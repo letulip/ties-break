@@ -45,6 +45,7 @@ import {
   skipTournament,
   spanDigest,
   spanRowCount,
+  spanWorthOffering,
   tickWeek,
   toSnapshot,
   KID_ID,
@@ -692,9 +693,15 @@ describe('R2-13 D – the shell offers the span in exactly the states the engine
 
   it('⚠ on a quiet week with nothing pending, the span IS offered', () => {
     // The other half – without it the gate above is satisfied by a control that never appears.
+    // ⚠ RE-AIMED NOTE (round 26 #1): this stays green for a DIFFERENT REASON than it used to.
+    // `quietCareer` empties `world.season`, so the owner's first arm – nothing in the calendar for
+    // five weeks – now holds as well as the engine's refusal being null. Both are needed and this
+    // case pins the pair; the arms themselves are measured on walked careers in
+    // `tests/round26-span-gate.test.ts`, which is where a change to either one goes red first.
     const { world } = quietCareer('gate-quiet')
     const snap = toSnapshot(world)
     expect(advanceRefusal(world), 'the engine can move time').toBeNull()
+    expect(snap.upcoming, 'and the owner\'s first arm holds – an empty calendar').toHaveLength(0)
     expect(multiOffered(snap, 'training'), 'so the quiet week offers the span').toBe(true)
     expect(multiOffered(snap, 'off-season')).toBe(true)
     expect(multiOffered(snap, 'exam')).toBe(true)
@@ -724,7 +731,27 @@ describe('R2-13 D – the shell offers the span in exactly the states the engine
     expect(snap.offerOpen, 'the inbox dot is lit').toBe(true)
     expect(advanceRefusal(world), 'and yet the engine can move time').toBeNull()
     expect(blockingOverlay(snap), 'nothing is blocking the shell either').toBeNull()
-    expect(multiOffered(snap, 'off-season'), 'so the span is still on offer – no reason to withhold it').toBe(true)
+
+    // ⚠ RE-AIMED BY ROUND 26 #1, NOT RELAXED – AND THE CLAIM IS NOW THE STRONGER ONE. This line used
+    // to read `multiOffered(snap, 'off-season') === true`, which was true only because the OLD gate
+    // offered the pill on every week the engine could move. The owner overturned that gate on 25.08
+    // and this fixture is not quiet under the new one: week 45 of a walked career has 17 events in
+    // the eight-week horizon and 11 of them inside his five. So the case can no longer read the
+    // pill's verdict as "the letter did not withhold it" – a false answer here would now be the
+    // CALENDAR's, not the letter's, and the case would pass or fail for the wrong reason.
+    //
+    // What it asserts instead is exactly the original sentence: THE LETTER IS NOT A TERM. First that
+    // the verdict is the owner's rule and nothing else…
+    expect(multiOffered(snap, 'off-season'), 'the letter contributes nothing to the verdict either way').toBe(
+      spanWorthOffering(snap.week, snap.upcoming, snap.injury),
+    )
+    // …and then that with his rule satisfied the pill IS on offer WITH the letter still lying open,
+    // which is the half a "the shell invented a refusal" regression would break. The calendar is
+    // emptied on the SNAPSHOT rather than in the world, so the offer, the inbox dot and every other
+    // fact about this week are untouched.
+    const clear = { ...snap, upcoming: [] }
+    expect(clear.offerOpen, 'the letter is still open on the cleared reading').toBe(true)
+    expect(multiOffered(clear, 'off-season'), 'so the span is still on offer – no reason to withhold it').toBe(true)
   })
 
   it('⭐ the offer stop has toast copy, and the copy keeps the house rules', () => {
@@ -743,6 +770,42 @@ describe('R2-13 D – the shell offers the span in exactly the states the engine
     expect(copy.toLowerCase(), 'it names the surface and the clock').toContain('inbox')
     expect(copy.toLowerCase()).toContain('deadline')
     // and it is in the precedence list, or the filter would silently drop it (R11-1's bug class)
+    expect(STOP_PRECEDENCE).toContain('offer')
+  })
+
+  it('⚠⚠ ROUND 26 #1 – THE OWNER\'S GATE IS AN OFFER RULE, AND THE ADVANCE HAS NOT HEARD OF IT', () => {
+    // ⚠⚠ THE DIRECTION IS THE WHOLE CASE. The second pass narrowed WHEN the pill is drawn, from "the
+    // engine can move time" (204 of 208 walked weeks) to his rule (5 of 208). The one way that can
+    // go wrong is for the narrowing to leak into the engine – a week the pill is withheld on must
+    // still be a week the ADVANCE runs, or `advanceRefusal` has quietly grown a seventh member and
+    // a busy career has lost the ability to step at all.
+    //
+    // Driven on block B's own offer fixture, which is exactly such a week: at week 45 of this walk
+    // her calendar is full, so the pill stands down – and the span still spends its weeks and still
+    // halts on the letter, with the identical reason list block B asserts.
+    const { world, rng } = quietCareer('r2-13-offer')
+    grantBand(world, 400)
+    walkTo(world, rng, 45)
+    const snap = toSnapshot(world)
+    expect(spanWorthOffering(snap.week, snap.upcoming, snap.injury), 'the owner\'s rule withholds the pill here').toBe(false)
+    expect(multiOffered(snap, 'off-season'), 'so the shell does not draw it').toBe(false)
+
+    // ...and none of that reaches the engine.
+    expect(advanceRefusal(world), 'the advance still refuses nothing').toBeNull()
+    const before = world.week
+    const ran = span(world, rng)
+    expect(ran.stops, 'and it still stops on the letter, exactly as block B asserts').toEqual(['offer'])
+    expect(world.week, 'having really spent the weeks it bought').toBeGreaterThan(before)
+
+    // THE REFUSAL LIST AND THE PRECEDENCE ARE THE SAME OBJECTS THEY WERE. Block F counts the
+    // refusals out of `advanceRefusal`'s own source and block B's last case accounts for every
+    // member of STOP_PRECEDENCE; this states the round's claim about them in one place, including
+    // the two the item text names – the letter and the college pauses.
+    expect([...ADVANCE_REFUSALS]).toEqual(['ending', 'tournament', 'knock', 'birthday', 'fork', 'retirement'])
+    expect(ADVANCE_REFUSALS, 'the offer is still a halt and not a refusal').not.toContain('offer')
+    for (const collegePause of ['ending', 'birthday', 'fork'] as const) {
+      expect(STOP_PRECEDENCE, `the college pause '${collegePause}' still has its slot`).toContain(collegePause)
+    }
     expect(STOP_PRECEDENCE).toContain('offer')
   })
 

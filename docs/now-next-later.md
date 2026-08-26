@@ -25,8 +25,11 @@ last-reviewed: 2026-08-23
 
 ## Now
 
-⚙ THE LIVE WAVE IS ROUND 25 – this line is machine-checked against the newest ledger in
+⚙ THE LIVE WAVE IS ROUND 26 – this line is machine-checked against the newest ledger in
 `docs/rounds/` by `scripts/doc-facts.mjs`; edit the number only by shipping a ledger.
+
+**Round 26 is open** – [round-26.md](rounds/round-26.md), thirteen college observations from a
+career played through all four years, captured 24.08 before triage. Three of them are REOPENED.
 
 **Rounds 24 and 25 have landed** – [round-24.md](rounds/round-24.md) (the college flow: the freeze
 defect, the Home shell, the College League, the academic year, the birthdays) and

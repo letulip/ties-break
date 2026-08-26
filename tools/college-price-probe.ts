@@ -35,7 +35,8 @@
 //
 // MEASUREMENT ONLY: nothing is patched and no engine number is written from here.
 import { openCareer, stepCareerWeek, POLICIES, PRESETS, mean, median } from './econ-bench'
-import { chooseGift, pendingBirthday, resumeFromCollege } from '../src/engine/world'
+import { chooseGift, pendingBirthday, resumeFromCollege, skipTournament, closeTournament } from '../src/engine/world'
+import { collegeLeagueRevealOpen } from '../src/engine/world/college'
 import { answerFork } from '../src/engine/world/endings'
 // ⚠⚠ THE COLLEGE COLUMN BELOW IS A COUNTERFACTUAL SINCE 16.08.2026, NOT A READING OF THE SHIPPED
 // GAME. The owner removed the rule that closed the college door on a result («Колледж – это
@@ -44,11 +45,16 @@ import { answerFork } from '../src/engine/world/endings'
 // this population, kept so the frozen battery's arms stay comparable on the dimension the
 // junior-access phases moved most. `tools/retired-college-rule.ts` is the one definition of it.
 import { retiredCollegeDoorOpen } from './retired-college-rule'
-import { COLLEGE_TIERS, type CollegeOffer } from '../src/engine/collegeOffer'
+import { COLLEGE_TIERS, COLLEGE_TIER_ORDER, type CollegeOffer } from '../src/engine/collegeOffer'
 
-/** ⚠ THE CHEAPEST PLACE OPEN TO HER. This probe never picks, so this is the only quote it can
- *  honestly read – see the note on `answerFork` below. */
-const cheapest = (offer: CollegeOffer | null | undefined) => offer?.quotes.find((q) => q.open) ?? null
+/** ⚠ THE CHEAPEST PLACE. This probe never picks, so this is the only quote it can honestly read –
+ *  see the note on `answerFork` below.
+ *  ⚠ ROUND 26 #2 (second pass): it used to say "the cheapest place OPEN to her" and filter on
+ *  `q.open`. The field is gone with the residence rule (v61) – every place is hers in every country –
+ *  so the cheapest place is `COLLEGE_TIER_ORDER`'s first, looked up through that order rather than by
+ *  index so a re-ordered offer still reports the cheapest. */
+const cheapest = (offer: CollegeOffer | null | undefined) =>
+  COLLEGE_TIER_ORDER.map((t) => offer?.quotes.find((q) => q.tier === t)).find((q) => q !== undefined) ?? null
 // ⚠ FROM world/ladder, NOT world/snapshot (TB-07): kidLadderRank moved down to the ladder leaf so
 // world/college.ts could stop importing the aggregate projection layer. Same function.
 import { kidLadderRank } from '../src/engine/world/ladder'
@@ -57,6 +63,41 @@ import { WEEKS_PER_YEAR } from '../src/engine/season/calendar'
 import type { WorldState } from '../src/engine/world'
 import type { Rng } from '../src/engine/rng'
 import type { FamilyBackground } from '../src/shared/protocol'
+
+/** ⚠⚠⚠ THE GAP BETWEEN THE ANSWER AND THE DEPARTURE, AND THE REASON THIS PROBE READ A WORLD THAT
+ *  NEVER WENT TO COLLEGE. Round 24 split the two: `answerFork('college')` RESERVES a place and
+ *  writes `fork.answer`, and `resolveCollegeDeparture` enrols her only once `world.week` reaches
+ *  `fork.departsWeek` – the following September. An instrument that answers and immediately calls
+ *  `resumeFromCollege` has ticked nothing, so `world.college` is still null, no ending is latched,
+ *  the press loop's `ending?.type === 'college'` is false on its first test, and the walk falls
+ *  straight through to the read. Measured: week frozen at 242, `funds after` byte-identical to
+ *  `savings at the fork`, «under water» 0/n – a finding manufactured by the instrument.
+ *
+ *  ⚠ THE GAP IS WALKED WITH `stepCareerWeek` AND NOT BARE `tickWeek`: until September she is still
+ *  on tour under the same policy the other arm uses, so these weeks earn and spend exactly as the
+ *  bench's weeks do everywhere else. The suites use bare ticks because their fixtures hold nothing;
+ *  a money probe cannot.
+ *
+ *  ⚠ SAME CLASS AS `pro-season-probe`'s retirement door: the engine grew a step, the instrument did
+ *  not, and nothing asserted that the walk had MOVED. It throws now. */
+function departToCollege(world: WorldState, rng: Rng): void {
+  for (let i = 0; i < WEEKS_PER_YEAR + 2 && world.ending === null; i++) stepCareerWeek(world, rng, POLICY)
+  if (world.college === null)
+    throw new Error(`college departure never resolved – answered at the fork, week ${world.week}, no enrolment`)
+}
+
+/** ⚠⚠ THE SECOND PAUSE INSIDE A COLLEGE YEAR. Round 24 gave the year one pause (her birthday);
+ *  round 26's student league gave it a second – the championship is revealed and `resumeFromCollege`
+ *  REFUSES to spend another year while it is open (`COLLEGE_REVEAL_REFUSAL`). Mirrors the helper the
+ *  college suites use: «Skip all rounds» then the finale's «Continue». */
+function answerLeagueReveal(world: WorldState): void {
+  if (!collegeLeagueRevealOpen(world)) return
+  skipTournament(world)
+  closeTournament(world)
+}
+
+
+
 
 const args = process.argv.slice(2)
 const argOf = (n: string, d: number) => {
@@ -198,11 +239,20 @@ for (let p = 0; p < PRESETS.length; p++) {
       // place open to her, so this file measures the college branch at its floor price and nothing
       // else. The choice is measured in `tools/college-choice-probe.ts`.
       answerFork(at.world, 'college')
+      departToCollege(at.world, at.rng)
       // Round 24: the year pauses on her birthday week – press, answer, press again.
       for (let press = 0; press < 3 * YEARS && at.world.ending?.type === 'college'; press++) {
         resumeFromCollege(at.world, at.rng)
+          answerLeagueReveal(at.world)
         if (pendingBirthday(at.world) !== null) chooseGift(at.world, 'day')
       }
+      // ⚠ THE ALARM THE OLD WALK DID NOT HAVE. A press budget that runs out is INDISTINGUISHABLE
+      // from a career that finished, and that is how this file reported 0/n bankruptcies off a
+      // world still standing at the fork. A stall is now loud.
+      if (at.world.ending?.type === 'college' && (at.world.college?.years.length ?? 0) < YEARS)
+        throw new Error(
+          `college walk stalled at ${at.world.college!.years.length}/${YEARS} years – an unanswered pause inside the year`,
+        )
       college.push({
         background: PRESETS[p].background,
         offerFamilyPerYearCents: cheapest(offer)?.familyPerYearCents ?? 0,

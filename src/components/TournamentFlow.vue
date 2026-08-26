@@ -17,7 +17,13 @@ import { finaleUrl } from '../art/preload'
 import { trophyArtUrl, trophyMetalFor } from '../art/trophies'
 import { armTrophyFlight } from '../composables/trophyArrival'
 import { facePoint } from '../art/faceRects'
-import { venueArtUrl } from '../art/venues'
+import { occasionArtUrl, venueArtUrl } from '../art/venues'
+/** ⭐⭐⭐ ROUND 26 #6 – THE ONE FIXTURE ON THIS SCREEN THAT HAS NO RUNG. The owner: «в чем проблема
+ *  использовать наш флоу турниров полностью и дать возможность игроку их смотреть и сопереживать? Я
+ *  уже просил это сделать». The College League is now walked here, through the same phases, the same
+ *  viewer and the same three commands as a tour event – see `amateur` below for the whole of the
+ *  difference. Its draw size is the engine's own, never a literal here. */
+import { COLLEGE_LEAGUE } from '../engine/collegeLeague'
 import MatchViewer from './MatchViewer.vue'
 import SurfaceMark from './ui/SurfaceMark.vue'
 import MatchScene from './MatchScene.vue'
@@ -120,8 +126,20 @@ const weekDates = computed(() => weekRange(game.snapshot?.week ?? 0))
 const weekShort = computed(() => weekLabel(game.snapshot?.week ?? 0))
 
 // --- Round 5 item 6: pre-tournament splash ------------------------------------
-const tier = computed(() => (pending.value ? TIERS[pending.value.tier] : null))
-const drawSize = computed(() => tier.value?.drawSize ?? 0)
+const tier = computed(() => (pending.value?.tier ? TIERS[pending.value.tier] : null))
+/**
+ * ⭐⭐⭐ ROUND 26 #6 – IS THIS AN AMATEUR FIXTURE? One predicate, read off the one discriminator
+ * (`PendingView.tier === null`), and every difference this screen makes for the College League is
+ * downstream of it. There is no second flag and no `competition` enum: the whole of what a rung
+ * BUYS on this screen is money, points and a piece of silverware, so "has no rung" and "awards
+ * nothing" are the same sentence and must not become two fields that can disagree.
+ *
+ * ⚠ WHAT DOES NOT CHANGE IS THE POINT OF THE ITEM. The splash, the pre-match card, the live viewer,
+ * the box score, the round strip and the finale are the tour's, unmodified, because the owner asked
+ * for the flow «полностью» and had already been given a cut-down version of it once.
+ */
+const amateur = computed(() => pending.value !== null && pending.value.tier === null)
+const drawSize = computed(() => (amateur.value ? COLLEGE_LEAGUE.drawSize : (tier.value?.drawSize ?? 0)))
 
 // Round 5 item 11 fallback: lost the final => silver-styled card, serious art, "Runner-up".
 const isRunnerUp = computed(() => !pending.value?.kidChampion && pending.value?.finishLabel === 'Runner-up')
@@ -214,7 +232,12 @@ const watchedRoundLabel = computed(() => {
  */
 const viewerPreviewEvent = computed(() => {
   const p = pending.value
-  if (!p) return null
+  // ⚠ NULL FOR AN AMATEUR FIXTURE, WHICH IS `occasionOf`'S OWN ANSWER FOR THESE MATCHES. The
+  // commentary's intro is a LADDER OF VOICES read off the rung (viz/preview.ts), and a student
+  // championship has none – `collegeLeagueMatchId` refuses to name one for exactly this reason, so a
+  // match opened from the feed already gets the thinnest intro. The flow must not give it a louder
+  // one than its own replay does.
+  if (!p || p.tier === null) return null
   return { tier: p.tier, roundLabel: watchedRoundLabel.value }
 })
 
@@ -264,16 +287,25 @@ function shortStage(round: number): string {
 // at stake, the first-round pairing, and her coach's read beside the button that starts it. Every
 // figure below is one the engine already holds – see the note on `factPrize` for the one the
 // handoff asks for that this game genuinely does not have.
-const venueUrl = computed(() =>
-  pending.value ? venueArtUrl(pending.value.tier, pending.value.surface, pending.value.eventId, game.snapshot?.seed ?? '') : '',
-)
+const venueUrl = computed(() => {
+  const p = pending.value
+  if (!p) return ''
+  // ⚠ NO ART WAS DRAWN FOR THIS. `occasionArtUrl` borrows the shipped regional set BY OCCASION, and
+  // 'college-league' is an occasion the game already has – round 24 #4 was the owner's own choice
+  // («Картинки для студенческих турниров… как раз для студенческих лиг»), and `CollegeYearCard`
+  // hangs the same picture. One fixture, one photograph, on both surfaces that show it.
+  if (p.tier === null) return occasionArtUrl('college-league', p.surface, p.eventId, game.snapshot?.seed ?? '')
+  return venueArtUrl(p.tier, p.surface, p.eventId, game.snapshot?.seed ?? '')
+})
 /** Winner's points at this tier – `points[0]` of the tier table, the design's "Ranking Points". */
 const winnerPoints = computed(() => tier.value?.points[0] ?? 0)
 /** Winner's CHEQUE at this tier – the design's "Prize Money" fact, read through `prizeCentsFor`
  *  because types.ts names that function the payout table's ONLY reader and this screen must not
  *  become a second one. 0 on the whole junior tour (juniors pay to play – the game's thesis), and
  *  the template renders that zero as the dash it always was. */
-const winnerPrizeCents = computed(() => (pending.value ? prizeCentsFor(pending.value.tier, 0) : 0))
+const winnerPrizeCents = computed(() =>
+  pending.value?.tier ? prizeCentsFor(pending.value.tier, 0) : 0,
+)
 /**
  * "SPECTATORS" – the design's fourth fact, and now a real (if decorative) figure.
  *
@@ -359,7 +391,13 @@ const conditionColor = computed(() => readingColor({ pct: condition.value }))
  * splash 404'd once already (`art/preload.ts`, the `-fs8` note). One builder, two callers.
  */
 const herTrophy = computed(() =>
-  pending.value ? trophyArtUrl(pending.value.tier, trophyMetalFor(pending.value.kidChampion)) : '',
+  // ⚠⚠ EMPTY ON AN AMATEUR FIXTURE, AND THAT IS THE CABINET TELLING THE TRUTH. Every one of the
+  // eighteen painted cups is a TIER's cup, and the College League puts nothing in
+  // `world.trophiesByTier` – `resolveCollegeLeague` writes no result, no cheque and no silverware,
+  // which is the round-25 ruling that keeps the fork a real choice. Drawing a rung's trophy over a
+  // student title would be the finale claiming an object that is not in her cabinet, and the flight
+  // below would then carry it to a shelf with nothing on it.
+  pending.value?.tier ? trophyArtUrl(pending.value.tier, trophyMetalFor(pending.value.kidChampion)) : '',
 )
 /** The GOLD of this tier, for the poster where somebody else lifted it.
  *
@@ -369,7 +407,7 @@ const herTrophy = computed(() =>
  *  общих эмоджи» names, and leaving one 🏆 on the third of three sibling posters would have been two
  *  art styles for one screen. Nothing flies to the cabinet from this card, and nothing should: her
  *  ledger did not gain a piece of silverware this week. */
-const eventGoldTrophy = computed(() => (pending.value ? trophyArtUrl(pending.value.tier, 'gold') : ''))
+const eventGoldTrophy = computed(() => (pending.value?.tier ? trophyArtUrl(pending.value.tier, 'gold') : ''))
 /** The poster's mark, measured at take-off – see `continueFinale`. Only the podium poster carries
  *  it: it is the only card whose trophy has anywhere to go. */
 const posterMark = useTemplateRef<HTMLImageElement>('posterMark')
@@ -480,7 +518,11 @@ function next(): void {
   // Her run is over. Champion or a lost final (runner-up) -> straight to the finale; both are
   // cases where she reached the Final so there's nothing left to spectate. Otherwise she exited
   // early: spectate the SUBSEQUENT rounds she isn't in, starting the round after her exit.
-  if (p.kidChampion || kidExitRound.value >= finalRound.value) {
+  // ⭐⭐⭐ ROUND 26 #6 – AND AN AMATEUR FIXTURE HAS NOTHING TO SPECTATE, BY CONSTRUCTION RATHER THAN
+  // BY TASTE. `playCollegeLeague` composes her side of the draw and plays only her matches, so the
+  // rounds she is not in were never simulated and `fullBracket` is empty. Walking a spectate card
+  // over an empty draw would be two clicks of «see how the draw finishes» with no draw behind them.
+  if (amateur.value || p.kidChampion || kidExitRound.value >= finalRound.value) {
     phase.value = 'finale'
     return
   }
@@ -521,7 +563,9 @@ async function skipAll(): Promise<void> {
  * way and the dot appears at once. Less motion is not less information.
  */
 async function continueFinale(): Promise<void> {
-  if (pending.value?.kidChampion || isRunnerUp.value) armTrophyFlight(herTrophy.value, posterMark.value)
+  // ⚠ AND NEVER FROM AN AMATEUR PODIUM (round 26 #6): see `herTrophy` – there is no cabinet entry to
+  // fly to, so the guard is the SAME fact the art is, read once.
+  if (!amateur.value && (pending.value?.kidChampion || isRunnerUp.value)) armTrophyFlight(herTrophy.value, posterMark.value)
   await game.tournamentClose()
 }
 
@@ -804,9 +848,17 @@ const matchMeta = computed(() => (stats.value ? matchStatMeta(stats.value) : nul
             <AppIcon name="trophy" :size="19" />
           </span>
           <span class="tf-fact-label">Winner</span>
-          <span class="tf-fact-value">{{ winnerPoints }} pts</span>
+          <!-- ⭐⭐⭐ ROUND 26 #6: the dash, on the same rule the prize cell one tile up already
+               keeps – a student field awards no ranking points, so there is no figure and the cell
+               says so rather than printing a zero that reads like a tuning mistake. -->
+          <span v-if="!amateur" class="tf-fact-value">{{ winnerPoints }} pts</span>
+          <span v-else class="tf-fact-value" title="A student field awards no ranking points">–</span>
         </div>
-        <div class="tf-fact">
+        <!-- ⚠ THE CROWD CELL IS ABSENT AND NOT DASHED ON AN AMATEUR FIXTURE, WHICH IS A DIFFERENT
+             CLAIM FROM THE TWO ABOVE. "No prize money" is a FACT about a student championship; "we
+             do not model its gate" is a fact about US, and a dash in this row would state the first
+             where only the second is true (`eventCrowd`'s bands are per tier and this has none). -->
+        <div v-if="!amateur" class="tf-fact">
           <span class="tf-fact-tile" aria-hidden="true">
             <AppIcon name="spectators" :size="19" />
           </span>
@@ -848,7 +900,12 @@ const matchMeta = computed(() => (stats.value ? matchStatMeta(stats.value) : nul
             <div v-if="showAges" class="tf-first-age">Age {{ oppAge }}</div>
           </div>
         </div>
-        <p class="hint tf-first-ladder">{{ ladderLabel }} ranking</p>
+        <!-- ⭐⭐⭐ ROUND 26 #6 – AND AN AMATEUR FIXTURE NAMES NO TABLE, because it is played in
+             none. This line exists to stop two ranks being compared across two currencies; on a
+             student championship there is no currency at all, and printing «International ranking»
+             under a college draw would be the exact lie the ladder split was built to end. -->
+        <p v-if="!amateur" class="hint tf-first-ladder">{{ ladderLabel }} ranking</p>
+        <p v-else class="hint tf-first-ladder">No ranking points and no prize money – a student field awards neither</p>
       </Card>
 
       <!-- THE COACH'S READ + THE BUTTON THAT STARTS IT. -->
@@ -886,8 +943,13 @@ const matchMeta = computed(() => (stats.value ? matchStatMeta(stats.value) : nul
         </div>
       </Card>
 
-      <!-- R9-9b: the post-deadline withdrawal, behind a confirm. -->
-      <button class="link tf-skip-entry" :disabled="game.busy" @click="showSkipConfirm = true">
+      <!-- R9-9b: the post-deadline withdrawal, behind a confirm.
+           ⚠⚠ ABSENT ON AN AMATEUR FIXTURE, AND IT IS A RULE RATHER THAN A TIDY-UP. Withdrawing is a
+           thing you do to an ENTRY: `skipEvent` forfeits an entry fee, refunds a fare and drops her
+           off a list. She entered nothing here – the programme plays her – so the control has no
+           command behind it, and `skipEvent` would throw on a reveal that owns no `SeasonEvent`.
+           «Skip all rounds» in the exit slot is the honest way past this one, and it is still there. -->
+      <button v-if="!amateur" class="link tf-skip-entry" :disabled="game.busy" @click="showSkipConfirm = true">
         Skip this event – withdraw
       </button>
     </template>
@@ -1104,7 +1166,10 @@ const matchMeta = computed(() => (stats.value ? matchStatMeta(stats.value) : nul
              Decorative: the poster says "Champion" or "Runner-up" in words on the very next line, in
              the colour of its own border and in the name below that, so a reader loses nothing.
              NOT lazy: it is the first thing on the card the player came here to see. -->
+        <!-- ⭐⭐⭐ ROUND 26 #6: absent on an amateur fixture – see `herTrophy`. Nothing entered the
+             cabinet, so nothing is painted and nothing takes off from here. -->
         <img
+          v-if="!amateur"
           ref="posterMark"
           class="tf-poster-mark"
           :src="herTrophy"
@@ -1127,8 +1192,11 @@ const matchMeta = computed(() => (stats.value ? matchStatMeta(stats.value) : nul
           <SurfaceMark :surface="pending.surface" />
           <span class="pill">{{ pending.tierLabel }}</span>
         </div>
-        <!-- Lime on BOTH posters: points are always a gain, even on the day she lost the final. -->
-        <p class="tf-poster-points">+{{ pending.points }} pts</p>
+        <!-- Lime on BOTH posters: points are always a gain, even on the day she lost the final.
+             ⭐⭐⭐ ROUND 26 #6: and absent on a student title, because the poster may not print a
+             gain there was none of. The chip beside the surface already names the competition, and
+             the splash stated its terms before she walked on. -->
+        <p v-if="!amateur" class="tf-poster-points">+{{ pending.points }} pts</p>
         <div v-if="pathCells.length" class="tf-path" :style="{ gridTemplateColumns: `repeat(${pathCells.length}, 1fr)` }">
           <div v-for="(c, i) in pathCells" :key="i" class="tf-path-cell" :class="{ lost: !c.won }">
             <span class="tf-path-round">{{ c.short }}</span>
@@ -1155,26 +1223,37 @@ const matchMeta = computed(() => (stats.value ? matchStatMeta(stats.value) : nul
            champion, so the photograph's place is taken by her own finish line. -->
       <Card v-else class="tf-poster out">
         <!-- The event's gold, and the name under it is the girl who lifted it. No ref and no
-             flight: nothing entered HER cabinet this week. -->
-        <img
-          class="tf-poster-mark"
-          :src="eventGoldTrophy"
-          alt=""
-          aria-hidden="true"
-          width="88"
-          height="88"
-          decoding="async"
-        />
-        <p class="tf-poster-status">Champion</p>
-        <h2 class="tf-poster-name">{{ championName }}</h2>
-        <p class="tf-poster-line">
-          {{ kidShort }} – <b>{{ pending.finishLabel }}</b>
-        </p>
+             flight: nothing entered HER cabinet this week.
+             ⭐⭐⭐ ROUND 26 #6 – AND ON A STUDENT CHAMPIONSHIP NOBODY IS NAMED, BECAUSE NOBODY IS
+             KNOWN. `playCollegeLeague` composes her side of the draw and plays only her matches; the
+             other half of the bracket is never simulated, so «who lifted it» is a fact this game
+             does not hold. Printing an empty name under a gold cup would be inventing one. Her own
+             finish carries the card instead, which is what the poster is for. -->
+        <template v-if="!amateur">
+          <img
+            class="tf-poster-mark"
+            :src="eventGoldTrophy"
+            alt=""
+            aria-hidden="true"
+            width="88"
+            height="88"
+            decoding="async"
+          />
+          <p class="tf-poster-status">Champion</p>
+          <h2 class="tf-poster-name">{{ championName }}</h2>
+          <p class="tf-poster-line">
+            {{ kidShort }} – <b>{{ pending.finishLabel }}</b>
+          </p>
+        </template>
+        <template v-else>
+          <p class="tf-poster-status">{{ pending.finishLabel }}</p>
+          <h2 class="tf-poster-name">{{ kidFullName }}</h2>
+        </template>
         <div class="controls tf-poster-chips">
           <SurfaceMark :surface="pending.surface" />
           <span class="pill">{{ pending.tierLabel }}</span>
         </div>
-        <p class="tf-poster-points">+{{ pending.points }} pts</p>
+        <p v-if="!amateur" class="tf-poster-points">+{{ pending.points }} pts</p>
         <div v-if="pathCells.length" class="tf-path" :style="{ gridTemplateColumns: `repeat(${pathCells.length}, 1fr)` }">
           <div v-for="(c, i) in pathCells" :key="i" class="tf-path-cell" :class="{ lost: !c.won }">
             <span class="tf-path-round">{{ c.short }}</span>

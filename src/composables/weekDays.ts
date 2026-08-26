@@ -78,7 +78,7 @@ import {
   isSummerWeek,
   surfaceBlockFor,
 } from '../engine/season/calendar'
-import { layoffCoversWeek } from '../engine/world'
+import { eventIsHers, layoffCoversWeek } from '../engine/world'
 import {
   DAY_CAPACITY_FREE,
   DAY_CAPACITY_SCHOOL,
@@ -601,10 +601,15 @@ export interface LookAheadRow {
   note: string
 }
 
-/** Is this event one a marker may carry? See the note above for why the word is this narrow. */
-export function isSuitable(e: UpcomingEvent, currentWeek: number): boolean {
-  return e.entered || (e.eligible && currentWeek <= e.deadlineWeek)
-}
+/** Is this event one a marker may carry? See the note above for why the word is this narrow.
+ *
+ *  ⚠⚠ THE BODY MOVED TO `engine/world/multiWeek.ts` AS `eventIsHers` (round 26 #1) AND THIS IS THE
+ *  HISTORICAL NAME RE-EXPORTED – the same move `TIER_SHORT` and `layoffCoversWeek` made, for the
+ *  same reason. The four-week span pill's «is there anything in the next five weeks» gate has to be
+ *  THIS question and not a second spelling of it, or the markers under the grid and the control
+ *  above the tab bar would disagree about what an empty stretch is. Every existing import path,
+ *  including `tests/calendar-screen.test.ts`'s pins, is untouched. */
+export const isSuitable: (e: UpcomingEvent, currentWeek: number) => boolean = eventIsHers
 
 /** The rows under the grid: weeks `week + 2` … `week + 1 + LOOK_AHEAD_WEEKS`. Precedence mirrors
  *  `calendarWeekFor`'s, minus the arms a future week cannot be in (there is no `arrival` past the

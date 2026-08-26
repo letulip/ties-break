@@ -64,14 +64,17 @@ import { kidAgeExact, kidAgeAt, kidPoints, tableSize } from '../src/engine/world
 // this population, kept so the frozen battery's arms stay comparable on the dimension the
 // junior-access phases moved most. `tools/retired-college-rule.ts` is the one definition of it.
 import { RETIRED_COLLEGE_RUNG, retiredCollegeDoorOpen } from './retired-college-rule'
-import { COLLEGE_OFFER, COLLEGE_TIERS, type CollegeOffer, type CollegeTier } from '../src/engine/collegeOffer'
+import { COLLEGE_OFFER, COLLEGE_TIERS, COLLEGE_TIER_ORDER, type CollegeOffer, type CollegeTier } from '../src/engine/collegeOffer'
 import type { FamilyBackground } from '../src/shared/protocol'
 
-/** ⚠ THE CHEAPEST PLACE OPEN TO HER – the one college column that means the same thing before and
- *  after the 17.08 rebuild. This battery never answers the fork, so it can report what a place would
- *  cost but never which one she took. */
+/** ⚠ THE CHEAPEST PLACE – the one college column that means the same thing before and after the
+ *  17.08 rebuild. This battery never answers the fork, so it can report what a place would cost but
+ *  never which one she took.
+ *  ⚠ ROUND 26 #2 (second pass): "open to her" is gone with the residence rule and with
+ *  `CollegeQuote.open` itself (v61). Every place is hers in every country, so the cheapest place is
+ *  `COLLEGE_TIER_ORDER`'s first. */
 function cheapestOpen(offer: CollegeOffer | null | undefined) {
-  return offer?.quotes.find((q) => q.open) ?? null
+  return COLLEGE_TIER_ORDER.map((t) => offer?.quotes.find((q) => q.tier === t)).find((q) => q !== undefined) ?? null
 }
 import { computeCountingResults } from '../src/engine/world/snapshot'
 import { BEST_N_BY_TRACK } from '../src/engine/season/ranking'
@@ -874,9 +877,10 @@ if (wants('6')) {
     console.log(`\n  WHAT ${ENDINGS.collegeYears} YEARS COST THE FAMILY, over all ${atFork.length}`)
     console.log(`    min ${usd(bill.min)} · p25 ${usd(bill.p25)} · median ${usd(bill.p50)} · p75 ${usd(bill.p75)} · max ${usd(bill.max)}`)
     console.log(`    free rides: ${atFork.filter((r) => (r.offerFamilyPerYearCents ?? 0) === 0).length} of ${atFork.length}`)
-    console.log(`\n  ⚠ EVERY CAREER HERE IS \`country: '${COLLEGE_OFFER.usCountryCode}'\` – the bench's own profile. A non-American faces the`)
-    console.log(`    out-of-state sticker (${usd(COLLEGE_TIERS.national.costPerYearCents)}/yr vs ${usd(COLLEGE_TIERS.state.costPerYearCents)}) AND no need-based layer at all (34 CFR 668.33),`)
-    console.log(`    so this table is the CHEAPEST the college branch can be. See the spec's §4.`)
+    console.log(`\n  ⚠ EVERY CAREER HERE IS \`country: '${COLLEGE_OFFER.usCountryCode}'\` – the bench's own profile. Since round 26 #2 a`)
+    console.log(`    non-American reaches the SAME cheapest place (${usd(COLLEGE_TIERS.state.costPerYearCents)}/yr, open in every country) but still gets`)
+    console.log(`    no need-based layer at all (34 CFR 668.33), so this table is the CHEAPEST the college branch can be.`)
+    console.log(`    What the missing layer costs her at each place is measured in tools/college-home-place.ts.`)
   }
 }
 

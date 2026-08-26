@@ -191,6 +191,7 @@ export type {
   CollegeYearStart,
   CollegeYear,
   CollegeLeagueRun,
+  CollegeLeagueReveal,
   CollegeCallUp,
   AlbumPage,
   ScrollSeason,

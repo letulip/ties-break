@@ -1510,6 +1510,34 @@ function reopenTour(): void {
       class="next-week-bar"
       :class="{ 'with-span': !!weekAction.multi }"
     >
+      <!-- ⭐⭐ R2-13 PHASE 1 – THE SPAN, AND IT IS ABSENT FAR MORE OFTEN THAN IT IS HERE. The 28.07
+           deletion of the old skip-4 stands as written ("a testing shortcut that offered to skip the
+           thing the player came to play"); what makes this one a different button is `multi`, which
+           is non-null only on a QUIET week – and, since round 26 #1, only on a week the owner's own
+           rule calls empty. Both halves are `composables/weekAction.ts`'s, so the two week controls
+           cannot disagree about when a span is on offer, and neither of them re-derives the engine's
+           refusal.
+           It routes through the SAME handler as the week button: one press, one place, and the span
+           report below is raised by that handler rather than by this element.
+
+           ⚠⚠ IT IS FIRST IN THE BAR BECAUSE THE OWNER PUT IT THERE (25.08, round-26 #1: "first of
+           all, let us put it to the LEFT of the main one" – his sentence is quoted in the original
+           in composables/weekAction.ts, where a comment may carry it). DOM ORDER IS THE POSITION:
+           the bar is an ordinary `flex-direction: row` and neither button sets `order`, so
+           first-in-source is left-on-screen and the keyboard reaches them in the order the eye does.
+           Do NOT "fix" this with a CSS `order` – a visual order that contradicts the DOM is the one
+           arrangement a screen reader and a sighted player disagree about, and
+           `tests/component/round26-span-gate-ui.test.ts` asserts both halves (index AND no `order`
+           override) for exactly that reason. -->
+      <button
+        v-if="weekAction.multi"
+        class="span-weeks-btn"
+        data-tour="span-weeks"
+        :disabled="weekAction.disabled"
+        @click="playWeek(MULTI_WEEK_SPAN)"
+      >
+        {{ weekAction.multi.label }}
+      </button>
       <!-- R10-7: one button, a label that names the plan for the week it is about to play.
            R13-5/R13-8: it routes through playWeek – a paused tournament re-opens its overlay, a
            booked practice week opens the flow, everything else advances as before. -->
@@ -1521,23 +1549,6 @@ function reopenTour(): void {
         @click="playWeek(1)"
       >
         {{ weekAction.label }}
-      </button>
-      <!-- ⭐⭐ R2-13 PHASE 1 – THE SPAN, AND IT IS ABSENT FAR MORE OFTEN THAN IT IS HERE. The 28.07
-           deletion of the old skip-4 stands as written ("a testing shortcut that offered to skip the
-           thing the player came to play"); what makes this one a different button is `multi`, which
-           is non-null only on a QUIET week and only while the engine can actually move time. Both
-           halves are `composables/weekAction.ts`'s, so the two week controls cannot disagree about
-           when a span is on offer, and neither of them re-derives the engine's refusal.
-           It routes through the SAME handler as the week button: one press, one place, and the span
-           report below is raised by that handler rather than by this element. -->
-      <button
-        v-if="weekAction.multi"
-        class="span-weeks-btn"
-        data-tour="span-weeks"
-        :disabled="weekAction.disabled"
-        @click="playWeek(MULTI_WEEK_SPAN)"
-      >
-        {{ weekAction.multi.label }}
       </button>
     </div>
 

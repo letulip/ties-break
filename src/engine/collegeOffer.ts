@@ -159,10 +159,26 @@ export interface CollegeRecruitView {
  *  supplied the driver**, and it is the one thing an invented selector could never be – A PLAYER'S
  *  CHOICE. The third sticker is no longer recorded-and-not-modelled; it is the dear place.
  *
- *  ⚠ `residentOnly` IS THE ONE PROPERTY HERE THAT IS NOT OURS. In-state versus out-of-state IS
- *  residence and a non-resident alien is never in-state anywhere, so the cheap place is not open to a
- *  girl on a student visa. Two places always are: **nothing here can remove the college answer**
- *  (owner, 16.08) – it removes one school from a list of three.
+ *  ⭐⭐⭐⭐ ROUND 26 #2, SECOND PASS – `residentOnly` IS GONE, AND THE OWNER DELETED IT, NOT THIS FILE.
+ *  Verbatim, after reading why the cheapest place was refused: «по-моему **в каждой стране есть
+ *  домашний универ**». He is overruling the RULE and not the sentence, and he is right about the
+ *  thing the first pass could only report: of the 24 playable countries exactly ONE opened the cheap
+ *  rung, and the choice that decided it was made on the onboarding country step ~440 weeks earlier
+ *  with nothing on that screen saying it priced college.
+ *
+ *  ⚠⚠ SO THE CHEAP RUNG IS NOT AN IN-STATE TARIFF ANY MORE, IT IS THE PLACE AT HOME. The fact under
+ *  the price gap changes with it and the change is what makes the rung legible outside the US: rung 1
+ *  is the public university she can live at home for, rung 2 is the public university she has to move
+ *  for. That is true of a family in Adelaide and a family in Osaka in exactly the way "in-state
+ *  tuition" never was, and it is the biggest single cost line in higher education anywhere – the
+ *  College Board's own in-state figure is tuition, fees, HOUSING AND FOOD, so the two columns already
+ *  differ by more than tuition.
+ *
+ *  ⚠⚠ AND THE THREE PRICES DO NOT MOVE. The stickers stay the three sourced figures `[S]`; what is
+ *  OURS now is what each one is the price OF. Re-pricing rung 1 because she sleeps at home would
+ *  invalidate `COLLEGE_TIER_ODDS` – 85 / 93 / 74, measured against this table – and the ruling is
+ *  that opening the rung changes WHO CAN TAKE IT, not what it is worth. Nothing measured moved; see
+ *  `COLLEGE_ODDS_MEASURED_AT`.
  *
  *  ⚠⚠ `squad` IS OURS AND IT IS AN INVENTION WITH A SCALE, NOT A FINDING. It is the programme's own
  *  playing level on the SAME 0-100 scale her skills use. No source rates a college squad on our scale
@@ -216,7 +232,6 @@ export interface CollegeRecruitView {
 export const COLLEGE_TIERS = {
   state: {
     costPerYearCents: 30_990_00,
-    residentOnly: true,
     squad: 55,
     fullAwardScore: 11,
     matchesPerWeek: 1,
@@ -224,7 +239,6 @@ export const COLLEGE_TIERS = {
   },
   national: {
     costPerYearCents: 50_920_00,
-    residentOnly: false,
     squad: 65,
     fullAwardScore: 18,
     matchesPerWeek: 2,
@@ -232,7 +246,6 @@ export const COLLEGE_TIERS = {
   },
   private: {
     costPerYearCents: 65_470_00,
-    residentOnly: false,
     squad: 75,
     fullAwardScore: 23,
     matchesPerWeek: 3,
@@ -242,7 +255,6 @@ export const COLLEGE_TIERS = {
   CollegeTier,
   {
     costPerYearCents: number
-    residentOnly: boolean
     squad: number
     fullAwardScore: number
     matchesPerWeek: number
@@ -262,21 +274,51 @@ export const COLLEGE_TIER_ORDER = ['state', 'national', 'private'] as const
  *  and "A national programme" are what the College Board's own table calls its three columns; they
  *  say nothing to a parent deciding where to send a nineteen-year-old, and "national" in particular
  *  reads as a RANK in a game whose every other ladder is one. These say where the place IS, which is
- *  the only thing that separates the three in the fiction – and «out of state» is not jargon here, it
- *  is the sourced reason the second price is higher than the first.
+ *  the only thing that separates the three in the fiction.
+ *
+ *  ⭐⭐⭐⭐ ROUND 26 #2, SECOND PASS – «out of state» IS GONE AND THE OWNER TOOK THE RULE WITH IT.
+ *  That caption's own justification, written in round 21, was that it «is not jargon here, it is the
+ *  sourced reason the second price is higher than the first» – and the sourced reason was US
+ *  residence, which is precisely what «в каждой стране есть домашний универ» overrules. A caption
+ *  cannot outlive the fact it was defending.
+ *
+ *  ⚠⚠ THE SHAPE IS HIS: HOME · AWAY · PRIVATE, and the two things it has to do are be TRUE in
+ *  twenty-four countries and say WHY the second price is higher.
+ *
+ *    * **`state` keeps its name, and that is the finding rather than the laziness.** «The university
+ *      at home» was already the right four words – it is the owner's own phrase back at him
+ *      («university at home») – and it was the RULE underneath that was US-shaped. Renaming it would
+ *      have hidden that.
+ *    * **`national` becomes «A university away from home».** It is the same fact stated from the
+ *      family's side instead of the tax office's: the second place costs more because she cannot
+ *      sleep at home, which is true in Adelaide, Osaka and Belgrade and needs no administrative
+ *      vocabulary at all. It is also the shortest phrasing that carries the contrast – see the
+ *      measured 320px note below.
+ *    * **`private` is untouched.** It is not a distance, it is an ownership, and that is the honest
+ *      third axis: it is dear because it is private, not because it is far.
+ *
+ *  ⚠ THE ROW IS 320px WIDE AND THAT IS A MEASURED CONSTRAINT, NOT A STYLE NOTE. `.fork-place-head`
+ *  puts the name and the price on ONE line with `space-between`; round 21 already lost a definite
+ *  article on this card because 46 character-units did not fit in 44. «A university away from home»
+ *  is 27 characters against «A university out of state»'s 25, and the pair is re-measured on a
+ *  mounted 320x568 card in `tests/component/round26-home-university.test.ts` rather than reasoned
+ *  about.
  *
  *  ⚠ THE IDS ARE UNTOUCHED. `CollegeTier` is persisted in `ForkState.offer.chosen` since v52, so
  *  renaming the id would be a save-schema change to fix a caption. The name is a caption; the id is a
- *  save field, and the two are now different things in different places.
+ *  save field, and the two are now different things in different places. ⚠ `national` therefore
+ *  survives as an ID whose caption no longer says "national", which is exactly the split this note
+ *  is about and not a drift.
  *
  *  ⚠ AND IT LIVES HERE RATHER THAN IN A COMPONENT BECAUSE IT HAD TWO COPIES – `ForkDialog.vue`'s
  *  `TIER_LABEL` and `EndingScreen.vue`'s `COLLEGE_PLACE`, identical, with a comment on the second
  *  saying "the same three names the fork card uses". That is exactly the shape of the four-copies
  *  failure this area already had once (the "the family stops paying" line, fixed in round 21). One
- *  copy, imported by both. */
+ *  copy, imported by both – and this round it is four readers (the fork card, the ending, the
+ *  college year card and `kidLife`), every one of which changed by editing this object. */
 export const COLLEGE_TIER_NAME: Record<CollegeTier, string> = {
   state: 'The university at home',
-  national: 'A university out of state',
+  national: 'A university away from home',
   private: 'A private university',
 }
 
@@ -337,16 +379,44 @@ export const COLLEGE_TIER_ODDS: Record<CollegeTier, { top100In100: number }> = {
 /** ⚠⚠ THE TIER TABLE THE ODDS ABOVE WERE MEASURED AGAINST. Any edit to it invalidates them, and the
  *  test that reads this is the only thing standing between a re-tune and a card quoting a run that
  *  no longer describes the game. ⚠ IT IS A STRING RATHER THAN A HASH ON PURPOSE: a failure has to say
- *  WHAT moved, and a hex digest says only that something did. */
+ *  WHAT moved, and a hex digest says only that something did.
+ *
+ *  ⭐⭐⭐ ROUND 26 #2 MOVED THIS STRING WITHOUT RE-MEASURING, WHICH NEEDS ITS REASON IN WRITING.
+ *  The fingerprint folds the WHOLE tier object – deliberately, so a field that did not exist when the
+ *  pin was written still trips it – and `residentOnly` left the table, so the string had to move. It
+ *  is the ONE property in the fold that `tools/college-return-probe.ts` never reads: the probe takes
+ *  each tier's quote by name (`offer.quotes.find(q => q.tier === tier)`) and walks four years plus
+ *  four back on tour, and openness cannot reach any of that. **Every property the probe DOES read is
+ *  byte-identical** – three prices, three recruiting bars, three match counts, three coaching rungs,
+ *  three squads and both trip weeks – so 85 / 93 / 74 still describes this game and no re-measure is
+ *  owed by this change.
+ *
+ *  ⚠ AND THE CLAIM IS MECHANICAL RATHER THAN A COMMENT. `tests/college-offer.test.ts` block F pins
+ *  the round-21 string beside this one and asserts the ONLY difference between them is the removed
+ *  residence property, so a wave that moves a price while claiming to have only removed a boolean
+ *  goes red. The re-measure the spec already owed on the skill wave (`a412162`) is untouched and
+ *  still owed. */
 export const COLLEGE_ODDS_MEASURED_AT =
+  'state coachesAt=budget,costPerYearCents=3099000,fullAwardScore=11,matchesPerWeek=1,squad=55 · ' +
+  'national coachesAt=middle,costPerYearCents=5092000,fullAwardScore=18,matchesPerWeek=2,squad=65 · ' +
+  'private coachesAt=high,costPerYearCents=6547000,fullAwardScore=23,matchesPerWeek=3,squad=75 · trips 8,20'
+
+/** ⚠ THE STRING THIS ONE REPLACED (round 21 -> round 26 #2), kept ONLY so the test above can prove
+ *  the delta is the residence property and nothing else. It is not a fallback and nothing reads it
+ *  at runtime. */
+export const COLLEGE_ODDS_MEASURED_AT_BEFORE_HOME_RULING =
   'state coachesAt=budget,costPerYearCents=3099000,fullAwardScore=11,matchesPerWeek=1,residentOnly=true,squad=55 · ' +
   'national coachesAt=middle,costPerYearCents=5092000,fullAwardScore=18,matchesPerWeek=2,residentOnly=false,squad=65 · ' +
   'private coachesAt=high,costPerYearCents=6547000,fullAwardScore=23,matchesPerWeek=3,residentOnly=false,squad=75 · trips 8,20'
 
 export const COLLEGE_OFFER = {
-  /** the country code that gets the in-state place and the need-based layer. ⚠ Both of those are US
-   *  federal facts (34 CFR §668.33; the state-residence tuition split), so this is not a nationality
-   *  preference in the game – it is the one place the sourced law is US-specific. */
+  /** the country code that gets the need-based layer.
+   *
+   *  ⚠ IT IS ONE RULE NOW, NOT TWO. Until round 26 #2 this constant also gated the in-state place;
+   *  the owner's «в каждой стране есть домашний универ» removed that half, and what is left is the
+   *  one that is still primary law and still meets his own test – **federal student aid**, 34 CFR
+   *  §668.33, which is about who may receive a US GRANT and not about who may enrol. The other half
+   *  was the half a player could not meet. */
   usCountryCode: 'US',
 
   /** how far a programme's own funding moves the award either side of its band, ± this.
@@ -529,103 +599,41 @@ export function recruitedAtAll(juniorScore: number): boolean {
 }
 
 // =================================================================================================
-// ⭐⭐⭐ WHY A PLACE IS NOT HERS – round 24 #2a, and it is the HOUSE RULE rather than a nicety
+// ⭐⭐⭐⭐ NO PLACE IS REFUSED – round 26 #2, second pass, and it is the OWNER'S RULING
 // =================================================================================================
 //
-// The owner, after a played career: «непонятно почему самый дешёвый нельзя выбрать». The cheapest
-// rung was drawn dead and the card typed its own explanation into the template – a sentence beside
-// the boolean rather than a sentence OFF it. This project already refuses that shape everywhere
-// else: `EntryStatus.ineligibleReason` carries a CODE and `ineligibleDetail` carries "THE ENGINE'S
-// OWN SENTENCE", and its docstring names exactly the failure being fixed here – *"the fallback must
-// not be a SECOND GUESS at which refusal this was"*. SeasonScreen's lock pill guessed once and
-// printed "Exams this week" on a rung a twenty-year-old was age-locked out of.
+// «по-моему в каждой стране есть домашний универ.»
 //
-// ⚠⚠ SO `open` IS NOW DERIVED FROM THE REASON, AND NEVER THE OTHER WAY ROUND. `tierShutFor` is the
-// ONE decision; `tierOpenTo` is `tierShutFor(...) === null`. A rung cannot be shut without a rule in
-// the table below naming it, because the table is the only thing that can return `false`.
+// WHAT USED TO BE HERE, and it is recorded rather than tidied away because two rounds of work are
+// buried in it. Round 24 #2a found the cheapest place drawn DEAD with the card typing its own
+// explanation into the template, and built the house shape: a CODE per rule (`CollegeShutReason`), a
+// total `Record` of the engine's own sentences (`COLLEGE_SHUT_DETAIL`), one decision (`tierShutFor`)
+// with `open` DERIVED from it, and a readout off the persisted quote (`quoteShutFor`) so the card
+// could never hold a second opinion. Round 26's first pass then made the sentence name the fact it
+// rested on – «this family is from Australia – chosen at the start of the career» – and REPORTED the
+// thing it could not fix on its own: **of the 24 playable countries exactly one opened the rung, and
+// the choice that decided it was made on the onboarding country step ~440 weeks before the card drew,
+// unannounced.** A refusal a player cannot meet is not an explanation, however well it is worded.
 //
-// ⚠ AND THE READOUT ASKS THE SAME TABLE. `quoteShutFor` takes the engine's own persisted verdict
-// (`quote.open` – the identical boolean `answerFork` re-validates on) as its INPUT and only names
-// the rule behind it, so the card and the engine cannot disagree about WHETHER a rung is shut: there
-// is one boolean and the screen does not compute a second one. Re-deriving from `country` at render
-// time would have been exactly the parallel judgement this comment is about.
-
-/** ⚠ ONE CODE PER RULE THAT CAN SHUT A PLACE. Adding a member without copy in
- *  `COLLEGE_SHUT_DETAIL` is a compile error – the map is a total `Record`. */
-export type CollegeShutReason = 'not-a-resident'
-
-/** ⚠⚠ EVERY RULE THAT CAN SHUT A PLACE, AS DATA – read by the DECISION and by the READOUT, which is
- *  what makes one question have one answer.
- *
- *  The split is the load-bearing part. `appliesTo` is a property of the PLACE and `firesFor` is a
- *  property of the FAMILY, so a shut quote's rule is recoverable from the tier alone – which is all
- *  a persisted quote carries. A rule that needed the family to know whether it even applies could
- *  not be reported off a saved offer, and would have to ride on the quote instead (a save-schema
- *  move, CLAUDE.md invariant 3).
- *
- *  ⚠ ORDER IS REPORTING ORDER. With one rule that is exact; a second rule joins the list in the
- *  order the card should name it, the same contract `StopReason`'s own priority list keeps. */
-const COLLEGE_SHUT_RULES: ReadonlyArray<{
-  reason: CollegeShutReason
-  appliesTo: (tier: CollegeTier) => boolean
-  firesFor: (country: string) => boolean
-}> = [
-  {
-    // ⚠ THE ONE PROPERTY HERE THAT IS NOT OURS. In-state versus out-of-state IS residence and a
-    // non-resident alien is never in-state anywhere (see `COLLEGE_TIERS`). Two places are always
-    // open, so nothing here can remove the college answer (owner, 16.08).
-    reason: 'not-a-resident',
-    appliesTo: (tier) => COLLEGE_TIERS[tier].residentOnly,
-    firesFor: (country) => country !== COLLEGE_OFFER.usCountryCode,
-  },
-]
-
-/** ⭐ THE ENGINE'S OWN SENTENCE FOR EACH REFUSAL – `ineligibleDetail`'s twin, one door along, and it
- *  lives in the engine for the reason that field's own docstring gives: a client holding only the
- *  code has to guess, and a guess is what printed the wrong refusal on the season card.
- *
- *  ⚠ IT IS A TOTAL `Record`, so a new `CollegeShutReason` cannot ship without its words.
- *
- *  ⚠ AND IT SAYS WHAT IS TRUE OF **THIS PLACE**, NOT WHAT SHE SHOULD DO ABOUT IT. Ruling 4 (30.07):
- *  the fork «may not recommend», and "take one of the others instead" is advice. The other rows are
- *  live on the same screen and say so by being pressable. */
-export const COLLEGE_SHUT_DETAIL: Record<CollegeShutReason, string> = {
-  'not-a-resident': 'The in-state price is only for residents of the state, and she is not one.',
-}
-
-/** ⚠⚠ IS THIS PLACE HERS TO PICK, AND IF NOT, WHY – THE ONE DECISION. `null` = it is hers.
- *  Residence, and nothing else: primary law, not a balance knob. */
-export function tierShutFor(tier: CollegeTier, country: string): CollegeShutReason | null {
-  for (const rule of COLLEGE_SHUT_RULES) {
-    if (rule.appliesTo(tier) && rule.firesFor(country)) return rule.reason
-  }
-  return null
-}
-
-/** ⚠ DERIVED FROM THE REASON, so a rung cannot be refused without one. Every historical caller is
- *  unchanged – this is the same boolean it always returned. */
-export function tierOpenTo(tier: CollegeTier, country: string): boolean {
-  return tierShutFor(tier, country) === null
-}
-
-/** ⭐⭐ THE SAME ANSWER, OFF A QUOTE THE PLAYER IS LOOKING AT – what the card reads.
- *
- *  ⚠⚠ IT TAKES `quote.open` AS ITS INPUT RATHER THAN RE-DECIDING. That boolean is the engine's own
- *  verdict, persisted at the fork and re-validated by `answerFork` when she answers, so a screen
- *  built on this function is reading the engine's decision and naming it – never holding a second
- *  opinion about it (CLAUDE.md invariant 1).
- *
- *  ⚠ TOTAL ON A SHUT QUOTE BY CONSTRUCTION: `open: false` is only producible by a rule whose
- *  `appliesTo` is true for that tier, and that is the only thing this looks for.
- *  `tests/college-offer.test.ts` sweeps every tier x both residence classes and asserts the two
- *  functions agree on all six, so the construction is checked rather than argued. */
-export function quoteShutFor(quote: Pick<CollegeQuote, 'tier' | 'open'>): CollegeShutReason | null {
-  if (quote.open) return null
-  for (const rule of COLLEGE_SHUT_RULES) {
-    if (rule.appliesTo(quote.tier)) return rule.reason
-  }
-  return null
-}
+// ⚠⚠ THE OWNER ANSWERED IT BY DELETING THE RULE, SO THE APPARATUS GOES WITH IT AND `open` GOES WITH
+// THE APPARATUS. There is no code, no rule table, no sentence map and no boolean, because there is
+// nothing that can shut a place: **all three are pressable in all 24 countries, in every career.**
+// A boolean that is always true would have been the worse end state – the next reader would believe
+// a place can be shut, and the next edit could shut one by accident – which is why this is a save
+// SHAPE change (v61) and not a value fix. `CollegeQuote.open` is gone from the wire and from the
+// save; `answerFork` takes the tier it is given.
+//
+// ⚠ THE HOUSE SHAPE IS NOT LOST WITH IT. `EntryStatus.ineligibleReason` / `ineligibleDetail` is one
+// door along, still live, still the pattern round 24 borrowed from – so a future refusal (if the
+// owner ever rules one in) has a worked example to copy and does not have to be re-derived from this
+// file's ghost.
+//
+// ⚠ AND ONE COUNTRY RULE SURVIVES, DELIBERATELY, BECAUSE IT PASSES HIS OWN TEST. `needShareOf` still
+// pays the need-based layer to an American family only – 34 CFR §668.33, federal student aid, which
+// is about who may receive a US GRANT rather than about who may enrol. It removes no place from
+// anybody's card and shuts no door; it means a non-American family pays more of the same bill, which
+// is a PRICE and not a refusal. What that costs the family at each rung is measured, not asserted:
+// `tools/college-home-place.ts`.
 
 /** ⚠⚠ THE ATHLETIC SHARE, AND ITS SIGNATURE IS STILL THE ARGUMENT.
  *
@@ -768,7 +776,6 @@ export function quoteFor(tier: CollegeTier, view: CollegeRecruitView, rng: Rng):
     athleticShare,
     needShare,
     familyPerYearCents: Math.round(costPerYearCents * (1 - covered)),
-    open: tierOpenTo(tier, view.country),
   }
 }
 
@@ -783,7 +790,12 @@ export function quoteFor(tier: CollegeTier, view: CollegeRecruitView, rng: Rng):
  *
  *  ⚠ ONE DRAW PER TIER, IN TIER ORDER, ON THE CALLER'S SUB-STREAM. Three draws where round 20 took
  *  one – invisible to the frozen MAIN capture by construction, because the stream is
- *  `seed:collegeoffer:<week>` and is re-derived at the call site. */
+ *  `seed:collegeoffer:<week>` and is re-derived at the call site.
+ *
+ *  ⭐⭐⭐ AND SINCE ROUND 26 #2 THE LIST IS THE SAME LIST IN EVERY COUNTRY – three quotes, three
+ *  pressable rows, no boolean between them. `COLLEGE_TIER_ORDER` is cheapest-first, so `quotes[0]` is
+ *  the home place for an Australian family exactly as it is for an American one, which is what
+ *  `answerFork`'s no-tier default now takes. */
 export function collegeOfferFor(view: CollegeRecruitView, rng: Rng): CollegeOffer {
   return {
     quotes: COLLEGE_TIER_ORDER.map((tier) => quoteFor(tier, view, rng)),

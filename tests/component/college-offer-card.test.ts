@@ -30,13 +30,16 @@ import ForkDialog from '../../src/components/ForkDialog.vue'
 import '../../src/style.css'
 import { useGameStore } from '../../src/stores/game'
 import { assertDismissReachable, measureDialog, setViewport, NARROW_PHONE, PHONE } from './fits'
-// ⚠ THE ENGINE'S OWN REFUSAL, IMPORTED RATHER THAN RETYPED – see the residence case below.
-import { COLLEGE_SHUT_DETAIL, quoteShutFor } from '../../src/engine/collegeOffer'
+// ⚠ THE ENGINE'S OWN NAMES FOR THE THREE PLACES, IMPORTED RATHER THAN RETYPED – round 26 #2 renamed
+// one of them and a card asserted against a literal would have gone green on the wrong caption.
+import { COLLEGE_TIER_NAME } from '../../src/engine/collegeOffer'
 import type { CollegeOffer, CollegeQuote, CollegeTier, Snapshot } from '../../src/shared/protocol'
 
 const PRICES: Record<CollegeTier, number> = { state: 30_990_00, national: 50_920_00, private: 65_470_00 }
 
-function quote(tier: CollegeTier, athleticShare: number, needShare: number, open = true): CollegeQuote {
+// ⚠ THE `open` ARGUMENT IS GONE WITH THE FIELD (round 26 #2, second pass, v61). A hand-built quote
+// can no longer express a shut place because the engine cannot produce one.
+function quote(tier: CollegeTier, athleticShare: number, needShare: number): CollegeQuote {
   const covered = Math.min(1, athleticShare + needShare)
   return {
     tier,
@@ -44,7 +47,6 @@ function quote(tier: CollegeTier, athleticShare: number, needShare: number, open
     athleticShare,
     needShare,
     familyPerYearCents: Math.round(PRICES[tier] * (1 - covered)),
-    open,
   }
 }
 
@@ -65,26 +67,34 @@ const FREE_RIDE: CollegeOffer = {
   chosen: null,
   canPayPerYearCents: 55_153_00,
 }
-/** a girl on a student visa: the in-state place is not hers, and two still are */
+/** ⭐⭐⭐ A NON-AMERICAN FAMILY – and since round 26 #2's second pass what makes it one is the BILL and
+ *  not a shut row. `needShare` is 0 at all three places (34 CFR §668.33, the one country rule the
+ *  round left standing) and all three are hers. It used to carry `quote('state', 0.62, 0, false)`,
+ *  the in-state place drawn dead. */
 const NON_RESIDENT: CollegeOffer = {
-  quotes: [quote('state', 0.62, 0, false), quote('national', 0.38, 0), quote('private', 0.3, 0)],
+  quotes: [quote('state', 0.62, 0), quote('national', 0.38, 0), quote('private', 0.3, 0)],
   chosen: null,
   canPayPerYearCents: 31_531_00,
 }
 
-function snapshotWith(offer: CollegeOffer | null): Snapshot {
+/** ⚠⚠ ROUND 26 #2 ADDED THE PROFILE, AND ITS ABSENCE WAS A HOLE RATHER THAN A SIMPLIFICATION. A live
+ *  snapshot has always carried one; this fixture did not, so the card could be asserted against a
+ *  state no career can be in. The refusal sentence names her home country now, so the fixture has to
+ *  say which career this is – and `country` is the one field of it these cases read. */
+function snapshotWith(offer: CollegeOffer | null, country = 'US'): Snapshot {
   return {
     ageYears: 19,
     week: 265,
     kidRank: 210,
     fundsCents: 41_200_00,
     careerTotals: { earnedCents: 0, spentCents: 0, prizeCents: 0 },
+    profile: { kidName: 'Vera', country },
     fork: { askedWeek: 265, ageYears: 19, offer },
   } as unknown as Snapshot
 }
 
-function mountFork(offer: CollegeOffer | null, attach = false) {
-  useGameStore().snapshot = snapshotWith(offer)
+function mountFork(offer: CollegeOffer | null, attach = false, country = 'US') {
+  useGameStore().snapshot = snapshotWith(offer, country)
   return mount(ForkDialog, attach ? { attachTo: document.body } : {})
 }
 
@@ -142,12 +152,22 @@ describe('⭐⭐ the card says what each college place costs', () => {
   // was standing in for survives exactly – **every row states what the place is worth, in its own
   // stated unit, beside the sourced price** – and it is stronger, because the number is now measured
   // out of this build (`tools/college-return-probe.ts`, n = 53 per place) rather than invented.
-  it('⭐⭐ states each place\'s measured odds, and the window it was measured over', () => {
+  // ⚠⚠ RE-AIMED AGAIN BY ROUND 26 #3a, AND FOR THE SECOND TIME THE FIGURE SURVIVED AND THE FRAME DID
+  // NOT. The owner asked what «Top 100 for 74 in 100» meant, which is the same class of complaint
+  // that killed `Squad 55`: a number the card states in a form the player cannot decode. `Top 100`
+  // read as a LABEL and the two numbers after it had no verb between them. The measured quantity is
+  // unchanged – 85 / 93 / 74 careers in a hundred – and what moved is that the row now says which
+  // hundred and what they did. ⚠ THE ASSERTION IS DELIBERATELY ON THE WHOLE PHRASE, not on the bare
+  // digits: `toContain('85')` would pass on a row that printed the number in the old unreadable
+  // frame, which is exactly the defect.
+  it('⭐⭐ states each place\'s measured odds in words, and the window it was measured over', () => {
     const w = mountFork(FUNDED)
     const rows = rowsOf(w)
-    expect(rows[0]).toContain('Top 100 for 85 in 100')
-    expect(rows[1]).toContain('Top 100 for 93 in 100')
-    expect(rows[2]).toContain('Top 100 for 74 in 100')
+    expect(rows[0]).toContain('85 in 100 reach the world top 100')
+    expect(rows[1]).toContain('93 in 100 reach the world top 100')
+    expect(rows[2]).toContain('74 in 100 reach the world top 100')
+    // ⚠ AND THE UNREADABLE FRAME IS OFF THE SURFACE, the same way `Squad \d` is below.
+    expect(w.find('.fork-places').text(), 'the round-24 frame is gone').not.toMatch(/Top 100 for \d/)
     // ⚠ AND A SHARE WITH NO SPAN UNDER IT IS NOT A MEASUREMENT. The window is named once, under the
     // list – a card that printed a bare percentage would be quoting a run it never identified.
     expect(w.find('.fork-places-note').text()).toContain('Four years after she leaves')
@@ -199,35 +219,42 @@ describe('⭐⭐ the card says what each college place costs', () => {
     w.unmount()
   })
 
-  // ⚠⚠ THE RESIDENCE SPLIT REMOVES ONE SCHOOL AND NEVER THE ANSWER. Two places stay pressable, the
-  // third states its reason, and the button falls to the cheapest one that IS hers.
+  // ⭐⭐⭐⭐ ROUND 26 #2, SECOND PASS – A NON-AMERICAN CAREER GETS THREE PRESSABLE ROWS AND THE HOME
+  // PLACE ON THE BUTTON. The owner: «по-моему в каждой стране есть домашний универ».
   //
-  // ⚠⚠ RE-AIMED BY ROUND 24 #2a, NOT WEAKENED. It asserted the literal string
-  // «In-state, and she is not a resident», which was TYPED INTO THE TEMPLATE beside the boolean –
-  // and pinning a template literal is what let the card hold an opinion the engine never issued.
-  // The claim it stood for is unchanged and is stricter for being sourced: the refused row states
-  // the ENGINE'S sentence for the reason the ENGINE gave, off `COLLEGE_SHUT_DETAIL`. A card that
-  // types its own words now fails here.
-  //
-  // ⚠ AND IT IS THE HAND-BUILT ARM ON PURPOSE. `tests/component/round24-fork-places.test.ts` walks a
-  // real world into this state and asserts the same property against `tierShutFor`; this case keeps
-  // the surface honest for a quote shape the world happens not to produce today.
-  it('⚠ shuts the in-state place to a non-resident and keeps the answer live', () => {
-    const w = mountFork(NON_RESIDENT)
+  // WHAT THIS CASE USED TO ASSERT, because the trade should be legible: «shuts the in-state place to
+  // a non-resident, names her home, and keeps the answer live» – row 0 disabled, `.fork-place-refusal`
+  // carrying `COLLEGE_SHUT_DETAIL['not-a-resident']('Czechia')`, and the button falling through to
+  // «A university out of state». Round 24 built that plaque and round 26's first pass made it name
+  // the fact under it; the owner then overruled the RULE, so the plaque, the disabled row and the
+  // fall-through all go. **The claim now is that none of them exists** – which is the same test
+  // pointed at the opposite verdict rather than a weaker one.
+  it('⭐⭐⭐⭐ a Czech career is offered all three places, and the button takes the one at home', () => {
+    const w = mountFork(NON_RESIDENT, false, 'CZ')
     const places = w.findAll('.fork-place')
-    expect(places[0].attributes('disabled')).toBeDefined()
-    const shut = quoteShutFor(NON_RESIDENT.quotes[0])
-    expect(shut, 'the engine names the rule behind its own `open: false`').not.toBeNull()
-    expect(places[0].find('.fork-place-refusal').text(), 'the engine\'s sentence, not the card\'s').toBe(
-      COLLEGE_SHUT_DETAIL[shut!],
-    )
-    expect(places[1].attributes('disabled')).toBeUndefined()
-    expect(places[2].attributes('disabled')).toBeUndefined()
-    expect(places[1].find('.fork-place-refusal').exists(), 'and an open row explains nothing').toBe(false)
-    expect(w.findAll('.fork-answer')[1].text(), 'the button falls to the cheapest place that is hers').toContain(
-      'A university out of state',
+    expect(places).toHaveLength(3)
+    for (const [i, p] of places.entries()) {
+      expect(p.attributes('disabled'), `row ${i} is pressable`).toBeUndefined()
+      expect(p.classes(), `row ${i} carries no shut fade`).not.toContain('is-shut')
+    }
+    // ⚠ NOT ONE REFUSAL SENTENCE ANYWHERE ON THE CARD, and the class itself is gone from the DOM.
+    expect(w.findAll('.fork-place-refusal'), 'nothing left to explain').toHaveLength(0)
+    // ⚠ AND THE DEFAULT THE BUTTON NAMES IS THE HOME PLACE, off the engine's own caption rather than
+    // a literal – the caption moved this round too.
+    expect(w.findAll('.fork-answer')[1].text(), 'the cheapest place, and it is hers').toContain(
+      COLLEGE_TIER_NAME.state,
     )
     for (const a of w.findAll('.fork-answer')) expect(a.attributes('disabled')).toBeUndefined()
+    w.unmount()
+  })
+
+  // ⚠ AND PRESSING THE HOME ROW REALLY PICKS IT – the round-24 defect was a row that could not be
+  // pressed, so «it is drawn» is not the claim. `aria-pressed` is the card's own record of the pick.
+  it('⭐⭐ ...and the home row can actually be pressed by a career that could not press it before', async () => {
+    const w = mountFork(NON_RESIDENT, false, 'CZ')
+    await w.findAll('.fork-place')[0].trigger('click')
+    expect(w.findAll('.fork-place')[0].attributes('aria-pressed'), 'the press landed').toBe('true')
+    expect(w.findAll('.fork-answer')[1].text()).toContain(COLLEGE_TIER_NAME.state)
     w.unmount()
   })
 

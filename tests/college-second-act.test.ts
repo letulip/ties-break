@@ -17,6 +17,9 @@
 //      call at a time, because the number of commands changed and the property must not have.
 import { describe, it, expect } from 'vitest'
 import {
+  skipTournament,
+  collegeLeagueRevealOpen,
+  closeTournament,
   createWorld,
   advanceWeeks,
   tickWeek,
@@ -49,6 +52,20 @@ import type { MatchPlayer } from '../src/engine/match/types'
 import type { WorldState } from '../src/engine/world'
 import type { Rng } from '../src/engine/rng'
 
+/** ⭐⭐⭐ ROUND 26 #6 RE-AIM – THE PRESS THAT ANSWERS THE CHAMPIONSHIP. `resumeFromCollege` now PAUSES
+ *  the year on the College League week the way it already pauses on her birthday, because the owner
+ *  had been told about the tournament instead of shown it. So every walk here answers the reveal the
+ *  way the player does – «Skip all rounds», then the finale's «Continue», which are `skipTournament`
+ *  and `closeTournament` dispatched at the college reveal. Nothing measured below moved; the walk
+ *  answers one more question and its press ceiling grows by one a year. The full note is in
+ *  tests/college-league.test.ts, and the flow itself in tests/round26-college-flow.test.ts. */
+function answerLeagueReveal(world: WorldState): void {
+  if (!collegeLeagueRevealOpen(world)) return
+  skipTournament(world)
+  closeTournament(world)
+}
+
+
 function freshWorld(seed = 'p5-college'): { world: WorldState; rng: Rng } {
   const world = createWorld(seed, { ...DEFAULT_PROFILE })
   return { world, rng: rngFromSeed(world.seed) }
@@ -76,16 +93,18 @@ function answerCollegeAndDepart(world: WorldState, rng: Rng, tier?: CollegeTier)
  *  together is the one option every birthday offers, so it is always a legal answer here. */
 function spendYear(world: WorldState, rng: Rng): void {
   const before = world.college!.years.length
-  for (let press = 0; press < 3 && world.college!.years.length === before && world.ending?.type === 'college'; press++) {
+  for (let press = 0; press < 4 && world.college!.years.length === before && world.ending?.type === 'college'; press++) {
     resumeFromCollege(world, rng)
+    answerLeagueReveal(world)
     if (pendingBirthday(world) !== null) chooseGift(world, 'day')
   }
 }
 
 /** The whole course, spent the same way. */
 function spendCourse(world: WorldState, rng: Rng): void {
-  for (let press = 0; press < 3 * ENDINGS.collegeYears && world.ending?.type === 'college'; press++) {
+  for (let press = 0; press < 4 * ENDINGS.collegeYears && world.ending?.type === 'college'; press++) {
     resumeFromCollege(world, rng)
+    answerLeagueReveal(world)
     if (pendingBirthday(world) !== null) chooseGift(world, 'day')
   }
 }
@@ -405,10 +424,11 @@ function collegeYearsWithACall(seed: string): { world: WorldState; stops: string
   const presses: string[][] = []
   for (let y = 0; y < ENDINGS.collegeYears; y++) {
     const seen = new Set<string>()
-    for (let press = 0; press < 3 && world.college!.years.length === y; press++) {
+    for (let press = 0; press < 4 && world.college!.years.length === y; press++) {
       const list = resumeFromCollege(world, rng)
       presses.push(list)
       for (const s of list) seen.add(s)
+      answerLeagueReveal(world)
       if (pendingBirthday(world) !== null) chooseGift(world, 'day')
     }
     stops.push((STOP_PRECEDENCE as readonly string[]).filter((r) => seen.has(r)))
@@ -504,8 +524,9 @@ describe('⭐⭐⭐ the college competition is played', () => {
     answerCollegeAndDepart(before.world, before.rng)
     const world = before.world
     // Round 24: press-answer-press – the years pause on her birthdays.
-    for (let press = 0; press < 3 * ENDINGS.collegeYears && world.ending?.type === 'college'; press++) {
+    for (let press = 0; press < 4 * ENDINGS.collegeYears && world.ending?.type === 'college'; press++) {
       resumeFromCollege(world, before.rng)
+      answerLeagueReveal(world)
       if (pendingBirthday(world) !== null) chooseGift(world, 'day')
     }
     expect(world.results.filter((r) => r.playerId === KID_ID), 'her column of the ledger is empty').toHaveLength(0)
@@ -682,6 +703,9 @@ describe('⚠ P5 – the college years cost the MAIN stream nothing', () => {
     const yearEnds = college.week + WEEKS_PER_YEAR
     for (let press = 0; press < 4 && college.week < yearEnds; press++) {
       resumeFromCollege(college, rngA)
+      // ⚠ ROUND 26 #6: the championship pauses the year too, and answering it must cost MAIN nothing
+      // either – which makes this arm stronger again rather than different.
+      answerLeagueReveal(college)
       if (pendingBirthday(college) !== null) chooseGift(college, 'day')
     }
     while (control.week < college.week) tickWeek(control, rngB)

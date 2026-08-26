@@ -31,10 +31,12 @@
 // ⚠ AGAINST WALKED WORLDS, NEVER HAND-BUILT ONES – the same discipline every college suite keeps.
 // The careers below really play sixty weeks, really answer the fork and really spend the freeze
 // through `resumeFromCollege`.
-import { describe, it, expect } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import {
+  skipTournament,
+  collegeLeagueRevealOpen,
   CAREER_ENDED_REFUSAL,
   answerFork,
   chooseGift,
@@ -51,6 +53,9 @@ import {
   tickWeek,
   toSnapshot,
   SAVE_SCHEMA_VERSION,
+  // ⭐ ROUND 26 #4 – the college band and the always-offered day, read by the wish/gift proof below.
+  BIRTHDAY_COLLEGE_BAND,
+  BIRTHDAY_DAY_TOGETHER,
   type WorldState,
 } from '../src/engine/world'
 import { migrateSave } from '../src/engine/migrations'
@@ -61,6 +66,31 @@ import { WEEKS_PER_YEAR } from '../src/engine/season/calendar'
 import { resumeMain, type Rng } from '../src/engine/rng'
 import { blockingOverlay } from '../src/composables/blockingOverlay'
 import { DEFAULT_PROFILE, STOP_PRECEDENCE, type StopReason } from '../src/shared/protocol'
+
+// ⚠⚠ THE UNIT PROJECT'S CEILING IS 20s AND THIS FILE WALKS CAREERS, WHICH IS THE ARITHMETIC ROUND 26
+// #16 IS ABOUT. Measured on an idle machine, 26.08: the whole file is 52s and its slowest single case
+// is **8.3s** (`her FIRST college birthday asks for the bicycle` – three careers, each ticked sixty
+// weeks, through the fork, the September gap and four college years with every championship and cake
+// answered). CI's runner is a 2-core box measured at 4-5x this machine, so 8.3s becomes **33-42s** and
+// the 20s project ceiling fails a test that is not slow, only starved – the exact failure
+// `vite.config.ts`'s own 20s note diagnoses one layer down. 120s is far above 42s and still low enough
+// to catch a genuine hang, which is the only thing a timeout is for. The three cases that were already
+// at 6.6-7.3s before this round were inside the same hazard and are covered by the same line.
+vi.setConfig({ testTimeout: 120_000 })
+
+/** ⭐⭐⭐ ROUND 26 #6 RE-AIM – THE PRESS THAT ANSWERS THE CHAMPIONSHIP. `resumeFromCollege` now
+ *  PAUSES on the College League week the way it pauses on her birthday, because the owner's
+ *  complaint was that the year reported the tournament and ticked on past it. So every walk here
+ *  answers the reveal the way the player does – «Skip all rounds», then the finale's «Continue» –
+ *  which is `skipTournament` + `closeTournament` dispatched at the college reveal. Nothing this
+ *  suite MEASURES moved: the same birthdays, the same pauses, the same banked years.
+ *  The full note is in tests/college-league.test.ts. */
+function answerLeagueReveal(world: WorldState): void {
+  if (!collegeLeagueRevealOpen(world)) return
+  skipTournament(world)
+  closeTournament(world)
+}
+
 
 function finishAnyReveal(world: WorldState): void {
   for (let i = 0; i < 40 && world.pendingTournament && !world.pendingTournament.finished; i++) {
@@ -111,6 +141,27 @@ function openedAtCollege(seed: string, birthMonth: number, birthDay: number): { 
   return { world, rng }
 }
 
+/** ⭐⭐⭐ ROUND 26 #6 RE-AIM – PRESS UNTIL THE CAKE, ANSWERING THE CHAMPIONSHIP ON THE WAY.
+ *
+ *  ⚠⚠ WHAT MOVED IS THE NUMBER OF PRESSES, NOT ONE CLAIM IN THIS FILE. Before this round a college
+ *  year held ONE mid-year stop and the cases below could press once and be standing on it. The year
+ *  now holds two – the championship pauses it as well, which is the whole of round 26 #6 – so for a
+ *  birth date after season week 12 the cake is the SECOND press. Every assertion underneath is
+ *  untouched: the paused year, its persisted opening, the deliverable dialog, the free gift.
+ *
+ *  ⚠ AND IT REFUSES TO PASS SILENTLY. If the walk runs out of presses without reaching a birthday,
+ *  it throws rather than returning the last stops – a helper that quietly hands back the wrong press
+ *  would turn these cases green against a career that never had a birthday at all. */
+function pressToBirthday(world: WorldState, rng: Rng): StopReason[] {
+  for (let guard = 0; guard < 4; guard++) {
+    const stops = resumeFromCollege(world, rng)
+    answerLeagueReveal(world)
+    if (pendingBirthday(world) !== null) return stops
+    if (world.ending?.type !== 'college') break
+  }
+  throw new Error('the walk never reached her birthday')
+}
+
 /** One press of the Home shell's college button, with the stops it reported. */
 type Press = { week: number; stops: StopReason[]; years: number; paused: boolean }
 
@@ -126,6 +177,9 @@ function walkTheFreeze(world: WorldState, rng: Rng, maxPresses = 24): Press[] {
       years: world.college!.years.length,
       paused: (world.college!.pendingYearStart ?? null) !== null,
     })
+    // ⚠ ROUND 26 #6 re-aim: a press can now stop for the championship as well, so the walk answers
+    // that too – see `answerLeagueReveal` at the head of this file.
+    answerLeagueReveal(world)
     if (pendingBirthday(world) !== null) answerBirthday(world)
   }
   return presses
@@ -151,6 +205,7 @@ describe('a walked career through four college years gets four birthdays', () =>
         years: world.college!.years.length,
         paused: (world.college!.pendingYearStart ?? null) !== null,
       })
+      answerLeagueReveal(world)
       if (pendingBirthday(world) !== null) {
         answerBirthday(world)
         feedAtBirthday.push(world.events.filter((e) => e.week === world.week).map((e) => e.text).join(' | '))
@@ -199,8 +254,8 @@ describe('a walked career through four college years gets four birthdays', () =>
     const skillAtOpening = skillMeanOf(world.skills)
     const fundsAtOpening = world.fundsCents
 
-    // Press once: this career pauses mid-year on her birthday.
-    const stops = resumeFromCollege(world, rng)
+    // Press until this career pauses mid-year on her birthday – see `pressToBirthday`.
+    const stops = pressToBirthday(world, rng)
     expect(stops).toContain('birthday')
     expect(world.college!.years, 'the paused year is NOT banked').toHaveLength(0)
     expect(world.college!.pendingYearStart, 'its opening is persisted instead').not.toBeNull()
@@ -211,6 +266,8 @@ describe('a walked career through four college years gets four birthdays', () =>
     answerBirthday(world)
     const fundsAtBank = (() => {
       resumeFromCollege(world, rng)
+      answerLeagueReveal(world)
+      if (world.college!.years.length === 0) resumeFromCollege(world, rng)
       return world.fundsCents
     })()
     expect(world.college!.years, 'now the year banks').toHaveLength(1)
@@ -222,7 +279,7 @@ describe('a walked career through four college years gets four birthdays', () =>
 
   it('⭐⭐ the dialog is deliverable where the pause leaves the player: over the college Home shell', () => {
     const { world, rng } = openedAtCollege('cb-overlay', 6, 15)
-    resumeFromCollege(world, rng)
+    pressToBirthday(world, rng)
     const snap = toSnapshot(world)
     expect(snap.birthdayPrompt, 'the prompt is on the snapshot').not.toBeNull()
     expect(snap.ending?.ending.type, 'the college latch is on underneath it').toBe('college')
@@ -239,7 +296,7 @@ describe('a walked career through four college years gets four birthdays', () =>
 
   it('⚠ a gift costs the family nothing at college, because it costs nothing anywhere – spec §0', () => {
     const { world, rng } = openedAtCollege('cb-free', 6, 15)
-    resumeFromCollege(world, rng)
+    pressToBirthday(world, rng)
     const funds = world.fundsCents
     const rng0 = { ...world.rngMain }
     answerBirthday(world)
@@ -274,8 +331,18 @@ describe('the collision year: birthday + championship + call-up all deliver', ()
     expect(world.college!.pendingLeague, 'the championship really was played this press').not.toBeNull()
     expect(world.college!.years, 'and the year is still open').toHaveLength(0)
 
-    // Answer the cake; press 2 finishes the year and the call-up week (14) lands in the second half.
+    // Answer the cake; the finishing press carries the year out and the call-up week (14) lands in
+    // its second half.
+    // ⚠ ROUND 26 #6: on the collision week the championship and the cake pause the year TOGETHER, so
+    // after the dialog is answered the REVEAL is still open – the same order the UI shows them in
+    // (`popupMayShow` holds the gift behind the takeover, so the player answers the takeover first
+    // and the cake second). A press over an open reveal is the engine's no-op report, exactly like a
+    // press over an unanswered birthday; answer it and the SAME press finishes the year.
     answerBirthday(world)
+    const refusedOverReveal = resumeFromCollege(world, rng)
+    expect(refusedOverReveal, 'the reveal is a question too: reported, nothing ticked').toEqual(['college-league'])
+    expect(world.college!.years, 'and nothing banked behind it').toHaveLength(0)
+    answerLeagueReveal(world)
     const second = resumeFromCollege(world, rng)
     expect(world.college!.years, 'one banked year, not two halves').toHaveLength(1)
     const year = world.college!.years[0]
@@ -297,7 +364,7 @@ describe('the collision year: birthday + championship + call-up all deliver', ()
     // pause and the bank coincide: the year is genuinely over, so it banks – and the prompt stays
     // pending where the player is standing.
     const { world, rng } = openedAtCollege('probe-boundary', 9, 3)
-    const stops = resumeFromCollege(world, rng)
+    const stops = pressToBirthday(world, rng)
     expect(stops).toContain('birthday')
     expect(world.college!.years, 'the completed year banked – a boundary birthday is not a pause').toHaveLength(1)
     expect(world.college!.pendingYearStart ?? null, 'no year is mid-flight').toBeNull()
@@ -315,6 +382,8 @@ describe('the collision year: birthday + championship + call-up all deliver', ()
 
     answerBirthday(world)
     resumeFromCollege(world, rng)
+    answerLeagueReveal(world)
+    if (world.college!.years.length === 1) resumeFromCollege(world, rng)
     expect(world.college!.years, 'answered, the same press works').toHaveLength(2)
   })
 })
@@ -343,15 +412,21 @@ describe('the guards: ended stays ended, and the early return respects the pause
     const { world, rng } = openedAtCollege('cb-early-return', 6, 15)
     // Year 1 pauses on her birthday; a career with a banked year behind it is the precondition the
     // engine already checks, so spend year 1 first, then pause year 2.
-    resumeFromCollege(world, rng) // pause in year 1
+    // ⚠ ROUND 26 #6 re-aim: a year now holds TWO mid-year stops, so «spend a year» is a walk rather
+    // than a fixed number of presses. `pressToBirthday` answers the championship on the way and
+    // throws if it never reaches the cake, so the precondition cannot go quietly wrong.
+    pressToBirthday(world, rng) // pause in year 1
     answerBirthday(world)
     resumeFromCollege(world, rng) // year 1 banks
-    resumeFromCollege(world, rng) // pause in year 2
+    answerLeagueReveal(world)
+    pressToBirthday(world, rng) // pause in year 2
     expect(world.college!.pendingYearStart, 'year 2 is mid-flight').not.toBeNull()
     answerBirthday(world)
     expect(() => endCollegeEarly(world), 'mid-year the door is shut, with the reason').toThrow(/still running/)
     expect(toSnapshot(world).ending?.college?.yearInProgress, 'and the screen is told to stand its button down').toBe(true)
     resumeFromCollege(world, rng) // year 2 banks – a boundary again
+    answerLeagueReveal(world)
+    if ((world.college!.pendingYearStart ?? null) !== null) resumeFromCollege(world, rng)
     expect(world.college!.pendingYearStart ?? null).toBeNull()
     expect(() => endCollegeEarly(world), 'at the boundary the early return works as it always did').not.toThrow()
     expect(world.ending, 'she is back on tour').toBeNull()
@@ -405,5 +480,249 @@ describe('a v56 save migrated mid-college is not retro-asked and not retro-bille
     expect(collegeRows, 'one row, the present week\'s – no retro-offers behind it').toHaveLength(1)
     expect(collegeRows[0].week).toBe(migrated.week)
     expect(pendingBirthday(migrated), 'and the question is spent').toBeNull()
+  })
+})
+
+// =================================================================================================
+// ⭐⭐⭐ ROUND 26 #4 – THE WISH AND THE GIFT BESIDE IT, AT HER STATE AND ON HIS WALLET
+// =================================================================================================
+//
+// The owner, 24.08, on `tennis-sim_alice-cfbv_w502.tsave` – Alice, 20, Year 2 of 4 on a scholarship:
+//
+//   «Очень странное пожелание на день рождения "She was looking fares home at two in the morning"
+//    для студентки с кошельком 500к+ с предложением подарить велосипед.»
+//
+// TWO CLAIMS IN ONE LINE, and they turn out to be different findings:
+//
+//   THE WISH was a real defect. $584,375 in the family wallet and $59,220 in her own account, and
+//   the line assumes a family that cannot face the fare. `world/means.ts` licenses it now.
+//
+//   THE BICYCLE WAS NOT. The row he saw is `campusbike` – "A bicycle for getting about there",
+//   fifteen minutes between buildings – which is the COLLEGE band's own row and correct for a girl
+//   of twenty in a hall of residence. The child's `bicycle` (band 0-14, "for the road to school")
+//   is unreachable at her age and residence, and the assertion below is what proves it rather than
+//   asserts it: R2-18's band really is being picked on a walked career.
+//
+// ⚠ RENDERED, NOT READ OFF THE CATALOGUE. Every string below comes out of
+// `toSnapshot(world).birthdayPrompt`, which is the object BirthdayDialog prints.
+describe('ROUND 26 #4 – a college wish may not assume a wallet she has not got', () => {
+  const FARES = 'She has been looking up fares home at two in the morning and booking none.'
+  const NO_FARES = 'The journey home is four hundred miles and she has never once asked us to book it.'
+  /** ⭐ ROUND 26 #4, SECOND PASS – the bicycle's own wish, and the one it replaced. Both are literals
+   *  on purpose: the second exists so the assertions can tell them apart. */
+  const BIKE_ASK = 'Everyone there has a bicycle. She walks, and she has mentioned it twice.'
+  const OLD_BIKE_ASK = 'She has counted the minutes she spends walking between buildings. It is a lot.'
+
+  /** Every college birthday of one career, rendered, with the household wallet forced on the day. */
+  function collegeBirthdays(seed: string, walletCents: number, kidCents: number) {
+    const { world, rng } = openedAtCollege(seed, 6, 15)
+    const prompts: Array<{ age: number; ask: string; ids: string[]; labels: string[] }> = []
+    for (let guard = 0; guard < 24 && world.ending?.type === 'college'; guard++) {
+      resumeFromCollege(world, rng)
+      // ⚠ ADDED AT THE ROUND-26 COLLECT: this walk was written on a branch where the year paused
+      // only for the cake. Another branch of the SAME round taught it to pause for the championship
+      // too, and a walk answering one pause but not the other stalls on the first league week - it
+      // read 0 college birthdays where four happen. The helper is B's; the call is the merge.
+      answerLeagueReveal(world)
+      if (pendingBirthday(world) === null) continue
+      // ⚠ SET ON THE BIRTHDAY WEEK ITSELF, both purses, because the claim is about what the
+      // household has ON THE DAY and four college years of base costs move it.
+      world.fundsCents = walletCents
+      world.kidFundsCents = kidCents
+      const prompt = toSnapshot(world).birthdayPrompt!
+      prompts.push({
+        age: prompt.age,
+        ask: prompt.ask,
+        ids: prompt.options.map((o) => o.id),
+        labels: prompt.options.map((o) => o.label),
+      })
+      answerBirthday(world)
+    }
+    return prompts
+  }
+
+  it('⭐⭐ ON HIS OWN NUMBERS: no college birthday tells him she was pricing tickets she could not buy', () => {
+    // His save, to the cent: $584,375 in the family wallet, $59,220 in hers.
+    const seen: string[] = []
+    for (const seed of ['means-college-a', 'means-college-b', 'means-college-c']) {
+      const prompts = collegeBirthdays(seed, 584_375_00, 59_220_00)
+      expect(prompts.length, `${seed}: the four college birthdays really happened`).toBe(4)
+      for (const p of prompts) seen.push(p.ask)
+    }
+    expect(seen.length, 'twelve rendered college birthdays').toBe(12)
+    expect(seen, 'the hardship wish reached a family with half a million').not.toContain(FARES)
+  })
+
+  it('⭐⭐ ...and the arm is live: the same wish, the same walk, on a family that really is counting', () => {
+    // ⚠ THE OTHER HALF, AND WITHOUT IT THE TEST ABOVE PROVES NOTHING – an ask that never renders at
+    // all would pass it. Same seeds, same weeks, one number different.
+    const seen: string[] = []
+    for (const seed of ['means-college-a', 'means-college-b', 'means-college-c']) {
+      for (const p of collegeBirthdays(seed, 1_200_00, 0)) seen.push(p.ask)
+    }
+    expect(seen, 'the hardship wish is unreachable even where it is true').toContain(FARES)
+    expect(seen, 'the licensed family got the wealthy wording').not.toContain(NO_FARES)
+  })
+
+  it('⭐ THE GIFT BESIDE THE WISH: the bicycle on her screen is the campus one, at every college birthday', () => {
+    // R2-18's band, verified on a WALKED career rather than on `birthdayOffer(seed, age, [], true)`.
+    // The child's row is "A bicycle" / "For the road to school, and nothing to do with any of this";
+    // hers is "A bicycle for getting about there" / fifteen minutes between buildings.
+    //
+    // ⚠ THE FIXTURE FORCES THE FORK EARLY (see `openedAtCollege` – sixty lived weeks, then the
+    // question), so these birthdays land at fifteen to nineteen rather than at his twenty. That
+    // makes the claim STRONGER rather than weaker: R2-18's rule is that RESIDENCE outranks the age,
+    // and at sixteen the age band would have offered a frame, driving lessons and a winter coat. The
+    // age is recorded in the message so a reader can see which band was overruled. His own age is
+    // covered by the walked-to-the-real-fork case below.
+    const collegeIds = new Set(BIRTHDAY_COLLEGE_BAND.gifts.map((g) => g.id))
+    for (const seed of ['means-college-a', 'means-college-b']) {
+      for (const p of collegeBirthdays(seed, 584_375_00, 59_220_00)) {
+        expect(p.ids, `age ${p.age}: the child's bicycle reached a student`).not.toContain('bicycle')
+        for (const id of p.ids) {
+          if (id === BIRTHDAY_DAY_TOGETHER.id) continue
+          expect(collegeIds.has(id), `"${id}" is not a college-band gift`).toBe(true)
+        }
+        if (p.ids.includes('campusbike')) {
+          expect(p.labels[p.ids.indexOf('campusbike')]).toBe('A bicycle for getting about there')
+        }
+      }
+    }
+  })
+
+  it('⭐⭐⭐ HIS CASE, WALKED TO THE REAL FORK: twenty, Year 2 of 4, $584,375 – and the wish reads true', () => {
+    // ⚠ THE FIXTURE ABOVE IS FAST AND SYNTHETIC; THIS ONE IS HIS. The fork is not hand-set – she is
+    // ticked to it, so it is asked when school ends and the September departure lands where the
+    // calendar puts it, which is what makes her twenty in Year 2 exactly as his save is.
+    const world = createWorld('his-case', { ...DEFAULT_PROFILE, birthMonth: 6, birthDay: 15, coachTier: 'self' })
+    const rng = resumeMain(world.rngMain)
+    world.fundsCents = 584_375_00
+    world.kidFundsCents = 59_220_00
+    for (let i = 0; i < 320 && world.fork === null; i++) {
+      tickWeek(world, rng)
+      finishAnyReveal(world)
+      if (pendingKnock(world)) decideKnock(world, 'rest')
+      if (pendingBirthday(world) !== null) answerBirthday(world)
+    }
+    expect(world.fork, 'the fork was asked by the calendar, not by the fixture').not.toBeNull()
+    answerFork(world, 'college')
+    for (let i = 0; i < WEEKS_PER_YEAR + 2 && world.ending === null; i++) {
+      tickWeek(world, rng)
+      finishAnyReveal(world)
+      if (pendingKnock(world)) decideKnock(world, 'rest')
+      if (world.ending === null && pendingBirthday(world) !== null) answerBirthday(world)
+    }
+    expect(world.ending?.type, 'she really departed').toBe('college')
+    if (pendingBirthday(world) !== null) answerBirthday(world)
+
+    const rendered: Array<{ year: number; age: number; ask: string; ids: string[] }> = []
+    for (let guard = 0; guard < 24 && world.ending?.type === 'college'; guard++) {
+      resumeFromCollege(world, rng)
+      // ⚠ ADDED AT THE ROUND-26 COLLECT: this walk was written on a branch where the year paused
+      // only for the cake. Another branch of the SAME round taught it to pause for the championship
+      // too, and a walk answering one pause but not the other stalls on the first league week - it
+      // read 0 college birthdays where four happen. The helper is B's; the call is the merge.
+      answerLeagueReveal(world)
+      if (pendingBirthday(world) === null) continue
+      world.fundsCents = 584_375_00
+      world.kidFundsCents = 59_220_00
+      const prompt = toSnapshot(world).birthdayPrompt!
+      rendered.push({
+        year: world.college!.years.length,
+        age: prompt.age,
+        ask: prompt.ask,
+        ids: prompt.options.map((o) => o.id),
+      })
+      answerBirthday(world)
+    }
+    expect(rendered.length, 'four college birthdays').toBe(4)
+    // HIS BIRTHDAY: Year 2 of 4. The ages are the calendar's, printed so the record is legible.
+    const his = rendered[1]
+    expect(his.age, `the four college birthdays landed at ${rendered.map((r) => r.age).join(', ')}`)
+      .toBeGreaterThanOrEqual(19)
+    expect(his.ask, 'the fares line survived on a family with $643,595').not.toBe(FARES)
+    // ...and not one of the four birthdays carries it, at any of her years
+    expect(rendered.map((r) => r.ask)).not.toContain(FARES)
+    // ...and the bicycle she is offered, where she is offered one, is the campus bicycle
+    for (const r of rendered) expect(r.ids, `year ${r.year}, age ${r.age}`).not.toContain('bicycle')
+  })
+
+  // ===============================================================================================
+  // ⭐⭐⭐⭐ ROUND 26 #4, SECOND PASS – THE WISH BESIDE THE BICYCLE IS ABOUT THE BICYCLE
+  // ===============================================================================================
+  //
+  // The owner, correcting the first pass:
+  //
+  //   «надо переписать значит саму фразу для велосипеда для соответствия ее пожеланиям и достаток
+  //    здесь вообще не при чем. У меня нет проблем с велосипедом, может быть это должна быть как раз
+  //    просьба на первый ДР во время учебы вообще.»
+  //
+  // ⚠⚠ WHAT THE FIRST PASS GOT WRONG, AND IT WAS NOT THE MEANS LICENCE. He read a dialog whose ask
+  // was `flighthome`'s fares line with the bicycle sitting in the options, and read the two as a
+  // PAIR – a girl who cannot afford a train ticket, offered a bike. The licence fixed the half that
+  // was visible (a hardship sentence printed over a $584,375 wallet, which the cases above still
+  // hold) and left the half he was pointing at: **the bicycle had no wish of its own.** Its ask
+  // hooked on "minutes" and never said the word.
+  //
+  // ⚠ SO THE FIX IS COPY AND PLACEMENT, AND THE MEANS PREDICATE IS NOT INVOLVED. «достаток здесь
+  // вообще не при чем»: this row carries no `means` and must not grow one. The last case in this
+  // block is that stated mechanically over the whole catalogue.
+  it('⭐⭐⭐⭐ her FIRST college birthday asks for the bicycle, in the bicycle\'s own words', () => {
+    for (const seed of ['means-college-a', 'means-college-b', 'means-college-c']) {
+      const prompts = collegeBirthdays(seed, 584_375_00, 59_220_00)
+      expect(prompts.length, `${seed}: four college birthdays`).toBe(4)
+      const first = prompts[0]
+      expect(first.ids, `${seed}: and the bicycle is one of the four she can be given`).toContain('campusbike')
+      expect(first.ask, `${seed}: the wish is the bicycle's`).toBe(BIKE_ASK)
+      // ⚠ AND IT IS ABOUT THE BICYCLE, WHICH IS THE WHOLE INSTRUCTION. The old line never said the
+      // word; a rewrite that stayed about walking would pass an equality check on a new literal and
+      // still be the sentence he objected to.
+      expect(first.ask.toLowerCase(), `${seed}: it names the thing`).toContain('bicycle')
+      expect(first.ask, `${seed}: and it is not the line it replaces`).not.toBe(OLD_BIKE_ASK)
+    }
+  })
+
+  it('⭐⭐⭐ the wallet does not touch it – the same first wish at $1,200 and at $643,595', () => {
+    // ⚠⚠ «достаток здесь вообще не при чем», as a measurement. The two arms differ by a factor of
+    // five hundred and the sentence is identical, which is what "this row makes no money claim"
+    // means when a means licence exists one row along and really does move `flighthome`'s words.
+    for (const seed of ['means-college-a', 'means-college-b']) {
+      const rich = collegeBirthdays(seed, 584_375_00, 59_220_00)[0]
+      const poor = collegeBirthdays(seed, 1_200_00, 0)[0]
+      expect(poor.ask, `${seed}: the bicycle wish is means-blind`).toBe(rich.ask)
+      expect(poor.ask).toBe(BIKE_ASK)
+    }
+  })
+
+  it('⚠ and the four college birthdays are still four DIFFERENT dialogs', () => {
+    // ⚠ ROUND 26 #9b's CLAIM, RE-MEASURED AFTER THE WALK WAS RE-INDEXED. Pinning the bicycle to the
+    // first birthday meant rotating the college cycle so entry 0 carries it and walking by COLLEGE
+    // BIRTHDAY instead of by her age – a rotation of a four-cycle is still a four-cycle, and this is
+    // that argument checked rather than asserted.
+    for (const seed of ['means-college-a', 'means-college-b', 'means-college-c']) {
+      const prompts = collegeBirthdays(seed, 584_375_00, 59_220_00)
+      const dialogs = prompts.map((p) => [...p.ids].sort().join('|'))
+      expect(new Set(dialogs).size, `${seed}: ${dialogs.join('  ·  ')}`).toBe(4)
+      // ...and no two CONSECUTIVE ones are the same, which is the figure the round reports as 0%.
+      for (let i = 1; i < dialogs.length; i++) {
+        expect(dialogs[i], `${seed}: birthday ${i + 1} repeats birthday ${i}`).not.toBe(dialogs[i - 1])
+      }
+    }
+  })
+
+  it('⚠⚠ the means predicate still carries the rows that DO claim hardship, and not this one', () => {
+    // ⚠ «достаток здесь вообще не при чем» is about ONE row. The licence stays where it was earned:
+    // `flighthome` and `books` really do make a money claim in their default words and really do
+    // carry an alternative for a family the claim is false of. A pass that deleted the machinery
+    // would have thrown that away with it.
+    const byId = new Map(BIRTHDAY_COLLEGE_BAND.gifts.map((g) => [g.id, g]))
+    expect(byId.get('flighthome')?.means, 'the fares line is still licensed').toBe('hardship')
+    expect(byId.get('books')?.means, 'and so is the reading list').toBe('hardship')
+    expect(byId.get('flighthome')?.unlicensed?.ask, 'with the sentence for when it does not hold').toBeTruthy()
+    expect(byId.get('books')?.unlicensed?.ask).toBeTruthy()
+    // ...and the bicycle makes no claim about money at all, in any of its four strings.
+    const bike = byId.get('campusbike')!
+    expect(bike.means, 'the bicycle asks nothing about the wallet').toBeUndefined()
+    expect(bike.unlicensed, 'so it needs no second wording').toBeUndefined()
   })
 })

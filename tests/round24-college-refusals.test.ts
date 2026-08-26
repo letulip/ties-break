@@ -25,6 +25,8 @@
 // report in silence. Same precedent as `RELEASE_LINE_PREFIX` and `COLLEGE_REVEAL_REFUSAL`.
 import { describe, it, expect } from 'vitest'
 import {
+  skipTournament,
+  collegeLeagueRevealOpen,
   CAREER_ENDED_REFUSAL,
   COLLEGE_FREEZE_REFUSAL,
   acceptOffer,
@@ -62,6 +64,20 @@ import {
 } from '../src/engine/world'
 import { resumeMain, type Rng } from '../src/engine/rng'
 import { DEFAULT_PROFILE, type CareerEndingType } from '../src/shared/protocol'
+
+/** ⭐⭐⭐ ROUND 26 #6 RE-AIM – THE PRESS THAT ANSWERS THE CHAMPIONSHIP. `resumeFromCollege` now
+ *  PAUSES on the College League week the way it pauses on her birthday, because the owner's
+ *  complaint was that the year reported the tournament and ticked on past it. So every walk here
+ *  answers the reveal the way the player does – «Skip all rounds», then the finale's «Continue» –
+ *  which is `skipTournament` + `closeTournament` dispatched at the college reveal. Nothing this
+ *  suite MEASURES moved: the same birthdays, the same pauses, the same banked years.
+ *  The full note is in tests/college-league.test.ts. */
+function answerLeagueReveal(world: WorldState): void {
+  if (!collegeLeagueRevealOpen(world)) return
+  skipTournament(world)
+  closeTournament(world)
+}
+
 
 // =================================================================================================
 // The walked career – the same shape tests/college-freeze.test.ts uses, for the same reason
@@ -113,6 +129,7 @@ function careerAtCollege(seed: string): { world: WorldState; rng: Rng } {
   }
   for (let press = 0; press < 4 && world.college!.years.length === 0; press++) {
     resumeFromCollege(world, rng)
+    answerLeagueReveal(world)
     if (pendingBirthday(world) !== null) chooseGift(world, 'day')
   }
   expect(world.ending?.type, 'the latch is back on with the next year under it').toBe('college')
@@ -165,6 +182,7 @@ function careerAtCollegeWithBookings(seed: string): { world: WorldState; vacWeek
   // ⚠ Press-answer-press, exactly as `careerAtCollege` above – the year pauses for her birthday now.
   for (let press = 0; press < 4 && world.college!.years.length === 0; press++) {
     resumeFromCollege(world, rng)
+    answerLeagueReveal(world)
     if (pendingBirthday(world) !== null) chooseGift(world, 'day')
   }
   expect(world.ending?.type).toBe('college')
@@ -283,6 +301,7 @@ describe('the family may take back a booking it made before the fork', () => {
     // booked court – the whole year has to be spent for the trap to be provably real.
     for (let press = 0; press < 4 && world.college!.years.length === 0; press++) {
       resumeFromCollege(world, rng)
+      answerLeagueReveal(world)
       if (pendingBirthday(world) !== null) chooseGift(world, 'day')
     }
 

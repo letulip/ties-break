@@ -53,6 +53,10 @@ import { inCollege } from './college'
 // see the cycle note at the top of world/birthdayGift.ts. They used to sit in shared/protocol.
 import { BIRTHDAY_DAY_NOUN } from './birthdayGift'
 import type { BirthdayGift } from './birthdayGift'
+// ⭐⭐ ROUND 26 #4: the wish is licensed by the family's MEANS, the same shape R2-18 gave the life
+// stage – one named predicate a copy table asks for, not a wealth test re-derived per surface.
+import { familyMeans } from './means'
+import type { FamilyMeans } from './means'
 import type { BirthdayOption, BirthdayPrompt, BirthdayRecord } from '../../shared/protocol'
 import type { WorldState } from '../world'
 
@@ -133,6 +137,89 @@ interface Band {
   to: number
   gifts: BirthdayGift[]
 }
+
+/** ⭐⭐ THE PEAK BAND'S GIFTS, DECLARED ONCE AND USED BY TWO BANDS – 22-28 offers exactly these and
+ *  29-99 offers the album ALONGSIDE them, which is §5.2's licensed repeat and was always the design
+ *  (see the note on the late-career band). It was two hand-kept copies of the same four objects
+ *  until round 26 asked both of them to grow: `neverbuy` needed a means claim and the band needed
+ *  two more rows, and every one of those edits had to be made twice or the two bands drift. Nothing
+ *  mutates a gift, so sharing the objects is safe; `shuffled` copies the array before touching it.
+ *
+ *  ⚠ THE LATE BAND STILL OWNS ITS OWN LIST – it is `[album, ...PEAK_GIFTS]` rather than a flag,
+ *  because "the album is chosen alongside things she has been given before" is a statement about
+ *  THAT band and should be readable where that band is declared. */
+const PEAK_GIFTS: BirthdayGift[] = [
+  {
+    // ⚠ THE OTHER HALF OF THE DAY/WEEK PAIR (round-18 #10b). It is a WEEK and it says so three
+    // times over, because the row it has to be told apart from is a DAY.
+    id: 'familyweek',
+    label: 'A week with the family, between seasons',
+    note: 'Seven mornings in a row, no courts, no flights, nobody else in the house.',
+    again: 'We had one of these last time, and she has asked for the same again.',
+    repeat: 'repeatable',
+    ask: 'Between the seasons she wants a week at home. Not a day, not a trip – one whole week, all of us, nothing booked.',
+    short: 'the week at home',
+  },
+  {
+    // ⭐ ROUND-18 #10a. The old ask was "something with nothing to do with tennis. Anything." –
+    // which the week at home two rows down answers just as well, and which shares not one
+    // distinctive word with this row. The hook is hers now: the box, and what is in it.
+    id: 'jewellery',
+    label: 'Jewellery',
+    note: 'Small, and in a box. The only things she owns that shine, she had to win.',
+    again: 'We gave her one for that box before. This would go beside it.',
+    repeat: 'repeatable',
+    ask: 'She has been talking about the box on her shelf, and how everything in it that shines, she won.',
+    short: 'the jewellery',
+  },
+  {
+    // ⭐ THE PAIR THE OWNER QUOTED, round-18 #10a: «Что-то вроде "чего бы она себе никогда не
+    // купила" и ответ в таком же духе.» The ask WAS the label, rearranged. The concept survives
+    // in the note – she has the money and will not spend it on herself – but the row now names
+    // the thing, and the ask is the scene that points at it.
+    id: 'neverbuy',
+    label: 'The painting from the gallery window',
+    // ⭐ ROUND 26 #4, THE CLAIM POINTING THE OTHER WAY. «She has the money for it» is the whole
+    // concept of this row (round-18 #10a) and it is FALSE of a career that never earned – the
+    // girl who washed out at twenty-three, the family eight weeks under water. The want survives
+    // the swap because the want was never about the money: she has been looking at it for years.
+    means: 'plenty',
+    note: 'She has the money for it, she has had it for years, and she will not.',
+    again: 'One of them is on her wall from us already. This would be the second.',
+    repeat: 'durable',
+    ask: 'She sent us a photograph of a gallery window at midnight, and then said it was ridiculous.',
+    // ⚠ THE NOTE AND NOT THE ASK. The ask is a SCENE ("a photograph of a gallery window at
+    // midnight") and asserts nothing about a balance, so it stands at every wealth; the money
+    // claim is entirely in the line under the button, and that is the only line that moves.
+    unlicensed: { note: 'She has stood at that window for years and never once asked what it costs.' },
+    short: 'the painting',
+  },
+  // ⭐⭐ ROUND 26 #9b – THE TWO ROWS THAT MAKE THIS BAND MORE THAN ONE DIALOG. Measured before the
+  // change: a career spends SEVEN birthdays in 22-28 and the band held exactly three material
+  // gifts, so C(3,3) = 1 – the identical four rows, seven years running, and then the late band
+  // re-offered the same three, which is where the measured run of EIGHT came from. Five gifts give
+  // C(5,3) = 10 and the late band C(6,3) = 20, both comfortably past the number of birthdays she
+  // spends there. They are gifts for a woman at the top of a career who is never in one place,
+  // which is what §1 says this band is about.
+  {
+    id: 'dog',
+    label: 'A dog, and we keep it while she is away',
+    note: 'She has wanted one since she was small and has not slept in the same city twice.',
+    again: 'There is a dog from us already, asleep on our sofa.',
+    repeat: 'durable',
+    ask: 'Every video she sends us has somebody else\'s dog in it, and she never mentions it.',
+    short: 'the dog',
+  },
+  {
+    id: 'oldclub',
+    label: 'The court at her first club, resurfaced',
+    note: 'Where she learned. The lines have not been repainted since she left.',
+    again: 'One court there is ours already. This would be the second, and the fence.',
+    repeat: 'durable',
+    ask: 'She drove past her first club in the spring and talked about the lines for an hour.',
+    short: 'the club court',
+  },
+]
 
 const BANDS: Band[] = [
   // --- 14 – she is still a child, and the gift should know it ------------------------------------
@@ -412,59 +499,46 @@ const BANDS: Band[] = [
         ask: 'What she eats off is still a box with a cloth over it. A kitchen table has become urgent.',
         short: 'the kitchen table',
       },
+      // ⭐⭐ ROUND 26 #9b – TWO ROWS ADDED, AND THE COUNT IS THE POINT. This band held exactly three
+      // material gifts and a dialog shows three, so C(3,3) = ONE possible dialog: a career spends
+      // THREE birthdays here and was offered the identical deposit / car / kitchen table on every
+      // one of them. Five gifts make C(5,3) = 10, which is more than she has birthdays in the band,
+      // so the walk below can hand her three different dialogs and never repeat. See `birthdayOffer`.
+      {
+        id: 'languages',
+        label: 'Lessons in the language she keeps apologising for',
+        note: 'Four seasons of press rooms, and she answers in English every time.',
+        again: 'She has had lessons from us already. This would be the language after it.',
+        repeat: 'durable',
+        ask: 'She has started apologising in three languages and finishing in none of them.',
+        short: 'the language lessons',
+      },
+      {
+        id: 'storage',
+        label: 'A storage unit for the boxes in our garage',
+        note: 'Sixteen years of her is stacked in there, and none of it fits where she lives now.',
+        again: 'There is a unit from us already, and it is full. This would be the bigger one.',
+        repeat: 'durable',
+        ask: 'She came to fetch her boxes, looked at how many there were, and took two.',
+        short: 'the storage unit',
+      },
     ],
   },
   // --- 22 to 28 – the peak, where things matter less ---------------------------------------------
   //
-  // ⚠ EVERY ONE OF THIS BAND'S THREE FAILED ROUND-18 #10, which is why the owner met all three
-  // defects in one dialog: the band has exactly three material gifts, so all four rows are on screen
-  // every single year from twenty-two on and nothing hides a bad pairing.
+  // ⚠ EVERY ONE OF THIS BAND'S ORIGINAL THREE FAILED ROUND-18 #10, which is why the owner met all
+  // three defects in one dialog: the band held exactly three material gifts, so all four rows were
+  // on screen every single year from twenty-two on and nothing hid a bad pairing. ROUND 26 #9b made
+  // that same arithmetic the defect in its own right – see PEAK_GIFTS, which is now five.
   {
     from: 22,
     to: 28,
-    gifts: [
-      {
-        // ⚠ THE OTHER HALF OF THE DAY/WEEK PAIR (round-18 #10b). It is a WEEK and it says so three
-        // times over, because the row it has to be told apart from is a DAY.
-        id: 'familyweek',
-        label: 'A week with the family, between seasons',
-        note: 'Seven mornings in a row, no courts, no flights, nobody else in the house.',
-        again: 'We had one of these last time, and she has asked for the same again.',
-        repeat: 'repeatable',
-        ask: 'Between the seasons she wants a week at home. Not a day, not a trip – one whole week, all of us, nothing booked.',
-        short: 'the week at home',
-      },
-      {
-        // ⭐ ROUND-18 #10a. The old ask was "something with nothing to do with tennis. Anything." –
-        // which the week at home two rows down answers just as well, and which shares not one
-        // distinctive word with this row. The hook is hers now: the box, and what is in it.
-        id: 'jewellery',
-        label: 'Jewellery',
-        note: 'Small, and in a box. The only things she owns that shine, she had to win.',
-        again: 'We gave her one for that box before. This would go beside it.',
-        repeat: 'repeatable',
-        ask: 'She has been talking about the box on her shelf, and how everything in it that shines, she won.',
-        short: 'the jewellery',
-      },
-      {
-        // ⭐ THE PAIR THE OWNER QUOTED, round-18 #10a: «Что-то вроде "чего бы она себе никогда не
-        // купила" и ответ в таком же духе.» The ask WAS the label, rearranged. The concept survives
-        // in the note – she has the money and will not spend it on herself – but the row now names
-        // the thing, and the ask is the scene that points at it.
-        id: 'neverbuy',
-        label: 'The painting from the gallery window',
-        note: 'She has the money for it, she has had it for years, and she will not.',
-        again: 'One of them is on her wall from us already. This would be the second.',
-        repeat: 'durable',
-        ask: 'She sent us a photograph of a gallery window at midnight, and then said it was ridiculous.',
-        short: 'the painting',
-      },
-    ],
+    gifts: PEAK_GIFTS,
   },
   // --- 29 and after – the late career ------------------------------------------------------------
   //
   // ⚠ FOUR OPTIONS ARE REQUIRED (spec §2a) AND ONE GIFT CANNOT MAKE FOUR. §1 names only the album for
-  // this band, so the peak band's three come with it – which is §5.2's licensed repeat rather than an
+  // this band, so the peak band's gifts come with it – which is §5.2's licensed repeat rather than an
   // invention, and it means the album is chosen ALONGSIDE things she has been given before.
   {
     from: 29,
@@ -482,33 +556,7 @@ const BANDS: Band[] = [
         ask: 'Did anybody keep the photographs and old draw sheets? She thinks not. The album would prove her wrong.',
         short: 'the album',
       },
-      {
-        id: 'familyweek',
-        label: 'A week with the family, between seasons',
-        note: 'Seven mornings in a row, no courts, no flights, nobody else in the house.',
-        again: 'We had one of these last time, and she has asked for the same again.',
-        repeat: 'repeatable',
-        ask: 'Between the seasons she wants a week at home. Not a day, not a trip – one whole week, all of us, nothing booked.',
-        short: 'the week at home',
-      },
-      {
-        id: 'jewellery',
-        label: 'Jewellery',
-        note: 'Small, and in a box. The only things she owns that shine, she had to win.',
-        again: 'We gave her one for that box before. This would go beside it.',
-        repeat: 'repeatable',
-        ask: 'She has been talking about the box on her shelf, and how everything in it that shines, she won.',
-        short: 'the jewellery',
-      },
-      {
-        id: 'neverbuy',
-        label: 'The painting from the gallery window',
-        note: 'She has the money for it, she has had it for years, and she will not.',
-        again: 'One of them is on her wall from us already. This would be the second.',
-        repeat: 'durable',
-        ask: 'She sent us a photograph of a gallery window at midnight, and then said it was ridiculous.',
-        short: 'the painting',
-      },
+      ...PEAK_GIFTS,
     ],
   },
 ]
@@ -567,7 +615,19 @@ const COLLEGE_BAND: Band = {
       note: 'Booked open. She picks the date and we do not see the fare.',
       repeat: 'repeatable',
       again: 'She had one of these from us before, and used every leg of it.',
+      // ⭐⭐ ROUND 26 #4 – THIS IS THE LINE HE READ, AND IT IS A GOOD LINE FOR THE WRONG FAMILY. See
+      // `means` on BirthdayGift and `world/means.ts`: a girl who checks fares at two in the morning
+      // and books none is counting money, and his family was not – $584,375 in the war chest and
+      // $59,220 in her own account. The row stays; only the sentence above the buttons moves.
+      means: 'hardship',
       ask: 'She has been looking up fares home at two in the morning and booking none.',
+      unlicensed: {
+        // ⚠ THE SAME WANT, WITH THE MONEY TAKEN OUT OF IT. What is true of every family is the
+        // DISTANCE and the fact that she will not ask – which was always the better half of the
+        // scene anyway. It keeps the row's hooks ("journey", "home") so the reading game §2ab is
+        // built on survives the swap; `tests/birthday-ask.test.ts` checks that on both wordings.
+        ask: 'The journey home is four hundred miles and she has never once asked us to book it.',
+      },
       short: 'the journey home',
     },
     {
@@ -576,7 +636,12 @@ const COLLEGE_BAND: Band = {
       note: 'Nobody there buys the whole list. She would read every page of it.',
       again: 'We bought her a list once already. This would be the next year of it.',
       repeat: 'durable',
+      // ⭐ ROUND 26 #4, THE SAME DEFECT ONE ROW DOWN – reading the prices before the titles is a
+      // sentence about a budget, and the round found it by sweeping the catalogue for declared
+      // claims rather than by waiting for him to read it too.
+      means: 'hardship',
       ask: 'Her reading list came with prices beside it, and she read the prices first.',
+      unlicensed: { ask: 'Her reading list is pinned up in order, and she means to read every one of them.' },
       short: 'the books',
     },
     {
@@ -588,7 +653,29 @@ const COLLEGE_BAND: Band = {
       note: 'Everything is fifteen minutes from everything else, and she walks all of it.',
       again: 'There is one from us chained up there already. This would be its replacement.',
       repeat: 'durable',
-      ask: 'She has counted the minutes she spends walking between buildings. It is a lot.',
+      // ⭐⭐⭐⭐ ROUND 26 #4, SECOND PASS – THE WISH BESIDE THE BICYCLE IS ABOUT THE BICYCLE NOW.
+      // The owner, correcting the first pass: «надо переписать значит саму фразу для велосипеда для
+      // соответствия ее пожеланиям и достаток здесь вообще не при чем. У меня нет проблем с
+      // велосипедом.»
+      //
+      // ⚠⚠ WHAT WAS ACTUALLY WRONG, and it was NOT this row's means. He read a dialog whose ask was
+      // `flighthome`'s fares line while the bicycle sat in the options, and read the two as a pair –
+      // a girl who cannot afford a train ticket, offered a bike. The first pass answered the half it
+      // could see (a hardship line printed over a $584,375 wallet) and left the half he was actually
+      // pointing at: **the bicycle had no wish of its own that a player would connect to it.** The
+      // old line – «She has counted the minutes she spends walking between buildings. It is a lot.» –
+      // hooked on "minutes" and never said the word.
+      //
+      // ⚠ SO THE FIX IS COPY AND PLACEMENT, NOT A WEALTH TEST. This row carries no `means` and must
+      // not grow one: «достаток здесь вообще не при чем». Everyone there having a bicycle is true of
+      // a rich family and a poor one, and what she wants is to stop being the one walking.
+      //
+      // ⚠ IT STILL HAS TO HOOK (rule 2, tests/birthday-ask.test.ts): "bicycle" is on this row's label
+      // and on no other row in the band, and "walks" is in this row's note and nowhere else – two
+      // hooks where the old line had one, and both of them are words the player can see on the
+      // button. ⚠ AND IT IS SHORTER than the line it replaces (71 characters against 76), which is
+      // what keeps the prompt inside the phone the round-20 rule measures.
+      ask: 'Everyone there has a bicycle. She walks, and she has mentioned it twice.',
       short: 'the bicycle',
     },
   ],
@@ -597,6 +684,22 @@ const COLLEGE_BAND: Band = {
 /** How many of the band's gifts are offered beside `DAY_TOGETHER`. Four rows in a column, one of
  *  which is always the day (owner, 11.08: «в колонку ставь, там хватит места»). */
 const MATERIAL_OPTIONS = 3
+
+/** ⭐⭐⭐ ROUND 26 #4, SECOND PASS – THE ROW HER FIRST COLLEGE BIRTHDAY ASKS FOR. The owner: «может
+ *  быть это должна быть как раз просьба на первый ДР во время учебы вообще.»
+ *
+ *  ⚠ WHY THE FIRST AND NOT A DRAW. A bicycle is a FRESHER'S problem: the fifteen minutes between
+ *  buildings are a discovery in the first term and solved furniture by the fourth year. The other
+ *  three rows of this band are not like that – the room, the journey home and the reading list are
+ *  true of all four years – so this is the one row the band has that belongs to a particular year,
+ *  and the year it belongs to is the first.
+ *
+ *  ⚠ AND A DETERMINISTIC COLLEGE YEAR IS THE HOUSE'S OWN SHAPE, NOT AN INVENTION. `docs/decisions.md`,
+ *  19.08, on the college birthday lines: «one line per year and not a random pick, deliberately –
+ *  four college birthdays is the whole of the population, so a pool would repeat within a single
+ *  career.» Four birthdays is a small enough population to place by hand, and this places one of
+ *  them. */
+const FIRST_COLLEGE_ASK_ID = 'campusbike'
 
 /** The band this birthday draws from.
  *
@@ -607,6 +710,144 @@ const MATERIAL_OPTIONS = 3
 function bandFor(age: number, atCollege: boolean): Band {
   if (atCollege) return COLLEGE_BAND
   return BANDS.find((b) => age >= b.from && age <= b.to) ?? BANDS[BANDS.length - 1]
+}
+
+/** A band's stable name, and the key of its own sub-stream. The college band spans 0-99 and would
+ *  otherwise collide with the childhood band, which is the same trap `birthdayOffer`'s `atCollege`
+ *  flag was added for. */
+function bandKey(band: Band): string {
+  return band === COLLEGE_BAND ? 'college' : `${band.from}-${band.to}`
+}
+
+/** Every `k`-sized COMBINATION of a band's gifts, in a fixed order – the whole population of dialogs
+ *  that band can ever print. Combinations and not permutations: which three rows are on screen is
+ *  what this decides, and the order they appear in is shuffled afterwards (spec §5.4). */
+function subsetsOf(gifts: readonly BirthdayGift[], k: number): BirthdayGift[][] {
+  const out: BirthdayGift[][] = []
+  const walk = (start: number, acc: BirthdayGift[]): void => {
+    if (acc.length === k) {
+      out.push(acc.slice())
+      return
+    }
+    for (let i = start; i < gifts.length; i++) {
+      acc.push(gifts[i])
+      walk(i + 1, acc)
+      acc.pop()
+    }
+  }
+  walk(0, [])
+  return out
+}
+
+// =================================================================================================
+// ⭐⭐⭐ ROUND 26 #9b – THE WALK, AND WHY IT IS A WALK AND NOT A DRAW
+// =================================================================================================
+//
+// The owner, 24.08: «Just a day together на день рождения случается подозрительно часто. Сколько у
+// нас вариантов подарков? Неужели мы не можем нагенерить так, чтобы они если и повторялись, то не
+// так часто?»
+//
+// ⚠ HIS IMPRESSION WAS RIGHT AND UNDERSTATED, and the measurement is in tools/birthday-pool.ts. It
+// was not the day that repeated – the day is on every dialog by his own 11.08 ruling – it was the
+// WHOLE DIALOG: over 12 walked careers and 201 birthdays, 53% of consecutive birthdays printed the
+// IDENTICAL four rows and the worst career ran EIGHT in a row. The cause is arithmetic, not luck:
+// `shuffled(band.gifts).slice(0, 3)` samples WITH REPLACEMENT, and four bands held exactly three
+// material gifts, so C(3,3) = 1 – there was only ever one dialog to sample.
+//
+// ⚠⚠ THE HOUSE ALREADY RULED ON THIS EXACT SHAPE AND THE RULING IS FOLLOWED RATHER THAN REINVENTED.
+// Round 24, on the four college birthday lines (docs/decisions.md, 19.08): «one line per year and
+// not a random pick, deliberately: four college birthdays is the whole of the population, so a pool
+// would repeat within a single career.» The same reasoning applies one level up. So the population
+// here is ENUMERATED – every combination of the band's gifts – shuffled ONCE per career per band,
+// and then WALKED by her age. Consecutive birthdays take consecutive entries, which means:
+//
+//   * two birthdays in a row can never print the same four rows while the band has more than one
+//     combination – a no-repeat window of one, structural rather than checked;
+//   * a career sees the band's WHOLE population before anything comes round again;
+//   * and it needs NO PERSISTED STATE, so there is no schema move. The walk is a pure function of
+//     (seed, band, age) exactly as the draw it replaces was a pure function of (seed, age).
+//
+// ⚠ BOTH HALVES WERE NEEDED. The walk alone does nothing for a band with one combination, which is
+// why PEAK_GIFTS and the 19-21 band grew by two rows each. The wider pool alone would have left
+// sampling-with-replacement in place (at C(5,3) = 10 a back-to-back repeat is still 10% a year).
+//
+// ⚠ RNG DISCIPLINE (CLAUDE.md invariant 2). The cycle has its OWN purpose-scoped sub-stream keyed on
+// (seed, band) – MAIN is not reached, so the frozen capture cannot move – and the key deliberately
+// carries no week, no choice and no age: shuffle it per age and consecutive entries would come from
+// different permutations and guarantee nothing. It is drawn once per band per career and persists
+// nothing, the same contract `seed:birthday:<age>` has always had.
+//
+// ⭐⭐⭐ ROUND 26 #4, SECOND PASS – THE COLLEGE CYCLE IS ROTATED SO ENTRY 0 CARRIES THE BICYCLE, and
+// the college walk is indexed by the college BIRTHDAY rather than by her age.
+//
+// Two facts make this a rotation and not a special case. (1) The band holds four gifts and a dialog
+// shows three, so C(4,3) = 4 combinations and **exactly one of them omits the bicycle** – rotating
+// the shuffled cycle left until the first entry contains it costs at most one step and no draw. (2)
+// A rotation of a 4-cycle is still a 4-cycle: her four college birthdays take entries 0, 1, 2, 3 and
+// therefore still see ALL FOUR combinations, which is round 26 #9b's whole claim («her four college
+// birthdays are four DIFFERENT dialogs») preserved rather than traded away.
+//
+// ⚠ THE INDEX HAD TO STOP BEING HER AGE, and that is the load-bearing half. She enrols at 18, 19 or
+// 20 depending on the career, so `age % 4` puts her FIRST college birthday anywhere in the cycle –
+// there is no rotation of a fixed cycle that lands entry 0 on it for every career. The college walk
+// therefore counts college birthdays (`collegeIndex`), which is the same «consecutive birthdays take
+// consecutive entries» contract measured against the thing that actually advances by one.
+//
+// ⚠ A CALLER WITH NO WORLD PASSES NOTHING and falls back to the age, so every catalogue sweep in the
+// tests asks the question it always did. The rotation applies to them too – it is a property of the
+// cycle, not of a career – so what they sweep is the real order.
+function materialFor(seed: string, band: Band, index: number): BirthdayGift[] {
+  const cycle = subsetsOf(band.gifts, MATERIAL_OPTIONS)
+  // Total: a band with fewer gifts than rows has no combination of that size. Every band has at
+  // least three (a sweep in tests/birthday-gifts.test.ts holds that), so this is a crash guard.
+  if (cycle.length === 0) return band.gifts.slice(0, MATERIAL_OPTIONS)
+  const order = shuffled(cycle, rngFromSeed(`${seed}:birthday:cycle:${bandKey(band)}`))
+  if (band === COLLEGE_BAND) {
+    // Total: `at` is -1 only if no combination holds the row, which cannot happen while the band
+    // offers it and more rows than a dialog shows – and a -1 would leave the order untouched rather
+    // than crash.
+    const at = order.findIndex((combo) => combo.some((g) => g.id === FIRST_COLLEGE_ASK_ID))
+    if (at > 0) order.push(...order.splice(0, at))
+  }
+  // The index advances by exactly one per birthday, which is the whole of what it needs. The modulo
+  // is written defensively for a poked save with a negative age.
+  return order[((index % order.length) + order.length) % order.length]
+}
+
+// =================================================================================================
+// ⭐⭐ ROUND 26 #4 – WHICH WORDS THIS ROW IS ALLOWED TO USE, GIVEN WHAT THE FAMILY HAS
+// =================================================================================================
+//
+// ⚠ THE OFFER IS NOT GIVEN THE MEANS AND CANNOT BE. `birthdayOffer` takes (seed, age, alreadyGiven,
+// atCollege) and no wallet, so the catalogue stays ONE LIST FOR EVERY BACKGROUND – the 11.08 ruling
+// that keeps this a gift and not a shop, and the thing that stops the scene becoming a wealth gate
+// by arithmetic. What moves is a sentence, which is the identical discipline `again` is written
+// under: «THE COPY CHANGES, THE OFFER DOES NOT.»
+//
+// ⚠ AND THE ASYMMETRY IS DELIBERATE. A hardship line («she looked up the fares and booked none»)
+// needs the family to be ACTUALLY at the bottom band, because it is the strong claim and it is the
+// one that read as absurd on his save. A plenty line («she has the money for it») is refused only
+// when money is plainly scarce – a mid-career family with $60,000 does have the money for a
+// painting, and stripping the line from them would be a second false sentence in place of the first.
+function meansLicenses(claim: 'hardship' | 'plenty', means: FamilyMeans): boolean {
+  return claim === 'hardship' ? means === 'tight' : means !== 'tight'
+}
+
+/** ⭐ THE THREE STRINGS A ROW PRINTS, after the means licence. `null` means "nobody asked" – every
+ *  catalogue sweep and every existing caller that has no world – and it returns the row as written,
+ *  which is what keeps this change invisible to anything that is not a real dialog. */
+export function birthdayWords(
+  gift: BirthdayGift,
+  means: FamilyMeans | null,
+): { ask: string; note: string; again: string } {
+  const ok = gift.means === undefined || means === null || meansLicenses(gift.means, means)
+  if (ok) return { ask: gift.ask, note: gift.note, again: gift.again }
+  const alt = gift.unlicensed
+  return {
+    ask: alt?.ask ?? gift.ask,
+    note: alt?.note ?? gift.note,
+    again: alt?.again ?? gift.again,
+  }
 }
 
 /** Fisher-Yates on a COPY, off the given stream. Written out rather than sorted-by-random because a
@@ -666,10 +907,23 @@ export function birthdayOffer(
   /** ⭐ R2-18: is she at college this birthday? See `COLLEGE_BAND`. Defaults to false so the
    *  catalogue sweeps in tests, and every existing caller, ask the same question they always did. */
   atCollege = false,
+  /** ⭐⭐⭐ ROUND 26 #4, SECOND PASS – WHICH OF HER FOUR COLLEGE BIRTHDAYS THIS IS, 0-based, or `null`
+   *  for a caller with no world (every catalogue sweep, and every historical call site). It is the
+   *  index the college walk uses instead of her age – see `materialFor` – and 0 is the birthday the
+   *  bicycle is asked for on. ⚠ It is IGNORED off the college band, because there is no such thing as
+   *  a college birthday on the tour. */
+  collegeIndex: number | null = null,
 ): { options: BirthdayGift[]; askedId: string } {
-  const rng = rngFromSeed(`${seed}:birthday:${age}`)
   const band = bandFor(age, atCollege)
-  const material = shuffled(band.gifts, rng).slice(0, MATERIAL_OPTIONS)
+  // ⭐ ROUND 26 #9b – WHICH three, off the band's own cycle stream (see `materialFor`). The band
+  // shuffle that used to stand here drew (n-1) times on the age stream; it does not any more, so
+  // `seed:birthday:<age>` is now drawn exactly FOUR times for every band and every age – three to
+  // order the four rows, one for the ask. The re-aimed count is pinned in tests/birthday-ask.test.ts.
+  // ⚠ ROUND 26 #4 (second pass) CHANGED THE INDEX, NOT THE DRAW COUNT: at college the walk advances
+  // per college birthday rather than per year of her life.
+  const walkIndex = band === COLLEGE_BAND && collegeIndex !== null ? collegeIndex : age
+  const material = materialFor(seed, band, walkIndex)
+  const rng = rngFromSeed(`${seed}:birthday:${age}`)
   const options = shuffled([...material, DAY_TOGETHER], rng)
   // ⚠ THE DAY TOGETHER IS NEVER SPENT. Every other option is a THING she now owns, and asking for it
   // twice is the bug; a day with her parents is not a possession and she may want one every year of
@@ -680,7 +934,25 @@ export function birthdayOffer(
   // Total: a band whose every material gift has been given still has the day, so this is never empty
   // – but the fallback is kept because `canAsk` being empty must print a scene rather than crash.
   const pool = canAsk.length ? canAsk : options
-  return { options, askedId: pool[Math.floor(rng() * pool.length)].id }
+  // ⚠⚠ THE DRAW HAPPENS EITHER WAY, AND THAT IS DELIBERATE. `seed:birthday:<age>` is drawn exactly
+  // four times for every birthday in the game, first-college-birthday included – the identical
+  // reason the `alreadyGiven` filter is applied to the POOL and never to the draw. A branch that
+  // skipped the roll would make the stream's position depend on where in her life she is, and the
+  // count is pinned.
+  const drawn = pool[Math.floor(rng() * pool.length)].id
+  // ⭐⭐⭐ ROUND 26 #4, SECOND PASS – HER FIRST COLLEGE BIRTHDAY ASKS FOR THE BICYCLE. The owner:
+  // «может быть это должна быть как раз просьба на первый ДР во время учебы вообще.»
+  //
+  // ⚠ IT IS AN OVERRIDE OF THE RESULT AND NEVER OF THE TWO PROPERTIES §2ab RESTS ON. The row is in
+  // `pool`, so the ask is still ONE OF THE FOUR ON SCREEN (`materialFor`'s rotation is what makes
+  // that certain) and it is still a row she has not already been given – `pool` is `canAsk`, so a
+  // poked save that somehow holds the bicycle already falls straight through to the drawn ask
+  // instead of asking her for a thing she owns.
+  const first =
+    band === COLLEGE_BAND && collegeIndex === 0
+      ? (pool.find((g) => g.id === FIRST_COLLEGE_ASK_ID)?.id ?? null)
+      : null
+  return { options, askedId: first ?? drawn }
 }
 
 /** What she has already been given, across every birthday on the record – the input to the ask above.
@@ -690,6 +962,45 @@ export function birthdayOffer(
  *  for a birthday nobody was asked about (spec §5.5), and null is not a gift. */
 function giftsAlreadyGiven(world: WorldState): string[] {
   return (world.birthdays ?? []).map((b) => b.given).filter((g): g is string => g !== null)
+}
+
+/** ⭐⭐⭐ WHICH OF HER COLLEGE BIRTHDAYS THIS ONE IS, 0-based – round 26 #4, second pass.
+ *
+ *  ⚠ DERIVED FROM THE RECORD, LIKE `pendingBirthday` ITSELF, AND NEVER A SECOND COUNTER. A field
+ *  would be a save-schema move and, worse, a number that can drift out of step with the rows it is
+ *  supposed to be counting. `world.college.fromWeek` is the week she enrolled and a birthday row
+ *  carries its week, so "how many birthdays have I already recorded since she went" is a fact the
+ *  save already holds.
+ *
+ *  ⚠ AND IT IS READ BEFORE THE ROW FOR THIS BIRTHDAY EXISTS – both callers derive the offer before
+ *  `chooseGift` pushes, which is the same ordering `giftsAlreadyGiven` already depends on. Her first
+ *  college birthday therefore counts 0 rows and answers 0.
+ *
+ *  Null when she is not at college: there is no such thing as a college birthday on the tour, and a
+ *  0 there would be a real index rather than an absence. */
+export function collegeBirthdayIndexOf(world: WorldState): number | null {
+  const from = world.college?.fromWeek
+  if (from === undefined || from === null) return null
+  return (world.birthdays ?? []).filter((b) => b.week >= from).length
+}
+
+/** ⭐⭐ THE ONE PLACE A WORLD IS TURNED INTO THE OFFER'S ARGUMENTS – `buildBirthdayPrompt`,
+ *  `chooseGift` and `tools/birthday-pool.ts` all come through here.
+ *
+ *  ⚠⚠ IT EXISTS BECAUSE THE DERIVATION HAD THREE COPIES AND ROUND 26 #4 WAS ABOUT TO MAKE IT FOUR
+ *  ARGUMENTS LONG. `chooseGift`'s own note already says why they must agree – it re-derives the offer
+ *  to validate the answer (invariant 1: the worker is not the gate), so a dialog built from one
+ *  reading and a validation run against another would reject every option the player was shown. That
+ *  was a comment holding three call sites in line; it is one function now, and the tool that measures
+ *  the ask reads it too instead of re-typing the arguments. */
+export function birthdayOfferFor(world: WorldState, age: number): { options: BirthdayGift[]; askedId: string } {
+  return birthdayOffer(
+    world.seed,
+    age,
+    giftsAlreadyGiven(world),
+    inCollege(world),
+    collegeBirthdayIndexOf(world),
+  )
 }
 
 /** IS A BIRTHDAY WAITING TO BE ANSWERED, and if so what age is she turning? Null on every other week.
@@ -785,14 +1096,19 @@ export function buildBirthdayPrompt(world: WorldState): BirthdayPrompt | null {
   const age = pendingBirthday(world)
   if (age === null) return null
   const alreadyGiven = giftsAlreadyGiven(world)
-  const { options, askedId } = birthdayOffer(world.seed, age, alreadyGiven, inCollege(world))
+  // ⚠ THROUGH `birthdayOfferFor`, WHICH IS THE SAME CALL `chooseGift` MAKES – see its note.
+  const { options, askedId } = birthdayOfferFor(world, age)
   const asked = options.find((g) => g.id === askedId)!
+  // ⭐⭐ ROUND 26 #4 – THE ONE PLACE THE WALLET IS READ, and it is read here rather than inside
+  // `birthdayOffer` on purpose: the OFFER must stay means-blind (spec §0), so the means cannot reach
+  // the function that chooses the four. It reaches only the strings.
+  const means = familyMeans(world)
   return {
     week: world.week,
     age,
     heading: birthdayHeading(world.seed, age),
-    ask: asked.ask,
-    options: birthdayOptions(options, alreadyGiven),
+    ask: birthdayWords(asked, means).ask,
+    options: birthdayOptions(options, alreadyGiven, means),
   }
 }
 
@@ -820,17 +1136,25 @@ export function buildBirthdayPrompt(world: WorldState): BirthdayPrompt | null {
  *  decoy the player himself created, not pointing at the one that is right.
  *
  *  ⚠ NOT APPENDED – REPLACED. A note plus an afterthought would grow the row and make a repeat
- *  visually taller than the others, which is a mark by accident. One line either way. */
+ *  visually taller than the others, which is a mark by accident. One line either way.
+ *
+ *  ⚠ ROUND 26 #4 ADDED THE THIRD INPUT AND IT DEFAULTS TO `null`. A caller with no world – every
+ *  catalogue sweep in the tests – gets the rows exactly as they were written, so the means licence
+ *  is visible only where a real family exists to be asked about. */
 export function birthdayOptions(
   gifts: readonly BirthdayGift[],
   alreadyGiven: readonly string[],
+  means: FamilyMeans | null = null,
 ): BirthdayOption[] {
   const held = new Set(alreadyGiven)
-  return gifts.map(({ id, label, note, again }): BirthdayOption => ({
-    id,
-    label,
-    note: held.has(id) ? again : note,
-  }))
+  return gifts.map((gift): BirthdayOption => {
+    const words = birthdayWords(gift, means)
+    return {
+      id: gift.id,
+      label: gift.label,
+      note: held.has(gift.id) ? words.again : words.note,
+    }
+  })
 }
 
 /** ⭐ THE PARENT ANSWERS. The ONE command that clears a pending birthday, and until it runs
@@ -865,7 +1189,11 @@ export function chooseGift(world: WorldState, giftId: string): void {
   // re-derives the offer to validate the answer (invariant 1 – the worker is not the gate), so a
   // dialog built from the college band and a validation run against the age band would reject every
   // option the player was actually shown.
-  const { options, askedId } = birthdayOffer(world.seed, age, giftsAlreadyGiven(world), inCollege(world))
+  // ⚠⚠ ROUND 26 #4 MADE THAT MECHANICAL RATHER THAN A PROMISE. There are two college facts now – is
+  // she there, and WHICH of the four birthdays this is – and `birthdayOfferFor` is the one function
+  // that reads them, called from here and from `buildBirthdayPrompt`. Two call sites cannot disagree
+  // about arguments they do not write.
+  const { options, askedId } = birthdayOfferFor(world, age)
   const given = options.find((g) => g.id === giftId)
   // Re-validated engine-side because the worker is not the gate (CLAUDE.md invariant 1): a stale
   // dialog from another week must not be able to record an option this birthday never offered.

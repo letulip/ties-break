@@ -1414,6 +1414,12 @@ button.primary.risky {
    the same question, so it is an outline pill rather than a second lime one. It renders only on a
    quiet week - see composables/weekAction.ts - so the pair is never on screen while there is
    something to play.
+   ⚠⚠ ROUND 26 #1: IT SITS TO THE LEFT OF THE WEEK BUTTON, AND NOTHING HERE PUTS IT THERE. The bar
+   is a plain `flex-direction: row` and the pill is the FIRST child of it in App.vue's template, so
+   source order is screen order and the keyboard agrees with the eye. Do not add `order` to either
+   button: a visual order that contradicts the DOM is the one arrangement a screen reader and a
+   sighted player disagree about, and the mounted test asserts the absence of the override as well
+   as the index.
    ⚠ THE MIN-WIDTH RELAXATION IS GEOMETRY, NOT TASTE. The week button carries min-width 206px, and
    206 + 8 + the span pill overflows a 320px screen once the app's 16px inset is taken off. With a
    sibling present the CTA drops its floor and its own ellipsis safety net - which the rule above

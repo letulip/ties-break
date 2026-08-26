@@ -266,6 +266,10 @@ game chose – and «national» in particular reads as a RANK in a game whose ev
   fiction, and «out of state» is not jargon here – it is the sourced *reason* the second price is
   higher than the first. The row still carries «In-state, and she is not a resident» where residence
   shuts the cheap place.
+  * ⚠⚠ **SUPERSEDED ON 26.08 – §11 is the current table.** The owner deleted the rule that sentence
+    defends, so the caption defending it went with it: `national` reads **«A university away from
+    home»** now and no row carries a refusal at all. The bullet is kept unedited because it is the
+    argument that has to be answered, not a mistake to tidy away.
 * **⚠ The ids are untouched.** `CollegeTier` is a persisted save field since v52; renaming it to fix a
   caption would be a schema change. The caption and the save key are now different things in different
   files.
@@ -702,3 +706,148 @@ capture is not re-pinned** – the override is a multiplier and draws nothing.
 
 ⚠ **Every commit is pathspec-form.** Another agent is committing a skill/win-probability audit on this
 same branch and `git commit` takes the whole index.
+
+---
+
+## 11. ⭐⭐⭐⭐ THE HOME UNIVERSITY EXISTS EVERYWHERE (round 26 #2, second pass – 26.08.2026)
+
+> «по-моему **в каждой стране есть домашний универ**»
+
+He has asked why the cheapest place was refused **three times**: round 24 #2a («непонятно почему самый
+дешёвый нельзя выбрать»), round 26 #2 («Ещё раз… я уже спрашивал, не понимаю и не починено»), and now.
+The first pass answered the second ask by making the refusal name the fact under it – and reported
+the thing it could not fix on its own authority:
+
+> of the 24 playable countries **exactly one** opens the cheap rung, the choice that decides it is made
+> on the onboarding country step ~440 weeks before the fork draws, and **nothing on that screen says
+> that picking a country prices college.**
+
+That is a refusal a player cannot meet, which is why a correct sentence did not close the item. **He
+is overruling the RULE.**
+
+### 11a. What the ladder is now
+
+| id (persisted, unchanged) | caption before | **caption now** | price `[S]` | the fact under the price |
+| --- | --- | --- | --- | --- |
+| `state` | The university at home | **The university at home** | $30,990/yr | she can live at home |
+| `national` | A university out of state | **A university away from home** | $50,920/yr | she cannot |
+| `private` | A private university | **A private university** | $65,470/yr | it is private |
+
+* **`state` keeps its caption, and that is the finding rather than the laziness.** «The university at
+  home» was already the right four words – it is the owner's own phrase – and what was US-shaped was
+  the RULE underneath it. Renaming would have hidden that.
+* **`national` had to move**, and its own round-21 justification says why: «out of state» was defended
+  as «not jargon here, it is the sourced reason the second price is higher than the first», and that
+  reason WAS US residence. A caption cannot outlive the fact it was defending.
+* **`private` is untouched** – it is an ownership, not a distance, which is the honest third axis.
+* **⚠ The ids are still untouched** (v52 persists `CollegeTier`), so `national` is now an id whose
+  caption does not say "national". That split is deliberate and is the same one §4 recorded.
+* **⚠ The caption is 27 characters against 25**, on the row that already cost this card a definite
+  article in round 21. Measured rather than reasoned about: `tests/component/round26-home-university.test.ts`
+  swaps the round-21 caption back into a live 320x568 card and re-reads the modelled content floor –
+  **identical**, with a mutation arm (an over-long caption) that moves it.
+
+### 11b. What was deleted, and why the field went rather than the value
+
+`CollegeQuote.open`, `tierShutFor`, `tierOpenTo`, `quoteShutFor`, `COLLEGE_SHUT_RULES`,
+`COLLEGE_SHUT_DETAIL`, `CollegeShutReason`, `COLLEGE_TIERS[*].residentOnly`, `.fork-place-refusal`,
+`.fork-place.is-shut`, and `answerFork`'s `&& q.open` filter. **Nothing can shut a place.**
+
+An always-true boolean was the other candidate and it is the worse end state: the next reader believes
+a place can be shut, and the next edit can shut one. So this is a **save SHAPE change – v61** and the
+full 4-part move (bump, append-only migration, golden fixture `v61.json`, README row).
+
+⚠ **And the migration is not cosmetic, which is the part worth reading twice.** A v60 career sitting
+on an UNANSWERED fork carries `state: {open: false}`. Under the new card that row is pressable – so
+without the migration the player presses «The university at home», `find(q => q.tier === tier && q.open)`
+misses, and the fallback enrols her at the next place up: **$20,000 a year dearer, silently, on the
+exact screen this item exists to fix.** Deleting the key and deleting the filter are one fix in two
+places. `tests/round26-home-university.test.ts` walks precisely that save.
+
+⚠ **The house shape is not lost with it.** `EntryStatus.ineligibleReason` / `ineligibleDetail` is one
+door along, still live, still the pattern round 24 borrowed – so a future refusal has a worked example.
+
+### 11c. The one country rule that survives, and why it passes his test
+
+`needShareOf` still pays the need-based layer to a US family only (34 CFR §668.33 – federal student
+**aid**, i.e. who may receive a US grant, not who may enrol). It removes no row from anybody's card:
+a non-American family is quoted the **same three places at the same three stickers** and pays more of
+the bill. **A refusal removes a row; a price does not.**
+
+### 11d. ⭐⭐ MEASURED – `tools/college-home-place.ts --seeds 3 --countries US,AU`
+
+**n = 54 careers** (9 presets x 3 seeds x 2 countries), every one walked to the fork under `POLICIES[1]`
+and then re-walked **once per place** through four college years – 162 arms, every championship and
+every cake answered.
+
+⚠ **THE ARMS ARE TIERS, NOT TREES, AND THAT IS THE PROVENANCE POINT.** The classic false null here
+would be an "A" worktree at the pre-ruling commit – where every bench profile is `country: 'US'` and
+the change is *unreachable*. The rule's entire behavioural content is *which tier a non-American career
+can take* (before: `national`; after: `state`), and both are an ANSWER to the same fork on the same
+tree. Same code, different input.
+
+**Which place the button takes with nothing pressed**
+
+| country | before | after |
+| --- | --- | --- |
+| US (control) | `state` – the home place | `state` – the home place |
+| every other country (23 of 24) | `national` | **`state` – the home place** |
+
+**AU – 27 careers, all three places walked**
+
+| place | covered | family $/yr | affordable | ran out | finished 4 years | funds after |
+| --- | --- | --- | --- | --- | --- | --- |
+| state | 82.6% | $5,398 | 25/27 93% | 5/27 19% | **22/27 81%** | $158,225 |
+| national | 50.8% | $25,062 | 18/27 67% | 8/27 30% | 19/27 70% | $82,287 |
+| private | 42.3% | $37,754 | 16/27 59% | 13/27 48% | 14/27 52% | $16,878 |
+
+**US – 27 careers, the control**
+
+| place | covered | family $/yr | affordable | ran out | finished 4 years | funds after |
+| --- | --- | --- | --- | --- | --- | --- |
+| state | 97.1% | $896 | 27/27 100% | 4/27 15% | 23/27 85% | $166,582 |
+| national | 63.8% | $18,443 | 25/27 93% | 6/27 22% | 21/27 78% | $115,121 |
+| private | 58.3% | $27,327 | 23/27 85% | 6/27 22% | 21/27 78% | $91,403 |
+
+**The delta – the default's arm, before → after**
+
+| country | $/yr before | $/yr after | saved/yr | ran out | finished 4 years |
+| --- | --- | --- | --- | --- | --- |
+| US | $896 | $896 | **$0** | 4 → 4 of 27 | 23 → 23 of 27 |
+| AU | $25,062 | **$5,398** | **$19,664** | 8 → **5** of 27 | 19 → **22** of 27 |
+
+* **How often is the home place taken: 100% of careers, in every country.** It was 100% in one country
+  and 0% in twenty-three.
+* **The college branch's survival IMPROVES for the careers the rule used to push upmarket**: four-year
+  completion **70% → 81%**, families running out of money **30% → 19%**, median four-year bill
+  **$100,248 → $21,592**.
+* **The US column does not move on a single line**, which is what says the change is the one intended.
+
+### 11e. ⚠⚠ DOES ANY CALIBRATED FIGURE MOVE? NO – AND HERE IS WHY NOT
+
+`COLLEGE_TIER_ODDS` is **state 85 / national 93 / private 74** careers in a hundred reaching the world
+top 100, measured per PLACE (§2a, §10h). This round changes **who can take a place**, never **what a
+place is worth once taken** – so not one of the three moves and **none is retuned.** The private
+deficit is still MONEY and not tennis (§10i: 11 of 53 never finish; among the ones the bill did not
+end the row is 85 / 94 / 82), and the AU column above is that same finding read one country along –
+the dear place ends 48% of families' money and only 52% of those careers finish.
+
+⚠ **One pin did move and it is not a figure.** `COLLEGE_ODDS_MEASURED_AT` folds the whole tier object,
+and `residentOnly` left the table. The probe (`tools/college-return-probe.ts`) never reads it – it
+takes each tier's quote by name and walks – so no re-measure is owed. **The claim is mechanical, not a
+comment**: `tests/college-offer.test.ts` block F pins the round-21 string beside the new one and
+asserts the only difference between them is the removed residence property, so a wave re-pricing a
+place under cover of a boolean deletion goes red.
+
+⚠ **And the re-measure the spec already owed is still owed**: §10h's figures jumped 38/40/34 → 85/93/74
+on another wave's change (`a412162`, `season/fieldPros.ts`) and the fingerprint cannot see that.
+Unchanged by this round, and still nobody's.
+
+### 11f. ⚠ A MEASUREMENT-INSTRUMENT DEFECT FOUND ON THE WAY, AND IT IS NOT THIS ITEM'S
+
+Round 26 #6 gave the college year a SECOND stop (the championship reveal), and every probe that walks
+the freeze presses once a year. `tools/college-home-place.ts`'s first cut reported **0 of 18 careers
+finishing four years** – a wedged walk, not a survival figure – and `tools/birthday-pool.ts` reported
+**«no birthdays recorded»** for the whole college band. Both are fixed here (answer the reveal, six
+presses a year). ⚠ **`tools/college-choice-probe.ts` and `tools/college-price-probe.ts` were not
+audited for the same hazard** and they are the instruments §10i's bankruptcy figures came from.

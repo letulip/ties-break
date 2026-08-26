@@ -1013,21 +1013,36 @@ const collegeWeek = computed(
 )
 const collegeProgress = computed(() => game.snapshot?.ending?.college ?? null)
 
-/** «Play the first year» / «Another year» – the same two words the epilogue's card used, off the
- *  engine's own count.
+/** «Play the first year» / «Another year» / «Play the final year» – off the engine's own count, and
+ *  the words the epilogue's card used before college moved onto this shell.
+ *
+ *  ⭐⭐⭐ ROUND 26 #12 – «И почему-то на Year 4 of 4 меня всё ещё две кнопки внизу интерфейса Another
+ *  year и Back on tour, хотя вроде бы колледж всё», and #8 – «Another year и Back on tour поменять
+ *  местами и сделать цветом, сейчас их вообще не видно тёмно синие на тёмно синем».
+ *
+ *  ⚠⚠ THE BUTTON WAS RIGHT AND THE WORD WAS WRONG, which is why nothing here gained a gate. At the
+ *  rest state with three years banked the press spends the FOURTH year – the last one – and the
+ *  engine graduates her inside that same call. «Another year» named it as one more of an open-ended
+ *  series, over a card whose heading then read «Year 4 of 4»: between them they offered a fifth year
+ *  that does not exist. `resumeFromCollege` would refuse it («She is not at college»), but the
+ *  player never reaches that throw, because the latch is off by then and this bar is not drawn –
+ *  measured on a walked career in tests/component/round26-college-card.test.ts.
  *
  *  ⭐ ROUND 24, THE BIRTHDAY: «Finish the year» while one is paused mid-flight. Her birthday stops
  *  the college year (`resumeFromCollege` breaks on the birthday week so the gift dialog can be
  *  answered), and the press after the cake continues THAT year – a button still reading «Another
  *  year» there would be offering a year it is not going to start. `yearInProgress` is the engine's
  *  own fact (`college.pendingYearStart`), so this label and the year the press spends cannot part. */
-const collegeYearLabel = computed(() =>
-  collegeProgress.value?.yearInProgress
-    ? 'Finish the year'
-    : (collegeProgress.value?.yearsDone ?? 0) === 0
-      ? 'Play the first year'
-      : 'Another year',
-)
+const collegeYearsLeft = computed(() => {
+  const c = collegeProgress.value
+  return c === null ? 0 : Math.max(0, c.totalYears - c.yearsDone)
+})
+const collegeYearLabel = computed(() => {
+  const c = collegeProgress.value
+  if (c?.yearInProgress) return 'Finish the year'
+  if ((c?.yearsDone ?? 0) === 0) return 'Play the first year'
+  return collegeYearsLeft.value <= 1 ? 'Play the final year' : 'Another year'
+})
 
 /** She may only leave a year she has actually spent. The engine refuses it too (`endCollegeEarly`
  *  throws on a career with no banked year) – this is the screen agreeing with the rule rather than
@@ -1498,10 +1513,22 @@ async function leaveCollege(): Promise<void> {
          epilogue covered the shell and nothing could draw the reveal; now the shell is up, so the
          one control that clears it – App.vue's global resume button, plus `TournamentFlow` itself –
          is on screen, and drawing a second bar over it would offer a press that can only be refused. -->
-    <div v-if="collegeWeek && !game.snapshot?.pending" class="college-bar">
-      <button class="college-answer" type="button" :disabled="game.busy" @click="resumeCollege">
-        {{ collegeYearLabel }}
-      </button>
+    <!-- ⚠⚠ ROUND 26 #12 – AND IT STANDS DOWN WHEN THERE IS NO YEAR LEFT TO SPEND. A TRIPWIRE RATHER
+         THAN A GATE, and the difference is the point: `collegeProgressOf` returns null the moment
+         `doneWeek` is set, and `resumeFromCollege` graduates her in the same call that banks the
+         fourth year, so a career with all four behind her has no latch, no `ending.college` and
+         therefore no bar – the state cannot be reached today, and the walked career in
+         tests/component/round26-college-card.test.ts is what proves that rather than asserting it.
+         What this closes is the next wave's version of it. BOTH commands behind this bar refuse
+         there – `resumeFromCollege` and `endCollegeEarly` throw the same «She is not at college» –
+         and the screen that belongs to that state is `CollegeDoneDialog`, not two answers to a
+         question the engine has already closed. -->
+    <div v-if="collegeWeek && !game.snapshot?.pending && collegeYearsLeft > 0" class="college-bar">
+      <!-- ⭐ ROUND 26 #8 – the owner asked for these two swapped (his line is quoted in full beside
+           `collegeYearsLeft` in the script above; no Cyrillic reaches a template). The leave answer
+           is first now, which is his order and also the one that suits the pair: it is the answer
+           that is sometimes absent, so it is the one whose position must be predictable when it
+           appears. Both still wear one class and one weight (ruling 4). -->
       <button
         v-if="canLeaveCollege"
         class="college-answer"
@@ -1510,6 +1537,9 @@ async function leaveCollege(): Promise<void> {
         @click="leaveCollege"
       >
         Back on tour now
+      </button>
+      <button class="college-answer" type="button" :disabled="game.busy" @click="resumeCollege">
+        {{ collegeYearLabel }}
       </button>
     </div>
 
@@ -2430,13 +2460,32 @@ button.note-card:active:not(:disabled) {
   z-index: 39;
 }
 
+/* ⭐⭐⭐ ROUND 26 #8 – «сейчас их вообще не видно тёмно синие на тёмно синем», AS THREE NUMBERS.
+   Measured through the real cascade on a 375x667 mount (tests/component/round26-college-card.test.ts):
+
+     the LABEL on the button          16.60:1   never the problem, and the reason nothing caught this
+     the BUTTON on the page            1.07:1   #0f1720 on #0a0e13 – his «dark blue on dark blue»
+     the BUTTON'S EDGE on the page     1.29:1   rgba(255,255,255,0.07), WCAG 1.4.11 asks for 3:1
+
+   ⚠ THE FILL CANNOT BE THE FIX AND THE ARITHMETIC SAYS SO. Against `--bg` (#0a0e13, luminance
+   0.0041) a surface needs luminance 0.112 to reach 3:1 – a mid-grey around #6a737c. Every dark
+   neutral this app owns is an order of magnitude under that: `--panel` gives 1.07:1 and `--card-top`
+   (#17212b), the lightest card surface in the sheet, gives 1.21:1. A control on a near-black page is
+   made visible by its BOUNDARY, which is exactly the contrast WCAG 1.4.11 measures.
+
+   ⚠ SO THE HAIRLINE CARRIES IT, IN THE APP'S OWN VOCABULARY: `--accent-soft` is the token declared
+   for precisely this ("the soft border the vacation card wanted and never had") and already borders
+   BirthdayDialog's choices and HerWeekTab's rows. It measures 3.70:1 against the page.
+   ⚠ AND BOTH ANSWERS TAKE IT IDENTICALLY (ruling 4, 30.07). Equal weight is not the same claim as
+   invisible: what the ruling forbids is one of the two being the page's CTA, and a filled lime pill
+   is still what that would look like. Neither of these is one; they are the same control twice. */
 .college-answer {
   pointer-events: auto;
   flex: 1 1 0;
   min-width: 0;
   max-width: 240px;
   padding: 12px 14px;
-  border: 1px solid var(--line);
+  border: 1px solid var(--accent-soft);
   border-radius: var(--radius-pill);
   background: var(--panel);
   color: var(--ink);

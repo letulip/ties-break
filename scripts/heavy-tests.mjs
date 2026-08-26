@@ -108,6 +108,46 @@ export const HEAVY_UNIT_FILES = [
   // unraisable 60 s window at CI's ~1.9x. Same remedy as every entry above: one process each.
   'tests/travel-home.test.ts',
   'tests/ladder-floor.test.ts',
+  // ⚠⚠ THE THIRD TIME, AND THIS TIME THE BULK POOL ITSELF WENT OVER THE WALL (26.08, round 26).
+  // `npm test` stalled on CI at 19+ minutes against a 25-minute ceiling, and the same shape
+  // reproduced ON A QUIET MAC – `--reporter=json` over the bulk pass returned `success: true`,
+  // 3455 tests, 0 failed, EXIT 1. Not a slower runner this time: the pool has simply grown to 172
+  // files and 3455 tests, and the contention penalty measured uniformly x2.9 (solo -> in-pool).
+  //
+  // The bar is this file's own, unchanged: a file near 40 s in-pool locally is past birpc's
+  // unraisable 60 s window at CI's ~1.9x, so the line sits at ~32 s in-pool. Twelve files crossed
+  // it. Measured both ways before anything moved, in-pool -> solo:
+  //
+  //     college-birthday    77.7 -> 27      college-second-act  42.0 -> 14
+  //     coach-travel-edge   59.9 -> 21      goldenSaves         41.4 -> 14
+  //     season-mirror       45.8 -> 16      world-trio          36.7 -> 13
+  //     viz/commentary      42.8 -> 14      coach-load          36.2 -> 13
+  //     blocking-overlay    42.3 -> 15      round23-kid-share   33.8 -> 13
+  //                                         condition           33.7 -> 11
+  //                                         round26-world-speaks 31.9 -> 12
+  //
+  // ⚠ NOT ONE OF THEM IS HEAVY ON ITS OWN – the largest is 27 s solo, well under half the window.
+  // That is the finding: the wall is being hit by CONTENTION, not by any file, so the remedy is the
+  // same one every entry above used (a process each) and NOT a trimmed assertion anywhere. The x2.9
+  // penalty is what a growing pool costs, and it will keep claiming files every round or two: when
+  // the next one crosses, measure in-pool with `TB_UNIT_SKIP_HEAVY=1 npx vitest run --project unit
+  // --reporter=json` and move it here. If the serial tail ever costs more than the pool saves, the
+  // honest next step is fewer workers per core, measured – not fewer tests.
+  'tests/college-birthday.test.ts',
+  'tests/coach-travel-edge.test.ts',
+  'tests/season-mirror.test.ts',
+  'tests/viz/commentary.test.ts',
+  'tests/blocking-overlay.test.ts',
+  'tests/college-second-act.test.ts',
+  'tests/goldenSaves.test.ts',
+  'tests/world-trio.test.ts',
+  'tests/coach-load.test.ts',
+  'tests/round23-kid-share.test.ts',
+  // ⚠ THE FROZEN MAIN CAPTURE LIVES HERE NOW. A shard placement changes nothing it asserts – the
+  // capture is still 41550 / e6b0c709 and still fails the same way – but it does mean the RNG law's
+  // own guard can no longer be lost to a runner stall that has nothing to do with it.
+  'tests/condition.test.ts',
+  'tests/round26-world-speaks.test.ts',
 ]
 
 /** The same list in the form a VITEST PROJECT's `include`/`exclude` needs.

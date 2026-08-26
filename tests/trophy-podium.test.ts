@@ -289,7 +289,11 @@ describe('the flight is assembly, and it stays out of the simulation', () => {
     // Both halves of the ordering: the mark is measured while it is still on screen, and the dot is
     // held before the bar is uncovered.
     expect(flow).toMatch(
-      /if \(pending\.value\?\.kidChampion \|\| isRunnerUp\.value\) armTrophyFlight\(herTrophy\.value, posterMark\.value\)\s*\n\s*await game\.tournamentClose\(\)/,
+      // ⚠ ROUND 26 #6 RE-AIM: the podium test gained one clause, `!amateur.value`. The claim is the
+      // same and is now stronger – armed BEFORE the close, from the podium ONLY, and never from a
+      // College League podium at all, because that fixture puts nothing in the cabinet for a flight
+      // to carry (`resolveCollegeLeague` writes no result, no cheque and no silverware).
+      /if \(!amateur\.value && \(pending\.value\?\.kidChampion \|\| isRunnerUp\.value\)\) armTrophyFlight\(herTrophy\.value, posterMark\.value\)\s*\n\s*await game\.tournamentClose\(\)/,
     )
   })
 

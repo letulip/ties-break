@@ -7,10 +7,16 @@
 //
 // ⚠ NOTHING ABOUT THE SAVE CHANGED, AND THAT IS THE WHOLE CLAIM. Two interfaces are TYPES: erased at
 // compile time, so they cannot reach a byte of `JSON.stringify`. Key ORDER follows the object
-// literal in `createWorld`, which did not move and was not touched. `SAVE_SCHEMA_VERSION` is 59, the
-// same 59 – the number did not move, no field was added, removed, renamed or retyped, and no
-// migration is owed. Proved rather than asserted: the three careers of
+// literal in `createWorld`, which did not move and was not touched. The version THIS EXTRACTION
+// carried across was 59, unchanged by it – no field was added, removed, renamed or retyped, and no
+// migration was owed by the move. Proved rather than asserted: the three careers of
 // tests/coach-travel-edge.test.ts hash byte for byte across this commit.
+//
+// ⚠ THE ABSOLUTE NUMBER USED TO LIVE IN THAT SENTENCE AND IT ROTTED (round 26, 26.08): the prose
+// still read «is 59, the same 59» at v61. `scripts/doc-facts.mjs` sources the version from the
+// CONSTANT below, which is why the gate stayed green over a false line – a script that reads the
+// fact cannot police the prose beside it. The claim above is now about the EXTRACTION, which cannot
+// go stale; the live version is the constant and nowhere else.
 //
 // ⚠ IT IS A LEAF AND MUST STAY ONE. Every import below is `import type`, so this module has NO
 // runtime edge at all – the one runtime thing in it is a number literal. That is what lets
@@ -166,7 +172,27 @@ import type { AcademySupport } from '../academy'
 // Rows of `injuryHistory` MAY carry `weeksSaved`, written only when he saved something – absent
 // everywhere in old saves, so nothing is back-filled; `pendingTournament` MAY carry `masseurThere`
 // on a week he made the trip. See docs/specs/the-masseur-2026-08.md.
-export const SAVE_SCHEMA_VERSION = 59
+//
+// ⭐⭐⭐ v60 (round 26 #6, THE COLLEGE LEAGUE IS WALKED AND NOT REPORTED): `CollegeState.leagueReveal`
+// – two numbers saying where the player is in the championship's reveal. The owner had asked for
+// this once already («Я уже просил это сделать»), and round 25 answered it with a summary line plus
+// replay buttons on a card, which is exactly «сообщили постфактум». The reveal makes the year STOP
+// on the championship week, the way a tour week stops, and `TournamentFlow` walks it.
+// ⚠ NULL FOR EVERY EARLIER SAVE AND NOTHING IS BACK-FILLED: a championship already lived is not
+// re-offered, so a career mid-freeze resumes with no reveal open and its NEXT year's gets one.
+//
+// ⭐⭐⭐ v61 (round 26 #2 second pass, THE HOME UNIVERSITY EXISTS EVERYWHERE): `CollegeQuote.open` is
+// REMOVED – the first field this ladder has ever deleted rather than added. The owner, having asked
+// twice why the cheapest place was refused: «по-моему в каждой стране есть домашний универ». The
+// boolean was false on one rule – the in-state price IS US residence – and that rule shut the rung in
+// 23 of the 24 playable countries, on a choice made at onboarding ~440 weeks earlier. He overruled
+// the rule, so the field goes with it: an always-true boolean would leave the next reader believing a
+// place can be shut and the next edit able to shut one.
+// ⚠ THE MIGRATION IS NOT COSMETIC. A career sitting on an unanswered fork carries `state: {open:
+// false}`, and `answerFork` filtered on it – so the card would have drawn the home row pressable and
+// the engine would have quietly enrolled her at the next place up, $20,000 a year dearer. Deleting
+// the key and deleting the filter are one fix in two places.
+export const SAVE_SCHEMA_VERSION = 61
 
 
 

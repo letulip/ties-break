@@ -145,11 +145,15 @@ export interface CollegeQuote {
   /** what the family pays for a year at this place, cents – the price after both layers, and the
    *  number the ledger charges one fifty-second at a time once she has picked it */
   familyPerYearCents: number
-  /** ⚠ IS THIS PLACE HERS TO PICK? False on exactly one case and it is primary law rather than a
-   *  balance knob: the in-state price IS residence, and a non-resident alien is never in-state
-   *  anywhere. **Two tiers are always open**, so nothing here can remove the college answer (owner,
-   *  16.08) – it removes one SCHOOL from a list of three. */
-  open: boolean
+  // ⭐⭐⭐⭐ `open: boolean` WAS HERE AND IT IS GONE IN v61 – round 26 #2, second pass, on the owner's
+  // ruling «по-моему в каждой стране есть домашний универ». It was false on exactly one case (the
+  // in-state price IS US residence) and that case was 23 of the 24 playable countries, decided on the
+  // onboarding country step ~440 weeks before the card drew. He overruled the RULE, so the field goes
+  // rather than becoming a boolean that is always true: **all three places are hers in every career**,
+  // and with no field there is nothing a later edit can shut one with. `engine/collegeOffer.ts`'s
+  // «NO PLACE IS REFUSED» block is the full record; the v61 migration deletes the key from persisted
+  // quotes. ⚠ A COUNTRY RULE DOES SURVIVE and it is not this one: `needShareOf` pays the need-based
+  // layer to an American family only (34 CFR §668.33), which is a PRICE on the same three places.
 }
 
 /** ⭐⭐ THE COLLEGE OFFER – every place she could take, and the one she took.
@@ -251,6 +255,42 @@ export interface CollegeState {
    *  academic year). Absent and null mean the same thing – no year is mid-flight – the v57 migration
    *  writes the explicit null for migrated saves, and every reader normalises with `?? null`. */
   pendingYearStart?: CollegeYearStart | null
+  /** ⭐⭐⭐ v60 – THE CHAMPIONSHIP'S REVEAL, OPEN UNTIL HE HAS WALKED IT (round 26 #6, the owner's
+   *  «в чем проблема использовать наш флоу турниров полностью… Я уже просил это сделать»).
+   *
+   *  ⚠⚠ IT IS THE COLLEGE TWIN OF `world.pendingTournament` AND DELIBERATELY NOT THAT FIELD. The
+   *  tour's reveal is a `PendingTournament` over a `SeasonEvent`, and `finalizeTournament` reads
+   *  `TIERS[event.tier]` to award points and a cheque – so borrowing it would either invent a rung
+   *  for a student field or break «a result cannot award one without the other». This holds two
+   *  numbers, awards nothing, and `world.pendingTournament` stays null through every college week,
+   *  which is what keeps round 24's refusal (`COLLEGE_REVEAL_REFUSAL`) a statement about a state
+   *  that still cannot occur inside the freeze.
+   *
+   *  ⚠ PERSISTED BECAUSE IT BLOCKS. `resumeFromCollege` will not spend a year over an open one, so
+   *  it is a question standing in front of the world – and an unpersisted blocking state is exactly
+   *  the class of failure B1's law was written about. Two numbers is the whole of it: the matches
+   *  themselves are `keep: true` rows in `world.events` already (see `collegeLeagueMatchesOf`), so
+   *  nothing about the record is copied here.
+   *
+   *  ⚠ NULL – or absent, on every save older than v60 – MEANS NO REVEAL IS OPEN, which is the true
+   *  value for a career that played its championships before the flow existed. The migration writes
+   *  the explicit null and nothing is back-filled: a year already lived is not re-offered. */
+  leagueReveal?: CollegeLeagueReveal | null
+}
+
+/** ⭐⭐⭐ v60 – WHERE HE IS IN THE CHAMPIONSHIP'S REVEAL. The college mirror of
+ *  `PendingTournament.revealedRounds` + `finished`, and it needs neither a result nor a player map
+ *  because both already live in the feed rows the tick wrote.
+ *
+ *  ⚠ `revealed === leagueMatchesPlayed(run)` IS THE FINALE, exactly as `revealedRounds >=
+ *  kidMatches.length` is on the tour; the object is cleared by `closeCollegeLeagueReveal`, which is
+ *  `closeTournament`'s twin. There is no `finished` flag for the same reason `wonTheLeague` is not
+ *  a stored boolean: a second copy of a derivable fact can drift from the first. */
+export interface CollegeLeagueReveal {
+  /** the week the championship was played – the key into `collegeLeagueMatchesOf` */
+  week: number
+  /** how many of her matches he has been shown, 0..the run's match count */
+  revealed: number
 }
 
 /** ⭐ v57 – WHAT A COLLEGE YEAR IS OPENED WITH: the measurements `bankCollegeYear` will close it

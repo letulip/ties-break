@@ -31,6 +31,10 @@ import { ENDINGS } from '../../src/engine/ending'
 import { boxOf, lengthPx, setViewport, NARROW_PHONE, PHONE, type Viewport } from './fits'
 import { NATIONAL_TEAM } from '../../src/engine/nationalTeam'
 import {
+  skipTournament,
+  pendingBirthday,
+  collegeLeagueRevealOpen,
+  chooseGift,
   answerFork,
   closeTournament,
   createWorld,
@@ -212,7 +216,22 @@ function walkedCollegeSnapshot(): Snapshot {
     tickWeek(world, rng)
     finishAnyReveal(world)
   }
-  resumeFromCollege(world, rng)
+  // ⚠⚠ ROUND 26 #6 RE-AIM, AND THE FIXTURE WOULD HAVE GONE QUIETLY WRONG WITHOUT IT. One press no
+  // longer spends a whole year: the championship week PAUSES it and `TournamentFlow` walks the
+  // matches, so a fixture that pressed once and stopped would hand every case below a snapshot with
+  // `pending` set – on which HomeScreen correctly draws no college bar at all, because a press that
+  // can only be refused is R10-16's own bug. Every case here is about the RESTING state, so the walk
+  // answers the reveal the way the player does («Skip all rounds», then the finale's «Continue») and
+  // keeps pressing until a year is actually banked. The same shape `finishAnyReveal` above already
+  // has for a tour reveal, one competition along.
+  for (let press = 0; press < 4 && world.college!.years.length === 0; press++) {
+    resumeFromCollege(world, rng)
+    if (collegeLeagueRevealOpen(world)) {
+      skipTournament(world)
+      closeTournament(world)
+    }
+    if (pendingBirthday(world) !== null) chooseGift(world, 'day')
+  }
   const snap = toSnapshot(world)
   if (snap.ending === null || snap.ending.ending.type !== 'college' || snap.ending.college === null) {
     throw new Error('the walked career is not at college – the fixture under every test below is wrong')
@@ -374,10 +393,13 @@ describe('P5 – the college year block', () => {
     wrapper.unmount()
   })
 
+  // ⚠ RE-AIMED BY ROUND 26 #8, NOT WEAKENED: «Another year и Back on tour поменять местами». The
+  // claim is the one it was – there are TWO answers and the early return is one of them – and the
+  // ORDER is his. Both still wear one class and one weight (ruling 4), which the case below checks.
   it('⭐ TWO ANSWERS, and the early return is one of them', async () => {
     const wrapper = await openCollegeHome(collegeView())
     const labels = wrapper.findAll('.college-answer').map((n) => n.text())
-    expect(labels).toEqual(['Another year', 'Back on tour now'])
+    expect(labels).toEqual(['Back on tour now', 'Another year'])
     wrapper.unmount()
   })
 

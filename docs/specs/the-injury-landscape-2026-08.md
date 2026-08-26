@@ -880,3 +880,289 @@ junior-bench evidence; this measurement neither supports nor contradicts it, and
 **No engine change ships from this append either.** Both patches were reverted byte-clean; `git
 diff` is empty on `src/`, `tests/condition.test.ts` is green on the frozen capture (41550 /
 e6b0c709), and the (K, F) pair and its gate remain his ruling to make.
+
+---
+
+# Appended 26.08 – the half-season before college, read to the floor (round 26 items 14 and 15)
+
+**MEASUREMENT ONLY, and `git diff src/` is empty at push.** The owner, on his own w502 save: «Alice
+поймала 2 травмы за половину сезона до колледжа, как будто многовато, но проверь пожалуйста по всем
+показателям» (#14) and «Посмотри статистику побед/поражений для Alice за эту половину сезона до
+колледжа и сверь с её показателями скиллов» (#15). Both are RATE questions, and both are answered
+below against the shipped model at her own exposure rather than against a feeling.
+
+**The instrument** is `tools/his-careers-brackets.ts --window A:B`, an extension of the reader §9
+already uses – no fourth reader, no second decode of the save, and the section prints nothing unless
+`--window` is given, so every existing run of that tool is byte-identical. The save is read through
+`decodeExportFile` under the same READ-ONLY LAW as §2 and §9: never copied, never committed, never a
+fixture, and only the derived statistics below live in the repo.
+
+    npx vite-node tools/his-careers-brackets.ts -- --save <hers>.tsave --window 268:293 --mc 4000
+
+⚠ **The `alice` row of §2 is a DIFFERENT CAREER.** That row is a w474 snapshot holding 6 onsets over
+319 matches; this save is `alice-cfbv` at w502 and holds **8 onsets over 369 matches with all eight
+landing before w474**, so the two cannot be the same career and must not be pooled. Same first name,
+different seed.
+
+## §12 The window's ground truth – what her ledger actually holds
+
+The college freeze opens at `college.fromWeek = 294`, so «half a season before college» is
+**weeks 268–293, the last 26 weeks of play.** Read, not inferred:
+
+    onset  recovered  severity  weeks out  door         kind
+    w279   w281       minor     2          RETIREMENT   ankle soreness
+    w286   w287       minor     1          RETIREMENT   forearm niggle
+
+**Two onsets, both the smallest injury the game deals, three weeks lost out of twenty-six** – and in
+the same twenty-six weeks she won three titles (W50 w273, W75 w282, W50 w290).
+
+⚠⚠ **`injuryHistory[].week` IS THE RECOVERY WEEK, NOT THE ONSET WEEK**, and every rate built on it
+is off by `weeksOut` until that is fixed. `rollInjury` pushes the row in the branch that CLEARS the
+layoff, at `world.week`; the onset is `week − weeksOut` (plus `weeksSaved` where a masseur bought
+weeks back). §9's per-season panel attributes a layoff to "the season its ONSET week falls in" and
+then uses the row's own week – the tool now checks whether that matters and reports it: **0 of the 8
+rows in this save cross a season boundary between the two readings, so §9's published numbers are
+untouched.** The correct reading is used throughout §§12–15 and the aggregate above is deliberately
+left alone rather than silently re-stated.
+
+⭐ **AND THE DOOR IS THE HEADLINE. Neither injury came from the weekly roll.** Both are on-court
+retirements: `WorldMatch.retiredId === KID_ID` on the QF of the w279 WT500 (3-6 6-3 2-4 against C.
+Iyer) and on the R32 of the w286 slam (5-7 6-1 5-1 against T. Kaminski), and `world.ts` opens a
+layoff for each by construction – `if (retiredMatch) retirementInjury(world)`. The two doors cannot
+collide in one week (a girl the weekly roll injures at step 1c never takes the court), so the
+attribution is exact rather than probabilistic. **Her whole career reads 3 weekly / 5 retirement.**
+
+This matters because the two doors are driven by completely different quantities. The weekly roll is
+`injuryTau`, one Bernoulli per WEEK, reading condition, age, trailing load and the physio rung. The
+retirement door is `RETIRE_K · spentness(pointNumber, stamina)`, a hazard per POINT, which is zero
+until point 120 and then accumulates – so it is bought with **minutes on court**, and a rung that
+plays five matches in a week integrates five matches' worth of it. Answering #14 against the weekly
+hazard alone would have answered the wrong question.
+
+## §13 Her exposure – and the condition series, recovered for the first time
+
+    14 event weeks of 26 · 42 matches · 31-11 · 3 titles
+    tiers: wta500 x4, w50 x2, w75 x2, wta125 x2, slam x2, w100 x1, wta250 x1
+    plan 75/25 · physio ON (middle rung, riskFactor 0.724) · no masseur
+    coach `middle-2`, travelling to EVERY event in the window (all seven rungs pay prize money,
+      so `coachTravelFareFor` is non-zero at each and the on-court edge is the doubled +0.870/wing)
+    the only knock in reach (w267-269, wrist) was answered REST -> knockTauFactor 1
+
+**1.62 matches per calendar week** against her own season-4 density of 1.19 (62 matches over 52
+weeks), her season-5 density of 1.47, and the corrected professional bench's 0.78–0.85. This is the
+densest stretch of her career and roughly twice a comparable professional season.
+
+⭐ **CONDITION AT ENTRY IS RECOVERABLE, and §2/§7/§9's "no save holds one" is now half-wrong.** It is
+not stored, but it is INVERTIBLE. `kidMatchPlayerFor` composes her on-court build as
+`raw × conditionMatchFactor(condition) × surfaceStyle × kit + coachEdge`; three of those four are
+pure functions of (week, surface, seed, profile) and computable at any week, and the composed
+five-vector is FROZEN into every match row (`WorldMatch.a`). Divide the three known factors out and
+what remains is `raw_wing × f(condition)`. The remaining scale is fixed by the save's own anchor:
+**`college.years[0].startSkill` is the arithmetic mean of her five raw skills at the enrolment week**
+– verified, not assumed (`endSkill` equals the mean of `world.skills` to 1e-15).
+
+**Both ends of the bracket are proofs, not fits**, and they need no development model at all:
+
+- raw skill is monotone non-decreasing, so `mean_raw(W) ≤ mean_raw(294) = 59.3356` – a hard **lower**
+  bound on `f`, hence on condition;
+- and `f ≤ 1` everywhere, so the RUNNING MAXIMUM of the measured series is a hard lower bound on raw
+  skill – hence `measured(W) / env(W)` is a hard **upper** bound on `f`. It is vacuous exactly at the
+  running maxima (where it only says "at or above the knee") and informative at every dip below them,
+  which is the half that matters: **a dip below a monotone curve cannot be anything but condition.**
+
+`f` saturates at the knee (`matchStrengthKnee` 70, `matchStrengthFloor` 0.55), so no read above 70 is
+claimed. What the window says:
+
+    week  tier     m   W-L   trail4   raw*f    cond>=  cond<=   note
+    w269  wta125   2   1-1   2        58.594   68.1    69.8
+    w270  wta500   2   1-1   2        58.617   68.1    69.8
+    w273  w50      5   5-0   2        58.655   68.2    69.9     TITLE
+    w274  wta250   2   1-1   2        58.268   67.2    68.9
+    w277  wta125   2   1-1   2        58.694   68.3    -
+    w279  wta500   3   2-1   2        58.725   68.4    -        <- ONSET (retirement)
+    w281  slam     1   0-1   2        58.750   68.5    -
+    w282  w75      5   5-0   3        58.758   68.5    -        TITLE
+    w286  slam     3   2-1   1        59.241   69.8    -        <- ONSET (retirement)
+    w287  w75      4   3-1   2        59.249   69.8    -
+    w288  wta500   1   0-1   3        54.308   56.8    57.0     <- deep sub-knee, and she lost
+    w290  w50      5   5-0   3        59.281   69.9    -        TITLE
+    w291  w100     4   3-1   3        59.289   69.9    -
+    w293  wta500   3   2-1   3        59.311   69.9    -
+
+She went on court **at or barely under the knee all window** (floor 67.2–69.9), provably below it at
+w274 (≤68.9) and deeply below it at **w288 (≤57.0)** – the week after a slam retirement plus a
+four-match W75. Neither ONSET happened at a low condition: both landed at a floor of 68.4 and 69.8.
+
+⚠ **Sensitivity, stated rather than buried.** `coachOnEventWeeks` is a point sample at w502; if the
+stance had been OFF in the window the edge would be +0.435 instead of +0.870 and every condition
+number above rises by ~1.1 uniformly. It shifts the floor, not the dips, and the dips are the reading.
+
+## §14 #14 answered – the model's own prediction, at her own exposure
+
+**The weekly door**, through the shipped `injuryTau` on a clone of her world stamped to each week,
+at the LOWER condition bound (the operand that maximises tau) and with the two unobservables – a
+booked vacation, a resort recovery buff – set to absent, both of which only reduce tau:
+
+    23 healthy weeks · SUM(tau) = 0.177 expected onsets (physio ON) / 0.244 (physio OFF)
+    P(>=2) = 1.4% / 2.5%          REALISED THROUGH THIS DOOR: 0
+
+**The retirement door**, priced by Monte Carlo over 4,000 reseeds of `simulateMatch` per match – the
+full point loop with momentum, the big-point penalty, the fatigue term and the retirement hazard,
+on the exact frozen players she met. ⚠ **Provenance first: all 42 matches reproduce winner AND
+scoreline byte-for-byte at their stored seed**, so the reseeds resample the same object.
+
+    expected retirements BY HER   0.461 ± 0.675 over 42 matches
+    expected by EITHER side       1.043 = 2.48% of matches, against RETIRE_K's own 2.73% calibration
+    P(>=2)                        7.8%          REALISED: 2
+
+**Both doors convolved exactly** (independent Bernoullis given the exposure – one per healthy week,
+one per match):
+
+    expected 0.638 onsets in the window
+    P(0) 52.6%  ·  P(1) 34.0%  ·  P(>=2) 13.4%  ·  P(>=3) 2.6%
+
+**Two onsets in this window is a 13.4% event under the shipped model at her own exposure – roughly
+one window in seven and a half.**
+
+### The population figures, and the exposure normalisation that dissolves most of the gap
+
+    figure                                                     onsets/season   per 100 matches
+    ROUND 25, his professional play (23.9 seasons, 24 onsets)   1.00 ± 0.20     1.59
+    her own play before college (5.65 seasons, 6 onsets, 369 m)  1.06 ± 0.43     1.63
+    pro-season-probe, reference cell, CORRECTED (48 seasons)    1.29 ± 0.16     3.19
+    pro-season-probe, greedy cell, CORRECTED (48 seasons)       1.10 ± 0.18     2.51
+    the shipped model AT HER OWN EXPOSURE in this window        1.28            1.52
+    REALISED in the window (2 onsets, 26 weeks, 42 matches)     4.00 ± 2.83     4.76 ± 3.37
+
+⚠ Round 25's 1.00 ± 0.20 is a both-doors figure read off saved `injuryHistory`, but the sample spans
+engines from before 10.08, when the retirement door did not exist – so it is a floor for a career
+played on today's engine, not a like-for-like.
+
+**Read per season she is at 4.0x the round-25 baseline. Read per MATCH she is at 3.0x it, and at
+1.5x a corrected bench of the current engine. Read against the model at her own exposure she is at
+3.1x an expectation of 0.638 – and the realised figure's own Poisson error is ±2.83 a season, so
+4.00 against 1.00 is z = 1.06.** That is not a signal; it is two events.
+
+### ⭐ VERDICT on #14: reproduced, and the model is correct. The window is dense and then unlucky.
+
+Nothing is wrong. Decomposed, «многовато» is: (1) **exposure** – 42 matches in 26 weeks, about twice
+a comparable professional stretch, and the retirement hazard is bought per match, so her expected
+onset count is genuinely above the population figure BEFORE any luck; (2) **the tail** – two onsets
+against an expectation of 0.638 is the 13.4% branch, one window in seven and a half; (3) **the word
+"injury" doing more work than the injuries did** – both were `minor`, together they cost three weeks
+of twenty-six, and the stretch they interrupted produced three titles. The weekly roll's prediction
+of ~0.18 onsets was met exactly: it produced none.
+
+## §15 #15 answered – her W/L against what her skills predict
+
+Her build in the window, read off the frozen snapshots rather than modelled:
+
+    wing            raw x f (w293)   on court   potential   field mean   edge over the field
+    serve                   54.83      55.59       57.38        48.04      +7.54
+    ret                     60.09      60.33       63.86        49.89     +10.43
+    composure               68.06      68.93       72.11        49.60     +19.33
+    stamina                 58.33      58.89       62.74        48.83     +10.05
+    groundstrokes           55.24      55.76       57.34        48.63      +7.13
+    mean on court 59.90 vs a field mean of 49.00 · counterpuncher · seasonHistory[5].endRank 85
+
+Two predictions, both from the engine's own functions on the players she actually met – the closed
+form `fastMatchProbability` (i.e. `pMatchBo3(basePServe(...))`, literally how the engine resolves an
+AI-AI match) and the Monte Carlo above. Expected wins is the Poisson-binomial sum, SEM `sqrt(Σp(1−p))`:
+
+    realised            31-11  (73.8%)
+    closed form         29.20 ± 2.76   z = +0.65
+    full point engine   29.39 ± 2.74   z = +0.59
+
+    by tier   n   W-L    exp    SEM     z          by round   n   W-L    exp    SEM     z
+    w50      10  10-0   9.00   0.95   1.06         r0        14  12-2   9.19   1.61   1.74
+    w75       9   8-1   7.19   1.18   0.68         r1        12   8-4   8.05   1.53  -0.03
+    wta500    9   5-4   4.95   1.47   0.04         r2         8   5-3   5.57   1.21  -0.47
+    wta125    4   2-2   2.52   0.94  -0.55         r3         5   3-2   3.96   0.89  -1.08
+    slam      4   2-2   1.92   0.96   0.08         r4         3   3-0   2.62   0.58   0.66
+    w100      4   3-1   2.76   0.90   0.27
+    wta250    2   1-1   1.06   0.69  -0.08
+
+### ⭐ VERDICT on #15: consistent with. Not a finding – and saying so is the result.
+
+**31 wins against an expected 29.4 ± 2.7 is +0.6 of a standard error.** Her realised record is
+exactly what her skills predict against the fields she actually met, and the closed form and the
+full point engine agree to 0.2 of a win over 42 matches. ⚠ **42 matches is a wide sample and the
+cells below it are wider still**: the largest of the twelve tier/round cells is r0 at z = 1.74, which
+is BELOW what twelve cells produce by chance – for twelve independent draws the MEDIAN largest |z| is
+1.91, and these twelve are not even independent (they partition the same 42 matches, which shrinks
+the maximum further). There is no tier and no round where her results depart from the model.
+
+## §16 The two items against each other – the link, priced
+
+Injuries suppress condition; condition scales all five wings through `conditionMatchFactor`; the
+scaled wings are what `basePServe` reads. So the link is real by construction, and the only question
+is its SIZE. Two measurements:
+
+**(a) Do the losses cluster after an onset? No.**
+
+    first 4 weeks after an onset   n=16   realised 13-3   expected 12.75 ± 1.50   z = 0.16
+    every other match              n=26   realised 18-8   expected 16.64 ± 2.30   z = 0.59
+
+**(b) What did the suppression cost, in wins?** The counterfactual is exact rather than modelled:
+undo the condition scaling on the SAME frozen snapshot (`(composed − edge)/f + edge`) and re-run the
+identical Monte Carlo against the identical opponent, only on the weeks where sub-knee is PROVEN.
+
+    w288 r0 vs F. Carvalho   cond <= 57.0 (f 0.9166)   as played 0.380 -> at full condition 0.518
+    every other proven sub-knee match (f 0.993-0.9995)                  within the ±0.011 MC noise
+    TOTAL over 12 matches: 0.16 of an expected win, of which 0.139 is that one match.
+
+**The honest link is therefore: the mechanism is real, it is already inside the model's expectation,
+and over this window it is worth one seventh of one match.** The single visible instance is w288 –
+the week after the slam retirement plus a four-match W75 – where she went on court at condition ≤57
+and lost a match she would have been a coin-flip in at full strength. That is the game working, and
+it is 0.14 of a win, not an explanation for anything.
+
+## §17 ⚠ A NAMED QUESTION FOR THE OWNER – found while measuring #14, and it is not about Alice
+
+`tools/pro-season-probe.ts` is the acceptance bench for `docs/specs/fatigue-reprice-2026-08.md` §6.
+**It read the body BEFORE it resolved the tournament.** `retirementInjury` is opened inside
+`finalizeTournament`, which the probe only reaches through `skipTournament` further down its own week
+loop – so every onset that came in by the retirement door landed AFTER the `world.injury !== null`
+check, and by the next iteration `wasInjured` was already true, so `!wasInjured` was false and the
+onset **vanished from the ledger entirely**. Not a mis-classified door: a missing onset.
+
+**Proved before it was believed** (null-result law, pointing the other way): `kidRetirements`, counted
+straight off `MatchRecord.retiredId`, read **30 over 2,115 bench matches in the same run that reported
+ZERO retirement-door onsets**, and 75.2% of those matches were long enough (≥19 games ≈ 120 points)
+to carry any hazard at all – so the arm was live and the instrument was blind. The fix is an
+ordering swap, in `tools/` only. Measured, same 16 seeds × 3 seasons:
+
+    cell (16 seeds x 3 seasons)          onsets/season         inj/100m     §6.4 prevalence
+    greedy/balanced/physio-on  before     0.48 ± 0.09           1.09         40%
+                               after      1.10 ± 0.18           2.51         63%
+    reference (pair/light/physio-off)     1.29 ± 0.16           3.19         71%   (weekly door alone: 60%)
+    ...the same cell at pre-variant-C recovery (--proRecovery 8)  1.46 ± 0.16  81%  (weekly alone: 58%)
+
+**The timeline is the point.** `injuryBaseChance: 0.003` was calibrated on **02.08** (commit 4318026)
+so that the professional pair schedule read **51% season prevalence** against a 46-54% target; the
+retirement door shipped on **10.08** (commit 54fd011), adding a second onset source; and the
+acceptance instrument has been unable to see it for the sixteen days since. Nothing was wrong on
+02.08 and nothing has been re-measured.
+
+**Corrected, the same reference cell reads 71% against a 46-54% band.** Decomposed: ~11 points are
+the retirement door the instrument could not see, and ~9 points are drift in the weekly door itself
+(60% today against the 51% recorded on 02.08). ⚠ Recovery variant C is NOT that drift – measured:
+`--proRecovery 8` moves the weekly-door prevalence to 58%, i.e. within noise of 60%, because better
+recovery buys her MORE matches (2,308 against 1,945) and hands the difference straight back through
+the retirement door. The remaining drift is unattributed and out of this measurement's scope.
+
+**His call, and it is a real fork:**
+
+- **(a) the 46-54% band was about ALL injuries.** Then the professional schedule over-injures by
+  ~17-25 points today and `injuryBaseChance` wants re-deriving downward – and #14's «многовато» is
+  not about Alice's window at all, it is about the tuning target, and he felt it before it was found.
+- **(b) the retirement door is a separate fiction** – a girl who stops mid-match, calibrated on its
+  own research anchor at 2.73% of matches – in which case 46-54% should be read on the weekly door
+  alone, that reads 60%, and the ~9 points of unattributed drift is the only thing left to chase.
+
+**No engine number is touched by this measurement either way**, and no re-derivation is proposed
+here: `injuryBaseChance` is a shipped knob with a spec of its own and moving it is a wave, not a
+footnote. What has changed is that the instrument now reports what the engine does.
+
+**Gate**: `git diff src/` empty, `tests/condition.test.ts` green on the frozen capture
+(41550 / e6b0c709), `npm run context:audit` green. Everything above is `tools/` and `docs/`.

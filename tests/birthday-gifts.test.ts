@@ -230,13 +230,22 @@ describe('the birthday popup', () => {
   it('⭐ ...and the day together is never spent – she may want one every year of her life', () => {
     // The exclusion is about POSSESSIONS. A day with her parents is not one, and excluding it would
     // make §2ab's best case unreachable for any career that ever chose it.
+    //
+    // ⚠ RE-AIMED BY ROUND 26 #9b, AND THE RE-AIM IS THE POINT OF THE FAILURE IT FIXED. The spent
+    // list was written out by hand – `['day', 'car', 'deposit', 'home']` – which WAS every material
+    // gift of the 19-21 band on the day it was written. #9b added two rows to that band and the
+    // literal silently stopped covering it, so the claim ("the day is the only unspent option")
+    // became false and the count fell to 86/200 while the sentence above it still said 200. The
+    // list is READ OFF THE BAND now, so a wider catalogue tightens this test instead of rotting it.
+    const band = BIRTHDAY_BANDS.find((b) => b.from === 19 && b.to === 21)!
+    const spentEverything = [BIRTHDAY_DAY_TOGETHER.id, ...band.gifts.map((g) => g.id)]
     let reachedDay = 0
     for (let s = 0; s < 200; s++) {
-      const { askedId } = birthdayOffer(`day-again-${s}`, 20, [BIRTHDAY_DAY_TOGETHER.id, 'car', 'deposit', 'home'])
+      const { askedId } = birthdayOffer(`day-again-${s}`, 20, spentEverything)
       if (askedId === BIRTHDAY_DAY_TOGETHER.id) reachedDay++
     }
-    // Every material gift of the 19-21 band is spent here, so the day is the ONLY unspent option and
-    // the pool is a single row: it must be the ask every time.
+    // Every material gift of the band is spent here, so the day is the ONLY unspent option and the
+    // pool is a single row: it must be the ask every time.
     expect(reachedDay, 'the day is still askable after it has been given').toBe(200)
   })
 
@@ -345,11 +354,20 @@ describe('the birthday popup', () => {
     // rather than on the source text, so it survives the file moving: no gift carries a numeric
     // field, and no word the player reads names an amount.
     const money = /[$€£]|\bcents?\b|\bdollars?\b|\bcosts? \d|\b\d[\d,.]*\s?(k|m)?\b/i
+    // ⚠ WIDENED BY ROUND 26 #4, NOT WEAKENED. `Object.entries` was a flat walk and a gift is no
+    // longer flat: `unlicensed` is a nested object of the SAME strings under a means licence, and a
+    // flat walk asserted `typeof {} === 'string'` and never looked inside it – which would have left
+    // the one set of sentences this round added completely unchecked for a price. Every string leaf
+    // on a gift, at any depth, and every leaf must BE a string.
+    const leaves = (v: unknown, path: string): Array<[string, string]> => {
+      if (typeof v === 'string') return [[path, v]]
+      expect(v && typeof v === 'object', `${path} is neither a string nor a nested object of them`).toBe(true)
+      return Object.entries(v as Record<string, unknown>).flatMap(([k, x]) => leaves(x, `${path}.${k}`))
+    }
     for (const band of [...BIRTHDAY_BANDS, { from: 0, to: 0, gifts: [BIRTHDAY_DAY_TOGETHER] }]) {
       for (const g of band.gifts) {
-        for (const [field, text] of Object.entries(g)) {
-          expect(typeof text, `${g.id}.${field} is a string – a gift has no numbers on it`).toBe('string')
-          expect(money.test(text as string), `${g.id}.${field}: "${text}"`).toBe(false)
+        for (const [field, text] of leaves(g, g.id)) {
+          expect(money.test(text), `${field}: "${text}"`).toBe(false)
         }
       }
     }

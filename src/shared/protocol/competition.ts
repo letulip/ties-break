@@ -304,7 +304,22 @@ export interface FullBracketMatch {
  *  enough for the pre-match card, the post-match card, the bracket strip and the finale. */
 export interface PendingView {
   eventId: string
-  tier: TierId
+  /** ⭐⭐⭐ ROUND 26 #6 – NULL IS «THIS FIXTURE HAS NO RUNG», AND IT IS THE ONE DISCRIMINATOR THE
+   *  AMATEUR REVEAL NEEDS. The owner: «в чем проблема использовать наш флоу турниров полностью и
+   *  дать возможность игроку их смотреть и сопереживать? Я уже просил это сделать».
+   *
+   *  The College League is played through `simulateMatch` like everything else and is now walked in
+   *  `TournamentFlow` like everything else – but it awards no ranking points and no prize money
+   *  (round 25's ruling, and it is what keeps the fork a real choice), so there is genuinely no
+   *  `TierId` behind it. `collegeLeagueMatchId` already refuses to name one for the same reason.
+   *
+   *  ⚠⚠ A NULL RATHER THAN AN INVENTED RUNG IS THE WHOLE SAFETY OF THIS. Every arithmetic that could
+   *  pay her is reached through `TIERS[tier]` – `finalizeTournament`'s points table, `prizeCentsFor`,
+   *  `trophiesByTier` – so a view that HAS no tier cannot be plugged into any of them by accident.
+   *  The five facts the flow actually prints (`tierLabel`, `points`, `finishLabel`, `roundLabel`,
+   *  `surface`) are already resolved on this view and carry the amateur answers: the label is the
+   *  competition's own name, and `points` is 0. */
+  tier: TierId | null
   surface: Surface
   /** THE DAY'S TEMPERATURE, for the live match's weather plate. The SAME number the Season card
    *  showed for this tournament – `eventTemperature`, one source, so the two surfaces cannot

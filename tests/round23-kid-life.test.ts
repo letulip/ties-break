@@ -49,6 +49,9 @@ import { COLLEGE_TIER_NAME } from '../src/engine/collegeOffer'
 import { ENDINGS } from '../src/engine/ending'
 import { WEEKS_PER_YEAR } from '../src/engine/season/calendar'
 import {
+  closeTournament,
+  collegeLeagueRevealOpen,
+  skipTournament,
   answerFork,
   buildBirthdayPrompt,
   chooseGift,
@@ -66,6 +69,20 @@ import { rngFromSeed } from '../src/engine/rng'
 import { POLICIES, stepCareerWeek } from '../tools/econ-bench'
 import { seasonYear } from '../src/shared/dates'
 import { DEFAULT_PROFILE, type CollegeTier } from '../src/shared/protocol'
+
+/** ⭐⭐⭐ ROUND 26 #6 RE-AIM – THE PRESS THAT ANSWERS THE CHAMPIONSHIP. `resumeFromCollege` now PAUSES
+ *  the year on the College League week the way it already pauses on her birthday, because the owner
+ *  had been told about the tournament instead of shown it. So every walk here answers the reveal the
+ *  way the player does – «Skip all rounds», then the finale's «Continue», which are `skipTournament`
+ *  and `closeTournament` dispatched at the college reveal. Nothing measured below moved; the walk
+ *  answers one more question and its press ceiling grows by one a year. The full note is in
+ *  tests/college-league.test.ts, and the flow itself in tests/round26-college-flow.test.ts. */
+function answerLeagueReveal(world: WorldState): void {
+  if (!collegeLeagueRevealOpen(world)) return
+  skipTournament(world)
+  closeTournament(world)
+}
+
 
 /** A view for one week of one career. Her age is HER OWN (`kidAgeExact`), never the band's – the
  *  one-clock ruling – because the after-school ladder's last rung is an age comparison. */
@@ -354,8 +371,9 @@ describe('#6b – on a career that really went', () => {
       stepCareerWeek(world, rng, POLICIES[1])
     }
     // Press-answer-press (round 24): the year pauses on her birthday so the gift can be answered.
-    for (let press = 0; press < 3 && world.college!.years.length === 0; press++) {
+    for (let press = 0; press < 4 && world.college!.years.length === 0; press++) {
       resumeFromCollege(world, rng)
+      answerLeagueReveal(world)
       const age = pendingBirthday(world)
       if (age !== null) chooseGift(world, answerableGift(world))
     }
@@ -408,9 +426,10 @@ describe('#6b – on a career that really went', () => {
       stepCareerWeek(world, rng, POLICIES[1])
     }
     // Press-answer-press (round 24): each year pauses on her birthday week.
-    for (let press = 0; press < 3 * ENDINGS.collegeYears && world.college!.doneWeek === null; press++) {
+    for (let press = 0; press < 4 * ENDINGS.collegeYears && world.college!.doneWeek === null; press++) {
       world.fundsCents = Math.max(world.fundsCents, 500_000_00)
       resumeFromCollege(world, rng)
+      answerLeagueReveal(world)
       const age = pendingBirthday(world)
       if (age !== null) chooseGift(world, answerableGift(world))
     }

@@ -23,8 +23,16 @@
 // or its own words fails here and cannot fail there.
 //
 // ⚠ AND THE LAST BLOCK IS THE OTHER HALF OF INVARIANT 1: `answerFork` re-validates the tier
-// engine-side and falls back to THE CHEAPEST PLACE OPEN TO HER. The card's stated default is
-// asserted to be the tier the engine actually records, so the promise and the ledger cannot part.
+// engine-side and falls back to THE CHEAPEST PLACE. The card's stated default is asserted to be the
+// tier the engine actually records, so the promise and the ledger cannot part.
+//
+// ⭐⭐⭐⭐ RE-AIMED BY ROUND 26 #2's SECOND PASS, AND FAULT 2 IS RETIRED RATHER THAN WEAKENED. The
+// owner overruled the RULE this file's first block was built around – «по-моему в каждой стране есть
+// домашний универ» – so `CollegeQuote.open`, `tierShutFor`, `quoteShutFor` and `COLLEGE_SHUT_DETAIL`
+// are all gone (v61) and there is no refused row left to explain. Fault 2's house rule is kept by
+// being satisfied absolutely: **no row is dead, in any of the 24 playable countries.** Block 1 asserts
+// that instead of asserting the plaque; fault 1 (document order), ruling 4 and the phone fit are
+// untouched claims and go on being measured exactly as they were.
 import { describe, it, expect, beforeEach } from 'vitest'
 import { mount } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
@@ -34,13 +42,11 @@ import '../../src/style.css'
 import { useGameStore } from '../../src/stores/game'
 import { assertDismissReachable, measureDialog, setViewport, NARROW_PHONE, PHONE } from './fits'
 import { createWorld, answerFork, measureCollegeOffer, toSnapshot } from '../../src/engine/world'
-import {
-  COLLEGE_SHUT_DETAIL,
-  COLLEGE_TIER_NAME,
-  COLLEGE_TIER_ORDER,
-  tierShutFor,
-} from '../../src/engine/collegeOffer'
+import { COLLEGE_TIER_NAME, COLLEGE_TIER_ORDER } from '../../src/engine/collegeOffer'
 import { DEFAULT_PROFILE } from '../../src/shared/protocol'
+// ⚠ THE PLAYABLE COUNTRY LIST – block 1 sweeps every career a player can start rather than two
+// sample passports, because "no place is refused" is a claim about all of them.
+import { COUNTRY_NAMES } from '../../src/composables/countries'
 import type { WorldState } from '../../src/engine/world'
 
 /** ⚠ A REAL CAREER STANDING AT THE FORK, and the offer is the engine's own. `resolveEndings` raises
@@ -74,96 +80,88 @@ function quotesOf(world: WorldState) {
 const ABROAD = 'CZ'
 
 // =================================================================================================
-// 1. ⭐⭐⭐ EVERY REFUSED TIER STATES A REASON, AND IT IS THE ONE THE ENGINE WOULD GIVE
+// 1. ⭐⭐⭐⭐ NO TIER IS REFUSED – IN ANY OF THE TWENTY-FOUR COUNTRIES (round 26 #2, second pass)
 // =================================================================================================
-describe('⭐⭐⭐ round 24 #2a – a refused place says why, in the engine\'s own words', () => {
+//
+// WHAT STOOD HERE, so the trade is legible rather than quietly deleted. Four cases, all built on the
+// residence rule: «every row the card refuses states the engine's reason – and no open row states
+// one» (a sweep over both residence classes against `tierShutFor` / `COLLEGE_SHUT_DETAIL`), its
+// anti-vacuity twin («the two residence classes really do draw different cards»), «the card refuses
+// exactly the rows the engine's own `open` refuses», and the legibility case that pinned the refusal
+// OUTSIDE `.is-shut`'s fade. They were good tests of a rule the owner has now deleted.
+//
+// ⚠⚠ THE REPLACEMENT IS STRICTLY STRONGER, WHICH IS WHY THIS IS A RE-AIM AND NOT A LOSS. Those cases
+// asserted that a refusal explains itself and that at least two places survive; these assert that
+// **no refusal exists at all**, over the whole playable country list rather than over two sample
+// passports – and that the card cannot even express one any more (`is-shut` and
+// `.fork-place-refusal` are gone from the DOM and from the stylesheet).
+describe('⭐⭐⭐⭐ round 26 #2 – every place is pressable, whatever her passport', () => {
   beforeEach(() => {
     setActivePinia(createPinia())
     document.body.innerHTML = ''
   })
 
-  // ⚠⚠ THIS IS THE CASE THE OWNER'S SENTENCE IS ABOUT. Written as a sweep over both residence
-  // classes rather than as a spot check, because the property is "EVERY refused tier", and a spot
-  // check on the one tier that happens to be shut today would pass on a card that hard-codes it.
-  it('⭐⭐⭐ every row the card refuses states the engine\'s reason – and no open row states one', () => {
-    for (const country of [ABROAD, 'US']) {
-      const world = atTheFork(`r24-2a-reason-${country}`, country)
+  // ⚠⚠ THIS IS THE CASE THE OWNER'S SENTENCE IS ABOUT, and it is a sweep over every career a player
+  // can start – `COUNTRY_NAMES` is exactly the list onboarding offers. A spot check on `US` and one
+  // other passport would pass on a card that still shut a third country nobody thought to try.
+  it('⭐⭐⭐⭐ draws three live rows in all 24 playable countries, and refuses none of them', () => {
+    const codes = Object.keys(COUNTRY_NAMES)
+    expect(codes.length, 'the sweep really is the whole onboarding list').toBe(24)
+    for (const country of codes) {
+      const world = atTheFork(`r26-2-open-${country}`, country)
       const w = mountFor(world)
       const places = w.findAll('.fork-place')
-      expect(places, 'three places, whatever her passport').toHaveLength(3)
-
-      let refusedSeen = 0
+      expect(places, `${country}: three places`).toHaveLength(3)
       for (const [i, tier] of COLLEGE_TIER_ORDER.entries()) {
-        // THE ENGINE'S ANSWER, asked of the same function `quoteFor` asked when it set `open`.
-        const shut = tierShutFor(tier, country)
-        const plaque = places[i].find('.fork-place-refusal')
-        if (shut === null) {
-          expect(places[i].attributes('disabled'), `${country} ${tier}: open, so pressable`).toBeUndefined()
-          expect(plaque.exists(), `${country} ${tier}: an open row explains nothing`).toBe(false)
-          continue
-        }
-        refusedSeen += 1
-        expect(places[i].attributes('disabled'), `${country} ${tier}: shut, so not pressable`).toBeDefined()
-        expect(plaque.exists(), `${country} ${tier}: a refused row is never silent`).toBe(true)
-        // ⭐ AND THE WORDS ARE THE ENGINE'S, not this card's. A sentence typed into the template
-        // passes the line above and fails this one.
-        expect(plaque.text(), `${country} ${tier}: the engine's own sentence`).toBe(COLLEGE_SHUT_DETAIL[shut])
-        expect(plaque.text().length, 'and it actually says something').toBeGreaterThan(20)
+        expect(places[i].attributes('disabled'), `${country} ${tier}: pressable`).toBeUndefined()
+        expect(places[i].classes(), `${country} ${tier}: not faded`).not.toContain('is-shut')
       }
-      expect(refusedSeen, `${country}: the sweep is not vacuous`).toBe(country === 'US' ? 0 : 1)
+      expect(w.findAll('.fork-place-refusal'), `${country}: nothing to explain`).toHaveLength(0)
       w.unmount()
     }
   })
 
-  // ⚠⚠ THE ANTI-VACUITY HALF, AND IT IS THE ONE THAT MAKES THE CASE ABOVE A MEASUREMENT. Both
-  // residence classes must really be different on this screen, or the sweep proves nothing.
-  it('⚠ the two residence classes really do draw different cards', () => {
-    const abroad = mountFor(atTheFork('r24-2a-split-abroad', ABROAD))
-    const home = mountFor(atTheFork('r24-2a-split-home', 'US'))
-    expect(abroad.findAll('.fork-place-refusal'), 'one refusal abroad').toHaveLength(1)
-    expect(home.findAll('.fork-place-refusal'), 'none at home').toHaveLength(0)
-    expect(abroad.findAll('.fork-place[disabled]')).toHaveLength(1)
-    expect(home.findAll('.fork-place[disabled]')).toHaveLength(0)
-    abroad.unmount()
-    home.unmount()
+  // ⭐⭐ AND THE HOME PLACE IS WHAT THE BUTTON TAKES, EVERYWHERE. This is the owner's own complaint
+  // answered on the control that spends it: he could not choose the cheapest place, and now the
+  // cheapest place is what the card takes when he chooses nothing.
+  it('⭐⭐ the button names the place at home for a career that could never reach it before', () => {
+    for (const country of [ABROAD, 'AU', 'JP', 'US']) {
+      const w = mountFor(atTheFork(`r26-2-default-${country}`, country))
+      expect(w.findAll('.fork-answer')[1].text(), `${country}: the cheapest place, and it is hers`).toContain(
+        COLLEGE_TIER_NAME.state,
+      )
+      w.unmount()
+    }
   })
 
-  // ⭐⭐ ONE QUESTION, ONE ANSWER. `answerFork` re-validates on the PERSISTED `quote.open`; this
-  // asserts the card's dead rows are exactly that boolean's false cases, so a stale screen and the
-  // engine cannot hold different opinions about which rung is shut (CLAUDE.md invariant 1).
-  it('⭐⭐ the card refuses exactly the rows the engine\'s own `open` refuses', () => {
+  // ⚠⚠ THE ENGINE AGREES WITH THE SCREEN – invariant 1, kept at the point where it can now go wrong
+  // in the OTHER direction. The old hazard was a card drawing a row the engine would refuse; the new
+  // one is a card drawing a row the engine silently substitutes, which is exactly what a surviving
+  // `q.open` filter in `answerFork` would have done to a migrated save. So the press is walked
+  // through the real command and the recorded tier is read back.
+  it('⭐⭐⭐ pressing the home row really enrols her at the home place, not at the next one up', async () => {
     for (const country of [ABROAD, 'US']) {
-      const world = atTheFork(`r24-2a-agree-${country}`, country)
-      const quotes = quotesOf(world)
+      const world = atTheFork(`r26-2-answer-${country}`, country)
       const w = mountFor(world)
-      const places = w.findAll('.fork-place')
-      for (const [i, q] of quotes.entries()) {
-        const drawnShut = places[i].attributes('disabled') !== undefined
-        expect(drawnShut, `${country} ${q.tier}: the screen and the engine agree`).toBe(!q.open)
-        expect(places[i].find('.fork-place-refusal').exists(), `${country} ${q.tier}: reason iff refused`).toBe(!q.open)
-      }
+      await w.findAll('.fork-place')[0].trigger('click')
+      expect(w.findAll('.fork-place')[0].attributes('aria-pressed'), `${country}: the press landed`).toBe('true')
+      answerFork(world, 'college', 'state')
+      expect(world.fork!.offer!.chosen, `${country}: and the engine recorded the home place`).toBe('state')
       w.unmount()
     }
   })
 
-  // ⚠ AND THE REFUSAL IS NOT DIMMED WITH THE ROW. The greying is what made it unreadable: the row
-  // faded to 0.55 and took its own explanation with it. `.fork-place-refusal` is outside that fade.
-  it('⚠ the reason is the one thing on a refused row that is not faded out', () => {
-    const world = atTheFork('r24-2a-legible', ABROAD)
-    const w = mountFor(world, true)
-    const row = document.querySelector('.fork-place.is-shut') as HTMLElement
-    expect(row, 'a shut row is on the card').toBeTruthy()
-    // ⚠ happy-dom returns '' for an unset `opacity` rather than '1', so an unset value is read as
-    // the initial one. A bare `Number('')` is 0, which would have made this assertion say the
-    // opposite of what it means.
-    const opacityOf = (el: Element): number => {
-      const v = getComputedStyle(el).opacity
-      return v === '' ? 1 : Number(v)
-    }
-    const plaque = row.querySelector('.fork-place-refusal')!
-    expect(opacityOf(plaque), 'the reason reads at full strength').toBe(1)
-    // ...while the figures it explains are the part that is dimmed.
-    expect(opacityOf(row.querySelector('.fork-place-head')!), 'and the row still reads as unavailable').toBeLessThan(1)
+  // ⚠ THE MUTATION ARM FOR THE THREE ABOVE, AND IT IS THE HONEST ONE: put a `disabled` back on the
+  // first row and every case in this block goes red. Written as a live check that the selector the
+  // sweep uses would find such a row if one existed – a sweep asserting the ABSENCE of something has
+  // to prove its own instrument works.
+  it('⚠ the instrument can see a dead row – it just never finds one', async () => {
+    const world = atTheFork('r26-2-instrument', ABROAD)
+    const w = mountFor(world)
+    const first = w.findAll('.fork-place')[0]
+    expect(first.attributes('disabled')).toBeUndefined()
+    first.element.setAttribute('disabled', '')
+    expect(w.findAll('.fork-place')[0].attributes('disabled'), 'the selector really reads the attribute').toBeDefined()
     w.unmount()
   })
 })
@@ -226,11 +224,13 @@ describe('⭐⭐ round 24 #2a – the three places are read before anything is c
     }
     expect(w.findAll('.fork-places .fork-answer'), 'no place is an answer').toHaveLength(0)
     expect(w.findAll('.tb-pill'), 'still no primary').toHaveLength(0)
-    // ⚠ AND THE REFUSAL MAY NOT BE ADVICE. Ruling 4 again: naming the other rows would be telling
-    // him which to take.
-    const plaque = w.find('.fork-place-refusal').text().toLowerCase()
+    // ⚠⚠ RULING 4, RE-AIMED AT WHAT IS LEFT TO READ (round 26 #2, second pass). It used to take the
+    // refusal plaque's own words and refuse a verdict in them; there is no plaque, so it takes the
+    // WHOLE places block – three rows and the caption under them – which is a wider net than the one
+    // sentence it replaces and covers the copy that is actually still on screen.
+    const block = w.find('.fork-places-block').text().toLowerCase()
     for (const steer of ['should', 'better', 'instead', 'recommend', 'consider', 'try ']) {
-      expect(plaque, `the refusal offers no verdict ("${steer}")`).not.toContain(steer)
+      expect(block, `the places offer no verdict ("${steer}")`).not.toContain(steer)
     }
     w.unmount()
   })
@@ -265,7 +265,10 @@ describe('⭐⭐ the fork card, with the places above the answers, fits a phone'
 
   it('keeps the way out inside a 375x667 screen, with a refusal on the card', () => {
     const { w, card, dismiss } = attached(ABROAD)
-    expect(document.querySelector('.fork-place-refusal'), 'and the refusal is one of the sentences measured').toBeTruthy()
+    // ⚠ ROUND 26 #2: the sentence this line used to name was the refusal plaque, which is gone. The
+    // anti-vacuity claim is the same and now points at the three rows themselves – the card really
+    // does carry its full content while being measured.
+    expect(document.querySelectorAll('.fork-place'), 'and all three rows are on the card measured').toHaveLength(3)
     const fit = assertDismissReachable(card, dismiss, PHONE, 'ForkDialog (places above)')
     expect(fit.available.height).toBe(635)
     expect(fit.cap, 'bounded by the room the scrim leaves').toBe(635)
@@ -296,37 +299,41 @@ describe('⭐⭐ the fork card, with the places above the answers, fits a phone'
 })
 
 // =================================================================================================
-// 4. ⭐⭐⭐ THE ENGINE STILL RE-VALIDATES, AND STILL FALLS BACK TO THE CHEAPEST PLACE OPEN TO HER
+// 4. ⭐⭐⭐ THE ENGINE TAKES THE TIER IT IS GIVEN, AND FALLS BACK TO THE CHEAPEST PLACE
 // =================================================================================================
 //
-// ⚠ BOTH PROPERTIES ARE PRE-EXISTING AND THIS WAVE MAY NOT MOVE EITHER (`world/endings.ts`'s own
-// note): the card stops drawing a place residence shuts, and THIS is what makes that a rule rather
-// than a decoration – while the ANSWER itself is never refused, because a caller with no tier is one
-// that never asked the player.
-describe('⭐⭐⭐ `answerFork` re-validates the tier, and never refuses the answer', () => {
+// ⚠⚠ RE-AIMED BY ROUND 26 #2, AND THE RE-AIM IS THE BEHAVIOUR CHANGE ITSELF. The two properties this
+// block held were «a shut tier falls back to the cheapest place OPEN to her» and «the answer is never
+// refused». The first is gone with the rule: nothing is shut, `answerFork` no longer filters on
+// `q.open` (the field does not exist), and a career abroad that asks for the home place GETS the home
+// place. The second is untouched and still measured below – an unknown tier still falls back rather
+// than throwing, because nothing removes the college answer (owner, 16.08).
+//
+// ⚠ AND THE ONE THAT REPLACES IT IS THE HAZARD THE DELETION CREATED. With the filter still in place,
+// a career carrying a persisted `state: {open: false}` would have had its press silently redirected
+// to the next place up. The first case below is that exact walk, abroad, asserting the home place is
+// what gets recorded.
+describe('⭐⭐⭐ `answerFork` takes the place she pressed, and never refuses the answer', () => {
   beforeEach(() => setActivePinia(createPinia()))
 
-  it('⭐⭐ a shut tier falls back to the cheapest place open to her – it does not throw', () => {
-    const world = atTheFork('r24-2a-revalidate', ABROAD)
-    expect(world.fork!.offer!.quotes[0], 'the cheapest place really is shut for her').toMatchObject({
-      tier: 'state',
-      open: false,
-    })
+  it('⭐⭐⭐⭐ a career abroad asks for the home place and is enrolled at the home place', () => {
+    const world = atTheFork('r26-2-revalidate', ABROAD)
+    expect(world.fork!.offer!.quotes[0].tier, 'the cheapest place is the home one').toBe('state')
     expect(() => answerFork(world, 'college', 'state')).not.toThrow()
     expect(world.fork!.answer, 'the answer is never refused').toBe('college')
-    expect(world.fork!.offer!.chosen, 'and it lands on the cheapest place that IS hers').toBe('national')
+    expect(world.fork!.offer!.chosen, 'and it lands on the place she asked for').toBe('state')
     // ⚠ ROUND 24 #5: the answer RESERVES – no ending latches here; the September departure is booked
     // instead, and the enrolment honours the quote chosen above (tests/college-departure.test.ts).
     expect(world.ending, 'the reservation does not end anything').toBeNull()
     expect(world.fork!.departsWeek ?? null, 'the departure is booked').not.toBeNull()
   })
 
-  it('⭐ a caller with no tier gets the cheapest OPEN place, in both residence classes', () => {
-    const abroad = atTheFork('r24-2a-fallback-abroad', ABROAD)
+  it('⭐ a caller with no tier gets the cheapest place – the same one in both residence classes now', () => {
+    const abroad = atTheFork('r26-2-fallback-abroad', ABROAD)
     answerFork(abroad, 'college')
-    expect(abroad.fork!.offer!.chosen).toBe('national')
+    expect(abroad.fork!.offer!.chosen, 'abroad it used to be `national`').toBe('state')
 
-    const home = atTheFork('r24-2a-fallback-home', 'US')
+    const home = atTheFork('r26-2-fallback-home', 'US')
     answerFork(home, 'college')
     expect(home.fork!.offer!.chosen, 'at home the cheapest place is hers').toBe('state')
   })
