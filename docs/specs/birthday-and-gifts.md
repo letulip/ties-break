@@ -526,3 +526,106 @@ by either: `tests/condition.test.ts` is green on 41550 draws / hash `e6b0c709`, 
 ⚠ **§8d's sentence about `gifts.length + 3` is superseded by this section**, and its determinism
 claim is not: every id is still unchanged and still persisted, and `giftNoun` still walks the whole
 catalogue.
+
+---
+
+## 11. Round-26 #4, second pass – the wish beside the bicycle (26.08.2026)
+
+> «надо переписать значит **саму фразу для велосипеда** для соответствия ее пожеланиям и **достаток
+> здесь вообще не при чем**. У меня нет проблем с велосипедом, может быть это должна быть как раз
+> **просьба на первый ДР во время учебы** вообще.»
+
+### 11a. What the first pass got wrong, and it was not the licence
+
+He read one dialog: the ask was `flighthome`'s **«She has been looking up fares home at two in the
+morning and booking none»** and the bicycle was sitting in the options. He read the two as a **pair** –
+a girl who cannot afford a train ticket, offered a bike. §9 answered the half that was visible (a
+hardship sentence printed over a $584,375 wallet) and left the half he was actually pointing at:
+
+**`campusbike` had no wish of its own that a player would connect to it.** Its ask was «She has counted
+the minutes she spends walking between buildings. It is a lot.» – hooked on «minutes» (rule 2, §8) and
+never said the word *bicycle*. So the only sentence at the top of that dialog that could point at the
+bike pointed at it obliquely, and the one that pointed loudly pointed somewhere else.
+
+⚠ **The means predicate is NOT the tool for this row and is not touched.** «достаток здесь вообще не
+при чем.» `campusbike` carries no `means` and must not grow one. §9's licence stays exactly where it
+was earned – `flighthome` and `books` (hardship), `neverbuy` (plenty) – and
+`tests/college-birthday.test.ts` now asserts that split mechanically, including that the bicycle
+declares nothing in any of its four strings.
+
+### 11b. The wish
+
+| | |
+| --- | --- |
+| was | *She has counted the minutes she spends walking between buildings. It is a lot.* |
+| **is** | ***Everyone there has a bicycle. She walks, and she has mentioned it twice.*** |
+
+* **It is about the bicycle.** It names the thing, which the old line never did.
+* **It is means-blind.** Everyone on a campus having a bicycle is as true of a rich family as of a
+  poor one, and what she wants is to stop being the one walking. Measured, not asserted: the same
+  first wish renders identically at a household wallet of **$1,200** and of **$643,595**.
+* **It hooks harder, not softer** (§8 rule 2). Two hooks where the old line had one – *bicycle* is on
+  this row's label and on no other row of the band, *walks* is in its note and nowhere else – and both
+  are words on the button the player is looking at.
+* **It is 71 characters against 76**, so the prompt is SHORTER than the one it replaces and the
+  round-20 fit rule is not newly stressed.
+
+### 11c. Her first college birthday asks for it
+
+> «может быть это должна быть как раз просьба на первый ДР во время учебы вообще»
+
+**Yes, and there is a reason beyond his suggestion.** A bicycle is a fresher's problem: the fifteen
+minutes between buildings are a discovery in the first term and solved furniture by the fourth year.
+The band's other three rows are not like that – the room, the journey home and the reading list are
+true of all four years – so this is the one row that belongs to a particular year, and it is the first.
+
+**And a deterministic college year is the house's own shape**, not an invention: `docs/decisions.md`,
+19.08, «one line per year and not a random pick, deliberately – four college birthdays is the whole of
+the population».
+
+How it is built, and each half is load-bearing:
+
+1. **The bicycle is guaranteed to be ON that dialog.** The band holds 4 gifts and a dialog shows 3, so
+   C(4,3) = 4 combinations and **exactly one omits the bicycle**. `materialFor` rotates the shuffled
+   cycle left until entry 0 contains it – at most one step, no draw.
+2. **The college walk is indexed by the college BIRTHDAY, not by her age.** She enrols at 18, 19 or 20
+   depending on the career, so `age % 4` puts her first college birthday anywhere in the cycle and no
+   fixed rotation can land entry 0 on it for every career. `collegeBirthdayIndexOf(world)` counts the
+   birthday rows at or after `college.fromWeek` – derived from the record, like `pendingBirthday`
+   itself, never a second counter and never a save field.
+3. **The ask is OVERRIDDEN, not re-drawn.** `pool[Math.floor(rng() * pool.length)]` still runs, so
+   `seed:birthday:<age>` is still drawn **exactly four times for every birthday in the game** – the
+   identical reason the `alreadyGiven` filter is applied to the pool and never to the draw. The
+   override then takes the bicycle **out of `pool`**, so §2ab's two properties hold unchanged: the ask
+   is one of the four on screen, and it is never a present she already holds (a poked save that
+   somehow owns the bicycle falls through to the drawn ask).
+
+⚠ **And the three derivations became one.** `buildBirthdayPrompt` and `chooseGift` must build the
+identical offer (invariant 1 – the worker is not the gate), and `tools/birthday-pool.ts` re-derives the
+ask to measure it. That was three copies of the arguments held in line by a comment, and this round
+would have made them four arguments long. `birthdayOfferFor(world, age)` is the one seam now; all
+three call it.
+
+### 11d. Measured after – `tools/birthday-pool.ts`, 12 walked careers
+
+| | tour band | college band |
+| --- | --- | --- |
+| birthdays | 274 | **48** (4 per career, ages 20-23) |
+| back-to-back IDENTICAL four rows | **0/189 – 0%** | **0/36 – 0%** |
+| longest run of identical dialogs | 1 | **1** |
+| each row's share of the dialogs | – | 36/48 = **75%** each, i.e. 3 of the 4 combinations |
+
+* **Her four college birthdays are still four different dialogs.** The 75% per row is the arithmetic
+  proof: every one of the four combinations is visited exactly once. The rotation preserved round 26
+  #9b's claim rather than trading it away – a rotation of a four-cycle is still a four-cycle.
+* **The bicycle is asked for on 20 of 48 college birthdays (42%)** – twelve of those are the
+  first-birthday pin, one per career, and eight are ordinary draws on later years.
+* **No schema move.** The index is derived, the rotation is a pure function of the shuffled cycle, and
+  nothing is persisted. `tests/condition.test.ts` green on **41550 / `e6b0c709`**, unchanged.
+
+⚠ **The instrument was broken before it was read, which is the finding worth keeping.**
+`tools/birthday-pool.ts` walks the freeze by pressing three times a year, and round 26 #6 gave the
+college year a SECOND stop (the championship reveal). Run on 26.08 before that was fixed it printed
+**«no birthdays recorded»** for the entire college band and a college wallet census of `none` – a
+stalled walk reported as a population. The fix (answer the reveal, six presses a year) reproduces §9's
+own census exactly: 48 college birthdays, median wallet **$133,514**, **0 in the `tight` band**.

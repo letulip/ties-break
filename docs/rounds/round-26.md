@@ -391,16 +391,137 @@ a repeat, and the record has to show the first fix missing.
   the week button, and gated on an empty five-week calendar OR a layoff of five-plus weeks (total or
   remaining).
 
-- [!] **2 (again). «по-моему в каждой стране есть домашний универ»** – ⭐ he is overruling the RULE,
+- [x] **2 (again). «по-моему в каждой стране есть домашний универ»** – ⭐ he is overruling the RULE,
   not the sentence. The in-state rung is US-only because it models US in-state tuition; his ruling is
   that a home university exists everywhere. **build**: the cheap rung becomes the home-country place
   for every country, and the refusal it keeps (if any) must be one a player can meet.
 
-- [!] **4 (again). «надо переписать значит саму фразу для велосипеда … достаток здесь вообще не при
+  **R26-G, `round26/home-university`. NO REFUSAL SURVIVES – that is the answer to "if any".**
+  All three places are pressable in all **24** playable countries, in every career, and the boolean
+  that could shut one is gone from the wire and from the save.
+
+  **1. THE LADDER, AND WHY THESE WORDS.** The shape is his: home / away / private.
+
+  | id (persisted, unchanged) | was | **is** | price `[S]`, unchanged | the fact under the price |
+  |---|---|---|---|---|
+  | `state` | The university at home | **The university at home** | $30,990/yr | she can live at home |
+  | `national` | A university out of state | **A university away from home** | $50,920/yr | she cannot |
+  | `private` | A private university | **A private university** | $65,470/yr | it is private |
+
+  * `state` KEEPS its caption and that is the finding rather than the laziness – «The university at
+    home» was already the right four words (they are his own), and what was US-shaped was the RULE
+    underneath. Renaming would have hidden that.
+  * `national` HAD to move, and its own round-21 justification says why: «out of state» was defended
+    as «not jargon here, it is the sourced reason the second price is higher than the first» – and
+    that reason WAS US residence. A caption cannot outlive the fact it was defending. What replaces
+    it says the same thing from the family's side: she cannot sleep at home. True in Adelaide, Osaka
+    and Belgrade, with no administrative vocabulary at all.
+  * ⚠ **The caption is 27 characters against 25, on the row that already cost this card a definite
+    article in round 21** – so it is MEASURED, not reasoned about: a mounted 320x568 card, the
+    round-21 caption swapped back in, content floor re-read through the real cascade – **identical**,
+    with a mutation arm (an over-long caption) that moves it.
+
+  **2. WHAT A PLAYER CAN NOW REACH.** Everything. `tierShutFor`, `tierOpenTo`, `quoteShutFor`,
+  `COLLEGE_SHUT_RULES`, `COLLEGE_SHUT_DETAIL`, `CollegeShutReason`, `residentOnly`,
+  `.fork-place-refusal`, `.fork-place.is-shut` and `answerFork`'s `&& q.open` are all deleted.
+  ⚠ **The one country rule that survives is a PRICE, not a door**: `needShareOf` still pays the
+  need-based layer to a US family only (34 CFR §668.33 – who may receive a US GRANT, not who may
+  enrol). A non-American family is quoted the same three places at the same three stickers and pays
+  more of the bill.
+
+  **3. SCHEMA v60 → v61, THE FULL 4-PART MOVE, AND IT IS NOT COSMETIC.** `CollegeQuote.open` is the
+  first field this ladder has REMOVED rather than added. An always-true boolean was the other
+  candidate and it is worse: the next reader believes a place can be shut and the next edit can shut
+  one. ⚠ **And a v60 career sitting on an unanswered fork carries `state: {open: false}`** – under
+  the new card that row is pressable, so without the migration the player presses «The university at
+  home», `find(q => q.tier === tier && q.open)` misses, and the fallback enrols her **$20,000 a year
+  dearer, silently, on the exact screen the item exists to fix.** Mutation-verified: the pre-round
+  code plus no migration reproduces it exactly – *`the place she pressed: expected 'national' to be
+  'state'`*.
+
+  **4. MEASURED – `tools/college-home-place.ts --seeds 3 --countries US,AU`, n = 54 careers, 162
+  four-year arms.** ⚠ The arms are TIERS on one tree, not two worktrees: the standing benches all
+  build `country: 'US'` profiles, so a pre-commit "A" arm could not contain the change at all.
+
+  | | before | after |
+  |---|---|---|
+  | how often the button takes the home place, US | 100% | 100% |
+  | how often the button takes the home place, everywhere else (23 of 24 countries) | **0%** | **100%** |
+  | AU median family bill at the default place | $25,062/yr | **$5,398/yr** (−$19,664) |
+  | AU careers whose money ran out | 8/27 (30%) | **5/27 (19%)** |
+  | AU careers finishing four years | 19/27 (70%) | **22/27 (81%)** |
+  | US control – every line | $896 · 4/27 · 23/27 | **$896 · 4/27 · 23/27** |
+
+  **5. NO CALIBRATED FIGURE MOVES AND NONE IS RETUNED.** `COLLEGE_TIER_ODDS` is still **85 / 93 / 74**:
+  it is measured per PLACE, and this round changes who can TAKE a place, never what a place is worth
+  once taken. The private deficit is still money and not tennis. ⚠ One PIN moved and it is not a
+  figure – `COLLEGE_ODDS_MEASURED_AT` folds the whole tier object and `residentOnly` left it. The
+  probe never reads that property, so no re-measure is owed, and the claim is mechanical rather than
+  a comment: block F now pins the round-21 string beside the new one and asserts the only difference
+  is the removed residence property.
+
+  ⚠ **A measurement-instrument defect found on the way, and it is not this item's.** Round 26 #6 gave
+  the college year a SECOND stop (the championship reveal) and every probe that walks the freeze
+  presses once a year. `tools/birthday-pool.ts` reported **«no birthdays recorded»** for the whole
+  college band; my own first cut reported 0 of 18 careers finishing four years. Both fixed here.
+  **`tools/college-choice-probe.ts` and `tools/college-price-probe.ts` were NOT audited for the same
+  hazard, and they are where §10i's bankruptcy figures came from.**
+
+  Spec: `docs/specs/the-college-answers-2026-08.md` §11 (§4's names marked superseded, unedited).
+
+- [x] **4 (again). «надо переписать значит саму фразу для велосипеда … достаток здесь вообще не при
   чем. У меня нет проблем с велосипедом, может быть это должна быть как раз просьба на первый ДР во
   время учебы вообще.»** – the means licence was the wrong tool for this row. **build**: the WISH
   beside `campusbike` is rewritten to be about the bicycle, and the pairing is a candidate for her
   FIRST college birthday specifically.
+
+  **R26-G, `round26/home-university`. HE WAS READING THE ASK AND THE OPTION AS A PAIR, and he was
+  right to.** The dialog he read had `flighthome`'s fares line at the top and the bicycle in the
+  options – a girl who cannot afford a train ticket, offered a bike. The first pass fixed the half
+  that was visible (a hardship sentence over a $584,375 wallet) and left the half he was pointing at:
+  **the bicycle had no wish of its own.** Its ask hooked on «minutes» and never said the word.
+
+  **THE WISH, RENDERED** off `toSnapshot(world).birthdayPrompt` on a walked career, never a source
+  string:
+  * was: *"She has counted the minutes she spends walking between buildings. It is a lot."*
+  * **is: *"Everyone there has a bicycle. She walks, and she has mentioned it twice."***
+
+  It names the thing, it is 71 characters against 76 (so the prompt got SHORTER), and it hooks twice
+  where the old line hooked once – *bicycle* is on this row's label and no other row of the band,
+  *walks* is in its note and nowhere else (rule 2, `tests/birthday-ask.test.ts`).
+
+  **AND IT IS FIRST-COLLEGE-BIRTHDAY-SPECIFIC, WITH A REASON BEYOND HIS SUGGESTION.** A bicycle is a
+  fresher's problem: the fifteen minutes between buildings are a discovery in the first term and
+  solved furniture by the fourth year. The band's other three rows – the room, the journey home, the
+  reading list – are true of all four years, so this is the one row that belongs to a particular one.
+  A deterministic college year is also the house's own shape (`decisions.md` 19.08: «one line per
+  year and not a random pick… four college birthdays is the whole of the population»).
+  Built in three parts, each load-bearing: the college cycle is **rotated** so entry 0 carries the
+  bicycle (exactly one of the four C(4,3) combinations omits it, so it costs at most one step and no
+  draw); the college walk is indexed by the **college birthday** rather than by her age (she enrols at
+  18, 19 or 20, so no fixed rotation could land entry 0 on her first otherwise); and the ask is
+  **overridden after the draw, not instead of it** – `seed:birthday:<age>` is still drawn exactly four
+  times for every birthday in the game, and the override reads from `pool`, so §2ab holds: the ask is
+  one of the four on screen and never a present she already owns.
+
+  ⚠ **«достаток здесь вообще не при чем», as a measurement**: the same first wish renders identically
+  at a household wallet of **$1,200** and of **$643,595**. And the means predicate is NOT deleted –
+  `flighthome` and `books` keep it, `neverbuy` keeps it, `campusbike` declares nothing in any of its
+  four strings, and a test asserts that split mechanically.
+
+  **RE-MEASURED, `tools/birthday-pool.ts`, 12 walked careers:** back-to-back identical dialogs
+  **college 0/36 = 0%** (worst run 1), **tour 0/189 = 0%** (worst run 1). Her four college birthdays
+  are still four DIFFERENT dialogs – each row appears on 36 of 48 = **75%**, i.e. exactly 3 of the 4
+  combinations, which is the arithmetic proof that all four are visited. The bicycle is asked for on
+  **20 of 48 (42%)** college birthdays: twelve are the first-birthday pin, eight are ordinary draws.
+
+  ⚠ **The instrument was broken before it was read.** `tools/birthday-pool.ts` presses three times a
+  year and round 26 #6 gave the college year a second stop, so before the fix it printed **«no
+  birthdays recorded»** for the entire college band. Fixed; it now reproduces §9's census exactly
+  (48 college birthdays, median wallet $133,514, 0 in the `tight` band).
+
+  ⚠ **RNG**: no new stream, no new draw. `tests/condition.test.ts` green, **41550 / `e6b0c709`**,
+  unchanged. **No schema move for this item.** Spec: `docs/specs/birthday-and-gifts.md` §11.
 
 - [!] **10 (again). «у меня в ленте предпоследняя новость были из мира "до колледжа" на протяжении
   всей учебы, а последняя жёлтым про её учебный год. Вот я бы хотел, чтобы "мир жил" и пока она в
