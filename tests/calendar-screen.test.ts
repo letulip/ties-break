@@ -826,8 +826,16 @@ describe('the calendar reads the snapshot and nothing else', () => {
   it('the composable takes a Pick of the snapshot – so it cannot read what it was not given', () => {
     expect(days).toContain('export type CalendarWeekFacts = Pick<')
     // ...and its own inputs are the engine's shared predicates rather than third spellings of them
-    expect(days).toContain("import { layoffCoversWeek } from '../engine/world'")
+    // ⚠ RE-AIMED, NOT RELAXED (round 26 #1). The import line grew a SECOND engine predicate:
+    // `isSuitable`'s body moved to `engine/world/multiWeek.ts` as `eventIsHers`, because the span
+    // pill's «anything in the next five weeks» gate has to be the marker rule itself and not a
+    // second spelling of it – which is the very claim this case makes. Both names are asserted,
+    // so the pin still fails if either predicate is re-spelled locally.
+    expect(days).toContain("import { eventIsHers, layoffCoversWeek } from '../engine/world'")
     expect(days).toContain('layoffCoversWeek(snap.week, snap.injury?.weeksRemaining, week)')
+    expect(days, 'the marker rule is the engine\'s function, re-exported under its historical name').toContain(
+      'export const isSuitable: (e: UpcomingEvent, currentWeek: number) => boolean = eventIsHers',
+    )
     expect(days).toContain("import { surfaceStyleHint } from '../engine/match/style'")
     expect(days).toContain('dominantSurface(block)')
   })

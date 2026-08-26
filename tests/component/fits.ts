@@ -189,6 +189,77 @@ export function boxOf(el: Element, availableWidth: number): Box {
   }
 }
 
+// =================================================================================================
+// ⭐ THE OTHER AXIS: A FIXED BOTTOM BAR, MEASURED ACROSS RATHER THAN DOWN (round 26 #1)
+// =================================================================================================
+//
+// `measureDialog` answers "can the player reach the way out of this card". A bar pinned above the
+// tab bar cannot fall below the fold – that half is structural – so what can go wrong is WIDTH: two
+// controls in one row on a 375px phone, and `.next-week-btn` alone declares `min-width: 206px`.
+// `tests/component/college-second-act.test.ts` measures its own two-answer bar with a private copy
+// of this idea; this is the shared one, and it is strictly stronger in the way that matters for a
+// row of PILLS: a control that declares no minimum but is `white-space: nowrap` still cannot shrink
+// below its own text, and reading only the declared minimum would score such a row as free.
+
+/** The width a control wants: its declared `min-width`, and – when it is `white-space: nowrap` – at
+ *  least its own label plus its padding and borders.
+ *
+ *  ⚠ AN ELLIPSIS IS NOT CREDITED, AND THAT IS THE DECISION. `.next-week-btn` declares
+ *  `text-overflow: ellipsis`, and style.css says what it is for in its own words: «the safety net at
+ *  375px, not the plan». A control cut down to «Trai…» is not a control the measurement should score
+ *  as fitting – crediting the ellipsis would let any pair of pills pass by shrinking the CTA to its
+ *  padding. A control that may WRAP is different: it gives ground vertically, so its declared
+ *  minimum is the floor. */
+export function demandedWidth(el: Element, room: number): number {
+  const cs = getComputedStyle(el)
+  const chrome = num(cs.paddingLeft) + num(cs.paddingRight) + num(cs.borderLeftWidth) + num(cs.borderRightWidth)
+  const declared = lengthPx(cs.minWidth, room)
+  const floor = Number.isFinite(declared) ? declared : 0
+  if (cs.whiteSpace !== 'nowrap') return Math.max(floor, chrome)
+  const text = (el.textContent ?? '').trim()
+  return Math.max(floor, chrome + text.length * num(cs.fontSize) * ADVANCE)
+}
+
+/**
+ * A fixed bar of side-by-side controls fits `vp`, and every control in it is pressable.
+ *
+ * Four things, each failing with its own sentence:
+ *  1. the bar is `position: fixed` – it cannot scroll away from under the thumb;
+ *  2. its own box lands inside the viewport with its `bottom` offset cleared;
+ *  3. every control has a box at all (happy-dom does no layout, so this is the cascade through
+ *     `boxOf`, the same instrument `measureDialog` uses);
+ *  4. the controls' demanded widths plus the gaps fit the room the bar has. This is the
+ *     content-independent half and it is the one a mutation must be able to take away.
+ */
+export function assertRowFits(bar: Element, items: Element[], vp: Viewport, label: string): number {
+  if (!document.head.querySelector('style')) {
+    throw new Error('no stylesheet in the document – without it this measurement is vacuous')
+  }
+  const cs = getComputedStyle(bar)
+  if (cs.position !== 'fixed') {
+    throw new Error(`${label}: the bar is \`${cs.position}\`, not \`fixed\` – it is not pinned to the screen`)
+  }
+  const maxWidth = lengthPx(cs.maxWidth, vp.width)
+  const barWidth = Math.min(vp.width, Number.isFinite(maxWidth) ? maxWidth : Infinity)
+  const room = barWidth - num(cs.paddingLeft) - num(cs.paddingRight)
+  const gap = num(cs.columnGap || cs.gap)
+
+  let needed = gap * Math.max(0, items.length - 1)
+  for (const item of items) {
+    const box = boxOf(item, room)
+    expect(box.h, `${label} at ${vp.width}x${vp.height} – a control has no box, so there is nothing to press`).toBeGreaterThan(0)
+    const top = vp.height - num(cs.bottom) - box.h
+    expect(top, `${label} at ${vp.width}x${vp.height} – the bar starts above the top of the screen`).toBeGreaterThan(0)
+    needed += demandedWidth(item, room)
+  }
+  expect(
+    needed,
+    `${label} at ${vp.width}x${vp.height} – the controls demand ${needed.toFixed(0)}px of a ${room.toFixed(0)}px bar, ` +
+      'so one of them is off the side of the phone',
+  ).toBeLessThanOrEqual(room)
+  return room - needed
+}
+
 export interface Fit {
   /** the room `.dialog-overlay` leaves inside its own padding */
   available: { width: number; height: number }

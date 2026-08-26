@@ -30,11 +30,12 @@
 //
 // NOTHING IS ADDED TO THE SAVE AND NOTHING IS ADDED TO THE SNAPSHOT. Every fact below is already
 // persisted (`world.events`) or already on the wire (`Snapshot.events`); the schema does not move.
-import type { StopReason, WorldEvent } from '../../shared/protocol'
+import type { SnapshotInjury, StopReason, WorldEvent } from '../../shared/protocol'
 import { isOfferLive } from '../offers'
 import type { WorldState } from '../world'
 import { pendingBirthday } from './birthday'
 import { pendingKnock } from './knock'
+import { layoffCoversWeek } from './medical'
 
 /** THE SPAN, as one number. Four is the engine's own step (`ToWorker`'s `weeks: 1 | 4`) and the step
  *  every stop in the game was tuned against – round-23 #16 is written in terms of "a player stepping
@@ -42,6 +43,131 @@ import { pendingKnock } from './knock'
  *  Phase 2 ("advance to the next decision") is explicitly NOT in this branch: R2-13 sequences it
  *  behind playtest evidence, so a second number here would be a guess dressed as a feature. */
 export const MULTI_WEEK_SPAN = 4
+
+// =================================================================================================
+// ⭐⭐ ROUND 26 #1, SECOND PASS – WHEN THE SPAN IS *WORTH* OFFERING, WHICH IS NOT THE SAME QUESTION
+// AS WHETHER THE ENGINE CAN MOVE
+// =================================================================================================
+//
+// The first pass offered the pill wherever `advanceRefusal` was null and the week ahead was quiet –
+// which is very nearly every week of a career – and the owner overturned it in one sentence
+// (25.08): «появляться она должна на тех моментах, где либо в календаре нет ни одного события в
+// ближайшие 5 недель, либо у нее травма на 5+ недель или до конца травмы осталось не меньше 5
+// недель. Иначе это совершенно дурной элемент управления получается, с которым пропускается всё.»
+//
+// ⚠⚠ IT IS A SECOND GATE AND NOT A REPLACEMENT, and the direction matters. `advanceRefusal` and
+// `STOP_PRECEDENCE` are untouched: they say when the advance MAY RUN, and nothing here narrows or
+// widens them. This says when the advance is OFFERED as a second button, and it can only ever
+// REMOVE the pill from weeks the first gate already allowed. A player who wants to spend a week
+// still presses the week button; nothing in the game becomes unreachable because this returns false.
+//
+// ⚠⚠ AND IT IS ONE FUNCTION WITH TWO CALLERS, WHICH IS THE POINT OF PUTTING IT HERE RATHER THAN IN
+// THE COMPOSABLE. «Is there anything in the next five weeks» is a question the shell and the engine
+// can each answer, and this repo's most expensive recurring defect is two surfaces answering the
+// same question their own way – the arrival gate's three readings (world.ts, "THE ARRIVAL GATE"),
+// R10-17's four spellings of the layoff window, `entryStatus`'s private copy of the point band. So
+// the predicate takes PRIMITIVES – a week, a list of dated events, an injury – and both sides hand
+// it what they hold: the engine passes `world.season` / `world.injury`, the shell passes
+// `snapshot.upcoming` / `snapshot.injury`. They agree BY CONSTRUCTION rather than by inspection,
+// because `upcoming` is `world.season` clipped to `(week, week + UPCOMING_WEEKS]` and
+// UPCOMING_WEEKS (8) is wider than the five weeks this asks about, so the clip cannot hide a member
+// of the window. `tests/round26-span-gate.test.ts` walks a real career and asserts the two readings
+// week by week rather than taking that argument's word for it.
+
+/** «в календаре нет ни одного события в ближайшие 5 недель» – his number, and the ONLY place it is
+ *  written. Five, not `MULTI_WEEK_SPAN`: a span of four lands on week +4 and he asked for one clear
+ *  week beyond it, so the two are deliberately different constants that happen to be near each
+ *  other. Must stay <= `UPCOMING_WEEKS` or the snapshot's clipped list stops being a faithful
+ *  window – asserted, not trusted. */
+export const QUIET_WINDOW_WEEKS = 5
+
+/** «травма на 5+ недель ... не меньше 5 недель» – the other half of the same sentence, same number,
+ *  named separately because it measures a different thing and could move on its own. */
+export const LONG_LAYOFF_WEEKS = 5
+
+/** IS THIS EVENT ON *HER* CALENDAR? She is in it, or she may still walk into it.
+ *
+ * ⚠⚠ THE FUNCTION MOVED HERE FROM `composables/weekDays.ts`, WHERE IT WAS `isSuitable`, AND THAT
+ * FILE RE-EXPORTS IT UNDER ITS HISTORICAL NAME – the `TIER_SHORT` / `layoffCoversWeek` pattern, for
+ * the identical reason. It is the rule the LOOK-AHEAD MARKERS under the week grid are drawn from,
+ * and the pill's first arm has to be the same question or the screen and the control disagree about
+ * what an empty fortnight is. One implementation, two readers, and the calendar's own tests
+ * (`tests/calendar-screen.test.ts`) still pin it through the old path.
+ *
+ * ⚠ THE NARROWNESS IS THE POINT AND IT IS THE CALENDAR'S OWN DOCTRINE, quoted from the note this
+ * function used to sit under: «a week whose only tournament is one she cannot enter reads as the
+ * training week it IS for her – the same reading SeasonScreen's `plannable` rule takes: empty means
+ * empty FOR HER.» A locked-ahead rung, a closed entry list and an outgrown draw are all rows she
+ * cannot act on.
+ *
+ * Both terms are the ENGINE's verdicts, carried on the event by `upcomingEvents`: `entered` off
+ * `world.entries` and `eligible` off `entryStatus`, the same gate `enterEvent` and `advanceWeeks`
+ * ask. Nothing is judged here – this composes two answers, it does not produce them. */
+export function eventIsHers(e: { entered: boolean; eligible: boolean; deadlineWeek: number }, currentWeek: number): boolean {
+  return e.entered || (e.eligible && currentWeek <= e.deadlineWeek)
+}
+
+/** ARM 1 – NOTHING ON HER CALENDAR IN THE NEXT FIVE WEEKS.
+ *
+ *  ⚠⚠ "NO EVENT" IS "NO EVENT OF HERS", AND THAT READING IS MEASURED RATHER THAN ASSUMED. The
+ *  literal reading – any dated row in `world.season` – was built first and walked: over three
+ *  careers of 300 weeks it fired on **0 of 900 weeks**, because the generated tour always has
+ *  something at some rung within five weeks. A rule that can never be true is not a rule, and the
+ *  pill would simply have been deleted by it. Asked of HER calendar instead (`eventIsHers`, the
+ *  look-ahead marker's own predicate) the same walk gives **6 / 5 / 7 of 300 weeks (~2 %)**, which
+ *  is the shape he described: a control that appears on the stretches where there is nothing to do.
+ *  ⚠ The Season feed's rung window was measured as a third reading (`isSuitable && feedShows`) and
+ *  agreed with this one on all 900 weeks, so it is not carried – it would drag `tierOpen`,
+ *  `activeLadder` and today's age into an engine predicate to change no answer.
+ *
+ *  ⚠ THE WINDOW IS `(week, week + 5]`, WHICH IS `upcoming`'S OWN LOWER BOUND. The current week is
+ *  excluded because it is the week the OTHER button is about to spend and `useWeekAhead` already
+ *  gates on what it holds; including it here would be a second opinion about the same week. And the
+ *  list must be an `upcoming`-shaped one: `UPCOMING_WEEKS` (8) is wider than five, so the snapshot's
+ *  clip cannot hide a member of this window – asserted in `tests/round26-span-gate.test.ts`. */
+export function calendarClearAhead(
+  week: number,
+  calendar: readonly { week: number; entered: boolean; eligible: boolean; deadlineWeek: number }[],
+): boolean {
+  return !calendar.some((e) => e.week > week && e.week <= week + QUIET_WINDOW_WEEKS && eventIsHers(e, week))
+}
+
+/** ARM 2 – SHE IS LAID UP LONG ENOUGH THAT THE CALENDAR DOES NOT MATTER.
+ *
+ *  Both terms he named, in his order, because he named both: the layoff as DEALT (`totalWeeks`, the
+ *  figure the injury report prints and the album records) and the layoff as it STANDS
+ *  (`weeksRemaining`).
+ *
+ *  ⚠ THE REMAINING TERM IS R10-17'S OWN WINDOW AND NOT A FIFTH SPELLING OF IT. `layoffCoversWeek`
+ *  is the extracted arithmetic every surface with a Snapshot already uses (`medical.ts` says why),
+ *  and "five weeks still to run" is exactly "the layoff still covers week + 4": the function reads
+ *  `week < currentWeek + weeksRemaining`, so `currentWeek + 4 < currentWeek + remaining` is
+ *  `remaining >= 5`. Written this way the term cannot drift from the window the entry gate, the
+ *  planner and the onset sweep are all reading.
+ *
+ *  ⚠ AND THE SECOND TERM IS SUBSUMED BY THE FIRST AS THE ENGINE STANDS TODAY, MEASURED RATHER THAN
+ *  ASSUMED: `rollInjury` opens a layoff with `weeksRemaining === totalWeeks` and nothing ever
+ *  increases it (`injury.ts` decrements, the masseur decrements again), so `remaining >= 5` implies
+ *  `total >= 5` and no career can reach a state only the second term catches. It is kept because
+ *  the owner named it and because it is the term that stays TRUE if a layoff is ever extended or
+ *  `totalWeeks` re-based – and the subsumption is pinned in `tests/round26-span-gate.test.ts` so
+ *  the day it stops holding is a red test rather than a surprise. */
+export function longLayoff(week: number, injury: SnapshotInjury | null): boolean {
+  if (injury === null) return false
+  if (injury.totalWeeks >= LONG_LAYOFF_WEEKS) return true
+  return layoffCoversWeek(week, injury.weeksRemaining, week + LONG_LAYOFF_WEEKS - 1)
+}
+
+/** THE OWNER'S RULE, AS ONE PREDICATE: the two arms, ORed, and nothing else. Pure, no RNG, no
+ *  mutation, no persistence – so the shell may call it on a `Snapshot` and a test on a `WorldState`
+ *  and get the same answer. */
+export function spanWorthOffering(
+  week: number,
+  calendar: readonly { week: number; entered: boolean; eligible: boolean; deadlineWeek: number }[],
+  injury: SnapshotInjury | null,
+): boolean {
+  return calendarClearAhead(week, calendar) || longLayoff(week, injury)
+}
 
 /** The six states in which `advanceWeeks` refuses to tick AT ALL, in the order it asks them.
  *
