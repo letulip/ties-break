@@ -28,20 +28,28 @@
 import { describe, it, expect } from 'vitest'
 import {
   KID_ID,
+  campusDigestLine,
+  chooseGift,
   closeTournament,
+  collegeLeagueRevealOpen,
   createWorld,
   enterEvent,
+  measureCollegeOffer,
+  pendingBirthday,
+  resumeFromCollege,
   skipTournament,
   tickWeek,
   toSnapshot,
   type WorldState,
 } from '../src/engine/world'
+import { answerFork } from '../src/engine/world/endings'
+import { ENDINGS } from '../src/engine/ending'
 import { FIELD_NEWS, isFieldFarewellWeek } from '../src/engine/world/fieldNews'
 import { EVENTS_CAP, EVENTS_ORDINARY_FLOOR } from '../src/engine/world/constants'
 import { kidPrizeShareBps, kidPrizeShareCents } from '../src/engine/economy'
 import { kidAgeYears } from '../src/engine/world/age'
 import { prizeCentsFor } from '../src/engine/world/labels'
-import { rngFromSeed } from '../src/engine/rng'
+import { rngFromSeed, type Rng } from '../src/engine/rng'
 import { formatCents } from '../src/shared/money'
 import { TIERS, WEEKS_PER_YEAR } from '../src/engine/season/calendar'
 import { DEFAULT_PROFILE, type WorldEvent } from '../src/shared/protocol'
@@ -238,5 +246,192 @@ describe('round 26 #5b – the prize row says where the missing money went', () 
       onLedger.every((e) => /less her [\d.]+% share \(\$[\d,.]+\)$/.test(e.text)),
       'every prize row in the window names the share that left – she is past eighteen for all of them',
     ).toBe(true)
+  })
+})
+
+// =================================================================================================
+// ⭐⭐⭐ ROUND 26 #10, SECOND PASS – THE ROW THAT CANNOT BE STALE
+// =================================================================================================
+//
+// HIS CORRECTION, after reading the first report: «у меня в ленте предпоследняя новость были из мира
+// "до колледжа" на протяжении всей учебы, а последняя жёлтым про её учебный год. Вот я бы хотел,
+// чтобы "мир жил" и пока она в колледже, ПУСТЬ И СЖАТО».
+//
+// ⚠⚠ THE FIRST PASS WAS NOT WRONG, IT WAS UNREACHABLE, and the number that says so is 45%: over 48
+// walked rest states the news card covers 7.8 of the 17 weeks a press actually spends
+// (`tools/college-news-probe.ts`). Five rows a season posted into that are a coin flip – measured
+// 2.4 generational rows at a rest state and NONE AT ALL at 9 of 48. This row is written ON the rest
+// week, so it is the top week group of the feed by construction. Measured after: 3.9 and 0 of 48.
+//
+// ⚠ MUTATION-VERIFIED – each turns exactly the named arm red, and each was watched doing it:
+//   * `announceCampusInterlude` early-returns             -> the recency arm and the 48/48 arm.
+//   * the call moved above the loop (`pressFrom` -> -1)   -> the "a refused press says nothing" arm.
+//   * `campusDigestLine` returns the newcomers clause on both branches -> the first-pause arm.
+//   * the row written with `keep: true`                   -> the "costs her nothing" arm.
+//   * `chairIndexOf` -> `debutSeason >= enrolledSeason`   -> the newcomers-are-new arm.
+
+/** ⭐ A CAREER WALKED TO THE FORK AND ENROLLED – the same shape `college-freeze.test.ts` and the
+ *  card's own file use, including the one thumb on the scale they both carry: four years is 208
+ *  weeks of base costs, and a family that goes bankrupt inside them measures the budget instead. */
+function enrolled(seed: string): { world: WorldState; rng: Rng } {
+  const world = createWorld(seed, { ...DEFAULT_PROFILE })
+  const rng = rngFromSeed(world.seed)
+  for (let i = 0; i < 60; i++) {
+    world.fundsCents = Math.max(world.fundsCents, 500_000_00)
+    tickWeek(world, rng)
+    if (world.pendingTournament) {
+      skipTournament(world)
+      closeTournament(world)
+    }
+  }
+  world.fundsCents = 500_000_00
+  world.fork = { askedWeek: world.week, answer: null, offer: measureCollegeOffer(world) }
+  answerFork(world, 'college')
+  for (let i = 0; i < 54 && world.ending === null; i++) {
+    world.fundsCents = Math.max(world.fundsCents, 500_000_00)
+    tickWeek(world, rng)
+    if (world.pendingTournament) {
+      skipTournament(world)
+      closeTournament(world)
+    }
+  }
+  expect(world.ending?.type, 'the departure really latched the college ending').toBe('college')
+  return { world, rng }
+}
+
+/** One press of «Another year» and everything the screen would answer before the next one – the
+ *  championship reveal (round 26 #6) and the cake (round 24). A walk that answers one and not the
+ *  other stalls on the first league week and measures the same rest state twelve times over. */
+function press(world: WorldState, rng: Rng): void {
+  world.fundsCents = Math.max(world.fundsCents, 200_000_00)
+  resumeFromCollege(world, rng)
+  if (collegeLeagueRevealOpen(world)) {
+    skipTournament(world)
+    closeTournament(world)
+  }
+  if (pendingBirthday(world) !== null) chooseGift(world, 'day')
+}
+
+const DIGEST = '🌍'
+const digestRows = (world: WorldState): WorldEvent[] => world.events.filter((e) => e.text.startsWith(DIGEST))
+
+describe('round 26 #10 (again) – the world speaks on the week he is looking at', () => {
+  it('puts a row about the tour on the CURRENT week at every rest state, all four years', () => {
+    // ⭐⭐ THE ASSERTION IS RECENCY AND NOT A COUNT, because the count was never the complaint: the
+    // card already held 21 rows and he still read it as a dead world. What it did not hold was
+    // anything whose week was the week he was standing on.
+    const { world, rng } = enrolled('r26-alive-a')
+    const seen: number[] = []
+    for (let i = 0; i < 3 * ENDINGS.collegeYears && world.ending?.type === 'college'; i++) {
+      press(world, rng)
+      const snap = toSnapshot(world)
+      const onThisWeek = snap.events.filter((e) => e.week === snap.week && e.text.startsWith(DIGEST))
+      expect(onThisWeek.length, `rest state at W${world.week}: the tour said something TODAY`).toBe(1)
+      seen.push(world.week)
+    }
+    expect(seen.length, 'the walk really visited every rest state of the degree').toBeGreaterThanOrEqual(8)
+    // ...and the freeze really ran its full span, so this is not eight presses at one week.
+    expect(seen[seen.length - 1] - seen[0], 'the rest states are spread over the whole degree').toBeGreaterThan(
+      WEEKS_PER_YEAR * 3,
+    )
+  })
+
+  it('says something DIFFERENT as the degree goes on – the number is the world moving', () => {
+    const { world, rng } = enrolled('r26-alive-b')
+    const lines: string[] = []
+    for (let i = 0; i < 3 * ENDINGS.collegeYears && world.ending?.type === 'college'; i++) {
+      press(world, rng)
+      const row = digestRows(world).find((e) => e.week === world.week)
+      if (row) lines.push(row.text)
+    }
+    expect(lines.length, 'there are rows to compare').toBeGreaterThanOrEqual(8)
+    // ⚠ NOT "all distinct" – two rest states inside one season CAN honestly report the same table
+    // and the same newcomer count, and a test that forbade it would be pinning luck. What may not
+    // happen is the row being the same sentence for the whole degree, which is the complaint.
+    expect(new Set(lines).size, 'the sentence moves as the field turns over').toBeGreaterThan(2)
+    // ⭐ AND THE NUMBER IN IT IS THE WORLD MOVING, not noise: four years is ~120 retirements a
+    // season against 1,600 chairs, so the top hundred she comes back to is not the one she left.
+    // ⚠ NOT ASSERTED MONOTONE – a newcomer who reaches the top 100 can drop out of it again, so
+    // "never decreases" would be pinning luck. First against last is the claim that matters.
+    const countIn = (t: string): number => Number(/(\d+) of today's top/.exec(t)?.[1] ?? 0)
+    expect(lines[lines.length - 1], 'the last one counts the newcomers').toMatch(/\d+ of today's top \d+ have come up/)
+    expect(countIn(lines[lines.length - 1]), 'four years of succession shows in the number').toBeGreaterThan(
+      countIn(lines[0]),
+    )
+  })
+
+  it('names nobody with a pronoun and pays nobody', () => {
+    const { world, rng } = enrolled('r26-alive-c')
+    for (let i = 0; i < 4 && world.ending?.type === 'college'; i++) press(world, rng)
+    const rows = digestRows(world)
+    expect(rows.length, 'there are rows to check').toBeGreaterThan(0)
+    for (const e of rows) {
+      expect(e.text, 'no pronoun names a professional').not.toMatch(/\b(she|her|hers)\b/i)
+      expect(e.amountCents, 'the tour paying nobody is the point').toBeUndefined()
+      expect(e.type, 'a news row and nothing else').toBe('info')
+      expect(e.match, 'nothing replayable, nothing playable').toBeUndefined()
+      expect(e.text, 'no ranking points anywhere near college').not.toMatch(/\bpts?\b|ranking point/)
+      // ⚠ ORDINARY, NEVER KEPT – so `pruneEvents` sacrifices it exactly as it sacrifices a champion
+      // line, and her milestones and match rows can never be pushed out by the tour's news.
+      expect(e.keep, `W${e.week}: the tour's news is ordinary, never kept`).toBeFalsy()
+    }
+  })
+
+  it('costs the four-year budget eleven rows and her history nothing', () => {
+    // ⭐⭐ THE BUDGET ARM. `EVENTS_CAP` is 400 and the ordinary class is already at its floor through
+    // the whole freeze, so every row here displaces an ordinary row and NEVER a kept one. The A/B
+    // over four walked careers measured 401 -> 402 rows at graduation with 39 kept in BOTH arms;
+    // this is that claim as a test, on one career, without needing the other tree.
+    const { world, rng } = enrolled('r26-alive-d')
+    const keptBefore = world.events.filter((e) => e.keep).length
+    let presses = 0
+    for (let i = 0; i < 3 * ENDINGS.collegeYears && world.ending?.type === 'college'; i++) {
+      press(world, rng)
+      presses++
+    }
+    const rows = digestRows(world)
+    // One row per press that moved time, and a degree is a dozen presses at the very outside.
+    expect(rows.length, 'never more than one row per rest state').toBeLessThanOrEqual(presses)
+    expect(rows.length, 'a whole degree stays inside a dozen rows').toBeLessThanOrEqual(3 * ENDINGS.collegeYears)
+    expect(world.events.length, 'the cap still holds').toBeLessThanOrEqual(EVENTS_CAP + EVENTS_ORDINARY_FLOOR)
+    // ⚠ HER OWN HISTORY IS THE THING THAT MAY NOT MOVE, and `keep` is what it is made of.
+    const keptAfter = world.events.filter((e) => e.keep).length
+    expect(keptAfter, 'the kept class only ever grew by her own college milestones').toBeGreaterThanOrEqual(keptBefore)
+    for (const e of rows) expect(world.events.includes(e), 'and the digest rows survived their own week').toBe(true)
+  })
+
+  it('says nothing at all in a career that never goes to college', () => {
+    // ⭐⭐ THE BYTE-IDENTICAL ARM, from inside the tree. The command that writes this row is
+    // `resumeFromCollege` and there is no other caller, so a career on tour cannot reach it – and
+    // the proof that matters is the absence, over a span longer than a whole degree.
+    const world = createWorld('r26-alive-tour', { ...DEFAULT_PROFILE })
+    const rng = rngFromSeed(world.seed)
+    while (world.week < WEEKS_PER_YEAR * 8) {
+      world.fundsCents = Math.max(world.fundsCents, 500_000_00)
+      tickWeek(world, rng)
+      if (world.pendingTournament) {
+        skipTournament(world)
+        closeTournament(world)
+      }
+      if (world.fork !== null && world.fork.answer === null) answerFork(world, 'continue')
+    }
+    expect(world.college, 'she never enrolled').toBeNull()
+    expect(digestRows(world).length, 'and the campus digest never wrote a byte into her feed').toBe(0)
+  })
+
+  it('states the table she left when nobody has come up yet – a zero is not a sentence', () => {
+    // The pure line, both branches, with no world in the way.
+    expect(campusDigestLine(0, { name: 'Rosa Delaney', ageYears: 26 })).toBe(
+      "🌍 The tour has not waited: nobody new is in today's top 100 yet, and R. Delaney is #1 at 26.",
+    )
+    expect(campusDigestLine(34, { name: 'Rosa Delaney', ageYears: 26 })).toBe(
+      "🌍 The tour has not waited: 34 of today's top 100 have come up since the scholarship began, and R. Delaney is #1 at 26.",
+    )
+    // A table with no professional at the top has no leader to name, and the line drops that half
+    // rather than inventing one. With nothing to say on either half there is no row.
+    expect(campusDigestLine(34, null)).toBe(
+      "🌍 The tour has not waited: 34 of today's top 100 have come up since the scholarship began.",
+    )
+    expect(campusDigestLine(0, null), 'no facts, no row').toBeNull()
   })
 })
