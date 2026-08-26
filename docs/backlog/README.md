@@ -62,6 +62,7 @@ the code on main, 23.08), and the engine's own «its own wave» comments.
 | [the-git-reviewer.md](the-git-reviewer.md) | The owner's 23.08 ask: an assistant reviewing every change against the repo's own law – shaped here as a PR-level reviewer, with the decisions he owns |
 | [awaiting-his-word.md](awaiting-his-word.md) | The pure-ruling queue: the Slam label, the dormant HandoffView fields, the balance methodology – plus cross-references to every ruling parked inside a theme |
 | [the-shop-and-the-broker.md](the-shop-and-the-broker.md) | The owner's round-23 ask: assets, price drift and the elite broker – design intent for what money becomes once the tennis stops needing it |
+| [geography-and-country.md](geography-and-country.md) | The owner's 26.08 ask, low priority: the country choice already prices the college bill (US-only need layer) and opens home wild cards, and says so nowhere – plus whether geography should mean anything more |
 | [season-life-future.md](season-life-future.md) | The 25.07 capture: §1 (coach-as-choice) has since SHIPPED as the tiers; §2's injury/mental-health beats still wait on their named missing systems |
 
 ## Reading order for a new wave

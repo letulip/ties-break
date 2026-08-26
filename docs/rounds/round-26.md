@@ -695,12 +695,30 @@ a repeat, and the record has to show the first fix missing.
   the check and **vanished from the ledger entirely**. Proved before it was believed: 30 retirements
   counted straight off `MatchRecord.retiredId` in the same run that reported ZERO retirement-door
   onsets, with 75% of those matches long enough to carry any hazard. Fixed in `tools/` only. The §6.4
-  prevalence at the spec's own reference cell now reads **71% against a 46-54% target** (weekly door
-  alone: 60%, against the **51%** recorded when `injuryBaseChance: 0.003` was set on 02.08 – the
-  retirement door shipped 10.08). Variant C is measured NOT to be the drift. **His fork, in §17: was
-  46-54% about all injuries (then the schedule over-injures and the knob wants re-deriving), or only
-  about the weekly door (then 60% and ~9 unattributed points are what is left)?** No engine number
-  is touched either way.
+  prevalence at the spec's own reference cell now reads **71% against the 30-54% professional band**
+  (weekly door alone: 60%, against the **51%** recorded when `injuryBaseChance: 0.003` was set on 02.08 – the
+  retirement door shipped 10.08). Variant C is measured NOT to be the drift.
+
+  ⚠⚠ **THE FORK I PUT TO HIM WAS THE WRONG QUESTION, AND THE TARGET I QUOTED WAS STALE (26.08).** I
+  asked whether 46-54% meant all injuries or only the weekly door. The spec answers it without him:
+  §6.4's criterion was **RE-AIMED ON 04.08** (`fatigue-injury-audit-2026-08.md` §8) from the JUNIOR
+  band 46-54% to the **PROFESSIONAL band 30-54%**, because the reference cell is twenty PROFESSIONAL
+  events a year. The definition never changed – it is season prevalence, every injury – so there is
+  no fork: **the number to beat is 30-54%, and today's reading is 71%. Seventeen points over the
+  ceiling.**
+
+  ⭐ **AND THE DRIFT IS DATED.** The 38% recorded on 04.08 was HONEST when it was taken – the
+  retirement door did not ship until 10.08, so the probe's blindness could not yet hide anything.
+  Splitting today's 71%: the retirement door accounts for about eleven points (weekly door alone
+  reads 60%), and the weekly door itself drifted from the **51%** recorded when `injuryBaseChance`
+  was set on 02.08 to 60% – **nine points nobody authored.** Those nine are the thing to chase
+  first: a knob re-derived against an unexplained drift bakes the drift in.
+
+  **VERDICT (mine, 26.08): a real overshoot, and NOTHING MOVES THIS WAVE.** It is an engine number,
+  §7 reserves the professional week's price to him, and he is mid-way through playing the K=8/F=0.3
+  dose himself – re-pricing the body underneath a live dose test would destroy the only reading that
+  matters. What this round owes him is the corrected target and the corrected number, so the next
+  measurement is not taken against a band retired three weeks ago. Both are now recorded here.
 
 - [x] **14c (the audit 14b's finding demanded). BOTH college probes had rotted the same way, and
   one of them was printing a defect that does not exist.** `tools/college-choice-probe.ts` and
