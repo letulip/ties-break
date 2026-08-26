@@ -382,7 +382,7 @@ clock he suspects from three directions.
 ⚠ Four items come back. They are marked `[!]` on their ORIGINAL numbers, not renumbered: a repeat is
 a repeat, and the record has to show the first fix missing.
 
-- [!] **1 (again). «давай сделаем ее во-первых слева от основной, а во-вторых по условию, появляться
+- [x] **1 (again). «давай сделаем ее во-первых слева от основной, а во-вторых по условию, появляться
   она должна на тех моментах, где либо в календаре нет ни одного события в ближайшие 5 недель, либо
   у нее травма на 5+ недель или до конца травмы осталось не меньше 5 недель. Иначе это совершенно
   дурной элемент управления получается, с которым пропускается всё, а еще и прямо под пальцем.»** –
@@ -390,6 +390,53 @@ a repeat, and the record has to show the first fix missing.
   rule is the opposite: it appears only when there is genuinely nothing to do. **build**: left of
   the week button, and gated on an empty five-week calendar OR a layoff of five-plus weeks (total or
   remaining).
+
+  **R26-F, 25.08 – SHIPPED, AND HIS OBJECTION WAS A NUMBER BEFORE IT WAS A FEELING.** Walked career,
+  208 weeks, `r26-gate`: the FIRST pass's gate ("the engine can move time") was true on **204 of 208
+  weeks – 98.1 %**, which is «с которым пропускается всё» exactly. His rule is true on **5 of 208 –
+  2.4 %**.
+  1. **POSITION.** The pill is the FIRST child of `.next-week-bar` now, so in a plain
+     `flex-direction: row` it is left of the CTA and the keyboard reaches them in the order the eye
+     does. No CSS `order` – a visual order that contradicts the DOM is the one arrangement a screen
+     reader and a sighted player disagree about, and the mounted test asserts BOTH (index, and that
+     neither button carries an `order`). **The bar has four states and only one of them has two
+     controls**: quiet week on Home = pill + CTA (`with-span`, the CTA drops its 206px floor); busy
+     week on Home = CTA alone at full width; a paused reveal on ANY tab = the resume arm alone (the
+     pill can never join it – `multiOffered` returns false on `snap.pending` before it reaches the
+     owner's rule, asserted); college latch on Home = no bar at all, unchanged.
+  2. **⚠⚠ THE FIRST ARM AS HE WORDED IT WOULD HAVE KILLED THE FEATURE, AND THAT IS MEASURED, NOT
+     ARGUED.** «нет ни одного события» read as *any dated row in `world.season`* fires on **0 of 900
+     weeks** (three careers × 300): the generated tour always has something at some rung within five
+     weeks. Read as *nothing on HER calendar* – `eventIsHers`, which is the look-ahead marker's own
+     predicate, moved to the engine and re-exported into `composables/weekDays.ts` under its
+     historical name `isSuitable` – it fires on 6 / 5 / 7 of 300. That reading is the calendar's own
+     doctrine, already written down beside those markers: «empty means empty FOR HER». A third
+     reading (`+ feedShows`, the Season feed's rung window) agreed on all 900 weeks and is not
+     carried.
+  3. **ONE QUESTION, ONE FUNCTION.** `spanWorthOffering(week, upcoming, injury)` lives in
+     `engine/world/multiWeek.ts` and takes primitives, so the shell hands it `snapshot.upcoming` /
+     `snapshot.injury` and a test hands it `toSnapshot(world)`'s – one producer, `upcomingEvents`,
+     for both. The layoff's «осталось не меньше 5» is asked through R10-17's own window
+     (`layoffCoversWeek(week, remaining, week + 4)`), not a fifth spelling of it. `isSuitable ===
+     eventIsHers` is asserted as an object identity, so the markers and the pill cannot part.
+  4. **THE REFUSALS AND THE STOPS ARE UNTOUCHED, AND THAT IS DRIVEN RATHER THAN CLAIMED.** This is
+     an OFFER rule and never a refusal: on a week the pill is withheld the span still runs and still
+     halts on the letter (`['offer']`, block D of `tests/r2-13-advance-span.test.ts`, on that file's
+     own fixture). `ADVANCE_REFUSALS` is the same six in the same order, `'offer'` is still a halt
+     and not a refusal, and the college pauses keep their slots.
+  5. **⚠ ONE HONEST CAVEAT ON HIS SECOND ARM.** «травма на 5+ недель» (total) and «осталось не
+     меньше 5» (remaining) are both implemented because he named both – but `weeksRemaining` starts
+     at `totalWeeks` and only ever decrements, so the second term is **subsumed** and no career this
+     engine can produce is caught by it alone. It is kept for the day a layoff can be extended, and
+     pinned with the one state that separates them. The consequence of taking `total` literally: a
+     six-week layoff still offers the pill in its LAST week, when one week remains.
+  ⚠ Tests: `tests/round26-span-gate.test.ts` (15 cases, walked careers) and
+  `tests/component/round26-span-gate-ui.test.ts` (9 mounted, position + 375x667 + 320x568). Guard
+  re-aims, all noted in place: 1 case in `r2-13-advance-span.test.ts`, 1 in
+  `component/r2-13-span-report.test.ts`, 1 in `calendar-screen.test.ts` – each red before the re-aim
+  and each re-aimed to the STRONGER claim, never relaxed. 12 mutations run, every arm killed (see
+  the report). RNG capture 41550 / `e6b0c709` untouched; `SAVE_SCHEMA_VERSION` stays 60 and no
+  migration, fixture or protocol shape moved.
 
 - [!] **2 (again). «по-моему в каждой стране есть домашний универ»** – ⭐ he is overruling the RULE,
   not the sentence. The in-state rung is US-only because it models US in-state tuition; his ruling is

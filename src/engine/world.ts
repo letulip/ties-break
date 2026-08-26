@@ -90,6 +90,10 @@ export { pendingKnock, ordinaryTrainingWeek, expireKnock, rollKnock, radarViewOf
 // extraction, so the 280-file public API is unchanged.
 import { advanceRefusal, ADVANCE_REFUSALS, MULTI_WEEK_SPAN, spanDigest, spanRowCount, stoppableOfferWeek } from './world/multiWeek'
 export { advanceRefusal, ADVANCE_REFUSALS, MULTI_WEEK_SPAN, spanDigest, spanRowCount, stoppableOfferWeek }
+// ⭐⭐ ROUND 26 #1 (second pass): WHEN the span is offered, which is the owner's rule and not the
+// engine's refusal – see `world/multiWeek.ts` for why the two are deliberately separate gates.
+import { QUIET_WINDOW_WEEKS, LONG_LAYOFF_WEEKS, calendarClearAhead, eventIsHers, longLayoff, spanWorthOffering } from './world/multiWeek'
+export { QUIET_WINDOW_WEEKS, LONG_LAYOFF_WEEKS, calendarClearAhead, eventIsHers, longLayoff, spanWorthOffering }
 export type { SpanWeek } from './world/multiWeek'
 import { bookVacation, cancelVacation, bookPractice, cancelPractice, consecutivePracticeWeeks, practiceCaution } from './world/planner'
 export { bookVacation, cancelVacation, bookPractice, cancelPractice, consecutivePracticeWeeks, practiceCaution }

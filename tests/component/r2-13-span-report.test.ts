@@ -33,10 +33,12 @@ import WeekSpanReport from '../../src/components/WeekSpanReport.vue'
 import { useGameStore } from '../../src/stores/game'
 import {
   MULTI_WEEK_SPAN,
+  QUIET_WINDOW_WEEKS,
   advanceWeeks,
   createWorld,
   enterEvent,
   spanDigest,
+  spanWorthOffering,
   toSnapshot,
   type SpanWeek,
   type WorldState,
@@ -320,6 +322,23 @@ describe('R2-13 – the span pill, in the real shell', () => {
     await w.findAll('.dialog-actions button')[0].trigger('click')
     await flushPromises()
     expect(w.findComponent(WeekSpanReport).exists()).toBe(false)
+
+    // ⚠ RE-AIMED BY ROUND 26 #1, AND THE FIXTURE IS THE REASON. The old line read "the next quiet
+    // stretch offers the span again" as an unconditional `true`, which held only under the old gate.
+    // The fixture starts with `world.season = []` and `ensureSeason` REBUILDS the calendar inside
+    // the very first tick (bookkeeping.ts – it extends in year blocks until SEASON_MIN_FUTURE weeks
+    // are covered), so the four weeks this case just spent have handed the career a full calendar.
+    // Under the owner's rule that is no longer a quiet stretch, and asserting `true` here would be
+    // asserting the old gate.
+    const after = toSnapshot(world)
+    expect(w.find('.span-weeks-btn').exists(), 'the pill follows the owner\'s rule and nothing else').toBe(
+      spanWorthOffering(after.week, after.upcoming, after.injury),
+    )
+    // …and the re-arm itself, which is what this line was always for: clear his five-week window on
+    // the world and the control comes back without anything else changing.
+    world.season = world.season.filter((e) => e.week > world.week + QUIET_WINDOW_WEEKS)
+    game.snapshot = toSnapshot(world)
+    await flushPromises()
     expect(w.find('.span-weeks-btn').exists(), 'and the next quiet stretch offers the span again').toBe(true)
     w.unmount()
   })

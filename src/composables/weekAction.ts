@@ -36,10 +36,23 @@
 //
 // NOTHING IS ADDED TO THE SNAPSHOT and nothing is added to the engine: every fact below is one the
 // shell was already reading, in the order it was already reading it.
+//
+// ⭐⭐ ROUND 26 #1, SECOND PASS – THE OWNER'S RULING ON THE SPAN PILL, VERBATIM AND IN ONE PLACE
+// (25.08). App.vue's template may not carry Cyrillic, so the sentence lives here and the markup
+// points at it:
+//
+//   «давай сделаем ее во-первых слева от основной, а во-вторых по условию, появляться она должна на
+//    тех моментах, где либо в календаре нет ни одного события в ближайшие 5 недель, либо у нее
+//    травма на 5+ недель или до конца травмы осталось не меньше 5 недель. Иначе это совершенно
+//    дурной элемент управления получается, с которым пропускается всё, а еще и прямо под пальцем.»
+//
+// Two halves, and they land in two different files. The POSITION is App.vue's bar (the pill is the
+// first child of `.next-week-bar` now, which in a plain flex row is "left of the main one"); the
+// CONDITION is `spanWorthOffering` in engine/world/multiWeek.ts, read by `multiOffered` below.
 import { computed, type ComputedRef } from 'vue'
 import { useGameStore } from '../stores/game'
 import { blockingOverlay } from './blockingOverlay'
-import { MULTI_WEEK_SPAN } from '../engine/world/multiWeek'
+import { MULTI_WEEK_SPAN, spanWorthOffering } from '../engine/world/multiWeek'
 import { useWeekAhead, type WeekAheadKind } from './weekAhead'
 
 /** What the one handler behind the button has to do with the press.
@@ -69,7 +82,12 @@ export interface WeekAction {
    *  and was deleted on 28.07 with a one-line verdict that is still the design constraint: "it was a
    *  testing shortcut that offered to skip the thing the player came to play" (App.vue, A3). R2-13
    *  brings it back under the rule that makes that verdict false – the span is offered ONLY on a
-   *  quiet week, and only while the engine can actually move time. See `multiOffered`. */
+   *  quiet week, and only while the engine can actually move time. See `multiOffered`.
+   *
+   *  ⚠⚠ ROUND 26 #1 MADE IT RARER AGAIN, and the owner's objection to the first pass is the whole
+   *  reason this field exists in the shape it does: «Иначе это совершенно дурной элемент управления
+   *  получается, с которым пропускается всё». "The engine can move time" is true almost every week
+   *  of a career, so it was never a gate at all. His rule is `spanWorthOffering`. */
   multi: { weeks: number; label: string } | null
 }
 
@@ -157,10 +175,25 @@ export function useWeekAction(): ComputedRef<WeekAction> {
  * the same move App.vue's birthday gate makes ("the engine sets it from `pendingBirthday`, the
  * identical predicate `advanceWeeks` blocks on") and its injury gate after it. Re-asking is not
  * re-deriving: no clause below invents a rule the engine does not already enforce.
+ *
+ * ⚠⚠⚠ AND SINCE ROUND 26 #1 (SECOND PASS) THERE IS A FOURTH CLAUSE, WHICH IS THE OWNER'S AND NOT
+ * THE ENGINE'S. The three above are all forms of "the engine cannot use this press", and the owner
+ * read the result correctly on his own save: they are true almost every week, so the pill was
+ * permanent – «совершенно дурной элемент управления получается, с которым пропускается всё, а еще и
+ * прямо под пальцем». `spanWorthOffering` is his replacement rule, and it lives in the ENGINE module
+ * rather than here for the reason that module's header gives at length: "is there anything in the
+ * next five weeks" is a question both sides of the wire can answer, and this codebase's most
+ * expensive recurring defect is two surfaces answering one question their own way. Nothing is
+ * re-derived here; the snapshot's own `upcoming` and `injury` are handed straight to it.
  */
 export function multiOffered(snap: Parameters<typeof blockingOverlay>[0], kind: WeekAheadKind): boolean {
   if (!snap) return false
   if (snap.pending) return false
   if (blockingOverlay(snap) !== null) return false
-  return QUIET_AHEAD.has(kind)
+  if (!QUIET_AHEAD.has(kind)) return false
+  // ⚠ THE OWNER'S GATE IS LAST, AND THE ORDER IS NOT COSMETIC: everything above says the press
+  // would not WORK, this says it should not be OFFERED. Keeping them in that order is what lets the
+  // three dead-click clauses keep their own tests (`r2-13-advance-span.test.ts` block D) without
+  // this one having to be satisfied first.
+  return spanWorthOffering(snap.week, snap.upcoming, snap.injury)
 }
