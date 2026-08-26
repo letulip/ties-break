@@ -153,6 +153,28 @@ interface SeasonRow {
   /** condition at this season's own opening week (offset 0) */
   firstWeek: number
   injuryOnsets: number
+  /** ⭐ THE TWO DOORS, ADDED FOR ROUND 26 #14 (the same split tools/injury-landscape.ts already
+   *  reports for the junior era, read the same way – off the news feed's own sentence markers, which
+   *  is how tools/injury-cause-probe.ts identifies the retirement door). It matters here because the
+   *  professional schedule is where the retirement door does its work: it is a PER-MATCH hazard on
+   *  spent legs, so a rung that plays more and longer matches integrates more of it, while the
+   *  weekly roll is per WEEK and cannot tell a five-match title run from a bye. Without this column
+   *  the pro row cannot answer "which door produced these onsets", which is the whole of #14. */
+  onsetsWeekly: number
+  onsetsRetire: number
+  /** ⚠ THE NULL-RESULT PROOF FOR THE COLUMN ABOVE. `retireHazard` is `RETIRE_K * spentness`, and
+   *  `spentness` is 0 at or below FATIGUE_START = 120 points – so a match that never gets there
+   *  carries EXACTLY zero retirement hazard, for either player, by construction and not by luck. A
+   *  bench career that loses 6-1 6-1 at every rung therefore reads 0 retirements no matter how many
+   *  matches it plays, and reporting that 0 without this column would be reporting a dead arm as a
+   *  measurement. Games are the observable proxy the save keeps: ~6.5 points a game puts 120 points
+   *  at ~19 games, so `kidLongMatches` counts the matches that can retire anybody at all. */
+  kidMatches: number
+  kidGames: number
+  kidLongMatches: number
+  /** retirements BY THE KID, counted off `MatchRecord.retiredId` – the ground truth the door column
+   *  is checked against. It exists because the door column read 0 while this read 22. */
+  kidRetirements: number
   /** the landscape spec's columns: what the onsets WERE, not only how many */
   bySeverity: Record<'minor' | 'moderate' | 'major' | 'severe', number>
   /** weeks whose PRE-TICK condition (the value injuryTau reads at step 1c) sat below the knee –
@@ -306,6 +328,12 @@ function probe(seed: string): SeasonRow[] {
       opensNextSeasonAt: 0,
       firstWeek: 0,
       injuryOnsets: 0,
+      onsetsWeekly: 0,
+      onsetsRetire: 0,
+      kidMatches: 0,
+      kidGames: 0,
+      kidLongMatches: 0,
+      kidRetirements: 0,
       bySeverity: { minor: 0, moderate: 0, major: 0, severe: 0 },
       weeksSubKnee: 0,
       weeksInjured: 0,
@@ -338,22 +366,56 @@ function probe(seed: string): SeasonRow[] {
         (e) => e.deadlineWeek === world.week + 1 && mandatoryBinds(world, e) && !world.entries.includes(e.id),
       ).length
       const penaltiesBefore = (world.penalties ?? []).length
+      const eidBefore = world.nextEventId
       tickMaybeUnstacked(world, rng, bookedVacationWeeks.has(target))
       for (const pen of (world.penalties ?? []).slice(penaltiesBefore)) row.penaltyPoints += pen.points
       if (isSuspendedAt(world, world.week)) row.suspendedWeeks += 1
+      // ⚠⚠ THE TOURNAMENT IS RESOLVED **BEFORE** THE BODY IS READ, AND FOR THREE WAVES IT WAS THE
+      // OTHER WAY ROUND (found round 26 #14). `retirementInjury` is opened by `finalizeTournament`,
+      // which this probe only reaches through `skipTournament` below – so an onset that came in by
+      // the RETIREMENT door landed AFTER the `world.injury !== null` check and was never counted:
+      // by the next iteration `wasInjured` was already true, so `!wasInjured` was false and the
+      // onset vanished from the ledger entirely. Not a mis-classified door – a MISSING ONSET.
+      // MEASURED, not argued: `kidRetirements` below counts retirements straight off the match
+      // records, and it read 30 over 2115 bench matches in the run that reported ZERO
+      // retirement-door onsets. On that same cell (16 seeds x 3 seasons, greedy/balanced/physio-on)
+      // the fix moves onsets/season 0.48 ±0.09 -> 1.10 ±0.18, inj/100 matches 1.09 -> 2.51 and the
+      // §6.4 prevalence 40% -> 63%: everything this probe reported about injuries was short by
+      // exactly the retirement door, which is 57% of the pro era's onsets.
+      if (world.pendingTournament) {
+        const p = world.pendingTournament
+        row.played += 1
+        const kidMs = p.result.matches.filter((m) => m.aId === KID_ID || m.bId === KID_ID)
+        row.matches += kidMs.length
+        for (const m of kidMs) {
+          const games = (m.score ?? '')
+            .split(' ')
+            .filter(Boolean)
+            .reduce((a, set) => a + set.split('-').reduce((x, g) => x + Number(g), 0), 0)
+          row.kidMatches += 1
+          row.kidGames += games
+          if (games >= 19) row.kidLongMatches += 1
+          if (m.retiredId === KID_ID) row.kidRetirements += 1
+        }
+        skipTournament(world)
+        closeTournament(world)
+      }
       if (world.injury !== null) {
         row.weeksInjured += 1
         if (!wasInjured) {
           row.injuryOnsets += 1
           row.bySeverity[world.injury.severity] += 1
+          // WHICH DOOR – injury-landscape.ts's own read, verbatim: the retirement door's news lines
+          // are "She had to stop…" / "She stopped, and this time it is serious…".
+          const retired = world.events.some(
+            (ev) =>
+              ev.id >= eidBefore &&
+              ev.type === 'injury' &&
+              (ev.text.startsWith('She had to stop') || ev.text.startsWith('She stopped,')),
+          )
+          if (retired) row.onsetsRetire += 1
+          else row.onsetsWeekly += 1
         }
-      }
-      if (world.pendingTournament) {
-        const p = world.pendingTournament
-        row.played += 1
-        row.matches += p.result.matches.filter((m) => m.aId === KID_ID || m.bId === KID_ID).length
-        skipTournament(world)
-        closeTournament(world)
       }
       condSum += world.condition
       row.trough = Math.min(row.trough, world.condition)
@@ -439,6 +501,16 @@ console.log(
 )
 console.log(`    3. home from a W35 title      ${String(100 - titleCost('w35')).padStart(6)}%  target 70-78%`)
 console.log(`    4. season injury prevalence   ${prevalence.toFixed(0).padStart(6)}%  target 46-54%`)
+// ⚠ AND THE SAME NUMBER ON THE WEEKLY DOOR ALONE, which is EXACTLY what this line read before the
+// ordering fix above: a retirement-door onset was invisible to the old check, and a weekly onset
+// cannot occur during a layoff, so "onsets the old probe could see" and "weekly-door onsets" are the
+// same set by construction. Printed so the acceptance verdict can be read both ways without
+// re-running a reverted tool: 46-54% was derived on 02.08, before the retirement door existed.
+console.log(
+  `       ...weekly door only        ${((100 * flat.filter((r) => r.onsetsWeekly > 0).length) / flat.length)
+    .toFixed(0)
+    .padStart(6)}%  = what this probe reported before the retirement door was counted (shipped 10.08)`,
+)
 
 // --- THE INJURY LANDSCAPE READ (detail/injuries-measure) ---------------------------------------
 // The pro era's row of the landscape spec's tables: onsets with SEM, the severity mix, weeks lost,
@@ -465,6 +537,27 @@ console.log(`    4. season injury prevalence   ${prevalence.toFixed(0).padStart(
       ` · weeks below knee/season ${mean(flat.map((r) => r.weeksSubKnee)).toFixed(1)} ± ${semOf(flat.map((r) => r.weeksSubKnee)).toFixed(1)}` +
       ` (of ${WEEKS_PER_YEAR})` +
       ` · matches/season ${mean(flat.map((r) => r.matches)).toFixed(1)}`,
+  )
+  // ⭐ THE DOOR SPLIT AND THE HALF-SEASON RATE (round 26 #14). The owner counted TWO onsets in half
+  // a season; the comparable population figure is therefore a HALF season at this schedule, and the
+  // door split says which hazard would have to be wrong for the count to be a defect.
+  const wk = flat.reduce((a, r) => a + r.onsetsWeekly, 0)
+  const rt = flat.reduce((a, r) => a + r.onsetsRetire, 0)
+  const halves = flat.map((r) => r.injuryOnsets / 2)
+  console.log(
+    `    DOORS weekly ${wk} / retirement ${rt} (${((100 * rt) / Math.max(1, wk + rt)).toFixed(0)}% of pro-era onsets come` +
+      ` off a court, not off the weekly roll; cross-check: ${flat.reduce((a, r) => a + r.kidRetirements, 0)} retirements` +
+      ` counted straight off MatchRecord.retiredId, and the two MUST agree)` +
+      ` · kid matches ${flat.reduce((a, r) => a + r.kidMatches, 0)}, mean ${(
+        flat.reduce((a, r) => a + r.kidGames, 0) / Math.max(1, flat.reduce((a, r) => a + r.kidMatches, 0))
+      ).toFixed(1)} games, ${(
+        (100 * flat.reduce((a, r) => a + r.kidLongMatches, 0)) / Math.max(1, flat.reduce((a, r) => a + r.kidMatches, 0))
+      ).toFixed(1)}% of them long enough (>=19 games ~ 120 points) to carry ANY retirement hazard` +
+      ` · matches per EVENT ${(mean(flat.map((r) => r.matches)) / Math.max(0.01, mean(flat.map((r) => r.played)))).toFixed(2)}` +
+      ` · onsets per HALF season ${mean(halves).toFixed(2)} ± ${semOf(halves).toFixed(2)}` +
+      ` · P(a half season carries >= 2) ${(
+        100 * flat.filter((r) => r.injuryOnsets >= 4).length / flat.length
+      ).toFixed(0)}% by whole-season proxy`,
   )
 }
 console.log(

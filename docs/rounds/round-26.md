@@ -407,12 +407,58 @@ a repeat, and the record has to show the first fix missing.
   колледже, пусть и сжато»** – five rows a season is still invisible at eight screens in 208 weeks.
   **build**: the world must be visibly alive on the college screens themselves, compressed.
 
-- [ ] **14. «Alice поймала 2 травмы за половину сезона до колледжа, как будто многовато, но проверь
+- [~] **14. «Alice поймала 2 травмы за половину сезона до колледжа, как будто многовато, но проверь
   пожалуйста по всем показателям»** – **measure**, against the shipped rates and her own load.
+  → **MEASURED, AND THE MODEL IS CORRECT – IT IS A 13% WINDOW, NOT A DEFECT (R26-I).** Full workings
+  in `docs/specs/the-injury-landscape-2026-08.md` §§12-17; instrument
+  `tools/his-careers-brackets.ts --window 268:293` (the §9 reader extended, no fourth reader, no
+  `src/` line touched). ⭐ **NEITHER INJURY CAME FROM THE WEEKLY ROLL.** Both are on-court
+  retirements – `retiredId === KID_ID` on the w279 WT500 quarterfinal and the w286 slam R32 – and
+  the weekly door produced exactly the **zero** its own hazard predicts (SUM of the shipped
+  `injuryTau` over her 23 healthy weeks = **0.177**). ⚠ And `injuryHistory[].week` is the RECOVERY
+  week, not the onset week (`rollInjury` writes the row in the branch that CLEARS the layoff); onset
+  is `week − weeksOut`, and 0 of her 8 rows cross a season boundary between the two readings, so
+  §9's published panel is unaffected. **THE GROUND TRUTH:** two `minor` layoffs, 2 and 1 weeks, **3
+  weeks lost of 26** – in the same 26 weeks she won three titles. **THE EXPOSURE:** 42 matches in 14
+  event weeks, **1.62 matches a calendar week against 0.78-0.85 for a comparable professional
+  season** – twice the load, and the retirement hazard is bought per MATCH. ⭐ **CONDITION AT ENTRY
+  RECOVERED for the first time** – it is not stored but it is invertible out of the frozen match
+  snapshots against the save's own `college.years[0].startSkill` anchor, as a two-sided bracket
+  whose both ends are proofs: she went on court at 67-70 all window and at **≤57 at w288**. **THE
+  MODEL'S OWN PREDICTION at her own exposure** (4,000 reseeds of `simulateMatch` per match; all 42
+  matches reproduce winner AND scoreline at their stored seed first): 0.461 ± 0.675 retirements +
+  0.177 weekly = **0.638 expected onsets, and P(>=2) = 13.4% exactly** – one window in seven and a
+  half. Per season she is at 4.00 ± 2.83 against round 25's 1.00 ± 0.20 – **z = 1.06, which is two
+  events and not a signal**; normalised per match it is 4.76 ± 3.37 against a corrected bench's 3.19.
+  **Answer: dense, then unlucky, and both injuries were the smallest the game deals.**
 
-- [ ] **15. «Посмотри статистику побед/поражений для Alice за эту половину сезона до колледжа и
+- [~] **15. «Посмотри статистику побед/поражений для Alice за эту половину сезона до колледжа и
   сверь с её показателями скиллов – всё ли соответствует?»** – **measure**: her realised win rate
   against what her skills predict.
+  → **REPRODUCED AND IT IS CORRECT (R26-I).** `docs/specs/the-injury-landscape-2026-08.md` §§15-16.
+  Realised **31-11**; the engine's own closed form (`fastMatchProbability` on the frozen players she
+  actually met) expects **29.20 ± 2.76 (z +0.65)** and the full point loop **29.39 ± 2.74 (z +0.59)**.
+  No tier and no round departs: the largest of twelve cells is r0 at z 1.74, which is what twelve
+  cells do. ⚠ **42 matches is a wide sample and this is «consistent with», not a finding** – saying
+  so plainly is the result. **AND THE TWO ITEMS ARE NOT LINKED IN HER DATA**: after an onset she is
+  13-3 against an expected 12.75 ± 1.50 (z 0.16). The condition→win-probability mechanism is real and
+  already inside the expectation – priced by re-running the identical MC on the same snapshot with
+  the condition scaling undone, it is worth **0.16 of a win over the whole window**, 0.139 of which
+  is one match (w288, condition ≤57, 0.380 -> 0.518, and she lost it).
+
+- [?] **14b (raised by the measurement, NOT by him). The pro-era injury acceptance number has been
+  stale since 10.08, and it may be the real «многовато».** `tools/pro-season-probe.ts` – the
+  acceptance bench for `fatigue-reprice-2026-08.md` §6 – read the body BEFORE it resolved the
+  tournament, so every onset opened by `retirementInjury` (inside `finalizeTournament`) landed after
+  the check and **vanished from the ledger entirely**. Proved before it was believed: 30 retirements
+  counted straight off `MatchRecord.retiredId` in the same run that reported ZERO retirement-door
+  onsets, with 75% of those matches long enough to carry any hazard. Fixed in `tools/` only. The §6.4
+  prevalence at the spec's own reference cell now reads **71% against a 46-54% target** (weekly door
+  alone: 60%, against the **51%** recorded when `injuryBaseChance: 0.003` was set on 02.08 – the
+  retirement door shipped 10.08). Variant C is measured NOT to be the drift. **His fork, in §17: was
+  46-54% about all injuries (then the schedule over-injures and the knob wants re-deriving), or only
+  about the weekly door (then 60% and ~9 unattributed points are what is left)?** No engine number
+  is touched either way.
 
 - [ ] **16. «test-build падает на гите»** – **build/diagnose**: CI is red and the local gate is
   green, so the difference is the runner. Reproduce before guessing.
