@@ -21,11 +21,14 @@ import {
   openingCoachId,
   replayMainState,
   seasonStartWeek,
+  kidAgeExact,
   seedWorldForV6,
   startingSkills,
   type WorldState,
 } from './world'
-import { rollPotential } from './development'
+// v62: the peak-physical back-fill reproduces `growWeek`'s own decline arithmetic – see the v61 -> v62
+// block for why running it backwards is exact rather than an estimate.
+import { declineFactor, physicalMean, rollPotential, type KidSkills } from './development'
 // v47: the migration lays a week out, so the two layout functions it needs live in the ENGINE now
 // (engine/plan.ts) and `composables/weekDays.ts` re-exports them under their historical names. The
 // engine may not import a composable – CLAUDE.md invariant 1 – and a second spelling of REST_PRIORITY
@@ -1881,6 +1884,75 @@ export function migrateSave(raw: unknown): WorldState {
       }
     }
     v = 61
+  }
+
+  // ⭐⭐⭐ v61 -> v62: THE BEST HER BODY HAS EVER BEEN (the long goodbye, step 1 –
+  // docs/specs/the-long-goodbye-2026-08.md §3b). `peakPhysical` is a running maximum of
+  // `physicalMean(skills)` that the growth phase keeps from here on. This block has to answer one
+  // question for a career that already exists: what was her peak, given that nothing in the save
+  // remembers it?
+  //
+  // ⚠⚠ THE SEEDING CHOICE, AND THE OBVIOUS ONE IS WRONG. Back-filling `physicalMean(save.skills)` –
+  // "her peak is whatever she has today" – is the identity element for a young career and a LIE for
+  // an old one: a 38-year-old who has spent nine seasons losing 4-6% a year would load reading
+  // 100% of her peak, i.e. as though the decline had not happened. Step 2 puts the last retirement
+  // offer on a share of this number, so that lie has a consequence with a size: she would be handed
+  // her whole decline back, and a career the age curve says is finished would go on being offered
+  // «one more year» for another decade. A migration may not give a career something play never did.
+  //
+  // ⭐ SO IT IS RECONSTRUCTED, and the engine's own arithmetic run backwards is exact rather than a
+  // guess. Three facts make it so, and all three are `growWeek`'s:
+  //   1. past `declineStart` the gain term is ZERO – `ageFactor` returns 0 from that age – so a
+  //      physical attribute's only movement is its loss;
+  //   2. that loss is PROPORTIONAL (`decline * skills[k]`), so each week multiplies every physical
+  //      attribute, and therefore their mean, by exactly `(1 - declineFactor(age that week))`;
+  //   3. before `declineStart` the loss is zero and the gain is non-negative (`weekLuck` is
+  //      [0.55, 1.45], never negative), so her physical mean is NON-DECREASING up to that age – the
+  //      career maximum is the value she carried into the decline, and no earlier week can beat it.
+  // Multiply the weekly factors back out of today's mean and you have that value. The walk below is
+  // the same one the tick took: `growWeek` is handed `kidAgeExact(world.week, ...)` AFTER the week
+  // is incremented, so week `w` declines at the age she was in week `w`.
+  //
+  // ⚠ WHAT A MIGRATED CAREER THEREFORE READS: exactly the share of peak its age implies – measured
+  // off the shipped curve on three careers with deliberately different ceilings, 89.2% at 33, 68.9%
+  // at 38 and 55.7% at 41, identical on all three to three decimals (tests/peak-physical.test.ts) –
+  // which is the same share a career played from scratch under this build shows at those ages. That
+  // is the consequence, stated: the seeding is chosen so that step 2's threshold fires at the SAME
+  // age on a migrated career as on a fresh one, and an old save is neither granted extra years nor
+  // retired on load.
+  // ⚠⚠ AND THOSE ARE NOT THE SPEC'S NUMBERS. `docs/specs/the-long-goodbye-2026-08.md` §1's "share of
+  // peak PHYSICAL left" column reads 87 / 66 / 53 at the same three ages – 2.3 to 3.2 points LOW
+  // against the function it says it was measured off. The numbers above are this file's, taken from
+  // `declineFactor` itself; §3a's dial table (70% -> 38, 55% -> 41) is the half of the spec that DOES
+  // reproduce, so the owner's 55% ruling is unaffected. Flagged rather than silently worked around.
+  //
+  // ⚠ AND IT IS A REPRODUCTION, NOT AN ESTIMATE OF A HISTORY IT CANNOT SEE. It reconstructs the
+  // peak she carried into her decline, whatever that was – a career wrecked by injuries before 29
+  // arrives at 29 lower, and the ratio is blind to the level, so it comes back lower too. Two
+  // bounds are worth naming rather than hiding: `growWeek` clamps every attribute at
+  // `ECONOMY.development.floor` (20), so an attribute driven onto the floor – reachable only in the
+  // deep forties, where the curve has taken two thirds of her – makes this read slightly HIGH; and
+  // a career whose `ending` has already latched stopped ticking, so its stored peak is the peak it
+  // had when it stopped, which is the right answer for a career that is over.
+  //
+  // Defensive (a non-numeric value is rewritten whole – v30's rule) and therefore idempotent. It
+  // writes arithmetic over state the save already holds: ZERO draws on any stream, so the frozen
+  // MAIN capture (41550 / e6b0c709) is untouched by construction.
+  if (v === 61) {
+    const skills = save.skills as KidSkills | undefined
+    const profile = save.profile as PlayerProfile | undefined
+    if (skills && profile && typeof save.peakPhysical !== 'number') {
+      // What is LEFT of her body, as a share of the peak she carried into the decline: the product
+      // of the weekly factors the age curve has already charged her. 1 for every career younger
+      // than `declineStart`, which is why those seed at exactly today's mean with no special case.
+      let shareLeft = 1
+      for (let w = 1; w <= Number(save.week ?? 0); w++) {
+        const decline = declineFactor(kidAgeExact(w, profile.birthMonth, profile.birthDay))
+        if (decline > 0) shareLeft *= 1 - decline
+      }
+      save.peakPhysical = physicalMean(skills) / shareLeft
+    }
+    v = 62
   }
 
   if (v !== SAVE_SCHEMA_VERSION) {

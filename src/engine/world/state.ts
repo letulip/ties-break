@@ -192,7 +192,20 @@ import type { AcademySupport } from '../academy'
 // false}`, and `answerFork` filtered on it – so the card would have drawn the home row pressable and
 // the engine would have quietly enrolled her at the next place up, $20,000 a year dearer. Deleting
 // the key and deleting the filter are one fix in two places.
-export const SAVE_SCHEMA_VERSION = 61
+//
+// ⭐⭐⭐ v62 (the long goodbye, step 1): `peakPhysical` – the best her body has ever been, as one
+// number, kept as a running maximum by the growth phase. Written every tick and READ BY NOTHING YET;
+// docs/specs/the-long-goodbye-2026-08.md §3b is what it is for (the last retirement offer will land
+// on a share of HER OWN PEAK instead of on her 38th birthday, so that a body kept well plays to 41
+// and a wrecked one finishes early).
+// ⚠ IT HAD TO BE STATE, and §3b says why the obvious alternative is wrong: reading her current
+// physical against `potential` costs nothing and is already persisted, but a girl who never came
+// near her ceiling would read as finished while still young. The signal is what she actually
+// reached, and nothing in a save remembers that – `growWeek` overwrites `skills` in place.
+// ⚠ AND IT IS RECONSTRUCTED, NOT DEFAULTED, FOR AN EXISTING CAREER. See the migration: seeding
+// "today" would tell a 38-year-old she is at 100% of her peak. Pure state, zero draws on any
+// stream, so the frozen MAIN capture (41550 / e6b0c709) cannot see it.
+export const SAVE_SCHEMA_VERSION = 62
 
 
 
@@ -656,4 +669,24 @@ export interface WorldState {
    *  which is the true value for every earlier save, so nothing is back-filled (the
    *  `pendingTournament.masseurThere` / `weeksSaved` discipline, recorded in the v59 migration). */
   masseurReturnDue?: number
+  /** ⭐⭐⭐ THE BEST HER BODY HAS EVER BEEN (v62, the long goodbye step 1) – `physicalMean` of her
+   *  skills, kept as a RUNNING MAXIMUM over the whole career by the growth phase (world/phaseGrowth).
+   *  One number, written every tick, read by nothing yet.
+   *
+   *  ⚠ WHY A MEAN IS THE WHOLE ANSWER AND NOT A SUMMARY OF ONE. `declineFactor` erodes each physical
+   *  attribute PROPORTIONALLY (`decline * skills[k]`), so every one of them keeps the same share of
+   *  its own peak – and the mean's share is that same share exactly. `physicalMean` carries the full
+   *  argument; it is not a fudge and must not be re-read as one.
+   *
+   *  ⚠ WHY A MAXIMUM AND NOT "WHERE SHE WAS AT 29". The peak is a fact about HER career rather than
+   *  about the age curve: a girl who spent her early twenties injured, or trained badly, peaks lower
+   *  and at a different week, and the point of §3b is to measure her against what she actually
+   *  reached. A maximum needs no age, no window and no history – it cannot be wrong about when.
+   *
+   *  ⚠ NOT DERIVABLE AFTER THE FACT, which is why it is persisted: `growWeek` overwrites
+   *  `world.skills` in place and no other record of her build survives (`radarViewOf` re-derives her
+   *  week-one build from the seed, which is where she STARTED, not where she got to).
+   *
+   *  Required rather than optional – the v62 migration seeds every existing save. */
+  peakPhysical: number
 }

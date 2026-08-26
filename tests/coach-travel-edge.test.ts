@@ -11,6 +11,7 @@ import {
 import { coachMatchEdge, kidMatchPlayerFor, COACH_EDGE_POINTS_PER_PP } from '../src/engine/world/player'
 import { coachEdgeView, coachMarket, coachTravelsWithHer, createWorld, hireCoach, setCoachOnEventWeeks } from '../src/engine/world'
 import { coachTravelFareFor } from '../src/engine/world/sponsors'
+import { physicalMean } from '../src/engine/development'
 import { TIERS } from '../src/engine/season/calendar'
 import { openCareer, stepCareerWeek, PRESETS, POLICIES } from '../tools/econ-bench'
 import { DEFAULT_PROFILE, type CoachTier } from '../src/shared/protocol'
@@ -971,9 +972,27 @@ const FROZEN = {
    *  running, and it is the load-bearing half: the reveal is two integers and a cursor over rows the
    *  tick had already written – ZERO draws on any stream. The frozen MAIN capture
    *  (41550 / e6b0c709) is not re-pinned and was re-run green beside this re-freeze. */
-  middleGrinder: 'c42d5ed886f8722a7de771d9b1a597ffc54bdded7a3d0f7056050c1ffed71a9c',
+  /** ⚠⚠ RE-AIMED, NOT WEAKENED (26.08, the long goodbye step 1 – schema v62: the stored peak
+   *  physical). All three moved, and this is the first re-freeze in the block that had to move them:
+   *  every "all three held" above belonged to a change living behind the college freeze, while
+   *  `peakPhysical` is written by the WEEKLY TICK – 156 times inside each of these walks – so a
+   *  frozen career that did NOT move would have meant the growth phase was not writing it at all.
+   *
+   *  ⚠ AND `PRE_V62` BELOW IS THE PROOF RATHER THAN THE CLAIM: rolling the schema back to 61 and
+   *  dropping the one key v62 appended reproduces these three hashes byte for byte, so what the wave
+   *  did to these careers is a number nothing reads yet. It CANNOT feed back into the tennis by
+   *  construction – `Math.max` over `physicalMean(world.skills)`, taken on the line after `growWeek`,
+   *  which is the engine's only writer of `world.skills` – and `walkFrozenCareer` now asserts the
+   *  value is exactly today's mean rather than merely present, since at 16.6 nothing has declined.
+   *  All EIGHT older rollback identities (PRE_V50…PRE_V61) reproduce their own constants unchanged,
+   *  which is the second half of the same proof: `careerHashAtSchema` drops the new key first.
+   *
+   *  ⚠ `rngMain` UNMOVED for the twentieth wave running, and it is the load-bearing half: a running
+   *  maximum is a comparison, and this wave adds no draw to any stream. The frozen MAIN capture is
+   *  not re-pinned – count 41550, hash e6b0c709 – and was re-run green beside this re-freeze. */
+  middleGrinder: 'f00688b488ae684a3fc06a5d71c61672b6fe000241da7ca38b64495980d1f6cd',
   /** PRESETS[8] · 120k wealthy family, elite coach · grinder policy (never travels) */
-  eliteGrinder: '13e00499902646b9752d6ed3f02743817f106bf2730cbf5fea7d3475ea25cb75',
+  eliteGrinder: '73fc7b8d1dc6f79df023d8771610461e0b3ec60ed2a38e7de90713cf00df32d2',
   /** PRESETS[0] · 8k working family, SELF-COACHED · player policy (switch on, nobody to send)
    *
    *  ⭐⭐ RE-FROZEN A FIFTH TIME (16.08) – AND ALONE, WHICH IS THE FINDING. The owner's correction of
@@ -1191,7 +1210,7 @@ const FROZEN = {
    *  rolled back by a version number, but swapping ONLY `schemaVersion` on the new world still
    *  reproduces each, which is all those lines ever claimed. The frozen MAIN capture
    *  (41550 / e6b0c709) is untouched and was re-run green beside this re-freeze. */
-  selfTravelling: '01975f139053efd8598230f1c5bd953f8d9cd2011957c7579cc43651e6a04bff',
+  selfTravelling: '79e6cbc3ee13e4160e351b6a029109ad74c3ab00fa4f904617e8297877598921',
 }
 
 /** ⭐ THE SAME THREE CAREERS AS THEY HASHED UNDER v56 – the identity that proves the v57 re-freeze
@@ -1276,6 +1295,32 @@ const PRE_V61 = {
   middleGrinder: '0cd2b78b9a31355d8eabb607f178a7a31656daae22b54fcd525a6459cb4c0232',
   eliteGrinder: '29d54dc0c7d608793e957770827be18ee0021dc2e485579777b4d9ccce0f004c',
   selfTravelling: '1acaa64e1a8f2ce5b6aa3544b58c920fd0d614163c51c70fc5d76de2329a19b6',
+}
+
+/** ⭐ THE SAME THREE CAREERS AS THEY HASHED UNDER v61 – the identity that proves the v62 re-freeze
+ *  (the long goodbye, step 1: the stored peak physical) added ONE inert key and touched nothing
+ *  else. These are the v61-era `FROZEN` values verbatim; `careerHashAtSchema(…, 61)` drops the key
+ *  v62 added before hashing, because a v61 serialisation never held it.
+ *
+ *  ⚠⚠ ALL THREE MOVED, AND UNLIKE v55/v56/v57 THAT IS EXPECTED HERE RATHER THAN SUSPICIOUS. Every
+ *  previous "all three held" was a change that lived behind the college freeze; this one lives in
+ *  the WEEKLY TICK and reaches every career there has ever been, by design – `peakPhysical` is
+ *  written on the line after `growWeek`, 156 times in each of these walks. A frozen career that had
+ *  NOT moved would have meant the growth phase was not writing it.
+ *
+ *  ⚠ AND THE KEY IS THE ONLY THING THAT MOVED, which is what this identity is for: the peak is a
+ *  `Math.max` over state `growWeek` has already computed, so it can neither feed back into her
+ *  tennis nor reorder anything – no rule reads it yet (step 2 is the reader, and it is not built).
+ *  `walkFrozenCareer` asserts the value is exactly today's `physicalMean`, so the new key is not
+ *  merely present, it is the number the comment says it is.
+ *
+ *  ⚠ `rngMain` UNMOVED for the twentieth wave running, and it is the load-bearing half: a maximum is
+ *  a comparison, not a roll, and this wave adds no draw to any stream. The frozen MAIN capture is
+ *  untouched: count 41550, hash e6b0c709, re-run green beside this re-freeze. */
+const PRE_V62 = {
+  middleGrinder: 'c42d5ed886f8722a7de771d9b1a597ffc54bdded7a3d0f7056050c1ffed71a9c',
+  eliteGrinder: '13e00499902646b9752d6ed3f02743817f106bf2730cbf5fea7d3475ea25cb75',
+  selfTravelling: '01975f139053efd8598230f1c5bd953f8d9cd2011957c7579cc43651e6a04bff',
 }
 
 /** ⭐ THE SAME THREE CAREERS AS THEY HASHED UNDER v59 – the identity that proves the v60 re-freeze
@@ -1452,6 +1497,13 @@ function walkFrozenCareer(presetIndex: number, policyIndex: number, force?: Part
     world.events.some((e) => e.text.includes("share of the prize money") && e.type === 'expense'),
     'no staff share row in any frozen career',
   ).toBe(false)
+  // ⚠ v62: and the stored peak is present and is TODAY. She is 16.6 at week 156, `declineFactor` opens
+  // at 29, and before it her physical mean is non-decreasing – so the running maximum can only be the
+  // value she is carrying. Checked rather than assumed, because it is the one thing that could make the
+  // new key move a hash for a reason that is NOT a schema bump: a peak above today's mean here would
+  // mean something took physical points off a sixteen-year-old.
+  expect(world.peakPhysical, 'the v62 peak is present and is TODAY at 16.6 – nothing has declined yet')
+    .toBeCloseTo(physicalMean(world.skills), 10)
   return world
 }
 
@@ -1468,11 +1520,20 @@ function careerHash(presetIndex: number, policyIndex: number, force?: Partial<{ 
  *  than a convenience: none of the three existed at any earlier schema, so a pre-59 serialisation
  *  containing any of them would be a shape no shipped version ever wrote. They are the LAST keys
  *  of `createWorld`'s literal (placed there for exactly this), so dropping them leaves every other
- *  key's order untouched and all seven older identities reproduce their constants byte for byte. */
+ *  key's order untouched and all seven older identities reproduce their constants byte for byte.
+ *
+ *  ⚠ RE-AIMED FOR v62, NOT WEAKENED, AND IT HAD TO BE. v62 appends `peakPhysical` – and it appends it
+ *  AFTER the masseur's three, so those three stopped being the last keys of the literal. Left alone,
+ *  every rollback below 62 (v59's included) would have hashed a "pre-v59 serialisation" that carried
+ *  a key which did not exist at any schema at all, and the eight older identities would have gone red
+ *  together for a reason none of their comments could explain. Dropping `peakPhysical` FIRST restores
+ *  each older shape exactly: a rollback to 61 is the v61 world, and a rollback below 59 is that minus
+ *  the masseur's three. Every one of the older constants below is unchanged and still reproduces. */
 function careerHashAtSchema(presetIndex: number, policyIndex: number, schemaVersion: number): string {
   const world = walkFrozenCareer(presetIndex, policyIndex)
-  const { masseurHired: _seat, masseurSessionsPerWeek: _dial, masseurTravels: _stance, ...preMasseur } = world
-  const shape = schemaVersion < 59 ? preMasseur : world
+  const { peakPhysical: _peak, ...prePeak } = world
+  const { masseurHired: _seat, masseurSessionsPerWeek: _dial, masseurTravels: _stance, ...preMasseur } = prePeak
+  const shape = schemaVersion < 59 ? preMasseur : schemaVersion < 62 ? prePeak : world
   return createHash('sha256').update(JSON.stringify({ ...shape, schemaVersion })).digest('hex')
 }
 
@@ -1484,6 +1545,21 @@ describe('the byte-identity of a career that does not travel', () => {
 
   it('...and for a self-coached family with the switch ON, which has nobody to send', () => {
     expect(careerHash(0, 1), '8k · self-coached · player').toBe(FROZEN.selfTravelling)
+  })
+
+  it('⭐⭐ v62: rolling the schema back to 61 – and dropping the key v62 added – reproduces the previous hashes byte for byte', () => {
+    // ⚠ THE WHOLE OF WHAT THE LONG GOODBYE'S STEP 1 DID TO THESE THREE CAREERS, as an identity. The
+    // stored peak physical is written by the WEEKLY TICK rather than from behind the college freeze,
+    // so unlike most of the rollbacks below it genuinely reaches all three – 156 times each. What
+    // this case asks is whether it did anything BUT be written: a `Math.max` over a mean of numbers
+    // `growWeek` has already produced cannot feed back into her tennis, and nothing reads it yet.
+    // If it had – if the peak had changed a rate, a rank, a fare or an event – the drop would not be
+    // enough and this case would be red beside the freeze, naming the wave rather than the number.
+    // ⚠ THE KEY IS DROPPED HERE, as in v59's rollback and unlike v60's and v61's: the field that
+    // moved is TOP-LEVEL, so a v61 serialisation of this world is exactly this world without it.
+    expect(careerHashAtSchema(5, 0, 61), '25k · middle coach · grinder').toBe(PRE_V62.middleGrinder)
+    expect(careerHashAtSchema(8, 0, 61), '120k · elite coach · grinder').toBe(PRE_V62.eliteGrinder)
+    expect(careerHashAtSchema(0, 1, 61), '8k · self-coached · player').toBe(PRE_V62.selfTravelling)
   })
 
   it('⭐⭐ v61: rolling ONLY the schema back to 60 reproduces the previous hashes byte for byte', () => {

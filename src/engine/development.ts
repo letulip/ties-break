@@ -67,6 +67,42 @@ export type SkillKey = keyof KidSkills
  *  existence from that position on. */
 export const SKILL_KEYS: readonly SkillKey[] = ['serve', 'ret', 'composure', 'stamina', 'groundstrokes']
 
+/** ⚠⚠ WHAT «PHYSICAL» MEANS, AND IT IS THE PREDICATE `growWeek` ITSELF SPENDS – not a list somebody
+ *  typed out beside it. The decline branch below reads `loss = decline * skills[k]` for exactly the
+ *  keys this returns true for, and hands `composure` `veteranPoise` instead; so the answer to "which
+ *  attributes does age take points off" is defined in ONE place and every reader gets the same four.
+ *
+ *  A hand-written `['serve', 'ret', 'stamina', 'groundstrokes']` would be a second home for that
+ *  answer, and `SKILL_KEYS` is APPEND-ONLY (see above): the day a sixth attribute is appended,
+ *  exactly one of the two would be updated and nothing would fail. */
+export function isPhysicalSkill(k: SkillKey): boolean {
+  return k !== 'composure'
+}
+
+/** The attributes `declineFactor` erodes, in `SKILL_KEYS`' order. DERIVED, never written down. */
+export const PHYSICAL_SKILL_KEYS: readonly SkillKey[] = SKILL_KEYS.filter(isPhysicalSkill)
+
+/** HER BODY AS ONE NUMBER: the mean of the attributes age takes points off.
+ *
+ *  ⭐⭐ A SCALAR MEAN IS EXACT HERE RATHER THAN A SIMPLIFICATION, and it has to be said out loud
+ *  because the next reader will otherwise assume it is a fudge that got waved through. `growWeek`'s
+ *  decline is PROPORTIONAL PER ATTRIBUTE – `loss = decline * skills[k]` – and past `declineStart`
+ *  nothing else moves a physical attribute at all (`ageFactor` returns 0 from that age, so the gain
+ *  term is 0). Each physical attribute is therefore multiplied by the SAME `(1 - decline)` every
+ *  week, so each one keeps the same SHARE of its own peak, week for week – and the mean of numbers
+ *  that have all been scaled by one factor is that factor times the mean. `physicalMean(now) / peak`
+ *  is not an approximation of "how much of her body is left": it IS each attribute's own share, to
+ *  the last decimal.
+ *
+ *  ⚠ AND THAT IS EXACTLY WHY COMPOSURE IS OUT rather than merely "not very physical". It GAINS
+ *  `veteranPoise` past the peak, so folding it in would put a rising number inside a falling one:
+ *  the share would understate the decay, and it would do so by more every year. */
+export function physicalMean(skills: KidSkills): number {
+  let total = 0
+  for (const k of PHYSICAL_SKILL_KEYS) total += skills[k]
+  return total / PHYSICAL_SKILL_KEYS.length
+}
+
 /** WHERE SHE CAN BE BORN, per attribute – the range `startingSkills` (engine/world/player.ts) draws
  *  each birth value out of.
  *
@@ -436,8 +472,13 @@ export function growWeek(args: {
     const headroom = Math.max(0, potential[k] - skills[k])
     const gain = rate * headroom * luck * aim[k]
     // Composure keeps rising past the peak – experience is the one thing that does not fade.
-    const loss = decline > 0 && k !== 'composure' ? decline * skills[k] : 0
-    const veteranPoise = decline > 0 && k === 'composure' ? d.veteranPoise : 0
+    // ⚠ THE PREDICATE, NOT A REPEAT OF IT (v62). These two lines used to spell `k !== 'composure'`
+    // and `k === 'composure'` inline, which was fine while this was the only thing that cared. The
+    // stored peak physical reads the same question now (`physicalMean`, and through it
+    // `WorldState.peakPhysical`), so the answer is `isPhysicalSkill` in both places and the two
+    // cannot drift apart. Byte-identical behaviour: `isPhysicalSkill` IS `k !== 'composure'`.
+    const loss = decline > 0 && isPhysicalSkill(k) ? decline * skills[k] : 0
+    const veteranPoise = decline > 0 && !isPhysicalSkill(k) ? d.veteranPoise : 0
     out[k] = Math.max(d.floor, skills[k] + gain - loss + veteranPoise)
   }
   return out
