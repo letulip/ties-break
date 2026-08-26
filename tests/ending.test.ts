@@ -421,8 +421,10 @@ describe('the latch, on a real world', () => {
     // ⚠⚠ AND THE W75 TITLE BOUGHT HER NOTHING AND COST HER NOTHING. The offer reads her JUNIOR
     // record; the professional title is not an input, so a programme still offered her a place.
     // ⚠ RE-AIMED FOR THE 17.08 REBUILD, NOT LOOSENED. A tier is a PLACE now and the offer carries a
-    // quote for each, so "was she offered a place" is "does the cheapest open quote fund her".
-    const cheapest = fork!.offer?.quotes.find((q) => q.open) ?? null
+    // quote for each, so "was she offered a place" is "does the cheapest quote fund her".
+    // ⚠ RE-AIMED AGAIN BY ROUND 26 #2 (second pass) AND STILL NOT LOOSENED: `q.open` is gone with the
+    // residence rule (v61), so the cheapest place is simply the first one – every place is hers.
+    const cheapest = fork!.offer?.quotes[0] ?? null
     expect(cheapest, 'a W75 champion is still quoted a college place').not.toBeNull()
     expect(cheapest!.athleticShare).toBeGreaterThan(0)
   })

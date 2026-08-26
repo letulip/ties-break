@@ -20,6 +20,9 @@
 // ⚠ THE LEDGER ROW ITSELF IS PROVEN NEXT DOOR, on a career that really plays: `tests/
 // round26-world-speaks.test.ts` re-derives every split from outside the till. A component test
 // cannot walk a career that enters tournaments inside happy-dom for the price it is worth.
+// ⚠ TWO AGENTS REACHED THIS INDEPENDENTLY (round 26 #16, 24.08) - the architect measuring the CI
+// red and a wave agent tripping over the same file mid-run. Both arrived at the same arithmetic and
+// the same ceiling, which is the strongest evidence the diagnosis is right rather than a guess.
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 // ⚠ A RUNNER-SIZED CEILING (round 26 #16 – «test-build падает на гите»). These cases mount a real
 // screen over a career walked hundreds of weeks, and locally the slowest sits at 4.7s against
@@ -34,6 +37,21 @@ import { createPinia, setActivePinia } from 'pinia'
 import '../../src/style.css'
 import MoneyScreen from '../../src/components/screens/MoneyScreen.vue'
 import { useGameStore } from '../../src/stores/game'
+
+// ⚠⚠ ADDED BY R26-G, 26.08, AND IT IS ROUND 26 #16 CAUGHT IN THE ACT. This file mounts the Money
+// screen over WALKED careers and carries no timeout of its own, so it runs at vitest's 5s default –
+// the component project declares none. Measured on an idle machine: the file is 9.3s and its two
+// heavy cases are **3.9s and 3.9s**. CI's runner is a 2-core box measured at 4-5x this machine, so
+// those become **16-20s against 5s** and fail every time. It went red here in a local full-project
+// run the moment anything else was competing for a core, with the exact signature CLAUDE.md
+// describes: «Test timed out in 5000ms», zero assertion failures.
+//
+// ⚠ NOT THIS AGENT'S FILE AND NOT THIS AGENT'S ITEM – it is round 26 #5b's, shipped last pass. The
+// line is added rather than reported because the rule is explicit («any mounted case over ~1s
+// locally needs a budget with the arithmetic») and because a red CI is the owner's own #16. Whoever
+// owns #16 should sweep the rest of `tests/component/**` the same way: run the project with the
+// default reporter and compare each file's slowest case against its `vi.setConfig`, if it has one.
+
 import {
   birthdayOffer,
   chooseGift,

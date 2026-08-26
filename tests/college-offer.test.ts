@@ -30,19 +30,21 @@ import {
   chosenQuoteOf,
   COLLEGE_TIER_ODDS,
   COLLEGE_ODDS_MEASURED_AT,
+  COLLEGE_ODDS_MEASURED_AT_BEFORE_HOME_RULING,
   familyCanPayPerYearCents,
   familyPositionCents,
   recruitedAtAll,
-  tierOpenTo,
-  // ⭐ ROUND 24 #2a – the one decision, its readout off a quote, and its words.
-  tierShutFor,
-  quoteShutFor,
-  COLLEGE_SHUT_DETAIL,
-  type CollegeShutReason,
+  // ⚠ `tierOpenTo`, `tierShutFor`, `quoteShutFor`, `COLLEGE_SHUT_DETAIL` and `CollegeShutReason` were
+  // imported here for round 24 #2a's refusal machinery. Round 26 #2's second pass deleted all five
+  // with the rule they served – see block B's own note.
   type CollegeFundingBand,
   type CollegeRecruitView,
   type JuniorRung,
 } from '../src/engine/collegeOffer'
+// ⚠ THE PLAYABLE COUNTRY LIST, imported rather than sampled: block B sweeps every career a player can
+// start. It is a composable (presentation – the engine holds two-letter codes and never renders one),
+// which a TEST may read even though the engine may not.
+import { COUNTRY_NAMES } from '../src/composables/countries'
 import { COLLEGE_TRIP_WEEKS } from '../src/engine/world/college'
 import { rngFromSeed } from '../src/engine/rng'
 import type { FamilyBackground } from '../src/shared/protocol'
@@ -170,114 +172,60 @@ describe('B. nothing removes the third answer', () => {
     expect(offer.quotes[0].athleticShare).toBeGreaterThan(offer.quotes[2].athleticShare)
   })
 
-  // ⚠⚠ AND THE ONE PLACE RESIDENCE SHUTS IS ONE SCHOOL, NEVER THE ANSWER. Two tiers are always open,
-  // which is the owner's ruling of 16.08 held structurally rather than by a copy check.
-  it('leaves at least two places open to everybody, American or not', () => {
-    for (const country of ['US', 'RU', 'AU', 'FR']) {
+  // ===============================================================================================
+  // ⭐⭐⭐⭐ ROUND 26 #2, SECOND PASS – EVERY PLACE IS HERS, IN EVERY COUNTRY
+  // ===============================================================================================
+  //
+  // The owner, having asked twice why the cheapest place was refused: «по-моему в каждой стране есть
+  // домашний универ». Round 24 gave the refusal a reason and round 26's first pass made the reason
+  // name the fact under it, and he asked again – because the refusal was TRUE and **unmeetable**:
+  // `profile.country` is written once at onboarding, ~440 weeks before the card draws, and 23 of the
+  // 24 playable countries were shut out of the cheap rung by it.
+  //
+  // WHAT USED TO BE HERE, so the record shows what was traded for what. Three cases: «leaves at least
+  // two places open to everybody», the derivation sweep (`open` IS `tierShutFor(...) === null`, six
+  // states), and the readout sweep (`quoteShutFor` off a persisted quote agrees with `tierShutFor`);
+  // plus two copy cases over `COLLEGE_SHUT_DETAIL`. All five guarded ONE rule, and the rule is gone
+  // with `CollegeQuote.open` itself (v61). What replaces them asserts the stronger thing: not that at
+  // least two places survive a refusal, but that **there is no refusal**.
+  //
+  // ⚠ IT SWEEPS THE REAL COUNTRY LIST AND NOT A SAMPLE. `COUNTRY_NAMES` is exactly what onboarding
+  // offers – a code with no name there is unreachable – so this is every career a player can start.
+  it('⭐⭐⭐⭐ quotes all three places in all 24 playable countries, with no boolean between them', () => {
+    const codes = Object.keys(COUNTRY_NAMES)
+    expect(codes.length, 'the sweep really is the whole onboarding list').toBe(24)
+    for (const country of codes) {
       const offer = collegeOfferFor(view({ j300: 3 }, 'working', country), rngFromSeed('anyone'))
-      expect(offer.quotes.filter((q) => q.open).length, country).toBeGreaterThanOrEqual(2)
+      expect(offer.quotes.map((q) => q.tier), country).toEqual([...COLLEGE_TIER_ORDER])
+      // ⚠ AND THE CHEAPEST IS THE HOME PLACE FOR ALL OF THEM, which is the sentence he wrote.
+      expect(offer.quotes[0].costPerYearCents, `${country}: the home place`).toBe(
+        COLLEGE_TIERS.state.costPerYearCents,
+      )
     }
-    expect(tierOpenTo('state', 'US')).toBe(true)
-    expect(tierOpenTo('state', 'RU')).toBe(false)
-    expect(tierOpenTo('national', 'RU')).toBe(true)
-    expect(tierOpenTo('private', 'RU')).toBe(true)
+    // ⚠⚠ AND THE FIELD ITSELF IS GONE FROM THE PAYLOAD, not merely true. An always-true boolean is
+    // the end state this deliberately did not take: it would leave the next reader believing a place
+    // can be shut. Mutation: put `open: true` back on `quoteFor`'s return and this line goes red.
+    const one = collegeOfferFor(view({ j300: 3 }, 'working', 'AU'), rngFromSeed('shape'))
+    for (const q of one.quotes) expect('open' in q, `${q.tier}: no shut flag survives`).toBe(false)
   })
 
-  // ===============================================================================================
-  // ⭐⭐⭐ ROUND 24 #2a – A SHUT PLACE CAN ALWAYS BE ASKED WHY, AND THERE IS ONLY ONE ANSWER
-  // ===============================================================================================
-  //
-  // The owner could not tell why the cheapest place was unpickable. The house rule is that a refusal
-  // names its reason (`EntryStatus.ineligibleReason` + `ineligibleDetail`), and the hazard that rule
-  // exists for is a SECOND, PARALLEL judgement: a screen holding its own opinion about a refusal it
-  // did not make. SeasonScreen's lock pill did exactly that once and printed the wrong refusal.
-  //
-  // So `tierShutFor` is the one decision and `tierOpenTo` is derived from it; `quoteShutFor` reports
-  // it off a persisted quote. These three cases are what make "one question, one answer" a
-  // measurement instead of a comment.
-  it('⭐⭐⭐ `open` is DERIVED from the reason – a place cannot be shut without one', () => {
-    // The whole reachable state space: every tier x both residence classes. Six states, all walked.
-    for (const country of ['US', 'RU']) {
-      for (const tier of COLLEGE_TIER_ORDER) {
-        const shut = tierShutFor(tier, country)
-        expect(tierOpenTo(tier, country), `${country} ${tier}`).toBe(shut === null)
-        // and every code that can come out of it has words
-        if (shut !== null) expect(COLLEGE_SHUT_DETAIL[shut], `${country} ${tier}`).toBeTruthy()
-      }
+  // ⚠⚠ AND THE COUNTRY RULE THAT SURVIVED IS A PRICE, NEVER A DOOR. `needShareOf` still pays the
+  // need-based layer to an American family only (34 CFR §668.33 – federal student AID, which is about
+  // who may receive a US grant rather than about who may enrol). That is the one country test the
+  // round left standing, and this is the line that says what it may and may not do: the Australian
+  // family is quoted the SAME place at the SAME sticker and pays more of it. A refusal removes a row;
+  // a price does not.
+  it('⭐⭐ the surviving country rule changes the BILL and never the list', () => {
+    const bests = { j300: 3 }
+    const us = collegeOfferFor(view(bests, 'working', 'US'), rngFromSeed('same-die'))
+    const au = collegeOfferFor(view(bests, 'working', 'AU'), rngFromSeed('same-die'))
+    for (const tier of COLLEGE_TIER_ORDER) {
+      const h = us.quotes.find((q) => q.tier === tier)!
+      const a = au.quotes.find((q) => q.tier === tier)!
+      expect(a.costPerYearCents, `${tier}: same sticker`).toBe(h.costPerYearCents)
+      expect(a.athleticShare, `${tier}: same merit award`).toBeCloseTo(h.athleticShare, 12)
+      expect(a.familyPerYearCents, `${tier}: and she pays more of it`).toBeGreaterThan(h.familyPerYearCents)
     }
-    // anti-vacuity: the sweep really does contain a refusal and an open place
-    expect(tierShutFor('state', 'RU')).not.toBeNull()
-    expect(tierShutFor('state', 'US')).toBeNull()
-  })
-
-  it('⭐⭐⭐ the reason recovered from a QUOTE is the reason the quote was priced with', () => {
-    // ⚠ THIS IS THE ONE THE CARD DEPENDS ON. A screen holds a persisted quote and nothing else – no
-    // country – so `quoteShutFor` has to give the same answer `tierShutFor` gave when `quoteFor` set
-    // `open`. If those two ever part, the card explains one refusal and the engine enforces another.
-    for (const country of ['US', 'RU', 'AU']) {
-      const offer = collegeOfferFor(view({ j300: 3 }, 'working', country), rngFromSeed(`why-${country}`))
-      for (const q of offer.quotes) {
-        expect(quoteShutFor(q), `${country} ${q.tier}`).toBe(tierShutFor(q.tier, country))
-        // ...and the boolean the engine re-validates on is exactly the reason's absence
-        expect(q.open, `${country} ${q.tier}: one boolean, not two`).toBe(quoteShutFor(q) === null)
-      }
-    }
-  })
-
-  // ⚠⚠ RE-AIMED BY ROUND 26 #2, NOT WEAKENED. The map's values are FUNCTIONS of the family's home
-  // now – `COLLEGE_SHUT_DETAIL[code](homeName)` – because round 24's sentence stated the rule's
-  // conclusion («she is not one») and never the fact under it, and the owner asked the same question
-  // a second time. Totality is unchanged (`Record` over the code union), the words are still the
-  // engine's, and this case gains the property the reopening was actually about: **the sentence
-  // names the fact.** The sample is a real country name because that is what the card passes.
-  it('⚠ every refusal code carries a sentence, it is player copy, and it names the fact', () => {
-    const codes = Object.keys(COLLEGE_SHUT_DETAIL) as CollegeShutReason[]
-    expect(codes.length, 'there is at least one refusal to explain').toBeGreaterThan(0)
-    for (const code of codes) {
-      const line = COLLEGE_SHUT_DETAIL[code]('Australia')
-      expect(line.length, `${code}: says something`).toBeGreaterThan(20)
-      expect(line, `${code}: short dash only`).not.toContain('—')
-      expect(line, `${code}: no Cyrillic in player copy`).not.toMatch(/[Ѐ-ӿ]/)
-      // ⚠ AND IT MAY NOT RECOMMEND. Ruling 4 (30.07): the fork card has no opinion about which
-      // answer to take, and a refusal that suggests a substitute is exactly that opinion.
-      for (const steer of ['should', 'better', 'instead', 'recommend', 'consider']) {
-        expect(line.toLowerCase(), `${code}: no verdict ("${steer}")`).not.toContain(steer)
-      }
-    }
-  })
-
-  // ===============================================================================================
-  // ⭐⭐⭐ ROUND 26 #2 – THE REFUSAL NAMES THE FACT IT RESTS ON, AND THAT IS WHY THIS REOPENED
-  // ===============================================================================================
-  //
-  // The owner asked why the in-state place was shut, round 24 gave the row a reason, and he asked
-  // AGAIN. The reason was *«The in-state price is only for residents of the state, and she is not
-  // one.»* – a rule and its conclusion, with the premise missing. Nothing on that card, or anywhere
-  // else in the game, says what the game thinks her residence IS, so the sentence was unfalsifiable
-  // from the player's chair: he could not agree with it, disagree with it, or act on it.
-  //
-  // ⚠ IT IS SCOPED TO THE ONE RULE THAT HAS A FACT OF THIS KIND, deliberately. Asserting that EVERY
-  // future code interpolates its argument would be the over-strict widening CLAUDE.md's pin-hygiene
-  // note is about: a later refusal that is a property of the PLACE has no country to name.
-  it('⭐⭐⭐ the residence refusal states where the game thinks the family is from', () => {
-    const line = COLLEGE_SHUT_DETAIL['not-a-resident']('Australia')
-    expect(line, 'the fact, in words').toContain('Australia')
-    expect(line, 'and the rule it makes her fail').toContain('US state')
-    // ⚠ THE ROUND-24 SENTENCE MAY NOT SURVIVE UNDER THE NEW ONE. A line that appended the country to
-    // "she is not one" would pass the two above and still be the sentence he could not read.
-    expect(line, 'the conclusion-only line is gone').not.toContain('she is not one')
-    // ⚠ AND THE ARGUMENT IS REALLY THE SOURCE OF THE NOUN – anti-vacuity for the two `toContain`s.
-    expect(COLLEGE_SHUT_DETAIL['not-a-resident']('Czechia')).toContain('Czechia')
-    expect(COLLEGE_SHUT_DETAIL['not-a-resident']('Czechia')).not.toContain('Australia')
-  })
-
-  // ⚠ AND A CARD THAT DOES NOT KNOW SAYS LESS RATHER THAN GUESSING (`canAfford`'s `null` doctrine).
-  // No live snapshot reaches this – the profile is written before week 0 and never again, which is
-  // the finding of round 26 #2 in one line – so it exists for hand-built fixtures.
-  it('⚠ an unknown home leaves the noun out instead of printing a blank', () => {
-    const line = COLLEGE_SHUT_DETAIL['not-a-resident']('')
-    expect(line.length, 'it is still a sentence').toBeGreaterThan(20)
-    expect(line, 'and it does not trail an empty slot').not.toMatch(/\s{2}|from\s*[.–-]|from\s*$/)
   })
 
   // ⚠ AN EMPTY RECORD IS A WALK-ON, NOT A CLOSED DOOR. She enrols and pays; the answer is still
@@ -377,10 +325,21 @@ describe('C. the two layers, one ceiling', () => {
       expect(a.needShare, tier).toBe(0)
     }
     expect(needShareOf({ country: 'RU', familyIncomeCents: 0, familyAssetsCents: 0 })).toBe(0)
-    // ⚠ AND THE CHEAPEST PLACE OPEN TO HER IS A DEARER ONE, because a non-resident alien is never
-    // in-state. That is the residence split, and it removes one school and not the answer.
-    expect(home.quotes.find((q) => q.open)!.costPerYearCents).toBe(COLLEGE_TIERS.state.costPerYearCents)
-    expect(away.quotes.find((q) => q.open)!.costPerYearCents).toBe(COLLEGE_TIERS.national.costPerYearCents)
+    // ⭐⭐⭐ RE-AIMED BY ROUND 26 #2 (second pass), AND THE RE-AIM IS THE BEHAVIOUR CHANGE. It used to
+    // read «AND THE CHEAPEST PLACE OPEN TO HER IS A DEARER ONE, because a non-resident alien is never
+    // in-state» and assert exactly that – the Russian family's cheapest place was the $50,920 one.
+    // The owner overruled the rule («в каждой стране есть домашний универ»), so **both families now
+    // reach the same $30,990 place** and what separates them is the need layer alone, which is what
+    // this case was always about. That is the whole of the change stated as one pair of assertions.
+    expect(home.quotes[0].costPerYearCents).toBe(COLLEGE_TIERS.state.costPerYearCents)
+    expect(away.quotes[0].costPerYearCents, 'the home place is the cheapest for her too now').toBe(
+      COLLEGE_TIERS.state.costPerYearCents,
+    )
+    // ⚠ AND WHAT THE MISSING LAYER COSTS HER, ON THE SAME PLACE: strictly more of the same bill, and
+    // never a different bill. A price, not a refusal.
+    expect(away.quotes[0].familyPerYearCents, 'she pays more for the same place').toBeGreaterThan(
+      home.quotes[0].familyPerYearCents,
+    )
   })
 
   // ⚠⚠ RE-AIMED IN ROUND 21 FROM THE LABEL TO THE POSITION, and it now asserts MORE than it did.
@@ -551,7 +510,10 @@ describe('E. a tier is a place with a price, and the player picks it', () => {
     // ruling of 16.08. A family that cannot pay goes into debt, not away.
     expect(affordable[2], 'the private place is beyond this family').toBe(false)
     expect(offer.quotes[2].familyPerYearCents).toBeGreaterThan(0)
-    expect(offer.quotes[2].open).toBe(true)
+    // ⚠ `expect(offer.quotes[2].open).toBe(true)` STOOD HERE and the field is gone (round 26 #2,
+    // second pass): a place that cannot be shut needs no boolean saying it is not. What survives is
+    // the claim that mattered – it is quoted, at its own price, on the same list as the others.
+    expect(offer.quotes.map((q) => q.tier), 'all three places, still').toEqual([...COLLEGE_TIER_ORDER])
   })
 
   // ⚠ THE UNMEASURED CASE. A career migrated from v51 was never asked this question, and the card
@@ -609,6 +571,27 @@ describe('F. the measured odds cannot go stale without a test noticing', () => {
       }),
       `trips ${COLLEGE_TRIP_WEEKS.join(',')}`,
     ].join(' · ')
+
+  // ⭐⭐⭐⭐ ROUND 26 #2 MOVED THE PIN WITHOUT RE-MEASURING, AND THIS IS THE CASE THAT MAKES THAT
+  // CLAIM CHECKABLE INSTEAD OF A COMMENT. `residentOnly` left `COLLEGE_TIERS` with the residence rule
+  // (the owner: «в каждой стране есть домашний универ»), so the whole-object fold had to move – and
+  // that property is the ONE thing in the fold `tools/college-return-probe.ts` never reads: the probe
+  // takes each tier's quote BY NAME and walks four years plus four back on tour, and openness cannot
+  // reach any of it. So 85 / 93 / 74 still describes this game.
+  //
+  // ⚠ THE ASSERTION IS THE DELTA, NOT THE STRING. Deleting the residence property from the round-21
+  // pin must reproduce the round-26 pin EXACTLY – which is only true if nothing else moved. A wave
+  // that quietly re-prices a place while claiming to have removed a boolean goes red here.
+  it('⭐⭐⭐ the pin moved by exactly the residence property and by nothing else', () => {
+    const withoutResidence = COLLEGE_ODDS_MEASURED_AT_BEFORE_HOME_RULING.replace(/,?residentOnly=(true|false)/g, '')
+    expect(
+      withoutResidence,
+      'a probe input moved under cover of the residence deletion – re-run the probe',
+    ).toBe(COLLEGE_ODDS_MEASURED_AT)
+    // anti-vacuity: the old string really did carry the property, on all three rows
+    expect(COLLEGE_ODDS_MEASURED_AT_BEFORE_HOME_RULING.match(/residentOnly=/g)).toHaveLength(3)
+    expect(COLLEGE_ODDS_MEASURED_AT).not.toContain('residentOnly')
+  })
 
   it('⭐⭐ pins the tier table the odds were measured against', () => {
     expect(

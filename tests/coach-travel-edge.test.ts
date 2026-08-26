@@ -971,9 +971,9 @@ const FROZEN = {
    *  running, and it is the load-bearing half: the reveal is two integers and a cursor over rows the
    *  tick had already written – ZERO draws on any stream. The frozen MAIN capture
    *  (41550 / e6b0c709) is not re-pinned and was re-run green beside this re-freeze. */
-  middleGrinder: '0cd2b78b9a31355d8eabb607f178a7a31656daae22b54fcd525a6459cb4c0232',
+  middleGrinder: 'c42d5ed886f8722a7de771d9b1a597ffc54bdded7a3d0f7056050c1ffed71a9c',
   /** PRESETS[8] · 120k wealthy family, elite coach · grinder policy (never travels) */
-  eliteGrinder: '29d54dc0c7d608793e957770827be18ee0021dc2e485579777b4d9ccce0f004c',
+  eliteGrinder: '13e00499902646b9752d6ed3f02743817f106bf2730cbf5fea7d3475ea25cb75',
   /** PRESETS[0] · 8k working family, SELF-COACHED · player policy (switch on, nobody to send)
    *
    *  ⭐⭐ RE-FROZEN A FIFTH TIME (16.08) – AND ALONE, WHICH IS THE FINDING. The owner's correction of
@@ -1191,7 +1191,7 @@ const FROZEN = {
    *  rolled back by a version number, but swapping ONLY `schemaVersion` on the new world still
    *  reproduces each, which is all those lines ever claimed. The frozen MAIN capture
    *  (41550 / e6b0c709) is untouched and was re-run green beside this re-freeze. */
-  selfTravelling: '1acaa64e1a8f2ce5b6aa3544b58c920fd0d614163c51c70fc5d76de2329a19b6',
+  selfTravelling: '01975f139053efd8598230f1c5bd953f8d9cd2011957c7579cc43651e6a04bff',
 }
 
 /** ⭐ THE SAME THREE CAREERS AS THEY HASHED UNDER v56 – the identity that proves the v57 re-freeze
@@ -1252,6 +1252,30 @@ const PRE_V59 = {
   middleGrinder: 'c33d3d6d468b6263ddad737eb869c7a1facdd880a7aad0deae30c8201beaacc0',
   eliteGrinder: 'e83e59d2362e2409ebd84771c3bcb9ab35e02afe8acdb3827a29ed654378df44',
   selfTravelling: '13c5c38248a05a3825f4cb3d193b11ed976005589df4b53da28f28efb32e7d4f',
+}
+
+/** ⭐ THE SAME THREE CAREERS AS THEY HASHED UNDER v60 – the identity that proves the v61 re-freeze
+ *  (round 26 #2, second pass: the home university exists in every country) moved the schema number
+ *  and NOTHING ELSE. These are the v60-era `FROZEN` values verbatim.
+ *
+ *  ⚠⚠ v61 IS THE FIRST VERSION IN THIS LADDER THAT **REMOVES** A FIELD RATHER THAN ADDING ONE –
+ *  `CollegeQuote.open`, the boolean that said whether a college place was hers to pick. So unlike
+ *  every rollback above it, the question this identity answers is not "did a new key leak into an
+ *  ordinary career" but "did a REMOVED one ever live in one". It did not, and by construction: the
+ *  field lives inside `fork.offer.quotes`, week 156 is 32 weeks short of the fork, and
+ *  `walkFrozenCareer` ASSERTS `world.fork === null` rather than assuming it. No key is dropped
+ *  before hashing here for the same reason v60's rollback dropped none: the field is nested, so the
+ *  top-level serialisation is the same 69 keys it was.
+ *
+ *  ⚠ `rngMain` UNMOVED for the nineteenth wave running, and it is the load-bearing half: nothing
+ *  this wave added or removed draws on any stream – deleting a boolean from a quote is not a roll,
+ *  and `answerFork`'s fallback changed which ARRAY LOOKUP it uses and not how many dice it throws.
+ *  The frozen MAIN capture is untouched: count 41550, hash e6b0c709, re-run green beside this
+ *  re-freeze. */
+const PRE_V61 = {
+  middleGrinder: '0cd2b78b9a31355d8eabb607f178a7a31656daae22b54fcd525a6459cb4c0232',
+  eliteGrinder: '29d54dc0c7d608793e957770827be18ee0021dc2e485579777b4d9ccce0f004c',
+  selfTravelling: '1acaa64e1a8f2ce5b6aa3544b58c920fd0d614163c51c70fc5d76de2329a19b6',
 }
 
 /** ⭐ THE SAME THREE CAREERS AS THEY HASHED UNDER v59 – the identity that proves the v60 re-freeze
@@ -1460,6 +1484,21 @@ describe('the byte-identity of a career that does not travel', () => {
 
   it('...and for a self-coached family with the switch ON, which has nobody to send', () => {
     expect(careerHash(0, 1), '8k · self-coached · player').toBe(FROZEN.selfTravelling)
+  })
+
+  it('⭐⭐ v61: rolling ONLY the schema back to 60 reproduces the previous hashes byte for byte', () => {
+    // ⚠ THE WHOLE OF WHAT ROUND 26 #2's SECOND PASS DID TO THESE THREE CAREERS, as an identity – and
+    // v61 is the first version here that REMOVES a field (`CollegeQuote.open`) rather than adding
+    // one, so what this asks is whether the removed field ever lived in an ordinary tour career. It
+    // did not: it is nested inside `fork.offer.quotes`, week 156 is 32 weeks short of the fork, and
+    // `walkFrozenCareer` asserts `world.fork === null` rather than assuming it. If the deletion, the
+    // migration or `answerFork`'s new cheapest-place lookup had reached a career that never went to
+    // college, THIS case would be red beside the freeze.
+    // ⚠ NO KEY IS DROPPED HERE, exactly as in v60's rollback and for the same reason: the field that
+    // moved is nested, so the top-level serialisation is unchanged.
+    expect(careerHashAtSchema(5, 0, 60), '25k · middle coach · grinder').toBe(PRE_V61.middleGrinder)
+    expect(careerHashAtSchema(8, 0, 60), '120k · elite coach · grinder').toBe(PRE_V61.eliteGrinder)
+    expect(careerHashAtSchema(0, 1, 60), '8k · self-coached · player').toBe(PRE_V61.selfTravelling)
   })
 
   it('⭐⭐ v60: rolling ONLY the schema back to 59 reproduces the previous hashes byte for byte', () => {

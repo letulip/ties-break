@@ -178,4 +178,28 @@ describe('golden saves corpus', () => {
       }
     })
   }
+
+  // ⭐⭐⭐⭐ v61 – THE FIRST FIELD THIS LADDER HAS DELETED, AND THE DELETE HAS TO BE PROVED ON THE
+  // CORPUS RATHER THAN ON ITS OWN MIGRATION. Round 26 #2, second pass: the owner overruled the rule
+  // that could shut a college place («по-моему в каждой стране есть домашний универ»), so
+  // `CollegeQuote.open` left the type – and a value left behind in a save is worse than one that was
+  // never removed, because `answerFork` used to filter on it. NINE fixtures (v52..v60) carry a fork
+  // offer with `open: true`, so this sweep is not vacuous and its own anti-vacuity line says so.
+  it('⭐⭐⭐⭐ v61: no migrated save carries a college quote\'s `open` flag', () => {
+    let quotesSeen = 0
+    for (const file of FILES) {
+      const migrated = migrateSave(load(file)) as unknown as {
+        fork?: { offer?: { quotes?: Array<Record<string, unknown>> } | null } | null
+      }
+      for (const q of migrated.fork?.offer?.quotes ?? []) {
+        quotesSeen += 1
+        expect('open' in q, `${file}: a shut flag survived the migration`).toBe(false)
+        // ⚠ AND NOTHING ELSE ON THE QUOTE MOVED. The migration deletes one key and re-prices nothing
+        // – `ForkState.offer`'s own doctrine that a career is not re-priced halfway through a bill.
+        expect(typeof q.costPerYearCents, `${file}: the sticker is still there`).toBe('number')
+        expect(typeof q.familyPerYearCents, `${file}: and so is what the family pays`).toBe('number')
+      }
+    }
+    expect(quotesSeen, 'the corpus really does carry college quotes to check').toBeGreaterThanOrEqual(9)
+  })
 })

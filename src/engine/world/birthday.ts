@@ -653,7 +653,29 @@ const COLLEGE_BAND: Band = {
       note: 'Everything is fifteen minutes from everything else, and she walks all of it.',
       again: 'There is one from us chained up there already. This would be its replacement.',
       repeat: 'durable',
-      ask: 'She has counted the minutes she spends walking between buildings. It is a lot.',
+      // ⭐⭐⭐⭐ ROUND 26 #4, SECOND PASS – THE WISH BESIDE THE BICYCLE IS ABOUT THE BICYCLE NOW.
+      // The owner, correcting the first pass: «надо переписать значит саму фразу для велосипеда для
+      // соответствия ее пожеланиям и достаток здесь вообще не при чем. У меня нет проблем с
+      // велосипедом.»
+      //
+      // ⚠⚠ WHAT WAS ACTUALLY WRONG, and it was NOT this row's means. He read a dialog whose ask was
+      // `flighthome`'s fares line while the bicycle sat in the options, and read the two as a pair –
+      // a girl who cannot afford a train ticket, offered a bike. The first pass answered the half it
+      // could see (a hardship line printed over a $584,375 wallet) and left the half he was actually
+      // pointing at: **the bicycle had no wish of its own that a player would connect to it.** The
+      // old line – «She has counted the minutes she spends walking between buildings. It is a lot.» –
+      // hooked on "minutes" and never said the word.
+      //
+      // ⚠ SO THE FIX IS COPY AND PLACEMENT, NOT A WEALTH TEST. This row carries no `means` and must
+      // not grow one: «достаток здесь вообще не при чем». Everyone there having a bicycle is true of
+      // a rich family and a poor one, and what she wants is to stop being the one walking.
+      //
+      // ⚠ IT STILL HAS TO HOOK (rule 2, tests/birthday-ask.test.ts): "bicycle" is on this row's label
+      // and on no other row in the band, and "walks" is in this row's note and nowhere else – two
+      // hooks where the old line had one, and both of them are words the player can see on the
+      // button. ⚠ AND IT IS SHORTER than the line it replaces (71 characters against 76), which is
+      // what keeps the prompt inside the phone the round-20 rule measures.
+      ask: 'Everyone there has a bicycle. She walks, and she has mentioned it twice.',
       short: 'the bicycle',
     },
   ],
@@ -662,6 +684,22 @@ const COLLEGE_BAND: Band = {
 /** How many of the band's gifts are offered beside `DAY_TOGETHER`. Four rows in a column, one of
  *  which is always the day (owner, 11.08: «в колонку ставь, там хватит места»). */
 const MATERIAL_OPTIONS = 3
+
+/** ⭐⭐⭐ ROUND 26 #4, SECOND PASS – THE ROW HER FIRST COLLEGE BIRTHDAY ASKS FOR. The owner: «может
+ *  быть это должна быть как раз просьба на первый ДР во время учебы вообще.»
+ *
+ *  ⚠ WHY THE FIRST AND NOT A DRAW. A bicycle is a FRESHER'S problem: the fifteen minutes between
+ *  buildings are a discovery in the first term and solved furniture by the fourth year. The other
+ *  three rows of this band are not like that – the room, the journey home and the reading list are
+ *  true of all four years – so this is the one row the band has that belongs to a particular year,
+ *  and the year it belongs to is the first.
+ *
+ *  ⚠ AND A DETERMINISTIC COLLEGE YEAR IS THE HOUSE'S OWN SHAPE, NOT AN INVENTION. `docs/decisions.md`,
+ *  19.08, on the college birthday lines: «one line per year and not a random pick, deliberately –
+ *  four college birthdays is the whole of the population, so a pool would repeat within a single
+ *  career.» Four birthdays is a small enough population to place by hand, and this places one of
+ *  them. */
+const FIRST_COLLEGE_ASK_ID = 'campusbike'
 
 /** The band this birthday draws from.
  *
@@ -738,15 +776,42 @@ function subsetsOf(gifts: readonly BirthdayGift[], k: number): BirthdayGift[][] 
 // carries no week, no choice and no age: shuffle it per age and consecutive entries would come from
 // different permutations and guarantee nothing. It is drawn once per band per career and persists
 // nothing, the same contract `seed:birthday:<age>` has always had.
-function materialFor(seed: string, band: Band, age: number): BirthdayGift[] {
+//
+// ⭐⭐⭐ ROUND 26 #4, SECOND PASS – THE COLLEGE CYCLE IS ROTATED SO ENTRY 0 CARRIES THE BICYCLE, and
+// the college walk is indexed by the college BIRTHDAY rather than by her age.
+//
+// Two facts make this a rotation and not a special case. (1) The band holds four gifts and a dialog
+// shows three, so C(4,3) = 4 combinations and **exactly one of them omits the bicycle** – rotating
+// the shuffled cycle left until the first entry contains it costs at most one step and no draw. (2)
+// A rotation of a 4-cycle is still a 4-cycle: her four college birthdays take entries 0, 1, 2, 3 and
+// therefore still see ALL FOUR combinations, which is round 26 #9b's whole claim («her four college
+// birthdays are four DIFFERENT dialogs») preserved rather than traded away.
+//
+// ⚠ THE INDEX HAD TO STOP BEING HER AGE, and that is the load-bearing half. She enrols at 18, 19 or
+// 20 depending on the career, so `age % 4` puts her FIRST college birthday anywhere in the cycle –
+// there is no rotation of a fixed cycle that lands entry 0 on it for every career. The college walk
+// therefore counts college birthdays (`collegeIndex`), which is the same «consecutive birthdays take
+// consecutive entries» contract measured against the thing that actually advances by one.
+//
+// ⚠ A CALLER WITH NO WORLD PASSES NOTHING and falls back to the age, so every catalogue sweep in the
+// tests asks the question it always did. The rotation applies to them too – it is a property of the
+// cycle, not of a career – so what they sweep is the real order.
+function materialFor(seed: string, band: Band, index: number): BirthdayGift[] {
   const cycle = subsetsOf(band.gifts, MATERIAL_OPTIONS)
   // Total: a band with fewer gifts than rows has no combination of that size. Every band has at
   // least three (a sweep in tests/birthday-gifts.test.ts holds that), so this is a crash guard.
   if (cycle.length === 0) return band.gifts.slice(0, MATERIAL_OPTIONS)
   const order = shuffled(cycle, rngFromSeed(`${seed}:birthday:cycle:${bandKey(band)}`))
-  // `age` advances by exactly one per birthday, which is the whole of what the index needs. The
-  // modulo is written defensively for a poked save with a negative age.
-  return order[((age % order.length) + order.length) % order.length]
+  if (band === COLLEGE_BAND) {
+    // Total: `at` is -1 only if no combination holds the row, which cannot happen while the band
+    // offers it and more rows than a dialog shows – and a -1 would leave the order untouched rather
+    // than crash.
+    const at = order.findIndex((combo) => combo.some((g) => g.id === FIRST_COLLEGE_ASK_ID))
+    if (at > 0) order.push(...order.splice(0, at))
+  }
+  // The index advances by exactly one per birthday, which is the whole of what it needs. The modulo
+  // is written defensively for a poked save with a negative age.
+  return order[((index % order.length) + order.length) % order.length]
 }
 
 // =================================================================================================
@@ -842,13 +907,22 @@ export function birthdayOffer(
   /** ⭐ R2-18: is she at college this birthday? See `COLLEGE_BAND`. Defaults to false so the
    *  catalogue sweeps in tests, and every existing caller, ask the same question they always did. */
   atCollege = false,
+  /** ⭐⭐⭐ ROUND 26 #4, SECOND PASS – WHICH OF HER FOUR COLLEGE BIRTHDAYS THIS IS, 0-based, or `null`
+   *  for a caller with no world (every catalogue sweep, and every historical call site). It is the
+   *  index the college walk uses instead of her age – see `materialFor` – and 0 is the birthday the
+   *  bicycle is asked for on. ⚠ It is IGNORED off the college band, because there is no such thing as
+   *  a college birthday on the tour. */
+  collegeIndex: number | null = null,
 ): { options: BirthdayGift[]; askedId: string } {
   const band = bandFor(age, atCollege)
   // ⭐ ROUND 26 #9b – WHICH three, off the band's own cycle stream (see `materialFor`). The band
   // shuffle that used to stand here drew (n-1) times on the age stream; it does not any more, so
   // `seed:birthday:<age>` is now drawn exactly FOUR times for every band and every age – three to
   // order the four rows, one for the ask. The re-aimed count is pinned in tests/birthday-ask.test.ts.
-  const material = materialFor(seed, band, age)
+  // ⚠ ROUND 26 #4 (second pass) CHANGED THE INDEX, NOT THE DRAW COUNT: at college the walk advances
+  // per college birthday rather than per year of her life.
+  const walkIndex = band === COLLEGE_BAND && collegeIndex !== null ? collegeIndex : age
+  const material = materialFor(seed, band, walkIndex)
   const rng = rngFromSeed(`${seed}:birthday:${age}`)
   const options = shuffled([...material, DAY_TOGETHER], rng)
   // ⚠ THE DAY TOGETHER IS NEVER SPENT. Every other option is a THING she now owns, and asking for it
@@ -860,7 +934,25 @@ export function birthdayOffer(
   // Total: a band whose every material gift has been given still has the day, so this is never empty
   // – but the fallback is kept because `canAsk` being empty must print a scene rather than crash.
   const pool = canAsk.length ? canAsk : options
-  return { options, askedId: pool[Math.floor(rng() * pool.length)].id }
+  // ⚠⚠ THE DRAW HAPPENS EITHER WAY, AND THAT IS DELIBERATE. `seed:birthday:<age>` is drawn exactly
+  // four times for every birthday in the game, first-college-birthday included – the identical
+  // reason the `alreadyGiven` filter is applied to the POOL and never to the draw. A branch that
+  // skipped the roll would make the stream's position depend on where in her life she is, and the
+  // count is pinned.
+  const drawn = pool[Math.floor(rng() * pool.length)].id
+  // ⭐⭐⭐ ROUND 26 #4, SECOND PASS – HER FIRST COLLEGE BIRTHDAY ASKS FOR THE BICYCLE. The owner:
+  // «может быть это должна быть как раз просьба на первый ДР во время учебы вообще.»
+  //
+  // ⚠ IT IS AN OVERRIDE OF THE RESULT AND NEVER OF THE TWO PROPERTIES §2ab RESTS ON. The row is in
+  // `pool`, so the ask is still ONE OF THE FOUR ON SCREEN (`materialFor`'s rotation is what makes
+  // that certain) and it is still a row she has not already been given – `pool` is `canAsk`, so a
+  // poked save that somehow holds the bicycle already falls straight through to the drawn ask
+  // instead of asking her for a thing she owns.
+  const first =
+    band === COLLEGE_BAND && collegeIndex === 0
+      ? (pool.find((g) => g.id === FIRST_COLLEGE_ASK_ID)?.id ?? null)
+      : null
+  return { options, askedId: first ?? drawn }
 }
 
 /** What she has already been given, across every birthday on the record – the input to the ask above.
@@ -870,6 +962,45 @@ export function birthdayOffer(
  *  for a birthday nobody was asked about (spec §5.5), and null is not a gift. */
 function giftsAlreadyGiven(world: WorldState): string[] {
   return (world.birthdays ?? []).map((b) => b.given).filter((g): g is string => g !== null)
+}
+
+/** ⭐⭐⭐ WHICH OF HER COLLEGE BIRTHDAYS THIS ONE IS, 0-based – round 26 #4, second pass.
+ *
+ *  ⚠ DERIVED FROM THE RECORD, LIKE `pendingBirthday` ITSELF, AND NEVER A SECOND COUNTER. A field
+ *  would be a save-schema move and, worse, a number that can drift out of step with the rows it is
+ *  supposed to be counting. `world.college.fromWeek` is the week she enrolled and a birthday row
+ *  carries its week, so "how many birthdays have I already recorded since she went" is a fact the
+ *  save already holds.
+ *
+ *  ⚠ AND IT IS READ BEFORE THE ROW FOR THIS BIRTHDAY EXISTS – both callers derive the offer before
+ *  `chooseGift` pushes, which is the same ordering `giftsAlreadyGiven` already depends on. Her first
+ *  college birthday therefore counts 0 rows and answers 0.
+ *
+ *  Null when she is not at college: there is no such thing as a college birthday on the tour, and a
+ *  0 there would be a real index rather than an absence. */
+export function collegeBirthdayIndexOf(world: WorldState): number | null {
+  const from = world.college?.fromWeek
+  if (from === undefined || from === null) return null
+  return (world.birthdays ?? []).filter((b) => b.week >= from).length
+}
+
+/** ⭐⭐ THE ONE PLACE A WORLD IS TURNED INTO THE OFFER'S ARGUMENTS – `buildBirthdayPrompt`,
+ *  `chooseGift` and `tools/birthday-pool.ts` all come through here.
+ *
+ *  ⚠⚠ IT EXISTS BECAUSE THE DERIVATION HAD THREE COPIES AND ROUND 26 #4 WAS ABOUT TO MAKE IT FOUR
+ *  ARGUMENTS LONG. `chooseGift`'s own note already says why they must agree – it re-derives the offer
+ *  to validate the answer (invariant 1: the worker is not the gate), so a dialog built from one
+ *  reading and a validation run against another would reject every option the player was shown. That
+ *  was a comment holding three call sites in line; it is one function now, and the tool that measures
+ *  the ask reads it too instead of re-typing the arguments. */
+export function birthdayOfferFor(world: WorldState, age: number): { options: BirthdayGift[]; askedId: string } {
+  return birthdayOffer(
+    world.seed,
+    age,
+    giftsAlreadyGiven(world),
+    inCollege(world),
+    collegeBirthdayIndexOf(world),
+  )
 }
 
 /** IS A BIRTHDAY WAITING TO BE ANSWERED, and if so what age is she turning? Null on every other week.
@@ -965,7 +1096,8 @@ export function buildBirthdayPrompt(world: WorldState): BirthdayPrompt | null {
   const age = pendingBirthday(world)
   if (age === null) return null
   const alreadyGiven = giftsAlreadyGiven(world)
-  const { options, askedId } = birthdayOffer(world.seed, age, alreadyGiven, inCollege(world))
+  // ⚠ THROUGH `birthdayOfferFor`, WHICH IS THE SAME CALL `chooseGift` MAKES – see its note.
+  const { options, askedId } = birthdayOfferFor(world, age)
   const asked = options.find((g) => g.id === askedId)!
   // ⭐⭐ ROUND 26 #4 – THE ONE PLACE THE WALLET IS READ, and it is read here rather than inside
   // `birthdayOffer` on purpose: the OFFER must stay means-blind (spec §0), so the means cannot reach
@@ -1057,7 +1189,11 @@ export function chooseGift(world: WorldState, giftId: string): void {
   // re-derives the offer to validate the answer (invariant 1 – the worker is not the gate), so a
   // dialog built from the college band and a validation run against the age band would reject every
   // option the player was actually shown.
-  const { options, askedId } = birthdayOffer(world.seed, age, giftsAlreadyGiven(world), inCollege(world))
+  // ⚠⚠ ROUND 26 #4 MADE THAT MECHANICAL RATHER THAN A PROMISE. There are two college facts now – is
+  // she there, and WHICH of the four birthdays this is – and `birthdayOfferFor` is the one function
+  // that reads them, called from here and from `buildBirthdayPrompt`. Two call sites cannot disagree
+  // about arguments they do not write.
+  const { options, askedId } = birthdayOfferFor(world, age)
   const given = options.find((g) => g.id === giftId)
   // Re-validated engine-side because the worker is not the gate (CLAUDE.md invariant 1): a stale
   // dialog from another week must not be able to record an option this birthday never offered.

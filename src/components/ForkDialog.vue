@@ -40,18 +40,14 @@ import { useGameStore } from '../stores/game'
 import { useDialogFocus } from '../composables/dialogFocus'
 import { TIERS, TIER_SHORT, WEEKS_PER_YEAR } from '../engine/season/calendar'
 import {
-  COLLEGE_SHUT_DETAIL,
   COLLEGE_TIER_NAME,
   COLLEGE_TIER_ODDS,
   canAfford,
   coveredShareOf,
   fundingBandOf,
-  quoteShutFor,
   type CollegeFundingBand,
-  type CollegeShutReason,
 } from '../engine/collegeOffer'
 import { ENDINGS } from '../engine/ending'
-import { COUNTRY_NAMES } from '../composables/countries'
 import { portraitStage } from '../shared/avatarEmotion'
 import { portraitUrl } from '../art/preload'
 import { facePoint } from '../art/faceRects'
@@ -159,33 +155,22 @@ const BAND_LABEL: Record<CollegeFundingBand, string> = {
 }
 const pct = (share: number): string => `${Math.round(share * 100)}%`
 
-/** ⭐⭐⭐ ROUND 26 #2 – WHERE THE GAME THINKS THE FAMILY IS FROM, IN WORDS, for the ONE sentence that
- *  rests on it (see `rows`). The code is the profile's; the name is `COUNTRY_NAMES`, which is the
- *  app's single copy of it and falls back to the bare code for anything onboarding cannot offer.
- *
- *  ⚠⚠ IT DECIDES NOTHING. Reading her country to NAME a refusal is not re-deriving it: the verdict
- *  is still `quoteShutFor`'s, off the engine's own persisted `quote.open`, and this value never
- *  reaches that call. The round-24 note below is about a second JUDGEMENT, and a noun is not one. */
-const homeName = computed(() => {
-  const code = snap.value?.profile?.country ?? ''
-  return COUNTRY_NAMES[code] ?? code
-})
-
 // ⭐ THE PLAYER'S PICK. Null until she presses a row – see the ruling note above.
 const picked = ref<CollegeTier | null>(null)
 const quotes = computed(() => offer.value?.quotes ?? [])
-/** ⚠ THE PLACE THE BUTTON WILL ACTUALLY TAKE – her pick, or the cheapest place open to her. The same
- *  fallback `answerFork` applies engine-side, so the card cannot promise a place the engine would not
- *  give (CLAUDE.md invariant 1: the engine re-validates, the screen does not decide).
- *  ⚠ IT READS `rows`, NOT `quotes`, so this card holds exactly ONE notion of "open" – see `rows`. */
-const effective = computed<CollegeTier | null>(
-  () => picked.value ?? rows.value.find((r) => r.open)?.tier ?? null,
-)
+/** ⚠ THE PLACE THE BUTTON WILL ACTUALLY TAKE – her pick, or the cheapest place. The same fallback
+ *  `answerFork` applies engine-side, so the card cannot promise a place the engine would not give
+ *  (CLAUDE.md invariant 1: the engine re-validates, the screen does not decide).
+ *
+ *  ⭐⭐⭐ ROUND 26 #2, SECOND PASS – "the cheapest place OPEN to her" is now just "the cheapest place",
+ *  and that is the owner's ruling («в каждой стране есть домашний универ») arriving on the control
+ *  that spends it. `quotes` is cheapest-first (`COLLEGE_TIER_ORDER`), every row is pressable, and the
+ *  home place is what this button takes in every country instead of in one. */
+const effective = computed<CollegeTier | null>(() => picked.value ?? rows.value[0]?.tier ?? null)
 const effectiveQuote = computed(() => quotes.value.find((q) => q.tier === effective.value) ?? null)
 
 interface TierRow {
   tier: CollegeTier
-  open: boolean
   name: string
   /** ⭐ MEASURED, and it replaced `squad` – see `COLLEGE_TIER_ODDS` */
   odds: string
@@ -194,44 +179,35 @@ interface TierRow {
   bill: string
   /** null = never measured (a migrated career). The card prints nothing rather than guessing. */
   affordable: boolean | null
-  /** ⭐⭐ WHY THIS PLACE IS REFUSED, or null when it is hers. See `rows`. */
-  shut: CollegeShutReason | null
-  /** the engine's own sentence for `shut`, never this file's. null when the row is open. */
-  refusal: string | null
 }
 
-// ⭐⭐⭐ ROUND 24 #2a – EVERY REFUSED PLACE STATES ITS REASON, AND THE REASON IS THE ENGINE'S.
+// ⭐⭐⭐⭐ ROUND 26 #2, SECOND PASS – THERE IS NO REFUSED ROW ANY MORE, AND THAT IS THE OWNER'S RULING.
 //
-// The owner, after a played career, could not tell why the cheapest place was unpickable (his own
-// words are in `docs/plans/college-the-flow.md` §2a; this file is English-only, its own rule). The
-// row was dead and the template typed its own explanation next to the boolean – a sentence BESIDE
-// the verdict rather than one derived from it. That is the shape `EntryStatus.ineligibleDetail` exists
-// to forbid one door along, in its own words: *"the fallback must not be a SECOND GUESS at which
-// refusal this was"* – a guess that once printed "Exams this week" on a rung a twenty-year-old was
-// age-locked out of.
+// «по-моему в каждой стране есть домашний универ.»
 //
-// ⚠⚠ SO `open` IS DERIVED FROM THE REASON HERE TOO, AND NOT READ SEPARATELY. `quoteShutFor` takes
-// the engine's own persisted `quote.open` – the identical boolean `answerFork` re-validates on – and
-// names the rule behind it. A row therefore CANNOT be drawn refused without a reason, because the
-// reason is what makes it refused; and the card cannot disagree with the engine about whether a rung
-// is open, because there is one boolean and this file does not compute a second one.
+// WHAT STOOD HERE, because two rounds are buried in it. Round 24 #2a found the cheapest place drawn
+// DEAD with the template typing its own explanation beside the boolean, and fixed the shape: `open`
+// derived from `quoteShutFor(q)`, the sentence looked up in the engine's own `COLLEGE_SHUT_DETAIL`,
+// one boolean and no second opinion. Round 26's first pass made that sentence name the fact under it
+// («this family is from Australia – chosen at the start of the career») and reported what it could
+// not fix: the refusal was TRUE, internally consistent, and **impossible for a player to meet** – her
+// country is written once at onboarding and never again, ~440 weeks before this card draws.
 //
-// ⚠ RE-DERIVING FROM HER COUNTRY WOULD HAVE BEEN THE DEFECT. It is the same fact today, and it is a
-// second judgement: two answers that happen to agree are still two answers.
+// ⚠⚠ SO THE ROWS ARE THREE PRESSABLE CONTROLS IN EVERY COUNTRY. No `open`, no `shut`, no `refusal`,
+// no `disabled` beyond `game.busy`, and no `.is-shut` fade – because `CollegeQuote.open` is gone from
+// the wire and the save (v61) and there is nothing left that can shut a place. The card is not
+// deciding this: it is drawing an offer whose every quote is takeable, which is what the engine now
+// builds.
+//
+// ⚠ AND THE ROUND-24 DISCIPLINE IS NOT WEAKENED BY LOSING ITS SUBJECT. Its rule was «a row can never
+// be dead and silent», and the way that rule is kept now is that no row is dead. If a refusal ever
+// comes back it comes back the round-24 way – a code in the engine, a sentence in the engine, `open`
+// derived from the code – and `EntryStatus.ineligibleReason` is the live worked example one door
+// along.
 const rows = computed<TierRow[]>(() =>
   quotes.value.map((q) => {
-    const shut = quoteShutFor(q)
     return {
       tier: q.tier,
-      open: shut === null,
-      shut,
-      // ⚠ THE ENGINE'S SENTENCE, LOOKED UP – never written here. `COLLEGE_SHUT_DETAIL` is a total
-      // `Record` over the reason codes, so a new refusal cannot reach this card without its words.
-      // ⚠⚠ ROUND 26 #2 – IT IS CALLED WITH THE FACT IT HAS TO NAME. The map holds functions now: the
-      // engine still owns every word, and the one thing passed in is the name of the country the
-      // profile carries. `she is not one` was the whole of the round-24 sentence's failure – it
-      // asserted the rule's conclusion and never said what the game thinks her residence IS.
-      refusal: shut === null ? null : COLLEGE_SHUT_DETAIL[shut](homeName.value),
       name: TIER_LABEL[q.tier],
       // ⭐⭐ THE ODDS REPLACED THE SQUAD (round 21 #2). `Squad 55` was ours, on a scale the card never
       // printed her own number on, so there was nothing to compare it to; this is a measured share of
@@ -276,8 +252,10 @@ const rows = computed<TierRow[]>(() =>
   }),
 )
 
+/** ⚠ NO GUARD LEFT TO KEEP (round 26 #2, second pass). It read `if (row.open)`, which was the card's
+ *  half of a rule that no longer exists; every row is pressable in every country. */
 function pick(row: TierRow): void {
-  if (row.open) picked.value = row.tier
+  picked.value = row.tier
 }
 
 /** ⭐ ROUND 24 #5 – the week the reserved place is taken up, off the snapshot's own derivation
@@ -422,9 +400,9 @@ useDialogFocus(card)
               class="fork-place"
               type="button"
               :aria-pressed="picked === row.tier"
-              :class="{ 'is-picked': picked === row.tier, 'is-shut': !row.open }"
-              :disabled="game.busy || !row.open"
+              :class="{ 'is-picked': picked === row.tier }"
               @click="pick(row)"
+              :disabled="game.busy"
             >
               <span class="fork-place-head">
                 <strong>{{ row.name }}</strong>
@@ -447,15 +425,19 @@ useDialogFocus(card)
               <!-- ⚠ A FACT, NEVER A REFUSAL. She may take a place the family cannot pay for: it goes
                    into debt, not away (owner, 16.08). -->
               <span v-if="row.affordable === false" class="fork-place-line">Beyond what the family has</span>
-              <!-- ⭐⭐⭐ AND THIS ONE IS THE REFUSAL, SO IT SAYS WHY (round 24 #2a). It is the
-                   engine's own sentence off `COLLEGE_SHUT_DETAIL`, reached through the same value
-                   that disabled the button one attribute up – see `rows`. A row can therefore never
-                   be dead and silent: `row.open` IS `row.refusal === null`.
+              <!-- ⭐⭐⭐⭐ A REFUSAL LINE STOOD HERE UNTIL ROUND 26 #2's SECOND PASS, and it is gone
+                   with the rule it explained – the owner's ruling that a home university exists in
+                   every country (his own words are in the round ledger and in
+                   `docs/specs/the-college-answers-2026-08.md` §11; this file carries no Cyrillic at
+                   all, comments included). It was `.fork-place-refusal`, the engine's own sentence
+                   off `COLLEGE_SHUT_DETAIL`, reached through the very value that disabled the
+                   button – round 24's «a row can never be dead and silent». The way that rule is
+                   kept now is stronger and simpler: **no row is dead.** All three are pressable in
+                   all 24 countries.
 
-                   ⚠ IT IS NOT DIMMED WITH THE REST OF THE ROW. The greying is what made this
-                   unreadable in the first place; on a refused row the reason is the one thing the
-                   player still needs, so `.fork-place-refusal` sits outside `.is-shut`'s fade. -->
-              <span v-if="row.refusal" class="fork-place-refusal">{{ row.refusal }}</span>
+                   ⚠ THE LINE ABOVE IS NOT ITS REPLACEMENT AND NEVER WAS. «Beyond what the family
+                   has» is a FACT about money on a row she may still press – she goes into debt, not
+                   away (owner, 16.08) – and it long predates the refusal. -->
             </button>
           </li>
         </ul>
@@ -694,27 +676,14 @@ useDialogFocus(card)
   cursor: default;
 }
 
-/* ⚠⚠ THE FADE IS ON THE ROW'S FIGURES, NOT ON THE WHOLE ROW (round 24 #2a). It used to be
-   `.fork-place.is-shut { opacity: 0.55 }`, which greyed the refusal's own sentence along with the
-   prices it explains – and the sentence is the one thing a player still needs off a row he cannot
-   press. The row still reads as unavailable; the reason is not part of what is dimmed. */
-.fork-place.is-shut .fork-place-head,
-.fork-place.is-shut .fork-place-line {
-  opacity: 0.55;
-}
-
-/* ⭐⭐ THE REFUSAL'S OWN LINE. Its own class rather than a fourth `.fork-place-line` for two
-   reasons: a test can find it (a refused row that states nothing is the defect this fixes), and it
-   is the only line on a shut row that is not faded. `--ink-soft` is one step brighter than the
-   figures above it – the house's own reading order, and the same weight `.fork-answer span` carries.
-
-   ⚠ NO BORDER, NO FILL, NO RAIL. The app has ONE accent rail (the left edge at 3px, `is-picked`)
-   and a refusal is not an accent. */
-.fork-place-refusal {
-  font-size: 11px;
-  line-height: 1.35;
-  color: var(--ink-soft);
-}
+/* ⭐⭐⭐⭐ `.fork-place.is-shut` AND `.fork-place-refusal` STOOD HERE AND ARE GONE WITH THE RULE THEY
+   DRESSED (round 26 #2, second pass – the owner's home-university ruling; his words are in the round
+   ledger, and this file carries no Cyrillic at all). The fade greyed a
+   refused row's figures while deliberately leaving its reason at full weight, which was round 24's
+   fix for a row that was dead and silent. There is no shut row to fade now: all three are pressable
+   in all 24 countries, and a stylesheet that still knew how to grey one would be the only thing left
+   in the app claiming a place can be refused. `tests/component/round26-home-university.test.ts`
+   asserts the classes are absent from the DOM as well as from here. */
 
 .fork-place-head {
   display: flex;

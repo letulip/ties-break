@@ -44,11 +44,16 @@ import { answerFork } from '../src/engine/world/endings'
 // this population, kept so the frozen battery's arms stay comparable on the dimension the
 // junior-access phases moved most. `tools/retired-college-rule.ts` is the one definition of it.
 import { retiredCollegeDoorOpen } from './retired-college-rule'
-import { COLLEGE_TIERS, type CollegeOffer } from '../src/engine/collegeOffer'
+import { COLLEGE_TIERS, COLLEGE_TIER_ORDER, type CollegeOffer } from '../src/engine/collegeOffer'
 
-/** ⚠ THE CHEAPEST PLACE OPEN TO HER. This probe never picks, so this is the only quote it can
- *  honestly read – see the note on `answerFork` below. */
-const cheapest = (offer: CollegeOffer | null | undefined) => offer?.quotes.find((q) => q.open) ?? null
+/** ⚠ THE CHEAPEST PLACE. This probe never picks, so this is the only quote it can honestly read –
+ *  see the note on `answerFork` below.
+ *  ⚠ ROUND 26 #2 (second pass): it used to say "the cheapest place OPEN to her" and filter on
+ *  `q.open`. The field is gone with the residence rule (v61) – every place is hers in every country –
+ *  so the cheapest place is `COLLEGE_TIER_ORDER`'s first, looked up through that order rather than by
+ *  index so a re-ordered offer still reports the cheapest. */
+const cheapest = (offer: CollegeOffer | null | undefined) =>
+  COLLEGE_TIER_ORDER.map((t) => offer?.quotes.find((q) => q.tier === t)).find((q) => q !== undefined) ?? null
 // ⚠ FROM world/ladder, NOT world/snapshot (TB-07): kidLadderRank moved down to the ladder leaf so
 // world/college.ts could stop importing the aggregate projection layer. Same function.
 import { kidLadderRank } from '../src/engine/world/ladder'

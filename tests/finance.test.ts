@@ -252,7 +252,6 @@ function enrolledAt(seed: string, familyPerYearCents: number): WorldState {
           athleticShare: 0.5,
           needShare: 0,
           familyPerYearCents,
-          open: true,
         },
       ],
       chosen: 'state',
