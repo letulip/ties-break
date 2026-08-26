@@ -43,6 +43,21 @@ defect, the Home shell, the College League, the academic year, the birthdays) an
 the team's prize share, the sim corridors, the git hygiene). Both ledgers were written 23.08 from
 the plans, specs and commit bodies – two days after the fact, which is itself recorded in them.
 
+⚙ **26.08 – TWO WAVES ARE PICKED AND ORDERED, and this is the first time this page has had a queue.**
+
+1. **`wave/the-long-goodbye` – RUNNING.** [the-long-goodbye-2026-08.md](specs/the-long-goodbye-2026-08.md).
+   His Federer question turned into a rework of how a career ends: the trigger leaves the birthday and
+   reads a share of her own peak physical (**55%**, his ruling, which puts the ceiling at Federer's 41),
+   the recovery corridor fades with the body every year, and the final offer stops being a question
+   with one legal answer and becomes her own line. Step 1 of 4 is building.
+2. **The shop – QUEUED BEHIND IT.** [the-shop-2026-08.md](specs/the-shop-2026-08.md), slice 1 only:
+   the tab, static prices, buy / own / sell. ⚠ **Its own wave and its own branch, started only once
+   the ending wave has landed** – his word, and the house's one-branch-per-wave rule.
+
+⚠ **Everything else waits on play, by his own decision 26.08: «Остальное надо уже щупать».** Both
+specs above carry open questions he has deliberately left open until he has felt the thing – the
+injury dose, the plateau offer, whether the academy comes early.
+
 **What is genuinely NOW is nothing until the owner picks it.** The backlog carries states on every
 row ([backlog/README.md](backlog/README.md) – Now / Next / Later / Parked / Rejected) and **Now is
 deliberately empty**: it is assigned by the owner's pick, not by a sweep. The R2 programme

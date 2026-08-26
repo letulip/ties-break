@@ -29,16 +29,26 @@ returns `declineRate * (1 + (age - declineStart) * declineAccel)` – `declineRa
 first and steeper every year, which is how careers actually end: a season of "still fine", then a
 season where the legs are gone.» Measured off the shipped function:
 
-| age | lost per season | share of peak PHYSICAL left |
+⚠⚠ **THIS TABLE WAS WRONG IN THE FIRST DRAFT AND THE BUILDER CAUGHT IT (26.08, step 1's report).**
+I computed the curve with age as a STEP FUNCTION – one `declineFactor` per year, held constant across
+its 52 weeks. The engine advances her age **every week**, so the factor rises continuously and the
+real curve is 2–3 points kinder at every age. Verified three ways before the correction was accepted:
+the builder's own arithmetic, its three walked careers, and my re-derivation with a weekly-advancing
+age, which reproduces its figures to a tenth of a point. ⭐ **And the wrongness was visible inside this
+file without measuring anything** – §3a said the 70% threshold fires at 38 while this table said 66%
+was left at 38. Two tables of mine disagreed and I shipped them.
+
+| age | lost that season | share of peak PHYSICAL left |
 | --- | --- | --- |
-| 33 | 3.8% | 87% |
-| 35 | 4.8% | 79% |
-| 37 | 5.7% | 71% |
-| **38** | 6.2% | **66%** |
-| 40 | 7.2% | 57% |
-| **41** – Federer's age | 7.6% | **53%** |
-| 43 | 8.6% | 45% |
-| 45 | 9.5% | 37% |
+| 29 | 2.0% | 100% |
+| 33 | 4.0% | 89.3% |
+| 35 | 5.0% | 81.8% |
+| 37 | 6.0% | 73.5% |
+| **38** | 6.4% | **69.1%** |
+| 40 | 7.4% | 60.2% |
+| **41** – Federer's age | 7.9% | **55.7%** |
+| 43 | 8.8% | 47.0% |
+| 45 | 9.7% | 38.9% |
 
 ⭐ **AND THE DECAY IS PHYSICAL ONLY** – `declineFactor`'s own doc line: «Physical only; composure is
 handled by the caller.» Technique and composure do not fall. That is precisely the late-Federer
@@ -91,14 +101,18 @@ The last offer arrives when her physical drops below a share of **her own peak**
 is deterministic in age, that share maps to an age for an UNDAMAGED career – and this is what makes
 the change safe to reason about:
 
+⭐ **THIS TABLE WAS ALWAYS RIGHT** – it is the half that reproduced against the shipped curve when
+§1 did not, and it is why the owner's ruling needed no revisiting. Figures below re-derived 26.08 on
+the weekly-advancing age and stated to a tenth.
+
 | threshold | last offer lands at (undamaged) | what it means |
 | --- | --- | --- |
-| 70% of peak | **38** | ⭐ **today's rule exactly** – the change is a strict generalisation |
-| 65% | 39 | |
-| 60% | 40 | |
-| **55%** | **41** | ⭐⭐ **RULED BY THE OWNER, 26.08: «я бы взял 55% по уходу – согласен, звучит ок»** – Federer's age, reachable only on a body kept well |
-| 50% | 42 | |
-| 45% | 43 | the tail gets long and the tennis gets sad |
+| 70% of peak | **37.8** | ⭐ **today's rule exactly** – the change is a strict generalisation |
+| 65% | 38.9 | |
+| 60% | 40.0 | |
+| **55%** | **41.2** | ⭐⭐ **RULED BY THE OWNER, 26.08: «я бы взял 55% по уходу – согласен, звучит ок»** – Federer's age, reachable only on a body kept well |
+| 50% | 42.3 | |
+| 45% | 43.5 | the tail gets long and the tennis gets sad |
 
 **Settled: 55%, by his word on 26.08.** It buys three years over today's rule, it puts the ceiling exactly where the
 real case he read about sits, and every year of it has to be paid for in physio, load and luck. ⚠ The
@@ -156,14 +170,80 @@ professional account of a late career is about the recovery, not the peak.
 is **5** points a rest week (variant C, his 22.08 ruling). The proposal is that the recovery a week
 returns scales with **what is left of her body** – the same share §3a already computes:
 
+⚠ **RE-TAKEN 26.08 on the corrected curve** – the first version of this table copied §1's wrong
+column and inherited its error.
+
 | age | share of peak left | rest week returns | note |
 | --- | --- | --- | --- |
-| ≤28 | 100% | 5.0 | untouched – the peak is the peak |
-| 33 | 87% | 4.4 | |
-| 36 | 75% | 3.8 | |
-| 38 | 66% | 3.3 | |
-| **41** | 53% | **2.7** | at the threshold that ends the career |
-| floor | – | **2.5** | ⚠ the one new constant, `recoveryAgeFloor: 0.5` |
+| ≤29 | 100% | 5.00 | untouched – the peak is the peak |
+| 33 | 89.3% | 4.46 | |
+| 36 | 77.7% | 3.89 | |
+| 38 | 69.1% | 3.45 | |
+| **41** | 55.7% | **2.79** | at the threshold that ends the career |
+| 43 | 47.0% | **2.50** | ⚠ the floor, `recoveryAgeFloor: 0.5` – approved 26.08, «пол 2.5 ок» |
+
+⚠ The right-hand column is what the ENGINE holds. What a screen shows is that number rounded – see
+the rule directly below, which he set the same day.
+
+### ⚙ 26.08 – IT ALREADY FADES EVERY YEAR, and the sparse table was mine
+
+> «можно даже сделать на каждый год затухающую динамику – будет вообще красиво, а не жесткую привязку»
+
+⭐ **It is already exactly that, and the "hard binding" he saw was my table's sparse rows rather than
+the mechanic.** Because the multiplier is the share of peak, and the share moves every week, the
+recovery moves every year with no steps in it at all. Taken off the shipped `declineFactor`:
+
+| age | body left | engine holds | screen shows |
+| --- | --- | --- | --- |
+| 29 | 100% | 5.00 | 5 |
+| 30 | 98.0% | 4.90 | 5 |
+| 31 | 95.5% | 4.77 | 5 |
+| 32 | 92.6% | 4.63 | 5 |
+| 33 | 89.3% | 4.46 | 4 |
+| 35 | 81.8% | 4.09 | 4 |
+| 37 | 73.5% | 3.67 | 4 |
+| 38 | 69.1% | 3.45 | 3 |
+| 40 | 60.2% | 3.01 | 3 |
+| **41** | 55.7% | **2.79** | 3 |
+| 42 | 51.3% | 2.57 | 3 |
+| 43 | 47.0% | 2.50 | 3 ⚠ floor |
+
+⚠⚠ **AND THE FLOOR TURNS OUT TO BE ALMOST INERT, which is worth knowing before it is built.** It
+first bites at **43** – nearly two years AFTER the 55% threshold has ended the career at 41.2. So under the
+settled rules it is a safety net that fires on essentially no career: it exists for the outliers (a
+body that somehow held past the threshold, a migrated save, a future rule change) and not as a dial.
+⭐ That is the right shape for a floor and it means §7 has one fewer number to tune – but nobody
+should later "raise the floor to fix something" without noticing it is not currently doing anything.
+
+**One question this leaves open, and I would not change it without measuring.** Recovery could fade
+FASTER than the body rather than in step with it – physiologically that is truer, and a veteran who
+still hits hard but cannot back it up two days later is the more accurate portrait. It would cost a
+second accel constant. **My recommendation is to ship the derived version first**: it needs no new
+number, the table above already reads right, and §6's measurements will say plainly whether the last
+seasons are too easy. Adding a curve before the measurement is tuning something nobody has felt yet.
+
+### ⚙ 26.08 – FRACTIONAL IN THE LOGIC, WHOLE IN THE INTERFACE (his rule, and it is general)
+
+> «у нас в логике могут быть дробные числа – это окей, а у пользователя целые в интерфейсе»
+> · «пусть падает, но на фронт едет в отображение округленное значение»
+
+⚠ **THE CORRIDOR IS CONTINUOUS AND MUST STAY SO.** My first reading quantised the mechanic itself to
+5 → 4 → 3 and he corrected it: the ENGINE keeps the fraction and it keeps falling; only the number
+that reaches a screen is rounded. A quantised recovery would make the fade arrive in three visible
+jumps instead of as a slope, which is the opposite of what §4a is for.
+
+**Rounding is `Math.round` – half away from zero, «по правилам математики».**
+
+⚠⚠ **AND IT HAPPENS ONCE, AT THE SNAPSHOT BOUNDARY, NOT IN EACH COMPONENT.** Verified 26.08: today
+`buildSnapshot` hands `world.condition` over RAW (`snapshot.ts:960` and `:1093`) and the components
+each round it themselves – `KidScreen.vue:198` and `TournamentFlow.vue:936` both carry their own
+`Math.round`. That is two sides asking the same question separately, this repo's most-repeated defect
+class, and the third caller that forgets will print `73.41999999` on a screen. **The snapshot is the
+boundary and it is where the rounding belongs**, so a component cannot get it wrong by omission.
+
+⭐ **This is a house rule, not a detail of this spec.** Any number that crosses into `Snapshot` for a
+person to read is whole; the fractions stay behind it. Cents are already integers and stay integers.
+A guard test should pin it for `condition` and the recovery figure at minimum.
 
 **Why a floor at all.** Without one the corridor keeps closing and the career does not end – it
 becomes unplayable, which is a different and worse thing. A wreck who cannot recover would be pushed
