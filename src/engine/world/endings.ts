@@ -35,6 +35,9 @@ import { COLLEGE_TIER_ORDER } from '../collegeOffer'
 import { nextAcademicYearStart } from '../kidLife'
 import { weekLabel } from '../../shared/dates'
 import { kidAgeYears } from './age'
+// ⚠ A VALUE IMPORT FROM A LEAF, NOT A CYCLE – `engine/development.ts` imports economy, rng, coach
+// and plan, and none of them reaches back here. `plateauViewOf` spends it on the share of her peak.
+import { physicalMean } from '../development'
 import { buildAlbum, buildScroll } from './album'
 import { CAREER_ENDED_REFUSAL, COLLEGE_FREEZE_REFUSAL, guardNotEnded, guardNotEndedForGood } from './constants'
 // ⚠ THE ENTRY RULEBOOK, IMPORTED RATHER THAN RE-STATED (round 24, the freeze's hygiene). `answerFork`
@@ -207,6 +210,19 @@ export function plateauViewOf(world: WorldState): PlateauView {
     // ...and the OTHER half of the rule is asked of the same table, by construction rather than by
     // coincidence: the track is resolved once, here, and handed down.
     lastRungSeasonIndex: lastRungSeasonIndexOf(world, track),
+    // ⭐⭐⭐ v62's STORED PEAK, FINALLY SPENT (the long goodbye step 2, §3a). This is what makes the
+    // last offer final instead of her 38th birthday.
+    //
+    // ⚠ THE NUMERATOR AND THE DENOMINATOR CANNOT COME APART. `physicalMean(world.skills)` and
+    // `world.peakPhysical` are written on ADJACENT LINES of the growth phase (world/phaseGrowth.ts,
+    // step 3b/3b-bis), by the only code in the engine that moves `world.skills` at all, so there is
+    // no week in which one has moved and the other has not.
+    //
+    // ⚠ THE DIVISION IS TOTAL. Every attribute is clamped at `ECONOMY.development.floor` (20) and
+    // she is born far above it, so the peak is never 0 – on a fresh world, on a walked one, and on a
+    // migrated one (the v62 migration reconstructs it and `tests/goldenSaves.test.ts` asserts a
+    // finite number at or above today's mean for every fixture).
+    physicalShare: physicalMean(world.skills) / world.peakPhysical,
   }
 }
 
@@ -301,7 +317,10 @@ export function resolveEndings(world: WorldState): void {
     world.week % WEEKS_PER_YEAR === WEEKS_PER_YEAR - OFF_SEASON_WEEKS &&
     !inCollege(world)
   ) {
-    const offer = retirementDue(plateauViewOf(world))
+    // ⚠ THE VIEW IS HELD, NOT REBUILT. The line below needs her age and the offer needs her body;
+    // both come off ONE reading of the world so the sentence and the verdict cannot be a week apart.
+    const view = plateauViewOf(world)
+    const offer = retirementDue(view)
     if (offer) {
       world.retirementOffer = { ...offer, askedWeek: world.week }
       addEvent(world, {
@@ -309,7 +328,11 @@ export function resolveEndings(world: WorldState): void {
         type: 'milestone',
         keep: true,
         text: offer.final
-          ? `She is ${ENDINGS.stopAskingAgeYears}. Nobody is going to ask her again.`
+          // ⚠ HER AGE, NOT A CONSTANT (the long goodbye step 2) – `ENDINGS.stopAskingAgeYears` is
+          // deleted and this line printed it. `view.ageYears` is already whole years. THE SENTENCE
+          // IS UNCHANGED ON PURPOSE: step 4 of the spec is what makes the last word HERS rather than
+          // the game's, and this is the deletion rather than that rewrite.
+          ? `She is ${view.ageYears}. Nobody is going to ask her again.`
           : offer.reason === 'plateau'
             ? 'She said it out loud in the car – if she cannot reach the top, she would rather go.'
             : 'Another off-season, and the same question: is there another year in this?',

@@ -59,7 +59,12 @@ import { nextAcademicYearStart, schoolEndWeek } from '../src/engine/kidLife'
 import { DEFAULT_PROFILE, LADDER_TRACKS } from '../src/shared/protocol'
 import type { SeasonHistoryEntry, SeasonTrackRow } from '../src/shared/protocol'
 import type { LadderTrack } from '../src/engine/season/types'
-import { WEEKS_PER_YEAR } from '../src/engine/season/calendar'
+import { WEEKS_PER_YEAR, OFF_SEASON_WEEKS } from '../src/engine/season/calendar'
+// ⭐ THE LONG GOODBYE, STEP 2 – the walk (phase 4 of the tick) and the curve the threshold is read
+// against. See the describe block that spends them for why the walk is not a whole `tickWeek`.
+import { kidAgeExact, kidAgeYears } from '../src/engine/world'
+import { growAndLive } from '../src/engine/world/phaseGrowth'
+import { ageAtPhysicalShare } from '../src/engine/development'
 
 /** ⭐⭐⭐ ROUND 26 #6 RE-AIM – THE PRESS THAT ANSWERS THE CHAMPIONSHIP. `resumeFromCollege` now PAUSES
  *  the year on the College League week the way it already pauses on her birthday, because the owner
@@ -242,6 +247,10 @@ describe('#5/#6 the natural end, and the plateau reading of it', () => {
       // the one thing that disqualifies it, and this fixture used to have it the other way round.
       seasonEndRanks: [...flat(6, 4, 175), ...flat(10, 3, 180)],
       lastRungSeasonIndex: 6,
+      // ⭐ THE LONG GOODBYE §3a – a body still at its peak, so the fixture's DEFAULT is "not final"
+      // and every case below that wants the last offer has to say so with a number. `plateauReading`
+      // never reads this field; only `retirementDue` does.
+      physicalShare: 1,
       ...over,
     }
   }
@@ -276,12 +285,44 @@ describe('#5/#6 the natural end, and the plateau reading of it', () => {
     expect(plateauReading(plateauView())).toBe(true)
   })
 
-  it('⚠ 38 is where the game STOPS ASKING – the offer is still an offer, it is just the last one', () => {
-    const at37 = retirementDue(plateauView({ ageYears: 37, lastRungSeasonIndex: 12 }))
-    const at38 = retirementDue(plateauView({ ageYears: ENDINGS.stopAskingAgeYears, lastRungSeasonIndex: 12 }))
-    expect(at37?.final).toBe(false)
-    expect(at38?.final).toBe(true)
-    expect(at38?.reason).toBe('age')
+  // ⚠⚠ RE-AIMED FOR THE LONG GOODBYE (§3a), NOT WEAKENED, AND THE RE-AIM IS THE POINT OF THE STEP.
+  // This read `ageYears: 37` against `ageYears: ENDINGS.stopAskingAgeYears` and asserted that 38 is
+  // where the game stops asking. There is no such age any more: the constant is deleted and the last
+  // offer is a share of her own peak physical. So the two arms below hold the AGE FIXED and move
+  // only the body – which is the whole claim, and which the old shape could not have made.
+  it('⭐⭐ the offer is final when her BODY crosses, and the age is not consulted at all', () => {
+    const old = { ageYears: 44, lastRungSeasonIndex: 12 }
+    const strong = retirementDue(plateauView({ ...old, physicalShare: ENDINGS.lastOfferPeakShare + 0.01 }))
+    const spent = retirementDue(plateauView({ ...old, physicalShare: ENDINGS.lastOfferPeakShare - 0.01 }))
+    expect(strong?.final, 'a body above the threshold is asked again, at any age').toBe(false)
+    expect(spent?.final, 'a body below it is asked for the last time').toBe(true)
+    expect(spent?.reason).toBe('age')
+  })
+
+  it('⭐ ...and it is final EXACTLY when the share crosses, not before', () => {
+    const at = (physicalShare: number) =>
+      retirementDue(plateauView({ ageYears: 33, lastRungSeasonIndex: 12, physicalShare }))?.final
+    // ⚠ `<=` IS THE SHIPPED BOUNDARY: standing exactly at the threshold is the off-season the
+    // question runs out. One hundredth either side is what makes this an assertion about the
+    // comparison rather than about the constant's value.
+    expect(at(ENDINGS.lastOfferPeakShare + 0.0001)).toBe(false)
+    expect(at(ENDINGS.lastOfferPeakShare)).toBe(true)
+    expect(at(ENDINGS.lastOfferPeakShare - 0.0001)).toBe(true)
+    // and a body that has not started declining is never the last offer, whatever her age
+    expect(at(1)).toBe(false)
+  })
+
+  it('⚠ `askFromAgeYears` still gates EVERYTHING – a ruined body at 28 is not asked at all', () => {
+    // The share means nothing before the decline exists, and this is the guard that says so. A view
+    // at 28 with 10% of her peak left is physically impossible in the engine (`declineStart` is 29,
+    // so the share is exactly 1 until then) – which is precisely why it is the right fixture: even
+    // handed an absurd body, the rule refuses to raise an age offer before 29.
+    const wrecked = retirementDue(plateauView({ ageYears: 28, lastRungSeasonIndex: 12, physicalShare: 0.1 }))
+    expect(wrecked, 'nothing fires before 29 whatever the share says').toBeNull()
+    // ...and one year later the same body IS asked, so the null above is the gate and not the fixture
+    const asked = retirementDue(plateauView({ ageYears: 29, lastRungSeasonIndex: 12, physicalShare: 0.1 }))
+    expect(asked?.reason).toBe('age')
+    expect(asked?.final).toBe(true)
   })
 
   it('the plateau puts the SAME question in front of her early, and the type says which it was', () => {
@@ -291,6 +332,189 @@ describe('#5/#6 the natural end, and the plateau reading of it', () => {
     const late = retirementDue(plateauView({ ageYears: 31, lastRungSeasonIndex: 12 }))
     expect(endingForRetirement(late!, 900, 31, 3).type).toBe('natural')
     expect(endingForRetirement(late!, 900, 31, 3).detail).toContain('3 more years')
+  })
+})
+
+// =================================================================================================
+// ⭐⭐⭐ THE LONG GOODBYE, STEP 2 – THE LAST OFFER LEAVES THE BIRTHDAY AND FINDS HER BODY
+// =================================================================================================
+//
+// docs/specs/the-long-goodbye-2026-08.md §3a, on the owner's reading of the news (26.08): «Roger
+// Federer играл активно до 41 года … отсюда у меня мысли на тему нашей жесткой концовки в 38».
+// `ENDINGS.stopAskingAgeYears` is deleted; `retirementDue` reads the share of her own peak physical.
+//
+// ⚠ EVERY CLAIM BELOW IS MADE OF A REAL `WorldState` AND GOES THROUGH `resolveEndings`, for the same
+// reason round-19 #1's block further down does: a hand-built `PlateauView` would pass whatever
+// `plateauViewOf` did to the numerator and the denominator, and the numerator and the denominator
+// are the whole mechanic here.
+describe('⭐⭐ the last offer, read off a walked body', () => {
+  const WRAP_WEEK = WEEKS_PER_YEAR - OFF_SEASON_WEEKS
+
+  interface Wrap {
+    week: number
+    /** whole years, as `plateauViewOf` reads them */
+    ageYears: number
+    /** ...and fractional, which is what the body is actually a function of */
+    exact: number
+    share: number
+    final: boolean | null
+  }
+
+  /** Walk a career to `toAge`, raising the offer through the REAL `resolveEndings` on every
+   *  off-season wrap week and reading the world back.
+   *
+   *  ⚠ THE GROWTH PHASE FOR THE WALK, `resolveEndings` FOR THE RULE, and the split is deliberate –
+   *  it is step 1's own argument (tests/peak-physical.test.ts) applied to step 1's own field.
+   *  Reaching the decline is 27 years and a full `tickWeek` costs ~5.6 ms of tournaments, finance,
+   *  brackets and AI against 0.035 ms for `growAndLive`, which IS `tickWeek`'s phase 4 and the only
+   *  code in the engine that writes `world.skills` or `world.peakPhysical`. So the walk is cheap and
+   *  the READER is real: nothing here re-implements the trigger, computes a share by hand, or builds
+   *  a view. ⚠ Nothing latches an ending during the walk either, and that is a property rather than
+   *  luck – the two automatic endings need money and injuries, and neither phase is being run.
+   *
+   *  ⚠ WHAT OPENS THE GAP BETWEEN TWO BODIES IS THE GIRL, NOT THE MANAGEMENT, and that is measured
+   *  rather than assumed. `gain = rate * headroom`, so growth is headroom-limited and by 30 almost
+   *  everyone is near their own ceiling: across the whole span from working/self-coached/Light to
+   *  wealthy/elite/Grind, ONE seed's peak moves about 8%. Across seeds it moves 26%, because
+   *  `potential` is what actually differs. So the wrecked/kept pair below varies both. */
+  function walkTheWraps(cfg: {
+    seed: string
+    background?: 'working' | 'middle' | 'wealthy'
+    coachTier?: 'self' | 'budget' | 'middle' | 'high' | 'elite'
+    train?: number
+    toAge: number
+    /** stop on the week the offer becomes final – i.e. walk a career the way a game ends one */
+    stopAtFinal?: boolean
+  }): { world: WorldState; wraps: Wrap[] } {
+    const world = createWorld(cfg.seed, {
+      ...DEFAULT_PROFILE,
+      ...(cfg.background ? { background: cfg.background } : {}),
+      ...(cfg.coachTier ? { coachTier: cfg.coachTier } : {}),
+    })
+    const rng = rngFromSeed(world.seed)
+    if (cfg.train !== undefined) world.plan = { ...world.plan, train: cfg.train }
+    // the fork answered, so `resolveEndings` reaches step 7d instead of stopping at 7c
+    world.fork = { askedWeek: 300, answer: 'continue', offer: null }
+    const wraps: Wrap[] = []
+    const ageNow = () => kidAgeExact(world.week, world.profile.birthMonth, world.profile.birthDay)
+    while (ageNow() < cfg.toAge) {
+      world.week += 1
+      growAndLive(world, rng)
+      if (world.week % WEEKS_PER_YEAR !== WRAP_WEEK) continue
+      resolveEndings(world)
+      const view = plateauViewOf(world)
+      const raised = world.retirementOffer
+      wraps.push({
+        week: world.week,
+        ageYears: view.ageYears,
+        exact: ageNow(),
+        share: view.physicalShare,
+        final: raised?.final ?? null,
+      })
+      if (raised?.final) {
+        if (cfg.stopAtFinal) break
+        // ⚠ SHE CANNOT REFUSE THE LAST ONE – `answerRetirement` throws on it by design – and these
+        // walks are about WHEN the question runs out rather than about what she says. So the card is
+        // taken off the table by hand and the next off-season is allowed to ask again, which is what
+        // lets a walk read the share past the crossing. `stopAtFinal` is the arm that ends properly.
+        world.retirementOffer = null
+      } else if (raised) {
+        // ...and every offer before it is answered the way a player answers it: «One more year, she
+        // said. Same as last time.» The REAL command, so `oneMoreYearCount` is real too.
+        answerRetirement(world, false)
+      }
+    }
+    return { world, wraps }
+  }
+
+  it('⭐⭐⭐ 70% IS TODAY\'S RULE: the off-season her body first falls to 70% is the off-season she is first 38', () => {
+    // THE PROOF THAT THIS IS A GENERALISATION AND NOT A NEW RULE, and it is pinned independently of
+    // whatever the dial is set to, so it goes on being true after the threshold moves. `70%` is a
+    // literal on purpose: it is the row of §3a's table that reproduces the deleted
+    // `ENDINGS.stopAskingAgeYears = 38`, and if this line ever needs changing then the claim the
+    // change was sold on has stopped holding.
+    const { wraps } = walkTheWraps({ seed: 'goodbye-generalisation', toAge: 40 })
+    const byBody = wraps.find((w) => w.share <= 0.7)
+    const byBirthday = wraps.find((w) => w.ageYears >= 38)
+    expect(byBody, 'she never fell to 70% inside the walk').toBeDefined()
+    expect(byBody!.week, 'the body and the birthday name the same off-season').toBe(byBirthday!.week)
+    expect(byBody!.ageYears).toBe(38)
+    // ⚠ AND THE YEAR BEFORE IS ABOVE IT – otherwise the line above would be satisfied by a rule that
+    // fires on every wrap. She is 37 with 71.2% left, which is the season the old rule also left open.
+    const before = wraps[wraps.indexOf(byBody!) - 1]
+    expect(before.ageYears).toBe(37)
+    expect(before.share).toBeGreaterThan(0.7)
+  })
+
+  it('⭐⭐ the last offer arrives on the first off-season AFTER her body crosses, and never before it', () => {
+    const { wraps } = walkTheWraps({ seed: 'goodbye-lands', toAge: 44 })
+    const first = wraps.find((w) => w.final === true)
+    expect(first, 'no last offer was ever raised inside the walk').toBeDefined()
+    // Threshold-independent: the crossing is continuous, the question is annual, so the offer lands
+    // in the year that follows the crossing – it may not anticipate it and may not be a year late.
+    const crossing = ageAtPhysicalShare(ENDINGS.lastOfferPeakShare)
+    expect(first!.exact, 'the offer anticipated the crossing').toBeGreaterThanOrEqual(crossing)
+    expect(first!.exact, 'the offer was more than a season late').toBeLessThan(crossing + 1)
+    // ...and every earlier off-season from 29 asked the same question WITHOUT being the last one,
+    // which is the decade of "one more year" the spec insists this change does not touch.
+    const asked = wraps.filter((w) => w.ageYears >= ENDINGS.askFromAgeYears && w.week < first!.week)
+    expect(asked.length, 'she was asked every off-season from 29').toBe(first!.ageYears - ENDINGS.askFromAgeYears)
+    expect(asked.every((w) => w.final === false)).toBe(true)
+    // ⭐ AND WHERE THE SHIPPED DIAL PUTS IT, AS A NUMBER, so moving the constant has to come past
+    // this line. §3a's 41.2 is the CROSSING; the question is asked once a winter, so on
+    // `DEFAULT_PROFILE`'s 15 June birthday the offer itself lands at 41.5 – still 41, still Federer.
+    expect(ENDINGS.lastOfferPeakShare, 'the owner\'s ruling of 26.08: «я бы взял 55% по уходу»').toBe(0.55)
+    expect(first!.ageYears).toBe(41)
+    expect(first!.exact).toBeCloseTo(41.503, 3)
+  })
+
+  it('⚠⚠ AND IT IS AGE-EQUIVALENT TODAY: two bodies 25% apart read the SAME share, off-season for off-season', () => {
+    // ⚠⚠ THIS PINS A MEASURED FACT, NOT A DESIGN GOAL, AND IT IS THE OPPOSITE OF §3's PROMISE.
+    // The spec says «a body wrecked by 33 finishes at 33»; TODAY IT DOES NOT, and this is the test
+    // that says so out loud instead of letting the sentence stand unchecked. Why it cannot: the peak
+    // is frozen the week `declineStart` arrives (`ageFactor` returns 0 from 29, so the gain term is
+    // gone) and `growWeek`'s loss is PROPORTIONAL per attribute – so every career leaves 29 at a
+    // share of exactly 1 and loses the same fraction of it every week thereafter. A wrecked body has
+    // a lower PEAK, which is real tennis and no part of a ratio to that same peak.
+    //
+    // ⚠ SO IT IS A TRIPWIRE, AND A DELIBERATE ONE. The day something lands that lowers her physical
+    // relative to her own peak – an atrophy term, a peak that keeps rising past 29, anything – this
+    // goes red, and the right response is to re-aim it at the new spread rather than to delete it.
+    const kept = walkTheWraps({ seed: 'goodbye-13', background: 'wealthy', coachTier: 'elite', train: 85, toAge: 43 })
+    const never = walkTheWraps({ seed: 'goodbye-11', background: 'working', coachTier: 'self', train: 60, toAge: 43 })
+    // 69.45 against 55.25 – the widest pair in a fourteen-seed sweep of both extremes of the game's
+    // own management axes. If the premise ever stops holding this line is what says so.
+    expect(kept.world.peakPhysical / never.world.peakPhysical, 'the two bodies really are different')
+      .toBeGreaterThan(1.2)
+    expect(kept.wraps.length).toBe(never.wraps.length)
+    for (let i = 0; i < kept.wraps.length; i++) {
+      const a = kept.wraps[i]
+      const b = never.wraps[i]
+      expect(b.share, `age ${a.ageYears}: the kept body and the wrecked one read differently`)
+        .toBeCloseTo(a.share, 6)
+      expect(b.final, `age ${a.ageYears}: they were asked for the last time in different years`).toBe(a.final)
+    }
+  })
+
+  it('⚠ the last-offer event and the epilogue print HER age, and no constant survives in either', () => {
+    // Both lines used to interpolate `ENDINGS.stopAskingAgeYears`. There is no such number now, so
+    // both have to read the age she actually reached – which on this career is 41 and not 38.
+    const { world, wraps } = walkTheWraps({ seed: 'goodbye-copy', toAge: 43, stopAtFinal: true })
+    const last = wraps.find((w) => w.final === true)!
+    const said = world.events.filter((e) => e.text.includes('Nobody is going to ask her again'))
+    expect(said).toHaveLength(1)
+    // ⚠ THE NUMBER IS RE-DERIVED FROM HER CLOCK RATHER THAN COMPARED TO A LITERAL, which is what
+    // makes this dial-independent: move `lastOfferPeakShare` and the sentence follows her age,
+    // because there is no constant left in it to disagree with.
+    const herAge = kidAgeYears(last.week, world.profile.birthMonth, world.profile.birthDay)
+    expect(said[0].text).toBe(`She is ${herAge}. Nobody is going to ask her again.`)
+
+    // ...and the epilogue's own detail line, through the real answer.
+    world.week = last.week
+    world.retirementOffer = { askedWeek: last.week, seasonIndex: 0, reason: 'age', final: true }
+    answerRetirement(world, true)
+    expect(world.ending?.type).toBe('natural')
+    expect(world.ending?.detail).toBe(`${herAge} – the last time anybody asked`)
   })
 })
 

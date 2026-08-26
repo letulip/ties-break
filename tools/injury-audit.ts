@@ -32,6 +32,7 @@
 import { PRESETS, POLICIES, openCareer, stepCareerWeek, mean, median, type Preset, type Policy } from './econ-bench'
 import { answerFork, answerRetirement, kidAgeYears } from '../src/engine/world'
 import { ENDINGS } from '../src/engine/ending'
+import { ageAtPhysicalShare } from '../src/engine/development'
 import { ECONOMY } from '../src/engine/economy'
 import { WEEKS_PER_YEAR } from '../src/engine/season/calendar'
 import type { InjurySeverity, CareerEndingType } from '../src/shared/protocol'
@@ -74,7 +75,20 @@ const ARM = str('arm', 'plays-on') as 'plays-on' | 'realistic'
 /** econ-bench's two entry policies: `grinder` enters everything affordable (the naive parent),
  *  `player` keeps a reserve and refuses to race below a rest floor. Both are shipped arms. */
 const POLICY = POLICIES.find((p) => p.id === str('policy', 'grinder')) ?? POLICIES[0]
-const FULL_CAREER_WEEKS = (ENDINGS.stopAskingAgeYears - 14 + 1) * WEEKS_PER_YEAR
+/** A whole playing life, as `tools/endings-bench.ts` defines it: the age an undamaged body crosses
+ *  `ENDINGS.lastOfferPeakShare`, rounded up, plus the two years that cover a once-a-year question
+ *  asked of a whole-year age. It read `ENDINGS.stopAskingAgeYears`, which the long goodbye's step 2
+ *  deleted.
+ *
+ *  ⚠ DERIVED HERE RATHER THAN IMPORTED FROM THE BENCH, AND THE REASON IS A TRAP WORTH NAMING:
+ *  IMPORTING A BENCH RUNS IT. Every bench in `tools/` carries the same autorun guard, and one of its
+ *  three clauses is `TB_BENCH_RUN === '1'` – which is exactly how a probe like this one gets invoked
+ *  by hand on a runner version that strips the entry file from `argv`. So `import { FULL_CAREER_WEEKS
+ *  } from './endings-bench'` would silently prepend a twelve-minute endings bench to every injury
+ *  audit. Measured 26.08 in the other direction: `TB_BENCH_RUN=1 vite-node tools/endings-bench.ts`
+ *  runs the WHOLE OF `econ-bench` first, because `endings-bench` imports it. */
+const FULL_CAREER_WEEKS =
+  (Math.ceil(ageAtPhysicalShare(ENDINGS.lastOfferPeakShare)) + 2 - 14 + 1) * WEEKS_PER_YEAR
 
 const SEVERITIES: InjurySeverity[] = ['minor', 'moderate', 'major', 'severe']
 

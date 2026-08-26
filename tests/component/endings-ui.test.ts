@@ -292,8 +292,13 @@ describe('the natural end', () => {
     w.unmount()
   })
 
-  it('⚠ at 38 the LAST offer is made and taken – one button, and the copy says the question ran out', () => {
-    patchSnapshot({ ageYears: 38, retirementOffer: { askedWeek: 1250, seasonIndex: 24, reason: 'age', final: true } })
+  // ⚠ RE-AIMED, NOT WEAKENED (the long goodbye §3a). It read «at 38 the LAST offer», and 38 was a
+  // real number then – `ENDINGS.stopAskingAgeYears`, now deleted. The card never read that constant
+  // and does not read the new one either: it branches on `offer.final` and prints
+  // `snapshot.ageYears`, which is exactly why no template line moved. So the fixture moves to the
+  // age the shipped 55% threshold actually produces (41, §3a) and the assertions are untouched.
+  it('⚠ on the LAST offer it is made and taken – one button, and the copy says the question ran out', () => {
+    patchSnapshot({ ageYears: 41, retirementOffer: { askedWeek: 1453, seasonIndex: 27, reason: 'age', final: true } })
     const w = mount(RetirementDialog)
     expect(w.findAll('.retire-answer')).toHaveLength(1)
     expect(w.text()).toContain('Nobody is going to ask her again')

@@ -39,6 +39,10 @@ import { ECONOMY } from './economy'
 import { coachFactor, coachFitFor, tierOf, type Coach } from './coach'
 import { planWeek, sessionCounts, planSessions } from './plan'
 import { SESSION_KINDS, type PlayStyle, type SessionKind, type WeekPlan } from '../shared/protocol'
+// ⚠ THE WEEK LENGTH, FROM THE LEAF `economy.ts` ALREADY READS IT FROM – `season/calendar.ts` exports
+// the very same constant as `WEEKS_PER_YEAR`, and importing THAT would pull the whole calendar into
+// this module's graph for one number. `ageAtPhysicalShare` below is the only consumer here.
+import { WEEKS_IN_SEASON } from '../shared/dates'
 
 /** The attributes the match engine reads. Kept as a bare record so it serialises into the save as
  *  numbers and nothing else.
@@ -285,6 +289,42 @@ export function declineFactor(ageYears: number): number {
   // Gentle at first and steeper every year, which is how careers actually end: a season of "still
   // fine", then a season where the legs are gone.
   return c.declineRate * (1 + (ageYears - c.declineStart) * c.declineAccel)
+}
+
+/** ⭐⭐ THE AGE AN UNDAMAGED BODY FALLS TO `share` OF ITS PEAK, walked off the curve above (the long
+ *  goodbye, docs/specs/the-long-goodbye-2026-08.md §3a). 0.70 -> 37.81 · 0.55 -> 41.17 · 0.50 -> 42.31.
+ *
+ *  ⚠ IT EXISTS BECAUSE THE ENDING NO LONGER NAMES AN AGE. `ENDINGS.stopAskingAgeYears` was deleted
+ *  by step 2 and two things still have to know roughly how long a playing life is – the endings
+ *  bench's walk horizon and the birthday catalogue's open-ended late band. Both read that constant;
+ *  neither may hard-code a replacement, because `ENDINGS.lastOfferPeakShare` is a dial and an age
+ *  copied beside it would be a second, silent home for the same decision.
+ *
+ *  ⚠⚠ A LOOP AND NOT A FORMULA, BECAUSE THE AGE ADVANCES EVERY WEEK – and that is the exact mistake
+ *  the spec's §1 table shipped in its first draft. It evaluated `declineFactor` once a year and held
+ *  it constant across the 52 weeks; the engine raises her age every tick, so the loss compounds
+ *  against a continuously rising factor and the real curve is 2-3 points kinder at every age.
+ *
+ *  ⚠ AND IT IS "UNDAMAGED" ONLY IN NAME TODAY, WHICH IS WORTH KNOWING BEFORE TRUSTING THE WORD.
+ *  Nothing in the engine lowers her physical relative to her OWN peak: the peak is frozen the week
+ *  `declineStart` arrives (`ageFactor` returns 0 from there, so the gain term is gone) and the loss
+ *  is proportional per attribute, so the share is the same function of age for every career ever
+ *  played. Measured on walked careers whose peaks are 31% apart: identical to three decimals. See
+ *  the note on `ENDINGS.lastOfferPeakShare`. */
+export function ageAtPhysicalShare(share: number): number {
+  const c = ECONOMY.development.ageCurve
+  if (share >= 1) return c.declineStart
+  if (share <= 0) return Infinity
+  let left = 1
+  let age = c.declineStart
+  while (left > share) {
+    left *= 1 - declineFactor(age)
+    // ⚠ `WEEKS_IN_SEASON` IS `WEEKS_PER_YEAR` – season/calendar.ts exports it under that name and
+    // this is the same constant, imported from the leaf `economy.ts` already reads it from so that
+    // nothing new joins this module's import graph.
+    age += 1 / WEEKS_IN_SEASON
+  }
+  return age
 }
 
 /** The training split, as a multiplier. `plan.train` runs 60 (light) to 85 (grind).

@@ -2,11 +2,21 @@
 // THE NATURAL END'S OFFER (career-contract-v1.md §5.3) – asked in the off-season, blocking until
 // answered, and offered again next year if she says no.
 //
-// ⚠ THE FLOOR AT 38 IS NOT A RETIREMENT RULE AND THIS CARD IS WHERE THE DIFFERENCE IS CARRIED. The
-// owner asked the right clarifying question about it, so the answer has to be legible on screen: 38
-// is the age at which the game STOPS ASKING. From 29 the offer comes every off-season and she may
-// always refuse; at 38 the LAST offer is made and taken. So the final card has one button, and the
-// copy on it says the question ran out - not that a mechanic retired her.
+// ⚠ THE LAST OFFER IS NOT A RETIREMENT RULE AND THIS CARD IS WHERE THE DIFFERENCE IS CARRIED. The
+// owner asked the right clarifying question about it, so the answer has to be legible on screen:
+// from 29 the offer comes every off-season and she may always refuse; on the LAST one the offer is
+// made and taken. So the final card has one button, and the copy on it says the question ran out -
+// not that a mechanic retired her.
+//
+// ⚠⚠ AND IT USED TO SAY "THE FLOOR AT 38", WHICH IS NOW WRONG IN THE ONE WAY A COMMENT MUST NOT BE:
+// it named a rule that no longer exists. `ENDINGS.stopAskingAgeYears` is deleted (the long goodbye,
+// docs/specs/the-long-goodbye-2026-08.md §3a) and the last offer arrives when her physical falls
+// below a share of her own peak - age 41 on a body kept well, earlier on one that never got there.
+// ⭐ NOT ONE LINE OF THE TEMPLATE MOVED FOR THIS, and that is a fact about the card rather than a
+// shortcut: the kicker already prints `snapshot.ageYears`, and the three headings already branch on
+// `offer.final`, so a card written against a birthday renders a body-driven offer correctly with no
+// edit at all. What the card still does NOT do is speak in her voice - that is step 4 of the spec,
+// and it is the step that rewrites the copy below.
 //
 // ⚠ AND THE PLATEAU IS THE SAME OFFER, ASKED EARLY. «Не могу выйти в топ – уйду» is not a sixth
 // mechanism (§5.2): it is a reading that puts this card in front of her before 29, and the reason
@@ -51,7 +61,7 @@ async function answer(retire: boolean): Promise<void> {
 //
 // ⚠⚠ ESCAPE IS PASSED NO HANDLER, AND THE FINAL CARD IS WHY IT CANNOT BE ANYTHING ELSE. From 29 the
 // card draws two answers and the offer BLOCKS the world until one of them is in, so a dismissal
-// would strand the career; at 38 it draws exactly ONE, because the question has run out, and a key
+// would strand the career; on the last one it draws exactly ONE, because the question has run out, and a key
 // that closed this card would either end a career on a stray press or hand back a card with no
 // refusal left on it. Neither is a dismissal, so there is none.
 //

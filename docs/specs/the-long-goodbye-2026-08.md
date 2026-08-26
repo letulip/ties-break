@@ -61,6 +61,11 @@ again on a `plateau` reading (three flat seasons inside `plateauRankBand: 20`). 
 carries `final: true`, and `answerRetirement` **throws** on a refusal – `'This was the last time
 anybody asked'`.
 
+⚙ **AS OF STEP 2 (26.08) THE SENTENCE ABOVE IS HISTORY AND IS KEPT AS SUCH** – it is what this
+proposal was written against. `stopAskingAgeYears` is deleted; the offer carries `final: true` when
+`physicalShare <= ENDINGS.lastOfferPeakShare`. Everything else in the paragraph is unchanged: 29,
+the plateau reading, `oneMoreYearCount`, and the throw.
+
 ---
 
 ## 2. What the floor at 38 is actually FOR – and this is the argument against simply deleting it
@@ -75,9 +80,25 @@ From this repo's own measured distribution ([endings-and-the-album.md](endings-a
 | injury | 7.8% | 31 |
 | plateau | 0.0% | – |
 
-⚠⚠ **FOR A PLAYER WHO NEVER SAYS YES, THE FLOOR IS THE ONLY ENDING THE GAME HAS.** Of the careers
+⚠⚠ **THE TABLE ABOVE IS THE 04.08 ONE AND IT NO LONGER REPRODUCES – IT IS QUOTED HERE FOR ITS
+ARGUMENT, NOT AS A CURRENT MEASUREMENT.** Its own source says so («⚠ THE TABLE ABOVE IS 04.08 AND IT
+HAS DRIFTED – RE-MEASURED 13.08»), and step 2 re-ran the bench on **untouched main** to be sure
+before changing anything (9 presets × 10 seeds, 26.08 – §2's own 04.08 sample size):
+
+| ending | 04.08 recorded | 13.08 re-measure | **main, 26.08 (the control)** |
+| --- | --- | --- | --- |
+| bankruptcy | 51.1% @ 17 | 59.4% | **51.1% @ 16** |
+| natural | 41.1% @ 38 | 23.9% | **36.7% @ 38** |
+| injury | 7.8% @ 31 | 16.7% | **12.2% @ 30** |
+| plateau | 0.0% | 0.0% | **0.0%** |
+
+So «reproduces §2 byte for byte» was never an achievable acceptance for step 2 – the code had already
+drifted away from that table on its own. **The control it was actually held to is untouched main**,
+and at 70% the change reproduces THAT, ending for ending and median for median, on both arms.
+
+⚠⚠ **FOR A PLAYER WHO NEVER SAYS YES, THE LAST OFFER IS THE ONLY ENDING THE GAME HAS.** Of the careers
 that survive the money and the injuries, **every single one** ends because the game stopped asking.
-Delete the floor and 41% of that arm has no ending at all – she slides to 37% of peak at 45 and keeps
+Delete it and a third of that arm has no ending at all – she slides to 37% of peak at 45 and keeps
 going, which is not a gentler story than a wall. It is no story.
 
 **So the fade cannot replace the ending. It never was competing with it.**
@@ -116,8 +137,49 @@ the weekly-advancing age and stated to a tenth.
 
 **Settled: 55%, by his word on 26.08.** It buys three years over today's rule, it puts the ceiling exactly where the
 real case he read about sits, and every year of it has to be paid for in physio, load and luck. ⚠ The
-number is a dial and this table is the whole argument for it – 70% reproduces the current game byte
-for byte, so a rollback is one constant.
+number is a dial and this table is the whole argument for it, so a rollback is one constant.
+
+### ⚙ 26.08 – TWO CORRECTIONS FROM STEP 2, BOTH FOUND BY BUILDING IT
+
+⚠ **THE TABLE ABOVE IS THE CROSSING, NOT THE WEEK THE OFFER ARRIVES – ADD UP TO A YEAR.** The share
+falls continuously; the question is asked on ONE week a year, the off-season wrap. So 55% is crossed
+at 41.2 and the last offer actually lands between **41.2 and 42.1** depending on her birth month
+(41.5 for `DEFAULT_PROFILE`'s 15 June). Same for every other row. This does not move the ruling – it
+is still the Federer ceiling – but the table should not be quoted as "the age she is asked".
+
+⚠⚠ **AND «70% REPRODUCES THE CURRENT GAME BYTE FOR BYTE» IS NOT QUITE TRUE – 8 BIRTH DATES IN 36
+DIVERGE.** The crossing is 37.81 and the old rule woke at 38.00, so a girl whose off-season wrap falls
+in that 0.19-year window gets her last offer a YEAR early under 70%. Swept over all 36 birth dates:
+the eight are every date from 12 December to 28 February. `DEFAULT_PROFILE` is 15 June and is not one,
+which is why the endings bench reproduces exactly and the generalisation claim stands for the
+measurement – but the *rule* is a strict generalisation only up to that fortnight-wide seam.
+
+⚠⚠⚠ **AND §3'S CENTRAL PROMISE IS NOT MET BY THIS CHANGE ALONE: A WRECKED BODY DOES NOT FINISH
+EARLY.** «a body wrecked by 33 finishes at 33» requires the share to differ between careers, and
+**it cannot today** – measured, not argued:
+
+* `growWeek` is the only writer of `world.skills`, and its gain term is `ageFactor(age) * …`, which
+  returns **0** from `declineStart`. So the peak is frozen the week she turns 29 and **every career
+  leaves 29 at a share of exactly 1.00**.
+* its loss is `decline * skills[k]` – **proportional per attribute** – so from 29 every career is
+  multiplied by the same factor every week and keeps the same share at the same age.
+* Measured on two walked careers 26% apart in peak (69.45 against 55.25, the widest pair in a
+  fourteen-seed sweep of both extremes of background, coach tier and training): **identical shares to
+  three decimals at every off-season week, and the same last offer, to the week.**
+
+What a wrecked body loses is the **level** of the peak – which is real tennis, and no part of a ratio
+taken against that same peak. Step 1's own commit note has this backwards («a career full of them
+arrives at 29 with a LOWER peak and therefore starts its last chapter from a lower number») – the
+number is lower and the *share* is not, and the share is what the trigger reads.
+
+⭐ **So step 2 is exactly what its own step table claims and no more: the trigger leaves the birthday
+and the rule generalises.** Making the goodbye personal needs a mechanism that does not exist yet, and
+**§4a's recovery corridor is not it either** – it slows her rest weeks, not her skills. Three shapes
+that would do it, none of them built and none of them ruled on: an atrophy term that takes physical
+off a body that is injured or unloaded; a peak that keeps rising past 29 for a body that is still
+being developed; or a second signal on the view (`condition`, weeks lost) that the threshold reads
+alongside the share. `tests/ending.test.ts` pins the age-equivalence as the measured fact it is, so
+the day one of them lands the pin goes red and gets re-aimed rather than quietly agreeing.
 
 ### 3b. Why «her own peak» and not «her potential»
 
@@ -279,6 +341,7 @@ the measurements say so, that is a better sentence for her last word in §4 than
 | the stored peak physical | `world/state.ts` + a phase writes it each tick | S – **one field, one save-schema move** (bump, append-only migration, golden fixture, `e2e:fixtures`) |
 | the trigger | `retirementDue` in `src/engine/ending.ts` reads the share instead of `stopAskingAgeYears` | S |
 | the constant | `ENDINGS.lastOfferPeakShare: 0.55`, and `stopAskingAgeYears` is **deleted, not left dangling** | XS |
+| ⚙ *(not costed, and it was real)* the constant's **other four readers** | it was never only the trigger: the epilogue's detail line and the last-offer event line both INTERPOLATED it, and `tools/endings-bench.ts` + `tools/injury-audit.ts` both derived their WALK HORIZON from it. The two copy lines now print her real age (`kidAgeYears`, already whole); the two horizons read a new `ageAtPhysicalShare(share)` in `development.ts`, so a dial that moves takes the bench with it | S |
 | her line | the retirement card's final state, and one event line | S |
 | the recovery fade (§4a) | `ECONOMY.condition` gains `recoveryAgeFloor`; the rest-week return is multiplied by the §3a share | S |
 | the re-measure | §6 below | M |
@@ -290,6 +353,45 @@ and if it moves, something is wrong.
 ---
 
 ## 6. Acceptance – the numbers that decide whether it worked
+
+### ⚙ 26.08 – MEASURED FOR STEP 2 (the trigger only; §4a is not built)
+
+`npm run bench:endings -- --seeds 10`, three runs of ~11 minutes each: untouched main, the same tree
+at **70%**, and the shipped **55%**. Numbers 1-5 below are step 2's; 6 and 7 belong to §4a.
+
+| ending | control (main) | at 70% | at **55%** |
+| --- | --- | --- | --- |
+| bankruptcy | 51.1% @ 16 | 51.1% @ 16 | **51.1% @ 16** |
+| natural | 36.7% @ **38** | 36.7% @ **38** | **33.3% @ 41** |
+| injury | 12.2% @ 30 | 12.2% @ 30 | **15.6% @ 31** |
+| plateau | 0.0% | 0.0% | **0.0%** |
+| *(still playing)* | 0.0% | 0.0% | **0.0%** |
+
+**1 ✅ «plays on» still ends.** Natural stays the dominant non-money finish and *(still playing)* is
+0.0% – every career on that arm gets an ending.
+
+**2 ⚠ HALF.** The median moved **38 → 41**, as asked. **The spread did not widen and cannot** – see
+§3a's third correction: the share is the same function of age for every career, so all thirty natural
+endings still land on the same birthday. «today every career ends at the same birthday, and the point
+of the change is that they stop agreeing» is **not yet delivered**, and no threshold delivers it.
+
+**3 ❌ NOT MET.** Nothing finishes before the old floor, because nothing can. Stated in §3a rather
+than worked around.
+
+**4 ⚠ BANKRUPTCY AND PLATEAU ARE UNMOVED TO THE CAREER; INJURY ROSE 12.2% → 15.6%.** That is the
+opposite of the failure §6.4 guards against: the last offer *gave three careers back* to the injury
+door by letting them play three more years into it, rather than stealing any. The bankruptcy grace
+sweep and the college-door tables are byte-identical across all three runs.
+
+**5 ✅ `condition.test.ts` unmoved** – 41550 / `e6b0c709`, 51 tests green, the file not touched.
+
+⚠ **Two second-order effects worth having on the record**, both from the three extra years and
+neither a defect: fresh-severe exposure 14.4% → 16.7% of full-life careers, and prize/spend at the
+end mean 2.0% → 1.8% (best 29.7% → 27.7%) as three low-earning seasons dilute the ratio.
+
+---
+
+The original text of this section, unchanged:
 
 Re-run the endings bench on both arms and compare against §2's table:
 
@@ -338,7 +440,7 @@ Re-run the endings bench on both arms and compare against §2's table:
 | # | step | done when |
 | --- | --- | --- |
 | **1** | the stored peak, with its schema move – written, migrated, fixtured, and read by nothing yet | a golden fixture round-trips it and `e2e:fixtures` is green |
-| **2** | the trigger moves to the share; `stopAskingAgeYears` deleted | at 70% the endings bench reproduces §2 byte for byte – the proof the generalisation is exact |
+| **2** ✅ | the trigger moves to the share; `stopAskingAgeYears` deleted | ⚙ **DONE 26.08.** Built at 70% FIRST and measured against untouched main: the endings bench's **whole 127-line report came back byte-identical** – six endings, both retirement arms, the fork arms, the plateau sweep, the grace sweep, the college door, the injury table and the per-preset grid – then the constant was set to 55%. ⚠ The stated gate («reproduces §2 byte for byte») was not achievable and §2 above says why: that table is 04.08 and main had already drifted off it. The control is main, which is the stronger arm anyway |
 | **3** | the threshold set to his answer, and §6 re-measured | the five acceptance numbers |
 | **4** | her last word – the card's final state and the event line | the copy reads as hers, and the parent is not asked a question with one legal answer |
 | **5** | *(optional, §7.4)* the fade becomes visible in the season summary | a season past the peak says so without naming a number |

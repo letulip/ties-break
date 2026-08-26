@@ -44,14 +44,30 @@ import {
 // this population. `tools/retired-college-rule.ts` is the one definition of it.
 import { RETIRED_COLLEGE_RUNG, retiredCollegeDoorOpen } from './retired-college-rule'
 import { ENDINGS, bankruptcyDue, debtWeeks, plateauReading, weeksLostSoFar } from '../src/engine/ending'
+import { ageAtPhysicalShare } from '../src/engine/development'
 import { plateauViewOf, autoEndingViewOf } from '../src/engine/world'
 import type { CareerEndingType } from '../src/shared/protocol'
 import { WEEKS_PER_YEAR, TIER_LADDER } from '../src/engine/season/calendar'
 import type { TierId } from '../src/engine/season/types'
 import type { Rng } from '../src/engine/rng'
 
-/** A full playing life: fourteen to the week the game stops asking. 24 seasons. */
-export const FULL_CAREER_WEEKS = (ENDINGS.stopAskingAgeYears - 14 + 1) * WEEKS_PER_YEAR
+/** A full playing life: fourteen to two whole years past the age the last offer can land on.
+ *
+ *  ⚠ IT READ `ENDINGS.stopAskingAgeYears - 14 + 1` AND THAT CONSTANT IS DELETED (the long goodbye
+ *  step 2). The horizon was never a game rule and is not one now – it is how long this tool is
+ *  willing to walk – but it HAS to sit past the last offer or the bench measures a truncation and
+ *  calls it an ending. So it is derived from the rule that ends careers now: `ageAtPhysicalShare` is
+ *  where an undamaged body crosses the threshold, and the two whole years on top cover the two ways
+ *  the offer lands later than the crossing – the question is asked on ONE week a year, and it is
+ *  asked of a WHOLE-year age.
+ *
+ *  ⚠ THE EXTENSION IS NEUTRAL, AND THAT WAS MEASURED RATHER THAN ASSUMED (26.08). Run at 70% – the
+ *  threshold that reproduces the deleted constant – this 1404-week horizon returns the same six
+ *  rates, the same median ages and the same "(still playing) 0.0%" as the 1300-week run it replaces,
+ *  on both retirement arms. It can only differ for a career that reaches the end of the walk with no
+ *  ending at all, and on these presets there is not one. */
+export const FULL_CAREER_AGE_YEARS = Math.ceil(ageAtPhysicalShare(ENDINGS.lastOfferPeakShare)) + 2
+export const FULL_CAREER_WEEKS = (FULL_CAREER_AGE_YEARS - 14 + 1) * WEEKS_PER_YEAR
 export const SEEDS_PER_PRESET = 20
 
 /** How the bench answers the fork at nineteen. Three arms, because two of the three answers ARE
@@ -62,8 +78,11 @@ export type ForkArm = 'continue' | 'college' | 'stop'
  *
  *  ⚠ THE DEFAULT IS THE OWNER'S OWN SENTENCE, not "always retire" and not "never". «Не могу выйти в
  *  топ – уйду»: she takes the PLATEAU offer, because that offer only exists when the reading holds,
- *  and she says one more year to the AGE offer until the game stops asking at 38. That produces the
- *  distribution between #5 and #6 the contract asks the epilogue to be able to tell apart. */
+ *  and she says one more year to the AGE offer until the game stops asking. That produces the
+ *  distribution between #5 and #6 the contract asks the epilogue to be able to tell apart.
+ *  ⚠ "until the game stops asking" USED TO SAY "at 38" and no longer may – the last offer is a share
+ *  of her peak physical now (the long goodbye §3a), so the week it arrives is a fact about the body
+ *  the walk produced rather than a date this file can name. */
 export type RetireArm = 'her-words' | 'plays-on'
 function answersRetirement(arm: RetireArm, reason: 'age' | 'plateau', final: boolean): boolean {
   if (final) return true
@@ -340,10 +359,10 @@ export function main(argv = process.argv.slice(2)): void {
   console.log('')
   console.log('THE ENDINGS BENCH – six endings, one surface (career-contract-v1.md §4)')
   console.log(
-    `  ${presets.length} presets x ${seeds} seeds, fourteen to ${ENDINGS.stopAskingAgeYears} (${FULL_CAREER_WEEKS} weeks max)`,
+    `  ${presets.length} presets x ${seeds} seeds, fourteen to ${FULL_CAREER_AGE_YEARS} (${FULL_CAREER_WEEKS} weeks max)`,
   )
   console.log(
-    `  grace N = ${ENDINGS.bankruptcyGraceWeeks}w · plateau = ${ENDINGS.plateauSeasons} seasons from ${ENDINGS.plateauFromAgeYears} · the game stops asking at ${ENDINGS.stopAskingAgeYears}`,
+    `  grace N = ${ENDINGS.bankruptcyGraceWeeks}w · plateau = ${ENDINGS.plateauSeasons} seasons from ${ENDINGS.plateauFromAgeYears} · the last offer at ${(100 * ENDINGS.lastOfferPeakShare).toFixed(0)}% of her peak physical (age ${ageAtPhysicalShare(ENDINGS.lastOfferPeakShare).toFixed(1)} undamaged)`,
   )
   console.log('')
 
@@ -351,11 +370,12 @@ export function main(argv = process.argv.slice(2)): void {
   //
   // ⚠ RUN UNDER BOTH RETIREMENT ANSWERS, because the split between #5 and #6 is a PLAYER CHOICE and
   // not a game rate. «Her words» takes the plateau offer the moment it comes («не могу выйти в топ –
-  // уйду»); «plays on» refuses every offer until the game stops asking at 38. Reporting only one of
-  // them would have printed a 0% next to an ending that is reachable in one tap.
+  // уйду»); «plays on» refuses every offer but the last one. Reporting only one of them would have
+  // printed a 0% next to an ending that is reachable in one tap.
   const arms: { label: string; retire: RetireArm; rows: CareerOutcome[] }[] = [
     { label: 'her words (takes the plateau)', retire: 'her-words', rows: [] },
-    { label: 'plays on (refuses until 38)', retire: 'plays-on', rows: [] },
+    // ⚠ THE LABEL SAID "refuses until 38" AND THAT AGE NO LONGER EXISTS (the long goodbye §3a).
+    { label: 'plays on (refuses all but the last)', retire: 'plays-on', rows: [] },
   ]
   for (const a of arms) {
     for (const preset of presets) {

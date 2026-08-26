@@ -96,12 +96,53 @@ export const ENDINGS = {
   /** her own decline starts here (`ECONOMY.development.ageCurve.declineStart`), so this is where
    *  the question starts being a real one rather than a rhetorical one */
   askFromAgeYears: 29,
-  /** ⚠ THE FLOOR, AND IT IS NOT A RETIREMENT RULE (§5.3, and the owner asked exactly the right
-   *  clarifying question about it). 38 is the age at which the game STOPS ASKING. From 29 the offer
-   *  comes every off-season and she may always refuse; at 38 the last offer is made and taken. So
-   *  the decade from 29 is a decade of "one more year" decisions and this is the week the question
-   *  runs out – not a mechanic that retires her for the player. */
-  stopAskingAgeYears: 38,
+  /** ⚠ THE LAST OFFER, AND IT IS READ OFF HER BODY RATHER THAN OFF A BIRTHDAY (the long goodbye,
+   *  docs/specs/the-long-goodbye-2026-08.md §3a). The share of her OWN PEAK PHYSICAL below which the
+   *  off-season offer carries `final: true` – `physicalMean(skills) / peakPhysical`, both of them
+   *  written by the growth phase, both v62. From 29 the offer still comes every off-season and she
+   *  may still always refuse; this is the week the question runs out. It is not a mechanic that
+   *  retires her for the player, and the answer is still hers.
+   *
+   *  ⭐⭐ `stopAskingAgeYears: 38` WAS HERE AND IT IS DELETED RATHER THAN LEFT DANGLING, on the
+   *  owner's reading of the news, 26.08: «Roger Federer играл активно до 41 года … отсюда у меня
+   *  мысли на тему нашей жесткой концовки в 38 – может быть ее как-то пересмотреть». A fixed number
+   *  is what he objected to, not the finish: §2 of the spec measures that DELETING the finish would
+   *  leave 41% of the "plays on" arm with no ending at all, which is not a gentler story than a wall.
+   *
+   *  ⭐ 0.55 IS HIS OWN NUMBER, 26.08: «я бы взял 55% по уходу – согласен, звучит ок». It is a DIAL,
+   *  and because the decline is deterministic in age the whole dial maps to ages (§3a):
+   *
+   *      70% -> 37.8    65% -> 38.9    60% -> 40.0    55% -> 41.2    50% -> 42.3
+   *
+   *  ⚠⚠ AND 70% IS TODAY'S GAME, WHICH IS WHY THIS IS A STRICT GENERALISATION AND NOT A NEW RULE.
+   *  Built at 0.70 first and measured before 0.55 was set: the endings bench came back IDENTICAL to
+   *  the run on the deleted constant, ending for ending, median for median, on both retirement arms
+   *  (9 presets x 10 seeds, 26.08). A rollback is this one line.
+   *
+   *  ⚠ THE ONE PLACE 0.70 IS NOT EXACTLY 38, stated because "byte for byte" is what the spec claims
+   *  and it is not quite true. The question is raised on ONE week a year, and the crossing is at
+   *  37.81 while the old rule woke at 38.00, so a girl whose off-season wrap falls inside that
+   *  0.19-year window is asked for the last time a year early. Measured over all 36 birth dates: 8 of
+   *  them, every one in December-February. `DEFAULT_PROFILE` (15 June) is not one, which is why the
+   *  bench reproduces exactly.
+   *
+   *  ⚠ IT IS A SHARE OF HER PEAK AND NEVER OF HER POTENTIAL (§3b). Reading against `potential` would
+   *  cost nothing – it is already persisted – and it would tell a girl who never came near her
+   *  ceiling that she is finished while she is still young. The signal has to be what she reached.
+   *
+   *  ⚠⚠ AND WHAT IT DOES NOT YET DO, MEASURED, SO NOBODY INFERS IT FROM THE SPEC. §3's promise is
+   *  that «a body wrecked by 33 finishes at 33» – TODAY IT DOES NOT, and the rule is age-equivalent
+   *  for every career that has ever been played. Nothing in the engine lowers her physical relative
+   *  to HER OWN peak: `growWeek` is the only writer of `world.skills`, its gain term is 0 from
+   *  `declineStart` (so the peak is frozen the week the decline starts, at share exactly 1) and its
+   *  loss is proportional per attribute (so every career keeps the same share at the same age). Four
+   *  walked careers with peaks 31% apart – grind against coast – read the same share to three
+   *  decimals at every off-season week. What a wrecked body loses is the LEVEL of the peak, which is
+   *  real tennis and no part of this trigger. Making the goodbye personal needs a mechanism that does
+   *  not exist yet, and §4a's recovery corridor is not it either – it slows her rest weeks, not her
+   *  skills. `tests/ending.test.ts` pins this as the measured fact it is, so the day such a mechanism
+   *  lands the pin goes red and gets re-aimed instead of quietly agreeing. */
+  lastOfferPeakShare: 0.55,
   /** #6 THE PLATEAU – «не могу выйти в топ – уйду». NOT a sixth mechanism: a READING that lets the
    *  natural end ask early. She has to have had a professional life first, or "plateau" just means
    *  "young", so the reading is gated on an age as well as on a drought. */
@@ -341,6 +382,14 @@ export interface PlateauView {
   /** the season she last cleared a rung in – the first title or final at the highest tier she has
    *  ever reached one at ON THAT SAME TABLE – or null if she has never reached a final there */
   lastRungSeasonIndex: number | null
+  /** ⭐⭐ HOW MUCH OF HER OWN BODY IS LEFT: `physicalMean(skills) / peakPhysical` (the long goodbye
+   *  §3a, v62's stored peak). 1 at her peak and falling every week from `declineStart`.
+   *
+   *  ⚠ IT IS READ BY `retirementDue` AND NOT BY `plateauReading` – the plateau is a RESULTS reading
+   *  and stays one, deliberately (§7.2: «a body-driven last word and a results-driven mid-career
+   *  question are different things»). It lives on this view because this is the view the off-season
+   *  question is asked of, which is also where `ageYears` already lives for the same reason. */
+  physicalShare: number
 }
 
 /** #6 – THE PLATEAU. «Не могу выйти в топ – уйду.»
@@ -382,16 +431,32 @@ export function plateauReading(view: PlateauView, seasons: number = ENDINGS.plat
 
 /** Should the natural end ask her this off-season, and with what reason? Null when it should not.
  *
- *  ⚠ THE FLOOR ARRIVES HERE AS `final: true`, NOT AS A LATCH. At 38 the offer is still an offer –
- *  it is simply the last one, and the copy says so. Nothing in this file retires her; the answer
- *  does, and at 38 the only answer on the card is yes. */
+ *  ⚠ THE LAST OFFER ARRIVES HERE AS `final: true`, NOT AS A LATCH. It is still an offer – it is
+ *  simply the last one, and the copy says so. Nothing in this file retires her; the answer does,
+ *  and on that one the only answer on the card is yes.
+ *
+ *  ⭐⭐⭐ AND WHICH ONE IS LAST IS HER BODY'S ANSWER NOW, NOT A BIRTHDAY (the long goodbye §3a). This
+ *  line read `view.ageYears >= ENDINGS.stopAskingAgeYears` – the same 38 for every career the game
+ *  has ever run. It reads the share of her own peak physical she has left, so the ceiling has to be
+ *  earned: §3a maps the shipped threshold to age 41.2 on an undamaged career, which is the age the
+ *  owner's own question was about.
+ *
+ *  ⚠ `askFromAgeYears` STILL GATES EVERYTHING AND HAS NOT MOVED – nothing fires before 29 whatever
+ *  the share says. Note that it cannot: `declineStart` IS 29, so the share is exactly 1 until then
+ *  and a "wrecked" body reads 100% at 28 as surely as a kept one. The gate is not redundant, it is
+ *  the reason the share is meaningful when it is finally read.
+ *
+ *  ⚠ THE PLATEAU BRANCH IS UNTOUCHED, on the spec's §7.2: a results-driven mid-career question and a
+ *  body-driven last word are different things, and the second one moving is no reason for the first. */
 export function retirementDue(view: PlateauView): RetirementOffer | null {
   if (view.ageYears >= ENDINGS.askFromAgeYears) {
     return {
       askedWeek: 0,
       seasonIndex: view.seasonIndex,
       reason: 'age',
-      final: view.ageYears >= ENDINGS.stopAskingAgeYears,
+      // ⚠ `<=`, NOT `<`. The threshold is the share she may still stand at and be asked again, so
+      // the off-season she is AT it is the off-season the question runs out.
+      final: view.physicalShare <= ENDINGS.lastOfferPeakShare,
     }
   }
   if (plateauReading(view)) {
@@ -417,7 +482,14 @@ export function endingForRetirement(
     }
   }
   const detail = offer.final
-    ? `${ENDINGS.stopAskingAgeYears} – the last time anybody asked`
+    // ⚠ HER REAL AGE, NOT A CONSTANT (the long goodbye step 2). This read
+    // `${ENDINGS.stopAskingAgeYears}` and printed the same 38 into every epilogue ever written;
+    // there is no such number any more, because the last offer lands where her body puts it.
+    // `ageYears` arrives already whole (`kidAgeYears` floors), so this prints exactly what it used
+    // to print on the careers the old rule ended.
+    // ⚠ THE SENTENCE IS OTHERWISE UNCHANGED, ON PURPOSE: her own last word is step 4 of the spec and
+    // that is what rewrites this line into her voice. This is the deletion, not the rewrite.
+    ? `${ageYears} – the last time anybody asked`
     : oneMoreYearCount > 0
       ? `${oneMoreYearCount} more ${oneMoreYearCount === 1 ? 'year' : 'years'} after the first time she was asked`
       : 'the first time she was asked, she said yes'
