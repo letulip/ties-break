@@ -184,9 +184,9 @@ function chairIndexOf(id: string): number {
 //
 // ⭐ WHAT IS MISSING IS ONE CURRENT SENTENCE, AND THIS IS IT. Written at the REST STATE – the week
 // the freeze hands the screen back – so its week IS the week at the top of the feed and it can never
-// be stale, never be pruned out from under him, and never need a window to reach it. Twelve rows
-// over 208 weeks (0.06 a week) against the first pass's twenty; the budget is not the constraint
-// and never was.
+// be stale, never be pruned out from under him, and never need a window to reach it. Eleven rows
+// over 208 weeks measured across four walked careers, twelve at the outside (0.05 a week) against
+// the first pass's twenty; the budget is not the constraint and never was.
 //
 // ⚠ ZERO MAIN DRAWS, exactly as the rest of this module: `careerAt` is a pure walk of (seed, chair,
 // season) and `rankingFor` is a fold. ⚠ NO `keep`, so `pruneEvents` sacrifices it like any other

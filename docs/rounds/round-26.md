@@ -443,7 +443,8 @@ a repeat, and the record has to show the first fix missing.
   carve-out, so the clause was rewritten instead.
   · **MEASURED AFTER, same probe, same 48 rest states:** generational rows at rest **2.4 → 3.9**, rest
   states with none **9/48 → 0/48**, rows on the card 21.1 → 22.4, median age 9.2w → 8.7w.
-  · **THE FOUR-YEAR BUDGET.** 12 rows per degree (0.06/week) against the first pass's 20. Rows
+  · **THE FOUR-YEAR BUDGET.** 11 rows per degree measured over four careers, 12 on the hashed one
+  (0.05/week) against the first pass's 20 – one per press that moved time, and no more. Rows
   written inside the freeze 3,628 → 3,672; news rows Home shows 841 → **885 (+5.2%)**; the events
   array at graduation **401 → 402 with 39 kept in BOTH arms**. On the hashed college career, events
   401 → 402, `nextEventId` 1811 → 1823, **kept 24 in both arms** – every new row is ordinary, the
