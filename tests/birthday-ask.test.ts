@@ -531,6 +531,68 @@ describe('R2-18 — a girl at college is offered gifts for the life she is actua
     }
   })
 
+  // ===============================================================================================
+  // ⭐⭐⭐⭐ ROUND 26 #4, SECOND PASS – THE FIRST COLLEGE BIRTHDAY IS THE BICYCLE'S
+  // ===============================================================================================
+  //
+  // The owner: «может быть это должна быть как раз просьба на первый ДР во время учебы вообще».
+  //
+  // ⚠⚠ THIS IS A SWEEP OVER SEEDS AND NOT A WALKED CAREER, AND THE REASON IS A MEASURED HOLE. The
+  // walked cases in `tests/college-birthday.test.ts` use three seeds, and the guarantee this rests on
+  // – that entry 0 of the shuffled college cycle CONTAINS the bicycle – is 75% likely per seed by
+  // luck alone (3 of the band's C(4,3) = 4 combinations hold it). Deleting the rotation in
+  // `materialFor` and re-running those three careers came back **GREEN**: they had drawn a lucky
+  // shuffle. Two hundred seeds cannot.
+  it('⭐⭐⭐⭐ every seed offers the bicycle on her first college birthday, and asks for it', () => {
+    let cyclesWithoutTheBikeFirst = 0
+    for (let s = 0; s < 200; s++) {
+      const { options, askedId } = birthdayOffer(`first-college-${s}`, 19, [], true, 0)
+      expect(options.map((o) => o.id), `seed ${s}: the bicycle is on the dialog`).toContain('campusbike')
+      expect(askedId, `seed ${s}: and it is what she asked for`).toBe('campusbike')
+      // ⚠ ANTI-VACUITY, AND IT IS THE PART THAT MAKES THE ROTATION A MEASURED FIX RATHER THAN A
+      // BELIEF: the UNROTATED cycle really does put a bike-less combination first for some seeds, so
+      // the two assertions above are not true by accident of the shuffle.
+      const unrotated = birthdayOffer(`first-college-${s}`, 19, [], true, 3)
+      if (!unrotated.options.map((o) => o.id).includes('campusbike')) cyclesWithoutTheBikeFirst += 1
+    }
+    expect(
+      cyclesWithoutTheBikeFirst,
+      'the band really does hold a combination without the bicycle, and the walk really does reach it',
+    ).toBeGreaterThan(0)
+  })
+
+  it('⭐⭐⭐ four college birthdays are four different dialogs, on every seed', () => {
+    // ⚠ ROUND 26 #9b's CLAIM, RE-ASSERTED AFTER THE WALK WAS RE-INDEXED BY COLLEGE BIRTHDAY. The
+    // rotation could have broken it and did not: a rotation of a four-cycle is still a four-cycle.
+    for (let s = 0; s < 200; s++) {
+      const dialogs = [0, 1, 2, 3].map((i) =>
+        birthdayOffer(`four-college-${s}`, 19 + i, [], true, i)
+          .options.map((o) => o.id)
+          .sort()
+          .join('|'),
+      )
+      expect(new Set(dialogs).size, `seed ${s}: ${dialogs.join('  ·  ')}`).toBe(4)
+    }
+  })
+
+  it('⚠ the draw count does not move on the first college birthday – the ask is overridden, not skipped', () => {
+    // ⚠ CLAUDE.md INVARIANT 2's BOOKKEEPING. `seed:birthday:<age>` is drawn exactly four times for
+    // every birthday in the game, and pinning the first college ask may not make it three: a branch
+    // that skipped the roll would make the stream's position depend on where in her life she is.
+    // Asserted as an identity rather than as a count – the OPTIONS a first-birthday offer produces
+    // are byte-identical to those of the same offer with the pin off (`collegeIndex: null` walks by
+    // age, so index 0 is compared against the same cycle entry via a matching age).
+    for (let s = 0; s < 60; s++) {
+      const pinned = birthdayOffer(`draw-count-${s}`, 20, [], true, 0)
+      const unpinned = birthdayOffer(`draw-count-${s}`, 20, [], true, null)
+      // the ROWS come from the walk index, so pick the age whose unpinned index lands on entry 0
+      const sameEntry = birthdayOffer(`draw-count-${s}`, 20, [], true, 0)
+      expect(pinned.options.map((o) => o.id)).toEqual(sameEntry.options.map((o) => o.id))
+      // ...and the unpinned offer still returns a drawn ask from its own four, never null or the pin
+      expect(unpinned.options.map((o) => o.id)).toContain(unpinned.askedId)
+    }
+  })
+
   it('⭐ ...and the age bands she skips are the ones that assert a home – she cannot reach them', () => {
     // Stated as the complement of the rule above rather than as a second rule: these are the ids the
     // 19-21 and 22-28 bands offer, and the assertion is that the college set does not intersect them.

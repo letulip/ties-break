@@ -31,7 +31,7 @@
 // ⚠ AGAINST WALKED WORLDS, NEVER HAND-BUILT ONES – the same discipline every college suite keeps.
 // The careers below really play sixty weeks, really answer the fork and really spend the freeze
 // through `resumeFromCollege`.
-import { describe, it, expect } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import {
@@ -66,6 +66,17 @@ import { WEEKS_PER_YEAR } from '../src/engine/season/calendar'
 import { resumeMain, type Rng } from '../src/engine/rng'
 import { blockingOverlay } from '../src/composables/blockingOverlay'
 import { DEFAULT_PROFILE, STOP_PRECEDENCE, type StopReason } from '../src/shared/protocol'
+
+// ⚠⚠ THE UNIT PROJECT'S CEILING IS 20s AND THIS FILE WALKS CAREERS, WHICH IS THE ARITHMETIC ROUND 26
+// #16 IS ABOUT. Measured on an idle machine, 26.08: the whole file is 52s and its slowest single case
+// is **8.3s** (`her FIRST college birthday asks for the bicycle` – three careers, each ticked sixty
+// weeks, through the fork, the September gap and four college years with every championship and cake
+// answered). CI's runner is a 2-core box measured at 4-5x this machine, so 8.3s becomes **33-42s** and
+// the 20s project ceiling fails a test that is not slow, only starved – the exact failure
+// `vite.config.ts`'s own 20s note diagnoses one layer down. 120s is far above 42s and still low enough
+// to catch a genuine hang, which is the only thing a timeout is for. The three cases that were already
+// at 6.6-7.3s before this round were inside the same hazard and are covered by the same line.
+vi.setConfig({ testTimeout: 120_000 })
 
 /** ⭐⭐⭐ ROUND 26 #6 RE-AIM – THE PRESS THAT ANSWERS THE CHAMPIONSHIP. `resumeFromCollege` now
  *  PAUSES on the College League week the way it pauses on her birthday, because the owner's
@@ -497,6 +508,10 @@ describe('a v56 save migrated mid-college is not retro-asked and not retro-bille
 describe('ROUND 26 #4 – a college wish may not assume a wallet she has not got', () => {
   const FARES = 'She has been looking up fares home at two in the morning and booking none.'
   const NO_FARES = 'The journey home is four hundred miles and she has never once asked us to book it.'
+  /** ⭐ ROUND 26 #4, SECOND PASS – the bicycle's own wish, and the one it replaced. Both are literals
+   *  on purpose: the second exists so the assertions can tell them apart. */
+  const BIKE_ASK = 'Everyone there has a bicycle. She walks, and she has mentioned it twice.'
+  const OLD_BIKE_ASK = 'She has counted the minutes she spends walking between buildings. It is a lot.'
 
   /** Every college birthday of one career, rendered, with the household wallet forced on the day. */
   function collegeBirthdays(seed: string, walletCents: number, kidCents: number) {
@@ -630,5 +645,84 @@ describe('ROUND 26 #4 – a college wish may not assume a wallet she has not got
     expect(rendered.map((r) => r.ask)).not.toContain(FARES)
     // ...and the bicycle she is offered, where she is offered one, is the campus bicycle
     for (const r of rendered) expect(r.ids, `year ${r.year}, age ${r.age}`).not.toContain('bicycle')
+  })
+
+  // ===============================================================================================
+  // ⭐⭐⭐⭐ ROUND 26 #4, SECOND PASS – THE WISH BESIDE THE BICYCLE IS ABOUT THE BICYCLE
+  // ===============================================================================================
+  //
+  // The owner, correcting the first pass:
+  //
+  //   «надо переписать значит саму фразу для велосипеда для соответствия ее пожеланиям и достаток
+  //    здесь вообще не при чем. У меня нет проблем с велосипедом, может быть это должна быть как раз
+  //    просьба на первый ДР во время учебы вообще.»
+  //
+  // ⚠⚠ WHAT THE FIRST PASS GOT WRONG, AND IT WAS NOT THE MEANS LICENCE. He read a dialog whose ask
+  // was `flighthome`'s fares line with the bicycle sitting in the options, and read the two as a
+  // PAIR – a girl who cannot afford a train ticket, offered a bike. The licence fixed the half that
+  // was visible (a hardship sentence printed over a $584,375 wallet, which the cases above still
+  // hold) and left the half he was pointing at: **the bicycle had no wish of its own.** Its ask
+  // hooked on "minutes" and never said the word.
+  //
+  // ⚠ SO THE FIX IS COPY AND PLACEMENT, AND THE MEANS PREDICATE IS NOT INVOLVED. «достаток здесь
+  // вообще не при чем»: this row carries no `means` and must not grow one. The last case in this
+  // block is that stated mechanically over the whole catalogue.
+  it('⭐⭐⭐⭐ her FIRST college birthday asks for the bicycle, in the bicycle\'s own words', () => {
+    for (const seed of ['means-college-a', 'means-college-b', 'means-college-c']) {
+      const prompts = collegeBirthdays(seed, 584_375_00, 59_220_00)
+      expect(prompts.length, `${seed}: four college birthdays`).toBe(4)
+      const first = prompts[0]
+      expect(first.ids, `${seed}: and the bicycle is one of the four she can be given`).toContain('campusbike')
+      expect(first.ask, `${seed}: the wish is the bicycle's`).toBe(BIKE_ASK)
+      // ⚠ AND IT IS ABOUT THE BICYCLE, WHICH IS THE WHOLE INSTRUCTION. The old line never said the
+      // word; a rewrite that stayed about walking would pass an equality check on a new literal and
+      // still be the sentence he objected to.
+      expect(first.ask.toLowerCase(), `${seed}: it names the thing`).toContain('bicycle')
+      expect(first.ask, `${seed}: and it is not the line it replaces`).not.toBe(OLD_BIKE_ASK)
+    }
+  })
+
+  it('⭐⭐⭐ the wallet does not touch it – the same first wish at $1,200 and at $643,595', () => {
+    // ⚠⚠ «достаток здесь вообще не при чем», as a measurement. The two arms differ by a factor of
+    // five hundred and the sentence is identical, which is what "this row makes no money claim"
+    // means when a means licence exists one row along and really does move `flighthome`'s words.
+    for (const seed of ['means-college-a', 'means-college-b']) {
+      const rich = collegeBirthdays(seed, 584_375_00, 59_220_00)[0]
+      const poor = collegeBirthdays(seed, 1_200_00, 0)[0]
+      expect(poor.ask, `${seed}: the bicycle wish is means-blind`).toBe(rich.ask)
+      expect(poor.ask).toBe(BIKE_ASK)
+    }
+  })
+
+  it('⚠ and the four college birthdays are still four DIFFERENT dialogs', () => {
+    // ⚠ ROUND 26 #9b's CLAIM, RE-MEASURED AFTER THE WALK WAS RE-INDEXED. Pinning the bicycle to the
+    // first birthday meant rotating the college cycle so entry 0 carries it and walking by COLLEGE
+    // BIRTHDAY instead of by her age – a rotation of a four-cycle is still a four-cycle, and this is
+    // that argument checked rather than asserted.
+    for (const seed of ['means-college-a', 'means-college-b', 'means-college-c']) {
+      const prompts = collegeBirthdays(seed, 584_375_00, 59_220_00)
+      const dialogs = prompts.map((p) => [...p.ids].sort().join('|'))
+      expect(new Set(dialogs).size, `${seed}: ${dialogs.join('  ·  ')}`).toBe(4)
+      // ...and no two CONSECUTIVE ones are the same, which is the figure the round reports as 0%.
+      for (let i = 1; i < dialogs.length; i++) {
+        expect(dialogs[i], `${seed}: birthday ${i + 1} repeats birthday ${i}`).not.toBe(dialogs[i - 1])
+      }
+    }
+  })
+
+  it('⚠⚠ the means predicate still carries the rows that DO claim hardship, and not this one', () => {
+    // ⚠ «достаток здесь вообще не при чем» is about ONE row. The licence stays where it was earned:
+    // `flighthome` and `books` really do make a money claim in their default words and really do
+    // carry an alternative for a family the claim is false of. A pass that deleted the machinery
+    // would have thrown that away with it.
+    const byId = new Map(BIRTHDAY_COLLEGE_BAND.gifts.map((g) => [g.id, g]))
+    expect(byId.get('flighthome')?.means, 'the fares line is still licensed').toBe('hardship')
+    expect(byId.get('books')?.means, 'and so is the reading list').toBe('hardship')
+    expect(byId.get('flighthome')?.unlicensed?.ask, 'with the sentence for when it does not hold').toBeTruthy()
+    expect(byId.get('books')?.unlicensed?.ask).toBeTruthy()
+    // ...and the bicycle makes no claim about money at all, in any of its four strings.
+    const bike = byId.get('campusbike')!
+    expect(bike.means, 'the bicycle asks nothing about the wallet').toBeUndefined()
+    expect(bike.unlicensed, 'so it needs no second wording').toBeUndefined()
   })
 })

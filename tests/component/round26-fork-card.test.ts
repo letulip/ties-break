@@ -7,10 +7,14 @@
 //      Round 24 gave the dead rung a reason and he asked the same question a second time, which is
 //      the tell that a reason is not yet an explanation. The shipped line was «The in-state price is
 //      only for residents of the state, and she is not one»: a rule and its conclusion, with the
-//      premise missing. THE FACT IS TRUE OF HER – the save he sent carries `profile.country = 'AU'`
-//      and `tierShutFor('state', 'AU')` is `not-a-resident` – and it was nowhere on the screen.
-//      Nothing anywhere in the game prints what it thinks her residence is, so the sentence could
-//      not be agreed with, disagreed with, or acted on.
+//      premise missing. THE FACT WAS TRUE OF HER – the save he sent carries `profile.country = 'AU'`
+//      – and it was nowhere on the screen.
+//      ⭐⭐⭐⭐ AND THEN HE OVERRULED THE RULE, NOT THE SENTENCE: «по-моему в каждой стране есть
+//      домашний универ». So block 1 of this file no longer measures the refusal's WORDS – there is no
+//      refusal. It measures the thing that replaced them, on her own career: three pressable rows and
+//      the home place on the button. The block 1 that stood here (the plaque naming Australia, the
+//      country varying by career, the American control drawing none) is described inside it, because
+//      a re-aim is only honest if the reader can see what was traded.
 //
 //   #3a – «Что значит Top 100 for 74 in 100 в строке университета?» The row stated a measured count
 //      of careers in a frame with no verb in it: a label, then two numbers. Same figure, said in
@@ -34,13 +38,7 @@ import '../../src/style.css'
 import { useGameStore } from '../../src/stores/game'
 import { assertDismissReachable, measureDialog, setViewport, NARROW_PHONE, PHONE } from './fits'
 import { createWorld, measureCollegeOffer, toSnapshot } from '../../src/engine/world'
-import {
-  COLLEGE_SHUT_DETAIL,
-  COLLEGE_TIER_NAME,
-  COLLEGE_TIER_ODDS,
-  COLLEGE_TIER_ORDER,
-  tierShutFor,
-} from '../../src/engine/collegeOffer'
+import { COLLEGE_TIER_NAME, COLLEGE_TIER_ODDS, COLLEGE_TIER_ORDER } from '../../src/engine/collegeOffer'
 import { COUNTRY_NAMES } from '../../src/composables/countries'
 import { DEFAULT_PROFILE } from '../../src/shared/protocol'
 import type { WorldState } from '../../src/engine/world'
@@ -50,9 +48,12 @@ import type { WorldState } from '../../src/engine/world'
  *  save carries as `AU`. Everything else here is a fresh world. */
 const ALICE_COUNTRY = 'AU'
 
-/** the round-24 sentence, kept as a literal for one purpose: proving the new assertions can tell the
- *  two apart. A guard that passes on the line it replaced is not a guard. */
+/** ⚠ THE TWO SENTENCES THIS CARD HAS ALREADY PRINTED HER, kept as literals for one purpose: a card
+ *  that has quietly kept either of them must fail. Round 24's stated the rule's conclusion; round
+ *  26's first pass named the fact under it. Both are refusals of a place the owner has since ruled is
+ *  hers, so neither may appear anywhere on the screen. */
 const ROUND_24_LINE = 'The in-state price is only for residents of the state, and she is not one.'
+const ROUND_26_FIRST_PASS_FRAGMENT = 'only for residents of a US state'
 
 function atTheFork(seed: string, country: string): WorldState {
   const world = createWorld(seed, { ...DEFAULT_PROFILE, country })
@@ -68,58 +69,77 @@ function mountFor(world: WorldState, attach = false) {
 }
 
 // =================================================================================================
-// 1. ⭐⭐⭐ #2 – THE REFUSAL NAMES THE FACT, ON HER OWN CAREER
+// 1. ⭐⭐⭐⭐ #2, SECOND PASS – HER OWN CAREER REACHES THE PLACE AT HOME
 // =================================================================================================
-describe('⭐⭐⭐ round 26 #2 – the shut rung says what the game thinks her residence IS', () => {
+//
+// WHAT THIS BLOCK USED TO ASSERT, and it was right about a rule that no longer exists: that the
+// refused row on an `AU` career carried `COLLEGE_SHUT_DETAIL['not-a-resident']('Australia')` word for
+// word, that the noun varied by career rather than being hard-coded, and that a US career drew no
+// refusal at all. It shipped on 25.08 and the owner read the report and answered «по-моему в каждой
+// стране есть домашний универ» – he is overruling the RULE. So the same career, the same mount, the
+// opposite verdict.
+describe('⭐⭐⭐⭐ round 26 #2 – Alice can take the university at home', () => {
   beforeEach(() => {
     setActivePinia(createPinia())
     document.body.innerHTML = ''
   })
 
-  // ⭐⭐⭐ THE CASE THE COMPLAINT IS ABOUT, at her own country rather than at a stand-in.
-  it('⭐⭐⭐ names Australia on the row it refuses, in the engine\'s own sentence', () => {
+  // ⭐⭐⭐⭐ THE CASE THE COMPLAINT IS ABOUT, at her own country rather than at a stand-in.
+  it('⭐⭐⭐⭐ draws the home place live on an AU career, and the button takes it', () => {
     const world = atTheFork('r26-2-alice', ALICE_COUNTRY)
-    expect(world.fork!.offer!.quotes[0], 'the cheapest place really is shut for her').toMatchObject({
-      tier: 'state',
-      open: false,
-    })
+    expect(world.fork!.offer!.quotes[0].tier, 'the cheapest place is the one at home').toBe('state')
     const w = mountFor(world)
-    const plaque = w.findAll('.fork-place')[0].find('.fork-place-refusal')
-    expect(plaque.exists(), 'a refused row is never silent').toBe(true)
+    const first = w.findAll('.fork-place')[0]
+    expect(first.text(), 'and it is named as such').toContain(COLLEGE_TIER_NAME.state)
+    expect(first.attributes('disabled'), 'pressable, at last').toBeUndefined()
+    expect(first.classes(), 'and not faded').not.toContain('is-shut')
+    expect(w.findAll('.fork-answer')[1].text(), 'the button takes it by default').toContain(
+      COLLEGE_TIER_NAME.state,
+    )
 
-    // the words are the ENGINE'S, resolved with the name the CARD resolves
-    expect(plaque.text()).toBe(COLLEGE_SHUT_DETAIL['not-a-resident'](COUNTRY_NAMES[ALICE_COUNTRY]))
-    // ...and the fact is legible without a glossary
-    expect(plaque.text(), 'the fact, in words').toContain('Australia')
-    expect(plaque.text(), 'and the rule she fails').toContain('US state')
-
-    // ⚠⚠ MUTATION ARM, INLINE. The three assertions above have to be able to tell the new sentence
-    // from the one the owner already read twice – otherwise this file green-lights round 24 again.
-    expect(ROUND_24_LINE, 'the old line names no fact').not.toContain('Australia')
-    expect(plaque.text(), 'and the card is not still printing it').not.toBe(ROUND_24_LINE)
-    expect(plaque.text(), 'nor its conclusion-only clause').not.toContain('she is not one')
+    // ⚠⚠ MUTATION ARM, INLINE, AND IT IS THE ONE THAT MATTERS ON A REOPENED ITEM: neither sentence he
+    // has already been shown may survive anywhere on this card. A build that kept the plaque and
+    // merely enabled the button would pass the four lines above and fail these three.
+    const card = w.text()
+    expect(card, 'round 24\'s conclusion-only line is gone').not.toContain(ROUND_24_LINE)
+    expect(card, 'and so is round 26\'s first pass').not.toContain(ROUND_26_FIRST_PASS_FRAGMENT)
+    expect(w.findAll('.fork-place-refusal'), 'no refusal of any wording').toHaveLength(0)
     w.unmount()
   })
 
-  // ⚠⚠ THE NOUN IS HER CAREER'S, NOT A CONSTANT. A card that hard-coded one country would pass the
-  // case above and fail this one – which is the whole difference between a fact and a decoration.
-  it('⚠⚠ a different career draws a different country, and an American draws no refusal at all', () => {
-    for (const country of ['AU', 'CZ', 'BR']) {
+  // ⚠⚠ AND IT IS NOT A SPECIAL CASE FOR AUSTRALIA. The old block's anti-vacuity half asked whether
+  // the noun varied by career; this one asks whether the RULE does – it must not, in either
+  // direction. Four passports from four continents plus the US control, all drawing the same card.
+  it('⚠⚠ every passport draws the same three live rows, US included', () => {
+    for (const country of ['AU', 'CZ', 'BR', 'JP', 'US']) {
       const w = mountFor(atTheFork(`r26-2-varies-${country}`, country))
-      const plaque = w.findAll('.fork-place')[0].find('.fork-place-refusal')
-      expect(plaque.text(), `${country}: its own home`).toContain(COUNTRY_NAMES[country])
-      for (const other of ['AU', 'CZ', 'BR'].filter((c) => c !== country)) {
-        expect(plaque.text(), `${country}: and nobody else's`).not.toContain(COUNTRY_NAMES[other])
-      }
+      expect(w.findAll('.fork-place[disabled]'), `${country}: nothing dead`).toHaveLength(0)
+      expect(w.findAll('.fork-place-refusal'), `${country}: nothing to explain`).toHaveLength(0)
+      expect(w.findAll('.fork-place')[0].text(), `${country}: the home place is first`).toContain(
+        COLLEGE_TIER_NAME.state,
+      )
+      // ⚠ AND NO CARD NAMES A COUNTRY AT ALL ANY MORE. The refusal was the only line that did, so a
+      // build still resolving `COUNTRY_NAMES` into this card is one still explaining something.
+      expect(w.text(), `${country}: the card no longer needs her passport`).not.toContain(COUNTRY_NAMES[country])
       w.unmount()
     }
-    // ⚠ THE ANTI-VACUITY HALF: the rung is REACHABLE, so this is a fact about her career and not a
-    // dead row wearing a reason. An American career draws three live places and explains nothing.
-    const home = mountFor(atTheFork('r26-2-home', 'US'))
-    expect(tierShutFor('state', 'US'), 'the in-state place is open to a US career').toBeNull()
-    expect(home.findAll('.fork-place-refusal'), 'so there is nothing to explain').toHaveLength(0)
-    expect(home.findAll('.fork-place[disabled]')).toHaveLength(0)
-    home.unmount()
+  })
+
+  // ⭐⭐ THE CAPTIONS THEMSELVES, WHICH HAD TO STOP BEING US-SHAPED. «A university out of state» was
+  // the sourced reason the second price was higher, and the source was the rule he deleted.
+  it('⭐⭐ the ladder reads home / away / private, with no US vocabulary left on it', () => {
+    const w = mountFor(atTheFork('r26-2-captions', ALICE_COUNTRY))
+    const names = w.findAll('.fork-place-head strong').map((n) => n.text())
+    expect(names).toEqual([COLLEGE_TIER_NAME.state, COLLEGE_TIER_NAME.national, COLLEGE_TIER_NAME.private])
+    expect(names[0], 'the place at home').toBe('The university at home')
+    expect(names[1], 'and the one she has to move for').toBe('A university away from home')
+    // ⚠ THE WHOLE BLOCK, not just the captions: "in-state" and "out of state" are administrative
+    // vocabulary a family in Osaka cannot read, and neither may appear anywhere in it.
+    const block = w.find('.fork-places-block').text().toLowerCase()
+    for (const jargon of ['in-state', 'out of state', 'out-of-state', 'resident']) {
+      expect(block, `no US vocabulary ("${jargon}")`).not.toContain(jargon)
+    }
+    w.unmount()
   })
 })
 
@@ -198,8 +218,11 @@ describe('⭐⭐ the card carries the longer copy and the way out is still reach
     const w = mountFor(atTheFork(`r26-fit-${country}-${vp.width}`, country), true)
     const card = document.querySelector('.fork-card')!
     const dismiss = document.querySelector('.fork-answers')!
-    // ⚠ NOTHING HERE IS VACUOUS: the long refusal and the long odds line are both on the card.
-    expect(document.querySelector('.fork-place-refusal')!.textContent).toContain(COUNTRY_NAMES[country])
+    // ⚠ NOTHING HERE IS VACUOUS: all three rows and the long odds line are on the card. The refusal
+    // used to be the third thing named here and it is gone (round 26 #2, second pass) – so the card
+    // being measured is now SHORTER by one wrapped sentence, which makes the fit claim easier and the
+    // mutation arm below the thing that keeps it honest.
+    expect(document.querySelectorAll('.fork-place')).toHaveLength(3)
     expect(document.querySelector('.fork-places')!.textContent).toContain('in 100 reach the world top 100')
     expect(dismiss.lastElementChild?.textContent).toContain('Stop here')
     return { w, card, dismiss }
