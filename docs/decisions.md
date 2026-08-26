@@ -3,7 +3,7 @@ type: decision-log
 status: current
 area: governance
 canonical: true
-last-reviewed: 2026-08-05
+last-reviewed: 2026-08-26
 ---
 
 # Design decisions log
@@ -21,7 +21,7 @@ Owner decisions, newest last. Working agreements – revisit explicitly, don't s
 
 ## Where the current answer lives
 
-**Generated** by `npm run decisions` from the headings below – 60 dated entries, newest 2026-08-23. Do not hand-edit this block; `npm run decisions:check` fails when it is stale.
+**Generated** by `npm run decisions` from the headings below – 61 dated entries, newest 2026-08-26. Do not hand-edit this block; `npm run decisions:check` fails when it is stale.
 
 This is a ROUTE, not a ruling. "Current" means the newest entry in that area – open it and read the
 entry itself, which is the record. An entry can revise part of an earlier one without replacing it,
@@ -33,7 +33,7 @@ the owner made. Nothing below the block has been edited: the archive is append-o
 | age-and-eligibility | 4 | [⭐⭐ THE AGE-ELIGIBILITY RULE BINDS THE FIELD, NOT THE KID ALONE](#19082026---the-age-eligibility-rule-binds-the-field-not-the-kid-alone-waveround22) | 2026-08-19 |
 | calendar-and-season | 3 | [Empty weeks are a number, not a gate; and two constants stop deciding for two others](#2026-08-16--empty-weeks-are-a-number-not-a-gate-and-two-constants-stop-deciding-for-two-others-waveround21) | 2026-08-16 |
 | coach-and-staff | 3 | [A 25k family that buys a high coach should go broke; the tripwire moves cell](#2026-08-10--a-25k-family-that-buys-a-high-coach-should-go-broke-the-tripwire-moves-cell-fixreach-fixture) | 2026-08-10 |
-| college | 12 | [THE ACADEMIC YEAR: ASK, HOLD, DEPART](#22082026--the-academic-year-ask-hold-depart-waveround24-schema-v58) | 2026-08-22 |
+| college | 13 | [ROUND 26: HIS RULINGS FROM FOUR YEARS OF COLLEGE PLAYED THROUGH](#2426082026--round-26-his-rulings-from-four-years-of-college-played-through-wavereview-intake-schema-v59--v61) | 2026-08-26 |
 | economy-and-money | 4 | [THE TEAM'S SHARE OF THE PRIZE MONEY](#22082026--the-teams-share-of-the-prize-money-waveround25-no-schema-move) | 2026-08-22 |
 | injury-and-condition | 3 | [RECOVERY VARIANT C: THE PRO TOUR GRINDS HARDER, JUNIORS UNTOUCHED](#22082026--recovery-variant-c-the-pro-tour-grinds-harder-juniors-untouched) | 2026-08-22 |
 | kid-life-and-school | 1 | [School ends, and "training doubles" did not survive the check](#2026-08-05--school-ends-and-training-doubles-did-not-survive-the-check-featschool-ends-at-18) | 2026-08-05 |
@@ -2589,3 +2589,48 @@ before verdicts (tuition typed as income; the injury dialog reading English pros
 owner's own built second act and the private-life build, R2-16 adopted as E1's design under the
 standing pause, protective coach-locks refused again. The `review-intake` skill records the
 procedure. Nothing launches before the owner's approve.
+
+## 24–26.08.2026 – ROUND 26: HIS RULINGS FROM FOUR YEARS OF COLLEGE PLAYED THROUGH (`wave/review-intake`, schema v59 → v61)
+
+⚠ **CAUGHT AS AN ORPHAN 26.08** – this log ran to 23.08 while round 26 shipped and merged
+([#106](https://github.com/letulip/ties-break/pull/106)). Six rulings were live only in the round
+ledger. Recorded here in his own words, as the chronicle requires.
+
+**1. The four-week pill is a bad control unless it is rare** – «сделать ее во-первых слева от
+основной, а во-вторых по условию, появляться она должна на тех моментах, где либо в календаре нет ни
+одного события в ближайшие 5 недель, либо у нее травма на 5+ недель… Иначе это совершенно дурной
+элемент управления получается, с которым пропускается всё, а еще и прямо под пальцем.» Built as
+`spanWorthOffering`. ⚠ His «no event at all» read literally would have fired **0 times in 900 weeks**
+(the tour always runs something), so it is «nothing on HER calendar» – the same function that draws
+the calendar's marks. Old gate true on 98% of weeks, his on 2.4%.
+
+**2. Every country has a home university** – «по-моему в каждой стране есть домашний универ». The
+rule that shut a place by nationality is DELETED (v61 removes the persisted `open` field rather than
+pinning it true). Australian family: median balance $25,062 → $5,398, ruined 30% → 19%, graduating
+70% → 81%; the American control byte-identical. ⚠ The rule that PRICES a place by country was not
+touched and still lives – see [geography-and-country.md](backlog/geography-and-country.md).
+
+**3. A wish must be the girl's, not the wallet's** – «надо переписать значит саму фразу для
+велосипеда для соответствия ее пожеланиям и достаток здесь вообще не при чем… может быть это должна
+быть как раз просьба на первый ДР во время учебы вообще». The bicycle line is rewritten as her own
+wish, family means removed from it, and it is attached to her FIRST birthday in college.
+
+**4. The world must live while she studies** – «у меня в ленте предпоследняя новость были из мира "до
+колледжа" на протяжении всей учебы… Вот я бы хотел, чтобы "мир жил" и пока она в колледже, пусть и
+сжато». One compressed line per rest week, written AT that week so recency is structural. States with
+no living world: 9 of 48 → 0.
+
+**5. «Banked» becomes two labels by sign** – his «про "Banked" на отрицательной дельте я не очень
+понял что это». Spent when the delta is negative, Banked when positive.
+
+**6. Geography goes to the backlog at low priority** (26.08) – «Заведи географию в бэклог с низким
+приоритетом пожалуйста», given after being shown that the country choice already prices the college
+bill (the US-only need layer) and opens home wild cards, and says so on no screen.
+
+**7. The injury dose stays as it is until he has played it** – «дозу травм… оставляем пока такой на
+тест, но вопрос еще актуален, мне надо поиграть». ⚠ Round 26 then found the acceptance band had been
+re-aimed to 30–54% on 04.08 and today reads 71%; nothing moves under a live dose test. See
+[injuries-gear-and-open-bugs.md](backlog/injuries-gear-and-open-bugs.md).
+
+---
+

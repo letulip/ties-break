@@ -3,7 +3,7 @@ type: plan
 status: draft
 area: engine
 canonical: false
-last-reviewed: 2026-08-22
+last-reviewed: 2026-08-26
 ---
 
 # The body, the gear, and the two bugs nobody has reproduced
@@ -19,3 +19,4 @@ two defects that need a repro before a fix.
 | 4 | **«Training week» printed over a tournament week** (round 15 #13) – condition 100 → 34 with no tournament screen. Unfixed AND unexplained: the ledger's 13.08 re-check corrected the original diagnosis (the entry-filter mechanism does not obviously reproduce it) and no repro was ever taken. A repro is the whole first step. | [round-15.md](../rounds/round-15.md) #13 | a reproduction | S (once reproduced) | Next |
 | 5 | **The intermittently empty W-card chance field** (round 16 #6) – not reproduced on the owner's own save (118 future W events all render). Parked as no-repro; stays here so the next sighting has a file to land in. | [round-16.md](../rounds/round-16.md) #6; [AUDIT-2026-08.md](../rounds/AUDIT-2026-08.md) | a second sighting | S | Parked |
 | 6 | **Injury suspends sponsor perks** – from the 25.07 research: a heavy injury pausing contract perks needs contract-shaped sponsorship, which the brand ladder now IS. The old blocker has quietly expired; needs a re-read, then a ruling («мы ни за что не наказываем» cuts close here). | [season-life-future.md](season-life-future.md) §2 (injury → sponsor loss) | owner's word – it borders on a punishment | M | Next |
+| 7 | **The season injury prevalence is 17 points over its own band, and nine of them are unauthored** – round 26 14b, once `pro-season-probe` could see the retirement door at all. The target is the PROFESSIONAL band **30–54%** (re-aimed 04.08 from the junior 46–54%, a correction I initially missed); today reads **71%**. Of the gap the retirement door (shipped 10.08, never measured) is ~11 points, and the weekly door drifted **51% → 60%** on its own – those nine are the thing to chase FIRST, because a knob re-derived over an unexplained drift bakes the drift in. ⚠ Nothing moves while he is playing the K=8/F=0.3 dose | [round-26.md](../rounds/round-26.md) 14b, [fatigue-reprice](../specs/fatigue-reprice-2026-08.md) §6.4 | his play, then his ruling – §7 reserves the professional week's price to him | M | Next |

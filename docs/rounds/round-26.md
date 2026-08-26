@@ -118,7 +118,6 @@ clock he suspects from three directions.
   because it folds only the college tier table. Re-running the probe is a five-minute job that
   nobody is currently on the hook for.
 
-- [ ] **4. «Очень странное пожелание на день рождения She was looking fares home at two in the
 - [x] **4. «Очень странное пожелание на день рождения She was looking fares home at two in the
   morning для студентки с кошельком 500к+ с предложением подарить велосипед.»** – the wish pool
   assumes a poor family. Her wallet is $500k+. **build**: wishes must read the family's means (and
@@ -157,7 +156,6 @@ clock he suspects from three directions.
 
   Spec: `docs/specs/birthday-and-gifts.md` §9. No schema move.
 
-- [ ] **5. «Проверь пожалуйста что со всех выигрышей после своего счета в банке в 18 лет она
 - [x] **5. «Проверь пожалуйста что со всех выигрышей после своего счета в банке в 18 лет она
   получает свои отчисления и неплохо бы об этом где-то игроку сообщать, кстати»** – **5a measure**:
   verify the 18+ share fires on EVERY prize cheque in a real career. **5b build**: it is invisible –
@@ -291,7 +289,6 @@ clock he suspects from three directions.
   the rows, one for the ask). `tests/condition.test.ts` green, **41550 / `e6b0c709`**, unchanged. No
   persisted state, so **no schema move**. Spec: `docs/specs/birthday-and-gifts.md` §10.
 
-- [ ] **10. «В новостях во время колледжа вообще пустота, как будто мир умер, мы вроде делали, чтобы
 - [x] **10. «В новостях во время колледжа вообще пустота, как будто мир умер, мы вроде делали, чтобы
   он жил, при том, что даже в highlights на результатах есть какие-то события»** – the world runs
   during the freeze (rivals age, retire, win) and the feed says nothing. **build**.
@@ -758,8 +755,16 @@ a repeat, and the record has to show the first fix missing.
   (`ladder.ts:688`). Both are real and neither is on any screen: **backlog, not a defect** – the
   onboarding country step still says nothing about either.
 
-- [ ] **16. «test-build падает на гите»** – **build/diagnose**: CI is red and the local gate is
+- [x] **16. «test-build падает на гите»** – **build/diagnose**: CI is red and the local gate is
   green, so the difference is the runner. Reproduce before guessing.
+  · **REPRODUCED, AND IT WAS DETERMINISTIC RATHER THAN FLAKY.** `round26-money-share.test.ts` had
+  cases landing at 4.5-4.7 s against vitest's 5 s default, on a runner 4-5x slower than this Mac -
+  so the case did not «sometimes» miss the ceiling, it always did. Ceilings raised to 30 s with the
+  arithmetic written above them, and the whole component project was swept for the same shape: the
+  slowest survivor is 1.4 s. Independently confirmed by agent R26-F.
+  · ⚠ **AND THE SAME JOB CAME BACK TWICE MORE, for two different reasons** - the birpc stall and
+  then the seven minutes my own fix for it cost him. Both are #18 below; this item is the timeout
+  ceilings only.
 
 - [x] **18 (his, 26.08, watching the PR). «test-build висит уже 19 минут… он всё-таки собрался за 21
   минуту, но это мне кажется очень долго тем не менее»** – both halves are right, and the second half

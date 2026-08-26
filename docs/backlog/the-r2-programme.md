@@ -3,7 +3,7 @@ type: plan
 status: draft
 area: project-review
 canonical: false
-last-reviewed: 2026-08-23
+last-reviewed: 2026-08-26
 ---
 
 # The R2 programme – the accepted set from the full-project review
@@ -22,9 +22,9 @@ R2-18's stage predicate. The status note that is the record is the 13-response's
 
 | what | where specified | blocked by | size | state |
 | --- | --- | --- | --- | --- |
-| **R2-06 engine→viz direction** – wave B's one unstarted item. Verified still live 24.08: `engine/match/rally.ts`, `serveSpeed.ts` and `matchStats.ts` import `viz/types` and `viz/matchClock`, and no architecture guard exists. Inventory first, then neutral contracts or a move under `viz/match`, then the guard | [07-roadmap](../review-principles-2026-08-23/07-proposals-and-roadmap.md) R2-06 | nothing – it is an inventory | M | Next |
-| Волна C: protocol split (R2-09) · state/phases (R2-10) · UI owners (R2-11) · pin ratchet (R2-12), one PR each | 07-roadmap R2-09..12 + TOK-02/03/05/09 | – | L | Next – ⚙ **in flight, wave C** for R2-09, R2-11 and R2-12; **R2-10 (persisted schema + weekly phases) has no executor** and is the piece of C nobody is holding |
-| Волна D: multi-week advance (R2-13) | 07-roadmap | – | M | Next – ⚙ in flight, wave D |
+| ~~**R2-06 engine→viz direction**~~ – **SHIPPED, verified in `main` 26.08.** The match types moved to `src/shared/matchViz.ts` and ZERO import statements from `viz` remain in `src/engine`; the guard exists. ⚠ This row said «verified still live 24.08» and was overtaken by `2bfcfc3`/`f784351`/`e57cb44` two days later | [07-roadmap](../review-principles-2026-08-23/07-proposals-and-roadmap.md) R2-06 | – | M | **Done** |
+| ~~Волна C: protocol split (R2-09) · state/phases (R2-10) · UI owners (R2-11) · pin ratchet (R2-12)~~ – **ALL FOUR SHIPPED, verified in `main` 26.08.** `src/shared/protocol.ts` is a 228-line barrel over 10 modules; the five weekly phases are `src/engine/world/phase*.ts` with state in `world/state.ts`; `MatchViewer.vue` has one clock and one audio owner; `scripts/pin-ratchet.mjs` runs inside `check` as `pins:check`. ⚠ R2-10 was recorded here as «no executor, the piece of C nobody is holding» – it was built the same week | 07-roadmap R2-09..12 + TOK-02/03/05/09 | – | L | **Done** |
+| ~~Волна D: multi-week advance (R2-13)~~ – **SHIPPED**, `src/engine/world/multiWeek.ts` including the offer stop (`01a240d`). Round 26 #1 then re-gated the button to his own condition (`spanWorthOffering`: a clear calendar for 5 weeks, or a layoff of 5+). ⚠ The «next decision» half was phase 2 and is now covered by that gate | 07-roadmap | – | M | **Done** |
 | Reasonable-player corridor standardised (R2-14) | injury-landscape spec (his-cadence) | next bench run | S | Next |
 | R2-16 = E1's design (derived preference, parent responds) | 13-response | private-life steps 1–2 (owner's pause) | M | Parked |
 | Wave-5 hygiene list | 07-roadmap wave 5 | волны A–C | rolling | Later |

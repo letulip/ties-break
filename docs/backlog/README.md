@@ -3,7 +3,7 @@ type: index
 status: current
 area: backlog
 canonical: false
-last-reviewed: 2026-08-22
+last-reviewed: 2026-08-26
 ---
 
 # The backlog – every recorded piece of unbuilt work, indexed
@@ -49,16 +49,16 @@ the code on main, 23.08), and the engine's own «its own wave» comments.
 | file | what it holds |
 | --- | --- |
 | ⭐ [WHAT-IS-LEFT.md](WHAT-IS-LEFT.md) | **Read this one first.** The whole answer on one page, re-verified against the code 24.08: the R2 review's remainder item by item, the rounds' remainder by round, and everything else open – the five commissioned plans and the rulings queue. A mirror of the files below, not a second copy of them |
-| [the-r2-programme.md](the-r2-programme.md) | The accepted set from the full-project review – what wave A and wave B closed, what waves C and D are holding, and the two items nobody is on |
+| [the-r2-programme.md](the-r2-programme.md) | The accepted set from the full-project review – ⚠ **16 of 18 shipped as of 26.08**, waves A–D all landed; only R2-14 is unbuilt, and R2-16 is his own pause |
 | [college-the-remainder.md](college-the-remainder.md) | What round 24's college wave did not build: the re-entry screen, the freeze's refused controls, the between-year decisions, the portrait ART ORDER, the ranking price |
 | [the-private-life-layer.md](the-private-life-layer.md) | The largest unbuilt layer: steps 1–8 (spirit, the standing, the beats), the psychologist, form-and-slump, and everything paused against it |
 | [advertising-and-fame.md](advertising-and-fame.md) | The face-and-court plan's steps 3–6: fame, refusal, her own account, obligations – gated on the private life |
 | [the-team-around-her.md](the-team-around-her.md) | The coach's unbuilt job (training-dials §7–§8), «why pay a coach», the coach-edge re-measures, the staff share and masseur tunes |
 | [the-living-world.md](the-living-world.md) | The field's phase 2: the pro contour (aging, results that move), field-pro fatigue, the J universes, name pools, the champion news, the thin top of the ladder, the 14U event, weather |
-| [screens-and-cards.md](screens-and-cards.md) | Owner-asked surfaces nobody built: the in-tournament player card (the folder's oldest open item), the Team card, the Moments gallery, the per-card counter |
+| [screens-and-cards.md](screens-and-cards.md) | Owner-asked surfaces nobody built: the in-tournament player card (the folder's oldest open item), the Team card, the Moments gallery, the per-card counter, and the calendar's total silence about past matches (round 26) |
 | [modes-and-the-prologue.md](modes-and-the-prologue.md) | The childhood prologue 6→14, the «until the next decision» speed, truthful onboarding, mom/dad, the difficulty wrapper |
-| [injuries-gear-and-open-bugs.md](injuries-gear-and-open-bugs.md) | Kit wear on holiday (thrice asked), the recklessness-injury proposal with its numbers, post-return fragility, and the two no-repro defects |
-| [the-quality-rig.md](the-quality-rig.md) | The twelve a11y defects, Playwright S3's matrix/axe/publishing, P8's system back, P9's lint/coverage/release discipline, the round-22 spec gap, the wake lock |
+| [injuries-gear-and-open-bugs.md](injuries-gear-and-open-bugs.md) | Kit wear on holiday (thrice asked), the recklessness-injury proposal with its numbers, post-return fragility, the two no-repro defects, and round 26's finding that season prevalence sits 17 points over its own band |
+| [the-quality-rig.md](the-quality-rig.md) | The twelve a11y defects, Playwright S3's matrix/axe/publishing, P8's system back, P9's lint/coverage/release discipline, the round-22 spec gap, the wake lock – plus round 26's two: cutting the unit file that stalls CI, and the instrument-rot class nothing guards |
 | [the-git-reviewer.md](the-git-reviewer.md) | The owner's 23.08 ask: an assistant reviewing every change against the repo's own law – shaped here as a PR-level reviewer, with the decisions he owns |
 | [awaiting-his-word.md](awaiting-his-word.md) | The pure-ruling queue: the Slam label, the dormant HandoffView fields, the balance methodology – plus cross-references to every ruling parked inside a theme |
 | [the-shop-and-the-broker.md](the-shop-and-the-broker.md) | The owner's round-23 ask: assets, price drift and the elite broker – design intent for what money becomes once the tennis stops needing it |

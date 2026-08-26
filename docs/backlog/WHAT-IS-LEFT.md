@@ -3,7 +3,7 @@ type: index
 status: current
 area: backlog
 canonical: false
-last-reviewed: 2026-08-23
+last-reviewed: 2026-08-26
 ---
 
 # What is left – the whole answer, on one page
@@ -18,7 +18,7 @@ be wrong about themselves and are marked ⚠ where that happened.
 
 ---
 
-## 1. The R2 review's remainder – 8 of 18 items are genuinely left, and 4 of those are moving now
+## 1. The R2 review's remainder – 2 of 18 items are left, and one of those is his own pause
 
 Verdicts: [13-full-project-review-response](../review-codex/13-full-project-review-response-2026-08-23.md).
 Catalogue: [07-proposals-and-roadmap](../review-principles-2026-08-23/07-proposals-and-roadmap.md).
@@ -26,18 +26,29 @@ Programme rows: [the-r2-programme.md](the-r2-programme.md).
 
 | item | state | where it stands |
 | --- | --- | --- |
-| **R2-06 engine→viz direction** | **open, no executor** | `engine/match/rally.ts`, `serveSpeed.ts` and `matchStats.ts` still import `viz/types` and `viz/matchClock`; no architecture guard exists |
-| **R2-10 persisted schema + weekly phases** | **open, no executor** | the one piece of wave C nobody is holding – C's other three PRs are in flight and this is not |
-| **R2-14 reasonable-player arms** | **open** | DI2's his-cadence policy standardised into the bench suite, at the next bench run |
+| **R2-14 reasonable-player arms** | **open, no executor** | DI2's his-cadence policy standardised into the bench suite, at the next bench run – the only R2 item still unbuilt |
 | **R2-16 one adult decision hers** | **Parked – his pause** | accepted as E1's design; waits on private-life steps 1–2 by his own 22.08 word |
-| R2-09 protocol split | ⚙ in flight, wave C | one PR, agent C1 |
-| R2-11 UI state owners | ⚙ in flight, wave C | Calendar and MatchViewer, agent C2 |
-| R2-12 source/docs/tools lifecycle ratchet | ⚙ in flight, wave C | agent C3 |
-| R2-13 multi-week advance | ⚙ in flight, wave D | phase 1 (the four-week advance); the «next decision» half is phase 2 and waits on playtest |
 | Wave-5 hygiene list | Later | rolling, folded into [the-quality-rig.md](the-quality-rig.md) |
 
-**What closed the other ten** – eight shipped in waves A and B, two were superseded before they were
-built:
+⚠⚠ **THIS SECTION WAS WRONG ABOUT ITSELF UNTIL 26.08, AND IN THE DIRECTION THAT MATTERS – it listed
+work as unbuilt that had already shipped.** Its header said «8 of 18 left, 4 of those moving now»,
+its table carried four rows as «⚙ in flight» and two as «open, no executor». Re-verified against the
+CODE on 26.08, after waves C and D landed and round 26 merged: **six of those six are in `main`.** A
+sweep dated 24.08 was simply overtaken by the merges of 25–26.08 and nothing re-read it – the exact
+rot [doc-facts.mjs](../../scripts/doc-facts.mjs) owns for the two facts a machine can source, and
+cannot own for a table a person has to re-derive. Verified by file and by commit, not by document:
+
+| was listed as | actually | proof in `main` |
+| --- | --- | --- |
+| R2-06 «open, no executor» | **shipped** | the match types live in `src/shared/matchViz.ts`; **zero** import statements from `viz` remain anywhere in `src/engine` (`2bfcfc3`, `f784351`, `e57cb44`) |
+| R2-09 «⚙ in flight» | **shipped** | `src/shared/protocol.ts` is a 228-line barrel over 10 modules in `src/shared/protocol/` (`33d273c`) |
+| R2-10 «open, no executor» | **shipped** | the five weekly phases are `src/engine/world/phase{Obligations,Finance,HerWeek,Growth,AiWeek}.ts`; state is `src/engine/world/state.ts` (`6fce9e2`, `3fa188e`, `fe6fc98`, `e272c83`) |
+| R2-11 «⚙ in flight» | **shipped** | `MatchViewer.vue`: one clock, one audio owner, a prop-driven transport (`2b3878c` and two more) |
+| R2-12 «⚙ in flight» | **shipped** | `scripts/pin-ratchet.mjs` + `tools/generated/source-pin-baseline.json` + `tests/helpers/source.ts`, and `pins:check` is inside `npm run check` |
+| R2-13 «⚙ in flight» | **shipped** | `src/engine/world/multiWeek.ts`, incl. the offer stop (`01a240d`); round 26 #1 then re-gated its button to his condition (`spanWorthOffering`) |
+
+**What closed the other sixteen** – eight shipped in waves A and B, six more in waves C and D (the
+table directly above), and two were superseded before they were built:
 
 | item | closed by |
 | --- | --- |

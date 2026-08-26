@@ -3,7 +3,7 @@ type: plan
 status: current
 area: delivery
 canonical: true
-last-reviewed: 2026-08-23
+last-reviewed: 2026-08-26
 ---
 
 # Now / next / later
@@ -12,8 +12,9 @@ last-reviewed: 2026-08-23
 
 - **This is the only current delivery document.** The August [roadmap](plans/roadmap-2026-08.md) and
   [launch plan](plans/launch-plan-2026-08.md) are `superseded` and kept as history: they schedule
-  save-schema work in the v35–v39 range, and `SAVE_SCHEMA_VERSION` in `src/engine/world.ts` is long
-  past it. Take neither ordering nor state from them.
+  save-schema work in the v35–v39 range, and `SAVE_SCHEMA_VERSION` – which DECLARES itself in
+  `src/engine/world/state.ts` since the decomposition, re-exported through the `world` barrel – is
+  long past it (v61). Take neither ordering nor state from them.
 - **Nothing on this page is a new priority.** Every line is transcribed from [the owner's dated
   log](decisions.md) or from a [round ledger](rounds/README.md) and names its source. A line with no
   source does not belong here.
@@ -28,8 +29,13 @@ last-reviewed: 2026-08-23
 ⚙ THE LIVE WAVE IS ROUND 26 – this line is machine-checked against the newest ledger in
 `docs/rounds/` by `scripts/doc-facts.mjs`; edit the number only by shipping a ledger.
 
-**Round 26 is open** – [round-26.md](rounds/round-26.md), thirteen college observations from a
-career played through all four years, captured 24.08 before triage. Three of them are REOPENED.
+**Round 26 has LANDED** – [round-26.md](rounds/round-26.md), merged 26.08 as
+[#106](https://github.com/letulip/ties-break/pull/106). Thirteen college observations from a career
+played through all four years, captured 24.08; **FOUR of them were reopened on a second pass** (#1,
+#2, #4, #10 – this line said «three» until 26.08), and #14–#18 were added as he played and watched.
+Every box in that ledger is ticked with where it landed. ⚠ Two things it leaves open by decision
+rather than by omission: the injury dose awaits his own play, and the calendar still shows no past
+matches at all.
 
 **Rounds 24 and 25 have landed** – [round-24.md](rounds/round-24.md) (the college flow: the freeze
 defect, the Home shell, the College League, the academic year, the birthdays) and

@@ -3,7 +3,7 @@ type: plan
 status: draft
 area: testing
 canonical: false
-last-reviewed: 2026-08-22
+last-reviewed: 2026-08-26
 ---
 
 # The quality rig – platform hygiene and the test layers' unbuilt floors
@@ -23,6 +23,8 @@ tests, the coverage map honest); everything here is the layer ABOVE it or the pl
 | 8 | **TB-24's second half – pure builds** – `art:ingest`/`art:optimize` split (only `optimize-art.mjs` exists), masters into versioned storage (the one-laptop risk the trophy incident proved), pinned toolchain, release checklist. | [09-detailed-proposals.md](../review-codex/09-detailed-proposals.md) TB-24 | the owner does the storage half (his masters, his cloud) | M | Later |
 | 9 | **The round-22 spec gap** – the tenure ramp and the live professional table were measured and shipped with no spec in `docs/specs/`; both records live only in commit bodies and source comments. Invariant 4's paper trail is owed retroactively. | [round-22.md](../rounds/round-22.md), «What is still open» #1 | nothing – it is a writing task | S | Next – owed by invariant 4 itself; nothing blocks but hands |
 | 10 | **Wake lock during a match** (round 16 #20) – the screen sleeps mid-match; no `wakeLock` reference anywhere in `src/`. A PWA capability with a small, well-trodden API. | [round-16.md](../rounds/round-16.md) #20 | nothing | S | Next |
+| 11 | **Cut `tests/college-birthday.test.ts`** – round 26 #18. At **27 s solo** it is the one unit file genuinely near birpc's unraisable 60 s window on a CI core, and a process of its own does NOT make a file cheaper – it only stops it being slowed further. This repo's precedent is to cut the file, as `radar` was cut 11.08 into three sharing one fixture, same 61 tests, not one seed trimmed. ⚠ The durable fix for a gate that stalls; everything else is headroom | [round-26.md](../rounds/round-26.md) #18, [heavy-tests.mjs](../../scripts/heavy-tests.mjs) | his call – it is real work | M | Later |
+| 12 | **The instrument-rot class, and nothing guards it** – round 26 found THREE probes reading a body the engine had not written yet: `pro-season-probe` (read before the tournament resolved – 30 retirements in a run reporting zero) and both college probes (walked a career that never enrolled, because round 24 split the answer from the departure). All three were green, silent, and quoted in specs. The shared shape is a walk with no assertion that it MOVED. A cheap guard – every bench asserts its own walk advanced – would have caught all three | [round-26.md](../rounds/round-26.md) 14b/14c | – | S | Later |
 
 **Not a backlog item, noted so nobody re-plans it:** P4, the `world.ts` decomposition, is ONGOING
 – the standing interleaved work with its own rules in `CLAUDE.md` (the type-only import pattern,
