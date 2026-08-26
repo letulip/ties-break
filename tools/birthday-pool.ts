@@ -17,9 +17,17 @@
  *   npx vite-node tools/birthday-pool.ts -- --census        (the catalogue arithmetic alone, instant)
  */
 import { openCareer, stepCareerWeek, POLICIES, PRESETS } from './econ-bench'
-import { buildBirthdayPrompt, chooseGift, pendingBirthday, resumeFromCollege } from '../src/engine/world'
+import {
+  buildBirthdayPrompt,
+  chooseGift,
+  closeTournament,
+  collegeLeagueRevealOpen,
+  pendingBirthday,
+  resumeFromCollege,
+  skipTournament,
+} from '../src/engine/world'
 import { answerFork } from '../src/engine/world/endings'
-import { BIRTHDAY_BANDS, BIRTHDAY_COLLEGE_BAND, BIRTHDAY_DAY_TOGETHER, birthdayOffer } from '../src/engine/world/birthday'
+import { BIRTHDAY_BANDS, BIRTHDAY_COLLEGE_BAND, BIRTHDAY_DAY_TOGETHER, birthdayOffer, birthdayOfferFor } from '../src/engine/world/birthday'
 import { inCollege } from '../src/engine/world/college'
 import { meansOfCents, MEANS_BANDS } from '../src/engine/world/means'
 import { ENDINGS } from '../src/engine/ending'
@@ -105,7 +113,11 @@ function answerIfBirthday(world: WorldState, career: string, out: BirthdayRow[],
   const ids = prompt.options.map((o) => o.id)
   // The ask is deliberately NOT on the wire (owner: «не помечай»), so it is re-derived here off the
   // same sub-stream the engine uses – measurement, not a surface.
-  const { askedId } = birthdayOffer(world.seed, prompt.age, (world.birthdays ?? []).map((b) => b.given).filter((g): g is string => g !== null), inCollege(world))
+  // ⚠ ROUND 26 #4 (second pass): through `birthdayOfferFor`, which is the engine's own world -> offer
+  // seam. The arguments grew a fourth member (which college birthday this is) and a tool re-typing
+  // them is a tool that measures a different dialog from the one the player answered – exactly the
+  // drift `chooseGift`'s note is about, one layer out.
+  const { askedId } = birthdayOfferFor(world, prompt.age)
   const given = pick(ids)
   out.push({
     career,
@@ -158,10 +170,25 @@ function walkCollege(preset: (typeof PRESETS)[number], i: number, out: BirthdayR
     answerIfBirthday(world, career, out, (ids) => ids[0])
     stepCareerWeek(world, rng, POLICIES[0])
   }
-  // the year pauses on her birthday week – press, answer, press again
-  for (let press = 0; press < 3 * ENDINGS.collegeYears && world.ending?.type === 'college'; press++) {
+  // ⚠⚠ THE YEAR STOPS TWICE, AND A WALK THAT ANSWERS ONE STOP MEASURES A CAREER WEDGED IN YEAR ONE.
+  // Round 24 gave the college year its birthday pause – which is what this loop was written for – and
+  // round 26 #6 gave it the CHAMPIONSHIP: `resolveCollegeLeague` opens `college.leagueReveal` and
+  // `resumeFromCollege` refuses to tick until it is answered the way a tour reveal is («Skip all
+  // rounds», then «Continue»). Both landed in the SAME round, on different branches, and this tool
+  // was written against the first: run on 26.08 before this fix it reported **section 3 empty – "no
+  // birthdays recorded"** and a college wallet census of `none`, which is a stalled walk and not a
+  // finding. The identical merge hazard is recorded in `tests/college-birthday.test.ts`.
+  //
+  // ⚠ AND THE BUDGET GREW WITH IT: two stops a year plus the press that spends it is three, so six
+  // per year is the same headroom the old three gave one stop.
+  for (let press = 0; press < 6 * ENDINGS.collegeYears && world.ending?.type === 'college'; press++) {
+    if (collegeLeagueRevealOpen(world)) {
+      skipTournament(world)
+      closeTournament(world)
+      continue
+    }
+    if (answerIfBirthday(world, career, out, (ids) => ids[0])) continue
     resumeFromCollege(world, rng)
-    answerIfBirthday(world, career, out, (ids) => ids[0])
   }
   return true
 }
