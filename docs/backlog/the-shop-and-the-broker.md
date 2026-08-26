@@ -238,6 +238,19 @@ one than either half of the original question.
 
 ---
 
+## ⚙ 26.08 – THE BUILDABLE HALF HAS MOVED OUT
+
+The owner: «Надо расписать спеку по всем идеям и можно запускать будет после утверждения. Вкладка
+новая в Бюджете возле Bills/Expences. Можно не всё сразу делать, а с какой-то части более менее
+понятной начать». Written as [the-shop-2026-08.md](../specs/the-shop-2026-08.md) – placement settled,
+slice 1 fully shaped (four items, static prices, the data, the guard class, five acceptance numbers),
+slices 2–5 sequenced, and §6.1's «when does the tab appear» ANSWERED rather than asked.
+
+⚠ **THIS FILE STAYS AS THE ARGUMENT.** Every ask of his in his own words, and the reasoning behind
+each choice, lives here; the spec carries shapes, numbers and guards. Neither restates the other.
+
+---
+
 ## 8. Steps
 
 The owner, 20.08: «Мы еще обсуждали магазин для трат и инвестиций, это тоже очень большой слой и

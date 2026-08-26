@@ -96,11 +96,11 @@ the change safe to reason about:
 | 70% of peak | **38** | ⭐ **today's rule exactly** – the change is a strict generalisation |
 | 65% | 39 | |
 | 60% | 40 | |
-| **55%** | **41** | ⭐ **recommended** – Federer's age, reachable only on a body kept well |
+| **55%** | **41** | ⭐⭐ **RULED BY THE OWNER, 26.08: «я бы взял 55% по уходу – согласен, звучит ок»** – Federer's age, reachable only on a body kept well |
 | 50% | 42 | |
 | 45% | 43 | the tail gets long and the tennis gets sad |
 
-**Recommendation: 55%.** It buys three years over today's rule, it puts the ceiling exactly where the
+**Settled: 55%, by his word on 26.08.** It buys three years over today's rule, it puts the ceiling exactly where the
 real case he read about sits, and every year of it has to be paid for in physio, load and luck. ⚠ The
 number is a dial and this table is the whole argument for it – 70% reproduces the current game byte
 for byte, so a rollback is one constant.
@@ -139,6 +139,59 @@ obvious first place it should colour, and the wording should be written so that 
 
 ---
 
+## 4a. The fade has a second half – recovery, and it was his own addition
+
+The owner, 26.08, on reading §1:
+
+> «для концовок и возраста предлагаю еще уменьшать недельное восстановление после матчей, т.е. и
+> физика будет падать и восстанавливаться будет дольше, надо угасающий коридор сделать какой-то
+> разумный тоже.»
+
+⭐ **He is right and it closes a hole in §1.** Today the ONLY thing age touches is the attribute
+value. A thirty-eight-year-old drains from a match exactly as fast as a twenty-two-year-old and
+recovers exactly as fast – so the old body is weaker but never *tireder*, which is backwards. Every
+professional account of a late career is about the recovery, not the peak.
+
+**The shape, and it deliberately introduces no new curve.** `ECONOMY.condition.proPhaseRecoveryBase`
+is **5** points a rest week (variant C, his 22.08 ruling). The proposal is that the recovery a week
+returns scales with **what is left of her body** – the same share §3a already computes:
+
+| age | share of peak left | rest week returns | note |
+| --- | --- | --- | --- |
+| ≤28 | 100% | 5.0 | untouched – the peak is the peak |
+| 33 | 87% | 4.4 | |
+| 36 | 75% | 3.8 | |
+| 38 | 66% | 3.3 | |
+| **41** | 53% | **2.7** | at the threshold that ends the career |
+| floor | – | **2.5** | ⚠ the one new constant, `recoveryAgeFloor: 0.5` |
+
+**Why a floor at all.** Without one the corridor keeps closing and the career does not end – it
+becomes unplayable, which is a different and worse thing. A wreck who cannot recover would be pushed
+out by exhaustion and injury rather than by the ending this spec is about, and that would quietly
+steal careers from the other three finishes (§6.4). The floor keeps the last seasons hard and
+playable, and lets the ENDING be what ends it.
+
+⚠ **THE JUNIOR ERA CANNOT MOVE.** `recoveryBase: 8` and everything below 29 is untouched by
+construction – the multiplier is 1 until `declineStart`. This is the same guarantee §5 of
+[fatigue-reprice-2026-08.md](fatigue-reprice-2026-08.md) makes about its own re-price, and for the
+same reason: the junior benches are pinned reference tables and a drift there is invisible.
+
+### ⚠ And this is the risk that has to be MEASURED, not argued
+
+A slower recovery raises fatigue, and fatigue is what feeds the injury door. Round 26 already found
+the season prevalence sitting **17 points over its own band** (71% against the professional 30–54%,
+[round-26.md](../rounds/round-26.md) 14b) with nine of those points unauthored. **Closing the
+recovery corridor pushes on exactly that number in exactly the wrong direction, and it does so only
+in the years this spec is about.** So §6 gains a sixth acceptance number, and if it fails, the floor
+rises before anything else is touched.
+
+⭐ **There is also a prize here.** «She can no longer open a season at 90» is a fact her body already
+knows how to state – the fatigue spec's own acceptance number (`opens the next season at >= 90`). If
+the measurements say so, that is a better sentence for her last word in §4 than any threshold: not
+«she is 41» but «she did not come back from the winter».
+
+---
+
 ## 5. What it costs
 
 | piece | where | size |
@@ -147,6 +200,7 @@ obvious first place it should colour, and the wording should be written so that 
 | the trigger | `retirementDue` in `src/engine/ending.ts` reads the share instead of `stopAskingAgeYears` | S |
 | the constant | `ENDINGS.lastOfferPeakShare: 0.55`, and `stopAskingAgeYears` is **deleted, not left dangling** | XS |
 | her line | the retirement card's final state, and one event line | S |
+| the recovery fade (§4a) | `ECONOMY.condition` gains `recoveryAgeFloor`; the rest-week return is multiplied by the §3a share | S |
 | the re-measure | §6 below | M |
 
 ⚠ **RNG: ZERO DRAWS.** Nothing here is random – the peak is a running maximum, the threshold is
@@ -169,6 +223,14 @@ Re-run the endings bench on both arms and compare against §2's table:
 4. **The other three endings do not move**: bankruptcy 51.1% at 17, injury 7.8% at 31, plateau on the
    «her words» arm at 48.9%. This change must not steal careers from them.
 5. **`condition.test.ts` unmoved** – 41550 / `e6b0c709`.
+6. ⚠ **The injury prevalence does not get worse** (§4a's risk). Re-taken on the FIXED
+   `pro-season-probe`, the professional band is 30–54% and today reads 71%. The recovery fade may not
+   push it further – if it does, `recoveryAgeFloor` rises until it does not. **This is a veto
+   condition, not a note**: the fade is a texture, and it may not buy texture with a prevalence that
+   is already over.
+7. **She opens her last seasons able to play them** – the fatigue spec's `>= 90` at the season door
+   holds through the mid-thirties and drifts below only in the final years. A career that arrives at
+   the off-season door unable to recover has been ended by the wrong system.
 
 ---
 
@@ -191,7 +253,7 @@ Re-run the endings bench on both arms and compare against §2's table:
 
 ## 8. Steps
 
-⚠ Each step is gated on his answer to §7.1. Nothing here is started before that.
+⚙ **§7.1 IS ANSWERED (26.08): 55%.** Steps 1–4 are unblocked. Step 5 and §7.2–7.4 are still his.
 
 | # | step | done when |
 | --- | --- | --- |
