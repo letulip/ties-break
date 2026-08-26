@@ -145,11 +145,15 @@ export interface CollegeQuote {
   /** what the family pays for a year at this place, cents – the price after both layers, and the
    *  number the ledger charges one fifty-second at a time once she has picked it */
   familyPerYearCents: number
-  /** ⚠ IS THIS PLACE HERS TO PICK? False on exactly one case and it is primary law rather than a
-   *  balance knob: the in-state price IS residence, and a non-resident alien is never in-state
-   *  anywhere. **Two tiers are always open**, so nothing here can remove the college answer (owner,
-   *  16.08) – it removes one SCHOOL from a list of three. */
-  open: boolean
+  // ⭐⭐⭐⭐ `open: boolean` WAS HERE AND IT IS GONE IN v61 – round 26 #2, second pass, on the owner's
+  // ruling «по-моему в каждой стране есть домашний универ». It was false on exactly one case (the
+  // in-state price IS US residence) and that case was 23 of the 24 playable countries, decided on the
+  // onboarding country step ~440 weeks before the card drew. He overruled the RULE, so the field goes
+  // rather than becoming a boolean that is always true: **all three places are hers in every career**,
+  // and with no field there is nothing a later edit can shut one with. `engine/collegeOffer.ts`'s
+  // «NO PLACE IS REFUSED» block is the full record; the v61 migration deletes the key from persisted
+  // quotes. ⚠ A COUNTRY RULE DOES SURVIVE and it is not this one: `needShareOf` pays the need-based
+  // layer to an American family only (34 CFR §668.33), which is a PRICE on the same three places.
 }
 
 /** ⭐⭐ THE COLLEGE OFFER – every place she could take, and the one she took.

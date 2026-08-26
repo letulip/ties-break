@@ -28,6 +28,10 @@ import type { LadderTrack, TierId } from '../season/types'
 import { addEvent, seasonIndexOf } from './ledger'
 import { activeLadderOf } from './ladder'
 import { collegeProgressOf, inCollege, measureCollegeOffer } from './college'
+// ⚠ A VALUE IMPORT FROM A LEAF, NOT A CYCLE. `engine/collegeOffer.ts` imports only `shared/protocol`
+// and `engine/rng`, and `world/college.ts` already imports it – the edge endings -> collegeOffer runs
+// the same way. It is here for the cheapest-place fallback in `answerFork` (round 26 #2).
+import { COLLEGE_TIER_ORDER } from '../collegeOffer'
 import { nextAcademicYearStart } from '../kidLife'
 import { weekLabel } from '../../shared/dates'
 import { kidAgeYears } from './age'
@@ -456,19 +460,30 @@ export function answerFork(world: WorldState, answer: ForkAnswer, tier?: College
   if (answer === 'college') {
     // ⭐⭐ THE PLACE SHE PICKED IS RECORDED HERE AND NOWHERE ELSE (17.08, the-college-choice spec).
     //
-    // ⚠⚠ IT IS RE-VALIDATED ENGINE-SIDE, WHICH IS CLAUDE.md INVARIANT 1 READ LITERALLY. The card
-    // stops drawing a place residence shuts; this is what makes that a RULE rather than a decoration,
-    // and a stale screen cannot enrol her somewhere she cannot be.
+    // ⭐⭐⭐⭐ ROUND 26 #2, SECOND PASS – THE `q.open` FILTER IS GONE BECAUSE THE FIELD IS (v61). The
+    // owner: «по-моему в каждой стране есть домашний универ». There is no place residence shuts any
+    // more, so there is nothing here to re-validate AGAINST – the re-validation this block used to do
+    // was the engine's half of a rule that no longer exists, and keeping it against an always-true
+    // boolean would have been a gate that cannot fire pretending to be one that can.
     //
-    // ⚠ AND THE FALLBACK IS THE CHEAPEST PLACE OPEN TO HER, not the dearest and not a preference. A
-    // command with no tier is a caller that never asked the player – every bench and every test in
-    // this repo – and the cheapest open place is the only default that cannot be read as advice.
-    // ⚠ IT NEVER REFUSES THE ANSWER ITSELF: an unknown or shut tier falls back, it does not throw.
-    // Nothing removes the college answer (owner, 16.08), including a bad argument.
+    // ⚠⚠ AND THE LEGACY SAVE IS EXACTLY WHY THE FIELD HAD TO GO RATHER THAN BE PINNED TRUE. A career
+    // sitting on an unanswered fork with `state: {open: false}` persisted would, under a card that now
+    // draws that row pressable, have had `find(q => q.tier === 'state' && q.open)` miss and fall
+    // through to the next place – the player presses «The university at home» and is quietly enrolled
+    // twenty thousand dollars a year away. The v61 migration deletes the key; this line stops reading
+    // it; the two together are the whole fix.
+    //
+    // ⚠ THE FALLBACK IS STILL THE CHEAPEST PLACE, not the dearest and not a preference. A command with
+    // no tier is a caller that never asked the player – every bench and every test in this repo – and
+    // the cheapest place is the only default that cannot be read as advice. It is `quotes[0]` by
+    // construction (`collegeOfferFor` maps `COLLEGE_TIER_ORDER`, cheapest first) but it is looked up
+    // through that order rather than by index, so a poked or re-ordered save still gets the cheapest.
+    // ⚠ IT NEVER REFUSES THE ANSWER ITSELF: an unknown tier falls back, it does not throw. Nothing
+    // removes the college answer (owner, 16.08), including a bad argument.
     const offer = world.fork.offer
     if (offer) {
-      const wanted = tier ? (offer.quotes.find((q) => q.tier === tier && q.open)?.tier ?? null) : null
-      const fallback = offer.quotes.find((q) => q.open)?.tier ?? null
+      const wanted = tier ? (offer.quotes.find((q) => q.tier === tier)?.tier ?? null) : null
+      const fallback = COLLEGE_TIER_ORDER.find((t) => offer.quotes.some((q) => q.tier === t)) ?? null
       world.fork = { ...world.fork, offer: { ...offer, chosen: wanted ?? fallback } }
     }
     // ⭐⭐⭐ ROUND 24 #5 – THE ANSWER RESERVES; THE DEPARTURE ENROLS. Nothing freezes here: no

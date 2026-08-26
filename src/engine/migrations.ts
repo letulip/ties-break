@@ -1848,6 +1848,41 @@ export function migrateSave(raw: unknown): WorldState {
     v = 60
   }
 
+  // ⭐⭐⭐ v60 -> v61: THE HOME UNIVERSITY EXISTS EVERYWHERE (round 26 #2, second pass). The owner,
+  // having asked the same question twice: «по-моему в каждой стране есть домашний универ». One field
+  // is REMOVED – `CollegeQuote.open`, the boolean that said whether a place was hers to pick – and
+  // this is the first deletion in the ladder rather than an addition.
+  //
+  // ⚠⚠ IT IS NOT A TIDY-UP AND THE CAREER SITTING ON THE FORK IS WHY. `open` was false on exactly one
+  // rule (the in-state price IS US residence) and that rule shut the cheapest rung in 23 of the 24
+  // playable countries. A v60 save with an UNANSWERED fork therefore carries `state: {open: false}` –
+  // and `answerFork` filtered on it. Under new code the card draws that row pressable, so the player
+  // would press «The university at home» and the engine would find no open `state` quote and fall
+  // through to the next place: enrolled twenty thousand dollars a year away, silently, on the exact
+  // screen the round exists to fix. Deleting the key here and the filter in `answerFork` is ONE fix.
+  //
+  // ⚠ AN ANSWERED FORK IS UNAFFECTED EITHER WAY. `offer.chosen` is set and the bill reads the chosen
+  // quote; nothing behind the answer ever consulted `open`. The delete still runs over those quotes,
+  // because a field removed from the type must not survive in the payload as a value nothing means.
+  //
+  // ⚠ AND NOTHING IS RE-PRICED. `costPerYearCents`, `athleticShare`, `needShare` and
+  // `familyPerYearCents` are untouched on every quote – `ForkState.offer`'s own doctrine («a later
+  // re-tune cannot silently re-price a career halfway through a bill it had already accepted»). What
+  // a migrated career gains is a row it can press, at the price the fork already quoted it.
+  //
+  // Idempotent (`delete` on an absent key is a no-op) and it writes no value at all: ZERO draws on
+  // any stream, so the frozen MAIN capture (41550 / e6b0c709) is untouched by construction.
+  if (v === 60) {
+    const fork = save.fork as { offer?: { quotes?: unknown } | null } | null | undefined
+    const quotes = fork && typeof fork === 'object' ? fork.offer?.quotes : undefined
+    if (Array.isArray(quotes)) {
+      for (const q of quotes) {
+        if (q && typeof q === 'object') delete (q as Record<string, unknown>).open
+      }
+    }
+    v = 61
+  }
+
   if (v !== SAVE_SCHEMA_VERSION) {
     throw new Error(`Save schema ${v} is newer than supported ${SAVE_SCHEMA_VERSION}`)
   }

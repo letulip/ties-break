@@ -174,7 +174,19 @@ import type { AcademySupport } from '../academy'
 // on the championship week, the way a tour week stops, and `TournamentFlow` walks it.
 // ⚠ NULL FOR EVERY EARLIER SAVE AND NOTHING IS BACK-FILLED: a championship already lived is not
 // re-offered, so a career mid-freeze resumes with no reveal open and its NEXT year's gets one.
-export const SAVE_SCHEMA_VERSION = 60
+//
+// ⭐⭐⭐ v61 (round 26 #2 second pass, THE HOME UNIVERSITY EXISTS EVERYWHERE): `CollegeQuote.open` is
+// REMOVED – the first field this ladder has ever deleted rather than added. The owner, having asked
+// twice why the cheapest place was refused: «по-моему в каждой стране есть домашний универ». The
+// boolean was false on one rule – the in-state price IS US residence – and that rule shut the rung in
+// 23 of the 24 playable countries, on a choice made at onboarding ~440 weeks earlier. He overruled
+// the rule, so the field goes with it: an always-true boolean would leave the next reader believing a
+// place can be shut and the next edit able to shut one.
+// ⚠ THE MIGRATION IS NOT COSMETIC. A career sitting on an unanswered fork carries `state: {open:
+// false}`, and `answerFork` filtered on it – so the card would have drawn the home row pressable and
+// the engine would have quietly enrolled her at the next place up, $20,000 a year dearer. Deleting
+// the key and deleting the filter are one fix in two places.
+export const SAVE_SCHEMA_VERSION = 61
 
 
 
