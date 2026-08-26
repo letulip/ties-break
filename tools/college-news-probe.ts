@@ -17,7 +17,15 @@
 //
 // ⚠ MEASUREMENT ONLY. Nothing under `src/` is touched and no save is written.
 import { openCareer, stepCareerWeek, POLICIES, PRESETS } from './econ-bench'
-import { chooseGift, pendingBirthday, resumeFromCollege } from '../src/engine/world'
+import {
+  chooseGift,
+  closeTournament,
+  collegeLeagueRevealOpen,
+  pendingBirthday,
+  resumeFromCollege,
+  skipTournament,
+  toSnapshot,
+} from '../src/engine/world'
 import { answerFork } from '../src/engine/world/endings'
 import { WEEKS_PER_YEAR } from '../src/engine/season/calendar'
 import { ENDINGS } from '../src/engine/ending'
@@ -44,6 +52,28 @@ const pct = (a: number, b: number) => (b === 0 ? '   –' : `${((100 * a) / b).t
  *  `expense` and `income` (they live on the Money ledger); this is that one line and nothing else,
  *  so a row that passes here is a row the player can actually read in the news list. */
 const readsAsNews = (e: WorldEvent): boolean => e.type !== 'expense' && e.type !== 'income'
+
+/** ⭐⭐ THE ORDER HE READS THEM IN, which is the other half of `readsAsNews` and was missing. Home
+ *  does not print a flat list: `newsGroups` buckets by week, sorts the WEEKS descending, and inside
+ *  a week pins milestones first and then sorts by descending id. «Предпоследняя новость» is row 2 of
+ *  THAT sequence, so the sequence has to be reproduced rather than approximated by an array order. */
+function homeOrder(events: WorldEvent[]): WorldEvent[] {
+  const byWeek = new Map<number, WorldEvent[]>()
+  for (const e of events) {
+    const list = byWeek.get(e.week)
+    if (list) list.push(e)
+    else byWeek.set(e.week, [e])
+  }
+  return [...byWeek.entries()]
+    .sort((a, b) => b[0] - a[0])
+    .flatMap(([, list]) =>
+      [...list].sort((a, b) => {
+        const am = a.type === 'milestone' ? 0 : 1
+        const bm = b.type === 'milestone' ? 0 : 1
+        return am - bm || b.id - a.id
+      }),
+    )
+}
 
 interface FreezeReport {
   label: string
@@ -92,6 +122,49 @@ interface RestRow {
    *  generations – a champion in a first or a last season, a farewell, a turnover or an intake
    *  line. Zero here means the world is speaking into weeks the player never opens. */
   generational: number
+  /** ⭐⭐⭐ ROUND 26 #10, SECOND PASS – RECENCY, WHICH IS THE THING HE ACTUALLY REPORTED AND THE ONE
+   *  QUANTITY THE FIRST PASS NEVER MEASURED. The owner: «у меня в ленте ПРЕДПОСЛЕДНЯЯ новость были
+   *  из мира "до колледжа" на протяжении всей учебы». That is not a claim about how many rows the
+   *  card holds – the first pass counted those and found fifteen – it is a claim about HOW OLD the
+   *  rows at the top of it are. Every field below is an age in weeks, read off the feed in the exact
+   *  order `HomeScreen.vue`'s `newsGroups` prints it (week groups descending, milestones pinned
+   *  first inside a group), so row 2 here IS his «предпоследняя». */
+  rows: number
+  topAge: number
+  secondAge: number
+  /** how many of the printed rows predate the enrolment week – his «из мира до колледжа» */
+  preCollege: number
+  /** ...and whether row 2 in particular is one of them */
+  secondIsPreCollege: boolean
+  /** rows written in the four weeks before the rest state – "current" at a glance */
+  freshRows: number
+  medianAge: number
+  /** ⭐⭐ THE SPAN THE PRESS JUST SPENT, and how much of it reached the card. This is the owner's
+   *  complaint stated as a fraction: he pressed a button, a year went by, and the feed can only
+   *  reach back into the last few weeks of it. */
+  sincePrev: number
+  coveredWeeks: number
+  /** ⭐⭐ THE COUNTERFACTUAL: what the SAME rows would look like if the snapshot's window were spent
+   *  on news rather than on rows Home throws away. `snapshotEvents` takes the last 60 rows of ANY
+   *  kind and Home then drops every `expense` and `income` – so the window's budget is spent five
+   *  parts in six on the Money screen's rows, which the Money screen does not even read from here
+   *  (`snapshot.financialEvents` is its own slice). Same ledger, same prune, one different window. */
+  cfRows: number
+  cfSpan: number
+  cfCovered: number
+  cfGenerational: number
+}
+
+/** A row that says the field has GENERATIONS – a champion in a first or a last season, a farewell,
+ *  the turnover line, the intake line, or (second pass) the digest the freeze now writes at rest. */
+function isGenerational(e: WorldEvent): boolean {
+  return (
+    e.text.includes('season on tour') ||
+    e.text.startsWith('\u{1F44B}') ||
+    e.text.startsWith('The tour turns over') ||
+    e.text.startsWith('\u{1F30D}') ||
+    e.text.includes('joined the professional tour')
+  )
 }
 
 function bump(m: Map<string, number>, k: string): void {
@@ -124,6 +197,20 @@ function walkToFork(preset: (typeof PRESETS)[number], i: number): { world: World
   return null
 }
 
+/** ⚠⚠ THE SECOND PAUSE, AND WITHOUT IT THIS FILE MEASURES NOTHING (found on the collected tree,
+ *  26.08). This probe was written on a branch where a college year paused only for her birthday.
+ *  Round 26 #6 – merged since – teaches `resumeFromCollege` to pause on the championship as well and
+ *  to RETURN `['college-league']` rather than spend the year, so a walk that answers the cake and
+ *  not the draw sheet refuses every press after the first league week: the run above this fix put
+ *  all twelve presses of every career at the SAME week (324), reported the freeze span as 208 weeks
+ *  because it reads `untilWeek - fromWeek`, and divided real rows by imaginary weeks. The player
+ *  answers it with «Skip all rounds» then «Continue»; these are those two commands. */
+function answerLeagueReveal(world: WorldState): void {
+  if (!collegeLeagueRevealOpen(world)) return
+  skipTournament(world)
+  closeTournament(world)
+}
+
 /** One career, four years, exactly as the Home shell's «Another year» spends them. */
 function walkCollege(at: { world: WorldState; rng: Rng; label: string }): FreezeReport | null {
   const world = structuredClone(at.world)
@@ -151,26 +238,43 @@ function walkCollege(at: { world: WorldState; rng: Rng; label: string }): Freeze
     // year» the college Home shell is drawn off exactly this snapshot window, so the honest measure
     // of «пустота» is not what the freeze WROTE, it is what is inside the last `SNAPSHOT_EVENTS`
     // rows at rest and survives Home's filter.
-    const window = world.events.slice(-SNAPSHOT_EVENTS)
+    // ⚠ THE REAL SNAPSHOT AND NOT `slice(-60)` (second pass). Round 26 #7 changed what the UI is
+    // handed – `snapshotEvents` unions the kept MATCH rows back in on top of the positional window –
+    // so a probe that keeps slicing measures a screen that no longer exists.
+    const window = toSnapshot(world).events
     const shown = window.filter(readsAsNews)
     const ordinary = world.events.filter((e) => !e.keep && e.match === undefined)
+    const printed = homeOrder(shown)
+    const ages = printed.map((e) => world.week - e.week).sort((a, b) => a - b)
+    // The counterfactual window: the newest SNAPSHOT_EVENTS rows Home would actually PRINT, taken
+    // out of the same live ledger, instead of the newest SNAPSHOT_EVENTS rows of any kind.
+    const cf = homeOrder(world.events.filter(readsAsNews).slice(-SNAPSHOT_EVENTS))
+    const prevWeek = rests.length > 0 ? rests[rests.length - 1].week : fromWeek
+    const inSpan = (list: WorldEvent[]) => new Set(list.filter((e) => e.week > prevWeek).map((e) => e.week)).size
     rests.push({
+      sincePrev: world.week - prevWeek,
+      coveredWeeks: inSpan(printed),
+      cfRows: cf.length,
+      cfSpan: cf.length > 0 ? world.week - cf[cf.length - 1].week : 0,
+      cfCovered: inSpan(cf),
+      cfGenerational: cf.filter(isGenerational).length,
       week: world.week,
       shown: shown.length,
       weeks: new Set(shown.map((e) => e.week)).size,
+      rows: printed.length,
+      topAge: printed.length > 0 ? world.week - printed[0].week : -1,
+      secondAge: printed.length > 1 ? world.week - printed[1].week : -1,
+      preCollege: printed.filter((e) => e.week < fromWeek).length,
+      secondIsPreCollege: printed.length > 1 && printed[1].week < fromWeek,
+      freshRows: printed.filter((e) => world.week - e.week <= 4).length,
+      medianAge: ages.length > 0 ? ages[Math.floor(ages.length / 2)] : -1,
       world: shown.filter((e) => topicOf(e, world.profile.kidName).startsWith('THE WORLD')).length,
       oldest: window.length ? window[0].week : world.week,
       keep: world.events.filter((e) => e.keep).length,
       evidence: world.events.filter((e) => !e.keep && e.match !== undefined).length,
       rest: ordinary.length,
       restFrom: ordinary.length ? ordinary[0].week : world.week,
-      generational: shown.filter(
-        (e) =>
-          e.text.includes('season on tour') ||
-          e.text.startsWith('\u{1F44B}') ||
-          e.text.startsWith('The tour turns over') ||
-          e.text.includes('joined the professional tour'),
-      ).length,
+      generational: shown.filter(isGenerational).length,
     })
     if (DUMP && press === 3) {
       console.log(`\n  ⭐ VERBATIM – the News card at week ${world.week} (${at.label}), exactly as Home groups it:`)
@@ -183,6 +287,7 @@ function walkCollege(at: { world: WorldState; rng: Rng; label: string }): Freeze
       console.log('')
     }
     if (pendingBirthday(world) !== null) chooseGift(world, 'day')
+    answerLeagueReveal(world)
   }
   collect()
   if (DUMP) {
@@ -297,6 +402,53 @@ console.log(
 )
 console.log(`  rest states with NO generational line  ${allRests.filter((x) => x.generational === 0).length} / ${allRests.length}`)
 console.log(`  rest states with ZERO news rows  ${allRests.filter((x) => x.shown === 0).length} / ${allRests.length}`)
+
+// =================================================================================================
+// ⭐⭐⭐ THE SECOND PASS'S QUESTION – RECENCY, AND WHICH OF THE THREE CANDIDATES DOMINATES.
+//
+// The owner, having read the first report: «у меня в ленте предпоследняя новость были из мира "до
+// колледжа" на протяжении всей учебы, а последняя жёлтым про её учебный год». Row counts do not
+// answer that; ages do. Three candidates, separated by number rather than by argument:
+//   (1) THE WINDOW – a positional slice over a ledger a freeze week barely writes to reaches back
+//       months, so the same old rows keep showing.
+//   (2) THE RATE – a once-a-season line against eight rest states in 208 weeks is invisible by
+//       arithmetic, whatever the window does.
+//   (3) THE SURFACE – the college screens may not draw the list the way the tour Home does.
+// =================================================================================================
+const mean = (pick: (x: RestRow) => number) => allRests.reduce((s, x) => s + pick(x), 0) / allRests.length
+console.log(`\n  ⭐⭐⭐ RECENCY – HOW OLD THE ROWS AT THE TOP OF THE FEED ARE (his «предпоследняя»)`)
+console.log(`  ${padE('career', 14)}${pad('press', 6)}${pad('week', 6)}${pad('rows', 6)}${pad('row1 age', 10)}${pad('row2 age', 10)}${pad('median', 8)}${pad('<=4w old', 10)}${pad('pre-college', 13)}${pad('row2 pre-coll', 15)}`)
+console.log(`  ${'-'.repeat(98)}`)
+for (const r of reports) {
+  for (let i = 0; i < r.rests.length; i++) {
+    const x = r.rests[i]
+    console.log(
+      `  ${padE(r.label, 14)}${pad(i + 1, 6)}${pad(x.week, 6)}${pad(x.rows, 6)}${pad(`${x.topAge}w`, 10)}${pad(`${x.secondAge}w`, 10)}` +
+        `${pad(`${x.medianAge}w`, 8)}${pad(x.freshRows, 10)}${pad(x.preCollege, 13)}${pad(x.secondIsPreCollege ? 'YES' : 'no', 15)}`,
+    )
+  }
+}
+console.log(`  ${'-'.repeat(98)}`)
+console.log(
+  `  ${padE('MEAN', 14)}${pad('', 12)}${pad(mean((x) => x.rows).toFixed(1), 6)}${pad(`${mean((x) => x.topAge).toFixed(1)}w`, 10)}` +
+    `${pad(`${mean((x) => x.secondAge).toFixed(1)}w`, 10)}${pad(`${mean((x) => x.medianAge).toFixed(1)}w`, 8)}${pad(mean((x) => x.freshRows).toFixed(1), 10)}` +
+    `${pad(mean((x) => x.preCollege).toFixed(1), 13)}${pad(`${allRests.filter((x) => x.secondIsPreCollege).length}/${allRests.length}`, 15)}`,
+)
+console.log(`\n  ⭐⭐ THE SPAN HE JUST PAID FOR – one press moves ${mean((x) => x.sincePrev).toFixed(0)} weeks on average`)
+console.log(`     weeks of that span with a row on the card   ${mean((x) => x.coveredWeeks).toFixed(1)} of ${mean((x) => x.sincePrev).toFixed(0)}` +
+  `   = ${((100 * mean((x) => x.coveredWeeks)) / mean((x) => x.sincePrev)).toFixed(0)}%`)
+console.log(`\n  ⭐⭐ THE COUNTERFACTUAL WINDOW – the same 60 rows, spent on news instead of on money`)
+console.log(`     rows printed        ${mean((x) => x.rows).toFixed(1)}  ->  ${mean((x) => x.cfRows).toFixed(1)}`)
+console.log(`     reach (weeks)       ${mean((x) => x.week - x.oldest).toFixed(0)}w ->  ${mean((x) => x.cfSpan).toFixed(0)}w`)
+console.log(`     weeks of the span   ${mean((x) => x.coveredWeeks).toFixed(1)}  ->  ${mean((x) => x.cfCovered).toFixed(1)}   of ${mean((x) => x.sincePrev).toFixed(0)}`)
+console.log(`     generational rows   ${mean((x) => x.generational).toFixed(1)}  ->  ${mean((x) => x.cfGenerational).toFixed(1)}` +
+  `   (rest states with none: ${allRests.filter((x) => x.generational === 0).length} -> ${allRests.filter((x) => x.cfGenerational === 0).length})`)
+console.log(`\n  ⭐ THE THREE CANDIDATES, WEIGHED`)
+console.log(`  (1) THE WINDOW   the printed feed spans ${mean((x) => x.week - x.oldest).toFixed(0)}w back at rest; its OLDEST row is ${mean((x) => x.week - x.oldest).toFixed(0)}w old,`)
+console.log(`                   its median row ${mean((x) => x.medianAge).toFixed(1)}w, and ${allRests.filter((x) => x.preCollege > 0).length}/${allRests.length} rest states print a row from before enrolment.`)
+console.log(`  (2) THE RATE     ${(newsTotal / totalWeeks).toFixed(2)} news rows / freeze week -> ${mean((x) => x.rows).toFixed(1)} rows on the card and`)
+console.log(`                   ${mean((x) => x.freshRows).toFixed(1)} of them from the last four weeks; ${allRests.filter((x) => x.freshRows === 0).length}/${allRests.length} rest states have NOTHING from the last four weeks.`)
+console.log(`  (3) THE SURFACE  measured in tests/component – Home draws #diary-news on a college week too.`)
 
 console.log(`\n  per career:`)
 console.log(`  ${padE('career', 14)}${pad('weeks', 7)}${pad('written', 9)}${pad('news', 7)}${pad('wks+', 6)}${pad('end rows', 10)}`)

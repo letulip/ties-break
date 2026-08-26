@@ -304,6 +304,10 @@ export type { FamilyMeans } from './world/means'
 // module, and that public API must not change.
 import { ACADEMY_NOTICE, academySpokeThisWeek, reviewAcademy, seasonBoundaryAndObligations } from './world/phaseObligations'
 export { ACADEMY_NOTICE, academySpokeThisWeek, reviewAcademy }
+// ⭐⭐ ROUND 26 #10, SECOND PASS – the tour's one compressed line at a college rest state. Re-exported
+// under its own name like every other decomposed symbol: `tests/` reads it from `engine/world`.
+import { announceCampusInterlude } from './world/fieldNews'
+export { announceCampusInterlude, campusDigestLine, FIELD_NEWS } from './world/fieldNews'
 // ⭐ R2-10 STEP 2, PHASE 2 – what the week costs, and the five private helpers it is made of.
 // `coachWorksThisWeek` is re-exported under its historical name: the development step below reads
 // it, the snapshot reads it, the tests read it, and there must go on being ONE of it.
@@ -1708,6 +1712,9 @@ export function resumeFromCollege(world: WorldState, rng: Rng): StopReason[] {
   // and for a resumed one this is what keeps the academic boundary where the first press put it –
   // a year paused for a cake is finished, not restarted.
   const yearEnds = Math.min(college.untilWeek, start.week + WEEKS_PER_YEAR)
+  // ⭐⭐⭐ ROUND 26 #10, SECOND PASS – WHERE THE PRESS STARTED, so the row written when it stops can
+  // be gated on the press having actually moved time. See `announceCampusInterlude` below the loop.
+  const pressFrom = world.week
   world.ending = null
   const stops = new Set<StopReason>()
   while (world.week < yearEnds && world.ending === null) {
@@ -1754,6 +1761,22 @@ export function resumeFromCollege(world: WorldState, rng: Rng): StopReason[] {
     // next thing on screen when it closes.
     if (pauseHere) break
   }
+  // ⭐⭐⭐ ROUND 26 #10, SECOND PASS – THE ONE ROW THAT CANNOT BE STALE. The owner, after the first
+  // pass: «предпоследняя новость были из мира "до колледжа" на протяжении всей учебы… я бы хотел,
+  // чтобы "мир жил" и пока она в колледже, пусть и сжато». Measured over 48 rest states, the card at
+  // rest reaches ninety weeks back and covers 45% of the weeks a press actually spends, so a line
+  // written on an ordinary freeze week is a line he sees by luck. This one is written ON the rest
+  // week itself – the week at the very top of the feed he is handed – which is what makes it
+  // CURRENT by construction rather than by budget. `world/fieldNews.ts` carries the whole argument,
+  // the arithmetic and the two rejected alternatives.
+  //
+  // ⚠ HERE AND NOT IN THE FOUR RETURNS BELOW: every exit from this command – a banked year, a
+  // birthday pause, a championship pause, the graduating press – hands back the same Home shell, and
+  // four copies of one call is how three of them come to disagree. ⚠ GATED ON THE PRESS HAVING MOVED
+  // TIME, so a press that only ticked into a refusal writes nothing; and gated on the freeze still
+  // being the state, because a career-ending injury mid-year hands back an EPILOGUE, and the tour's
+  // succession is not what that screen is for.
+  if (world.week > pressFrom && world.ending === null) announceCampusInterlude(world)
   // ⭐⭐⭐ THE PAUSE – the year stops mid-flight (for her birthday, or since round 26 #6 for the
   // championship the player is being shown) and is NOT banked. The latch goes
   // back on with the SAME year's end under it, the opening measurements are persisted for the press
