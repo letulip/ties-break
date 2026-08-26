@@ -271,7 +271,8 @@ recovery moves every year with no steps in it at all. Taken off the shipped `dec
 | 43 | 47.0% | 2.50 | 3 ⚠ floor |
 
 ⚠⚠ **AND THE FLOOR TURNS OUT TO BE ALMOST INERT, which is worth knowing before it is built.** It
-first bites at **43** – nearly two years AFTER the 55% threshold has ended the career at 41.2. So under the
+first bites at **42.31** (the table's 43 row is the first whole year past it) – over a year AFTER the
+55% threshold has ended the career at 41.17. So under the
 settled rules it is a safety net that fires on essentially no career: it exists for the outliers (a
 body that somehow held past the threshold, a migrated save, a future rule change) and not as a dial.
 ⭐ That is the right shape for a floor and it means §7 has one fewer number to tune – but nobody
@@ -332,6 +333,103 @@ knows how to state – the fatigue spec's own acceptance number (`opens the next
 the measurements say so, that is a better sentence for her last word in §4 than any threshold: not
 «she is 41» but «she did not come back from the winter».
 
+### ⚙ 27.08 – BUILT, AND MEASURED AGAINST §6.6'S VETO. THE FADE SHIPS AT THE APPROVED FLOOR
+
+`ECONOMY.condition.recoveryAgeFloor: 0.5` exists and `recoveryBaseFor` (world/medical.ts) multiplies
+the phase's base by `Math.max(recoveryAgeFloor, physicalShare)` from `declineStart`. **No schema
+move** – step 1 shipped `peakPhysical` at v62 and this reads it, exactly as step 2 does. **Zero
+draws**: a comparison and a division; the frozen MAIN capture (41550 / `e6b0c709`) is unmoved.
+
+⭐ **THE FADE GOES INSIDE THE HELPER, SO BOTH ITS READERS INHERIT IT.** ⚠ And the helper's own header
+was one merge out of date: it said «three readers – `accrueCondition` plus the two 18.08 makeup
+expressions in world.ts», and the round-25 collect had already folded those makeups into
+`withheldFreeWeekRecovery`, which is now the ONE oracle behind **three** refund sites (world.ts's
+medical-withdrawal arm, `skipEvent`, planner.ts's practice cancellation). Same closed set, one level
+of indirection deeper: every read of `recoveryBaseFor` in the repo is inside world/medical.ts. There
+is no fourth reader, and no reader that must not fade. The header is corrected in place.
+
+⚠ **THE RIVALS ARE UNTOUCHED AND STRUCTURALLY CANNOT FADE** – `season/rival.ts`'s `walkWindow` reads
+`ECONOMY.condition.recoveryBase` directly, and `rivalCondition(results, playerId, week)` takes no
+world, no skills and no peak, so there is nothing for a share of a peak to be taken against.
+Field-pro ageing stays its own backlog item.
+
+**The rounding moved to the boundary and the duplicates are gone.** `toSnapshot` computes
+`shownCondition = Math.round(world.condition)` once and both `Snapshot` sites read it;
+`KidScreen.vue` and `TournamentFlow.vue` no longer round for themselves, and the FIVE other readers
+of the same field that never rounded at all (`HomeScreen` twice, `PlanWeekSheet`, `SeasonScreen`,
+`WeekRecapCard`) are correct now by construction rather than by luck.
+`tests/condition-boundary.test.ts` pins it behaviourally AND ratchets the class: nothing under
+`src/components` may apply `Math.round` to a `condition` again.
+
+⚠ Two things deliberately still read the RAW fraction, and it is the right call:
+`coachEntryLine(e.tier, world.condition)` and `buildKnockPrompt(..., world.condition)`. Neither
+crosses a NUMBER – they cross a sentence – and both are threshold reads that must agree with the
+engine's own gates (`availabilityStatus`, the doctor's veto), which read the fraction too. Rounding
+them would make the coach disagree with the doctor at a boundary point.
+
+#### The measurement, on the FIXED `tools/pro-season-probe.ts`
+
+⚠ **THE DEFAULT CELL IS A NULL ARM FOR THIS CHANGE AND MUST NOT BE QUOTED AS THE ANSWER.** The probe
+walks three seasons from age 16; the fade cannot bite before 29. Run at the default cell the two arms
+come back **byte-identical** – which proves the arms differ only by the knob and
+proves nothing at all about the risk. The probe therefore gained two things, both in `tools/` only:
+`--recoveryFloor X`, and a prevalence line split at `declineStart`.
+
+⭐ **`--recoveryFloor 1` IS THE CONTROL ARM BY CONSTRUCTION, NOT BY A WORKTREE.** The multiplier is
+`Math.max(floor, share)` and the share can never exceed 1, so a floor of 1 pins it at exactly 1 and
+the engine is the un-faded one – same tree, same commit, same code path, with the reader provably
+present.
+
+**48 careers × 27 seasons (ages 16–42), 1 296 season-rows per arm, `--plan light --policy pair
+--vac elite --physio off`:**
+
+| | control (fade OFF) | shipped (floor 0.5) | read |
+| --- | --- | --- | --- |
+| season injury prevalence, pooled | 65% | 66% | |
+| ...under 29 – the fade cannot bite | **70%** | **70%** | ⭐ identical, as it must be |
+| ...**over 29 – the fade's own years** | **60%** | **61%** | **+1 pt, SEM ±1.9** |
+| onsets / season | 1.07 ± 0.03 | 1.08 ± 0.03 | +0.01, a third of one SEM |
+| weeks lost / season | 3.3 ± 0.1 | 3.4 ± 0.1 | |
+| total onsets | 1 389 | 1 403 | +1.0% |
+| weeks below the knee / season | 33.2 ± 0.5 | **35.4 ± 0.5** | ⚠ **+2.2, 4.4 SEM – REAL** |
+| matches walked | 45 694 | 44 841 | −1.9% |
+| at the off-season door | 54 | **49** | ⭐ back INSIDE §6.2's 45–50 |
+
+⭐⭐ **6 ✅ THE VETO DOES NOT FIRE, AND THE FLOOR STAYS AT 0.5.** The MECHANISM moves exactly as
+designed and measurably – she spends 2.2 more weeks a season below the injury knee, 4.4 SEM, in the
+years the spec is about. The injury DOOR's output does not: onsets/season +0.01 against ±0.03, and
+season prevalence in the fade's own years 60% → 61% against a ±1.9 pt SEM. ⚠ **Said plainly: the
+point estimate moved UP, in the predicted direction, by an amount this sample cannot distinguish from
+zero** – at 12 seeds it read +2, at 48 seeds +1, which is what noise does. It is not a licence to
+ignore the number; it is a statement that there is no measured increase to act on.
+
+⚠ **AND IF IT EVER DOES FIRE, `recoveryAgeFloor` IS THE WRONG LEVER AND §6.6 SHOULD SAY SO.** The
+floor is inert until **42.31** – past the 41.17 at which `lastOfferPeakShare` has already ended the
+career. A floor that actually blunted the fade in the years that carry the risk would have to be
+~0.8 (biting from ~35.6), which is a different mechanic and contradicts his own «пол 2.5 ок».
+
+**7 ⚠ AND THE «PRIZE» IN §4a IS NOT DELIVERED – THE MEASUREMENT SAYS THE OPPOSITE, PLAINLY.** «She
+did not come back from the winter» was to be read off the fatigue spec's `opens the next season
+at >= 90`. What the walk shows is the reverse: she opens the season *better* the older she gets,
+because her level falls, she loses earlier, and she plays **38.9 matches a season at 16 against 19.7
+at 42**. Less tennis outruns slower recovery.
+
+| age | 30 | 33 | 35 | 37 | 39 | 41 |
+| --- | --- | --- | --- | --- | --- | --- |
+| opens next season – control | 87 | 86 | 91 | 94 | 94 | 97 |
+| opens next season – **shipped** | 83 | 84 | 90 | 91 | 93 | 97 |
+
+The fade costs her at most ~3 points at the season door, in the mid-thirties, and she is over 90 from
+35 in both arms. **The pooled 86 → 85 shortfall against `>= 90` is real but is NOT this change's**:
+ages 16–29 are byte-identical between the arms and are where the shortfall lives. So §4's last word
+cannot be «she did not come back from the winter» – it is not true of this engine. ⭐ If that sentence
+is wanted it needs a mechanism that makes the last seasons HARDER, not a corridor that makes them
+quieter; the honest late-career sentence available today is about how little tennis is left in her.
+
+⚠ **AND THE ARMS ARE IDENTICAL TO THE INTEGER AT EVERY AGE THROUGH 29** – played, matches, mean
+condition, the wk49 door, «opens next» – so «the junior era and the whole pre-peak career are
+untouched by construction» is measured, not asserted.
+
 ---
 
 ## 5. What it costs
@@ -353,6 +451,14 @@ and if it moves, something is wrong.
 ---
 
 ## 6. Acceptance – the numbers that decide whether it worked
+
+⚙ **27.08: 6 AND 7 ARE NOW MEASURED TOO** – §4a's own ⚙ 27.08 block carries the arms, the sample and
+the numbers. In one line each: **6 ✅ the veto does not fire** (season injury prevalence in the fade's
+own years 60% → 61%, one point against a ±1.9-point SEM, on 48 careers × 27 seasons; the EXPOSURE it
+works through does move, +2.2 weeks a season below the knee at 4.4 SEM), so `recoveryAgeFloor` ships
+at the approved 0.5. **7 ⚠ NOT AS PREDICTED, AND THE «PRIZE» IS OFF**: she opens her last seasons
+BETTER, not worse – less tennis outruns slower recovery – so «she did not come back from the winter»
+is not a sentence this engine can say.
 
 ### ⚙ 26.08 – MEASURED FOR STEP 2 (the trigger only; §4a is not built)
 
@@ -442,5 +548,6 @@ Re-run the endings bench on both arms and compare against §2's table:
 | **1** | the stored peak, with its schema move – written, migrated, fixtured, and read by nothing yet | a golden fixture round-trips it and `e2e:fixtures` is green |
 | **2** ✅ | the trigger moves to the share; `stopAskingAgeYears` deleted | ⚙ **DONE 26.08.** Built at 70% FIRST and measured against untouched main: the endings bench's **whole 127-line report came back byte-identical** – six endings, both retirement arms, the fork arms, the plateau sweep, the grace sweep, the college door, the injury table and the per-preset grid – then the constant was set to 55%. ⚠ The stated gate («reproduces §2 byte for byte») was not achievable and §2 above says why: that table is 04.08 and main had already drifted off it. The control is main, which is the stronger arm anyway |
 | **3** | the threshold set to his answer, and §6 re-measured | the five acceptance numbers |
+| **3a** ✅ | *(§4a)* the recovery fade, its floor, and the rounding moved to the snapshot boundary | ⚙ **DONE 27.08.** `recoveryAgeFloor: 0.5` inside `recoveryBaseFor`, so both its readers inherit it; the rivals untouched; NO schema move and zero draws. §6.6's veto measured on the fixed probe against a `--recoveryFloor 1` control – it does not fire. ⚠ Two things the spec had wrong are corrected in §4a: the helper's «three readers in world.ts» was one merge stale, and §6.7's hoped-for «she did not come back from the winter» is the OPPOSITE of what the walk shows |
 | **4** | her last word – the card's final state and the event line | the copy reads as hers, and the parent is not asked a question with one legal answer |
 | **5** | *(optional, §7.4)* the fade becomes visible in the season summary | a season past the peak says so without naming a number |

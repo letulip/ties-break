@@ -69,7 +69,13 @@ export interface Snapshot {
    *  calendar. It is the capacity of `week + 1`, the week the main button plays. */
   planDayCapacity: number
   /** the kid's per-week condition 0..100 (100 = fresh); fatigue is the derived 100 - condition
-   *  (Season-Life slice B, schema v12). */
+   *  (Season-Life slice B, schema v12).
+   *
+   *  ⭐⭐ A WHOLE NUMBER, ALWAYS – rounded ONCE by `toSnapshot` (the long goodbye §4a, owner 26.08:
+   *  «у нас в логике могут быть дробные числа – это окей, а у пользователя целые в интерфейсе»).
+   *  `world.condition` behind it is FRACTIONAL in the professional era, because the recovery a rest
+   *  week returns fades with her body from 29 on. No screen may round this again: the boundary owns
+   *  the decision, and `tests/condition-boundary.test.ts` is the ratchet that says so. */
   condition: number
   /** the kid's active injury, or null when healthy. Always null in slice B (Slice C populates it). */
   injury: SnapshotInjury | null

@@ -20,7 +20,12 @@ import { TIERS, isBlackoutWeek, isJuniorAge, isOffSeasonWeek, tierAgeBlock } fro
 import { schoolIsOver } from '../kidLife'
 import type { LadderTrack, SeasonEvent, TierId } from '../season/types'
 import { LADDER_LABEL, LADDER_POINTS_LABEL, type EntryCapUsage } from '../../shared/protocol'
-import { kidAgeAt } from './age'
+// ⭐ THE LONG GOODBYE §4a: her body as one number, and the continuous age `declineFactor` reads.
+// `development.ts` is an engine LEAF (rng / economy / coach / plan / protocol / dates – no world.ts
+// edge), which is the same reason world/endings.ts imports `physicalMean` from it for the ending's
+// own share. The dependency direction in this file's header is unchanged.
+import { physicalMean } from '../development'
+import { kidAgeAt, kidAgeExact } from './age'
 import { alternateListPlace } from './ladder'
 import {
   entryCapUsage,
@@ -81,12 +86,62 @@ export function restRecoveryBonus(restPercent: number): number {
  *  `activeLadderOf === 'wta'`: her first counting W-series result on the never-pruned mark, a
  *  one-way door, so the base can never flap back mid-career.
  *
- *  ⚠ ONE HELPER, THREE READERS, BY CONSTRUCTION: `accrueCondition` below plus the two 18.08 makeup
- *  expressions in world.ts (the medical-withdrawal arm and `skipEvent`). The makeups hand back
- *  «what a non-playing week pays», so they MUST pay the same phase's base or the doctor's veto
- *  becomes worth 3 condition more than an ordinary week in the pro era. Pure read, zero draws. */
+ *  ⚠ ONE HELPER, TWO READERS IN THIS FILE, BY CONSTRUCTION: `accrueCondition` below plus
+ *  `withheldFreeWeekRecovery`, which is the one oracle the three refund sites read (the two 18.08
+ *  makeup expressions in world.ts – the medical-withdrawal arm and `skipEvent` – plus planner.ts's
+ *  practice cancellation; the round-25 collect folded them into it, so this header's old «three
+ *  readers in world.ts» wording named the shape before that merge). The makeups hand back «what a
+ *  non-playing week pays», so they MUST pay the same phase's base or the doctor's veto becomes worth
+ *  3 condition more than an ordinary week in the pro era. Pure read, zero draws.
+ *
+ *  ⭐⭐⭐ AND FROM `declineStart` IT FADES WITH HER BODY (the long goodbye §4a, his own addition on
+ *  26.08: «для концовок и возраста предлагаю еще уменьшать недельное восстановление после матчей,
+ *  т.е. и физика будет падать и восстанавливаться будет дольше»). The base is multiplied by the
+ *  share of her own peak physical she has left – v62's stored `peakPhysical` against today's
+ *  `physicalMean`, the SAME ratio §3a's ending trigger reads – floored at
+ *  `ECONOMY.condition.recoveryAgeFloor`. 5.00 at 29, 4.46 at 33, 3.45 at 38, 2.79 at 41, 2.50 from
+ *  ~43 where the floor first bites.
+ *
+ *  ⚠⚠ THE FADE GOES HERE PRECISELY SO THAT BOTH READERS INHERIT IT. A slower rest week that the
+ *  medical withdrawal then refunded at the un-faded rate would make the doctor's veto worth MORE
+ *  than an ordinary week in exactly the years this is about – the same incoherence the 22.08 phase
+ *  split had to close, one step further on. `withheldFreeWeekRecovery` carries the faded base on
+ *  both sides of its practice arm, so a friendly still forfeits only the slider.
+ *
+ *  ⚠ THE JUNIOR ERA CANNOT MOVE, AND IT IS THE AGE GATE THAT GUARANTEES IT RATHER THAN THE RATIO.
+ *  The share is not identically 1 before the peak: a rested knock lowers `skills` while the running
+ *  maximum keeps the number the good week earned, so a fifteen-year-old with a sore shoulder reads
+ *  below 1 for a few weeks. Multiplying by that would slow the junior recovery, and the junior
+ *  benches are pinned reference tables where a drift is invisible (fatigue-reprice-2026-08.md §5).
+ *  So: below `declineStart` the multiplier is exactly 1, by construction and not by arithmetic.
+ *
+ *  ⚠ `kidAgeExact` AND NOT `kidAgeAt`, because `declineFactor` reads the continuous age and
+ *  `growWeek` hands it `kidAgeExact` (world/phaseGrowth.ts). Two clocks here would open a gap of up
+ *  to a year in which her body is falling and her recovery is not.
+ *
+ *  ⚠ RIVALS ARE UNTOUCHED and must stay so: season/rival.ts:185 reads `c.recoveryBase` directly, not
+ *  this helper. Field-pro ageing is its own backlog item and is not this spec's.
+ *
+ *  ⚠ FRACTIONAL ON PURPOSE (owner 26.08: «у нас в логике могут быть дробные числа – это окей, а у
+ *  пользователя целые в интерфейсе»). The engine keeps the fraction and it keeps falling; the
+ *  rounding happens ONCE, where a number crosses into `Snapshot` for a person to read – see
+ *  world/snapshot.ts. Quantising the mechanic would deliver the fade as three visible jumps instead
+ *  of a slope, which is the opposite of what §4a is for. Still zero draws: a division. */
 export function recoveryBaseFor(world: WorldState): number {
-  return activeLadderOf(world) === 'wta' ? ECONOMY.condition.proPhaseRecoveryBase : ECONOMY.condition.recoveryBase
+  const base = activeLadderOf(world) === 'wta' ? ECONOMY.condition.proPhaseRecoveryBase : ECONOMY.condition.recoveryBase
+  return base * recoveryAgeFade(world)
+}
+
+/** THE MULTIPLIER ABOVE, ALONE – 1 through the whole junior era and the whole pre-peak career, then
+ *  the share of her own peak physical that is left, floored at `recoveryAgeFloor`.
+ *
+ *  Exported because the fade is a claim about a career and the tests have to be able to state it at
+ *  an age without walking `accrueCondition` a thousand times to infer it. Pure read, zero draws. */
+export function recoveryAgeFade(world: WorldState): number {
+  const age = kidAgeExact(world.week, world.profile.birthMonth, world.profile.birthDay)
+  if (age < ECONOMY.development.ageCurve.declineStart) return 1
+  const share = physicalMean(world.skills) / world.peakPhysical
+  return Math.max(ECONOMY.condition.recoveryAgeFloor, share)
 }
 
 /** ⭐ AD STEP 2 (§4a): IS A SHOOT WEEK IN FORCE – the signed endorsement's named week, outside the

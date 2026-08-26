@@ -195,7 +195,12 @@ const pointsText = computed(() =>
 // colour here as it does on Home. The ramp is DATA and therefore a prop - see
 // src/components/ui/ProgressRing.vue - and the hue is `composables/readingColor.ts`, which is where
 // the expression this file used to spell out for itself now lives, once, for all five rings.
-const condition = computed(() => Math.round(game.snapshot?.condition ?? 0))
+// ⚠ NO `Math.round` HERE ANY MORE, AND THAT IS THE FIX RATHER THAN AN OMISSION (the long goodbye
+// §4a, owner 26.08). `toSnapshot` rounds `condition` ONCE at the boundary, so this screen and the
+// five others that read the same field cannot disagree about the same body – the rounding used to
+// live here and in TournamentFlow and nowhere else, which is two sides answering one question
+// separately. Round again and nothing breaks today; the point is that the boundary owns it.
+const condition = computed(() => game.snapshot?.condition ?? 0)
 const conditionColor = computed(() => readingColor({ pct: condition.value }))
 
 // --- THE COACH TILE ------------------------------------------------------------------------

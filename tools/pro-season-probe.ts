@@ -87,13 +87,28 @@ KNOBS.injuryPlayingMultiplier = argOf('injPlay', KNOBS.injuryPlayingMultiplier)
 //                   the package gain is all she gets that week. Nothing in the engine does this – it
 //                   is the counterfactual the question needs, and it is bench-local by construction
 //                   (see the note where it is applied).
-const CONDITION = ECONOMY.condition as unknown as { recoveryBase: number; proPhaseRecoveryBase: number }
+const CONDITION = ECONOMY.condition as unknown as {
+  recoveryBase: number
+  proPhaseRecoveryBase: number
+  recoveryAgeFloor: number
+}
 CONDITION.recoveryBase = argOf('recovery', CONDITION.recoveryBase)
 // ⚠ AND THE PRO PHASE'S OWN BASE (recovery variant C, owner 22.08 – `recoveryBaseFor` reads it while
 // `activeLadderOf === 'wta'`). The injury-landscape spec's interaction question – does the §6
 // sub-knee lever bite harder in a pro era that recovers on 5 instead of 8 – needs the counterfactual
 // arm `--proRecovery 8`, measured, not assumed. Omitted = shipped 5.
 CONDITION.proPhaseRecoveryBase = argOf('proRecovery', CONDITION.proPhaseRecoveryBase)
+// ⚠⚠ AND THE FADING RECOVERY'S FLOOR (the long goodbye §4a, shipped 26.08) – the knob §6.6's VETO is
+// written against. From `declineStart` the base above is multiplied by the share of her own peak
+// physical she has left, floored here; the spec's rule is that if the fade pushes season injury
+// prevalence further over its 30-54% band, THIS number rises before anything else is touched.
+//
+// ⭐ AND `--recoveryFloor 1` IS THE CONTROL ARM, BY CONSTRUCTION RATHER THAN BY A WORKTREE. The
+// multiplier is `Math.max(floor, share)` and the share can never exceed 1, so a floor of 1 pins the
+// multiplier at exactly 1 and the engine is the un-faded one – same tree, same code path, same
+// commit, with the reader provably present (CLAUDE.md's null-arm hazard: «a constant without its
+// reader is a null arm that looks like a null result»).
+CONDITION.recoveryAgeFloor = argOf('recoveryFloor', CONDITION.recoveryAgeFloor)
 const VAC_SCALE = argOf('vacScale', 1)
 if (VAC_SCALE !== 1) {
   for (const pkg of ECONOMY.vacation.packages as unknown as { conditionGain: number }[]) {
@@ -511,6 +526,26 @@ console.log(
     .toFixed(0)
     .padStart(6)}%  = what this probe reported before the retirement door was counted (shipped 10.08)`,
 )
+// ⭐⭐ AND THE SAME NUMBER SPLIT AT `declineStart`, WITHOUT WHICH §6.6'S VETO CANNOT BE READ AT ALL
+// (the long goodbye §4a). The fade multiplies the recovery base ONLY from 29, so a run of the
+// probe's default three seasons (ages 16-18) is a NULL ARM for it by construction – it would report
+// "no change" for the same reason a constant without its reader does. The veto is about the years
+// the spec is about, so the prevalence has to be readable there on its own. Printed only when the
+// walk actually reaches those years; three seasons from sixteen never do.
+{
+  const before = flat.filter((r) => r.age < ECONOMY.development.ageCurve.declineStart)
+  const after = flat.filter((r) => r.age >= ECONOMY.development.ageCurve.declineStart)
+  const pct = (rows: SeasonRow[]) =>
+    rows.length === 0 ? '  n/a' : `${((100 * rows.filter((r) => r.injuryOnsets > 0).length) / rows.length).toFixed(0).padStart(5)}%`
+  if (after.length > 0) {
+    console.log(
+      `       ...under ${ECONOMY.development.ageCurve.declineStart} (fade cannot bite) ${pct(before)}   over ${
+        ECONOMY.development.ageCurve.declineStart
+      } (the fade's own years) ${pct(after)}` +
+        `   [recoveryAgeFloor ${CONDITION.recoveryAgeFloor}${CONDITION.recoveryAgeFloor >= 1 ? ' = FADE OFF, the control arm' : ''}]`,
+    )
+  }
+}
 
 // --- THE INJURY LANDSCAPE READ (detail/injuries-measure) ---------------------------------------
 // The pro era's row of the landscape spec's tables: onsets with SEM, the severity mix, weeks lost,

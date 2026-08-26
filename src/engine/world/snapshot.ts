@@ -944,6 +944,28 @@ export function toSnapshot(world: WorldState, stopReasons?: StopReason[]): Snaps
   // Computed ONCE and shared by the snapshot field and the diary facts – two computations could
   // never disagree, but one is also cheaper and reads as the single decision it is.
   const lossStreak = computeLossStreak(world)
+  // ⭐⭐⭐ THE ONE PLACE HER CONDITION BECOMES A WHOLE NUMBER, and it is a HOUSE RULE rather than a
+  // detail of one spec (owner, 26.08 – the long goodbye §4a): «у нас в логике могут быть дробные
+  // числа – это окей, а у пользователя целые в интерфейсе» · «пусть падает, но на фронт едет в
+  // отображение округленное значение». Any number that crosses into `Snapshot` for a person to read
+  // is whole; the fractions stay behind it. `Math.round` – half away from zero, «по правилам
+  // математики».
+  //
+  // ⚠⚠ IT HAPPENS HERE, ONCE, AND NOT IN EACH COMPONENT. It used to be handed over raw and rounded
+  // on the far side by `KidScreen` and `TournamentFlow` – two sides answering one question
+  // separately, this repo's most-repeated defect class, with five OTHER readers of the same field
+  // (`HomeScreen` twice, `PlanWeekSheet`, `SeasonScreen`, `WeekRecapCard`) rounding nothing at all.
+  // While the engine's recovery was integer arithmetic that cost nothing; the long goodbye's fading
+  // recovery base (world/medical.ts) makes `world.condition` genuinely fractional in the pro era, so
+  // the third caller that forgot would have printed `73.41999999` on a screen. The boundary is the
+  // place a component cannot get it wrong by omission.
+  //
+  // ⚠ THE ENGINE'S OWN COPY IS UNTOUCHED and must stay so: `world.condition` keeps the fraction, the
+  // corridor keeps closing continuously, and every threshold the engine reads – the doctor's veto,
+  // the tier caution floors, the injury door – still reads the real number. Rounding the MECHANIC
+  // would deliver the fade as three visible jumps instead of a slope, which is the opposite of what
+  // §4a is for. `tests/condition-boundary.test.ts` is the guard.
+  const shownCondition = Math.round(world.condition)
   // Diary-1: the facts + the selected lines, assembled from a narrow view of the world. Selection
   // draws only from `seed:diary:*` / `seed:memory:*` sub-streams at SNAPSHOT time – zero MAIN
   // draws, so the frozen capture (41550 / e6b0c709) is untouched by construction.
@@ -957,7 +979,7 @@ export function toSnapshot(world: WorldState, stopReasons?: StopReason[]): Snaps
     schoolOver: schoolIsOver(world.week, world.profile.birthMonth),
     kidId: KID_ID,
     startAgeYears: START_AGE_YEARS,
-    condition: world.condition,
+    condition: shownCondition,
     fundsCents: world.fundsCents,
     injury: world.injury
       ? {
@@ -1090,7 +1112,7 @@ export function toSnapshot(world: WorldState, stopReasons?: StopReason[]): Snaps
     // the next one. A capacity read off today's week would put two dots on the last Sunday of the
     // holidays and one on the Monday she actually trains through.
     planDayCapacity: summerDayCapacity({ ...world, week: world.week + 1 } as WorldState),
-    condition: world.condition,
+    condition: shownCondition,
     // injury is always null in slice B.
     // ⚠ `sinceWeek` IS CARRIED NOW (round-16 #19). It used to be dropped here as "persisted-only",
     // and that omission is what left the injury popup unable to ask its own question: the dialog had

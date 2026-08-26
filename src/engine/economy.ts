@@ -1696,6 +1696,26 @@ export const ECONOMY = {
     // he pointed. His «накидывать» arithmetic only works here too: base 5 + slider 2 + the entry
     // rung's +1 = 8 for a staffed professional against today's unstaffed 10.
     proPhaseRecoveryBase: 5,
+    // ⭐⭐⭐ THE FLOOR UNDER THE FADING RECOVERY (the long goodbye §4a, owner 26.08 – «пол 2.5 ок»).
+    // From `declineStart` the base above is multiplied by the share of her own peak physical she has
+    // left, and this is the lowest that multiplier may go: 0.5, so a professional rest week can never
+    // return less than 2.5. His own addition to the spec – «и физика будет падать и восстанавливаться
+    // будет дольше» – because until it the only thing age touched was the attribute VALUE: a
+    // thirty-eight-year-old drained from a match exactly as fast as a twenty-two-year-old and came
+    // back exactly as fast, so the old body was weaker but never tireder, which is backwards.
+    //
+    // ⚠ IT IS A MULTIPLIER ON `recoveryBaseFor`, NOT A SECOND CURVE. The share is the one §3a already
+    // computes for the ending, so the corridor closes continuously – every week, with no steps in it
+    // – and no new constant is tuned. `world/medical.ts` is the single place it is spent.
+    //
+    // ⚠⚠ AND IT IS ALMOST INERT UNDER THE SHIPPED THRESHOLD, which is worth knowing BEFORE anybody
+    // reaches for it. The share first falls below 0.5 at ~43, and `ENDINGS.lastOfferPeakShare` (0.55)
+    // has ended the career at ~41.2 – so this fires on outliers only (a migrated save, a future dial).
+    // It is a safety net, not a balance knob: «nobody should later raise the floor to fix something
+    // without noticing it is not currently doing anything» (§4a). ⚠ The ONE thing that legitimately
+    // moves it is §6.6's veto – if the fade pushes season injury prevalence further over its band,
+    // this rises before anything else is touched.
+    recoveryAgeFloor: 0.5,
     // V2 SHIPPED (owner verdict 25.07 "V2 хорош", after two fatigue-bench rounds): a tournament
     // week is travel + competition, not rest – NO base recovery on a week the kid plays. The
     // knob stays (the bench's 'legacy' scenario patches it back to 2 for reference runs).
