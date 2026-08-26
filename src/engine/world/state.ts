@@ -7,10 +7,16 @@
 //
 // ⚠ NOTHING ABOUT THE SAVE CHANGED, AND THAT IS THE WHOLE CLAIM. Two interfaces are TYPES: erased at
 // compile time, so they cannot reach a byte of `JSON.stringify`. Key ORDER follows the object
-// literal in `createWorld`, which did not move and was not touched. `SAVE_SCHEMA_VERSION` is 59, the
-// same 59 – the number did not move, no field was added, removed, renamed or retyped, and no
-// migration is owed. Proved rather than asserted: the three careers of
+// literal in `createWorld`, which did not move and was not touched. The version THIS EXTRACTION
+// carried across was 59, unchanged by it – no field was added, removed, renamed or retyped, and no
+// migration was owed by the move. Proved rather than asserted: the three careers of
 // tests/coach-travel-edge.test.ts hash byte for byte across this commit.
+//
+// ⚠ THE ABSOLUTE NUMBER USED TO LIVE IN THAT SENTENCE AND IT ROTTED (round 26, 26.08): the prose
+// still read «is 59, the same 59» at v61. `scripts/doc-facts.mjs` sources the version from the
+// CONSTANT below, which is why the gate stayed green over a false line – a script that reads the
+// fact cannot police the prose beside it. The claim above is now about the EXTRACTION, which cannot
+// go stale; the live version is the constant and nowhere else.
 //
 // ⚠ IT IS A LEAF AND MUST STAY ONE. Every import below is `import type`, so this module has NO
 // runtime edge at all – the one runtime thing in it is a number literal. That is what lets
