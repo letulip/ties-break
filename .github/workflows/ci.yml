@@ -40,7 +40,17 @@ jobs:
     # signal and a silence. Sized well above the honest worst case (the unit shards run ~4 min
     # locally, the e2e job spends ~2 of its own minutes fetching Chromium), so it can only ever fire
     # on a wedge and never on a slow-but-working run.
-    timeout-minutes: 25
+    #
+    # ⚠ RAISED 25 -> 35 ON 26.08, AND THE CEILING HAD STOPPED MEANING WHAT ITS NOTE SAYS. The unit
+    # shards it was sized against ran ~4 min locally; round 26 took them to 424 s (the bulk pool went
+    # over birpc's wall and twelve files were given processes of their own - scripts/heavy-tests.mjs
+    # carries the measurement). At CI's ~1.9x that is ~13.5 min for `npm test` alone and ~17 for the
+    # job, so 25 was no longer «well above the honest worst case» - it was 1.5x it, and it would have
+    # started firing on slow-but-working runs, which is the one thing this note says it must never do.
+    # 35 restores the original margin against the measured job. ⚠ IT IS NOT A FIX FOR A STALL: a
+    # wedged bulk pass burns the whole ceiling whatever it is set to, and the fix for that is the
+    # sharding, not this number.
+    timeout-minutes: 35
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7

@@ -761,6 +761,33 @@ a repeat, and the record has to show the first fix missing.
 - [ ] **16. «test-build падает на гите»** – **build/diagnose**: CI is red and the local gate is
   green, so the difference is the runner. Reproduce before guessing.
 
+- [x] **18 (his, 26.08, watching the PR). «test-build висит уже 19 минут, подозреваю, что скоро упадет
+  по тайм-ауту»** – he was right, and it was the birpc wall for the THIRD time. Not a wedge and not
+  his PR's content: `npm test` (`scripts/units.mjs`) stalls on the bulk pass, retries once, stalls
+  again, and burns the 25-minute ceiling.
+
+  ⭐ **REPRODUCED ON A QUIET MAC BEFORE ANYTHING WAS TOUCHED**, which is what turned a suspicion into
+  a diagnosis: `TB_UNIT_SKIP_HEAVY=1 npx vitest run --project unit --reporter=json` returned
+  **`success: true`, 3455 tests, 0 failed – and exit 1**. The same all-green-non-zero shape the two
+  earlier occurrences wear. It had already appeared once THIS session, in the first re-gate of #17.
+
+  ⚠ **AND THE CAUSE IS NEW: no single file is heavy any more – the POOL is.** Every candidate was
+  measured both in-pool and solo, and the contention penalty came out uniformly **x2.9**. The worst
+  file, `college-birthday`, is **77.7 s in-pool and 27 s solo** – nowhere near birpc's 60 s window on
+  its own, and far past it inside a pool of 172 files. Twelve files crossed this repo's own bar (a
+  file near 40 s in-pool is past the window at CI's ~1.9x, so the line is ~32 s); all twelve now have
+  a process each, exactly as the eight before them do. **Not one assertion was trimmed:
+  3642 tests before, 3642 after** – 375 of them simply moved out of the pool. Bulk fell 128 s/3455
+  tests to 95 s/3080, and the slowest shard is now 27 s (~51 s at CI's 1.9x, inside the window).
+
+  ⚠ **THE GATE GOT DEARER AND THAT IS THE TRADE**: `unit` went 252 s to **424 s** locally, because
+  twenty shards run serially. The job is now ~17 min against a ceiling of 25 that had been sized for
+  a 4-minute unit step – so the ceiling went to 35, which is the same margin the note claims for
+  itself rather than a new policy. ⚠ Raising it is NOT the fix for a stall: a wedged pass burns
+  whatever ceiling it is given. **The honest next step, when the serial tail costs more than the pool
+  saves, is fewer workers per core – measured – and never fewer tests.** Written into
+  `scripts/heavy-tests.mjs` so the next person meets it there.
+
 - [x] **17. «жду what и checklist проверенный по итогу»** – the PR body, every box earned. Handed over
   26.08 against `2937502`: `CHECK_EXIT=0` from a file (engine purity ok, unit green in 255s, component
   733 passed, build ok), `TESTSIM_EXIT=0` with 10 sim files in 305s and no corridor moved, and the
