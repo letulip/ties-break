@@ -28,7 +28,8 @@
 //
 // MEASUREMENT ONLY: nothing is patched and no engine number is written from here.
 import { openCareer, stepCareerWeek, POLICIES, PRESETS, median } from './econ-bench'
-import { chooseGift, pendingBirthday, resumeFromCollege } from '../src/engine/world'
+import { chooseGift, pendingBirthday, resumeFromCollege, skipTournament, closeTournament } from '../src/engine/world'
+import { collegeLeagueRevealOpen } from '../src/engine/world/college'
 import { answerFork } from '../src/engine/world/endings'
 import { skillMeanOf } from '../src/engine/world/college'
 import { COLLEGE_TIERS, COLLEGE_TIER_ORDER, canAfford, coveredShareOf, familyCanPayPerYearCents } from '../src/engine/collegeOffer'
@@ -40,6 +41,41 @@ import { WEEKS_PER_YEAR } from '../src/engine/season/calendar'
 import type { WorldState } from '../src/engine/world'
 import type { Rng } from '../src/engine/rng'
 import type { CollegeOffer, CollegeTier } from '../src/shared/protocol'
+
+/** ⚠⚠⚠ THE GAP BETWEEN THE ANSWER AND THE DEPARTURE, AND THE REASON THIS PROBE READ A WORLD THAT
+ *  NEVER WENT TO COLLEGE. Round 24 split the two: `answerFork('college')` RESERVES a place and
+ *  writes `fork.answer`, and `resolveCollegeDeparture` enrols her only once `world.week` reaches
+ *  `fork.departsWeek` – the following September. An instrument that answers and immediately calls
+ *  `resumeFromCollege` has ticked nothing, so `world.college` is still null, no ending is latched,
+ *  the press loop's `ending?.type === 'college'` is false on its first test, and the walk falls
+ *  straight through to the read. Measured: week frozen at 242, `funds after` byte-identical to
+ *  `savings at the fork`, «under water» 0/n – a finding manufactured by the instrument.
+ *
+ *  ⚠ THE GAP IS WALKED WITH `stepCareerWeek` AND NOT BARE `tickWeek`: until September she is still
+ *  on tour under the same policy the other arm uses, so these weeks earn and spend exactly as the
+ *  bench's weeks do everywhere else. The suites use bare ticks because their fixtures hold nothing;
+ *  a money probe cannot.
+ *
+ *  ⚠ SAME CLASS AS `pro-season-probe`'s retirement door: the engine grew a step, the instrument did
+ *  not, and nothing asserted that the walk had MOVED. It throws now. */
+function departToCollege(world: WorldState, rng: Rng): void {
+  for (let i = 0; i < WEEKS_PER_YEAR + 2 && world.ending === null; i++) stepCareerWeek(world, rng, POLICY)
+  if (world.college === null)
+    throw new Error(`college departure never resolved – answered at the fork, week ${world.week}, no enrolment`)
+}
+
+/** ⚠⚠ THE SECOND PAUSE INSIDE A COLLEGE YEAR. Round 24 gave the year one pause (her birthday);
+ *  round 26's student league gave it a second – the championship is revealed and `resumeFromCollege`
+ *  REFUSES to spend another year while it is open (`COLLEGE_REVEAL_REFUSAL`). Mirrors the helper the
+ *  college suites use: «Skip all rounds» then the finale's «Continue». */
+function answerLeagueReveal(world: WorldState): void {
+  if (!collegeLeagueRevealOpen(world)) return
+  skipTournament(world)
+  closeTournament(world)
+}
+
+
+
 
 const args = process.argv.slice(2)
 const argOf = (n: string, d: number) => {
@@ -133,11 +169,13 @@ for (let p = 0; p < PRESETS.length; p++) {
       // are all American so this never fires today; the row records the tier it ASKED for and the
       // engine's re-validation is what decides. See `answerFork`'s own note.
       answerFork(at.world, 'college', tier)
+      departToCollege(at.world, at.rng)
       let firstYearTuition = 0
       for (let y = 0; y < YEARS && at.world.ending?.type === 'college'; y++) {
         // Round 24: the year pauses on her birthday week – press, answer, press again.
         for (let press = 0; press < 3 && at.world.college!.years.length === y && at.world.ending?.type === 'college'; press++) {
           resumeFromCollege(at.world, at.rng)
+          answerLeagueReveal(at.world)
           if (pendingBirthday(at.world) !== null) chooseGift(at.world, 'day')
         }
         // ⚠⚠ THE LEDGER CHECK IS TAKEN AFTER ONE YEAR AND NOT AFTER FOUR, AND THAT IS THE INSTRUMENT

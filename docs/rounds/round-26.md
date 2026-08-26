@@ -702,6 +702,44 @@ a repeat, and the record has to show the first fix missing.
   about the weekly door (then 60% and ~9 unattributed points are what is left)?** No engine number
   is touched either way.
 
+- [x] **14c (the audit 14b's finding demanded). BOTH college probes had rotted the same way, and
+  one of them was printing a defect that does not exist.** `tools/college-choice-probe.ts` and
+  `tools/college-price-probe.ts` answered the fork with `answerFork(world, 'college')` and went
+  straight to `resumeFromCollege` – but ROUND 24 SPLIT THE ANSWER FROM THE DEPARTURE. The answer only
+  RESERVES a place; `resolveCollegeDeparture` enrols her when `world.week` reaches `fork.departsWeek`,
+  the following September. Neither probe ticked those weeks, so `world.college` stayed null, no ending
+  latched, the press loop's `ending?.type === 'college'` was false on its first test, and both walks
+  fell through to the read. Measured, not reasoned: week frozen at 242 in every career, `funds after`
+  byte-identical to `savings at the fork`, «under water» 0/n.
+
+  ⚠⚠ **THE CHOICE PROBE'S HEADLINE WAS THE INVERSE OF THE TRUTH.** Its quote-against-the-ledger line
+  read `quoted $27,327 / charged $-0 / delta $-27,327` on the private tier – it looked exactly like
+  the card promising a bill the tick never takes. Control (the file as shipped, run beside the fix):
+  `charged $-0` on all three tiers, «nothing ended» everywhere. Fixed, n=54: **state $0/$-0, national
+  $16,731/$16,732, private $26,594/$25,769**, and **bankruptcy 3 national, 4 private** where the
+  shipped file reported none.
+
+  ⭐ **THE SPEC IS NOT AFFECTED, and that was checked rather than assumed.** `the-college-choice-2026-08.md`
+  records quoted == charged to the dollar (`national $14,144 / $14,144`) and real bankruptcies (6 of 53
+  at the private place) – figures the broken walk CANNOT produce. The spec was measured before round 24
+  split the departure; the instruments rotted afterwards and nobody re-ran them. The restored shape
+  matches the spec's: state safe, national rare, private worst.
+
+  ⚠ Both walks also learned round 26's league reveal (`skipTournament` + `closeTournament`), and the
+  price probe now THROWS on a stalled walk – a press budget running out was indistinguishable from a
+  career finishing, which is how a manufactured 0/n reached a report with a green run beside it.
+  `tools/` only; no engine number is touched.
+
+- [x] **14d. Does the country choice affect anything? (his question, and my earlier answer to it was
+  wrong.)** I reported that country «no longer decides» the college price. It still does, in two
+  shipped places. **(1) The need layer is US-only** – `needShareOf` returns 0 outright for a non-US
+  family (`collegeOffer.ts:701`, the 34 CFR 668.33 rule the price probe already prints), so a
+  non-American pays the sticker with the athletic share alone and no need-based discount. Round 26 #2
+  removed the rule that shut a PLACE by country; it did not touch the rule that prices one.
+  **(2) `homeWildCardPlace`** opens a rung she has not earned when the event is hosted in her country
+  (`ladder.ts:688`). Both are real and neither is on any screen: **backlog, not a defect** – the
+  onboarding country step still says nothing about either.
+
 - [ ] **16. «test-build падает на гите»** – **build/diagnose**: CI is red and the local gate is
   green, so the difference is the runner. Reproduce before guessing.
 
