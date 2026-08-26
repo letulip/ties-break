@@ -463,6 +463,16 @@ a repeat, and the record has to show the first fix missing.
   · ⚠ **NOTHING ON THE COLLEGE CARD WAS TOUCHED** – not its heading, not its facts, not its answer
   buttons, and no news area was added to it: the card and the feed are on the same page, so the same
   sentence in both is one sentence twice. `CollegeYearCard.vue` is unmodified.
+  · **THE GATES.** Unit project GREEN in full (`scripts/units.mjs`, 238 s); the 12-file guard batch
+  (condition, coach-travel-edge, the six college files, events, pin-hygiene) 256/256; the component
+  batch (my file plus college-card, college-flow, college-shell, second-act, home-strip, mount-smoke)
+  98/98; `vue-tsc -b --force` clean; `doc-facts` ok; `pin-ratchet` ok (**3 raw marker slices, baseline
+  3 – this wave added none**); `engine-purity` ok. ⚠ **`test:sim` exits 1 and it is NOT this branch,
+  reproduced as CLAUDE.md demands rather than argued**: 9 of 10 files ok, `econ-reach-pro` "stalled
+  twice (runner, not tests)" with its own report reading **10/10 passed** – the documented birpc
+  `onTaskUpdate` 60 s RPC timeout. The same file ALONE: **37.27 s / exit 0 / 10 passed on this
+  branch** against **36.95 s / exit 0 / 10 passed at `origin/wave/review-intake`**. Same file, both
+  trees, no difference.
   · **MUTATION ARMS, each run and watched red:** `announceCampusInterlude` early-returns → 5 arms;
   the row dated `college.fromWeek` instead of `world.week` → the 3 RECENCY arms only, presence arms
   still green (a test that only counted rows would have passed this one); the row written
