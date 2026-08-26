@@ -2,13 +2,13 @@
 
 # `engine/world` – area to owner
 
-The barrel `src/engine/world.ts` (1,866 lines) re-exports the decomposed modules under their historical names, so every importer sees one flat surface. That is a COMPATIBILITY contract, not a discovery one – this file is the discovery half.
+The barrel `src/engine/world.ts` (1,893 lines) re-exports the decomposed modules under their historical names, so every importer sees one flat surface. That is a COMPATIBILITY contract, not a discovery one – this file is the discovery half.
 
 Regenerate with `node scripts/world-map.mjs`; `node scripts/world-map.mjs --check` fails when it is stale, and CI runs that on every pull request.
 
 **Do not read this file to answer one question** – that is the habit it exists to replace. `node scripts/world-map.mjs <symbol>` prints the owner and the line, and a plain `grep <symbol> tools/generated/world-symbol-map.md` does the same for a partial name.
 
-285 exported names across 37 owning modules.
+296 exported names across 38 owning modules.
 
 ## Areas
 
@@ -19,9 +19,10 @@ Regenerate with `node scripts/world-map.mjs`; `node scripts/world-map.mjs --chec
 | `src/engine/world/ladder.ts` | THE LADDER: where she stands, and what that standing opens | 22 |
 | `src/engine/world/medical.ts` | THE GATES: condition, the doctor's veto, the layoff, and whether she may enter at all | 20 |
 | `src/engine/world/entryCaps.ts` | THE ANNUAL ENTRY CAPS: the ITF junior allowance, the WTA professional one (AER) – and since P1 the JUNIOR ACCESS rules, which are the same family of rule from the same two rulebooks | 17 |
+| `src/engine/world/birthday.ts` | HER BIRTHDAY, AND WHAT YOU GIVE HER | 15 |
 | `src/engine/world/coachMarket.ts` | THE COACH MARKET: who is available at her age and rung, what they cost, and what hiring one does | 15 |
 | `src/engine/world/masseur.ts` | THE MASSEUR: the first seat of the travelling team (docs/plans/the-travelling-team-2026-08.md, step 1 – the owner's ruling Б, re-cut 22.08) | 15 |
-| `src/engine/world/birthday.ts` | HER BIRTHDAY, AND WHAT YOU GIVE HER | 13 |
+| `src/engine/world/multiWeek.ts` | ⭐ R2-13 PHASE 1 – THE FOUR-WEEK ADVANCE, AND THE TWO FACTS A SECOND WEEK BUTTON NEEDS | 13 |
 | `src/engine/world/sponsors.ts` | THE MONEY FROM OUTSIDE THE FAMILY: sponsors, the offers they make, and what a trip costs once somebody else is helping pay for it | 13 |
 | `src/engine/world/endings.ts` | THE ENDINGS, WIRED INTO THE WORLD: the latch, the two questions, the four-year freeze and the guard that stops a stale screen mutating a career that has stopped | 12 |
 | `src/engine/world/mandatory.ts` | THE MANDATORY REGIME AND THE PENALTY LEDGER (W3-ACT2, act2-pro-tour.md §6) | 11 |
@@ -29,7 +30,6 @@ Regenerate with `node scripts/world-map.mjs`; `node scripts/world-map.mjs --chec
 | `src/engine/world/kit.ts` | THE KIT SHE PLAYS WITH, AS A DECISION - the till, and what the Money screen reads off it | 8 |
 | `src/engine/world/knock.ts` | THE KNOCK: she comes off court sore, and the parent rests it or sends her back out | 8 |
 | `src/engine/world/injury.ts` | INJURIES AND PHYSIO: the weekly roll, the hazard shape behind it, and the recovery the family pays for – plus the sweep that cleans up everything an injury invalidates | 7 |
-| `src/engine/world/multiWeek.ts` | ⭐ R2-13 PHASE 1 – THE FOUR-WEEK ADVANCE, AND THE TWO FACTS A SECOND WEEK BUTTON NEEDS | 7 |
 | `src/engine/world/planner.ts` | THE SEASON PLANNER: the two things a parent can put on an empty week – a family holiday and a practice match – and what the engine does with them when the week arrives | 7 |
 | `src/engine/world/entries.ts` | THE ENTRY COMMANDS: putting her in a draw, and taking her back out | 6 |
 | `src/engine/world/milestones.ts` | WHAT THE FAMILY KEEPS: the moments that are never pruned, and the season they add up to | 6 |
@@ -39,6 +39,7 @@ Regenerate with `node scripts/world-map.mjs`; `node scripts/world-map.mjs --chec
 | `src/engine/season/calendar.ts` | Package L – tournament calendar | 4 |
 | `src/engine/world/ledger.ts` | THE LEDGER: the two write primitives every world mutation goes through, and the pure folds that read the finance ledger back out | 4 |
 | `src/engine/kidLife.ts` | HER LIFE OFF THE COURT - the three tiles of screen C's attribute grid that are not about results | 3 |
+| `src/engine/world/fieldNews.ts` | ⭐⭐⭐ THE TOUR HAS A VOICE – the professional field's succession, said out loud (round 26 #10) | 3 |
 | `src/engine/world/phaseObligations.ts` | ⭐ R2-10 STEP 2, PHASE 1 – THE SEASON BOUNDARY AND THE RECURRING OBLIGATIONS | 3 |
 | `src/engine/world/player.ts` | THE KID AS A MATCH PLAYER: turning a career's persisted state into the two numbers the match engine actually consumes | 3 |
 | `src/engine/world/state.ts` | ⭐ R2-10 STEP 1 – THE PERSISTED SCHEMA, MOVED WITHOUT TOUCHING SERIALISATION | 3 |
@@ -178,6 +179,26 @@ THE ANNUAL ENTRY CAPS: the ITF junior allowance, the WTA professional one (AER) 
 - `proSubCapUsage` – `src/engine/world/entryCaps.ts`
 - `yearEndJuniorRank` – `src/engine/world/entryCaps.ts`
 
+### `src/engine/world/birthday.ts`
+
+HER BIRTHDAY, AND WHAT YOU GIVE HER.
+
+- `BIRTHDAY_BANDS` – `src/engine/world/birthday.ts`
+- `BIRTHDAY_COLLEGE_BAND` – `src/engine/world/birthday.ts`
+- `BIRTHDAY_DAY_TOGETHER` – `src/engine/world/birthday.ts`
+- `BIRTHDAY_TIME_TOGETHER` – `src/engine/world/birthday.ts`
+- `birthdayHeading` – `src/engine/world/birthday.ts`
+- `birthdayHistory` – `src/engine/world/birthday.ts`
+- `birthdayOffer` – `src/engine/world/birthday.ts`
+- `birthdayOfferFor` – `src/engine/world/birthday.ts`
+- `birthdayOptions` – `src/engine/world/birthday.ts`
+- `birthdayWords` – `src/engine/world/birthday.ts`
+- `buildBirthdayPrompt` – `src/engine/world/birthday.ts`
+- `chooseGift` – `src/engine/world/birthday.ts`
+- `collegeBirthdayIndexOf` – `src/engine/world/birthday.ts`
+- `giftNoun` – `src/engine/world/birthday.ts`
+- `pendingBirthday` – `src/engine/world/birthday.ts`
+
 ### `src/engine/world/coachMarket.ts`
 
 THE COACH MARKET: who is available at her age and rung, what they cost, and what hiring one does.
@@ -218,23 +239,23 @@ THE MASSEUR: the first seat of the travelling team (docs/plans/the-travelling-te
 - `setMasseurSessions` – `src/engine/world/masseur.ts`
 - `setMasseurTravels` – `src/engine/world/masseur.ts`
 
-### `src/engine/world/birthday.ts`
+### `src/engine/world/multiWeek.ts`
 
-HER BIRTHDAY, AND WHAT YOU GIVE HER.
+⭐ R2-13 PHASE 1 – THE FOUR-WEEK ADVANCE, AND THE TWO FACTS A SECOND WEEK BUTTON NEEDS.
 
-- `BIRTHDAY_BANDS` – `src/engine/world/birthday.ts`
-- `BIRTHDAY_COLLEGE_BAND` – `src/engine/world/birthday.ts`
-- `BIRTHDAY_DAY_TOGETHER` – `src/engine/world/birthday.ts`
-- `BIRTHDAY_TIME_TOGETHER` – `src/engine/world/birthday.ts`
-- `birthdayHeading` – `src/engine/world/birthday.ts`
-- `birthdayHistory` – `src/engine/world/birthday.ts`
-- `birthdayOffer` – `src/engine/world/birthday.ts`
-- `birthdayOptions` – `src/engine/world/birthday.ts`
-- `birthdayWords` – `src/engine/world/birthday.ts`
-- `buildBirthdayPrompt` – `src/engine/world/birthday.ts`
-- `chooseGift` – `src/engine/world/birthday.ts`
-- `giftNoun` – `src/engine/world/birthday.ts`
-- `pendingBirthday` – `src/engine/world/birthday.ts`
+- `ADVANCE_REFUSALS` – `src/engine/world/multiWeek.ts`
+- `advanceRefusal` – `src/engine/world/multiWeek.ts`
+- `calendarClearAhead` – `src/engine/world/multiWeek.ts`
+- `eventIsHers` – `src/engine/world/multiWeek.ts`
+- `LONG_LAYOFF_WEEKS` – `src/engine/world/multiWeek.ts`
+- `longLayoff` – `src/engine/world/multiWeek.ts`
+- `MULTI_WEEK_SPAN` – `src/engine/world/multiWeek.ts`
+- `QUIET_WINDOW_WEEKS` – `src/engine/world/multiWeek.ts`
+- `spanDigest` – `src/engine/world/multiWeek.ts`
+- `spanRowCount` – `src/engine/world/multiWeek.ts`
+- `SpanWeek` *(type)* – `src/engine/world/multiWeek.ts`
+- `spanWorthOffering` – `src/engine/world/multiWeek.ts`
+- `stoppableOfferWeek` – `src/engine/world/multiWeek.ts`
 
 ### `src/engine/world/sponsors.ts`
 
@@ -339,18 +360,6 @@ INJURIES AND PHYSIO: the weekly roll, the hazard shape behind it, and the recove
 - `retirementInjury` – `src/engine/world/injury.ts`
 - `rollInjury` – `src/engine/world/injury.ts`
 
-### `src/engine/world/multiWeek.ts`
-
-⭐ R2-13 PHASE 1 – THE FOUR-WEEK ADVANCE, AND THE TWO FACTS A SECOND WEEK BUTTON NEEDS.
-
-- `ADVANCE_REFUSALS` – `src/engine/world/multiWeek.ts`
-- `advanceRefusal` – `src/engine/world/multiWeek.ts`
-- `MULTI_WEEK_SPAN` – `src/engine/world/multiWeek.ts`
-- `spanDigest` – `src/engine/world/multiWeek.ts`
-- `spanRowCount` – `src/engine/world/multiWeek.ts`
-- `SpanWeek` *(type)* – `src/engine/world/multiWeek.ts`
-- `stoppableOfferWeek` – `src/engine/world/multiWeek.ts`
-
 ### `src/engine/world/planner.ts`
 
 THE SEASON PLANNER: the two things a parent can put on an empty week – a family holiday and a practice match – and what the engine does with them when the week arrives.
@@ -439,6 +448,14 @@ HER LIFE OFF THE COURT - the three tiles of screen C's attribute grid that are n
 - `schoolEndWeek` – `src/engine/kidLife.ts`
 - `schoolIsOver` – `src/engine/kidLife.ts`
 - `schoolIsOverForBand` – `src/engine/kidLife.ts`
+
+### `src/engine/world/fieldNews.ts`
+
+⭐⭐⭐ THE TOUR HAS A VOICE – the professional field's succession, said out loud (round 26 #10).
+
+- `announceCampusInterlude` – `src/engine/world/fieldNews.ts`
+- `campusDigestLine` – `src/engine/world/fieldNews.ts`
+- `FIELD_NEWS` – `src/engine/world/fieldNews.ts`
 
 ### `src/engine/world/phaseObligations.ts`
 
