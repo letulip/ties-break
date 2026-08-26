@@ -430,9 +430,11 @@ a repeat, and the record has to show the first fix missing.
   spending the whole 60-row snapshot budget on news (Home discards every `expense`/`income`, and the
   Money screen reads its own `financialEvents` slice, so five rows in six of that window are thrown
   away before drawing) gives **60 rows reaching 138 weeks** – more and older, the opposite of «сжато».
-  · **WHAT SHIPPED: ONE ROW, ON THE WEEK HE IS STANDING ON.** `world/fieldNews.ts:156-249` –
-  `announceCampusInterlude`, called from `world.ts:1775` at the one point every exit from
-  `resumeFromCollege` passes: «🌍 The tour has not waited: 34 of today's top 100 have come up since
+  · **WHAT SHIPPED: ONE ROW, ON THE WEEK HE IS STANDING ON.** `world/fieldNews.ts:160-258` –
+  `campusDigestLine` + `announceCampusInterlude`, called from `world.ts:1775` at the one point every
+  exit from `resumeFromCollege` passes (its other two lines: the `pressFrom` capture at `world.ts:1711`
+  and the import/re-export at `world.ts:305-306`; `FIELD_NEWS.churnDepth`'s doc gained three lines at
+  `fieldNews.ts:57`): «🌍 The tour has not waited: 34 of today's top 100 have come up since
   the scholarship began, and R. Delaney is #1 at 26.» Its week IS the rest week, so it is the top
   week group of the feed **by construction rather than by budget** – no window can lose it. Both
   facts are pure walks of `careerAt` / `rankingFor`; the newcomer count reads `debutSeason`, i.e. the
