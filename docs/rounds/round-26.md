@@ -761,4 +761,20 @@ a repeat, and the record has to show the first fix missing.
 - [ ] **16. «test-build падает на гите»** – **build/diagnose**: CI is red and the local gate is
   green, so the difference is the runner. Reproduce before guessing.
 
-- [ ] **17. «жду what и checklist проверенный по итогу»** – the PR body, every box earned.
+- [x] **17. «жду what и checklist проверенный по итогу»** – the PR body, every box earned. Handed over
+  26.08 against `2937502`: `CHECK_EXIT=0` from a file (engine purity ok, unit green in 255s, component
+  733 passed, build ok), `TESTSIM_EXIT=0` with 10 sim files in 305s and no corridor moved, and the
+  frozen MAIN capture unmoved – `tests/condition.test.ts` is byte-identical to main and passes 51/51 at
+  41550 / `e6b0c709`. The one box that needed a reason rather than a tick is the schema: it MOVED,
+  59 -> 61, and both 4-part moves are named in What (v60 the league's replays, v61 the deletion of the
+  per-place `open` field).
+
+  ⚠ **THE FIRST RE-GATE CAME BACK RED AND IT WAS MINE.** `CHECK_EXIT=1` with **3455 of 3455 tests
+  passed and zero assertion failures** – the error was vitest's own `Timeout calling "onTaskUpdate"`,
+  its reporter RPC, and `units.mjs` classified it itself: «1 stalled twice (runner, not tests)». Cause:
+  I had `pkill`-ed the previous run and started the next one on top of it. Re-run clean on the same
+  commit: green. Recorded because the contention signature is now three-for-three this round – zero
+  failed assertions is the tell, and the answer is always to re-run before diagnosing.
+
+  ⚠ **PR #105 WAS ALREADY MERGED by the owner** (the R2 programme, the world.ts/protocol.ts
+  decomposition, #16's CI ceiling). This PR is round 26 alone: 43 commits on top.
