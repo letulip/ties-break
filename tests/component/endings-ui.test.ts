@@ -11,6 +11,9 @@ import EndingScreen from '../../src/components/EndingScreen.vue'
 import ForkDialog from '../../src/components/ForkDialog.vue'
 import RetirementDialog from '../../src/components/RetirementDialog.vue'
 import { useGameStore } from '../../src/stores/game'
+// ⭐ THE LONG GOODBYE STEP 4 – her last word is the ENGINE's sentence, and the card renders it. The
+// pin goes through the symbol so a re-wording moves the assertion with the copy.
+import { lastWordLine } from '../../src/engine/ending'
 import type { AlbumPage, CareerEndingType, EndingView, Snapshot } from '../../src/shared/protocol'
 
 function albumPage(slot: number, over: Partial<AlbumPage> = {}): AlbumPage {
@@ -157,6 +160,38 @@ describe('the album', () => {
     w.unmount()
   })
 
+  // ⭐ THE LONG GOODBYE STEP 4 – THE EPILOGUE STILL OPENS ON EVERY ENDING, COLLEGE INCLUDED. Step 4
+  // rewrote the `natural` ending's detail line into her own voice, and `CareerEndingType` is a
+  // closed set of six that this screen has to survive whichever one it is handed. College is in the
+  // sweep on purpose: it is the one ending that can be RESUMED, so its epilogue is read by a player
+  // whose career is still alive, and it is the one the album has already been re-aimed for twice.
+  it('⚠ opens on every ending type, college included – the whole album, to the last page', async () => {
+    const types: CareerEndingType[] = ['stopped', 'college', 'bankruptcy', 'injury', 'natural', 'plateau']
+    for (const type of types) {
+      setActivePinia(createPinia())
+      patchSnapshot({
+        ending: endingView(type, {
+          ending: {
+            type,
+            week: 1453,
+            ageYears: 41,
+            // The natural ending's real fragment, as `endingForRetirement` now writes it.
+            detail: type === 'natural' ? '41, and nobody had to ask her' : `detail for ${type}`,
+            resumesWeek: type === 'college' ? 317 : null,
+          },
+          oneMoreYearCount: 4,
+        }),
+      })
+      const w = mount(EndingScreen)
+      expect(w.findAll('.album-page'), `${type}: no page rendered`).toHaveLength(1)
+      for (let i = 0; i < 6; i++) await w.findAll('.album-arrow')[1].trigger('click')
+      // The hand-off foot is the last page's own block, and it is the half a mount alone would miss.
+      expect(w.text(), `${type}: the record never opened`).toContain('The whole record')
+      expect(w.text(), `${type}: the count on the foot is not hers`).toContain('She said one more year 4 times')
+      w.unmount()
+    }
+  })
+
   it('renders for the nineteen-year-old who never turned pro – seven pages, two of them empty', () => {
     patchSnapshot({
       ending: endingView('stopped', {
@@ -292,17 +327,27 @@ describe('the natural end', () => {
     w.unmount()
   })
 
-  // ⚠ RE-AIMED, NOT WEAKENED (the long goodbye §3a). It read «at 38 the LAST offer», and 38 was a
-  // real number then – `ENDINGS.stopAskingAgeYears`, now deleted. The card never read that constant
-  // and does not read the new one either: it branches on `offer.final` and prints
-  // `snapshot.ageYears`, which is exactly why no template line moved. So the fixture moves to the
-  // age the shipped 55% threshold actually produces (41, §3a) and the assertions are untouched.
-  it('⚠ on the LAST offer it is made and taken – one button, and the copy says the question ran out', () => {
-    patchSnapshot({ ageYears: 41, retirementOffer: { askedWeek: 1453, seasonIndex: 27, reason: 'age', final: true } })
+  // ⚠ RE-AIMED TWICE, NEVER WEAKENED. (1) The long goodbye §3a: it read «at 38 the LAST offer», and
+  // 38 was a real number then – `ENDINGS.stopAskingAgeYears`, now deleted – so the fixture moved to
+  // the age the shipped 55% threshold actually produces (41). (2) STEP 4: it then read «the copy
+  // says the question ran out», which is the game explaining that IT stopped asking. There is no
+  // question on this card at all now, so the assertion asks the thing that replaced it – the line
+  // is HERS, and it is pinned through the engine's own symbol rather than through a spelling.
+  it('⚠ on the LAST offer there is nothing to answer – one control, and the line on it is hers', () => {
+    patchSnapshot({
+      ageYears: 41,
+      oneMoreYearCount: 4,
+      retirementOffer: { askedWeek: 1453, seasonIndex: 27, reason: 'age', final: true },
+    })
     const w = mount(RetirementDialog)
-    expect(w.findAll('.retire-answer')).toHaveLength(1)
-    expect(w.text()).toContain('Nobody is going to ask her again')
-    // It must NOT read as a rule that retires her.
+    const controls = w.findAll('.retire-answer')
+    expect(controls).toHaveLength(1)
+    expect(w.text(), 'the card printed something other than the engine\'s line').toContain(lastWordLine(4))
+    // ⭐ ...and it really is reading the state rather than printing a fixed sentence.
+    expect(w.text()).toContain('She has said one more year 4 times')
+    // ⚠ THE CONTROL ACKNOWLEDGES, IT DOES NOT ANSWER, and there is no refusal to press.
+    expect(controls[0].find('strong').text()).toBe('All right')
+    // It must NOT read as a rule that retires her, and it must not grade her either.
     expect(w.text().toLowerCase()).not.toContain('you must')
     w.unmount()
   })

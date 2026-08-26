@@ -1442,6 +1442,9 @@ export function toSnapshot(world: WorldState, stopReasons?: StopReason[]): Snaps
         }
       : null,
     retirementOffer: world.retirementOffer,
+    // ⭐ THE LONG GOODBYE STEP 4 – the one piece of state her last word reads, and the retirement
+    // card is drawn long before `buildEndingView` above has anything to return.
+    oneMoreYearCount: world.oneMoreYearCount,
     college: world.college,
     careerTotals: world.careerTotals ?? { earnedCents: 0, spentCents: 0, prizeCents: 0, weeksLostToInjury: 0 },
     ...(stopReasons && stopReasons.length > 0 ? { stopReasons } : {}),

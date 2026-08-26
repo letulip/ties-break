@@ -134,6 +134,11 @@ import {
   guardNotEnded,
   latchEnding,
   lastRungSeasonIndexOf,
+  // ⭐ THE LONG GOODBYE STEP 4 – the refusal behind a `retire: false` aimed at an offer that was
+  // never a question. Off the barrel for the same reason `CAREER_ENDED_REFUSAL` is: player-facing
+  // copy on the worker's error channel, pinned by symbol so a re-wording cannot break a test in
+  // silence.
+  LAST_OFFER_NOT_A_QUESTION,
   plateauViewOf,
   autoEndingViewOf,
   resolveCollegeDeparture,
@@ -202,6 +207,7 @@ export {
   guardNotEnded,
   latchEnding,
   lastRungSeasonIndexOf,
+  LAST_OFFER_NOT_A_QUESTION,
   plateauViewOf,
   autoEndingViewOf,
   resolveCollegeDeparture,

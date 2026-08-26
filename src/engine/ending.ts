@@ -465,6 +465,49 @@ export function retirementDue(view: PlateauView): RetirementOffer | null {
   return null
 }
 
+/** ⭐⭐⭐ HER OWN LAST WORD (the long goodbye step 4, §4) – THE ONE SENTENCE THAT IS HERS, WRITTEN
+ *  ONCE AND RENDERED IN THREE PLACES: the feed line the off-season writes, the card that used to ask
+ *  the parent a question with one legal answer, and – through `endingForRetirement` below – the
+ *  epilogue's own detail. Exported so a test can pin the line without pinning a spelling, on the
+ *  precedent of `RELEASE_LINE_PREFIX` and `COLLEGE_FREEZE_REFUSAL`.
+ *
+ *  ⚠⚠ WHAT THIS SENTENCE MAY NOT SAY, AND EVERY CLAUSE OF IT WAS MEASURED BEFORE IT WAS WRITTEN.
+ *  The spec's own proposed line was «she did not come back from the winter», and step 3 measured it
+ *  FALSE: `opens next` at 30/33/35/37/39/41 reads 83/84/90/91/93/97, because she plays 19.7 matches
+ *  a season at 42 against 38.9 at 16 and less tennis outruns slower recovery. **She opens her last
+ *  seasons better, not worse.** So nothing here may imply she is too tired to go on.
+ *
+ *  ⚠ NOR MAY IT IMPLY SHE WORE OUT FASTER THAN ANYBODY ELSE, or that the player's management brought
+ *  this on. §3a's third correction: the share is a function of her AGE alone – two careers 26% apart
+ *  in peak read identical shares to three decimals – so a line blaming a body, a load or a decision
+ *  would be a promise the engine does not keep.
+ *
+ *  ⭐ WHAT IS LEFT IS THE HONEST MATERIAL, AND IT IS BETTER THAN WHAT WAS PROPOSED. Composure does
+ *  not decline: `growWeek` hands every non-physical attribute `veteranPoise` from `declineStart`, so
+ *  she is at her most composed the day she stops – see `physicalMean`'s own note in development.ts,
+ *  which excludes composure from the share for exactly this reason. «steadily» is that fact said
+ *  in-fiction, and it is the only thing in this line that is about HER rather than about the week.
+ *
+ *  ⭐ AND THE COUNT IS THE RICHEST STATE ON THE CARD. A woman who has said one more year four times
+ *  is telling a different story from one who never had to, and `oneMoreYearCount` is the only field
+ *  that can tell them apart. It counts BOTH questions – the plateau's and the age one – which is
+ *  correct: the sentence says how often she has said those words, not which reading prompted them.
+ *
+ *  ⚠ IT GRADES NOTHING (the house rule, «мы ни за что не наказываем»). It does not say the career
+ *  was good or wasted, it does not console, and it does not tell the player they should have done
+ *  something else. It reports who spoke and how. */
+export const LAST_WORD_OPENING = 'Nobody asked her this time. She said it herself, and she said it steadily.'
+
+/** Her line, with the one piece of state it reads. `oneMoreYearCount` is defensive against a poked
+ *  save: a count of 0 is unreachable in normal play (she is asked from 29 and the share cannot reach
+ *  the threshold until her forties) but it is a number on a save file, so it gets its own branch
+ *  rather than printing «one more year 0 times». */
+export function lastWordLine(oneMoreYearCount: number): string {
+  if (oneMoreYearCount <= 0) return `${LAST_WORD_OPENING} This season was the last one.`
+  const times = oneMoreYearCount === 1 ? 'time' : 'times'
+  return `${LAST_WORD_OPENING} She has said one more year ${oneMoreYearCount} ${times}, and this season was the last one.`
+}
+
 export function endingForRetirement(
   offer: RetirementOffer,
   week: number,
@@ -485,11 +528,13 @@ export function endingForRetirement(
     // ⚠ HER REAL AGE, NOT A CONSTANT (the long goodbye step 2). This read
     // `${ENDINGS.stopAskingAgeYears}` and printed the same 38 into every epilogue ever written;
     // there is no such number any more, because the last offer lands where her body puts it.
-    // `ageYears` arrives already whole (`kidAgeYears` floors), so this prints exactly what it used
-    // to print on the careers the old rule ended.
-    // ⚠ THE SENTENCE IS OTHERWISE UNCHANGED, ON PURPOSE: her own last word is step 4 of the spec and
-    // that is what rewrites this line into her voice. This is the deletion, not the rewrite.
-    ? `${ageYears} – the last time anybody asked`
+    // `ageYears` arrives already whole (`kidAgeYears` floors), so the number is what it always was.
+    // ⭐⭐ AND STEP 4 IS THE REWRITE STEP 2 PROMISED. It said «the last time anybody asked», and
+    // after `LAST_WORD_OPENING` above nobody asks: the final offer is her statement, so an epilogue
+    // whose one-line summary of it names a question is an epilogue contradicting its own card. Same
+    // number, same length, and the voice is now hers. It reads in place as
+    // «She played until she was done – 41, and nobody had to ask her.»
+    ? `${ageYears}, and nobody had to ask her`
     : oneMoreYearCount > 0
       ? `${oneMoreYearCount} more ${oneMoreYearCount === 1 ? 'year' : 'years'} after the first time she was asked`
       : 'the first time she was asked, she said yes'

@@ -213,6 +213,61 @@ choice is closed by her body, and the two inputs – what she has left and what 
 both already on the snapshot. ⚠ If the private-life layer later gives her a spirit, this line is the
 obvious first place it should colour, and the wording should be written so that it can.
 
+### ⚙ 27.08 – BUILT. THE LINE SHE SAYS, AND THREE THINGS THIS SECTION HAD WRONG
+
+**What she says**, written once in `engine/ending.ts` and rendered in the feed, on the card and in
+the epilogue's detail so the three cannot drift:
+
+> **Nobody asked her this time. She said it herself, and she said it steadily.** She has said one
+> more year 4 times, and this season was the last one.
+
+Every clause of it was checked against a measurement rather than written first and defended after.
+**«steadily» is the composure fact** – `growWeek` hands every non-physical attribute `veteranPoise`
+from `declineStart`, so she is at her most composed the day she stops, and `physicalMean`'s own note
+excludes composure from the share for exactly that reason. **The count is `oneMoreYearCount`**, which
+is the only field on the card that can tell two careers apart. Nothing in it touches fatigue, nothing
+implies she wore out faster than anybody else, and nothing grades her or the player.
+
+The card's final state is a heading (**«She told you at the end of the season.»**), her line as the
+lede, and ONE control that reads **«All right / Nothing to answer here. She has told you what
+happens next.»** The epilogue's detail moved with it: «41 – the last time anybody asked» became
+**«41, and nobody had to ask her»**, because after this step nobody does. Every non-final offer –
+the age question from 29 and the plateau reading – is untouched to the byte, and a test asserts that
+rather than trusting it.
+
+⚠⚠ **«NOTHING NEEDS TO THROW» IS HALF RIGHT, AND SHIPPING THE OTHER HALF WOULD HAVE BEEN A DEFECT.**
+The PRODUCT reason for the throw is gone – there is no refusal control to press. The ENGINEERING
+reason is untouched and is the stronger one: the worker is not the gate (invariant 1), so a
+hand-built message or a poked save can still put `retire: false` against a final offer, and a command
+that accepted it would increment `oneMoreYearCount` and write «One more year, she said» over a career
+whose card never offered those words. So the throw stays and only its MEANING moves – from «she may
+not refuse» to «there is nothing here to answer» – as `LAST_OFFER_NOT_A_QUESTION`, exported for the
+same reason `CAREER_ENDED_REFUSAL` is. ⚠ Three things also still depended on it and were checked
+before it was touched: `tests/ending.test.ts`'s walk helper routes around it by hand, and
+`tools/potential-band-sweep.ts` and `tools/his-careers-dose.ts` both answer every open offer with
+`false` unconditionally – removing the refusal would have silently ended or silently extended careers
+inside a measurement.
+
+⚠ **`oneMoreYearCount` WAS NOT UNUSED IN COPY.** §4's plan called it the richest unused field;
+`EndingScreen.vue` has printed «She said one more year N times.» on the album's last page since the
+endings shipped, and `endingForRetirement`'s NON-final detail branch has interpolated it for just as
+long. What was true is narrower and still worth having: nothing on the RETIREMENT CARD read it, and
+it was not on the snapshot at all outside `EndingView` – which is null until a career has ended, so
+the card could not have read it. `Snapshot.oneMoreYearCount` closes that, and it is **not a schema
+move**: the field has been persisted on the world since the album.
+
+⚠ **THE `RetirementOffer` DOCTYPE COMMENT WAS STILL DESCRIBING THE FLOOR AT 38** – «`final: true` IS
+THE FLOOR AT 38 … 38 is the age at which the game STOPS ASKING» – a rule step 2 deleted. Corrected in
+`shared/protocol/career.ts` on the way past, since it is the exact failure the card's own header
+records («it named a rule that no longer exists»).
+
+⚠ **AND THE HOUSE-LAW GUARD HAD A HOLE THIS STEP OPENED.** `tests/template-copy-rules.test.ts` bans
+Cyrillic and the long dash by scanning every `.vue` file's `<template>` block – which was the whole
+rendered surface while every sentence lived in a template. Her line does not: the template carries
+`{{ lastWord }}` and the words are in the engine, so a Cyrillic character in `lastWordLine` would
+reach a player with that guard green. `tests/component/last-word.test.ts` re-aims the same two rules
+at the rendered text and at the engine's exported sentences.
+
 ---
 
 ## 4a. The fade has a second half – recovery, and it was his own addition
@@ -549,5 +604,5 @@ Re-run the endings bench on both arms and compare against §2's table:
 | **2** ✅ | the trigger moves to the share; `stopAskingAgeYears` deleted | ⚙ **DONE 26.08.** Built at 70% FIRST and measured against untouched main: the endings bench's **whole 127-line report came back byte-identical** – six endings, both retirement arms, the fork arms, the plateau sweep, the grace sweep, the college door, the injury table and the per-preset grid – then the constant was set to 55%. ⚠ The stated gate («reproduces §2 byte for byte») was not achievable and §2 above says why: that table is 04.08 and main had already drifted off it. The control is main, which is the stronger arm anyway |
 | **3** | the threshold set to his answer, and §6 re-measured | the five acceptance numbers |
 | **3a** ✅ | *(§4a)* the recovery fade, its floor, and the rounding moved to the snapshot boundary | ⚙ **DONE 27.08.** `recoveryAgeFloor: 0.5` inside `recoveryBaseFor`, so both its readers inherit it; the rivals untouched; NO schema move and zero draws. §6.6's veto measured on the fixed probe against a `--recoveryFloor 1` control – it does not fire. ⚠ Two things the spec had wrong are corrected in §4a: the helper's «three readers in world.ts» was one merge stale, and §6.7's hoped-for «she did not come back from the winter» is the OPPOSITE of what the walk shows |
-| **4** | her last word – the card's final state and the event line | the copy reads as hers, and the parent is not asked a question with one legal answer |
+| **4** ✅ | her last word – the card's final state and the event line | ⚙ **DONE 27.08.** One sentence, written once in `engine/ending.ts` (`LAST_WORD_OPENING` + `lastWordLine`) and rendered in three places – the off-season feed line, the card, and the epilogue's detail. The card's final state acknowledges instead of asking; **the throw stays** and is re-meant (`LAST_OFFER_NOT_A_QUESTION`), because it was never load-bearing as a rule about her and is entirely load-bearing as a guard on an illegal message. NO schema move; zero draws; `Snapshot` gains the already-persisted `oneMoreYearCount` so the card can read it. ⚠ Three things the spec had wrong are corrected in §4's own ⚙ block below |
 | **5** | *(optional, §7.4)* the fade becomes visible in the season summary | a season past the peak says so without naming a number |

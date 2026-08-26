@@ -529,6 +529,20 @@ export interface Snapshot {
   } | null
   /** the natural end's offer while it is OPEN and unanswered, else null */
   retirementOffer: RetirementOffer | null
+  /** ⭐⭐ HOW MANY TIMES SHE HAS SAID «one more year» (the long goodbye step 4). On the snapshot
+   *  ALWAYS, not only at the end, and that is the change: `EndingView.oneMoreYearCount` has carried
+   *  it since the album shipped, but the ending view is null until a career has one – and the
+   *  surface that needs it now is the retirement card, which is drawn while the career is still
+   *  running. Her last word reads it (`lastWordLine`, engine/ending.ts), and one who has said those
+   *  words four times is telling a different story from one who never had to.
+   *
+   *  ⚠ IT COUNTS BOTH QUESTIONS – the age offer's refusals and the plateau's – which is what the
+   *  sentence claims: how often she has said those words, not which reading prompted them.
+   *
+   *  DERIVED IS THE WRONG WORD AND THE FIELD IS STILL NOT A SCHEMA MOVE: it is copied straight off
+   *  the persisted `world.oneMoreYearCount`, which has existed since the album. Nothing new is
+   *  stored, so `SAVE_SCHEMA_VERSION` does not move for it. */
+  oneMoreYearCount: number
   /** her college years, once she has chosen them – null for every career that did not. ⭐ P5: she may
    *  leave after any of them, so this is a span she is LIVING rather than a four-year block. */
   college: CollegeState | null

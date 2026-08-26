@@ -367,9 +367,13 @@ describe('R2-07 RetirementDialog – the shell, and NO Escape', () => {
     assertShell({ label: 'RetirementDialog (final)', nameIds: RETIRE_IDS, controls: 1 })
     // ⚠ THE THREE HEADINGS SHARE ONE id AND EXACTLY ONE IS EVER RENDERED, which is what makes that
     // safe – so the name tracks WHICH question this winter is, and the final card says so.
+    // ⚠ RE-AIMED, NOT WEAKENED (the long goodbye step 4). The heading read «Nobody is going to ask
+    // her again.» – the game announcing that IT had stopped asking, with her absent from her own
+    // retirement. The card is her statement now, so the accessible name is too. The CLAIM is
+    // untouched: one heading in the document, and the name says which of the three cards this is.
     expect(document.querySelectorAll('#retire-dialog-title'), 'one heading in the document, not three').toHaveLength(1)
     expect(accName(document.querySelector('[role="dialog"]')!)).toBe(
-      'Off-season – she is 38 Nobody is going to ask her again.',
+      'Off-season – she is 38 She told you at the end of the season.',
     )
     w.unmount()
   })
@@ -588,11 +592,15 @@ describe('R2-07 – every irreversible dialog can be completed without a mouse',
     }
   })
 
-  it('⭐ THE RETIREMENT: both answers, and the FINAL card\'s only answer', async () => {
+  // ⚠ RE-AIMED (the long goodbye step 4): the final card's single control is an ACKNOWLEDGEMENT now
+  // and says «All right», because the offer it sits under is her statement rather than a question.
+  // What it files is unchanged – `answerRetirement(true)` – and that is the point of keeping this
+  // row: the keyboard must still reach the one control on the final card.
+  it('⭐ THE RETIREMENT: both answers, and the FINAL card\'s only control', async () => {
     for (const [final, label, expected] of [
       [false, 'That is enough', true],
       [false, 'One more year', false],
-      [true, 'That is enough', true],
+      [true, 'All right', true],
     ] as const) {
       reset()
       const answers: boolean[] = []

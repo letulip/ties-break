@@ -12,6 +12,7 @@ import { readFileSync } from 'node:fs'
 import { migrateSave } from '../src/engine/migrations'
 import {
   ENDINGS,
+  ENDING_TITLE,
   bankruptcyDue,
   careerEndingInjuryDue,
   debtWeeks,
@@ -19,6 +20,10 @@ import {
   endingForForkAnswer,
   endingForRetirement,
   forkDue,
+  // ⭐ THE LONG GOODBYE, STEP 4 – her own last word, pinned through the engine's symbol rather than
+  // through a spelling (`RELEASE_LINE_PREFIX` / `CAREER_ENDED_REFUSAL`'s own precedent).
+  LAST_WORD_OPENING,
+  lastWordLine,
   plateauReading,
   retirementDue,
   weeksLostSoFar,
@@ -52,12 +57,13 @@ import {
   buildAlbum,
   captureBreakEven,
   toSnapshot,
+  LAST_OFFER_NOT_A_QUESTION,
   type WorldState,
 } from '../src/engine/world'
 import { rngFromSeed, resumeMain, initMainState, type Rng } from '../src/engine/rng'
 import { nextAcademicYearStart, schoolEndWeek } from '../src/engine/kidLife'
 import { DEFAULT_PROFILE, LADDER_TRACKS } from '../src/shared/protocol'
-import type { SeasonHistoryEntry, SeasonTrackRow } from '../src/shared/protocol'
+import type { CareerEndingType, SeasonHistoryEntry, SeasonTrackRow } from '../src/shared/protocol'
 import type { LadderTrack } from '../src/engine/season/types'
 import { WEEKS_PER_YEAR, OFF_SEASON_WEEKS } from '../src/engine/season/calendar'
 // ⭐ THE LONG GOODBYE, STEP 2 – the walk (phase 4 of the tick) and the curve the threshold is read
@@ -413,10 +419,14 @@ describe('⭐⭐ the last offer, read off a walked body', () => {
       })
       if (raised?.final) {
         if (cfg.stopAtFinal) break
-        // ⚠ SHE CANNOT REFUSE THE LAST ONE – `answerRetirement` throws on it by design – and these
-        // walks are about WHEN the question runs out rather than about what she says. So the card is
-        // taken off the table by hand and the next off-season is allowed to ask again, which is what
-        // lets a walk read the share past the crossing. `stopAtFinal` is the arm that ends properly.
+        // ⚠ RE-AIMED, NOT WEAKENED (the long goodbye step 4). It read «SHE CANNOT REFUSE THE LAST
+        // ONE – `answerRetirement` throws on it by design», which was a rule ABOUT HER; the last
+        // offer is now her own statement and there is no refusal to make. The throw is still there
+        // and this line still has to route around it, but it guards an illegal MESSAGE now
+        // (`LAST_OFFER_NOT_A_QUESTION`), not a refusal she is forbidden. These walks are about WHEN
+        // the offer turns final rather than about what she says, so the card is taken off the table
+        // by hand and the next off-season is allowed to raise it again, which is what lets a walk
+        // read the share past the crossing. `stopAtFinal` is the arm that ends properly.
         world.retirementOffer = null
       } else if (raised) {
         // ...and every offer before it is answered the way a player answers it: «One more year, she
@@ -496,25 +506,73 @@ describe('⭐⭐ the last offer, read off a walked body', () => {
     }
   })
 
-  it('⚠ the last-offer event and the epilogue print HER age, and no constant survives in either', () => {
-    // Both lines used to interpolate `ENDINGS.stopAskingAgeYears`. There is no such number now, so
-    // both have to read the age she actually reached – which on this career is 41 and not 38.
+  // ⚠ RE-AIMED, NOT DELETED (the long goodbye step 4). Step 2 pinned the two lines that used to
+  // interpolate `ENDINGS.stopAskingAgeYears`, and the CLAIM it was making – no constant survives in
+  // either, both read the age she actually reached – is still exactly the claim being made here.
+  // What moved is the wording around the number, because step 4 put her in the sentence: the feed
+  // line was «She is 41. Nobody is going to ask her again» (the game announcing it has stopped
+  // asking) and is now her own last word, and the epilogue's «the last time anybody asked» named a
+  // question nobody asks any more. Both are pinned THROUGH THE ENGINE'S OWN SYMBOL now, so a
+  // re-wording moves the assertion with the copy instead of breaking it.
+  it('⚠ the last-offer event and the epilogue print HER age and HER line, and no constant survives in either', () => {
     const { world, wraps } = walkTheWraps({ seed: 'goodbye-copy', toAge: 43, stopAtFinal: true })
     const last = wraps.find((w) => w.final === true)!
-    const said = world.events.filter((e) => e.text.includes('Nobody is going to ask her again'))
+    const said = world.events.filter((e) => e.text.includes(LAST_WORD_OPENING))
     expect(said).toHaveLength(1)
     // ⚠ THE NUMBER IS RE-DERIVED FROM HER CLOCK RATHER THAN COMPARED TO A LITERAL, which is what
     // makes this dial-independent: move `lastOfferPeakShare` and the sentence follows her age,
     // because there is no constant left in it to disagree with.
     const herAge = kidAgeYears(last.week, world.profile.birthMonth, world.profile.birthDay)
-    expect(said[0].text).toBe(`She is ${herAge}. Nobody is going to ask her again.`)
+    expect(said[0].text).toBe(`She is ${herAge}. ${lastWordLine(world.oneMoreYearCount)}`)
+    // ⭐ AND THE LINE REALLY IS READING HER STATE, not printing a fixed sentence with a symbol's
+    // name on it: this walk answers every non-final offer with «one more year», so the count is real
+    // and the branch that spends it is the one that ran.
+    expect(world.oneMoreYearCount, 'the walk filed real refusals').toBeGreaterThan(0)
+    expect(said[0].text).toContain(`She has said one more year ${world.oneMoreYearCount} times`)
 
     // ...and the epilogue's own detail line, through the real answer.
     world.week = last.week
     world.retirementOffer = { askedWeek: last.week, seasonIndex: 0, reason: 'age', final: true }
     answerRetirement(world, true)
     expect(world.ending?.type).toBe('natural')
-    expect(world.ending?.detail).toBe(`${herAge} – the last time anybody asked`)
+    expect(world.ending?.detail).toBe(`${herAge}, and nobody had to ask her`)
+  })
+
+  // ⚠ THE OTHER FIVE ENDINGS ARE UNTOUCHED, AND THIS IS WHERE THAT IS CHECKED. Step 4 rewrote ONE
+  // branch of ONE detail line, and `latchEnding` composes every ending's feed row out of the same
+  // two halves – `${ENDING_TITLE[type]} – ${detail}.` – so a detail that stopped being a fragment
+  // would break a sentence in five places nobody was looking at. College is in the list on purpose:
+  // it is an ending that can be RESUMED, so its row is read by a player whose career is still alive.
+  it('⚠ the epilogue line still reads for every ending type, college included', () => {
+    // ⚠ EVERY DETAIL COMES OFF ITS REAL PRODUCER. A table of six hand-written fragments would pass
+    // this test while the engine wrote something else entirely.
+    const hurt = autoView({
+      freshInjurySeverity: 'severe',
+      injuryHistory: [{ severity: 'severe', weeksOut: 18 }, { severity: 'major', weeksOut: 10 }],
+    })
+    const details: Record<CareerEndingType, string> = {
+      stopped: endingForForkAnswer('stop', 265, 19, ENDINGS.collegeYears, WEEKS_PER_YEAR)!.detail,
+      college: endingForForkAnswer('college', 265, 19, ENDINGS.collegeYears, WEEKS_PER_YEAR)!.detail,
+      bankruptcy: detectEnding(autoView({ fundsCents: -1, debtSinceWeek: 0, week: 100 }))!.detail,
+      injury: detectEnding(hurt)!.detail,
+      natural: endingForRetirement({ askedWeek: 0, seasonIndex: 0, reason: 'age', final: true }, 1453, 41, 4).detail,
+      plateau: endingForRetirement({ askedWeek: 0, seasonIndex: 0, reason: 'plateau', final: false }, 700, 26, 0).detail,
+    }
+    for (const type of Object.keys(details) as CareerEndingType[]) {
+      const { world } = freshWorld(`epilogue-${type}`)
+      latchEnding(world, { type, week: world.week, ageYears: 30, detail: details[type], resumesWeek: null })
+      const row = world.events.find((e) => e.text.startsWith(ENDING_TITLE[type]))
+      expect(row, `${type}: the latch wrote no line`).toBeDefined()
+      expect(row!.text, `${type}`).toBe(`${ENDING_TITLE[type]} – ${details[type]}.`)
+      // A fragment, not a sentence: no capital opening it and no full stop of its own, or the
+      // composed row reads «She played until she was done – She was 41..».
+      expect(details[type], `${type}: the detail ends in its own full stop`).not.toMatch(/\.$/)
+      expect(row!.text, `${type}: the row is not a sentence`).toMatch(/^[A-Z].*\.$/)
+      expect(row!.text, `${type}: a long dash reached the player's record`).not.toMatch(/[—―]/)
+    }
+    // ⭐ AND THE ONE THAT MOVED SAYS SO, so this is not a vacuous sweep over six strings.
+    expect(details.natural).toBe('41, and nobody had to ask her')
+    expect(details.natural, 'the epilogue still names a question nobody asks').not.toContain('asked')
   })
 })
 
@@ -665,10 +723,23 @@ describe('the latch, on a real world', () => {
     }
   })
 
-  it('⚠ the last offer cannot be refused, because the question has run out', () => {
+  // ⚠ RE-AIMED, NOT DELETED (the long goodbye step 4). The old title was «the last offer cannot be
+  // refused, because the question has run out» and the pin was `/last time/` – a SPELLING, and the
+  // spelling was of a sentence about what she is not allowed to do. Both halves move: the last offer
+  // is not a question, so there is no refusal to forbid, and what is left is a guard against an
+  // illegal MESSAGE reaching a command that no card can produce. Pinned by symbol now, on the
+  // `CAREER_ENDED_REFUSAL` precedent.
+  it('⚠ a refusal aimed at the last offer is an illegal message, and it is refused loudly', () => {
     const { world } = freshWorld()
     world.retirementOffer = { askedWeek: 0, seasonIndex: 0, reason: 'age', final: true }
-    expect(() => answerRetirement(world, false)).toThrow(/last time/)
+    expect(() => answerRetirement(world, false)).toThrow(LAST_OFFER_NOT_A_QUESTION)
+    // ⭐ AND IT REFUSED RATHER THAN HALF-RAN: nothing was counted, nothing was written, and the
+    // offer is still standing. `mutate` clones the world before a command touches it, so a throw
+    // here can only ever leave the career exactly as it was – this is that promise, asserted.
+    expect(world.oneMoreYearCount, 'the refusal counted a year she never asked for').toBe(0)
+    expect(world.retirementOffer, 'the refusal cleared the offer on its way out').not.toBeNull()
+    expect(world.events.some((e) => e.text.startsWith('One more year')), 'it wrote her a line she never said')
+      .toBe(false)
     answerRetirement(world, true)
     expect(world.ending?.type).toBe('natural')
   })
