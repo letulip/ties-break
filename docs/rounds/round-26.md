@@ -402,10 +402,69 @@ a repeat, and the record has to show the first fix missing.
   beside `campusbike` is rewritten to be about the bicycle, and the pairing is a candidate for her
   FIRST college birthday specifically.
 
-- [!] **10 (again). «у меня в ленте предпоследняя новость были из мира "до колледжа" на протяжении
+- [x] **10 (again). «у меня в ленте предпоследняя новость были из мира "до колледжа" на протяжении
   всей учебы, а последняя жёлтым про её учебный год. Вот я бы хотел, чтобы "мир жил" и пока она в
   колледже, пусть и сжато»** – five rows a season is still invisible at eight screens in 208 weeks.
   **build**: the world must be visibly alive on the college screens themselves, compressed.
+  · **THE THREE CANDIDATES, SEPARATED BY NUMBER (R26-H).** Walked four-year freezes, 4 careers × 12
+  rest states = 48 screens, the real `toSnapshot` and Home's own ordering
+  (`tools/college-news-probe.ts`). ⚠ **The probe had to be repaired first and that is a finding of
+  its own**: round 26 #6 taught the year to pause on the championship and RETURN rather than spend
+  itself, so the first pass's walk – which answers the cake and not the draw sheet – had put all
+  twelve presses of every career **at the same week (324)** while dividing real rows by an imaginary
+  208-week span. Repaired, the three candidates read: **(1) THE WINDOW dominates** – the card reaches
+  **90 weeks** back, its median row is **9.2 weeks** old, and of the **17 weeks a press actually
+  spends only 7.8 (45%)** have a row on the card at all. **(2) THE RATE is refuted** – the freeze
+  writes **1.01 news rows a week** and the card holds **21.1** of them, never zero at any of the 48.
+  **(3) THE SURFACE is refuted as "not drawn"** – `#diary-news` carries no college condition and the
+  card renders under the college card (measured mounted, and mutation-verified by gating it).
+  · **AND HIS OWN SAVE SAYS IT EXACTLY** (`alice-cfbv_w502`, read-only, never copied): the build he
+  played printed **TEN rows** on that card – one yellow milestone and then **eight «🏆 <a stranger>
+  won the World Tour N»**, the identical sentence he had been reading before she enrolled. Of his
+  208 freeze weeks, **25** still had a news row alive at graduation. ⚠ His literal «предпоследняя
+  из мира до колледжа» does not reproduce as a WEEK – no walked rest state prints a row older than
+  enrolment (0/48) – it reproduces as a SENTENCE, which is the same complaint and a worse one.
+  · **SO THE FIRST PASS WAS NOT WRONG, IT WAS UNREACHABLE**, and the fix follows from that: five
+  rows a season posted into a window that covers 45% of the year is a coin flip – **2.4 generational
+  rows at a rest state, NONE AT ALL at 9 of 48**. ⚠ Widening the window was measured and rejected:
+  spending the whole 60-row snapshot budget on news (Home discards every `expense`/`income`, and the
+  Money screen reads its own `financialEvents` slice, so five rows in six of that window are thrown
+  away before drawing) gives **60 rows reaching 138 weeks** – more and older, the opposite of «сжато».
+  · **WHAT SHIPPED: ONE ROW, ON THE WEEK HE IS STANDING ON.** `world/fieldNews.ts:156-249` –
+  `announceCampusInterlude`, called from `world.ts:1775` at the one point every exit from
+  `resumeFromCollege` passes: «🌍 The tour has not waited: 34 of today's top 100 have come up since
+  the scholarship began, and R. Delaney is #1 at 26.» Its week IS the rest week, so it is the top
+  week group of the feed **by construction rather than by budget** – no window can lose it. Both
+  facts are pure walks of `careerAt` / `rankingFor`; the newcomer count reads `debutSeason`, i.e. the
+  PERSON and not the chair. ⚠ No pronoun anywhere: the first draft said «since she enrolled», which
+  genders the KID and not a professional – legal, but it turns a mechanical assertion into one with a
+  carve-out, so the clause was rewritten instead.
+  · **MEASURED AFTER, same probe, same 48 rest states:** generational rows at rest **2.4 → 3.9**, rest
+  states with none **9/48 → 0/48**, rows on the card 21.1 → 22.4, median age 9.2w → 8.7w.
+  · **THE FOUR-YEAR BUDGET.** 12 rows per degree (0.06/week) against the first pass's 20. Rows
+  written inside the freeze 3,628 → 3,672; news rows Home shows 841 → **885 (+5.2%)**; the events
+  array at graduation **401 → 402 with 39 kept in BOTH arms**. On the hashed college career, events
+  401 → 402, `nextEventId` 1811 → 1823, **kept 24 in both arms** – every new row is ordinary, the
+  ordinary class is at its floor through the whole freeze, and her history cannot be displaced.
+  · **BYTE-IDENTICAL, PROVED.** A tour-only career (fork answered «continue», 8 seasons, week 416,
+  400 events) hashes **`cb37b713c01df04a9febefe618bc86f24e85df72bdabe64f7eea77f2f876e8b8`** on both
+  arms, every top-level key identical. A arm = `959264e` with `git revert --no-commit 959264e` in a
+  detached worktree, B arm = `959264e`. ⚠ The harness was proved SENSITIVE before the null was
+  believed: the same script on a COLLEGE career moves (`7c495576…` → `7f7c7dd0…`).
+  · ⚠ **THE FROZEN CAREERS DO NOT MOVE, and it was measured rather than argued.** `events` and
+  `nextEventId` are touched only inside `resumeFromCollege`, and the three frozen careers are 156
+  weeks (she is 16.6 at the end, years short of the fork). `tools/frozen-key-diff.ts` on both arms,
+  presets 0/1/2 at policy 1 – printed header checked against each invocation – is IDENTICAL on every
+  top-level key. **No re-freeze.** `tests/condition.test.ts` green, **41550 / `e6b0c709`**, unchanged.
+  No persisted field, no wire field, **no schema move**.
+  · ⚠ **NOTHING ON THE COLLEGE CARD WAS TOUCHED** – not its heading, not its facts, not its answer
+  buttons, and no news area was added to it: the card and the feed are on the same page, so the same
+  sentence in both is one sentence twice. `CollegeYearCard.vue` is unmodified.
+  · **MUTATION ARMS, each run and watched red:** `announceCampusInterlude` early-returns → 5 arms;
+  the row dated `college.fromWeek` instead of `world.week` → the 3 RECENCY arms only, presence arms
+  still green (a test that only counted rows would have passed this one); the row written
+  `keep: true` → the budget arm; the zero-newcomer branch dropped → the pure-line arm; `#diary-news`
+  gated on `!collegeWeek` → both mounted arms.
 
 - [ ] **14. «Alice поймала 2 травмы за половину сезона до колледжа, как будто многовато, но проверь
   пожалуйста по всем показателям»** – **measure**, against the shipped rates and her own load.

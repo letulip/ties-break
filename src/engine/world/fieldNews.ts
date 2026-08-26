@@ -30,7 +30,11 @@
 //
 // ⚠ NEWS IS NEWS AND NOT RESULTS. Nothing here writes a point, a cheque or a result row – which is
 // the freeze's own law (no ranking points, no prize money, nothing that makes college a tour), and
-// it is also simply what this module is: two `addEvent` calls with no `amountCents`.
+// it is also simply what this module is: three `addEvent` calls with no `amountCents`.
+//
+// ⚠⚠ AND THE SECOND PASS SAYS THE FIRST ONE WAS UNREACHABLE RATHER THAN WRONG – see the box above
+// `announceCampusInterlude` at the foot of this file for the 45% that says so, the two rejected
+// alternatives, and the third call.
 import { formatShortName } from '../../shared/format'
 import { WEEKS_PER_YEAR } from '../season/calendar'
 import { FIELD, careerAt } from '../season/fieldPros'
@@ -195,8 +199,13 @@ function chairIndexOf(id: string): number {
 /** ⭐⭐ THE SENTENCE ITSELF, pure and exported so a test can read it without a world getting in the
  *  way. Two facts, because they fail on opposite weeks and one of them always has something to say:
  *  the table's OWNER (which changes over a degree but can repeat between two rest states) and how
- *  much of the top `churnDepth` is new SINCE SHE ENROLLED (0 at her first pause, monotone upwards
- *  after, so by the fourth year it is a different number every time).
+ *  much of the top `churnDepth` is new SINCE THE SCHOLARSHIP BEGAN – measured 7 at the first pause
+ *  of a walked career and several times that by the fourth year.
+ *
+ *  ⚠ NOT MONOTONE, AND THE ZERO BRANCH IS NOT DEAD EITHER. A newcomer who reaches the top hundred
+ *  can drop out of it again, so the number can fall between two rest states; and a first pause
+ *  inside the enrolment season has nobody new to count at all. The second branch exists because
+ *  «0 of today's top 100 have come up» is a sentence that reads like a bug.
  *
  *  ⚠ NO PRONOUN ANYWHERE, and the first draft failed its own test on the OTHER girl. The rule the
  *  farewells keep is that no string genders a PROFESSIONAL – and «since she enrolled» genders the
