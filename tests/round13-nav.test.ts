@@ -219,6 +219,13 @@ describe('the bottom nav is Season · Calendar · Home · Stats · Trophies, Hom
     const marketTemplate = after(market, '<template>')
     expect(marketTemplate).not.toContain('—')
     expect(marketTemplate).not.toMatch(/[\u0400-\u04ff]/)
+    // ⚠ EXTENDED 27.08 TO THE SCREEN'S THIRD CHAPTER. `Support staff` is a tab OF this screen, so
+    // its template is this screen's user-facing copy and the same two rules bind it – and they bite
+    // there in particular, because that file quotes the owner in Russian in its comments (allowed)
+    // directly above a template that must carry none of it (not allowed).
+    const staffTemplate = after(read('../src/components/SupportStaffTab.vue'), '<template>')
+    expect(staffTemplate).not.toContain('—')
+    expect(staffTemplate).not.toMatch(/[\u0400-\u04ff]/)
   })
 })
 

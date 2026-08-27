@@ -280,13 +280,21 @@ describe('a tick is a command, and the engine is the only writer', () => {
 describe('the tab it lives on', () => {
   beforeEach(() => setActivePinia(createPinia()))
 
-  it('is `Her week` / `Coaches` on the app\'s own segmented row, and either pill reaches its half', async () => {
+  it('is `Her week` / `Coaches` / `Support staff` on the app\'s own segmented row, and either pill reaches its half', async () => {
     const store = useGameStore()
     store.snapshot = snapshotAfter()
     const wrapper = mount(CoachMarketScreen, { global: { stubs: { teleport: true } } })
 
     const pills = wrapper.findAll('.tb-seg .tab-pill')
-    expect(pills.map((p) => p.text())).toEqual(['Her week', 'Coaches'])
+    // ⚠ RE-AIMED 27.08 – A THIRD PILL JOINED, AND THE PROTECTED FACT DID NOT MOVE. The owner could
+    // not find the masseur at the foot of the coach list («он сейчас находится реально "на дне"
+    // страницы коучей, его там никто и никогда не найдет») and asked for him «на уровне
+    // Her week/Coaches», so `Support staff` is a third entry in THIS row rather than a sixth seat in
+    // the bottom bar. What this test is about is unchanged: the switcher is the app's own segmented
+    // row, its pills are correctly named, and each one reaches its own half – the two halves below
+    // are still asserted by the same two `pills[0]` / `pills[1]` presses. The third pill's own
+    // contents are held where they are rendered, in tests/component/masseur-card.test.ts.
+    expect(pills.map((p) => p.text())).toEqual(['Her week', 'Coaches', 'Support staff'])
     // ⚠ NOT `Self-coaching` / `Coaches` (§9a): one ladder, self on the bottom rung, and two tabs on
     // that axis would hide the one comparison this screen exists to make.
     expect(wrapper.text()).not.toContain('Self-coaching')

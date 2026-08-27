@@ -45,7 +45,13 @@ legibility seams keep them apart at a glance:
 * **The hire** – `hireMasseur(world, hire)` (`src/engine/world/masseur.ts`), the coach's shape:
   no signing fee, effective next bill, release always allowed, kept+tagged ledger rows
   (`masseur-since-<week>`, the `COACH_CHANGE_KEY` trick). Worker command `hireMasseur`,
-  store facade, card on screen T beside the roster.
+  store facade, card on screen T. ⚠ **MOVED 27.08 – he is no longer "beside the roster"**: the
+  card sat at the FOOT of the coach list and the owner could not find the man he had commissioned
+  («он сейчас находится реально "на дне" страницы коучей... я вот не нашел, кстати»). It is now
+  screen T's third chapter, `Support staff`, at the level he named – `Her week` / `Coaches` /
+  `Support staff` – rendered by `src/components/SupportStaffTab.vue` as a LIST of staff members
+  with one entry, so the psychologist (§9, and `the-travelling-team-2026-08.md` §5) costs an entry
+  rather than a rebuild. Nothing about the hire, the price, the dial, the fare or the freeze moved.
 * **The gate** – `masseurUnlocked` = `activeLadderOf(world) === 'wta'`: the plan's own ruling
   («открываются в про карьере») on the game's own one-way door – her first counting W-series
   result, read off the never-pruned mark, so the gate cannot close behind a pruned window. The
