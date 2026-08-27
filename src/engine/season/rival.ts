@@ -385,6 +385,12 @@ export function rivalMatchPlayer(player: AiPlayer, surface: Surface, condition: 
     // against a sixteen-year-old reports a sixteen-year-old's serve. Not a skill; `basePServe` never
     // reads it, and no draw is spent resolving it.
     age: player.ageYears,
+    // ⭐ AND THE CONDITION ITSELF, beside the factor it produced (27.08). `factor` is the STRENGTH
+    // half and it is already inside the five attributes below; this is the BREAKABILITY half, which
+    // `retireHazard` reads through `retireDurability` and nothing else reads at all. Written HERE,
+    // from the same argument, so the two halves of one number can never disagree about who took the
+    // court - the identical reason `applySurfaceStyle` and the factor share this one helper.
+    condition,
     serve: styled.serve * factor,
     ret: styled.ret * factor,
     composure: styled.composure * factor,

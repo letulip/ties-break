@@ -153,6 +153,19 @@ and arriving at 70 carry **identical** retirement risk. Before re-calibrating an
 `docs/specs/retirement-shape-2026-08.md` – the numbers, the dominant term and the candidate fixes –
 or this section will re-tune the weekly curve to absorb a defect that is not in it.
 
+⚠⚠ **AND THAT DOOR WAS RE-SHAPED ON 27.08, WHICH MOVES THE TARGET THIS SECTION AIMS AT** –
+`retirement-shape-2026-08.md` §13. The hazard now has its own condition curve, so the retirement door
+finally reads the number this page prices. The LEVEL did not move (the re-aimed bench reads 2.65% of
+matches against the 2.73% anchor, `RETIRE_K` untouched) but the SPLIT did, and it lands on this
+section's own acceptance number: measured over 96 season-years an arm, **season injury prevalence goes
+48% → 39% for a careful policy** – inside the researched 30–54% band for the first time – **and 79% →
+92% for the professional grinding arm.** ⚠ So §6 criterion 4 is now POLICY-DEPENDENT rather than a
+single number, and the reason the grinding arm cannot reach the band is exactly what THIS page has not
+shipped yet: at the shipped surcharge the professional era arrives at ~37 whatever the player does, so
+the freshness lever the fix creates cannot be pulled there. **Re-price the week and re-measure §6.4
+before touching any injury knob** – that is the same ordering warning §5 ends with, now with a number
+on both sides of it.
+
 **Therefore this wave carries a third lever: the injury curve is re-calibrated in the same pass**,
 against the researched 46–54% at a realistic professional season. The candidates, in the order I
 would try them:
