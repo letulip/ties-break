@@ -930,10 +930,13 @@ const matchMeta = computed(() => (stats.value ? matchStatMeta(stats.value) : nul
         </div>
         <div class="tf-brief-go">
           <p class="tf-brief-ring-label">Her condition</p>
+          <!-- ⚠ THE LABEL NO LONGER ROUNDS – `toSnapshot` rounds `condition` once at the boundary
+               (the long goodbye §4a, owner 26.08). It used to be spelled here and in KidScreen and
+               nowhere else, while five other readers of the same field rounded nothing. -->
           <ProgressRing
             :value="condition / 100"
             :color="conditionColor"
-            :label="`Her condition going into this tournament: ${Math.round(condition)} percent`"
+            :label="`Her condition going into this tournament: ${condition} percent`"
           />
           <!-- ⚠ JUST THE WORD - the owner, 30.07: on begin, simply drop the arrow. The arrow was doing
                nothing the button was not: a lime CTA at the foot of a brief is already the way

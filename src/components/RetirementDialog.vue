@@ -2,11 +2,38 @@
 // THE NATURAL END'S OFFER (career-contract-v1.md §5.3) – asked in the off-season, blocking until
 // answered, and offered again next year if she says no.
 //
-// ⚠ THE FLOOR AT 38 IS NOT A RETIREMENT RULE AND THIS CARD IS WHERE THE DIFFERENCE IS CARRIED. The
-// owner asked the right clarifying question about it, so the answer has to be legible on screen: 38
-// is the age at which the game STOPS ASKING. From 29 the offer comes every off-season and she may
-// always refuse; at 38 the LAST offer is made and taken. So the final card has one button, and the
-// copy on it says the question ran out - not that a mechanic retired her.
+// ⭐⭐⭐ THE LONG GOODBYE STEP 4 - THE FINAL OFFER IS NOT A QUESTION ANY MORE, AND THIS CARD IS
+// WHERE THAT STOPPED BEING A MATTER OF WORDING. From 29 the offer comes every off-season, the
+// parent answers it, and she may always refuse: that path below is UNTOUCHED, down to the byte. On
+// the LAST one the parent is no longer handed a question with one legal answer - it is HER line,
+// the card acknowledges it, and there is no refusal control on it because there is nothing to
+// refuse.
+//
+// ⚠⚠ WHAT THIS HEADER USED TO SAY, AND IT IS THE WHOLE REASON STEP 4 EXISTS: «the copy on it says
+// the question ran out - not that a mechanic retired her». That is a card apologising for its own
+// shape. The engine's `answerRetirement` carried the same apology in its header and both are gone:
+// the difference between "we are retiring you" and "nobody is going to ask again" is carried by
+// WHOSE VOICE IT IS, not by how carefully the sentence is phrased.
+//
+// ⚠ HER LINE IS THE ENGINE'S, IMPORTED AS A SYMBOL AND NOT RETYPED HERE (`lastWordLine`,
+// src/engine/ending.ts). It is written once and reaches three surfaces - this card, the off-season
+// feed line, and the epilogue's detail - so they cannot drift apart, and a test pins the line
+// through the symbol rather than through a spelling (`RELEASE_LINE_PREFIX`'s own precedent, and
+// the reason `InjuryStopDialog` imports that one). ⚠ This is a SHARED SENTENCE, not prose being
+// parsed for facts: R2-02's rule stands untouched - no number on this card is recovered from
+// rendered English.
+//
+// ⚠⚠ AND IT USED TO SAY "THE FLOOR AT 38", WHICH IS NOW WRONG IN THE ONE WAY A COMMENT MUST NOT BE:
+// it named a rule that no longer exists. `ENDINGS.stopAskingAgeYears` is deleted (the long goodbye,
+// docs/specs/the-long-goodbye-2026-08.md §3a) and the last offer arrives when her physical falls
+// below a share of her own peak - age 41 on a body kept well, earlier on one that never got there.
+// Step 2 moved not one line of this template for that, because the kicker already prints
+// `snapshot.ageYears` and the headings already branch on `offer.final`.
+//
+// ⚠ WHAT HER LINE MAY NOT SAY, MEASURED RATHER THAN GUESSED - the full argument is on
+// `LAST_WORD_OPENING` in src/engine/ending.ts. In one line: she opens her last seasons BETTER, not
+// worse, so nothing here may read as "she is too tired to go on"; and her body's share is a
+// function of her age alone, so nothing here may read as "she wore out faster" or "you did this".
 //
 // ⚠ AND THE PLATEAU IS THE SAME OFFER, ASKED EARLY. «Не могу выйти в топ – уйду» is not a sixth
 // mechanism (§5.2): it is a reading that puts this card in front of her before 29, and the reason
@@ -26,6 +53,7 @@ import { computed, useTemplateRef } from 'vue'
 import { useGameStore } from '../stores/game'
 import { useDialogFocus } from '../composables/dialogFocus'
 import { activeLadderOfSnapshot } from '../shared/protocol'
+import { lastWordLine } from '../engine/ending'
 import { portraitStage } from '../shared/avatarEmotion'
 import { portraitUrl } from '../art/preload'
 import { facePoint } from '../art/faceRects'
@@ -35,12 +63,27 @@ const offer = computed(() => game.snapshot?.retirementOffer ?? null)
 const age = computed(() => game.snapshot?.ageYears ?? 29)
 const tableName = computed(() => activeLadderOfSnapshot(game.snapshot).label.toLowerCase())
 
+// ⭐⭐ HER LAST WORD. The kicker one line up already carries her age, which is why the card renders
+// the line ALONE while the feed prints `She is 41.` in front of it - the same sentence, and neither
+// surface repeats the other's furniture.
+const lastWord = computed(() => lastWordLine(game.snapshot?.oneMoreYearCount ?? 0))
+
 const stage = computed(() => portraitStage(age.value))
 const artUrl = computed(() => portraitUrl(stage.value, 'serious'))
 const artStyle = computed(() => {
   const p = facePoint(`${stage.value}-serious`)
   return { objectPosition: `${p.x}% ${p.y}%` }
 })
+
+// ⚠ THE SINGLE CONTROL ON THE FINAL CARD ACKNOWLEDGES; ON EVERY OTHER CARD IT ANSWERS. It is the
+// same button element on purpose rather than a second one behind a `v-if`: the non-final path must
+// render byte-identically to what shipped, and a duplicated control is how that quietly stops being
+// true. `answer(true)` is what both file, because acknowledging her line and taking the offer are
+// the same transition - what differs is who decided, and she did.
+const answerLabel = computed(() => (offer.value?.final ? 'All right' : 'That is enough'))
+const answerNote = computed(() =>
+  offer.value?.final ? 'Nothing to answer here. She has told you what happens next.' : 'She stops here, on her own terms.',
+)
 
 async function answer(retire: boolean): Promise<void> {
   await game.answerRetirement(retire)
@@ -51,9 +94,9 @@ async function answer(retire: boolean): Promise<void> {
 //
 // ⚠⚠ ESCAPE IS PASSED NO HANDLER, AND THE FINAL CARD IS WHY IT CANNOT BE ANYTHING ELSE. From 29 the
 // card draws two answers and the offer BLOCKS the world until one of them is in, so a dismissal
-// would strand the career; at 38 it draws exactly ONE, because the question has run out, and a key
-// that closed this card would either end a career on a stray press or hand back a card with no
-// refusal left on it. Neither is a dismissal, so there is none.
+// would strand the career; on the last one it draws exactly ONE, because there is no question on it
+// to answer, and a key that closed this card would either end a career on a stray press or hand back
+// a card she has already spoken on. Neither is a dismissal, so there is none.
 //
 // ⚠ AND "One more year" IS NOT THE ESCAPE EITHER, tempting as it looks. It is an ANSWER – the engine
 // records it (`oneMoreYearCount` is on the ending screen) and the offer comes back next winter – so
@@ -85,12 +128,12 @@ useDialogFocus(card)
            document, and a per-branch id would make the name depend on which question was asked. -->
       <p id="retire-dialog-kicker" class="retire-kicker">Off-season – she is {{ age }}</p>
 
+      <!-- ⭐⭐⭐ THE LAST ONE IS HERS. The heading reports her, the lede IS her - `lastWordLine`,
+           the engine's own sentence, rendered rather than retyped. It read «Nobody is going to ask
+           her again», which is the game announcing that it has stopped asking; she was not in it. -->
       <template v-if="offer.final">
-        <h2 id="retire-dialog-title" class="retire-title">Nobody is going to ask her again.</h2>
-        <p class="retire-lede">
-          She has been answering this question every winter for years. This is the last winter it
-          gets asked, and she has already said what she thinks.
-        </p>
+        <h2 id="retire-dialog-title" class="retire-title">She told you at the end of the season.</h2>
+        <p class="retire-lede">{{ lastWord }}</p>
       </template>
       <template v-else-if="offer.reason === 'plateau'">
         <h2 id="retire-dialog-title" class="retire-title">She said it in the car.</h2>
@@ -115,8 +158,8 @@ useDialogFocus(card)
 
       <div class="retire-answers">
         <button class="retire-answer" type="button" :disabled="game.busy" @click="answer(true)">
-          <strong>That is enough</strong>
-          <span>She stops here, on her own terms.</span>
+          <strong>{{ answerLabel }}</strong>
+          <span>{{ answerNote }}</span>
         </button>
         <button
           v-if="!offer.final"

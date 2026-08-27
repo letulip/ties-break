@@ -3,7 +3,7 @@ type: plan
 status: draft
 area: rulings
 canonical: false
-last-reviewed: 2026-08-22
+last-reviewed: 2026-08-26
 ---
 
 # Awaiting his word – the standing questions only the owner can move
@@ -18,6 +18,7 @@ foot here, so nothing is listed twice.
 | 2 | **The dormant `HandoffView` fields** – three of four are produced and read by nothing (measured, round 22); each field's comment carries an argument for existing that only he can weigh against YAGNI. Keep, wire, or delete. | [round-22.md](../rounds/round-22.md) foot, item 4; the interface note in [protocol.ts](../../src/shared/protocol.ts) (search `HandoffView`) | 19.08 | Next |
 | 3 | **The balance methodology as a standing rule** – distributions not anecdotes, median plus tails, corrections separated from tuning. Written up, explicitly NOT adopted, his call. | [balance-methodology-proposal-2026-08-19.md](../plans/balance-methodology-proposal-2026-08-19.md) | 19.08 | Next |
 | 4 | **Round 16 #10 – `key`/`full` should drive the MATCH, not only the text.** Explicitly left alone by his own instruction; recorded here so the standing ruling is findable, not because it needs a new one. | [round-16.md](../rounds/round-16.md) #10 | 11.08 | Next |
+| 5 | **The career's ending: the threshold, and three questions beside it** – [the-long-goodbye-2026-08.md](../specs/the-long-goodbye-2026-08.md) §7, written 26.08 on his Federer question. §7.1 is the one that gates the build: the last offer's trigger moves from the birthday to a share of her own peak physical, and the share is a dial – 70% reproduces today's game exactly, 55% puts the ceiling at Federer's 41. §7.2–7.4 ask whether the plateau offer changes, whether a comeback is ever possible (this spec says no and argues it), and whether the fade should be visible before the end |
 | – | Slam wild cards: measure condition-at-arrival, then rule – is 34→66 of 108 careers reaching a major the game we want? | the wild-card spec + `docs/review-codex/12-…response` | the measurement (S), then his ruling | **Next** |
 | – | The grant's presentation: one merit award + a separate means top-up, or the award itself varying by background? | flags-grant plan + `docs/review-codex/12-…response` | his ruling | **Next** |
 

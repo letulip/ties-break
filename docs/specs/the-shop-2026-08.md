@@ -1,0 +1,445 @@
+---
+type: spec
+status: draft
+area: economy
+canonical: false
+last-reviewed: 2026-08-26
+---
+
+# The shop, the assets and the broker – the buildable spec
+
+⚠ **REWRITTEN 26.08 on his review of the first draft.** Six of his corrections changed the shape of
+the thing, and one of them corrected a mistake I should not have made: **this is the PARENT's money.**
+His words, and they are a reminder rather than a new instruction:
+
+> «Мы же делаем инвестиции для родителя, ты помнишь? А не для нее, её можно всё тот же % дохода от
+> инвестиций перечислять, в принципе.»
+
+The argument, his verbatim asks and the reasoning live in
+[the-shop-and-the-broker.md](../backlog/the-shop-and-the-broker.md). This file is shapes, numbers,
+guards and acceptance.
+
+---
+
+## 1. Whose money, and what that rules out
+
+**The shelf belongs to the parent.** The player has spent a whole career paying for someone else's
+tennis; this is the first screen in the game where the money is his to enjoy. That single fact
+settles three things the first draft got wrong or left open:
+
+- ⚠ **Nothing on the shelf is bought FOR her.** «A court at home» and «a flat near the academy» are
+  struck – see §3d and §3e for what replaces them.
+- **She is not a shopper.** `kidFundsCents` exists (v54) and round 26 #5 proved her share arrives on
+  every cheque, but a second shelf for her is a different game and this spec does not open it.
+- **What she CAN get is a cut of the returns** – his own suggestion, §7.
+
+---
+
+## 2. Placement – settled by him, no design left
+
+**A fourth chapter on the Budget tab, beside Spend / Bills / Ledger.** `MoneyScreen.vue`'s chapter
+picker has been `SegmentedRow appearance="chapter"` since DRY-8: one row in `TAB_OPTIONS`, one `v-if`
+block. No new navigation, no new bottom-bar tab.
+
+**Visible from the first week of the professional era, never in the junior years.** The backlog's §0
+warning – «a shop that arrives before the turn is a shop nobody can open» – is about being USABLE,
+not about being VISIBLE. A shop window is a thing you look into before you can afford it. On an empty
+shelf the screen says so plainly, naming the cheapest reachable thing and its price: never a locked
+row, a progress bar or a teaser.
+
+---
+
+## 3. The shelf
+
+Six families. Each must behave differently – a shop where the only difference is price is a list, not
+a decision.
+
+### 3a. Investments – the core, and he asked for it to go further
+
+> «"индексный фонд" вообще интересно звучит, надо развить идею дальше»
+
+Not one product but a small ladder, and the axis is **liquidity against return** rather than return
+alone:
+
+| product | minimum | expected | ⚠ the catch |
+| --- | --- | --- | --- |
+| **deposit** | $1,000 | ~2%/yr | none – the floor, and the thing a cautious player can always do |
+| **index fund** | $5,000 | ~7%/yr, noisy | can be DOWN for a whole season and still be the right holding |
+| **bonds** | $25,000 | ~4%/yr | **locked for N seasons** – the first taste of the freeze mechanic, but honest and stated up front |
+| **a stake in a club** | $250,000 | ~5%/yr + ⭐ | pays a return AND gives her a home venue (§10.1) – the family's money buying her tennis |
+
+⭐ **THE RETURN IS PAID WEEKLY INTO THE LEDGER, not accrued invisibly.** A line every week is the
+whole difference between owning something and having a number go up: the player should see the
+deposit's $19 beside the coach's $600 and feel the gap.
+
+⚠ **AND THE INDEX FUND MUST BE ABLE TO LOSE.** A product that only rises is a savings account with a
+better name. Its season may be negative; only its multi-season trend is up.
+
+### 3b. Cars – a ladder, and the dear ones fall hardest
+
+> «Машина вполне может быть и не одна, а еще более дорогие варианты, которые будут больше терять в цене»
+
+⚙ **26.08 – the gap narrowed on his word: «давай гэп сделаем скромнее пока что от 60 до 300к».**
+
+| car | price | loses |
+| --- | --- | --- |
+| the sensible one | $60,000 | 6% a season |
+| the good one | $110,000 | 9% a season |
+| the one he wanted at nineteen | $190,000 | 12% a season |
+| the unreasonable one | $300,000 | 15% a season |
+
+⭐ **A five-fold spread rather than the twenty-two-fold one I first drew, and he is right to pull it
+in.** A $900k car sits in a different economy from the family this game is about – it would be
+reachable only by the handful of careers that break the top ten, so three of the four rungs would be
+decoration for everyone else. From $60k to $300k every rung is a real decision for a real career, and
+the ladder can always be extended upward later. Widening a ladder is cheap; a ladder nobody can climb
+teaches nothing.
+
+⚠ **THIS FAMILY EXISTS TO LOSE MONEY AND THAT IS THE POINT.** If everything on the shelf
+appreciates, the shop is a savings account with pictures. A car is a decision to SPEND, dressed as an
+asset, and the ladder makes the dressing thinner the higher you climb.
+
+### 3c. Houses – tiers, for the family
+
+> «здесь надо разные тиры домов делать»
+
+The family home, in three or four bands from «finally not renting» to the absurd. Slow, large, and
+the only family that can pay RENT if it is not lived in. ⭐ The first rung matters most: the earliest
+seasons are measured in debt, and a family that finally owns where it lives is a real milestone this
+game currently has no way to mark.
+
+### 3d. ⚠ «A court at home» – struck from the shelf, and it becomes a GIFT
+
+He caught the confusion: «что значит "дома"? у нас уже было где-то в подарках, что она себе свое
+жилье покупала (первый взнос или вроде того), тогда наверное актуально там корт делать ей в подарок
+типа».
+
+**He is right and the precedent is already in the code.** `world/birthday.ts:469` offers **«A deposit
+towards her own place»**, and `:495` follows it with «A kitchen table for her flat» – she has her own
+home in the fiction, and it arrived as a gift. A court belongs THERE: a birthday gift at her own
+place, offered only after the deposit has been given, priced like the big gifts. **Not a shop item at
+all**, because the shop is the parent's and this is hers.
+
+#### ⚙ 26.08 – AND HE GAVE IT AN EFFECT
+
+> «а у корта для нее может быть скрытый бонус, кстати! Например она меньше устает за неделю, скажем
+> на 1 очко»
+
+⭐ **The effect is right and the story it tells is the best thing in this file.** A court at her own
+place adds **+1 to what a week returns** – and because
+[the-long-goodbye](the-long-goodbye-2026-08.md) §4a is closing that corridor with age, its RELATIVE
+worth grows every season: +1 on a base of 4.91 at twenty-nine is +20%, and +1 on 2.65 at forty-one is
+**+38%**. ⭐⭐ **The court he gave her at nineteen is what lets her play to forty.** Nothing else in
+either spec pays off across twenty years like that, and it costs the player nothing but a birthday.
+
+⚠⚠ **BUT IT BREAKS THE RULING THAT MAKES THE GIFT SCENE WORK, AND THAT HAS TO BE SAID.** Gifts are
+free by his own ruling, and `birthday.ts`'s header says exactly why: «with no price the four options
+differ only in WHAT THEY ARE» – a priced catalogue would turn a scene about a girl into a scene about
+a balance. **A free gift carrying a permanent mechanical advantage is strictly dominant**: every
+player takes the court every time, the other three become traps, and the scene stops being a choice.
+
+⚙ **26.08 – AND HE ANSWERED THAT OBJECTION, correctly, so rule 2 below is HIS and not mine:**
+
+> «верно, но только если знают об этом, я предложил сделать бонус скрытым. А рядом какие-то не менее
+> ценные варианты подарков, например. Будет некоторого рода ребус, головоломка.»
+
+⭐ **He is right and my fix was the wrong one.** I proposed «one exception only», which protects the
+scene by keeping it thin. His is better: **make SEVERAL gifts carry hidden weight of comparable
+value**, and the scene becomes a puzzle instead of a lookup. Dominance needs two things – an
+advantage AND knowledge of it – and a player who learns one effect (they will; there are saves, and
+there is a community) still faces a real trade-off if the neighbours are worth as much in a different
+currency. ⚠ One hidden bonus beside three inert options is a secret worth knowing exactly once, and
+then the scene is solved forever. Four that trade off never solve.
+
+**The design that keeps both:**
+
+1. **The court is offered ONLY after the deposit has been given.** She has to have a place before it
+   can have a court. That costs a whole birthday to reach, so it can never be a first pick, and the
+   deposit – the warm, unmechanical gift – stays the thing that opens the road.
+2. ⭐ **HIS RULE: the catalogue carries several weighted gifts, and no one of them is strictly best.**
+   They must pay in DIFFERENT currencies, or the puzzle collapses back into a ranking. Candidates,
+   and this set needs designing rather than declaring: the court pays in rest; a gift that settles her
+   somewhere pays in composure (⚠ which the decline never touches – see `veteranPoise` – so it
+   compounds late); a gift about her people pays where the private-life layer will read it. **The
+   acceptance is that no option wins on more than one axis**, measured over careers, and that is a
+   real design task rather than a paragraph.
+3. **The bonus applies on weeks she is NOT competing** – rest and practice weeks, the ones she spends
+   at home. It is a court, not a charm: it does nothing in a hotel in Ostrava. ⭐ That also makes it a
+   reward for a schedule the player CHOOSES rather than free value, and it grows naturally into the
+   late career, when she plays less and rests more.
+4. ⚠ **Hidden means never a number on a card**, in the house's own habit (the coach's room note, the
+   broker in §6). The player is told she has somewhere to practise, not «+1». The effect is visible
+   where every effect in this game is visible – in the condition line, over weeks.
+
+**Acceptance, and both are veto conditions:**
+
+- the court may not move the ending's median age by more than **one year** (§6 of the-long-goodbye
+  measures that number anyway, so this is free to check);
+- it may not raise the season injury prevalence, which round 26 already found **17 points over its
+  own band**.
+
+⚠ Its build goes to the birthday wave, not to this spec. Recorded here so the idea is not lost.
+
+### 3e. ⚠ «A flat near the academy» – struck entirely
+
+His three questions killed it and they were the right three: «у какой академии? Когда академия
+перестает ее поддерживать в чем ценность? И зачем она родителям?» There is no single academy in the
+fiction to be near, the value evaporates the moment the academy relationship ends, and the parent has
+no reason to want it. Replaced by §3c.
+
+### 3f. The elite – and they are not bought, they are COMMISSIONED
+
+> «Может что-то элитное добавить - яхты или самолеты? Со временем постройки около реальным - купил и
+> ждешь пока будет готово, яхты строят несколько лет.»
+
+⭐ **This is the best idea in his list, because waiting is a mechanic no other family has.**
+
+⚙ **26.08, his: «тоже можно разные тиры сделать, кстати и потерю стоимости в год + годовое
+обслуживание (недельный кост, ага)».** So each family is a ladder, and each thing carries THREE
+numbers rather than one – what it cost, what it loses, and what it takes every week to keep.
+
+| thing | price | build | loses / year | upkeep / year | **upkeep / week** |
+| --- | --- | --- | --- | --- | --- |
+| the launch | $900,000 | ~12 months | 7% | 6% | **$1,040** |
+| the boat | $2,400,000 | ~18 months | 7% | 6% | **$2,770** |
+| the yacht | $12,000,000 | ~3 years | 5% | **10%** | **$23,080** |
+| the big yacht | $28,000,000 | ~4 years | 5% | **10%** | **$53,850** |
+| the plane | $18,000,000 | ~2 years | 6% | 8% | **$27,690** |
+| the long-range plane | $38,000,000 | ~3 years | 6% | 8% | **$58,460** |
+
+⚠ **THE UPKEEP PERCENTAGES ARE THE REAL ONES AND THAT IS WHY THEY HURT.** A yacht genuinely costs
+about a tenth of its value a year to keep – crew, berth, fuel, survey, insurance – and at $12M that
+is **$23,080 a week, which is roughly thirty-eight coaches**. The number is not a punishment invented
+for balance; it is what the thing costs, and it is the whole argument for owning one being a
+statement rather than an investment. ⭐ The weekly figure is what appears in the ledger, beside the
+masseur, which is where the decision actually lives.
+
+**How commissioning works.** The money leaves on order. The thing arrives N weeks later. Between
+those two weeks the player owns a *contract*, not a boat – and ⚠ **the contract cannot be sold**,
+which is the freeze mechanic (§4) arriving early and by consent rather than as a surprise.
+
+⭐ **THE RUNNING COST IS A WEEKLY BILL, exactly like the coach's**, and that is deliberate: the toys
+compete with the team for the same money. A yacht crew and a masseur come out of one wallet, and that
+is a real decision rather than a trophy.
+
+#### ⚙ 26.08 – THE PLANE GETS AN EFFECT, and he corrected my objection
+
+> «Самолёт не её, а родителей =) Теоретически может вполне резать косты на перелеты до соревнований,
+> почему бы и нет. По усталости по аналогии с кортом может 1 накинуть, не вижу причин не делать, не
+> такая большая величина»
+
+**He is right on the first half without qualification.** I wrote «the plane must not make her better»
+while thinking of it as her equipment; it is the FAMILY's, and cutting the travel bill is a money
+effect on a cost the game already models in full (`coachTravelFareFor` and the travel line the
+masseur's fare was priced against). Money buying cheaper logistics is not pay-to-win – it is the
+tycoon loop working correctly.
+
+**And on the second half he is right too, for a reason neither of us said out loud: the two effects
+land on DIFFERENT WEEKS, so they cannot stack.**
+
+| gift / asset | +1 applies on | who it is for |
+| --- | --- | --- |
+| **her court** (§3d) | weeks she is NOT competing – rest and practice, spent at home | hers, a gift |
+| **the plane** | weeks she IS travelling to an event | the parents', bought |
+
+⭐ **That is the whole answer to my stacking worry and it is better than a cap.** No week can receive
+both, so a family owning everything gets a corridor that is one point kinder across the board – never
+two – and the two items stay complementary rather than additive. The court rewards resting at home;
+the plane softens the road. They describe different lives.
+
+#### ⚙ 26.08 – ⭐⭐ A WEEK ON THE YACHT IS A VACATION PACKAGE
+
+> «а неделя на яхте (при наличии яхты) вполне может стать новой строкой отпуска, кстати»
+
+**This is the idea that makes the whole elite family earn its place, and it costs almost nothing to
+build.** `ECONOMY.vacation.packages` already holds six – `staycation` (free, `conditionGain: 10`)
+through `elite`, stepping by 8, each with a `buffFactor` riding `buffWeeks: 4` afterwards. A yacht
+week is a seventh, and its shape is unusual in exactly the right way:
+
+- **`priceCents: [0, 0]` – it is free at the point of use**, because the money went years ago and the
+  upkeep is charged every week whether she sails or not;
+- **it appears in `PlanWeekSheet` only while the yacht is owned and delivered** (⚠ not while it is
+  still building – §3f's contract is not a boat);
+- its gain sits **at or above `elite`**, which is the priciest package in the game.
+
+⭐⭐ **AND THIS IS WHAT TURNS THE YACHT FROM A TROPHY INTO A DECISION.** Before it, the absurd family
+was status with a bill – the one part of this spec that risked being a number going up. After it, the
+$23,080 a week buys a thing the player uses, on a screen he already knows, and the question «is the
+yacht worth it?» becomes arithmetic he can actually do: **it is about 1.4 elite vacations a week in
+upkeep, and it gives him one.** That is a genuine, losable bet rather than a purchase.
+
+⚠ It also means the yacht must NOT be the strictly best rest week available – if it is, every owner
+takes it every time and the other six packages die on the same day the yacht arrives. Either it ties
+with `elite` and wins on being free, or it beats it slightly and `elite` keeps a reason to exist that
+is not price. **That is a tuning question for the slice, and it is named here so it cannot be
+forgotten.**
+
+⚠ **THE ACCEPTANCE IS ON THE AGGREGATE, NOT PER ITEM.** Every such bonus in the game is measured
+together against the same two numbers: the ending's median age may not move by more than **one year**,
+and the season injury prevalence may not rise (it is already 17 points over its band). If the total is
+too kind, the bonuses shrink before anything else is touched. ⚠ A per-item budget would let a third
+one arrive later and quietly break what the first two respected.
+
+### 3g. ⭐⭐ The apogee – her academy
+
+> «построить свою академию за много миллионов - тоже может быть интересно, кстати. Как раз будет куда
+> рекламное тратить.»
+
+**The end of the money, and the answer to a hole this game already has.** Round 23 measured it: Ines
+earns $2.57M a year against $220k of costs, and her INTEREST ALONE ($251k) exceeds every outgoing she
+has. The money has nowhere to go. An academy is where it goes.
+
+- **Cost: $8–15M**, in STAGES rather than one press – land, courts, the building, the staff. Each
+  stage is a decision and a bill, and a half-built academy is a real state the player can sit in.
+- ⭐ **His own connection: this is where advertising money lands.** The face-and-court plan's fame and
+  endorsement income currently has no destination beyond the balance. Cross-referenced both ways.
+- **It is the one asset that outlives the career**, so it belongs in the epilogue by construction: the
+  album can say what the money became. ⚠ That makes it the strongest candidate of anything in this
+  file for actually being built – it converts a measured dead end into an ending.
+
+---
+
+## 4. Prices that move
+
+- **DRIFT** – a small per-week move around each family's own trend.
+- **SHOCK** – rare, large, both directions. What makes an asset a story rather than a line item.
+- **FROZEN** – ⭐ the sharpest idea in his original ask, and one a normal shop never has: the asset
+  **cannot be sold** for an indefinite stretch. It is the only mechanic here that can hurt a player
+  who did everything right, and it stops «buy low, sell before the season» from being free.
+
+⚠ **A FREEZE MUST BE SURVIVABLE.** It may never be the reason a family goes bankrupt – the bankruptcy
+door reads liquid funds, and a frozen asset is not liquid. Acceptance: over a career sweep, **zero
+bankruptcies whose proximate cause is a frozen asset**.
+
+⚠⚠ **DETERMINISM.** Every roll goes through a purpose-scoped sub-stream –
+`rngFromSeed(\`${seed}:asset:${assetId}:${week}\`)` – and NEVER the MAIN weekly stream. A player's
+purchase may not move the world's dice (`CLAUDE.md` §2). The frozen MAIN capture (41550 /
+`e6b0c709`) must be unmoved by every slice here; if it moves, the sub-stream leaked.
+
+---
+
+## 5. The data
+
+```
+OwnedAsset = {
+  id: AssetId
+  boughtWeek: number
+  paidCents: number
+  valueCents: number
+  readyWeek: number | null    // §3f – null once delivered, a future week while building
+  frozenUntilWeek: number | null
+}
+WorldState.assets: OwnedAsset[]        // empty on every existing career
+```
+
+- **Cents, one wallet.** No second currency. Buying is an `expense` row, selling an `income` one,
+  through the same till every other cost uses.
+- **`valueCents` is stored, not derived** – a derived value would have to be recomputed identically by
+  the screen and the ledger, and this repo has been bitten twice by two sides asking different
+  functions about one question.
+- **The catalogue is a constant, not save data** (`ECONOMY.shop.catalogue`), so adding an item later
+  is not a migration. Only what she owns persists.
+- ⚠ **Whole numbers reach the interface.** Fractions may live in the engine; every figure that
+  crosses into `Snapshot` for a person to read is rounded, at the boundary and not in each component
+  – his rule of 26.08, argued in [the-long-goodbye](the-long-goodbye-2026-08.md) §4a.
+
+**Guard class:** a shop command is about the FAMILY'S OWN money, so it belongs to
+`guardNotEndedForGood` – the short list round 24 created that holds the vacation cancel and the
+birthday gift – and NOT to the tour-command guard that refuses inside the college freeze. ⭐ That is
+what makes the college years shoppable, which the backlog's §0a argues is the shop's best moment.
+
+---
+
+## 6. The broker
+
+Modelled on the coach: a weekly cents fee, tiered, cancellable, roughly the middle coach's band **so
+the two compete for the same money**. What he sells is **legibility, never return**: he names the
+BAND («this is above its trend», «this one has not moved in eleven weeks») and can warn a freeze is
+likely before it lands.
+
+⚠⚠ **HE MAY NEVER PROMISE A NUMBER.** The moment he predicts a return, the optimal play is «hire him,
+follow him» and both the shop and his fee stop being decisions. **Acceptance: a career following every
+broker line may not out-earn one ignoring him by more than his own fee.**
+
+---
+
+## 7. Her cut of the returns – his suggestion, with one design note
+
+> «её можно всё тот же % дохода от инвестиций перечислять, в принципе»
+
+`ECONOMY.kidShare` is already the ramp: from **18**, starting at **10%**, **+5%** a step, capped at
+**50%**. Applying it to investment income needs no new curve.
+
+⚙ **SETTLED 26.08: a standing instruction, not automatic – «договорились».**
+
+⚠ **AND THE DIFFERENCE MATTERS.** Her share
+of PRIZE money is hers because she won it – the engine pays it without asking, correctly. Investment
+income is the parent's, earned by the parent's capital, and handing her a cut is a **decision**. Make
+it automatic and it stops being generosity; make it a switch he sets once and it becomes one of the
+few purely warm choices in a game largely about spending. His «в принципе» reads as an option rather
+than a rule, and this is that reading made mechanical.
+
+---
+
+## 8. Charity
+
+**The giving is free, and the world notices.** No progress bar, no tier, no «donate $50,000 to
+unlock». What may come back is real, unpriced and unpromised: an invitation because of who she has
+become; a sponsor whose values match turning up on his own (⭐ converting giving into MONEY); a line in
+the ending that names it. ⚠ It is the only mechanic here that spends with no way back, which is what
+makes it able to turn late-career wealth into a statement rather than a bigger number.
+
+---
+
+## 9. What I would add to his list
+
+He asked. Four, in the order I would rank them:
+
+1. ⭐⭐ **The club stake pays in TENNIS, not only in money** (§3a). A club she can train at, that
+   changes what a practice week costs rather than what it does. It is the one item that makes the
+   shop part of the game instead of beside it, and it is small.
+2. ⭐ **Insurance, as the counter-play to the freeze.** A weekly premium that guarantees a floor price
+   on one asset. It makes the freeze a risk to be MANAGED rather than a thing that happens to you,
+   and it gives the broker something concrete to advise about. ⚠ Priced so that insuring everything is
+   strictly worse than insuring nothing – it is a hedge, not a subscription to safety.
+3. **Naming a tournament.** Late-career money buying prestige rather than objects: her surname on a
+   W-tier event, a running cost, and the field notices. Cheap to build on the ladder that exists.
+4. **A stage in the academy that is HERS to run** (§3g), after she retires. The epilogue currently
+   ends the game; an academy she runs is the first thing that could make an ending feel like a
+   beginning. ⚠ Design-heavy, listed last on purpose, and not proposed for any slice below.
+
+---
+
+## 10. What is still his
+
+1. **Does he want the academy (§3g) EARLY?** It is the strongest item in this file and the only one
+   that closes a measured hole, but it is also the largest. It could be slice 2 instead of slice 5.
+2. **Can he sell HER things?** My answer is no – it makes the parent a liquidator of her career.
+3. ⚙ **SETTLED 26.08 – her cut of the returns is a SWITCH, not automatic** («договорились»), §7.
+4. **Does the shop survive an ending?** My answer is yes and it is cheap: the retirement card names
+   what the family owns. An ending that silently drops the house is a bug the player will feel.
+
+---
+
+## 11. Slices
+
+⚙ **QUEUED 26.08, by his word: «ставь в очередь после первой волны. это будет отдельной волной и
+веткой, соответственно».** The shop starts after `wave/the-long-goodbye` lands – its own wave, its own
+branch, and it does not begin while the ending wave is open (the house rule: one branch per wave).
+
+⚠ Each slice is its own save-schema move and its own wave – separate PRs, never one.
+
+⭐ **Slice 1 is what «более менее понятная часть» meant** – everything in it is static, so it answers
+the only question worth asking first: is spending the parent's money on things fun in THIS game? If it
+is not, slices 2–7 are a large amount of work built on a shrug, and this is the cheapest place to find
+that out.
+
+| # | slice | done when | state |
+| --- | --- | --- | --- |
+| **1** | **the tab, static prices, buy / own / sell** – the deposit and index fund (§3a), the four cars (§3b), the first two house tiers (§3c). No movement, no building, no freeze | a bench career buys the good car in season 3, sells it two seasons later, and the ledger shows the loss to the cent; `careerTotals` grows at most two fields; the frozen capture is unmoved; a previous-version save loads with `assets: []` and plays identically; ⚠ the shop is NOT the dominant outgoing before season 4 | **awaits his approval** |
+| **2** | **drift** (§4), one sub-stream, no shocks | the four families are distinguishable from the numbers alone, without being told which is which | Next |
+| **3** | **commissioning** (§3f) – the elite ladders, the wait, the contract, the annual loss and the weekly upkeep; ⭐ **the yacht week as a seventh vacation package**; the plane's travel-cost cut and its +1 on travelling weeks | a career orders a yacht, waits three years, and the weekly upkeep sits in the ledger beside the masseur; the yacht week appears in `PlanWeekSheet` only once delivered, and it does not kill the other six packages | Next |
+| **4** | **shock and freeze** (§4) | zero bankruptcies whose proximate cause is a freeze, over a sweep | Next |
+| **5** | **the academy** (§3g), in stages | a half-built academy is a legible state, and the epilogue can name the finished one | Later – ⚠ or slice 2, by §10.1 |
+| **6** | **the broker** (§6) | following him beats ignoring him by less than his fee | Later |
+| **7** | **charity** (§8) | a gift changes something unpromised, and the ending can name it | Later |

@@ -3,7 +3,7 @@ type: plan
 status: draft
 area: economy
 canonical: false
-last-reviewed: 2026-08-22
+last-reviewed: 2026-08-26
 ---
 
 # The shop, the assets and the broker – backlog (owner, round 23 item 8, 19.08.2026)
@@ -51,6 +51,36 @@ gift – not the tour-command guard that refuses inside the freeze.
 
 ⚠ **An opportunity, not a dependency.** The owner's word for this branch is «независимый», and it
 stays true: the shop needs nothing from college, it merely lands best there.
+
+### ⚙ ACTUALISED 26.08 – the claim now has numbers, and they SPLIT the case in three
+
+Two things moved under this section since it was written, and both matter to when a shop could open.
+
+**1. «The wallet rests» is true at ONE of the three places, not at college in general.** Measured
+26.08 on `tools/college-price-probe.ts`, n=54, quoted against what the tick actually charged:
+
+| place | quoted per year | charged per year | careers ruined in four years |
+| --- | --- | --- | --- |
+| the home university | **$0** | $0 | none |
+| national | $16,731 | $16,732 | 3 of 54 |
+| private | $26,594 | $25,769 | 4 of 54 |
+
+So the four idle years this section is built on are **the home place's four years**. At the other two
+the family is paying a coach's salary in tuition, and a shop tab beside that bill is the same
+mistake §0 warns about, one layer up.
+
+⚠⚠ **AND THESE ARE THE FIRST TRUSTWORTHY NUMBERS THIS FILE COULD HAVE HAD.** Both college probes had
+rotted when round 24 split the college answer from the departure: they answered the fork, never
+ticked the weeks to September, and read a career that never enrolled – «funds after four years»
+byte-identical to «savings at the fork», bankruptcies 0/n by construction. Fixed 26.08
+([round-26.md](../rounds/round-26.md) 14c). Any figure about college money written into this file
+before that date should be re-taken, not trusted.
+
+**2. Round 26 #2 put the home university in EVERY country** («по-моему в каждой стране есть домашний
+универ»), so the cheap case is no longer American-only. For the Australian preset the median balance
+after four years went **$25,062 → $5,398** and the share graduating **70% → 81%**. That widens this
+section's opportunity from one nationality to all of them – and it is also why the split above is now
+the interesting question rather than a footnote.
 
 ---
 
@@ -162,7 +192,10 @@ band, so the two compete for the same money and the player has to choose.
 4. **Is any of it inheritable by HER?** Round 23 item 18 asks for prize money to reach her account
    at 18. If she has money, does she have a shelf of her own? That is a much bigger game.
    *(22.08: the rail exists – `kidFundsCents` is live since schema v54. The design question stands;
-   the plumbing no longer blocks it.)*
+   the plumbing no longer blocks it.)* ⚙ **26.08: re-verified in the code** – `kidFundsCents` is
+   declared at `src/engine/world/state.ts:251` and round 26 #5 proved the share actually arrives:
+   5,593 cheques audited across careers, 4,737 of them after her eighteenth birthday, every one paid
+   to the cent, none missed. So «if she has money» is no longer hypothetical – she does, provably.
 
 ---
 
@@ -202,6 +235,19 @@ this fills.
 **Is it HER giving or the FAMILY's?** Round 23 #18 put her prize share in her own account from 18. If
 the money is hers, the parent proposing a gift is a different scene entirely – and possibly a better
 one than either half of the original question.
+
+---
+
+## ⚙ 26.08 – THE BUILDABLE HALF HAS MOVED OUT
+
+The owner: «Надо расписать спеку по всем идеям и можно запускать будет после утверждения. Вкладка
+новая в Бюджете возле Bills/Expences. Можно не всё сразу делать, а с какой-то части более менее
+понятной начать». Written as [the-shop-2026-08.md](../specs/the-shop-2026-08.md) – placement settled,
+slice 1 fully shaped (four items, static prices, the data, the guard class, five acceptance numbers),
+slices 2–5 sequenced, and §6.1's «when does the tab appear» ANSWERED rather than asked.
+
+⚠ **THIS FILE STAYS AS THE ARGUMENT.** Every ask of his in his own words, and the reasoning behind
+each choice, lives here; the spec carries shapes, numbers and guards. Neither restates the other.
 
 ---
 

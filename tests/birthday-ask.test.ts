@@ -50,6 +50,7 @@ import {
 } from '../src/engine/world'
 import { answerFork } from '../src/engine/world/endings'
 import { ENDINGS } from '../src/engine/ending'
+import { ageAtPhysicalShare } from '../src/engine/development'
 import { ECONOMY } from '../src/engine/economy'
 import { rngFromSeed } from '../src/engine/rng'
 import { DEFAULT_PROFILE } from '../src/shared/protocol'
@@ -839,12 +840,24 @@ describe('ROUND 26 #9b – the offer walks the band instead of sampling it', () 
     // ⚠ THE RULE IS PER BIRTHDAY, NOT ">1", because a ONE-YEAR band (17, 18) cannot repeat inside
     // itself whatever it holds – she has exactly one birthday there – and demanding two dialogs of
     // it would be content for the sake of a number. The bound on the open-ended late band is the
-    // game's own: `ENDINGS.stopAskingAgeYears` is the age it stops asking her to go on.
+    // game's own: the last age at which anybody is still asking her to go on.
+    //
+    // ⚠⚠ RE-AIMED FOR THE LONG GOODBYE, AND IT GOT STRICTER RATHER THAN LOOSER. It read
+    // `ENDINGS.stopAskingAgeYears` – 38 – and step 2 deleted that constant, because the last
+    // retirement offer is a share of her peak physical now and not a birthday. The honest
+    // replacement is the age that share reaches on an undamaged body, which at the shipped 55% is
+    // 41.2: the open-ended 29-99 band therefore has to carry THIRTEEN birthdays where it used to
+    // carry ten. It does – six gifts, C(6,3) = 20 dialogs – so this is a re-aim and not a weakening,
+    // and the headroom is real rather than assumed. ⚠ IT IS ALSO A LIVE TRIPWIRE ON THE DIAL: drop
+    // the threshold to 40% and the last band would want 17 birthdays, still inside 20; drop it to
+    // 30% and it would want 21 and this goes red, which is exactly the conversation that should
+    // happen before the tail gets that long.
     for (const band of BIRTHDAY_BANDS) {
+      const lastAgeAnybodyAsks = Math.floor(ageAtPhysicalShare(ENDINGS.lastOfferPeakShare))
       const birthdays =
         band === BIRTHDAY_COLLEGE_BAND
           ? ENDINGS.collegeYears
-          : Math.min(band.to, ENDINGS.stopAskingAgeYears) - Math.max(band.from, 14) + 1
+          : Math.min(band.to, lastAgeAnybodyAsks) - Math.max(band.from, 14) + 1
       expect(
         combinationCount(band.gifts.length, 3),
         `${bandName(band)}: ${birthdays} birthdays are spent here and it can print ` +

@@ -22,7 +22,7 @@
 import type { Rng } from '../rng'
 import type { WorldState } from './state'
 import { driftCohort } from '../season/cohort'
-import { growWeek } from '../development'
+import { growWeek, physicalMean } from '../development'
 import { coachById } from '../coach'
 import { KNOCK_REST_GROWTH, knockRestWeek } from '../knock'
 import { coachWorksThisWeek } from './phaseFinance'
@@ -133,6 +133,27 @@ export function growAndLive(world: WorldState, rng: Rng): void {
     // different from 1. ZERO draw implications - `growWeek` keeps `seed:growth:<week>`, one pull.
     loadFactor: (knockRestWeek(world.knock, world.week) ? KNOCK_REST_GROWTH : 1) * summerLoadFactor(world),
   })
+
+  // 3b-bis. ⭐⭐⭐ ...AND THE BEST HER BODY HAS EVER BEEN IS REMEMBERED (v62, the long goodbye step 1 –
+  //     docs/specs/the-long-goodbye-2026-08.md §3b). Nothing reads it yet; step 2 is what puts the
+  //     last retirement offer on a share of THIS number instead of on her 38th birthday.
+  //
+  // ⚠ IMMEDIATELY AFTER `growWeek` AND FOR A MECHANICAL REASON, not for tidiness: `growWeek` is the
+  //   ONLY thing in the engine that moves `world.skills` (world/knock.ts says so at `radarViewOf`,
+  //   and `git grep 'world.skills ='` finds this one assignment). So a maximum taken on the line
+  //   after it has seen every value her build has ever held – no other phase, command or migration
+  //   can slip a build past it, which is what makes a running maximum honest rather than a sample.
+  //
+  // ⚠ A MAXIMUM, SO THE INTERRUPTIONS COST HER PROPERLY. A knock rest week develops at
+  //   `KNOCK_REST_GROWTH` of the rate and a layoff at the college freeze's, so a career full of them
+  //   arrives at 29 with a LOWER peak and therefore starts its last chapter from a lower number –
+  //   which is §3's whole point, that the ending reads her body rather than her birthday. What it
+  //   cannot do is fall: a bad week lowers `skills`, and `Math.max` simply keeps the number the good
+  //   week already earned.
+  //
+  // ⚠ ZERO DRAWS ON ANY STREAM – a comparison over state `growWeek` has already computed. The frozen
+  //   MAIN capture (41550 / e6b0c709) cannot see this line.
+  world.peakPhysical = Math.max(world.peakPhysical, physicalMean(world.skills))
 
   // 3c. W4 – AND SHE CAME OFF COURT SORE. Deliberately LAST of the things that happen to her body,
   //     and after `growWeek`: the week's work is done and banked, and the knock is what she is left

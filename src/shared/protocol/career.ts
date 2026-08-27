@@ -194,10 +194,17 @@ export interface CollegeOffer {
 
 /** THE NATURAL END'S OFFER (§5.3). Raised in the off-season, answered before time can move again.
  *
- *  ⚠ `final: true` IS THE FLOOR AT 38, AND THE FLOOR IS NOT A RETIREMENT RULE. 38 is the age at
- *  which the game STOPS ASKING: from 29 she may always refuse, and at 38 the last offer is made and
- *  taken. So the final offer carries no refusal – not because a mechanic retires her, but because
- *  the question has run out. The copy has to carry that and this flag is what lets it. */
+ *  ⚠⚠ THIS COMMENT NAMED A RULE THAT NO LONGER EXISTS and is corrected twice over. It read
+ *  «`final: true` IS THE FLOOR AT 38 … 38 is the age at which the game STOPS ASKING».
+ *  `ENDINGS.stopAskingAgeYears` was DELETED by the long goodbye step 2: `final` is now raised when
+ *  her physical falls to `ENDINGS.lastOfferPeakShare` (55%) of her own peak – age 41 on a body kept
+ *  well (§3a) – and no birthday is involved.
+ *
+ *  ⚠⚠ AND `final: true` IS NOT A HARDER QUESTION, IT IS NOT A QUESTION (step 4, §4). Every offer
+ *  with `final: false` is the parent's to answer and she may always refuse. The final one is HER
+ *  statement: the card renders `lastWordLine` and acknowledges, it draws no refusal control, and
+ *  `answerRetirement` refuses a `retire: false` against it as an illegal message rather than as a
+ *  rule about her. This flag is what lets the card tell the two apart. */
 export interface RetirementOffer {
   askedWeek: number
   seasonIndex: number

@@ -507,8 +507,17 @@ college birthdays is the whole of the population, so a pool would repeat within 
 
 1. **A wider pool.** Two rows each to the 19-21 and the peak bands: C(5,3) = 10 and, with the album,
    C(6,3) = 20. The rule the tests hold is per birthday, not ">1": **a band must be able to print at
-   least as many dialogs as it holds birthdays**, bounded for the open-ended late band by
-   `ENDINGS.stopAskingAgeYears`. A one-year band (17, 18) cannot repeat inside itself and is left.
+   least as many dialogs as it holds birthdays**, bounded for the open-ended late band by the last
+   age anybody is still asking her to go on. A one-year band (17, 18) cannot repeat inside itself and
+   is left.
+
+   ⚠ **RE-AIMED 26.08 AND THE BOUND ROSE FROM 38 TO 41.** It read `ENDINGS.stopAskingAgeYears`, and
+   [the long goodbye](the-long-goodbye-2026-08.md) §3a deleted that constant: the last retirement
+   offer is a share of her peak physical now, so the bound is `ageAtPhysicalShare(lastOfferPeakShare)`
+   – 41 at the shipped 55%. The late band therefore has to carry **13 birthdays and not 10**, and it
+   does: six gifts, C(6,3) = 20. ⚠ It is a live tripwire on that dial rather than a fact about this
+   spec – at a 30% threshold the band would want 21 dialogs and `tests/birthday-ask.test.ts` would go
+   red, which is the right place for that conversation to start.
 2. **A walk, not a draw.** Every combination of the band is ENUMERATED, shuffled ONCE per career per
    band on `seed:birthday:cycle:<band>`, and indexed by her age. Consecutive birthdays take
    consecutive entries, so two in a row can never be identical while the band has more than one

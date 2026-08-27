@@ -39,7 +39,7 @@ import { ECONOMY,
 // allowed to reach into shared/ for a player-facing string.
 import { formatCents } from '../shared/money'
 import { generateCohort, COHORT_SIZE } from './season/cohort'
-import { rollPotential } from './development'
+import { physicalMean, rollPotential } from './development'
 import { coachIncludesPhysio } from './coach'
 import { generatePreHistory } from './season/prehistory'
 import { BEST_N_BY_TRACK, WINDOW_BY_TRACK, RANKABLE_MIN, windowedBestSum } from './season/ranking'
@@ -134,6 +134,11 @@ import {
   guardNotEnded,
   latchEnding,
   lastRungSeasonIndexOf,
+  // ⭐ THE LONG GOODBYE STEP 4 – the refusal behind a `retire: false` aimed at an offer that was
+  // never a question. Off the barrel for the same reason `CAREER_ENDED_REFUSAL` is: player-facing
+  // copy on the worker's error channel, pinned by symbol so a re-wording cannot break a test in
+  // silence.
+  LAST_OFFER_NOT_A_QUESTION,
   plateauViewOf,
   autoEndingViewOf,
   resolveCollegeDeparture,
@@ -202,6 +207,7 @@ export {
   guardNotEnded,
   latchEnding,
   lastRungSeasonIndexOf,
+  LAST_OFFER_NOT_A_QUESTION,
   plateauViewOf,
   autoEndingViewOf,
   resolveCollegeDeparture,
@@ -214,8 +220,8 @@ import { localSponsorCents, reviewSponsors, reviewAdOffer, sponsorNeedMet, accep
 // implementation exactly as every other sponsor helper is.
 export { appearanceFeeFor, resultBonusFor, isRetainerWeek }
 export { localSponsorCents, reviewSponsors, reviewAdOffer, sponsorNeedMet, acceptOffer, declineOffer, travelCostFor, coachTravelFareFor, masseurTravelFareFor, rolloverKitAllowance }
-import { restRecoveryBonus, recoveryBaseFor, accrueCondition, adShootHolds, withheldFreeWeekRecovery, medicalClearance, medicalBlock, layoffCovering, layoffCoversWeek, layoffBlock, availabilityStatus, entryStatus, arrivalStatus } from './world/medical'
-export { restRecoveryBonus, recoveryBaseFor, accrueCondition, adShootHolds, withheldFreeWeekRecovery, medicalClearance, medicalBlock, layoffCovering, layoffCoversWeek, layoffBlock, availabilityStatus, entryStatus, arrivalStatus }
+import { restRecoveryBonus, recoveryBaseFor, recoveryAgeFade, accrueCondition, adShootHolds, withheldFreeWeekRecovery, medicalClearance, medicalBlock, layoffCovering, layoffCoversWeek, layoffBlock, availabilityStatus, entryStatus, arrivalStatus } from './world/medical'
+export { restRecoveryBonus, recoveryBaseFor, recoveryAgeFade, accrueCondition, adShootHolds, withheldFreeWeekRecovery, medicalClearance, medicalBlock, layoffCovering, layoffCoversWeek, layoffBlock, availabilityStatus, entryStatus, arrivalStatus }
 export type { AvailabilityStatus, MedicalClearance, MedicalBlock, LayoffBlock, EntryStatus, ArrivalVerdict, ArrivalStatus } from './world/medical'
 // Pass-throughs that historically lived in the condition/availability block and left with it:
 // re-exported here so the ~111 modules importing them from  keep working.
@@ -1173,6 +1179,16 @@ export function createWorld(
     masseurHired: false,
     masseurSessionsPerWeek: ECONOMY.masseur.defaultSessions,
     masseurTravels: false,
+    // ⭐ v62 (the long goodbye, step 1): the best her body has ever been. On week 0 that is the body
+    // she turned up with – a running maximum's identity element is its first observation, and there
+    // is no earlier week to have been better in. `world/phaseGrowth.ts` raises it from here.
+    // ⚠ THE HEAD-STARTED BUILD, deliberately: it is `skills` above, which is what the tick will
+    // compare against from week 1. Seeding the birth build instead would put the January girl's
+    // eleven months of extra training on the wrong side of her own peak.
+    // ⚠ LAST KEY OF THE LITERAL, for the reason the masseur's three above give: the frozen-career
+    // identity in tests/coach-travel-edge.test.ts reproduces the pre-v62 hashes by dropping exactly
+    // this key, which only works while the rest of the serialisation order is untouched.
+    peakPhysical: physicalMean(withHeadStart(startingSkills(seed, profile), profile.birthMonth)),
   }
   addEvent(world, {
     week: 0,

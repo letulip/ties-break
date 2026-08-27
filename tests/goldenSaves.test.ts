@@ -5,6 +5,7 @@ import { migrateSave } from '../src/engine/migrations'
 import { SAVE_SCHEMA_VERSION, maxMainDraws } from '../src/engine/world'
 import { mainStateConsistent } from '../src/engine/rng'
 import { COACH_TIERS } from '../src/engine/coach'
+import { physicalMean, SKILL_CEILING_MAX } from '../src/engine/development'
 import { LADDER_TRACKS } from '../src/shared/protocol'
 import { daysInBirthMonth } from '../src/shared/dates'
 
@@ -201,5 +202,34 @@ describe('golden saves corpus', () => {
       }
     }
     expect(quotesSeen, 'the corpus really does carry college quotes to check').toBeGreaterThanOrEqual(9)
+  })
+
+  // ⭐⭐⭐⭐ v62 – EVERY SAVE THIS GAME HAS EVER WRITTEN COMES BACK WITH A PEAK, AND IT IS AT LEAST THE
+  // BODY IT IS CARRYING. `peakPhysical` (the long goodbye step 1) is a RUNNING MAXIMUM, so the one
+  // thing that can never be true of it is that it sits below her current physical mean – a save that
+  // loaded like that would tell step 2 she is at more than 100% of her own peak, i.e. that the
+  // decline runs backwards. The v62 migration reconstructs the value rather than defaulting it, and
+  // this is the corpus-scale check on that: sixty-three fixtures, every historical shape the ladder
+  // has ever produced, through the real loader.
+  //
+  // ⚠⚠ AND WHAT IT CANNOT DO IS STATED RATHER THAN IMPLIED, because the corpus has one blind spot
+  // here: the DEEPEST fixture in it is week 333 – she is 19 – so no golden save has ever reached
+  // `declineStart` and the reconstruction's divisor is 1 on every one of them. Mutation-verified in
+  // both directions: seeding half her build fails this on v0.json, and INVERTING the divisor
+  // (`* shareLeft` for `/ shareLeft`) passes it, which is exactly the hole. So this case is the
+  // loader-side FLOOR – every historical shape survives the ladder and comes back with a usable
+  // number – and the reconstruction's accuracy is measured where a career can actually be old, on
+  // walked careers of 33 / 38 / 41 in tests/peak-physical.test.ts. Neither can do the other's job.
+  it('⭐⭐⭐⭐ v62: every migrated save carries a peak physical, and it is never below her build', () => {
+    for (const file of FILES) {
+      const migrated = migrateSave(load(file))
+      expect(typeof migrated.peakPhysical, `${file}: no stored peak`).toBe('number')
+      expect(Number.isFinite(migrated.peakPhysical), `${file}: the peak is not a real number`).toBe(true)
+      // A hundredth of tolerance for the floating-point walk the reconstruction does, and no more.
+      expect(migrated.peakPhysical, `${file}: the peak is BELOW her current body`)
+        .toBeGreaterThanOrEqual(physicalMean(migrated.skills) - 0.01)
+      expect(migrated.peakPhysical, `${file}: the peak is above anything this engine can produce`)
+        .toBeLessThanOrEqual(SKILL_CEILING_MAX)
+    }
   })
 })

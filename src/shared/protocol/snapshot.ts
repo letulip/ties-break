@@ -69,7 +69,13 @@ export interface Snapshot {
    *  calendar. It is the capacity of `week + 1`, the week the main button plays. */
   planDayCapacity: number
   /** the kid's per-week condition 0..100 (100 = fresh); fatigue is the derived 100 - condition
-   *  (Season-Life slice B, schema v12). */
+   *  (Season-Life slice B, schema v12).
+   *
+   *  ⭐⭐ A WHOLE NUMBER, ALWAYS – rounded ONCE by `toSnapshot` (the long goodbye §4a, owner 26.08:
+   *  «у нас в логике могут быть дробные числа – это окей, а у пользователя целые в интерфейсе»).
+   *  `world.condition` behind it is FRACTIONAL in the professional era, because the recovery a rest
+   *  week returns fades with her body from 29 on. No screen may round this again: the boundary owns
+   *  the decision, and `tests/condition-boundary.test.ts` is the ratchet that says so. */
   condition: number
   /** the kid's active injury, or null when healthy. Always null in slice B (Slice C populates it). */
   injury: SnapshotInjury | null
@@ -523,6 +529,20 @@ export interface Snapshot {
   } | null
   /** the natural end's offer while it is OPEN and unanswered, else null */
   retirementOffer: RetirementOffer | null
+  /** ⭐⭐ HOW MANY TIMES SHE HAS SAID «one more year» (the long goodbye step 4). On the snapshot
+   *  ALWAYS, not only at the end, and that is the change: `EndingView.oneMoreYearCount` has carried
+   *  it since the album shipped, but the ending view is null until a career has one – and the
+   *  surface that needs it now is the retirement card, which is drawn while the career is still
+   *  running. Her last word reads it (`lastWordLine`, engine/ending.ts), and one who has said those
+   *  words four times is telling a different story from one who never had to.
+   *
+   *  ⚠ IT COUNTS BOTH QUESTIONS – the age offer's refusals and the plateau's – which is what the
+   *  sentence claims: how often she has said those words, not which reading prompted them.
+   *
+   *  DERIVED IS THE WRONG WORD AND THE FIELD IS STILL NOT A SCHEMA MOVE: it is copied straight off
+   *  the persisted `world.oneMoreYearCount`, which has existed since the album. Nothing new is
+   *  stored, so `SAVE_SCHEMA_VERSION` does not move for it. */
+  oneMoreYearCount: number
   /** her college years, once she has chosen them – null for every career that did not. ⭐ P5: she may
    *  leave after any of them, so this is a span she is LIVING rather than a four-year block. */
   college: CollegeState | null

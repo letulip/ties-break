@@ -20,6 +20,7 @@ import {
   endingForForkAnswer,
   endingForRetirement,
   forkDue,
+  lastWordLine,
   retirementDue,
   debtWeeks,
 } from '../ending'
@@ -35,6 +36,9 @@ import { COLLEGE_TIER_ORDER } from '../collegeOffer'
 import { nextAcademicYearStart } from '../kidLife'
 import { weekLabel } from '../../shared/dates'
 import { kidAgeYears } from './age'
+// ⚠ A VALUE IMPORT FROM A LEAF, NOT A CYCLE – `engine/development.ts` imports economy, rng, coach
+// and plan, and none of them reaches back here. `plateauViewOf` spends it on the share of her peak.
+import { physicalMean } from '../development'
 import { buildAlbum, buildScroll } from './album'
 import { CAREER_ENDED_REFUSAL, COLLEGE_FREEZE_REFUSAL, guardNotEnded, guardNotEndedForGood } from './constants'
 // ⚠ THE ENTRY RULEBOOK, IMPORTED RATHER THAN RE-STATED (round 24, the freeze's hygiene). `answerFork`
@@ -207,6 +211,19 @@ export function plateauViewOf(world: WorldState): PlateauView {
     // ...and the OTHER half of the rule is asked of the same table, by construction rather than by
     // coincidence: the track is resolved once, here, and handed down.
     lastRungSeasonIndex: lastRungSeasonIndexOf(world, track),
+    // ⭐⭐⭐ v62's STORED PEAK, FINALLY SPENT (the long goodbye step 2, §3a). This is what makes the
+    // last offer final instead of her 38th birthday.
+    //
+    // ⚠ THE NUMERATOR AND THE DENOMINATOR CANNOT COME APART. `physicalMean(world.skills)` and
+    // `world.peakPhysical` are written on ADJACENT LINES of the growth phase (world/phaseGrowth.ts,
+    // step 3b/3b-bis), by the only code in the engine that moves `world.skills` at all, so there is
+    // no week in which one has moved and the other has not.
+    //
+    // ⚠ THE DIVISION IS TOTAL. Every attribute is clamped at `ECONOMY.development.floor` (20) and
+    // she is born far above it, so the peak is never 0 – on a fresh world, on a walked one, and on a
+    // migrated one (the v62 migration reconstructs it and `tests/goldenSaves.test.ts` asserts a
+    // finite number at or above today's mean for every fixture).
+    physicalShare: physicalMean(world.skills) / world.peakPhysical,
   }
 }
 
@@ -301,7 +318,10 @@ export function resolveEndings(world: WorldState): void {
     world.week % WEEKS_PER_YEAR === WEEKS_PER_YEAR - OFF_SEASON_WEEKS &&
     !inCollege(world)
   ) {
-    const offer = retirementDue(plateauViewOf(world))
+    // ⚠ THE VIEW IS HELD, NOT REBUILT. The line below needs her age and the offer needs her body;
+    // both come off ONE reading of the world so the sentence and the verdict cannot be a week apart.
+    const view = plateauViewOf(world)
+    const offer = retirementDue(view)
     if (offer) {
       world.retirementOffer = { ...offer, askedWeek: world.week }
       addEvent(world, {
@@ -309,7 +329,15 @@ export function resolveEndings(world: WorldState): void {
         type: 'milestone',
         keep: true,
         text: offer.final
-          ? `She is ${ENDINGS.stopAskingAgeYears}. Nobody is going to ask her again.`
+          // ⚠ HER AGE, NOT A CONSTANT (the long goodbye step 2) – `ENDINGS.stopAskingAgeYears` is
+          // deleted and this line printed it. `view.ageYears` is already whole years.
+          // ⭐⭐⭐ AND STEP 4 IS THE REWRITE STEP 2 DEFERRED. It said «Nobody is going to ask her
+          // again», which is the GAME announcing that it has stopped asking – she is not in that
+          // sentence at all. `lastWordLine` is, and the age stays in front of it because the feed
+          // has no kicker to carry it (the card's does, which is why the card renders the line
+          // alone). The words themselves live in `engine/ending.ts` and are written once: the same
+          // string reaches the feed, the card and the epilogue, so they cannot drift apart.
+          ? `She is ${view.ageYears}. ${lastWordLine(world.oneMoreYearCount)}`
           : offer.reason === 'plateau'
             ? 'She said it out loud in the car – if she cannot reach the top, she would rather go.'
             : 'Another off-season, and the same question: is there another year in this?',
@@ -531,14 +559,48 @@ export function answerFork(world: WorldState, answer: ForkAnswer, tier?: College
     })
 }
 
-/** ⚠ AT 38 THE ONLY ANSWER IS YES, AND THAT IS NOT A RETIREMENT RULE. `final` means the question has
- *  run out, so refusing it is not a thing the game offers – §5.3, and the copy on the card has to
- *  carry the difference between "we are retiring you" and "nobody is going to ask again". */
+/** The sentence behind a `retire: false` aimed at an offer that was never a question. Exported so a
+ *  test can pin the refusal without pinning a spelling, on the precedent of `CAREER_ENDED_REFUSAL`
+ *  and `RELEASE_LINE_PREFIX`.
+ *
+ *  ⚠ IT NAMES THE STATE RATHER THAN SCOLDING THE CALLER, which is `COLLEGE_FREEZE_REFUSAL`'s own
+ *  doctrine (R10-16): where the career is, and why this control has nothing to do. It reaches the
+ *  player only through the store's error path, and no card in the game can produce it. */
+export const LAST_OFFER_NOT_A_QUESTION = 'She has already said this one – there is nothing here left to answer'
+
+/** ⭐⭐⭐ THE FINAL OFFER IS NOT A QUESTION, SO THIS COMMAND IS NOT AN ANSWER TO IT (the long
+ *  goodbye step 4, §4). Every NON-final offer is untouched and stays exactly what it was: the
+ *  parent's question, the parent's answer, «One more year, she said. Same as last time.»
+ *
+ *  ⚠⚠ WHAT THIS HEADER USED TO SAY, AND WHY IT IS GONE. It read «AT 38 THE ONLY ANSWER IS YES, AND
+ *  THAT IS NOT A RETIREMENT RULE … the copy on the card has to carry the difference between "we are
+ *  retiring you" and "nobody is going to ask again"» – an apology for handing the parent a question
+ *  with one legal answer, and an instruction to paper over it with wording. The difference is
+ *  carried by WHOSE VOICE IT IS now (`LAST_WORD_OPENING` in engine/ending.ts): the last offer is
+ *  her statement, the card acknowledges rather than asks, and there is no refusal control on it at
+ *  all. Nothing was papered over, so nothing needs the copy to carry it.
+ *
+ *  ⚠⚠ AND THE REFUSAL BELOW STAYS, WHICH IS THE ONLY PART OF THE OLD RULE THAT WAS EVER LOAD-BEARING.
+ *  It is no longer «she may not refuse» – it is «there is nothing here to answer». The guard is not
+ *  about her: the worker is not the gate (CLAUDE.md invariant 1), so a hand-built message or a poked
+ *  save can still put `retire: false` against a final offer, and a command that accepted it would
+ *  increment `oneMoreYearCount` and write «One more year, she said» over a career whose card never
+ *  offered those words. That is an illegal state, and the house rule for an illegal command in this
+ *  engine is a LOUD refusal, never a silent no-op (`guardNotEnded`'s own note above, and round 24's
+ *  `COLLEGE_REVEAL_REFUSAL`: «a silent no-op was the failure and a loud refusal was the fix»).
+ *  `mutate` runs commands against a structuredClone, so a throw here leaves the world untouched.
+ *
+ *  ⚠ WHAT ELSE DEPENDED ON THE OLD THROW, checked before it was re-aimed rather than after: the walk
+ *  helper in `tests/ending.test.ts` steps PAST a final offer by nulling it by hand and says in a
+ *  comment that it must (still true, and the comment is re-aimed); `tools/potential-band-sweep.ts`
+ *  and `tools/his-careers-dose.ts` answer every open offer with `false` unconditionally, so removing
+ *  the refusal would have silently ended or silently extended careers inside a measurement. Keeping
+ *  the throw keeps all three exactly as they are; only the sentence moved. */
 export function answerRetirement(world: WorldState, retire: boolean): void {
   guardNotEnded(world)
   const offer = world.retirementOffer
   if (offer === null) throw new Error('Nobody has asked her')
-  if (!retire && offer.final) throw new Error('This was the last time anybody asked')
+  if (!retire && offer.final) throw new Error(LAST_OFFER_NOT_A_QUESTION)
   world.retirementOffer = null
   if (!retire) {
     world.oneMoreYearCount += 1

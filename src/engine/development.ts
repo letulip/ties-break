@@ -39,6 +39,10 @@ import { ECONOMY } from './economy'
 import { coachFactor, coachFitFor, tierOf, type Coach } from './coach'
 import { planWeek, sessionCounts, planSessions } from './plan'
 import { SESSION_KINDS, type PlayStyle, type SessionKind, type WeekPlan } from '../shared/protocol'
+// ⚠ THE WEEK LENGTH, FROM THE LEAF `economy.ts` ALREADY READS IT FROM – `season/calendar.ts` exports
+// the very same constant as `WEEKS_PER_YEAR`, and importing THAT would pull the whole calendar into
+// this module's graph for one number. `ageAtPhysicalShare` below is the only consumer here.
+import { WEEKS_IN_SEASON } from '../shared/dates'
 
 /** The attributes the match engine reads. Kept as a bare record so it serialises into the save as
  *  numbers and nothing else.
@@ -66,6 +70,42 @@ export type SkillKey = keyof KidSkills
  *  or ceiling moves by a hundredth. INSERTING one anywhere else would re-roll every career in
  *  existence from that position on. */
 export const SKILL_KEYS: readonly SkillKey[] = ['serve', 'ret', 'composure', 'stamina', 'groundstrokes']
+
+/** ⚠⚠ WHAT «PHYSICAL» MEANS, AND IT IS THE PREDICATE `growWeek` ITSELF SPENDS – not a list somebody
+ *  typed out beside it. The decline branch below reads `loss = decline * skills[k]` for exactly the
+ *  keys this returns true for, and hands `composure` `veteranPoise` instead; so the answer to "which
+ *  attributes does age take points off" is defined in ONE place and every reader gets the same four.
+ *
+ *  A hand-written `['serve', 'ret', 'stamina', 'groundstrokes']` would be a second home for that
+ *  answer, and `SKILL_KEYS` is APPEND-ONLY (see above): the day a sixth attribute is appended,
+ *  exactly one of the two would be updated and nothing would fail. */
+export function isPhysicalSkill(k: SkillKey): boolean {
+  return k !== 'composure'
+}
+
+/** The attributes `declineFactor` erodes, in `SKILL_KEYS`' order. DERIVED, never written down. */
+export const PHYSICAL_SKILL_KEYS: readonly SkillKey[] = SKILL_KEYS.filter(isPhysicalSkill)
+
+/** HER BODY AS ONE NUMBER: the mean of the attributes age takes points off.
+ *
+ *  ⭐⭐ A SCALAR MEAN IS EXACT HERE RATHER THAN A SIMPLIFICATION, and it has to be said out loud
+ *  because the next reader will otherwise assume it is a fudge that got waved through. `growWeek`'s
+ *  decline is PROPORTIONAL PER ATTRIBUTE – `loss = decline * skills[k]` – and past `declineStart`
+ *  nothing else moves a physical attribute at all (`ageFactor` returns 0 from that age, so the gain
+ *  term is 0). Each physical attribute is therefore multiplied by the SAME `(1 - decline)` every
+ *  week, so each one keeps the same SHARE of its own peak, week for week – and the mean of numbers
+ *  that have all been scaled by one factor is that factor times the mean. `physicalMean(now) / peak`
+ *  is not an approximation of "how much of her body is left": it IS each attribute's own share, to
+ *  the last decimal.
+ *
+ *  ⚠ AND THAT IS EXACTLY WHY COMPOSURE IS OUT rather than merely "not very physical". It GAINS
+ *  `veteranPoise` past the peak, so folding it in would put a rising number inside a falling one:
+ *  the share would understate the decay, and it would do so by more every year. */
+export function physicalMean(skills: KidSkills): number {
+  let total = 0
+  for (const k of PHYSICAL_SKILL_KEYS) total += skills[k]
+  return total / PHYSICAL_SKILL_KEYS.length
+}
 
 /** WHERE SHE CAN BE BORN, per attribute – the range `startingSkills` (engine/world/player.ts) draws
  *  each birth value out of.
@@ -249,6 +289,42 @@ export function declineFactor(ageYears: number): number {
   // Gentle at first and steeper every year, which is how careers actually end: a season of "still
   // fine", then a season where the legs are gone.
   return c.declineRate * (1 + (ageYears - c.declineStart) * c.declineAccel)
+}
+
+/** ⭐⭐ THE AGE AN UNDAMAGED BODY FALLS TO `share` OF ITS PEAK, walked off the curve above (the long
+ *  goodbye, docs/specs/the-long-goodbye-2026-08.md §3a). 0.70 -> 37.81 · 0.55 -> 41.17 · 0.50 -> 42.31.
+ *
+ *  ⚠ IT EXISTS BECAUSE THE ENDING NO LONGER NAMES AN AGE. `ENDINGS.stopAskingAgeYears` was deleted
+ *  by step 2 and two things still have to know roughly how long a playing life is – the endings
+ *  bench's walk horizon and the birthday catalogue's open-ended late band. Both read that constant;
+ *  neither may hard-code a replacement, because `ENDINGS.lastOfferPeakShare` is a dial and an age
+ *  copied beside it would be a second, silent home for the same decision.
+ *
+ *  ⚠⚠ A LOOP AND NOT A FORMULA, BECAUSE THE AGE ADVANCES EVERY WEEK – and that is the exact mistake
+ *  the spec's §1 table shipped in its first draft. It evaluated `declineFactor` once a year and held
+ *  it constant across the 52 weeks; the engine raises her age every tick, so the loss compounds
+ *  against a continuously rising factor and the real curve is 2-3 points kinder at every age.
+ *
+ *  ⚠ AND IT IS "UNDAMAGED" ONLY IN NAME TODAY, WHICH IS WORTH KNOWING BEFORE TRUSTING THE WORD.
+ *  Nothing in the engine lowers her physical relative to her OWN peak: the peak is frozen the week
+ *  `declineStart` arrives (`ageFactor` returns 0 from there, so the gain term is gone) and the loss
+ *  is proportional per attribute, so the share is the same function of age for every career ever
+ *  played. Measured on walked careers whose peaks are 31% apart: identical to three decimals. See
+ *  the note on `ENDINGS.lastOfferPeakShare`. */
+export function ageAtPhysicalShare(share: number): number {
+  const c = ECONOMY.development.ageCurve
+  if (share >= 1) return c.declineStart
+  if (share <= 0) return Infinity
+  let left = 1
+  let age = c.declineStart
+  while (left > share) {
+    left *= 1 - declineFactor(age)
+    // ⚠ `WEEKS_IN_SEASON` IS `WEEKS_PER_YEAR` – season/calendar.ts exports it under that name and
+    // this is the same constant, imported from the leaf `economy.ts` already reads it from so that
+    // nothing new joins this module's import graph.
+    age += 1 / WEEKS_IN_SEASON
+  }
+  return age
 }
 
 /** The training split, as a multiplier. `plan.train` runs 60 (light) to 85 (grind).
@@ -436,8 +512,13 @@ export function growWeek(args: {
     const headroom = Math.max(0, potential[k] - skills[k])
     const gain = rate * headroom * luck * aim[k]
     // Composure keeps rising past the peak – experience is the one thing that does not fade.
-    const loss = decline > 0 && k !== 'composure' ? decline * skills[k] : 0
-    const veteranPoise = decline > 0 && k === 'composure' ? d.veteranPoise : 0
+    // ⚠ THE PREDICATE, NOT A REPEAT OF IT (v62). These two lines used to spell `k !== 'composure'`
+    // and `k === 'composure'` inline, which was fine while this was the only thing that cared. The
+    // stored peak physical reads the same question now (`physicalMean`, and through it
+    // `WorldState.peakPhysical`), so the answer is `isPhysicalSkill` in both places and the two
+    // cannot drift apart. Byte-identical behaviour: `isPhysicalSkill` IS `k !== 'composure'`.
+    const loss = decline > 0 && isPhysicalSkill(k) ? decline * skills[k] : 0
+    const veteranPoise = decline > 0 && !isPhysicalSkill(k) ? d.veteranPoise : 0
     out[k] = Math.max(d.floor, skills[k] + gain - loss + veteranPoise)
   }
   return out
