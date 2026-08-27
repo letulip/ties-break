@@ -37,6 +37,7 @@ import type {
   Offer,
   PenaltyRow,
   PlayerProfile,
+  OwnedAsset,
   PracticeBooking,
   RecoveryBuff,
   RetirementOffer,
@@ -205,7 +206,16 @@ import type { AcademySupport } from '../academy'
 // ⚠ AND IT IS RECONSTRUCTED, NOT DEFAULTED, FOR AN EXISTING CAREER. See the migration: seeding
 // "today" would tell a 38-year-old she is at 100% of her peak. Pure state, zero draws on any
 // stream, so the frozen MAIN capture (41550 / e6b0c709) cannot see it.
-export const SAVE_SCHEMA_VERSION = 62
+// ⭐⭐⭐ v63 (the shop, slice 1): `assets` – WHAT THE FAMILY OWNS THAT IS NOT TENNIS
+// (docs/specs/the-shop-2026-08.md §5). One array, empty on every career that has ever existed, and
+// the ONLY thing this feature persists: the shelf itself is `ECONOMY.shop.catalogue`, a constant, so
+// slices 2-7 can add a rung without a migration.
+// ⚠ THE BACK-FILL IS EMPTY AND THERE IS NOTHING TO RECONSTRUCT – v26's `knock` case rather than
+// v62's `peakPhysical` one. A career that reached this build could not buy anything: there was no
+// shelf, no command and no ledger row, so there is no earlier evidence to mine and an invented row
+// would hand a family a car it never chose. Pure state, zero draws on any stream, so the frozen MAIN
+// capture (41550 / e6b0c709) cannot see it.
+export const SAVE_SCHEMA_VERSION = 63
 
 
 
@@ -669,6 +679,19 @@ export interface WorldState {
    *  which is the true value for every earlier save, so nothing is back-filled (the
    *  `pendingTournament.masseurThere` / `weeksSaved` discipline, recorded in the v59 migration). */
   masseurReturnDue?: number
+  /** ⭐⭐ WHAT THE FAMILY OWNS (v63, the shop slice 1 – docs/specs/the-shop-2026-08.md §5). One row
+   *  per catalogue id the parent has bought and not sold; empty for every career that predates the
+   *  shelf, and empty for most careers that do not.
+   *
+   *  ⚠ ONE ROW PER ID, WHICH IS A RULE AND NOT AN ACCIDENT. `buyAsset` refuses a second copy of a
+   *  thing already owned, so the shelf reads buy / own / sell as a tri-state per rung – and slice 2's
+   *  drift sub-stream is keyed `seed:asset:<assetId>:<week>` (spec §4), which is a fact about the
+   *  ITEM rather than about a copy of it. Two copies of one car would have to move identically or
+   *  the key is wrong; refusing the second copy is the honest way to keep that true. An amount is
+   *  what an investment varies, not a count.
+   *
+   *  Required rather than optional – `createWorld` writes `[]` and the v63 migration seeds it. */
+  assets: OwnedAsset[]
   /** ⭐⭐⭐ THE BEST HER BODY HAS EVER BEEN (v62, the long goodbye step 1) – `physicalMean` of her
    *  skills, kept as a RUNNING MAXIMUM over the whole career by the growth phase (world/phaseGrowth).
    *  One number, written every tick, read by nothing yet.

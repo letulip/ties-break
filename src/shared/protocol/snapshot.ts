@@ -13,7 +13,7 @@ import type { CareerTotals, DebtView, FinanceWeekPoint, FinanceWindow, StopReaso
 import type { InjuryReport, Knock, KnockPrompt, SnapshotInjury } from './health'
 import type { CountingResult, LadderViews, StandingRow } from './ladder'
 import type { BirthdayPrompt, DiarySnapshot, KidLife, Milestone, RadarAxis, TrainingRead } from './narrative'
-import type { CoachMarketRow, KitDealView, KitLineView, Offer, SnapshotAcademy, TourBriefing } from './offers'
+import type { CoachMarketRow, KitDealView, KitLineView, Offer, ShopView, SnapshotAcademy, TourBriefing } from './offers'
 import type { CoachEdgePlacement, PlayerProfile, PracticeBooking, RecoveryBuff, VacationBooking, WeekPlan } from './profile'
 
 export interface Snapshot {
@@ -345,6 +345,11 @@ export interface Snapshot {
   /** THE DEAL BEHIND THOSE LINES, or null when nobody is kitting her out. See `KitDealView` - the
    *  running allowance is the fact the Bills page was missing. */
   kitDeal: KitDealView | null
+  /** ⭐⭐ THE SHELF (schema v63, docs/specs/the-shop-2026-08.md §2): every rung, its price, whether
+   *  the family owns it and what it is worth now. `kit`'s own shape and `kit`'s own rule – the
+   *  SCREEN never prices a rung, never applies a rate and never subtracts two figures to find a
+   *  loss; the engine does all three and hands over the answers. See `ShopView`. */
+  shop: ShopView
   /** her academy scholarship, or null when nobody is backing her (schema v21). Surfaced because
    *  every travel figure the planner quotes is already net of it, and a smaller number with no
    *  explanation is worse than no discount at all. */

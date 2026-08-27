@@ -2684,6 +2684,135 @@ export const ECONOMY = {
      *  deficit shrinks, instead of always demanding the +20 tier. */
     rescueTargetCondition: 85,
   },
+  /** ⭐⭐ THE SHELF (slice 1, docs/specs/the-shop-2026-08.md §3a/§3b/§3c). The parent's own money,
+   *  and the first screen in this game where it is his to enjoy.
+   *
+   *  ⚠⚠ A CONSTANT AND NOT SAVE DATA, which is the whole reason it lives here (spec §5). Only what
+   *  the family OWNS persists (`WorldState.assets`), so adding a rung – or the whole elite ladder of
+   *  §3f – is a catalogue edit and not a migration. An owned row whose id has left this list is the
+   *  one case that needs care, and `shopItem` returns undefined for it rather than throwing.
+   *
+   *  ⚠ `annualRateBps` IS SIGNED AND THE SIGN IS THE POINT. Negative is a thing that loses money,
+   *  and §3b says why the game needs some: «THIS FAMILY EXISTS TO LOSE MONEY AND THAT IS THE POINT.
+   *  If everything on the shelf appreciates, the shop is a savings account with pictures.» Basis
+   *  points rather than a percentage so the table is integers all the way down; the fraction appears
+   *  once, inside `assetValueCents`.
+   *
+   *  ⚠ SLICE 1 IS STATIC, AND «STATIC» MEANS DETERMINISTIC RATHER THAN FROZEN. Every value below is
+   *  arithmetic on `boughtWeek` and draws NOTHING – no drift (§4, slice 2), no shock, no freeze. A
+   *  car still loses its 9% a season, because otherwise acceptance §2e-1 («the ledger shows the loss
+   *  to the cent») has no loss to show and the shelf teaches nothing. */
+  shop: {
+    /** ⭐ THE RUNGS, cheapest first – the order they are read in and the order they are shown in.
+     *  `stake: 'open'` is a product you choose an amount for (at least `entryCents`); `'fixed'` is a
+     *  thing with one price. That distinction is §3a's, not a convenience: a deposit with a $1,000
+     *  MINIMUM and a car with a $60,000 PRICE are different objects, and modelling the deposit as a
+     *  $1,000 thing you buy would make every investment on this shelf decorative the moment the
+     *  family had real money. */
+    catalogue: [
+      {
+        id: 'deposit',
+        family: 'investment',
+        stake: 'open',
+        label: 'A savings deposit',
+        blurb: 'The dull one – it will not lose money and it will not make much.',
+        entryCents: 1_000_00,
+        annualRateBps: 200,
+      },
+      {
+        id: 'index-fund',
+        family: 'investment',
+        stake: 'open',
+        label: 'An index fund',
+        // ⚠ NO PROMISE IN THE WORDS. §3a's index fund «can be DOWN for a whole season and still be
+        // the right holding» – that is slice 2's drift, and until it lands the blurb may not
+        // describe a movement the engine does not make. It says what the thing IS, not what it will
+        // do, which is the one description that stays true across both slices.
+        blurb: 'A slice of the whole market, bought once and left alone.',
+        entryCents: 5_000_00,
+        annualRateBps: 700,
+      },
+      // ⚙ 26.08, the owner: «давай гэп сделаем скромнее пока что от 60 до 300к». A five-fold spread
+      // rather than the twenty-two-fold one the first draft drew – from $60k to $300k every rung is
+      // a real decision for a real career, and the ladder can always be extended upward later.
+      {
+        id: 'car-sensible',
+        family: 'car',
+        stake: 'fixed',
+        label: 'The sensible estate',
+        blurb: 'Five doors and a boot that takes the kit bags. Nobody looks at it twice.',
+        entryCents: 60_000_00,
+        annualRateBps: -600,
+      },
+      {
+        id: 'car-good',
+        family: 'car',
+        stake: 'fixed',
+        label: 'The good saloon',
+        blurb: 'Quiet, quick, and quietly expensive the day it stops being new.',
+        entryCents: 110_000_00,
+        annualRateBps: -900,
+      },
+      {
+        id: 'car-nineteen',
+        family: 'car',
+        stake: 'fixed',
+        // ⚠ NOT «the one he wanted at nineteen», WHICH IS §3b's OWN LABEL AND CANNOT SHIP. R15-7 is a
+        // house rule with a test behind it (tests/coach-voice.test.ts): no string a player can read
+        // calls anybody «he». The spec's phrase is about the PARENT, whose gender this game has never
+        // fixed – the player is «the parent», never a father – so the pronoun would have been the
+        // engine deciding something the onboarding deliberately does not ask. The picture survives
+        // the edit; only the assumption goes.
+        label: 'The one from the poster',
+        blurb: 'Two seats, no boot, and twenty-five years late.',
+        entryCents: 190_000_00,
+        annualRateBps: -1200,
+      },
+      {
+        id: 'car-unreasonable',
+        family: 'car',
+        stake: 'fixed',
+        label: 'The unreasonable one',
+        blurb: 'No boot, no back seats, no defence for any of it.',
+        entryCents: 300_000_00,
+        annualRateBps: -1500,
+      },
+      // ⭐ §3c – THE FIRST RUNG MATTERS MOST: «the earliest seasons are measured in debt, and a
+      // family that finally owns where it lives is a real milestone this game currently has no way
+      // to mark.» Two tiers in slice 1; the absurd end of that ladder waits.
+      //
+      // ⚠⚠ THE TWO PRICES ARE MINE AND NOT THE SPEC'S – §3c gives tiers, a rent idea and no numbers
+      // at all, so these are MEASURED rather than declared (CLAUDE.md invariant 4). See
+      // `tools/shop-probe.ts`: on the nine bench presets the first rung must be out of reach while
+      // the tennis still needs the money and reachable while it does not, which is the whole of
+      // acceptance §2e-5. $240,000 clears the dearest car and lands after the turn; $520,000 is the
+      // rung above it, at the same distance again.
+      //
+      // ⚠ AND +3% IS THE SLOWEST POSITIVE RATE ON THE SHELF ON PURPOSE. §3c's word is «slow»: a home
+      // that out-earned the index fund would make property the correct answer to every question and
+      // §0's warning – «assets never beat a career, they only survive one» – would be broken by the
+      // one family that is largest. The rent a house can pay when it is not lived in is §3c's, and
+      // it is not slice 1's: an income line is movement, and this slice has none.
+      {
+        id: 'house-first',
+        family: 'house',
+        stake: 'fixed',
+        label: 'A place of their own',
+        blurb: 'The end of renting. Small, theirs on paper, and hers to paint.',
+        entryCents: 240_000_00,
+        annualRateBps: 300,
+      },
+      {
+        id: 'house-garden',
+        family: 'house',
+        stake: 'fixed',
+        label: 'The house with the garden',
+        blurb: 'Room for all of them, and a garden nobody has to share.',
+        entryCents: 520_000_00,
+        annualRateBps: 300,
+      },
+    ],
+  },
 } as const
 
 export interface GearHit {

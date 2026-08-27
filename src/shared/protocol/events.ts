@@ -89,6 +89,26 @@ export type WorldEventCategory =
    *  v51 migration back-fills a `null` offer rather than inventing one, and a null offer is charged
    *  nothing. Same discipline as v44's 'facility' split and v50's empty college ledger. */
   | 'tuition'
+  /** 'shop' (v63, docs/specs/the-shop-2026-08.md §5) is THE FAMILY'S OWN MONEY LEAVING AND COMING
+   *  BACK – what a bought asset cost, and what a sold one returned. Two-sided by design and by the
+   *  house's own idiom: a sale is booked under the SAME category as the purchase, exactly as a
+   *  cancelled vacation refunds under 'vacation', so a car bought for $110,000 and sold for $91,091
+   *  reads on the breakdown as the $18,909 it actually cost the family. ⭐ THAT NETTING IS THE
+   *  FEATURE, not a shortcut: the shop's whole thesis (§3b) is that the vehicle family exists to
+   *  LOSE money, and a single line whose size IS the loss says so better than a gross pair.
+   *
+   *  ⚠ THE GROSS FLOWS ARE NOT LOST, they live where gross flows live: `financialEvents` carries the
+   *  purchase row and the sale row separately, one 'expense' and one 'income', so the ledger tab
+   *  shows both prices and the breakdown shows the difference. Two questions, two surfaces.
+   *
+   *  ⚠ IT IS THE SECOND COST IN THE GAME THAT IS NOT TENNIS ('tuition' was the first), and the
+   *  reason it gets its own bucket rather than joining 'other' is 'staff''s: a purchase the player
+   *  cannot find on the breakdown is the academy's $20,879 mistake again – you paid, and you could
+   *  not tell.
+   *
+   *  ⚠ AN OLD SAVE HAS NO ROWS OF IT, by construction: `assets` back-fills empty (see migrations.ts
+   *  v62 -> v63) and the shelf did not exist, so nothing is retconned. */
+  | 'shop'
   | 'income'
   | 'interest'
   | 'physio'
@@ -192,6 +212,44 @@ export interface WorldEventEntryRef {
 export interface FinanceWeek {
   week: number
   byCategory: Partial<Record<WorldEventCategory, number>>
+  /** ⭐⭐ HER CUT OF THE WEEK'S CHEQUE – A MEMO, AND DELIBERATELY NOT A CATEGORY.
+   *
+   *  THE OWNER, 27.08: «на плашке Finances на week recap после турниров можно писать что-то вроде
+   *  Income $sum / Spent $sum / Her cut 10% $sum / Balance $sum. Мне кажется так будет нагляднее» –
+   *  and, shown that his arithmetic double-counts, «(B) мемо под балансом - вот это хорошо, да».
+   *
+   *  ⚠⚠ IT IS A SIBLING OF `byCategory`, NEVER A KEY INSIDE IT, AND THAT PLACEMENT IS THE WHOLE
+   *  DESIGN. Both folds over this ledger – `financeWindow` and `financeSeries` in engine/world/
+   *  ledger.ts – iterate `byCategory` and nothing else, so a figure parked here provably cannot
+   *  reach an income total, an expense total or a balance. `finalizeTournament` already credits the
+   *  family `prize − herShare` (world.ts), which makes every income figure on every screen ALREADY
+   *  NET of her cut; a cut that joined the arithmetic a second time would print a balance the till
+   *  never had. This field exists so a screen can say «this also happened» without being able to say
+   *  «this was deducted».
+   *
+   *  ⚠ AND IT IS CARRIED RATHER THAN RE-DERIVED. The gross cheque is not persisted anywhere, and
+   *  dividing the family's row back by the ramp would reintroduce exactly the penny
+   *  `kidPrizeShareCents`' own comment forbids («the two balances add up to the tournament's cheque
+   *  to the cent – a player can put the two numbers side by side on screen and they must not
+   *  disagree by a penny»). `cents` below is the very `herShare` variable the account was credited
+   *  with, written at the same commit point.
+   *
+   *  ⚠ OPTIONAL, AND NOT A SCHEMA MOVE – `WorldEvent.entryRef`'s own reasoning above, verbatim in
+   *  its situation: absent is exactly what every historical save and every hand-built fixture
+   *  already mean here ("no cheque was split this week"), which is also true of every week before
+   *  her eighteenth, so no migration is owed, no golden fixture is added and `SAVE_SCHEMA_VERSION`
+   *  does not move. The recorded widening precedent is commit 2763caa (the whole `entry` offer
+   *  family added with the version left at 36). */
+  kidShare?: FinanceWeekKidShare
+}
+
+/** What left the family's half of one week's cheques and landed in hers. Both numbers are the
+ *  engine's own at the moment it paid: no ratio is inverted, no cheque is reconstructed. */
+export interface FinanceWeekKidShare {
+  /** cents credited to `world.kidFundsCents` this week – summed if a week ever pays twice */
+  cents: number
+  /** the ramp's rate at her real age that week, in basis points (`kidPrizeShareBps`) */
+  bps: number
 }
 
 /** A category-accurate rollup of `FinanceWeek[]` over a trailing window (pure fold; the bench and
@@ -225,6 +283,18 @@ export interface FinanceWeekPoint {
    *  draws the line the export draws, and the line a parent actually watches is the balance, not
    *  the per-week churn – the slope toward zero is the whole game.) */
   balanceCents: number
+  /** ⭐ HER CUT, CARRIED ONTO THE POINT SO THE WEEK RECAP'S MEMO CAN READ IT OFF THE SAME OBJECT it
+   *  already reads Income and Spent from (`FinanceWeek.kidShare`, straight through).
+   *
+   *  ⚠ ABSENT ON EVERY WEEK THAT SPLIT NO CHEQUE, which is every week before her eighteenth and
+   *  every week the tennis paid nothing – the prize event's own conditional rule, not a second copy
+   *  of it. A consumer that sums this into `incomeCents` or `balanceCents` has misread it: those
+   *  three fields are the arithmetic and this one is a memo beside it. */
+  kidShareCents?: number
+  /** the rate that produced it, as WHOLE PERCENT – rounded ONCE here at the snapshot boundary, the
+   *  owner's rule of 26.08 and `shopView`'s `annualRatePct` two files over. No component divides
+   *  basis points again. */
+  kidSharePct?: number
 }
 
 export type StopReason =

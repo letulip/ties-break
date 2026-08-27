@@ -87,8 +87,21 @@ export function guardNotEnded(world: WorldState): void {
  *  ⭐ THE THIRD MEMBER IS `chooseGift` (round 24, the owner's «да, день рождения делай»). The
  *  college year now PAUSES on her birthday week and the answer lands while the latch is on, so the
  *  one command that clears a pending birthday has to pass the freeze – the most family-and-calendar
- *  command in the game, which is the exact sentence this list was defined by. Appended, not widened:
- *  cancelVacation, cancelPractice, chooseGift, and nothing else. */
+ *  command in the game, which is the exact sentence this list was defined by.
+ *
+ *  ⚠ RE-AIMED BY THE SHOP (v63, docs/specs/the-shop-2026-08.md §5), NOT WIDENED, AND THE SENTENCE
+ *  ABOVE IS WHAT DID THE ADMITTING. `buyAsset` and `sellAsset` are members four and five, on the
+ *  spec's own explicit ruling: «a shop command is about the FAMILY'S OWN money, so it belongs to
+ *  `guardNotEndedForGood` … and NOT to the tour-command guard that refuses inside the college
+ *  freeze.» The list's defining clause is a command about the family's own calendar or the family's
+ *  own money, where being at a university plainly does not stop it and where opening it can break
+ *  nothing – and the shop clears all three: it reaches no decision about the girl (no radar, no
+ *  condition, no kit, no entry), it spends the parent's pocket, and the backlog's §0a is that the
+ *  college years are the shop's BEST moment, four years where the wallet rests and the parent has no
+ *  weekly job to do. ⚠ Everything the freeze already shuts off in `tickWeek` still keeps
+ *  `guardNotEnded` with the honest sentence; this is not a precedent for a tour command.
+ *  Appended, not widened: cancelVacation, cancelPractice, chooseGift, buyAsset, sellAsset, and
+ *  nothing else. */
 export function guardNotEndedForGood(world: WorldState): void {
   if (world.ending && world.ending.type !== 'college') throw new Error(CAREER_ENDED_REFUSAL)
 }

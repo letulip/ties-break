@@ -132,6 +132,11 @@ describe('every command answers with the arm REPLY_BY_COMMAND names for it', () 
       tournamentClose: { type: 'tournamentClose', baseRevision: 0 },
       decideKnock: { type: 'decideKnock', choice: 'rest', baseRevision: 0 },
       chooseGift: { type: 'chooseGift', giftId: 'no-such-gift', baseRevision: 0 },
+      // ⚠ v63, the shop: deliberately invalid ids, like every other row here – on a quiet junior
+      // career the refusal arrives from the professional-era gate before the id is ever looked up,
+      // and a refusal IS a legitimate answer for this suite (it correlates the reply, not the verb).
+      buyAsset: { type: 'buyAsset', itemId: 'no-such-item', baseRevision: 0 },
+      sellAsset: { type: 'sellAsset', itemId: 'no-such-item', baseRevision: 0 },
       signOffer: { type: 'signOffer', offerId: 'no-such-offer', baseRevision: 0 },
       refuseOffer: { type: 'refuseOffer', offerId: 'no-such-offer', baseRevision: 0 },
       answerFork: { type: 'answerFork', answer: 'continue', baseRevision: 0 },

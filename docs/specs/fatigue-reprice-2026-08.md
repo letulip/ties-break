@@ -144,6 +144,15 @@ average condition from ~40 to ~65 moves the season from ~97% to ~90% — better,
 the researched band. The re-price alone cannot fix it: at 20 competing weeks the base rate of
 0.006 × 1.8 contributes 23% on its own, before any fatigue at all.
 
+⚠⚠ **AND THIS SECTION IS ABOUT ONE OF THE TWO DOORS – THE SMALLER ONE, ON A CAREFUL CAREER.** The
+weekly roll priced above is the only injury model anybody has tuned, but the in-match RETIREMENT
+hazard (`src/engine/match/point.ts`, shipped 10.08 – after this spec was written) delivers **56% of
+a fresh player's injuries** and is the whole of the professional era's prevalence overshoot. It is
+not a knob on this page and it does not read anything this page prices: measured, arriving at 95
+and arriving at 70 carry **identical** retirement risk. Before re-calibrating anything here, read
+`docs/specs/retirement-shape-2026-08.md` – the numbers, the dominant term and the candidate fixes –
+or this section will re-tune the weekly curve to absorb a defect that is not in it.
+
 **Therefore this wave carries a third lever: the injury curve is re-calibrated in the same pass**,
 against the researched 46–54% at a realistic professional season. The candidates, in the order I
 would try them:

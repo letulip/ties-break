@@ -72,7 +72,7 @@ import {
 // more either: the window review went to world/phaseObligations.ts and the letters' own prune to
 // world/bookkeeping.ts, with the steps that call them (R2-10 step 2).
 // The load slice (docs/specs/coach-as-load-manager.md): pure, world-free, world -> coachLoad only.
-import { addEvent, seasonIndexOf, seasonStartWeek, financeWindow, financeSeries } from './world/ledger'
+import { addEvent, accrueKidShare, seasonIndexOf, seasonStartWeek, financeWindow, financeSeries } from './world/ledger'
 import { activeLadderOf, toSnapshot } from './world/snapshot'
 export { activeLadderOf, toSnapshot }
 import {
@@ -290,6 +290,11 @@ export { birthdayOffer, birthdayOfferFor, birthdayOptions, birthdayWords, birthd
 // reader and because a future copy surface should find it on the same barrel (world/means.ts).
 import { familyMeans, householdWalletCents, meansOfCents, MEANS_BANDS } from './world/means'
 export { familyMeans, householdWalletCents, meansOfCents, MEANS_BANDS }
+// ⭐⭐ v63 – THE SHOP, SLICE 1 (docs/specs/the-shop-2026-08.md §2, §3a-c, §5). The parent's own
+// money, and the first shelf in this game that is his. Re-exported under the historical convention.
+import { assetValueCents, buyAsset, ownedAssets, revalueAssets, sellAsset, sellableAsset, shopCatalogue, shopItem, shopUnlocked, shopView, SHOP_LOCKED_DETAIL } from './world/shop'
+export { assetValueCents, buyAsset, ownedAssets, revalueAssets, sellAsset, sellableAsset, shopCatalogue, shopItem, shopUnlocked, shopView, SHOP_LOCKED_DETAIL }
+export type { ShopItem } from './world/shop'
 export type { FamilyMeans } from './world/means'
 
 // ⭐ R2-10 STEP 1 – THE PERSISTED SCHEMA DECLARES ITSELF IN `./world/state.ts` NOW.
@@ -619,6 +624,27 @@ function finalizeTournament(world: WorldState): void {
         type: 'info',
         text: `${world.profile.kidName}'s share of the prize money – ${formatCents(herShare)} into her own account`,
       })
+      // ⭐⭐ ...AND THE SAME CENTS ARE PARKED ON THE DURABLE LEDGER, so the week recap can say it too.
+      //
+      // THE OWNER, 27.08: «на плашке Finances на week recap после турниров можно писать что-то вроде
+      // Income $sum / Spent $sum / Her cut 10% $sum / Balance $sum. Мне кажется так будет нагляднее»
+      // – and, once shown that subtracting it again would double-count, «(B) мемо под балансом - вот
+      // это хорошо, да». So the recap prints it BELOW the balance as a memo and the balance does not
+      // move: `Income` there is `familyShare`, already net, exactly as this block decided above.
+      //
+      // ⚠ NOT ON THE `info` ROW ABOVE, AND THE CHOICE IS MEASURED, NOT STYLISTIC. The recap's
+      // Finances tile was moved OFF the event feed on 05.08 because the feed is count-capped
+      // (EVENTS_CAP = 400) and the owner's own save at week 412 deleted every money row on the tick
+      // that wrote it – see the tile's note in WeekRecapCard.vue: «"the money for one week" is a
+      // question a count-capped feed must never be asked.» Her cut for the week is money for one
+      // week, so it goes where the tile's other three figures already come from: `financeWeeks`,
+      // which prunes on a 60-WEEK window and therefore always holds the week the card is showing.
+      //
+      // ⚠ `herShare` ITSELF, NOT A RATIO INVERTED BACK OUT of the family's row – the one-rounding
+      // rule stated twenty lines up. And the RATE beside it is `kidPrizeShareBps(ageNow)`, the very
+      // call the sentence above divides by, so the memo and the ledger row can never quote two
+      // different percentages. Zero draws: a state write on a cheque already decided.
+      accrueKidShare(world, world.week, herShare, kidPrizeShareBps(ageNow))
     }
     // ⭐⭐ ROUND-24 – AND THE TEAM IS PAID ON THE RESULT (owner 22.08, docs/plans/the-team-share.md
     // §3 as re-ruled). His model verbatim: «3млн призовые из них отчисляется процент дочери (скажем
@@ -1189,6 +1215,14 @@ export function createWorld(
     // identity in tests/coach-travel-edge.test.ts reproduces the pre-v62 hashes by dropping exactly
     // this key, which only works while the rest of the serialisation order is untouched.
     peakPhysical: physicalMean(withHeadStart(startingSkills(seed, profile), profile.birthMonth)),
+    // ⭐ v63 (the shop, slice 1): the family owns nothing on day one, and the shelf is not even
+    // visible – it opens with her professional career (`shopUnlocked`). Empty is the identity here
+    // in the plainest sense: there was no shop to buy from.
+    // ⚠ LAST KEY OF THE LITERAL, for the reason the masseur's three and `peakPhysical` above give:
+    // the frozen-career identity in tests/coach-travel-edge.test.ts reproduces each older schema's
+    // hashes by dropping exactly the keys appended since, which only works while every key stays in
+    // the order it was appended in.
+    assets: [],
   }
   addEvent(world, {
     week: 0,

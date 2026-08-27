@@ -37,6 +37,9 @@ import {
   cancelEntry,
   cancelPractice,
   cancelVacation,
+  buyAsset,
+  sellAsset,
+  SHOP_LOCKED_DETAIL,
   chooseGift,
   closeTournament,
   createWorld,
@@ -345,6 +348,37 @@ describe('the family may take back a booking it made before the fork', () => {
     expect(() => chooseGift(world, 'day'), 'and it does not call the career frozen').not.toThrow(COLLEGE_FREEZE_REFUSAL)
   })
 
+  it('⭐⭐ v63 THE SHOP: buying at college passes the freeze, and refuses on its OWN rule instead', () => {
+    // ⭐ THE POINT OF PUTTING THE SHOP IN THIS CLASS, and the backlog's §0a is the argument: the
+    // college years are the shop's BEST moment – four years where the wallet rests and the parent has
+    // no weekly job to do. A guard that refused here would shut the shelf on exactly the stretch it
+    // was designed for. The spec rules it directly (§5): «a shop command is about the FAMILY'S OWN
+    // money … and NOT the tour-command guard that refuses inside the college freeze.»
+    //
+    // ⚠ WHAT IS ASSERTED IS THE SENTENCE, NOT A SUCCESS. This fixture never turned professional, so
+    // the shelf's own gate answers – which is the correct refusal and is the whole shape of this
+    // block: the guard is FIRST in the body, so the fact that a DIFFERENT sentence comes back proves
+    // the freeze let it through.
+    const { world } = careerAtCollege('e2-shop-rules')
+    expect(() => buyAsset(world, 'deposit', 100_000), 'the shelf answers, not the freeze').toThrow(
+      SHOP_LOCKED_DETAIL,
+    )
+    expect(() => buyAsset(world, 'deposit', 100_000)).not.toThrow(COLLEGE_FREEZE_REFUSAL)
+    expect(() => sellAsset(world, 'deposit')).toThrow('does not own')
+    expect(() => sellAsset(world, 'deposit')).not.toThrow(COLLEGE_FREEZE_REFUSAL)
+    // ⚠⚠ AND WITH THE GATE OUT OF THE WAY IT REALLY BUYS, INSIDE THE FREEZE. Forcing the professional
+    // mark is the only way to ask the question this test exists for on a career that is at
+    // university: without it the lock answers first and the freeze is never actually exercised.
+    // `activeLadderOf`'s professional arm reads the NEVER-PRUNED mark (`wtaEverCounted` off
+    // `bestFinishByTier`), which is the one-way door the gate borrows – so this is the fixture's own
+    // door, opened the way the engine opens it, rather than a flag poked on the side.
+    world.bestFinishByTier.wta250 = 3
+    world.fundsCents = 500_000
+    expect(() => buyAsset(world, 'deposit', 200_000), 'a purchase lands with the latch on').not.toThrow()
+    expect(world.assets.map((a) => a.id), 'and it is really owned').toEqual(['deposit'])
+    expect(() => sellAsset(world, 'deposit'), 'and it can be sold again').not.toThrow()
+  })
+
   it('a cancel at college still refuses on its OWN rules – the guard is the only thing that moved', () => {
     const { world } = careerAtCollege('e2-cancel-rules')
     expect(() => cancelVacation(world, world.week + 30)).toThrow('No vacation booked that week')
@@ -391,6 +425,15 @@ describe('a career that has really ended still hears that it has ended', () => {
       world.practices.push({ week: world.week + 11, paidCents: 100, withCoach: false })
       expect(() => cancelVacation(world, world.week + 10), `${type}: cancelVacation`).toThrow(CAREER_ENDED_REFUSAL)
       expect(() => cancelPractice(world, world.week + 11), `${type}: cancelPractice`).toThrow(CAREER_ENDED_REFUSAL)
+      // ⚠ RE-AIMED WIDER BY THE SHOP (v63), NOT WEAKENED: `buyAsset` and `sellAsset` are members
+      // four and five of the short list, so they belong in exactly this pair of cases – open at
+      // college (below) and SHUT here. A career that has really ended may not spend the family's
+      // money, and the sentence it hears is the unchanged one. ⚠ The arguments are deliberately
+      // ones that would be refused on their own merits a line later (the shelf is locked on these
+      // careers and nothing is owned), because the guard is FIRST in both bodies – so what comes
+      // back is the guard's sentence and nothing else, which is this list's whole method.
+      expect(() => buyAsset(world, 'deposit', 100_000), `${type}: buyAsset`).toThrow(CAREER_ENDED_REFUSAL)
+      expect(() => sellAsset(world, 'deposit'), `${type}: sellAsset`).toThrow(CAREER_ENDED_REFUSAL)
       expect(() => guardNotEndedForGood(world), `${type}: the guard itself`).toThrow(CAREER_ENDED_REFUSAL)
     }
   })

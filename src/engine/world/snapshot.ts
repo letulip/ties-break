@@ -89,6 +89,7 @@ import { kidMatchPlayerFor } from './player'
 import { coachBilling, coachEdgeView, coachEntryLine, coachLadderNote, coachMarket, coachRoomNote, coachTravelsWithHer } from './coachMarket'
 import { masseurRoomNote, masseurRungOf, masseurUnlocked, masseurWeeklyCents } from './masseur'
 import { kitDealView, kitLineViews } from './kit'
+import { shopView } from './shop'
 import { copyByTrack, copyTrophyLedger, emptySeasonRecord, seasonWrapDue } from './milestones'
 import { computeLossStreak, fallbackPlayer, flipScore, kidMatchesOf, kidMatchEvent } from './matchNews'
 import { coachLoadViewOf, pendingKnock, radarViewOf } from './knock'
@@ -1237,6 +1238,10 @@ export function toSnapshot(world: WorldState, stopReasons?: StopReason[]): Snaps
     // allowance, and how long the contract runs. The quota was computed and never shown, so kit that
     // was free last week was charged this week with no warning - see `KitDealView`.
     kitDeal: kitDealView(world),
+    // ⭐⭐ v63 – THE SHELF (docs/specs/the-shop-2026-08.md §2). Same rule as `kit` two lines up, and
+    // the same reason: the screen never prices a rung, never applies a rate and never subtracts two
+    // figures to find a loss. `shopView` does all three, once.
+    shop: shopView(world),
     academy: world.academy
       ? {
           coverShare: travelCoverShare(world.academy),

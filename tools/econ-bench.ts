@@ -248,7 +248,11 @@ export const PRESETS: Preset[] = [
  *  in the bench too - GROSS EXPENSE is folded from the ledger's own `expenseCents` and not from this
  *  list, so it was never at risk, but a category the bench does not name is a category the reader
  *  cannot see. */
-export const EXPENSE_CATS: WorldEventCategory[] = ['coaching', 'facility', 'travel', 'entry', 'gear', 'stringing', 'physio', 'vacation', 'practice', 'other']
+/** ⚠ 'shop' JOINS THE EXPENSE SIDE (v63) even though buying and selling are two directions of one
+ *  category: `financeWindow` folds SIGNED per-category totals, so a family that bought a car for
+ *  $110,000 and sold it for $91,091 nets to the $18,909 it actually cost them – which is the number
+ *  a spending table should print. The gross pair lives on `financialEvents`, one row each way. */
+export const EXPENSE_CATS: WorldEventCategory[] = ['coaching', 'facility', 'travel', 'entry', 'gear', 'stringing', 'physio', 'vacation', 'practice', 'shop', 'other']
 /** ⚠ 'prize' LEADS THE INCOME LIST because it is the only one of the four the TENNIS produces – the
  *  other three are a parent, a shop and a bank. It reads $0 for every career under 16 and for every
  *  career that never opens a W15, which is information rather than an empty column. */
@@ -335,6 +339,10 @@ function zeroCats(): Record<WorldEventCategory, number> {
     staff: 0,
     vacation: 0,
     practice: 0,
+    // ⚠ v63, the shop: an expense bucket the bench NEVER books – no policy in this file buys
+    // anything, so it reads $0 and exists to keep the category fold exhaustive, exactly as
+    // 'practice' does. `tools/shop-probe.ts` is where the shelf is actually driven.
+    shop: 0,
     sponsor: 0,
     academy: 0,
     income: 0,

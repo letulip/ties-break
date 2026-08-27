@@ -3,7 +3,7 @@ type: plan
 status: draft
 area: life
 canonical: false
-last-reviewed: 2026-08-22
+last-reviewed: 2026-08-27
 ---
 
 # The private life – the whole layer is unbuilt, and four other items wait on it
@@ -23,6 +23,7 @@ steps and everything else in the repo that is parked against them.
 | 6 | **Relationship/trust UI** – a round-5 backlog line, the oldest ancestor of this layer. | [round-5.md](../rounds/round-5.md) (open boxes at the foot) | item 1 | absorbed | Next |
 | 7 | **Her opinion at the college fork (E1)** and **the fork-opinion surface** – paused 22.08 until steps 1–2 exist. Listed in [college-the-remainder.md](college-the-remainder.md) #7; named here because this layer is what unblocks it. | [college-the-flow.md](../plans/college-the-flow.md) ruling 4 | steps 1–2 | S | Parked |
 | 8 | **First independent-life beat** – a one-time non-blocking story beat near the first 22+ week (a spare key, Sunday dinner). Narrative-only version is 1–2 days; a residence MECHANIC is explicitly gated on creating real choices. | [human-language-proposals-2026-08-19.md](../plans/human-language-proposals-2026-08-19.md) §P1, §P3 | nothing (narrative-only); owner's word for the mechanic | S / L | Later |
+| 9 | **The kid-share dial, and whether greed costs anything** (his ask, 27.08: «надо давать ручку для выбора сколько % ребенку от денег отдавать? И может быть это тоже как-то на мораль завязать? например не в меру жадный родитель будет испытывать негативные последствия своей жадности»). `ECONOMY.kidShare` is the ramp today – from 18, 10% rising 5% a step to a 50% cap, automatic, no dial. ⚠ **A free slider is not a decision**: 0-100% with no consequence has one optimal answer and it is zero. It only becomes a choice if generosity costs money the family wants AND meanness costs something the family feels. ⭐⭐ **Both halves now have a home, and neither did six months ago**: the shop (slice 1 shipped) is the first thing family money has ever competed for – round 23 measured Ines's INTEREST ALONE at $251k against $220k of total costs, so before the shelf existed the money had nowhere to go and the dial would have been free – and this layer is where a girl who can NOTICE lives. ⚠ **The symmetric trap must be designed out**: if generosity is strictly optimal (happier girl plays better) it is the same failure as greed being free, just kinder. The interesting version is that both sides genuinely cost. | [the-shop-2026-08.md](../specs/the-shop-2026-08.md) §7, `ECONOMY.kidShare`, and this layer's steps 1-2 | this layer's spirit model – there is nobody to be hurt by it yet | M | Next |
 
 ⚠ **Upstream of advertising:** fame (the advertising plan's steps 3–6) reads this layer for its
 story feed – see [advertising-and-fame.md](advertising-and-fame.md). The owner's pause here is the

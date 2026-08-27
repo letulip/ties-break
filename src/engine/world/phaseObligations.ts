@@ -35,6 +35,7 @@ import { fireMilestone } from './milestones'
 import { inCollege } from './college'
 import { announceFieldFarewells, announceFieldIntake, isFieldFarewellWeek } from './fieldNews'
 import { expireKnock } from './knock'
+import { revalueAssets } from './shop'
 import {
   settleMandatoryDeadlines,
   settleMandatoryMisses,
@@ -370,4 +371,15 @@ export function seasonBoundaryAndObligations(world: WorldState): void {
   //         block) and the grant's income row is already written, so `settleAcademyLetters` reads
   //         both rather than re-deriving either. ZERO draws.
   settleAcademyLetters(world)
+  // ⭐ v63, THE SHOP SLICE 1 – ...AND WHAT THE FAMILY OWNS IS WORTH WHAT IT IS WORTH THIS WEEK.
+  //         The last obligation of the calendar rather than a decision the world makes: a week has
+  //         passed, so the car is worth less and the deposit is worth a little more, whether anybody
+  //         looks or not. It belongs in THIS phase and at the END of it for two reasons – the phase
+  //         is defined as everything owed «before a single price is quoted», and `revalueAssets` is
+  //         the one writer of a number the ledger, the screen and the sale price all read, so it has
+  //         to have run before phase 2 charges anything.
+  //         ⚠ ZERO DRAWS, and `world/shop.ts` imports no RNG at all: the value is arithmetic on
+  //         `boughtWeek`, so the frozen MAIN capture (41550 / e6b0c709) cannot see it. Slice 2's
+  //         drift arrives INSIDE this call on `seed:asset:<id>:<week>` and never on MAIN.
+  revalueAssets(world)
 }

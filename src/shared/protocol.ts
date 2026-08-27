@@ -50,6 +50,7 @@ export type {
   VacationBooking,
   PracticeBooking,
   RecoveryBuff,
+  OwnedAsset,
 } from './protocol/profile'
 export {
   DEFAULT_PROFILE,
@@ -65,6 +66,7 @@ export type {
   WorldEvent,
   WorldEventEntryRef,
   FinanceWeek,
+  FinanceWeekKidShare,
   FinanceWindow,
   FinanceWeekPoint,
   StopReason,
@@ -163,6 +165,8 @@ export type {
   KitState,
   KitLineView,
   KitDealView,
+  ShopRowView,
+  ShopView,
   KitOfferTerms,
   EntryLetterTerms,
   EntryReleaseReason,

@@ -24,8 +24,13 @@
 // numbers are not in this file, or in any file: engine/coach.ts derives them from HER remaining
 // headroom, which is what "всё зависит от ребенка" actually is. A range, never a single number,
 // because the weekly luck draw is real spread - and phrased as what a rung CAN add, never a promise.
-// ⚠ AND SINCE v47 IT IS TWO TABS - `Her week` and `Coaches` (docs/specs/training-dials.md §9a). Two
-// arguments, both settled there and neither re-opened here:
+// ⚠ AND SINCE v47 IT IS TWO TABS - `Her week` and `Coaches` (docs/specs/training-dials.md §9a), and
+// SINCE 27.08 IT IS THREE: `Support staff` joined them, at the owner's ask and in his own words -
+// «вынеси отдельную вкладку на уровне Her week/Coaches -> Her week/Coaches/Support Stuff». The
+// masseur had been the last block of this template, below the whole roster, and he could not find
+// the man he had commissioned. See SupportStaffTab.vue for what moved and why it is a LIST.
+//
+// Two arguments, both settled there and neither re-opened here:
 //
 //   * IT IS NOT `Self-coaching` / `Coaches`. `COACH_TIERS` is literally
 //     ['self','budget','middle','high','elite'] and `coachFactor`, `COACH_EYE`, `COACH_ACCURACY` and
@@ -38,6 +43,7 @@ import { computed, ref, watchEffect } from 'vue'
 import { useGameStore } from '../../stores/game'
 import ConfirmDialog from '../ConfirmDialog.vue'
 import HerWeekTab from '../HerWeekTab.vue'
+import SupportStaffTab from '../SupportStaffTab.vue'
 import IconButton from '../ui/IconButton.vue'
 import SegmentedRow from '../ui/SegmentedRow.vue'
 import { coachPortraitUrl, preloadCoachMarketArt } from '../../art/preload'
@@ -49,22 +55,33 @@ import { COACH_TIER_LABEL, coachHoursForPlan, HIREABLE_TIERS, styleFitBetween, t
 // draws anything, or knows what a career is - see their notes in the engine for why the blurb could not
 // simply ride on `CoachMarketRow` this wave.
 import { coachBlurb, coachRoomBand } from '../../engine/world/coachMarket'
-import { MASSEUR_LOCKED_DETAIL } from '../../engine/world/masseur'
-// v59 step 2 - the dial's option table. A static market catalogue in the same register as
-// `COACH_TIER_LABEL` above: labels and prices keyed on nothing the world decides, so reading it
-// here cannot leak a derivation the snapshot should own (the card's own price stays the
-// snapshot's `masseurSalaryCents`, asserted in tests/component/masseur-card.test.ts).
-import { ECONOMY } from '../../engine/economy'
+// ⚠ `MASSEUR_LOCKED_DETAIL` AND `ECONOMY` LEFT WITH HIM (27.08). Both were imported for the masseur
+// card alone and now live in SupportStaffTab.vue; this screen imports no market catalogue, which is
+// the state it was in before v59.
 import { WEEK_PLAN_PRESETS, type CoachMarketRow, type CoachTier, type PlayStyle } from '../../shared/protocol'
 import { formatCents } from '../../shared/money'
 
 const game = useGameStore()
 const emit = defineEmits<{ back: [] }>()
 
-/** THE TWO HALVES OF ONE DECISION: what she does with her week, and who she does it with. */
+/** THE HALVES OF ONE DECISION: what she does with her week, and who she does it with.
+ *
+ *  ⭐⭐ THE THIRD ENTRY IS THE 27.08 FIX, AND IT IS THE OWNER'S OWN LEVEL. He asked for the masseur
+ *  «на уровне Her week/Coaches», and this row IS that level - so the fix is one entry here plus the
+ *  component behind it, and not a sixth seat in App.vue's bottom bar. Two reasons the bar was never
+ *  a candidate: Home's centring is EMERGENT from "five slots, Home third" (App.vue's TABS note, and
+ *  tests/round13-nav.test.ts pins `ids[floor(len / 2)] === 'home'`), so a sixth entry moves Home off
+ *  the middle and breaks his own order; and this screen is not even IN the bar - it is reached FROM
+ *  somewhere, which is what `marketFrom` exists for.
+ *
+ *  ⚠ AND THE ROW KEEPS ITS PLATE. `appearance="chapter"` (Money, More) is a real idiom for a page's
+ *  chapter picker, but the 05.08 ruling behind it named the ledger and the settings, and this row
+ *  has carried the default plate since v47. Growing a control he did not ask about would be
+ *  inventing a decision inside a fix that is supposed to MOVE something, so the row is untouched. */
 const TABS = [
   { value: 'week', label: 'Her week' },
   { value: 'coaches', label: 'Coaches' },
+  { value: 'staff', label: 'Support staff' },
 ] as const
 
 /** ⭐ ROUND-18 #3 – THE SCREEN CHOOSES ITS LANDING TAB, AND A HIRED COACH LANDS ON THE COACHES
@@ -577,77 +594,13 @@ async function doRelease(): Promise<void> {
   await game.hireCoach(null)
 }
 
-// --- the masseur (v59, the travelling team step 1) -----------------------------------------------
-// The first staff seat beyond the coach, on this screen because it is the same decision family:
-// people the family pays weekly for her game. Every fact on the card is the SNAPSHOT's – the flag,
-// the gate, the flat salary, and his room note (the plan's §4 sentence) – so the card cannot invent
-// a number the engine did not derive.
-const masseurHired = computed(() => game.snapshot?.masseurHired ?? false)
-const masseurUnlocked = computed(() => game.snapshot?.masseurUnlocked ?? false)
-const masseurSalary = computed(() => formatCents(game.snapshot?.masseurSalaryCents ?? 0))
-// The one line under his name, by state. LOCKED prints the ENGINE's own refusal
-// (MASSEUR_LOCKED_DETAIL – the sentence `hireMasseur` throws), the R10-16 doctrine: a disabled
-// control and the click it refuses must tell one story. HIRED prints the room note. UNHIRED prints
-// the pitch – what the salary buys, in the units the player reads, no figures (they are on the
-// price beside it).
-const masseurLine = computed(() => {
-  if (!masseurUnlocked.value) return MASSEUR_LOCKED_DETAIL
-  if (masseurHired.value) return game.snapshot?.masseurNote ?? ''
-  return 'Table work at home every week, and a hand on every rehab – layoffs end sooner.'
-})
-// ⭐ v59 step 2 – THE DIAL, the owner's own idea («настройки сколько раз в неделю он дает свои
-// услуги»). Three rungs off the market catalogue; the ACTIVE one is the snapshot's, the click is a
-// command the engine re-validates, and the card's headline price follows the snapshot because the
-// engine prices the rung – this screen sets a dial, it never computes a bill.
-const MASSEUR_RUNGS = ECONOMY.masseur.rungs
-const masseurSessions = computed(
-  () => game.snapshot?.masseurSessionsPerWeek ?? ECONOMY.masseur.defaultSessions,
-)
-async function setMasseurRung(sessions: number): Promise<void> {
-  if (sessions === masseurSessions.value) return
-  await game.setMasseurSessions(sessions)
-}
-const masseurRungLabel = computed(
-  () => MASSEUR_RUNGS.find((r) => r.sessions === masseurSessions.value)?.label ?? '',
-)
-// ...AND THE SEAT (ruling Б: the masseur travels). The coach's own switch idiom one section up,
-// asked of the next seat over; the sub-line quotes the booked trips off the SNAPSHOT's as-if
-// price, so the row can say what the switch costs before it is flipped.
-const masseurTravels = computed(() => game.snapshot?.masseurTravels ?? false)
-async function toggleMasseurTravel(): Promise<void> {
-  await game.setMasseurTravels(!masseurTravels.value)
-}
-const masseurTravelSub = computed(() => {
-  // ⭐ The per-match sentence is the owner's 22.08 pricing rule («на неделе выезда по-матчевая
-  // цена заменяет недельную»), on the switch that buys it: a travel week is billed per match at
-  // the session rate instead of the weekly figure above – the price READS off the card before the
-  // switch is flipped, which is the whole legibility contract of this screen.
-  const rule =
-    `Table work between rounds – one more fare on every trip to a paying event, and the week is billed per match there (${formatCents(ECONOMY.masseur.perSessionCents)} each) instead of the weekly rate.`
-  const trips = game.snapshot?.masseurTravelTrips ?? 0
-  if (trips === 0) return rule
-  const t = trips === 1 ? '1 trip' : `${trips} trips`
-  return `${rule} ${formatCents(game.snapshot?.masseurTravelFareCents ?? 0)} over the ${t} booked.`
-})
-const hiringMasseur = ref(false)
-const releasingMasseur = ref(false)
-// Both directions ask, the screen's own doctrine (see `releasing` above): a screen that asks before
-// it starts paying somebody and not before it stops is not neutral about the two directions.
-const masseurHireMessage = computed(
-  () =>
-    `Put a masseur on the payroll at ${masseurSalary.value} a week (${masseurRungLabel.value.toLowerCase()})? Cancellable any week, like the coach.`,
-)
-const masseurReleaseMessage = computed(
-  () => 'Let the masseur go? The weekly salary stops, and rehab goes back to the clinic alone.',
-)
-async function doHireMasseur(): Promise<void> {
-  hiringMasseur.value = false
-  await game.hireMasseur(true)
-}
-async function doReleaseMasseur(): Promise<void> {
-  releasingMasseur.value = false
-  await game.hireMasseur(false)
-}
+// --- the masseur -------------------------------------------------------------------------------
+// ⚠ HE MOVED, WHOLE, TO `SupportStaffTab.vue` ON 27.08 – card, dial, travel switch, both confirms
+// and the locked state, with his behaviour untouched. He was on THIS screen because he is the same
+// decision family as the coach (people the family pays weekly for her game), and that argument still
+// holds: the tab he moved to is a chapter of this screen, not a new destination. What was wrong was
+// the ORDER – he was the last block of a 1223-line template, below the whole roster, and the owner
+// could not find the man he had commissioned.
 
 // Warm every face HERE and nowhere else: this is the only surface that can show them, which is the
 // rule src/art/preload.ts states for the whole coach set. Idempotent, so the watcher is free.
@@ -687,6 +640,10 @@ function scrollToTier(tier: CoachTier): void {
          a person and the tick names none - so it moves the player to the list where the choosing
          happens. Both handlers are one line here BECAUSE the decisions were already here. -->
     <HerWeekTab v-if="tab === 'week'" @release="releasing = true" @coaches="tab = 'coaches'" />
+
+    <!-- ⭐⭐ THE 27.08 FIX. The masseur used to be the LAST thing in the block below, under the whole
+         roster; he is a chapter of his own now, and the psychologist is one entry in its list. -->
+    <SupportStaffTab v-else-if="tab === 'staff'" />
 
     <template v-else>
     <!-- The budget meter: what she pays now, what a week brings in, and what is left. -->
@@ -1040,69 +997,6 @@ function scrollToTier(tier: CoachTier): void {
       <button v-if="current" :disabled="game.busy" @click="releasing = true">Coach her yourself</button>
     </section>
 
-    <!-- v59, the travelling team step 1: the first salaried seat beyond the coach. The line under
-         the name is the engine's own sentence in every state (the lock, the note, the pitch) and
-         the price is the snapshot's flat salary - this card derives nothing itself. -->
-    <section class="bare masseur-block">
-      <p class="tier-head">
-        <span class="tier-name">Support staff</span>
-        <span class="tier-range">{{ masseurSalary }} /wk</span>
-      </p>
-      <div class="masseur-card" :class="{ locked: !masseurUnlocked }">
-        <span class="masseur-body">
-          <span class="cm-name">Masseur</span>
-          <span class="cm-load masseur-line">{{ masseurLine }}</span>
-        </span>
-        <span class="masseur-right">
-          <span v-if="!masseurUnlocked" class="cm-action is-locked">Locked</span>
-          <button v-else-if="!masseurHired" :disabled="game.busy" @click="hiringMasseur = true">Hire</button>
-          <button v-else :disabled="game.busy" @click="releasingMasseur = true">Let go</button>
-        </span>
-      </div>
-      <!-- ⭐ v59 step 2: THE DIAL - the owner's own idea, three rungs off the market catalogue.
-           Offered from the unlock (choosing the arrangement BEFORE hiring prices the card and the
-           confirm honestly); the active rung is the snapshot's, and the headline price above
-           follows it because the ENGINE prices the rung. -->
-      <div v-if="masseurUnlocked" class="masseur-dial" role="radiogroup" aria-label="Masseur sessions per week">
-        <button
-          v-for="r in MASSEUR_RUNGS"
-          :key="r.sessions"
-          class="masseur-rung"
-          :class="{ active: masseurSessions === r.sessions }"
-          role="radio"
-          :aria-checked="masseurSessions === r.sessions ? 'true' : 'false'"
-          :disabled="game.busy"
-          @click="setMasseurRung(r.sessions)"
-        >
-          <span class="rung-label">{{ r.label }}</span>
-          <span class="rung-price">{{ formatCents(r.sessions * ECONOMY.masseur.perSessionCents) }}/wk</span>
-        </button>
-      </div>
-      <!-- ...AND THE SEAT (the owner's ruling B: the masseur travels) - the coach's own switch idiom one
-           section up, asked of the next seat over. Only while HIRED: with nobody on the payroll
-           the switch would send nobody anywhere, and a row that looked live would be the control
-           lying about itself (the round-20 #1 defect). -->
-      <section v-if="masseurHired" class="cm-travel masseur-travel">
-        <div class="cm-travel-text">
-          <p class="cm-travel-title">Masseur travels to tournaments</p>
-          <p class="cm-travel-sub">{{ masseurTravelSub }}</p>
-        </div>
-        <button
-          class="cm-switch"
-          role="switch"
-          :aria-checked="masseurTravels ? 'true' : 'false'"
-          :disabled="game.busy"
-          :aria-label="
-            masseurTravels
-              ? 'Masseur travels to tournaments - on. Press to keep the table work at home.'
-              : 'Masseur travels to tournaments - off. Press to buy one more fare on every trip, for table work between rounds.'
-          "
-          @click="toggleMasseurTravel"
-        >
-          <span class="cm-switch-knob"></span>
-        </button>
-      </section>
-    </section>
     </template>
 
     <ConfirmDialog
@@ -1111,20 +1005,6 @@ function scrollToTier(tier: CoachTier): void {
       confirm-label="Hire"
       @confirm="doHire"
       @cancel="pending = null"
-    />
-    <ConfirmDialog
-      v-if="hiringMasseur"
-      :message="masseurHireMessage"
-      confirm-label="Hire"
-      @confirm="doHireMasseur"
-      @cancel="hiringMasseur = false"
-    />
-    <ConfirmDialog
-      v-if="releasingMasseur"
-      :message="masseurReleaseMessage"
-      confirm-label="Let go"
-      @confirm="doReleaseMasseur"
-      @cancel="releasingMasseur = false"
     />
     <!-- The other direction of the same decision - see `releaseMessage` for what it may and may not
          claim. Its own dialog rather than a second mode of the one above: the two messages are
@@ -1156,68 +1036,5 @@ function scrollToTier(tier: CoachTier): void {
   font-size: 10.5px;
   line-height: 1.35;
   color: var(--muted);
-}
-
-/* v59 - the masseur card. Scoped for the HomeScreen-documented reason: exactly one surface can
-   want it. It borrows the roster's own text classes (.cm-name / .cm-load / .cm-action) so the two
-   card families read as one screen, and only the frame is its own: no portrait strip, so the
-   .cm-row grid does not fit, and a plain flex row does. */
-.masseur-card {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 10px 12px;
-  border: 1px solid var(--border, rgba(255, 255, 255, 0.12));
-  border-radius: 10px;
-}
-.masseur-card.locked {
-  opacity: 0.75;
-}
-.masseur-body {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  min-width: 0;
-  flex: 1;
-}
-.masseur-line {
-  margin-top: 0;
-}
-.masseur-right {
-  flex: none;
-  display: flex;
-  align-items: center;
-}
-/* v59 step 2 - the dial. Three equal pills under the card; the active one carries the accent the
-   segmented rows already use, so the control reads as the same family without borrowing the
-   roster's grid. */
-.masseur-dial {
-  display: flex;
-  gap: 6px;
-  margin-top: 8px;
-}
-.masseur-rung {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 2px;
-  padding: 6px 4px;
-  border: 1px solid var(--border, rgba(255, 255, 255, 0.12));
-  border-radius: 8px;
-  background: none;
-  font-size: 11px;
-  line-height: 1.2;
-}
-.masseur-rung.active {
-  border-color: var(--accent, #4da3ff);
-  color: var(--accent, #4da3ff);
-}
-.masseur-rung .rung-price {
-  font-size: 10px;
-  opacity: 0.75;
-}
-.masseur-travel {
-  margin-top: 8px;
 }
 </style>

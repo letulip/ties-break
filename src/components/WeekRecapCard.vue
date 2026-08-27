@@ -42,7 +42,7 @@ import { planWeek } from '../engine/plan'
 import { vacationPackage } from '../engine/economy'
 import { vacationArtUrl, weekArtUrl, weekSceneArtUrl } from '../art/weeks'
 import { weekLabel } from '../shared/dates'
-import { formatCentsSigned } from '../shared/money'
+import { formatCents, formatCentsSigned } from '../shared/money'
 import PracticeFlow from './PracticeFlow.vue'
 import Card from './ui/Card.vue'
 import Eyebrow from './ui/Eyebrow.vue'
@@ -233,6 +233,45 @@ const expenseCents = computed(() => -(weekFinance.value?.expenseCents ?? 0))
 // income and spend are two halves of one week and the parent reads the pair to get the answer. The
 // engine's own expense events are already signed negative, so the net is the plain sum.
 const balanceCents = computed(() => incomeCents.value + expenseCents.value)
+
+// =================================================================================================
+// ⭐⭐⭐ HER CUT, UNDER THE BALANCE, AS A MEMO – AND NOT AS A SUBTRACTION (owner, 27.08)
+// =================================================================================================
+//
+// HIS ASK: «на плашке Finances на week recap после турниров можно писать что-то вроде Income $sum /
+// Spent $sum / Her cut 10% $sum / Balance $sum. Мне кажется так будет нагляднее.»
+//
+// ⚠⚠ AND HIS ARITHMETIC AS WRITTEN DOUBLE-COUNTS, WHICH IS WHY THIS IS A MEMO AND NOT A ROW.
+// `finalizeTournament` credits the family `prize − herShare` (world.ts), and the ledger row is
+// deliberately «what the family actually banked» – the academy travel-subsidy precedent quoted in
+// its own comment. So `incomeCents` above is ALREADY NET of her cut, and a fourth row subtracting it
+// again would print a balance the till never had. He was shown the two honest layouts and chose this
+// one: «(B) мемо под балансом - вот это хорошо, да».
+//
+// ⚠ SO NOTHING ABOVE THIS LINE MAY CHANGE. `balanceCents` keeps its definition to the character, and
+// the memo is deliberately NOT a `.recap-row` with a signed `.recap-row-val`: it is prose in the
+// tile's own established idiom (see `.recap-train-read` below, «a short line of prose in a tile»),
+// unsigned, sitting under the balance rather than between the figures. `formatCents` and never
+// `formatCentsSigned` – a leading + or − is the exact misreading the layout exists to prevent.
+//
+// ⚠ THE FIGURE IS CARRIED, NOT RECONSTRUCTED. `FinanceWeekPoint.kidShareCents` is the `herShare` the
+// engine credited to her account, off the same durable ledger row this card already reads Income and
+// Spent from – so it survives the event feed's 400-row cap for the same reason they do, and no
+// screen ever divides a family row back by the ramp to guess at it (the penny
+// `kidPrizeShareCents`' own comment forbids).
+//
+// ⚠ SILENT BEFORE HER EIGHTEENTH, and by the prize event's own rule rather than by a second copy of
+// it: the engine writes `kidShare` only inside `if (herShare > 0)`, so the age gate lives once, in
+// `ECONOMY.kidShare`. Silent too on any week the tennis paid nothing.
+//
+// ⚠ THE PERCENTAGE IS ALREADY WHOLE (`kidSharePct`, rounded once in `financeSeries`) – the owner's
+// rule of 26.08. This file must not divide basis points.
+const kidShareMemo = computed(() => {
+  const cents = weekFinance.value?.kidShareCents ?? 0
+  const pct = weekFinance.value?.kidSharePct ?? 0
+  // His shape verbatim – «Her cut 10% $sum» – because the ramp is age-based and the number is the fact.
+  return cents > 0 ? `Her cut ${pct}% ${formatCents(cents)}` : null
+})
 
 // The base-cost expense event's own text doubles as this week's flavor line (world.ts
 // picks one of TRAIN_EVENTS/REST_EVENTS for it already) – and it is what D writes by hand across
@@ -479,6 +518,16 @@ const practiceWeekLabel = computed(() => weekLabel(week.value))
             :class="balanceCents < 0 ? 'negative' : 'positive'"
           >{{ formatCentsSigned(balanceCents) }}</span>
         </div>
+        <!-- HER CUT – A MEMO UNDER THE BALANCE, NEVER A FOURTH FIGURE IN IT. The owner's words and
+             the arithmetic that makes this layout the honest one are in the script block above and
+             in tests/component/week-recap-kid-share.test.ts, because Cyrillic inside a <template> is
+             forbidden (tests/template-copy-rules.test.ts). BELOW the balance, unsigned, in prose
+             rather than in a key/value row: it says «this also happened», and the second line says
+             out loud what Income already is, so no reader can take it for a deduction. -->
+        <p v-if="kidShareMemo" class="recap-memo" role="note">
+          <span class="recap-memo-line">{{ kidShareMemo }}</span>
+          <span class="recap-memo-foot">Into her own account – the income above is what the family kept.</span>
+        </p>
       </Card>
 
       <!-- TRAINING. The week's training DECISION, what it is starting to do to her, and the days it
@@ -741,6 +790,32 @@ const practiceWeekLabel = computed(() => weekLabel(week.value))
 .recap-balance {
   font-size: 16px;
   font-weight: 800;
+}
+
+/* HER CUT, under the balance. It borrows `.recap-train-read`'s shape below rather than
+   `.recap-row`'s deliberately: the training read is the other «short line of prose in a tile» on
+   this card, and a key/value row here would put a fourth figure in a column of three that already
+   add up. Neither line takes `.positive`/`.negative` – the money is not a delta to this wallet, it
+   left before the wallet saw it – and the foot is one step quieter than the line above it. */
+.recap-memo {
+  margin: 8px 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.recap-memo-line {
+  font-size: 12.5px;
+  font-weight: 700;
+  line-height: 1.25;
+  color: var(--ink);
+}
+
+.recap-memo-foot {
+  font-size: 11.5px;
+  font-weight: 500;
+  line-height: 1.25;
+  color: var(--ink-2);
 }
 
 /* WHAT CAME ALONG, under the hairline. The wing's name and then the coach's sentence, on the

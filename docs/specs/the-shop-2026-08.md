@@ -436,10 +436,104 @@ that out.
 
 | # | slice | done when | state |
 | --- | --- | --- | --- |
-| **1** | **the tab, static prices, buy / own / sell** – the deposit and index fund (§3a), the four cars (§3b), the first two house tiers (§3c). No movement, no building, no freeze | a bench career buys the good car in season 3, sells it two seasons later, and the ledger shows the loss to the cent; `careerTotals` grows at most two fields; the frozen capture is unmoved; a previous-version save loads with `assets: []` and plays identically; ⚠ the shop is NOT the dominant outgoing before season 4 | **awaits his approval** |
+| **1** | **the tab, static prices, buy / own / sell** – the deposit and index fund (§3a), the four cars (§3b), the first two house tiers (§3c). No movement, no building, no freeze | a bench career buys the good car in season 3, sells it two seasons later, and the ledger shows the loss to the cent; `careerTotals` grows at most two fields; the frozen capture is unmoved; a previous-version save loads with `assets: []` and plays identically; ⚠ the shop is NOT the dominant outgoing before season 4 | ⚙ **BUILT 27.08 – schema v63, see §12** |
 | **2** | **drift** (§4), one sub-stream, no shocks | the four families are distinguishable from the numbers alone, without being told which is which | Next |
 | **3** | **commissioning** (§3f) – the elite ladders, the wait, the contract, the annual loss and the weekly upkeep; ⭐ **the yacht week as a seventh vacation package**; the plane's travel-cost cut and its +1 on travelling weeks | a career orders a yacht, waits three years, and the weekly upkeep sits in the ledger beside the masseur; the yacht week appears in `PlanWeekSheet` only once delivered, and it does not kill the other six packages | Next |
 | **4** | **shock and freeze** (§4) | zero bankruptcies whose proximate cause is a freeze, over a sweep | Next |
 | **5** | **the academy** (§3g), in stages | a half-built academy is a legible state, and the epilogue can name the finished one | Later – ⚠ or slice 2, by §10.1 |
 | **6** | **the broker** (§6) | following him beats ignoring him by less than his fee | Later |
 | **7** | **charity** (§8) | a gift changes something unpromised, and the ending can name it | Later |
+
+
+---
+
+## 12. ⚙ SLICE 1 AS BUILT (27.08, schema v63) – and three things this file got wrong
+
+Recorded here rather than in a second document, because a spec whose acceptance was measured and
+whose numbers moved is the only honest place to read either. Everything below is `wave/the-shop`.
+
+### 12a. What shipped
+
+`ECONOMY.shop.catalogue` (a constant, §5), `WorldState.assets` (the only persisted half),
+`world/shop.ts` (`buyAsset` / `sellAsset` / `revalueAssets` / `shopView`), the fourth chapter on
+`MoneyScreen.vue`, a `'shop'` ledger category, and the v62 → v63 migration. Zero draws on any
+stream: the module imports no RNG and takes no `Rng`, and the frozen MAIN capture
+(41550 / `e6b0c709`) is **unmoved**.
+
+⚠ **`OwnedAsset` SHIPPED WITHOUT `readyWeek` AND `frozenUntilWeek`**, against §5's drawn shape and
+deliberately. The argument is at the interface (`shared/protocol/profile.ts`) and in one line here:
+the repo's shipped idiom for a field whose absence is its true value is an OPTIONAL key with no
+back-fill (v59's `masseurReturnDue?`, `injuryHistory[].weeksSaved?`), so slices 3 and 4 can add
+`readyWeek?` and `frozenUntilWeek?` with **no migration at all** – which is cheaper than the second
+migration the nullable pair was meant to avoid. `sellableAsset` is the seam they widen.
+
+### 12b. ⚠ §3c GAVE NO NUMBERS, so the two house tiers are MEASURED and they are mine
+
+The spec names tiers, rent and a milestone and stops. `tools/shop-probe.ts` (`npm run probe:shop`)
+measures what a family actually holds; under the `player` policy, 9 presets x 4 seeds, median funds
+by season are **$19,974 / $5,732 / $16,052 / $18,824 / $46,268 / $494,189 / $1,492,297 / $2,531,675**.
+So **$240,000** (first rung) and **$520,000** (the garden) land in seasons 5–6 for the median career
+and season 4 for the p90 – after the turn, never before it – and **+3%/season** is the slowest
+positive rate on the shelf, because a home that out-earned the index fund would make property the
+right answer to every question and break §0's «assets never beat a career».
+
+### 12c. ⚠⚠ THE THREE THINGS THIS FILE GOT WRONG
+
+**1. §11 row 1's «static prices» and its own acceptance contradict each other.** «No movement» and
+«the ledger shows the loss to the cent» cannot both be literal – a car that does not move has no loss
+to show. Built as: **static means DETERMINISTIC, not frozen.** Values are arithmetic on `boughtWeek`
+and draw nothing; §3b's 6/9/12/15% still bite. That is the only reading in which slice 1 answers the
+question §11 says it exists to answer.
+
+**2. §2e-1 and §5 disagree about what «the ledger» can hold.** `FINANCE_WEEKS` keeps **sixty** weeks
+and `pruneEvents` caps the feed at 400 rows; two seasons is **104 weeks**. So a career that buys a car
+and sells it two seasons later cannot see the two prices side by side anywhere – by the week of the
+sale, the purchase is gone from the breakdown AND from the transactions tab. The loss survives only
+because `sellAsset` names it in the row's own words («Sold: The good saloon – $18,909 less than it
+cost»), taken off the stored `paidCents`. ⚠ **Slices 2–7 must not "tidy" that sentence into a number
+pair.** Pinned in `tests/shop.test.ts`.
+
+**3. ⚠⚠ §2e-5 IS NOT A PROPERTY THE SHELF CAN GUARANTEE, and the number says by how much.** Measured
+with a deliberately eager shopper – buys the good car the first week the shelf is open, the price is
+affordable and the policy's own reserve still stands; sells exactly two seasons later:
+
+| policy | careers | bought before season 4 | season-slots (career x season 0–3) where the shop was the LARGEST outgoing | worst shop share of a season |
+| --- | --- | --- | --- | --- |
+| `grinder` | 54 | 0 | **0 of 216** | 0.0% |
+| `player` | 36 | 4 | **4 of 144 (2.8%)** | **69.1%** |
+
+The four are `8k working` x2, `25k middle · budget` (season **2**) and `25k middle · high`. The cause
+is arithmetic rather than tuning: a purchase is a LUMP and a season of tennis is a DRIP, so any car on
+an open shelf is the largest line of the season it is bought in. §2 opens the shelf on the
+professional era, which the same probe measures at a **median of season 2** (open before season 4 in
+86% of `player` careers) – so §2 and §2e-5 cannot both hold as written.
+
+⭐ **§2 already contains the resolution and it is the owner's own distinction**: «the backlog's §0
+warning is about being USABLE, not about being VISIBLE». VISIBLE is settled; BUYABLE early is not, and
+this is the decision that needs him:
+
+⚙⚙ **SETTLED 27.08 – (a), and his reason is better than the option's own.** «магазин есть и всё, мы
+не можем запретить там что-то покупать».
+
+⭐ **That closes §2e-5 by RETIRING IT, not by satisfying it.** A shop the player can see but not use
+is a shop that lies about itself, and «the money must go somewhere else first» was written as a
+property of the SHELF when it was only ever a property of the ECONOMY. The economy already enforces
+it and the measurement says so: 89% of `player` careers and 100% of `grinder` careers buy nothing
+before season 4 without being stopped, because they have nothing to buy with. The four that do had
+banked six figures. **A gate would have taken a real decision away from the four families who earned
+it, to make a number in this file true.**
+
+⚠ §2e-5 is therefore struck as an acceptance condition and kept as an OBSERVATION – the figure is
+still worth re-taking when the shelf grows, because a cheap shelf and an expensive one are different
+questions, but it can no longer fail a slice.
+
+
+
+- **(a) leave it** – 89% of `player` careers and 100% of `grinder` careers never buy before season 4
+  at all, and the four that do are families that genuinely banked six figures by season 3. Shipped as
+  this, because inventing a gate the spec does not have is not slice 1's to do.
+- **(b) a buy gate above the visibility gate** – e.g. the shelf is browsable from the professional era
+  and buyable from season 4. Cheap (one predicate in `buyAsset`, one flag on `ShopView`), and it makes
+  §2e-5 true by construction.
+- **(c) price the first rung under a season of tennis** – rejected here: §3b's ladder is his own
+  («от 60 до 300к»), and moving it to satisfy §2e-5 would trade a stated ruling for an unstated one.
