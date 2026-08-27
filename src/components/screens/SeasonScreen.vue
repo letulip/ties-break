@@ -1348,8 +1348,10 @@ function closeExhibition(): void {
     <section class="bare">
       <h2>Calendar</h2>
       <!-- ⭐⭐⭐ ROUND 27 #5 – THE REASON, BESIDE THE CONTROLS INSTEAD OF BEHIND THEM.
-           The owner asked for a line «рядом или ниже», «как сейчас наверху появляется» – his words
-           and the argument are quoted in full at `frozenForCollege` in the script.
+           The owner asked for a line beside or under the buttons, in the words the shell already
+           puts up. ⚠ HIS WORDS ARE IN THE SCRIPT, AT `frozenForCollege`, AND THEY STAY THERE: no
+           Cyrillic may appear in a template, comments included (tests/template-copy-rules.test.ts
+           and tests/ladder.test.ts both read this block).
            ⚠ THE STRING IS THE ENGINE'S, NEVER THIS TEMPLATE'S. `COLLEGE_FREEZE_REFUSAL` is the exact
            sentence `guardNotEnded` throws for every control this note explains, so the screen and
            the refusal cannot come to say two different things about the same four years.
@@ -1567,7 +1569,9 @@ function closeExhibition(): void {
               <!-- She cannot enter this one (locked ahead, or the list has closed), so the week is
                    still hers to plan: a friendly or a family week. The aspirational card stays –
                    the week just stops being dead. -->
-              <!-- ⭐⭐⭐ ROUND 27 #5 – THE SECOND OF THE OWNER'S TWO GROUPS («планирования недели»).
+              <!-- ⭐⭐⭐ ROUND 27 #5 – THE SECOND OF THE OWNER'S TWO GROUPS (the week planner; his
+                   own words for it are quoted at `frozenForCollege` in the script, where Cyrillic
+                   is allowed and in a template it is not).
                    The sheet behind it books a practice or a family week, and `bookPractice` /
                    `bookVacation` are both `guardNotEnded`: refused for the whole freeze. -->
               <button v-if="row.plannable" :disabled="game.busy || frozenForCollege" @click="openPlanner(row)">+ Plan week</button>
