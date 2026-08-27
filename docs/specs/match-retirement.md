@@ -107,6 +107,21 @@ research behind it and would break the "reads the same quantity" property that m
 
 ## 4. The measurement (CLAUDE.md invariant 4)
 
+> ⚠⚠ **THIS SECTION IS THE 10.08 CALIBRATION AND EVERY NUMBER IN IT IS STILL THE ONE THAT WAS
+> MEASURED THEN. TWO THINGS HAVE HAPPENED TO IT SINCE, AND A READER WHO DOES NOT KNOW BOTH WILL
+> MIS-READ IT** – see `docs/specs/retirement-shape-2026-08.md`:
+>
+> 1. **THE BENCH THIS SECTION IS BUILT ON WAS BLIND TO HALF THE POPULATION** (that spec §10.0). It
+>    gated entry on `condition >= matchStrengthKnee`, so the corpus that produced 2.81% never once
+>    arrived below the knee. It was **re-aimed on 27.08** to walk three arms and grade the pooled
+>    corpus; the shipped gate is kept, unchanged, as the continuity arm.
+> 2. **THE HAZARD GAINED ITS OWN CONDITION TERM ON 27.08** (that spec §13), so the flat rows this
+>    section's tables average over are not flat any more. `RETIRE_K` did **not** move – the fix is a
+>    redistribution with a population-weighted mean of 1.0 – and the pooled bench reads 2.65% against
+>    the same 2.73% anchor. Re-measure THERE before touching `RETIRE_K`, and re-run rather than
+>    quoting the 2.81%: on this tree the unmodified bench reads 2.26% over 3,624 matches, because the
+>    calendar and the ladder have moved underneath it since.
+
 `npm run bench:retire` (`tools/retirement-rate.ts`). It measures the matches **the game actually
 plays** – careers driven on `best16-bench`'s policy (enter the strongest rung that will take her, one
 entry a week, money never the reason), which is the heaviest schedule the gates allow.

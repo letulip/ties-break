@@ -8,6 +8,15 @@ last-reviewed: 2026-08-27
 
 # The shape of the retirement hazard – what decides who stops, and what does not
 
+> ⭐⭐ **§§0-12 ARE THE MEASUREMENT, TAKEN BEFORE ANYTHING WAS BUILT. §13 IS THE FIX, BUILT THE SAME
+> DAY AGAINST IT** – the recommendation in §10.6, shipped: the calibration bench re-aimed first, then
+> `retireHazard` given its own condition term, shaped as a redistribution whose population-weighted
+> mean is 1.0. ⚠ §10.1's preferred seam (`MatchOptions`) did not survive contact with a test and the
+> term ships on `MatchPlayer` instead – §13.5 has the failure and the argument. Every "today" and "shipped" in §§0-12 means **before** that
+> fix; §13 carries the after-numbers beside the before-numbers and does not edit a single one of
+> them, because the measurement is the evidence the fix was graded against and re-writing it would
+> destroy the grading.
+
 **This is a MEASUREMENT and a finding. Nothing is built here and no engine number moves.** The
 instrument is `tools/retirement-shape-probe.ts` (new, `tools/` only). Every number below is
 reproducible from it and from `tools/pro-season-probe.ts`; the command that produced each is named
@@ -692,3 +701,372 @@ npx vite-node tools/pro-season-probe.ts --seeds 16 --seasons 3 --policy greedy -
 exits 2 on this tree for two PRE-EXISTING unused-import errors in `tools/birthday-pool.ts:34` and
 `tools/his-careers-brackets.ts:529`, both last touched by round 26's own commit (`ce282ca`) and
 neither in this file's path. Named here so the next reader does not attribute them to this work.
+
+---
+
+## 13. ⭐⭐ THE FIX, BUILT AND MEASURED – 27.08
+
+**§10.6's recommendation, shipped in the order it names.** Nothing above this section was edited: it
+is the before-picture, and a fix graded against a moved target is not graded at all.
+
+Commands (all exit codes read out of a file, never a pipe):
+
+```bash
+npm run bench:retire                                          # the re-aimed bench, §13.1
+npx vite-node tools/retirement-shape-probe.ts --careers 16 --seasons 6
+npx vite-node tools/retirement-shape-probe.ts --careers 16 --seasons 6 --plan balanced --arms rested,grinder
+```
+
+### 13.0 ⚠ FIRST: the bench was re-aimed, and here is the proof it was not weakened
+
+`tools/retirement-rate.ts` gated every entry on `world.condition >= matchStrengthKnee`, so the
+corpus that calibrated `RETIRE_K` never once arrived below the knee (§10.0). It now walks **three
+arms** and grades the POOLED corpus:
+
+* `knee` – **the shipped policy, byte for byte.** The continuity arm.
+* `all` – the same appetite with the gate removed; only the medical floor stops her.
+* `rested` – enters at 85 or better, never two weeks running.
+
+⚠ **THE CONTINUITY ARM REPRODUCES THE OLD HEADLINE EXACTLY.** Run with the freshness span set to 0 –
+which makes the multiplier exactly 1 for every condition, i.e. the pre-fix hazard bit for bit – the
+`knee` arm reads **2.26% on 3,624 matches (hers 1.05%, opponent's 1.21%, 1.00 per 1000 games)**,
+which is what `bench:retire` printed on this tree before a line was touched. Nothing was removed;
+two arms and three tables were added beside it.
+
+⚠ **AND THE SHIPPED FIGURE HAS DRIFTED SINCE §7 WAS WRITTEN.** §7 quotes `bench:retire`'s 2.81% over
+a 5,311-match corpus; measured today, unmodified, it is **2.26% over 3,624**. The calendar and the
+ladder have moved underneath that bench since the number was recorded. It changes no conclusion here
+– both readings are above-the-knee numbers, which is §10.0's whole point – but the 2.81% should not
+be quoted again without a re-run.
+
+| the re-aimed bench, 12 careers x 312 weeks x 3 arms | matches | ret | rate | hers | opp | mean arrival |
+| --- | --- | --- | --- | --- | --- | --- |
+| **BEFORE** `knee` (= the shipped bench) | 3,624 | 82 | **2.26%** | 1.05% | 1.21% | 75.3 |
+| **BEFORE** `all` | 3,691 | 118 | 3.20% | 1.79% | 1.41% | 44.9 |
+| **BEFORE** `rested` | 2,167 | 49 | 2.26% | 1.15% | 1.11% | 99.6 |
+| **BEFORE POOLED – graded against 2.73%** | **9,482** | **249** | **2.63%** | | | |
+| **AFTER** `knee` | 3,575 | 73 | 2.04% | 1.23% | 0.81% | 75.4 |
+| **AFTER** `all` | 3,548 | 149 | 4.20% | 3.21% | 0.99% | 47.9 |
+| **AFTER** `rested` | 2,241 | 26 | 1.16% | 0.58% | 0.58% | 99.6 |
+| **AFTER POOLED – graded against 2.73%** | **9,364** | **248** | **2.65%** | | | |
+
+**The population level did not move: 2.63% -> 2.65%, against an anchor of 2.73% and a standard error
+of 0.17%.** The `knee` arm falling to 2.04% is not a regression – §10.0 predicted it in advance, in
+these words: *"a fix that lowers above-knee risk would drop the bench BELOW the anchor and look like
+a regression when it is the intended half of a redistribution."*
+
+The bench also now carries two instrument arms, and both are clean in every run below:
+
+| arm | what it proves | reading |
+| --- | --- | --- |
+| (a) every kid match re-simulated at its stored seed, **with no condition argument at all**, must reproduce winner and scoreline | that the snapshot is the match that was played – and, since the freshness rides on the snapshot, that a Watch button replays it | **0 mismatches** |
+| (b) `players[KID_ID].condition` must equal the `world.condition` this file read at the same point | that the body is read BEFORE finalize – round 26 #14b's ordering hazard, as an identity of the composition | **exact in every match** |
+
+⚠ Arm (b) is a check on THIS FILE'S READ ORDER rather than on the engine: `world/player.ts` writes
+one number from the other, so the two can only part company if the read has drifted to the wrong side
+of `finalizeTournament`. It also reports sides that stepped on court with no composed freshness at
+all, which on this path is **0**.
+
+### 13.1 ⭐ The curve, the weighting, and the mean it achieved
+
+```ts
+export function retireDurability(condition: number): number {
+  const c = clamp(condition, 0, 100)
+  return 1 + (RETIRE_DURABILITY_SPAN * (RETIRE_DURABILITY_PIVOT - c)) / 100
+}
+export const RETIRE_DURABILITY_PIVOT = 79.8   // MEASURED – see below
+export const RETIRE_DURABILITY_SPAN = 2.6     // the one free parameter
+```
+
+`retireHazard(pointNumber, stamina, durability = 1)` multiplies by it; `simulateMatch` resolves one
+value per side, once, before the first ball, from `MatchOptions.condition?` if a caller offered one
+and otherwise from `MatchPlayer.condition?` on the snapshot – neither present ⇒ exactly 1. See §13.5
+for why the snapshot is the record and the option is only an override.
+
+**⭐ THE WEIGHTING, STATED: hazard-weighted, over every SIDE of every one of her matches – hers and
+her opponent's alike.** Not match-weighted, and the difference is the whole trap. The expected number
+of retirements is `Σ over sides of min(1, h·d)`, so the weight a side deserves is the hazard `h` it
+actually carries, not one vote per player. Worn players play LONGER matches (§3.3: 153 points against
+147), so they carry more hazard per match than their head-count earns; centre on the plain mean and
+the heavy end of the curve is over-weighted in the only sum that matters, and the rate quietly rises.
+A match under `FATIGUE_START` carries no hazard and votes not at all, which is correct – it can
+never produce a retirement.
+
+| the census, hazard-weighted | sides | Σ hazard | mean condition | **hazard-wtd condition** | **hazard-wtd multiplier** |
+| --- | --- | --- | --- | --- | --- |
+| BEFORE – hers | 9,482 | 1,761.9 | 69.02 | 63.91 | 1.0000 |
+| BEFORE – her opponents | 9,482 | 1,862.9 | 92.93 | 92.62 | 1.0000 |
+| **BEFORE – BOTH SIDES** | 18,964 | 3,624.9 | 80.97 | **78.67** | 1.0000 |
+| AFTER – hers | 9,364 | 1,688.7 | 70.76 | 66.85 | 1.3366 |
+| AFTER – her opponents | 9,364 | 1,791.0 | 92.47 | 92.10 | 0.6803 |
+| **AFTER – BOTH SIDES** | 18,728 | 3,479.8 | 81.61 | **79.85** | **0.9988** |
+
+**The pivot is a fixed point, found by iteration and not by taste.** Measured on the pre-fix
+population it is 78.67; setting it there and re-running moved the population's own centre to 79.76
+(the fix changes careers, which changes conditions); setting it to **79.8** lands the population at
+**79.85** and the achieved mean multiplier at **0.9988** – 0.05 condition points and 12 parts in
+10,000 from the fixed point. `RETIRE_K` did not move, and the anchor holds by construction.
+
+⚠ **"EXACTLY 1.0" IS EXACT ARITHMETIC ON A CORPUS, NOT A UNIVERSAL LAW, AND THE DIFFERENCE MATTERS.**
+For a straight line, ANY population whose hazard-weighted mean condition equals the pivot has a mean
+multiplier of exactly 1 – that is pinned as a property in `tests/match-retirement.test.ts` §8, on
+three synthetic populations, to nine decimal places. What is measured rather than proved is that
+THIS game's population sits at the pivot. A sub-population that does not – see §13.3 – does not hold
+its level, and must not, or nothing has been fixed.
+
+**Why linear.** The knee IS the defect, so the fix cannot introduce a second one; and a straight line
+is the only shape whose weighted mean is solvable in closed form, which is what makes "exactly 1.0"
+arithmetic instead of a search. **Why the span is 2.6.** It is the one free parameter and the brief
+is the owner's sentence. Its ceiling is arithmetic – `100 / (100 - PIVOT)` = 4.95 here, above which a
+fresh player's hazard would go negative and the running sum would stop being non-decreasing. At 2.6
+the freshest girl in the game sits at 0.47 of the population's risk (rare, not impossible) and the
+worn-out one at 3.07.
+
+### 13.2 ⭐ The arrival table, after – beside the before
+
+`npx vite-node tools/retirement-shape-probe.ts --careers 16 --seasons 6`, the same 3 arms, ~13,500
+of her matches. This is §6's table, re-taken.
+
+| arrival | BEFORE rate | **AFTER rate** | before mean pts | after mean pts | multiplier |
+| --- | --- | --- | --- | --- | --- |
+| >= 90 | 0.83% (3,251) | **0.37%** (3,252) | 147 | 148 | 0.52 |
+| 80-89 | 0.23% (883) | 0.23% (866) | 143 | 142 | 0.88 |
+| 70-79 | 1.04% (866) | 0.94% (853) | 141 | 142 | 1.13 |
+| 60-69 | 0.79% (636) | 0.92% (655) | 145 | 146 | 1.40 |
+| < 60 | 1.43% (7,893) | **3.44%** (7,850) | 153 | 153 | 2.28 |
+
+**<60 against >=90: x1.72 before, x9.3 after.** Both ends moved and both are significant on their
+own: the >=90 row falls from 27 retirements to 12 on the same ~3,250 matches (**2.4 s.e.**) and the
+<60 row rises from 113 to 270 on the same ~7,880 (**8.2 s.e.**). Before the fix these two rows – the
+whole span of a career – were x1.72 apart with the model predicting x1.00 across most of it.
+
+⚠ **AND THE 80-89 ROW IS FLAT AT 0.23% IN BOTH COLUMNS – 2 retirements in 870-ish matches, either
+way.** It is the smallest cell on the board and it cannot separate anything; the row that carries the
+owner's own band with enough matches to speak is the bench's, where 80-89 reads 0.92% before and
+1.35% after on ~970 matches (1 s.e. apart, i.e. still noise). **The claim this fix can make about
+80-90 is the model's, not the corpus's**: at a fixed length the multiplier there is 0.87 against
+2.28 at 40, and the pooled >=90 row is where the corpus confirms the direction.
+
+### 13.3 ⚠⚠ THE SECOND CHANNEL, AND THE TRADE THAT COMES WITH IT
+
+**The length channel is untouched, and that was measured rather than assumed.** `retireDurability`
+multiplies the hazard alone – it does not enter `basePServe`, `modifiedPServe` or any composition
+point – so match length by arrival bucket is unchanged to the point: 147/143/141/145/153 before,
+148/142/142/146/153 after. The x21 length lever is exactly where §4 left it.
+
+So the two channels now COMPOUND instead of cancelling, and the cleanest read is §6's fixed-length
+cut (150-250 points only), where length cannot do any of the work:
+
+| arrival | BEFORE | **AFTER** |
+| --- | --- | --- |
+| >= 90 | 1.73% (1,329) | **0.80%** (1,368) |
+| 80-89 | 0.31% (319) | 0.32% (310) |
+| 70-79 | 2.20% (318) | 2.13% (329) |
+| 60-69 | 1.20% (251) | 1.87% (268) |
+| < 60 | 2.41% (3,775) | **5.79%** (3,783) |
+
+**x1.39 before, x7.2 after, with length held constant.** And the model's own arithmetic over both
+channels together, at a 260-point match: arriving at 90 against arriving at 50 is **x3.14** (it was
+x1.30), at 85 against 50 **x2.67**, and across the whole legal range **x13.3** (it was x2.05).
+
+**The grinder, on the matched-plan control** (`--plan balanced --arms rested,grinder`, the arm where
+the training slider is pinned so only the entry policy differs):
+
+| | BEFORE | AFTER |
+| --- | --- | --- |
+| rested, mean arrival 87 | 0.77% per match | **0.49%** |
+| grinder, mean arrival 40 | 1.24% per match | **2.50%** |
+| **ratio** | **x1.61** | **x5.11** |
+
+§10.6 said this number rising is how the fix is falsified. It went from x1.61 to **x5.11**, and the
+unmatched-plan arms from x1.74 to **x5.62**.
+
+⭐ **AND IT READS ON ONE CAREER, WHICH WAS THE BRIEF – here is that stated as a probability rather
+than as a feeling.** Per season, over 96 season-years an arm, the careful player goes from **0.35 to
+0.24** retirements a season and the grinder from **0.68 to 1.49**. Over ONE six-season career that is
+1.4 against 8.9, where it used to be 2.1 against 4.1. Treating each career as a Poisson draw at its
+own rate:
+
+| the question a player can actually ask | BEFORE | **AFTER** |
+| --- | --- | --- |
+| P(a careful career suffers fewer retirements than a grinding one), 6 seasons | 72.4% (and 12.2% a dead tie) | **99.1%** (0.6% a tie) |
+| the same over ONE season | 38.6% (44.7% a tie) | **69.7%** (24.7% a tie) |
+| P(a careful 6-season career takes NONE at all) | 12.2% | **23.7%** |
+| P(a grinding 6-season career takes five or more) | 38.7% | **94.3%** |
+
+**Before the fix, two careers played the two opposite ways came out a dead heat one time in eight and
+the wrong way round one time in six. After it, the careful career wins 99 times in 100.** That is the
+difference between a corpus effect and something a player can see happening to him.
+
+⚠ Read the one-season row honestly too: at these rates a single SEASON is still mostly a coin-flip
+with a fat tie (24.7%), because 0.24 retirements a season means most careful seasons have none. The
+signal is legible over a career, not over a fortnight – and a fortnight is the window the owner
+complained about.
+
+⚠⚠ **THE TRADE, AND IT IS THE ONE THING ON THIS PAGE THAT NEEDS THE OWNER.** A redistribution moves
+sub-populations by construction, and the professional arm is a sub-population that arrives ~43
+condition points below the pivot EVERY WEEK:
+
+| probe arm | mean arrival | per-match, either player: BEFORE -> AFTER | her retirements a season | season injury prevalence |
+| --- | --- | --- | --- | --- |
+| rested | 89.1 | 2.04% -> **1.45%** | 0.35 -> **0.24** | 48% -> **39%** |
+| grinder | 38.4 | 2.97% -> **3.75%** | 0.68 -> **1.49** | 75% -> **83%** |
+| pro | 37.2 | 2.71% -> **3.92%** | 0.59 -> **1.38** | 79% -> **92%** |
+
+* **The careful arm moves INTO the researched professional band** (30-54%, `fatigue-reprice` §6.4 as
+  re-aimed): 48% -> 39%. That is the first time any arm of this game has sat inside it.
+* **The grinding arms move further out of it**, 79% -> 92% on the pro arm, and the pro arm's
+  per-match rate – the 2.71% that §7 matched to the 2.73% anchor – rises to 3.92%.
+
+⚠ **THIS CANNOT BE TUNED AWAY WITHOUT UNDOING THE FIX, and the arithmetic says so.** Holding the pro
+arm at 2.73% requires a span of **0.07**, at which arriving at 90 buys x1.02 and the model is back
+where §6 found it. The pro arm arrives 43 points below the population's centre every single week;
+charging for that IS the fix, and the pro arm not holding its level is the fix working.
+
+⚠⚠ **BUT THE REASON IT ARRIVES THERE IS THE ECONOMY, NOT THE HAZARD** – and that half is not shipped.
+`fatigue-reprice-2026-08.md` §2 prices a W35 title at 41 condition points and §6.2 measures the
+season door at 73; the professional era parks her in the 30-50 band whatever the player does, which
+is why the probe's `pro` arm arrives at 37. **So the fix hands the player a lever the professional
+economy does not yet let him pull.** The `rested` arm proves the lever exists and is worth x5 – she
+still plays 46.7 matches a season on it – but it enters at 85+, and that is the cadence the re-price
+is for. Two things follow, and both are the owner's call:
+
+1. **`RETIRE_DURABILITY_SPAN` is the one dial**, and it is linear in effect: 2.0 would put the pro
+   arm at ~3.5% and the grinder ratio at ~3.6.
+2. **Or the re-price ships beside it**, which is the version this document would argue for: it is the
+   same wave, the same complaint, and §5 of that spec already says the foot is shot.
+
+### 13.4 What did NOT move, checked rather than claimed
+
+* **The MAIN capture did not move.** `tests/condition.test.ts` passes with count **41550** and hash
+  **e6b0c709** unchanged. It could not: the two retirement uniforms are drawn unconditionally off
+  `seed:ret` (`match/engine.ts`), the new term is arithmetic on state, and it draws nothing.
+* **`rngMain` is byte-identical in all three frozen careers.** `tools/frozen-key-diff.ts` on
+  preset/policy **5/0, 8/0 and 0/1**, headers checked against the invocations (the first attempt
+  came back `# preset 0 policy 0` on all three – the zsh word-split `coach-travel-edge.test.ts`
+  warns about, caught and re-run). The control was **this change reverted**, in a detached worktree
+  at the same commit, never the previous commit.
+* **What DID move**: 29 of 72 keys on 5/0, 28 of 72 on 8/0, and **1 of 71 on 0/1** – `results`,
+  `events`, `entries`, `condition`, `skills` and the career's downstream ledgers. That is what
+  "changing who retires changes careers" looks like, and `rngMain` sitting still inside it is the
+  proof that the stream did not.
+* **`matchStrengthKnee` was not touched** (§10.5), nor `conditionMatchFactor`, nor `RETIRE_K`.
+* **The door is still visible** and the severity table is untouched (§11.6).
+* **The round axis is unchanged in shape** – nothing in the hazard reads the round, and per-match
+  risk stays flat across R32-to-Final, which the research agrees with (§5).
+
+### 13.5 ⚠⚠ THE SEAM MOVED, AND A TEST IS THE REASON – `MatchPlayer`, not `MatchOptions`
+
+**§10.1 offered two seams and preferred `MatchOptions` because it "costs no schema question at all".
+That is true, and it is not the whole price. It was built that way first, and it broke a guarded,
+user-visible invariant inside one run.**
+
+`MatchOptions` is rebuilt at each call site. The three replay sites – `MatchReplay.vue`,
+`TournamentFlow.vue`, `PracticeFlow.vue` – rebuild it from a stored `WorldMatch`, which carries
+`{surface, tour, seed}` and **no body**. So a re-watch passed no freshness, got a multiplier of 1,
+and replayed the match as if both players had arrived at the population's centre. The points, the
+winner of every point and every statistic still reproduced – the multiplier touches `retH` and
+nothing else – but **the TRUNCATION could differ**, on exactly the matches this fix moves.
+`MatchViewer` reads `result.retired` off the re-simulation, so such a match re-watches to a full
+result while the bracket row says "ret."
+
+`tests/college-league.test.ts` caught it on the first full run:
+
+```
+FAIL  every stored match REPLAYS – the same simulateMatch under the same seed, point for point
+      college-w64-r0: expected '6-2 6-7 4-4' to be '6-2 6-7 7-5'
+```
+
+and its own comment names the stake: *"This is literally what `MatchReplay` does, so a record that
+failed here is a Watch button that opens on nothing."* `tests/round10-view.test.ts` fired the same
+way for the practice friendly. **Neither was re-aimed.** A corridor widened to admit the change that
+broke it is the failure mode every note in those files was written to prevent.
+
+**So the freshness lives on `MatchPlayer.condition?: number`, beside `age` – and `age`'s own comment
+is the argument, word for word:** *"IT BELONGS ON THE SNAPSHOT... `WorldMatch.a/.b` freeze a
+MatchPlayer into the save, so a box score re-opened three seasons later must still report the serve
+of the girl who played it."* The condition she arrived at is a fact about the girl who played that
+match, not about the call that is asking.
+
+What that costs, and what it does not:
+
+* **No migration and no `SAVE_SCHEMA_VERSION` bump.** An additive OPTIONAL field, absent ⇒ a
+  multiplier of exactly 1, i.e. the pre-fix hazard. That is exactly what every pre-branch snapshot
+  means, and it is the same reading `MatchPlayer.age?` (`LEGACY_SNAPSHOT_AGE`), `MatchRecord.retiredId?`
+  and `WorldEvent.entryId?` each shipped under, all three with the argument written down. ⚠ It is
+  still a widening of a persisted type and the schema rule is the owner's, so it is named here rather
+  than buried: **if the ruling is that any additive field bumps the version, this is the field.**
+* **`MatchOptions.condition?: [number, number]` STAYS, as an OVERRIDE.** Resolution order is option,
+  then snapshot, then 1. Every live call site in `src/` passes nothing and is answered by the
+  snapshot; the option is for a caller that builds players BY HAND – a calibration fixture, a probe
+  asking "what if she had arrived at 85?" – and `tests/match-retirement.test.ts` §8 exercises it.
+* **Two composition points write it, and only those two** – `kidMatchPlayerFor` (world/player.ts)
+  from `world.condition`, `rivalMatchPlayer` (season/rival.ts) from the week's derived value – on the
+  same line as `conditionMatchFactor`, so the STRENGTH half and the BREAKABILITY half of one number
+  cannot disagree about who took the court. `applySurfaceStyle` and `applyKit` spread it through
+  untouched, which is correct: a hard court changes how she plays, not how worn out she turned up.
+* **A raw opponent nobody composed a condition for is left ABSENT, not set to 100** – the sparring
+  partner in a friendly, the call-up rubber, the college-league round. "No opinion" and "fresh at
+  100" are different claims, and only the first one is true of a player built without a body.
+  ⭐ That also keeps the college fixture outside the condition economy, which is what
+  `playCollegeLeague`'s own comment demands: *"A condition drain, a layoff on a retirement... are
+  each a balance change... Adding the fixture was the ask; re-pricing the year was not."*
+* **And the instruments got SIMPLER and stronger for it.** Both the bench and the probe now
+  re-simulate with **no condition argument at all** – the same call `MatchReplay` makes – so
+  "0 re-sim mismatches" is now also a Watch-button check. The bench's opponent-condition
+  reconstruction (and its 15 season-boundary caveats) is gone: the freshness is read straight off the
+  frozen snapshot, and instrument (b) is now the identity `players[KID_ID].condition === world.condition`,
+  which tests THIS FILE'S READ ORDER against round 26 #14b rather than the engine.
+
+### 13.6 What is still NOT built, and why
+
+* **Candidate B, the cumulative wear counter (§10.2)** – the honest reading of «делает это
+  ПОСТОЯННО». Still held: it needs persisted state (a `SAVE_SCHEMA_VERSION` bump, an append-only
+  migration and a golden fixture) and a tuning surface with **no research anchor**. What §13.3 shows
+  is that (2) alone already buys x5.11 on the grinder, which was the argument for spending (2)
+  first – and it is a good deal of the effect the memory was wanted for. It should be re-argued
+  against these numbers rather than against §8's.
+* **Candidate C, breaking the winning-hurts coupling (§10.3)** – untouched. Length is still worth
+  x21 and is still the dominant term. That is the owner's fiction and needs him.
+* **Candidate E, the knee (§10.5)** – untouched, and this fix is the reason nobody has to reach
+  for it.
+
+### 13.7 ⭐⭐ THE SIM CORRIDOR THAT MOVED – and it moved back into place
+
+`npm run test:sim`, 12 files. **One corridor moved, and it is the one `match-retirement.md` §4.1 left
+FAILING on purpose ten days ago.**
+
+`tests/fatigue-bench-policy-104w.test.ts` measures the property this whole bench family exists for –
+*per match played, the grinder gets hurt substantially more often than the careful parent* – and §4.1
+recorded the retirement door DILUTING it, in these words: *"a hazard indexed on match LENGTH is
+collected mostly by the player who makes matches long, and the load-management axis this file exists
+to measure is not what it responds to."* Its own numbers:
+
+| arm | grinder | careful | **per-match ratio** |
+| --- | --- | --- | --- |
+| main, before the retirement door existed | 0.0245 | 0.0096 | **2.550** |
+| the door shipped, condition curve flat | 0.0435 | 0.0281 | **1.546** |
+| **the door with its own condition curve (27.08)** | | | **2.405** |
+
+The floor had been slackened from `> 1.5` to `> 1.3` to survive the dilution, and an INVERTED
+tripwire – `ratio < 2.2` – was left in place as the honest record that the corridor was lost. **It
+fired on the run that restored it**: `expected 2.405 to be less than 2.2`.
+
+Its own instruction, verbatim: *"THIS ASSERTION FAILS, and whoever is here should restore the floor to
+1.5 (or higher) and delete it."* So: **the floor is back at `> 1.5` and the inverted pin is retired**,
+which is this file's own protocol for a recovered corridor – the same one W3-FIELD3 followed at
+2.032 → 2.538 – and not a corridor widened to admit a change.
+
+⚠ **AND THE ROUTE WAS NOT THE ONE THAT NOTE ANTICIPATED, which is the interesting part.** It expected
+the repair to be *"count only `cause: 'week'` injuries here"* – filter the contamination out of the
+MEASURE – and flagged it as a schema question for the owner. Instead the contaminating source stopped
+contaminating: the retirement door now points the SAME WAY as the weekly one. The careful parent's
+long three-set matches are still where the hazard accumulates (length is untouched and still worth
+x21) – she now carries a multiplier of ~0.5 through them while the grinder carries ~2.1.
+⚠ **The schema question is still open and still worth the owner's time**: `injuryHistory` rows carry
+no cause, so that bench still cannot separate the two doors. It simply no longer has to in order to
+read the axis it exists for.
+
+**Everything else in the sim project is unchanged**, including the second tripwire §4.1 names
+(`fatigue-bench-planner`, the grinder's medical blocks), the econ benches and the fatigue reference
+tables – 11 of 12 files green before the re-aim and 12 of 12 after.

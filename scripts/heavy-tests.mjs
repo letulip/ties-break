@@ -208,9 +208,26 @@ export const HEAVY_UNIT_FILES = [
   // honest next step is fewer workers per core, measured – not fewer tests.
   'tests/college-birthday.test.ts',
   'tests/coach-travel-edge.test.ts',
-  // ⚠ THE FROZEN MAIN CAPTURE LIVES HERE NOW. A shard placement changes nothing it asserts – the
-  // capture is still 41550 / e6b0c709 and still fails the same way – but it does mean the RNG law's
-  // own guard can no longer be lost to a runner stall that has nothing to do with it.
+  // ⚠⚠ AN ORPHANED COMMENT LIVED HERE AND IT WAS MINE (corrected 27.08). It read «THE FROZEN MAIN
+  // CAPTURE LIVES HERE NOW» – true when twelve files were promoted on 26.08, false four hours later
+  // when the list was cut back to two and `tests/condition.test.ts` went out with the other nine.
+  // The entry left; the sentence claiming it stayed. **A comment that survives the line it describes
+  // is worse than no comment**, because it is read as a fact about the list. The capture is fine and
+  // runs in the bulk pool, where it has passed 51/51 on every gate since.
+  //
+  // ⚠⚠ PROMOTED 27.08, AND THE REASON IS THAT SAME NARROWING. The 26.08 sweep measured this file at
+  // 41.4 s in-pool / 14 s solo and NAMED it – and then the twelve candidates were cut to two, because
+  // the in-pool ranking had been taken on a Mac whose ~9 workers sit on 4 performance cores and so
+  // described this laptop rather than CI. That correction was right for CI and left the LOCAL gate
+  // fragile, which is the gate every hand-off is measured on: `npm run check` has since come back red
+  // four times on nothing but this file, every run with ZERO assertion failures and the file passing
+  // 68/68 in 18 s alone.
+  //
+  // ⚠ IT IS A TEST TIMEOUT, NOT BIRPC'S WALL – a different failure from every entry above it, and the
+  // distinction matters. The wall is a 60 s reporter RPC; this is vitest's own 20 s per-test ceiling,
+  // reached because the corpus walks 68 golden saves while 170 other files share the cores. Same
+  // remedy, different mechanism, and a later reader must not conclude the wall moved.
+  'tests/goldenSaves.test.ts',
 ]
 
 /** The same list in the form a VITEST PROJECT's `include`/`exclude` needs.

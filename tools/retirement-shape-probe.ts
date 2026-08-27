@@ -63,7 +63,7 @@ import { ECONOMY } from '../src/engine/economy'
 import { TIERS, TIER_LADDER, WEEKS_PER_YEAR } from '../src/engine/season/calendar'
 import { simulateMatch } from '../src/engine/match/engine'
 import { JUNIOR_TOUR } from '../src/engine/season/tournament'
-import { RETIRE_K, spentness } from '../src/engine/match/point'
+import { RETIRE_K, RETIRE_DURABILITY_PIVOT, RETIRE_DURABILITY_SPAN, retireDurability, spentness } from '../src/engine/match/point'
 import { conditionMatchFactor } from '../src/engine/condition'
 import { DEFAULT_PROFILE, WEEK_PLAN_PRESETS } from '../src/shared/protocol'
 import type { TierId } from '../src/engine/season/types'
@@ -96,9 +96,16 @@ const ARMS = argStr('arms', 'rested,grinder,pro').split(',') as ArmId[]
 // `retH` is non-decreasing, so P(side s stops within N points) is EXACTLY min(1, Σ h) - not
 // 1 − Π(1 − h). The two differ by (Σh)²/2, which is 0.19 points of percentage at a 260-point match:
 // small, but the sum is what the engine does and this file reports the engine.
-function pRetire(points: number, stamina: number): number {
+//
+// ⚠⚠ AND SINCE 27.08 THE HAZARD TAKES A SECOND ARGUMENT. `retireHazard(n, stamina, durability)`
+// multiplies the same `spentness` by `retireDurability(arrival condition)` - the hazard's OWN
+// freshness curve, which is the fix this file's first run argued for. So the arithmetic below reads
+// condition TWICE, through two different channels, and that is deliberate rather than a duplication:
+// `staminaAt` is the STRENGTH channel (flat above the knee, and the whole defect), `retireDurability`
+// is the BREAKABILITY channel (monotone over the whole span, and the fix).
+function pRetire(points: number, stamina: number, durability = 1): number {
   let h = 0
-  for (let n = 1; n <= points; n++) h += RETIRE_K * spentness(n, stamina)
+  for (let n = 1; n <= points; n++) h += RETIRE_K * spentness(n, stamina) * durability
   return Math.min(1, h)
 }
 
@@ -116,26 +123,35 @@ console.log(
 const RAW_STAMINA = 70
 const LENGTHS = [120, 150, 180, 200, 230, 260, 300]
 const CONDITIONS = [100, 95, 90, 85, 80, 75, 70, 60, 50, 40, 30, 20, 15, 0]
+console.log(
+  `retireDurability: pivot ${RETIRE_DURABILITY_PIVOT} span ${RETIRE_DURABILITY_SPAN}` +
+    `   (the freshness channel; a span of 0 would make it exactly 1 everywhere, i.e. the pre-27.08 hazard)`,
+)
 console.log(`\nP(she retires in ONE match), raw stamina ${RAW_STAMINA}, by match length x arrival condition:`)
-console.log(`  cond  factor  stam  ` + LENGTHS.map((n) => `${n}pt`.padStart(8)).join(''))
+console.log(`  cond  factor  stam   dur  ` + LENGTHS.map((n) => `${n}pt`.padStart(8)).join(''))
 for (const c of CONDITIONS) {
   const f = conditionMatchFactor(c)
   const s = staminaAt(RAW_STAMINA, c)
+  const d = retireDurability(c)
   console.log(
-    `  ${String(c).padStart(4)}  ${f.toFixed(3).padStart(6)}  ${s.toFixed(1).padStart(4)}  ` +
-      LENGTHS.map((n) => `${(100 * pRetire(n, s)).toFixed(2)}%`.padStart(8)).join(''),
+    `  ${String(c).padStart(4)}  ${f.toFixed(3).padStart(6)}  ${s.toFixed(1).padStart(4)}  ${d.toFixed(2).padStart(4)}  ` +
+      LENGTHS.map((n) => `${(100 * pRetire(n, s, d)).toFixed(2)}%`.padStart(8)).join(''),
   )
 }
 {
-  const at = (c: number, n: number) => pRetire(n, staminaAt(RAW_STAMINA, c))
+  const at = (c: number, n: number) => pRetire(n, staminaAt(RAW_STAMINA, c), retireDurability(c))
   const lengthLever = at(80, 260) / at(80, 150)
   const conditionLever90to70 = at(70, 260) / at(90, 260)
+  const conditionLever90to50 = at(50, 260) / at(90, 260)
+  const conditionLever85to50 = at(50, 260) / at(85, 260)
   const conditionLeverFullRange = at(ECONOMY.condition.min, 260) / at(100, 260)
   const conditionLeverToFloor15 = at(15, 260) / at(90, 260)
   console.log(
-    `\n  THE TWO LEVERS, at a 260-point match:` +
+    `\n  THE TWO LEVERS, at a 260-point match - BOTH condition channels together:` +
       `\n    LENGTH   150pt -> 260pt at the same condition   x${lengthLever.toFixed(2)}` +
       `\n    CONDITION arriving at 90 -> arriving at 70       x${conditionLever90to70.toFixed(2)}   <- the owner's own range` +
+      `\n    CONDITION arriving at 90 -> arriving at 50       x${conditionLever90to50.toFixed(2)}   <- his sentence, as one number` +
+      `\n    CONDITION arriving at 85 -> arriving at 50       x${conditionLever85to50.toFixed(2)}` +
       `\n    CONDITION arriving at 90 -> arriving at 15       x${conditionLeverToFloor15.toFixed(2)}   (15 = the medical floor she may enter on)` +
       `\n    CONDITION arriving at 100 -> arriving at ${ECONOMY.condition.min}        x${conditionLeverFullRange.toFixed(2)}   (the whole legal range)`,
   )
@@ -296,7 +312,11 @@ function walk(arm: ArmId, seed: string): ArmOut {
           const a = p.players[m.aId]
           const b = p.players[m.bId]
           if (!a || !b || !m.seed) continue
-          // instrument (b): re-simulate at the stored seed off the frozen snapshots.
+          // instrument (b): re-simulate at the stored seed off the frozen snapshots. ⚠ NO
+          // `condition` option is passed and that is the point since 27.08: the freshness the hazard
+          // integrates rides on `MatchPlayer.condition`, frozen into the same snapshot, so this is
+          // the SAME call `MatchReplay` makes from the Watch button - and reproducing a RETIREMENT
+          // here now proves the freshness reproduced too.
           const res = simulateMatch(a, b, { surface: event.surface, tour: JUNIOR_TOUR, seed: m.seed })
           const score = res.sets.map((s) => `${s.a}-${s.b}`).join(' ')
           const winnerId = res.winner === 0 ? m.aId : m.bId
@@ -304,8 +324,9 @@ function walk(arm: ArmId, seed: string): ArmOut {
           const kidIsA = m.aId === KID_ID
           const kidStamina = kidIsA ? a.stamina : b.stamina
           staminaSeen.add(kidStamina)
+          const kidDurability = retireDurability(arrival)
           let hazard = 0
-          for (let n = 1; n <= res.totalPoints; n++) hazard += RETIRE_K * spentness(n, kidStamina)
+          for (let n = 1; n <= res.totalPoints; n++) hazard += RETIRE_K * spentness(n, kidStamina) * kidDurability
           out.rows.push({
             arm,
             tier,
@@ -455,16 +476,20 @@ const BUCKETS: [string, (c: number) => boolean][] = [
 {
   const all = ARMS.flatMap((a) => merge(byArm.get(a)!).rows)
   console.log('\n  POOLED over every arm - the population question:')
-  console.log('    arrival    matches   her ret   rate      mean pts   mean games   mean cond-factor   Σ hazard/match')
+  console.log('    arrival    matches   her ret   rate     +-1 s.e.   mean pts   mean games   cond-factor   durability   Σ hazard/match')
   for (const [label, test] of BUCKETS) {
     const cell = all.filter((r) => test(r.arrival))
     if (cell.length === 0) continue
     const her = cell.filter((r) => r.retiredKid).length
+    const p = her / cell.length
+    const se = 100 * Math.sqrt((p * (1 - p)) / cell.length)
     console.log(
       `    ${label}    ${String(cell.length).padStart(7)}   ${String(her).padStart(7)}   ${pct(her, cell.length).padStart(6)}` +
+        `   ${se.toFixed(2).padStart(7)}%` +
         `   ${(sum(cell.map((r) => r.points)) / cell.length).toFixed(0).padStart(8)}` +
         `   ${(sum(cell.map((r) => r.games)) / cell.length).toFixed(1).padStart(10)}` +
-        `   ${(sum(cell.map((r) => conditionMatchFactor(r.arrival))) / cell.length).toFixed(3).padStart(16)}` +
+        `   ${(sum(cell.map((r) => conditionMatchFactor(r.arrival))) / cell.length).toFixed(3).padStart(11)}` +
+        `   ${(sum(cell.map((r) => retireDurability(r.arrival))) / cell.length).toFixed(3).padStart(10)}` +
         `   ${(100 * (sum(cell.map((r) => r.hazard)) / cell.length)).toFixed(3).padStart(13)}%`,
     )
   }

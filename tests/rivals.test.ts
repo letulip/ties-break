@@ -601,11 +601,24 @@ describe('B5 — rivalMatchPlayer: ONE composition, in the kid order, applied ex
   // composition point DERIVES from it, exactly as `groundstrokes` is derived, because the serve-speed
   // curve (match/serveSpeed.ts) is a function of age and a box score against a sixteen-year-old has to
   // report a sixteen-year-old's serve. `nation`, `growth` and `potential` are still barred outright.
+  // ⚠ RE-AIMED AGAIN (27.08, the retirement hazard's own condition curve – docs/specs/
+  // retirement-shape-2026-08.md §13): the key set gains `condition`, and it is the SAME distinction
+  // one more time rather than an exception to it. It is a MatchPlayer field the composition point
+  // takes from its own `condition` ARGUMENT – the identical number `conditionMatchFactor` two lines
+  // above turns into the strength factor – so the built player carries the freshness she stepped on
+  // court at and the cohort row carries nothing new. No AiPlayer field rides along: `nation`,
+  // `growth`, `potential` and `ageYears` are still barred and still asserted below. The reason it has
+  // to be ON the player rather than handed in at simulation time is a replay one and it is argued in
+  // `MatchPlayer.condition` – a stored match must re-watch as the match that was played.
   it('drops the AiPlayer-only fields: a MatchPlayer goes into the bracket, not a cohort row', () => {
     const built = rivalMatchPlayer(rival, 'hard', 80)
     expect(Object.keys(built).sort()).toEqual([
-      'age', 'composure', 'groundstrokes', 'id', 'name', 'ret', 'serve', 'stamina',
+      'age', 'composure', 'condition', 'groundstrokes', 'id', 'name', 'ret', 'serve', 'stamina',
     ])
+    // ...and it is the argument, not a re-derivation: one number, written once, read by the
+    // retirement hazard and by nothing else.
+    expect(built.condition).toBe(80)
+    expect('condition' in rival).toBe(false)
     // ...and the cohort row it came from still does NOT hold the fifth attribute.
     expect('groundstrokes' in rival).toBe(false)
     expect(built.groundstrokes).toBeGreaterThan(0)

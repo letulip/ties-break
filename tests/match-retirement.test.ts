@@ -24,13 +24,25 @@
 //   4. THE HAZARD READS THE MATCH AND NOTHING ELSE. No tier term, no age term, no rank term – so a
 //      W100 and a J30 of the same length carry the same risk, and tier-dependence is a consequence
 //      of match length rather than a knob.
+//      ⚠ AMENDED 27.08: it reads the match AND HOW FRESH THE TWO PLAYERS ARRIVED, which is section 8
+//      below. That is not a widening of the rule, it is the rule finally being obeyed – "a long
+//      match on tired legs breaks girls" was always the fiction, and until that day the model could
+//      not tell tired legs from fresh ones anywhere above condition 70.
 //   5. THE INJURY LANDS WHERE SHE WORKED, AND COSTS NO NEW DRAW. The same single uniform against a
 //      different table – proved by tapping the generator, which is the claim's own terms.
 //   6. THE LAYOFF IS THE ORDINARY ONE, opened through the ONE onset writer.
 //   7. THE VOICE. Short dash only, no Cyrillic, and a retirement week does not read like a defeat.
 import { describe, expect, it } from 'vitest'
 import { simulateMatch } from '../src/engine/match/engine'
-import { RETIRE_K, retireHazard, spentness } from '../src/engine/match/point'
+import {
+  RETIRE_K,
+  RETIRE_DURABILITY_PIVOT,
+  RETIRE_DURABILITY_SPAN,
+  retireDurability,
+  retireHazard,
+  spentness,
+} from '../src/engine/match/point'
+import { conditionMatchFactor } from '../src/engine/condition'
 import { BODY_REGIONS, drawBodyRegionFrom, tiltedBodyRegions } from '../src/engine/body'
 import { loadedPartShares } from '../src/engine/knock'
 import { rngFromSeed } from '../src/engine/rng'
@@ -164,8 +176,15 @@ describe('the rate comes from the match, not from the sign on the door', () => {
   it('⚠ NO TIER, AGE, RANK OR SURFACE TERM anywhere in the hazard', () => {
     // The design instruction, as a source pin: the rate must be taken from the match itself. A
     // future edit that reaches for a tier table has to delete this test to do it.
+    //
+    // ⚠ RE-AIMED 27.08, WIDENED RATHER THAN RELAXED. The hazard gained a second term that day –
+    // `retireDurability`, the freshness curve – and a pin anchored at `retireHazard` would have
+    // stopped covering the half of the model where a tier table is now easiest to smuggle in. The
+    // region therefore starts at `retireDurability` and runs to the same end marker, so BOTH
+    // functions are inside it. The forbidden list is unchanged and freshness is not on it: how worn
+    // a player is IS a statement about a body, which is the sentence this pin protects.
     const src = engineModuleSource('match/point')
-    const from = src.indexOf('export function retireHazard')
+    const from = src.indexOf('export function retireDurability')
     const to = src.indexOf('export const RETIRE_K')
     expect(from).toBeGreaterThan(0)
     expect(to).toBeGreaterThan(from)
@@ -537,6 +556,130 @@ describe('the copy', () => {
     expect(worldSource()).toContain('she retired hurt')
   })
 })
+
+// =================================================================================================
+// 8. ⭐ ARRIVING FRESH BUYS SAFETY – the 27.08 shape fix, and the three properties it stands on
+// =================================================================================================
+//
+// The owner, 27.08: «наказывать тех, кто УЖЕ в низкой кондиции приезжает и делает это ПОСТОЯННО
+// (гриндер), а если я приезжаю с 80-90 на турнир, то как будто вполне есть высокий шанс доиграть».
+// Measured before anything was built (docs/specs/retirement-shape-2026-08.md §6): arriving at 95 and
+// arriving at 70 carried IDENTICAL risk, x1.00 to the last decimal, because the hazard was borrowing
+// `conditionMatchFactor` – a curve that returns exactly 1 above its knee of 70.
+//
+// The three properties, in the order they matter:
+//   (a) IT IS A REDISTRIBUTION. The population-weighted mean of the multiplier is 1.0, so the
+//       expected number of retirements does not move and the 2.73% anchor survives by construction.
+//       That is what makes this a SHAPE change rather than a LEVEL change, and §11.1 of the spec
+//       forbids the second one.
+//   (b) OMITTED IS TODAY'S BEHAVIOUR, EXACTLY. `MatchOptions.condition` absent is a multiplier of 1
+//       on both sides – not "both fresh" – so every fixture and every pure caller is untouched.
+//   (c) THE SHAPE DELIVERS HIS SENTENCE. Arriving at 85 must be materially safer than arriving at
+//       50, at a length neither of them chose.
+describe('⭐ the hazard can finally tell a fresh girl from a worn one', () => {
+  it('MONOTONE over the WHOLE 0-100 span – the knee is the defect, and there is not a second one', () => {
+    for (let c = 0; c < 100; c++) {
+      expect(retireDurability(c + 1), `condition ${c} -> ${c + 1}`).toBeLessThan(retireDurability(c))
+    }
+    // ...and this is exactly what the borrowed curve could not do: it is FLAT across the owner's
+    // own range, which is the finding this fix answers.
+    expect(conditionMatchFactor(95)).toBe(conditionMatchFactor(70))
+    expect(retireDurability(95)).toBeLessThan(retireDurability(70))
+  })
+
+  it('⚠ STRICTLY POSITIVE at both ends, and clamped outside the legal span', () => {
+    // A non-positive multiplier would let `retH` stop being non-decreasing, and the sampler would
+    // stop being a threshold on accumulated exhaustion. The ceiling is arithmetic:
+    // SPAN < 100 / (100 - PIVOT).
+    expect(retireDurability(100)).toBeGreaterThan(0)
+    expect(RETIRE_DURABILITY_SPAN).toBeLessThan(100 / (100 - RETIRE_DURABILITY_PIVOT))
+    expect(retireDurability(-40)).toBe(retireDurability(0))
+    expect(retireDurability(140)).toBe(retireDurability(100))
+  })
+
+  it('⭐ (a) A REDISTRIBUTION: a population centred on the pivot has a mean multiplier of exactly 1', () => {
+    // The load-bearing arithmetic, stated as a property rather than as one measured corpus: for the
+    // straight line this curve is, ANY population whose hazard-weighted mean condition equals the
+    // pivot has a hazard-weighted mean multiplier of exactly 1. That is why `RETIRE_K` did not move.
+    // The corpus that supplies the pivot is `npm run bench:retire`, which prints both numbers.
+    const pivot = RETIRE_DURABILITY_PIVOT
+    // ⚠ EVERY CONDITION HERE IS INSIDE 0-100, and that is a real precondition rather than tidiness:
+    // the curve CLAMPS outside the legal span, so a synthetic population straddling 100 would break
+    // the identity while the game's own population – which `ECONOMY.condition` clamps to 0-100 –
+    // never can. A case at 108 was written first and failed exactly this way, which is the check
+    // earning its keep on its first run.
+    const cases: { condition: number; hazard: number }[][] = [
+      [
+        { condition: pivot - 20, hazard: 1 },
+        { condition: pivot + 20, hazard: 1 },
+      ],
+      [
+        { condition: pivot - 40, hazard: 3 },
+        { condition: pivot + 20, hazard: 6 },
+      ],
+      [
+        { condition: 0, hazard: 100 - pivot },
+        { condition: 100, hazard: pivot },
+      ],
+    ]
+    for (const pop of cases) {
+      const h = pop.reduce((s, r) => s + r.hazard, 0)
+      const meanCondition = pop.reduce((s, r) => s + r.hazard * r.condition, 0) / h
+      const meanMultiplier = pop.reduce((s, r) => s + r.hazard * retireDurability(r.condition), 0) / h
+      expect(meanCondition).toBeCloseTo(pivot, 9)
+      expect(meanMultiplier, 'the LEVEL must not move').toBeCloseTo(1, 9)
+    }
+  })
+
+  it('⭐ (b) OMITTED IS BYTE-IDENTICAL, and the option really is read – proved by mutating it', () => {
+    const a = player('a', 40)
+    const b = player('b', 40)
+    let moved = 0
+    for (let i = 0; i < 400; i++) {
+      const opts = OPTS(`dur-${i}`)
+      const bare = simulateMatch(a, b, opts)
+      // No condition ⇒ the shipped hazard. `retireHazard`'s third argument defaults to 1, so the
+      // running sum is the same sum it always was.
+      const neutral = simulateMatch(a, b, { ...opts, condition: [invert(1), invert(1)] })
+      expect(neutral.totalPoints, `seed ${i}`).toBe(bare.totalPoints)
+      expect(neutral.retired?.pointNumber ?? null, `seed ${i}`).toBe(bare.retired?.pointNumber ?? null)
+      // ...and a worn pair really is more breakable. If this line could not fail, the option would
+      // not be wired to anything – the null-arm hazard CLAUDE.md warns about.
+      const worn = simulateMatch(a, b, { ...opts, condition: [0, 0] })
+      if ((worn.retired ? 1 : 0) !== (bare.retired ? 1 : 0)) moved += 1
+    }
+    expect(moved, 'the condition option must change outcomes, or it is not wired up').toBeGreaterThan(0)
+  })
+
+  it('⭐ (c) HIS SENTENCE, AS A NUMBER: arriving at 85 is materially safer than arriving at 50', () => {
+    // Held at a fixed pair and a fixed seed set, so length cannot do the work – the axis the
+    // measurement found doing ALL of it before this shipped.
+    const a = player('a', 45)
+    const b = player('b', 45)
+    const rateAt = (condition: number) => {
+      let stopped = 0
+      for (let i = 0; i < 900; i++) {
+        const res = simulateMatch(a, b, { ...OPTS(`fresh-${i}`), condition: [condition, condition] })
+        if (res.retired) stopped += 1
+      }
+      return stopped / 900
+    }
+    const fresh = rateAt(85)
+    const worn = rateAt(50)
+    expect(worn, 'the worn pair must break more often').toBeGreaterThan(fresh)
+    // The curve's own arithmetic over that span, which the measured rates must be in the region of.
+    expect(retireDurability(50) / retireDurability(85)).toBeGreaterThan(1.8)
+    // ...and the pre-27.08 model said EXACTLY ZERO here, which is the whole complaint.
+    expect(conditionMatchFactor(85)).toBe(conditionMatchFactor(100))
+  })
+})
+
+/** Identity, written so `condition: [1, 1]` in the test above cannot be mistaken for a CONDITION of
+ *  1 – the neutral arm passes conditions whose multiplier is exactly the shipped one, which is the
+ *  pivot, not the number 1. */
+function invert(multiplier: number): number {
+  return RETIRE_DURABILITY_PIVOT - ((multiplier - 1) * 100) / RETIRE_DURABILITY_SPAN
+}
 
 // A `Side` import that is used only to keep the type surface honest in this file.
 export type _Side = Side

@@ -214,6 +214,19 @@ export function kidMatchPlayerFor(
       {
         ...raw,
         age: kidAgeExact(world.week, world.profile.birthMonth, world.profile.birthDay),
+        // ⭐ AND THE CONDITION ITSELF, beside the factor it produced (27.08). `factor` is the
+        // STRENGTH half of condition and it is already inside the five attributes below; this is the
+        // BREAKABILITY half, which `retireHazard` reads through `retireDurability` and which nothing
+        // else reads at all. Written from the SAME `world.condition` one line above `factor` is, so
+        // the two halves of one number cannot disagree about the girl who took the court - and it is
+        // frozen into `WorldMatch.a` beside her skills, so a re-watch three seasons later replays
+        // the match that was played (`MatchPlayer.condition` argues that in full).
+        //
+        // ⚠ NEITHER `applySurfaceStyle` NOR `applyKit` TOUCHES IT, and neither should: a hard court
+        // and a dead frame change how she PLAYS, not how worn out she turned up. Both spread the
+        // player through, so it survives the composition unchanged - which is the whole reason it can
+        // be written at the top of it.
+        condition: world.condition,
         serve: raw.serve * factor,
         ret: raw.ret * factor,
         composure: raw.composure * factor,
