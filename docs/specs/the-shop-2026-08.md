@@ -512,6 +512,23 @@ professional era, which the same probe measures at a **median of season 2** (ope
 warning is about being USABLE, not about being VISIBLE». VISIBLE is settled; BUYABLE early is not, and
 this is the decision that needs him:
 
+⚙⚙ **SETTLED 27.08 – (a), and his reason is better than the option's own.** «магазин есть и всё, мы
+не можем запретить там что-то покупать».
+
+⭐ **That closes §2e-5 by RETIRING IT, not by satisfying it.** A shop the player can see but not use
+is a shop that lies about itself, and «the money must go somewhere else first» was written as a
+property of the SHELF when it was only ever a property of the ECONOMY. The economy already enforces
+it and the measurement says so: 89% of `player` careers and 100% of `grinder` careers buy nothing
+before season 4 without being stopped, because they have nothing to buy with. The four that do had
+banked six figures. **A gate would have taken a real decision away from the four families who earned
+it, to make a number in this file true.**
+
+⚠ §2e-5 is therefore struck as an acceptance condition and kept as an OBSERVATION – the figure is
+still worth re-taking when the shelf grows, because a cheap shelf and an expensive one are different
+questions, but it can no longer fail a slice.
+
+
+
 - **(a) leave it** – 89% of `player` careers and 100% of `grinder` careers never buy before season 4
   at all, and the four that do are families that genuinely banked six figures by season 3. Shipped as
   this, because inventing a gate the spec does not have is not slice 1's to do.
