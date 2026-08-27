@@ -44,24 +44,24 @@ reads longer than the work it implies.
   graduation do not exist in it. **If the last year ends in June, `delta` stops being zero and 1
   dissolves on its own.** Three observations, one repair.
 
-- [ ] **2. «кнопка "Продолжить год", а при нажатии мы попадаем в the College League – как будто можно
+- [x] **2. «кнопка "Продолжить год", а при нажатии мы попадаем в the College League – как будто можно
   тоже наш флоу использовать с неймингом кнопки – Play College Open, а уже потом Закончить год»** –
   ⚠ True. The label knows ONE pause inside a year (her birthday) and round 26 added a second. ⭐ The
-  function's own comment already forbids this one case earlier. Spec §2.
+  function's own comment already forbids this one case earlier. Spec §2. ⚙ **BUILT** (`e355fdd`). ⚠ And the brief was wrong twice: it is not «the championship pause» – over 12 birth months × 4 years, **April–August (5/12) reach the fixture on «Another year», September–March (7/12) on «Finish the year»**, so BOTH shipped labels lied and which one depends only on her birth month. And `collegeLeagueRevealOpen` could not be the predicate – it is true exactly while the button is off screen. Measured after: **0 mismatches over 12 × 4**.
 
 - [ ] **3. «сотая ракетка мира приезжает в колледж и проигрывает там =))»** – ⚠ **True and measured.**
   The student field draws 44–68 against a professional MIDDLE of 52–62: it is calibrated at the level
   of ranks 30–150, which is where a world #100 sits. **She is playing her equals and they should not
   be her equals.** ⚠⚠ But see 9 – the fix may be at the other end. Spec §3.
 
-- [ ] **4. «на экране итогов матча the College League написано Professional ranking – как будто нет»**
+- [x] **4. «на экране итогов матча the College League написано Professional ranking – как будто нет»**
   – ⚠ True. `LadderTrack` has three members and no fourth answer, so a fixture that awards nothing
   must still name a table. ⚠⚠ **This exact defect was fixed once before** and `PendingView.ladder` IS
-  that fix; it came back because the type cannot say «neither». Spec §4.
+  that fix; it came back because the type cannot say «neither». Spec §4. ⚙ **BUILT** (`8ebdea2`). ⚠ And «the compiler will find every reader» was false: `LADDER_LABEL[x ?? 'domestic']` kept type-checking and would have printed **«National»** over a college draw. ⭐ **Any `??` default on a widened field defeats that technique** – a lesson wider than this item.
 
-- [ ] **5. «на время колледжа на вкладке Season кнопки подачи заявок и планирования недели задизаблим»**
+- [x] **5. «на время колледжа на вкладке Season кнопки подачи заявок и планирования недели задизаблим»**
   – ⚠ True. `SeasonScreen.vue` contains no reference to college at all. ⭐ The ENGINE is correct – it
-  refuses with the college sentence – so the defect is entirely about WHEN he learns it. Spec §5.
+  refuses with the college sentence – so the defect is entirely about WHEN he learns it. Spec §5. ⚙ **BUILT** (`3b5a28d`). ⚠ And my enumeration was incomplete: **four surfaces refuse, not two**, and the fourth – «Play it and watch» – refused **in SILENCE**, because `advanceRefusal` returns `'ending'` and `'ending'` is the one stop reason with no copy in `STOP_REASON_TEXT`. ⭐ Three controls were correctly left LIVE (the two E2 cancels and the booked-vacation tap), each verified against `guardNotEndedForGood`.
 
 - [x] **6. «И опять на те же грабли: "Her country called this year…" во всплывашке сверху и матчи
   только постфактум»** – ⚠ True, and it is the shape round 26 #6/#7 fixed for the League one file
