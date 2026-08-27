@@ -354,8 +354,30 @@ export interface PendingView {
    *
    *  It rides on the pending view rather than being re-derived in the component for the same reason
    *  `temperatureC` does: the event has already dropped out of `upcoming` by the time it is played,
-   *  and a second derivation of "which ladder is this" is a second thing to get wrong. */
-  ladder: LadderTrack
+   *  and a second derivation of "which ladder is this" is a second thing to get wrong.
+   *
+   *  ⚠⚠ NULL MEANS «NONE OF THE THREE», AND IT IS THE ROUND-27 #4 HALF OF THE SAME BUG. The owner,
+   *  27.08: «на экране итогов матча the College League написано Professional ranking – как будто
+   *  нет». `LadderTrack` is `'domestic' | 'itf' | 'wta'` – three real tables and no fourth answer –
+   *  so a fixture played in NONE of them still had to name one, and the College League was carried
+   *  as `'wta'` with a note saying the screen would not print it. The screen printed it: the box
+   *  score's own «… · {ladder} ranking» line had no amateur branch, and «Professional» is
+   *  `LADDER_LABEL.wta`. That is this field's founding bug read from the other end – two ranks are
+   *  not being compared across two currencies, ONE table is being named over a fixture that awards
+   *  nothing at all.
+   *
+   *  ⛔ NOT A FOURTH `LadderTrack` MEMBER: this is the ABSENCE of a table, not another one, and
+   *  `LADDER_LABEL`, `LADDER_TRACKS` and `LadderViews` are total records that would all have to be
+   *  taught a ladder that does not exist. ⛔ AND NOT A SECOND BOOLEAN BESIDE IT: two fields for one
+   *  fact is precisely how the first version of this bug happened.
+   *
+   *  ⚠ THE SECOND FIXTURE IS THE NATIONS CUP AND IT IS NOT ON THIS VIEW YET. The tie is played
+   *  outside all three tables too (`engine/nationalTeam.ts`: no points, no cheque), and spec §6
+   *  routes it through `TournamentFlow`. Whoever builds that sets this to `null` and the ranking
+   *  line stays off by construction – the type can say «neither» now, so nothing has to remember to.
+   *  ⚠ What that wave DOES have to write is its own amateur sentence: the splash's «a student field
+   *  awards neither» is the College League's, and a national squad is not a student field. */
+  ladder: LadderTrack | null
   /** HER rank in `ladder`, or null when she holds no counting result in it.
    *
    *  ⚠ NULL IS NOT #1 and it is not the tie floor either – the same distinction `LadderView.rank`

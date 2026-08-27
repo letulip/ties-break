@@ -349,6 +349,79 @@ describe('⭐⭐⭐ #7 – and the replay is still there afterwards, in the feed
 })
 
 // =================================================================================================
+// ⭐⭐⭐ ROUND 27 #4 – «PROFESSIONAL RANKING» OVER A MATCH THAT AWARDS NOTHING
+// =================================================================================================
+//
+// The owner, 27.08: «на экране итогов матча the College League написано Professional ranking – как
+// будто нет».
+//
+// ⚠ IT LIVES IN THIS FILE RATHER THAN A ROUND-27 ONE BECAUSE THE HARNESS IS THE CLAIM. Reaching the
+// box score takes a career walked to the fork, answered «college», pressed to a championship week
+// and driven through the takeover's own controls – `walkToTheChampionship` + `openShell` above – and
+// a second copy of that setup is a second thing to keep in step with the engine. The item is round
+// 27's; the surface is round 26's.
+//
+// ⚠⚠ AND THE BOX SCORE IS WHY THIS IS A MOUNT AND NOT A VIEW ASSERTION. `pending.ladder === null` is
+// pinned on the engine in tests/college-league.test.ts; what THAT cannot say is that the screen
+// reads it. The shipped defect was precisely a screen that had an amateur branch on ONE of its two
+// ranking lines – so the engine was asserted, the splash was asserted, and the line he was actually
+// looking at was covered by neither.
+describe('⭐⭐⭐ ROUND 27 #4 – the box score names no table when the fixture is played in none', () => {
+  beforeEach(() => {
+    setActivePinia(createPinia())
+    backing.clear()
+    document.body.innerHTML = ''
+  })
+
+  /** The subtitle under the Win/Loss badge – «her vs the opponent», plus the table on a tour event. */
+  function boxScoreLine(w: ReturnType<typeof mount>) {
+    return w.findAll('.tf-card p.hint').find((p) => p.text().includes(' vs '))
+  }
+
+  it('⭐⭐⭐ ...and the mutation proof: put a table back on the view and the line comes back', async () => {
+    const { world } = walkToTheChampionship('r27-flow-ladder')
+    const { w, game } = await openShell(world)
+
+    // Begin -> the pre-match card -> «Skip», which reveals the round and flips to the box score.
+    // The reveal command is the tour's own, driven through the ENGINE exactly as case #6/4 does.
+    const drive = (fn: (wld: WorldState) => void) => async () => {
+      fn(world)
+      game.snapshot = toSnapshot(world)
+      await flushPromises()
+    }
+    vi.spyOn(game, 'tournamentReveal').mockImplementation(drive(revealTournamentRound))
+    const begin = w.findAll('button').find((b) => b.text().trim() === 'Begin')
+    expect(begin, 'the brief`s own CTA').toBeTruthy()
+    await begin!.trigger('click')
+    await flushPromises()
+    const skip = w.findAll('button').find((b) => b.text().trim() === 'Skip')
+    expect(skip, 'the pre-match card`s own skip').toBeTruthy()
+    await skip!.trigger('click')
+    await flushPromises()
+
+    // Not vacuous: the post-match box score really is the screen being read.
+    expect(w.find('.tf-result-head').exists(), 'the box score is on screen').toBe(true)
+    const line = boxScoreLine(w)
+    expect(line, 'and it carries its own subtitle').toBeTruthy()
+
+    // ⭐⭐⭐ THE ITEM. No table is named, because the fixture is played in none.
+    expect(line!.text(), 'the two names, and nothing about a table').not.toMatch(/ranking/i)
+    expect(w.text(), 'and the word he read is nowhere on the screen').not.toContain('Professional')
+
+    // ⚠⚠ THE PROOF THAT THE ASSERTION ABOVE CAN FAIL, and it is the shipped defect itself: the view
+    // used to carry `ladder: 'wta'`. Put that back and the line states «Professional ranking» again.
+    // A test that cannot go red on the broken version is not this test.
+    const snap = game.snapshot!
+    game.snapshot = { ...snap, pending: { ...snap.pending!, ladder: 'wta' } }
+    await flushPromises()
+    expect(boxScoreLine(w)!.text(), 'the defect, reproduced through the one field that caused it').toContain(
+      'Professional ranking',
+    )
+    w.unmount()
+  })
+})
+
+// =================================================================================================
 // ⚠⚠ MUTATION ARMS – run by hand before believing any of the above (CLAUDE.md: "mutate the thing you
 // think you are covering and watch it fail").
 //
@@ -370,4 +443,9 @@ describe('⭐⭐⭐ #7 – and the replay is still there afterwards, in the feed
 //   6. `src/style.css`: change `.tf-body`'s `overflow-y` to `visible`.
 //      -> the phone case goes red on «and it really scrolls», which is the half that keeps the
 //         finale's Continue reachable when the poster grows by one line.
+//   7. ROUND 27 #4: `src/engine/world/snapshot.ts`, `collegeLeaguePendingView`: set `ladder: 'wta'`
+//      again (the shipped value). -> the round-27 case goes red on «the two names, and nothing about
+//      a table», with «Professional ranking» in the box score's subtitle. ⚠ Its SECOND arm is the
+//      same mutation applied to the view in-test, so this one runs on every green run rather than
+//      by hand – but the source mutation is what proves the engine half.
 // =================================================================================================

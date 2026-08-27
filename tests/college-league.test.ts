@@ -489,6 +489,32 @@ describe('the championship awards nothing, and that is the constraint', () => {
     }
   }, 240_000)
 
+  it('⭐⭐⭐ ROUND 27 #4 – the reveal names NO table: `ladder` is null, not a placeholder', () => {
+    // The owner, 27.08: «на экране итогов матча the College League написано Professional ranking –
+    // как будто нет». The view used to carry `ladder: 'wta'` – a placeholder chosen because ONE of
+    // the screen's two ranking lines had an amateur branch – and `LADDER_LABEL.wta` is
+    // «Professional», which is what the other line printed.
+    //
+    // ⚠ THE ASSERTION IS ABOUT THE ENGINE'S ANSWER AND NOT ABOUT A STRING ON A SCREEN. `LadderTrack`
+    // has three members and this fixture is played in none of them; `null` is the type being able to
+    // say «neither», which is the whole repair (`PendingView.ladder`). The tour's own reveal still
+    // names its track – pinned over a walked career in tests/ladder-separation.test.ts – so this is
+    // the absence of a table rather than the field going quiet.
+    const { world, rng } = atTheFork('r27-league-ladder')
+    answerCollegeAndDepart(world, rng)
+    resumeFromCollege(world, rng)
+    expect(collegeLeagueRevealOpen(world), 'the walk really reached a championship').toBe(true)
+
+    const pending = toSnapshot(world).pending
+    expect(pending, 'and the reveal really reached the snapshot').toBeTruthy()
+    expect(pending!.ladder, 'no table at all – the fixture awards nothing').toBeNull()
+    // The three facts that make that true rather than tidy, all on the same view.
+    expect(pending!.tier, 'no rung either').toBeNull()
+    expect(pending!.points, 'nothing to award').toBe(0)
+    expect(pending!.kidRank, 'and no rank to print in a table she is not in').toBeNull()
+    expect(pending!.opponent.rank, 'on either side').toBeNull()
+  }, 120_000)
+
   it('⚠ every match row is a FRIENDLY and is KEPT – it is not evidence, and it is not prunable', () => {
     // `friendly` is the one predicate the radar, the avatar's emotion, the knock history and the
     // Weekly Story read to decide whether a match is evidence about her form. `keep` is why the

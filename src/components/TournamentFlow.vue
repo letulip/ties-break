@@ -98,8 +98,22 @@ const kidFullName = computed(() =>
 // played, so a component re-deriving "which ladder is this" is a second place to get it wrong.
 const kidRank = computed<number | null>(() => pending.value?.kidRank ?? null)
 /** "National" / "International" - the player-facing name of the table these numbers are in, defined
- *  once in LADDER_LABEL so this screen cannot invent a seventh word for it. */
-const ladderLabel = computed(() => LADDER_LABEL[pending.value?.ladder ?? 'domestic'])
+ *  once in LADDER_LABEL so this screen cannot invent a seventh word for it.
+ *
+ *  ⭐⭐⭐ ROUND 27 #4 - NULL WHEN THE FIXTURE IS PLAYED IN NO TABLE AT ALL, and every line that
+ *  prints this is now gated on it rather than on `amateur`. The owner: «на экране итогов матча the
+ *  College League написано Professional ranking - как будто нет».
+ *
+ *  ⚠⚠ AND THE `?? 'domestic'` THAT USED TO BE ON THIS LINE IS WHY THE COMPILER WAS NOT ENOUGH.
+ *  `PendingView.ladder` became `LadderTrack | null` in the engine and this expression went on
+ *  type-checking, because the nullish default swallowed the new case and handed `LADDER_LABEL` a
+ *  key it always had - the screen would have gone on saying "National" over a college draw instead
+ *  of "Professional", which is a different wrong word rather than a fixed one. A default is a
+ *  SECOND answer to a question the engine has already answered; the null has to travel. */
+const ladderLabel = computed<string | null>(() => {
+  const track = pending.value?.ladder ?? null
+  return track === null ? null : LADDER_LABEL[track]
+})
 /** ...and the shared "#N or Unranked" rule, so a girl with no counting result in THIS table is not
  *  introduced on the splash as the tie floor she shares with half the field. */
 const kidRankText = computed(() => rankLabel(kidRank.value ?? 0, kidRank.value !== null))
@@ -903,8 +917,14 @@ const matchMeta = computed(() => (stats.value ? matchStatMeta(stats.value) : nul
         <!-- ⭐⭐⭐ ROUND 26 #6 – AND AN AMATEUR FIXTURE NAMES NO TABLE, because it is played in
              none. This line exists to stop two ranks being compared across two currencies; on a
              student championship there is no currency at all, and printing «International ranking»
-             under a college draw would be the exact lie the ladder split was built to end. -->
-        <p v-if="!amateur" class="hint tf-first-ladder">{{ ladderLabel }} ranking</p>
+             under a college draw would be the exact lie the ladder split was built to end.
+
+             ⭐ ROUND 27 #4 RE-POINTED, SAME BEHAVIOUR: the gate is `ladderLabel` – the TABLE's own
+             field – rather than `amateur`, which is the RUNG's. They agree on every fixture that
+             exists today and they are answers to two different questions, and this line is about
+             the table. ⚠ The `v-else` sentence is still the College League's own: a second amateur
+             fixture (the Nations Cup, spec §6) needs its own words here, not these. -->
+        <p v-if="ladderLabel !== null" class="hint tf-first-ladder">{{ ladderLabel }} ranking</p>
         <p v-else class="hint tf-first-ladder">No ranking points and no prize money – a student field awards neither</p>
       </Card>
 
@@ -1105,8 +1125,19 @@ const matchMeta = computed(() => (stats.value ? matchStatMeta(stats.value) : nul
       <!-- ⚠ THE RESULTS TABLE THE OWNER WAS LOOKING AT (31.07). It printed her ITF rank under her name
            whatever the tournament was, so a National box score introduced her as #118 in a table that
            had just paid her nothing. It names its ladder now, for the same reason the Stats screen
-           does: a rank with no table beside it is only ever right by accident. -->
-      <p class="hint" style="margin: 0 0 12px">{{ kidShort }} vs {{ oppShort }} · {{ ladderLabel }} ranking</p>
+           does: a rank with no table beside it is only ever right by accident.
+
+           ⭐⭐⭐ ROUND 27 #4 – AND THE SAME SCREEN, TWENTY-SEVEN DAYS LATER, WITH NO TABLE TO NAME.
+           This line had no amateur branch – the splash two hundred lines up did – so a college box
+           score read «… · Professional ranking», which is `LADDER_LABEL.wta` arriving off a
+           placeholder in the engine's own view. That is the item the owner filed, quoted in his own
+           words on `ladderLabel` in the script above and on `PendingView.ladder` in the protocol.
+           It draws NO ranking clause when the fixture is played in no table: both ranks in the
+           header below are null there, so what is left is the two names, which is the whole of what
+           this line has to say about a student match. -->
+      <p class="hint" style="margin: 0 0 12px">
+        {{ kidShort }} vs {{ oppShort }}<template v-if="ladderLabel !== null"> · {{ ladderLabel }} ranking</template>
+      </p>
       <table>
         <thead>
           <tr>

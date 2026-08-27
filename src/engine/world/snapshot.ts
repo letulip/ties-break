@@ -878,10 +878,21 @@ function collegeLeaguePendingView(world: WorldState): PendingView | undefined {
     // She is at a university and the family is not paying a coach – `collegeCoachFactor` is the
     // programme's staff, not a man on a fare. Nobody travelled with her, and the card says nothing.
     coachTravelled: false,
-    // ⚠ THE LADDER IS CARRIED BECAUSE THE TYPE HOLDS IT AND THE SCREEN DOES NOT PRINT IT HERE. Both
-    // ranks below are null, so there is no comparison for a table name to qualify; `TournamentFlow`
-    // states the amateur rule in that line's place.
-    ladder: 'wta',
+    // ⭐⭐⭐ ROUND 27 #4 – NO TABLE AT ALL, AND THE TYPE CAN SAY SO NOW. The owner: «на экране итогов
+    // матча the College League написано Professional ranking – как будто нет».
+    //
+    // ⚠⚠ THIS LINE USED TO READ `'wta'` UNDER A COMMENT SAYING «the screen does not print it here»,
+    // AND THE COMMENT WAS WRONG ABOUT A SCREEN IT DOES NOT OWN. The splash had an amateur branch;
+    // the post-match BOX SCORE did not, and printed «… · Professional ranking» over a fixture that
+    // awards nothing – `LADDER_LABEL.wta`, arriving from this literal. A view field chosen to be
+    // harmless because one reader ignores it is a fact waiting for a second reader, which is what
+    // `PendingView.ladder` exists to stop: it was added so no screen would invent the answer, and a
+    // placeholder here is the engine inventing it instead.
+    //
+    // `null` is «none of the three», the same shape `tier: null` above carries for the rung, and it
+    // is a fact about this competition rather than a default: `resolveCollegeLeague` writes no
+    // result row and no cheque, so there is no table for a rank to be measured in.
+    ladder: null,
     // ⚠⚠ NULL ON BOTH SIDES, AND IT IS THE SAME RULING `PendingView.ladder` CARRIES READ FROM THE
     // OTHER END. Her professional rank is a number in a table this fixture is not played in, and the
     // student across the net has none at all; printing hers beside the other woman's blank would
