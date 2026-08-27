@@ -66,6 +66,74 @@ strong for the field. **The two are the same decision.**
 
 ---
 
+## 1a. ⚠⚠ The iceberg under §1 – the school model is one country's, applied to twenty-four
+
+He saw it before I did: «это же тащит и школьные возраста с собой, как мне кажется, так что "айсберг"
+оказался еще больше. На счет 12 класса – это реально так происходит или всё-таки наша додумка?»
+
+**Verified: `src/engine/kidLife.ts` never reads `profile.country`. Not once.** The whole school model
+is `ECONOMY.school.lastGrade: 12`, `SCHOOL_CUTOFF_MONTH: 9`, and «grade G runs from age G+5 to G+6» –
+first grade at six, twelfth grade ending at eighteen. That is the **United States**, and the game
+offers **twenty-four countries** (`composables/countries.ts`). ⚠ And her grade is on screen: the Kid
+screen's ladder prints it from `gradeOf`, so the assumption is not buried in the engine, it is shown
+to the player as a fact about her life.
+
+⭐ **THIS IS THE THIRD TIME THIS EXACT PATTERN HAS TURNED UP IN A WEEK.** Round 26 #2 deleted the rule
+that shut a college place by nationality («по-моему в каждой стране есть домашний универ»); the
+need-based aid layer is still US-only by statute (`collegeOffer.ts:701`, and that one is deliberate);
+and now the school itself. **An American default that nobody chose, applied to everyone, and visible.**
+
+### What is actually true in the world – and it is NOT what I expected
+
+The grade COUNT varies far more than the leaving AGE does, because countries that start earlier run
+more years:
+
+| | school starts | years | leaves at about |
+| --- | --- | --- | --- |
+| United States | 6 | 12 | 17–18 |
+| Russia | 6–7 | 11 | 17 |
+| England | 4–5 | 13 | 18 |
+| Australia | 5–6 | 13 | 17–18 |
+| New Zealand (his example, not in the game) | 5 | 13 | 17–18 |
+
+⭐⭐ **THE LEAVING AGE CONVERGES ON 17–18 ALMOST EVERYWHERE, AND THAT IS THE FINDING.** «Twelve grades»
+is a local fact; «out of school at seventeen or eighteen» is close to a universal one. So the model's
+OUTPUT is broadly defensible and its MECHANISM is not – and the output sits at the **top** of the real
+range, never below 18.00.
+
+⚠ **THESE FIGURES ARE MY READING AND THEY ARE NOT YET RESEARCH.** This repo keeps `docs/research/`
+for exactly this, and no engine constant should be set from the table above until it is written up
+there the way `injury-stats-by-age.md` and `retirement-and-withdrawal.md` were. **Sourced first, then
+used.**
+
+### Which makes his ±1 not flavour but a correction
+
+> «давай вариативность добавим, ±1 год, и калибруй поле под 17-19»
+
+Today: school ends at **18.00–18.92, and there is no variation at all** – the cohort rule is a single
+deterministic line on birth month. Real leaving ages run roughly **17.0–18.9**. So the variation he
+asked for is what moves the model from one edge of reality onto the whole of it.
+
+**Two ways to build it, and they are not the same feature:**
+
+- **(a) per-country school length** – the honest fix for §1a: `lastGrade` and the start age become
+  country facts, so a Russian girl finishes at 17 and an English one at 18 *because of where she
+  lives*. ⚠ Needs the research above first, needs a value for all twenty-four, and ⭐ it makes the
+  country choice mean a third thing (see `docs/backlog/geography-and-country.md`).
+- **(b) a cohort ± 1 independent of country** – a girl is occasionally a year ahead or behind her
+  band. Cheap, delivers the 17–19 spread §3 wants, and is true everywhere. ⚠ But it models
+  «she skipped or repeated a year», which is a different claim from «her country's school is shorter».
+
+**Recommendation: (b) now, (a) when the research exists.** (b) unblocks §3 immediately and is honest
+on its own terms; (a) is the real repair and should not be guessed at. ⚠ Doing (a) badly – a made-up
+`lastGrade` per country – would be worse than the American default, because a wrong specific is harder
+to notice than an obvious generic.
+
+⚠ **AND THE TWO MUST NOT BOTH LAND UNCOORDINATED**: (a) plus (b) together would widen the spread twice
+and put freshmen at sixteen. Whichever ships second reads the other before choosing its range.
+
+---
+
 ## 2. The button offers a year and plays a tournament
 
 > «в интерфейсе колледжа появляется кнопка "Продолжить год", а при нажатии мы попадаем в "the College
@@ -127,6 +195,12 @@ compared the number against the pro pyramid, so a well-defended constant sat unc
 **Direction, not a number:** the field belongs below the professional tail – centre in the low
 forties, top of the draw about where the tail's median is, so an NCAA champion reads as a fifth-hundred
 professional.
+
+⚙ **AND THE TARGET IS A RANGE, NOT A POINT (his ruling, 27.08): «калибруй поле под 17-19».** With §1a's
+variation shipped a freshman is 17.0–18.9 rather than a single age, so the field is calibrated against
+a two-year span of development. ⭐ That is better than it sounds: a spread of freshman strengths against
+a fixed field is what real student tennis looks like – some arrive able to win it, some do not – and it
+means the fixture stops having one correct answer.
 
 ⚠⚠ **DO NOT PICK IT BLIND. The league feeds the call-up.** The national-team ladder reads her league
 result on the 0.15 / 0.40 / 0.65 / 0.85 rungs, and round 24 measured the college years at **2.63–2.72
@@ -223,15 +297,17 @@ enabling something it refuses, pointed the other way.
 
 | # | what | blocked on | size |
 | --- | --- | --- | --- |
+| 0 | ⚠ **RESEARCH FIRST: school in the twenty-four countries** – start age, years, leaving age, written into `docs/research/` the way the injury and retirement anchors were. Nothing in §1a ships off my table | – | S |
 | 1 | **§1 the entry age** – move the question, keep the departure | ⚠ **his ruling on the lost junior season** | M |
+| 1b | **§1a variation (b)** – a cohort ± 1, giving freshmen 17.0–18.9 | after §1, and ⚠ never at the same time as (a) | S |
 | 2 | **§4 the ladder label** – `LadderTrack | null`, both fixtures | – | S |
 | 3 | **§2 the button** – the pause reason reaches the snapshot | – | S |
 | 4 | **§5 the frozen Season controls** – disabled, with the engine's own sentence beside them | – | S |
-| 5 | **§3 the field strength** – with the call-up ladder re-measured | §1 first | M |
+| 5 | **§3 the field strength**, calibrated against the 17–19 span – with the call-up ladder re-measured | §1 **and** §1a-(b) first | M |
 
 **Acceptance for the wave as a whole:**
 
-1. She enrols at 18.0–18.9 and is never twenty in her first year.
+1. She enrols at **17.0–18.9** and is never twenty in her first year.
 2. No screen names a table a fixture does not award in – checked on the College League AND the
    Nations Cup.
 3. The button never offers a year when the press plays a tournament.
@@ -240,4 +316,5 @@ enabling something it refuses, pointed the other way.
    tariffs.
 5. ⚠ No control on the Season tab both LOOKS pressable and refuses – and none that the engine still
    allows has been disabled by mistake.
-6. The frozen MAIN capture is unmoved – none of this draws.
+6. ⚠ No school figure in the engine traces to my table rather than to a sourced research file.
+7. The frozen MAIN capture is unmoved – none of this draws.
