@@ -590,7 +590,8 @@ export function collegeLeagueWeek(world: WorldState): boolean {
   return inCollege(world) && isCollegeLeagueWeek(world.week)
 }
 
-/** ⭐⭐⭐ ROUND 27 #2 – WILL THE NEXT PRESS OF THE COLLEGE BUTTON END AT THE CHAMPIONSHIP?
+/** ⭐⭐⭐ ROUND 27 #2 – WHICH FIXTURE WILL THE NEXT PRESS OF THE COLLEGE BUTTON END AT?
+ *  («…END AT THE CHAMPIONSHIP?» when it was written – round 27 #6 gave it a second answer.)
  *
  *  The owner, 27.08: «в интерфейсе колледжа появляется кнопка "Продолжить год", а при нажатии мы
  *  попадаем в "the College League" – как будто можно тоже наш флоу использовать с неймингом кнопки
@@ -610,24 +611,30 @@ export function collegeLeagueWeek(world: WorldState): boolean {
  *  labelled «Finish the year» plays it. One predicate covers both, because it names what the press
  *  DOES rather than which pause the year is standing in.
  *
- *  ⚠ IT WALKS THE WEEKS THE PRESS WILL WALK AND ASKS THE LOOP'S OWN TWO QUESTIONS, in the loop's own
- *  order – `resumeFromCollege` in `world.ts` is the list, and it has exactly two mid-year stops. A
- *  championship BEHIND a birthday is not this press's business: that press ends at the cake, the
- *  button after it says the fixture's name, and the year is never offered something it will not
- *  reach. ⚠⚠ IF A THIRD MID-YEAR STOP IS EVER ADDED TO THAT LOOP, IT HAS TO BE ADDED HERE TOO, or
- *  this button starts promising a tournament that a new pause arrives in front of.
+ *  ⚠ IT WALKS THE WEEKS THE PRESS WILL WALK AND ASKS THE LOOP'S OWN QUESTIONS, in the loop's own
+ *  order – `resumeFromCollege` in `world.ts` is the list. A championship BEHIND a birthday is not
+ *  this press's business: that press ends at the cake, the button after it says the fixture's name,
+ *  and the year is never offered something it will not reach.
+ *
+ *  ⚠⚠ IT SAID «EXACTLY TWO MID-YEAR STOPS» AND CARRIED A WARNING – «IF A THIRD MID-YEAR STOP IS EVER
+ *  ADDED TO THAT LOOP, IT HAS TO BE ADDED HERE TOO, or this button starts promising a tournament that
+ *  a new pause arrives in front of». ⚙ **ROUND 27 #6 IS THAT THIRD STOP AND THE WARNING IS
+ *  COLLECTED**: the Nations Cup tie now pauses the year exactly as the championship does, so without
+ *  the clause below a press labelled «Finish the year» would have played it – and, on the enrolment
+ *  weeks whose year opens between the two fixtures, a press labelled «Play the College League» would
+ *  have played the tie instead. The predicate became a WALK RETURNING WHICH ONE, and
+ *  `collegeLeagueIsNextStop` is now one reading of it.
+ *
+ *  ⚠ ONE SCAN FOR BOTH ANSWERS, DELIBERATELY. Two predicates over the same weeks is two places to get
+ *  the ORDER wrong, and the order is the whole content: a college year that opens on season week 13
+ *  meets the tie (14) before the championship (12), and one that opens on 34 meets them the other way
+ *  round. At most one of them can be true of a given press, and a single walk is what makes that a
+ *  fact rather than a hope.
  *
  *  The span is `resumeFromCollege`'s own arithmetic: a year in progress finishes against the start it
  *  was paused with, a fresh one opens at this week (`openCollegeYear().week === world.week`), and a
  *  pause can only fire on a week STRICTLY inside the span – the boundary week banks the year instead,
  *  which is the ruling `resumeFromCollege` states for a birthday landing on it. */
-/** WHICH FIXTURE THE NEXT PRESS ENDS AT, or `null` when it ends at a cake or at the year's end.
- *
- *  ⚠ ONE SCAN FOR BOTH ANSWERS, DELIBERATELY. Two predicates walking the same weeks is two places to
- *  get the ORDER wrong, and the order is the whole content: a college year that opens on season week
- *  13 meets the tie (14) before the championship (12), and one that opens on 34 meets them the other
- *  way round. Exactly one of them can be true of a given press, and a single walk is what makes that
- *  a fact rather than a hope. */
 export type CollegeStop = 'college-league' | 'call-up' | null
 
 export function collegeNextStop(world: WorldState): CollegeStop {
