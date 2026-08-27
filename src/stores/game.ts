@@ -405,6 +405,24 @@ export const useGameStore = defineStore('game', {
         await this.refreshSlots()
       })
     },
+    /** ⭐ v63, the shop slice 1: buy a rung of the shelf. `stakeCents` is the amount on an 'open'
+     *  rung (an investment names a minimum) and is ignored on a 'fixed' one. `refreshSlots` because
+     *  money moved – the same reason the two bookings above refresh and `chooseGift` does not. */
+    async buyAsset(itemId: string, stakeCents?: number) {
+      await this.run(async () => {
+        const res = this.takeOk(await request({ type: 'buyAsset', itemId, stakeCents, baseRevision: this.revision }))
+        this.applySnapshot(res)
+        await this.refreshSlots()
+      })
+    },
+    /** ...and sell one, at the value the engine stored – never at a price this side computed. */
+    async sellAsset(itemId: string) {
+      await this.run(async () => {
+        const res = this.takeOk(await request({ type: 'sellAsset', itemId, baseRevision: this.revision }))
+        this.applySnapshot(res)
+        await this.refreshSlots()
+      })
+    },
     /** Book a practice match (watchable friendly) on an empty future week. */
     async bookPractice(week: number, withCoach: boolean) {
       await this.run(async () => {

@@ -61,6 +61,7 @@ import type {
   KitGrade,
   KitLine,
   KitLineView,
+  ShopRowView,
   WorldEvent,
   WorldEventCategory,
 } from '../../shared/protocol'
@@ -282,6 +283,15 @@ const EXPENSE_META: { key: ExpenseCategory; label: string }[] = [
   // `WorldEventCategory`'s own note calls it "the first cost in the game that is not tennis" – and
   // because it is the only row here that can be the whole bill for a year at a time.
   { key: 'tuition', label: 'College tuition' },
+  // ⚠ v63, THE SHOP – AND THIS ROW IS A NET, NOT A GROSS, WHICH IS THE ONE THING TO KNOW ABOUT IT.
+  // Buying books a negative and selling books a positive under the SAME category (the idiom a
+  // cancelled vacation already uses), and `financeWindow` folds signed totals – so a car bought for
+  // $110,000 and sold for $91,091 inside one window shows here as the $18,909 it actually cost. That
+  // is the shop's whole thesis on one line (spec §3b: the vehicle family exists to LOSE money). The
+  // two gross prices are on the ledger tab, one row each way, where gross flows belong.
+  // ⚠ A window in which the family only BOUGHT therefore shows the full price, which is correct and
+  // is also why §2e-5 exists: the shelf must not be the biggest thing on this list before season 4.
+  { key: 'shop', label: 'The shop' },
   { key: 'other', label: 'Other' },
 ]
 const EXPENSE_KEYS = new Set<string>(EXPENSE_META.map((m) => m.key))
@@ -336,6 +346,7 @@ const CAT_COLOR: Record<string, string> = {
   vacation: 'var(--cat-vacation)',
   practice: 'var(--cat-practice)',
   tuition: 'var(--cat-tuition)',
+  shop: 'var(--cat-shop)',
   other: 'var(--cat-other)',
 }
 function catColor(key: string): string {
@@ -785,12 +796,126 @@ function showAllTransactions(): void {
 // look the owner ruled for Stats on 02.08 - see `.money-tabs` in the style block for the ruling and
 // the mechanism. Nothing is unmounted for the sake of it: `v-if` is what buys the screen back, and
 // each arm is exactly the block that used to be there.
-type MoneyTab = 'spend' | 'bills' | 'history'
+// ================================ THE SHELF (v63) =================================================
+// docs/specs/the-shop-2026-08.md §2, §3a-c. The parent's own money, and the first screen in this game
+// where it is his to enjoy.
+//
+// ⚠⚠ EVERY NUMBER BELOW IS THE ENGINE'S. This block reads `snapshot.shop` and formats it – it never
+// prices a rung, never applies a rate, never subtracts a paid price from a current one and never
+// rounds a percentage. `shopView` (engine/world/shop.ts) did all four, once, which is the same rule
+// `kitLines` above is written under and the reason §5 stores `valueCents` instead of deriving it.
+const shop = computed(() => game.snapshot?.shop ?? null)
+const shopRows = computed<ShopRowView[]>(() => shop.value?.rows ?? [])
+/** The three families, in the order the shelf is read. The note under each is what the family IS
+ *  FOR – a shop where the only difference is price is a list, not a decision (spec §3). */
+const SHOP_FAMILIES: { key: ShopRowView['family']; title: string; note: string }[] = [
+  {
+    key: 'investment',
+    title: 'Investments',
+    note: 'Money that stays money. Each one names a minimum, not a price – put in what you like above it.',
+  },
+  {
+    key: 'car',
+    title: 'Cars',
+    note: 'Every one of these is worth less next season than it is today. That is what a car is.',
+  },
+  { key: 'house', title: 'Property', note: 'Slow, large, and the end of paying somebody else rent.' },
+]
+function shopRowsOf(family: ShopRowView['family']): ShopRowView[] {
+  return shopRows.value.filter((r) => r.family === family)
+}
+/** ⭐ §2 – WHAT AN EMPTY SHELF SAYS: the cheapest thing on it, by name and price. «Never a locked
+ *  row, a progress bar or a teaser» – so this is a real object at a real number, and the engine
+ *  chose it (`shop.cheapestId`) rather than this screen sorting the rows itself. */
+const shopCheapest = computed(() => shopRows.value.find((r) => r.id === shop.value?.cheapestId) ?? null)
+
+/** What the player has typed into an 'open' rung, in DOLLARS as typed – the input's own units, kept
+ *  as a string so a half-typed figure is not silently coerced to a number. `stakeCentsFor` is the
+ *  one place it becomes cents, and the engine re-validates the minimum either way. */
+const stakeDollars = ref<Record<string, string>>({})
+function stakeCentsFor(row: ShopRowView): number {
+  const typed = Number(stakeDollars.value[row.id] ?? '')
+  if (!Number.isFinite(typed) || typed <= 0) return row.entryCents
+  return Math.round(typed * 100)
+}
+/** ⚠ ADVISORY, NOT THE GATE. The engine refuses a stake under the minimum and a stake over the
+ *  wallet with its own sentences (`buyAsset`); this only decides whether the control is pressable,
+ *  which is the R10-16 pairing – a disabled control and a refused click telling one story. */
+function canBuy(row: ShopRowView): boolean {
+  if (game.busy || row.valueCents !== null) return false
+  const cents = row.stake === 'open' ? stakeCentsFor(row) : row.entryCents
+  return cents >= row.entryCents && cents <= (game.snapshot?.fundsCents ?? 0)
+}
+/** «loses 6% a season» / «+7% a season». ⚠ THE UNIT IS THE GAME'S OWN – a season IS the 52-week
+ *  block every other figure on this screen is quoted over, and the spec's own «/yr» and «a season»
+ *  are the same span. The number is `annualRatePct`, whole, rounded once in the engine. */
+function rateLine(row: ShopRowView): string {
+  if (row.annualRatePct < 0) return `Loses ${-row.annualRatePct}% a season`
+  if (row.annualRatePct === 0) return 'Holds its value'
+  return `Gains about ${row.annualRatePct}% a season`
+}
+
+interface PendingShop {
+  kind: 'buy' | 'sell'
+  id: string
+  label: string
+  amountCents: number
+  changeCents: number | null
+}
+const pendingShop = ref<PendingShop | null>(null)
+function askBuy(row: ShopRowView): void {
+  if (!canBuy(row)) return
+  const amountCents = row.stake === 'open' ? stakeCentsFor(row) : row.entryCents
+  pendingShop.value = { kind: 'buy', id: row.id, label: row.label, amountCents, changeCents: null }
+}
+function askSell(row: ShopRowView): void {
+  if (game.busy || row.valueCents === null) return
+  pendingShop.value = {
+    kind: 'sell',
+    id: row.id,
+    label: row.label,
+    amountCents: row.valueCents,
+    changeCents: row.changeCents,
+  }
+}
+/** ⚠ THE SALE'S SENTENCE NAMES THE DIFFERENCE, TO THE CENT, and it is the same sentence the ledger
+ *  row carries – both take `changeCents` off the engine rather than working it out. A player who has
+ *  to subtract two prices himself has been shown two prices, not a loss (spec §2e-1). */
+const shopConfirmMessage = computed(() => {
+  const p = pendingShop.value
+  if (!p) return ''
+  if (p.kind === 'buy') {
+    return `Buy ${p.label} for ${formatCents(p.amountCents)}? It comes out of the family's money this week.`
+  }
+  const tail =
+    p.changeCents === null || p.changeCents === 0
+      ? 'exactly what it cost'
+      : p.changeCents < 0
+        ? `${formatCents(-p.changeCents)} less than it cost`
+        : `${formatCents(p.changeCents)} more than it cost`
+  return `Sell ${p.label} for ${formatCents(p.amountCents)}? That is ${tail}.`
+})
+function confirmShop(): void {
+  const pending = pendingShop.value
+  pendingShop.value = null
+  if (!pending) return
+  if (pending.kind === 'buy') void game.buyAsset(pending.id, pending.amountCents)
+  else void game.sellAsset(pending.id)
+}
+
+//
+// ⚠ THE FOURTH IS THE SHOP (v63, docs/specs/the-shop-2026-08.md §2), AND IT IS THE OWNER'S OWN
+// PLACEMENT: «Можно как раз на вкладку Family budget отдельным пунктом добавить как вариант.» The
+// spec's §2 leaves no design here – one row in this list and one `v-if` block, no new navigation and
+// no new bottom-bar tab, because it is money and money already has a home. It sits LAST because the
+// other three are about money that has already moved and this one is about money that has not.
+type MoneyTab = 'spend' | 'bills' | 'history' | 'shop'
 const screenTab = ref<MoneyTab>('spend')
 const TAB_OPTIONS = [
   { value: 'spend', label: 'Spending', title: 'Where the money went in the chosen period' },
   { value: 'bills', label: 'Bills', title: 'The recurring costs the family has signed up to' },
   { value: 'history', label: 'History', title: 'Every season, and every transaction' },
+  { value: 'shop', label: 'Shop', title: 'What the family can buy with what is left' },
 ]
 </script>
 
@@ -1234,12 +1359,106 @@ const TAB_OPTIONS = [
         </Card>
       </div>
 
+      <!-- ========================= 8. THE SHELF (v63) =========================
+           docs/specs/the-shop-2026-08.md §2. The owner's own placement - a fourth chapter here
+           rather than a new screen, because it is money and money already has a home.
+
+           ⚠ THE LOCKED ARM NAMES A DOOR, NOT A TARGET. §2: visible from the first week of the
+           professional era and never in the junior years, and on an empty shelf the screen names
+           the cheapest reachable thing and its price - "never a locked row, a progress bar or a
+           teaser". So there is no per-row lock anywhere below: while the shelf is shut the whole
+           chapter is one sentence, and once it is open every price is on screen whether the family
+           can reach it or not. A shop window is a thing you look into before you can afford it. -->
+      <Card v-if="screenTab === 'shop' && shop" class="money-panel money-shop">
+        <Eyebrow as="h2">The shelf</Eyebrow>
+        <p v-if="!shop.unlocked" class="money-panel-note">{{ shop.lockedDetail }}</p>
+        <template v-else>
+          <p class="money-panel-note">
+            This is the family's own money, and none of it is hers. Nothing here makes her better,
+            faster or fitter - it is what the money becomes once the tennis has stopped needing it.
+          </p>
+          <!-- ⭐ THE EMPTY SHELF'S OWN SENTENCE: a real thing at a real price. -->
+          <p v-if="shopCheapest" class="money-panel-note is-empty-shelf">
+            They own nothing yet. The cheapest thing here is
+            {{ shopCheapest.label }}, from {{ formatCents(shopCheapest.entryCents) }}.
+          </p>
+          <StatRow
+            v-else
+            class="money-row"
+            label="What they own"
+            :meta="`${shop.ownedCount} ${shop.ownedCount === 1 ? 'thing' : 'things'}`"
+            :value="formatCents(shop.ownedValueCents)"
+            tone="positive"
+          />
+          <div v-for="family in SHOP_FAMILIES" :key="family.key" class="shop-family">
+            <div class="shop-family-head">{{ family.title }}</div>
+            <p class="shop-family-note">{{ family.note }}</p>
+            <div v-for="row in shopRowsOf(family.key)" :key="row.id" class="shop-row">
+              <div class="shop-row-head">
+                <span class="shop-row-name">{{ row.label }}</span>
+                <span class="shop-row-rate" :class="{ 'is-down': row.annualRatePct < 0 }">
+                  {{ rateLine(row) }}
+                </span>
+              </div>
+              <p class="shop-row-blurb">{{ row.blurb }}</p>
+              <!-- OWNED: what they paid, what it is worth, and the difference as ONE figure the
+                   engine computed. This screen subtracts nothing. -->
+              <div v-if="row.valueCents !== null" class="shop-row-owned">
+                <StatRow
+                  class="money-row"
+                  label="Worth now"
+                  :meta="`paid ${formatCents(row.paidCents ?? 0)}`"
+                  :value="formatCents(row.valueCents)"
+                  :tone="(row.changeCents ?? 0) < 0 ? 'negative' : 'positive'"
+                />
+                <p class="shop-row-change" :class="{ 'is-down': (row.changeCents ?? 0) < 0 }">
+                  {{ formatCentsSigned(row.changeCents ?? 0) }}
+                  <span v-if="row.changePct !== null">since they bought it ({{ row.changePct }}%)</span>
+                  <span v-else>since they bought it</span>
+                </p>
+                <button class="shop-action" :disabled="game.busy" @click="askSell(row)">
+                  Sell it for {{ formatCents(row.valueCents) }}
+                </button>
+              </div>
+              <!-- NOT OWNED: the price, and a control that is pressable or is not. -->
+              <div v-else class="shop-row-buy">
+                <label v-if="row.stake === 'open'" class="shop-stake">
+                  <span class="shop-stake-label">
+                    How much, from {{ formatCents(row.entryCents) }}
+                  </span>
+                  <input
+                    v-model="stakeDollars[row.id]"
+                    class="shop-stake-input"
+                    type="number"
+                    inputmode="numeric"
+                    :min="Math.round(row.entryCents / 100)"
+                    step="100"
+                    :placeholder="String(Math.round(row.entryCents / 100))"
+                  />
+                </label>
+                <span v-else class="shop-row-price">{{ formatCents(row.entryCents) }}</span>
+                <button class="shop-action" :disabled="!canBuy(row)" @click="askBuy(row)">
+                  {{ row.stake === 'open' ? 'Put it in' : 'Buy it' }}
+                </button>
+              </div>
+            </div>
+          </div>
+        </template>
+      </Card>
+
       <ConfirmDialog
         v-if="pendingKit"
         :message="kitConfirmMessage"
         confirm-label="Buy it"
         @confirm="confirmKit"
         @cancel="pendingKit = null"
+      />
+      <ConfirmDialog
+        v-if="pendingShop"
+        :message="shopConfirmMessage"
+        :confirm-label="pendingShop.kind === 'buy' ? 'Buy it' : 'Sell it'"
+        @confirm="confirmShop"
+        @cancel="pendingShop = null"
       />
     </ScreenShell>
   </template>
@@ -1771,5 +1990,148 @@ const TAB_OPTIONS = [
   font-size: 11.5px;
   line-height: 1.35;
   color: var(--money-in);
+}
+
+/* ============================== THE SHELF (v63) ==============================
+   The kit block's own idiom one card down, deliberately: a family, its rows, a price and a control.
+   Nothing here spells a hex - every colour is a token from src/style.css. */
+.money-shop .is-empty-shelf {
+  color: var(--ink);
+}
+
+.shop-family {
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid var(--line);
+}
+
+.shop-family-head {
+  font-family: var(--font-heading);
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: -0.015em;
+  color: var(--ink);
+}
+
+.shop-family-note {
+  margin: 4px 0 0;
+  font-size: 12px;
+  line-height: 1.35;
+  color: var(--ink-soft);
+  text-wrap: pretty;
+}
+
+.shop-row {
+  margin-top: 12px;
+  padding: 10px;
+  border: 1px solid var(--line);
+  border-radius: 11px;
+}
+
+.shop-row-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.shop-row-name {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+
+/* ⚠ THE LOSING ROWS SAY SO IN THE INK AS WELL AS IN THE WORDS, because the whole point of the car
+   family is that it goes the other way (spec §3b). `--money-out` is the app's one colour for money
+   leaving, so the shelf borrows it rather than inventing a second red. */
+.shop-row-rate {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--money-in);
+  white-space: nowrap;
+}
+
+.shop-row-rate.is-down {
+  color: var(--money-out);
+}
+
+.shop-row-blurb {
+  margin: 4px 0 0;
+  font-size: 12px;
+  line-height: 1.35;
+  color: var(--ink-soft);
+  text-wrap: pretty;
+}
+
+.shop-row-owned,
+.shop-row-buy {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.shop-row-owned {
+  display: block;
+}
+
+.shop-row-change {
+  margin: 6px 0 0;
+  font-size: 11.5px;
+  line-height: 1.35;
+  color: var(--money-in);
+}
+
+.shop-row-change.is-down {
+  color: var(--money-out);
+}
+
+.shop-row-price {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.shop-stake {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.shop-stake-label {
+  font-size: 11px;
+  color: var(--ink-soft);
+}
+
+.shop-stake-input {
+  width: 8.5em;
+  max-width: 100%;
+  padding: 7px 9px;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  background: transparent;
+  color: var(--ink);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.shop-action {
+  margin-top: 8px;
+  padding: 8px 12px;
+  border: 1px solid var(--line);
+  border-radius: 11px;
+  background: transparent;
+  color: var(--ink);
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.shop-action:disabled {
+  opacity: 0.5;
+  cursor: default;
 }
 </style>

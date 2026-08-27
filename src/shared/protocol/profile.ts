@@ -140,3 +140,48 @@ export interface RecoveryBuff {
   untilWeek: number
   factor: number
 }
+
+// --- The shop (schema v63) ---------------------------------------------------
+// docs/specs/the-shop-2026-08.md §5. The parent's own money, turned into things.
+
+/** ONE THING THE FAMILY OWNS – a row in `WorldState.assets`.
+ *
+ *  ⚠ `valueCents` IS STORED AND NOT DERIVED, and the spec's reason (§5) is this repo's own scar
+ *  tissue: «a derived value would have to be recomputed identically by the screen and the ledger,
+ *  and this repo has been bitten twice by two sides asking different functions about one question.»
+ *  One writer (`revalueAssets`, at the top of the weekly tick), every reader takes the field. From
+ *  slice 2 the value is genuinely path-dependent – drift accumulates and cannot be recomputed from
+ *  `paidCents` at all – so the field is not a cache that happens to be redundant today, it is the
+ *  same field arriving one slice before its second reason.
+ *
+ *  ⚠⚠ NO `readyWeek`, NO `frozenUntilWeek`, AND THE SPEC'S OWN SHAPE IS DECLINED HERE ON PURPOSE.
+ *  §5 draws both fields as `number | null`, always null until slices 3 (commissioning) and 4
+ *  (freeze). Pouring them now would buy nothing and cost something:
+ *
+ *    1. IT SAVES NO MIGRATION, which is the only thing it was for. This repo's shipped idiom for
+ *       exactly this case is an OPTIONAL key whose ABSENCE is the true value – `masseurReturnDue?`
+ *       and `injuryHistory[].weeksSaved?` (v59) both went in with no back-fill, because "the key is
+ *       not there" already means what the new state means. Slice 3 can add `readyWeek?: number`
+ *       (absent = delivered) and slice 4 `frozenUntilWeek?: number` (absent = sellable) the same
+ *       way, and every row written by slice 1 is then already correct. The second migration this
+ *       shape was meant to avoid is not merely small – it is ZERO – and it is zero *because* these
+ *       two fields are not here as required nullables.
+ *    2. A REQUIRED FIELD NOTHING CAN WRITE IS A SHAPE THAT LIES. Every reader of this file would
+ *       find `readyWeek: null` on every row of every save and go looking for the writer that makes
+ *       it a week. There is none, and there is no commissioning system for it to belong to. The
+ *       version ladder in `world/state.ts` is a record of what was TRUE at each version; a v63 save
+ *       claiming a delivery date it can never carry makes that record wrong at the one place it is
+ *       read from.
+ *    3. THE SEAM IS KEPT WITHOUT THE STATE. `sellableAsset` in `world/shop.ts` is the predicate
+ *       slice 4 widens, and slice 3's build wait is a second predicate beside it – neither needs a
+ *       field to exist today, and both name the fields they will read when they do. */
+export interface OwnedAsset {
+  /** the `ECONOMY.shop.catalogue` id – one row per id, never two (see `WorldState.assets`). */
+  id: string
+  boughtWeek: number
+  /** what left the wallet. Never re-written: the loss §2e-1 measures is `valueCents - paidCents`,
+   *  and a paid price that moved would make that difference a different question every week. */
+  paidCents: number
+  /** what it is worth THIS week, in cents, whole. Written by `revalueAssets` on every tick. */
+  valueCents: number
+}

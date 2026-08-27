@@ -79,14 +79,21 @@ beforeEach(() => {
 })
 
 // =================================================================================================
-// ITEM 1 - THE MONEY SCREEN IS THREE TABS
+// ITEM 1 - THE MONEY SCREEN IS FOUR TABS
+//
+// ⚠ RE-AIMED BY THE SHOP (v63, docs/specs/the-shop-2026-08.md §2), NOT WEAKENED. Round 20 grouped the
+// budget into THREE chapters and this exact-equality list is what has held that shape ever since -
+// which is why a fourth entry had to come through here deliberately rather than by loosening the
+// assertion to `toContain`. The owner's own placement is «на вкладку Family budget отдельным
+// пунктом», so the shop is a fourth chapter and not a fourth screen, and the list still says exactly
+// which chapters exist and in what order. The three original arms below are untouched.
 // =================================================================================================
 describe('MoneyScreen - the budget is grouped into tabs', () => {
   it('opens on Spending, and Spending is the arm that owns the period switcher', () => {
     withSnapshot(snapshotAfter(20))
     const wrapper = mount(MoneyScreen, mountOpts)
     const tabs = wrapper.findAll('.money-tabs .tab-pill')
-    expect(tabs.map((t) => t.text())).toEqual(['Spending', 'Bills', 'History'])
+    expect(tabs.map((t) => t.text())).toEqual(['Spending', 'Bills', 'History', 'Shop'])
     expect(tabs[0].attributes('aria-pressed')).toBe('true')
     // The summary and the 12w/season switcher are reads of one period, so they share one tab.
     expect(wrapper.find('.money-summary').exists()).toBe(true)

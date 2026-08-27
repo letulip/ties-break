@@ -89,6 +89,26 @@ export type WorldEventCategory =
    *  v51 migration back-fills a `null` offer rather than inventing one, and a null offer is charged
    *  nothing. Same discipline as v44's 'facility' split and v50's empty college ledger. */
   | 'tuition'
+  /** 'shop' (v63, docs/specs/the-shop-2026-08.md §5) is THE FAMILY'S OWN MONEY LEAVING AND COMING
+   *  BACK – what a bought asset cost, and what a sold one returned. Two-sided by design and by the
+   *  house's own idiom: a sale is booked under the SAME category as the purchase, exactly as a
+   *  cancelled vacation refunds under 'vacation', so a car bought for $110,000 and sold for $91,091
+   *  reads on the breakdown as the $18,909 it actually cost the family. ⭐ THAT NETTING IS THE
+   *  FEATURE, not a shortcut: the shop's whole thesis (§3b) is that the vehicle family exists to
+   *  LOSE money, and a single line whose size IS the loss says so better than a gross pair.
+   *
+   *  ⚠ THE GROSS FLOWS ARE NOT LOST, they live where gross flows live: `financialEvents` carries the
+   *  purchase row and the sale row separately, one 'expense' and one 'income', so the ledger tab
+   *  shows both prices and the breakdown shows the difference. Two questions, two surfaces.
+   *
+   *  ⚠ IT IS THE SECOND COST IN THE GAME THAT IS NOT TENNIS ('tuition' was the first), and the
+   *  reason it gets its own bucket rather than joining 'other' is 'staff''s: a purchase the player
+   *  cannot find on the breakdown is the academy's $20,879 mistake again – you paid, and you could
+   *  not tell.
+   *
+   *  ⚠ AN OLD SAVE HAS NO ROWS OF IT, by construction: `assets` back-fills empty (see migrations.ts
+   *  v62 -> v63) and the shelf did not exist, so nothing is retconned. */
+  | 'shop'
   | 'income'
   | 'interest'
   | 'physio'

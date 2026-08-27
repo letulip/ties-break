@@ -195,6 +195,14 @@
      against its neighbours: nearest hue in the table is `gear` #d97f52 at 20deg, this sits at 6deg
      with far more chroma, so the donut cannot confuse them. */
   --cat-tuition: #c0453f;
+  /* ⭐ THE SHOP (v63, docs/specs/the-shop-2026-08.md). The SECOND spending hue outside the sport's
+     palette, for `tuition`'s own reason: it is the second cost in the game that is not tennis. An
+     orchid magenta, chosen off the gap in the wallet table rather than off taste - the two nearest
+     hues on the donut are `vacation` #e0748f (350deg, far lighter and pinker) and `travel` #9a86e0
+     (252deg), so this sits ~40deg and ~58deg away from its neighbours and cannot be confused with
+     either. It stays clear of `tuition`'s red because a shop row and a college bill are the two
+     things a parent most needs to tell apart on a season where both are large. */
+  --cat-shop: #b0479e;
   --cat-other: #8b95a1;
   /* The grid-only three: hours with no line on the wallet. */
   --cat-school: #7f8fa6;

@@ -353,6 +353,65 @@ export interface KitDealView {
   minEventsPerSeason: number
 }
 
+// --- THE SHOP (schema v63, docs/specs/the-shop-2026-08.md) ---------------------------------------
+// The parent's own money, on the Budget tab beside Spend / Bills / Ledger. `KitLineView`'s shape and
+// `KitLineView`'s rule: the screen never prices a rung and never derives a loss.
+
+/** One rung of the shelf, as the Money screen reads it. */
+export interface ShopRowView {
+  id: string
+  family: 'investment' | 'car' | 'house'
+  /** 'fixed' – one price. 'open' – the family names an amount, at least `entryCents`. */
+  stake: 'fixed' | 'open'
+  label: string
+  blurb: string
+  /** the price, or the MINIMUM on an 'open' rung. */
+  entryCents: number
+  /** ⚠ A WHOLE NUMBER OF PERCENT A YEAR, SIGNED, and negative on every car by design (§3b: «this
+   *  family exists to LOSE money and that is the point»). Derived from `annualRateBps` at the
+   *  boundary rather than on screen – the owner's rule of 26.08, «у пользователя целые в
+   *  интерфейсе», the same one `shownCondition` follows. */
+  annualRatePct: number
+  /** what the family paid for it, or null when it does not own one. */
+  paidCents: number | null
+  /** what it is worth now (the stored `valueCents`), or null when it does not own one. */
+  valueCents: number | null
+  /** ⚠ THE LOSS, AS ONE SIGNED NUMBER OF CENTS, computed here so no screen subtracts two figures
+   *  and no two screens can subtract them differently (§5's whole argument for storing the value).
+   *  Null when unowned. */
+  changeCents: number | null
+  /** ...and the same difference as a WHOLE percentage of what was paid, rounded ONCE here. Null when
+   *  unowned, and null on a zero-paid row rather than a division by nothing. */
+  changePct: number | null
+  /** which week it was bought, so the screen can say how long they have had it. Null when unowned. */
+  boughtWeek: number | null
+  /** can the family afford to open this rung THIS WEEK? False never hides the row and never draws a
+   *  progress bar (§2: «never a locked row, a progress bar or a teaser») – the price stays on screen
+   *  and the control is simply not pressable. */
+  affordable: boolean
+}
+
+/** THE SHELF. Present on every snapshot; `unlocked` is what the junior years turn off. */
+export interface ShopView {
+  /** ⭐ §2 – visible from the first week of the PROFESSIONAL era, never in the junior years. The
+   *  same one-way door the masseur's seat uses (`activeLadderOf === 'wta'`), so it cannot close
+   *  again behind a layoff or the college freeze. */
+  unlocked: boolean
+  /** the sentence to print instead of the shelf while it is shut – written once in the engine so a
+   *  disabled control and a refused click cannot tell two stories. */
+  lockedDetail: string
+  /** every rung, cheapest first. */
+  rows: ShopRowView[]
+  /** ⭐ §2 – WHAT AN EMPTY SHELF SAYS: the cheapest thing on it and its price, so the screen names a
+   *  real object at a real number rather than teasing one. Null once the family owns anything. */
+  cheapestId: string | null
+  /** how many rungs the family owns – the screen's own «is the shelf empty» question, answered here
+   *  rather than by counting rows on the far side. */
+  ownedCount: number
+  /** what everything they own is worth added up, in cents. Zero when they own nothing. */
+  ownedValueCents: number
+}
+
 /** What a kit deal actually commits both sides to. FIXED AT ARRIVAL and never re-read from
  *  `ECONOMY` afterwards, which is the rule that makes the deadline mean something: a letter held for
  *  three weeks is the same letter, and the spec's §2 warning ("terms never improve while you hold

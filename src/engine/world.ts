@@ -290,6 +290,11 @@ export { birthdayOffer, birthdayOfferFor, birthdayOptions, birthdayWords, birthd
 // reader and because a future copy surface should find it on the same barrel (world/means.ts).
 import { familyMeans, householdWalletCents, meansOfCents, MEANS_BANDS } from './world/means'
 export { familyMeans, householdWalletCents, meansOfCents, MEANS_BANDS }
+// ⭐⭐ v63 – THE SHOP, SLICE 1 (docs/specs/the-shop-2026-08.md §2, §3a-c, §5). The parent's own
+// money, and the first shelf in this game that is his. Re-exported under the historical convention.
+import { assetValueCents, buyAsset, ownedAssets, revalueAssets, sellAsset, sellableAsset, shopCatalogue, shopItem, shopUnlocked, shopView, SHOP_LOCKED_DETAIL } from './world/shop'
+export { assetValueCents, buyAsset, ownedAssets, revalueAssets, sellAsset, sellableAsset, shopCatalogue, shopItem, shopUnlocked, shopView, SHOP_LOCKED_DETAIL }
+export type { ShopItem } from './world/shop'
 export type { FamilyMeans } from './world/means'
 
 // ⭐ R2-10 STEP 1 – THE PERSISTED SCHEMA DECLARES ITSELF IN `./world/state.ts` NOW.
@@ -1189,6 +1194,14 @@ export function createWorld(
     // identity in tests/coach-travel-edge.test.ts reproduces the pre-v62 hashes by dropping exactly
     // this key, which only works while the rest of the serialisation order is untouched.
     peakPhysical: physicalMean(withHeadStart(startingSkills(seed, profile), profile.birthMonth)),
+    // ⭐ v63 (the shop, slice 1): the family owns nothing on day one, and the shelf is not even
+    // visible – it opens with her professional career (`shopUnlocked`). Empty is the identity here
+    // in the plainest sense: there was no shop to buy from.
+    // ⚠ LAST KEY OF THE LITERAL, for the reason the masseur's three and `peakPhysical` above give:
+    // the frozen-career identity in tests/coach-travel-edge.test.ts reproduces each older schema's
+    // hashes by dropping exactly the keys appended since, which only works while every key stays in
+    // the order it was appended in.
+    assets: [],
   }
   addEvent(world, {
     week: 0,

@@ -119,6 +119,15 @@ export type ToWorker =
   // again on her birthday week. `giftId` is re-validated against the four the engine itself offered –
   // the worker is not the gate, so a stale dialog cannot record a gift this birthday never had.
   | { id: number; type: 'chooseGift'; giftId: string; baseRevision: number }
+  // ⭐⭐ v63, THE SHOP SLICE 1 (docs/specs/the-shop-2026-08.md §2/§5): the parent buys and sells with
+  // the family's OWN money. `stakeCents` is the amount on an 'open' rung – an investment names a
+  // minimum, not a price – and is ignored on a 'fixed' one, because the price of a car is the
+  // catalogue's and a screen that could send its own would be a screen that could name it.
+  // ⚠ EVERY REFUSAL IS RE-DERIVED ENGINE-SIDE (invariant 1): the junior gate, the already-owned
+  // rung, the minimum and the wallet are all checked again in `buyAsset`, so a tab left open on a
+  // career that has since gone somewhere else cannot spend.
+  | { id: number; type: 'buyAsset'; itemId: string; stakeCents?: number; baseRevision: number }
+  | { id: number; type: 'sellAsset'; itemId: string; baseRevision: number }
   // THE INBOX (v32): answer a letter. Both are refused past the deadline – the window is the
   // feature, not a courtesy – and `signOffer` is irreversible by design, which is why the UI puts a
   // ConfirmDialog in front of it and the engine puts nothing in front of the confirm.
@@ -280,6 +289,8 @@ export const REPLY_BY_COMMAND = {
   setPlan: 'snapshot',
   decideKnock: 'snapshot',
   chooseGift: 'snapshot',
+  buyAsset: 'snapshot',
+  sellAsset: 'snapshot',
   signOffer: 'snapshot',
   refuseOffer: 'snapshot',
   setPhysio: 'snapshot',

@@ -14,6 +14,8 @@ import {
   bookVacation,
   cancelVacation,
   bookPractice,
+  buyAsset,
+  sellAsset,
   hireCoach,
   hireMasseur,
   setMasseurSessions,
@@ -428,6 +430,17 @@ async function handle(msg: ToWorker): Promise<ToUI> {
     // a double-tap (or a stale dialog on a reloaded save) from recording a second row for one year.
     case 'chooseGift': {
       return mutate(msg.id, msg.baseRevision, (world) => chooseGift(world, msg.giftId))
+    }
+    // ⭐⭐ v63, THE SHOP SLICE 1: the parent buys and sells with the family's own money. Nothing here
+    // is a gate - `buyAsset` re-derives the professional-era unlock, the already-owned rung, the
+    // 'open' rung's minimum and the wallet, and `sellAsset` re-derives ownership, so a stale screen
+    // cannot spend or liquidate. Zero draws on any stream: the values are arithmetic on `boughtWeek`,
+    // which is why a purchase cannot move the world's dice (CLAUDE.md invariant 2).
+    case 'buyAsset': {
+      return mutate(msg.id, msg.baseRevision, (world) => buyAsset(world, msg.itemId, msg.stakeCents))
+    }
+    case 'sellAsset': {
+      return mutate(msg.id, msg.baseRevision, (world) => sellAsset(world, msg.itemId))
     }
     // THE INBOX (v32): the parent answers a letter. Both handlers go through the engine, which
     // re-checks the deadline - the UI's disabled button is a courtesy and the engine's refusal is the

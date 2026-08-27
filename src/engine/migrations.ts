@@ -1955,6 +1955,31 @@ export function migrateSave(raw: unknown): WorldState {
     v = 62
   }
 
+  // ⭐⭐ v62 -> v63: WHAT THE FAMILY OWNS (the shop, slice 1 –
+  // docs/specs/the-shop-2026-08.md §5). One array, and it back-fills EMPTY.
+  //
+  // ⚠ THERE IS NOTHING TO RECONSTRUCT, AND UNLIKE v62 ABOVE THAT IS THE END OF THE QUESTION rather
+  // than the start of it. A career that reached this build could not have bought anything: there was
+  // no shelf, no command, no ledger row and no category – so no earlier evidence exists to mine, and
+  // an invented row would hand a family a car nobody chose to buy. This is v26's `knock` case («both
+  // back-fill EMPTY, and unlike v18's milestones there is nothing to reconstruct»), not v62's.
+  //
+  // ⚠ AND THE CATALOGUE IS DELIBERATELY NOT PART OF THIS. `ECONOMY.shop.catalogue` is a CONSTANT
+  // (spec §5), so the shelf a migrated career sees is the shelf every career sees, and slices 2-7 can
+  // add a rung – or the whole elite ladder of §3f – without a second migration for the shop's
+  // contents. Only ownership persists.
+  //
+  // ⚠ A MIGRATED CAREER PLAYS IDENTICALLY, which is acceptance §2e-4 and is the honest claim here
+  // rather than a hope: an empty `assets` makes `revalueAssets` a no-op loop, no ledger row is
+  // written, no category appears in `financeWeeks`, and the shelf itself is invisible until
+  // `activeLadderOf` says professional. Idempotent (a non-array value is rewritten whole – v30's
+  // rule) and it writes no derived value at all: ZERO draws on any stream, so the frozen MAIN
+  // capture (41550 / e6b0c709) is untouched by construction.
+  if (v === 62) {
+    if (!Array.isArray(save.assets)) save.assets = []
+    v = 63
+  }
+
   if (v !== SAVE_SCHEMA_VERSION) {
     throw new Error(`Save schema ${v} is newer than supported ${SAVE_SCHEMA_VERSION}`)
   }

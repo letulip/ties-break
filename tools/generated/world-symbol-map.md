@@ -2,13 +2,13 @@
 
 # `engine/world` – area to owner
 
-The barrel `src/engine/world.ts` (1,909 lines) re-exports the decomposed modules under their historical names, so every importer sees one flat surface. That is a COMPATIBILITY contract, not a discovery one – this file is the discovery half.
+The barrel `src/engine/world.ts` (1,922 lines) re-exports the decomposed modules under their historical names, so every importer sees one flat surface. That is a COMPATIBILITY contract, not a discovery one – this file is the discovery half.
 
 Regenerate with `node scripts/world-map.mjs`; `node scripts/world-map.mjs --check` fails when it is stale, and CI runs that on every pull request.
 
 **Do not read this file to answer one question** – that is the habit it exists to replace. `node scripts/world-map.mjs <symbol>` prints the owner and the line, and a plain `grep <symbol> tools/generated/world-symbol-map.md` does the same for a partial name.
 
-298 exported names across 38 owning modules.
+310 exported names across 39 owning modules.
 
 ## Areas
 
@@ -25,6 +25,7 @@ Regenerate with `node scripts/world-map.mjs`; `node scripts/world-map.mjs --chec
 | `src/engine/world/endings.ts` | THE ENDINGS, WIRED INTO THE WORLD: the latch, the two questions, the four-year freeze and the guard that stops a stale screen mutating a career that has stopped | 13 |
 | `src/engine/world/multiWeek.ts` | ⭐ R2-13 PHASE 1 – THE FOUR-WEEK ADVANCE, AND THE TWO FACTS A SECOND WEEK BUTTON NEEDS | 13 |
 | `src/engine/world/sponsors.ts` | THE MONEY FROM OUTSIDE THE FAMILY: sponsors, the offers they make, and what a trip costs once somebody else is helping pay for it | 13 |
+| `src/engine/world/shop.ts` | ⭐⭐ THE SHOP, SLICE 1 – the tab, static prices, buy / own / sell | 12 |
 | `src/engine/world/mandatory.ts` | THE MANDATORY REGIME AND THE PENALTY LEDGER (W3-ACT2, act2-pro-tour.md §6) | 11 |
 | `src/engine/world/age.ts` | HER AGE: the band and the girl, and the birthday that lands in the feed | 9 |
 | `src/engine/world/kit.ts` | THE KIT SHE PLAYS WITH, AS A DECISION - the till, and what the Money screen reads off it | 8 |
@@ -293,6 +294,23 @@ THE MONEY FROM OUTSIDE THE FAMILY: sponsors, the offers they make, and what a tr
 - `rolloverKitAllowance` – `src/engine/world/sponsors.ts`
 - `sponsorNeedMet` – `src/engine/world/sponsors.ts`
 - `travelCostFor` – `src/engine/world/sponsors.ts`
+
+### `src/engine/world/shop.ts`
+
+⭐⭐ THE SHOP, SLICE 1 – the tab, static prices, buy / own / sell.
+
+- `assetValueCents` – `src/engine/world/shop.ts`
+- `buyAsset` – `src/engine/world/shop.ts`
+- `ownedAssets` – `src/engine/world/shop.ts`
+- `revalueAssets` – `src/engine/world/shop.ts`
+- `sellableAsset` – `src/engine/world/shop.ts`
+- `sellAsset` – `src/engine/world/shop.ts`
+- `SHOP_LOCKED_DETAIL` – `src/engine/world/shop.ts`
+- `shopCatalogue` – `src/engine/world/shop.ts`
+- `shopItem` – `src/engine/world/shop.ts`
+- `ShopItem` *(type)* – `src/engine/world/shop.ts`
+- `shopUnlocked` – `src/engine/world/shop.ts`
+- `shopView` – `src/engine/world/shop.ts`
 
 ### `src/engine/world/mandatory.ts`
 
