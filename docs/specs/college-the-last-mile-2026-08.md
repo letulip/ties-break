@@ -17,7 +17,7 @@ measured against the shipped code, not recalled.
 
 ---
 
-## 1. She is always a nineteen-year-old freshman, and one line decides it
+## 1. Every freshman is exactly 19.0–19.9, and one line decides it
 
 > «я вижу, что на первый год колледжа Alice исполняется 20 лет, в то время как ее соперницам 18 –
 > может быть мы что-то напутали с возрастом ухода в колледж? может быть это надо делать сразу после
@@ -45,7 +45,15 @@ of the freshman band rather than the bottom of it.
 and departure is «her last junior season, played rather than skipped», and the J rungs close on age 18
 inside it. Nobody chose a twenty-year-old freshman; it fell out of protecting that season.
 
-### The recommendation, and it keeps both
+### ⚙ THE RECOMMENDATION BELOW IS SUPERSEDED BY §1a – read that first
+
+⚠ **What follows was written before he cut the problem down, and it is kept as the record of why the
+cause matters even though the fix changed.** The diagnosis above still holds exactly: `delta === 0`
+is why every career reads the same age. But the repair is no longer «move the question» – see §1a,
+where the entry age is modelled directly and the fork does not move at all. **Do not build what this
+subsection proposes.**
+
+### The superseded recommendation, kept for its argument
 
 **Do not change `nextAcademicYearStart` to `>=`.** That enrols her the week she answers, which deletes
 the decision entirely – the comment already rejects it and is right to.
@@ -66,71 +74,64 @@ strong for the field. **The two are the same decision.**
 
 ---
 
-## 1a. ⚠⚠ The iceberg under §1 – the school model is one country's, applied to twenty-four
+## 1a. ⚙ REWRITTEN 27.08 – the iceberg was smaller than it looked, and he is the one who shrank it
 
-He saw it before I did: «это же тащит и школьные возраста с собой, как мне кажется, так что "айсберг"
-оказался еще больше. На счет 12 класса – это реально так происходит или всё-таки наша додумка?»
+I had this section arguing that the school model is one country's applied to twenty-four, and that
+fixing it needed per-country school calendars. **He cut that off, and he was right:**
 
-**Verified: `src/engine/kidLife.ts` never reads `profile.country`. Not once.** The whole school model
-is `ECONOMY.school.lastGrade: 12`, `SCHOOL_CUTOFF_MONTH: 9`, and «grade G runs from age G+5 to G+6» –
-first grade at six, twelfth grade ending at eighteen. That is the **United States**, and the game
-offers **twenty-four countries** (`composables/countries.ts`). ⚠ And her grade is on screen: the Kid
-screen's ladder prints it from `gradeOf`, so the assumption is not buried in the engine, it is shown
-to the player as a fact about her life.
+> «нам пока не обязательно к каждой стране индивидуально цепляться, мне кажется, надо просто понять
+> в каком возрасте идут в колледжи спортсмены»
 
-⭐ **THIS IS THE THIRD TIME THIS EXACT PATTERN HAS TURNED UP IN A WEEK.** Round 26 #2 deleted the rule
-that shut a college place by nationality («по-моему в каждой стране есть домашний универ»); the
-need-based aid layer is still US-only by statute (`collegeOffer.ts:701`, and that one is deliberate);
-and now the school itself. **An American default that nobody chose, applied to everyone, and visible.**
+**The game needs ONE number, not twenty-four school systems.** College entry age is not a consequence
+this game has to derive – it can simply be modelled, and everything below follows from that.
 
-### What is actually true in the world – and it is NOT what I expected
+### What is true about ATHLETES, which is the only population that matters here
 
-The grade COUNT varies far more than the leaving AGE does, because countries that start earlier run
-more years:
+- **Domestic American recruits** arrive at 18, sometimes 19.
+- ⭐ **International recruits in tennis arrive noticeably older** – 19, 20, not rarely 21 – because
+  they play the junior tour or try futures first. College tennis is one of the most international
+  fields in the NCAA, so this is not a rare tail, it is a large share of every roster.
+- **17 is a rarity in tennis**, not a normal case. My earlier «17–19» was wrong for athletes; it was
+  a schoolchild's range.
 
-| | school starts | years | leaves at about |
-| --- | --- | --- | --- |
-| United States | 6 | 12 | 17–18 |
-| Russia | 6–7 | 11 | 17 |
-| England | 4–5 | 13 | 18 |
-| Australia | 5–6 | 13 | 17–18 |
-| New Zealand (his example, not in the game) | 5 | 13 | 17–18 |
+⚠⚠ **WHICH PARTLY VINDICATES THE SHIPPED MODEL AND CHANGES WHAT §1 IS ABOUT.** A 19.0–19.9 freshman is
+**defensible for an international recruit**. What is NOT defensible is that she is 19.0–19.9 *and
+nothing else* – the shipped model has **no spread at all**, because the cohort rule is one
+deterministic line on birth month. **The defect is the absence of variance, not the value.**
 
-⭐⭐ **THE LEAVING AGE CONVERGES ON 17–18 ALMOST EVERYWHERE, AND THAT IS THE FINDING.** «Twelve grades»
-is a local fact; «out of school at seventeen or eighteen» is close to a universal one. So the model's
-OUTPUT is broadly defensible and its MECHANISM is not – and the output sits at the **top** of the real
-range, never below 18.00.
+### So §1 changes shape
 
-⚠ **THESE FIGURES ARE MY READING AND THEY ARE NOT YET RESEARCH.** This repo keeps `docs/research/`
-for exactly this, and no engine constant should be set from the table above until it is written up
-there the way `injury-stats-by-age.md` and `retirement-and-withdrawal.md` were. **Sourced first, then
-used.**
+| | before this rewrite | after |
+| --- | --- | --- |
+| the claim | «she is too old» | «there is no spread, and she sits at the older edge of a real range» |
+| the fix | move the fork question a year earlier | **model the entry age directly as a band, ~18–20** |
+| the cost | ⚠ her last junior season | ⭐ **none** – nothing about the junior calendar has to move |
+| what it touches | `forkDue`, `nextAcademicYearStart`, the school calendar | one band, read at the departure |
 
-### Which makes his ±1 not flavour but a correction
+⭐⭐ **AND THAT REMOVES THE DECISION I PUT TO HIM.** «Do we lose her last junior season?» was the price
+of moving the fork. Modelling the entry age directly does not move the fork at all, so the junior
+season stays and the question is withdrawn.
 
-> «давай вариативность добавим, ±1 год, и калибруй поле под 17-19»
+### The school finding is still true – it is just not this task
 
-Today: school ends at **18.00–18.92, and there is no variation at all** – the cohort rule is a single
-deterministic line on birth month. Real leaving ages run roughly **17.0–18.9**. So the variation he
-asked for is what moves the model from one edge of reality onto the whole of it.
+`src/engine/kidLife.ts` never reads `profile.country`, not once: `lastGrade: 12`, first grade at six,
+twelfth ending at eighteen, for all twenty-four countries the game offers, **and her grade is printed
+on the Kid screen**. That is a real observation and it is the third instance of one pattern in a week
+(round 26 #2's nationality-shut college place; the US-only need layer, which is deliberate by statute;
+this). ⚠ **But it does not pay for itself here**, and modelling twenty-four school systems to move one
+number would be the tail wagging the dog. **Filed to
+[geography-and-country.md](../backlog/geography-and-country.md) instead, where the other two country
+findings already live.**
 
-**Two ways to build it, and they are not the same feature:**
+### What still needs sourcing, and it is now one question instead of twenty-four
 
-- **(a) per-country school length** – the honest fix for §1a: `lastGrade` and the start age become
-  country facts, so a Russian girl finishes at 17 and an English one at 18 *because of where she
-  lives*. ⚠ Needs the research above first, needs a value for all twenty-four, and ⭐ it makes the
-  country choice mean a third thing (see `docs/backlog/geography-and-country.md`).
-- **(b) a cohort ± 1 independent of country** – a girl is occasionally a year ahead or behind her
-  band. Cheap, delivers the 17–19 spread §3 wants, and is true everywhere. ⚠ But it models
-  «she skipped or repeated a year», which is a different claim from «her country's school is shorter».
+⚠ **The figures above are my reading and are NOT research.** The order of magnitude I hold with
+confidence; the distribution I do not. If a constant is going to be set from it – and §3's field
+calibration depends on the band – it belongs in `docs/research/` first, sourced, exactly as
+`injury-stats-by-age.md` and `retirement-and-withdrawal.md` were before they moved a number.
 
-**Recommendation: (b) now, (a) when the research exists.** (b) unblocks §3 immediately and is honest
-on its own terms; (a) is the real repair and should not be guessed at. ⚠ Doing (a) badly – a made-up
-`lastGrade` per country – would be worse than the American default, because a wrong specific is harder
-to notice than an obvious generic.
-
-⚠ **AND THE TWO MUST NOT BOTH LAND UNCOORDINATED**: (a) plus (b) together would widen the spread twice
-and put freshmen at sixteen. Whichever ships second reads the other before choosing its range.
+**The one question: the age distribution of a first-year college tennis player, domestic against
+international.** One table. Not twenty-four school calendars.
 
 ---
 
@@ -196,9 +197,9 @@ compared the number against the pro pyramid, so a well-defended constant sat unc
 forties, top of the draw about where the tail's median is, so an NCAA champion reads as a fifth-hundred
 professional.
 
-⚙ **AND THE TARGET IS A RANGE, NOT A POINT (his ruling, 27.08): «калибруй поле под 17-19».** With §1a's
-variation shipped a freshman is 17.0–18.9 rather than a single age, so the field is calibrated against
-a two-year span of development. ⭐ That is better than it sounds: a spread of freshman strengths against
+⚙ **AND THE TARGET IS A RANGE, NOT A POINT (his ruling, 27.08).** He first said «под 17-19»; §1a's
+rewrite moves that to roughly **18–20**, because the population is athletes rather than schoolchildren
+and 17 is a rarity in tennis. So the field is calibrated against a two-year span of development. ⭐ That is better than it sounds: a spread of freshman strengths against
 a fixed field is what real student tennis looks like – some arrive able to win it, some do not – and it
 means the fixture stops having one correct answer.
 
@@ -297,9 +298,8 @@ enabling something it refuses, pointed the other way.
 
 | # | what | blocked on | size |
 | --- | --- | --- | --- |
-| 0 | ⚠ **RESEARCH FIRST: school in the twenty-four countries** – start age, years, leaving age, written into `docs/research/` the way the injury and retirement anchors were. Nothing in §1a ships off my table | – | S |
-| 1 | **§1 the entry age** – move the question, keep the departure | ⚠ **his ruling on the lost junior season** | M |
-| 1b | **§1a variation (b)** – a cohort ± 1, giving freshmen 17.0–18.9 | after §1, and ⚠ never at the same time as (a) | S |
+| 0 | ⚠ **RESEARCH FIRST, and it is now ONE table**: the age distribution of a first-year college tennis player, domestic against international. Written into `docs/research/` the way the injury and retirement anchors were. Nothing ships off my reading | – | S |
+| 1 | **§1 the entry age as a BAND (~18–20)**, modelled directly at the departure. ⭐ The fork does not move, so her last junior season is not spent and the question I put to him is withdrawn | row 0 | S |
 | 2 | **§4 the ladder label** – `LadderTrack | null`, both fixtures | – | S |
 | 3 | **§2 the button** – the pause reason reaches the snapshot | – | S |
 | 4 | **§5 the frozen Season controls** – disabled, with the engine's own sentence beside them | – | S |
@@ -307,7 +307,7 @@ enabling something it refuses, pointed the other way.
 
 **Acceptance for the wave as a whole:**
 
-1. She enrols at **17.0–18.9** and is never twenty in her first year.
+1. Her enrolment age has a real SPREAD across careers, inside the sourced band – rather than the single value every career reads today.
 2. No screen names a table a fixture does not award in – checked on the College League AND the
    Nations Cup.
 3. The button never offers a year when the press plays a tournament.
@@ -316,5 +316,5 @@ enabling something it refuses, pointed the other way.
    tariffs.
 5. ⚠ No control on the Season tab both LOOKS pressable and refuses – and none that the engine still
    allows has been disabled by mistake.
-6. ⚠ No school figure in the engine traces to my table rather than to a sourced research file.
+6. ⚠ No age constant in the engine traces to my reading rather than to a sourced research file.
 7. The frozen MAIN capture is unmoved – none of this draws.
