@@ -283,6 +283,42 @@ export interface CollegeState {
    *  value for a career that played its championships before the flow existed. The migration writes
    *  the explicit null and nothing is back-filled: a year already lived is not re-offered. */
   leagueReveal?: CollegeLeagueReveal | null
+  /** ⭐⭐⭐ v64 – THE NATIONS CUP TIE'S REVEAL, OPEN UNTIL HE HAS WALKED IT (round 27 #6, the owner's
+   *  «И опять на те же грабли … матчи только постфактум … проводить этот турнир по обычному флоу
+   *  турнира»).
+   *
+   *  ⚠⚠ A SECOND FIELD AND NOT A SECOND MEANING FOR `leagueReveal` ONE LINE UP. The two fixtures are
+   *  played two season weeks apart and are never open together, so one field with a `kind` on it
+   *  would have LOOKED cheaper – and it would have re-shaped a persisted object every save since v60
+   *  carries, which is a rewrite of shipped data rather than an append. Two optional fields is the
+   *  append-only move (invariant 3), and it also keeps `collegeLeagueRevealOpen` answering exactly
+   *  the question its name asks.
+   *
+   *  ⚠ PERSISTED BECAUSE IT BLOCKS, on `leagueReveal`'s own argument: `resumeFromCollege` will not
+   *  spend a year over an open one, so it is a question standing in front of the world, and an
+   *  unpersisted blocking state is the class of failure B1's law was written about. ⚠ AND THE OPEN
+   *  BIT IS THE HALF THAT CANNOT BE DERIVED: «is a tie waiting» reads as `pendingCallUp.week ===
+   *  world.week` right up to the moment he ANSWERS it – the week does not move while the year is
+   *  paused, so a derived predicate would go on refusing the press that closes it for ever.
+   *
+   *  ⚠ NULL – or absent, on every save older than v64 – MEANS NO REVEAL IS OPEN, which is the true
+   *  value for a career that played its ties before the flow existed. The migration writes the
+   *  explicit null and nothing is back-filled: a week already lived is not re-offered. */
+  callUpReveal?: CollegeCallUpReveal | null
+}
+
+/** ⭐⭐⭐ v64 – WHERE HE IS IN THE TIE'S REVEAL. `CollegeLeagueReveal`'s twin, field for field, and
+ *  deliberately a separate NAME rather than a shared shape: the two are cleared, opened and read by
+ *  different functions, and a shared alias is the first step towards one field serving both.
+ *
+ *  ⚠ `revealed === callUpRubbersOf(world, week).length` IS THE FINALE, exactly as it is one
+ *  interface up; the object is cleared by `closeCallUpReveal`, which is `closeTournament`'s twin.
+ *  No `finished` flag, for the same reason: a second copy of a derivable fact can drift from it. */
+export interface CollegeCallUpReveal {
+  /** the week the tie was played – the key into `callUpRubbersOf` */
+  week: number
+  /** how many of her rubbers he has been shown, 0..the week's rubber count */
+  revealed: number
 }
 
 /** ⭐⭐⭐ v60 – WHERE HE IS IN THE CHAMPIONSHIP'S REVEAL. The college mirror of

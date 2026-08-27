@@ -320,6 +320,20 @@ export interface PendingView {
    *  `surface`) are already resolved on this view and carry the amateur answers: the label is the
    *  competition's own name, and `points` is 0. */
   tier: TierId | null
+  /** ⭐⭐⭐ ROUND 27 #6 – HOW BIG THE DRAW IS, OR `null` WHEN THE FIXTURE IS NOT A DRAW AT ALL.
+   *
+   *  ⚠⚠ IT IS HERE BECAUSE THE SCREEN'S OWN FALLBACK WAS THE `?? 'domestic'` TRAP IN ANOTHER
+   *  COSTUME. `TournamentFlow` read `amateur ? COLLEGE_LEAGUE.drawSize : tier.drawSize` – correct
+   *  while the College League was the ONLY rungless fixture, and it goes on type-checking for ever.
+   *  The Nations Cup week is three ties and no knockout, so that expression would have printed
+   *  «8-player draw» over it, labelled its rubbers «Quarterfinal / Semifinal / Final», and had the
+   *  coach promise «Three wins for the title» in a competition she cannot win. One constant standing
+   *  in for a whole class is exactly how round 27 #4 happened; the engine answers instead.
+   *
+   *  `null` is «no bracket», the same shape `tier: null` carries for the rung: the round names come
+   *  off `roundLabel` (this view's, and each `bracket` row's own), the draw line is not drawn, and
+   *  the coach's price clause is dropped rather than computed from a size that does not exist. */
+  drawSize: number | null
   surface: Surface
   /** THE DAY'S TEMPERATURE, for the live match's weather plate. The SAME number the Season card
    *  showed for this tournament – `eventTemperature`, one source, so the two surfaces cannot
@@ -371,13 +385,32 @@ export interface PendingView {
    *  taught a ladder that does not exist. ⛔ AND NOT A SECOND BOOLEAN BESIDE IT: two fields for one
    *  fact is precisely how the first version of this bug happened.
    *
-   *  ⚠ THE SECOND FIXTURE IS THE NATIONS CUP AND IT IS NOT ON THIS VIEW YET. The tie is played
-   *  outside all three tables too (`engine/nationalTeam.ts`: no points, no cheque), and spec §6
-   *  routes it through `TournamentFlow`. Whoever builds that sets this to `null` and the ranking
-   *  line stays off by construction – the type can say «neither» now, so nothing has to remember to.
-   *  ⚠ What that wave DOES have to write is its own amateur sentence: the splash's «a student field
-   *  awards neither» is the College League's, and a national squad is not a student field. */
+   *  ⭐⭐⭐ ROUND 27 #6 – AND THE SECOND FIXTURE IS ON THIS VIEW NOW. The Nations Cup tie is played
+   *  outside all three tables too (`engine/nationalTeam.ts`: no points, no cheque), so
+   *  `callUpPendingView` carries `null` here and the ranking line stays off BY CONSTRUCTION – §4's
+   *  widening is what made that a fact of the type rather than a thing a builder has to remember.
+   *  ⚠ THE PROSE, HOWEVER, IS NOT SHARED, and §4's builder was right to leave the warning: the
+   *  splash's «a student field awards neither» is the College League's own sentence and is FALSE of
+   *  a national squad. `TournamentFlow` branches the two on `tierLabel` – see the `v-else-if` there –
+   *  because one null covers two competitions and only one of them is a student field. */
   ladder: LadderTrack | null
+  /** ⭐⭐⭐ ROUND 27 #6 – WHAT STANDS WHERE THE TABLE'S NAME WOULD BE, when there is no table.
+   *
+   *  ⚠⚠ NON-NULL EXACTLY WHEN `ladder` IS NULL, AND THE TWO ARE WRITTEN IN THE SAME OBJECT LITERAL
+   *  SO THEY CANNOT DRIFT (`tests/round27-call-up-flow.test.ts` pins the pairing over every fixture
+   *  the engine can build). It is not a second answer to `ladder`'s question – it is the SENTENCE for
+   *  the answer `ladder` already gave, and it is here rather than in the screen because one null now
+   *  covers two competitions whose reasons are different:
+   *
+   *    the College League   a student field, and students are not paid
+   *    the Nations Cup      a national squad, and the competition awards nothing to anybody
+   *
+   *  §4's builder left the warning that made this field necessary: «the splash's `v-else` reads "a
+   *  student field awards neither" – the College League's own words, and false of a national squad».
+   *  A screen picking between two sentences would have to identify a competition by its display name;
+   *  the engine already knows which one it is building. Same ruling as §5's `COLLEGE_FREEZE_REFUSAL`:
+   *  the screen asks the engine and prints the answer, it does not compose its own. */
+  ladderNote: string | null
   /** HER rank in `ladder`, or null when she holds no counting result in it.
    *
    *  ⚠ NULL IS NOT #1 and it is not the tie floor either – the same distinction `LadderView.rank`
