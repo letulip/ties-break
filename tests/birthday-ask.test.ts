@@ -966,7 +966,7 @@ describe('ROUND 26 #9b – the offer walks the band instead of sampling it', () 
 describe('ROUND 27 #7 – the day cannot be VOICED two birthdays running', () => {
   const DAY = BIRTHDAY_DAY_TOGETHER.id
   /** The band she is actually in from nineteen on, and the one his career was in. */
-  const bandOf = (from: number) => BIRTHDAY_BANDS.find((b) => b.from === from && b.to !== undefined)!
+  const bandOf = (from: number) => BIRTHDAY_BANDS.find((b) => b.from === from)!
 
   it('⭐⭐⭐ THE DEFECT, REPRODUCED AND THEN CLOSED: certainty, then never', () => {
     // ⚠⚠ THIS IS THE RE-AIM OF tests/birthday-gifts.test.ts's «the day is still askable after it has
@@ -1144,6 +1144,35 @@ describe('ROUND 27 #7 – the day cannot be VOICED two birthdays running', () =>
     }
     // ...and the sweep really reached the branch, or it proves nothing.
     expect(checked, 'no card in the whole catalogue held a repeatable row').toBeGreaterThan(50)
+  })
+
+  it('⚠⚠ THE ASK IS STILL A CLUE WHEN THE ROW SAYS "AGAIN" – §2ab survives the fallback', () => {
+    // ⚠⚠ A CONSEQUENCE OF THE EMPTY-POOL RULE THAT NOTHING ELSE IN THIS FILE CAN SEE, because until
+    // round 27 it could not happen. `birthdayOptions` replaces a row's `note` with its `again` copy
+    // for any gift she holds – and the ask was never a held gift, so the ASKED row always printed
+    // its `note`. The fallback names a possession she already has, so the row she is meant to read
+    // now prints `again` instead, and RULE 2 above computes its hooks from label + note. If a gift's
+    // only discriminating word lives in the note, the ask stops pointing at anything the moment it
+    // is a repeat – four rows and a coin, which is exactly what §2ab forbids.
+    //
+    // MEASURED before it was written: all 8 repeatable gifts in the catalogue keep at least one hook
+    // on screen. Mutation-verified by moving `trip`'s hooks out of its label and into its note.
+    const survivors: string[] = []
+    for (const band of BIRTHDAY_BANDS) {
+      for (const gift of band.gifts) {
+        // Only the repeatable rows: they are the only ones the fallback can land on.
+        if (gift.repeat !== 'repeatable') continue
+        const shown = new Set(words(`${gift.label} ${gift.again}`))
+        const kept = hooks(gift, [...band.gifts]).filter((h) => shown.has(h))
+        expect(
+          kept.length,
+          `${bandName(band)} ${gift.id}: every hook lives in the note, so the repeat row answers nothing`,
+        ).toBeGreaterThan(0)
+        survivors.push(gift.id)
+      }
+    }
+    // ...and the sweep found repeatable rows at all, or it asserted nothing.
+    expect(survivors.length, 'no repeatable rows in the catalogue').toBeGreaterThan(4)
   })
 
   it('⭐⭐⭐ ON A REAL CAREER: the record never holds two day-asks in a row', () => {
