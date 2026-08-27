@@ -6,11 +6,11 @@ canonical: false
 last-reviewed: 2026-08-27
 ---
 
-# College, the last mile – four things round 26 left behind
+# College, the last mile – five things round 26 left behind
 
 The owner, 27.08, after playing four years through: «нам чуть-чуть осталось колледж дожать».
 
-**Four findings from one afternoon of his play, and three of them share a cause.** Round 26 gave
+**Five findings from one afternoon of his play, and three of them share a cause.** Round 26 gave
 college real tournaments – the student championship, walked through the tour's own flow – and the
 texts, types and calibrations around college never learned that it had. Each section below is
 measured against the shipped code, not recalled.
@@ -178,7 +178,46 @@ is worse than none – it makes the remaining one look deliberate.
 
 ---
 
-## 5. What this wave owes, in order
+## 5. The Season tab lets her enter tournaments she cannot play
+
+> «на время колледжа на вкладке Season кнопки подачи заявок и планирования недели задизаблим
+> пожалуйста. Можно рядом или ниже написать пояснение, что это только на время колледжа»
+
+**Measured: `SeasonScreen.vue` contains no reference to college at all** – no `inCollege`, no freeze
+check, nothing disabled. Its Enter / Withdraw controls and its «+ Plan week» sheet render exactly as
+they do on tour.
+
+⚠ **The ENGINE is correct and that is what hid this.** `enterEvent` (`world/entries.ts:42`) and
+`bookVacation` (`world/planner.ts:117`) both open with `guardNotEnded`, which inside the freeze throws
+the COLLEGE sentence rather than the ended one – so nothing illegal can happen and the message that
+comes back is the right message. **The defect is entirely about WHEN the player learns it.**
+
+⭐ **This is R10-16's own doctrine applied one step earlier than it currently is.** That ruling says a
+refused control with no reason on screen is the bug; today the reason arrives in a toast AFTER the
+press. A control that cannot work should not look like one that can, and the reason belongs beside it
+rather than behind it.
+
+**Build:** disable the entry controls and «+ Plan week» for the duration of the freeze, with a short
+line beside or under them saying it lasts while she is at college – ⭐ **his own steer: «как сейчас
+наверху появляется»**, so reuse the note the shell already shows rather than inventing a second voice
+for the same fact.
+
+⚠ **The sentence must come from the engine, not the screen.** `COLLEGE_FREEZE_REFUSAL` is already
+exported for exactly this reason (its own comment: «a string literal copied into a test is a rename
+that breaks a report in silence»), and the same argument covers a component. The screen asks whether
+she is in college and prints the engine's sentence; it does not compose its own.
+
+⚠ **AND NOT EVERYTHING ON THAT SCREEN IS FROZEN.** Round 24's E2 audit left two cancels deliberately
+OPEN inside the freeze – the vacation cancel and the sparring cancel – because undoing a booking is
+about the family's own week, not about the tour. **Check each control against `guardNotEndedForGood`
+before disabling it**: disabling something the engine still allows is the same class of lie as
+enabling something it refuses, pointed the other way.
+
+⭐ Cheapest of the five: every fact exists, the sentence exists, and no engine number moves.
+
+---
+
+## 6. What this wave owes, in order
 
 ⚠ The order matters – §1 changes the input to §3, and §2 and §4 touch the same flow.
 
@@ -187,7 +226,8 @@ is worse than none – it makes the remaining one look deliberate.
 | 1 | **§1 the entry age** – move the question, keep the departure | ⚠ **his ruling on the lost junior season** | M |
 | 2 | **§4 the ladder label** – `LadderTrack | null`, both fixtures | – | S |
 | 3 | **§2 the button** – the pause reason reaches the snapshot | – | S |
-| 4 | **§3 the field strength** – with the call-up ladder re-measured | §1 first | M |
+| 4 | **§5 the frozen Season controls** – disabled, with the engine's own sentence beside them | – | S |
+| 5 | **§3 the field strength** – with the call-up ladder re-measured | §1 first | M |
 
 **Acceptance for the wave as a whole:**
 
@@ -198,4 +238,6 @@ is worse than none – it makes the remaining one look deliberate.
 4. A top-100 professional wins the College League comfortably, and ⚠ **the call-up rungs still read
    what round 24 measured**: 2.63–2.72 watchable matches a year, floor 1, ceiling 2, on all three
    tariffs.
-5. The frozen MAIN capture is unmoved – none of this draws.
+5. ⚠ No control on the Season tab both LOOKS pressable and refuses – and none that the engine still
+   allows has been disabled by mistake.
+6. The frozen MAIN capture is unmoved – none of this draws.
