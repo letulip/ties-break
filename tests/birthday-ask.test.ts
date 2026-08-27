@@ -943,3 +943,233 @@ describe('ROUND 26 #9b – the offer walks the band instead of sampling it', () 
     expect(other.options).toHaveLength(4)
   })
 })
+
+// =================================================================================================
+// ⭐⭐⭐ ROUND 27 #7 – THE DAY CANNOT BE VOICED TWO BIRTHDAYS RUNNING
+// =================================================================================================
+//
+// The owner, 27.08, for the second round running:
+//
+//   «И снова она просит "One day, not a week, not a trip"» · «3 раза подряд» · «я просил это
+//    исправить»
+//
+// ⚠⚠ AND THE LEDGER SAYS HE IS RIGHT TO BE ANNOYED. His round-26 #9 complaint was about THE DAY.
+// The measurement found the whole DIALOG repeating, fixed that – genuinely, 53% of consecutive
+// birthdays down to 0%, and the block above still holds it – and recorded «the day was never the
+// problem». The thing he pointed at was left alone for a whole round.
+//
+// ⚠ THE CLAIM UNDER TEST IS A PROPERTY OF THE ASK AND NOT OF THE ROWS, which is exactly why #9b's
+// wider bands could not reach it: rows are drawn fresh every year, the ask filters on WHAT SHE OWNS.
+// Every test here therefore sweeps `askedId` and never the four options – and one of them asserts
+// the options did not move at all, because his 11.08 ruling («the day is on every card») is the
+// thing this fix is not allowed to break.
+describe('ROUND 27 #7 – the day cannot be VOICED two birthdays running', () => {
+  const DAY = BIRTHDAY_DAY_TOGETHER.id
+  /** The band she is actually in from nineteen on, and the one his career was in. */
+  const bandOf = (from: number) => BIRTHDAY_BANDS.find((b) => b.from === from && b.to !== undefined)!
+
+  it('⭐⭐⭐ THE DEFECT, REPRODUCED AND THEN CLOSED: certainty, then never', () => {
+    // ⚠⚠ THIS IS THE RE-AIM OF tests/birthday-gifts.test.ts's «the day is still askable after it has
+    // been given», WHICH ASSERTED 200/200 AND WAS RIGHT TO. That test is about the OPTION – the day
+    // is never spent – and it still passes unchanged. What nobody wrote down is the consequence:
+    // 200/200 is a GUARANTEE of the sentence he read three times. Both halves are pinned here so the
+    // pair cannot drift apart: without a cooldown the day is still certain in this position (the
+    // 11.08 ruling), and with one it is impossible.
+    const band = bandOf(19)
+    const spentEverything = [DAY, ...band.gifts.map((g) => g.id)]
+    let before = 0
+    let after = 0
+    for (let s = 0; s < 200; s++) {
+      if (birthdayOffer(`day-again-${s}`, 20, spentEverything).askedId === DAY) before++
+      if (birthdayOffer(`day-again-${s}`, 20, spentEverything, false, null, DAY).askedId === DAY) after++
+    }
+    expect(before, 'the mechanism: every material row owned and the day is the whole pool').toBe(200)
+    expect(after, 'and asked last birthday, it is never the ask').toBe(0)
+  })
+
+  it('⭐⭐ never twice running – every band, every age a career can reach, 60 seeds', () => {
+    // Mutation-verified by deleting the `wanted` filter in `birthdayOffer`: this goes red in the
+    // 19-21 band first and then everywhere.
+    for (const band of BIRTHDAY_BANDS) {
+      const atCollege = band === BIRTHDAY_COLLEGE_BAND
+      for (const age of [Math.max(band.from, 14), Math.max(band.from, 14) + 1]) {
+        for (let s = 0; s < 60; s++) {
+          // ⚠ collegeIndex 1, not 0: her FIRST college birthday is the bicycle by ruling and would
+          // never be the day anyway, so pinning the cooldown on index 0 would prove nothing.
+          const { askedId } = birthdayOffer(`cooldown-${s}`, age, [], atCollege, atCollege ? 1 : null, DAY)
+          expect(askedId, `${bandName(band)} age ${age} seed ${s}: the day, twice running`).not.toBe(DAY)
+        }
+      }
+    }
+  })
+
+  it('⭐ ...and the day is STILL ON THE CARD every year – the 11.08 ruling is untouched', () => {
+    // ⚠ THE COOLDOWN IS ON THE VOICE, NEVER ON THE OPTION, and this is what that sentence means in
+    // code: the four rows and their ORDER are byte-identical whatever she asked for last year. If a
+    // future edit ever filters the OFFER instead of the pool, this fails before the copy tests do.
+    for (const band of BIRTHDAY_BANDS) {
+      const atCollege = band === BIRTHDAY_COLLEGE_BAND
+      const age = Math.max(band.from, 14)
+      for (let s = 0; s < 40; s++) {
+        const cold = birthdayOffer(`on-card-${s}`, age, [], atCollege, null, DAY)
+        const warm = birthdayOffer(`on-card-${s}`, age, [], atCollege, null, null)
+        expect(cold.options.map((o) => o.id), `${bandName(band)}: the offer moved`).toEqual(
+          warm.options.map((o) => o.id),
+        )
+        expect(cold.options.map((o) => o.id), 'the day left the card').toContain(DAY)
+      }
+    }
+  })
+
+  it('⭐ the cooldown fires on the DAY and on nothing else', () => {
+    // A material gift she asked for last year and was not given is still a want (`giftsAlreadyGiven`
+    // reads the GIFTS, not the asks – see its note). Only the day is exempt from the spent filter,
+    // so only the day needed a cooldown, and a cooldown on everything would be a different feature.
+    for (const band of BIRTHDAY_BANDS) {
+      const age = Math.max(band.from, 14)
+      const atCollege = band === BIRTHDAY_COLLEGE_BAND
+      for (let s = 0; s < 40; s++) {
+        const base = birthdayOffer(`only-day-${s}`, age, [], atCollege)
+        for (const gift of band.gifts) {
+          const withLast = birthdayOffer(`only-day-${s}`, age, [], atCollege, null, gift.id)
+          expect(withLast.askedId, `${bandName(band)}: ${gift.id} last year moved this year's ask`)
+            .toBe(base.askedId)
+        }
+      }
+    }
+  })
+
+  it('⚠⚠ THE ASK IS STILL THE FOURTH DRAW – the cooldown filters the POOL, never the stream', () => {
+    // ⚠ CLAUDE.md INVARIANT 2's BOOKKEEPING, and the constraint is PINNED: `seed:birthday:<age>` is
+    // drawn exactly four times for every birthday in the game – three to order the rows, one for the
+    // ask – because a branch that skipped or added a roll would make the stream's POSITION depend on
+    // where in her life she is. Filtering the pool is allowed; that is how `alreadyGiven` has always
+    // worked. Changing the number of draws is not.
+    //
+    // ⚠⚠ AND THE OBVIOUS VERSION OF THIS TEST DOES NOT WORK, WHICH IS WHY IT IS WRITTEN THIS WAY.
+    // Comparing the four OPTIONS across cooldown settings catches nothing: the shuffle has already
+    // happened by the time the cooldown is read, so an `rng()` added inside the cooldown branch
+    // would move the ASK and leave the rows identical. The block above («the two sub-streams are
+    // drawn exactly C(n,3)-1 and 4 times») misses it for the same reason from the other side – it
+    // replays with the defaults, so the cooldown branch is never entered.
+    //
+    // So the ask is checked AGAINST THE STREAM: take a fresh generator on the same key, burn the
+    // three shuffle draws, and the FOURTH value must be the one that picks the ask out of the pool.
+    // Add a draw anywhere in the cooldown path and the fourth value is no longer the ask's.
+    //
+    // ⚠ THIS PINS THE POOL RULE TOO, deliberately and in one place: the empty-pool decision is
+    // written out below in the order the engine applies it, so a future edit that changes the rule
+    // has to come here and say so rather than moving it silently. Mutation-verified by inserting a
+    // bare `rng()` in front of the cooldown filter, and again by swapping the fallback order.
+    const fourthDraw = (seed: string, age: number): number => {
+      const g = rngFromSeed(`${seed}:birthday:${age}`)
+      g()
+      g()
+      g()
+      return g()
+    }
+    for (const band of BIRTHDAY_BANDS) {
+      const atCollege = band === BIRTHDAY_COLLEGE_BAND
+      const age = Math.max(band.from, 14)
+      const every = band.gifts.map((g) => g.id)
+      for (let s = 0; s < 40; s++) {
+        const seed = `draw-count-27-${s}`
+        for (const [given, last] of [
+          [[], null],
+          [[], DAY],
+          [every, DAY],
+          [every, null],
+        ] as [string[], string | null][]) {
+          // ⚠ collegeIndex 1 and never 0: the first college birthday OVERRIDES the drawn ask with
+          // the bicycle by ruling, so index 0 would be checking a branch that ignores the draw.
+          const { options, askedId } = birthdayOffer(seed, age, given, atCollege, atCollege ? 1 : null, last)
+          const spent = new Set(given)
+          const canAsk = options.filter((g) => g.id === DAY || !spent.has(g.id))
+          const wanted = last === DAY ? canAsk.filter((g) => g.id !== DAY) : canAsk
+          const onCard = options.filter((g) => g.id !== DAY)
+          const askAgain = onCard.filter((g) => g.repeat === 'repeatable')
+          const pool = wanted.length ? wanted : askAgain.length ? askAgain : onCard.length ? onCard : options
+          expect(
+            pool[Math.floor(fourthDraw(seed, age) * pool.length)].id,
+            `${bandName(band)} seed ${s}: the ask is not the fourth draw off its own stream`,
+          ).toBe(askedId)
+        }
+      }
+    }
+  })
+
+  it('⭐⭐ THE EMPTY-POOL RULE – with nothing new to want she asks AGAIN, never the day on a loop', () => {
+    // ⚠⚠ THE TRAP THIS EXISTS TO CATCH. The fallback that used to stand in `birthdayOffer` was
+    // `canAsk.length ? canAsk : options` and it was DEAD CODE – the day is never spent, so `canAsk`
+    // could not empty. The cooldown makes it live, and live in exactly the case that matters: all
+    // three material rows owned and the day cooling down. A fallback that restored `options` would
+    // hand the day straight back and the fix would do nothing in the only place it was needed.
+    //
+    // Mutation-verified by restoring `: options` as the fallback: the day comes back and this fails.
+    for (const band of BIRTHDAY_BANDS) {
+      const atCollege = band === BIRTHDAY_COLLEGE_BAND
+      const age = Math.max(band.from, 14)
+      const spentEverything = [DAY, ...band.gifts.map((g) => g.id)]
+      for (let s = 0; s < 60; s++) {
+        const { options, askedId } = birthdayOffer(`empty-pool-${s}`, age, spentEverything, atCollege, null, DAY)
+        expect(askedId, `${bandName(band)}: the empty pool handed the day back`).not.toBe(DAY)
+        expect(options.map((o) => o.id), 'and the ask is still one of the four on screen').toContain(askedId)
+      }
+    }
+  })
+
+  it('⭐⭐ ...and it prefers a REPEATABLE row, because a durable ask asserts she has none', () => {
+    // ⚠ THIS IS THE ONE ASK IN THE GAME THAT CAN NAME A POSSESSION SHE ALREADY HAS, so the ask's own
+    // words have to survive being read a second time – and `repeat` is exactly that distinction,
+    // written for it in round-18 #10c. A repeatable row's ask is a want that recurs; a DURABLE row's
+    // ask is written as a want for a thing she LACKS, and `campusbike` is the proof: «Everyone there
+    // has a bicycle. She walks, and she has mentioned it twice» is false the moment one is chained
+    // up outside. Mutation-verified by dropping the `askAgain` step from the fallback chain: the
+    // college band starts asking for the bicycle she owns and this fails.
+    const kindOf = new Map<string, string>()
+    for (const band of BIRTHDAY_BANDS) for (const g of band.gifts) kindOf.set(g.id, g.repeat)
+    let checked = 0
+    for (const band of BIRTHDAY_BANDS) {
+      const atCollege = band === BIRTHDAY_COLLEGE_BAND
+      const age = Math.max(band.from, 14)
+      const spentEverything = [DAY, ...band.gifts.map((g) => g.id)]
+      for (let s = 0; s < 60; s++) {
+        const { options, askedId } = birthdayOffer(`repeatable-${s}`, age, spentEverything, atCollege, null, DAY)
+        const onCard = options.filter((o) => o.id !== DAY)
+        if (!onCard.some((o) => kindOf.get(o.id) === 'repeatable')) continue
+        checked++
+        expect(kindOf.get(askedId), `${bandName(band)}: a durable row was asked for over a repeatable one`)
+          .toBe('repeatable')
+      }
+    }
+    // ...and the sweep really reached the branch, or it proves nothing.
+    expect(checked, 'no card in the whole catalogue held a repeatable row').toBeGreaterThan(50)
+  })
+
+  it('⭐⭐⭐ ON A REAL CAREER: the record never holds two day-asks in a row', () => {
+    // The end-to-end claim, in the shape he made it: «3 раза подряд» is a run length, and the run is
+    // visible in `world.birthdays` because `chooseGift` writes the ask down beside the gift. This
+    // walks a career through the ask he was reading, answering with the day every time – the worst
+    // case for the cooldown, because it keeps the day in the record AND keeps every material gift
+    // unspent, so nothing else is being filtered out to help.
+    const world = createWorld('no-run', { ...DEFAULT_PROFILE, birthMonth: 6, birthDay: 15, coachTier: 'self' })
+    const rng = rngFromSeed(world.seed)
+    for (let i = 0; i < 700; i++) {
+      if (pendingKnock(world)) decideKnock(world, 'rest')
+      if (pendingBirthday(world) !== null) chooseGift(world, BIRTHDAY_DAY_TOGETHER.id)
+      if (world.ending) break
+      tickWeek(world, rng)
+    }
+    expect(world.birthdays.length, 'the fixture has to reach a run of birthdays').toBeGreaterThan(8)
+    for (let i = 1; i < world.birthdays.length; i++) {
+      const prev = world.birthdays[i - 1]
+      const now = world.birthdays[i]
+      expect(
+        [prev.asked, now.asked],
+        `she asked for the day at ${prev.age} and again at ${now.age} – the sentence he read three times`,
+      ).not.toEqual([DAY, DAY])
+    }
+    // ...and the day is still reachable at all, or the cooldown has quietly become an exclusion.
+    expect(world.birthdays.some((b) => b.asked === DAY), 'the day is never asked for any more').toBe(true)
+  })
+})

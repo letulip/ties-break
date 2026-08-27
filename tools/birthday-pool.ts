@@ -327,6 +327,35 @@ function dayAsk(rows: BirthdayRow[], careers: string[]): void {
   console.log(`  ${'-'.repeat(96)}`)
   console.log(`  such birthdays:                             ${ownedAll}/${rows.length}  ${pct(ownedAll, rows.length)}`)
   console.log(`  ...of which she asked for the day:          ${ownedAllDay}/${ownedAll}  ${pct(ownedAllDay, ownedAll)}`)
+  againAsk(rows, careers)
+}
+
+/** ⭐⭐ ROUND 27 #7 – THE EMPTY-POOL RULE, COUNTED. When the cooldown removes the day and every
+ *  material row on the card is already in the house, she asks for one of them AGAIN. This is the
+ *  only ask in the game that can name a possession she already has, so it is worth knowing how often
+ *  it happens and – because a DURABLE row's ask is written as a want for a thing she LACKS – which
+ *  kind of row it lands on. On an arm with the fix reverted every count here is zero, which is the
+ *  control: the `spent` filter alone can never produce a repeat ask. */
+function againAsk(rows: BirthdayRow[], careers: string[]): void {
+  const DAY = BIRTHDAY_DAY_TOGETHER.id
+  const repeatOf = new Map<string, string>()
+  for (const band of BIRTHDAY_BANDS) for (const g of band.gifts) repeatOf.set(g.id, g.repeat)
+  let again = 0
+  let durable = 0
+  for (const c of careers) {
+    const held = new Set<string>()
+    for (const r of rows.filter((x) => x.career === c).sort((a, b) => a.week - b.week)) {
+      if (r.askedId !== DAY && held.has(r.askedId)) {
+        again++
+        if (repeatOf.get(r.askedId) !== 'repeatable') durable++
+      }
+      if (r.given !== DAY) held.add(r.given)
+    }
+  }
+  console.log(`\n  ⭐ THE EMPTY-POOL RULE – she asks for something already in the house`)
+  console.log(`  ${'-'.repeat(96)}`)
+  console.log(`  asked for a gift she already has:           ${again}/${rows.length}  ${pct(again, rows.length)}`)
+  console.log(`  ...on a DURABLE row (the ask may read as if she lacks it): ${durable}`)
 }
 
 function wallets(rows: BirthdayRow[]): void {
