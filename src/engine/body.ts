@@ -93,8 +93,10 @@ export function drawBodyRegionFrom(rng: Rng, table: readonly { part: string; wei
 //               than to HOW LIKELY.
 //
 // ⚠ IT IS A TILT AND NOT A RISK, exactly as `KNOCK_AIM_TILT` is. Nothing here changes how often she
-// gets hurt - `retireHazard` reads fatigue and nothing else - only where it lands when she does.
-// That is the difference between a consequence and a penalty.
+// gets hurt - `retireHazard` reads in-match fatigue and how fresh she arrived (`retireDurability`,
+// 27.08) and nothing else - only where it lands when she does. That is the difference between a
+// consequence and a penalty, and it is untouched by the freshness term: that curve moves HOW OFTEN,
+// on the other side of this file's boundary.
 
 /** How far a part the week ENTIRELY loaded is tilted. Matches `KNOCK_AIM_TILT` deliberately: it is
  *  the same claim about the same week, and two numbers for one idea would drift apart. */

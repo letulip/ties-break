@@ -2120,7 +2120,9 @@ export const ECONOMY = {
     // one it is rolling:
     //
     //   1. THE TRIGGER IS EXHAUSTION, BY CONSTRUCTION. `retireHazard = RETIRE_K * spentness(n,
-    //      stamina)` is zero for the first 120 points and rises with IN-MATCH fatigue –
+    //      stamina) x retireDurability(condition)` – the third factor since 27.08, and STRICTLY
+    //      POSITIVE, so it cannot manufacture a stoppage where exhaustion is zero – is zero for the
+    //      first 120 points and rises with IN-MATCH fatigue –
     //      match-retirement.md §3 says it in as many words: "A retirement in this engine is
     //      exhaustion, not accident", and names the rolled ankle at 2-2 in the first set as the thing
     //      it deliberately does NOT model. A hazard indexed on how spent she is should hand out the

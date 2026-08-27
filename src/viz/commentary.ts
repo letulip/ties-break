@@ -1452,9 +1452,11 @@ export function buildCommentary(
   //      prints "Semifinalist (+30 pts) – she retired hurt", match-retirement.md §9), so the log now
   //      agrees with the rest of the game instead of inventing a quieter phrase for the same fact.
   //   2. IT DID NOT SAY WHY, and the model has an answer. `retireHazard` (point.ts) is
-  //      `RETIRE_K * spentness(pointNumber, stamina)` and `spentness` is EXACTLY ZERO up to
-  //      FATIGUE_START, so every retirement this engine can produce happened past 120 points to a
-  //      girl who is not fresh. "A long match on tired legs" is that file's own summary of its own
+  //      `RETIRE_K * spentness(pointNumber, stamina) x retireDurability(condition)` and `spentness`
+  //      is EXACTLY ZERO up to FATIGUE_START, so every retirement this engine can produce happened
+  //      past 120 points to a girl who is not fresh. ⚠ THE 27.08 FRESHNESS TERM DOES NOT WEAKEN THAT
+  //      – it is strictly positive and multiplies a quantity that is exactly zero for 120 points, so
+  //      the property this line stands on is unchanged and the sentence stays true. "A long match on tired legs" is that file's own summary of its own
   //      mechanism and it is true of every match that reaches this branch by construction - which is
   //      the standard the honesty rule sets. `tests/viz/commentary.test.ts` asserts the >120
   //      property directly, so the sentence cannot outlive the mechanism that licenses it.
