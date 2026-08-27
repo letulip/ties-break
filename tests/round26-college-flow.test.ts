@@ -35,6 +35,7 @@ import {
   closeTournament,
   collegeLeagueMatchesOf,
   collegeLeagueRevealMatches,
+  callUpRevealOpen,
   collegeLeagueRevealOpen,
   createWorld,
   chooseGift,
@@ -95,15 +96,22 @@ function pressToTheChampionship(world: WorldState, rng: Rng): { stops: string[];
   for (let press = 1; press <= 4; press++) {
     const stops = resumeFromCollege(world, rng)
     if (collegeLeagueRevealOpen(world)) return { stops, press }
+    // ⚠ ROUND 27 #6: a career whose enrolment week falls between the two fixtures meets the tie
+    // first, so the walk has to be able to step past one to reach a championship.
+    if (callUpRevealOpen(world)) answerTheReveal(world)
     if (pendingBirthday(world) !== null) chooseGift(world, 'day')
     if (world.ending?.type !== 'college') break
   }
   throw new Error('the walk never reached a championship')
 }
 
-/** «Skip all rounds» then the finale's «Continue» – the two commands the flow's own controls call. */
+/** «Skip all rounds» then the finale's «Continue» – the two commands the flow's own controls call.
+ ⭐⭐⭐ ROUND 27 #6 RE-AIM – IT ANSWERS THE NATIONS CUP TIE TOO.
+ *  ⚠ IT USED TO CLAIM: «the championship is the only reveal a college year raises» (round 26 #6).
+ *  ⚠ WHY IT MOVED: the call-up now pauses the year and is walked in the same flow, so a walk that
+ *  answered one of the two would hang on the other. The assertions in this file are untouched. */
 function answerTheReveal(world: WorldState): void {
-  if (!collegeLeagueRevealOpen(world)) return
+  if (!collegeLeagueRevealOpen(world) && !callUpRevealOpen(world)) return
   skipTournament(world)
   closeTournament(world)
 }
@@ -145,10 +153,11 @@ describe('#6 the championship stops the year instead of being reported after it'
     let reveals = 0
     for (let press = 0; press < 6 * ENDINGS.collegeYears && world.ending?.type === 'college'; press++) {
       resumeFromCollege(world, rng)
-      if (collegeLeagueRevealOpen(world)) {
-        reveals++
-        answerTheReveal(world)
-      }
+      if (collegeLeagueRevealOpen(world)) reveals++
+      // ⚠ ROUND 27 #6: the tie pauses the year too, and this walk counts CHAMPIONSHIPS – so the
+      // answer is unconditional and only the count is gated. A walk that answered one reveal and not
+      // the other would stall on the first call-up and report one championship a career.
+      answerTheReveal(world)
       if (pendingBirthday(world) !== null) chooseGift(world, 'day')
     }
     expect(world.college!.years, 'she graduated – the reveals never stranded the career').toHaveLength(

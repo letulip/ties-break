@@ -36,6 +36,7 @@ import { readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import {
   skipTournament,
+  callUpRevealOpen,
   collegeLeagueRevealOpen,
   CAREER_ENDED_REFUSAL,
   answerFork,
@@ -85,8 +86,16 @@ vi.setConfig({ testTimeout: 120_000 })
  *  which is `skipTournament` + `closeTournament` dispatched at the college reveal. Nothing this
  *  suite MEASURES moved: the same birthdays, the same pauses, the same banked years.
  *  The full note is in tests/college-league.test.ts. */
-function answerLeagueReveal(world: WorldState): void {
-  if (!collegeLeagueRevealOpen(world)) return
+/** ⭐⭐⭐ ROUND 27 #6 RE-AIM – IT ANSWERS THE NATIONS CUP TIE TOO, AND IT IS NOT A WEAKENING.
+ *  ⚠ IT USED TO CLAIM: «a college year has exactly one pause the flow owns – the championship»
+ *  (`answerLeagueReveal`, round 26 #6). That is why it read `collegeLeagueRevealOpen` alone.
+ *  ⚠ WHY IT MOVED: the call-up used to resolve inside the tick and report itself in a toast – the
+ *  owner's «матчи только постфактум». It now pauses the year and is walked in `TournamentFlow` like
+ *  the championship, so a walk that answered only one of the two would hang on the other. The
+ *  predicate is widened and the name says what it covers; the ASSERTIONS below are untouched, and
+ *  `skipTournament` / `closeTournament` are still the player's own two presses. */
+function answerCollegeReveal(world: WorldState): void {
+  if (!collegeLeagueRevealOpen(world) && !callUpRevealOpen(world)) return
   skipTournament(world)
   closeTournament(world)
 }
@@ -155,7 +164,7 @@ function openedAtCollege(seed: string, birthMonth: number, birthDay: number): { 
 function pressToBirthday(world: WorldState, rng: Rng): StopReason[] {
   for (let guard = 0; guard < 4; guard++) {
     const stops = resumeFromCollege(world, rng)
-    answerLeagueReveal(world)
+    answerCollegeReveal(world)
     if (pendingBirthday(world) !== null) return stops
     if (world.ending?.type !== 'college') break
   }
@@ -179,7 +188,7 @@ function walkTheFreeze(world: WorldState, rng: Rng, maxPresses = 24): Press[] {
     })
     // ⚠ ROUND 26 #6 re-aim: a press can now stop for the championship as well, so the walk answers
     // that too – see `answerLeagueReveal` at the head of this file.
-    answerLeagueReveal(world)
+    answerCollegeReveal(world)
     if (pendingBirthday(world) !== null) answerBirthday(world)
   }
   return presses
@@ -205,7 +214,7 @@ describe('a walked career through four college years gets four birthdays', () =>
         years: world.college!.years.length,
         paused: (world.college!.pendingYearStart ?? null) !== null,
       })
-      answerLeagueReveal(world)
+      answerCollegeReveal(world)
       if (pendingBirthday(world) !== null) {
         answerBirthday(world)
         feedAtBirthday.push(world.events.filter((e) => e.week === world.week).map((e) => e.text).join(' | '))
@@ -266,7 +275,7 @@ describe('a walked career through four college years gets four birthdays', () =>
     answerBirthday(world)
     const fundsAtBank = (() => {
       resumeFromCollege(world, rng)
-      answerLeagueReveal(world)
+      answerCollegeReveal(world)
       if (world.college!.years.length === 0) resumeFromCollege(world, rng)
       return world.fundsCents
     })()
@@ -342,7 +351,7 @@ describe('the collision year: birthday + championship + call-up all deliver', ()
     const refusedOverReveal = resumeFromCollege(world, rng)
     expect(refusedOverReveal, 'the reveal is a question too: reported, nothing ticked').toEqual(['college-league'])
     expect(world.college!.years, 'and nothing banked behind it').toHaveLength(0)
-    answerLeagueReveal(world)
+    answerCollegeReveal(world)
     const second = resumeFromCollege(world, rng)
     expect(world.college!.years, 'one banked year, not two halves').toHaveLength(1)
     const year = world.college!.years[0]
@@ -382,7 +391,7 @@ describe('the collision year: birthday + championship + call-up all deliver', ()
 
     answerBirthday(world)
     resumeFromCollege(world, rng)
-    answerLeagueReveal(world)
+    answerCollegeReveal(world)
     if (world.college!.years.length === 1) resumeFromCollege(world, rng)
     expect(world.college!.years, 'answered, the same press works').toHaveLength(2)
   })
@@ -418,14 +427,14 @@ describe('the guards: ended stays ended, and the early return respects the pause
     pressToBirthday(world, rng) // pause in year 1
     answerBirthday(world)
     resumeFromCollege(world, rng) // year 1 banks
-    answerLeagueReveal(world)
+    answerCollegeReveal(world)
     pressToBirthday(world, rng) // pause in year 2
     expect(world.college!.pendingYearStart, 'year 2 is mid-flight').not.toBeNull()
     answerBirthday(world)
     expect(() => endCollegeEarly(world), 'mid-year the door is shut, with the reason').toThrow(/still running/)
     expect(toSnapshot(world).ending?.college?.yearInProgress, 'and the screen is told to stand its button down').toBe(true)
     resumeFromCollege(world, rng) // year 2 banks – a boundary again
-    answerLeagueReveal(world)
+    answerCollegeReveal(world)
     if ((world.college!.pendingYearStart ?? null) !== null) resumeFromCollege(world, rng)
     expect(world.college!.pendingYearStart ?? null).toBeNull()
     expect(() => endCollegeEarly(world), 'at the boundary the early return works as it always did').not.toThrow()
@@ -523,7 +532,7 @@ describe('ROUND 26 #4 – a college wish may not assume a wallet she has not got
       // only for the cake. Another branch of the SAME round taught it to pause for the championship
       // too, and a walk answering one pause but not the other stalls on the first league week - it
       // read 0 college birthdays where four happen. The helper is B's; the call is the merge.
-      answerLeagueReveal(world)
+      answerCollegeReveal(world)
       if (pendingBirthday(world) === null) continue
       // ⚠ SET ON THE BIRTHDAY WEEK ITSELF, both purses, because the claim is about what the
       // household has ON THE DAY and four college years of base costs move it.
@@ -622,7 +631,7 @@ describe('ROUND 26 #4 – a college wish may not assume a wallet she has not got
       // only for the cake. Another branch of the SAME round taught it to pause for the championship
       // too, and a walk answering one pause but not the other stalls on the first league week - it
       // read 0 college birthdays where four happen. The helper is B's; the call is the merge.
-      answerLeagueReveal(world)
+      answerCollegeReveal(world)
       if (pendingBirthday(world) === null) continue
       world.fundsCents = 584_375_00
       world.kidFundsCents = 59_220_00

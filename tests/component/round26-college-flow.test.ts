@@ -47,6 +47,7 @@ import {
   answerFork,
   chooseGift,
   closeTournament,
+  callUpRevealOpen,
   collegeLeagueRevealOpen,
   createWorld,
   measureCollegeOffer,
@@ -117,6 +118,12 @@ function walkToTheChampionship(seed: string): { world: WorldState; rng: Rng } {
   for (let press = 0; press < 4; press++) {
     resumeFromCollege(world, rng)
     if (collegeLeagueRevealOpen(world)) return { world, rng }
+    // ⚠ ROUND 27 #6: the tie pauses the year too, so the walk has to be able to step past one on the
+    // way to a championship. `skipTournament`/`closeTournament` dispatch at whichever is open.
+    if (callUpRevealOpen(world)) {
+      skipTournament(world)
+      closeTournament(world)
+    }
     if (pendingBirthday(world) !== null) chooseGift(world, 'day')
     if (world.ending?.type !== 'college') break
   }
