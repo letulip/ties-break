@@ -601,10 +601,13 @@ const settled = computed(() => {
     <PaperNote class="offer-paper" size="letter" :tilt="0">
       <p class="offer-body">
         <template v-if="callUpBecause">{{ callUpBecause }}, and the selectors have read it.</template>
-        She is named in the squad for {{ callUpTerms.label }}, in the week of
-        {{ weekLabel(callUpTerms.tieWeek) }}.
+        She is named in the squad for {{ callUpTerms.label }} – she is expected on court for
+        {{ weekRange(callUpTerms.tieWeek) }}.
       </p>
       <ul class="offer-terms">
+        <!-- THE WEEK IS STATED AS A RANGE, exactly as the tournament desk's own entry letter states
+             a week she is expected on court. A letter about a week that has not happened yet is only
+             useful if it says WHEN, and «W15 '33» is the game's shorthand rather than a date. -->
         <li>
           {{ callUpTerms.squadSize }} players are named and the week holds {{ callUpTerms.tiesInTheWeek }} ties,
           so the captain picks the side for each of them – she may be named and never take the court.
