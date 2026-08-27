@@ -372,13 +372,49 @@ is how `alreadyGiven` already works. Changing the number of draws is not.
 
 ---
 
-## 8. ⚠ Family Budget reads a different reality during college – CANDIDATE, not yet confirmed
+## 8. ⚙ SOLVED 27.08 on his own save – it is a label, not the arithmetic
 
 > «что происходит с плашкой Family Budget во время колледжа – такое ощущение, что она отражает
 > какую-то другую реальность и слишком большие доходы отражает или какие-то расходы не учитывает,
 > хотя вроде бы в Истории списаний всё нормально»
 
-**Established so far.** The card folds `finance.window12w` / `finance.season` – per-category totals
+⚙ **REPRODUCED EXACTLY, on the save he sent** (`tennis-sim_alice-cfbv_w502`, week 502, college
+4/4 done – read only, never copied into the repo and never a fixture, per his standing rule):
+
+    the expenses tab, "This season"      spent  25 213
+    History, seasonHistory season 8      spent  36 514
+
+⭐⭐ **AND THE ARITHMETIC IS NOT WRONG.** Both surfaces call **the same fold from the same start** –
+`financeWindow(world.financeWeeks, seasonStartWeek/yearStart)` (`snapshot.ts:1206` and
+`milestones.ts:354`). There is nothing in the maths to disagree.
+
+**`seasonStartWeek(502) = 468`, so the tab is showing season 9 at 34 weeks of 52, while History shows
+season 8 complete.** 25 213 over 34 weeks projects to ~38 500 against season 8's actual 36 514 – **the
+two numbers agree about the world; they describe different periods.**
+
+⚠ **So the defect is entirely that two screens say «за сезон» and mean different seasons, with nothing
+on either saying which.** For a player that is indistinguishable from broken maths, and he read it
+exactly that way. **The repair is a label and a window that name their period – not a line of
+arithmetic.**
+
+⚠ One candidate ruled OUT by the same data, and it had a good comment behind it: `milestones.ts:349`
+warns that the wrap-up cannot know off-season weeks 50–51 while the wallet keeps counting them. True,
+but it makes History **smaller** than the live tab, and his gap runs the other way.
+
+### What else the save showed, since the ledger was open anyway
+
+    income 47 244 · interest 27 507 · tuition −39 686 · physio −3 510 · coaching −142 · facility −139
+
+- ⭐ **`interest 27 507` is why it «reads like another reality».** She earns $44k in a season she does
+  not play, most of it interest on a $780k balance. Not a bug, and exactly what it looks like.
+- ⚙ **`physio −3 510` billed through the freeze while the coach's salary is suspended** – asymmetric,
+  and **he ruled it is not a problem** («здесь нет проблемы»). Recorded as his decision, not a defect.
+- ⭐ **No gear line at all, and that is his own rule**: `if (!inCollege(world)) resolveGear(world)`,
+  «her kit is the university's for four years» (W2-ENDINGS). Her kit is pro on all three lines. His
+  expected 5–6k a year is correctly absent. ⚠ My first probe reported «racket: null» – that was the
+  probe reading a field that does not exist, not a fact about the save.
+
+**Superseded – the original hypothesis, kept because it was nearly right and the reasoning matters.** The card folds `finance.window12w` / `finance.season` – per-category totals
 over two windows – while the transactions history reads individual events. Two paths to one number,
 which is this repo's most-repeated defect class. ⚠ And tuition is **not** the explanation: it is
 charged **weekly** (`world/college.ts:147`, `amountCents: -weekly`), so it cannot fall outside a window

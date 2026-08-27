@@ -3,7 +3,7 @@ type: plan
 status: current
 area: delivery
 canonical: true
-last-reviewed: 2026-08-26
+last-reviewed: 2026-08-27
 ---
 
 # Now / next / later
@@ -26,8 +26,17 @@ last-reviewed: 2026-08-26
 
 ## Now
 
-⚙ THE LIVE WAVE IS ROUND 26 – this line is machine-checked against the newest ledger in
+⚙ THE LIVE WAVE IS ROUND 27 – this line is machine-checked against the newest ledger in
 `docs/rounds/` by `scripts/doc-facts.mjs`; edit the number only by shipping a ledger.
+
+**Round 27 is OPEN – the college mini-round** ([round-27.md](rounds/round-27.md), 27.08). Eleven
+observations from two afternoons of his own play, collected on his ask. ⭐ Four were answered by
+reading rather than building and two of those found the shipped behaviour was already what he wanted;
+one is REOPENED because round 26 measured a neighbouring problem and fixed that instead. ⚠ **Nothing
+in it is built yet, and the order is not free**: item 9 (are careers three years ahead of the
+development model's own anchor?) decides whether item 3 is a fix or a symptom, so the wave waits on
+one measurement. The argument lives in
+[college-the-last-mile-2026-08.md](specs/college-the-last-mile-2026-08.md).
 
 **Round 26 has LANDED** – [round-26.md](rounds/round-26.md), merged 26.08 as
 [#106](https://github.com/letulip/ties-break/pull/106). Thirteen college observations from a career
