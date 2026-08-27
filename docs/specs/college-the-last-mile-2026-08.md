@@ -421,6 +421,78 @@ absence.
 `TournamentFlow` it hits the same «Professional ranking» lie §4 records. **Fix §4 first or ship them
 together** – doing this one alone converts a postfactum popup into a screen that states a falsehood.
 
+### ⚙ BUILT 27.08 – and §4's warning was worth more than §4's code
+
+**Everything above held.** `rollCallUp`'s decision really is knowable a week early, and the letter,
+the flow and the deletion are what shipped. Four things the build learned that the section did not
+say:
+
+**1. The prediction is EXACT, and it is exact for a reason worth writing down.** The letter and the
+tick now ask ONE function, `callUpFor(world, week)` – the tick's own expression, moved – and it is
+keyed on the TIE's week, so both callers derive the identical `seed:callup:<tie>` sub-stream however
+early they ask. Its three inputs, one at a time: the stream is per-tie-week (identical); `ageYears`
+is computed FOR the tie week, so a birthday in between cannot move it; and `leagueRoundsWon` is final
+because the championship is season week 12, the tie is 14, and `lastLeagueRun` reads the same run
+through a year boundary (`bankCollegeYear` moves it from `pendingLeague` into `years[n]`, the second
+place that lookup already looks). ⚠ **The subtle one is `skillMean`**, which is today's on both
+calls – and it feeds exactly one expression, `binomial(played, rubberWinChance(skillMean), rng())`,
+whose draw count is one uniform whatever the probability is. So the stream position, `called`,
+`rubbersPlayed` and `nationFinish` are identical from either week; the ONE value it moves is
+`rubbersWon`, which `playCallUpRubbers` overwrites with what happened on court. That is why the
+letter states neither. **Mutation-verified rather than argued**: her skill is driven to 20 and to 99
+in the suite and the answer stands still.
+
+**2. `rubbersPlayed` is knowable a week early and is deliberately NOT on the paper.** The draw that
+decides the team sheet is taken on the same sub-stream as the letter, so `CallUpLetterTerms` COULD
+carry it. Research §0.7 – the captain alone picks who plays out of the nomination – and a letter that
+told the parent the side a week early would be the postfactum defect wearing an envelope. The suite
+asserts its ABSENCE, because the temptation is to add it later.
+
+**3. THE LANDMINE §4's BUILDER LEFT WAS REAL, AND THERE WAS A SECOND ONE HE DID NOT SEE.** His was
+the splash's `v-else` («a student field awards neither» – the College League's words, false of a
+national squad), and it is closed by `PendingView.ladderNote`: the engine states the clause, non-null
+exactly when `ladder` is null, written in the same object literal so the two cannot drift, and pinned
+across all three fixture kinds. **The second was `TournamentFlow`'s own
+`amateur ? COLLEGE_LEAGUE.drawSize : tier.drawSize`** – the identical `?? 'domestic'` shape one layer
+out, and it type-checks for ever. A Nations Cup week is three ties and no knockout, so it would have
+been introduced as an «8-player draw», its rubbers labelled «Quarterfinal / Semifinal / Final», and
+the coach would have promised «Three wins for the title» in a competition she cannot win.
+`PendingView.drawSize: number | null` is the same answer §4 gave for the table, given for the draw –
+and `null` made the compiler find `BracketTabs`, which is now gated on a real draw rather than on an
+empty list. ⭐ **The generalisation §4's builder wrote is right and is now measured twice: a constant
+standing in for a whole class is a default with a longer fuse.**
+
+**4. The zero arm is a real outcome and it does NOT open a reveal.** `rubbersPlayed === 0` – named,
+travelled, and sat – has no rubber to walk, so opening a reveal would pause the year in front of an
+empty flow. The letter still arrived, the milestone row still says what happened, and the stop reason
+is still reported: the week is not silent, it simply has no tournament in it.
+
+**Schema: a real four-part move, v63 → v64.** `CollegeState.callUpReveal` is a QUESTION STANDING IN
+FRONT OF THE PLAYER and an unpersisted blocking state is B1's own failure class. ⚠ **The open bit is
+the half that cannot be derived**: «is a tie waiting» reads as `pendingCallUp.week === world.week`
+right up to the moment he answers it – the week does not move while the year is paused, so a derived
+predicate would refuse the very press that closes it, for ever. A SECOND optional field rather than a
+`kind` on v60's `leagueReveal`, because one field with a discriminator would re-shape a persisted
+object every save since v60 carries – a rewrite of shipped data rather than an append. Back-fills
+null; a week already lived is not re-offered, and `settleCallUpLetter`'s guard means a migrated career
+gets its NEXT invitation and none for the ties behind it.
+
+**RNG: the frozen MAIN capture is UNMOVED – 41550 / e6b0c709, `tests/condition.test.ts` untouched and
+green.** Nothing about WHEN the rubbers are simulated changed: `playCallUpRubbers` still runs where it
+always ran, inside the tick, on `seed:rubbers:<week>`. What moved is when the RESULT is shown. The
+three frozen careers in `coach-travel-edge` moved by the version number alone, and `PRE_V64` proves
+it: rolling only the schema back to 63 reproduces all three byte for byte – which also closes the
+letter, since `world.offers` is inside that hash.
+
+⚠ **One correction to this section's own text: the academy letters are ROUND 24 #1, not round 26.**
+`OfferKind`'s docstring says so («⭐ `academy` IS ROUND 24 #1»), so does `App.vue`'s academy toast
+note, and the suite that guards them is `tests/round24-academy-letters.test.ts`. Round 26 has no
+letter item. The precedent was followed anyway – `raiseCallUpLetter` is `raiseAcademyLetter`'s twin,
+`state: 'info'`, keyed and idempotent, no schema move for a new `OfferKind` (`AdOfferTerms`' own note
+cites commit 2763caa for that) – and the shape for a letter that arrives BEFORE the thing it is about
+came from `TourLetterTerms.notice: 'due'`, whose docstring is the rule in one line: «the warning
+arrives at the entry deadline, A WEEK BEFORE THE EVENT».
+
 ---
 
 ## 7. The birthday wish collapses onto «one day» – and it is a pool, not a fluke

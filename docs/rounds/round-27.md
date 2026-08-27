@@ -63,10 +63,20 @@ reads longer than the work it implies.
   – ⚠ True. `SeasonScreen.vue` contains no reference to college at all. ⭐ The ENGINE is correct – it
   refuses with the college sentence – so the defect is entirely about WHEN he learns it. Spec §5.
 
-- [ ] **6. «И опять на те же грабли: "Her country called this year…" во всплывашке сверху и матчи
+- [x] **6. «И опять на те же грабли: "Her country called this year…" во всплывашке сверху и матчи
   только постфактум»** – ⚠ True, and it is the shape round 26 #6/#7 fixed for the League one file
   away. ⭐ His own key: the game knows in advance (`rollCallUp`), so a letter and the ordinary
-  tournament flow are available and the toast can go. ⚠ Ships with 4 or after it. Spec §6.
+  tournament flow are available and the toast can go. ⚙ **BUILT, all three halves**: an invitation
+  in the inbox the week BEFORE the tie, the tie walked in `TournamentFlow` through the same three
+  commands the League uses, and the toast deleted. ⭐ **His «мы знаем будет это происходить или нет»
+  is exact rather than nearly** – one function answers both callers off the tie week's own
+  sub-stream, and her skill is mutated to 20 and 99 in the suite to prove it cannot move the answer.
+  ⚠ **§4's builder left a warning and it was worth more than §4's code**: the splash's «a student
+  field awards neither» is the College League's sentence and false of a national squad – the engine
+  states each fixture's own clause now. ⚠ **And a SECOND one he did not see**, the same shape one
+  layer out: `TournamentFlow`'s `amateur ? COLLEGE_LEAGUE.drawSize : …` would have called three ties
+  an eight-player draw. ⚠ Schema v63 → v64 (a paused tie is a question the player has not answered).
+  ⚠ The frozen MAIN capture is UNMOVED. Spec §6.
 
 - [x] **7. «И снова она просит "One day, not a week, not a trip"» · «3 раза подряд» · «я просил это
   исправить»** – ⚠⚠ **REOPENED, and he was right to.** His original complaint (round 26 #9) was about
@@ -179,8 +189,9 @@ reads longer than the work it implies.
 | ⚙ **done** | **9's measurement** – it decided: 3 is a symptom, the growth curve is the cause | landed 27.08 |
 | ⚠ **first** | **the growth curve** – ⚠ and the measurement recommends BISECTING the 12.08→27.08 drift before anything is tuned, because the manager moved as much as the model | the owner |
 | ⚠ **his** | the entry-age band, once 9 lands and the one research table exists | the owner |
-| then | 4 → 2 → 5 → 7 → 6, in that order (4 before 6; 5 and 7 are independent) | – |
+| then | 4 → 2 → 5 → 7 → 6, in that order (4 before 6; 5 and 7 are independent) – ⚙ **all five landed** | – |
 | last | 3, only after the growth curve is settled – its number is a DIFFERENCE against a freshman who is about to change | – |
 
-⚠ **Nothing in this round has been built.** Two agents are finishing unrelated work on the same
-branch and a third is measuring 9. The spec carries the order and the reason for it.
+⚠ **This line said «Nothing in this round has been built» when the round opened.** Items 2, 4, 5, 6
+and 7 have since landed on `wave/college-last-mile`; 1/1a/1b and 3 are still the owner's, and 14 is
+held open on purpose. The spec carries the order and the reason for it.
