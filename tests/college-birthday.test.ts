@@ -352,12 +352,24 @@ describe('the collision year: birthday + championship + call-up all deliver', ()
     expect(refusedOverReveal, 'the reveal is a question too: reported, nothing ticked').toEqual(['college-league'])
     expect(world.college!.years, 'and nothing banked behind it').toHaveLength(0)
     answerCollegeReveal(world)
+    // ⭐⭐⭐ ROUND 27 #6 RE-AIM – AND THE COLLISION YEAR NOW HAS A THIRD QUESTION IN IT.
+    // ⚠ IT USED TO CLAIM: «the finishing press carries the year out and the call-up week (14) lands
+    // in its second half» – i.e. that the tie passed inside the press, reporting itself on the way.
+    // ⚠ WHY IT MOVED: that is exactly the owner's complaint («матчи только постфактум»). The tie now
+    // PAUSES the year like the championship two weeks before it, so the press that meets it ends
+    // there and the one after it finishes the year. NOTHING BELOW IS WEAKENED: the same year banks,
+    // with the same championship and the same letter folded into it, and 'call-up' is still reported
+    // by the press that reaches the week.
     const second = resumeFromCollege(world, rng)
+    expect(second, 'the press that reaches the tie reports it, as it always did').toContain('call-up')
+    answerCollegeReveal(world)
+    const third = resumeFromCollege(world, rng)
+    expect(third, 'and the press after it is the one that carries the year out').toBeDefined()
     expect(world.college!.years, 'one banked year, not two halves').toHaveLength(1)
     const year = world.college!.years[0]
     expect(year.league, 'the championship folded into the banked year').not.toBeNull()
     expect(year.callUp, 'the letter came – read off the championship the player had just watched').not.toBeNull()
-    expect(second, 'and the finishing press reported it').toContain('call-up')
+
 
     // Nothing strands: the remaining years walk out with every birthday answered.
     const presses = walkTheFreeze(world, rng)

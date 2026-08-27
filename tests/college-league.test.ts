@@ -118,10 +118,15 @@ function answerCollegeReveal(world: WorldState): void {
   closeTournament(world)
 }
 
+// ⚠ FIVE PRESSES A YEAR AND IT USED TO BE THREE (round 27 #6). It is a BUDGET, not a claim: a
+// college year can now raise three questions – the championship (season week 12), the Nations Cup
+// tie (14) and her birthday – and each of them ends a press, so finishing a year costs up to four.
+// Five leaves the loop a margin and still terminates on `ending?.type`, which is what makes a
+// stranded career a failing assertion below rather than an infinite walk.
 function walkFourYears(seed: string, tier?: CollegeTier): WorldState {
   const { world, rng } = atTheFork(seed)
   answerCollegeAndDepart(world, rng, tier)
-  for (let press = 0; press < 3 * ENDINGS.collegeYears && world.ending?.type === 'college'; press++) {
+  for (let press = 0; press < 5 * ENDINGS.collegeYears && world.ending?.type === 'college'; press++) {
     resumeFromCollege(world, rng)
     answerCollegeReveal(world)
     if (pendingBirthday(world) !== null) chooseGift(world, 'day')
@@ -131,7 +136,7 @@ function walkFourYears(seed: string, tier?: CollegeTier): WorldState {
 
 /** Press until exactly `years` are banked – the boundary the college card is read at. */
 function spendYears(world: WorldState, rng: Rng, years: number): void {
-  for (let press = 0; press < 3 * years && world.college!.years.length < years && world.ending?.type === 'college'; press++) {
+  for (let press = 0; press < 5 * years && world.college!.years.length < years && world.ending?.type === 'college'; press++) {
     resumeFromCollege(world, rng)
     answerCollegeReveal(world)
     if (pendingBirthday(world) !== null) chooseGift(world, 'day')
