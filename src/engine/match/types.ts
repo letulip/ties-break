@@ -41,6 +41,37 @@ export interface MatchPlayer {
    *  live composition points always set it. ⚠ `AiPlayer` does not inherit it either - the cohort
    *  already carries `ageYears`, and two ages on one row is one age too many. */
   age?: number
+  /** ⭐ HOW FRESH SHE ARRIVED, 0-100 – the condition she stepped on court at, read by the RETIREMENT
+   *  HAZARD and by nothing else (`retireDurability`, match/point.ts, 27.08).
+   *
+   *  ⚠ IT IS A SECOND NUMBER BECAUSE `stamina` CANNOT ANSWER THE QUESTION. The hazard read `stamina`
+   *  and nothing else, and `stamina` conflates TALENT with FRESHNESS: a 45 is either a worn-out star
+   *  or a fresh weak girl and the function cannot tell them apart. Measured, that left the hazard
+   *  unable to tell a girl who arrived at 95 from one who arrived at 70 – ×1.00 to the last decimal
+   *  across the whole band (docs/specs/retirement-shape-2026-08.md §6).
+   *
+   *  ⚠ NOT A SKILL, AND NEVER READ BY `basePServe`. The STRENGTH half of condition is already inside
+   *  the four scaled attributes above – both composition points multiply by `conditionMatchFactor`
+   *  before they write this – so a model that read this for point-win probability would be paying for
+   *  condition twice. Exactly the rule `age` is under, one field up.
+   *
+   *  ⚠⚠ IT BELONGS ON THE SNAPSHOT, and the argument is `age`'s own, word for word: `WorldMatch.a/.b`
+   *  freeze a `MatchPlayer` into the save, and a match re-opened three seasons later must replay as
+   *  the match that was played. It was FIRST built as a `MatchOptions` field – no persisted type
+   *  touched, which looked like the cheaper seam – and `tests/college-league.test.ts`'s "every stored
+   *  match REPLAYS" caught it inside one run: the three replay call sites rebuild `MatchOptions` from
+   *  a stored record that carries `{surface, tour, seed}` and no body, so a re-watch of a match whose
+   *  retirement turned on freshness replayed as a different match. That test's own comment names the
+   *  stake – "a record that failed here is a Watch button that opens on nothing". The freshness she
+   *  played at is a fact about the girl who played, not about the call that is asking.
+   *
+   *  OPTIONAL, and ABSENT MEANS A MULTIPLIER OF EXACTLY 1 – not "she was fresh". Every snapshot frozen
+   *  before this field existed, every hand-built fixture and every calibration case therefore
+   *  integrates the identical hazard it always did, which is why no migration is owed and
+   *  `SAVE_SCHEMA_VERSION` does not move (the same reading `MatchRecord.retiredId` and `age` ship
+   *  under). A raw opponent nobody composed a condition for – a sparring partner, a call-up rubber –
+   *  is deliberately left absent: "no opinion" and "fresh at 100" are different claims. */
+  condition?: number
 }
 
 export interface MatchOptions {
@@ -53,6 +84,18 @@ export interface MatchOptions {
   firstServer?: Side
   /** momentum/streak modifier on; defaults to true */
   momentum?: boolean
+  /** ⭐ AN OVERRIDE FOR HOW FRESH THE TWO PLAYERS ARRIVED, 0-100, `[side 0, side 1]` – the same
+   *  quantity as `MatchPlayer.condition` and read by the same one consumer, the retirement hazard.
+   *
+   *  ⚠ THE PLAYER'S OWN FIELD IS THE RECORD; THIS IS THE OPINION, and the order is: option first,
+   *  then the snapshot, then a multiplier of exactly 1. That order is what lets a caller who builds
+   *  players BY HAND – a calibration fixture, a probe asking "what if she had arrived at 85?" – say
+   *  so without inventing a composition point, while a stored match replays off its own snapshot
+   *  with no option at all. Every live call site in `src/` passes NOTHING here and is answered by the
+   *  snapshot, which is the property that makes a re-watch reproduce.
+   *
+   *  ⚠ OMITTED IS NOT "BOTH FRESH". It is "no opinion", and it falls through to the players. */
+  condition?: [number, number]
 }
 
 /** Raw point counters of the current game or tiebreak (deuce = margin rule, not a state). */

@@ -236,10 +236,24 @@ describe('policy ordering - the 104-week anchor', () => {
     // under it did. Measured on both arms with the same cells:
     //     main (no in-match retirement)   grinder 0.0245 / careful 0.0096 = 2.550
     //     this branch (retirement on)     grinder 0.0435 / careful 0.0281 = 1.546
-    // and the floor sits at 1.3 rather than 1.5 because of what the second reading exposed - see
+    // and the floor sat at 1.3 rather than 1.5 because of what the second reading exposed - see
     // the tripwire under the `< 2.5` line. The DIRECTION is the property that must never break: per
     // match played, the grinder gets hurt substantially more often than the careful parent.
-    expect(ratio, 'per match, the grinder must get hurt substantially more than the careful parent').toBeGreaterThan(1.3)
+    //
+    // ✅✅ AND THE FLOOR IS BACK AT 1.5 (27.08), BECAUSE THE CONTAMINATION IS GONE AT THE SOURCE. The
+    // tripwire below fired on the very run that restored it and its own instruction was "restore the
+    // floor to 1.5 (or higher) and delete it", so that is what happened. Measured on these cells:
+    //     main (no in-match retirement)                 grinder 0.0245 / careful 0.0096 = 2.550
+    //     retirement on, flat condition curve            grinder 0.0435 / careful 0.0281 = 1.546
+    //     retirement on, its OWN condition curve         **2.405**
+    // ⚠ AND IT CAME BACK BY A DIFFERENT ROUTE THAN THE ONE THAT NOTE ANTICIPATED, which is worth
+    // saying: nobody separated the two causes. `retireHazard` was given its own freshness term
+    // (`retireDurability`, docs/specs/retirement-shape-2026-08.md §13), so the retirement door now
+    // points the SAME WAY as the weekly one instead of against it - the grinder's per-match
+    // retirement rate went x1.61 -> x5.11 against the careful parent's at a matched training plan.
+    // A second injury source is still mixed into this measure, but it is no longer pulling the
+    // wrong way, so the floor no longer has to be slack to survive it.
+    expect(ratio, 'per match, the grinder must get hurt substantially more than the careful parent').toBeGreaterThan(1.5)
     // ...and the owner's C3 anchor is MET again (3.12). This is the tripwire in the other direction
     // now: if content pushes it back under 3, this fails and gets re-read rather than quietly
     // re-pinned. Deliberately NOT tightened into a point pin – see every note above.
@@ -396,6 +410,26 @@ describe('policy ordering - the 104-week anchor', () => {
     // the day somebody separates the two causes, the per-match ratio returns toward 2.55, THIS
     // ASSERTION FAILS, and whoever is here should restore the floor to 1.5 (or higher) and delete
     // it. The `> 1.3` claim above is untouched and still asserted. ***
-    expect(ratio, 'retirement injuries are diluting the per-match hazard - see the note above, and restore > 1.5').toBeLessThan(2.2)
+    //
+    // *** ✅✅✅ AND IT FIRED, ON 27.08, EXACTLY AS WRITTEN - `expected 2.405 to be less than 2.2`.
+    // THE INVERTED PIN IS THEREFORE RETIRED AND THE FLOOR IS RESTORED TO 1.5 ABOVE, which is this
+    // file's own protocol for a recovered corridor (the same one W3-FIELD3 followed at 2.032 ->
+    // 2.538) and NOT a corridor widened to admit a change. It is retired rather than re-aimed
+    // upwards because it was only ever the record of a LOSS: with the retirement door pointing the
+    // same way as the weekly one there is nothing left for it to be the tripwire FOR.
+    //
+    // ⚠ THE ROUTE WAS NOT THE ONE ANTICIPATED. The note above expected the fix to be "count only
+    // `cause: 'week'` injuries here", i.e. filter the contamination out of the MEASURE - and named
+    // it a schema question for the owner. What actually happened is that the contaminating source
+    // stopped contaminating: `retireHazard` reads how fresh the player ARRIVED since 27.08
+    // (`retireDurability`, docs/specs/retirement-shape-2026-08.md §13), a redistribution whose
+    // population-weighted mean is 1.0, so the LEVEL of the retirement door is unchanged and only
+    // WHO walks through it moved. The careful parent's long three-set matches are still where the
+    // hazard accumulates - the length term is untouched and still worth x21 - but she now carries a
+    // multiplier of ~0.5 through them while the grinder carries ~2.1.
+    //
+    // ⚠ AND THE SCHEMA QUESTION THE NOTE RAISED IS STILL OPEN AND STILL WORTH THE OWNER'S TIME:
+    // `injuryHistory` rows still carry no cause, so this bench still cannot separate the two doors.
+    // It simply no longer NEEDS to in order to read the load-management axis. ***
   })
 })

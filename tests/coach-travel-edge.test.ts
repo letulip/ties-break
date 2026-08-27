@@ -1007,12 +1007,82 @@ const FROZEN = {
    *  imports no RNG and takes no `Rng` argument – so the frozen MAIN capture is NOT re-pinned (count
    *  41550, hash e6b0c709) and was re-run green beside this re-freeze.
    *
-   *  ⭐⭐ RE-FROZEN AGAIN (27.08, ROUND 27 #6 – the national-team call-up through the tournament flow,
-   *  schema v64), AND ALL THREE MOVED BY THE VERSION NUMBER ALONE. `PRE_V64` below is the proof
-   *  rather than the claim: `careerHashAtSchema(…, 63)` rolls ONLY the number back – no key is
-   *  dropped, because v64's field is `college.callUpReveal`, nested inside a `CollegeState` that is
-   *  null in all three of these careers – and every one of the previous hashes comes back byte for
-   *  byte. That is v60's shape exactly, one college fixture along.
+   *  ⭐⭐ RE-FROZEN AGAIN (27.08, THE RETIREMENT HAZARD'S OWN CONDITION CURVE – docs/specs/
+   *  retirement-shape-2026-08.md §13), AND THIS ONE MOVED CAREERS RATHER THAN KEYS. ALL THIRTEEN
+   *  BLOCKS MOVED, INCLUDING EVERY ROLLBACK IDENTITY, and that is correct rather than alarming: the
+   *  change decides WHO retires, a retirement opens a layoff, a layoff releases entries, and a
+   *  career diverges from there. No rollback can undo it because no key was added to `WorldState` –
+   *  `SAVE_SCHEMA_VERSION` did not move (the freshness is an additive OPTIONAL field on the
+   *  `MatchPlayer` snapshot, absent ⇒ the pre-27.08 hazard, the same reading `age?` ships under).
+   *
+   *  ⚠ PER-KEY DIFF TAKEN FIRST, as this file's protocol demands – `tools/frozen-key-diff.ts`, all
+   *  three arms (preset/policy 5/0, 8/0, 0/1), headers checked against the invocations. ⚠ AND THE
+   *  CHECK EARNED ITS KEEP AGAIN: the first attempt used a `for` loop with `set -- $pp` and all
+   *  three files came back `# preset 0 policy 0` – the same zsh word-split this file has already
+   *  recorded twice. Re-run with explicit flags. ⚠ THE CONTROL WAS THIS CHANGE REVERTED, in a
+   *  DETACHED WORKTREE at the same commit, never the previous commit.
+   *
+   *  WHAT MOVED: **29 of 72 keys** on 5/0, **28 of 72** on 8/0 – `results`, `events`, `entries`,
+   *  `condition`, `skills`, `injuryHistory` and the ledgers downstream of them – and **1 of 71** on
+   *  0/1, where the only key to move is `events`. That last cell is the clearest reading on the
+   *  page: the 8k player-policy career suffers no DIFFERENT retirement inside 156 weeks, so the only
+   *  thing that changed in it is the new optional field appearing on the `MatchPlayer` snapshots
+   *  stored in its match records.
+   *
+   *  ⭐⭐ AND THE KEY THAT MATTERS DID NOT MOVE: `rngMain` IS BYTE-IDENTICAL IN ALL THREE ARMS
+   *  (1dbff28caca2 / aebc8101d6df / d84bcbf0c481, before and after). The new term is arithmetic on
+   *  state and draws nothing; the two retirement uniforms were already drawn unconditionally per
+   *  match off `seed:ret`. So the frozen MAIN capture is NOT re-pinned – count 41550, hash e6b0c709
+   *  – and `tests/condition.test.ts` was re-run green beside this re-freeze.
+   *
+   *  ⭐⭐ AND RE-FROZEN ONCE MORE ON TOP OF THAT, THE SAME DAY (27.08, ROUND 27 #6 – the
+   *  national-team call-up through the tournament flow, schema v64). THIS BLOCK STACKS ON THE ONE
+   *  ABOVE and the order is the history: the retirement fix landed on `main` at 13:47, round 27 #6
+   *  through the evening, and this tree is the FIRST to carry both. ⚠⚠ WHICH IS WHY THE THREE
+   *  CONSTANTS BELOW MATCH NEITHER SIDE OF THE MERGE – the retirement change moved the careers, v64
+   *  moves the schema number, and every hash here was RE-DERIVED against the merged tree rather than
+   *  inherited from whichever side made the test pass.
+   *
+   *  ⚠⚠ AND THAT IS THE TRAP THIS PARAGRAPH EXISTS TO RECORD. Git merges by LINE, and agreement on
+   *  a line is not agreement on a fact: `PRE_V64` merged CLEANLY and was WRONG, because it exists on
+   *  one side only and its values were taken before the retirement change ever reached these
+   *  careers. Git raised markers over the three `FROZEN` values and these two prose blocks and over
+   *  nothing else – so the twelve older identities below and `PRE_V64` all arrived unchallenged, and
+   *  the one number that needed the most care was the one no marker pointed at. All thirteen sets
+   *  were re-derived on the merged tree regardless; the twelve inherited ones reproduced, and
+   *  `PRE_V64` did not.
+   *
+   *  ⚠ PER-KEY DIFF TAKEN FIRST, as this file's protocol demands, and ⚠ THE CONTROL IS THE MERGE'S
+   *  OWN RESULT AGAINST `origin/main` (`8450d23`, in a detached worktree) – NOT the branch base,
+   *  which predates the retirement change and would have measured the two waves together. That
+   *  control is what isolates round 27 #6's contribution ON TOP OF the retirement change, which is
+   *  the only question the merge raises. Null-arm checked both ways (the 17.08 hazard):
+   *  `callUpReveal`, `settleCallUpLetter` and `callUpFor` match 0 files in the control's `src`/
+   *  `tools`, and the merged tree carries the field plus its readers – the `world.offers` writer
+   *  among them.
+   *
+   *  THE VERDICT, all three arms (preset/policy 5/0, 8/0, 0/1), ⚠ headers checked against the
+   *  invocations – the zsh word-split this file has now recorded three times did NOT recur, each
+   *  header read back its own preset and policy: **exactly one key differs – 1 of 71, 1 of 71 and
+   *  1 of 70 – and it is `schemaVersion`** (da4ea2a5506f -> a68b412c4282). Not one key was added or
+   *  dropped on any arm, and `results`, `offers`, `events`, `entries`, `condition`, `skills`,
+   *  `injuryHistory`, `season`, `cohort`, `fundsCents`, `careerTotals` – every other key
+   *  byte-identical on all three.
+   *
+   *  ⚠ AND ONE CORRECTION TO THE DENOMINATOR THE BLOCK ABOVE USES. It says «of 72», «of 72» and «of
+   *  71»; `frozen-key-diff` prints 72/72/71 LINES on these arms and the first of them is its own
+   *  `# preset … policy …` header, so the KEY counts are 71/71/70 – measured on `origin/main` itself,
+   *  not only here. The retirement block's own reading is unaffected (what moved is what moved), but
+   *  the denominators in it are each one too many, and this file is the wrong place to leave a
+   *  number nobody re-counted.
+   *
+   *  ⭐⭐ SO THE «VERSION NUMBER ALONE» CLAIM SURVIVES THE RETIREMENT CHANGE, and it was VERIFIED
+   *  rather than trusted: `careerHashAtSchema(…, 63)` on the MERGED tree reproduces origin/main's
+   *  three post-retirement hashes byte for byte – 37a2a7b7…, 2ead13e9…, 8d6b056f… – which is
+   *  exactly what `PRE_V64` below is now pinned to. The twelve older identities (PRE_V63…PRE_V50)
+   *  reproduce origin/main's re-pinned constants unchanged as well – 36 of 36 set-arm cells, 39 of
+   *  39 counting PRE_V64's own three – so the ones the line-merge inherited are RIGHT on this tree
+   *  rather than merely uncontested.
    *
    *  ⚠ AND THE WAVE HAD TWO OTHER WAYS TO REACH THESE CAREERS, WHICH IS WHY THE IDENTITY IS WORTH
    *  MORE THAN THE PROSE. It adds a letter to `world.offers` (`settleCallUpLetter`) and it moves the
@@ -1021,15 +1091,19 @@ const FROZEN = {
    *  `world.college === null` rather than assuming it; if either had leaked, the rollback would not
    *  reproduce and this case would be red beside the freeze, naming the wave.
    *
-   *  ⚠ `rngMain` UNMOVED for the twenty-second wave running, and here it is the sharpest half of the
-   *  wave: the letter asks `rollCallUp` a second time on `seed:callup:<tieWeek>` – the SAME
-   *  per-week sub-stream the tick will derive, never MAIN and never a new key – and
-   *  `playCallUpRubbers` is untouched where it always ran. The frozen MAIN capture is NOT re-pinned
-   *  (count 41550, hash e6b0c709) and `tests/condition.test.ts` was re-run green beside this
-   *  re-freeze. */
-  middleGrinder: '24a8ccf3d47f53b554949bf8f20dfb026bec9e9c1a1bebfa89827ac3e241d174',
+   *  ⚠ `rngMain` UNMOVED for the twenty-second wave running, and ⚠⚠ ON A MERGE THAT IS THE STOP
+   *  CONDITION RATHER THAN A REMARK: it is byte-identical across the control on every arm AND equal
+   *  to the values the retirement block above records (1dbff28caca2 / aebc8101d6df / d84bcbf0c481),
+   *  so round 27 #6 did not leak into the MAIN stream on top of the retirement change. Had it
+   *  moved, nothing here would have been re-pinned. The letter asks `rollCallUp` a second time on
+   *  `seed:callup:<tieWeek>` – the SAME per-week sub-stream the tick will derive, never MAIN and
+   *  never a new key – and `playCallUpRubbers` is untouched where it always ran. The frozen MAIN
+   *  capture is NOT re-pinned (count 41550, hash e6b0c709), `tests/condition.test.ts` is
+   *  byte-identical at the base, on `origin/main`, on this branch and in this tree (blob f1c8d518),
+   *  and it was re-run green beside this re-freeze. */
+  middleGrinder: 'ac6d69368fe92fc2de10cf07adf8dc24290099ad97cd5029b4e38bdae6525f4a',
   /** PRESETS[8] · 120k wealthy family, elite coach · grinder policy (never travels) */
-  eliteGrinder: '9e3635685511f5a5dae43051f152d9f3c06806b15539cfd4e120bad9530606ed',
+  eliteGrinder: '0116627527eb2be93b262cd3276d92a09dc54bf47b3cca84a6fdc1acc1395d5e',
   /** PRESETS[0] · 8k working family, SELF-COACHED · player policy (switch on, nobody to send)
    *
    *  ⭐⭐ RE-FROZEN A FIFTH TIME (16.08) – AND ALONE, WHICH IS THE FINDING. The owner's correction of
@@ -1247,7 +1321,13 @@ const FROZEN = {
    *  rolled back by a version number, but swapping ONLY `schemaVersion` on the new world still
    *  reproduces each, which is all those lines ever claimed. The frozen MAIN capture
    *  (41550 / e6b0c709) is untouched and was re-run green beside this re-freeze. */
-  selfTravelling: '95d6287dd37b7d96c4e433ccb43f46f3e4f9aa490073680a894d197821f0377c',
+  /** ⚠ MOVED WITH BOTH TWINS, TWICE OVER, AND THIS NUMBER IS THE MERGE'S OWN (27.08). The
+   *  retirement hazard's condition curve moved the career and round 27 #6's v64 moved the schema
+   *  number; this tree is the first to carry both, so the value is neither side's – see the two
+   *  stacked paragraphs on `middleGrinder` for the control and the per-key verdict. `PRE_V64` rolls
+   *  ONLY the version back and reproduces origin/main's post-retirement 8d6b056f… byte for byte,
+   *  which is what makes this a version bump on a moved career rather than a second career move. */
+  selfTravelling: 'fad86deab1af0bf3670039a83126f04a8341c5a96f5b39ff97280cd98cf30b7e',
 }
 
 /** ⭐ THE SAME THREE CAREERS AS THEY HASHED UNDER v56 – the identity that proves the v57 re-freeze
@@ -1272,9 +1352,9 @@ const FROZEN = {
  *  is a break in a loop, the guard is a read, and the gift's offer lives on `seed:birthday:<age>` –
  *  none of it is a draw. The frozen MAIN capture is untouched: count 41550, hash e6b0c709. */
 const PRE_V57 = {
-  middleGrinder: 'f0e7def30b1b814cbf9842dff9bd147e6e54a7cfd0caf46e2261f0d62ebee2f3',
-  eliteGrinder: '0e3c44caaaef2258be2e29e16762e340a21a0fad555bbd8e672461b701a3a05d',
-  selfTravelling: '646dc2d19cb0e4aa9a357bfb01ed1412ec9f9f9f5ddc50efc22d853269952ac9',
+  middleGrinder: 'ac1006dfe148a829225d7c7347d76e5fbc77fe9648e75f0102a6bb4a5b3a8431',
+  eliteGrinder: '0e454d9781958939bbc8597d47e96615f30229e88b8dd415a77f4ac4c4224bd1',
+  selfTravelling: '4a56d6401d4c57bb7d2cdce8362c394a5ad54c8d57273eb34b5938ff3c54b805',
 }
 
 /** ⭐ THE SAME THREE CAREERS AS THEY HASHED UNDER v57 – the identity that proves the v58 re-freeze
@@ -1295,9 +1375,9 @@ const PRE_V57 = {
  *  became a week comparison, the reservation is pure state, and `resolveCollegeDeparture` draws
  *  nothing on any stream. The frozen MAIN capture is untouched: count 41550, hash e6b0c709. */
 const PRE_V58 = {
-  middleGrinder: '1216219c4ae09cdcdd6126b77ffe8238e995ff0c25871a3962915c1709b36816',
-  eliteGrinder: '0d170644e6ef8ba4600ab52663111baecd14dc042684a3944e36a9629c66ac9c',
-  selfTravelling: 'd66b99cee79cd7a0703ff43467ab6e6048bf7f15aacd8b0f20db29658603e692',
+  middleGrinder: '56764bc4b67824f6b0c2cdaea41238499b7459f9015fb8f08a419e012d0c92df',
+  eliteGrinder: 'e14a170afae73288e22f49e454b5ef662ed1731dff07a0d9bce9da4a424c2551',
+  selfTravelling: 'b52cd48499406462e4a7c6b1e7dd0ecd72d4692ed714e62836702b9740617239',
 }
 
 /** ⭐ THE SAME THREE CAREERS AS THEY HASHED UNDER v58 – the identity that proves the v59 re-freeze
@@ -1305,9 +1385,9 @@ const PRE_V58 = {
  *  nothing else. These are the v58-era `FROZEN` values verbatim; `careerHashAtSchema(…, 58)` drops
  *  the key v59 added before hashing, because a v58 serialisation never held it. */
 const PRE_V59 = {
-  middleGrinder: 'c33d3d6d468b6263ddad737eb869c7a1facdd880a7aad0deae30c8201beaacc0',
-  eliteGrinder: 'e83e59d2362e2409ebd84771c3bcb9ab35e02afe8acdb3827a29ed654378df44',
-  selfTravelling: '13c5c38248a05a3825f4cb3d193b11ed976005589df4b53da28f28efb32e7d4f',
+  middleGrinder: '99e45d5d71d96dc28d6fa249e27df893505478c049cb4e2a61e11292e6877bf1',
+  eliteGrinder: 'b02eeea417fc789c76a3e5a2196f74d3591c7dd6ce5f12201cb78d9fc4e2e804',
+  selfTravelling: 'ffd18d2001237ada22184772d56d81dbd60f81df9866caee50b8be255c9acbe4',
 }
 
 /** ⭐ THE SAME THREE CAREERS AS THEY HASHED UNDER v60 – the identity that proves the v61 re-freeze
@@ -1329,9 +1409,9 @@ const PRE_V59 = {
  *  The frozen MAIN capture is untouched: count 41550, hash e6b0c709, re-run green beside this
  *  re-freeze. */
 const PRE_V61 = {
-  middleGrinder: '0cd2b78b9a31355d8eabb607f178a7a31656daae22b54fcd525a6459cb4c0232',
-  eliteGrinder: '29d54dc0c7d608793e957770827be18ee0021dc2e485579777b4d9ccce0f004c',
-  selfTravelling: '1acaa64e1a8f2ce5b6aa3544b58c920fd0d614163c51c70fc5d76de2329a19b6',
+  middleGrinder: '42ca08754b8b5e5405d7812b0081b9c9b949f7af730ab3e7f33e89a7e6f2ffc6',
+  eliteGrinder: '7fdc15222651dcc059dcb9d5f8490f0d30c610ff27ea544fcb404598da20c923',
+  selfTravelling: 'c7d82d3125040dbdd20162679720d0525b6f21a2c1bc13fc17ca74362beb4d60',
 }
 
 /** ⭐ THE SAME THREE CAREERS AS THEY HASHED UNDER v61 – the identity that proves the v62 re-freeze
@@ -1355,9 +1435,9 @@ const PRE_V61 = {
  *  a comparison, not a roll, and this wave adds no draw to any stream. The frozen MAIN capture is
  *  untouched: count 41550, hash e6b0c709, re-run green beside this re-freeze. */
 const PRE_V62 = {
-  middleGrinder: 'c42d5ed886f8722a7de771d9b1a597ffc54bdded7a3d0f7056050c1ffed71a9c',
-  eliteGrinder: '13e00499902646b9752d6ed3f02743817f106bf2730cbf5fea7d3475ea25cb75',
-  selfTravelling: '01975f139053efd8598230f1c5bd953f8d9cd2011957c7579cc43651e6a04bff',
+  middleGrinder: '2cfece96f016dde4468176fc64898f479db82f58a1abcf59951f91fe5404f131',
+  eliteGrinder: '5665967656bbf1627da624c4aba7110b04fcb63d95673a5004374d0d846834f1',
+  selfTravelling: '04a46813a846b7a9027e1d18589479e1b113b509896383ff15fcd7132302089d',
 }
 
 /** ⭐ THE SAME THREE CAREERS AS THEY HASHED UNDER v62 – the identity that proves the v63 re-freeze
@@ -1388,17 +1468,32 @@ const PRE_V62 = {
  *  ⚠⚠ THE INTERESTING ARM IS `offers`, NOT `college`. This wave puts a LETTER in the inbox a week
  *  before every tie, and `world.offers` is inside this hash – so if `settleCallUpLetter` had been
  *  reachable outside the freeze, or if moving the roll into `callUpFor` had changed what the roll
- *  returns, these three would not roll back. They do, on all three arms. */
+ *  returns, these three would not roll back. They do, on all three arms.
+ *
+ *  ⚠⚠ RE-PINNED BY THE MERGE OF `origin/main`, NOT WEAKENED – AND IT IS THE SHARPEST WARNING IN THIS
+ *  FILE. These three moved because "the v63-era `FROZEN` values" is a moving target: the retirement
+ *  hazard's condition curve (`7261b17`) re-froze every one of them before this branch was merged, so
+ *  the numbers that stood here – daed02ec…, f722b0b3…, 34261cd3… – were the PRE-retirement v63 era
+ *  and are now history that never existed on any shipped tree. ⚠ THE DANGER IS THAT NOTHING
+ *  CONFLICTED: `PRE_V64` lives on this branch alone, so git took it CLEANLY and wrongly, while the
+ *  two constants that DID conflict were the ones a reader would have looked at. A line that merges
+ *  without a marker has not been checked by anything.
+ *
+ *  ⚠ SO THESE ARE NOW origin/main's OWN POST-RETIREMENT `FROZEN` VALUES, and that identity is the
+ *  measurement rather than the argument: `careerHashAtSchema(…, 63)` on the MERGED tree reproduces
+ *  them byte for byte on all three arms, which is the claim above re-proved on top of a change that
+ *  moved every career. The per-key diff against `origin/main` agrees – one key of 71/71/70 differs
+ *  and it is `schemaVersion` – and `rngMain` is byte-identical on every arm. */
 const PRE_V64 = {
-  middleGrinder: 'daed02ecf1b8cc02824b427b193dba3a9ea417cfdfbae8f9a82db49ffe9c2b49',
-  eliteGrinder: 'f722b0b3801a00cb44fdfd4b6cfd3b93ccae0838cf65d749dbf5a4b4914617af',
-  selfTravelling: '34261cd30586465aa757904c9bce40eadcaf3389f927a46421bfba8d15648f0e',
+  middleGrinder: '37a2a7b787ebf3b6de5daadef4e4e91386355c59e488c7270316d53a10292e47',
+  eliteGrinder: '2ead13e9a043799c44c2c1608d4372b9ffe2fd2ac1f941cefb4d4697ba8606fe',
+  selfTravelling: '8d6b056ff2480dfce6f7a2eb92bdfcaede034c229f8e55b07fda8dedd45d3fe8',
 }
 
 const PRE_V63 = {
-  middleGrinder: 'f00688b488ae684a3fc06a5d71c61672b6fe000241da7ca38b64495980d1f6cd',
-  eliteGrinder: '73fc7b8d1dc6f79df023d8771610461e0b3ec60ed2a38e7de90713cf00df32d2',
-  selfTravelling: '79e6cbc3ee13e4160e351b6a029109ad74c3ab00fa4f904617e8297877598921',
+  middleGrinder: '46047201ad23600b8e56a4d95d898ba36f0f85ab27d100e366285d0c3d955359',
+  eliteGrinder: '36f0afef166b70915215cd7f088dd072da5d9443310272b040399efb2ff7b5a9',
+  selfTravelling: '054b39447404b35c88bbb615a16ab30bf5070e4c4054d11a0c3e8c62300abfcf',
 }
 
 /** ⭐ THE SAME THREE CAREERS AS THEY HASHED UNDER v59 – the identity that proves the v60 re-freeze
@@ -1408,9 +1503,9 @@ const PRE_V63 = {
  *  `CollegeState` that is null in every one of these careers, so their top-level serialisation is
  *  the same 69 keys it was. */
 const PRE_V60 = {
-  middleGrinder: 'ec84bd3a70b073dc2c9dac99b1e0480c67192c6719d37957984e2b0e10a5fd34',
-  eliteGrinder: 'f6016239d0b34983c6042ae6c8a82e12449ede6513b33127f1c6435f6db25325',
-  selfTravelling: '13eda4a81943465cce2511b910d040e05c83b18cecb800e9feb9fa3195418c07',
+  middleGrinder: '514a2d2dc7eb401fe4b7ba860f5580863b692cb5c734c49f4345f4e3806aa760',
+  eliteGrinder: 'b8b1828ff53184a2d6fb04d1b000d5dc78c4b0944130b2f5de47153891d9ee5e',
+  selfTravelling: '6d8841ee34b62f0afaaa37221853bedbc96d2acbfd04b53dd4c0bc1f6f93ac03',
 }
 
 /** ⭐ THE SAME THREE CAREERS AS THEY HASHED UNDER v55 – the identity that proves the v56 re-freeze
@@ -1432,9 +1527,9 @@ const PRE_V60 = {
  *  byte-identical – only the threshold the first one is compared against moved. The frozen MAIN
  *  capture is untouched: count 41550, hash e6b0c709. */
 const PRE_V56 = {
-  middleGrinder: 'f4473f07610ea9da8b2026f625133e485436e959aecf7246447884293b65846b',
-  eliteGrinder: '1a582882dd2151cdd959263bb5c6863346784069353dc0eee56a3652f3932bec',
-  selfTravelling: '371af341af030e7ef763f908f5b2e3f6e3c2f5d6ad7e2199af81877b3e555b62',
+  middleGrinder: '33555892cdaeb1945be47ed4ce9e90ca40cdbb927725390f58fed424c6cd056a',
+  eliteGrinder: '9272258400b95d71be1a5556979d3cfc769f9819af0bcec25d7cdd1fda184361',
+  selfTravelling: 'a7bfb6653ae8a5ff6baed10eb2bb6cf20b3bc5958d24d854610d3e001968a3f9',
 }
 
 /** ⭐ THE SAME THREE CAREERS AS THEY HASHED UNDER v54 – the identity that proves the v55 re-freeze
@@ -1446,9 +1541,9 @@ const PRE_V56 = {
  *  control built as this branch with the wave's own commit reverted, never the previous commit –
  *  named `schemaVersion` and no other key, on all three. */
 const PRE_V55 = {
-  middleGrinder: '7601ec6b84185d443893cd34d78f9050bf192507a91f4606b8e49ba78266a945',
-  eliteGrinder: '1fcf6365c738cb3feccf73001a5698828d9da870a2e81ae90af1724142e542ac',
-  selfTravelling: '377b5ed1ef86fec37205a0078c3f5157affd209feb6d7091833c571abaa47d6a',
+  middleGrinder: '050321b3b9795815afa0f7d865c7187facedeb9be1d033949f5135339f95386a',
+  eliteGrinder: 'c24f8eacf53786f158bbbb9b32f768069164b566f01b1c3fab024431f58368e4',
+  selfTravelling: '175523e329084e75743b5fc8c8b128aa97e2152b772a1943c08b85aee79fe02d',
 }
 
 /** ⭐⭐ RE-FROZEN A SEVENTH TIME (16.08, v51 – docs/specs/what-the-college-place-costs-2026-08.md) AND
@@ -1487,16 +1582,16 @@ const PRE_V55 = {
  *  moves one of these careers through anything but `SAVE_SCHEMA_VERSION` still goes red here beside
  *  a red freeze, and the pair is what says which kind of change it was. */
 const PRE_V52 = {
-  middleGrinder: '0c2bfbe56ba00abb3d53ea1af314e80344c484116be370667bb7fd9f957c9583',
-  eliteGrinder: '0f41e5e846d9861ec2bda981c630f1282fd6f4009363903ebe4885b5a1c1fa43',
-  selfTravelling: '8361225f50e9a4e3f9760e16ea2939d8853d7eba3374fc7ff5e0599cec053dc5',
+  middleGrinder: '698d5261c32053c987e91fff66a86bd375c75f9013ed23924dc913e4e0869900',
+  eliteGrinder: '66bbadeacb14a742d087c36df64fd4f1027b465b6e5683885175a4f2eef743f1',
+  selfTravelling: '73ab222cac4434c9db611f707c8d230a29447431913f84ef27025ba6757f804e',
 }
 
 /** ⭐ THE SAME THREE CAREERS AS THEY HASHED UNDER v50 – the identity that proves the v51 re-freeze
  *  moved ONE key and nothing else. */
 const PRE_V51 = {
-  middleGrinder: '185e5e7df73b9e4a7d41afe085e406f32515e01cf7a7f657252f4c735d6f964c',
-  eliteGrinder: 'f586b455585ca13cfe7970ad06b07c880ec521a89cc1cf6e23cd028b14e55113',
+  middleGrinder: '611d9457e492bf7ff9076a076f0acf931377dac7a031741b2891046039dc5611',
+  eliteGrinder: '55e1bfe0949aeb9c5d8f1a9dcc329ce8e3ec1ef54baf0660522efb35566a446b',
   /** ⚠ MOVED WITH THE FREEZE ABOVE (17.08, round 21 #2b) AND THAT IS THE HONEST OUTCOME, not a
    *  weakening. The v51 case asks "does rolling ONLY the schema back reproduce the v50 hashes" – and
    *  for the two grinders it still does, untouched. For THIS career it no longer can, because the
@@ -1504,7 +1599,7 @@ const PRE_V51 = {
    *  different season cannot produce the old season. The identity is re-anchored to the new world, so
    *  it goes on doing its job – if a LATER wave moves this career through anything but
    *  `SAVE_SCHEMA_VERSION`, this line goes red beside the freeze exactly as it just did. */
-  selfTravelling: '8f9125412ad1ed447afd7831cbdc6720535cd240a543a7c63b4edf96a098a31e',
+  selfTravelling: '129ea9aed51121bd06d789a19882daa7eb5ae07123f2894d2c65a56a965c9a29',
 }
 
 /** ⭐ THE SAME THREE CAREERS AS THEY HASHED UNDER v49, kept so the re-freeze above can PROVE its own
@@ -1515,8 +1610,8 @@ const PRE_V50 = {
    *  full: the WTA 250's field changed, so the tour NEWS in `events` changed, and `events` is inside
    *  the hash. The rollback identity itself is untouched in meaning – swapping only `schemaVersion`
    *  on the new world still reproduces exactly this, which is what these three lines are for. */
-  middleGrinder: '38e428f127fac896ea18f6f2e523a873e6727c6ead5624285cce3738b746acc7',
-  eliteGrinder: '7f0b8edf0a3bca39e98c54ac0435c23379a55f3e10613ae867afd5c43807d80d',
+  middleGrinder: '9e707a3451aeedd51a892ef4536de820f167c4d366e21e2d15d40b86917d5af6',
+  eliteGrinder: 'ec6ce443924ba3ce2290d5e9d0db72dccffcfbc50f55d307b311aeefbdf93c8f',
   /** ⚠ MOVED WITH ITS TWIN ABOVE, AND THE PARAGRAPH ON `FROZEN` PREDICTED EXACTLY THIS: *"if a later
    *  wave moves one of these careers for a real reason, the rollback case goes red beside the freeze
    *  and says which kind of change it was."* It did, on 16.08, and it said so – both hashes red, and
@@ -1532,7 +1627,7 @@ const PRE_V50 = {
    *  line: this wave changed the CAREER, not a schema field, so the rollback is re-anchored to the
    *  new world. The two grinder hashes in this block did NOT move, which is the identity doing its
    *  job – a change that reaches one career of three shows up in one pair of hashes of three. */
-  selfTravelling: '90bf53d6e938a31eb744e97ba86190a829616ad299c30fb6fd25afd24fb919ba',
+  selfTravelling: 'e74145e08c6b511d6ff8c50c7e8b19b113bd3fdf140fa49f3999687b02d35fa6',
 }
 const FREEZE_WEEKS = 156
 
@@ -1685,6 +1780,11 @@ describe('the byte-identity of a career that does not travel', () => {
     // `inCollege`, week 156 is 32 weeks short of the fork, and `walkFrozenCareer` asserts
     // `world.college === null` rather than assuming it – so if any of the three had leaked, rolling
     // the number back would NOT reproduce and this case would be red beside the freeze.
+    // ⚠ RE-AIMED BY THE MERGE OF `origin/main`, NOT WEAKENED: `PRE_V64` now holds main's OWN
+    // post-retirement hashes, because the retirement hazard's condition curve moved every frozen
+    // career before this branch was merged. The case asks exactly what it always asked – does v64
+    // move the version number and nothing else – but it now asks it ON TOP OF a change that moved
+    // the careers, which is the first time this identity has had to survive one. It does.
     expect(careerHashAtSchema(5, 0, 63), '25k · middle coach · grinder').toBe(PRE_V64.middleGrinder)
     expect(careerHashAtSchema(8, 0, 63), '120k · elite coach · grinder').toBe(PRE_V64.eliteGrinder)
     expect(careerHashAtSchema(0, 1, 63), '8k · self-coached · player').toBe(PRE_V64.selfTravelling)

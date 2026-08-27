@@ -12,7 +12,7 @@ import type {
   Side,
 } from './types'
 import { createScore, awardPoint, contextOf, formatScore } from './scoring'
-import { basePServe, modifiedPServe, retireHazard, type Streak } from './point'
+import { basePServe, modifiedPServe, retireDurability, retireHazard, type Streak } from './point'
 import { pMatchBo3 } from './closedForm'
 import { rngFromSeed } from '../rng'
 
@@ -63,6 +63,13 @@ function winsGameNext(myPts: number, oppPts: number): boolean {
 //     MatchReplay / TournamentFlow / PracticeFlow re-run the stored `WorldMatch` and get the SAME
 //     truncated match back with no new field to pass. That is the whole reason it lives in here
 //     rather than being decided by the world after the fact.
+//     ⚠⚠ AND THAT CLAUSE IS WHY THE 27.08 FRESHNESS TERM LIVES ON `MatchPlayer` AND NOT IN
+//     `MatchOptions`. Freshness is a REAL input to the truncation now, and the three replay call
+//     sites rebuild `opts` from a stored `WorldMatch`, which carries `{surface, tour, seed}` and no
+//     body – so an options-only seam would have made a re-watch of a match whose retirement turned
+//     on freshness replay as a DIFFERENT match. It was built that way first and
+//     `tests/college-league.test.ts`'s "every stored match REPLAYS" caught it inside one run. The
+//     freshness is on the snapshot, beside `age`, and the sentence above stays true.
 //   * conditional pulls are impossible: both uniforms are taken before anything is compared.
 //
 // THE SAMPLER. Per point, per side, `retireHazard` gives a small probability that this player stops
@@ -91,6 +98,30 @@ export function simulateMatch(a: MatchPlayer, b: MatchPlayer, opts: MatchOptions
   const retRng = rngFromSeed(`${opts.seed}:ret`)
   const retU: [number, number] = [retRng(), retRng()]
   const retH: [number, number] = [0, 0]
+  // ⭐ HOW BREAKABLE EACH OF THEM IS, resolved ONCE before the first ball – exactly as `baseServe`
+  // below is, and for the same reason: it is a fact about how they arrived, and it cannot change
+  // inside a match any more than their skills can.
+  //
+  // ⚠⚠ THE SNAPSHOT IS THE RECORD AND `opts.condition` IS AN OVERRIDE, IN THAT ORDER, AND THE ORDER
+  // IS WHAT MAKES A RE-WATCH REPRODUCE. MatchReplay / TournamentFlow / PracticeFlow rebuild `opts`
+  // from a stored `WorldMatch`, which carries `{surface, tour, seed}` and no body – so if freshness
+  // lived only in the options, a match whose retirement TURNED on it would replay as a different
+  // match, and `tests/college-league.test.ts` says what that is worth: "a record that failed here is
+  // a Watch button that opens on nothing." It lives on `MatchPlayer` for the same reason `age` does.
+  // Neither present ⇒ exactly 1, i.e. the pre-27.08 hazard to the last bit, which is what every
+  // hand-built fixture and every pre-branch snapshot means.
+  //
+  // ⚠ STILL NO DRAW, AND STILL NO SIDE IS SPECIAL. This is arithmetic over a number each player
+  // already carried; the two uniforms above are unchanged, unconditional and drawn before anything
+  // is compared, and the multiplier is looked up by INDEX, so this function has not learned which
+  // side the kid is on. And `retireDurability` is strictly positive, so `retH` stays non-decreasing
+  // and the sampler stays a threshold on accumulated exhaustion rather than a coin flip.
+  const freshnessOf = (side: Side): number | undefined => opts.condition?.[side] ?? players[side].condition
+  const durabilityOf = (side: Side): number => {
+    const c = freshnessOf(side)
+    return c === undefined ? 1 : retireDurability(c)
+  }
+  const retD: [number, number] = [durabilityOf(0), durabilityOf(1)]
   let retired: { side: Side; pointNumber: number } | null = null
   // Base serve-win prob per server; constant across the match (skills/surface only).
   const baseServe: [number, number] = [basePServe(a, b, opts), basePServe(b, a, opts)]
@@ -193,8 +224,8 @@ export function simulateMatch(a: MatchPlayer, b: MatchPlayer, opts: MatchOptions
     // Skipped once the match is already decided – you cannot retire from a match you have just won,
     // and without this guard a hazard that fires on match point would steal a completed result.
     if (score.winner === null) {
-      retH[0] += retireHazard(pointNumber, players[0].stamina)
-      retH[1] += retireHazard(pointNumber, players[1].stamina)
+      retH[0] += retireHazard(pointNumber, players[0].stamina, retD[0])
+      retH[1] += retireHazard(pointNumber, players[1].stamina, retD[1])
       // Side 0 is asked first purely so the tie is TOTAL rather than order-of-evaluation-dependent.
       // Both firing on the same point needs two independent uniforms to be passed by two sums that
       // differ by the stamina ratio, on the same point, and has never been observed.

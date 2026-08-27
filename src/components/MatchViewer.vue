@@ -1035,9 +1035,12 @@ const retirementNotice = ref(false)
 
 /**
  * WHY, AS FAR AS THE MODEL KNOWS - and it knows exactly this much. `retireHazard` is
- * `RETIRE_K * spentness(pointNumber, stamina)` and `spentness` is EXACTLY ZERO up to
- * `FATIGUE_START` (120 points), so every retirement this engine can produce happened deep into a
- * long match to a girl who was not fresh. The sentence is the same one round 16 put in the
+ * `RETIRE_K * spentness(pointNumber, stamina) x retireDurability(condition)` and `spentness` is
+ * EXACTLY ZERO up to `FATIGUE_START` (120 points), so every retirement this engine can produce
+ * happened deep into a long match to a girl who was not fresh. ⚠ THE FRESHNESS FACTOR (27.08) IS
+ * STRICTLY POSITIVE AND MULTIPLIES THAT ZERO, so the sentence below is still true of every
+ * retirement the engine can produce – and it is now true of MORE of them for a girl who turned up
+ * worn out, which is the same sentence rather than a new one. The sentence is the same one round 16 put in the
  * commentary beat (docs/specs/round16-commentary.md §2), deliberately: two surfaces saying one fact
  * must say it the same way.
  */
