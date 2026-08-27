@@ -462,7 +462,22 @@ and `null` made the compiler find `BracketTabs`, which is now gated on a real dr
 empty list. ⭐ **The generalisation §4's builder wrote is right and is now measured twice: a constant
 standing in for a whole class is a default with a longer fuse.**
 
-**4. The zero arm is a real outcome and it does NOT open a reveal.** `rubbersPlayed === 0` – named,
+**4. ⚠⚠ AND §2 LEFT A TRIPWIRE THAT THIS ITEM STEPPED ON – ITS OWN WARNING, COLLECTED.**
+`collegeLeagueIsNextStop`'s docstring reads: *«IF A THIRD MID-YEAR STOP IS EVER ADDED TO THAT LOOP,
+IT HAS TO BE ADDED HERE TOO, or this button starts promising a tournament that a new pause arrives in
+front of.»* **The tie is that third stop.** Without the fix a press labelled «Finish the year» would
+have played the Nations Cup – §2's own defect, arriving from the other college fixture – and, on the
+two enrolment weeks whose year opens between the fixtures, a press labelled «Play the College League»
+would have played the tie instead. **One walk answers both now** (`collegeNextStop` returns the FIRST
+stop, and `leagueIsNextStop` / `callUpIsNextStop` are two readings of it), so the two facts cannot
+both claim a press; the button gained a sixth label, `Play the Nations Cup`, off `NATIONAL_TEAM.label`
+like the League's off its own. ⚠ Unlike the championship this stop is CONDITIONAL – the League is
+arithmetic and fires every year, the tie is a roll and a bench year raises no reveal – so the scan
+asks the letter's own question through the letter's own function, which is also why the button and the
+letter cannot disagree. **Mutation-verified**: delete the third clause and press 7 of a walked career
+promises no tie and delivers one.
+
+**5. The zero arm is a real outcome and it does NOT open a reveal.** `rubbersPlayed === 0` – named,
 travelled, and sat – has no rubber to walk, so opening a reveal would pause the year in front of an
 empty flow. The letter still arrived, the milestone row still says what happened, and the stop reason
 is still reported: the week is not silent, it simply has no tournament in it.

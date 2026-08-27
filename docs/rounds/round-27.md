@@ -75,8 +75,11 @@ reads longer than the work it implies.
   field awards neither» is the College League's sentence and false of a national squad – the engine
   states each fixture's own clause now. ⚠ **And a SECOND one he did not see**, the same shape one
   layer out: `TournamentFlow`'s `amateur ? COLLEGE_LEAGUE.drawSize : …` would have called three ties
-  an eight-player draw. ⚠ Schema v63 → v64 (a paused tie is a question the player has not answered).
-  ⚠ The frozen MAIN capture is UNMOVED. Spec §6.
+  an eight-player draw. ⚠⚠ **And a THIRD, which is §2's own tripwire collected**: «if a third mid-year
+  stop is ever added to that loop, it has to be added here too» – the tie IS that third stop, so a
+  press labelled «Finish the year» would have played the Nations Cup. One walk answers both fixtures
+  now and the college button gained a sixth label. ⚠ Schema v63 → v64 (a paused tie is a question the
+  player has not answered). ⚠ The frozen MAIN capture is UNMOVED. Spec §6.
 
 - [x] **7. «И снова она просит "One day, not a week, not a trip"» · «3 раза подряд» · «я просил это
   исправить»** – ⚠⚠ **REOPENED, and he was right to.** His original complaint (round 26 #9) was about
