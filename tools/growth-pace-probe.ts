@@ -95,6 +95,7 @@ import {
 import { kidAgeExact } from '../src/engine/world/age'
 import { TIERS, TIER_LADDER, WEEKS_PER_YEAR } from '../src/engine/season/calendar'
 import { SKILL_KEYS } from '../src/engine/development'
+import { ECONOMY } from '../src/engine/economy'
 import { COLLEGE_LEAGUE } from '../src/engine/collegeLeague'
 import { FIELD } from '../src/engine/season/fieldPros'
 import type { CareerEnding } from '../src/shared/protocol'
@@ -148,6 +149,58 @@ const JULY_PLAYER: Policy = {
 const POLICY: Policy =
   policyArg === 'july' ? JULY_PLAYER : (POLICIES.find((p) => p.id === policyArg) ?? POLICIES[1])
 const PROVE_ARM = args.includes('--proveArm')
+
+// -------------------------------------------------------------------------------------------------
+// ⭐ THE POTENTIAL-BAND OVERRIDE – measurement only, ONE BAND PER PROCESS, and never in `src/`
+// -------------------------------------------------------------------------------------------------
+//
+// The owner's «может не до 3-6% довести, но как-то все-таки и не так 90+%» needs a SWEEP of
+// `ECONOMY.development.potentialBand`, and a sweep must not touch the shipped constant. So the band
+// is read from the environment (`TB_POTENTIAL_BAND="lo,hi"`) or from `--band lo,hi`, and applied to
+// the live ECONOMY object ONCE, here, before a single career exists. `src/` is byte-identical to
+// `wave/the-shop`'s tip in every arm – `git status --porcelain -- src` is the check.
+//
+// ⚠⚠ AND THE REASON IT IS ONE BAND PER PROCESS RATHER THAN A LOOP. `tools/potential-band-sweep.ts`
+// wraps each arm in `withBand(...)` inside ONE process, which is correct for pure arithmetic and is
+// exactly the hazard this file's own header records for the corpus: the engine's per-season memos
+// are PROCESS-GLOBAL, so a career run after another career in the same process is not the career it
+// would have been alone (`--proveArm` moved the median career-best rank #13 → #14 by doing nothing
+// but opening one extra world first). A band swept in-process would carry that contamination into
+// every arm after the first and it would look exactly like a band effect. Separate processes cannot.
+//
+// ⚠ WHAT THE PATCH DOES NOT REACH, stated because it is a real (small) limit. `SKILL_CEILING_MAX`
+// (development.ts) is computed at MODULE LOAD from `potentialBand[1]`, so it keeps its shipped 86 in
+// every arm. Nothing in the simulation reads it – it is the skills-rose axis and two tests – so no
+// number below moves with it; but a SHIPPED band change would move that axis, and the report says so.
+//
+// ⚠ `COHORT.potentialBand` `[1, 22]` (season/cohort.ts) is a DIFFERENT constant and is not touched:
+// the 199 rivals and the 1,600 professionals keep their shipped ceilings in every arm, which is what
+// makes this a difficulty knob against a fixed field rather than a world parameter.
+const bandArgRaw =
+  process.env.TB_POTENTIAL_BAND ??
+  (args.indexOf('--band') >= 0 ? args[args.indexOf('--band') + 1] : undefined)
+const SHIPPED_BAND: readonly [number, number] = [
+  ECONOMY.development.potentialBand[0],
+  ECONOMY.development.potentialBand[1],
+]
+if (bandArgRaw !== undefined) {
+  const parts = bandArgRaw.split(',').map((s) => Number(s.trim()))
+  if (parts.length !== 2 || !parts.every((x) => Number.isFinite(x)) || parts[0] > parts[1]) {
+    throw new Error(
+      `growth-pace-probe: --band / TB_POTENTIAL_BAND must be "lo,hi" with lo <= hi – got "${bandArgRaw}". REFUSING to run.`,
+    )
+  }
+  // Elementwise, not a replacement: `rollPotential` destructures the array, and a replaced array
+  // would leave any reference captured elsewhere pointing at the old one.
+  const d = ECONOMY.development as unknown as { potentialBand: [number, number] }
+  d.potentialBand[0] = parts[0]
+  d.potentialBand[1] = parts[1]
+}
+const BAND: readonly [number, number] = [
+  ECONOMY.development.potentialBand[0],
+  ECONOMY.development.potentialBand[1],
+]
+const BAND_IS_SHIPPED = BAND[0] === SHIPPED_BAND[0] && BAND[1] === SHIPPED_BAND[1]
 
 // -------------------------------------------------------------------------------------------------
 // the rungs this file is asked about, by name rather than by index arithmetic
@@ -248,6 +301,13 @@ interface Career {
   ageProTakeover: number | null
   /** total events committed, by track */
   eventsByTrack: Record<LadderTrack, number>
+
+  /** ⭐ ADDED FOR THE BAND SWEEP – the MEDIAN career's own numbers, which is the half of the
+   *  question a top-100 share cannot see. Career prize money at the moment the career stops, and
+   *  whether she was ever paid a professional cheque at all (`potential-band-2026-08.md` §3's
+   *  "ever paid" column, which is that page's own reading of "is there enough to play for"). */
+  finalPrizeCents: number
+  everPaid: boolean
 }
 
 function zeroTracks(): Record<LadderTrack, number> {
@@ -461,6 +521,8 @@ function runCareer(cell: string, preset: Preset, index: number, policy: Policy):
     ageProTakeover:
       firstProMajoritySeason === null ? null : ageAt(firstProMajoritySeason * WEEKS_PER_YEAR),
     eventsByTrack,
+    finalPrizeCents: world.careerTotals.prizeCents,
+    everPaid: world.careerTotals.prizeCents > 0,
   }
 }
 
@@ -573,6 +635,12 @@ function main(): void {
       `14 -> ${FULL_CAREER_AGE_YEARS} (${FULL_CAREER_WEEKS} weeks max), policy '${POLICY.label}'`,
   )
   console.log(`  fork answered 'continue', every retirement offer refused, bankruptcy NOT defused.`)
+  console.log(
+    `  potentialBand [${BAND[0]}, ${BAND[1]}]` +
+      `${BAND_IS_SHIPPED ? ' – AS SHIPPED' : ` – OVERRIDDEN (shipped is [${SHIPPED_BAND[0]}, ${SHIPPED_BAND[1]}])`}` +
+      `  mean ${((BAND[0] + BAND[1]) / 2).toFixed(1)} · width ${(BAND[1] - BAND[0]).toFixed(1)}` +
+      ` · sd of her mean-of-five ceiling ${((BAND[1] - BAND[0]) / Math.sqrt(60)).toFixed(2)}`,
+  )
 
   if (PROVE_ARM) {
     console.log(`\n=== ARM 3 – the round-26 read-order defect, reproduced on purpose ===`)
@@ -780,6 +848,59 @@ function main(): void {
         ` · above its TOP (${fieldHi}): ${pct(means.filter((m) => m > fieldHi).length, means.length)}`,
     )
   }
+
+  // ---- ⭐ ONE MACHINE-READABLE ROW, so a sweep of processes can be assembled without re-parsing
+  // eighty lines of prose per arm. Every field is already printed above; nothing new is computed
+  // except the arithmetic of the band itself.
+  const share_ = (k: number, n: number): string => (n === 0 ? 'NA' : ((100 * k) / n).toFixed(1))
+  const q = (xs: number[], p: number): string => (xs.length === 0 ? 'NA' : quantile(xs, p).toFixed(2))
+  const s18 = careers.map((c) => c.at18).filter((s): s is Snap => s !== null)
+  const s19 = careers.map((c) => c.at19).filter((s): s is Snap => s !== null)
+  const r19 = s19.map((s) => s.rank).filter((x): x is number => x !== null)
+  const bestRanks = careers.map((c) => c.bestWta).filter((x): x is number => x !== null)
+  const row: Record<string, string> = {
+    band: `${BAND[0]}-${BAND[1]}`,
+    bandMean: ((BAND[0] + BAND[1]) / 2).toFixed(1),
+    bandWidth: (BAND[1] - BAND[0]).toFixed(1),
+    policy: POLICY.id === 'player' && POLICY.label.startsWith('july') ? 'july' : POLICY.id,
+    n: String(all),
+    horizon: String(H),
+    top100H: share_(horizon.filter((c) => (c.bestWta ?? 9999) <= 100).length, H),
+    top100All: share_(careers.filter((c) => (c.bestWta ?? 9999) <= 100).length, all),
+    top250H: share_(horizon.filter((c) => (c.bestWta ?? 9999) <= 250).length, H),
+    top250All: share_(careers.filter((c) => (c.bestWta ?? 9999) <= 250).length, all),
+    proH: share_(horizon.filter((c) => c.eventsByTrack.wta > 0).length, H),
+    slamH: share_(horizon.filter((c) => c.firstPlayAge.slam !== undefined).length, H),
+    bankrupt: String(careers.filter((c) => c.bankrupt).length),
+    // ⚠ RANK MEDIANS ARE OVER THE CAREERS THAT HELD A PAID RANK AT ALL. `everPaidPct` beside it is
+    // what stops that being a survivorship read: a band that pays fewer careers moves both.
+    medBestRank: q(bestRanks, 0.5),
+    nRanked: String(bestRanks.length),
+    everPaidPct: share_(careers.filter((c) => c.everPaid).length, all),
+    medFirstTop100: q(careers.map((c) => c.ageFirstTop100).filter((x): x is number => x !== null), 0.5),
+    nFirstTop100: String(careers.filter((c) => c.ageFirstTop100 !== null).length),
+    medRank19: r19.length === 0 ? 'NA' : quantile(r19, 0.5).toFixed(0),
+    medPower19: q(s19.map((s) => s.skillMean), 0.5),
+    medCeiling19: q(s19.map((s) => s.potentialMean), 0.5),
+    medCeilShare18: q(s18.map((s) => 100 * s.ceilingShare), 0.5),
+    medAge90Ceiling: q(careers.map((c) => c.ageAt90Ceiling).filter((x): x is number => x !== null), 0.5),
+    medJnrSeasons: q(careers.map((c) => c.juniorSeasonsByMatches), 0.5),
+    medFirst500: q(
+      careers
+        .map((c) => {
+          const ages = W500_AND_UP.map((t) => c.firstPlayAge[t]).filter((x): x is number => x !== undefined)
+          return ages.length === 0 ? null : Math.min(...ages)
+        })
+        .filter((x): x is number => x !== null),
+      0.5,
+    ),
+    medPrize19: q(s19.map((s) => s.prizeCents / 100), 0.5),
+    medPrizeFinal: q(careers.map((c) => c.finalPrizeCents / 100), 0.5),
+    medFunds19: q(s19.map((s) => s.fundsCents / 100), 0.5),
+    aboveCollegeCentre19: share_(s19.filter((s) => s.skillMean > standard).length, s19.length),
+    aboveCollegeTop19: share_(s19.filter((s) => s.skillMean > fieldHi).length, s19.length),
+  }
+  console.log(`\nRESULT\t${Object.entries(row).map(([k, v]) => `${k}=${v}`).join('\t')}`)
 
   console.log('')
 }

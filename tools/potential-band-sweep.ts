@@ -100,7 +100,7 @@ interface Variant {
  *  "the bottom of the distribution has nothing to play for", this variant answers it without making
  *  a single career better on average; if the numbers say the median has to move too, this is the arm
  *  that proves it. Every other variant confounds "raise the floor" with "raise everyone". */
-const VARIANTS: Variant[] = [
+const SHIPPED_VARIANTS: Variant[] = [
   { label: 'baseline  [4, 26]', band: [4, 26], why: 'as shipped' },
   { label: 'floor+3   [7, 26]', band: [7, 26], why: 'half a floor lift – is the cheap half enough?' },
   { label: 'floor+6   [10, 26]', band: [10, 26], why: 'the asked floor lift' },
@@ -108,6 +108,29 @@ const VARIANTS: Variant[] = [
   { label: 'top+14    [4, 40]', band: [4, 40], why: 'the asked ceiling lift' },
   { label: 'both      [10, 40]', band: [10, 40], why: 'both' },
 ]
+
+/** ⭐ 27.08 – THE VARIANT LIST IS OVERRIDABLE FROM THE ENVIRONMENT, so a later sweep can price its
+ *  OWN bands against these guard windows without editing the list and without touching the shipped
+ *  constant. `TB_BANDS="4,26;0,16;0,12"` replaces the six above; unset, nothing changes and every
+ *  number this file has ever printed reproduces. The 11.08 page asked "what would moving it cost";
+ *  the 27.08 question is the opposite direction (the owner's «не так 90+%»), and the six variants
+ *  above are all LIFTS – there was no reason in August to price a lowering. */
+const VARIANTS: Variant[] = process.env.TB_BANDS
+  ? process.env.TB_BANDS.split(';')
+      .map((s) => s.trim())
+      .filter(Boolean)
+      .map((s) => {
+        const [lo, hi] = s.split(',').map((x) => Number(x.trim()))
+        if (!Number.isFinite(lo) || !Number.isFinite(hi) || lo > hi) {
+          throw new Error(`potential-band-sweep: TB_BANDS entry "${s}" is not "lo,hi" with lo <= hi. REFUSING.`)
+        }
+        return {
+          label: `[${lo}, ${hi}]`.padEnd(12),
+          band: [lo, hi] as [number, number],
+          why: `mean ${((lo + hi) / 2).toFixed(1)} · width ${(hi - lo).toFixed(0)}`,
+        }
+      })
+  : SHIPPED_VARIANTS
 
 /** Patch the live band, run, and put it back whatever happens. The array is mutated ELEMENTWISE
  *  rather than replaced, because `ECONOMY.development.potentialBand` is destructured by identity in
@@ -624,8 +647,13 @@ function guards(): Guard[] {
     {
       file: 'tests/econ-reach.test.ts',
       what: '14->18 pro proxy (middle·self, top-50 once ranked), of 30',
-      window: [7, 21],
-      anchor: 13,
+      // ⚠ RE-POINTED 27.08 – THE TOOL HAD GONE STALE AGAINST THE TEST IT REPRODUCES. It carried
+      // `[7, 21]` anchored at 13, which is the 10.08 re-point; `tests/econ-reach.test.ts` was
+      // re-pinned on 22.08 and now asserts `>= 3` and `<= 18` against a measured 6. A guard window
+      // priced against a window the suite no longer holds is worse than no price at all – it is the
+      // same class as `docs/specs/potential-band-2026-08.md` §6a, whose table quotes the old pair.
+      window: [3, 18],
+      anchor: 6,
       run: () =>
         Array.from({ length: 30 }, (_, i) => runCareerReach(middleSelf, i, 208)).filter((r) => r !== null).length,
     },
@@ -652,7 +680,12 @@ function section5(): void {
   console.log(rule())
   for (const g of guards()) {
     console.log(`\n  ${g.file} · ${g.what}`)
-    console.log(`  pinned window [${g.window[0]}, ${g.window[1]}], anchored at ${g.anchor}\n`)
+    console.log(`  pinned window [${g.window[0]}, ${g.window[1]}], anchored at ${g.anchor}`)
+    // ⚠ AND THE WINDOW IS NOT THE WHOLE TEST. Both guards also carry CASE assertions the drift
+    // window cannot express – `> 0` ("collapsed to never") and `< 30` ("saturated") – and those are
+    // the ones a LOWERING trips first. A band that reads 0 of 30 here is red on a hard assertion
+    // that no re-pin is allowed to move, because it is the assertion that the proxy still SPLITS.
+    console.log(`  hard case assertions, un-re-pinnable: > 0 (collapsed) and < 30 (saturated)\n`)
     console.log(`  ${padEnd('variant', 20)}${pad('measured', 10)}${pad('vs anchor', 11)}   verdict`)
     for (const v of VARIANTS) {
       const n = withBand(v.band, g.run)
