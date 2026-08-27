@@ -67,8 +67,12 @@ reads longer than the work it implies.
   только постфактум»** – ⚠ True, and it is the shape round 26 #6/#7 fixed for the League one file
   away. ⭐ His own key: the game knows in advance (`rollCallUp`), so a letter and the ordinary
   tournament flow are available and the toast can go. ⚙ **BUILT, all three halves**: an invitation
-  in the inbox the week BEFORE the tie, the tie walked in `TournamentFlow` through the same three
-  commands the League uses, and the toast deleted. ⭐ **His «мы знаем будет это происходить или нет»
+  in the inbox on the CHAMPIONSHIP week – two ahead of the tie, and a week the year already pauses on,
+  so he stands at a rest state holding it – the tie walked in `TournamentFlow` through the same three
+  commands the League uses, and the toast deleted. ⚠ **The first draft posted it one week before the
+  tie and that was wrong**: a college year is spent in presses, that week raises no pause, and the
+  paper arrived at the instant the takeover covered it. Caught by asking for a MOUNTED claim; every
+  source pin was green on the wrong version. ⭐ **His «мы знаем будет это происходить или нет»
   is exact rather than nearly** – one function answers both callers off the tie week's own
   sub-stream, and her skill is mutated to 20 and 99 in the suite to prove it cannot move the answer.
   ⚠ **§4's builder left a warning and it was worth more than §4's code**: the splash's «a student

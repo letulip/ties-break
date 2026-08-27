@@ -186,24 +186,51 @@ export function callUpWeek(world: WorldState): boolean {
   return inCollege(world) && world.week % WEEKS_PER_YEAR === NATIONAL_TEAM.seasonWeek
 }
 
-/** ⭐⭐⭐ ROUND 27 #6 – IS THIS THE WEEK THE LETTER IS WRITTEN? The week BEFORE the tie, and the tie
- *  has to be a week she is still enrolled for.
+/** THE NEXT WEEK HER COUNTRY PLAYS, strictly after `week`. One expression, so a question about the
+ *  future cannot be spelled two ways (`callUpWeek`'s own rule, asked of a week instead of a world). */
+export function nextCallUpWeekAfter(week: number): number {
+  const ahead = (NATIONAL_TEAM.seasonWeek - ((week + 1) % WEEKS_PER_YEAR) + WEEKS_PER_YEAR) % WEEKS_PER_YEAR
+  return week + 1 + ahead
+}
+
+/** ⭐⭐⭐ ROUND 27 #6 – IS THIS THE WEEK THE LETTER IS WRITTEN? **The championship week**, and the tie
+ *  it invites her to has to be a week she is still enrolled for.
  *
- *  ⚠⚠ THE SECOND CLAUSE IS NOT DEFENSIVE, IT IS THE FINAL YEAR. `untilWeek` lands on the same season
- *  week she enrolled on, so a career that enrolled on `seasonWeek` reaches its LAST season week 13
- *  inside college and its week 14 outside it – and a letter raised there would invite her to a tie
- *  the tick will never play. One comparison, and it is the same one `inCollege` makes.
+ *  ⚠⚠ IT IS THE CHAMPIONSHIP WEEK AND NOT «THE WEEK BEFORE THE TIE», AND THE FIRST DRAFT OF THIS
+ *  WAVE HAD IT WRONG. A letter one week early is one week early *in the calendar* and NOT in the
+ *  player's hands: a college year is spent in PRESSES, the letter week raises no pause, and the tie
+ *  two weeks after the championship is inside the same press – so the paper landed in the inbox at
+ *  the exact moment the takeover covered it. «Ahead of time» has to mean ahead of a REST STATE.
+ *
+ *  ⭐ THE CHAMPIONSHIP WEEK IS A PAUSE (round 26 #6), AND IT IS ALSO THE CAUSALITY. `lastLeagueRun`'s
+ *  own note: «the letter is read off the result the player has just watched». So the selectors get
+ *  their evidence, the paper is written the same week, the year stops for the player to watch the
+ *  championship – and at THAT rest state the invitation is in the inbox, the dot is lit, and the
+ *  bottom control already reads «Play the Nations Cup». One press later she is on court.
+ *
+ *  ⚠ THE EVIDENCE CANNOT GO STALE BETWEEN THE TWO, and that is what makes the prediction exact
+ *  rather than nearly: `nextCallUpWeekAfter` is two weeks out (season 12 -> 14) and no championship
+ *  week falls between, so the `leagueRoundsWon` the paper quotes is the one `resolveCallUp` will
+ *  read. ⚠⚠ THAT IS AN INVARIANT OVER TWO CONSTANTS AND IT IS PINNED RATHER THAN ASSUMED
+ *  (`tests/round27-call-up-flow.test.ts`): re-tune `COLLEGE_LEAGUE.seasonWeek` or
+ *  `NATIONAL_TEAM.seasonWeek` so that a championship lands between the paper and the tie and the
+ *  suite goes red with a sentence instead of the letter quietly promising the wrong year's form.
+ *
+ *  ⚠ THE `untilWeek` CLAUSE IS THE FINAL YEAR AND NOT DEFENSIVENESS. `untilWeek` lands on the season
+ *  week she enrolled on, so a career that enrolled between the two fixtures reaches its last
+ *  championship inside college and the tie after it outside – and a letter raised there would invite
+ *  her to a week the tick will never play.
  *
  *  ⚠ THE MIRROR CASE – a tie whose letter week fell outside college – CANNOT PRODUCE A SILENT WEEK,
- *  and it is arithmetic rather than luck. It needs week 13 outside and week 14 inside, i.e. enrolment
- *  ON season week 13, and `resolveCallUp`'s first tick then lands on 14 with no championship on her
- *  record at all – `callChanceNoLeague` is 0, so nobody writes and no tie is played. That is the same
- *  two-enrolment-weeks case `NATIONAL_TEAM.callChanceNoLeague` already states, read from this end. */
+ *  and it is arithmetic rather than luck. It needs the championship week outside and the tie inside,
+ *  i.e. an enrolment between them, and `resolveCallUp` then meets that tie with no championship on
+ *  her record at all – `callChanceNoLeague` is 0, so nobody writes and no tie is played. That is the
+ *  same two-enrolment-weeks case `NATIONAL_TEAM.callChanceNoLeague` already states, from this end. */
 export function callUpLetterWeek(world: WorldState): boolean {
   const college = world.college
   if (!college || !inCollege(world)) return false
-  const tie = world.week + 1
-  return tie % WEEKS_PER_YEAR === NATIONAL_TEAM.seasonWeek && tie < college.untilWeek
+  if (!isCollegeLeagueWeek(world.week)) return false
+  return nextCallUpWeekAfter(world.week) < college.untilWeek
 }
 
 /** ⭐⭐⭐ ROUND 27 #6 – THE ROLL, ASKED OF A WEEK RATHER THAN OF TODAY. The owner's own key to this
@@ -252,7 +279,9 @@ export function callUpFor(world: WorldState, week: number): CallUp | null {
  *
  *  ⚠⚠ IT REPLACES A TOAST THAT COULD ONLY EVER BE WRITTEN AFTERWARDS. «Her country called this year
  *  – her matches are in the news feed» is a sentence about a week the player was not present for; a
- *  letter one week early is the same fact told in the order it happens, and the flow does the rest.
+ *  letter that lands at a REST STATE ahead of the week is the same fact told in the order it happens,
+ *  and the flow does the rest. See `callUpLetterWeek` for why «a rest state» and not «a week» is the
+ *  unit that matters here – it is the correction this wave's own first draft needed.
  *
  *  ⚠ THE INBOX AND NOT THE FEED, on `settleAcademyLetters`' own argument (round 24 #1): the feed
  *  answers «what happened this week» and is pruned to 400 rows, the inbox answers «what did somebody
@@ -267,7 +296,7 @@ export function callUpFor(world: WorldState, week: number): CallUp | null {
  *  one idempotent push onto `world.offers`; the frozen capture (41550 / e6b0c709) cannot see it. */
 export function settleCallUpLetter(world: WorldState): void {
   if (!callUpLetterWeek(world)) return
-  const tieWeek = world.week + 1
+  const tieWeek = nextCallUpWeekAfter(world.week)
   const call = callUpFor(world, tieWeek)
   if (!call) return
   raiseCallUpLetter(world.offers, world.week, {

@@ -229,6 +229,45 @@ describe('⭐⭐⭐ #6 – the tie takes the screen, on the live college shell',
     w.unmount()
   })
 
+  it('⭐⭐⭐ AT THE REST STATE BEFORE THE TIE THE INVITATION IS ALREADY IN THE INBOX, and readable', async () => {
+    // ⚠⚠ THIS IS THE ITEM'S OWN «письмо … ЗАРАНЕЕ», AND IT IS THE CASE THAT CAUGHT THIS WAVE'S FIRST
+    // DRAFT. The letter used to be written the week before the tie – one week early in the CALENDAR
+    // and not one press early in the PLAYER'S HANDS: that week raises no pause, so the paper landed
+    // in the inbox at the same instant the takeover covered it. It is written on the championship
+    // week now, which the year DOES pause on, so the player stands at a rest state holding it with
+    // the tie still ahead. A mount is the only thing that can tell those two apart.
+    const { world, rng } = atCollege('r27c-flow-a')
+    let reached = false
+    for (let press = 0; press < 5 * ENDINGS.collegeYears && world.ending?.type === 'college'; press++) {
+      if (toSnapshot(world).ending?.college?.callUpIsNextStop) {
+        reached = true
+        break
+      }
+      lastStops = resumeFromCollege(world, rng)
+      skipTournament(world)
+      closeTournament(world)
+      if (pendingBirthday(world) !== null) chooseGift(world, 'day')
+    }
+    expect(reached, 'the walk really reached a rest state with a tie ahead of it').toBe(true)
+    expect(callUpRevealOpen(world), 'and the tie has NOT been played yet – this is before it').toBe(false)
+
+    const { w } = await openShell(world)
+    // The bell's neighbour, by its own label – the door the owner asked for by name.
+    await w.find('[aria-label="Open the inbox"]').trigger('click')
+    await flushPromises()
+    const rows = w.findAll('.inbox-row')
+    expect(rows.length, 'the inbox has post in it').toBeGreaterThan(0)
+    const row = rows.find((r) => r.text().includes(NATIONAL_TEAM.label))
+    expect(row, 'the invitation is on the list, before the week it is about').toBeDefined()
+    expect(row!.text(), 'and it says who wrote').toContain('Her national federation')
+    // ...and the sheet itself, opened: the fixture, the week, and no outcome anywhere on it.
+    await row!.find('button, [role="button"], .inbox-open, li > *').trigger('click')
+    await flushPromises()
+    const paper = w.text()
+    expect(paper, 'the paper names the week she is expected on court').toContain('named in the squad')
+    w.unmount()
+  })
+
   it('⭐⭐⭐ the college button NAMES the tie before it plays it – round 27 #2`s law, third stop', async () => {
     // ⚠⚠ ROUND 27 #2's PREDICATE CARRIED A ⚠⚠ THAT THIS WAVE TRIGGERED: «IF A THIRD MID-YEAR STOP IS
     // EVER ADDED TO THAT LOOP, IT HAS TO BE ADDED HERE TOO, or this button starts promising a

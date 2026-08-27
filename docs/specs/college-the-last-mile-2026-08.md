@@ -427,10 +427,25 @@ together** – doing this one alone converts a postfactum popup into a screen th
 the flow and the deletion are what shipped. Four things the build learned that the section did not
 say:
 
+**0. ⚠⚠ «AHEAD OF TIME» MEANS AHEAD OF A REST STATE, NOT AHEAD OF A WEEK – AND THE FIRST DRAFT OF
+THIS BUILD GOT IT WRONG.** The letter went out on the week BEFORE the tie, which is one week early in
+the calendar and no weeks early in the player's hands: a college year is spent in PRESSES, that week
+raises no pause, and the tie is inside the same press – so the paper landed in the inbox at the exact
+instant the takeover covered it. **It is written on the CHAMPIONSHIP week now** (season 12, two ahead
+of the tie), which round 26 #6 already made a pause, and which is also the causality
+(`lastLeagueRun`: «the letter is read off the result the player has just watched»). So the sequence
+the owner asked for is the sequence he gets: watch the championship → the invitation is in the inbox
+with the dot lit → the bottom control reads «Play the Nations Cup» → press → she is on court.
+⚠ **The evidence cannot go stale in between** – no championship week falls between the paper and the
+tie – and that is an invariant over two constants, so it is PINNED rather than assumed: re-tune
+either season week so a championship lands in the gap and the suite goes red with a sentence.
+⭐ Caught by asking for a MOUNTED claim («at the rest state before the tie the letter is already in
+the inbox»); every source-level pin was green on the wrong version.
+
 **1. The prediction is EXACT, and it is exact for a reason worth writing down.** The letter and the
 tick now ask ONE function, `callUpFor(world, week)` – the tick's own expression, moved – and it is
 keyed on the TIE's week, so both callers derive the identical `seed:callup:<tie>` sub-stream however
-early they ask. Its three inputs, one at a time: the stream is per-tie-week (identical); `ageYears`
+early they ask (two weeks, in the shipped calendar). Its three inputs, one at a time: the stream is per-tie-week (identical); `ageYears`
 is computed FOR the tie week, so a birthday in between cannot move it; and `leagueRoundsWon` is final
 because the championship is season week 12, the tie is 14, and `lastLeagueRun` reads the same run
 through a year boundary (`bankCollegeYear` moves it from `pendingLeague` into `years[n]`, the second

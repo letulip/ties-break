@@ -182,6 +182,7 @@ export {
   // is the same KIND of thing arriving on a different week.
   callUpFor,
   callUpLetterWeek,
+  nextCallUpWeekAfter,
   callUpRevealMatches,
   callUpRevealOpen,
   closeCallUpReveal,

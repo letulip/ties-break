@@ -32,6 +32,7 @@ import {
   answerFork,
   callUpFor,
   callUpLetterWeek,
+  nextCallUpWeekAfter,
   callUpRevealMatches,
   callUpRevealOpen,
   callUpRubbersOf,
@@ -158,8 +159,14 @@ describe('#6 the invitation is posted before the tie, and it is exact', () => {
         ties++
         const letter = posted.find((o) => termsOf(o).tieWeek === year.callUp!.week)
         expect(letter, `a tie at week ${year.callUp.week} with no letter behind it`).toBeDefined()
-        // ⚠⚠ THE WHOLE ITEM IN ONE LINE: the paper is dated BEFORE the week it is about.
-        expect(letter!.week, 'the letter is filed the week before the tie').toBe(year.callUp.week - 1)
+        // ⚠⚠ THE WHOLE ITEM IN ONE LINE: the paper is dated BEFORE the week it is about – and it is
+        // dated on the CHAMPIONSHIP week, which is a pause, so it lands in the inbox at a rest state
+        // the player is standing on rather than inside the press that plays the tie. That distinction
+        // is this wave's own correction to itself; see `callUpLetterWeek`.
+        expect(letter!.week, 'the letter is filed on the championship week').toBe(
+          year.callUp.week - (NATIONAL_TEAM.seasonWeek - COLLEGE_LEAGUE.seasonWeek),
+        )
+        expect(letter!.week % WEEKS_PER_YEAR, 'which is a week the year PAUSES on').toBe(COLLEGE_LEAGUE.seasonWeek)
         expect(letter!.week).toBeLessThan(termsOf(letter!).tieWeek)
       }
       for (const letter of posted) {
@@ -250,21 +257,37 @@ describe('#6 the invitation is posted before the tie, and it is exact', () => {
 
   it('⚠ the letter week is guarded on the TIE being inside the course, not merely on today', () => {
     // ⚠ THE FINAL YEAR IS THE CASE. `untilWeek` lands on the season week she enrolled on, so a career
-    // that enrolled on `NATIONAL_TEAM.seasonWeek` reaches its last week 13 inside college and its
-    // week 14 outside it. A letter raised there would invite her to a tie the tick never plays.
+    // that enrolled between the two fixtures reaches its last championship inside college and the tie
+    // after it outside. A letter raised there would invite her to a week the tick never plays.
     const { world } = atCollege('r27-guard')
     const college = world.college!
     const savedWeek = world.week
     const savedUntil = college.untilWeek
-    // Stand the world on a letter week whose tie is the first week PAST the course.
     world.week = college.fromWeek + 100
-    while (world.week % WEEKS_PER_YEAR !== (NATIONAL_TEAM.seasonWeek - 1 + WEEKS_PER_YEAR) % WEEKS_PER_YEAR) world.week++
-    college.untilWeek = world.week + 1
+    while (!((world.week % WEEKS_PER_YEAR) === COLLEGE_LEAGUE.seasonWeek)) world.week++
+    const tie = nextCallUpWeekAfter(world.week)
+    college.untilWeek = tie
     expect(callUpLetterWeek(world), 'the tie is the boundary week itself – outside the course').toBe(false)
-    college.untilWeek = world.week + 2
+    college.untilWeek = tie + 1
     expect(callUpLetterWeek(world), 'and inside it, the same week posts').toBe(true)
     world.week = savedWeek
     college.untilWeek = savedUntil
+  })
+
+  it('⚠⚠ THE PAPER`S EVIDENCE CANNOT GO STALE: no championship falls between the letter and the tie', () => {
+    // ⚠ THIS IS AN INVARIANT OVER TWO CONSTANTS AND IT IS WHAT MAKES `leagueRoundsWon` ON THE PAPER
+    // THE NUMBER `resolveCallUp` WILL READ. The letter is written on the championship week and the
+    // tie is the next call-up week; if a re-tune ever put another championship in between, the paper
+    // would quote a form line the selectors no longer have. Red here, with a sentence, rather than a
+    // letter that is quietly about the wrong year.
+    const letterWeek = COLLEGE_LEAGUE.seasonWeek
+    const tie = nextCallUpWeekAfter(letterWeek)
+    expect(tie, 'the tie really is ahead of the paper').toBeGreaterThan(letterWeek)
+    for (let w = letterWeek + 1; w < tie; w++) {
+      expect(w % WEEKS_PER_YEAR, `week ${w} would re-decide her form between the paper and the tie`).not.toBe(
+        COLLEGE_LEAGUE.seasonWeek,
+      )
+    }
   })
 })
 
