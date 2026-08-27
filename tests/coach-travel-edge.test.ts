@@ -1005,10 +1005,31 @@ const FROZEN = {
    *
    *  ⚠ `rngMain` UNMOVED for the twenty-first wave running. Slice 1 draws NOTHING – `world/shop.ts`
    *  imports no RNG and takes no `Rng` argument – so the frozen MAIN capture is NOT re-pinned (count
-   *  41550, hash e6b0c709) and was re-run green beside this re-freeze. */
-  middleGrinder: 'daed02ecf1b8cc02824b427b193dba3a9ea417cfdfbae8f9a82db49ffe9c2b49',
+   *  41550, hash e6b0c709) and was re-run green beside this re-freeze.
+   *
+   *  ⭐⭐ RE-FROZEN AGAIN (27.08, ROUND 27 #6 – the national-team call-up through the tournament flow,
+   *  schema v64), AND ALL THREE MOVED BY THE VERSION NUMBER ALONE. `PRE_V64` below is the proof
+   *  rather than the claim: `careerHashAtSchema(…, 63)` rolls ONLY the number back – no key is
+   *  dropped, because v64's field is `college.callUpReveal`, nested inside a `CollegeState` that is
+   *  null in all three of these careers – and every one of the previous hashes comes back byte for
+   *  byte. That is v60's shape exactly, one college fixture along.
+   *
+   *  ⚠ AND THE WAVE HAD TWO OTHER WAYS TO REACH THESE CAREERS, WHICH IS WHY THE IDENTITY IS WORTH
+   *  MORE THAN THE PROSE. It adds a letter to `world.offers` (`settleCallUpLetter`) and it moves the
+   *  call-up's roll into `callUpFor` – and `offers` is inside this hash. Both are guarded on
+   *  `inCollege`, week 156 is 32 weeks short of the fork, and `walkFrozenCareer` asserts
+   *  `world.college === null` rather than assuming it; if either had leaked, the rollback would not
+   *  reproduce and this case would be red beside the freeze, naming the wave.
+   *
+   *  ⚠ `rngMain` UNMOVED for the twenty-second wave running, and here it is the sharpest half of the
+   *  wave: the letter asks `rollCallUp` a second time on `seed:callup:<tieWeek>` – the SAME
+   *  per-week sub-stream the tick will derive, never MAIN and never a new key – and
+   *  `playCallUpRubbers` is untouched where it always ran. The frozen MAIN capture is NOT re-pinned
+   *  (count 41550, hash e6b0c709) and `tests/condition.test.ts` was re-run green beside this
+   *  re-freeze. */
+  middleGrinder: '24a8ccf3d47f53b554949bf8f20dfb026bec9e9c1a1bebfa89827ac3e241d174',
   /** PRESETS[8] · 120k wealthy family, elite coach · grinder policy (never travels) */
-  eliteGrinder: 'f722b0b3801a00cb44fdfd4b6cfd3b93ccae0838cf65d749dbf5a4b4914617af',
+  eliteGrinder: '9e3635685511f5a5dae43051f152d9f3c06806b15539cfd4e120bad9530606ed',
   /** PRESETS[0] · 8k working family, SELF-COACHED · player policy (switch on, nobody to send)
    *
    *  ⭐⭐ RE-FROZEN A FIFTH TIME (16.08) – AND ALONE, WHICH IS THE FINDING. The owner's correction of
@@ -1226,7 +1247,7 @@ const FROZEN = {
    *  rolled back by a version number, but swapping ONLY `schemaVersion` on the new world still
    *  reproduces each, which is all those lines ever claimed. The frozen MAIN capture
    *  (41550 / e6b0c709) is untouched and was re-run green beside this re-freeze. */
-  selfTravelling: '34261cd30586465aa757904c9bce40eadcaf3389f927a46421bfba8d15648f0e',
+  selfTravelling: '95d6287dd37b7d96c4e433ccb43f46f3e4f9aa490073680a894d197821f0377c',
 }
 
 /** ⭐ THE SAME THREE CAREERS AS THEY HASHED UNDER v56 – the identity that proves the v57 re-freeze
@@ -1357,6 +1378,23 @@ const PRE_V62 = {
  *  ⚠ `rngMain` UNMOVED for the twenty-first wave running, and it is the load-bearing half: slice 1
  *  draws NOTHING – `world/shop.ts` imports no RNG and takes no `Rng` – so the frozen MAIN capture is
  *  not re-pinned (count 41550, hash e6b0c709) and was re-run green beside this re-freeze. */
+/** ⭐ THE SAME THREE CAREERS AS THEY HASHED UNDER v63 – the identity that proves the v64 re-freeze
+ *  (round 27 #6, the Nations Cup tie walked through the tour's flow) moved the schema number and
+ *  NOTHING ELSE. These are the v63-era `FROZEN` values verbatim, and no key is dropped before
+ *  hashing: v64's new field is `college.callUpReveal`, nested inside a `CollegeState` that is null
+ *  in every one of these careers, so their top-level serialisation is the same list of keys it was.
+ *  v60's rollback has exactly this shape and for exactly this reason.
+ *
+ *  ⚠⚠ THE INTERESTING ARM IS `offers`, NOT `college`. This wave puts a LETTER in the inbox a week
+ *  before every tie, and `world.offers` is inside this hash – so if `settleCallUpLetter` had been
+ *  reachable outside the freeze, or if moving the roll into `callUpFor` had changed what the roll
+ *  returns, these three would not roll back. They do, on all three arms. */
+const PRE_V64 = {
+  middleGrinder: 'daed02ecf1b8cc02824b427b193dba3a9ea417cfdfbae8f9a82db49ffe9c2b49',
+  eliteGrinder: 'f722b0b3801a00cb44fdfd4b6cfd3b93ccae0838cf65d749dbf5a4b4914617af',
+  selfTravelling: '34261cd30586465aa757904c9bce40eadcaf3389f927a46421bfba8d15648f0e',
+}
+
 const PRE_V63 = {
   middleGrinder: 'f00688b488ae684a3fc06a5d71c61672b6fe000241da7ca38b64495980d1f6cd',
   eliteGrinder: '73fc7b8d1dc6f79df023d8771610461e0b3ec60ed2a38e7de90713cf00df32d2',
@@ -1509,6 +1547,14 @@ function walkFrozenCareer(presetIndex: number, policyIndex: number, force?: Part
   // ⚠ v50: and none of them goes to COLLEGE either – the fork sits far past week 156 – so
   // everything P5 added is unreachable here by construction, not by luck.
   expect(world.college, 'the v50 freeze is not entered by any frozen career').toBeNull()
+  // ⚠ v64 (round 27 #6): ...so no NATIONS CUP INVITATION can be in this inbox either. Stated as its
+  // own assertion rather than left to the null above, because this wave's new writer reaches a
+  // different key: `settleCallUpLetter` pushes onto `world.offers`, which is INSIDE the career hash,
+  // and a guard that stopped holding would otherwise show up only as three drifting hex strings.
+  expect(
+    world.offers.filter((o) => o.kind === 'call-up'),
+    'the v64 invitation is unreachable in a frozen career: it is written only inside the freeze',
+  ).toHaveLength(0)
   // ⚠ v51: and the fork is never RAISED here either, so there is no college offer to measure and no
   // tuition line to charge. ⚠ ROUND 24 #5 moved the ask off her birthday (≈283 for these
   // birth-month-6 careers) to `schoolEndWeek(6)` = 242 – measured, still 86 weeks past this freeze's
@@ -1628,6 +1674,20 @@ describe('the byte-identity of a career that does not travel', () => {
     expect(careerHashAtSchema(5, 0, 62), '25k · middle coach · grinder').toBe(PRE_V63.middleGrinder)
     expect(careerHashAtSchema(8, 0, 62), '120k · elite coach · grinder').toBe(PRE_V63.eliteGrinder)
     expect(careerHashAtSchema(0, 1, 62), '8k · self-coached · player').toBe(PRE_V63.selfTravelling)
+  })
+
+  it('⭐⭐ v64: rolling ONLY the schema back to 63 reproduces the previous hashes byte for byte', () => {
+    // ⚠ THE WHOLE OF WHAT ROUND 27 #6 DID TO A CAREER THAT NEVER GOES TO COLLEGE, as an identity.
+    // The wave has three ways to reach an ordinary tour career and this closes all three at once:
+    // the new save field (`college.callUpReveal` – nested, and `college` is null here), the new
+    // LETTER (`settleCallUpLetter` writes to `world.offers`, which IS in this hash), and the moved
+    // roll (`callUpFor`, same key, same view, same draw order). Every one of them is guarded on
+    // `inCollege`, week 156 is 32 weeks short of the fork, and `walkFrozenCareer` asserts
+    // `world.college === null` rather than assuming it – so if any of the three had leaked, rolling
+    // the number back would NOT reproduce and this case would be red beside the freeze.
+    expect(careerHashAtSchema(5, 0, 63), '25k · middle coach · grinder').toBe(PRE_V64.middleGrinder)
+    expect(careerHashAtSchema(8, 0, 63), '120k · elite coach · grinder').toBe(PRE_V64.eliteGrinder)
+    expect(careerHashAtSchema(0, 1, 63), '8k · self-coached · player').toBe(PRE_V64.selfTravelling)
   })
 
   it('⭐⭐ v61: rolling ONLY the schema back to 60 reproduces the previous hashes byte for byte', () => {
