@@ -173,12 +173,23 @@ the right way (`yearInProgress` is `college.pendingYearStart`, the engine's own 
 `collegeLeagueOpponent` draws every attribute from `COLLEGE_LEAGUE.field = { standard: 56, spread: 12 }`
 – **uniform 44 to 68**. Against the professional pyramid `fieldPros.ts` documents:
 
-| population | attribute band |
-| --- | --- |
-| **the college league field** | **44 – 68**, centred 56 |
-| professionals, elite (~top 30) | 60 – 70 |
-| professionals, **middle (~120)** | **52 – 62** |
-| professionals, tail (~150) | 45 – 55 |
+⚠⚠ **CORRECTED 27.08 – THE TABLE I FIRST PUT HERE QUOTED A REJECTED DRAFT**, caught by the
+growth-pace measurement. `fieldPros.ts:129` names «elite 60-70 / middle 52-62 / tail 45-55» as *the
+draft* pyramid, inside a block headed «THE BANDS WERE TUNED **DOWN** FROM THE FIRST DRAFT». The
+shipped storeys are four, at `fieldPros.ts:396`:
+
+| population | count | attribute core |
+| --- | --- | --- |
+| **the college league field** | – | **44 – 68**, centred 56 |
+| `tourElite` – the top of the world | 64 | **67 – 77** |
+| `elite` | 30 | **56 – 66** |
+| `contender` | 120 | 43 – 53 |
+| `journeyman` | 150 | 38 – 48 |
+
+⭐ **So this section was UNDERSTATED, not wrong.** The college field's ceiling of **68 is above the
+`elite` band entirely and inside `tourElite` – the world's top sixty-four.** Its centre, 56, is the
+FLOOR of the elite storey (ranks #65–94), not a middle. **A student can roll the attributes of a
+top-64 professional.**
 
 **The student field is calibrated at the professional MIDDLE**, which by `fieldPros.ts`'s own
 description is «a middle ~120 at strong-junior level» – exactly where a world #100 sits. She is not
@@ -209,9 +220,22 @@ watchable matches a year with a floor of 1 and a ceiling of 2 on all three tarif
 field moves every one of those. **Re-measure them in the same pass or the fix trades a funny story for
 a broken one.**
 
-⭐ **AND §1 IS PART OF THIS.** An eighteen-year-old freshman is a year less developed than a
-nineteen-and-a-half-year-old one. Moving the entry age closes part of the gap for free, so §1 should
-be decided BEFORE §3's number is chosen – otherwise the field gets re-tuned twice.
+⚠⚠ **AND MY «§1 CLOSES PART OF THE GAP FOR FREE» DOES NOT SURVIVE MEASUREMENT.** A year of freshman
+age at 18–19 is worth **+0.8 power points**, against a college-opponent standard deviation of ≈3.2 –
+**a quarter of one SD.** §1a is still right for its own reasons; it may **not** be credited with any
+of §3's work.
+
+⭐⭐ **WHAT DOES DECIDE §3 IS THE GROWTH CURVE, and that is now measured** – see
+[how-fast-she-grows-2026-08.md](how-fast-she-grows-2026-08.md). **90% of her rolled ceiling is spent
+by 16.4** and 92.8% by 18; her first top-100 lands at a **median of 18.9** against the development
+model's own anchor of ~22, and the anchor's year is the **p90**. ⚠ And it is manager-proof: the figure
+is 16.4 / 16.4 / 16.2 / 16.1 across four policies whose ladder outcomes span 0% to 95.6%. **The parent
+buys rank and money; the parent does not buy skill.**
+
+⚠⚠ **SO §3 IS ON HOLD AND ITS ORDER IS THE ONLY ACTIONABLE PART.** Both numbers are wrong – the
+freshman is three years over-developed AND the field straddles a storey it has no business in. Tune
+the field first and it gets tuned twice, because the thing it is a difference against will move.
+**Decide the growth curve, then re-take this section.**
 
 ---
 

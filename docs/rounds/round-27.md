@@ -95,12 +95,41 @@ reads longer than the work it implies.
   +23 423 and +19 469 = **+83 980** against his predicted 79 004. **The money is consistent** – his
   suspicion was wrong and the numbers say so.
 
-- [~] **9. «а не слишком ли быстро растут наши спортсменки? Alice на момент поступления играла уже на
-  500 и шлемах и имела 600к+ в 18-19»** – ⚠⚠ **The most consequential question of the round, and it
-  may invert 3.** The development model's own calibration is «points ~17-18, top-100 ~4.5 yrs later» –
-  **top-100 at about 22**. She is there at 18–19, three years early. ⭐ **If careers run ahead of the
-  anchor, the college field may be right and the player too strong.** Fixing the field first would
-  then be treating the symptom. **A measurement is in flight and the college wave waits on it.**
+- [x] **9. «а не слишком ли быстро растут наши спортсменки? Alice на момент поступления играла уже на
+  500 и шлемах и имела 600к+ в 18-19»** – ⚠⚠ **MEASURED, and every one of his four observations is the
+  MEDIAN case rather than a tail** ([how-fast-she-grows-2026-08.md](../specs/how-fast-she-grows-2026-08.md),
+  90 careers × 4 manager arms):
+
+  | | measured | anchor / target |
+  | --- | --- | --- |
+  | first top-100 | **median 18.9** | ~22 – and 22 is the **p90** |
+  | rank at 19 | **median #96**, 47.8% top-100 | – |
+  | first W500+ main draw | median **18.9**, 61.9% under 19 | – |
+  | first Slam main draw | median **19.0** | – |
+  | prize banked by 19 | p75 **$799,518**, 30% over $600k | his 600k is normal |
+  | junior-majority seasons | **median 1**, and she leaves the junior tour at **15.6** | – |
+  | reach top-100 | **93.3%** | **3–6%** |
+  | played a Slam | **93.3%** | **<1%** |
+
+  ⭐⭐ **THE MECHANISM, and it is manager-proof: 90% of her rolled ceiling is spent by 16.4** and 92.8%
+  by 18; she gains **0.8 power points** between 18 and 19. The anchor's «top-100 about 4.5 years after
+  first points» is a climb with no fuel left. **16.4 / 16.4 / 16.2 / 16.1 across four policies whose
+  ladder outcomes span 0% to 95.6% – the parent buys rank and money, the parent does not buy skill.**
+
+  ⚠ **The outcome half is subtler and mostly the BENCH'S MANAGER, not the model**: the same engine and
+  seeds under the 12.08 `player` policy reach top-100 **8.8%**, today's **93.3%**, `grinder` **0.0%**.
+  The 3–6% band is bracketed by the managers and none of the three sits inside it. ⚠ And
+  `ladder-vs-targets-2026-08.md` (12.08) is now badly stale – the same tool, unchanged, went from
+  «nobody in 160 careers reaches it» to 16/16 top-100 and a median career prize of $457k → **$15.4M**.
+
+  ⚠⚠ **AND IT INVERTS THE ORDER OF 3.** My §3 was also **understated, not backwards**: I had quoted a
+  REJECTED draft pyramid. Shipped, the college field's ceiling of 68 sits **above the whole `elite`
+  storey and inside `tourElite` – the world's top 64.** ⭐ **Both numbers are wrong; only the order is
+  actionable. Decide the growth curve first, or the field is tuned twice against a target that moves.**
+
+  ⚠ My «moving the entry age closes part of the gap for free» is refuted: a year of freshman age is
+  worth **+0.8 power points** against an opponent sd of ≈3.2 – **a quarter of one SD**. §1a keeps its
+  own reasons and none of §3's.
 
 - [~] **10. «physio -2061 – это без массажиста, здесь нет проблемы, а вот массажиста хорошо бы
   останавливать, как и тренера»** – ⭐ **Already done.** `masseurWorksThisWeek` returns false in
@@ -121,10 +150,11 @@ reads longer than the work it implies.
 
 | | what | who |
 | --- | --- | --- |
-| ⚠ **first** | **9's measurement** – it decides whether 3 is a fix or a symptom | in flight |
+| ⚙ **done** | **9's measurement** – it decided: 3 is a symptom, the growth curve is the cause | landed 27.08 |
+| ⚠ **first** | **the growth curve** – ⚠ and the measurement recommends BISECTING the 12.08→27.08 drift before anything is tuned, because the manager moved as much as the model | the owner |
 | ⚠ **his** | the entry-age band, once 9 lands and the one research table exists | the owner |
 | then | 4 → 2 → 5 → 7 → 6, in that order (4 before 6; 5 and 7 are independent) | – |
-| last | 3, only after 9 | – |
+| last | 3, only after the growth curve is settled – its number is a DIFFERENCE against a freshman who is about to change | – |
 
 ⚠ **Nothing in this round has been built.** Two agents are finishing unrelated work on the same
 branch and a third is measuring 9. The spec carries the order and the reason for it.
