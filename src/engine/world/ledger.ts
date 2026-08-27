@@ -41,14 +41,41 @@ export function accrueFinance(world: WorldState, week: number, category: WorldEv
   else world.careerTotals.spentCents += -amountCents
   if (category === 'prize') world.careerTotals.prizeCents += amountCents
 
-  let entry = world.financeWeeks.find((w) => w.week === week)
-  if (!entry) {
-    entry = { week, byCategory: {} }
-    const last = world.financeWeeks[world.financeWeeks.length - 1]
-    if (!last || week >= last.week) world.financeWeeks.push(entry)
-    else world.financeWeeks.splice(world.financeWeeks.findIndex((w) => w.week > week), 0, entry)
-  }
+  const entry = financeWeekEntry(world, week)
   entry.byCategory[category] = (entry.byCategory[category] ?? 0) + amountCents
+}
+
+/** Find-or-create this week's ledger row, keeping the array week-ascending (the common case is
+ *  appending the current, newest week). Shared by the two writers below it so "which row is this
+ *  week's" is spelled once – the same reason `seasonStartWeek` exists further down. */
+function financeWeekEntry(world: WorldState, week: number): FinanceWeek {
+  const found = world.financeWeeks.find((w) => w.week === week)
+  if (found) return found
+  const entry: FinanceWeek = { week, byCategory: {} }
+  const last = world.financeWeeks[world.financeWeeks.length - 1]
+  if (!last || week >= last.week) world.financeWeeks.push(entry)
+  else world.financeWeeks.splice(world.financeWeeks.findIndex((w) => w.week > week), 0, entry)
+  return entry
+}
+
+/** ⭐⭐ WHAT THE TILL PAID HER THIS WEEK, PARKED BESIDE THE ARITHMETIC AND NOT IN IT.
+ *
+ *  ⚠⚠ THIS IS NOT `accrueFinance` AND MUST NEVER BECOME IT. Her share is not a family expense – the
+ *  family was credited `prize − herShare` in the first place, and `finalizeTournament`'s own note
+ *  says why booking it a second time is forbidden: it «would count the same cents twice - once
+ *  against `careerTotals.spentCents`, which is the denominator of the album's break-even page». So
+ *  this writes `FinanceWeek.kidShare` and touches neither `byCategory` nor `careerTotals`, which is
+ *  what lets a screen print the figure under a balance the figure cannot move.
+ *
+ *  Cents ACCUMULATE (a week that ever pays two cheques owes her both); the rate is the last one
+ *  written, and two cheques in one week are one age and therefore one rate by construction.
+ *
+ *  A pure state write on integers already decided: no draw, no clock, so the frozen MAIN capture
+ *  cannot notice it – `addEvent`'s own guarantee at the top of this file. */
+export function accrueKidShare(world: WorldState, week: number, cents: number, bps: number): void {
+  if (cents <= 0) return
+  const entry = financeWeekEntry(world, week)
+  entry.kidShare = { cents: (entry.kidShare?.cents ?? 0) + cents, bps }
 }
 
 /** THE SEASON'S IDENTITY: the 0-based index of the 52-week block a week belongs to.
@@ -119,7 +146,23 @@ export function financeSeries(
       if ((amt ?? 0) > 0) incomeCents += amt!
       else expenseCents += -(amt ?? 0)
     }
-    out.push({ week, incomeCents, expenseCents, balanceCents: 0 })
+    // ⚠ HER CUT RIDES ALONG AND IS NOT SUMMED – it is not in `byCategory`, so the loop above cannot
+    // have seen it, and the two figures the card prints (`incomeCents`, `expenseCents`) are byte for
+    // byte what they were before this field existed. That is the point of it: `finalizeTournament`
+    // credits the family `prize − herShare`, so income here is ALREADY net of her cut and a memo is
+    // the only honest place for it. Absent on a week that split no cheque.
+    // ⚠ ROUNDED ONCE, HERE (basis points are a hundredth of a percent) – the snapshot boundary, per
+    // the owner's whole-numbers rule of 26.08 and `shopView`'s `annualRatePct`. No component divides
+    // the rate a second time; `FinanceWeekPoint` persists nothing, so this is a display figure born
+    // whole. Cents are already integers and stay integers (tests/condition-boundary.test.ts).
+    const kidShare = byWeek.get(week)?.kidShare
+    out.push({
+      week,
+      incomeCents,
+      expenseCents,
+      balanceCents: 0,
+      ...(kidShare ? { kidShareCents: kidShare.cents, kidSharePct: Math.round(kidShare.bps / 100) } : {}),
+    })
   }
   // Backwards: the last week ends on today's funds, and every earlier week ends on the next week's
   // opening balance. Undoing week i means removing ITS OWN net from the balance it closed on.

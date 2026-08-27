@@ -161,6 +161,17 @@ const startingBudget = computed(() => (game.snapshot ? formatCents(STARTING_FUND
 // `finalizeTournament` uses); the ceiling is `ECONOMY.kidShare`; and the balance sentence is the
 // engine-composed `snapshot.life.ownAccount` (kidLife.ownAccountNote), reused rather than re-worded
 // so her page and this strip can never promise different shares.
+//
+// ⚠⚠ ...AND ON 27.08 HE MOVED IT DOWN THE PAGE, WITHOUT TAKING IT AWAY: «вместо вот этой некрасивой
+// и большой плашки на вкладке бюджет… эту плашку можно оставить может быть, но переместить вниз, она
+// не главная». The same message asked for her cut on the WEEK RECAP's Finances tile, which is where
+// he actually reads the week – so the SHORT telling now lives there (WeekRecapCard.vue, `Her cut
+// 10% $sum` as a memo under the balance) and this strip keeps the long one at the FOOT of the
+// screen. It is section 9 of the template now, not 1a-bis, and it is still outside every tab guard.
+//
+// ⚠ WHAT DID NOT MOVE IS THE ARITHMETIC. Both surfaces state the split; neither subtracts it twice.
+// `finalizeTournament` credits the family `prize − herShare`, so every income figure on both screens
+// is already net – which is exactly what this strip's second sentence has always said out loud.
 const kidShareBps = computed(() => kidPrizeShareBps(game.snapshot?.ageYears ?? 0))
 /** Null before the ramp starts – there is no account, no transfer and nothing to explain yet, which
  *  is exactly when `ownAccountNote` returns '' too. */
@@ -955,21 +966,6 @@ const TAB_OPTIONS = [
         before the money runs out for good. One week back in the black clears it.
       </p>
 
-      <!-- ====================== 1a-bis. HER SHARE OF THE CHEQUES ======================
-           ROUND 26 #5b. His words are in the script block above and in
-           tests/component/round26-money-share.test.ts, because Cyrillic inside a <template> is
-           forbidden (tests/template-copy-rules.test.ts). Above the tabs, so it is on the screen
-           whichever tab is open – including the ledger, where the prize rows it is about live. Two
-           sentences and no control: the first is the engine's own (`kidLife.ownAccountNote`,
-           balance + the ramp), the second is the DIRECTION, which is the half nothing in the game
-           had ever said out loud. Absent before her eighteenth. -->
-      <p v-if="kidShareNote" class="money-share" role="note">
-        <strong>{{ kidShareNote }}</strong>
-        Every prize cheque is split before it reaches this account: her part goes to her, the family
-        banks the rest. The prize rows below are what the family kept, and each one names the share
-        that left.
-      </p>
-
       <!-- ========================= 1b. THE SECTION SWITCHER =========================
            Three tabs over what used to be one very long page. Which block sits behind which tab,
            and why the summary cannot be parted from the period switcher, is argued at
@@ -1446,6 +1442,39 @@ const TAB_OPTIONS = [
         </template>
       </Card>
 
+      <!-- ====================== 9. HER SHARE OF THE CHEQUES ======================
+           ROUND 26 #5b. His words are in the script block above and in
+           tests/component/round26-money-share.test.ts, because Cyrillic inside a <template> is
+           forbidden (tests/template-copy-rules.test.ts). Two sentences and no control: the first is
+           the engine's own (`kidLife.ownAccountNote`, balance + the ramp), the second is the
+           DIRECTION, which is the half nothing in the game had ever said out loud. Absent before
+           her eighteenth.
+
+           ⚠⚠ DEMOTED FROM THE TOP OF THE SCREEN, 27.08, ON THE OWNER'S OWN WORD – keep the strip,
+           but move it down, it is not the main thing. His sentence is quoted in full in the script
+           block above (`kidShareNote`), where Cyrillic belongs. It used to sit above the tab
+           switcher as section 1a-bis. He asked for this at the same moment he asked for her cut on
+           the WEEK RECAP's Finances tile (WeekRecapCard.vue), which is where he actually reads the
+           week – so the telling moves to the surface he uses and this keeps the long version.
+           KEPT, NOT DELETED, and not one sentence of it re-written: the copy below is what round 26
+           #5b shipped, and tests/component/round26-money-share.test.ts still holds it to every
+           clause.
+           ⚠ STILL OUTSIDE EVERY `screenTab` GUARD, which is the half of its old placement that was
+           never about height: it is on the screen whichever tab is open – including the ledger,
+           where the prize rows it is about live. Only its position in the column changed.
+           ⚠ ...AND THAT POSITION COST EXACTLY ONE WORD, WHICH IS RECORDED HERE RATHER THAN LEFT TO
+           BE FOUND. The last sentence used to read «The prize rows BELOW», written from a strip that
+           sat above everything; from the foot of the screen those rows are ABOVE it, so the word is
+           the other one now. It is a direction, not a claim: the message, the tone and every clause
+           the mounted test asserts are untouched. A demotion that leaves a sentence pointing the
+           wrong way is not a demotion, it is a small lie with a good excuse. -->
+      <p v-if="kidShareNote" class="money-share" role="note">
+        <strong>{{ kidShareNote }}</strong>
+        Every prize cheque is split before it reaches this account: her part goes to her, the family
+        banks the rest. The prize rows above are what the family kept, and each one names the share
+        that left.
+      </p>
+
       <ConfirmDialog
         v-if="pendingKit"
         :message="kitConfirmMessage"
@@ -1485,9 +1514,13 @@ const TAB_OPTIONS = [
 
 /* ROUND 26 #5b – her share. The debt strip's box, in the app's own "money came in" colour rather
    than the warning one: this is not a problem, it is where a part of the family's money now goes.
-   `--money-in` is the single token for that meaning (see note 3 in the script header). */
+   `--money-in` is the single token for that meaning (see note 3 in the script header).
+   ⚠ THE MARGIN FLIPPED WITH THE 27.08 DEMOTION («переместить вниз, она не главная»): it used to
+   open a gap UNDER itself at the top of the screen and now opens one ABOVE itself at the foot of it.
+   Same 14px, other side – the strip is no longer separating the header from the tabs, it is being
+   set apart from the chapter it now follows. */
 .money-share {
-  margin: 0 0 14px;
+  margin: 14px 0 0;
   padding: 10px 12px;
   border-radius: var(--radius-control);
   border: var(--stroke-hair) solid var(--money-in);

@@ -66,6 +66,7 @@ export type {
   WorldEvent,
   WorldEventEntryRef,
   FinanceWeek,
+  FinanceWeekKidShare,
   FinanceWindow,
   FinanceWeekPoint,
   StopReason,
