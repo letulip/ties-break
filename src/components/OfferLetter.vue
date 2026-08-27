@@ -41,7 +41,15 @@
 // letter reports what actually happened and against which number. An obligation that fails silently
 // is the same invisibility one step later.
 import { computed } from 'vue'
-import type { AcademyLetterTerms, AdOfferTerms, EntryLetterTerms, KitOfferTerms, Offer, TourLetterTerms } from '../shared/protocol'
+import type {
+  AcademyLetterTerms,
+  AdOfferTerms,
+  CallUpLetterTerms,
+  EntryLetterTerms,
+  KitOfferTerms,
+  Offer,
+  TourLetterTerms,
+} from '../shared/protocol'
 import { formatCents } from '../shared/money'
 import { weekLabel, weekRange } from '../shared/dates'
 import { dealUntilWeek } from '../engine/offers'
@@ -158,6 +166,42 @@ const academyEndBody = computed(() => {
 // count and the rule, and the signed letter names the weeks themselves (the engine's own
 // `shootWeeks`, never a number this sheet worked out). The cost is stated in the house's words, not
 // the engine's: a shoot week rests her the way a trip does, and no figure is quoted.
+// ⭐⭐⭐ THE NATIONAL SQUAD'S INVITATION (round 27 #6). The owner: «мы знаем будет это происходить или
+// нет, можно письмо об этом пользователю нормальное присылать с приглашением на турнир и проводить
+// этот турнир по обычному флоу турнира. А этот попап не нужен для этого флоу вообще.»
+//
+// ⚠⚠ A NOTICE AND NOT A PROPOSAL, AND HERE THAT IS THE FICTION AS WELL AS THE PLUMBING. There are no
+// buttons because there is nothing to answer: research §0.7 – the National Association nominates and
+// the captain alone picks who plays – and §0.8 – availability is a Good Standing criterion her own
+// federation judges unappealably. «She does not enter it, she is not asked, and she may not decline»
+// is `resolveCallUp`'s own sentence, and a Sign/Refuse foot under it would be offering a choice the
+// engine will not honour.
+//
+// ⚠ NO LETTERHEAD, THE ACADEMY'S RULE APPLIED. The marks are keyed by KIT RUNG and a federation is on
+// no rung; there is no art for it and none may be made for it, so the sheet signs itself the way the
+// two desks' and the academy's do – with what it IS. It cannot sign with her country's name either:
+// `profile.country` is an ISO-2 code and the fixture's own file forbids naming nations («NAMES ARE
+// FICTIONAL», engine/nationalTeam.ts).
+//
+// ⚠ AND THE SHEET STATES NO OUTCOME, WHICH IS THE HALF THE OLD TOAST GOT WRONG. The engine knows the
+// team sheet a week early – `rollCallUp` draws it – and `CallUpLetterTerms` deliberately does not
+// carry it. What the paper says is what a nomination says: she is in the squad, this is the week, and
+// the captain names the side there.
+const isCallUp = computed(() => props.offer.kind === 'call-up')
+const callUpTerms = computed(() => props.offer.terms as CallUpLetterTerms)
+/** How far she went at the championship they read, in the federation's own words – the causality
+ *  round 24 built («вызов в сборную можно будет опереть на результаты студенческого»), said out loud
+ *  on the paper rather than left as a number nobody can see. `null` is unreachable while
+ *  `callChanceNoLeague` is 0 – no championship, no letter – and the sheet simply omits the clause
+ *  rather than inventing a result for it. */
+const callUpBecause = computed(() => {
+  const n = callUpTerms.value.leagueRoundsWon
+  if (n === null) return ''
+  if (n <= 0) return 'We watched her at the college championship'
+  if (n === 1) return 'She reached the last four of the college championship'
+  if (n === 2) return 'She played the final of the college championship'
+  return 'She won the college championship'
+})
 const isAd = computed(() => props.offer.kind === 'ad')
 const adTerms = computed(() => props.offer.terms as AdOfferTerms)
 /** "Twelve months", because a house writing to a family says it the way the kit letters say "three
@@ -542,6 +586,39 @@ const settled = computed(() => {
         </ul>
       </template>
       <p class="offer-sign-off">– The academy</p>
+    </PaperNote>
+    <div class="offer-foot">
+      <p class="offer-window settled">Filed {{ weekLabel(offer.week) }}.</p>
+    </div>
+  </article>
+
+  <!-- ⭐⭐⭐ THE NATIONAL SQUAD'S INVITATION (round 27 #6) – the letter that replaced a toast about a
+       week the player had already missed. A NOTICE: no mark, no buttons, and a foot that only says
+       when it was filed. Every number comes off `terms`, frozen the week it was written – see
+       CallUpLetterTerms for why a persisted letter carries figures and never an assembled sentence,
+       and for why the team sheet the engine already holds is deliberately not among them. -->
+  <article v-else-if="isCallUp" class="offer-letter">
+    <PaperNote class="offer-paper" size="letter" :tilt="0">
+      <p class="offer-body">
+        <template v-if="callUpBecause">{{ callUpBecause }}, and the selectors have read it.</template>
+        She is named in the squad for {{ callUpTerms.label }}, in the week of
+        {{ weekLabel(callUpTerms.tieWeek) }}.
+      </p>
+      <ul class="offer-terms">
+        <li>
+          {{ callUpTerms.squadSize }} players are named and the week holds {{ callUpTerms.tiesInTheWeek }} ties,
+          so the captain picks the side for each of them – she may be named and never take the court.
+        </li>
+        <li>
+          {{ callUpTerms.nationsAtHerLevel }} nations play at this level, and where the country finishes
+          is the country's result rather than hers.
+        </li>
+        <li>
+          There are no ranking points and no prize money here – the competition awards neither to
+          anybody in it. Playing when we call is what representing asks of her.
+        </li>
+      </ul>
+      <p class="offer-sign-off">– Her national federation</p>
     </PaperNote>
     <div class="offer-foot">
       <p class="offer-window settled">Filed {{ weekLabel(offer.week) }}.</p>

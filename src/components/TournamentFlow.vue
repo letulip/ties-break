@@ -18,12 +18,17 @@ import { trophyArtUrl, trophyMetalFor } from '../art/trophies'
 import { armTrophyFlight } from '../composables/trophyArrival'
 import { facePoint } from '../art/faceRects'
 import { occasionArtUrl, venueArtUrl } from '../art/venues'
-/** ⭐⭐⭐ ROUND 26 #6 – THE ONE FIXTURE ON THIS SCREEN THAT HAS NO RUNG. The owner: «в чем проблема
- *  использовать наш флоу турниров полностью и дать возможность игроку их смотреть и сопереживать? Я
- *  уже просил это сделать». The College League is now walked here, through the same phases, the same
- *  viewer and the same three commands as a tour event – see `amateur` below for the whole of the
- *  difference. Its draw size is the engine's own, never a literal here. */
-import { COLLEGE_LEAGUE } from '../engine/collegeLeague'
+// ⭐⭐⭐ ROUND 26 #6 – THE ONE FIXTURE ON THIS SCREEN THAT HAD NO RUNG, AND SINCE ROUND 27 #6 THERE
+// ARE TWO. The owner, twice: «в чем проблема использовать наш флоу турниров полностью и дать
+// возможность игроку их смотреть и сопереживать? Я уже просил это сделать» (the College League), and
+// «проводить этот турнир по обычному флоу турнира» (the Nations Cup tie). Both are walked here,
+// through the same phases, the same viewer and the same three commands as a tour event – see
+// `amateur` below for what a missing RUNG changes and `drawSize` for what a missing DRAW changes.
+//
+// ⚠ `import { COLLEGE_LEAGUE }` STOOD HERE FOR ITS DRAW SIZE AND IS GONE. Its own note said «its draw
+// size is the engine's own, never a literal here» – and the constant was still a screen-side answer
+// to a per-fixture question, which is what made it wrong for the second fixture. The size rides on
+// the view now, so this screen names no competition at all.
 import MatchViewer from './MatchViewer.vue'
 import SurfaceMark from './ui/SurfaceMark.vue'
 import MatchScene from './MatchScene.vue'
@@ -153,7 +158,20 @@ const tier = computed(() => (pending.value?.tier ? TIERS[pending.value.tier] : n
  * for the flow «полностью» and had already been given a cut-down version of it once.
  */
 const amateur = computed(() => pending.value !== null && pending.value.tier === null)
-const drawSize = computed(() => (amateur.value ? COLLEGE_LEAGUE.drawSize : (tier.value?.drawSize ?? 0)))
+/** ⭐⭐⭐ ROUND 27 #6 – HOW BIG THE DRAW IS, OFF THE ENGINE, AND `null` WHEN THERE IS NO DRAW.
+ *
+ *  ⚠⚠ THIS LINE READ `amateur ? COLLEGE_LEAGUE.drawSize : tier.drawSize` AND IT WAS THE `?? 'domestic'`
+ *  TRAP WEARING A DIFFERENT COAT. It was true while the College League was the only rungless fixture
+ *  and it goes on type-checking for ever – so the Nations Cup week, which is three ties and no
+ *  knockout, would have arrived here and been told it was an eight-player draw: «8-player draw» on
+ *  the splash, «Quarterfinal / Semifinal / Final» over its rubbers, and a coach promising «Three wins
+ *  for the title» in a competition she cannot win. One constant standing in for a whole class is
+ *  exactly how round 27 #4 happened, and the answer is the same one: the engine says, the screen
+ *  prints (`PendingView.drawSize`).
+ *
+ *  Every reader below is now gated on the null – and each gate is a different sentence, not one
+ *  suppression: no draw line, round names off the record, and no price to the title. */
+const drawSize = computed<number | null>(() => pending.value?.drawSize ?? null)
 
 // Round 5 item 11 fallback: lost the final => silver-styled card, serious art, "Runner-up".
 const isRunnerUp = computed(() => !pending.value?.kidChampion && pending.value?.finishLabel === 'Runner-up')
@@ -268,6 +286,9 @@ const watchedScreen = computed(() => `${phase.value}:${replayOpen.value}`)
 // The Final's round index (log2(draw) - 1) and the round the kid exited in. Single-elim: she
 // plays contiguous rounds 0..bracket.length-1, so her exit round is bracket.length-1 (once
 // finished, `bracket` holds all her matches). She reached the Final iff exit === finalRound.
+// ⚠ 0 WITHOUT A DRAW, and it costs nothing: `finalRound` is read by the SPECTATE walk and by the
+// AI-champion name, and `enterFinale` refuses to spectate an amateur fixture at all (see its first
+// clause), so neither is reachable from a fixture with no bracket.
 const finalRound = computed(() => (drawSize.value ? Math.log2(drawSize.value) - 1 : 0))
 const kidExitRound = computed(() => (pending.value ? pending.value.bracket.length - 1 : -1))
 // The round the spectate walk is currently showing (starts at the round after her exit).
@@ -278,6 +299,9 @@ const bracketActiveRound = computed(() =>
   phase.value === 'spectate' ? spectateRound.value : Math.max(0, (pending.value?.bracket.length ?? 1) - 1),
 )
 function stageName(round: number): string {
+  // ⚠ SPECTATE ONLY, AND SPECTATE IS UNREACHABLE WITHOUT A DRAW – see `finalRound`. The fallback is
+  // the engine's own name for the round rather than an invented one.
+  if (drawSize.value === null) return pending.value?.bracket[round]?.roundLabel ?? ''
   const remaining = drawSize.value / 2 ** round
   if (remaining === 2) return 'Final'
   if (remaining === 4) return 'Semifinal'
@@ -289,6 +313,11 @@ const spectateRoundLabel = computed(() => stageName(spectateRound.value))
  *  BracketTabs' own `shortStage`, because L/M's round strip and the draw's tabs sit one card apart
  *  and must not call the same round two different things. */
 function shortStage(round: number): string {
+  // ⭐⭐⭐ ROUND 27 #6 – A FIXTURE WITH NO DRAW HAS NO STAGE, AND ITS ROUNDS ARE NAMED BY THE RECORD.
+  // The engine writes «Rubber 1» on each bracket row for exactly this cell; abbreviating it here
+  // would be inventing a second vocabulary for one week, and `R1` is worse than useless next to a
+  // draw's own `R16`.
+  if (drawSize.value === null) return pending.value?.bracket[round]?.roundLabel ?? ''
   const remaining = drawSize.value / 2 ** round
   if (remaining === 2) return 'F'
   if (remaining === 4) return 'SF'
@@ -336,7 +365,7 @@ const crowdTitle = computed(() =>
 /** How many wins the title costs from round one. log2 of the draw, in words, because the coach
  *  says it out loud rather than printing it. */
 const WINS_IN_WORDS = ['', 'One win', 'Two wins', 'Three wins', 'Four wins', 'Five wins', 'Six wins']
-const winsToTitle = computed(() => (drawSize.value ? Math.log2(drawSize.value) : 0))
+const winsToTitle = computed<number | null>(() => (drawSize.value ? Math.log2(drawSize.value) : null))
 /**
  * "COACH PREDICTION" – what a coach can honestly say about THIS event, which is not what the
  * handoff's mock says.
@@ -356,6 +385,12 @@ const coachLine = computed(() => {
   // "Grass – suits her game" -> "The court suits her game." (R11-15's slice, same as Season's).
   const dash = hint?.indexOf('– ') ?? -1
   const fit = hint && dash >= 0 ? hint.slice(dash + 2) : hint
+  // ⭐⭐⭐ ROUND 27 #6 – AND A WEEK WITH NO TITLE IN IT IS PRICED AT NOTHING, WHICH IS A DROPPED
+  // CLAUSE RATHER THAN A ZERO. The old expression would have read « for the title.» over a Nations
+  // Cup tie – `WINS_IN_WORDS[0]` is the empty string, and `??` does not catch it – and the sentence
+  // would have been wrong twice over: she plays every rubber the captain gives her whatever happens
+  // in them, and there is no title at the end of any of them.
+  if (winsToTitle.value === null) return fit ? `The court ${fit}.` : ''
   const price = `${WINS_IN_WORDS[winsToTitle.value] ?? `${winsToTitle.value} wins`} for the title.`
   return fit ? `The court ${fit}. ${price}` : price
 })
@@ -453,12 +488,23 @@ const pathCells = computed<PathCell[]>(() =>
 // the finale card. NEVER over the pre-match card and never during a replay (round-7 rule): the
 // draw would spoil the match she is about to watch.
 const bracketMatches = computed(() => pending.value?.fullBracket ?? [])
+// ⭐⭐⭐ ROUND 27 #6 – ...AND A FIXTURE WITH NO DRAW HAS NO DRAW TABS, WHICH IS THE STRUCTURE RATHER
+// THAN A SECOND SUPPRESSION. `BracketTabs` names every round off `drawSize` (`R32 · R16 · QF · SF ·
+// F`), so a `?? 0` here would hand it the very default `PendingView.drawSize` exists to abolish, and
+// it would print `RInfinity` doing it. Both amateur fixtures already send an empty `fullBracket` –
+// neither simulates the half of the field she is not in – so this clause is a tripwire and not a
+// path today; it is written down because the empty list is a fact about what the ENGINE plays and
+// the null is a fact about what the FIXTURE is, and the second one is the one this component needs.
 const showBracket = computed(
-  () => bracketMatches.value.length > 0 && !replayOpen.value && (phase.value === 'post' || phase.value === 'spectate'),
+  () =>
+    bracketMatches.value.length > 0 &&
+    drawSize.value !== null &&
+    !replayOpen.value &&
+    (phase.value === 'post' || phase.value === 'spectate'),
 )
 // The finale copy of the draw sits BELOW the champion/portrait card, so the celebration still
 // lands first and the completed bracket is there to scroll into.
-const showFinaleBracket = computed(() => bracketMatches.value.length > 0 && phase.value === 'finale')
+const showFinaleBracket = computed(() => bracketMatches.value.length > 0 && drawSize.value !== null && phase.value === 'finale')
 // The tournament champion (the Final match's winner) – named on the non-champion finale card,
 // where there is no kid portrait to celebrate an AI winner.
 const championName = computed(() => {
@@ -889,9 +935,14 @@ const matchMeta = computed(() => (stats.value ? matchStatMeta(stats.value) : nul
              win it. The draw size lives HERE rather than in the facts row (see the note on it):
              "Quarterfinal · 8-player draw" says in one line both where she starts and how far
              the top is, which is more than either half said on its own. -->
+        <!-- ROUND 27 #6: the draw line is ABSENT, not dashed, when the fixture is not a draw. A tie
+             set is three ties and no bracket, so there is no size to state - and the round line
+             beside it already carries the count ("Rubber 2 of 3"), which is the half a draw size is
+             actually read for. The same claim the crowd cell makes further up: absent is a different
+             sentence from a dash. -->
         <div class="tf-round-row">
           <p class="tf-round">{{ pending.roundLabel }}</p>
-          <p class="tf-draw">{{ drawSize }}-player draw</p>
+          <p v-if="drawSize !== null" class="tf-draw">{{ drawSize }}-player draw</p>
         </div>
         <!-- Both ranks are read off the table THIS tournament is played on, and the panel says which
              one that is - a bare "#118" beside a bare "#4" is a comparison, and a comparison across
@@ -922,10 +973,17 @@ const matchMeta = computed(() => (stats.value ? matchStatMeta(stats.value) : nul
              ⭐ ROUND 27 #4 RE-POINTED, SAME BEHAVIOUR: the gate is `ladderLabel` – the TABLE's own
              field – rather than `amateur`, which is the RUNG's. They agree on every fixture that
              exists today and they are answers to two different questions, and this line is about
-             the table. ⚠ The `v-else` sentence is still the College League's own: a second amateur
-             fixture (the Nations Cup, spec §6) needs its own words here, not these. -->
+             the table.
+
+             ⭐⭐⭐ ROUND 27 #6 – AND THE SENTENCE UNDER THE `v-else` IS THE ENGINE'S NOW. It used to be
+             written out here, in the College League's own words, and §4's builder left the warning
+             that made this change necessary: a national squad is not a student field, so a second
+             rungless fixture arriving at this line would have printed a reason that is false of it.
+             `PendingView.ladderNote` is non-null exactly when `ladder` is null and carries the
+             competition's own clause; §5's ruling one screen along - the screen asks the engine and
+             prints the answer, it does not compose its own. -->
         <p v-if="ladderLabel !== null" class="hint tf-first-ladder">{{ ladderLabel }} ranking</p>
-        <p v-else class="hint tf-first-ladder">No ranking points and no prize money – a student field awards neither</p>
+        <p v-else-if="pending.ladderNote" class="hint tf-first-ladder">{{ pending.ladderNote }}</p>
       </Card>
 
       <!-- THE COACH'S READ + THE BUTTON THAT STARTS IT. -->
@@ -1005,7 +1063,7 @@ const matchMeta = computed(() => (stats.value ? matchStatMeta(stats.value) : nul
            active tab defaults to the kid's current round between rounds (post) and to the
            spectate round during the walk; the finale renders the same component again below
            its card. Only revealed rounds are in `fullBracket`, so no tab can leak ahead. -->
-      <section v-if="showBracket" class="tf-card tf-bracket">
+      <section v-if="showBracket && drawSize !== null" class="tf-card tf-bracket">
         <p class="tf-bracket-title">Draw</p>
         <BracketTabs :matches="bracketMatches" :draw-size="drawSize" :active-round="bracketActiveRound" />
       </section>
@@ -1307,7 +1365,7 @@ const matchMeta = computed(() => (stats.value ? matchStatMeta(stats.value) : nul
 
       <!-- The finished draw, below the celebration – same component, same tabs (her round is
            still the default one, and by now every round is revealed). -->
-      <section v-if="showFinaleBracket" class="tf-card tf-bracket">
+      <section v-if="showFinaleBracket && drawSize !== null" class="tf-card tf-bracket">
         <p class="tf-bracket-title">Draw</p>
         <BracketTabs :matches="bracketMatches" :draw-size="drawSize" :active-round="bracketActiveRound" />
       </section>
