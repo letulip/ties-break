@@ -144,6 +144,28 @@ reads longer than the work it implies.
   nothing» in points, money and results only. Someone making the championship feel like real tennis
   would trip nothing, and the masseur stand-down would silently turn from correct into a hole.
 
+- [~] **12. «100 из 10 она вылетает в обоих турнирах сразу на 1м матче?»** – ⭐⭐ **No. There is real
+  spread, and his result reproduced because it is the same seeded draw, not because it is typical.**
+  N=100 on his own pair at full condition: W50 opener **11%**, title **48%**; W75 opener **15%**.
+  **Both openers lost: 2 of 100.** ⚠ And the card had told him **85.0%** and **85.3%** – he lost both,
+  a one-in-forty-five afternoon. ⚠ He also played the SECOND W50/W75 after the winter, not the first;
+  on the first pair she wins.
+
+- [~] **13. «просто рельсы без влияния игрока… мы показываем 70% успеха, но она не пройдет никогда»** –
+  ⚠⚠ **Not rails – but the levers he pays most for are the ones that do least.** Over 300 trials:
+  an elite coach travelling moves **49** results, firing the coach **30**, restoring her to full
+  condition **2**, the masseur **1**, the physio retainer **0**. ⭐⭐ **And one line of arithmetic
+  explains the whole condition family: `conditionMatchFactor` is flat above 70 and every measured
+  arrival condition was 86–100.** Written up as its own page –
+  [the-knee-2026-08.md](../specs/the-knee-2026-08.md) – because that constant has now been the answer
+  to three separate investigations in one week. ⚙ **He has seen the numbers and ruled: «вариативность
+  всё-таки есть, это хорошо, значит не рельсы».**
+
+- [ ] **14. ⚠ «наши фавориты слишком безопасны» (mine, from his own standard)** – measured against the
+  cited research at the same rank gap: **ours 11%, reality 19.2%.** She should be losing openers
+  MORE often, not less. Held open because it points the opposite way to every other balance finding
+  this week and must not be fixed in the same breath as them.
+
 ---
 
 ## What this round is waiting on
