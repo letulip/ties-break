@@ -164,6 +164,38 @@ the pause reason has to reach the snapshot. A screen that guesses which pause it
 screen deciding a rule, which `CLAUDE.md` invariant 1 forbids – and the birthday half is already done
 the right way (`yearInProgress` is `college.pendingYearStart`, the engine's own fact).
 
+### ⚙ CORRECTED AT THE BUILD, 27.08 – it is not «the championship pause», and it is not one label
+
+⚠ **The paragraph above is right about the cause and wrong about the state, and the walked career is
+what says so.** Two probes over `resumeFromCollege`, all twelve birth months, four years each:
+
+| her birth month | the press that plays the championship | what it said |
+| --- | --- | --- |
+| **April–August** (5/12) | the FIRST press of the year – the fixture is thirty weeks in, her birthday later | `Another year` · `Play the first year` · `Play the final year` |
+| **September–March** (7/12) | the SECOND press – her birthday pauses the year first | `Finish the year` |
+
+**So BOTH halves of the label lie, and which one depends only on her birth month.** The academic year
+opens on a fixed season week for every career, so the fixture is always at the same offset and only
+the cake moves across it.
+
+⚠ **AND `collegeLeagueRevealOpen` CANNOT BE THE PREDICATE**, for a measured reason: it is true exactly
+while `snapshot.pending` is set, and `HomeScreen`'s college bar carries `&& !game.snapshot?.pending` –
+so while it is true the button is not on screen at all. The state it names is the takeover, not the
+rest state before it.
+
+**Built instead:** `collegeLeagueIsNextStop(world)` – «does the press ahead END at the championship» –
+reaching the screen as `CollegeProgressView.leagueIsNextStop`, and ONE label, `Play the College
+League`, ahead of both orderings. It walks the weeks the press will walk and asks the loop's own two
+questions in the loop's own order, so a championship sitting BEHIND a birthday is not promised by the
+press that will stop at the cake. ⚠ Its own docstring carries the standing hazard: `resumeFromCollege`
+has exactly two mid-year stops today, and a third would have to be taught to this predicate too.
+
+⚠ The name is **the league's own label** (`COLLEGE_LEAGUE.label`), not «College Open» – his «или
+вроде того» left the choice open and the fixture already has a name on every other surface.
+
+**Measured after the fix: 0 mismatches over 12 birth months × 4 years – the button names the
+championship on exactly the presses that play it, and «Finish the year» on the one after.**
+
 ---
 
 ## 3. ⚠⚠ The world #100 goes to college and loses, and the numbers say why

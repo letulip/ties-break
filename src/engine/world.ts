@@ -186,6 +186,10 @@ export {
   collegeLeagueRevealMatches,
   collegeLeagueRevealOpen,
   collegeLeagueWeek,
+  // ⭐⭐⭐ ROUND 27 #2 – WILL THE NEXT PRESS END AT THE CHAMPIONSHIP? The fact behind the bottom
+  // control's fifth label, and the week-level test it is built on.
+  collegeLeagueIsNextStop,
+  isCollegeLeagueWeek,
   collegeMatchesThisWeek,
   collegeProgressOf,
   collegeRecruitViewOf,

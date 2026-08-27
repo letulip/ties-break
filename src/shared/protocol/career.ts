@@ -526,4 +526,18 @@ export interface CollegeProgressView {
    *  offering to start one, and the early return can stand down until the year she started is done.
    *  A wire field off persisted state – no schema implications of its own. */
   yearInProgress: boolean
+  /** ⭐⭐⭐ ROUND 27 #2 – DOES THE NEXT PRESS END AT THE STUDENT CHAMPIONSHIP? The owner: «кнопка
+   *  "Продолжить год", а при нажатии мы попадаем в "the College League" – как будто можно тоже наш
+   *  флоу использовать с неймингом кнопки – Play College Open, а уже потом "Закончить год"?»
+   *
+   *  ⚠ THE ENGINE'S ANSWER AND NOT THE SCREEN'S, on `yearInProgress`' own argument one line up. A
+   *  college year has TWO mid-year pauses – her birthday and, since round 26 #6, the championship –
+   *  and a screen deciding which one it is standing in front of is the screen deciding a rule
+   *  (CLAUDE.md invariant 1). `collegeLeagueIsNextStop` is where that is decided, and its own note
+   *  carries the measurement: over the twelve birth months, five put the championship in front of
+   *  the birthday and seven put it behind, so BOTH shipped labels lie on some careers.
+   *
+   *  A wire field off the calendar and the persisted year start – no `SAVE_SCHEMA_VERSION` bump, no
+   *  migration and no golden fixture, exactly as `billPerYearCents` and `yearInProgress` are. */
+  leagueIsNextStop: boolean
 }

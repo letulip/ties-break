@@ -49,7 +49,7 @@ import {
 } from '../collegeOffer'
 import type { CollegeLeagueRun, CollegeOffer, CollegeProgressView, CollegeState, CollegeYearStart } from '../../shared/protocol'
 import { addEvent } from './ledger'
-import { kidAgeYears } from './age'
+import { birthdayTurning, kidAgeYears } from './age'
 // ⚠ FROM ./ladder, NOT ./snapshot (TB-07). This file MUTATES the world; snapshot BUILDS the
 // aggregate projection over it, and importing upward from one to the other closed two runtime
 // cycles (birthday → college → snapshot → birthday, coachMarket → endings → college → snapshot →
@@ -380,11 +380,71 @@ export function callUpRubbersOf(world: WorldState, week: number): WorldMatch[] {
 // each occurs once, so a year holds at most two and never three, which is the owner's own bound.
 // `tests/college-league.test.ts` pins both ends over walked careers rather than asserting them here.
 
+/** THE SEASON-WEEK TEST ON ITS OWN, asked of a week rather than of the world – so a question about a
+ *  week the tick has not reached yet cannot spell it a second way. ⚠ ONE PLACE WRITES
+ *  `% WEEKS_PER_YEAR === COLLEGE_LEAGUE.seasonWeek`: two copies is how a fixture comes to be played
+ *  on one week and announced for another. */
+export function isCollegeLeagueWeek(week: number): boolean {
+  return week % WEEKS_PER_YEAR === COLLEGE_LEAGUE.seasonWeek
+}
+
 /** IS THIS THE WEEK THE STUDENT CHAMPIONSHIP IS PLAYED? A season-week comparison and nothing else –
  *  the same shape `callUpWeek` has, and guarded on `inCollege` for the same reason: this is a closed
  *  student field and a girl on the tour is not in it. */
 export function collegeLeagueWeek(world: WorldState): boolean {
-  return inCollege(world) && world.week % WEEKS_PER_YEAR === COLLEGE_LEAGUE.seasonWeek
+  return inCollege(world) && isCollegeLeagueWeek(world.week)
+}
+
+/** ⭐⭐⭐ ROUND 27 #2 – WILL THE NEXT PRESS OF THE COLLEGE BUTTON END AT THE CHAMPIONSHIP?
+ *
+ *  The owner, 27.08: «в интерфейсе колледжа появляется кнопка "Продолжить год", а при нажатии мы
+ *  попадаем в "the College League" – как будто можно тоже наш флоу использовать с неймингом кнопки
+ *  – Play College Open или вроде того, а уже потом "Закончить год"?»
+ *
+ *  ⚠⚠ THE SCREEN MAY NOT ANSWER THIS, WHICH IS WHY IT IS HERE (CLAUDE.md invariant 1). `HomeScreen`'s
+ *  bottom control already reads `yearInProgress` – `college.pendingYearStart`, the engine's own fact
+ *  – rather than counting weeks itself, and its own comment states the rule this predicate serves:
+ *  «a button still reading "Another year" there would be offering a year it is not going to start».
+ *  A button reading «Finish the year» when the next press plays a championship is the same sentence
+ *  one pause later.
+ *
+ *  ⚠⚠ MEASURED, AND BOTH LABELS LIE – WHICH ONE DEPENDS ON HER BIRTH MONTH. The academic year opens
+ *  at a fixed season week and the fixture sits thirty weeks into it, so her birthday falls on either
+ *  side of it: over all twelve birth months, five (April–August) put the championship FIRST, so the
+ *  press labelled «Another year» plays it; the other seven put her birthday first, so the press
+ *  labelled «Finish the year» plays it. One predicate covers both, because it names what the press
+ *  DOES rather than which pause the year is standing in.
+ *
+ *  ⚠ IT WALKS THE WEEKS THE PRESS WILL WALK AND ASKS THE LOOP'S OWN TWO QUESTIONS, in the loop's own
+ *  order – `resumeFromCollege` in `world.ts` is the list, and it has exactly two mid-year stops. A
+ *  championship BEHIND a birthday is not this press's business: that press ends at the cake, the
+ *  button after it says the fixture's name, and the year is never offered something it will not
+ *  reach. ⚠⚠ IF A THIRD MID-YEAR STOP IS EVER ADDED TO THAT LOOP, IT HAS TO BE ADDED HERE TOO, or
+ *  this button starts promising a tournament that a new pause arrives in front of.
+ *
+ *  The span is `resumeFromCollege`'s own arithmetic: a year in progress finishes against the start it
+ *  was paused with, a fresh one opens at this week (`openCollegeYear().week === world.week`), and a
+ *  pause can only fire on a week STRICTLY inside the span – the boundary week banks the year instead,
+ *  which is the ruling `resumeFromCollege` states for a birthday landing on it. */
+export function collegeLeagueIsNextStop(world: WorldState): boolean {
+  const college = world.college
+  if (!college || college.doneWeek !== null) return false
+  const startWeek = college.pendingYearStart?.week ?? world.week
+  const yearEnds = Math.min(college.untilWeek, startWeek + WEEKS_PER_YEAR)
+  for (let week = world.week + 1; week < yearEnds; week++) {
+    // `resolveCollegeLeague` only fires while she is enrolled, and `inCollege` is `week <
+    // untilWeek` – so a fixture week at or past the end of the course is not one.
+    if (isCollegeLeagueWeek(week) && week < college.untilWeek) return true
+    // ...and her birthday gets there first. The same two conditions `pendingBirthday` asks – the
+    // date, and that this one has not already been answered – because it is the same pause.
+    if (
+      birthdayTurning(week, world.profile.birthMonth, world.profile.birthDay) !== null &&
+      !world.birthdays.some((b) => b.week === week)
+    ) {
+      return false
+    }
+  }
+  return false
 }
 
 /** ⭐⭐⭐ THE CHAMPIONSHIP, PLAYED AND FILED. The college mirror of `resolveCallUp`, two weeks up the
@@ -733,6 +793,11 @@ export function collegeProgressOf(world: WorldState): CollegeProgressView | null
     // so the bottom control's «Finish the year» and the engine's own early-return refusal cannot
     // disagree about whether one is.
     yearInProgress: (college.pendingYearStart ?? null) !== null,
+    // ⭐⭐⭐ ROUND 27 #2 – ...AND WHAT THE NEXT PRESS ACTUALLY DOES. The line above says a year is
+    // running; this says whether finishing it plays a tournament first. Two facts, because they are
+    // two questions: the shipped label collapsed them and offered a year on a press that plays the
+    // championship.
+    leagueIsNextStop: collegeLeagueIsNextStop(world),
   }
 }
 

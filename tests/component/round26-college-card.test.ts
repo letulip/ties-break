@@ -120,6 +120,12 @@ function collegeView(over: Partial<CollegeProgressView> = {}): CollegeProgressVi
     league: { week: 293, roundsWon: 2, rounds: 3 },
     leagueMatches: [],
     yearInProgress: false,
+    // ⚠ ROUND 27 #2 – A NEW FIELD, AND `false` IS A CLAIM RATHER THAN A FILLER. `leagueIsNextStop`
+    // is «the next press ends at the student championship», and the cases below are about the four
+    // labels that count YEARS, so every one of them is a rest state whose press does not play a
+    // fixture. The fifth label has its own case, over a WALKED career, in this file's round-27
+    // describe – a fabricated `true` here would pin a string, not a state.
+    leagueIsNextStop: false,
     ...over,
   }
 }
@@ -409,6 +415,61 @@ describe('⭐⭐⭐ #12 – no press offers a fifth year', () => {
     expect(w.findAll('.college-answer'), 'and there is no press that can only be refused').toHaveLength(0)
     expect(w.find('.college-bar').exists()).toBe(false)
     w.unmount()
+  })
+})
+
+// =================================================================================================
+// ⭐⭐⭐ ROUND 27 #2 – THE FIFTH LABEL, ON THE PRESS THAT PLAYS A TOURNAMENT
+// =================================================================================================
+//
+// The owner, 27.08: «в интерфейсе колледжа появляется кнопка "Продолжить год", а при нажатии мы
+// попадаем в "the College League" – как будто можно тоже наш флоу использовать с неймингом кнопки –
+// Play College Open или вроде того, а уже потом "Закончить год"?»
+//
+// ⚠ TWO ADJACENT REAL STATES AND NOT A FABRICATED VIEW, which is the difference between this case
+// and every other label case in this file. The four labels above count YEARS, so a hand-built
+// `CollegeProgressView` is the honest fixture for them. The fifth names what a PRESS DOES, and the
+// only thing that can prove it lands on the right press is a career that presses.
+describe('⭐⭐⭐ ROUND 27 #2 – the button names the championship, and only while it is ahead', () => {
+  beforeEach(() => {
+    setActivePinia(createPinia())
+    document.body.innerHTML = ''
+  })
+
+  it('⭐⭐⭐ THE PAIR: «Play the College League» before the fixture, «Finish the year» after it', async () => {
+    const { world, rng } = atCollege('r27-label-pair')
+
+    // BEFORE. The first rest state of the first year: the press ahead ends at the championship, and
+    // the button says so instead of offering a year.
+    expect(
+      toSnapshot(world).ending?.college?.leagueIsNextStop,
+      'this career really is standing in front of its championship – otherwise the case is vacuous',
+    ).toBe(true)
+    const before = await openWorld(world)
+    expect(
+      before.findAll('.college-answer').map((n) => n.text()),
+      'the fixture names itself, and there is no leave answer with no year banked',
+    ).toEqual([`Play ${COLLEGE_LEAGUE.label}`])
+    before.unmount()
+
+    // ...the press really does play it, through the engine, exactly as the button's click does.
+    resumeFromCollege(world, rng)
+    expect(collegeLeagueRevealOpen(world), 'the press ended at the championship').toBe(true)
+    skipTournament(world)
+    closeTournament(world)
+
+    // AFTER. Same year, same rest state shape, and the championship is behind her – so the button
+    // goes back to naming the year. ⚠ THIS IS THE MUTATION PROOF: no constant satisfies both ends,
+    // and a predicate that merely asked «does this year hold a championship» would say the fixture's
+    // name here too, over a fixture that has already been played.
+    const after = await openWorld(world)
+    expect(after.findAll('.college-answer').map((n) => n.text()), 'his own «а уже потом Закончить год»').toEqual([
+      'Finish the year',
+    ])
+    expect(after.text(), 'and nothing on the screen still offers the tournament').not.toContain(
+      `Play ${COLLEGE_LEAGUE.label}`,
+    )
+    after.unmount()
   })
 })
 

@@ -30,6 +30,7 @@ import { useGameStore } from '../../src/stores/game'
 import { ENDINGS } from '../../src/engine/ending'
 import { boxOf, lengthPx, setViewport, NARROW_PHONE, PHONE, type Viewport } from './fits'
 import { NATIONAL_TEAM } from '../../src/engine/nationalTeam'
+import { COLLEGE_LEAGUE } from '../../src/engine/collegeLeague'
 import {
   skipTournament,
   pendingBirthday,
@@ -166,6 +167,11 @@ function collegeView(over: Partial<CollegeProgressView> = {}): CollegeProgressVi
     // card the player sees on every press – the paused-mid-year state has its own walk in
     // tests/college-birthday.test.ts and its own label case in HomeScreen.
     yearInProgress: false,
+    // ⚠ ROUND 27 #2, and the same argument once more: this fixture is a year at REST at a BOUNDARY,
+    // and «the next press ends at the championship» is a fact about a press mid-year. The state
+    // where it is true is walked rather than fabricated – tests/college-league.test.ts owns the
+    // predicate and tests/component/round26-college-card.test.ts owns the label over a real career.
+    leagueIsNextStop: false,
     ...over,
   }
 }
@@ -657,6 +663,23 @@ describe('⚠⚠ P5 – the college question fits a phone, and the measurement c
       for (const r of wrapper.findAll('.college-rubber')) {
         expect(boxOf(r.element, room).h, 'a rubber row with no box is not a control').toBeGreaterThan(0)
       }
+      wrapper.unmount()
+    })
+
+    it(`⭐ ROUND 27 #2 – and the LONGEST answer this bar can hold, at ${vp.width}x${vp.height}`, async () => {
+      // The fifth label names the fixture («Play the College League»), which is half again as long as
+      // «Another year» – and this describe exists for exactly the failure mode of a surface that
+      // grows one honest word at a time. ⚠ A FABRICATED VIEW IS THE RIGHT FIXTURE HERE and a walked
+      // career is not: the question is geometry, not when the state occurs (that is walked, in
+      // tests/college-league.test.ts and tests/component/round26-college-card.test.ts).
+      const wrapper = await openCollegeHome(collegeView({ leagueIsNextStop: true }), vp)
+      const bar = wrapper.find('.college-bar').element
+      const answers = wrapper.findAll('.college-answer').map((n) => n.element)
+      expect(
+        wrapper.findAll('.college-answer').map((n) => n.text()),
+        'the arm is not vacuous – the long label really is on the bar',
+      ).toContain(`Play ${COLLEGE_LEAGUE.label}`)
+      assertBarFits(bar, answers, vp, 'HomeScreen (college answers, the fixture label)')
       wrapper.unmount()
     })
   }
