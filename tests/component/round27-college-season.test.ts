@@ -170,6 +170,26 @@ describe('⭐⭐⭐ round 27 #5 – the entry and planning controls stand down f
     expect(note.text()).toBe(COLLEGE_FREEZE_REFUSAL)
     wrapper.unmount()
   })
+
+  it('⚠ ...and it is read BEFORE the first control it explains', () => {
+    // A disabled control still needs its reason READABLE, which is half a placement claim and half a
+    // reachability one.
+    //
+    // ⚠ THE REACHABILITY HALF IS NOT A BOX MEASUREMENT AND MUST NOT PRETEND TO BE. `fits.ts` exists
+    // because happy-dom has no layout engine, and everything it models is a DIALOG – a fixed,
+    // centred card that can push its own dismiss control off a 375x667 screen with nothing to
+    // scroll. This note is a `<p>` in the ordinary page flow of a scrolling tab: there is no box to
+    // overflow and no control to strand, so the honest claim left is ORDER. A player reading down
+    // the calendar meets the reason before the first greyed Enter, rather than after eight cards of
+    // wondering.
+    const wrapper = mountSeason(frozenCareer())
+    const note = wrapper.find('.college-freeze-note').element
+    const firstEnter = enterPills(wrapper)[0].element
+    // The DOM's own ordering predicate, which returns a bitmask.
+    const follows = note.compareDocumentPosition(firstEnter) & Node.DOCUMENT_POSITION_FOLLOWING
+    expect(follows, 'the reason precedes the control it is about').toBeTruthy()
+    wrapper.unmount()
+  })
 })
 
 describe('⚠⚠ round 27 #5 – and NOT everything on the screen is frozen (round 24, E2)', () => {
