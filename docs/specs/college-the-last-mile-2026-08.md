@@ -346,6 +346,53 @@ enabling something it refuses, pointed the other way.
 
 ⭐ Cheapest of the five: every fact exists, the sentence exists, and no engine number moves.
 
+### ⚙ BUILT 27.08 – the control-by-control audit, and it found a THIRD refused control
+
+**The premise above held: the engine was already right, and no engine number moved.** What the audit
+added is the list itself. Every control the screen draws, against the guard behind it:
+
+| control | engine command | guard | shipped |
+| --- | --- | --- | --- |
+| **Enter** | `enterEvent` | `guardNotEnded` | **disabled** |
+| **Withdraw** | `withdrawEvent` | `guardNotEnded` | **disabled** (see below) |
+| **Cancel entry** | `cancelEntry` | `guardNotEnded` | **disabled** (see below) |
+| **+ Plan week** (both cards) | `bookPractice` / `bookVacation` | `guardNotEnded` | **disabled** |
+| **Play it and watch** | `advance(1)` | `advanceRefusal` → `'ending'` | **disabled** – see below |
+| rescue card «See the options» | `bookVacation`, through the same sheet | `guardNotEnded` | **suppressed** |
+| **Cancel** on a booked practice | `cancelPractice` | `guardNotEndedForGood` | **left live** |
+| **Cancel** on a booked vacation | `cancelVacation` | `guardNotEndedForGood` | **left live** |
+| the painted vacation card's tap | opens `PlanWeekSheet`'s `booked` pane | reaches `cancelVacation` only | **left live** |
+| Tour guide, Watch match, the sandbox friendly | none – no command at all | – | **left live** |
+
+⚠⚠ **«Play it and watch» IS A THIRD REFUSED CONTROL AND IT WAS THE WORST OF THEM, because it was
+silent.** The press is an ADVANCE, `advanceRefusal` returns `'ending'` behind any latch – college
+included – and `'ending'` is the one stop reason with **no copy in App.vue's `STOP_REASON_TEXT`**, so
+R10-16's own «no copy, no toast» rule meant the press produced *nothing at all*: no week, no message.
+It is reachable exactly because of the fact E2 built on – `resolveCollegeDeparture` releases her
+ENTRIES and leaves `world.practices` alone, so a friendly booked in August is still on the calendar in
+September. ⭐ **App.vue's own week bar already stands down on a college week for this argument**
+(the note at `.next-week-bar`, and `round24-college-shell.test.ts` pins it); this is the same command
+on another screen, and nobody had told it.
+
+⚠ **The rescue card is SUPPRESSED rather than disabled, and it is the only thing here that is.**
+Everything else is a control the player went looking for, so it stays on screen greyed with the reason
+beside it. This is the game *offering* a booking it will refuse, and its own copy («nothing is booked
+until you say so») promises a decision the engine will not take.
+
+⚠ **Withdraw / Cancel entry cannot actually be reached inside the freeze** – `releaseEntriesForTheFreeze`
+runs at the departure, so she holds no entry (pinned in the new suite). Both are gated all the same:
+the guard is what makes that a rule rather than a hope.
+
+⚠ **The three «left live» rows are the whole second half of the item** and they are pinned in both
+directions – `tests/component/round27-college-season.test.ts`, mutation-verified four ways (freeze
+never fires → the four freeze cases die; freeze always fires → the on-tour arm dies; freeze the
+practice cancel or the vacation card's tap → exactly the E2 case that names it dies).
+
+**The predicate is `guardNotEnded`'s own first question** (`ending.type === 'college'`), not
+`snapshot.inCollege` – the same reasoning `world/constants.ts` writes out beside the guard, so the
+screen and the refusal cannot disagree about which controls work. The note is `COLLEGE_FREEZE_REFUSAL`
+itself, printed once at the head of the calendar rather than eight times over eight cards.
+
 ---
 
 ## 6. ⚠⚠ The national-team call-up is the SAME RAKE the League just stepped off
