@@ -180,6 +180,7 @@ export {
   // ⭐⭐⭐ ROUND 27 #6 – THE TIE'S REVEAL, and the letter that arrives the week before it. Six names,
   // the same six shapes the championship's reveal exports two blocks down – deliberately, because it
   // is the same KIND of thing arriving on a different week.
+  callUpFor,
   callUpLetterWeek,
   callUpRevealMatches,
   callUpRevealOpen,
