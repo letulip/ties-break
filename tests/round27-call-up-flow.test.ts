@@ -307,7 +307,11 @@ describe('#6 the tie is played through the ordinary tournament flow', () => {
       for (const year of world.college!.years) {
         if (!year.callUp) continue
         for (const m of callUpRubbersOf(world, year.callUp.week)) {
-          const again = simulateMatch(m.a!, m.b!, { surface: m.surface, tour: JUNIOR_TOUR, seed: m.seed })
+          // ⚠ THE SEED IS THE RECORD'S OWN AND IT IS ASSERTED PRESENT, not defaulted: a rubber with
+          // no seed is a replay button with nothing behind it, which is the failure this case exists
+          // to catch, and `?? ''` would have replayed a different match and called it a match.
+          expect(m.seed, `rubber ${m.eventId} carries its seed`).toBeTruthy()
+          const again = simulateMatch(m.a!, m.b!, { surface: m.surface, tour: JUNIOR_TOUR, seed: m.seed! })
           expect(again.sets.map((s) => `${s.a}-${s.b}`).join(' '), `rubber ${m.eventId}`).toBe(m.score)
           replayed++
         }

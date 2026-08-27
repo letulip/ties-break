@@ -255,8 +255,11 @@ describe('⭐⭐⭐ #13 – four years is four years, and the fourth is the last
 
     // Every rest state the player can be in, recorded as the engine leaves it. Each year takes two
     // presses because her birthday pauses it (round 24) – the loop answers the cake and presses on.
+    // ⚠ ROUND 27 #6: and up to four, because the year now holds three questions – the championship,
+    // the Nations Cup tie and the cake. The BUDGET moved from three presses a year to five; the
+    // assertions below are untouched and still measure four banked years over 208 weeks.
     const rest: { yearsDone: number; latched: boolean }[] = []
-    for (let press = 0; press < 3 * ENDINGS.collegeYears && world.ending?.type === 'college'; press++) {
+    for (let press = 0; press < 5 * ENDINGS.collegeYears && world.ending?.type === 'college'; press++) {
       resumeFromCollege(world, rng)
       answerCollegeReveal(world)
       if (pendingBirthday(world) !== null) chooseGift(world, 'day')
