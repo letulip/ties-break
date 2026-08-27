@@ -473,6 +473,58 @@ the scene richer rather than thinner.
 game and the count is **pinned in `tests/birthday-ask.test.ts`**. Filtering the pool is allowed – that
 is how `alreadyGiven` already works. Changing the number of draws is not.
 
+### ⚙ BUILT 27.08 – measured before and after, and the average was hiding it
+
+**The mechanism is confirmed exactly as diagnosed, and the measurement found a second thing worth
+saying.** `tools/birthday-pool.ts`, 12 careers, 201 tour birthdays and 48 college birthdays, the same
+tool on both arms and only the engine differing:
+
+| | before | after |
+|---|---|---|
+| the day is the ask, overall | **30%** | 24% |
+| ...from twenty-two on (**late career**) | **34%** | 28% |
+| longest run of consecutive day-asks | **4** | **1** |
+| careers that ever ran three in a row | **4 of 12** | **0 of 12** |
+| all three material rows already hers → asked the day | **8 of 8 = 100%** | 6 of 8 = 75% |
+| she asks for something already in the house | 0 | 2 of 201 = 1% |
+| ...of those, on a **durable** row | – | **0** |
+
+⭐ **The run is the number that answers him, and it is structural rather than statistical.** «3 раза
+подряд» cannot happen because two in a row cannot happen: worst run 1, on both the tour and the
+college band, in every career walked. The college band's own worst run was 3 before and is 1 now.
+
+⚠ **THE SHARE FALLS BY SIX POINTS AND NO FURTHER, AND THAT IS THE FIX WORKING RATHER THAN
+UNDER-DELIVERING.** The day is on 100% of dialogs by the owner's own 11.08 ruling and every material
+row is on at most 31%, so a healthy day share is *high*. The 6 of 8 that still ask for the day in the
+single-element case are correct: the pool is genuinely one row and the day was **not** last year's
+ask, so the day is the only true answer. What was removed is the *consecutive* certainty, which is
+the whole of what he was reading.
+
+⚠ **AND THE 100% CASE IS ONLY 8 BIRTHDAYS OF 201 – THE SPEC ABOVE NAMES THE EXTREME OF A CONTINUOUS
+EFFECT, NOT THE WHOLE OF IT.** The filter lifts the day at every level of ownership: one material row
+owned and the pool is 3, two and it is 2, three and it is 1. That is where the other 53 day-asks come
+from, and at a ~30% per-birthday rate a three-in-a-row appears in a third of careers by arithmetic.
+**His career was not unlucky. It was the distribution**, which is why round 26's 30% average read as
+a fair share of four options and nobody looked at the run.
+
+**The empty-pool rule chosen:** `wanted → repeatable rows on the card → any material row on the card →
+options`. The last step is unreachable crash-insurance. ⭐ **The repeatable step is not a preference –
+it is what keeps a false sentence off the screen.** This is the first ask in the game that can name a
+possession she already has, and a DURABLE row's ask is written as a want for a thing she LACKS:
+`campusbike` asks «Everyone there has a bicycle. **She walks**, and she has mentioned it twice», which
+is false the moment one is chained up outside. A repeatable row's ask is a want that recurs. Measured:
+the fallback fired twice in 201 birthdays and **landed on a repeatable row both times**.
+
+**No schema move was needed, and it was checked rather than assumed.** `BirthdayRecord.asked` has
+been persisted beside `given` since **v48** – the v48 note says why they are separate fields – so the
+cooldown reads the record every save already carries. `chooseGift` is the array's only writer and
+pushes one row per birthday in the week it happens; the v48 migration only ever seeds `[]`. The array
+is therefore chronological by construction and the last row is her previous birthday, derived before
+this birthday's own row exists, exactly as `giftsAlreadyGiven` and `collegeBirthdayIndexOf` are. **Had
+`asked` not been on the record this would have been a full four-part move from v63.**
+
+**RNG:** no draw added or removed, MAIN not reached, the frozen capture (41550 / `e6b0c709`) unmoved.
+
 ---
 
 ## 8. ⚙ SOLVED 27.08 on his own save – it is a label, not the arithmetic

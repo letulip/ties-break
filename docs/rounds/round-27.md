@@ -68,13 +68,17 @@ reads longer than the work it implies.
   away. ⭐ His own key: the game knows in advance (`rollCallUp`), so a letter and the ordinary
   tournament flow are available and the toast can go. ⚠ Ships with 4 or after it. Spec §6.
 
-- [!] **7. «И снова она просит "One day, not a week, not a trip"» · «3 раза подряд» · «я просил это
-  исправить»** – ⚠⚠ **REOPENED, and he is right to.** His original complaint (round 26 #9) was about
+- [x] **7. «И снова она просит "One day, not a week, not a trip"» · «3 раза подряд» · «я просил это
+  исправить»** – ⚠⚠ **REOPENED, and he was right to.** His original complaint (round 26 #9) was about
   THE DAY; the measurement found the DIALOG repeating, fixed that, and recorded «the day was never the
   problem». **The dialog fix was real and held. The thing he pointed at was left alone.** And it is a
   guarantee, not luck: the day is exempt from the already-given filter by design, material gifts leave
   the pool permanently, so the day's share rises to 100% once the three drawn options are all hers.
-  Spec §7.
+  ⚙ **BUILT: a one-birthday cooldown on the VOICE, never on the option** – the day is on the card
+  every year exactly as his 11.08 ruling says, it just cannot be the ask twice running. **Measured:
+  the longest run of day-asks goes 4 → 1 and the careers that ever ran three in a row go 4 of 12 → 0
+  of 12**, with the share 30% → 24% (late career 34% → 28%). No schema move – the record has held
+  `asked` since v48 – and no draw moved. Spec §7.
 
 - [ ] **8. «в History расход за сезон написан 36 тысяч, а на вкладке расходов 25 тысяч. Явно что-то
   там не ладно с нашей математикой»** – ⚠ **Reproduced exactly on his own save** (`w502`, read-only,
