@@ -6,11 +6,11 @@ canonical: false
 last-reviewed: 2026-08-27
 ---
 
-# College, the last mile – five things round 26 left behind
+# College, the last mile – eight things round 26 left behind
 
 The owner, 27.08, after playing four years through: «нам чуть-чуть осталось колледж дожать».
 
-**Five findings from one afternoon of his play, and three of them share a cause.** Round 26 gave
+**Eight findings from two afternoons of his play, and four of them share a cause.** Round 26 gave
 college real tournaments – the student championship, walked through the tour's own flow – and the
 texts, types and calibrations around college never learned that it had. Each section below is
 measured against the shipped code, not recalled.
@@ -292,7 +292,115 @@ enabling something it refuses, pointed the other way.
 
 ---
 
-## 6. What this wave owes, in order
+## 6. ⚠⚠ The national-team call-up is the SAME RAKE the League just stepped off
+
+> «И опять на те же грабли: "Her country called this year…" во всплывашке сверху и матчи только
+> постфактум. Мы уже обсудили, что мы знаем будет это происходить или нет, можно письмо об этом
+> пользователю нормальное присылать с приглашением на турнир и проводить этот турнир по обычному
+> флоу турнира. А этот попап не нужен для этого флоу вообще.»
+
+**Verified.** `playCallUpRubbers` (`world/college.ts:282`) simulates every rubber **inside the tick**,
+stores the result as `college.pendingCallUp`, and the card retells it afterwards. The toast at
+`App.vue:868` says «Her country called this year – her matches are in the news feed, and they can be
+watched», which is a sentence about something the player was not present for.
+
+⚠ **Round 26 #6/#7 fixed exactly this for the College League and the call-up was not in that item's
+scope**, so the identical shape survived one file away. The League now pauses on its week and is
+played through `TournamentFlow`; the tie is still resolved and reported.
+
+⭐ **And his key observation is what makes the fix cheap: the game already knows in advance.**
+`rollCallUp` decides before the week, which is the same fact the academy letters of round 26 were
+built on. So the sequence is available: **a letter with the invitation ahead of time, then the tie
+played through the ordinary tournament flow, and the toast deleted** – it exists only to report an
+absence.
+
+⚠ **AND §4 IS ITS TWIN.** The tie is played outside all three ladders, so the moment it goes through
+`TournamentFlow` it hits the same «Professional ranking» lie §4 records. **Fix §4 first or ship them
+together** – doing this one alone converts a postfactum popup into a screen that states a falsehood.
+
+---
+
+## 7. The birthday wish collapses onto «one day» – and it is a pool, not a fluke
+
+> «И снова она просит "One day, not a week, not a trip" второй год подряд, я просил это исправить»
+> · correction: «3 раза подряд»
+
+⚠⚠ **His original complaint was answered with a measurement of something else, and this is worth
+saying plainly.** Round 26 #9 opened on his «Just a day together на день рождения случается
+подозрительно часто» – a complaint about **the day**. The measurement found the whole DIALOG repeating
+(53% of consecutive birthdays printed identical rows, worst run eight) and fixed that, recording «the
+day was never the problem». **The dialog fix was real and it held. The thing he pointed at was left
+alone, and it is still there.**
+
+**The mechanism, and it guarantees his three in a row** (`world/birthday.ts:920`):
+
+    const canAsk = options.filter((g) => g.id === DAY_TOGETHER.id || !spent.has(g.id))
+
+⭐ The day is **exempt from the already-given filter by design**, with a good argument beside it: «a
+day with her parents is not a possession and she may want one every year of her life». **But the
+consequence was never counted.** There are always exactly four options – three material plus the day.
+Material gifts leave the ask pool permanently once given; the day never does. **So the day's share of
+the pool rises monotonically across a career, and once the three material options drawn for a birthday
+are all already hers, the pool is a single element and the probability is 100%.**
+
+⚠ Round 26 #9b saw the neighbouring version of this – «a career spends SEVEN birthdays in 22-28 and
+the band held exactly three material gifts, so C(3,3) = 1» – and widened the bands from 3 to 5. **That
+fixes the ROWS, because rows are drawn fresh each year. It cannot fix the ASK, which filters on what
+she owns.**
+
+### The fix, and the trap that would defeat a naive one
+
+**A one-birthday cooldown on the ASK, never on the option.** The day stays on the card every year
+(his 11.08 ruling and the argument above are both untouched); it simply cannot be VOICED twice
+running.
+
+⚠⚠ **The trap:** the code already carries an empty-pool fallback –
+
+    const pool = canAsk.length ? canAsk : options
+
+– so a cooldown layered on top would empty the pool in **exactly the case that matters** (all three
+material owned, the day on cooldown), the fallback would restore every option, and the day could come
+straight back. **The empty-pool rule has to be decided rather than inherited:** when there is nothing
+new to want, she should ask for a material gift AGAIN – the gifts carry `repeat: 'repeatable'` /
+`'durable'` and their own `again` wording for precisely this – rather than the day on a loop. ⭐ «She
+has one of these from us already, this would be the second» is a human thing to want, and it makes
+the scene richer rather than thinner.
+
+⚠ **HARD CONSTRAINT:** `seed:birthday:<age>` is drawn **exactly four times** for every birthday in the
+game and the count is **pinned in `tests/birthday-ask.test.ts`**. Filtering the pool is allowed – that
+is how `alreadyGiven` already works. Changing the number of draws is not.
+
+---
+
+## 8. ⚠ Family Budget reads a different reality during college – CANDIDATE, not yet confirmed
+
+> «что происходит с плашкой Family Budget во время колледжа – такое ощущение, что она отражает
+> какую-то другую реальность и слишком большие доходы отражает или какие-то расходы не учитывает,
+> хотя вроде бы в Истории списаний всё нормально»
+
+**Established so far.** The card folds `finance.window12w` / `finance.season` – per-category totals
+over two windows – while the transactions history reads individual events. Two paths to one number,
+which is this repo's most-repeated defect class. ⚠ And tuition is **not** the explanation: it is
+charged **weekly** (`world/college.ts:147`, `amountCents: -weekly`), so it cannot fall outside a window
+as a lump.
+
+⭐ **THE LEADING CANDIDATE, and it is structural rather than a bug in the arithmetic: a press means a
+different thing in college.** On tour one press is one week, so «the last 12 weeks» is twelve presses
+of history. In college **one press is a whole YEAR**, so the same window shows less than a quarter of
+what just happened, while the history shows all of it. **The label is identical and the meaning is
+not** – which is exactly «another reality», and it would also read as «expenses missing», because most
+of the year's spending is outside the window the card is folding.
+
+⚠⚠ **THIS IS A HYPOTHESIS AND IT IS NOT MEASURED.** It fits every symptom he described including
+«в Истории списаний всё нормально», but so might two or three other explanations. **Measure before
+building**: walk a career through college and compare, week by week, what the card would fold against
+what the history holds – and report which line diverges first. If the windows are the whole story the
+fix is a label and a window that know about the freeze; if a category is genuinely missing it is a
+different repair entirely.
+
+---
+
+## 9. What this wave owes, in order
 
 ⚠ The order matters – §1 changes the input to §3, and §2 and §4 touch the same flow.
 
@@ -303,6 +411,9 @@ enabling something it refuses, pointed the other way.
 | 2 | **§4 the ladder label** – `LadderTrack | null`, both fixtures | – | S |
 | 3 | **§2 the button** – the pause reason reaches the snapshot | – | S |
 | 4 | **§5 the frozen Season controls** – disabled, with the engine's own sentence beside them | – | S |
+| 4a | **§7 the birthday ask** – a cooldown on the VOICE, and the empty-pool rule decided rather than inherited | – | S |
+| 4b | **§8 Family Budget** – ⚠ MEASURE FIRST, build only what the divergence names | a measurement | S–M |
+| 4c | **§6 the call-up** – the letter, the tournament flow, the toast deleted | ⚠ **§4 must land first or with it** | M |
 | 5 | **§3 the field strength**, calibrated against the 17–19 span – with the call-up ladder re-measured | §1 **and** §1a-(b) first | M |
 
 **Acceptance for the wave as a whole:**
@@ -314,6 +425,10 @@ enabling something it refuses, pointed the other way.
 4. A top-100 professional wins the College League comfortably, and ⚠ **the call-up rungs still read
    what round 24 measured**: 2.63–2.72 watchable matches a year, floor 1, ceiling 2, on all three
    tariffs.
+4a. ⚠ **No fixture she plays is resolved without her** – the League and the national-team tie both
+   reach the player as an invitation and a played tournament, and no toast reports an absence.
+4b. **The day is never the wish two birthdays running**, and the empty pool asks for something rather
+   than falling back to the day.
 5. ⚠ No control on the Season tab both LOOKS pressable and refuses – and none that the engine still
    allows has been disabled by mistake.
 6. ⚠ No age constant in the engine traces to my reading rather than to a sourced research file.
