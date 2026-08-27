@@ -8,6 +8,27 @@
 //
 // NOTHING ELSE MOVED: same tests, same sample sizes, same seeds, same assertions. Wall-clock is
 // unchanged because the sim project runs one file at a time anyway (see vite.config.ts).
+//
+// =================================================================================================
+// ⚠⚠ AND IT CAME BACK, AND THIS TIME THE FILE ITSELF WAS THE UNIT (27.08). The block above did not
+// stop growing after 02.08: it was 64.1s on 13.08, 65.2s when the eleven sim files were timed, and
+// it reproduced again today at 69.73s – every assertion green, exit 1,
+// `Timeout calling "onTaskUpdate"`, on a quiet Mac and already alone in its own process from
+// `scripts/sim.mjs`. Nothing left to shard. Under the gate's own dot reporter it read 52 / 53s on
+// one branch and 51 / 68s (exit 1) on another, which is the shape of the defect: not a slow file, a
+// file ON the wall, crossing at random on branches that had nothing to do with it.
+//
+// So the file is three files, sharing tests/fatigueBenchPolicyFixtures.ts, which carries the whole
+// account and the seam. THIS file keeps the name because the name is quoted from outside the tests
+// (src/engine/season/tournament.ts and docs/specs/ai-w-onramp.md both cite the C3 corridor by this
+// path), and the C3 corridor is the test below. The mean-condition ordering is now
+// tests/fatigue-bench-policy-condition-working.test.ts and
+// tests/fatigue-bench-policy-condition-middle.test.ts – one file per iteration of the profile loop
+// that test always ran, with both `expect`s of each iteration intact.
+//
+// ⚠ NOT ONE SEED, NOT ONE HORIZON AND NOT ONE ASSERTION MOVED. Ten Monte-Carlo cells before, ten
+// after; 30 paired seeds a cell before and after; 52 weeks throughout; seven `expect`s before and
+// seven after, at the same pinned values. Only the file boundary moved.
 import { describe, it, expect, vi } from 'vitest'
 
 // Monte-Carlo cells (30 seeds × 52-208 engine-weeks) finish in ~1-4s on a dev Mac but blow the
@@ -15,46 +36,14 @@ import { describe, it, expect, vi } from 'vitest'
 // PR run). One generous file-level timeout instead of per-test surgery – these tests are
 // deterministic, only slow.
 vi.setConfig({ testTimeout: 240_000 })
-import {
-  PROFILES,
-  POLICIES,
-  FATIGUE_HORIZONS,
-  runCell,
-  computeCellStats,
-} from '../tools/fatigue-bench'
-
-// The fatigue bench is a MEASUREMENT tool for the round-9 condition math: it must be
-// deterministic, its policy ordering must reflect the load-management axis it exists to compare,
-// and its condition trace must be exactly the owner's formula – re-derived here INDEPENDENTLY
-// from the ECONOMY knobs (no accrueCondition/matchDrain imports) and compared byte-for-byte.
-
-const working = PROFILES.find((p) => p.background === 'working')!
-// ⚠ RE-AIMED by the coach ladder: the bench's profiles moved from `coachSetup: 'parent' | 'hired'`
-// to rungs of the ladder ('self' / 'middle'). Same two middle-family cells, same contrast – the
-// self-coached family against the one paying a coach – so every assertion below is unchanged.
-const middleSelf = PROFILES.find((p) => p.background === 'middle' && p.coachTier === 'self')!
-
-const grinder = POLICIES.find((p) => p.id === 'grinder')!
-const balanced = POLICIES.find((p) => p.id === 'balanced')!
-const careful = POLICIES.find((p) => p.id === 'careful')!
-
-const H52 = FATIGUE_HORIZONS.find((h) => h.weeks === 52)!
+import { runCell } from '../tools/fatigue-bench'
+import { careful, grinder, H52, middleSelf, working } from './fatigueBenchPolicyFixtures'
 
 describe('policy ordering (the load-management axis)', () => {
   // Self-coached profiles are the clean read: physio is OFF for grinder/balanced there, so the
   // three policies actually differ in recovery. (On hired-coach profiles the default physio +2
   // saturates all three at the cap and the ordering collapses to a tie – a bench FINDING, not a
   // bench bug; see the anchor test below.)
-  it('mean condition: grinder < balanced < careful (both self-coached profiles, 52w)', () => {
-    for (const profile of [working, middleSelf]) {
-      const g = computeCellStats(profile, grinder, H52, runCell(profile, grinder, H52.weeks))
-      const b = computeCellStats(profile, balanced, H52, runCell(profile, balanced, H52.weeks))
-      const c = computeCellStats(profile, careful, H52, runCell(profile, careful, H52.weeks))
-      expect(g.meanCond).toBeLessThan(b.meanCond)
-      expect(b.meanCond).toBeLessThan(c.meanCond)
-    }
-  })
-
   it('injuries/season: grinder > careful; the spec ≥3x anchor is NOT met – pinned as the round-9 finding', () => {
     // Pooled over both self-coached profiles at 52w for stability (paired seeds).
     const gRuns = [...runCell(working, grinder, H52.weeks), ...runCell(middleSelf, grinder, H52.weeks)]

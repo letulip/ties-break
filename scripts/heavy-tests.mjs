@@ -48,7 +48,77 @@ export const HEAVY_SIM_FILES = [
   // it back. See the list below and .github/workflows/simulation.yml for where the line is drawn.
   'tests/fatigue-bench.test.ts',
   'tests/fatigue-bench-planner.test.ts',
+  // ⚠⚠ 27.08: `fatigue-bench-policy` HAD TO BE CUT, AND THE CUT WENT ONE LEVEL DEEPER THAN THE TWO
+  // BEFORE IT. The header's own table below already recorded it RED – «fatigue-bench-policy 65.2
+  // (RED: two tests green, exit 1 – birpc's wall, on a quiet Mac)» – and it never stopped being a
+  // coin flip: 64.1 s on 13.08, 65.2 s in the eleven-file timing, and 69.73 s re-measured today with
+  // both tests green and `Timeout calling "onTaskUpdate"`. Paired against its base branch it read
+  // 52 s / 53 s on one and 51 s / 68 s (exit 1) on the other, so it is neither branch's doing – it
+  // is a file sitting ON the wall. It was already alone in its process from `scripts/sim.mjs`, so
+  // the FILE was the unit and the file had to be cut, exactly as radar's was on 11.08.
+  //
+  // ⚠ AND TWO FILES WOULD NOT HAVE DONE IT, which is the finding worth carrying. There were only
+  // two `it`s, and the file is TEN Monte-Carlo cells at ~5.0 s each – six in the mean-condition
+  // test, four in the injuries one – so cutting between the two tests leaves a ~32 s file against a
+  // 52 s file that was already a coin flip. 32 s needs a 1.9x unlucky stretch to cross, and this
+  // project has measured 18 s -> 917 s on ONE unchanged file thirty minutes apart (scripts/sim.mjs).
+  // That is not a cut, it is a shorter coin flip.
+  //
+  // So the seam went one level deeper, through the mean-condition test's own
+  // `for (const profile of [working, middleSelf])` loop, whose two iterations were INDEPENDENT –
+  // three cells and two `expect`s each, nothing pooled across them. The injuries test POOLS its
+  // four cells into one ratio across both profiles (paired seeds, its own comment says why), so it
+  // is atomic: four cells is the floor for the largest file here, and it is what the largest is.
+  //
+  // MEASURED SOLO, THREE RUNS EACH, the real `scripts/sim.mjs` invocation (sim project,
+  // `--no-file-parallelism`, `--reporter dot`), one file per process:
+  //
+  //     fatigue-bench-policy             (injuries, 4 cells)  21.9 / 22.0 / 21.9 s   exit 0
+  //     fatigue-bench-policy-condition-working  (3 cells)     16.8 / 16.9 / 16.9 s   exit 0
+  //     fatigue-bench-policy-condition-middle   (3 cells)     16.9 / 17.0 / 17.2 s   exit 0
+  //
+  // Under 0.4 s of spread across nine runs, which is the point: the file it replaced read 52 / 53 s
+  // on one branch and 51 / 68 s on another, and that spread WAS the defect.
+  //
+  // ⚠ AND THE SHORTFALL WAS CONTROLLED FOR RATHER THAN POCKETED. 21.9 + 16.8 + 16.9 = 55.6 s
+  // against a file that reproduced at 69.73 s, and 14 s of free speed is exactly what a silently
+  // dropped cell looks like. So all four were re-run back to back under IDENTICAL conditions (one
+  // file, serialised, dot), the old file restored from git alongside the new three:
+  //
+  //     old file, both tests, 10 cells   52.3 s
+  //     injuries          4 cells        22.0 s
+  //     condition-working 3 cells        16.7 s
+  //     condition-middle  3 cells        16.8 s
+  //                                      ------
+  //     the three, summed                55.5 s   = the old file + 3.2 s
+  //
+  // The +3.2 s is two extra vitest starts (~1.6 s each). TEN CELLS COST THE SAME BEFORE AND AFTER,
+  // ~5.0 s each either way – that sum is the proof no cell went missing, and it is why the number
+  // is here. The 69.73 s reproduction was taken under `--reporter verbose`, which this module's
+  // neighbours already record as the second variable in this exact race (vite.config.ts: the
+  // per-test tree re-render keeps far more `onTaskUpdate` acks in flight). The gate runs dot.
+  //
+  // The largest new file is 22 s – it needs a 2.7x stretch to reach the wall, and it lands
+  // FOURTH-CHEAPEST of the twelve sim files, well under econ-reach-pro (41.9 s) and econ-bench
+  // (39.0 s), both of which pass the weekly 2-core runner today.
+  //
+  // ⚠ AND IN-SUITE IS DEARER THAN SOLO, WHICH IS THE NUMBER THAT ACTUALLY GATES. Read off three
+  // full `npm run test:sim` runs back to back – twelve files, ~400 s of continuous Monte-Carlo, the
+  // machine never idle – the same three files land at 33/32/32 s, 24/24/24 s and 24/24/24 s, about
+  // 1.5x their solo cost (`fatigue-bench-policy-104w` moves the same way: 19.7 s recorded solo,
+  // 23/22/23 s here). Still nowhere near the wall, and not one stall in three runs: 12 files green
+  // in 363 s, 417 s and 422 s, exit 0 every time, no retry consumed.
+  //
+  // ⚠ NOT ONE SEED, NOT ONE HORIZON AND NOT ONE ASSERTION MOVED. Ten cells before, ten after; 30
+  // paired seeds a cell throughout; 52 weeks throughout; seven `expect`s before and seven after at
+  // the same pinned values. The one thing that DID change is two test NAMES, and only because the
+  // split made the old one false: `(both self-coached profiles, 52w)` is now `(working
+  // self-coached, 52w)` and `(middle self-coached, 52w)`. The describe name is untouched, and
+  // `fatigue-bench-policy.test.ts` keeps its path because src/engine/season/tournament.ts and
+  // docs/specs/ai-w-onramp.md cite the C3 corridor by it – the test they mean is the one left there.
   'tests/fatigue-bench-policy.test.ts',
+  'tests/fatigue-bench-policy-condition-working.test.ts',
+  'tests/fatigue-bench-policy-condition-middle.test.ts',
   'tests/fatigue-bench-policy-104w.test.ts',
   'tests/match/calibration.test.ts',
 ]
@@ -83,6 +153,9 @@ export const HEAVY_SIM_FILES = [
  *      fatigue-bench 29.4 · econ-bench-survival 29.1 · fatigue-bench-planner 22.3 (RED)
  *      fatigue-bench-policy-104w 19.7 · match/calibration 14.9 · endings-bench 12.2  <- moved
  *      fatigue-bench-policy 65.2 (RED: two tests green, exit 1 – birpc's wall, on a quiet Mac)
+ *                           ⚠ AND IT STAYED RED FOR TWO WEEKS. Cut into three on 27.08 – see the
+ *                           block against it in HEAVY_SIM_FILES above. This row is the record of
+ *                           the reading, not of a file that still measures this.
  *
  *  ⚠ THE BAR IS TWO TESTS AND BOTH MATTER: a regression test by its own header, AND real headroom
  *  under birpc's 60 s wall at CI's ~1.9x local (scripts/units.mjs's own calibration). On cost alone
