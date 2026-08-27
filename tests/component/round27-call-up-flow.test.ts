@@ -229,6 +229,34 @@ describe('⭐⭐⭐ #6 – the tie takes the screen, on the live college shell',
     w.unmount()
   })
 
+  it('⭐⭐⭐ the college button NAMES the tie before it plays it – round 27 #2`s law, third stop', async () => {
+    // ⚠⚠ ROUND 27 #2's PREDICATE CARRIED A ⚠⚠ THAT THIS WAVE TRIGGERED: «IF A THIRD MID-YEAR STOP IS
+    // EVER ADDED TO THAT LOOP, IT HAS TO BE ADDED HERE TOO, or this button starts promising a
+    // tournament that a new pause arrives in front of.» Without the fix this button would have read
+    // «Finish the year» and the press would have played the Nations Cup – his own item, one fixture
+    // along. Walked to the rest state BEFORE a tie and read off the DOM.
+    const { world, rng } = atCollege('r27c-label')
+    let reached = false
+    for (let press = 0; press < 5 * ENDINGS.collegeYears && world.ending?.type === 'college'; press++) {
+      if (toSnapshot(world).ending?.college?.callUpIsNextStop) {
+        reached = true
+        break
+      }
+      lastStops = resumeFromCollege(world, rng)
+      skipTournament(world)
+      closeTournament(world)
+      if (pendingBirthday(world) !== null) chooseGift(world, 'day')
+    }
+    expect(reached, 'the walk really reached a rest state with a tie ahead of it').toBe(true)
+
+    const { w } = await openShell(world)
+    const answers = w.findAll('.college-answer')
+    expect(answers.length, 'the college bar is drawn – no reveal is open yet').toBeGreaterThan(0)
+    expect(answers[0].text(), 'and it names the fixture the press plays').toBe(`Play ${NATIONAL_TEAM.label}`)
+    expect(answers[0].text(), 'never a year it is not going to finish').not.toContain('Finish the year')
+    w.unmount()
+  })
+
   it('⭐⭐⭐ no toast: the week that used to be a popup is a screen now', async () => {
     // ⚠ THE STOP REASON IS STILL REPORTED – `resumeFromCollege` adds 'call-up' – so this is the
     // R10-16 rule doing its work rather than a reason being suppressed: no copy, no toast.

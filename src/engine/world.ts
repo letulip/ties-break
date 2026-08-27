@@ -204,6 +204,9 @@ export {
   // ⭐⭐⭐ ROUND 27 #2 – WILL THE NEXT PRESS END AT THE CHAMPIONSHIP? The fact behind the bottom
   // control's fifth label, and the week-level test it is built on.
   collegeLeagueIsNextStop,
+  // ⭐⭐⭐ ROUND 27 #6 – ...and the tie is the third stop that predicate's own ⚠⚠ asked for.
+  collegeCallUpIsNextStop,
+  collegeNextStop,
   isCollegeLeagueWeek,
   collegeMatchesThisWeek,
   collegeProgressOf,

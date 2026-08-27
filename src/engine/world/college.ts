@@ -592,25 +592,65 @@ export function collegeLeagueWeek(world: WorldState): boolean {
  *  was paused with, a fresh one opens at this week (`openCollegeYear().week === world.week`), and a
  *  pause can only fire on a week STRICTLY inside the span – the boundary week banks the year instead,
  *  which is the ruling `resumeFromCollege` states for a birthday landing on it. */
-export function collegeLeagueIsNextStop(world: WorldState): boolean {
+/** WHICH FIXTURE THE NEXT PRESS ENDS AT, or `null` when it ends at a cake or at the year's end.
+ *
+ *  ⚠ ONE SCAN FOR BOTH ANSWERS, DELIBERATELY. Two predicates walking the same weeks is two places to
+ *  get the ORDER wrong, and the order is the whole content: a college year that opens on season week
+ *  13 meets the tie (14) before the championship (12), and one that opens on 34 meets them the other
+ *  way round. Exactly one of them can be true of a given press, and a single walk is what makes that
+ *  a fact rather than a hope. */
+export type CollegeStop = 'college-league' | 'call-up' | null
+
+export function collegeNextStop(world: WorldState): CollegeStop {
   const college = world.college
-  if (!college || college.doneWeek !== null) return false
+  if (!college || college.doneWeek !== null) return null
   const startWeek = college.pendingYearStart?.week ?? world.week
   const yearEnds = Math.min(college.untilWeek, startWeek + WEEKS_PER_YEAR)
   for (let week = world.week + 1; week < yearEnds; week++) {
     // `resolveCollegeLeague` only fires while she is enrolled, and `inCollege` is `week <
     // untilWeek` – so a fixture week at or past the end of the course is not one.
-    if (isCollegeLeagueWeek(week) && week < college.untilWeek) return true
+    if (isCollegeLeagueWeek(week) && week < college.untilWeek) return 'college-league'
+    // ⭐⭐⭐ ROUND 27 #6 – THE THIRD STOP, WHICH IS EXACTLY WHAT THE ⚠⚠ ABOVE ASKED FOR. The tie now
+    // pauses the year like the championship, so a scan that knew only the championship would go on
+    // labelling the press «Finish the year» over a press that plays the Nations Cup – round 27 #2's
+    // own defect, arriving from the fixture two season weeks along.
+    //
+    // ⚠⚠ AND IT IS A CONDITIONAL STOP, WHICH THE CHAMPIONSHIP IS NOT. The League is arithmetic and
+    // fires every year; the tie is a roll, and a year in which nobody wrote – or in which she was
+    // NAMED AND SAT (`rubbersPlayed === 0`, a real outcome) – raises no reveal and does not pause.
+    // So the scan asks the same question the letter asks, through the same function.
+    //
+    // ⚠ `lastLeagueRun` IS EXACT HERE FOR THE REASON THE EARLY RETURN ABOVE GIVES: the scan returns
+    // on the FIRST championship week it meets, so it can never reach a call-up week with a
+    // championship still in front of it – which is precisely the case that would make the roll's
+    // input stale. `callUpFor` derives a per-week sub-stream and persists nothing, so asking here
+    // costs the MAIN capture nothing (CLAUDE.md invariant 2).
+    if (week % WEEKS_PER_YEAR === NATIONAL_TEAM.seasonWeek && week < college.untilWeek) {
+      const call = callUpFor(world, week)
+      if (call && call.rubbersPlayed > 0) return 'call-up'
+    }
     // ...and her birthday gets there first. The same two conditions `pendingBirthday` asks – the
     // date, and that this one has not already been answered – because it is the same pause.
     if (
       birthdayTurning(week, world.profile.birthMonth, world.profile.birthDay) !== null &&
       !world.birthdays.some((b) => b.week === week)
     ) {
-      return false
+      return null
     }
   }
-  return false
+  return null
+}
+
+/** ⚠ KEPT AS A PREDICATE, because that is what `CollegeProgressView.leagueIsNextStop` and round 27
+ *  #2's suite ask for – now one reading of `collegeNextStop` rather than its own walk. */
+export function collegeLeagueIsNextStop(world: WorldState): boolean {
+  return collegeNextStop(world) === 'college-league'
+}
+
+/** ⭐⭐⭐ ROUND 27 #6 – ...AND WILL IT END AT THE NATIONS CUP TIE? The championship's twin, on the
+ *  same scan, so the two can never both claim the press. */
+export function collegeCallUpIsNextStop(world: WorldState): boolean {
+  return collegeNextStop(world) === 'call-up'
 }
 
 /** ⭐⭐⭐ THE CHAMPIONSHIP, PLAYED AND FILED. The college mirror of `resolveCallUp`, two weeks up the
@@ -923,6 +963,8 @@ export function collegeProgressOf(world: WorldState): CollegeProgressView | null
   const college = world.college
   if (!college || college.doneWeek !== null) return null
   const last = college.years[college.years.length - 1] ?? null
+  // ONE WALK, TWO FIELDS – see `collegeNextStop`.
+  const stop = collegeNextStop(world)
   return {
     yearsDone: college.years.length,
     totalYears: ENDINGS.collegeYears,
@@ -968,7 +1010,12 @@ export function collegeProgressOf(world: WorldState): CollegeProgressView | null
     // running; this says whether finishing it plays a tournament first. Two facts, because they are
     // two questions: the shipped label collapsed them and offered a year on a press that plays the
     // championship.
-    leagueIsNextStop: collegeLeagueIsNextStop(world),
+    // ⭐⭐⭐ ROUND 27 #6 – ...AND SO DOES THE TIE, SINCE THIS WAVE. One scan answers both
+    // (`collegeNextStop`), so the two fields cannot both claim the press – which is what the
+    // championship's own ⚠⚠ («IF A THIRD MID-YEAR STOP IS EVER ADDED TO THAT LOOP, IT HAS TO BE
+    // ADDED HERE TOO») was written to prevent.
+    leagueIsNextStop: stop === 'college-league',
+    callUpIsNextStop: stop === 'call-up',
   }
 }
 

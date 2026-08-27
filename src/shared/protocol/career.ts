@@ -576,4 +576,19 @@ export interface CollegeProgressView {
    *  A wire field off the calendar and the persisted year start – no `SAVE_SCHEMA_VERSION` bump, no
    *  migration and no golden fixture, exactly as `billPerYearCents` and `yearInProgress` are. */
   leagueIsNextStop: boolean
+  /** ⭐⭐⭐ ROUND 27 #6 – ...OR AT THE NATIONS CUP TIE. The championship's twin, and it exists because
+   *  round 26 #6's field carried a ⚠⚠ that this wave triggered: «IF A THIRD MID-YEAR STOP IS EVER
+   *  ADDED TO THAT LOOP, IT HAS TO BE ADDED HERE TOO, or this button starts promising a tournament
+   *  that a new pause arrives in front of». The tie is that third stop.
+   *
+   *  ⚠ AT MOST ONE OF THE TWO IS TRUE, BY CONSTRUCTION AND NOT BY CARE: both are read off a single
+   *  `collegeNextStop` walk, which returns the FIRST fixture the press will meet. Which one that is
+   *  depends on the week she enrolled – a year opening on season week 13 meets the tie (14) before
+   *  the championship (12), and one opening on 34 meets them the other way round.
+   *
+   *  ⚠ AND UNLIKE THE CHAMPIONSHIP THIS ONE IS CONDITIONAL. The League is arithmetic and fires every
+   *  year; the tie is a roll, and a year in which nobody wrote – or in which she was NAMED AND SAT –
+   *  raises no reveal and does not pause the press. The scan asks the same question the invitation
+   *  letter asks, through the same function, so the button and the letter cannot disagree. */
+  callUpIsNextStop: boolean
 }

@@ -127,6 +127,12 @@ function collegeView(over: Partial<CollegeProgressView> = {}): CollegeProgressVi
     // fixture. The fifth label has its own case, over a WALKED career, in this file's round-27
     // describe – a fabricated `true` here would pin a string, not a state.
     leagueIsNextStop: false,
+    // ⚠ ROUND 27 #6 – AND ITS TWIN, `false` ON THE SAME ARGUMENT. The tie is the year's third
+    // mid-year stop and this fixture is a year at REST at a boundary, so neither fixture is what the
+    // next press plays. At most one of the two can ever be true (`collegeNextStop` is one walk), and
+    // the state where THIS one is true is walked rather than fabricated – tests/round27-call-up-flow
+    // owns the predicate and tests/component/round27-call-up-flow owns the screen.
+    callUpIsNextStop: false,
     ...over,
   }
 }

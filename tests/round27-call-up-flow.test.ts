@@ -477,6 +477,56 @@ describe('#6 the flow tells the truth about a week with no table, no rung and no
 })
 
 // =================================================================================================
+// ⭐⭐⭐ 3b. THE BUTTON NAMES WHAT THE PRESS DOES – round 27 #2's own law, on the third stop
+// =================================================================================================
+describe('#6 the college button names the tie, because the tie is now a stop', () => {
+  it('⭐⭐⭐ every press: the view promises exactly the fixture the press delivers, on BOTH facts', () => {
+    // ⚠⚠ THIS CASE EXISTS BECAUSE ROUND 27 #2's PREDICATE CARRIED A ⚠⚠ THAT THIS WAVE TRIGGERED:
+    // «IF A THIRD MID-YEAR STOP IS EVER ADDED TO THAT LOOP, IT HAS TO BE ADDED HERE TOO, or this
+    // button starts promising a tournament that a new pause arrives in front of.» The tie IS that
+    // third stop, so without the fix a press labelled «Finish the year» would have played the
+    // Nations Cup – round 27 #2's own defect, arriving from the other college fixture.
+    //
+    // ⚠ AND IT ASKS BOTH DIRECTIONS ON BOTH FIELDS, because a predicate that only ever said `false`
+    // would satisfy «never promises what it does not deliver» and nothing else.
+    const { world, rng } = atCollege('r27-next-stop')
+    let promisedTie = 0
+    let playedTie = 0
+    for (let press = 0; press < 5 * ENDINGS.collegeYears && world.ending?.type === 'college'; press++) {
+      // The engine's answer, read the way the screen reads it: off the view, before the press.
+      const view = toSnapshot(world).ending?.college
+      const saysLeague = view?.leagueIsNextStop ?? false
+      const saysTie = view?.callUpIsNextStop ?? false
+      expect(saysLeague && saysTie, 'the two facts are one walk – they can never both claim a press').toBe(false)
+
+      resumeFromCollege(world, rng)
+      const league = (world.college?.leagueReveal ?? null) !== null
+      const tie = callUpRevealOpen(world)
+      expect(saysLeague, `press ${press}: the championship was promised iff it was delivered`).toBe(league)
+      expect(saysTie, `press ${press}: the tie was promised iff it was delivered`).toBe(tie)
+      if (saysTie) promisedTie++
+      if (tie) playedTie++
+
+      answerAnyCollegeReveal(world)
+      if (pendingBirthday(world) !== null) chooseGift(world, 'day')
+    }
+    // Not vacuous: the career really met ties, and the button really named them.
+    expect(playedTie, 'the walked career really played ties').toBeGreaterThan(0)
+    expect(promisedTie, 'and the button named every one of them').toBe(playedTie)
+    expect(world.college!.years, 'the course really ran to the end').toHaveLength(ENDINGS.collegeYears)
+  }, 120_000)
+
+  it('⚠ it is false at a rest state the tie is BEHIND – there is nothing left to play', () => {
+    const { world, rng } = atCollege('r27-next-stop')
+    pressToTheTie(world, rng)
+    answerAnyCollegeReveal(world)
+    const view = toSnapshot(world).ending?.college
+    expect(view?.callUpIsNextStop, 'after: the week has been played').toBe(false)
+    expect(view?.yearInProgress, 'and the year is still the same one').toBe(true)
+  }, 120_000)
+})
+
+// =================================================================================================
 // ⭐⭐⭐ 4. THE TOAST IS GONE, AND `friendly` IS NOT
 // =================================================================================================
 describe('#6 the popup is deleted, and the flag it must not take with it', () => {
