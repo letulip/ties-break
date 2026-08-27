@@ -154,13 +154,17 @@ import { ENDINGS } from './ending'
 import {
   bankCollegeYear,
   callUpPlayedThisWeek,
+  callUpRevealOpen,
+  closeCallUpReveal,
   closeCollegeLeagueReveal,
   collegeEpilogueLine,
   collegeLeaguePlayedThisWeek,
   collegeLeagueRevealOpen,
   leaveCollege as leaveCollegeState,
   openCollegeYear,
+  revealCallUpRubber,
   revealCollegeLeagueRound,
+  skipCallUpRubbers,
   skipCollegeLeagueRounds,
 } from './world/college'
 export {
@@ -173,6 +177,16 @@ export {
   callUpPlayedThisWeek,
   callUpRubberId,
   callUpRubbersOf,
+  // ⭐⭐⭐ ROUND 27 #6 – THE TIE'S REVEAL, and the letter that arrives the week before it. Six names,
+  // the same six shapes the championship's reveal exports two blocks down – deliberately, because it
+  // is the same KIND of thing arriving on a different week.
+  callUpLetterWeek,
+  callUpRevealMatches,
+  callUpRevealOpen,
+  closeCallUpReveal,
+  revealCallUpRubber,
+  settleCallUpLetter,
+  skipCallUpRubbers,
   collegeCoachFactor,
   collegeEpilogueLine,
   // ⭐⭐⭐ ROUND 24 – THE STUDENT CHAMPIONSHIP: the one tournament a college year is guaranteed, and
@@ -957,6 +971,10 @@ export function revealTournamentRound(world: WorldState): void {
   // `TournamentFlow`'s Watch, Skip all rounds and Continue reach the college reveal by the same
   // store action, the same worker case and the same engine entry point they always used.
   if (collegeLeagueRevealOpen(world)) return revealCollegeLeagueRound(world)
+  // ⭐⭐⭐ ROUND 27 #6 – AND THE NATIONS CUP TIE COMES DOWN THE SAME ROAD, for round 26 #6's reason
+  // said once more: the owner asked for «обычный флоу турнира», and a second command set would be a
+  // second place for a reveal to strand. One line per command, exactly as the championship took.
+  if (callUpRevealOpen(world)) return revealCallUpRubber(world)
   const p = world.pendingTournament
   if (!p || p.finished) return
   const event = eventById(world, p.eventId)
@@ -984,6 +1002,8 @@ export function skipTournament(world: WorldState): void {
   // flight is not a decision. Found by tests/travel-home.test.ts, which plays a real career.
   // ⭐⭐⭐ ROUND 26 #6 – the college reveal's «Skip all rounds», by the same dispatch as one door up.
   if (collegeLeagueRevealOpen(world)) return skipCollegeLeagueRounds(world)
+  // ⭐⭐⭐ ROUND 27 #6 – the tie's «Skip all rounds», by the same dispatch as one door up.
+  if (callUpRevealOpen(world)) return skipCallUpRubbers(world)
   const p = world.pendingTournament
   if (!p || p.finished) return
   const event = eventById(world, p.eventId)
@@ -1010,6 +1030,9 @@ export function closeTournament(world: WorldState): void {
   // what lets `resumeFromCollege` spend the rest of the year, exactly as closing a tour reveal is
   // what lets `advanceWeeks` tick again.
   if (collegeLeagueRevealOpen(world)) return closeCollegeLeagueReveal(world)
+  // ⭐⭐⭐ ROUND 27 #6 – the tie's finale «Continue». Answering it is what lets `resumeFromCollege`
+  // spend the rest of the year, exactly as answering the championship's does.
+  if (callUpRevealOpen(world)) return closeCallUpReveal(world)
   world.pendingTournament = null
 }
 
@@ -1743,6 +1766,12 @@ export function resumeFromCollege(world: WorldState, rng: Rng): StopReason[] {
   // is answered. Round 24's law is not weakened by this – `world.pendingTournament` is still never
   // written inside the freeze and the throw above is still unreachable.
   if (collegeLeagueRevealOpen(world)) return ['college-league']
+  // ⭐⭐⭐ ROUND 27 #6 – AND NOT OVER A TIE HE HAS NOT WATCHED EITHER. The same contract, the same
+  // treatment and the same reason as the line above: the state is HEALTHY, it is raised on purpose,
+  // and the app draws it – `snapshot.pending` carries it, `TournamentFlow` mounts over the college
+  // Home shell, and the global week bar offers the resume press. A RETURN and not a throw: nothing is
+  // mutated, nothing is drawn, and the same click works the moment the reveal is answered.
+  if (callUpRevealOpen(world)) return ['call-up']
   // ⭐⭐⭐ ROUND 24 – AND NOT OVER AN UNANSWERED BIRTHDAY EITHER (the owner's «да, день рождения
   // делай»). The identical contract `advanceWeeks` keeps at its own entry, engine-side because the
   // worker is not the gate (invariant 1): the dialog covers the button, but a stale screen must not
@@ -1776,7 +1805,24 @@ export function resumeFromCollege(world: WorldState, rng: Rng): StopReason[] {
     if (world.pendingTournament) throw new Error(COLLEGE_REVEAL_REFUSAL)
     // ⚠ ASKED AFTER THE TICK AND OF THE WORLD, never threaded back through `tickWeek` – the whole
     // point of `callUpPlayedThisWeek` being a predicate. One `stops.add`, exactly like the academy's.
-    if (callUpPlayedThisWeek(world)) stops.add('call-up')
+    // ⚠ ONE `pauseHere` FOR ALL THREE QUESTIONS, hoisted above the first of them since round 27 #6:
+    // the rule is R11-1's – a week can be several things at once, and every one of them has to reach
+    // the `stops` set before anything breaks the loop.
+    let pauseHere = false
+    // ⭐⭐⭐ ROUND 27 #6 – AND IT NOW BREAKS, WHICH IS THE ITEM. Round 25 played the rubbers and round
+    // 26 left the report where it was, so the week was over and forty weeks behind him by the time
+    // the year handed the screen back: «матчи только постфактум». The year PAUSES on the tie instead,
+    // in the shape the championship two branches down already uses.
+    //
+    // ⚠ THE PAUSE READS `callUpRevealOpen` AND NOT `callUpPlayedThisWeek`, and the two differ by two
+    // things that matter: a career migrated from v63 mid-freeze has no reveal for a tie it already
+    // lived, and a year in which she was NAMED AND SAT has no rubber to walk (`resolveCallUp` opens
+    // no reveal on `rubbersPlayed === 0`). Neither may be halted in front of a flow with nothing in
+    // it – and both still REPORT, because `stops.add` is outside the question.
+    if (callUpPlayedThisWeek(world)) {
+      stops.add('call-up')
+      if (callUpRevealOpen(world)) pauseHere = true
+    }
     // ⭐⭐⭐ ROUND 24 – AND THE ONE WEEK THAT ALWAYS HAPPENS. Unlike every other member of this set
     // the championship is not a roll, so this line fires in EVERY college year – which is the point:
     // a year that produced a tournament and reported nothing would be the silence round 23 #16 was
@@ -1791,7 +1837,6 @@ export function resumeFromCollege(world: WorldState, rng: Rng): StopReason[] {
     // ⚠ THE STOP READS `collegeLeagueRevealOpen` AND NOT `collegeLeaguePlayedThisWeek`, and the two
     // differ by one thing that matters: a career migrated from v59 mid-freeze has no reveal for a
     // championship it already lived, and must not be halted in front of a flow with nothing to walk.
-    let pauseHere = false
     if (collegeLeaguePlayedThisWeek(world)) {
       stops.add('college-league')
       if (collegeLeagueRevealOpen(world)) pauseHere = true
@@ -1845,7 +1890,11 @@ export function resumeFromCollege(world: WorldState, rng: Rng): StopReason[] {
   // are the same three facts whichever question stopped the loop, and a second copy of this block is
   // how two pauses come to disagree about where the academic year ends. A birthday landing ON the
   // championship week takes this branch once and both stops are already in the set (R11-1).
-  if (world.ending === null && world.week < yearEnds && (pendingBirthday(world) !== null || collegeLeagueRevealOpen(world))) {
+  if (
+    world.ending === null &&
+    world.week < yearEnds &&
+    (pendingBirthday(world) !== null || collegeLeagueRevealOpen(world) || callUpRevealOpen(world))
+  ) {
     college.pendingYearStart = start
     world.ending = {
       type: 'college',

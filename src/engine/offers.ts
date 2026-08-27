@@ -87,8 +87,8 @@ import { seasonIndexOf } from './world/ledger'
 import type { KitFreshCap } from './equipment'
 import type { TierId } from './season/types'
 import type {
-  AcademyLetterTerms, AdOfferTerms, EntryLetterTerms, EntryReleaseReason, KitEndReason, KitLine, KitOfferTerms, Offer,
-  PenaltyReason, SponsorTier, TourLetterTerms,
+  AcademyLetterTerms, AdOfferTerms, CallUpLetterTerms, EntryLetterTerms, EntryReleaseReason, KitEndReason, KitLine,
+  KitOfferTerms, Offer, PenaltyReason, SponsorTier, TourLetterTerms,
 } from '../shared/protocol'
 
 /** Every sponsor tier's letterhead lives at `public/images/sponsors/<key>.webp`, and this is the
@@ -1432,6 +1432,48 @@ export function raiseAcademyLetter(offers: Offer[], week: number, terms: Academy
   const notice: Offer = {
     id,
     kind: 'academy',
+    week,
+    // Informational letters never expire on their own; see `raiseKitEndLetter`.
+    deadlineWeek: week,
+    terms: { ...terms },
+    state: 'info',
+  }
+  offers.push(notice)
+  return notice
+}
+
+// --- the national squad's invitation (round 27 #6) ----------------------------------------------
+
+/** ONE TIE, ONE LETTER – the idempotency key for the squad's paper, and it is keyed on the week the
+ *  tie is PLAYED rather than on the week the letter arrives.
+ *
+ *  ⚠ THAT IS THE WHOLE OF WHY A REPLAYED WEEK CANNOT WRITE TWICE. The letter is raised on the week
+ *  BEFORE the fixture, so a key on the arrival week would look identical – until a career ends and
+ *  resumes, or a migration re-runs a week, and the same tie is announced under two ids. The tie's
+ *  week is the fact the letter is about; `academyLetterId` keys on the review for the same reason. */
+export function callUpLetterId(tieWeek: number): string {
+  return `call-up-w${tieWeek}`
+}
+
+/** HER FEDERATION WRITES (round 27 #6). A NOTICE, not a proposal: `state: 'info'`, so there is
+ *  nothing to sign and nothing to refuse – which here is the FICTION as well as the plumbing.
+ *  Research §0.7 (the National Association nominates) and §0.8 (availability is a Good Standing
+ *  criterion her own federation judges unappealably): «she does not enter it, she is not asked, and
+ *  she may not decline», which is `resolveCallUp`'s own sentence one file along.
+ *
+ *  ⚠ IT ARRIVES BEFORE THE WEEK IT IS ABOUT, and that is the item. The shipped call-up reported
+ *  itself in a toast after three rubbers had already been simulated; `TourLetterTerms`'s own note is
+ *  the precedent for the other order – «the warning arrives at the entry deadline, A WEEK BEFORE THE
+ *  EVENT, which is the whole of "every obligation is announced in a letter before it can bite"».
+ *
+ *  ⚠ IDEMPOTENT ON ITS ID, like every other `raise*` in this file. Nothing here draws. */
+export function raiseCallUpLetter(offers: Offer[], week: number, terms: CallUpLetterTerms): Offer {
+  const id = callUpLetterId(terms.tieWeek)
+  const existing = offers.find((o) => o.id === id)
+  if (existing) return existing
+  const notice: Offer = {
+    id,
+    kind: 'call-up',
     week,
     // Informational letters never expire on their own; see `raiseKitEndLetter`.
     deadlineWeek: week,
