@@ -33,6 +33,7 @@ import WeekSpanReport from '../../src/components/WeekSpanReport.vue'
 import { useGameStore } from '../../src/stores/game'
 import {
   MULTI_WEEK_SPAN,
+  spanWeeksFor,
   QUIET_WINDOW_WEEKS,
   advanceWeeks,
   createWorld,
@@ -225,7 +226,16 @@ describe('R2-13 – the span pill, in the real shell', () => {
     // suite's `WEEK_ACTION_NAME` matches `Play .+` and is unscoped, so a second "Play ..." button on
     // Home makes every journey ambiguous under Playwright's strict mode. Asserted here because this
     // is the layer that can catch it in three seconds instead of in a browser.
-    expect(pill.text()).toBe(`Next ${MULTI_WEEK_SPAN} weeks`)
+    // ⚠⚠ RE-AIMED AT ROUND 29 #6, NOT WEAKENED – AND IT IS STRICTLY STRONGER NOW. This line read
+    // `Next ${MULTI_WEEK_SPAN} weeks`, which passed for the wrong reason: the label and the
+    // expectation were the same constant, so nothing was compared. The owner read four weeks off a
+    // pill standing on a six-week gap. The label is now built from the WEEK (`multiSpanOf` ->
+    // `spanWeeksFor`), so the assertion compares the button against the engine's own count of the
+    // slot – and this fixture (`world.season = []`) has a slot of `UPCOMING_WEEKS`, not four, so a
+    // pill that fell back to the constant would fail here.
+    const slot = spanWeeksFor(world.week, toSnapshot(world).upcoming)
+    expect(slot, 'a fixture whose slot equals the old constant would prove nothing').not.toBe(MULTI_WEEK_SPAN)
+    expect(pill.text()).toBe(`Next ${slot} weeks`)
     expect(pill.text()).not.toMatch(/^Play /)
     expect(w.find('.next-week-btn').exists(), 'and the week button is still the CTA beside it').toBe(true)
     w.unmount()
@@ -282,10 +292,16 @@ describe('R2-13 – the span pill, in the real shell', () => {
     w.unmount()
   })
 
-  it('⭐⭐ PRESSING IT SPENDS FOUR WEEKS AND REPORTS ALL OF THEM – press to card, end to end', async () => {
+  // ⚠⚠ RE-AIMED AT ROUND 29 #6 – "FOUR WEEKS" BECAME "THE WEEKS THE PILL PROMISED". The claim is
+  // unchanged and the number is no longer a constant: one press, the span the LABEL named, one
+  // command, and a card that reports that same number. Written this way it is the assertion the
+  // owner's complaint needed – «слот 6 недель ... отчётом о двух пройденных днях» is exactly label ≠
+  // press ≠ report, and each equality below is now checked rather than assumed.
+  it('⭐⭐ PRESSING IT SPENDS THE WEEKS IT PROMISED AND REPORTS ALL OF THEM – press to card, end to end', async () => {
     const { world, rng } = quietWorld('r2-13-ui-press')
     const { w, game } = await openShell(world)
     const from = world.week
+    const slot = spanWeeksFor(from, toSnapshot(world).upcoming)
 
     // The store is the ONLY thing stubbed, and it is stubbed onto the real engine: the worker is not
     // available here, so `advance` runs `advanceWeeks` in-process and republishes the snapshot –
@@ -298,12 +314,12 @@ describe('R2-13 – the span pill, in the real shell', () => {
     await w.find('.span-weeks-btn').trigger('click')
     await flushPromises()
 
-    expect(advance, 'one press, four weeks, one command').toHaveBeenCalledWith(MULTI_WEEK_SPAN)
-    expect(world.week, 'and the engine really spent them').toBe(from + MULTI_WEEK_SPAN)
+    expect(advance, 'the press bought a different number from the one on the button').toHaveBeenCalledWith(slot)
+    expect(world.week, 'and the engine really spent them').toBe(from + slot)
 
     const report = w.findComponent(WeekSpanReport)
     expect(report.exists(), 'the report is up').toBe(true)
-    expect(report.text()).toContain(`${MULTI_WEEK_SPAN} weeks passed`)
+    expect(report.text(), 'the card reports a different number again').toContain(`${slot} weeks passed`)
 
     // ⚠⚠ THE CLAIM THAT MATTERS: what the card lists is what the weeks WROTE. Compared against the
     // world's own feed rather than against the digest the shell built, so a shell that filtered on

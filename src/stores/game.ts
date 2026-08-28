@@ -282,7 +282,9 @@ export const useGameStore = defineStore('game', {
         await this.refreshCareers()
       })
     },
-    async advance(weeks: 1 | 4) {
+    // ⚠ ROUND 29 #6: `1 | 4` widened to a plain count – the span the pill offers is now the length
+    // of the actual quiet slot (`spanWeeksFor`), not the engine's historical step.
+    async advance(weeks: number) {
       await this.run(async () => {
         const res = this.takeOk(await request({ type: 'advance', weeks, baseRevision: this.revision }))
         this.applySnapshot(res)

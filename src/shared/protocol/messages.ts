@@ -89,7 +89,13 @@ export type WorkerErrorCode = 'STALE_REVISION' | 'SAVE_CONFLICT'
 export type ToWorker =
   | { id: number; type: 'new'; seed: string; profile: PlayerProfile }
   | { id: number; type: 'tick'; weeks: number; baseRevision: number }
-  | { id: number; type: 'advance'; weeks: 1 | 4; baseRevision: number }
+  // ⚠ `weeks` WAS `1 | 4` UNTIL ROUND 29 #6. The literal union was the engine's historical step
+  // written into the wire, and it is exactly what made the span pill unable to say anything true
+  // about the week it stood on: the owner had a six-week gap and the button could only ever offer
+  // four (`spanWeeksFor` carries the whole item). `advanceWeeks` has taken any count since the first
+  // slice and the dev fast-forward's `tick` has always carried a plain `number`, so this is the
+  // narrower of two shapes widening to the one beside it – no save field, no schema move.
+  | { id: number; type: 'advance'; weeks: number; baseRevision: number }
   | { id: number; type: 'enterEvent'; eventId: string; baseRevision: number }
   | { id: number; type: 'withdrawEvent'; eventId: string; baseRevision: number }
   | { id: number; type: 'tournamentReveal'; baseRevision: number }

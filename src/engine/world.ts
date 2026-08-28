@@ -88,8 +88,8 @@ export { pendingKnock, ordinaryTrainingWeek, expireKnock, rollKnock, radarViewOf
 // ⭐ R2-13 phase 1: the advance's entry gate and the span report, in a leaf module the shell can
 // import without pulling the integration core in. Re-exported under `engine/world` like every other
 // extraction, so the 280-file public API is unchanged.
-import { advanceRefusal, ADVANCE_REFUSALS, MULTI_WEEK_SPAN, spanDigest, spanRowCount, stoppableOfferWeek } from './world/multiWeek'
-export { advanceRefusal, ADVANCE_REFUSALS, MULTI_WEEK_SPAN, spanDigest, spanRowCount, stoppableOfferWeek }
+import { advanceRefusal, ADVANCE_REFUSALS, MULTI_WEEK_SPAN, SPAN_REPORTS_ONLY, spanDigest, spanRowCount, spanWeeksFor, stoppableOfferWeek } from './world/multiWeek'
+export { advanceRefusal, ADVANCE_REFUSALS, MULTI_WEEK_SPAN, SPAN_REPORTS_ONLY, spanDigest, spanRowCount, spanWeeksFor, stoppableOfferWeek }
 // ⭐⭐ ROUND 26 #1 (second pass): WHEN the span is offered, which is the owner's rule and not the
 // engine's refusal – see `world/multiWeek.ts` for why the two are deliberately separate gates.
 import { QUIET_WINDOW_WEEKS, LONG_LAYOFF_WEEKS, calendarClearAhead, eventIsHers, longLayoff, spanWorthOffering } from './world/multiWeek'
@@ -113,8 +113,8 @@ import { startingSkills, withHeadStart, kidMatchPlayer, kidMatchPlayerFor } from
 export { startingSkills, kidMatchPlayer, kidMatchPlayerFor }
 import { ageInjuryFactor, consecutivePlayFactor, playedWeeksInTrailing4, injuryTau, rollInjury, resolvePhysio, retirementInjury } from './world/injury'
 export { ageInjuryFactor, consecutivePlayFactor, playedWeeksInTrailing4, injuryTau, rollInjury, resolvePhysio, retirementInjury }
-import { hireMasseur, masseurUnlocked, masseurWorksThisWeek, masseurRoomNote, resolveMasseur, resolveMasseurReturn, masseurRungOf, masseurWeeklyCents, masseurTourRelief, masseurTourWeekCents, setMasseurSessions, setMasseurTravels, MASSEUR_CHANGE_KEY, MASSEUR_LOCKED_DETAIL, MASSEUR_NOTE_WINDOW_WEEKS } from './world/masseur'
-export { hireMasseur, masseurUnlocked, masseurWorksThisWeek, masseurRoomNote, resolveMasseur, resolveMasseurReturn, masseurRungOf, masseurWeeklyCents, masseurTourRelief, masseurTourWeekCents, setMasseurSessions, setMasseurTravels, MASSEUR_CHANGE_KEY, MASSEUR_LOCKED_DETAIL, MASSEUR_NOTE_WINDOW_WEEKS }
+import { hireMasseur, masseurUnlocked, masseurWorksThisWeek, masseurWorksInWeek, masseurRoomNote, resolveMasseur, resolveMasseurReturn, masseurRungOf, masseurWeeklyCents, masseurTourRelief, masseurTourWeekCents, setMasseurSessions, setMasseurTravels, MASSEUR_CHANGE_KEY, MASSEUR_LOCKED_DETAIL, MASSEUR_NOTE_WINDOW_WEEKS } from './world/masseur'
+export { hireMasseur, masseurUnlocked, masseurWorksThisWeek, masseurWorksInWeek, masseurRoomNote, resolveMasseur, resolveMasseurReturn, masseurRungOf, masseurWeeklyCents, masseurTourRelief, masseurTourWeekCents, setMasseurSessions, setMasseurTravels, MASSEUR_CHANGE_KEY, MASSEUR_LOCKED_DETAIL, MASSEUR_NOTE_WINDOW_WEEKS }
 import { enterEvent, withdrawEvent, releaseEntry, cancelEntry, RELEASE_LINE_PREFIX, INJURY_RELEASE_SUFFIX } from './world/entries'
 export { enterEvent, withdrawEvent, releaseEntry, cancelEntry, RELEASE_LINE_PREFIX, INJURY_RELEASE_SUFFIX }
 import { eventById } from './world/bookings'
@@ -1653,7 +1653,17 @@ export function advanceWeeks(world: WorldState, rng: Rng, weeks: number): StopRe
     if (world.ending) stops.add('ending')
     if (world.fork !== null && world.fork.answer === null) stops.add('fork')
     if (world.retirementOffer !== null) stops.add('retirement')
-    if (stops.size > 0) break
+    // ⭐⭐ ROUND 29 #6 – THE LOOP BREAKS ON A REASON THAT HALTS, NOT ON EVERY REASON IT COLLECTED.
+    // It used to be `if (stops.size > 0) break`, and the one member that difference is about is
+    // 'season-end': a press made at the tail of a season bought two weeks of a six-week gap and
+    // handed back the wrap-up, which is the owner's «увидел сообщение о конце года ... а календарь
+    // так и остался на 51й неделе». `SPAN_REPORTS_ONLY` carries the whole argument for why that one
+    // reason may pass and no other may – including the measured half, that the recap dialog reads
+    // the SNAPSHOT and not this reason, so nothing about it is lost.
+    //
+    // ⚠ A ONE-WEEK PRESS IS BYTE-IDENTICAL EITHER WAY: the loop runs once and ends on its own
+    // counter, so this line can only ever be reached by a span.
+    if ([...stops].some((r) => !SPAN_REPORTS_ONLY.has(r))) break
   }
   // Precedence order, not insertion order: the caller renders them in this sequence, and the
   // medical pair leads it so nothing can bury them (see STOP_PRECEDENCE).

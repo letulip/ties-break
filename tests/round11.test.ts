@@ -262,7 +262,16 @@ describe('R11-1 — every reason a week stopped the advance is reported', () => 
       .filter((line) => !line.trim().startsWith('//')) // prose may say "break" without doing it
       .join('\n')
     expect(code.match(/\bbreak\b/g) ?? []).toHaveLength(1)
-    expect(code).toContain('if (stops.size > 0) break')
+    // ⚠⚠ RE-AIMED AT ROUND 29 #6, AND THE CLAIM IS UNTOUCHED. This read `if (stops.size > 0) break`
+    // – the break's CONDITION – while what R11-1 is about is that there is exactly ONE break and it
+    // comes after the whole week has been read (the line above, which is the guard proper). Round 29
+    // #6 changed the condition and nothing else: the loop now breaks on a reason that HALTS rather
+    // than on every reason it collected, because 'season-end' was cutting a six-week span in half to
+    // deliver a recap that reads the snapshot anyway (`SPAN_REPORTS_ONLY` in world/multiWeek.ts
+    // carries the whole argument). Pinned by SHAPE now – one break, and it consults the list rather
+    // than the set's size – so a future per-reason `break` still fails here and a change of policy
+    // in that one named place does not.
+    expect(code).toMatch(/if \(\[\.\.\.stops\]\.some\(\(r\) => !SPAN_REPORTS_ONLY\.has\(r\)\)\) break/)
   })
 })
 

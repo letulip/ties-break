@@ -52,7 +52,7 @@
 import { computed, type ComputedRef } from 'vue'
 import { useGameStore } from '../stores/game'
 import { blockingOverlay } from './blockingOverlay'
-import { MULTI_WEEK_SPAN, spanWorthOffering } from '../engine/world/multiWeek'
+import { MULTI_WEEK_SPAN, spanWeeksFor, spanWorthOffering } from '../engine/world/multiWeek'
 import { useWeekAhead, type WeekAheadKind } from './weekAhead'
 
 /** What the one handler behind the button has to do with the press.
@@ -150,7 +150,16 @@ export function useWeekAction(): ComputedRef<WeekAction> {
       // "there is exactly one advance button in the whole product". A second control saying
       // "Play 4 weeks" makes that locator ambiguous and every journey fails Playwright's strict mode.
       // "Next" also happens to be the honest word: this button does not play a week, it spends four.
-      multi: multiOffered(snap, kind) ? { weeks: MULTI_WEEK_SPAN, label: `Next ${MULTI_WEEK_SPAN} weeks` } : null,
+      // ⭐⭐ ROUND 29 #6 – THE NUMBER ON THE BUTTON IS THE WEEK'S, NOT THE CODE'S. It used to be
+      // `MULTI_WEEK_SPAN` at both ends, so the label was a fact about the engine's historical step
+      // and the owner read four against a slot of six. `multiSpanOf` answers both halves at once
+      // (offered at all, and how many) so a press can never buy a different number from the one it
+      // promised. `MULTI_WEEK_SPAN` survives as the floor below which a "span" is just the week
+      // button – see `multiSpanOf`.
+      multi: (() => {
+        const weeks = multiSpanOf(snap, kind)
+        return weeks === 0 ? null : { weeks, label: `Next ${weeks} weeks` }
+      })(),
     }
   })
 }
@@ -201,4 +210,27 @@ export function multiOffered(snap: Parameters<typeof blockingOverlay>[0], kind: 
   // three dead-click clauses keep their own tests (`r2-13-advance-span.test.ts` block D) without
   // this one having to be satisfied first.
   return spanWorthOffering(snap.week, snap.upcoming, snap.injury)
+}
+
+/** ⭐⭐ ROUND 29 #6 – HOW MANY WEEKS THIS PRESS BUYS, or 0 when there is no press to offer.
+ *
+ *  ⚠⚠ ONE FUNCTION FOR BOTH HALVES, and that is the whole repair. The shipped control asked
+ *  `multiOffered` whether to render and then wrote `MULTI_WEEK_SPAN` on itself, so the label and the
+ *  week it was standing on were never connected: the owner had a six-week gap at the tail of a
+ *  season and the button said four. Now the count is the answer, and the label is built from it.
+ *
+ *  ⚠ THE FLOOR IS `MULTI_WEEK_SPAN` AND IT IS A FLOOR, NOT THE ANSWER. A slot of one or two weeks is
+ *  not a span – it is the week button pressed once or twice – and a pill offering "Next 2 weeks"
+ *  beside "Next week" is the dead-ish control R2-13 spends its length avoiding. The floor is the
+ *  engine's own historical step because that is the size R2-13 was argued and measured at; it only
+ *  ever REMOVES a pill the gate above already allowed, which is the same direction round 26 #1's
+ *  rule runs in.
+ *
+ *  ⚠ AND IT NEVER EXCEEDS WHAT THE SNAPSHOT CAN SEE – `spanWeeksFor` caps at `UPCOMING_WEEKS`, the
+ *  clip on `snapshot.upcoming` itself. See that function for why the cap is derived and not picked. */
+export function multiSpanOf(snap: Parameters<typeof blockingOverlay>[0], kind: WeekAheadKind): number {
+  if (!snap) return 0
+  if (!multiOffered(snap, kind)) return 0
+  const weeks = spanWeeksFor(snap.week, snap.upcoming)
+  return weeks >= MULTI_WEEK_SPAN ? weeks : 0
 }

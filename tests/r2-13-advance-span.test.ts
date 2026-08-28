@@ -471,7 +471,15 @@ describe('R2-13 B – the span stops before every blocking event, one reason at 
     expect(world.fundsCents).toBeLessThan(0)
   })
 
-  it('SEASON-END – halts on the wrap-up week, before the off-season', () => {
+  // ⚠⚠ RE-AIMED AT ROUND 29 #6 – "HALTS" BECAME "REPORTS", AND THE OLD CASE COULD NOT TELL THEM
+  // APART. It walked to week 45 and pressed four, which lands ON 49: the wrap was the span's LAST
+  // week, so `weeks === 4` was the full span either way and the case never once exercised the break.
+  // The owner pressed from a week where the wrap falls MID-span and bought two weeks of a six-week
+  // gap – «увидел сообщение о конце года ... а календарь так и остался на 51й неделе». The reason is
+  // still collected and still returned in its `STOP_PRECEDENCE` slot (R11-1); what changed is that
+  // it no longer ends the loop. See `SPAN_REPORTS_ONLY` for why this one member may pass and no
+  // other may.
+  it('SEASON-END – is REPORTED on the wrap-up week and no longer truncates the span', () => {
     const { world, rng } = career('r2-13-season-end')
     walkTo(world, rng, 45)
     world.season = []
@@ -479,6 +487,22 @@ describe('R2-13 B – the span stops before every blocking event, one reason at 
     expect(stops).toEqual(['season-end'])
     expect(world.week % 52, 'the season wrapped on 49, as the loop says').toBe(49)
     expect(weeks).toBe(4)
+  })
+
+  it('⭐⭐ ...and a press that STRADDLES the wrap buys every week it offered (round 29 #6)', () => {
+    // THE DISCRIMINATING CASE the block above could not be. Standing on 46 with a clear calendar,
+    // a six-week press crosses the wrap at 49 and must land on 52 – the first week of the next
+    // season – rather than stopping three weeks in. This is the owner's own scenario: the tail of a
+    // season is the longest quiet gap a career has, which is exactly where the pill appears.
+    const { world, rng } = career('r2-13-season-end-through')
+    walkTo(world, rng, 46)
+    world.season = []
+    const before = world.week
+    const stops = advanceWeeks(world, rng, 6)
+    expect(before % 52, 'the fixture stands where the wrap falls mid-span').toBe(46)
+    expect(world.week - before, 'the year end cut the span short').toBe(6)
+    expect(world.week % 52, 'and it really did cross into the new season').toBe(0)
+    expect(stops, 'the wrap-up is still reported – it just no longer ends the press').toContain('season-end')
   })
 
   it('FORK – halts on the week school ends and the question opens (walked, not injected)', () => {

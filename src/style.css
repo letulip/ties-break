@@ -1457,6 +1457,27 @@ button.primary.risky {
   opacity: 0.5;
 }
 
+/* ROUND 26 #1's first-use line (shipped at round 29 #6). Fixed ABOVE the bar and out of its flex
+   row – see the template's note on why it may not be a child of `.next-week-bar`. `pointer-events:
+   none` because it explains a control rather than being one, and because the bar it floats over
+   must stay reachable through it. */
+.span-hint {
+  position: fixed;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: 110px;
+  width: 100%;
+  max-width: 520px;
+  margin: 0;
+  padding: 0 20px;
+  text-align: center;
+  font-size: 12px;
+  line-height: 1.35;
+  color: var(--muted);
+  pointer-events: none;
+  z-index: 39;
+}
+
 /* Wave 2: only Home carries the floating week button, so only Home reserves room under it. Every
    other screen gets its space back – which is most of a card's height on a 390px phone. */
 .app-content.with-next-week-bar {
