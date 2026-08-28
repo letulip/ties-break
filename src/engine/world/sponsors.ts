@@ -10,7 +10,8 @@
 // imports these values with no runtime cycle. Everything else comes from leaves.
 //
 // ⚠ RNG: the sponsor review draws on a PURPOSE-SCOPED sub-stream, never MAIN.
-import { ECONOMY } from '../economy'
+import { ECONOMY, kidPrizeShareBps, kidPrizeShareCents } from '../economy'
+import { formatCents } from '../../shared/money'
 import { TIERS, TIER_LADDER, WEEKS_PER_YEAR } from '../season/calendar'
 import { netTravelCents, travelCoverShare } from '../academy'
 // The rung ladder, for the cameo's coach cut. coach.ts is a leaf (it imports ECONOMY and rng and
@@ -18,8 +19,8 @@ import { netTravelCents, travelCoverShare } from '../academy'
 import { COACH_TIERS } from '../coach'
 import { activeKitDeal, adSpokenFor, adWritesAt, chooseShootWeeks, contractEndWeek, dealEndingWithSeason, dealUnderReview, endDealWithSeason, isSponsorWindowCloseWeek, isSponsorWindowWeek, kitTravelShare, letDownThisWindow, raiseAdOffer, raiseKitEndLetter, raiseKitOffers, raiseKitRenewal, refuseOffer as refuseOfferIn, signOffer as signOfferIn, sponsorWindowOpensAt, standingClears, type SponsorStanding } from '../offers'
 import type { SeasonEvent, TierId } from '../season/types'
-import { LADDER_LABEL, type AdOfferTerms, type CoachTier, type KitEndReason, type KitOfferTerms, type Offer } from '../../shared/protocol'
-import { addEvent } from './ledger'
+import { LADDER_LABEL, type AdOfferTerms, type CoachTier, type KitEndReason, type KitOfferTerms, type Offer, type WorldEventCategory } from '../../shared/protocol'
+import { accrueKidShare, addEvent } from './ledger'
 import { kidPoints, tableSize } from './ladder'
 import { KID_ID } from './constants'
 import { kidAgeAt } from './age'
@@ -602,9 +603,17 @@ export function acceptOffer(world: WorldState, offerId: string): Offer {
   // ⭐ THE ADVERTISING FEE IS PAID HERE, THE WEEK THE PAPER IS SIGNED (plan §6 step 1: «cash only…
   // done when it arrives, it can be signed, and the ledger shows it»). Signature-time and not
   // settled weekly, because that is what the letter promises – one fee, once – and the till and the
-  // paper may not tell two stories. INTO THE FAMILY WALLET: step 5 is where the plan routes an
-  // endorsement to her own account (`kidFundsCents`), and until that ships this money lands beside
-  // every other sponsor dollar the family banks.
+  // paper may not tell two stories.
+  //
+  // ⭐⭐ AND SINCE ROUND-28 #15 IT IS SPLIT ON THE WAY IN. This comment used to end «INTO THE FAMILY
+  // WALLET: step 5 is where the plan routes an endorsement to her own account (`kidFundsCents`), and
+  // until that ships this money lands beside every other sponsor dollar the family banks» – true
+  // when it was written, false now, and left standing it would have sent the next reader looking for
+  // a rail that is already live. ⚠ WHAT THE OWNER RULED IS NOT STEP 5. Step 5 gives her the WHOLE
+  // fee («the deal pays HER, not the family»); he asked for the prize ramp instead – «ребёнку тоже
+  // нужно % перечислять, как и с призовых» – which is a SHARE, at her age's rate, with the family
+  // keeping the rest. So step 5 is still open and still means what it meant; this is smaller and it
+  // is his. See `bankSponsorCheque` for which cheques it reaches and why.
   //
   // ⚠ THE LEDGER ROW IS THE RECEIPT, under 'sponsor' – the category brand money has always used –
   // so the Money breakdown files the fee with the other backing rather than under the family's own
@@ -626,13 +635,9 @@ export function acceptOffer(world: WorldState, offerId: string): Offer {
       t.shootCount,
       ECONOMY.advertising.shootLeadWeeks,
     )
-    world.fundsCents += t.cashCents
-    addEvent(world, {
-      week: world.week,
-      type: 'income',
+    bankSponsorCheque(world, t.cashCents, {
       category: 'sponsor',
       text: `${t.brand} endorsement – the campaign fee, on signing`,
-      amountCents: t.cashCents,
     })
   }
   return signed
@@ -959,6 +964,116 @@ export function chargeTravel(world: WorldState, event: SeasonEvent): void {
 // ⚠ RNG: zero draws, all three. They are lookups on a signed deal plus post-draw arithmetic, so the
 // frozen MAIN capture cannot see any of this.
 
+// =================================================================================================
+// ⭐⭐ ROUND-28 #15 – AND FROM EIGHTEEN A SPONSOR'S CHEQUE IS SPLIT TOO, EXACTLY LIKE THE PRIZE
+// =================================================================================================
+//
+// THE OWNER, 28.08: «С чеков спонсоров мне кажется ребёнку тоже нужно % перечислять, как и с
+// призовых, давай сделаем». A ruling, not a question, and «как и с призовых» is the whole spec: the
+// SAME ramp (`ECONOMY.kidShare` – 10% at 18, +5 a birthday, half from 26), the same single rounding,
+// the same family-keeps-the-remainder subtraction, the same memo on the durable ledger. Nothing is
+// invented here and no second rate exists to drift.
+//
+// ⚠⚠ WHICH CHEQUES, AND WHY – the one real decision in this item, because it moves money every week
+// for the rest of a career. The line is NOT drawn by taste: it is the one the paragraph directly
+// above already drew, for a different purpose, before this ruling existed:
+//
+//     «every one of them is a cheque somebody writes to the PLAYER rather than a price the family
+//      pays»
+//
+// So the test is: is this money written TO HER, or is it a price the family pays being reduced?
+//
+//   HERS – her cut applies:
+//     * the ADVERTISING FEE (`AdOfferTerms.cashCents`). The plan's own words, the-face-and-the-court
+//       §4b.1: «a brand buys her face, not the family's». The unambiguous one.
+//     * the KIT RETAINER (`KitOfferTerms.retainerCents`) – a quarterly cheque for HER wearing the
+//       brand, and named as a cheque on the ledger row it writes. It is the largest sponsor money in
+//       the game, and excluding it would make «как и с призовых» mean "some cheques" – a rule he
+//       would find in a later round. ⚠ Its one consequence is at `familyWeeklyIncomeCents`, which
+//       had to stop quoting the gross; see the note there.
+//     * the APPEARANCE FEE (`appearanceFeeCents`) – money for HER turning up, conditional on her
+//       appearing, committed at the same point the prize is. ⚠ NOT NAMED IN HIS SENTENCE. It is
+//       included because it is indistinguishable from the two above and a rule that skipped it would
+//       be arbitrary – but it is the one line here he has not personally ruled on, so it is the one
+//       to take back out if he wants it out.
+//     * the RESULT BONUS (`bonusShare`) – it is LITERALLY a fraction of the prize cheque she just won
+//       (`resultBonusFor` = share x TIERS[tier].prizeCents[finish]). If the prize is split and its
+//       own multiplier is not, her realised share of a winning week FALLS as sponsorship grows,
+//       which inverts the ramp he asked for.
+//
+//   NOT HERS – no cut, no row:
+//     * the KIT ALLOWANCE (`allowanceCents`) – it buys her rackets, shoes and strings. Money that
+//       pays a cost is not money that is paid; a cut of her racket budget leaves her half a racket.
+//     * the KIT TRAVEL SHARE (`kitTravelShare`) – it reduces a FARE inside `travelCostFor`. Nothing
+//       lands in a wallet, so there is nothing to split.
+//     * the LOCAL SPONSOR CAMEO (`localSponsorCents`) – need-based, gated on the family being short
+//       («порог по деньгам на счету, а не по строчке в анкете»). It is written to the FAMILY to keep
+//       a career alive, and a cut of a rescue is the opposite of what the rescue is for.
+//     * the ACADEMY SCHOLARSHIP and its kit grant – cost covers, on the allowance's reasoning.
+//
+// ⚠⚠ NO NEW WAY FOR THE PARENT TO GO NEGATIVE – the standing «мы ни за что не наказываем» check.
+// Every site below is an INCOME line: the family banks `gross - herShare`, and `herShare <= gross`
+// for every rate the ramp can produce (`capBps` is 5000), so a cheque can only ever add less. It can
+// never subtract, so no balance that was not already falling can be pushed through zero by this.
+//
+// ⚠ AND IT IS FORWARD-ONLY. `kidFundsCents` is persisted state: this changes what LANDS there from
+// the week the code ships and touches no save that already exists – no migration back-fills a
+// career's sponsor history and none should. `SAVE_SCHEMA_VERSION` does not move, because no field is
+// added anywhere: the memo this writes is `FinanceWeek.kidShare`, live since round 26.
+
+/** ⭐ ROUND-28 #15 – BANK ONE SPONSOR CHEQUE INTO THE TWO ACCOUNTS. Returns what each side got.
+ *
+ *  ⚠ ONE FUNCTION FOR ALL FOUR SITES, AND THAT IS THE POINT. Four copies of "split, credit, receipt,
+ *  memo" is four chances to forget the memo or to round twice – this repo's most-repeated defect in a
+ *  new hat. A fifth sponsor line added later reaches the ruling by calling this and nothing else.
+ *
+ *  ⚠ ONE ROUNDING, THE FAMILY GETS THE REMAINDER – `kidPrizeShareCents`' own discipline, verbatim:
+ *  the cut rounds once and the family's half is a SUBTRACTION, so the two balances re-add to the
+ *  brand's cheque to the cent and a player can put them side by side on screen.
+ *
+ *  ⚠ ROW ORDER IS THE PRIZE PATH'S. The income row the family actually banked comes FIRST, with the
+ *  split named on it – a row that quietly shrank would read as a bug in the till – and the transfer
+ *  follows as an `info` row with NO `amountCents`: booking her share as a family expense would count
+ *  the same cents twice against `careerTotals.spentCents`, the denominator of the album's break-even
+ *  page.
+ *
+ *  ⚠ HER REAL AGE (`kidAgeAt`), never the ITF band's – the one-clock ruling of 09.08.
+ *
+ *  ZERO DRAWS on any stream: integer arithmetic on a cheque that has already been decided. */
+export function bankSponsorCheque(
+  world: WorldState,
+  grossCents: number,
+  row: { category: WorldEventCategory; text: string },
+): { herCents: number; familyCents: number } {
+  if (grossCents <= 0) return { herCents: 0, familyCents: 0 }
+  const ageNow = kidAgeAt(world, world.week)
+  const bps = kidPrizeShareBps(ageNow)
+  const herCents = kidPrizeShareCents(grossCents, ageNow)
+  const familyCents = grossCents - herCents
+  world.fundsCents += familyCents
+  addEvent(world, {
+    week: world.week,
+    type: 'income',
+    category: row.category,
+    // Silent before her eighteenth, where nothing is deducted – the prize row's own conditional.
+    text: herCents > 0 ? `${row.text}, less her ${bps / 100}% share (${formatCents(herCents)})` : row.text,
+    amountCents: familyCents,
+  })
+  if (herCents > 0) {
+    world.kidFundsCents = (world.kidFundsCents ?? 0) + herCents
+    addEvent(world, {
+      week: world.week,
+      type: 'info',
+      text: `${world.profile.kidName}'s share of the sponsor money – ${formatCents(herCents)} into her own account`,
+    })
+    // The same cents onto the durable ledger so the week recap's memo can say it too (round-26 #5b).
+    // `accrueKidShare` SUMS within a week, which is exactly what a title week paying a prize, an
+    // appearance fee and a result bonus needs.
+    accrueKidShare(world, world.week, herCents, bps)
+  }
+  return { herCents, familyCents }
+}
+
 /** THE RETAINER'S PAY WEEKS. Quarterly, and quarterly means "every thirteenth week of the season
  *  block", which is `WEEKS_PER_YEAR / 4` exactly - so the four arrivals land on season offsets 0,
  *  13, 26 and 39 in every year, and a player can plan against them. Deliberately NOT the season
@@ -969,7 +1084,13 @@ export function isRetainerWeek(week: number): boolean {
 }
 
 /** Pay the quarter's retainer, if a deal that carries one is running. Idempotent per week by
- *  construction (the tick calls it once) and silent when nobody is paying. */
+ *  construction (the tick calls it once) and silent when nobody is paying.
+ *
+ *  ⭐⭐ ROUND-28 #15 – AND HER SHARE COMES OFF IT. The retainer is the biggest cheque a sponsor
+ *  writes in this game and the header above `bankSponsorCheque` carries the whole argument for why
+ *  it is one of «чеки спонсоров». ⚠ THE ONE FIGURE THAT MOVES WITH IT is the coach market's weekly
+ *  income cap, which pro-rates this cheque across the year – `familyWeeklyIncomeCents` nets it now,
+ *  because a meter quoting money the till no longer banks is the round-21 #12 defect in mirror. */
 export function payRetainer(world: WorldState): void {
   if (!isRetainerWeek(world.week)) return
   const deal = activeKitDeal(world.offers, world.week)
@@ -977,14 +1098,7 @@ export function payRetainer(world: WorldState): void {
   const terms = deal.terms as KitOfferTerms
   const cents = terms.retainerCents ?? 0
   if (cents <= 0) return
-  world.fundsCents += cents
-  addEvent(world, {
-    week: world.week,
-    type: 'income',
-    category: 'income',
-    text: `${terms.brand} retainer – quarterly`,
-    amountCents: cents,
-  })
+  bankSponsorCheque(world, cents, { category: 'income', text: `${terms.brand} retainer – quarterly` })
 }
 
 /** WHAT AN EVENT PAYS HER TO TURN UP, in cents, 0 when nothing does. Read at the moment a run

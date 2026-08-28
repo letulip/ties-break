@@ -55,7 +55,7 @@ import {
 import { resumeMain } from '../src/engine/rng'
 import { activeAdDeal, adOfferId, adShootWeek, adSpokenFor, adWritesAt, chooseShootWeeks, hasLiveOffer, isOfferLive } from '../src/engine/offers'
 import { sponsorStandingOf } from '../src/engine/world/sponsors'
-import { ECONOMY } from '../src/engine/economy'
+import { ECONOMY, kidPrizeShareCents } from '../src/engine/economy'
 import { isOffSeasonWeek } from '../src/engine/season/calendar'
 import { lookAheadFor, type CalendarWeekFacts } from '../src/composables/weekDays'
 import { DEFAULT_PROFILE, type AdOfferTerms, type Offer } from '../src/shared/protocol'
@@ -161,25 +161,44 @@ describe('step 1.1 – it arrives', () => {
 })
 
 describe('step 1.2 – it can be signed, and the ledger shows it', () => {
-  it('signing pays the fee into the FAMILY wallet and the ledger shows it, same week, in cents', () => {
+  // ⚠⚠ RE-AIMED BY ROUND-28 #15, NOT WEAKENED. This test used to assert the fee landed WHOLE in the
+  // family wallet and that «her balance must not move by a cent here» – a correct guard on the day
+  // it was written, and the owner has since ruled the other way: «С чеков спонсоров мне кажется
+  // ребёнку тоже нужно % перечислять, как и с призовых, давай сделаем». So the claim moves from
+  // "none of it is hers" to "exactly the ramp's share of it is hers, and the two halves re-add to
+  // the brand's cheque to the cent", which is a strictly sharper assertion than the one it replaces.
+  //
+  // ⚠ IT IS STILL NOT STEP 5, and that distinction is the reason this describe keeps its name. Step
+  // 5 gives her the WHOLE fee («the deal pays HER, not the family»); his ruling is the prize ramp,
+  // which is a SHARE with the family keeping the rest. The fence below (`Object.keys(t)`) is
+  // untouched: no `AdOfferTerms` field was added, because the ramp needs none.
+  it('signing splits the fee with her at the ramp, and the ledger shows both halves, same week', () => {
     const world = structuredClone(life.world)
     const offer = adPost(world)[0]
     const fundsBefore = world.fundsCents
     const kidBefore = world.kidFundsCents ?? 0
     const earnedBefore = world.careerTotals.earnedCents
 
+    // The rate is read off the shipped ramp at HER real age, never restated as a literal – a retune
+    // of `ECONOMY.kidShare` moves this test with the game instead of reddening it.
+    const hers = kidPrizeShareCents(AD.cashCents, ageOf(world))
+    const theirs = AD.cashCents - hers
+    expect(hers, 'she is eighteen-plus here, so the ramp is really paying').toBeGreaterThan(0)
+
     const signed = acceptOffer(world, offer.id)
     expect(signed.state).toBe('signed')
 
-    // The wallet: the fee, exactly, once.
-    expect(world.fundsCents - fundsBefore).toBe(AD.cashCents)
-    // ⚠ AND NOT HER ACCOUNT. Step 5 is where the plan routes an endorsement to `kidFundsCents`;
-    // step 1's money is the family's, so her balance must not move by a cent here.
-    expect(world.kidFundsCents ?? 0).toBe(kidBefore)
+    // The wallet: the fee less her share, exactly, once.
+    expect(world.fundsCents - fundsBefore).toBe(theirs)
+    // ...and HER account moved by the rest of it.
+    expect((world.kidFundsCents ?? 0) - kidBefore).toBe(hers)
+    // ⚠ THE PENNY RULE, WHICH IS WHY THE TWO ARE READ TOGETHER: one rounding, the family gets the
+    // remainder, so the halves re-add to the brand's cheque exactly.
+    expect(theirs + hers).toBe(AD.cashCents)
 
-    // The feed row: income, under 'sponsor' – filed with the other brand money.
+    // The feed row: income, under 'sponsor' – filed with the other brand money, at what was banked.
     const row = world.events.find(
-      (e) => e.week === world.week && e.category === 'sponsor' && e.amountCents === AD.cashCents,
+      (e) => e.week === world.week && e.category === 'sponsor' && e.amountCents === theirs,
     )
     expect(row).toBeDefined()
     expect(row!.type).toBe('income')
@@ -187,8 +206,8 @@ describe('step 1.2 – it can be signed, and the ledger shows it', () => {
 
     // The persisted finance ledger – the Money breakdown's source, which survives feed pruning.
     const week = world.financeWeeks.find((f) => f.week === world.week)
-    expect(week?.byCategory.sponsor).toBe(AD.cashCents)
-    expect(world.careerTotals.earnedCents - earnedBefore).toBe(AD.cashCents)
+    expect(week?.byCategory.sponsor).toBe(theirs)
+    expect(world.careerTotals.earnedCents - earnedBefore).toBe(theirs)
 
     // The paper is a record now: the engine froze the term it will honour.
     expect(signed.fromWeek).toBe(world.week)
@@ -418,11 +437,19 @@ describe('«nobody writes to an amateur» – the college freeze (plan §4c)', (
     // moved back out: the only sponsor-category row in the whole career is the one credit, and no
     // negative sponsor row – no clawback of any size – exists anywhere. «Мы ни за что не
     // наказываем» applies to contracts too.
+    //
+    // ⚠ RE-AIMED BY ROUND-28 #15, AND THE CLAIM IS UNCHANGED – only the size of the credit moved.
+    // Her cut now comes off the fee at signing («с чеков спонсоров… как и с призовых»), so the
+    // sponsor row is the FAMILY's half. The no-clawback claim is what this test is about and it is
+    // now asserted on BOTH balances rather than one: the halves still re-add to the brand's cheque,
+    // so neither purse gave anything back when she enrolled.
     expect(offer.state).toBe('signed')
     expect(offer.untilWeek).toBe(until)
+    const hers = kidPrizeShareCents(AD.cashCents, ageOf(world))
     const sponsorRows = world.events.filter((e) => e.category === 'sponsor')
     expect(sponsorRows).toHaveLength(1)
-    expect(sponsorRows[0].amountCents).toBe(AD.cashCents)
+    expect(sponsorRows[0].amountCents).toBe(AD.cashCents - hers)
+    expect(sponsorRows[0].amountCents! + (world.kidFundsCents ?? 0), 'both halves are still there').toBe(AD.cashCents)
     expect(world.events.some((e) => (e.amountCents ?? 0) < 0 && e.text.includes(AD.brand))).toBe(false)
   })
 })

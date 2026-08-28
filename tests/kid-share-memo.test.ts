@@ -56,9 +56,18 @@ function enterEligible(world: WorldState, event: SeasonEvent): void {
 }
 
 /** What the walk harvests: for every tick, what her account gained and what the ledger row says it
- *  gained. `world.ts:592` is the ONLY writer of `kidFundsCents` in the engine (createWorld and the
- *  v54 migration aside), which is what makes the account balance an independent witness rather than
- *  a second reading of the same field. */
+ *  gained. The account balance is an INDEPENDENT WITNESS here rather than a second reading of the
+ *  same field, because the two are written by different statements: `world.fundsCents` /
+ *  `world.kidFundsCents` by the split, and the memo by `accrueKidShare`.
+ *
+ *  ⚠ THIS NOTE USED TO SAY «`world.ts:592` is the ONLY writer of `kidFundsCents` in the engine
+ *  (createWorld and the v54 migration aside)», AND ROUND-28 #15 MADE THAT FALSE. The owner ruled her
+ *  prize ramp onto sponsor cheques too («с чеков спонсоров… как и с призовых»), so
+ *  `bankSponsorCheque` in engine/world/sponsors.ts is a second writer – reached by the advertising
+ *  fee, the kit retainer, the appearance fee and the result bonus. It is corrected rather than
+ *  deleted because a line number in a comment is exactly the kind of fact that rots silently: this
+ *  file's walk enters tournaments and takes prize money, so what it measures is unchanged, but a
+ *  reader who trusted the old sentence would conclude a sponsor cheque cannot pay her. */
 interface Credit {
   fundsDelta: number
   ledgerDelta: number

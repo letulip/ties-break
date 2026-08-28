@@ -3540,6 +3540,45 @@ tr.kid-row td {
   background: rgba(255, 255, 255, 0.28);
 }
 
+/* ⭐⭐ ROUND-28 #8 – the household strip under the coaching meter. Three figures and a noun, so the
+   parent can read the whole week (the masseur and the shelf included) without leaving the screen he
+   makes the coaching decision on. It WRAPS: on a 375px phone the label takes its own line rather
+   than squeezing the figures, which is the failure mode a one-line flex row has here. */
+.budget-household {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 4px 10px;
+  margin: 8px 0 0;
+  padding-top: 8px;
+  border-top: 1px solid rgba(255, 255, 255, 0.09);
+  font-size: 10.5px;
+  font-weight: 500;
+  color: var(--muted);
+}
+.household-label {
+  font-weight: 600;
+  color: var(--ink-soft);
+}
+.budget-household strong {
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--ink);
+}
+/* The one figure that has a direction: a household spending more than it earns says so in colour as
+   well as in the word beside it. */
+.budget-household strong.short {
+  color: var(--danger);
+}
+.budget-household i {
+  font-style: normal;
+  opacity: 0.5;
+}
+.budget-shelf {
+  margin: 6px 0 0;
+}
+
 .market-chips {
   margin-bottom: 8px;
 }
