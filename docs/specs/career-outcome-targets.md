@@ -21,7 +21,7 @@ were confused once already in discussion, and the multiplication is where the de
 | Saw the pro contour ($15k-analog events) | **50-65%** | ~35-45% |
 | Lives from tennis (~top-250 analog) | **15-25%** | ~10-18% |
 | Top-100 analog — a real star, **BY 18** | **3-6%** | ~2-4% |
-| ⚠ Top-100 analog, **EVER** (proposed 28.08) | **20-30%**, pick **25%** | – |
+| Top-100 analog, **EVER** (⚙ owner 28.08) | **30-40%**, take **35%** | – |
 | Slam-level | <1% | <1% |
 | She quit of her own accord | **5-10%**, reversible | — |
 
@@ -55,11 +55,23 @@ competently played career lands, not how much the parent matters.**
 | measured today | **93.3%** |
 | ⚠ floor reachable via `potentialBand` | **8.1%** |
 | by-18 target, unchanged | 3-6% |
-| **proposed lifetime target** | **25%** (band 20-30%) |
+| ⚙ **lifetime target, HIS RULING** | **35%** (band 30-40%) |
 
-⚠ **`[?]` OPEN – the owner picks the number.** 25% means roughly one career in four reaches the top
-100, so a player who runs three or four sees it once. Everything below is the argument for keeping
-the ladder's SHAPE while that number moves.
+⚙ **SETTLED 28.08 at 35%.** He pushed back on my 25% – «не слишком жестко, как думаешь? может 30-40%
+хотя бы?» – and he is right, for two reasons that are this document's own:
+
+1. ⭐ **The target describes a COMPETENTLY PLAYED career, not a random girl.** The real 18-36% is
+   every junior top-100 taken together, most of them unmanaged. A parent who played thirteen seasons
+   deliberately belongs in the UPPER half of that band, not its middle.
+2. ⭐⭐ **This document's own rule against hidden content.** At 25%, three careers in four never see
+   the WTA storeys, the shop or the cabinet we build for them – «That is not honest difficulty, it
+   is hidden content» applies to itself.
+
+⚠ **40% is the CEILING, not the target**: above it «a real star» stops being scarce.
+
+⭐⭐⭐ **And the scarcity moves UP rather than away.** The game now runs thirteen-plus seasons with a
+full WTA storey; the top 100 is a mid-career waypoint, not the ending. **«Almost none» belongs at
+top-10 and Slam now** – rungs this table does not yet carry and should.
 
 ## Why these, and not the honest real-world numbers
 Reality is harsher: ~70% of children leave organised sport by 13, and of juniors identified as
