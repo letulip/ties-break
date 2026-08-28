@@ -70,12 +70,35 @@ function financeWeekEntry(world: WorldState, week: number): FinanceWeek {
  *  Cents ACCUMULATE (a week that ever pays two cheques owes her both); the rate is the last one
  *  written, and two cheques in one week are one age and therefore one rate by construction.
  *
+ *  ⭐⭐ ROUND 29 #10 – AND SO DOES THE BASE, WHICH IS THE WHOLE OF THAT ITEM. `baseCents` is the
+ *  GROSS of the same cheque, handed in by the site that banked it, and it accumulates in lockstep
+ *  with `cents` for exactly the reason `cents` does: a title week pays a prize, a result bonus and
+ *  sometimes a quarterly retainer, and her «50%» is 50% of all three added up. Summing the two
+ *  together is what keeps `cents === round(baseCents * bps / 10_000)` true across a multi-cheque
+ *  week – ⚠ to within the per-cheque rounding, since each cheque rounds once on its own way in and
+ *  a sum of rounded halves is not the rounded half of a sum. `tests/round29-kid-cut-base.test.ts`
+ *  pins that tolerance at one cent per cheque rather than pretending it is zero.
+ *
+ *  ⚠ NEVER RE-DERIVED BY DIVIDING `cents` BY THE RATE. That division is the arithmetic that
+ *  produced two wrong readings of this item before it was measured, and it re-introduces the penny
+ *  `kidPrizeShareCents`' own comment forbids.
+ *
  *  A pure state write on integers already decided: no draw, no clock, so the frozen MAIN capture
  *  cannot notice it – `addEvent`'s own guarantee at the top of this file. */
-export function accrueKidShare(world: WorldState, week: number, cents: number, bps: number): void {
+export function accrueKidShare(
+  world: WorldState,
+  week: number,
+  cents: number,
+  bps: number,
+  baseCents: number,
+): void {
   if (cents <= 0) return
   const entry = financeWeekEntry(world, week)
-  entry.kidShare = { cents: (entry.kidShare?.cents ?? 0) + cents, bps }
+  entry.kidShare = {
+    cents: (entry.kidShare?.cents ?? 0) + cents,
+    bps,
+    baseCents: (entry.kidShare?.baseCents ?? 0) + baseCents,
+  }
 }
 
 /** THE SEASON'S IDENTITY: the 0-based index of the 52-week block a week belongs to.
@@ -161,7 +184,17 @@ export function financeSeries(
       incomeCents,
       expenseCents,
       balanceCents: 0,
-      ...(kidShare ? { kidShareCents: kidShare.cents, kidSharePct: Math.round(kidShare.bps / 100) } : {}),
+      ...(kidShare
+        ? {
+            kidShareCents: kidShare.cents,
+            kidSharePct: Math.round(kidShare.bps / 100),
+            // ⭐ ROUND 29 #10 – the gross the percentage is a share OF, straight through and only
+            // when the ledger row actually carries it. A week banked before that field existed has
+            // no base and gets none invented here (see `FinanceWeekKidShare.baseCents`): the recap
+            // reads its absence and prints the older, base-less line.
+            ...(kidShare.baseCents ? { kidShareBaseCents: kidShare.baseCents } : {}),
+          }
+        : {}),
     })
   }
   // Backwards: the last week ends on today's funds, and every earlier week ends on the next week's

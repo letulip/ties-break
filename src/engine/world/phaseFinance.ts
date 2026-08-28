@@ -213,22 +213,32 @@ function facilityFlavor(input: {
 }
 
 // --- weekly resolution pieces ------------------------------------------------
-// R9-1: weekly savings interest on a POSITIVE balance, credited on the CARRIED-IN funds as
-// the week opens – before any of this week's flows (refunds, contribution, costs). Emitted
-// only when it rounds to >= 1 cent, under the dedicated income category 'interest'. Zero RNG.
-function resolveInterest(world: WorldState): void {
-  if (world.fundsCents <= 0) return
-  const interest = Math.round(world.fundsCents * ECONOMY.savings.apyWeekly)
-  if (interest < 1) return
-  world.fundsCents += interest
-  addEvent(world, {
-    week: world.week,
-    type: 'income',
-    category: 'interest',
-    text: 'Savings interest',
-    amountCents: interest,
-  })
-}
+//
+// ⭐⭐⭐ R9-1's SAVINGS INTEREST STOOD HERE, AND ROUND 29 #12 REMOVED IT.
+//
+// THE OWNER, 28.08: «И я предлагал убрать авто начисление % на текущий счёт.» A RULING – it settles
+// round 28 #9, which had been filed as an ask.
+//
+// WHAT IT WAS: `round(fundsCents x ECONOMY.savings.apyWeekly)` credited on the CARRIED-IN balance at
+// the top of every tick, ~3.1%/yr, zero RNG, emitted as an `income` row under the category
+// 'interest'. It was silent, automatic, and it grew with the balance – which is exactly why it had to
+// go: a current account that pays a wage means the richest careers get richer for doing nothing, and
+// a parent who has banked a million earns more from the balance than from the job.
+//
+// ⚠ WHAT REPLACES IT IS ALREADY ON THE SHELF, and that is what makes this a design and not a
+// subtraction. Money now earns where the family DECIDES to put it – `ECONOMY.shop.catalogue`'s
+// deposit (+2%/season) and index fund (+7%/season) – and round 29 #11 gave both of them top-ups in
+// the same wave, so moving the balance into them is a thing a player can actually keep doing. The
+// wallet is a wallet; yield is a choice.
+//
+// ⚠⚠ AND THE CATEGORY 'interest' SURVIVES ON PURPOSE. Every save already written carries `interest`
+// rows in `events` and in `financeWeeks.byCategory`, and `WorldEventCategory` is how a screen knows
+// what they were. Deleting the category to tidy up would leave a career's own history unrenderable –
+// see `shared/protocol/events.ts`, where the category is now marked historical rather than removed.
+//
+// ⚠ ZERO DRAWS THEN, ZERO DRAWS NOW. It never touched the MAIN stream, so removing it moves no
+// sequence: the frozen capture (41550 / e6b0c709) and the input-independence freezes are untouched
+// by construction – `releaseOutgrownEntries`' own note, four lines down, on the identical situation.
 
 // The parent's weekly contribution to the budget. Runs BEFORE costs and draws no MAIN-stream RNG:
 // the per-season growth (round 12, +5-10% compounding each new season) replays from the private
@@ -557,8 +567,9 @@ function resolveGear(world: WorldState): void {
  *  body. `rng` is the MAIN stream and reaches exactly one function, `resolveBaseCosts`; see the
  *  header for the draw budget that fact is what keeps stable. */
 export function weeklyFinance(world: WorldState, rng: Rng): void {
-  // 0a0. R9-1: savings interest on the carried-in balance. ZERO draws.
-  resolveInterest(world)
+  // 0a0. RETIRED 28.08 by round 29 #12 – `resolveInterest` stood here and paid a weekly wage on the
+  //      current account. The owner's ruling and what replaces it are written out where the function
+  //      used to live. It drew nothing, so removing it moves no stream.
 
   // 0a. RETIRED 05.08 – `releaseOutgrownEntries` stood here. An entry already taken is honoured;
   //     see the note where the function used to live. It drew nothing, so removing it moves no

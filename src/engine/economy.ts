@@ -1289,11 +1289,19 @@ export const ECONOMY = {
     } as Record<KitGrade, Record<KitLine, { label: string; blurb: string }>>,
   },
 
-  // R9-1: weekly deterministic savings interest on a POSITIVE balance, credited on the
-  // carried-in funds as each week opens (before any of the week's flows). ~3.1%/yr – a
-  // realistic family savings account. round(fundsCents × apyWeekly), emitted only when
-  // >= 1 cent as an `income` event under the dedicated 'interest' category. Zero RNG.
-  savings: { apyWeekly: 0.0006 },
+  // ⭐⭐⭐ R9-1's `savings: { apyWeekly: 0.0006 }` STOOD HERE AND ROUND 29 #12 DELETED IT.
+  //
+  // THE OWNER, 28.08: «И я предлагал убрать авто начисление % на текущий счёт.» It paid ~3.1%/yr on
+  // the current account every week, automatically and silently, and it grew with the balance.
+  //
+  // ⚠ DELETED RATHER THAN LEFT AT ZERO, deliberately. A live balance constant that nothing charges
+  // is a decision nobody can find – the exact failure this file's own header exists to prevent – and
+  // the next reader would wire it back up believing it was a tuning knob. The rate is recoverable
+  // from git and from `docs/rounds/round-29.md`; it is not recoverable from a dead field.
+  //
+  // ⚠ WHERE MONEY EARNS NOW: `shop.catalogue` below – the deposit at +2% a season and the index fund
+  // at +7%, both of which round 29 #11 gave top-ups in the same wave. Yield became a decision the
+  // parent makes instead of a wage the wallet pays.
 
   // =================================================================================================
   // HER SHARE OF THE PRIZE MONEY (round-23 #18) – the one income line the family stops keeping

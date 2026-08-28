@@ -478,10 +478,15 @@ function coachedWeeksLostToRest(world: WorldState): number {
  *  the parents' contribution was $482.94/wk, the savings interest $600.00/wk, and the market's
  *  affordability test read the FIRST NUMBER ALONE - so all four Elite coaches printed "$33-176
  *  over" while more than half of the family's weekly money was invisible to the test that was
- *  refusing them. The «%» he names is `ECONOMY.savings.apyWeekly`: `accrueSavingsInterest` credits
- *  round(fundsCents x apyWeekly) at the top of EVERY tick, deterministically and with zero RNG -
- *  it is a wage the balance pays, not a windfall, and at a million it is larger than the parents'
- *  own. So this is a defect in the DENOMINATOR, not a wording problem.
+ *  refusing them. So that was a defect in the DENOMINATOR, not a wording problem.
+ *
+ *  ⚠⚠ AND THE «%» HE NAMED NO LONGER EXISTS – ROUND 29 #12, HIS OWN LATER RULING. «Убрать авто
+ *  начисление % на текущий счёт»: `ECONOMY.savings` is deleted and `world/phaseFinance.ts` no longer
+ *  credits the balance, so the interest term is gone from the sum below too. THE PARAGRAPH ABOVE IS
+ *  KEPT AS THE RECORD OF WHY THIS FUNCTION EXISTS AT ALL – the rule it established, «what counts is
+ *  what ARRIVES every week», is unchanged and is what forces the term out now that nothing arrives.
+ *  ⚠ The consequence he will see is written out at the deleted term itself, below: a wealthy family
+ *  reads Elite rungs as «over» again, flagged and never refused, and the answer is the shelf.
  *
  *  ⚠ WHAT COUNTS IS "ARRIVES EVERY WEEK WHATEVER SHE DOES", and the two exclusions are the rule
  *  stating itself. PRIZE MONEY, appearance fees and result bonuses are not here: they are paid for
@@ -513,10 +518,21 @@ function coachedWeeksLostToRest(world: WorldState): number {
  *  Pure: zero draws on any stream, derived at snapshot time like everything else on this screen. */
 export function familyWeeklyIncomeCents(world: WorldState): number {
   const parents = parentIncomeForWeekCents(world.seed, world.profile.background, world.week)
-  // The owner's «%», in the SAME expression `accrueSavingsInterest` charges - so the market and the
-  // ledger can never disagree about what the balance earns. Floored at zero: an overdrawn family
-  // earns nothing, it is not billed negative interest (the accrual returns early below 1 cent).
-  const interest = Math.max(0, Math.round(world.fundsCents * ECONOMY.savings.apyWeekly))
+  // ⚠⚠ THE SAVINGS INTEREST TERM STOOD HERE AND ROUND 29 #12 TOOK IT OUT WITH THE ACCRUAL, because
+  // this figure must be «the money that really arrives» and it no longer arrives. Leaving it would
+  // be the round-21 #12 defect in mirror image – the meter and the till disagreeing, this time
+  // over-reading – which is the same correctness argument round 28 #15 made one paragraph up.
+  //
+  // ⚠⚠ AND IT PARTLY UNDOES ROUND 21 #12, WHICH IS HIS OWN EARLIER RULING – SAY SO RATHER THAN LET
+  // HIM REDISCOVER IT. His report then: «у нас есть ещё %, надо их тоже учитывать и суммировать, а
+  // то на счету 1млн, а элитного тренера какого-то нельзя брать.» On that same million the interest
+  // was $600/wk against the parents' $482 – MORE THAN HALF the family's weekly money – so a wealthy
+  // family will again see Elite rungs flagged «over». ⚠ FLAGGED, NEVER REFUSED: `hireCoach` does not
+  // consult the budget at all (`overBudgetCents` colours a card and nothing else), which is what
+  // keeps this inside «мы ни за что не наказываем». The honest answer to the re-opened complaint is
+  // the shelf, not a restored wage on the current account: a family that puts the million into the
+  // index fund is earning again, deliberately, and `householdWeekly` already shows that money in the
+  // household's week.
   const deal = activeKitDeal(world.offers, world.week)
   const retainerCents = deal ? ((deal.terms as KitOfferTerms).retainerCents ?? 0) : 0
   // ⚠ HER CUT COMES OFF THE CHEQUE BEFORE IT IS PRO-RATED, and in that order, because that is the
@@ -524,7 +540,7 @@ export function familyWeeklyIncomeCents(world: WorldState): number {
   // what has to last thirteen weeks. Pro-rating first and splitting the weekly figure would round in
   // a different place and quote a cap the ledger never delivers.
   const familyRetainerCents = retainerCents - kidPrizeShareCents(retainerCents, kidAgeAt(world, world.week))
-  return parents + interest + Math.round((familyRetainerCents * RETAINERS_A_YEAR) / WEEKS_PER_YEAR)
+  return parents + Math.round((familyRetainerCents * RETAINERS_A_YEAR) / WEEKS_PER_YEAR)
 }
 
 /** How many times a signed kit deal pays its retainer in a year - `isRetainerWeek` is
@@ -570,8 +586,15 @@ export function householdWeekly(world: WorldState, trainingCents: number): House
   for (const owned of ownedAssets(world)) {
     const item = shopItem(owned.id)
     if (!item) continue // a rung retired from the catalogue keeps its value; see `revalueAssets`
-    const held = world.week - owned.boughtWeek
-    shelfCents += assetValueCents(item, owned.paidCents, held + 1) - assetValueCents(item, owned.paidCents, held)
+    // ⚠⚠ THE SAME BASIS AND THE SAME CLOCK `revalueAssets` USES, and round 29 #11 is why this line
+    // says it twice. A top-up REBASES the holding (`OwnedAsset.basisCents` / `basisWeek`), and this
+    // meter reading `paidCents` / `boughtWeek` after one would be the exact defect the note above
+    // forbids – two functions asking one question and getting different answers. The `??` pair is
+    // the same one `revalueAssets` carries, and on a holding never topped up it is the identical
+    // arithmetic this line has always done.
+    const basis = owned.basisCents ?? owned.paidCents
+    const held = world.week - (owned.basisWeek ?? owned.boughtWeek)
+    shelfCents += assetValueCents(item, basis, held + 1) - assetValueCents(item, basis, held)
   }
   const incomeCents = familyWeeklyIncomeCents(world) + Math.max(0, shelfCents)
   const outgoingCents = trainingCents + staffCents + Math.max(0, -shelfCents)

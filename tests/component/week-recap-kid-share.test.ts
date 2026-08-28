@@ -141,7 +141,23 @@ describe('the week recap says what her cut was', () => {
     expect(memo.exists(), 'the memo is on the Finances tile').toBe(true)
     // HIS SHAPE, AND THE ENGINE'S OWN FIGURES: the percentage arrives whole from the snapshot and
     // the cents are formatted by the same helper the tile's other rows use.
-    expect(clean(memo.text())).toContain(`Her cut ${row.kidSharePct}% ${formatCents(row.kidShareCents!)}`)
+    //
+    // ⚠⚠ RE-AIMED BY ROUND 29 #10, NOT WEAKENED – AND THE OLD SHAPE IS THE DEFECT IT REPORTS. This
+    // arm used to read `Her cut N% $sum` and it passed all through the bug the owner filed: «Her
+    // cut 50% $27,600 – это не 50% по сравнению с income». It could not see it, because the only
+    // base on that card is `Income`, which is the family's REMAINDER of the cheque being split, and
+    // this assertion never asked what the percentage was a percentage OF. The line now names the
+    // gross the engine really applied the ramp to (`kidShareBaseCents`), so the rate, its base and
+    // the money are one readable sentence – and the arm below turns that into an arithmetic pin.
+    expect(clean(memo.text())).toContain(
+      `Her cut ${row.kidSharePct}% of ${formatCents(row.kidShareBaseCents!)} – ${formatCents(row.kidShareCents!)}`,
+    )
+    // ⚠⚠ THE COMPANION PIN THE ITEM ASKED FOR: the percentage ON SCREEN must be a percentage OF the
+    // figure ON SCREEN beside it. Rendered text, not the snapshot – this is the surface he read.
+    // Tolerance is one cent per cheque (each rounds once on its own way in; a title week banks up to
+    // three), the same allowance tests/round29-kid-cut-base.test.ts writes out in full.
+    const impliedCut = Math.round((row.kidShareBaseCents! * row.kidSharePct!) / 100)
+    expect(Math.abs(impliedCut - row.kidShareCents!)).toBeLessThanOrEqual(3)
     // ⚠ AND IT SAYS «THIS ALSO HAPPENED», NOT «THIS WAS DEDUCTED» – the whole reason layout (B) was
     // chosen over the gross-first one. No sign on the figure, and the second line states out loud
     // what Income above already is.

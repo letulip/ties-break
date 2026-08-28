@@ -670,7 +670,11 @@ function finalizeTournament(world: WorldState): void {
       // rule stated twenty lines up. And the RATE beside it is `kidPrizeShareBps(ageNow)`, the very
       // call the sentence above divides by, so the memo and the ledger row can never quote two
       // different percentages. Zero draws: a state write on a cheque already decided.
-      accrueKidShare(world, world.week, herShare, kidPrizeShareBps(ageNow))
+      // ⭐⭐ ROUND 29 #10 – AND THE BASE IS `prize`, THE GROSS CHEQUE, not the `familyShare` the row
+      // two blocks up reports. That distinction IS the item: the ledger row is deliberately «what
+      // the family actually banked», so the only prize figure any screen could reach was already
+      // net of the very cut the memo was quoting a percentage of.
+      accrueKidShare(world, world.week, herShare, kidPrizeShareBps(ageNow), prize)
     }
     // ⭐⭐ ROUND-24 – AND THE TEAM IS PAID ON THE RESULT (owner 22.08, docs/plans/the-team-share.md
     // §3 as re-ruled). His model verbatim: «3млн призовые из них отчисляется процент дочери (скажем

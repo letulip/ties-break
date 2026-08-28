@@ -266,11 +266,39 @@ const balanceCents = computed(() => incomeCents.value + expenseCents.value)
 //
 // ⚠ THE PERCENTAGE IS ALREADY WHOLE (`kidSharePct`, rounded once in `financeSeries`) – the owner's
 // rule of 26.08. This file must not divide basis points.
+//
+// ⭐⭐⭐ ROUND 29 #10 – AND IT NOW NAMES THE BASE, BECAUSE THE PERCENTAGE HAD NONE ON SCREEN.
+//
+// THE OWNER, off his w780 save: «Income +$29,046 · Spent -$6,883 · Balance +$22,164 · Her cut 50%
+// $27,600 – это не 50% по сравнению с income».
+//
+// ⚠⚠ HE IS RIGHT, AND THE SPLIT IS NOT WHAT IS WRONG. Measured across all 27 weeks of that save
+// that credited her, and reproduced in a live engine run: she is paid EXACTLY half of every gross
+// cheque, to the cent. His week 738 is the whole story – prize row $23,000, her cut $27,600, and
+// both correct: the tournament's cheque was $46,000 GROSS, `finalizeTournament` banks the family
+// `prize − herShare` so the row is already net, and the kit contract's result bonus paid a further
+// $9,200 gross that the same ramp also split. Half of $55,200 is $27,600. The `Income` figure on
+// this very tile is the family's REMAINDER, so it is the one number «50%» can never be a share of –
+// and it was the only base a reader had. **The label was quoting a base that was not on the card.**
+//
+// So the memo prints the base. `kidShareBaseCents` is the gross the engine actually applied the
+// ramp to, carried on the ledger row beside the cents (see `FinanceWeekKidShare.baseCents`) – never
+// `cents / pct`, which is the division that produced two wrong readings of this item before anybody
+// measured it, and which cannot survive the per-cheque rounding anyway.
+//
+// ⚠ AND IT FALLS BACK RATHER THAN GUESSING. The base is FORWARD-ONLY: a week banked before that
+// field existed has none, and no ratio may invent one. Those weeks keep the exact line they printed
+// before, which is why the old wording is still here rather than deleted.
 const kidShareMemo = computed(() => {
   const cents = weekFinance.value?.kidShareCents ?? 0
   const pct = weekFinance.value?.kidSharePct ?? 0
-  // His shape verbatim – «Her cut 10% $sum» – because the ramp is age-based and the number is the fact.
-  return cents > 0 ? `Her cut ${pct}% ${formatCents(cents)}` : null
+  const base = weekFinance.value?.kidShareBaseCents ?? 0
+  if (cents <= 0) return null
+  // His shape, with the base restored to it – «Her cut 50% of $55,200 – $27,600» – so the rate, the
+  // thing it is a rate OF and the money all sit in one readable sentence. Short dash only.
+  if (base > 0) return `Her cut ${pct}% of ${formatCents(base)} – ${formatCents(cents)}`
+  // Pre-round-29 weeks: his original shape, unchanged, because their base was never recorded.
+  return `Her cut ${pct}% ${formatCents(cents)}`
 })
 
 // The base-cost expense event's own text doubles as this week's flavor line (world.ts
