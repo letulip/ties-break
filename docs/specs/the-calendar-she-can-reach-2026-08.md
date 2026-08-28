@@ -20,7 +20,22 @@ last-reviewed: 2026-08-28
 
 ## 1. What is actually wrong – three faults, and none is the one the item names
 
-### 1a. ⚠⚠ THE SUPPLY CURVE IS UPSIDE DOWN
+### 1a. ⚠⚠ CORRECTION (28.08, same day) – I OVERSTATED THIS, AND THE SPEC SAYS SO
+
+**`act2-pro-tour.md` §11.4 already sets the OFFERED target and already did the research**: *«a real
+top-100 plays 20–25 events over ~44 playing weeks… roughly 500 women's ITF events and 60 WTA ones a
+year»*, and its graded table reads **OFFERED = 5.2–6.0 weeks of 8, «~34 weeks carry an event»**.
+
+⚠⚠ **I measured 34 of 48 on her save. The calendar hits its own target exactly.** So «the supply is
+upside down» is NOT the defect he is reporting, and the research pass this spec asked for was already
+done. ⭐ What survives the correction is below, and it is narrower and better aimed.
+
+⭐ **What DOES survive**: at the top of the ladder a THREE-rung band (the width §11.1 measures) holds
+`w75 w100 wta125` **16**, `w100 wta125 wta250` **16**, `wta125 wta250 wta500` **22** – **33–46% of
+weeks**, against the spec's own 65–75%. The junior end holds 45–53. **So the inversion is real for
+NARROW bands and not for Alice**, whose eligible set spans seven rungs and therefore lands on target.
+
+### 1a-bis. The original claim, kept for the record
 
 The game's own eligibility rule (`tierOutgrown`) closes a rung when the rung **three above** it
 opens, so **a player's live band is four adjacent rungs**. Counting our shipped `seasonEventCount`
@@ -36,10 +51,8 @@ per four-rung window against 48 playable weeks:
 | `w100 wta125 wta250 wta500` | 26 | ⚠ |
 | `wta250 wta500 wta1000 slam` | 30 | ⚠ |
 
-⭐⭐ **The better she gets, the less there is to play.** A junior sees 70 events in her window; a
-top-110 professional sees 24 – one every other week. ⭐⭐⭐ **This, and not the strength of the
-field, is the larger half of «250 и 500 выглядят как стена»: she is not only losing there, she has
-nowhere to go.**
+⚠ **Read this against 1a**: the four-rung count is right arithmetic aimed at the wrong target. The
+spec grades OFFERED on a three-rung band and on weeks-carrying-an-event, not on a raw event count.
 
 ### 1b. ⚠⚠ NOBODY DISTRIBUTES THE UNION – and it is one line
 
@@ -80,16 +93,16 @@ aged-out junior rows from the feed instead of rendering a refusal.
 
 ⭐ Cheap, self-contained, and it alone gives back four slots in eight weeks.
 
-### Part 1 – flatten the supply curve
+### Part 1 – ⚠ DEMOTED. Not the cause, and possibly not needed at all
 
-Raise the cadence at the thin rungs so **no four-rung window falls below ~48**, i.e. never fewer than
-one event a week for anybody on the ladder.
+⚠⚠ **Struck on the correction in 1a.** The calendar meets §11.4's OFFERED target for her, so raising
+counts would push it PAST a target the owner already set, and «an availability of 20-30 would leave
+her playing the whole menu» is that spec's own warning.
 
-⚠⚠ **The target numbers are NOT set here and must not be invented.** Our thin end is `w100` 4,
-`wta125` 4, `wta250` 8, `wta500` 10 a season. Whether those should move, and to what, is a research
-question against the real WTA/ITF calendar – `docs/research/ranking-points-by-tier.md` covers the
-ITF **junior** volume and does not answer it. **A research pass owes the real per-tier annual counts
-before this part is built.**
+⭐ **The research this part asked for is already written**: ~60 WTA events a year in the real sport
+against our **34** (slam 4 · wta1000 8 · wta500 10 · wta250 8 · wta125 4). That gap is real and it is
+a legitimate future question – but it is **not** what he reported, and Part 2 must be measured alone
+first. ⚠ Revisit only if Part 2 leaves narrow-band players (§1a) short of 65–75% of weeks.
 
 ### Part 2 – distribute the union, within the band
 
@@ -124,7 +137,7 @@ protocol and a re-pin, with the control being that part reverted in a detached w
 
 ## 4. Order, and why
 
-**0 → 2 → 1.** Part 0 is a prerequisite. **Part 2 before Part 1**: distribution is free (no counts
+**0 → 2, and 1 only if 2 leaves a hole.** Part 0 is a prerequisite. **Part 2 before Part 1**: distribution is free (no counts
 move) and its effect is measurable on its own – her 50 events over 48 weeks should close most of the
 14 holes without a single new tournament. **Only then** does Part 1's research pass have an honest
 question to answer: how much supply is still missing once the existing supply is spread properly.
