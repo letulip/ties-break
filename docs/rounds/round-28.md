@@ -57,9 +57,20 @@ held open for exactly this reason.
 
 ---
 
-- [ ] **1. «При наличии массажиста добавить в соответствии с выбранным тиром сессии массажа в
+- [x] **1. «При наличии массажиста добавить в соответствии с выбранным тиром сессии массажа в
   расписании»** – **build.** The masseur is bought and billed but never appears in the week. The tier
   should decide how many sessions land, the way the coach's tier decides his.
+  ⭐ **SHIPPED, and it was a SURFACING job – no schema move.** The dial already existed
+  (`masseurSessionsPerWeek`, `ECONOMY.masseur.rungs` = 2 / 4 / 7); no week had ever drawn one of its
+  sessions. `CalendarWeek.masseurDays` now carries exactly `masseurSessionsPerWeek` day indices
+  (`masseurDaysFor`: her training days first, then the free ones – so `Daily` is every day) and
+  `weekGrid.ts` draws one `Body work` hour on each, in the last free hour of that day so it can never
+  paint over a session. ⚠ **The weeks that draw NONE are the weeks the ENGINE pays him nothing for** –
+  college, a booked family week, a trip he did not travel to, and a SHOOT week (`accrueCondition`:
+  «lights and flights, not his table»). Evidence: `tests/component/round28-week-and-season.test.ts`
+  mounts CalendarScreen at two rungs and counts the rendered blocks – 2 vs 7, each equal to its rung –
+  and the middle rung lands at 4. Mutation-verified three ways (rung ignored → red; hire clause
+  dropped → red; shoot exemption dropped → red).
 
 - [ ] **2. «Предложение от спонсора с часами пришло на сорок четвёртой неделе А на сорок восьмой уже
   истёк срок рассмотрения мне казалось мы договаривались про 5 недель»** – **build.** w44 → w48 is
@@ -76,9 +87,18 @@ held open for exactly this reason.
   is a new ruling, not the old fix, and it collides with his 11.08 ruling that the day must stay on the
   card every year. Sharpened as an ask below.
 
-- [ ] **4. «Для съёмочных недель для спонсоров надо сделать какие-то отдельные плашки или хотя бы
+- [x] **4. «Для съёмочных недель для спонсоров надо сделать какие-то отдельные плашки или хотя бы
   какой-то символ выделения в календаре в сезоне»** – **build.** A shoot week is currently
   indistinguishable from a training week in the season feed.
+  ⭐ **SHIPPED, also pure surfacing** – the feed already had the fact (`snapshot.adShoot.weeks`) and
+  never read it. `CalendarRow` gained a `shoot` FLAG beside `injured`/`exam` rather than a `kind`,
+  because a shoot week is «not blocked and not double-charged»: a tournament, a family week and a
+  friendly on a shoot week all genuinely happen, so a mark that had to displace one of them would lie
+  about the week on the four rows it is not. The chip (`.shoot-chip`, the wallet's `--cat-shop`
+  magenta, the injury chip's shape) therefore renders on **all five row shapes**, and a week with
+  nothing else on it is also TITLED `Shooting week`. Evidence:
+  `tests/component/round28-week-and-season.test.ts` – a shoot week renders the mark, a training week
+  does not, and two named weeks render exactly two marks. Mutation-verified three ways.
 
 - [ ] **5. «2 травмы за первый год после колледжа»** – **measure.** ⚠ Prevalence was measured this
   month at **30–54%** across a career; two in one season is a different statistic (a per-season rate),
@@ -86,10 +106,24 @@ held open for exactly this reason.
   ruling) – **the first year back is the first year her body is loaded again**, so the question may be
   a re-entry spike rather than a rate.
 
-- [ ] **6. «И на кнопки соответственно перед съёмочной недели тоже надо писать Shooting week и как бы
+- [x] **6. «И на кнопки соответственно перед съёмочной недели тоже надо писать Shooting week и как бы
   в продолжении деле тоже комбинации делать и тренировочных дней и слоты фотосессии добавлять»** –
   **build**, and it is 4's other half: the button that advances into a shoot week must name it, and the
   week itself should mix training days with shoot slots rather than consuming the whole week.
+  ⭐ **SHIPPED, both halves.** (a) `useWeekAhead` gained a `shoot` kind labelled **`Shooting week`**,
+  sitting exactly where `lookAheadFor` puts a shoot – below the bookings and an entered event, above
+  the blackouts – so the marker under the grid and the button above the tab bar cannot disagree; it
+  feeds BOTH week controls through `useWeekAction`, and `QUIET_AHEAD` gained `'shoot'` so the span
+  pill behaves exactly as it did (the engine ticks straight through a shoot week). (b) The week
+  COMBINES: a ninth `DayKind` `'shoot'` takes **the plan's free days and only those**, which is the
+  engine's own charge drawn – `accrueCondition` pays a shoot week the travel figure, i.e. it keeps her
+  sessions and forfeits the REST. Her session count does not move; the eyebrow and the read-out name
+  the brand. Evidence: mounted assertions that `.cal-go-btn` reads `Shooting week` on a shoot week and
+  `Training week` otherwise, and that the drawn week carries training blocks AND shoot blocks with the
+  shoot landing on exactly the free days. Mutation-verified (label branch deleted → red; shoot takes
+  every day → red; shoot takes none → red). ⚠ `e2e/journey.ts`'s advance-button locator is a
+  deliberately CLOSED set of `weekAhead`'s labels – its own comment says a new week kind is meant
+  to arrive there as a decision – so `Shooting week` is added to it.
 
 - [ ] **7. «Что с остальными разделами магазина? Яхты, самолёты, строительство академии»** –
   **answer.** Slice 1 (cars) shipped; the spec carries yachts, the parents' plane and the academy.
@@ -107,8 +141,21 @@ held open for exactly this reason.
   income line. Removing it makes the shop's yield instruments matter and makes the parent manage money
   – it also removes a floor that the economy may currently lean on. Needs a measurement before a ruling.
 
-- [ ] **10. «На всплывающих сверху уведомлениях есть кнопка Dismiss с 3 словам на ней, выглядит
+- [x] **10. «На всплывающих сверху уведомлениях есть кнопка Dismiss с 3 словам на ней, выглядит
   неаккуратно, давай просто оставим Dismiss и всё»** – **build.** One word, one button.
+  ⭐ **SHIPPED. Three top-of-screen notification surfaces, enumerated:** `.recovered-banner` (damaged
+  autosave) and `.stop-toast` (the advance's stop reason) both carried the three-word copy and now
+  read exactly `Dismiss`; `.update-banner` (the PWA update prompt) has no dismiss control at all – its
+  only button is `Update` – and is asserted as such so the day it grows one, it gets the same word.
+  ⚠ This OVERRULES defect D11, which had deliberately put the disambiguation in the VISIBLE copy; the
+  two banners can be on screen together, so the names moved to `aria-label` («Dismiss autosave
+  notice» / «Dismiss stop notice»). WCAG 2.5.3 is satisfied, not breached: each label STARTS with the
+  visible word. `tests/a11y-banner-names.test.ts` is **re-aimed, not deleted**, and points at the new
+  layer. ⭐⭐ **And `App.vue` is mountable for the first time** – the `virtual:pwa-register` import that
+  blocked it is now aliased to a stub on the `component` project alone – so
+  `tests/component/round28-top-notices.test.ts` raises both strips at once and asserts the RENDERED
+  text, which is the claim D11 could only ever state backwards. Mutation-verified: restoring the old
+  copy turns three blocks red.
 
 - [ ] **11. «Alice за 2 года до топ-100 добралась, это нормальный темп?»** – **answer**, and the
   measurement already exists: [how-fast-she-grows-2026-08.md](../specs/how-fast-she-grows-2026-08.md).

@@ -656,11 +656,35 @@ function summerOrdinary(blocks: readonly DayBlock[], kind: OrdinaryKind, index: 
   return out
 }
 
-/** One shaper per whole-week kind. A `Record` rather than a switch so the type carries the
- *  completeness: a ninth `DayKind` would fail to compile here rather than draw an empty column. */
+/** ⭐ ROUND 28 #6 – A DAY AT THE SHOOT, and it is one shape rather than a seven-day arc because a
+ *  shoot day is not a sequence: the letter names WEEKS and the week gives up its free days, so any
+ *  one of them is the same working day (see `shootDaysFor` in weekDays.ts).
+ *
+ *  ⚠ IT WEARS `travel`, WHICH IS NOT A SHORTAGE OF COLOURS. The plan's own words for what this costs
+ *  are «lights, flights and a working day» - `accrueCondition` charges the week at the TRAVEL figure
+ *  for exactly that reason - so the hour that is not hers reads in the palette the app already uses
+ *  for an hour spent getting somewhere. A trip week draws `travel` too and the two can never share a
+ *  column: an entered tournament outranks the shoot, and `calendarWeekFor` returns before it.
+ *
+ *  ⚠ AND IT CARRIES NO SCHOOL BLOCK, deliberately. A call sheet takes the day it is on; the
+ *  fourteen-year-old shape's eight o'clock lesson is exactly what a shoot day does not have. The
+ *  same assertion `TRIP_ARC` already makes about a girl away at a tournament in term time. */
+const SHOOT_DAY: readonly DayBlock[] = [
+  { start: 8, span: 2, kind: 'travel', label: 'Call' },
+  { start: 10, span: 6, kind: 'travel', label: 'Shoot' },
+]
+
+/** One shaper per kind whose day content does NOT come from the plan. A `Record` rather than a
+ *  switch so the type carries the completeness: a tenth `DayKind` would fail to compile here rather
+ *  than draw an empty column.
+ *
+ *  ⚠ 'shoot' IS THE ONE MEMBER THAT IS NOT A WHOLE WEEK (round 28 #6), and it belongs here anyway:
+ *  what this table really is, is "the kinds the plan does not shape", and a shoot day is one of them
+ *  whether or not its neighbours are. */
 const WEEK_SHAPES: Record<WeekKind, (shapes: BandShapes, day: DayContext) => readonly DayBlock[]> = {
   school: examDay,
   away: (_shapes, day) => TRIP_ARC[day.index] ?? [],
+  shoot: () => SHOOT_DAY,
   // Three weeks wear one kind, and they are told apart by DATA the composer hands down rather than by
   // anything this module could look up: the off-season block, a named family package, and the generic
   // family week a package we do not recognise falls back to.
@@ -808,6 +832,43 @@ function dropSchoolFurniture(schoolOver: boolean, blocks: DayBlock[]): DayBlock[
   return blocks.filter((b) => b.kind !== 'school' && b.kind !== 'schoolLong' && b.kind !== 'study')
 }
 
+/** ⭐⭐ ROUND 28 #1 – THE MASSEUR'S HOUR, AND THE ONE COMPOSITION RULE IN THIS FILE THAT ADDS.
+ *
+ *  The owner: with a masseur hired, the massage sessions his TIER buys should be in the week's
+ *  schedule. He has been on the payroll since v59, the dial is 2 / 4 / 7 sessions a week, the bill
+ *  is on the ledger every week – and no week has ever drawn one of them.
+ *
+ *  ⚠ WHY IT CANNOT LIVE IN `DAY_SHAPES` LIKE EVERYTHING ELSE. That table is keyed by day KIND and
+ *  age BAND, and a hire is neither: it is a fact about the WEEK the family bought, so a court day
+ *  with a masseur and a court day without are the same kind. The two neighbours above only ever
+ *  REMOVE for exactly this reason – the table is where a day's shape is decided and a rule that
+ *  invents an hour would take that away from it. This one adds, and it is fenced accordingly:
+ *
+ *    * it draws ONLY what it is HANDED. `week.masseurDays` is computed in weekDays.ts, from the
+ *      snapshot, against the ENGINE's own refusals (college, a booked family week, a shoot week, a
+ *      trip he did not travel to). This module still imports nothing from `../engine/`.
+ *    * it can never collide. The hour is the LAST free one in the day, scanned down from the end of
+ *      the grid, so a rub-down lands after the day's work at every band and on every arc – and if a
+ *      day were ever full it would draw nothing rather than paint over a session.
+ *    * it is one hour, once. A day is in `masseurDays` or it is not, so the drawn count is exactly
+ *      the sessions the rung is billed for – which is what makes the picture checkable against the
+ *      bill instead of merely decorative.
+ *
+ *  ⚠ THE LABEL IS `Body work`, NOT `Massage`. Every word in a block label is capped at six
+ *  characters (tests/calendar-grid.test.ts, measured in the browser at 375pt – an eight-letter word
+ *  has nowhere to break but inside itself). `Body work` is the masseur module's own phrase for what
+ *  he sells, and it does not read as the physio's `Physio` / `Rub-down`, which is the distinction
+ *  the whole hire rests on. */
+const MASSEUR_BLOCK: Omit<DayBlock, 'start'> = { span: 1, kind: 'physio', label: 'Body work' }
+function addMasseurTable(masseurDays: readonly number[], index: number, blocks: DayBlock[]): DayBlock[] {
+  if (!masseurDays.includes(index)) return blocks
+  for (let hour = GRID_END_HOUR - MASSEUR_BLOCK.span; hour >= GRID_START_HOUR; hour--) {
+    const free = blocks.every((b) => hour + MASSEUR_BLOCK.span <= b.start || hour >= b.start + b.span)
+    if (free) return [...blocks, { ...MASSEUR_BLOCK, start: hour }]
+  }
+  return blocks
+}
+
 // =================================================================================================
 // WHAT THE SESSION ACTUALLY WAS — variety without a second session
 // =================================================================================================
@@ -903,27 +964,34 @@ export function weekGridFor(
     date: dates[i] ?? 0,
     kind: d.kind,
     beat: d.beat,
-    blocks: namedSession(
-      dropSchoolFurniture(
-        week.schoolOver,
-        dropOffSeasonStudy(
-          week.offSeason,
-          d.kind,
-          dropWeekendSchool(
-            d.index,
-            dayBlocksFor(d.kind, band, {
-            index: d.index,
-            role: roles[i],
-              offSeason: week.offSeason,
-              summer: week.summer,
-              vacationId: week.vacationId,
-            }),
+    // ⭐ ROUND 28 #1 – the masseur's hour goes on LAST, after every rule that removes, so it can
+    // read the day it is actually landing in rather than the one the table proposed. See
+    // `addMasseurTable`: it is the one rule here that adds, and it adds only what it is handed.
+    blocks: addMasseurTable(
+      week.masseurDays,
+      d.index,
+      namedSession(
+        dropSchoolFurniture(
+          week.schoolOver,
+          dropOffSeasonStudy(
+            week.offSeason,
+            d.kind,
+            dropWeekendSchool(
+              d.index,
+              dayBlocksFor(d.kind, band, {
+                index: d.index,
+                role: roles[i],
+                offSeason: week.offSeason,
+                summer: week.summer,
+                vacationId: week.vacationId,
+              }),
+            ),
           ),
         ),
+        seed,
+        week.week,
+        d.index,
       ),
-      seed,
-      week.week,
-      d.index,
     ),
   }))
 }

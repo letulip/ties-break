@@ -38,6 +38,8 @@ export type WeekAheadKind =
   | 'walkover'
   | 'vacation'
   | 'practice'
+  /** ⭐ ROUND 28 #6 – the week ahead is one of a signed endorsement's named shoot weeks. */
+  | 'shoot'
   | 'exam'
   | 'off-season'
   | 'training'
@@ -116,6 +118,26 @@ export function useWeekAhead(): ComputedRef<WeekAhead> {
     }
     if (snap.vacations.some((v) => v.week === next)) return { kind: 'vacation', label: 'Leave on vacation' }
     if (snap.practices.some((p) => p.week === next)) return { kind: 'practice', label: 'Practice match' }
+    // ⭐⭐ ROUND 28 #6 – THE SHOOT WEEK NAMES ITSELF ON THE BUTTON. The owner asked for the words:
+    // the button before a shoot week should say «Shooting week». It was one of the two halves of his
+    // ask – the other is that the week itself mixes training days with the shoot's slots
+    // (composables/weekDays.ts) – and the label is what makes the press readable BEFORE it is made:
+    // the letter named these weeks at the signature and the parent plans the season around them.
+    //
+    // ⚠ IT SITS EXACTLY WHERE `lookAheadFor` PUTS IT, below the bookings and an entered event and
+    // above the calendar's own blackouts. That is not a taste: the markers under the Calendar grid
+    // and the button above the tab bar describe the SAME week, and this codebase's most expensive
+    // recurring defect is two surfaces answering one question their own way. A tournament on a shoot
+    // week is not blocked and not double-charged – it genuinely plays – so `Play WT250` is still the
+    // truth about that press, and the shoot rides underneath it.
+    //
+    // ⚠ AND THE COLLEGE FREEZE IS NOT CHECKED HERE, for the reason `adShootWeek` gives on the engine
+    // side: the enrolled career does not reach this button at all (`resumeFromCollege` is the only
+    // way forward and the college shell owns the screen), so a second freeze test would be a guard
+    // for a state that cannot arrive. `calendarWeekFor` DOES check it, because the Calendar tab can
+    // be opened during the hold – see its own note.
+    // ⚠ 'Shooting week' is 13 characters, inside the ~22 the button's ellipsis budget allows.
+    if (snap.adShoot?.weeks.includes(next)) return { kind: 'shoot', label: 'Shooting week' }
     // W4-SCHOOL: the NEXT week's own answer – she may leave school between this week and it.
     if (isExamWeek(next, snap.schoolEndsWeek !== undefined && next >= snap.schoolEndsWeek)) {
       return { kind: 'exam', label: 'Exam week' }
