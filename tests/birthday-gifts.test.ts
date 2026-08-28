@@ -246,6 +246,17 @@ describe('the birthday popup', () => {
     }
     // Every material gift of the band is spent here, so the day is the ONLY unspent option and the
     // pool is a single row: it must be the ask every time.
+    //
+    // ⚠⚠ RE-AIMED BY ROUND 27 #7 – NOT ONE ASSERTION MOVED, AND THE NOTE IS THE WHOLE RE-AIM. This
+    // number is still 200 and still correct: it is a claim about the OPTION («the day is never
+    // spent», the 11.08 ruling), and round 27 changed the VOICE and left the option alone. What it
+    // NEVER SAID – and what cost the owner a whole round – is that 200/200 is also the shape of a
+    // defect. It is the pool collapsing to one element, which is exactly the sentence he read three
+    // birthdays running («И снова она просит "One day, not a week, not a trip"» · «3 раза подряд»),
+    // and this test asserted the certainty without anybody reading it as one. The consequence is
+    // pinned in tests/birthday-ask.test.ts, «ROUND 27 #7 – the day cannot be VOICED two birthdays
+    // running», whose first case runs this identical sweep with `lastAsked` set and asserts 0. Read
+    // the pair together: without a cooldown the day is certain here, with one it is impossible.
     expect(reachedDay, 'the day is still askable after it has been given').toBe(200)
   })
 

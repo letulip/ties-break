@@ -18,6 +18,7 @@
 import { describe, it, expect } from 'vitest'
 import {
   skipTournament,
+  callUpRevealOpen,
   collegeLeagueRevealOpen,
   closeTournament,
   createWorld,
@@ -59,8 +60,16 @@ import type { Rng } from '../src/engine/rng'
  *  and `closeTournament` dispatched at the college reveal. Nothing measured below moved; the walk
  *  answers one more question and its press ceiling grows by one a year. The full note is in
  *  tests/college-league.test.ts, and the flow itself in tests/round26-college-flow.test.ts. */
-function answerLeagueReveal(world: WorldState): void {
-  if (!collegeLeagueRevealOpen(world)) return
+/** ⭐⭐⭐ ROUND 27 #6 RE-AIM – IT ANSWERS THE NATIONS CUP TIE TOO, AND IT IS NOT A WEAKENING.
+ *  ⚠ IT USED TO CLAIM: «a college year has exactly one pause the flow owns – the championship»
+ *  (`answerLeagueReveal`, round 26 #6). That is why it read `collegeLeagueRevealOpen` alone.
+ *  ⚠ WHY IT MOVED: the call-up used to resolve inside the tick and report itself in a toast – the
+ *  owner's «матчи только постфактум». It now pauses the year and is walked in `TournamentFlow` like
+ *  the championship, so a walk that answered only one of the two would hang on the other. The
+ *  predicate is widened and the name says what it covers; the ASSERTIONS below are untouched, and
+ *  `skipTournament` / `closeTournament` are still the player's own two presses. */
+function answerCollegeReveal(world: WorldState): void {
+  if (!collegeLeagueRevealOpen(world) && !callUpRevealOpen(world)) return
   skipTournament(world)
   closeTournament(world)
 }
@@ -95,7 +104,7 @@ function spendYear(world: WorldState, rng: Rng): void {
   const before = world.college!.years.length
   for (let press = 0; press < 4 && world.college!.years.length === before && world.ending?.type === 'college'; press++) {
     resumeFromCollege(world, rng)
-    answerLeagueReveal(world)
+    answerCollegeReveal(world)
     if (pendingBirthday(world) !== null) chooseGift(world, 'day')
   }
 }
@@ -104,7 +113,7 @@ function spendYear(world: WorldState, rng: Rng): void {
 function spendCourse(world: WorldState, rng: Rng): void {
   for (let press = 0; press < 4 * ENDINGS.collegeYears && world.ending?.type === 'college'; press++) {
     resumeFromCollege(world, rng)
-    answerLeagueReveal(world)
+    answerCollegeReveal(world)
     if (pendingBirthday(world) !== null) chooseGift(world, 'day')
   }
 }
@@ -428,7 +437,7 @@ function collegeYearsWithACall(seed: string): { world: WorldState; stops: string
       const list = resumeFromCollege(world, rng)
       presses.push(list)
       for (const s of list) seen.add(s)
-      answerLeagueReveal(world)
+      answerCollegeReveal(world)
       if (pendingBirthday(world) !== null) chooseGift(world, 'day')
     }
     stops.push((STOP_PRECEDENCE as readonly string[]).filter((r) => seen.has(r)))
@@ -526,7 +535,7 @@ describe('⭐⭐⭐ the college competition is played', () => {
     // Round 24: press-answer-press – the years pause on her birthdays.
     for (let press = 0; press < 4 * ENDINGS.collegeYears && world.ending?.type === 'college'; press++) {
       resumeFromCollege(world, before.rng)
-      answerLeagueReveal(world)
+      answerCollegeReveal(world)
       if (pendingBirthday(world) !== null) chooseGift(world, 'day')
     }
     expect(world.results.filter((r) => r.playerId === KID_ID), 'her column of the ledger is empty').toHaveLength(0)
@@ -705,7 +714,7 @@ describe('⚠ P5 – the college years cost the MAIN stream nothing', () => {
       resumeFromCollege(college, rngA)
       // ⚠ ROUND 26 #6: the championship pauses the year too, and answering it must cost MAIN nothing
       // either – which makes this arm stronger again rather than different.
-      answerLeagueReveal(college)
+      answerCollegeReveal(college)
       if (pendingBirthday(college) !== null) chooseGift(college, 'day')
     }
     while (control.week < college.week) tickWeek(control, rngB)

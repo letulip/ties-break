@@ -215,7 +215,7 @@ import type { AcademySupport } from '../academy'
 // shelf, no command and no ledger row, so there is no earlier evidence to mine and an invented row
 // would hand a family a car it never chose. Pure state, zero draws on any stream, so the frozen MAIN
 // capture (41550 / e6b0c709) cannot see it.
-export const SAVE_SCHEMA_VERSION = 63
+export const SAVE_SCHEMA_VERSION = 64
 
 
 

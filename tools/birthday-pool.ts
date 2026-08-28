@@ -258,6 +258,104 @@ function recurrence(rows: BirthdayRow[], title: string): void {
   for (const [id, n] of [...asked.entries()].sort((a, b) => b[1] - a[1])) {
     console.log(`  ${padE(id, 16)}${pad(n, 6)}${pad(pct(n, rows.length), 7)}`)
   }
+  dayAsk(rows, careers)
+}
+
+// =================================================================================================
+// ⭐⭐⭐ ROUND 27 #7 – THE DAY, VOICED TWICE RUNNING
+// =================================================================================================
+//
+// The owner, 27.08: «И снова она просит "One day, not a week, not a trip"» · «3 раза подряд» · «я
+// просил это исправить».
+//
+// ⚠⚠ THE AVERAGE IS THE THING THAT HID THIS FOR A WHOLE ROUND. Round 26 #9a measured the ask and
+// reported the day at 30% overall, which reads like a fair share of four options and is why nobody
+// looked further. The mechanism is MONOTONIC – material gifts leave the ask pool permanently and the
+// day never does – so the share is small early, large late, and a career mean is the one statistic
+// that cannot see it. Everything below is therefore reported SPLIT BY PHASE and as a RUN LENGTH:
+// what he is complaining about is not a rate, it is three dialogs in a row.
+//
+// ⚠ THE THIRD BLOCK IS THE DIAGNOSIS ITSELF, not a summary of it. «Once the three material options
+// drawn for a birthday are all already hers, the pool is a single element and the probability is
+// 100%» is a claim about a SUBSET of birthdays, so it is measured on that subset: the share of
+// day-asks among the birthdays whose three material rows were ALL already in the house. A fix that
+// works must move that number off 100 without touching the day's presence on the card.
+function dayAsk(rows: BirthdayRow[], careers: string[]): void {
+  const DAY = BIRTHDAY_DAY_TOGETHER.id
+  const isDay = (r: BirthdayRow) => r.askedId === DAY
+  const band = (label: string, xs: BirthdayRow[]) =>
+    console.log(`  ${padE(label, 34)}${pad(xs.filter(isDay).length, 5)} / ${pad(xs.length, 4)}${pad(pct(xs.filter(isDay).length, xs.length), 7)}`)
+
+  console.log(`\n  ⭐ THE DAY AS THE ASK – by phase, because the mechanism is monotonic`)
+  console.log(`  ${'-'.repeat(96)}`)
+  band('every birthday', rows)
+  band('under 19', rows.filter((r) => r.age < 19))
+  band('19-21', rows.filter((r) => r.age >= 19 && r.age <= 21))
+  band('22 and over (LATE CAREER)', rows.filter((r) => r.age >= 22))
+
+  // --- the run, which is the shape of his complaint ----------------------------------------------
+  const runs: number[] = []
+  let ownedAll = 0
+  let ownedAllDay = 0
+  for (const c of careers) {
+    const mine = rows.filter((r) => r.career === c).sort((a, b) => a.week - b.week)
+    let run = 0
+    let best = 0
+    const held = new Set<string>()
+    for (const r of mine) {
+      run = isDay(r) ? run + 1 : 0
+      if (run > best) best = run
+      // ⚠ THE HOUSE, NOT THE CARD: what she has been GIVEN before this birthday, which is exactly
+      // the set `giftsAlreadyGiven` hands the engine. Read BEFORE this row's own gift is added, the
+      // same ordering `chooseGift` depends on.
+      if (r.options.every((id) => id === DAY || held.has(id))) {
+        ownedAll++
+        if (isDay(r)) ownedAllDay++
+      }
+      if (r.given !== DAY) held.add(r.given)
+    }
+    runs.push(best)
+  }
+  const longest = runs.length ? Math.max(...runs) : 0
+  const meanRun = runs.length ? runs.reduce((a, b) => a + b, 0) / runs.length : 0
+  console.log(`\n  ⭐ CONSECUTIVE DAY-ASKS – "3 раза подряд" is a run length, not a rate`)
+  console.log(`  ${'-'.repeat(96)}`)
+  console.log(`  longest run of day-asks in one career:      worst ${longest}, mean ${meanRun.toFixed(1)}`)
+  console.log(`  careers that ever ran 2 in a row:           ${runs.filter((n) => n >= 2).length}/${runs.length}`)
+  console.log(`  careers that ever ran 3 in a row (his):     ${runs.filter((n) => n >= 3).length}/${runs.length}`)
+  console.log(`\n  ⭐ THE MECHANISM ITSELF – birthdays whose three material rows were ALL already hers`)
+  console.log(`  ${'-'.repeat(96)}`)
+  console.log(`  such birthdays:                             ${ownedAll}/${rows.length}  ${pct(ownedAll, rows.length)}`)
+  console.log(`  ...of which she asked for the day:          ${ownedAllDay}/${ownedAll}  ${pct(ownedAllDay, ownedAll)}`)
+  againAsk(rows, careers)
+}
+
+/** ⭐⭐ ROUND 27 #7 – THE EMPTY-POOL RULE, COUNTED. When the cooldown removes the day and every
+ *  material row on the card is already in the house, she asks for one of them AGAIN. This is the
+ *  only ask in the game that can name a possession she already has, so it is worth knowing how often
+ *  it happens and – because a DURABLE row's ask is written as a want for a thing she LACKS – which
+ *  kind of row it lands on. On an arm with the fix reverted every count here is zero, which is the
+ *  control: the `spent` filter alone can never produce a repeat ask. */
+function againAsk(rows: BirthdayRow[], careers: string[]): void {
+  const DAY = BIRTHDAY_DAY_TOGETHER.id
+  const repeatOf = new Map<string, string>()
+  for (const band of BIRTHDAY_BANDS) for (const g of band.gifts) repeatOf.set(g.id, g.repeat)
+  let again = 0
+  let durable = 0
+  for (const c of careers) {
+    const held = new Set<string>()
+    for (const r of rows.filter((x) => x.career === c).sort((a, b) => a.week - b.week)) {
+      if (r.askedId !== DAY && held.has(r.askedId)) {
+        again++
+        if (repeatOf.get(r.askedId) !== 'repeatable') durable++
+      }
+      if (r.given !== DAY) held.add(r.given)
+    }
+  }
+  console.log(`\n  ⭐ THE EMPTY-POOL RULE – she asks for something already in the house`)
+  console.log(`  ${'-'.repeat(96)}`)
+  console.log(`  asked for a gift she already has:           ${again}/${rows.length}  ${pct(again, rows.length)}`)
+  console.log(`  ...on a DURABLE row (the ask may read as if she lacks it): ${durable}`)
 }
 
 function wallets(rows: BirthdayRow[]): void {

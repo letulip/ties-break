@@ -898,6 +898,14 @@ function shuffled<T>(items: readonly T[], rng: () => number): T[] {
  *  input is fixed before the dialog opens and reloading cannot move it – which is the whole of what
  *  "never re-rollable" was protecting.
  *
+ *  ⭐⭐⭐ AND ROUND 27 #7 ADDED A COOLDOWN ON THE DAY, WHICH ADDS NO NEW CLASS OF DEPENDENCY. See the
+ *  block on `wanted` below for the defect and the measurement. On the bookkeeping: `lastAsked` is a
+ *  function of the seed, her ages and the gifts given up to last year – which is exactly what
+ *  `alreadyGiven` has been since round-17 #18 – so §4.2's clause is no more strained than it already
+ *  was, and the reason behind that clause («OR THE CHOICE RE-ROLLS THE WORLD», CLAUDE.md invariant
+ *  2) is untouched: same key, same FOUR draws, same four options in the same order, MAIN not reached.
+ *  What moves is which of the four she names, and it moves only by DECLINING TO REPEAT ONE.
+ *
  *  `alreadyGiven` defaults to empty so the catalogue sweeps in tests can still ask what a fresh
  *  career of a given age is offered without building a world. */
 export function birthdayOffer(
@@ -913,6 +921,10 @@ export function birthdayOffer(
    *  bicycle is asked for on. ⚠ It is IGNORED off the college band, because there is no such thing as
    *  a college birthday on the tour. */
   collegeIndex: number | null = null,
+  /** ⭐⭐⭐ ROUND 27 #7 – THE GIFT ID SHE ASKED FOR AT HER LAST BIRTHDAY, or `null` if she has not had
+   *  one yet (and for every catalogue sweep, which is why it defaults to null: a caller with no
+   *  world asks exactly the question it always did). See the cooldown below. */
+  lastAsked: string | null = null,
 ): { options: BirthdayGift[]; askedId: string } {
   const band = bandFor(age, atCollege)
   // ⭐ ROUND 26 #9b – WHICH three, off the band's own cycle stream (see `materialFor`). The band
@@ -931,9 +943,67 @@ export function birthdayOffer(
   // any career that ever chose it.
   const spent = new Set(alreadyGiven)
   const canAsk = options.filter((g) => g.id === DAY_TOGETHER.id || !spent.has(g.id))
-  // Total: a band whose every material gift has been given still has the day, so this is never empty
-  // – but the fallback is kept because `canAsk` being empty must print a scene rather than crash.
-  const pool = canAsk.length ? canAsk : options
+  // ===============================================================================================
+  // ⭐⭐⭐ ROUND 27 #7 – THE COOLDOWN IS ON THE VOICE, NEVER ON THE OPTION
+  // ===============================================================================================
+  //
+  // The owner, 27.08, for the second round running: «И снова она просит "One day, not a week, not a
+  // trip"» · «3 раза подряд» · «я просил это исправить».
+  //
+  // ⚠⚠ AND HE IS RIGHT TWICE OVER, because round 26 answered his complaint with a measurement of
+  // something else. He said THE DAY; #9a measured the whole DIALOG repeating (53% of consecutive
+  // birthdays printed the identical four rows, worst run eight), fixed exactly that – the walk above,
+  // and it held: 0% of 189 consecutive pairs on the re-measurement – and recorded «the day was never
+  // the problem». The thing he pointed at was never touched.
+  //
+  // ⚠ IT IS A GUARANTEE AND NOT LUCK, which is why widening the bands could not have reached it.
+  // #9b grew the bands from three material gifts to five; that fixes the ROWS, which are drawn fresh
+  // every year, and it cannot touch the ASK, which filters on WHAT SHE OWNS. The filter above keeps
+  // the day and drops every material gift already in the house, so the day's share of the pool rises
+  // monotonically across a career: one of three owned and the pool is 3, two and it is 2, all three
+  // and the pool is a SINGLE ELEMENT and the day is certain.
+  //
+  // MEASURED, before the fix, over 12 careers and 201 tour birthdays (tools/birthday-pool.ts):
+  //   * the day was the ask 30% overall – and 34% from twenty-two on, which is why the round-26
+  //     average could not see this. The mechanism is monotonic; a career mean is the one statistic
+  //     that hides it.
+  //   * the longest run of consecutive day-asks was FOUR, and 4 careers of 12 ran three or more.
+  //     His «3 раза подряд» is not an unlucky career, it is the distribution.
+  //   * the extreme case – all three material rows already hers – was 8 birthdays of 201, and she
+  //     asked for the day on 8 of 8. 100%, exactly as predicted.
+  //
+  // ⭐ THE DAY STAYS ON THE CARD EVERY YEAR. His 11.08 ruling is untouched and so is the argument
+  // above it: a day with her parents is not a possession. What it cannot do is be VOICED twice
+  // running, which is a property of the ASK and costs the OFFER nothing.
+  const wanted = lastAsked === DAY_TOGETHER.id ? canAsk.filter((g) => g.id !== DAY_TOGETHER.id) : canAsk
+  // ⚠⚠ AND THE EMPTY POOL IS DECIDED HERE RATHER THAN INHERITED – THIS IS THE TRAP.
+  //
+  // The fallback that used to stand here was `canAsk.length ? canAsk : options`, and it was dead
+  // code: the day is never spent, so `canAsk` could not empty. A cooldown layered on top makes it
+  // LIVE, and live in exactly the case that matters – all three material rows owned and the day on
+  // cooldown – where restoring `options` would put the day straight back and the cooldown would
+  // achieve nothing in the only place it was needed.
+  //
+  // ⭐ SO WHEN THERE IS NOTHING NEW TO WANT, SHE ASKS FOR ONE OF THESE AGAIN. «She has one of these
+  // from us already, this would be the second» is a human thing to want, and round-18 #10c is the
+  // owner ruling that already licensed it: «чтобы мы новую машину не раз в год покупали (хотя почему
+  // и нет, с другой стороны, но если так, то надо как-то обыграть)». The row's `again` wording is
+  // written for precisely this and `birthdayOptions` prints it, so the scene gets richer rather than
+  // thinner – the dialog says out loud that this would be the second one.
+  //
+  // ⚠⚠ REPEATABLE FIRST, AND IT IS NOT A PREFERENCE – IT IS THE ONLY THING KEEPING A FALSE SENTENCE
+  // OFF THE SCREEN. This is the first ask in the game that can name a possession she already has, so
+  // the ask's own words have to survive being read a second time. `repeat` is exactly that
+  // distinction and it was written for it: a repeatable row's ask is a want that recurs («not a day
+  // at home, not a week there – a trip, with a flight in it»), while a durable row's ask is written
+  // as a want for a thing she LACKS – `campusbike` asks «Everyone there has a bicycle. She walks»,
+  // which is false the moment one is chained up outside. So the repeatable rows on this card are
+  // preferred, and the durable ones are the step below them.
+  const onCard = options.filter((g) => g.id !== DAY_TOGETHER.id)
+  const askAgain = onCard.filter((g) => g.repeat === 'repeatable')
+  // Total: `options` last, so a future catalogue that somehow printed a card of nothing but the day
+  // still prints a scene rather than crashing – the same insurance the old fallback carried.
+  const pool = wanted.length ? wanted : askAgain.length ? askAgain : onCard.length ? onCard : options
   // ⚠⚠ THE DRAW HAPPENS EITHER WAY, AND THAT IS DELIBERATE. `seed:birthday:<age>` is drawn exactly
   // four times for every birthday in the game, first-college-birthday included – the identical
   // reason the `alreadyGiven` filter is applied to the POOL and never to the draw. A branch that
@@ -945,9 +1015,11 @@ export function birthdayOffer(
   //
   // ⚠ IT IS AN OVERRIDE OF THE RESULT AND NEVER OF THE TWO PROPERTIES §2ab RESTS ON. The row is in
   // `pool`, so the ask is still ONE OF THE FOUR ON SCREEN (`materialFor`'s rotation is what makes
-  // that certain) and it is still a row she has not already been given – `pool` is `canAsk`, so a
-  // poked save that somehow holds the bicycle already falls straight through to the drawn ask
-  // instead of asking her for a thing she owns.
+  // that certain) and it is still a row she has not already been given: on her FIRST college
+  // birthday `pool` is `wanted`, because the four college rows exist in no other band and therefore
+  // cannot be in `spent` – the cooldown can remove the day and never the bicycle, so `wanted` holds
+  // at least three rows and the round-27 fallback below it is unreachable here. A poked save that
+  // somehow holds the bicycle already falls straight through to the drawn ask instead.
   const first =
     band === COLLEGE_BAND && collegeIndex === 0
       ? (pool.find((g) => g.id === FIRST_COLLEGE_ASK_ID)?.id ?? null)
@@ -962,6 +1034,35 @@ export function birthdayOffer(
  *  for a birthday nobody was asked about (spec §5.5), and null is not a gift. */
 function giftsAlreadyGiven(world: WorldState): string[] {
   return (world.birthdays ?? []).map((b) => b.given).filter((g): g is string => g !== null)
+}
+
+/** ⭐⭐⭐ ROUND 27 #7 – WHAT SHE ASKED FOR AT HER LAST BIRTHDAY. Null before her first.
+ *
+ *  ⚠⚠ NO SCHEMA MOVE, AND THAT IS A FACT ABOUT THE RECORD RATHER THAN A SHORTCUT. A cooldown needs
+ *  to know what she ASKED for, and the first question was whether `BirthdayRecord` holds it – v48
+ *  could easily have persisted only the GIFT, which would have made this a full four-part move from
+ *  v63 (bump, append-only migration, golden fixture, `npm run e2e:fixtures`). It holds both: `asked`
+ *  is written by `chooseGift` beside `given`, and the v48 note says why they are separate fields –
+ *  «she got what she asked for, she got something else, or she got nothing» is a distinction the
+ *  record was built to state. The cooldown reads a field that has been on every save since v48.
+ *
+ *  ⚠ THE LAST ROW IS THE LAST BIRTHDAY, and the array's own construction is the whole argument.
+ *  `chooseGift` is the ONLY writer (`world.birthdays.push`, one row per birthday, in the week it
+ *  happens) and the v48 migration only ever seeds `[]` – it invents no rows and reorders nothing –
+ *  so the array is chronological by construction and `at(-1)` is her previous birthday. There is no
+ *  second counter to drift, which is the same reasoning `collegeBirthdayIndexOf` is built on.
+ *
+ *  ⚠ AND IT IS READ BEFORE THIS BIRTHDAY'S OWN ROW EXISTS, exactly like `giftsAlreadyGiven` beside
+ *  it: both callers derive the offer before `chooseGift` pushes. So «the last row» is never this
+ *  birthday's, the ask stays IMMUTABLE once the dialog is on screen, and reloading cannot move it.
+ *
+ *  ⚠ A SKIPPED YEAR LEAVES NO ROW, AND THAT IS THE RIGHT SEMANTICS RATHER THAN AN EDGE CASE. The
+ *  cooldown exists to stop the player READING the same sentence twice running; a birthday nobody was
+ *  asked about printed no sentence, so the last one he actually read is the one to cool down against
+ *  – which is precisely the last row. */
+function lastAskedGift(world: WorldState): string | null {
+  const rows = world.birthdays ?? []
+  return rows.length ? rows[rows.length - 1].asked : null
 }
 
 /** ⭐⭐⭐ WHICH OF HER COLLEGE BIRTHDAYS THIS ONE IS, 0-based – round 26 #4, second pass.
@@ -1000,6 +1101,10 @@ export function birthdayOfferFor(world: WorldState, age: number): { options: Bir
     giftsAlreadyGiven(world),
     inCollege(world),
     collegeBirthdayIndexOf(world),
+    // ⭐⭐⭐ ROUND 27 #7 – the fifth argument, and it is here for the same reason the fourth is: two
+    // call sites that re-type the arguments are two call sites that can disagree about which dialog
+    // this is, and `chooseGift` re-derives the offer to validate the answer.
+    lastAskedGift(world),
   )
 }
 

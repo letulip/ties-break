@@ -283,6 +283,42 @@ export interface CollegeState {
    *  value for a career that played its championships before the flow existed. The migration writes
    *  the explicit null and nothing is back-filled: a year already lived is not re-offered. */
   leagueReveal?: CollegeLeagueReveal | null
+  /** ⭐⭐⭐ v64 – THE NATIONS CUP TIE'S REVEAL, OPEN UNTIL HE HAS WALKED IT (round 27 #6, the owner's
+   *  «И опять на те же грабли … матчи только постфактум … проводить этот турнир по обычному флоу
+   *  турнира»).
+   *
+   *  ⚠⚠ A SECOND FIELD AND NOT A SECOND MEANING FOR `leagueReveal` ONE LINE UP. The two fixtures are
+   *  played two season weeks apart and are never open together, so one field with a `kind` on it
+   *  would have LOOKED cheaper – and it would have re-shaped a persisted object every save since v60
+   *  carries, which is a rewrite of shipped data rather than an append. Two optional fields is the
+   *  append-only move (invariant 3), and it also keeps `collegeLeagueRevealOpen` answering exactly
+   *  the question its name asks.
+   *
+   *  ⚠ PERSISTED BECAUSE IT BLOCKS, on `leagueReveal`'s own argument: `resumeFromCollege` will not
+   *  spend a year over an open one, so it is a question standing in front of the world, and an
+   *  unpersisted blocking state is the class of failure B1's law was written about. ⚠ AND THE OPEN
+   *  BIT IS THE HALF THAT CANNOT BE DERIVED: «is a tie waiting» reads as `pendingCallUp.week ===
+   *  world.week` right up to the moment he ANSWERS it – the week does not move while the year is
+   *  paused, so a derived predicate would go on refusing the press that closes it for ever.
+   *
+   *  ⚠ NULL – or absent, on every save older than v64 – MEANS NO REVEAL IS OPEN, which is the true
+   *  value for a career that played its ties before the flow existed. The migration writes the
+   *  explicit null and nothing is back-filled: a week already lived is not re-offered. */
+  callUpReveal?: CollegeCallUpReveal | null
+}
+
+/** ⭐⭐⭐ v64 – WHERE HE IS IN THE TIE'S REVEAL. `CollegeLeagueReveal`'s twin, field for field, and
+ *  deliberately a separate NAME rather than a shared shape: the two are cleared, opened and read by
+ *  different functions, and a shared alias is the first step towards one field serving both.
+ *
+ *  ⚠ `revealed === callUpRubbersOf(world, week).length` IS THE FINALE, exactly as it is one
+ *  interface up; the object is cleared by `closeCallUpReveal`, which is `closeTournament`'s twin.
+ *  No `finished` flag, for the same reason: a second copy of a derivable fact can drift from it. */
+export interface CollegeCallUpReveal {
+  /** the week the tie was played – the key into `callUpRubbersOf` */
+  week: number
+  /** how many of her rubbers he has been shown, 0..the week's rubber count */
+  revealed: number
 }
 
 /** ⭐⭐⭐ v60 – WHERE HE IS IN THE CHAMPIONSHIP'S REVEAL. The college mirror of
@@ -526,4 +562,33 @@ export interface CollegeProgressView {
    *  offering to start one, and the early return can stand down until the year she started is done.
    *  A wire field off persisted state – no schema implications of its own. */
   yearInProgress: boolean
+  /** ⭐⭐⭐ ROUND 27 #2 – DOES THE NEXT PRESS END AT THE STUDENT CHAMPIONSHIP? The owner: «кнопка
+   *  "Продолжить год", а при нажатии мы попадаем в "the College League" – как будто можно тоже наш
+   *  флоу использовать с неймингом кнопки – Play College Open, а уже потом "Закончить год"?»
+   *
+   *  ⚠ THE ENGINE'S ANSWER AND NOT THE SCREEN'S, on `yearInProgress`' own argument one line up. A
+   *  college year has TWO mid-year pauses – her birthday and, since round 26 #6, the championship –
+   *  and a screen deciding which one it is standing in front of is the screen deciding a rule
+   *  (CLAUDE.md invariant 1). `collegeLeagueIsNextStop` is where that is decided, and its own note
+   *  carries the measurement: over the twelve birth months, five put the championship in front of
+   *  the birthday and seven put it behind, so BOTH shipped labels lie on some careers.
+   *
+   *  A wire field off the calendar and the persisted year start – no `SAVE_SCHEMA_VERSION` bump, no
+   *  migration and no golden fixture, exactly as `billPerYearCents` and `yearInProgress` are. */
+  leagueIsNextStop: boolean
+  /** ⭐⭐⭐ ROUND 27 #6 – ...OR AT THE NATIONS CUP TIE. The championship's twin, and it exists because
+   *  round 26 #6's field carried a ⚠⚠ that this wave triggered: «IF A THIRD MID-YEAR STOP IS EVER
+   *  ADDED TO THAT LOOP, IT HAS TO BE ADDED HERE TOO, or this button starts promising a tournament
+   *  that a new pause arrives in front of». The tie is that third stop.
+   *
+   *  ⚠ AT MOST ONE OF THE TWO IS TRUE, BY CONSTRUCTION AND NOT BY CARE: both are read off a single
+   *  `collegeNextStop` walk, which returns the FIRST fixture the press will meet. Which one that is
+   *  depends on the week she enrolled – a year opening on season week 13 meets the tie (14) before
+   *  the championship (12), and one opening on 34 meets them the other way round.
+   *
+   *  ⚠ AND UNLIKE THE CHAMPIONSHIP THIS ONE IS CONDITIONAL. The League is arithmetic and fires every
+   *  year; the tie is a roll, and a year in which nobody wrote – or in which she was NAMED AND SAT –
+   *  raises no reveal and does not pause the press. The scan asks the same question the invitation
+   *  letter asks, through the same function, so the button and the letter cannot disagree. */
+  callUpIsNextStop: boolean
 }

@@ -849,8 +849,10 @@ const STOP_REASON_TEXT: Record<string, string> = {
   // The owner, 20.08: «Я бы и рад изучить, да только далее не знаю где.» The old line said "check her
   // scholarship" and there was nothing in the game to check – the toast said WHEN and pointed at
   // nowhere. C1 made the academy's three notices into kept letters and the tick raises them
-  // (`settleAcademyLetters`), so the sentence can honestly point at the inbox, in the voice the
-  // 'call-up' line one row down already uses – the surface, named, rather than an instruction.
+  // (`settleAcademyLetters`), so the sentence can honestly point at the inbox – the surface, named,
+  // rather than an instruction. ⚠ THAT VOICE WAS BORROWED FROM THE 'call-up' LINE, WHICH IS NO LONGER
+  // IN THIS TABLE (round 27 #6, four rows down): the call-up's own destination is a letter and a
+  // tournament flow now, so it needs no toast at all. The rule the two shared is the one that stays.
   academy: 'Stopped: the academy has reviewed her year – the letter is in her inbox, on Home.',
   // ⭐ THE OFFER STOP – R2-13's own item text lists «offers» among the events the span must stop
   // before, and phase 1 shipped without one. It is the academy line's sibling and its copy is built
@@ -859,13 +861,22 @@ const STOP_REASON_TEXT: Record<string, string> = {
   // reason (`stoppableOfferWeek`: an `open` letter, on the week it arrived), so the sentence can
   // promise something to answer without ever being wrong about a receipt.
   offer: 'Stopped: a new offer is in her inbox, on Home – answer it before its deadline or it lapses.',
-  // ⭐⭐ THE COLLEGE WAVE – the only line in this table that a `resumeFromCollege` puts up rather
-  // than an advance. Her country played, and since this wave the rubbers are real matches with
-  // stored seeds. On the three years that re-latch the epilogue this toast sits behind it and the
-  // year card does the talking; on the year that FINISHES college the latch comes off, the tab shell
-  // is back, and this is what the player reads – so it points at the FEED, which is where the rows
-  // are on both paths, and never at a card that only exists on one of them.
-  'call-up': 'Her country called this year – her matches are in the news feed, and they can be watched.',
+  // ⭐⭐⭐ ROUND 27 #6 – 'call-up' HAD A LINE HERE AND IT IS DELETED, WHICH IS THE ITEM. It read «Her
+  // country called this year – her matches are in the news feed, and they can be watched», and the
+  // owner: «И опять на те же грабли: "Her country called this year…" во всплывашке сверху и матчи
+  // только постфактум … А этот попап не нужен для этого флоу вообще.»
+  //
+  // ⚠⚠ IT WAS A SENTENCE ABOUT SOMETHING THE PLAYER WAS NOT PRESENT FOR, and no wording could fix
+  // that: the toast fired after `playCallUpRubbers` had already simulated the week inside the tick.
+  // The week now announces itself BEFORE it happens (a letter in the inbox, `settleCallUpLetter`)
+  // and is PLAYED in `TournamentFlow` like any other tournament – so both halves of the toast's job
+  // are done by surfaces that can be acted on, and the copy has nothing left to say.
+  //
+  // ⚠ THE STOP REASON ITSELF IS NOT DELETED. `resumeFromCollege` still reports 'call-up', because it
+  // is still true that the week happened – and R10-16's rule («no copy, no toast») is precisely what
+  // makes removing the copy the whole of the fix: the reason stays readable to the harness, the e2e
+  // layer and the span digest, and this table stops speaking for it. 'tournament', 'injury' and
+  // 'season-end' are absent for the same reason – they own a surface.
   // ⭐⭐⭐ ROUND 24 – THE ONE TOURNAMENT THE YEAR IS GUARANTEED. It sits ABOVE 'call-up' in
   // STOP_PRECEDENCE, so on a year that had both this is the line the player reads – which is the
   // right way round, because the championship is what decided whether the letter came at all.

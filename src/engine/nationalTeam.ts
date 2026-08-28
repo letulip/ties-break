@@ -374,6 +374,34 @@ export function callUpLine(call: CallUp, label: string = NATIONAL_TEAM.label): s
   return `${label}: her country called and there was no declining it. ${bench}; the nation finished ${ordinal(call.nationFinish)} of ${NATIONAL_TEAM.nationsAtHerLevel}. No prize money and no ranking points – there are none to award.`
 }
 
+/** ⭐⭐⭐ ROUND 27 #6 – WHAT THIS WEEK AWARDS, IN THE SCREEN'S OWN VOICE, and it is the tie's SENTENCE
+ *  rather than the student championship's.
+ *
+ *  ⚠⚠ §4's BUILDER LEFT THIS EXACT WARNING AND IT WAS RIGHT. `TournamentFlow`'s splash printed «No
+ *  ranking points and no prize money – a student field awards neither» under every fixture with no
+ *  ladder, which was one fixture until this wave. A national squad is NOT a student field: the reason
+ *  a student is unpaid is that she is a student, and the reason nobody is paid here is the rulebook.
+ *  Research §0.4 / §5.5 – the WTA ranking chart has no row for this competition and its own
+ *  regulations carry no player ranking-points provision at all; §5.6 – player prize money exists «For
+ *  the Finals only», and below that a player's compensation is entirely at her federation's
+ *  discretion, which in this game is nothing. So the clause is about EVERYONE on the court, which is
+ *  what makes it a different sentence and not a reworded one.
+ *
+ *  ⚠ IT LIVES WITH THE FIXTURE AND NOT ON THE SCREEN – §5's `COLLEGE_FREEZE_REFUSAL` ruling, and
+ *  `callUpLine` two functions up is the same discipline: the competition owns its own words, so a
+ *  screen cannot come to describe it differently from the record. It reaches the UI on
+ *  `PendingView.ladderNote`, whose docstring pins that it is non-null exactly when `ladder` is. */
+export const NATIONS_CUP_AWARDS_NOTHING =
+  'No ranking points and no prize money – this competition awards neither to anybody in it'
+
+/** ⭐⭐ WHERE HER NATION FINISHED, as the one phrase the flow's finale poster hangs. The placing and
+ *  the size of the field, because a placing with nothing beside it is not a fact – and «WHERE IS NOT
+ *  ABOUT HER» (`nationsAtHerLevel`), which is why her own rubbers are the strip under it rather than
+ *  this line. It never grades her: `career-contract-v1.md` §6, the rule `callUpLine` already keeps. */
+export function nationFinishLabel(call: CallUp): string {
+  return `${ordinal(call.nationFinish)} of ${NATIONAL_TEAM.nationsAtHerLevel} nations`
+}
+
 function ordinal(n: number): string {
   const rem100 = n % 100
   if (rem100 >= 11 && rem100 <= 13) return `${n}th`

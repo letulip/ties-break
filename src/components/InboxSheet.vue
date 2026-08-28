@@ -35,7 +35,15 @@
 import { computed, ref } from 'vue'
 import { useGameStore } from '../stores/game'
 import { formatCents } from '../shared/money'
-import type { AcademyLetterTerms, AdOfferTerms, EntryLetterTerms, KitOfferTerms, Offer, TourLetterTerms } from '../shared/protocol'
+import type {
+  AcademyLetterTerms,
+  AdOfferTerms,
+  CallUpLetterTerms,
+  EntryLetterTerms,
+  KitOfferTerms,
+  Offer,
+  TourLetterTerms,
+} from '../shared/protocol'
 import { SPONSOR_TIERS, chooseShootWeeks, dealUntilWeek } from '../engine/offers'
 import { ECONOMY } from '../engine/economy'
 import { weekLabel } from '../shared/dates'
@@ -87,6 +95,10 @@ function senderOf(o: Offer): string {
   // letterhead here would be inventing a fact the engine does not hold. (It is also the one place
   // this letter does not fit the kit shape – no `tier`, no mark, no `SPONSOR_TIERS` rung.)
   if (o.kind === 'academy') return 'The academy'
+  // ⭐⭐⭐ ROUND 27 #6 – and her federation signs like the desks and the academy do, with what it IS.
+  // It cannot sign with a country's name: `profile.country` is an ISO-2 code, and
+  // `engine/nationalTeam.ts` forbids naming nations outright («NAMES ARE FICTIONAL»).
+  if (o.kind === 'call-up') return 'Her national federation'
   // ⭐ ROUND 24 ITEM 2 – the advertising house signs with its name exactly as a kit brand does: it
   // HAS a brand, unlike the desks; what it lacks is a rung, so `rungOf` leaves it at -1 with the
   // rest of the non-kit post and the letter prints no mark (see OfferLetter's script).
@@ -124,6 +136,13 @@ function subjectOf(o: Offer): string {
   // ⭐ ROUND 24 ITEM 2 – the endorsement's subject restates its own sheet's first sentence, this
   // function's rule, and carries the fee because the fee is the whole content: cash for her face is
   // exactly what makes this letter not a sixth rung of the kit ladder.
+  // ⭐⭐⭐ ROUND 27 #6 – the invitation's subject restates its own sheet's first sentence, this
+  // function's rule, and carries the WEEK because the week is the whole content: a letter about a
+  // fixture that has not happened yet is only useful if it says when.
+  if (o.kind === 'call-up') {
+    const t = o.terms as CallUpLetterTerms
+    return `Named in the squad – ${t.label}, ${weekLabel(t.tieWeek)}`
+  }
   if (o.kind === 'ad') return `Her face in a campaign – ${formatCents((o.terms as AdOfferTerms).cashCents)}`
   const t = o.terms as KitOfferTerms
   if (t.ended) return 'The kit deal has ended'

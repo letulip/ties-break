@@ -417,9 +417,18 @@ describe('the weather is decoration, and stays decoration', () => {
     // the view and nothing else. The second one belongs to the College League's reveal, which walks
     // the same flow and therefore needs the same decorative day – through the SAME function, because
     // two weather functions is how one tournament comes to have two days.
-    expect(world.match(/eventTemperature\(/g) ?? [], 'world.ts uses the weather somewhere new').toHaveLength(2)
+    //
+    // ⚠ ROUND 27 #6 RE-AIM – THREE NOW, AND THE COUNT IS STILL THE POINT.
+    // ⚠ IT USED TO CLAIM: «two uses, both inside `pendingView`» (round 26 #6).
+    // ⚠ WHY IT MOVED: the Nations Cup tie walks the same flow since this wave, so it needs the same
+    // decorative day from the same function. THE PROTECTED FACT IS UNTOUCHED and the guard is not
+    // weakened by a hair: every one of the three is asserted BY ITS EXACT TEXT below, so the count
+    // rising cannot smuggle in a use that reads the weather instead of assembling it – a fourth
+    // still goes red, and a third that was not this one goes red on its own line.
+    expect(world.match(/eventTemperature\(/g) ?? [], 'world.ts uses the weather somewhere new').toHaveLength(3)
     expect(world).toContain('temperatureC: eventTemperature(world.seed, event)')
     expect(world).toContain('temperatureC: eventTemperature(world.seed, { id: `college-w${reveal.week}`, surface })')
+    expect(world).toContain('temperatureC: eventTemperature(world.seed, { id: `nations-w${reveal.week}`, surface })')
   })
 })
 

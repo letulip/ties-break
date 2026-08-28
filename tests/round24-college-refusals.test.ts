@@ -26,6 +26,7 @@
 import { describe, it, expect } from 'vitest'
 import {
   skipTournament,
+  callUpRevealOpen,
   collegeLeagueRevealOpen,
   CAREER_ENDED_REFUSAL,
   COLLEGE_FREEZE_REFUSAL,
@@ -75,8 +76,16 @@ import { DEFAULT_PROFILE, type CareerEndingType } from '../src/shared/protocol'
  *  which is `skipTournament` + `closeTournament` dispatched at the college reveal. Nothing this
  *  suite MEASURES moved: the same birthdays, the same pauses, the same banked years.
  *  The full note is in tests/college-league.test.ts. */
-function answerLeagueReveal(world: WorldState): void {
-  if (!collegeLeagueRevealOpen(world)) return
+/** ⭐⭐⭐ ROUND 27 #6 RE-AIM – IT ANSWERS THE NATIONS CUP TIE TOO, AND IT IS NOT A WEAKENING.
+ *  ⚠ IT USED TO CLAIM: «a college year has exactly one pause the flow owns – the championship»
+ *  (`answerLeagueReveal`, round 26 #6). That is why it read `collegeLeagueRevealOpen` alone.
+ *  ⚠ WHY IT MOVED: the call-up used to resolve inside the tick and report itself in a toast – the
+ *  owner's «матчи только постфактум». It now pauses the year and is walked in `TournamentFlow` like
+ *  the championship, so a walk that answered only one of the two would hang on the other. The
+ *  predicate is widened and the name says what it covers; the ASSERTIONS below are untouched, and
+ *  `skipTournament` / `closeTournament` are still the player's own two presses. */
+function answerCollegeReveal(world: WorldState): void {
+  if (!collegeLeagueRevealOpen(world) && !callUpRevealOpen(world)) return
   skipTournament(world)
   closeTournament(world)
 }
@@ -132,7 +141,7 @@ function careerAtCollege(seed: string): { world: WorldState; rng: Rng } {
   }
   for (let press = 0; press < 4 && world.college!.years.length === 0; press++) {
     resumeFromCollege(world, rng)
-    answerLeagueReveal(world)
+    answerCollegeReveal(world)
     if (pendingBirthday(world) !== null) chooseGift(world, 'day')
   }
   expect(world.ending?.type, 'the latch is back on with the next year under it').toBe('college')
@@ -185,7 +194,7 @@ function careerAtCollegeWithBookings(seed: string): { world: WorldState; vacWeek
   // ⚠ Press-answer-press, exactly as `careerAtCollege` above – the year pauses for her birthday now.
   for (let press = 0; press < 4 && world.college!.years.length === 0; press++) {
     resumeFromCollege(world, rng)
-    answerLeagueReveal(world)
+    answerCollegeReveal(world)
     if (pendingBirthday(world) !== null) chooseGift(world, 'day')
   }
   expect(world.ending?.type).toBe('college')
@@ -304,7 +313,7 @@ describe('the family may take back a booking it made before the fork', () => {
     // booked court – the whole year has to be spent for the trap to be provably real.
     for (let press = 0; press < 4 && world.college!.years.length === 0; press++) {
       resumeFromCollege(world, rng)
-      answerLeagueReveal(world)
+      answerCollegeReveal(world)
       if (pendingBirthday(world) !== null) chooseGift(world, 'day')
     }
 

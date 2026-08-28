@@ -44,37 +44,58 @@ reads longer than the work it implies.
   graduation do not exist in it. **If the last year ends in June, `delta` stops being zero and 1
   dissolves on its own.** Three observations, one repair.
 
-- [ ] **2. «кнопка "Продолжить год", а при нажатии мы попадаем в the College League – как будто можно
+- [x] **2. «кнопка "Продолжить год", а при нажатии мы попадаем в the College League – как будто можно
   тоже наш флоу использовать с неймингом кнопки – Play College Open, а уже потом Закончить год»** –
   ⚠ True. The label knows ONE pause inside a year (her birthday) and round 26 added a second. ⭐ The
-  function's own comment already forbids this one case earlier. Spec §2.
+  function's own comment already forbids this one case earlier. Spec §2. ⚙ **BUILT** (`e355fdd`). ⚠ And the brief was wrong twice: it is not «the championship pause» – over 12 birth months × 4 years, **April–August (5/12) reach the fixture on «Another year», September–March (7/12) on «Finish the year»**, so BOTH shipped labels lied and which one depends only on her birth month. And `collegeLeagueRevealOpen` could not be the predicate – it is true exactly while the button is off screen. Measured after: **0 mismatches over 12 × 4**.
 
 - [ ] **3. «сотая ракетка мира приезжает в колледж и проигрывает там =))»** – ⚠ **True and measured.**
   The student field draws 44–68 against a professional MIDDLE of 52–62: it is calibrated at the level
   of ranks 30–150, which is where a world #100 sits. **She is playing her equals and they should not
   be her equals.** ⚠⚠ But see 9 – the fix may be at the other end. Spec §3.
 
-- [ ] **4. «на экране итогов матча the College League написано Professional ranking – как будто нет»**
+- [x] **4. «на экране итогов матча the College League написано Professional ranking – как будто нет»**
   – ⚠ True. `LadderTrack` has three members and no fourth answer, so a fixture that awards nothing
   must still name a table. ⚠⚠ **This exact defect was fixed once before** and `PendingView.ladder` IS
-  that fix; it came back because the type cannot say «neither». Spec §4.
+  that fix; it came back because the type cannot say «neither». Spec §4. ⚙ **BUILT** (`8ebdea2`). ⚠ And «the compiler will find every reader» was false: `LADDER_LABEL[x ?? 'domestic']` kept type-checking and would have printed **«National»** over a college draw. ⭐ **Any `??` default on a widened field defeats that technique** – a lesson wider than this item.
 
-- [ ] **5. «на время колледжа на вкладке Season кнопки подачи заявок и планирования недели задизаблим»**
+- [x] **5. «на время колледжа на вкладке Season кнопки подачи заявок и планирования недели задизаблим»**
   – ⚠ True. `SeasonScreen.vue` contains no reference to college at all. ⭐ The ENGINE is correct – it
-  refuses with the college sentence – so the defect is entirely about WHEN he learns it. Spec §5.
+  refuses with the college sentence – so the defect is entirely about WHEN he learns it. Spec §5. ⚙ **BUILT** (`3b5a28d`). ⚠ And my enumeration was incomplete: **four surfaces refuse, not two**, and the fourth – «Play it and watch» – refused **in SILENCE**, because `advanceRefusal` returns `'ending'` and `'ending'` is the one stop reason with no copy in `STOP_REASON_TEXT`. ⭐ Three controls were correctly left LIVE (the two E2 cancels and the booked-vacation tap), each verified against `guardNotEndedForGood`.
 
-- [ ] **6. «И опять на те же грабли: "Her country called this year…" во всплывашке сверху и матчи
+- [x] **6. «И опять на те же грабли: "Her country called this year…" во всплывашке сверху и матчи
   только постфактум»** – ⚠ True, and it is the shape round 26 #6/#7 fixed for the League one file
   away. ⭐ His own key: the game knows in advance (`rollCallUp`), so a letter and the ordinary
-  tournament flow are available and the toast can go. ⚠ Ships with 4 or after it. Spec §6.
+  tournament flow are available and the toast can go. ⚙ **BUILT, all three halves**: an invitation
+  in the inbox on the CHAMPIONSHIP week – two ahead of the tie, and a week the year already pauses on,
+  so he stands at a rest state holding it – the tie walked in `TournamentFlow` through the same three
+  commands the League uses, and the toast deleted. ⚠ **The first draft posted it one week before the
+  tie and that was wrong**: a college year is spent in presses, that week raises no pause, and the
+  paper arrived at the instant the takeover covered it. Caught by asking for a MOUNTED claim; every
+  source pin was green on the wrong version. ⭐ **His «мы знаем будет это происходить или нет»
+  is exact rather than nearly** – one function answers both callers off the tie week's own
+  sub-stream, and her skill is mutated to 20 and 99 in the suite to prove it cannot move the answer.
+  ⚠ **§4's builder left a warning and it was worth more than §4's code**: the splash's «a student
+  field awards neither» is the College League's sentence and false of a national squad – the engine
+  states each fixture's own clause now. ⚠ **And a SECOND one he did not see**, the same shape one
+  layer out: `TournamentFlow`'s `amateur ? COLLEGE_LEAGUE.drawSize : …` would have called three ties
+  an eight-player draw. ⚠⚠ **And a THIRD, which is §2's own tripwire collected**: «if a third mid-year
+  stop is ever added to that loop, it has to be added here too» – the tie IS that third stop, so a
+  press labelled «Finish the year» would have played the Nations Cup. One walk answers both fixtures
+  now and the college button gained a sixth label. ⚠ Schema v63 → v64 (a paused tie is a question the
+  player has not answered). ⚠ The frozen MAIN capture is UNMOVED. Spec §6.
 
-- [!] **7. «И снова она просит "One day, not a week, not a trip"» · «3 раза подряд» · «я просил это
-  исправить»** – ⚠⚠ **REOPENED, and he is right to.** His original complaint (round 26 #9) was about
+- [x] **7. «И снова она просит "One day, not a week, not a trip"» · «3 раза подряд» · «я просил это
+  исправить»** – ⚠⚠ **REOPENED, and he was right to.** His original complaint (round 26 #9) was about
   THE DAY; the measurement found the DIALOG repeating, fixed that, and recorded «the day was never the
   problem». **The dialog fix was real and held. The thing he pointed at was left alone.** And it is a
   guarantee, not luck: the day is exempt from the already-given filter by design, material gifts leave
   the pool permanently, so the day's share rises to 100% once the three drawn options are all hers.
-  Spec §7.
+  ⚙ **BUILT: a one-birthday cooldown on the VOICE, never on the option** – the day is on the card
+  every year exactly as his 11.08 ruling says, it just cannot be the ask twice running. **Measured:
+  the longest run of day-asks goes 4 → 1 and the careers that ever ran three in a row go 4 of 12 → 0
+  of 12**, with the share 30% → 24% (late career 34% → 28%). No schema move – the record has held
+  `asked` since v48 – and no draw moved. Spec §7.
 
 - [ ] **8. «в History расход за сезон написан 36 тысяч, а на вкладке расходов 25 тысяч. Явно что-то
   там не ладно с нашей математикой»** – ⚠ **Reproduced exactly on his own save** (`w502`, read-only,
@@ -175,8 +196,9 @@ reads longer than the work it implies.
 | ⚙ **done** | **9's measurement** – it decided: 3 is a symptom, the growth curve is the cause | landed 27.08 |
 | ⚠ **first** | **the growth curve** – ⚠ and the measurement recommends BISECTING the 12.08→27.08 drift before anything is tuned, because the manager moved as much as the model | the owner |
 | ⚠ **his** | the entry-age band, once 9 lands and the one research table exists | the owner |
-| then | 4 → 2 → 5 → 7 → 6, in that order (4 before 6; 5 and 7 are independent) | – |
+| then | 4 → 2 → 5 → 7 → 6, in that order (4 before 6; 5 and 7 are independent) – ⚙ **all five landed** | – |
 | last | 3, only after the growth curve is settled – its number is a DIFFERENCE against a freshman who is about to change | – |
 
-⚠ **Nothing in this round has been built.** Two agents are finishing unrelated work on the same
-branch and a third is measuring 9. The spec carries the order and the reason for it.
+⚠ **This line said «Nothing in this round has been built» when the round opened.** Items 2, 4, 5, 6
+and 7 have since landed on `wave/college-last-mile`; 1/1a/1b and 3 are still the owner's, and 14 is
+held open on purpose. The spec carries the order and the reason for it.

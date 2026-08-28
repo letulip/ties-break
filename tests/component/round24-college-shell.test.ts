@@ -54,7 +54,6 @@ import CollegeDoneDialog from '../../src/components/CollegeDoneDialog.vue'
 import { useGameStore } from '../../src/stores/game'
 import {
   skipTournament,
-  collegeLeagueRevealOpen,
   answerFork,
   chooseGift,
   closeTournament,
@@ -233,12 +232,15 @@ describe('⭐⭐ #4 – graduation is the last college screen, and it hands back
     // `closeTournament` dispatched at the college reveal. Same reason as the birthday one line up:
     // a reveal left standing would hold the graduation card behind a takeover. The ceiling grows
     // from three presses a year to four because the year now holds one more stop.
-    for (let press = 0; press < 4 * ENDINGS.collegeYears && world.ending?.type === 'college'; press++) {
+    // ⚠ ROUND 27 #6 RE-AIM: ...and a THIRD stop, the Nations Cup tie, which pauses the year exactly
+    // as the championship does. The dispatch is unconditional now – `skipTournament` and
+    // `closeTournament` are no-ops when no reveal is open – because naming one of the two reveals is
+    // what left this walk standing at year three. The ceiling grows to five for the same arithmetic:
+    // three questions in a year costs four presses to finish it.
+    for (let press = 0; press < 5 * ENDINGS.collegeYears && world.ending?.type === 'college'; press++) {
       resumeFromCollege(world, rng)
-      if (collegeLeagueRevealOpen(world)) {
-        skipTournament(world)
-        closeTournament(world)
-      }
+      skipTournament(world)
+      closeTournament(world)
       if (pendingBirthday(world) !== null) chooseGift(world, 'day')
     }
     expect(world.ending, 'she came out the other side – the latch is off for good').toBeNull()
@@ -279,12 +281,12 @@ describe('⭐⭐ #4 – graduation is the last college screen, and it hands back
     // Round 24: press-answer-press – the year pauses on her birthday week. ⚠ Round 26 #6: and on
     // the championship, which `endCollegeEarly` below would otherwise refuse behind – a paused year
     // is not at a boundary, and the engine says so.
-    for (let press = 0; press < 4 && world.college!.years.length === 0; press++) {
+    // ⚠ ROUND 27 #6: and the tie, on the same argument – `endCollegeEarly` refuses behind a paused
+    // year, and a year paused on a reveal is not at a boundary either.
+    for (let press = 0; press < 5 && world.college!.years.length === 0; press++) {
       resumeFromCollege(world, rng)
-      if (collegeLeagueRevealOpen(world)) {
-        skipTournament(world)
-        closeTournament(world)
-      }
+      skipTournament(world)
+      closeTournament(world)
       if (pendingBirthday(world) !== null) chooseGift(world, 'day')
     }
     endCollegeEarly(world)

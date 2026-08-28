@@ -2,20 +2,20 @@
 
 # `engine/world` – area to owner
 
-The barrel `src/engine/world.ts` (1,943 lines) re-exports the decomposed modules under their historical names, so every importer sees one flat surface. That is a COMPATIBILITY contract, not a discovery one – this file is the discovery half.
+The barrel `src/engine/world.ts` (2,001 lines) re-exports the decomposed modules under their historical names, so every importer sees one flat surface. That is a COMPATIBILITY contract, not a discovery one – this file is the discovery half.
 
 Regenerate with `node scripts/world-map.mjs`; `node scripts/world-map.mjs --check` fails when it is stale, and CI runs that on every pull request.
 
 **Do not read this file to answer one question** – that is the habit it exists to replace. `node scripts/world-map.mjs <symbol>` prints the owner and the line, and a plain `grep <symbol> tools/generated/world-symbol-map.md` does the same for a partial name.
 
-310 exported names across 39 owning modules.
+323 exported names across 39 owning modules.
 
 ## Areas
 
 | owner module | area | symbols |
 | --- | --- | ---: |
 | `src/engine/world.ts` | THE INTEGRATION CORE: what the barrel itself still owns – career creation, the reveal/finalize trio, the advance and the college resume, and `tickWeek`, which is now the ordered recipe that calls the five phases in `world/phase*.ts` | 16 |
-| `src/engine/world/college.ts` | ⭐⭐ WHAT IS BEHIND THE DOOR – the college years, wired into the world (P5, 16.08.2026, docs/specs/college-as-a-second-act-2026-08.md) | 24 |
+| `src/engine/world/college.ts` | ⭐⭐ WHAT IS BEHIND THE DOOR – the college years, wired into the world (P5, 16.08.2026, docs/specs/college-as-a-second-act-2026-08.md) | 37 |
 | `src/engine/world/ladder.ts` | THE LADDER: where she stands, and what that standing opens | 22 |
 | `src/engine/world/medical.ts` | THE GATES: condition, the doctor's veto, the layoff, and whether she may enter at all | 21 |
 | `src/engine/world/entryCaps.ts` | THE ANNUAL ENTRY CAPS: the ITF junior allowance, the WTA professional one (AER) – and since P1 the JUNIOR ACCESS rules, which are the same family of rule from the same two rulebooks | 17 |
@@ -82,12 +82,19 @@ THE INTEGRATION CORE: what the barrel itself still owns – career creation, the
 ⭐⭐ WHAT IS BEHIND THE DOOR – the college years, wired into the world (P5, 16.08.2026, docs/specs/college-as-a-second-act-2026-08.md).
 
 - `bankCollegeYear` – `src/engine/world/college.ts`
+- `callUpFor` – `src/engine/world/college.ts`
+- `callUpLetterWeek` – `src/engine/world/college.ts`
 - `callUpPlayedThisWeek` – `src/engine/world/college.ts`
+- `callUpRevealMatches` – `src/engine/world/college.ts`
+- `callUpRevealOpen` – `src/engine/world/college.ts`
 - `callUpRubberId` – `src/engine/world/college.ts`
 - `callUpRubbersOf` – `src/engine/world/college.ts`
+- `closeCallUpReveal` – `src/engine/world/college.ts`
 - `COLLEGE_TRIP_WEEKS` – `src/engine/world/college.ts`
+- `collegeCallUpIsNextStop` – `src/engine/world/college.ts`
 - `collegeCoachFactor` – `src/engine/world/college.ts`
 - `collegeEpilogueLine` – `src/engine/world/college.ts`
+- `collegeLeagueIsNextStop` – `src/engine/world/college.ts`
 - `collegeLeagueMatchesOf` – `src/engine/world/college.ts`
 - `collegeLeagueMatchId` – `src/engine/world/college.ts`
 - `collegeLeaguePlayedThisWeek` – `src/engine/world/college.ts`
@@ -95,16 +102,22 @@ THE INTEGRATION CORE: what the barrel itself still owns – career creation, the
 - `collegeLeagueRevealOpen` – `src/engine/world/college.ts`
 - `collegeLeagueWeek` – `src/engine/world/college.ts`
 - `collegeMatchesThisWeek` – `src/engine/world/college.ts`
+- `collegeNextStop` – `src/engine/world/college.ts`
 - `collegeProgressOf` – `src/engine/world/college.ts`
 - `collegeRecruitViewOf` – `src/engine/world/college.ts`
 - `inCollege` – `src/engine/world/college.ts`
+- `isCollegeLeagueWeek` – `src/engine/world/college.ts`
 - `lastLeagueRun` – `src/engine/world/college.ts`
 - `measureCollegeOffer` – `src/engine/world/college.ts`
+- `nextCallUpWeekAfter` – `src/engine/world/college.ts`
 - `openCollegeYear` – `src/engine/world/college.ts`
 - `resolveCallUp` – `src/engine/world/college.ts`
 - `resolveCollegeBill` – `src/engine/world/college.ts`
 - `resolveCollegeLeague` – `src/engine/world/college.ts`
+- `revealCallUpRubber` – `src/engine/world/college.ts`
+- `settleCallUpLetter` – `src/engine/world/college.ts`
 - `skillMeanOf` – `src/engine/world/college.ts`
+- `skipCallUpRubbers` – `src/engine/world/college.ts`
 
 ### `src/engine/world/ladder.ts`
 

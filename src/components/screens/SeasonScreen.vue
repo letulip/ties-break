@@ -46,7 +46,9 @@ import ProgressRing from '../ui/ProgressRing.vue'
 import { simulateMatch } from '../../engine/match/engine'
 import { annotateMatch } from '../../engine/match/rally'
 import { applySurfaceStyle } from '../../engine/match/style'
-import { KID_ID, kidMatchPlayer, isCappedProTier, isCappedTier, isExamWeek, flipScore, type PracticeCaution } from '../../engine/world'
+// ⚠ `COLLEGE_FREEZE_REFUSAL` IS THE ENGINE'S OWN SENTENCE AND THIS SCREEN ONLY PRINTS IT – see
+// `frozenForCollege` below for the whole argument.
+import { COLLEGE_FREEZE_REFUSAL, KID_ID, kidMatchPlayer, isCappedProTier, isCappedTier, isExamWeek, flipScore, type PracticeCaution } from '../../engine/world'
 import { dominantSurface, isOffSeasonWeek, surfaceBlockFor, SURFACE_BLOCKS, TIERS } from '../../engine/season/calendar'
 // The wild-card badge quotes the engine's own count, never a literal – see the badge in the
 // template and `WILD_CARD` in engine/season/tournament.ts for why the number lives there.
@@ -833,6 +835,47 @@ const openButUnscheduled = computed<string[]>(() =>
   tierStates.value.filter((s) => s.kind === 'unscheduled').map((s) => TIER_SHORT[s.id]),
 )
 
+// =================================================================================================
+// ⭐⭐⭐ ROUND 27 #5 – THE FOUR COLLEGE YEARS, AS THIS SCREEN HAS TO READ THEM
+// =================================================================================================
+//
+// The owner, 27.08: «на время колледжа на вкладке Season кнопки подачи заявок и планирования недели
+// задизаблим пожалуйста. Можно рядом или ниже написать пояснение, что это только на время колледжа
+// (как сейчас наверху появляется)».
+//
+// ⚠⚠ THE ENGINE WAS ALREADY RIGHT, AND THAT IS WHAT HID THIS. `enterEvent`, `withdrawEvent`,
+// `cancelEntry`, `bookVacation` and `bookPractice` all open with `guardNotEnded`, which inside the
+// freeze throws `COLLEGE_FREEZE_REFUSAL` rather than the ended sentence – so nothing illegal could
+// ever happen here and the message that came back was the right message. The defect was entirely
+// about WHEN the player learned it: after the press, in a toast, having already chosen a tournament.
+// That is R10-16's own doctrine («a refused control with no reason on screen is the bug») applied
+// one step earlier than it was being applied.
+//
+// ⚠⚠ THE SENTENCE COMES FROM THE ENGINE, NEVER FROM THIS FILE. `COLLEGE_FREEZE_REFUSAL` is exported
+// for exactly this argument – its own comment says «a string literal copied into a test is a rename
+// that breaks a report in silence», and a component is the same reader. The owner's «как сейчас
+// наверху появляется» is the same instruction from his side: the note the shell already puts up is
+// the note he wants, not a second voice saying the same fact in different words.
+//
+// ⚠ THE PREDICATE IS `guardNotEnded`'s OWN FIRST QUESTION, spelled the way App.vue's `showCollege`
+// and HomeScreen's `collegeWeek` spell it. It is deliberately NOT `snapshot.inCollege`: the guard
+// branches on `ending.type === 'college'`, i.e. "is the latch a FREEZE or an END", and the two part
+// on the one week that matters – a career-ending injury inside the freeze re-latches its own ending,
+// the guard goes back to refusing with the ended sentence, and the epilogue takes the shell so this
+// screen is not on the player's screen at all. Asking the guard's question is what makes it
+// impossible for this screen and the engine to disagree about which controls work.
+const frozenForCollege = computed(() => game.snapshot?.ending?.ending.type === 'college')
+
+// ⚠⚠ AND NOT EVERYTHING ON THIS SCREEN IS FROZEN – ROUND 24's E2 AUDIT LEFT TWO CANCELS OPEN ON
+// PURPOSE, so the flag above is applied control by control and never to the screen as a whole.
+// `cancelVacation` and `cancelPractice` take `guardNotEndedForGood` (world/constants.ts), because
+// `resolveVacation` / `resolvePractice` have no `inCollege` gate: a booking made before the fork is
+// really resolved inside the freeze, and undoing it is about the family's own week rather than about
+// the tour. Both stay live here, and so does the painted vacation card that opens the planner – on a
+// booked week `PlanWeekSheet` replaces both booking tabs with its `booked` pane, so that tap reaches
+// the cancel and nothing else. Disabling a control the engine still allows is the same class of lie
+// as enabling one it refuses, pointed the other way.
+
 // --- one shared confirm-popup slot (mirrors MoreScreen's pattern) ------------
 interface PendingConfirm {
   message: string
@@ -1003,6 +1046,15 @@ const showRescue = computed(
   () =>
     !!game.snapshot &&
     !game.snapshot.injury &&
+    // ⭐ ROUND 27 #5 – AND IT IS SILENT INSIDE THE COLLEGE FREEZE, WHICH IS THE ONE PLACE THIS CARD
+    // IS SUPPRESSED RATHER THAN DISABLED. Everything else on the screen is a control the player went
+    // looking for, so it stays on screen greyed with the reason beside it; this is the game OFFERING
+    // a booking, and `bookVacation` is refused for the whole freeze. An offer that cannot be
+    // accepted is worse than no offer – its own copy («nothing is booked until you say so») promises
+    // a decision the engine will not take – and «See the options» opens the same planner sheet the
+    // owner asked to have disabled, so leaving it would have been the disabled button with a second
+    // door beside it.
+    !frozenForCollege.value &&
     !rescueDismissed.value &&
     condition.value <= ECONOMY.practice.rescueCondition &&
     rescueWeek.value !== null,
@@ -1295,6 +1347,18 @@ function closeExhibition(): void {
          border went with it - that was the line running across above the first card. -->
     <section class="bare">
       <h2>Calendar</h2>
+      <!-- ⭐⭐⭐ ROUND 27 #5 – THE REASON, BESIDE THE CONTROLS INSTEAD OF BEHIND THEM.
+           The owner asked for a line beside or under the buttons, in the words the shell already
+           puts up. ⚠ HIS WORDS ARE IN THE SCRIPT, AT `frozenForCollege`, AND THEY STAY THERE: no
+           Cyrillic may appear in a template, comments included (tests/template-copy-rules.test.ts
+           and tests/ladder.test.ts both read this block).
+           ⚠ THE STRING IS THE ENGINE'S, NEVER THIS TEMPLATE'S. `COLLEGE_FREEZE_REFUSAL` is the exact
+           sentence `guardNotEnded` throws for every control this note explains, so the screen and
+           the refusal cannot come to say two different things about the same four years.
+           ⚠ ONCE, AT THE HEAD OF THE FEED, AND NOT PER CARD. Eight cards carry a disabled Enter and
+           eight copies of one sentence would be the noisiest thing on the screen; here it is read
+           before the first card and stays true for every one under it. -->
+      <p v-if="frozenForCollege" class="hint college-freeze-note" role="note">{{ COLLEGE_FREEZE_REFUSAL }}</p>
       <!-- ⚠ The two-row "swing" strip that used to sit here is GONE (wave 2). The phase strip at the
            top of the screen is the export's version of the same fact and shows the WHOLE season
            rather than this block and the next, so keeping both meant saying it twice. The surface
@@ -1441,18 +1505,24 @@ function closeExhibition(): void {
                  tested; it has no surface, and giving it one again is his decision. -->
 
             <div class="controls" style="margin-top: 12px">
-              <!-- Entered, list still OPEN: an ordinary withdrawal, fee refunded. -->
+              <!-- Entered, list still OPEN: an ordinary withdrawal, fee refunded.
+                   ⭐ ROUND 27 #5: `withdrawEvent` takes `guardNotEnded`, so it is refused for the
+                   whole college freeze. The departure releases every outstanding entry, so this
+                   button should not be drawn there at all - the gate is what makes that a rule
+                   rather than a hope. -->
               <button
                 v-if="row.event.entered && !row.event.cancellable"
-                :disabled="game.busy"
+                :disabled="game.busy || frozenForCollege"
                 @click="askWithdraw(row.event)"
               >
                 Withdraw
               </button>
               <!-- R10-13: entered, list CLOSED. Not a "withdraw" any more – a CANCEL, with the fee
                    forfeited, which hands the week back to the planner. Plain secondary button, like
-                   the planner's own Cancel controls; the confirm carries the warning. -->
-              <button v-else-if="row.event.entered" :disabled="game.busy" @click="askCancelEntry(row.event)">
+                   the planner's own Cancel controls; the confirm carries the warning.
+                   ⭐ ROUND 27 #5: `cancelEntry` is `guardNotEnded` too - it is a TOUR command about
+                   an entry, not one of E2's two family-week cancels. -->
+              <button v-else-if="row.event.entered" :disabled="game.busy || frozenForCollege" @click="askCancelEntry(row.event)">
                 Cancel entry
               </button>
               <!-- Round-8 6b: `lock` brightens the label to soft amber (pill stays disabled). -->
@@ -1475,9 +1545,12 @@ function closeExhibition(): void {
                      VISIBLE word is unchanged and is still the first word of the name, which is what
                      WCAG 2.5.3 asks; `enterActionName` is shared with the Calendar so the two
                      surfaces cannot call the same event two different things. -->
+                <!-- ⭐⭐⭐ ROUND 27 #5 – ...AND IT STANDS DOWN FOR THE FOUR COLLEGE YEARS. `enterEvent`
+                     opens with `guardNotEnded`, so every press inside the freeze was refused; the
+                     freeze note at the head of the calendar carries the engine's own reason. -->
                 <PrimaryPill
                   :risky="row.event.cautionReason === 'fatigued'"
-                  :disabled="fundsShort(row.event) || game.busy"
+                  :disabled="fundsShort(row.event) || game.busy || frozenForCollege"
                   :aria-label="enterActionName(row.event)"
                   @click="askEnter(row.event)"
                 >
@@ -1496,7 +1569,12 @@ function closeExhibition(): void {
               <!-- She cannot enter this one (locked ahead, or the list has closed), so the week is
                    still hers to plan: a friendly or a family week. The aspirational card stays –
                    the week just stops being dead. -->
-              <button v-if="row.plannable" :disabled="game.busy" @click="openPlanner(row)">+ Plan week</button>
+              <!-- ⭐⭐⭐ ROUND 27 #5 – THE SECOND OF THE OWNER'S TWO GROUPS (the week planner; his
+                   own words for it are quoted at `frozenForCollege` in the script, where Cyrillic
+                   is allowed and in a template it is not).
+                   The sheet behind it books a practice or a family week, and `bookPractice` /
+                   `bookVacation` are both `guardNotEnded`: refused for the whole freeze. -->
+              <button v-if="row.plannable" :disabled="game.busy || frozenForCollege" @click="openPlanner(row)">+ Plan week</button>
               <!-- R12-1/14: on an exam week the button does not vanish SILENTLY – the card says why
                    SHE cannot go (the tournament still runs; school owns her week). -->
               <span v-else-if="examReasonShows(row)" class="pill muted lock">Exams this week</span>
@@ -1543,7 +1621,12 @@ function closeExhibition(): void {
                SHORTER than a training card, because the art is: these frames are 941x377 against
                the week paintings' 941x536, and the card follows the art rather than cropping it.
                NO BUTTON on it (the owner's call): a booked week is a statement, not a control, and
-               cancelling lives where booking does - tap the card and the planner opens. -->
+               cancelling lives where booking does - tap the card and the planner opens.
+               ⚠⚠ AND THAT TAP IS DELIBERATELY NOT FROZEN FOR COLLEGE (round 27 #5, round 24 E2).
+               The card only renders on a week that IS booked, and `PlanWeekSheet` answers a booked
+               week with its `booked` pane – a third pane that REPLACES both booking tabs – so the
+               only command this door reaches is `cancelVacation`, which the engine allows through
+               the whole freeze (`guardNotEndedForGood`). -->
           <Card
             v-else-if="row.kind === 'vacation' && row.vacation && vacationArt(row)"
             variant="photo"
@@ -1586,6 +1669,9 @@ function closeExhibition(): void {
               </span>
             </span>
             <span class="planned-actions">
+              <!-- ⚠⚠ LEFT LIVE INSIDE THE COLLEGE FREEZE, ON PURPOSE (round 24, E2). `cancelVacation`
+                   takes `guardNotEndedForGood` – a booked family week is the family's own calendar,
+                   and a trip booked before she left is really paid for inside the freeze. -->
               <button :disabled="game.busy" @click="askCancelVacation(row.week, row.vacation)">Cancel</button>
             </span>
           </div>
@@ -1609,9 +1695,22 @@ function closeExhibition(): void {
                    promise and for the owner's words. Nothing here happens as you watch: the click
                    TICKS THE WEEK, the engine resolves the friendly inside that tick, and the viewer
                    then re-simulates the stored record. The label is what the press does. -->
-              <PrimaryPill v-if="row.week === week + 1" class="sfx-watch" :disabled="game.busy" @click="playPracticeWeek">
+              <!-- ⭐⭐ ROUND 27 #5 – AND IT STANDS DOWN INSIDE THE COLLEGE FREEZE, WHICH IS THE ONE
+                   CONTROL HERE THAT WAS FAILING SILENTLY. This press is an ADVANCE, and
+                   `advanceRefusal` returns 'ending' behind any latch – college included – so the
+                   week did not move; and 'ending' is the one stop reason with no copy in
+                   `STOP_REASON_TEXT`, so R10-16's rule («no copy, no toast») meant nothing appeared
+                   at all. A booked friendly really can sit inside the freeze: the departure releases
+                   ENTRIES and leaves `world.practices` alone, which is why E2 opened the Cancel
+                   beside this. App.vue's own week bar already stands down on a college week for
+                   exactly this argument (see the note at `.next-week-bar`); this is the same command
+                   on another screen, and it had not been told. -->
+              <PrimaryPill v-if="row.week === week + 1" class="sfx-watch" :disabled="game.busy || frozenForCollege" @click="playPracticeWeek">
                 Play it and watch
               </PrimaryPill>
+              <!-- ⚠⚠ AND THE CANCEL BESIDE IT IS DELIBERATELY LEFT LIVE (round 24, E2).
+                   `cancelPractice` takes `guardNotEndedForGood`, so the engine ALLOWS it through the
+                   whole freeze – disabling it would be the same lie pointed the other way. -->
               <button :disabled="game.busy" @click="askCancelPractice(row)">Cancel</button>
             </span>
           </div>
@@ -1638,7 +1737,9 @@ function closeExhibition(): void {
               </div>
               <div class="controls week-controls">
                 <span v-if="row.injured" class="pill avail-chip red" :title="layoffNote">injury</span>
-                <button v-if="row.plannable" :disabled="game.busy" @click="openPlanner(row)">+ Plan week</button>
+                <!-- ⭐ ROUND 27 #5 – the same button on the tournament-free week card, and the same
+                     two refused commands behind it. -->
+                <button v-if="row.plannable" :disabled="game.busy || frozenForCollege" @click="openPlanner(row)">+ Plan week</button>
                 <span v-else-if="row.kind === 'exam'" class="week-note">School owns this week.</span>
               </div>
             </div>
@@ -1811,6 +1912,14 @@ function closeExhibition(): void {
    rect, 236 nodes, before and after.
 
 /* --- Season: event cards, entries strip, bracket, standings ------------------- */
+
+/* ⭐ ROUND 27 #5 – the college freeze note stands between the heading and the first card, so it
+   needs the gap underneath that a `.hint` at the FOOT of a section does not. Colour and size stay
+   the shared `.hint`'s on purpose: it is the same voice the screen's other explanations speak in,
+   and that pair is already measured by the contrast sweep everywhere else it appears. */
+.college-freeze-note {
+  margin-bottom: 10px;
+}
 
 .event-cards {
   display: flex;
