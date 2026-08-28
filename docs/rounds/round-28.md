@@ -23,8 +23,12 @@ repo, never a fixture) plus three screenshots: the Trophies cabinet, and two Sea
 specs each item names.
 
 ⭐⭐⭐ **MEASURED 28.08, AND IT KILLS THE PREMISE WE WERE HOLDING §3 ON.**
-[the-rank-she-deserves-2026-08.md](../specs/the-rank-she-deserves-2026-08.md). Read off his save with
-the engine's own `coreForStanding` and `ratingOf`:
+⚠ Measured into THIS ledger rather than a spec of its own – I named a
+`the-rank-she-deserves-2026-08.md` here before writing it and `context:audit` caught the dangling
+link, correctly. The growth half lives in
+[how-fast-she-grows-2026-08.md](../specs/how-fast-she-grows-2026-08.md); the calendar half in
+[the-calendar-she-can-reach-2026-08.md](../specs/the-calendar-she-can-reach-2026-08.md). Read off his
+save with the engine's own `coreForStanding` and `ratingOf`:
 
 | | |
 | --- | --- |
