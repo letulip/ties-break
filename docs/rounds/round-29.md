@@ -437,10 +437,75 @@ contention artefacts of round 28 cost more reading than the wall-clock they save
   r2-13's SEASON-END case and its span-is-four pin, and `r2-13-span-report`'s two label/press pins –
   ⚠ **which had been comparing the constant with itself and so could never have caught this.**
 
-- [ ] **7. «А что у нас со спонсорами вообще, кстати? Кроме часов за 20к есть ещё кто-то и когда
+- [~] **7. «А что у нас со спонсорами вообще, кстати? Кроме часов за 20к есть ещё кто-то и когда
   появляется? Мы что-то говорили о больших чеках вроде.»** – **answer.** Read the ladder out of the
   code and tell him what exists, at what standing each rung opens, and what the largest cheque in the
   model actually is. ⭐ Pairs with 15, which is the same question from the other side.
+
+  ⚙ **ANSWERED, AND NOTHING WAS BUILT – the one defect the measurement DID find is a balance ruling
+  and is written up under 15, not fixed here.** «Часов за 20к»
+  is **Quiet Hour**, the advertising house – a watchmaker, $20,000 cash, and the ONE letter on its own
+  clock. Everything else is the **six-rung kit ladder** and it is entirely separate from it:
+
+  | rung | brand | opens at | term | kit/season | and what else it writes |
+  | --- | --- | --- | --- | --- | --- |
+  | `local` | String House | national #30 · ITF #128 · any W standing | 1 season | $1,000 ($2,000 top-10 at home) | – |
+  | `national` | Netrally Distribution | ITF #32 **or** WTA #350 | 2 seasons | $3,000 | – |
+  | `tour` | Baseline Athletic | WTA #200 | 2 seasons | $5,000 | retainer $1,500/qtr · 25% of travel · **20% of every W75+ cheque** |
+  | `global` | Play Beyond | ITF #8 **or** WTA #87 | 3 seasons | $5,000 | 25% of travel |
+  | `premium` | Meridian Sport | **WTA #50** | 3 seasons | $8,000 | retainer $7,500/qtr · 50% of travel · **$15,000 an appearance** (WTA250+) · **25% of every W50+ cheque** |
+  | `icon` | **Aurelia** | **WTA #10** | 4 seasons | $12,000 | retainer $37,500/qtr · 75% of travel · **$40,000 an appearance** · **30% of every W50+ cheque** |
+
+  ⚙ **THE LARGEST CHEQUE THE MODEL CAN PRODUCE IS $900,000, AND IT IS THE ICON RESULT BONUS ON A SLAM
+  TITLE** – 30% of the $3,000,000 first prize, paid as one line the week she wins it. It is not
+  hypothetical: the corpus below produced it, and the ledger row a family actually banks was
+  **$585,000** after her own 35% cut ($315,000 – round 28 #15's widening, which is live in his save).
+  A full icon season is that plus **$150,000** of retainer, **$40,000 per WTA250-or-better appearance**,
+  $12,000 of kit and three quarters of every fare.
+
+  ⚙ **AND IT IS REACHED. 108 careers x 780 weeks** (9 econ-bench presets x 2 policies x 6 seeds, to
+  age 29 – the length of his own save), each signing the strongest live letter the week it lands, so
+  no rung is being missed by a cautious parent. `tools/sponsor-ladder-reach.ts`:
+
+  | rung | careers that CLEARED it | ...were WRITTEN to | ...SIGNED it | median week it opens |
+  | --- | --- | --- | --- | --- |
+  | local | 108 (100%) | 106 (98%) | 106 (98%) | w47 – age 14.9 |
+  | national | 60 (56%) | 49 (45%) | 49 (45%) | w151 – age 16.9 |
+  | tour | 52 (48%) | 40 (37%) | 40 (37%) | w255 – age 18.9 |
+  | global | 50 (46%) | 45 (42%) | 45 (42%) | w307 – age 19.9 |
+  | premium | 49 (45%) | 42 (39%) | 42 (39%) | w359 – age 20.9 |
+  | **icon** | **24 (22%)** | **17 (16%)** | **17 (16%)** | **w463 – age 22.9** (earliest w307) |
+
+  ⭐ **SO THE TOP OF THE LADDER IS NOT DEAD CONTENT** – the finding this item was told to look for is
+  absent. 31 of 108 careers were inside WTA #10 at some point and 24 of them were there in a sponsor
+  window, which is the only week a brand can write; of those 24, seventeen actually got the Aurelia
+  letter. Career sponsor CASH over the 51 careers that received any: median **$1,942,862**, most
+  **$8,599,241**.
+
+  ⚙ **AND WHY HIS OWN CAREER HAS NOT SEEN THEM – MEASURED ON HIS SAVE, NOT GUESSED, AND USED AS ONE
+  DATA POINT.** `tools/sponsor-ladder-reach.ts -- --save <his .tsave>` (read-only; nothing copied into
+  the repo): at w780 he is **WTA #21, ITF unranked, national #200**, and he **CLEARS local · national ·
+  tour · global · premium** – five of the six. Only `icon` (WTA #10) is genuinely out of reach at #21.
+
+  **Premium has never written to him, and this winter is the reason in miniature.** The window ran
+  w775–779 and the slot ids say exactly what happened: `windowLadder` is strongest-first, so slot 0
+  (`kit-775`) was Meridian Sport, slot 1 `kit-776` **is Play Beyond**, slot 2 was skipped because the
+  incumbent is `tour`, slot 3 `kit-778` **is Netrally**. That arrangement is only consistent with
+  premium holding slot 0 – had he not cleared it, slot 1 would carry `tour`, not `global`. **So
+  Meridian Sport rolled its 70% chance and missed.** Nothing is manufactured, by design.
+
+  ⚠⚠ **AND THE OTHER HALF IS THE RULE HE KEEPS RE-SIGNING.** 4 of his 15 winters (w203, w307, w619,
+  w723) produced **no post at all** – not silence, `seasonSpokenFor`: a multi-season deal promises the
+  season ahead and `raiseKitOffers` returns empty. He has been in Baseline Athletic's two-season kit
+  almost continuously since w151. ⭐ **The sentence he can act on: the Baseline renewal sitting open in
+  his inbox right now shuts next winter's post, and Meridian Sport is the letter it would be shutting
+  out.** Play Beyond's open letter (3 seasons) shuts three winters.
+
+  ⭐ **NOTHING BUILT, DELIBERATELY.** Reach is not the problem: the top rungs are not out of his reach,
+  and he has simply been holding one brand's hand. ⚠ Two things the measurement cannot settle and
+  neither is fixed silently: whether 22% is the right frequency for `icon`, and the ordering defect
+  the same run DID find – **`global` is dominated by `tour`**, written up under item 15 because it is
+  the brand-side half and it is the one thing here that wants a ruling from him.
 
 - [x] **8. «При клике на Next Tournament на главном экране давай сделаем может быть какой-то
   информационный экран? Например со списком соперников, прогнозами и комментариями тренера ещё
@@ -778,9 +843,50 @@ contention artefacts of round 28 cost more reading than the wall-clock they save
   ⚠⚠ **`rngMain` is BYTE-IDENTICAL on all three arms** – the dice did not move, the decisions did, so
   input-independence holds and the frozen MAIN capture (41550 / `e6b0c709`) is untouched.
 
-- [ ] **13. «А мы что-то перечисляем тренеру за финал каких-то турниров в итоге? Мне кажется эта
+- [x] **13. «А мы что-то перечисляем тренеру за финал каких-то турниров в итоге? Мне кажется эта
   информация стоит того, чтобы добавить её на странице тренеров»** – **answer + build.** Read the
   bonus rule out of the code, then surface it once on the coaches page.
+
+  ⚙ **THE ANSWER IS YES, AND IT HAS BEEN PAID SINCE ROUND 24** – it is his own ruling of 22.08 («тренер
+  может не ездить, но долю получать наверное за победы или 2е места вполне может. За 2е только
+  по-меньше»), and nothing on any screen said so. `finalizeTournament` takes
+  `staffResultShareBps('coach', finishIdx)` of the **GROSS** cheque:
+
+  | finish | coach | masseur |
+  | --- | --- | --- |
+  | title | **10%** (`titleBps 1000`) | 3% |
+  | runner-up | **5%** (`finalBps 500`) | 1.5% |
+  | anything below a final | **nothing** | nothing |
+
+  ...on the **professional tour only** (`track === 'wta'`) and only into a **filled seat** – a
+  self-coached family owes nothing. It is a UNIVERSAL rule, not a contract form: nothing is chosen at
+  hire and nothing is persisted.
+
+  ⚙ **SHIPPED, ONCE, WHERE HIS INSTRUCTION PUTS IT.** `.cm-share-note` on `CoachMarketScreen.vue`'s
+  Coaches tab, directly under the weekly-bill line, because the two are the halves of what a coach
+  costs. His own «общая для всех … в одном месте» is the design: a line per card would be six copies
+  of one fact about none of them.
+  > *Every coach here also takes **10%** of a prize cheque when she wins a tour title and 5% when she
+  > is runner-up – nothing below a final, and nothing on the junior ladder, which pays no prize money.*
+
+  ⚠⚠ **AND THE PERCENTAGES ARE READ OUT OF THE ENGINE, NEVER TYPED.** `staffResultShareBps('coach',
+  0 | 1)` is the SAME function that pays him, so a retune of `ECONOMY.staffShare` moves the sentence
+  and the cheque together. ⭐ That is the point item 10 turned out to be tonight: **a line that
+  describes a rule is pinned to the rule.**
+
+  **Evidence.** `tests/component/round29-coach-share.test.ts` – 9 mounted cases in three sections:
+  ONCE-ness against a roster of >3 cards (with no card carrying a copy); the two percentages **parsed
+  off the rendered line** and then applied to a REAL driven title and a REAL driven runner-up through
+  `finalizeTournament`, asserting the coach's expense row is that percentage of that cheque; and both
+  exclusions the copy names – a driven semi-final writes no row, and the junior clause is proved by
+  temporarily GIVING `j300` a prize table so the `track === 'wta'` guard is observable instead of dead.
+  ⚠ Mutation-verified, three, each alone: dropping `track === 'wta' &&` at the call site → 1 red;
+  hard-coding the title rate at 12 in the template → 2 red; moving the sentence onto every coach card
+  → the once-ness test red.
+
+  ⚠ **THE TWO NEIGHBOURS ARE UNTOUCHED AND PINNED AS SUCH** – round 28 #8's household strip
+  (`.budget-household`) and the sessions-a-week note (`.cm-plan-note`) are both asserted present on
+  the same mount, so tonight's shop upkeep keeps feeding the strip it always fed.
 
 - [ ] **14. «Ни одной победы в 45 году, только 2е место на 500 и 250 и 2 взрыва ярости за год по
   случаю полосы вылетов в 1м раунде – не самый удачный год для 23 ракетки мира»** – **measure.**
@@ -788,16 +894,90 @@ contention artefacts of round 28 cost more reading than the wall-clock they save
   **#23**, where our rate was 15.3% against a real 50%. **A title-less year at #23 is normal by the
   real censuses and abnormal by our own numbers.** Check which of the two his season actually is.
 
-- [ ] **15. «И где все наши топовые спонсоры, интересно? Кроме Netrally, Baseline athletic, Play
+- [~] **15. «И где все наши топовые спонсоры, интересно? Кроме Netrally, Baseline athletic, Play
   beyond? На других аккаунтах я помню один был мощный.»** – **answer/measure.** Same question as 7
   from the brand side: does the top of the brand ladder ever open, and what gates it.
 
-- [ ] **16. ⚠ «письмо с Заголовком Entries Suspended – я точно это заводил уже в одном из предыдущих
+  ⚙ **ANSWERED BY THE SAME MEASUREMENT – see item 7 for the ladder, the money and the 108-career
+  census. The three names he lists are rungs 2, 3 and 4 of six.** The two above them are **Meridian
+  Sport** (`premium`, WTA #50, $8,000 kit + $7,500/qtr + $15,000 an appearance + 25% of every W50+
+  cheque) and **Aurelia** (`icon`, WTA #10, $12,000 + $37,500/qtr + $40,000 an appearance + 30%).
+  ⭐ **«Один был мощный» is real and is almost certainly one of those two** – 22% of measured careers
+  clear `icon` and 16% are written to by it, so an account that saw one is not a misremembering.
+
+  ⚠⚠ **AND THE GATE THAT IS ACTUALLY HOLDING HIM IS NOT THE RANKING.** He clears `premium` today at
+  WTA #21 (item 7's save read). What has kept Meridian Sport off his doormat is `seasonSpokenFor` –
+  four of his fifteen winters produced no post at all because the season ahead was already promised to
+  the Baseline Athletic deal he keeps renewing – and, in the one winter that IS open (w775, right now),
+  premium held slot 0 and its 70% roll missed. **Both are the design working; neither is a bug.**
+  ⭐ The reachable consequence, in one sentence he can act on: **signing the Baseline renewal in his
+  inbox shuts next winter's post, and Meridian Sport is what it shuts out.**
+
+  ⚠⚠ **AND THE MEASUREMENT DID TURN UP ONE REAL DEFECT, WHICH IS NOT ABOUT REACH – `global` IS
+  DOMINATED BY `tour`.** Read straight off `ECONOMY.sponsorship`, printed by the tool's own
+  monotonicity check, and it needs no simulation because the constants settle it:
+
+  | | kit/season | retainer/season | bonus | travel | lines | locks |
+  | --- | --- | --- | --- | --- | --- | --- |
+  | `tour` – Baseline Athletic | $5,000 | **$6,000** | **20% of every W75+ cheque** | 25% | 3 | 2 seasons |
+  | `global` – Play Beyond | $5,000 | **$0** | **none** | 25% | 3 | **3 seasons** |
+
+  **Play Beyond is listed ABOVE Baseline Athletic, is sorted above it in the inbox, and pays strictly
+  less money for a longer lock.** That contradicts the ladder's own stated safety property, written in
+  `windowLadder`'s header: *«Strongest-first makes signing on sight always safe and waiting always
+  optional»*. For a junior at ITF #8 the shape is right – she wins no W75 cheques – but the moment she
+  holds a professional ranking the "better" letter is the worse deal. ⭐⭐ **It is live on his own save
+  right now: `kit-776` Play Beyond is open in his inbox and would lock three winters for less than the
+  Baseline renewal beside it.**
+
+  ⚠ **NOT FIXED HERE, DELIBERATELY.** Both candidate fixes – giving `global` a retainer and a bonus, or
+  moving it below `tour` in `SPONSOR_TIERS` – are BALANCE changes, and this house ships those with a
+  bench run and a spec against an owner ruling (CLAUDE.md invariant 4), not inside an answer. **It is
+  his call, and it is the one thing in 7/15 that wants one.**
+
+- [x] **16. ⚠ «письмо с Заголовком Entries Suspended – я точно это заводил уже в одном из предыдущих
   раундов, мне кажется этот заголовок сбивает с толку… Может его как-то и озаглавить про топ-50
   правила»** – **build**, and ⚠⚠ **CHECK THE EARLIER ROUND FIRST.** If he filed it before, this is
   `[!]` REOPENED and the ledger must say what the first fix aimed at and why it missed. The letter's
   body is the top-50 mandatory regime (4 Slams, 8 × WT1000, 6 of 10 × WT500, 2 penalty points, 10
   points suspends for 4 weeks); the title announces a suspension that has not happened.
+
+  ⚙ **NOT A REOPEN, AND THE HISTORY IS THE FIRST THING SETTLED.** He DID file this letter before –
+  **round 23 #2** – but what he named then was «особенно последняя строчка», the CLOSING LINE of the
+  suspension sheet («Nothing is owed and nothing is taken back»), and that fix landed and still holds:
+  `tests/component/round23-tour-suspension.test.ts` is untouched and green. **The heading was never
+  mentioned in that round.** So `[x]`, not `[!]`.
+
+  ⚙ **AND IT IS A MISSING BRANCH, NOT A WORDING.** The tour desk raises **four** notices
+  (`TourLetterTerms.notice` – `due` · `penalty` · `suspension` · `season`). `InboxSheet.subjectOf`
+  branched on **two** of them and then **fell through** to `return 'Entries suspended'`, so the SEASON
+  BRIEFING – the quiet yearly letter about the top-50 regime – was posted under a title announcing a
+  suspension that had not happened. **The title was FALSE, which is worse than confusing**, and it is
+  the exact failure that function's own header forbids: *«a subject line that promised something the
+  sheet does not say would be worse than no subject line».*
+
+  ⚙ **THE FIX IS THE MISSING ARM, NAMED FROM THE SHEET'S OWN FIRST SENTENCE.** The paper opens «Her
+  ranking is inside the top N, so the season ahead is a required one», so the subject is now
+  **`Required season – the top 50`** – the sibling of the `due` letter's `Required event – X`, and his
+  own «озаглавить про топ-50 правила». ⚠ **The N is `terms.maxRank`, i.e.
+  `ECONOMY.mandatory.maxRank` as the desk wrote it**, never a literal.
+
+  ⚠⚠ **AND THE FALL-THROUGH CANNOT HAPPEN SILENTLY AGAIN.** `suspension` is an explicit arm now and
+  the function ends on `const unhandled: never = t.notice`, so a fifth notice **fails to compile**
+  rather than inheriting whichever title happened to be last.
+
+  **Evidence.** `tests/component/round29-inbox-subjects.test.ts` – **17 mounted cases pinning all
+  THIRTEEN subject lines across all six letter kinds**, which is thirteen more than existed before it
+  (`git grep subjectOf -- tests` returned one comment and zero assertions). All four tour notices are
+  built **by the engine** – `settleTourSeasonNotice`, `chargeMandatoryPenalty` to the tenth point,
+  `raiseMandatoryDueLetter` – so the season letter's number is the rule's. The last case renders the
+  whole post at once and asserts **no two letters share a title**, which is the mechanical form of
+  "the next fall-through cannot be silent".
+  ⚠ Mutation-verified, three, each alone: restoring the fall-through → **3 red** (the season claim,
+  the four-distinct-subjects claim, and the duplicate detector); hard-coding `the top 50` in the
+  subject and moving `ECONOMY.mandatory.maxRank` to 42 → 1 red, which is what proves the pin reads the
+  rule; collapsing the kit renewal's title into the new-deal one → 1 red, which proves the nine
+  table-driven cases are live tests and not a loop that generates nothing.
 
 - [ ] **17. «проверь предыдущие раунды на предмет "что забыто и не сделано" пожалуйста»** – **audit.**
   ⭐ Runs FIRST, because its output changes what the rest of this round should do.
