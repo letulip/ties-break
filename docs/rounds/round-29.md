@@ -328,7 +328,7 @@ contention artefacts of round 28 cost more reading than the wall-clock they save
   («магазин есть и всё, мы не можем запретить там что-то покупать»), so no second gate was invented.
   What gates a $38M aeroplane is its price: most careers will look at these rows and never press one.
 
-  **Evidence.** `tests/round29-shop-elite.test.ts` – 22 engine cases in six blocks: the ladder IS the
+  **Evidence.** `tests/round29-shop-elite.test.ts` – 23 engine cases in six blocks: the ladder IS the
   spec's table; ordered-not-bought (the wallet, the contract, no upkeep, no depreciation while it
   builds); delivered (the ledger line, the value clock starting at ARRIVAL and not at the order, the
   bill leaving the wallet measured as a difference of differences against the same career with the
