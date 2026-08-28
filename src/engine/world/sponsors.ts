@@ -1071,7 +1071,11 @@ export function bankSponsorCheque(
     // The same cents onto the durable ledger so the week recap's memo can say it too (round-26 #5b).
     // `accrueKidShare` SUMS within a week, which is exactly what a title week paying a prize, an
     // appearance fee and a result bonus needs.
-    accrueKidShare(world, world.week, herCents, bps)
+    // ⭐⭐ ROUND 29 #10 – the base is `grossCents`, the brand's whole cheque. A title week reaches
+    // this function twice (the result bonus, and the retainer when the quarter lands on it) and the
+    // prize path a third time; `accrueKidShare` sums all three bases, so the memo's «50% of $X» is
+    // 50% of everything she was paid that week rather than of whichever cheque happened to be last.
+    accrueKidShare(world, world.week, herCents, bps, grossCents)
   }
   return { herCents, familyCents }
 }

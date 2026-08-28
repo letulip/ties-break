@@ -250,6 +250,35 @@ export interface FinanceWeekKidShare {
   cents: number
   /** the ramp's rate at her real age that week, in basis points (`kidPrizeShareBps`) */
   bps: number
+  /** ⭐⭐ ROUND 29 #10 – WHAT `bps` IS A SHARE **OF**: the GROSS cheques she took a cut of this week,
+   *  summed alongside `cents` and by the same writer at the same commit point.
+   *
+   *  ⚠⚠ THE FIELD THIS ROUND EXISTS FOR, AND THE DEFECT WAS NEVER IN THE ARITHMETIC. The owner, off
+   *  his own w780 save: «Income +$29,046 · Spent -$6,883 · Balance +$22,164 · Her cut 50% $27,600 –
+   *  это не 50% по сравнению с income». Measured, and the split is EXACTLY right – she is credited
+   *  half of every gross cheque, to the cent. What was wrong is that the only base on that card is
+   *  `incomeCents`, which is the family's share AFTER the cut, so «50%» stood beside a figure it can
+   *  never be 50% of. On his week 738 the card said `50%` and `$27,600` against a prize row of
+   *  $23,000, and both were true: the prize was $46,000 gross, the kit contract's result bonus added
+   *  $9,200 gross on top of it, and half of $55,200 is $27,600. **The base was the one number never
+   *  on screen.** So the memo now names it and the percentage has something to be a percentage of.
+   *
+   *  ⚠ CARRIED, NEVER RE-DERIVED, and this is the same penny rule `kidPrizeShareCents` writes out:
+   *  `cents / (bps / 10_000)` is a DIVISION on a figure that was rounded once on the way in, and it
+   *  is also the exact arithmetic that produced two wrong readings of this item before it was
+   *  measured. The gross is added here by the site that banked it.
+   *
+   *  ⚠⚠ AND IT IS FORWARD-ONLY, WHICH IS WHY IT IS OPTIONAL RATHER THAN BACK-FILLED. `kidFundsCents`
+   *  is persisted state and a career's history is not ours to rewrite; a save written before this
+   *  build genuinely does not record the base of the weeks it already paid, and inventing one from a
+   *  ratio would be the same division wearing a migration. Absent means "not recorded", the memo
+   *  falls back to the line it printed before, and the next cheque it splits carries the base.
+   *
+   *  ⚠ OPTIONAL, AND NOT A SCHEMA MOVE – `WorldEvent.entryRef`'s rule above and `kidShare`'s own,
+   *  applied to `kidShare`'s own sub-object: absent is already meaningful on every historical save,
+   *  so no migration is owed, no golden fixture is added and `SAVE_SCHEMA_VERSION` does not move
+   *  (the recorded widening precedent is commit 2763caa). */
+  baseCents?: number
 }
 
 /** A category-accurate rollup of `FinanceWeek[]` over a trailing window (pure fold; the bench and
@@ -295,6 +324,11 @@ export interface FinanceWeekPoint {
    *  owner's rule of 26.08 and `shopView`'s `annualRatePct` two files over. No component divides
    *  basis points again. */
   kidSharePct?: number
+  /** ⭐ ROUND 29 #10 – THE GROSS THE RATE ABOVE IS A SHARE OF (`FinanceWeek.kidShare.baseCents`,
+   *  straight through). Absent on every week written before that field existed, and the recap's memo
+   *  drops back to its base-less wording there rather than guessing. Never summed into
+   *  `incomeCents`: the family banked the REMAINDER of this, not this. */
+  kidShareBaseCents?: number
 }
 
 export type StopReason =
