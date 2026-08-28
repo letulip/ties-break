@@ -85,6 +85,29 @@ a box it has not proven with a command in this session.
    the short commit SHA and the date, not a semver. ⭐ **A semver says what we intended; a SHA says
    what he is holding**, and the second is the question every defect report needs answered.
 
+   ⚠ **CONFIRM IT, DO NOT ASSERT IT – and it is two commands, no browser needed** (round 29 #19
+   shipped the reader so this step could not be decorative). `scripts/build-stamp.mjs` is the single
+   source the build bakes from; `vite build` substitutes it into the bundle as a string literal, so
+   the built file can be grepped for the value the script names:
+
+   ```bash
+   node scripts/build-stamp.mjs                    # -> "<sha> <date>", what a build made NOW bakes
+   grep -l "$(node scripts/build-stamp.mjs | cut -d' ' -f1)" dist/assets/*.js
+   ```
+
+   The second command must name a file. If it names none, `dist/` predates the branch head – rebuild
+   (`npx vite build`) and run it again rather than reporting the first command's answer, which is a
+   statement about git and not about the bundle.
+
+   ⚠ **AND THE SHA IT PRINTS IS THE BRANCH HEAD, NOT THE COMMIT THE OWNER WILL DEPLOY.** A merge
+   makes a new commit, so the line his phone shows after the merge names *that* one. What this step
+   proves is the mechanism – the app renders the commit its bundle was built from – not a value to
+   copy into the body. Do not paste a SHA into the PR as "the version he will see".
+
+   ⚠ If the line reads `unknown`, the build could not reach git (a shallow container, no history).
+   That is the designed fallback, not a defect, and it is `tests/component/round29-build-line.test.ts`
+   and `…-fallback.test.ts` that hold both paths.
+
 5. **The body.** Fill `.github/pull_request_template.md` verbatim – What, then the checklist with
    every earned box ticked `[x]`. ⚠ For an EXISTING PR (a red `checklist` job on an open PR is the
    usual reason this skill is invoked) the deliverable is the same body as a REPLACEMENT – the

@@ -981,7 +981,7 @@ contention artefacts of round 28 cost more reading than the wall-clock they save
 - [ ] **17. «проверь предыдущие раунды на предмет "что забыто и не сделано" пожалуйста»** – **audit.**
   ⭐ Runs FIRST, because its output changes what the rest of this round should do.
 
-- [ ] **19. ⭐ «вроде бы я всё мержил и обновление прилетало на телефон, где информация об этом?
+- [x] **19. ⭐ «вроде бы я всё мержил и обновление прилетало на телефон, где информация об этом?
   может быть стоит какую-то версию добавить в настройках внизу строчкой? И в pull-request скилле
   обновлять при деплое?»** – **build, and it closes a hole that just cost us.** ⚠⚠ **I asserted his
   save predated round 28 and was wrong** – it is schemaVersion 65, i.e. round 28 was in it. Nothing
@@ -991,6 +991,78 @@ contention artefacts of round 28 cost more reading than the wall-clock they save
   precisely enough to map a report onto a commit. ⭐ Recommend a short commit SHA plus the date rather
   than a semver – a semver says what we intended, a SHA says what he is running, and it is the second
   question we keep needing. Pairs with 18: the `pull-request` skill updates it.
+
+  ⚙ **SHIPPED.** `[ ]` -> `[x]`. One muted line at the foot of More, on every tab – its SHAPE, since
+  the SHA is by definition whatever commit the build was made from:
+
+  > *Build 9201e53 · 2026-08-28 · save schema v65*
+
+  Three fields, and the third is deliberate: the save schema is the OTHER number that misled us
+  tonight, it costs nothing, and it is the BUILD's constant rather than the loaded save's – so it
+  prints with no career open, which is exactly what the About table's `snapshot.schemaVersion` row
+  cannot do. `scripts/build-stamp.mjs` (+ `.d.mts`), `src/buildStamp.ts`,
+  `composables/buildInfo.ts`, and eleven lines of `MoreScreen.vue`.
+
+  ⚠ **OUTSIDE THE TAB SWITCHER, NOT INSIDE `About`.** The man reading it is halfway through
+  reporting a defect; asking him to first know which tab the answer lives on is asking him to
+  already have it.
+
+  ⚠⚠ **AND `define` IS NOT THE ROAD, WHICH IS A MEASUREMENT AND NOT A PREFERENCE.** It is the obvious
+  one and it was tried first. A root `define` reaches the app build and the `unit` project (which
+  sets `extends: true`); it is **silently dropped for the `component` project**, which does not – and
+  so is a project-level `define` on it, and so is one contributed by a plugin's `config` hook. All
+  three probed. The mounted assertion that the foot of Settings prints the REAL commit would have
+  passed against `unknown`: a green test measuring its own fallback, the exact class of dead guard
+  this round has been finding. `import.meta.env.VITE_*` is resolved per project through Vite's own
+  `loadEnv` (which copies matching `process.env` keys), so the app build, the unit project and the
+  component project all see one pair – and it is the repo's EXISTING shape for a build switch,
+  `VITE_TB_SW` having lived in `src/vite-env.d.ts` since e2e.
+
+  ⚙ **BAKED, CONFIRMED IN `dist/` AND NOT BY A GREP OF THE SOURCE.** `vite build` substitutes the
+  reads into string literals – `const yB="9201e53",kB="2026-08-28"` in `dist/assets/index-*.js` – and
+  **zero** occurrences of `VITE_BUILD_SHA` or `import.meta.env.VITE_BUILD` survive anywhere in the
+  output. Nothing is resolved at runtime, so the line cannot disagree with the bundle printing it.
+  It survives the PWA update path by construction: the stamped file is content-hashed, it is in
+  `dist/sw.js`'s precache manifest (`"assets/index-B5qryx3R.js",revision:null`), so a new build is a
+  new precache entry and the update he taps brings the new stamp with it.
+
+  ⚙ **AND IT FOLLOWS `HEAD`, WHICH IS A SECOND BUILD AND NOT AN INFERENCE.** Rebuilt one commit later:
+  the bundle's literal moved `9201e53` -> `6e21d49`, the old stamp appears **zero** times anywhere in
+  `dist/`, and the asset's content hash moved with it (`index-B5qryx3R.js` -> `index-CsPKBW4L.js`),
+  which is the same fact the service worker reads as "a new file to precache". A cached or
+  config-time-frozen value would have failed exactly here.
+
+  ⚠ **AND IT DOES NOT BREAK WHERE GIT CANNOT ANSWER.** A ladder, most direct first: the CI's own
+  `GITHUB_SHA`/`CI_COMMIT_SHA` (exact, and it survives a container with no git binary), then
+  `git rev-parse`, then an explicit `unknown`. The formatter validates SHAPE, not just emptiness –
+  `HEAD`, `zzzzzzz` and an unsubstituted `__BUILD_SHA__` all render `unknown`, because a plausible
+  wrong SHA costs the reader the whole investigation while `unknown` costs him one lookup.
+
+  **Evidence.** `tests/component/round29-build-line.test.ts` (8) – MOUNTED on the real screen, and the
+  SHA it expects is recomputed with `git rev-parse` independently of the code under test, so a define
+  that stopped substituting turns it red instead of quietly rendering `unknown`; plus the foot
+  placement, the tab sweep, and the git-less ladder against the real script.
+  `tests/component/round29-build-line-fallback.test.ts` (3) – the same screen MOUNTED with the
+  constants absent (the injection point mocked, formatter and component real), asserting the exact
+  sentence `Build unknown · unknown · save schema v65`: not blank, no dangling separator, no
+  identifier on screen. ⚠ Its own file because `vi.mock` is file-scoped and would otherwise mock the
+  very constants the first file exists to read.
+  ⚠ **Mutation-verified, 12 of 12 red, each alone**: the line deleted from the template (7 red); the
+  SHA and the date each replaced by a placeholder (1, 1); the line hidden behind the About tab (7);
+  a sibling appended after it (1); the schema clause dropped (4) and the schema hard-coded to the
+  misleading 63 (3); the `unknown` fallback replaced by the raw value (3) and by an empty string (3);
+  the script returning `''` instead of `unknown` (2); the CI variable trusted without a shape check
+  (1); Cyrillic put in the rendered line (5).
+
+  ⚙ **THE SKILL HALF («И в pull-request скилле обновлять при деплое?»).** Step 4d was already
+  written; what it lacked was a way to run it. It now names two commands –
+  `node scripts/build-stamp.mjs` prints what a build made now bakes, and a `grep` of `dist/assets/*.js`
+  proves the bundle carries it – so the step is checkable with no browser and no phone. ⚠ With the
+  caveat that matters: the SHA it prints is the BRANCH HEAD, and the merge makes a different commit,
+  so what the step proves is the mechanism and not a value to paste into a PR body.
+
+  ⚠ Schema **65**, unmoved – this is a string. No engine file touched; the frozen MAIN capture
+  (41550 / `e6b0c709`) and the career hashes cannot see a version line.
 
 - [ ] **18. «добавить в скилл pull-request проверку несделанных пунктов из раунда»** – **build (skill).**
   ⭐ 17 and 18 are the same instinct: he has noticed that items go quiet, and wants the PR step to

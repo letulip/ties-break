@@ -9,6 +9,7 @@ import { optimizeArt } from './scripts/optimize-art.mjs'
 // three statements of one fact, two of which could go quietly stale on a rename. One module, three
 // importers; scripts/heavy-tests.mjs's header carries the full argument.
 import { HEAVY_SIM_FILES, HEAVY_UNIT_FILES, asProjectGlobs } from './scripts/heavy-tests.mjs'
+import { buildStamp } from './scripts/build-stamp.mjs'
 
 /**
  * build/webp-only — the art pipeline runs INSIDE the build, not beside it.
@@ -104,6 +105,35 @@ function noStowaways(): Plugin {
     },
   }
 }
+
+// THE BUILD STAMP, RESOLVED ONCE PER CONFIG LOAD (round 29 #19).
+//
+// The owner cannot tell which build his phone is running, and it has already cost a wrong diagnosis.
+// `scripts/build-stamp.mjs` carries the whole argument – why a short commit SHA rather than a semver,
+// and the fallback ladder that keeps a git-less build honest.
+//
+// ⚠ IT IS BAKED, NOT LOOKED UP. `import.meta.env.VITE_*` is a build-time SUBSTITUTION: `vite build`
+// rewrites each read into a string literal in the bundle, so what the phone renders is a fact about
+// the bytes it downloaded. Nothing is fetched, and no file, header or manifest can go stale against
+// the code printing it – a version line that lies is worse than no version line.
+//
+// ⚠⚠ AND `define` IS NOT USED, THOUGH IT IS THE OBVIOUS ROAD – measured, not assumed. A root-level
+// `define` reaches the app build and the `unit` project (which sets `extends: true`) and is SILENTLY
+// DROPPED for the `component` project, which does not; a project-level `define` on that project is
+// dropped too, and so is one contributed by a plugin's `config` hook (all three probed). The mounted
+// assertion that the foot of Settings prints the REAL commit would then have passed against
+// `unknown` – a green test measuring its own fallback, which is precisely the class of dead guard
+// this round has been finding. `import.meta.env` is resolved per project through Vite's own
+// `loadEnv`, which copies matching `process.env` keys, so all three surfaces see the same pair.
+//
+// ⚠ THE ENV ASSIGNMENT MUST HAPPEN AT MODULE SCOPE, HERE. `loadEnv` runs during `resolveConfig`,
+// after this file has been evaluated; set inside a hook it would arrive too late.
+//
+// This is also the repo's existing shape for a build-time switch rather than a new one:
+// `VITE_TB_SW` is declared beside these two in src/vite-env.d.ts and has worked this way since e2e.
+const BUILD_STAMP = buildStamp()
+process.env.VITE_BUILD_SHA = BUILD_STAMP.sha
+process.env.VITE_BUILD_DATE = BUILD_STAMP.date
 
 // BASE_PATH is set by CI to "/<repo-name>/" for GitHub Pages; locally the app serves from "/".
 export default defineConfig({

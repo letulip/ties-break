@@ -44,8 +44,13 @@ import type { ViewMode } from '../../viz/types'
 // byte-identical in five components and the name map was written out in two; a twenty-fifth
 // country would have had to be added in two files with nothing to say so.
 import { flagEmoji } from '../../composables/countries'
+// ROUND 29 #19 – the build line at the foot of this screen. Computed once at module scope inside the
+// composable from constants the bundler baked in; there is nothing reactive about it, so it is a
+// plain string rather than a `computed`.
+import { appBuildLine } from '../../composables/buildInfo'
 
 const game = useGameStore()
+const buildStampLine = appBuildLine()
 const fileInput = ref<HTMLInputElement | null>(null)
 const confirmingNewCareer = ref(false)
 
@@ -881,6 +886,21 @@ const TAB_OPTIONS = [
     </table>
   </section>
 
+  <!-- WHICH BUILD HE IS PLAYING – the commit, the day it was built, and the schema this build reads.
+       The owner asked for a version line at the foot of Settings because the PWA updates itself on
+       his phone and nothing on screen said what had arrived; the full argument, and why a SHA rather
+       than a semver, is at `composables/buildInfo.ts`.
+
+       ⚠ OUTSIDE EVERY `screenTab` BRANCH, ON PURPOSE. It is the foot of the SCREEN, not the foot of
+       the About tab: the person reading it is answering "what am I running" in the middle of
+       reporting something, and asking him to first find the right tab is asking him to already know
+       where the answer lives. It costs one muted line on the other two tabs.
+
+       ⚠ AND IT IS BAKED, NOT LOOKED UP. `appBuildLine()` reads two `define` constants the bundler
+       substituted at build time - see src/buildStamp.ts. A line that resolved itself at runtime could
+       disagree with the bundle printing it, and a version line that lies is worse than none. -->
+  <p class="build-line">{{ buildStampLine }}</p>
+
   <ConfirmDialog
     v-if="pendingConfirm"
     :message="pendingConfirm.message"
@@ -903,6 +923,18 @@ const TAB_OPTIONS = [
    carries no top margin of its own, so without this the first heading sits on the pills. */
 .more-tabs {
   margin-bottom: 14px;
+}
+
+/* THE BUILD LINE (round 29 #19). Muted caption treatment - the same colour and size `.hint` uses in
+   src/style.css - because it is a footer, not a setting: it is there when he goes looking for it and
+   it never competes with the controls above. `overflow-wrap` because a 375px phone is the target and
+   the line carries three fields; it wraps rather than pushing the screen sideways. */
+.build-line {
+  margin: 20px 0 4px;
+  color: var(--muted);
+  font-size: 12.5px;
+  text-align: center;
+  overflow-wrap: anywhere;
 }
 
 </style>
