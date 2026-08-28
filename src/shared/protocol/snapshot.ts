@@ -16,6 +16,53 @@ import type { BirthdayPrompt, DiarySnapshot, KidLife, Milestone, RadarAxis, Trai
 import type { CoachMarketRow, KitDealView, KitLineView, Offer, ShopView, SnapshotAcademy, TourBriefing } from './offers'
 import type { CoachEdgePlacement, PlayerProfile, PracticeBooking, RecoveryBuff, VacationBooking, WeekPlan } from './profile'
 
+/** ⭐⭐ ROUND-28 #8 – THE WHOLE HOUSEHOLD'S WEEK, IN THREE NUMBERS.
+ *
+ *  THE OWNER, 28.08: «На странице коучей в верхнем блоке с недельными тратами и доходами можно
+ *  совокупную всю цифру показывать с учётом массажиста (и психолога в будущем), и даже на магазин
+ *  растянуть, т.к. там тоже есть и с доходностью инструменты и с расходом».
+ *
+ *  The coaching meter above it answers "can this family afford THIS COACH" and is unchanged – that
+ *  is round-21 #12's claim and it is still true. This answers the different question he asked for:
+ *  what does the whole household take in and pay out in a week, the masseur included. A seat added
+ *  later – the psychologist he names next – joins `outgoingCents` and NOTHING else has to move.
+ *
+ *  ⚠ A STANDING QUOTE, NOT LAST WEEK'S RECEIPT, and that is what makes it a budget rather than a
+ *  history. The training line is `coachBilling.weeklyCents` – the same midpoint quote the rows on
+ *  this screen are priced at, with no week jitter and no corridor roll – so the figure a player reads
+ *  before hiring is the figure the meter beside it is drawn from. What a week ACTUALLY cost is a
+ *  question the Money screen and the week recap already answer off `financeWeeks`.
+ *
+ *  ⚠ Derived at snapshot time; persists nothing, bumps no schema. */
+export interface HouseholdWeekly {
+  /** everything that arrives in a week, in cents: `weeklyIncomeCents` (the parents' contribution,
+   *  the savings interest, a kit retainer pro-rated and net of her cut) plus the shelf's weekly GAIN
+   *  when it is gaining. */
+  incomeCents: number
+  /** everything that leaves in a week, as a POSITIVE magnitude: the training bill (the coach and the
+   *  court – `coachBilling.weeklyCents`, which is court time alone for a self-coached family) plus a
+   *  hired masseur's salary, plus the shelf's weekly LOSS when it is losing. */
+  outgoingCents: number
+  /** `incomeCents - outgoingCents`. Signed: a household spending more than it earns reads negative,
+   *  which is most junior careers and is the truth of them. */
+  netCents: number
+  /** ⭐ THE SHELF'S OWN WEEK, signed – what the owned assets gain (positive) or lose (negative) in
+   *  one more week of holding, 0 with nothing owned. His «и даже на магазин растянуть, т.к. там тоже
+   *  есть и с доходностью инструменты и с расходом»: a deposit at +2% a year yields, a car at -9%
+   *  costs, and a family holding both sees the net of the two.
+   *
+   *  ⚠⚠ A MEMO, AND ALREADY INSIDE THE THREE FIGURES ABOVE – `FinanceWeek.kidShare`'s own discipline,
+   *  in the same words: a consumer that ADDS this to `incomeCents` or subtracts it from
+   *  `outgoingCents` has misread it. It is carried so a screen can NAME the shelf, never so that the
+   *  arithmetic can be redone.
+   *
+   *  ⚠ AND IT IS NOT CASH. A car's depreciation never leaves the wallet and a fund's growth never
+   *  enters it – the value only becomes money on a sale. It is here because he asked for the shelf to
+   *  be in the household's weekly picture, and it is deliberately NOT in `weeklyIncomeCents`, which
+   *  is the coach market's affordability cap and must stay the money that really arrives. */
+  shelfCents: number
+}
+
 export interface Snapshot {
   schemaVersion: number
   careerId: string
@@ -279,8 +326,15 @@ export interface Snapshot {
      *  savings interest the balance earns plus a signed kit deal's retainer, pro-rated. It is the cap
      *  the coaching budget meter draws against and the denominator every `overBudgetCents` is cut
      *  from, and it is carried here rather than reverse-engineered on the screen (which only worked
-     *  while some row happened to be over budget). See `familyWeeklyIncomeCents`. */
+     *  while some row happened to be over budget). See `familyWeeklyIncomeCents`.
+     *
+     *  ⚠ NET OF HER CUT OF A KIT RETAINER since round-28 #15 – the till pays the family
+     *  `retainer - herShare`, so the cap has to quote what actually arrives. See
+     *  `familyWeeklyIncomeCents` for what that moves and by how much. */
     weeklyIncomeCents: number
+    /** ⭐⭐ ROUND-28 #8 – THE WHOLE HOUSEHOLD'S WEEK, not the coaching line alone. See
+     *  `HouseholdWeekly`. */
+    household: HouseholdWeekly
   }
   /** ONE SENTENCE ABOUT HOW MUCH ROOM IS LEFT IN HER (08.08) – the context every uplift on screen T
    *  is relative to, since a rung's worth is a share of remaining headroom and collapses as she

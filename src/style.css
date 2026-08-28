@@ -3540,6 +3540,62 @@ tr.kid-row td {
   background: rgba(255, 255, 255, 0.28);
 }
 
+/* ⭐⭐ ROUND-28 #8 – the household strip. Three figures and a noun, so the parent can read the whole
+   week (the masseur and the shelf included) without leaving the screen he is deciding on. It WRAPS:
+   on a 375px phone the label takes its own line rather than squeezing the figures, which is the
+   failure mode a one-line flex row has here.
+
+   ⚠ THESE RULES ARE GLOBAL AND STAY GLOBAL, because two surfaces mount the markup now – the Coaches
+   tab under its budget meter, and the Support staff tab at the head of the payroll (his follow-up:
+   «эту шкалу на вкладке массажиста тоже»). Scoping them into HouseholdStrip.vue would work, but the
+   declarations below are the coach meter's own family (`.budget-*`, `.legend-*`) and splitting one
+   visual family across a global sheet and an SFC is how the two drift apart. */
+.household-strip {
+  min-width: 0;
+}
+/* ⚠ AND THE TOP RULE IS A SEPARATOR, SO IT ONLY EXISTS WHEN THERE IS SOMETHING ABOVE TO SEPARATE
+   FROM. On the Coaches tab the strip follows the meter's legend and the hairline is doing work; on
+   the Support staff tab it OPENS the card, where the same hairline would be a line under nothing. */
+.household-strip:first-child .budget-household {
+  margin-top: 0;
+  padding-top: 0;
+  border-top: none;
+}
+.budget-household {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 4px 10px;
+  margin: 8px 0 0;
+  padding-top: 8px;
+  border-top: 1px solid rgba(255, 255, 255, 0.09);
+  font-size: 10.5px;
+  font-weight: 500;
+  color: var(--muted);
+}
+.household-label {
+  font-weight: 600;
+  color: var(--ink-soft);
+}
+.budget-household strong {
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--ink);
+}
+/* The one figure that has a direction: a household spending more than it earns says so in colour as
+   well as in the word beside it. */
+.budget-household strong.short {
+  color: var(--danger);
+}
+.budget-household i {
+  font-style: normal;
+  opacity: 0.5;
+}
+.budget-shelf {
+  margin: 6px 0 0;
+}
+
 .market-chips {
   margin-bottom: 8px;
 }

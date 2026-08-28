@@ -43,6 +43,7 @@ import { computed, ref, watchEffect } from 'vue'
 import { useGameStore } from '../../stores/game'
 import ConfirmDialog from '../ConfirmDialog.vue'
 import HerWeekTab from '../HerWeekTab.vue'
+import HouseholdStrip from '../HouseholdStrip.vue'
 import SupportStaffTab from '../SupportStaffTab.vue'
 import IconButton from '../ui/IconButton.vue'
 import SegmentedRow from '../ui/SegmentedRow.vue'
@@ -532,6 +533,24 @@ const meterPct = computed(() =>
   capCents.value > 0 ? Math.min(100, Math.round((committedCents.value / capCents.value) * 100)) : 0,
 )
 
+// --- and the household beneath it (round-28 #8) ---------------------------------------------------
+// The owner, 28.08, on this exact block: the aggregate figure should be shown with the masseur in it
+// (and the psychologist when there is one), and it should stretch to the shop, which has both
+// yielding instruments and depreciating ones. His own week at 675 is the case: coaching, facility,
+// stringing, physio - and $525.00 of masseur that this block did not know existed.
+//
+// ⚠ IT IS A SECOND QUESTION, NOT A REPLACEMENT FOR THE FIRST. The meter above answers "can this
+// family afford THIS COACH", which is what the screen is for and is round-21 #12's own claim; this
+// answers "what does the household take in and pay out in a week". Two figures because they are two
+// questions - overwriting the meter with the household total would have silently deleted a shipped
+// answer to a different one.
+//
+// ⚠⚠ AND THE FIGURES ARE NO LONGER READ IN THIS FILE AT ALL. His follow-up - «а мы можем эту шкалу
+// на вкладке массажиста тоже показывать?» - put the same strip on the Support staff tab, so the
+// whole block moved into `HouseholdStrip.vue`, which reads `coachBilling.household` itself and takes
+// no props. That is the anti-drift design and it is not decoration: two tabs quoting one figure from
+// two computations is the same defect class this strip was written to fix (the meter above once read
+// the current ROSTER ROW's price, and told a self-coached family it committed $0.00 a week).
 const headline = computed(() => {
   const p = game.snapshot?.profile
   if (!p) return ''
@@ -659,6 +678,13 @@ function scrollToTier(tier: CoachTier): void {
         <span class="legend-dot committed"></span>{{ formatCents(committedCents) }} committed
         <span class="legend-dot cap"></span>{{ formatCents(capCents) }} weekly cap
       </p>
+
+      <!-- ⭐⭐ ROUND-28 #8 – AND THE WHOLE HOUSEHOLD UNDER IT. The meter above is the coaching
+           decision; this is the week the family actually has, with the support staff and the shelf
+           in it. ⚠ IT IS A COMPONENT AND NOT MARKUP, since his follow-up put the same strip on the
+           Support staff tab: one file reads `coachBilling.household`, both tabs mount it, and there
+           is no second copy to drift. See HouseholdStrip.vue. -->
+      <HouseholdStrip />
     </section>
 
     <!-- THE TRAINING REGULATOR. Half of every price on this screen, so it belongs on it. -->

@@ -129,10 +129,52 @@ held open for exactly this reason.
   **answer.** Slice 1 (cars) shipped; the spec carries yachts, the parents' plane and the academy.
   Their queue position is his call.
 
-- [ ] **8. «На странице коучей в верхнем блоке с недельными тратами и доходами можно совокупную всю
+- [x] **8. «На странице коучей в верхнем блоке с недельными тратами и доходами можно совокупную всю
   цифру показывать с учётом массажиста (и психолога в будущем), и даже на магазин растянуть, т.к. там
   тоже есть и с доходностью инструменты и с расходом»** – **build.** One weekly figure that actually
   totals the household, not just the coaching line.
+  ⭐ **SHIPPED.** A second line under the coaching meter: `Household, every week – $X in, $Y out,
+  $Z left over` (or `short`). `HouseholdWeekly` on `coachBilling`, computed by `householdWeekly` in
+  `engine/world/coachMarket.ts`. **OUT** = the training bill (`coachBilling.weeklyCents`, coach +
+  court) **+ a hired masseur's salary** + the shelf's weekly loss; **IN** = `familyWeeklyIncomeCents`
+  + the shelf's weekly gain. A psychologist joins as one more line in that list and nothing else
+  moves. ⚠ **The coaching meter above is UNTOUCHED** – "can I afford this coach" is round-21 #12's
+  claim and is a different question; overwriting it would have deleted a shipped answer. ⚠ **The
+  shelf is his «и даже на магазин растянуть»**, signed and asked of `assetValueCents` itself (one
+  more week of holding), so a deposit yields and a car costs; it is carried as a memo beside the
+  three figures and is **deliberately NOT in `weeklyIncomeCents`** – an unrealised gain is not cash
+  and that field is the affordability cap. ⭐ **It also quietly fixed a second thing:** the old meter
+  read the CURRENT ROW's price, so a self-coached family saw `$0.00 committed` while paying the
+  facility rate every week.
+  **Evidence:** `tests/component/round28-household-block.test.ts` – 7 mounted assertions on the
+  rendered strip, hired vs not hired (the figure moves by exactly his salary, and the two screens
+  really differ), the shelf arm, and a guard that the coaching meter still says what it said.
+  ⚠ Mutation-verified, 4 mutations, each alone: masseur term dropped → §1+§2; shelf term dropped →
+  §3 only; the strip bound back to `committedCents` (the shipped defect) → §1, §2, §3; income halved
+  → §1. ⚠ **The first draft survived the income mutation green** – the expectation was read back off
+  the field under test – so §1 now rebuilds it from `parentIncomeForWeekCents` + interest.
+
+  ⭐⭐ **APPROVED («это хорошо»), AND THE FOLLOW-UP SHIPPED:** «а мы можем эту шкалу на вкладке
+  массажиста тоже показывать?» The strip is now on **`SupportStaffTab.vue`** too, at the head of the
+  payroll. ⭐ His reasoning is the good part and it decided the placement: a salary on that payroll is
+  one of the lines the strip totals and **the dial that sets its size is on that tab**, so it was the
+  one screen where a rung could be chosen without seeing what the rung does to the week.
+  ⚠⚠ **ONE SOURCE, STRUCTURALLY.** The block became `src/components/HouseholdStrip.vue`, which reads
+  `snapshot.coachBilling.household` **itself and takes no props** – a caller cannot hand it a
+  different number, so there is nothing for a second implementation to be. Not decoration: two tabs
+  quoting one figure from two computations is the same defect class this strip was written to fix
+  (the meter beside it once read the current roster row's price and told a self-coached family it
+  committed $0.00 a week). The global `.budget-*` rules stay global for the same reason; one new
+  `:first-child` rule drops the separator hairline when the strip opens a card instead of following
+  the legend.
+  **Evidence:** `tests/component/round28-household-shared.test.ts` – 6 mounted assertions: the strip
+  on the staff tab hired and unhired, its position above the payroll (that chapter exists because he
+  could not find something at the bottom of a page), ⭐⭐ **both surfaces mounted against one snapshot
+  printing the same string, on two households of different shape**, and pressing a rung moving the
+  OUT figure by exactly the rung difference through the real click path and the real engine command.
+  ⚠ Mutation-verified, and the asymmetry is the record: **the shared source moved → five reds across
+  BOTH files; the sharing broken (staff tab hand-rolling its own figure) → the parity tests red while
+  the Coaches-only file stayed entirely green**; the dial disconnected → §3 alone.
 
 - [ ] **9. «Может быть с появлением магазина надо переписать спеку про безусловную % доходность на
   текущий счёт? И оставить этот момент уже на управление игроку, убрав текущую автоматическую, т.к.
@@ -235,8 +277,48 @@ held open for exactly this reason.
   нет?»** – **ask.** ⭐ College already suspends the coach and the masseur and zeroes body cost; her
   cut is the one standing instruction that has never been examined against the freeze.
 
-- [ ] **15. «С чеков спонсоров мне кажется ребёнку тоже нужно % перечислять, как и с призовых, давай
+- [x] **15. «С чеков спонсоров мне кажется ребёнку тоже нужно % перечислять, как и с призовых, давай
   сделаем»** – **build.** A ruling, not a question: her cut extends to sponsor cheques.
+  ⭐ **SHIPPED.** One splitter, `bankSponsorCheque` (`engine/world/sponsors.ts`), at four sites. Same
+  `ECONOMY.kidShare` ramp, same single rounding, family keeps the remainder by subtraction, same
+  `FinanceWeek.kidShare` memo. ⚠ **NOT the plan's step 5** – that gives her the WHOLE fee; he asked
+  for the prize ramp, which is a share. Step 5 stays open.
+  ⚠⚠ **WHICH CHEQUES, AND WHY.** The line is not taste: it is the one `sponsors.ts` already drew in
+  2026-08 – «every one of them is a cheque somebody writes to the PLAYER rather than a price the
+  family pays».
+  **HERS:** the advertising fee (`cashCents` – «a brand buys her face, not the family's»); the **kit
+  retainer** (`retainerCents` – a quarterly cheque for HER wearing the brand, the largest sponsor
+  money in the game; excluding it would make «как и с призовых» mean *some* cheques); the **result
+  bonus** (`bonusShare` – literally `share x TIERS[tier].prizeCents[finish]`, so leaving it whole
+  would make her realised share of a winning week FALL as sponsorship grows); and the **appearance
+  fee** – ⚠ **not named in his sentence**, included because it is indistinguishable from the other
+  two and a rule that skipped it would be arbitrary. **It is the one line to take back out if he
+  disagrees.**
+  **NOT HERS:** the kit allowance (it buys her rackets – a cut leaves her half a racket); the kit
+  travel share (reduces a fare, nothing lands); the local-sponsor cameo (need-based rescue written to
+  the family – a cut of a rescue inverts it); the academy scholarship and its grant.
+  ⚠⚠ **ONE BALANCE CONSEQUENCE, AND IT IS HIS TO KNOW ABOUT.** `familyWeeklyIncomeCents` – the coach
+  market's affordability cap – had to stop quoting the GROSS retainer, or the meter would state money
+  the till no longer banks (round-21 #12 in mirror). Closed-form, since it is linear: the cap falls
+  by `bps/10000 x retainerCents x 4 / 52` **for a family holding a kit deal, and by nothing at all
+  for one holding none.** At the icon rung ($37,500/quarter): **$288/wk at her first 10%, $1,442/wk
+  at the 50% cap**; at the tour rung ($1,500): $11.50 and $57.70. ⚠ **Nobody is locked out** –
+  `hireCoach` never consults the budget, so `overBudgetCents` colours a card and refuses nothing;
+  «мы ни за что не наказываем» holds. **And no new way to go negative:** every site is an income
+  line, `herShare <= gross` always, so a cheque can only add less, never subtract.
+  ⚠ **Forward-only, no schema move.** `kidFundsCents` is persisted, so this changes what lands there
+  from the week it ships and rewrites no existing save. No field added anywhere, so
+  `SAVE_SCHEMA_VERSION` does not move.
+  **Evidence:** `tests/round28-sponsor-cut.test.ts` – 13 assertions across §1 the ad fee, §2 the
+  other three cheques, §3 the categories that are NOT hers (a full-season walk proving the allowance
+  never touches her account; the cameo driven through the real tick), §4 the cap. ⚠ Mutation-verified,
+  4 mutations: rate moved → the two literal-pinned tests only; split removed → 8 of 13; **the RULE
+  widened (the cameo routed through the splitter) → §3's cameo test ALONE**; cap back to gross → §4.
+  ⚠ **The first draft survived the rate mutation entirely green** (every expectation read the same
+  constant), which is why §1 and §4 now each carry one literal pin.
+  ⚠ **Two guards RE-AIMED, not deleted:** `tests/ad-offer.test.ts`' «and NOT her account» now asserts
+  the split and the penny rule (a sharper claim than the one it replaces), and the stale «`world.ts`
+  is the ONLY writer of `kidFundsCents`» note in `tests/kid-share-memo.test.ts` is corrected.
 
 - [ ] **16. «250 и 500 всё ещё выглядят почти как стена… в 35 году она взяла 2 250 победой, а с тех
   пор после колледжа смогла только 1 раз до 2 места дойти… А в 500 вообще пусто. При этом она около
