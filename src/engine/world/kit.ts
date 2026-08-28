@@ -34,6 +34,7 @@ import {
 } from '../equipment'
 import { activeKitDeal, kitFreshCap } from '../offers'
 import type { KitDealView, KitGrade, KitLine, KitLineView, KitOfferTerms } from '../../shared/protocol'
+import { vacationForWeek } from './bookings'
 import { addEvent } from './ledger'
 import type { WorldState } from '../world'
 import { guardNotEnded } from './endings'
@@ -45,6 +46,60 @@ export const KIT_LINES: readonly KitLine[] = ['strings', 'frame', 'shoes']
  *  place answers "what is she on", so the till, the snapshot and the wear model cannot disagree. */
 export function kitStateOf(world: WorldState): NonNullable<WorldState['kit']> {
   return world.kit ?? defaultKitState()
+}
+
+/** ⭐ HOW FAR BACK THE STAND-DOWN LEDGER HAS TO REACH, and it is derived rather than picked.
+ *
+ *  The longest span `kitAgeWeeks` can ever ask about is the longest gear cadence, because the clock
+ *  resets on every purchase and the hand-bought clock is a MIN against the scheduled one. Today that
+ *  worst case is `ECONOMY.gear.rackets.cadenceWeeks.working` = 14-18 weeks, and the pre-first-purchase
+ *  case (`weeksSinceGear` returns `week` itself) is bounded by the same 18. A year is therefore ~3x
+ *  the readable span, which is the slack that lets a cadence be re-tuned without silently eating a
+ *  week the curve still reads. `tests/kit-holiday-wear.test.ts` asserts that margin against the real
+ *  `ECONOMY.gear` table rather than against this comment, so a cadence raised past it goes RED.
+ *
+ *  ⚠ Same discipline as `pruneInternationalEntries`: the prune can never eat a slot a gate still
+ *  reads. Bounded at one number per rested week per year, so a twenty-season career cannot grow the
+ *  save without limit - the reason this is a window and not an append-only history. */
+export const GEAR_REST_WINDOW = 52
+
+/** The weeks her kit stood down, for the wear model. `[]` for a world that never booked a holiday –
+ *  the identity element `kitAgeWeeks` documents, so a career with no vacations is byte-identical. */
+export function gearRestWeeksOf(world: WorldState): readonly number[] {
+  return world.gearRestWeeks ?? []
+}
+
+/** ⭐ ROUND-29 #20 / THE OWNER'S RULING 5 OF 09.08 – A VACATION PAUSES WEAR.
+ *
+ *  His words, and they are the whole spec: «Ну да, занятий же нет, по-моему логично» – there are no
+ *  sessions, so the kit is not being used. Round-15 #14 put it as "wear should count weeks she
+ *  trained or played"; this is the writer that makes that sentence true.
+ *
+ *  ⚠ THE FAMILY'S PRECEDENT, ASKED OF THE KIT BAG. `masseurWorksThisWeek` already returns false on a
+ *  booked holiday and the coach's salary already stands down in college: the retainer is SUSPENDED,
+ *  not cancelled. Gear was the odd one out, and this is the missing symmetry rather than a new
+ *  mechanic. ⚠ It is deliberately NOT folded into either predicate – round-27 #10 recorded an
+ *  ACCEPTED asymmetry in this family (the physio bills through the college freeze while the coach
+ *  does not), so "everything stops together" is explicitly not the house rule and one stand-down
+ *  edit must not move three seats.
+ *
+ *  ⚠⚠ COLLEGE IS NOT A REST WEEK, and that is the asymmetry above doing its work. She trains and
+ *  plays inside the fork – the programme has her body – so her soles are on court and the clock
+ *  runs. Only the booked family holiday is «занятий нет».
+ *
+ *  ⚠ AND AN INJURY LAYOFF IS NOT ONE EITHER. The owner left that half unruled on purpose («травмы
+ *  бывают долгими и рехаб может быть с вещами, я бы тут еще подумал») and even sketched why it is
+ *  probably not binary – a layoff stops racquet and string wear and does not stop shoe wear. Nothing
+ *  here decides it; `vacationForWeek` is the only question asked.
+ *
+ *  Called from `housekeep`, so `world.week` is the week that has just RESOLVED. Idempotent: three
+ *  call sites reach `housekeep` (a normal week, and the reveal-week pair that defer to the flow) and
+ *  a week already on the ledger is not written twice. Pure state, zero draws on any stream. */
+export function recordGearRestWeek(world: WorldState): void {
+  if (vacationForWeek(world, world.week) === undefined) return
+  const ledger = world.gearRestWeeks ?? []
+  if (ledger.includes(world.week)) return
+  world.gearRestWeeks = [...ledger, world.week].filter((w) => w > world.week - GEAR_REST_WINDOW)
 }
 
 /** Where a rung sits on the ladder. -1 for a value that is not a rung at all, which is what makes the
@@ -265,10 +320,13 @@ export function kitLineViews(world: WorldState): KitLineView[] {
   const kit = kitStateOf(world)
   const bg = world.profile.background
   const cap = kitFreshCap(world.offers ?? [], world.week)
-  const wear = kitWearAt(world.seed, bg, world.week, cap, kit)
+  const rest = gearRestWeeksOf(world)
+  const wear = kitWearAt(world.seed, bg, world.week, cap, kit, rest)
   // ⚠ ROUND 21 ITEM 10 - the same clock the wear curve above walks, so the countdown and the
-  // condition word can never disagree. See `goodWeeksLeftFor`.
-  const age = kitAgeWeeks(world.seed, bg, world.week, kit)
+  // condition word can never disagree. See `goodWeeksLeftFor`. ⚠ AND THE HOLIDAY STAND-DOWN GOES
+  // INTO BOTH (round-29 #20): a fortnight at the sea that did not wear the strings must not tick the
+  // "(3 left)" countdown down either, or the screen and the model would part company on week 3.
+  const age = kitAgeWeeks(world.seed, bg, world.week, kit, rest)
   return KIT_LINES.map((line) => {
     const grade = kit.grade[line] ?? DEFAULT_KIT_GRADES[line]
     const ceiling = cap?.[line]

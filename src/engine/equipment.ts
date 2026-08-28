@@ -186,17 +186,50 @@ function clamp01(x: number): number {
  * The MIN is the rule: the family's recurring purchase and the player's over-the-counter one are two
  * clocks, and she is holding whichever arrived more recently. Pure, no draws of its own beyond
  * `weeksSinceGear`'s own deterministic `seed:gear:<category>` schedule.
+ *
+ * ⚠⚠ AND IT COUNTS THE WEEKS SHE PLAYED, NOT THE WEEKS THAT PASSED - the owner's ruling 5 of 09.08
+ * (round-15 #14, re-asked as round-16 #8, re-asked again as round-29 #20): «Ну да, занятий же нет,
+ * по-моему логично». A fortnight camping used to wear her shoes exactly as hard as a fortnight of
+ * doubles, because this clock was pure elapsed calendar weeks. `restWeeks` are the weeks a booked
+ * family holiday stood the kit down, and they come OFF the age before the curve is walked.
+ *
+ * ⚠ THE SCOPE IS THE HOLIDAY AND NOTHING ELSE. A training week is a week she plays - the racket is
+ * strung, the soles are on court - so a week that merely carries no tournament wears at the normal
+ * rate. The ruling's own reason is «занятий нет», absence of SESSIONS, which a training week fails.
+ * `tests/kit-holiday-wear.test.ts` guards that edge explicitly, because it is the over-reach this
+ * change invites.
+ *
+ * ⚠ THE INJURY HALF IS DELIBERATELY NOT HERE and stays unruled, in the owner's own words: «травмы
+ * бывают долгими и рехаб может быть с вещами, я бы тут еще подумал». A layoff is not a rest week.
+ *
+ * ⚠ A SET, NOT A LENGTH - the same idiom `coachedWeeksLostToRest` uses on the same data, so a week
+ * that somehow arrives twice is still one week. And the interval is HALF-OPEN, `[week - age, week)`:
+ * the purchase week itself counts (she bought the frame and left the next morning) and the week now
+ * running does not, because it has not resolved yet and the recorder writes it at `housekeep`.
+ *
+ * ⚠ EMPTY IS THE IDENTITY ELEMENT. `[]` gives back exactly the elapsed-calendar answer this function
+ * has always given, which is what keeps every pure probe, every hand-built test world and every save
+ * that predates the ledger byte-identical - including the frozen MAIN capture, which books no
+ * holidays because booking one is a player action.
  */
 export function kitAgeWeeks(
   seed: string,
   background: FamilyBackground,
   week: number,
   kit: KitState | null = null,
+  restWeeks: readonly number[] = [],
 ): Record<KitLine, number> {
+  const rested = new Set(restWeeks)
   const since = (line: KitLine, category: GearCategory): number => {
     const scheduled = weeksSinceGear(seed, category, background, week)
     const bought = kit ? week - kit.sinceWeek[line] : scheduled
-    return Math.min(scheduled, Math.max(0, bought))
+    const elapsed = Math.min(scheduled, Math.max(0, bought))
+    if (rested.size === 0) return elapsed
+    let stood = 0
+    for (let w = week - elapsed; w < week; w += 1) if (rested.has(w)) stood += 1
+    // Every week in the span is either played or rested, so this can never go negative - the guard
+    // is arithmetic, not defensive.
+    return elapsed - stood
   }
   return {
     strings: since('strings', 'stringing'),
@@ -211,10 +244,15 @@ export function kitWearAt(
   week: number,
   freshCap: KitFreshCap | null = null,
   kit: KitState | null = null,
+  restWeeks: readonly number[] = [],
 ): KitWear {
   const e = ECONOMY.equipment
   const grade = kit?.grade ?? DEFAULT_KIT_GRADES
-  const age = kitAgeWeeks(seed, background, week, kit)
+  // ⚠ THE HOLIDAY STAND-DOWN RIDES IN ON THE AGE, WHICH IS WHY IT IS NOT A SIXTH TERM HERE (round-29
+  // #20, the owner's ruling 5 of 09.08). Same shape as the sponsor's cap and the quality rung before
+  // it: what a booked family holiday moves is the CLOCK that goes in, never the arithmetic below, so
+  // the anti-destiny bound stays structural and an empty ledger is byte-identical.
+  const age = kitAgeWeeks(seed, background, week, kit, restWeeks)
   const sinceStrings = age.strings
   const sinceFrame = age.frame
   const sinceShoes = age.shoes

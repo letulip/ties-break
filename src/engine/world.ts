@@ -104,8 +104,8 @@ export { openingCoachId, practiceCoachRateFor, hireCoach, coachSinceWeek, matche
 // file until R2-10 step 2; it left with `resolveGear`, its only reader here, and is imported by
 // world/phaseFinance.ts now. See the note at `resolveGear` for why it was priced below world.ts.
 import { defaultKitState } from './equipment'
-import { setKitGrade, kitLineViews, kitDealView, kitAllowanceRemainingCents, kitStateOf, kitPurchaseSplit, goodWeeksFor, KIT_LINES } from './world/kit'
-export { setKitGrade, kitLineViews, kitDealView, kitAllowanceRemainingCents, kitStateOf, kitPurchaseSplit, goodWeeksFor, KIT_LINES }
+import { setKitGrade, kitLineViews, kitDealView, kitAllowanceRemainingCents, kitStateOf, kitPurchaseSplit, goodWeeksFor, KIT_LINES, gearRestWeeksOf, recordGearRestWeek, GEAR_REST_WINDOW } from './world/kit'
+export { setKitGrade, kitLineViews, kitDealView, kitAllowanceRemainingCents, kitStateOf, kitPurchaseSplit, goodWeeksFor, KIT_LINES, gearRestWeeksOf, recordGearRestWeek, GEAR_REST_WINDOW }
 // W3-SUMMER: the holidays as a real training block - one predicate, both halves.
 import { summerBlockWeek, summerLoadFactor, summerConditionCost } from './world/summer'
 export { summerBlockWeek, summerLoadFactor, summerConditionCost }

@@ -684,6 +684,30 @@ export interface WorldState {
    *  `null` IS the shipped behaviour, so absence is not a hole - it is the identity element. A real
    *  career always has one: `createWorld` writes it and the v36 -> v37 migration back-fills it. */
   kit?: KitState
+  /** ⭐ THE WEEKS HER KIT STOOD DOWN - every resolved week she spent on a booked family holiday.
+   *  The owner's ruling 5 of 09.08: «Ну да, занятий же нет, по-моему логично» - a vacation stops the
+   *  wear clock. Round-15 #14 asked it, round-16 #8 re-asked it, round-29 #20 is the fourth asking.
+   *
+   *  ⚠ WHY A LEDGER RATHER THAN A COUNTER, and it is the one thing this field cannot be talked out
+   *  of: wear is DERIVED from a purchase week (`weeksSinceGear`), so the question the model asks is
+   *  "how many rest weeks fell between THEN and now" - a span, not a total. A running total cannot
+   *  answer it without a second number captured per line at every purchase, and the scheduled
+   *  purchases are never stored at all.
+   *
+   *  ⚠⚠ AND IT CANNOT BE READ OFF `world.vacations`, which is the trap this field exists to avoid.
+   *  `prunePlannerBookings` keeps only `PLANNER_TRAIL_WEEKS` (4) of trailing bookings, so a holiday
+   *  is GONE from that array long before the shoes it stood down are replaced. Deriving from it
+   *  would have looked right in a unit test and been wrong on every real career.
+   *
+   *  ⚠ OPTIONAL ON THE TYPE, and NOT a schema move - the `kit?` precedent directly above and the
+   *  recorded widening precedent (commit 2763caa, cited twice in shared/protocol/events.ts). Absent
+   *  is exactly what every historical save and every hand-built test world already mean: no rest
+   *  recorded, so the clock runs on calendar weeks, which is the shipped behaviour byte for byte.
+   *  An in-flight career therefore keeps its wear history and gains the pause from the next holiday
+   *  on. `SAVE_SCHEMA_VERSION` does not move, no migration is owed and no golden fixture is added.
+   *
+   *  Bounded by `GEAR_REST_WINDOW` - see `recordGearRestWeek`, which is the only writer. */
+  gearRestWeeks?: number[]
 
   // --- W2-ENDINGS (v39): where the career ends -------------------------------------------------
 

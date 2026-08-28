@@ -28,6 +28,7 @@ import { KID_ID } from './constants'
 import { captureMilestone } from './milestones'
 import { layoffCovering } from './medical'
 import { eventById, refundPractice, vacationForWeek } from './bookings'
+import { gearRestWeeksOf } from './kit'
 import { masseurRungOf, masseurWorksThisWeek } from './masseur'
 import { releaseEntry } from './entries'
 import { retireKnock } from './knockHistory'
@@ -127,12 +128,19 @@ export function injuryTau(world: WorldState): number {
   // spending nothing on any stream. A career with no `kit` on it (every save before v37, and every
   // hand-built test world) passes `undefined` and gets the shipped answer byte-identical.
   tau *= kitInjuryFactor(
+    // ⚠ AND THE HOLIDAY STAND-DOWN RIDES IN THE SAME WAY (round-29 #20, the owner's ruling 5 of
+    // 09.08): a booked family holiday stops the wear CLOCK, so her shoes come back off a fortnight
+    // at the sea exactly as worn as they went, and this factor reads that. Still post-draw, still
+    // arity-1, still spending nothing on any stream. ⚠⚠ It does NOT decide the injury half of that
+    // ruling, which the owner left open on purpose - a LAYOFF is not a rest week here, only a
+    // booked holiday is, and `gearRestWeeksOf` is empty for every career that never booked one.
     kitWearAt(
       world.seed,
       world.profile.background,
       world.week,
       kitFreshCap(world.offers, world.week),
       world.kit ?? null,
+      gearRestWeeksOf(world),
     ),
   )
   // W4 – AND THE KNOCK HE SENT HER BACK OUT ON. The whole cost of the `push` branch, and it is
