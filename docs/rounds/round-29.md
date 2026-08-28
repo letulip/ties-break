@@ -42,7 +42,7 @@ contention artefacts of round 28 cost more reading than the wall-clock they save
   в сезоне»** – **build.** Every other card in the season feed renders black. PWA precache already
   exists (`118 entries` in the build log); the feed's imagery is evidently not in it.
 
-- [ ] **3. «В разделе календаря недели всё ещё нет блоков про съёмки… а если это выпадает на неделю
+- [x] **3. «В разделе календаря недели всё ещё нет блоков про съёмки… а если это выпадает на неделю
   турнира, то на затраченной энергии должно отражаться. А, увидел на пустой неделе, но на
   чемпионатской нет. Может сделать возможность переноса съёмки или всё-таки жарить прямо с
   чемпионатом с последствиями.»** – **build + ask.** ⚠ Round 28 #1/#6 shipped the shoot week and
@@ -81,18 +81,129 @@ contention artefacts of round 28 cost more reading than the wall-clock they save
   the domestic-points plaque, and now this. That is a pattern, not three accidents, and it is worth a
   standing check rather than three separate fixes.
 
+  ⚙ **SHIPPED, BOTH HALVES.** `[ ]` -> `[x]`.
+
+  **THE WEEK ASKS, with four buttons for his three arms** (the second is «cancel or move», and a card
+  that hid that pair behind one control would ask him to choose twice). Built on the fork's and the
+  knock's own shape rather than a new one – `shootClashOpen` is a predicate `advanceRefusal` blocks
+  on, `Snapshot.shootClash` carries the card, `blockingOverlay` places it in the queue, and
+  `answerShootClash` is the one command that clears it. `engine/world/shootClash.ts`,
+  `components/ShootClashDialog.vue`.
+
+  ⚠⚠ **IT IS RAISED THE WEEK BEFORE, AND THAT IS FORCED BY HIS OWN ANSWERS RATHER THAN CHOSEN.**
+  `cancelEntry` refuses outright once `event.week <= world.week` («That week has already started –
+  skip the tournament instead») and `skipEvent` needs a `pendingTournament` that does not exist until
+  the tick has run; and a shoot cannot be moved out of a week already being lived. So two of the four
+  arms only EXIST before the week starts, which is also why this blocks rather than merely halting: an
+  advance that rolled past it would silently pick one of the other two for him.
+
+  | arm | what it does | what it costs |
+  | --- | --- | --- |
+  | pull out | `cancelEntry` – the engine's existing withdrawal | the fee, forfeited past the deadline, plus the late-withdrawal points where `mandatoryBinds` says the event bound her. ⚠ **Nothing new was invented**: it costs exactly what pulling out of that tournament costs from the calendar on any other week |
+  | move the shoot | the first week the letter's own promises still allow – in-season, inside the term, non-adjacent to the other shoot, and not another entry | nothing, as he said |
+  | cancel the shoot | the week leaves `shootWeeks` | ⭐ **his «явно должны быть последствия»**, read off the CONTRACT and not tuned: `cashCents / shootCount`, the shoot's own share of the campaign fee, back to the brand under 'sponsor' ($10,000 of Quiet Hour's $20,000) |
+  | do both | both stand, the week is latched | **his own figure**: `clashConditionPerDay` (1) x `PLAN_DAYS` (7) = **7 condition off the week**, on top of the travel-figure recovery a shoot week already pays |
+
+  ⚠ **THE PRICE IS CHARGED OFF THE FACT, NEVER OFF THE ANSWER.** `accrueCondition` reads the shoot
+  week and `isCompetitionWeek`; the latch (`shootClashAccepted`) exists only to stop the question
+  being asked twice. So a career that reaches the collision by any other road – a save written before
+  the question existed included – is charged correctly.
+
+  ⚠ **SCHEMA STAYS 65.** One optional persisted field, `WorldState.shootClashAccepted?: number[]`,
+  absent meaning exactly what every historical save already means. `WorldEvent.entryRef`'s own rule.
+  `ToWorker` gains a command; the wire is not the save.
+
+  **AND THE MASSEUR DEFECT IS FIXED IN THE ENGINE'S DIRECTION** – the bill is right, the drawing was
+  not. `masseurWorksInWeek` is `masseurWorksThisWeek`'s body taking primitives (`spanWorthOffering`'s
+  precedent) and `weekDays.ts` asks it instead of re-spelling it.
+
+  ⚠⚠ **ONE CORRECTION TO THE TABLE ABOVE, AND IT SHARPENS THE PATTERN RATHER THAN SOFTENING IT.**
+  «`!shooting` exists only in the UI» is not quite right: `accrueCondition` has one too, and has since
+  the round-25 collect – «lights and flights, not his table». So the screen was not inventing a rule,
+  it was mirroring the WRONG ENGINE READER: the one that decides the condition bonus, instead of the
+  one that decides the BILL. That is a worse failure mode than invention, because it looks correct at
+  every step. **`accrueCondition`'s term is deliberately UNTOUCHED** – it is owner-approved, it is
+  about the condition sum rather than about the man, and retuning it was not asked for. ⭐ **Open for
+  him:** on a shoot week the family now pays the masseur, sees his days on the calendar, and still
+  gets no condition bonus from them. That is coherent (his work goes into getting her through the
+  shoot) but it is a decision, and it is his.
+
+  **Evidence.** `tests/round29-shoot-clash.test.ts` – 18 cases on ticked worlds: the refusal with zero
+  ticks, the prompt on the snapshot, three negatives (a shoot alone, a tournament alone, a collision
+  she is laid up for), one case per arm reading the outcome off the world, the condition price read
+  out of `accrueCondition` AND out of a real `tickWeek` against a control that differs only in where
+  the shoot is, and a case per arm proving the career is unblocked afterwards.
+  `tests/component/round29-shoot-clash-ui.test.ts` – 11 mounted: the card on the real shell, one
+  button per answer through the real click path, the move arm ABSENT when the term has no room
+  (R10-16), the copy rules, and round-20 #3's phone fit at 375x667 and 320x568, mutated.
+  ⚠ Mutation-verified: the condition term dropped -> 2 red in the engine file, the rest green; the
+  refusal dropped -> the zero-tick case alone.
+  `tests/component/round29-masseur-parity.test.ts` – 10 mounted, and the parity block is the point:
+  one world, two readers, four week kinds. ⚠ **The asymmetry is the record** – the engine rule mutated
+  (`masseurWorksInWeek` ignoring `bookedOff`) reddens this file AND `tests/masseur.test.ts` (3 cases);
+  `&& !shooting` put back in the UI alone reddens this file and the re-aimed round-28 case and nothing
+  engine-side. ⭐ That is the third instance of this class this round, and it is now checkable.
+
 - [~] **4. «По победам как-будто по-лучше стало»** – ⚙ **his own verdict, recorded, nothing to build.**
 
 - [ ] **5. «В магазине всё ещё не хватает яхт, самолётов и стойки академии»** – **build.** Slice 1
   (cars) shipped; the spec [the-shop-2026-08.md](../specs/the-shop-2026-08.md) already carries yachts,
   the parents' plane and the academy. This is round 28 #7 with the queue position now given.
 
-- [ ] **6. «Листалка на 4 недели кажется весьма бессмысленной: у меня был слот 6 недель, я нажал,
+- [x] **6. «Листалка на 4 недели кажется весьма бессмысленной: у меня был слот 6 недель, я нажал,
   увидел сообщение о конце года и странное окошко с отчётом о двух пройденных днях, а календарь так и
   остался на 51й неделе. Наверное эта кнопка будет полезна только для длительных травм, и то не точно.
   Её необходимость под большим вопросом.»** – **build (bug) + ask (keep it at all).** ⚠ Three separate
   wrongnesses in one press: it stopped at the year end, it reported **two days** for a six-week slot,
   and **the calendar did not move**. Fix the lie first; whether the control survives is his call.
+
+  ⚙ **THE LIE IS REPAIRED AND THE CONTROL STANDS.** `[ ]` -> `[x]` for the build; the «нужна ли она
+  вообще» half is still HIS – deleting is available in the morning, restoring is not.
+
+  **Three wrongnesses, three different mechanisms, and none of them was the one the sentence
+  suggests:**
+
+  1. **IT OFFERED FOUR AGAINST A SLOT OF SIX.** `MULTI_WEEK_SPAN` was written on the label AND passed
+     to the press, so the button stated the engine's historical step and never the week it stood on.
+     `spanWeeksFor` counts the consecutive weeks with nothing OF HERS in them (`eventIsHers`, the
+     look-ahead marker's own rule), capped at `UPCOMING_WEEKS` – ⚠ **a derived bound, not a picked
+     one**: beyond that horizon `snapshot.upcoming` is clipped and the shell has no information about
+     her calendar at all. `multiSpanOf` answers offered-at-all and how-many together, so the label and
+     the press cannot differ. `MULTI_WEEK_SPAN` survives as the FLOOR – below four a "span" is the
+     week button pressed twice.
+  2. **THE YEAR END TRUNCATED IT.** `advanceWeeks` broke on 'season-end', which cuts every press made
+     at the tail of a season – the longest quiet gap a career has, and therefore exactly where the
+     pill appears. The loop now breaks on a reason that HALTS (`SPAN_REPORTS_ONLY`). ⚠ **Measured, not
+     assumed:** the recap dialog reads `snapshot.lastSeasonSummary` against a per-season watermark and
+     has since round 19 #2, so it still shows, once, on the week it was banked. The reason is still
+     collected and still returned in its precedence slot (R11-1); only the break moved, and the list
+     has exactly one member.
+  3. **«THE CALENDAR DID NOT MOVE»** was 1 and 2 together: the press left him three weeks further into
+     the same dead stretch he pressed from, which is not a place a career visibly moves to.
+
+  ⚠ `ToWorker.advance.weeks` widens `1 | 4` -> `number`. **No save field, no migration, schema stays
+  65** – the wire is not the save, and the dev fast-forward's `tick` has always carried a plain count.
+
+  ⭐⭐ **AND THE FIRST-USE LINE SHIPS WITH IT** – the round-29 audit found this item is **round 26 #1**,
+  whose actual ask was a sentence explaining the control («Что за кнопка Next 4 weeks у меня появилась
+  прямо под пальцем?»). That item produced a GATE and never produced the sentence. One muted line
+  above the bar, cleared by the first press, watermarked per career: *"Quiet stretch ahead – the left
+  button spends those weeks in one press, and stops early on anything worth reading."*
+
+  **Evidence.** `tests/component/round29-span-repair.test.ts` – 7 mounted on the real shell, built on
+  a six-week gap that STRADDLES the year end (his own week): ⭐ the chain – **the pill says six, the
+  press commands six, the calendar lands six weeks on and across the wrap, and the card says six** –
+  plus a second fixture proving the number follows the calendar rather than being a new constant, and
+  the first-use line rendering once and not after a fresh mount.
+  `tests/r2-13-advance-span.test.ts` gains the discriminating straddle case the old SEASON-END guard
+  could not be (it landed the wrap on the span's LAST week, so it never exercised the break).
+  ⚠ Mutation-verified, three, each alone: the break restored -> the chain and the straddle red; the
+  label pinned back to the constant -> 4 red across two files; `markSpanHintUsed` disconnected -> the
+  once-ness case alone.
+  ⚠ Guards re-aimed with a note, never deleted: `round11`'s break pin (the claim is ONE break after
+  the whole week is read, and that is untouched), `worker-reply-pairs`' `1 | 4` payload pin,
+  r2-13's SEASON-END case and its span-is-four pin, and `r2-13-span-report`'s two label/press pins –
+  ⚠ **which had been comparing the constant with itself and so could never have caught this.**
 
 - [ ] **7. «А что у нас со спонсорами вообще, кстати? Кроме часов за 20к есть ещё кто-то и когда
   появляется? Мы что-то говорили о больших чеках вроде.»** – **answer.** Read the ladder out of the
