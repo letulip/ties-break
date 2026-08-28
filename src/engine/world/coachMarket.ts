@@ -570,8 +570,15 @@ export function householdWeekly(world: WorldState, trainingCents: number): House
   for (const owned of ownedAssets(world)) {
     const item = shopItem(owned.id)
     if (!item) continue // a rung retired from the catalogue keeps its value; see `revalueAssets`
-    const held = world.week - owned.boughtWeek
-    shelfCents += assetValueCents(item, owned.paidCents, held + 1) - assetValueCents(item, owned.paidCents, held)
+    // ⚠⚠ THE SAME BASIS AND THE SAME CLOCK `revalueAssets` USES, and round 29 #11 is why this line
+    // says it twice. A top-up REBASES the holding (`OwnedAsset.basisCents` / `basisWeek`), and this
+    // meter reading `paidCents` / `boughtWeek` after one would be the exact defect the note above
+    // forbids – two functions asking one question and getting different answers. The `??` pair is
+    // the same one `revalueAssets` carries, and on a holding never topped up it is the identical
+    // arithmetic this line has always done.
+    const basis = owned.basisCents ?? owned.paidCents
+    const held = world.week - (owned.basisWeek ?? owned.boughtWeek)
+    shelfCents += assetValueCents(item, basis, held + 1) - assetValueCents(item, basis, held)
   }
   const incomeCents = familyWeeklyIncomeCents(world) + Math.max(0, shelfCents)
   const outgoingCents = trainingCents + staffCents + Math.max(0, -shelfCents)

@@ -187,6 +187,25 @@ describe.each(['deposit', 'index-fund'] as const)('round 29 #11 – %s takes top
   })
 })
 
+describe('round 29 #11 – the household meter and the ledger agree after a top-up', () => {
+  it('⚠⚠ the shelf line is the REAL week-over-week move, off the rebased basis', () => {
+    // ⚠⚠ THE DEFECT THIS ARM CAUGHT, IN THIS WAVE. `householdWeekly` computes what one more week of
+    // holding does to the shelf as `assetValueCents(held + 1) - assetValueCents(held)`, and it was
+    // reading `paidCents` / `boughtWeek`. After a top-up those are no longer the compounding inputs
+    // – `revalueAssets` reads the REBASED basis – so the meter and the till would have quietly
+    // disagreed about the same holding, which is the «two functions asking one question» defect this
+    // repo names as its most-repeated. Both now read `basisCents ?? paidCents`.
+    const t = toppedUpTwice('r29-household', 'index-fund')
+    const before = t.held().valueCents
+    const shelf = toSnapshot(t.world).coachBilling.household.shelfCents
+    run(t.world, 1)
+    const actualMove = t.held().valueCents - before
+    // The meter promised exactly what the next tick delivered, to the cent.
+    expect(shelf).toBe(actualMove)
+    expect(shelf, 'and an appreciating holding really did move').toBeGreaterThan(0)
+  })
+})
+
 describe('round 29 #11 – a car is still a car', () => {
   it('⚠ a FIXED rung offers no top-up, on screen or in the engine', async () => {
     const world = professional(walk('r29-topup-car', 20))
