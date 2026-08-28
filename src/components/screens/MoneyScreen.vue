@@ -857,6 +857,27 @@ function stakeCentsFor(row: ShopRowView): number {
   if (!Number.isFinite(typed) || typed <= 0) return row.entryCents
   return Math.round(typed * 100)
 }
+// ⭐⭐ ROUND 29 #11 – `shopTopUpNote`, THE OWNER'S OWN WORDS, PARKED HERE AND NOT IN THE TEMPLATE.
+//
+// «Index fund хотелось бы иметь возможность докупать, предполагаю, что Savings deposit будет вести
+// себя так же – тоже надо исправить.»
+//
+// ⚠ AND HIS RULING THAT BINDS IT TO #12, 28.08: «здесь логика простая: в реальности на текущем счете
+// нет процентного дохода, максимум кешбек, и то не за все, мы для этого делаем Savings как раз. Одни
+// должны друг друга заменить.» So the shelf is not a competitor to the current account's interest –
+// it is its REPLACEMENT, and the decision to move money into it is the mechanic. That is why the
+// top-up control exists at all: without it the replacement cannot be fed.
+//
+// ⚠⚠ AND `shopToneNote` (ROUND 29 #9), for the same reason – Cyrillic may not appear in a template,
+// in a string OR in a comment (tests/template-copy-rules.test.ts):
+// «В строке с машиной и другими вещами Worth now / paid $60,000 / $59,361 – давай последнюю цифру
+// сделаем либо белой, либо жёлтой, с красным перебор.»
+// He is right about what red MEANS. `negative` is `--money-out`, whose documented sense is money
+// LEAVING – a bill, a fare, a cheque. What that figure states is what the thing IS WORTH, which is a
+// BALANCE, and StatRow's own vocabulary already has the word: `plain` = «a number with no direction
+// (a count, a balance)», painted `--ink`, i.e. white. The existing palette, not a new colour. The
+// direction is not lost – it moves to `.shop-row-change`, the signed row that is about a direction.
+
 /** ⭐ ROUND 29 #11 – CAN THE FAMILY PUT MORE INTO THIS ONE? True only for an 'open' rung it already
  *  holds: a deposit and an index fund take more money, a car does not. The predicate is the STAKE
  *  and not a list of ids, exactly as `buyAsset` re-validates it engine-side. */
@@ -1438,29 +1459,20 @@ const TAB_OPTIONS = [
                    engine computed. This screen subtracts nothing. -->
               <div v-if="row.valueCents !== null" class="shop-row-owned">
                 <!-- ⭐⭐ ROUND 29 #9 – `tone="plain"`, AND A DEPRECIATED VALUE IS NOT AN ERROR.
-                     THE OWNER: «В строке с машиной и другими вещами Worth now / paid $60,000 /
-                     $59,361 – давай последнюю цифру сделаем либо белой, либо жёлтой, с красным
-                     перебор.» He is right about what red MEANS here. `negative` is StatRow's
-                     `--money-out` and its documented sense is «money out» – a bill, a fare, a
-                     cheque leaving. What this figure states is what the thing IS WORTH, which is a
-                     BALANCE, and StatRow's own vocabulary already has the word for that: `plain` is
-                     «a number with no direction (a count, a balance)», painted `--ink`, i.e. white.
-                     That is the token he asked for, out of the existing three, not a new colour.
-                     ⚠ AND THE DIRECTION IS NOT LOST – it moves one line down to `.shop-row-change`,
-                     which is the SIGNED difference and the row that is genuinely about a direction.
-                     A car that lost $639 still says so, in red, under a worth that is just a
-                     worth. -->
+                     The owner's words and the reasoning are in `shopToneNote` in the script block,
+                     because Cyrillic inside a template is forbidden - strings AND comments
+                     (tests/template-copy-rules.test.ts). In short: `negative` means MONEY OUT, this
+                     figure is a BALANCE, and `plain` is StatRow's own word for a balance. -->
                 <StatRow class="money-row" label="Worth now" :meta="`paid ${formatCents(row.paidCents ?? 0)}`" :value="formatCents(row.valueCents)" tone="plain" />
                 <p class="shop-row-change" :class="{ 'is-down': (row.changeCents ?? 0) < 0 }">
                   {{ formatCentsSigned(row.changeCents ?? 0) }}
                   <span v-if="row.changePct !== null">since they bought it ({{ row.changePct }}%)</span>
                   <span v-else>since they bought it</span>
                 </p>
-                <!-- ⭐⭐ ROUND 29 #11 – PUT MORE IN. The owner: «Index fund хотелось бы иметь
-                     возможность докупать, предполагаю, что Savings deposit будет вести себя так же».
-                     Both, and only those two shapes: the control is drawn for an 'open' rung and
-                     never for a car. Same input, same minimum and same engine command as the
-                     opening stake – `buyAsset` re-validates every one of them. -->
+                <!-- ⭐⭐ ROUND 29 #11 – PUT MORE IN. His words are in `shopTopUpNote` in the
+                     script block (no Cyrillic in a template). The control is drawn for an 'open'
+                     rung and never for a car; same input, same minimum and same engine command as
+                     the opening stake, and `buyAsset` re-validates every one of them. -->
                 <label v-if="isTopUp(row)" class="shop-stake">
                   <span class="shop-stake-label">
                     Add more, from {{ formatCents(row.entryCents) }}
