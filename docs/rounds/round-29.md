@@ -166,6 +166,23 @@ contention artefacts of round 28 cost more reading than the wall-clock they save
 
 ---
 
+## Revived from the audit – his rulings, 28.08
+
+- [~] **Stats header tiles (round 10)** – ⚙ **NOT a regression; he has looked and has no complaint**:
+  «к этому претензий нет уже поправлено». ⚠ **And the audit over-claimed**: it reasoned from character
+  count («18 chars against the 11 it was measured at… which clips») and never measured a rendered
+  width. `nowrap` forbids wrapping, it does not clip; three tiles at 375px give each ~117px and
+  «International rank» at 11.5px needs ~105. **Counting characters is not measuring, in either
+  direction** – the same error as proving a UI fix with a source grep.
+  ⚠ One real residue: `StatsScreen.vue:239` still claims «"Season points" is now "Season pts"» and
+  **no such string exists** – the tile prints `Points`. The comment lies even though the layout does not.
+
+- [ ] **20. ⚠⚠ KIT WEAR ON HOLIDAY – the audit's worst find, and his: «вот это важно, да»** – ruled
+  **09.08**, re-asked as round 16 #8, and `src/engine/equipment.ts` carries **no vacation term at all**.
+  **Fourth asking, no code.** ⭐ Its own family is already correct – college suspends the coach and the
+  masseur, and a shoot week pays the masseur nothing – so a holiday that wears her rackets at full rate
+  is the odd one out, not a new idea. Own step in the wave.
+
 ## Asks – batched, so he answers in one pass
 
 | | the choice |
