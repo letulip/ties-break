@@ -29,7 +29,7 @@ contention artefacts of round 28 cost more reading than the wall-clock they save
 
 ---
 
-- [ ] **1. «На 23 неделе 44 года у меня в ленте был Шлем и не подал заявку, девушка была exhausted,
+- [x] **1. «На 23 неделе 44 года у меня в ленте был Шлем и не подал заявку, девушка была exhausted,
   я выбрал отпуск, отдохнул, вернулся – а шлема в ленте нет! Текущее место 116 (минус 11) показывает.
   После победы w500 снова появился. Это не очень хороший паттерн.»** – **measure, then build.** ⚠ The
   Slam is rank-gated, so a rank slip past its cut removes it mid-window. **The defect he is naming is
@@ -38,9 +38,118 @@ contention artefacts of round 28 cost more reading than the wall-clock they save
   slipped. ⭐ His «не очень хороший паттерн» is the design complaint: a decision that removes content
   must be legible before it is taken, not after.
 
-- [ ] **2. «Надо сделать предзагрузку картинок для оффлайн, у меня в ленте через одну черные плашки
+  ⚙ **MEASURED FIRST, AND THE MEASUREMENT MOVED THE ANSWER.** 12 careers x 624 weeks through the
+  SHIPPED predicates (`toSnapshot`, `feedContext`, `feedShows`, `preferredWeekEvent`), so the probe
+  cannot disagree with the screen. **140 Slam cards left the feed:**
+
+  | why | n | share |
+  | --- | --- | --- |
+  | the slam's OWN WEEK had passed – the eight-week horizon moved on | **134** | **95.7%** |
+  | `tierOpen.slam` went false – her rank crossed the acceptance cut | 3 | 2.1% |
+  | other | 3 | 2.1% |
+
+  ⚠ **SO THE DOMINANT CAUSE IS A THIRD ONE NEITHER OF US NAMED**: the feed looks eight weeks FORWARD,
+  and a week he spends is a week the Slam falls behind. The rank gate is real and is his «116 (минус
+  11)» exactly – two of the three crossings are clean: **92 -> 128** and **105 -> 130** against a cut
+  of 112, each in a SINGLE week – it is simply not what usually does it.
+
+  ⚙ **AND THE REST ITSELF MOVED NOTHING.** 58 forks taken from weeks where the Slam card was ON SCREEN
+  and her rank was within 40 places of the cut, each run THREE ways for four weeks from one world –
+  BOOK A FAMILY WEEK / IDLE / PLAY THE POLICY. The rung's verdict was identical in all three arms in
+  all 58 (`closed after rest = 1, after idle = 1, after play = 1`); the rank differences between rest
+  and idle were small and UNSIGNED, i.e. a diverged world, not a penalty for resting. **The decay is a
+  calendar fact: a counted result leaves the 52-week window on its own.** So of the two candidates the
+  answer is the second – the slip was going to happen and the vacation spanned the moment.
+
+  ⚙ **THE DELIVERABLE SURVIVES THAT, WHICH IS THE POINT.** `composables/restCost.ts` +
+  `PlanWeekSheet.vue`'s Vacation tab: the tab he books from now states, BEFORE the press, what the
+  week costs. Two sentences, both facts already on the Snapshot and neither a forecast:
+
+  > *She is defending 130 pts from that week, and a week away banks nothing in their place.*
+  > *At #92 she is 20 places inside the Grand Slam cut of 112 – a rung that closes takes its
+  > tournaments off the feed.*
+
+  ⚠ **THE TRIGGER IS THE DEFENDING SLOT** – the counted result exactly one ranking window behind the
+  booked week, the same arithmetic SeasonScreen's defending badge already uses. A week that defends
+  nothing costs her ranking nothing, so a note on it would be furniture on every booking. The cut
+  clause RIDES on that trigger and is dropped when she is not near one: `GATE_NEAR_PLACES = 40`, and
+  it is **measured, not picked** – the two clean crossings above moved her 36 and 25 places in one
+  week, so a threshold that would have warned him has to be at least 36.
+
+  ⚠ **THE GATE IS NOT TOUCHED.** `tierOpen`, `acceptanceRank` and every entry rule are read and never
+  written; field access is a later wave's. This is a sentence.
+
+  **Evidence.** `tests/component/round29-rest-cost.test.ts` – 6 cases, 4 of them mounted on the real
+  sheet: both lines with their numbers, the note ABSENT on a week that defends nothing, the cut clause
+  alone dropped for a girl 41 places clear, and the takeover shell that answers round-20 #3 here (the
+  exit is in a header that does not scroll, and the sheet does not block).
+  ⚠ Mutation-verified, three, each alone: the gate clause disabled -> 1 red; the trigger widened to
+  fire on every week -> 2 red; and the copy pin proved by putting Cyrillic in a template -> 1 red.
+
+- [x] **2. «Надо сделать предзагрузку картинок для оффлайн, у меня в ленте через одну черные плашки
   в сезоне»** – **build.** Every other card in the season feed renders black. PWA precache already
   exists (`118 entries` in the build log); the feed's imagery is evidently not in it.
+
+  ⚙ **DIAGNOSED BEFORE IT WAS FIXED, AND «ЧЕРЕЗ ОДНУ» IS THE WHOLE CLUE.** Nothing is missing from
+  disk – every stem `art/venues.ts` and `art/weeks.ts` can spell has its webp, checked both ways by
+  two existing tests. What was missing is the FETCH. `vite.config.ts` keeps ALL of `public/images/**`
+  out of the precache (`globIgnores`) and serves it through a CacheFirst RUNTIME route, so a picture
+  is on the device **if and only if something asked for its URL while there was a network** – and
+  nothing did: `art/preload.ts` warms her portraits, her coach and the one journey-home frame, and the
+  feed's courts and week frames were on nobody's list. The quiet weeks share four paintings between
+  them (`training` + the three off-season frames) so on any phone that has been online they were
+  fetched long ago; a tournament card binds a DIFFERENT court every time (`venueArtStem` – one
+  photograph per event, forever), so every card he had not already scrolled past was a URL nothing had
+  ever requested. **Tournament, quiet, tournament, quiet.**
+
+  ⚙ **REPRODUCED IN A BROWSER, NOT REASONED.** `e2e/offline.spec.ts` gained *"the season feed keeps
+  its pictures with the network cut"* – a real production build with a real registered service worker,
+  the network cut with `context.setOffline`, and `naturalWidth` read off the feed's own `<img>`s.
+  Before the fix it named **seven blank plates** on the `junior` fixture:
+  `local-clay-1`, `local-clay-1`, `training`, `regional-clay-1`, `training`, `local-clay-1`,
+  `study-young`. After it: **zero**, on the same fixture and the same build.
+
+  ⚙ **THE FIX IS A PRELOADER, AND IT ADDS NOTHING TO THE PRECACHE.** `src/art/feedArt.ts` +
+  one watch in `art/autoPreload.ts`, keyed on the WEEK, which is the feed's own trigger.
+
+  | cost | figure |
+  | --- | --- |
+  | **added to the precache** | **0 bytes.** `globIgnores` untouched, install stays 118 entries / 2826 KiB |
+  | what precaching the courts instead would have cost | **+5108 KiB** (73 webp, `ls`) – nearly triple the install, for art most careers never see |
+  | fetched at runtime | at most ONE painting per week of the horizon = 8. Courts average 70 KiB, week frames 25-82 KiB, so a cold career's first warm is under ~560 KiB |
+  | every later tick | ONE new week – `warm()` is idempotent per URL, so the seven that merely slid along cost nothing |
+
+  ⚠ **ONE PER WEEK, NOT ONE PER EVENT, AND THE GAP IS LARGE.** Measured on the same 12x624 corpus:
+  `snapshot.upcoming` holds a **median of 30 events (max 38)** because a week stacks several rungs,
+  against a feed that draws a median of 5 cards and never more than 8. Warming `upcoming` would fetch
+  ~2 MB per career to paint eight cards. The module asks the feed's OWN question instead – the same
+  `feedContext` / `feedShows` / `preferredWeekEvent` the screen asks – so the picture warmed is the
+  picture drawn, by construction.
+
+  ⚠ **AND `maxEntries: 80` IS DELIBERATELY LEFT ALONE.** vite.config.ts records that 167 files reach
+  `tb-art-v1` against a cap of 80 and leaves the number as an owner storage-budget call. It does not
+  need moving for this: a warm write is the most recently used entry, so the eight the feed is about
+  to draw are the last things eviction reaches.
+
+  **Evidence.** `e2e/offline.spec.ts` (above – the only layer that can prove a file is ON the device
+  with the network gone) and `tests/round29-feed-art.test.ts` – 4 cases: every court the feed will
+  draw is in the set, the quiet weeks' frames are in it, the set is bounded by `UPCOMING_WEEKS + 1`
+  at weeks 0/20/40/80 however many events stack, and no snapshot means no fetches.
+  ⚠ Mutation-verified: the venue arm dropped from `weekUrl` -> 1 red in the unit file, and the e2e
+  itself is the mutation proof for the whole module (red at baseline, green after).
+
+  ⚠ **ONE GUARD RE-AIMED, NEVER DELETED.** `tests/redesign-home.test.ts`'s *"the per-band portrait
+  budget is untouched"* counts the watches in `art/autoPreload.ts` and stood at 3; the feed's warm is
+  a fourth, on its OWN trigger, which is the third time that has happened and the exact reason the
+  guard exists. 3 -> 4, plus the new trigger named in the set beside the count, so a fifth addition
+  still has to say what it keys on. ⚠ Mutation-verified against the fact it protects: folding
+  `preloadFeedArt` into the AGE watch reddens it (`expected 3 to have a length of 4`).
+
+  ⚠ **AND THE WATCH KEYS ON THE ENTRIES AS WELL AS THE WEEK**, which the first draft did not.
+  `preferredWeekEvent` puts the ENTERED event at the front of its tiebreaks, so entering a lower rung
+  on a stacked week changes which photograph that card draws – and entering works perfectly well with
+  no network. Keyed on the week alone, the newly-preferred court would have stayed cold precisely
+  when he had just committed to it.
 
 - [x] **3. «В разделе календаря недели всё ещё нет блоков про съёмки… а если это выпадает на неделю
   турнира, то на затраченной энергии должно отражаться. А, увидел на пустой неделе, но на
@@ -210,10 +319,53 @@ contention artefacts of round 28 cost more reading than the wall-clock they save
   code and tell him what exists, at what standing each rung opens, and what the largest cheque in the
   model actually is. ⭐ Pairs with 15, which is the same question from the other side.
 
-- [ ] **8. «При клике на Next Tournament на главном экране давай сделаем может быть какой-то
+- [x] **8. «При клике на Next Tournament на главном экране давай сделаем может быть какой-то
   информационный экран? Например со списком соперников, прогнозами и комментариями тренера ещё
   какой-то информацией о турнире, картинкой с ним… Можно частично переиспользовать экран начала
   турнира»** – **build.** ⭐ His own implementation hint is the cheap road and should be taken.
+
+  ⚙ **HIS HINT IS TAKEN AND THE NAVIGATION IS UNCHANGED.** Home's card is a door onto the This-week
+  tab (R13-12) and it stays one; what was behind it was a single pill of text. `NextTournamentPanel.vue`
+  is the tournament-start splash shown ONE ENTRY EARLIER, on the same screen: the hero photograph, the
+  same four facts in the same order (Surface / Prize money / Winner / Spectators), the two-sided first
+  round with the draw size on it, the read-plus-ring, and what the trip costs.
+
+  ⚠ **THE CSS COULD NOT BE SHARED AND THAT IS SAID RATHER THAN HIDDEN.** `TournamentFlow.vue`'s block
+  is `<style scoped>`, so its `tf-*` classes exist only inside that component; hoisting a 600-line
+  style block into the global sheet to borrow four of them is a bigger change than the panel. The
+  SHAPE is the reuse.
+
+  ⚠ **AND THE COACH'S VOICE STAYS SEASONSCREEN'S.** `coachSays` there picks one of four wordings per
+  verdict off the event's own sub-stream and is bounded by source-region pins in three test files;
+  copying that table would give two surfaces two sentences for one engine verdict, which is the class
+  this repo has already paid for four times. The panel prints the VERDICT plainly and lets the feed
+  keep the voice.
+
+  ⭐⭐ **THREE OF THE FOUR THINGS HE NAMED EXIST AND ARE DRAWN. THE FOURTH DOES NOT AND IS NOT
+  INVENTED.**
+
+  | his ask | what it is drawn from |
+  | --- | --- |
+  | «прогнозами» | `preview.firstMatchChance` – the engine's own round-one odds, on the same `ProgressRing` through the same `readingColor` ramp and the same accessible sentence the feed uses |
+  | «комментариями тренера» | the field's reading (`preview.fieldStrength`), the court's verdict for her build (`surfaceStyleHint`, consumed not re-worded), and the hired coach's note about this trip (`UpcomingEvent.coachCaution`) when he has one |
+  | «картинкой с ним» | `venueArtUrl` – one tournament, one photograph, wherever it appears |
+  | «информацией о турнире» | winner's cheque (`prizeCentsFor`), winner's points, draw size, crowd, weather, entry fee, travel budget |
+  | ⚠ **«списком соперников»** | **NOT SHIPPED, and the panel says so.** `EventPreview` carries exactly ONE opponent, because the draw is not made until `runTournament` runs on the tick. The first round is named in full – both flags-or-not, both ranks read off THIS rung's table – and one line states that the rest of the bracket is made when she gets there. A list of eight invented names on a screen he trusts is worse than an honest sentence. |
+
+  ⚠ **NO OPPONENT FLAG**, for the same reason: `EventPreview` carries a name and a rank and no nation.
+  Absent, not blank – a blank flag slot opposite a filled one reads as a bug.
+
+  **Evidence.** `tests/component/round29-next-tournament.test.ts` – 13 cases, mounted on a REAL ticked
+  career with the engine's own event: the picker's exact URL, the four facts against `TIERS` and
+  `prizeCentsFor`, the ring's value/label against `preview`, both sides of the first round, the money
+  to the cent, the panel ON the This-week screen for an ENTERED tournament and absent when nothing is,
+  and the copy rules on all three templates this wave touched.
+  ⚠ Mutation-verified, four: the honest-gap sentence deleted -> 1 red; an invented opponent flag -> 1
+  red; Cyrillic in a template -> 1 red; ⚠⚠ **and the fourth is the important one** – re-pointing her
+  rank at the ITF alias left the first draft GREEN, because that fixture's event is an ITF rung and a
+  young career is unranked in every table, i.e. it was comparing a value with itself. That is the dead
+  guard class this round found twice elsewhere. A second case now places three DIFFERENT ranks and
+  mounts a domestic rung; the same mutation now reddens it (`expected '#77' to be '#41'`).
 
 - [x] **9. «В строке с машиной и другими вещами `Worth now / paid $60,000 / $59,361` – давай
   последнюю цифру сделаем либо белой, либо жёлтой, с красным перебор.»** – **build.** One colour token.

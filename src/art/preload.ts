@@ -236,6 +236,19 @@ export function resetPreloadCache(): void {
   requested.clear()
 }
 
+/** Warm a list of URLs that some OTHER module built with the shipped builders.
+ *
+ *  ⚠ IT IS NOT A LICENCE TO SPELL A FILENAME AT A CALL SITE. This module's standing rule - "the URL
+ *  builders MUST agree with the consumers, or a preload warms a file nobody asks for" - is why every
+ *  entry point above returns the urls it warmed. `art/feedArt.ts` (round 29 #2) keeps that rule by
+ *  going through `venueArtUrl` / `weekArtUrl` / `weekHomeArtUrl` / `vacationArtUrl`, the same four
+ *  functions the Season feed's `<img>` bindings call; what it cannot do is live in HERE, because
+ *  `art/weeks.ts` already imports this file and the cycle would be real. */
+export function warmAll(urls: readonly string[]): string[] {
+  for (const u of urls) warm(u)
+  return [...urls]
+}
+
 function warm(url: string): void {
   if (requested.has(url)) return
   requested.add(url)

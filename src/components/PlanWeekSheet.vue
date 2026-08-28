@@ -31,6 +31,7 @@ import { layoffBlock, medicalBlock, practiceCaution, type PracticeCaution } from
 import { isOffSeasonWeek } from '../engine/season/calendar'
 import { weekLabel, weekRange } from '../shared/dates'
 import { vacationArtUrl } from '../art/weeks'
+import { restCostFor, restCostLines } from '../composables/restCost'
 import IconButton from './ui/IconButton.vue'
 import TakeoverShell from './ui/TakeoverShell.vue'
 
@@ -211,6 +212,19 @@ const packageRows = computed<PackageRow[]>(() =>
   }),
 )
 
+// ⭐⭐ ROUND 29 #1 – THE REST'S OWN PRICE, on the tab where the owner took the decision.
+//
+// «я выбрал отпуск, отдохнул, вернулся – а шлема в ленте нет!» The rule, the measurement behind it
+// and the reason it is not a prediction all live in composables/restCost.ts; this is one call.
+//
+// ⚠ THE VACATION TAB ONLY, AND THAT IS HIS OWN DECISION RATHER THAN A LIMIT OF THE RULE. A friendly
+// banks no ranking points either, but a practice week is not rest – it already carries its own
+// guardrail two panes up, and a second caution beside it would make the louder one read as noise.
+const restNote = computed(() => {
+  const cost = restCostFor(game.snapshot, props.week)
+  return cost ? restCostLines(cost) : []
+})
+
 function askVacation(row: PackageRow): void {
   emit('bookVacation', {
     week: props.week,
@@ -344,6 +358,16 @@ function askVacation(row: PackageRow): void {
              choosing – it is simply not a block any more. -->
         <p v-if="layoff" class="hint">
           {{ layoffNote }} A week away is still hers to book – the trip is rest, not tennis.
+        </p>
+        <!-- ⭐⭐ ROUND 29 #1 – WHAT THE WEEK OFF COSTS HER RANKING, BEFORE IT IS BOOKED.
+             The owner rested a tired girl and came back to a feed with no Slam in it. The measurement
+             and the reason this is two sentences rather than a prediction are on `restCostFor`
+             (composables/restCost.ts); the short version is that the points leave her window on their
+             own, and a week away is the choice to put nothing in their place.
+             ⚠ `caution-note` and not `hint`: this is the practice guardrail's own shape, because it
+             is the same kind of statement – a real cost attached to a choice that is still hers. -->
+        <p v-if="restNote.length" class="caution-note">
+          <span v-for="line in restNote" :key="line" class="rest-cost-line">{{ line }}</span>
         </p>
         <div class="pkg-list">
           <div v-for="row in packageRows" :key="row.id" class="pkg-row" :class="{ recommended: row.recommended }">

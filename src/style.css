@@ -1339,6 +1339,15 @@ button.danger:hover:not(:disabled) {
   font-size: 12px;
   margin: 6px 0 0;
 }
+/* ROUND 29 #1 – the two sentences of the rest-cost note stack instead of running together. A caution
+   is a paragraph and stays one; each sentence is a block inside it, so the second one starts on its
+   own line without a second amber block appearing beside the first. */
+.rest-cost-line {
+  display: block;
+}
+.rest-cost-line + .rest-cost-line {
+  margin-top: 2px;
+}
 /* THE HIRED COACH'S OPINION on a trip (load slice). Deliberately NOT `--warning`: it is advice from a
    person, not the engine refusing anything, and amber next to an active Enter reads as a lock. Muted,
    same size as the caution above it, so a card carrying both shows a hierarchy - the rule shouts, the

@@ -41,6 +41,7 @@ import { weekDateLine, weekLabel } from '../../shared/dates'
 import { KID_ID, ageAtWeek, flipScore } from '../../engine/world'
 import { recapExists } from '../../composables/weekRecap'
 import WeekRecapCard from '../WeekRecapCard.vue'
+import NextTournamentPanel from '../NextTournamentPanel.vue'
 import PrimaryPill from '../ui/PrimaryPill.vue'
 import ScreenShell from '../ui/ScreenShell.vue'
 
@@ -208,6 +209,12 @@ const spendRange = computed<[number, number]>(() => {
         <!-- Round-8 R8-4: latest played match score of this week's tournament, once available. -->
         <span v-if="thisWeekScore" class="this-week-score num">Latest match: {{ thisWeekScore }}</span>
       </div>
+      <!-- ⭐⭐ ROUND 29 #8 – the owner clicked Home's "Next tournament" card and found emptiness. It
+           is a door and this is what it opens onto; until now the tournament behind it was one pill
+           of text. The panel is the tournament-start screen shown one entry early, which is his own
+           implementation hint - his words, the whole argument, and the one thing he asked for that
+           the snapshot cannot supply are all in NextTournamentPanel.vue's header. -->
+      <NextTournamentPanel v-if="nearestEntered" :event="nearestEntered" />
     </section>
 
     <section>
