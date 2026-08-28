@@ -122,7 +122,27 @@ function subjectOf(o: Offer): string {
     const t = o.terms as TourLetterTerms
     if (t.notice === 'due') return `Required event – ${t.label ?? 'the tour'}`
     if (t.notice === 'penalty') return 'Penalty points recorded'
-    return 'Entries suspended'
+    // ⚠⚠ ROUND 29 #16 – THE SEASON BRIEFING USED TO WEAR THE SUSPENSION LETTER'S TITLE, and it was
+    // not a wording complaint. The owner: «письмо с Заголовком Entries Suspended … мне кажется этот
+    // заголовок сбивает с толку, я его перевожу как "Заявки приостановлены", в то время как письмо
+    // вообще о другом.» (his words are in the .ts comments and in
+    // tests/component/round29-inbox-subjects.test.ts – THIS IS A SCRIPT and not a template, but the
+    // sentence below it IS the subject line, so no Cyrillic goes past this comment.)
+    //
+    // The desk raises FOUR notices (`TourLetterTerms.notice`) and this function branched on TWO of
+    // them and then fell through, so `season` – the top-50 mandatory regime, the quiet yearly
+    // briefing – arrived in the list announcing a suspension that had not happened. That is a FALSE
+    // title, not a confusing one, and it is the exact failure this function's own header forbids:
+    // «a subject line that promised something the sheet does not say would be worse than no subject
+    // line». It restates its own sheet's first sentence now, like every other arm: the paper opens
+    // «Her ranking is inside the top N, so the season ahead is a required one.»
+    if (t.notice === 'season') return t.maxRank ? `Required season – the top ${t.maxRank}` : 'Required season'
+    if (t.notice === 'suspension') return 'Entries suspended'
+    // ⚠ AND A FIFTH NOTICE CANNOT INHERIT A TITLE IN SILENCE AGAIN. `notice` is a closed union, so
+    // TypeScript narrows it to `never` here: adding a value to it without adding an arm above stops
+    // the build rather than borrowing whichever line happened to be last.
+    const unhandled: never = t.notice
+    return unhandled
   }
   // ⭐ ROUND 24 #1 – the scholarship's three subjects. Each one restates its own sheet's first
   // sentence, which is this function's rule; the share is on the line because the share is the whole
