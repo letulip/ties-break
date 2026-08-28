@@ -1980,6 +1980,32 @@ export function migrateSave(raw: unknown): WorldState {
     v = 63
   }
 
+  // ⭐⭐ v63 -> v64: WHO WON EACH AI TOURNAMENT. `fieldSeasonTitles` is the season's titles by rung
+  // and then by champion id – the record `runAiTournament` computed and dropped on every canonical
+  // bracket the game has ever resolved. One object, and it back-fills EMPTY.
+  //
+  // ⚠ THE BACK-FILL IS A PRESERVATION AND NOT A DEFAULT, WHICH IS v53's CASE EXACTLY (its own twin,
+  // `fieldSeasonPoints`, one field over). Every career saved before this build was played on an
+  // engine that discarded the champion the instant it was computed, so an empty tally is precisely
+  // what those seasons contained. It cannot be reconstructed either, and that is the end of the
+  // question rather than the start of it: the bracket that produced each champion was resolved on
+  // `seed:aitour:<event.id>` against a field derived from `deriveWeekField`'s inputs AS THEY STOOD
+  // THAT WEEK – results since pruned at 52 weeks, a cohort since drifted, a points tally already
+  // added to – so a replay today deals a different draw and would invent a champion this save never
+  // had. An invented champion is worse than an absent one.
+  //
+  // ⚠ AND IT FILLS ITSELF FROM THE NEXT TOURNAMENT WEEK ON, so a migrated career is short of a
+  // census for at most the rest of its current season and is level from the next wrap – the same
+  // shape v53 has, on the same clear line in `maybeFireSeasonWrapUp`.
+  //
+  // Defensive (a non-object value is written whole – v30's rule) and therefore idempotent. It writes
+  // a literal: ZERO draws on any stream, so the frozen MAIN capture (41550 / e6b0c709) is untouched
+  // by construction.
+  if (v === 63) {
+    if (typeof save.fieldSeasonTitles !== 'object' || save.fieldSeasonTitles === null) save.fieldSeasonTitles = {}
+    v = 64
+  }
+
   if (v !== SAVE_SCHEMA_VERSION) {
     throw new Error(`Save schema ${v} is newer than supported ${SAVE_SCHEMA_VERSION}`)
   }

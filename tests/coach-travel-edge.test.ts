@@ -1034,8 +1034,40 @@ const FROZEN = {
    *  (1dbff28caca2 / aebc8101d6df / d84bcbf0c481, before and after). The new term is arithmetic on
    *  state and draws nothing; the two retirement uniforms were already drawn unconditionally per
    *  match off `seed:ret`. So the frozen MAIN capture is NOT re-pinned – count 41550, hash e6b0c709
-   *  – and `tests/condition.test.ts` was re-run green beside this re-freeze. */
-  middleGrinder: '37a2a7b787ebf3b6de5daadef4e4e91386355c59e488c7270316d53a10292e47',
+   *  – and `tests/condition.test.ts` was re-run green beside this re-freeze.
+   *
+   *  ⭐⭐ RE-FROZEN FOR v64 (28.08) – THE CHAMPION OF EVERY AI TOURNAMENT IS NOW WRITTEN DOWN
+   *  (`world.fieldSeasonTitles`), AND ALL THREE CAREERS MOVED BECAUSE ALL THREE CARRY IT. That is a
+   *  different reason from v63's: `assets` was an EMPTY key appearing, this one fills itself ~187
+   *  times a season in every career the engine has.
+   *
+   *  ⚠ PER-KEY DIFF TAKEN FIRST, as this file's protocol demands, and the control was **this branch
+   *  with my own change reverted** – a detached worktree at `8f9d7af`, the commit my worktree was
+   *  cut from, with nothing of mine committed on top of it. Verified BOTH ways rather than assumed
+   *  (the 17.08 null-arm hazard): `grep -rl fieldSeasonTitles src/` returns NOTHING on the A tree and
+   *  four files on B (`world/state.ts`, `world/phaseAiWeek.ts`, `world/milestones.ts`,
+   *  `migrations.ts`), so the A arm genuinely lacks the change and the B arm contains its reader.
+   *  `tools/frozen-key-diff.ts` on all three arms (preset/policy 5/0, 8/0, 0/1), headers checked
+   *  against the invocations: **exactly two lines of 72 differ, and one of them is a key that did not
+   *  exist** – `fieldSeasonTitles` APPEARS, and `schemaVersion` goes 63 → 64 (da4ea2a5506f →
+   *  a68b412c4282). Nothing else on any arm.
+   *
+   *  ⚠ THE LIST THAT MATTERS, byte-identical on every arm: `rngMain`, `results`, `season`, `cohort`,
+   *  `events`, `fundsCents`, `kidRank`, `skills`, `entries`, `seasonEntries`, `fieldSeasonPoints`,
+   *  `trophiesByTier`, `careerTotals`, `offers`. **NOT ONE OF THESE THREE CAREERS PLAYED A DIFFERENT
+   *  MATCH, WON A DIFFERENT TITLE OR BANKED A DIFFERENT CENT** – which is the whole claim of a change
+   *  that only writes down what the bracket had already decided.
+   *
+   *  ⚠ `rngMain` UNMOVED (1dbff28caca2 / aebc8101d6df / d84bcbf0c481, before and after) is the
+   *  load-bearing half, and it is true by construction: `recordTourChampion` reads
+   *  `result.finishes`, a table the bracket has already filled in, and writes an integer. There is no
+   *  draw on MAIN and none on any sub-stream. **So the frozen MAIN capture is NOT re-pinned – count
+   *  41550, hash e6b0c709 – and `tests/condition.test.ts` was re-run green beside this re-freeze.**
+   *
+   *  `PRE_V64` below is the byte-level half of the same proof rather than a claim about it:
+   *  `careerHashAtSchema(…, 63)` drops the one appended key and rolls the number back, and all three
+   *  v63 constants come back byte for byte. */
+  middleGrinder: 'b4f513473a1eb296730ff3bb432f44654e1e0de109e5f9df60141510478c5182',
   /** PRESETS[8] · 120k wealthy family, elite coach · grinder policy (never travels)
    *
    *  ⭐⭐ RE-FROZEN FOR ROUND 28 #17-b (28.08) – AND ALONE, WHICH IS THE FINDING, exactly as the
@@ -1056,7 +1088,7 @@ const FROZEN = {
    *
    *  `PRE_R28B` + `careerHashUnderTheWindowRule` are the byte-level half of the same proof, and the
    *  frozen MAIN capture is NOT re-pinned – the ruling adds no draw on any stream. */
-  eliteGrinder: '32086f46ed998781048e54be3904558d2cbf2c965c9dbdcbd705492a043f7082',
+  eliteGrinder: '56e70aae50d9d4185e3f6e9777f65f3ace30daf5ad4f64eb21b4b75b0b60cea7',
   /** PRESETS[0] · 8k working family, SELF-COACHED · player policy (switch on, nobody to send)
    *
    *  ⭐⭐ RE-FROZEN A FIFTH TIME (16.08) – AND ALONE, WHICH IS THE FINDING. The owner's correction of
@@ -1274,7 +1306,7 @@ const FROZEN = {
    *  rolled back by a version number, but swapping ONLY `schemaVersion` on the new world still
    *  reproduces each, which is all those lines ever claimed. The frozen MAIN capture
    *  (41550 / e6b0c709) is untouched and was re-run green beside this re-freeze. */
-  selfTravelling: '8d6b056ff2480dfce6f7a2eb92bdfcaede034c229f8e55b07fda8dedd45d3fe8',
+  selfTravelling: 'df94910ff028f50acedac988a3c1d0be08f08a5843b13ec98c64c6a510531a86',
 }
 
 /** ⭐⭐ THE SAME THREE CAREERS AS THEY HASHED BEFORE ROUND 28 #17-b – the identity that proves the
@@ -1292,10 +1324,22 @@ const FROZEN = {
  *  wave running: the ruling adds no draw on any stream, so the frozen MAIN capture in
  *  tests/condition.test.ts (count 41550, hash e6b0c709) is not re-pinned, and the pairwise
  *  invariance block in tests/offers.test.ts was green beside this re-freeze. */
+/** ⚠ RE-TAKEN AT v64 (28.08), NOT WEAKENED, AND FOR A REASON THAT IS NOT ABOUT THE WINDOW RULE AT
+ *  ALL. These three are whole-world hashes like `FROZEN`'s – `careerHashUnderTheWindowRule` rewrites
+ *  the inbox and hashes everything else unchanged – so the key v64 appends moves them exactly as it
+ *  moves their twins, and holding the old numbers would have made this identity fail for a reason
+ *  that has nothing to do with the ruling it exists to prove.
+ *
+ *  ⚠ THE SHAPE OF THE PROOF IS UNCHANGED AND STILL HOLDS, which is what re-taking has to preserve:
+ *  `middleGrinder` is still IDENTICAL to `FROZEN.middleGrinder` (that career's kit letters all land
+ *  on the window's opening week, where the two rules agree), `selfTravelling` is still identical to
+ *  `FROZEN.selfTravelling` (a career that clears no rung is never written to), and only
+ *  `eliteGrinder` differs from its `FROZEN` twin – the one letter, `kit-152`, that the ruling moves.
+ *  Same three relations as before the re-take; the numbers moved together, the argument did not. */
 const PRE_R28B = {
-  middleGrinder: '37a2a7b787ebf3b6de5daadef4e4e91386355c59e488c7270316d53a10292e47',
-  eliteGrinder: '2ead13e9a043799c44c2c1608d4372b9ffe2fd2ac1f941cefb4d4697ba8606fe',
-  selfTravelling: '8d6b056ff2480dfce6f7a2eb92bdfcaede034c229f8e55b07fda8dedd45d3fe8',
+  middleGrinder: 'b4f513473a1eb296730ff3bb432f44654e1e0de109e5f9df60141510478c5182',
+  eliteGrinder: 'c23bb7dda4ae4c84062aae4748a5d3b3a7374863e89365c98165e4a3dfa9f6d1',
+  selfTravelling: 'df94910ff028f50acedac988a3c1d0be08f08a5843b13ec98c64c6a510531a86',
 }
 
 /** ⭐ THE SAME THREE CAREERS AS THEY HASHED UNDER v56 – the identity that proves the v57 re-freeze
@@ -1430,6 +1474,25 @@ const PRE_V63 = {
   middleGrinder: '46047201ad23600b8e56a4d95d898ba36f0f85ab27d100e366285d0c3d955359',
   eliteGrinder: 'eaead59db7001eb165338ce79c25d13d041a796cb2c570f2b79243c87271f5be',
   selfTravelling: '054b39447404b35c88bbb615a16ab30bf5070e4c4054d11a0c3e8c62300abfcf',
+}
+
+/** ⭐⭐ THE SAME THREE CAREERS AS THEY HASHED UNDER v63 – the identity that proves the v64 re-freeze
+ *  moved the schema number and ONE APPENDED KEY, and nothing else in any of the three.
+ *
+ *  v64 records the champion of every AI tournament (`world.fieldSeasonTitles`), a fact these careers
+ *  produce ~187 times a season and had been throwing away since the canonical brackets existed. So
+ *  unlike v63's `assets` the new key is NOT empty here – it is full, in every career, which is
+ *  precisely the change landing. That makes this identity the load-bearing one: if writing the
+ *  champion had touched a draw, a rank, a cent or an event, dropping the key would NOT bring the old
+ *  hashes back and this case would go red beside the freeze, naming the wave instead of leaving
+ *  three hashes to drift.
+ *
+ *  These are the v63-era `FROZEN` values verbatim. `careerHashAtSchema(…, 63)` drops
+ *  `fieldSeasonTitles` and rolls the number back, and all three come back byte for byte. */
+const PRE_V64 = {
+  middleGrinder: '37a2a7b787ebf3b6de5daadef4e4e91386355c59e488c7270316d53a10292e47',
+  eliteGrinder: '32086f46ed998781048e54be3904558d2cbf2c965c9dbdcbd705492a043f7082',
+  selfTravelling: '8d6b056ff2480dfce6f7a2eb92bdfcaede034c229f8e55b07fda8dedd45d3fe8',
 }
 
 /** ⭐ THE SAME THREE CAREERS AS THEY HASHED UNDER v59 – the identity that proves the v60 re-freeze
@@ -1618,6 +1681,19 @@ function walkFrozenCareer(presetIndex: number, policyIndex: number, force?: Part
   // file buys anything, and 156 weeks ends at age 16.6. Asserted rather than assumed, because a key
   // that filled itself would move these hashes for a reason no comment could name.
   expect(world.assets, 'the v63 shelf is present and EMPTY in the frozen careers').toEqual([])
+  // ⚠ v64: and the champion tally is present and FULL – the one key here that is asserted non-empty,
+  // because unlike every field above it this one IS the change rather than a seat the change left
+  // inert. Week 156 is `156 % 52 = 0`, three weeks past the season-2 wrap that cleared it, so what it
+  // holds is the opening weeks of a new season and not a whole one; the shape is what matters here
+  // (the census itself is measured in tests/ai-champions.test.ts). Asserted rather than assumed for
+  // the mirror of every reason above: a wave that quietly STOPPED recording would leave three hashes
+  // drifting with no comment able to name why, and this line names it instead.
+  const recorded = Object.values(world.fieldSeasonTitles ?? {})
+  expect(recorded.length, 'the v64 champion tally is present in the frozen careers').toBeGreaterThan(0)
+  expect(
+    recorded.reduce((sum, rung) => sum + Object.values(rung).reduce((a, b) => a + b, 0), 0),
+    'the v64 champion tally holds this season-so-far, not nothing',
+  ).toBeGreaterThan(0)
   return world
 }
 
@@ -1652,11 +1728,30 @@ function careerHashAtSchema(presetIndex: number, policyIndex: number, schemaVers
   // back exactly: a rollback to 62 is this world minus `assets`, a rollback to 61 is that minus the
   // peak, and a rollback below 59 is that minus the masseur's three. Every one of the nine older
   // constants below is unchanged and still reproduces.
-  const { assets: _assets, ...preAssets } = world
+  // ⚠ RE-AIMED FOR v64, NOT WEAKENED, AND THE KEY THIS ONE PEELS IS NOT IN `createWorld`'s LITERAL
+  // AT ALL – which is a difference worth stating, because the three notes above are about literal
+  // order and this one is not. `fieldSeasonTitles` is written by `runAiTournament` on the first week
+  // a bracket resolves, exactly as its twin `fieldSeasonPoints` is, so it joins the serialisation at
+  // whatever position that first write gives it – ahead of `fieldSeasonPoints` on a career whose
+  // first event is a domestic rung, since a junior draw pays no professional and creates no points
+  // entry. That costs this identity nothing: object rest preserves the RELATIVE order of everything
+  // it keeps, so dropping the new key alone restores precisely the v63 serialisation, whichever side
+  // of its twin it landed on. Verified rather than argued – `PRE_V64` below reproduces all three v63
+  // constants byte for byte.
+  const { fieldSeasonTitles: _titles, ...preTitles } = world
+  const { assets: _assets, ...preAssets } = preTitles
   const { peakPhysical: _peak, ...prePeak } = preAssets
   const { masseurHired: _seat, masseurSessionsPerWeek: _dial, masseurTravels: _stance, ...preMasseur } = prePeak
   const shape =
-    schemaVersion < 59 ? preMasseur : schemaVersion < 62 ? prePeak : schemaVersion < 63 ? preAssets : world
+    schemaVersion < 59
+      ? preMasseur
+      : schemaVersion < 62
+        ? prePeak
+        : schemaVersion < 63
+          ? preAssets
+          : schemaVersion < 64
+            ? preTitles
+            : world
   return createHash('sha256').update(JSON.stringify({ ...shape, schemaVersion })).digest('hex')
 }
 
@@ -1755,6 +1850,23 @@ describe('the byte-identity of a career that does not travel', () => {
     expect(careerHashAtSchema(5, 0, 62), '25k · middle coach · grinder').toBe(PRE_V63.middleGrinder)
     expect(careerHashAtSchema(8, 0, 62), '120k · elite coach · grinder').toBe(PRE_V63.eliteGrinder)
     expect(careerHashAtSchema(0, 1, 62), '8k · self-coached · player').toBe(PRE_V63.selfTravelling)
+  })
+
+  it('⭐⭐ v64: rolling the schema back to 63 – and dropping the key v64 added – reproduces the previous hashes byte for byte', () => {
+    // ⚠ THE WHOLE OF WHAT RECORDING A CHAMPION DID TO A CAREER, AS AN IDENTITY, and this is the
+    // strongest form the claim can take. v64 writes `world.fieldSeasonTitles` on EVERY canonical
+    // bracket – ~187 a season in each of these three careers – so unlike v63's empty `assets` the new
+    // key is FULL here. If the write had reached anything, dropping it would not be enough: the
+    // ledger, the ranking, the cohort, the feed or the funds would still differ and this case would
+    // be red beside the freeze.
+    // ⚠ AND THE POINT OF THE CHANGE IS THAT IT REACHES NOTHING. It is post-draw bookkeeping on a
+    // table the bracket has already filled in (`finishes`), written to a tally nothing but a census
+    // reads – deliberately NOT to `world.results`, which prunes at 52 weeks and IS what
+    // `computeRanking` reads. `walkFrozenCareer` asserts the key is present and non-empty rather than
+    // merely present, so a wave that silently stopped recording would go red here too.
+    expect(careerHashAtSchema(5, 0, 63), '25k · middle coach · grinder').toBe(PRE_V64.middleGrinder)
+    expect(careerHashAtSchema(8, 0, 63), '120k · elite coach · grinder').toBe(PRE_V64.eliteGrinder)
+    expect(careerHashAtSchema(0, 1, 63), '8k · self-coached · player').toBe(PRE_V64.selfTravelling)
   })
 
   it('⭐⭐ v61: rolling ONLY the schema back to 60 reproduces the previous hashes byte for byte', () => {

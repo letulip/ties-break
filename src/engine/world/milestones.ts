@@ -587,6 +587,15 @@ export function maybeFireSeasonWrapUp(world: WorldState): void {
   // ⚠ THIS IS THE ONE PLACE IT IS CLEARED, and it is the same line the kid's own ledgers are cleared
   // on, so the field's year and hers can never be a week apart.
   world.fieldSeasonPoints = {}
+  // ⭐⭐ v64 – AND THE FIELD'S TITLES CLOSE ON THE SAME LINE, for the same reason and on the same
+  // week. `fieldSeasonTitles` is who won what SINCE JANUARY; a new season is a new count of titles,
+  // exactly as it is a new count of points. Carrying it across would turn a season census into a
+  // running career total by accident – a different question, and one nothing asked for.
+  //
+  // ⚠ SO A READER OF THE TALLY IS READING THE SEASON IN PROGRESS. That is what makes it comparable
+  // to the real tour's own per-year census (59 titles / ~32 champions in 2024) and it is the whole
+  // reason the field is season-scoped rather than career-scoped.
+  world.fieldSeasonTitles = {}
 }
 
 /** ⭐ ROUND-19 #2 – IS THE SEASON'S WRAP-UP STILL OWED THIS WEEK? The season's index, or null.

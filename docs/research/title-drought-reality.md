@@ -86,6 +86,21 @@ And repeat champions are the rule, not the exception. Two measured multiplicitie
 > winning anything.** That is the outer figure. Our careers are funded, coached and managed – the
 > favourable tail – so the fair comparators are the two band censuses below, not this one.
 
+> ⭐⭐ **AND OURS IS READABLE NOW, WHICH IT WAS NOT WHEN THIS PAGE WAS WRITTEN.** The multiplicity
+> above had to be compared against arithmetic rather than against a save, because `runAiTournament`
+> computed the champion of every AI tournament and threw her away – ~187 titles a season that no
+> reader could name. Since **schema v64** the world keeps them (`WorldState.fieldSeasonTitles`, a
+> per-season tally by rung and then by champion id), and `tests/ai-champions.test.ts` prints the
+> census. **Ours, one season of the four WTA rungs, three careers: 30 titles among 21–22 champions =
+> 1.36–1.43 each**, against the real **1.84**.
+>
+> ⚠ **READ THE DENOMINATORS BEFORE READING THE GAP.** Our four WTA rungs hold **30** events a season
+> (wta250 8 · wta500 10 · wta1000 8 · slam 4) against the real tour's **58 tournaments**, and titles
+> per champion rises with the number of titles at fixed concentration – so half the calendar cannot
+> produce the same ratio even from an identically concentrated field. The scale-free half of the same
+> measurement is the share of titles taken by women who won more than one: **ours 43–50%**. Nothing
+> has been tuned to either number; they are reported, not defended.
+
 ⚠ `[GAP]` **Nobody publishes the number of distinct ITF singles champions in a year.** The Wikipedia
 season pages carry a per-player title table but it merges singles and doubles across five levels and
 does not total the distinct singles column; the ITF publishes no equivalent. The multiplicity above
