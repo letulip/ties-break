@@ -699,19 +699,40 @@ export const ECONOMY = {
      *  season spent nursing her does not. */
     minEvents: 6,
     topMinEvents: 8,
-    /** HOW LONG THE PARENT HAS TO THINK. The owner asked for exactly this - «давать человеку
-     *  какое-то время на подумать» - and the number has to be long enough to be a real pause and
-     *  short enough that the letter is still the season's business. Four weeks.
+    /** HOW LONG THE PARENT HAS TO THINK, in weeks, counted INCLUSIVELY from the week the letter
+     *  lands: the deadline is `arrival + decideWeeks - 1` (`kitOfferDeadline`), so five means the
+     *  arrival week and the four after it, and the letter is still answerable on the last of them.
+     *  The owner asked for exactly this - «давать человеку какое-то время на подумать».
      *
-     *  ⚠ IT SIZES THE WINDOW NOW RATHER THAN EACH LETTER (05.08, feat/sponsor-window).
-     *  `SPONSOR_WINDOW_WEEKS` is `decideWeeks + 1` - four weeks of thinking plus the week the first
-     *  letter lands - and it is also, to the week, the owner's own «межсезонье +2». The two readings
-     *  agreeing is why the number did not have to move. What changed is that the four weeks belong
-     *  to the WINDOW: every letter raised inside one expires when it closes, so the first letter of
-     *  a winter carries five weeks and the last carries two, and none of them carries a decision
-     *  into a week she is playing. See `SPONSOR_LETTER_WEEKS` for the guarantee that replaces "four
-     *  weeks each". */
-    decideWeeks: 4,
+     *  ⚠⚠ IT BELONGS TO THE LETTER AGAIN, AND IT IS FIVE (28.08, round 28 #17-b, HIS RULING):
+     *
+     *      «в чем проблема сделать 5? у нас конечная неделя сезона 49 по сути, дальше окно в новый
+     *       сезон, даже если приглашение придет на 1й или 2й неделе я не вижу проблем сделать слот
+     *       в 5 недель»
+     *
+     *  From 05.08 to 28.08 this number SIZED THE WINDOW instead: `SPONSOR_WINDOW_WEEKS` was read as
+     *  `decideWeeks + 1`, every letter of a winter expired when the window closed, and so the first
+     *  letter of a winter carried five weeks and the last carried two. That bought one property -
+     *  «no decision is ever open while she is playing» - and it cost the thing this constant is
+     *  named for.
+     *
+     *  ⚠ WHAT HE IS KNOWINGLY GIVING UP, because the next reader of `docs/specs/sponsor-window-2026-08.md`
+     *  §3.1 will otherwise re-derive the old rule from a document that still argues for it. A letter
+     *  raised on the window's closing week now runs four weeks into the new season, so the inbox can
+     *  hold a live decision while she is playing. He was shown that objection in those words and
+     *  overruled it, and he is more right than the spec is, for a reason the spec could not have
+     *  known: **the property was already gone.** Round 28 #2 gave the ADVERTISING letter five fixed
+     *  weeks from arrival, and an advertising letter arrives on whatever week a campaign notices her
+     *  - mid-season, most of the time. So «no decision open while playing» had already stopped being
+     *  true of the inbox; the window guarantee only ever covered kit letters. His ruling makes the
+     *  two kinds of post one rule instead of two, which is simpler than what it replaces.
+     *
+     *  ⚠ THE WINDOW ITSELF DID NOT MOVE. `SPONSOR_WINDOW_WEEKS` is `OFF_SEASON_WEEKS + 2` and always
+     *  was - that is «межсезонье +2», the owner's own sentence - and it is still the five weeks a
+     *  brand may WRITE in. What is no longer true is the second reading, `decideWeeks + 1`: the two
+     *  numbers are now independent and only coincidentally equal, so nothing should re-derive one
+     *  from the other. See `SPONSOR_LETTER_WEEKS`, whose reason changed with this. */
+    decideWeeks: 5,
     /** WHETHER THE SHOP WRITES AT ALL in a season she qualifies for. Not 1, on purpose: an offer
      *  that is guaranteed to come round again is an offer with no cost to letting it expire, and
      *  spec §2 asks for the reverse ("an offer left to expire is gone, and the next one is not

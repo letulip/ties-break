@@ -252,6 +252,24 @@ held open for exactly this reason.
   place item 2 is about. Moving the renewal earlier would reverse two heavily-argued guards (it
   writes last, and it takes no dice), so it is **left as it stands and flagged**: if he wants the
   incumbent's letter to arrive at its rung's slot instead, that is a new ruling.
+  ⭐⭐ **HE RULED, 28.08** – «в чем проблема сделать 5? у нас конечная неделя сезона 49 по сути,
+  дальше окно в новый сезон, даже если приглашение придет на 1й или 2й неделе я не вижу проблем
+  сделать слот в 5 недель». **SHIPPED as #17-b:** every kit letter now carries five weeks from its own
+  arrival (`kitOfferDeadline`), the deadline is a property of the LETTER again, and the renewal-only
+  ladder – his actual case – carries five weeks instead of one. He knowingly gave up §3.1's «no
+  decision is ever open while she is playing»; that property was **already gone**, because item 2 gave
+  the ad letter five fixed weeks and ad letters land mid-season. Two windows can never overlap: latest
+  death is season offset 3, next window opens at 47, **44 weeks of daylight** – arithmetic, pinned.
+  ⚠⚠ **BUT THE MEASUREMENT CROSSES THE LINE AND NEEDS HIM AGAIN – DO NOT MERGE ON MY WORD.** Seasons
+  opening with **no kit deal**, patient signer: **27/646 (4.2%) → 354/645 (54.9%)**; careers that never
+  open a season bare **117/144 → 13/144**; uncovered opening weeks **10.7 → 21.6 per career**; coverage
+  83.3% → 79.3%. ⚠ The **eager signer is identical to the digit** – this costs nothing to a parent who
+  answers on sight. The mechanism is NOT the objection he overruled: `fromWeek` is the week he SIGNS
+  while `untilWeek` is anchored on the letter's ARRIVAL, so the new weeks are **spent, not banked** –
+  before the ruling he could not wait past week 51, so he could not lose. The one-line remedy (a winter
+  letter's cover starts at the season's first week however late it is signed) is **named and not
+  built**: it changes what a signature means and touches the seam §3.5 protects. Full table, the
+  instrument note and the remedy: `docs/specs/sponsor-window-2026-08.md` §12.
   Measured: `npm run bench:sponsor`, 144 careers per arm, the change toggled on one line so both arms
   carry the same tree. **The whole delta is on the PATIENT arm** – local letters **6.34 → 4.17**,
   while the eager arm barely moves (3.46 → 3.51), because an eager signer takes the ladder's letter

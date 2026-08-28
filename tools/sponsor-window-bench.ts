@@ -73,9 +73,22 @@ function liveKitLetters(world: WorldState): Offer[] {
 function answerThePost(world: WorldState, policy: SignPolicy): void {
   const live = liveKitLetters(world)
   if (live.length === 0) return
-  const lastQuietWeek = world.week % WEEKS_PER_YEAR === WEEKS_PER_YEAR - 1
-  if (policy === 'patient' && !lastQuietWeek) {
-    // ...unless holding would lose it: a letter whose deadline is this week must be answered now.
+  if (policy === 'patient') {
+    // ⚠⚠ RE-AIMED (28.08, round 28 #17-b) AND IT IS A NO-OP FOR EVERY ARM BEFORE THE OWNER'S RULING.
+    //    `patient` means «hold to the last moment you can», and until the ruling that was expressible
+    //    as a CALENDAR week: every letter of a winter died when the window closed, so "the last quiet
+    //    week" (season offset 51) and "the last week this letter is live" were the same week and the
+    //    policy was written against the first one. They are no longer the same week - a letter now
+    //    carries five weeks from its own arrival - and a policy pinned to the calendar would answer
+    //    every letter before its deadline, which is not patience, it is a parent who happens to act
+    //    on week 51. Measured against the old engine this branch is byte-identical (all deadlines
+    //    ARE offset 51 there, so `dying` is exactly `live` on that week and empty before it), which
+    //    is what makes the A/B below a fair one rather than two different players.
+    //
+    //    ⚠ IT IS ALSO THE ONLY INSTRUMENT THAT CAN SEE THE RULING AT ALL. With `patient` pinned to
+    //    week 51, neither policy ever holds a letter into the new season, so the extra weeks are
+    //    dead weight and the bench reports a byte-identical null - which is a property of the probe,
+    //    not of the change.
     const dying = live.filter((o) => o.deadlineWeek === world.week)
     if (dying.length === 0) return
     signBest(world, dying)
@@ -163,6 +176,21 @@ export interface CareerResult {
   seasonsOpened: number
   /** ...of those, the ones that opened with no kit deal in force. */
   seasonsOpenedBare: number
+  /** ⚠⚠ THE SAME COUNT, READ AFTER THE POST IS ANSWERED - and the two disagree only because of the
+   *  owner's 28.08 ruling (round 28 #17-b), which is exactly why it was added. A kit letter now
+   *  carries five weeks from its own arrival instead of dying with the window, so a letter raised on
+   *  window week 51 is STILL LIVE in weeks 0-3 of the new season. `seasonsOpenedBare` above is read
+   *  before the parent acts, so it now counts a season as bare that he covers the same morning by
+   *  signing the letter in his hand. That is the honest historical series and it is kept; this one
+   *  is the question a player would recognise - «did she actually play a week in nobody's kit». */
+  seasonsOpenedBareAfterPost: number
+  /** ⚠ ...AND FOR HOW LONG. The consequence the ruling could plausibly have bought: a letter that
+   *  can be answered in week 2 is a season that opens uncovered even when it ends up signed. Counts
+   *  the CONSECUTIVE weeks from a season's first week in which no deal is in force, read after the
+   *  post is answered, so a season covered on its opening week contributes zero. Summed per career;
+   *  `bareOpeningRuns` is how many seasons contributed, so the mean run is one over the other. */
+  bareOpeningWeeks: number
+  bareOpeningRuns: number
   /** ⚠ THE FLOOR'S OWN POPULATION, AND IT IS GATE-INDEPENDENT ON PURPOSE (09.08). Winters in which
    *  the local shop's DOMESTIC gate alone would refuse her - she has slid past `maxRank` at home and
    *  holds no professional ranking - and, of those, the junior world ranks she was actually holding.
@@ -269,6 +297,12 @@ export function runSponsorCareer(
   const seenFinanceWeeks = new Set<number>()
   let seasonsOpened = 0
   let seasonsOpenedBare = 0
+  let seasonsOpenedBareAfterPost = 0
+  let bareOpeningWeeks = 0
+  let bareOpeningRuns = 0
+  /** Are we inside a season's opening run of uncovered weeks? Set at the season's first week and
+   *  cleared by the first week a deal is in force - see `bareOpeningWeeks`. */
+  let inBareOpening = false
   let domesticRefusedWinters = 0
   const domesticRefusedItfRanks: number[] = []
   let wintersReached = 0
@@ -332,12 +366,33 @@ export function runSponsorCareer(
     //     that could have covered this season closed at week 51 of the one before. So this is
     //     exactly "she went into the new year with nothing", which is the owner's own report.
     //     Season 0 is skipped: nobody can be written to before week 47 of it.
-    if (!world.ending && week > 0 && week % WEEKS_PER_YEAR === 0) {
+    const seasonOpens = !world.ending && week > 0 && week % WEEKS_PER_YEAR === 0
+    if (seasonOpens) {
       seasonsOpened++
       if (!activeKitDeal(world.offers, week)) seasonsOpenedBare++
     }
     // 1. THE POST, answered before the week is played – the same order a player acts in.
     if (!world.ending) answerThePost(world, sign)
+
+    // 0c. ⚠⚠ ...AND THE SAME QUESTION ASKED AFTER HE HAS ACTED (28.08, round 28 #17-b). Since the
+    //     owner's ruling a kit letter carries five weeks from its own arrival, so one raised on
+    //     window week 51 is still answerable in weeks 0-3 of the season she is now playing. Step 0b
+    //     above reads BEFORE the post and therefore now calls a season bare that he covers the same
+    //     morning; this reads after, which is the version a player would recognise, and the run of
+    //     uncovered weeks below is the cost the ruling could plausibly have bought.
+    if (seasonOpens) {
+      if (!activeKitDeal(world.offers, week)) {
+        seasonsOpenedBareAfterPost++
+        inBareOpening = true
+        bareOpeningRuns++
+      } else {
+        inBareOpening = false
+      }
+    }
+    if (inBareOpening) {
+      if (activeKitDeal(world.offers, week)) inBareOpening = false
+      else bareOpeningWeeks++
+    }
 
     // 2. COVERAGE, read as the week is played.
     if (week >= FIRST_LETTER_WEEK) {
@@ -436,6 +491,9 @@ export function runSponsorCareer(
     endedWeek: world.ending ? world.week : null,
     seasonsOpened,
     seasonsOpenedBare,
+    seasonsOpenedBareAfterPost,
+    bareOpeningWeeks,
+    bareOpeningRuns,
     domesticRefusedWinters,
     domesticRefusedItfRanks,
     wintersReached,
@@ -547,6 +605,18 @@ export function main(argv: string[] = process.argv.slice(2)): void {
     const bareShare = arm.map((r) => (r.seasonsOpened > 0 ? r.seasonsOpenedBare / r.seasonsOpened : 0))
     console.log(
       `  THE FLOOR:    ${opened} seasons opened (season 1+) – ${bare} of them with NO kit deal (${pct(opened > 0 ? bare / opened : 0)}); per career p50 ${pct(median(bareShare))}, careers never bare ${arm.filter((r) => r.seasonsOpenedBare === 0).length}/${arm.length}`,
+    )
+    // ⚠⚠ ...AND THE SAME FLOOR AFTER HE HAS ANSWERED THE POST (28.08, round 28 #17-b). The line
+    //    above reads before the parent acts, which since the owner's ruling can call a season bare
+    //    that he covers the same morning with a letter that is still live in week 0. This is the
+    //    version a player would recognise, plus the run of weeks she actually spends uncovered at
+    //    the start of a season - the consequence the ruling could plausibly have bought.
+    const bareAfter = arm.reduce((a, r) => a + r.seasonsOpenedBareAfterPost, 0)
+    const bareWeeks = arm.reduce((a, r) => a + r.bareOpeningWeeks, 0)
+    const bareRuns = arm.reduce((a, r) => a + r.bareOpeningRuns, 0)
+    console.log(
+      `  ...AFTER POST: ${bareAfter} of ${opened} opened bare (${pct(opened > 0 ? bareAfter / opened : 0)}); careers never bare ${arm.filter((r) => r.seasonsOpenedBareAfterPost === 0).length}/${arm.length}` +
+        `; uncovered opening weeks ${bareWeeks} over ${bareRuns} runs (mean ${bareRuns > 0 ? (bareWeeks / bareRuns).toFixed(1) : '0.0'} wk), ${(bareWeeks / arm.length).toFixed(1)} wk per career`,
     )
     // ...and WHY the bare ones were bare. Four verdicts, and only three of them can leave a season
     // uncovered - a winter turned away by a running multi-season deal is the deal still working.

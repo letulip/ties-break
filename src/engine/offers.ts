@@ -604,18 +604,56 @@ export function isSponsorReviewWeek(week: number): boolean {
  *  the window with it instead of silently leaving it behind. */
 export const SPONSOR_WINDOW_WEEKS = OFF_SEASON_WEEKS + 2
 
-/** ...OF WHICH THE LAST ONE IS THE PARENT'S, AND NO BRAND WRITES ON IT. Four letter weeks and a
- *  fifth to make up his mind.
+/** ...OF WHICH THE LAST ONE IS NOT A RUNG'S. Four weeks in which a brand from the ladder may write,
+ *  and a fifth that belongs to the incumbent's renewal.
  *
- *  ⚠ THIS IS WHAT KEEPS A LATE LETTER FROM BEING A TRAP, and it is the question the schedule change
- *  had to answer: with one deadline per letter (`decideWeeks`, four weeks) a letter raised on the
- *  last quiet week would have run its window straight through the first tournaments of the new
- *  season - the exact fault the 01.08 move into the off-season existed to fix. So the deadline is not
- *  per-letter any more: EVERY letter in a window expires when the window closes
- *  (`sponsorWindowClosesAt`), and no letter is raised on the closing week. The parent therefore
- *  always has at least two weeks with the paper in his hand, and never has a decision open while she
- *  is playing. `decideWeeks` is what sizes the window - see ECONOMY.sponsorship. */
+ *  ⚠⚠ ITS REASON CHANGED ON 28.08 (round 28 #17-b) AND THE NUMBER DID NOT, which is exactly the
+ *  shape of thing that rots if nobody writes it down. From 05.08 this constant was the guarantee
+ *  that replaced "four weeks each": since every letter died with the window, reserving the closing
+ *  week was the only thing standing between a late letter and a two-week decision. **The owner's
+ *  ruling retired that job** - every letter now carries its own `ECONOMY.sponsorship.decideWeeks`
+ *  from arrival (`kitOfferDeadline`), so no letter can be short-changed by landing late and the
+ *  closing week needs no protecting.
+ *
+ *  What keeps it at `SPONSOR_WINDOW_WEEKS - 1` is the OTHER job, which was always the load-bearing
+ *  one: `raiseKitRenewal` lands on the closing week and must land after every rung has had its turn,
+ *  because the incumbent is the letter a parent is likeliest to sign on sight and a signature turns
+ *  every other rung away (`seasonSpokenFor`). So the queue is bounded at four so that no FIFTH rung
+ *  is ever given the week the relationship writes in. Delete this and the ladder loses its order,
+ *  not its thinking time. */
 export const SPONSOR_LETTER_WEEKS = SPONSOR_WINDOW_WEEKS - 1
+
+/**
+ * ⭐⭐ THE LAST WEEK A KIT LETTER RAISED ON `week` CAN STILL BE ANSWERED – the owner's ruling of
+ * 28.08 (round 28 #17-b) in one expression, and the ONE place the rule lives so the ladder's letters
+ * and the incumbent's renewal cannot drift apart.
+ *
+ *     «в чем проблема сделать 5? у нас конечная неделя сезона 49 по сути, дальше окно в новый сезон,
+ *      даже если приглашение придет на 1й или 2й неделе я не вижу проблем сделать слот в 5 недель»
+ *
+ * INCLUSIVE, like every other decide-window in this file: five weeks means the arrival week and the
+ * four after it, which is the arithmetic `OfferLetter` and `InboxSheet` already print
+ * (`deadlineWeek - week + 1`). The same shape `raiseAdOffer`'s caller uses, deliberately - two kinds
+ * of post, one rule.
+ *
+ * ⚠ IT REPLACES `sponsorWindowClosesAt`, WHICH IS THE PROPERTY THE OWNER TRADED AWAY. Between 05.08
+ * and 28.08 the deadline belonged to the WINDOW, so the first letter of a winter carried five weeks
+ * and the last carried two, and no decision was ever open in a week she was playing. A letter raised
+ * on the closing week now runs four weeks past it - into the new season - and he was shown that in
+ * those words and overruled it. See `ECONOMY.sponsorship.decideWeeks` for why he is right (the
+ * advertising letter had already broken the property that trade was buying).
+ *
+ * ⚠ TWO WINDOWS CAN NEVER OVERLAP, AND IT IS ARITHMETIC RATHER THAN LUCK. The latest a letter can be
+ * raised is the window's closing week, at season offset `WEEKS_PER_YEAR - 1`; it then dies at offset
+ * `WEEKS_PER_YEAR - 1 + decideWeeks - 1`, i.e. offset 3 of the next season. The next window does not
+ * open until offset 47 of that season - forty-four weeks later. So no letter can ever still be live
+ * when the next winter's post begins, and none can outlive the deal it was competing for. Pinned in
+ * tests/offers.test.ts rather than left as a comment, because it is the property that makes
+ * `seasonSpokenFor` and the window's own idempotence safe.
+ */
+export function kitOfferDeadline(week: number): number {
+  return week + ECONOMY.sponsorship.decideWeeks - 1
+}
 
 /** The absolute week the window opens in the season year that contains `week`. */
 export function sponsorWindowOpensAt(week: number): number {
@@ -827,14 +865,14 @@ export function raiseKitOffers(args: {
       // The week it LANDED, which is what the paper is dated and what the feed reports. The slot it
       // came from lives in the id; the two differ only for a career that reached the window late.
       week,
-      // ⚠ EVERY LETTER IN A WINDOW DIES WITH THE WINDOW, not `decideWeeks` after its own arrival. Two
-      // things follow and both are the point: no decision is ever open while she is playing (the whole
-      // reason the review moved into the off-season on 01.08), and a letter that arrives late is worth
-      // less than one that arrives early - which is the cost of the weakest-first order, paid by the
-      // brand rather than by the parent. `SPONSOR_LETTER_WEEKS` is what guarantees the shortest window
-      // is still two weeks long FOR A CAREER THAT WAS HERE WHEN IT OPENED; one that arrives on the
-      // closing week gets that week, which is the whole of what was left to give it.
-      deadlineWeek: sponsorWindowClosesAt(week),
+      // ⚠⚠ EVERY LETTER CARRIES ITS OWN FIVE WEEKS FROM THE DAY IT LANDS (28.08, the owner's ruling
+      // - see `kitOfferDeadline`). This used to be `sponsorWindowClosesAt(week)`: the deadline was a
+      // property of the WINDOW, so a letter arriving late was worth less than one arriving early -
+      // «the cost of the strongest-first order, paid by the brand rather than by the parent» - and
+      // the last letter of a winter carried two weeks. It is now paid by nobody. What that bought
+      // and he has given up is that a decision can be open in a week she is playing; what it cost,
+      // and what he was actually reporting, is that a renewal-only career got ONE week to decide.
+      deadlineWeek: kitOfferDeadline(week),
       terms,
       state: 'open',
     }
@@ -869,6 +907,13 @@ export function raiseKitOffers(args: {
  * So the queue is: the rungs she clears write first, strongest of them first (slots 0-3), and the
  * brand she already knows writes LAST. It is the last letter she can still take, and taking it is
  * always a choice made with every other letter of the winter already on the table.
+ *
+ * ⚠⚠ AND SINCE 28.08 IT NO LONGER EXPIRES THE WEEK IT ARRIVES. Its deadline was
+ * `sponsorWindowClosesAt`, which on the closing week is TODAY, so the incumbent's letter was a
+ * one-week decision - and for a career whose ladder is only the incumbent's own rung that was the
+ * whole of the winter's post. That is what the owner reported and what his ruling closes: it carries
+ * `kitOfferDeadline` like every other letter. Its PLACEMENT is untouched, which is what the rest of
+ * this header is about; only its shelf life moved.
  *
  * ⚠ THE CLOSING WEEK IS "THE PARENT'S OWN" AND THIS DOES NOT TAKE IT BACK. `SPONSOR_LETTER_WEEKS`
  * reserves it so that no RUNG's turn falls there and every competitive letter has had at least two
@@ -916,7 +961,12 @@ export function raiseKitRenewal(offers: Offer[], week: number, ended: Offer): Of
     id,
     kind: 'kit',
     week,
-    deadlineWeek: sponsorWindowClosesAt(week),
+    // ⭐⭐ FIVE WEEKS, LIKE EVERY OTHER LETTER, AND THIS IS THE DEFECT THE 28.08 RULING EXISTS TO
+    //    CLOSE. It used to be `sponsorWindowClosesAt(week)`, which on the closing week is TODAY - so
+    //    the commonest career in the game, the local shop renewing every winter, got a one-week
+    //    decision every year and often no other letter at all. The renewal still LANDS last (see the
+    //    header); what it no longer does is expire the moment it arrives.
+    deadlineWeek: kitOfferDeadline(week),
     terms: { ...(ended.terms as KitOfferTerms), renewal: true },
     state: 'open',
   }
