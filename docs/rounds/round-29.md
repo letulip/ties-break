@@ -61,6 +61,26 @@ contention artefacts of round 28 cost more reading than the wall-clock they save
 
   ⭐ So this is a decision surface, not an automatic resolution. The week must ASK.
 
+  ⚠⚠ **AND A DEFECT HE FOUND FROM FIRST PRINCIPLES WHILE READING MY ANSWER** – «а вот не очень
+  понятно как связано. Если есть турнир или тренировки, то есть и массажист.» He is right, and my
+  sentence to him («съёмочная неделя массажисту не платит») was **wrong** – I repeated an agent's
+  phrasing instead of reading the code.
+
+  **The engine and the screen disagree, and only on the shoot:**
+
+  | | rule |
+  | --- | --- |
+  | engine, `masseurWorksThisWeek` | hired · not college · not a booked holiday → **he works and is billed** |
+  | screen, `weekDays.ts:429` | hired · not frozen · not booked off · **`&& !shooting`** · home-or-travels |
+
+  **`!shooting` exists only in the UI.** So a shoot week **charges for the masseur and draws none of
+  his sessions** – precisely «the "you paid and cannot see it" failure the plan bans specialists for»,
+  which is written in that same file fifteen lines above the bug.
+
+  ⭐⭐ **Third time this round the UI has invented a rule the engine does not hold** – calendar Part 0,
+  the domestic-points plaque, and now this. That is a pattern, not three accidents, and it is worth a
+  standing check rather than three separate fixes.
+
 - [~] **4. «По победам как-будто по-лучше стало»** – ⚙ **his own verdict, recorded, nothing to build.**
 
 - [ ] **5. «В магазине всё ещё не хватает яхт, самолётов и стойки академии»** – **build.** Slice 1
