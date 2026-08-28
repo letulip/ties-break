@@ -839,6 +839,25 @@ const SHOP_FAMILIES: { key: ShopRowView['family']; title: string; note: string }
     note: 'Every one of these is worth less next season than it is today. That is what a car is.',
   },
   { key: 'house', title: 'Property', note: 'Slow, large, and the end of paying somebody else rent.' },
+  // ⭐⭐ ROUND 29 #5 – THE THREE STOREYS THE OWNER ASKED FOR. His words are in `shopEliteNote` in the
+  // comment block below (Cyrillic may not appear in a template, and this array is read into one).
+  // Each note says what the FAMILY is for, which is §3's own rule: «a shop where the only difference
+  // is price is a list, not a decision».
+  {
+    key: 'boat',
+    title: 'On the water',
+    note: 'Ordered, not bought – the money goes now and the boat comes years later. Every one of them costs a wage a week to keep.',
+  },
+  {
+    key: 'plane',
+    title: 'In the air',
+    note: 'The family aeroplane. It takes half the fare off every trip to a tournament, and it is kept the way an aeroplane is kept.',
+  },
+  {
+    key: 'academy',
+    title: 'Her academy',
+    note: 'Four stages, in order, and each one is a decision. The only thing on this shelf that outlives a career.',
+  },
 ]
 function shopRowsOf(family: ShopRowView['family']): ShopRowView[] {
   return shopRows.value.filter((r) => r.family === family)
@@ -878,6 +897,25 @@ function stakeCentsFor(row: ShopRowView): number {
 // (a count, a balance)», painted `--ink`, i.e. white. The existing palette, not a new colour. The
 // direction is not lost – it moves to `.shop-row-change`, the signed row that is about a direction.
 
+// ⭐⭐ ROUND 29 #5 – `shopEliteNote`, THE OWNER'S OWN WORDS, PARKED HERE FOR THE SAME REASON AS THE
+// two above: Cyrillic may not appear in a template, in a string OR in a comment
+// (tests/template-copy-rules.test.ts), and `SHOP_FAMILIES` is read into one.
+//
+// «В магазине всё ещё не хватает яхт, самолётов и стойки академии» – round 29 #5, the ask itself.
+// «Может что-то элитное добавить - яхты или самолеты? Со временем постройки около реальным - купил и
+// ждешь пока будет готово, яхты строят несколько лет.»
+// «тоже можно разные тиры сделать, кстати и потерю стоимости в год + годовое обслуживание (недельный
+// кост, ага)»
+// «построить свою академию за много миллионов - тоже может быть интересно, кстати. Как раз будет
+// куда рекламное тратить.»
+//
+// ⚠⚠ AND THE ONE THING THIS SCREEN MAY NOT SAY. The plane's fare cut is a MONEY fact and money facts
+// are always on screen here – «a cost the player cannot find» is this repo's own named defect. Its
+// other effect is NOT: «По усталости по аналогии с кортом может 1 накинуть», and the analogy carries
+// his ruling about the court with it – «верно, но только если знают об этом, я предложил сделать
+// бонус скрытым». So no row, no note and no dialog below states a condition number, and none may be
+// added. The spec's §3d rule 4: «Hidden means never a number on a card.»
+
 /** ⭐ ROUND 29 #11 – CAN THE FAMILY PUT MORE INTO THIS ONE? True only for an 'open' rung it already
  *  holds: a deposit and an index fund take more money, a car does not. The predicate is the STAKE
  *  and not a list of ids, exactly as `buyAsset` re-validates it engine-side. */
@@ -894,8 +932,37 @@ function isTopUp(row: ShopRowView): boolean {
 function canBuy(row: ShopRowView): boolean {
   if (game.busy) return false
   if (row.valueCents !== null && !isTopUp(row)) return false
+  // ⭐ ROUND 29 #5, §3g – a stage cannot be built before the one under it. Advisory, like every other
+  // clause here: `buyAsset` refuses the same purchase with its own sentence naming the stage.
+  if (!row.requirementMet) return false
   const cents = row.stake === 'open' ? stakeCentsFor(row) : row.entryCents
   return cents >= row.entryCents && cents <= (game.snapshot?.fundsCents ?? 0)
+}
+/** ⭐ ROUND 29 #5, §3f – IS THIS ONE STILL BEING BUILT? A contract, not a boat: no sale, and the
+ *  week it is due instead. The engine decided it (`ShopRowView.readyWeek`); this reads the field. */
+function isBuilding(row: ShopRowView): boolean {
+  return row.readyWeek !== null
+}
+/** The stage this rung is waiting on, by NAME – the label off the row it names, never an id on
+ *  screen. Empty when the requirement is met or there is none. */
+function requiresLabel(row: ShopRowView): string {
+  if (row.requirementMet || !row.requiresId) return ''
+  return shopRows.value.find((r) => r.id === row.requiresId)?.label ?? ''
+}
+/** ⭐ §3f – HOW LONG THE FAMILY WOULD BE WAITING, in the unit a person thinks in. The engine's
+ *  `buildWeeks` is weeks, which is the right unit for the calendar and a bad one for «yachts take
+ *  years».
+ *
+ *  ⚠⚠ MONTHS UNDER TWO YEARS AND YEARS ABOVE IT, WHICH IS §3f's OWN TABLE READ BACK: «~12 months»,
+ *  «~18 months», «~2 years», «~3 years», «~4 years». That is not a style choice – a single unit
+ *  either turns eighteen months into «1.5 years» or into a wrong «2 years», and the spec already
+ *  chose. ⚠ WHOLE NUMBERS EITHER WAY (the owner's display ruling of 26.08: «у пользователя целые в
+ *  интерфейсе»); the wait itself is whole weeks and the due date the row prints once ordered is the
+ *  engine's own. */
+function buildWaitLine(row: ShopRowView): string {
+  const months = Math.round((row.buildWeeks / 52) * 12)
+  if (months < 24) return `Built to order – about ${months} months from the week it is ordered.`
+  return `Built to order – about ${Math.round(months / 12)} years from the week it is ordered.`
 }
 /** «loses 6% a season» / «+7% a season». ⚠ THE UNIT IS THE GAME'S OWN – a season IS the 52-week
  *  block every other figure on this screen is quoted over, and the spec's own «/yr» and «a season»
@@ -914,6 +981,12 @@ interface PendingShop {
   changeCents: number | null
   /** ⭐ ROUND 29 #11 – adding to a holding they already have, rather than opening one. */
   topUp?: boolean
+  /** ⭐ ROUND 29 #5 – how long they would be waiting, in weeks. 0 on everything that arrives at
+   *  once, which is every rung the shelf had before §3f. */
+  buildWeeks?: number
+  /** ⚠ ...and what keeping it costs a week. §3f's whole argument is that this is the number the
+   *  decision is actually about, so it is on the question and not only on the row. */
+  upkeepCents?: number
 }
 const pendingShop = ref<PendingShop | null>(null)
 function askBuy(row: ShopRowView): void {
@@ -926,6 +999,8 @@ function askBuy(row: ShopRowView): void {
     amountCents,
     changeCents: null,
     topUp: isTopUp(row),
+    buildWeeks: row.buildWeeks,
+    upkeepCents: row.upkeepCents,
   }
 }
 function askSell(row: ShopRowView): void {
@@ -949,6 +1024,15 @@ const shopConfirmMessage = computed(() => {
     // different act: «Buy an index fund» reads wrong on the fund they have held for six seasons.
     if (p.topUp) {
       return `Put a further ${formatCents(p.amountCents)} into ${p.label}? It comes out of the family's money this week.`
+    }
+    // ⭐⭐ ROUND 29 #5, §3f – A COMMISSION ASKS A DIFFERENT QUESTION, because it commits the family to
+    // three things and not one: the money now, the wait, and a bill every week for as long as they
+    // keep it. «Buy the yacht for $12,000,000?» would be true and would hide the two halves that
+    // actually decide it. ⚠ NOT A NUMBER ABOUT HER – the fatigue side of the plane is hidden by his
+    // own ruling and no sentence here goes near it.
+    if (p.buildWeeks) {
+      const keep = p.upkeepCents ? ` It then costs ${formatCents(p.upkeepCents)} a week to keep.` : ''
+      return `Order ${p.label} for ${formatCents(p.amountCents)}? The money goes this week and it arrives in ${p.buildWeeks} weeks.${keep}`
     }
     return `Buy ${p.label} for ${formatCents(p.amountCents)}? It comes out of the family's money this week.`
   }
@@ -1455,9 +1539,45 @@ const TAB_OPTIONS = [
                 </span>
               </div>
               <p class="shop-row-blurb">{{ row.blurb }}</p>
+              <!-- ⭐⭐ ROUND 29 #5 – THE THIRD NUMBER (spec §3f): what it cost, what it loses, and
+                   what it takes every week to keep. It is on the row whether the family owns one or
+                   not, because it is the half of the price a shop window normally hides – «the
+                   weekly figure is what appears in the ledger, beside the masseur, which is where
+                   the decision actually lives». The engine computed it (`upkeepCents`); this screen
+                   does not divide a percentage by a year. -->
+              <p v-if="row.upkeepCents > 0" class="shop-row-upkeep">
+                {{ formatCents(row.upkeepCents) }} a week to keep
+              </p>
+              <!-- ⭐ §3f – THE WAIT, ON THE ROW, BEFORE THE ORDER IS PLACED. Not a teaser and not a
+                   lock: the price is beside it and the control is pressable. -->
+              <p v-if="row.buildWeeks > 0 && row.valueCents === null && !isBuilding(row)" class="shop-row-wait">
+                {{ buildWaitLine(row) }}
+              </p>
+              <!-- ⭐ §3g – THE STAGE UNDER IT, WHEN THAT STAGE IS NOT BUILT. Again not a lock and
+                   not a bar: the price stays on screen and the control is simply not pressable,
+                   which is §2's rule read one storey up. -->
+              <p v-if="requiresLabel(row)" class="shop-row-wait">
+                {{ requiresLabel(row) }} has to come first.
+              </p>
+              <!-- ⭐⭐ ROUND 29 #5, §3f – ORDERED, AND NOT HERE YET. «Between those two weeks the
+                   player owns a CONTRACT, not a boat», so there is nothing to value and nothing to
+                   sell – `sellableAsset` refuses the same week, so this is not the gate, it is the
+                   honest face of it (R10-16: a disabled control and a refused click tell one
+                   story). What the row says instead is the date, which is the whole point of a
+                   commission. -->
+              <div v-if="isBuilding(row)" class="shop-row-owned is-building">
+                <StatRow
+                  class="money-row"
+                  label="On order"
+                  :meta="`paid ${formatCents(row.paidCents ?? 0)}`"
+                  :value="weekLabel(row.readyWeek ?? 0)"
+                  tone="plain"
+                />
+                <p class="shop-row-change">It cannot be sold before it is delivered, and it costs nothing to keep until then.</p>
+              </div>
               <!-- OWNED: what they paid, what it is worth, and the difference as ONE figure the
                    engine computed. This screen subtracts nothing. -->
-              <div v-if="row.valueCents !== null" class="shop-row-owned">
+              <div v-else-if="row.valueCents !== null" class="shop-row-owned">
                 <!-- ⭐⭐ ROUND 29 #9 – `tone="plain"`, AND A DEPRECIATED VALUE IS NOT AN ERROR.
                      The owner's words and the reasoning are in `shopToneNote` in the script block,
                      because Cyrillic inside a template is forbidden - strings AND comments
@@ -1511,8 +1631,10 @@ const TAB_OPTIONS = [
                   />
                 </label>
                 <span v-else class="shop-row-price">{{ formatCents(row.entryCents) }}</span>
+                <!-- ⭐ §3f – A COMMISSIONED THING IS ORDERED, NOT BOUGHT, and the verb on the control
+                     is the one difference the player can see before he presses it. -->
                 <button class="shop-action" :disabled="!canBuy(row)" @click="askBuy(row)">
-                  {{ row.stake === 'open' ? 'Put it in' : 'Buy it' }}
+                  {{ row.stake === 'open' ? 'Put it in' : row.buildWeeks > 0 ? 'Order it' : 'Buy it' }}
                 </button>
               </div>
             </div>
@@ -1560,10 +1682,13 @@ const TAB_OPTIONS = [
         @confirm="confirmKit"
         @cancel="pendingKit = null"
       />
+      <!-- ⭐ ROUND 29 #5 – the verb on the control matches the verb in the question: a commissioned
+           thing is ORDERED, and a button reading "Buy it" under a sentence about a three-year wait
+           would be the two halves of one decision disagreeing. -->
       <ConfirmDialog
         v-if="pendingShop"
         :message="shopConfirmMessage"
-        :confirm-label="pendingShop.kind === 'buy' ? 'Buy it' : 'Sell it'"
+        :confirm-label="pendingShop.kind === 'sell' ? 'Sell it' : pendingShop.buildWeeks ? 'Order it' : 'Buy it'"
         @confirm="confirmShop"
         @cancel="pendingShop = null"
       />
@@ -2170,6 +2295,26 @@ const TAB_OPTIONS = [
 .shop-row-blurb {
   margin: 4px 0 0;
   font-size: 12px;
+  line-height: 1.35;
+  color: var(--ink-soft);
+  text-wrap: pretty;
+}
+
+/* ⭐ ROUND 29 #5, §3f – THE WEEKLY BILL READS AS MONEY LEAVING, because it is: unlike the rate two
+   rules up (a valuation) this figure really goes out of the wallet every week. Same `--money-out`
+   the ledger paints an expense in, so nothing new is invented for it. */
+.shop-row-upkeep {
+  margin: 4px 0 0;
+  font-size: 11.5px;
+  font-weight: 700;
+  color: var(--money-out);
+}
+
+/* The wait and the stage under it – facts about WHEN, not about money, so they take the quiet ink
+   the blurb takes rather than either money colour. */
+.shop-row-wait {
+  margin: 4px 0 0;
+  font-size: 11.5px;
   line-height: 1.35;
   color: var(--ink-soft);
   text-wrap: pretty;

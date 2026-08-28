@@ -180,8 +180,20 @@ const recommendedId = computed<string | null>(() =>
         background: background.value,
         condition: condition.value,
         fundsCents: fundsCents.value,
+        grantedIds: grantedVacationIds.value,
       }),
 )
+
+/** ⭐⭐ ROUND 29 #5, the-shop §3f – THE VACATION PACKAGES THE SHELF HAS UNLOCKED, off the snapshot.
+ *
+ *  The owner's own idea, quoted in `world/assets.ts` and in the economy catalogue rather than here
+ *  (this file has a template and Cyrillic may not reach one): a week on the yacht is a seventh line
+ *  of the vacation ladder, and it exists for a family that has taken delivery of a yacht.
+ *
+ *  ⚠ THE ENGINE ANSWERED IT (`shop.vacationIds`) – this sheet never asks what the family owns. And
+ *  the recommendation reads the same list, so it can name the free week for an owner and can never
+ *  name it for anybody else. */
+const grantedVacationIds = computed<string[]>(() => game.snapshot?.shop.vacationIds ?? [])
 
 /** ⚠ W4 – THE PRICE READS AS A PRICE (owner, 30.07: «на вкладке брони отпуска давай суммы сделаем
  *  крупнее и без обводки вокруг, чтобы явно читались»). Nothing about the number CHANGED - it is the
@@ -190,8 +202,14 @@ const recommendedId = computed<string | null>(() =>
  *  one figure the parent is deciding on at the same visual weight as the "Recommended" badge two
  *  elements to its left - so the row read as a run of three badges - and made it the quietest type on
  *  a card whose whole job is to compare five prices. It is `--fs-value-md`/800 now, with no frame. */
+/** ⭐ ROUND 29 #5, §3f – «it appears in PlanWeekSheet only while the yacht is owned and delivered».
+ *  A `grantedOnly` package is not on the general shelf and is drawn only for the family that owns
+ *  the thing that grants it; every other package is untouched. */
+const offeredPackages = computed(() =>
+  ECONOMY.vacation.packages.filter((p) => !p.grantedOnly || grantedVacationIds.value.includes(p.id)),
+)
 const packageRows = computed<PackageRow[]>(() =>
-  ECONOMY.vacation.packages.map((p) => {
+  offeredPackages.value.map((p) => {
     const priceCents = vacationPriceCents(seed.value, props.week, p.id, background.value)
     return {
       id: p.id,

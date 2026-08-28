@@ -1069,6 +1069,10 @@ const rescuePackageId = computed<string | null>(() => {
     background: snap.profile.background,
     condition: condition.value,
     fundsCents: snap.fundsCents,
+    // ⭐ ROUND 29 #5 – the packages the shelf has unlocked (the-shop §3f). Without this the rescue
+    // card and the planner sheet would recommend different things to the same family, which is the
+    // one thing `recommendVacationPackage` exists to make impossible.
+    grantedIds: snap.shop.vacationIds,
   })
 })
 /** The rescue week as the player reads it. Empty string is unreachable: the card is gated on

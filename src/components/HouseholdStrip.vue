@@ -44,6 +44,13 @@ const netCents = computed(() => household.value?.netCents ?? 0)
 // The shelf only earns a mention when the family owns something that moves – a "$0.00 shelf" line is
 // noise on a phone, and every junior career would carry it for years before the shop even opens.
 const shelfCents = computed(() => household.value?.shelfCents ?? 0)
+// ⭐⭐ ROUND 29 #5 – AND WHAT THE SHELF COSTS TO KEEP, which is a different sentence from the one
+// above and has to be. `shelfCents` is a VALUATION (a car is worth less this week); this is CASH
+// that really left the wallet – a yacht's crew, berth, fuel, survey and insurance. It is already
+// inside the OUT figure; the line exists so the largest weekly bill in the game has a name on the
+// one strip the owner asked for two rounds ago. Silent at zero, exactly as the shelf line is: every
+// family that owns nothing with an upkeep is every family that has not commissioned a boat.
+const upkeepCents = computed(() => household.value?.upkeepCents ?? 0)
 // ⚠ THE SIGN IS IN THE WORD, NOT ONLY IN THE MINUS. A household spending more than it earns is the
 // ordinary junior case, and "-$1,234.00 left over" is not a sentence; the magnitude is printed and
 // the noun says which way it points.
@@ -76,6 +83,9 @@ const netMagnitude = computed(() => Math.abs(netCents.value))
           ? `The shelf is in that – it adds ${formatCents(shelfCents)} a week at today's rates.`
           : `The shelf is in that – it costs ${formatCents(-shelfCents)} a week at today's rates.`
       }}
+    </p>
+    <p v-if="upkeepCents > 0" class="hint budget-upkeep">
+      {{ `Keeping what they own is ${formatCents(upkeepCents)} a week of that, and it is real money.` }}
     </p>
   </div>
 </template>

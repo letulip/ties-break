@@ -554,6 +554,25 @@ const VACATION_ARCS: Record<string, readonly (readonly DayBlock[])[]> = {
     [{ start: 9, span: 3, kind: 'physio', label: 'Final review' }, { start: 13, span: 3, kind: 'vacation', label: 'Free time' }],
     [{ start: 10, span: 4, kind: 'travel', label: 'Home' }],
   ],
+  // ⭐⭐ ROUND 29 #5 – THE SEVENTH, AND IT IS THE ONE RUNG WHOSE GAIN IS NOT BOUGHT WITH TREATMENT.
+  // docs/specs/the-shop-2026-08.md §3f, the owner: «а неделя на яхте (при наличии яхты) вполне может
+  // стать новой строкой отпуска, кстати». It ties the clinic on the number and gets there the other
+  // way: nothing to be on time for, nobody able to reach her, and a week of it. So there is no
+  // physio in this arc AT ALL and that is deliberate rather than an omission – a boat is not a
+  // clinic, and drawing six massage sessions on it would be the clinic's week with a new label.
+  // `tests/calendar-grid.test.ts`'s treatment ladder is re-aimed at the six the money buys, with the
+  // reason written where the guard is.
+  //
+  // TWO TRAVEL DAYS, because the boat is where the boat is: they fly to it and they fly home.
+  'yacht-week': [
+    [{ start: 9, span: 4, kind: 'travel', label: 'Flight out' }, { start: 15, span: 2, kind: 'vacation', label: 'Aboard' }],
+    [{ start: 10, span: 3, kind: 'rest', label: 'Lie-in' }, { start: 13, span: 4, kind: 'vacation', label: 'The sea' }],
+    [{ start: 9, span: 2, kind: 'study', label: 'Study' }, { start: 11, span: 5, kind: 'vacation', label: 'Swim' }],
+    [{ start: 10, span: 3, kind: 'rest', label: 'No plans' }, { start: 13, span: 4, kind: 'vacation', label: 'The sea' }],
+    [{ start: 9, span: 2, kind: 'study', label: 'Study' }, { start: 11, span: 5, kind: 'vacation', label: 'Ashore' }],
+    [{ start: 10, span: 3, kind: 'rest', label: 'Lie-in' }, { start: 13, span: 4, kind: 'vacation', label: 'Last swim' }],
+    [{ start: 10, span: 4, kind: 'travel', label: 'Flight home' }],
+  ],
 }
 
 /** Everything that is her SPORT, as opposed to school, homework, rest, a journey or the family's
