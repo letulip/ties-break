@@ -129,6 +129,35 @@ held open for exactly this reason.
   above w35**. ⭐⭐ **His proposal is exactly right and the measurement backs it**: the weeks are not
   missing, they are occupied by tiers that are dead to her.
 
+  ⚠⚠ **HE PUSHED BACK AND HE WAS RIGHT – my first count was dishonest.** I counted weeks carrying
+  ANY event, junior and local included. Re-measured on HER OWN playable set
+  (`w50 w75 w100 wta125 wta250 wta500 slam`; `w15`/`w35` are closed to the top 150, `wta1000` needs
+  the top 65, juniors aged out, `regional`/`national` refused for want of DOMESTIC points):
+
+  | | |
+  | --- | --- |
+  | events playable in season 13 | **50** |
+  | weeks they land on | **34 of 48** |
+  | ⚠ weeks with nothing for her | **14** |
+  | ⚠ events stacked on an already-busy week | **16** |
+  | longest hole | **2 weeks** |
+
+  ⭐⭐ **50 events, 48 weeks – the SUPPLY is already right and the DISTRIBUTION is wrong.** 16 events
+  land on a week that already had one. ⚠ Honest limit: his screenshots are season **12** and I
+  measured **13**; season 13's longest hole is two weeks, so I have not reproduced his exact run.
+
+  ⚠⚠ **THREE DEFECTS FOUND IN THE FEED, none of them the one the item names:**
+  1. **`Local Open` never closes.** At 26, WTA #110, it is open with `outgrown=n` – **4 of the 12 open
+     slots in the next 8 weeks are Local Opens.** Its band is `[0, 85]` on DOMESTIC points, which she
+     stopped earning nine seasons ago, so the gate that should graduate her never fires.
+  2. **The domestic ladder locked her OUT while local stays open**: «Not enough national pts for
+     Regional Championship yet (need 65)» and «…National Series yet (need 150)» – said to the world
+     #110. Same root, opposite sign.
+  3. **Junior rows still render in her feed at 26**, with reasons that read absurd against her rank:
+     «Junior Tour 60 takes the top 100 – she has no international ranking yet».
+
+  ⚙ **The owner approved plan B** – «это хороший план, как раз пересекается с моим пониманием».
+
 - [ ] **13. «Нормально ли с Alice с таким количеством вылетов в первых раундах вообще до топ-100
   добирается? Или мне только кажется, что это странно?»** – **answer.** ⚠ This is the sharpest question
   in the round, because it points at a possible contradiction in the model rather than at a defect:
