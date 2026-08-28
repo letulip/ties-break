@@ -41,8 +41,8 @@ held open for exactly this reason.
   college, a booked family week, a trip he did not travel to, and a SHOOT week (`accrueCondition`:
   «lights and flights, not his table»). Evidence: `tests/component/round28-week-and-season.test.ts`
   mounts CalendarScreen at two rungs and counts the rendered blocks – 2 vs 7, each equal to its rung –
-  and the middle rung lands at 4. Mutation-verified five ways (rung ignored → red; hire clause dropped
-  → red; shoot exemption dropped → red).
+  and the middle rung lands at 4. Mutation-verified three ways (rung ignored → red; hire clause
+  dropped → red; shoot exemption dropped → red).
 
 - [ ] **2. «Предложение от спонсора с часами пришло на сорок четвёртой неделе А на сорок восьмой уже
   истёк срок рассмотрения мне казалось мы договаривались про 5 недель»** – **build.** w44 → w48 is
