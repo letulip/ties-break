@@ -175,9 +175,17 @@ describe('round 28 #6 - the button before a shoot week names it', () => {
   it('the week the button lands on is titled the same thing', () => {
     // One week, one phrase. A press that says "Shooting week" and a page that says "Training week"
     // would be the two surfaces this repo keeps having to reconcile, on the same screen this time.
-    const wrapper = mountCalendar(shootingNext())
-    expect(wrapper.text()).toContain('Shooting week')
-    wrapper.unmount()
+    //
+    // ⚠ THE EYEBROW SPECIFICALLY, not `wrapper.text()`. The button is on the same page, so a text
+    // search would be satisfied by the assertion one test up and this one would prove nothing.
+    const shooting = mountCalendar(shootingNext())
+    expect(shooting.find('.cal-week-head .tb-eyebrow').text()).toBe('Shooting week')
+    shooting.unmount()
+
+    setActivePinia(createPinia())
+    const plain = mountCalendar(base())
+    expect(plain.find('.cal-week-head .tb-eyebrow').text()).toBe('Training week')
+    plain.unmount()
   })
 })
 
