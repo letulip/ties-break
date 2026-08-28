@@ -3747,6 +3747,18 @@ tr.kid-row td {
   font-variant-numeric: tabular-nums;
 }
 
+/* ⭐ ROUND 29 #13 - WHAT A FINISH PAYS HIM, stated once for the whole page. Same register as
+   `.cm-travel-cost` above and deliberately so: they are the two halves of what a coach costs, the
+   weekly bill and the share of a win, and a parent reads them as one paragraph with two lines. The
+   percentages take the same tabular numerals for the same reason the money does. */
+.cm-share-note {
+  margin: 4px 0 0;
+}
+.cm-share-note strong {
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+
 /* ⚠ HOW MUCH ROOM IS LEFT IN HER (08.08) - the sentence the falling uplift needed beside it. It reads
    as a remark rather than as a stat, which is deliberate: it is the only thing on this screen that is
    about HER rather than about a coach, and printing it in the numeric register would make it look like

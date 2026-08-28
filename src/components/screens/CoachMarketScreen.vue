@@ -56,6 +56,11 @@ import { COACH_TIER_LABEL, coachHoursForPlan, HIREABLE_TIERS, styleFitBetween, t
 // draws anything, or knows what a career is - see their notes in the engine for why the blurb could not
 // simply ride on `CoachMarketRow` this wave.
 import { coachBlurb, coachRoomBand } from '../../engine/world/coachMarket'
+// ⭐ ROUND 29 #13 – the ONE function that answers "what does a finish pay the staff", imported for the
+// same reason `coachBlurb` above is: it is a pure read of `ECONOMY` with no world in it, and the
+// alternative is typing two percentages into a template where nothing could ever check them against
+// what `finalizeTournament` actually pays. See the note on `.cm-share-note` in the template.
+import { staffResultShareBps } from '../../engine/economy'
 // ⚠ `MASSEUR_LOCKED_DETAIL` AND `ECONOMY` LEFT WITH HIM (27.08). Both were imported for the masseur
 // card alone and now live in SupportStaffTab.vue; this screen imports no market catalogue, which is
 // the state it was in before v59.
@@ -533,6 +538,21 @@ const meterPct = computed(() =>
   capCents.value > 0 ? Math.min(100, Math.round((committedCents.value / capCents.value) * 100)) : 0,
 )
 
+/** ⭐ ROUND 29 #13 – WHAT A FINISH PAYS HIM, as a percentage, straight off the engine's own rule.
+ *
+ *  THE OWNER, 28.08, and the second half of his sentence is the design: «А мы что-то перечисляем
+ *  тренеру за финал каких-то турниров в итоге? Мне кажется эта информация стоит того, чтобы добавить
+ *  её на странице тренеров где-то, думать, что она общая для всех, так что можно где-то в одном месте
+ *  написать наверное.»
+ *
+ *  `finishIdx` is `finalizeTournament`'s own index (0 = champion, 1 = finalist) and these are the
+ *  only two the rule pays at all, so the pair below IS the rule rather than a description of it.
+ *  Basis points to percent is a display conversion and nothing more - the logic stays in bps, which
+ *  is where the engine keeps it. Not computed off a snapshot because it depends on no career: it is
+ *  the same sentence for a self-coached family shopping and for one that hired last winter. */
+const titleSharePct = staffResultShareBps('coach', 0) / 100
+const finalSharePct = staffResultShareBps('coach', 1) / 100
+
 // --- and the household beneath it (round-28 #8) ---------------------------------------------------
 // The owner, 28.08, on this exact block: the aggregate figure should be shown with the masseur in it
 // (and the psychologist when there is one), and it should stretch to the shop, which has both
@@ -840,6 +860,33 @@ function scrollToTier(tier: CoachTier): void {
     <p v-if="billing" class="hint cm-travel-cost">
       <strong>{{ formatCents(billing.weeklyCents) }}</strong> a week at her current plan –
       {{ formatCents(billing.seasonCents) }} over {{ billing.billedWeeks }} weeks.
+    </p>
+
+    <!-- ⭐⭐ ROUND 29 #13 – THE OTHER HALF OF WHAT A COACH COSTS, AND IT IS SAID EXACTLY ONCE.
+         The owner asked for the share to be written down on the coaches page, and said himself that
+         it is common to every coach so one place would do. His words are verbatim in
+         tests/component/round29-coach-share.test.ts and beside `titleSharePct` in the script above -
+         THIS IS A TEMPLATE, and no Cyrillic may appear inside one, comments included
+         (tests/round13-nav.test.ts is the guard, and it caught the first draft of this very block).
+
+         ⚠ HIS OWN INSTRUCTION IS THE PLACEMENT. The share is a UNIVERSAL rule - `staffResultShareBps`
+         reads `ECONOMY.staffShare` and the finish and nothing else, so it is identical for every coach
+         on this page and for every coach he could hire instead - so it belongs beside the weekly bill,
+         once, and NOT on the cards. A per-card copy would be six identical sentences saying a fact
+         about none of them, and would be the second surface for one engine verdict that this repo has
+         already paid for four times.
+
+         ⚠⚠ AND THE PERCENTAGES ARE READ OUT OF THE ENGINE, NEVER TYPED HERE. That is the whole
+         difference between a sentence and a claim: `staffResultShareBps('coach', 0 | 1)` is the SAME
+         function `finalizeTournament` calls when it actually pays him, so a retune of
+         `ECONOMY.staffShare` moves this line and the cheque together and they cannot drift apart. Its
+         two conditions are on the paper too, because both of them are things a parent would otherwise
+         discover by not being charged: below a final it is nothing, and the junior ladder pays no
+         prize money to take a share of (`track === 'wta'`). -->
+    <p class="hint cm-share-note">
+      Every coach here also takes <strong>{{ titleSharePct }}%</strong> of a prize cheque when she
+      wins a tour title and {{ finalSharePct }}% when she is runner-up – nothing below a final, and
+      nothing on the junior ladder, which pays no prize money.
     </p>
 
     <!-- ⚠ HOW MUCH ROOM IS LEFT IN HER, and it is the context every percentage below is relative to.
