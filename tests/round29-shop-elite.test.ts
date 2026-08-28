@@ -352,6 +352,21 @@ describe('§5 – the plane: the fare it cuts, and the point it does NOT print',
 
   const trip = { tier: 'wta250', travelCostCents: 3_000_00 } as unknown as SeasonEvent
 
+  it('⭐ ordering one moves the wallet, the shelf and – once it lands – the weekly bill', () => {
+    // The per-storey claim, for this storey: the boats have it in §2 and §3, the academy in §4, and
+    // this is the aircraft's. Read out of a ticked world at both ends.
+    const w = shopper('r29-5-plane-wallet')
+    const before = w.fundsCents
+    buyAsset(w, 'plane')
+    expect(before - w.fundsCents, 'the money left this week, in full').toBe(18_000_000_00)
+    expect(ownedOf(w, 'plane')!.readyWeek, 'two years').toBe(w.week + 104)
+    expect(householdWeekly(w, 0).upkeepCents, 'a contract has no crew').toBe(0)
+    walk(w, 105)
+    const weekly = rowOf(w, 'plane').upkeepCents
+    expect(weekly, '§3f\'s own figure for this rung, to the dollar').toBe(27_692_31)
+    expect(householdWeekly(w, 0).upkeepCents, 'and now it is in the household\'s week').toBe(weekly)
+  })
+
   it('⭐⭐ it halves the family\'s fare – hers and the staff\'s, because it is one aeroplane', () => {
     const w = withPlane('r29-5-plane-fare')
     const bare = withoutPlane('r29-5-plane-fare')
