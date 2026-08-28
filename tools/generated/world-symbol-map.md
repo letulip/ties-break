@@ -2,13 +2,13 @@
 
 # `engine/world` – area to owner
 
-The barrel `src/engine/world.ts` (2,005 lines) re-exports the decomposed modules under their historical names, so every importer sees one flat surface. That is a COMPATIBILITY contract, not a discovery one – this file is the discovery half.
+The barrel `src/engine/world.ts` (2,020 lines) re-exports the decomposed modules under their historical names, so every importer sees one flat surface. That is a COMPATIBILITY contract, not a discovery one – this file is the discovery half.
 
 Regenerate with `node scripts/world-map.mjs`; `node scripts/world-map.mjs --check` fails when it is stale, and CI runs that on every pull request.
 
 **Do not read this file to answer one question** – that is the habit it exists to replace. `node scripts/world-map.mjs <symbol>` prints the owner and the line, and a plain `grep <symbol> tools/generated/world-symbol-map.md` does the same for a partial name.
 
-327 exported names across 39 owning modules.
+336 exported names across 40 owning modules.
 
 ## Areas
 
@@ -19,12 +19,12 @@ Regenerate with `node scripts/world-map.mjs`; `node scripts/world-map.mjs --chec
 | `src/engine/world/ladder.ts` | THE LADDER: where she stands, and what that standing opens | 22 |
 | `src/engine/world/medical.ts` | THE GATES: condition, the doctor's veto, the layoff, and whether she may enter at all | 21 |
 | `src/engine/world/entryCaps.ts` | THE ANNUAL ENTRY CAPS: the ITF junior allowance, the WTA professional one (AER) – and since P1 the JUNIOR ACCESS rules, which are the same family of rule from the same two rulebooks | 17 |
+| `src/engine/world/masseur.ts` | THE MASSEUR: the first seat of the travelling team (docs/plans/the-travelling-team-2026-08.md, step 1 – the owner's ruling Б, re-cut 22.08) | 16 |
 | `src/engine/world/birthday.ts` | HER BIRTHDAY, AND WHAT YOU GIVE HER | 15 |
 | `src/engine/world/coachMarket.ts` | THE COACH MARKET: who is available at her age and rung, what they cost, and what hiring one does | 15 |
-| `src/engine/world/masseur.ts` | THE MASSEUR: the first seat of the travelling team (docs/plans/the-travelling-team-2026-08.md, step 1 – the owner's ruling Б, re-cut 22.08) | 15 |
+| `src/engine/world/multiWeek.ts` | ⭐ R2-13 PHASE 1 – THE FOUR-WEEK ADVANCE, AND THE TWO FACTS A SECOND WEEK BUTTON NEEDS | 15 |
 | `src/engine/world/sponsors.ts` | THE MONEY FROM OUTSIDE THE FAMILY: sponsors, the offers they make, and what a trip costs once somebody else is helping pay for it | 14 |
 | `src/engine/world/endings.ts` | THE ENDINGS, WIRED INTO THE WORLD: the latch, the two questions, the four-year freeze and the guard that stops a stale screen mutating a career that has stopped | 13 |
-| `src/engine/world/multiWeek.ts` | ⭐ R2-13 PHASE 1 – THE FOUR-WEEK ADVANCE, AND THE TWO FACTS A SECOND WEEK BUTTON NEEDS | 13 |
 | `src/engine/world/shop.ts` | ⭐⭐ THE SHOP, SLICE 1 – the tab, static prices, buy / own / sell | 12 |
 | `src/engine/world/kit.ts` | THE KIT SHE PLAYS WITH, AS A DECISION - the till, and what the Money screen reads off it | 11 |
 | `src/engine/world/mandatory.ts` | THE MANDATORY REGIME AND THE PENALTY LEDGER (W3-ACT2, act2-pro-tour.md §6) | 11 |
@@ -34,6 +34,7 @@ Regenerate with `node scripts/world-map.mjs`; `node scripts/world-map.mjs --chec
 | `src/engine/world/planner.ts` | THE SEASON PLANNER: the two things a parent can put on an empty week – a family holiday and a practice match – and what the engine does with them when the week arrives | 7 |
 | `src/engine/world/entries.ts` | THE ENTRY COMMANDS: putting her in a draw, and taking her back out | 6 |
 | `src/engine/world/milestones.ts` | WHAT THE FAMILY KEEPS: the moments that are never pruned, and the season they add up to | 6 |
+| `src/engine/world/shootClash.ts` | ⭐⭐ ROUND 29 #3 – THE SHOOT THAT LANDS ON A TOURNAMENT WEEK, AND THE FOUR ANSWERS TO IT | 6 |
 | `src/engine/world/constants.ts` | THE SHARED IDS AND CAPS: the handful of constants more than one world module needs | 5 |
 | `src/engine/world/means.ts` | WHAT THE FAMILY CAN AFFORD, AS ONE FACT – the licence a line of copy asks for before it may assume a wallet | 5 |
 | `src/engine/condition.ts` | THE condition math – one rule, everybody | 4 |
@@ -194,6 +195,27 @@ THE ANNUAL ENTRY CAPS: the ITF junior allowance, the WTA professional one (AER) 
 - `proSubCapUsage` – `src/engine/world/entryCaps.ts`
 - `yearEndJuniorRank` – `src/engine/world/entryCaps.ts`
 
+### `src/engine/world/masseur.ts`
+
+THE MASSEUR: the first seat of the travelling team (docs/plans/the-travelling-team-2026-08.md, step 1 – the owner's ruling Б, re-cut 22.08).
+
+- `hireMasseur` – `src/engine/world/masseur.ts`
+- `MASSEUR_CHANGE_KEY` – `src/engine/world/masseur.ts`
+- `MASSEUR_LOCKED_DETAIL` – `src/engine/world/masseur.ts`
+- `MASSEUR_NOTE_WINDOW_WEEKS` – `src/engine/world/masseur.ts`
+- `masseurRoomNote` – `src/engine/world/masseur.ts`
+- `masseurRungOf` – `src/engine/world/masseur.ts`
+- `masseurTourRelief` – `src/engine/world/masseur.ts`
+- `masseurTourWeekCents` – `src/engine/world/masseur.ts`
+- `masseurUnlocked` – `src/engine/world/masseur.ts`
+- `masseurWeeklyCents` – `src/engine/world/masseur.ts`
+- `masseurWorksInWeek` – `src/engine/world/masseur.ts`
+- `masseurWorksThisWeek` – `src/engine/world/masseur.ts`
+- `resolveMasseur` – `src/engine/world/masseur.ts`
+- `resolveMasseurReturn` – `src/engine/world/masseur.ts`
+- `setMasseurSessions` – `src/engine/world/masseur.ts`
+- `setMasseurTravels` – `src/engine/world/masseur.ts`
+
 ### `src/engine/world/birthday.ts`
 
 HER BIRTHDAY, AND WHAT YOU GIVE HER.
@@ -234,25 +256,25 @@ THE COACH MARKET: who is available at her age and rung, what they cost, and what
 - `setCoachOnEventWeeks` – `src/engine/world/coachMarket.ts`
 - `setCoachOnJuniorEvents` – `src/engine/world/coachMarket.ts`
 
-### `src/engine/world/masseur.ts`
+### `src/engine/world/multiWeek.ts`
 
-THE MASSEUR: the first seat of the travelling team (docs/plans/the-travelling-team-2026-08.md, step 1 – the owner's ruling Б, re-cut 22.08).
+⭐ R2-13 PHASE 1 – THE FOUR-WEEK ADVANCE, AND THE TWO FACTS A SECOND WEEK BUTTON NEEDS.
 
-- `hireMasseur` – `src/engine/world/masseur.ts`
-- `MASSEUR_CHANGE_KEY` – `src/engine/world/masseur.ts`
-- `MASSEUR_LOCKED_DETAIL` – `src/engine/world/masseur.ts`
-- `MASSEUR_NOTE_WINDOW_WEEKS` – `src/engine/world/masseur.ts`
-- `masseurRoomNote` – `src/engine/world/masseur.ts`
-- `masseurRungOf` – `src/engine/world/masseur.ts`
-- `masseurTourRelief` – `src/engine/world/masseur.ts`
-- `masseurTourWeekCents` – `src/engine/world/masseur.ts`
-- `masseurUnlocked` – `src/engine/world/masseur.ts`
-- `masseurWeeklyCents` – `src/engine/world/masseur.ts`
-- `masseurWorksThisWeek` – `src/engine/world/masseur.ts`
-- `resolveMasseur` – `src/engine/world/masseur.ts`
-- `resolveMasseurReturn` – `src/engine/world/masseur.ts`
-- `setMasseurSessions` – `src/engine/world/masseur.ts`
-- `setMasseurTravels` – `src/engine/world/masseur.ts`
+- `ADVANCE_REFUSALS` – `src/engine/world/multiWeek.ts`
+- `advanceRefusal` – `src/engine/world/multiWeek.ts`
+- `calendarClearAhead` – `src/engine/world/multiWeek.ts`
+- `eventIsHers` – `src/engine/world/multiWeek.ts`
+- `LONG_LAYOFF_WEEKS` – `src/engine/world/multiWeek.ts`
+- `longLayoff` – `src/engine/world/multiWeek.ts`
+- `MULTI_WEEK_SPAN` – `src/engine/world/multiWeek.ts`
+- `QUIET_WINDOW_WEEKS` – `src/engine/world/multiWeek.ts`
+- `SPAN_REPORTS_ONLY` – `src/engine/world/multiWeek.ts`
+- `spanDigest` – `src/engine/world/multiWeek.ts`
+- `spanRowCount` – `src/engine/world/multiWeek.ts`
+- `SpanWeek` *(type)* – `src/engine/world/multiWeek.ts`
+- `spanWeeksFor` – `src/engine/world/multiWeek.ts`
+- `spanWorthOffering` – `src/engine/world/multiWeek.ts`
+- `stoppableOfferWeek` – `src/engine/world/multiWeek.ts`
 
 ### `src/engine/world/sponsors.ts`
 
@@ -290,24 +312,6 @@ THE ENDINGS, WIRED INTO THE WORLD: the latch, the two questions, the four-year f
 - `resolveCollegeDeparture` – `src/engine/world/endings.ts`
 - `resolveEndings` – `src/engine/world/endings.ts`
 - `wasThereAChild` – `src/engine/world/endings.ts`
-
-### `src/engine/world/multiWeek.ts`
-
-⭐ R2-13 PHASE 1 – THE FOUR-WEEK ADVANCE, AND THE TWO FACTS A SECOND WEEK BUTTON NEEDS.
-
-- `ADVANCE_REFUSALS` – `src/engine/world/multiWeek.ts`
-- `advanceRefusal` – `src/engine/world/multiWeek.ts`
-- `calendarClearAhead` – `src/engine/world/multiWeek.ts`
-- `eventIsHers` – `src/engine/world/multiWeek.ts`
-- `LONG_LAYOFF_WEEKS` – `src/engine/world/multiWeek.ts`
-- `longLayoff` – `src/engine/world/multiWeek.ts`
-- `MULTI_WEEK_SPAN` – `src/engine/world/multiWeek.ts`
-- `QUIET_WINDOW_WEEKS` – `src/engine/world/multiWeek.ts`
-- `spanDigest` – `src/engine/world/multiWeek.ts`
-- `spanRowCount` – `src/engine/world/multiWeek.ts`
-- `SpanWeek` *(type)* – `src/engine/world/multiWeek.ts`
-- `spanWorthOffering` – `src/engine/world/multiWeek.ts`
-- `stoppableOfferWeek` – `src/engine/world/multiWeek.ts`
 
 ### `src/engine/world/shop.ts`
 
@@ -430,6 +434,17 @@ WHAT THE FAMILY KEEPS: the moments that are never pruned, and the season they ad
 - `emptyTrophyLedger` – `src/engine/world/milestones.ts`
 - `maybeFireSeasonWrapUp` – `src/engine/world/milestones.ts`
 - `seasonWrapDue` – `src/engine/world/milestones.ts`
+
+### `src/engine/world/shootClash.ts`
+
+⭐⭐ ROUND 29 #3 – THE SHOOT THAT LANDS ON A TOURNAMENT WEEK, AND THE FOUR ANSWERS TO IT.
+
+- `answerShootClash` – `src/engine/world/shootClash.ts`
+- `buildShootClashPrompt` – `src/engine/world/shootClash.ts`
+- `shootCancelCents` – `src/engine/world/shootClash.ts`
+- `shootClashOpen` – `src/engine/world/shootClash.ts`
+- `shootClashWeek` – `src/engine/world/shootClash.ts`
+- `shootMoveTarget` – `src/engine/world/shootClash.ts`
 
 ### `src/engine/world/constants.ts`
 

@@ -24,7 +24,6 @@ import {
   advanceWeeks,
   answerShootClash,
   createWorld,
-  enterEvent,
   shootCancelCents,
   shootClashOpen,
   shootClashWeek,
@@ -151,7 +150,7 @@ describe('round 29 #3 – the week raises the choice', () => {
 
   it('⚠ nor a collision she is laid up for – the layoff owns that week and the walkover reports it', () => {
     const world = clashWorld('r29-3-injured')
-    world.injury = { kind: 'wrist', sinceWeek: AT, weeksRemaining: 6, totalWeeks: 6 }
+    world.injury = { kind: 'wrist', severity: 'moderate', sinceWeek: AT, weeksRemaining: 6, totalWeeks: 6 }
     expect(shootClashOpen(world), 'a question with no consequence is the R10-16 dead control').toBe(false)
   })
 })
