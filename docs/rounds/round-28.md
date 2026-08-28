@@ -22,6 +22,30 @@ repo, never a fixture) plus three screenshots: the Trophies cabinet, and two Sea
 ⚠ **THIS FILE IS THE LEDGER, NOT THE ARGUMENT.** Diagnoses, measurements and refusals live in the
 specs each item names.
 
+⭐⭐⭐ **MEASURED 28.08, AND IT KILLS THE PREMISE WE WERE HOLDING §3 ON.**
+[the-rank-she-deserves-2026-08.md](../specs/the-rank-she-deserves-2026-08.md). Read off his save with
+the engine's own `coreForStanding` and `ratingOf`:
+
+| | |
+| --- | --- |
+| her skill core | **60.8** (ceiling 62.7, she is at 97% of it) |
+| what the SKILL LAW says that core is worth | **standing #26** – by full rating, **#36** |
+| her actual ranking | **#93**, WTA **#110** |
+| she beats a player at her OWN rank | **64.8%** |
+| she beats a real #32 | **47.3%** – a coin flip, not a wall |
+| her season points | **791**, where the tier bands put a #36 at **1400+** |
+
+⚠⚠ **She is not too weak for the 250s. She is UNDER-RANKED BY ABOUT SIXTY PLACES**, and every
+symptom in 11, 13 and 16 falls out of that one gap: strength ahead of ranking means she climbs fast
+(11), is unseeded and meets seeds in round one (13), and cannot convert either into a title (16).
+
+⚠⚠⚠ **AND ROUND 27 §3 READ THE WRONG COLUMN – SO DID I.** `FIELD.tourElite.core = [67, 77]` is not
+the STRENGTH of the top 64; `careerAt` (fieldPros.ts:833) draws the opponent's core from
+`coreForStanding(standing)` and uses `tier.core` only to spread that storey's POINTS. The real
+strength of the top 64 runs **76.4 at #1 down to 55.2 at #64**, fitted to the live 2026 Elo list.
+**«The college field is calibrated too high» was never true.** The §3 hold was correct for the wrong
+reason and the reason has to be replaced, not inherited.
+
 ⭐⭐ **Items 3, 11, 12, 13 and 16 are not five questions.** 11/13/16 are one question asked from three
 directions – *she reaches the top 100, and yet the 250s and 500s are a wall* – and 12 is the schedule
 that feeds them. They are measured together or not at all, and they inherit round 27 §3, which was
@@ -86,7 +110,9 @@ held open for exactly this reason.
   measurement already exists: [how-fast-she-grows-2026-08.md](../specs/how-fast-she-grows-2026-08.md).
   ⚠ Median first top-100 is **18.9** and the research anchor is ~22, with 22 sitting at the **p90** –
   so no, two years is not normal, it is the median case of a curve we already know is too fast. Round
-  27 §9. ⭐ **This is the same finding he is reporting from the other end in 16.**
+  27 §9. ⚠⚠ **But the measurement above reframes it**: two years is fast because her STRENGTH is
+  genuinely top-40 by season 5 – the climb is not too fast for the girl, the girl is too strong for
+  the anchor. ⭐ Same gap as 13 and 16, seen from the other end.
 
 - [ ] **12. «Посмотри на скриншот с распределением турниров… Давай подумаем как распределить турниры
   по году ещё раз в зависимости от уровня игрока и закрывать дыры одновременно в расписании… Проверь
@@ -95,14 +121,22 @@ held open for exactly this reason.
   screenshot shows runs of three and four consecutive training weeks; (b) the entitlement he can see
   («Also open to her: WT125 Grass – none scheduled in the next 8 weeks») disagrees with what the season
   actually offers. ⭐ His own proposal: **let higher tiers replace lower ones** so density and choice
-  survive as she climbs.
+  survive as she climbs. ⚙ **MEASURED on his save, and (a) is not what it looks like**: season 13 has
+  **47 of 48 weeks carrying at least one event** – only w685 is truly empty. But the tier mix is
+  `w15 25 · j30 25 · local 25 · j60 16 · w35 16 · regional 12 · w50 12 · wta500 10 · wta250 8 · w75 8
+  · wta1000 8 · national 6 · slam 4 · w100 4 · j300 4 · wta125 4` – **a quarter of the calendar is
+  junior and domestic events she outgrew nine seasons ago**, and **12 of 48 weeks offer her nothing
+  above w35**. ⭐⭐ **His proposal is exactly right and the measurement backs it**: the weeks are not
+  missing, they are occupied by tiers that are dead to her.
 
 - [ ] **13. «Нормально ли с Alice с таким количеством вылетов в первых раундах вообще до топ-100
   добирается? Или мне только кажется, что это странно?»** – **answer.** ⚠ This is the sharpest question
   in the round, because it points at a possible contradiction in the model rather than at a defect:
   first-round exits and a top-100 rank should not coexist this comfortably. ⚠⚠ It also touches round
   27 #14 (**our favourites are SAFER than the research, 11% vs 19.2%**), which he has just put on hold –
-  answering 13 must not quietly re-open 14.
+  answering 13 must not quietly re-open 14. ⚙ **ANSWERED: it is not strange and it is not two things.**
+  She is unseeded at #110 while playing to a #36 standard, so round one hands her a seed – and the same
+  gap is why she still climbs. ⭐ **Both halves of his sentence are the one gap.**
 
 - [ ] **14. «Нужно ли на время колледжа приостановить накопление % на выплаты ребенку от выигрышей или
   нет?»** – **ask.** ⭐ College already suspends the coach and the masseur and zeroes body cost; her
@@ -119,7 +153,11 @@ held open for exactly this reason.
   while its rank did not** – two titles at 17-ish, nothing for seven years. That is the growth curve
   (round 27 §9: 90% of her ceiling spent by **16.4**) seen from the trophy cabinet, and it is why §3
   was held. ⭐ His «оцени её перформанс опираясь на скиллы» is the right instrument: read her actual
-  skills out of the save and ask what result they DESERVE.
+  skills out of the save and ask what result they DESERVE. ⚙ **DONE, and the verdict is that she is
+  UNDER-performing her ranking's expectations while OVER-performing her ranking itself.** ⚠ And the
+  cabinet is not as empty as it shows: `bestFinishByTier.wta500 = 2` – **she has reached a WT500
+  semi-final**, which the cabinet does not display because it shows only champion and runner-up.
+  That is a display finding of its own and it belongs to 4's family.
 
 - [ ] **17. «Baseline athletic 2 раза письмо о спонсорстве прислали на 48 и 52 неделе одинаковое»** –
   **build.** A duplicate offer from one brand four weeks apart. Related to 2 – both are the sponsor
