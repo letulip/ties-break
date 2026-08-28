@@ -666,7 +666,6 @@ contention artefacts of round 28 cost more reading than the wall-clock they save
   ⚠ **Cashback is NOT a request** – he named it as reasoning about why a current account pays nothing.
   Recorded as a possible future line; nobody builds it off that sentence.
 
-- [ ] **12. «И я предлагал убрать авто начисление % на текущий счёт»** – ⚙ **his RULING**, and it
   ⚙ **TOP-UPS SHIPPED, BOTH INSTRUMENTS.** `buyAsset` now treats an owned `stake: 'open'` rung as a
   top-up and only a `'fixed'` one still refuses – **the predicate is the STAKE, never a list of two
   ids**, so a third investment added to the catalogue tomorrow tops up because of what it is. No new
