@@ -57,6 +57,7 @@ import { activeAdDeal, adOfferId, adShootWeek, adSpokenFor, adWritesAt, chooseSh
 import { sponsorStandingOf } from '../src/engine/world/sponsors'
 import { ECONOMY, kidPrizeShareCents } from '../src/engine/economy'
 import { isOffSeasonWeek } from '../src/engine/season/calendar'
+import { PLAN_DAYS } from '../src/engine/plan'
 import { weekLabel } from '../src/shared/dates'
 import { lookAheadFor, type CalendarWeekFacts } from '../src/composables/weekDays'
 import { DEFAULT_PROFILE, type AdOfferTerms, type Offer } from '../src/shared/protocol'
@@ -586,16 +587,30 @@ describe('step 2.2 – a shoot week recovers like a travel week, not a rest week
     expect(world.condition).toBe(51) // +1, exactly what the retainer adds on a real trip week
   })
 
-  it('a tournament on the shoot week does NOT stack – she simply recovers worse, via the match drain', () => {
-    // played=true on a shoot week and played=true on a plain week are the SAME accrual: the drain
-    // (charged at finalizeTournament, not here) is what makes the shoot+tournament week the worst
-    // one. A hidden second malus would show as a difference between these two arms.
+  // ⚠⚠ RE-AIMED AT ROUND 29 #3, AND IT IS THE OWNER OVERTURNING HIS OWN EARLIER DESIGN – not a
+  // regression and not a weakening. What stood here was «a tournament on the shoot week does NOT
+  // stack – she simply recovers worse, via the match drain», which was round 28's ruling: the shoot
+  // is «not blocked and not double-charged», and the collision was nobody's decision. He has since
+  // looked at that exemption and rejected it – «но она же осталась на турнирной неделе... Может
+  // сделать возможность переноса съёмки или всё-таки жарить прямо с чемпионатом с последствиями» –
+  // and named the price himself: «+1 в день, т.к. съемка занимает не один час, то нагрузка будет
+  // мощной на всю неделю».
+  //
+  // ⚠ AND IT IS NOT A HIDDEN MALUS, WHICH IS WHAT THE OLD CASE WAS PROTECTING AGAINST. The parent is
+  // ASKED before the week is spent (`shootClashOpen` refuses the tick) and this arm is one of four
+  // answers he can give – the other three remove the collision. The guard's real content therefore
+  // moves: the two arms must differ by EXACTLY his figure and by nothing else.
+  it('a tournament on the shoot week costs the owner\'s figure, and exactly that (round 29 #3)', () => {
     const shoot = shootProbe([WEEK], WEEK)
     accrueCondition(shoot, true)
     const plain = shootProbe([], WEEK)
     accrueCondition(plain, true)
-    expect(shoot.condition).toBe(plain.condition)
-    expect(shoot.condition).toBe(50 + ECONOMY.condition.matchWeekRecoveryBase)
+    const price = ECONOMY.advertising.clashConditionPerDay * PLAN_DAYS
+    expect(plain.condition - shoot.condition, 'the week did not cost what he priced it at').toBe(price)
+    expect(plain.condition, 'the plain playing week moved – the difference is not the shoot').toBe(
+      50 + ECONOMY.condition.matchWeekRecoveryBase,
+    )
+    expect(shoot.condition).toBe(50 + ECONOMY.condition.matchWeekRecoveryBase - price)
   })
 
   it('at the ceiling a shoot week holds – recovery is forfeited, nothing is taken', () => {

@@ -59,6 +59,11 @@ import { masseurRungOf, masseurWorksThisWeek } from './masseur'
 // shoot week? `offers.ts` is an engine LEAF (it reaches only economy/rng/calendar/world-ledger), so
 // the edge runs the same direction as every other import in this file.
 import { adShootWeek } from '../offers'
+// ⭐ ROUND 29 #3: the week's own length, for the clash price the owner named per DAY. `plan.ts` is a
+// leaf below this one (it reaches only shared/protocol), so the edge runs the same direction as the
+// import above it – and the alternative was a literal 7 beside a rate, which is the shape a retune
+// walks past.
+import { PLAN_DAYS } from '../plan'
 import { isSuspendedAt, suspensionWeeksLeft } from './mandatory'
 import type { WorldState } from '../world'
 
@@ -153,10 +158,16 @@ export function recoveryAgeFade(world: WorldState): number {
  *  `world/college.ts` is the middle of the package and this file is a gate leaf (see the header's
  *  dependency note – the same reason `guardNotEnded` in world/constants.ts reads `ending.type`
  *  instead of importing it). A shoot week the freeze swallows lapses silently – no penalty, no
- *  makeup week («мы ни за что не наказываем», plan §4c). Pure read, zero draws. */
-export function adShootHolds(world: WorldState): boolean {
-  const atCollege = world.college !== null && world.week < world.college.untilWeek
-  return !atCollege && adShootWeek(world.offers, world.week)
+ *  makeup week («мы ни за что не наказываем», plan §4c). Pure read, zero draws.
+ *
+ *  ⚠ ROUND 29 #3 WIDENED IT TO TAKE A WEEK, DEFAULTING TO THE CURRENT ONE – a widening, not a
+ *  second opinion. The shoot/tournament collision is raised the week BEFORE it lands (that is the
+ *  only week on which withdrawing an entry or moving a shoot is still possible), so it has to ask
+ *  this question about `world.week + 1`. Every existing caller passes nothing and is byte-identical.
+ */
+export function adShootHolds(world: WorldState, week: number = world.week): boolean {
+  const atCollege = world.college !== null && week < world.college.untilWeek
+  return !atCollege && adShootWeek(world.offers, week)
 }
 
 /** THE WITHHELD RECOVERY, OWED WHEN A "PLAYING" WEEK ENDS MATCH-FREE – the one oracle behind the
@@ -241,6 +252,22 @@ export function accrueCondition(world: WorldState, playedThisWeek: boolean): voi
   if (isBlackoutWeek(world.week, schoolIsOver(world.week, world.profile.birthMonth))) {
     recovery += c.blackoutBonus
   }
+  // ⭐⭐ ROUND 29 #3 – SHE SHOT AND SHE PLAYED IN THE SAME WEEK, and the owner priced it himself:
+  // «+1 в день, т.к. съемка занимает не один час, то нагрузка будет мощной на всю неделю». One
+  // point per day of the week, taken off the week's recovery.
+  //
+  // ⚠⚠ IT IS CHARGED OFF THE FACT AND NEVER OFF THE ANSWER. Round 28's note two paragraphs up says
+  // «NO STACKING on a played week ... she simply recovers worse, no rule needed» – that was true for
+  // as long as the collision was nobody's decision, and the owner has now made it one: «жарить прямо
+  // с чемпионатом с последствиями». The three other answers to the question REMOVE the collision
+  // (the entry is withdrawn, or the week leaves `shootWeeks`), so by the time both are true here the
+  // parent has chosen this. Reading the world rather than `shootClashAccepted` is what makes that
+  // safe for a save written before the question existed, and keeps this arithmetic a function of
+  // the week rather than of a click.
+  //
+  // ⚠ NOT A SECOND SPELLING OF EITHER PREDICATE: `adShootHolds` is the one shoot-week oracle this
+  // file already reads, and `playedThisWeek` is `isCompetitionWeek`, handed in by the caller.
+  if (shooting && playedThisWeek) recovery -= ECONOMY.advertising.clashConditionPerDay * PLAN_DAYS
   world.condition = clamp(world.condition + recovery, c.min, c.max)
 }
 

@@ -445,6 +445,18 @@ export type StopReason =
   /** W2-ENDINGS: the natural end has asked her and she has not answered (contract §5.3). Blocks
    *  like the fork; an off-season question a player can tick past is not a decision. */
   | 'retirement'
+  /** ⭐⭐ ROUND 29 #3 – A SIGNED CAMPAIGN'S SHOOT WEEK IS ALSO A WEEK SHE IS ENTERED IN, AND NOBODY
+   *  HAS CHOSEN WHAT TO DO ABOUT IT. Blocks exactly like the knock and the fork, and for the
+   *  strongest version of their reason: two of its four answers are IMPOSSIBLE once the week has
+   *  started (`cancelEntry` refuses on the week itself, and a shoot cannot be moved out of a week
+   *  being lived), so a stop the player could tick past would silently pick one of the other two for
+   *  him. The owner ruled the choice his – «И варианты пользователю предложить» – and named all
+   *  three arms himself.
+   *
+   *  ⚠ IT IS THE ONLY MEMBER OF THIS LIST ABOUT A WEEK THAT HAS NOT HAPPENED YET, which is what
+   *  makes it answerable at all: it is raised for `world.week + 1`. Every other reason here reports
+   *  a week already lived or a state already reached. */
+  | 'shoot-clash'
 
 /** R11-1: the order the UI must SURFACE a week's stop reasons in, and the order `advanceWeeks`
  *  returns them in. One advance can stop for SEVERAL true reasons at once (the owner's lost injury
@@ -541,6 +553,19 @@ export const STOP_PRECEDENCE: readonly StopReason[] = [
   // with 'funds', which is exactly the ordering these two lines decide.
   'fork',
   'retirement',
+  // ⭐⭐ ROUND 29 #3 – THE SHOOT/TOURNAMENT COLLISION, immediately below the two endings questions and
+  // above everything that owns a dismissable toast, on the knock's own argument: it BLOCKS, it has
+  // cost nothing by the time it fires, and a question nobody surfaces would strand the career. It
+  // sits BELOW the fork and the retirement offer because those two decide whether there is a career
+  // at all and this decides one week of one; and BELOW the birthday above them because a nineteenth
+  // birthday is a beat that can be deleted by whatever stands in front of it, while this question
+  // waits – the week it is about cannot start until it is answered.
+  //
+  // It can co-occur with 'season-end' and 'funds' (a shoot week is in-season by construction, so it
+  // can sit next to a wrap-up week and a household under water), which is exactly the ordering this
+  // line decides. It can NEVER co-occur with 'tournament': that reason is a reveal of a week already
+  // played, and this one refuses to let the week begin.
+  'shoot-clash',
   'tournament',
   'season-end',
   'deadline',

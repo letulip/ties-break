@@ -13,7 +13,7 @@ import type { CareerTotals, DebtView, FinanceWeekPoint, FinanceWindow, StopReaso
 import type { InjuryReport, Knock, KnockPrompt, SnapshotInjury } from './health'
 import type { CountingResult, LadderViews, StandingRow } from './ladder'
 import type { BirthdayPrompt, DiarySnapshot, KidLife, Milestone, RadarAxis, TrainingRead } from './narrative'
-import type { CoachMarketRow, KitDealView, KitLineView, Offer, ShopView, SnapshotAcademy, TourBriefing } from './offers'
+import type { CoachMarketRow, KitDealView, KitLineView, Offer, ShootClashPrompt, ShopView, SnapshotAcademy, TourBriefing } from './offers'
 import type { CoachEdgePlacement, PlayerProfile, PracticeBooking, RecoveryBuff, VacationBooking, WeekPlan } from './profile'
 
 /** ⭐⭐ ROUND-28 #8 – THE WHOLE HOUSEHOLD'S WEEK, IN THREE NUMBERS.
@@ -180,6 +180,15 @@ export interface Snapshot {
    *  DERIVED, not persisted: assembled per snapshot (buildBirthdayPrompt) off the birth date and the
    *  record. Once he answers, the row appears in `birthdays` and this goes null. */
   birthdayPrompt: BirthdayPrompt | null
+  /** ⭐⭐ ROUND 29 #3 – THE SHOOT ON A TOURNAMENT WEEK, AND THE FOUR ANSWERS TO IT. Non-null on
+   *  exactly the weeks `shootClashOpen` is true, which is the predicate `advanceWeeks` blocks on –
+   *  so the dialog cannot be missing on a week the engine has refused to tick. Same contract as
+   *  `knockPrompt` and `birthdayPrompt` above, same reason.
+   *
+   *  DERIVED, not persisted: assembled per snapshot (`buildShootClashPrompt`) off the signed deal's
+   *  own named weeks and her entries. What IS persisted is only the latch for «do both»
+   *  (`WorldState.shootClashAccepted`), which is optional and moves no schema. */
+  shootClash: ShootClashPrompt | null
   /** ⭐ round-18 #8 – THE TOUR'S COMMITMENT RULES, EXPLAINED THE FIRST TIME THEY BIND HER. Non-null on
    *  every week `mandatoryBindsRank` is true; the shell shows it ONCE per career and then never again
    *  (a per-career localStorage watermark, exactly like the injury report's). See `TourBriefing`. */

@@ -9,7 +9,7 @@
 
 import type { CollegeTier, ForkAnswer } from './career'
 import type { KnockChoice } from './health'
-import type { KitGrade, KitLine } from './offers'
+import type { KitGrade, KitLine, ShootClashChoice } from './offers'
 import type { PlayerProfile, WeekPlan } from './profile'
 import type { Snapshot } from './snapshot'
 
@@ -125,6 +125,11 @@ export type ToWorker =
   // again on her birthday week. `giftId` is re-validated against the four the engine itself offered –
   // the worker is not the gate, so a stale dialog cannot record a gift this birthday never had.
   | { id: number; type: 'chooseGift'; giftId: string; baseRevision: number }
+  // ⭐⭐ ROUND 29 #3: answer the shoot/tournament collision. The ONLY way `shootClashOpen` clears, and
+  // the only way time moves again on the week before a shoot lands on a playing week. The engine
+  // re-validates the collision itself – the worker is not the gate, so a stale card cannot withdraw
+  // her from a tournament the world has already moved past.
+  | { id: number; type: 'answerShootClash'; choice: ShootClashChoice; baseRevision: number }
   // ⭐⭐ v63, THE SHOP SLICE 1 (docs/specs/the-shop-2026-08.md §2/§5): the parent buys and sells with
   // the family's OWN money. `stakeCents` is the amount on an 'open' rung – an investment names a
   // minimum, not a price – and is ignored on a 'fixed' one, because the price of a car is the
@@ -295,6 +300,7 @@ export const REPLY_BY_COMMAND = {
   setPlan: 'snapshot',
   decideKnock: 'snapshot',
   chooseGift: 'snapshot',
+  answerShootClash: 'snapshot',
   buyAsset: 'snapshot',
   sellAsset: 'snapshot',
   signOffer: 'snapshot',

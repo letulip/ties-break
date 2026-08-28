@@ -796,4 +796,24 @@ export interface WorldState {
    *
    *  Required rather than optional – the v62 migration seeds every existing save. */
   peakPhysical: number
+  /** ⭐⭐ ROUND 29 #3 – THE WEEKS THE PARENT SAID "SHOOT AND PLAY ANYWAY".
+   *
+   *  A signed campaign can name a week she is also entered in a tournament, and round 28 shipped
+   *  that collision as nothing at all. The owner ruled it a DECISION and named all three answers
+   *  himself – pull out of the tournament, move or cancel the shoot, or do both and pay for it in
+   *  condition. Three of the four answers REMOVE the collision (the entry goes, or the week leaves
+   *  `shootWeeks`), so nothing has to be remembered for them. Only «do both» leaves the world in the
+   *  state that raised the question, so only it needs a latch – without one `shootClashOpen` would
+   *  ask again on the next press and the week could never be spent.
+   *
+   *  ⚠ IT IS THE LATCH AND NOT THE PRICE. What the week costs is charged off the FACT that she shot
+   *  and played (`accrueCondition` reads the shoot week and `isCompetitionWeek`), never off this
+   *  list – so a career that reaches the collision by some other road, a save written before this
+   *  field existed included, is charged correctly and simply gets asked once.
+   *
+   *  ⚠ OPTIONAL, AND NOT A SCHEMA MOVE (`WorldEvent.entryRef`'s own rule, and `AdOfferTerms`'
+   *  before it): absent means exactly what every historical save already means – nobody has answered
+   *  this question – so no migration is owed, no golden fixture is added, and `SAVE_SCHEMA_VERSION`
+   *  does not move. Every reader normalises with `?? []`. */
+  shootClashAccepted?: number[]
 }

@@ -13,6 +13,7 @@ import {
   type OkReply,
   type PlayerProfile,
   type SavePeek,
+  type ShootClashChoice,
   type Snapshot,
   type SlotMeta,
   type SlotsReply,
@@ -509,6 +510,16 @@ export const useGameStore = defineStore('game', {
     async decideKnock(choice: KnockChoice) {
       await this.run(async () => {
         const res = this.takeOk(await request({ type: 'decideKnock', choice, baseRevision: this.revision }))
+        this.applySnapshot(res)
+      })
+    },
+    /** ⭐⭐ ROUND 29 #3: answer the shoot that landed on a tournament week. Like `decideKnock` above,
+     *  nothing else can clear it and the sim will not tick until it is answered – and unlike the
+     *  knock two of its four answers stop being POSSIBLE once the week starts, which is why the
+     *  engine refuses to move time in front of it rather than merely halting on it. */
+    async answerShootClash(choice: ShootClashChoice) {
+      await this.run(async () => {
+        const res = this.takeOk(await request({ type: 'answerShootClash', choice, baseRevision: this.revision }))
         this.applySnapshot(res)
       })
     },

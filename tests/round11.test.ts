@@ -242,7 +242,13 @@ describe('R11-1 — every reason a week stopped the advance is reported', () => 
     // argument for that exact line is written beside it in protocol/events.ts.
     // ⚠ THE HAND-WRITTEN LIST IS THE POINT OF THIS TEST and must stay hand-written: derived from
     // STOP_PRECEDENCE it could never catch a member that has no slot, which is the whole bug class.
-    const all: StopReason[] = ['tournament', 'deadline', 'funds', 'season-end', 'injury', 'medical', 'walkover', 'knock', 'birthday', 'ending', 'fork', 'retirement', 'academy', 'offer', 'call-up', 'college-league']
+    // ⚠ ROUND 29 #3 ADDED 'shoot-clash', and it is the only member of this list about a week that has
+    // NOT HAPPENED YET – it is raised for `world.week + 1`, because two of its four answers stop
+    // being possible once the week begins (`cancelEntry` refuses on the week itself, and a shoot
+    // cannot be moved out of a week being lived). Slotted immediately below 'retirement': it BLOCKS
+    // like the fork and the retirement offer, and it is below them because those two decide whether
+    // there is a career at all while this decides one week of one.
+    const all: StopReason[] = ['tournament', 'deadline', 'funds', 'season-end', 'injury', 'medical', 'walkover', 'knock', 'birthday', 'ending', 'fork', 'retirement', 'academy', 'offer', 'call-up', 'college-league', 'shoot-clash']
     expect([...STOP_PRECEDENCE].sort()).toEqual([...all].sort())
     expect(new Set(STOP_PRECEDENCE).size).toBe(STOP_PRECEDENCE.length)
     for (const medical of ['injury', 'medical', 'walkover'] as StopReason[]) {

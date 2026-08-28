@@ -175,6 +175,8 @@ export type {
   AcademyEndReason,
   AcademyLetterTerms,
   AdOfferTerms,
+  ShootClashChoice,
+  ShootClashPrompt,
   CallUpLetterTerms,
   OfferTerms,
   Offer,

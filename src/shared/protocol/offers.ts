@@ -910,3 +910,47 @@ export interface SnapshotAcademy {
   /** travel the academy has paid for since the last review, in cents. */
   coveredCents: number
 }
+
+// =================================================================================================
+// ⭐⭐ ROUND 29 #3 – THE SHOOT THAT LANDS ON A TOURNAMENT WEEK
+// =================================================================================================
+
+/** The four answers the owner named for a shoot week that is also a playing week – «cancel the
+ *  tournament; cancel or move the shoot; or shoot and play with consequences». Four members and not
+ *  three because his second arm is itself a pair, and a card that offered "cancel or move" behind
+ *  one button would be asking him to make the choice twice.
+ *
+ *  ⚠ NOT PERSISTED. The ANSWER is not stored – three of the four remove the collision from the world
+ *  itself (the entry goes, or the week leaves `shootWeeks`) and the fourth latches its week on
+ *  `WorldState.shootClashAccepted`. So no save carries this union and no migration is owed. */
+export type ShootClashChoice = 'withdraw' | 'move-shoot' | 'cancel-shoot' | 'play-both'
+
+/** Everything the decision card shows, DERIVED at snapshot time (no schema cost) – `KnockPrompt`'s
+ *  own shape and its own rule: NUMBERS, never assembled prose, so a copy edit cannot change what the
+ *  player is told a thing costs, and every figure the card prints is the engine's own.
+ *
+ *  ⚠ `moveToWeek` IS NULL WHEN THE TERM HAS NO ROOM LEFT, and the card must then not offer the move
+ *  at all – a control that cannot act is R10-16's bug. The week is carried as a NUMBER and as its
+ *  LABEL because the shell formats no dates of its own (`weekLabel` is the engine's). */
+export interface ShootClashPrompt {
+  /** the week the collision is on – always the week ahead */
+  week: number
+  weekLabel: string
+  /** whose campaign it is */
+  brand: string
+  /** the tournament's rung label, as the desk writes it */
+  eventLabel: string
+  /** what her entry cost, in cents – what a withdrawal forfeits when the list has closed */
+  entryFeeCents: number
+  /** is the list still open, so a withdrawal hands the fee back? */
+  entryRefunded: boolean
+  /** does the tour's commitment rule bind her to this one (a late withdrawal costs points)? */
+  mandatoryPenalty: boolean
+  /** where a moved shoot would land, or null when the term has no room left */
+  moveToWeek: number | null
+  moveToLabel: string | null
+  /** what cancelling the shoot hands back to the brand, in cents – the shoot's own share of the fee */
+  cancelShootCents: number
+  /** what doing both costs her in condition – the owner's «+1 в день», across the week */
+  conditionCost: number
+}

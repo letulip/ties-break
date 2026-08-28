@@ -37,6 +37,9 @@ import { pendingBirthday } from './birthday'
 import { UPCOMING_WEEKS } from './constants'
 import { pendingKnock } from './knock'
 import { layoffCoversWeek } from './medical'
+// ⭐ ROUND 29 #3: the shoot/tournament collision blocks the tick exactly as the knock and the fork
+// do; `world/shootClash.ts` is a leaf beside this one and imports nothing from here.
+import { shootClashOpen } from './shootClash'
 
 /** THE SPAN, as one number. Four is the engine's own step (`ToWorker`'s `weeks: 1 | 4`) and the step
  *  every stop in the game was tuned against – round-23 #16 is written in terms of "a player stepping
@@ -257,7 +260,7 @@ export const SPAN_REPORTS_ONLY: ReadonlySet<StopReason> = new Set<StopReason>(['
  *  again – so `tests/r2-13-advance-span.test.ts` counts the refusals in the function's own source
  *  against this list. Hand-written on the `STOP_PRECEDENCE` precedent (round11.test.ts): derived
  *  from the code it could never catch the member the code forgot. */
-export const ADVANCE_REFUSALS: readonly StopReason[] = ['ending', 'tournament', 'knock', 'birthday', 'fork', 'retirement']
+export const ADVANCE_REFUSALS: readonly StopReason[] = ['ending', 'tournament', 'knock', 'birthday', 'fork', 'retirement', 'shoot-clash']
 
 /** WHY THE ADVANCE WILL NOT MOVE, or `null` when it will. `advanceWeeks`'s entry gate, extracted
  *  verbatim so the gate and the button read one rule.
@@ -295,6 +298,17 @@ export function advanceRefusal(world: WorldState): StopReason | null {
   // block above exists to answer, one order of magnitude more expensive.
   if (world.fork !== null && world.fork.answer === null) return 'fork'
   if (world.retirementOffer !== null) return 'retirement'
+  // ⭐⭐ ROUND 29 #3 – AND SO DOES AN UNANSWERED SHOOT/TOURNAMENT COLLISION, on the identical
+  // contract and for the sharpest version of the reason above it. Two of its four answers are
+  // IMPOSSIBLE once the week has begun – `cancelEntry` refuses on the week itself and a shoot cannot
+  // be moved out of a week being lived – so an advance that rolled past this would not merely fail
+  // to ask, it would silently pick one of the remaining two for him. The owner ruled the choice his
+  // and named all four arms; see world/shootClash.ts.
+  //
+  // ⚠ LAST IN THE ORDER, WHICH IS THIS FUNCTION'S OWN ORDER AND NOT `STOP_PRECEDENCE`'S (see the
+  // note on ADVANCE_REFUSALS). It is the only question here about a week that has not started, so
+  // every state above it is about something already true and answers first.
+  if (shootClashOpen(world)) return 'shoot-clash'
   return null
 }
 

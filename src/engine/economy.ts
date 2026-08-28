@@ -1450,6 +1450,23 @@ export const ECONOMY = {
      *  mechanics of the choice, not a promise on the paper – so it is read at signature, not frozen
      *  into terms. */
     shootLeadWeeks: 4,
+    /** ⭐⭐ ROUND 29 #3 – WHAT SHOOTING AND PLAYING IN THE SAME WEEK COSTS HER, PER DAY OF THAT WEEK.
+     *
+     *  THE OWNER'S OWN FIGURE, verbatim: «+1 в день, т.к. съемка занимает не один час, то нагрузка
+     *  будет мощной на всю неделю». So it is one condition point per day and it is charged across
+     *  the WHOLE week rather than per shoot slot – his sentence says why: a shoot is not an hour,
+     *  and the load it leaves is the week's, not the afternoon's.
+     *
+     *  ⚠ IT IS A PRICE AND NOT A REFUSAL. Round 28's shoot week is «not blocked and not
+     *  double-charged» and that still holds everywhere else; this is the one week the owner asked to
+     *  be paid for, and only when the parent has CHOSEN to have both – the other three answers to
+     *  the collision remove it (see `world/shootClash.ts`).
+     *
+     *  ⚠ PER DAY, MULTIPLIED BY THE WEEK'S DAYS AT THE ONE SITE THAT CHARGES IT
+     *  (`accrueCondition`). Written as a rate rather than as a total because that is the shape he
+     *  named it in, and because a week is seven days everywhere in this engine – the plan matrix,
+     *  `planWeek`, the calendar grid – so the multiplication has one honest reading. */
+    clashConditionPerDay: 1,
     /** The weekly chance a qualifying week produces the letter, on its own sub-stream
      *  (`seed:ad:<week>`, never MAIN). 5% a week puts the median arrival ~13 weeks after she
      *  crosses the bar and the mean ~20 – the plan's §2 row «when it arrives: after results, and it

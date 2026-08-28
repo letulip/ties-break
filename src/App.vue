@@ -63,6 +63,7 @@ import PracticeFlow from './components/PracticeFlow.vue'
 import SeasonSummaryDialog from './components/SeasonSummaryDialog.vue'
 import InjuryStopDialog from './components/InjuryStopDialog.vue'
 import KnockDialog from './components/KnockDialog.vue'
+import ShootClashDialog from './components/ShootClashDialog.vue'
 import BirthdayDialog from './components/BirthdayDialog.vue'
 import TourBriefingDialog from './components/TourBriefingDialog.vue'
 import EndingScreen from './components/EndingScreen.vue'
@@ -992,6 +993,9 @@ const queued = computed(() => blockingOverlay(game.snapshot ?? null))
 const liveSequence = computed(() => practiceLive.value !== null)
 const overlay = computed(() => visibleOverlay(game.snapshot ?? null, liveSequence.value))
 const showKnock = computed(() => overlay.value === 'knock')
+// ⭐⭐ ROUND 29 #3 – the shoot that landed on a tournament week. Read off `overlay` like every other
+// blocking question, so its place in the queue is `blockingOverlay`'s decision and not this file's.
+const showShootClash = computed(() => overlay.value === 'shoot-clash')
 
 // W2-ENDINGS. Three gates, and every one of them reads a SNAPSHOT FIELD rather than a stop reason -
 // the same argument the knock gate above makes, and here it matters more: an ending is permanent.
@@ -1735,6 +1739,9 @@ function reopenTour(): void {
          no event and has no dismiss: answering it IS the exit, and until it is answered the engine
          will not tick a week. Last in the template so it paints over anything else that is up. -->
     <KnockDialog v-if="showKnock" />
+    <!-- ⭐⭐ ROUND 29 #3 – the shoot on a tournament week. Beside the knock and gated the same way:
+         `overlay` decides which blocking question is on screen, this only renders the one it named. -->
+    <ShootClashDialog v-if="showShootClash" />
 
     <!-- v48: her birthday, and the four presents. Like the knock it emits no event and has no
          dismiss – answering IS the exit – but here that is the owner's ruling rather than a

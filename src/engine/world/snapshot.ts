@@ -81,6 +81,7 @@ import { financeWindow, financeSeries, seasonIndexOf, seasonStartWeek } from './
 import { ageAtWeek, birthdayTurning, kidAgeAt, kidAgeYears, START_AGE_YEARS } from './age'
 // ⭐ v48: the birthday popup's copy, assembled in the engine like every other dialog's.
 import { birthdayHistory, buildBirthdayPrompt, giftNoun } from './birthday'
+import { buildShootClashPrompt } from './shootClash'
 // ⭐ round-18 #8: the tour's commitment rules, spelled out by the module that already enforces them.
 import { buildTourBriefing } from './mandatory'
 // W2-ENDINGS: the epilogue and the debt strip, built by the module that owns the latch.
@@ -1334,6 +1335,11 @@ export function toSnapshot(world: WorldState, stopReasons?: StopReason[]): Snaps
     // `advanceWeeks` blocks on, so the dialog cannot be missing on a week the engine has stopped.
     // `buildBirthdayPrompt` re-checks the predicate itself, so this is one call rather than two.
     birthdayPrompt: buildBirthdayPrompt(world),
+    // ⭐⭐ ROUND 29 #3 – THE SHOOT ON A TOURNAMENT WEEK. Same contract as the two prompts above and
+    // for the same reason: non-null on exactly the weeks `shootClashOpen` is true, which is the
+    // predicate `advanceRefusal` blocks on, so the card cannot be missing on a week the engine has
+    // refused to tick. `buildShootClashPrompt` re-checks that predicate itself, so this is one call.
+    shootClash: buildShootClashPrompt(world),
     // ⭐ round-18 #8 – THE TOUR'S COMMITMENT RULES, AS SENTENCES. Non-null on exactly the weeks
     // `mandatoryBindsRank` is true, which is a READ of the regime that has been enforced since v38 –
     // nothing new is decided here. Unlike the two prompts above this one does NOT stop the world: the

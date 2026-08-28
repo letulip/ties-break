@@ -4,6 +4,7 @@ import {
   advanceWeeks,
   maxMainDraws,
   pendingKnock,
+  shootClashOpen,
   pendingBirthday,
   chooseGift,
   replayMainState,
@@ -24,6 +25,7 @@ import {
   setCoachOnJuniorEvents,
   setKitGrade,
   cancelPractice,
+  answerShootClash,
   decideKnock,
   acceptOffer,
   declineOffer,
@@ -285,7 +287,14 @@ async function handle(msg: ToWorker): Promise<ToUI> {
           pendingBirthday(w) !== null ||
           w.ending !== null ||
           (w.fork !== null && w.fork.answer === null) ||
-          w.retirementOffer !== null
+          w.retirementOffer !== null ||
+          // ⭐⭐ ROUND 29 #3: ...AND THE SHOOT/TOURNAMENT COLLISION, for the reason this whole list
+          // exists. The dev fast-forward ships in EVERY build (an owner ruling), so a `▶▶ 52` that
+          // outran this question would tick a year past a decision two of whose four answers stop
+          // being possible the moment the week starts – which is exactly the hole the knock and the
+          // fork are on this list to close, with the extra sharpness that it fires on the week BEFORE
+          // the one it is about.
+          shootClashOpen(w)
         // ⚠ THE SHAPE AND THE WORDING ARE BOTH PINNED (tests/dev-fast-forward.test.ts): it matches
         // `if (decisionOpen(world)) {` followed immediately by the throw, and asserts the substring
         // "resolve the tournament or knock". So v48's birthday joins the parenthesis rather than
@@ -421,6 +430,13 @@ async function handle(msg: ToWorker): Promise<ToUI> {
     // until it runs `advanceWeeks` refuses to tick at all - so this handler is what makes time move
     // again. `decideKnock` throws on a knock that is already answered, which is what keeps a
     // double-tap (or a stale dialog on a reloaded save) from re-deciding a week.
+    // ⭐⭐ ROUND 29 #3 – THE SHOOT ON A TOURNAMENT WEEK. The knock's own shape one case up: the ONLY
+    // way `shootClashOpen` clears, and the only way time moves again on that week. `answerShootClash`
+    // throws on a collision that is not open, which is what keeps a stale card from withdrawing her
+    // from a tournament the world has already moved past.
+    case 'answerShootClash': {
+      return mutate(msg.id, msg.baseRevision, (world) => answerShootClash(world, msg.choice))
+    }
     case 'decideKnock': {
       return mutate(msg.id, msg.baseRevision, (world) => decideKnock(world, msg.choice))
     }
