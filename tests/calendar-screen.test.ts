@@ -1131,6 +1131,14 @@ describe('player copy', () => {
       facts({ week: ECONOMY.availability.examWeeks[0][0] - 1 }),
       // W3-SUMMER: the holidays are a sixth kind of week now, and its copy is swept like every other.
       facts({ week: SUMMER_WEEKS[0] }),
+      // ⭐ ROUND 28 #6/#1: the shoot week and the masseur's week are the two newest sentences under
+      // this grid, and both interpolate something the older cases never did – a BRAND, straight off
+      // the signed paper, and a COUNT off the dial. Both arms of the shoot read-out are here (one
+      // named day, and several) because they are different sentences.
+      facts({ adShoot: { brand: 'Quiet Hour', weeks: [6] } }),
+      facts({ plan: WEEK_PLAN_PRESETS.grind, adShoot: { brand: 'Quiet Hour', weeks: [6] } }),
+      facts({ masseurHired: true, masseurSessionsPerWeek: 7 }),
+      facts({ masseurHired: true, masseurSessionsPerWeek: 2 }),
     ]
     for (const f of cases) {
       const w = calendarWeekFor(f, f.week + 1)
@@ -1143,8 +1151,13 @@ describe('player copy', () => {
       seen.add(w.title)
     }
     // the sweep really did reach every kind of week
+    // ⚠ WIDENED FOR ROUND 28 #6, not weakened: 'Shooting week' is a seventh title the layout can
+    // produce, and the point of this set is that the sweep really did reach every kind of week.
     expect(seen).toEqual(
-      new Set(['Training week', 'Family week', 'On the bench', 'Off-season', 'Exams', 'Summer block']),
+      new Set([
+        'Training week', 'Family week', 'On the bench', 'Off-season', 'Exams', 'Summer block',
+        'Shooting week',
+      ]),
     )
   })
 })
