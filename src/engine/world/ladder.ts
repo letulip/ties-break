@@ -11,7 +11,7 @@
 // imports these values with no runtime cycle. Nothing here draws on any RNG stream: ranks are folded
 // from the ledger, so the frozen MAIN capture cannot notice this file.
 
-import { TIERS, TIER_LADDER, hasAcceptanceList, isJuniorAge, isTierAgeOpen, isWSeriesTier } from '../season/calendar'
+import { TIERS, TIER_LADDER, hasAcceptanceList, isJuniorAge, isTierAgeOpen, isWSeriesTier, tierAgeBlock } from '../season/calendar'
 import { ALTERNATES, alternatePlacesOpen } from '../season/tournament'
 import { WILD_CARD, hostNationOf, wildCardWindow } from '../season/tournament'
 import { BEST_N_BY_TRACK, WINDOW_BY_TRACK, computeRanking, isCountingResult, windowFromWeek, windowSlots, windowedBestSum, type SeasonResult } from '../season/ranking'
@@ -420,6 +420,27 @@ export function acceptanceRank(world: WorldState, tier: TierId): number | undefi
  *  an outgrown rung is below her working one by construction), and the card says so. See
  *  docs/specs/ladder-floor-2026-08.md. */
 export function tierOpenFor(world: WorldState, tier: TierId, eventId?: string): boolean {
+  // ⭐⭐ THE DOOR THAT HAS SHUT BEHIND HER (round 28 #12 Part 0). A rung she has AGED OUT of is not
+  // open, and until this line the engine said it was: `tierFloorOpen` for j30 is `onRampOpen('itf')`
+  // - a LATCH on domestic points crossed once and never re-examined - so `Snapshot.tierOpen.j30`
+  // stayed true for ever and the oracle told the feed that a Junior Tour 30 was available to a
+  // twenty-six-year-old. The feed was only ever saved from printing it by re-deriving the age gate
+  // in the UI (`feedContext` in composables/tierState.ts), which is precisely the visibility-vs-
+  // access shape act2-pro-tour.md §4 rules against: the closure is the ENGINE's, not the UI's guess.
+  //
+  // ⚠ 'old' ONLY, NEVER 'young', and the asymmetry is the same one the feed already states. A rung
+  // she has aged out of can never open again, so calling it open is simply false; a rung she is too
+  // YOUNG for opens on a birthday, and the oracle saying "shut" about it would take the aspiration
+  // card away and put the empty weeks back (the 06.08 ruling).
+  //
+  // ⚠ AND IT IS `tierOpenFor` AND NOT `tierFloorOpen`, DELIBERATELY. `tierOutgrown` reads the FLOOR
+  // of the rung three above, and its own age clause is the one that decides what a shut door up
+  // there means for the rung below it («a door she cannot open yet cannot close the one behind
+  // her»). Putting the age gate in the floor would answer that question a second time, from here,
+  // for rungs this change has no business touching. R10-5 still holds in the direction it is
+  // written: `availabilityStatus`' age branch already blocks an aged-out event, so a rung the
+  // calendar now shuts was never enterable anyway.
+  if (tierAgeBlock(tier, kidAgeAt(world, world.week)) === 'old') return false
   return tierFloorOpen(world, tier, eventId)
 }
 
@@ -536,6 +557,21 @@ export const PLAY_DOWN = {
   fromLowW: 150,
   /** which rungs "the bottom" means. The two the regulation names. */
   lowW: ['w15', 'w35'] as readonly TierId[],
+  /** ⭐⭐ AND THE DOMESTIC LADDER IS SHUT ONCE SHE IS ON THE PROFESSIONAL TABLE – round 28 #12,
+   *  docs/specs/the-calendar-she-can-reach-2026-08.md Part 0. `false` is a meaningful OFF, like a
+   *  `0` cut above.
+   *
+   *  ⚠ IT IS A TABLE AND NOT A RANK CUT, AND THAT IS THE WHOLE OF WHY IT IS A SEPARATE LIMB. The two
+   *  cuts above are quoted from the WTT Regulations, which govern the ITF's OWN events; the domestic
+   *  ladder is OURS (TIERS.j30's note: «it is ours, not the ITF's»), so no regulation has a number
+   *  for it. A rank cut also cannot express the rule act2-pro-tour.md §4 actually gives – «Если
+   *  national доступен - показывать только их», the domestic family collapsing upward – because a
+   *  professional ranked #400 is past the club draws exactly as surely as one ranked #40 is.
+   *  `activeLadderOf` is the engine's own one answer to which table is hers, and it is already what
+   *  the FEED filters on (round-21 #5, `paysIntoHerTables` in composables/tierState.ts). This limb
+   *  is that rule moved off the screen and into the ladder, which is what §4 asks for: the closure
+   *  is the engine's latch, not the UI's guess. */
+  domesticFromProTable: true,
 }
 
 /** IS SHE TOO STRONG FOR THIS RUNG? A rank READ, and the difference between a read and a latch is
@@ -559,6 +595,30 @@ export const PLAY_DOWN = {
  *  ⚠ AND "UNRANKED IS NOT A RANK" ONE LAST TIME. A girl with no W points holds no W ranking, so she
  *  cannot be barred by one – the sentinel would otherwise read a missing cache as a number. */
 export function playDownBars(world: WorldState, tier: TierId): boolean {
+  // ⭐⭐ THE DOMESTIC LIMB (round 28 #12 Part 0) – the same rule pointing at the bottom of the
+  // ladder, and it is here rather than in a gate of its own precisely so it inherits everything
+  // this one already has: `hasOutgrown` folds it into the ONE "she is past this rung" answer,
+  // `tierFloorOpen` closes the rung, `entryVerdict` refuses with a sentence that says she is too
+  // GOOD for it, and none of the three can drift from the others.
+  //
+  // ⚠ WHY THE DOMESTIC RUNGS NEEDED IT AND THE SLIDING WINDOW COULD NOT REACH THEM. Both of their
+  // ceilings are denominated in DOMESTIC points, a currency a world-tour player stops earning:
+  // `outgrewTier` reads a season-to-date total that is 0 for a professional, and `tierOutgrown`
+  // asks whether the rung THREE ABOVE is open - j30/j60/j300, which are U18 and therefore shut for
+  // ever past eighteen, so its own age clause vetoes the closure. Measured on the owner's save at
+  // 26, WTA #110: `Local Open` OPEN with `outgrown=n` and four of her twelve open slots, while
+  // Regional and National refused her for want of national points she can no longer earn. One
+  // disease, both signs.
+  //
+  // ⚠ IT IS THE SAME SHAPE AS THE W LIMBS ONE STOREY UP, WITH ONE HONEST DIFFERENCE: those reverse
+  // themselves when her rank falls back, and this does not, because `activeLadderOf`'s professional
+  // arm is permanent by construction (`wtaEverCounted` reads the unpruned high-water mark). That is
+  // deliberate and it is not the boredom failure: a professional whose W book has aged out still
+  // holds her W15/W35 on-ramp latch, so the rungs she keeps are the ones one table UP, not one
+  // table down. `tests/tier-window.test.ts` asserts she is never stranded.
+  if (TIERS[tier].track === 'domestic') {
+    return PLAY_DOWN.domesticFromProTable && activeLadderOf(world) === 'wta'
+  }
   if (!isWSeriesTier(tier)) return false
   if (kidPoints(world, 'wta') <= 0) return false
   const rank = world.kidRankWta ?? tableSize(world, 'wta')
@@ -571,6 +631,12 @@ export function playDownBars(world: WorldState, tier: TierId): boolean {
  *  («игрок должен иметь возможность играть… чтобы не скучал»), and it says the rule is about being
  *  too good – there is nothing here to apologise for. */
 export function playDownRefusalDetail(tier: TierId, rank: number): string {
+  // ⭐ THE DOMESTIC LIMB'S OWN SENTENCE, in this one function so the copy cannot drift from the
+  // rule. It names a TABLE rather than a cut because the limb is a table (see PLAY_DOWN), and it
+  // keeps the family's voice: the refusal is about being too good, and it says what is hers instead.
+  if (TIERS[tier].track === 'domestic') {
+    return `${TIERS[tier].label} pays national points – she is on the world tour now, at #${rank}. The bigger draws are hers.`
+  }
   const cut = PLAY_DOWN.lowW.includes(tier) && rank > PLAY_DOWN.fromAllW ? PLAY_DOWN.fromLowW : PLAY_DOWN.fromAllW
   return `${TIERS[tier].label} is closed to the world's top ${cut} – she is #${rank}. The bigger draws are hers now.`
 }
@@ -797,6 +863,12 @@ export function tierFloorOpen(world: WorldState, tier: TierId, eventId?: string)
   // `isTierEligible` stays as it is: it is the BAND predicate, and its only other readers are the
   // on-ramps, whose bands have no ceiling (`[250, MAX]`, `[120, MAX]`) so the two readings agree
   // there by construction.
+  //
+  // ⭐⭐ THE PLAY DOWN RULES COME FIRST HERE TOO (round 28 #12 Part 0), and above the floor for the
+  // same reason they sit above the on-ramp branch in the W arm: the floor is denominated in
+  // domestic points, so for a professional it answers the wrong question in both directions at once
+  // - it holds Local open on a book of zero and refuses Regional on the same zero.
+  if (playDownBars(world, tier)) return false
   return kidPoints(world, 'domestic') >= TIERS[tier].enterPointBand[0]
 }
 

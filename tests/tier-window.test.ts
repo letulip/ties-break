@@ -432,18 +432,32 @@ describe('round-21 #5 – the feed offers the rungs that pay into her table', ()
     }
   })
 
-  it('...and WITHOUT the table verdict the same world still offers all three – the bug, pinned', () => {
-    // The half that makes the assertion above mean something: fold the identical snapshot with
-    // `activeLadder` withheld and the club draws come straight back. Measured at 22 with a
-    // six-hundred-point book: local, regional and national beside w100/wta125/wta250.
+  // ⚠⚠ RE-AIMED 28.08 BY ROUND 28 #12 PART 0 – AND THE RE-AIM IS THE RECEIPT, NOT A LOSS.
+  //
+  // This case used to be the WITNESS for the one above: fold the identical snapshot with
+  // `activeLadder` withheld and the club draws came straight back – `local, regional, national`
+  // beside w100/wta125/wta250, with `national` inside her WORKING window. It proved that the
+  // filter, and only the filter, was doing the work.
+  //
+  // THAT IS EXACTLY WHAT PART 0 CHANGED, and it is what act2-pro-tour.md §4 asks for: the closure
+  // is «the engine's latch, not the UI's guess». `PLAY_DOWN.domesticFromProTable` now shuts the
+  // domestic rungs in the LADDER, so withholding the UI's verdict no longer brings them back and
+  // the old expectation can no longer be satisfied by any world. Deleting the case would throw away
+  // the finding; asserting the OPPOSITE keeps it, and turns it into the proof that the rule moved
+  // rather than the proof that it existed.
+  //
+  // ⭐ The mutation that reddens it is `PLAY_DOWN.domesticFromProTable = false`, which restores the
+  // exact list this case used to expect.
+  it('⚠ ...and WITHOUT the table verdict they STAY gone – the rule is the ladder\'s now, not the feed\'s', () => {
     const world = proWorld('r21-5-witness', 22, 600)
     const before = foldFeed(world, false)
-    expect(before.rungs.filter((t) => TIERS[t].track === 'domestic')).toEqual([
-      'local', 'regional', 'national',
-    ])
-    // ...and one of them was inside her WORKING window, i.e. on the Home strip as a rung her career
-    // is supposedly about. That is the sharpest form of the complaint.
-    expect(before.working).toContain('national')
+    expect(before.rungs.filter((t) => TIERS[t].track === 'domestic')).toEqual([])
+    // ...and the Home strip inherits it from the same place, with the UI judging no table at all.
+    expect(before.working).not.toContain('national')
+    // The ENGINE's own answer, said out loud, so this case names the mechanism it is measuring.
+    for (const t of ['local', 'regional', 'national'] as const) {
+      expect(toSnapshot(world).tierOpen[t], t).toBe(false)
+    }
   })
 
   it('⚠ THE SEAM: her first counting W point costs her the domestic three and NOT the junior tour', () => {
@@ -491,16 +505,38 @@ describe('round-21 #5 – the feed offers the rungs that pay into her table', ()
     }
   })
 
-  it('VISIBILITY, NEVER ACCESS – the engine still opens every rung it opened, and entry is untouched', () => {
-    // The 06.08 ruling was that the lower bound must not REFUSE. It still does not: this wave
-    // changed what the feed OFFERS unasked, and nothing about what she may walk into.
+  // ⚠⚠ RE-AIMED 28.08 BY ROUND 28 #12 PART 0 – the claim narrows by exactly one rung family and
+  // the reason it narrows is worth stating, because "visibility, never access" was true of THIS
+  // wave and is no longer the whole story.
+  //
+  // Round-21 #5 changed only what the feed offered; Part 0 closes the domestic rungs in the LADDER,
+  // so for a professional they are now access as well as visibility. ⚠ THE 06.08 RULING IS STILL
+  // INTACT AND THAT IS THE HALF THIS CASE NOW HAS TO CARRY: what shuts them is an UPPER bound (the
+  // Play Down family's domestic limb – "she is too good for this ladder") and never a floor. The
+  // floor still refuses nobody, which is asserted on a domestic climber below, where it is the
+  // ruling's actual subject.
+  it('VISIBILITY, NEVER ACCESS – still true of every rung this wave touched, and the 06.08 floor still refuses nobody', () => {
     const world = proWorld('r21-5-access', 22, 600)
+    // ⭐ THE DOMESTIC THREE ARE NOW ACCESS TOO, by the ladder and not by the feed. Named rather than
+    // quietly dropped, so the day it changes back this line says so.
     for (const tier of ['local', 'regional', 'national'] as const) {
-      expect(tierOpenFor(world, tier), `${tier} is still open to her`).toBe(true)
+      expect(tierOpenFor(world, tier), `${tier} is shut by the ladder for a professional`).toBe(false)
     }
-    // ...and an ENTERED domestic event still renders, on `feedShows`'s own first arm.
+    // ...and an ENTERED domestic event still renders, on `feedShows`'s own first arm (R10-3): a
+    // committed week stays actionable whatever the ladder has since decided.
     const feed = foldFeed(world, true)
     expect(feedShows({ id: 'x', tier: 'local', entered: true }, feed)).toBe(true)
     expect(feedShows({ id: 'x', tier: 'local', entered: false }, feed)).toBe(false)
+
+    // THE 06.08 RULING, ON THE CAREER IT IS ABOUT. A domestic climber has passed Local and Regional
+    // by her points, and both are still hers to enter – the lower bound does not refuse, exactly as
+    // it has not since `ladder-floor-2026-08.md`. Part 0 took nothing from her.
+    const home = createWorld('r21-5-access-home')
+    home.results.push({ playerId: KID_ID, week: home.week, points: 300, tier: 'national' })
+    recomputeKidRank(home)
+    expect(activeLadderOf(home), 'she has never played a professional event').not.toBe('wta')
+    for (const tier of ['local', 'regional'] as const) {
+      expect(tierOpenFor(home, tier), `${tier} is behind her AND still hers`).toBe(true)
+    }
   })
 })
