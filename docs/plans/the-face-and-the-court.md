@@ -189,6 +189,19 @@ step 6 ships.
 | **5** | **her own account** (§4b.1) – the deal pays HER, not the family | the parent can see money he cannot spend |
 | **6** | **obligations that outlive form** (§4b.3) | a deal signed at a peak still owes its weeks at #90 |
 
+⚠ **THE LETTER'S SHELF LIFE IS FIVE WEEKS, NOT FOUR (round 28 #2, 28.08).** Step 1 shipped with
+`ECONOMY.advertising.decideWeeks: 4`, counted inclusively – a letter filed on W44 died on W47. The
+owner: «Предложение от спонсора с часами пришло на сорок четвёртой неделе А на сорок восьмой уже
+истёк срок рассмотрения мне казалось мы договаривались про 5 недель», and his memory is the ruling.
+**The five was never written down for this letter and that is where the bug came from**: the
+constant's comment said "the same thinking time the kit window's letters get", but the kit window is
+five weeks wide and its letters carry five down to two because their deadline belongs to the WINDOW
+(`docs/specs/sponsor-window-2026-08.md` §3.1) – reading "the same" off `sponsorship.decideWeeks`, the
+number that *sizes* that window, produced four. The two clocks stay separate: an ad letter arrives on
+whatever week a campaign notices her, so it cannot inherit «every letter dies when the window closes»
+without leaving a decision open while she is playing. Pinned as a literal in `tests/ad-offer.test.ts`,
+measured from four different arrival weeks so a shared deadline cannot creep back in.
+
 ⚠ **STEPS 1-2 ARE A COMPLETE FEATURE.** Everything from 3 on is the second axis, and that is a much
 larger commitment – fame wants a surface, a fog rule and its own calibration.
 

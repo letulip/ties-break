@@ -697,3 +697,266 @@ file alone from `tb-spon2`: exit 0, correct root, no artefact.
 **No schema change.** Both halves are derived from what is already in `offers`, which is the call
 §3.4 made with `letDownThisWindow` and the right one again.
 
+---
+
+# 11. The incumbent is on the ladder too (28.08, round 28 #17)
+
+**Schema unchanged at v41** · bench `npm run bench:sponsor` (8 seeds, 144 careers per arm, both
+signing policies)
+
+## 11.1 The bug report is the owner's own career, a third time
+
+> «Baseline athletic 2 раза письмо о спонсорстве прислали на 48 и 52 неделе одинаковое»
+
+Read off save `alice-cfbv_w675`:
+
+```
+kit-671            week 671 (W48, the window's OPENING week)   tier tour   Baseline Athletic   refused
+kit-renew-kit-567  week 675 (W52, the CLOSING week)            tier tour   Baseline Athletic   signed, renewal
+```
+
+`weekLabel` is 1-based, so his W48/W52 are window weeks 47 and 51, to the week. Their `terms` are
+identical field for field – allowance, freshCap, minEvents, covers, travelShare, seasons, retainer,
+bonus – and the only difference is `renewal: true`.
+
+**They are the same brand because the contract ending under her, `kit-567`, came from that very
+rung.** §3.2's ladder wrote to her as a stranger on its own slot, and §10's renewal wrote to her as
+the relationship four weeks later.
+
+⚠ **This is round 17 #27 one seam over, and the earlier fix could not have caught it.** That report
+was *also* two identical Baseline Athletics letters (`w359` and `w360`), and the fix deduped the
+window's letters **rung against rung** by seeding an `alreadyWritten` set from the window's own slot
+ids. `raiseKitRenewal` is independently idempotent on `kit-renew-<id>`. Neither ever asked whether
+the rung and the incumbent were the same brand.
+
+**The feed row is the design saying so out loud and being ignored.** `reviewSponsors` already
+excludes the renewal from the "letters from X and Y" clause, and the comment states why: it is «the
+one thing a renewal is not: they already have her, and the row would name the same brand twice in
+two different voices one sentence apart». With the ladder also writing, the row names the brand twice
+anyway – in two clauses instead of one.
+
+## 11.2 Which letter is the duplicate, and why it is not the renewal
+
+The rung's letter goes. Three reasons and all three were already written down:
+
+1. **Placement.** `raiseKitRenewal`'s header puts the incumbent LAST because `seasonSpokenFor` turns
+   every other rung away the moment a letter is signed, and «the incumbent is the letter a parent is
+   likeliest to sign on sight». A fresh letter *from that same brand* on slot 0 is the incumbent
+   writing on the window's opening week – the exact placement that header exists to forbid.
+2. **The copy.** Only `renewal: true` renders «Another year in our kit» (`InboxSheet.subjectOf`,
+   `OfferLetter`). Without it the paper says «A kit deal for your daughter» and *introduces* a brand
+   she has worn all season. Of the two letters only one is true.
+3. **The dice.** Suppressing the renewal instead would make the relationship depend on a competing
+   letter's roll, and «⚠ NO DICE» is a pinned, mutation-verified property of it: a girl who clears no
+   rung at all still hears from the brand she has been with.
+
+## 11.3 What ships
+
+One clause in `raiseKitOffers`, beside the round-17 set it extends:
+
+```ts
+const incumbent = dealEndingWithSeason(offers, week)
+const incumbentTier = (incumbent?.terms as { tier?: SponsorTier } | undefined)?.tier
+if (incumbentTier) alreadyWritten.add(incumbentTier)
+```
+
+Read off `dealEndingWithSeason` – the same call the closing week makes to find who may renew – so the
+two halves cannot disagree about who the incumbent is. **No new state, no field and no migration**:
+the fact is already in `offers`, which is the call §3.4 and §10.2 both made and the right one again.
+
+⚠ **The slot ids either side of the hole are unchanged.** A suppressed rung is `continue`d over, not
+removed from the queue, so `local` stays `kit-101` rather than sliding up to `kit-100`. A suppression
+that shifted the queue would re-key `shopWritesAt` for every rung below it and silently re-roll them –
+§10.2's own property.
+
+Two arms need no rule of their own: a contract that is **not** ending still turns the whole window
+away (`seasonSpokenFor`), and a brand that was **let down** never reaches `raiseKitOffers` at all
+(`reviewSponsors` skips the call).
+
+## 11.4 What was measured
+
+Same bench, same seeds, the change toggled on one line so both arms carry the same tree.
+
+| | BEFORE eager | AFTER eager | | BEFORE patient | AFTER patient |
+|---|---|---|---|---|---|
+| career sponsor coverage | 84.8% | **84.4%** | | 83.0% | **83.3%** |
+| careers ever covered | 144/144 | 144/144 | | 144/144 | 144/144 |
+| longest gap – p50 / p90 / max | 1 / 158 / 210 | 1 / 158 / 210 | | 4 / 106 / 210 | 4 / 106 / 210 |
+| week of her first deal, p50 | 47 | 47 | | 51 | 51 |
+| **letters by rung – local** | 3.46 | **3.51** | | **6.34** | **4.17** |
+| ...national / tour | 0.51 / 0.25 | 0.46 / 0.23 | | 1.14 / 0.47 | 0.91 / 0.41 |
+| the competing half – letters | 4.7 | 4.8 | | **9.4** | **6.8** |
+| the quieter half – letters | 4.1 | 4.0 | | **6.9** | **4.3** |
+| seasons opened with NO kit deal | 28 / 639 (4.4%) | **26 / 639 (4.1%)** | | 29 / 646 (4.5%) | **27 / 646 (4.2%)** |
+| careers never bare | 117 / 144 | **118 / 144** | | 115 / 144 | **117 / 144** |
+| kit cover per career | $2,872 | $2,850 | | $2,933 | $2,863 |
+| sponsor as a share of income | 3.6% | 3.5% | | 3.5% | 3.6% |
+| winters different by entry week | 0 | **0** | | 0 | **0** |
+
+### ⭐ The reading, and it explains why the bench never caught this and the owner did
+
+**The whole delta is on the PATIENT arm.** Local letters fall **6.34 → 4.17**, about one letter per
+winter for a career whose local deal keeps renewing; the eager arm barely moves (3.46 → 3.51). That
+asymmetry is not noise, it is the mechanism: **an eager signer takes the ladder's letter on the
+opening week, and the signature makes `seasonSpokenFor` true, so the renewal is never raised at all.
+He never sees the duplicate.** Only a parent who holds his letters to the last quiet week ends up
+with both on the table – which is exactly how the owner plays, and exactly what his save shows
+(`kit-671` refused, `kit-renew-kit-567` signed).
+
+**Nothing else moves.** Coverage ±0.4 pp with 144/144 careers still covered, the gap distribution
+identical to the week, the first-deal week identical, and §10.3.1's zero holds: no winter comes out
+different depending on which week the career met it. **Bare seasons go slightly DOWN** (28 → 26,
+29 → 27), so removing the duplicate did not cost a single career a deal.
+
+The money is the size of the footprint and is small: kit cover −0.8% / −2.4%, and the share of career
+income is unchanged to a tenth of a point either way. The larger swings in the eager arm's headline
+`sponsor $` are `bonus` and `appearance` – prize-linked lines that follow a handful of careers
+diverging on a different signature – and not something this change can touch.
+
+## 11.5 ⚠ One consequence, and it is a ruling rather than a bug
+
+A career whose ladder is **only** the incumbent's rung – the common shape, the local shop renewing
+every winter – used to get a rolled fresh letter early in the window (five weeks to decide) *and* the
+renewal. It now gets only the renewal, which by the 10.08 placement lands on the closing week with a
+**one-week** deadline.
+
+That is the duplicate being removed, and it is also less thinking time in exactly the place round 28
+#2 is about. The obvious alternative – letting the incumbent's letter arrive at its rung's slot,
+carrying `renewal: true` – would reverse two heavily-argued and mutation-verified guards at once (it
+writes last; it takes no dice), so **it is left as it stands and flagged for the owner**. If he wants
+the incumbent to write earlier, that is a new ruling, not this fix.
+
+## 11.6 Gates and files
+
+Mutation-verified: dropping the one clause reddens three tests, the new one reporting
+`week 51: Netrally Distribution, String House, String House` – his report, reproduced.
+
+| file | what changed |
+|---|---|
+| `src/engine/offers.ts` | `raiseKitOffers` seeds `alreadyWritten` from `dealEndingWithSeason`; the per-rung comment re-stated as per-BRAND |
+| `tests/offers.test.ts` | a new round-28 #17 test in the renewal block, reading `toSnapshot(world).offers` through `InboxSheet`'s own `live()` predicate on every week of the window; three guards **re-aimed with ⚠ notes** – `careerInTheWindow`'s `rungsWanted` 3 → 2, the `kit-100/national` ladder line, and the seam test, whose second letter now steps her up a rung |
+
+
+---
+
+# 12. The deadline goes back to the letter (28.08, round 28 #17-b)
+
+**Schema unchanged at v41** · bench `npm run bench:sponsor` (8 seeds, 144 careers per arm)
+
+## 12.1 The ruling
+
+§11.5 flagged a consequence and the owner ruled on it:
+
+> «в чем проблема сделать 5? у нас конечная неделя сезона 49 по сути, дальше окно в новый сезон,
+> даже если приглашение придет на 1й или 2й неделе я не вижу проблем сделать слот в 5 недель»
+
+**Every kit letter now carries five weeks from its own arrival** – `kitOfferDeadline(week) = week +
+ECONOMY.sponsorship.decideWeeks - 1`, one expression read by both `raiseKitOffers` and
+`raiseKitRenewal`. The deadline is a property of the LETTER again, as it was before 05.08.
+
+## 12.2 ⚠⚠ What §3.1 above is now WRONG about, stated here because it still argues for itself
+
+§3.1 bought one property with the window deadline – **«no decision is ever open while she is
+playing»** – and the 01.08 move into the off-season existed to buy exactly that. A letter raised on
+the window's closing week now runs to season offset 3, so the inbox can hold a live decision in weeks
+she is entering tournaments. **He was shown that objection in those words and overruled it.**
+
+And he is more right than §3.1 is, for a reason §3.1 could not have known: **the property was already
+gone.** Round 28 #2 gave the ADVERTISING letter five fixed weeks from arrival, and an advertising
+letter arrives on whatever week a campaign notices her – his own was season week 35. So «no decision
+open while playing» had already stopped being true of the inbox; the window guarantee only ever
+covered kit post. His ruling makes the two kinds of letter one rule instead of two.
+
+⚠ `SPONSOR_LETTER_WEEKS` survives at `SPONSOR_WINDOW_WEEKS - 1`, and **its reason changed while its
+value did not** – the kind of thing that rots silently. Its old job was guaranteeing a late letter two
+weeks; that job is retired. Its remaining job was always the load-bearing one: the closing week is
+reserved for the incumbent's renewal, so no fifth rung can crowd the relationship out.
+
+⚠ **Two windows can never overlap, and it is arithmetic rather than luck.** The latest a letter can be
+raised is season offset 51; it dies at offset 51 + 4 = offset 3 of the next season; the next window
+does not open until offset 47. **Forty-four weeks of daylight.** So no letter can outlive the deal it
+was competing for, and `seasonSpokenFor` cannot be asked about two winters at once. Pinned, not
+assumed.
+
+## 12.3 ⚠⚠ THE MEASUREMENT, AND IT CROSSES THE LINE – THIS NEEDS HIS RULING BEFORE IT MERGES
+
+The brief was: measure how many careers begin a season with no kit contract, and for how long; if it
+moves materially, **report and stop.** It moves materially.
+
+### 12.3.1 First the instrument, because the first A/B read a byte-identical null
+
+`answerThePost`'s `patient` policy signed on **calendar** week 51. Until this ruling that was
+identical to «hold to the last moment», because every letter died on week 51 – so the policy was
+written against the calendar. With the deadline back on the letter the two stopped being the same
+thing, and a policy pinned to week 51 answers every letter *before* its deadline: **neither modelled
+signer ever used the new weeks, and the bench reported no change at all.** That is a property of the
+probe, not of the change.
+
+`patient` is therefore re-aimed to «sign a letter on the last week it is live». ⚠ **Measured against
+the old engine it is byte-identical** – all deadlines ARE week 51 there – which is what makes the A/B
+below a fair one rather than two different players.
+
+### 12.3.2 The numbers, same bench both arms, engine toggled on one line
+
+**The EAGER arm is identical to the digit in both arms** – a parent who signs on sight is untouched by
+this ruling, which is worth saying first. Everything below is the patient arm.
+
+| patient signer | BEFORE | AFTER |
+|---|---|---|
+| career sponsor coverage | 83.3% | **79.3%** (−4.0 pp) |
+| longest gap – p50 | 4 | 5 |
+| longest gap after her first deal – p50 | 1 | **5** |
+| **seasons opening with NO kit deal** | **27 / 646 (4.2%)** | **354 / 645 (54.9%)** |
+| ...read AFTER the post is answered | 27 / 646 (4.2%) | **337 / 645 (52.2%)** |
+| **careers that never open a season bare** | **117 / 144** | **13 / 144** |
+| uncovered opening weeks | 1,535 over 27 runs (mean 56.9 wk) | **3,116 over 337 runs (mean 9.2 wk)** |
+| ...per career | 10.7 wk | **21.6 wk** |
+| kit cover per career | $2,863 | $2,747 |
+| letters by rung – local | 4.17 | 4.20 |
+| winters different by entry week | 0 | 0 |
+
+### 12.3.3 The mechanism, and it is not the one the objection named
+
+The cost is **not** «a decision open while she is playing». It is this:
+
+**`fromWeek` is the week he SIGNS, and `untilWeek` is anchored on the letter's ARRIVAL.** So a parent
+who uses his new weeks signs after the season has already opened, gets cover from that week, and the
+term still ends on the same week it always would have. **The extra weeks are spent, not banked** –
+which is the existing pinned property «holding the letter can never BUY weeks», now visible from the
+other side: before the ruling he *could not* wait past week 51, so he could not lose. Now he can.
+
+The bare seasons are mostly short – the mean run falls from 56.9 weeks to 9.2, because the BEFORE
+population was whole-year holes belonging to careers that had stopped competing, while the AFTER
+population is dominated by a few uncovered weeks at the top of an otherwise covered season. But there
+are twelve times as many of them, and «she started the season in nobody's kit» is the owner's own
+sentence and the reason the floor counter exists at all (§ fix/sponsor-floor, 09.08).
+
+### 12.3.4 What I have NOT built, because it is his call
+
+The obvious remedy is one line and a different ruling: **let a letter raised in the window start its
+cover at the season's first week rather than at the signing week** – i.e. `dealStartsAt` treats a
+winter letter as covering the season it was written for, however late in its own five weeks it is
+signed. That makes the extra weeks free, removes the entire delta above, and keeps his ruling intact.
+
+It is not built because it changes what a signature MEANS, it touches the seam §3.5 exists to protect
+(«the deals meet exactly: no overlap and no gap»), and §12.3.3's «holding can never buy weeks» is a
+deliberate property somebody argued for. **That is a decision, not a fix.**
+
+## 12.4 What the ruling DID fix, which is what it was for
+
+§11.5's defect is closed and pinned by name: **a career whose ladder is only the incumbent's rung –
+the local shop renewing every winter, the commonest shape in the game – now gets five weeks to answer
+its renewal instead of one.** The renewal still LANDS on the closing week; it simply no longer expires
+the moment it arrives.
+
+## 12.5 Gates and files
+
+Mutation-verified in both directions: restoring the window deadline (`kitOfferDeadline` →
+`sponsorWindowClosesAt`) reddens 4 tests; the ruled number back to 4 reddens 7.
+
+| file | what changed |
+|---|---|
+| `src/engine/economy.ts` | `sponsorship.decideWeeks` 4 → 5, and it belongs to the LETTER again; the `decideWeeks + 1` reading of the window retired with the argument written out |
+| `src/engine/offers.ts` | `kitOfferDeadline` – the one place the rule lives, read by `raiseKitOffers` and `raiseKitRenewal`; `SPONSOR_LETTER_WEEKS`' reason re-stated |
+| `tests/offers.test.ts` | three guards **re-aimed with ⚠ notes** – the shared-expiry loop, the renewal's one-week deadline (now pinned as HIS case, by name), and the window-shape test's retired third reading; two new blocks – the five-week sweep across every window week and over the season boundary, and the no-overlap arithmetic |
+| `tools/sponsor-window-bench.ts` | `patient` re-aimed to the letter's own deadline (byte-identical on the old engine); `seasonsOpenedBareAfterPost` and the uncovered-opening-weeks run counter |

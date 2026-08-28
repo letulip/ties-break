@@ -699,19 +699,40 @@ export const ECONOMY = {
      *  season spent nursing her does not. */
     minEvents: 6,
     topMinEvents: 8,
-    /** HOW LONG THE PARENT HAS TO THINK. The owner asked for exactly this - «давать человеку
-     *  какое-то время на подумать» - and the number has to be long enough to be a real pause and
-     *  short enough that the letter is still the season's business. Four weeks.
+    /** HOW LONG THE PARENT HAS TO THINK, in weeks, counted INCLUSIVELY from the week the letter
+     *  lands: the deadline is `arrival + decideWeeks - 1` (`kitOfferDeadline`), so five means the
+     *  arrival week and the four after it, and the letter is still answerable on the last of them.
+     *  The owner asked for exactly this - «давать человеку какое-то время на подумать».
      *
-     *  ⚠ IT SIZES THE WINDOW NOW RATHER THAN EACH LETTER (05.08, feat/sponsor-window).
-     *  `SPONSOR_WINDOW_WEEKS` is `decideWeeks + 1` - four weeks of thinking plus the week the first
-     *  letter lands - and it is also, to the week, the owner's own «межсезонье +2». The two readings
-     *  agreeing is why the number did not have to move. What changed is that the four weeks belong
-     *  to the WINDOW: every letter raised inside one expires when it closes, so the first letter of
-     *  a winter carries five weeks and the last carries two, and none of them carries a decision
-     *  into a week she is playing. See `SPONSOR_LETTER_WEEKS` for the guarantee that replaces "four
-     *  weeks each". */
-    decideWeeks: 4,
+     *  ⚠⚠ IT BELONGS TO THE LETTER AGAIN, AND IT IS FIVE (28.08, round 28 #17-b, HIS RULING):
+     *
+     *      «в чем проблема сделать 5? у нас конечная неделя сезона 49 по сути, дальше окно в новый
+     *       сезон, даже если приглашение придет на 1й или 2й неделе я не вижу проблем сделать слот
+     *       в 5 недель»
+     *
+     *  From 05.08 to 28.08 this number SIZED THE WINDOW instead: `SPONSOR_WINDOW_WEEKS` was read as
+     *  `decideWeeks + 1`, every letter of a winter expired when the window closed, and so the first
+     *  letter of a winter carried five weeks and the last carried two. That bought one property -
+     *  «no decision is ever open while she is playing» - and it cost the thing this constant is
+     *  named for.
+     *
+     *  ⚠ WHAT HE IS KNOWINGLY GIVING UP, because the next reader of `docs/specs/sponsor-window-2026-08.md`
+     *  §3.1 will otherwise re-derive the old rule from a document that still argues for it. A letter
+     *  raised on the window's closing week now runs four weeks into the new season, so the inbox can
+     *  hold a live decision while she is playing. He was shown that objection in those words and
+     *  overruled it, and he is more right than the spec is, for a reason the spec could not have
+     *  known: **the property was already gone.** Round 28 #2 gave the ADVERTISING letter five fixed
+     *  weeks from arrival, and an advertising letter arrives on whatever week a campaign notices her
+     *  - mid-season, most of the time. So «no decision open while playing» had already stopped being
+     *  true of the inbox; the window guarantee only ever covered kit letters. His ruling makes the
+     *  two kinds of post one rule instead of two, which is simpler than what it replaces.
+     *
+     *  ⚠ THE WINDOW ITSELF DID NOT MOVE. `SPONSOR_WINDOW_WEEKS` is `OFF_SEASON_WEEKS + 2` and always
+     *  was - that is «межсезонье +2», the owner's own sentence - and it is still the five weeks a
+     *  brand may WRITE in. What is no longer true is the second reading, `decideWeeks + 1`: the two
+     *  numbers are now independent and only coincidentally equal, so nothing should re-derive one
+     *  from the other. See `SPONSOR_LETTER_WEEKS`, whose reason changed with this. */
+    decideWeeks: 5,
     /** WHETHER THE SHOP WRITES AT ALL in a season she qualifies for. Not 1, on purpose: an offer
      *  that is guaranteed to come round again is an offer with no cost to letting it expire, and
      *  spec §2 asks for the reverse ("an offer left to expire is gone, and the next one is not
@@ -1416,7 +1437,7 @@ export const ECONOMY = {
      *  figure, no second calendar, no blocking: see `accrueCondition`. */
     shootWeeksPerTerm: 2,
     /** The earliest a shoot may land after the signature, in weeks – the studio is booked about a
-     *  month out, and it is the same courtesy the letter's own four decide weeks extend: a cost the
+     *  month out, and it is the same courtesy the letter's own decide weeks extend: a cost the
      *  player can SEE coming is a plan, a cost that lands the week he agreed to it is a trap. Engine
      *  mechanics of the choice, not a promise on the paper – so it is read at signature, not frozen
      *  into terms. */
@@ -1428,9 +1449,34 @@ export const ECONOMY = {
      *  once-a-season 70%, this rolls weekly because a campaign is not an off-season ritual: brands
      *  write when they notice her. */
     offerChance: 0.05,
-    /** Four weeks to decide – the same thinking time the kit window's letters get («давать человеку
-     *  какое-то время на подумать»), stated on the paper and enforced by `expireOffers`. */
-    decideWeeks: 4,
+    /** HOW LONG THE PARENT HAS TO THINK, in weeks, counted INCLUSIVELY from the week the letter
+     *  lands: the deadline is `arrival + decideWeeks - 1`, so five means the arrival week and the
+     *  four after it, and the letter is still answerable on the last of them.
+     *
+     *  ⚠ FOUR → FIVE, ROUND 28 #2, AND IT SETTLES A DISAGREEMENT RATHER THAN TUNING A NUMBER. The
+     *  owner: «Предложение от спонсора с часами пришло на сорок четвёртой неделе А на сорок восьмой
+     *  уже истёк срок рассмотрения мне казалось мы договаривались про 5 недель». He is describing
+     *  this letter exactly – `brand` below is the watchmaker – and the arithmetic he read off the
+     *  screen was right: at four, a letter filed on W44 died on W47 and was already gone when he
+     *  looked on W48.
+     *
+     *  ⚠⚠ AND THE FIVE HE REMEMBERS WAS NEVER WRITTEN DOWN FOR THIS LETTER. What this comment used
+     *  to say was "four weeks – the same thinking time the kit window's letters get", and that
+     *  sentence was loose in a way that produced the bug: the KIT window is five weeks wide
+     *  (`SPONSOR_WINDOW_WEEKS`, «межсезонье +2»), and what a kit letter actually gets is five weeks
+     *  for the first of a winter down to two for the last, because its deadline is the WINDOW's and
+     *  not its own (see `SPONSOR_LETTER_WEEKS`). Reading "the same thinking time" off
+     *  `sponsorship.decideWeeks` – the number that SIZES that window rather than the time any letter
+     *  gets – is how the advertising house came to give four. The owner's memory is the ruling
+     *  (round 28 #2), so the campaign letter now gets the five weeks the window's own first letter
+     *  gets, on its own clock, and the number is written here as a duration rather than borrowed.
+     *
+     *  ⚠ IT IS ITS OWN CLOCK AND MUST STAY ONE. An advertising letter is not windowed – it arrives
+     *  on whatever week the campaign notices her (`reviewAdOffer`) – so it cannot inherit the kit
+     *  window's «every letter dies when the window closes» rule without a decision hanging over
+     *  weeks she is playing, which is the exact fault the 01.08 move into the off-season fixed.
+     *  Stated on the paper and enforced by `expireOffers`. */
+    decideWeeks: 5,
     /** THE HOUSE THAT WRITES: a watchmaker – the plan's own first example of non-endemic («a watch,
      *  a bank, an airline, a cosmetics house»). Fictional, like every brand on the ladder above,
      *  and deliberately nothing constructible into a real company or trademark. */

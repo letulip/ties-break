@@ -51,6 +51,8 @@ import {
   isOfferLive,
   isSponsorReviewWeek,
   isSponsorWindowWeek,
+  sponsorWindowOpensAt,
+  kitOfferDeadline,
   isSponsorLetterWeek,
   contractEndWeek,
   kitFreshCap,
@@ -1416,10 +1418,23 @@ describe('the sponsor window', () => {
     }
     expect(seen).toEqual(['global', 'national', 'local'])
     expect(offers).toHaveLength(3)
-    expect(offers.every((o) => o.deadlineWeek === WINDOW_CLOSE_WEEK)).toBe(true)
-    // ...and every one of them is still a decision on the window's last week.
-    for (const o of offers) expect(isOfferLive(o, WINDOW_CLOSE_WEEK)).toBe(true)
-    for (const o of offers) expect(isOfferLive(o, WINDOW_CLOSE_WEEK + 1)).toBe(false)
+    // ⚠⚠ RE-AIMED, NOT WEAKENED (28.08, round 28 #17-b, the owner's ruling: «в чем проблема сделать
+    //   5? … даже если приглашение придет на 1й или 2й неделе я не вижу проблем сделать слот в 5
+    //   недель»). This asserted `o.deadlineWeek === WINDOW_CLOSE_WEEK` for all three - the deadline
+    //   was a property of the WINDOW, so three letters landing on three different weeks shared one
+    //   expiry and the last was worth less than the first. The claim is now the stronger one: each
+    //   letter carries the SAME five weeks, counted from its own arrival, so which week a brand
+    //   writes on no longer decides how long the parent has. The old shape is what this exact loop
+    //   would have proved, so it is asserted in the negative below rather than merely dropped.
+    for (const o of offers) {
+      expect(o.deadlineWeek, `a letter dated ${o.week} did not get its own five weeks`).toBe(o.week + 4)
+      expect(isOfferLive(o, o.week + 4)).toBe(true)
+      expect(isOfferLive(o, o.week + 5)).toBe(false)
+    }
+    // ⚠ AND THE THREE NO LONGER SHARE AN EXPIRY, which is the whole of what his ruling changed. A
+    //   batch deadline creeping back in - by anybody re-deriving it from `sponsorWindowClosesAt` -
+    //   collapses this set to one element.
+    expect(new Set(offers.map((o) => o.deadlineWeek)).size).toBe(3)
   })
 
   // ===============================================================================================
@@ -1517,16 +1532,28 @@ describe('the sponsor window', () => {
     // The seam the window created and `fromWeek` closes. She signs next year's letter three weeks
     // before this year's contract stops, so the two would otherwise overlap - and `activeKitDeal`
     // promises there is at most one.
+    //
+    // ⚠ RE-AIMED (round 28 #17): the second letter comes from a DIFFERENT rung, and it has to. Both
+    //   letters used to be `local`, i.e. the shop she was already with writing to her as a stranger
+    //   on the window's opening week - the duplicate the owner reported («Baseline athletic 2 раза
+    //   письмо о спонсорстве прислали на 48 и 52 неделе одинаковое»), and it is now suppressed. A
+    //   career stepping UP a rung is the honest way to have two consecutive terms that meet inside
+    //   the window, since the incumbent's own second year is the renewal and the renewal is signed
+    //   on the closing week, after the old term has already stopped (see the renewal block: that
+    //   fortnight belongs to nobody, deliberately). Nothing about the CLAIM moves - two terms, no
+    //   overlapping week and no hole between them.
     const { world, id } = worldWithLetter('seam')
     acceptOffer(world, id)
     const first = world.offers[0]
     const nextOpen = LETTER_WEEK + WEEKS_PER_YEAR
+    const stepUp = worldly(20) // ITF top 32: the national rung clears, and it is not her shop
     const [second] = raiseKitOffers({
       offers: world.offers,
-      seed: seedTheShopWritesTo('seam-roll', nextOpen, domestic(1)),
+      seed: seedTheShopWritesTo('seam-roll', nextOpen, stepUp),
       week: nextOpen,
-      standing: domestic(1),
+      standing: stepUp,
     })
+    expect((second.terms as KitOfferTerms).tier, 'the fixture must step her up a rung').toBe('national')
     world.week = nextOpen
     acceptOffer(world, second.id)
     expect(second.decidedWeek).toBe(nextOpen)
@@ -1642,9 +1669,18 @@ describe('the window can be entered late', () => {
    *  career picked up at a different week – which is the whole point.
    *
    *  The seed is searched rather than asserted: the dice are real (`shopWritesAt`), and a fixture
-   *  that needed a particular career to be written to by all three rungs has to find one rather than
-   *  pretend the roll always says yes. */
-  function careerInTheWindow(stem: string, rungsWanted = 3): WorldState {
+   *  that needed a particular career to be written to by all its rungs has to find one rather than
+   *  pretend the roll always says yes.
+   *
+   *  ⚠ RE-AIMED (round 28 #17): `rungsWanted` is TWO where it used to be three, and the missing one
+   *  is the defect this round removed rather than a rung that stopped writing. Her ladder is still
+   *  global -> national -> local, and the outgoing contract below is still a NATIONAL one - so
+   *  `national` is now the incumbent's own rung and does not also write to her as a stranger on the
+   *  window's slot. It writes once, on the closing week, as the renewal (`kit-renew-kit-47/national`
+   *  is still asserted below, in the same place it always was). Everything this block CLAIMS is
+   *  untouched: the claims are about the ladder being the same from every entry week, and two rungs
+   *  plus a renewal exercise a multi-letter queue exactly as three did. */
+  function careerInTheWindow(stem: string, rungsWanted = 2): WorldState {
     for (let attempt = 0; attempt < 60; attempt++) {
       const world = createWorld(`${stem}-${attempt}`, DEFAULT_PROFILE)
       // #1 at home and #1 in the world juniors, so her ladder is global -> national -> local.
@@ -1724,9 +1760,18 @@ describe('the window can be entered late', () => {
     }
     const opening = winters.get(LATE_OPEN)!
     // The strongest rung she clears writes FIRST, which is what makes signing on sight safe.
+    //
+    // ⚠ RE-AIMED (round 28 #17), AND THE MISSING LINE IS THE DEFECT RATHER THAN A LOST LETTER. This
+    //   used to read `kit-99/global`, `kit-100/national`, `kit-101/local` - and `kit-100/national`
+    //   was the bug the owner reported: her outgoing contract is a NATIONAL one, so that letter was
+    //   the brand she is already wearing writing to her as a stranger, four weeks before the same
+    //   brand's renewal. «Baseline athletic 2 раза письмо о спонсорстве прислали на 48 и 52 неделе
+    //   одинаковое.» The slot ids are deliberately UNCHANGED either side of the hole - `local` is
+    //   still `kit-101` and not `kit-100` - because a rung's id is its place in the queue and its
+    //   dice are keyed on it; a suppression that shifted the queue would silently re-roll every rung
+    //   below it.
     expect(opening.filter(rungLetter)).toEqual([
       'kit-99/global',
-      'kit-100/national',
       'kit-101/local',
     ])
     // ⚠ ...AND THE FAMILIAR BRAND WRITES LAST, WHICH IS THE 10.08 PLACEMENT AS A PROPERTY RATHER THAN
@@ -1751,14 +1796,20 @@ describe('the window can be entered late', () => {
     const winter = winterFrom(arm, LATE_CLOSE)
     expect(winter).toEqual(winterFrom(clone(base), LATE_OPEN))
     const post = arm.offers.filter((o) => o.kind === 'kit' && o.state === 'open')
-    // ⚠ THE RUNG COUNT IS UNCHANGED AND IS STILL THREE; what is new is a FOURTH paper (10.08). The
-    //   incumbent's renewal always lands on the window's closing week - that IS its placement, see
-    //   `raiseKitRenewal` - so a career caught on the very last week is handed its whole winter AND
-    //   the offer of another year, and the loop below then holds every one of the four to the same
-    //   two facts: dated the week it landed, and still answerable on it. Split in two rather than
-    //   changed to 4, so the claim about the LADDER stays exactly the claim it was.
-    expect(post.filter((o) => !o.id.startsWith('kit-renew'))).toHaveLength(3)
-    expect(post).toHaveLength(4)
+    // ⚠ THE RUNG COUNT AND THE RENEWAL ARE COUNTED SEPARATELY (10.08). The incumbent's renewal always
+    //   lands on the window's closing week - that IS its placement, see `raiseKitRenewal` - so a
+    //   career caught on the very last week is handed its whole winter AND the offer of another year,
+    //   and the loop below then holds every one of them to the same two facts: dated the week it
+    //   landed, and still answerable on it. Split in two rather than asserted as one total, so the
+    //   claim about the LADDER stays exactly the claim it was.
+    //
+    // ⚠ RE-AIMED 3 -> 2 (round 28 #17), for the reason written out on the fixture and on the ladder
+    //   assertion above: the third rung was `national`, which is the outgoing contract's OWN rung,
+    //   and that letter was the duplicate the owner reported. The property under test here is
+    //   untouched - a career caught on the closing week still receives a QUEUE of letters in one
+    //   post, every one of them live on the week it arrives.
+    expect(post.filter((o) => !o.id.startsWith('kit-renew'))).toHaveLength(2)
+    expect(post).toHaveLength(3)
     for (const o of post) {
       expect(o.week, 'a caught-up letter is dated the week it landed').toBe(LATE_CLOSE)
       expect(isOfferLive(o, LATE_CLOSE), 'a letter he can never answer is worse than none').toBe(true)
@@ -1830,7 +1881,9 @@ describe('the window can be entered late', () => {
     let denied = 0
     let armsChecked = 0
     for (let n = 0; n < 20; n++) {
-      const base = careerInTheWindow(`no-rung-denied-${n}`, 3)
+      // ⚠ 3 -> 2 (round 28 #17): her ladder is unchanged, but the rung her outgoing contract came
+      //   from now writes once, as the renewal, instead of twice. See `careerInTheWindow`.
+      const base = careerInTheWindow(`no-rung-denied-${n}`, 2)
       const fromOpen = winterFrom(clone(base), LATE_OPEN).filter(rungLetter)
       for (let entry = LATE_OPEN + 1; entry <= LATE_CLOSE; entry++) {
         armsChecked++
@@ -2054,15 +2107,56 @@ describe('⚠ THE RENEWAL – the familiar brand writes last, and only last', ()
     expect(renewal.state, 'a renewal he cannot say no to is a re-signing').toBe('refused')
   })
 
-  it('expires with the window, so waiting past it is still a decision', () => {
+  it('⚠ HIS CASE: the renewal-only ladder carries FIVE weeks, not the one it used to', () => {
+    // ⚠⚠ RE-AIMED, NOT WEAKENED (28.08, round 28 #17-b). This was «expires with the window, so
+    //   waiting past it is still a decision», and it pinned `deadlineWeek === LATE_CLOSE` - which on
+    //   the closing week is TODAY. That is not a decision, it is a notification, and it is exactly
+    //   what the owner reported once round 28 #17 removed the duplicate that had been hiding it: the
+    //   commonest career in the game is the local shop renewing every winter, and its whole winter's
+    //   post was one letter he had to answer the day it arrived.
+    //
+    //   His ruling: «в чем проблема сделать 5? у нас конечная неделя сезона 49 по сути, дальше окно
+    //   в новый сезон, даже если приглашение придет на 1й или 2й неделе я не вижу проблем сделать
+    //   слот в 5 недель». The SECOND half of the old claim - that waiting past the deadline is still
+    //   a real loss - is untouched and asserted below; only the deadline moved.
     const world = careerWithExpiringDeal('renew-expire')
     playWinter(world)
     const renewal = renewalIn(world)!
-    expect(renewal.deadlineWeek).toBe(LATE_CLOSE)
-    expect(isOfferLive(renewal, LATE_CLOSE)).toBe(true)
-    expect(isOfferLive(renewal, LATE_CLOSE + 1)).toBe(false)
-    expireOffers(world.offers, LATE_CLOSE + 1)
+    // Five weeks, counted inclusively from arrival, as a LITERAL rather than as a constant - the
+    // trap this very file taught us in round 28 #2: every assertion written in terms of the constant
+    // stayed green while the ruled number was wrong.
+    expect(renewal.week).toBe(LATE_CLOSE)
+    expect(renewal.deadlineWeek).toBe(LATE_CLOSE + 4)
+    expect(renewal.deadlineWeek - renewal.week + 1, 'the paper says five, so five it must be').toBe(5)
+    for (let n = 0; n < 5; n++) expect(isOfferLive(renewal, LATE_CLOSE + n)).toBe(true)
+    // ...and it is STILL a deadline. An offer left past it is gone, which is «the window is the
+    // feature, not a courtesy» and the half of this test that did not change.
+    expect(isOfferLive(renewal, LATE_CLOSE + 5)).toBe(false)
+    expireOffers(world.offers, LATE_CLOSE + 4)
+    expect(renewal.state, 'it lapsed on the last week he was promised').toBe('open')
+    expireOffers(world.offers, LATE_CLOSE + 5)
     expect(renewal.state).toBe('expired')
+  })
+
+  it('⚠ ...and those five weeks run INTO the new season, which is what he traded for them', () => {
+    // The property `docs/specs/sponsor-window-2026-08.md` §3.1 bought and he has given up, pinned so
+    // that nobody re-derives the old rule from a document that still argues for it. A renewal raised
+    // on the window's closing week - season offset 51 - is answerable on offsets 0, 1, 2 and 3 of
+    // the season she is now playing. He was shown that objection in those words and overruled it.
+    const world = careerWithExpiringDeal('renew-into-season')
+    playWinter(world)
+    const renewal = renewalIn(world)!
+    expect(renewal.week % WEEKS_PER_YEAR, 'the fixture must raise it on the closing week').toBe(WEEKS_PER_YEAR - 1)
+    expect(renewal.deadlineWeek % WEEKS_PER_YEAR, 'it should now die in week 4 of the new season').toBe(3)
+    expect(isSponsorWindowWeek(renewal.deadlineWeek), 'the deadline is outside the window now').toBe(false)
+    // ⚠⚠ AND IT CANNOT REACH THE NEXT WINDOW – the property that keeps `seasonSpokenFor` honest and
+    //   stops a letter outliving the deal it was competing for. Forty-four weeks of daylight, and it
+    //   is arithmetic rather than luck: the latest arrival is offset 51 and the shelf life is five,
+    //   so the latest death is offset 3, and the next window does not open until offset 47.
+    expect(renewal.deadlineWeek).toBeLessThan(sponsorWindowOpensAt(renewal.deadlineWeek + WEEKS_PER_YEAR))
+    const nextOpen = sponsorWindowOpensAt(LATE_CLOSE) + WEEKS_PER_YEAR
+    expect(nextOpen - renewal.deadlineWeek, 'two windows must never be able to overlap').toBe(44)
+    expect(isOfferLive(renewal, nextOpen), 'a letter was still live when the next winter opened').toBe(false)
   })
 
   it('⚠ takes NO dice and asks no table – it is a relationship, not a competitive selection', () => {
@@ -2153,6 +2247,96 @@ describe('⚠ THE RENEWAL – the familiar brand writes last, and only last', ()
     // ...and the allowance starts again, rather than the second year inheriting the first's spend.
     expect(renewal.coveredCents).toBe(0)
   })
+
+  // ===============================================================================================
+  // ⚠⚠ ROUND 28 #17 – ONE LETTER PER BRAND, AND THE INCUMBENT'S IS THE RENEWAL
+  // ===============================================================================================
+  //
+  // The owner: «Baseline athletic 2 раза письмо о спонсорстве прислали на 48 и 52 неделе
+  // одинаковое». Read off his own save: `kit-671` (W48, the window's opening week, tier `tour`) and
+  // `kit-renew-kit-567` (W52, the closing week, `renewal: true`) - the same brand, and terms
+  // identical field for field, because the contract ending under her came from that very rung.
+  //
+  // THE SEAM: `raiseKitOffers` dedupes rung against rung (round 17 #27) and `raiseKitRenewal`
+  // dedupes the incumbent against itself, and nobody asked whether the two are the same brand. When
+  // the deal finishing under her is from a rung she still clears, the ladder writes to her as a
+  // stranger AND the relationship writes to her four weeks later.
+  //
+  // ⚠ IT IS THE RUNG'S LETTER THAT GOES, NOT THE RENEWAL - the argument is written out on
+  // `raiseKitOffers`, and the shortest form of it is that the other choice would make the
+  // relationship depend on a competing letter's dice, and «⚠ NO DICE» is a pinned property of it
+  // three tests up.
+  //
+  // ⚠ AND THE ASSERTIONS READ THE SNAPSHOT, because he reported this off the SCREEN. `world.offers`
+  // is the engine's own array; `toSnapshot(world).offers` is the only thing the UI is ever given
+  // (CLAUDE.md invariant 1), and `live()` below is `InboxSheet`'s own predicate copied verbatim.
+  it('⚠ ROUND 28 #17 – a contract runs to its natural end and the brand writes ONCE', () => {
+    /** `InboxSheet`'s own rule for a letter that is still a decision. */
+    const live = (o: Offer, week: number): boolean => o.state === 'open' && week <= o.deadlineWeek
+    const brandOf = (o: Offer): string => (o.terms as KitOfferTerms).brand
+
+    // THE FIXTURE HAS TO BE ONE WHERE THE DEFECT COULD FIRE, and both halves of that are asserted
+    // rather than hoped for: her ladder must still contain the rung her outgoing contract came from,
+    // and that rung's own dice must say YES on its slot. Without the second one the winter is silent
+    // for a reason that has nothing to do with this fix and the test proves nothing.
+    let world: WorldState | null = null
+    let ladder: readonly string[] = []
+    for (let attempt = 0; attempt < 60 && !world; attempt++) {
+      const probe = careerWithExpiringDeal(`dup-brand-${attempt}`, { ranked: true })
+      const rungs = windowLadder(sponsorStandingOf(probe))
+      const slot = rungs.indexOf('local') // `kit-47` in this fixture is a LOCAL deal
+      if (slot < 0) continue
+      const standing = sponsorStandingOf(probe)
+      if (!shopWritesAt(probe.seed, LATE_OPEN + slot, offerChanceFor(standing, 'local'))) continue
+      world = probe
+      ladder = rungs
+    }
+    expect(world, 'no seed in 60 tries put the incumbent\'s own rung on her ladder with a live roll').not.toBeNull()
+    expect(ladder, 'the fixture must still clear the rung the ending contract came from').toContain('local')
+    const incumbent = world!.offers.find((o) => o.id === 'kit-47')!
+    const brand = brandOf(incumbent)
+
+    // THE WINTER, week by week, exactly as a player lives it - and the inbox checked on every one of
+    // them, because "two letters from one brand" is a fact about a MOMENT and not about a total.
+    for (let week = LATE_OPEN; week <= LATE_CLOSE; week++) {
+      world!.week = week
+      reviewSponsors(world!)
+      const inbox = toSnapshot(world!).offers.filter((o) => o.kind === 'kit' && live(o, week))
+      const names = inbox.map(brandOf)
+      expect(new Set(names).size, `week ${week % WEEKS_PER_YEAR}: ${names.join(', ')}`).toBe(names.length)
+    }
+
+    // The contract ran to its natural end - this is a renewal case and not a brand that was let
+    // down, which is the arm the duplicate lives in.
+    const goodbye = world!.offers.find((o) => o.id === 'kit-end-kit-47')!
+    expect((goodbye.terms as KitOfferTerms).ended).toBe('term')
+
+    // ...and over the whole window, one letter per brand, full stop. `info` is excluded because the
+    // goodbye is a notice rather than an offer - he cannot sign it - which is the same line
+    // `reviewSponsors` draws when it composes the season's one feed row.
+    const winter = world!.offers.filter(
+      (o) => o.kind === 'kit' && o.week >= LATE_OPEN && o.state !== 'info',
+    )
+    const winterBrands = winter.map(brandOf)
+    expect(new Set(winterBrands).size, winterBrands.join(', ')).toBe(winterBrands.length)
+
+    // ...and the one from the brand she has been wearing is the RENEWAL, on the paper she has been
+    // reading all season. Without this the letter would say «A kit deal for your daughter» and
+    // introduce a brand she has been in the kit of for a year (`InboxSheet.subjectOf`).
+    const hers = winter.filter((o) => brandOf(o) === brand)
+    expect(hers).toHaveLength(1)
+    expect(hers[0].id).toBe('kit-renew-kit-47')
+    expect((hers[0].terms as KitOfferTerms).renewal).toBe(true)
+
+    // AND THE FEED SAYS IT ONCE. `reviewSponsors` already keeps the renewal out of the "letters from
+    // X and Y" clause so the row cannot «name the same brand twice in two different voices one
+    // sentence apart» - and then named it twice anyway, in two clauses, because the ladder had also
+    // written. This is that comment as a test.
+    const row = world!.events.find((e) => e.week === LATE_CLOSE && e.type === 'info')!
+    expect(row.text).toContain(`${brand} would like another season`)
+    expect(row.text).not.toContain(`A letter from ${brand}`)
+    expect(row.text).not.toContain(`Letters from ${brand}`)
+  })
 })
 
 describe('the letter arrives in the OFF-SEASON, once', () => {
@@ -2181,34 +2365,110 @@ describe('the letter arrives in the OFF-SEASON, once', () => {
     expect(new Set(world.offers.map((o) => o.week)).size).toBe(world.offers.length)
   })
 
-  it('⚠ REVERSED (05.08): the window now ENDS with the year, and no decision runs into the season', () => {
-    // ⚠ THIS TEST USED TO ASSERT THE OPPOSITE - «four weeks of thinking against a three-week
-    //   off-season, so a letter raised at 49 can still be signed at 53» - and its reasoning was that
-    //   shortening the pause to fit the calendar «would be letting the calendar edit the decision».
-    //   The window reverses it deliberately, and gets BOTH properties instead of trading one away:
-    //     * the pause is LONGER, not shorter. The window opens two weeks before the off-season, so
-    //       the first letter of the year carries five weeks rather than four;
-    //     * and no decision is open while she is playing, which is what the 01.08 move into the
-    //       off-season was for in the first place. A per-letter deadline could not have both: a
-    //       letter raised on the window's later weeks would have run its four weeks straight through
-    //       the first tournaments of the new season, which is the fault that move existed to fix.
-    //   So the deadline is a property of the WINDOW rather than of the letter, and the guarantee
-    //   that replaces "four weeks each" is `SPONSOR_LETTER_WEEKS`: no brand writes on the closing
-    //   week, so every letter has at least two.
+  it('⚠ REVERSED TWICE (05.08, then 28.08): the window is when brands WRITE, not when letters die', () => {
+    // ⚠ THE FIRST REVERSAL (05.08) is kept here as history because it is what makes the second one
+    //   legible. This test originally asserted «four weeks of thinking against a three-week
+    //   off-season, so a letter raised at 49 can still be signed at 53», reasoning that shortening
+    //   the pause to fit the calendar «would be letting the calendar edit the decision». The sponsor
+    //   window reversed it: the deadline became a property of the WINDOW, every letter of a winter
+    //   died when it closed, and that bought «no decision is ever open while she is playing» - the
+    //   thing the 01.08 move into the off-season existed for.
+    //
+    // ⚠⚠ THE SECOND REVERSAL (28.08, round 28 #17-b) PUTS IT BACK, ON THE OWNER'S RULING, AND HE WAS
+    //   SHOWN THE COST FIRST:
+    //
+    //     «в чем проблема сделать 5? у нас конечная неделя сезона 49 по сути, дальше окно в новый
+    //      сезон, даже если приглашение придет на 1й или 2й неделе я не вижу проблем сделать слот в
+    //      5 недель»
+    //
+    //   So a letter raised on the closing week now runs four weeks into the new season and the inbox
+    //   CAN hold a live decision while she is playing. Two things make that the better trade:
+    //     * the property was already gone. Round 28 #2 gave the ADVERTISING letter five fixed weeks
+    //       from arrival, and those letters land mid-season - so «no decision open while playing»
+    //       had stopped being true of the inbox as a whole; the window only ever covered kit post.
+    //       His ruling makes the two kinds one rule instead of two.
+    //     * what the window's deadline actually cost was the thing `decideWeeks` is NAMED for: the
+    //       last letter of a winter carried two weeks, and a renewal carried ONE.
+    //
+    //   ⚠ `docs/specs/sponsor-window-2026-08.md` §3.1 still argues for the old rule, in detail. It
+    //   is superseded by §12 and by `ECONOMY.sponsorship.decideWeeks`; this note exists so that a
+    //   reader who reaches the spec first does not re-derive it.
     const { world } = worldWithLetter('window-shape')
     expect(world.offers[0].week).toBe(LETTER_WEEK)
-    expect(world.offers[0].deadlineWeek).toBe(WINDOW_CLOSE_WEEK)
-    expect(world.offers[0].deadlineWeek).toBeLessThan(WEEKS_PER_YEAR)
-    // The window is five weeks wide, it is the off-season plus two, and it is `decideWeeks` of
-    // thinking plus the week the first letter lands - three readings of the same number.
+    // Five weeks from arrival, as a LITERAL - the round 28 #2 trap, in the file that taught it.
+    expect(world.offers[0].deadlineWeek).toBe(LETTER_WEEK + 4)
+    expect(world.offers[0].deadlineWeek - world.offers[0].week + 1).toBe(5)
+    // ⚠ THE WINDOW ITSELF DID NOT MOVE, and it is still «межсезонье +2» - what changed is that it is
+    //   now ONLY the weeks a brand may write in. The third reading, `decideWeeks + 1`, is RETIRED:
+    //   the two numbers are independent now and only coincidentally equal, so asserting one from the
+    //   other would re-couple exactly what the ruling separated.
     expect(SPONSOR_WINDOW_WEEKS).toBe(OFF_SEASON_WEEKS + 2)
-    expect(SPONSOR_WINDOW_WEEKS).toBe(ECONOMY.sponsorship.decideWeeks + 1)
-    // ...and the shortest window any letter can get is still two whole weeks.
+    expect(SPONSOR_WINDOW_WEEKS).toBe(5)
+    expect(ECONOMY.sponsorship.decideWeeks).toBe(5)
+    // ...and the closing week is still nobody's TURN, which is the job `SPONSOR_LETTER_WEEKS` kept
+    // when its old job (guaranteeing a late letter two weeks) was retired: it is reserved for the
+    // incumbent's renewal, so no fifth rung can crowd the relationship out. See its own comment.
     const lastLetterWeek = LETTER_WEEK + SPONSOR_LETTER_WEEKS - 1
     expect(isSponsorLetterWeek(lastLetterWeek)).toBe(true)
     expect(isSponsorLetterWeek(lastLetterWeek + 1)).toBe(false)
     expect(isSponsorWindowWeek(lastLetterWeek + 1)).toBe(true)
     expect(WINDOW_CLOSE_WEEK - lastLetterWeek + 1).toBe(2)
+  })
+
+  it('⚠⚠ HIS RULING, SWEPT: every week of the window gives five, and the last one crosses the year', () => {
+    // Round 28 #17-b. The claim is «the deadline is a property of the LETTER», and the only honest
+    // way to assert that is to raise letters on EVERY week a brand can write on and show the number
+    // does not move - including the two weeks that put the answer in the next season, which is the
+    // half he was warned about and accepted.
+    //
+    // FIVE IS A LITERAL HERE. Writing it as `SPONSOR_LETTER_WEEKS - 1` or as `decideWeeks` is the
+    // trap round 28 #2 was invisible behind for three weeks: every assertion in that file was
+    // expressed in terms of the constant, so not one of them could fail when the constant was wrong.
+    const RULED = 5
+    const seen: { week: number; deadline: number }[] = []
+    for (let slot = 0; slot < SPONSOR_WINDOW_WEEKS; slot++) {
+      const week = LETTER_WEEK + slot
+      const offers: Offer[] = []
+      const raised = raiseKitOffers({
+        offers,
+        seed: seedTheShopWritesTo(`sweep-${slot}`, week, worldly(1)),
+        week,
+        standing: worldly(1),
+      })
+      // The closing week raises nothing NEW for a career that has been here all along, but this arm
+      // is a career meeting the window there - the catch-up case - so it does write.
+      expect(raised.length, `no brand wrote on window week ${week % WEEKS_PER_YEAR}`).toBeGreaterThan(0)
+      for (const o of raised) {
+        expect(o.week).toBe(week)
+        expect(o.deadlineWeek - o.week + 1, `window week ${week % WEEKS_PER_YEAR} gave a different shelf life`).toBe(RULED)
+        expect(isOfferLive(o, week + RULED - 1)).toBe(true)
+        expect(isOfferLive(o, week + RULED)).toBe(false)
+        seen.push({ week, deadline: o.deadlineWeek })
+      }
+    }
+    expect(seen.length).toBeGreaterThanOrEqual(SPONSOR_WINDOW_WEEKS)
+
+    // ⚠ AND THE TWO LAST WEEKS REALLY DO REACH INTO THE SEASON – «даже если приглашение придет на 1й
+    //   или 2й неделе я не вижу проблем сделать слот в 5 недель». A letter on the closing week (season
+    //   offset 51) is answerable on offset 3 of the year she is now playing. That is the property
+    //   §3.1 bought and he sold; it is asserted rather than merely allowed, so nobody can quietly
+    //   restore the old rule and still pass.
+    const onClose = seen.filter((s) => s.week === WINDOW_CLOSE_WEEK)
+    expect(onClose.length).toBeGreaterThan(0)
+    for (const s of onClose) {
+      expect(s.deadline).toBe(WINDOW_CLOSE_WEEK + 4)
+      expect(s.deadline % WEEKS_PER_YEAR).toBe(3)
+      expect(s.deadline).toBeGreaterThanOrEqual(WEEKS_PER_YEAR) // ...genuinely the next season
+      expect(isSponsorWindowWeek(s.deadline)).toBe(false)
+    }
+
+    // ⚠⚠ ...AND NO LETTER CAN SURVIVE TO THE NEXT WINDOW. Forty-four weeks of daylight between the
+    //   latest possible expiry and the next winter's opening week, so two windows can never overlap
+    //   and a letter can never outlive the deal it was competing for. Arithmetic, not luck.
+    const latestDeath = kitOfferDeadline(WINDOW_CLOSE_WEEK)
+    const nextOpen = sponsorWindowOpensAt(LETTER_WEEK) + WEEKS_PER_YEAR
+    expect(nextOpen - latestDeath).toBe(44)
+    expect(latestDeath).toBeLessThan(nextOpen)
   })
 
   it('signing in the quiet weeks means she opens the season already kitted', () => {
