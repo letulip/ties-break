@@ -100,11 +100,11 @@ held open for exactly this reason.
   week) reddens the shelf-life pair. Argument recorded on the constant itself and in
   `docs/plans/the-face-and-the-court.md` §6; no bench – this is a duration ruling, not a tuning.
 
-- [ ] **3. «Снова "один день" на день рождения. Эта правка была до колледжа или нет ещё? Может быть
+- [?] **3. «Снова "один день" на день рождения. Эта правка была до колледжа или нет ещё? Может быть
   надо какую-то логику дополнительную сделать, например раз в несколько лет иди просто вообще 1 раз
   только такое пожелание показывать?»** – **answer + ask, NOT a reopen.** ⚠ The fix is round 27 #7 and
-  it is sitting in [#112](https://github.com/letulip/ties-break/pull/112), unmerged – **this save was
-  played without it.** Shipped there: a one-birthday cooldown on the VOICE, longest run **4 → 1**,
+  it is round 27 #7. ⚙ **[#112](https://github.com/letulip/ties-break/pull/112) IS NOW MERGED** (28.08),
+  so the fix is in `main` – **his save was played on a build without it**, which is why he saw it again. Shipped there: a one-birthday cooldown on the VOICE, longest run **4 → 1**,
   careers that ever run three in a row **4 of 12 → 0 of 12**, share 30% → 24%. ⭐ **But he is now
   asking for something stronger than what #112 ships** – «раз в несколько лет» or «вообще 1 раз». That
   is a new ruling, not the old fix, and it collides with his 11.08 ruling that the day must stay on the
@@ -148,7 +148,7 @@ held open for exactly this reason.
   deliberately CLOSED set of `weekAhead`'s labels – its own comment says a new week kind is meant
   to arrive there as a decision – so `Shooting week` is added to it.
 
-- [ ] **7. «Что с остальными разделами магазина? Яхты, самолёты, строительство академии»** –
+- [?] **7. «Что с остальными разделами магазина? Яхты, самолёты, строительство академии»** –
   **answer.** Slice 1 (cars) shipped; the spec carries yachts, the parents' plane and the academy.
   Their queue position is his call.
 
@@ -199,7 +199,7 @@ held open for exactly this reason.
   BOTH files; the sharing broken (staff tab hand-rolling its own figure) → the parity tests red while
   the Coaches-only file stayed entirely green**; the dial disconnected → §3 alone.
 
-- [ ] **9. «Может быть с появлением магазина надо переписать спеку про безусловную % доходность на
+- [?] **9. «Может быть с появлением магазина надо переписать спеку про безусловную % доходность на
   текущий счёт? И оставить этот момент уже на управление игроку, убрав текущую автоматическую, т.к.
   довольно часто на текущий счёт никаких % не приходит в банке обычно»** – **ask.** ⭐ He is right about
   the real world, and this is a balance decision, not a bug: the automatic interest is a large silent
@@ -222,7 +222,7 @@ held open for exactly this reason.
   text, which is the claim D11 could only ever state backwards. Mutation-verified: restoring the old
   copy turns three blocks red.
 
-- [ ] **11. «Alice за 2 года до топ-100 добралась, это нормальный темп?»** – **answer**, and the
+- [~] **11. «Alice за 2 года до топ-100 добралась, это нормальный темп?»** – **answer**, and the
   measurement already exists: [how-fast-she-grows-2026-08.md](../specs/how-fast-she-grows-2026-08.md).
   ⚠ Median first top-100 is **18.9** and the research anchor is ~22, with 22 sitting at the **p90** –
   so no, two years is not normal, it is the median case of a curve we already know is too fast. Round
@@ -287,7 +287,7 @@ held open for exactly this reason.
   `PLAY_DOWN.fromAllW` bars the whole W series at once inside the top 50. **Design and build
   disagree, and the build is the one that is wrong.**
 
-- [ ] **13. «Нормально ли с Alice с таким количеством вылетов в первых раундах вообще до топ-100
+- [~] **13. «Нормально ли с Alice с таким количеством вылетов в первых раундах вообще до топ-100
   добирается? Или мне только кажется, что это странно?»** – **answer.** ⚠ This is the sharpest question
   in the round, because it points at a possible contradiction in the model rather than at a defect:
   first-round exits and a top-100 rank should not coexist this comfortably. ⚠⚠ It also touches round
@@ -296,7 +296,7 @@ held open for exactly this reason.
   She is unseeded at #110 while playing to a #36 standard, so round one hands her a seed – and the same
   gap is why she still climbs. ⭐ **Both halves of his sentence are the one gap.**
 
-- [ ] **14. «Нужно ли на время колледжа приостановить накопление % на выплаты ребенку от выигрышей или
+- [?] **14. «Нужно ли на время колледжа приостановить накопление % на выплаты ребенку от выигрышей или
   нет?»** – **ask.** ⭐ College already suspends the coach and the masseur and zeroes body cost; her
   cut is the one standing instruction that has never been examined against the freeze.
 
@@ -343,7 +343,7 @@ held open for exactly this reason.
   the split and the penny rule (a sharper claim than the one it replaces), and the stale «`world.ts`
   is the ONLY writer of `kidFundsCents`» note in `tests/kid-share-memo.test.ts` is corrected.
 
-- [ ] **16. «250 и 500 всё ещё выглядят почти как стена… в 35 году она взяла 2 250 победой, а с тех
+- [~] **16. «250 и 500 всё ещё выглядят почти как стена… в 35 году она взяла 2 250 победой, а с тех
   пор после колледжа смогла только 1 раз до 2 места дойти… А в 500 вообще пусто. При этом она около
   топ-100. Проверь пожалуйста этот момент. И вообще оцени её перформанс опираясь на скиллы и
   статистику»** – **measure.** The cabinet: **WT250 champion ×2 (both '35), runner-up ×1 ('42), WT500
