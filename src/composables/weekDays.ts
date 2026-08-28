@@ -78,7 +78,7 @@ import {
   isSummerWeek,
   surfaceBlockFor,
 } from '../engine/season/calendar'
-import { eventIsHers, layoffCoversWeek } from '../engine/world'
+import { eventIsHers, layoffCoversWeek, masseurWorksInWeek } from '../engine/world'
 import {
   DAY_CAPACITY_FREE,
   DAY_CAPACITY_SCHOOL,
@@ -355,7 +355,15 @@ export function masseurDaysFor(sessions: number, planDays: readonly PlanRole[]):
  *  same thing from the other end: the shoots «надо ... отражать потом в свободных неделях», and the
  *  week stays hers. `accrueCondition` implements exactly that: a shoot week recovers at the TRAVEL
  *  figure, which is to say it keeps her sessions and FORFEITS THE REST – the slider bonus and the
- *  masseur's table both come off, and nothing about her training moves.
+ *  masseur's condition term both come off, and nothing about her training moves.
+ *
+ *  ⚠⚠ ROUND 29 #3 – AND "THE MASSEUR'S TABLE COMES OFF" IS A SENTENCE ABOUT THE CONDITION SUM AND
+ *  NOT ABOUT THE MAN. It used to be written here without that qualifier and this file read it as a
+ *  stand-down, which is how `masseurSessions` above grew a `&& !shooting` the engine never had: the
+ *  salary is CHARGED on a shoot week (`resolveMasseur` reads `masseurWorksThisWeek`, which knows
+ *  nothing about a shoot), so the week he was drawn out of was a week the family paid for. His days
+ *  are drawn again. What is unchanged is `accrueCondition`'s arithmetic – its `!shooting` term is
+ *  the owner-approved «lights and flights, not his table» and is deliberately NOT touched here.
  *
  *  So the shoot takes the days the plan left FREE, and only those. The picture is then the same
  *  sentence the sim charges for: the training stands, the rest is what went. A plan with no free day
@@ -421,13 +429,27 @@ export function calendarWeekFor(snap: CalendarWeekFacts, week: number): Calendar
   const shooting = !frozen && (snap.adShoot?.weeks.includes(week) ?? false)
   const bookedOff = snap.vacations.some((v) => v.week === week)
   const awayThisWeek = snap.arrival?.week === week
-  // ⚠ AND A SHOOT WEEK BUYS NO TABLE, which is `accrueCondition`'s own line - «lights and flights,
-  // not his table», the same reason the week recovers at the travel figure at all. The other three
-  // refusals are `masseurWorksThisWeek`'s (hired, not frozen, not a booked family week) plus the
-  // step-2 rule that a masseur left at home earns nothing on the weeks she is not home: on a
-  // tournament week he is only in the picture when the fare was bought.
+  // ⚠⚠ ROUND 29 #3 – `&& !shooting` STOOD HERE AND IT WAS A RULE ONLY THIS FILE HELD. The engine's
+  // `masseurWorksThisWeek` refuses on three states (hired, not frozen, not a booked family week)
+  // and a shoot is not one of them, so `resolveMasseur` CHARGED the salary on a shoot week while
+  // this line drew none of his days – «вы заплатили и не можете этого заметить», the failure the
+  // travelling-team plan bans specialists for, written fifteen lines above where the bug was. The
+  // owner found it from first principles: «Если есть турнир или тренировки, то есть и массажист.»
+  // A shoot takes her FREE days and leaves the plan's training days alone (`shootDaysFor`), so a
+  // shoot week HAS training in it, and therefore has him in it.
+  //
+  // ⚠ THE THREE REFUSALS ARE THE ENGINE'S NOW, NOT A FOURTH SPELLING OF THEM: `masseurWorksInWeek`
+  // is `masseurWorksThisWeek`'s own body taking primitives, so the week the bill is charged for and
+  // the week his days are drawn on are the same week by construction. `tests/component/
+  // round29-masseur-parity.test.ts` is the guard, on the round-28 #8 shared-source pattern.
+  //
+  // ⚠ THE AWAY TERM STAYS AND IS NOT PART OF THAT PREDICATE, deliberately: it answers WHERE he works
+  // and not WHETHER he is working, which is the step-2 rule that a masseur left at home earns
+  // nothing on the weeks she is not home (`accrueCondition`'s `!playedThisWeek`). The retainer runs
+  // on a tournament week he stays home from – `resolveMasseur` says so – and the calendar draws no
+  // table for it, which is the truth about both.
   const masseurSessions =
-    (snap.masseurHired ?? false) && !frozen && !bookedOff && !shooting && (!awayThisWeek || (snap.masseurTravels ?? false))
+    masseurWorksInWeek(snap.masseurHired ?? false, frozen, bookedOff) && (!awayThisWeek || (snap.masseurTravels ?? false))
       ? (snap.masseurSessionsPerWeek ?? 0)
       : 0
   const base = {

@@ -835,7 +835,16 @@ describe('the calendar reads the snapshot and nothing else', () => {
     // pill's «anything in the next five weeks» gate has to be the marker rule itself and not a
     // second spelling of it – which is the very claim this case makes. Both names are asserted,
     // so the pin still fails if either predicate is re-spelled locally.
-    expect(days).toContain("import { eventIsHers, layoffCoversWeek } from '../engine/world'")
+    // ⚠ RE-AIMED A SECOND TIME (round 29 #3), FOR THE IDENTICAL REASON. The import line grew a
+    // THIRD engine predicate: `masseurWorksInWeek`, `masseurWorksThisWeek`'s own body taking
+    // primitives. This file had re-spelled that rule by hand and the hand-spelling had grown a
+    // fourth stand-down (`&& !shooting`) the engine has never held – so a shoot week charged the
+    // masseur's salary and drew none of his days. Exactly the defect this case is about, caught by
+    // the owner instead of by this pin, which is why the name is asserted here now.
+    expect(days).toContain("import { eventIsHers, layoffCoversWeek, masseurWorksInWeek } from '../engine/world'")
+    expect(days, 'the masseur rule is the engine\'s, not a fourth spelling of it').toContain(
+      'masseurWorksInWeek(snap.masseurHired ?? false, frozen, bookedOff)',
+    )
     expect(days).toContain('layoffCoversWeek(snap.week, snap.injury?.weeksRemaining, week)')
     expect(days, 'the marker rule is the engine\'s function, re-exported under its historical name').toContain(
       'export const isSuitable: (e: UpcomingEvent, currentWeek: number) => boolean = eventIsHers',

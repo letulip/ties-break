@@ -193,9 +193,32 @@ export function masseurTourRelief(matchesPlayed: number, strain: number, masseur
  *  ⚠ AND HE WORKS THROUGH A LAYOFF – that is when the salary earns hardest (the rehab room is
  *  his), so an injury is deliberately NOT a stand-down. Pure state, zero draws. */
 export function masseurWorksThisWeek(world: WorldState): boolean {
-  if (!(world.masseurHired ?? false)) return false
-  if (inCollege(world)) return false
-  return vacationForWeek(world, world.week) === undefined
+  return masseurWorksInWeek(world.masseurHired ?? false, inCollege(world), vacationForWeek(world, world.week) !== undefined)
+}
+
+/** ⭐⭐ ROUND 29 #3 – THE SAME RULE, TAKING PRIMITIVES, SO THE SCREEN CAN ASK IT TOO.
+ *
+ *  ⚠⚠ THIS EXISTS BECAUSE THE SCREEN HAD INVENTED A FOURTH STAND-DOWN THE ENGINE DOES NOT HOLD.
+ *  `composables/weekDays.ts` re-spelled the three refusals above and added `&& !shooting`, so a
+ *  shoot week CHARGED the salary (`resolveMasseur` reads the predicate above, which knows nothing
+ *  about a shoot) and DREW none of his days – «вы заплатили и не можете этого заметить», the exact
+ *  failure the travelling-team plan bans specialists for, written fifteen lines above the bug in
+ *  that same file. The owner found it from first principles: «Если есть турнир или тренировки, то
+ *  есть и массажист.» A shoot takes her FREE days and leaves her training days alone
+ *  (`shootDaysFor`), so a shoot week has training in it, and therefore has him in it.
+ *
+ *  ⚠ THE FIX RUNS IN THE ENGINE'S DIRECTION, NOT THE SCREEN'S. The bill is CORRECT; what was wrong
+ *  was the drawing, so `shooting` is not added here to make the two agree – the fourth term is
+ *  deleted from the screen and the screen asks this instead.
+ *
+ *  ⚠ IT TAKES PRIMITIVES FOR `spanWorthOffering`'s OWN REASON (world/multiWeek.ts spells it out at
+ *  length): the shell holds a `Snapshot`, never a `WorldState`, and it draws OTHER weeks than the
+ *  current one, so a predicate keyed on `world.week` could not answer its question at all. Both
+ *  sides hand it what they hold and they agree BY CONSTRUCTION rather than by inspection –
+ *  `tests/component/round29-masseur-parity.test.ts` asserts it week by week rather than taking this
+ *  paragraph's word for it. Pure, zero draws. */
+export function masseurWorksInWeek(hired: boolean, frozen: boolean, bookedOff: boolean): boolean {
+  return hired && !frozen && !bookedOff
 }
 
 /** ⭐ WHAT A TOUR WEEK COSTS (owner 22.08: «на неделе выезда по-матчевая цена заменяет
