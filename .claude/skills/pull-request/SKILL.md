@@ -57,6 +57,34 @@ a box it has not proven with a command in this session.
    and told you which. The rule the review earned: **repair without ownership rots in days** – so a
    wave that changes what is true also changes what the docs say it is, in the same PR.
 
+4c. **⚠⚠ WHAT THE ROUND DID NOT DO – the unfinished-items block** (owner, round 29 #18: «добавить в
+   скилл pull-request проверку несделанных пунктов из раунда»). He asked for this because items go
+   quiet: the round-29 audit found round 8 #1 open for 34 days, kit wear on holiday asked FOUR times
+   with no code, and a `[x]` sample where 1 of 10 was false. **My memory is not the instrument. The
+   PR is.**
+
+   Read the wave's ledger (`docs/rounds/round-<N>.md`) and put EVERY item that is not `[x]` or `[~]`
+   into the body under **What the round did not do**, one line each, with its status mark and a
+   half-sentence reason. `[?]` items are listed as questions HE still owes an answer to, and `[ ]`
+   items say what blocks them.
+
+   ⚠ **This block is never omitted for being long, and never softened.** A wave that closed 8 of 20
+   says so in the PR; the owner decides whether that is enough, and he cannot decide it from a body
+   that only lists wins. ⭐ **If the ledger and the PR disagree, the PR is wrong** – the ledger was
+   written from the work and the body is written from the ledger, never the other way round.
+
+   ⚠ Also carry forward anything the wave REVIVED from an older round, naming the round it came from,
+   so the older debt is visibly shrinking rather than silently re-filed.
+
+4d. **The build line** (owner, round 29 #19: «может быть стоит какую-то версию добавить в настройках
+   внизу строчкой? И в pull-request скилле обновлять при деплое?»). He cannot tell which build he is
+   playing, and it has already cost a wrong diagnosis – I asserted his save predated a merged wave and
+   was wrong by a whole schema version.
+
+   Before the body is written, confirm the version line the app renders is the one this PR ships:
+   the short commit SHA and the date, not a semver. ⭐ **A semver says what we intended; a SHA says
+   what he is holding**, and the second is the question every defect report needs answered.
+
 5. **The body.** Fill `.github/pull_request_template.md` verbatim – What, then the checklist with
    every earned box ticked `[x]`. ⚠ For an EXISTING PR (a red `checklist` job on an open PR is the
    usual reason this skill is invoked) the deliverable is the same body as a REPLACEMENT – the
