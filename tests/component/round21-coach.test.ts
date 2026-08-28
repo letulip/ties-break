@@ -60,7 +60,7 @@ import { useGameStore } from '../../src/stores/game'
 import { createWorld, hireCoach, tickWeek, toSnapshot } from '../../src/engine/world'
 import { coachRevealWeek } from '../../src/engine/world/coachMarket'
 import { rngFromSeed } from '../../src/engine/rng'
-import { ECONOMY, parentIncomeForWeekCents } from '../../src/engine/economy'
+import { parentIncomeForWeekCents } from '../../src/engine/economy'
 import { isOffSeasonWeek, OFF_SEASON_WEEKS, WEEKS_PER_YEAR } from '../../src/engine/season/calendar'
 import { formatCents } from '../../src/shared/money'
 import { DEFAULT_PROFILE, type CoachTier, type Snapshot } from '../../src/shared/protocol'
@@ -354,49 +354,88 @@ describe('#12 what the gate reads', () => {
     return world
   }
 
-  it('sums the parents\' contribution and the interest the balance earns', () => {
-    // ⚠ READ OUT OF REAL STATE, not restated from a constant: the world is built and ticked, the
-    // funds are set, and the two components are recomputed here from the SAME inputs the engine had.
+  it('⚠⚠ is the parents\' contribution ALONE now – round 29 #12 took the interest term out', () => {
+    // ⚠⚠ RE-AIMED BY ROUND 29 #12, AND IT IS THE ARM THAT RECORDS THE COLLISION BETWEEN TWO OF HIS
+    // OWN RULINGS. Round 21 #12 was his complaint that «на счету 1млн, а элитного тренера какого-то
+    // нельзя брать», and the fix was to count the savings interest into this cap – at a million it
+    // was $600/wk, MORE than the parents' own $482. Round 29 #12 is his later ruling: «убрать авто
+    // начисление % на текущий счёт». The accrual is gone, so this figure must stop quoting it –
+    // «the money that really arrives» is the whole definition of `weeklyIncomeCents`, and a cap
+    // still counting a wage nobody pays would be round 21 #12's defect in mirror image.
+    //
+    // ⚠ WHAT HE WILL SEE, said out loud rather than left for him to rediscover: a wealthy family
+    // sees Elite rungs flagged «over» again. FLAGGED, NOT REFUSED – `hireCoach` never consults the
+    // budget, which is what keeps this inside «мы ни за что не наказываем». The answer to the
+    // re-opened complaint is the shelf: money in the index fund earns, and `householdWeekly` shows
+    // it in the household's week.
     const world = millionaire()
     const snapshot = toSnapshot(world)
     const parents = parentIncomeForWeekCents(world.seed, world.profile.background, world.week)
-    const interest = Math.round(world.fundsCents * ECONOMY.savings.apyWeekly)
 
-    expect(interest, 'the owner\'s «%» is real money at a million').toBe(600_00)
-    expect(interest, 'and it is larger than the parents\' own contribution').toBeGreaterThan(parents)
-    // No kit deal is running on this career, so those are the two streams.
-    expect(snapshot.coachBilling.weeklyIncomeCents).toBe(parents + interest)
+    // No kit deal is running on this career, so the parents are now the ONLY stream.
+    expect(snapshot.coachBilling.weeklyIncomeCents).toBe(parents)
+    // ...and the million buys nothing here any more. This is the assertion that goes red if anybody
+    // quietly restores a balance-proportional term to the cap.
+    const broke = millionaire()
+    broke.fundsCents = 0
+    expect(toSnapshot(broke).coachBilling.weeklyIncomeCents).toBe(snapshot.coachBilling.weeklyIncomeCents)
   })
 
-  it('so a millionaire is refused no elite coach – and a broke family still is', () => {
+  it('⚠⚠ the BALANCE no longer buys coaching headroom at all – round 29 #12', () => {
+    // ⚠⚠ RE-AIMED, AND IT IS THE ARM THAT WILL SHOW HIM THE COST OF HIS OWN RULING. It used to read
+    // «so a millionaire is refused no elite coach», which was round 21 #12's whole point: the
+    // interest made the million show up in the cap. Round 29 #12 removes the interest, so the
+    // million shows up nowhere – and the elite rungs are flagged «over» again on his exact career.
+    //
+    // ⚠ THAT IS A REGRESSION IN WHAT HE SEES AND NOT IN WHAT HE CAN DO, which is why the arm keeps
+    // its teeth by asserting the second half rather than by dropping the first. `overBudgetCents`
+    // COLOURS A CARD; `hireCoach` never consults it. Nobody is locked out of anything, which is what
+    // keeps this inside «мы ни за что не наказываем» – and the answer to the re-opened complaint is
+    // the shelf, where a million now earns deliberately (see round 29 #11's top-ups).
     const world = millionaire()
     const rich = toSnapshot(world)
+    const parents = parentIncomeForWeekCents(world.seed, world.profile.background, world.week)
     const elite = rich.coachMarket.filter((r) => r.tier === 'elite')
     expect(elite.length, 'there are elite coaches to check').toBeGreaterThan(0)
-    for (const r of elite) {
-      expect(r.overBudgetCents, `${r.name} at ${formatCents(r.weeklyCents)} fits the week`).toBe(0)
-      expect(r.lockedPoints, 'and the ranking gate is off, as shipped').toBeNull()
-    }
 
-    // ⚠ THE OTHER DIRECTION, ON THE SAME CAREER: empty the account and the interest goes with it, so
-    // the same coaches go back over budget by exactly the parents' shortfall. This is what makes the
-    // test above a measurement of the INTEREST rather than of a threshold that was simply widened.
-    const parents = parentIncomeForWeekCents(world.seed, world.profile.background, world.week)
+    // ⭐ THE MILLION AND AN EMPTY ACCOUNT READ THE SAME CAP AND THE SAME MARKET, to the cent. This is
+    // the assertion that reddens if anybody restores a balance-proportional term to the cap.
     world.fundsCents = 0
     const broke = toSnapshot(world)
+    expect(broke.coachBilling.weeklyIncomeCents).toBe(rich.coachBilling.weeklyIncomeCents)
     expect(broke.coachBilling.weeklyIncomeCents).toBe(parents)
-    const over = broke.coachMarket.filter((r) => r.tier === 'elite' && r.overBudgetCents > 0)
-    expect(over.length, 'with nothing banked the elite rung is out of reach again').toBeGreaterThan(0)
+    expect(broke.coachMarket.map((r) => r.overBudgetCents)).toEqual(rich.coachMarket.map((r) => r.overBudgetCents))
+
+    // ...and where a rung IS over, it is over by exactly the shortfall against the parents' week –
+    // no threshold was widened or narrowed, one income stream simply stopped existing.
+    const over = rich.coachMarket.filter((r) => r.tier === 'elite' && r.overBudgetCents > 0)
+    expect(over.length, 'the elite rung is out of reach on the parents\' week alone').toBeGreaterThan(0)
     for (const r of over) expect(r.overBudgetCents).toBe(r.weeklyCents - parents)
+    // ⚠⚠ AND NONE OF IT REFUSES HIM ANYTHING – the ranking gate is the only thing that ever locks a
+    // rung, and it is off here exactly as it was before this change.
+    for (const r of elite) expect(r.lockedPoints, 'flagged, never gated').toBeNull()
   })
 
   it('and the budget meter draws that cap rather than reverse-engineering one', async () => {
     // ⚠ THE METER USED TO RECOVER THE CAP FROM AN OVER-BUDGET ROW, which returns nothing when no row
     // is over - and fixing the income made HIS case exactly that case. Without the carried figure
     // the screen would have gone from a wrong cap to "$0.00 weekly cap" with a full bar beside it.
-    const world = millionaire()
+    //
+    // ⚠⚠ THE FIXTURE MOVED, THE CLAIM DID NOT (round 29 #12). This used to be the millionaire, whose
+    // whole market fitted inside the cap BECAUSE the interest was in it; with the interest gone he no
+    // longer produces a nothing-is-over screen, and the defect this arm guards only exists on such a
+    // screen. A wealthy family on the budget rung is that screen now – measured, not assumed, and
+    // asserted below so the arm cannot go vacuous if the market ever shifts under it.
+    const world = createWorld('r29-cap', {
+      ...DEFAULT_PROFILE,
+      coachTier: 'budget',
+      background: 'wealthy',
+    })
+    const rng = rngFromSeed(world.seed)
+    for (let i = 0; i < 120; i++) tickWeek(world, rng)
     const snapshot = toSnapshot(world)
     expect(snapshot.coachMarket.every((r) => r.overBudgetCents === 0), 'nothing is over budget here').toBe(true)
+    expect(snapshot.coachMarket.find((r) => r.current), 'and a coach is engaged, so the free bar has a subtrahend').toBeTruthy()
 
     const wrapper = await mountCoaches(snapshot)
     const legend = wrapper.find('.budget-legend').text()

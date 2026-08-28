@@ -32,6 +32,12 @@ export type WorldEventType =
  *  onset treatment, and the healthy-week physio retainer.
  *  'interest' (round-9 R9-1) is an INCOME-side category: the weekly savings interest on a
  *  positive balance ("Savings interest").
+ *  ⚠⚠ HISTORICAL SINCE ROUND 29 #12 – NOTHING WRITES IT ANY MORE. The owner ruled the automatic
+ *  interest on the current account out («убрать авто начисление % на текущий счёт»), so the accrual
+ *  is gone from `world/phaseFinance.ts`. THE CATEGORY STAYS because every save already written
+ *  carries rows under it, and a career's own past has to keep rendering – deleting it to tidy up
+ *  would make a real family's real ledger unclassifiable. A new writer of this category is a
+ *  regression, and `tests/round9.test.ts` asserts the absence.
  *  'vacation' / 'practice' (season planner, schema v13) bucket the two planner spends: a family
  *  vacation package and a practice-match court rental (+ the optional coach). Refunds are booked
  *  under the SAME category, so a cancelled booking nets to zero on the Money breakdown. */

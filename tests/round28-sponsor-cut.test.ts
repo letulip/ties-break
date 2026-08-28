@@ -408,8 +408,10 @@ describe('§4 the coaching cap quotes what the till actually banks', () => {
     expect(world.offers.some((o) => o.kind === 'kit' && o.state === 'signed'), 'no deal on this career').toBe(false)
     expect(kidPrizeShareBps(ageOf(world)), 'and the ramp IS running – she is eighteen').toBeGreaterThan(0)
 
+    // ⚠ RE-AIMED BY ROUND 29 #12 – ONE stream now, not two: the savings interest left this figure
+    // with the accrual. The claim this arm makes is unchanged in kind («no third term, and nothing
+    // taken off»); it is the list of streams that got shorter.
     const parents = parentIncomeForWeekCents(world.seed, world.profile.background, world.week)
-    const interest = Math.max(0, Math.round(world.fundsCents * ECONOMY.savings.apyWeekly))
-    expect(familyWeeklyIncomeCents(world), 'the two streams, and nothing taken off either').toBe(parents + interest)
+    expect(familyWeeklyIncomeCents(world), 'the one stream, and nothing taken off it').toBe(parents)
   })
 })
