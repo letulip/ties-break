@@ -162,6 +162,19 @@ held open for exactly this reason.
 
   ⚙ **The owner approved plan B** – «это хороший план, как раз пересекается с моим пониманием».
 
+  **His top-50 requirement, measured on his own season 13.** Mandatory events never collide: slams
+  land on 678/697/702/710 and WTA 1000s on 681/684/688/694/707/713/717/721 – **no shared week**, and
+  it is guaranteed by construction (anchored tiers are placed by name from disjoint lists, pinned in
+  `tests/season/calendar.test.ts`). ⚠ **But the rung below them collides with them six times a
+  season**: 678 slam+250, 691 250+500, 697 slam+250, 710 slam+125+250, 715 250+500, 721 1000+250.
+  No penalty – she plays the compulsory one – but six events land on a week she is already committed
+  to, and that is choice destroyed rather than offered.
+
+  ⚠ **And `act2-pro-tour.md` §517 already rules what he is asking for**: at the top, «the big events
+  are compulsory and **the rungs below stay open as filler**». Part 0 measured the opposite –
+  `PLAY_DOWN.fromAllW` bars the whole W series at once inside the top 50. **Design and build
+  disagree, and the build is the one that is wrong.**
+
 - [ ] **13. «Нормально ли с Alice с таким количеством вылетов в первых раундах вообще до топ-100
   добирается? Или мне только кажется, что это странно?»** – **answer.** ⚠ This is the sharpest question
   in the round, because it points at a possible contradiction in the model rather than at a defect:
@@ -206,6 +219,9 @@ held open for exactly this reason.
 | round 27 **3** | «надо что-то придумать с этим. Какие варианты?» | ⚙ options owed, see below |
 | round 27 **8** | «да, я уже понял, не страшно» | ⚙ **CLOSED**, no repair |
 | round 27 **14** | «тогда на стопе пока» | ⚙ **ON HOLD** by his ruling – must not be re-opened sideways by 13 |
+| **15** appearance fee | «да, окей, пусть остается пока» | ⚙ **STAYS** in her cut – reviewable, not settled forever |
+| **2** letter window | «в чем проблема сделать 5?» | ⚙ five weeks per LETTER, both kinds; §3.1's window deadline retired |
+| **12** top-50 | «проконтролировать, что игрок увидит все обязательные турниры в первую очередь и гарантированно, чтобы не было коллизий» | ⚙ requirement recorded – measured below |
 
 ## What this round is waiting on
 
