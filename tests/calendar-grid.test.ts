@@ -123,9 +123,14 @@ function planRoleOf(week: CalendarWeek, index: number): OrdinaryKind {
   return !session.has(index) ? 'rest' : 'court'
 }
 
-/** Every day kind there is – the four the plan mixes, and the four a whole week is made of. Spelled
- *  out rather than imported so that a ninth `DayKind` is a decision somebody has to make here too. */
-const ALL_KINDS: DayKind[] = ['court', 'gym', 'rest', 'match', 'away', 'off', 'school', 'rehab']
+/** Every day kind there is – the four the plan mixes, and the FIVE the plan does not. Spelled out
+ *  rather than imported so that a tenth `DayKind` is a decision somebody has to make here too.
+ *
+ *  ⚠ WIDENED FOR 'shoot' (round 28 #6), which is the note above working exactly as intended: the
+ *  ninth kind arrived, the decision was made here, and every sweep in this file now covers it. It is
+ *  the one member that is not a whole WEEK – a shoot week keeps her training days and gives up its
+ *  free ones – but every claim below is about a DAY, so nothing about the sweeps changes. */
+const ALL_KINDS: DayKind[] = ['court', 'gym', 'rest', 'match', 'away', 'off', 'school', 'rehab', 'shoot']
 const DAY_INDEXES = [0, 1, 2, 3, 4, 5, 6] as const
 
 /** ⚠ SWEPT OVER EVERY DAY OF EVERY WEEK, not just over the four ordinary shapes. The whole-week
@@ -165,7 +170,7 @@ const ALL_BLOCKS = (): DayBlock[] =>
 // (c) THE AGE BAND – the completeness the owner asked for
 // =================================================================================================
 describe('the layout table is complete for every band it carries', () => {
-  it('⚠ every populated band covers every day kind – all EIGHT of them now', () => {
+  it('⚠ every populated band covers every day kind – all NINE of them now', () => {
     // THE HALF-ADDED BAND is the failure this exists for: a later hand adds `senior-school` with a
     // court day and a gym day in it, forgets rest and match, and two columns of a shipped week
     // render empty with no error anywhere.
@@ -174,6 +179,10 @@ describe('the layout table is complete for every band it carries', () => {
     // ones drawn. All eight draw now, so all eight are covered - and the two travel days of a trip
     // week are exactly the kind of column that would render empty unnoticed, because nobody opens a
     // career on a Sunday of a tournament week to check.
+    // ⚠ WIDENED AGAIN, SAME DIRECTION (round 28 #6): 'shoot' is the ninth, and it is the kind most
+    // exposed to this failure - a shoot day appears on two or three days of a week that otherwise
+    // looks completely ordinary, so an empty column there would read as a rendering glitch rather
+    // than as a missing table row.
     const bands = populatedBands()
     expect(bands.length, 'no band is populated at all').toBeGreaterThan(0)
     for (const band of bands) {

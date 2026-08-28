@@ -167,6 +167,8 @@ const KIND_WORD: Record<DayKind, string> = {
   off: 'no tennis',
   school: 'school exams',
   rehab: 'rehab',
+  // ⭐ ROUND 28 #6 – the sponsor's shoot. A day, not a week: the days around it are still the plan's.
+  shoot: 'at the shoot',
 }
 function dayName(d: Pick<CalendarDay, 'index' | 'kind'>): string {
   return `${DAY_LONG[d.index]} – ${KIND_WORD[d.kind]}`
@@ -208,6 +210,13 @@ const NOTE_MOOD: Record<DayKind, NoteMood> = {
   off: 'home',
   school: 'exam',
   rehab: 'home',
+  // ⭐ ROUND 28 #6 – A SHOOT DAY KEEPS THE DOMESTIC POOL, with the family week and the layoff and
+  // for their reason: the two week pools exist for facts the week already CONTAINS before it is
+  // played, and this screen's own week is the ordinary one either way - the shoot takes some of its
+  // days, never all of them, so `days[0].kind` (which is what picks the mood) is a training day on
+  // almost every shoot week anyway. A scrap about the shoot would be a note about how a working day
+  // GOES, which the fridge does not know.
+  shoot: 'home',
 }
 
 /** THE NOTE ON THE FRIDGE DOOR. Off `(seed, week)` and the week's own kind, so it is the same scrap

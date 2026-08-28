@@ -222,7 +222,19 @@ function vacationGain(row: CalendarRow): number {
 }
 
 function weekTitle(row: CalendarRow): string {
-  return row.kind === 'off-season' ? 'Off-season' : row.kind === 'exam' ? 'Exams' : 'Training week'
+  // ⭐⭐ ROUND 28 #4 – A SHOOT WEEK NAMES ITSELF, and it names itself in the SAME WORDS the button
+  // into it uses (`useWeekAhead` -> 'Shooting week') and the Calendar's own eyebrow uses. Three
+  // surfaces, one week, one phrase: the owner's item 6 is that the button says it, and item 4 is
+  // that the season calendar shows it, and they are one thing said twice.
+  //
+  // ⚠ IT OUTRANKS 'Training week' AND NOT THE OTHER TWO. The off-season and the exam fortnight are
+  // weeks nothing is hers to plan in - a shoot is what happens INSIDE a week she has - and a shoot
+  // in the off-season cannot exist anyway (`chooseShootWeeks` filters those weeks out of every pool
+  // by construction, «an off-season cost is free money wearing a cost's clothes»). Saying so here
+  // rather than assuming it: if the pool rule ever changes, this stays right.
+  if (row.kind === 'off-season') return 'Off-season'
+  if (row.kind === 'exam') return 'Exams'
+  return row.shoot ? 'Shooting week' : 'Training week'
 }
 
 /** "W8" - the week number alone. The date beside it already names the year, and `weekLabel` would
@@ -525,6 +537,9 @@ const visibleUpcoming = computed(() => upcoming.value.filter((e) => feedShows(e,
 const myEntries = computed(() => upcoming.value.filter((e) => e.entered))
 const vacations = computed<VacationBooking[]>(() => game.snapshot?.vacations ?? [])
 const practices = computed<PracticeBooking[]>(() => game.snapshot?.practices ?? [])
+/** ⭐ ROUND 28 #4 – the running endorsement's named shoot weeks, or none. Read once here so the row
+ *  loop below asks the snapshot a single time rather than per week. */
+const shootWeeks = computed<number[]>(() => game.snapshot?.adShoot?.weeks ?? [])
 
 // --- Round 5 item 7: tour guide overlay ---------------------------------------
 const showTierGuide = ref(false)
@@ -550,6 +565,19 @@ interface CalendarRow {
   exam: boolean
   /** R12-8b: the layoff covers this week – the card wears the small red injury chip. */
   injured: boolean
+  /** ⭐⭐ ROUND 28 #4 – THIS WEEK IS ONE OF THE SIGNED ENDORSEMENT'S SHOOT WEEKS, with the brand that
+   *  booked it. Undefined on every other week.
+   *
+   *  ⚠ IT IS A FLAG BESIDE `kind`, NOT A MEMBER OF IT, and that is the mechanic's own design rather
+   *  than a shortcut. A shoot week is «not blocked and not double-charged» – a tournament, a booked
+   *  family week and a practice match on a shoot week all genuinely happen – so a `kind: 'shoot'`
+   *  would have had to outrank one of them and lie about the week. `injured` and `exam` are flags
+   *  for exactly the same reason, and the mark rides on top of whatever the row already is: the
+   *  owner asked for separate plates, or at least some mark that picks a shoot week out (his words
+   *  are in docs/rounds/round-28.md item 4 – this file's comments are English by its own header's
+   *  rule), and a chip that can appear on ANY row is the form of that which never has to displace
+   *  something true. */
+  shoot?: { brand: string }
 }
 
 // R12-8b: the layoff window as the SNAPSHOT tells it. Mirrors the engine's `layoffCovering`
@@ -606,6 +634,10 @@ const calendarRows = computed<CalendarRow[]>(() => {
       event: e,
       vacation,
       practice,
+      // ⭐ ROUND 28 #4 – off `snapshot.adShoot`, the deal's own frozen terms as `toSnapshot` reads
+      // them, so the plate here and the recovery `accrueCondition` charges can never name different
+      // weeks. `shootWeeks` is absolute career weeks, the same unit this loop counts in.
+      shoot: shootWeeks.value.includes(w) ? { brand: game.snapshot!.adShoot!.brand } : undefined,
       // "Empty" means empty FOR HER: a week whose only tournament is one she can NOT enter – a
       // locked-ahead "Reach N pts" card (the spec keeps those visible on purpose) or one whose
       // entry list has already closed – is still hers to plan. Otherwise the aspirational cards
@@ -1366,6 +1398,15 @@ function closeExhibition(): void {
                    points-locked card names the band first (lock precedence), so without the chip
                    the injury never appeared on it at all. -->
               <span v-if="row.injured" class="pill avail-chip red" :title="layoffNote">injury</span>
+              <!-- ⭐⭐ ROUND 28 #4 – THE SHOOT PLATE, and it rides on EVERY row shape rather than on a
+                   row kind of its own. The owner: shoot weeks for sponsors need their own plates, or
+                   at least some mark that picks them out in the season calendar. A shoot week is not
+                   blocked and not double-charged, so it can be any of these five rows at once – a
+                   tournament, a family week, a friendly, a training week – and a mark that had to
+                   displace one of those to appear would be a lie about the week on the four rows it
+                   is not. Same shape and same slot as the injury chip beside it, for the same
+                   reason: both are facts ABOUT the week rather than what the week IS. -->
+              <span v-if="row.shoot" class="pill shoot-chip" :title="`${row.shoot.brand} shoot week – she keeps her sessions and gives up the rest`">shoot</span>
               <!-- Round-7 item 21: past tense once the window has shut. -->
               <span class="pill" :class="{ negative: week > row.event.deadlineWeek && !row.event.entered }">
                 {{ week > row.event.deadlineWeek ? 'Closed' : 'closes' }} {{ weekLabel(row.event.deadlineWeek) }}
@@ -1567,6 +1608,7 @@ function closeExhibition(): void {
               <div class="controls week-controls">
                 <!-- R12-8b: a kept booking inside the layoff still wears the week's truth. -->
                 <span v-if="row.injured" class="pill avail-chip red" :title="layoffNote">injury</span>
+                <span v-if="row.shoot" class="pill shoot-chip" :title="`${row.shoot.brand} shoot week – she keeps her sessions and gives up the rest`">shoot</span>
                 <span v-if="vacationGain(row) > 0" class="pill">+{{ vacationGain(row) }} condition</span>
                 <span class="pill">{{ formatCents(row.vacation.paidCents) }}</span>
                 <span v-if="row.event" class="week-note">Skipping {{ row.event.label }}.</span>
@@ -1579,6 +1621,7 @@ function closeExhibition(): void {
               <span class="planned-when">
                 {{ weekLabel(row.week) }} · {{ row.dates }}
                 <span v-if="row.injured" class="pill avail-chip red" :title="layoffNote">injury</span>
+                <span v-if="row.shoot" class="pill shoot-chip" :title="`${row.shoot.brand} shoot week – she keeps her sessions and gives up the rest`">shoot</span>
               </span>
               <span class="planned-what">
                 🏖 {{ packageLabel(row.vacation.packageId) }}
@@ -1596,6 +1639,7 @@ function closeExhibition(): void {
                 <!-- R12-8b: the engine refunds these on injury, so the chip here is a belt-and-braces
                      read of the same window, never a promise the match survives the layoff. -->
                 <span v-if="row.injured" class="pill avail-chip red" :title="layoffNote">injury</span>
+                <span v-if="row.shoot" class="pill shoot-chip" :title="`${row.shoot.brand} shoot week – she keeps her sessions and gives up the rest`">shoot</span>
               </span>
               <span class="planned-what">
                 🎾 Practice match{{ row.practice.withCoach ? ' + coach' : '' }}
@@ -1638,6 +1682,7 @@ function closeExhibition(): void {
               </div>
               <div class="controls week-controls">
                 <span v-if="row.injured" class="pill avail-chip red" :title="layoffNote">injury</span>
+                <span v-if="row.shoot" class="pill shoot-chip" :title="`${row.shoot.brand} shoot week – she keeps her sessions and gives up the rest`">shoot</span>
                 <button v-if="row.plannable" :disabled="game.busy" @click="openPlanner(row)">+ Plan week</button>
                 <span v-else-if="row.kind === 'exam'" class="week-note">School owns this week.</span>
               </div>
@@ -2409,6 +2454,21 @@ section.bare .event-cards {
 .bracket-score {
   font-weight: 600;
   font-variant-numeric: tabular-nums;
+}
+
+/* ⭐⭐ ROUND 28 #4 – THE SHOOT PLATE. The owner asked for separate plates on a sponsor's shoot week,
+   or at least some mark that picks one out in the season calendar (his own words are in
+   docs/rounds/round-28.md item 4). This is the second of those: the app's own pill,
+   in the one palette colour that already means "a commercial thing the family bought" – the wallet's
+   shop magenta, `--cat-shop`. It is deliberately the same SHAPE as the injury chip it sits beside
+   (both are facts about the week rather than what the week is), and deliberately not red: a shoot is
+   a decision the parent made and gets paid for, not a warning.
+   ⚠ NO `background`. Every pill on this screen is an outline, and a filled one would out-shout the
+   tournament card's own art on the row it lands on. */
+.shoot-chip {
+  color: var(--cat-shop);
+  border-color: var(--cat-shop);
+  border-radius: var(--radius-chip);
 }
 
 </style>

@@ -1401,12 +1401,27 @@ function reopenTour(): void {
     <!-- D11 – TWO BANNERS, ONE SHAPE, AND THEY CAN BE ON SCREEN TOGETHER. Both said `Dismiss` and
          nothing else, so the pair collided in strict mode AND, more to the point, looked identical
          to anyone reading them: two grey strips stacked at the top of the page with the same word on
-         the same button. This is the one place in the sweep where the honest fix is the VISIBLE
-         copy rather than a label under it - an `aria-label` saying which is which would have left a
-         sighted player with the ambiguity that started this. -->
+         the same button. D11's fix was the VISIBLE copy - `Dismiss autosave notice` and `Dismiss
+         stop notice` - on the reasoning that an `aria-label` saying which is which would leave a
+         sighted player with the ambiguity that started this.
+
+         ⚠⚠ ROUND 28 #10 – THE OWNER HAS OVERRULED THAT. His words are in docs/rounds/round-28.md
+         item 10, where they may be quoted in his own language; in English: the top notifications
+         carry a Dismiss button with three words on it, it looks untidy, leave just `Dismiss`. He is
+         the one reading the screen and a three-word button on a one-line strip is what he sees, so
+         the visible copy is one word again.
+
+         ⚠ WHAT D11 FOUND IS STILL TRUE AND IS STILL SOLVED, one layer down: the two are told apart
+         by `aria-label`, which is what keeps the accessible names distinct and the strict-mode
+         collision gone. WCAG 2.5.3 (Label in Name) is satisfied rather than breached - each label
+         STARTS with the visible word `Dismiss` and adds to it, which is the pattern that rule
+         exists to allow; what it forbids is a label that CONTRADICTS the visible text. The pair is
+         mounted-tested in tests/component/round28-top-notices.test.ts - the App shell became
+         mountable in this round (see the alias in vite.config.ts), so the claim D11 could only
+         state backwards as a source pin is now made forwards, on the rendered button. -->
     <div v-if="game.recovered" class="recovered-banner">
       <span>Autosave was damaged – restored the previous one.</span>
-      <button @click="dismissRecovered">Dismiss autosave notice</button>
+      <button aria-label="Dismiss autosave notice" @click="dismissRecovered">Dismiss</button>
     </div>
 
     <!-- R11-1: NOT gated on the Home tab any more – an advance can be triggered from the Season
@@ -1414,9 +1429,9 @@ function reopenTour(): void {
          happen as far as they are concerned. -->
     <div v-if="showStopToast" class="stop-toast">
       <span>{{ stopReasonText }}</span>
-      <!-- Its message always opens with the word "Stopped:", so this is the sentence's own noun and
-           not a new one invented for the button. -->
-      <button @click="dismissStopToast">Dismiss stop notice</button>
+      <!-- Its message always opens with the word "Stopped:", so the accessible name's own noun is
+           the sentence's and not a new one invented for the button. -->
+      <button aria-label="Dismiss stop notice" @click="dismissStopToast">Dismiss</button>
     </div>
 
     <!-- R13-12: the paused-tournament banner is GONE – the sticky bar below is global now, and

@@ -1,3 +1,4 @@
+import { fileURLToPath } from 'node:url'
 import { defineConfig, configDefaults, type Plugin } from 'vitest/config'
 import vue from '@vitejs/plugin-vue'
 import { VitePWA } from 'vite-plugin-pwa'
@@ -394,6 +395,27 @@ export default defineConfig({
         // all; without it a mount dies on the template block. Declaring it per-project keeps the
         // include isolated AND the SFCs compiling, which is what both constraints need.
         plugins: [vue()],
+        // ⚠⚠ ROUND 28 #10 – AND THIS IS WHAT MAKES `App.vue` MOUNTABLE AT ALL.
+        //
+        // `src/pwa.ts` imports `virtual:pwa-register`, a module the VitePWA plugin injects at BUILD
+        // time and that therefore does not exist under Vitest: importing App.vue used to die at
+        // resolve time, before a single line rendered. `tests/a11y-banner-names.test.ts` recorded
+        // that as the reason the two top banners were pinned as SOURCE TEXT rather than mounted -
+        // "making it mountable means an alias in the shared vite.config.ts".
+        //
+        // The owner then asked for the banners' copy to change (round 28 #10), which is a claim
+        // about what a control SAYS - exactly the claim a source pin cannot make. So the alias is
+        // here, and it is the narrow form: ONE module id, resolved to a stub that hands back the
+        // shape `registerSW` returns, and only inside the `component` project. The unit and sim
+        // projects never load an SFC and never reach this import; the production build resolves the
+        // real virtual module through the plugin and never sees the alias.
+        resolve: {
+          alias: {
+            'virtual:pwa-register': fileURLToPath(
+              new URL('./tests/component/stubs/pwa-register.ts', import.meta.url),
+            ),
+          },
+        },
         test: {
           name: 'component',
           include: ['tests/component/**/*.test.ts'],

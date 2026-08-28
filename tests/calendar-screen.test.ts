@@ -691,7 +691,11 @@ describe('ONE week button, two projections', () => {
     expect(calendarOwnsWeekAhead('tournament')).toBe(false)
     expect(calendarOwnsWeekAhead('walkover')).toBe(false)
     // everything else is a week the calendar is about, including the ones where nothing is played
-    for (const kind of ['training', 'vacation', 'practice', 'exam', 'off-season'] as const) {
+    // ⚠ WIDENED FOR 'shoot' (round 28 #6), and it is the same membership rule rather than a new one:
+    // a shoot week is «not blocked and not double-charged», so it IS played and the calendar runs its
+    // animation over a grid that still carries her sessions. The two kinds outside the set are the
+    // two the tournament flow owns; nothing about that changed.
+    for (const kind of ['training', 'vacation', 'practice', 'shoot', 'exam', 'off-season'] as const) {
       expect(calendarOwnsWeekAhead(kind), kind).toBe(true)
     }
   })
