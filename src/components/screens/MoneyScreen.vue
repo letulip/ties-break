@@ -191,9 +191,17 @@ const kidShareNote = computed<string | null>(() => {
 // global (it is on the template global-allowlist), so a ref by that name is unreachable from the
 // template and the toggle would silently no-op.
 const breakdownWindow = ref<'12w' | 'season'>('12w')
+// ⭐⭐ ROUND 27 #8 (folded into round 29) – «SO FAR», BECAUSE IT IS THE SEASON SO FAR.
+//
+// THE OWNER: «в History расход за сезон написан 36 тысяч, а на вкладке расходов 25 тысяч», and
+// «явно что-то не ладно с нашей математикой». ⚠⚠ THE ARITHMETIC WAS NEVER WRONG. Both figures were
+// right about DIFFERENT SEASONS: this toggle folds the CURRENT 52-week block, which on the save he
+// reported from was 34 weeks old, while `Every season` below lists seasons that have FINISHED. Two
+// screens said «season» and meant two things, and neither said which – so the only honest repair is
+// a label on each, not a change to a number. Its twin is the eyebrow on the history card.
 const WINDOW_OPTIONS = [
   { value: '12w', label: 'Last 12 weeks', short: '12 weeks' },
-  { value: 'season', label: 'This season', short: 'This season' },
+  { value: 'season', label: 'Season so far', short: 'So far' },
 ]
 // The engine-side finance window for the active toggle (12w: last 12 weeks; season: the current
 // 52-week block) - category-accurate over the full retained history, not the trailing event feed.
@@ -849,11 +857,22 @@ function stakeCentsFor(row: ShopRowView): number {
   if (!Number.isFinite(typed) || typed <= 0) return row.entryCents
   return Math.round(typed * 100)
 }
+/** ⭐ ROUND 29 #11 – CAN THE FAMILY PUT MORE INTO THIS ONE? True only for an 'open' rung it already
+ *  holds: a deposit and an index fund take more money, a car does not. The predicate is the STAKE
+ *  and not a list of ids, exactly as `buyAsset` re-validates it engine-side. */
+function isTopUp(row: ShopRowView): boolean {
+  return row.stake === 'open' && row.valueCents !== null
+}
 /** ⚠ ADVISORY, NOT THE GATE. The engine refuses a stake under the minimum and a stake over the
  *  wallet with its own sentences (`buyAsset`); this only decides whether the control is pressable,
- *  which is the R10-16 pairing – a disabled control and a refused click telling one story. */
+ *  which is the R10-16 pairing – a disabled control and a refused click telling one story.
+ *
+ *  ⚠ ROUND 29 #11 re-aimed the owned-row clause: it used to refuse EVERY owned rung, which is what
+ *  made the fund un-toppable on screen even once the engine allowed it. A `fixed` rung still
+ *  refuses – there is no second helping of a car. */
 function canBuy(row: ShopRowView): boolean {
-  if (game.busy || row.valueCents !== null) return false
+  if (game.busy) return false
+  if (row.valueCents !== null && !isTopUp(row)) return false
   const cents = row.stake === 'open' ? stakeCentsFor(row) : row.entryCents
   return cents >= row.entryCents && cents <= (game.snapshot?.fundsCents ?? 0)
 }
@@ -872,12 +891,21 @@ interface PendingShop {
   label: string
   amountCents: number
   changeCents: number | null
+  /** ⭐ ROUND 29 #11 – adding to a holding they already have, rather than opening one. */
+  topUp?: boolean
 }
 const pendingShop = ref<PendingShop | null>(null)
 function askBuy(row: ShopRowView): void {
   if (!canBuy(row)) return
   const amountCents = row.stake === 'open' ? stakeCentsFor(row) : row.entryCents
-  pendingShop.value = { kind: 'buy', id: row.id, label: row.label, amountCents, changeCents: null }
+  pendingShop.value = {
+    kind: 'buy',
+    id: row.id,
+    label: row.label,
+    amountCents,
+    changeCents: null,
+    topUp: isTopUp(row),
+  }
 }
 function askSell(row: ShopRowView): void {
   if (game.busy || row.valueCents === null) return
@@ -896,6 +924,11 @@ const shopConfirmMessage = computed(() => {
   const p = pendingShop.value
   if (!p) return ''
   if (p.kind === 'buy') {
+    // ⭐ ROUND 29 #11 – a top-up is a different sentence from a first purchase, because it is a
+    // different act: «Buy an index fund» reads wrong on the fund they have held for six seasons.
+    if (p.topUp) {
+      return `Put a further ${formatCents(p.amountCents)} into ${p.label}? It comes out of the family's money this week.`
+    }
     return `Buy ${p.label} for ${formatCents(p.amountCents)}? It comes out of the family's money this week.`
   }
   const tail =
@@ -1316,7 +1349,11 @@ const TAB_OPTIONS = [
            One row per season she has finished. Read-only, and honest about the years it cannot
            answer for - see the script for why some rows say nothing. -->
       <Card v-if="screenTab === 'history'" class="money-panel money-years">
-        <Eyebrow as="h2">Every season</Eyebrow>
+        <!-- ⭐⭐ ROUND 27 #8 (folded into round 29) – «COMPLETED», and its twin is the period
+             switcher's «Season so far». These rows are seasons that have WRAPPED; that one is the
+             season still running. The two numbers he could not reconcile were each right about a
+             different season and neither card said which. See WINDOW_OPTIONS in the script. -->
+        <Eyebrow as="h2">Completed seasons</Eyebrow>
         <p v-if="!seasonRows.length" class="money-panel-note">
           Her first season is still running – it lands here when the year wraps up.
         </p>
@@ -1400,18 +1437,47 @@ const TAB_OPTIONS = [
               <!-- OWNED: what they paid, what it is worth, and the difference as ONE figure the
                    engine computed. This screen subtracts nothing. -->
               <div v-if="row.valueCents !== null" class="shop-row-owned">
-                <StatRow
-                  class="money-row"
-                  label="Worth now"
-                  :meta="`paid ${formatCents(row.paidCents ?? 0)}`"
-                  :value="formatCents(row.valueCents)"
-                  :tone="(row.changeCents ?? 0) < 0 ? 'negative' : 'positive'"
-                />
+                <!-- ⭐⭐ ROUND 29 #9 – `tone="plain"`, AND A DEPRECIATED VALUE IS NOT AN ERROR.
+                     THE OWNER: «В строке с машиной и другими вещами Worth now / paid $60,000 /
+                     $59,361 – давай последнюю цифру сделаем либо белой, либо жёлтой, с красным
+                     перебор.» He is right about what red MEANS here. `negative` is StatRow's
+                     `--money-out` and its documented sense is «money out» – a bill, a fare, a
+                     cheque leaving. What this figure states is what the thing IS WORTH, which is a
+                     BALANCE, and StatRow's own vocabulary already has the word for that: `plain` is
+                     «a number with no direction (a count, a balance)», painted `--ink`, i.e. white.
+                     That is the token he asked for, out of the existing three, not a new colour.
+                     ⚠ AND THE DIRECTION IS NOT LOST – it moves one line down to `.shop-row-change`,
+                     which is the SIGNED difference and the row that is genuinely about a direction.
+                     A car that lost $639 still says so, in red, under a worth that is just a
+                     worth. -->
+                <StatRow class="money-row" label="Worth now" :meta="`paid ${formatCents(row.paidCents ?? 0)}`" :value="formatCents(row.valueCents)" tone="plain" />
                 <p class="shop-row-change" :class="{ 'is-down': (row.changeCents ?? 0) < 0 }">
                   {{ formatCentsSigned(row.changeCents ?? 0) }}
                   <span v-if="row.changePct !== null">since they bought it ({{ row.changePct }}%)</span>
                   <span v-else>since they bought it</span>
                 </p>
+                <!-- ⭐⭐ ROUND 29 #11 – PUT MORE IN. The owner: «Index fund хотелось бы иметь
+                     возможность докупать, предполагаю, что Savings deposit будет вести себя так же».
+                     Both, and only those two shapes: the control is drawn for an 'open' rung and
+                     never for a car. Same input, same minimum and same engine command as the
+                     opening stake – `buyAsset` re-validates every one of them. -->
+                <label v-if="isTopUp(row)" class="shop-stake">
+                  <span class="shop-stake-label">
+                    Add more, from {{ formatCents(row.entryCents) }}
+                  </span>
+                  <input
+                    v-model="stakeDollars[row.id]"
+                    class="shop-stake-input"
+                    type="number"
+                    inputmode="numeric"
+                    :min="Math.round(row.entryCents / 100)"
+                    step="100"
+                    :placeholder="String(Math.round(row.entryCents / 100))"
+                  />
+                </label>
+                <button v-if="isTopUp(row)" class="shop-action" :disabled="!canBuy(row)" @click="askBuy(row)">
+                  Put more in
+                </button>
                 <button class="shop-action" :disabled="game.busy" @click="askSell(row)">
                   Sell it for {{ formatCents(row.valueCents) }}
                 </button>

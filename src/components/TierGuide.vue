@@ -47,7 +47,13 @@ const rows = computed<TierRow[]>(() =>
       id,
       label: t.label,
       drawSize: t.drawSize,
-      entryFee: formatCents(t.entryFeeCents),
+      // ⭐ ROUND 17 #28, THE LAST SURFACE – flagged 13.08, marked `[x]`, and this cell was still
+      // printing «$0». `shared/money.ts`' own rule: «A fact ("no entry fee") and a missing value
+      // ("$0") must not look the same», and the only rung this can fire on is the slam, where it is
+      // true. ⚠ NOT `entryFeeLabel` here, and the column is why: this is a `.num` cell under a
+      // header that already reads «Entry fee», so the helper's full sentence would print «no entry
+      // fee» under «Entry fee» and wrap a numeric column. One word is the same fact in this idiom.
+      entryFee: t.entryFeeCents === 0 ? 'none' : formatCents(t.entryFeeCents),
       travelRange: `${formatCents(t.travelCostCents[0])}–${formatCents(t.travelCostCents[1])}`,
       points: t.points.join(' / '),
       // The gate the ENGINE applies, in one clause per condition – see `tierOpensWhen`. The live

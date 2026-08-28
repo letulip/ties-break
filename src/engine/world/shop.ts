@@ -116,7 +116,15 @@ export function revalueAssets(world: WorldState): void {
   for (const owned of world.assets) {
     const item = shopItem(owned.id)
     if (!item) continue
-    owned.valueCents = assetValueCents(item, owned.paidCents, world.week - owned.boughtWeek)
+    // ⭐ ROUND 29 #11 – off the REBASED basis and its own clock when the holding has been topped up,
+    // and off the original purchase when it has not. The `??` pair is the whole compatibility story:
+    // absent means «never topped up», which is what every save written before that field means, and
+    // it evaluates to exactly the arithmetic this line has always done (see `OwnedAsset.basisCents`).
+    owned.valueCents = assetValueCents(
+      item,
+      owned.basisCents ?? owned.paidCents,
+      world.week - (owned.basisWeek ?? owned.boughtWeek),
+    )
   }
 }
 
@@ -156,24 +164,56 @@ export function buyAsset(world: WorldState, itemId: string, stakeCents?: number)
   const item = shopItem(itemId)
   if (!item) throw new Error('There is nothing like that on the shelf')
   world.assets ??= []
-  if (world.assets.some((a) => a.id === itemId)) throw new Error('The family already owns that')
+  const held = world.assets.find((a) => a.id === itemId)
+  // ⭐⭐ ROUND 29 #11 – AN OWNED 'open' RUNG IS A TOP-UP, AND ONLY A 'fixed' ONE STILL REFUSES.
+  //
+  // THE OWNER: «Index fund хотелось бы иметь возможность докупать, предполагаю, что Savings deposit
+  // будет вести себя так же – тоже надо исправить.» Both, and the catalogue already draws the line
+  // he is drawing: `stake: 'open'` is «a product you choose an amount for» and `'fixed'` is «a thing
+  // with one price» (ECONOMY.shop's own words). You can put more money into a deposit; you cannot
+  // put more money into a car. So the predicate is the STAKE and never a list of two ids – a third
+  // investment added to the catalogue tomorrow tops up because of what it is, not because somebody
+  // remembered to name it here.
+  //
+  // ⚠ NO NEW COMMAND, DELIBERATELY. `world/constants.ts` describes the guard list this belongs to as
+  // «short on purpose», and a top-up is the same decision as the opening stake, out of the same
+  // wallet, through the same validation – so it is the same command. A `topUpAsset` beside `buyAsset`
+  // would be two functions that must agree about a minimum, a wallet check and a ledger row.
+  if (held && item.stake !== 'open') throw new Error('The family already owns that')
 
   // ⚠ THE AMOUNT IS DECIDED BEFORE THE WALLET IS ASKED, and a 'fixed' rung ignores whatever the
   // caller sent rather than refusing it: the price of a car is the catalogue's, and a screen that
   // passed a number would otherwise be able to name its own.
   const paidCents = item.stake === 'open' ? Math.floor(stakeCents ?? 0) : item.entryCents
+  // ⚠ ONE MINIMUM, NOT TWO. A top-up is held to the same floor as the opening stake because that
+  // floor is already the sentence on screen («How much, from $5,000») and a second, smaller
+  // threshold would be a balance number no player could find and no screen states.
   if (item.stake === 'open' && paidCents < item.entryCents) {
     throw new Error(`That one starts at ${formatCents(item.entryCents)}`)
   }
   if (world.fundsCents < paidCents) throw new Error('Not enough funds for that')
 
   world.fundsCents -= paidCents
-  world.assets.push({ id: item.id, boughtWeek: world.week, paidCents, valueCents: paidCents })
+  if (held) {
+    // ⚠⚠ THE REBASE, AND IT IS THE WHOLE OF THE TOP-UP. New money has not been compounding since the
+    // original purchase and must not be treated as though it had, so the basis becomes what the
+    // holding is worth TODAY plus what was just added, and the clock restarts here. `paidCents`
+    // meanwhile keeps accumulating the CASH the family put in, so `changeCents` stays the honest
+    // lifetime gain or loss – the reasoning is written out over `OwnedAsset.basisCents`.
+    held.basisCents = held.valueCents + paidCents
+    held.basisWeek = world.week
+    held.valueCents = held.basisCents
+    held.paidCents += paidCents
+  } else {
+    world.assets.push({ id: item.id, boughtWeek: world.week, paidCents, valueCents: paidCents })
+  }
   addEvent(world, {
     week: world.week,
     type: 'expense',
     category: 'shop',
-    text: `Bought: ${item.label}`,
+    // Two verbs, because they are two different events in a career and the ledger is read as a
+    // story: the week the family opened a holding is not the week it added to one.
+    text: held ? `Added to: ${item.label}` : `Bought: ${item.label}`,
     amountCents: -paidCents,
   })
 }

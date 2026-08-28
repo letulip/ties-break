@@ -184,4 +184,32 @@ export interface OwnedAsset {
   paidCents: number
   /** what it is worth THIS week, in cents, whole. Written by `revalueAssets` on every tick. */
   valueCents: number
+  /** ⭐⭐ ROUND 29 #11 – THE COMPOUNDING BASIS AND THE WEEK IT STARTED FROM, written only by a
+   *  TOP-UP and absent on a holding that has never had one.
+   *
+   *  THE OWNER: «Index fund хотелось бы иметь возможность докупать, предполагаю, что Savings deposit
+   *  будет вести себя так же – тоже надо исправить.»
+   *
+   *  ⚠⚠ WHY THIS IS NOT JUST `paidCents += more`. The value is `basis x (1+r)^years` off ONE start
+   *  week, so money added in season six has not been compounding since season one and must not be
+   *  treated as though it had. A top-up therefore REBASES: the basis becomes what the holding is
+   *  worth today plus the new money, and the clock restarts from this week. That is exactly
+   *  `V x (1+r)^t + T x (1+r)^t` – the arithmetic a real account does – with no second value model.
+   *
+   *  ⚠ AND `paidCents` STAYS WHAT THE FAMILY PUT IN, WHICH IS WHY THE BASIS IS A SEPARATE FIELD.
+   *  Folding the rebase into `paidCents` would make it include accrued gains, so §2e-1's «the ledger
+   *  shows the loss to the cent» would reset to zero on every top-up and the shelf would stop
+   *  teaching the one thing it exists to teach. `paidCents` accumulates the CASH; the basis carries
+   *  the COMPOUNDING; `changeCents` is still `valueCents - paidCents` and is still the truth.
+   *
+   *  ⚠ `boughtWeek` IS NOT TOUCHED – it stays the week the family first opened the holding, which is
+   *  what it says it is and what any «how long have they had it» line would mean.
+   *
+   *  ⚠ OPTIONAL, AND NOT A SCHEMA MOVE – `WorldEvent.entryRef`'s recorded rule (commit 2763caa's
+   *  precedent). Absent is exactly what every historical save already means here: «never topped up,
+   *  so the basis IS `paidCents` and the clock IS `boughtWeek`», which is what `revalueAssets` reads
+   *  when they are missing. No migration is owed and `SAVE_SCHEMA_VERSION` does not move. */
+  basisCents?: number
+  /** the week `basisCents` was struck – the compounding clock's start. Absent with it. */
+  basisWeek?: number
 }
