@@ -767,6 +767,44 @@ export function raiseKitOffers(args: {
     const seenTier = (seen?.terms as { tier?: SponsorTier } | undefined)?.tier
     if (seenTier) alreadyWritten.add(seenTier)
   }
+  // ⭐⭐ ...AND THE BRAND SHE IS ALREADY WEARING IS ONE OF THEM - ROUND 28 #17, which is the round-17
+  // rule above applied across the one seam it could not see.
+  //
+  // THE REPORT: «Baseline athletic 2 раза письмо о спонсорстве прислали на 48 и 52 неделе
+  // одинаковое». Read off his own save: `kit-671` (W48, the window's opening week, tier `tour`,
+  // refused) and `kit-renew-kit-567` (W52, the closing week, `renewal: true`, signed) - the same
+  // brand, the same letterhead, and terms identical field for field, because the deal that was
+  // ending was from that very rung.
+  //
+  // THE CAUSE IS A SECOND SEAM BETWEEN IDENTITY AND CONTENT. `alreadyWritten` above dedupes rung
+  // against rung, and `raiseKitRenewal` dedupes the incumbent against itself, but NOBODY asked
+  // whether the rung and the incumbent are the same brand. When the contract finishing under her is
+  // from a rung she still clears, the ladder writes to her as a stranger on the window's own slot
+  // AND the relationship writes to her on the closing week. It is not two offers; it is one brand in
+  // two voices, and the feed row says so out loud - `reviewSponsors` already excludes the renewal
+  // from the "letters from X and Y" clause precisely so the row cannot "name the same brand twice in
+  // two different voices one sentence apart", and then names it twice anyway in two clauses.
+  //
+  // ⚠ THE RENEWAL IS THE ONE THE DESIGN KEEPS, and the rung's letter is the duplicate - not the
+  // other way round. Three reasons, all of them already written down:
+  //   * `raiseKitRenewal`'s own header: the incumbent lands LAST because `seasonSpokenFor` turns
+  //     every other rung away the moment a letter is signed, and «the incumbent is the letter a
+  //     parent is likeliest to sign on sight». A fresh letter from that same brand on slot 0 IS the
+  //     incumbent writing on the window's opening week - the exact placement that header forbids.
+  //   * the copy. `InboxSheet`/`OfferLetter` render `renewal: true` as «Another year in our kit»;
+  //     without it the paper says «A kit deal for your daughter» and INTRODUCES a brand she has worn
+  //     all season. Of the two letters only one is true.
+  //   * suppressing the renewal instead would make the relationship depend on a competing letter's
+  //     dice, and «⚠ NO DICE» is a pinned property of it: a girl who clears no rung at all still
+  //     hears from the brand she has been with.
+  // Read off `dealEndingWithSeason`, the same call the closing week makes to find who may renew, so
+  // the two halves cannot disagree about who the incumbent is. A deal that is NOT ending stops the
+  // window on its own (`seasonSpokenFor`, above), and a brand that was let down never reaches here
+  // at all - `reviewSponsors` skips the whole call. No new state and no migration: the fact is
+  // already in `offers`.
+  const incumbent = dealEndingWithSeason(offers, week)
+  const incumbentTier = (incumbent?.terms as { tier?: SponsorTier } | undefined)?.tier
+  if (incumbentTier) alreadyWritten.add(incumbentTier)
   // Every rung whose turn has come by this week - which for a career that has been here all along is
   // "the one whose turn is today", because the earlier ones have already written or already missed.
   const dueThrough = Math.min(sponsorWindowSlot(week), SPONSOR_LETTER_WEEKS - 1)
@@ -775,8 +813,10 @@ export function raiseKitOffers(args: {
     if (!tier) break
     const id = kitOfferId(opened + slot)
     if (offers.some((o) => o.id === id)) continue
-    // ⭐ ONE LETTER PER RUNG PER WINDOW. A brand that has already written this winter does not write
-    // again because the ladder moved under it.
+    // ⭐ ONE LETTER PER BRAND PER WINDOW, and the rung IS the brand (each tier has exactly one name
+    // in `ECONOMY.sponsorship`). A brand does not write twice because the ladder moved under it
+    // (round 17 #27), and it does not write as a stranger on top of the renewal it is going to send
+    // on the closing week (round 28 #17).
     if (alreadyWritten.has(tier)) continue
     const terms = kitTermsFor(standing, tier)
     if (!terms) continue

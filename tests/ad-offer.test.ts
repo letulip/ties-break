@@ -53,10 +53,11 @@ import {
   type WorldState,
 } from '../src/engine/world'
 import { resumeMain } from '../src/engine/rng'
-import { activeAdDeal, adOfferId, adShootWeek, adSpokenFor, adWritesAt, chooseShootWeeks, hasLiveOffer, isOfferLive } from '../src/engine/offers'
+import { activeAdDeal, adOfferId, adShootWeek, adSpokenFor, adWritesAt, chooseShootWeeks, expireOffers, hasLiveOffer, isOfferLive, raiseAdOffer } from '../src/engine/offers'
 import { sponsorStandingOf } from '../src/engine/world/sponsors'
 import { ECONOMY } from '../src/engine/economy'
 import { isOffSeasonWeek } from '../src/engine/season/calendar'
+import { weekLabel } from '../src/shared/dates'
 import { lookAheadFor, type CalendarWeekFacts } from '../src/composables/weekDays'
 import { DEFAULT_PROFILE, type AdOfferTerms, type Offer } from '../src/shared/protocol'
 
@@ -764,5 +765,128 @@ describe('step 2.4 – the calendar shows them coming (the D2 marker idiom)', ()
     const row = rows.find((r) => r.week === 305)
     expect(row!.kind).toBe('event') // the tournament genuinely plays – the shoot never blocks
     expect(row!.event).not.toBeNull()
+  })
+})
+
+// =================================================================================================
+// ROUND 28 #2 – HOW LONG THE PARENT ACTUALLY HAS, AND IT IS THE SAME LENGTH WHATEVER WEEK IT LANDS
+// =================================================================================================
+//
+// The owner: «Предложение от спонсора с часами пришло на сорок четвёртой неделе А на сорок восьмой
+// уже истёк срок рассмотрения мне казалось мы договаривались про 5 недель». The sponsor with the
+// watches is this letter – `ECONOMY.advertising.brand` is a watchmaker – and his arithmetic was
+// right: at four weeks a letter filed on W44 died on W47 and was gone when he opened the inbox on
+// W48. His memory is the ruling (round 28 #2), so the number moved 4 -> 5.
+//
+// ⚠ THE NUMBER IS ASSERTED AS A LITERAL HERE, DELIBERATELY, AND IT IS THE ONLY PLACE IN THIS FILE
+// THAT DOES. Every other deadline assertion in this file is written as `AD.decideWeeks - 1`, which
+// is right for them – they are about the CLOCK and must survive a retune – but it means not one of
+// them could have failed when the ruled duration was wrong. A ruling needs a test that breaks when
+// the ruling is broken, so this block reads the number the owner said out loud.
+//
+// ⚠ AND THE SECOND HALF IS WHAT HIS SAVE ACTUALLY DIAGNOSED: the ad letter's clock is PER LETTER,
+// not per batch. The kit window's letters deliberately share one deadline – every letter of a
+// winter dies when the window closes, so the first carries five weeks and the last carries two
+// (`SPONSOR_LETTER_WEEKS`, pinned in tests/offers.test.ts) – and reading that shape onto the
+// campaign letter would be a real bug, because an advertising house writes on whatever week it
+// notices her and a shared deadline would hand a late letter a window of nothing. So the shelf life
+// is measured from SEVERAL different arrival weeks and must come out the same every time.
+describe('⚠ ROUND 28 #2 – the campaign letter is five weeks of shelf life, from any arrival week', () => {
+  /** The ruled duration, written out rather than read off the constant – see the block header. */
+  const RULED_WEEKS = 5
+
+  it('the ruling: five weeks to decide, counted inclusively from the week it lands', () => {
+    // «мне казалось мы договаривались про 5 недель» – round 28 #2, and the owner's memory is the
+    // spec. The arithmetic is inclusive because that is how the paper counts: `OfferLetter` and
+    // `InboxSheet` both print `deadlineWeek - week + 1`, so the arrival week is one of the five and
+    // the letter is still answerable on the last of them.
+    expect(AD.decideWeeks).toBe(RULED_WEEKS)
+  })
+
+  /** Every week inside a span whose own dice say a house writes – so the shelf life is measured on
+   *  letters that genuinely arrive on DIFFERENT weeks rather than on one letter inspected twice. */
+  function arrivalWeeks(seed: string, from: number, span: number, want: number): number[] {
+    const weeks: number[] = []
+    for (let w = from; w < from + span && weeks.length < want; w++) {
+      if (adWritesAt(seed, w, AD.offerChance)) weeks.push(w)
+    }
+    return weeks
+  }
+
+  const SEED = 'ad-shelf-life'
+  const ARRIVALS = arrivalWeeks(SEED, 260, 200, 4)
+
+  it('fixture facts: four genuinely different arrival weeks, and not all of them are quiet ones', () => {
+    // Asserted as fixture facts first, the discipline this file already keeps: a retuned
+    // `offerChance` that stopped producing four arrivals would fail HERE rather than quietly
+    // testing one letter four times.
+    expect(ARRIVALS).toHaveLength(4)
+    expect(new Set(ARRIVALS).size).toBe(4)
+    // ...and at least one lands in a week she is PLAYING, which is what makes this letter's clock a
+    // different object from the kit window's: a shared deadline is only even expressible for letters
+    // that all arrive inside the same five off-season weeks.
+    expect(ARRIVALS.some((w) => !isOffSeasonWeek(w))).toBe(true)
+  })
+
+  it('⚠ THE SHELF LIFE: five weeks live, the sixth gone – and it does not depend on the arrival week', () => {
+    // The batch-deadline check. Four letters, four different arrival weeks, one shelf life. If the
+    // deadline were ever anchored on something SHARED – a window's close, a season's end, a fixed
+    // decision week – the later arrivals would come out shorter than the earlier ones, which is
+    // exactly the shape the owner's save shows for the KIT letters (`kit-671`, `kit-672` and
+    // `kit-673` all expiring together on 675, deliberately). Here it must be flat.
+    for (const arrival of ARRIVALS) {
+      const world = probeWorld(SEED, arrival, 150, true)
+      reviewAdOffer(world)
+      const post = adPost(world)
+      expect(post, `no letter arrived on week ${arrival}`).toHaveLength(1)
+      const offer = post[0]
+      expect(offer.week).toBe(arrival)
+      // What the paper says, in the paper's own arithmetic: `deadlineWeek - week + 1`.
+      expect(offer.deadlineWeek - offer.week + 1, `week ${arrival} got a different shelf life`).toBe(RULED_WEEKS)
+      // ...and what the parent can actually DO, week by week, which is the claim the number stands
+      // for. Live on all five, including the last; gone on the sixth.
+      for (let n = 0; n < RULED_WEEKS; n++) {
+        expect(isOfferLive(offer, arrival + n), `dead on week ${n + 1} of ${RULED_WEEKS}`).toBe(true)
+      }
+      expect(isOfferLive(offer, arrival + RULED_WEEKS)).toBe(false)
+    }
+  })
+
+  it('⚠ ...and the engine really does take it away on the week after the last one', () => {
+    // `isOfferLive` is a predicate; `expireOffers` is the thing that acts. The owner's report is
+    // about the second one – he opened the inbox and the letter was gone – so this asks the engine
+    // rather than the predicate, from the LAST live week, so it fails if the boundary moves either
+    // way.
+    const arrival = ARRIVALS[0]
+    const world = probeWorld(SEED, arrival, 150, true)
+    reviewAdOffer(world)
+    const offer = adPost(world)[0]
+    world.week = arrival + RULED_WEEKS - 1
+    expireOffers(world.offers, world.week)
+    expect(offer.state, 'the letter lapsed on the last week he was promised').toBe('open')
+    world.week = arrival + RULED_WEEKS
+    expireOffers(world.offers, world.week)
+    expect(offer.state).toBe('expired')
+  })
+
+  it('his own report, replayed: filed on W44, still answerable on W48', () => {
+    // The complaint as a sentence the engine can be asked, in the labels he read off the screen.
+    // `weekLabel` is 1-based, so his "W44" is season week 43 – the arrival is placed there directly
+    // rather than hunted for, because this test is about the arithmetic and not about the dice.
+    const world = probeWorld('ad-w44', 300, 150, true)
+    const filedOn = Math.floor(300 / 52) * 52 + 43 // season week 43 prints as "W44"
+    world.week = filedOn
+    raiseAdOffer(
+      world.offers,
+      world.week,
+      { brand: AD.brand, cashCents: AD.cashCents, termWeeks: AD.termWeeks, shootCount: AD.shootWeeksPerTerm },
+      world.week + AD.decideWeeks - 1,
+    )
+    const offer = adPost(world)[0]
+    expect(weekLabel(offer.week)).toContain('W44')
+    expect(weekLabel(filedOn + 4)).toContain('W48') // the week he came back and found it gone
+    expect(isOfferLive(offer, filedOn + 4), 'the letter he came back for on W48 had already lapsed').toBe(true)
+    // ...and it is still a real deadline rather than an open-ended one: W49 is too late.
+    expect(isOfferLive(offer, filedOn + 5)).toBe(false)
   })
 })

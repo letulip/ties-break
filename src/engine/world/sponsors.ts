@@ -574,10 +574,12 @@ export function reviewAdOffer(world: WorldState): void {
   if (adSpokenFor(world.offers, world.week)) return
   if (!adWritesAt(world.seed, world.week, s.offerChance)) return
   // Terms are frozen at arrival from the catalogue – the snapshot rule – and the deadline gives him
-  // the kit window's own four weeks to think. `shootCount` is on the paper from the first read (step
-  // 2, §4a): the letter states its own price in time, and a catalogue retune between arrival and
-  // signature cannot change what this letter promised. The WEEKS themselves are the signature's to
-  // name – see `acceptOffer`.
+  // `ECONOMY.advertising.decideWeeks` counted INCLUSIVELY from today, so the arrival week is one of
+  // them and the letter is still answerable on the last (round 28 #2: it was four, the owner's
+  // ruling is five, and the constant's own comment carries the argument). `shootCount` is on the
+  // paper from the first read (step 2, §4a): the letter states its own price in time, and a
+  // catalogue retune between arrival and signature cannot change what this letter promised. The
+  // WEEKS themselves are the signature's to name – see `acceptOffer`.
   raiseAdOffer(
     world.offers,
     world.week,
