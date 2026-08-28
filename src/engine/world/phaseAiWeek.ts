@@ -329,7 +329,47 @@ function runAiTournament(
     }
     world.results.push({ playerId, week: world.week, points: pts[finish] ?? 0, tier: event.tier })
   }
+  recordTourChampion(world, event, result)
   announceTourChampion(world, event, result)
+}
+
+/** THE WINNER OF A RESOLVED BRACKET, or null if it produced none. `runTournament` stamps her
+ *  explicitly – `finishes[alive[0].id] = 0` (season/tournament.ts) – so this reads a decision that
+ *  has already been made rather than re-deriving one.
+ *
+ *  ⚠ ONE FUNCTION FOR BOTH READERS, and that is the point of extracting it. The tally below and the
+ *  news line further down must never disagree about who won a tournament; two copies of
+ *  `find(([, f]) => f === 0)` are two chances for a later change to make them. */
+function championOf(result: TournamentResult): string | null {
+  return Object.entries(result.finishes).find(([, f]) => f === 0)?.[0] ?? null
+}
+
+/** ⭐⭐ v65 – THE CHAMPION IS WRITTEN DOWN. One line of bookkeeping against a defect that had run
+ *  since the canonical brackets existed: every AI tournament in the game computed its winner and
+ *  then discarded her.
+ *
+ *  ⚠ WHY THIS IS NOT A LEDGER ROW, and it is v53's measured argument rather than a preference.
+ *  `world.results` is pruned on a 52-week window sized for 199 people and is what `computeRanking`
+ *  reads; ~30 canonical champions a week would be ~30 rows a week into the structure the STANDINGS
+ *  are made of, and a change that moves a ranking is a change to the world. This moves nothing: it
+ *  is a tally nothing but a census reads, two numbers deep by (rung, champion).
+ *
+ *  ⚠ ZERO RNG, ZERO DRAWS, POST-DRAW BY CONSTRUCTION. The bracket has already been resolved by the
+ *  time this runs – `result.finishes` is a table being read, not rolled – so the frozen MAIN capture
+ *  (41550 / e6b0c709) cannot see this and neither can any sub-stream.
+ *
+ *  ⚠ EVERY EVENT, THE KID'S INCLUDED, which is the one place this deliberately differs from
+ *  `announceTourChampion` below. That function skips the event she ENTERED because her shadow run
+ *  and the canonical bracket are two universes for one event id and two champions in one week's news
+ *  would be a lie about the story. This is not news: it is the field's record of the field's own
+ *  tour, so it holds the canonical winner of every bracket that ran and the tally therefore counts
+ *  exactly as many titles as there were AI tournaments. */
+function recordTourChampion(world: WorldState, event: SeasonEvent, result: TournamentResult): void {
+  const championId = championOf(result)
+  if (!championId) return
+  world.fieldSeasonTitles ??= {}
+  const rung = (world.fieldSeasonTitles[event.tier] ??= {})
+  rung[championId] = (rung[championId] ?? 0) + 1
 }
 
 // WHICH RUNGS' CANONICAL CHAMPIONS MAKE THE NEWS – now `tierMakesWorldNews` in world/matchNews.ts,
@@ -399,7 +439,9 @@ function championNote(world: WorldState, championId: string): string {
 function announceTourChampion(world: WorldState, event: SeasonEvent, result: TournamentResult): void {
   if (!tierMakesWorldNews(event.tier)) return
   if (world.entries.includes(event.id)) return
-  const championId = Object.entries(result.finishes).find(([, f]) => f === 0)?.[0]
+  // ⚠ v65: THE SAME `championOf` THE TALLY USES – see its note. The line and the record can no
+  // longer name different winners, because there is only one function that names one.
+  const championId = championOf(result)
   if (!championId) return
   addEvent(world, {
     week: world.week,

@@ -8,7 +8,7 @@ Regenerate with `node scripts/world-map.mjs`; `node scripts/world-map.mjs --chec
 
 **Do not read this file to answer one question** – that is the habit it exists to replace. `node scripts/world-map.mjs <symbol>` prints the owner and the line, and a plain `grep <symbol> tools/generated/world-symbol-map.md` does the same for a partial name.
 
-323 exported names across 39 owning modules.
+324 exported names across 39 owning modules.
 
 ## Areas
 
@@ -22,9 +22,9 @@ Regenerate with `node scripts/world-map.mjs`; `node scripts/world-map.mjs --chec
 | `src/engine/world/birthday.ts` | HER BIRTHDAY, AND WHAT YOU GIVE HER | 15 |
 | `src/engine/world/coachMarket.ts` | THE COACH MARKET: who is available at her age and rung, what they cost, and what hiring one does | 15 |
 | `src/engine/world/masseur.ts` | THE MASSEUR: the first seat of the travelling team (docs/plans/the-travelling-team-2026-08.md, step 1 – the owner's ruling Б, re-cut 22.08) | 15 |
+| `src/engine/world/sponsors.ts` | THE MONEY FROM OUTSIDE THE FAMILY: sponsors, the offers they make, and what a trip costs once somebody else is helping pay for it | 14 |
 | `src/engine/world/endings.ts` | THE ENDINGS, WIRED INTO THE WORLD: the latch, the two questions, the four-year freeze and the guard that stops a stale screen mutating a career that has stopped | 13 |
 | `src/engine/world/multiWeek.ts` | ⭐ R2-13 PHASE 1 – THE FOUR-WEEK ADVANCE, AND THE TWO FACTS A SECOND WEEK BUTTON NEEDS | 13 |
-| `src/engine/world/sponsors.ts` | THE MONEY FROM OUTSIDE THE FAMILY: sponsors, the offers they make, and what a trip costs once somebody else is helping pay for it | 13 |
 | `src/engine/world/shop.ts` | ⭐⭐ THE SHOP, SLICE 1 – the tab, static prices, buy / own / sell | 12 |
 | `src/engine/world/mandatory.ts` | THE MANDATORY REGIME AND THE PENALTY LEDGER (W3-ACT2, act2-pro-tour.md §6) | 11 |
 | `src/engine/world/age.ts` | HER AGE: the band and the girl, and the birthday that lands in the feed | 9 |
@@ -254,6 +254,25 @@ THE MASSEUR: the first seat of the travelling team (docs/plans/the-travelling-te
 - `setMasseurSessions` – `src/engine/world/masseur.ts`
 - `setMasseurTravels` – `src/engine/world/masseur.ts`
 
+### `src/engine/world/sponsors.ts`
+
+THE MONEY FROM OUTSIDE THE FAMILY: sponsors, the offers they make, and what a trip costs once somebody else is helping pay for it.
+
+- `acceptOffer` – `src/engine/world/sponsors.ts`
+- `appearanceFeeFor` – `src/engine/world/sponsors.ts`
+- `bankSponsorCheque` – `src/engine/world/sponsors.ts`
+- `coachTravelFareFor` – `src/engine/world/sponsors.ts`
+- `declineOffer` – `src/engine/world/sponsors.ts`
+- `isRetainerWeek` – `src/engine/world/sponsors.ts`
+- `localSponsorCents` – `src/engine/world/sponsors.ts`
+- `masseurTravelFareFor` – `src/engine/world/sponsors.ts`
+- `resultBonusFor` – `src/engine/world/sponsors.ts`
+- `reviewAdOffer` – `src/engine/world/sponsors.ts`
+- `reviewSponsors` – `src/engine/world/sponsors.ts`
+- `rolloverKitAllowance` – `src/engine/world/sponsors.ts`
+- `sponsorNeedMet` – `src/engine/world/sponsors.ts`
+- `travelCostFor` – `src/engine/world/sponsors.ts`
+
 ### `src/engine/world/endings.ts`
 
 THE ENDINGS, WIRED INTO THE WORLD: the latch, the two questions, the four-year freeze and the guard that stops a stale screen mutating a career that has stopped.
@@ -289,24 +308,6 @@ THE ENDINGS, WIRED INTO THE WORLD: the latch, the two questions, the four-year f
 - `SpanWeek` *(type)* – `src/engine/world/multiWeek.ts`
 - `spanWorthOffering` – `src/engine/world/multiWeek.ts`
 - `stoppableOfferWeek` – `src/engine/world/multiWeek.ts`
-
-### `src/engine/world/sponsors.ts`
-
-THE MONEY FROM OUTSIDE THE FAMILY: sponsors, the offers they make, and what a trip costs once somebody else is helping pay for it.
-
-- `acceptOffer` – `src/engine/world/sponsors.ts`
-- `appearanceFeeFor` – `src/engine/world/sponsors.ts`
-- `coachTravelFareFor` – `src/engine/world/sponsors.ts`
-- `declineOffer` – `src/engine/world/sponsors.ts`
-- `isRetainerWeek` – `src/engine/world/sponsors.ts`
-- `localSponsorCents` – `src/engine/world/sponsors.ts`
-- `masseurTravelFareFor` – `src/engine/world/sponsors.ts`
-- `resultBonusFor` – `src/engine/world/sponsors.ts`
-- `reviewAdOffer` – `src/engine/world/sponsors.ts`
-- `reviewSponsors` – `src/engine/world/sponsors.ts`
-- `rolloverKitAllowance` – `src/engine/world/sponsors.ts`
-- `sponsorNeedMet` – `src/engine/world/sponsors.ts`
-- `travelCostFor` – `src/engine/world/sponsors.ts`
 
 ### `src/engine/world/shop.ts`
 

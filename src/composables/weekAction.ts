@@ -105,7 +105,12 @@ export interface WeekAction {
  *  tournament sets `pendingTournament` inside the tick and halts the span there, so nothing is
  *  skipped and the flow opens exactly as it would have on the fourth separate press. Re-deriving
  *  "what is in week +3" here would be a second stopping model, which is the one thing R2-13 forbids. */
-const QUIET_AHEAD: ReadonlySet<WeekAheadKind> = new Set<WeekAheadKind>(['training', 'exam', 'off-season'])
+// ⭐ ROUND 28 #6 – 'shoot' JOINS THE QUIET SET, and that is a decision not to change anything. A
+// shoot week is «not blocked and not double-charged»: the engine ticks straight through it, so a
+// span pill that stood down in front of one would be a refusal nothing enforces – the R10-16
+// dead-ish control, and the two-readers-disagreeing failure `multiOffered`'s own note is about.
+// Before this round the same week was reported as 'training' and offered the span; it still is.
+const QUIET_AHEAD: ReadonlySet<WeekAheadKind> = new Set<WeekAheadKind>(['training', 'shoot', 'exam', 'off-season'])
 
 /** THE ONE ANSWER both week controls read. Precedence is `useWeekAhead`'s, deliberately: a paused
  *  reveal owns the press first, and everything else follows the "most committed first" order the

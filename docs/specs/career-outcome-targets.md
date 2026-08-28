@@ -20,9 +20,58 @@ were confused once already in discussion, and the multiplication is where the de
 | Family did not go bankrupt, 14→18 | **60-80%** (of all starts) | — |
 | Saw the pro contour ($15k-analog events) | **50-65%** | ~35-45% |
 | Lives from tennis (~top-250 analog) | **15-25%** | ~10-18% |
-| Top-100 analog — a real star | **3-6%** | ~2-4% |
+| Top-100 analog — a real star, **BY 18** | **3-6%** | ~2-4% |
+| Top-100 analog, **EVER** (⚙ owner 28.08) | **30-40%**, take **35%** | – |
 | Slam-level | <1% | <1% |
 | She quit of her own accord | **5-10%**, reversible | — |
+
+## ⚠⚠ THE HORIZON MOVED AND THE TARGET DID NOT (28.08.2026)
+
+**The owner, ruling on the 93.3% we measured:** «да, я просил эту нашу оптимистичную цифру как-то
+подрезать, но не до реальных 3-6%, конечно, надо что-то более "игровое"».
+
+⭐⭐ **He is right, and the reason is stronger than "it is a game".** This whole ladder was written
+for a **14→18** career – its own prose says so, «a 14→18 career is four seasons of real play». The
+game now runs **thirteen-plus seasons to 26 and beyond**; his own save is week 675. **A target set
+for «by 18» has been read ever since as «ever», and those are different claims.**
+
+⭐⭐⭐ **And once they are separated, the game number and the real number stop disagreeing.**
+`docs/research/real-ladder-pace.md`: *of the ITF junior top 100, **18-36% ever reach the WTA top
+100**; of the junior top 20, 61%*. She starts as a talented junior. **So «ever» is honestly 20-30%,
+and 3-6% was never the lifetime figure – it is roughly the by-18 figure, which is the one this table
+was built to hold.**
+
+⚠⚠ **AND 3-6% WAS NOT REACHABLE ANYWAY.** The `potentialBand` sweep measured a floor of **8.1%**:
+about 9% of girls are born with a ceiling above what #100 requires, so no tuning of the band can go
+below it. The old target was not merely harsh, it was unbuildable with the levers we have. **25% is.**
+
+⚠ Measured today: **93.3%** (`how-fast-she-grows-2026-08.md`, 90 careers × 4 manager arms). The
+managers bracket it – 12.08 `player` policy **8.8%**, `grinder` **0.0%** – so the parent's play
+already moves this outcome across almost the whole range. ⭐ **What needs moving is where a
+competently played career lands, not how much the parent matters.**
+
+| | |
+| --- | --- |
+| measured today | **93.3%** |
+| ⚠ floor reachable via `potentialBand` | **8.1%** |
+| by-18 target, unchanged | 3-6% |
+| ⚙ **lifetime target, HIS RULING** | **35%** (band 30-40%) |
+
+⚙ **SETTLED 28.08 at 35%.** He pushed back on my 25% – «не слишком жестко, как думаешь? может 30-40%
+хотя бы?» – and he is right, for two reasons that are this document's own:
+
+1. ⭐ **The target describes a COMPETENTLY PLAYED career, not a random girl.** The real 18-36% is
+   every junior top-100 taken together, most of them unmanaged. A parent who played thirteen seasons
+   deliberately belongs in the UPPER half of that band, not its middle.
+2. ⭐⭐ **This document's own rule against hidden content.** At 25%, three careers in four never see
+   the WTA storeys, the shop or the cabinet we build for them – «That is not honest difficulty, it
+   is hidden content» applies to itself.
+
+⚠ **40% is the CEILING, not the target**: above it «a real star» stops being scarce.
+
+⭐⭐⭐ **And the scarcity moves UP rather than away.** The game now runs thirteen-plus seasons with a
+full WTA storey; the top 100 is a mid-career waypoint, not the ending. **«Almost none» belongs at
+top-10 and Slam now** – rungs this table does not yet carry and should.
 
 ## Why these, and not the honest real-world numbers
 Reality is harsher: ~70% of children leave organised sport by 13, and of juniors identified as

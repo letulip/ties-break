@@ -684,6 +684,26 @@ function entryVerdict(
   availability = true,
 ): EntryStatus {
   const tier = TIERS[event.tier]
+  // ⭐⭐ THE DOOR THAT HAS SHUT BEHIND HER OUT-RANKS EVERY LADDER SENTENCE (round 28 #12 Part 0).
+  // `availabilityStatus` has always carried the age gate, but it runs AFTER this function's ladder
+  // arms, so an aged-out rung was refused by whichever ladder rule happened to fire first - and on
+  // the owner's save at 26 that produced «Junior Tour 60 takes the top 100 – she has no
+  // international ranking yet» and «Junior Tour 300 takes the top 50 – she has no international
+  // ranking yet», sentences that invite a twenty-six-year-old to go and earn a junior ranking. j30
+  // read correctly the whole time purely because its arm has no acceptance list to refuse her with,
+  // which is how the inconsistency hid: one of the three J rungs told the truth.
+  //
+  // ⚠ 'old' ONLY. The 'young' end stays exactly where it is, in `availabilityStatus`, because it is
+  // a countdown rather than a closed door and nothing about its precedence has ever been wrong.
+  // ⚠ AND IT IS THE SAME `tierAgeBlock` `tierOpenFor` NOW ASKS, so the calendar and the turnstile
+  // shut an aged-out rung on one function's answer (R10-5).
+  if (tierAgeBlock(event.tier, kidAgeAt(world, event.week)) === 'old') {
+    return {
+      level: 'blocked',
+      reason: 'unavailable',
+      detail: `${tier.label} is under-${tier.maxAgeYears! + 1} – at ${kidAgeAt(world, event.week)} she has aged out.`,
+    }
+  }
   // AN ITF OR WTA RUNG IS AN ACCEPTANCE LIST, not a points threshold (docs/specs/two-ladders.md).
   // She gets in on her RANK IN THAT TABLE, the same signal the AI field is drawn on, so the two
   // sides of the same event finally obey the same rule - see rank-plateau.md 2b for what it cost
@@ -844,6 +864,20 @@ function entryVerdict(
       }
     }
     return availability ? availabilityStatus(world, event) : { level: 'ok' }
+  }
+  // ⭐⭐ THE PLAY DOWN RULES ON THE DOMESTIC LADDER, ASKED FIRST (round 28 #12 Part 0, docs/specs/
+  // the-calendar-she-can-reach-2026-08.md). Same position and same reason as the W arm's copy
+  // twenty lines up: it is a LADDER fact about her standing, and it has to out-rank the points floor
+  // below because that floor is denominated in a currency a world-tour player stops earning. The
+  // owner's save at 26, WTA #110, read «Not enough national pts for Regional Championship yet (need
+  // 65)» - said to the world number one hundred and ten. The rule has not changed; the sentence it
+  // is refused with has, and `playDownRefusalDetail` writes it in one place for both surfaces.
+  if (playDownBars(world, event.tier)) {
+    return {
+      level: 'blocked',
+      reason: 'locked',
+      detail: playDownRefusalDetail(event.tier, rankIn(world, 'wta')),
+    }
   }
   const minPoints = tier.enterPointBand[0]
   const points = kidPoints(world, 'domestic')

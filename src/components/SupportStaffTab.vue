@@ -34,6 +34,18 @@
 import { computed, ref } from 'vue'
 import { useGameStore } from '../stores/game'
 import ConfirmDialog from './ConfirmDialog.vue'
+// ⭐⭐ ROUND-28 #8's FOLLOW-UP – the household's week, the SAME component the Coaches tab mounts.
+//
+// The owner, having approved the strip there («это хорошо»): «а мы можем эту шкалу на вкладке
+// массажиста тоже показывать?» – and his reasoning decides where it goes. A salary on this payroll
+// is one of the lines that strip TOTALS, and the dial that sets its size is on this tab, so this was
+// the one screen where a rung could be chosen without seeing what the rung does to the week.
+//
+// ⚠⚠ THE SAME COMPONENT, NOT THE SAME MARKUP. `HouseholdStrip` reads `coachBilling.household` itself
+// and takes NO PROPS, so neither tab can hand it a different number and there is no second
+// computation to drift. Two tabs quoting one figure from two implementations is the defect class
+// this strip was written to fix one level down – see the component's own header.
+import HouseholdStrip from './HouseholdStrip.vue'
 import { MASSEUR_LOCKED_DETAIL } from '../engine/world/masseur'
 // v59 step 2 - the dial's option table. A static market catalogue in the same register as
 // `COACH_TIER_LABEL` next door: labels and prices keyed on nothing the world decides, so reading it
@@ -192,6 +204,27 @@ async function doRelease(): Promise<void> {
 </script>
 
 <template>
+  <!-- ⭐⭐ ROUND-28 #8's FOLLOW-UP – THE HOUSEHOLD'S WEEK, ON THE TAB THAT SETS ONE OF ITS LINES.
+       The owner approved the strip on the Coaches tab and asked in the same breath for it here too;
+       his words are quoted verbatim in the script block above, where the house fence allows them.
+       ⚠ NO CYRILLIC INSIDE A TEMPLATE, THIS COMMENT INCLUDED – tests/round13-nav.test.ts pins it, and
+       this very comment carried his sentence for one draft before the guard was run.
+       HIS REASONING IS THE GOOD PART. A salary on this payroll is one of the lines that strip totals,
+       and the DIAL that decides its size is a few lines down, so this was the one screen where a rung
+       could be chosen without seeing what the rung does to the week. Pressing one now moves the OUT
+       figure in place.
+       ⚠⚠ THE SAME COMPONENT, NOT THE SAME MARKUP. `HouseholdStrip` reads
+       `snapshot.coachBilling.household` itself and takes no props, so neither tab can hand it a
+       different number and there is no second computation to drift – see its own header, and
+       tests/component/round28-household-shared.test.ts, which mounts both surfaces against one world
+       and asserts they print the same string.
+       ⚠ ABOVE THE ROSTER RATHER THAN BELOW IT, matching where it sits one tab over: the budget is
+       the context you read the prices in, and this chapter exists because the owner could not find
+       something that was at the bottom of a long page. -->
+  <section class="budget-meter staff-budget">
+    <HouseholdStrip />
+  </section>
+
   <!-- ⚠ THE HEAD IS THE MEMBER, NOT THE GROUP, AND THAT IS THE ONE THING THE MOVE CHANGED. The block
        used to be headed «Support staff / $150 /wk» with his name repeated inside the card, because
        the group had exactly one member and no tab of its own. The tab now says «Support staff», so
@@ -338,5 +371,11 @@ async function doRelease(): Promise<void> {
 }
 .staff-travel {
   margin-top: 8px;
+}
+/* ⭐ ROUND-28 #8's follow-up – the frame the household strip sits in at the head of this tab. It
+   borrows `.budget-meter` (global) for the padding and the radius so the two tabs' strips are the
+   same object, and adds only the gap to the first payroll head below it. */
+.staff-budget {
+  margin-bottom: 12px;
 }
 </style>

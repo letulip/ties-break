@@ -17,6 +17,7 @@
 //   4. THE CALENDAR AND THE TURNSTILE AGREE (R10-5), and the refusal says what is hers instead.
 import { describe, it, expect } from 'vitest'
 import {
+  activeLadderOf,
   createWorld,
   entryStatus,
   kidAgeYears,
@@ -28,7 +29,7 @@ import {
   KID_ID,
   type WorldState,
 } from '../src/engine/world'
-import { TIER_LADDER, W_SERIES } from '../src/engine/season/calendar'
+import { TIERS, TIER_LADDER, W_SERIES } from '../src/engine/season/calendar'
 import { resumeMain } from '../src/engine/rng'
 import type { SeasonEvent, TierId } from '../src/engine/season/types'
 
@@ -161,10 +162,50 @@ describe('it is the ITF World Tennis Tour\'s rule, about the ITF World Tennis To
     }
   })
 
-  it('the junior and domestic ladders are not its business either', () => {
+  // ⚠⚠ RE-AIMED 28.08 BY ROUND 28 #12 PART 0, NOT WEAKENED – and the re-aim is the whole point of
+  // the case rather than a hole in it. This used to read "the junior and domestic ladders are not
+  // its business EITHER" and swept all of `NOT_W`. The DOMESTIC ladder is now its business, on a
+  // second and separate source: the two rank cuts above are quoted from the 2026 WTT Regulations,
+  // which govern the ITF's own events; `PLAY_DOWN.domesticFromProTable` is act2-pro-tour.md §4's
+  // «Если national доступен - показывать только их» taken to its end, and it is a TABLE test rather
+  // than a rank cut precisely because no regulation has a number for a ladder that is ours.
+  //
+  // WHAT THE CASE STILL PROVES, and it is the claim that mattered: the two RANK limbs remain about
+  // the W series alone. A rank inside #1 bars nothing on the junior tour, and – asserted below on a
+  // world that is NOT on the professional table – nothing on the domestic ladder either. So the
+  // scope note this section exists for is intact: the cuts did not leak, a limb was added beside
+  // them.
+  it('the junior ladder is not its business, and neither is the domestic one on rank', () => {
     const world = proWorld('pd-scope-j')
     atRank(world, 1)
-    for (const t of NOT_W) expect(playDownBars(world, t), t).toBe(false)
+    for (const t of NOT_W.filter((t) => TIERS[t].track !== 'domestic')) {
+      expect(playDownBars(world, t), t).toBe(false)
+    }
+    // THE RANK LIMBS DO NOT REACH THE DOMESTIC LADDER: a girl at #1 of a table she is not on keeps
+    // her club draws, because the domestic limb asks which TABLE is hers and nothing about a cut.
+    const domestic = createWorld('pd-scope-domestic')
+    domestic.results.push({ playerId: KID_ID, week: domestic.week, points: 300, tier: 'national' })
+    recomputeKidRank(domestic)
+    domestic.kidRankWta = 1
+    expect(activeLadderOf(domestic), 'she has never played a professional event').toBe('domestic')
+    for (const t of NOT_W) expect(playDownBars(domestic, t), t).toBe(false)
+  })
+
+  it('⭐ THE DOMESTIC LIMB (round 28 #12 Part 0): it is the professional TABLE that shuts the club draws', () => {
+    // The owner's save at 26, WTA #110: `Local Open` open with `outgrown=n` on a domestic book of
+    // zero, and Regional refused for want of national points she can no longer earn. Both ceilings
+    // of a domestic rung are denominated in domestic points, so neither could ever fire for her.
+    const world = proWorld('pd-domestic-limb')
+    atRank(world, 400) // ⚠ well outside BOTH rank cuts – this limb is not one of them
+    expect(activeLadderOf(world)).toBe('wta')
+    for (const t of NOT_W.filter((t) => TIERS[t].track === 'domestic')) {
+      expect(playDownBars(world, t), t).toBe(true)
+      expect(tierFloorOpen(world, t), `${t} is shut on the calendar too`).toBe(false)
+    }
+    // ...and the junior tour is NOT shut by it – one table of slack, the seam round-21 #5 named.
+    for (const t of NOT_W.filter((t) => TIERS[t].track === 'itf')) {
+      expect(playDownBars(world, t), t).toBe(false)
+    }
   })
 })
 

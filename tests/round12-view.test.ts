@@ -79,7 +79,15 @@ describe('R12-1/14 — exam weeks say "Exams", in green, and the event card says
   it('the week card is titled "Exams" – the owner\'s word, not the old "School exams"', () => {
     // ⚠ RE-AIMED by wave 2 (28.07): the one-line row became a card, so the label lives in
     // `weekTitle` rather than inline in the template. The WORD is the fact R12-1/14 pinned.
-    expect(seasonScreen).toContain("row.kind === 'exam' ? 'Exams'")
+    //
+    // ⚠ RE-AIMED AGAIN, ROUND 28 #4, AND NOT WEAKENED. `weekTitle` grew a fourth answer – a shoot
+    // week names itself – so the one-line ternary this pin was reading became a guard chain and the
+    // literal `row.kind === 'exam' ? 'Exams'` no longer exists anywhere. What R12-1/14 actually
+    // pinned is the WORD and the fact that the exam week keeps it, so that is what is asked for now:
+    // the exam arm returns 'Exams', the old copy is still gone, and the card still reads the
+    // function. Matching on the RETURN rather than on the shape of the branch is also why this
+    // cannot rot the same way twice.
+    expect(seasonScreen).toMatch(/row\.kind === 'exam'\)? return 'Exams'|row\.kind === 'exam' \? 'Exams'/)
     expect(seasonScreen).not.toContain('School exams')
     expect(seasonScreen).toContain('{{ weekTitle(row) }}')
   })

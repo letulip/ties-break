@@ -16,15 +16,20 @@ import { ECONOMY } from '../economy'
 import type { LadderTrack, SeasonEvent, TierId } from '../season/types'
 import { ageFactor, SKILL_KEYS, trainFactor } from '../development'
 import { LADDER_LABEL, LADDER_TRACKS } from '../../shared/protocol'
-import type { CoachEdgePlacement, CoachMarketRow, CoachTier, KitOfferTerms, PlayerProfile } from '../../shared/protocol'
-import { parentIncomeForWeekCents } from '../economy'
+import type { CoachEdgePlacement, CoachMarketRow, CoachTier, HouseholdWeekly, KitOfferTerms, PlayerProfile } from '../../shared/protocol'
+import { kidPrizeShareCents, parentIncomeForWeekCents } from '../economy'
 import { activeKitDeal, kitTravelShare } from '../offers'
 // ⭐ ROUND-21 #2: the ONE fare definition, read rather than re-derived - see `coachTravelFareFor`,
 // which lives beside it in world/sponsors.ts. sponsors.ts imports nothing from this module, so this
 // runs one way exactly as `../offers` above does.
 import { coachTravelFareFor, travelCostFor } from './sponsors'
+// ⭐ ROUND-28 #8 – the other two seats the household's week has to know about. Both are leaves that
+// import nothing from this file (masseur: economy/condition/ledger/constants/ladder/college/bookings;
+// shop: economy/calendar/ladder/endings/ledger/money), so there is no runtime cycle to make here.
+import { masseurWeeklyCents } from './masseur'
+import { assetValueCents, ownedAssets, shopItem } from './shop'
 import { addEvent, seasonIndexOf, seasonStartWeek } from './ledger'
-import { ageAtWeek, START_AGE_YEARS } from './age'
+import { ageAtWeek, kidAgeAt, START_AGE_YEARS } from './age'
 import { activeLadderOf, bookClosedTo, hasOutgrown, kidPoints, tierOpenFor } from './ladder'
 import type { WorldState } from '../world'
 import { guardNotEnded } from './endings'
@@ -336,6 +341,10 @@ export function coachBilling(world: WorldState): {
    *  meter would then have printed a $0.00 weekly cap with a full bar beside it. A number the screen
    *  needs is a number the engine should hand over. */
   weeklyIncomeCents: number
+  /** ⭐⭐ ROUND-28 #8 – the whole household's week, the masseur and the shelf included. Computed from
+   *  `weeklyCents` below rather than from a second read of the coach, so the block on screen T and
+   *  the meter inside it cannot describe two different bills. See `householdWeekly`. */
+  household: HouseholdWeekly
 } {
   const age = ageAtWeek(world.week)
   const coach = coachById(world.seed, age, world.coachId)
@@ -417,6 +426,9 @@ export function coachBilling(world: WorldState): {
     // every family holding no deal that pays towards travel, which is most of them.
     coachFareCoverPct: Math.round(kitTravelShare(world.offers, world.week) * 100),
     weeklyIncomeCents: familyWeeklyIncomeCents(world),
+    // ⭐⭐ ROUND-28 #8 – and the same week, for the whole household. `weeklyCents` is handed over
+    // rather than re-derived: one bill, quoted once, read by both figures in the block.
+    household: householdWeekly(world, weeklyCents),
   }
 }
 
@@ -484,6 +496,20 @@ function coachedWeeksLostToRest(world: WorldState): number {
  *  a market that flickers. It is a contracted wage, and a wage divided by the weeks it covers is
  *  what a family can actually spend of it each week.
  *
+ *  ⚠⚠ AND THE RETAINER IS QUOTED NET OF HER CUT SINCE ROUND-28 #15. The owner ruled her prize ramp
+ *  onto sponsor cheques («с чеков спонсоров… как и с призовых»), and `payRetainer` now banks
+ *  `retainer - herShare` into `world.fundsCents`. A cap that went on quoting the GROSS would be the
+ *  round-21 #12 defect in mirror image – the same "the meter and the till disagree" failure, this
+ *  time over-reading instead of under-reading – so this is a correctness consequence of his ruling
+ *  and not a second balance decision. ⚠ WHAT IT MOVES, in closed form rather than by a bench,
+ *  because it is linear: the cap falls by `bps/10000 x retainerCents x 4 / 52` for a family holding
+ *  a kit deal, and by NOTHING AT ALL for a family holding none (most of them, and every family below
+ *  the tour rung). At the icon rung's $37,500 a quarter that is $288/wk at her first 10% and
+ *  $1,442/wk at the 50% cap; at the tour rung's $1,500 it is $11.50 and $57.70. ⚠ AND NOBODY IS
+ *  LOCKED OUT BY IT: `hireCoach` does not consult the budget at all – `overBudgetCents` colours a
+ *  card and nothing else – so a narrower cap warns, it never refuses. That is what keeps this inside
+ *  «мы ни за что не наказываем».
+ *
  *  Pure: zero draws on any stream, derived at snapshot time like everything else on this screen. */
 export function familyWeeklyIncomeCents(world: WorldState): number {
   const parents = parentIncomeForWeekCents(world.seed, world.profile.background, world.week)
@@ -493,12 +519,64 @@ export function familyWeeklyIncomeCents(world: WorldState): number {
   const interest = Math.max(0, Math.round(world.fundsCents * ECONOMY.savings.apyWeekly))
   const deal = activeKitDeal(world.offers, world.week)
   const retainerCents = deal ? ((deal.terms as KitOfferTerms).retainerCents ?? 0) : 0
-  return parents + interest + Math.round((retainerCents * RETAINERS_A_YEAR) / WEEKS_PER_YEAR)
+  // ⚠ HER CUT COMES OFF THE CHEQUE BEFORE IT IS PRO-RATED, and in that order, because that is the
+  // order the till pays in: `payRetainer` splits the quarter's cheque once and the family's part is
+  // what has to last thirteen weeks. Pro-rating first and splitting the weekly figure would round in
+  // a different place and quote a cap the ledger never delivers.
+  const familyRetainerCents = retainerCents - kidPrizeShareCents(retainerCents, kidAgeAt(world, world.week))
+  return parents + interest + Math.round((familyRetainerCents * RETAINERS_A_YEAR) / WEEKS_PER_YEAR)
 }
 
 /** How many times a signed kit deal pays its retainer in a year - `isRetainerWeek` is
  *  `week % (WEEKS_PER_YEAR / 4) === 0`, so it is four, and the two must not drift apart. */
 const RETAINERS_A_YEAR = 4
+
+/** ⭐⭐ ROUND-28 #8 – THE WHOLE HOUSEHOLD'S WEEK, and the shape of it is in `HouseholdWeekly`.
+ *
+ *  THE OWNER, 28.08: «можно совокупную всю цифру показывать с учётом массажиста (и психолога в
+ *  будущем), и даже на магазин растянуть». The block on screen T showed the COACH's line and called
+ *  it the week's spending; his masseur was $525 a week of it and was nowhere in the figure.
+ *
+ *  ⚠ THE INCOME SIDE IS `familyWeeklyIncomeCents` AND NOT A SECOND SUM OF THE SAME STREAMS. That
+ *  function is the one definition of "what arrives every week", the cap the meter draws and the
+ *  denominator every `overBudgetCents` is cut from; a household total that re-derived the parents'
+ *  contribution would be exactly the two-sides-asking-different-functions defect this file's own
+ *  round-21 #12 note was written about.
+ *
+ *  ⚠ AND THE TRAINING LINE IS THE ONE `coachBilling` QUOTES, for the same reason – `weeklyCents` is
+ *  passed IN rather than recomputed here, so the household total and the meter above it can never
+ *  describe two different coaches. It is court time alone for a self-coached family, which is the
+ *  honest answer: the family still rents the court. (The old meter read the CURRENT ROW's price and
+ *  therefore showed a self-coached family $0.00 committed while it paid the facility rate every
+ *  week – a second thing this figure quietly gets right.)
+ *
+ *  ⚠ THE MASSEUR IS GATED ON THE HIRE (`masseurHired`) AND NOT ON `masseurWorksThisWeek`, and that
+ *  is deliberate symmetry with the coach: `coachBilling.weeklyCents` is a standing QUOTE that does
+ *  not consult `coachWorksThisWeek` either, so a college freeze or a booked holiday stands both
+ *  seats down on the ledger without either of them vanishing from the family's standing budget. A
+ *  PSYCHOLOGIST joins as one more line in this list and nothing else moves.
+ *
+ *  ⚠ THE SHELF IS ONE MORE WEEK OF HOLDING, ASKED OF `assetValueCents` ITSELF. Slice 1's whole design
+ *  is that there is exactly one arithmetic for what a thing is worth (`revalueAssets` is its only
+ *  writer); a weekly rate derived from `annualRateBps` here would be a second one, and it would drift
+ *  the day slice 2 adds drift. Difference of the same function at `held` and `held + 1` – so when the
+ *  curve changes, this changes with it, for free.
+ *
+ *  Pure: zero draws on any stream, derived at snapshot time like everything else on this screen. */
+export function householdWeekly(world: WorldState, trainingCents: number): HouseholdWeekly {
+  const staffCents = (world.masseurHired ?? false) ? masseurWeeklyCents(world) : 0
+  // WHAT ONE MORE WEEK OF HOLDING DOES TO THE SHELF, signed, summed over what the family owns.
+  let shelfCents = 0
+  for (const owned of ownedAssets(world)) {
+    const item = shopItem(owned.id)
+    if (!item) continue // a rung retired from the catalogue keeps its value; see `revalueAssets`
+    const held = world.week - owned.boughtWeek
+    shelfCents += assetValueCents(item, owned.paidCents, held + 1) - assetValueCents(item, owned.paidCents, held)
+  }
+  const incomeCents = familyWeeklyIncomeCents(world) + Math.max(0, shelfCents)
+  const outgoingCents = trainingCents + staffCents + Math.max(0, -shelfCents)
+  return { incomeCents, outgoingCents, netCents: incomeCents - outgoingCents, shelfCents }
+}
 
 /** THE MARKET, as the screen needs it: every coach, priced in HER family's corridor at HER age and
  *  HER plan, read against HER game, with what each rung would add for her.

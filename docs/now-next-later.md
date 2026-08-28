@@ -26,7 +26,7 @@ last-reviewed: 2026-08-27
 
 ## Now
 
-⚙ THE LIVE WAVE IS ROUND 27 – this line is machine-checked against the newest ledger in
+⚙ THE LIVE WAVE IS ROUND 28 – this line is machine-checked against the newest ledger in
 `docs/rounds/` by `scripts/doc-facts.mjs`; edit the number only by shipping a ledger.
 
 **Round 27 is OPEN – the college mini-round** ([round-27.md](rounds/round-27.md), 27.08). Eleven

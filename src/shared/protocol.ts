@@ -208,6 +208,7 @@ export type {
 
 // --- snapshot ------------------------------------------------------------------------------------
 export type {
+  HouseholdWeekly,
   Snapshot,
 } from './protocol/snapshot'
 

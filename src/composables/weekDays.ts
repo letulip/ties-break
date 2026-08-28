@@ -150,6 +150,12 @@ export type DayKind =
   | 'school'
   /** the injury layoff covers this week */
   | 'rehab'
+  /** ⭐ ROUND 28 #6 – A DAY AT THE SPONSOR'S SHOOT. The ninth kind, and the FIRST one that is not a
+   *  whole week: a shoot week keeps her training days and gives up her free ones (see
+   *  `shootDaysFor`), so this kind lands on SOME days of an otherwise ordinary week. Everything the
+   *  grid does with it follows from that – `weekGrid.ts` shapes the day from its kind exactly as it
+   *  shapes a trip day, and every day around it is still the plan's. */
+  | 'shoot'
 
 /** THE THREE THINGS THE CROSSING-OUT ANIMATION STOPS FOR (owner: it "runs through, or PAUSES on a
  *  match / an injury / a knock and then continues").
@@ -215,6 +221,26 @@ export interface CalendarWeek {
    *  every other week. Carried as data for the same reason `offSeason` is: `weekGrid.ts` may not
    *  import from the engine, so the composer looks the booking up and the grid only ever reads. */
   vacationId?: string
+  /** ⭐ ROUND 28 #1 – THE DAYS THE MASSEUR'S TABLE IS HERS, Monday..Sunday indices, empty when
+   *  nobody is hired or the week is one he does not work.
+   *
+   *  The owner: with a masseur on the payroll, put the massage sessions the chosen TIER buys into
+   *  the week's schedule. He was already bought, billed and dialled – `ECONOMY.masseur.rungs` is
+   *  2 / 4 / 7 sessions a week – and the week never showed one of them, which is the "you paid and
+   *  cannot see it" failure the plan bans specialists for.
+   *
+   *  ⚠ IT IS EXACTLY `masseurSessionsPerWeek` ENTRIES, or none, and the weeks that get none are the
+   *  weeks the ENGINE pays him nothing for – see `masseurDaysFor` and the note above it. Carried as
+   *  DATA for the reason `offSeason` and `summer` are: `weekGrid.ts` may not ask the engine. */
+  masseurDays: number[]
+  /** ⭐ ROUND 28 #4/#6 – THE SPONSOR'S SHOOT, when this week is one of the signed deal's named shoot
+   *  weeks and the week is otherwise hers to plan. Null on every other week, and null on the five
+   *  weeks whose own identity outranks it – a layoff, a trip, a family week, the off-season and the
+   *  exam fortnight (see `calendarWeekFor`'s precedence note).
+   *
+   *  `days` are the Monday..Sunday indices the shoot took; `brand` is whose it is, so the grid and
+   *  the read-out can name it without re-deriving a deal. */
+  shoot: { brand: string; days: number[] } | null
   /** Should the days cross themselves out when the week is played? False when another surface owns
    *  the week: a tournament trip has its own flow and its own screens, and a week whose reveal is
    *  already paused is not a week anybody is about to watch pass. */
@@ -255,7 +281,17 @@ export type CalendarWeekFacts = Pick<
   // the way it marks the departure – a decision already made, visible before it arrives. Optional
   // for the same fixture reason – absence means no deal is running, which is what every fixture
   // written before it was about.
-  Partial<Pick<Snapshot, 'adShoot'>>
+  Partial<Pick<Snapshot, 'adShoot'>> &
+  // ⭐ ROUND 28 #1 – THE MASSEUR, so the week can draw the sessions his rung buys. Three facts and
+  // no fourth: is he hired, how many sessions the dial is set to, and does he travel (the one thing
+  // that decides whether a tournament week has him in it at all). Optional for the fixture reason
+  // above – absence means nobody is hired, which is what every fixture written before v59 was about.
+  Partial<Pick<Snapshot, 'masseurHired' | 'masseurSessionsPerWeek' | 'masseurTravels'>> &
+  // ...and the college freeze, which suspends BOTH of the above. The engine's own rule in both
+  // cases: `masseurWorksThisWeek` refuses inside the freeze, and `adShootHolds` swallows a shoot
+  // week the freeze covers – «no penalty, no makeup». A calendar that drew either would be the
+  // screen billing him for a week the sim gives away. Optional for the fixture reason above.
+  Partial<Pick<Snapshot, 'college'>>
 
 /** ⚠ THE SUMMER WINDOW MOVED INTO THE ENGINE (W3-SUMMER) AND IS RE-EXPORTED HERE UNDER ITS HISTORICAL
  *  NAMES, so every existing caller and every test that imports `SUMMER_WEEKS` / `isSummerWeek` from
@@ -294,6 +330,49 @@ export function layoffReturnWeek(snap: Pick<Snapshot, 'week' | 'injury'>): numbe
   return snap.injury ? snap.week + snap.injury.weeksRemaining : null
 }
 
+/** ⭐ ROUND 28 #1 – WHICH DAYS THE MASSEUR'S TABLE LANDS ON, given how many sessions the rung buys.
+ *
+ *  THE RULE IS "THE TABLE FOLLOWS THE WORK": her training days first, in day order, and then the
+ *  free ones – so the entry rung (2) is two sessions beside the two hardest days of her week and the
+ *  top rung (7) is every day, which is what «Daily» means. It returns EXACTLY `sessions` days (the
+ *  rungs are 2 / 4 / 7 and a week has seven days, so the list can never run out), which is what
+ *  makes the picture and the bill the same number: what he is paid for is what is drawn.
+ *
+ *  ⚠ DETERMINISTIC AND PLAN-SHAPED, NEVER DRAWN. Nothing in the masseur touches any RNG stream by
+ *  construction (`engine/world/masseur.ts`'s own header), and a calendar that shuffled his days week
+ *  to week would be the screen inventing a decision nobody made. */
+export function masseurDaysFor(sessions: number, planDays: readonly PlanRole[]): number[] {
+  if (sessions <= 0) return []
+  const working = planDays.flatMap((role, d) => (role === 'rest' ? [] : [d]))
+  const free = planDays.flatMap((role, d) => (role === 'rest' ? [d] : []))
+  return [...working, ...free].slice(0, sessions).sort((a, b) => a - b)
+}
+
+/** ⭐ ROUND 28 #6 – WHICH DAYS THE SHOOT TAKES, and the rule is the ENGINE'S OWN CHARGE DRAWN.
+ *
+ *  The owner asked for the shoot week to be a COMBINATION – her training days and the shoot's slots
+ *  in one week – rather than the shoot eating the week, and his ruling behind the mechanic says the
+ *  same thing from the other end: the shoots «надо ... отражать потом в свободных неделях», and the
+ *  week stays hers. `accrueCondition` implements exactly that: a shoot week recovers at the TRAVEL
+ *  figure, which is to say it keeps her sessions and FORFEITS THE REST – the slider bonus and the
+ *  masseur's table both come off, and nothing about her training moves.
+ *
+ *  So the shoot takes the days the plan left FREE, and only those. The picture is then the same
+ *  sentence the sim charges for: the training stands, the rest is what went. A plan with no free day
+ *  at all still gets one slot – a shoot named in a signed letter happens – and it takes the last day
+ *  that is not the booked friendly, because a friendly is a commitment with a date and a shoot day
+ *  inside the plan is the thing that gives.
+ *
+ *  ⚠ `planDays` AND NOT THE LIVED DAYS. On a week she is resting a knock EVERY day reads as rest,
+ *  and a shoot that swallowed all seven of them would be the shoot owning the week – exactly what
+ *  the mechanic's own design forbids. The plan is what says which days were hers to give. */
+export function shootDaysFor(planDays: readonly PlanRole[], matchIndex: number | null): number[] {
+  const free = planDays.flatMap((role, d) => (role === 'rest' && d !== matchIndex ? [d] : []))
+  if (free.length > 0) return free
+  for (let d = planDays.length - 1; d >= 0; d--) if (d !== matchIndex) return [d]
+  return []
+}
+
 /** Every day the same kind, for the five weeks that are not hers to train through. */
 function uniform(kind: DayKind, beat: DayBeat | null, note: string | null): CalendarDay[] {
   return DAY_SHORT.map((short, index) => ({
@@ -309,7 +388,14 @@ function uniform(kind: DayKind, beat: DayBeat | null, note: string | null): Cale
 /** THE LAYOUT. Precedence runs from "somebody else owns this week" down to the ordinary training
  *  week, in the same order the app already resolves a week's identity elsewhere: the body first (a
  *  layoff outranks every plan, exactly as `availabilityStatus` puts injured above everything), then
- *  the committed trip, then the bookings, then the calendar's own blackouts. */
+ *  the committed trip, then the bookings, then the calendar's own blackouts.
+ *
+ *  ⚠ AND THE SHOOT SITS AT THE BOTTOM OF THAT LIST, WHICH IS THE SAME PLACE `lookAheadFor` PUTS IT
+ *  (round 28 #6). The two surfaces must not disagree about what a week IS, and the mechanic's own
+ *  design settles the order anyway: a shoot week is «not blocked and not double-charged» – a
+ *  tournament, a family week or a layoff on a shoot week genuinely happens, and the shoot never
+ *  pretends to own the week. So `shoot` is non-null on exactly the branch where the shoot actually
+ *  shapes the days: the ordinary week, the one the owner asked to see the combination on. */
 export function calendarWeekFor(snap: CalendarWeekFacts, week: number): CalendarWeek {
   const block = surfaceBlockFor(week)
   const surface = dominantSurface(block)
@@ -324,6 +410,26 @@ export function calendarWeekFor(snap: CalendarWeekFacts, week: number): Calendar
   const sessions = planSessions(laid)
   const session = planDays.flatMap((role, d) => (role === 'rest' ? [] : [d]))
   const courtDays = planDays.filter((role) => role === 'court').length
+  // ⭐ ROUND 28 #1/#6 – THE TWO FACTS ABOUT THIS WEEK THAT ARE NOT ABOUT THE PLAN, asked once, above
+  // the branches, because the answer is the same in every one of them and a second spelling of
+  // either would be the drift this file spends its comments avoiding.
+  //
+  // ⚠ THE COLLEGE FREEZE KILLS BOTH, and that is the ENGINE's rule read back rather than a UI
+  // decision: `masseurWorksThisWeek` refuses inside the freeze and `adShootHolds` swallows a shoot
+  // week the freeze covers, so a calendar drawing either would promise work the sim does not do.
+  const frozen = snap.college != null && week < snap.college.untilWeek
+  const shooting = !frozen && (snap.adShoot?.weeks.includes(week) ?? false)
+  const bookedOff = snap.vacations.some((v) => v.week === week)
+  const awayThisWeek = snap.arrival?.week === week
+  // ⚠ AND A SHOOT WEEK BUYS NO TABLE, which is `accrueCondition`'s own line - «lights and flights,
+  // not his table», the same reason the week recovers at the travel figure at all. The other three
+  // refusals are `masseurWorksThisWeek`'s (hired, not frozen, not a booked family week) plus the
+  // step-2 rule that a masseur left at home earns nothing on the weeks she is not home: on a
+  // tournament week he is only in the picture when the fare was bought.
+  const masseurSessions =
+    (snap.masseurHired ?? false) && !frozen && !bookedOff && !shooting && (!awayThisWeek || (snap.masseurTravels ?? false))
+      ? (snap.masseurSessionsPerWeek ?? 0)
+      : 0
   const base = {
     week,
     sessions,
@@ -331,6 +437,9 @@ export function calendarWeekFor(snap: CalendarWeekFacts, week: number): Calendar
     planDays,
     surface,
     surfaceNote,
+    masseurDays: masseurDaysFor(masseurSessions, planDays),
+    // Null here and filled in on the ordinary-week branch alone - see the precedence note above.
+    shoot: null as CalendarWeek['shoot'],
     // Asked once, here, and carried on the week - see the field's note on CalendarWeek for why the
     // grid may not ask it itself. Summer travels the same way (R15-8).
     offSeason: isOffSeasonWeek(week),
@@ -459,10 +568,15 @@ export function calendarWeekFor(snap: CalendarWeekFacts, week: number): Calendar
   const knock = knockGoverns(snap.knock, week) ? snap.knock : null
   const resting = knock?.choice === 'rest'
   const knockIndex = knock ? (session[0] ?? 0) : null
+  // ⭐ ROUND 28 #6 – THE SHOOT'S OWN DAYS, on the one branch where the week is hers to combine. See
+  // `shootDaysFor` for why they are the plan's FREE days and nothing else.
+  const shootDays = shooting ? shootDaysFor(planDays, matchIndex) : []
 
   const days: CalendarDay[] = DAY_SHORT.map((short, index) => {
     const role = resting ? 'rest' : planDays[index]
-    const kind: DayKind = index === matchIndex ? 'match' : role
+    // ⚠ THE BOOKED FRIENDLY OUTRANKS THE SHOOT AND THE SHOOT OUTRANKS THE PLAN'S OWN REST. A match
+    // has a date and an opponent; a rest day is the thing the shoot week is charged for taking.
+    const kind: DayKind = index === matchIndex ? 'match' : shootDays.includes(index) ? 'shoot' : role
     const beat: DayBeat | null =
       index === matchIndex ? 'match' : knock !== null && index === knockIndex ? 'knock' : null
     return {
@@ -472,13 +586,14 @@ export function calendarWeekFor(snap: CalendarWeekFacts, week: number): Calendar
       beat,
       // Only the days that are NOT the week's default say anything: the mark carries "court" and
       // "rest", and five cells all labelled "Court" is the noise a grid is supposed to remove.
-      note: kind === 'match' ? 'Match' : kind === 'gym' ? 'Gym' : null,
+      note: kind === 'match' ? 'Match' : kind === 'shoot' ? 'Shoot' : kind === 'gym' ? 'Gym' : null,
     }
   })
 
   return {
     ...base,
     days,
+    shoot: shooting && snap.adShoot ? { brand: snap.adShoot.brand, days: shootDays } : null,
     // ⚠ THE HOLIDAYS ARE A DIFFERENT WEEK NOW, AND THE TITLE SAYS SO (W3-SUMMER). The engine develops
     // and fatigues a summer training week differently - two sessions a day, no school - so a week
     // labelled "Training week" while the sim is running a block would be the screen under-reporting a
@@ -488,7 +603,16 @@ export function calendarWeekFor(snap: CalendarWeekFacts, week: number): Calendar
     // holidays are not a block – every week is school-free and the engine prices them all the same –
     // so calling one week of July special would be the screen inventing a distinction the sim does
     // not make. She is a professional; her weeks are training weeks.
-    title: base.summer && !base.schoolOver && !resting ? 'Summer block' : 'Training week',
+    // ⭐⭐ ROUND 28 #6 – AND THE SHOOT OUTRANKS BOTH OF THEM, because the owner asked for the word by
+    // name: the button into this week says «Shooting week» (composables/weekAhead.ts) and the week's
+    // own eyebrow has to be the same word, or the press and the page it lands on are about two
+    // different weeks. A shoot is also the more specific fact: July is a season, a shoot is a date in
+    // a signed letter.
+    title: shooting
+      ? 'Shooting week'
+      : base.summer && !base.schoolOver && !resting
+        ? 'Summer block'
+        : 'Training week',
     readout: trainingReadout({
       sessions,
       courtDays,
@@ -499,6 +623,9 @@ export function calendarWeekFor(snap: CalendarWeekFacts, week: number): Calendar
       resting,
       knockPart: knock?.part ?? null,
       matchIndex,
+      shootBrand: shooting ? (snap.adShoot?.brand ?? null) : null,
+      shootDays,
+      masseurSessions: base.masseurDays.length,
     }),
   }
 }
@@ -519,13 +646,36 @@ function trainingReadout(x: {
   resting: boolean
   knockPart: string | null
   matchIndex: number | null
+  /** ⭐ ROUND 28 #6 – whose shoot this week carries, or null when it carries none. */
+  shootBrand: string | null
+  /** ...and which days it took. Empty on every week that is not a shoot week. */
+  shootDays: readonly number[]
+  /** ⭐ ROUND 28 #1 – how many massage sessions the week draws, 0 when nobody is working it. */
+  masseurSessions: number
 }): string {
+  // ⚠ THE TWO NEW CLAUSES ARE SUFFIXES, NEVER REPLACEMENTS. The sentence under the grid IS the
+  // legend, and the plan is the thing it legends; a shoot that ATE the sentence would tell the
+  // parent less about the week than the week before it, which is the opposite of what the owner
+  // asked for («комбинации ... тренировочных дней и слоты фотосессии»).
+  const shoot =
+    x.shootBrand === null || x.shootDays.length === 0
+      ? ''
+      : x.shootDays.length === 1
+        ? ` ${x.shootBrand} shoot on ${DAY_LONG[x.shootDays[0]]}.`
+        : ` ${x.shootBrand} shoot takes ${x.shootDays.length} of her free days.`
+  // ⭐ ROUND 28 #1 – what the rung actually bought, in the week it bought it for. `masseurSessions`
+  // is the drawn count and not the dial, so a week he does not work says nothing rather than
+  // promising sessions the ledger will not bill.
+  const table =
+    x.masseurSessions === 0
+      ? ''
+      : ` Masseur in ${x.masseurSessions} ${x.masseurSessions === 1 ? 'day' : 'days'} of the week.`
   if (x.resting) {
     // ⚠ A BOOKED FRIENDLY IS NOT CANCELLED BY A RESTED KNOCK - only `rollInjury` cancels bookings - so
     // when the two land on one week the sentence names the tension instead of hiding it behind a
     // "she is resting" the Saturday mark would immediately contradict.
     const match = x.matchIndex === null ? '' : ` The booked match on ${DAY_LONG[x.matchIndex]} still stands.`
-    return `Resting the ${x.knockPart ?? 'knock'} – off the training court all week.${match}`
+    return `Resting the ${x.knockPart ?? 'knock'} – off the training court all week.${match}${shoot}${table}`
   }
   // ⚠ THE TWO-A-DAY SENTENCE NOW FOLLOWS WHAT HE BUILT, NOT WHAT MONTH IT IS (v47, spec §3). It used
   // to fire on `summer`/`schoolOver` alone: «N days on, two sessions a day – no school, so the work
@@ -548,7 +698,7 @@ function trainingReadout(x: {
             : `${x.sessions} sessions – ${x.courtDays} on court, ${x.gymDays} in the gym.`
   const match = x.matchIndex === null ? '' : ` Practice match on ${DAY_LONG[x.matchIndex]}.`
   const knock = x.knockPart === null ? '' : ` She is training on a sore ${x.knockPart}.`
-  return `${plan}${match}${knock}`
+  return `${plan}${match}${knock}${shoot}${table}`
 }
 
 // =================================================================================================

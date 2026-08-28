@@ -215,7 +215,29 @@ import type { AcademySupport } from '../academy'
 // shelf, no command and no ledger row, so there is no earlier evidence to mine and an invented row
 // would hand a family a car it never chose. Pure state, zero draws on any stream, so the frozen MAIN
 // capture (41550 / e6b0c709) cannot see it.
-export const SAVE_SCHEMA_VERSION = 64
+// ⭐⭐⭐ v64 (round 27 #6, THE NATIONS CUP TIE IS WALKED AND NOT REPORTED): `CollegeState.callUpReveal`
+// – a second optional reveal beside v60's `leagueReveal`, back-filling NULL. ⚠ ADDED HERE BY THE
+// MERGE OF 28.08, NOT BY ITS OWN WAVE: PR #112 shipped the field, the migration, the fixture and the
+// README row and left this ladder – the only place that reads as the complete list – one rung short
+// at v63. A ladder with a hole in it is how the next reader picks the wrong number for the next
+// bump, which is exactly what happened on the branch below.
+// ⭐⭐⭐ v65: `fieldSeasonTitles` – WHO WON EACH AI TOURNAMENT. `runAiTournament` has always computed
+// the champion of every canonical bracket and then dropped her on the floor; this is the tally that
+// keeps her. Same family, same lifecycle and same argument as v53's `fieldSeasonPoints` one rung
+// below – a per-season TALLY, not rows – and it is the second half of the same repair: v53 kept what
+// the field EARNED, this keeps what the field WON.
+// ⚠ THE BACK-FILL IS EMPTY AND IT IS A PRESERVATION, exactly as v53's was: every career saved before
+// this build was played on an engine that discarded the champion, so an empty tally is precisely what
+// those seasons contained, and it fills itself from the next tournament week on. Pure post-draw
+// bookkeeping – the finish is already decided when it is read – so zero draws on any stream and the
+// frozen MAIN capture (41550 / e6b0c709) cannot see it.
+// ⚠⚠ AND IT SHIPPED AS v64 ON ITS OWN BRANCH, WHICH IS THE REASON THIS COMMENT NAMES 65. The wave was
+// built off round 28's ledger branch while that branch still read 63, so it did the whole three-part
+// move correctly against the only chain it could see – and `main` had meanwhile taken 64 for the
+// call-up reveal above. Two different v64 schemas existed for a day, and a save written by either
+// could not be read by the other. Renumbered on the merge: the version, the migration's place in the
+// append-only chain, and the golden fixture, all three together.
+export const SAVE_SCHEMA_VERSION = 65
 
 
 
@@ -446,6 +468,44 @@ export interface WorldState {
    *  has done since. Replacing it would empty the table every January and hand the player a world with
    *  no history in it. */
   fieldSeasonPoints?: Record<string, number>
+  /** ⭐⭐ v65 – WHO WON IT. Titles taken in the current season, by rung and then by champion id:
+   *  `fieldSeasonTitles.wta250['fp-341'] === 2` is "she won two WTA 250s this year". Absent means
+   *  none, and every writer guards with `??=`, exactly as `fieldSeasonPoints` above does.
+   *
+   *  ⚠⚠ WHY IT EXISTS, AND IT IS THE SECOND HALF OF v53's REPAIR. `runAiTournament` resolves every
+   *  canonical bracket in the game and `runTournament` stamps the winner explicitly
+   *  (`finishes[alive[0].id] = 0`) – and then the whole result was thrown away three different ways:
+   *  the points went to the tally above with no event and no finish attached, the ledger row was
+   *  written for the LIVE cohort only (a field pro hit a bare `continue`), and the news line carries
+   *  prose with NO player id, on 6 of 16 rungs, and is skipped entirely on the event the kid entered.
+   *  So the world knew its champions and no reader could name one. Re-running the bracket is not a
+   *  recovery either: the same tick has already moved `deriveWeekField`'s inputs (results pruned at
+   *  52 weeks, the cohort drifted, this season's points already added), so a re-run deals a different
+   *  draw. If it is not written when it happens it is gone.
+   *
+   *  ⚠ WHAT IT BOUGHT. A field-level census – "how many distinct champions, and how many titles
+   *  each" – against the real tour's own figure (59 WTA titles among ~32 champions in 2024 = 1.84;
+   *  `docs/research/title-drought-reality.md` §2). That question was asked of this engine and had to
+   *  be settled by arithmetic instead, because nothing in the save could answer it.
+   *
+   *  ⚠ A TALLY AND NOT ROWS, for v53's measured reason and not by taste. `world.results` is pruned on
+   *  a 52-week window sized for 199 people AND is what `computeRanking` reads; writing ~30 field rows
+   *  a week into it would change the standings, which is a different change from this one. Two
+   *  numbers deep by (rung, champion) is at most one entry per event played – ~189 a season, ~4 KB –
+   *  and it is all a census needs.
+   *
+   *  ⚠ IT IS THE CANONICAL BRACKET'S CHAMPION, INCLUDING ON THE EVENT SHE ENTERED. Her shadow run and
+   *  the canonical bracket are two universes for one event id and always have been (separate streams,
+   *  separate fields); `announceTourChampion` prints only hers because two champions in one week's
+   *  NEWS would be a lie about the story. This is not news – it is the field's own record of its own
+   *  tour – so it holds the canonical winner of every event, and the count therefore equals the
+   *  number of AI tournaments played. Her own trophies live in `trophiesByTier`, which is untouched.
+   *
+   *  ⚠ SEASON-SCOPED, cleared at the wrap on the same line as `fieldSeasonPoints`. What that cannot
+   *  answer, stated rather than discovered later: a career-long title count for one professional, and
+   *  which event any single title came from. Both are storeys on this floor if they are ever wanted;
+   *  neither is what the census asks. */
+  fieldSeasonTitles?: Partial<Record<TierId, Record<string, number>>>
   /** per-week/per-category signed-cents finance ledger (v11), accrued at the `addEvent` choke
    *  point and pruned to a 60-week trailing window. Feeds the Money breakdown/ledger so they
    *  survive the 60-event snapshot cap; see FinanceWeek in protocol.ts. */

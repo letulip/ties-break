@@ -238,10 +238,13 @@ export {
   wasThereAChild,
 }
 export { buildAlbum, buildScroll } from './world/album'
-import { localSponsorCents, reviewSponsors, reviewAdOffer, sponsorNeedMet, acceptOffer, declineOffer, travelCostFor, coachTravelFareFor, masseurTravelFareFor, academyCoverOf, appearanceFeeFor, resultBonusFor, isRetainerWeek, rolloverKitAllowance } from './world/sponsors'
+import { localSponsorCents, reviewSponsors, reviewAdOffer, sponsorNeedMet, acceptOffer, declineOffer, travelCostFor, coachTravelFareFor, masseurTravelFareFor, academyCoverOf, appearanceFeeFor, resultBonusFor, isRetainerWeek, rolloverKitAllowance, bankSponsorCheque } from './world/sponsors'
 // W3-ACT2 §7 - the professional rungs' money, re-exported so the tools and the snapshot read one
 // implementation exactly as every other sponsor helper is.
 export { appearanceFeeFor, resultBonusFor, isRetainerWeek }
+// ⭐ ROUND-28 #15 – the one splitter every sponsor cheque goes through, re-exported for the same
+// reason: a test that wants to know what her cut of a brand's money is must ask the shipped one.
+export { bankSponsorCheque }
 export { localSponsorCents, reviewSponsors, reviewAdOffer, sponsorNeedMet, acceptOffer, declineOffer, travelCostFor, coachTravelFareFor, masseurTravelFareFor, rolloverKitAllowance }
 import { restRecoveryBonus, recoveryBaseFor, recoveryAgeFade, accrueCondition, adShootHolds, withheldFreeWeekRecovery, medicalClearance, medicalBlock, layoffCovering, layoffCoversWeek, layoffBlock, availabilityStatus, entryStatus, arrivalStatus } from './world/medical'
 export { restRecoveryBonus, recoveryBaseFor, recoveryAgeFade, accrueCondition, adShootHolds, withheldFreeWeekRecovery, medicalClearance, medicalBlock, layoffCovering, layoffCoversWeek, layoffBlock, availabilityStatus, entryStatus, arrivalStatus }
@@ -750,26 +753,23 @@ function finalizeTournament(world: WorldState): void {
   // nothing is the trio that never reaches this function: a skipped event, the injury walkover and
   // the medical withdrawal, none of which put her on a court. See the fuller restatement above the
   // prize money.
+  //
+  // ⭐⭐ ROUND-28 #15 – AND BOTH ARE SPLIT WITH HER, at the ramp the prize money above already uses.
+  // The owner: «С чеков спонсоров мне кажется ребёнку тоже нужно % перечислять, как и с призовых».
+  // `bankSponsorCheque` credits the family and her from ONE rounding and writes both rows – the
+  // whole ruling, and the list of which sponsor money it does and does not reach, is in its header
+  // in world/sponsors.ts. The RESULT BONUS is the sharpest case there: it is literally a fraction of
+  // the very cheque split forty lines up, so leaving it whole would make her realised share of a
+  // winning week fall as sponsorship grows.
   const appearance = appearanceFeeFor(world, event.tier)
   if (appearance > 0) {
-    world.fundsCents += appearance
-    addEvent(world, {
-      week: world.week,
-      type: 'income',
-      category: 'income',
-      text: `Appearance fee – ${tier.label}`,
-      amountCents: appearance,
-    })
+    bankSponsorCheque(world, appearance, { category: 'income', text: `Appearance fee – ${tier.label}` })
   }
   const bonus = resultBonusFor(world, event.tier, kidFinish)
   if (bonus > 0) {
-    world.fundsCents += bonus
-    addEvent(world, {
-      week: world.week,
-      type: 'income',
+    bankSponsorCheque(world, bonus, {
       category: 'income',
       text: `Sponsor bonus – ${finishLabel(kidFinish)} at the ${tier.label}`,
-      amountCents: bonus,
     })
   }
 

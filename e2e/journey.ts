@@ -38,8 +38,14 @@ import { weekDateLine } from '../src/shared/dates'
  * pill to anything beginning with "Play" breaks every journey in this suite under strict mode, and a
  * spec that wants the SPAN must ask for it by its own name rather than widen this one.
  */
+// ⚠ ROUND 28 #6 ADDED `Shooting week`, WHICH IS THIS COMMENT'S OWN THIRD BULLET HAPPENING. The owner
+// asked for the button before a sponsor's shoot week to name it (`composables/weekAhead.ts` gained a
+// `shoot` kind), so a new week kind reached the app's single most important control – and the set is
+// closed precisely so that arrives here as a decision rather than as a silently unmatched locator.
+// Nothing else about the contract moved: it is a plain advance, it does not begin with "Play", and
+// the span pill beside it is still "Next 4 weeks".
 export const WEEK_ACTION_NAME =
-  /^(Training week|Practice match|Exam week|Off-season week|Leave on vacation|Injured – walkover|Play .+|.+ \(outgrown\))$/
+  /^(Training week|Shooting week|Practice match|Exam week|Off-season week|Leave on vacation|Injured – walkover|Play .+|.+ \(outgrown\))$/
 
 export function weekButton(page: Page): Locator {
   return page.getByRole('button', { name: WEEK_ACTION_NAME })
