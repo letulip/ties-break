@@ -93,7 +93,9 @@ held open for exactly this reason.
   the brand. Evidence: mounted assertions that `.cal-go-btn` reads `Shooting week` on a shoot week and
   `Training week` otherwise, and that the drawn week carries training blocks AND shoot blocks with the
   shoot landing on exactly the free days. Mutation-verified (label branch deleted → red; shoot takes
-  every day → red; shoot takes none → red).
+  every day → red; shoot takes none → red). ⚠ `e2e/journey.ts`'s advance-button locator is a
+  deliberately CLOSED set of `weekAhead`'s labels – its own comment says a new week kind is meant
+  to arrive there as a decision – so `Shooting week` is added to it.
 
 - [ ] **7. «Что с остальными разделами магазина? Яхты, самолёты, строительство академии»** –
   **answer.** Slice 1 (cars) shipped; the spec carries yachts, the parents' plane and the academy.
