@@ -92,6 +92,28 @@ held open for exactly this reason.
   → §1. ⚠ **The first draft survived the income mutation green** – the expectation was read back off
   the field under test – so §1 now rebuilds it from `parentIncomeForWeekCents` + interest.
 
+  ⭐⭐ **APPROVED («это хорошо»), AND THE FOLLOW-UP SHIPPED:** «а мы можем эту шкалу на вкладке
+  массажиста тоже показывать?» The strip is now on **`SupportStaffTab.vue`** too, at the head of the
+  payroll. ⭐ His reasoning is the good part and it decided the placement: a salary on that payroll is
+  one of the lines the strip totals and **the dial that sets its size is on that tab**, so it was the
+  one screen where a rung could be chosen without seeing what the rung does to the week.
+  ⚠⚠ **ONE SOURCE, STRUCTURALLY.** The block became `src/components/HouseholdStrip.vue`, which reads
+  `snapshot.coachBilling.household` **itself and takes no props** – a caller cannot hand it a
+  different number, so there is nothing for a second implementation to be. Not decoration: two tabs
+  quoting one figure from two computations is the same defect class this strip was written to fix
+  (the meter beside it once read the current roster row's price and told a self-coached family it
+  committed $0.00 a week). The global `.budget-*` rules stay global for the same reason; one new
+  `:first-child` rule drops the separator hairline when the strip opens a card instead of following
+  the legend.
+  **Evidence:** `tests/component/round28-household-shared.test.ts` – 6 mounted assertions: the strip
+  on the staff tab hired and unhired, its position above the payroll (that chapter exists because he
+  could not find something at the bottom of a page), ⭐⭐ **both surfaces mounted against one snapshot
+  printing the same string, on two households of different shape**, and pressing a rung moving the
+  OUT figure by exactly the rung difference through the real click path and the real engine command.
+  ⚠ Mutation-verified, and the asymmetry is the record: **the shared source moved → five reds across
+  BOTH files; the sharing broken (staff tab hand-rolling its own figure) → the parity tests red while
+  the Coaches-only file stayed entirely green**; the dial disconnected → §3 alone.
+
 - [ ] **9. «Может быть с появлением магазина надо переписать спеку про безусловную % доходность на
   текущий счёт? И оставить этот момент уже на управление игроку, убрав текущую автоматическую, т.к.
   довольно часто на текущий счёт никаких % не приходит в банке обычно»** – **ask.** ⭐ He is right about

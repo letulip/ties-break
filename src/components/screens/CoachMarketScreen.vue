@@ -43,6 +43,7 @@ import { computed, ref, watchEffect } from 'vue'
 import { useGameStore } from '../../stores/game'
 import ConfirmDialog from '../ConfirmDialog.vue'
 import HerWeekTab from '../HerWeekTab.vue'
+import HouseholdStrip from '../HouseholdStrip.vue'
 import SupportStaffTab from '../SupportStaffTab.vue'
 import IconButton from '../ui/IconButton.vue'
 import SegmentedRow from '../ui/SegmentedRow.vue'
@@ -544,21 +545,12 @@ const meterPct = computed(() =>
 // questions - overwriting the meter with the household total would have silently deleted a shipped
 // answer to a different one.
 //
-// ⚠ EVERY NUMBER IS THE ENGINE'S (`coachBilling.household`). Nothing is summed here: the screen lays
-// out what the worker decided, which is why the total and the rows above it cannot disagree.
-const household = computed(() => billing.value?.household ?? null)
-const householdInCents = computed(() => household.value?.incomeCents ?? 0)
-const householdOutCents = computed(() => household.value?.outgoingCents ?? 0)
-const householdNetCents = computed(() => household.value?.netCents ?? 0)
-// The shelf only earns a mention when the family owns something that moves - a "$0.00 shelf" line is
-// noise on a phone, and every junior career would carry it for years before the shop even opens.
-const shelfCents = computed(() => household.value?.shelfCents ?? 0)
-// ⚠ THE SIGN IS IN THE WORD, NOT ONLY IN THE MINUS. A household spending more than it earns is the
-// ordinary junior case, and "-$1,234.00 left over" is not a sentence; the magnitude is printed and
-// the noun says which way it points.
-const householdNetLabel = computed(() => (householdNetCents.value < 0 ? 'short' : 'left over'))
-const householdNetMagnitude = computed(() => Math.abs(householdNetCents.value))
-
+// ⚠⚠ AND THE FIGURES ARE NO LONGER READ IN THIS FILE AT ALL. His follow-up - «а мы можем эту шкалу
+// на вкладке массажиста тоже показывать?» - put the same strip on the Support staff tab, so the
+// whole block moved into `HouseholdStrip.vue`, which reads `coachBilling.household` itself and takes
+// no props. That is the anti-drift design and it is not decoration: two tabs quoting one figure from
+// two computations is the same defect class this strip was written to fix (the meter above once read
+// the current ROSTER ROW's price, and told a self-coached family it committed $0.00 a week).
 const headline = computed(() => {
   const p = game.snapshot?.profile
   if (!p) return ''
@@ -689,31 +681,10 @@ function scrollToTier(tier: CoachTier): void {
 
       <!-- ⭐⭐ ROUND-28 #8 – AND THE WHOLE HOUSEHOLD UNDER IT. The meter above is the coaching
            decision; this is the week the family actually has, with the support staff and the shelf
-           in it. Every figure is `coachBilling.household`, computed in the engine – see
-           `householdWeekly` in engine/world/coachMarket.ts for what each one contains and for why
-           the shelf is a memo rather than a fourth number to add up.
-           ⚠ THE SEPARATOR IS A SHORT DASH. House rule, and no Cyrillic may appear inside a TEMPLATE,
-           this comment included – tests/round13-nav.test.ts pins it. (The script block above carries
-           the owner's words verbatim in a dozen places; the fence is the template, not the file, and
-           the travel toggle's own note twenty lines down says the same.) -->
-      <p class="budget-household">
-        <span class="household-label">Household, every week</span>
-        <span class="household-figs">
-          <strong>{{ formatCents(householdInCents) }}</strong> in
-          <i>–</i>
-          <strong>{{ formatCents(householdOutCents) }}</strong> out
-          <i>–</i>
-          <strong :class="{ short: householdNetCents < 0 }">{{ formatCents(householdNetMagnitude) }}</strong>
-          {{ householdNetLabel }}
-        </span>
-      </p>
-      <p v-if="shelfCents !== 0" class="hint budget-shelf">
-        {{
-          shelfCents > 0
-            ? `The shelf is in that – it adds ${formatCents(shelfCents)} a week at today's rates.`
-            : `The shelf is in that – it costs ${formatCents(-shelfCents)} a week at today's rates.`
-        }}
-      </p>
+           in it. ⚠ IT IS A COMPONENT AND NOT MARKUP, since his follow-up put the same strip on the
+           Support staff tab: one file reads `coachBilling.household`, both tabs mount it, and there
+           is no second copy to drift. See HouseholdStrip.vue. -->
+      <HouseholdStrip />
     </section>
 
     <!-- THE TRAINING REGULATOR. Half of every price on this screen, so it belongs on it. -->
