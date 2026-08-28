@@ -255,9 +255,132 @@ contention artefacts of round 28 cost more reading than the wall-clock they save
 
 - [~] **4. «По победам как-будто по-лучше стало»** – ⚙ **his own verdict, recorded, nothing to build.**
 
-- [ ] **5. «В магазине всё ещё не хватает яхт, самолётов и стойки академии»** – **build.** Slice 1
+- [x] **5. «В магазине всё ещё не хватает яхт, самолётов и стойки академии»** – **build.** Slice 1
   (cars) shipped; the spec [the-shop-2026-08.md](../specs/the-shop-2026-08.md) already carries yachts,
   the parents' plane and the academy. This is round 28 #7 with the queue position now given.
+
+  ⚙ **ALL THREE STOREYS SHIPPED – the spec's slice 3 AND slice 5 in one branch, because they are one
+  sentence of his.** `[ ]` -> `[x]`. Everything below is §3f and §3g of the spec, and §13 there is the
+  as-built record with the numbers. **`SAVE_SCHEMA_VERSION` DID NOT MOVE – it is still 65**, and the
+  spec predicted that a slice in advance: §12a's «slice 3 can add `readyWeek?: number`
+  (absent = delivered) … with **no migration at all**». It did, so there is no v66, no migration and
+  no golden fixture.
+
+  **THE ELITE ARE NOT BOUGHT, THEY ARE COMMISSIONED** – his own framing («купил и ждешь пока будет
+  готово, яхты строят несколько лет»), and each rung carries the THREE numbers he asked for rather
+  than one («потерю стоимости в год + годовое обслуживание (недельный кост, ага)»):
+
+  | thing | price | wait | loses / yr | **a week to keep** |
+  | --- | --- | --- | --- | --- |
+  | The launch | $900,000 | 1 yr | 7% | $1,038 |
+  | The motor boat | $2,400,000 | 1.5 yr | 7% | $2,769 |
+  | The yacht | $12,000,000 | 3 yr | 5% | **$23,077** |
+  | The big yacht | $28,000,000 | 4 yr | 5% | **$53,846** |
+  | The plane | $18,000,000 | 2 yr | 6% | **$27,692** |
+  | The long-range plane | $38,000,000 | 3 yr | 6% | **$58,462** |
+
+  ⭐ **THE WEEKLY BILL IS A REAL BILL** – `resolveAssetUpkeep` charges it in the same phase that
+  charges the coach, one ledger row per thing by name, and it is inside
+  `coachBilling.household.outgoingCents`, which is the strip round 28 #8 exists for. A yacht is
+  roughly thirty-eight coaches a week; a cost that bypassed that total would be round 28 #8's own
+  defect again and larger.
+
+  ⚠⚠ **AND NOTHING HERE CAN STRAND A FAMILY, which was checked rather than assumed.** The two states
+  are disjoint by construction: **while it is being built it cannot be sold and it charges NOTHING;
+  the week it arrives the upkeep starts and it becomes sellable the same week.** There is no week in
+  which the family is paying for a thing it has no way out from under.
+
+  ⭐⭐ **A WEEK ON THE YACHT IS THE SEVENTH VACATION PACKAGE**, his own idea. Free at the point of use
+  (the money went years ago), gain **48 – a tie with the elite programme** – and `buffFactor: 1`
+  against elite's 0.85, so it wins on price and elite keeps the injury buff. That is §3f's own veto
+  satisfied («the yacht must NOT be the strictly best rest week available»), and it is the first arm
+  of the fork the spec named and did not answer. It has its own drawn week on the calendar grid and
+  its own two diary lines – ⚠ **found by two existing guards going red**, not by inspection: a
+  package with no arc and no line would have shipped as a blank week and a generic sentence.
+
+  ⭐⭐ **THE PLANE IS THE PARENTS' AND IT HAS TWO EFFECTS, one loud and one silent** – his correction
+  and his figure. The fare cut is **half** of every seat the family pays for, hers and the staff's,
+  because it is one aeroplane; the fatigue point is **hidden**, by his own ruling about the court it
+  is an analogy of («верно, но только если знают об этом, я предложил сделать бонус скрытым»). ⚠ The
+  split is deliberate: money facts are always on screen here, and «hidden means never a number on a
+  card». ⚠ **The two +1s cannot stack**: the court's lands on weeks she is NOT competing and the
+  plane's on weeks she IS, which is §3f's own answer to the stacking worry.
+
+  ⭐ **THE ACADEMY IS FOUR STAGES IN HIS ORDER** – land $2M, courts $3M, the clubhouse $4M, the staff
+  $3M = **$12M**, the middle of his «$8–15M» band. Each stage is a decision and a bill, the chain is
+  enforced (`requiresId`), and a half-built academy is a real state: the stages it has are valued,
+  the ones it does not keep their price on screen and name the one that comes first.
+
+  ⚠⚠ **THREE PLACES THE SPEC WAS SILENT AND I CHOSE, all recorded in the spec's §13b for him to
+  overrule:** the four academy prices are MINE (§3g gives a band and four names, exactly as §12b's
+  house tiers were mine); the plane's fare cut is **half** and not the whole fare (his verb is
+  «резать», not «убрать», and a fare that fell to zero would take the travel line off the ledger);
+  and the yacht week ties elite rather than beating it.
+
+  ⚠⚠ **AND ONE THING IS NOT BUILT, DELIBERATELY: THE EPILOGUE DOES NOT NAME THE ACADEMY.** That is
+  the second half of the spec's slice-5 acceptance, and it depends on §10.4 – «Does the shop survive
+  an ending?» – which that file still lists as **HIS** and which has never been ruled on. Building a
+  retirement card off an un-ruled proposal is the scope-widening the house forbids. **It needs one
+  word from him**, and it is small when it comes.
+
+  ⚠ **THE GATE IS UNCHANGED AND THAT IS WORTH HIS EYE.** `shopUnlocked` (the professional era) opens
+  the whole shelf, storeys included – §12c settled the buy-gate question with his own words
+  («магазин есть и всё, мы не можем запретить там что-то покупать»), so no second gate was invented.
+  What gates a $38M aeroplane is its price: most careers will look at these rows and never press one.
+
+  **Evidence.** `tests/round29-shop-elite.test.ts` – 22 engine cases in six blocks: the ladder IS the
+  spec's table; ordered-not-bought (the wallet, the contract, no upkeep, no depreciation while it
+  builds); delivered (the ledger line, the value clock starting at ARRIVAL and not at the order, the
+  bill leaving the wallet measured as a difference of differences against the same career with the
+  boat sold, and the same figure inside `householdWeekly`); the academy's four stages and their
+  order; ⭐ the plane's fare on both seats and its HIDDEN point, asserted as an absence with an
+  anti-vacuity arm; and the yacht week appearing only once delivered, disappearing again on a sale.
+  `tests/component/round29-shop-elite.test.ts` – 13 mounted on the real screens: every new rung's
+  real price and real weekly figure, the ordered row's date and its missing Sell, the academy's
+  stages and their «has to come first» line, the household strip's bill, the planner sheet with and
+  without a yacht, and the order confirm inside a 375x667 phone (CLAUDE.md's dialog rule – its
+  sentence is the longest this dialog has ever carried).
+
+  ⚠ **MUTATION-VERIFIED, FIFTEEN, EACH APPLIED ALONE AND RESTORED.** What each actually reddened,
+  measured rather than predicted: the upkeep never charged -> the WALLET case alone; the upkeep left
+  out of `householdWeekly`'s outgoing -> the household case alone (the two are separate claims and
+  they separate); the meter reading no upkeep at all -> the household case AND the mounted strip; a
+  contract made sellable again -> the contract case; the value clock started at the ORDER -> both
+  value cases; the plane's point dropped -> both hidden-bonus cases; the point widened to every week
+  -> the rest-week case alone; ⭐⭐ **the bonus PRINTED on the card -> both «is not displayed» cases,
+  engine and mounted** – that is the one a careless build gets backwards; the yacht granting nothing
+  -> four cases across three files; the grant check dropped from `bookVacation` -> three; the sheet's
+  filter dropped -> two mounted; the stage order unenforced -> the academy case; the plane's cut
+  removed -> the fare case; `travelCovered` pointed back at the plane -> the scholarship case;
+  delivery never happening -> eleven.
+
+  ⚠ **FOUR GUARDS RE-AIMED WITH A NOTE, NONE DELETED**, and two of them were re-aimed because they
+  are about the LADDER MONEY BUYS rather than about the catalogue: `tests/shop.test.ts`'s catalogue
+  pin (8 ids -> 18, and its negative moved with it so it can no longer refuse the words this slice
+  legitimately adds) and its input-independence sweep (it now asks `sellableAsset` before selling,
+  which makes it STRICTER – the contracts stay on the books and the delivery and the bill are inside
+  the claim); `tests/planner.test.ts`'s six-package pin and price-floor ladder (the seventh rung is
+  free by design and not on the general shelf, so it is not a step in a price ladder – with an
+  anti-vacuity case proving the filter removes exactly one); and `tests/calendar-grid.test.ts`'s
+  treatment monotonicity (the yacht week's 48 is not bought with a programme, and forcing a clinic's
+  week onto a boat to satisfy an arithmetic would be the drawing lying to keep a test green).
+
+  ⚠ **FROZEN HASHES: ALL THREE CAREERS UNMOVED, and the null arm is named honestly rather than
+  claimed.** `tests/coach-travel-edge.test.ts` is green, so no re-freeze was owed and no per-key diff
+  was owed with it. ⚠ But byte-identical proves nothing on its own here, so the READER was measured:
+  over the same three 156-week careers, **two of the three DO open the shelf** (`shopUnlocked` true
+  on 8/0 and 0/1) and **none of them ever buys anything** – 0 assets, 0 upkeep rows, 0 delivery rows
+  on all three. So every new code path has zero readers in that corpus by construction, and its
+  liveness is the fifteen mutations above rather than the freeze. The frozen MAIN capture
+  (41550 / `e6b0c709`) is untouched: `world/shop.ts` and the new `world/assets.ts` import no RNG and
+  take no `Rng`, which is the guarantee rather than a claim about one.
+
+  ⚠⚠ **AND ONE HAZARD FROM CLAUDE.md BIT INSIDE THIS ITEM, so it is recorded rather than quietly
+  survived.** The first mutation harness restored the tree with `git checkout -- <path>`. Checkout
+  restores from the INDEX, and these edits were UNSTAGED – so it deleted the wave's work on
+  `phaseFinance.ts` and `coachMarket.ts` instead of undoing the mutation. Caught by the NEXT
+  mutation reddening a test it had no business touching, both files were rewritten, and the harness
+  now restores from a file copy with the reason written above it. **Nothing was lost.**
 
 - [x] **6. «Листалка на 4 недели кажется весьма бессмысленной: у меня был слот 6 недель, я нажал,
   увидел сообщение о конце года и странное окошко с отчётом о двух пройденных днях, а календарь так и

@@ -2,13 +2,13 @@
 
 # `engine/world` – area to owner
 
-The barrel `src/engine/world.ts` (2,020 lines) re-exports the decomposed modules under their historical names, so every importer sees one flat surface. That is a COMPATIBILITY contract, not a discovery one – this file is the discovery half.
+The barrel `src/engine/world.ts` (2,024 lines) re-exports the decomposed modules under their historical names, so every importer sees one flat surface. That is a COMPATIBILITY contract, not a discovery one – this file is the discovery half.
 
 Regenerate with `node scripts/world-map.mjs`; `node scripts/world-map.mjs --check` fails when it is stale, and CI runs that on every pull request.
 
 **Do not read this file to answer one question** – that is the habit it exists to replace. `node scripts/world-map.mjs <symbol>` prints the owner and the line, and a plain `grep <symbol> tools/generated/world-symbol-map.md` does the same for a partial name.
 
-336 exported names across 40 owning modules.
+343 exported names across 41 owning modules.
 
 ## Areas
 
@@ -25,11 +25,12 @@ Regenerate with `node scripts/world-map.mjs`; `node scripts/world-map.mjs --chec
 | `src/engine/world/multiWeek.ts` | ⭐ R2-13 PHASE 1 – THE FOUR-WEEK ADVANCE, AND THE TWO FACTS A SECOND WEEK BUTTON NEEDS | 15 |
 | `src/engine/world/sponsors.ts` | THE MONEY FROM OUTSIDE THE FAMILY: sponsors, the offers they make, and what a trip costs once somebody else is helping pay for it | 14 |
 | `src/engine/world/endings.ts` | THE ENDINGS, WIRED INTO THE WORLD: the latch, the two questions, the four-year freeze and the guard that stops a stale screen mutating a career that has stopped | 13 |
-| `src/engine/world/shop.ts` | ⭐⭐ THE SHOP, SLICE 1 – the tab, static prices, buy / own / sell | 12 |
+| `src/engine/world/assets.ts` | ⭐⭐ WHAT THE FAMILY OWNS – the shelf's PURE READS, and nothing that spends money | 11 |
 | `src/engine/world/kit.ts` | THE KIT SHE PLAYS WITH, AS A DECISION - the till, and what the Money screen reads off it | 11 |
 | `src/engine/world/mandatory.ts` | THE MANDATORY REGIME AND THE PENALTY LEDGER (W3-ACT2, act2-pro-tour.md §6) | 11 |
 | `src/engine/world/age.ts` | HER AGE: the band and the girl, and the birthday that lands in the feed | 9 |
 | `src/engine/world/knock.ts` | THE KNOCK: she comes off court sore, and the parent rests it or sends her back out | 8 |
+| `src/engine/world/shop.ts` | ⭐⭐ THE SHOP – the tab, static prices, buy / own / sell, and since round 29 #5 the storeys above | 8 |
 | `src/engine/world/injury.ts` | INJURIES AND PHYSIO: the weekly roll, the hazard shape behind it, and the recovery the family pays for – plus the sweep that cleans up everything an injury invalidates | 7 |
 | `src/engine/world/planner.ts` | THE SEASON PLANNER: the two things a parent can put on an empty week – a family holiday and a practice match – and what the engine does with them when the week arrives | 7 |
 | `src/engine/world/entries.ts` | THE ENTRY COMMANDS: putting her in a draw, and taking her back out | 6 |
@@ -313,22 +314,21 @@ THE ENDINGS, WIRED INTO THE WORLD: the latch, the two questions, the four-year f
 - `resolveEndings` – `src/engine/world/endings.ts`
 - `wasThereAChild` – `src/engine/world/endings.ts`
 
-### `src/engine/world/shop.ts`
+### `src/engine/world/assets.ts`
 
-⭐⭐ THE SHOP, SLICE 1 – the tab, static prices, buy / own / sell.
+⭐⭐ WHAT THE FAMILY OWNS – the shelf's PURE READS, and nothing that spends money.
 
-- `assetValueCents` – `src/engine/world/shop.ts`
-- `buyAsset` – `src/engine/world/shop.ts`
-- `ownedAssets` – `src/engine/world/shop.ts`
-- `revalueAssets` – `src/engine/world/shop.ts`
-- `sellableAsset` – `src/engine/world/shop.ts`
-- `sellAsset` – `src/engine/world/shop.ts`
-- `SHOP_LOCKED_DETAIL` – `src/engine/world/shop.ts`
-- `shopCatalogue` – `src/engine/world/shop.ts`
-- `shopItem` – `src/engine/world/shop.ts`
-- `ShopItem` *(type)* – `src/engine/world/shop.ts`
-- `shopUnlocked` – `src/engine/world/shop.ts`
-- `shopView` – `src/engine/world/shop.ts`
+- `assetDelivered` – `src/engine/world/assets.ts`
+- `assetUpkeepCents` – `src/engine/world/assets.ts`
+- `assetValueCents` – `src/engine/world/assets.ts`
+- `deliveredAssets` – `src/engine/world/assets.ts`
+- `grantedVacationIds` – `src/engine/world/assets.ts`
+- `ownedAssets` – `src/engine/world/assets.ts`
+- `ownsDeliveredOfFamily` – `src/engine/world/assets.ts`
+- `shopCatalogue` – `src/engine/world/assets.ts`
+- `shopItem` – `src/engine/world/assets.ts`
+- `ShopItem` *(type)* – `src/engine/world/assets.ts`
+- `weeklyAssetUpkeepCents` – `src/engine/world/assets.ts`
 
 ### `src/engine/world/kit.ts`
 
@@ -388,6 +388,19 @@ THE KNOCK: she comes off court sore, and the parent rests it or sends her back o
 - `pendingKnock` – `src/engine/world/knock.ts`
 - `radarViewOf` – `src/engine/world/knock.ts`
 - `rollKnock` – `src/engine/world/knock.ts`
+
+### `src/engine/world/shop.ts`
+
+⭐⭐ THE SHOP – the tab, static prices, buy / own / sell, and since round 29 #5 the storeys above.
+
+- `buyAsset` – `src/engine/world/shop.ts`
+- `deliverAssets` – `src/engine/world/shop.ts`
+- `revalueAssets` – `src/engine/world/shop.ts`
+- `sellableAsset` – `src/engine/world/shop.ts`
+- `sellAsset` – `src/engine/world/shop.ts`
+- `SHOP_LOCKED_DETAIL` – `src/engine/world/shop.ts`
+- `shopUnlocked` – `src/engine/world/shop.ts`
+- `shopView` – `src/engine/world/shop.ts`
 
 ### `src/engine/world/injury.ts`
 

@@ -438,9 +438,9 @@ that out.
 | --- | --- | --- | --- |
 | **1** | **the tab, static prices, buy / own / sell** – the deposit and index fund (§3a), the four cars (§3b), the first two house tiers (§3c). No movement, no building, no freeze | a bench career buys the good car in season 3, sells it two seasons later, and the ledger shows the loss to the cent; `careerTotals` grows at most two fields; the frozen capture is unmoved; a previous-version save loads with `assets: []` and plays identically; ⚠ the shop is NOT the dominant outgoing before season 4 | ⚙ **BUILT 27.08 – schema v63, see §12** |
 | **2** | **drift** (§4), one sub-stream, no shocks | the four families are distinguishable from the numbers alone, without being told which is which | Next |
-| **3** | **commissioning** (§3f) – the elite ladders, the wait, the contract, the annual loss and the weekly upkeep; ⭐ **the yacht week as a seventh vacation package**; the plane's travel-cost cut and its +1 on travelling weeks | a career orders a yacht, waits three years, and the weekly upkeep sits in the ledger beside the masseur; the yacht week appears in `PlanWeekSheet` only once delivered, and it does not kill the other six packages | Next |
+| **3** | **commissioning** (§3f) – the elite ladders, the wait, the contract, the annual loss and the weekly upkeep; ⭐ **the yacht week as a seventh vacation package**; the plane's travel-cost cut and its +1 on travelling weeks | a career orders a yacht, waits three years, and the weekly upkeep sits in the ledger beside the masseur; the yacht week appears in `PlanWeekSheet` only once delivered, and it does not kill the other six packages | ⚙ **BUILT 29.08 – round 29 #5, see §13** |
 | **4** | **shock and freeze** (§4) | zero bankruptcies whose proximate cause is a freeze, over a sweep | Next |
-| **5** | **the academy** (§3g), in stages | a half-built academy is a legible state, and the epilogue can name the finished one | Later – ⚠ or slice 2, by §10.1 |
+| **5** | **the academy** (§3g), in stages | a half-built academy is a legible state, and the epilogue can name the finished one | ⚙ **BUILT 29.08 – round 29 #5, §13; the epilogue half is NOT built, see §13d** |
 | **6** | **the broker** (§6) | following him beats ignoring him by less than his fee | Later |
 | **7** | **charity** (§8) | a gift changes something unpromised, and the ending can name it | Later |
 
@@ -537,3 +537,109 @@ questions, but it can no longer fail a slice.
   §2e-5 true by construction.
 - **(c) price the first rung under a season of tennis** – rejected here: §3b's ladder is his own
   («от 60 до 300к»), and moving it to satisfy §2e-5 would trade a stated ruling for an unstated one.
+
+---
+
+## 13. ⚙ SLICES 3 AND 5 AS BUILT (29.08, round 29 #5) – and four places this file was silent
+
+Recorded here beside §12 rather than in a second document, for §12's own reason. Everything below is
+round 29 #5, on `r29g/shop-elite-academy`, and **`SAVE_SCHEMA_VERSION` did not move: it is still 65.**
+
+His ask, in full: «В магазине всё ещё не хватает яхт, самолётов и стойки академии».
+
+### 13a. What shipped
+
+Ten new rungs in `ECONOMY.shop.catalogue` – §3f's six commissioned ones and §3g's four academy
+stages – plus `world/assets.ts` (a new LEAF holding the shelf's pure reads), `deliverAssets`,
+`assetUpkeepCents` / `weeklyAssetUpkeepCents`, `resolveAssetUpkeep` in the weekly till,
+`HouseholdWeekly.upkeepCents`, the `yacht-week` vacation package with its own drawn week and its own
+diary lines, and the plane's two effects. Zero draws on any stream; the frozen MAIN capture
+(41550 / `e6b0c709`) is **unmoved**.
+
+⚠ **`OwnedAsset` GAINED `readyWeek?` AND NOTHING ELSE, exactly as §12a predicted it would** – «slice 3
+can add `readyWeek?: number` (absent = delivered) … with **no migration at all**». It did, so there
+is no v66, no migration and no golden fixture. `sellableAsset` is the seam §12a named and it is the
+one function that changed.
+
+⚠ **AND THE VALUE CLOCK RE-USED `basisWeek` RATHER THAN GROWING A SECOND ONE.** A commissioned thing
+is ordered years before it exists, so `buyAsset` writes `basisWeek = readyWeek` and
+`assetValueCents`' own `Math.max(0, weeksHeld)` holds the contract at what was paid for the whole
+wait. One field, one sentence («the compounding clock's start»), no branch in `revalueAssets` and no
+second value model.
+
+### 13b. ⚠⚠ THE FOUR PLACES THIS FILE WAS SILENT, and what was chosen
+
+**1. §3g GIVES NO PER-STAGE PRICES**, only a band and four names. So the four are MEASURED against
+his band rather than declared, the same way §12b's two house tiers were: land $2M, courts $3M, the
+clubhouse $4M, the staff $3M = **$12,000,000**, the middle of «$8–15M». ⚠ They are also the one
+exception to the catalogue's «cheapest first»: the stages read in BUILD order, because `requiresId`
+chains them and a stage cannot be bought before the one under it.
+
+**2. §3g GIVES THE ACADEMY NO WAIT, NO UPKEEP AND NO RATE**, and it was given none. §3f's «время
+постройки» and «годовое обслуживание» are said of the boats and the planes; §3g's own sentence is
+«each stage is a decision and a bill», and a stage IS the wait. The rate is 0, so the shelf says
+«Holds its value» – which is what «the one asset that outlives the career» reads like with no number
+attached.
+
+**3. §3f GIVES THE PLANE'S FARE CUT NO PERCENTAGE.** His verb is «резать» and not «убрать», so it is
+**half** (`ECONOMY.shop.planeTravelShare`), and it comes off every seat the family pays for – hers,
+the coach's and the masseur's – because it is one aeroplane carrying all of them. Three reasons for a
+half rather than the whole fare are written over the constant; the load-bearing one is that a fare
+which fell to zero would take the travel LINE off the ledger, and a cost the player cannot find is
+this repo's own named defect. ⚠ It is **not a balance lever in either direction**: a season of travel
+is four figures and the aircraft costs $27,692 a week to keep.
+
+**4. §3f NAMES THE YACHT WEEK'S TUNING QUESTION AND DOES NOT ANSWER IT** – «Either it ties with
+`elite` and wins on being free, or it beats it slightly and `elite` keeps a reason to exist that is
+not price.» Built on the **first** arm: `conditionGain: 48`, the same as elite, free, and
+`buffFactor: 1` against elite's `0.85`. So the yacht wins on price and elite keeps the injury buff,
+which is a currency a boat cannot pay in – and §3f's veto («the yacht must NOT be the strictly best
+rest week available») holds. ⚠ A gain above 48 would break it, and `tests/planner.test.ts` says so.
+
+### 13c. ⚠ WHICH RUNGS GRANT THE WEEK, and it is the narrow reading
+
+**`yacht` and `yacht-big` only.** «при наличии яхты» is the sentence, and the two rungs below them
+are a launch and a motor boat – the spec calls neither a yacht, and §11 row 3's own acceptance is «a
+career orders a yacht, **waits three years**», which is the $12M rung's build time and not theirs.
+A week away on a day-boat is not a holiday.
+
+### 13d. ⚠⚠ WHAT IS **NOT** BUILT, AND IS STILL OPEN
+
+- **The epilogue does not name the academy.** §11 row 5's acceptance has two halves and only the
+  first is here: a half-built academy IS a legible state (four rows, priced, chained, with the stage
+  under each named). The second half – «the epilogue can name the finished one» – is §10.4, which
+  this file still lists as **his** («Does the shop survive an ending? My answer is yes»), and it has
+  never been ruled on. Building the retirement card's version of it off an un-ruled proposal is
+  exactly the scope-widening the house forbids. **It needs one word from him.**
+- **No academy stage does anything yet.** §3g's own «this is where advertising money lands» is a
+  cross-reference to the face-and-court plan, not a mechanic in this file, and §9.4 («a stage that is
+  HERS to run, after she retires») is explicitly «listed last on purpose, and not proposed for any
+  slice below». The academy is, today, the end of the money and a thing the family owns.
+- **§4's drift, shock and freeze are still slice 2 and slice 4.** Nothing here draws.
+- ⚠ **A STAGE CAN BE SOLD OUT FROM UNDER THE ONE ABOVE IT.** `requiresId` gates BUYING and nothing
+  gates selling, so a family that owns the land and the courts may sell the land and keep the
+  courts – which is not a state that means anything. It is one predicate in `sellableAsset` to
+  close, and it was deliberately NOT written: §3g asks for stages and says nothing about unwinding
+  them, and a refusal the spec does not have is not this slice's to invent. **Flagged for him**, and
+  it is small either way.
+
+### 13e. ⚠ THE GATE IS UNCHANGED, AND THAT IS A DECISION
+
+`shopUnlocked` (the professional era, `activeLadderOf === 'wta'`) opens the whole shelf, storeys
+included. §12c settled the buy-gate question with his own words – «магазин есть и всё, мы не можем
+запретить там что-то покупать» – so no second gate was invented for the expensive rows. What gates
+them is the price: a $38M aeroplane is out of reach of every career the probe has ever walked, and
+§12b's own funds table (median season 8 at $2.5M) says the boats' bottom rung is the first storey a
+very good career can reach at all. ⚠ **That is worth his eye**: most careers will see these rows and
+never press one, which is §2's «a shop window is a thing you look into before you can afford it»
+taken to its limit.
+
+### 13f. ⚠ AND THE ONE THING THAT COULD STRAND A FAMILY WAS CHECKED
+
+A yacht is **$23,076.92 a week**, which is roughly thirty-eight coaches, and the shelf has no
+bankruptcy guard. The two states are disjoint by construction and that is what makes it safe:
+**while it is being built it cannot be sold and it charges nothing; the week it arrives the upkeep
+starts and it becomes sellable the same week.** There is no week in which a family is paying for a
+thing it has no way out from under, which is §4's own acceptance («a freeze may never be the reason a
+family goes bankrupt») met by the shape rather than by a rule. Pinned in
+`tests/round29-shop-elite.test.ts` §2.
