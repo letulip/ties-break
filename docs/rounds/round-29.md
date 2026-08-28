@@ -444,11 +444,46 @@ contention artefacts of round 28 cost more reading than the wall-clock they save
   ⚠ One real residue: `StatsScreen.vue:239` still claims «"Season points" is now "Season pts"» and
   **no such string exists** – the tile prints `Points`. The comment lies even though the layout does not.
 
-- [ ] **20. ⚠⚠ KIT WEAR ON HOLIDAY – the audit's worst find, and his: «вот это важно, да»** – ruled
+- [x] **20. ⚠⚠ KIT WEAR ON HOLIDAY – the audit's worst find, and his: «вот это важно, да»** – ruled
   **09.08**, re-asked as round 16 #8, and `src/engine/equipment.ts` carries **no vacation term at all**.
   **Fourth asking, no code.** ⭐ Its own family is already correct – college suspends the coach and the
   masseur – so a holiday that wears her rackets at full rate
   is the odd one out, not a new idea. Own step in the wave.
+  → ✅ **SHIPPED, `r29d/holiday-gear-wear`.** The ruling implemented is **ruling 5 of 09.08** verbatim
+  («Ну да, занятий же нет, по-моему логично»), read in `docs/rounds/round-15.md:31` – the round-15
+  header "The owner's five rulings, 09.08" – and cross-read against round-15 #14 and round-16 #8.
+  It answers the question fully, so no interpretation was needed: **vacation weeks stop the wear
+  clock.** Round-15 #14's own phrasing is the implementation – *wear should count weeks she trained
+  or played* – and `kitAgeWeeks` now subtracts the booked-holiday weeks that fall inside the span
+  before the curve is walked. Spec: `docs/specs/equipment-and-serve-speed.md` §2.
+  → ⚠ **SCOPE HELD TO THE HOLIDAY.** A training week is a week she plays, so a week that merely
+  lacks a tournament still wears at the normal rate; college is not a rest week; and **the injury
+  half stays unruled**, in his own words. `tests/kit-holiday-wear.test.ts` carries both the claim and
+  the over-reach guard, and **both were mutation-verified**: neutralising the wear term reddens the
+  two holiday claims, and widening the rule to "any week without a tournament" reddens both guards.
+  → ⚠ **NOT folded into `masseurWorksThisWeek` or `coachWorksThisWeek`**, deliberately – round 27 #10
+  recorded an ACCEPTED asymmetry in that family (the physio bills through the college freeze, the
+  coach does not), so "everything stops together" is not the house rule and one edit must not move
+  three seats.
+  → ⚠⚠ **WHAT THE EARLIER ROUNDS GOT WRONG, and it is why three askings produced no code.** Every
+  previous pass described this as a one-line change to `kitWearAt` – round-16 #8 and round-15 #14
+  both point at `equipment.ts:175` and say the term is simply missing. **It is not a one-liner**: the
+  wear model is DERIVED from a purchase week, so the question is "how many rest weeks fell in this
+  span", and `world.vacations` **cannot answer it** – `prunePlannerBookings` keeps only four trailing
+  weeks, so a holiday is gone from that array long before the shoes it stood down are replaced.
+  Deriving from it would have passed a unit test and been wrong on every real career. The change
+  needs a small persisted ledger (`gearRestWeeks`, windowed at 52 weeks, written at `housekeep`
+  ahead of the prune) – ⚠ optional, so **no schema move**: absence means "no rest recorded", which is
+  the shipped behaviour byte for byte (`kit?` precedent; widening precedent `2763caa`), so
+  `SAVE_SCHEMA_VERSION` stays **65** and no migration or golden fixture is owed.
+  → ⭐ **MEASURED** (`tools/frozen-key-diff.ts`, preset 0, control = this change reverted in a
+  detached worktree): **policy 0** (books no vacation) is **byte-identical on every key**; **policy 1**
+  (books vacations) moved **only** `events` + the new `gearRestWeeks`. `rngMain` is byte-identical
+  (`d84bcbf0c481`) in **all four arms** and the frozen MAIN capture (41550 / `e6b0c709`) is UNMOVED.
+  ⚠ And the `events` move is **two match scorelines** over 156 weeks – same opponents, rounds and
+  winners – with **no money row changed**: the earlier framing expected gear SPEND to move, and it
+  does not. The family's recurring buys are a schedule, not a clock, so a holiday changes the
+  CONDITION of her kit and never its price.
 ## Folded in from the audit – same surfaces, near-zero marginal cost
 
 ⭐ Both were found by item 17's audit (`docs/rounds/AUDIT-2026-08-28.md`) on files this wave was
