@@ -15,9 +15,9 @@ Status: `[x]` shipped on the branch · `[~]` answered, nothing to build · `[>]`
 READ-ONLY – never copied into the repo, never a fixture) and three screenshots: the season feed at
 W47–W2 '44/'45, the inbox, and the Tour office letter.
 
-⚠ **This save is v65-era play on a build WITHOUT round 28.** Round 28 is assembled and gated on
-`round/28-ledger` and not yet merged, so anything it closed is not in the build he played – check
-before calling a repeat a regression.
+⚠⚠ **CORRECTION – the save IS schemaVersion 65, so he played a build WITH round 28 in it.** My first
+note here said the opposite. That matters most for item 10: round 28 #15 widened her cut to sponsor
+cheques, and it is live in this save.
 
 ⭐ **His instruction on how to run this round**, and it shapes every bundle below: «делай план работ,
 выбирай агентов и запускай всю волну поочередно в ночь, работы много, мы не торопимся, одновременно
@@ -80,8 +80,29 @@ contention artefacts of round 28 cost more reading than the wall-clock they save
 - [ ] **10. «По результатам w500 мне пишут Income +$29,046 · Spent -$6,883 · Balance +$22,164 ·
   Her cut 50% $27,600 – это не 50% по сравнению с income»** – **build (bug).** ⚠⚠ **$27,600 against an
   income of $29,046 is 95%, not 50%.** Either the label lies about the base or the split is wrong;
-  round 28 #15 has just widened her cut to sponsor cheques, so **check whether that is the base being
-  mixed in** – a number that says 50% and pays 95% is the worst kind of defect.
+  round 28 #15 has just widened her cut to sponsor cheques and **is live in this save (v65)**.
+
+  ⚠⚠ **MEASURED, and it is neither of the two readings we had.** I first called it 95% by dividing
+  where I should have added; he corrected me – «это 27,600 + 29,046, это НЕ 95%, но и не 50%». The
+  save says a third thing. Across all 27 weeks that credited her:
+
+  | week | prize | her cut | bps | ratio |
+  | --- | --- | --- | --- | --- |
+  | 730 | $62,000 | $74,400 | 5000 | **1.20** |
+  | 733 | $82,500 | $99,000 | 5000 | **1.20** |
+  | 738 | $23,000 | $27,600 | 5000 | **1.20** |
+  | 749 | $95,000 | $114,000 | 5000 | **1.20** |
+  | 754 | $41,000 | $49,950 | 5000 | **1.22** |
+  | 767 | $13,250 | $16,650 | 5000 | **1.26** |
+
+  **The field states `bps: 5000` and pays 120% of the prize – more than the whole prize.** 24 of 27
+  weeks land on exactly 1.20 and two drift to 1.22 / 1.26, so there is a VARIABLE term, not merely a
+  wrong constant. ⚠ Candidate, unverified: the kit contract's `bonusShare: 0.2` (a 20% bonus on prize
+  money from w75 up). **The base must be identified before anything is changed** – I have already been
+  wrong once on this item.
+
+  ⭐ Two weeks (728, 741) credit **$750 with a prize of zero** – the sponsor-cheque cut of round 28 #15
+  doing its job, and evidence the two paths are separate.
 
 - [ ] **11. «Index fund хотелось бы иметь возможность докупать, предполагаю, что Savings deposit
   будет вести себя так же – тоже надо исправить. А ещё было предложение делать доходность индексного
