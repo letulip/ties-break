@@ -2170,7 +2170,10 @@ describe('the byte-identity of a career that does not travel', () => {
     // table the bracket has already filled in (`finishes`), written to a tally nothing but a census
     // reads – deliberately NOT to `world.results`, which prunes at 52 weeks and IS what
     // `computeRanking` reads. `walkFrozenCareer` asserts the key is present and non-empty rather than
-    // merely present, so a wave that silently stopped recording would go red here too.    expect(careerHashAtSchema(5, 0, 64), '25k · middle coach · grinder').toBe(PRE_V65.middleGrinder)
+    // merely present, so a wave that silently stopped recording would go red here too.
+    // ⚠ THIS ASSERTION WAS DEAD until 28.08: it shared a physical line with the comment above, so
+    // `//` swallowed it and the arm ran green while checking nothing. Re-aimed, never weakened.
+    expect(careerHashAtSchema(5, 0, 64), '25k · middle coach · grinder').toBe(PRE_V65.middleGrinder)
     expect(careerHashAtSchema(8, 0, 64), '120k · elite coach · grinder').toBe(PRE_V65.eliteGrinder)
     expect(careerHashAtSchema(0, 1, 64), '8k · self-coached · player').toBe(PRE_V65.selfTravelling)
   })
@@ -2193,7 +2196,9 @@ describe('the byte-identity of a career that does not travel', () => {
     // post-retirement hashes, because the retirement hazard's condition curve moved every frozen
     // career before this branch was merged. The case asks exactly what it always asked – does v64
     // move the version number and nothing else – but it now asks it ON TOP OF a change that moved
-    // the careers, which is the first time this identity has had to survive one. It does.    expect(careerHashAtSchema(5, 0, 63), '25k · middle coach · grinder').toBe(PRE_V64.middleGrinder)
+    // the careers, which is the first time this identity has had to survive one. It does.
+    // ⚠ Dead the same way and for the same reason – see the note on the v65 arm above.
+    expect(careerHashAtSchema(5, 0, 63), '25k · middle coach · grinder').toBe(PRE_V64.middleGrinder)
     expect(careerHashAtSchema(8, 0, 63), '120k · elite coach · grinder').toBe(PRE_V64.eliteGrinder)
     expect(careerHashAtSchema(0, 1, 63), '8k · self-coached · player').toBe(PRE_V64.selfTravelling)
   })
