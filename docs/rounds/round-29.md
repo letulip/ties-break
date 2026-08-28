@@ -140,6 +140,23 @@ contention artefacts of round 28 cost more reading than the wall-clock they save
   **build + answer.** Top-ups for both instruments; and answer whether the floating yield shipped.
   ⭐ His «иначе непонятно зачем вообще Savings» is the design test the answer has to pass.
 
+  ⚙ **ANSWERED BY HIM 28.08, and it binds 11 and 12 into ONE change**: «в реальности на текущем счете
+  нет процентного дохода, максимум кешбек, и то не за все, мы для этого делаем Savings как раз. **Одни
+  должны друг друга заменить**». Savings is the REPLACEMENT for the automatic interest, not a rival –
+  a real current account pays nothing, and the player who wants yield MOVES money. That is the
+  decision the mechanic exists to create.
+
+  ⚠⚠ **So 11 is the PREREQUISITE for 12.** Removing the interest while top-ups are broken strands the
+  player: no passive income and no working way to feed its replacement. Top-ups first, verified, then
+  the removal.
+
+  ⭐ And it sharpens 12's bench: not «what does the economy lose» but **«does a player who moves his
+  money into Savings land roughly where the interest used to put him?»** If the replacement falls
+  short, the RATES are what to look at – never the ruling.
+
+  ⚠ **Cashback is NOT a request** – he named it as reasoning about why a current account pays nothing.
+  Recorded as a possible future line; nobody builds it off that sentence.
+
 - [ ] **12. «И я предлагал убрать авто начисление % на текущий счёт»** – ⚙ **his RULING**, and it
   settles round 28 #9, which was filed as an ask. Remove the automatic interest on the current
   account. ⚠ It is a large silent income line – measure what the economy loses before shipping, and
