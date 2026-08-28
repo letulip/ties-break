@@ -205,6 +205,26 @@ held open for exactly this reason.
   semi-final**, which the cabinet does not display because it shows only champion and runner-up.
   That is a display finding of its own and it belongs to 4's family.
 
+- [ ] **18. ⚠ THE HALF OF ROUND 27 #13 THAT WAS NEVER ANSWERED (found 28.08, his own reference)** –
+  «И чем дело кончилось по моему вопросу-референсу с DnD системой и перезагрузкой сохранения,
+  напомни пожалуйста, я это пропустил.» ⚠⚠ **It was a DOUBLE question and only half of it closed.**
+
+  Closed: «рельсы или нет» – the lever bench, 300 trials, his own ruling «вариативность всё-таки
+  есть, это хорошо, значит не рельсы» (round 27 #13).
+
+  **Never answered anywhere** – not in round 27, not in a spec, not in the backlog: «возможно ты прав,
+  но это игра. Я когда играю в Pathfinder Kingmaker… пользуюсь этим иногда в особо сложных битвах и
+  проверяю какие мои действия дадут какие результаты. Есть стены непроходные – это ок "недорос", но
+  есть и криво выпавшие кости. Это другой момент. **Может быть можем какую-то грань найти здесь.**»
+
+  ⚠ **This is a silent drop, exactly the failure the ledger exists to prevent**, and it was mine.
+  The question is real and unresolved: RNG input-independence (the permanent law, frozen capture
+  41550 / `e6b0c709`) means a reload replays the same dice, so a lost match is lost for ever. He is
+  not asking to break the law – he is asking whether there is a LINE between «she was not good
+  enough», which should stand, and «the dice fell badly», which a player may reasonably want to
+  re-roll. **Needs a spec of its own before anything is built; it touches the one law nothing else
+  may touch.**
+
 - [ ] **17. «Baseline athletic 2 раза письмо о спонсорстве прислали на 48 и 52 неделе одинаковое»** –
   **build.** A duplicate offer from one brand four weeks apart. Related to 2 – both are the sponsor
   offer clock – and they belong to one agent.
@@ -221,6 +241,7 @@ held open for exactly this reason.
 | round 27 **14** | «тогда на стопе пока» | ⚙ **ON HOLD** by his ruling – must not be re-opened sideways by 13 |
 | **15** appearance fee | «да, окей, пусть остается пока» | ⚙ **STAYS** in her cut – reviewable, not settled forever |
 | **2** letter window | «в чем проблема сделать 5?» | ⚙ five weeks per LETTER, both kinds; §3.1's window deadline retired |
+| **12** `tierOutgrown` age clause | «это не страшно, просто по приоритету мы их не покажем. Или просто убрать их на уровне про» | ⚙ fix by PRIORITY/display, not by the age clause – do not touch `tierOutgrown` |
 | **12** top-50 | «проконтролировать, что игрок увидит все обязательные турниры в первую очередь и гарантированно, чтобы не было коллизий» | ⚙ requirement recorded – measured below |
 
 ## What this round is waiting on
