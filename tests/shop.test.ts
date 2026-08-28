@@ -20,6 +20,7 @@ import {
   assetValueCents,
   ownedAssets,
   revalueAssets,
+  sellableAsset,
   shopCatalogue,
   shopItem,
   shopUnlocked,
@@ -59,7 +60,14 @@ function career(seed: string, weeks: number): WorldState {
 }
 
 describe('the shelf itself', () => {
-  it('⭐ carries §3a-c and nothing else – two investments, four cars, two house tiers', () => {
+  // ⚠⚠ RE-AIMED AT ROUND 29 #5, NEVER DELETED, AND THE CLAIM IS THE SAME CLAIM. This pin exists so
+  // that a rung cannot arrive on the shelf without a line in a test saying it did; the owner asked
+  // for three storeys – «В магазине всё ещё не хватает яхт, самолётов и стойки академии» – so ten
+  // rows arrive and every one of them is named here. What is STILL absent is what is still absent:
+  // no bonds and no club stake (§3a's upper rungs), and neither of the two items that were about HER
+  // (§3d became a birthday gift, §3e was struck). The negative below moved with the positive, which
+  // is the honest form of a re-aim: it can no longer refuse the words this slice legitimately adds.
+  it('⭐ carries §3a-c, §3f and §3g – and still nothing else', () => {
     const rows = shopCatalogue()
     expect(rows.map((r) => r.id)).toEqual([
       'deposit',
@@ -70,6 +78,16 @@ describe('the shelf itself', () => {
       'car-unreasonable',
       'house-first',
       'house-garden',
+      'boat-launch',
+      'boat-motor',
+      'yacht',
+      'yacht-big',
+      'plane',
+      'plane-long',
+      'academy-land',
+      'academy-courts',
+      'academy-building',
+      'academy-staff',
     ])
     // §3a's two minimums and §3b's four prices are the spec's own numbers, quoted here so a retune
     // has to come through this file.
@@ -78,10 +96,13 @@ describe('the shelf itself', () => {
     expect(rows.filter((r) => r.family === 'car').map((r) => r.entryCents)).toEqual([
       60_000_00, 110_000_00, 190_000_00, 300_000_00,
     ])
-    // ⚠ AND THE SLICES THAT ARE NOT MINE ARE NOT HERE. No bonds, no club stake (§3a's upper rungs),
-    // no elite ladder (§3f), no academy (§3g) – and neither of the two items that were about HER,
-    // which left the shelf entirely (§3d became a birthday gift, §3e was struck).
-    expect(rows.some((r) => /bond|club|yacht|plane|academy|court|flat/i.test(r.id))).toBe(false)
+    // ⚠ AND THE SLICES THAT ARE STILL NOT MINE ARE STILL NOT HERE. No bonds and no club stake (§3a's
+    // upper rungs) – and neither of the two items that were about HER, which left the shelf entirely
+    // (§3d became a birthday gift, §3e was struck). ⚠ `court` and `flat` are the two of hers and
+    // they stay in the pattern; `academy-courts` is the ACADEMY's, so the pattern is anchored on the
+    // word standing alone rather than on a substring, which is what «no court for her» means.
+    expect(rows.some((r) => /bond|club|flat/i.test(r.id))).toBe(false)
+    expect(rows.some((r) => r.id === 'court' || r.id === 'home-court')).toBe(false)
   })
 
   it('⭐⭐ §3b – THE CARS LOSE MONEY, and that is the point of having them', () => {
@@ -384,7 +405,13 @@ describe('§2e-3 – the frozen MAIN capture cannot see any of this', () => {
           /* already owned this week */
         }
       }
-      for (const owned of [...ownedAssets(w)]) sellAsset(w, owned.id)
+      // ⚠ RE-AIMED AT ROUND 29 #5, NOT WEAKENED – `sellableAsset` is now false while a commissioned
+      // thing is still being built (§3f: «the contract cannot be sold»), so an unconditional sale
+      // threw and the arm stopped at the first boat. Asking the predicate keeps every rung in the
+      // sweep and makes it STRICTER than it was: the contracts stay on the books, `deliverAssets`
+      // fires on the week each one lands, and the weekly upkeep runs from there – so this now
+      // proves input-independence over the delivery and the bill as well as over buy/sell.
+      for (const owned of [...ownedAssets(w)]) if (sellableAsset(w, owned)) sellAsset(w, owned.id)
     })
     expect(draws.length, 'the same number of MAIN draws').toBe(base.draws.length)
     expect(fnv1aHex(draws.join(',')), 'and the same sequence').toBe(fnv1aHex(base.draws.join(',')))

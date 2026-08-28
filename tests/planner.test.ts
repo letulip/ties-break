@@ -481,10 +481,17 @@ describe('P3 — vacation pricing (middle-anchored band × wealth corridor)', ()
   // grandma's, so the free rung impersonated the paid ones and the picker's own "cheapest
   // sufficient" rule recommended it nearly always. The bottom now steps by 8 (10 -> 18 -> 26);
   // rungs three and up are untouched, exactly as the ruling says.
+  // ⚠⚠ RE-AIMED AT ROUND 29 #5, NEVER DELETED, AND THE SIX ARE STILL THE SIX. The shop's §3f gave
+  // the ladder a SEVENTH rung that is not sold – «а неделя на яхте (при наличии яхты) вполне может
+  // стать новой строкой отпуска» – and it is `grantedOnly`, i.e. it is not on the general shelf and
+  // no family sees it without owning a yacht. So every claim below that is about the LADDER MONEY
+  // BUYS is asked of `SHELF` and reads exactly as it did; the seventh gets its own assertions under
+  // it, and `tests/round29-shop-elite.test.ts` holds what it does in a world.
   it('has the owner-approved six packages with the spec gains and buffs', () => {
-    const ids = ECONOMY.vacation.packages.map((p) => p.id)
+    const SHELF = ECONOMY.vacation.packages.filter((p) => !p.grantedOnly)
+    const ids = SHELF.map((p) => p.id)
     expect(ids).toEqual(['staycation', 'grandma', 'camping', 'seaside', 'resort', 'elite'])
-    expect(ECONOMY.vacation.packages.map((p) => p.conditionGain)).toEqual([10, 18, 26, 32, 40, 48])
+    expect(SHELF.map((p) => p.conditionGain)).toEqual([10, 18, 26, 32, 40, 48])
     expect(vacationPackage('resort')!.buffFactor).toBe(0.9)
     expect(vacationPackage('elite')!.buffFactor).toBe(0.85)
     expect(vacationPackage('staycation')!.buffFactor).toBe(1)
@@ -493,13 +500,31 @@ describe('P3 — vacation pricing (middle-anchored band × wealth corridor)', ()
     expect(vacationPackage('staycation')!.priceCents).toEqual([0, 0])
     // ...and the gain ladder is strictly ascending too, which is what every copy licence and grid
     // arc in the game reads (diary.ts, weekGrid.ts): the sentences climb WITH the number.
-    const gains = ECONOMY.vacation.packages.map((p) => p.conditionGain)
+    const gains = SHELF.map((p) => p.conditionGain)
     for (let i = 1; i < gains.length; i++) expect(gains[i]).toBeGreaterThan(gains[i - 1])
+    // ⭐⭐ ROUND 29 #5 – AND THE SEVENTH RUNG DOES NOT KILL THE SIX, which is §3f's own veto: «the
+    // yacht must NOT be the strictly best rest week available – if it is, every owner takes it every
+    // time and the other six packages die on the same day the yacht arrives.» It TIES with the elite
+    // programme on the gain and wins on being free; elite keeps the injury buff, which is a currency
+    // a boat cannot pay in. ⚠ A GAIN ABOVE 48 HERE WOULD BREAK THE VETO and this is what says so.
+    const yachtWeek = vacationPackage('yacht-week')!
+    expect(yachtWeek.grantedOnly).toBe(true)
+    expect(yachtWeek.priceCents).toEqual([0, 0])
+    expect(yachtWeek.conditionGain).toBe(vacationPackage('elite')!.conditionGain)
+    expect(yachtWeek.buffFactor).toBeGreaterThan(vacationPackage('elite')!.buffFactor)
     // The unit the table is written in (spec §4): every rung is denominated in rest weeks at the
     // repriced base, which is why the two knobs may never be re-tuned apart. ⚠ 12.08: the bottom
     // two moved with the owner's re-step (18/22 -> 10/18), so the free week is now worth 1.25 rest
     // weeks against grandma's 2.25 - a full rest-week between them where there was half of one.
     expect(gains.map((g) => g / ECONOMY.condition.recoveryBase)).toEqual([1.25, 2.25, 3.25, 4, 5, 6])
+  })
+
+  // ⚠ ANTI-VACUITY FOR THE RE-AIM ABOVE. `SHELF` is a filter, and a filter that matched everything –
+  // or nothing – would make every claim in that test either unchanged-and-blind or empty-and-green.
+  it('⚠ the shelf filter really removes exactly one package', () => {
+    expect(ECONOMY.vacation.packages.length).toBe(7)
+    expect(ECONOMY.vacation.packages.filter((p) => !p.grantedOnly).length).toBe(6)
+    expect(ECONOMY.vacation.packages.filter((p) => p.grantedOnly).map((p) => p.id)).toEqual(['yacht-week'])
   })
 
   // ⚠ MONEY BUYS RECOVERY SPEED, NEVER RECOVERY (spec §4, and the rule act2-pro-tour.md §3 sets for
@@ -525,6 +550,14 @@ describe('P3 — vacation pricing (middle-anchored band × wealth corridor)', ()
           w.fundsCents = 100_000_00
           w.physioActive = false
           w.condition = 40
+          // ⚠ RE-AIMED AT ROUND 29 #5, AND WIDENED RATHER THAN NARROWED. §3f's seventh rung is
+          // `grantedOnly`, so `bookVacation` refuses it to a family with no yacht; giving these
+          // three worlds a DELIVERED one keeps all seven packages inside the claim instead of
+          // excusing the new one from it. An owned row with no `readyWeek` is what «delivered»
+          // means (shared/protocol/profile.ts), which is why no tick is needed to arrange it.
+          if (pkg.grantedOnly) {
+            w.assets = [{ id: 'yacht', boughtWeek: 0, paidCents: 12_000_000_00, valueCents: 12_000_000_00 }]
+          }
           bookVacation(w, w.week + 1, pkg.id)
           tickWeek(w, rngFromSeed(w.seed))
           return w.condition
@@ -575,7 +608,14 @@ describe('P3 — vacation pricing (middle-anchored band × wealth corridor)', ()
       }
     }
     // and the ladder still climbs: every rung's floor clears the one below it
-    const floors = ECONOMY.vacation.packages.map((p) => p.priceCents[0])
+    // ⚠ RE-AIMED AT ROUND 29 #5 – asked of the LADDER MONEY BUYS. §3f's seventh rung is free by
+    // design («the money went years ago and the upkeep is charged every week whether she sails or
+    // not») and is not on the general shelf at all, so it is not a step in a price ladder and a
+    // strictly-ascending claim that included it would be asserting the opposite of the design. The
+    // claim about IT is one line up, in the `free` branch, where it is held to `[0, 0]` exactly like
+    // the staycation – so nothing about the zero-quote property is weakened.
+    const floors = ECONOMY.vacation.packages.filter((p) => !p.grantedOnly).map((p) => p.priceCents[0])
+    expect(floors.length, 'the paid ladder is still six rungs').toBe(6)
     for (let i = 1; i < floors.length; i++) expect(floors[i]).toBeGreaterThan(floors[i - 1])
   })
 
