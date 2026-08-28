@@ -47,9 +47,19 @@ contention artefacts of round 28 cost more reading than the wall-clock they save
   чемпионатской нет. Может сделать возможность переноса съёмки или всё-таки жарить прямо с
   чемпионатом с последствиями.»** – **build + ask.** ⚠ Round 28 #1/#6 shipped the shoot week and
   **deliberately exempted a tournament week** – the engine pays the masseur nothing there and the
-  builder recorded «lights and flights, not his table». **He has now looked at that exemption and
-  does not want it.** Two roads and he named both: let the shoot MOVE, or let it run on top of the
-  tournament with a real energy cost. Sharpened below.
+  builder recorded «lights and flights, not his table». **He has looked at that exemption and does not want it** –
+  «но она же осталась на турнирной неделе, значит надо понять как с ней быть».
+
+  ⚙ **HIS RULING, and it is better than the fork I offered him.** I asked him to pick between moving
+  the shoot and paying for it; he says the CHOICE BELONGS TO THE PLAYER, and named all three arms:
+
+  1. **cancel the tournament**;
+  2. **cancel or move the shoot** – ⚠ and cancelling «явно должны быть последствия какие-то», moving
+     presumably not;
+  3. **shoot and play in the same week**, paying for it in condition – his own figure: **«+1 в день,
+     т.к. съемка занимает не один час, то нагрузка будет мощной на всю неделю»**.
+
+  ⭐ So this is a decision surface, not an automatic resolution. The week must ASK.
 
 - [~] **4. «По победам как-будто по-лучше стало»** – ⚙ **his own verdict, recorded, nothing to build.**
 
@@ -139,6 +149,17 @@ contention artefacts of round 28 cost more reading than the wall-clock they save
 - [ ] **17. «проверь предыдущие раунды на предмет "что забыто и не сделано" пожалуйста»** – **audit.**
   ⭐ Runs FIRST, because its output changes what the rest of this round should do.
 
+- [ ] **19. ⭐ «вроде бы я всё мержил и обновление прилетало на телефон, где информация об этом?
+  может быть стоит какую-то версию добавить в настройках внизу строчкой? И в pull-request скилле
+  обновлять при деплое?»** – **build, and it closes a hole that just cost us.** ⚠⚠ **I asserted his
+  save predated round 28 and was wrong** – it is schemaVersion 65, i.e. round 28 was in it. Nothing
+  on his screen says which build he is playing, so every defect he reports carries an unknown.
+
+  What it owes: a version line at the foot of Settings, updated at deploy, identifying the build
+  precisely enough to map a report onto a commit. ⭐ Recommend a short commit SHA plus the date rather
+  than a semver – a semver says what we intended, a SHA says what he is running, and it is the second
+  question we keep needing. Pairs with 18: the `pull-request` skill updates it.
+
 - [ ] **18. «добавить в скилл pull-request проверку несделанных пунктов из раунда»** – **build (skill).**
   ⭐ 17 and 18 are the same instinct: he has noticed that items go quiet, and wants the PR step to
   catch it mechanically rather than by my memory.
@@ -149,6 +170,5 @@ contention artefacts of round 28 cost more reading than the wall-clock they save
 
 | | the choice |
 | --- | --- |
-| **3** | a shoot landing on a tournament week: **(A)** it can be MOVED, **(B)** it runs on top with a real energy cost, **(C)** both, A by default with B as the price of refusing |
 | **6** | the multi-week skip: **(A)** repair it (it must move the calendar and report the real span), **(B)** delete the control, **(C)** keep it only for an injury lay-off |
 | **11** | Savings vs Index fund: what makes Savings worth holding once the fund can be topped up |
