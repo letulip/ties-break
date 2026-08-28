@@ -41,6 +41,14 @@ export interface VacationPackage {
   conditionGain: number
   /** injury-tau multiplier carried for ECONOMY.vacation.buffWeeks weeks; 1 = no carry-over buff */
   buffFactor: number
+  /** ⭐⭐ ROUND 29 #5, the-shop §3f – A PACKAGE THAT IS NOT ON THE GENERAL SHELF: the family has to
+   *  OWN the thing that grants it. Absent on the six the planner has always carried, which is why
+   *  it is optional rather than `false` everywhere.
+   *
+   *  ⚠ THE GRANT IS THE SHOP'S (`ShopView.vacationIds`) AND THE REFUSAL IS `bookVacation`'s. Nothing
+   *  here knows what grants what – this flag only says «ask before offering me», so a screen that
+   *  forgot to ask shows one row too many and the engine still refuses the booking. */
+  grantedOnly?: boolean
 }
 
 export interface GearLine {
@@ -2704,6 +2712,38 @@ export const ECONOMY = {
         conditionGain: 48,
         buffFactor: 0.85,
       },
+      // ⭐⭐ ROUND 29 #5 – THE SEVENTH RUNG, AND IT IS NOT SOLD. docs/specs/the-shop-2026-08.md §3f,
+      // the owner's own idea: «а неделя на яхте (при наличии яхты) вполне может стать новой строкой
+      // отпуска, кстати».
+      //
+      // ⚠ FREE AT THE POINT OF USE, and §3f says why in one line: «the money went years ago and the
+      // upkeep is charged every week whether she sails or not». `[0, 0]` is the staycation's own
+      // shape, so `bookVacation`'s two zero-price carve-outs (affordable at negative funds, no
+      // expense row) apply to it unchanged and correctly – nothing is charged, so nothing has to be
+      // afforded and there is no row to write.
+      //
+      // ⚠⚠ 48 AND `buffFactor: 1` – THE TUNING QUESTION §3f NAMES, ANSWERED ON ITS FIRST ARM. Its
+      // words: «Either it ties with elite and wins on being free, or it beats it slightly and elite
+      // keeps a reason to exist that is not price», and its veto: «the yacht must NOT be the
+      // strictly best rest week available – if it is, every owner takes it every time and the other
+      // six packages die on the same day the yacht arrives.»
+      //
+      // It TIES with the elite programme on the gain (48, the top of the ladder – §3f's «at or above
+      // elite» read at «at») and wins on being free, and ELITE KEEPS THE INJURY BUFF: `buffFactor`
+      // 0.85 against this one's 1, riding `buffWeeks: 4`. So the two are not comparable on one axis
+      // and neither dominates – a family with a yacht still pays for the clinic in the weeks it
+      // wants her tau bought down, which is the only thing money can do that a boat cannot. ⚠ A
+      // NUMBER ABOVE 48 WOULD BREAK THAT: it would beat elite on the gain AND on the price, and the
+      // buff alone is not a reason to pay $7,000 for a smaller reset.
+      {
+        id: 'yacht-week',
+        label: 'A week on the yacht',
+        blurb: 'Nowhere to be, and the sea to be nowhere on.',
+        priceCents: [0, 0],
+        conditionGain: 48,
+        buffFactor: 1,
+        grantedOnly: true,
+      },
     ] as VacationPackage[],
   },
 
@@ -2884,7 +2924,212 @@ export const ECONOMY = {
         entryCents: 520_000_00,
         annualRateBps: 300,
       },
+      // ⭐⭐ ROUND 29 #5 – THE ELITE (§3f), AND THEY ARE NOT BOUGHT, THEY ARE COMMISSIONED.
+      //
+      // THE OWNER: «Может что-то элитное добавить - яхты или самолеты? Со временем постройки около
+      // реальным - купил и ждешь пока будет готово, яхты строят несколько лет.» And, on the shape:
+      // «тоже можно разные тиры сделать, кстати и потерю стоимости в год + годовое обслуживание
+      // (недельный кост, ага)».
+      //
+      // ⚠⚠ SO EACH ONE CARRIES THREE NUMBERS AND NOT ONE: what it cost (`entryCents`), what it loses
+      // (`annualRateBps`, negative on every rung here) and what it takes every week to keep
+      // (`upkeepBps`, an annual share of the PRICE – `assetUpkeepCents` divides it by the year).
+      // Every figure below is §3f's own table, verbatim, including the build times.
+      //
+      // ⚠⚠ THE UPKEEP PERCENTAGES ARE THE REAL ONES AND THAT IS WHY THEY HURT (§3f). A yacht
+      // genuinely costs about a tenth of its value a year to keep – crew, berth, fuel, survey,
+      // insurance – and at $12M that is $23,076.92 a week, which is roughly thirty-eight coaches.
+      // The number is not a punishment invented for balance; it is what the thing costs, and it is
+      // the whole argument for owning one being a statement rather than an investment.
+      //
+      // ⚠ AND NOTHING HERE CAN STRAND A FAMILY, which is the house's «мы ни за что не наказываем»
+      // checked against the largest bill in the game. The two states are disjoint by construction:
+      // while it is BUILDING it cannot be sold and it charges NOTHING; the week it arrives the
+      // upkeep starts and it becomes sellable the same week. There is no week in which the family
+      // is paying for a thing it cannot get out from under.
+      {
+        id: 'boat-launch',
+        family: 'boat',
+        stake: 'fixed',
+        label: 'The launch',
+        blurb: 'Eight metres of teak and one good afternoon a week.',
+        entryCents: 900_000_00,
+        annualRateBps: -700,
+        buildWeeks: 52,
+        upkeepBps: 600,
+      },
+      {
+        id: 'boat-motor',
+        family: 'boat',
+        stake: 'fixed',
+        label: 'The motor boat',
+        blurb: 'Two cabins, a galley, and a berth with their name on it.',
+        entryCents: 2_400_000_00,
+        annualRateBps: -700,
+        buildWeeks: 78,
+        upkeepBps: 600,
+      },
+      // ⭐⭐ THE TWO THAT GRANT THE WEEK (§3f, and it is the owner's own idea): «а неделя на яхте
+      // (при наличии яхты) вполне может стать новой строкой отпуска, кстати».
+      //
+      // ⚠ ONLY THESE TWO, AND THAT IS THE NARROW READING OF «при наличии ЯХТЫ» ON PURPOSE. The two
+      // rungs above are a launch and a motor boat – the spec calls neither of them a yacht, and
+      // §11's own acceptance for this slice is «a career orders a yacht, WAITS THREE YEARS», which
+      // is this rung's build time and not theirs. A week away on a day-boat is not a holiday.
+      {
+        id: 'yacht',
+        family: 'boat',
+        stake: 'fixed',
+        label: 'The yacht',
+        blurb: 'Crew of six, and a week of it is a week nobody can reach them.',
+        entryCents: 12_000_000_00,
+        annualRateBps: -500,
+        buildWeeks: 156,
+        upkeepBps: 1000,
+        grantsVacationId: 'yacht-week',
+      },
+      {
+        id: 'yacht-big',
+        family: 'boat',
+        stake: 'fixed',
+        label: 'The big yacht',
+        blurb: 'The one the harbour has to make room for.',
+        entryCents: 28_000_000_00,
+        annualRateBps: -500,
+        buildWeeks: 208,
+        upkeepBps: 1000,
+        grantsVacationId: 'yacht-week',
+      },
+      // ⭐⭐ THE PLANE IS THE PARENTS', AND THE OWNER CORRECTED ME ON EXACTLY THAT (§3f): «Самолёт не
+      // её, а родителей =) Теоретически может вполне резать косты на перелеты до соревнований,
+      // почему бы и нет. По усталости по аналогии с кортом может 1 накинуть, не вижу причин не
+      // делать, не такая большая величина».
+      //
+      // ⚠ BOTH EFFECTS RIDE ON THE FAMILY, not on the rung: a long-range plane costs more, loses
+      // more and keeps for more, and it flies the same people to the same tournaments. The spec
+      // gives the two aircraft three different numbers and one identical purpose, so inventing a
+      // second, better cut for the dearer one would be a rule this file does not have.
+      {
+        id: 'plane',
+        family: 'plane',
+        stake: 'fixed',
+        label: 'The plane',
+        blurb: 'Eight seats and no airport that keeps them waiting.',
+        entryCents: 18_000_000_00,
+        annualRateBps: -600,
+        buildWeeks: 104,
+        upkeepBps: 800,
+      },
+      {
+        id: 'plane-long',
+        family: 'plane',
+        stake: 'fixed',
+        label: 'The long-range plane',
+        blurb: 'Melbourne without stopping, and a bed on the way back.',
+        entryCents: 38_000_000_00,
+        annualRateBps: -600,
+        buildWeeks: 156,
+        upkeepBps: 800,
+      },
+      // ⭐⭐ ROUND 29 #5 – HER ACADEMY (§3g), THE END OF THE MONEY.
+      //
+      // THE OWNER: «построить свою академию за много миллионов - тоже может быть интересно, кстати.
+      // Как раз будет куда рекламное тратить.»
+      //
+      // ⚠⚠ FOUR STAGES IN THE SPEC'S OWN ORDER – «land, courts, the building, the staff» – AND THE
+      // ORDER IS ENFORCED, not suggested: `requiresId` chains them, so a half-built academy is a
+      // real state the player can sit in (§3g's own words) and courts cannot appear on land nobody
+      // owns. That is why THIS family is the one exception to the catalogue's «cheapest first»: the
+      // stages read in BUILD order, and the last one is not the dearest.
+      //
+      // ⚠⚠ THE FOUR PRICES ARE MINE AND NOT THE SPEC'S, exactly as the two house tiers were (§12b).
+      // §3g gives a band – «Cost: $8–15M, in STAGES rather than one press» – and four stage names,
+      // and stops. $2M + $3M + $4M + $3M = $12,000,000, the middle of his band, and each stage is a
+      // real decision on its own rather than a step nobody notices.
+      //
+      // ⚠ NO BUILD WAIT AND NO UPKEEP, because §3g asks for neither and this file does not invent
+      // what it was not given. §3f's «время постройки» and «годовое обслуживание» are said of the
+      // boats and the planes; the academy's own sentence is «each stage is a decision and a bill»,
+      // and a stage IS the wait. ⚠ AND IT HOLDS ITS VALUE (rate 0) for the same reason: §3g calls it
+      // «the one asset that outlives the career» and gives it no rate, so it neither earns nor
+      // decays, and the shelf says so in as many words («Holds its value»).
+      {
+        id: 'academy-land',
+        family: 'academy',
+        stake: 'fixed',
+        label: 'The land',
+        blurb: 'Twelve hectares outside town, and a name on the deeds.',
+        entryCents: 2_000_000_00,
+        annualRateBps: 0,
+      },
+      {
+        id: 'academy-courts',
+        family: 'academy',
+        stake: 'fixed',
+        label: 'The courts',
+        blurb: 'Sixteen of them, and the lights that keep them open till nine.',
+        entryCents: 3_000_000_00,
+        annualRateBps: 0,
+        requiresId: 'academy-land',
+      },
+      {
+        id: 'academy-building',
+        family: 'academy',
+        stake: 'fixed',
+        label: 'The clubhouse',
+        blurb: 'Gym, kitchen, forty beds and somewhere to do the homework.',
+        entryCents: 4_000_000_00,
+        annualRateBps: 0,
+        requiresId: 'academy-courts',
+      },
+      {
+        id: 'academy-staff',
+        family: 'academy',
+        stake: 'fixed',
+        label: 'The staff',
+        blurb: 'Coaches, physios and the person who answers the telephone.',
+        entryCents: 3_000_000_00,
+        annualRateBps: 0,
+        requiresId: 'academy-building',
+      },
     ],
+    /** ⭐⭐ ROUND 29 #5, §3f – WHAT THE FAMILY'S OWN PLANE TAKES OFF A FARE, as a share of it.
+     *
+     *  THE OWNER: «Теоретически может вполне резать косты на перелеты до соревнований, почему бы и
+     *  нет.» ⚠ THE VERB IS «резать» AND NOT «убрать», and this number is that distinction made
+     *  mechanical: the plane HALVES the family's travel bill, it does not delete it. Three reasons
+     *  the share is a half rather than the whole fare, and the spec gives no figure at all:
+     *
+     *    1. a fare that fell to zero would take the travel LINE off the family's ledger, and a cost
+     *       the player cannot find is this repo's own named defect (the academy's $20,879);
+     *    2. flying your own aeroplane is not free – it is what `upkeepBps` above is charging for,
+     *       and a plane that both zeroed the fare and billed the upkeep would be describing one
+     *       journey twice;
+     *    3. it is not a balance lever in either direction. A season of travel is four figures and
+     *       this aircraft costs $27,692 A WEEK to keep, so the cut can never be the reason to buy
+     *       one. §3f is explicit that owning these is «a statement rather than an investment».
+     *
+     *  ⚠ IT COMES OFF EVERY SEAT THE FAMILY PAYS FOR – hers, the coach's and the masseur's – because
+     *  it is ONE AIRCRAFT carrying all of them. That does not touch the 15.08 ruling that support
+     *  may not pay for the entourage: a scholarship is somebody else's money and this is the
+     *  family's own. */
+    planeTravelShare: 0.5,
+    /** ⭐⭐ §3f – WHAT THE PLANE ADDS TO A WEEK SHE SPENDS TRAVELLING, in condition points.
+     *
+     *  THE OWNER: «По усталости по аналогии с кортом может 1 накинуть, не вижу причин не делать, не
+     *  такая большая величина.»
+     *
+     *  ⚠⚠ IT IS HIDDEN, AND THAT IS HIS OWN RULING ON THE COURT IT IS AN ANALOGY OF: «верно, но
+     *  только если знают об этом, я предложил сделать бонус скрытым». §3d rule 4 spells out what
+     *  hidden means – «never a number on a card» – so no shelf row, no confirm dialog and no note
+     *  anywhere states it. The effect is visible where every effect in this game is visible: in the
+     *  condition line, over weeks.
+     *
+     *  ⚠ AND IT CANNOT STACK WITH THE COURT (§3d), by construction rather than by a cap: the court's
+     *  +1 lands on weeks she is NOT competing and this one lands on weeks she IS. §3f: «No week can
+     *  receive both, so a family owning everything gets a corridor that is one point kinder across
+     *  the board – never two.» */
+    planeTravelRestBonus: 1,
   },
 } as const
 
@@ -2982,10 +3227,17 @@ export function recommendVacationPackage(input: {
   budgetCents?: number
   /** optional override for the condition the pick aims to restore */
   targetCondition?: number
+  /** ⭐ ROUND 29 #5 – the `grantedOnly` packages this family may actually book
+   *  (`Snapshot.shop.vacationIds`). ⚠ DEFAULTS TO NONE, and the default is the conservative one: a
+   *  caller that does not know about the shelf recommends only what every family can book, which is
+   *  exactly what this function did before the yacht existed. */
+  grantedIds?: string[]
 }): string | null {
   const cap = Math.min(input.fundsCents, input.budgetCents ?? input.fundsCents)
   const target = input.targetCondition ?? ECONOMY.practice.rescueTargetCondition
+  const granted = input.grantedIds ?? []
   const priced = ECONOMY.vacation.packages
+    .filter((pkg) => !pkg.grantedOnly || granted.includes(pkg.id))
     .map((pkg) => ({ pkg, priceCents: vacationPriceCents(input.seed, input.week, pkg.id, input.background) }))
     .filter((row) => row.priceCents <= cap)
     // cheapest first, and on a price tie the SMALLER gain first – "cheapest sufficient" has to be

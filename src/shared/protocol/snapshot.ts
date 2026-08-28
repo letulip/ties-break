@@ -61,6 +61,19 @@ export interface HouseholdWeekly {
    *  be in the household's weekly picture, and it is deliberately NOT in `weeklyIncomeCents`, which
    *  is the coach market's affordability cap and must stay the money that really arrives. */
   shelfCents: number
+  /** ⭐⭐ ROUND 29 #5, §3f – WHAT THE SHELF COSTS TO KEEP, as a POSITIVE magnitude, and unlike
+   *  `shelfCents` THIS ONE IS CASH. A yacht's crew, berth, fuel, survey and insurance leave the
+   *  wallet every week whether anybody sails or not, which is the whole argument for owning one
+   *  being a statement rather than an investment.
+   *
+   *  ⚠⚠ IT IS ALREADY INSIDE `outgoingCents` – `shelfCents`' own discipline, in the same words: a
+   *  consumer that adds it again has misread it. It is carried so the strip can NAME the bill.
+   *
+   *  ⚠ AND IT IS IN THIS TOTAL BY DESIGN RATHER THAN BESIDE IT. Round 28 #8 exists because the
+   *  masseur's $525 was a real weekly cost the household block did not know about; a $23,080 yacht
+   *  that bypassed the same total would be that defect again, larger. Zero for every family that
+   *  owns nothing with an upkeep. */
+  upkeepCents: number
 }
 
 export interface Snapshot {

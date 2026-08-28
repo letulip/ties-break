@@ -22,6 +22,10 @@ import type { SeasonEvent, TierId } from '../season/types'
 import { LADDER_LABEL, type AdOfferTerms, type CoachTier, type KitEndReason, type KitOfferTerms, type Offer, type WorldEventCategory } from '../../shared/protocol'
 import { accrueKidShare, addEvent } from './ledger'
 import { kidPoints, tableSize } from './ladder'
+// ⚠ ROUND 29 #5 – the leaf, never `./shop`: `shop.ts` imports `./endings`, `endings` imports
+// `./entries` and `entries` imports `./medical`, which is a real cycle. `world/assets.ts` imports
+// the catalogue and a type and nothing else.
+import { ownsDeliveredOfFamily } from './assets'
 import { KID_ID } from './constants'
 import { kidAgeAt } from './age'
 import type { WorldState } from '../world'
@@ -679,12 +683,50 @@ export function offerAnswerErrorFor(world: WorldState, offerId: string): string 
  *
  *  The two covers COMPOSE rather than add: the brand takes its share of what the family still owes
  *  after the academy has taken its own, so a girl carrying both is never handed more than the fare.
- *  A scholarship at 80% plus a brand at 25% is 85% of a trip covered, not 105%. */
+ *  A scholarship at 80% plus a brand at 25% is 85% of a trip covered, not 105%.
+ *
+ *  ⚠⚠ ROUND 29 #5 PUT A THIRD HAND ON IT AND IT IS NOT A COVER – IT IS THE FAMILY'S OWN AEROPLANE
+ *  (the-shop §3f, the owner: «Теоретически может вполне резать косты на перелеты до соревнований,
+ *  почему бы и нет»). It composes the same way and it comes LAST, off what the family still owes
+ *  after everybody else's help, so a plane can never hand the family more than the fare.
+ *
+ *  ⚠ AND THE SPLIT BELOW IS THE WHOLE REASON THIS IS TWO FUNCTIONS. `travelCoverReachesHer` in
+ *  world/coachMarket.ts asks «is any SUPPORT taking anything off her travel right now», and its own
+ *  note says it is asked of this function precisely so that a support stream added tomorrow is
+ *  inside the answer automatically. A plane is not support – it is the family paying for itself –
+ *  so it must NOT make that sentence true, and the honest way to keep both is to name the support
+ *  half (`supportedTravelCents`) and leave that question pointed at it. */
 export function travelCostFor(world: WorldState, event: SeasonEvent): number {
+  return afterOwnPlaneCents(world, supportedTravelCents(world, event))
+}
+
+/** THE SUPPORT HALF ALONE – the academy's scholarship and the brand's share, composed, and NOTHING
+ *  the family bought for itself. This is the body `travelCostFor` has always had; only the plane
+ *  sits outside it (round 29 #5). Every future SUPPORT stream belongs in here. */
+export function supportedTravelCents(world: WorldState, event: SeasonEvent): number {
   const afterAcademy = netTravelCents(event.travelCostCents, world.academy)
   const share = kitTravelShare(world.offers, world.week)
   if (share <= 0) return afterAcademy
   return afterAcademy - Math.round(afterAcademy * share)
+}
+
+/** ⭐⭐ ROUND 29 #5, the-shop §3f – WHAT THE FAMILY'S OWN PLANE TAKES OFF A SEAT.
+ *
+ *  ⚠ ONE SHARE, ONE FUNCTION, EVERY SEAT. Hers goes through `travelCostFor` above and the staff's
+ *  through `staffSeatFareCents` below, and both arrive here, because it is ONE aircraft carrying all
+ *  of them and a second arithmetic for the second seat is how two figures start disagreeing.
+ *
+ *  ⚠⚠ IT DOES NOT TOUCH THE 15.08 RULING that the support may not pay for the entourage – «этот
+ *  механизм не должен поддерживать их чрезмерные траты». That ruling is about somebody ELSE's money
+ *  reaching the coach's ticket; this is the family flying its own people in its own plane, having
+ *  paid $18,000,000 for it and paying $27,692 a week to keep it. `tests/support-never-pays-the-coach.test.ts`
+ *  measures the scholarship and the brand, and neither of them moved.
+ *
+ *  ⚠ DELIVERED ONLY (`ownsDeliveredOfFamily`) – a contract flies nobody anywhere. Zero draws. */
+function afterOwnPlaneCents(world: WorldState, fareCents: number): number {
+  if (fareCents <= 0) return fareCents
+  if (!ownsDeliveredOfFamily(world, 'plane')) return fareCents
+  return fareCents - Math.round(fareCents * ECONOMY.shop.planeTravelShare)
 }
 
 /** What the ACADEMY alone took off this fare - its own tally must never be credited with the brand's
@@ -845,10 +887,13 @@ export function coachTravelFareFor(world: WorldState, event: SeasonEvent): numbe
  *  (17.08: «a sponsor's travel share comes off both seats; a scholarship comes off hers alone»).
  *  One multiply against the printed price, zero draws. */
 function staffSeatFareCents(world: WorldState, event: SeasonEvent, paysPrizeMoney: boolean): number {
-  if (!paysPrizeMoney) return event.travelCostCents
+  // ⭐ ROUND 29 #5 – the family's own plane carries the staff too (§3f). Wrapped around the whole
+  // expression rather than added to one arm of it, so his seat is halved at a junior rung the brand
+  // does not touch as well as at a W event it does: the aeroplane does not care which tier it is.
+  if (!paysPrizeMoney) return afterOwnPlaneCents(world, event.travelCostCents)
   const share = kitTravelShare(world.offers, world.week)
-  if (share <= 0) return event.travelCostCents
-  return event.travelCostCents - Math.round(event.travelCostCents * share)
+  if (share <= 0) return afterOwnPlaneCents(world, event.travelCostCents)
+  return afterOwnPlaneCents(world, event.travelCostCents - Math.round(event.travelCostCents * share))
 }
 
 /** ⭐ TRAVELLING TEAM STEP 2 – WHAT THE MASSEUR'S SEAT COSTS, and it is the coach's own rule asked

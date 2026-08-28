@@ -210,6 +210,33 @@ export interface OwnedAsset {
    *  so the basis IS `paidCents` and the clock IS `boughtWeek`», which is what `revalueAssets` reads
    *  when they are missing. No migration is owed and `SAVE_SCHEMA_VERSION` does not move. */
   basisCents?: number
-  /** the week `basisCents` was struck – the compounding clock's start. Absent with it. */
+  /** the week `basisCents` was struck – the compounding clock's start. Absent with it.
+   *
+   *  ⚠ ROUND 29 #5 GAVE IT A SECOND WRITER AND NOT A SECOND MEANING. A COMMISSIONED thing (§3f –
+   *  the boats and the planes) is ordered years before it exists, so its clock starts on the week it
+   *  ARRIVES: `buyAsset` writes `basisWeek = readyWeek` on the order, and `assetValueCents`'s own
+   *  `Math.max(0, weeksHeld)` then holds the contract at what was paid for the whole wait. One
+   *  field, one sentence – «the compounding clock's start» – and no second value model. */
   basisWeek?: number
+  /** ⭐⭐ ROUND 29 #5, §3f – THE WEEK IT ARRIVES, and ABSENT ONCE IT HAS.
+   *
+   *  THE OWNER: «Со временем постройки около реальным – купил и ждешь пока будет готово, яхты
+   *  строят несколько лет.»
+   *
+   *  Between the order and this week the family owns a CONTRACT and not a boat: `sellableAsset`
+   *  refuses it (§3f – «the contract cannot be sold»), `weeklyAssetUpkeepCents` charges nothing for
+   *  it (there is no crew on a hull), it grants no vacation week and it flies nobody anywhere. A
+   *  rung with no `buildWeeks` never carries this key at all, which is every car, house and
+   *  investment on the shelf and every row any save has ever written.
+   *
+   *  ⚠ THE KEY IS DELETED ON ARRIVAL rather than left behind as a date, because «absent = delivered»
+   *  is the shape §12a of the spec drew for it and the shape every reader below is written against.
+   *  `deliverAssets` is its one remover and it compares `>=`, so a week skipped in a multi-week
+   *  advance still delivers.
+   *
+   *  ⚠ OPTIONAL, AND NOT A SCHEMA MOVE – `WorldEvent.entryRef`'s recorded rule and `basisCents`'s
+   *  own, one paragraph up. Absent is exactly what every historical row already means («it is here,
+   *  it arrived»), so no migration is owed and `SAVE_SCHEMA_VERSION` does not move. The spec named
+   *  this field and this exact reasoning a slice in advance (§12a). */
+  readyWeek?: number
 }

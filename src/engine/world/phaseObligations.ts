@@ -35,7 +35,7 @@ import { fireMilestone } from './milestones'
 import { inCollege } from './college'
 import { announceFieldFarewells, announceFieldIntake, isFieldFarewellWeek } from './fieldNews'
 import { expireKnock } from './knock'
-import { revalueAssets } from './shop'
+import { deliverAssets, revalueAssets } from './shop'
 import {
   settleMandatoryDeadlines,
   settleMandatoryMisses,
@@ -381,5 +381,12 @@ export function seasonBoundaryAndObligations(world: WorldState): void {
   //         ⚠ ZERO DRAWS, and `world/shop.ts` imports no RNG at all: the value is arithmetic on
   //         `boughtWeek`, so the frozen MAIN capture (41550 / e6b0c709) cannot see it. Slice 2's
   //         drift arrives INSIDE this call on `seed:asset:<id>:<week>` and never on MAIN.
+  //
+  // ⭐⭐ ROUND 29 #5, §3f – AND THE THING THE FAMILY ORDERED THREE YEARS AGO ARRIVES FIRST. It is an
+  //         obligation of the CALENDAR in the purest sense – nobody decided it, a date came round –
+  //         and it has to run AHEAD of `revalueAssets` because delivery is the week the value clock
+  //         starts, and ahead of phase 2 because delivery is the week the upkeep starts being
+  //         charged. ⚠ ZERO DRAWS: it removes one optional key and writes one `entry` row.
+  deliverAssets(world)
   revalueAssets(world)
 }

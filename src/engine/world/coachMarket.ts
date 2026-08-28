@@ -22,12 +22,15 @@ import { activeKitDeal, kitTravelShare } from '../offers'
 // ⭐ ROUND-21 #2: the ONE fare definition, read rather than re-derived - see `coachTravelFareFor`,
 // which lives beside it in world/sponsors.ts. sponsors.ts imports nothing from this module, so this
 // runs one way exactly as `../offers` above does.
-import { coachTravelFareFor, travelCostFor } from './sponsors'
+import { coachTravelFareFor, supportedTravelCents, travelCostFor } from './sponsors'
 // ⭐ ROUND-28 #8 – the other two seats the household's week has to know about. Both are leaves that
 // import nothing from this file (masseur: economy/condition/ledger/constants/ladder/college/bookings;
 // shop: economy/calendar/ladder/endings/ledger/money), so there is no runtime cycle to make here.
 import { masseurWeeklyCents } from './masseur'
-import { assetValueCents, ownedAssets, shopItem } from './shop'
+// ⚠ REPOINTED AT THE LEAF AT ROUND 29 #5 – same functions, same behaviour. `world/assets.ts` holds
+// the shelf's pure reads and `world/shop.ts` re-exports them, so this is a shorter path to the same
+// symbols and not a change: this file only ever asked the shelf questions.
+import { assetValueCents, ownedAssets, shopItem, weeklyAssetUpkeepCents } from './assets'
 import { addEvent, seasonIndexOf, seasonStartWeek } from './ledger'
 import { ageAtWeek, kidAgeAt, START_AGE_YEARS } from './age'
 import { activeLadderOf, bookClosedTo, hasOutgrown, kidPoints, tierOpenFor } from './ladder'
@@ -446,10 +449,17 @@ export function coachBilling(world: WorldState): {
  *  card yet and most needs to be told whose seat the scholarship pays for. The amount is large enough
  *  that no percentage cover rounds away to nothing. Pure; zero draws. */
 function travelCoverReachesHer(world: WorldState): boolean {
-  // `travelCostFor` reads the world and `event.travelCostCents`, and nothing else on the event, so
-  // the cast names what this object is FOR rather than pretending it is a fixture of a real trip.
+  // `supportedTravelCents` reads the world and `event.travelCostCents`, and nothing else on the
+  // event, so the cast names what this object is FOR rather than pretending it is a real trip.
   const probe = { travelCostCents: 10_000_00 } as SeasonEvent
-  return travelCostFor(world, probe) < probe.travelCostCents
+  // ⚠⚠ RE-AIMED AT ROUND 29 #5, AND THE CLAIM IS UNCHANGED – it asked `travelCostFor` and it now
+  // asks the SUPPORT half of it. The question on screen is «is any support taking anything off her
+  // travel», and §3f gave the family a way to cut its own fare that is emphatically not support: it
+  // bought an aeroplane. Left pointed at `travelCostFor`, a family with a plane and no scholarship
+  // would have been told a brand or an academy was paying for her seat, which is a sentence nothing
+  // in the world would support. The note above still holds in full for every SUPPORT stream added
+  // later – they all arrive through `supportedTravelCents`.
+  return supportedTravelCents(world, probe) < probe.travelCostCents
 }
 
 /** How many of the NEXT `WEEKS_PER_YEAR` weeks the coach is stood down for, which since 08.08 is
@@ -596,9 +606,17 @@ export function householdWeekly(world: WorldState, trainingCents: number): House
     const held = world.week - (owned.basisWeek ?? owned.boughtWeek)
     shelfCents += assetValueCents(item, basis, held + 1) - assetValueCents(item, basis, held)
   }
+  // ⭐⭐ ROUND 29 #5 – ...AND WHAT IT COSTS TO KEEP, WHICH IS CASH AND NOT A VALUATION. §3f's weekly
+  // upkeep really leaves the wallet every week (`resolveAssetUpkeep` charges it), so unlike
+  // `shelfCents` it belongs in the OUT figure without qualification. ⚠ ASKED OF THE SAME FUNCTION
+  // THE TILL ASKS – `weeklyAssetUpkeepCents` – for the reason this whole file keeps repeating: the
+  // meter and the bill must not be two arithmetics. A yacht is $23,076 a week, which is roughly
+  // thirty-eight coaches, and a household block that did not know about it would be round 28 #8's
+  // own defect (the masseur's $525) again and larger.
+  const upkeepCents = weeklyAssetUpkeepCents(world)
   const incomeCents = familyWeeklyIncomeCents(world) + Math.max(0, shelfCents)
-  const outgoingCents = trainingCents + staffCents + Math.max(0, -shelfCents)
-  return { incomeCents, outgoingCents, netCents: incomeCents - outgoingCents, shelfCents }
+  const outgoingCents = trainingCents + staffCents + Math.max(0, -shelfCents) + upkeepCents
+  return { incomeCents, outgoingCents, netCents: incomeCents - outgoingCents, shelfCents, upkeepCents }
 }
 
 /** THE MARKET, as the screen needs it: every coach, priced in HER family's corridor at HER age and

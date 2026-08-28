@@ -35,6 +35,9 @@ import { retirementInjury } from './injury'
 import { kidMatchPlayerFor } from './player'
 import { fullRanking } from './ladder'
 import { practiceCoachRateFor } from './coachMarket'
+// ⚠ ROUND 29 #5 – the leaf (`world/assets.ts`), never `world/shop.ts`: this file is imported by the
+// shop's own dependency chain and a value import of the commands would close a cycle.
+import { grantedVacationIds } from './assets'
 import type { WorldState } from '../world'
 import { guardNotEnded, guardNotEndedForGood } from './endings'
 
@@ -117,6 +120,17 @@ export function bookVacation(world: WorldState, week: number, packageId: string)
   guardNotEnded(world)
   const pkg = vacationPackage(packageId)
   if (!pkg) throw new Error('Unknown vacation package')
+  // ⭐⭐ ROUND 29 #5, the-shop §3f – A WEEK ON THE YACHT NEEDS A YACHT, AND ONE THAT HAS ARRIVED.
+  //
+  // THE OWNER: «а неделя на яхте (при наличии яхты) вполне может стать новой строкой отпуска.»
+  //
+  // ⚠ RE-VALIDATED HERE BECAUSE THE WORKER IS NOT THE GATE (CLAUDE.md invariant 1). The planner
+  // sheet already leaves the row out (`Snapshot.shop.vacationIds`), and a tab left open on a career
+  // that has since sold the boat – or that never had one – must not be able to book a week on it.
+  // §3f is explicit that a contract is not a boat: `grantedVacationIds` reads DELIVERED rungs only.
+  if (pkg.grantedOnly && !grantedVacationIds(world).includes(pkg.id)) {
+    throw new Error('The family does not own that')
+  }
   assertPlannable(world, week, 'vacation')
   const priceCents = vacationPriceCents(world.seed, week, packageId, world.profile.background)
   // R13-7a: a ZERO-PRICE package is always affordable. The bare `funds < price` refused the free

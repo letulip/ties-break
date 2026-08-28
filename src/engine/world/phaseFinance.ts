@@ -51,6 +51,9 @@ import { ageAtWeek } from './age'
 import { vacationForWeek } from './bookings'
 import { inCollege, resolveCollegeBill } from './college'
 import { sponsorNeedMet } from './sponsors'
+// ⚠ THE LEAF, NOT `./shop` – `world/assets.ts` is the shelf's pure reads and imports nothing from
+// this package, which is what keeps the till free of the shop's command-side dependencies.
+import { assetUpkeepCents, deliveredAssets } from './assets'
 
 // Flavor lists are background-aware but a flavor is always chosen with ONE `pickInt`
 // (a single rng() call regardless of list length), so the per-tick draw count is
@@ -561,6 +564,46 @@ function resolveGear(world: WorldState): void {
   }
 }
 
+/** ⭐⭐ ROUND 29 #5, docs/specs/the-shop-2026-08.md §3f – WHAT THE SHELF COSTS TO KEEP THIS WEEK.
+ *
+ *  THE OWNER: «тоже можно разные тиры сделать, кстати и потерю стоимости в год + годовое
+ *  обслуживание (недельный кост, ага)».
+ *
+ *  ⚠⚠ IT IS A WEEKLY BILL, EXACTLY LIKE THE COACH'S, AND THAT IS THE WHOLE DESIGN (§3f): «the toys
+ *  compete with the team for the same money. A yacht crew and a masseur come out of one wallet, and
+ *  that is a real decision rather than a trophy.» So it is charged HERE, in the phase that charges
+ *  the coach, the court, the tuition and the kit, and not somewhere clever.
+ *
+ *  ⚠ ONE ROW PER THING, AND NOT ONE ROLLED-UP LINE. The masseur has a row, the coach has a row, and
+ *  a family that owns a boat and a plane is paying two crews – a single «Upkeep $81,538» line would
+ *  be a figure with no object attached, which is the shape round 23 #16 named as «you paid and you
+ *  could not tell». `category: 'shop'` so it lands in the breakdown bucket the shelf already owns.
+ *
+ *  ⚠ DELIVERED ONLY – `weeklyAssetUpkeepCents`' own rule, and the reason a commissioned order cannot
+ *  strand a family: while it cannot be sold it costs nothing.
+ *
+ *  ⚠ ZERO DRAWS ON ANY STREAM. It is arithmetic on the catalogue and on what the family paid, so the
+ *  MAIN sequence is byte-identical for every career that owns nothing with an upkeep – which is
+ *  every career that has not commissioned one – and the frozen capture (41550 / e6b0c709) cannot see
+ *  it. Nothing here is a die, so the input-independence law is not engaged. */
+function resolveAssetUpkeep(world: WorldState): void {
+  for (const { owned, item } of deliveredAssets(world)) {
+    const amountCents = assetUpkeepCents(item, owned.paidCents)
+    if (amountCents <= 0) continue
+    world.fundsCents -= amountCents
+    addEvent(world, {
+      week: world.week,
+      type: 'expense',
+      category: 'shop',
+      // Crew, berth, fuel, survey, insurance – §3f's own list, said once in the catalogue's note and
+      // not repeated on every row. The row names the THING, which is what the player is deciding
+      // about when he reads it beside the masseur.
+      text: `Upkeep: ${item.label}`,
+      amountCents: -amountCents,
+    })
+  }
+}
+
 /** ⭐ PHASE 2 OF THE WEEKLY TICK – what the week costs.
  *
  *  Called from `tickWeek` immediately after the season boundary and before anything reads her
@@ -593,6 +636,15 @@ export function weeklyFinance(world: WorldState, rng: Rng): void {
   //     e6b0c709) is untouched by construction, and the input-independence law is not engaged
   //     because nothing here is a die.
   resolveCollegeBill(world)
+
+  // 1a-bis. ⭐⭐ ROUND 29 #5 – WHAT THE SHELF COSTS TO KEEP (the-shop §3f). It sits between the
+  //     college's bill and the gear because it is the same KIND of thing as both: a standing weekly
+  //     cost the family signed up for, charged whether anybody looks at it or not. ⚠ AND IT IS NOT
+  //     GATED ON COLLEGE, unlike the gear one line below: her kit is the university's for four
+  //     years, but a yacht's crew is paid by the people who own the yacht, and the shop is the
+  //     PARENT's (§1). `buyAsset`'s own guard is `guardNotEndedForGood` for exactly this reason –
+  //     the college years are shoppable. ZERO DRAWS.
+  resolveAssetUpkeep(world)
 
   // 1b. recurring gear line-items (round-7 a). Zero main-stream draws – purpose-scoped
   //     sub-streams only – so this never perturbs the weekly draw count.

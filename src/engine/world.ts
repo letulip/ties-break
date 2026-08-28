@@ -323,8 +323,12 @@ import { familyMeans, householdWalletCents, meansOfCents, MEANS_BANDS } from './
 export { familyMeans, householdWalletCents, meansOfCents, MEANS_BANDS }
 // ⭐⭐ v63 – THE SHOP, SLICE 1 (docs/specs/the-shop-2026-08.md §2, §3a-c, §5). The parent's own
 // money, and the first shelf in this game that is his. Re-exported under the historical convention.
-import { assetValueCents, buyAsset, ownedAssets, revalueAssets, sellAsset, sellableAsset, shopCatalogue, shopItem, shopUnlocked, shopView, SHOP_LOCKED_DETAIL } from './world/shop'
-export { assetValueCents, buyAsset, ownedAssets, revalueAssets, sellAsset, sellableAsset, shopCatalogue, shopItem, shopUnlocked, shopView, SHOP_LOCKED_DETAIL }
+// ⭐⭐ ROUND 29 #5 added §3f's commissioned families and §3g's academy stages – `assetDelivered`,
+// `assetUpkeepCents`, `deliverAssets`, `grantedVacationIds`, `ownsDeliveredOfFamily` and
+// `weeklyAssetUpkeepCents` join the list. The pure reads live in `world/assets.ts` now and
+// `world/shop.ts` re-exports every one of them, so this line is unchanged in shape.
+import { assetDelivered, assetUpkeepCents, assetValueCents, buyAsset, deliverAssets, deliveredAssets, grantedVacationIds, ownedAssets, ownsDeliveredOfFamily, revalueAssets, sellAsset, sellableAsset, shopCatalogue, shopItem, shopUnlocked, shopView, weeklyAssetUpkeepCents, SHOP_LOCKED_DETAIL } from './world/shop'
+export { assetDelivered, assetUpkeepCents, assetValueCents, buyAsset, deliverAssets, deliveredAssets, grantedVacationIds, ownedAssets, ownsDeliveredOfFamily, revalueAssets, sellAsset, sellableAsset, shopCatalogue, shopItem, shopUnlocked, shopView, weeklyAssetUpkeepCents, SHOP_LOCKED_DETAIL }
 export type { ShopItem } from './world/shop'
 export type { FamilyMeans } from './world/means'
 

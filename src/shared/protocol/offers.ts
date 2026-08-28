@@ -366,7 +366,10 @@ export interface KitDealView {
 /** One rung of the shelf, as the Money screen reads it. */
 export interface ShopRowView {
   id: string
-  family: 'investment' | 'car' | 'house'
+  /** ⭐ ROUND 29 #5 added the last three (§3f, §3g). 'boat' and 'plane' are the COMMISSIONED
+   *  families – ordered, waited for, and kept every week; 'academy' is the one thing on the shelf
+   *  that is built in stages and outlives the career. */
+  family: 'investment' | 'car' | 'house' | 'boat' | 'plane' | 'academy'
   /** 'fixed' – one price. 'open' – the family names an amount, at least `entryCents`. */
   stake: 'fixed' | 'open'
   label: string
@@ -395,6 +398,25 @@ export interface ShopRowView {
    *  progress bar (§2: «never a locked row, a progress bar or a teaser») – the price stays on screen
    *  and the control is simply not pressable. */
   affordable: boolean
+  /** ⭐⭐ ROUND 29 #5, §3f – WHAT IT COSTS EVERY WEEK TO KEEP, in cents, once it is delivered. Zero
+   *  on every rung that has no upkeep, which is every car, house and investment.
+   *
+   *  ⚠ IT IS THE PRICE'S OWN PERCENTAGE AND NOT THE CURRENT VALUE'S, so the figure a player was
+   *  quoted on the day he ordered is the figure he goes on paying – see `assetUpkeepCents`. */
+  upkeepCents: number
+  /** ⭐ §3f – HOW MANY WEEKS FROM THE ORDER TO THE THING, for a rung that is commissioned rather
+   *  than bought. Zero on everything that arrives at once. */
+  buildWeeks: number
+  /** ⭐ §3f – THE WEEK THIS ONE ARRIVES, while the family is still waiting for it; null once it is
+   *  here and null when it is not owned. A contract cannot be sold, so the screen draws no Sell
+   *  control against it – it says when the thing is due instead. */
+  readyWeek: number | null
+  /** ⭐ §3g – the rung that has to be owned before this one can be bought (the academy's stages),
+   *  or null when the rung stands on its own. Never hides the row: the price and the stage are on
+   *  screen, and the control is simply not pressable yet. */
+  requiresId: string | null
+  /** ...and whether that requirement is met. True on every rung that has none. */
+  requirementMet: boolean
 }
 
 /** THE SHELF. Present on every snapshot; `unlocked` is what the junior years turn off. */
@@ -416,6 +438,21 @@ export interface ShopView {
   ownedCount: number
   /** what everything they own is worth added up, in cents. Zero when they own nothing. */
   ownedValueCents: number
+  /** ⭐⭐ ROUND 29 #5, §3f – WHAT THE SHELF COSTS TO KEEP, every week, in cents. The sum of every
+   *  DELIVERED rung's upkeep; zero for a family that owns nothing that has any, which is every
+   *  family that has not commissioned a boat or a plane. Already inside
+   *  `coachBilling.household.outgoingCents` – this is the shelf's own share of it, named. */
+  upkeepCents: number
+  /** ⭐⭐ §3f – THE VACATION PACKAGES THE SHELF HAS UNLOCKED, by id. Empty for every family that has
+   *  not taken delivery of a yacht.
+   *
+   *  THE OWNER: «а неделя на яхте (при наличии яхты) вполне может стать новой строкой отпуска.»
+   *
+   *  ⚠ THE ENGINE ANSWERS "may they book it", NEVER THE SCREEN, and this is the field that carries
+   *  the answer: `bookVacation` re-validates the same question, so a sheet left open on a career
+   *  that has just sold the boat cannot book a week on it. A package that is not `grantedOnly` is
+   *  never in here – it never needed granting. */
+  vacationIds: string[]
 }
 
 /** What a kit deal actually commits both sides to. FIXED AT ARRIVAL and never re-read from

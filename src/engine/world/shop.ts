@@ -1,13 +1,24 @@
-// ⭐⭐ THE SHOP, SLICE 1 – the tab, static prices, buy / own / sell.
-// docs/specs/the-shop-2026-08.md §2, §3a-c, §5 and §11 row 1. Nothing else in that file is here:
-// no drift, no shock, no freeze, no commissioning, no broker, no charity, no academy.
+// ⭐⭐ THE SHOP – the tab, static prices, buy / own / sell, and since round 29 #5 the storeys above.
+// docs/specs/the-shop-2026-08.md §2, §3a-c, §5 and §11 row 1 (slice 1); §3f and §3g (round 29 #5:
+// «В магазине всё ещё не хватает яхт, самолётов и стойки академии»). Still NOT here, and named so
+// the next builder does not have to diff two files to find out: no drift (§4, slice 2), no shock, no
+// freeze, no broker (§6), no charity (§8).
 //
 // ⚠⚠ WHOSE MONEY THIS IS, because the spec had to be corrected on it once already (§1, the owner:
 // «Мы же делаем инвестиции для родителя, ты помнишь?»). The shelf belongs to the PARENT. Nothing on
-// it is bought for her, nothing on it touches her radar, her condition, her kit or her calendar –
-// the two items that were about her are gone from the shelf entirely (§3d became a birthday gift,
-// §3e was struck). This module writes `world.assets`, `world.fundsCents` and two ledger rows, and
-// reads nothing about the girl at all.
+// it is bought for her – the two items that were about her are gone from the shelf entirely (§3d
+// became a birthday gift, §3e was struck). This module writes `world.assets`, `world.fundsCents` and
+// its ledger rows, and reads nothing about the girl at all.
+//
+// ⚠⚠ AND ROUND 29 #5 AMENDED THE SECOND HALF OF THAT SENTENCE, ON THE OWNER'S OWN CORRECTION, so it
+// is written out rather than quietly left standing. Slice 1's header said «nothing on it touches her
+// radar, her condition, her kit or her calendar». The PLANE now touches two of those, and it is his
+// ruling that it should: «Самолёт не её, а родителей =) Теоретически может вполне резать косты на
+// перелеты до соревнований... По усталости по аналогии с кортом может 1 накинуть». It is still not
+// hers – it is the FAMILY's aeroplane, and what it buys is cheaper logistics and a slightly kinder
+// week on the road. ⚠ NEITHER EFFECT IS IN THIS FILE: the fare is `world/sponsors.ts` and the rest
+// week is `world/medical.ts`, both reading the one predicate in `world/assets.ts`. Her radar and her
+// kit are untouched and must stay so.
 //
 // ⚠⚠ ZERO DRAWS, ON MAIN OR ANYWHERE, AND SLICE 1 IS WHERE THAT IS EASIEST TO GUARANTEE: this file
 // imports no RNG and takes no `Rng` argument, which is the guarantee rather than a claim about it.
@@ -20,44 +31,46 @@
 // call site, and every other line in this file and on the screen is unchanged. That is why the value
 // is a STORED field written by a tick phase rather than a getter the screen calls: a getter would
 // have to be given a stream, and a stream on a read path is how a purchase moves the world's dice.
-import { ECONOMY } from '../economy'
-import { WEEKS_PER_YEAR } from '../season/calendar'
 import { activeLadderOf } from './ladder'
 import { guardNotEndedForGood } from './endings'
 import { addEvent } from './ledger'
 import { formatCents } from '../../shared/money'
+import { weekLabel } from '../../shared/dates'
 import type { OwnedAsset, ShopRowView, ShopView } from '../../shared/protocol'
 import type { WorldState } from '../world'
-
-/** One rung of `ECONOMY.shop.catalogue`, with the constant's literal types widened back to the
- *  shapes the rest of the engine reasons in. */
-export interface ShopItem {
-  id: string
-  family: 'investment' | 'car' | 'house'
-  /** 'fixed' – one price. 'open' – the family chooses an amount, at least `entryCents` (§3a's
-   *  minimums: a deposit is not a $1,000 thing you buy). */
-  stake: 'fixed' | 'open'
-  label: string
-  blurb: string
-  entryCents: number
-  /** signed basis points a year. NEGATIVE IS THE POINT for §3b's family. */
-  annualRateBps: number
+// ⚠⚠ THE PURE READS LEFT THIS FILE AT ROUND 29 #5 AND COME STRAIGHT BACK OUT OF IT. `world/assets.ts`
+// is a LEAF – catalogue and a type, nothing else – and it exists because two files that may NOT
+// import this one now need the shelf's answers: the plane's fare (`world/sponsors.ts`) and the
+// plane's travelling week (`world/medical.ts`). This file imports `./endings`, `endings` imports
+// `./entries`, and `entries` imports `./medical`, so the cycle is real and was traced before the
+// split. Every name below is re-exported under the historical convention, so `engine/world`, the
+// tests that import `world/shop` directly and every screen are untouched.
+import {
+  assetDelivered,
+  assetUpkeepCents,
+  assetValueCents,
+  deliveredAssets,
+  grantedVacationIds,
+  ownedAssets,
+  ownsDeliveredOfFamily,
+  shopCatalogue,
+  shopItem,
+  weeklyAssetUpkeepCents,
+  type ShopItem,
+} from './assets'
+export {
+  assetDelivered,
+  assetUpkeepCents,
+  assetValueCents,
+  deliveredAssets,
+  grantedVacationIds,
+  ownedAssets,
+  ownsDeliveredOfFamily,
+  shopCatalogue,
+  shopItem,
+  weeklyAssetUpkeepCents,
 }
-
-/** THE SHELF, cheapest first. A plain read of the constant – there is no per-career catalogue and
- *  there must not be one (§5: adding an item later is not a migration). */
-export function shopCatalogue(): ShopItem[] {
-  return ECONOMY.shop.catalogue as unknown as ShopItem[]
-}
-
-/** One rung by id, or undefined for an id the catalogue no longer carries.
- *
- *  ⚠ UNDEFINED RATHER THAN A THROW, because a save can outlive a catalogue edit. An owned row whose
- *  rung has been retired must still be sellable and still be readable on screen – the same courtesy
- *  `vacationPackage(booking.packageId)?.label ?? booking.packageId` extends to a retired package. */
-export function shopItem(id: string): ShopItem | undefined {
-  return shopCatalogue().find((i) => i.id === id)
-}
+export type { ShopItem }
 
 /** ⭐ THE GATE: the shelf opens with the professional era and never in the junior years (§2).
  *
@@ -74,27 +87,6 @@ export function shopUnlocked(world: WorldState): boolean {
  *  control and a refused click can never tell two stories (the R10-16 doctrine). */
 export const SHOP_LOCKED_DETAIL =
   'The shelf opens with her professional career – her first counting W-series result unlocks it.'
-
-/** WHAT A THING IS WORTH AFTER `weeksHeld` WEEKS, in whole cents.
- *
- *  ⚠ CONTINUOUS AND NOT A SEASONAL STEP, and the difference is visible on the one acceptance this
- *  slice is measured by. A step would make a car worth its full price for fifty-one weeks and then
- *  drop it by 9% overnight, which turns §3b's honest depreciation into a date to sell before – the
- *  exact «buy low, sell before the season» play §4's freeze exists to stop. A smooth curve is also
- *  exact at the boundaries the spec talks in: held for two full seasons is `(1 + r)^2` to the cent,
- *  whichever week of the season it was bought in.
- *
- *  ⚠ ROUNDED ONCE, HERE, and never again: cents are integers everywhere in this engine (CLAUDE.md
- *  «Money is in cents»), so the fraction lives inside this function and nowhere else. The stored
- *  `valueCents` is already whole, which is why the shop needs no rounding at the snapshot boundary
- *  the way `shownCondition` does – `tests/condition-boundary.test.ts`'s own note: «Cents are already
- *  integers and stay integers.»
- *
- *  Pure: no world, no rng, no clock. */
-export function assetValueCents(item: ShopItem, paidCents: number, weeksHeld: number): number {
-  const years = Math.max(0, weeksHeld) / WEEKS_PER_YEAR
-  return Math.round(paidCents * Math.pow(1 + item.annualRateBps / 10_000, years))
-}
 
 /** THE ONE WRITER OF `valueCents`, run at the top of every tick (world/phaseObligations.ts).
  *
@@ -128,19 +120,48 @@ export function revalueAssets(world: WorldState): void {
   }
 }
 
-/** ⭐ CAN THIS BE SOLD THIS WEEK? Always true in slice 1 – and it exists anyway, because it is the
- *  seam §4's FREEZE widens («the asset cannot be sold for an indefinite stretch») and slice 3's
- *  contract widens beside it («the money leaves on order, the thing arrives N weeks later, and the
- *  contract cannot be sold»). Both read a field this slice deliberately does not persist – see
- *  `OwnedAsset` in shared/protocol/profile.ts for why an absent optional key beats a required null.
- *  Keeping the predicate now means those slices change one function, not two commands and a screen. */
-export function sellableAsset(_world: WorldState, _owned: OwnedAsset): boolean {
-  return true
+/** ⭐⭐ ROUND 29 #5, §3f – THE WEEK THE THING ARRIVES, and the ONE remover of `readyWeek`.
+ *
+ *  THE OWNER: «купил и ждешь пока будет готово, яхты строят несколько лет.»
+ *
+ *  ⚠ `>=` AND NOT `===`, because the multi-week skip spends several weeks in one press (round 29 #6
+ *  widened it to a real span) and a delivery that only fired on an exact match would be missed by a
+ *  career that pressed it. The key is then GONE, which is what makes this idempotent and what makes
+ *  «absent = delivered» true for every row in the file rather than for old rows only.
+ *
+ *  ⚠ IT SPEAKS, and one line is the whole of it. A three-year wait that ended in silence would be
+ *  this repo's «you paid and you could not tell» again, on the largest purchase in the game; an
+ *  `entry` row is what the ledger already uses for a fact with no money attached (`bookVacation`'s
+ *  own second row). No cash moves here – the money left on the order.
+ *
+ *  ⚠ IT RUNS BEFORE `revalueAssets`, and before the week's bills, so the week a boat arrives is the
+ *  first week it depreciates and the first week it is charged for. ZERO DRAWS. */
+export function deliverAssets(world: WorldState): void {
+  world.assets ??= []
+  for (const owned of world.assets) {
+    if (owned.readyWeek === undefined || world.week < owned.readyWeek) continue
+    delete owned.readyWeek
+    addEvent(world, {
+      week: world.week,
+      type: 'entry',
+      text: `Delivered: ${shopItem(owned.id)?.label ?? owned.id}`,
+    })
+  }
 }
 
-/** WHAT THE FAMILY OWNS, oldest purchase first. Defensive `?? []` for probe worlds. */
-export function ownedAssets(world: WorldState): OwnedAsset[] {
-  return world.assets ?? []
+/** ⭐ CAN THIS BE SOLD THIS WEEK? It exists because it is the seam §4's FREEZE widens («the asset
+ *  cannot be sold for an indefinite stretch») and the seam slice 3's contract widened at round 29
+ *  #5 – §3f: «the money leaves on order, the thing arrives N weeks later ... and the contract
+ *  cannot be sold», which is «the freeze mechanic arriving early and by consent rather than as a
+ *  surprise».
+ *
+ *  ⚠⚠ AND IT CANNOT STRAND ANYBODY, which is the check §4's own acceptance demands of a freeze («it
+ *  may never be the reason a family goes bankrupt»). The un-sellable weeks are exactly the weeks the
+ *  thing costs nothing: `weeklyAssetUpkeepCents` charges DELIVERED rungs only. A family that has
+ *  ordered a yacht it can no longer afford is out the deposit and nothing more per week, and the
+ *  week the boat lands it may sell it. */
+export function sellableAsset(_world: WorldState, owned: OwnedAsset): boolean {
+  return assetDelivered(owned)
 }
 
 /** ⭐ BUY. `stakeCents` is ignored on a 'fixed' rung and required on an 'open' one (§3a's minimums).
@@ -180,6 +201,17 @@ export function buyAsset(world: WorldState, itemId: string, stakeCents?: number)
   // wallet, through the same validation – so it is the same command. A `topUpAsset` beside `buyAsset`
   // would be two functions that must agree about a minimum, a wallet check and a ledger row.
   if (held && item.stake !== 'open') throw new Error('The family already owns that')
+  // ⭐⭐ ROUND 29 #5, §3g – A STAGE CANNOT BE BUILT BEFORE THE ONE UNDER IT. «Cost: $8–15M, in STAGES
+  // rather than one press – land, courts, the building, the staff. Each stage is a decision and a
+  // bill, and a half-built academy is a real state the player can sit in.»
+  //
+  // ⚠ THE CHAIN IS DATA AND NOT A LIST HERE (`ShopItem.requiresId`), for round 29 #11's own reason
+  // one paragraph down: a fifth stage added to the catalogue tomorrow is ordered because of what it
+  // says about itself, not because somebody remembered to name it in this function. Every rung with
+  // no `requiresId` – which is the whole of the rest of the shelf – walks straight past.
+  if (item.requiresId && !world.assets.some((a) => a.id === item.requiresId)) {
+    throw new Error(`${shopItem(item.requiresId)?.label ?? 'The stage before it'} has to come first`)
+  }
 
   // ⚠ THE AMOUNT IS DECIDED BEFORE THE WALLET IS ASKED, and a 'fixed' rung ignores whatever the
   // caller sent rather than refusing it: the price of a car is the catalogue's, and a screen that
@@ -204,6 +236,29 @@ export function buyAsset(world: WorldState, itemId: string, stakeCents?: number)
     held.basisWeek = world.week
     held.valueCents = held.basisCents
     held.paidCents += paidCents
+  } else if (item.buildWeeks) {
+    // ⭐⭐ ROUND 29 #5, §3f – COMMISSIONED. «The money leaves on order. The thing arrives N weeks
+    // later. Between those two weeks the player owns a CONTRACT, not a boat.»
+    //
+    // ⚠⚠ THE VALUE CLOCK STARTS AT DELIVERY, and it is `basisWeek` that says so – the field round 29
+    // #11 added for the top-up, used for its own sentence («the compounding clock's start») rather
+    // than widened. `assetValueCents`'s `Math.max(0, weeksHeld)` then holds the contract at exactly
+    // what was paid for the whole wait, with no second value model and no branch in `revalueAssets`.
+    //
+    // ⚠ AND A CONTRACT THAT DEPRECIATED WOULD BE A PUNISHMENT FOR WAITING. Three years of losing 5%
+    // a year on a thing that does not exist yet, on top of the wait itself, is not what §3f asks
+    // for – it asks for a wait, and «мы ни за что не наказываем» is the house rule that decides how
+    // to read the silence.
+    const readyWeek = world.week + item.buildWeeks
+    world.assets.push({
+      id: item.id,
+      boughtWeek: world.week,
+      paidCents,
+      valueCents: paidCents,
+      basisCents: paidCents,
+      basisWeek: readyWeek,
+      readyWeek,
+    })
   } else {
     world.assets.push({ id: item.id, boughtWeek: world.week, paidCents, valueCents: paidCents })
   }
@@ -211,11 +266,22 @@ export function buyAsset(world: WorldState, itemId: string, stakeCents?: number)
     week: world.week,
     type: 'expense',
     category: 'shop',
-    // Two verbs, because they are two different events in a career and the ledger is read as a
-    // story: the week the family opened a holding is not the week it added to one.
-    text: held ? `Added to: ${item.label}` : `Bought: ${item.label}`,
+    // Three verbs, because they are three different events in a career and the ledger is read as a
+    // story: the week the family opened a holding is not the week it added to one, and neither of
+    // them is the week it ORDERED a thing that will not exist for three years (§3f).
+    text: held ? `Added to: ${item.label}` : item.buildWeeks ? `Ordered: ${item.label}` : `Bought: ${item.label}`,
     amountCents: -paidCents,
   })
+  // ⚠ AND THE ORDER SAYS WHEN, ON ITS OWN LINE. A purchase whose thing does not arrive for three
+  // years is the one row on this shelf whose date is the point of it; the expense row above is
+  // about the money and this is about the wait.
+  if (!held && item.buildWeeks) {
+    addEvent(world, {
+      week: world.week,
+      type: 'entry',
+      text: `${item.label} is on order – due ${weekLabel(world.week + item.buildWeeks)}`,
+    })
+  }
 }
 
 /** ⭐ SELL, at exactly what the stored value says – and the difference from `paidCents` is the whole
@@ -295,6 +361,20 @@ export function shopView(world: WorldState): ShopView {
       // whether the row is drawn: §2 rules out the locked row and the progress bar, and a shop
       // window is a thing you look into before you can afford it.
       affordable: world.fundsCents >= item.entryCents,
+      // ⭐⭐ ROUND 29 #5 – THE THREE NUMBERS §3f GAVE THE ELITE, AND THE ENGINE WORKED OUT ALL THREE.
+      // What it costs is `entryCents` above; what it loses is `annualRatePct`; what it takes every
+      // week to keep is this, quoted off what the family PAID when it owns one and off the price
+      // when it does not, so the card and the bill can never differ.
+      upkeepCents: assetUpkeepCents(item, mine ? mine.paidCents : item.entryCents),
+      buildWeeks: item.buildWeeks ?? 0,
+      // ⚠ NON-NULL ONLY WHILE THEY ARE WAITING. The screen draws no Sell against a contract and says
+      // the date instead – `sellableAsset` refuses the same week, so a stale tab cannot sell a boat
+      // that does not exist.
+      readyWeek: mine?.readyWeek ?? null,
+      requiresId: item.requiresId ?? null,
+      // §3g – the stage under it, answered here rather than on screen: a shelf that worked out its
+      // own chain would be a second copy of `buyAsset`'s refusal.
+      requirementMet: !item.requiresId || owned.some((a) => a.id === item.requiresId),
     }
   })
   const cheapest = rows.reduce<ShopRowView | null>((best, r) => (!best || r.entryCents < best.entryCents ? r : best), null)
@@ -305,5 +385,9 @@ export function shopView(world: WorldState): ShopView {
     cheapestId: owned.length === 0 && cheapest ? cheapest.id : null,
     ownedCount: owned.length,
     ownedValueCents: owned.reduce((sum, a) => sum + a.valueCents, 0),
+    // ⭐ ROUND 29 #5 – the shelf's own weekly bill and the vacation week it has earned, both asked of
+    // the one function that answers them for the till as well (§3f).
+    upkeepCents: weeklyAssetUpkeepCents(world),
+    vacationIds: grantedVacationIds(world),
   }
 }
