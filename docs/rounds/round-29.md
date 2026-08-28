@@ -221,9 +221,22 @@ contention artefacts of round 28 cost more reading than the wall-clock they save
   is correct as a verdict on the shipped state**, and the deposit stays decorative until either the
   fund can genuinely go down or the deposit gets something the fund has not.
 
-  ⚠ **THIS IS NOW HIS RULING TO MAKE, and it is added to the asks table below**: ship slice 2's drift
-  (the fund floats, the deposit becomes the safe harbour it was designed to be), or retire the deposit,
-  or leave it as the small-stake rung and say so in its blurb.
+  ⚙⚙ **AND HE HAS ALREADY ANSWERED IT – 28.08, so this is no longer an ask.** «В реальности на
+  текущем счете нет процентного дохода, максимум кешбек, и то не за все, **мы для этого делаем Savings
+  как раз. Одни должны друг друга заменить.**»
+
+  ⭐ **Savings is what the current account's automatic interest TURNED INTO.** That is the answer to
+  «зачем вообще Savings» and it is a better one than either fork I was going to offer him: the wallet
+  stops paying a wage, and the player who wants yield moves the money – which is a decision, which is
+  the mechanic. ⚠ It also makes **this item the prerequisite for 12**, and it shipped first
+  (`db6da62` before `74cb407`): removing the wage while the instrument replacing it could not be fed
+  would have left the player with neither.
+
+  ⚠ **WHAT REMAINS TRUE AND IS STILL HIS TO RULE ON is a narrower thing than «why does Savings
+  exist»**: the index fund still cannot fall, so between the two instruments the fund is strictly the
+  better holding above $5,000. That does not make Savings pointless any more – it makes the FUND
+  under-priced for its risk-free-ness. Re-filed as ask **11b** in those terms, and the measurement of
+  whether Savings actually covers what the interest paid is under item 12.
 
 - [x] **12. «И я предлагал убрать авто начисление % на текущий счёт»** – ⚙ **his RULING**, and it
   settles round 28 #9, which was filed as an ask. Remove the automatic interest on the current
@@ -277,6 +290,51 @@ contention artefacts of round 28 cost more reading than the wall-clock they save
   shelf: a family that puts the million into the index fund is earning again, deliberately, and
   `householdWeekly` already shows that money in the household's week.
 
+  ⚙⚙ **HIS SECOND RULING ON THIS, 28.08 – AND IT BINDS 12 TO 11.** «Здесь логика простая: в
+  реальности на текущем счете нет процентного дохода, максимум кешбек, и то не за все, мы для этого
+  делаем Savings как раз. **Одни должны друг друга заменить.**»
+
+  ⭐ **So Savings is the REPLACEMENT, not a competitor** – the current account pays nothing because
+  that is what a real current account does, and the player who wants yield MOVES money. That is the
+  decision the mechanic exists to create, and it also **answers his own «иначе непонятно зачем вообще
+  Savings»**: it is what the interest turned into. ⚠ Shipped in that order: **11's top-ups first
+  (commit `db6da62`), 12's removal after (`74cb407`)** – removing the wage while the instrument that
+  replaces it could not be fed would have stranded the player with neither.
+
+  ⚠⚠ **AND HIS SHARPER QUESTION, MEASURED: CAN A PLAYER WHO MOVES HIS MONEY INTO SAVINGS LAND WHERE
+  THE INTEREST USED TO PUT HIM?** Three arms, same seeds, 312 weeks (14→20), total wealth = wallet +
+  shelf. Arm A on a control worktree (this branch with `74cb407` reverted, reader confirmed present);
+  arms B and C on the branch; arm C moves every surplus above a $25,000 living reserve into the
+  deposit each week the shop is open.
+
+  | career | A – interest | B – neither | C – Savings | shop opens |
+  | --- | --- | --- | --- | --- |
+  | 25k middle · middle coach · grinder | $9,241 | $15,041 | **$15,041** | ⚠ **never** |
+  | 120k wealthy · elite · grinder | −$37,044 | −$37,534 | **−$37,534** | w152, ⚠ **overdrawn** |
+  | 8k working · self · player | $1,456,450 | $1,548,965 | **$1,914,678** | w122 |
+
+  ⚙ **THE ANSWER IS: FOR ONE CAREER OF THREE, YES, AND HANDSOMELY – AND FOR THE OTHER TWO, NOT AT
+  ALL.** Where the shelf is reachable and there is a surplus, Savings does not merely cover the loss,
+  it beats it (**+$365,713, +23.6%** over arm B on the same code and the same dice). ⚠ But the gap is
+  **structural, not a rate gap**, and it has two halves:
+
+  1. **AVAILABILITY.** `shopUnlocked` gates the whole shelf on the **professional** ladder. The
+     middle-family grinder above **never opened the shop in 312 weeks**, and the wealthy career was
+     overdrawn when it did. The junior sink – the horizon where the loss is cleanest, at −$1,954 a
+     career – has **no replacement at all**, and a career that never turns professional never gets one.
+  2. **RATE.** On the same money the deposit pays **2.00%/yr against the current account's 3.17%**
+     (`apyWeekly 0.0006` annualised), so it recovers **63%** of the removed rate. The index fund at
+     7% would recover 221%, but he named Savings.
+
+  ⚠ **NOTHING TUNED, per instruction.** Both halves are his to rule on – the availability half is
+  filed as ask **12b** and is the sharper of the two, because no rate change fixes a locked door.
+
+  ⭐ **CASHBACK – RECORDED, NOT BUILT.** «Максимум кешбек, и то не за все» is his reasoning for why a
+  current account pays nothing, not a request. Filed here as a possible future line and deliberately
+  left unbuilt: a small rebate on some spending categories would be the realistic replacement for the
+  wage on the wallet, and it is the natural companion to 12b if he decides the junior years need
+  something. **No code exists for it and none should until he asks.**
+
   ⚠ Guard tests **re-aimed, not deleted**: `tests/round9.test.ts`' R9-1 block now asserts the ABSENCE
   of everything it used to assert the presence of (six arms, including the zero-RNG arm re-proven
   against the step's removal, which is what keeps the frozen MAIN capture provably untouched);
@@ -284,6 +342,17 @@ contention artefacts of round 28 cost more reading than the wall-clock they save
   three coach-cap arms now expect one stream instead of two. The **category** `'interest'` survives on
   purpose – every save already written carries rows under it and a career's own past has to keep
   rendering.
+
+  ⚠⚠ **AND THE THREE FROZEN CAREERS WERE RE-STRUCK, WITH THE PER-KEY DIFF FIRST** (`tools/frozen-key-diff.ts`,
+  control = this branch with `74cb407` reverted in a dedicated worktree, reader confirmed present on
+  the control before measuring). The two grinder careers move **7 of 73 keys** – `careerTotals`,
+  `events`, `financeWeeks`, `fundsCents`, `lastSeasonSummary`, `nextEventId`, `seasonHistory`: money
+  and the money's paper trail, nothing else. The **player** career moves **26 of 72**, including
+  `skills`, `results`, `kidRank` and `vacations` – ⚠ not a leak but the economy: that policy enters
+  tournaments and books holidays out of the wallet, so a poorer family enters fewer and finishes
+  elsewhere. An income change that could not reach a career's results would not be an income change.
+  ⚠⚠ **`rngMain` is BYTE-IDENTICAL on all three arms** – the dice did not move, the decisions did, so
+  input-independence holds and the frozen MAIN capture (41550 / `e6b0c709`) is untouched.
 
 - [ ] **13. «А мы что-то перечисляем тренеру за финал каких-то турниров в итоге? Мне кажется эта
   информация стоит того, чтобы добавить её на странице тренеров»** – **answer + build.** Read the
@@ -355,6 +424,6 @@ already inside, so they cost the wave almost nothing and they shrink the audit's
 | | the choice |
 | --- | --- |
 | **6** | the multi-week skip: **(A)** repair it (it must move the calendar and report the real span), **(B)** delete the control, **(C)** keep it only for an injury lay-off |
-| **11** | Savings vs Index fund: what makes Savings worth holding once the fund can be topped up |
+| **11** | ~~Savings vs Index fund: what makes Savings worth holding once the fund can be topped up~~ – ⚙ **ANSWERED BY HIM, 28.08**: «мы для этого делаем Savings как раз, одни должны друг друга заменить». Savings is what the current account's interest turned into. |
 | **12b** | ⭐ **THE JUNIOR YEARS NOW EARN NOTHING AT ALL** – the shelf replaces the wallet's yield but `shopUnlocked` gates it on the professional ladder. **(A)** leave it (a fourteen-year-old's family is not an investor), **(B)** open the two investment rungs early, **(C)** open them at some earlier mark |
-| **11b** | ⭐ **MEASURED AND NOW A REAL FORK** – the floating yield never shipped, so nothing the fund holds can fall and the deposit is dominated above $5,000. **(A)** ship slice 2's drift so the fund really floats and the deposit becomes the safe harbour, **(B)** retire the deposit, **(C)** keep it as the $1,000–$4,999 rung and say so in its blurb |
+| **11b** | ⭐ **RE-FILED after his «одни должны друг друга заменить» answered the bigger question.** The floating yield never shipped, so the index fund cannot fall – it is a risk-free 7% beside a risk-free 2%. **(A)** ship slice 2's drift so the fund really floats, **(B)** leave it, and accept that the fund is the strictly better holding above $5,000 |
