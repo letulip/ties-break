@@ -34,8 +34,16 @@ import { chosenQuoteOf } from '../collegeOffer'
  *  snapshot -> college, the same direction `./endings` -> `./college` already runs; college.ts
  *  deliberately imports `./ladder` rather than this module (its own TB-07 note) so there is no cycle
  *  to close here. */
-import { collegeLeagueRevealMatches, collegeLeagueRevealOpen } from './college'
+import {
+  callUpRevealMatches,
+  callUpRevealOpen,
+  callUpRubberId,
+  collegeLeagueRevealMatches,
+  collegeLeagueRevealOpen,
+} from './college'
+import { rngFromSeed } from '../rng'
 import { COLLEGE_LEAGUE, COLLEGE_LEAGUE_ROUNDS, wonTheLeague } from '../collegeLeague'
+import { NATIONAL_TEAM, NATIONS_CUP_AWARDS_NOTHING, callUpOpponent, nationFinishLabel } from '../nationalTeam'
 import { axisReadings, buildRadar, buildTrainingRead } from '../radar'
 import { previewEvent, eventCrowd, eventTemperature } from '../season/preview'
 import { BEST_N_BY_TRACK, WINDOW_BY_TRACK, isCountingResult, windowFromWeek, windowSlots, windowedBestSum } from '../season/ranking'
@@ -694,7 +702,13 @@ export function pendingView(world: WorldState): PendingView | undefined {
   // branch somebody has to remember. Everything downstream of `snapshot.pending` – TournamentFlow
   // mounting, the college bar standing down, `screenBusy` holding the popups, the global week bar's
   // resume press – then works with no change at all, because it was all written against this field.
-  if (!p) return collegeLeaguePendingView(world)
+  // ⭐⭐⭐ ROUND 27 #6 – THREE SOURCES NOW, STILL ONE VIEW. The tie takes the identical road the
+  // championship took, and the order below is not load-bearing: `resumeFromCollege` pauses the year
+  // on the first reveal it opens, and the two fixtures are two season weeks apart, so they can never
+  // both be standing. It is written as a chain rather than as a branch on which week it is, because a
+  // projection that depends on an argument made in another file is a projection waiting for that
+  // argument to change.
+  if (!p) return collegeLeaguePendingView(world) ?? callUpPendingView(world)
   if (!p) return undefined
   const event = eventById(world, p.eventId)
   if (!event) return undefined
@@ -796,6 +810,9 @@ export function pendingView(world: WorldState): PendingView | undefined {
   return {
     eventId: p.eventId,
     tier: event.tier,
+    // The rung's own draw, carried rather than re-derived – see `PendingView.drawSize` for the
+    // screen-side constant this replaced and what it would have printed over a fixture with no draw.
+    drawSize: tier.drawSize,
     surface: event.surface,
     // The weather plate on the live match. Same function the Season card quotes, so one tournament
     // has one day. VIEW ASSEMBLY ONLY - see the grep guard in tests/preview.test.ts.
@@ -805,6 +822,9 @@ export function pendingView(world: WorldState): PendingView | undefined {
     // and carried - the same answer the running commentary and the week's story are given.
     coachTravelled: coachTravelsWithHer(world),
     ladder: track,
+    // ⭐⭐⭐ ROUND 27 #6 – NOTHING STANDS WHERE THE TABLE'S NAME IS, BECAUSE THE TABLE HAS A NAME. The
+    // pairing this field's docstring pins: `ladder` non-null, note null, in one literal.
+    ladderNote: null,
     kidRank: kidLadderRank(world, track),
     opponent: {
       name: formatShortName((p.players[oppId] ?? fallbackPlayer(oppId)).name),
@@ -872,16 +892,38 @@ function collegeLeaguePendingView(world: WorldState): PendingView | undefined {
     // be one value for the whole walk; it names no tier for `collegeLeagueMatchId`'s own reason.
     eventId: `college-w${reveal.week}`,
     tier: null,
+    // ⚠ IT IS A DRAW OF EIGHT AND IT SAYS SO. The College League is a knockout, so the round names,
+    // the strip's short stages and the coach's «three wins for the title» are all real here – see
+    // `PendingView.drawSize`, where the Nations Cup's `null` is the case this number used to cover
+    // by accident.
+    drawSize: COLLEGE_LEAGUE.drawSize,
     surface,
     temperatureC: eventTemperature(world.seed, { id: `college-w${reveal.week}`, surface }),
     roundLabel: stageLabel(current.round, drawSize),
     // She is at a university and the family is not paying a coach – `collegeCoachFactor` is the
     // programme's staff, not a man on a fare. Nobody travelled with her, and the card says nothing.
     coachTravelled: false,
-    // ⚠ THE LADDER IS CARRIED BECAUSE THE TYPE HOLDS IT AND THE SCREEN DOES NOT PRINT IT HERE. Both
-    // ranks below are null, so there is no comparison for a table name to qualify; `TournamentFlow`
-    // states the amateur rule in that line's place.
-    ladder: 'wta',
+    // ⭐⭐⭐ ROUND 27 #4 – NO TABLE AT ALL, AND THE TYPE CAN SAY SO NOW. The owner: «на экране итогов
+    // матча the College League написано Professional ranking – как будто нет».
+    //
+    // ⚠⚠ THIS LINE USED TO READ `'wta'` UNDER A COMMENT SAYING «the screen does not print it here»,
+    // AND THE COMMENT WAS WRONG ABOUT A SCREEN IT DOES NOT OWN. The splash had an amateur branch;
+    // the post-match BOX SCORE did not, and printed «… · Professional ranking» over a fixture that
+    // awards nothing – `LADDER_LABEL.wta`, arriving from this literal. A view field chosen to be
+    // harmless because one reader ignores it is a fact waiting for a second reader, which is what
+    // `PendingView.ladder` exists to stop: it was added so no screen would invent the answer, and a
+    // placeholder here is the engine inventing it instead.
+    //
+    // `null` is «none of the three», the same shape `tier: null` above carries for the rung, and it
+    // is a fact about this competition rather than a default: `resolveCollegeLeague` writes no
+    // result row and no cheque, so there is no table for a rank to be measured in.
+    ladder: null,
+    // ⭐⭐⭐ ROUND 27 #6 – AND THE WORDS THAT STAND IN ITS PLACE ARE THIS FIXTURE'S OWN. They used to
+    // live in `TournamentFlow`'s `v-else`, which was correct while this was the only rungless
+    // competition in the game and false the moment a second one arrived: a national squad is not a
+    // student field. §5's ruling, applied one screen along – the engine states it, the screen prints
+    // it.
+    ladderNote: 'No ranking points and no prize money – a student field awards neither',
     // ⚠⚠ NULL ON BOTH SIDES, AND IT IS THE SAME RULING `PendingView.ladder` CARRIES READ FROM THE
     // OTHER END. Her professional rank is a number in a table this fixture is not played in, and the
     // student across the net has none at all; printing hers beside the other woman's blank would
@@ -912,6 +954,120 @@ function collegeLeaguePendingView(world: WorldState): PendingView | undefined {
     // fork would stop being a real choice.
     points: 0,
     finishLabel: kidFinish <= 0 ? finishLabel(0) : finishLabel(Math.min(kidFinish, COLLEGE_LEAGUE_ROUNDS)),
+    crowd: 0,
+  }
+}
+
+/** ⭐⭐⭐ ROUND 27 #6 – THE NATIONS CUP TIE, AS THE FLOW SEES IT. The owner: «И опять на те же грабли:
+ *  "Her country called this year…" во всплывашке сверху и матчи только постфактум … проводить этот
+ *  турнир по обычному флоу турнира. А этот попап не нужен для этого флоу вообще.»
+ *
+ *  `collegeLeaguePendingView`'s twin, and every place the two differ is a place the two competitions
+ *  differ – which is the whole reason this is a second function and not a parameter on that one:
+ *
+ *    THE RUNG        null on both. Neither is played for a tier and `callUpRubberId` names none.
+ *    THE DRAW        null HERE, 8 there. A tie set is not a knockout: she plays the rubbers the
+ *                    captain gives her, every one of them, and losing the first does not end her
+ *                    week. So there is no bracket, no «N-player draw» and no title to cost wins.
+ *    THE ROUND NAME  «Rubber 2 of 3» here against «Semifinal» there, and it comes off the record
+ *                    rather than off `stageLabel`, which can only name a knockout stage.
+ *    THE FINISH      HER NATION's placing, not hers. `rollCallUp` draws it flat and «nothing in that
+ *                    expression reads `view`» – she can win every rubber and go home eleventh.
+ *    THE FLAG        drawn. `collegeLeagueOpponent` says why the student draw has none in as many
+ *                    words: «a tie is her country against another country and the shirt is the point
+ *                    of it; a student draw is not that.»
+ *
+ *  ⚠ THE OPPONENT'S NATION IS RE-DERIVED AND NOT STORED, and that is the same trade `temperatureC`
+ *  and `crowd` already make on this view. `WorldMatch` has no country field – `MatchPlayer` has none
+ *  either, and giving it one would touch every match in the game to decorate three a year – so the
+ *  shirt comes back off `seed:rubbers:<week>`, THE SAME sub-stream and the same call order
+ *  `playCallUpRubbers` walked, re-derived at the call site and persisting nothing. Two derivations of
+ *  one pure stream cannot disagree, no save field is added, and the frozen MAIN capture (41550 /
+ *  e6b0c709) cannot see a sub-stream (CLAUDE.md invariant 2). */
+function callUpPendingView(world: WorldState): PendingView | undefined {
+  if (!callUpRevealOpen(world)) return undefined
+  const reveal = world.college!.callUpReveal!
+  const call = world.college!.pendingCallUp
+  const matches = callUpRevealMatches(world)
+  // Defensive, and it is `collegeLeaguePendingView`'s own tripwire: a reveal whose rows are gone has
+  // nothing to walk, and a flow mounted over nothing is worse than no flow. `resolveCallUp` writes
+  // the rows and the reveal in the same call, so this is a tripwire rather than a path.
+  if (!call || matches.length === 0) return undefined
+  const revealed = Math.min(reveal.revealed, matches.length)
+  const surface = NATIONAL_TEAM.surface
+  const current = matches[Math.min(revealed, matches.length - 1)]
+  // THE WHOLE SIDE, IN THE ORDER IT WAS DRAWN – `tiesInTheWeek` opponents whether or not she played
+  // them all, which is `playCallUpRubbers`' own post-draw discipline. Reading only the shirts.
+  const rng = rngFromSeed(`${world.seed}:rubbers:${reveal.week}`)
+  const nations: string[] = []
+  for (let i = 0; i < NATIONAL_TEAM.tiesInTheWeek; i++) {
+    nations.push(callUpOpponent(callUpRubberId(reveal.week, i), rng).nation)
+  }
+  const bracket: PendingBracketRound[] = matches.slice(0, revealed).map((m) => ({
+    roundLabel: `Rubber ${m.round + 1}`,
+    oppName: formatShortName(m.oppName),
+    kidWon: m.winnerId === KID_ID,
+    score: m.score && m.bId === KID_ID ? flipScore(m.score) : m.score,
+  }))
+  return {
+    // ⚠ THE REVEAL'S OWN ID AND NOT A RUBBER'S. App.vue keys `tournamentHidden` off this, so it has
+    // to be one value for the whole walk; it names no tier for `callUpRubberId`'s own reason.
+    eventId: `nations-w${reveal.week}`,
+    tier: null,
+    drawSize: null,
+    surface,
+    temperatureC: eventTemperature(world.seed, { id: `nations-w${reveal.week}`, surface }),
+    roundLabel: `Rubber ${current.round + 1} of ${matches.length}`,
+    // She is at a university and the family is not paying a coach, and this week she is not even the
+    // university's – she is her federation's. Nobody travelled with her, and the card says nothing.
+    coachTravelled: false,
+    // ⭐⭐⭐ ROUND 27 #4's WIDENING IS WHAT MAKES THIS LINE POSSIBLE. The tie is played in none of the
+    // three tables (`engine/nationalTeam.ts`: no points, no cheque), and before §4 the type could not
+    // say «neither» – so this fixture would have had to name one, exactly as the College League did
+    // when it printed «Professional ranking» over a fixture that awards nothing.
+    ladder: null,
+    ladderNote: NATIONS_CUP_AWARDS_NOTHING,
+    // ⚠⚠ NULL ON BOTH SIDES, the same ruling the championship's view carries: her professional rank
+    // is a number in a table this week is not played in, and the woman across the net is a selected
+    // senior with no row in ours at all. A real number opposite a blank invites a comparison that is
+    // not there.
+    kidRank: null,
+    opponent: {
+      name: formatShortName(current.oppName),
+      // ⭐ THE SHIRT, AND HERE IT IS THE POINT OF THE WEEK – see the note over this function for why
+      // it is re-derived. `''` is unreachable while `tiesInTheWeek` covers every stored rubber, and
+      // is the same blank `flagEmoji` already renders for an unknown country.
+      nation: nations[current.round] ?? '',
+      rank: null,
+      // ⚠ OFF THE FROZEN MATCH PLAYER, exactly as the tour's own opponent age is – `callUpOpponent`
+      // draws her age out of `opponentAgeBand` because the serve-speed curve reads it, so a rubber
+      // record saved since the college wave always has one.
+      ageYears: current.b.age !== undefined && Number.isFinite(current.b.age) ? Math.floor(current.b.age) : null,
+    },
+    kidMatch: revealed < matches.length ? current : undefined,
+    bracket,
+    // ⚠ EMPTY, AND IT IS AN HONEST EMPTY – the championship's own reason, one competition along:
+    // `playCallUpRubbers` plays HER rubbers and nobody else's, so the other six ties of the week were
+    // never simulated and there is no full sheet to show.
+    fullBracket: [],
+    finished: revealed >= matches.length,
+    // ⚠⚠ FALSE, ALWAYS, AND IT IS A FACT RATHER THAN A DEFAULT. `kidChampion` asks whether SHE won
+    // the thing, and there is nothing here for her to win: the week's only placing belongs to her
+    // nation and is drawn flat («nothing in that expression reads `view`»). Setting it from
+    // `nationFinish === 1` would hang a champion's poster, with her name and her photograph on it,
+    // on somebody else's result – which is the exact inversion the fixture exists to demonstrate.
+    kidChampion: false,
+    tierLabel: NATIONAL_TEAM.label,
+    // ⚠⚠ ZERO, AND IT IS THE RULEBOOK RATHER THAN A PLACEHOLDER – research §0.4 / §5.5: the ranking
+    // chart has no row for this competition at all.
+    points: 0,
+    // ⚠ HER NATION'S PLACING, NOT A ROUND SHE REACHED. `finishLabel` (the knockout namer) would have
+    // to be handed an index this week does not have; `nationFinishLabel` is the fixture's own word
+    // for its own outcome, and the poster prints it under her name with her rubbers in the strip
+    // below – which is the honest split between what she did and what happened to her country.
+    finishLabel: nationFinishLabel(call),
+    // We do not model a national tie's gate any more than a student one's, and the screen omits the
+    // cell rather than dashing it – see the splash's note on the crowd row.
     crowd: 0,
   }
 }

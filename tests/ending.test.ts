@@ -32,6 +32,7 @@ import {
 } from '../src/engine/ending'
 import {
   closeTournament,
+  callUpRevealOpen,
   collegeLeagueRevealOpen,
   skipTournament,
   createWorld,
@@ -79,8 +80,16 @@ import { ageAtPhysicalShare } from '../src/engine/development'
  *  and `closeTournament` dispatched at the college reveal. Nothing measured below moved; the walk
  *  answers one more question and its press ceiling grows by one a year. The full note is in
  *  tests/college-league.test.ts, and the flow itself in tests/round26-college-flow.test.ts. */
-function answerLeagueReveal(world: WorldState): void {
-  if (!collegeLeagueRevealOpen(world)) return
+/** ⭐⭐⭐ ROUND 27 #6 RE-AIM – IT ANSWERS THE NATIONS CUP TIE TOO, AND IT IS NOT A WEAKENING.
+ *  ⚠ IT USED TO CLAIM: «a college year has exactly one pause the flow owns – the championship»
+ *  (`answerLeagueReveal`, round 26 #6). That is why it read `collegeLeagueRevealOpen` alone.
+ *  ⚠ WHY IT MOVED: the call-up used to resolve inside the tick and report itself in a toast – the
+ *  owner's «матчи только постфактум». It now pauses the year and is walked in `TournamentFlow` like
+ *  the championship, so a walk that answered only one of the two would hang on the other. The
+ *  predicate is widened and the name says what it covers; the ASSERTIONS below are untouched, and
+ *  `skipTournament` / `closeTournament` are still the player's own two presses. */
+function answerCollegeReveal(world: WorldState): void {
+  if (!collegeLeagueRevealOpen(world) && !callUpRevealOpen(world)) return
   skipTournament(world)
   closeTournament(world)
 }
@@ -1022,7 +1031,7 @@ describe('#2 college – the only ending that resumes', () => {
       // is press-answer-press. Every original assertion is unchanged and asked at the same boundary.
       for (let press = 0; press < 4 && world.college!.years.length < year; press++) {
         resumeFromCollege(world, rng)
-        answerLeagueReveal(world)
+        answerCollegeReveal(world)
         if (pendingBirthday(world) !== null) chooseGift(world, 'day')
       }
       expect(world.week, `after year ${year}`).toBe(from + year * WEEKS_PER_YEAR)
@@ -1047,7 +1056,7 @@ describe('#2 college – the only ending that resumes', () => {
     // Press-answer-press (round 24): each year pauses on her birthday week.
     for (let press = 0; press < 4 * ENDINGS.collegeYears && world.ending?.type === 'college'; press++) {
       resumeFromCollege(world, rng)
-      answerLeagueReveal(world)
+      answerCollegeReveal(world)
       if (pendingBirthday(world) !== null) chooseGift(world, 'day')
     }
     const kidResults = world.results.filter((r) => r.playerId === 'KID')
@@ -1064,7 +1073,7 @@ describe('#2 college – the only ending that resumes', () => {
     // nothing, which is exactly what this case goes on to measure.
     for (let press = 0; press < 4 * ENDINGS.collegeYears && world.ending?.type === 'college'; press++) {
       resumeFromCollege(world, rng)
-      answerLeagueReveal(world)
+      answerCollegeReveal(world)
       if (pendingBirthday(world) !== null) chooseGift(world, 'day')
     }
     // ⚠ THE SPAN IS [fromWeek, untilWeek): `untilWeek` is her FIRST WEEK BACK, and it is billed like
@@ -1197,7 +1206,7 @@ describe('⚠ input-independence survives college', () => {
       resumeFromCollege(a, rngA)
       // ⚠ ROUND 26 #6: and the championship's reveal is answered mid-walk too – the arm now proves
       // that watching a tournament costs the MAIN stream not one draw either.
-      answerLeagueReveal(a)
+      answerCollegeReveal(a)
       if (pendingBirthday(a) !== null) chooseGift(a, 'day')
     }
     while (b.week < a.week) tickWeek(b, rngB)

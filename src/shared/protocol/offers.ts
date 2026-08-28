@@ -31,13 +31,19 @@ import type { CoachTier, PlayStyle } from './profile'
  *  a NON-ENDEMIC brand – a watch house, not a racquet maker – paying cash for her FACE rather than
  *  kit for her tennis. See `AdOfferTerms` for what step 1 deliberately is and is not.
  *
+ *  ⭐⭐⭐ `call-up` IS ROUND 27 #6 – THE NATIONAL SQUAD'S INVITATION, AND IT ARRIVES BEFORE THE WEEK.
+ *  The owner: «можно письмо об этом пользователю нормальное присылать с приглашением на турнир и
+ *  проводить этот турнир по обычному флоу турнира. А этот попап не нужен для этого флоу вообще.»
+ *  See `CallUpLetterTerms` for what it states and `settleCallUpLetter` for how a week that has not
+ *  happened yet can be written about truthfully.
+ *
  *  ⚠ THE WIDENING COSTS NO SCHEMA MOVE, and that is this union's own precedent rather than a
  *  shortcut taken here: commit 2763caa added the whole `entry` family – the kind, the terms shape
  *  and `cancelled` – and left `SAVE_SCHEMA_VERSION` at 36, because no save written before a kind
  *  exists can contain it, nothing is renamed and no existing shape gains a required field. There is
  *  nothing to migrate and nothing to back-fill; see `settleAcademyLetters` for the one thing an old
  *  career CAN have derived for it, which is derived in the engine rather than in a migration. */
-export type OfferKind = 'kit' | 'entry' | 'tour' | 'academy' | 'ad'
+export type OfferKind = 'kit' | 'entry' | 'tour' | 'academy' | 'ad' | 'call-up'
 
 /** WHICH RULE A PENALTY WAS (W3-ACT2, act2-pro-tour.md §6). A closed union, and it is closed on
  *  purpose: «мы ни за что не наказываем» means every charge has to be nameable, so a row that could
@@ -727,7 +733,57 @@ export interface AdOfferTerms {
   shootWeeks?: number[]
 }
 
-export type OfferTerms = KitOfferTerms | EntryLetterTerms | TourLetterTerms | AcademyLetterTerms | AdOfferTerms
+/** ⭐⭐⭐ ROUND 27 #6 – WHAT THE NATIONAL SQUAD'S INVITATION STATES, WRITTEN BEFORE THE WEEK IT IS
+ *  ABOUT. The owner: «мы уже обсудили, что мы знаем будет это происходить или нет, можно письмо об
+ *  этом пользователю нормальное присылать с приглашением на турнир».
+ *
+ *  ⚠⚠ IT IS AN INVITATION AND NOT A REPORT, WHICH IS THE WHOLE ITEM. The shipped week arrived as a
+ *  toast AFTER three rubbers had already been simulated inside the tick – «матчи только постфактум».
+ *  Every field below is a fact that is TRUE ON THE WEEK THE LETTER IS WRITTEN: the fixture's own
+ *  constants, the week she is expected on court, and the student result the selectors read. Nothing
+ *  here is an outcome, because none has happened.
+ *
+ *  ⛔ AND `rubbersPlayed` IS DELIBERATELY NOT HERE, THOUGH THE ENGINE ALREADY KNOWS IT. The draw that
+ *  decides how many rubbers the captain gives her is taken on the same sub-stream as the letter's own
+ *  (`rollCallUp`), so this shape COULD state it – and it must not. Research §0.7: the captain alone
+ *  picks who plays out of the nomination, and a letter that told the parent the team sheet a week
+ *  early would be the postfactum defect wearing an envelope. The letter says she is named; the week
+ *  says what she played.
+ *
+ *  ⚠ NUMBERS, NEVER ASSEMBLED PROSE – `AcademyLetterTerms`' own rule, and it is sharper here because
+ *  these constants are the ones a later balance pass moves. `world.offers` is persisted, so a
+ *  sentence frozen onto the paper would go on stating a fixture that no longer exists;
+ *  `OfferLetter.vue` rebuilds the words from these every time it is read. */
+export interface CallUpLetterTerms {
+  /** the competition's name as the letter was written – the same rule `TourLetterTerms.label` keeps,
+   *  because a persisted letter must keep naming its own author after a rename. */
+  label: string
+  /** THE WEEK SHE IS EXPECTED ON COURT, absolute. The whole point of the paper: it is in the future
+   *  when this arrives. Same field, same job, as `TourLetterTerms.eventWeek`. */
+  tieWeek: number
+  /** how many players her federation nominates (`NATIONAL_TEAM.squadSize`) and how many ties the
+   *  week holds (`tiesInTheWeek`) – frozen at arrival, so the letter states the squad it was written
+   *  about rather than the one a later tune describes. Together they are why she may be named and
+   *  never take the court, which is the one thing the parent should know before the week. */
+  squadSize: number
+  tiesInTheWeek: number
+  /** how many nations are at her country's level (`nationsAtHerLevel`) – the size of the thing her
+   *  nation's placing will be measured against, stated before it is drawn. */
+  nationsAtHerLevel: number
+  /** ⭐ WHY THEY WROTE: how far she went at the college championship the selectors read
+   *  (`callChanceFor`'s own input, round 24's design). `null` on a career whose letter arrived with
+   *  no championship on record – which today cannot happen, because `callChanceNoLeague` is 0, and
+   *  the field says so honestly rather than printing a zero that reads like a first-round exit. */
+  leagueRoundsWon: number | null
+}
+
+export type OfferTerms =
+  | KitOfferTerms
+  | EntryLetterTerms
+  | TourLetterTerms
+  | AcademyLetterTerms
+  | AdOfferTerms
+  | CallUpLetterTerms
 
 /** ONE LETTER IN THE INBOX. The spec's shape (§2) plus the two bookkeeping fields a signed deal
  *  needs to be honoured for a season and then reviewed. */

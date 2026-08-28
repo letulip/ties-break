@@ -33,6 +33,10 @@ import { weekDateLine, weekLabel, weekRange } from '../../shared/dates'
 import { formatShortName, rankLabel } from '../../shared/format'
 import { formatCents } from '../../shared/money'
 import { KID_ID, flipScore, practiceCaution } from '../../engine/world'
+// ⭐ ROUND 27 #2 – the fixture's own name for the bottom control's fifth label. One place spells it
+// (`collegeLeague.ts`), so this button and the takeover it opens cannot disagree about the name.
+import { NATIONAL_TEAM } from '../../engine/nationalTeam'
+import { COLLEGE_LEAGUE } from '../../engine/collegeLeague'
 import { ECONOMY } from '../../engine/economy'
 import { useKidEmotion } from '../../composables/kidEmotion'
 import { useHeaderAvatar } from '../../composables/headerAvatar'
@@ -1032,13 +1036,42 @@ const collegeProgress = computed(() => game.snapshot?.ending?.college ?? null)
  *  the college year (`resumeFromCollege` breaks on the birthday week so the gift dialog can be
  *  answered), and the press after the cake continues THAT year – a button still reading «Another
  *  year» there would be offering a year it is not going to start. `yearInProgress` is the engine's
- *  own fact (`college.pendingYearStart`), so this label and the year the press spends cannot part. */
+ *  own fact (`college.pendingYearStart`), so this label and the year the press spends cannot part.
+ *
+ *  ⭐⭐⭐ ROUND 27 #2 – AND A FIFTH LABEL, WHICH IS THE LINE ABOVE APPLIED TO THE PAUSE IT DID NOT
+ *  KNOW ABOUT. The owner: «кнопка "Продолжить год", а при нажатии мы попадаем в "the College League"
+ *  – как будто можно тоже наш флоу использовать с неймингом кнопки – Play College Open, а уже потом
+ *  "Закончить год"?»
+ *
+ *  ⚠⚠ HIS ASK IS THIS FUNCTION'S OWN RULE, NOT A NEW PREFERENCE. «a button still reading "Another
+ *  year" there would be offering a year it is not going to start» is the sentence one pause earlier;
+ *  round 26 #6 gave the year a SECOND mid-year stop – the championship, played through
+ *  `TournamentFlow` – and the four labels above knew only the first. Whichever of them was on screen
+ *  offered a year, and the press played a tournament.
+ *
+ *  ⚠ WHICH of them lied depends on her BIRTH MONTH, which is why one predicate replaces both cases:
+ *  measured over all twelve, five (April–August) meet the championship before her birthday, so
+ *  «Another year» plays it; the other seven meet the cake first, so «Finish the year» does.
+ *
+ *  ⚠ AND IT READS AN ENGINE FACT (`leagueIsNextStop`, off `collegeLeagueIsNextStop`) rather than
+ *  inferring one from the week – a screen that guessed which pause it was standing in would be the
+ *  screen deciding a rule, which CLAUDE.md invariant 1 forbids. Exactly how `yearInProgress` is
+ *  already done. The fixture NAMES ITSELF: `COLLEGE_LEAGUE.label` is the one place its name is
+ *  spelled, so this button and the takeover it opens cannot come to call it two different things. */
 const collegeYearsLeft = computed(() => {
   const c = collegeProgress.value
   return c === null ? 0 : Math.max(0, c.totalYears - c.yearsDone)
 })
 const collegeYearLabel = computed(() => {
   const c = collegeProgress.value
+  // FIRST, because it is the only one of the five that names what the press DOES rather than how
+  // much of the course is left – and it outranks «Finish the year» for that reason (round 27 #2).
+  if (c?.leagueIsNextStop) return `Play ${COLLEGE_LEAGUE.label}`
+  // ⭐⭐⭐ ROUND 27 #6 – AND THE SECOND FIXTURE NAMES ITSELF TOO. The tie pauses the year since this
+  // wave, so «Finish the year» over a press that plays the Nations Cup is round 27 #2's own defect
+  // arriving from the other college fixture. Two engine facts, one scan behind them, so the button
+  // cannot claim both – and the label is `NATIONAL_TEAM.label`, the one place its name is spelled.
+  if (c?.callUpIsNextStop) return `Play ${NATIONAL_TEAM.label}`
   if (c?.yearInProgress) return 'Finish the year'
   if ((c?.yearsDone ?? 0) === 0) return 'Play the first year'
   return collegeYearsLeft.value <= 1 ? 'Play the final year' : 'Another year'

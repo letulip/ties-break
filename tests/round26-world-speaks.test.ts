@@ -31,6 +31,7 @@ import {
   campusDigestLine,
   chooseGift,
   closeTournament,
+  callUpRevealOpen,
   collegeLeagueRevealOpen,
   createWorld,
   enterEvent,
@@ -305,7 +306,12 @@ function enrolled(seed: string): { world: WorldState; rng: Rng } {
 function press(world: WorldState, rng: Rng): void {
   world.fundsCents = Math.max(world.fundsCents, 200_000_00)
   resumeFromCollege(world, rng)
-  if (collegeLeagueRevealOpen(world)) {
+  // ⭐⭐⭐ ROUND 27 #6 RE-AIM – AND THE TIE, WHICH PAUSES THE YEAR THE SAME WAY SINCE THIS WAVE.
+  // ⚠ IT USED TO CLAIM: «the championship reveal (round 26 #6) and the cake» are everything a press
+  // has to answer. ⚠ WHY IT MOVED: the call-up stopped being a toast, so a walk that answered only
+  // the championship stalls on the first call-up week – the very failure this helper's own comment
+  // one line up warns about, arriving from the second fixture.
+  if (collegeLeagueRevealOpen(world) || callUpRevealOpen(world)) {
     skipTournament(world)
     closeTournament(world)
   }

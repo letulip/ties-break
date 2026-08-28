@@ -24,7 +24,7 @@ import { SKILL_KEYS, type KidSkills } from '../development'
 import { ENDINGS } from '../ending'
 import { WEEKS_PER_YEAR } from '../season/calendar'
 import { parentIncomeForWeekCents } from '../economy'
-import { NATIONAL_TEAM, callUpLine, callUpOpponent, rollCallUp, type CallUpOpponent } from '../nationalTeam'
+import { NATIONAL_TEAM, callUpLine, callUpOpponent, rollCallUp, type CallUp, type CallUpOpponent } from '../nationalTeam'
 import {
   COLLEGE_LEAGUE,
   COLLEGE_LEAGUE_ROUNDS,
@@ -48,8 +48,9 @@ import {
   type JuniorRung,
 } from '../collegeOffer'
 import type { CollegeLeagueRun, CollegeOffer, CollegeProgressView, CollegeState, CollegeYearStart } from '../../shared/protocol'
+import { raiseCallUpLetter } from '../offers'
 import { addEvent } from './ledger'
-import { kidAgeYears } from './age'
+import { birthdayTurning, kidAgeYears } from './age'
 // ⚠ FROM ./ladder, NOT ./snapshot (TB-07). This file MUTATES the world; snapshot BUILDS the
 // aggregate projection over it, and importing upward from one to the other closed two runtime
 // cycles (birthday → college → snapshot → birthday, coachMarket → endings → college → snapshot →
@@ -185,6 +186,129 @@ export function callUpWeek(world: WorldState): boolean {
   return inCollege(world) && world.week % WEEKS_PER_YEAR === NATIONAL_TEAM.seasonWeek
 }
 
+/** THE NEXT WEEK HER COUNTRY PLAYS, strictly after `week`. One expression, so a question about the
+ *  future cannot be spelled two ways (`callUpWeek`'s own rule, asked of a week instead of a world). */
+export function nextCallUpWeekAfter(week: number): number {
+  const ahead = (NATIONAL_TEAM.seasonWeek - ((week + 1) % WEEKS_PER_YEAR) + WEEKS_PER_YEAR) % WEEKS_PER_YEAR
+  return week + 1 + ahead
+}
+
+/** ⭐⭐⭐ ROUND 27 #6 – IS THIS THE WEEK THE LETTER IS WRITTEN? **The championship week**, and the tie
+ *  it invites her to has to be a week she is still enrolled for.
+ *
+ *  ⚠⚠ IT IS THE CHAMPIONSHIP WEEK AND NOT «THE WEEK BEFORE THE TIE», AND THE FIRST DRAFT OF THIS
+ *  WAVE HAD IT WRONG. A letter one week early is one week early *in the calendar* and NOT in the
+ *  player's hands: a college year is spent in PRESSES, the letter week raises no pause, and the tie
+ *  two weeks after the championship is inside the same press – so the paper landed in the inbox at
+ *  the exact moment the takeover covered it. «Ahead of time» has to mean ahead of a REST STATE.
+ *
+ *  ⭐ THE CHAMPIONSHIP WEEK IS A PAUSE (round 26 #6), AND IT IS ALSO THE CAUSALITY. `lastLeagueRun`'s
+ *  own note: «the letter is read off the result the player has just watched». So the selectors get
+ *  their evidence, the paper is written the same week, the year stops for the player to watch the
+ *  championship – and at THAT rest state the invitation is in the inbox, the dot is lit, and the
+ *  bottom control already reads «Play the Nations Cup». One press later she is on court.
+ *
+ *  ⚠ THE EVIDENCE CANNOT GO STALE BETWEEN THE TWO, and that is what makes the prediction exact
+ *  rather than nearly: `nextCallUpWeekAfter` is two weeks out (season 12 -> 14) and no championship
+ *  week falls between, so the `leagueRoundsWon` the paper quotes is the one `resolveCallUp` will
+ *  read. ⚠⚠ THAT IS AN INVARIANT OVER TWO CONSTANTS AND IT IS PINNED RATHER THAN ASSUMED
+ *  (`tests/round27-call-up-flow.test.ts`): re-tune `COLLEGE_LEAGUE.seasonWeek` or
+ *  `NATIONAL_TEAM.seasonWeek` so that a championship lands between the paper and the tie and the
+ *  suite goes red with a sentence instead of the letter quietly promising the wrong year's form.
+ *
+ *  ⚠ THE `untilWeek` CLAUSE IS THE FINAL YEAR AND NOT DEFENSIVENESS. `untilWeek` lands on the season
+ *  week she enrolled on, so a career that enrolled between the two fixtures reaches its last
+ *  championship inside college and the tie after it outside – and a letter raised there would invite
+ *  her to a week the tick will never play.
+ *
+ *  ⚠ THE MIRROR CASE – a tie whose letter week fell outside college – CANNOT PRODUCE A SILENT WEEK,
+ *  and it is arithmetic rather than luck. It needs the championship week outside and the tie inside,
+ *  i.e. an enrolment between them, and `resolveCallUp` then meets that tie with no championship on
+ *  her record at all – `callChanceNoLeague` is 0, so nobody writes and no tie is played. That is the
+ *  same two-enrolment-weeks case `NATIONAL_TEAM.callChanceNoLeague` already states, from this end. */
+export function callUpLetterWeek(world: WorldState): boolean {
+  const college = world.college
+  if (!college || !inCollege(world)) return false
+  if (!isCollegeLeagueWeek(world.week)) return false
+  return nextCallUpWeekAfter(world.week) < college.untilWeek
+}
+
+/** ⭐⭐⭐ ROUND 27 #6 – THE ROLL, ASKED OF A WEEK RATHER THAN OF TODAY. The owner's own key to this
+ *  item: «мы уже обсудили, что мы знаем будет это происходить или нет».
+ *
+ *  ⚠⚠ ONE FUNCTION, TWO CALLERS, WHICH IS WHAT MAKES THE LETTER HONEST. `settleCallUpLetter` asks it
+ *  about NEXT week and `resolveCallUp` asks it about THIS one; a second copy of the question is how
+ *  a letter comes to promise a week that then does not happen.
+ *
+ *  ⚠⚠ AND IT IS EXACT RATHER THAN A GOOD GUESS – the three inputs, one at a time:
+ *    * THE SUB-STREAM is keyed on the TIE's week (`seed:callup:<week>`), never on the asking week, so
+ *      both callers derive the identical stream. `rngFromSeed` re-derives and persists nothing, so
+ *      asking twice costs nothing and moves nothing (CLAUDE.md invariant 2). ⚠ The MAIN stream is
+ *      untouched by construction, so the frozen capture (41550 / e6b0c709) cannot see either call.
+ *    * `ageYears` IS COMPUTED FOR THE TIE'S WEEK, not for today's, so a birthday falling between the
+ *      letter and the tie cannot change the answer. It gates on `minAgeYears` (14) and she is
+ *      nineteen at the earliest, but the argument has to be the right one whether or not it bites.
+ *    * `leagueRoundsWon` IS ALREADY FINAL. The championship is season week 12 and the tie is 14, so
+ *      no fixture week falls between the letter and the tie, and `lastLeagueRun` reads the same run
+ *      through a year boundary – `bankCollegeYear` moves it from `pendingLeague` into `years[n]`,
+ *      which is the second place that lookup already looks.
+ *
+ *  ⚠ `skillMean` IS TODAY'S AND IT CANNOT MOVE ANYTHING THE LETTER SAYS. It feeds ONE expression –
+ *  `binomial(played, rubberWinChance(skillMean), rng())` – whose draw count is one uniform whatever
+ *  the probability is, so the stream position, `called`, `rubbersPlayed` and `nationFinish` are all
+ *  identical from either week. The one value it moves is `rubbersWon`, and that is the model rather
+ *  than the result: `playCallUpRubbers` overwrites it with what happened on court. Which is also why
+ *  `CallUpLetterTerms` states neither of those two numbers. */
+export function callUpFor(world: WorldState, week: number): CallUp | null {
+  return rollCallUp(
+    {
+      ageYears: kidAgeYears(week, world.profile.birthMonth, world.profile.birthDay),
+      skillMean: skillMeanOf(world.skills),
+      // ⭐⭐⭐ ROUND 24 – THE LETTER IS EARNED NOW. The owner, 21.08: «вызов в сборную можно будет
+      // опереть на результаты студенческого». `lastLeagueRun` is the championship the selectors have
+      // in front of them, and `null` – no championship on her record at all – means nobody writes.
+      leagueRoundsWon: lastLeagueRun(world.college!)?.roundsWon ?? null,
+    },
+    rngFromSeed(`${world.seed}:callup:${week}`),
+  )
+}
+
+/** ⭐⭐⭐ ROUND 27 #6 – THE INVITATION, POSTED THE WEEK BEFORE THE TIE. The owner: «можно письмо об
+ *  этом пользователю нормальное присылать с приглашением на турнир и проводить этот турнир по
+ *  обычному флоу турнира. А этот попап не нужен для этого флоу вообще.»
+ *
+ *  ⚠⚠ IT REPLACES A TOAST THAT COULD ONLY EVER BE WRITTEN AFTERWARDS. «Her country called this year
+ *  – her matches are in the news feed» is a sentence about a week the player was not present for; a
+ *  letter that lands at a REST STATE ahead of the week is the same fact told in the order it happens,
+ *  and the flow does the rest. See `callUpLetterWeek` for why «a rest state» and not «a week» is the
+ *  unit that matters here – it is the correction this wave's own first draft needed.
+ *
+ *  ⚠ THE INBOX AND NOT THE FEED, on `settleAcademyLetters`' own argument (round 24 #1): the feed
+ *  answers «what happened this week» and is pruned to 400 rows, the inbox answers «what did somebody
+ *  write to this family» and is never pruned for a non-`entry`/`tour` kind. The milestone row the
+ *  week itself writes is unchanged and still `keep: true` – two surfaces, two questions.
+ *
+ *  ⚠ `state: 'info'`, SO IT RAISES NO 'offer' STOP. `stoppableOfferWeek` fires on an `open` letter
+ *  only, which is exactly right: this is a nomination she cannot answer, and a blocking stop in
+ *  front of it would be a question with no buttons.
+ *
+ *  ⚠ ZERO DRAWS ON MAIN. `callUpFor` derives a per-week sub-stream at the call site and this writes
+ *  one idempotent push onto `world.offers`; the frozen capture (41550 / e6b0c709) cannot see it. */
+export function settleCallUpLetter(world: WorldState): void {
+  if (!callUpLetterWeek(world)) return
+  const tieWeek = nextCallUpWeekAfter(world.week)
+  const call = callUpFor(world, tieWeek)
+  if (!call) return
+  raiseCallUpLetter(world.offers, world.week, {
+    label: NATIONAL_TEAM.label,
+    tieWeek,
+    squadSize: NATIONAL_TEAM.squadSize,
+    tiesInTheWeek: NATIONAL_TEAM.tiesInTheWeek,
+    nationsAtHerLevel: NATIONAL_TEAM.nationsAtHerLevel,
+    leagueRoundsWon: lastLeagueRun(world.college!)?.roundsWon ?? null,
+  })
+}
+
 /** THE COLLEGE MIRROR OF `rollKnock`, and it sits exactly where that does in the tick.
  *
  *  On an ordinary week the thing that happens TO her is a sore shoulder. In these four years it is a
@@ -199,17 +323,11 @@ export function callUpWeek(world: WorldState): boolean {
  *  `pruneResults` has deleted everything else about these weeks. */
 export function resolveCallUp(world: WorldState): void {
   if (!callUpWeek(world)) return
-  const call = rollCallUp(
-    {
-      ageYears: kidAgeYears(world.week, world.profile.birthMonth, world.profile.birthDay),
-      skillMean: skillMeanOf(world.skills),
-      // ⭐⭐⭐ ROUND 24 – THE LETTER IS EARNED NOW. The owner, 21.08: «вызов в сборную можно будет
-      // опереть на результаты студенческого». `lastLeagueRun` is the championship the selectors have
-      // in front of them, and `null` – no championship on her record at all – means nobody writes.
-      leagueRoundsWon: lastLeagueRun(world.college!)?.roundsWon ?? null,
-    },
-    rngFromSeed(`${world.seed}:callup:${world.week}`),
-  )
+  // ⭐⭐⭐ ROUND 27 #6 – THE SAME QUESTION THE LETTER ASKED A WEEK AGO, ASKED THE SAME WAY. This was
+  // an inline `rollCallUp` over `seed:callup:<world.week>`; `callUpFor(world, world.week)` is that
+  // expression verbatim, moved so the invitation and the week cannot disagree about whether her
+  // country wrote. ⚠ NOTHING MOVED IN THE STREAM: same key, same view, same draw order.
+  const call = callUpFor(world, world.week)
   if (!call) return
   // ⭐⭐ AND HERE THE WEEK STOPS BEING A SUMMARY. The owner's brief, 19.08: «в каждом году минимум
   // одни соревнования, которые можно смотреть так же, как и наши текущие, т.е. тот же самый механизм
@@ -217,12 +335,89 @@ export function resolveCallUp(world: WorldState): void {
   // placing – and `rubbersWon` is now COUNTED OFF THE COURT rather than drawn.
   const asPlayed = { ...call, rubbersWon: playCallUpRubbers(world, call.rubbersPlayed) }
   world.college!.pendingCallUp = { week: world.week, ...asPlayed }
+  // ⭐⭐⭐ ROUND 27 #6 – AND THE WEEK NOW STOPS TO BE WATCHED, exactly as round 26 #6 taught the
+  // championship two season weeks up the calendar. The owner: «И опять на те же грабли … матчи
+  // только постфактум … проводить этот турнир по обычному флоу турнира». `resumeFromCollege` pauses
+  // the year on this week and the app's own `TournamentFlow` walks the rubbers one at a time.
+  //
+  // ⚠⚠ ONLY WHEN SHE ACTUALLY TOOK THE COURT, AND THE ZERO ARM IS NOT AN OMISSION. `rubbersPlayed`
+  // is 0 on a real outcome – she was named, she travelled and she sat (research §0.7: the captain
+  // alone picks who plays) – and there is no match to walk, so a reveal opened here would pause the
+  // year in front of a flow with nothing in it. That is the same tripwire `collegeLeaguePendingView`
+  // keeps («a flow mounted over nothing is worse than no flow»), enforced at the source instead. The
+  // bench week is not silent: the letter arrived last week and the milestone below says what
+  // happened, in the record's own words.
+  //
+  // ⚠ AFTER THE ROWS ARE WRITTEN AND NOT INSTEAD OF THEM – `resolveCollegeLeague`'s own ruling, and
+  // the reason round 26 #7 («реплеев этих матчей нигде нет») cannot come back through this door: the
+  // rubbers are `keep: true` rows in the feed whatever the player does with the reveal.
+  if (asPlayed.rubbersPlayed > 0) world.college!.callUpReveal = { week: world.week, revealed: 0 }
   addEvent(world, {
     week: world.week,
     type: 'milestone',
     keep: true,
     text: callUpLine(asPlayed),
   })
+}
+
+// -------------------------------------------------------------------------------------------------
+// ⭐⭐⭐ ROUND 27 #6 – THE TIE'S REVEAL: THE TOUR'S OWN FLOW, OVER A WEEK SHE DID NOT ENTER
+// -------------------------------------------------------------------------------------------------
+//
+// ⚠⚠ FOUR FUNCTIONS THAT ARE `revealTournamentRound` / `skipTournament` / `closeTournament` FOR THIS
+// COMPETITION, and they are reached through those very names – the identical wiring round 26 #6 built
+// for the championship (`world.ts` dispatches each of the three), so the worker's command table, the
+// store's actions and every button in `TournamentFlow.vue` are untouched. One road, three kinds of
+// tournament on it.
+//
+// ⚠ AND `world.pendingTournament` IS STILL NEVER WRITTEN. Every payout in this game is reached
+// through `TIERS[event.tier]` and this fixture has no rung (`callUpRubberId` names none on purpose),
+// so the amateur line is held by the state's SHAPE rather than by a branch somebody has to remember,
+// and round 24's `COLLEGE_REVEAL_REFUSAL` stays a statement about a state that cannot occur.
+//
+// ⚠ THE TWO REVEALS ARE NEVER OPEN TOGETHER, and it is arithmetic rather than care: the championship
+// is season week 12 and the tie is 14, and `resumeFromCollege` pauses on the first of them – so the
+// year cannot reach 14 with 12 still standing. `pendingView` orders them all the same, because a
+// projection that depends on an argument made elsewhere is a projection waiting for that argument to
+// change.
+
+/** IS A TIE WAITING TO BE WATCHED? The predicate `resumeFromCollege` pauses on and the snapshot
+ *  builds its `pending` view from. `collegeLeagueRevealOpen`'s twin. */
+export function callUpRevealOpen(world: WorldState): boolean {
+  return (world.college?.callUpReveal ?? null) !== null
+}
+
+/** The rubbers the open reveal is walking – off the feed, exactly like every other reader of these
+ *  records, so the reveal holds a cursor and never a second copy of the week. */
+export function callUpRevealMatches(world: WorldState): WorldMatch[] {
+  const reveal = world.college?.callUpReveal ?? null
+  return reveal ? callUpRubbersOf(world, reveal.week) : []
+}
+
+/** Show one more rubber. ⚠ IT WRITES NO EVENT, which is the one place this differs from
+ *  `revealTournamentRound` and the difference is stated at `resolveCallUp`: the rows are already in
+ *  the feed. Idempotent at the end of the week, exactly like its twin. */
+export function revealCallUpRubber(world: WorldState): void {
+  const reveal = world.college?.callUpReveal ?? null
+  if (!reveal) return
+  const played = callUpRubbersOf(world, reveal.week).length
+  if (reveal.revealed >= played) return
+  reveal.revealed += 1
+}
+
+/** «Skip all rounds» – straight to the week's own finish. */
+export function skipCallUpRubbers(world: WorldState): void {
+  const reveal = world.college?.callUpReveal ?? null
+  if (!reveal) return
+  reveal.revealed = callUpRubbersOf(world, reveal.week).length
+}
+
+/** The finale's Continue: the reveal is answered and the year may go on. ⚠ A BARE CLEAR, like
+ *  `closeTournament`, and callable at any point in the walk – the owner is allowed to stop watching,
+ *  and nothing about the record depends on how far he got. */
+export function closeCallUpReveal(world: WorldState): void {
+  if (!world.college) return
+  world.college.callUpReveal = null
 }
 
 /** ⭐⭐ DID HER COUNTRY PLAY **THIS** WEEK – the predicate the year's loop asks so the week cannot
@@ -380,11 +575,118 @@ export function callUpRubbersOf(world: WorldState, week: number): WorldMatch[] {
 // each occurs once, so a year holds at most two and never three, which is the owner's own bound.
 // `tests/college-league.test.ts` pins both ends over walked careers rather than asserting them here.
 
+/** THE SEASON-WEEK TEST ON ITS OWN, asked of a week rather than of the world – so a question about a
+ *  week the tick has not reached yet cannot spell it a second way. ⚠ ONE PLACE WRITES
+ *  `% WEEKS_PER_YEAR === COLLEGE_LEAGUE.seasonWeek`: two copies is how a fixture comes to be played
+ *  on one week and announced for another. */
+export function isCollegeLeagueWeek(week: number): boolean {
+  return week % WEEKS_PER_YEAR === COLLEGE_LEAGUE.seasonWeek
+}
+
 /** IS THIS THE WEEK THE STUDENT CHAMPIONSHIP IS PLAYED? A season-week comparison and nothing else –
  *  the same shape `callUpWeek` has, and guarded on `inCollege` for the same reason: this is a closed
  *  student field and a girl on the tour is not in it. */
 export function collegeLeagueWeek(world: WorldState): boolean {
-  return inCollege(world) && world.week % WEEKS_PER_YEAR === COLLEGE_LEAGUE.seasonWeek
+  return inCollege(world) && isCollegeLeagueWeek(world.week)
+}
+
+/** ⭐⭐⭐ ROUND 27 #2 – WHICH FIXTURE WILL THE NEXT PRESS OF THE COLLEGE BUTTON END AT?
+ *  («…END AT THE CHAMPIONSHIP?» when it was written – round 27 #6 gave it a second answer.)
+ *
+ *  The owner, 27.08: «в интерфейсе колледжа появляется кнопка "Продолжить год", а при нажатии мы
+ *  попадаем в "the College League" – как будто можно тоже наш флоу использовать с неймингом кнопки
+ *  – Play College Open или вроде того, а уже потом "Закончить год"?»
+ *
+ *  ⚠⚠ THE SCREEN MAY NOT ANSWER THIS, WHICH IS WHY IT IS HERE (CLAUDE.md invariant 1). `HomeScreen`'s
+ *  bottom control already reads `yearInProgress` – `college.pendingYearStart`, the engine's own fact
+ *  – rather than counting weeks itself, and its own comment states the rule this predicate serves:
+ *  «a button still reading "Another year" there would be offering a year it is not going to start».
+ *  A button reading «Finish the year» when the next press plays a championship is the same sentence
+ *  one pause later.
+ *
+ *  ⚠⚠ MEASURED, AND BOTH LABELS LIE – WHICH ONE DEPENDS ON HER BIRTH MONTH. The academic year opens
+ *  at a fixed season week and the fixture sits thirty weeks into it, so her birthday falls on either
+ *  side of it: over all twelve birth months, five (April–August) put the championship FIRST, so the
+ *  press labelled «Another year» plays it; the other seven put her birthday first, so the press
+ *  labelled «Finish the year» plays it. One predicate covers both, because it names what the press
+ *  DOES rather than which pause the year is standing in.
+ *
+ *  ⚠ IT WALKS THE WEEKS THE PRESS WILL WALK AND ASKS THE LOOP'S OWN QUESTIONS, in the loop's own
+ *  order – `resumeFromCollege` in `world.ts` is the list. A championship BEHIND a birthday is not
+ *  this press's business: that press ends at the cake, the button after it says the fixture's name,
+ *  and the year is never offered something it will not reach.
+ *
+ *  ⚠⚠ IT SAID «EXACTLY TWO MID-YEAR STOPS» AND CARRIED A WARNING – «IF A THIRD MID-YEAR STOP IS EVER
+ *  ADDED TO THAT LOOP, IT HAS TO BE ADDED HERE TOO, or this button starts promising a tournament that
+ *  a new pause arrives in front of». ⚙ **ROUND 27 #6 IS THAT THIRD STOP AND THE WARNING IS
+ *  COLLECTED**: the Nations Cup tie now pauses the year exactly as the championship does, so without
+ *  the clause below a press labelled «Finish the year» would have played it – and, on the enrolment
+ *  weeks whose year opens between the two fixtures, a press labelled «Play the College League» would
+ *  have played the tie instead. The predicate became a WALK RETURNING WHICH ONE, and
+ *  `collegeLeagueIsNextStop` is now one reading of it.
+ *
+ *  ⚠ ONE SCAN FOR BOTH ANSWERS, DELIBERATELY. Two predicates over the same weeks is two places to get
+ *  the ORDER wrong, and the order is the whole content: a college year that opens on season week 13
+ *  meets the tie (14) before the championship (12), and one that opens on 34 meets them the other way
+ *  round. At most one of them can be true of a given press, and a single walk is what makes that a
+ *  fact rather than a hope.
+ *
+ *  The span is `resumeFromCollege`'s own arithmetic: a year in progress finishes against the start it
+ *  was paused with, a fresh one opens at this week (`openCollegeYear().week === world.week`), and a
+ *  pause can only fire on a week STRICTLY inside the span – the boundary week banks the year instead,
+ *  which is the ruling `resumeFromCollege` states for a birthday landing on it. */
+export type CollegeStop = 'college-league' | 'call-up' | null
+
+export function collegeNextStop(world: WorldState): CollegeStop {
+  const college = world.college
+  if (!college || college.doneWeek !== null) return null
+  const startWeek = college.pendingYearStart?.week ?? world.week
+  const yearEnds = Math.min(college.untilWeek, startWeek + WEEKS_PER_YEAR)
+  for (let week = world.week + 1; week < yearEnds; week++) {
+    // `resolveCollegeLeague` only fires while she is enrolled, and `inCollege` is `week <
+    // untilWeek` – so a fixture week at or past the end of the course is not one.
+    if (isCollegeLeagueWeek(week) && week < college.untilWeek) return 'college-league'
+    // ⭐⭐⭐ ROUND 27 #6 – THE THIRD STOP, WHICH IS EXACTLY WHAT THE ⚠⚠ ABOVE ASKED FOR. The tie now
+    // pauses the year like the championship, so a scan that knew only the championship would go on
+    // labelling the press «Finish the year» over a press that plays the Nations Cup – round 27 #2's
+    // own defect, arriving from the fixture two season weeks along.
+    //
+    // ⚠⚠ AND IT IS A CONDITIONAL STOP, WHICH THE CHAMPIONSHIP IS NOT. The League is arithmetic and
+    // fires every year; the tie is a roll, and a year in which nobody wrote – or in which she was
+    // NAMED AND SAT (`rubbersPlayed === 0`, a real outcome) – raises no reveal and does not pause.
+    // So the scan asks the same question the letter asks, through the same function.
+    //
+    // ⚠ `lastLeagueRun` IS EXACT HERE FOR THE REASON THE EARLY RETURN ABOVE GIVES: the scan returns
+    // on the FIRST championship week it meets, so it can never reach a call-up week with a
+    // championship still in front of it – which is precisely the case that would make the roll's
+    // input stale. `callUpFor` derives a per-week sub-stream and persists nothing, so asking here
+    // costs the MAIN capture nothing (CLAUDE.md invariant 2).
+    if (week % WEEKS_PER_YEAR === NATIONAL_TEAM.seasonWeek && week < college.untilWeek) {
+      const call = callUpFor(world, week)
+      if (call && call.rubbersPlayed > 0) return 'call-up'
+    }
+    // ...and her birthday gets there first. The same two conditions `pendingBirthday` asks – the
+    // date, and that this one has not already been answered – because it is the same pause.
+    if (
+      birthdayTurning(week, world.profile.birthMonth, world.profile.birthDay) !== null &&
+      !world.birthdays.some((b) => b.week === week)
+    ) {
+      return null
+    }
+  }
+  return null
+}
+
+/** ⚠ KEPT AS A PREDICATE, because that is what `CollegeProgressView.leagueIsNextStop` and round 27
+ *  #2's suite ask for – now one reading of `collegeNextStop` rather than its own walk. */
+export function collegeLeagueIsNextStop(world: WorldState): boolean {
+  return collegeNextStop(world) === 'college-league'
+}
+
+/** ⭐⭐⭐ ROUND 27 #6 – ...AND WILL IT END AT THE NATIONS CUP TIE? The championship's twin, on the
+ *  same scan, so the two can never both claim the press. */
+export function collegeCallUpIsNextStop(world: WorldState): boolean {
+  return collegeNextStop(world) === 'call-up'
 }
 
 /** ⭐⭐⭐ THE CHAMPIONSHIP, PLAYED AND FILED. The college mirror of `resolveCallUp`, two weeks up the
@@ -649,6 +951,11 @@ export function bankCollegeYear(world: WorldState, start: CollegeYearStart): voi
   // ask it on (`collegeProgressOf` is null the moment `doneWeek` is set). Cleared here rather than
   // guarded against everywhere, which is `pendingCallUp`'s own argument two lines up.
   college.leagueReveal = null
+  // ⭐⭐⭐ v64 – AND THE TIE'S REVEAL DIES WITH ITS YEAR ON THE IDENTICAL ARGUMENT. It cannot normally
+  // be open here – `resumeFromCollege` pauses the year on it – but a year CUT SHORT BY AN ENDING on
+  // the call-up week itself reaches this line with one still standing, and a reveal that outlives its
+  // college state is a question with no surface left to ask it on.
+  college.callUpReveal = null
   // ⭐ v57 – AND THE PAUSED YEAR'S OPENING GOES WITH THEM, whose lifetime it shares: it exists from
   // a birthday pause to the bank, and a start left standing here would open the NEXT year with the
   // LAST year's four numbers. Written unconditionally so the key normalises to null the first time
@@ -692,6 +999,8 @@ export function collegeProgressOf(world: WorldState): CollegeProgressView | null
   const college = world.college
   if (!college || college.doneWeek !== null) return null
   const last = college.years[college.years.length - 1] ?? null
+  // ONE WALK, TWO FIELDS – see `collegeNextStop`.
+  const stop = collegeNextStop(world)
   return {
     yearsDone: college.years.length,
     totalYears: ENDINGS.collegeYears,
@@ -733,6 +1042,16 @@ export function collegeProgressOf(world: WorldState): CollegeProgressView | null
     // so the bottom control's «Finish the year» and the engine's own early-return refusal cannot
     // disagree about whether one is.
     yearInProgress: (college.pendingYearStart ?? null) !== null,
+    // ⭐⭐⭐ ROUND 27 #2 – ...AND WHAT THE NEXT PRESS ACTUALLY DOES. The line above says a year is
+    // running; this says whether finishing it plays a tournament first. Two facts, because they are
+    // two questions: the shipped label collapsed them and offered a year on a press that plays the
+    // championship.
+    // ⭐⭐⭐ ROUND 27 #6 – ...AND SO DOES THE TIE, SINCE THIS WAVE. One scan answers both
+    // (`collegeNextStop`), so the two fields cannot both claim the press – which is what the
+    // championship's own ⚠⚠ («IF A THIRD MID-YEAR STOP IS EVER ADDED TO THAT LOOP, IT HAS TO BE
+    // ADDED HERE TOO») was written to prevent.
+    leagueIsNextStop: stop === 'college-league',
+    callUpIsNextStop: stop === 'call-up',
   }
 }
 

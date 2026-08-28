@@ -51,6 +51,7 @@ import {
   measureCollegeOffer,
   pendingBirthday,
   resumeFromCollege,
+  callUpRevealOpen,
   collegeLeagueRevealOpen,
   skipTournament,
   revealTournamentRound,
@@ -120,6 +121,18 @@ function collegeView(over: Partial<CollegeProgressView> = {}): CollegeProgressVi
     league: { week: 293, roundsWon: 2, rounds: 3 },
     leagueMatches: [],
     yearInProgress: false,
+    // ⚠ ROUND 27 #2 – A NEW FIELD, AND `false` IS A CLAIM RATHER THAN A FILLER. `leagueIsNextStop`
+    // is «the next press ends at the student championship», and the cases below are about the four
+    // labels that count YEARS, so every one of them is a rest state whose press does not play a
+    // fixture. The fifth label has its own case, over a WALKED career, in this file's round-27
+    // describe – a fabricated `true` here would pin a string, not a state.
+    leagueIsNextStop: false,
+    // ⚠ ROUND 27 #6 – AND ITS TWIN, `false` ON THE SAME ARGUMENT. The tie is the year's third
+    // mid-year stop and this fixture is a year at REST at a boundary, so neither fixture is what the
+    // next press plays. At most one of the two can ever be true (`collegeNextStop` is one walk), and
+    // the state where THIS one is true is walked rather than fabricated – tests/round27-call-up-flow
+    // owns the predicate and tests/component/round27-call-up-flow owns the screen.
+    callUpIsNextStop: false,
     ...over,
   }
 }
@@ -174,8 +187,16 @@ let walked: Snapshot | null = null
  *  pause but not the other stalls on the first league week: these cases read ZERO banked years
  *  where four are lived. The player answers it with «Skip all rounds» then «Continue», which is
  *  what these two commands are. */
-function answerLeagueReveal(world: WorldState): void {
-  if (!collegeLeagueRevealOpen(world)) return
+/** ⭐⭐⭐ ROUND 27 #6 RE-AIM – IT ANSWERS THE NATIONS CUP TIE TOO, AND IT IS NOT A WEAKENING.
+ *  ⚠ IT USED TO CLAIM: «a college year has exactly one pause the flow owns – the championship»
+ *  (`answerLeagueReveal`, round 26 #6). That is why it read `collegeLeagueRevealOpen` alone.
+ *  ⚠ WHY IT MOVED: the call-up used to resolve inside the tick and report itself in a toast – the
+ *  owner's «матчи только постфактум». It now pauses the year and is walked in `TournamentFlow` like
+ *  the championship, so a walk that answered only one of the two would hang on the other. The
+ *  predicate is widened and the name says what it covers; the ASSERTIONS below are untouched, and
+ *  `skipTournament` / `closeTournament` are still the player's own two presses. */
+function answerCollegeReveal(world: WorldState): void {
+  if (!collegeLeagueRevealOpen(world) && !callUpRevealOpen(world)) return
   skipTournament(world)
   closeTournament(world)
 }
@@ -185,7 +206,7 @@ function walkedCollegeSnapshot(): Snapshot {
   if (walked) return walked
   const { world, rng } = atCollege('r26-card-base')
   resumeFromCollege(world, rng)
-  answerLeagueReveal(world)
+  answerCollegeReveal(world)
   if (pendingBirthday(world) !== null) chooseGift(world, 'day')
   const snap = toSnapshot(world)
   if (snap.ending === null || snap.ending.ending.type !== 'college' || snap.ending.college === null) {
@@ -240,10 +261,13 @@ describe('⭐⭐⭐ #13 – four years is four years, and the fourth is the last
 
     // Every rest state the player can be in, recorded as the engine leaves it. Each year takes two
     // presses because her birthday pauses it (round 24) – the loop answers the cake and presses on.
+    // ⚠ ROUND 27 #6: and up to four, because the year now holds three questions – the championship,
+    // the Nations Cup tie and the cake. The BUDGET moved from three presses a year to five; the
+    // assertions below are untouched and still measure four banked years over 208 weeks.
     const rest: { yearsDone: number; latched: boolean }[] = []
-    for (let press = 0; press < 3 * ENDINGS.collegeYears && world.ending?.type === 'college'; press++) {
+    for (let press = 0; press < 5 * ENDINGS.collegeYears && world.ending?.type === 'college'; press++) {
       resumeFromCollege(world, rng)
-      answerLeagueReveal(world)
+      answerCollegeReveal(world)
       if (pendingBirthday(world) !== null) chooseGift(world, 'day')
       const view = toSnapshot(world).ending?.college ?? null
       rest.push({ yearsDone: view?.yearsDone ?? world.college!.years.length, latched: view !== null })
@@ -282,7 +306,7 @@ describe('⭐⭐⭐ #13 – four years is four years, and the fourth is the last
     const { world, rng } = atCollege('r26-fifth')
     for (let press = 0; press < 3 * ENDINGS.collegeYears && world.ending?.type === 'college'; press++) {
       resumeFromCollege(world, rng)
-      answerLeagueReveal(world)
+      answerCollegeReveal(world)
       if (pendingBirthday(world) !== null) chooseGift(world, 'day')
     }
     expect(world.college!.years).toHaveLength(ENDINGS.collegeYears)
@@ -409,6 +433,61 @@ describe('⭐⭐⭐ #12 – no press offers a fifth year', () => {
     expect(w.findAll('.college-answer'), 'and there is no press that can only be refused').toHaveLength(0)
     expect(w.find('.college-bar').exists()).toBe(false)
     w.unmount()
+  })
+})
+
+// =================================================================================================
+// ⭐⭐⭐ ROUND 27 #2 – THE FIFTH LABEL, ON THE PRESS THAT PLAYS A TOURNAMENT
+// =================================================================================================
+//
+// The owner, 27.08: «в интерфейсе колледжа появляется кнопка "Продолжить год", а при нажатии мы
+// попадаем в "the College League" – как будто можно тоже наш флоу использовать с неймингом кнопки –
+// Play College Open или вроде того, а уже потом "Закончить год"?»
+//
+// ⚠ TWO ADJACENT REAL STATES AND NOT A FABRICATED VIEW, which is the difference between this case
+// and every other label case in this file. The four labels above count YEARS, so a hand-built
+// `CollegeProgressView` is the honest fixture for them. The fifth names what a PRESS DOES, and the
+// only thing that can prove it lands on the right press is a career that presses.
+describe('⭐⭐⭐ ROUND 27 #2 – the button names the championship, and only while it is ahead', () => {
+  beforeEach(() => {
+    setActivePinia(createPinia())
+    document.body.innerHTML = ''
+  })
+
+  it('⭐⭐⭐ THE PAIR: «Play the College League» before the fixture, «Finish the year» after it', async () => {
+    const { world, rng } = atCollege('r27-label-pair')
+
+    // BEFORE. The first rest state of the first year: the press ahead ends at the championship, and
+    // the button says so instead of offering a year.
+    expect(
+      toSnapshot(world).ending?.college?.leagueIsNextStop,
+      'this career really is standing in front of its championship – otherwise the case is vacuous',
+    ).toBe(true)
+    const before = await openWorld(world)
+    expect(
+      before.findAll('.college-answer').map((n) => n.text()),
+      'the fixture names itself, and there is no leave answer with no year banked',
+    ).toEqual([`Play ${COLLEGE_LEAGUE.label}`])
+    before.unmount()
+
+    // ...the press really does play it, through the engine, exactly as the button's click does.
+    resumeFromCollege(world, rng)
+    expect(collegeLeagueRevealOpen(world), 'the press ended at the championship').toBe(true)
+    skipTournament(world)
+    closeTournament(world)
+
+    // AFTER. Same year, same rest state shape, and the championship is behind her – so the button
+    // goes back to naming the year. ⚠ THIS IS THE MUTATION PROOF: no constant satisfies both ends,
+    // and a predicate that merely asked «does this year hold a championship» would say the fixture's
+    // name here too, over a fixture that has already been played.
+    const after = await openWorld(world)
+    expect(after.findAll('.college-answer').map((n) => n.text()), 'his own «а уже потом Закончить год»').toEqual([
+      'Finish the year',
+    ])
+    expect(after.text(), 'and nothing on the screen still offers the tournament').not.toContain(
+      `Play ${COLLEGE_LEAGUE.label}`,
+    )
+    after.unmount()
   })
 })
 

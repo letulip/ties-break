@@ -28,7 +28,14 @@ import { KNOCK_REST_GROWTH, knockRestWeek } from '../knock'
 import { coachWorksThisWeek } from './phaseFinance'
 import { ageAtWeek, kidAgeExact, markBirthday } from './age'
 import { markCoachTravelOpen, markSchoolEnd } from './milestones'
-import { collegeCoachFactor, collegeMatchesThisWeek, inCollege, resolveCallUp, resolveCollegeLeague } from './college'
+import {
+  collegeCoachFactor,
+  collegeMatchesThisWeek,
+  inCollege,
+  resolveCallUp,
+  resolveCollegeLeague,
+  settleCallUpLetter,
+} from './college'
 import { rollKnock } from './knock'
 import { summerLoadFactor } from './summer'
 
@@ -185,9 +192,19 @@ export function growAndLive(world: WorldState, rng: Rng): void {
   //   ⚠ ITS OWN SUB-STREAM, `seed:collegeleague:<week>`, plus one `seed:collegematch:<week>:<r>` per
   //   round – so `seed:callup:<week>` is byte-identical to what it was and the frozen MAIN capture
   //   (41550 / e6b0c709) cannot see either of them.
+  // ⭐⭐⭐ ROUND 27 #6 – AND THE LETTER GOES OUT ON THE CHAMPIONSHIP WEEK, TWO AHEAD OF THE TIE. The
+  //   owner: «мы знаем будет это происходить или нет, можно письмо об этом пользователю нормальное
+  //   присылать с приглашением на турнир». It is called immediately AFTER `resolveCollegeLeague`
+  //   because that is the causality as well as the calendar: the selectors read the championship this
+  //   very line has just played, and `lastLeagueRun` is what they read. ⚠ AND THE ORDER IS
+  //   LOAD-BEARING – called before it, the paper would quote LAST year's form.
+  //   ⚠ IT WRITES TO `world.offers` AND NOTHING ELSE, and it re-derives `seed:callup:<tieWeek>` – the
+  //   SAME sub-stream `resolveCallUp` will derive two weeks later, never a new one – so the frozen
+  //   MAIN capture (41550 / e6b0c709) still cannot see any of this block.
   if (!inCollege(world)) rollKnock(world)
   else {
     resolveCollegeLeague(world)
+    settleCallUpLetter(world)
     resolveCallUp(world)
   }
 

@@ -1980,6 +1980,38 @@ export function migrateSave(raw: unknown): WorldState {
     v = 63
   }
 
+  // ⭐⭐⭐ v63 -> v64: `CollegeState.callUpReveal` – THE NATIONS CUP TIE'S REVEAL (round 27 #6, the
+  // owner: «И опять на те же грабли … матчи только постфактум … проводить этот турнир по обычному
+  // флоу турнира»). One optional field on the college object, and it back-fills NULL.
+  //
+  // ⚠ NULL IS NOT A PLACEHOLDER HERE – IT IS THE TRUE VALUE, and for a sharper reason than v31's
+  // empty shelves. A reveal is a QUESTION STANDING IN FRONT OF THE PLAYER, and no save written before
+  // this version can be holding one: the tie resolved inside the tick, reported itself in a toast and
+  // left nothing to answer. So there is no state to reconstruct and nothing to date. This is v26's
+  // knock case exactly («both back-fill EMPTY, and unlike v18's milestones there is nothing to
+  // reconstruct»), which v60 already applied to the championship's own reveal one field along.
+  //
+  // ⚠ AND A WEEK ALREADY LIVED IS NOT RE-OFFERED, which is v60's ruling repeated because it is the
+  // tempting mistake here: `pendingCallUp` on a migrated save may well name a tie played four weeks
+  // ago whose rubbers are STILL in the feed (`keep: true`), so a back-fill of `{week, revealed: 0}`
+  // would compile, would find its matches, and would pause a career in front of a tournament it
+  // finished before the update. The letters behave the same way: `settleCallUpLetter` is guarded on
+  // the week BEFORE a tie, so a migrated career gets its first invitation for its next call-up and
+  // none for the ones behind it – a letter stamped at today's week about a week that has already
+  // happened is a fabrication that reads exactly like a record (`settleAcademyLetters`' own rule).
+  //
+  // ⚠ A MIGRATED CAREER PLAYS IDENTICALLY THIS WEEK: `callUpRevealOpen` is false, so
+  // `resumeFromCollege` pauses on nothing new, `pendingView` builds nothing new, and no screen
+  // changes. Idempotent (a non-null value is left alone – v30's rule), zero draws on any stream, so
+  // the frozen MAIN capture (41550 / e6b0c709) is untouched by construction.
+  if (v === 63) {
+    const w = save as { college?: { callUpReveal?: unknown } | null }
+    if (w.college && typeof w.college === 'object' && w.college.callUpReveal === undefined) {
+      w.college.callUpReveal = null
+    }
+    v = 64
+  }
+
   if (v !== SAVE_SCHEMA_VERSION) {
     throw new Error(`Save schema ${v} is newer than supported ${SAVE_SCHEMA_VERSION}`)
   }

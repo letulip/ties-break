@@ -164,6 +164,38 @@ the pause reason has to reach the snapshot. A screen that guesses which pause it
 screen deciding a rule, which `CLAUDE.md` invariant 1 forbids – and the birthday half is already done
 the right way (`yearInProgress` is `college.pendingYearStart`, the engine's own fact).
 
+### ⚙ CORRECTED AT THE BUILD, 27.08 – it is not «the championship pause», and it is not one label
+
+⚠ **The paragraph above is right about the cause and wrong about the state, and the walked career is
+what says so.** Two probes over `resumeFromCollege`, all twelve birth months, four years each:
+
+| her birth month | the press that plays the championship | what it said |
+| --- | --- | --- |
+| **April–August** (5/12) | the FIRST press of the year – the fixture is thirty weeks in, her birthday later | `Another year` · `Play the first year` · `Play the final year` |
+| **September–March** (7/12) | the SECOND press – her birthday pauses the year first | `Finish the year` |
+
+**So BOTH halves of the label lie, and which one depends only on her birth month.** The academic year
+opens on a fixed season week for every career, so the fixture is always at the same offset and only
+the cake moves across it.
+
+⚠ **AND `collegeLeagueRevealOpen` CANNOT BE THE PREDICATE**, for a measured reason: it is true exactly
+while `snapshot.pending` is set, and `HomeScreen`'s college bar carries `&& !game.snapshot?.pending` –
+so while it is true the button is not on screen at all. The state it names is the takeover, not the
+rest state before it.
+
+**Built instead:** `collegeLeagueIsNextStop(world)` – «does the press ahead END at the championship» –
+reaching the screen as `CollegeProgressView.leagueIsNextStop`, and ONE label, `Play the College
+League`, ahead of both orderings. It walks the weeks the press will walk and asks the loop's own two
+questions in the loop's own order, so a championship sitting BEHIND a birthday is not promised by the
+press that will stop at the cake. ⚠ Its own docstring carries the standing hazard: `resumeFromCollege`
+has exactly two mid-year stops today, and a third would have to be taught to this predicate too.
+
+⚠ The name is **the league's own label** (`COLLEGE_LEAGUE.label`), not «College Open» – his «или
+вроде того» left the choice open and the fixture already has a name on every other surface.
+
+**Measured after the fix: 0 mismatches over 12 birth months × 4 years – the button names the
+championship on exactly the presses that play it, and «Finish the year» on the one after.**
+
 ---
 
 ## 3. ⚠⚠ The world #100 goes to college and loses, and the numbers say why
@@ -314,6 +346,53 @@ enabling something it refuses, pointed the other way.
 
 ⭐ Cheapest of the five: every fact exists, the sentence exists, and no engine number moves.
 
+### ⚙ BUILT 27.08 – the control-by-control audit, and it found a THIRD refused control
+
+**The premise above held: the engine was already right, and no engine number moved.** What the audit
+added is the list itself. Every control the screen draws, against the guard behind it:
+
+| control | engine command | guard | shipped |
+| --- | --- | --- | --- |
+| **Enter** | `enterEvent` | `guardNotEnded` | **disabled** |
+| **Withdraw** | `withdrawEvent` | `guardNotEnded` | **disabled** (see below) |
+| **Cancel entry** | `cancelEntry` | `guardNotEnded` | **disabled** (see below) |
+| **+ Plan week** (both cards) | `bookPractice` / `bookVacation` | `guardNotEnded` | **disabled** |
+| **Play it and watch** | `advance(1)` | `advanceRefusal` → `'ending'` | **disabled** – see below |
+| rescue card «See the options» | `bookVacation`, through the same sheet | `guardNotEnded` | **suppressed** |
+| **Cancel** on a booked practice | `cancelPractice` | `guardNotEndedForGood` | **left live** |
+| **Cancel** on a booked vacation | `cancelVacation` | `guardNotEndedForGood` | **left live** |
+| the painted vacation card's tap | opens `PlanWeekSheet`'s `booked` pane | reaches `cancelVacation` only | **left live** |
+| Tour guide, Watch match, the sandbox friendly | none – no command at all | – | **left live** |
+
+⚠⚠ **«Play it and watch» IS A THIRD REFUSED CONTROL AND IT WAS THE WORST OF THEM, because it was
+silent.** The press is an ADVANCE, `advanceRefusal` returns `'ending'` behind any latch – college
+included – and `'ending'` is the one stop reason with **no copy in App.vue's `STOP_REASON_TEXT`**, so
+R10-16's own «no copy, no toast» rule meant the press produced *nothing at all*: no week, no message.
+It is reachable exactly because of the fact E2 built on – `resolveCollegeDeparture` releases her
+ENTRIES and leaves `world.practices` alone, so a friendly booked in August is still on the calendar in
+September. ⭐ **App.vue's own week bar already stands down on a college week for this argument**
+(the note at `.next-week-bar`, and `round24-college-shell.test.ts` pins it); this is the same command
+on another screen, and nobody had told it.
+
+⚠ **The rescue card is SUPPRESSED rather than disabled, and it is the only thing here that is.**
+Everything else is a control the player went looking for, so it stays on screen greyed with the reason
+beside it. This is the game *offering* a booking it will refuse, and its own copy («nothing is booked
+until you say so») promises a decision the engine will not take.
+
+⚠ **Withdraw / Cancel entry cannot actually be reached inside the freeze** – `releaseEntriesForTheFreeze`
+runs at the departure, so she holds no entry (pinned in the new suite). Both are gated all the same:
+the guard is what makes that a rule rather than a hope.
+
+⚠ **The three «left live» rows are the whole second half of the item** and they are pinned in both
+directions – `tests/component/round27-college-season.test.ts`, mutation-verified four ways (freeze
+never fires → the four freeze cases die; freeze always fires → the on-tour arm dies; freeze the
+practice cancel or the vacation card's tap → exactly the E2 case that names it dies).
+
+**The predicate is `guardNotEnded`'s own first question** (`ending.type === 'college'`), not
+`snapshot.inCollege` – the same reasoning `world/constants.ts` writes out beside the guard, so the
+screen and the refusal cannot disagree about which controls work. The note is `COLLEGE_FREEZE_REFUSAL`
+itself, printed once at the head of the calendar rather than eight times over eight cards.
+
 ---
 
 ## 6. ⚠⚠ The national-team call-up is the SAME RAKE the League just stepped off
@@ -341,6 +420,108 @@ absence.
 ⚠ **AND §4 IS ITS TWIN.** The tie is played outside all three ladders, so the moment it goes through
 `TournamentFlow` it hits the same «Professional ranking» lie §4 records. **Fix §4 first or ship them
 together** – doing this one alone converts a postfactum popup into a screen that states a falsehood.
+
+### ⚙ BUILT 27.08 – and §4's warning was worth more than §4's code
+
+**Everything above held.** `rollCallUp`'s decision really is knowable a week early, and the letter,
+the flow and the deletion are what shipped. Four things the build learned that the section did not
+say:
+
+**0. ⚠⚠ «AHEAD OF TIME» MEANS AHEAD OF A REST STATE, NOT AHEAD OF A WEEK – AND THE FIRST DRAFT OF
+THIS BUILD GOT IT WRONG.** The letter went out on the week BEFORE the tie, which is one week early in
+the calendar and no weeks early in the player's hands: a college year is spent in PRESSES, that week
+raises no pause, and the tie is inside the same press – so the paper landed in the inbox at the exact
+instant the takeover covered it. **It is written on the CHAMPIONSHIP week now** (season 12, two ahead
+of the tie), which round 26 #6 already made a pause, and which is also the causality
+(`lastLeagueRun`: «the letter is read off the result the player has just watched»). So the sequence
+the owner asked for is the sequence he gets: watch the championship → the invitation is in the inbox
+with the dot lit → the bottom control reads «Play the Nations Cup» → press → she is on court.
+⚠ **The evidence cannot go stale in between** – no championship week falls between the paper and the
+tie – and that is an invariant over two constants, so it is PINNED rather than assumed: re-tune
+either season week so a championship lands in the gap and the suite goes red with a sentence.
+⭐ Caught by asking for a MOUNTED claim («at the rest state before the tie the letter is already in
+the inbox»); every source-level pin was green on the wrong version.
+
+**1. The prediction is EXACT, and it is exact for a reason worth writing down.** The letter and the
+tick now ask ONE function, `callUpFor(world, week)` – the tick's own expression, moved – and it is
+keyed on the TIE's week, so both callers derive the identical `seed:callup:<tie>` sub-stream however
+early they ask (two weeks, in the shipped calendar). Its three inputs, one at a time: the stream is per-tie-week (identical); `ageYears`
+is computed FOR the tie week, so a birthday in between cannot move it; and `leagueRoundsWon` is final
+because the championship is season week 12, the tie is 14, and `lastLeagueRun` reads the same run
+through a year boundary (`bankCollegeYear` moves it from `pendingLeague` into `years[n]`, the second
+place that lookup already looks). ⚠ **The subtle one is `skillMean`**, which is today's on both
+calls – and it feeds exactly one expression, `binomial(played, rubberWinChance(skillMean), rng())`,
+whose draw count is one uniform whatever the probability is. So the stream position, `called`,
+`rubbersPlayed` and `nationFinish` are identical from either week; the ONE value it moves is
+`rubbersWon`, which `playCallUpRubbers` overwrites with what happened on court. That is why the
+letter states neither. **Mutation-verified rather than argued**: her skill is driven to 20 and to 99
+in the suite and the answer stands still.
+
+**2. `rubbersPlayed` is knowable a week early and is deliberately NOT on the paper.** The draw that
+decides the team sheet is taken on the same sub-stream as the letter, so `CallUpLetterTerms` COULD
+carry it. Research §0.7 – the captain alone picks who plays out of the nomination – and a letter that
+told the parent the side a week early would be the postfactum defect wearing an envelope. The suite
+asserts its ABSENCE, because the temptation is to add it later.
+
+**3. THE LANDMINE §4's BUILDER LEFT WAS REAL, AND THERE WAS A SECOND ONE HE DID NOT SEE.** His was
+the splash's `v-else` («a student field awards neither» – the College League's words, false of a
+national squad), and it is closed by `PendingView.ladderNote`: the engine states the clause, non-null
+exactly when `ladder` is null, written in the same object literal so the two cannot drift, and pinned
+across all three fixture kinds. **The second was `TournamentFlow`'s own
+`amateur ? COLLEGE_LEAGUE.drawSize : tier.drawSize`** – the identical `?? 'domestic'` shape one layer
+out, and it type-checks for ever. A Nations Cup week is three ties and no knockout, so it would have
+been introduced as an «8-player draw», its rubbers labelled «Quarterfinal / Semifinal / Final», and
+the coach would have promised «Three wins for the title» in a competition she cannot win.
+`PendingView.drawSize: number | null` is the same answer §4 gave for the table, given for the draw –
+and `null` made the compiler find `BracketTabs`, which is now gated on a real draw rather than on an
+empty list. ⭐ **The generalisation §4's builder wrote is right and is now measured twice: a constant
+standing in for a whole class is a default with a longer fuse.**
+
+**4. ⚠⚠ AND §2 LEFT A TRIPWIRE THAT THIS ITEM STEPPED ON – ITS OWN WARNING, COLLECTED.**
+`collegeLeagueIsNextStop`'s docstring reads: *«IF A THIRD MID-YEAR STOP IS EVER ADDED TO THAT LOOP,
+IT HAS TO BE ADDED HERE TOO, or this button starts promising a tournament that a new pause arrives in
+front of.»* **The tie is that third stop.** Without the fix a press labelled «Finish the year» would
+have played the Nations Cup – §2's own defect, arriving from the other college fixture – and, on the
+two enrolment weeks whose year opens between the fixtures, a press labelled «Play the College League»
+would have played the tie instead. **One walk answers both now** (`collegeNextStop` returns the FIRST
+stop, and `leagueIsNextStop` / `callUpIsNextStop` are two readings of it), so the two facts cannot
+both claim a press; the button gained a sixth label, `Play the Nations Cup`, off `NATIONAL_TEAM.label`
+like the League's off its own. ⚠ Unlike the championship this stop is CONDITIONAL – the League is
+arithmetic and fires every year, the tie is a roll and a bench year raises no reveal – so the scan
+asks the letter's own question through the letter's own function, which is also why the button and the
+letter cannot disagree. **Mutation-verified**: delete the third clause and press 7 of a walked career
+promises no tie and delivers one.
+
+**5. The zero arm is a real outcome and it does NOT open a reveal.** `rubbersPlayed === 0` – named,
+travelled, and sat – has no rubber to walk, so opening a reveal would pause the year in front of an
+empty flow. The letter still arrived, the milestone row still says what happened, and the stop reason
+is still reported: the week is not silent, it simply has no tournament in it.
+
+**Schema: a real four-part move, v63 → v64.** `CollegeState.callUpReveal` is a QUESTION STANDING IN
+FRONT OF THE PLAYER and an unpersisted blocking state is B1's own failure class. ⚠ **The open bit is
+the half that cannot be derived**: «is a tie waiting» reads as `pendingCallUp.week === world.week`
+right up to the moment he answers it – the week does not move while the year is paused, so a derived
+predicate would refuse the very press that closes it, for ever. A SECOND optional field rather than a
+`kind` on v60's `leagueReveal`, because one field with a discriminator would re-shape a persisted
+object every save since v60 carries – a rewrite of shipped data rather than an append. Back-fills
+null; a week already lived is not re-offered, and `settleCallUpLetter`'s guard means a migrated career
+gets its NEXT invitation and none for the ties behind it.
+
+**RNG: the frozen MAIN capture is UNMOVED – 41550 / e6b0c709, `tests/condition.test.ts` untouched and
+green.** Nothing about WHEN the rubbers are simulated changed: `playCallUpRubbers` still runs where it
+always ran, inside the tick, on `seed:rubbers:<week>`. What moved is when the RESULT is shown. The
+three frozen careers in `coach-travel-edge` moved by the version number alone, and `PRE_V64` proves
+it: rolling only the schema back to 63 reproduces all three byte for byte – which also closes the
+letter, since `world.offers` is inside that hash.
+
+⚠ **One correction to this section's own text: the academy letters are ROUND 24 #1, not round 26.**
+`OfferKind`'s docstring says so («⭐ `academy` IS ROUND 24 #1»), so does `App.vue`'s academy toast
+note, and the suite that guards them is `tests/round24-academy-letters.test.ts`. Round 26 has no
+letter item. The precedent was followed anyway – `raiseCallUpLetter` is `raiseAcademyLetter`'s twin,
+`state: 'info'`, keyed and idempotent, no schema move for a new `OfferKind` (`AdOfferTerms`' own note
+cites commit 2763caa for that) – and the shape for a letter that arrives BEFORE the thing it is about
+came from `TourLetterTerms.notice: 'due'`, whose docstring is the rule in one line: «the warning
+arrives at the entry deadline, A WEEK BEFORE THE EVENT».
 
 ---
 
@@ -393,6 +574,58 @@ the scene richer rather than thinner.
 ⚠ **HARD CONSTRAINT:** `seed:birthday:<age>` is drawn **exactly four times** for every birthday in the
 game and the count is **pinned in `tests/birthday-ask.test.ts`**. Filtering the pool is allowed – that
 is how `alreadyGiven` already works. Changing the number of draws is not.
+
+### ⚙ BUILT 27.08 – measured before and after, and the average was hiding it
+
+**The mechanism is confirmed exactly as diagnosed, and the measurement found a second thing worth
+saying.** `tools/birthday-pool.ts`, 12 careers, 201 tour birthdays and 48 college birthdays, the same
+tool on both arms and only the engine differing:
+
+| | before | after |
+|---|---|---|
+| the day is the ask, overall | **30%** | 24% |
+| ...from twenty-two on (**late career**) | **34%** | 28% |
+| longest run of consecutive day-asks | **4** | **1** |
+| careers that ever ran three in a row | **4 of 12** | **0 of 12** |
+| all three material rows already hers → asked the day | **8 of 8 = 100%** | 6 of 8 = 75% |
+| she asks for something already in the house | 0 | 2 of 201 = 1% |
+| ...of those, on a **durable** row | – | **0** |
+
+⭐ **The run is the number that answers him, and it is structural rather than statistical.** «3 раза
+подряд» cannot happen because two in a row cannot happen: worst run 1, on both the tour and the
+college band, in every career walked. The college band's own worst run was 3 before and is 1 now.
+
+⚠ **THE SHARE FALLS BY SIX POINTS AND NO FURTHER, AND THAT IS THE FIX WORKING RATHER THAN
+UNDER-DELIVERING.** The day is on 100% of dialogs by the owner's own 11.08 ruling and every material
+row is on at most 31%, so a healthy day share is *high*. The 6 of 8 that still ask for the day in the
+single-element case are correct: the pool is genuinely one row and the day was **not** last year's
+ask, so the day is the only true answer. What was removed is the *consecutive* certainty, which is
+the whole of what he was reading.
+
+⚠ **AND THE 100% CASE IS ONLY 8 BIRTHDAYS OF 201 – THE SPEC ABOVE NAMES THE EXTREME OF A CONTINUOUS
+EFFECT, NOT THE WHOLE OF IT.** The filter lifts the day at every level of ownership: one material row
+owned and the pool is 3, two and it is 2, three and it is 1. That is where the other 53 day-asks come
+from, and at a ~30% per-birthday rate a three-in-a-row appears in a third of careers by arithmetic.
+**His career was not unlucky. It was the distribution**, which is why round 26's 30% average read as
+a fair share of four options and nobody looked at the run.
+
+**The empty-pool rule chosen:** `wanted → repeatable rows on the card → any material row on the card →
+options`. The last step is unreachable crash-insurance. ⭐ **The repeatable step is not a preference –
+it is what keeps a false sentence off the screen.** This is the first ask in the game that can name a
+possession she already has, and a DURABLE row's ask is written as a want for a thing she LACKS:
+`campusbike` asks «Everyone there has a bicycle. **She walks**, and she has mentioned it twice», which
+is false the moment one is chained up outside. A repeatable row's ask is a want that recurs. Measured:
+the fallback fired twice in 201 birthdays and **landed on a repeatable row both times**.
+
+**No schema move was needed, and it was checked rather than assumed.** `BirthdayRecord.asked` has
+been persisted beside `given` since **v48** – the v48 note says why they are separate fields – so the
+cooldown reads the record every save already carries. `chooseGift` is the array's only writer and
+pushes one row per birthday in the week it happens; the v48 migration only ever seeds `[]`. The array
+is therefore chronological by construction and the last row is her previous birthday, derived before
+this birthday's own row exists, exactly as `giftsAlreadyGiven` and `collegeBirthdayIndexOf` are. **Had
+`asked` not been on the record this would have been a full four-part move from v63.**
+
+**RNG:** no draw added or removed, MAIN not reached, the frozen capture (41550 / `e6b0c709`) unmoved.
 
 ---
 
