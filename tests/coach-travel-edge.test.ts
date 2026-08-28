@@ -1148,9 +1148,53 @@ const FROZEN = {
    *  records. Had it moved, nothing here would have been re-pinned and this would be a leak report
    *  instead. The frozen MAIN capture is NOT re-pinned – count 41550, hash e6b0c709 – and
    *  `tests/condition.test.ts` is byte-identical at the branch base, on `origin/main`, on this branch
-   *  and in this tree (blob f1c8d518). */
-  middleGrinder: 'ac6d69368fe92fc2de10cf07adf8dc24290099ad97cd5029b4e38bdae6525f4a',
-  /** PRESETS[8] · 120k wealthy family, elite coach · grinder policy (never travels)
+   *  and in this tree (blob f1c8d518).
+   *
+   *  ⭐⭐ RE-FROZEN FOR v65 (28.08) – THE CHAMPION OF EVERY AI TOURNAMENT IS NOW WRITTEN DOWN
+   *  (`world.fieldSeasonTitles`), AND ALL THREE CAREERS MOVED BECAUSE ALL THREE CARRY IT. That is a
+   *  different reason from v63's: `assets` was an EMPTY key appearing, this one fills itself ~187
+   *  times a season in every career the engine has.
+   *
+   *  ⚠ PER-KEY DIFF TAKEN FIRST, as this file's protocol demands, and ⚠ THE CONTROL IS THIS CHANGE
+   *  REVERTED, IN A DETACHED WORKTREE – at `a3ff9df`, the merge commit directly below, which is this
+   *  branch with the champion wave absent and nothing else moved. (The wave's own branch measured
+   *  itself against `8f9d7af`; that arm predates the merge of `origin/main` and would have credited
+   *  this wave with round 27 #6 as well.) Verified BOTH ways rather than assumed (the 17.08 null-arm
+   *  hazard): `grep -rl fieldSeasonTitles src/` returns NOTHING on the A tree and four files on B
+   *  (`world/state.ts`, `world/phaseAiWeek.ts`, `world/milestones.ts`, `migrations.ts`), so the A arm
+   *  genuinely lacks the change and the B arm contains its readers.
+   *
+   *  `tools/frozen-key-diff.ts` on all three arms (preset/policy 5/0, 8/0, 0/1), ⚠ headers read back
+   *  and checked against the invocations: **exactly two lines differ on every arm, and one of them is
+   *  a key that did not exist** – `fieldSeasonTitles` APPEARS (71 keys become 72 on the grinders, 70
+   *  become 71 on the player arm), and `schemaVersion` goes 64 → 65 (a68b412c4282 → 108c995b953c).
+   *  Nothing else on any arm.
+   *
+   *  ⚠ THE LIST THAT MATTERS, byte-identical on every arm: `rngMain`, `results`, `season`, `cohort`,
+   *  `events`, `fundsCents`, `kidRank`, `skills`, `entries`, `seasonEntries`, `fieldSeasonPoints`,
+   *  `trophiesByTier`, `careerTotals`, `offers`. **NOT ONE OF THESE THREE CAREERS PLAYED A DIFFERENT
+   *  MATCH, WON A DIFFERENT TITLE OR BANKED A DIFFERENT CENT** – which is the whole claim of a change
+   *  that only writes down what the bracket had already decided.
+   *
+   *  ⚠ `rngMain` UNMOVED (1dbff28caca2 / aebc8101d6df / d84bcbf0c481, before and after) is the
+   *  load-bearing half, and it is true by construction: `recordTourChampion` reads
+   *  `result.finishes`, a table the bracket has already filled in, and writes an integer. There is no
+   *  draw on MAIN and none on any sub-stream. **So the frozen MAIN capture is NOT re-pinned – count
+   *  41550, hash e6b0c709 – and `tests/condition.test.ts` was re-run green beside this re-freeze.**
+   *
+   *  `PRE_V65` below is the byte-level half of the same proof rather than a claim about it:
+   *  `careerHashAtSchema(…, 64)` drops the one appended key and rolls the number back, and all three v64
+   *  constants come back byte for byte – and `careerHashAtSchema(…, 63)` still reproduces the v63 ones
+   *  underneath it, so the ladder has TWO working rungs below this one rather than one.
+   *
+   *  ⚠⚠ AND THE NUMBER THIS BLOCK NAMES IS 65 BECAUSE OF A COLLISION, NOT A COUNT. The wave shipped
+   *  as v64 on its own branch, cut from round 28's ledger while that branch still read 63 – and
+   *  `main` had meanwhile taken 64 for round 27 #6's call-up reveal. Two different v64 schemas, each
+   *  a correct three-part move against the only chain it could see, and a save written by either
+   *  unreadable by the other. The renumber moved all three parts together: the constant, the
+   *  migration's PLACE in the append-only chain (it runs at `v === 64`, after the reveal), and the
+   *  golden fixture – `v65.json`, with college's `v64.json` untouched beside it. */
+  middleGrinder: '118bbc8ce479bd55ad767f1094a71f467ca7edb58b1a2e0876533f955aab6e18',  /** PRESETS[8] · 120k wealthy family, elite coach · grinder policy (never travels)
    *
    *  ⭐⭐ RE-FROZEN FOR ROUND 28 #17-b (28.08) – AND ALONE, WHICH IS THE FINDING, exactly as the
    *  16.08 re-freeze below was alone for its own reason. The owner's ruling put a kit letter's
@@ -1178,9 +1222,14 @@ const FROZEN = {
    *  produces. Both halves are pinned rather than argued: `PRE_V64.eliteGrinder` rolls ONLY the
    *  version back to 63 and returns the pre-merge `32086f46…`, and `PRE_R28B.eliteGrinder` puts the
    *  window rule back and returns `origin/main`'s `0116627527eb…`. See the merge paragraph on
-   *  `middleGrinder` for the control, the headers and the per-key verdict. */
-  eliteGrinder: '41b8992061ab4512d7930e52b8ded3d7c145b9dfd72067d7316efcbdb6c5e569',
-  /** PRESETS[0] · 8k working family, SELF-COACHED · player policy (switch on, nobody to send)
+   *  `middleGrinder` for the control, the headers and the per-key verdict.
+   *
+   *  ⭐⭐ AND MOVED A THIRD TIME BY v65 (28.08, the champion tally), WITH BOTH ITS TWINS AND BY THE ONE
+   *  APPENDED KEY – see the block on `middleGrinder`. `PRE_V65.eliteGrinder` is the byte-level half:
+   *  drop `fieldSeasonTitles`, roll the number back to 64, and the merge value above comes back. So
+   *  this career carries all three of the day's moves and its constant matches no branch that exists,
+   *  which is what a renumbered collision looks like from inside a fixture. */
+  eliteGrinder: '4a5bb20bda53177377bc93a67503482a042e74c7ebc05858f9fd246d1ea65c31',  /** PRESETS[0] · 8k working family, SELF-COACHED · player policy (switch on, nobody to send)
    *
    *  ⭐⭐ RE-FROZEN A FIFTH TIME (16.08) – AND ALONE, WHICH IS THE FINDING. The owner's correction of
    *  that afternoon made the Junior Accelerator a reserved place instead of a ceiling, so a junior
@@ -1402,9 +1451,12 @@ const FROZEN = {
    *  number; this tree is the first to carry both, so the value is neither side's – see the two
    *  stacked paragraphs on `middleGrinder` for the control and the per-key verdict. `PRE_V64` rolls
    *  ONLY the version back and reproduces origin/main's post-retirement 8d6b056f… byte for byte,
-   *  which is what makes this a version bump on a moved career rather than a second career move. */
-  selfTravelling: 'fad86deab1af0bf3670039a83126f04a8341c5a96f5b39ff97280cd98cf30b7e',
-}
+   *  which is what makes this a version bump on a moved career rather than a second career move.
+   *
+   *  ⚠ AND MOVED A THIRD TIME BY v65 (28.08), with both twins and by the one appended key – the
+   *  champion tally fills itself in every career, this one included. `PRE_V65` rolls it back to 64
+   *  and reproduces the merge value; `PRE_V64` rolls it back to 63 and reproduces `8d6b056f…`. */
+  selfTravelling: '14072851337948085954657a68905ce1b80e3327d11e66568b7cb02a5eb0012d',}
 
 /** ⭐⭐ THE SAME THREE CAREERS AS THEY HASHED BEFORE ROUND 28 #17-b – the identity that proves the
  *  re-freeze moved ONE FIELD, `Offer.deadlineWeek`, and nothing else.
@@ -1433,12 +1485,24 @@ const FROZEN = {
  *  own frozen hashes, byte for byte. Put the window rule back on the merged tree and you do not get
  *  «the old numbers», you get `origin/main` – on all three careers at once. So round 28 #17-b is the
  *  ONLY thing this branch carries that reaches these fixtures, and the merge proved it by
- *  reconstruction rather than by reading the diff. */
+ *  reconstruction rather than by reading the diff.
+ */
+/** ⚠ RE-TAKEN AGAIN AT v65 (28.08), NOT WEAKENED, AND FOR A REASON THAT IS NOT ABOUT THE WINDOW RULE AT
+ *  ALL. These three are whole-world hashes like `FROZEN`'s – `careerHashUnderTheWindowRule` rewrites
+ *  the inbox and hashes everything else unchanged – so the key v65 appends moves them exactly as it
+ *  moves their twins, and holding the old numbers would have made this identity fail for a reason
+ *  that has nothing to do with the ruling it exists to prove.
+ *
+ *  ⚠ THE SHAPE OF THE PROOF IS UNCHANGED AND STILL HOLDS, which is what re-taking has to preserve:
+ *  `middleGrinder` is still IDENTICAL to `FROZEN.middleGrinder` (that career's kit letters all land
+ *  on the window's opening week, where the two rules agree), `selfTravelling` is still identical to
+ *  `FROZEN.selfTravelling` (a career that clears no rung is never written to), and only
+ *  `eliteGrinder` differs from its `FROZEN` twin – the one letter, `kit-152`, that the ruling moves.
+ *  Same three relations as before the re-take; the numbers moved together, the argument did not. */
 const PRE_R28B = {
-  middleGrinder: 'ac6d69368fe92fc2de10cf07adf8dc24290099ad97cd5029b4e38bdae6525f4a',
-  eliteGrinder: '0116627527eb2be93b262cd3276d92a09dc54bf47b3cca84a6fdc1acc1395d5e',
-  selfTravelling: 'fad86deab1af0bf3670039a83126f04a8341c5a96f5b39ff97280cd98cf30b7e',
-}
+  middleGrinder: '118bbc8ce479bd55ad767f1094a71f467ca7edb58b1a2e0876533f955aab6e18',
+  eliteGrinder: '8f5fd7c1dd12951f6f42dc780140b8a7017a8f7ad0bf4f5d459817bcbf63d01a',
+  selfTravelling: '14072851337948085954657a68905ce1b80e3327d11e66568b7cb02a5eb0012d',}
 
 /** ⭐ THE SAME THREE CAREERS AS THEY HASHED UNDER v56 – the identity that proves the v57 re-freeze
  *  moved ONE key and nothing else.
@@ -1618,6 +1682,35 @@ const PRE_V63 = {
   middleGrinder: '46047201ad23600b8e56a4d95d898ba36f0f85ab27d100e366285d0c3d955359',
   eliteGrinder: 'eaead59db7001eb165338ce79c25d13d041a796cb2c570f2b79243c87271f5be',
   selfTravelling: '054b39447404b35c88bbb615a16ab30bf5070e4c4054d11a0c3e8c62300abfcf',
+}
+
+/** ⭐⭐ THE SAME THREE CAREERS AS THEY HASHED UNDER v64 – the identity that proves the v65 re-freeze
+ *  moved the schema number and ONE APPENDED KEY, and nothing else in any of the three.
+ *
+ *  v65 records the champion of every AI tournament (`world.fieldSeasonTitles`), a fact these careers
+ *  produce ~187 times a season and had been throwing away since the canonical brackets existed. So
+ *  unlike v63's `assets` the new key is NOT empty here – it is full, in every career, which is
+ *  precisely the change landing. That makes this identity the load-bearing one: if writing the
+ *  champion had touched a draw, a rank, a cent or an event, dropping the key would NOT bring the old
+ *  hashes back and this case would go red beside the freeze, naming the wave instead of leaving
+ *  three hashes to drift.
+ *
+ *  ⚠⚠ THIS BLOCK ARRIVED AS A SECOND `const PRE_V64` AND THE MERGE CAUGHT IT AS A DUPLICATE
+ *  IDENTIFIER, not as a hash. Its wave numbered itself v64 off a branch that still read 63, so when
+ *  it landed beside round 27 #6's own `PRE_V64` – inserted a few lines apart, therefore NO CONFLICT
+ *  MARKER – the file simply declared the name twice. That is the schema collision showing up in the
+ *  one place a type-checker can see it, and it is the third thing on this merge that a clean line
+ *  merge got wrong. Renamed with the version it now belongs to.
+ *
+ *  These are the v64-era `FROZEN` values verbatim – i.e. what the merge of `origin/main` re-pinned
+ *  the day before. `careerHashAtSchema(…, 64)` drops `fieldSeasonTitles` and rolls the number back,
+ *  and all three come back byte for byte; `PRE_V64` below then rolls the SAME world on to 63 and
+ *  reproduces the v63 era underneath, which is what makes this an append-only chain rather than two
+ *  unrelated pins. */
+const PRE_V65 = {
+  middleGrinder: 'ac6d69368fe92fc2de10cf07adf8dc24290099ad97cd5029b4e38bdae6525f4a',
+  eliteGrinder: '41b8992061ab4512d7930e52b8ded3d7c145b9dfd72067d7316efcbdb6c5e569',
+  selfTravelling: 'fad86deab1af0bf3670039a83126f04a8341c5a96f5b39ff97280cd98cf30b7e',
 }
 
 /** ⭐ THE SAME THREE CAREERS AS THEY HASHED UNDER v59 – the identity that proves the v60 re-freeze
@@ -1814,6 +1907,19 @@ function walkFrozenCareer(presetIndex: number, policyIndex: number, force?: Part
   // file buys anything, and 156 weeks ends at age 16.6. Asserted rather than assumed, because a key
   // that filled itself would move these hashes for a reason no comment could name.
   expect(world.assets, 'the v63 shelf is present and EMPTY in the frozen careers').toEqual([])
+  // ⚠ v65: and the champion tally is present and FULL – the one key here that is asserted non-empty,
+  // because unlike every field above it this one IS the change rather than a seat the change left
+  // inert. Week 156 is `156 % 52 = 0`, three weeks past the season-2 wrap that cleared it, so what it
+  // holds is the opening weeks of a new season and not a whole one; the shape is what matters here
+  // (the census itself is measured in tests/ai-champions.test.ts). Asserted rather than assumed for
+  // the mirror of every reason above: a wave that quietly STOPPED recording would leave three hashes
+  // drifting with no comment able to name why, and this line names it instead.
+  const recorded = Object.values(world.fieldSeasonTitles ?? {})
+  expect(recorded.length, 'the v65 champion tally is present in the frozen careers').toBeGreaterThan(0)
+  expect(
+    recorded.reduce((sum, rung) => sum + Object.values(rung).reduce((a, b) => a + b, 0), 0),
+    'the v65 champion tally holds this season-so-far, not nothing',
+  ).toBeGreaterThan(0)
   return world
 }
 
@@ -1848,11 +1954,34 @@ function careerHashAtSchema(presetIndex: number, policyIndex: number, schemaVers
   // back exactly: a rollback to 62 is this world minus `assets`, a rollback to 61 is that minus the
   // peak, and a rollback below 59 is that minus the masseur's three. Every one of the nine older
   // constants below is unchanged and still reproduces.
-  const { assets: _assets, ...preAssets } = world
+  // ⚠ RE-AIMED FOR v65, NOT WEAKENED, AND THE KEY THIS ONE PEELS IS NOT IN `createWorld`'s LITERAL
+  // AT ALL – which is a difference worth stating, because the three notes above are about literal
+  // order and this one is not. `fieldSeasonTitles` is written by `runAiTournament` on the first week
+  // a bracket resolves, exactly as its twin `fieldSeasonPoints` is, so it joins the serialisation at
+  // whatever position that first write gives it – ahead of `fieldSeasonPoints` on a career whose
+  // first event is a domestic rung, since a junior draw pays no professional and creates no points
+  // entry. That costs this identity nothing: object rest preserves the RELATIVE order of everything
+  // it keeps, so dropping the new key alone restores precisely the v63 serialisation, whichever side
+  // of its twin it landed on. Verified rather than argued – `PRE_V65` below reproduces all three v64
+  // constants byte for byte, and `PRE_V64` the three v63 ones under them.
+  // ⚠⚠ AND THE BOUNDARY IS `< 65`, NOT `< 64`, WHICH IS THE ONE LINE THE RENUMBER COULD NOT AFFORD TO
+  // MISS. This chain merged CLEANLY at `< 64` – the champion wave's own number – and a clean line is
+  // checked by nothing: left alone it would have peeled the key off the LIVE version and every
+  // identity below would have gone red at once, for a reason none of their comments could name.
+  const { fieldSeasonTitles: _titles, ...preTitles } = world
+  const { assets: _assets, ...preAssets } = preTitles
   const { peakPhysical: _peak, ...prePeak } = preAssets
   const { masseurHired: _seat, masseurSessionsPerWeek: _dial, masseurTravels: _stance, ...preMasseur } = prePeak
   const shape =
-    schemaVersion < 59 ? preMasseur : schemaVersion < 62 ? prePeak : schemaVersion < 63 ? preAssets : world
+    schemaVersion < 59
+      ? preMasseur
+      : schemaVersion < 62
+        ? prePeak
+        : schemaVersion < 63
+          ? preAssets
+          : schemaVersion < 65
+            ? preTitles
+            : world
   return createHash('sha256').update(JSON.stringify({ ...shape, schemaVersion })).digest('hex')
 }
 
@@ -1953,7 +2082,28 @@ describe('the byte-identity of a career that does not travel', () => {
     expect(careerHashAtSchema(0, 1, 62), '8k · self-coached · player').toBe(PRE_V63.selfTravelling)
   })
 
-  it('⭐⭐ v64: rolling ONLY the schema back to 63 reproduces the previous hashes byte for byte', () => {
+  it('⭐⭐ v65: rolling the schema back to 64 – and dropping the key v65 added – reproduces the merge hashes byte for byte', () => {
+    // ⚠ THE WHOLE OF WHAT RECORDING A CHAMPION DID TO A CAREER, AS AN IDENTITY, and this is the
+    // strongest form the claim can take. v65 writes `world.fieldSeasonTitles` on EVERY canonical
+    // bracket – ~187 a season in each of these three careers – so unlike v63's empty `assets` the new
+    // key is FULL here. If the write had reached anything, dropping it would not be enough: the
+    // ledger, the ranking, the cohort, the feed or the funds would still differ and this case would
+    // be red beside the freeze.
+    // ⚠ AND THE POINT OF THE CHANGE IS THAT IT REACHES NOTHING. It is post-draw bookkeeping on a
+    // table the bracket has already filled in (`finishes`), written to a tally nothing but a census
+    // reads – deliberately NOT to `world.results`, which prunes at 52 weeks and IS what
+    // `computeRanking` reads. `walkFrozenCareer` asserts the key is present and non-empty rather than
+    // merely present, so a wave that silently stopped recording would go red here too.    expect(careerHashAtSchema(5, 0, 64), '25k · middle coach · grinder').toBe(PRE_V65.middleGrinder)
+    expect(careerHashAtSchema(8, 0, 64), '120k · elite coach · grinder').toBe(PRE_V65.eliteGrinder)
+    expect(careerHashAtSchema(0, 1, 64), '8k · self-coached · player').toBe(PRE_V65.selfTravelling)
+  })
+
+  it('⭐⭐ v64: rolling back to 63 – dropping v65\'s key as well – still reproduces the v63 hashes byte for byte', () => {
+    // ⚠ THE SECOND WORKING RUNG, AND THE RENUMBER IS EXACTLY WHY IT MATTERS. Two schema moves landed
+    // on this tree a day apart and this case walks BOTH of them off: `careerHashAtSchema(…, 63)`
+    // drops `fieldSeasonTitles` and rolls the number past 64 to 63, so it is asking whether round 27
+    // #6 AND the champion tally together left an ordinary tour career alone. The case above asks the
+    // same of v65 alone; a chain is only append-only if every rung below it still reproduces.
     // ⚠ THE WHOLE OF WHAT ROUND 27 #6 DID TO A CAREER THAT NEVER GOES TO COLLEGE, as an identity.
     // The wave has three ways to reach an ordinary tour career and this closes all three at once:
     // the new save field (`college.callUpReveal` – nested, and `college` is null here), the new
@@ -1966,8 +2116,7 @@ describe('the byte-identity of a career that does not travel', () => {
     // post-retirement hashes, because the retirement hazard's condition curve moved every frozen
     // career before this branch was merged. The case asks exactly what it always asked – does v64
     // move the version number and nothing else – but it now asks it ON TOP OF a change that moved
-    // the careers, which is the first time this identity has had to survive one. It does.
-    expect(careerHashAtSchema(5, 0, 63), '25k · middle coach · grinder').toBe(PRE_V64.middleGrinder)
+    // the careers, which is the first time this identity has had to survive one. It does.    expect(careerHashAtSchema(5, 0, 63), '25k · middle coach · grinder').toBe(PRE_V64.middleGrinder)
     expect(careerHashAtSchema(8, 0, 63), '120k · elite coach · grinder').toBe(PRE_V64.eliteGrinder)
     expect(careerHashAtSchema(0, 1, 63), '8k · self-coached · player').toBe(PRE_V64.selfTravelling)
   })

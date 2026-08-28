@@ -507,6 +507,79 @@ describe('save migrations', () => {
     expect(mainStateConsistent(migrated.seed, { s: migrated.rngMain.s, n: migrated.rngMain.n + 1 })).toBe(false)
   })
 
+  // ⭐⭐ THE SCHEMA COLLISION'S OWN PIN – 28.08, AND IT IS THE REASON THE RENUMBER WAS URGENT RATHER
+  // THAN TIDY. Two schema moves were built the same day off the same base and BOTH numbered
+  // themselves v64: round 27 #6's `college.callUpReveal`, which reached `main` as PR #112, and the
+  // champion tally's `world.fieldSeasonTitles`, which was cut from round 28's ledger branch while
+  // that branch still read 63 and so could not see `main` at all. Each did the full three-part move
+  // correctly against the only chain it could see. The result was two different v64 schemas, and a
+  // save written by one could not be read by the other – silently, because the version numbers
+  // agreed. The tally was renumbered to 65 and its migration moved BEHIND the reveal in the
+  // append-only chain.
+  //
+  // ⚠ WHAT THIS CASE EXISTS TO CATCH is the renumber's one real failure mode: a step left on its OLD
+  // guard (`v === 63`) after the version above it moved, so the chain stops at 64 and a v63 save
+  // either throws or arrives a key short. Both back-fills are observable in ONE fixture – `v63.json`
+  // carries a non-null `college` with no `callUpReveal`, and no `fieldSeasonTitles` – so this walks
+  // the whole ladder in a single call and asserts BOTH effects rather than the version number at the
+  // end. Mutate either guard and it goes red; mutate the peel boundary in
+  // `tests/coach-travel-edge.test.ts` and the frozen careers go red beside it.
+  it('⭐⭐ v63 -> v64 -> v65: a v63 save walks BOTH of the day\'s schema moves and arrives correct', () => {
+    const raw = JSON.parse(readFileSync(fileURLToPath(new URL('./fixtures/saves/v63.json', import.meta.url)), 'utf8'))
+    expect(raw.schemaVersion, 'the fixture is a genuine v63 save').toBe(63)
+    expect(raw.college, "v63.json holds a college state, so v64's back-fill is observable here").not.toBeNull()
+    expect('callUpReveal' in raw.college, "...and it predates v64's field").toBe(false)
+    expect('fieldSeasonTitles' in raw, "...and it predates v65's key").toBe(false)
+
+    const migrated = migrateSave(raw)
+
+    // The chain runs to the END and not to 64 – which is the whole of what the renumber had to keep.
+    expect(migrated.schemaVersion, 'the chain reaches the current schema').toBe(SAVE_SCHEMA_VERSION)
+    expect(SAVE_SCHEMA_VERSION, 'and the current schema is 65, not the colliding 64').toBe(65)
+
+    // v64's step ran: the reveal back-fills NULL, which is the TRUE value and not a placeholder – no
+    // save written before it can be holding a question in front of the player.
+    expect(migrated.college, 'the college state survives the walk').not.toBeNull()
+    expect(migrated.college!.callUpReveal, 'v64 ran: the reveal back-fills null').toBeNull()
+    expect('callUpReveal' in migrated.college!, 'and the KEY is present, not merely absent-and-undefined').toBe(true)
+
+    // ...and v65's step ran on top of it, on the same payload rather than instead of it.
+    expect(migrated.fieldSeasonTitles, 'v65 ran: the champion tally back-fills empty').toEqual({})
+
+    // ⚠ AND NEITHER STEP TOUCHED THE OTHER'S NEIGHBOUR. `fieldSeasonPoints` is v65's twin one field
+    // over and was already on this save; a back-fill that reached for the wrong key would show here.
+    expect(migrated.fieldSeasonPoints, "v65's twin is untouched").toEqual(raw.fieldSeasonPoints)
+  })
+
+  it('...and the whole 63 -> 65 walk is idempotent: re-migrating changes nothing', () => {
+    const raw = JSON.parse(readFileSync(fileURLToPath(new URL('./fixtures/saves/v63.json', import.meta.url)), 'utf8'))
+    const once = migrateSave(raw)
+    const again = migrateSave(JSON.parse(JSON.stringify(once)))
+    expect(again).toEqual(once)
+  })
+
+  // ⭐ THE OTHER HALF OF THE APPEND-ONLY CLAIM, and the one a version collision breaks first: a save
+  // that has ALREADY answered v64's question must not have it answered again. The fixture on disk
+  // carries `callUpReveal: null`, which is indistinguishable from a fresh back-fill – so the arm is
+  // built with a REAL reveal on it. If v65's step had kept the old `v === 63` guard, or if the two
+  // steps had been placed beside each other rather than in order, this open reveal would be wiped
+  // and a career would resume in front of a tie it had already been asked about.
+  it('⭐ a v64 save runs only the SECOND step: an open reveal survives the walk to v65', () => {
+    const raw = JSON.parse(readFileSync(fileURLToPath(new URL('./fixtures/saves/v64.json', import.meta.url)), 'utf8'))
+    expect(raw.schemaVersion, 'the fixture is a genuine v64 save').toBe(64)
+    expect('fieldSeasonTitles' in raw, "...and it predates v65's key").toBe(false)
+    raw.college.callUpReveal = { week: 240, revealed: 1 }
+
+    const migrated = migrateSave(raw)
+
+    expect(migrated.schemaVersion).toBe(SAVE_SCHEMA_VERSION)
+    expect(migrated.college!.callUpReveal, "v64's step did NOT re-run over an answered save").toEqual({
+      week: 240,
+      revealed: 1,
+    })
+    expect(migrated.fieldSeasonTitles, "v65's step DID run").toEqual({})
+  })
+
   it('rejects saves from a future schema', () => {
     expect(() => migrateSave({ schemaVersion: 999, seed: 's', week: 1 })).toThrow(/newer/)
   })
