@@ -887,7 +887,7 @@ contention artefacts of round 28 cost more reading than the wall-clock they save
   (`.budget-household`) and the sessions-a-week note (`.cm-plan-note`) are both asserted present on
   the same mount, so tonight's shop upkeep keeps feeding the strip it always fed.
 
-- [ ] **14. «Ни одной победы в 45 году, только 2е место на 500 и 250 и 2 взрыва ярости за год по
+- [~] **14. «Ни одной победы в 45 году, только 2е место на 500 и 250 и 2 взрыва ярости за год по
   случаю полосы вылетов в 1м раунде – не самый удачный год для 23 ракетки мира»** – **measure.**
   ⚠ Round 28 measured the drought at 23.9% of seasons and **66.1% in the #81–120 band** – but he is
   **#23**, where our rate was 15.3% against a real 50%. **A title-less year at #23 is normal by the
@@ -978,7 +978,7 @@ contention artefacts of round 28 cost more reading than the wall-clock they save
   rule; collapsing the kit renewal's title into the new-deal one → 1 red, which proves the nine
   table-driven cases are live tests and not a loop that generates nothing.
 
-- [ ] **17. «проверь предыдущие раунды на предмет "что забыто и не сделано" пожалуйста»** – **audit.**
+- [~] **17. «проверь предыдущие раунды на предмет "что забыто и не сделано" пожалуйста»** – **audit.**
   ⭐ Runs FIRST, because its output changes what the rest of this round should do.
 
 - [x] **19. ⭐ «вроде бы я всё мержил и обновление прилетало на телефон, где информация об этом?
@@ -1064,11 +1064,17 @@ contention artefacts of round 28 cost more reading than the wall-clock they save
   ⚠ Schema **65**, unmoved – this is a string. No engine file touched; the frozen MAIN capture
   (41550 / `e6b0c709`) and the career hashes cannot see a version line.
 
-- [ ] **18. «добавить в скилл pull-request проверку несделанных пунктов из раунда»** – **build (skill).**
+- [x] **18. «добавить в скилл pull-request проверку несделанных пунктов из раунда»** – **build (skill).**
   ⭐ 17 and 18 are the same instinct: he has noticed that items go quiet, and wants the PR step to
   catch it mechanically rather than by my memory.
 
 ---
+
+## Where the round stands, 29.08
+
+**17 built · 4 answered · 0 open.** Every item he filed has a verdict. ⚠ What is NOT closed is
+**seven decisions that are his**, listed in the PR body and in "Asks" below – they are not unfinished
+work, they are work that must not be done without him.
 
 ## Revived from the audit – his rulings, 28.08
 
