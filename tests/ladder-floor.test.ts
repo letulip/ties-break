@@ -19,10 +19,12 @@
 //      is what fails when it does.
 import { describe, it, expect } from 'vitest'
 import {
+  activeLadderOf,
   createWorld,
   entryStatus,
   enterEvent,
   hasOutgrown,
+  playDownBars,
   tierOpenFor,
   tierOutgrown,
   outgrewTier,
@@ -182,8 +184,16 @@ describe('the two ceilings are the same event for the player', () => {
     ] as const) {
       for (const tier of TIER_LADDER) {
         const bandTrack = TIERS[tier].track === 'wta' ? 'itf' : 'domestic'
+        // ⚠⚠ RE-AIMED 28.08 (round 28 #12 Part 0) – AND IT WAS ALREADY INCOMPLETE, WHICH IS THE
+        // interesting half. `hasOutgrown` has folded THREE ceilings since P1 step 2 (its own note
+        // says so: the Play Down rule "bars her from a rung FOR BEING TOO GOOD FOR IT"), and this
+        // equivalence only ever named two. It stayed green because no fixture here was inside a
+        // play-down cut. Part 0 gave that rule a domestic limb, `floor-eq-pro` is on the
+        // professional table, and the missing term finally showed up as a red - on `regional`,
+        // which no version of this file was thinking about. The claim is unchanged and the case is
+        // now what it always said it was: ONE answer, exactly the OR of the ceilings there are.
         const either =
-          outgrewTier(tier, kidPoints(world, bandTrack)) || tierOutgrown(world, tier)
+          outgrewTier(tier, kidPoints(world, bandTrack)) || tierOutgrown(world, tier) || playDownBars(world, tier)
         expect(hasOutgrown(world, tier), `${seed} / ${tier}`).toBe(either)
       }
     }
@@ -560,22 +570,57 @@ describe('the coach has an opinion about WHICH event, and it is only ever advice
   })
 
   it('⚠ THE OWNER\'S OWN CARD: a domestic rung is never held up against the table she is climbing', () => {
-    // His screenshot's exact shape: a professional card, a National-track event on the same week.
-    // The preconditions prove the old picker WOULD have named it (open, not outgrown, same week) -
-    // and the book has room, so the sentence it hung on the card was false twice over. The
-    // professional arm is a one-way door (`activeLadderOf`); the coach does not point back through
-    // it, and with nothing else to say he says nothing.
-    const world = proWorld('coach-owner-card', 17, 250)
-    world.results.push({ playerId: KID_ID, week: world.week, points: 160, tier: 'national' })
+    // His screenshot's exact shape: an outgrown card, a domestic event on the same week. The
+    // preconditions prove the old picker WOULD have named it (open, not outgrown, same week) - and
+    // the book has room, so the sentence it hung on the card was false twice over. The climbing arm
+    // is a one-way door (`activeLadderOf`); the coach does not point back through it, and with
+    // nothing else to say he says nothing.
+    //
+    // ⚠⚠ RE-AIMED 28.08 (round 28 #12 Part 0) ONE TABLE DOWN, BECAUSE THE PROFESSIONAL FIXTURE CAN
+    // NO LONGER HOLD THE PRECONDITIONS. Part 0 shuts the domestic rungs outright for a player on the
+    // professional table, so "a National that is open and not outgrown" is unrepresentable there -
+    // and a case built on it would have gone green on the NEW rule while saying nothing about the
+    // one it was written for. `climbs` is asked of `activeLadderOf`, so the identical shape exists
+    // one storey down: on the ITF table the domestic rungs are open, not outgrown, and still not
+    // his to point at. The claim is unchanged; only the table it is demonstrated on moved.
+    // ⚠ SEVENTEEN, AND THE AGE IS THE FIXTURE'S CONTRACT rather than a round number. `tierOutgrown`
+    // reads the rung three above through HER age, so j30 only goes behind her once W15's door is one
+    // she could walk through - and at SIXTEEN the same world has `national` outgrown too, which
+    // would have removed the precondition this case is entirely about. Bisected, not assumed.
+    const world = createWorld('coach-owner-card')
+    const rng = resumeMain(world.rngMain)
+    while (kidAgeYears(world.week, world.profile.birthMonth, world.profile.birthDay) < 17) tickWeek(world, rng)
+    world.condition = 100
+    world.fundsCents = 50_000_00
+    world.season = []
+    world.results.push({ playerId: KID_ID, week: world.week, points: 300, tier: 'national' })
+    world.results.push({ playerId: KID_ID, week: world.week, points: 60, tier: 'j30' })
+    world.onRampCleared = { itf: true, wta: true }
     recomputeKidRank(world)
-    const w15 = injectEvent(world, world.week + 3, 'w15')
+    const j30 = injectEvent(world, world.week + 3, 'j30')
     injectEvent(world, world.week + 3, 'national')
-    expect(hasOutgrown(world, 'w15')).toBe(true)
-    expect(hasOutgrown(world, 'national')).toBe(false)
-    expect(tierOpenFor(world, 'national')).toBe(true)
-    expect(bookClosedTo(world, 'w15')).toBe(false)
+    expect(activeLadderOf(world), 'she is climbing the international table').toBe('itf')
+    expect(hasOutgrown(world, 'j30')).toBe(true)
+    expect(hasOutgrown(world, 'national'), 'the domestic rung is NOT behind her').toBe(false)
+    expect(tierOpenFor(world, 'national'), 'and it is open - the picker could have named it').toBe(true)
+    expect(bookClosedTo(world, 'j30')).toBe(false)
     for (const tier of ['budget', 'middle', 'high', 'elite'] as const) {
-      expect(coachLadderNote(world, w15, tier), tier).toBeNull()
+      expect(coachLadderNote(world, j30, tier), tier).toBeNull()
+    }
+
+    // ...AND ON THE PROFESSIONAL TABLE THE SAME SILENCE NOW HAS A SECOND, STRONGER CAUSE. The
+    // original fixture, kept, with its verdicts read as they now are: the National is shut and
+    // behind her, so `better()` cannot reach it through either clause.
+    const pro = proWorld('coach-owner-card-pro', 17, 250)
+    pro.results.push({ playerId: KID_ID, week: pro.week, points: 160, tier: 'national' })
+    recomputeKidRank(pro)
+    const w15 = injectEvent(pro, pro.week + 3, 'w15')
+    injectEvent(pro, pro.week + 3, 'national')
+    expect(hasOutgrown(pro, 'w15')).toBe(true)
+    expect(tierOpenFor(pro, 'national'), 'Part 0: shut for a professional').toBe(false)
+    expect(hasOutgrown(pro, 'national'), '...and behind her, by the same rule').toBe(true)
+    for (const tier of ['budget', 'middle', 'high', 'elite'] as const) {
+      expect(coachLadderNote(pro, w15, tier), tier).toBeNull()
     }
   })
 

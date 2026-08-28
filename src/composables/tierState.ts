@@ -651,6 +651,41 @@ export function tierState(id: TierId, input: TierStateInput): TierState {
       title: `${tier.label} – opens at ${tierOpensWhen(id, input.acceptsRank)}`,
     }
   }
+  // ⭐⭐ A LOCK THAT IS NOT A GAP (round 28 #12 Part 0, docs/specs/the-calendar-she-can-reach-
+  // 2026-08.md). Every arm below prices a lock as a DISTANCE - "N more points", "opens in the top
+  // N" - because until the Play Down family existed every lock WAS one. Those refusals are the
+  // opposite: they fire because she is too GOOD for the rung, so there is no threshold to walk
+  // towards and the arithmetic below prints a sentence that is false in both directions. Measured
+  // on the owner's save at 26, WTA #110, with Part 0's engine closure in place and this arm absent:
+  // Local Open read «locked: 0 more national pts (she has 0 of 0)» and Regional «65 more national
+  // pts», which IS round 28 #12's second fault, surviving the engine fix by being re-derived here.
+  //
+  // ⚠ AND IT WAS ALREADY WRONG ONE TABLE UP, WHICH IS HOW IT GOT PAST REVIEW ONCE. The same shape
+  // has been showing a top-150 professional «World Tour 15 - locked: 120 more international pts (she
+  // has 0 of 120)» since the Play Down rule shipped (15.08): her junior book aged out years ago and
+  // the number is unreachable and irrelevant. One arm fixes both, because it is the same defect.
+  //
+  // ⚠ THE TEST IS THE SHAPE OF THE VERDICT, NOT A LIST OF REASONS. A refusal carrying neither
+  // `pointsToEnter` nor `rankToEnter` is exactly "a lock with no distance", so a future rule of this
+  // kind inherits the right copy instead of needing this comment again - and the sentence printed is
+  // the ENGINE's own (`playDownRefusalDetail`), never one rebuilt here, which is the whole discipline
+  // `refusal` was added for (PR-09 / TB-05).
+  //
+  // ⭐ `kind` IS 'outgrown' AND NOT 'locked', deliberately: a padlock promises something to unlock,
+  // and there is nothing. `isTierOpen` is false either way, so no surface offers her the rung.
+  if (
+    input.refusal?.reason === 'locked' &&
+    input.refusal.pointsToEnter === undefined &&
+    input.refusal.rankToEnter === undefined
+  ) {
+    return {
+      id,
+      kind: 'outgrown',
+      outgrown: true,
+      note: 'Outgrown',
+      title: input.refusal.detail ?? `${tier.label} – she is past this level.`,
+    }
+  }
   // ⚠ THE BAND IS COMPARED IN ITS OWN CURRENCY (01.08, round-15's find). `input.points` is her
   // DOMESTIC total, and that is the right ruler for the domestic rungs and for j30's on-ramp - but
   // W15's band is ITF JUNIOR points (`entryBandTrack`), and holding her domestic 58 against its ITF
