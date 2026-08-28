@@ -8,7 +8,7 @@ Regenerate with `node scripts/world-map.mjs`; `node scripts/world-map.mjs --chec
 
 **Do not read this file to answer one question** – that is the habit it exists to replace. `node scripts/world-map.mjs <symbol>` prints the owner and the line, and a plain `grep <symbol> tools/generated/world-symbol-map.md` does the same for a partial name.
 
-324 exported names across 39 owning modules.
+327 exported names across 39 owning modules.
 
 ## Areas
 
@@ -26,9 +26,9 @@ Regenerate with `node scripts/world-map.mjs`; `node scripts/world-map.mjs --chec
 | `src/engine/world/endings.ts` | THE ENDINGS, WIRED INTO THE WORLD: the latch, the two questions, the four-year freeze and the guard that stops a stale screen mutating a career that has stopped | 13 |
 | `src/engine/world/multiWeek.ts` | ⭐ R2-13 PHASE 1 – THE FOUR-WEEK ADVANCE, AND THE TWO FACTS A SECOND WEEK BUTTON NEEDS | 13 |
 | `src/engine/world/shop.ts` | ⭐⭐ THE SHOP, SLICE 1 – the tab, static prices, buy / own / sell | 12 |
+| `src/engine/world/kit.ts` | THE KIT SHE PLAYS WITH, AS A DECISION - the till, and what the Money screen reads off it | 11 |
 | `src/engine/world/mandatory.ts` | THE MANDATORY REGIME AND THE PENALTY LEDGER (W3-ACT2, act2-pro-tour.md §6) | 11 |
 | `src/engine/world/age.ts` | HER AGE: the band and the girl, and the birthday that lands in the feed | 9 |
-| `src/engine/world/kit.ts` | THE KIT SHE PLAYS WITH, AS A DECISION - the till, and what the Money screen reads off it | 8 |
 | `src/engine/world/knock.ts` | THE KNOCK: she comes off court sore, and the parent rests it or sends her back out | 8 |
 | `src/engine/world/injury.ts` | INJURIES AND PHYSIO: the weekly roll, the hazard shape behind it, and the recovery the family pays for – plus the sweep that cleans up everything an injury invalidates | 7 |
 | `src/engine/world/planner.ts` | THE SEASON PLANNER: the two things a parent can put on an empty week – a family holiday and a practice match – and what the engine does with them when the week arrives | 7 |
@@ -326,6 +326,22 @@ THE ENDINGS, WIRED INTO THE WORLD: the latch, the two questions, the four-year f
 - `shopUnlocked` – `src/engine/world/shop.ts`
 - `shopView` – `src/engine/world/shop.ts`
 
+### `src/engine/world/kit.ts`
+
+THE KIT SHE PLAYS WITH, AS A DECISION - the till, and what the Money screen reads off it.
+
+- `GEAR_REST_WINDOW` – `src/engine/world/kit.ts`
+- `gearRestWeeksOf` – `src/engine/world/kit.ts`
+- `goodWeeksFor` – `src/engine/world/kit.ts`
+- `KIT_LINES` – `src/engine/world/kit.ts`
+- `kitAllowanceRemainingCents` – `src/engine/world/kit.ts`
+- `kitDealView` – `src/engine/world/kit.ts`
+- `kitLineViews` – `src/engine/world/kit.ts`
+- `kitPurchaseSplit` – `src/engine/world/kit.ts`
+- `kitStateOf` – `src/engine/world/kit.ts`
+- `recordGearRestWeek` – `src/engine/world/kit.ts`
+- `setKitGrade` – `src/engine/world/kit.ts`
+
 ### `src/engine/world/mandatory.ts`
 
 THE MANDATORY REGIME AND THE PENALTY LEDGER (W3-ACT2, act2-pro-tour.md §6).
@@ -355,19 +371,6 @@ HER AGE: the band and the girl, and the birthday that lands in the feed.
 - `kidAgeYears` – `src/engine/world/age.ts`
 - `kidBirthYear` – `src/engine/world/age.ts`
 - `START_AGE_YEARS` – `src/engine/world/age.ts`
-
-### `src/engine/world/kit.ts`
-
-THE KIT SHE PLAYS WITH, AS A DECISION - the till, and what the Money screen reads off it.
-
-- `goodWeeksFor` – `src/engine/world/kit.ts`
-- `KIT_LINES` – `src/engine/world/kit.ts`
-- `kitAllowanceRemainingCents` – `src/engine/world/kit.ts`
-- `kitDealView` – `src/engine/world/kit.ts`
-- `kitLineViews` – `src/engine/world/kit.ts`
-- `kitPurchaseSplit` – `src/engine/world/kit.ts`
-- `kitStateOf` – `src/engine/world/kit.ts`
-- `setKitGrade` – `src/engine/world/kit.ts`
 
 ### `src/engine/world/knock.ts`
 
