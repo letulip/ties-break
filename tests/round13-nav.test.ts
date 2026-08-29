@@ -130,7 +130,11 @@ describe('the bottom nav is Season · Calendar · Home · Stats · Trophies, Hom
     expect(vite, 'the art is in the install now – see round 29 part two #7').not.toMatch(
       /^\s*globIgnores:/m,
     )
-    expect(vite).toContain("globPatterns: ['**/*.{js,css,html,svg,png,webp,woff2}']")
+    // ⚠ `mp3` JOINED THE GLOB BY HIS RULING (19d1e62: «audio joins the install») and this pin was
+    // never moved with it – it sat red on the wave branch until the P6 portfolio gate tripped over
+    // it. The pin now states the ruling's own glob, so the NEXT format added moves this line with
+    // its commit rather than a wave later.
+    expect(vite).toContain("globPatterns: ['**/*.{js,css,html,svg,png,webp,woff2,mp3}']")
   })
 
   it('the cabinet screen obeys the copy rules and dates by SEASON, never by calendar year', () => {
