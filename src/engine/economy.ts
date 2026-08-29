@@ -1859,10 +1859,12 @@ export const ECONOMY = {
        *  KEPT (docs/specs/merch-and-academy-income-2026-08.md, predicted vs measured): the
        *  proposal's own sizing was «repay the p90 commission in 7 seasons at the cap»; the P7
        *  bench criterion is the research's bridge – the $12M academy repays in roughly 5–10
-       *  seasons of a real reign – and every career that can BUILD it holds reputation 2.9–4.0,
-       *  where this base pays back in 8.0–11.0 seasons ($1.09M–$1.51M a year). At reputation 1.0
-       *  it is 3.1% a year against the fund's 7% – the shelf's own law («assets never beat a
-       *  career, they only survive one») still holds everywhere below a top-ten reign. */
+       *  seasons of a real reign. Benched at 108 × 780 (--buy-business): the careers that BUILD
+       *  it hold reputation 2.40–4.00 with the MEDIAN BUILDER AT THE 4.00 CAP, where this base
+       *  repays in **8.0 seasons** ($1.508M/yr) – mid-window – against 10.06 at the unlifted
+       *  anchor (the window's edge); the worst builder (2.40) reads 13.3. At reputation 1.0 it is
+       *  3.1% a year against the fund's 7% – the shelf's own law («assets never beat a career,
+       *  they only survive one») still holds everywhere below a top-ten reign. */
       stageIncomeCents: {
         'academy-land': 0,
         'academy-courts': 95_000,
