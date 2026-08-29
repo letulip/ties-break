@@ -41,10 +41,15 @@ import { writeFileSync } from 'node:fs'
 import { acceptOffer, financeWindow, type WorldState } from '../src/engine/world'
 import { AD_TIERS, isOfferLive, seasonSpokenFor, sponsorWindowOpensAt, windowLadder, SPONSOR_TIERS, TIER_COVERS, standingClears, isSponsorWindowWeek } from '../src/engine/offers'
 import { sponsorStandingOf } from '../src/engine/world/sponsors'
+// ⚠ THE SHELF IS READ THROUGH ITS OWN LEAF (`world/assets.ts`) AND NOT RE-PRICED HERE. `shopItem`'s
+// three numbers – price, rate and upkeep – have exactly one arithmetic in this codebase and it is
+// `assetUpkeepCents`; a bench that divided `upkeepBps` by 52 itself would be the second reader of one
+// question that `world/assets.ts`' own header forbids.
+import { assetUpkeepCents, shopCatalogue } from '../src/engine/world/assets'
 import { ECONOMY } from '../src/engine/economy'
 import { START_AGE_YEARS } from '../src/engine/world/age'
 import { WEEKS_PER_YEAR } from '../src/engine/season/calendar'
-import type { AdOfferTerms, AdTier, KitOfferTerms, SponsorTier } from '../src/shared/protocol'
+import type { AdOfferTerms, AdTier, KitOfferTerms, SponsorTier, WorldEventCategory } from '../src/shared/protocol'
 import { PRESETS, POLICIES, openCareer, stepCareerWeek, type Preset, type Policy } from './econ-bench'
 
 /** Fifteen seasons – the length of the owner's own save (`w780`), and the first horizon on which the
@@ -54,6 +59,18 @@ const DEFAULT_SEEDS = 6
 
 /** Weakest-first, the array's own order – so an index comparison IS a ladder comparison. */
 const LADDER: readonly SponsorTier[] = SPONSOR_TIERS
+
+/** ⭐ THE THREE STAGES, in weeks off the career's own zero (`START_AGE_YEARS` = 14). See StageSpend
+ *  for why the cuts are ages: 18 is the birthday her cut starts on and 23 is halfway up its ramp. */
+const STAGE_CUTS = [
+  { label: '14-18 the junior sink', fromWeek: 0, toWeek: 4 * WEEKS_PER_YEAR - 1 },
+  { label: '18-23 the climb     ', fromWeek: 4 * WEEKS_PER_YEAR, toWeek: 9 * WEEKS_PER_YEAR - 1 },
+  { label: '23-29 the cap years ', fromWeek: 9 * WEEKS_PER_YEAR, toWeek: Number.MAX_SAFE_INTEGER },
+] as const
+
+/** ⭐ THE BANDS TENURE WOULD BE COUNTED IN, and they are the advertising ladder's own gates
+ *  (`ECONOMY.advertising.houses`: WTA 200 / 50 / 10) plus the #100 the owner named in #20. */
+const TENURE_BANDS = [200, 100, 50, 10] as const
 const rungIndex = (t: SponsorTier): number => LADDER.indexOf(t)
 
 /** ⭐⭐ ONE SPONSOR WINDOW, AND WHAT THE POST DID IN IT – round 29 part two #12. Recorded on the
@@ -70,6 +87,27 @@ interface Winter {
   blockedTop: SponsorTier | null
   /** how many kit letters the winter actually produced */
   letters: number
+}
+
+/** ⭐⭐ ONE SLICE OF A CAREER AND WHAT IT COST – the owner's «расходы уже 200к+» made into a table.
+ *
+ *  ⚠ THE CUT-POINTS ARE AGES AND NOT RANKS, deliberately, and the difference is the whole reading.
+ *  A rank band answers «what does a season at #40 cost», which §5 of docs/research/off-court-money.md
+ *  already measured; HIS question is «where does the money go», which is a question about a career
+ *  moving through time – a family that never gets ranked still spends, and a rank-banded table
+ *  cannot see it. The three cuts are the game's own: the junior sink (14-18, nothing she enters
+ *  pays), the climb (18-23, her cut starts at 18 and ramps), and the years the ramp is at its cap
+ *  (23-29). */
+interface StageSpend {
+  label: string
+  fromWeek: number
+  toWeek: number
+  /** signed cents per category, income positive and spend negative – `FinanceWeek`'s own convention. */
+  byCategory: Partial<Record<WorldEventCategory, number>>
+  /** what she was paid out of the gross in this stage – `FinanceWeek.kidShare.cents`, summed. */
+  kidCutCents: number
+  /** ...and what those cuts were a share OF (`FinanceWeek.kidShare.baseCents`). Zero before 18. */
+  kidCutBaseCents: number
 }
 
 interface CareerRow {
@@ -108,9 +146,50 @@ interface CareerRow {
   winters: Winter[]
   /** what the sponsors actually banked over the career, gross of her cut. */
   sponsorIncomeCents: number
+  /** ⭐ 29.08 – the GROSS of every sponsor cheque, before any split. The denominator the commission
+   *  ruling is a share of. */
+  sponsorGrossCents: number
+  /** ...and the ADVERTISING fee, which `sponsorIncomeCents` never counted (a different post). */
+  adFeeIncomeCents: number
+  /** what the commission arm took back out of the wallet over the career. Zero on the shipped arm. */
+  commissionHandedBackCents: number
   /** the single largest sponsor cheque the career ever received. */
   biggestChequeCents: number
   biggestChequeText: string
+  /** ⭐⭐ ROUND 29 PART TWO, THE OWNER'S 29.08 REPLY – «Без всех этих пунктов не очень понятно зачем
+   *  нам вообще магазин пока что.» The ladder was sized as a share of a stage's outgoings without
+   *  anybody ever asking whether the SHELF is reachable, which is the wrong order: the shop is the
+   *  sink the advertising money is for, so the sink's price list is the sizing rule's real
+   *  denominator. Six numbers, all read off the world at the week they are true.
+   *
+   *  ⚠ `careerTotals` IS THE ONLY HONEST LIFETIME LEDGER AND THAT IS WHY IT IS USED. `financeWeeks`
+   *  prunes to sixty weeks and `events` to four hundred rows, so a horizon-end read of either is a
+   *  read of the last season and nothing else – the trap this file's own sponsor-cash scan already
+   *  documents. `careerTotals` is accumulated by `accrueFinance` at the moment each row is written
+   *  and never pruned. */
+  peakFundsCents: number
+  peakFundsWeek: number
+  endFundsCents: number
+  /** every cent that ever came IN to the family wallet, over the whole career. ⚠ ALREADY NET OF HER
+   *  CUT: `finalizeTournament` credits the family `prize − herShare`, so this is the parent's side
+   *  of the split and `kidFundsCents` is the other. GROSS is the sum of the two. */
+  lifetimeEarnedCents: number
+  /** ...and every cent that ever went out. */
+  lifetimeSpentCents: number
+  /** her half of the cheques – `world.kidFundsCents`, the money that left the family wallet for her
+   *  own account. The owner: «с учетом 50% отчислений дочери так и вообще доход практически не
+   *  ощущается». */
+  kidFundsCents: number
+  /** ⭐ WHERE THE MONEY WENT, in three stages of a career, signed cents per category. Accumulated
+   *  per tick off `financeWeeks`' own row for THIS week, for the pruning reason above. */
+  stages: StageSpend[]
+  /** ⭐ THE SHELF, RUNG BY RUNG: the first week the wallet held the price, and the first week it held
+   *  the price plus a year of the thing's upkeep. Null for a rung the career never came near. */
+  affordWeek: Record<string, number | null>
+  affordAndCarryWeek: Record<string, number | null>
+  /** ⭐ TENURE, and it costs nothing to measure because the world already banks it: how many SEASONS
+   *  this career ended inside each professional band (`seasonHistory[].byTrack.wta.endRank`). */
+  seasonsInTop: Record<number, number>
   endedWeek: number | null
   weeksRun: number
 }
@@ -120,9 +199,33 @@ interface CareerRow {
  *  two files reading the ledger differently would be two answers to one question. The kit allowance
  *  and the travel share are NOT cash and are deliberately absent: they are bills the brand did not
  *  send, which is a different sentence from a cheque it did. */
-const RETAINER_RE = / retainer – quarterly$/
+// ⚠⚠ THE FIRST OF THESE WAS END-ANCHORED AND MATCHED NOTHING, AND IT IS THE MEASUREMENT BEHIND A
+// HEADLINE. `bankSponsorCheque` APPENDS «, less her N% share ($X)» to every row it splits, from her
+// eighteenth birthday onward – and the rungs that pay a retainer at all gate on WTA #200, first
+// cleared at 18-20, so in practice EVERY retainer row carries the suffix and `/…quarterly$/` saw
+// none of them. Probed on one wealthy/player career over 780 weeks: **0 matched, 32 missed.** The
+// other two were prefix-anchored and were never affected, which is why the figure looked plausible.
+// ⚠ So round 29 part two #12's «career sponsor cash: median $1,942,862 -> $4,321,847» was measured
+// with the retainer line MISSING. The doubling is real – both arms had the same blind spot – but the
+// LEVEL was understated. Corrected here and re-reported in the ledger.
+const RETAINER_RE = / retainer – quarterly(?:,|$)/
 const APPEARANCE_RE = /^Appearance fee – /
 const BONUS_RE = /^Sponsor bonus – /
+/** ⭐ THE ADVERTISING FEE, WHICH WAS NEVER IN THE THREE ABOVE AT ALL. It is a different post and
+ *  `sponsorIncomeCents` means «what the KIT brands paid», so it is counted separately rather than
+ *  folded in – but it goes through the same `bankSponsorCheque` and is therefore subject to the same
+ *  share ruling, which is the only reason this file needs to see it. */
+const AD_FEE_RE = / endorsement – the campaign fee, on signing(?:,|$)/
+/** ⭐⭐ HER SHARE, READ OFF THE ROW THAT PAID IT AND NEVER RE-DERIVED. `bankSponsorCheque` writes the
+ *  cents it actually credited her into the text; `family + herCents` is the gross cheque TO THE CENT,
+ *  where `family / (1 - bps/10000)` is a division on a figure that was rounded once on the way in –
+ *  the exact arithmetic `kidPrizeShareCents`' own comment forbids. */
+const HER_SHARE_RE = /, less her [\d.]+% share \(\$([\d,]+(?:\.\d\d)?)\)$/
+function grossOfSponsorRow(text: string, familyCents: number): number {
+  const m = HER_SHARE_RE.exec(text)
+  if (!m) return familyCents
+  return familyCents + Math.round(Number(m[1].replace(/,/g, '')) * 100)
+}
 
 /** Sign the strongest live letter in the inbox, kit or advertising, the week it lands. */
 function answerThePost(
@@ -153,7 +256,15 @@ function answerThePost(
   }
 }
 
-function runCareer(preset: Preset, policy: Policy, index: number, weeks: number): CareerRow {
+function runCareer(
+  preset: Preset,
+  policy: Policy,
+  index: number,
+  weeks: number,
+  /** ⭐ ROUND 29 PART TWO, 29.08 – the manager's commission in basis points, or null for the shipped
+   *  rule (her age ramp). See the withdrawal inside the loop for what it does and does not model. */
+  commissionBps: number | null = null,
+): CareerRow {
   const { world, rng, seed } = openCareer(preset, index, policy)
   const cleared = new Set<SponsorTier>()
   const written = new Set<SponsorTier>()
@@ -169,14 +280,98 @@ function runCareer(preset: Preset, policy: Policy, index: number, weeks: number)
   let bestWtaRank: number | null = null
   let bestItfRank: number | null = null
   let sponsorIncomeCents = 0
+  let sponsorGrossCents = 0
+  let adFeeIncomeCents = 0
+  let commissionHandedBackCents = 0
   let biggestChequeCents = 0
   let biggestChequeText = ''
   let ran = 0
+  // ⭐ THE SHELF'S OWN READINGS. `peakFunds` starts at the wallet's opening balance rather than at 0,
+  // so a family that never banks a cent still reports what it actually had.
+  let peakFundsCents = world.fundsCents
+  let peakFundsWeek = world.week
+  const stages: StageSpend[] = STAGE_CUTS.map((s) => ({ ...s, byCategory: {}, kidCutCents: 0, kidCutBaseCents: 0 }))
+  const affordWeek: Record<string, number | null> = {}
+  const affordAndCarryWeek: Record<string, number | null> = {}
+  for (const item of shopCatalogue()) {
+    affordWeek[item.id] = null
+    affordAndCarryWeek[item.id] = null
+  }
 
   for (let i = 0; i < weeks; i++) {
     const week = world.week
     stepCareerWeek(world, rng, policy)
     ran++
+    // ⚠ WHAT THE BRANDS PAID, SCANNED AT THE WEEK IT IS WRITTEN AND NOT AT THE END. `world.events`
+    // is pruned at 400 ROWS, so an index that only ever grows walks off the end of a career this
+    // long and reports ZERO for every rung – which is exactly what the first run of this file did.
+    // The sponsor bench dodges the same trap the same way.
+    for (const row of world.events) {
+      if (row.week !== week || row.type !== 'income') continue
+      const amount = row.amountCents ?? 0
+      if (amount <= 0) continue
+      const isKitCash = RETAINER_RE.test(row.text) || APPEARANCE_RE.test(row.text) || BONUS_RE.test(row.text)
+      const isAdFee = AD_FEE_RE.test(row.text)
+      if (!isKitCash && !isAdFee) continue
+      // ⭐⭐ THE SHARE RULING, SIMULATED IN THE BENCH AND NOWHERE ELSE (the owner, 29.08: «контракт на
+      // полную сумму ребенку приходит на почту, после подписания видим на счету уже родительский
+      // кат», at «10-20% например»). Today `bankSponsorCheque` credits the family `gross − her ramp
+      // share`, so the parent keeps 100% before her eighteenth and 50% from her twenty-sixth. Under
+      // the ruling the parent keeps a flat commission and the rest is hers.
+      //
+      // ⚠⚠ THIS IS A REAL B ARM AND NOT A SUBTRACTION AFTERWARDS. The money is taken OUT of the
+      // wallet the week it lands, so the career that follows is genuinely poorer – its reserve is
+      // smaller, and `reserveFor` gates coach rungs and entries off exactly that. A static
+      // re-attribution at the end would have reported the money and none of the consequence.
+      // ⚠ It writes cents and taps NO draw, so it cannot move the frozen MAIN capture. It does make
+      // the two arms diverge in the MAIN sequence downstream (a career that enters fewer events rolls
+      // different dice), which is why this is a bench arm and not a paired A/B on one seed.
+      const grossCents = grossOfSponsorRow(row.text, amount)
+      sponsorGrossCents += grossCents
+      if (isKitCash) sponsorIncomeCents += amount
+      else adFeeIncomeCents += amount
+      if (commissionBps !== null) {
+        const kept = Math.round((grossCents * commissionBps) / 10_000)
+        const handedBack = amount - kept
+        if (handedBack > 0) {
+          world.fundsCents -= handedBack
+          commissionHandedBackCents += handedBack
+        }
+      }
+      if (amount > biggestChequeCents) {
+        biggestChequeCents = amount
+        biggestChequeText = row.text
+      }
+    }
+    // ⚠ READ AFTER THE TICK AND KEYED ON `week`, THE WEEK THAT WAS JUST PLAYED. `stepCareerWeek`
+    // advances the clock, so `world.week` is already the NEXT week here and a fold keyed on it would
+    // find nothing and report a career that spent nothing – which is exactly the shape of the null
+    // this file's own event scan is written against. `financeWeeks` prunes to a sixty-week trailing
+    // window, so the row has to be folded the week it is written or it is gone.
+    const fw = world.financeWeeks.find((r) => r.week === week)
+    if (fw) {
+      const stage = stages.find((s) => week >= s.fromWeek && week <= s.toWeek)
+      if (stage) {
+        for (const [cat, amt] of Object.entries(fw.byCategory) as [WorldEventCategory, number][]) {
+          stage.byCategory[cat] = (stage.byCategory[cat] ?? 0) + amt
+        }
+        stage.kidCutCents += fw.kidShare?.cents ?? 0
+        stage.kidCutBaseCents += fw.kidShare?.baseCents ?? 0
+      }
+    }
+    // ⭐⭐ CAN THE FAMILY BUY THE THING, AND CAN IT KEEP THE THING – two different questions, and the
+    // second is the one the elite shelf turns on. A yacht is $12,000,000 and $23,077 A WEEK; a
+    // family that can just afford the hull and not the crew has not reached the rung, it has reached
+    // a bill. `assetUpkeepCents` is the shelf's own arithmetic rather than a second one here.
+    if (world.fundsCents > peakFundsCents) {
+      peakFundsCents = world.fundsCents
+      peakFundsWeek = week
+    }
+    for (const item of shopCatalogue()) {
+      if (affordWeek[item.id] === null && world.fundsCents >= item.entryCents) affordWeek[item.id] = week
+      const carry = item.entryCents + assetUpkeepCents(item, item.entryCents) * WEEKS_PER_YEAR
+      if (affordAndCarryWeek[item.id] === null && world.fundsCents >= carry) affordAndCarryWeek[item.id] = week
+    }
     const standing = sponsorStandingOf(world)
     if (standing.wtaRanked && (bestWtaRank === null || standing.wtaRank < bestWtaRank)) {
       bestWtaRank = standing.wtaRank
@@ -229,21 +424,6 @@ function runCareer(preset: Preset, policy: Policy, index: number, weeks: number)
       // by construction, so the fallback is exact rather than a guess (`AdOfferTerms.tier`).
       if (o.kind === 'ad') adWritten.add((o.terms as AdOfferTerms).tier ?? 'watch')
     }
-    // ⚠ WHAT THE BRANDS PAID, SCANNED AT THE WEEK IT IS WRITTEN AND NOT AT THE END. `world.events`
-    // is pruned at 400 ROWS, so an index that only ever grows walks off the end of a career this
-    // long and reports ZERO for every rung – which is exactly what the first run of this file did.
-    // The sponsor bench dodges the same trap the same way.
-    for (const row of world.events) {
-      if (row.week !== week || row.type !== 'income') continue
-      const amount = row.amountCents ?? 0
-      if (amount <= 0) continue
-      if (!RETAINER_RE.test(row.text) && !APPEARANCE_RE.test(row.text) && !BONUS_RE.test(row.text)) continue
-      sponsorIncomeCents += amount
-      if (amount > biggestChequeCents) {
-        biggestChequeCents = amount
-        biggestChequeText = row.text
-      }
-    }
     answerThePost(world, signed, adSigned, adSignedRungs)
     if (world.ending) break
   }
@@ -276,8 +456,37 @@ function runCareer(preset: Preset, policy: Policy, index: number, weeks: number)
     outgoingsByRank,
     winters,
     sponsorIncomeCents,
+    sponsorGrossCents,
+    adFeeIncomeCents,
+    commissionHandedBackCents,
     biggestChequeCents,
     biggestChequeText,
+    peakFundsCents,
+    peakFundsWeek,
+    endFundsCents: world.fundsCents,
+    // ⚠ `?? 0` FOR A CAREER THAT NEVER BANKED A ROW, which is a real state on the junior arm and not
+    // a defensive shrug: `careerTotals` is created lazily by `accrueFinance`'s own `??=`.
+    lifetimeEarnedCents: world.careerTotals?.earnedCents ?? 0,
+    lifetimeSpentCents: world.careerTotals?.spentCents ?? 0,
+    kidFundsCents: world.kidFundsCents ?? 0,
+    stages,
+    affordWeek,
+    affordAndCarryWeek,
+    // ⭐⭐ TENURE, READ OFF WHAT THE WORLD ALREADY BANKS. `seasonHistory[].byTrack.wta.endRank` is the
+    // professional place she held at each season's wrap – appended once a year at `wrapSeason`,
+    // capped at 30 seasons (a 15-season career never reaches it) and NEVER pruned by the 60-week
+    // finance window or the 400-row event cap. So «years spent in the top 100» is a fold over an
+    // existing field and not a schema question at SEASON granularity. ⚠ `byTrack` is optional (v46);
+    // absent means «not recorded», never «unranked», so a missing row is skipped rather than counted.
+    seasonsInTop: Object.fromEntries(
+      TENURE_BANDS.map((cut) => [
+        cut,
+        world.seasonHistory.filter((h) => {
+          const r = h.byTrack?.wta?.endRank
+          return r !== undefined && r <= cut
+        }).length,
+      ]),
+    ),
     endedWeek: world.ending ? world.week : null,
     weeksRun: ran,
   }
@@ -356,17 +565,26 @@ export function main(argv: string[] = process.argv.slice(2)): void {
   const weeks = arg('--weeks', DEFAULT_WEEKS)
   const seeds = arg('--seeds', DEFAULT_SEEDS)
   const jsonAt = argv.indexOf('--json')
+  // ⭐ `--commission 15` runs the 29.08 ruling instead of the shipped ramp: sponsor money is HERS and
+  // the parent keeps 15% of the gross. Absent = the shipped rule, byte for byte.
+  const commissionAt = argv.indexOf('--commission')
+  const commissionBps = commissionAt >= 0 ? Math.round(Number(argv[commissionAt + 1]) * 100) : null
 
   const rows: CareerRow[] = []
   for (const preset of PRESETS) {
     for (const policy of POLICIES) {
-      for (let i = 0; i < seeds; i++) rows.push(runCareer(preset, policy, i, weeks))
+      for (let i = 0; i < seeds; i++) rows.push(runCareer(preset, policy, i, weeks, commissionBps))
     }
   }
 
   const n = rows.length
   console.log(`\nSPONSOR LADDER REACH – ${n} careers x ${weeks} weeks (to age ${START_AGE_YEARS + Math.floor(weeks / WEEKS_PER_YEAR)})`)
-  console.log(`${PRESETS.length} presets x ${POLICIES.length} policies x ${seeds} seeds, eager signing\n`)
+  console.log(
+    `${PRESETS.length} presets x ${POLICIES.length} policies x ${seeds} seeds, eager signing` +
+      (commissionBps === null
+        ? '  ·  SHIPPED share rule (her age ramp on every sponsor cheque)\n'
+        : `  ·  ⭐ COMMISSION ARM: sponsor money is HERS, the parent keeps ${commissionBps / 100}%\n`),
+  )
 
   console.log('  rung        brand                  gate                        cleared  written   signed')
   const gateOf: Record<SponsorTier, string> = {
@@ -528,6 +746,126 @@ export function main(argv: string[] = process.argv.slice(2)): void {
       `    ${b.label} ${String(seen.length).padStart(4)}   ${usd(med).padStart(16)}   ${usd(fee).padStart(14)}   ` +
         `${`${((100 * fee) / med).toFixed(1)}%`.padStart(13)}   ` +
         `${usd(Math.round(fee / ECONOMY.advertising.houses[b.tier].shootWeeksPerTerm)).padStart(11)}`,
+    )
+  }
+
+  // ⭐⭐⭐ ROUND 29 PART TWO, HIS 29.08 REPLY – «Без всех этих пунктов не очень понятно зачем нам
+  // вообще магазин пока что.» EVERYTHING ABOVE SIZES A CHEQUE AGAINST A SEASON'S COSTS. This block
+  // asks the question that should have come first: what does a whole career BANK, and what will the
+  // shelf sell it? A ladder tuned to a share of the outgoings is defensible and still pointless if
+  // the sink it feeds is out of reach – so the price list is printed against the money, rung by rung.
+  const q = (xs: number[], p: number): number =>
+    xs.length === 0 ? 0 : [...xs].sort((a, b) => a - b)[Math.min(xs.length - 1, Math.floor(p * xs.length))]
+  const gross = (r: CareerRow) => r.lifetimeEarnedCents + r.kidFundsCents
+  console.log('\n  ⭐⭐ A WHOLE CAREER, IN MONEY – what the shelf is shopping with:')
+  console.log('    line                                   median          p90         best')
+  const lines: [string, (r: CareerRow) => number][] = [
+    ['gross into the household (incl. her cut)', gross],
+    ['  ...of which HER cut left for her own account', (r) => r.kidFundsCents],
+    ['what the FAMILY actually banked', (r) => r.lifetimeEarnedCents],
+    ['what the family spent', (r) => r.lifetimeSpentCents],
+    ['the most it ever held AT ONCE (peak wallet)', (r) => r.peakFundsCents],
+    ['what it was left holding at the end', (r) => r.endFundsCents],
+  ]
+  for (const [label, read] of lines) {
+    const xs = rows.map(read)
+    console.log(`    ${label.padEnd(38)} ${usd(q(xs, 0.5)).padStart(12)} ${usd(q(xs, 0.9)).padStart(12)} ${usd(q(xs, 1)).padStart(12)}`)
+  }
+
+  // ⭐⭐ THE SPONSOR LINE ON ITS OWN – the money the 29.08 commission ruling is about, and the only
+  // line in the game whose OWNER is now in question. Printed gross, because a share needs a base.
+  console.log('\n  ⭐ THE SPONSOR MONEY, WHOSE SHARE IS THE 29.08 RULING:')
+  const sponsorLines: [string, (r: CareerRow) => number][] = [
+    ['GROSS sponsor money (kit cash + ad fees)', (r) => r.sponsorGrossCents],
+    ['  what the kit brands paid the FAMILY', (r) => r.sponsorIncomeCents],
+    ['  what the advertising post paid the FAMILY', (r) => r.adFeeIncomeCents],
+    ['  handed back under the commission arm', (r) => r.commissionHandedBackCents],
+  ]
+  for (const [label, read] of sponsorLines) {
+    const xs = rows.map(read)
+    console.log(`    ${label.padEnd(38)} ${usd(q(xs, 0.5)).padStart(12)} ${usd(q(xs, 0.9)).padStart(12)} ${usd(q(xs, 1)).padStart(12)}`)
+  }
+  const grossAll = rows.reduce((s, r) => s + r.sponsorGrossCents, 0)
+  const keptAll = rows.reduce((s, r) => s + r.sponsorIncomeCents + r.adFeeIncomeCents - r.commissionHandedBackCents, 0)
+  console.log(
+    `    ...so across all ${n} careers the parent kept ${((100 * keptAll) / Math.max(1, grossAll)).toFixed(1)}% of the gross sponsor money`,
+  )
+
+  // ⚠⚠ TWO COLUMNS AND NOT ONE, AND THE SECOND IS THE HONEST ONE. «Afford» is `fundsCents >= price`
+  // at some week of the career. «Afford + carry» adds ONE YEAR of the rung's own upkeep on top,
+  // because a $12M yacht is also $23,077 a week and a family that clears the hull and not the crew
+  // has reached a bill rather than a rung. Both are generous: neither leaves a penny for the tennis.
+  console.log('\n  ⭐⭐ THE SHELF, AND WHETHER ANY CAREER REACHES IT:')
+  console.log('    rung                      price   upkeep/wk    afforded   ...+1yr upkeep   median week afforded')
+  for (const item of shopCatalogue()) {
+    const up = assetUpkeepCents(item, item.entryCents)
+    const got = rows.filter((r) => r.affordWeek[item.id] !== null)
+    const carried = rows.filter((r) => r.affordAndCarryWeek[item.id] !== null)
+    const at = got.map((r) => r.affordWeek[item.id]!).sort((a, b) => a - b)
+    const medWeek = at.length === 0 ? '–' : `w${at[Math.floor(at.length / 2)]} (age ${(START_AGE_YEARS + at[Math.floor(at.length / 2)] / WEEKS_PER_YEAR).toFixed(1)})`
+    console.log(
+      `    ${item.label.padEnd(22)} ${usd(item.entryCents).padStart(12)} ${(up ? usd(up) : '–').padStart(11)}` +
+        `   ${String(got.length).padStart(3)} ${pct(got.length, n)}    ${String(carried.length).padStart(3)} ${pct(carried.length, n)}   ${medWeek}`,
+    )
+  }
+
+  // ...AND THE ONE SENTENCE HE ASKED FOR: the dearest rung a career's peak wallet ever cleared, with
+  // its upkeep carried. That is «how far up the shelf does the median career get», answered as a
+  // NAME rather than as a number.
+  const topRungOf = (r: CareerRow): string => {
+    const reached = shopCatalogue().filter((i) => r.affordAndCarryWeek[i.id] !== null)
+    if (reached.length === 0) return '(nothing on the shelf)'
+    return reached.reduce((a, b) => (b.entryCents > a.entryCents ? b : a)).label
+  }
+  const priceOf = (r: CareerRow): number => {
+    const reached = shopCatalogue().filter((i) => r.affordAndCarryWeek[i.id] !== null)
+    return reached.length === 0 ? 0 : Math.max(...reached.map((i) => i.entryCents))
+  }
+  const ceilings = [...rows].sort((a, b) => priceOf(a) - priceOf(b))
+  const nameAt = (p: number) => {
+    const r = ceilings[Math.min(ceilings.length - 1, Math.floor(p * ceilings.length))]
+    return `${topRungOf(r)} (${usd(priceOf(r))})`
+  }
+  console.log('\n  ⭐⭐ HOW FAR UP THE SHELF – the dearest rung the wallet ever cleared WITH a year of its upkeep:')
+  console.log(`    median career   ${nameAt(0.5)}`)
+  console.log(`    p90 career      ${nameAt(0.9)}`)
+  console.log(`    the best of ${n}   ${nameAt(1)}`)
+  const stuck = rows.filter((r) => priceOf(r) === 0).length
+  console.log(`    reached NOTHING on the shelf at all: ${stuck} ${pct(stuck, n)}`)
+
+  // ⭐⭐ WHERE THE MONEY ACTUALLY GOES – his own list, as a share of GROSS (family + her cut), so the
+  // percentages of one stage add up against the money that stage produced.
+  console.log('\n  ⭐⭐ WHERE THE MONEY GOES, as a share of the stage`s GROSS income:')
+  const catsShown: WorldEventCategory[] = ['coaching', 'facility', 'staff', 'physio', 'travel', 'entry', 'gear', 'stringing', 'vacation', 'shop', 'other']
+  console.log(`    stage                  gross in    ${catsShown.map((c) => c.slice(0, 5).padStart(6)).join('')}   her cut`)
+  for (let s = 0; s < STAGE_CUTS.length; s++) {
+    // Summed across careers rather than averaged per career: a share of a total is what the question
+    // asks, and a mean of ratios over careers that earned nothing is undefined.
+    const grossIn = rows.reduce((sum, r) => {
+      const st = r.stages[s]
+      return sum + Object.values(st.byCategory).reduce((a, v) => a + Math.max(0, v ?? 0), 0) + st.kidCutCents
+    }, 0)
+    const share = (c: WorldEventCategory) => {
+      const spent = rows.reduce((sum, r) => sum + Math.max(0, -(r.stages[s].byCategory[c] ?? 0)), 0)
+      return grossIn === 0 ? '   –  ' : `${((100 * spent) / grossIn).toFixed(1)}%`.padStart(6)
+    }
+    const her = rows.reduce((sum, r) => sum + r.stages[s].kidCutCents, 0)
+    console.log(
+      `    ${STAGE_CUTS[s].label} ${usd(grossIn).padStart(12)}    ${catsShown.map(share).join('')}   ` +
+        `${(grossIn === 0 ? '–' : `${((100 * her) / grossIn).toFixed(1)}%`).padStart(6)}`,
+    )
+  }
+
+  // ⭐⭐ TENURE – the fourth proposal's feasibility, measured rather than asserted. He asked to tie the
+  // big contracts to TIME IN BAND; this is what the world already knows, and it knows it for free.
+  console.log('\n  ⭐⭐ TENURE – SEASONS ENDED INSIDE EACH BAND (`seasonHistory[].byTrack.wta.endRank`):')
+  console.log('    band       careers with >=1   >=2 seasons   >=4 seasons   most any career held')
+  for (const cut of TENURE_BANDS) {
+    const counts = rows.map((r) => r.seasonsInTop[cut] ?? 0)
+    const atLeast = (k: number) => counts.filter((c) => c >= k).length
+    console.log(
+      `    WTA #${String(cut).padStart(3)}   ${String(atLeast(1)).padStart(9)} ${pct(atLeast(1), n)}   ` +
+        `${String(atLeast(2)).padStart(6)} ${pct(atLeast(2), n)}   ${String(atLeast(4)).padStart(6)} ${pct(atLeast(4), n)}   ${Math.max(...counts)}`,
     )
   }
 

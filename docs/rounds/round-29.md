@@ -1886,3 +1886,692 @@ larger one.
   ощущения потом.» Building the seeded market path: `marketIndex(seed, week)` off a purpose-scoped
   sub-stream, value = `paid × index(now) / index(basisWeek)`. ⚠ He will judge it by feel after
   playing, so the numbers are provisional by his own framing.
+---
+
+## His 29.08 reply to the advertising ladder – I sized it in the wrong order, and the shop is the reason
+
+> «Без всех этих пунктов не очень понятно зачем нам вообще магазин пока что.»
+>
+> «это смотря с кем она едет, потому что с тренером и массажистом расходов уже 200к+, а с психологом
+> будет еще больше. А с учетом 50% отчислений дочери так и вообще доход практически не ощущается.»
+>
+> «игрок устанет смотреть на одно и то же название без смены ГОДАМИ – давай добавим в каждый тир
+> разных несколько с немного похожими чеками.»
+>
+> «я рассчитывал увидеть реальные чеки из спорта, например федерер получал от Nike 10 миллионов…
+> Может быть у нас тоже могут появиться долгосрочные контракты с реальными деньгами.»
+>
+> «можно как-то привязать крутые контракты либо к прогрессу, либо ко времени, проведенном в топ-100,
+> 50, 10 и т.д. Чем больше лет – тем мощнее контракт.»
+
+⚠⚠ **HE IS RIGHT THAT I DID IT BACKWARDS.** #19 and #20 sized every rung as «a share of the OUTGOINGS
+of the stage it opens for» and never once asked whether the thing that money is FOR is reachable. The
+sink is the shelf; the shelf's price list is the real denominator. So this is the measurement that
+should have come first.
+
+---
+
+### ⭐⭐⭐ THE ONE SENTENCE
+
+⚠⚠ **READ THE LAST SECTION OF THIS FILE WITH IT.** Your 29.08 ruling on the manager's commission
+(«10-20% например») landed while this was being measured, and it **changes the answer**: at the
+shipped share the median career reaches the house with the garden and the best of 72 reaches the big
+yacht; **at a 10% commission the median drops a rung and the big yacht becomes reachable by nobody.**
+Everything below is the SHIPPED share; the ruling's arm is measured separately at the end.
+
+**Yes – a career can buy the shop, and the shop is not the problem. But it is bought with PRIZE
+MONEY, never with advertising: the top advertising rung pays $55,000 a year against a yacht that
+costs $1,200,000 a year to keep, which is 4.6% of the crew's wages.** The median career stops at
+**the house with the garden ($520,000)**, reached at age 20; the p90 career reaches **the plane
+($18,000,000)**; the best of 72 reaches **the big yacht ($28,000,000)**; and **the long-range plane
+($38,000,000 with $58,462 a week of upkeep) is reached by NOBODY** – 0 of 72, and only 2 of 72 could
+even clear its sticker price without a year of crew behind it. ⚠ **And the two dearest rungs are
+never DELIVERED to anybody at all** – their build times run past the end of the career that could pay
+for them, which is a separate defect and it is written up below.
+
+⚠ **So «зачем нам магазин» has an answer and it is not the one I expected.** The shelf works. What
+does not work is the SENTENCE THAT JOINS IT TO THE ADVERTISING LADDER – your own «как раз будет куда
+рекламное тратить». Measured over a whole career the entire advertising post is worth **0.67% of a
+career's money** at the median and **1.92%** at p90. It cannot buy anything on the elite shelf and no
+defensible retune of it can: to make the top rung pay one year of the yacht's crew it would have to
+be **21.8 times** bigger ($1,200,000 / $55,000), i.e. **453%** of a top-10 season's measured outgoings
+($1,200,000 / $265,024) instead of the 20.8% it is.
+
+---
+
+### The instrument, the sample and the seeds
+
+`tools/sponsor-ladder-reach.ts` – **the existing bench, extended with a reporting block, not a fourth
+harness.** It already owned the 780-week horizon and the outgoings-by-rank reading; the career loop
+is still `openCareer` / `stepCareerWeek` from `tools/econ-bench.ts`, so no second entry policy exists
+anywhere in this measurement.
+
+* **72 careers x 780 weeks** (age 14 → 29): 9 presets x 2 policies x 4 seeds, seeds
+  `bench-{working|middle|wealthy}-{0..3}`. Run:
+  `npx vite-node tools/sponsor-ladder-reach.ts -- --weeks 780 --seeds 4`.
+* ⭐ **The run reproduces the shipped figure exactly**, which is what says the arm is real: kit cash
+  median **$4,321,847**, the same number #12 recorded after its fix. Nothing drifted.
+* ⚠ **NO ENGINE FILE WAS TOUCHED.** `git diff -- src/` is empty; the frozen MAIN capture is
+  **verified unmoved** (41550 / `e6b0c709`, `tests/condition.test.ts` 51/51 green, exit read from the
+  file). `check:tools` (6 errors) and `tools:registry:check` are red at baseline and **byte-identical
+  red with my change reverted** – confirmed by restoring the committed file from `git show` and
+  re-running, not assumed.
+
+---
+
+### 1. What a career actually banks, over its whole life
+
+Read off `world.careerTotals` (accumulated at each ledger write, **never pruned** – `financeWeeks`
+keeps sixty weeks and `events` four hundred rows, so a horizon-end read of either would have reported
+the last season and called it a career).
+
+| | median | p90 | best of 72 |
+| --- | ---: | ---: | ---: |
+| gross into the household (incl. her cut) | **$1,696,541** | $45,548,567 | $65,350,002 |
+| ...of which HER cut left for her own account | $343,989 | $14,230,700 | $22,366,527 |
+| what the FAMILY actually banked | $1,352,552 | $31,467,690 | $42,983,475 |
+| what the family spent | $817,946 | $3,206,225 | $4,122,407 |
+| **the most the wallet ever held AT ONCE** | **$552,837** | **$28,733,412** | **$39,596,000** |
+
+⚠⚠ **THE ECONOMY IS BIMODAL AND THAT IS THE WHOLE FINDING.** Split the 72 on one question – did she
+ever finish a season inside the world's top ten?
+
+| | careers | peak wallet, median | the extreme |
+| --- | ---: | ---: | ---: |
+| ever inside WTA #10 | **15 (21%)** | **$28,733,412** | **minimum $14,210,192** – every one of them can buy the yacht |
+| never inside WTA #10 | 57 (79%) | **$166,330** | max $19,793,158 (one outlier) |
+
+**There is no middle.** The peak-wallet deciles are $25,000 · $91,499 · **$552,837** · $15,092,002 ·
+$28,733,412 – the p50-to-p75 step is a factor of **27**. A career either reaches the top ten and the
+whole shelf opens at once, or it does not and the shelf ends at a house.
+
+---
+
+### 2. The shelf against that money – rung by rung
+
+Two columns, and **the second is the honest one**: «afforded» is the wallet clearing the sticker in
+some week; «+1yr upkeep» adds one year of the rung's own upkeep on top, because a $12M yacht is also
+$23,077 **a week** and a family that clears the hull and not the crew has reached a bill, not a rung.
+Both are generous – neither leaves a penny for the tennis, and the bench never buys anything, so the
+wallet only ever goes up. **These are ceilings.**
+
+| rung | price | upkeep/wk | afforded | +1yr upkeep | median age afforded |
+| --- | ---: | ---: | ---: | ---: | --- |
+| the sensible estate | $60,000 | – | 78% | 78% | 18.6 |
+| the good saloon | $110,000 | – | 72% | 72% | 18.6 |
+| the one from the poster | $190,000 | – | 58% | 58% | 19.5 |
+| a place of their own | $240,000 | – | 57% | 57% | 19.6 |
+| the unreasonable one | $300,000 | – | 56% | 56% | 19.8 |
+| the house with the garden | $520,000 | – | 50% | 50% | 20.0 |
+| the launch | $900,000 | $1,038 | 49% | 49% | 20.2 |
+| the academy – land | $2,000,000 | – | 46% | 46% | 21.0 |
+| the motor boat | $2,400,000 | $2,769 | 46% | 46% | 21.3 |
+| the academy – courts / staff | $3,000,000 | – | 46% | 46% | 21.6 |
+| the academy – clubhouse | $4,000,000 | – | 46% | 46% | 22.1 |
+| **the yacht** | $12,000,000 | $23,077 | 29% | **26%** | 25.1 |
+| **the plane** | $18,000,000 | $27,692 | 15% | **14%** | 24.2 |
+| **the big yacht** | $28,000,000 | $53,846 | 11% | **4%** | 28.0 |
+| **the long-range plane** | $38,000,000 | $58,462 | 3% | **0%** | 28.6 |
+
+**How far up the shelf, with the upkeep carried:**
+
+* **median career → the house with the garden, $520,000**
+* **p90 career → the plane, $18,000,000**
+* **best of 72 → the big yacht, $28,000,000**
+* reached nothing at all: **0 of 72**
+
+⚠ **The academy row above is per-stage and `requiresId` chains the four**, so the honest reading is
+cumulative:
+
+| through | cumulative spend | reachable by |
+| --- | ---: | ---: |
+| the land | $2,000,000 | 33 of 72 (46%) |
+| + the courts | $5,000,000 | 33 of 72 (46%) |
+| + the clubhouse | $9,000,000 | 27 of 72 (38%) |
+| **+ the staff – the whole academy** | **$12,000,000** | **21 of 72 (29%)** |
+
+⭐ **The academy is the most reachable thing above a million on the shelf**, and the reason is
+structural: it is the only elite family with **no upkeep at all** and **no build wait**. A career that
+can reach $12M can finish it.
+
+#### ⚠⚠ AND THE DEFECT THIS MEASUREMENT FOUND – REPORTED, NOT FIXED. THE TOP TWO RUNGS ARE MONEY SPENT ON A THING THAT NEVER EXISTS.
+
+`sellableAsset` refuses while a rung is building and the clock starts at the ORDER, so a rung whose
+build time runs past the end of the career is $28,000,000 that leaves the wallet, cannot be sold back,
+and never arrives. Measured against each career's own end week:
+
+| rung | build | could pay + carry | **and it actually ARRIVED** |
+| --- | ---: | ---: | ---: |
+| the launch | 52w | 35 of 72 | 34 of 72 |
+| the motor boat | 78w | 33 of 72 | 33 of 72 |
+| the plane | 104w | 10 of 72 | 8 of 72 |
+| **the yacht** | 156w | 19 of 72 | **11 of 72** – eight pay and never see it |
+| **the big yacht** | 208w | 3 of 72 | **0 of 72** |
+| **the long-range plane** | 156w | 0 of 72 | **0 of 72** |
+
+**`yacht-big` and `plane-long` are delivered to nobody**, and `plane-long` is not bought by anybody
+either (0 with a year of crew carried, 2 on the sticker alone). That is precisely the failure
+`tools/brand-gate-bench.ts` was written for the first time it happened: a rung that is theoretically
+open and empirically never seen. **The spec's own acceptance for this slice – «a career orders a
+yacht, WAITS THREE YEARS» – holds for the yacht (11 of 19 see it) and cannot hold for the two above
+it, because 208 weeks after the week the wallet first clears them is past the end of the game.**
+
+**Your call, and I am not building any of it without a ruling:**
+1. leave them as the aspiration at the top of a shelf you are meant to look at and never own;
+2. cut their build times so they can arrive (the yacht's 156 weeks is your own «яхты строят несколько
+   лет» and should stay; 208 is the one that cannot fit);
+3. cut their prices;
+4. leave both and accept they are for a career that goes further than these 72 did – but then the
+   money-that-buys-nothing case above should at least refuse or warn at the counter.
+
+---
+
+### 3. Where the money actually goes – and your correction is confirmed to the dollar
+
+As a share of the GROSS money of each stage (everything that came in, including her cut):
+
+| stage | gross in | coach | court | masseur | physio | travel | entry | gear | vacation | **her cut** |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| 14–18 the junior sink | $13.3M | 12.2% | 12.7% | 0.0% | 4.0% | **37.4%** | 8.7% | 4.0% | 4.8% | – |
+| 18–23 the climb | $331.5M | 2.1% | 0.5% | 0.0% | 0.2% | 4.5% | 1.0% | 0.1% | 0.6% | **20.6%** |
+| 23–29 the cap years | $680.6M | 2.2% | 0.3% | 0.0% | 0.1% | 3.0% | 0.7% | 0.0% | 0.5% | **42.4%** |
+
+⭐⭐ **YOUR «200к+» IS RIGHT AND THE $64,000 THE CODE WAS SIZED AGAINST IS A JUNIOR NUMBER.** Annual
+outgoings, per career, per stage:
+
+| stage | median | p75 | p90 | worst |
+| --- | ---: | ---: | ---: | ---: |
+| 14–18 the junior sink | $31,592 | $54,348 | $83,597 | $96,079 |
+| 18–23 the climb | $60,196 | $144,767 | $205,733 | $347,203 |
+| **23–29 the cap years** | $69,537 | **$198,449** | **$296,801** | $381,428 |
+
+**$198,449 at p75 – and that is WITHOUT the masseur** (see the null below). The dearest masseur rung
+is $525/wk = **$27,300 a year**, which puts your career at **$225,749**. That is «200к+», measured.
+The $64,000 that `ECONOMY.advertising`'s original comment sized $20,000 against is the median of the
+CLIMB stage, i.e. a nineteen-year-old's budget, and the game has moved a long way past it.
+
+⚠⚠ **BUT THE TWO HALVES OF YOUR SENTENCE ARE NOT THE SAME SIZE, AND THE MEASUREMENT SAYS SO
+SHARPLY.** «с тренером и массажистом расходов уже 200к+, а с учетом 50% отчислений дочери так и
+вообще доход практически не ощущается» reads as two costs. At your stage they are not comparable:
+
+* the coach is **2.2%** of gross, the court **0.3%**, physio **0.1%**, travel **3.0%** – the WHOLE
+  tennis bill is about **7%** of the money coming in;
+* **her cut is 42.4%** – six times the entire cost of running the career.
+
+**What makes the income stop being felt at the top is the 50% split, not the staff.** The staff is
+what makes it felt in the JUNIOR years, where coach + court is **24.9%** of everything coming in and
+travel is another **37.4%**. The staff bill does not grow into the money – the money grows past the
+staff bill. That is a real finding about the shape
+of the ramp and it is yours to rule on – I am not proposing to move `kidShare`.
+
+---
+
+### 4. The four things you asked for, with numbers
+
+#### ⭐ (a) VARIETY – several houses a rung, similar cheques. Cheapest of the four, and it needs no balance decision.
+
+**Each rung's houses AVERAGE to its shipped anchor, to the cent**, so the sizing rule of #19 is
+untouched and there is nothing here for you to accept or reject on balance grounds – only names.
+
+| rung | gate | house | trade | cheque |
+| --- | --- | --- | --- | ---: |
+| `watch` | WTA ≤ 200 | **Quiet Hour** (shipped, unchanged) | watches | $20,000 |
+| | | Marchfield Bank | a bank | $18,000 |
+| | | Coldbrook Spring | bottled water | $19,500 |
+| | | Vantage Optics | eyewear | $22,500 |
+| | | | **mean** | **$20,000** |
+| `campaign` | WTA ≤ 50 | **Northmere Air** (shipped, unchanged) | an airline | $40,000 |
+| | | Verain | a fashion house | $44,000 |
+| | | Casala Motors | cars | $36,000 |
+| | | Lindhalt & Roe | a private bank | $40,000 |
+| | | | **mean** | **$40,000** |
+| `house` | WTA ≤ 10 | **Rivelle** (shipped, unchanged) | perfume | $55,000 |
+| | | Maison Aubry | couture | $61,000 |
+| | | Halbrand Jewellers | jewellery | $52,000 |
+| | | Pacific Halcyon | an airline group | $52,000 |
+| | | | **mean** | **$55,000** |
+
+**Shoot weeks stay per rung (2 / 4 / 6) and must**, because they are the structural annual cap: one
+deal at a time x the biggest house's six IS «never more than 6 shoot weeks a year». Varying them per
+house would turn a structural guarantee into a rule somebody has to remember.
+
+**Cost:** the draw picking a house inside a rung is new randomness, so it goes through a
+purpose-scoped sub-stream (`rngFromSeed` on a `seed:adhouse:week` key) and **never MAIN** – the frozen
+capture cannot see it. `AdOfferTerms` gains an optional `houseId`, frozen at arrival; absent means
+«the rung's first house», which is exactly what every letter already written means, so it is the
+`WorldEvent.entryRef` widening and **not a schema bump**. Repeat-avoidance («без смены ГОДАМИ») is
+free: exclude the house that wrote last time by reading `world.offers`, which is not pruned for kit
+and ad letters.
+
+#### ⭐ (b) LONG-TERM CONTRACTS – multi-year, and the fee becomes ANNUAL
+
+Every rung is `termWeeks: 52` today. Proposed:
+
+| rung | term now | term proposed | fee | paid |
+| --- | ---: | ---: | ---: | --- |
+| `watch` | 1 year | **1 year** (unchanged – the entry deal should stay short) | $20,000 | on signature |
+| `campaign` | 1 year | **2 years** | $40,000 **a year** | signature + each anniversary |
+| `house` | 1 year | **3 years** | $55,000 **a year** | signature + each anniversary |
+
+**Annual and not a lump**, for two reasons that agree: it is how the real paper works (§4 of
+`docs/research/off-court-money.md`: «a base fee … upon execution»), and it is already this codebase's
+own shape – `payRetainer` pays the kit ladder quarterly. **Shoot weeks become per YEAR, not per
+term**, or a 3-year deal asking six shoots in total would be cheaper per season than the 1-year deal
+it replaced and the ladder would invert.
+
+⚠⚠ **AND MULTI-YEAR NEEDS #12's ESCAPE HATCH OR IT REBUILDS #12's DEFECT.** `adSpokenFor` is «one deal
+at a time». A 2-year `campaign` deal signed at #45 would hide the `house` rung for two years if she
+reaches #8 in year two – which is exactly the closed door #12 just opened on the kit side. So a
+**strictly stronger house must be allowed to write over a running ad deal**, with the incumbent pulled
+back to the end of its current contract YEAR. That is the real build cost of this item and it is not
+small; the kit-side version took a wave.
+
+#### ⭐⭐ (c) TENURE – and the world already records it, so this is NOT a schema question
+
+⭐⭐ **CHECKED, AND THE ANSWER IS THAT IT COSTS NOTHING.** `seasonHistory[].byTrack.wta.endRank`
+(schema v46) banks her professional place at **every season's wrap**, appended once a year at
+`wrapSeason`, capped at 30 seasons (a 15-season career never reaches it) and **never pruned** by the
+60-week finance window or the 400-row event cap. «Years spent inside the top 100 / 50 / 10» is a
+**fold over an existing field**. **SAVE_SCHEMA_VERSION stays at 65.** No migration, no golden fixture.
+
+⚠ The one limit, stated: it is **season** granularity, not weeks. «She was in the top ten for 26
+weeks» is not recoverable and would be a real schema move – a per-band week counter on the world, a
+migration, a fixture, a version bump, and a forward-only back-fill problem because `pruneResults`
+deleted the history years ago. **Your own words are seasons anyway** («чем больше ЛЕТ»), so I propose
+we never pay for weeks.
+
+**Measured over the 72 – the tenure ladder has real fuel:**
+
+| band | careers that ever ended a season there | ≥2 seasons | ≥4 seasons | most any career held |
+| --- | ---: | ---: | ---: | ---: |
+| WTA #200 | 37 (51%) | 36 (50%) | 36 (50%) | **13** |
+| WTA #100 | 35 (49%) | 35 (49%) | 34 (47%) | 13 |
+| WTA #50 | 35 (49%) | 33 (46%) | 32 (44%) | 12 |
+| **WTA #10** | **15 (21%)** | 13 (18%) | **7 (10%)** | **10** |
+
+⭐ **And it is steep exactly where it should be.** In the top 200 and top 50, a career that gets there
+stays 9–11 seasons, so the bonus fills almost at once. **In the top ten the seasons held are
+1,1,2,2,2,2,3,3,4,4,5,5,7,8,10** – fewer than half of the fifteen who get there ever reach four. The
+big contract is genuinely earned at the top and nearly free at the bottom, which is what you asked
+for.
+
+**The proposal, with the number:** the cheque is multiplied by `1 + 15% x min(seasons already ended
+inside THIS RUNG'S OWN BAND, 4)` – **+15% a season, capped at +60%.**
+
+| rung | base | at the cap (4 seasons in band) | this run's median band outgoings | share, base → cap |
+| --- | ---: | ---: | ---: | ---: |
+| `watch` | $20,000 | **$32,000** | $86,526 | 23.1% → **37.0%** |
+| `campaign` | $40,000 | **$64,000** | $175,207 | 22.8% → **36.5%** |
+| `house` | $55,000 | **$88,000** | $265,024 | 20.8% → **33.2%** |
+
+All three stay under 40% of a season's outgoings at the cap, so «felt, not budget-solving» survives.
+⚠ The denominators are this run's own (72 careers) and differ by 1–10% from #19's 108-career figures
+($86,474 / $173,210 / $240,343) – sampling, not drift, and the base shares are 23.1% / 22.8% / 20.8%
+against 23.1% / 23.1% / 22.9%. The verdict does not turn on which set is used.
+⚠ **One decision is yours**: seasons in THIS rung's band (proposed – the deeper the band the harder
+to accumulate, which is the honest reading of «в топ-100, 50, 10») or seasons anywhere professional
+(easier, and the top rung would arrive already maxed).
+
+#### (d) REAL MONEY – the sourced comparison
+
+⭐⭐ **RESEARCHED PROPERLY, AND THE SOURCES CORRECT YOUR INSTINCT ON ONE POINT.** Same tagging as
+`docs/research/off-court-money.md`: `[S]` read in the cited source, `[I]` computed here with the
+arithmetic shown, `[WEAK]` circulates but the trail ends at an aggregator, `[GAP]` looked for and not
+found.
+
+**Your Federer number is right and it is confirmed.** Nike paid him a reported **~$10M a year on a
+ten-year deal, 2008–2018** `[S]` (SportsPro, 2 Jul 2018; the term from his agent, SI 9 Oct 2025) –
+$100M in all `[I]`. ⭐ **And the deal he left it for is the better template for what you are asking
+about**: **Uniqlo, $300,000,000 guaranteed over TEN YEARS = $30M a year** `[I]` from `[S]`
+(ESPN/Rovell, 2 Jul 2018), **and he collects it even if he never plays again** `[S]`. That is a
+non-endemic house, a real cheque and a real term, all three at once.
+
+**The women's numbers, with terms – every one of these is a real reported contract:**
+
+| player | brand | endemic? | value | term | tag |
+| --- | --- | --- | ---: | ---: | --- |
+| Sharapova | Nike | kit | **up to $8.75M/yr** ($70M) | **8 years** (2010) | `[S]` total+term, `[I]` per-yr |
+| Osaka | Nike | kit | **$10M/yr** | reported through 2025 | `[S]` value, `[WEAK]` end date |
+| Osaka | Adidas | kit | **$8.5M/yr** – «the largest in the history of women's tennis» | – | `[S]` (The Times via CBS) |
+| Venus Williams | Reebok | kit | **$8M/yr** ($40M) | **5 years** (2000) | `[S]`+`[I]` |
+| Serena Williams | Nike | kit | **up to $6.875M/yr** ($55M) | **5 years + a 3-year performance option** | `[S]`+`[I]` |
+| **Raducanu** | **Vodafone** | **non-endemic** | **~$4M/yr** (£3M) | signed 2021, **not renewed 2025** | `[S]` (Mail on Sunday via SportsPro) |
+| **Raducanu** | **Uniqlo** | **non-endemic** | **$3.5M/yr** + performance bonuses | «long-term» | `[S]`, Feb 2026, unconfirmed by Uniqlo |
+| **Raducanu** | **Dior** | **non-endemic** | **$2M/yr** | – | `[S]` (Daily Mail via SI) |
+| **Raducanu** | **Tiffany** | **non-endemic** | **$2M/yr** – ⚠ conflicting `[S]`: $0.75M on a **1-year** deal | 1 year | two `[S]` sources disagree |
+| **Raducanu** | **Porsche** | **non-endemic** | **$1.5M/yr** | ended by 2025 | `[S]` (GlobalData) |
+| Raducanu | Nike | kit | **$100,000/yr**, signed at **15** | ~8 years | `[S]`, ⚠ conflicts with GlobalData's $1.5M/yr |
+| Sharapova | Porsche / Land Rover | non-endemic | `[GAP]` – never disclosed | **3 years each** | term `[S]` |
+| Swiatek | Oshee | non-endemic | `[GAP]` | **2 years + option** | term `[S]` |
+| Zheng Qinwen | 10 brands | mixed | **$5.5M/yr in aggregate** `[I]` from ¥39.44M `[S]` | «from 2–3 years» `[S]` | per-deal `[GAP]` |
+
+⭐⭐⭐ **AND THE FINDING THAT SHOULD CHANGE THE DESIGN, BECAUSE IT SAYS OUR TWO ASKS ARE FIGHTING EACH
+OTHER.** In every figure that could be sourced, **the long deals are the KIT deals and the short deals
+are the non-endemic ones**:
+
+* **kit / apparel: 8–10 years, and signed YOUNG** – Sharapova 8, Serena 5+3, Venus 5, Alcaraz 10,
+  Federer 10, Djokovic 5 then a 4-year extension. **Gauff signed New Balance at 14** `[S]`;
+  **Raducanu signed Nike at 15 for $100,000 a year** `[S]`.
+* **non-endemic: 1–3 years, renewed or dropped** – Sharapova/Porsche 3, Sharapova/Land Rover 3,
+  Swiatek/Oshee 2+option, Raducanu/Tiffany 1, and Raducanu's Vodafone and Porsche deals **both
+  lapsed** within four years. Federer/Uniqlo at ten years is the outlier ESPN itself called
+  «unprecedented» `[S]`.
+
+⚠⚠ **So «долгосрочные контракты» belongs on the KIT ladder and «несколько разных названий» belongs on
+the advertising one, and the sources say each of them separately.** A long non-endemic deal is exactly
+what would make you stare at one name for years – the complaint you opened with. **Churn IS the
+variety.** Revised proposal, replacing (b) above where they disagree:
+
+| ladder | term | why |
+| --- | --- | --- |
+| **advertising** | **1–2 years, several houses a rung, a house may not write twice running** | the sourced shape of a real non-endemic deal, and it is what puts a new name in the inbox |
+| **kit** `premium` / `icon` | **6 seasons / 8 seasons** (from 3 / 4 today) | Sharapova's 8, Serena's 5+3, Venus's 5 – the long deal is the apparel deal |
+| ⭐ **a new JUNIOR kit rung, signed at 14–16** | **8 seasons**, a small cheque | Gauff at 14 and Raducanu at 15 are both `[S]`, and it is a genuine decision for the parent: take $100,000 a year now and be locked out of the big money for eight years, or wait |
+
+⭐ **THE CAPSTONE – if you want one deal that is «реальные чеки», here is one with a number.**
+Everything above keeps the constant-share rule. This deliberately breaks it, once, at the very top:
+
+| | |
+| --- | --- |
+| **gate** | **4 seasons ended inside WTA #10** – reached by **7 of 72 careers (10%)**, and by 47% of the fifteen who ever get there |
+| **cheque** | **$500,000 a year** |
+| **term** | **8 years**, the Sharapova/Nike shape `[S]` – **$4,000,000 in all** |
+| **shoots** | 6 a year, the top rung's existing allowance – it replaces the `house` deal, it does not stack |
+| **share of a top-10 season's outgoings** | **189%** – it is meant to feel like winning, which is the whole point of a capstone |
+| **against the shelf** | pays **42%** of the yacht's annual crew, **a third** of the whole academy |
+| **what it does to the doubling** | **+$4M to the top 10% of careers and ZERO to everybody else** – those careers already bank $28–45M, so it is +9–14% for them and no change at all to the median |
+
+⚠ **The scale gap is stated rather than closed, and it is enormous.** A real top-ten WTA woman earns
+**$3M–$25M a year off court** `[S]`; our top rung is $55,000 and this capstone is $500,000. Copying the
+real curve would hand a top-ten career eight figures and end the economy – the decision
+`docs/research/off-court-money.md` §5 already recorded and this does not overturn. **The capstone is
+one rung, once, for a tenth of careers.**
+
+⭐ **And Raducanu is the case that says the design is right about ORDER.** She won one major as a
+qualifier and assembled a **$9.03M-a-year** non-endemic portfolio in 2022, rising to **$14M in 2024**
+`[S]`, while ranked nowhere near the top ten. That is the plan's own «a photogenic #40 with a story
+can out-earn a dour #8» with a name and a number on it.
+
+⚠ **`[GAP]`, restated and now doubly confirmed: there is still no published non-endemic contract value
+for any WTA player outside roughly the top 25.** The one figure I chased for a lower-ranked player –
+«Eala, $10M» – turned out to be a journalist's forward projection, not a contract; and Rappler has
+had to publish a fact-check debunking an invented $45M Eala/Wilson deal. **Invented tennis
+endorsement figures circulate widely enough to need debunking**, which is the reason for the tagging.
+
+---
+
+### ⚠⚠ WHAT ALL OF THIS DOES TO THE DOUBLING ALREADY FLAGGED THIS WAVE
+
+#12 flagged that career sponsor CASH went from a median of **$1,942,862 to $4,321,847**. **Saying
+nothing about a second increase stacked on top of that would be dishonest, so here it is, measured on
+the same 72 careers:**
+
+| arm | lifetime advertising cash, median | p90 | as a share of lifetime gross |
+| --- | ---: | ---: | ---: |
+| **shipped** (1-year terms, flat fee) | $120,000 | $440,000 | 0.67% / 1.92% |
+| **+ tenure at 15%/season, cap 4** | **$162,000** | $621,500 | 0.95% / 2.66% |
+| + tenure at 25%/season, cap 4 | $190,000 | $742,500 | 1.14% / 3.16% |
+| + tenure at 15%/season, cap 8 | $165,000 | $671,000 | 1.03% / 2.79% |
+
+⭐ **The proposed arm multiplies total advertising money by 1.405 and adds $42,000 to the median
+career – which is 1.7% of the size of the change #12 already asked you to accept.** It moves a
+career's total money by **+0.28 percentage points**. Variety (a) moves the expectation by **zero, by
+construction**. Long terms (b) move the money by **zero** – the fee becomes annual, so a 3-year deal
+pays what three 1-year deals paid; what changes is that the post is quiet in between and the money is
+predictable.
+
+⚠ **The one that WOULD stack is «real money».** If the top rung went to $250,000 a year to chase the
+real curve, lifetime advertising cash at p90 goes from $440,000 to roughly $2M and the ladder stops
+being a fifth of a season's budget and starts being the season's budget. **That is a decision, not a
+tuning, and it is yours** – see the sourced section.
+
+---
+
+### ⚠ THE NULLS, NAMED HONESTLY – what these instruments COULD NOT have shown
+
+1. ⚠⚠ **The masseur column reads 0.0% in every stage and that is the BENCH, not the game.**
+   `tools/econ-bench.ts`'s career loop never hires one – there is no `hireMasseur` call in it – so the
+   `staff` category is structurally empty and this instrument **could not have** shown a masseur cost
+   however large it was. Every outgoings figure above is therefore a FLOOR, understated by up to
+   $27,300 a year against a career that keeps the dearest rung. **This is exactly the line you named,
+   and it is the one line the bench is blind to.** The psychologist is not shipped at all
+   (`docs/plans/` only), so it is absent for the different and correct reason.
+2. **The shop column reads 0.0% because the bench never buys.** Peak wallet therefore equals end
+   wallet for most careers and the reachability figures are ceilings: a family that really bought the
+   car at 19 has less at 25. A shopping arm would only make the table WORSE, never better.
+3. **`byTrack` is optional (v46).** A season banked before it existed has no professional rank, and
+   the fold skips those rows rather than counting them as unranked. On these 72 careers – all created
+   at the current version – no row was skipped, so the tenure table is complete here and would be
+   incomplete against a genuinely old save.
+4. **72 careers, not 108.** #19 and #20 used `--seeds 6`; this is `--seeds 4`, for run time. The
+   cross-check that says the arm is nonetheless the same one: kit cash median came back at
+   **$4,321,847**, #12's own post-fix figure, unchanged.
+
+---
+
+## ⭐⭐⭐ HIS 29.08 RULINGS ON WHOSE MONEY IT IS – measured, and one of them changes the answer above
+
+> «как менеджер может от этого что-то получать в свою очередь. **10-20% например**… контракт на полную
+> сумму ребенку приходит на почту, после подписания видим на счету уже родительский кат.»
+>
+> «для каждой стадии академии нам нужен доход… подвязать пропорционально к максимальному месту ребенка
+> на турнирах… **чем выше и дольше место – тем выше будет доход** у каждой стадии»
+
+### ⚠⚠ FIRST, A CORRECTION TO THE FRAMING – the parent does not keep 50% of sponsor money today, he keeps more
+
+I was told the drop is «from 50% to 10–20%». **Checked against the code rather than accepted.** Every
+sponsor cash line – the kit retainer, the appearance fee, the result bonus and the advertising fee –
+goes through **one** function, `bankSponsorCheque`, and it splits by **her prize ramp**
+(`kidPrizeShareBps`): **0% before her eighteenth**, 10% at 18, +5 points a birthday, **50% only from
+her twenty-sixth**. So what the parent keeps today is:
+
+| her age | parent keeps today | parent keeps at 10% | parent keeps at 20% | the drop |
+| --- | ---: | ---: | ---: | ---: |
+| under 18 | **100%** | 10% | 20% | **10.0x / 5.0x** |
+| 18 | 90% | 10% | 20% | 9.0x / 4.5x |
+| 22 | 70% | 10% | 20% | 7.0x / 3.5x |
+| 26+ | 50% | 10% | 20% | **5.0x / 2.5x** |
+
+**«2.5–5x» is the FLOOR of the effect, not the effect** – it is the drop in the last years only.
+Averaged over a career the cut is deeper, because the early cheques are the ones the parent currently
+keeps almost all of.
+
+⭐ **One real cushion, and it is not affected by the ruling at all**: the KIT ALLOWANCE and the TRAVEL
+SHARE are cost covers, not cash – they reduce a bill rather than credit the wallet, so they never
+touch `bankSponsorCheque` and the family keeps 100% of both under any commission. At `icon` that is
+$12,000 of kit and **75% of her fares**, and on this run a top career’s season carries about $123,000 of fares, so the cover is worth ~$92,000 + $12,000 of kit against a $150,000 retainer of which a 10% manager keeps $15,000. **Under the ruling the cost covers become the larger half of an icon deal by six to one.**
+
+### ⚠⚠ THE MEASUREMENT, RE-RUN UNDER THE RULING – three arms, same 72 careers, same seeds
+
+`npx vite-node tools/sponsor-ladder-reach.ts -- --weeks 780 --seeds 4 [--commission 10|20]`. The
+commission arm **takes the money out of the wallet the week the cheque lands**, so the career that
+follows is genuinely poorer – its reserve is smaller and `reserveFor` gates coach rungs and entries
+off exactly that. It is a real B arm, not a subtraction at the end. ⚠ It writes cents and taps **no
+draw**, so it cannot move the frozen MAIN capture; it does make the arms diverge downstream in MAIN
+(a career that enters fewer events rolls different dice), which is why 10% and 20% are not a paired
+comparison with each other. **Verified the arm is live**: the shipped run reports the parent keeping
+**63.1%** of gross sponsor money, the 10% arm **10.0%** and the 20% arm **20.0%**.
+
+**What the parent's wallet does:**
+
+| peak wallet | shipped | at 10% | at 20% |
+| --- | ---: | ---: | ---: |
+| median | $552,837 | **$422,871** (−23.5%) | $446,355 (−19.3%) |
+| p75 | $15,092,002 | **$10,109,777** (−33.0%) | $11,044,569 (−26.8%) |
+| p90 | $28,733,412 | **$20,277,728** (−29.4%) | $20,965,399 (−27.0%) |
+| best of 72 | $39,596,000 | **$28,461,483** (−28.1%) | $30,426,545 (−23.2%) |
+
+⚠ **10% and 20% are inside each other's noise at n=72 and 20% is not consistently better than 10%** –
+that is trajectory divergence, not a finding. **What is far outside the noise is "a commission at
+all" against "today": every percentile loses a fifth to a third of the wallet.**
+
+⭐ **And nobody goes bankrupt from it**: 22 of 72 careers ended before the horizon on all three arms,
+unchanged. The ruling makes the parent poorer, not ruined.
+
+### ⭐⭐⭐ SO THE ONE SENTENCE, RESTATED UNDER THE RULING
+
+**It was reachable at the shipped share, and the ruling takes the top of the shelf away.**
+
+| how far up the shelf (price + a year of upkeep) | shipped | at 10% | at 20% |
+| --- | --- | --- | --- |
+| **median career** | the house with the garden **$520,000** | **the unreasonable one $300,000** | the unreasonable one $300,000 |
+| **p90 career** | the plane **$18,000,000** | the plane $18,000,000 | the plane $18,000,000 |
+| **the best of 72** | **the big yacht $28,000,000** | **the plane $18,000,000** | the plane $18,000,000 |
+
+| rung, reached with a year of upkeep | shipped | at 10% | at 20% |
+| --- | ---: | ---: | ---: |
+| the yacht $12M | 19 of 72 | **11** | 15 |
+| the plane $18M | 10 of 72 | 8 | 8 |
+| **the big yacht $28M** | 3 of 72 | **0** | **0** |
+| the long-range plane $38M | 0 of 72 | 0 | 0 |
+| **the WHOLE academy $12M** | **21 of 72 (29%)** | **14 (19%)** | 15 (21%) |
+
+⚠⚠ **The big yacht joins the long-range plane as content nobody reaches**, and the median career drops
+a rung. **This is the finding, unsoftened: the ruling is right about whose money it is, and it makes
+the shop harder to reach, not easier.**
+
+### ⚠⚠ AND THE COUNTERWEIGHT CANNOT REACH THE PEOPLE THE COMMISSION HITS
+
+The academy is the intended offset. **Measured, it cannot be one for most careers:**
+
+* the commission takes money from **36 of 72 careers** – everybody who ever signs a brand;
+* the whole academy is inside the peak wallet of **14 of 72** under a 10% commission;
+* **so 22 careers lose sponsor money and gain nothing**, because a $12,000,000 business is not a
+  consolation for somebody whose whole career banks $1.7M.
+
+⭐ **That does not make the academy a bad mechanic – it makes it a mechanic for a different job.** It
+gives the top career something to do with its money and ties the parent's reward to how well he
+raised her, which is exactly what «чем выше и дольше место – тем выше будет доход» is for. It is not
+a replacement for the sponsor money the commission gives up, and pricing it as if it were would over-
+pay the fourteen who need it least. **If the median career is meant to be made whole, the knob is the
+commission RATE or a floor under it – not the academy.**
+
+### ⭐⭐ THE ACADEMY AS A BUSINESS – the table, sized to the gap
+
+**The reputation multiplier**, off `seasonHistory[].byTrack.wta.endRank` – ⭐ **no schema move, no
+migration, no new persisted state**: which stages are owned is already in `world.assets` and the ranks
+are already banked. **Best band per season, counted once, capped at 4.0:**
+
+| a season she ended inside | adds |
+| --- | ---: |
+| WTA #100 | +0.10 |
+| WTA #50 | +0.20 |
+| WTA #25 | +0.35 |
+| WTA #10 | **+0.60** |
+
+**On your own save** – `#411 → #198 → #155 → #106 → #97 → [college] → #385 → #173 → #98 → #106 → #42
+→ #23` – that is two seasons inside #100, one inside #50 and one inside #25: **reputation 1.75.**
+Across the 72 bench careers the multiplier is 1.00 at the median, 2.90 at p75 and **4.00 at p90**;
+nine careers hit the cap. ⚠ Of the fourteen who can actually BUILD it, **every one is between 2.90 and
+4.00** – the academy is only ever owned by a career that earned a high multiplier, which is the
+mechanic working rather than a coincidence.
+
+**The income, per stage, per week – sized so that the academy exactly repays what a 10% commission
+takes from the careers that can build it:**
+
+| stage | at reputation 1.0 | at 1.75 (your save) | at 4.0 (the cap) | a year, at the cap |
+| --- | ---: | ---: | ---: | ---: |
+| the land | **$0** – it is a field | $0 | $0 | $0 |
+| the courts | $750/wk | $1,313/wk | $3,000/wk | $156,000 |
+| the clubhouse | $2,000/wk | $3,500/wk | $8,000/wk | $416,000 |
+| the staff | $3,000/wk | $5,250/wk | $12,000/wk | $624,000 |
+| **the whole academy** | **$5,750/wk** | **$10,063/wk** | **$23,000/wk** | **$1,196,000** |
+| ...as a return on the $12,000,000 | 2.5% a year | 4.4% | **10.0%** | |
+
+⭐⭐ **WHY THAT SIZE AND NOT A ROUND NUMBER.** The 10% commission costs the p90 career **$8,455,684** of
+peak wallet. The academy is affordable at about age 22, so it is owned for roughly **7 seasons**;
+seven seasons at reputation 4.0 pays **$8,372,000**, which is **99% of the gap**. Nothing here was
+picked and then justified – the base is the gap divided by the multiplier those careers actually
+hold.
+
+⚠ **AND IT DELIBERATELY DOES NOT BEAT THE INDEX FUND EXCEPT AT THE TOP.** 2.5% a year at reputation
+1.0, against the fund's 7%. The academy out-earns the market only for a parent who raised a top-ten
+player, which keeps the shop spec's own §0 – «assets never beat a career, they only survive one» –
+and stops property becoming the correct answer to every question.
+
+⚠ **The one real cost, and it is a schema question.** The income needs a category to be booked
+under, and the three honest options are not equal:
+* **a new `WorldEventCategory`** – the right sentence on the Money screen, and **a new member of that
+  union is a schema change by CLAUDE.md invariant 3**: the v43 → v44 step exists for exactly this
+  («'facility'… a new member of that union is a schema change by the rule in CLAUDE.md §3, so the
+  version moves»). So **SAVE_SCHEMA_VERSION 65 → 66**, a no-op migration step, one golden fixture.
+  Nothing to back-fill – it is a forward-only income line.
+* reuse `'income'` – zero schema, but the Money screen folds the academy into «the parent's job».
+* reuse `'academy'` – zero schema, but that category today means «the scholarship SHE receives», and
+  making it also mean «the business HE owns» is precisely the two-facts-one-name defect the v44 split
+  was built to end.
+
+**Recommended: pay the version bump.** It is the smallest honest option and it is one step.
+
+### ⚠ A CONSEQUENCE OF THE «rename only» ON THE MOTOR BOAT
+
+«моторка $2.4М – давай переделаем на парусную яхту». **None of my figures move** – price, rate, upkeep
+and build time are untouched, so every table above stands. ⚠ **But the rename is not free of
+meaning**: `grantsVacationId: 'yacht-week'` is carried by `yacht` and `yacht-big` only, and the
+catalogue's own comment defends that as «the spec calls neither of them a yacht». **Rename
+`boat-motor` to a sailing yacht and that sentence stops being true of it**, so whoever builds the
+rename has to rule on whether it now grants the week. **A rename that leaves the comment standing
+would leave the file arguing against itself.**
+
+---
+
+### ⚠⚠ A SECOND DEFECT, AND THIS ONE IS IN A MEASUREMENT THAT ALREADY WENT INTO A REPORT
+
+**`tools/sponsor-ladder-reach.ts`'s retainer regex was end-anchored and matched nothing.**
+
+```
+const RETAINER_RE = / retainer – quarterly$/
+```
+
+`bankSponsorCheque` **appends** «, less her N% share ($X)» to every row it splits, from her eighteenth
+birthday onward – and the rungs that pay a retainer at all gate on WTA #200, first cleared at 18–20.
+So in practice **every** retainer row carries the suffix and an end-anchored pattern sees none of
+them. **Probed on one wealthy/player career over 780 weeks: 0 matched, 32 missed.** The other two
+patterns are prefix-anchored (`/^Appearance fee – /`, `/^Sponsor bonus – /`) and were never affected,
+which is why the total looked plausible instead of looking like zero.
+
+⚠ **Round 29 part two #12's headline – «career sponsor cash: median $1,942,862 → $4,321,847» – was
+measured with the retainer line missing from both arms.** Paired on identical seeds, 72 careers, the
+same 780 weeks, the only difference being the pattern:
+
+| | broken pattern | fixed pattern |
+| --- | ---: | ---: |
+| kit cash, median of the 36 careers paid | $3,870,633 | **$4,443,897** (+14.8%) |
+| the largest career | $12,211,523 | **$12,832,023** (+5.1%) |
+
+⭐ **The DOUBLING #12 reported is still real** – both of its arms had the same blind spot, so the ratio
+survives. **The LEVEL was understated by about 15%.** Fixed in the tool (a measurement correction, not
+a behaviour change; `git diff -- src/` is still empty) and reported here so the published figure is
+not quoted again as it stands.
+
+⚠ **The advertising fee was never in that regex set at all** – `sponsorIncomeCents` means «what the
+KIT brands paid» and the ad fee is a different post. It is now counted on its own line rather than
+folded in, so neither number changes meaning: median $76,000 a career, p90 $219,000.
+
+---
+
+### ⚠⚠ AND THE HONEST TOTAL – WHAT ALL OF THIS DOES TO A CAREER'S MONEY, IN ONE PLACE
+
+Four changes are now on the table at once and **three of them push in opposite directions**. Stacked,
+on the median career and on the p90 career:
+
+| change | median career | p90 career |
+| --- | ---: | ---: |
+| **the commission at 10%** (his ruling) | **−$129,965** peak wallet | **−$8,455,684** |
+| the tenure ladder (+15%/season, cap 4) | +$42,000 lifetime | +$181,500 |
+| variety (several houses a rung) | **$0 by construction** – each rung's houses average to its shipped anchor | $0 |
+| long terms (annual fee over a multi-year term) | **$0** – three 1-year deals pay what one 3-year deal pays | $0 |
+| the capstone ($500,000 x 8 years, gate: 4 seasons in the top 10) | $0 – unreachable | $0 at p90; **+$4,000,000** to the top 10% |
+| the academy as a business (base $5,750/wk) | $0 – it cannot be built | **+$8,372,000** over 7 seasons |
+| **net, capstone excluded** | **−$88,000** | **≈ +$98,000** |
+
+⚠ The capstone is left out of the net on purpose: its gate (4 seasons inside WTA #10) is cleared by
+**7 of 72 = the top 9.7%**, which sits exactly on the p90 line, so counting it there would be a coin
+toss dressed as arithmetic. A career that does clear it adds $4,000,000 to a lifetime of $28–45M.
+
+⭐⭐ **So the whole package is roughly neutral for the career that can build an academy and a straight
+LOSS for the one that cannot.** That is the design's real shape and it is the thing to rule on: the
+commission is a flat tax on everybody who ever signs a brand, and every counterweight proposed here
+is a reward for the top of the distribution. **If that is the intent, it ships as is. If it is not,
+the fix belongs on the commission side** – a floor (say, the parent keeps 100% of the first $50,000 a
+season), or a rate that starts at 20% and falls to 10% as she grows, mirroring her own ramp.
