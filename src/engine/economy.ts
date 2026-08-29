@@ -3423,12 +3423,18 @@ export const ECONOMY = {
         buildWeeks: 52,
         upkeepBps: 600,
       },
+      // ⭐ ROUND 29 PART THREE P1 – THE MOTOR BOAT BECAME A SAILING YACHT, his ask verbatim:
+      // «моторка $2.4М – давай переделаем на парусную яхту пожалуйста». He changed what it IS,
+      // never what it costs: price, build weeks, annual loss and upkeep are the motor boat's own,
+      // untouched. The id moved with the identity – the art hook is the id everywhere on this
+      // shelf – and v66's migration renames owned rows in the same wave, so no save is stranded
+      // on a rung the catalogue no longer carries.
       {
-        id: 'boat-motor',
+        id: 'boat-sail',
         family: 'boat',
         stake: 'fixed',
-        label: 'The motor boat',
-        blurb: 'Two cabins, a galley, and a berth with their name on it.',
+        label: 'The sailing yacht',
+        blurb: 'Two cabins, a mast, and weekends that answer to the wind.',
         entryCents: 2_400_000_00,
         annualRateBps: -700,
         buildWeeks: 78,
@@ -3437,10 +3443,16 @@ export const ECONOMY = {
       // ⭐⭐ THE TWO THAT GRANT THE WEEK (§3f, and it is the owner's own idea): «а неделя на яхте
       // (при наличии яхты) вполне может стать новой строкой отпуска, кстати».
       //
-      // ⚠ ONLY THESE TWO, AND THAT IS THE NARROW READING OF «при наличии ЯХТЫ» ON PURPOSE. The two
-      // rungs above are a launch and a motor boat – the spec calls neither of them a yacht, and
-      // §11's own acceptance for this slice is «a career orders a yacht, WAITS THREE YEARS», which
-      // is this rung's build time and not theirs. A week away on a day-boat is not a holiday.
+      // ⚠ ONLY THESE TWO, AND THAT IS STILL THE NARROW READING OF «при наличии ЯХТЫ» ON PURPOSE –
+      // re-argued at part three P1, because the sailing yacht above made the old sentence («the
+      // spec calls neither of them a yacht») stop covering the shelf. The WEEK is a crewed week:
+      // its own copy is a crew of six and nobody able to reach her, and the crew is what these two
+      // rungs' 10% upkeep is buying – the «real ones» note above names it first. The launch and
+      // the sailing yacht keep the boats' 6%: hull, berth and survey, nobody on the payroll. A
+      // family that sails itself has a boat, not a holiday staff, so the sailing yacht grants
+      // nothing – the grant reads what the upkeep pays for, never the word in the label. §11's own
+      // acceptance – «a career orders a yacht, WAITS THREE YEARS» – is still this rung's build
+      // time and not theirs.
       {
         id: 'yacht',
         family: 'boat',

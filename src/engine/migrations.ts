@@ -2049,10 +2049,11 @@ export function migrateSave(raw: unknown): WorldState {
   }
 
   // ⭐⭐ v65 -> v66: THE 'business' LEDGER CATEGORY (round 29 part four P7 – the merch brand's and
-  // the academy's weekly income lines). A UNION WIDENED AND NOTHING ELSE: no field moved, so this
-  // step writes nothing – it exists because a new `WorldEventCategory` member is a schema change by
-  // CLAUDE.md invariant 3 (the v43 -> v44 'facility' precedent, verbatim: «a new member of that
-  // union is a schema change by the rule in CLAUDE.md §3, so the version moves»).
+  // the academy's weekly income lines). A UNION WIDENED: the category half of this step moves no
+  // field and writes nothing – it exists because a new `WorldEventCategory` member is a schema
+  // change by CLAUDE.md invariant 3 (the v43 -> v44 'facility' precedent, verbatim: «a new member
+  // of that union is a schema change by the rule in CLAUDE.md §3, so the version moves»). The
+  // step's second half – the P1 id rename, added later in the SAME unshipped wave – is below.
   //
   // ⚠ NOTHING IS BACK-FILLED, BY CONSTRUCTION AND NOT BY OMISSION. The businesses did not exist
   // before this build – no save can hold a merch brand it could not buy or an academy income it was
@@ -2060,9 +2061,25 @@ export function migrateSave(raw: unknown): WorldState {
   // would retcon a family's own history (v44's own rule: the ledger stays truthful about what it
   // actually charged). The income starts from the career's next tick, forward-only.
   //
-  // Idempotent trivially (it writes nothing), and it writes nothing: ZERO draws on any stream, so
-  // the frozen MAIN capture (41550 / e6b0c709) is untouched by construction.
+  // ⭐ AND – SAME WAVE, SAME STEP – ROUND 29 PART THREE P1's SAILING YACHT: «моторка $2.4М – давай
+  // переделаем на парусную яхту пожалуйста». The catalogue rung `boat-motor` is `boat-sail` now
+  // (he changed what it IS, not what it costs), and an owned row follows its rung: the id is
+  // renamed and every other field – paid, value, basis, the delivery clock – is carried untouched,
+  // so the boat is still valued, billed and sellable under its new name. ⚠ THE RENAME RIDES v66
+  // RATHER THAN TAKING A v67 because v66 has never been merged to main (main is at 65): no save
+  // with schemaVersion 66 exists outside this wave's own worktrees, so amending the unshipped step
+  // is not editing a shipped migration – the append-only rule bites at the moment of shipping, and
+  // this wave is that moment.
+  //
+  // Idempotent: the first pass leaves no `boat-motor` behind and a second pass finds none. The
+  // union half still writes nothing. ZERO draws on any stream either way, so the frozen MAIN
+  // capture (41550 / e6b0c709) is untouched by construction.
   if (v === 65) {
+    if (Array.isArray(save.assets)) {
+      for (const a of save.assets as { id?: unknown }[]) {
+        if (a && typeof a === 'object' && a.id === 'boat-motor') a.id = 'boat-sail'
+      }
+    }
     v = 66
   }
 

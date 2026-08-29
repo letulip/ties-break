@@ -86,7 +86,11 @@ describe('the shelf itself', () => {
       // still no bonds, no club stake, and nothing about HER.
       'merch-brand',
       'boat-launch',
-      'boat-motor',
+      // ⚠ RE-AIMED AT ROUND 29 PART THREE P1 («моторка $2.4М – давай переделаем на парусную яхту
+      // пожалуйста»): `boat-motor` is `boat-sail` now – identity changed, price/build/upkeep did
+      // not (the three-numbers claims live in tests/round29-shop-elite.test.ts, moved with the id).
+      // Owned rows follow through v66's migration, asserted in tests/migrations.test.ts.
+      'boat-sail',
       'yacht',
       'yacht-big',
       'plane',

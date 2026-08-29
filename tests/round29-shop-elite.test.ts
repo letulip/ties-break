@@ -94,7 +94,11 @@ describe('§1 – the elite ladder is the spec table, and each rung carries THRE
     const table: [string, number, number, number, number][] = [
       // id, price, build weeks, annual loss bps, annual upkeep bps
       ['boat-launch', 900_000_00, 52, -700, 600],
-      ['boat-motor', 2_400_000_00, 78, -700, 600],
+      // ⚠ RE-AIMED AT ROUND 29 PART THREE P1 («моторка $2.4М – давай переделаем на парусную яхту
+      // пожалуйста»): the motor boat became the sailing yacht – id and identity moved, EVERY
+      // NUMBER STAYED, which is exactly what this row now guards: he changed what the rung IS,
+      // never what it costs.
+      ['boat-sail', 2_400_000_00, 78, -700, 600],
       ['yacht', 12_000_000_00, 156, -500, 1000],
       ['yacht-big', 28_000_000_00, 208, -500, 1000],
       ['plane', 18_000_000_00, 104, -600, 800],
@@ -115,7 +119,9 @@ describe('§1 – the elite ladder is the spec table, and each rung carries THRE
     // and no more – a bill computed off anything but `price x pct / 52` misses by far more.
     const spec: [string, number][] = [
       ['boat-launch', 1_040_00],
-      ['boat-motor', 2_770_00],
+      // P1: the sailing yacht keeps the motor boat's weekly bill to the cent – same price, same
+      // percentage, so the same $2,770.
+      ['boat-sail', 2_770_00],
       ['yacht', 23_080_00],
       ['yacht-big', 53_850_00],
       ['plane', 27_690_00],
@@ -489,6 +495,20 @@ describe('§6 – ⭐⭐ a week on the yacht is a seventh vacation package (§3f
     w.physioActive = false
     walk(w, week - w.week + 1)
     expect(w.condition, 'the week away landed its gain').toBeGreaterThan(40)
+  })
+
+  it('⚠ P1 – the SAILING yacht grants nothing: the week is crewed and its upkeep has no crew in it', () => {
+    // ⭐ ROUND 29 PART THREE P1's one design question, answered NO on purpose: the package's own
+    // copy is a crew of six, and the crew is what `yacht`/`yacht-big`'s 10% upkeep pays for. The
+    // $2.4M sailing yacht keeps the boats' crewless 6%, so renaming the rung must not hand its
+    // family a crewed holiday – the grant reads what the upkeep pays for, not the label's noun.
+    // The catalogue comment above `yacht` carries the full argument; this arm is what keeps a
+    // future «it says yacht, wire the week» edit honest.
+    const w = shopper('r29-p1-sail-grants-nothing')
+    w.assets = [{ id: 'boat-sail', boughtWeek: 0, paidCents: 2_400_000_00, valueCents: 2_400_000_00 }]
+    expect(shopItem('boat-sail')!.label, 'the rung really is the sailing yacht').toBe('The sailing yacht')
+    expect(shopItem('boat-sail')!.grantsVacationId, 'and it grants no package').toBeUndefined()
+    expect(shopView(w).vacationIds, 'a delivered sailing yacht unlocks nothing').toEqual([])
   })
 
   it('⚠ selling the yacht takes the week away again', () => {

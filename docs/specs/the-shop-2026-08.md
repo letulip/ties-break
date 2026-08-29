@@ -201,7 +201,7 @@ numbers rather than one – what it cost, what it loses, and what it takes every
 | thing | price | build | loses / year | upkeep / year | **upkeep / week** |
 | --- | --- | --- | --- | --- | --- |
 | the launch | $900,000 | ~12 months | 7% | 6% | **$1,040** |
-| the boat | $2,400,000 | ~18 months | 7% | 6% | **$2,770** |
+| the sailing yacht (was: the motor boat, part three P1) | $2,400,000 | ~18 months | 7% | 6% | **$2,770** |
 | the yacht | $12,000,000 | ~3 years | 5% | **10%** | **$23,080** |
 | the big yacht | $28,000,000 | ~4 years | 5% | **10%** | **$53,850** |
 | the plane | $18,000,000 | ~2 years | 6% | 8% | **$27,690** |
@@ -602,6 +602,16 @@ rest week available») holds. ⚠ A gain above 48 would break it, and `tests/pla
 are a launch and a motor boat – the spec calls neither a yacht, and §11 row 3's own acceptance is «a
 career orders a yacht, **waits three years**», which is the $12M rung's build time and not theirs.
 A week away on a day-boat is not a holiday.
+
+⚙ **RE-ARGUED AT PART THREE P1 (29.08), SAME ANSWER.** «моторка $2.4М – давай переделаем на
+парусную яхту пожалуйста» renamed the $2.4M rung to **the sailing yacht** – so «the spec calls
+neither of them a yacht» stopped covering the shelf, and the ruling had to be re-derived rather
+than inherited. It survives on a better leg: the WEEK the package sells is a **crewed** week («crew
+of six, and a week of it is a week nobody can reach them»), and the crew is what the two granting
+rungs' 10% upkeep is buying – the sailing yacht keeps the boats' crewless 6% (hull, berth, survey).
+A family that sails itself has a boat, not a holiday staff. The grant reads what the upkeep pays
+for, never the noun in the label; the sailing yacht grants nothing, and
+`tests/round29-shop-elite.test.ts` holds the claim against the delivered rung.
 
 ### 13d. ⚠⚠ WHAT IS **NOT** BUILT, AND IS STILL OPEN
 
