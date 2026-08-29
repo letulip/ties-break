@@ -3091,13 +3091,27 @@ export const ECONOMY = {
         // true 17% is a random walk's number, and a walk would put roughly a quarter of ten-year
         // holdings behind the deposit.
         //
-        // ⚙ MEASURED, `npx vite-node tools/market-probe.ts --seeds 4000` (29.08), 228,000 rolling
-        // seasons and 48,000 holdings per horizon:
+        // ⭐⭐⭐ THE CRASH LAYER RIDES ON TOP SINCE HIS EXTENSION OF 29.08 («например раз в 3-5 лет и
+        // стартовый сезон уже может быть как раз с -20%») – a crisis every 2-6 years centered on
+        // four, -15…-30% at the trough with a recovery arc, no grace period. The construction and
+        // its own knobs live in `world/market.ts`; this rung participates because it has a volBps,
+        // at full depth (a crisis is not a bigger wobble – the reasoning is at `marketIndex`).
         //
-        //   negative seasons  19.9%   («roughly one year in four or five» – part three #16's ask)
-        //   season sd          8.35%  · worst season −18.5% · worst peak-to-trough −20.4%
-        //   beats the deposit  1y 67.07%  3y 90.24%  5y 98.73%  10y 100.00% (0 of 48,000 lose)
-        //   worst 10y fund    +48.5% against the deposit's +36.6%
+        // ⚙ MEASURED, `npx vite-node tools/market-probe.ts --seeds 4000` (29.08, crash layer IN),
+        // 228,000 rolling seasons, 48,000 holdings per horizon, 16,000 crises:
+        //
+        //   crises            mean interval 4.01y (75.2% in his 3-5y band) · median depth −22.5%
+        //   first-season fall 49.7% of careers («стартовый сезон» – exactly his ask)
+        //   negative seasons  30.8%   (the wave alone was 19.9% – his crises are the difference;
+        //                              the knob back toward one-in-four is THIS volBps, his call)
+        //   worst season      −39.9%  (a deep crash landing on a bad wave year; sd 16.79%)
+        //   beats the deposit 1y 57.15%  3y 84.03%  5y 86.75%  10y 98.90%
+        //   ⚠⚠ the 10y tail   529 of 48,000 (1.10%) – EVERY one sold inside a crash arc; selling
+        //                     in calm waters ten years is still universal (the two-tier bound,
+        //                     `worstCrashFreeRatio` / `worstMarketRatio`), so «мы ни за что не
+        //                     наказываем» reads: holding through a crisis costs nothing, only
+        //                     selling into one can lose, at this measured rate. HIS number to
+        //                     accept – docs/specs/the-shop-2026-08.md §14h puts it in front of him.
         //
         // The shape is the design: WHEN you sell matters, WHETHER you were right to hold does not.
         //

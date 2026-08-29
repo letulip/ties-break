@@ -2,13 +2,13 @@
 
 # `engine/world` – area to owner
 
-The barrel `src/engine/world.ts` (2,032 lines) re-exports the decomposed modules under their historical names, so every importer sees one flat surface. That is a COMPATIBILITY contract, not a discovery one – this file is the discovery half.
+The barrel `src/engine/world.ts` (2,033 lines) re-exports the decomposed modules under their historical names, so every importer sees one flat surface. That is a COMPATIBILITY contract, not a discovery one – this file is the discovery half.
 
 Regenerate with `node scripts/world-map.mjs`; `node scripts/world-map.mjs --check` fails when it is stale, and CI runs that on every pull request.
 
 **Do not read this file to answer one question** – that is the habit it exists to replace. `node scripts/world-map.mjs <symbol>` prints the owner and the line, and a plain `grep <symbol> tools/generated/world-symbol-map.md` does the same for a partial name.
 
-348 exported names across 42 owning modules.
+353 exported names across 42 owning modules.
 
 ## Areas
 
@@ -29,6 +29,7 @@ Regenerate with `node scripts/world-map.mjs`; `node scripts/world-map.mjs --chec
 | `src/engine/world/kit.ts` | THE KIT SHE PLAYS WITH, AS A DECISION - the till, and what the Money screen reads off it | 11 |
 | `src/engine/world/mandatory.ts` | THE MANDATORY REGIME AND THE PENALTY LEDGER (W3-ACT2, act2-pro-tour.md §6) | 11 |
 | `src/engine/world/age.ts` | HER AGE: the band and the girl, and the birthday that lands in the feed | 9 |
+| `src/engine/world/market.ts` | ⭐⭐⭐ THE MARKET – round 29 part three #16, and it is the answer to one sentence of his | 9 |
 | `src/engine/world/knock.ts` | THE KNOCK: she comes off court sore, and the parent rests it or sends her back out | 8 |
 | `src/engine/world/injury.ts` | INJURIES AND PHYSIO: the weekly roll, the hazard shape behind it, and the recovery the family pays for – plus the sweep that cleans up everything an injury invalidates | 7 |
 | `src/engine/world/planner.ts` | THE SEASON PLANNER: the two things a parent can put on an empty week – a family holiday and a practice match – and what the engine does with them when the week arrives | 7 |
@@ -41,7 +42,6 @@ Regenerate with `node scripts/world-map.mjs`; `node scripts/world-map.mjs --chec
 | `src/engine/condition.ts` | THE condition math – one rule, everybody | 4 |
 | `src/engine/season/calendar.ts` | Package L – tournament calendar | 4 |
 | `src/engine/world/ledger.ts` | THE LEDGER: the two write primitives every world mutation goes through, and the pure folds that read the finance ledger back out | 4 |
-| `src/engine/world/market.ts` | ⭐⭐⭐ THE MARKET – round 29 part three #16, and it is the answer to one sentence of his | 4 |
 | `src/engine/kidLife.ts` | HER LIFE OFF THE COURT - the three tiles of screen C's attribute grid that are not about results | 3 |
 | `src/engine/world/fieldNews.ts` | ⭐⭐⭐ THE TOUR HAS A VOICE – the professional field's succession, said out loud (round 26 #10) | 3 |
 | `src/engine/world/phaseObligations.ts` | ⭐ R2-10 STEP 2, PHASE 1 – THE SEASON BOUNDARY AND THE RECURRING OBLIGATIONS | 3 |
@@ -379,6 +379,20 @@ HER AGE: the band and the girl, and the birthday that lands in the feed.
 - `kidBirthYear` – `src/engine/world/age.ts`
 - `START_AGE_YEARS` – `src/engine/world/age.ts`
 
+### `src/engine/world/market.ts`
+
+⭐⭐⭐ THE MARKET – round 29 part three #16, and it is the answer to one sentence of his.
+
+- `marketCrash` – `src/engine/world/market.ts`
+- `MarketCrash` *(type)* – `src/engine/world/market.ts`
+- `marketCrashFellIn` – `src/engine/world/market.ts`
+- `marketCrashLog` – `src/engine/world/market.ts`
+- `marketIndex` – `src/engine/world/market.ts`
+- `marketRatio` – `src/engine/world/market.ts`
+- `marketWave` – `src/engine/world/market.ts`
+- `worstCrashFreeRatio` – `src/engine/world/market.ts`
+- `worstMarketRatio` – `src/engine/world/market.ts`
+
 ### `src/engine/world/knock.ts`
 
 THE KNOCK: she comes off court sore, and the parent rests it or sends her back out.
@@ -507,15 +521,6 @@ THE LEDGER: the two write primitives every world mutation goes through, and the 
 - `financeWindow` – `src/engine/world/ledger.ts`
 - `seasonIndexOf` – `src/engine/world/ledger.ts`
 - `seasonStartWeek` – `src/engine/world/ledger.ts`
-
-### `src/engine/world/market.ts`
-
-⭐⭐⭐ THE MARKET – round 29 part three #16, and it is the answer to one sentence of his.
-
-- `marketIndex` – `src/engine/world/market.ts`
-- `marketRatio` – `src/engine/world/market.ts`
-- `marketWave` – `src/engine/world/market.ts`
-- `worstMarketRatio` – `src/engine/world/market.ts`
 
 ### `src/engine/kidLife.ts`
 

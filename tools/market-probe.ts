@@ -20,7 +20,15 @@
 // ощущения потом») and the numbers have to be cheap to move.
 import { WEEKS_PER_YEAR } from '../src/engine/season/calendar'
 import { assetValueCents, shopItem, type ShopItem } from '../src/engine/world/assets'
-import { marketRatio, marketWave, worstMarketRatio } from '../src/engine/world/market'
+import {
+  marketCrash,
+  marketCrashFellIn,
+  marketCrashLog,
+  marketRatio,
+  marketWave,
+  worstCrashFreeRatio,
+  worstMarketRatio,
+} from '../src/engine/world/market'
 
 function arg(name: string, fallback: number): number {
   const i = process.argv.indexOf(`--${name}`)
@@ -63,7 +71,39 @@ for (const seed of seeds.slice(0, Math.min(400, SEEDS))) {
   }
 }
 console.log(`\nBOUND  max |wave| over 400 seeds x 780 weeks: ${maxAbsWave.toFixed(4)}  (must be <= 1)`)
-console.log(`       worst possible ratio e^-2vol = ${worstMarketRatio(VOL).toFixed(4)}`)
+console.log(`       crash-free worst ratio e^-2vol = ${worstCrashFreeRatio(VOL).toFixed(4)}`)
+console.log(`       total worst ratio (sell at the deepest trough) = ${worstMarketRatio(VOL).toFixed(4)}`)
+
+// --- THE CRASH CALENDAR, REALISED (his extension, 29.08) -----------------------------------------
+// «раз в 3-5 лет» – measure it: gaps between consecutive crash starts, drawn depths, and how often
+// the FIRST season of a career contains a fall (his «стартовый сезон уже может быть как раз с -20%»).
+{
+  const gaps: number[] = []
+  const depths: number[] = []
+  let firstSeasonCrashes = 0
+  for (const seed of seeds) {
+    let prev = -1
+    for (let epoch = 0; epoch * 208 <= 780; epoch++) {
+      const c = marketCrash(seed, epoch)
+      if (prev >= 0) gaps.push(c.startWeek - prev)
+      prev = c.startWeek
+      depths.push(Math.exp(c.depthLog) - 1)
+    }
+    if (marketCrashFellIn(seed, 0, WEEKS_PER_YEAR)) firstSeasonCrashes++
+  }
+  gaps.sort((a, b) => a - b)
+  depths.sort((a, b) => a - b)
+  const inBand = gaps.filter((g) => g >= 3 * WEEKS_PER_YEAR && g <= 5 * WEEKS_PER_YEAR).length
+  const meanGap = gaps.reduce((a, b) => a + b, 0) / gaps.length
+  console.log(`\nCRASHES  ${depths.length.toLocaleString()} crises over ${SEEDS} seeds x 15 seasons`)
+  console.log(
+    `  interval: mean ${(meanGap / WEEKS_PER_YEAR).toFixed(2)}y  min ${(gaps[0] / WEEKS_PER_YEAR).toFixed(1)}y  max ${(gaps[gaps.length - 1] / WEEKS_PER_YEAR).toFixed(1)}y  in the 3-5y band ${((inBand / gaps.length) * 100).toFixed(1)}%`,
+  )
+  console.log(
+    `  drawn depth: median ${(depths[Math.floor(depths.length / 2)] * 100).toFixed(1)}%  range ${(depths[0] * 100).toFixed(1)}%…${(depths[depths.length - 1] * 100).toFixed(1)}%`,
+  )
+  console.log(`  a career whose FIRST season contains a fall: ${((firstSeasonCrashes / SEEDS) * 100).toFixed(1)}%`)
+}
 
 // --- 1. HOW OFTEN IS A YEAR NEGATIVE? ------------------------------------------------------------
 let years = 0
@@ -77,6 +117,14 @@ for (const seed of seeds) {
     if (move < 0) negativeYears++
   }
 }
+const crashSeasonMoves: number[] = []
+for (const seed of seeds) {
+  for (let w = WEEKS_PER_YEAR; w <= 780; w += WEEKS_PER_YEAR) {
+    if (!marketCrashFellIn(seed, w - WEEKS_PER_YEAR, w)) continue
+    crashSeasonMoves.push(fundAt(seed, w - WEEKS_PER_YEAR, WEEKS_PER_YEAR) - 1)
+  }
+}
+crashSeasonMoves.sort((a, b) => a - b)
 const meanYear = yearMoves.reduce((a, b) => a + b, 0) / yearMoves.length
 const sdYear = Math.sqrt(yearMoves.reduce((a, b) => a + (b - meanYear) ** 2, 0) / yearMoves.length)
 const sorted = [...yearMoves].sort((a, b) => a - b)
@@ -87,9 +135,14 @@ console.log(`  mean ${(meanYear * 100).toFixed(2)}%  sd ${(sdYear * 100).toFixed
 console.log(
   `  p5 ${(pct(0.05) * 100).toFixed(1)}%  p25 ${(pct(0.25) * 100).toFixed(1)}%  p50 ${(pct(0.5) * 100).toFixed(1)}%  p75 ${(pct(0.75) * 100).toFixed(1)}%  p95 ${(pct(0.95) * 100).toFixed(1)}%`,
 )
+const csm = (q: number) => crashSeasonMoves[Math.floor(q * (crashSeasonMoves.length - 1))]
+console.log(
+  `  CRASH seasons (a fall touched the calendar year, ${crashSeasonMoves.length.toLocaleString()} of them): ` +
+    `median ${(csm(0.5) * 100).toFixed(1)}%  p10 ${(csm(0.1) * 100).toFixed(1)}%  worst ${(csm(0) * 100).toFixed(1)}%`,
+)
 
 // --- 2. THE FUND AGAINST THE DEPOSIT, AT FOUR HORIZONS -------------------------------------------
-console.log(`\nHORIZON   samples      fund beats deposit     fund mean   deposit   worst fund`)
+console.log(`\nHORIZON   samples      fund beats deposit     fund mean   deposit   worst fund   losers selling in calm`)
 for (const yrs of [1, 3, 5, 10]) {
   const weeks = yrs * WEEKS_PER_YEAR
   const dep = depositAt(weeks)
@@ -97,6 +150,7 @@ for (const yrs of [1, 3, 5, 10]) {
   let beat = 0
   let sum = 0
   let worst = Infinity
+  let calmLosers = 0
   for (const seed of seeds) {
     for (const from of ENTRIES) {
       const v = fundAt(seed, from, weeks)
@@ -104,11 +158,14 @@ for (const yrs of [1, 3, 5, 10]) {
       sum += v
       if (v < worst) worst = v
       if (v > dep) beat++
+      // ⚠ THE TWO-TIER BOUND'S RECEIPT: a loser whose SELL week carries no crash excursion would
+      // break the crash-free tier. Expected: zero at 5y and 10y, every loser mid-arc.
+      else if (marketCrashLog(seed, from + weeks) === 0) calmLosers++
     }
   }
   console.log(
     `  ${String(yrs).padStart(2)}y   ${String(n).padStart(8)}   ${((beat / n) * 100).toFixed(2).padStart(7)}%  (${(n - beat).toLocaleString()} lose)   ` +
-      `${((sum / n - 1) * 100).toFixed(1).padStart(7)}%   ${((dep - 1) * 100).toFixed(1).padStart(6)}%   ${((worst - 1) * 100).toFixed(1).padStart(7)}%`,
+      `${((sum / n - 1) * 100).toFixed(1).padStart(7)}%   ${((dep - 1) * 100).toFixed(1).padStart(6)}%   ${((worst - 1) * 100).toFixed(1).padStart(7)}%   ${String(calmLosers).padStart(6)}`,
   )
 }
 

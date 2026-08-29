@@ -332,8 +332,9 @@ export { familyMeans, householdWalletCents, meansOfCents, MEANS_BANDS }
 // The path itself is `world/market.ts` and is re-exported one line down.
 import { assetDelivered, assetUpkeepCents, assetValueCents, assetWorthCents, buyAsset, deliverAssets, deliveredAssets, grantedVacationIds, marketSeasonMove, ownedAssets, ownsDeliveredOfFamily, reportMarketSeason, revalueAssets, sellAsset, sellableAsset, shopCatalogue, shopItem, shopView, weeklyAssetUpkeepCents } from './world/shop'
 export { assetDelivered, assetUpkeepCents, assetValueCents, assetWorthCents, buyAsset, deliverAssets, deliveredAssets, grantedVacationIds, marketSeasonMove, ownedAssets, ownsDeliveredOfFamily, reportMarketSeason, revalueAssets, sellAsset, sellableAsset, shopCatalogue, shopItem, shopView, weeklyAssetUpkeepCents }
-import { marketIndex, marketRatio, marketWave, worstMarketRatio } from './world/market'
-export { marketIndex, marketRatio, marketWave, worstMarketRatio }
+import { marketCrash, marketCrashFellIn, marketCrashLog, marketIndex, marketRatio, marketWave, worstCrashFreeRatio, worstMarketRatio } from './world/market'
+export { marketCrash, marketCrashFellIn, marketCrashLog, marketIndex, marketRatio, marketWave, worstCrashFreeRatio, worstMarketRatio }
+export type { MarketCrash } from './world/market'
 export type { ShopItem } from './world/shop'
 export type { FamilyMeans } from './world/means'
 

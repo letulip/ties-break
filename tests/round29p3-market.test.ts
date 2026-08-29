@@ -37,12 +37,35 @@
 //     named career's figure with it. ⚠⚠ AND THE MEASURED TEN-YEAR ARM STAYED GREEN – 2,400 holdings
 //     and not one of them lost. That is the finding, and it is why both arms exist: sampling cannot
 //     see a ceiling this design is only just inside, and the inequality can.
-//   * `marketIndex`'s `if (!volBps) return 1` deleted         -> NOTHING. `Math.exp(0·wave)` is
-//     already 1, so the clause is a short-circuit and not a guard. Documented at its own source.
+//   * `marketIndex`'s `if (!volBps) return 1` deleted         -> NOTHING under the wave-only model
+//     (`exp(0·wave)` is already 1) – and STILL nothing under the crash layer, but for a new reason:
+//     the guard is written twice and `marketRatio`'s own first clause shadows this one. See the
+//     crash battery below for the pair.
 //   * `marketRatio`'s `toWeek <= fromWeek` deleted            -> NOTHING, because no rung in the
 //     catalogue is both commissioned and market-driven. Also documented at its source, and NOT
 //     covered by an arm here: an arm that could not distinguish the mutation would be a dead guard
 //     of exactly the kind this list exists to keep out.
+//
+// ⚠ THE CRASH BATTERY (his extension, 29.08) – eight more, each applied alone, watched, reverted:
+//   * `marketCrashLog` -> constant 0 (the layer disconnected)  -> FOUR red: his -20% anchor, the
+//     no-grace bite, the measured tail («a zero here means the layer is disconnected» – exactly),
+//     and the trough top-up. The calendar arm stays green, correctly: the calendar exists whether
+//     or not the index reads it, which is the same seeding/consumption split the weekly-noise
+//     mutation demonstrated for the wave.
+//   * `CRASH_DEPTH_RANGE` -> [0.85, 0.85] (his band emptied)   -> FIVE red, including the closed
+//     form (the 0.70 floor is pinned there) and the calendar's median-depth band.
+//   * `CRASH_JITTER_WEEKS` 104 -> 208 (gaps unbounded)         -> FIVE red: both gap theorems, the
+//     no-grace share, and the two named fixtures whose calendars moved.
+//   * the season line's `crashed` predicate forced false       -> «HIS ANCHOR» red, ALONE.
+//   * `marketCrashFellIn` -> always true                       -> «A BAD YEAR THAT IS NOT A CRASH
+//     STAYS PLAIN» red + the no-grace share arm – the label and its discriminator are separately
+//     armed, in both directions.
+//   * the recovery limb of `marketCrashLog` -> 0 (no rebound)  -> the anchor arm red (the season
+//     nets deeper than his -20% once nothing comes back inside the year).
+//   * the zero-vol guard, measured as a PAIR because a draft of the source note overclaimed:
+//     `marketIndex`'s clause deleted alone -> NOTHING; `marketRatio`'s `!volBps` half deleted
+//     alone -> NOTHING (each shadows the other); BOTH deleted -> «the deposit and the car did NOT
+//     move by a cent» RED, ALONE. The pair is the guard; the arm covers the pair.
 import { describe, it, expect } from 'vitest'
 import {
   assetValueCents,
@@ -50,6 +73,9 @@ import {
   buyAsset,
   closeTournament,
   createWorld,
+  marketCrash,
+  marketCrashFellIn,
+  marketCrashLog,
   marketIndex,
   marketRatio,
   marketSeasonMove,
@@ -60,6 +86,7 @@ import {
   skipTournament,
   tickWeek,
   toSnapshot,
+  worstCrashFreeRatio,
   worstMarketRatio,
   type WorldState,
 } from '../src/engine/world'
@@ -260,56 +287,143 @@ describe('part three #16 – it is a market, not noise, and the household meter 
 })
 
 // -------------------------------------------------------------------------------------------------
-describe('part three #16 – the season line, on a career that really had a bad year', () => {
-  // ⚠ THE SEED IS CHOSEN AND SAID SO. `tools/market-probe.ts` measures 19.9% of seasons negative, so
-  // a bad year is common – this is a NAMED one so the arm can assert the exact sentence rather than
-  // «some row appeared». Its second season is the negative one.
-  const SEED = 'r29p3-career-20'
+describe('part three #16 + the crash extension – the season line knows a crash from a bad year', () => {
+  // ⚠ THE SEEDS ARE CHOSEN AND SAID SO, re-scanned after the crash layer landed (the previous named
+  // seed, r29p3-career-20, was chosen for a wave-only world and its seasons moved when every epoch
+  // gained a crisis). `r29p3-crash-12` is the owner's own anchor made real: its epoch-0 crash falls
+  // at weeks 4-20 and the STARTING season nets exactly -20% – «стартовый сезон уже может быть как
+  // раз с -20%». `r29p3-crash-41` is the discriminator: season one is down 7% on the WAVE alone,
+  // its crash falling later (weeks 64-72), so its feed row must stay plain.
+  const CRASH_SEED = 'r29p3-crash-12'
+  const PLAIN_SEED = 'r29p3-crash-41'
 
-  it('⭐⭐ a negative season happens, the holding really falls, and the feed says why', () => {
-    const world = career(SEED, 2 * WEEKS_PER_YEAR, (w) => {
+  it('⭐⭐ HIS ANCHOR, TICKED: the starting season is a crash year, down 20%, and the feed says which', () => {
+    // The engine's own calendar, pinned so the fixture cannot drift silently under a re-tune: the
+    // fall is inside season one and deep.
+    const c = marketCrash(CRASH_SEED, 0)
+    expect(c.troughWeek).toBeLessThan(WEEKS_PER_YEAR)
+    expect(Math.exp(c.depthLog)).toBeLessThan(0.8)
+
+    const world = career(CRASH_SEED, WEEKS_PER_YEAR + 2, (w) => {
       if (w.week === 1) buyAsset(w, 'index-fund', 50_000_00)
     })
-    expect(world.week).toBe(104)
+    const move = marketSeasonMove(FUND, CRASH_SEED, WEEKS_PER_YEAR)
+    expect(Math.round(move * 100), 'the anchor: a -20% starting season').toBe(-20)
 
-    // The market's own year, and it is DOWN – the fixture is not asserting an up year by accident.
-    const move = marketSeasonMove(FUND, SEED, world.week)
-    expect(move).toBeLessThan(0)
-
-    // ⭐ AND THE MONEY REALLY FELL, which the sentence alone would not prove. What the holding was
-    // worth a season ago against what it is worth now, both off the engine's one pricing function.
+    // ⭐ THE MONEY REALLY FELL – the holding is worth less than the family put in, read off the row.
     const held = heldOf(world, 'index-fund')
-    const aYearAgo = assetWorthCents({ ...world, week: world.week - WEEKS_PER_YEAR } as WorldState, held, FUND)
-    expect(held.valueCents).toBeLessThan(aYearAgo)
+    expect(held.valueCents).toBeLessThan(held.paidCents)
 
-    // ...and the row is in the feed, in the week the season turned, saying the same number rounded.
-    const rows = world.events.filter((e) => e.week === world.week && e.text.startsWith('A season of the market'))
+    // ...and the row names the crash, in the week the season turned, with the same number rounded.
+    const rows = world.events.filter((e) => e.week === WEEKS_PER_YEAR && e.text.startsWith('A season of the market'))
     expect(rows).toHaveLength(1)
-    expect(rows[0].text).toBe(`A season of the market – An index fund is down ${-Math.round(move * 100)}% over the season.`)
-    expect(rows[0].text).toContain('is down 8%')
+    expect(rows[0].text).toBe('A season of the market – a crash year: An index fund is down 20% over the season.')
     expect(rows[0].type).toBe('info')
   })
 
+  it('⚠ A BAD YEAR THAT IS NOT A CRASH STAYS PLAIN – the label is the fall, never mere red', () => {
+    // Season one is down on the wave alone; this seed's fall starts at week 64, after the boundary.
+    const c = marketCrash(PLAIN_SEED, 0)
+    expect(c.startWeek).toBeGreaterThan(WEEKS_PER_YEAR)
+    expect(marketCrashFellIn(PLAIN_SEED, 0, WEEKS_PER_YEAR)).toBe(false)
+
+    const world = career(PLAIN_SEED, WEEKS_PER_YEAR + 2, (w) => {
+      if (w.week === 1) buyAsset(w, 'index-fund', 50_000_00)
+    })
+    const move = marketSeasonMove(FUND, PLAIN_SEED, WEEKS_PER_YEAR)
+    expect(move, 'the fixture really is a down year').toBeLessThan(-0.02)
+    const rows = world.events.filter((e) => e.week === WEEKS_PER_YEAR && e.text.startsWith('A season of the market'))
+    expect(rows).toHaveLength(1)
+    expect(rows[0].text).toBe(`A season of the market – An index fund is down ${-Math.round(move * 100)}% over the season.`)
+    expect(rows[0].text, 'no crash label on a wave year').not.toContain('crash')
+  })
+
   it('⚠ ONCE A SEASON, ON THE BOUNDARY, and never on a shelf with nothing on it', () => {
-    const holder = career(SEED, 110, (w) => {
+    const holder = career(PLAIN_SEED, 110, (w) => {
       if (w.week === 1) buyAsset(w, 'index-fund', 50_000_00)
     })
     const said = holder.events.filter((e) => e.text.startsWith('A season of the market')).map((e) => e.week)
-    // Weeks 52 and 104 and nothing between them. (The ledger prunes, so this reads the recent half
-    // of the career – which is why the run stops at 110 rather than at 500.)
+    // Weeks 52 and 104 and nothing between them – the crash label changes the sentence, never the
+    // count. (The ledger prunes, so this reads the recent half of the career – which is why the run
+    // stops at 110 rather than at 500.)
     expect(said).toEqual([52, 104])
 
     // A family that never opened the fund hears nothing about it, however loud the market was.
-    const idle = career(SEED, 110)
+    const idle = career(PLAIN_SEED, 110)
     expect(idle.events.some((e) => e.text.startsWith('A season of the market'))).toBe(false)
     // ⚠ AND THE MARKET WAS LOUD IN EXACTLY THAT CAREER, so the silence is a decision and not an
-    // absent market.
-    expect(Math.abs(marketSeasonMove(FUND, SEED, 104))).toBeGreaterThan(0.05)
+    // absent market: season two contains this seed's first fall.
+    expect(marketCrashFellIn(PLAIN_SEED, WEEKS_PER_YEAR, 2 * WEEKS_PER_YEAR)).toBe(true)
   })
 })
 
 // -------------------------------------------------------------------------------------------------
-describe('part three #16 – ⚠⚠ THE LONG HORIZON IS SAFE, and it is a proof before it is a sample', () => {
+describe('the crash extension – the calendar is variability, not rails', () => {
+  it('⭐⭐ gaps 2-6 years centered on exactly four, three-quarters inside his «раз в 3-5 лет» band', () => {
+    const gaps: number[] = []
+    const depths: number[] = []
+    let malformed = 0
+    for (let i = 0; i < 200; i++) {
+      const seed = `cal-${i}`
+      let prev = -1
+      for (let epoch = 0; epoch <= 4; epoch++) {
+        const c = marketCrash(seed, epoch)
+        // Contained in its own epoch and ordered – the no-overlap theorem, checked rather than trusted.
+        if (c.startWeek < epoch * 208 || c.endWeek >= (epoch + 1) * 208) malformed++
+        if (!(c.startWeek < c.troughWeek && c.troughWeek < c.endWeek)) malformed++
+        if (prev >= 0) gaps.push(c.startWeek - prev)
+        prev = c.startWeek
+        depths.push(Math.exp(c.depthLog))
+      }
+    }
+    expect(malformed).toBe(0)
+    expect(gaps.length).toBe(800)
+    // Every gap in (104, 312) – two to six years, never a pile-up and never a decade of calm.
+    expect(gaps.filter((g) => g <= 104 || g >= 312)).toHaveLength(0)
+    const mean = gaps.reduce((a, b) => a + b, 0) / gaps.length
+    expect(mean / WEEKS_PER_YEAR).toBeGreaterThan(3.7)
+    expect(mean / WEEKS_PER_YEAR).toBeLessThan(4.3)
+    // ...and the 3-5y band holds the bulk. Probe (16,000 crises): 75.2%.
+    const inBand = gaps.filter((g) => g >= 3 * WEEKS_PER_YEAR && g <= 5 * WEEKS_PER_YEAR).length / gaps.length
+    expect(inBand).toBeGreaterThan(0.65)
+    // Depth: his «-15…-30%» band verbatim, and the middle really is near his -20% anchor.
+    expect(depths.filter((d) => d < 0.7 - 1e-12 || d > 0.85 + 1e-12)).toHaveLength(0)
+    const median = [...depths].sort((a, b) => a - b)[Math.floor(depths.length / 2)]
+    expect(median).toBeGreaterThan(0.75)
+    expect(median).toBeLessThan(0.8)
+  })
+
+  it('⚠ NO GRACE PERIOD: about half of all careers open into a fall, and a real one really bites', () => {
+    // The share, over seeds – his «стартовый сезон уже может быть как раз с -20%» needs «может» to
+    // be common, not universal. Probe (4,000 seeds): 49.7%.
+    let firstSeason = 0
+    for (let i = 0; i < 200; i++) if (marketCrashFellIn(`grace-${i}`, 0, WEEKS_PER_YEAR)) firstSeason++
+    expect(firstSeason / 200).toBeGreaterThan(0.3)
+    expect(firstSeason / 200).toBeLessThan(0.7)
+
+    // ...and one named career, week-0 money, read at the trough: r29p3-crash-12 bottoms at week 20.
+    const SEED = 'r29p3-crash-12'
+    const c = marketCrash(SEED, 0)
+    const world = createWorld(SEED)
+    world.fundsCents = 5_000_000_00
+    buyAsset(world, 'index-fund', 50_000_00)
+    const rng = resumeMain(world.rngMain)
+    while (world.week < c.troughWeek) {
+      tickWeek(world, rng)
+      if (world.pendingTournament) {
+        skipTournament(world)
+        closeTournament(world)
+      }
+    }
+    const held = heldOf(world, 'index-fund')
+    // Down at least 15% from the family's money, inside the first half-season of the game.
+    expect(held.valueCents / held.paidCents).toBeLessThan(0.85)
+    expect(held.valueCents).toBe(assetWorthCents(world, held, FUND))
+  })
+})
+
+// -------------------------------------------------------------------------------------------------
+describe('part three #16 – ⚠⚠ THE LONG HORIZON, re-derived under crashes: a two-tier bound', () => {
   it('the wave is bounded in [-1, 1] – the premise every claim below rests on', () => {
     let worst = 0
     for (let s = 0; s < 120; s++) {
@@ -320,14 +434,24 @@ describe('part three #16 – ⚠⚠ THE LONG HORIZON IS SAFE, and it is a proof 
     expect(worst).toBeGreaterThan(0.85)
   })
 
-  it('⭐⭐ CLOSED FORM: even the worst market the model can draw leaves ten years ahead of the deposit', () => {
-    const fundTen = Math.pow(1 + FUND.annualRateBps / 10_000, 10) * worstMarketRatio(VOL)
-    const depositTen = Math.pow(1 + DEPOSIT.annualRateBps / 10_000, 10)
-    expect(fundTen).toBeGreaterThan(depositTen)
-    // ⚠ THE MARGIN IS THIN AND THAT IS DELIBERATE – 1,800 bps sits just under the 1,824 the
-    // inequality solves to. If a future tuning raises the volatility this arm is the one that says
-    // no, so it must not be given slack it does not have.
+  it('⭐⭐ CLOSED FORM, TWO TIERS: calm waters keep the old guarantee; a trough-sell needs ~20 years', () => {
+    const growth = (rateBps: number, years: number) => Math.pow(1 + rateBps / 10_000, years)
+
+    // TIER ONE – both ends outside crash arcs. The arc always returns home, so the crash contributes
+    // exactly zero and the ORIGINAL ten-year universality stands verbatim, same 1,824 bps ceiling.
+    expect(growth(FUND.annualRateBps, 10) * worstCrashFreeRatio(VOL)).toBeGreaterThan(growth(DEPOSIT.annualRateBps, 10))
     expect(VOL).toBeLessThan(1_824)
+
+    // TIER TWO – selling into the deepest possible trough. The floor is the crash constant itself
+    // (-30%), pinned here so deepening his band knowingly moves this arm and nothing else quietly.
+    expect(worstMarketRatio(VOL)).toBeCloseTo(worstCrashFreeRatio(VOL) * 0.7, 10)
+    // At ten years the total bound genuinely FAILS – the loss tail is real, which is why it is
+    // MEASURED in the arm below and stated to the owner as a number, not assumed away…
+    expect(growth(FUND.annualRateBps, 10) * worstMarketRatio(VOL)).toBeLessThan(growth(DEPOSIT.annualRateBps, 10))
+    // …and universality returns just under twenty years – longer than a career, which is the honest
+    // sentence: within a career, «hold through and sell in calm» is the guarantee; «sell into the
+    // trough» is the measured tail.
+    expect(growth(FUND.annualRateBps, 20) * worstMarketRatio(VOL)).toBeGreaterThan(growth(DEPOSIT.annualRateBps, 20))
   })
 
   it('⭐⭐ MEASURED: 1 / 3 / 5 / 10 years against the 3.17% deposit, 400 seeds x 6 entry weeks', () => {
@@ -348,10 +472,24 @@ describe('part three #16 – ⚠⚠ THE LONG HORIZON IS SAFE, and it is a proof 
       }
       beat[years] = { n, won }
     }
-    // ⚠⚠ THE LAW: «On a long horizon the fund MUST beat Savings. Otherwise it is a trap for a player
-    // who did not read carefully, and "мы ни за что не наказываем" is house law.» Every one of them.
-    expect(beat[10].won).toBe(beat[10].n)
+    // ⚠⚠ THE LAW, RE-STATED UNDER CRASHES: «мы ни за что не наказываем» now reads – holding through
+    // a crisis costs nothing (the arc comes home), and only SELLING INTO one can lose. So the tail
+    // must be (a) real, or the crash layer is dead; (b) small; (c) made ENTIRELY of trough-sells –
+    // a single calm-water loser breaks tier one of the closed form. Probe at scale: 529 of 48,000
+    // (1.10%) at ten years, zero of them in calm waters. HIS number to accept, measured here too.
     expect(beat[10].n).toBe(2400)
+    const tail10 = beat[10].n - beat[10].won
+    expect(tail10, 'the crash tail is real – a zero here means the layer is disconnected').toBeGreaterThan(0)
+    expect(tail10 / beat[10].n, 'and small').toBeLessThan(0.025)
+    for (const seed of seeds) {
+      for (const from of entries) {
+        const weeks = 10 * WEEKS_PER_YEAR
+        const v = assetValueCents(FUND, 1_000_000_00, weeks, marketRatio(seed, from, from + weeks, VOL))
+        if (v <= assetValueCents(DEPOSIT, 1_000_000_00, weeks)) {
+          expect(marketCrashLog(seed, from + weeks), `${seed}@${from} lost selling in calm waters`).toBeLessThan(0)
+        }
+      }
+    }
     // ...and the shorter horizons are NOT safe, which is the whole point of the mechanic. A fund
     // that won every one-year hold would be the risk-free 7% this item exists to delete.
     expect(beat[1].won / beat[1].n).toBeLessThan(0.8)
@@ -365,7 +503,7 @@ describe('part three #16 – ⚠⚠ THE LONG HORIZON IS SAFE, and it is a proof 
     expect(beat[5].won / beat[5].n).toBeLessThan(beat[10].won / beat[10].n)
   })
 
-  it('⭐ and roughly one season in five is negative – the risk is felt', () => {
+  it('⭐ and the negative-season share sits where the probe says – the risk is felt', () => {
     let seasons = 0
     let negative = 0
     for (let s = 0; s < 400; s++) {
@@ -376,12 +514,14 @@ describe('part three #16 – ⚠⚠ THE LONG HORIZON IS SAFE, and it is a proof 
         if (v < 1_000_000_00) negative++
       }
     }
-    // ⚠ A BAND AND NOT A PIN, because the owner will re-tune this by feel. `tools/market-probe.ts`
-    // measures 19.9% over 228,000 seasons; the band is «one year in four or five» with room either
-    // side, and it is the arm that goes red if `volBps` or the octave mix is moved carelessly.
+    // ⚠ A BAND AND NOT A PIN, because the owner will re-tune this by feel. RE-AIMED under the crash
+    // layer: the wave alone measured 19.9% negative seasons; with his crises on top the probe reads
+    // 30.8% over 228,000 – nearly one season in three, which is a consequence he sees plainly in
+    // §14h (the wave knob comes down if he wants one-in-four back). The band moves with the
+    // measurement; it still goes red if `volBps`, the octave mix or the crash depth moves carelessly.
     const rate = negative / seasons
-    expect(rate).toBeGreaterThan(0.12)
-    expect(rate).toBeLessThan(0.32)
+    expect(rate).toBeGreaterThan(0.2)
+    expect(rate).toBeLessThan(0.4)
   })
 })
 
@@ -401,7 +541,74 @@ describe('part three #16 – the top-up and the part sale still hold under a mar
     const backDated = assetValueCents(FUND, 70_000_00, world.week - 10, marketRatio(world.seed, 10, world.week, VOL))
     expect(held.valueCents).not.toBe(backDated)
     // ...and the market between weeks 10 and 70 really moved, so the inequality is not a rounding.
-    expect(Math.abs(marketRatio(world.seed, 10, 70, VOL) - 1)).toBeGreaterThan(0.02)
+    // ⚠ The floor was 0.02 and the CRASH LAYER moved this seed's ratio to 0.0174 – the epoch-0
+    // excursion partially cancels the wave here. 0.01 is still a hundred times any rounding, and
+    // the claim this guards (the not-equal above is substantive) does not need more.
+    expect(Math.abs(marketRatio(world.seed, 10, 70, VOL) - 1)).toBeGreaterThan(0.01)
+  })
+
+  it('⭐⭐ THE CRASH CASE HIS EXTENSION ADDS: a tranche bought AT THE TROUGH, and the P&L stays honest', () => {
+    // r29p3-crash-46, scanned and named: calm until week 32, trough at 46 (-28.8% drawn), recovered
+    // by 115. The family opens in calm waters and doubles in at the very bottom – the strongest
+    // version of «new money enters at today's index», because today's index is a crisis.
+    const SEED = 'r29p3-crash-46'
+    const c = marketCrash(SEED, 0)
+    expect(c.troughWeek).toBe(46)
+    expect(c.startWeek).toBeGreaterThan(10)
+
+    let troughValue = 0
+    const world = career(SEED, c.endWeek + 5, (w) => {
+      if (w.week === 10) buyAsset(w, 'index-fund', 50_000_00)
+      if (w.week === c.troughWeek) {
+        // The crisis really bit first – the holding stands well under the family's money…
+        troughValue = heldOf(w, 'index-fund').valueCents
+        // …and THAT is the moment they add to it.
+        buyAsset(w, 'index-fund', 30_000_00)
+      }
+    })
+    expect(troughValue, 'the fixture is a real crash, not a dip').toBeLessThan(42_500_00)
+
+    const held = heldOf(world, 'index-fund')
+    // The P&L, whole: cash is cash, the basis was struck at the trough, and the value is the one
+    // arithmetic (`assetWorthCents`) – so the trough tranche rode the WHOLE rebound.
+    expect(held.paidCents).toBe(80_000_00)
+    expect(held.boughtWeek).toBe(10)
+    expect(held.basisWeek).toBe(c.troughWeek)
+    expect(held.valueCents).toBe(assetWorthCents(world, held, FUND))
+    expect(held.valueCents, 'the recovery really carried the rebased basis up').toBeGreaterThan(held.basisCents!)
+    // ⚠ AND NOT THE BACK-DATED ARITHMETIC: money pretending to have been there since week 10 would
+    // have ridden down into the crash first. Under a crash the two REALLY diverge.
+    const backDated = assetValueCents(FUND, 80_000_00, world.week - 10, marketRatio(SEED, 10, world.week, VOL))
+    expect(held.valueCents).not.toBe(backDated)
+    // The direction is the crash speaking: entering at the bottom beats entering before the fall.
+    expect(held.valueCents).toBeGreaterThan(backDated)
+  })
+
+  it('⚠ and a part sale AT THE TROUGH stays sold – the crisis does not reinflate it', () => {
+    // The same trap part two #4 caught, at the worst possible week to sell: `revalueAssets`
+    // recomputes from the basis every tick, and mid-crash the path itself is moving hard, which is
+    // exactly the noise a silent reinflation would hide in.
+    const SEED = 'r29p3-crash-46'
+    const c = marketCrash(SEED, 0)
+    let walletAfter = 0
+    const world = career(SEED, c.troughWeek + 3, (w) => {
+      if (w.week === 10) buyAsset(w, 'index-fund', 50_000_00)
+      if (w.week === c.troughWeek) {
+        const wallet = w.fundsCents
+        const before = heldOf(w, 'index-fund').valueCents
+        sellAsset(w, 'index-fund', 10_000_00)
+        expect(w.fundsCents).toBe(wallet + 10_000_00)
+        expect(heldOf(w, 'index-fund').valueCents).toBe(before - 10_000_00)
+        walletAfter = w.fundsCents
+      }
+    })
+    const held = heldOf(world, 'index-fund')
+    // Three ticks later the holding is priced off the REBASED trough basis – riding the early
+    // rebound, not reinflated to the pre-sale curve.
+    expect(held.basisWeek).toBe(c.troughWeek)
+    expect(held.valueCents).toBe(assetWorthCents(world, held, FUND))
+    expect(held.paidCents, 'the cost of what left went with it').toBeLessThan(50_000_00)
+    expect(walletAfter, 'the sale really happened inside the run').toBeGreaterThan(0)
   })
 
   it('⚠⚠ a part sale STAYS sold across the next tick, market or no market', () => {

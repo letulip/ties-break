@@ -37,6 +37,9 @@
 // world's dice.
 import { guardNotEndedForGood } from './endings'
 import { addEvent } from './ledger'
+// ⚠ THE ONE THING THIS FILE ASKS THE MARKET DIRECTLY – the season line's crash predicate. Every
+// VALUE still flows through `assetWorthCents`; this is a question about the calendar, not a price.
+import { marketCrashFellIn } from './market'
 import { WEEKS_PER_YEAR } from '../season/calendar'
 import { formatCents } from '../../shared/money'
 import { weekLabel } from '../../shared/dates'
@@ -218,10 +221,19 @@ export function reportMarketSeason(world: WorldState): void {
     // this string IS the display. `marketSeasonMove` hands back a signed fraction.
     const pct = Math.round(marketSeasonMove(item, world.seed, world.week) * 100)
     const said = pct === 0 ? 'is level' : pct > 0 ? `is up ${pct}%` : `is down ${-pct}%`
+    // ⭐⭐ HIS EXTENSION, 29.08 – A CRASH YEAR IS NOT «down 8%», IT GETS ITS OWN SENTENCE. The
+    // predicate is the FALL: `marketCrashFellIn` asks whether a crisis' falling phase touched this
+    // season, because that is the year the player LIVED through a crash. A season that caught only
+    // the recovery is an up year and says so in the plain sentence – labelling «a crash year: up
+    // 15%» would be the feed contradicting itself. ⚠ And the plain sentence still carries the
+    // number on a crash year; the label explains the number, it never replaces it.
+    const crashed = pct < 0 && marketCrashFellIn(world.seed, world.week - WEEKS_PER_YEAR, world.week)
     addEvent(world, {
       week: world.week,
       type: 'info',
-      text: `${MARKET_SEASON_OPENING} – ${item.label} ${said} over the season.`,
+      text: crashed
+        ? `${MARKET_SEASON_OPENING} – a crash year: ${item.label} ${said} over the season.`
+        : `${MARKET_SEASON_OPENING} – ${item.label} ${said} over the season.`,
     })
   }
 }

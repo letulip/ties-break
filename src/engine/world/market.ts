@@ -23,10 +23,20 @@
 // any of this, and the spec called the shape a slice ahead (§4: «Every roll goes through a
 // purpose-scoped sub-stream … A player's purchase may not move the world's dice»).
 //
-// ⚠ WHAT IS **NOT** HERE, ON MY DECISION AND HIS. §4 also names a SHOCK and a FREEZE, and part
-// three #16 explicitly ruled out the third idea in that family: «No early-exit fee or spread … that
-// is friction, not risk, and it does not answer "why is a risk-free 7% sitting beside a risk-free
-// 3"». A path that moves IS the answer; a toll on the door is a different mechanic wearing its coat.
+// ⚠ WHAT IS **NOT** HERE, ON MY DECISION AND HIS. §4 also names a FREEZE, and part three #16
+// explicitly ruled out the third idea in that family: «No early-exit fee or spread … that is
+// friction, not risk, and it does not answer "why is a risk-free 7% sitting beside a risk-free 3"».
+// A path that moves IS the answer; a toll on the door is a different mechanic wearing its coat.
+//
+// ⭐⭐⭐ §4's SHOCK **IS** HERE SINCE HIS EXTENSION OF 29.08 – THE CRASH LAYER. His words, on being
+// shown the one-in-five negative seasons: «Каждый пятый сезон отрицательный – круто, но может быть
+// нам добавить вариативность тоже здесь, а не рельсы? например раз в 3-5 лет и стартовый сезон уже
+// может быть как раз с -20%? это добавит невероятной динамики и реализма.» So: a crisis roughly
+// once every 3-5 years, a sharp fall in the -15%…-30% band with a recovery arc after – a 2008/2020
+// shape, not a deeper wiggle – and NO grace period: the first crash can land in the first season,
+// which is exactly what he asked for. Same discipline as the wave: READ off
+// `${seed}:market:crash:${epoch}`, never drawn, so a reload replays the same crisis and a purchase
+// still cannot move anything. See THE CRASH LAYER below for the construction and the bound it costs.
 import { rngFromSeed } from '../rng'
 
 /** ⭐⭐ THE OCTAVES – four tides of different length, added together, and this is the whole of
@@ -96,6 +106,94 @@ export function marketWave(seed: string, week: number): number {
   return sum
 }
 
+// -------------------------------------------------------------------------------------------------
+// THE CRASH LAYER (his extension, 29.08). One crisis per EPOCH, jittered inside it, read not drawn.
+//
+// ⭐⭐ THE CONSTRUCTION, AND WHY IT IS EXACTLY THIS. Time is cut into 208-week epochs (four years)
+// and every epoch holds exactly one crash, starting at `epoch·208 + jitter` with jitter drawn in
+// [0, 104). Two theorems fall out of those three numbers, and both are load-bearing:
+//
+//   * THE GAP between consecutive crash starts is `208 + (j' - j)` ∈ (104, 312) – two to six years,
+//     triangular, CENTERED ON EXACTLY FOUR – with 75% of gaps inside his «раз в 3-5 лет» band.
+//     Variability without rails: the rhythm is real but never a timetable a player can sell against.
+//   * A CRASH NEVER OVERLAPS THE NEXT ONE, because its whole arc is at most 16 + 80 = 96 weeks and
+//     the gap is always more than 104. So at any week AT MOST ONE crash is in force, its arc is
+//     contained in its own epoch (103 + 96 = 199 < 208), and the worst-case excursion is one
+//     crash's depth and not a pile-up – which is what keeps the safety bound below a closed form.
+//
+// ⚠ NO GRACE PERIOD, BY CONSTRUCTION AND BY HIS ASK («стартовый сезон уже может быть как раз с
+// -20%»): epoch 0's crash starts in weeks [0, 104), so roughly half of all careers fall into one
+// inside their first season and every career has met one by week ~120.
+//
+// ⚠⚠ FOUR DRAWS FROM ONE SUB-STREAM, IN THIS ORDER: jitter, depth, fall, recovery. The order is
+// part of the seed contract – reordering them re-times every crisis in every existing career the
+// way editing `mulberry32` would, so it is named here the way `conveyor.ts` names its own draw
+// order. Nothing is persisted; the crash is a fact about the seed, like the weather.
+
+/** Four years. The epoch grid the crash calendar lives on. */
+const CRASH_EPOCH_WEEKS = 208
+/** How far into its epoch a crash may start, exclusive. HALF the epoch, so gaps stay in (104, 312). */
+const CRASH_JITTER_WEEKS = 104
+/** The fall, in weeks – sharp on purpose (2020 was five; 2008 was ~26). */
+const CRASH_FALL_WEEKS: [number, number] = [8, 16]
+/** The recovery arc, in weeks – slower than the fall by construction, which is the 2008/2020 shape. */
+const CRASH_RECOVERY_WEEKS: [number, number] = [40, 80]
+/** ⚠⚠ WHAT IS LEFT AT THE TROUGH, as a multiplier – his «-15…-30%» band verbatim, anchor -20%
+ *  inside it. `[0]` is ALSO the floor `worstMarketRatio` builds the safety bound from: deepen it
+ *  and the bound moves, so the two are one constant and not two. */
+const CRASH_DEPTH_RANGE: [number, number] = [0.7, 0.85]
+
+/** One epoch's crisis: where it starts, where it bottoms, where it is over, and how deep. */
+export interface MarketCrash {
+  startWeek: number
+  troughWeek: number
+  endWeek: number
+  /** ln of the trough multiplier – negative, in [ln 0.70, ln 0.85]. */
+  depthLog: number
+}
+
+/** ⭐ THE CRISIS OF EPOCH `epoch`, read off `${seed}:market:crash:${epoch}` – a purpose-scoped
+ *  sub-stream of its own, four draws, thrown away. Pure and total: every epoch has one. */
+export function marketCrash(seed: string, epoch: number): MarketCrash {
+  const rng = rngFromSeed(`${seed}:market:crash:${epoch}`)
+  const startWeek = epoch * CRASH_EPOCH_WEEKS + Math.floor(rng() * CRASH_JITTER_WEEKS)
+  const [dLo, dHi] = CRASH_DEPTH_RANGE
+  const depthLog = Math.log(dLo + (dHi - dLo) * rng())
+  const fall = CRASH_FALL_WEEKS[0] + Math.floor(rng() * (CRASH_FALL_WEEKS[1] - CRASH_FALL_WEEKS[0] + 1))
+  const recovery = CRASH_RECOVERY_WEEKS[0] + Math.floor(rng() * (CRASH_RECOVERY_WEEKS[1] - CRASH_RECOVERY_WEEKS[0] + 1))
+  return { startWeek, troughWeek: startWeek + fall, endWeek: startWeek + fall + recovery, depthLog }
+}
+
+/** smoothstep, the same `t²(3-2t)` the wave interpolates with – flat at both ends, so the fall
+ *  arrives at the trough and the recovery arrives home without a step in the weekly figure. */
+function smoothstep(t: number): number {
+  return t * t * (3 - 2 * t)
+}
+
+/** ⭐⭐ THE CRASH'S CONTRIBUTION TO THE LOG-INDEX AT `week` – 0 outside a crisis, `depthLog` at the
+ *  trough, smoothstepped down and back. Because an arc never crosses its epoch boundary, exactly
+ *  one epoch can answer, which makes this O(1) and the no-pile-up theorem visible in the code. */
+export function marketCrashLog(seed: string, week: number): number {
+  const c = marketCrash(seed, Math.floor(week / CRASH_EPOCH_WEEKS))
+  if (week <= c.startWeek || week >= c.endWeek) return 0
+  if (week <= c.troughWeek) return c.depthLog * smoothstep((week - c.startWeek) / (c.troughWeek - c.startWeek))
+  return c.depthLog * (1 - smoothstep((week - c.troughWeek) / (c.endWeek - c.troughWeek)))
+}
+
+/** ⭐ DID A CRASH'S FALL PHASE TOUCH [fromWeek, toWeek]? The season line's predicate: a season is a
+ *  «crash year» when it SAW the falling, not merely some part of an arc – a window that caught only
+ *  the recovery is an up year and says so plainly. A window can straddle an epoch boundary, so both
+ *  epochs are asked. */
+export function marketCrashFellIn(seed: string, fromWeek: number, toWeek: number): boolean {
+  const first = Math.floor(Math.max(0, fromWeek) / CRASH_EPOCH_WEEKS)
+  const last = Math.floor(Math.max(0, toWeek) / CRASH_EPOCH_WEEKS)
+  for (let epoch = first; epoch <= last; epoch++) {
+    const c = marketCrash(seed, epoch)
+    if (c.startWeek < toWeek && c.troughWeek > fromWeek) return true
+  }
+  return false
+}
+
 /** ⭐⭐ WHERE THE MARKET STANDS IN WEEK `week`, as a multiplier around 1. `volBps` is how hard a
  *  given holding rides it – see `ShopItem.volBps`; zero is a rung that does not ride it at all and
  *  returns exactly 1, which is every car, house, deposit and yacht on the shelf.
@@ -104,17 +202,31 @@ export function marketWave(seed: string, week: number): number {
  *  a +25% year are the same distance, and no sequence of weeks can wipe a holding out. A linear
  *  `1 + vol·wave` would be neither.
  *
- *  ⚠⚠ `if (!volBps) return 1` IS A SHORT-CIRCUIT AND NOT A GUARD, and it is written down because a
- *  clause that cannot change an answer is exactly the dead-guard family this repo keeps catching:
- *  `Math.exp(0 · wave)` is already 1, so deleting this line changes NO value anywhere – it only
- *  stops six `rngFromSeed` calls being made per priced holding per tick, on the twelve rungs of the
- *  catalogue that do not ride the market. Do not write a test that claims to cover it; a mutation
- *  that removes it is arithmetically identical to the control, which is the trap.
+ *  ⚠⚠ `if (!volBps) return 1` BECAME HALF OF A REAL GUARD THE DAY THE CRASH LAYER LANDED, and the
+ *  note that stood here – «a short-circuit and not a guard … do not write a test that claims to
+ *  cover it» – is CORRECTED rather than deleted. It used to be true outright: `Math.exp(0 · wave)`
+ *  is already 1, so removing the clause moved no value. The crash term does NOT scale with `volBps`
+ *  – see below – so a zero-vol rung reaching the `exp` would now price as `exp(0 + crashLog)` and
+ *  every deposit, car and house would ride the crises.
+ *
+ *  ⚠⚠ AND THE PRECISE SHAPE WAS MEASURED, NOT ASSERTED, BECAUSE A FIRST DRAFT OF THIS CORRECTION
+ *  OVERCLAIMED: the zero-vol guard is WRITTEN TWICE – here and in `marketRatio`'s own first clause –
+ *  and each shadows the other. Deleting EITHER alone was watched leaving every arm green (the other
+ *  still answers 1); deleting BOTH was watched turning «the deposit and the car did NOT move by a
+ *  cent» RED, alone. So the PAIR is load-bearing and the existing arm covers it; each single clause
+ *  is kept because this function is exported and must honour «volBps 0 → exactly 1» on its own,
+ *  without knowing who fronts it.
+ *
+ *  ⚠ AND THE CRASH AT FULL DEPTH ON PURPOSE, NOT AT `volBps` STRENGTH. `volBps` is how hard a rung
+ *  rides the everyday wobble; a crisis is not a bigger wobble, it is the market event of the year,
+ *  and a rung either participates in the market (volBps > 0) or it does not. Scaling depth by vol
+ *  would also quietly move his «-15…-30%» band every time the wave was re-tuned – two knobs welded
+ *  together is how a measured number stops being movable.
  *
  *  Pure: no world, no MAIN draw, no clock. */
 export function marketIndex(seed: string, week: number, volBps: number): number {
   if (!volBps) return 1
-  return Math.exp((volBps / 10_000) * marketWave(seed, week))
+  return Math.exp((volBps / 10_000) * marketWave(seed, week) + marketCrashLog(seed, week))
 }
 
 /** ⭐⭐ WHAT THE MARKET DID BETWEEN TWO WEEKS – the only shape any caller actually wants, because a
@@ -127,30 +239,47 @@ export function marketIndex(seed: string, week: number, volBps: number): number 
  *  the shelf is both commissioned and market-driven today; the clamp is here so that a rung which is
  *  both cannot be a defect tomorrow.
  *
- *  ⚠⚠ AND «TOMORROW» IS EXACT: NEITHER HALF OF THIS LINE CAN CHANGE AN ANSWER TODAY, and it is
- *  written down because a first draft of this comment claimed otherwise. The `!volBps` half is
- *  `marketIndex`'s short-circuit (see the note there – `Math.exp(0·wave)` is already 1). The
- *  `toWeek <= fromWeek` half needs a rung that is BOTH commissioned and market-driven, and the
- *  catalogue has none: the fund has no `buildWeeks`, and no yacht has a `volBps`. Deleting the whole
- *  clause was mutation-tested against `tests/round29p3-market.test.ts` and every arm stayed green,
- *  which is the honest report. It stays because the day somebody puts a `volBps` on a commissioned
- *  rung, a contract would otherwise be priced at `index(order)/index(delivery)` – a number about two
- *  weeks the family did not own it – and that is a defect nobody would look for here. Do not write
- *  an arm that claims to cover it; there is nothing yet to cover. */
+ *  ⚠⚠ THE TWO HALVES OF THIS LINE, RE-MEASURED UNDER THE CRASH LAYER (the note has been corrected
+ *  once already and says so). The `!volBps` half is the second copy of the zero-vol guard – see
+ *  `marketIndex`'s note: each copy shadows the other, deleting either alone changes nothing
+ *  (watched), deleting both turns the deposit arm red (watched). The `toWeek <= fromWeek` half
+ *  still needs a rung that is BOTH commissioned and market-driven, and the catalogue still has
+ *  none: the fund has no `buildWeeks`, no yacht has a `volBps`. It stays because the day somebody
+ *  builds such a rung, a contract would otherwise be priced at `index(order)/index(delivery)` – a
+ *  number about two weeks the family did not own it, and under the crash layer that number can now
+ *  swing by a third. Do not write an arm that claims to cover that half; there is nothing yet to
+ *  cover. */
 export function marketRatio(seed: string, fromWeek: number, toWeek: number, volBps: number): number {
   if (!volBps || toWeek <= fromWeek) return 1
   return marketIndex(seed, toWeek, volBps) / marketIndex(seed, fromWeek, volBps)
 }
 
-/** ⭐ THE WORST THE MARKET CAN EVER DO TO A HOLDING, as a multiplier – `e^(-2·vol)`, and it is a
- *  CLOSED FORM rather than a measurement because `marketWave` is bounded in [-1, 1] by construction.
+/** ⭐ THE WORST THE MARKET CAN EVER DO TO A HOLDING, as a multiplier, and still a CLOSED FORM:
+ *  `e^(-2·vol)` from the wave (bounded in [-1, 1] by construction) times the deepest trough the
+ *  crash layer can draw (`CRASH_DEPTH_RANGE[0]`, and at most ONE crash is in force at any week –
+ *  the no-overlap theorem above).
  *
- *  It exists so the long-horizon safety claim can be a proof and not a sample: over `years` the fund
- *  compounds `(1 + rate)^years` and the market can take at most this off it, so
- *  `(1 + rate)^years · worstMarketRatio() > (1 + depositRate)^years` is a statement about EVERY seed
- *  and every pair of weeks, not about the ten thousand this repo happened to try.
- *  `tests/round29p3-market.test.ts` asserts both halves – the bound holds empirically, and the
- *  inequality holds at ten years. */
+ *  ⚠⚠ THE CRASH LAYER CHANGED WHAT THIS BOUND CAN PROMISE, AND THE HONEST STATEMENT IS TWO-TIER –
+ *  re-derived, not hoped (his extension's own instruction):
+ *
+ *    * SELL IN CALM WATERS AND NOTHING CHANGED: a hold whose basis week and sell week both lie
+ *      outside crash arcs sees a crash contribution of exactly 0 at both ends – the arc always
+ *      returns home – so `worstCrashFreeRatio` governs and the OLD guarantee stands verbatim: at
+ *      ten years the fund beats the 3.17% deposit for EVERY seed while vol < 1,824 bps.
+ *    * SELL INTO A TROUGH AND UNIVERSALITY NEEDS ~20 YEARS: with this floor at 0.70,
+ *      `1.07^T · worstMarketRatio > 1.0317^T` solves to T > ~19.7 years – longer than a career. At
+ *      ten years the loss tail is therefore REAL and is MEASURED, not asserted: see
+ *      `tools/market-probe.ts` and §14h. Every ten-year loser sells inside a crash arc; that is a
+ *      theorem (tier one), and the tests assert it on the sample.
+ *
+ *  «мы ни за что не наказываем» survives as: holding through a crisis costs nothing – the arc comes
+ *  home by construction – and only SELLING INTO one can lose, at a measured, owner-accepted rate. */
 export function worstMarketRatio(volBps: number): number {
+  return Math.exp((-2 * volBps) / 10_000) * CRASH_DEPTH_RANGE[0]
+}
+
+/** The calm-waters tier of the bound above: the worst ratio between two weeks that both lie outside
+ *  crash arcs. This is the number the ten-year universality claim is still made from. */
+export function worstCrashFreeRatio(volBps: number): number {
   return Math.exp((-2 * volBps) / 10_000)
 }
