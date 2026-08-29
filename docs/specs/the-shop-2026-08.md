@@ -755,6 +755,10 @@ peak-to-trough on a holding **−20.4%**.
 `volBps` to 2,500 breaks the inequality – and 2,400 sampled ten-year holdings still all won. Sampling
 cannot see a ceiling this design is only just inside.
 
+⚠⚠ **SUPERSEDED IN PART BY §14h (his crash extension, 29.08)**: the table above is the WAVE-ONLY
+measurement and the ten-year universality is now the CALM-WATERS tier of a two-tier bound. The
+current numbers, the crisis calendar and the measured ten-year tail are all in §14h.
+
 ### 14d. The knobs, and what each one moves
 
 | knob | where | moves |
@@ -801,3 +805,65 @@ quarter turns over. Measured on a real career: **fewer than 20 sign changes in 2
 120+ for a per-week draw. Both writers of a worth – `revalueAssets` and `householdWeekly` – go
 through `assetWorthCents`, so the till and the meter cannot describe two different markets; that is
 round 29 #11's own defect, re-armed as a mutation and caught.
+
+### 14h. ⚙ THE CRASH LAYER – his extension, same day, and the bound it re-prices
+
+On being shown §14c's one-in-five negative seasons:
+
+> «Каждый пятый сезон отрицательный – круто, но может быть нам добавить вариативность тоже здесь, а
+> не рельсы? например раз в 3-5 лет и стартовый сезон уже может быть как раз с -20%? это добавит
+> невероятной динамики и реализма.»
+
+**The construction** (`world/market.ts`, THE CRASH LAYER block): one crisis per 208-week epoch,
+starting at `epoch·208 + jitter` with jitter in [0, 104) – so gaps between crises are 2–6 years,
+triangular, **centered on exactly four**, with **75.2% inside his 3–5 band** (16,000 crises
+measured). Depth is drawn in his band verbatim – trough multiplier in [0.70, 0.85], **median
+−22.5%** – over a sharp fall (8–16 weeks) and a slower recovery arc (40–80 weeks): the 2008/2020
+shape. An arc is at most 96 weeks against a minimum gap of 104, so **crises never overlap and never
+cross an epoch boundary**, which is what keeps the worst case a closed form. Four draws off
+`${seed}:market:crash:${epoch}` in a fixed, documented order – read, never drawn, so `rngMain`
+cannot see it, a reload replays the same crisis, and input-independence is untouched (the same
+ticked-world proof arms cover it).
+
+**No grace period, by his ask**: epoch 0's crisis starts inside the first two seasons, and **49.7%
+of careers see a fall in season one**. The named fixture is his anchor made real:
+`r29p3-crash-12`'s starting season nets **exactly −20%** and the feed says
+*«A season of the market – a crash year: An index fund is down 20% over the season.»* – the crash
+year has its own sentence, and a wave-only bad year stays plain (the label is the FALL, never mere
+red).
+
+⚠⚠ **THE BOUND, RE-DERIVED – it is now TWO-TIER, and the ten-year tail is his to accept:**
+
+* **Calm waters – the old guarantee stands verbatim.** A crisis arc always returns home, so a hold
+  whose basis and sell weeks both lie outside arcs sees exactly the wave-only bound
+  (`worstCrashFreeRatio`): ten-year universality at vol < 1,824 bps, unchanged.
+* **Selling into a trough – universality needs ~20 years.** The total floor is
+  `e^(−2·vol) · 0.70 = 0.488` (`worstMarketRatio`), and `1.07^T · 0.488 > 1.0317^T` only past
+  T ≈ 19.7 years – longer than a career. Universality at ten years is arithmetically impossible at
+  his crash depths; that is not a tuning miss, it is what a real crisis costs.
+
+⚙ **MEASURED** (`npx vite-node tools/market-probe.ts --seeds 4000`, crash layer in – 228,000
+seasons, 48,000 holdings per horizon):
+
+| | 1y | 3y | 5y | 10y |
+| --- | ---: | ---: | ---: | ---: |
+| fund beats the deposit | 57.15% | 84.03% | 86.75% | **98.90%** |
+| losers selling in calm waters | 6,681 | 2,693 | 245 | **0** |
+
+**⚠⚠ At ten years, 529 of 48,000 holdings (1.10%) lose to the deposit – and every single one sells
+inside a crash arc.** Zero calm-water losers at ten years is the measured receipt of tier one. So
+«мы ни за что не наказываем» now reads: **holding through a crisis costs nothing – only selling into
+one can lose, at 1.10%**. That tail is REAL and it is HIS to accept as the price of «невероятной
+динамики и реализма»; if he wants it gone, the knobs are the depth floor (shallower crises) or an
+epilogue-style rule, not a silent re-tune here.
+
+**The other consequence he sees plainly**: negative seasons rise from 19.9% (wave alone, the number
+he called «круто») to **30.8%** – nearly one in three. His crises are the whole difference. If he
+wants back toward one-in-four WITH crashes, the wave's `volBps` comes down (e.g. ~1,300) – his call,
+one knob. Worst observed season is now **−39.9%** (a deep crash landing on an already-bad wave
+year), worst peak-to-trough −40.1%.
+
+**Knobs** (all in `world/market.ts`): `CRASH_EPOCH_WEEKS`/`CRASH_JITTER_WEEKS` (the calendar),
+`CRASH_DEPTH_RANGE` (his −15…−30 band; `[0]` is also the floor the safety bound is built from – move
+them together or the closed form lies), `CRASH_FALL_WEEKS`/`CRASH_RECOVERY_WEEKS` (the shape; keep
+fall + recovery ≤ 104 or arcs overlap and the one-crash-at-a-time theorem dies).

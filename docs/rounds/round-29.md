@@ -2867,3 +2867,31 @@ season), or a rate that starts at 20% and falls to 10% as she grows, mirroring h
   (`exp(0·wave)` is already 1) and `marketRatio`'s past-week clamp (no rung is both commissioned and
   market-driven yet). An arm that cannot distinguish its own mutation is the dead guard the log
   exists to keep out.
+
+  ⚙⚙ **EXTENDED THE SAME DAY – THE CRASH LAYER, on his reading of the numbers above:** «Каждый пятый
+  сезон отрицательный – круто, но может быть нам добавить вариативность тоже здесь, а не рельсы?
+  например раз в 3-5 лет и стартовый сезон уже может быть как раз с -20%? это добавит невероятной
+  динамики и реализма.» Built on the same branch; write-up `docs/specs/the-shop-2026-08.md` §14h.
+
+  One crisis per four-year epoch, jittered – gaps 2-6 years **centered on exactly four, 75.2% in his
+  3-5 band** – depth −15…−30% (median −22.5%), sharp fall, slower recovery, never overlapping. Read
+  off `${seed}:market:crash:${epoch}`: `rngMain` byte-identity re-proved on the same three-career
+  arms, frozen captures UNMOVED. **No grace period**: 49.7% of careers see a fall in season one, and
+  the named fixture `r29p3-crash-12` opens at **exactly −20%** – his anchor – with the feed saying
+  its own sentence: «A season of the market – a crash year: An index fund is down 20% over the
+  season.»
+
+  ⚠⚠ **THE TEN-YEAR GUARANTEE IS NOW TWO-TIER, AND THE TAIL IS HIS TO ACCEPT.** Calm waters (basis
+  and sell both outside arcs): the old universality stands verbatim. Selling into a trough: the
+  floor is `e^(-2·vol)·0.70 = 0.488` and universality needs ~19.7 years – longer than a career.
+  ⚙ Measured at 4,000 seeds: **at ten years 529 of 48,000 holdings (1.10%) lose to the deposit, and
+  every one of them sells inside a crash arc – zero calm-water losers.** «мы ни за что не
+  наказываем» now reads: holding through a crisis costs nothing; only selling into one can lose, at
+  that measured rate. ⚠ And negative seasons rise 19.9% → **30.8%** – his crises are the whole
+  difference; the knob back toward one-in-four is the wave's `volBps`, his call.
+
+  ⚠ **Eight more mutations watched** for the layer (the test header carries all of them), including
+  the honest pair: the zero-vol guard is written twice and each copy shadows the other – deleting
+  either alone changes nothing, deleting both turns the deposit arm red. A crash top-up arm buys a
+  tranche AT A TROUGH (`r29p3-crash-46`, −28.8%) and proves the P&L honest through the rebound; a
+  part sale at the same trough stays sold.
