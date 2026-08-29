@@ -27,6 +27,20 @@ a box it has not proven with a command in this session.
      (CLAUDE.md's standing regime), so the PR body carries the local verdict, with the numbers
      whenever a corridor moved.
 
+2a. **⚠⚠ AND THE LOG MUST BE NEWER THAN THE COMMAND** (29.08, caught in this repo's own final gate).
+   Reading the exit code from a file instead of a pipe or a notification is rule one and two; rule
+   three is that the file you read is **today's**. macOS is case-insensitive, so `/tmp/W29-cap.log`
+   and `/tmp/w29-cap.log` are ONE file – a previous wave's green `CAP_EXIT=0` sat there looking
+   perfect and nineteen hours old. Two of four verdicts were stale and would have been reported as a
+   gate that never ran.
+
+       START=$(date +%s)
+       # ... run the gate ...
+       [ "$(stat -f %m /tmp/gate.log)" -gt "$START" ] || echo "STALE – this log predates the run"
+
+   ⭐ Check the mtime, or use a prefix unique to the run. A stale green is worse than a red: red stops
+   you, stale ships.
+
 2b. **⚠ `npm run test:e2e`, ALWAYS, the same way** (owner, 29.08: «добавить в skill pull-request и
    гонять на локале как условие отправки кода на сервер»). Measured that day: **30 tests, 22 seconds,
    the whole suite** – cheaper than a single unit shard. At that price "smoke only" stopped being an
