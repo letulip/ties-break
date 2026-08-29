@@ -3,7 +3,7 @@ type: spec
 status: draft
 area: economy
 canonical: false
-last-reviewed: 2026-08-26
+last-reviewed: 2026-08-29
 ---
 
 # The shop, the assets and the broker – the buildable spec
@@ -668,3 +668,136 @@ starts and it becomes sellable the same week.** There is no week in which a fami
 thing it has no way out from under, which is §4's own acceptance («a freeze may never be the reason a
 family goes bankrupt») met by the shape rather than by a rule. Pinned in
 `tests/round29-shop-elite.test.ts` §2.
+
+---
+
+## 14. ⚙ §4's MOVING PRICE AS BUILT (29.08, round 29 part three #16) – the fund has a market
+
+Recorded here beside §12 and §13, for their reason. Everything below is round 29 part three #16, on
+`r29p3/market-fund`, and **`SAVE_SCHEMA_VERSION` did not move: it is still 65.** No field was added
+to `OwnedAsset`, no migration, no golden fixture – the market is read off the career seed, so there
+is nothing about it to persist.
+
+His ask, in full:
+
+> «Механику фонда надо придумать, да, потому что безрисковые 3 против безрисковых 7 это весьма
+> странно. Давай подумаем как это можно сделать красиво и просто.»
+
+And his ruling on the design: «вроде посмотрел, давай сделаем, а я пощупаю и скажу свои ощущения
+потом.» ⚠ **He will judge it by feel after playing, so every number here is provisional by his own
+framing** – §14d says which knob moves what.
+
+### 14a. What shipped
+
+`src/engine/world/market.ts` (a new leaf: `marketWave`, `marketIndex`, `marketRatio`,
+`worstMarketRatio`), `ShopItem.volBps`, `assetWorthCents` and `marketSeasonMove` in
+`world/assets.ts`, a fourth argument on `assetValueCents`, `reportMarketSeason` in `world/shop.ts`
+called at the end of the obligations phase, and `volBps: 1_800` on the index fund. Every other rung
+on the shelf is priced by exactly the arithmetic it was priced by yesterday, to the cent.
+
+**The model, whole:**
+
+```
+wave(seed, week)  = Σ ampᵢ · smoothstep-interpolated value noise at periodᵢ     ∈ [-1, 1]
+index(seed, week) = exp(volBps/10⁴ · wave)
+worth             = basisCents · (1 + annualRateBps/10⁴)^years · index(now)/index(basisWeek)
+```
+
+Three octaves: **104 weeks at 0.15, 39 at 0.50, 26 at 0.35**. Anchors are drawn from
+`rngFromSeed(\`${seed}:market:${period}:${anchor}\`)` – purpose-scoped sub-streams, the pattern
+`:calweek:` / `:growth:` / `:conveyor:` already use, re-derived at the call site and persisting
+nothing.
+
+### 14b. ⭐⭐ THE LOAD-BEARING PROPERTY: the market exists whether or not she buys
+
+The path is a fact about the world, like the weather. It is **READ** at the two weeks a holding spans,
+never **DRAWN** when one is opened. That is what makes RNG input-independence – the permanent law,
+frozen capture 41550 / `e6b0c709` – unreachable rather than merely respected: there is no code path
+by which a purchase could move the world's dice, because owning nothing draws exactly the same
+numbers as owning everything.
+
+⚠ **It also kept `revalueAssets` idempotent**, which the per-week roll §4 originally sketched would
+have destroyed. A rolled drift depends on how many times the phase ran; a read path does not, so the
+second press of the fast-forward button prices a holding exactly as the first did.
+
+**Proved, not claimed** (`tests/round29p3-market.test.ts`): three careers on one seed and 160 weeks –
+one that never touches the shelf, one that opens the fund, one that opens it inside a busy shelf of
+top-ups, part sales and a car bought and sold. `rngMain` is **byte-identical** in all three
+(`{s, n}` is a complete and self-redundant description of the MAIN position), and the two that hold
+the fund agree on its worth **to the cent**. The frozen MAIN capture is **unmoved**, and
+`tests/coach-travel-edge.test.ts`'s three frozen career hashes are unmoved with it.
+
+### 14c. ⚠⚠ THE LONG HORIZON IS SAFE, and it is a PROOF before it is a sample
+
+«On a long horizon the fund MUST beat Savings. Otherwise it is a trap for a player who did not read
+carefully», and «мы ни за что не наказываем» is house law.
+
+Because `wave` is bounded in `[-1, 1]`, the worst the market can ever do to a holding is
+`e^(-2·vol)` – so the fund beats the 3.17% deposit at ten years for **every seed and every pair of
+weeks** exactly while `1.07¹⁰ · e^(-2·vol) > 1.0317¹⁰`, which solves to **`vol < 1,824 bps`**. The
+shipped 1,800 sits just under that line, deliberately: it is the most risk the design can carry and
+still be safe to hold.
+
+⚙ **MEASURED** (`npx vite-node tools/market-probe.ts --seeds 4000`, 29.08 – 228,000 rolling seasons,
+48,000 holdings per horizon over 4,000 seeds x 12 entry weeks):
+
+| | 1 year | 3 years | 5 years | 10 years |
+| --- | ---: | ---: | ---: | ---: |
+| fund beats the deposit | **67.07%** | **90.24%** | **98.73%** | **100.00%** (0 of 48,000 lose) |
+| mean fund | +7.3% | +22.9% | +40.7% | +97.3% |
+| the deposit | +3.2% | +9.8% | +16.9% | +36.6% |
+| worst fund seen | −18.5% | −11.7% | +5.4% | **+48.5%** |
+
+Negative seasons **19.9%** – «roughly one year in four or five». Season sd **8.35%**; worst
+peak-to-trough on a holding **−20.4%**.
+
+⚠ **AND THE PROOF IS STRICTLY STRONGER THAN THE SAMPLE, which is why both are pinned.** Raising
+`volBps` to 2,500 breaks the inequality – and 2,400 sampled ten-year holdings still all won. Sampling
+cannot see a ceiling this design is only just inside.
+
+### 14d. The knobs, and what each one moves
+
+| knob | where | moves |
+| --- | --- | --- |
+| `volBps` | `ECONOMY.shop.catalogue` (index-fund) | how hard the fund rides the market. ⚠ **Capped at 1,824** by §14c's inequality. |
+| `annualRateBps` | the same rung | the LONG-RUN figure, unchanged at 700 – the market moves either side of it, so the shop card's «7% a year» needed no re-wording. |
+| the octave mix | `world/market.ts` `OCTAVES` | trends against felt risk. A tide much longer than a season barely moves within one, so amplitude spent there buys texture and costs negative years: a four-year-dominant mix measured **7.3%** negative seasons against this one's **19.9%**. ⚠ The amplitudes must sum to 1.00 or §14c's bound – and its proof – is gone. |
+
+### 14e. ⚠ WHAT IS **NOT** BUILT, and one thing that was ruled out
+
+§4's **SHOCK** and **FREEZE** are still not here, and neither is §6's broker.
+
+⚠⚠ **AN EARLY-EXIT FEE OR SPREAD WAS CONSIDERED AND REJECTED**, and it is written down so it is not
+re-proposed: «that is friction, not risk, and it does not answer "why is a risk-free 7% sitting
+beside a risk-free 3"». A path that moves IS the answer; a toll on the door is a different mechanic
+wearing its coat.
+
+### 14f. ⭐ THE SEASON LINE – the half of the item that is not the mechanic
+
+One `info` row a season, on the season boundary, while the family holds a market rung:
+
+> A season of the market – An index fund is down 8% over the season.
+
+Without it a player sees a smaller number and cannot tell why, which is the blindness that produced
+round 29 #10: **the number moving is not the same as the number being legible.**
+
+⚠ It reports the **MARKET** and not the holding. A family that topped up in week 40 has a personal
+return nothing like the market's year, and quoting that here would be a third arithmetic for a worth
+– the shop row's own `changePct` is where a family's number lives, and it is already on screen.
+
+⚠ **Idempotent without a persisted flag**, and therefore without a schema move: it reads the ledger
+back for its own opening words at this week, which is `academySpokeThisWeek`'s trick.
+
+### 14g. ⚠ AND `householdWeekly` NOW MOVES, which is his to feel
+
+The shelf line on the Money screen is «one more week of holding, signed». It used to be a trickle a
+positive rate could never make negative; on a $120,000 fund it is now hundreds of dollars a week and
+**the sign flips**. That is the honest figure, and the split it feeds (`Math.max(0, shelfCents)` into
+income, `Math.max(0, -shelfCents)` into outgoings) needed no change – it was always signed.
+
+⚠ **It does not jitter.** The market's fastest anchor is HALF A SEASON and the interpolation is
+smoothstep, which is flat at both ends, so the figure walks a curve rather than stepping when a
+quarter turns over. Measured on a real career: **fewer than 20 sign changes in 260 weeks**, against
+120+ for a per-week draw. Both writers of a worth – `revalueAssets` and `householdWeekly` – go
+through `assetWorthCents`, so the till and the meter cannot describe two different markets; that is
+round 29 #11's own defect, re-armed as a mutation and caught.

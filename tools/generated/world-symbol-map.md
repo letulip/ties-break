@@ -2,13 +2,13 @@
 
 # `engine/world` – area to owner
 
-The barrel `src/engine/world.ts` (2,027 lines) re-exports the decomposed modules under their historical names, so every importer sees one flat surface. That is a COMPATIBILITY contract, not a discovery one – this file is the discovery half.
+The barrel `src/engine/world.ts` (2,032 lines) re-exports the decomposed modules under their historical names, so every importer sees one flat surface. That is a COMPATIBILITY contract, not a discovery one – this file is the discovery half.
 
 Regenerate with `node scripts/world-map.mjs`; `node scripts/world-map.mjs --check` fails when it is stale, and CI runs that on every pull request.
 
 **Do not read this file to answer one question** – that is the habit it exists to replace. `node scripts/world-map.mjs <symbol>` prints the owner and the line, and a plain `grep <symbol> tools/generated/world-symbol-map.md` does the same for a partial name.
 
-341 exported names across 41 owning modules.
+348 exported names across 42 owning modules.
 
 ## Areas
 
@@ -24,23 +24,24 @@ Regenerate with `node scripts/world-map.mjs`; `node scripts/world-map.mjs --chec
 | `src/engine/world/coachMarket.ts` | THE COACH MARKET: who is available at her age and rung, what they cost, and what hiring one does | 15 |
 | `src/engine/world/multiWeek.ts` | ⭐ R2-13 PHASE 1 – THE FOUR-WEEK ADVANCE, AND THE TWO FACTS A SECOND WEEK BUTTON NEEDS | 15 |
 | `src/engine/world/sponsors.ts` | THE MONEY FROM OUTSIDE THE FAMILY: sponsors, the offers they make, and what a trip costs once somebody else is helping pay for it | 14 |
+| `src/engine/world/assets.ts` | ⭐⭐ WHAT THE FAMILY OWNS – the shelf's PURE READS, and nothing that spends money | 13 |
 | `src/engine/world/endings.ts` | THE ENDINGS, WIRED INTO THE WORLD: the latch, the two questions, the four-year freeze and the guard that stops a stale screen mutating a career that has stopped | 13 |
-| `src/engine/world/assets.ts` | ⭐⭐ WHAT THE FAMILY OWNS – the shelf's PURE READS, and nothing that spends money | 11 |
 | `src/engine/world/kit.ts` | THE KIT SHE PLAYS WITH, AS A DECISION - the till, and what the Money screen reads off it | 11 |
 | `src/engine/world/mandatory.ts` | THE MANDATORY REGIME AND THE PENALTY LEDGER (W3-ACT2, act2-pro-tour.md §6) | 11 |
 | `src/engine/world/age.ts` | HER AGE: the band and the girl, and the birthday that lands in the feed | 9 |
 | `src/engine/world/knock.ts` | THE KNOCK: she comes off court sore, and the parent rests it or sends her back out | 8 |
 | `src/engine/world/injury.ts` | INJURIES AND PHYSIO: the weekly roll, the hazard shape behind it, and the recovery the family pays for – plus the sweep that cleans up everything an injury invalidates | 7 |
 | `src/engine/world/planner.ts` | THE SEASON PLANNER: the two things a parent can put on an empty week – a family holiday and a practice match – and what the engine does with them when the week arrives | 7 |
+| `src/engine/world/shop.ts` | ⭐⭐ THE SHOP – the tab, static prices, buy / own / sell, and since round 29 #5 the storeys above | 7 |
 | `src/engine/world/entries.ts` | THE ENTRY COMMANDS: putting her in a draw, and taking her back out | 6 |
 | `src/engine/world/milestones.ts` | WHAT THE FAMILY KEEPS: the moments that are never pruned, and the season they add up to | 6 |
 | `src/engine/world/shootClash.ts` | ⭐⭐ ROUND 29 #3 – THE SHOOT THAT LANDS ON A TOURNAMENT WEEK, AND THE FOUR ANSWERS TO IT | 6 |
-| `src/engine/world/shop.ts` | ⭐⭐ THE SHOP – the tab, static prices, buy / own / sell, and since round 29 #5 the storeys above | 6 |
 | `src/engine/world/constants.ts` | THE SHARED IDS AND CAPS: the handful of constants more than one world module needs | 5 |
 | `src/engine/world/means.ts` | WHAT THE FAMILY CAN AFFORD, AS ONE FACT – the licence a line of copy asks for before it may assume a wallet | 5 |
 | `src/engine/condition.ts` | THE condition math – one rule, everybody | 4 |
 | `src/engine/season/calendar.ts` | Package L – tournament calendar | 4 |
 | `src/engine/world/ledger.ts` | THE LEDGER: the two write primitives every world mutation goes through, and the pure folds that read the finance ledger back out | 4 |
+| `src/engine/world/market.ts` | ⭐⭐⭐ THE MARKET – round 29 part three #16, and it is the answer to one sentence of his | 4 |
 | `src/engine/kidLife.ts` | HER LIFE OFF THE COURT - the three tiles of screen C's attribute grid that are not about results | 3 |
 | `src/engine/world/fieldNews.ts` | ⭐⭐⭐ THE TOUR HAS A VOICE – the professional field's succession, said out loud (round 26 #10) | 3 |
 | `src/engine/world/phaseObligations.ts` | ⭐ R2-10 STEP 2, PHASE 1 – THE SEASON BOUNDARY AND THE RECURRING OBLIGATIONS | 3 |
@@ -296,6 +297,24 @@ THE MONEY FROM OUTSIDE THE FAMILY: sponsors, the offers they make, and what a tr
 - `sponsorNeedMet` – `src/engine/world/sponsors.ts`
 - `travelCostFor` – `src/engine/world/sponsors.ts`
 
+### `src/engine/world/assets.ts`
+
+⭐⭐ WHAT THE FAMILY OWNS – the shelf's PURE READS, and nothing that spends money.
+
+- `assetDelivered` – `src/engine/world/assets.ts`
+- `assetUpkeepCents` – `src/engine/world/assets.ts`
+- `assetValueCents` – `src/engine/world/assets.ts`
+- `assetWorthCents` – `src/engine/world/assets.ts`
+- `deliveredAssets` – `src/engine/world/assets.ts`
+- `grantedVacationIds` – `src/engine/world/assets.ts`
+- `marketSeasonMove` – `src/engine/world/assets.ts`
+- `ownedAssets` – `src/engine/world/assets.ts`
+- `ownsDeliveredOfFamily` – `src/engine/world/assets.ts`
+- `shopCatalogue` – `src/engine/world/assets.ts`
+- `shopItem` – `src/engine/world/assets.ts`
+- `ShopItem` *(type)* – `src/engine/world/assets.ts`
+- `weeklyAssetUpkeepCents` – `src/engine/world/assets.ts`
+
 ### `src/engine/world/endings.ts`
 
 THE ENDINGS, WIRED INTO THE WORLD: the latch, the two questions, the four-year freeze and the guard that stops a stale screen mutating a career that has stopped.
@@ -313,22 +332,6 @@ THE ENDINGS, WIRED INTO THE WORLD: the latch, the two questions, the four-year f
 - `resolveCollegeDeparture` – `src/engine/world/endings.ts`
 - `resolveEndings` – `src/engine/world/endings.ts`
 - `wasThereAChild` – `src/engine/world/endings.ts`
-
-### `src/engine/world/assets.ts`
-
-⭐⭐ WHAT THE FAMILY OWNS – the shelf's PURE READS, and nothing that spends money.
-
-- `assetDelivered` – `src/engine/world/assets.ts`
-- `assetUpkeepCents` – `src/engine/world/assets.ts`
-- `assetValueCents` – `src/engine/world/assets.ts`
-- `deliveredAssets` – `src/engine/world/assets.ts`
-- `grantedVacationIds` – `src/engine/world/assets.ts`
-- `ownedAssets` – `src/engine/world/assets.ts`
-- `ownsDeliveredOfFamily` – `src/engine/world/assets.ts`
-- `shopCatalogue` – `src/engine/world/assets.ts`
-- `shopItem` – `src/engine/world/assets.ts`
-- `ShopItem` *(type)* – `src/engine/world/assets.ts`
-- `weeklyAssetUpkeepCents` – `src/engine/world/assets.ts`
 
 ### `src/engine/world/kit.ts`
 
@@ -413,6 +416,18 @@ THE SEASON PLANNER: the two things a parent can put on an empty week – a famil
 - `practiceCaution` – `src/engine/world/planner.ts`
 - `PracticeCaution` *(type)* – `src/engine/world/planner.ts`
 
+### `src/engine/world/shop.ts`
+
+⭐⭐ THE SHOP – the tab, static prices, buy / own / sell, and since round 29 #5 the storeys above.
+
+- `buyAsset` – `src/engine/world/shop.ts`
+- `deliverAssets` – `src/engine/world/shop.ts`
+- `reportMarketSeason` – `src/engine/world/shop.ts`
+- `revalueAssets` – `src/engine/world/shop.ts`
+- `sellableAsset` – `src/engine/world/shop.ts`
+- `sellAsset` – `src/engine/world/shop.ts`
+- `shopView` – `src/engine/world/shop.ts`
+
 ### `src/engine/world/entries.ts`
 
 THE ENTRY COMMANDS: putting her in a draw, and taking her back out.
@@ -445,17 +460,6 @@ WHAT THE FAMILY KEEPS: the moments that are never pruned, and the season they ad
 - `shootClashOpen` – `src/engine/world/shootClash.ts`
 - `shootClashWeek` – `src/engine/world/shootClash.ts`
 - `shootMoveTarget` – `src/engine/world/shootClash.ts`
-
-### `src/engine/world/shop.ts`
-
-⭐⭐ THE SHOP – the tab, static prices, buy / own / sell, and since round 29 #5 the storeys above.
-
-- `buyAsset` – `src/engine/world/shop.ts`
-- `deliverAssets` – `src/engine/world/shop.ts`
-- `revalueAssets` – `src/engine/world/shop.ts`
-- `sellableAsset` – `src/engine/world/shop.ts`
-- `sellAsset` – `src/engine/world/shop.ts`
-- `shopView` – `src/engine/world/shop.ts`
 
 ### `src/engine/world/constants.ts`
 
@@ -503,6 +507,15 @@ THE LEDGER: the two write primitives every world mutation goes through, and the 
 - `financeWindow` – `src/engine/world/ledger.ts`
 - `seasonIndexOf` – `src/engine/world/ledger.ts`
 - `seasonStartWeek` – `src/engine/world/ledger.ts`
+
+### `src/engine/world/market.ts`
+
+⭐⭐⭐ THE MARKET – round 29 part three #16, and it is the answer to one sentence of his.
+
+- `marketIndex` – `src/engine/world/market.ts`
+- `marketRatio` – `src/engine/world/market.ts`
+- `marketWave` – `src/engine/world/market.ts`
+- `worstMarketRatio` – `src/engine/world/market.ts`
 
 ### `src/engine/kidLife.ts`
 

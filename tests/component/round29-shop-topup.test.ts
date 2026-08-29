@@ -21,6 +21,12 @@
 //   * `held.paidCents += paidCents` dropped -> the «what the family put in» arm and the wallet arm
 //     RED.
 //   * `tone="plain"` back to the old `:tone="… ? 'negative' : 'positive'"` -> the #9 arm RED, alone.
+//
+// ⚠⚠ THREE ASSERTIONS WERE RE-AIMED BY ROUND 29 PART THREE #16, and each carries its reason at its
+// own line rather than here. The fund now rides a seeded market (`world/market.ts`), so an
+// expectation written as the smooth curve is no longer the engine's arithmetic. ⚠ ONE OF THEM WENT
+// RED AND TWO WERE LATENT FLAKES THAT PASSED ON THEIR SEEDS – the second kind is the more dangerous,
+// and both are narrowed rather than deleted. Every #11 claim in this file is unchanged.
 import { describe, it, expect, beforeEach } from 'vitest'
 import { mount } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
@@ -40,6 +46,7 @@ import {
   toSnapshot,
   type WorldState,
 } from '../../src/engine/world'
+import { marketRatio } from '../../src/engine/world/market'
 import { rngFromSeed } from '../../src/engine/rng'
 import type { Snapshot } from '../../src/shared/protocol'
 
@@ -153,8 +160,22 @@ describe.each(['deposit', 'index-fund'] as const)('round 29 #11 – %s takes top
     // The value at the moment of the second top-up is the FIRST rebase grown over the 26 weeks since
     // it was struck – not the whole stake grown from `openedWeek`, which is what a naive
     // `paidCents += more` would have produced.
+    //
+    // ⚠⚠ RE-AIMED, NOT WIDENED, AT ROUND 29 PART THREE #16 – and it went RED first, which is the
+    // whole reason this note exists. The fund now rides a seeded market, so «grown over the 26 weeks
+    // since it was struck» is `(1+r)^(26/52)` TIMES `index(now)/index(firstTopUpWeek)`. The old
+    // three-argument form was asserting the smooth curve against an engine that had stopped drawing
+    // it. ⚠ The CLAIM is unchanged and is still #11's: a tranche compounds over its own span. Part
+    // three #16 only adds a second half to it – a tranche also ENTERS THE MARKET at its own index –
+    // and `marketRatio` from `firstTopUpWeek` is that sentence. The deposit passes `volBps ?? 0` and
+    // gets exactly the arithmetic this line has always done.
     expect(t.worthBeforeSecondTopUp).toBe(
-      assetValueCents(item, t.worthBeforeFirstTopUp + TOP_1, t.world.week - t.firstTopUpWeek),
+      assetValueCents(
+        item,
+        t.worthBeforeFirstTopUp + TOP_1,
+        t.world.week - t.firstTopUpWeek,
+        marketRatio(t.world.seed, t.firstTopUpWeek, t.world.week, item.volBps ?? 0),
+      ),
     )
     // And the holding now stands at that worth plus the money just added – the clock restarted here.
     expect(held.valueCents).toBe(t.worthBeforeSecondTopUp + TOP_2)
@@ -163,11 +184,23 @@ describe.each(['deposit', 'index-fund'] as const)('round 29 #11 – %s takes top
     // ⚠ THE ORIGINAL PURCHASE WEEK IS NOT REWRITTEN – it still says when the family opened this.
     expect(held.boughtWeek).toBe(t.openedWeek)
 
-    // ⭐ THE BACK-DATING MUTATION, STATED AS AN INEQUALITY SO IT CANNOT PASS VACUOUSLY: had the new
-    // money been treated as though it had been there since week one, the holding would be worth
-    // strictly more than this on an appreciating rung.
-    const backDated = assetValueCents(item, OPEN + TOP_1 + TOP_2, t.world.week - t.openedWeek)
-    expect(held.valueCents).toBeLessThan(backDated)
+    // ⭐ THE BACK-DATING MUTATION, NAMED EXACTLY: had the new money been treated as though it had
+    // been there since week one (`paidCents += more`, no rebase), the holding would be worth this.
+    const backDated = assetValueCents(
+      item,
+      OPEN + TOP_1 + TOP_2,
+      t.world.week - t.openedWeek,
+      marketRatio(t.world.seed, t.openedWeek, t.world.week, item.volBps ?? 0),
+    )
+    expect(held.valueCents).not.toBe(backDated)
+    // ⚠⚠ AND THE DIRECTION IS ASSERTED ONLY WHERE IT IS GUARANTEED – re-aimed at part three #16 and
+    // NARROWED on purpose. On a rate-only rung, back-dating money onto an appreciating curve can only
+    // make it worth MORE, so the inequality is arithmetic. On a MARKET rung it is not: the extra
+    // tranches would also have ridden `index(openedWeek) -> index(now)`, and if the market fell over
+    // that span the back-dated holding is worth LESS. The old unconditional `toBeLessThan` passed on
+    // this seed by luck, which is a latent flake and not a guard. The equality above is what carries
+    // the claim for the fund; this is the deposit's cheap corroboration of it.
+    if (!item.volBps) expect(held.valueCents).toBeLessThan(backDated)
   })
 
   it('⭐ and the screen shows the topped-up holding and offers to add again', async () => {
@@ -202,7 +235,13 @@ describe('round 29 #11 – the household meter and the ledger agree after a top-
     const actualMove = t.held().valueCents - before
     // The meter promised exactly what the next tick delivered, to the cent.
     expect(shelf).toBe(actualMove)
-    expect(shelf, 'and an appreciating holding really did move').toBeGreaterThan(0)
+    // ⚠ RE-AIMED AT PART THREE #16: this said `toBeGreaterThan(0)` on the reason «an appreciating
+    // holding really did move», and that reason stopped being true when the fund got a market – a
+    // positive-rate holding now has losing weeks, so the sign of any one week is a fact about the
+    // seed. The claim the arm needs is that the meter is not reporting a flat nothing, and that is
+    // what this says. (`tests/round29p3-market.test.ts` is where the SIGN is asserted, over a season
+    // rather than in one week.)
+    expect(shelf, 'and the holding really did move').not.toBe(0)
   })
 })
 

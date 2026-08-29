@@ -327,8 +327,13 @@ export { familyMeans, householdWalletCents, meansOfCents, MEANS_BANDS }
 // `assetUpkeepCents`, `deliverAssets`, `grantedVacationIds`, `ownsDeliveredOfFamily` and
 // `weeklyAssetUpkeepCents` join the list. The pure reads live in `world/assets.ts` now and
 // `world/shop.ts` re-exports every one of them, so this line is unchanged in shape.
-import { assetDelivered, assetUpkeepCents, assetValueCents, buyAsset, deliverAssets, deliveredAssets, grantedVacationIds, ownedAssets, ownsDeliveredOfFamily, revalueAssets, sellAsset, sellableAsset, shopCatalogue, shopItem, shopView, weeklyAssetUpkeepCents } from './world/shop'
-export { assetDelivered, assetUpkeepCents, assetValueCents, buyAsset, deliverAssets, deliveredAssets, grantedVacationIds, ownedAssets, ownsDeliveredOfFamily, revalueAssets, sellAsset, sellableAsset, shopCatalogue, shopItem, shopView, weeklyAssetUpkeepCents }
+// ⭐⭐⭐ ROUND 29 PART THREE #16 adds §4's moving price – `assetWorthCents` (the ONE thing that turns
+// a holding into a number now that a market is in it), `marketSeasonMove` and `reportMarketSeason`.
+// The path itself is `world/market.ts` and is re-exported one line down.
+import { assetDelivered, assetUpkeepCents, assetValueCents, assetWorthCents, buyAsset, deliverAssets, deliveredAssets, grantedVacationIds, marketSeasonMove, ownedAssets, ownsDeliveredOfFamily, reportMarketSeason, revalueAssets, sellAsset, sellableAsset, shopCatalogue, shopItem, shopView, weeklyAssetUpkeepCents } from './world/shop'
+export { assetDelivered, assetUpkeepCents, assetValueCents, assetWorthCents, buyAsset, deliverAssets, deliveredAssets, grantedVacationIds, marketSeasonMove, ownedAssets, ownsDeliveredOfFamily, reportMarketSeason, revalueAssets, sellAsset, sellableAsset, shopCatalogue, shopItem, shopView, weeklyAssetUpkeepCents }
+import { marketIndex, marketRatio, marketWave, worstMarketRatio } from './world/market'
+export { marketIndex, marketRatio, marketWave, worstMarketRatio }
 export type { ShopItem } from './world/shop'
 export type { FamilyMeans } from './world/means'
 
