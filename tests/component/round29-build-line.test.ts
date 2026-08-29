@@ -77,8 +77,13 @@ describe('the build line renders at the foot of Settings, with the values the bu
     // ⚠ THE BUILD'S SCHEMA, NOT THE LOADED SAVE'S - and this mount has no career at all, which is
     // precisely the case the About table's `snapshot.schemaVersion` row cannot answer.
     expect(line).toContain(`save schema v${SAVE_SCHEMA_VERSION}`)
-    // ⚠ House law for this wave: item 19 is a version string and must not move the schema.
-    expect(SAVE_SCHEMA_VERSION).toBe(65)
+    // ⚠ House law for ITS OWN wave: item 19 is a version string and must not move the schema.
+    // ⚠ RE-AIMED AT v66 (29.08, round 29 part four P7 – the 'business' category's own three-part
+    // move), NOT WEAKENED: the claim was always «the BUILD-LINE wave moved no schema», and 66 was
+    // moved by P7's ledger category with its full move (migration, golden fixture, e2e fixtures
+    // regenerated), never by this line's item. The pin follows the ladder's head so the sentence
+    // above it stays checkable.
+    expect(SAVE_SCHEMA_VERSION).toBe(66)
   })
 
   it('is one line at the FOOT of the screen, and it is there whichever tab is open', async () => {
