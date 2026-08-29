@@ -50,14 +50,18 @@ import { ECONOMY } from '../../src/engine/economy'
 import { isOffSeasonWeek } from '../../src/engine/season/calendar'
 import { DEFAULT_PROFILE, type Snapshot } from '../../src/shared/protocol'
 
-/** ⚠ THE CATALOGUE BECAME A LADDER (round 29 part two #19/#20), so the five per-house numbers
- *  moved out of `ECONOMY.advertising` into `ECONOMY.advertising.houses`. Every claim in this
- *  file is about the rung that already shipped – Quiet Hour, $20,000, two shoot weeks – so it
- *  is REPOINTED and not re-aimed: `AD` still carries the mechanics every house shares (the age
- *  bar, the weekly chance, the decide weeks, the lead, the clash price) and `WATCH` carries
- *  that one house's own terms, which have not moved by a cent. This file only ever needed the
- *  house's own numbers, so it takes `WATCH` alone. */
-const WATCH = ECONOMY.advertising.houses.watch
+/** ⚠ THE CATALOGUE BECAME A LADDER (round 29 part two #19/#20) AND THEN A PORTFOLIO (part four
+ *  P6/§8). Every claim in this file is about the shipped watch deal's SHAPE – papers exactly like
+ *  it are persisted in real saves – so `WATCH` freezes that LEGACY paper: the fee off the watches
+ *  category's ≤200 cell (the anchor, unchanged to the cent), the brand its first house, the
+ *  52-week term and two-shoot ask the old letters carry. */
+const WATCH = {
+  brand: ECONOMY.advertising.categories.watches.houses[0],
+  maxWtaRank: ECONOMY.advertising.bands[0].maxWtaRank,
+  cashCents: ECONOMY.advertising.categories.watches.feeCentsByBand[0]!,
+  termWeeks: 52,
+  shootWeeksPerTerm: 2,
+}
 /** The dearest rung, so "he drew nothing" and "he drew his sessions" are the widest apart. */
 const DAILY = ECONOMY.masseur.rungs[ECONOMY.masseur.rungs.length - 1].sessions
 
@@ -129,7 +133,7 @@ describe('round 29 #3 – the fixture', () => {
     expect(isOffSeasonWeek(SHOOT_WEEK), 'an off-season shoot is a cost wearing a cost\'s clothes').toBe(false)
     const world = payrolled([SHOOT_WEEK])
     const snap = toSnapshot(world)
-    expect(snap.adShoot?.weeks, 'the deal does not name the week under test').toContain(SHOOT_WEEK)
+    expect(snap.adShoots.flatMap((d) => d.weeks), 'the deal does not name the week under test').toContain(SHOOT_WEEK)
     expect(snap.masseurHired).toBe(true)
     expect(snap.masseurSessionsPerWeek).toBe(DAILY)
   })

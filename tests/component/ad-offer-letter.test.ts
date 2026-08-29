@@ -16,6 +16,7 @@ import InboxSheet from '../../src/components/InboxSheet.vue'
 import OfferLetter from '../../src/components/OfferLetter.vue'
 import { useGameStore } from '../../src/stores/game'
 import { ECONOMY } from '../../src/engine/economy'
+import { adTermsForCategory, adCapstoneTerms } from '../../src/engine/offers'
 import { chooseShootWeeks } from '../../src/engine/offers'
 import { weekLabel } from '../../src/shared/dates'
 import type { AdOfferTerms, Offer, Snapshot } from '../../src/shared/protocol'
@@ -26,13 +27,18 @@ import '../../src/style.css'
 import { assertDismissReachable, setViewport, PHONE } from './fits'
 
 const AD = ECONOMY.advertising
-/** ⚠ THE CATALOGUE BECAME A LADDER (round 29 part two #19/#20), so the five per-house numbers
- *  moved out of `ECONOMY.advertising` into `ECONOMY.advertising.houses`. Every claim in this
- *  file is about the rung that already shipped – Quiet Hour, $20,000, two shoot weeks – so it
- *  is REPOINTED and not re-aimed: `AD` still carries the mechanics every house shares (the age
- *  bar, the weekly chance, the decide weeks, the lead, the clash price) and `WATCH` carries
- *  that one house's own terms, which have not moved by a cent. */
-const WATCH = ECONOMY.advertising.houses.watch
+/** ⚠ THE CATALOGUE BECAME A LADDER (round 29 part two #19/#20) AND THEN A PORTFOLIO (part four
+ *  P6/§8). Every claim in this file is about the shipped watch deal's SHAPE – papers exactly like
+ *  it are persisted in real saves – so `WATCH` freezes that LEGACY paper: the fee off the watches
+ *  category's ≤200 cell (the anchor, unchanged to the cent), the brand its first house, the
+ *  52-week term and two-shoot ask the old letters carry. */
+const WATCH = {
+  brand: ECONOMY.advertising.categories.watches.houses[0],
+  maxWtaRank: ECONOMY.advertising.bands[0].maxWtaRank,
+  cashCents: ECONOMY.advertising.categories.watches.feeCentsByBand[0]!,
+  termWeeks: 52,
+  shootWeeksPerTerm: 2,
+}
 
 // The inbox annotates letters with two per-device facts (read / binned) and both live in
 // localStorage; this runner has none. Same shim, and the same argument, as the other mail suites.
@@ -86,7 +92,12 @@ describe('OfferLetter – the advertising house has its own sheet', () => {
     // должны быть иногда и это надо как-то прописывать». The paper now states its price in time –
     // the shoot count in the house's words, the naming rule, and the cost said plainly WITHOUT an
     // engine figure – and bounds what is owed beyond it.
-    expect(text).toContain('Two weeks of her season are shoot weeks')
+    // ⚠ RE-AIMED AGAIN BY ROUND 29 PART FOUR P9: the sentence was «Two weeks of her season are
+    // shoot weeks … In season, spread apart», and the owner moved the shoot season into the winter
+    // – the paper now says so («We book the winter first – the off-season is the shoot season») and
+    // keeps the in-season clause for the overflow. The price-in-time content is unchanged.
+    expect(text).toContain('Two weeks of her year are shoot weeks')
+    expect(text).toContain('the off-season is the shoot season')
     expect(text).toContain('named the day this is signed')
     expect(text).toContain('she will rest less in it')
     expect(text).toContain('Beyond those weeks nothing is owed')
@@ -220,25 +231,34 @@ describe('InboxSheet – the letter is in the list, the row says what it is, the
   })
 })
 
-describe('⭐⭐ OfferLetter – the LADDER on the paper (round 29 part two #19/#20)', () => {
+describe('⭐⭐ OfferLetter – the PORTFOLIO on the paper (round 29 part four P6/§8)', () => {
   beforeEach(() => setActivePinia(createPinia()))
 
   // ⚠ THE OPENING CLAUSE WAS HARD-CODED «We make watches» IN THE MARKUP while the catalogue had one
-  // house. Three houses and a template that introduced all of them as watchmakers is the same class
-  // of defect as a renewal that says «A kit deal for your daughter» – the letter would be false about
-  // its own author. The clause now comes off the PAPER (`AdOfferTerms.trade`).
-  it.each([['campaign'], ['house']] as const)('the %s rung`s letter says what THAT house makes and asks', (tier) => {
-    const h = ECONOMY.advertising.houses[tier]
-    const open = letter({}, { tier, brand: h.brand, trade: h.trade, cashCents: h.cashCents, shootCount: h.shootWeeksPerTerm })
+  // house. A shelf of categories and a template that introduced all of them as watchmakers is the
+  // same class of defect as a renewal that says «A kit deal for your daughter» – the letter would be
+  // false about its own author. The clause comes off the PAPER (`AdOfferTerms.trade`), and since P6
+  // the paper also states its per-year money, its 1–3 year term and its CATEGORY-scoped
+  // exclusivity clause.
+  it.each([['airline', 1], ['fragrance', 3]] as const)('the %s category`s letter says what THAT house makes and asks', (category, band) => {
+    const def = ECONOMY.advertising.categories[category]
+    const t = adTermsForCategory(category, band, 2, def.houses[0])!
+    const open = letter({}, t)
     const w = mount(OfferLetter, { props: { offer: open, week: open.week } as never })
     const text = w.text()
-    expect(text).toContain(h.trade)
-    expect(text).toContain(h.brand)
+    expect(text).toContain(def.trade)
+    expect(text).toContain(def.houses[0])
     expect(text).not.toContain('We make watches')
-    expect(text).toContain(`$${Math.round(h.cashCents / 100).toLocaleString('en-US')}`)
-    // ...and the count in the house's own words, which now has to run to six.
-    const word = ['', 'One', 'Two', 'Three', 'Four', 'Five', 'Six'][h.shootWeeksPerTerm]
-    expect(text).toContain(`${word} weeks of her season are shoot weeks`)
+    // the PER-YEAR fee and where the rest of it lands – P6's multi-year money, stated on the paper
+    expect(text).toContain(`$${Math.round(t.cashCents / 100).toLocaleString('en-US')}`)
+    expect(text).toContain('for each contract year')
+    expect(text).toContain('Two years')
+    // the exclusivity clause is the CATEGORY's, not the whole post's – the portfolio's own rule
+    expect(text).toContain(`in no other ${category} campaign while that runs`)
+    // ...and the shoot ask, per year, preferring the winter (P9's own sentence on the paper).
+    const word = ['', 'One', 'Two', 'Three', 'Four', 'Five', 'Six'][t.shootCount]
+    expect(text).toContain(`${word} ${t.shootCount === 1 ? 'week' : 'weeks'} of her year`)
+    expect(text).toContain('the off-season is the shoot season')
     w.unmount()
   })
 
@@ -260,15 +280,16 @@ describe('⚠ the confirm the BIGGEST house produces still fits a phone', () => 
   })
 
   // CLAUDE.md's own rule: «any dialog you add or LENGTHEN gets a mounted assertion that its dismiss
-  // control's box is inside a 375x667 viewport». Round 29 part two #19 lengthened this one – the ad
-  // confirm names every shoot week the signature will choose, and the top rung asks SIX of them
-  // where the shipped rung asked two, so the sentence grows by four dates. It is a BLOCKING overlay
-  // and this is the failure mode round-20 #3 cost a career to: «a dialog grows by one honest
-  // sentence at a time and nothing objects until it is taller than a phone».
-  it('Rivelle`s six named weeks do not push the buttons off a 375x667 screen', async () => {
+  // control's box is inside a 375x667 viewport». Round 29 part four P6 lengthened this one AGAIN –
+  // the longest paper is now the CAPSTONE, eight years at two shoots a year = sixteen named weeks –
+  // so the confirm caps the list at six dates and counts the rest, and this test mounts the worst
+  // case to prove the cap holds the dialog on a phone. It is a BLOCKING overlay and this is the
+  // failure mode round-20 #3 cost a career to: «a dialog grows by one honest sentence at a time and
+  // nothing objects until it is taller than a phone».
+  it('the capstone`s sixteen shoot weeks do not push the buttons off a 375x667 screen', async () => {
     setViewport(PHONE)
-    const h = ECONOMY.advertising.houses.house
-    const open = letter({}, { tier: 'house', brand: h.brand, trade: h.trade, cashCents: h.cashCents, shootCount: h.shootWeeksPerTerm })
+    const h = { brand: adCapstoneTerms('Aurelia').brand, trade: 'We make her kit' }
+    const open = letter({}, adCapstoneTerms('Aurelia'))
     const base: Snapshot = careerSnapshot(8, 'ad-inbox-fit')
     const store = useGameStore()
     store.snapshot = { ...base, offers: [...base.offers, open], week: open.week }
@@ -281,10 +302,13 @@ describe('⚠ the confirm the BIGGEST house produces still fits a phone', () => 
 
     const card = document.querySelector('.dialog-overlay .dialog-card')!
     const dismiss = document.querySelector('.dialog-overlay .dialog-actions')!
-    // The sentence really did grow: six dates on the paper, not two.
+    // The sentence really did grow – and then CAPPED: six named dates plus the term's end, with
+    // the remaining ten counted in words rather than listed. A mutant that lists all sixteen fails
+    // the reachability assertion below on this very mount.
     expect(card.textContent).toContain(h.brand)
-    expect((card.textContent ?? '').match(/W\d+ '\d+/g) ?? []).toHaveLength(h.shootWeeksPerTerm + 1)
-    assertDismissReachable(card, dismiss, PHONE, "the six-shoot confirm (round 29 part two #19)")
+    expect((card.textContent ?? '').match(/W\d+ '\d+/g) ?? []).toHaveLength(6 + 1)
+    expect(card.textContent).toContain('10 more across the term')
+    assertDismissReachable(card, dismiss, PHONE, "the capstone confirm (round 29 part four P6)")
     wrapper.unmount()
   })
 })

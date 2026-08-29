@@ -40,9 +40,8 @@
 // here is the first eligible week by the paper's own rules, deterministically, because a draw taken
 // at the moment of a player's answer would be a decision re-rolling the world's dice.
 import { ECONOMY } from '../economy'
-import { activeAdDeal } from '../offers'
+import { adDealShootingAt, isWinterShootWeek } from '../offers'
 import { TIERS } from '../season/calendar'
-import { isOffSeasonWeek } from '../season/calendar'
 import type { SeasonEvent } from '../season/types'
 import type { AdOfferTerms, Offer, ShootClashChoice, ShootClashPrompt } from '../../shared/protocol'
 import { weekLabel } from '../../shared/dates'
@@ -96,17 +95,29 @@ export function shootCancelCents(terms: AdOfferTerms): number {
   return Math.round(terms.cashCents / Math.max(1, terms.shootCount))
 }
 
-/** THE DEAL THAT NAMED THIS WEEK, or null – the paper every arm below writes to. */
+/** THE DEAL THAT NAMED THIS WEEK, or null – the paper every arm below writes to.
+ *
+ *  ⚠ SINCE THE PORTFOLIO (round 29 part four P6) several deals run at once, so this asks which
+ *  live deal actually NAMED the week (`adDealShootingAt`) rather than taking the first live deal –
+ *  which would move or cancel the wrong campaign's shoot the moment two deals coexist. Two deals
+ *  naming the SAME week resolve one at a time: answering one clears its own paper, the predicate
+ *  finds the other, and the question is asked again in the other brand's name. */
 function clashDeal(world: WorldState, week: number): Offer | null {
-  return activeAdDeal(world.offers, week)
+  return adDealShootingAt(world.offers, week)
 }
 
 /** WHERE A MOVED SHOOT LANDS: the first week after the clash that the letter's own promises still
  *  allow. `chooseShootWeeks`' clauses, re-asked one at a time rather than re-rolled –
  *
  *   * inside the term (`fromWeek`..`untilWeek`), because the campaign ends when it ends;
- *   * IN-SEASON, «an off-season cost is free money wearing a cost's clothes» (plan §5.2, owner-ruled);
- *   * not ADJACENT to another shoot week – «a campaign is not a tour», the signature's own filter;
+ *   * ⚠ RE-AIMED BY P9 (round 29 part four): the clause here used to skip the off-season – «an
+ *     off-season cost is free money wearing a cost's clothes» (plan §5.2) – and the owner
+ *     overturned that rule: the winter IS the shoot season now (`isWinterShootWeek`), so a moved
+ *     shoot may land there, where its cost is the rest it displaces. The old skip would have sent
+ *     every late-season move PAST the six weeks the shoots now prefer;
+ *   * not ADJACENT to another shoot week IN SEASON – «a campaign is not a tour», the signature's
+ *     own filter – while inside the winter window adjacency is allowed, exactly as the signature
+ *     itself now books it (the shoot season stacks);
  *   * and not a week she is entered in, which is this item's whole point: a move that landed on the
  *     next tournament would raise the same question again next month.
  *
@@ -120,8 +131,7 @@ export function shootMoveTarget(world: WorldState, week: number): number | null 
   const others = (terms.shootWeeks ?? []).filter((w) => w !== week)
   const until = deal.untilWeek ?? -1
   for (let w = week + 1; w <= until; w++) {
-    if (isOffSeasonWeek(w)) continue
-    if (others.some((s) => Math.abs(s - w) <= 1)) continue
+    if (!isWinterShootWeek(w) && others.some((s) => Math.abs(s - w) <= 1)) continue
     if (clashEvent(world, w) !== null) continue
     return w
   }

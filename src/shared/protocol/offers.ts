@@ -226,6 +226,33 @@ export type SponsorTier = 'local' | 'national' | 'global' | 'tour' | 'premium' |
  *  `ECONOMY.advertising.houses`, where the money and the weeks are sized against each other. */
 export type AdTier = 'watch' | 'campaign' | 'house'
 
+/** ⭐⭐⭐ ROUND 29 PART FOUR P6/P7 – THE PORTFOLIO IS CATEGORIES, NOT ABSTRACT SLOTS. The owner, off
+ *  Bublik's actual sponsor list («одежда и обувь · ракетки и экипировка · часы · автомобили ·
+ *  гидратация и напитки»): «У нас они частично есть уже. Можно даже текущих использовать двойной
+ *  программой. И еще парочку накинуть – будет полный список.»
+ *
+ *  So concurrency is not «N deals» – it is ONE DEAL PER CATEGORY, which is how a real portfolio
+ *  works (no portfolio read for the research holds two brands of one trade at once –
+ *  docs/research/endorsement-tiers-and-academy-money.md §2/§7) and is instantly legible on screen:
+ *  a shelf of named categories, filled or empty. The cap of «up to 4–6 concurrent» (§8) needs no
+ *  constant at all – it is how many categories a standing has opened.
+ *
+ *    watches    the rung that already shipped (Quiet Hour) – opens first
+ *    cars       §7 «add» – a local dealer at the bottom band, a marque at the top
+ *    drinks     §7 «add» – hydration & drinks, Bublik's own list
+ *    clothing   the DOUBLE PROGRAMME: the kit brand she already wears buys an ad campaign on top –
+ *               two deals, one brand, separate letters, separate money (kit ≠ face)
+ *    airline    Northmere Air, the shipped `campaign` rung's own trade
+ *    fragrance  Rivelle, the shipped `house` rung's own trade – the icon-band category
+ *    capstone   NOT a trade: the one $10M/yr × 8yr kit-shaped deal on top (§8), gated on tenure
+ *               (4 seasons ENDED inside the top 10), one at a time by the same one-per-category rule
+ *
+ *  ⚠ `AdTier` ABOVE IS NOT DELETED AND MUST NOT BE: letters written under the three-rung ladder are
+ *  persisted in real saves, and `adCategoryOf` (engine/offers.ts) maps each old tier onto the
+ *  category its house always was – watch→watches, campaign→airline, house→fragrance – so an old
+ *  signed deal fills its category exactly as a new one would. */
+export type AdCategory = 'watches' | 'cars' | 'drinks' | 'clothing' | 'airline' | 'fragrance' | 'capstone'
+
 /** THE THREE PROFESSIONAL RUNGS (W3-ACT2, act2-pro-tour.md section 7 - the owner's «да, надо
  *  продумать, предложи что-то», built). They are gated on the WTA rank, which is exactly as real as
  *  the two tables the rungs below read, and what they add is a KIND of money the junior ladder never
@@ -788,6 +815,26 @@ export interface AdOfferTerms {
    *  letter by construction – the catalogue had exactly one house – so an absent `tier` reads
    *  `'watch'` EXACTLY rather than by guess, which is why nothing is back-filled. */
   tier?: AdTier
+  /** ⭐⭐ ROUND 29 PART FOUR P6/P7 – WHICH CATEGORY OF THE PORTFOLIO THIS LETTER IS FOR, once the
+   *  post is a shelf of categories rather than one ladder.
+   *
+   *  ⚠ OPTIONAL BECAUSE IT IS A WIDENING OF A SHIPPED SHAPE – the same move `tier` itself was, one
+   *  wave earlier, and the same exactness: an absent category is the old ladder's letter, and every
+   *  one of those maps onto exactly one category through its tier (`adCategoryOf`: watch→watches,
+   *  campaign→airline, house→fragrance, absent tier→watch→watches). Nothing is back-filled and
+   *  `SAVE_SCHEMA_VERSION` does not move (65). */
+  category?: AdCategory
+  /** ⭐ P6 – HOW MANY CONTRACT YEARS THE TERM RUNS (1–3 churned, the research's own law for
+   *  non-endemic paper; 8 for the capstone, which is the one kit-shaped exception). `cashCents`
+   *  below is the fee PER CONTRACT YEAR: year one is banked at signature and each remaining year on
+   *  its anniversary while the term runs (`payAdAnniversaries`), so three 1-year deals pay exactly
+   *  what one 3-year deal pays – the ledger's own stated equivalence.
+   *
+   *  ⚠ OPTIONAL, AND ABSENT MEANS EXACTLY 1: every letter written before this wave was a 52-week
+   *  term whose whole fee was banked at signature, which is precisely what one contract year of the
+   *  new arithmetic pays. `termWeeks` stays the operative span (= termYears × 52 on new letters), so
+   *  nothing that reads the span changes meaning. */
+  termYears?: number
   /** who is writing – a FICTIONAL non-endemic house, never a tennis brand and never anything
    *  constructible into a real company. It is on the terms, not derived, for the same reason
    *  `KitOfferTerms.brand` is: the letter is persisted and must keep naming its own author. */
@@ -799,9 +846,11 @@ export interface AdOfferTerms {
    *  ⚠ THE SAME WIDENING AS `tier`, and the same exactness: an absent trade is Quiet Hour's, so
    *  `OfferLetter` reads `'watches'` and an old letter keeps saying precisely what it always said. */
   trade?: string
-  /** the one-time fee, in cents, paid into the FAMILY wallet the week the paper is signed. Cash
-   *  only – no kit, no travel share, no retainer schedule: that is the whole difference between
-   *  this letter and the ladder above it. */
+  /** the fee, in cents, PER CONTRACT YEAR (see `termYears` – absent years mean 1, so on every
+   *  letter written before the portfolio this is the one-time fee it always was, to the cent).
+   *  Banked the week the paper is signed and again on each anniversary the term is still running.
+   *  Cash only – no kit, no travel share, no retainer schedule: that is the whole difference
+   *  between this letter and the ladder above it. */
   cashCents: number
   /** how long her face is theirs, in weeks from signature. While the term runs no second
    *  advertising letter arrives – one deal at a time, over time and not merely one letter at a
@@ -810,11 +859,13 @@ export interface AdOfferTerms {
    *  shoot week the freeze swallows lapses silently with it (see `shootWeeks`): «мы ни за что не
    *  наказываем» applies to contracts too (plan §4c). */
   termWeeks: number
-  /** ⭐ STEP 2 (§4a): how many SHOOT WEEKS the term asks – the campaign's whole price in time,
-   *  frozen at arrival like every other promise so the letter can state its own obligation and keep
-   *  stating it after a catalogue retune (the `AcademyLetterTerms` rule: numbers, never assembled
-   *  prose). Quiet Hour asks exactly 2; the bigger asks (campaigns 3-4, global 5-6, cap 6/yr) are
-   *  RECORDED in the plan doc only and deliberately not built. */
+  /** ⭐ STEP 2 (§4a): how many SHOOT WEEKS the term asks PER CONTRACT YEAR – the campaign's whole
+   *  price in time, frozen at arrival like every other promise so the letter can state its own
+   *  obligation and keep stating it after a catalogue retune (the `AcademyLetterTerms` rule:
+   *  numbers, never assembled prose). Per year and not per term since P6's multi-year churn: a
+   *  2-year deal asking 2 shoots a year names 4 weeks at signature. On every letter written before
+   *  the portfolio the term was one year, so «per term» and «per year» were the same number and an
+   *  old paper keeps meaning exactly what it said. */
   shootCount: number
   /** ⭐ STEP 2 (§4a): THE NAMED WEEKS – absolute career weeks, written ONCE by the signature
    *  (`acceptOffer`'s ad arm via `chooseShootWeeks`), absent exactly while the letter is unsigned.
@@ -824,6 +875,30 @@ export interface AdOfferTerms {
    *  week's recovery, not the rest week's). A week the college freeze swallows simply lapses –
    *  silently, no penalty, no makeup week. */
   shootWeeks?: number[]
+}
+
+/** ⭐⭐ ONE ROW OF THE PORTFOLIO SHELF (round 29 part four P6/§8), as the sponsors surface reads it
+ *  – a category, filled or empty, with the live deal named. Derived at snapshot time; the SCREEN
+ *  prices nothing and re-derives no gate, which is `KitDealView`'s own rule one type up. */
+export interface AdPortfolioRow {
+  category: AdCategory
+  /** the shelf's word for the trade ("Watches"), or "The capstone" for the crowning row */
+  label: string
+  /** filled = a signed deal is running; open = her band writes here and the slot is empty;
+   *  closed = the category has not opened for her yet (the gate rides in `opensAtRank` /
+   *  `seasonsInTop10`) */
+  state: 'filled' | 'open' | 'closed'
+  /** filled rows: the deal's own frozen facts */
+  brand?: string
+  cashCents?: number
+  termYears?: number
+  untilWeek?: number
+  /** open rows: the cheque her current band would be written at, per contract year */
+  openCashCents?: number
+  /** closed rows: the standing the category opens at (trade categories)... */
+  opensAtRank?: number
+  /** ...or the capstone's tenure – seasons ended inside the top 10, held and needed */
+  seasonsInTop10?: { held: number; needed: number }
 }
 
 /** ⭐⭐⭐ ROUND 27 #6 – WHAT THE NATIONAL SQUAD'S INVITATION STATES, WRITTEN BEFORE THE WEEK IT IS

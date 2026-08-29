@@ -281,7 +281,7 @@ export type CalendarWeekFacts = Pick<
   // the way it marks the departure – a decision already made, visible before it arrives. Optional
   // for the same fixture reason – absence means no deal is running, which is what every fixture
   // written before it was about.
-  Partial<Pick<Snapshot, 'adShoot'>> &
+  Partial<Pick<Snapshot, 'adShoots'>> &
   // ⭐ ROUND 28 #1 – THE MASSEUR, so the week can draw the sessions his rung buys. Three facts and
   // no fourth: is he hired, how many sessions the dial is set to, and does he travel (the one thing
   // that decides whether a tournament week has him in it at all). Optional for the fixture reason
@@ -426,7 +426,9 @@ export function calendarWeekFor(snap: CalendarWeekFacts, week: number): Calendar
   // decision: `masseurWorksThisWeek` refuses inside the freeze and `adShootHolds` swallows a shoot
   // week the freeze covers, so a calendar drawing either would promise work the sim does not do.
   const frozen = snap.college != null && week < snap.college.untilWeek
-  const shooting = !frozen && (snap.adShoot?.weeks.includes(week) ?? false)
+  // Any live deal of the portfolio can own the week (P6): the first deal naming it lends the name.
+  const shootDeal = frozen ? undefined : snap.adShoots?.find((d) => d.weeks.includes(week))
+  const shooting = shootDeal !== undefined
   const bookedOff = snap.vacations.some((v) => v.week === week)
   const awayThisWeek = snap.arrival?.week === week
   // ⚠⚠ ROUND 29 #3 – `&& !shooting` STOOD HERE AND IT WAS A RULE ONLY THIS FILE HELD. The engine's
@@ -615,7 +617,7 @@ export function calendarWeekFor(snap: CalendarWeekFacts, week: number): Calendar
   return {
     ...base,
     days,
-    shoot: shooting && snap.adShoot ? { brand: snap.adShoot.brand, days: shootDays } : null,
+    shoot: shootDeal ? { brand: shootDeal.brand, days: shootDays } : null,
     // ⚠ THE HOLIDAYS ARE A DIFFERENT WEEK NOW, AND THE TITLE SAYS SO (W3-SUMMER). The engine develops
     // and fatigues a summer training week differently - two sessions a day, no school - so a week
     // labelled "Training week" while the sim is running a block would be the screen under-reporting a
@@ -645,7 +647,7 @@ export function calendarWeekFor(snap: CalendarWeekFacts, week: number): Calendar
       resting,
       knockPart: knock?.part ?? null,
       matchIndex,
-      shootBrand: shooting ? (snap.adShoot?.brand ?? null) : null,
+      shootBrand: shootDeal?.brand ?? null,
       shootDays,
       masseurSessions: base.masseurDays.length,
     }),
@@ -824,7 +826,8 @@ export function lookAheadFor(snap: CalendarWeekFacts): LookAheadRow[] {
     // genuinely happens (she simply recovers worse), so the tappable/booked marker stays true and
     // the shoot never pretends to own the week. Below `college` too: leaving for four years
     // outranks one working day.
-    const shoot = snap.adShoot != null && snap.adShoot.weeks.includes(w)
+    const shootRow = snap.adShoots?.find((d) => d.weeks.includes(w))
+    const shoot = shootRow !== undefined
     const kind: LookAheadRow['kind'] = vacation
       ? 'vacation'
       : practice
@@ -849,7 +852,7 @@ export function lookAheadFor(snap: CalendarWeekFacts): LookAheadRow[] {
           : college
             ? 'Leaves for college'
             : shoot
-              ? `${snap.adShoot!.brand} shoot`
+              ? `${shootRow!.brand} shoot`
               : exam
                 ? 'Exams'
                 : offSeason

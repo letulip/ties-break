@@ -264,21 +264,33 @@ const confirmMessage = computed(() => {
   if (pendingSign.value.kind === 'ad') {
     const t = pendingSign.value.terms as AdOfferTerms
     const until = weekLabel(week.value + Math.max(1, t.termWeeks) - 1)
+    const years = Math.max(1, t.termYears ?? 1)
+    // ⭐ P6 – the fee is PER CONTRACT YEAR on a multi-year paper, and the confirm says when the
+    // rest of it arrives; a one-year letter keeps its original sentence to the word.
+    const feeClause =
+      years === 1
+        ? `A one-time fee of ${formatCents(t.cashCents)}, paid to the family now`
+        : `${formatCents(t.cashCents)} a year for ${years} years – the first year's fee paid to the family now, the rest on each anniversary`
     const shoots = chooseShootWeeks(
       game.snapshot?.seed ?? '',
       week.value,
       t.termWeeks,
       t.shootCount,
       ECONOMY.advertising.shootLeadWeeks,
-    ).map((w) => weekLabel(w))
+    )
+    // ⚠ THE PHONE RULE (round-20 #3, CLAUDE.md): the capstone names 16 weeks over eight years, and
+    // sixteen dates is a dialog taller than a phone. Six are named – more than any single year
+    // books – and the rest are counted, so the sentence grows by one clause however long the term.
+    const named = shoots.slice(0, 6).map((w) => weekLabel(w))
+    const more = shoots.length - named.length
     const shootLine =
-      shoots.length > 1
-        ? `${shoots.slice(0, -1).join(', ')} and ${shoots[shoots.length - 1]}`
-        : (shoots[0] ?? '')
+      named.length > 1 ? `${named.slice(0, -1).join(', ')} and ${named[named.length - 1]}` : (named[0] ?? '')
     // The clause folds away on a degenerate term with no room for a shoot (`chooseShootWeeks`
     // yields fewer weeks rather than a broken promise) – the shipped catalogue always names them.
-    const shootClause = shootLine ? `, with her shoot weeks on ${shootLine} – working weeks, less rest in them` : ''
-    return `Sign with ${t.brand}? A one-time fee of ${formatCents(t.cashCents)}, paid to the family now – her face in their campaign to ${until}${shootClause}. This cannot be undone.`
+    const shootClause = shootLine
+      ? `, with her shoot weeks on ${shootLine}${more > 0 ? ` and ${more} more across the term` : ''} – working weeks, less rest in them`
+      : ''
+    return `Sign with ${t.brand}? ${feeClause} – her face in their campaign to ${until}${shootClause}. This cannot be undone.`
   }
   const t = pendingSign.value.terms as KitOfferTerms
   const value = formatCents(t.kitAllowanceCents)

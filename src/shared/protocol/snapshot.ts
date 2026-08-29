@@ -13,7 +13,7 @@ import type { CareerTotals, DebtView, FinanceWeekPoint, FinanceWindow, StopReaso
 import type { InjuryReport, Knock, KnockPrompt, SnapshotInjury } from './health'
 import type { CountingResult, LadderViews, StandingRow } from './ladder'
 import type { BirthdayPrompt, DiarySnapshot, KidLife, Milestone, RadarAxis, TrainingRead } from './narrative'
-import type { CoachMarketRow, KitDealView, KitLineView, Offer, ShootClashPrompt, ShopView, SnapshotAcademy, TourBriefing } from './offers'
+import type { AdPortfolioRow, CoachMarketRow, KitDealView, KitLineView, Offer, ShootClashPrompt, ShopView, SnapshotAcademy, TourBriefing } from './offers'
 import type { CoachEdgePlacement, PlayerProfile, PracticeBooking, RecoveryBuff, VacationBooking, WeekPlan } from './profile'
 
 /** ⭐⭐ ROUND-28 #8 – THE WHOLE HOUSEHOLD'S WEEK, IN THREE NUMBERS.
@@ -106,15 +106,30 @@ export interface Snapshot {
    *  boolean, `schoolEndsWeek`'s own reason one line up – the look-ahead asks about weeks that are
    *  not this one. */
   collegeDepartsWeek: number | null
-  /** ⭐ AD STEP 2 (the-face-and-the-court.md §4a) – THE RUNNING ENDORSEMENT'S SHOOT WEEKS, or null
-   *  when no signed advertising deal is in force this week. The calendar look-ahead marks them the
-   *  way it marks the college departure – a decision already made, visible before it arrives – and
-   *  the brand rides along so the row can say WHOSE shoot it is without the UI re-deriving a deal.
+  /** ⭐ AD STEP 2 (the-face-and-the-court.md §4a) – EVERY RUNNING ENDORSEMENT'S SHOOT WEEKS, one
+   *  row per live deal, empty when none is in force this week. The calendar look-ahead marks them
+   *  the way it marks the college departure – a decision already made, visible before it arrives –
+   *  and the brand rides along so a row can say WHOSE shoot a week is without the UI re-deriving a
+   *  deal.
    *
-   *  DERIVED, never persisted: `toSnapshot` reads the active deal's own frozen terms
-   *  (`activeAdDeal`), so the markers and the recovery the engine actually charges can never name
-   *  different weeks. Weeks are absolute career weeks, `weekLabel`'s own unit. */
-  adShoot: { brand: string; weeks: number[] } | null
+   *  ⚠ PLURAL SINCE ROUND 29 PART FOUR P6 (it was `adShoot`, one deal's row): the portfolio runs
+   *  several deals at once and each names its own weeks. DERIVED, never persisted: `toSnapshot`
+   *  reads each live deal's own frozen terms (`activeAdDeals`), so the markers and the recovery the
+   *  engine actually charges can never name different weeks. Weeks are absolute career weeks,
+   *  `weekLabel`'s own unit. */
+  adShoots: { brand: string; weeks: number[] }[]
+  /** ⭐⭐ ROUND 29 PART FOUR P6/§8 – THE ADVERTISING PORTFOLIO, AS THE SHELF THE OWNER DESCRIBED:
+   *  one row per category in shelf order, filled or empty, with the live deal named. `filled` rows
+   *  carry the deal's own frozen numbers; `open` rows carry the cheque her CURRENT band would be
+   *  written at, so the surface can say what an empty slot is worth today; `closed` rows carry the
+   *  standing (or, for the capstone, the seasons-in-top-10 tenure) still needed. The capstone row
+   *  is last and appears once any professional band is open, so the shelf always shows where the
+   *  ladder ends.
+   *
+   *  DERIVED at snapshot time from the offers and the catalogue – the screen prices nothing and
+   *  re-derives no gate, the same rule every other derived block on this snapshot keeps. Empty
+   *  before her eighteenth birthday: there is no shelf to show a junior. */
+  adPortfolio: AdPortfolioRow[]
   fundsCents: number
   profile: PlayerProfile
   plan: WeekPlan

@@ -53,19 +53,26 @@ import { familyWeeklyIncomeCents } from '../src/engine/world/coachMarket'
 import { payRetainer, isRetainerWeek, appearanceFeeFor, resultBonusFor, sponsorStandingOf, travelCostFor } from '../src/engine/world/sponsors'
 import type { SeasonEvent } from '../src/engine/season/types'
 import { resumeMain } from '../src/engine/rng'
-import { adWritesAt, kitTermsFor, signOffer } from '../src/engine/offers'
+import { adCategoryOf, adWritesAt, kitTermsFor, signOffer } from '../src/engine/offers'
 import { ECONOMY, kidPrizeShareBps, kidPrizeShareCents, parentIncomeForWeekCents } from '../src/engine/economy'
 import { WEEKS_PER_YEAR } from '../src/engine/season/calendar'
-import { DEFAULT_PROFILE, type KitOfferTerms, type Offer } from '../src/shared/protocol'
+import { DEFAULT_PROFILE, type AdOfferTerms, type KitOfferTerms, type Offer } from '../src/shared/protocol'
 
 const AD = ECONOMY.advertising
-/** ⚠ THE CATALOGUE BECAME A LADDER (round 29 part two #19/#20), so the five per-house numbers
- *  moved out of `ECONOMY.advertising` into `ECONOMY.advertising.houses`. Every claim in this
- *  file is about the rung that already shipped – Quiet Hour, $20,000, two shoot weeks – so it
- *  is REPOINTED and not re-aimed: `AD` still carries the mechanics every house shares (the age
- *  bar, the weekly chance, the decide weeks, the lead, the clash price) and `WATCH` carries
- *  that one house's own terms, which have not moved by a cent. */
-const WATCH = ECONOMY.advertising.houses.watch
+/** ⚠ THE CATALOGUE BECAME A LADDER (round 29 part two #19/#20) AND THEN A PORTFOLIO (part four
+ *  P6/§8). Every claim in this file is about the shipped watch deal's SHAPE – a watchmaker,
+ *  $20,000, two shoot weeks over a one-year term – and papers exactly like it are persisted in
+ *  real saves, so `WATCH` freezes that LEGACY paper here: the fee read off the watches category's
+ *  ≤200 cell (the anchor, unchanged to the cent), the brand its first house, the term and the
+ *  two-shoot ask as the old letters carry them. `AD` still carries the mechanics every house
+ *  shares (the age bar, the weekly chance, the decide weeks, the lead, the clash price). */
+const WATCH = {
+  brand: ECONOMY.advertising.categories.watches.houses[0],
+  maxWtaRank: ECONOMY.advertising.bands[0].maxWtaRank,
+  cashCents: ECONOMY.advertising.categories.watches.feeCentsByBand[0]!,
+  termWeeks: 52,
+  shootWeeksPerTerm: 2,
+}
 
 /** Her age this week, off the world's own clock – the same read every gate makes. */
 const ageOf = (world: WorldState): number =>
@@ -98,9 +105,11 @@ function adultPro(seed: string) {
   return { world, rng }
 }
 
-/** The first week at or after `from` whose own dice say an advertising house writes. -1 for none. */
+/** The first week at or after `from` whose own dice say the WATCHES house writes – the portfolio
+ *  rolls per category (P6) and this file's cash claims are about the anchor cell's letter. -1 for
+ *  none. */
 function firstAdRollFrom(seed: string, from: number, limit: number): number {
-  for (let w = from; w < from + limit; w++) if (adWritesAt(seed, w, AD.offerChance)) return w
+  for (let w = from; w < from + limit; w++) if (adWritesAt(seed, w, AD.offerChance, 'watches')) return w
   return -1
 }
 
@@ -150,7 +159,9 @@ describe('the fixture is what it claims to be', () => {
 describe('§1 a cash sponsor deal', () => {
   it('⭐⭐ signing pays her the ramp\'s share of the campaign fee, and the family the rest', () => {
     const world = structuredClone(life.world)
-    const offer = world.offers.find((o) => o.kind === 'ad')!
+    const offer = world.offers.find(
+      (o) => o.kind === 'ad' && adCategoryOf(o.terms as AdOfferTerms) === 'watches' && o.state === 'open',
+    )!
     expect(offer, 'a letter is on the table to sign').toBeDefined()
 
     const kidBefore = world.kidFundsCents ?? 0
@@ -184,7 +195,9 @@ describe('§1 a cash sponsor deal', () => {
     expect(kidPrizeShareBps(18), 'and the first year is ten percent').toBe(1000)
     expect(WATCH.cashCents, 'the campaign fee is twenty thousand dollars').toBe(20_000_00)
 
-    const offer = world.offers.find((o) => o.kind === 'ad')!
+    const offer = world.offers.find(
+      (o) => o.kind === 'ad' && adCategoryOf(o.terms as AdOfferTerms) === 'watches' && o.state === 'open',
+    )!
     const kidBefore = world.kidFundsCents ?? 0
     const fundsBefore = world.fundsCents
     acceptOffer(world, offer.id)
@@ -198,7 +211,9 @@ describe('§1 a cash sponsor deal', () => {
 
   it('the transfer is on the durable ledger too, at the rate that produced it', () => {
     const world = structuredClone(life.world)
-    const offer = world.offers.find((o) => o.kind === 'ad')!
+    const offer = world.offers.find(
+      (o) => o.kind === 'ad' && adCategoryOf(o.terms as AdOfferTerms) === 'watches' && o.state === 'open',
+    )!
     const hers = kidPrizeShareCents(WATCH.cashCents, ageOf(world))
     acceptOffer(world, offer.id)
 
@@ -217,7 +232,9 @@ describe('§1 a cash sponsor deal', () => {
     // varied and nothing else, so a green here is about the ramp's floor rather than about a
     // different career.
     const world = structuredClone(life.world)
-    const offer = world.offers.find((o) => o.kind === 'ad')!
+    const offer = world.offers.find(
+      (o) => o.kind === 'ad' && adCategoryOf(o.terms as AdOfferTerms) === 'watches' && o.state === 'open',
+    )!
     // Her birthday is her own; moving the world's week back a whole year moves her age by one.
     world.week -= WEEKS_PER_YEAR
     offer.week = world.week
@@ -305,17 +322,20 @@ describe('§3 the sponsor money that is NOT a cheque to her', () => {
 
     const rng = resumeMain(world.rngMain)
     const kidBefore = world.kidFundsCents ?? 0
-    const share = kidPrizeShareCents(terms.retainerCents ?? 0, ageOf(world))
 
-    // A full season of real weeks. Every week her account moves is recorded with the amount, and the
-    // claim is read off that record afterwards rather than guessed at per tick – which also keeps
-    // the arm free of an off-by-one about whether `tickWeek` pays before or after it advances.
-    const moved: { week: number; cents: number }[] = []
+    // A full season of real weeks. Every week her account moves is recorded with the amount AND the
+    // ramp share the retainer owed at that week's age – her nineteenth birthday can fall inside the
+    // walk and the ramp steps with it (this fixture's arrival week moved when the portfolio gave the
+    // watches letter its own dice, and the first draft of this walk froze the share at the start and
+    // reddened on the step). The claim is read off that record afterwards rather than guessed at per
+    // tick – which also keeps the arm free of an off-by-one about whether `tickWeek` pays before or
+    // after it advances.
+    const moved: { week: number; cents: number; owed: number }[] = []
     for (let i = 0; i < WEEKS_PER_YEAR; i++) {
       const before = world.kidFundsCents ?? 0
       tickWeek(world, rng)
       const delta = (world.kidFundsCents ?? 0) - before
-      if (delta !== 0) moved.push({ week: world.week, cents: delta })
+      if (delta !== 0) moved.push({ week: world.week, cents: delta, owed: kidPrizeShareCents(terms.retainerCents ?? 0, ageOf(world)) })
     }
 
     // ⚠⚠ THE ARM CONTAINS THE THING IT IS PROVING ABSENT, and this is the assertion that says so:
@@ -330,14 +350,16 @@ describe('§3 the sponsor money that is NOT a cheque to her', () => {
     // so no prize, appearance fee or result bonus can be mistaken for one here.
     for (const m of moved) {
       expect(isRetainerWeek(m.week), `w${m.week} moved her account and is not a pay week`).toBe(true)
-      expect(m.cents, `w${m.week} moved by something other than the retainer's share`).toBe(share)
+      expect(m.cents, `w${m.week} moved by something other than the retainer's share`).toBe(m.owed)
     }
     // ...and she really was paid at least once, so the season is not silently proving nothing.
     // ⚠ AT LEAST ONE RATHER THAN FOUR: `dealUntilWeek` ends a one-season term with the season she
     // signed in, so a deal signed mid-year covers fewer than four of the quarterly pay weeks. The
     // count is not the claim; what moved her account is.
     expect(moved.length, 'the retainer really paid inside the term').toBeGreaterThanOrEqual(1)
-    expect((world.kidFundsCents ?? 0) - kidBefore, 'and by exactly the ramp, every time').toBe(share * moved.length)
+    expect((world.kidFundsCents ?? 0) - kidBefore, 'and by exactly the ramp, every time').toBe(
+      moved.reduce((sum, m) => sum + m.owed, 0),
+    )
   })
 
   it('⭐⭐ the local sponsor cameo is a rescue written to the FAMILY, and she takes none of it', () => {

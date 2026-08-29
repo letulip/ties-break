@@ -40,7 +40,7 @@ const FREE_DAYS = [2, 6]
 
 const base = (): Snapshot => careerSnapshot(AT, SEED)
 
-/** The brand and the weeks a signed endorsement names. `toSnapshot` derives `adShoot` from the
+/** The brand and the weeks a signed endorsement names. `toSnapshot` derives `adShoots` from the
  *  deal's own frozen terms; a test that walked a career until a letter arrived AND was signed AND
  *  named this week would be testing `chooseShootWeeks`, which `tests/ad-offer.test.ts` already
  *  owns. What is under test here is what the SCREENS do with the fact. */
@@ -48,7 +48,7 @@ const BRAND = 'Quiet Hour'
 
 /** A career whose signed deal has a shoot on the week the calendar is about (`AT + 1`). */
 function shootingNext(): Snapshot {
-  return { ...base(), adShoot: { brand: BRAND, weeks: [AT + 1] } }
+  return { ...base(), adShoots: [{ brand: BRAND, weeks: [AT + 1] }] }
 }
 
 /** ...and one with a masseur at `sessions` a week, which must be one of the shipped rungs. */
@@ -157,7 +157,7 @@ describe('round 28 #1 - the masseur\'s sessions are in the week', () => {
 // #6 – THE BUTTON SAYS IT, AND THE WEEK COMBINES
 // =================================================================================================
 describe('round 28 #6 - the button before a shoot week names it', () => {
-  // ⚠ MUTATION: delete the `adShoot` branch in `useWeekAhead` and the label falls back to
+  // ⚠ MUTATION: delete the `adShoots` branch in `useWeekAhead` and the label falls back to
   // "Training week" - this goes red and the training-week control below stays green, so no single
   // mutation satisfies both.
   it('the week button reads `Shooting week`', () => {
@@ -254,7 +254,7 @@ describe('round 28 #4 - a shoot week is marked in the season feed', () => {
   it('...and it marks exactly the weeks the letter named, not one more', () => {
     // The feed draws `UPCOMING_WEEKS` rows; two named weeks inside that horizon must produce two
     // marks. A chip that appeared on the whole feed would satisfy the test above and fail this one.
-    const two = { ...base(), adShoot: { brand: BRAND, weeks: [AT + 1, AT + 3] } }
+    const two = { ...base(), adShoots: [{ brand: BRAND, weeks: [AT + 1, AT + 3] }] }
     const wrapper = mountSeason(two)
     expect(wrapper.findAll('.shoot-chip').length).toBe(2)
     wrapper.unmount()
@@ -302,7 +302,7 @@ describe('round 28 #1 x #6, re-aimed at round 29 #3 - a shoot week draws his tab
     // "he never draws at all"; it now proves the shoot week's count is not an accident of the
     // fixture. Same career, same rung, a week the letter did not name.
     const daily = ECONOMY.masseur.rungs[2].sessions
-    const elsewhere = { ...base(), adShoot: { brand: BRAND, weeks: [AT + 4] } }
+    const elsewhere = { ...base(), adShoots: [{ brand: BRAND, weeks: [AT + 4] }] }
     const wrapper = mountCalendar(withMasseur(elsewhere, daily))
     expect(blocksSaying(wrapper, 'Body work')).toBe(daily)
     wrapper.unmount()

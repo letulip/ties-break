@@ -137,7 +137,8 @@ export function useWeekAhead(): ComputedRef<WeekAhead> {
     // for a state that cannot arrive. `calendarWeekFor` DOES check it, because the Calendar tab can
     // be opened during the hold – see its own note.
     // ⚠ 'Shooting week' is 13 characters, inside the ~22 the button's ellipsis budget allows.
-    if (snap.adShoot?.weeks.includes(next)) return { kind: 'shoot', label: 'Shooting week' }
+    // Any live deal of the portfolio can own the week (P6 – `adShoots` is one row per deal).
+    if (snap.adShoots?.some((d) => d.weeks.includes(next))) return { kind: 'shoot', label: 'Shooting week' }
     // W4-SCHOOL: the NEXT week's own answer – she may leave school between this week and it.
     if (isExamWeek(next, snap.schoolEndsWeek !== undefined && next >= snap.schoolEndsWeek)) {
       return { kind: 'exam', label: 'Exam week' }
