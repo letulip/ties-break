@@ -1862,12 +1862,53 @@ rest are new.
   dropped (red), the incumbent left running so two contracts overlap (red), and the queue boundary
   collapsed into an interruption (red).
 
-- [ ] **13. ⚠⚠ «вот и можно как раз добавить cut тренера на weekly экране для прозрачности»** –
+- [x] **13. ⚠⚠ «вот и можно как раз добавить cut тренера на weekly экране для прозрачности»** –
   **MISSED BY ME, not by an agent.** Part-one #13 shipped the coach's 10%/5% share as one line on the
   Coaches tab; this is his FOLLOW-UP asking for it on the WEEKLY screen, and I never briefed it into
   any step. Found by auditing the ledger when he asked «остальное же доделали?». It ships with the
   commission step. – **build.**
   The coach's 10%/5% share on the weekly screen, not only as a sentence on the coaches page.
+
+  ⚙⚙ **SHIPPED (r29p7a).** The Weekly Story's Finances tile carries a second memo under the balance,
+  beside her cut:
+
+  > *Coach's cut 10% – $4,600, inside Spent above.*
+
+  ⚠⚠ **A MEMO AND NOT A ROW, WHICH IS THE OPPOSITE OF HER CUT AND FOR THE OPPOSITE REASON – and it
+  is the trap in the item.** Her cut is a ROW in that column because those cents never entered the
+  family ledger, so the column only adds up when the gross, the cut and the remainder are all in it.
+  The coach's share IS a family expense – `finalizeTournament` writes it through `addEvent` as a real
+  `coaching` row the same tick – so it is **already inside `Spent`**, and a fourth row would charge
+  one cheque twice. The sentence says where the money already is rather than pretending it is a new
+  deduction.
+
+  ⭐⭐ **THE PIN DISCIPLINE HELD: no percentage is typed anywhere.** `finalizeTournament` parks the
+  cents it just debited and `staffResultShareBps('coach', finishIdx)` – the very call that paid him –
+  onto the durable ledger (`FinanceWeek.coachCut`, optional, **no schema move**: absent is what every
+  historical save already means, `kidShare`'s own precedent), the snapshot rounds the rate once at
+  its boundary, and the template reads it. Move `ECONOMY.staffShare` and the sentence moves with the
+  cheque; that is an arm, not a hope.
+
+  ⚠ **NOT ON THE EVENT FEED, and the choice is the one her cut already measured**: the feed is
+  count-capped (`EVENTS_CAP = 400`) and a save at week 412 deleted every money row on the tick that
+  wrote it. «The money for one week» is a question a count-capped feed must never be asked.
+
+  ⚠ **SILENT ON EVERY WEEK THE RULE PAYS NOTHING** – below a final, off the pro tour, or a
+  self-coached family. Both exclusions are driven arms, not assertions about the copy.
+
+  ⚠ **THE MASSEUR IS DELIBERATELY NOT HERE.** His ask names the coach, part-one #13 shipped the
+  coach, and the masseur's 3%/1.5% has its own surface. Say the word and it is one line.
+
+  **Evidence.** `tests/component/round29p2-coach-cut-weekly.test.ts` – 9 mounted arms over a REAL
+  driven title (`finishes[KID_ID]` forced, then resolved through the shipped tick), the figure parsed
+  back OFF THE SCREEN and matched against the coaching expense row.
+  ⚠⚠ **ONE FIRST-DRAFT DEAD GUARD, KILLED BY ITS OWN MUTATION RUN AND WRITTEN OUT RATHER THAN
+  QUIETLY FIXED**: `financeRows` has TWO early returns – the netted `[Income, Spent]` pair on a week
+  that split no cheque with her, and the four-row gross column on a week that did – and the first
+  draft only ever mounted the first. **The double-count mutation the whole of §2 exists for passed it
+  green.** Both shapes are driven now, and the second fixture is also the realistic one (a
+  nineteen-year-old winning a title with a coach on the payroll). Five mutations in all, each applied
+  alone, with the measured red-counts in the file header.
 
 - [~] **14. «травмы бывают долгими и рехаб может быть с вещами, я бы тут еще подумал – мы это вроде бы
   делали: у нас кроссовки участвуют в рехабе вроде бы. Проверь пожалуйста.»** – **answer.** ⚠ Round 29
@@ -2092,7 +2133,7 @@ larger one.
   raised her, instead of a cut of her money. The academy stops being a $12M purchase that only bills
   upkeep and becomes the business the shop is actually FOR.
 
-- [ ] **P3. ⭐⭐⭐ «как менеджер может от этого что-то получать в свою очередь. 10-20% например…
+- [x] **P3. ⭐⭐⭐ «как менеджер может от этого что-то получать в свою очередь. 10-20% например…
   контракт на полную сумму ребенку приходит на почту, после подписания видим на счету уже
   родительский кат»** – ⚙ **RULING, and it settles the question I could not.**
 
@@ -2107,6 +2148,131 @@ larger one.
 
   ⚠ Scope: this is about SPONSOR cheques. Prize money's 50/50 is his standing ruling and is untouched
   unless he says otherwise. The exact percentage inside 10-20 is still his.
+
+  ⚙⚙ **SHIPPED (r29p7a), and the whole wave's sponsor economy was re-measured against it.**
+  `bankSponsorCheque` credits the family `round(gross x ECONOMY.managerCommission.bps / 10_000)` and
+  her the remainder – one rounding, the sides swapped, the pair still re-adding to the brand's cheque
+  to the cent. ⚠ **The rate is ONE constant and it is PROVISIONAL at 15%** – the midpoint of his own
+  «10-20% например», picked because he named a band and not a number. Moving it is one edit, and
+  every sentence on every screen reads `managerCommissionBps()`.
+
+  ⚠⚠ **NO AGE TERM, and that is the ruling rather than an omission.** «контракт на полную сумму
+  ребенку» has no birthday in it. It is also where most of the money is: the old ramp gave the family
+  **100%** of every sponsor cheque before her eighteenth, which is what made the measured 63.1% so
+  much higher than the 50% everybody quoted.
+
+  ⚠ **PRIZE MONEY WAS NOT TOUCHED, said plainly because it is his standing ruling.**
+  `finalizeTournament` still splits the tournament's cheque by `kidPrizeShareBps` and the staff
+  shares still come off the gross. A driven title asserts it, and the mutation that routes the prize
+  through the commission reddens that arm and nothing else.
+
+  ### THE BENCH – before/after, and the «before» is the published run REPRODUCED, not quoted
+
+  `npx vite-node tools/sponsor-ladder-reach.ts` at its defaults (**108 careers x 780 weeks**, 9
+  presets x 2 policies x 6 seeds, portfolio-aware, eager signing) plus `--buy-business`. ⚠ The A arm
+  is a **control worktree with these three commits reverted** (`git revert --no-commit`, detached),
+  never «the previous commit» – and it **reproduces every published figure to the dollar**, which is
+  the provenance check and not a coincidence: kit cash median **$4,759,522**, ad p90 **$27,342,800**,
+  ad best **$85,325,000**, family-banked p90 with the businesses **$66,108,519**, academy payback
+  **8.0**.
+
+  | the published figure | before (control) | after (15%) |
+  | --- | ---: | ---: |
+  | the parent's share of gross sponsor money | **61.3%** | **15.0%** |
+  | kit cash, median of the 51 careers paid any | **$4,759,522** | **$1,009,084** |
+  | kit cash, the largest career | $12,885,663 | $2,913,005 |
+  | ad post family-banked – median · p90 · best | $0 · **$27,342,800** · **$85,325,000** | $0 · **$6,315,000** · **$20,505,000** |
+  | family-banked p90 **with the businesses** | **$66,108,519** | **$35,644,616** |
+  | **academy payback at the median builder** | **8.0 seasons** | **8.0 seasons** |
+  | GROSS sponsor money p90 (the ladder itself) | $55,439,384 | $55,470,830 |
+
+  ⚠ **61.3%, not 63.1%, and both are right.** The 63.1% in the section below was measured at 72
+  careers (`--seeds 4`); the same statistic at the published 108-career scale is 61.3%. The gross
+  line is the check that says **the split moved and the ladder did not** – same to four significant
+  figures in both arms.
+
+  ### ⭐⭐⭐ THE ONE SENTENCE ON THE PAYBACK, WHICH IS THE ONE THAT MATTERED
+
+  **The counterweight held: the academy still repays itself in 8.0 seasons at the median builder,
+  unmoved to the tenth.** ⚠ **But read the second line before believing the first**: it held because
+  the POPULATION of builders changed, not because the academy got better. The whole academy is built
+  by **27 of 108** careers now against 40, at median week **602** against 512, and the builders'
+  minimum reputation rose from **2.40 to 3.65** – the commission priced the weakest builders out, and
+  the payback rate is computed at the builders' own reputations. The «worst builder» reading improves
+  from 13.3 seasons to 8.7 for exactly that reason. Nothing was tuned to rescue it.
+
+  ### ⭐⭐ AND WHAT SHE NOW BANKS – the ruling moves money to her, and this is how much
+
+  | her own account, over a career | before | after |
+  | --- | ---: | ---: |
+  | median | $104,535 | $111,010 |
+  | p90 | **$29,239,517** | **$56,519,800** |
+  | best of 108 | $78,778,172 | $157,083,956 |
+
+  **At p90 she almost exactly doubles (+93%), and at the top she does (+99%).** Of the after figure,
+  **$47,150,206 at p90** is sponsor money specifically – a new line on the bench, read off the till
+  (`gross − what the family's row banked`) rather than subtracted at the end.
+
+  ### ⚠ AND THE POOREST ARM SURVIVES – «мы ни за что не наказываем», checked both ways
+
+  **34 of 108 careers ended before the horizon on BOTH arms, unchanged**, and the median career banks
+  **$999,634 in both** – it holds no brand, so the commission never reaches it. Nobody is bankrupted
+  by this and nobody is newly unable to pay a coach. What it costs is the top: family-banked p90
+  **$55.18M → $26.87M**, peak wallet p90 **$52.37M → $24.17M**, and the p90 career's dearest reachable
+  rung drops from the long-range plane to **the plane**. That is P5's own ruling doing its work – the
+  top shelf is for exceptional careers – but it is a real loss and it is his to accept.
+
+  ⚠ **The largest single consequence on a SCREEN is the coach market's cap.** `familyWeeklyIncomeCents`
+  had to follow the till (round-21 #12's «the meter must read what the till banks»), so the icon
+  rung's retainer term falls from **$2,884.62/wk gross** – or $1,442 at the old 50% cap – to
+  **$433/wk**. Flagged, never refused: `hireCoach` does not consult the budget.
+
+  ⚠⚠ **RNG: FROZEN MAIN CAPTURE 41550 / `e6b0c709` UNMOVED, no re-pin.** Zero draws added – integer
+  arithmetic on a cheque already decided. Per-key frozen-career diff, presets 0/1/2 x policy 1,
+  control = the detached worktree above, headers checked against the invocation: **byte-identical on
+  every key, `rngMain` included.** ⚠ And the null is EXPLAINED rather than assumed: the frozen career
+  walks 156 weeks to age ~17 and **signs no sponsor deal at all** (probed: 0 kit, 0 ad, 0 sponsor
+  rows on all three presets), so `bankSponsorCheque` is never reached and zero movement is the
+  expectation. The reader is present on the B tree; the absurd-value check that proves it lives in
+  the test file (`ECONOMY.managerCommission.bps` at 90% moves the split, the ledger row and the
+  sentence on her page together).
+
+  ⚠ **SCHEMA STAYS AT 66.** A commission is arithmetic at the moment of signing; no field was added
+  for it.
+
+  ### The surfaces, and what the letter may not say
+
+  * **The letter is at FULL VALUE and quotes no split** – `OfferLetter`'s «A one-time fee of $X, paid
+    the day this is signed» was already right and is pinned as such. ⚠ The ad CONFIRM said the money
+    was «paid to the family now» and now says **«paid to her now»**: the figure never moved, the
+    payee did, on the one screen where the decision is actually taken.
+  * **The Bills portfolio card** says it after signing: «Every fee is written to her at its full
+    value, and the family banks the manager's 15% of it» – the percentage read from the engine.
+  * **Her own page and the Money screen's strip** – `ownAccountNote`'s «N% of every cheque» became
+    «every **prize** cheque» plus «Sponsor cheques are hers, less the manager's 15%». That sentence
+    is the one place a player is told the rule exists, and it had become a promise the ramp does not
+    keep.
+  * **The ledger row** names both halves: «Kit retainer – quarterly, the manager's 15% of $150,000».
+
+  ⚠ **Guards re-aimed with notes, never deleted** – `round28-sponsor-cut` (its SCOPE half is
+  untouched and stays green through every mutation; **one arm INVERTED**, «not one cent before her
+  eighteenth» → «the commission has no age term», because the ruling is what moved),
+  `round29-kid-cut-base` (the week's memo rate is now an EFFECTIVE blend, 5000 → **5583** on his own
+  fixture, and his measured **1.20** ratio becomes **1.34** – re-derived from the two constants now
+  instead of pinned, so either retune has to explain itself against his report),
+  `round23-kid-share` + its two mounted readers, `round29p4-ad-portfolio`'s anniversary arm.
+  ⚠⚠ **One first-draft dead guard killed by its own mutation run**: the re-add sweep sampled only
+  awkward-LOOKING cents, and at 15% a second independent rounding agrees with subtraction on almost
+  every integer – the disagreement lives at `15x ≡ 50 (mod 100)`, so 10/30/50/70 are witnesses in the
+  sweep now. Five mutations in all, measured red-counts in the file header, and one claim
+  (`Math.floor` in the fee) **left un-guarded and said so** rather than asserted and dead.
+
+  ⚠ **The bench's `--commission N` was re-aimed, not deleted.** It used to SIMULATE the ruling by
+  withdrawing money after the engine had already split by the ramp; run against the shipped engine
+  that would charge the same cheque twice. It now OVERRIDES `ECONOMY.managerCommission.bps` for the
+  run, so the band is still sweepable and the sweep measures the real code path. Its memo parser
+  follows the new row shape, and the «what the brands paid in CASH» heading that actually reported
+  the FAMILY's share is corrected – at 15% that wording would misreport the ladder by a factor of six.
 
 
 - [x] **P4. ⭐ «до академии можно запустить свой бренд одежды (мерча) – это может стать хорошим шагом

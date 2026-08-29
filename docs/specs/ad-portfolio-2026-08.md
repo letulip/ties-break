@@ -79,6 +79,18 @@ is untouched**: every cheque still runs the shipped age ramp through `bankSponso
 bench, and stacking both would make the money unreviewable. At the new scale that step is where the
 «1-2млн для родителя» arithmetic will actually land.
 
+> ⚠⚠ **SUPERSEDED THE SAME NIGHT, AND THE PARAGRAPH ABOVE IS KEPT AS THE RECORD OF THE ORDER THE TWO
+> STEPS SHIPPED IN.** Round 29 part three **P3** built the commission (`ECONOMY.managerCommission`,
+> provisional **15%**), so «every cheque still runs the shipped age ramp» is true of the run that
+> produced this table and of nothing after it. **The ad post's own gross is unmoved** – the ladder,
+> the bands, the churn and the capstone are untouched – but **the family-banked column above is the
+> pre-commission one**: re-measured on the same 108 careers it reads **median $0 · p90 $6.32M ·
+> best $20.51M**, and kit cash's «median of careers paid any» **$4.76M** reads **$1.01M**. The
+> gross those cheques were is the same to four significant figures (p90 $55.44M → $55.47M), which is
+> the check that says the split moved and the ladder did not. Her side of the same money is the new
+> column: **p90 $47.15M** of sponsor cash into her own account. Round 29's ledger carries the full
+> before/after, both arms run from a control worktree with P3 reverted.
+
 ## 4. Surfaces
 
 The Bills page carries **the portfolio shelf** – one row per category, filled (deal named, fee/yr,

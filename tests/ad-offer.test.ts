@@ -55,7 +55,7 @@ import {
 import { resumeMain } from '../src/engine/rng'
 import { activeAdDealIn, adBandFor, adCategoryOf, adLetterRng, adOfferId, adShootWeek, adSpokenFor, adWritesAt, chooseShootWeeks, expireOffers, hasLiveOffer, isOfferLive, isWinterShootWeek, pickAdHouse, raiseAdOffer } from '../src/engine/offers'
 import { sponsorStandingOf } from '../src/engine/world/sponsors'
-import { ECONOMY, kidPrizeShareCents } from '../src/engine/economy'
+import { ECONOMY, managerCommissionCents } from '../src/engine/economy'
 import { isOffSeasonWeek } from '../src/engine/season/calendar'
 import { PLAN_DAYS } from '../src/engine/plan'
 import { weekLabel } from '../src/shared/dates'
@@ -237,18 +237,25 @@ describe('step 1.2 – it can be signed, and the ledger shows it', () => {
   // 5 gives her the WHOLE fee («the deal pays HER, not the family»); his ruling is the prize ramp,
   // which is a SHARE with the family keeping the rest. The fence below (`Object.keys(t)`) is
   // untouched: no `AdOfferTerms` field was added, because the ramp needs none.
-  it('signing splits the fee with her at the ramp, and the ledger shows both halves, same week', () => {
+  // ⚠⚠ RE-AIMED BY ROUND 29 PART THREE P3, 29.08, AND THE CLAIM IS UNCHANGED IN KIND. Round 28 #15
+  // put her ramp on this fee; P3 replaced the ramp with a flat manager's commission («контракт на
+  // полную сумму ребенку приходит на почту, после подписания видим на счету уже родительский кат»),
+  // so the family's half is now the FEE and hers is the remainder. What this arm asserts – both
+  // halves land, the same week, and they re-add to the brand's cheque – is what it always asserted.
+  it('signing splits the fee at the manager`s commission, and the ledger shows both halves, same week', () => {
     const world = structuredClone(life.world)
     const offer = adPost(world)[0]
     const fundsBefore = world.fundsCents
     const kidBefore = world.kidFundsCents ?? 0
     const earnedBefore = world.careerTotals.earnedCents
 
-    // The rate is read off the shipped ramp at HER real age, never restated as a literal – a retune
-    // of `ECONOMY.kidShare` moves this test with the game instead of reddening it.
-    const hers = kidPrizeShareCents(WATCH.cashCents, ageOf(world))
-    const theirs = WATCH.cashCents - hers
-    expect(hers, 'she is eighteen-plus here, so the ramp is really paying').toBeGreaterThan(0)
+    // The rate is read off the shipped constant, never restated as a literal – a retune of
+    // `ECONOMY.managerCommission` moves this test with the game instead of reddening it. ⚠ P3 SWAPPED
+    // WHICH SIDE IS COMPUTED: the fee rounds once and she takes the remainder.
+    const theirs = managerCommissionCents(WATCH.cashCents)
+    const hers = WATCH.cashCents - theirs
+    expect(hers, 'the cheque really reaches her account').toBeGreaterThan(0)
+    expect(theirs, 'and the manager really takes a fee off it').toBeGreaterThan(0)
 
     const signed = acceptOffer(world, offer.id)
     expect(signed.state).toBe('signed')
@@ -257,8 +264,8 @@ describe('step 1.2 – it can be signed, and the ledger shows it', () => {
     expect(world.fundsCents - fundsBefore).toBe(theirs)
     // ...and HER account moved by the rest of it.
     expect((world.kidFundsCents ?? 0) - kidBefore).toBe(hers)
-    // ⚠ THE PENNY RULE, WHICH IS WHY THE TWO ARE READ TOGETHER: one rounding, the family gets the
-    // remainder, so the halves re-add to the brand's cheque exactly.
+    // ⚠ THE PENNY RULE, WHICH IS WHY THE TWO ARE READ TOGETHER: one rounding, SHE gets the
+    // remainder since P3, so the halves re-add to the brand's cheque exactly.
     expect(theirs + hers).toBe(WATCH.cashCents)
 
     // The feed row: income, under 'sponsor' – filed with the other brand money, at what was banked.
@@ -523,14 +530,14 @@ describe('«nobody writes to an amateur» – the college freeze (plan §4c)', (
     // negative sponsor row – no clawback of any size – exists anywhere. «Мы ни за что не
     // наказываем» applies to contracts too.
     //
-    // ⚠ RE-AIMED BY ROUND-28 #15, AND THE CLAIM IS UNCHANGED – only the size of the credit moved.
-    // Her cut now comes off the fee at signing («с чеков спонсоров… как и с призовых»), so the
-    // sponsor row is the FAMILY's half. The no-clawback claim is what this test is about and it is
-    // now asserted on BOTH balances rather than one: the halves still re-add to the brand's cheque,
-    // so neither purse gave anything back when she enrolled.
+    // ⚠ RE-AIMED BY ROUND-28 #15 AND AGAIN BY ROUND 29 P3, AND THE CLAIM IS UNCHANGED BOTH TIMES –
+    // only the size of the credit moved. Round 28 put her ramp on the fee at signing; P3 made the
+    // family's half the manager's commission instead. The no-clawback claim is what this test is
+    // about and it is asserted on BOTH balances: the halves still re-add to the brand's cheque, so
+    // neither purse gave anything back when she enrolled.
     expect(offer.state).toBe('signed')
     expect(offer.untilWeek).toBe(until)
-    const hers = kidPrizeShareCents(WATCH.cashCents, ageOf(world))
+    const hers = WATCH.cashCents - managerCommissionCents(WATCH.cashCents)
     const sponsorRows = world.events.filter((e) => e.category === 'sponsor')
     expect(sponsorRows).toHaveLength(1)
     expect(sponsorRows[0].amountCents).toBe(WATCH.cashCents - hers)

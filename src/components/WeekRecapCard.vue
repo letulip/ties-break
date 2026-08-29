@@ -694,14 +694,15 @@ const practiceWeekLabel = computed(() => weekLabel(week.value))
           <span v-if="kidShareFoot" class="recap-memo-foot">{{ kidShareFoot }}</span>
         </p>
 
-        <!-- ⭐⭐ THE COACH'S CUT, ROUND 29 PART TWO #13 – his «cut тренера на weekly экране для
-             прозрачности», in its own memo under the balance. Cyrillic lives in the script block
-             above and in tests/component/round29p2-coach-cut-weekly.test.ts, never here
-             (tests/template-copy-rules.test.ts). ⚠ SEPARATE FROM HERS ON PURPOSE: it is present on a
-             title week and absent on a week she was paid by a brand, so folding the two into one
-             paragraph would make each appear on the other's weeks. ⚠ The percentage comes from
-             `staffResultShareBps` through the ledger – see the script; no rate is typed in this
-             template. -->
+        <!-- ⭐⭐ THE COACH'S CUT, ROUND 29 PART TWO #13 – his ask for it on the weekly screen, in
+             its own memo under the balance. His words are in the script block above and in
+             tests/component/round29p2-coach-cut-weekly.test.ts, because Cyrillic inside a <template>
+             is forbidden, comments included (tests/template-copy-rules.test.ts – and it caught the
+             first draft of this very block, exactly as it caught part-one #13's).
+             ⚠ SEPARATE FROM HERS ON PURPOSE: it is present on a title week and absent on a week she
+             was paid by a brand, so folding the two into one paragraph would make each appear on the
+             other's weeks. ⚠ The percentage comes from `staffResultShareBps` through the ledger –
+             see the script; no rate is typed in this template. -->
         <p v-if="coachCutMemo" class="recap-memo recap-memo-coach" role="note">
           <span class="recap-memo-line">{{ coachCutMemo }}</span>
         </p>
