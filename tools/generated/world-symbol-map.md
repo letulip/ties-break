@@ -2,13 +2,13 @@
 
 # `engine/world` – area to owner
 
-The barrel `src/engine/world.ts` (2,033 lines) re-exports the decomposed modules under their historical names, so every importer sees one flat surface. That is a COMPATIBILITY contract, not a discovery one – this file is the discovery half.
+The barrel `src/engine/world.ts` (2,040 lines) re-exports the decomposed modules under their historical names, so every importer sees one flat surface. That is a COMPATIBILITY contract, not a discovery one – this file is the discovery half.
 
 Regenerate with `node scripts/world-map.mjs`; `node scripts/world-map.mjs --check` fails when it is stale, and CI runs that on every pull request.
 
 **Do not read this file to answer one question** – that is the habit it exists to replace. `node scripts/world-map.mjs <symbol>` prints the owner and the line, and a plain `grep <symbol> tools/generated/world-symbol-map.md` does the same for a partial name.
 
-353 exported names across 42 owning modules.
+361 exported names across 44 owning modules.
 
 ## Areas
 
@@ -41,6 +41,8 @@ Regenerate with `node scripts/world-map.mjs`; `node scripts/world-map.mjs --chec
 | `src/engine/world/means.ts` | WHAT THE FAMILY CAN AFFORD, AS ONE FACT – the licence a line of copy asks for before it may assume a wallet | 5 |
 | `src/engine/condition.ts` | THE condition math – one rule, everybody | 4 |
 | `src/engine/season/calendar.ts` | Package L – tournament calendar | 4 |
+| `src/engine/world/business.ts` | ⭐⭐ THE PARENT'S BUSINESSES – round 29 part four P7, parts two and three of his order: «нам нужен мерч, растущий от частоты и обилия рекламных контрактов, съемок, выступлений, титулов и прочего» and «нам нужна академия, которая зарабатывает» | 4 |
+| `src/engine/world/fame.ts` | ⭐⭐ FAME – round 29 part four P7/P8, the first implementation of docs/specs/fame-and-the-shoots-2026-08.md | 4 |
 | `src/engine/world/ledger.ts` | THE LEDGER: the two write primitives every world mutation goes through, and the pure folds that read the finance ledger back out | 4 |
 | `src/engine/kidLife.ts` | HER LIFE OFF THE COURT - the three tiles of screen C's attribute grid that are not about results | 3 |
 | `src/engine/world/fieldNews.ts` | ⭐⭐⭐ THE TOUR HAS A VOICE – the professional field's succession, said out loud (round 26 #10) | 3 |
@@ -512,6 +514,24 @@ Package L – tournament calendar.
 - `isExamWeek` – `src/engine/season/calendar.ts`
 - `isTierAgeOpen` – `src/engine/season/calendar.ts`
 - `tierAgeBlock` – `src/engine/season/calendar.ts`
+
+### `src/engine/world/business.ts`
+
+⭐⭐ THE PARENT'S BUSINESSES – round 29 part four P7, parts two and three of his order: «нам нужен мерч, растущий от частоты и обилия рекламных контрактов, съемок, выступлений, титулов и прочего» and «нам нужна академия, которая зарабатывает».
+
+- `academyReputationOf` – `src/engine/world/business.ts`
+- `academyWeeklyIncomeCents` – `src/engine/world/business.ts`
+- `assetWeeklyIncomeCents` – `src/engine/world/business.ts`
+- `merchWeeklyIncomeCents` – `src/engine/world/business.ts`
+
+### `src/engine/world/fame.ts`
+
+⭐⭐ FAME – round 29 part four P7/P8, the first implementation of docs/specs/fame-and-the-shoots-2026-08.md.
+
+- `completedShootWeeks` – `src/engine/world/fame.ts`
+- `fameAt` – `src/engine/world/fame.ts`
+- `fameFloorOf` – `src/engine/world/fame.ts`
+- `fameShootMultOf` – `src/engine/world/fame.ts`
 
 ### `src/engine/world/ledger.ts`
 
