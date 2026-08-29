@@ -155,6 +155,9 @@ interface PackageRow {
   label: string
   blurb: string
   priceCents: number
+  /** #8 – true when the quote is 0 BECAUSE the shelf granted it (their own boat), so the price
+   *  slot can say why instead of a bare «free» that would read like the staycation's */
+  grantedFree: boolean
   gain: number
   buffFactor: number
   returnsTo: number
@@ -184,15 +187,17 @@ const recommendedId = computed<string | null>(() =>
       }),
 )
 
-/** ⭐⭐ ROUND 29 #5, the-shop §3f – THE VACATION PACKAGES THE SHELF HAS UNLOCKED, off the snapshot.
+/** ⭐⭐ ROUND 29 #5 -> PART TWO #8, the-shop §3f/§13g – THE VACATION PACKAGES THE SHELF HAS MADE
+ *  FREE, off the snapshot.
  *
- *  The owner's own idea, quoted in `world/assets.ts` and in the economy catalogue rather than here
- *  (this file has a template and Cyrillic may not reach one): a week on the yacht is a seventh line
- *  of the vacation ladder, and it exists for a family that has taken delivery of a yacht.
+ *  The owner's idea and his #8 extension are quoted in the economy catalogue rather than here
+ *  (this file has a template and Cyrillic may not reach one): the yacht week is on every family's
+ *  sheet at a real charter price, and taking delivery of a yacht is what zeroes it.
  *
- *  ⚠ THE ENGINE ANSWERED IT (`shop.vacationIds`) – this sheet never asks what the family owns. And
- *  the recommendation reads the same list, so it can name the free week for an owner and can never
- *  name it for anybody else. */
+ *  ⚠ THE ENGINE ANSWERED IT (`shop.vacationIds`) – this sheet never asks what the family owns. The
+ *  quote, the recommendation and the booking all price through `vacationPriceCents` with this same
+ *  list, so the sheet can show the owner's week free and can never show it free to anybody else –
+ *  and `bookVacation` re-prices off the world, so a stale sheet cannot under-charge. */
 const grantedVacationIds = computed<string[]>(() => game.snapshot?.shop.vacationIds ?? [])
 
 /** ⚠ W4 – THE PRICE READS AS A PRICE (owner, 30.07: «на вкладке брони отпуска давай суммы сделаем
@@ -202,20 +207,22 @@ const grantedVacationIds = computed<string[]>(() => game.snapshot?.shop.vacation
  *  one figure the parent is deciding on at the same visual weight as the "Recommended" badge two
  *  elements to its left - so the row read as a run of three badges - and made it the quietest type on
  *  a card whose whole job is to compare five prices. It is `--fs-value-md`/800 now, with no frame. */
-/** ⭐ ROUND 29 #5, §3f – «it appears in PlanWeekSheet only while the yacht is owned and delivered».
- *  A `grantedOnly` package is not on the general shelf and is drawn only for the family that owns
- *  the thing that grants it; every other package is untouched. */
-const offeredPackages = computed(() =>
-  ECONOMY.vacation.packages.filter((p) => !p.grantedOnly || grantedVacationIds.value.includes(p.id)),
-)
+/** ⭐ ROUND 29 #5 -> PART TWO #8, §3f/§13g – the yacht week is on EVERY family's sheet now («можно
+ *  просто на постоянку добавить в ленту» is quoted in the economy catalogue; no Cyrillic reaches a
+ *  file with a template). The filter that hid the `grantedOnly` row is gone rather than inverted:
+ *  what the shelf's grant changes is the PRICE – `vacationPriceCents` quotes 0 for a granted
+ *  package – so the whole catalogue is the list and the one function prices it. */
 const packageRows = computed<PackageRow[]>(() =>
-  offeredPackages.value.map((p) => {
-    const priceCents = vacationPriceCents(seed.value, props.week, p.id, background.value)
+  ECONOMY.vacation.packages.map((p) => {
+    const priceCents = vacationPriceCents(seed.value, props.week, p.id, background.value, grantedVacationIds.value)
     return {
       id: p.id,
       label: p.label,
       blurb: p.blurb,
       priceCents,
+      // #8's own sentence for the owner: the row is free BECAUSE of the boat, and the price slot
+      // says so instead of a bare «free» that would read like the staycation's.
+      grantedFree: priceCents === 0 && !!p.freeOnceGranted,
       gain: p.conditionGain,
       buffFactor: p.buffFactor,
       returnsTo: Math.min(ECONOMY.condition.max, condition.value + p.conditionGain),
@@ -418,7 +425,11 @@ function askVacation(row: PackageRow): void {
                    hairline round it, which is a LABEL treatment, and it was wrong twice over on the
                    one number the parent is choosing between. It is a FIGURE now - see `.pkg-price` in
                    src/style.css for the two rungs and where they come from. -->
-              <span class="num pkg-price" :class="{ ok: row.recommended }">{{ feeLabel(row.priceCents) }}</span>
+              <!-- #8: a week made free by the shelf says WHY – their own boat – so the owner sees
+                   the purchase paying off, not a price rounding to nothing. -->
+              <span class="num pkg-price" :class="{ ok: row.recommended }">{{
+                row.grantedFree ? 'free – their own boat' : feeLabel(row.priceCents)
+              }}</span>
               <!-- ⭐ #11: the layoff no longer disables Book. It still must not become a control that
                    can only throw (R10-16), which is why the ENGINE gate came off first – the button
                    is live here exactly because `assertPlannable` will now accept it. -->

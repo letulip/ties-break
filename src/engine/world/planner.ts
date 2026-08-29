@@ -120,19 +120,29 @@ export function bookVacation(world: WorldState, week: number, packageId: string)
   guardNotEnded(world)
   const pkg = vacationPackage(packageId)
   if (!pkg) throw new Error('Unknown vacation package')
-  // ⭐⭐ ROUND 29 #5, the-shop §3f – A WEEK ON THE YACHT NEEDS A YACHT, AND ONE THAT HAS ARRIVED.
+  // ⭐⭐ ROUND 29 #5 -> PART TWO #8, the-shop §3f – THE YACHT WEEK IS ON EVERY FAMILY'S SHELF NOW,
+  // AND A DELIVERED YACHT IS WHAT MAKES IT FREE.
   //
-  // THE OWNER: «а неделя на яхте (при наличии яхты) вполне может стать новой строкой отпуска.»
+  // THE OWNER, #5: «а неделя на яхте (при наличии яхты) вполне может стать новой строкой отпуска.»
+  // Then #8: «можно просто на постоянку добавить в ленту сначала с реальной стоимостью, а после
+  // покупки яхты это станет бесплатным.»
   //
-  // ⚠ RE-VALIDATED HERE BECAUSE THE WORKER IS NOT THE GATE (CLAUDE.md invariant 1). The planner
-  // sheet already leaves the row out (`Snapshot.shop.vacationIds`), and a tab left open on a career
-  // that has since sold the boat – or that never had one – must not be able to book a week on it.
-  // §3f is explicit that a contract is not a boat: `grantedVacationIds` reads DELIVERED rungs only.
-  if (pkg.grantedOnly && !grantedVacationIds(world).includes(pkg.id)) {
-    throw new Error('The family does not own that')
-  }
+  // ⚠ THE REFUSAL THAT STOOD HERE («The family does not own that») guarded a row that did not
+  // exist for a boatless family; #8 made the row a charter anybody can book, so the engine-side
+  // re-validation moves from the ROW to the PRICE. The worker is still not the gate (CLAUDE.md
+  // invariant 1): the price is computed from the WORLD's own grant below, so a tab left open on a
+  // career that has since sold the boat books at the world's quote, never the stale screen's free
+  // one – and the affordability check two lines down still refuses a family that cannot pay it.
+  // DELIVERED rungs only, exactly as before: a contract is not a boat, and `grantedVacationIds`
+  // reads only what has arrived.
   assertPlannable(world, week, 'vacation')
-  const priceCents = vacationPriceCents(world.seed, week, packageId, world.profile.background)
+  const priceCents = vacationPriceCents(
+    world.seed,
+    week,
+    packageId,
+    world.profile.background,
+    grantedVacationIds(world),
+  )
   // R13-7a: a ZERO-PRICE package is always affordable. The bare `funds < price` refused the free
   // home-rest week the moment funds went negative (-$1 < $0), i.e. exactly when it is the one
   // thing a broke family can still book. Nothing is charged, so nothing has to be afforded.

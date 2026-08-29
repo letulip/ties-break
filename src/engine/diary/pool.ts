@@ -419,10 +419,11 @@ export const DIARY_POOL: readonly DiaryPhrase[] = [
     claims: { affect: 'neutral', vacation: true },
     license: (f) => f.vacationWeek && !f.resultFresh && f.emotion === 'norm' && f.vacationPackageId === 'elite',
   },
-  // ⭐ ROUND 29 #5 – the seventh package (the-shop §3f, the week on the family's own boat). Its own
-  // sentence like every other rung's: «no two are the same sentence» is a rule this pool is tested
-  // against, and a granted package that fell through to the generic «A week away» would be the one
-  // holiday in the game the diary could not name.
+  // ⭐ ROUND 29 #5 – the seventh package (the-shop §3f; since part two #8 a chartered week anybody
+  // can book, free on the family's own boat – the sentence below fits both). Its own sentence like
+  // every other rung's: «no two are the same sentence» is a rule this pool is tested against, and
+  // a package that fell through to the generic «A week away» would be the one holiday in the game
+  // the diary could not name.
   {
     surface: 'photo',
     text: 'Seven days of water in every direction, and no telephone worth answering.',

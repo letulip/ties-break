@@ -482,13 +482,14 @@ describe('P3 — vacation pricing (middle-anchored band × wealth corridor)', ()
   // sufficient" rule recommended it nearly always. The bottom now steps by 8 (10 -> 18 -> 26);
   // rungs three and up are untouched, exactly as the ruling says.
   // ⚠⚠ RE-AIMED AT ROUND 29 #5, NEVER DELETED, AND THE SIX ARE STILL THE SIX. The shop's §3f gave
-  // the ladder a SEVENTH rung that is not sold – «а неделя на яхте (при наличии яхты) вполне может
-  // стать новой строкой отпуска» – and it is `grantedOnly`, i.e. it is not on the general shelf and
-  // no family sees it without owning a yacht. So every claim below that is about the LADDER MONEY
-  // BUYS is asked of `SHELF` and reads exactly as it did; the seventh gets its own assertions under
-  // it, and `tests/round29-shop-elite.test.ts` holds what it does in a world.
+  // the ladder a SEVENTH rung – «а неделя на яхте (при наличии яхты) вполне может стать новой
+  // строкой отпуска» – and part two #8 then put that rung on the general shelf at a real charter
+  // price, free only for the family whose yacht has arrived (`freeOnceGranted`). So every claim
+  // below that is about the SIX THAT ARE NEVER FREE is asked of `SHELF` and reads exactly as it
+  // did; the seventh gets its own assertions under it, and `tests/round29-shop-elite.test.ts`
+  // holds what it does in a world.
   it('has the owner-approved six packages with the spec gains and buffs', () => {
-    const SHELF = ECONOMY.vacation.packages.filter((p) => !p.grantedOnly)
+    const SHELF = ECONOMY.vacation.packages.filter((p) => !p.freeOnceGranted)
     const ids = SHELF.map((p) => p.id)
     expect(ids).toEqual(['staycation', 'grandma', 'camping', 'seaside', 'resort', 'elite'])
     expect(SHELF.map((p) => p.conditionGain)).toEqual([10, 18, 26, 32, 40, 48])
@@ -505,11 +506,21 @@ describe('P3 — vacation pricing (middle-anchored band × wealth corridor)', ()
     // ⭐⭐ ROUND 29 #5 – AND THE SEVENTH RUNG DOES NOT KILL THE SIX, which is §3f's own veto: «the
     // yacht must NOT be the strictly best rest week available – if it is, every owner takes it every
     // time and the other six packages die on the same day the yacht arrives.» It TIES with the elite
-    // programme on the gain and wins on being free; elite keeps the injury buff, which is a currency
-    // a boat cannot pay in. ⚠ A GAIN ABOVE 48 HERE WOULD BREAK THE VETO and this is what says so.
+    // programme on the gain and wins on being free FOR THE OWNER; elite keeps the injury buff, which
+    // is a currency a boat cannot pay in. ⚠ A GAIN ABOVE 48 HERE WOULD BREAK THE VETO and this is
+    // what says so.
+    //
+    // ⚠ RE-AIMED AT PART TWO #8 + #9 (29.08): «на постоянку добавить в ленту сначала с реальной
+    // стоимостью» – the band is a real charter now, ×1.4 of ELITE's, and the multiplier is HIS
+    // 29.08 figure verified against the spec first («х1.4 вроде мы считали, да?» – §3f's only 1.4
+    // relates exactly these two packages and no other charter figure exists, so ×1.4 the elite
+    // band is the figure of record). Asserted as the RELATION and as the literal, so a retune of
+    // elite that forgets the charter – or the reverse – goes red here.
     const yachtWeek = vacationPackage('yacht-week')!
-    expect(yachtWeek.grantedOnly).toBe(true)
-    expect(yachtWeek.priceCents).toEqual([0, 0])
+    expect(yachtWeek.freeOnceGranted).toBe(true)
+    // (rounded per bound – 700000 × 1.4 is 979999.99… in floats, and the band is whole cents)
+    expect(yachtWeek.priceCents).toEqual(vacationPackage('elite')!.priceCents.map((c) => Math.round(c * 1.4)))
+    expect(yachtWeek.priceCents).toEqual([5600_00, 9800_00])
     expect(yachtWeek.conditionGain).toBe(vacationPackage('elite')!.conditionGain)
     expect(yachtWeek.buffFactor).toBeGreaterThan(vacationPackage('elite')!.buffFactor)
     // The unit the table is written in (spec §4): every rung is denominated in rest weeks at the
@@ -521,10 +532,12 @@ describe('P3 — vacation pricing (middle-anchored band × wealth corridor)', ()
 
   // ⚠ ANTI-VACUITY FOR THE RE-AIM ABOVE. `SHELF` is a filter, and a filter that matched everything –
   // or nothing – would make every claim in that test either unchanged-and-blind or empty-and-green.
+  // (#8 re-aim: the flag is `freeOnceGranted` now and it no longer hides the row – but it is still
+  // carried by exactly one package, which is all this arm ever guarded.)
   it('⚠ the shelf filter really removes exactly one package', () => {
     expect(ECONOMY.vacation.packages.length).toBe(7)
-    expect(ECONOMY.vacation.packages.filter((p) => !p.grantedOnly).length).toBe(6)
-    expect(ECONOMY.vacation.packages.filter((p) => p.grantedOnly).map((p) => p.id)).toEqual(['yacht-week'])
+    expect(ECONOMY.vacation.packages.filter((p) => !p.freeOnceGranted).length).toBe(6)
+    expect(ECONOMY.vacation.packages.filter((p) => p.freeOnceGranted).map((p) => p.id)).toEqual(['yacht-week'])
   })
 
   // ⚠ MONEY BUYS RECOVERY SPEED, NEVER RECOVERY (spec §4, and the rule act2-pro-tour.md §3 sets for
@@ -550,14 +563,12 @@ describe('P3 — vacation pricing (middle-anchored band × wealth corridor)', ()
           w.fundsCents = 100_000_00
           w.physioActive = false
           w.condition = 40
-          // ⚠ RE-AIMED AT ROUND 29 #5, AND WIDENED RATHER THAN NARROWED. §3f's seventh rung is
-          // `grantedOnly`, so `bookVacation` refuses it to a family with no yacht; giving these
-          // three worlds a DELIVERED one keeps all seven packages inside the claim instead of
-          // excusing the new one from it. An owned row with no `readyWeek` is what «delivered»
-          // means (shared/protocol/profile.ts), which is why no tick is needed to arrange it.
-          if (pkg.grantedOnly) {
-            w.assets = [{ id: 'yacht', boughtWeek: 0, paidCents: 12_000_000_00, valueCents: 12_000_000_00 }]
-          }
+          // ⚠ RE-AIMED TWICE AND WIDER EACH TIME. Round 29 #5's version handed these worlds a
+          // DELIVERED yacht, because the seventh rung refused a boatless family and the claim
+          // wanted all seven packages inside it. Part two #8 removed the refusal itself – the week
+          // is a charter anybody can book at a real price – so the fixture excuse is gone too: all
+          // seven book on plain worlds, the yacht week is CHARGED like the rest (funds cover the
+          // quote), and both halves of the claim now run on it with no special arm at all.
           bookVacation(w, w.week + 1, pkg.id)
           tickWeek(w, rngFromSeed(w.seed))
           return w.condition
@@ -608,15 +619,20 @@ describe('P3 — vacation pricing (middle-anchored band × wealth corridor)', ()
       }
     }
     // and the ladder still climbs: every rung's floor clears the one below it
-    // ⚠ RE-AIMED AT ROUND 29 #5 – asked of the LADDER MONEY BUYS. §3f's seventh rung is free by
-    // design («the money went years ago and the upkeep is charged every week whether she sails or
-    // not») and is not on the general shelf at all, so it is not a step in a price ladder and a
-    // strictly-ascending claim that included it would be asserting the opposite of the design. The
-    // claim about IT is one line up, in the `free` branch, where it is held to `[0, 0]` exactly like
-    // the staycation – so nothing about the zero-quote property is weakened.
-    const floors = ECONOMY.vacation.packages.filter((p) => !p.grantedOnly).map((p) => p.priceCents[0])
-    expect(floors.length, 'the paid ladder is still six rungs').toBe(6)
+    // ⚠ RE-AIMED AT ROUND 29 #5, AND AGAIN AT PART TWO #8+#9 – WIDER THE SECOND TIME. #5's version
+    // excused the yacht week (granted-only, [0,0], not a step in any price ladder); #8 put it on
+    // the general shelf «сначала с реальной стоимостью» and #9 priced that at ×1.4 of elite, so it
+    // IS the top step now and the strictly-ascending claim covers all seven with no filter at all.
+    const floors = ECONOMY.vacation.packages.map((p) => p.priceCents[0])
+    expect(floors.length, 'the ladder is seven rungs, the charter on top').toBe(7)
     for (let i = 1; i < floors.length; i++) expect(floors[i]).toBeGreaterThan(floors[i - 1])
+    // ⚠ AND THE ONE LEGAL ZERO A PAID BAND CAN QUOTE IS THE GRANT, WHICH IS A RULE AND NOT A ROLL:
+    // the shelf's granted list zeroes the charter for the family whose yacht arrived («после
+    // покупки яхты это станет бесплатным»), in every corridor, on any week – while the ungranted
+    // quote above just proved it can never roll to nothing. Both halves together are #8's design.
+    for (const bg of ['working', 'middle', 'wealthy'] as FamilyBackground[]) {
+      expect(vacationPriceCents('floor-seed', 7, 'yacht-week', bg, ['yacht-week'])).toBe(0)
+    }
   })
 
   it('quotes deterministically off seed:vacation:week:packageId, inside band × corridor', () => {

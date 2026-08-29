@@ -259,7 +259,8 @@ week is a seventh, and its shape is unusual in exactly the right way:
 - **`priceCents: [0, 0]` – it is free at the point of use**, because the money went years ago and the
   upkeep is charged every week whether she sails or not;
 - **it appears in `PlanWeekSheet` only while the yacht is owned and delivered** (⚠ not while it is
-  still building – §3f's contract is not a boat);
+  still building – §3f's contract is not a boat); ⚙ **AMENDED by part two #8 – see §13g**: the row
+  is on every family's sheet at a real charter price now, and delivery is what makes it FREE;
 - its gain sits **at or above `elite`**, which is the priciest package in the game.
 
 ⭐⭐ **AND THIS IS WHAT TURNS THE YACHT FROM A TROPHY INTO A DECISION.** Before it, the absurd family
@@ -678,6 +679,46 @@ starts and it becomes sellable the same week.** There is no week in which a fami
 thing it has no way out from under, which is §4's own acceptance («a freeze may never be the reason a
 family goes bankrupt») met by the shape rather than by a rule. Pinned in
 `tests/round29-shop-elite.test.ts` §2.
+
+### 13g. ⚙ THE YACHT WEEK BECAME A CHARTER – round 29 part two #8 + #9 (29.08)
+
+> «она же бесплатная только при наличии яхты, верно? я могу сделать для нее отдельный арт, тогда
+> можно просто на постоянку добавить в ленту сначала с реальной стоимостью, а после покупки яхты это
+> станет бесплатным» – and, on the price: «изначально стоит дороже немного (х1.4 вроде мы считали,
+> да?)»
+
+**This amends §3f's second bullet** («it appears in `PlanWeekSheet` only while the yacht is owned
+and delivered»): the row is on **every** family's sheet now, at a real charter band, and taking
+delivery of a yacht is what zeroes it. The flag turned with the design – `grantedOnly` (hide the
+row) became `freeOnceGranted` (zero the quote) – and one function prices every surface:
+`vacationPriceCents(seed, week, id, background, grantedIds)` is the sheet's quote, the
+recommendation's weight and the booking's charge, so a screen and the engine cannot price the same
+week two ways. `bookVacation`'s old refusal («The family does not own that») is gone with the
+design it guarded; the engine-side re-validation moved from the row to the **price** – a stale
+sheet books at the world's own quote, never a stale free one.
+
+⚠ **THE ×1.4 WAS VERIFIED BEFORE IT WAS USED**, because «вроде мы считали, да?» is a question and
+the spec outranks his memory. This file carries exactly **one** 1.4 – §3f's own «it is about 1.4
+elite vacations a week in upkeep» – which relates exactly these two packages and no other charter
+figure exists anywhere in it. So his multiplier lands as the figure of record: the charter band is
+**elite ×1.4 = [$5,600, $9,800]** before the wealth corridor, sitting above elite as the ladder's
+top step (strictly ascending floors, all seven, pinned in `tests/planner.test.ts` – the RELATION to
+elite's band is pinned beside the literal, so neither can be retuned alone).
+
+⚠ **§3f's veto survives on both sides of the grant, for free.** The owner's family still ties elite
+at 48 and wins on being free; the boatless family sees the same 48 at a **dearer** price with a
+weaker after-effect, so elite keeps its reason everywhere and the six packages survive the row
+appearing on every sheet.
+
+⚠ **His art for the row is coming** («я могу сделать для нее отдельный арт»); until it lands the
+sheet draws the row artless through `vacationArtUrl`'s documented null fallback – a catalogue entry
+may exist before its frame does, and a missing picture must not cost the row.
+
+⚠ **What did NOT move**: `Snapshot.shop.vacationIds` (same machinery, new meaning: «made free», not
+«may see»), the grant's DELIVERED-only read, `conditionGain` 48 / `buffFactor` 1, the diary's two
+yacht-week sentences (ownership-neutral, they fit a charter), and the week's calendar arc. Zero
+MAIN draws anywhere in this: the charter quote is the same purpose-scoped
+`seed:vacation:week:packageId` sub-stream every package has always used.
 
 ---
 

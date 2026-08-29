@@ -500,15 +500,20 @@ export interface ShopView {
    *  family that has not commissioned a boat or a plane. Already inside
    *  `coachBilling.household.outgoingCents` – this is the shelf's own share of it, named. */
   upkeepCents: number
-  /** ⭐⭐ §3f – THE VACATION PACKAGES THE SHELF HAS UNLOCKED, by id. Empty for every family that has
-   *  not taken delivery of a yacht.
+  /** ⭐⭐ §3f -> ROUND 29 PART TWO #8 – THE VACATION PACKAGES THE SHELF HAS MADE FREE, by id. Empty
+   *  for every family that has not taken delivery of a yacht.
    *
-   *  THE OWNER: «а неделя на яхте (при наличии яхты) вполне может стать новой строкой отпуска.»
+   *  THE OWNER, #5: «а неделя на яхте (при наличии яхты) вполне может стать новой строкой
+   *  отпуска.» Then #8: «на постоянку добавить в ленту сначала с реальной стоимостью, а после
+   *  покупки яхты это станет бесплатным» – so since #8 the row is on every family's sheet and this
+   *  list answers "is it free for THIS family", not "may they see it".
    *
-   *  ⚠ THE ENGINE ANSWERS "may they book it", NEVER THE SCREEN, and this is the field that carries
-   *  the answer: `bookVacation` re-validates the same question, so a sheet left open on a career
-   *  that has just sold the boat cannot book a week on it. A package that is not `grantedOnly` is
-   *  never in here – it never needed granting. */
+   *  ⚠ THE ENGINE ANSWERS THE PRICE, NEVER THE SCREEN, and this is the field that carries the
+   *  answer to the sheet: quote, recommendation and booking all go through `vacationPriceCents`
+   *  with the granted list, and `bookVacation` re-prices off the WORLD's own grant – so a sheet
+   *  left open on a career that has just sold the boat books at the real quote (and the
+   *  affordability guard still refuses a family that cannot pay it), never at the stale free one.
+   *  A package that is not `freeOnceGranted` is never in here – it never needed granting. */
   vacationIds: string[]
 }
 

@@ -74,14 +74,19 @@ export interface VacationPackage {
   conditionGain: number
   /** injury-tau multiplier carried for ECONOMY.vacation.buffWeeks weeks; 1 = no carry-over buff */
   buffFactor: number
-  /** ⭐⭐ ROUND 29 #5, the-shop §3f – A PACKAGE THAT IS NOT ON THE GENERAL SHELF: the family has to
-   *  OWN the thing that grants it. Absent on the six the planner has always carried, which is why
-   *  it is optional rather than `false` everywhere.
+  /** ⭐⭐ ROUND 29 #5 -> PART TWO #8, the-shop §3f – A PACKAGE THE SHELF CAN MAKE FREE. It used to
+   *  say «ask before offering me» (the row existed only for a family with a delivered yacht); his
+   *  part-two #8 put the row on EVERY family's sheet at a real charter price – «можно просто на
+   *  постоянку добавить в ленту сначала с реальной стоимостью, а после покупки яхты это станет
+   *  бесплатным» – so the flag now zeroes the QUOTE instead of hiding the ROW. Absent on the six
+   *  the planner has always carried, which is why it is optional rather than `false` everywhere.
    *
-   *  ⚠ THE GRANT IS THE SHOP'S (`ShopView.vacationIds`) AND THE REFUSAL IS `bookVacation`'s. Nothing
-   *  here knows what grants what – this flag only says «ask before offering me», so a screen that
-   *  forgot to ask shows one row too many and the engine still refuses the booking. */
-  grantedOnly?: boolean
+   *  ⚠ THE GRANT IS STILL THE SHOP'S (`ShopView.vacationIds` / `grantedVacationIds`) AND THE PRICE
+   *  IS `vacationPriceCents`'s: nothing here knows what grants what, and every quote – the sheet's,
+   *  the recommendation's and the booking's – goes through that one function with the granted list
+   *  in hand, so a screen and the engine cannot price the same week two ways. A screen that forgot
+   *  the list can only OVERSTATE a price; the booking itself always re-prices off the world. */
+  freeOnceGranted?: boolean
 }
 
 export interface GearLine {
@@ -3082,15 +3087,30 @@ export const ECONOMY = {
         conditionGain: 48,
         buffFactor: 0.85,
       },
-      // ⭐⭐ ROUND 29 #5 – THE SEVENTH RUNG, AND IT IS NOT SOLD. docs/specs/the-shop-2026-08.md §3f,
-      // the owner's own idea: «а неделя на яхте (при наличии яхты) вполне может стать новой строкой
-      // отпуска, кстати».
+      // ⭐⭐ ROUND 29 #5 – THE SEVENTH RUNG. docs/specs/the-shop-2026-08.md §3f, the owner's own
+      // idea: «а неделя на яхте (при наличии яхты) вполне может стать новой строкой отпуска,
+      // кстати».
       //
-      // ⚠ FREE AT THE POINT OF USE, and §3f says why in one line: «the money went years ago and the
-      // upkeep is charged every week whether she sails or not». `[0, 0]` is the staycation's own
-      // shape, so `bookVacation`'s two zero-price carve-outs (affordable at negative funds, no
-      // expense row) apply to it unchanged and correctly – nothing is charged, so nothing has to be
-      // afforded and there is no row to write.
+      // ⭐⭐ PART TWO #8 PUT IT ON THE GENERAL SHELF (29.08): «она же бесплатная только при наличии
+      // яхты, верно? я могу сделать для нее отдельный арт, тогда можно просто на постоянку
+      // добавить в ленту сначала с реальной стоимостью, а после покупки яхты это станет
+      // бесплатным». So the band below is a real CHARTER price every family is quoted, and the
+      // shelf's grant is what zeroes it (`freeOnceGranted` + `grantedVacationIds`, DELIVERED rungs
+      // only) – §3f's «the money went years ago and the upkeep is charged every week whether she
+      // sails or not» is still the whole reason the owner's quote is 0. A granted quote of 0 walks
+      // `bookVacation`'s two zero-price carve-outs (affordable at negative funds, no expense row)
+      // unchanged and correctly: nothing is charged, so nothing has to be afforded and there is no
+      // row to write. ⚠ His art for the row is coming; until it lands `vacationArtUrl` returns
+      // null and the sheet draws the row artless by its documented fallback.
+      //
+      // ⚠ #9's BAND IS x1.4 OF ELITE'S ([4000_00, 7000_00] -> [5600_00, 9800_00]) – HIS 29.08
+      // FIGURE, VERIFIED AGAINST THE SPEC BEFORE USE because he asked rather than decreed
+      // («изначально стоит дороже немного (х1.4 вроде мы считали, да?)»). §3f carries exactly one
+      // 1.4 and it relates the SAME two objects – the yacht week against the elite programme
+      // («about 1.4 elite vacations a week in upkeep») – and no other charter figure anywhere, so
+      // his multiplier stands as the figure of record. A charter dearer than the clinic is also
+      // the honest ladder: same gain, no injury buff, top of a strictly ascending price ladder
+      // (tests/planner.test.ts pins both).
       //
       // ⚠⚠ 48 AND `buffFactor: 1` – THE TUNING QUESTION §3f NAMES, ANSWERED ON ITS FIRST ARM. Its
       // words: «Either it ties with elite and wins on being free, or it beats it slightly and elite
@@ -3099,20 +3119,23 @@ export const ECONOMY = {
       // six packages die on the same day the yacht arrives.»
       //
       // It TIES with the elite programme on the gain (48, the top of the ladder – §3f's «at or above
-      // elite» read at «at») and wins on being free, and ELITE KEEPS THE INJURY BUFF: `buffFactor`
-      // 0.85 against this one's 1, riding `buffWeeks: 4`. So the two are not comparable on one axis
-      // and neither dominates – a family with a yacht still pays for the clinic in the weeks it
-      // wants her tau bought down, which is the only thing money can do that a boat cannot. ⚠ A
-      // NUMBER ABOVE 48 WOULD BREAK THAT: it would beat elite on the gain AND on the price, and the
-      // buff alone is not a reason to pay $7,000 for a smaller reset.
+      // elite» read at «at») and wins on being free FOR THE OWNER, and ELITE KEEPS THE INJURY BUFF:
+      // `buffFactor` 0.85 against this one's 1, riding `buffWeeks: 4`. So the two are not comparable
+      // on one axis and neither dominates – a family with a yacht still pays for the clinic in the
+      // weeks it wants her tau bought down, which is the only thing money can do that a boat cannot.
+      // ⚠ A NUMBER ABOVE 48 WOULD BREAK THAT: it would beat elite on the gain AND on the price, and
+      // the buff alone is not a reason to pay $7,000 for a smaller reset. ⚠ AND #8's CHARTER MAKES
+      // THE VETO HOLD FOR EVERYBODY ELSE TOO, for free: the boatless family sees the same 48 at a
+      // DEARER price and a weaker after-effect, so the clinic keeps its reason on both sides of the
+      // grant and the six packages survive the row appearing everywhere.
       {
         id: 'yacht-week',
         label: 'A week on the yacht',
         blurb: 'Nowhere to be, and the sea to be nowhere on.',
-        priceCents: [0, 0],
+        priceCents: [5600_00, 9800_00],
         conditionGain: 48,
         buffFactor: 1,
-        grantedOnly: true,
+        freeOnceGranted: true,
       },
     ] as VacationPackage[],
   },
@@ -3671,15 +3694,28 @@ export function vacationPackage(id: string): VacationPackage | undefined {
 }
 
 /** The deterministic price of ONE vacation offer: `rngFromSeed(seed:vacation:week:packageId)`
- *  (spec §2). Quoted at offer time, charged on booking – same function, same number. */
+ *  (spec §2). Quoted at offer time, charged on booking – same function, same number.
+ *
+ *  ⭐ ROUND 29 PART TWO #8 – `grantedIds` IS THE SHELF'S GRANT (`Snapshot.shop.vacationIds` on a
+ *  screen, `grantedVacationIds(world)` in the engine): a `freeOnceGranted` package the family has
+ *  earned is quoted 0 – «после покупки яхты это станет бесплатным» – and the sub-stream is not
+ *  even derived for it, which no caller can observe (sub-streams persist nothing and are re-keyed
+ *  per call; the world's dice cannot see any of this either way).
+ *
+ *  ⚠ THE DEFAULT IS THE CONSERVATIVE ARM, on `recommendVacationPackage.grantedIds`' own argument:
+ *  a caller that does not know about the shelf quotes the price every family pays. It can only
+ *  OVERSTATE – the booking itself always passes the world's own list, so a forgetful screen shows
+ *  a price and the engine charges less, never the reverse. */
 export function vacationPriceCents(
   seed: string,
   week: number,
   packageId: string,
   background: FamilyBackground,
+  grantedIds: readonly string[] = [],
 ): number {
   const pkg = vacationPackage(packageId)
   if (!pkg) throw new Error(`Unknown vacation package "${packageId}"`)
+  if (pkg.freeOnceGranted && grantedIds.includes(packageId)) return 0
   return corridorPrice(rngFromSeed(`${seed}:vacation:${week}:${packageId}`), pkg.priceCents, background)
 }
 
@@ -3711,18 +3747,23 @@ export function recommendVacationPackage(input: {
   budgetCents?: number
   /** optional override for the condition the pick aims to restore */
   targetCondition?: number
-  /** ⭐ ROUND 29 #5 – the `grantedOnly` packages this family may actually book
-   *  (`Snapshot.shop.vacationIds`). ⚠ DEFAULTS TO NONE, and the default is the conservative one: a
-   *  caller that does not know about the shelf recommends only what every family can book, which is
-   *  exactly what this function did before the yacht existed. */
+  /** ⭐ ROUND 29 #5 -> PART TWO #8 – the packages the shelf has made FREE for this family
+   *  (`Snapshot.shop.vacationIds`). Since #8 every package is on every family's shelf, so this no
+   *  longer widens the LIST – it re-prices it: a granted `freeOnceGranted` package is weighed at 0,
+   *  which is what lets the pick name the owner's free week over a paid one. ⚠ DEFAULTS TO NONE,
+   *  and the default is the conservative one: a caller that does not know about the shelf weighs
+   *  the yacht week at the charter price every family pays, and can only over-charge the
+   *  recommendation, never under-charge the booking. */
   grantedIds?: string[]
 }): string | null {
   const cap = Math.min(input.fundsCents, input.budgetCents ?? input.fundsCents)
   const target = input.targetCondition ?? ECONOMY.practice.rescueTargetCondition
   const granted = input.grantedIds ?? []
+  // ⚠ PART TWO #8 – the grantedOnly FILTER that stood here is gone rather than inverted: every
+  // package is on the general shelf now, and the grant lives in the PRICE (a granted week weighs
+  // 0, exactly what the sheet quotes for it).
   const priced = ECONOMY.vacation.packages
-    .filter((pkg) => !pkg.grantedOnly || granted.includes(pkg.id))
-    .map((pkg) => ({ pkg, priceCents: vacationPriceCents(input.seed, input.week, pkg.id, input.background) }))
+    .map((pkg) => ({ pkg, priceCents: vacationPriceCents(input.seed, input.week, pkg.id, input.background, granted) }))
     .filter((row) => row.priceCents <= cap)
     // cheapest first, and on a price tie the SMALLER gain first – "cheapest sufficient" has to be
     // read off the quoted price, not the catalogue order (quotes breathe inside their bands).
