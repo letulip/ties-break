@@ -138,7 +138,10 @@ export type ToWorker =
   // rung, the minimum and the wallet are all checked again in `buyAsset`, so a tab left open on a
   // career that has since gone somewhere else cannot spend.
   | { id: number; type: 'buyAsset'; itemId: string; stakeCents?: number; baseRevision: number }
-  | { id: number; type: 'sellAsset'; itemId: string; baseRevision: number }
+  // ⭐ ROUND 29 PART TWO #4 – `amountCents` is OPTIONAL and absent means «sell the lot», which is
+  // what every caller written before it meant. The 'open'-only rule, the floor, the ceiling and the
+  // zero-op are all re-derived in `sellAsset`, so a stale tab cannot sell what is not there.
+  | { id: number; type: 'sellAsset'; itemId: string; amountCents?: number; baseRevision: number }
   // THE INBOX (v32): answer a letter. Both are refused past the deadline – the window is the
   // feature, not a courtesy – and `signOffer` is irreversible by design, which is why the UI puts a
   // ConfirmDialog in front of it and the engine puts nothing in front of the confirm.

@@ -419,9 +419,9 @@ export const useGameStore = defineStore('game', {
       })
     },
     /** ...and sell one, at the value the engine stored – never at a price this side computed. */
-    async sellAsset(itemId: string) {
+    async sellAsset(itemId: string, amountCents?: number) {
       await this.run(async () => {
-        const res = this.takeOk(await request({ type: 'sellAsset', itemId, baseRevision: this.revision }))
+        const res = this.takeOk(await request({ type: 'sellAsset', itemId, amountCents, baseRevision: this.revision }))
         this.applySnapshot(res)
         await this.refreshSlots()
       })
