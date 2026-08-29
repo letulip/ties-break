@@ -38,7 +38,10 @@ fields only (`category`, `termYears` – the `entry`-family precedent, seventh u
   смотреть на одно и то же название без смены ГОДАМИ».
 * **The capstone**: $10,000,000 a year × 8 years, kit-shaped – written by the kit house that
   dresses her (the double programme at icon scale; the icon rung's brand between kit deals), gated
-  on **4 seasons ENDED inside the top 10**, one at a time.
+  on **4 seasons ENDED inside the top 10**, one at a time. ⚠ The whole post's own floor still
+  applies (a counting standing inside the top 200 – `adBandFor` gates the review before any
+  category is walked): tenure earns the letter, but a face that has left the professional table is
+  not written to this week – it is the review's precondition, not a second tenure rule.
 * **P9 – the winter is the shoot season.** `WINTER_SHOOT_WEEKS = 6` – the last six weeks of the
   season year, derived from the top calendar's own tail (the 1000-tier's last anchor is offset 45),
   which is his «у нас 6 пустых недель там» counted. `chooseShootWeeks` fills the winter FIRST
