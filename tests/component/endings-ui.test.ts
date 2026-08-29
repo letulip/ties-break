@@ -46,6 +46,9 @@ function endingView(type: CareerEndingType = 'stopped', over: Partial<EndingView
     bestRank: 88,
     titles: 2,
     oneMoreYearCount: 0,
+    // ⭐ round 29 part two #10: null unless the fixture built academy stages – the default career
+    // never did, so the line's ABSENCE is part of every existing arm for free.
+    academy: null,
     // ⭐ P5: null unless the fixture is a career sitting between two college years. The screen's
     // "another year?" question is drawn from this and from nothing else.
     college: null,
@@ -113,6 +116,46 @@ describe('the album', () => {
     expect(w.text()).toContain('The whole record')
     expect(w.text()).toContain('Local Open')
     w.unmount()
+  })
+
+  // ⭐ ROUND 29 PART TWO #10 – THE ACADEMY LINE ON THE FOOT, the-shop §10.4 settled (his ruling is
+  // quoted on `AcademyEpilogue` in the protocol; no Cyrillic here – this file mounts templates).
+  // The engine hands facts and the template writes the fixed sentence, so the mounted claims are:
+  // the earning shape names income, the not-earning shape does not, and no academy means NO line –
+  // three arms, one of which every other fixture in this file already carries (academy: null).
+  it('⭐ #10 – the last page names the academy: what stands, and what it earns', async () => {
+    patchSnapshot({
+      ending: endingView('natural', {
+        // The four stages' bases at the reputation cap – the real ceiling a career can hold
+        // (world/business.ts: (95_000 + 250_000 + 380_000) × 4 cents).
+        academy: { stagesBuilt: 4, totalStages: 4, weeklyIncomeCents: 29_000_00 },
+      }),
+    })
+    const w = mount(EndingScreen)
+    for (let i = 0; i < 6; i++) await w.findAll('.album-arrow')[1].trigger('click')
+    const text = w.text()
+    expect(text).toContain('Her academy stands – 4 of 4 stages built – and it earns $29,000 a week.')
+    w.unmount()
+  })
+
+  it('⚠ #10 – stages that do not earn are named without an income, and no academy is NO line', async () => {
+    patchSnapshot({
+      ending: endingView('natural', {
+        academy: { stagesBuilt: 1, totalStages: 4, weeklyIncomeCents: 0 },
+      }),
+    })
+    const w = mount(EndingScreen)
+    for (let i = 0; i < 6; i++) await w.findAll('.album-arrow')[1].trigger('click')
+    expect(w.text()).toContain('Her academy is begun – 1 of 4 stages built.')
+    expect(w.text()).not.toContain('a week.')
+    w.unmount()
+
+    // ...and the family that never built one reads nothing about academies at all.
+    patchSnapshot({ ending: endingView('natural') })
+    const bare = mount(EndingScreen)
+    for (let i = 0; i < 6; i++) await bare.findAll('.album-arrow')[1].trigger('click')
+    expect(bare.text()).not.toContain('academy')
+    bare.unmount()
   })
 
   it('⚠ the hand-off asks EXACTLY ONE question, and it is the capital fork', async () => {

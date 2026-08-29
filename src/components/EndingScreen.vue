@@ -220,6 +220,26 @@ async function resumeCollege(): Promise<void> {
           {{ view.oneMoreYearCount === 1 ? 'time' : 'times' }}.
         </p>
 
+        <!-- ⭐ ROUND 29 PART TWO #10 – THE ACADEMY LINE, the-shop §10.4 settled by the owner (his
+             ruling is quoted on `AcademyEpilogue` in shared/protocol/career.ts – a template may
+             carry no Cyrillic). The SMALLEST honest line inside today's shape: the album itself is
+             reserved by him (the photo-album concept is his backlog item), so this is one
+             `ending-note` beside the one-more-year note, on the same division of labour – the
+             engine hands facts, the template writes the fixed sentence, and it renders only when
+             there is an academy to name. Two arms because the truth has two shapes: a built academy
+             that EARNS (what it became – the round-29 income wave), and stages standing that do not
+             earn yet (only the land, a field). -->
+        <p v-if="view.academy" class="ending-note">
+          <template v-if="view.academy.weeklyIncomeCents > 0">
+            Her academy stands – {{ view.academy.stagesBuilt }} of {{ view.academy.totalStages }}
+            stages built – and it earns {{ formatCents(view.academy.weeklyIncomeCents) }} a week.
+          </template>
+          <template v-else>
+            Her academy is begun – {{ view.academy.stagesBuilt }} of {{ view.academy.totalStages }}
+            stages built.
+          </template>
+        </p>
+
         <button class="ending-link" type="button" @click="scrollOpen = true">The whole record</button>
 
         <!-- ⭐⭐⭐ ROUND 24 #2b/#3 – THE COLLEGE YEAR BLOCK HAS LEFT THIS SCREEN, and its absence is

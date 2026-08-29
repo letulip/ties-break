@@ -24,7 +24,12 @@ import {
   retirementDue,
   debtWeeks,
 } from '../ending'
-import type { CareerEnding, CollegeTier, DebtView, EndingView, ForkAnswer } from '../../shared/protocol'
+import type { AcademyEpilogue, CareerEnding, CollegeTier, DebtView, EndingView, ForkAnswer } from '../../shared/protocol'
+// ⭐ ROUND 29 PART TWO #10 – the epilogue's academy line reads the LEAVES, never `world/shop.ts`
+// (shop imports THIS file, so the leaf split in `world/assets.ts`' header is what makes this legal):
+// the delivered stages off `./assets`, the income off `./business` (assets + fame, both leaves).
+import { deliveredAssets, shopCatalogue } from './assets'
+import { academyWeeklyIncomeCents } from './business'
 import type { LadderTrack, TierId } from '../season/types'
 import { addEvent, seasonIndexOf } from './ledger'
 import { activeLadderOf } from './ladder'
@@ -654,6 +659,13 @@ export function buildEndingView(world: WorldState): EndingView | null {
     bestRank,
     titles,
     oneMoreYearCount: world.oneMoreYearCount,
+    // ⭐ ROUND 29 PART TWO #10 – the academy line, settling the-shop §10.4 by his ruling («Эпилог…
+    // надо добавить, мне кажется. Это всё-таки финал игры»). Facts only, composed at snapshot time
+    // off the leaves (see the import note above): what stands, out of how many stages, and what it
+    // brings in NOW through the same arithmetic the till banks – so the epilogue and the ledger
+    // cannot quote two figures. Null when nothing was ever built: the epilogue says nothing rather
+    // than naming an absence, which is also why 0-of-N is not a state this field can carry.
+    academy: academyEpilogueOf(world),
     // ⭐ P5: null on every ending but the college one, and null on that one the moment she leaves.
     // It is the state of an OPEN question – see `collegeProgressOf`.
     college: collegeProgressOf(world),
@@ -666,6 +678,26 @@ export function buildEndingView(world: WorldState): EndingView | null {
  *  extended. One function, one call site, and the day the system ships it reads real state. */
 export function wasThereAChild(_world: WorldState): boolean {
   return false
+}
+
+/** ⭐ ROUND 29 PART TWO #10 – the epilogue's academy facts, or null when no stage was ever built.
+ *
+ *  DELIVERED stages, though today the two reads agree by construction (§3g gives the stages no
+ *  `buildWeeks`, so an owned stage IS delivered): if a wait is ever added to a stage, «a contract
+ *  is not a business» keeps holding here for free, the same way it already does in the income
+ *  arithmetic this shares (`assetWeeklyIncomeCents` gates on the same predicate).
+ *
+ *  ⚠ `totalStages` COUNTS THE CATALOGUE rather than quoting 4, for `CollegeProgressView
+ *  .totalYears`' own reason: the copy must never say «four» from a template, and a fifth stage
+ *  added to the catalogue tomorrow moves the sentence by itself. Zero draws, pure read. */
+export function academyEpilogueOf(world: WorldState): AcademyEpilogue | null {
+  const stagesBuilt = deliveredAssets(world).filter((row) => row.item.family === 'academy').length
+  if (stagesBuilt === 0) return null
+  return {
+    stagesBuilt,
+    totalStages: shopCatalogue().filter((i) => i.family === 'academy').length,
+    weeklyIncomeCents: academyWeeklyIncomeCents(world),
+  }
 }
 
 /** The debt strip's numbers, or null while she is solvent. */

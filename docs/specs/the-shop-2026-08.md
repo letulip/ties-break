@@ -419,6 +419,14 @@ He asked. Four, in the order I would rank them:
 3. ⚙ **SETTLED 26.08 – her cut of the returns is a SWITCH, not automatic** («договорились»), §7.
 4. **Does the shop survive an ending?** My answer is yes and it is cheap: the retirement card names
    what the family owns. An ending that silently drops the house is a bug the player will feel.
+   ⚙ **SETTLED 29.08, round 29 part two #10, for the academy** – his ruling: «Эпилог… надо
+   добавить, мне кажется. Это всё-таки финал игры.» The epilogue names the academy when the family
+   built any stage: what stands (N of M stages, the catalogue's own count) and – now that the
+   academy EARNS – what it became (its weekly income, off `world/business.ts`' one arithmetic).
+   Built as ONE engine-fed line in `EndingScreen.vue`'s footer (`EndingView.academy`, a wire field:
+   no schema move), because the album's SHAPE is reserved by him – the photo-album concept is his
+   backlog item, and this line deliberately does not touch it. The REST of the shelf at an ending
+   is still open.
 
 ---
 
@@ -616,12 +624,10 @@ for, never the noun in the label; the sailing yacht grants nothing, and
 
 ### 13d. ⚠⚠ WHAT IS **NOT** BUILT, AND IS STILL OPEN
 
-- **The epilogue does not name the academy.** §11 row 5's acceptance has two halves and only the
-  first is here: a half-built academy IS a legible state (four rows, priced, chained, with the stage
-  under each named). The second half – «the epilogue can name the finished one» – is §10.4, which
-  this file still lists as **his** («Does the shop survive an ending? My answer is yes»), and it has
-  never been ruled on. Building the retirement card's version of it off an un-ruled proposal is
-  exactly the scope-widening the house forbids. **It needs one word from him.**
+- ⚙ **RESOLVED 29.08 – the epilogue names the academy now** (round 29 part two #10). This bullet
+  stood on «it has never been ruled on», and he ruled: «Эпилог… надо добавить, мне кажется. Это
+  всё-таки финал игры.» The word arrived and the line shipped – see §10.4's ⚙ note for what was
+  built and what stayed deliberately untouched (the album's shape is his).
 - **No academy stage does anything yet.** §3g's own «this is where advertising money lands» is a
   cross-reference to the face-and-court plan, not a mechanic in this file, and §9.4 («a stage that is
   HERS to run, after she retires») is explicitly «listed last on purpose, and not proposed for any
