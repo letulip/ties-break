@@ -204,9 +204,37 @@ const callUpBecause = computed(() => {
 })
 const isAd = computed(() => props.offer.kind === 'ad')
 const adTerms = computed(() => props.offer.terms as AdOfferTerms)
-/** "Twelve months", because a house writing to a family says it the way the kit letters say "three
- *  seasons" – words, not a numeral – falling back to the numeral past the terms the game issues. */
-const adTermWord = computed(() => (adTerms.value.termWeeks === 52 ? 'Twelve months' : `${adTerms.value.termWeeks} weeks`))
+/** How many contract years the paper runs – 1 on every letter written before the portfolio
+ *  (`termYears` absent), 1–3 on a category letter, 8 on the capstone. */
+const adYears = computed(() => Math.max(1, adTerms.value.termYears ?? (adTerms.value.termWeeks === 52 ? 1 : Math.round(adTerms.value.termWeeks / 52))))
+/** "Twelve months" / "Two years" / "Eight years", because a house writing to a family says it the
+ *  way the kit letters say "three seasons" – words, not a numeral – falling back to the numeral
+ *  past the terms the game issues. */
+const adTermWord = computed(() => {
+  if (adYears.value === 1) return adTerms.value.termWeeks === 52 ? 'Twelve months' : `${adTerms.value.termWeeks} weeks`
+  const words = ['', '', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight']
+  return `${words[adYears.value] || adYears.value} years`
+})
+/** ⭐ P6 – the money sentence differs by shape: a one-year letter states its one fee, a multi-year
+ *  letter states the year-fee and when the rest of it arrives. Numbers off the paper, never prose
+ *  frozen onto it (`AcademyLetterTerms`' rule). */
+const adFeeLine = computed(() => {
+  const fee = formatCents(adTerms.value.cashCents)
+  if (adYears.value === 1) return `A one-time fee of ${fee}, paid the day this is signed. Money, not kit – we are not a tennis house.`
+  return `${fee} for each contract year – the first paid the day this is signed, the rest on its anniversary. Money for her face, nothing else.`
+})
+/** ⭐ P6/§7 – THE EXCLUSIVITY IS THE CATEGORY'S, not the whole post's: the portfolio holds one deal
+ *  per trade, so the clause the letter states is «in no other campaign OF OUR TRADE». A letter from
+ *  before the portfolio keeps its original whole-post sentence – that is what its paper promised. */
+const adExclusivityLine = computed(() => {
+  const c = adTerms.value.category
+  if (!c) return `${adTermWord.value} from signing, her face is with us – and in no other campaign while that runs.`
+  if (c === 'capstone') return `${adTermWord.value} from signing, her face is with us – the house deal of her career, and there is only ever one of these.`
+  const trade: Record<string, string> = {
+    watches: 'watch', cars: 'car', drinks: 'drinks', clothing: 'clothing', airline: 'airline', fragrance: 'fragrance',
+  }
+  return `${adTermWord.value} from signing, her face is with us – and in no other ${trade[c] ?? c} campaign while that runs.`
+})
 /** ⭐ WHAT THE HOUSE MAKES, in its own words – the letter's opening clause, and since round 29 part
  *  two #19 it comes off the PAPER rather than out of the template. It was «We make watches» in the
  *  markup while the catalogue had one house; the ladder has three (a watchmaker, an airline, a
@@ -657,18 +685,22 @@ const settled = computed(() => {
       </p>
       <ul class="offer-terms">
         <li>
-          A one-time fee of {{ formatCents(adTerms.cashCents) }}, paid the day this is signed.
-          Money, not kit – we are not a tennis house.
+          {{ adFeeLine }}
         </li>
         <li>
-          {{ adTermWord }} from signing, her face is with us – and in no other campaign while that
-          runs.
+          {{ adExclusivityLine }}
         </li>
 
         <li>
-          {{ adShootCountWord }} weeks of her season are shoot weeks – ours. In season, spread
-          apart, and named the day this is signed, so the family can plan around them. A shoot is a
-          working week: she will rest less in it, as she would on any trip.
+          <!-- ⭐ P9 – the shoots prefer the WINTER now (the six empty weeks are the shoot season);
+               the in-season sentence survives for the overflow, which still clashes and still
+               costs exactly as round-29 #3 priced it. Per year since the multi-year terms. -->
+          {{ adShootCountWord }} {{ adTerms.shootCount === 1 ? 'week' : 'weeks' }} of her year
+          {{ adTerms.shootCount === 1 ? 'is a shoot week' : 'are shoot weeks' }} – ours, each year
+          of the term. We book the winter first – the off-season is the shoot season – and what the
+          winter cannot hold lands in season, spread apart, named the day this is signed so the
+          family can plan around it. A shoot is a working week: she will rest less in it, as she
+          would on any trip.
         </li>
         <li>
           Beyond those weeks nothing is owed: no tournaments, no results, nothing to pay back –

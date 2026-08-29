@@ -44,13 +44,20 @@ import { isOffSeasonWeek } from '../src/engine/season/calendar'
 import { DEFAULT_PROFILE, type AdOfferTerms, type Offer } from '../src/shared/protocol'
 
 const AD = ECONOMY.advertising
-/** ⚠ THE CATALOGUE BECAME A LADDER (round 29 part two #19/#20), so the five per-house numbers
- *  moved out of `ECONOMY.advertising` into `ECONOMY.advertising.houses`. Every claim in this
- *  file is about the rung that already shipped – Quiet Hour, $20,000, two shoot weeks – so it
- *  is REPOINTED and not re-aimed: `AD` still carries the mechanics every house shares (the age
- *  bar, the weekly chance, the decide weeks, the lead, the clash price) and `WATCH` carries
- *  that one house's own terms, which have not moved by a cent. */
-const WATCH = ECONOMY.advertising.houses.watch
+/** ⚠ THE CATALOGUE BECAME A LADDER (round 29 part two #19/#20) AND THEN A PORTFOLIO (part four
+ *  P6/§8), so the shipped rung's numbers moved twice: first into `advertising.houses.watch`, now
+ *  into the watches CATEGORY's bottom-band cell. Every claim in this file is about that one deal –
+ *  a watchmaker, $20,000, two shoot weeks over a one-year term – so it is REPOINTED and not
+ *  re-aimed: `AD` still carries the mechanics every house shares (the age bar, the weekly chance,
+ *  the decide weeks, the lead, the clash price) and `WATCH` freezes the shipped terms this bench
+ *  has always measured. The fee is read off the watches category's ≤200 cell (unchanged to the
+ *  cent – the anchor); the two-shoots-per-year ask and the one-year term are the shipped letter's
+ *  own and are pinned here as literals exactly because the new bands ask differently. */
+const WATCH = {
+  cashCents: ECONOMY.advertising.categories.watches.feeCentsByBand[0]!,
+  termWeeks: 52,
+  shootWeeksPerTerm: 2,
+}
 const CAREERS = 12
 const TERM = WATCH.termWeeks
 

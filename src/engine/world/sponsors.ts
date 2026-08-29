@@ -17,7 +17,7 @@ import { netTravelCents, travelCoverShare } from '../academy'
 // The rung ladder, for the cameo's coach cut. coach.ts is a leaf (it imports ECONOMY and rng and
 // nothing else), so this runs one way exactly as every other import in this file does.
 import { COACH_TIERS } from '../coach'
-import { activeKitDeal, adSpokenFor, adTermsFor, adWritesAt, chooseShootWeeks, contractEndWeek, dealEndingWithSeason, dealUnderReview, endDealWithSeason, isSponsorWindowCloseWeek, isSponsorWindowWeek, kitTravelShare, letDownThisWindow, raiseAdOffer, raiseKitEndLetter, raiseKitOffers, raiseKitRenewal, refuseOffer as refuseOfferIn, signOffer as signOfferIn, sponsorWindowOpensAt, standingClears, type SponsorStanding } from '../offers'
+import { AD_CATEGORIES, activeAdDeals, activeKitDeal, adBandFor, adCapstoneTerms, adFeeFor, adLetterRng, adSpokenFor, adTermsForCategory, adWritesAt, chooseShootWeeks, contractEndWeek, dealEndingWithSeason, dealUnderReview, endDealWithSeason, isSponsorWindowCloseWeek, isSponsorWindowWeek, kitTravelShare, lastSignedAdBrand, letDownThisWindow, pickAdHouse, raiseAdOffer, raiseKitEndLetter, raiseKitOffers, raiseKitRenewal, refuseOffer as refuseOfferIn, signOffer as signOfferIn, sponsorWindowOpensAt, standingClears, type SponsorStanding } from '../offers'
 import type { SeasonEvent, TierId } from '../season/types'
 import { LADDER_LABEL, type AdOfferTerms, type CoachTier, type KitEndReason, type KitOfferTerms, type Offer, type WorldEventCategory } from '../../shared/protocol'
 import { accrueKidShare, addEvent } from './ledger'
@@ -560,46 +560,110 @@ export function reviewSponsors(world: WorldState): void {
 // week, so a save reloaded and replayed gets the same letter on the same Monday. The frozen MAIN
 // capture (41550 / e6b0c709) cannot see it.
 
+/** ⭐⭐ THE CAPSTONE'S TENURE, counted where the world already banks it: seasons that ENDED inside
+ *  the professional top 10 – `seasonHistory[].byTrack.wta.endRank`, appended once a year at the
+ *  wrap, capped at 30 seasons, never pruned. A fold over an existing persisted field, so the gate
+ *  the owner ruled («4 seasons ended in top 10», round-29 part four) costs NO schema move (65
+ *  stays). `byTrack` is optional (v46) and absent means «not recorded», never «unranked» – a
+ *  missing row is skipped, exactly as the reach bench reads the same field. */
+export function capstoneSeasonsOf(world: WorldState): number {
+  let n = 0
+  for (const h of world.seasonHistory) {
+    const r = h.byTrack?.wta?.endRank
+    if (r !== undefined && r <= 10) n++
+  }
+  return n
+}
+
 /** WHETHER THIS IS THE WEEK A CAMPAIGN NOTICES HER – and if it is, the letter is raised. Weekly,
  *  not windowed: an endorsement is not an off-season ritual, and the plan's own table says the deal
  *  LAGS results – `ECONOMY.advertising.offerChance` a week, from the week she qualifies, is that
- *  lag with no second calendar. */
+ *  lag with no second calendar.
+ *
+ *  ⭐⭐⭐ SINCE ROUND 29 PART FOUR P6/§8 THE POST IS A PORTFOLIO, so this walks the CATEGORY SHELF
+ *  rather than one ladder: each category that is open at her band and not already spoken for rolls
+ *  its own arrival dice, so several houses can notice her in one season – «Таких контрактов может
+ *  быть несколько», which is his ruling and what overturned the plan's one-at-a-time §4.1 (see
+ *  `adSpokenFor`, re-aimed per category rather than deleted).
+ *
+ *  RNG DISCIPLINE, RESTATED FOR THE SHELF: at most one arrival draw PER CATEGORY, each on its own
+ *  purpose scope `seed:ad:<category>:<week>`, plus the letter's own author/term draws on
+ *  `…:<week>:letter` when a letter is actually written. ZERO draws on MAIN – the frozen capture
+ *  (41550 / e6b0c709) cannot see any of it – and every stream is keyed on the week, so a reloaded
+ *  career gets the same letters on the same Monday. Which categories ROLL depends only on the
+ *  world's own facts (her standing, the paper trail), never on undecided player input this week,
+ *  and each category's stream is untouched by whether another category rolled – so no choice can
+ *  re-roll anybody's dice. */
 export function reviewAdOffer(world: WorldState): void {
   const s = ECONOMY.advertising
   // FROM EIGHTEEN («от 18+ лет начиная») – her real age, `kidAgeYears` through `kidAgeAt`, the
   // one-clock ruling: never the band's clock, never a birthday approximation.
   if (kidAgeAt(world, world.week) < s.fromAgeYears) return
-  // RESULTS ONLY: a counting professional standing inside a house's bar. The `wtaRanked` guard is
-  // the brand ladder's own – a floor tie is not a standing, and `adRungFor` holds it – and the bars
-  // are measured, not invented: see `ECONOMY.advertising.houses` for the arithmetic behind all three.
-  //
-  // ⭐⭐ AND SINCE ROUND 29 PART TWO #19/#20 THE BAR IS A LADDER, SO THIS ASKS WHICH HOUSE RATHER
-  // THAN WHETHER ANY. The owner: «предлагать контракт за 20к долларов на год для 100 и выше ракетки
-  // мира выглядит весьма сомнительно… поправь меня, если я ошибаюсь». He is right – there was one
-  // house, one cheque and NO upper gate, so the world #21 was written to on the world #199's terms.
-  // `adRungFor` reads `ECONOMY.advertising.houses` strongest-first, exactly as `rungFor` reads the
-  // kit ladder, and the terms come from the rung that actually writes.
+  // RESULTS ONLY: a counting professional standing inside a band of the gradient. The `wtaRanked`
+  // guard is the brand ladder's own – a floor tie is not a standing, and `adBandFor` holds it. The
+  // band sets every category's cheque at once (§8: the cheque is the only axis that scales).
   const standing = sponsorStandingOf(world)
-  const terms = adTermsFor(standing)
-  if (!terms) return
-  // ONE DEAL AT A TIME (plan §4.1): a letter still open on the table, or a signed term still
-  // running, turns the next house away before any dice are read.
-  //
-  // ⚠ AND IT IS THE WHOLE LADDER'S RULE, NOT THE RUNG'S – deliberately unlike the kit ladder's
-  // round 29 part two #12 narrowing, where a stronger rung may write over a running deal. The kit
-  // rule is about a SEASON of gear she can only wear one of; this one is about her FACE, which she
-  // promised to one house for twelve months. A bigger house interrupting that would make the
-  // exclusivity clause the letter states («in no other campaign while that runs») untrue.
-  if (adSpokenFor(world.offers, world.week)) return
-  if (!adWritesAt(world.seed, world.week, s.offerChance)) return
-  // Terms are frozen at arrival from the catalogue – the snapshot rule – and the deadline gives him
-  // `ECONOMY.advertising.decideWeeks` counted INCLUSIVELY from today, so the arrival week is one of
-  // them and the letter is still answerable on the last (round 28 #2: it was four, the owner's
-  // ruling is five, and the constant's own comment carries the argument). `shootCount` is on the
-  // paper from the first read (step 2, §4a): the letter states its own price in time, and a
-  // catalogue retune between arrival and signature cannot change what this letter promised. The
-  // WEEKS themselves are the signature's to name – see `acceptOffer`.
-  raiseAdOffer(world.offers, world.week, terms, world.week + s.decideWeeks - 1)
+  const band = adBandFor(standing)
+  if (band === null) return
+  const deadline = world.week + s.decideWeeks - 1
+  const topBand = band === s.bands.length - 1
+  for (const category of AD_CATEGORIES) {
+    // ONE DEAL PER CATEGORY (P6/§7): a letter still open for the category, or a signed term still
+    // running in it, turns the category's next house away before any dice are read. A bigger
+    // cheque interrupting a running term would make the letter's own exclusivity clause («in no
+    // other <trade> campaign while that runs») untrue – the same argument the one-post rule always
+    // made, now made per slot.
+    if (adSpokenFor(world.offers, world.week, category)) continue
+    let terms: AdOfferTerms | null = null
+    if (category === 'capstone') {
+      // ⭐⭐ THE CAPSTONE GATE IS TENURE, NOT TODAY'S RANK – four seasons ENDED inside the top 10
+      // (his ruling; `capstoneSeasonsOf` above), one such deal at a time for its whole eight
+      // years. The author is the kit house that already dresses her – his own sentence is a kit
+      // brand paying for a face – falling back to the icon rung's brand between kit deals so the
+      // tenure gate he ruled is the only gate there is.
+      if (capstoneSeasonsOf(world) < s.capstone.seasonsInTop10) continue
+      const kit = activeKitDeal(world.offers, world.week)
+      const author = kit ? (kit.terms as KitOfferTerms).brand : ECONOMY.sponsorship.icon.brand
+      if (!adWritesAt(world.seed, world.week, s.offerChance, category)) continue
+      terms = adCapstoneTerms(author)
+    } else {
+      // A `null` fee cell IS the category's gate at this band – watches/cars/drinks/clothing from
+      // the first professional cash, the airline from the top 100, fragrance at the top 10 (§7).
+      if (adFeeFor(category, band) === null) continue
+      // ⭐ THE DOUBLE PROGRAMME («двойной программой»): the clothing category's author is the live
+      // kit deal's own brand – the poster campaign on top of the racket bag, two deals, one brand,
+      // separate letters, separate money. No kit deal, nobody to write it.
+      let author: string | undefined
+      if (category === 'clothing') {
+        const kit = activeKitDeal(world.offers, world.week)
+        if (!kit) continue
+        author = (kit.terms as KitOfferTerms).brand
+      }
+      if (!adWritesAt(world.seed, world.week, s.offerChance, category)) continue
+      // The letter's own dice, split from the arrival roll by scope: the author (P6's churn – at
+      // the top band the previous signed house steps back, `pickAdHouse`) and the term (1–3
+      // years, the research's non-endemic law).
+      const rng = adLetterRng(world.seed, world.week, category)
+      if (author === undefined) {
+        author = pickAdHouse(
+          ECONOMY.advertising.categories[category].houses,
+          lastSignedAdBrand(world.offers, category),
+          topBand,
+          rng(),
+        )
+      }
+      const years = 1 + Math.floor(rng() * s.termYearsMax)
+      terms = adTermsForCategory(category, band, years, author)
+    }
+    if (!terms) continue
+    // Terms are frozen at arrival from the catalogue – the snapshot rule – and the deadline gives
+    // him `ECONOMY.advertising.decideWeeks` counted INCLUSIVELY from today, so the arrival week is
+    // one of them and the letter is still answerable on the last (round 28 #2's five, on its own
+    // clock). `shootCount` is on the paper from the first read (step 2, §4a): the letter states
+    // its own price in time, and a catalogue retune between arrival and signature cannot change
+    // what this letter promised. The WEEKS themselves are the signature's to name – `acceptOffer`.
+    raiseAdOffer(world.offers, world.week, terms, deadline)
+  }
 }
 
 /** THE PARENT SIGNS. Returns the signed offer, or throws with the engine's own reason – past the
@@ -1159,6 +1223,40 @@ export function payRetainer(world: WorldState): void {
   const cents = terms.retainerCents ?? 0
   if (cents <= 0) return
   bankSponsorCheque(world, cents, { category: 'income', text: `${terms.brand} retainer – quarterly` })
+}
+
+/** ⭐⭐ PAY THE PORTFOLIO'S ANNIVERSARIES (round 29 part four P6) – the year-fee of every running
+ *  multi-year advertising deal, on each anniversary of its signature while the term runs. Year one
+ *  is banked at the signature (`acceptOffer`); this pays years two and on, so «три однолетних
+ *  контракта платят ровно то же, что один трёхлетний» – the ledger's own stated equivalence – holds
+ *  in the till and not only on paper.
+ *
+ *  ⚠ EVERY LETTER WRITTEN BEFORE THE PORTFOLIO IS UNREACHABLE BY CONSTRUCTION: a 52-week term's
+ *  first anniversary is the week AFTER `untilWeek`, so the guard below never fires for it and an
+ *  old save's money is byte-identical. Zero draws on any stream: arithmetic on decided deals, and
+ *  each cheque runs through `bankSponsorCheque`, so her ramp share comes off it exactly as it does
+ *  off the signature fee. Idempotent per week by construction – the tick calls it once and the
+ *  modulus is exact. */
+export function payAdAnniversaries(world: WorldState): void {
+  for (const deal of activeAdDeals(world.offers, world.week)) {
+    const from = deal.fromWeek ?? deal.decidedWeek ?? 0
+    const at = world.week - from
+    if (at <= 0 || at % WEEKS_PER_YEAR !== 0) continue
+    const t = deal.terms as AdOfferTerms
+    const years = Math.max(1, t.termYears ?? 1)
+    const yearIndex = at / WEEKS_PER_YEAR + 1
+    // ⚠ NO `yearIndex > years` GUARD, AND ITS ABSENCE IS A MEASURED FACT, NOT AN OVERSIGHT. The
+    // first draft carried one and the mutation log killed it as a dead guard: `activeAdDeals`'
+    // own window is the stop – untilWeek = fromWeek + years×52 − 1, so the year-(years+1)
+    // anniversary falls one week PAST the term and the deal is simply not live to be paid
+    // (52k ≤ years×52 − 1 ⇔ k ≤ years − 1, provably). A second spelling of the same stop would
+    // be unreachable code wearing a safety's clothes – the market test's own precedent for
+    // recording a mutant that moves nothing rather than covering it.
+    bankSponsorCheque(world, t.cashCents, {
+      category: 'sponsor',
+      text: `${t.brand} endorsement – year ${yearIndex} of ${years}`,
+    })
+  }
 }
 
 /** WHAT AN EVENT PAYS HER TO TURN UP, in cents, 0 when nothing does. Read at the moment a run

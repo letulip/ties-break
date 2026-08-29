@@ -137,6 +137,19 @@ The owner read step 1's letter line «no appearances scheduled» and ruled it de
   The measured season: −9 condition on every deficit shoot week (the balanced rest week, forfeited),
   0 at the ceiling and on tournament collisions, 0 weeks lost, and an off-season landing impossible
   over 20,000 draws.
+- ⚠⚠ **SUPERSEDED TWICE, 29.08 (round 29 part four P6/§8 and P9), BY THE OWNER.** The three-house
+  ladder above became the **category portfolio** – one live deal per category (watches, cars,
+  drinks, the kit brand's own campaign, airline, fragrance, and the tenure-gated capstone), §8's
+  four bands (200/100/50/10) with the cheque as the only scaling axis, 1–3-year churned terms paid
+  per contract year – `ECONOMY.advertising.categories`/`bands`/`capstone`, and the one-deal-at-a-time
+  rule of §4.1 is now PER CATEGORY (`adSpokenFor`, re-aimed, never deleted). And P9 overturned the
+  in-season-only rule below: «межсезонье… у нас 6 пустых недель там» – **the winter is the shoot
+  season now** (`isWinterShootWeek`, `chooseShootWeeks` fills it first), its cost is the DISPLACED
+  REST the empty week would have banked, and only the overflow spills in-season where the round-29
+  #3 clash machinery prices it exactly as this section records. The «6 shoot weeks a year is
+  structural» sentence is therefore retired with the one-deal rule that carried it: the shoot budget
+  is now the portfolio's own arithmetic (per-deal-per-year asks × filled categories), and the winter
+  carries the bulk of it.
 
 ## 4b. What else these contracts can carry, from eighteen on
 
@@ -175,7 +188,11 @@ step 6 ships.
    surface, a fog rule, and its own calibration.
 2. **Do the appearance weeks come out of the season, or out of the off-season?** The first is a real
    cost; the second is free money wearing a cost's clothes. ⭐ *Answered 22.08: in-season, by
-   construction – see §4a-1.*
+   construction – see §4a-1.* ⚠⚠ *Re-answered 29.08 by the owner (round 29 part four P9), the other
+   way: the winter IS the shoot season – Zheng's «слишком много съёмок и никакого отпуска» is the
+   model – and the off-season cost is real after all: it is the displaced rest of the empty week
+   (`accrueCondition` already prices a shoot week at the travel figure, so parking one on a winter
+   week forfeits exactly the recovery the vacation would have banked).*
 3. **Should refusing ever be right?** If declining is always wrong, it is not a decision. If it is
    sometimes right, the game has to say why – and that is a moral statement, not a balance one.
 4. **What happens to a live deal when she enrols?** Pause or lapse – see §4c.

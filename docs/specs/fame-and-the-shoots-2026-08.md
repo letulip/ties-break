@@ -39,6 +39,14 @@ Round 29 #3/#6 shipped the price of a shoot without anything on the other side:
 
 **So the trade is already live: fame is paid for in condition, and condition is what wins matches.**
 
+⭐ **And since round 29 part four (P6/P9, built 29.08) the fuel line is wider than one deal**: the
+advertising post is a PORTFOLIO – up to one live deal per category, each asking shoot weeks per
+contract year – and the shoots now book the WINTER first (P9: the six empty weeks are the shoot
+season; the cost there is the displaced rest of the empty week). The shoot RECORD the fame stock
+will one day account is therefore already legible and per-deal: every signed `'ad'` offer carries
+its own `shootWeeks` (absolute career weeks, frozen at signature) and its own brand – so «how many
+shoots, for whom, when» is a fold over `world.offers`, no new bookkeeping needed when fame ships.
+
 ⭐⭐⭐ **That is a real decision and the game has not had one like it** – be good, or be known. And it is
 exactly why the #30 on court can be the #2 off it: she did the work off court and paid for it on.
 

@@ -39,7 +39,7 @@
  */
 import { writeFileSync } from 'node:fs'
 import { acceptOffer, financeWindow, type WorldState } from '../src/engine/world'
-import { AD_TIERS, isOfferLive, seasonSpokenFor, sponsorWindowOpensAt, windowLadder, SPONSOR_TIERS, TIER_COVERS, standingClears, isSponsorWindowWeek } from '../src/engine/offers'
+import { AD_CATEGORIES, adCategoryOf, isOfferLive, seasonSpokenFor, sponsorWindowOpensAt, windowLadder, SPONSOR_TIERS, TIER_COVERS, standingClears, isSponsorWindowWeek } from '../src/engine/offers'
 import { sponsorStandingOf } from '../src/engine/world/sponsors'
 // ⚠ THE SHELF IS READ THROUGH ITS OWN LEAF (`world/assets.ts`) AND NOT RE-PRICED HERE. `shopItem`'s
 // three numbers – price, rate and upkeep – have exactly one arithmetic in this codebase and it is
@@ -49,7 +49,7 @@ import { assetUpkeepCents, shopCatalogue } from '../src/engine/world/assets'
 import { ECONOMY } from '../src/engine/economy'
 import { START_AGE_YEARS } from '../src/engine/world/age'
 import { WEEKS_PER_YEAR } from '../src/engine/season/calendar'
-import type { AdOfferTerms, AdTier, KitOfferTerms, SponsorTier, WorldEventCategory } from '../src/shared/protocol'
+import type { AdCategory, AdOfferTerms, KitOfferTerms, SponsorTier, WorldEventCategory } from '../src/shared/protocol'
 import { PRESETS, POLICIES, openCareer, stepCareerWeek, type Preset, type Policy } from './econ-bench'
 
 /** Fifteen seasons – the length of the owner's own save (`w780`), and the first horizon on which the
@@ -133,11 +133,11 @@ interface CareerRow {
   /** the advertising post – «часов за 20к», its own clock and its own gate. */
   adLettersRaised: number
   adSigned: number
-  /** ⭐ round 29 part two #19 – which HOUSES of the advertising ladder ever wrote, and which were
-   *  taken. A rung nobody reaches is not shipped, so these two are what turn a catalogue into a
-   *  list somebody actually sees. */
-  adRungsWritten: AdTier[]
-  adRungsSigned: AdTier[]
+  /** ⭐ round 29 part four P6/§8 – which CELLS of the portfolio (category x band) ever wrote, and
+   *  which were taken, as 'category@band' keys ('watches@200', 'capstone'). A cell nobody reaches
+   *  is not shipped, so these two are what turn a catalogue into a shelf somebody actually sees. */
+  adCellsWritten: string[]
+  adCellsSigned: string[]
   /** ⭐ round 29 part two #20 – one reading a season of what the last 52 weeks COST her, tagged with
    *  the professional standing she held when it was taken. The denominator of the sizing rule. */
   outgoingsByRank: { rank: number; cents: number }[]
@@ -216,6 +216,10 @@ const BONUS_RE = /^Sponsor bonus – /
  *  folded in – but it goes through the same `bankSponsorCheque` and is therefore subject to the same
  *  share ruling, which is the only reason this file needs to see it. */
 const AD_FEE_RE = / endorsement – the campaign fee, on signing(?:,|$)/
+/** ⭐ P6's multi-year deals pay again on each anniversary (`payAdAnniversaries`) – a second row
+ *  shape on the same post, counted with the signature fee or the ad line under-reports every
+ *  multi-year deal by (years − 1) years of money. */
+const AD_YEAR_RE = / endorsement – year \d+ of \d+(?:,|$)/
 /** ⭐⭐ HER SHARE, READ OFF THE ROW THAT PAID IT AND NEVER RE-DERIVED. `bankSponsorCheque` writes the
  *  cents it actually credited her into the text; `family + herCents` is the gross cheque TO THE CENT,
  *  where `family / (1 - bps/10000)` is a division on a figure that was rounded once on the way in –
@@ -227,12 +231,14 @@ function grossOfSponsorRow(text: string, familyCents: number): number {
   return familyCents + Math.round(Number(m[1].replace(/,/g, '')) * 100)
 }
 
-/** Sign the strongest live letter in the inbox, kit or advertising, the week it lands. */
+/** Sign the strongest live kit letter AND every live advertising letter, the week they land.
+ *  ⚠ EVERY ad letter and not one, since the portfolio (P6): the categories are independent slots
+ *  and the eager arm's whole job is «if even this arm never sees a cell, nobody does». */
 function answerThePost(
   world: WorldState,
   signedRungs: Set<SponsorTier>,
   adSigned: { n: number },
-  adSignedRungs: Set<AdTier>,
+  adSignedCells: Set<string>,
 ): void {
   const live = world.offers.filter((o) => (o.kind === 'kit' || o.kind === 'ad') && isOfferLive(o, world.week))
   if (live.length === 0) return
@@ -240,20 +246,33 @@ function answerThePost(
   const best = [...kit].sort(
     (a, b) => rungIndex((b.terms as KitOfferTerms).tier) - rungIndex((a.terms as KitOfferTerms).tier),
   )[0]
-  const target = best ?? live[0]
-  try {
-    acceptOffer(world, target.id)
-    if (target.kind === 'kit') signedRungs.add((target.terms as KitOfferTerms).tier)
-    else {
-      adSigned.n++
-      // An ad letter written before the ladder carries no tier; every one of those is the watch
-      // rung by construction, which is the same exact fallback `OfferLetter` reads.
-      adSignedRungs.add((target.terms as AdOfferTerms).tier ?? 'watch')
+  const targets = [...(best ? [best] : []), ...live.filter((o) => o.kind === 'ad')]
+  for (const target of targets) {
+    try {
+      acceptOffer(world, target.id)
+      if (target.kind === 'kit') signedRungs.add((target.terms as KitOfferTerms).tier)
+      else {
+        adSigned.n++
+        adSignedCells.add(adCellOf(target.terms as AdOfferTerms))
+      }
+    } catch {
+      // A career that has ended – or a deal that is already spoken for – refuses. That is the engine
+      // re-validating, which is the point of asking it rather than deciding here.
     }
-  } catch {
-    // A career that has ended – or a deal that is already spoken for – refuses. That is the engine
-    // re-validating, which is the point of asking it rather than deciding here.
   }
+}
+
+/** 'category@band' for a letter, the band read back off the letter's own frozen fee – the cells are
+ *  distinct per category, so the match is exact. The capstone and the historical single-post
+ *  letters are their own keys. */
+function adCellOf(terms: AdOfferTerms): string {
+  const category = adCategoryOf(terms)
+  if (category === 'capstone') return 'capstone'
+  if (!terms.category) return `${category}@legacy`
+  const bands = ECONOMY.advertising.bands
+  const fees = ECONOMY.advertising.categories[category as Exclude<AdCategory, 'capstone'>].feeCentsByBand
+  const at = fees.findIndex((f) => f === terms.cashCents)
+  return `${category}@${at >= 0 ? bands[at].maxWtaRank : '?'}`
 }
 
 function runCareer(
@@ -268,11 +287,11 @@ function runCareer(
   const { world, rng, seed } = openCareer(preset, index, policy)
   const cleared = new Set<SponsorTier>()
   const written = new Set<SponsorTier>()
-  const adWritten = new Set<AdTier>()
+  const adWritten = new Set<string>()
   const signed = new Set<SponsorTier>()
   const firstClearedWeek: Partial<Record<SponsorTier, number>> = {}
   const adSigned = { n: 0 }
-  const adSignedRungs = new Set<AdTier>()
+  const adSignedCells = new Set<string>()
   const winters: Winter[] = []
   const outgoingsByRank: { rank: number; cents: number }[] = []
   let bestCleared: SponsorTier | null = null
@@ -311,7 +330,7 @@ function runCareer(
       const amount = row.amountCents ?? 0
       if (amount <= 0) continue
       const isKitCash = RETAINER_RE.test(row.text) || APPEARANCE_RE.test(row.text) || BONUS_RE.test(row.text)
-      const isAdFee = AD_FEE_RE.test(row.text)
+      const isAdFee = AD_FEE_RE.test(row.text) || AD_YEAR_RE.test(row.text)
       if (!isKitCash && !isAdFee) continue
       // ⭐⭐ THE SHARE RULING, SIMULATED IN THE BENCH AND NOWHERE ELSE (the owner, 29.08: «контракт на
       // полную сумму ребенку приходит на почту, после подписания видим на счету уже родительский
@@ -420,11 +439,9 @@ function runCareer(
     // raised by any path is seen.
     for (const o of world.offers) {
       if (o.kind === 'kit') written.add((o.terms as KitOfferTerms).tier)
-      // An ad letter written before the ladder carries no tier; every one of those is the watch rung
-      // by construction, so the fallback is exact rather than a guess (`AdOfferTerms.tier`).
-      if (o.kind === 'ad') adWritten.add((o.terms as AdOfferTerms).tier ?? 'watch')
+      if (o.kind === 'ad') adWritten.add(adCellOf(o.terms as AdOfferTerms))
     }
-    answerThePost(world, signed, adSigned, adSignedRungs)
+    answerThePost(world, signed, adSigned, adSignedCells)
     if (world.ending) break
   }
 
@@ -451,8 +468,8 @@ function runCareer(
     bestItfRank,
     adLettersRaised: adLetters.length,
     adSigned: adSigned.n,
-    adRungsWritten: AD_TIERS.filter((t) => adWritten.has(t)),
-    adRungsSigned: AD_TIERS.filter((t) => adSignedRungs.has(t)),
+    adCellsWritten: [...adWritten].sort(),
+    adCellsSigned: [...adSignedCells].sort(),
     outgoingsByRank,
     winters,
     sponsorIncomeCents,
@@ -703,50 +720,46 @@ export function main(argv: string[] = process.argv.slice(2)): void {
       `${rows.reduce((s, r) => s + r.adLettersRaised, 0)} letters in all`,
   )
 
-  // ⭐⭐ ROUND 29 PART TWO #19 – THE LIST HE ASKED FOR, AND WHETHER ANYBODY EVER SEES IT.
+  // ⭐⭐ ROUND 29 PART FOUR P6/§8 – THE SHELF HE ORDERED, CELL BY CELL, AND WHETHER ANYBODY SEES IT.
   //
-  // «я не увидел наш список спонсоров для съемок и прочего, не спортивных. С ними что и на каких
-  // уровнях и что дают… Хочу увидеть их список и что дают.» Printed here rather than in the docs so
-  // it can never go stale against the catalogue, and beside a REACH column, because a rung nobody
-  // reaches is not content – the same discipline the kit table above keeps.
-  console.log('\n  ⭐ THE ADVERTISING LADDER – the list, what it pays, and how often it is actually seen:')
-  console.log('    rung      house              trade                       gate       fee   shoots   written   signed')
-  for (const t of AD_TIERS) {
-    const h = ECONOMY.advertising.houses[t]
-    const written = rows.filter((r) => r.adRungsWritten.includes(t)).length
-    const signed = rows.filter((r) => r.adRungsSigned.includes(t)).length
-    console.log(
-      `    ${t.padEnd(9)} ${h.brand.padEnd(18)} ${h.trade.padEnd(27)} ` +
-        `WTA #${String(h.maxWtaRank).padStart(3)} ${usd(h.cashCents).padStart(9)} ${String(h.shootWeeksPerTerm).padStart(6)}` +
-        `   ${String(written).padStart(3)} ${pct(written, n)}  ${String(signed).padStart(3)} ${pct(signed, n)}`,
-    )
-  }
-
-  // ...AND THE SIZING RULE, MEASURED. A rung is a fixed SHARE of the OUTGOINGS of the stage it opens
-  // for (`ECONOMY.advertising.houses`), set by the bottom rung's own realised share, so the
-  // denominator has to be printed with the numerator or the rule is unfalsifiable. One reading a
-  // season, on the sponsor window's own opening week.
-  console.log('\n  ...and what a season COSTS in each of those bands – the denominator the fees are a share of:')
-  console.log('    band            n   median outgoings   this rung pays   realised share   $ per shoot')
-  const bandOf: { tier: AdTier; label: string; lo: number; hi: number }[] = [
-    { tier: 'watch', label: 'WTA 51-200', lo: 51, hi: ECONOMY.advertising.houses.watch.maxWtaRank },
-    { tier: 'campaign', label: 'WTA 11-50 ', lo: 11, hi: ECONOMY.advertising.houses.campaign.maxWtaRank },
-    { tier: 'house', label: 'WTA 1-10  ', lo: 1, hi: ECONOMY.advertising.houses.house.maxWtaRank },
-  ]
-  for (const b of bandOf) {
-    const seen = rows.flatMap((r) => r.outgoingsByRank.filter((o) => o.rank >= b.lo && o.rank <= b.hi).map((o) => o.cents))
-    seen.sort((x, y) => x - y)
-    if (seen.length === 0) {
-      console.log(`    ${b.label}     0   –`)
-      continue
+  // «на каждой ступени может быть до 4-6 одновременно, только с разными чеками» – so the table is
+  // category x band: the fee each cell writes, and the share of careers a letter from that cell ever
+  // reached (written) and was taken by (signed). A cell nobody reaches is not content – the same
+  // discipline the kit table above keeps. The capstone is its own row: tenure-gated, not rank-gated.
+  console.log('\n  ⭐ THE ADVERTISING PORTFOLIO – fee per cell, and how often each cell is actually seen:')
+  {
+    const bands = ECONOMY.advertising.bands
+    const catKeys = AD_CATEGORIES.filter((c): c is Exclude<AdCategory, 'capstone'> => c !== 'capstone')
+    console.log(`    category    houses${' '.repeat(30)}${bands.map((b) => `<=${String(b.maxWtaRank).padEnd(10)}`).join('')}`)
+    for (const c of catKeys) {
+      const def = ECONOMY.advertising.categories[c]
+      const cells = bands.map((b, i) => {
+        const fee = def.feeCentsByBand[i]
+        if (fee === null) return '–'.padEnd(12)
+        const written = rows.filter((r) => r.adCellsWritten.includes(`${c}@${b.maxWtaRank}`)).length
+        const signedN = rows.filter((r) => r.adCellsSigned.includes(`${c}@${b.maxWtaRank}`)).length
+        return `${usd(fee)} ${written}w/${signedN}s`.padEnd(12)
+      })
+      const houses = def.houses.length > 0 ? def.houses.join(', ') : '(the live kit brand)'
+      console.log(`    ${c.padEnd(11)} ${houses.slice(0, 34).padEnd(35)} ${cells.join('')}`)
     }
-    const med = seen[Math.floor(seen.length / 2)]
-    const fee = ECONOMY.advertising.houses[b.tier].cashCents
+    const capW = rows.filter((r) => r.adCellsWritten.includes('capstone')).length
+    const capS = rows.filter((r) => r.adCellsSigned.includes('capstone')).length
+    const cap = ECONOMY.advertising.capstone
     console.log(
-      `    ${b.label} ${String(seen.length).padStart(4)}   ${usd(med).padStart(16)}   ${usd(fee).padStart(14)}   ` +
-        `${`${((100 * fee) / med).toFixed(1)}%`.padStart(13)}   ` +
-        `${usd(Math.round(fee / ECONOMY.advertising.houses[b.tier].shootWeeksPerTerm)).padStart(11)}`,
+      `    ${'capstone'.padEnd(11)} ${'(the kit house that dresses her)'.padEnd(35)} ` +
+        `${usd(cap.cashCents)}/yr x ${cap.termYears}yr, gate ${cap.seasonsInTop10} top-10 seasons – ${capW} written ${pct(capW, n)}, ${capS} signed ${pct(capS, n)}`,
     )
+    // ...and the same reach folded PER BAND – «reach per band per category» in one line each.
+    console.log('\n    per band, careers reached by at least one letter of the band:')
+    for (const b of bands) {
+      const written = rows.filter((r) => r.adCellsWritten.some((k) => k.endsWith(`@${b.maxWtaRank}`))).length
+      const signedN = rows.filter((r) => r.adCellsSigned.some((k) => k.endsWith(`@${b.maxWtaRank}`))).length
+      const cats = rows.length === 0 ? 0 : Math.max(...rows.map((r) => new Set(r.adCellsSigned.filter((k) => k.endsWith(`@${b.maxWtaRank}`)).map((k) => k.split('@')[0])).size))
+      console.log(
+        `      WTA <=${String(b.maxWtaRank).padEnd(4)} written ${String(written).padStart(3)} ${pct(written, n)}   signed ${String(signedN).padStart(3)} ${pct(signedN, n)}   most categories one career held at this band: ${cats}`,
+      )
+    }
   }
 
   // ⭐⭐⭐ ROUND 29 PART TWO, HIS 29.08 REPLY – «Без всех этих пунктов не очень понятно зачем нам

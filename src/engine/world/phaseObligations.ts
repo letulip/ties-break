@@ -41,7 +41,7 @@ import {
   settleMandatoryMisses,
   settleTourSeasonNotice,
 } from './mandatory'
-import { payRetainer, reviewAdOffer, reviewSponsors, rolloverKitAllowance } from './sponsors'
+import { payAdAnniversaries, payRetainer, reviewAdOffer, reviewSponsors, rolloverKitAllowance } from './sponsors'
 
 // --- the junior conveyor -----------------------------------------------------
 // The field turns over once a year: who is still here, and who has just arrived underneath her.
@@ -318,6 +318,14 @@ export function seasonBoundaryAndObligations(world: WorldState): void {
   //         inbox replaced. Beside the sponsor review because it is the same contract talking, and
   //         ZERO draws, so it is safe this far up the tick.
   payRetainer(world)
+
+  // ⭐ ROUND 29 PART FOUR P6: AND THE PORTFOLIO'S MULTI-YEAR DEALS PAY THEIR YEAR-FEE ON EACH
+  //         ANNIVERSARY. Beside the retainer because it is the same kind of step – a cheque a
+  //         signed contract owes on a date, ZERO draws – and through `bankSponsorCheque`, so her
+  //         ramp share comes off it exactly as it does off every other sponsor cheque. Letters
+  //         from before the portfolio are 52-week terms whose first anniversary falls past
+  //         `untilWeek`, so this pays them nothing by construction.
+  payAdAnniversaries(world)
 
   // 0a0-w4. W4: retire a knock whose weeks are up. FIRST of the pure-state steps, because everything
   //         below that reads it – `injuryTau` at step 1c most of all – must see the same answer for

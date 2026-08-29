@@ -12,23 +12,39 @@
 // look-ups or post-draw scalings that leave the draw sequence untouched.
 
 import { rngFromSeed, pickInt, type Rng } from './rng'
-import type { AdTier, CoachTier, FamilyBackground, InjurySeverity, KitGrade, KitLine, PlayStyle } from '../shared/protocol'
+import type { AdCategory, CoachTier, FamilyBackground, InjurySeverity, KitGrade, KitLine, PlayStyle } from '../shared/protocol'
 
-/** ONE RUNG OF THE ADVERTISING LADDER (round 29 part two #19/#20) – see `ECONOMY.advertising.houses`
- *  for the sizing rule, the measured shares it is built from and why it stops at three rows. Named
- *  here rather than inlined so `adTermsFor` and the reach bench read one shape. */
-export interface AdHouse {
-  brand: string
-  /** the opening clause of the house's own letter ("We make watches") */
+/** ONE CATEGORY OF THE ADVERTISING PORTFOLIO (round 29 part four P6/P7) – see
+ *  `ECONOMY.advertising.categories` for the shelf itself and the gradient it is priced on. Named
+ *  here rather than inlined so `adTermsForCategory` and the reach bench read one shape.
+ *
+ *  ⚠ THIS REPLACES `AdHouse`, the one-rung shape of the #19/#20 ladder, because the axis moved: a
+ *  rung WAS a house, and a category HOLDS several («игрок устанет смотреть на одно и то же название
+ *  без смены ГОДАМИ» – the owner, 29.08). Letters already written under the old shape persist in
+ *  saves untouched; only the catalogue that writes NEW letters changes shape. */
+export interface AdCategoryDef {
+  /** the shelf's own word for the trade, capitalised for the portfolio surface ("Watches") */
+  label: string
+  /** the opening clause of a house's letter, in the houses' shared voice ("We make watches") */
   trade: string
-  /** the professional standing at or inside which this house writes */
+  /** 2–4 fictional houses that take turns writing – the variety P6's churn asks for. Never a
+   *  tennis brand and never anything constructible into a real company. EMPTY for the clothing
+   *  category, whose writer is the live kit deal's own brand (the «двойной программой» ruling). */
+  houses: readonly string[]
+  /** the fee PER CONTRACT YEAR, in cents, per band of `AD_BANDS` (same index), and `null` exactly
+   *  where the category has not opened yet – which is also how «which categories are open at this
+   *  band» is derived, so the gate and the price cannot disagree. */
+  feeCentsByBand: readonly (number | null)[]
+}
+
+/** ONE BAND OF THE GRADIENT (§8) – the professional cut it opens at, and what a year of a deal
+ *  signed inside it asks in shoot weeks. The CHEQUE is deliberately not here: it is the one axis
+ *  that scales, and it scales per category (`AdCategoryDef.feeCentsByBand`). */
+export interface AdBandDef {
+  /** the standing at or inside which this band's cheques are written */
   maxWtaRank: number
-  /** the one-time fee, in cents, on signature */
-  cashCents: number
-  /** how long her face is theirs, in weeks from the signature */
-  termWeeks: number
-  /** how many shoot weeks the term asks for */
-  shootWeeksPerTerm: number
+  /** how many shoot weeks one deal asks per contract year at this band */
+  shootWeeksPerYear: number
 }
 import type { TierId } from './season/types'
 // ⚠ THE SEASON LENGTH COMES FROM THE SHARED DATES LEAF, NOT FROM season/calendar.ts – see the note
@@ -1566,98 +1582,141 @@ export const ECONOMY = {
      *  week a four-way decision: SIX of her 49 in-season weeks, 12% of the playing year, each
      *  recovering like a travel week instead of a rest week (measured at -9 condition per deficit
      *  shoot week, `docs/specs/ad-shoot-recovery-2026-08.md`) and each one a week she must either
-     *  keep clear or pay `clashConditionPerDay` x 7 to play through. */
-    houses: {
-      watch: {
-        /** THE HOUSE THAT WRITES FIRST: a watchmaker – the plan's own first example of non-endemic
-         *  («a watch, a bank, an airline, a cosmetics house»). Fictional, like every brand on the
-         *  ladder above, and deliberately nothing constructible into a real company or trademark. */
-        brand: 'Quiet Hour',
-        /** What it introduces itself as making – the letter's opening clause, in the house's own
-         *  voice. It was hard-coded into `OfferLetter.vue` while there was one house and could not
-         *  survive a second. */
+     *  keep clear or pay `clashConditionPerDay` x 7 to play through.
+     *
+     *  ⚠⚠⚠ ROUND 29 PART FOUR P6/§6–§8 SUPERSEDES THE THREE-ROW LADDER ABOVE, BY THE OWNER'S OWN
+     *  CALIBRATION, and the history stays because it explains what the anchor is. His three moves,
+     *  in order (docs/research/endorsement-tiers-and-academy-money.md §6–§8):
+     *   1. «Это доход у топ-100, у топ-50 точно больше» – Bublik's $1–2M/yr portfolio is a TOP-100
+     *      figure, so the bands LIFT and a #100 gate joins the kit ladder's own 200/50/10;
+     *   2. the portfolio is CATEGORIES – «одежда и обувь · часы · автомобили · гидратация и
+     *      напитки», one live deal per category, kit brands writing ad campaigns as a second
+     *      programme («Можно даже текущих использовать двойной программой»);
+     *   3. the GRADIENT – «на каждой ступени может быть до 4-6 одновременно, только с разными
+     *      чеками»: the portfolio SHAPE is constant at every band and the CHEQUE is the only axis
+     *      that scales.
+     *  The 23.1%-share sizing rule above therefore holds for exactly ONE cell of the new table –
+     *  the watches fee at the ≤200 band, $20,000 unchanged to the cent, the anchor everything else
+     *  was once derived from – and the cells above it are HIS band ranges (§8, movable, his), not
+     *  shares: at real scale off-court money is 32–99% of an annual income (§4c), so no share of
+     *  outgoings can reach his line and the resize is a chosen point on the measured dial. */
+    /** ⭐⭐⭐ THE GRADIENT'S BANDS (round 29 part four, §8 – his final shape), weakest-first like
+     *  every ladder in this file, so an index comparison is a band comparison everywhere.
+     *
+     *  ⚠⚠ THE GATES ARE THE KIT LADDER'S OWN PROFESSIONAL CUTS PLUS HIS OWN #100. 200 / 50 / 10 are
+     *  `tour` / `premium` / `icon`'s `maxWtaRank`, read and not imported (the shipped rule: a kit
+     *  retune must never silently retune advertising); 100 is the Bublik line, P11 verbatim: «Это
+     *  доход у топ-100, у топ-50 точно больше» – the one band the kit ladder never had, added
+     *  because his data point sits exactly on it.
+     *
+     *  ⚠ THE SHOOT ASK RISES WITH THE BAND AND THE WINTER NOW CARRIES IT (P9, §6: «shoot capacity
+     *  rises because the winter now carries them»). One week per deal-year at the two lower bands,
+     *  two at the two upper – so a full ≤10 shelf of six deals asks 12 weeks a year against a
+     *  6-week winter, and the spill into the season is Zheng's own complaint made mechanical:
+     *  «слишком много съёмок и никакого отпуска». The overflow meets the round-29 #3 four-way
+     *  clash exactly as an in-season shoot always did. */
+    bands: [
+      { maxWtaRank: 200, shootWeeksPerYear: 1 },
+      { maxWtaRank: 100, shootWeeksPerYear: 1 },
+      { maxWtaRank: 50, shootWeeksPerYear: 2 },
+      { maxWtaRank: 10, shootWeeksPerYear: 2 },
+    ] as readonly AdBandDef[],
+    /** ⭐⭐⭐ THE PORTFOLIO'S CATEGORIES (P7, his own list mapped onto ours) – the shelf the player
+     *  sees, one live deal per category, the cheque per band in each row.
+     *
+     *  THE FEES ARE §8'S TABLE, CELL BY CELL, and land inside his ranges by construction (the
+     *  in-band test pins every cell): ≤200 $5k–20k · ≤100 $100k–500k · ≤50 $300k–1M · ≤10
+     *  $1M–2.5M. Portfolio-per-year at each band, all categories filled: $45k · $1.1M · $2.6M ·
+     *  $9.2M – against his own column «$30k–80k · ~$1–2M (Bublik) · ~$2.5–4M · ~$6–10M with kit».
+     *
+     *  ⭐ THE ANCHOR SURVIVES A SECOND RESIZE UNMOVED: watches at ≤200 is the shipped $20,000 to
+     *  the cent – the one cell the 23.1%-share rule still governs, and the cell every earlier
+     *  number in this file's history was derived from.
+     *
+     *  ⚠ A `null` CELL IS THE GATE: the category has not opened at that band. Watches, cars,
+     *  drinks and the kit brand's poster campaign open with the first professional cash (≤200 – «A
+     *  #180 holds a watch deal, a drinks deal, a local car dealer: small money, same shelf», §8);
+     *  the airline waits for the top 100; fragrance is the icon-band category (§7: «watches early,
+     *  cars at top-100, fragrance at top-10»). Derived, never a second constant, so the gate and
+     *  the price cannot disagree.
+     *
+     *  ⚠ 2–4 HOUSES PER CATEGORY IS P6'S CHURN MADE VISIBLE – terms run 1–3 years and a house may
+     *  not write twice running at the top band (`pickAdHouse`), so the shelf shows different names
+     *  across a reign: «игрок устанет смотреть на одно и то же название без смены ГОДАМИ». Every
+     *  name is fictional and constructible into no real company or trademark.
+     *
+     *  ⚠ CLOTHING HAS NO HOUSES OF ITS OWN, BY DESIGN («двойной программой»): the writer is the
+     *  live kit deal's brand – Baseline Athletic paying for her racket bag AND a poster campaign
+     *  is two deals, one brand, separate letters, separate money. No kit deal, no clothing
+     *  campaign; the kit paper stays entirely the kit ladder's. */
+    categories: {
+      watches: {
+        label: 'Watches',
         trade: 'We make watches',
-        /** THE RESULTS BAR: a counting W standing inside the world's top 200. Two hundred is the
-         *  number the game already uses for "the first professional rung that pays cash" – the tour
-         *  rung's `maxWtaRank` (Baseline Athletic, the first retainer) – so a non-endemic brand
-         *  notices her exactly when the first endemic cash does: a measured boundary, not an
-         *  invented one.
-         *
-         *  ⚠ WHY NOT TOP-100 OR TIGHTER: `development.ageCurve` is calibrated «first points 17-18,
-         *  top-100 about 4.5 years later» – a top-100 bar would first clear at ~22, and this rung is
-         *  written for the stage where the budget is still tight. Top-200 is crossed on the way up,
-         *  at 18-20, which is Alice's stage – the years the plan says the deal is worth building
-         *  for. The `wtaRanked` guard is the ladder's own: everybody without a counting W result
-         *  ties at the floor of that table, so a position there is not a standing.
-         *
-         *  ⚠⚠ AND «THERE IS DELIBERATELY NO UPPER CUTOFF … HER CHEQUE IS SIMPLY NOISE, WHICH IS §3'S
-         *  CLAIM AND NOT A BUG» IS THE SENTENCE ROUND 29 PART TWO #20 OVERTURNED. It was a defensible
-         *  reading of a one-row catalogue and it is not a defensible ladder: `adRungFor` now reads
-         *  this table strongest-first, so a top-10 girl hears from the top-10 house and this rung
-         *  writes to the band it was written for. */
-        maxWtaRank: 200,
-        /** THE FEE, in cents, once, on signature. ⭐ UNCHANGED BY THE LADDER, TO THE CENT – it is
-         *  23.1% of the measured median outgoings of its own band ($86,474), which is the share the
-         *  two rungs above derive from rather than a number this rung was moved to fit. More
-         *  than three times the tour rung's cash for a season ($1,500/qtr), because «cash, and a lot
-         *  of it» is the whole difference between this letter and the kit ladder at her rung; and
-         *  under the premium rung's $30,000-a-year retainer, so mid-career the endemic ladder still
-         *  out-earns one photograph. Its measured counterweight is the shoot weeks below: two weeks
-         *  a term that recover like travel weeks, benched in
-         *  docs/specs/ad-shoot-recovery-2026-08.md. */
-        cashCents: 20_000_00,
-        /** Twelve months of her face, from the week the paper is signed. While the term runs no
-         *  second advertising letter arrives – one deal at a time, the plan's §4.1 – and it survives
-         *  a college enrolment by simply running out on its own clock (plan §4c: no penalty, ever; a
-         *  shoot week the freeze swallows lapses silently with it). */
-        termWeeks: 52,
-        /** ⭐ STEP 2 (§4a, owner ruling 22.08: «съемки должны быть иногда и это надо как-то
-         *  прописывать и отражать потом в свободных неделях, соответственно и восстановления на тех
-         *  неделях должно быть чуть меньше», sized and approved: «утверждаю, для начала точно ок») –
-         *  HOW MANY SHOOT WEEKS the term asks. Exactly two for Quiet Hour, IN-SEASON by construction
-         *  (§5.2's own answer: an off-season cost is free money wearing a cost's clothes), named in
-         *  the letter at signature so the player plans the season around them. Frozen onto
-         *  `AdOfferTerms.shootCount` at arrival.
-         *
-         *  The COST of a shoot week is not a number here on purpose: it is a SHAPE, the owner's own
-         *  design – the week recovers like a travel week (`condition.matchWeekRecoveryBase`) rather
-         *  than a rest week (`condition.recoveryBase` + the slider). One modifier on an existing
-         *  weekly figure, no second calendar, no blocking: see `accrueCondition`. */
-        shootWeeksPerTerm: 2,
+        houses: ['Quiet Hour', 'Halfpast', 'Silver Alder'],
+        feeCentsByBand: [20_000_00, 200_000_00, 500_000_00, 1_200_000_00],
       },
-      campaign: {
-        /** An airline – the plan's third example. Invented, like every other name in this file. */
-        brand: 'Northmere Air',
+      cars: {
+        label: 'Cars',
+        trade: 'We make cars',
+        houses: ['Northgate Motors', 'Caldera Auto', 'Faro Automobiles'],
+        feeCentsByBand: [12_000_00, 400_000_00, 800_000_00, 2_000_000_00],
+      },
+      drinks: {
+        label: 'Drinks',
+        trade: 'We make drinks',
+        houses: ['Cold Current', 'Verdel Springs', 'Ninefold'],
+        feeCentsByBand: [8_000_00, 150_000_00, 400_000_00, 1_000_000_00],
+      },
+      clothing: {
+        label: 'Clothing',
+        trade: 'We make her kit',
+        houses: [],
+        feeCentsByBand: [5_000_00, 100_000_00, 300_000_00, 1_000_000_00],
+      },
+      airline: {
+        label: 'Airline',
         trade: 'We fly people across the world',
-        /** `sponsorship.premium.maxWtaRank`'s figure, read and not imported: the top 50 is where the
-         *  tour starts requiring her presence and where the endemic ladder starts paying real money,
-         *  so it is also where a house stops wanting a face and starts wanting a campaign. */
-        maxWtaRank: 50,
-        /** The watch rung's own realised share (23.1%) of the measured median outgoings of the
-         *  WTA 11-50 band ($173,210) – so the anchor sets the rule and this rung obeys it. */
-        cashCents: 40_000_00,
-        /** A year, like every rung – which is what makes the plan's «6 shoot weeks a year» cap
-         *  structural rather than a rule to remember. */
-        termWeeks: 52,
-        /** The top of the plan's recorded «campaigns 3-4». */
-        shootWeeksPerTerm: 4,
+        houses: ['Northmere Air', 'Corvess Airways', 'Palewing Atlantic'],
+        feeCentsByBand: [null, 250_000_00, 600_000_00, 1_500_000_00],
       },
-      house: {
-        /** A cosmetics house – the plan's fourth example, and the biggest non-endemic category in
-         *  the real women's game. Invented; not constructible into any real company. */
-        brand: 'Rivelle',
+      fragrance: {
+        label: 'Fragrance',
         trade: 'We make perfume',
-        /** `sponsorship.icon.maxWtaRank`'s figure, read and not imported. */
-        maxWtaRank: 10,
-        /** The same share again of the WTA 1-10 band's $240,343 – 22.9%, and $9,167 a shoot week
-         *  against the two rungs below it at $10,000, which is as close as legible round figures get. */
-        cashCents: 55_000_00,
-        termWeeks: 52,
-        /** The top of the plan's recorded «a global house 5-6», which is also its whole annual cap –
-         *  see the block comment above for why that is what stops the ladder at three rungs. */
-        shootWeeksPerTerm: 6,
+        houses: ['Rivelle', 'Maison Ondelle', 'Blanche & Noir'],
+        feeCentsByBand: [null, null, null, 2_500_000_00],
       },
-    } as Record<AdTier, AdHouse>,
+    } as Record<Exclude<AdCategory, 'capstone'>, AdCategoryDef>,
+    /** ⭐⭐⭐ THE CAPSTONE (P6, approved twice – §6 «D … очень хорошо» and §8's own last row): the
+     *  one kit-shaped deal on top of the whole shelf. His anchor sentence, verbatim: «Федерер
+     *  получал контракт с Nike на 10+ миллионов, это 1-2млн для родителя.»
+     *
+     *  ⚠⚠ THE GATE IS TENURE, NOT A RANK READ TODAY: four seasons ENDED inside the world's top 10,
+     *  counted off `seasonHistory[].byTrack.wta.endRank` – banked once a season at the wrap,
+     *  never pruned, already persisted, so the gate is a fold over an existing field and NO schema
+     *  moves (65 stays). Measured before it was picked: 4+ seasons in the top 10 is the top ~10%
+     *  of careers (7 of 72, the round-29 reachability run), which is what a career-crowning deal
+     *  should cost.
+     *
+     *  ⚠ KIT-SHAPED MEANS THE SHAPE, SAID PRECISELY: eight years, one at a time, the writer is the
+     *  kit house that already dresses her (the double programme at icon scale – his Federer/Nike
+     *  sentence is a kit brand paying for a FACE), falling back to the icon rung's own brand when
+     *  she happens to be between kit deals so the gate he ruled is the only gate there is. It pays
+     *  cash for her face through `bankSponsorCheque` like every ad deal – NOT kit, fares or
+     *  bonuses – and its year-fee lands each anniversary (`payAdAnniversaries`). */
+    capstone: {
+      /** seasons that must have ENDED inside the top 10 before the letter is written */
+      seasonsInTop10: 4,
+      /** the fee per contract year – his $10M sentence, exactly */
+      cashCents: 10_000_000_00,
+      termYears: 8,
+      shootWeeksPerYear: 2,
+    },
+    /** 1–3 contract years for every category deal – the research's own law for non-endemic paper
+     *  («kit deals run 8–10 years while non-endemic deals run 1–3», off-court-money.md), drawn per
+     *  letter on the letter's own sub-stream. The churn is the variety: short paper is what makes
+     *  the 2–4 houses per category actually rotate. */
+    termYearsMax: 3,
     /** The earliest a shoot may land after the signature, in weeks – the studio is booked about a
      *  month out, and it is the same courtesy the letter's own decide weeks extend: a cost the
      *  player can SEE coming is a plan, a cost that lands the week he agreed to it is a trap. Engine

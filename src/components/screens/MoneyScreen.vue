@@ -676,6 +676,9 @@ function wearWord(wear: number): string {
 // off the signed offer (see `KitDealView`); this screen does not subtract a spend from an allowance,
 // because the disagreement between two surfaces about that subtraction IS the bug being fixed.
 const kitDeal = computed(() => game.snapshot?.kitDeal ?? null)
+/** ⭐ ROUND 29 PART FOUR P6/§8 – the portfolio shelf, engine-derived rows (`AdPortfolioRow`), empty
+ *  before eighteen. This screen renders states and formats money; it decides nothing. */
+const adPortfolio = computed(() => game.snapshot?.adPortfolio ?? [])
 /** The covered lines in the LETTER's words - the paper says "racquets", the equipment model says
  *  "frame", and a parent reading both must not meet two vocabularies for one thing. */
 const KIT_LINE_WORDS: Record<string, string> = { strings: 'strings', frame: 'racquets', shoes: 'shoes' }
@@ -1501,6 +1504,43 @@ const TAB_OPTIONS = [
         </div>
       </Card>
 
+      <!-- ======================= 5b-bis. THE ADVERTISING PORTFOLIO ===============
+           Round 29 part four P6/§8 – the shelf of categories the owner described, filled or empty,
+           with the live deal named. Every row is `snapshot.adPortfolio`, derived by the engine off
+           the offers and the catalogue: this screen prices nothing, gates nothing and re-derives
+           nothing, which is the kit-deal block's own rule one card up. Absent for a junior – the
+           engine hands an empty shelf before eighteen and the card simply is not there. -->
+      <Card v-if="screenTab === 'bills' && adPortfolio.length > 0" class="money-panel">
+        <Eyebrow as="h2">The advertising portfolio</Eyebrow>
+        <p class="money-panel-note">
+          One deal per category – the cheque grows with her standing, the shelf itself does not.
+          Fees run through the family's account with her share taken like any sponsor cheque.
+        </p>
+        <div v-for="row in adPortfolio" :key="row.category" class="ad-slot" :class="`is-${row.state}`">
+          <div class="ad-slot-head">
+            <span class="ad-slot-name">{{ row.label }}</span>
+            <span v-if="row.state === 'filled'" class="ad-slot-brand">{{ row.brand }}</span>
+            <span v-else-if="row.state === 'open'" class="ad-slot-state">Open – nobody signed</span>
+            <span v-else class="ad-slot-state">
+              {{ row.seasonsInTop10
+                ? `${row.seasonsInTop10.held} of ${row.seasonsInTop10.needed} top-10 seasons`
+                : row.opensAtRank
+                  ? `Opens inside WTA #${row.opensAtRank}`
+                  : 'Not open yet' }}
+            </span>
+          </div>
+          <p v-if="row.state === 'filled'" class="ad-slot-note">
+            {{ formatCents(row.cashCents ?? 0) }} a year ·
+            {{ (row.termYears ?? 1) === 1 ? 'one year' : `${row.termYears} years` }} · runs to
+            {{ weekLabel(row.untilWeek ?? 0) }}
+          </p>
+          <p v-else-if="row.state === 'open'" class="ad-slot-note">
+            A letter here writes about {{ formatCents(row.openCashCents ?? 0) }} a year at her
+            standing.
+          </p>
+        </div>
+      </Card>
+
       <!-- ======================= 5c. HER ACADEMY, AND WHAT IT HAS PAID ===============
            Backlog #90. The scholarship pays as a discount on every fare, so it never becomes a line
            the family can see - the calendar says "academy covers 75%" at the moment of a trip and
@@ -2315,6 +2355,35 @@ const TAB_OPTIONS = [
   color: var(--ink-soft);
   opacity: 0.7;
   margin-right: 4px;
+}
+
+.ad-slot {
+  padding: 8px 0 6px;
+  border-top: 1px solid var(--line-soft, rgba(127, 127, 127, 0.18));
+}
+.ad-slot-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  align-items: baseline;
+}
+.ad-slot-name {
+  font-weight: 600;
+}
+.ad-slot-brand {
+  font-weight: 600;
+}
+.ad-slot-state {
+  opacity: 0.62;
+  font-size: 13px;
+}
+.is-closed .ad-slot-name {
+  opacity: 0.55;
+}
+.ad-slot-note {
+  margin: 2px 0 0;
+  font-size: 13px;
+  opacity: 0.75;
 }
 
 .kit-line-sponsored {

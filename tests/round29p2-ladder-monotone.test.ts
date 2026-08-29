@@ -23,7 +23,7 @@
 // the property fail on the shipped, correct ladder; leaving them unasserted would make the exclusion
 // a hole. So each is pinned in its own direction, with its own reason.
 import { describe, it, expect } from 'vitest'
-import { AD_TIERS, SPONSOR_TIERS, adRungFor, adTermsFor, kitTermsFor, rungStrength } from '../src/engine/offers'
+import { SPONSOR_TIERS, adBandFor, adTermsForCategory, kitTermsFor, rungStrength } from '../src/engine/offers'
 import { ECONOMY } from '../src/engine/economy'
 import { TIERS } from '../src/engine/season/calendar'
 import type { KitOfferTerms, SponsorTier } from '../src/shared/protocol'
@@ -148,77 +148,140 @@ describe('⭐⭐ the kit ladder is monotone in what it PAYS – round 29 part tw
   })
 })
 
-describe('⭐ the ADVERTISING ladder is monotone too – round 29 part two #19/#20', () => {
-  it('every house pays more and gates harder than the one below it', () => {
-    for (let i = 1; i < AD_TIERS.length; i++) {
-      const hi = ECONOMY.advertising.houses[AD_TIERS[i]]
-      const lo = ECONOMY.advertising.houses[AD_TIERS[i - 1]]
-      expect(hi.cashCents, `${AD_TIERS[i]} pays less than ${AD_TIERS[i - 1]}`).toBeGreaterThan(lo.cashCents)
-      expect(hi.maxWtaRank, `${AD_TIERS[i]} is not a harder gate than ${AD_TIERS[i - 1]}`).toBeLessThan(lo.maxWtaRank)
-      // ...and it asks MORE of her, which is this ladder's obligation direction: shoot weeks.
-      expect(hi.shootWeeksPerTerm).toBeGreaterThan(lo.shootWeeksPerTerm)
+// ⚠⚠ RE-AIMED BY ROUND 29 PART FOUR P6/§8, NOT DELETED: the two describes below WERE the
+// three-rung ad ladder's monotone property and its strongest-house gate. The owner replaced the
+// ladder with the CATEGORY PORTFOLIO (one deal per category, the cheque the only axis that
+// scales), so the same disciplines are restated on the new shape: the BANDS gate harder and ask
+// more as they rise, every category's cheque is monotone up the bands and lands inside §8's own
+// ranges, and the anchor cell is untouched to the cent.
+describe('⭐ the ADVERTISING gradient is monotone – round 29 part four P6/§8', () => {
+  const BANDS = ECONOMY.advertising.bands
+  const CATS = Object.keys(ECONOMY.advertising.categories) as (keyof typeof ECONOMY.advertising.categories)[]
+  /** §8's table, verbatim – his ranges, the in-band pin every cell must land inside. */
+  const RANGE_BY_BAND: [number, number][] = [
+    [5_000_00, 20_000_00],
+    [100_000_00, 500_000_00],
+    [300_000_00, 1_000_000_00],
+    [1_000_000_00, 2_500_000_00],
+  ]
+
+  it('the bands gate harder and never ask less as they rise', () => {
+    for (let i = 1; i < BANDS.length; i++) {
+      expect(BANDS[i].maxWtaRank, `band ${i} is not a harder gate`).toBeLessThan(BANDS[i - 1].maxWtaRank)
+      expect(BANDS[i].shootWeeksPerYear).toBeGreaterThanOrEqual(BANDS[i - 1].shootWeeksPerYear)
+    }
+    // ...and the four gates are the kit ladder's own cuts plus his Bublik line, in order.
+    expect(BANDS.map((b) => b.maxWtaRank)).toEqual([200, 100, 50, 10])
+  })
+
+  it('⭐⭐ every cheque lands inside §8`s own range for its band, and rises up the bands', () => {
+    for (const c of CATS) {
+      const fees = ECONOMY.advertising.categories[c].feeCentsByBand
+      expect(fees).toHaveLength(BANDS.length)
+      let last: number | null = null
+      let opened = false
+      for (let i = 0; i < fees.length; i++) {
+        const fee = fees[i]
+        if (fee === null) {
+          // a category opens once and stays open – a null above a priced cell would be a slot that
+          // slams shut as she climbs, which no portfolio does
+          expect(opened, `${c}: a closed cell above an open one`).toBe(false)
+          continue
+        }
+        opened = true
+        const [lo, hi] = RANGE_BY_BAND[i]
+        expect(fee, `${c}@band${i} under §8's floor`).toBeGreaterThanOrEqual(lo)
+        expect(fee, `${c}@band${i} over §8's ceiling`).toBeLessThanOrEqual(hi)
+        if (last !== null) expect(fee, `${c}: the cheque fell up the ladder`).toBeGreaterThan(last)
+        last = fee
+      }
+      expect(opened, `${c}: a category no band ever opens`).toBe(true)
     }
   })
 
-  it('⚠ the plan`s annual cap is structural: one deal at a time x the biggest ask = six weeks', () => {
-    // `the-face-and-the-court.md` §4a-1: «the sum of live deals must never exceed 6 shoot weeks a
-    // year». Nothing enforces that as a rule, and nothing needs to: every term is exactly one year
-    // and only one deal runs at a time, so the ceiling IS the biggest single house's ask.
-    for (const t of AD_TIERS) expect(ECONOMY.advertising.houses[t].termWeeks).toBe(52)
-    const most = Math.max(...AD_TIERS.map((t) => ECONOMY.advertising.houses[t].shootWeeksPerTerm))
-    expect(most).toBe(6)
-  })
-
-  it('the terms the engine issues are the catalogue`s, house by house', () => {
-    for (const t of AD_TIERS) {
-      const h = ECONOMY.advertising.houses[t]
-      const terms = adTermsFor(clearsEverything, t)!
-      expect(terms.tier).toBe(t)
-      expect(terms.brand).toBe(h.brand)
-      expect(terms.trade).toBe(h.trade)
-      expect(terms.cashCents).toBe(h.cashCents)
-      expect(terms.termWeeks).toBe(h.termWeeks)
-      expect(terms.shootCount).toBe(h.shootWeeksPerTerm)
+  it('the terms the engine issues are the catalogue`s, cell by cell', () => {
+    for (const c of CATS) {
+      const def = ECONOMY.advertising.categories[c]
+      for (let band = 0; band < BANDS.length; band++) {
+        const fee = def.feeCentsByBand[band]
+        const terms = adTermsForCategory(c, band, 2, def.houses[0] ?? 'Baseline Athletic')
+        if (fee === null) {
+          expect(terms, `${c}@band${band} issued terms for a closed cell`).toBeNull()
+          continue
+        }
+        expect(terms!.category).toBe(c)
+        expect(terms!.trade).toBe(def.trade)
+        expect(terms!.cashCents).toBe(fee)
+        expect(terms!.termYears).toBe(2)
+        expect(terms!.termWeeks).toBe(104)
+        expect(terms!.shootCount).toBe(BANDS[band].shootWeeksPerYear)
+      }
     }
   })
 
-  it('⭐ and $20,000 did not move – the ladder was built on top of the shipped rung, not over it', () => {
-    // Round 29 part two #20's whole answer: the research (docs/research/off-court-money.md) does not
-    // contradict the shipped fee at the band it was written for; it contradicts that fee still being
-    // the only one eleven rungs later. A wave that "fixed" #20 by retuning this number would have
-    // answered a question nobody asked.
-    expect(ECONOMY.advertising.houses.watch.cashCents).toBe(20_000_00)
-    expect(ECONOMY.advertising.houses.watch.maxWtaRank).toBe(200)
-    expect(ECONOMY.advertising.houses.watch.shootWeeksPerTerm).toBe(2)
-    expect(ECONOMY.advertising.houses.watch.brand).toBe('Quiet Hour')
+  it('⭐ P6`s churn has names to churn: 2–4 houses per category, and clothing deliberately none', () => {
+    for (const c of CATS) {
+      const houses = ECONOMY.advertising.categories[c].houses
+      if (c === 'clothing') {
+        // the double programme: the live kit brand writes, so the category lists no houses of its own
+        expect(houses).toHaveLength(0)
+        continue
+      }
+      expect(houses.length, `${c}: one name is what the owner said the player would tire of`).toBeGreaterThanOrEqual(2)
+      expect(houses.length).toBeLessThanOrEqual(4)
+      expect(new Set(houses).size).toBe(houses.length)
+    }
+  })
+
+  it('⭐ and $20,000 did not move – the gradient was built on top of the shipped rung, not over it', () => {
+    // Round 29 part two #20's whole answer, held through a second resize: the research does not
+    // contradict the shipped fee at the band it was written for. The anchor cell is the watches
+    // category at the ≤200 band, and Quiet Hour still writes there.
+    expect(ECONOMY.advertising.categories.watches.feeCentsByBand[0]).toBe(20_000_00)
+    expect(ECONOMY.advertising.bands[0].maxWtaRank).toBe(200)
+    expect(ECONOMY.advertising.categories.watches.houses).toContain('Quiet Hour')
+  })
+
+  it('⭐⭐ the capstone is the roof: dearer than every cell, longer than every term, gated on tenure', () => {
+    const cap = ECONOMY.advertising.capstone
+    for (const c of CATS) {
+      for (const fee of ECONOMY.advertising.categories[c].feeCentsByBand) {
+        if (fee !== null) expect(cap.cashCents).toBeGreaterThan(fee)
+      }
+    }
+    expect(cap.cashCents).toBe(10_000_000_00) // his sentence: «контракт с Nike на 10+ миллионов»
+    expect(cap.termYears).toBe(8) // kit-shaped: «kit deals run 8–10 years» (off-court-money.md)
+    expect(cap.termYears).toBeGreaterThan(ECONOMY.advertising.termYearsMax)
+    expect(cap.seasonsInTop10).toBe(4) // the ruling: 4 seasons ENDED inside the top 10
   })
 })
 
-describe('⭐⭐ ...and the GATE picks the strongest house she clears, at every boundary', () => {
+describe('⭐⭐ ...and the GATE picks the strongest band she clears, at every boundary', () => {
   // ⚠ THESE ARMS LIVE HERE, WITH THE CONSTANTS, AND NOT WITH THE WALKED CAREERS – AND THE REASON IS
-  // A DEAD GUARD THAT WAS CAUGHT IN ITS OWN DRAFT. `tests/round29p2-ad-ladder.test.ts` builds three
-  // real careers at module load and THROWS when it cannot stand one in the band it needs; mutating
-  // `adRungFor` back to «always the bottom rung» – which is round 29 part two #20's whole defect –
-  // made that file collapse at collection with «no tests», so its own assertion about the defect
-  // never ran. A pure-function arm in a file with no fixture cannot be silenced that way.
+  // A DEAD GUARD THAT WAS CAUGHT IN ITS OWN DRAFT (see this block's history): a fixture file that
+  // THROWS when it cannot stand a career in a band collapses at collection with «no tests», so its
+  // own assertion about the defect never runs. A pure-function arm in a file with no fixture cannot
+  // be silenced that way.
   const at = (wtaRank: number) =>
-    adRungFor({ nationalRank: 1, itfRank: 1, itfRanked: true, wtaRank, wtaRanked: true })
-  const H = ECONOMY.advertising.houses
+    adBandFor({ nationalRank: 1, itfRank: 1, itfRanked: true, wtaRank, wtaRanked: true })
 
   it('an unranked standing is offered nothing at all – a floor tie is not a standing', () => {
-    expect(adRungFor({ nationalRank: 1, itfRank: 1, itfRanked: true, wtaRank: 1, wtaRanked: false })).toBeNull()
-    expect(adTermsFor({ nationalRank: 1, itfRank: 1, itfRanked: true, wtaRank: 1, wtaRanked: false })).toBeNull()
+    expect(adBandFor({ nationalRank: 1, itfRank: 1, itfRanked: true, wtaRank: 1, wtaRanked: false })).toBeNull()
   })
 
-  it('⚠⚠ THE DEFECT #20 REPORTED, AS AN ASSERTION: a top-10 standing gets the top-10 house', () => {
-    expect(at(H.house.maxWtaRank)).toBe('house')
-    expect(at(H.house.maxWtaRank + 1)).toBe('campaign')
-    expect(at(H.campaign.maxWtaRank)).toBe('campaign')
-    expect(at(H.campaign.maxWtaRank + 1)).toBe('watch')
-    expect(at(H.watch.maxWtaRank)).toBe('watch')
-    expect(at(H.watch.maxWtaRank + 1)).toBeNull()
-    // ...and the fee that arrives with it, which is the number he was reading off the screen.
-    expect(adTermsFor({ nationalRank: 1, itfRank: 1, itfRanked: true, wtaRank: 21, wtaRanked: true })!.cashCents)
-      .toBeGreaterThan(H.watch.cashCents)
+  it('⚠⚠ THE DEFECT #20 REPORTED, AS AN ASSERTION: a top-10 standing gets the top band`s cheques', () => {
+    const B = ECONOMY.advertising.bands
+    expect(at(B[3].maxWtaRank)).toBe(3)
+    expect(at(B[3].maxWtaRank + 1)).toBe(2)
+    expect(at(B[2].maxWtaRank)).toBe(2)
+    expect(at(B[2].maxWtaRank + 1)).toBe(1)
+    expect(at(B[1].maxWtaRank)).toBe(1)
+    expect(at(B[1].maxWtaRank + 1)).toBe(0)
+    expect(at(B[0].maxWtaRank)).toBe(0)
+    expect(at(B[0].maxWtaRank + 1)).toBeNull()
+    // ...and the fee that arrives with it, which is the number he was reading off the screen: the
+    // world #21's watches cheque is written from the ≤50 band's cell, not the ≤200's.
+    expect(adTermsForCategory('watches', at(21)!, 1)!.cashCents)
+      .toBeGreaterThan(ECONOMY.advertising.categories.watches.feeCentsByBand[0]!)
   })
 })
