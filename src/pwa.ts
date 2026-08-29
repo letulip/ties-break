@@ -39,6 +39,55 @@ let updateSW: ((reloadPage?: boolean) => Promise<void>) | undefined
 /** How often a session that never leaves the foreground re-asks. See the header for why an hour. */
 export const UPDATE_CHECK_MS = 60 * 60 * 1000
 
+/**
+ * THE TWO RUNTIME ART CACHES THIS BUILD NO LONGER WRITES (round 29 part two #7).
+ *
+ * Until 29.08 `public/images/**` was kept OUT of the precache and served through two runtime
+ * routes: `tb-art-v1` (CacheFirst, up to 80 paintings) and `tb-art-small-v1` (StaleWhileRevalidate,
+ * up to 48 trophies and letterheads). His ruling put the art in the install instead, the routes are
+ * gone from vite.config.ts, and nothing writes to either cache again.
+ *
+ * ⚠ NOTHING DELETES THEM EITHER, WHICH IS THE POINT OF THIS FUNCTION. Workbox's
+ * `cleanupOutdatedCaches` prunes old PRECACHES and no more; a runtime cache it was never told about
+ * survives every update forever. On a phone that installed before this build that is up to 128
+ * entries of art – several MB – sitting unreferenced beside a 12 MB install, which is exactly the
+ * cost his question was about.
+ */
+export const LEGACY_ART_CACHES = ['tb-art-v1', 'tb-art-small-v1']
+
+/**
+ * Delete those two caches, but ONLY once the precache demonstrably holds the art.
+ *
+ * ⚠ THE CONDITION IS THE WHOLE SAFETY ARGUMENT AND IT IS NOT DECORATION. With
+ * `registerType: 'prompt'` a player can sit on the OLD worker for days – he has to tap Update. On
+ * that worker the runtime routes are still live and `tb-art-v1` is still the only copy of a
+ * painting he has; deleting it there would blank his feed offline until he accepted an update he
+ * had not been offered yet. So the test is a positive fact about the replacement rather than a
+ * guess about the version: if the precache is answering for `/images/`, the art is on the device
+ * twice and one of the copies is garbage.
+ *
+ * Returns the names it actually deleted, which is what makes this testable without a browser.
+ */
+export async function dropLegacyArtCaches(store: CacheStorage | undefined = globalThis.caches): Promise<string[]> {
+  if (!store) return []
+  try {
+    const names = await store.keys()
+    const precache = names.find((n) => n.startsWith('workbox-precache'))
+    if (!precache) return []
+    const held = await (await store.open(precache)).keys()
+    if (!held.some((r) => new URL(r.url).pathname.includes('/images/'))) return []
+    const dropped: string[] = []
+    for (const name of LEGACY_ART_CACHES) {
+      if (names.includes(name) && (await store.delete(name))) dropped.push(name)
+    }
+    return dropped
+  } catch {
+    // A private window, a browser with storage blocked, a quota error mid-delete. None of them is
+    // worth a console error on a phone for housekeeping nobody asked for.
+    return []
+  }
+}
+
 export function initPwa(): void {
   // ⚠ THE E2E BUILD DOES NOT REGISTER THE WORKER, AND THAT IS THIS LINE (S0, 08.08).
   //
@@ -57,6 +106,13 @@ export function initPwa(): void {
   // ⚠ IT IS A SWITCH, NOT A DELETION. S2's update-flow spec needs the worker back ON, and it gets
   // there by building without this variable - see e2e/README.md, "The service worker".
   if (import.meta.env.VITE_TB_SW === 'off') return
+
+  // ⚠ EVERY BOOT, AND THE FUNCTION'S OWN PRECONDITION IS WHAT MAKES THAT SAFE – there is no
+  // `onActivate` in this API to hang it on, and reaching for `onOfflineReady` would fire it only on
+  // a first install, which is the one phone that has nothing to clean up. On a phone still running
+  // the old worker the live precache is the old one, holds no `/images/` and the call deletes
+  // nothing; the boot after he taps Update, it deletes both. A one-boot delay on housekeeping.
+  void dropLegacyArtCaches()
 
   updateSW = registerSW({
     immediate: true,

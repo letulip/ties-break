@@ -3,6 +3,19 @@
 // The owner: «Надо сделать предзагрузку картинок для оффлайн, у меня в ленте через одну черные
 // плашки в сезоне».
 //
+// ⚠⚠ READ THIS FIRST, 29.08: THE OWNER OVERTURNED THE COST DECISION THIS MODULE IS BUILT AROUND.
+// Round 29 part two #7 – «надо сделать, чтобы можно было полностью оффлайн играть без помех» – puts
+// ALL of `public/images/**` into the PWA install (313 entries / 12.3 MB) and deletes both runtime
+// art routes. So the diagnosis below is still exactly right and the "ADDED TO THE PRECACHE:
+// NOTHING" section below is now a record of a decision that was made and then reversed, not a
+// description of the build. Every number in it was true when written.
+//
+// THIS MODULE IS KEPT, and not out of sentiment: `warm()` still decodes a painting before the frame
+// that binds it, which is R11-9's job and has nothing to do with where the bytes came from; and it
+// is the only mechanism that would still cover an image that ever fell outside the precache glob.
+// What it no longer carries is the OFFLINE promise. That is the precache's now, and unlike a warm
+// it covers the card he has not reached yet.
+//
 // =================================================================================================
 // WHAT A BLACK PLATE ACTUALLY IS, and it is not a missing file. Every stem `art/venues.ts` and
 // `art/weeks.ts` can spell has a webp on disk (`tests/redesign-home.test.ts` and
