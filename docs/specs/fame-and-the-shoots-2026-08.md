@@ -12,7 +12,16 @@ last-reviewed: 2026-08-29
 фотосессий и их количества – **это прямой рычаг известности**. Можно попробовать для этого какую-то
 измеримую механику и четкий механизм сделать.»
 
-⚠ Nothing here is built. This is the proposal he asked for; every number is movable and his.
+⚠ This page is the proposal he asked for; every number is movable and his.
+
+⚙ **§3's stock is BUILT since 29.08 (r29p5a, part four P7)** – `world/fame.ts`, exactly the
+floor-and-multiplier shape of §5's answer: the floor from dated titles / lost Slam finals / top-10
+seasons, the lived shoot weeks as a multiplier, slow decay, 0–100, **zero draws, nothing
+persisted**. First reader: merch income; surfaced as one line on the Bills portfolio card. The
+numbers picked and the measurement are in
+[merch-and-academy-income-2026-08.md](merch-and-academy-income-2026-08.md). **§4's other two
+drives (the fame-gated advertising ladder, the cheque inside a band) are NOT built** – a later
+wave, deliberately, and §5's open questions stay his.
 
 ---
 

@@ -38,7 +38,10 @@
  *       npx vite-node tools/sponsor-ladder-reach.ts -- --weeks 780 --seeds 6 --json out.json
  */
 import { writeFileSync } from 'node:fs'
-import { acceptOffer, financeWindow, type WorldState } from '../src/engine/world'
+// ⭐ ROUND 29 PART FOUR P7 – `buyAsset` for the business arm (the engine's own command, so the
+// requiresId chain and the wallet guard are the engine's, never re-derived here), and the two
+// income folds + fame so the arm can report what the businesses actually did.
+import { academyReputationOf, acceptOffer, buyAsset, fameAt, financeWindow, type WorldState } from '../src/engine/world'
 import { AD_CATEGORIES, adCategoryOf, isOfferLive, seasonSpokenFor, sponsorWindowOpensAt, windowLadder, SPONSOR_TIERS, TIER_COVERS, standingClears, isSponsorWindowWeek } from '../src/engine/offers'
 import { sponsorStandingOf } from '../src/engine/world/sponsors'
 // ⚠ THE SHELF IS READ THROUGH ITS OWN LEAF (`world/assets.ts`) AND NOT RE-PRICED HERE. `shopItem`'s
@@ -192,6 +195,16 @@ interface CareerRow {
   seasonsInTop: Record<number, number>
   endedWeek: number | null
   weeksRun: number
+  /** ⭐ ROUND 29 PART FOUR P7, the business arm (`--buy-business`) – what the parent's own
+   *  businesses did over the career. All zero / null on the default arm, which buys nothing. */
+  merchBoughtWeek: number | null
+  academyDoneWeek: number | null
+  merchIncomeCents: number
+  academyIncomeCents: number
+  /** the week the academy's own income first covered its $12M build, or null if it never did */
+  academyPaybackWeek: number | null
+  endReputation: number
+  endFame: number
 }
 
 /** THE THREE CASH LINES A BRAND WRITES, and they are the sponsor bench's own three regexes rather
@@ -283,6 +296,13 @@ function runCareer(
   /** ⭐ ROUND 29 PART TWO, 29.08 – the manager's commission in basis points, or null for the shipped
    *  rule (her age ramp). See the withdrawal inside the loop for what it does and does not model. */
   commissionBps: number | null = null,
+  /** ⭐ ROUND 29 PART FOUR P7 – the BUSINESS arm: eagerly start the merch brand and build the
+   *  academy's four stages, each the first week the wallet holds TWICE its price (the eager arm's
+   *  own friendliness with the one prudence a real parent has – never the last dollar). Purchases
+   *  are player actions through `buyAsset`, so they tap no MAIN draw; the careers do diverge from
+   *  the default arm downstream (a poorer wallet enters differently), which is why this is a bench
+   *  arm and not a paired A/B on one seed – the commission arm's own note, one parameter up. */
+  buyBusiness = false,
 ): CareerRow {
   const { world, rng, seed } = openCareer(preset, index, policy)
   const cleared = new Set<SponsorTier>()
@@ -316,6 +336,13 @@ function runCareer(
     affordWeek[item.id] = null
     affordAndCarryWeek[item.id] = null
   }
+  // ⭐ the business arm's own readings – see the parameter note above.
+  const BUSINESS_LADDER = ['merch-brand', 'academy-land', 'academy-courts', 'academy-building', 'academy-staff']
+  let merchBoughtWeek: number | null = null
+  let academyDoneWeek: number | null = null
+  let merchIncomeCents = 0
+  let academyIncomeCents = 0
+  let academyPaybackWeek: number | null = null
 
   for (let i = 0; i < weeks; i++) {
     const week = world.week
@@ -329,6 +356,18 @@ function runCareer(
       if (row.week !== week || row.type !== 'income') continue
       const amount = row.amountCents ?? 0
       if (amount <= 0) continue
+      // ⭐ P7 – the businesses' own two lines, split by the row's category and its own first word
+      // (`resolveBusinessIncome` writes exactly two shapes). Counted apart from the sponsor cash:
+      // a business is the PARENT's income, not a brand's cheque, and folding them would re-create
+      // the «ad fee inside sponsorIncomeCents» confusion this file already had to unpick once.
+      if (row.category === 'business') {
+        if (row.text.startsWith('Merch')) merchIncomeCents += amount
+        else {
+          academyIncomeCents += amount
+          if (academyPaybackWeek === null && academyIncomeCents >= 12_000_000_00) academyPaybackWeek = week
+        }
+        continue
+      }
       const isKitCash = RETAINER_RE.test(row.text) || APPEARANCE_RE.test(row.text) || BONUS_RE.test(row.text)
       const isAdFee = AD_FEE_RE.test(row.text) || AD_YEAR_RE.test(row.text)
       if (!isKitCash && !isAdFee) continue
@@ -390,6 +429,23 @@ function runCareer(
       if (affordWeek[item.id] === null && world.fundsCents >= item.entryCents) affordWeek[item.id] = week
       const carry = item.entryCents + assetUpkeepCents(item, item.entryCents) * WEEKS_PER_YEAR
       if (affordAndCarryWeek[item.id] === null && world.fundsCents >= carry) affordAndCarryWeek[item.id] = week
+    }
+    // ⭐⭐ P7 – THE BUSINESS ARM BUYS, in the ladder's own order, half the wallet always kept. The
+    // engine's `buyAsset` re-validates the price and the academy's requiresId chain, so a refusal
+    // is the engine's and never this file's guess.
+    if (buyBusiness) {
+      for (const id of BUSINESS_LADDER) {
+        if (world.assets.some((a) => a.id === id)) continue
+        const item = shopCatalogue().find((r) => r.id === id)
+        if (!item || world.fundsCents < item.entryCents * 2) continue
+        try {
+          buyAsset(world, id)
+          if (id === 'merch-brand') merchBoughtWeek = week
+          if (id === 'academy-staff') academyDoneWeek = week
+        } catch {
+          // an ended career refuses; the engine said so, which is the point of asking it
+        }
+      }
     }
     const standing = sponsorStandingOf(world)
     if (standing.wtaRanked && (bestWtaRank === null || standing.wtaRank < bestWtaRank)) {
@@ -506,6 +562,13 @@ function runCareer(
     ),
     endedWeek: world.ending ? world.week : null,
     weeksRun: ran,
+    merchBoughtWeek,
+    academyDoneWeek,
+    merchIncomeCents,
+    academyIncomeCents,
+    academyPaybackWeek,
+    endReputation: academyReputationOf(world),
+    endFame: fameAt(world),
   }
 }
 
@@ -586,11 +649,15 @@ export function main(argv: string[] = process.argv.slice(2)): void {
   // the parent keeps 15% of the gross. Absent = the shipped rule, byte for byte.
   const commissionAt = argv.indexOf('--commission')
   const commissionBps = commissionAt >= 0 ? Math.round(Number(argv[commissionAt + 1]) * 100) : null
+  // ⭐ ROUND 29 PART FOUR P7 – `--buy-business` runs the business arm: every career eagerly starts
+  // the merch brand and builds the academy (half the wallet always kept). Absent = the shipped
+  // world, byte for byte, which is what the published kit/ad figures are checked against.
+  const buyBusiness = argv.includes('--buy-business')
 
   const rows: CareerRow[] = []
   for (const preset of PRESETS) {
     for (const policy of POLICIES) {
-      for (let i = 0; i < seeds; i++) rows.push(runCareer(preset, policy, i, weeks, commissionBps))
+      for (let i = 0; i < seeds; i++) rows.push(runCareer(preset, policy, i, weeks, commissionBps, buyBusiness))
     }
   }
 
@@ -904,6 +971,62 @@ export function main(argv: string[] = process.argv.slice(2)): void {
   }
   for (const [k, v] of [...byStep.entries()].sort((a, b) => b[1] - a[1])) {
     console.log(`      ${k.padEnd(24)} ${String(v).padStart(4)}`)
+  }
+
+  // ⭐⭐⭐ ROUND 29 PART FOUR P7 – THE BUSINESS ARM'S OWN REPORT: what merch and the academy DID.
+  if (buyBusiness) {
+    console.log('\n  ⭐⭐ THE PARENT\'S BUSINESSES (the --buy-business arm; the default arm buys nothing):')
+    const merchOwners = rows.filter((r) => r.merchBoughtWeek !== null)
+    const fameOf = (r: CareerRow) => r.endFame
+    console.log(
+      `    merch: started by ${merchOwners.length}/${n} careers` +
+        (merchOwners.length > 0
+          ? `, median start week ${q(merchOwners.map((r) => r.merchBoughtWeek!), 0.5)}` +
+            `; career merch income median ${usd(q(merchOwners.map((r) => r.merchIncomeCents), 0.5))}` +
+            ` · p90 ${usd(q(merchOwners.map((r) => r.merchIncomeCents), 0.9))}` +
+            ` · best ${usd(q(merchOwners.map((r) => r.merchIncomeCents), 1))}`
+          : ''),
+    )
+    console.log(
+      `    fame at the horizon, all careers: median ${q(rows.map(fameOf), 0.5).toFixed(1)}` +
+        ` · p90 ${q(rows.map(fameOf), 0.9).toFixed(1)} · best ${q(rows.map(fameOf), 1).toFixed(1)}`,
+    )
+    const builders = rows.filter((r) => r.academyDoneWeek !== null)
+    console.log(
+      `    academy: all four stages delivered by ${builders.length}/${n} careers` +
+        (builders.length > 0 ? `, median delivered week ${q(builders.map((r) => r.academyDoneWeek!), 0.5)}` : ''),
+    )
+    if (builders.length > 0) {
+      const reps = builders.map((r) => r.endReputation)
+      console.log(
+        `      builders' end reputation: min ${q(reps, 0).toFixed(2)} · median ${q(reps, 0.5).toFixed(2)}` +
+          ` · max ${q(reps, 1).toFixed(2)}`,
+      )
+      console.log(
+        `      academy income banked by the horizon: median ${usd(q(builders.map((r) => r.academyIncomeCents), 0.5))}` +
+          ` · p90 ${usd(q(builders.map((r) => r.academyIncomeCents), 0.9))}` +
+          ` · best ${usd(q(builders.map((r) => r.academyIncomeCents), 1))}`,
+      )
+      // ⚠ TWO PAYBACK READINGS, kept apart: MEASURED (did $12M of academy income actually land
+      // before the horizon) and ARITHMETIC (the seasons the $12M takes at the reputation the
+      // career ended holding – the honest horizon for a career that built late).
+      const repaid = builders.filter((r) => r.academyPaybackWeek !== null)
+      const baseCents = Object.values(ECONOMY.business.academy.stageIncomeCents).reduce((s, c) => s + c, 0)
+      const horizonYears = builders.map(
+        (r) => 12_000_000_00 / (Math.round(baseCents * r.endReputation) * WEEKS_PER_YEAR),
+      )
+      console.log(
+        `      $12M repaid inside the horizon by ${repaid.length}/${builders.length} builders` +
+          (repaid.length > 0
+            ? ` (median ${(q(repaid.map((r) => r.academyPaybackWeek! - r.academyDoneWeek!), 0.5) / WEEKS_PER_YEAR).toFixed(1)} seasons from delivery)`
+            : ''),
+      )
+      console.log(
+        `      arithmetic payback at the builders' own reputations: best ${q(horizonYears, 0).toFixed(1)}` +
+          ` · median ${q(horizonYears, 0.5).toFixed(1)} · worst ${q(horizonYears, 1).toFixed(1)} seasons` +
+          ` (the P7 criterion: roughly 5–10 at a real reign)`,
+      )
+    }
   }
 
   const paid = rows.filter((r) => r.sponsorIncomeCents > 0)
