@@ -17,7 +17,7 @@ import type { LadderTrack, SeasonEvent, TierId } from '../season/types'
 import { ageFactor, SKILL_KEYS, trainFactor } from '../development'
 import { LADDER_LABEL, LADDER_TRACKS } from '../../shared/protocol'
 import type { CoachEdgePlacement, CoachMarketRow, CoachTier, HouseholdWeekly, KitOfferTerms, PlayerProfile } from '../../shared/protocol'
-import { kidPrizeShareCents, parentIncomeForWeekCents } from '../economy'
+import { managerCommissionCents, parentIncomeForWeekCents } from '../economy'
 import { activeKitDeal, kitTravelShare } from '../offers'
 // ⭐ ROUND-21 #2: the ONE fare definition, read rather than re-derived - see `coachTravelFareFor`,
 // which lives beside it in world/sponsors.ts. sponsors.ts imports nothing from this module, so this
@@ -34,7 +34,7 @@ import { assetWorthCents, ownedAssets, shopItem, weeklyAssetUpkeepCents } from '
 // Round 29 part four P7 – the businesses' one arithmetic; the till banks the same two functions.
 import { academyWeeklyIncomeCents, merchWeeklyIncomeCents } from './business'
 import { addEvent, seasonIndexOf, seasonStartWeek } from './ledger'
-import { ageAtWeek, kidAgeAt, START_AGE_YEARS } from './age'
+import { ageAtWeek, START_AGE_YEARS } from './age'
 import { activeLadderOf, bookClosedTo, hasOutgrown, kidPoints, tierOpenFor } from './ladder'
 import type { WorldState } from '../world'
 import { guardNotEnded } from './endings'
@@ -513,7 +513,11 @@ function coachedWeeksLostToRest(world: WorldState): number {
  *  a market that flickers. It is a contracted wage, and a wage divided by the weeks it covers is
  *  what a family can actually spend of it each week.
  *
- *  ⚠⚠ AND THE RETAINER IS QUOTED NET OF HER CUT SINCE ROUND-28 #15. The owner ruled her prize ramp
+ *  ⚠⚠ AND THE RETAINER IS QUOTED NET SINCE ROUND-28 #15 – ⚠ WHAT IT IS NET *OF* CHANGED IN ROUND 29
+ *  P3 AND THE FIGURES IN THIS PARAGRAPH ARE THE OLD RULE'S. Kept because the ARGUMENT is what
+ *  matters and it did not change; the new arithmetic and its own worked figures are at the line
+ *  itself, below. The paragraph as written describes the ramp the sponsor cheques no longer use.
+ *  ⚠⚠ THE ROUND-28 TEXT: The owner ruled her prize ramp
  *  onto sponsor cheques («с чеков спонсоров… как и с призовых»), and `payRetainer` now banks
  *  `retainer - herShare` into `world.fundsCents`. A cap that went on quoting the GROSS would be the
  *  round-21 #12 defect in mirror image – the same "the meter and the till disagree" failure, this
@@ -547,11 +551,21 @@ export function familyWeeklyIncomeCents(world: WorldState): number {
   // household's week.
   const deal = activeKitDeal(world.offers, world.week)
   const retainerCents = deal ? ((deal.terms as KitOfferTerms).retainerCents ?? 0) : 0
-  // ⚠ HER CUT COMES OFF THE CHEQUE BEFORE IT IS PRO-RATED, and in that order, because that is the
+  // ⚠ THE SPLIT COMES OFF THE CHEQUE BEFORE IT IS PRO-RATED, and in that order, because that is the
   // order the till pays in: `payRetainer` splits the quarter's cheque once and the family's part is
   // what has to last thirteen weeks. Pro-rating first and splitting the weekly figure would round in
   // a different place and quote a cap the ledger never delivers.
-  const familyRetainerCents = retainerCents - kidPrizeShareCents(retainerCents, kidAgeAt(world, world.week))
+  //
+  // ⚠⚠ AND SINCE ROUND 29 P3 THE FAMILY'S PART IS THE MANAGER'S FEE, NOT THE RAMP'S REMAINDER. The
+  // paragraph above records why this line exists at all – a cap that quotes the GROSS while the till
+  // banks less is the round-21 #12 defect in mirror image – and that argument is indifferent to WHICH
+  // rule does the splitting: it says the meter must read what `bankSponsorCheque` actually banks.
+  // ⚠ WHAT IT MOVES, in closed form again because it is still linear: the term falls from
+  // `(1 − ramp) × retainer × 4/52` to `commission × retainer × 4/52`, i.e. at the icon rung's $37,500
+  // a quarter from $2,884/wk (before eighteen) or $1,442/wk (at the 50% cap) to $433/wk at 15%. It
+  // moves NOTHING for a family holding no kit deal, which is most of them. And nobody is locked out:
+  // `hireCoach` never consults the budget, so a narrower cap warns and never refuses.
+  const familyRetainerCents = managerCommissionCents(retainerCents)
   // ⭐⭐ ROUND 29 PART FOUR P7 – AND THE BUSINESSES, because they are «the money that really
   // arrives»: `resolveBusinessIncome` banks exactly these two figures every week they are
   // positive, unconditionally – no roll, no window, no stand-down – which is the test this

@@ -10,7 +10,10 @@
 // imports these values with no runtime cycle. Everything else comes from leaves.
 //
 // ⚠ RNG: the sponsor review draws on a PURPOSE-SCOPED sub-stream, never MAIN.
-import { ECONOMY, kidPrizeShareBps, kidPrizeShareCents } from '../economy'
+// ⚠ `kidPrizeShareBps` / `kidPrizeShareCents` LEFT THIS FILE WITH ROUND 29 P3 and are not to be
+// re-imported here on a hunch: the ramp is the PRIZE money's rule (finalizeTournament) and sponsor
+// cash now pays a flat manager's fee. Two rates in one file is how the two would drift back together.
+import { ECONOMY, managerCommissionBps, managerCommissionCents } from '../economy'
 import { formatCents } from '../../shared/money'
 import { TIERS, TIER_LADDER, WEEKS_PER_YEAR } from '../season/calendar'
 import { netTravelCents, travelCoverShare } from '../academy'
@@ -1143,21 +1146,42 @@ export function chargeTravel(world: WorldState, event: SeasonEvent): void {
 
 /** ⭐ ROUND-28 #15 – BANK ONE SPONSOR CHEQUE INTO THE TWO ACCOUNTS. Returns what each side got.
  *
+ *  ⭐⭐⭐ ROUND 29 PART THREE P3 SUPERSEDES THE SPLIT THIS FUNCTION SHIPPED WITH, AND ONLY THE SPLIT.
+ *  The owner, 29.08: «как менеджер может от этого что-то получать в свою очередь. 10-20% например…
+ *  контракт на полную сумму ребенку приходит на почту, после подписания видим на счету уже
+ *  родительский кат.» So the cheque is HERS and the parent takes a MANAGER'S FEE off it, rather than
+ *  the other way round. Everything the header above establishes still stands and is why this is one
+ *  function: WHICH cheques are «чеки спонсоров» is unchanged to the line, the row order is unchanged,
+ *  the memo is unchanged, the single rounding is unchanged. What is inverted is who the small side
+ *  belongs to.
+ *
+ *  ⚠⚠ AND THE DROP IS BIGGER THAN THE HEADLINE «50% -> 15%». The ramp paid the family 100% before
+ *  her eighteenth and 50% only from her twenty-sixth; measured over 72 careers the parent kept
+ *  **63.1% of gross sponsor money**. The real move is 63.1% -> `ECONOMY.managerCommission.bps`.
+ *
  *  ⚠ ONE FUNCTION FOR ALL FOUR SITES, AND THAT IS THE POINT. Four copies of "split, credit, receipt,
  *  memo" is four chances to forget the memo or to round twice – this repo's most-repeated defect in a
  *  new hat. A fifth sponsor line added later reaches the ruling by calling this and nothing else.
  *
- *  ⚠ ONE ROUNDING, THE FAMILY GETS THE REMAINDER – `kidPrizeShareCents`' own discipline, verbatim:
- *  the cut rounds once and the family's half is a SUBTRACTION, so the two balances re-add to the
- *  brand's cheque to the cent and a player can put them side by side on screen.
+ *  ⚠ ONE ROUNDING, AND NOW **SHE** GETS THE REMAINDER – `kidPrizeShareCents`' discipline with the
+ *  sides swapped, for the reason the ruling gives: the fee is what is computed and the rest is hers,
+ *  so the two balances still re-add to the brand's cheque to the cent and a player can put them side
+ *  by side on screen.
  *
  *  ⚠ ROW ORDER IS THE PRIZE PATH'S. The income row the family actually banked comes FIRST, with the
- *  split named on it – a row that quietly shrank would read as a bug in the till – and the transfer
+ *  fee named on it – a row that quietly shrank would read as a bug in the till – and the transfer
  *  follows as an `info` row with NO `amountCents`: booking her share as a family expense would count
  *  the same cents twice against `careerTotals.spentCents`, the denominator of the album's break-even
  *  page.
  *
- *  ⚠ HER REAL AGE (`kidAgeAt`), never the ITF band's – the one-clock ruling of 09.08.
+ *  ⚠ HER REAL AGE IS NO LONGER READ HERE, and that is the ruling too. The ramp's `kidAgeAt` call is
+ *  gone because the commission has no age term: «контракт на полную сумму ребенку» is addressed to
+ *  her whatever her age. Her age still decides the PRIZE split, in `finalizeTournament`, untouched.
+ *
+ *  ⚠⚠ NO NEW WAY FOR THE PARENT TO GO NEGATIVE, re-checked under the inversion because the standing
+ *  «мы ни за что не наказываем» rule deserves the check rather than the assumption: every site is
+ *  still an INCOME line, the family banks `round(gross x bps / 10_000)` which is `>= 0` for any
+ *  non-negative rate, and a cheque can therefore only ever add less. It can never subtract.
  *
  *  ZERO DRAWS on any stream: integer arithmetic on a cheque that has already been decided. */
 export function bankSponsorCheque(
@@ -1166,17 +1190,20 @@ export function bankSponsorCheque(
   row: { category: WorldEventCategory; text: string },
 ): { herCents: number; familyCents: number } {
   if (grossCents <= 0) return { herCents: 0, familyCents: 0 }
-  const ageNow = kidAgeAt(world, world.week)
-  const bps = kidPrizeShareBps(ageNow)
-  const herCents = kidPrizeShareCents(grossCents, ageNow)
-  const familyCents = grossCents - herCents
+  const bps = managerCommissionBps()
+  const familyCents = managerCommissionCents(grossCents)
+  const herCents = grossCents - familyCents
   world.fundsCents += familyCents
   addEvent(world, {
     week: world.week,
     type: 'income',
     category: row.category,
-    // Silent before her eighteenth, where nothing is deducted – the prize row's own conditional.
-    text: herCents > 0 ? `${row.text}, less her ${bps / 100}% share (${formatCents(herCents)})` : row.text,
+    // ⚠ THE ROW NAMES THE FEE AND THE CHEQUE IT CAME OFF, which is «после подписания видим на счету
+    // уже родительский кат» in one line: the figure on the row is the parent's, and the gross beside
+    // it is what she was actually worth. The old clause said «less her N% share» because the row WAS
+    // the cheque minus a deduction; it is now the deduction, so a subtraction reading would be a lie.
+    // Silent only on a rate of zero, where there is no fee to name – the prize row's own conditional.
+    text: familyCents > 0 ? `${row.text}, the manager's ${bps / 100}% of ${formatCents(grossCents)}` : row.text,
     amountCents: familyCents,
   })
   if (herCents > 0) {
@@ -1191,9 +1218,12 @@ export function bankSponsorCheque(
     // appearance fee and a result bonus needs.
     // ⭐⭐ ROUND 29 #10 – the base is `grossCents`, the brand's whole cheque. A title week reaches
     // this function twice (the result bonus, and the retainer when the quarter lands on it) and the
-    // prize path a third time; `accrueKidShare` sums all three bases, so the memo's «50% of $X» is
-    // 50% of everything she was paid that week rather than of whichever cheque happened to be last.
-    accrueKidShare(world, world.week, herCents, bps, grossCents)
+    // prize path a third time; `accrueKidShare` sums all three bases, so the memo's «N% of $X» is a
+    // share of everything she was paid that week rather than of whichever cheque happened to be last.
+    // ⚠⚠ P3 IS WHY `accrueKidShare` NOW STORES AN EFFECTIVE RATE. Two rates reach one week the moment
+    // a title pays a prize (her ramp) and a result bonus (this fee's complement); the rate handed in
+    // here is this cheque's own, and the sum is reconciled there. See its header.
+    accrueKidShare(world, world.week, herCents, 10_000 - bps, grossCents)
   }
   return { herCents, familyCents }
 }

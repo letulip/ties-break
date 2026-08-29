@@ -267,10 +267,16 @@ const confirmMessage = computed(() => {
     const years = Math.max(1, t.termYears ?? 1)
     // ⭐ P6 – the fee is PER CONTRACT YEAR on a multi-year paper, and the confirm says when the
     // rest of it arrives; a one-year letter keeps its original sentence to the word.
+    // ⚠⚠ «TO HER», NOT «TO THE FAMILY», SINCE ROUND 29 PART THREE P3. The owner's ruling of 29.08 is
+    // that the contract is addressed to the daughter at its full value and the parent takes a
+    // manager's fee off it after signing – so a confirm that said the money was «paid to the family»
+    // named the wrong payee, on the one screen where the decision is actually taken. ⚠ The FIGURE is
+    // unchanged and stays the whole cheque: no split may be quoted before the signature, which is the
+    // point of his «контракт на полную сумму ребенку приходит на почту».
     const feeClause =
       years === 1
-        ? `A one-time fee of ${formatCents(t.cashCents)}, paid to the family now`
-        : `${formatCents(t.cashCents)} a year for ${years} years – the first year's fee paid to the family now, the rest on each anniversary`
+        ? `A one-time fee of ${formatCents(t.cashCents)}, paid to her now`
+        : `${formatCents(t.cashCents)} a year for ${years} years – the first year's fee paid to her now, the rest on each anniversary`
     const shoots = chooseShootWeeks(
       game.snapshot?.seed ?? '',
       week.value,

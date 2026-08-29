@@ -1478,6 +1478,38 @@ export const ECONOMY = {
   } as Record<'coach' | 'masseur', { titleBps: number; finalBps: number }>,
 
   // =================================================================================================
+  // ⭐⭐⭐ THE MANAGER'S COMMISSION – round 29 part three P3 (owner, 29.08)
+  // =================================================================================================
+  //
+  // HIS RULING, VERBATIM: «как менеджер может от этого что-то получать в свою очередь. 10-20%
+  // например… контракт на полную сумму ребенку приходит на почту, после подписания видим на счету
+  // уже родительский кат.» Its context: it was put to him that taking half of a cheque paid for her
+  // face reads as the parent living off the daughter, and he answered «полностью согласен».
+  //
+  // ⚠⚠ WHAT IT REPLACES, AND THE HEADLINE UNDERSTATED IT. Until this ruling `bankSponsorCheque`
+  // split sponsor cash by HER PRIZE RAMP – so the family kept 100% before her eighteenth, 90% at
+  // 18 and 50% only from 26. Measured over 72 careers x 780 weeks the parent actually kept **63.1%
+  // of gross sponsor money**, so this is not «50% -> 15%», it is **63.1% -> 15%**.
+  //
+  // ⚠ SPONSOR CHEQUES ONLY. Prize money's own 50/50 ramp is his standing ruling of 23 #18 and is
+  // untouched: `finalizeTournament` still splits the tournament's cheque by `kidPrizeShareBps`, and
+  // the staff shares one block up still come off the gross prize. This constant is read at exactly
+  // one place in the engine, `bankSponsorCheque`, and by the two screens that describe it.
+  //
+  // ⚠ NO AGE GATE, DELIBERATELY, and it is the ruling rather than an omission: «контракт на полную
+  // сумму ребенку» is addressed to HER at any age, so the commission is flat from the first cheque a
+  // brand ever writes. In practice the professional rungs open at WTA #200 and the advertising
+  // ladder at eighteen, so a pre-eighteen sponsor cheque is close to unreachable – but where one
+  // exists, the money is hers minus the fee, not the family's whole.
+  managerCommission: {
+    /** ⚠ PROVISIONAL AND HIS TO MOVE – the midpoint of his own «10-20% например», picked because he
+     *  named a band and not a number. It is ONE constant and every sentence on every screen reads
+     *  it, so moving it is one edit here. The bench (`tools/sponsor-ladder-reach.ts --commission N`)
+     *  overrides it for a run so the band can be swept without a code change. */
+    bps: 1500,
+  },
+
+  // =================================================================================================
   // THE ADVERTISING LADDER (round 24 item 2, docs/plans/the-face-and-the-court.md §6 STEPS 1-2;
   // the three rungs are round 29 part two #19/#20)
   // =================================================================================================
@@ -3950,4 +3982,26 @@ export function staffResultShareBps(role: 'coach' | 'masseur', finishIdx: number
  *  the tournament's cheque to the cent). Zero draws, no state, no schema. */
 export function staffPrizeShareCents(role: 'coach' | 'masseur', prizeCents: number, finishIdx: number): number {
   return Math.round((prizeCents * staffResultShareBps(role, finishIdx)) / 10_000)
+}
+
+/** ⭐⭐⭐ ROUND 29 PART THREE P3 – WHAT THE PARENT EARNS ON A SPONSOR CHEQUE, in basis points.
+ *
+ *  `ECONOMY.managerCommission` holds the one number and this reads it and nothing else, so a retune
+ *  moves the whole game – the split, the coach market's cap and every sentence that describes it –
+ *  and this function does not change. `staffResultShareBps`' own shape, one block up, for the same
+ *  reason: the screens call the SAME function the till calls, so a line that describes the rule
+ *  cannot drift from the rule. */
+export function managerCommissionBps(): number {
+  return ECONOMY.managerCommission.bps
+}
+
+/** The parent's fee on one sponsor cheque, in whole cents – rounded ONCE.
+ *
+ *  ⚠⚠ AND SHE GETS THE REMAINDER BY SUBTRACTION, WHICH IS THE OTHER HALF OF THE RULING. Every other
+ *  splitter in this engine rounds the small side and leaves the family the rest; here the small side
+ *  IS the family's, so the rounding lands on the fee and `gross - fee` is hers. The pair still
+ *  re-adds to the brand's cheque to the cent, which is `kidPrizeShareCents`' rule and the reason it
+ *  exists: a player can put the two balances side by side on screen. */
+export function managerCommissionCents(grossCents: number): number {
+  return Math.round((grossCents * managerCommissionBps()) / 10_000)
 }

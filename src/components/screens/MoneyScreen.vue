@@ -48,7 +48,7 @@
 //     the export is written on (docs/design/README.md §3, "цвет = смысл").
 import { computed, nextTick, ref, useTemplateRef } from 'vue'
 import { useGameStore } from '../../stores/game'
-import { ECONOMY, kidPrizeShareBps } from '../../engine/economy'
+import { ECONOMY, kidPrizeShareBps, managerCommissionBps } from '../../engine/economy'
 // STARTING_FUNDS_CENTS: the ENGINE's own number, not a hand copy – see `startingBudget` below.
 // world.ts is already in the UI chunk (PracticeFlow/BracketTabs import from it), so this costs
 // nothing at bundle time and removes a "must match" comment that was one retune away from a lie.
@@ -173,6 +173,18 @@ const startingBudget = computed(() => (game.snapshot ? formatCents(STARTING_FUND
 // `finalizeTournament` credits the family `prize − herShare`, so every income figure on both screens
 // is already net – which is exactly what this strip's second sentence has always said out loud.
 const kidShareBps = computed(() => kidPrizeShareBps(game.snapshot?.ageYears ?? 0))
+
+// ⭐⭐⭐ ROUND 29 PART THREE P3 – THE MANAGER'S COMMISSION, for the advertising card's second line.
+//
+// HIS RULING, 29.08: «как менеджер может от этого что-то получать в свою очередь. 10-20% например…
+// контракт на полную сумму ребенку приходит на почту, после подписания видим на счету уже
+// родительский кат.» So the fee is what the parent earns, and the letter never quotes a split.
+//
+// ⚠ NOT COMPUTED OFF A SNAPSHOT, because it depends on no career: it is the same sentence for a
+// family with six deals and for one that has never been written to. `staffResultShareBps` on the
+// coaches page is the same shape for the same reason – bps to percent is a display conversion and
+// nothing more; the logic stays in bps, where the engine keeps it.
+const commissionPct = managerCommissionBps() / 100
 /** Null before the ramp starts – there is no account, no transfer and nothing to explain yet, which
  *  is exactly when `ownAccountNote` returns '' too. */
 const kidShareNote = computed<string | null>(() => {
@@ -1536,9 +1548,21 @@ const TAB_OPTIONS = [
            engine hands an empty shelf before eighteen and the card simply is not there. -->
       <Card v-if="screenTab === 'bills' && adPortfolio.length > 0" class="money-panel">
         <Eyebrow as="h2">The advertising portfolio</Eyebrow>
+        <!-- ⭐⭐⭐ ROUND 29 PART THREE P3 – THE SECOND SENTENCE IS THE MANAGER'S COMMISSION, AND IT
+             REPLACES THE ONE THAT DESCRIBED THE OLD SPLIT. It used to read «Fees run through the
+             family's account with her share taken like any sponsor cheque», which was true while
+             sponsor cash was split by her prize ramp; his ruling of 29.08 inverts it – the letter is
+             addressed to her at its full value and the parent earns a fee for the work. His words
+             are in the script block above and in tests/round29p3-manager-commission.test.ts, because
+             Cyrillic inside a <template> is forbidden (tests/template-copy-rules.test.ts).
+             ⚠⚠ THE PERCENTAGE IS READ OUT OF THE ENGINE, NEVER TYPED – part-one #13's rule, and it
+             is the same one: `managerCommissionBps()` is the function `bankSponsorCheque` calls when
+             it actually pays, so a retune of `ECONOMY.managerCommission` moves this line and the
+             cheque together and they cannot drift apart. -->
         <p class="money-panel-note">
           One deal per category – the cheque grows with her standing, the shelf itself does not.
-          Fees run through the family's account with her share taken like any sponsor cheque.
+          Every fee is written to her at its full value, and the family banks the manager's
+          {{ commissionPct }}% of it.
         </p>
         <!-- ⭐ ROUND 29 PART FOUR P7/P8 – FAME'S ONE LINE, where the sponsors live. The stock of
              docs/specs/fame-and-the-shoots-2026-08.md, first surfaced here and deliberately

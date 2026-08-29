@@ -31,7 +31,7 @@
 // pinned in tests/kidLife.test.ts, not left to a careful author.
 
 import { rngFromSeed } from './rng'
-import { ECONOMY, kidPrizeShareBps } from './economy'
+import { ECONOMY, kidPrizeShareBps, managerCommissionBps } from './economy'
 import { COLLEGE_TIER_NAME } from './collegeOffer'
 import { isExamWeek, isOffSeasonWeek, isSummerWeek, WEEKS_PER_YEAR } from './season/calendar'
 import { kidBirthYear } from './world/age'
@@ -437,12 +437,19 @@ export function collegeNote(view: KidLifeWorldView): string {
 export function ownAccountNote(view: KidLifeWorldView): string {
   const bps = kidPrizeShareBps(view.ageYears)
   if (bps <= 0) return ''
-  const share = `${bps / 100}% of every cheque`
+  // ⚠⚠ «PRIZE» IS LOAD-BEARING SINCE ROUND 29 P3 AND WAS NOT THERE BEFORE. This sentence said «of
+  // every cheque» while ONE ramp split every cheque in the game. The manager's commission gave
+  // sponsor money its own rule – it is hers, less a flat fee – so «every cheque» became a promise
+  // this ramp does not keep, in the one place a player is told the rule exists.
+  const share = `${bps / 100}% of every prize cheque`
   const held = `Her own account – ${formatCents(view.kidFundsCents)}.`
-  if (bps >= ECONOMY.kidShare.capBps) return `${held} She keeps ${share} now, and the share goes no higher.`
+  // ...and the other half of the account, in one clause. `managerCommissionBps` is the function
+  // `bankSponsorCheque` itself calls, so this line and the till cannot quote two different fees.
+  const sponsor = ` Sponsor cheques are hers, less the manager's ${managerCommissionBps() / 100}%.`
+  if (bps >= ECONOMY.kidShare.capBps) return `${held} She keeps ${share} now, and the share goes no higher.${sponsor}`
   return (
     `${held} She keeps ${share} now, ${ECONOMY.kidShare.stepBps / 100} points more every birthday ` +
-    `up to ${ECONOMY.kidShare.capBps / 100}%.`
+    `up to ${ECONOMY.kidShare.capBps / 100}%.${sponsor}`
   )
 }
 
