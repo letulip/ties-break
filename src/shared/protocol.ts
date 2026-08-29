@@ -207,6 +207,7 @@ export type {
   AlbumPage,
   ScrollSeason,
   HandoffView,
+  AcademyEpilogue,
   EndingView,
   CollegeProgressView,
 } from './protocol/career'

@@ -1707,20 +1707,59 @@ rest are new.
   ⚠ **SCHEMA 65 UNMOVED, frozen careers and the frozen MAIN capture (41550 / `e6b0c709`) UNTOUCHED** –
   a precache manifest is not a world change, and nothing in this item reaches `src/engine`.
 
-- [ ] **8. «она же бесплатная только при наличии яхты, верно? я могу сделать для нее отдельный арт,
+- [x] **8. «она же бесплатная только при наличии яхты, верно? я могу сделать для нее отдельный арт,
   тогда можно просто на постоянку добавить в ленту сначала с реальной стоимостью, а после покупки
   яхты это станет бесплатным»** – **build.** The yacht week is a permanent vacation line, priced
   normally, and becomes free once the yacht is owned. ⚠ He is also supplying art.
 
-- [ ] **9. «изначально стоит дороже немного (х1.4 вроде мы считали, да?)»** – **verify then build.**
+  ⚙⚙ **SHIPPED (r29p6a).** The row is on EVERY family's sheet now, at a real charter price, and a
+  DELIVERED `yacht`/`yacht-big` is what zeroes it – «после покупки яхты это станет бесплатным»
+  rendered as the price slot's own sentence, «free – their own boat», never a bare zero. The flag
+  turned with the design (`grantedOnly` → `freeOnceGranted`: it zeroes the quote instead of hiding
+  the row) and ONE function prices every surface – the sheet's quote, the recommendation's weight
+  and the booking's charge all go through `vacationPriceCents(…, grantedIds)` – so a screen and
+  the engine cannot price the same week two ways. `bookVacation`'s old refusal («does not own») is
+  gone with the design it guarded: the engine-side re-validation moved from the ROW to the PRICE,
+  so a stale sheet books at the world's own quote, never a stale free one. ⚠ Art: his is coming;
+  until it lands the row rides `vacationArtUrl`'s documented null fallback (the sheet draws the
+  row artless, no 404). Spec: the-shop §13g, §3f's bullet amended in place. Guards re-aimed, never
+  deleted, every claim mutation-verified; frozen MAIN capture and frozen careers unmoved – the
+  charter quote rides the same `seed:vacation:week:packageId` sub-stream every package always had.
+
+- [x] **9. «изначально стоит дороже немного (х1.4 вроде мы считали, да?)»** – **verify then build.**
   Confirm the ×1.4 against the spec before using it; if the spec says another number, his memory is
   the thing to check, not the source of truth.
 
-- [ ] **10. «Эпилог… надо добавить, мне кажется. Это всё-таки финал игры.»** – ⚙ **RULING**, settling
+  ⚙ **VERIFIED, THEN BUILT (r29p6a).** The spec was read before his ×1.4 was used, as asked. The
+  finding: the-shop §3f carries exactly ONE 1.4 – «it is about 1.4 elite vacations a week in
+  upkeep» – relating exactly these two objects (the yacht week against the elite programme), and
+  NO other charter figure exists anywhere in the spec. So the spec does not contradict him and his
+  multiplier stands as the figure of record: the charter band is **elite ×1.4 = [$5,600, $9,800]**
+  before the wealth corridor. Pinned twice in `tests/planner.test.ts` – as the RELATION to elite's
+  band and as the literal – so neither package can be retuned alone. ⚠ Honest caveat, so the
+  verification is not overstated: §3f's own 1.4 sentence is about UPKEEP and its arithmetic is
+  loose ($23,077/wk against a $4,800–9,100 corridor-scaled elite quote is 2.5–4.8, not 1.4) – so
+  formally this lands under «the spec carries none for a charter → ×1.4 the elite package,
+  recorded as his 29.08 figure», with §3f's 1.4 the likely source of his «вроде мы считали».
+
+- [x] **10. «Эпилог… надо добавить, мне кажется. Это всё-таки финал игры.»** – ⚙ **RULING**, settling
   the shop spec's §10.4. The epilogue names the academy. He is supplying art for every item and
   academy stage.
 
 - [x] **11. «добавь пожалуйста вообще идею и концепцию фотоальбома для эпилога в бэклог отдельной
+  ⚙⚙ **SHIPPED (r29p6a), the smallest honest line inside today's shape.** When the family built
+  any academy stage, the ending's last page carries one `ending-note` beside the one-more-year
+  note: what stands («Her academy stands – N of M stages built») and – now that the academy EARNS
+  – what it became («…and it earns $X a week», the same `world/business.ts` arithmetic the till
+  banks, so the epilogue and the ledger cannot quote two figures). Stages that earn nothing yet
+  are named without an income («Her academy is begun – 1 of 4 stages built.»); a family that never
+  built reads nothing at all (null, not 0-of-N). `EndingView.academy` is a WIRE field
+  (`billPerYearCents`' precedent): no schema move, no migration, no fixture. ⚠ The album's SHAPE
+  untouched, as reserved – the photo-album concept stays his backlog item (#11); this settles
+  the-shop §10.4 (⚙ note added there) and closes §13d's first bullet. Engine and mounted arms both
+  ways, mutation-verified.
+
+- [ ] **11. «добавь пожалуйста вообще идею и концепцию фотоальбома для эпилога в бэклог отдельной
   задачей»** – **backlog entry**, not a build. A photo album for the epilogue, as a concept.
 
 - [x] **12. «открытое сейчас в вашем ящике продление Baseline закроет и следующую зимнюю почту… вот с
@@ -2016,11 +2055,26 @@ These arrived while the economy measurement was running and they change what tha
 it now has to answer «can the parent reach the shelf» against a **smaller** parent income, not a
 larger one.
 
-- [ ] **P1. «моторка $2.4М – давай переделаем на парусную яхту пожалуйста»** – **build.** The
+- [x] **P1. «моторка $2.4М – давай переделаем на парусную яхту пожалуйста»** – **build.** The
   `motor boat` rung becomes a sailing yacht: label, art hook and copy. ⚠ Price, build weeks and
   upkeep unchanged unless he says otherwise – he asked to change what it IS, not what it costs.
 
 - [x] **P2. ⭐⭐ «для каждой стадии академии нам нужен доход… подвязать пропорционально к
+  ⚙⚙ **SHIPPED (r29p6a).** `boat-motor` → `boat-sail`, label «The sailing yacht», new blurb («Two
+  cabins, a mast, and weekends that answer to the wind.»); price/build/upkeep untouched and pinned
+  ($2.4M / 78w / −700 / 600 bps – the three-numbers table moved with the id). ⚠ THE GRANT QUESTION
+  the catalogue comment forced, ruled NO and the comment's defence EXTENDED rather than deleted:
+  the yacht week is a CREWED week (crew of six), the crew is what `yacht`/`yacht-big`'s 10% upkeep
+  pays for, and the sailing yacht keeps the boats' crewless 6% – the grant reads what the upkeep
+  pays for, never the noun in the label. Since #8 the sailing family books the crewed charter like
+  everybody (asserted: charged, not free – the crew comes with the charter, not with their own
+  sails). ⚠ Forward-safety: MIGRATED, riding v66's existing step – chosen over a tombstone because
+  v66 has never been merged to main (main is at 65), so amending the unshipped step is not editing
+  a shipped migration; the committed v65 fixture stays byte-identical and the rename is proven on
+  an in-memory owning save (delivery clock, basis and paid all carried; idempotent; zero draws).
+  Spec §13c carries the re-derivation; the art hook is the id, as everywhere on the shelf.
+
+- [ ] **P2. ⭐⭐ «для каждой стадии академии нам нужен доход… подвязать пропорционально к
   максимальному месту ребенка на турнирах… чем выше и дольше место – тем выше будет доход у каждой
   стадии»** – **build, and it is the biggest idea in this round.**
 
@@ -2921,13 +2975,26 @@ season), or a rate that starts at 20% and falls to 10% as she grows, mirroring h
   the same question. The letters say it in the house's own words («We book the winter first – the
   off-season is the shoot season») and §5.2's supersession is recorded in the plan doc itself.
 
-- [ ] **P10. ⚙ «значит убрать этот самолет за 38М и всех делов =)»** – **RULING: `plane-long` leaves
+- [x] **P10. ⚙ «значит убрать этот самолет за 38М и всех делов =)»** – **RULING: `plane-long` leaves
   the catalogue.** The reachability measurement (0 of 72 delivered, upkeep alone eats a $20M
   portfolio's whole commission) said it is a rung nobody can hold; he removes it rather than resizing
   it. ⚠ Forward-safety: a save that somehow owns one must still value and sell it – tombstone the id,
   do not strand the money.
 
 - [x] **P11. ⚙ His calibration correction, with his own data point**: «Доход Александра Бублика от
+  ⚙⚙ **SHIPPED (r29p6a), and the money is not stranded.** `ShopItem.retired` on `plane-long`: the
+  catalogue keeps the entry as a tombstone, `shopView` draws the row only for a family that owns
+  one, and `buyAsset` refuses it engine-side («That one is no longer sold» – the worker is not the
+  gate). An OWNED row keeps everything: valued by its own −6% rate, billed §3f's $58,460/wk, sold
+  at the stored value – asserted end to end, with the $18M plane proven still on sale
+  (anti-vacuity), and selling explicitly ungated (retired gates the way IN, never the way out). No
+  schema move: no save field changed shape. The reachability finding (0 of 72 delivered) is cited
+  in the commit as the ruling's ground. The four «every rung on the shelf» guards are re-aimed at
+  catalogue-minus-tombstones, with the tombstone list pinned to exactly `['plane-long']` so the
+  filter cannot quietly widen; the phone-fit dialog measure moved to the worst case still on sale
+  (the big yacht's $28M / 208-week confirm).
+
+- [ ] **P11. ⚙ His calibration correction, with his own data point**: «Доход Александра Бублика от
   рекламных и спонсорских контрактов оценивается примерно в $1–2 миллиона в год. – это даже не 50
   ракетка. Твои цифры всё еще мимо частично. **Это доход у топ-100, у топ-50 точно больше, D – очень
   хорошо.**» – So the bands lift: **top-100 ≈ $1–2M/yr off-court total, top-50 above that, D capstone

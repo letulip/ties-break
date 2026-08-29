@@ -201,7 +201,7 @@ numbers rather than one – what it cost, what it loses, and what it takes every
 | thing | price | build | loses / year | upkeep / year | **upkeep / week** |
 | --- | --- | --- | --- | --- | --- |
 | the launch | $900,000 | ~12 months | 7% | 6% | **$1,040** |
-| the boat | $2,400,000 | ~18 months | 7% | 6% | **$2,770** |
+| the sailing yacht (was: the motor boat, part three P1) | $2,400,000 | ~18 months | 7% | 6% | **$2,770** |
 | the yacht | $12,000,000 | ~3 years | 5% | **10%** | **$23,080** |
 | the big yacht | $28,000,000 | ~4 years | 5% | **10%** | **$53,850** |
 | the plane | $18,000,000 | ~2 years | 6% | 8% | **$27,690** |
@@ -259,7 +259,8 @@ week is a seventh, and its shape is unusual in exactly the right way:
 - **`priceCents: [0, 0]` – it is free at the point of use**, because the money went years ago and the
   upkeep is charged every week whether she sails or not;
 - **it appears in `PlanWeekSheet` only while the yacht is owned and delivered** (⚠ not while it is
-  still building – §3f's contract is not a boat);
+  still building – §3f's contract is not a boat); ⚙ **AMENDED by part two #8 – see §13g**: the row
+  is on every family's sheet at a real charter price now, and delivery is what makes it FREE;
 - its gain sits **at or above `elite`**, which is the priciest package in the game.
 
 ⭐⭐ **AND THIS IS WHAT TURNS THE YACHT FROM A TROPHY INTO A DECISION.** Before it, the absurd family
@@ -418,6 +419,14 @@ He asked. Four, in the order I would rank them:
 3. ⚙ **SETTLED 26.08 – her cut of the returns is a SWITCH, not automatic** («договорились»), §7.
 4. **Does the shop survive an ending?** My answer is yes and it is cheap: the retirement card names
    what the family owns. An ending that silently drops the house is a bug the player will feel.
+   ⚙ **SETTLED 29.08, round 29 part two #10, for the academy** – his ruling: «Эпилог… надо
+   добавить, мне кажется. Это всё-таки финал игры.» The epilogue names the academy when the family
+   built any stage: what stands (N of M stages, the catalogue's own count) and – now that the
+   academy EARNS – what it became (its weekly income, off `world/business.ts`' one arithmetic).
+   Built as ONE engine-fed line in `EndingScreen.vue`'s footer (`EndingView.academy`, a wire field:
+   no schema move), because the album's SHAPE is reserved by him – the photo-album concept is his
+   backlog item, and this line deliberately does not touch it. The REST of the shelf at an ending
+   is still open.
 
 ---
 
@@ -603,14 +612,22 @@ are a launch and a motor boat – the spec calls neither a yacht, and §11 row 3
 career orders a yacht, **waits three years**», which is the $12M rung's build time and not theirs.
 A week away on a day-boat is not a holiday.
 
+⚙ **RE-ARGUED AT PART THREE P1 (29.08), SAME ANSWER.** «моторка $2.4М – давай переделаем на
+парусную яхту пожалуйста» renamed the $2.4M rung to **the sailing yacht** – so «the spec calls
+neither of them a yacht» stopped covering the shelf, and the ruling had to be re-derived rather
+than inherited. It survives on a better leg: the WEEK the package sells is a **crewed** week («crew
+of six, and a week of it is a week nobody can reach them»), and the crew is what the two granting
+rungs' 10% upkeep is buying – the sailing yacht keeps the boats' crewless 6% (hull, berth, survey).
+A family that sails itself has a boat, not a holiday staff. The grant reads what the upkeep pays
+for, never the noun in the label; the sailing yacht grants nothing, and
+`tests/round29-shop-elite.test.ts` holds the claim against the delivered rung.
+
 ### 13d. ⚠⚠ WHAT IS **NOT** BUILT, AND IS STILL OPEN
 
-- **The epilogue does not name the academy.** §11 row 5's acceptance has two halves and only the
-  first is here: a half-built academy IS a legible state (four rows, priced, chained, with the stage
-  under each named). The second half – «the epilogue can name the finished one» – is §10.4, which
-  this file still lists as **his** («Does the shop survive an ending? My answer is yes»), and it has
-  never been ruled on. Building the retirement card's version of it off an un-ruled proposal is
-  exactly the scope-widening the house forbids. **It needs one word from him.**
+- ⚙ **RESOLVED 29.08 – the epilogue names the academy now** (round 29 part two #10). This bullet
+  stood on «it has never been ruled on», and he ruled: «Эпилог… надо добавить, мне кажется. Это
+  всё-таки финал игры.» The word arrived and the line shipped – see §10.4's ⚙ note for what was
+  built and what stayed deliberately untouched (the album's shape is his).
 - **No academy stage does anything yet.** §3g's own «this is where advertising money lands» is a
   cross-reference to the face-and-court plan, not a mechanic in this file, and §9.4 («a stage that is
   HERS to run, after she retires») is explicitly «listed last on purpose, and not proposed for any
@@ -668,6 +685,46 @@ starts and it becomes sellable the same week.** There is no week in which a fami
 thing it has no way out from under, which is §4's own acceptance («a freeze may never be the reason a
 family goes bankrupt») met by the shape rather than by a rule. Pinned in
 `tests/round29-shop-elite.test.ts` §2.
+
+### 13g. ⚙ THE YACHT WEEK BECAME A CHARTER – round 29 part two #8 + #9 (29.08)
+
+> «она же бесплатная только при наличии яхты, верно? я могу сделать для нее отдельный арт, тогда
+> можно просто на постоянку добавить в ленту сначала с реальной стоимостью, а после покупки яхты это
+> станет бесплатным» – and, on the price: «изначально стоит дороже немного (х1.4 вроде мы считали,
+> да?)»
+
+**This amends §3f's second bullet** («it appears in `PlanWeekSheet` only while the yacht is owned
+and delivered»): the row is on **every** family's sheet now, at a real charter band, and taking
+delivery of a yacht is what zeroes it. The flag turned with the design – `grantedOnly` (hide the
+row) became `freeOnceGranted` (zero the quote) – and one function prices every surface:
+`vacationPriceCents(seed, week, id, background, grantedIds)` is the sheet's quote, the
+recommendation's weight and the booking's charge, so a screen and the engine cannot price the same
+week two ways. `bookVacation`'s old refusal («The family does not own that») is gone with the
+design it guarded; the engine-side re-validation moved from the row to the **price** – a stale
+sheet books at the world's own quote, never a stale free one.
+
+⚠ **THE ×1.4 WAS VERIFIED BEFORE IT WAS USED**, because «вроде мы считали, да?» is a question and
+the spec outranks his memory. This file carries exactly **one** 1.4 – §3f's own «it is about 1.4
+elite vacations a week in upkeep» – which relates exactly these two packages and no other charter
+figure exists anywhere in it. So his multiplier lands as the figure of record: the charter band is
+**elite ×1.4 = [$5,600, $9,800]** before the wealth corridor, sitting above elite as the ladder's
+top step (strictly ascending floors, all seven, pinned in `tests/planner.test.ts` – the RELATION to
+elite's band is pinned beside the literal, so neither can be retuned alone).
+
+⚠ **§3f's veto survives on both sides of the grant, for free.** The owner's family still ties elite
+at 48 and wins on being free; the boatless family sees the same 48 at a **dearer** price with a
+weaker after-effect, so elite keeps its reason everywhere and the six packages survive the row
+appearing on every sheet.
+
+⚠ **His art for the row is coming** («я могу сделать для нее отдельный арт»); until it lands the
+sheet draws the row artless through `vacationArtUrl`'s documented null fallback – a catalogue entry
+may exist before its frame does, and a missing picture must not cost the row.
+
+⚠ **What did NOT move**: `Snapshot.shop.vacationIds` (same machinery, new meaning: «made free», not
+«may see»), the grant's DELIVERED-only read, `conditionGain` 48 / `buffFactor` 1, the diary's two
+yacht-week sentences (ownership-neutral, they fit a charter), and the week's calendar arc. Zero
+MAIN draws anywhere in this: the charter quote is the same purpose-scoped
+`seed:vacation:week:packageId` sub-stream every package has always used.
 
 ---
 

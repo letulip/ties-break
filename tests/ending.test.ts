@@ -54,6 +54,7 @@ import {
   plateauViewOf,
   resolveCollegeDeparture,
   resolveEndings,
+  academyWeeklyIncomeCents,
   buildEndingView,
   buildAlbum,
   captureBreakEven,
@@ -1144,6 +1145,46 @@ describe('the album – seven pages, every career', () => {
     const view = buildEndingView(world)!
     expect(view.handoff.childBorn).toBe(false)
     expect(view.handoff.freshCapitalFork).toBe(true)
+  })
+
+  // ⭐ ROUND 29 PART TWO #10 – THE ACADEMY LINE, settling the-shop §10.4 by his ruling: «Эпилог…
+  // надо добавить, мне кажется. Это всё-таки финал игры.» The epilogue names the academy when the
+  // family built any stage – what stands, and (the same wave's income mechanic) what it became.
+  // FACTS ONLY, off the one arithmetic the till banks; the template writes the sentence.
+  it('⭐ #10 – the ending view names the academy: stages standing, and what it earns', () => {
+    const { world } = freshWorld('ending-academy')
+    world.assets = [
+      { id: 'academy-land', boughtWeek: 100, paidCents: 2_000_000_00, valueCents: 2_000_000_00 },
+      { id: 'academy-courts', boughtWeek: 120, paidCents: 3_000_000_00, valueCents: 3_000_000_00 },
+    ]
+    latchEnding(world, { type: 'natural', week: 900, ageYears: 31, detail: 'x', resumesWeek: null })
+    const view = buildEndingView(world)!
+    expect(view.academy, 'two stages stand').not.toBeNull()
+    expect(view.academy!.stagesBuilt).toBe(2)
+    // The catalogue's own count, never a template's «four» – a fifth stage would move this alone.
+    expect(view.academy!.totalStages).toBe(4)
+    // ⚠ THE ONE ARITHMETIC: the line quotes exactly what the till banks each week for the same
+    // world (world/business.ts) – the epilogue and the ledger cannot describe two academies.
+    expect(view.academy!.weeklyIncomeCents).toBe(academyWeeklyIncomeCents(world))
+    expect(view.academy!.weeklyIncomeCents, 'courts earn at any reputation').toBeGreaterThan(0)
+  })
+
+  it('⚠ #10 – the land alone is named but not paid, and no academy at all is NOT named', () => {
+    // Only the land: a field earns nothing (stageIncomeCents 0) and the sentence must be able to
+    // say so – the view carries the honest 0 rather than hiding the stage.
+    const { world } = freshWorld('ending-academy-land')
+    world.assets = [{ id: 'academy-land', boughtWeek: 100, paidCents: 2_000_000_00, valueCents: 2_000_000_00 }]
+    latchEnding(world, { type: 'natural', week: 900, ageYears: 31, detail: 'x', resumesWeek: null })
+    const landOnly = buildEndingView(world)!
+    expect(landOnly.academy).not.toBeNull()
+    expect(landOnly.academy!.stagesBuilt).toBe(1)
+    expect(landOnly.academy!.weeklyIncomeCents).toBe(0)
+
+    // And the family that never built: null, not 0-of-4 – the epilogue says nothing rather than
+    // naming an absence (the field's own doc carries the reasoning).
+    const { world: bare } = freshWorld('ending-academy-none')
+    latchEnding(bare, { type: 'natural', week: 900, ageYears: 31, detail: 'x', resumesWeek: null })
+    expect(buildEndingView(bare)!.academy).toBeNull()
   })
 
   it('the snapshot carries the epilogue as a FIELD, so a reload still shows it', () => {

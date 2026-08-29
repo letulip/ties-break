@@ -276,6 +276,11 @@ export function buyAsset(world: WorldState, itemId: string, stakeCents?: number)
   // the top of this file). A terminal latch still refuses; a fourteen-year-old's family does not.
   const item = shopItem(itemId)
   if (!item) throw new Error('There is nothing like that on the shelf')
+  // ⚠ ROUND 29 PART FOUR P10 – a retired rung refuses HERE as well as being hidden, because the
+  // worker is not the gate (CLAUDE.md invariant 1): a stale tab that still draws the row must not
+  // be able to order a plane the shop no longer sells. Selling is untouched two functions down –
+  // retired gates the way IN, never the way out.
+  if (item.retired) throw new Error('That one is no longer sold')
   world.assets ??= []
   const held = world.assets.find((a) => a.id === itemId)
   // ⭐⭐ ROUND 29 #11 – AN OWNED 'open' RUNG IS A TOP-UP, AND ONLY A 'fixed' ONE STILL REFUSES.
@@ -501,7 +506,13 @@ export function sellAsset(world: WorldState, itemId: string, amountCents?: numbe
  *  Pure: reads the world, writes nothing, draws nothing. */
 export function shopView(world: WorldState): ShopView {
   const owned = ownedAssets(world)
-  const rows: ShopRowView[] = shopCatalogue().map((item) => {
+  // ⚠ ROUND 29 PART FOUR P10 – a RETIRED rung is drawn only for the family that owns one: an owned
+  // row has to stay visible, priced and sellable (the ruling: value and sell, «do not strand the
+  // money»), and for everybody else the rung is simply not on the shelf – §2's own law already
+  // rules out the locked row and the teaser, and a «no longer sold» row would be both at once.
+  const rows: ShopRowView[] = shopCatalogue()
+    .filter((item) => !item.retired || owned.some((a) => a.id === item.id))
+    .map((item) => {
     const mine = owned.find((a) => a.id === item.id)
     const changeCents = mine ? mine.valueCents - mine.paidCents : null
     return {

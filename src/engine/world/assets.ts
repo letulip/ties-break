@@ -74,6 +74,17 @@ export interface ShopItem {
   /** ⭐ §3f – the `ECONOMY.vacation.packages` id this rung unlocks once DELIVERED. Absent on
    *  everything that unlocks nothing. */
   grantsVacationId?: string
+  /** ⭐ ROUND 29 PART FOUR P10 – A RUNG THE SHOP NO LONGER SELLS, kept as a tombstone for any save
+   *  that holds one. His ruling: «значит убрать этот самолет за 38М и всех делов =)», off the
+   *  reachability measurement (72 careers x 780 weeks: 0 of 72 ever took delivery).
+   *
+   *  ⚠ RETIRED MEANS NOT SOLD, NEVER NOT OWNED: `shopView` draws the row only for a family that
+   *  owns one and `buyAsset` refuses it, while everything an OWNED row does – valuation by its own
+   *  rate, the weekly upkeep, the sale – keeps working through the entry exactly as before.
+   *  Deleting the entry instead would freeze the value, drop the bill and take the row off the
+   *  screen with the money still in it (`shopItem`'s courtesy covers a lost id, but a courtesy is
+   *  not a plan). Absent on everything still for sale. */
+  retired?: boolean
 }
 
 /** THE SHELF, cheapest first. A plain read of the constant – there is no per-career catalogue and

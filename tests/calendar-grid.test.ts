@@ -1067,15 +1067,16 @@ describe('each family package draws its own week', () => {
         .filter((b) => b.kind === 'physio')
         .reduce((n, b) => n + b.span, 0)
     // ⚠⚠ RE-AIMED AT ROUND 29 #5, NEVER DELETED, AND THE PREMISE IS WHY. This monotonicity says «the
-    // gain is DRAWN as treatment», and it holds for every rung whose gain money buys: a resort sells
-    // a programme and a clinic sells more of one. §3f's yacht week is the first package whose gain
-    // is not bought at all – it was bought years earlier, as a boat – and its 48 is total absence of
-    // obligation rather than six massage tables. Including it would force a clinic's week onto a
-    // boat to satisfy an arithmetic, which is the drawing telling a lie to keep a test green. So the
-    // ladder is the SIX MONEY BUYS, and the seventh's own week is asserted in the two cases below
-    // (it has an arc, it is a distinct drawing, no tennis on it, and it travels).
+    // gain is DRAWN as treatment», and it holds for every rung whose gain is a PROGRAMME: a resort
+    // sells one and a clinic sells more of one. §3f's yacht week is the package whose gain is no
+    // programme at all – its 48 is total absence of obligation rather than six massage tables (true
+    // whether the week is chartered at part two #8's price or free on the family's own boat).
+    // Including it would force a clinic's week onto a boat to satisfy an arithmetic, which is the
+    // drawing telling a lie to keep a test green. So the ladder is the SIX WHOSE GAIN IS TREATMENT
+    // (`freeOnceGranted` is the seventh's own flag), and the seventh's week is asserted in the two
+    // cases below (it has an arc, it is a distinct drawing, no tennis on it, and it travels).
     const ladder = [...ECONOMY.vacation.packages]
-      .filter((p) => !p.grantedOnly)
+      .filter((p) => !p.freeOnceGranted)
       .sort((a, b) => a.conditionGain - b.conditionGain)
     expect(ladder.length, 'the paid ladder is still six rungs, or this guard went blind').toBe(6)
     const hours = ladder.map((p) => physioHours(p.id))

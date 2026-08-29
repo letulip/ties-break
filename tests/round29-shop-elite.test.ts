@@ -14,7 +14,9 @@
 //   §4  §3g's academy, in stages, in order, with a legible half-built state;
 //   §5  ⭐⭐ THE PLANE: the fare it cuts (visible) and the point it adds (HIDDEN, and asserted as an
 //       absence – that is the one a careless implementation gets backwards);
-//   §6  ⭐⭐ THE YACHT WEEK as a seventh vacation package – there once owned, and not before.
+//   §6  ⭐⭐ THE YACHT WEEK as a seventh vacation package – a charter for everybody since part two
+//       #8, and FREE exactly while a yacht stands delivered;
+//   §7  ⭐ P10's TOMBSTONE: the long-range plane is not sold, and an owning save is not stranded.
 //
 // ⚠ EVERY FIGURE IS READ OUT OF A TICKED WORLD, never off the constant that produced it. Where a
 // price or a percentage IS asserted it is the SPEC's own literal, quoted so that a retune has to
@@ -29,6 +31,7 @@ import {
   closeTournament,
   hireMasseur,
   ownedAssets,
+  revalueAssets,
   sellAsset,
   sellableAsset,
   shopItem,
@@ -42,6 +45,7 @@ import {
   type WorldState,
 } from '../src/engine/world'
 import { householdWeekly } from '../src/engine/world/coachMarket'
+import { vacationPriceCents } from '../src/engine/economy'
 import { rngFromSeed } from '../src/engine/rng'
 import { WEEKS_PER_YEAR } from '../src/engine/season/calendar'
 import type { SeasonEvent } from '../src/engine/season/types'
@@ -94,10 +98,16 @@ describe('§1 – the elite ladder is the spec table, and each rung carries THRE
     const table: [string, number, number, number, number][] = [
       // id, price, build weeks, annual loss bps, annual upkeep bps
       ['boat-launch', 900_000_00, 52, -700, 600],
-      ['boat-motor', 2_400_000_00, 78, -700, 600],
+      // ⚠ RE-AIMED AT ROUND 29 PART THREE P1 («моторка $2.4М – давай переделаем на парусную яхту
+      // пожалуйста»): the motor boat became the sailing yacht – id and identity moved, EVERY
+      // NUMBER STAYED, which is exactly what this row now guards: he changed what the rung IS,
+      // never what it costs.
+      ['boat-sail', 2_400_000_00, 78, -700, 600],
       ['yacht', 12_000_000_00, 156, -500, 1000],
       ['yacht-big', 28_000_000_00, 208, -500, 1000],
       ['plane', 18_000_000_00, 104, -600, 800],
+      // ⚠ P10: retired (see §7 below), but the TOMBSTONE keeps the numbers – an owned one is still
+      // valued and billed by exactly this row, so the pin stays.
       ['plane-long', 38_000_000_00, 156, -600, 800],
     ]
     for (const [id, price, build, lossBps, upkeepBps] of table) {
@@ -115,13 +125,20 @@ describe('§1 – the elite ladder is the spec table, and each rung carries THRE
     // and no more – a bill computed off anything but `price x pct / 52` misses by far more.
     const spec: [string, number][] = [
       ['boat-launch', 1_040_00],
-      ['boat-motor', 2_770_00],
+      // P1: the sailing yacht keeps the motor boat's weekly bill to the cent – same price, same
+      // percentage, so the same $2,770.
+      ['boat-sail', 2_770_00],
       ['yacht', 23_080_00],
       ['yacht-big', 53_850_00],
       ['plane', 27_690_00],
       ['plane-long', 58_460_00],
     ]
     const w = shopper('r29-5-table')
+    // ⚠ RE-AIMED AT ROUND 29 PART FOUR P10: `plane-long` is RETIRED, and a retired rung is on the
+    // view only for a family that owns one – so this world owns one, delivered, which is also the
+    // tombstone's own claim being exercised: the row is still drawn and still quotes §3f's bill.
+    // The other five stay unowned, so their rows quote off the PRICE exactly as before.
+    w.assets = [{ id: 'plane-long', boughtWeek: 0, paidCents: 38_000_000_00, valueCents: 38_000_000_00 }]
     for (const [id, weekly] of spec) {
       // ⚠ OFF THE VIEW THE SCREEN READS, not off the catalogue: the number the player sees is the
       // claim, and `shopView` is where it is made.
@@ -457,23 +474,44 @@ describe('§5 – the plane: the fare it cuts, and the point it does NOT print',
   })
 })
 
-describe('§6 – ⭐⭐ a week on the yacht is a seventh vacation package (§3f)', () => {
-  it('⭐⭐ it is not on the ladder for a family with no yacht, and cannot be booked', () => {
+describe('§6 – ⭐⭐ a week on the yacht is a seventh vacation package (§3f -> part two #8)', () => {
+  // ⚠⚠ RE-AIMED AT PART TWO #8 (29.08), NEVER DELETED. These arms guarded «the row exists only for
+  // a family with a delivered yacht» and the refusal that enforced it; his #8 replaced that design –
+  // «можно просто на постоянку добавить в ленту сначала с реальной стоимостью, а после покупки
+  // яхты это станет бесплатным» – so the SAME worlds now assert the same boundary's new shape: no
+  // delivered yacht means the week is CHARGED at the real quote (and says so in the ledger), a
+  // delivered yacht means it is free. What `vacationIds` carries is unchanged machinery with a new
+  // meaning: the list of packages the shelf has made FREE.
+  it('⭐⭐ with no yacht it is a charter: bookable by anybody, charged at the real quote', () => {
     const w = shopper('r29-5-noyacht')
-    expect(shopView(w).vacationIds, 'nothing granted').toEqual([])
+    expect(shopView(w).vacationIds, 'nothing granted, so nothing is free').toEqual([])
     expect(toSnapshot(w).shop.vacationIds).toEqual([])
-    expect(() => bookVacation(w, w.week + 2, 'yacht-week')).toThrow(/does not own/i)
+    const week = w.week + 2
+    const quote = vacationPriceCents(w.seed, week, 'yacht-week', w.profile.background)
+    expect(quote, 'the charter has a real price').toBeGreaterThan(0)
+    const funds = w.fundsCents
+    bookVacation(w, week, 'yacht-week')
+    expect(funds - w.fundsCents, 'charged exactly the quote').toBe(quote)
+    expect(
+      w.events.some((e) => e.category === 'vacation' && e.amountCents === -quote && /week on the yacht/i.test(e.text)),
+      'and the expense row names it',
+    ).toBe(true)
   })
 
-  it('⚠ ...nor while the yacht is still being built – a contract is not a boat', () => {
+  it('⚠ ...and while the yacht is still being built the charter is STILL charged – a contract is not a boat', () => {
     const w = shopper('r29-5-building-yacht')
     buyAsset(w, 'yacht')
     walk(w, 30)
-    expect(shopView(w).vacationIds).toEqual([])
-    expect(() => bookVacation(w, w.week + 2, 'yacht-week')).toThrow(/does not own/i)
+    expect(shopView(w).vacationIds, 'a contract grants nothing').toEqual([])
+    const week = w.week + 2
+    const funds = w.fundsCents
+    bookVacation(w, week, 'yacht-week')
+    expect(funds - w.fundsCents, 'the wait does not discount the charter').toBe(
+      vacationPriceCents(w.seed, week, 'yacht-week', w.profile.background),
+    )
   })
 
-  it('⭐⭐ ...and once it is DELIVERED the week is there, free, and it books', () => {
+  it('⭐⭐ ...and once it is DELIVERED the week is free – #8\'s second half, unchanged on purpose', () => {
     const w = shopper('r29-5-yacht-week')
     buyAsset(w, 'yacht')
     walk(w, 157)
@@ -481,6 +519,9 @@ describe('§6 – ⭐⭐ a week on the yacht is a seventh vacation package (§3f
     expect(toSnapshot(w).shop.vacationIds).toEqual(['yacht-week'])
     const funds = w.fundsCents
     const week = w.week + 2
+    // The quote the sheet shows the owner and the charge the engine takes are the same 0, through
+    // the same function with the same granted list – «после покупки яхты это станет бесплатным».
+    expect(vacationPriceCents(w.seed, week, 'yacht-week', w.profile.background, shopView(w).vacationIds)).toBe(0)
     bookVacation(w, week, 'yacht-week')
     expect(w.fundsCents, 'free at the point of use – the money went years ago').toBe(funds)
     expect(w.vacations.some((v) => v.week === week && v.packageId === 'yacht-week')).toBe(true)
@@ -491,13 +532,89 @@ describe('§6 – ⭐⭐ a week on the yacht is a seventh vacation package (§3f
     expect(w.condition, 'the week away landed its gain').toBeGreaterThan(40)
   })
 
-  it('⚠ selling the yacht takes the week away again', () => {
+  it('⚠ P1 – the SAILING yacht grants nothing: the week is crewed and its upkeep has no crew in it', () => {
+    // ⭐ ROUND 29 PART THREE P1's one design question, answered NO on purpose: the package's own
+    // copy is a crew of six, and the crew is what `yacht`/`yacht-big`'s 10% upkeep pays for. The
+    // $2.4M sailing yacht keeps the boats' crewless 6%, so renaming the rung must not hand its
+    // family a crewed holiday – the grant reads what the upkeep pays for, not the label's noun.
+    // The catalogue comment above `yacht` carries the full argument; this arm is what keeps a
+    // future «it says yacht, wire the week» edit honest.
+    const w = shopper('r29-p1-sail-grants-nothing')
+    w.assets = [{ id: 'boat-sail', boughtWeek: 0, paidCents: 2_400_000_00, valueCents: 2_400_000_00 }]
+    expect(shopItem('boat-sail')!.label, 'the rung really is the sailing yacht').toBe('The sailing yacht')
+    expect(shopItem('boat-sail')!.grantsVacationId, 'and it grants no package').toBeUndefined()
+    expect(shopView(w).vacationIds, 'a delivered sailing yacht unlocks nothing').toEqual([])
+    // ...so the sailing family books the crewed week the way every family does since #8: as a
+    // charter, charged – the crew comes with the charter, not with their own sails.
+    const week = w.week + 2
+    const funds = w.fundsCents
+    bookVacation(w, week, 'yacht-week')
+    expect(funds - w.fundsCents).toBe(vacationPriceCents(w.seed, week, 'yacht-week', w.profile.background))
+    expect(funds - w.fundsCents).toBeGreaterThan(0)
+  })
+
+  it('⚠ selling the yacht takes the FREE away again – the charter price comes back', () => {
+    // ⚠ RE-AIMED AT #8: the refusal this arm held («does not own») is gone with the granted-only
+    // design; what selling the boat takes away now is the PRICE OF NOTHING. The world's own quote
+    // is what `bookVacation` charges – the stale-sheet story is on the engine gate itself
+    // (world/planner.ts): a tab still showing «free» books at this real number, never under it.
     const w = shopper('r29-5-yacht-sold')
     buyAsset(w, 'yacht')
     walk(w, 157)
     expect(shopView(w).vacationIds).toEqual(['yacht-week'])
     sellAsset(w, 'yacht')
     expect(shopView(w).vacationIds).toEqual([])
-    expect(() => bookVacation(w, w.week + 2, 'yacht-week')).toThrow(/does not own/i)
+    const week = w.week + 2
+    const funds = w.fundsCents
+    bookVacation(w, week, 'yacht-week')
+    const charged = funds - w.fundsCents
+    expect(charged, 'charged again, at the world\'s own quote').toBe(
+      vacationPriceCents(w.seed, week, 'yacht-week', w.profile.background),
+    )
+    expect(charged).toBeGreaterThan(0)
+  })
+})
+
+describe('§7 – ⭐ round 29 part four P10: the long-range plane leaves the shelf, tombstoned', () => {
+  // HIS RULING: «значит убрать этот самолет за 38М и всех делов =)» – off the reachability
+  // measurement (72 careers x 780 weeks): 0 of 72 ever took DELIVERY of a `plane-long`, and its
+  // upkeep alone ($58,460/wk) eats a $20M portfolio's whole commission. He removed the rung rather
+  // than resizing it. The three claims below are the ruling's own three verbs: not sold, still
+  // valued/billed, still sellable – «do not strand the money».
+
+  it('⭐ it is not on the shelf and cannot be bought – and the smaller plane still is', () => {
+    const w = shopper('r29-p10-not-sold')
+    expect(shopView(w).rows.some((r) => r.id === 'plane-long'), 'no row for a family without one').toBe(false)
+    // ⚠ ANTI-VACUITY: the FAMILY survives – only the one rung is gone, so a filter that swept the
+    // whole plane family (or the whole shelf) goes red here rather than passing quietly.
+    expect(shopView(w).rows.some((r) => r.id === 'plane'), 'the $18M plane is still sold').toBe(true)
+    const funds = w.fundsCents
+    expect(() => buyAsset(w, 'plane-long')).toThrow(/no longer sold/i)
+    expect(w.fundsCents, 'and the refusal charged nothing').toBe(funds)
+    expect(ownedAssets(w).length, 'and owns nothing').toBe(0)
+  })
+
+  it('⭐⭐ a save that owns one is not stranded: visible, valued, billed – and it sells', () => {
+    const w = shopper('r29-p10-owner')
+    // The owning save, delivered – the state the tombstone exists for. Written directly: no career
+    // can BUY one any more, which is exactly the point.
+    w.assets = [{ id: 'plane-long', boughtWeek: w.week - 52, paidCents: 38_000_000_00, valueCents: 38_000_000_00 }]
+    const row = shopView(w).rows.find((r) => r.id === 'plane-long')
+    expect(row, 'the owner still sees the row').toBeDefined()
+    expect(row!.upkeepCents, 'still billed §3f\'s own weekly figure').toBe(
+      Math.round((38_000_000_00 * 800) / 10_000 / WEEKS_PER_YEAR),
+    )
+    expect(weeklyAssetUpkeepCents(w), 'and the till charges the same number').toBe(row!.upkeepCents)
+    // Valuation still runs on the retired rung's own rate – a year old, it is worth LESS than paid.
+    revalueAssets(w)
+    const owned = ownedAssets(w).find((a) => a.id === 'plane-long')!
+    expect(owned.valueCents, 'a year of -6% really priced in').toBeLessThan(38_000_000_00)
+    expect(owned.valueCents, 'and it is a value, not a write-off').toBeGreaterThan(30_000_000_00)
+    // ...and the way out is open: sold at the stored value, money in the wallet, row off the shelf.
+    const funds = w.fundsCents
+    const worth = owned.valueCents
+    sellAsset(w, 'plane-long')
+    expect(w.fundsCents).toBe(funds + worth)
+    expect(shopView(w).rows.some((r) => r.id === 'plane-long'), 'gone from the view once sold').toBe(false)
   })
 })

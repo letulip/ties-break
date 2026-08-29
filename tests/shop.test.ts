@@ -48,6 +48,12 @@ function turnProfessional(world: WorldState): void {
   expect(activeLadderOf(world), 'the fixture really is professional now').toBe('wta')
 }
 
+/** ⚠ ROUND 29 PART FOUR P10 – WHAT THE SHELF SELLS: the catalogue minus its tombstones. Every
+ *  «the screen gets every rung» claim below reads THIS, because a retired rung (`plane-long`) is
+ *  deliberately not drawn for a family that does not own one – the roster test holds the list of
+ *  tombstones to exactly one, so this filter cannot quietly widen. */
+const onSale = () => shopCatalogue().filter((i) => !i.retired)
+
 function career(seed: string, weeks: number): WorldState {
   const world = createWorld(seed)
   const rng = rngFromSeed(world.seed)
@@ -86,17 +92,30 @@ describe('the shelf itself', () => {
       // still no bonds, no club stake, and nothing about HER.
       'merch-brand',
       'boat-launch',
-      'boat-motor',
+      // ⚠ RE-AIMED AT ROUND 29 PART THREE P1 («моторка $2.4М – давай переделаем на парусную яхту
+      // пожалуйста»): `boat-motor` is `boat-sail` now – identity changed, price/build/upkeep did
+      // not (the three-numbers claims live in tests/round29-shop-elite.test.ts, moved with the id).
+      // Owned rows follow through v66's migration, asserted in tests/migrations.test.ts.
+      'boat-sail',
       'yacht',
       'yacht-big',
       'plane',
+      // ⚠ ROUND 29 PART FOUR P10: «значит убрать этот самолет за 38М и всех делов =)» – RETIRED,
+      // not deleted. The id stays in the CATALOGUE as a tombstone (an owning save must still
+      // value, bill and sell it – 0 of 72 careers ever took delivery, so removal is the ruling);
+      // what changed is the SHELF: `shopView` draws it only for an owner and `buyAsset` refuses
+      // it, both asserted in tests/round29-shop-elite.test.ts.
       'plane-long',
       'academy-land',
       'academy-courts',
       'academy-building',
       'academy-staff',
     ])
-    // §3a's two minimums and §3b's four prices are the spec's own numbers, quoted here so a retune
+    // ⚠ P10's ANTI-VACUITY, held HERE beside the roster: exactly one tombstone, by name. `onSale`
+    // above filters on this flag, so a `retired` that leaked onto a living rung – or fell off the
+    // plane – would go red in one place with the reason next to it.
+    expect(rows.filter((r) => r.retired).map((r) => r.id)).toEqual(['plane-long'])
+    // §3a's two minimums and §3b's four prices are the spec's own numbers, quoted so a retune
     // has to come through this file.
     expect(shopItem('deposit')!.entryCents).toBe(1_000_00)
     expect(shopItem('index-fund')!.entryCents).toBe(5_000_00)
@@ -189,8 +208,9 @@ describe('the shelf is open from week one – part two #6, his ruling', () => {
     world.fundsCents = 500_000_00
     expect(() => buyAsset(world, 'car-sensible'), 'no professional-era refusal is left').not.toThrow()
     expect(world.assets.map((a) => a.id)).toEqual(['car-sensible'])
-    // ...and the screen sees the same shelf: every rung, no shut arm to print.
-    expect(toSnapshot(world).shop.rows).toHaveLength(shopCatalogue().length)
+    // ...and the screen sees the same shelf: every rung ON SALE, no shut arm to print (P10: the
+    // retired plane is a tombstone, not a rung – `onSale` is the honest denominator).
+    expect(toSnapshot(world).shop.rows).toHaveLength(onSale().length)
   })
 
   it('⭐⭐ ...and so can a fourteen-year-old family in its very first week', () => {
@@ -210,7 +230,8 @@ describe('the shelf is open from week one – part two #6, his ruling', () => {
     // whole-number offer and that every rule that used to sit behind the gate still answers.
     const world = createWorld('shop-open-catalogue-14')
     const view = shopView(world)
-    expect(view.rows).toHaveLength(shopCatalogue().length)
+    // ⚠ P10 re-aim: every rung ON SALE – the retired plane is drawn for owners only.
+    expect(view.rows).toHaveLength(onSale().length)
     for (const row of view.rows) {
       expect(Number.isInteger(row.entryCents) && row.entryCents > 0, `${row.id} price`).toBe(true)
       expect(Number.isInteger(row.annualRatePct), `${row.id} rate`).toBe(true)
@@ -531,8 +552,9 @@ describe('the shelf as the screen reads it', () => {
     expect(view.rows.find((r) => r.id === 'deposit')!.entryCents).toBe(1_000_00)
     // ⚠ EVERY ROW IS ON THE SHELF WHETHER SHE CAN REACH IT OR NOT. A shop window is a thing you
     // look into before you can afford it (§2), so nothing is hidden and nothing is locked – only
-    // `affordable` moves, and it moves the CONTROL rather than the row.
-    expect(view.rows).toHaveLength(shopCatalogue().length)
+    // `affordable` moves, and it moves the CONTROL rather than the row. (⚠ P10 re-aim: «every
+    // row» means every row ON SALE – a tombstoned rung is not hidden stock, it is not stock.)
+    expect(view.rows).toHaveLength(onSale().length)
     expect(view.rows.some((r) => !r.affordable), 'a $300,000 car is not affordable at this week').toBe(true)
   })
 
@@ -577,7 +599,8 @@ describe('the shelf as the screen reads it', () => {
     // really guarding – that `shopView` is TOTAL and hands the screen every rung whatever the career
     // has done – is the half that survives his ruling, and it is now the whole claim.
     const view = shopView(career('shop-view-junior', 40))
-    expect(view.rows).toHaveLength(shopCatalogue().length)
+    // ⚠ P10 re-aim: the WHOLE shelf = everything on sale; the tombstoned plane is owner-only.
+    expect(view.rows).toHaveLength(onSale().length)
     expect(view.cheapestId, 'and it introduces itself with a real thing at a real price').toBe('deposit')
   })
 })
