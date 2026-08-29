@@ -69,6 +69,11 @@ export const LEGACY_ART_CACHES = ['tb-art-v1', 'tb-art-small-v1']
  * Returns the names it actually deleted, which is what makes this testable without a browser.
  */
 export async function dropLegacyArtCaches(store: CacheStorage | undefined = globalThis.caches): Promise<string[]> {
+  // ⚠ THIS EARLY RETURN IS FOR THE TYPE CHECKER AND FOR THE READER, NOT FOR BEHAVIOUR – said out
+  // loud because a mutation run proved it. Delete it and the function still returns `[]` on a
+  // browser with no CacheStorage: `store.keys()` throws a TypeError that the `catch` below
+  // swallows. So no test can distinguish the two, and `tests/round29p2-offline-install.test.ts`
+  // asserts the outcome ("empty, never thrown") in one arm rather than pretending to cover both.
   if (!store) return []
   try {
     const names = await store.keys()

@@ -121,7 +121,9 @@ describe('preload urls resolve to files that actually ship', () => {
     // art provenance manifest at public/images/README.md - the exact per-folder convention
     // public/music/README.md and public/sounds/README.md already follow - and this guard predates
     // it. Documentation is not raw art: it ships nothing (the precache glob has no .md and
-    // globIgnores covers images/**), and the manifest is the file that ANSWERS the rights question
+    // globIgnores covers images/**  – ⚠ RE-AIMED AGAIN 29.08: `globIgnores` is GONE and every webp
+    // under images/ is precached now, so the glob's extension list is the only thing keeping the
+    // README out of the install, and it is enough), and the manifest ANSWERS the rights question
     // this directory used to be unable to answer. Everything else non-webp still fails exactly as
     // before - the allowance is the one literal filename, never a blanket extension.
     const stray = walk(`${PUBLIC}images/`).filter((f) => !f.endsWith('.webp') && !f.endsWith('/README.md'))
