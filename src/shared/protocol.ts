@@ -159,6 +159,7 @@ export type {
   TourBriefing,
   OfferState,
   SponsorTier,
+  AdTier,
   KitLine,
   KitGrade,
   KitGrades,

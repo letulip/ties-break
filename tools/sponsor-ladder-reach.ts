@@ -38,13 +38,13 @@
  *       npx vite-node tools/sponsor-ladder-reach.ts -- --weeks 780 --seeds 6 --json out.json
  */
 import { writeFileSync } from 'node:fs'
-import { acceptOffer, type WorldState } from '../src/engine/world'
-import { isOfferLive, SPONSOR_TIERS, TIER_COVERS, standingClears, isSponsorWindowWeek } from '../src/engine/offers'
+import { acceptOffer, financeWindow, type WorldState } from '../src/engine/world'
+import { AD_TIERS, isOfferLive, seasonSpokenFor, sponsorWindowOpensAt, windowLadder, SPONSOR_TIERS, TIER_COVERS, standingClears, isSponsorWindowWeek } from '../src/engine/offers'
 import { sponsorStandingOf } from '../src/engine/world/sponsors'
 import { ECONOMY } from '../src/engine/economy'
 import { START_AGE_YEARS } from '../src/engine/world/age'
 import { WEEKS_PER_YEAR } from '../src/engine/season/calendar'
-import type { KitOfferTerms, SponsorTier } from '../src/shared/protocol'
+import type { AdOfferTerms, AdTier, KitOfferTerms, SponsorTier } from '../src/shared/protocol'
 import { PRESETS, POLICIES, openCareer, stepCareerWeek, type Preset, type Policy } from './econ-bench'
 
 /** Fifteen seasons – the length of the owner's own save (`w780`), and the first horizon on which the
@@ -55,6 +55,22 @@ const DEFAULT_SEEDS = 6
 /** Weakest-first, the array's own order – so an index comparison IS a ladder comparison. */
 const LADDER: readonly SponsorTier[] = SPONSOR_TIERS
 const rungIndex = (t: SponsorTier): number => LADDER.indexOf(t)
+
+/** ⭐⭐ ONE SPONSOR WINDOW, AND WHAT THE POST DID IN IT – round 29 part two #12. Recorded on the
+ *  window's OPENING week, with the letters of this winter taken out of the question: `raiseKitOffers`
+ *  asks `seasonSpokenFor` BEFORE it writes, and asking it against the final offer list would also see
+ *  the deal the parent signed later the same winter – so every winter would read "spoken for",
+ *  including the ones that plainly produced letters. (That mistake was made once in this file's
+ *  `readOneSave` and is written out there too.) */
+interface Winter {
+  week: number
+  /** the rung of the contract that was already covering the season ahead, or null */
+  spokenBy: SponsorTier | null
+  /** the strongest rung her standing cleared that the running contract turned away, or null */
+  blockedTop: SponsorTier | null
+  /** how many kit letters the winter actually produced */
+  letters: number
+}
 
 interface CareerRow {
   preset: string
@@ -76,9 +92,20 @@ interface CareerRow {
   /** the best professional standing she ever held while genuinely ranked. */
   bestWtaRank: number | null
   bestItfRank: number | null
-  /** the advertising house – «часов за 20к», its own clock and its own gate. */
+  /** the advertising post – «часов за 20к», its own clock and its own gate. */
   adLettersRaised: number
   adSigned: number
+  /** ⭐ round 29 part two #19 – which HOUSES of the advertising ladder ever wrote, and which were
+   *  taken. A rung nobody reaches is not shipped, so these two are what turn a catalogue into a
+   *  list somebody actually sees. */
+  adRungsWritten: AdTier[]
+  adRungsSigned: AdTier[]
+  /** ⭐ round 29 part two #20 – one reading a season of what the last 52 weeks COST her, tagged with
+   *  the professional standing she held when it was taken. The denominator of the sizing rule. */
+  outgoingsByRank: { rank: number; cents: number }[]
+  /** ⭐ round 29 part two #12 – every sponsor window this career lived through and what the post
+   *  did in it. */
+  winters: Winter[]
   /** what the sponsors actually banked over the career, gross of her cut. */
   sponsorIncomeCents: number
   /** the single largest sponsor cheque the career ever received. */
@@ -98,7 +125,12 @@ const APPEARANCE_RE = /^Appearance fee – /
 const BONUS_RE = /^Sponsor bonus – /
 
 /** Sign the strongest live letter in the inbox, kit or advertising, the week it lands. */
-function answerThePost(world: WorldState, signedRungs: Set<SponsorTier>, adSigned: { n: number }): void {
+function answerThePost(
+  world: WorldState,
+  signedRungs: Set<SponsorTier>,
+  adSigned: { n: number },
+  adSignedRungs: Set<AdTier>,
+): void {
   const live = world.offers.filter((o) => (o.kind === 'kit' || o.kind === 'ad') && isOfferLive(o, world.week))
   if (live.length === 0) return
   const kit = live.filter((o) => o.kind === 'kit')
@@ -109,7 +141,12 @@ function answerThePost(world: WorldState, signedRungs: Set<SponsorTier>, adSigne
   try {
     acceptOffer(world, target.id)
     if (target.kind === 'kit') signedRungs.add((target.terms as KitOfferTerms).tier)
-    else adSigned.n++
+    else {
+      adSigned.n++
+      // An ad letter written before the ladder carries no tier; every one of those is the watch
+      // rung by construction, which is the same exact fallback `OfferLetter` reads.
+      adSignedRungs.add((target.terms as AdOfferTerms).tier ?? 'watch')
+    }
   } catch {
     // A career that has ended – or a deal that is already spoken for – refuses. That is the engine
     // re-validating, which is the point of asking it rather than deciding here.
@@ -120,9 +157,13 @@ function runCareer(preset: Preset, policy: Policy, index: number, weeks: number)
   const { world, rng, seed } = openCareer(preset, index, policy)
   const cleared = new Set<SponsorTier>()
   const written = new Set<SponsorTier>()
+  const adWritten = new Set<AdTier>()
   const signed = new Set<SponsorTier>()
   const firstClearedWeek: Partial<Record<SponsorTier, number>> = {}
   const adSigned = { n: 0 }
+  const adSignedRungs = new Set<AdTier>()
+  const winters: Winter[] = []
+  const outgoingsByRank: { rank: number; cents: number }[] = []
   let bestCleared: SponsorTier | null = null
   let bestClearedWeek: number | null = null
   let bestWtaRank: number | null = null
@@ -146,6 +187,29 @@ function runCareer(preset: Preset, policy: Policy, index: number, weeks: number)
     // THE GATE, asked only on the weeks it can produce anything. A standing held in April is not a
     // rung reached: `raiseKitOffers` refuses outside the window, so counting it would inflate every
     // figure below with standings no brand was ever in a position to read.
+    // ⭐⭐ THE WINTER CENSUS – round 29 part two #12, taken on the window's OPENING week and BEFORE
+    // this winter's own letters exist, which is the only reading `raiseKitOffers` itself takes.
+    if (isSponsorWindowWeek(world.week) && sponsorWindowOpensAt(world.week) === world.week) {
+      const before = world.offers.filter((o) => o.week < world.week)
+      const spoken = seasonSpokenFor(before, world.week)
+      const spokenBy = spoken ? ((spoken.terms as KitOfferTerms).tier ?? null) : null
+      const ladder = windowLadder(standing)
+      winters.push({
+        week: world.week,
+        spokenBy,
+        blockedTop:
+          spokenBy && ladder.length > 0 && rungIndex(ladder[0]) > rungIndex(spokenBy) ? ladder[0] : null,
+        letters: 0,
+      })
+      // ...and what the season just gone COST, tagged with the standing she holds today. One reading
+      // a year, so a band is counted once per season rather than fifty-two times.
+      if (standing.wtaRanked && world.week >= WEEKS_PER_YEAR) {
+        outgoingsByRank.push({
+          rank: standing.wtaRank,
+          cents: financeWindow(world.financeWeeks, world.week - (WEEKS_PER_YEAR - 1)).expenseCents,
+        })
+      }
+    }
     if (isSponsorWindowWeek(world.week)) {
       for (const tier of LADDER) {
         if (!standingClears(standing, tier)) continue
@@ -161,6 +225,9 @@ function runCareer(preset: Preset, policy: Policy, index: number, weeks: number)
     // raised by any path is seen.
     for (const o of world.offers) {
       if (o.kind === 'kit') written.add((o.terms as KitOfferTerms).tier)
+      // An ad letter written before the ladder carries no tier; every one of those is the watch rung
+      // by construction, so the fallback is exact rather than a guess (`AdOfferTerms.tier`).
+      if (o.kind === 'ad') adWritten.add((o.terms as AdOfferTerms).tier ?? 'watch')
     }
     // ⚠ WHAT THE BRANDS PAID, SCANNED AT THE WEEK IT IS WRITTEN AND NOT AT THE END. `world.events`
     // is pruned at 400 ROWS, so an index that only ever grows walks off the end of a career this
@@ -177,11 +244,17 @@ function runCareer(preset: Preset, policy: Policy, index: number, weeks: number)
         biggestChequeText = row.text
       }
     }
-    answerThePost(world, signed, adSigned)
+    answerThePost(world, signed, adSigned, adSignedRungs)
     if (world.ending) break
   }
 
   const adLetters = world.offers.filter((o) => o.kind === 'ad')
+  // Kit letters are never pruned, so each winter's own count is a complete reconstruction.
+  for (const w of winters) {
+    w.letters = world.offers.filter(
+      (o) => o.kind === 'kit' && o.state !== 'info' && o.week >= w.week && o.week < w.week + 5,
+    ).length
+  }
   return {
     preset: preset.label,
     policy: policy.label,
@@ -198,6 +271,10 @@ function runCareer(preset: Preset, policy: Policy, index: number, weeks: number)
     bestItfRank,
     adLettersRaised: adLetters.length,
     adSigned: adSigned.n,
+    adRungsWritten: AD_TIERS.filter((t) => adWritten.has(t)),
+    adRungsSigned: AD_TIERS.filter((t) => adSignedRungs.has(t)),
+    outgoingsByRank,
+    winters,
     sponsorIncomeCents,
     biggestChequeCents,
     biggestChequeText,
@@ -399,10 +476,75 @@ export function main(argv: string[] = process.argv.slice(2)): void {
 
   const adRows = rows.filter((r) => r.adLettersRaised > 0)
   console.log(
-    `\n  the advertising house (${ECONOMY.advertising.brand}, ${usd(ECONOMY.advertising.cashCents)}, age ${ECONOMY.advertising.fromAgeYears}+ and WTA #${ECONOMY.advertising.maxWtaRank}):` +
+    `\n  the advertising post (age ${ECONOMY.advertising.fromAgeYears}+):` +
       ` ${adRows.length}/${n} careers written to ${pct(adRows.length, n)}, ` +
       `${rows.reduce((s, r) => s + r.adLettersRaised, 0)} letters in all`,
   )
+
+  // ⭐⭐ ROUND 29 PART TWO #19 – THE LIST HE ASKED FOR, AND WHETHER ANYBODY EVER SEES IT.
+  //
+  // «я не увидел наш список спонсоров для съемок и прочего, не спортивных. С ними что и на каких
+  // уровнях и что дают… Хочу увидеть их список и что дают.» Printed here rather than in the docs so
+  // it can never go stale against the catalogue, and beside a REACH column, because a rung nobody
+  // reaches is not content – the same discipline the kit table above keeps.
+  console.log('\n  ⭐ THE ADVERTISING LADDER – the list, what it pays, and how often it is actually seen:')
+  console.log('    rung      house              trade                       gate       fee   shoots   written   signed')
+  for (const t of AD_TIERS) {
+    const h = ECONOMY.advertising.houses[t]
+    const written = rows.filter((r) => r.adRungsWritten.includes(t)).length
+    const signed = rows.filter((r) => r.adRungsSigned.includes(t)).length
+    console.log(
+      `    ${t.padEnd(9)} ${h.brand.padEnd(18)} ${h.trade.padEnd(27)} ` +
+        `WTA #${String(h.maxWtaRank).padStart(3)} ${usd(h.cashCents).padStart(9)} ${String(h.shootWeeksPerTerm).padStart(6)}` +
+        `   ${String(written).padStart(3)} ${pct(written, n)}  ${String(signed).padStart(3)} ${pct(signed, n)}`,
+    )
+  }
+
+  // ...AND THE SIZING RULE, MEASURED. A rung is one fifth of the OUTGOINGS of the stage it opens
+  // for (`ECONOMY.advertising.houses`), so the denominator has to be printed with the numerator or
+  // the rule is unfalsifiable. One reading a season, on the sponsor window's own opening week.
+  console.log('\n  ...and what a season COSTS in each of those bands – the denominator the fees are a fifth of:')
+  console.log('    band            n   median outgoings   1/5 of it   this rung pays   realised share')
+  const bandOf: { tier: AdTier; label: string; lo: number; hi: number }[] = [
+    { tier: 'watch', label: 'WTA 51-200', lo: 51, hi: ECONOMY.advertising.houses.watch.maxWtaRank },
+    { tier: 'campaign', label: 'WTA 11-50 ', lo: 11, hi: ECONOMY.advertising.houses.campaign.maxWtaRank },
+    { tier: 'house', label: 'WTA 1-10  ', lo: 1, hi: ECONOMY.advertising.houses.house.maxWtaRank },
+  ]
+  for (const b of bandOf) {
+    const seen = rows.flatMap((r) => r.outgoingsByRank.filter((o) => o.rank >= b.lo && o.rank <= b.hi).map((o) => o.cents))
+    seen.sort((x, y) => x - y)
+    if (seen.length === 0) {
+      console.log(`    ${b.label}     0   –`)
+      continue
+    }
+    const med = seen[Math.floor(seen.length / 2)]
+    const fee = ECONOMY.advertising.houses[b.tier].cashCents
+    console.log(
+      `    ${b.label} ${String(seen.length).padStart(4)}   ${usd(med).padStart(16)}   ${usd(Math.round(med / 5)).padStart(9)}   ` +
+        `${usd(fee).padStart(14)}   ${((100 * fee) / med).toFixed(1)}%`,
+    )
+  }
+
+  // ⭐⭐ ROUND 29 PART TWO #12 – WHY A WINTER PRODUCES NO KIT LETTER, and how often a BIGGER house
+  // was standing behind the closed door. The owner: «открытое сейчас в вашем ящике продление
+  // Baseline закроет и следующую зимнюю почту… там без спонсора грустновато немного живется».
+  const winters = rows.flatMap((r) => r.winters)
+  const shut = winters.filter((w) => w.letters === 0)
+  const spoken = winters.filter((w) => w.spokenBy !== null)
+  const blocked = winters.filter((w) => w.blockedTop !== null)
+  console.log(`\n  ⭐ THE WINTERS – ${winters.length} sponsor windows lived through:`)
+  console.log(`    produced no kit letter at all      ${String(shut.length).padStart(4)} ${pct(shut.length, winters.length)}`)
+  console.log(`    the season ahead was already promised ${String(spoken.length).padStart(2)} ${pct(spoken.length, winters.length)}` +
+    `   (letters raised anyway: ${spoken.filter((w) => w.letters > 0).length})`)
+  console.log(`    ...with a STRICTLY STRONGER rung cleared and turned away ${String(blocked.length).padStart(4)} ${pct(blocked.length, winters.length)}`)
+  const byStep = new Map<string, number>()
+  for (const w of blocked) {
+    const k = `${w.spokenBy} -> ${w.blockedTop}`
+    byStep.set(k, (byStep.get(k) ?? 0) + 1)
+  }
+  for (const [k, v] of [...byStep.entries()].sort((a, b) => b[1] - a[1])) {
+    console.log(`      ${k.padEnd(24)} ${String(v).padStart(4)}`)
+  }
 
   const paid = rows.filter((r) => r.sponsorIncomeCents > 0)
   console.log(`\n  what the brands paid in CASH over a career (retainer + appearance + bonus), ${paid.length}/${n} careers received any:`)

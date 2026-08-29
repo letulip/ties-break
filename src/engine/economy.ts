@@ -12,7 +12,24 @@
 // look-ups or post-draw scalings that leave the draw sequence untouched.
 
 import { rngFromSeed, pickInt, type Rng } from './rng'
-import type { CoachTier, FamilyBackground, InjurySeverity, KitGrade, KitLine, PlayStyle } from '../shared/protocol'
+import type { AdTier, CoachTier, FamilyBackground, InjurySeverity, KitGrade, KitLine, PlayStyle } from '../shared/protocol'
+
+/** ONE RUNG OF THE ADVERTISING LADDER (round 29 part two #19/#20) – see `ECONOMY.advertising.houses`
+ *  for the sizing rule, the measured shares it is built from and why it stops at three rows. Named
+ *  here rather than inlined so `adTermsFor` and the reach bench read one shape. */
+export interface AdHouse {
+  brand: string
+  /** the opening clause of the house's own letter ("We make watches") */
+  trade: string
+  /** the professional standing at or inside which this house writes */
+  maxWtaRank: number
+  /** the one-time fee, in cents, on signature */
+  cashCents: number
+  /** how long her face is theirs, in weeks from the signature */
+  termWeeks: number
+  /** how many shoot weeks the term asks for */
+  shootWeeksPerTerm: number
+}
 import type { TierId } from './season/types'
 // ⚠ THE SEASON LENGTH COMES FROM THE SHARED DATES LEAF, NOT FROM season/calendar.ts – see the note
 // on `upliftHorizonWeeks` below for the browser crash the old edge caused. `shared/dates.ts` imports
@@ -975,6 +992,59 @@ export const ECONOMY = {
        *  rather than swept, and travel is the biggest line in the game, so it is the first knob to
        *  put through econ-bench when the ladder has run for a while. */
       travelShare: 0.25,
+
+      // ===============================================================================================
+      // ⭐⭐ ROUND 29 PART TWO #5 – THE CASH THIS RUNG NEVER HAD, AND IT IS THE OWNER'S RULING ON A
+      // DEFECT THE SPEC ITSELF PREDICTED AND NOBODY EVER TOOK TO HIM.
+      // ===============================================================================================
+      //
+      // HIS WORDS: «мировые топы должны иметь все возможности достучаться до топовой спортсменки.»
+      //
+      // WHAT WAS WRONG. `global` is sorted ABOVE `tour` – the chain is national 350 > tour 200 >
+      // global 87 > premium 50 > icon 10 – and it paid LESS: the same $5,000 of kit and the same 25%
+      // of the fare, but NO retainer against tour's $6,000 a season and NO result bonus against
+      // tour's 20% of every W75+ cheque, while locking THREE seasons against two. A parent who signed
+      // the stronger-looking letter on sight was strictly worse off, which is the exact inversion
+      // `windowLadder`'s own header promises cannot happen («signing on sight is always safe and
+      // waiting always optional»). `tools/sponsor-ladder-reach.ts` prints it as a ⚠ line, and
+      // `tests/round29p2-ladder-monotone.test.ts` is now the guard that stops it recurring – written
+      // as a property over the WHOLE ladder rather than as a case about this rung.
+      //
+      // ⚠⚠ AND IT WAS PREDICTED AT DESIGN TIME. `docs/specs/act2-pro-tour.md` §7, verbatim: «`tour`'s
+      // WTA ≤ 200 sits deliberately BELOW global's 31 in strength while above it in kind, which is
+      // the one thing to resolve when it is built … an owner's call at build time, not now.» The call
+      // was never taken and the rungs shipped side by side. This is that call, finally made, and the
+      // spec is amended where it stood open.
+      //
+      // ⚠ THE FIX IS THE TERMS AND NOT THE GATE, on his instruction. Nothing about who Play Beyond
+      // writes to moves by a single rank; what moves is what the letter is worth when it comes.
+      /** ⭐ THE RETAINER, AND IT IS READ OFF THE SPEC'S OWN BAND RATHER THAN PICKED. §7 gives the
+       *  professional retainer a «~$3–8k/yr» band and `tour` takes the MIDDLE of it ($1,500 a
+       *  quarter = $6,000 a season). This rung takes the TOP of the same band – $2,000 a quarter =
+       *  $8,000 a season – which is the smallest honest number that is strictly better than the rung
+       *  below rather than merely equal to it.
+       *
+       *  ⚠ STRICTLY BETTER AND NOT MERELY EQUAL, ON PURPOSE. Equal money would still leave this rung
+       *  the worse deal, because it locks a THIRD season and a running deal turns the post away – so
+       *  a parent who signed it would give up a winter of letters for nothing. (Round 29 part two
+       *  #12 narrows that cost: a strictly stronger rung may now write while a deal runs. It does not
+       *  remove it – `premium` may write over this deal, `tour` may not.)
+       *
+       *  ⚠ AND IT STAYS INSIDE THE CHAIN ABOVE IT: `premium`'s $7,500 a quarter is still §7's
+       *  «retainer ×5–10» of `tour`, which is the relationship that clause names, and $2,000 sits
+       *  between the two without disturbing either. */
+      retainerCents: 2_000_00,
+      /** ⭐ THE RESULT BONUS, AND HERE THE HONEST NUMBER IS EXACTLY TOUR'S. The share ladder is
+       *  20% → 25% → 30% across tour → premium → icon and the reach is w75 → w50 → w50; inserting a
+       *  fourth value between 20 and 25 would be inventing a number to fill a gap the design does not
+       *  have. Taking tour's pair verbatim keeps the whole chain non-decreasing (20 / 20 / 25 / 30,
+       *  w75 / w75 / w50 / w50) and adds nothing to retune.
+       *
+       *  ⚠ WHY THE MONEY LADDER STEPS ON THE RETAINER AND NOT HERE. A retainer is a promise about
+       *  HER; a result bonus is a share of a cheque she has to go and win. This rung's own step up
+       *  over `tour` is a longer, safer term, so the term-shaped money is where its step belongs. */
+      bonusShare: 0.2,
+      bonusFromTier: 'w75' as TierId,
     },
 
     // --- THE PROFESSIONAL RUNGS: tour / premium / icon (W3-ACT2, act2-pro-tour.md section 7) -----
@@ -1387,7 +1457,8 @@ export const ECONOMY = {
   } as Record<'coach' | 'masseur', { titleBps: number; finalBps: number }>,
 
   // =================================================================================================
-  // THE ADVERTISING DEAL (round 24 item 2, docs/plans/the-face-and-the-court.md §6 STEPS 1-2)
+  // THE ADVERTISING LADDER (round 24 item 2, docs/plans/the-face-and-the-court.md §6 STEPS 1-2;
+  // the three rungs are round 29 part two #19/#20)
   // =================================================================================================
   //
   // THE OWNER: «Рекламные контракты будем добавлять какие-то?» – and the plan's answer is that the
@@ -1397,11 +1468,17 @@ export const ECONOMY = {
   // TIME (the shoot weeks below, §4a) – and the build stops there on the plan's own order: fame
   // (step 3+) is paused upstream with the private life.
   //
-  // ⚠ WHERE THE GATE SITS IS THE PLAN'S OWN MEASUREMENT (§3, the owner's two careers): at Ines'
+  // ⚠ WHERE THE GATE SITS WAS THE PLAN'S OWN MEASUREMENT (§3, the owner's two careers): at Ines'
   // level (24, interest $251,439 a year against $220,000 of ALL outgoings) an advertising cheque is
   // noise; at Alice's (18, interest $3,235 against $64,000 of outgoings) it is real money against a
-  // real budget. So the deal belongs EARLY – mid-career, where the budget is still tight – which
+  // real budget. So the deal belonged EARLY – mid-career, where the budget is still tight – which
   // inverts the instinct to gate it on the top ten.
+  //
+  // ⚠⚠ AND ROUND 29 PART TWO #20 IS THE OTHER HALF OF THAT ARGUMENT, WHICH NOBODY EVER BUILT. §3 is
+  // right that a FIXED cheque decays into noise as she climbs; the conclusion it drew – so gate it
+  // low and let it decay – only followed because there was one row. A rung sized on the stage it
+  // opens for does not decay, and the ladder is on `houses` below, with the owner's own words, the
+  // sourced comparison it was checked against, and the measured shares it is built from.
   advertising: {
     /** The age the owner scoped advertising mechanics to («какие у нас могут быть механики этих
      *  контрактов дополнительные от 18+ лет начиная и дальше»). Eighteen is already the engine's
@@ -1409,49 +1486,166 @@ export const ECONOMY = {
      *  over by 18.92 for every birth month, the junior rungs shut – so the boundary exists and this
      *  reads the same clock (`kidAgeYears`, the one-clock ruling of 09.08). */
     fromAgeYears: 18,
-    /** THE RESULTS BAR: a counting W standing inside the world's top 200. Two hundred is the number
-     *  the game already uses for "the first professional rung that pays cash" – the tour rung's
-     *  `maxWtaRank` (Baseline Athletic, the first retainer) – so a non-endemic brand notices her
-     *  exactly when the first endemic cash does: a measured boundary, not an invented one. Its OWN
-     *  constant rather than a read of `sponsorship.tour`, the `appearanceFromTier` instinct: a kit
-     *  retune must never silently retune advertising.
+    /** ⭐⭐⭐ ROUND 29 PART TWO #19/#20 – THE LADDER, WHICH IS WHAT THIS CATALOGUE DID NOT HAVE.
      *
-     *  ⚠ WHY NOT TOP-100 OR TIGHTER: `development.ageCurve` is calibrated «first points 17-18,
-     *  top-100 about 4.5 years later» – a top-100 bar would first clear at ~22, Ines territory,
-     *  where §3 measured the cheque as noise. Top-200 is crossed on the way up, at 18-20, which is
-     *  Alice's stage – the years the plan says the deal is worth building for. And there is
-     *  deliberately no UPPER cutoff: a top-10 girl still qualifies, her cheque is simply noise, which
-     *  is §3's claim and not a bug. The `wtaRanked` guard is the ladder's own: everybody without a
-     *  counting W result ties at the floor of that table, so a position there is not a standing. */
-    maxWtaRank: 200,
-    /** THE FEE, in cents, once, on signature. Sized against the plan's §3 numbers: about 31% of
-     *  Alice's-stage ANNUAL outgoings ($64,000) – felt, not budget-solving; more than three times
-     *  the tour rung's cash for a season ($1,500/qtr), because «cash, and a lot of it» is the whole
-     *  difference between this letter and the kit ladder at her rung; and under the premium rung's
-     *  $30,000-a-year retainer, so mid-career the endemic ladder still out-earns one photograph.
-     *  At Ines' stage it is 8% of her interest alone – noise, exactly as §3 predicts. Its measured
-     *  counterweight is the shoot weeks below: two weeks a term that recover like travel weeks,
-     *  benched in docs/specs/ad-shoot-recovery-2026-08.md. */
-    cashCents: 20_000_00,
-    /** Twelve months of her face, from the week the paper is signed. While the term runs no second
-     *  advertising letter arrives – one deal at a time, the plan's §4.1 – and it survives a college
-     *  enrolment by simply running out on its own clock (plan §4c: no penalty, ever; a shoot week
-     *  the freeze swallows lapses silently with it). */
-    termWeeks: 52,
-    /** ⭐ STEP 2 (§4a, owner ruling 22.08: «съемки должны быть иногда и это надо как-то прописывать
-     *  и отражать потом в свободных неделях, соответственно и восстановления на тех неделях должно
-     *  быть чуть меньше», sized and approved: «утверждаю, для начала точно ок») – HOW MANY SHOOT
-     *  WEEKS the term asks. Exactly two for Quiet Hour, IN-SEASON by construction (§5.2's own
-     *  answer: an off-season cost is free money wearing a cost's clothes), named in the letter at
-     *  signature so the player plans the season around them. Frozen onto `AdOfferTerms.shootCount`
-     *  at arrival. The bigger asks – campaigns 3-4, global houses 5-6, a cap of 6 a year – are
-     *  RECORDED in the plan doc only and deliberately not built: this catalogue has one house.
+     *  HIS TWO QUESTIONS, and the second one invited correction: «я не увидел наш список спонсоров
+     *  для съемок и прочего, не спортивных. С ними что и на каких уровнях и что дают… Хочу увидеть
+     *  их список и что дают.» and «предлагать контракт за 20к долларов на год для 100 и выше ракетки
+     *  мира выглядит весьма сомнительно, как мне кажется, поправь меня, если я ошибаюсь.»
      *
-     *  The COST of a shoot week is not a number here on purpose: it is a SHAPE, the owner's own
-     *  design – the week recovers like a travel week (`condition.matchWeekRecoveryBase`) rather
-     *  than a rest week (`condition.recoveryBase` + the slider). One modifier on an existing weekly
-     *  figure, no second calendar, no blocking: see `accrueCondition`. */
-    shootWeeksPerTerm: 2,
+     *  ⚠ HE IS RIGHT, AND THE MEASUREMENT SAYS SO MORE SHARPLY THAN HE DID – see
+     *  `docs/research/off-court-money.md`, which reads the WTA's own prize-money list and the Forbes
+     *  2025 earnings table rather than quoting either at second hand. In the real sport off-court
+     *  money is not flat and it is not ordered by rank: the woman with the second-largest endorsement
+     *  income in 2025 was the THIRTIETH-largest prize-money earner ($21M off court against $1.6M on
+     *  it), and no non-endemic contract value has ever been published for anybody outside the top 25
+     *  at all. What was shipped here was ONE house, $20,000, with a floor at WTA #200 and **no
+     *  ceiling of any kind** – so the world #21 in his own save was offered exactly what the #199 is.
+     *
+     *  ⭐ AND THE $20,000 ITSELF SURVIVES. The research does not contradict it at the rung it was
+     *  written for; what it contradicts is the same cheque still arriving eleven rungs later. So this
+     *  is a LADDER and not a retune: the bottom row is the shipped deal, unchanged to the cent.
+     *
+     *  THE SIZING PRINCIPLE IS THE ONE THE SHIPPED COMMENT ALREADY STATED – a rung is a SHARE OF THE
+     *  OUTGOINGS OF THE STAGE IT OPENS FOR, not an absolute sum – with one correction it needed. The
+     *  old comment sized $20,000 as «about 31% of Alice's-stage ANNUAL outgoings ($64,000)», read
+     *  off ONE career; measured across 108 careers x 780 weeks (`tools/sponsor-ladder-reach.ts`) the
+     *  median annual outgoings of a season spent in that band are **$100,435**, so the shipped rung
+     *  is really **one fifth**, not a third. One fifth is therefore the rule, and it is a rule the
+     *  shipped number obeys rather than a rule invented to justify new ones:
+     *
+     *    band            median annual outgoings   1/5 of it   this catalogue   realised share
+     *    WTA 51-200            $100,435             $20,087       $20,000           19.9%
+     *    WTA 11-50             $254,972             $50,994       $50,000           19.6%
+     *    WTA 1-10              $348,855             $69,771       $70,000           20.1%
+     *
+     *  ⚠ A CONSTANT SHARE IS A DECISION AND IT OVERRULES §3 OF THE PLAN, WHICH SAID THIS MECHANIC
+     *  ONLY MATTERS EARLY. That was the right reading of a catalogue with one row: a fixed cheque
+     *  does decay into noise as she climbs. A rung sized on the stage it opens for cannot – it is the
+     *  same fifth of the same budget at every stage, which is what «felt, not budget-solving» has to
+     *  mean once there is more than one rung. It is deliberately NOT the real curve, which is convex
+     *  to the point of absurdity (Gauff: $25M off court against $8M on it); a game that copied that
+     *  would make the top rung solve the endgame, and the endgame is not short of money.
+     *
+     *  ⚠ AND THE ENDEMIC LADDER STILL OUT-EARNS THE PHOTOGRAPH AT EVERY PROFESSIONAL RUNG, which is
+     *  the relationship the shipped comment named and this one keeps: $50,000 against `premium`'s
+     *  $30,000 retainer + $15,000 appearance fee + $8,000 of kit + half the fares + 25% bonuses;
+     *  $70,000 against `icon`'s $150,000 retainer + $40,000 appearance fees + 30% bonuses.
+     *
+     *  ⚠⚠ THE GATES ARE THE KIT LADDER'S OWN PROFESSIONAL CUTS, READ AND NOT SHARED. 200 / 50 / 10
+     *  are `tour` / `premium` / `icon`'s `maxWtaRank`, which is the shipped rung's own derivation
+     *  («a non-endemic brand notices her exactly when the first endemic cash does») extended upward
+     *  with the same argument. They are written out here rather than imported, exactly as the
+     *  original 200 was and for the same reason: a kit retune must never silently retune advertising.
+     *  ⭐ And they are REACHED – `tools/sponsor-ladder-reach.ts` measures 45% of careers ever inside
+     *  WTA #50 and 29% ever inside #10, so neither new rung is a row nobody sees.
+     *
+     *  ⚠⚠ THE SHOOT WEEKS ARE THE PLAN'S RECORDED LADDER, AND THEY ARE WHY IT STOPS AT THREE ROWS.
+     *  `the-face-and-the-court.md` §4a-1 wrote down «bigger campaigns would carry 3-4 shoot weeks, a
+     *  global house 5-6, and the sum of live deals must never exceed 6 shoot weeks a year». Taking
+     *  the top of each band – 2 / 4 / 6 – spends the whole annual allowance on the top rung, so the
+     *  cap is STRUCTURAL rather than a rule somebody has to remember: one deal at a time
+     *  (`adSpokenFor`), every term exactly one year (`termWeeks: 52`), so the most she can ever owe
+     *  in a year is the biggest single house's six. A fourth rung would have nothing left to ask for.
+     *
+     *  ⭐ WHAT THE BIGGEST HOUSE ACTUALLY COSTS HER, since round 29 #3 made a shoot on a tournament
+     *  week a four-way decision: SIX of her 49 in-season weeks, 12% of the playing year, each
+     *  recovering like a travel week instead of a rest week (measured at -9 condition per deficit
+     *  shoot week, `docs/specs/ad-shoot-recovery-2026-08.md`) and each one a week she must either
+     *  keep clear or pay `clashConditionPerDay` x 7 to play through. The money reads the same way
+     *  from that side: $10,000, $12,500 and $11,667 per shoot week across the three rungs – the same
+     *  price for the same week, which is the cross-check that says the two sizings agree. (It dips
+     *  slightly at the top because the primary rule is the share and it is deliberately not bent to
+     *  make a secondary reading tidy.) */
+    houses: {
+      watch: {
+        /** THE HOUSE THAT WRITES FIRST: a watchmaker – the plan's own first example of non-endemic
+         *  («a watch, a bank, an airline, a cosmetics house»). Fictional, like every brand on the
+         *  ladder above, and deliberately nothing constructible into a real company or trademark. */
+        brand: 'Quiet Hour',
+        /** What it introduces itself as making – the letter's opening clause, in the house's own
+         *  voice. It was hard-coded into `OfferLetter.vue` while there was one house and could not
+         *  survive a second. */
+        trade: 'We make watches',
+        /** THE RESULTS BAR: a counting W standing inside the world's top 200. Two hundred is the
+         *  number the game already uses for "the first professional rung that pays cash" – the tour
+         *  rung's `maxWtaRank` (Baseline Athletic, the first retainer) – so a non-endemic brand
+         *  notices her exactly when the first endemic cash does: a measured boundary, not an
+         *  invented one.
+         *
+         *  ⚠ WHY NOT TOP-100 OR TIGHTER: `development.ageCurve` is calibrated «first points 17-18,
+         *  top-100 about 4.5 years later» – a top-100 bar would first clear at ~22, and this rung is
+         *  written for the stage where the budget is still tight. Top-200 is crossed on the way up,
+         *  at 18-20, which is Alice's stage – the years the plan says the deal is worth building
+         *  for. The `wtaRanked` guard is the ladder's own: everybody without a counting W result
+         *  ties at the floor of that table, so a position there is not a standing.
+         *
+         *  ⚠⚠ AND «THERE IS DELIBERATELY NO UPPER CUTOFF … HER CHEQUE IS SIMPLY NOISE, WHICH IS §3'S
+         *  CLAIM AND NOT A BUG» IS THE SENTENCE ROUND 29 PART TWO #20 OVERTURNED. It was a defensible
+         *  reading of a one-row catalogue and it is not a defensible ladder: `adRungFor` now reads
+         *  this table strongest-first, so a top-10 girl hears from the top-10 house and this rung
+         *  writes to the band it was written for. */
+        maxWtaRank: 200,
+        /** THE FEE, in cents, once, on signature. ⭐ UNCHANGED BY THE LADDER, TO THE CENT – it is
+         *  one fifth of the measured median outgoings of its own band ($100,435), which is the rule
+         *  the two rungs above derive from rather than a number this rung was moved to fit. More
+         *  than three times the tour rung's cash for a season ($1,500/qtr), because «cash, and a lot
+         *  of it» is the whole difference between this letter and the kit ladder at her rung; and
+         *  under the premium rung's $30,000-a-year retainer, so mid-career the endemic ladder still
+         *  out-earns one photograph. Its measured counterweight is the shoot weeks below: two weeks
+         *  a term that recover like travel weeks, benched in
+         *  docs/specs/ad-shoot-recovery-2026-08.md. */
+        cashCents: 20_000_00,
+        /** Twelve months of her face, from the week the paper is signed. While the term runs no
+         *  second advertising letter arrives – one deal at a time, the plan's §4.1 – and it survives
+         *  a college enrolment by simply running out on its own clock (plan §4c: no penalty, ever; a
+         *  shoot week the freeze swallows lapses silently with it). */
+        termWeeks: 52,
+        /** ⭐ STEP 2 (§4a, owner ruling 22.08: «съемки должны быть иногда и это надо как-то
+         *  прописывать и отражать потом в свободных неделях, соответственно и восстановления на тех
+         *  неделях должно быть чуть меньше», sized and approved: «утверждаю, для начала точно ок») –
+         *  HOW MANY SHOOT WEEKS the term asks. Exactly two for Quiet Hour, IN-SEASON by construction
+         *  (§5.2's own answer: an off-season cost is free money wearing a cost's clothes), named in
+         *  the letter at signature so the player plans the season around them. Frozen onto
+         *  `AdOfferTerms.shootCount` at arrival.
+         *
+         *  The COST of a shoot week is not a number here on purpose: it is a SHAPE, the owner's own
+         *  design – the week recovers like a travel week (`condition.matchWeekRecoveryBase`) rather
+         *  than a rest week (`condition.recoveryBase` + the slider). One modifier on an existing
+         *  weekly figure, no second calendar, no blocking: see `accrueCondition`. */
+        shootWeeksPerTerm: 2,
+      },
+      campaign: {
+        /** An airline – the plan's third example. Invented, like every other name in this file. */
+        brand: 'Northmere Air',
+        trade: 'We fly people across the world',
+        /** `sponsorship.premium.maxWtaRank`'s figure, read and not imported: the top 50 is where the
+         *  tour starts requiring her presence and where the endemic ladder starts paying real money,
+         *  so it is also where a house stops wanting a face and starts wanting a campaign. */
+        maxWtaRank: 50,
+        /** One fifth of the measured median outgoings of the WTA 11-50 band ($254,972). */
+        cashCents: 50_000_00,
+        /** A year, like every rung – which is what makes the plan's «6 shoot weeks a year» cap
+         *  structural rather than a rule to remember. */
+        termWeeks: 52,
+        /** The top of the plan's recorded «campaigns 3-4». */
+        shootWeeksPerTerm: 4,
+      },
+      house: {
+        /** A cosmetics house – the plan's fourth example, and the biggest non-endemic category in
+         *  the real women's game. Invented; not constructible into any real company. */
+        brand: 'Rivelle',
+        trade: 'We make perfume',
+        /** `sponsorship.icon.maxWtaRank`'s figure, read and not imported. */
+        maxWtaRank: 10,
+        /** One fifth of the measured median outgoings of the WTA 1-10 band ($348,855). */
+        cashCents: 70_000_00,
+        termWeeks: 52,
+        /** The top of the plan's recorded «a global house 5-6», which is also its whole annual cap –
+         *  see the block comment above for why that is what stops the ladder at three rungs. */
+        shootWeeksPerTerm: 6,
+      },
+    } as Record<AdTier, AdHouse>,
     /** The earliest a shoot may land after the signature, in weeks – the studio is booked about a
      *  month out, and it is the same courtesy the letter's own decide weeks extend: a cost the
      *  player can SEE coming is a plan, a cost that lands the week he agreed to it is a trap. Engine
@@ -1510,10 +1704,6 @@ export const ECONOMY = {
      *  weeks she is playing, which is the exact fault the 01.08 move into the off-season fixed.
      *  Stated on the paper and enforced by `expireOffers`. */
     decideWeeks: 5,
-    /** THE HOUSE THAT WRITES: a watchmaker – the plan's own first example of non-endemic («a watch,
-     *  a bank, an airline, a cosmetics house»). Fictional, like every brand on the ladder above,
-     *  and deliberately nothing constructible into a real company or trademark. */
-    brand: 'Quiet Hour',
   },
 
   // Season-Life condition accumulator (0..100, 100 = fresh). Pure INTEGER arithmetic –

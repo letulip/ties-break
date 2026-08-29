@@ -711,9 +711,9 @@ describe('R2-13 D – the shell offers the span in exactly the states the engine
       fromWeek: clash.world.week - 5,
       untilWeek: clash.world.week + 40,
       terms: {
-        brand: ECONOMY.advertising.brand,
-        cashCents: ECONOMY.advertising.cashCents,
-        termWeeks: ECONOMY.advertising.termWeeks,
+        brand: ECONOMY.advertising.houses.watch.brand,
+        cashCents: ECONOMY.advertising.houses.watch.cashCents,
+        termWeeks: ECONOMY.advertising.houses.watch.termWeeks,
         shootCount: 2,
         shootWeeks: [clash.world.week + 1],
       },

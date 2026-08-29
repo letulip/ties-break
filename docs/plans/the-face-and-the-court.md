@@ -126,6 +126,13 @@ The owner read step 1's letter line «no appearances scheduled» and ruled it de
 - ⚠ **THE LADDER, RECORDED ONLY – nothing below this line is built**: bigger campaigns would carry
   3-4 shoot weeks, a global house 5-6, and the sum of live deals must never exceed **6 shoot weeks
   a year**. When a second house ever arrives, it takes these numbers from here, not from a guess.
+  ⭐⭐ **BUILT, 29.08 (round 29 part two #19/#20), and it did take these numbers from here.** The
+  catalogue is `ECONOMY.advertising.houses`: **Quiet Hour** (a watchmaker, WTA ≤ 200, $20,000,
+  2 shoots) – *unchanged to the cent* – **Northmere Air** (an airline, WTA ≤ 50, $50,000, 4 shoots)
+  and **Rivelle** (a cosmetics house, WTA ≤ 10, $70,000, 6 shoots). The top of each recorded band,
+  so the annual cap is **structural rather than a rule**: one deal at a time plus a one-year term
+  means the most she can ever owe in a year is the biggest single house's six, and a fourth rung
+  would have nothing left to ask for.
 - Bench + predicted-vs-measured: `docs/specs/ad-shoot-recovery-2026-08.md` (`npm run bench:adshoot`).
   The measured season: −9 condition on every deficit shoot week (the balanced rest week, forfeited),
   0 at the ceiling and on tournament collisions, 0 weeks lost, and an off-season landing impossible
@@ -202,8 +209,29 @@ whatever week a campaign notices her, so it cannot inherit «every letter dies w
 without leaving a decision open while she is playing. Pinned as a literal in `tests/ad-offer.test.ts`,
 measured from four different arrival weeks so a shared deadline cannot creep back in.
 
+⭐⭐ **AND §3'S CONCLUSION IS OVERTURNED BY ROUND 29 PART TWO #20 – read this before quoting it.**
+
+The owner, on the shipped rung: *«предлагать контракт за 20к долларов на год для 100 и выше ракетки
+мира выглядит весьма сомнительно, как мне кажется, поправь меня, если я ошибаюсь пожалуйста.»*
+He is right, and `docs/research/off-court-money.md` is the sourced answer.
+
+§3 said the deal only matters EARLY and therefore should be gated low and left to decay – and it
+drew that conclusion honestly from a catalogue with one row, where a fixed cheque genuinely does
+decay into noise. What it never considered is a rung sized on the stage it opens for, which does not.
+So the half of §3 that stands is the measurement (*at Ines' level a $20,000 cheque is noise*) and the
+half that falls is the design it implied (*so gate it low and accept that*). What the shipped code
+had was worse than either: a floor at WTA #200 and **no ceiling at all**, so the world #21 in his own
+save was offered exactly what the #199 is.
+
+⭐ **The number was never the defect.** Measured across 108 careers, $20,000 is 19.9% of the median
+annual outgoings of a season spent in the WTA 51–200 band – and the line is crossed at almost exactly
+the rank he named: 24–25% of a season's costs from #100 to #200, 13% inside the top 100. The ladder
+is **one fifth of the stage's outgoings**, at every rung, and `houses.watch` obeys it unchanged.
+
 ⚠ **STEPS 1-2 ARE A COMPLETE FEATURE.** Everything from 3 on is the second axis, and that is a much
-larger commitment – fame wants a surface, a fog rule and its own calibration.
+larger commitment – fame wants a surface, a fog rule and its own calibration. ⭐ The ladder above is
+NOT step 3: it is more rows of steps 1–2, gated on results exactly as they are. Fame is still unbuilt
+and still waits on the private life.
 
 ⚠ **AND THE PAUSE UPSTREAM (22.08):** the private life – fame's feeder and half of §2's claim – is
 paused by the owner until its own steps 1–2 exist. So steps 1–2 here are the only near-term

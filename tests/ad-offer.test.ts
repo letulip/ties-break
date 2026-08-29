@@ -53,7 +53,7 @@ import {
   type WorldState,
 } from '../src/engine/world'
 import { resumeMain } from '../src/engine/rng'
-import { activeAdDeal, adOfferId, adShootWeek, adSpokenFor, adWritesAt, chooseShootWeeks, expireOffers, hasLiveOffer, isOfferLive, raiseAdOffer } from '../src/engine/offers'
+import { activeAdDeal, adOfferId, adRungFor, adShootWeek, adSpokenFor, adWritesAt, chooseShootWeeks, expireOffers, hasLiveOffer, isOfferLive, raiseAdOffer } from '../src/engine/offers'
 import { sponsorStandingOf } from '../src/engine/world/sponsors'
 import { ECONOMY, kidPrizeShareCents } from '../src/engine/economy'
 import { isOffSeasonWeek } from '../src/engine/season/calendar'
@@ -63,6 +63,13 @@ import { lookAheadFor, type CalendarWeekFacts } from '../src/composables/weekDay
 import { DEFAULT_PROFILE, type AdOfferTerms, type Offer } from '../src/shared/protocol'
 
 const AD = ECONOMY.advertising
+/** ⚠ THE CATALOGUE BECAME A LADDER (round 29 part two #19/#20), so the five per-house numbers
+ *  moved out of `ECONOMY.advertising` into `ECONOMY.advertising.houses`. Every claim in this
+ *  file is about the rung that already shipped – Quiet Hour, $20,000, two shoot weeks – so it
+ *  is REPOINTED and not re-aimed: `AD` still carries the mechanics every house shares (the age
+ *  bar, the weekly chance, the decide weeks, the lead, the clash price) and `WATCH` carries
+ *  that one house's own terms, which have not moved by a cent. */
+const WATCH = ECONOMY.advertising.houses.watch
 
 const adPost = (world: WorldState): Offer[] => world.offers.filter((o) => o.kind === 'ad')
 
@@ -74,7 +81,15 @@ const ageOf = (world: WorldState): number =>
  *  puts a real rank in the table. Re-pushed when a test walks past the 52-week results window,
  *  which is only what a career that keeps playing does. */
 function pushBook(world: WorldState): void {
-  world.results.push({ playerId: KID_ID, week: world.week, points: 100_000, tier: 'w100' })
+  // ⚠⚠ 100_000 -> 400, AND IT IS A RE-AIM RATHER THAN A TUNE (round 29 part two #19/#20). The
+  // advertising catalogue became a LADDER, so which house writes now depends on where she stands,
+  // and 100,000 points put this fixture at world #1 – the top rung. Every claim in this file is
+  // about the rung that shipped (Quiet Hour, $20,000, two shoot weeks), so the fixture is moved to
+  // the band that rung is FOR rather than the assertions being moved to whatever arrives: 400
+  // points is world #183, inside `houses.watch.maxWtaRank` and outside `campaign`'s. The band is
+  // asserted as a fixture fact below, so a retuned table that moves her out of it fails there
+  // instead of quietly testing a different house.
+  world.results.push({ playerId: KID_ID, week: world.week, points: 400, tier: 'w100' })
 }
 
 /** A REAL career ticked to her eighteenth year, then given a professional standing the way
@@ -112,7 +127,13 @@ describe('the fixture is what it claims to be', () => {
     expect(ageOf(life.eligible)).toBeGreaterThanOrEqual(AD.fromAgeYears)
     const standing = sponsorStandingOf(life.eligible)
     expect(standing.wtaRanked).toBe(true)
-    expect(standing.wtaRank).toBeLessThanOrEqual(AD.maxWtaRank)
+    expect(standing.wtaRank).toBeLessThanOrEqual(WATCH.maxWtaRank)
+    // ⭐ ...AND IN THE WATCH RUNG'S BAND AND NOT A HIGHER ONE (round 29 part two #19/#20). The
+    // catalogue is a ladder now, so «inside the bar» is no longer enough to say WHICH letter this
+    // file is about. She must be outside `campaign`'s gate for every Quiet Hour assertion below to
+    // mean what it was written to mean, and `adRungFor` is asked directly rather than inferred.
+    expect(standing.wtaRank).toBeGreaterThan(ECONOMY.advertising.houses.campaign.maxWtaRank)
+    expect(adRungFor(standing)).toBe('watch')
     // The dice hit inside 40 weeks of eligibility – inside the book's own 52-week window, so her
     // standing still holds on the arrival week. A retuned `offerChance` that breaks this fails HERE,
     // not silently in an arm that then proves nothing.
@@ -137,10 +158,10 @@ describe('step 1.1 – it arrives', () => {
 
   it('terms are the catalogue, frozen at arrival – brand, cash, term, the shoot promise, and nothing else', () => {
     const t = adPost(life.world)[0].terms as AdOfferTerms
-    expect(t.brand).toBe(AD.brand)
-    expect(t.cashCents).toBe(AD.cashCents)
-    expect(t.termWeeks).toBe(AD.termWeeks)
-    expect(t.shootCount).toBe(AD.shootWeeksPerTerm)
+    expect(t.brand).toBe(WATCH.brand)
+    expect(t.cashCents).toBe(WATCH.cashCents)
+    expect(t.termWeeks).toBe(WATCH.termWeeks)
+    expect(t.shootCount).toBe(WATCH.shootWeeksPerTerm)
     // ...and the WEEKS are not on the arrival paper: they are the signature's to name, so an open
     // letter that already carried them would be a choice made before the player made it.
     expect(t.shootWeeks).toBeUndefined()
@@ -151,7 +172,14 @@ describe('step 1.1 – it arrives', () => {
     // refusal reason, her own account, obligations outliving the term. A new key here is a step 3+
     // field arriving early, and it must arrive the way this one did – by a ruling, re-aiming this
     // line on purpose.
-    expect(Object.keys(t).sort()).toEqual(['brand', 'cashCents', 'shootCount', 'termWeeks'])
+    //
+    // ⚠⚠ RE-AIMED A SECOND TIME, ROUND 29 PART TWO #19/#20, AND BY THE SAME KIND OF RULING. The
+    // catalogue became a LADDER, so the paper has to be able to say WHICH house wrote it (`tier`)
+    // and what that house makes (`trade`, the letter's opening clause – it was hard-coded as «We
+    // make watches» in the markup while there was one house). Both are identity, not obligation:
+    // nothing about what she owes moved, and the fence still forbids every step 3+ field.
+    expect(Object.keys(t).sort()).toEqual(['brand', 'cashCents', 'shootCount', 'termWeeks', 'tier', 'trade'])
+    expect(t.tier).toBe('watch')
   })
 
   it('nothing arrived on the walk to eighteen, and nothing before the dice said yes', () => {
@@ -183,8 +211,8 @@ describe('step 1.2 – it can be signed, and the ledger shows it', () => {
 
     // The rate is read off the shipped ramp at HER real age, never restated as a literal – a retune
     // of `ECONOMY.kidShare` moves this test with the game instead of reddening it.
-    const hers = kidPrizeShareCents(AD.cashCents, ageOf(world))
-    const theirs = AD.cashCents - hers
+    const hers = kidPrizeShareCents(WATCH.cashCents, ageOf(world))
+    const theirs = WATCH.cashCents - hers
     expect(hers, 'she is eighteen-plus here, so the ramp is really paying').toBeGreaterThan(0)
 
     const signed = acceptOffer(world, offer.id)
@@ -196,7 +224,7 @@ describe('step 1.2 – it can be signed, and the ledger shows it', () => {
     expect((world.kidFundsCents ?? 0) - kidBefore).toBe(hers)
     // ⚠ THE PENNY RULE, WHICH IS WHY THE TWO ARE READ TOGETHER: one rounding, the family gets the
     // remainder, so the halves re-add to the brand's cheque exactly.
-    expect(theirs + hers).toBe(AD.cashCents)
+    expect(theirs + hers).toBe(WATCH.cashCents)
 
     // The feed row: income, under 'sponsor' – filed with the other brand money, at what was banked.
     const row = world.events.find(
@@ -204,7 +232,7 @@ describe('step 1.2 – it can be signed, and the ledger shows it', () => {
     )
     expect(row).toBeDefined()
     expect(row!.type).toBe('income')
-    expect(row!.text).toContain(AD.brand)
+    expect(row!.text).toContain(WATCH.brand)
 
     // The persisted finance ledger – the Money breakdown's source, which survives feed pruning.
     const week = world.financeWeeks.find((f) => f.week === world.week)
@@ -213,7 +241,7 @@ describe('step 1.2 – it can be signed, and the ledger shows it', () => {
 
     // The paper is a record now: the engine froze the term it will honour.
     expect(signed.fromWeek).toBe(world.week)
-    expect(signed.untilWeek).toBe(world.week + AD.termWeeks - 1)
+    expect(signed.untilWeek).toBe(world.week + WATCH.termWeeks - 1)
     expect(activeAdDeal(world.offers, world.week)?.id).toBe(offer.id)
   })
 
@@ -238,7 +266,7 @@ describe('step 1.2 – it can be signed, and the ledger shows it', () => {
     // ...and the career simply continues: refusal is an answer, not an event.
     const rng = resumeMain(world.rngMain)
     tickWeek(world, rng)
-    expect(world.events.some((e) => e.category === 'sponsor' && e.amountCents === AD.cashCents)).toBe(false)
+    expect(world.events.some((e) => e.category === 'sponsor' && e.amountCents === WATCH.cashCents)).toBe(false)
   })
 
   it('left unanswered it expires on its own deadline, and that costs nothing either', () => {
@@ -248,7 +276,7 @@ describe('step 1.2 – it can be signed, and the ledger shows it', () => {
     while (world.week <= deadline) tickWeek(world, rng)
     const offer = adPost(world)[0]
     expect(offer.state).toBe('expired')
-    expect(world.events.some((e) => e.category === 'sponsor' && e.amountCents === AD.cashCents)).toBe(false)
+    expect(world.events.some((e) => e.category === 'sponsor' && e.amountCents === WATCH.cashCents)).toBe(false)
   })
 })
 
@@ -363,11 +391,11 @@ describe('the gate: results only, from eighteen, and the dice', () => {
   })
 
   it('no letter below the bar – #200 is written to, #201 is not', () => {
-    const inside = probeWorld(SEED, adultTrue, AD.maxWtaRank, true)
+    const inside = probeWorld(SEED, adultTrue, WATCH.maxWtaRank, true)
     reviewAdOffer(inside)
     expect(adPost(inside)).toHaveLength(1)
 
-    const outside = probeWorld(SEED, adultTrue, AD.maxWtaRank + 1, true)
+    const outside = probeWorld(SEED, adultTrue, WATCH.maxWtaRank + 1, true)
     reviewAdOffer(outside)
     expect(adPost(outside)).toEqual([])
   })
@@ -447,12 +475,12 @@ describe('«nobody writes to an amateur» – the college freeze (plan §4c)', (
     // so neither purse gave anything back when she enrolled.
     expect(offer.state).toBe('signed')
     expect(offer.untilWeek).toBe(until)
-    const hers = kidPrizeShareCents(AD.cashCents, ageOf(world))
+    const hers = kidPrizeShareCents(WATCH.cashCents, ageOf(world))
     const sponsorRows = world.events.filter((e) => e.category === 'sponsor')
     expect(sponsorRows).toHaveLength(1)
-    expect(sponsorRows[0].amountCents).toBe(AD.cashCents - hers)
-    expect(sponsorRows[0].amountCents! + (world.kidFundsCents ?? 0), 'both halves are still there').toBe(AD.cashCents)
-    expect(world.events.some((e) => (e.amountCents ?? 0) < 0 && e.text.includes(AD.brand))).toBe(false)
+    expect(sponsorRows[0].amountCents).toBe(WATCH.cashCents - hers)
+    expect(sponsorRows[0].amountCents! + (world.kidFundsCents ?? 0), 'both halves are still there').toBe(WATCH.cashCents)
+    expect(world.events.some((e) => (e.amountCents ?? 0) < 0 && e.text.includes(WATCH.brand))).toBe(false)
   })
 })
 
@@ -499,7 +527,7 @@ describe('step 2.1 – the signature names the weeks', () => {
     expect(second.shootWeeks).toEqual(first.shootWeeks)
     // ...and they are the sub-stream's own answer, not a coincidence of the walk.
     expect(first.shootWeeks).toEqual(
-      chooseShootWeeks(life.world.seed, life.world.week, AD.termWeeks, AD.shootWeeksPerTerm, AD.shootLeadWeeks),
+      chooseShootWeeks(life.world.seed, life.world.week, WATCH.termWeeks, WATCH.shootWeeksPerTerm, AD.shootLeadWeeks),
     )
   })
 
@@ -516,7 +544,7 @@ describe('step 2.1 – the signature names the weeks', () => {
     let pairs = 0
     for (let n = 0; n < 10; n++) {
       for (let sw = 220; sw < 270; sw++) {
-        const weeks = chooseShootWeeks(`ad-shoot-sweep-${n}`, sw, AD.termWeeks, AD.shootWeeksPerTerm, AD.shootLeadWeeks)
+        const weeks = chooseShootWeeks(`ad-shoot-sweep-${n}`, sw, WATCH.termWeeks, WATCH.shootWeeksPerTerm, AD.shootLeadWeeks)
         expect(weeks).toHaveLength(2)
         for (const w of weeks) expect(isOffSeasonWeek(w), `seed ${n} sign ${sw}: week ${w} off-season`).toBe(false)
         expect(Math.abs(weeks[0] - weeks[1])).toBeGreaterThanOrEqual(2)
@@ -530,7 +558,7 @@ describe('step 2.1 – the signature names the weeks', () => {
     // on the first of its own – so this one case fails DETERMINISTICALLY under that mutation, where
     // the 500 random pairs above would only fail by luck (the mutant measured 33 adjacent in
     // 20,000: ~1/600 a pair).
-    const witness = chooseShootWeeks('adj-0', 212, AD.termWeeks, AD.shootWeeksPerTerm, AD.shootLeadWeeks)
+    const witness = chooseShootWeeks('adj-0', 212, WATCH.termWeeks, WATCH.shootWeeksPerTerm, AD.shootLeadWeeks)
     expect(witness[0]).toBe(239)
     expect(Math.abs(witness[0] - witness[1])).toBeGreaterThanOrEqual(2)
   })
@@ -555,8 +583,8 @@ describe('step 2.2 – a shoot week recovers like a travel week, not a rest week
       state: 'signed',
       decidedWeek: week - 10,
       fromWeek: week - 10,
-      untilWeek: week - 10 + AD.termWeeks - 1,
-      terms: { brand: AD.brand, cashCents: AD.cashCents, termWeeks: AD.termWeeks, shootCount: 2, shootWeeks },
+      untilWeek: week - 10 + WATCH.termWeeks - 1,
+      terms: { brand: WATCH.brand, cashCents: WATCH.cashCents, termWeeks: WATCH.termWeeks, shootCount: 2, shootWeeks },
     })
     return world
   }
@@ -667,8 +695,8 @@ describe('step 2.2b – the refund paths cannot hand a shoot week its rest back'
       state: 'signed',
       decidedWeek: week - 10,
       fromWeek: week - 10,
-      untilWeek: week - 10 + AD.termWeeks - 1,
-      terms: { brand: AD.brand, cashCents: AD.cashCents, termWeeks: AD.termWeeks, shootCount: 2, shootWeeks },
+      untilWeek: week - 10 + WATCH.termWeeks - 1,
+      terms: { brand: WATCH.brand, cashCents: WATCH.cashCents, termWeeks: WATCH.termWeeks, shootCount: 2, shootWeeks },
     })
     return world
   }
@@ -715,8 +743,8 @@ describe('step 2.3 – the college freeze lapses a shoot, silently (plan §4c)',
       state: 'signed',
       decidedWeek: WEEK - 10,
       fromWeek: WEEK - 10,
-      untilWeek: WEEK - 10 + AD.termWeeks - 1,
-      terms: { brand: AD.brand, cashCents: AD.cashCents, termWeeks: AD.termWeeks, shootCount: 2, shootWeeks: [WEEK, WEEK + 20] },
+      untilWeek: WEEK - 10 + WATCH.termWeeks - 1,
+      terms: { brand: WATCH.brand, cashCents: WATCH.cashCents, termWeeks: WATCH.termWeeks, shootCount: 2, shootWeeks: [WEEK, WEEK + 20] },
     })
     world.college = {
       fromWeek: WEEK - 2,
@@ -765,7 +793,7 @@ describe('step 2.4 – the calendar shows them coming (the D2 marker idiom)', ()
     const { world, offer } = signedLife()
     const t = offer.terms as AdOfferTerms
     const snap = toSnapshot(world)
-    expect(snap.adShoot).toEqual({ brand: AD.brand, weeks: t.shootWeeks })
+    expect(snap.adShoot).toEqual({ brand: WATCH.brand, weeks: t.shootWeeks })
 
     // ...and the wire goes quiet when the term does: the marker cannot outlive the deal. (The term
     // is ENDED on the paper rather than the week moved, so the snapshot is read in a week the
@@ -775,11 +803,11 @@ describe('step 2.4 – the calendar shows them coming (the D2 marker idiom)', ()
   })
 
   it('a shoot week inside the look-ahead window is a row of its own kind, named by the brand', () => {
-    const rows = lookAheadFor(facts({ adShoot: { brand: AD.brand, weeks: [305, 330] } }))
+    const rows = lookAheadFor(facts({ adShoot: { brand: WATCH.brand, weeks: [305, 330] } }))
     const marked = rows.find((r) => r.week === 305)
     expect(marked).toBeDefined()
     expect(marked!.kind).toBe('shoot')
-    expect(marked!.note).toBe(`${AD.brand} shoot`)
+    expect(marked!.note).toBe(`${WATCH.brand} shoot`)
     expect(rows.filter((r) => r.kind === 'shoot')).toHaveLength(1) // 330 is past the seven-week window
     // No deal, no marker.
     const bare = lookAheadFor(facts({}))
@@ -789,7 +817,7 @@ describe('step 2.4 – the calendar shows them coming (the D2 marker idiom)', ()
   it('the week stays hers: an entered tournament on the shoot week keeps its tappable marker', () => {
     const rows = lookAheadFor(
       facts({
-        adShoot: { brand: AD.brand, weeks: [305] },
+        adShoot: { brand: WATCH.brand, weeks: [305] },
         upcoming: [
           {
             id: 'evt-305',
@@ -816,7 +844,7 @@ describe('step 2.4 – the calendar shows them coming (the D2 marker idiom)', ()
 //
 // The owner: «Предложение от спонсора с часами пришло на сорок четвёртой неделе А на сорок восьмой
 // уже истёк срок рассмотрения мне казалось мы договаривались про 5 недель». The sponsor with the
-// watches is this letter – `ECONOMY.advertising.brand` is a watchmaker – and his arithmetic was
+// watches is this letter – `ECONOMY.advertising.houses.watch.brand` is a watchmaker – and his arithmetic was
 // right: at four weeks a letter filed on W44 died on W47 and was gone when he opened the inbox on
 // W48. His memory is the ruling (round 28 #2), so the number moved 4 -> 5.
 //
@@ -921,7 +949,7 @@ describe('⚠ ROUND 28 #2 – the campaign letter is five weeks of shelf life, f
     raiseAdOffer(
       world.offers,
       world.week,
-      { brand: AD.brand, cashCents: AD.cashCents, termWeeks: AD.termWeeks, shootCount: AD.shootWeeksPerTerm },
+      { brand: WATCH.brand, cashCents: WATCH.cashCents, termWeeks: WATCH.termWeeks, shootCount: WATCH.shootWeeksPerTerm },
       world.week + AD.decideWeeks - 1,
     )
     const offer = adPost(world)[0]

@@ -59,6 +59,13 @@ import { WEEKS_PER_YEAR } from '../src/engine/season/calendar'
 import { DEFAULT_PROFILE, type KitOfferTerms, type Offer } from '../src/shared/protocol'
 
 const AD = ECONOMY.advertising
+/** ⚠ THE CATALOGUE BECAME A LADDER (round 29 part two #19/#20), so the five per-house numbers
+ *  moved out of `ECONOMY.advertising` into `ECONOMY.advertising.houses`. Every claim in this
+ *  file is about the rung that already shipped – Quiet Hour, $20,000, two shoot weeks – so it
+ *  is REPOINTED and not re-aimed: `AD` still carries the mechanics every house shares (the age
+ *  bar, the weekly chance, the decide weeks, the lead, the clash price) and `WATCH` carries
+ *  that one house's own terms, which have not moved by a cent. */
+const WATCH = ECONOMY.advertising.houses.watch
 
 /** Her age this week, off the world's own clock – the same read every gate makes. */
 const ageOf = (world: WorldState): number =>
@@ -67,7 +74,15 @@ const ageOf = (world: WorldState): number =>
 /** A counting professional result – the `proWorld` fixture idiom, so `wtaRanked` is true and the
  *  table holds a real rank. Copied from tests/ad-offer.test.ts, which is where the gate lives. */
 function pushBook(world: WorldState): void {
-  world.results.push({ playerId: KID_ID, week: world.week, points: 100_000, tier: 'w100' })
+  // ⚠⚠ 100_000 -> 400, AND IT IS A RE-AIM RATHER THAN A TUNE (round 29 part two #19/#20). The
+  // advertising catalogue became a LADDER, so which house writes now depends on where she stands,
+  // and 100,000 points put this fixture at world #1 – the top rung. Every claim in this file is
+  // about the rung that shipped (Quiet Hour, $20,000, two shoot weeks), so the fixture is moved to
+  // the band that rung is FOR rather than the assertions being moved to whatever arrives: 400
+  // points is world #183, inside `houses.watch.maxWtaRank` and outside `campaign`'s. The band is
+  // asserted as a fixture fact below, so a retuned table that moves her out of it fails there
+  // instead of quietly testing a different house.
+  world.results.push({ playerId: KID_ID, week: world.week, points: 400, tier: 'w100' })
 }
 
 /** A REAL career ticked to her eighteenth year, then given a professional standing. Self-coached and
@@ -143,16 +158,16 @@ describe('§1 a cash sponsor deal', () => {
     // ⚠ THE EXPECTATION IS THE SHIPPED RAMP AT HER REAL AGE, never a literal: retuning
     // `ECONOMY.kidShare` must move the game and this test together, and only a change to the RULE
     // should redden it.
-    const hers = kidPrizeShareCents(AD.cashCents, ageOf(world))
+    const hers = kidPrizeShareCents(WATCH.cashCents, ageOf(world))
     expect(hers, 'the arm contains the thing it is measuring').toBeGreaterThan(0)
 
     acceptOffer(world, offer.id)
 
     expect((world.kidFundsCents ?? 0) - kidBefore, 'her account moved by the ruled share').toBe(hers)
-    expect(world.fundsCents - fundsBefore, 'and the family banked the remainder').toBe(AD.cashCents - hers)
+    expect(world.fundsCents - fundsBefore, 'and the family banked the remainder').toBe(WATCH.cashCents - hers)
     // ⚠ ONE ROUNDING: the two halves re-add to the brand's cheque to the cent, which is the property
     // a player can check by putting the two balances side by side on screen.
-    expect((world.kidFundsCents ?? 0) - kidBefore + (world.fundsCents - fundsBefore)).toBe(AD.cashCents)
+    expect((world.kidFundsCents ?? 0) - kidBefore + (world.fundsCents - fundsBefore)).toBe(WATCH.cashCents)
   })
 
   it('⭐ ...and in the actual money, at the actual rate, written out', () => {
@@ -167,7 +182,7 @@ describe('§1 a cash sponsor deal', () => {
     const world = structuredClone(life.world)
     expect(ageOf(world), 'the fixture is in her first year on the ramp').toBe(18)
     expect(kidPrizeShareBps(18), 'and the first year is ten percent').toBe(1000)
-    expect(AD.cashCents, 'the campaign fee is twenty thousand dollars').toBe(20_000_00)
+    expect(WATCH.cashCents, 'the campaign fee is twenty thousand dollars').toBe(20_000_00)
 
     const offer = world.offers.find((o) => o.kind === 'ad')!
     const kidBefore = world.kidFundsCents ?? 0
@@ -184,7 +199,7 @@ describe('§1 a cash sponsor deal', () => {
   it('the transfer is on the durable ledger too, at the rate that produced it', () => {
     const world = structuredClone(life.world)
     const offer = world.offers.find((o) => o.kind === 'ad')!
-    const hers = kidPrizeShareCents(AD.cashCents, ageOf(world))
+    const hers = kidPrizeShareCents(WATCH.cashCents, ageOf(world))
     acceptOffer(world, offer.id)
 
     // `financeWeeks` prunes on a 60-week window and therefore always holds the week being read –
@@ -194,7 +209,7 @@ describe('§1 a cash sponsor deal', () => {
     expect(week?.kidShare?.bps, 'and the rate that produced them').toBe(kidPrizeShareBps(ageOf(world)))
     // ⚠ AND IT IS A MEMO, NOT A CATEGORY: `byCategory` may never learn about her share, or every
     // income total on every screen would count the split twice. The sponsor row is the NET one.
-    expect(week?.byCategory.sponsor).toBe(AD.cashCents - hers)
+    expect(week?.byCategory.sponsor).toBe(WATCH.cashCents - hers)
   })
 
   it('...and not one cent of it before her eighteenth', () => {
@@ -213,7 +228,7 @@ describe('§1 a cash sponsor deal', () => {
     const fundsBefore = world.fundsCents
     acceptOffer(world, offer.id)
     expect(world.kidFundsCents ?? 0, 'her account does not exist yet').toBe(kidBefore)
-    expect(world.fundsCents - fundsBefore, 'and the family banks the whole fee').toBe(AD.cashCents)
+    expect(world.fundsCents - fundsBefore, 'and the family banks the whole fee').toBe(WATCH.cashCents)
     // The row says nothing about a share, because there was none to name.
     const row = world.events.find((e) => e.week === world.week && e.category === 'sponsor')
     expect(row?.text).not.toContain('share')

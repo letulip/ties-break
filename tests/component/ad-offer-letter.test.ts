@@ -22,6 +22,13 @@ import type { AdOfferTerms, Offer, Snapshot } from '../../src/shared/protocol'
 import { careerSnapshot } from '../helpers/career'
 
 const AD = ECONOMY.advertising
+/** ⚠ THE CATALOGUE BECAME A LADDER (round 29 part two #19/#20), so the five per-house numbers
+ *  moved out of `ECONOMY.advertising` into `ECONOMY.advertising.houses`. Every claim in this
+ *  file is about the rung that already shipped – Quiet Hour, $20,000, two shoot weeks – so it
+ *  is REPOINTED and not re-aimed: `AD` still carries the mechanics every house shares (the age
+ *  bar, the weekly chance, the decide weeks, the lead, the clash price) and `WATCH` carries
+ *  that one house's own terms, which have not moved by a cent. */
+const WATCH = ECONOMY.advertising.houses.watch
 
 // The inbox annotates letters with two per-device facts (read / binned) and both live in
 // localStorage; this runner has none. Same shim, and the same argument, as the other mail suites.
@@ -50,7 +57,7 @@ function letter(overrides: Partial<Offer> = {}, terms: Partial<AdOfferTerms> = {
     week,
     deadlineWeek: week + AD.decideWeeks - 1,
     state: 'open',
-    terms: { brand: AD.brand, cashCents: AD.cashCents, termWeeks: AD.termWeeks, shootCount: AD.shootWeeksPerTerm, ...terms },
+    terms: { brand: WATCH.brand, cashCents: WATCH.cashCents, termWeeks: WATCH.termWeeks, shootCount: WATCH.shootWeeksPerTerm, ...terms },
     ...overrides,
   } as Offer
 }
@@ -64,7 +71,7 @@ describe('OfferLetter – the advertising house has its own sheet', () => {
     const text = w.text()
     // Who is writing, and that they are not a tennis house – the non-endemic half is the content.
     expect(text).toContain('We make watches')
-    expect(text).toContain(AD.brand)
+    expect(text).toContain(WATCH.brand)
     // The fee, in real money, formatted once at the edge (cents in, dollars out).
     expect(text).toContain('$20,000')
     expect(text).toContain('paid the day this is signed')
@@ -158,7 +165,7 @@ describe('InboxSheet – the letter is in the list, the row says what it is, the
   it('the row is signed by the brand, the subject names the fee, and a live letter wears the pill', () => {
     const wrapper = mountInbox([letter()])
     const rows = wrapper.findAll('.inbox-row')
-    const row = rows.map((r) => r.text()).find((t) => t.includes(AD.brand))
+    const row = rows.map((r) => r.text()).find((t) => t.includes(WATCH.brand))
     expect(row).toBeTruthy()
     expect(row).toContain('Her face in a campaign – $20,000')
     // An open advertising letter is a DECISION, so – unlike the academy's notices – it must wear
@@ -170,7 +177,7 @@ describe('InboxSheet – the letter is in the list, the row says what it is, the
   it('clicking the row opens the paper, and pressing Sign raises the endorsement\'s OWN confirm', async () => {
     const open = letter()
     const wrapper = mountInbox([open])
-    const row = wrapper.findAll('.inbox-open').find((b) => b.text().includes(AD.brand))
+    const row = wrapper.findAll('.inbox-open').find((b) => b.text().includes(WATCH.brand))
     expect(row).toBeTruthy()
     await row!.trigger('click')
     await nextTick()
@@ -182,7 +189,7 @@ describe('InboxSheet – the letter is in the list, the row says what it is, the
     const text = wrapper.text()
     // The last thing he reads is the deal in the paper's own words – the fee, where it lands, the
     // term – and the one thing the letter cannot say for itself.
-    expect(text).toContain(`Sign with ${AD.brand}?`)
+    expect(text).toContain(`Sign with ${WATCH.brand}?`)
     expect(text).toContain('one-time fee')
     expect(text).toContain('paid to the family now')
     expect(text).toContain('This cannot be undone.')
@@ -199,7 +206,7 @@ describe('InboxSheet – the letter is in the list, the row says what it is, the
       t.shootCount,
       ECONOMY.advertising.shootLeadWeeks,
     ).map((w) => weekLabel(w))
-    expect(expected).toHaveLength(AD.shootWeeksPerTerm)
+    expect(expected).toHaveLength(WATCH.shootWeeksPerTerm)
     expect(text).toContain(`with her shoot weeks on ${expected.join(' and ')}`)
     expect(text).toContain('working weeks, less rest in them')
     expect(text).not.toContain('nothing else asked of her')

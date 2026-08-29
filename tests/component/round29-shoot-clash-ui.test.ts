@@ -63,6 +63,13 @@ Object.defineProperty(globalThis, 'localStorage', {
 })
 
 const AD = ECONOMY.advertising
+/** ⚠ THE CATALOGUE BECAME A LADDER (round 29 part two #19/#20), so the five per-house numbers
+ *  moved out of `ECONOMY.advertising` into `ECONOMY.advertising.houses`. Every claim in this
+ *  file is about the rung that already shipped – Quiet Hour, $20,000, two shoot weeks – so it
+ *  is REPOINTED and not re-aimed: `AD` still carries the mechanics every house shares (the age
+ *  bar, the weekly chance, the decide weeks, the lead, the clash price) and `WATCH` carries
+ *  that one house's own terms, which have not moved by a cent. */
+const WATCH = ECONOMY.advertising.houses.watch
 const CLASH = 216
 const AT = CLASH - 1
 
@@ -82,7 +89,7 @@ function clashWorld(seed: string, opts: { shootWeeks?: number[]; termWeeks?: num
   }
   world.season = [event]
   world.entries = [event.id]
-  const termWeeks = opts.termWeeks ?? AD.termWeeks
+  const termWeeks = opts.termWeeks ?? WATCH.termWeeks
   world.offers.push({
     id: adOfferId(AT - 10),
     kind: 'ad',
@@ -92,7 +99,7 @@ function clashWorld(seed: string, opts: { shootWeeks?: number[]; termWeeks?: num
     decidedWeek: AT - 10,
     fromWeek: AT - 10,
     untilWeek: AT - 10 + termWeeks - 1,
-    terms: { brand: AD.brand, cashCents: AD.cashCents, termWeeks, shootCount: 2, shootWeeks: opts.shootWeeks ?? [CLASH] },
+    terms: { brand: WATCH.brand, cashCents: WATCH.cashCents, termWeeks, shootCount: 2, shootWeeks: opts.shootWeeks ?? [CLASH] },
   })
   return world
 }
@@ -139,7 +146,7 @@ describe('round 29 #3 – the collision raises a card the parent has to answer',
     expect(w.findComponent(ShootClashDialog).exists(), 'the week did not ask').toBe(true)
     const card = w.find('.shoot-clash-dialog')
     expect(card.exists()).toBe(true)
-    expect(card.text(), 'the card does not name whose campaign it is').toContain(AD.brand)
+    expect(card.text(), 'the card does not name whose campaign it is').toContain(WATCH.brand)
     // FOUR answers – his three arms with the second one split, because «cancel or move» behind one
     // button would ask him to choose twice.
     expect(w.findAll('.shoot-clash-dialog .knock-choice').length).toBe(4)

@@ -87,8 +87,8 @@ import { seasonIndexOf } from './world/ledger'
 import type { KitFreshCap } from './equipment'
 import type { TierId } from './season/types'
 import type {
-  AcademyLetterTerms, AdOfferTerms, CallUpLetterTerms, EntryLetterTerms, EntryReleaseReason, KitEndReason, KitLine,
-  KitOfferTerms, Offer, PenaltyReason, SponsorTier, TourLetterTerms,
+  AcademyLetterTerms, AdOfferTerms, AdTier, CallUpLetterTerms, EntryLetterTerms, EntryReleaseReason, KitEndReason,
+  KitLine, KitOfferTerms, Offer, PenaltyReason, SponsorTier, TourLetterTerms,
 } from '../shared/protocol'
 
 /** Every sponsor tier's letterhead lives at `public/images/sponsors/<key>.webp`, and this is the
@@ -442,6 +442,25 @@ export function kitTermsFor(standing: SponsorStanding, tier = rungFor(standing))
     covers: TIER_COVERS[tier],
     travelShare: tier === 'global' ? s.global.travelShare : 0,
     seasons: rung.seasons,
+    // ⭐⭐ ROUND 29 PART TWO #5 – GLOBAL CARRIES CASH NOW (the owner: «мировые топы должны иметь все
+    // возможности достучаться до топовой спортсменки»). It is sorted ABOVE `tour` and paid less than
+    // it – no retainer, no result bonus – which is the one thing `windowLadder`'s strongest-first
+    // order promises cannot happen. The three fields are the ones `KitOfferTerms` already carries
+    // for the professional rungs, optional there since W3-ACT2, so nothing about the shape moves.
+    //
+    // ⚠ FROZEN AT ARRIVAL LIKE EVERY OTHER TERM, WHICH MAKES THIS FORWARD-ONLY AND HAS TO BE SAID:
+    // a Play Beyond letter already sitting in an inbox was written from the old catalogue and keeps
+    // the old terms for its whole life. That is `kitTermsFor`'s own standing rule («terms never
+    // improve while you hold the letter») working in the direction nobody enjoys, and repairing it
+    // in place would mean a signed contract whose numbers change under the parent – which is the
+    // property the rule exists to prevent. The NEXT letter from this rung carries the retainer.
+    ...(tier === 'global'
+      ? {
+          retainerCents: s.global.retainerCents,
+          bonusShare: s.global.bonusShare,
+          bonusFromTier: s.global.bonusFromTier,
+        }
+      : {}),
     // ⚠ NATIONAL ALONE CARRIES A DOMESTIC KEEP-CONDITION, and it is this rung's reason to exist
     // beyond the extra line of kit. See `KitOfferTerms.keepDomesticRank`.
     ...(tier === 'national' ? { keepDomesticRank: s.national.keepDomesticRank } : {}),
@@ -517,6 +536,56 @@ export function seasonSpokenFor(offers: Offer[], week: number): Offer | null {
   return (
     offers.find((o) => o.kind === 'kit' && o.state === 'signed' && (o.untilWeek ?? -1) >= seasonAhead) ?? null
   )
+}
+
+/** THE RUNG'S PLACE ON THE LADDER as a number, so "is this one stronger" is a comparison rather than
+ *  a table. `SPONSOR_TIERS` is weakest-first, so a bigger index is a bigger brand – the same reading
+ *  `windowLadder`, `rungFor` and `tools/sponsor-ladder-reach.ts` all take of the same array. */
+export function rungStrength(tier: SponsorTier): number {
+  return SPONSOR_TIERS.indexOf(tier)
+}
+
+/** ⭐⭐ ROUND 29 PART TWO #12 – IS THE POST SHUT AGAINST **THIS RUNG**? The narrowing of
+ *  `seasonSpokenFor`, and the whole of the item.
+ *
+ *  THE OWNER: «открытое сейчас в вашем ящике продление Baseline закроет и следующую зимнюю почту…
+ *  вот с этим надо что-то делать, там без спонсора грустновато немного живется.» He is describing a
+ *  two-season renewal, and he is right about what it does: `seasonSpokenFor` turned away EVERY rung
+ *  for as long as any deal covered the season ahead, so signing the letter he was holding bought a
+ *  winter of silence.
+ *
+ *  ⚠ IT IS NOT ROUND 28 #17 BEING UNDONE. That fix stops ONE BRAND writing twice in a winter
+ *  (`alreadyWritten` seeded from `dealEndingWithSeason`) and is untouched here – this is the OTHER
+ *  rule, the one that turns away every OTHER brand, and only its top edge moves.
+ *
+ *  ⭐ WHAT IT COSTS, MEASURED BEFORE IT WAS CHANGED (108 careers x 780 weeks, `bench:sponsorreach`):
+ *  1,274 winters, **416 of them produced no kit letter at all**, and **360 of those 416 were shut by
+ *  this rule alone** – no letter was raised in a single one of them. In **191** the ladder had a
+ *  STRICTLY STRONGER rung standing behind the closed door, the commonest being **`global` in front
+ *  of `premium` (84)**, which is the owner's own save to the brand.
+ *
+ *  THE RULE NOW: a running deal turns away every rung AT OR BELOW ITS OWN, and a strictly stronger
+ *  one may write. Three things that does NOT change, each of them load-bearing:
+ *   - ONE BRAND AT A TIME survives literally: two deals are never live at once, because signing the
+ *     stronger letter ENDS the running one with the season it is in (`signOffer`, reason `stepped`).
+ *   - THE TERM STILL BITES. A `premium` deal cannot be interrupted by `tour`, `global` or `national`
+ *     – only 2 of the 6 rungs can ever write over `premium`, and none at all over `icon` – so a long
+ *     contract is still a decision with a cost, which is what `KitOfferTerms.seasons` is for.
+ *   - NOTHING IS MANUFACTURED. The stronger rung still has to be one `standingClears` says would
+ *     have her, and still has to roll its own dice on its own slot.
+ *
+ *  ⚠ AND IT IS WHY THE LADDER HAD TO BE MADE MONOTONE FIRST (item #5, `global`'s cash). "A stronger
+ *  rung may interrupt a weaker one" is only safe when a stronger rung is actually worth more –
+ *  otherwise this rule would let a WORSE deal replace a better one, which is the same defect wearing
+ *  the opposite sign. `tests/round29p2-ladder-monotone.test.ts` is the guard under both. */
+export function rungTurnedAway(offers: Offer[], week: number, tier: SponsorTier): Offer | null {
+  const running = seasonSpokenFor(offers, week)
+  if (!running) return null
+  const runningTier = (running.terms as KitOfferTerms).tier
+  // A signed deal whose terms carry no tier cannot be compared, so it keeps the old, total bite -
+  // the safe direction, and unreachable in practice (every `kitTermsFor` result carries one).
+  if (!runningTier) return running
+  return rungStrength(tier) > rungStrength(runningTier) ? null : running
 }
 
 /** THE WEEK A LETTER SIGNED NOW WOULD START COVERING HER: today, unless a contract she is already
@@ -771,10 +840,13 @@ export function raiseKitOffers(args: {
   if (!isSponsorWindowWeek(week)) return raised
   // ⚠ ONE BRAND AT A TIME, and it is enforced HERE so that no caller can forget it (spec §4.1 as the
   // ladder extends it). The season she is about to play may be promised to ONE brand, so a
-  // multi-season contract that is only halfway through turns the whole window away - sign the
-  // two-season national deal and the global letter next winter finds her busy. See `seasonSpokenFor`
-  // for why that is the right shape of the rule and "is anything running" was not.
-  if (seasonSpokenFor(offers, week)) return raised
+  // multi-season contract that is only halfway through turns the window away - sign the two-season
+  // national deal and the global letter next winter finds her busy.
+  //
+  // ⚠⚠ ...EXCEPT FOR A STRICTLY STRONGER RUNG, WHICH IS ROUND 29 PART TWO #12. The test moved from
+  // the top of this function into the loop below (`rungTurnedAway`), because it is no longer one
+  // answer for the whole window: `global` running turns `tour` away and does not turn `premium`
+  // away. The owner's sentence and the 191-winter measurement behind it are on `rungTurnedAway`.
   const opened = sponsorWindowOpensAt(week)
   const ladder = windowLadder(standing)
   // ⭐ WHICH RUNGS HAVE ALREADY WRITTEN IN THIS WINDOW - round-17 #27, and the identity is the TIER.
@@ -856,6 +928,11 @@ export function raiseKitOffers(args: {
     // (round 17 #27), and it does not write as a stranger on top of the renewal it is going to send
     // on the closing week (round 28 #17).
     if (alreadyWritten.has(tier)) continue
+    // ⭐⭐ ROUND 29 PART TWO #12 – THE RUNNING DEAL'S OWN BITE, ASKED PER RUNG. A contract that
+    // covers the season ahead turns away every rung at or below its own and lets a strictly
+    // stronger one through; signing that one ends the contract (`signOffer`). See `rungTurnedAway`
+    // for the owner's sentence, the measurement, and the three properties this does not move.
+    if (rungTurnedAway(offers, week, tier)) continue
     const terms = kitTermsFor(standing, tier)
     if (!terms) continue
     if (!shopWritesAt(seed, opened + slot, offerChanceFor(standing, tier))) continue
@@ -1007,7 +1084,16 @@ export function offerAnswerError(offers: Offer[], offerId: string, week: number)
   // line a parent could sign two of them and the game's oldest invariant - at most one deal - would
   // be broken by the feature meant to make signing a decision. `signOffer` also closes the losers, so
   // this is belt and braces for a stale screen answering a letter that has already been beaten.
-  if (offer.kind === 'kit' && seasonSpokenFor(offers, week)) return 'She is already signed for next season.'
+  //
+  // ⚠⚠ AND IT ASKS `rungTurnedAway` RATHER THAN `seasonSpokenFor` SINCE ROUND 29 PART TWO #12. A
+  // strictly stronger rung may write over a running deal, so it must also be SIGNABLE - a letter the
+  // engine posts and then refuses is worse than no letter at all. The invariant is unchanged and is
+  // still enforced here: at most one deal, because signing the stronger one ends the weaker one in
+  // the same breath (see `signOffer`). A rung at or below the running deal's is refused exactly as
+  // it always was, with exactly the same sentence.
+  if (offer.kind === 'kit' && rungTurnedAway(offers, week, (offer.terms as KitOfferTerms).tier)) {
+    return 'She is already signed for next season.'
+  }
   return null
 }
 
@@ -1047,9 +1133,37 @@ export function signOffer(offers: Offer[], offerId: string, week: number): Offer
     offer.untilWeek = week + termWeeks - 1
     return offer
   }
+  // ⭐⭐ ROUND 29 PART TWO #12 – SHE STEPS UP, AND THE BRAND SHE LEAVES IS TOLD SO. `rungTurnedAway`
+  // lets a strictly stronger rung write over a running deal and `offerAnswerError` lets it be
+  // signed; this is the other half, and without it the game would briefly hold two live contracts.
+  // The outgoing deal ends WITH THE SEASON IT IS IN (`endDealWithSeason` - the same snap a failed
+  // deal takes, so `untilWeek` lands on `contractEndWeek` and the successor's `dealStartsAt` reads
+  // the week after), and its goodbye is posted on the spot with its own reason.
+  //
+  // ⚠ REASON `stepped`, NOT `term`: this contract was not served out, and `term` means it was. The
+  // goodbye is the only place a player learns a deal stopped, so it must not lie about why.
+  //
+  // ⚠ AND IT IS RAISED HERE RATHER THAN LEFT TO `reviewSponsors`, which would reach the same deal on
+  // a later week of the same window and call it `term`. `raiseKitEndLetter` is idempotent on
+  // `kit-end-<id>`, so posting it first is what makes the true reason the one that survives.
+  const superseded = offers.filter(
+    (o) =>
+      o !== offer &&
+      o.kind === 'kit' &&
+      o.state === 'signed' &&
+      (o.untilWeek ?? -1) >= coveredSeasonStart(week) &&
+      (o.untilWeek ?? -1) > contractEndWeek(week),
+  )
+  for (const old of superseded) {
+    endDealWithSeason(old, week)
+    raiseKitEndLetter(offers, week, old, 'stepped', old.eventsPlayed)
+  }
   // Read the start BEFORE the state moves: `dealStartsAt` walks the signed deals, and this one is
   // about to become one of them (with no `untilWeek` yet, so it could not move the answer - but the
-  // order is written to be true rather than merely harmless).
+  // order is written to be true rather than merely harmless). ⚠ AND IT IS READ AFTER THE STEP-UP
+  // ABOVE, deliberately: the superseded deal's `untilWeek` has just been pulled back to this
+  // season's contract end, and a start computed before that would queue the new deal behind a term
+  // that no longer exists.
   const from = dealStartsAt(offers, week)
   offer.state = 'signed'
   offer.decidedWeek = week
@@ -1593,6 +1707,50 @@ export function raiseCallUpLetter(offers: Offer[], week: number, terms: CallUpLe
  *  is stable across a replay the way every other derived id in this file is. */
 export function adOfferId(week: number): string {
   return `ad-${week}`
+}
+
+/** ⭐⭐ THE ADVERTISING LADDER, WEAKEST-FIRST – round 29 part two #19/#20. Exactly the shape
+ *  `SPONSOR_TIERS` has and for exactly its reason: the ORDER is the ladder, `adRungFor` reverses it
+ *  and takes the first rung she clears, so a row listed above a stricter one would be handed to
+ *  somebody who cleared both and the stricter house would become unreachable.
+ *
+ *  ⚠ IT IS A SECOND LADDER AND NOT SIX MORE RUNGS OF THE FIRST – see `AdTier`. The kit ladder is
+ *  endemic and pays in gear, fares and result bonuses; these three are non-endemic and pay cash for
+ *  her face. They run at once, and neither reads the other's dice, gates or terms. */
+export const AD_TIERS: readonly AdTier[] = ['watch', 'campaign', 'house']
+
+const AD_TIERS_STRONGEST_FIRST: readonly AdTier[] = [...AD_TIERS].reverse()
+
+/** THE STRONGEST HOUSE HER STANDING CLEARS, or null when none does – `rungFor`'s rule, applied to
+ *  the other ladder. ONE house writes, the biggest that would have her, because an advertising deal
+ *  is one at a time by construction (`adSpokenFor`) and there is no window to walk: a campaign
+ *  writes on whatever week it notices her.
+ *
+ *  ⚠ `wtaRanked` IS THE GUARD AND IT IS NOT OPTIONAL. Everybody without a counting W result ties at
+ *  the FLOOR of that table (`tableSize`, 564 rows), so a position there is not a standing – the
+ *  same trap `standingClears` documents for the kit rungs. */
+export function adRungFor(standing: SponsorStanding): AdTier | null {
+  if (!standing.wtaRanked) return null
+  return AD_TIERS_STRONGEST_FIRST.find((t) => standing.wtaRank <= ECONOMY.advertising.houses[t].maxWtaRank) ?? null
+}
+
+/** WHAT THAT HOUSE'S LETTER SAYS – the ad ladder's `kitTermsFor`, and the same snapshot rule: every
+ *  field is frozen onto the offer at arrival and never re-read from `ECONOMY` again, so a deal
+ *  signed under one catalogue keeps its own numbers if the catalogue is retuned.
+ *
+ *  ⚠ `tier` IS AN ARGUMENT WITH A DEFAULT, like `kitTermsFor`'s, so a test or a bench can ask what a
+ *  named rung offers without having to build a standing that clears it. */
+export function adTermsFor(standing: SponsorStanding, tier = adRungFor(standing)): AdOfferTerms | null {
+  if (!tier) return null
+  const h = ECONOMY.advertising.houses[tier]
+  return {
+    tier,
+    brand: h.brand,
+    trade: h.trade,
+    cashCents: h.cashCents,
+    termWeeks: h.termWeeks,
+    shootCount: h.shootWeeksPerTerm,
+  }
 }
 
 /** WHETHER A CAMPAIGN WRITES THIS WEEK - the one random thing about the deal, the same shape as the

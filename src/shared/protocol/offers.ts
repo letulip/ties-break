@@ -205,6 +205,27 @@ export type OfferState = 'open' | 'signed' | 'refused' | 'expired' | 'info'
  *  ELEVATE.". The coverage ladder is written on the pictures; this type only names it. */
 export type SponsorTier = 'local' | 'national' | 'global' | 'tour' | 'premium' | 'icon'
 
+/** ⭐⭐ THE ADVERTISING LADDER – round 29 part two #19/#20, and it is a SECOND ladder rather than
+ *  three more rungs of the one above. Weakest-first, like `SPONSOR_TIERS`, so an index comparison
+ *  is a ladder comparison in both files that do one.
+ *
+ *    watch     WTA <= 200   a watchmaker, 2 shoot weeks – the rung that already shipped
+ *    campaign  WTA <= 50    an airline's campaign, 4 shoot weeks
+ *    house     WTA <= 10    a cosmetics house, 6 shoot weeks – the plan's cap for a whole year
+ *
+ *  ⚠ IT IS NOT THE KIT LADDER AND MUST NEVER BE FOLDED INTO IT. Every rung of `SponsorTier` is
+ *  ENDEMIC – a tennis brand paying for tennis, in kit, fares and result bonuses – and every rung
+ *  here is NON-ENDEMIC: a house that makes something else entirely, paying cash for her FACE. The
+ *  two run at once by construction (`adSpokenFor` and `seasonSpokenFor` never read each other), so
+ *  a girl may wear Baseline Athletic and be photographed for Quiet Hour in the same season, which
+ *  is exactly what happens in the sport.
+ *
+ *  ⚠ AND THE PRICE IS TIME, WHICH IS WHY THE LADDER IS SHORT. A rung here asks for SHOOT WEEKS
+ *  (`AdOfferTerms.shootCount`), and the plan's own ceiling is six a year – so three rungs at 2 / 4
+ *  / 6 spend the whole allowance and there is no room for a fourth. See
+ *  `ECONOMY.advertising.houses`, where the money and the weeks are sized against each other. */
+export type AdTier = 'watch' | 'campaign' | 'house'
+
 /** THE THREE PROFESSIONAL RUNGS (W3-ACT2, act2-pro-tour.md section 7 - the owner's «да, надо
  *  продумать, предложи что-то», built). They are gated on the WTA rank, which is exactly as real as
  *  the two tables the rungs below read, and what they add is a KIND of money the junior ladder never
@@ -639,6 +660,19 @@ export type KitEndReason =
   | 'standing'
   /** it simply ran to the end of its term, terms honoured on both sides */
   | 'term'
+  /** ⭐⭐ ROUND 29 PART TWO #12 – SHE LEFT THEM FOR A BIGGER HOUSE. The owner: «открытое сейчас в
+   *  вашем ящике продление Baseline закроет и следующую зимнюю почту… там без спонсора грустновато
+   *  немного живется». A multi-season deal used to turn the WHOLE post away for as long as it ran
+   *  (`seasonSpokenFor`), so a girl who climbed two rungs during her term heard from nobody until it
+   *  expired – measured at 191 of 1,274 winters (15%), the commonest of them a `global` contract
+   *  standing in front of `premium`'s letter, which is his own save exactly.
+   *
+   *  ⚠ IT IS THE FOURTH REASON AND NOT A RE-USE OF `term`, because `term` means «terms honoured on
+   *  both sides» and this deal was not served out – saying otherwise on the paper would make the
+   *  brand's own goodbye a lie. The letter is the only place a player learns a contract stopped, so
+   *  it has to be able to say why. Additive to an optional persisted union: no save written before
+   *  this wave can contain it, and every reader falls back to a default arm. */
+  | 'stepped'
 
 /** ⭐⭐ THE ACADEMY'S THREE NOTICES, AS PAPER (round 24 #1). The owner, 20.08: «сейчас как-то
  *  незаметно появляется один маленький попапчик сверху, который призывает изучить scholarship и
@@ -736,12 +770,35 @@ export interface AcademyLetterTerms {
  *  contain an `'ad'` letter, so there is nothing to migrate and nothing to back-fill. ⚠ AND THAT
  *  COVERS STEP 2'S WIDENING TOO: `'ad'` has never shipped (step 1 and step 2 ride one unmerged
  *  branch), so no save can contain an ad letter without `shootCount` – widening the shape is free
- *  exactly once, and this is that once. */
+ *  exactly once, and this is that once.
+ *
+ *  ⚠⚠ AND ROUND 29 PART TWO'S LADDER IS THE SAME MOVE A SECOND TIME, WITH ONE DIFFERENCE THAT HAS
+ *  TO BE SAID OUT LOUD: `'ad'` HAS shipped by now (the owner is holding a Quiet Hour letter in his
+ *  own save), so the sentence above no longer covers it. `tier` and `trade` are OPTIONAL and both
+ *  read exactly on an old letter – the catalogue had one house, so every existing ad letter is a
+ *  watchmaker's – which is why `SAVE_SCHEMA_VERSION` still does not move. A required field would
+ *  have needed a migration and a fixture; an optional one whose absence has a single true meaning
+ *  does not. */
 export interface AdOfferTerms {
-  /** who is writing – a FICTIONAL non-endemic house (a watchmaker), never a tennis brand and never
-   *  anything constructible into a real company. It is on the terms, not derived, for the same
-   *  reason `KitOfferTerms.brand` is: the letter is persisted and must keep naming its own author. */
+  /** ⭐⭐ ROUND 29 PART TWO #19/#20 – WHICH HOUSE THIS IS, once there is more than one of them.
+   *
+   *  ⚠ OPTIONAL BECAUSE IT IS A WIDENING OF A SHIPPED SHAPE, and the precedent is the one this
+   *  file already records twice: commit 2763caa added the entire `entry` letter family while
+   *  `SAVE_SCHEMA_VERSION` stayed at 36. Every ad letter written before this wave is a Quiet Hour
+   *  letter by construction – the catalogue had exactly one house – so an absent `tier` reads
+   *  `'watch'` EXACTLY rather than by guess, which is why nothing is back-filled. */
+  tier?: AdTier
+  /** who is writing – a FICTIONAL non-endemic house, never a tennis brand and never anything
+   *  constructible into a real company. It is on the terms, not derived, for the same reason
+   *  `KitOfferTerms.brand` is: the letter is persisted and must keep naming its own author. */
   brand: string
+  /** WHAT THE HOUSE MAKES, in its own words and in the plural ("watches", "aircraft seats") – the
+   *  letter's opening clause, which was a hard-coded «We make watches» while the catalogue had one
+   *  house and could not survive a second.
+   *
+   *  ⚠ THE SAME WIDENING AS `tier`, and the same exactness: an absent trade is Quiet Hour's, so
+   *  `OfferLetter` reads `'watches'` and an old letter keeps saying precisely what it always said. */
+  trade?: string
   /** the one-time fee, in cents, paid into the FAMILY wallet the week the paper is signed. Cash
    *  only – no kit, no travel share, no retainer schedule: that is the whole difference between
    *  this letter and the ladder above it. */

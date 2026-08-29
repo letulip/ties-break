@@ -41,6 +41,13 @@ import { DEFAULT_PROFILE, type AdOfferTerms } from '../src/shared/protocol'
 import type { SeasonEvent } from '../src/engine/season/types'
 
 const AD = ECONOMY.advertising
+/** ⚠ THE CATALOGUE BECAME A LADDER (round 29 part two #19/#20), so the five per-house numbers
+ *  moved out of `ECONOMY.advertising` into `ECONOMY.advertising.houses`. Every claim in this
+ *  file is about the rung that already shipped – Quiet Hour, $20,000, two shoot weeks – so it
+ *  is REPOINTED and not re-aimed: `AD` still carries the mechanics every house shares (the age
+ *  bar, the weekly chance, the decide weeks, the lead, the clash price) and `WATCH` carries
+ *  that one house's own terms, which have not moved by a cent. */
+const WATCH = ECONOMY.advertising.houses.watch
 /** Week 216 – offset 8 of season 5, an ordinary in-season adult week (asserted in the fixture
  *  block). `tests/ad-offer.test.ts`'s own probe week, for the same reason: one condition varies. */
 const CLASH = 216
@@ -80,11 +87,11 @@ function clashWorld(seed: string, opts: { shootWeeks?: number[]; deadlineWeek?: 
     state: 'signed',
     decidedWeek: AT - 10,
     fromWeek: AT - 10,
-    untilWeek: AT - 10 + AD.termWeeks - 1,
+    untilWeek: AT - 10 + WATCH.termWeeks - 1,
     terms: {
-      brand: AD.brand,
-      cashCents: AD.cashCents,
-      termWeeks: AD.termWeeks,
+      brand: WATCH.brand,
+      cashCents: WATCH.cashCents,
+      termWeeks: WATCH.termWeeks,
       shootCount: 2,
       shootWeeks: opts.shootWeeks ?? [CLASH],
     },
@@ -127,7 +134,7 @@ describe('round 29 #3 – the week raises the choice', () => {
     const snap = toSnapshot(clashWorld('r29-3-prompt'))
     expect(snap.shootClash, 'the engine refused a week the screen has nothing to draw for').not.toBeNull()
     expect(snap.shootClash!.week).toBe(CLASH)
-    expect(snap.shootClash!.brand).toBe(AD.brand)
+    expect(snap.shootClash!.brand).toBe(WATCH.brand)
     expect(snap.shootClash!.eventLabel).toBe(TIERS.local.label)
     expect(snap.shootClash!.conditionCost).toBe(AD.clashConditionPerDay * PLAN_DAYS)
   })
@@ -217,7 +224,7 @@ describe('round 29 #3 – the four answers, and each costs something different',
     expect(funds - world.fundsCents, 'cancelling cost nothing – the owner asked for consequences').toBe(share)
     expect(share, 'a zero share would make the assertion above vacuous').toBeGreaterThan(0)
     // ⚠ THE SHARE IS THE PAPER'S, REBUILT rather than read back off the thing under test.
-    expect(share).toBe(Math.round(AD.cashCents / 2))
+    expect(share).toBe(Math.round(WATCH.cashCents / 2))
     const row = world.events.filter((e) => e.week === world.week && e.category === 'sponsor')
     expect(row, 'the money moved with no receipt in the ledger').toHaveLength(1)
     expect(row[0].amountCents).toBe(-share)

@@ -50,7 +50,14 @@ import { ECONOMY } from '../../src/engine/economy'
 import { isOffSeasonWeek } from '../../src/engine/season/calendar'
 import { DEFAULT_PROFILE, type Snapshot } from '../../src/shared/protocol'
 
-const AD = ECONOMY.advertising
+/** ⚠ THE CATALOGUE BECAME A LADDER (round 29 part two #19/#20), so the five per-house numbers
+ *  moved out of `ECONOMY.advertising` into `ECONOMY.advertising.houses`. Every claim in this
+ *  file is about the rung that already shipped – Quiet Hour, $20,000, two shoot weeks – so it
+ *  is REPOINTED and not re-aimed: `AD` still carries the mechanics every house shares (the age
+ *  bar, the weekly chance, the decide weeks, the lead, the clash price) and `WATCH` carries
+ *  that one house's own terms, which have not moved by a cent. This file only ever needed the
+ *  house's own numbers, so it takes `WATCH` alone. */
+const WATCH = ECONOMY.advertising.houses.watch
 /** The dearest rung, so "he drew nothing" and "he drew his sessions" are the widest apart. */
 const DAILY = ECONOMY.masseur.rungs[ECONOMY.masseur.rungs.length - 1].sessions
 
@@ -78,8 +85,8 @@ function payrolled(shootWeeks: number[]): WorldState {
     state: 'signed',
     decidedWeek: AT - 10,
     fromWeek: AT - 10,
-    untilWeek: AT - 10 + AD.termWeeks - 1,
-    terms: { brand: AD.brand, cashCents: AD.cashCents, termWeeks: AD.termWeeks, shootCount: 2, shootWeeks },
+    untilWeek: AT - 10 + WATCH.termWeeks - 1,
+    terms: { brand: WATCH.brand, cashCents: WATCH.cashCents, termWeeks: WATCH.termWeeks, shootCount: 2, shootWeeks },
   })
   // The hire is gated on a professional standing; the market's own door, opened the way the
   // `proWorld` fixtures do rather than by writing `masseurHired` behind the command's back.

@@ -280,6 +280,23 @@ built: either `tour` replaces `global` for professionals, or the two ladders (ju
 professional brands) run side by side with one deal at a time across both. An owner's call at
 build time, not now.
 
+⭐⭐⭐ **THE CALL WAS NEVER TAKEN, AND THE DEFECT THIS PARAGRAPH PREDICTED SHIPPED. IT IS RULED ON
+NOW – round 29 part two #5, 29.08.** The rungs went in side by side and nobody looked at the terms:
+`global` sorted ABOVE `tour` on the gate chain and paid **less** – the same $5,000 of kit and the
+same 25% of the fare, but no retainer against `tour`'s $6,000 a season and no result bonus against
+its 20% of every W75+ cheque, while locking three seasons against two. A parent who signed the
+stronger-looking letter on sight was strictly worse off, which is the exact inversion
+`windowLadder`'s strongest-first order exists to prevent.
+
+The owner: *«мировые топы должны иметь все возможности достучаться до топовой спортсменки.»*
+⚠ **His ruling is on the TERMS and not on the gate** – nothing about who Play Beyond writes to moves
+by a single rank. `global` takes a **$2,000/quarter retainer** (the TOP of this section's own
+«~$3–8k/yr» band, where `tour` takes the middle) and `tour`'s bonus verbatim (20% from W75), which
+keeps the whole chain non-decreasing without inventing a number to fill a gap the design does not
+have. The guard is `tests/round29p2-ladder-monotone.test.ts`, written as a property over the whole
+ladder rather than as a case about this rung – because prose in a header does not fail a build, and
+this paragraph is the proof of that.
+
 Principles carried over: cheques and retainers do NOT scale with the wealth corridor (the sponsor
 pays the player, not the family's background); a lost gate LAPSES at annual renewal — with a
 warning letter in the renewal window — never a mid-term drop (the lever, not the punishment);

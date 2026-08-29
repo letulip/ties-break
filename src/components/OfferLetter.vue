@@ -207,12 +207,22 @@ const adTerms = computed(() => props.offer.terms as AdOfferTerms)
 /** "Twelve months", because a house writing to a family says it the way the kit letters say "three
  *  seasons" – words, not a numeral – falling back to the numeral past the terms the game issues. */
 const adTermWord = computed(() => (adTerms.value.termWeeks === 52 ? 'Twelve months' : `${adTerms.value.termWeeks} weeks`))
+/** ⭐ WHAT THE HOUSE MAKES, in its own words – the letter's opening clause, and since round 29 part
+ *  two #19 it comes off the PAPER rather than out of the template. It was «We make watches» in the
+ *  markup while the catalogue had one house; the ladder has three (a watchmaker, an airline, a
+ *  perfumer) and a letter that introduced all of them as watchmakers would be the same class of
+ *  defect as a renewal that says «A kit deal for your daughter».
+ *
+ *  ⚠ THE FALLBACK IS EXACT, NOT A GUESS. An ad letter written before the ladder carries no `trade`,
+ *  and every one of those is a Quiet Hour letter by construction – so an old letter in an old inbox
+ *  still reads word for word what it read the day it arrived. */
+const adTrade = computed(() => adTerms.value.trade ?? 'We make watches')
 /** The promise count, in a house's words ("Two") – same rule as the term above – falling back to
- *  the numeral past the counts the game issues (the catalogue says 2; the plan's bigger asks are
- *  recorded, not built). */
+ *  the numeral past the counts the game issues. The catalogue asks 2 / 4 / 6, which is the plan's
+ *  own recorded ladder and its own annual cap, so the words run to six. */
 const adShootCountWord = computed(() => {
   const n = adTerms.value.shootCount
-  return n === 1 ? 'One' : n === 2 ? 'Two' : n === 3 ? 'Three' : `${n}`
+  return ['', 'One', 'Two', 'Three', 'Four', 'Five', 'Six'][n] || `${n}`
 })
 /** The named weeks once the signature has chosen them, in the game's own calendar words
  *  ("W14 '31 and W38 '31") – `weekLabel` is the unit every surface speaks. Empty until signed. */
@@ -257,6 +267,13 @@ const endBody = computed(() => {
   }
   if (t.ended === 'standing') {
     return `We kitted her out all season and enjoyed doing it. We back a girl who is somebody at home, and she has slid out of that band while she has been away, so this is where we shake hands.`
+  }
+  // ⭐⭐ ROUND 29 PART TWO #12 – SHE HAS SIGNED WITH A BIGGER HOUSE, and the brand she is leaving is
+  // the one who tells her so. It is its own sentence and not the `term` one because the term was
+  // NOT served: this deal had a year or more still to run. No scolding and nothing owed – the same
+  // register as the other three, and the same law («мы ни за что не наказываем»).
+  if (t.ended === 'stepped') {
+    return `We hear she is going somewhere bigger, and honestly we are not surprised. Our contract stops with this season – no notice to give and nothing to settle. It was a pleasure putting her in our kit.`
   }
   return `That is our term served, and she held up every part of it – ${played} tournaments in our kit this season. We are stopping here for now, with thanks.`
 })
@@ -635,7 +652,7 @@ const settled = computed(() => {
   <article v-else-if="isAd" class="offer-letter">
     <PaperNote class="offer-paper" size="letter" :tilt="0">
       <p class="offer-body">
-        We make watches, and we have been following her results. We would like her face in our
+        {{ adTrade }}, and we have been following her results. We would like her face in our
         campaign – her photograph beside our name, and the fee below for the family.
       </p>
       <ul class="offer-terms">

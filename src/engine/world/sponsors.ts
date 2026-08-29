@@ -17,7 +17,7 @@ import { netTravelCents, travelCoverShare } from '../academy'
 // The rung ladder, for the cameo's coach cut. coach.ts is a leaf (it imports ECONOMY and rng and
 // nothing else), so this runs one way exactly as every other import in this file does.
 import { COACH_TIERS } from '../coach'
-import { activeKitDeal, adSpokenFor, adWritesAt, chooseShootWeeks, contractEndWeek, dealEndingWithSeason, dealUnderReview, endDealWithSeason, isSponsorWindowCloseWeek, isSponsorWindowWeek, kitTravelShare, letDownThisWindow, raiseAdOffer, raiseKitEndLetter, raiseKitOffers, raiseKitRenewal, refuseOffer as refuseOfferIn, signOffer as signOfferIn, sponsorWindowOpensAt, standingClears, type SponsorStanding } from '../offers'
+import { activeKitDeal, adSpokenFor, adTermsFor, adWritesAt, chooseShootWeeks, contractEndWeek, dealEndingWithSeason, dealUnderReview, endDealWithSeason, isSponsorWindowCloseWeek, isSponsorWindowWeek, kitTravelShare, letDownThisWindow, raiseAdOffer, raiseKitEndLetter, raiseKitOffers, raiseKitRenewal, refuseOffer as refuseOfferIn, signOffer as signOfferIn, sponsorWindowOpensAt, standingClears, type SponsorStanding } from '../offers'
 import type { SeasonEvent, TierId } from '../season/types'
 import { LADDER_LABEL, type AdOfferTerms, type CoachTier, type KitEndReason, type KitOfferTerms, type Offer, type WorldEventCategory } from '../../shared/protocol'
 import { accrueKidShare, addEvent } from './ledger'
@@ -569,13 +569,27 @@ export function reviewAdOffer(world: WorldState): void {
   // FROM EIGHTEEN («от 18+ лет начиная») – her real age, `kidAgeYears` through `kidAgeAt`, the
   // one-clock ruling: never the band's clock, never a birthday approximation.
   if (kidAgeAt(world, world.week) < s.fromAgeYears) return
-  // RESULTS ONLY: a counting professional standing inside the bar. The `wtaRanked` guard is the
-  // brand ladder's own – a floor tie is not a standing – and the bar is measured, not invented:
-  // see ECONOMY.advertising.maxWtaRank for the §3 arithmetic that puts it at the tour rung's 200.
+  // RESULTS ONLY: a counting professional standing inside a house's bar. The `wtaRanked` guard is
+  // the brand ladder's own – a floor tie is not a standing, and `adRungFor` holds it – and the bars
+  // are measured, not invented: see `ECONOMY.advertising.houses` for the arithmetic behind all three.
+  //
+  // ⭐⭐ AND SINCE ROUND 29 PART TWO #19/#20 THE BAR IS A LADDER, SO THIS ASKS WHICH HOUSE RATHER
+  // THAN WHETHER ANY. The owner: «предлагать контракт за 20к долларов на год для 100 и выше ракетки
+  // мира выглядит весьма сомнительно… поправь меня, если я ошибаюсь». He is right – there was one
+  // house, one cheque and NO upper gate, so the world #21 was written to on the world #199's terms.
+  // `adRungFor` reads `ECONOMY.advertising.houses` strongest-first, exactly as `rungFor` reads the
+  // kit ladder, and the terms come from the rung that actually writes.
   const standing = sponsorStandingOf(world)
-  if (!standing.wtaRanked || standing.wtaRank > s.maxWtaRank) return
+  const terms = adTermsFor(standing)
+  if (!terms) return
   // ONE DEAL AT A TIME (plan §4.1): a letter still open on the table, or a signed term still
   // running, turns the next house away before any dice are read.
+  //
+  // ⚠ AND IT IS THE WHOLE LADDER'S RULE, NOT THE RUNG'S – deliberately unlike the kit ladder's
+  // round 29 part two #12 narrowing, where a stronger rung may write over a running deal. The kit
+  // rule is about a SEASON of gear she can only wear one of; this one is about her FACE, which she
+  // promised to one house for twelve months. A bigger house interrupting that would make the
+  // exclusivity clause the letter states («in no other campaign while that runs») untrue.
   if (adSpokenFor(world.offers, world.week)) return
   if (!adWritesAt(world.seed, world.week, s.offerChance)) return
   // Terms are frozen at arrival from the catalogue – the snapshot rule – and the deadline gives him
@@ -585,12 +599,7 @@ export function reviewAdOffer(world: WorldState): void {
   // paper from the first read (step 2, §4a): the letter states its own price in time, and a
   // catalogue retune between arrival and signature cannot change what this letter promised. The
   // WEEKS themselves are the signature's to name – see `acceptOffer`.
-  raiseAdOffer(
-    world.offers,
-    world.week,
-    { brand: s.brand, cashCents: s.cashCents, termWeeks: s.termWeeks, shootCount: s.shootWeeksPerTerm },
-    world.week + s.decideWeeks - 1,
-  )
+  raiseAdOffer(world.offers, world.week, terms, world.week + s.decideWeeks - 1)
 }
 
 /** THE PARENT SIGNS. Returns the signed offer, or throws with the engine's own reason – past the

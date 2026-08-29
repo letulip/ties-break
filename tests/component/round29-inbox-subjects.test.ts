@@ -148,7 +148,7 @@ const CALL_UP = letter({
 })
 const AD = letter({
   id: 'ad-1', kind: 'ad', state: 'open',
-  terms: { brand: ECONOMY.advertising.brand, cashCents: ECONOMY.advertising.cashCents, termWeeks: 52, shootCount: 2 },
+  terms: { brand: ECONOMY.advertising.houses.watch.brand, cashCents: ECONOMY.advertising.houses.watch.cashCents, termWeeks: 52, shootCount: 2 },
 })
 const KIT_NEW = letter({
   id: 'kit-1', kind: 'kit', state: 'open',
@@ -264,7 +264,7 @@ describe('Round 29 #16 – and every OTHER subject line in the inbox is pinned t
     expect(line).toBeTruthy()
     // ⚠ FORMATTED FROM CENTS, so this is the number the letter is worth and not a re-typing of it.
     expect(line).toContain('$20,000')
-    expect(ECONOMY.advertising.cashCents).toBe(20_000_00)
+    expect(ECONOMY.advertising.houses.watch.cashCents).toBe(20_000_00)
   })
 
   it('⚠ THE WHOLE POST AT ONCE – thirteen letters, thirteen distinct subjects, none of them borrowed', () => {

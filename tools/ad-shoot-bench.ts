@@ -44,8 +44,15 @@ import { isOffSeasonWeek } from '../src/engine/season/calendar'
 import { DEFAULT_PROFILE, type AdOfferTerms, type Offer } from '../src/shared/protocol'
 
 const AD = ECONOMY.advertising
+/** ⚠ THE CATALOGUE BECAME A LADDER (round 29 part two #19/#20), so the five per-house numbers
+ *  moved out of `ECONOMY.advertising` into `ECONOMY.advertising.houses`. Every claim in this
+ *  file is about the rung that already shipped – Quiet Hour, $20,000, two shoot weeks – so it
+ *  is REPOINTED and not re-aimed: `AD` still carries the mechanics every house shares (the age
+ *  bar, the weekly chance, the decide weeks, the lead, the clash price) and `WATCH` carries
+ *  that one house's own terms, which have not moved by a cent. */
+const WATCH = ECONOMY.advertising.houses.watch
 const CAREERS = 12
-const TERM = AD.termWeeks
+const TERM = WATCH.termWeeks
 
 const ageOf = (w: WorldState) => kidAgeYears(w.week, w.profile.birthMonth, w.profile.birthDay)
 
@@ -110,7 +117,7 @@ function walkTerm(world: WorldState, racing: boolean): Arm {
 console.log('='.repeat(100))
 console.log('AD-SHOOT BENCH - what do two shoot weeks cost, is it felt, and can one land in the off-season?')
 console.log(
-  `  ${CAREERS} careers · term ${TERM}w · shoots/term ${AD.shootWeeksPerTerm} · lead ${AD.shootLeadWeeks}w · ` +
+  `  ${CAREERS} careers · term ${TERM}w · shoots/term ${WATCH.shootWeeksPerTerm} · lead ${AD.shootLeadWeeks}w · ` +
     `rest week +${ECONOMY.condition.recoveryBase}+slider vs travel week +${ECONOMY.condition.matchWeekRecoveryBase}`,
 )
 console.log('='.repeat(100))
@@ -188,8 +195,8 @@ let minGap = Infinity
 const gaps: number[] = []
 for (let s = 0; s < 200; s++) {
   for (let sw = 200; sw < 300; sw++) {
-    const w = chooseShootWeeks(`ad-shoot-c-${s}`, sw, TERM, AD.shootWeeksPerTerm, AD.shootLeadWeeks)
-    if (w.length !== AD.shootWeeksPerTerm) short++
+    const w = chooseShootWeeks(`ad-shoot-c-${s}`, sw, TERM, WATCH.shootWeeksPerTerm, AD.shootLeadWeeks)
+    if (w.length !== WATCH.shootWeeksPerTerm) short++
     for (const x of w) {
       if (isOffSeasonWeek(x)) offSeason++
       if (x < sw + AD.shootLeadWeeks) beforeLead++
