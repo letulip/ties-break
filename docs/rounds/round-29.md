@@ -1159,3 +1159,122 @@ already inside, so they cost the wave almost nothing and they shrink the audit's
 | **11** | ~~Savings vs Index fund: what makes Savings worth holding once the fund can be topped up~~ – ⚙ **ANSWERED BY HIM, 28.08**: «мы для этого делаем Savings как раз, одни должны друг друга заменить». Savings is what the current account's interest turned into. |
 | **12b** | ⭐ **THE JUNIOR YEARS NOW EARN NOTHING AT ALL** – the shelf replaces the wallet's yield but `shopUnlocked` gates it on the professional ladder. **(A)** leave it (a fourteen-year-old's family is not an investor), **(B)** open the two investment rungs early, **(C)** open them at some earlier mark |
 | **11b** | ⭐ **RE-FILED after his «одни должны друг друга заменить» answered the bigger question.** The floating yield never shipped, so the index fund cannot fall – it is a risk-free 7% beside a risk-free 2%. **(A)** ship slice 2's drift so the fund really floats, **(B)** leave it, and accept that the fund is the strictly better holding above $5,000 |
+
+
+---
+
+# Part two – his answers, 29.08. THE ROUND IS NOT CLOSED UNTIL THESE ARE
+
+⚠⚠ **I mis-filed these as a "round 30" and he corrected me**: «подожди, какой раунд 30? я думал, что
+отвечал на вопросы 29… Как раз вот этот блок должен закрыть 29 раунд целиком.» He is right – the PR
+body ended with «seven decisions that are his», and this is him making them. **They belong here, and
+round 29 stays open until they are done.**
+
+
+
+Status: `[x]` shipped · `[~]` answered, nothing to build · `[>]` in flight · `[ ]` open · `[?]` his ·
+`[!]` REOPENED.
+
+**His replies to round 29's report.** Several are RULINGS that settle round 29's open questions; the
+rest are new. 
+
+---
+
+## Rulings that CLOSE round 29's open questions
+
+- [~] **R29 masseur on a shoot week** – ⚙ **CLOSED, no defect**: «ты же сам сказал, что получает, ведь
+  он отбивает эти 7 обратно. Всё ок.»
+- [~] **R29 item 14 / the 92%** – ⚙ **CLOSED, nothing to fix**: «да нет, судя по всему всё в норме, она
+  же продвинулась до 20 места за этот сезон. так что "се ля ви", нечего чинить.» ⚠ So the top-25
+  title rate stands as shipped; do not re-open it off round 29's measurement.
+- [~] **R29 round 21 #12** – ⚙ **NOT overturned**, and my report was wrong to say it partly was:
+  «нет, не отменяет, потому что % всё ещё будут начисляться.»
+
+---
+
+- [ ] **1. «У нас есть одна сумма призовых, допустим 55200, тогда и ее доля будет 27600 и у нас income
+  должен показывать 27600, а на соседней строчке все остальные расходы. Можно это сделать?»** –
+  **build.** ⚠⚠ He did not want the base explained, he wanted the ledger to stop netting silently.
+  **One prize figure, her half, the family's half, expenses beside it.** The row must mean what its
+  name says.
+
+- [ ] **2. «Her cut 50% of $55,200 – $27,600 – это усложнило и фразу и интерфейс – верни Her cut 50% –
+  $27,600 как было раньше пожалуйста»** – **build, revert.** ⚠ Round 29 #10 fixed the arithmetic's
+  legibility by lengthening the sentence; he wants the sentence back and item 1 fixes the cause
+  properly. **Do 1 first, then this is a pure revert.**
+
+- [ ] **3. «не вижу проблем сделать ставку 3.17% на Savings»** – ⚙ **RULING.** Savings takes the rate
+  the current account used to pay, so the replacement is whole rather than 63% of one.
+
+- [ ] **4. «при продаже бумаг надо дать возможность только часть продавать, иными словами при продаже
+  надо дать цифровой инпут для ввода суммы продажи»** – **build.** A numeric input on the sale, not
+  all-or-nothing. ⭐ His own reasoning: with partial sales the instrument becomes a real cash
+  management decision instead of a one-way door.
+
+- [ ] **5. «мировые топы должны иметь все возможности достучаться до топовой спортсменки»** –
+  ⚙ **RULING on round 29's `global`-dominated-by-`tour` defect.** The global rung must be at least as
+  good as the one below it. ⚠ Its terms, not its gate.
+
+- [ ] **6. «магазин открыт всегда с начала игры»** – ⚙ **RULING.** `shopUnlocked`'s professional gate
+  goes. ⭐ This also closes round 29's ask 12b: the junior years get the Savings replacement they
+  had no access to.
+
+- [ ] **7. «Запихнуть туда корты стоило бы +5108 КБ – это не очень большая цена, надо сделать, чтобы
+  можно было полностью оффлайн играть без помех… Возможно все надо в установку PWA добавлять. А с
+  обновлением догружать то, чего нет или обновлять то, что обновилось, а не весь сет.»** – ⚙ **RULING,
+  and it overturns round 29 #2's conservative choice.** Full offline is the goal. ⚠⚠ **The second
+  sentence is the hard half and the more important one**: an update must fetch only what is new or
+  changed, never the whole set. Inventory every art directory first and report the total.
+
+- [ ] **8. «она же бесплатная только при наличии яхты, верно? я могу сделать для нее отдельный арт,
+  тогда можно просто на постоянку добавить в ленту сначала с реальной стоимостью, а после покупки
+  яхты это станет бесплатным»** – **build.** The yacht week is a permanent vacation line, priced
+  normally, and becomes free once the yacht is owned. ⚠ He is also supplying art.
+
+- [ ] **9. «изначально стоит дороже немного (х1.4 вроде мы считали, да?)»** – **verify then build.**
+  Confirm the ×1.4 against the spec before using it; if the spec says another number, his memory is
+  the thing to check, not the source of truth.
+
+- [ ] **10. «Эпилог… надо добавить, мне кажется. Это всё-таки финал игры.»** – ⚙ **RULING**, settling
+  the shop spec's §10.4. The epilogue names the academy. He is supplying art for every item and
+  academy stage.
+
+- [ ] **11. «добавь пожалуйста вообще идею и концепцию фотоальбома для эпилога в бэклог отдельной
+  задачей»** – **backlog entry**, not a build. A photo album for the epilogue, as a concept.
+
+- [ ] **12. «открытое сейчас в вашем ящике продление Baseline закроет и следующую зимнюю почту… вот с
+  этим надо что-то делать, там без спонсора грустновато немного живется»** – **build.** A renewal
+  should not shut the winter's post. ⚠ Round 28 #17 made the renewal suppress the ladder's letter to
+  stop a duplicate; this is the cost of that fix showing up, so read that reasoning before changing it.
+
+- [ ] **13. «вот и можно как раз добавить cut тренера на weekly экране для прозрачности»** – **build.**
+  The coach's 10%/5% share on the weekly screen, not only as a sentence on the coaches page.
+
+- [ ] **14. «травмы бывают долгими и рехаб может быть с вещами, я бы тут еще подумал – мы это вроде бы
+  делали: у нас кроссовки участвуют в рехабе вроде бы. Проверь пожалуйста.»** – **answer.** ⚠ Round 29
+  #20 implemented the vacation half of the 09.08 ruling and recorded the injury half as unruled. Check
+  whether rehab already consumes gear; if it does, the ruling is complete and the ledger is wrong.
+
+- [ ] **15. «Закупки семьи — это расписание, а не часы… вот это интересно да, что можем сделать, чтобы
+  это исправить? или уже исправили?»** – **answer, then possibly build.** Gear is REPLACED on a
+  schedule while it WEARS on a clock, so a holiday changes its condition and never its price. Say
+  whether that is a defect or a design, and what tying the two together would cost.
+
+- [ ] **16. «Механику фонда надо придумать, да, потому что безрисковые 3 против безрисковых 7 это
+  весьма странно. Давай подумаем как это можно сделать красиво и просто.»** – **design, then his
+  ruling.** ⚠⚠ The hard constraint: **RNG input-independence is permanent law** – a fund that moves
+  must not draw from the MAIN weekly stream. Propose mechanics that respect it, cheaply.
+
+- [ ] **17. «Оставь он это так… починили?»** – **answer.** The `define` trap in round 29 #19.
+
+- [ ] **18. «Что там с playwright? Разобрались, он теперь работает?»** – **answer.**
+
+- [ ] **19. «я не увидел наш список спонсоров для съемок и прочего, не спортивных. С ними что и на
+  каких уровнях и что дают… Хочу увидеть их список и что дают.»** – **answer.** ⚠ Round 29 #7/#15
+  reported the KIT ladder and never the ADVERTISING one; that is a real gap in my report, not in his
+  reading.
+
+- [ ] **20. «предлагать контракт за 20к долларов на год для 100 и выше ракетки мира выглядит весьма
+  сомнительно, как мне кажется, поправь меня, если я ошибаюсь»** – **measure and answer.** ⭐ He has
+  invited correction, so the answer must be a real comparison against what a real top-100 woman earns
+  off court, not agreement.
