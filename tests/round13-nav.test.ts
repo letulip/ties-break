@@ -130,7 +130,13 @@ describe('the bottom nav is Season · Calendar · Home · Stats · Trophies, Hom
     expect(vite, 'the art is in the install now – see round 29 part two #7').not.toMatch(
       /^\s*globIgnores:/m,
     )
-    expect(vite).toContain("globPatterns: ['**/*.{js,css,html,svg,png,webp,woff2}']")
+    // ⚠ RE-AIMED AGAIN 29.08, SAME DISCIPLINE AS THE BLOCK ABOVE: `mp3` joined the pattern by the
+    // owner's audio ruling (19d1e62 – «audio joins the install by his ruling», the offline wave),
+    // and this pin was left reading the old glob – caught as a pre-existing red at the ledger head
+    // by the market-fund gate, control-proved at 972b74f in a detached worktree before being
+    // touched. The pin keeps guarding the same KIND of fact: what a player's install contains does
+    // not change silently.
+    expect(vite).toContain("globPatterns: ['**/*.{js,css,html,svg,png,webp,woff2,mp3}']")
   })
 
   it('the cabinet screen obeys the copy rules and dates by SEASON, never by calendar year', () => {
