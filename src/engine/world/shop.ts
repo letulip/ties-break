@@ -1,8 +1,8 @@
 // ⭐⭐ THE SHOP – the tab, static prices, buy / own / sell, and since round 29 #5 the storeys above.
 // docs/specs/the-shop-2026-08.md §2, §3a-c, §5 and §11 row 1 (slice 1); §3f and §3g (round 29 #5:
-// «В магазине всё ещё не хватает яхт, самолётов и стойки академии»). Still NOT here, and named so
-// the next builder does not have to diff two files to find out: no drift (§4, slice 2), no shock, no
-// freeze, no broker (§6), no charity (§8).
+// «В магазине всё ещё не хватает яхт, самолётов и стойки академии»); §4's moving price, in the shape
+// part three #16 approved. Still NOT here, and named so the next builder does not have to diff two
+// files to find out: no shock, no freeze, no broker (§6), no charity (§8).
 //
 // ⚠⚠ WHOSE MONEY THIS IS, because the spec had to be corrected on it once already (§1, the owner:
 // «Мы же делаем инвестиции для родителя, ты помнишь?»). The shelf belongs to the PARENT. Nothing on
@@ -20,19 +20,24 @@
 // week is `world/medical.ts`, both reading the one predicate in `world/assets.ts`. Her radar and her
 // kit are untouched and must stay so.
 //
-// ⚠⚠ ZERO DRAWS, ON MAIN OR ANYWHERE, AND SLICE 1 IS WHERE THAT IS EASIEST TO GUARANTEE: this file
-// imports no RNG and takes no `Rng` argument, which is the guarantee rather than a claim about it.
-// «Static» here means DETERMINISTIC, not frozen – every value is arithmetic on `boughtWeek`, so a
-// car still loses its 9% a season and the ledger still has a loss to show. The frozen MAIN capture
-// (41550 / e6b0c709) cannot see any of this.
-// ⚠ AND THE DOOR SLICE 2 WALKS THROUGH IS ALREADY CUT. §4's drift draws on
-// `rngFromSeed(`${seed}:asset:${assetId}:${week}`)` and never MAIN. `revalueAssets` below is the one
-// writer of `valueCents` and takes the world alone; slice 2 adds the sub-stream inside it, at one
-// call site, and every other line in this file and on the screen is unchanged. That is why the value
-// is a STORED field written by a tick phase rather than a getter the screen calls: a getter would
-// have to be given a stream, and a stream on a read path is how a purchase moves the world's dice.
+// ⚠⚠ ZERO **MAIN** DRAWS, AND THIS FILE STILL TAKES NO `Rng` ARGUMENT – which is the guarantee
+// rather than a claim about it. The frozen MAIN capture (41550 / e6b0c709) cannot see any of this.
+//
+// ⭐⭐ AND THE DOOR SLICE 2 WAS TO WALK THROUGH WAS CUT HERE, BUT ROUND 29 PART THREE #16 WALKED
+// THROUGH A DIFFERENT ONE, so the plan that stood in this paragraph is written out rather than
+// quietly replaced. It said: «§4's drift draws on `rngFromSeed(`${seed}:asset:${assetId}:${week}`)`
+// … slice 2 adds the sub-stream inside `revalueAssets`, at one call site.» That would have been a
+// per-week ROLL, and two things are wrong with it. It makes the value depend on how many times the
+// phase ran, killing the idempotence the paragraph below relies on; and a roll keyed on an ASSET is
+// a roll that only happens because the family bought one. What shipped instead is a PATH – seeded on
+// the career and READ at two weeks, drawing the same numbers whether or not anything is owned. See
+// `world/market.ts`. The rest of the paragraph stands unchanged and is the reason the design fits:
+// the value is a STORED field written by a tick phase rather than a getter the screen calls, because
+// a getter would have to be given a stream, and a stream on a read path is how a purchase moves the
+// world's dice.
 import { guardNotEndedForGood } from './endings'
 import { addEvent } from './ledger'
+import { WEEKS_PER_YEAR } from '../season/calendar'
 import { formatCents } from '../../shared/money'
 import { weekLabel } from '../../shared/dates'
 import type { OwnedAsset, ShopRowView, ShopView } from '../../shared/protocol'
@@ -48,8 +53,10 @@ import {
   assetDelivered,
   assetUpkeepCents,
   assetValueCents,
+  assetWorthCents,
   deliveredAssets,
   grantedVacationIds,
+  marketSeasonMove,
   ownedAssets,
   ownsDeliveredOfFamily,
   shopCatalogue,
@@ -61,8 +68,10 @@ export {
   assetDelivered,
   assetUpkeepCents,
   assetValueCents,
+  assetWorthCents,
   deliveredAssets,
   grantedVacationIds,
+  marketSeasonMove,
   ownedAssets,
   ownsDeliveredOfFamily,
   shopCatalogue,
@@ -110,27 +119,30 @@ export type { ShopItem }
  *  here. An item whose rung has been retired from the catalogue keeps its last value rather than
  *  being re-priced by a rate that no longer exists.
  *
- *  ⚠ IDEMPOTENT AND ORDER-FREE: the value is a function of (paidCents, boughtWeek, week), not of the
- *  previous value, so running it twice in a week or skipping a week changes nothing. That stops
- *  being true in slice 2, when drift accumulates – which is exactly when a single named writer with
- *  a single call site starts earning its keep.
+ *  ⚠ IDEMPOTENT AND ORDER-FREE: the value is a function of (basisCents, basisWeek, week, seed), not
+ *  of the previous value, so running it twice in a week or skipping a week changes nothing.
  *
- *  ZERO DRAWS. Defensive `??=` for the hand-built probe worlds in tests that predate the field, the
- *  courtesy `accrueFinance` extends to `careerTotals`. */
+ *  ⭐⭐ ROUND 29 PART THREE #16 KEPT THAT TRUE AND IT IS WHY THE MARKET IS A PATH RATHER THAN A DRIFT.
+ *  The note here used to say idempotence «stops being true in slice 2, when drift accumulates». It
+ *  does not: a market that ACCUMULATES would have to be rolled once per week, which makes the value
+ *  depend on how many times this ran and puts a draw on a path a player's purchase can reach. A
+ *  seeded path is READ instead – `index(week) / index(basisWeek)`, a fact about the world at two
+ *  weeks – so the second press of the fast-forward button prices the holding exactly as the first
+ *  did, and «the market exists whether or not she buys» is the same sentence as «this is idempotent».
+ *
+ *  ZERO **MAIN** DRAWS. The market's sub-streams are keyed on the seed and a week; see
+ *  `world/market.ts`. Defensive `??=` for the hand-built probe worlds in tests that predate the
+ *  field, the courtesy `accrueFinance` extends to `careerTotals`. */
 export function revalueAssets(world: WorldState): void {
   world.assets ??= []
   for (const owned of world.assets) {
     const item = shopItem(owned.id)
     if (!item) continue
-    // ⭐ ROUND 29 #11 – off the REBASED basis and its own clock when the holding has been topped up,
-    // and off the original purchase when it has not. The `??` pair is the whole compatibility story:
-    // absent means «never topped up», which is what every save written before that field means, and
-    // it evaluates to exactly the arithmetic this line has always done (see `OwnedAsset.basisCents`).
-    owned.valueCents = assetValueCents(
-      item,
-      owned.basisCents ?? owned.paidCents,
-      world.week - (owned.basisWeek ?? owned.boughtWeek),
-    )
+    // ⚠ THE `??` PAIR ROUND 29 #11 WROTE AND PART TWO #4 RE-USED NOW LIVES IN `assetWorthCents`,
+    // because part three #16 gave the household meter a second thing to agree about (the market's
+    // seed and the ABSOLUTE week, neither of which `assetValueCents` can see). One function, two
+    // readers, no chance of the till and the meter pricing two different markets.
+    owned.valueCents = assetWorthCents(world, owned, item)
   }
 }
 
@@ -159,6 +171,48 @@ export function deliverAssets(world: WorldState): void {
       week: world.week,
       type: 'entry',
       text: `Delivered: ${shopItem(owned.id)?.label ?? owned.id}`,
+    })
+  }
+}
+
+/** ⭐⭐⭐ ROUND 29 PART THREE #16 – THE SEASON LINE, and it is the half of the item that is not the
+ *  mechanic.
+ *
+ *  «A season summary line – "the fund this year: −8%". Without it the player sees a smaller number
+ *  and cannot tell why, which is precisely the blindness that produced round 29 #10. The number
+ *  moving is not the same as the number being legible.»
+ *
+ *  ⚠⚠ IT REPORTS THE MARKET AND NOT THE HOLDING, which is the difference that makes it a fact rather
+ *  than a P&L. A family that topped up in week 40 has a personal return nothing like the market's
+ *  year, and quoting THAT here would be a third arithmetic for a worth – the shop row's `changePct`
+ *  is where a family's own number lives, and it is already on screen. This line answers «why did my
+ *  number move», and the answer is about the world.
+ *
+ *  ⚠ ONCE A SEASON, ON THE SEASON BOUNDARY, AND ONLY WHILE THEY HOLD ONE. A market nobody is in is
+ *  noise in a feed. `world.week % WEEKS_PER_YEAR === 0` is `seasonStartWeek`'s own definition read
+ *  as a predicate, so the window it reports is exactly the season that just ended – the same 52-week
+ *  block the Money screen's «this season» means (R11-12a).
+ *
+ *  ⚠ IDEMPOTENT WITHOUT A PERSISTED FLAG, and therefore without a schema move: it reads back the
+ *  ledger for its own opening words at this week, which is `academySpokeThisWeek`'s trick one file
+ *  over. A tick replayed over the same week writes one row, not two.
+ *
+ *  ⚠ ZERO MAIN DRAWS – `marketSeasonMove` reads the seeded path and nothing else. */
+const MARKET_SEASON_OPENING = 'A season of the market'
+
+export function reportMarketSeason(world: WorldState): void {
+  if (world.week === 0 || world.week % WEEKS_PER_YEAR !== 0) return
+  if (world.events.some((e) => e.week === world.week && e.text.startsWith(MARKET_SEASON_OPENING))) return
+  for (const { item } of deliveredAssets(world)) {
+    if (!item.volBps) continue
+    // ⚠ ROUNDED HERE AND NOWHERE ELSE – the house rule is «round the display, not the logic», and
+    // this string IS the display. `marketSeasonMove` hands back a signed fraction.
+    const pct = Math.round(marketSeasonMove(item, world.seed, world.week) * 100)
+    const said = pct === 0 ? 'is level' : pct > 0 ? `is up ${pct}%` : `is down ${-pct}%`
+    addEvent(world, {
+      week: world.week,
+      type: 'info',
+      text: `${MARKET_SEASON_OPENING} – ${item.label} ${said} over the season.`,
     })
   }
 }

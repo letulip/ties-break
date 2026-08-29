@@ -3088,10 +3088,18 @@ export const ECONOMY = {
         // the design can carry and still be safe to hold.
         //
         // ⚠ AND IT IS ABOUT HALF A REAL INDEX'S VOLATILITY, which is a decision and not a mistake. A
-        // true 17% would put a quarter of ten-year holdings behind the deposit. Measured at this
-        // number (`npx vite-node tools/market-probe.ts`, 4,000 seeds): 22.6% of rolling seasons are
-        // negative – «roughly one year in four or five», which is what part three #16 asked for –
-        // and 100.00% of ten-year holds beat the deposit.
+        // true 17% is a random walk's number, and a walk would put roughly a quarter of ten-year
+        // holdings behind the deposit.
+        //
+        // ⚙ MEASURED, `npx vite-node tools/market-probe.ts --seeds 4000` (29.08), 228,000 rolling
+        // seasons and 48,000 holdings per horizon:
+        //
+        //   negative seasons  19.9%   («roughly one year in four or five» – part three #16's ask)
+        //   season sd          8.35%  · worst season −18.5% · worst peak-to-trough −20.4%
+        //   beats the deposit  1y 67.07%  3y 90.24%  5y 98.73%  10y 100.00% (0 of 48,000 lose)
+        //   worst 10y fund    +48.5% against the deposit's +36.6%
+        //
+        // The shape is the design: WHEN you sell matters, WHETHER you were right to hold does not.
         //
         // ⚠ PROVISIONAL BY HIS OWN FRAMING: «вроде посмотрел, давай сделаем, а я пощупаю и скажу
         // свои ощущения потом.» Move this one number and re-run the probe; nothing else has to move.

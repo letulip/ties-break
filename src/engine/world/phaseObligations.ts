@@ -35,7 +35,7 @@ import { fireMilestone } from './milestones'
 import { inCollege } from './college'
 import { announceFieldFarewells, announceFieldIntake, isFieldFarewellWeek } from './fieldNews'
 import { expireKnock } from './knock'
-import { deliverAssets, revalueAssets } from './shop'
+import { deliverAssets, reportMarketSeason, revalueAssets } from './shop'
 import {
   settleMandatoryDeadlines,
   settleMandatoryMisses,
@@ -389,4 +389,16 @@ export function seasonBoundaryAndObligations(world: WorldState): void {
   //         charged. ⚠ ZERO DRAWS: it removes one optional key and writes one `entry` row.
   deliverAssets(world)
   revalueAssets(world)
+  // ⭐⭐⭐ ROUND 29 PART THREE #16 – ...AND ONCE A YEAR THE MARKET SAYS WHAT IT DID.
+  //
+  //         «A season summary line – "the fund this year: −8%". Without it the player sees a smaller
+  //         number and cannot tell why … The number moving is not the same as the number being
+  //         legible.»
+  //
+  //         ⚠ IT RUNS AFTER `revalueAssets` ON PURPOSE, and the ordering is the whole of its
+  //         honesty: the row the feed shows and the worth the screen shows are written in the same
+  //         tick off the same path, so a player who reads the line and then looks at his holding
+  //         cannot find two different markets. ⚠ ZERO MAIN DRAWS; the season figure is read off the
+  //         seeded path, and the guard against a second row is a ledger read, not a persisted flag.
+  reportMarketSeason(world)
 }

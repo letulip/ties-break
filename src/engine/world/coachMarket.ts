@@ -30,7 +30,7 @@ import { masseurWeeklyCents } from './masseur'
 // ⚠ REPOINTED AT THE LEAF AT ROUND 29 #5 – same functions, same behaviour. `world/assets.ts` holds
 // the shelf's pure reads and `world/shop.ts` re-exports them, so this is a shorter path to the same
 // symbols and not a change: this file only ever asked the shelf questions.
-import { assetValueCents, ownedAssets, shopItem, weeklyAssetUpkeepCents } from './assets'
+import { assetWorthCents, ownedAssets, shopItem, weeklyAssetUpkeepCents } from './assets'
 import { addEvent, seasonIndexOf, seasonStartWeek } from './ledger'
 import { ageAtWeek, kidAgeAt, START_AGE_YEARS } from './age'
 import { activeLadderOf, bookClosedTo, hasOutgrown, kidPoints, tierOpenFor } from './ladder'
@@ -582,13 +582,22 @@ const RETAINERS_A_YEAR = 4
  *  seats down on the ledger without either of them vanishing from the family's standing budget. A
  *  PSYCHOLOGIST joins as one more line in this list and nothing else moves.
  *
- *  ⚠ THE SHELF IS ONE MORE WEEK OF HOLDING, ASKED OF `assetValueCents` ITSELF. Slice 1's whole design
+ *  ⚠ THE SHELF IS ONE MORE WEEK OF HOLDING, ASKED OF `assetWorthCents` ITSELF. Slice 1's whole design
  *  is that there is exactly one arithmetic for what a thing is worth (`revalueAssets` is its only
  *  writer); a weekly rate derived from `annualRateBps` here would be a second one, and it would drift
- *  the day slice 2 adds drift. Difference of the same function at `held` and `held + 1` – so when the
- *  curve changes, this changes with it, for free.
+ *  the day the value stops being a smooth curve. Difference of the same function at this week and the
+ *  next – so when the curve changes, this changes with it, for free.
  *
- *  Pure: zero draws on any stream, derived at snapshot time like everything else on this screen. */
+ *  ⭐⭐ AND ROUND 29 PART THREE #16 IS THE DAY THAT PAID OFF, LOUDLY. The fund now rides a market, so
+ *  this line is no longer a rounding-error trickle: a $50,000 holding can move a few hundred dollars
+ *  in a week, either way, and the sign flips. That is the HONEST figure and it is why the split below
+ *  (`Math.max(0, shelfCents)` into income, `Math.max(0, -shelfCents)` into outgoings) needed no
+ *  change – it was always signed. ⚠ AND IT DOES NOT JITTER: the market's shortest anchor is half a
+ *  season and the interpolation is smoothstep, which is flat at both ends, so this figure walks a
+ *  curve rather than stepping when a quarter turns over. `tests/round29p3-market.test.ts` measures
+ *  the week-over-week change of this very number over a real career.
+ *
+ *  Pure: zero MAIN draws, derived at snapshot time like everything else on this screen. */
 export function householdWeekly(world: WorldState, trainingCents: number): HouseholdWeekly {
   const staffCents = (world.masseurHired ?? false) ? masseurWeeklyCents(world) : 0
   // WHAT ONE MORE WEEK OF HOLDING DOES TO THE SHELF, signed, summed over what the family owns.
@@ -596,15 +605,14 @@ export function householdWeekly(world: WorldState, trainingCents: number): House
   for (const owned of ownedAssets(world)) {
     const item = shopItem(owned.id)
     if (!item) continue // a rung retired from the catalogue keeps its value; see `revalueAssets`
-    // ⚠⚠ THE SAME BASIS AND THE SAME CLOCK `revalueAssets` USES, and round 29 #11 is why this line
-    // says it twice. A top-up REBASES the holding (`OwnedAsset.basisCents` / `basisWeek`), and this
-    // meter reading `paidCents` / `boughtWeek` after one would be the exact defect the note above
-    // forbids – two functions asking one question and getting different answers. The `??` pair is
-    // the same one `revalueAssets` carries, and on a holding never topped up it is the identical
-    // arithmetic this line has always done.
-    const basis = owned.basisCents ?? owned.paidCents
-    const held = world.week - (owned.basisWeek ?? owned.boughtWeek)
-    shelfCents += assetValueCents(item, basis, held + 1) - assetValueCents(item, basis, held)
+    // ⚠⚠ THE SAME FUNCTION `revalueAssets` USES, AT TWO WEEKS – and round 29 #11 and part three #16
+    // are both why. #11 rebased the holding on a top-up (`basisCents` / `basisWeek`) and this meter
+    // was still reading `paidCents` / `boughtWeek`, which is the «two functions asking one question»
+    // defect the note above forbids. #16 gave the fund a MARKET, which needs the seed and the
+    // absolute week as well – three things to keep in step instead of two. So the `??` pair and the
+    // market ratio both moved into `assetWorthCents` and this line asks it twice: the difference of
+    // ONE function at 0 and at +1. When the curve changes, this changes with it, for free.
+    shelfCents += assetWorthCents(world, owned, item, 1) - assetWorthCents(world, owned, item)
   }
   // ⭐⭐ ROUND 29 #5 – ...AND WHAT IT COSTS TO KEEP, WHICH IS CASH AND NOT A VALUATION. §3f's weekly
   // upkeep really leaves the wallet every week (`resolveAssetUpkeep` charges it), so unlike
