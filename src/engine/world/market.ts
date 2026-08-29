@@ -61,7 +61,7 @@ const OCTAVES: { periodWeeks: number; amp: number }[] = [
  *  thrown away – `pickInt`'s neighbours in `rng.ts` are the same shape.
  *
  *  ⚠ THE KEY CARRIES THE PERIOD AND NOT AN OCTAVE INDEX, so re-tuning one octave's LENGTH re-seeds
- *  that octave alone and leaves the other three where they were. Nothing persists any of it, so this
+ *  that octave alone and leaves the other two where they were. Nothing persists any of it, so this
  *  is a debugging convenience rather than a compatibility promise: every number in this file is
  *  provisional by the owner's own framing («я пощупаю и скажу свои ощущения потом»). */
 function anchor(seed: string, periodWeeks: number, index: number): number {
@@ -107,7 +107,7 @@ export function marketWave(seed: string, week: number): number {
  *  ⚠⚠ `if (!volBps) return 1` IS A SHORT-CIRCUIT AND NOT A GUARD, and it is written down because a
  *  clause that cannot change an answer is exactly the dead-guard family this repo keeps catching:
  *  `Math.exp(0 · wave)` is already 1, so deleting this line changes NO value anywhere – it only
- *  stops four `rngFromSeed` calls being made per priced holding per tick, on the twelve rungs of the
+ *  stops six `rngFromSeed` calls being made per priced holding per tick, on the twelve rungs of the
  *  catalogue that do not ride the market. Do not write a test that claims to cover it; a mutation
  *  that removes it is arithmetically identical to the control, which is the trap.
  *

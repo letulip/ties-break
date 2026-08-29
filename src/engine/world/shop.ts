@@ -193,16 +193,25 @@ export function deliverAssets(world: WorldState): void {
  *  as a predicate, so the window it reports is exactly the season that just ended – the same 52-week
  *  block the Money screen's «this season» means (R11-12a).
  *
- *  ⚠ IDEMPOTENT WITHOUT A PERSISTED FLAG, and therefore without a schema move: it reads back the
- *  ledger for its own opening words at this week, which is `academySpokeThisWeek`'s trick one file
- *  over. A tick replayed over the same week writes one row, not two.
+ *  ⚠⚠ AND THAT PREDICATE IS THE WHOLE OF THE ONCE-NESS – THERE IS NO SECOND GUARD, DELIBERATELY. A
+ *  draft of this function carried `academySpokeThisWeek`'s trick as well (read the ledger back for
+ *  this row's own opening words), and it was DELETED before it shipped: `tickWeek` increments
+ *  `world.week` once at the top and `seasonBoundaryAndObligations` is this function's only caller, so
+ *  the ledger read could never once be true. That is the shape this file's own header block argues
+ *  about the deleted `shopUnlocked` – «a predicate that cannot be false and a refusal string nothing
+ *  prints are the same hazard» – and the repo has caught nine dead guards in three days. It was
+ *  mutation-tested before removal and turned no arm red.
+ *
+ *  ⚠ SO A SECOND CALLER IS THE THING TO WATCH. `chargeMandatoryPenalty` needs its replay guard
+ *  precisely because it has four call sites («a week re-ticked must not fine her twice»); if this
+ *  ever gains one, it needs the same and the ledger read is how to write it. No persisted flag and
+ *  therefore no schema move, either way.
  *
  *  ⚠ ZERO MAIN DRAWS – `marketSeasonMove` reads the seeded path and nothing else. */
 const MARKET_SEASON_OPENING = 'A season of the market'
 
 export function reportMarketSeason(world: WorldState): void {
   if (world.week === 0 || world.week % WEEKS_PER_YEAR !== 0) return
-  if (world.events.some((e) => e.week === world.week && e.text.startsWith(MARKET_SEASON_OPENING))) return
   for (const { item } of deliveredAssets(world)) {
     if (!item.volBps) continue
     // ⚠ ROUNDED HERE AND NOWHERE ELSE – the house rule is «round the display, not the logic», and
