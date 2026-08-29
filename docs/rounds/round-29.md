@@ -1411,9 +1411,82 @@ rest are new.
   spied so the ARGUMENT is what is asserted – a screen that drew a perfect box and then sold the whole
   holding would pass every rendering check ever written for it).
 
-- [ ] **5. «мировые топы должны иметь все возможности достучаться до топовой спортсменки»** –
+- [x] **5. «мировые топы должны иметь все возможности достучаться до топовой спортсменки»** –
   ⚙ **RULING on round 29's `global`-dominated-by-`tour` defect.** The global rung must be at least as
   good as the one below it. ⚠ Its terms, not its gate.
+
+  ⚙⚙ **SHIPPED, AND THE SPEC PREDICTED THIS DEFECT AT DESIGN TIME AND NOBODY EVER TOOK THE CALL TO
+  YOU.** `docs/specs/act2-pro-tour.md` §7, verbatim, written when the professional rungs were
+  proposed: «`tour`'s WTA ≤ 200 sits deliberately BELOW global's 31 in strength while above it in
+  kind, **which is the one thing to resolve when it is built** … an owner's call at build time, not
+  now.» It was never resolved. The rungs went in side by side, and `global` ended up sorted ABOVE
+  `tour` while paying **less**: the same $5,000 of kit and the same 25% of the fare, but **no
+  retainer** against tour's $6,000 a season and **no result bonus** against its 20% of every W75+
+  cheque, locking three seasons against two. Your ruling is that call, finally made, and §7 is
+  amended where it stood open.
+
+  ⭐ **WHAT IT TAKES, AND NEITHER NUMBER IS INVENTED.** A **$2,000/quarter retainer** ($8,000 a
+  season) – the TOP of §7's own «~$3–8k/yr» band, where `tour` takes the middle – and `tour`'s bonus
+  **verbatim** (20% from W75). Strictly better on the retainer rather than merely equal, on purpose:
+  a rung that matched the one below it and still locked a third season would remain the worse deal.
+  The bonus is not stepped because a fourth value between 20% and `premium`'s 25% would be a number
+  invented to fill a gap the design does not have – 20 / 20 / 25 / 30 is non-decreasing and adds
+  nothing to retune.
+
+  ⚠ **THE GATE IS NOT TOUCHED.** `maxItfRank: 8` and `maxWtaRank: 87` are read and never written.
+
+  ⚠⚠ **YES – `kit-776` IN YOUR SAVE KEEPS ITS BAD TERMS, AND YOU WILL SEE IT.** The Play Beyond
+  letter open in your inbox was written from the old catalogue, and `kitTermsFor`'s standing rule
+  freezes every term at ARRIVAL («terms never improve while you hold the letter»). That rule is the
+  reason a held letter can never pay you for waiting, and repairing this one in place would mean a
+  contract whose numbers change under you – so the fix is **forward-only** and the open letter is
+  the one career-week that pays for it. **The next Play Beyond letter carries the retainer.**
+  Refusing this one to wait for that is a real choice and a real cost (a season of kit); it is
+  yours, and the game will not make it for you.
+
+  ⭐ **THE GUARD IS A PROPERTY OVER THE WHOLE LADDER, NOT A CASE ABOUT `global`** –
+  `tests/round29p2-ladder-monotone.test.ts`. Two arms: every rung is **at least as good as the one
+  below it on every term that pays her** (kit allowance, freshness ceiling, lines covered, travel
+  share, retainer, appearance fee, bonus share, and how far down the ladder the bonus reaches), and
+  every rung **improves somewhere**, so no rung can be pure ceremony. It reads the catalogue through
+  `kitTermsFor` – the same function the engine reads it through – so a rung fixed in `ECONOMY` and
+  dropped on the floor in `kitTermsFor`, which is exactly how this could have half-shipped, fails
+  there. `global` paid less than `tour` for twenty-eight days and nothing objected, because the
+  ordering's promise lived only in `windowLadder`'s header, and **prose does not fail a build**.
+
+  ⚠ **AND THE PROPERTY FOUND A SECOND INVERSION I HAD NOT LOOKED FOR, WHICH IS REPORTED AND NOT
+  FIXED.** `minEventsPerSeason` runs 8 / 10 / **14 / 12** / 16 / 16 – `tour` asks fourteen events and
+  `global`, one rung above it, asks twelve. Both rungs' comments read «the step of two» off an order
+  in which global comes fourth and tour fifth, which is not the order `SPONSOR_TIERS` has: the same
+  artefact of `tour`'s insertion. ⭐ **It is left alone deliberately** – an obligation that FALLS as
+  the rung improves is the player-favourable direction, so it is not a domination and not the defect
+  you ruled on. Raising it would make a deal harder to keep, which is a balance decision and is
+  yours. Pinned as literals so it cannot be «tidied» into a real domination by accident.
+
+  ⚙ **AND THE REACH BENCH NO LONGER PRINTS THE WARNING IT USED TO.** `tools/sponsor-ladder-reach.ts`
+  has always ended its worth-table with a domination check, and every run before this one closed
+  with `⚠ global is presented ABOVE tour and pays LESS on: retainer, bonus – and locks 3 seasons
+  against 2`. It is gone. ⚠ **The tool itself had to be fixed to say that honestly**: its table was
+  hand-built when `global` had no cash fields, so it read ZERO for both and would have kept flagging
+  the defect for a whole run AFTER the ruling shipped.
+
+  ⚠ Mutation-verified: reverting `global`'s retainer and bonus reddens the property, the
+  improves-somewhere arm and the named-defect arm together.
+
+  ⚠⚠ **FROZEN CAREERS: BYTE-IDENTICAL ON ALL THREE ARMS, AND I AM NAMING THE NULL ARM HONESTLY
+  BECAUSE THAT ON ITS OWN PROVES NOTHING.** Per-key diff first (`tools/frozen-key-diff.ts`, control =
+  **this commit reverted in a detached worktree**, not the previous commit), headers checked against
+  each invocation – `# preset 5 policy 0`, `# preset 8 policy 0`, `# preset 0 policy 1`, three
+  different lines, which is the trap that has bitten three agents. All three arms **byte-identical on
+  every key, `rngMain` included**, and the frozen MAIN capture (41550 / `e6b0c709`) is untouched –
+  nothing in this wave draws.
+  ⭐ **THE ABSENCE IS PROVEN, NOT ASSUMED.** These careers run 156 weeks to age 17, and
+  `tools/econ-bench.ts` **never signs an offer** – so no retainer is ever paid, no `seasonSpokenFor`
+  is ever true, and eighteen never arrives for an advertising letter. Proven by two mutations rather
+  than by that argument alone: setting `global.retainerCents` to an absurd **$99,999,999** moves
+  **nothing on any arm**, while setting `sponsorship.seasonCents` – a constant these careers DO read –
+  to the same absurd value moves the `offers` key on **all three**. The instrument is live; the
+  reader for this change is simply not in that fixture.
 
 - [x] **6. «магазин открыт всегда с начала игры»** – ⚙ **RULING.** `shopUnlocked`'s professional gate
   goes. ⭐ This also closes round 29's ask 12b: the junior years get the Savings replacement they
@@ -1478,10 +1551,87 @@ rest are new.
 - [ ] **11. «добавь пожалуйста вообще идею и концепцию фотоальбома для эпилога в бэклог отдельной
   задачей»** – **backlog entry**, not a build. A photo album for the epilogue, as a concept.
 
-- [ ] **12. «открытое сейчас в вашем ящике продление Baseline закроет и следующую зимнюю почту… вот с
+- [x] **12. «открытое сейчас в вашем ящике продление Baseline закроет и следующую зимнюю почту… вот с
   этим надо что-то делать, там без спонсора грустновато немного живется»** – **build.** A renewal
   should not shut the winter's post. ⚠ Round 28 #17 made the renewal suppress the ladder's letter to
   stop a duplicate; this is the cost of that fix showing up, so read that reasoning before changing it.
+
+  ⚙⚙ **SHIPPED, AND IT IS NOT ROUND 28 #17 BEING UNDONE.** That fix stops ONE BRAND writing twice in
+  a winter and is untouched, still mutation-verified, and asserted again by the new arms. The rule
+  that shut your winter is the OTHER one – `seasonSpokenFor`, «one brand at a time» – and only its
+  top edge moves.
+
+  ⚙ **MEASURED FIRST, ON THE SHIPPED CODE (108 careers x 780 weeks, `tools/sponsor-ladder-reach.ts`),
+  AND THE MEASUREMENT IS WHY THE SHAPE IS THIS SHAPE.** 1,274 sponsor windows lived through:
+
+  | what the winter did | n | share |
+  | --- | ---: | ---: |
+  | produced no kit letter at all | **416** | 32.7% |
+  | ...of which: the season ahead was already promised to a running deal | **360** | 28.3% |
+  | ...and letters raised in those 360 anyway | **0** | – |
+  | ⭐ a **strictly stronger** rung was cleared and standing behind that closed door | **191** | 15.0% |
+
+  ⭐ **AND THE COMMONEST SHUT-OUT IS YOUR SAVE TO THE BRAND: `global` standing in front of `premium`
+  (84 of the 191)** – Play Beyond's contract, Meridian Sport's letter. Then `national` in front of
+  `tour` (26), `tour` in front of `premium` (24), `premium` in front of `icon` (24).
+
+  ⭐ **THE FIX: A RUNNING DEAL TURNS AWAY EVERY RUNG AT OR BELOW ITS OWN, AND A STRICTLY STRONGER ONE
+  MAY WRITE** (`rungTurnedAway`, read per rung inside `raiseKitOffers` instead of once at the top).
+  Three things it does NOT change, each load-bearing and each asserted:
+  - **One brand at a time survives literally.** Two contracts are never live at once, because signing
+    the stronger letter ENDS the running one with the season it is in – the same `endDealWithSeason`
+    snap a failed deal takes – and the successor starts the week after.
+  - **The term still bites.** `premium` cannot be interrupted by `tour`, `global` or `national`; only
+    two of six rungs can ever write over it, and NOTHING can write over `icon`. A long contract is
+    still a real decision, which is what `seasons` is for.
+  - **Nothing is manufactured.** The stronger rung still has to be one `standingClears` would have,
+    and still rolls its own dice on its own slot.
+
+  ⭐ **AND THE BRAND SHE LEAVES WRITES TO SAY SO** – a fourth `KitEndReason`, `'stepped'`, with its
+  own sentence («We hear she is going somewhere bigger, and honestly we are not surprised»). It is
+  NOT re-used `term`, because `term` means «terms honoured on both sides» and this deal was not
+  served out; the goodbye is the only place you ever learn a contract stopped, so it must not lie.
+  Raised at the signature so the true reason is the one that survives – `reviewSponsors` would reach
+  the same deal a week later and call it `term`, and `raiseKitEndLetter` is idempotent on its id.
+
+  ⚠ **THIS IS WHY ITEM #5 HAD TO LAND FIRST.** «A stronger rung may interrupt a weaker one» is only
+  safe when a stronger rung is genuinely worth more – otherwise it would let a WORSE deal replace a
+  better one, which is the same defect wearing the opposite sign. The monotonicity property guards
+  both.
+
+  ⚠ Evidence, all in `tests/offers.test.ts` beside the rules they are about: **a winter carrying a
+  renewal AND another brand's letter with no brand writing twice** (round 28 #17's property asserted
+  again, in the same arm); **the winter after a two-season renewal**, where Meridian Sport now writes
+  over a running Baseline contract while `local`, `national` and `tour` are still turned away by it;
+  and the step-up signed end to end – the incumbent pulled back to this season's contract end, at
+  most one live deal on every week of the successor's term, and the `stepped` goodbye in the inbox.
+  ⚠ **Two guard arms RE-AIMED with ⚠ notes, not deleted**, and the sentence one of them used to
+  assert was the defect itself: «she is top 8 in the world now, **and it does not matter**». Both now
+  ask the weaker direction, which is the half of the rule that survives; the stale-screen arm signs
+  the stronger letter and forces the weaker one, which is where its refusal still lives.
+  ⚙ **AND THE SAME MEASUREMENT RE-RUN ON THE FIX, which is what says it worked rather than compiled.**
+  1,273 winters: **362 silent** where 416 were (−13%), and of the 429 winters in which a contract
+  already covered the season ahead, **124 raised letters anyway** where the shipped code raised
+  **zero**. The kit ladder's own reach moves with it, which is the sentence the item is really about
+  – the top rungs can finally get to her:
+
+  | rung | letters written, before → after | signed, before → after |
+  | --- | ---: | ---: |
+  | `premium` (Meridian Sport) | 39% → **44%** | 39% → **44%** |
+  | `icon` (Aurelia) | 16% → **23%** | 16% → **23%** |
+
+  ⚠⚠ **AND ONE CONSEQUENCE YOU SHOULD SEE BEFORE THIS MERGES, BECAUSE IT IS BIG AND IT IS YOURS TO
+  ACCEPT.** Career sponsor CASH (retainer + appearance + bonus) over the same 108 careers goes from a
+  median of **$1,942,862 to $4,321,847** – it more than doubles – and the largest career from $8.6M
+  to $12.2M. Two causes, both intended and neither hidden: `global` now pays a retainer at all
+  (item #5), and the two richest rungs are reachable years earlier because a running contract no
+  longer hides them. A knock-on the same run shows: a season in the WTA 11–50 band now COSTS
+  $173,210 where it cost $254,972, because those rungs pay half to three quarters of her fares. If
+  that is too rich, the knob is `premium`/`icon`'s reach and not this rule – say so and it is a
+  half-hour.
+
+  ⚠ Mutation-verified four ways: the total bite restored (red), no bite at all (red), the goodbye
+  dropped (red), and the incumbent left running so two contracts overlap (red).
 
 - [ ] **13. «вот и можно как раз добавить cut тренера на weekly экране для прозрачности»** – **build.**
   The coach's 10%/5% share on the weekly screen, not only as a sentence on the coaches page.
@@ -1505,12 +1655,118 @@ rest are new.
 
 - [ ] **18. «Что там с playwright? Разобрались, он теперь работает?»** – **answer.**
 
-- [ ] **19. «я не увидел наш список спонсоров для съемок и прочего, не спортивных. С ними что и на
+- [x] **19. «я не увидел наш список спонсоров для съемок и прочего, не спортивных. С ними что и на
   каких уровнях и что дают… Хочу увидеть их список и что дают.»** – **answer.** ⚠ Round 29 #7/#15
   reported the KIT ladder and never the ADVERTISING one; that is a real gap in my report, not in his
   reading.
 
-- [ ] **20. «предлагать контракт за 20к долларов на год для 100 и выше ракетки мира выглядит весьма
+  ⚙⚙ **THE LIST, WHOLE. IT WAS ONE ROW, AND I HAVE TO SAY THAT PLAINLY BEFORE ANYTHING ELSE.**
+
+  | house | what it is | gate | pays | when | costs her |
+  | --- | --- | --- | ---: | --- | --- |
+  | Quiet Hour | a watchmaker | 18+, WTA ≤ 200, **no upper bound at all** | $20,000 once, on signature | ~13 weeks after she crosses the bar (median), 5% a week | 2 shoot weeks a year |
+
+  That is not a summary. `ECONOMY.advertising` held exactly one house, and its own comment admitted
+  the design: *«The bigger asks – campaigns 3-4, global houses 5-6, a cap of 6 a year – are RECORDED
+  in the plan doc only and deliberately not built: this catalogue has one house.»* So «на каких
+  уровнях» had no answer: there was one level, and everybody from #200 to #1 was on it.
+
+  ⚙ **BUILT – THREE HOUSES, AND THE SHIPPED ONE DOES NOT MOVE BY A CENT** (`ECONOMY.advertising.houses`):
+
+  | rung | house | trade | gate | fee | shoot weeks | share of the band's outgoings |
+  | --- | --- | --- | --- | ---: | ---: | ---: |
+  | `watch` | **Quiet Hour** | watches | WTA ≤ 200 | **$20,000** | 2 | 23.1% |
+  | `campaign` | **Northmere Air** | an airline | WTA ≤ 50 | **$40,000** | 4 | 23.1% |
+  | `house` | **Rivelle** | a cosmetics house | WTA ≤ 10 | **$55,000** | 6 | 22.9% |
+
+  ⭐ **THE SIZING IS THE PRINCIPLE THE OLD COMMENT ALREADY REVEALED** – a rung is a SHARE of the
+  outgoings of the stage it opens for, not an absolute sum – with the anchor's own realised share
+  setting the rule, so no new number was invented and $20,000 justifies the other two rather than the
+  other way round. ⚠ The old comment sized it off ONE career («about 31% of Alice's-stage $64,000»);
+  measured across 108 careers the band's median annual outgoings are **$86,474**, so its realised
+  share is 23.1%. Cross-checked the other way – as a price per week of her season – the three rungs
+  come out at **$10,000 / $10,000 / $9,167** a shoot week, two independent readings inside 8%.
+
+  ⚠⚠ **WHAT THE BIGGEST HOUSE COSTS HER IN WEEKS, since round 29 #3 made a shoot on a tournament week
+  a four-way decision: SIX of her 49 in-season weeks – 12% of the playing year.** Each recovers like
+  a travel week instead of a rest week (−9 condition per deficit shoot week, `ad-shoot-recovery`),
+  and each is a week she must either keep clear or pay 7 condition to play through. The gates are the
+  kit ladder's own professional cuts (200 / 50 / 10) read and not imported, and the shoot counts are
+  the TOP of each band the plan recorded – which makes the plan's «6 shoot weeks a year» cap
+  **structural** rather than a rule to remember: one deal at a time plus a one-year term means the
+  most she can ever owe in a year is the biggest single house's six, and a fourth rung would have
+  nothing left to ask for.
+
+  ⭐ **AND EVERY RUNG IS ACTUALLY SEEN – measured, because a rung nobody reaches is not shipped.**
+  Over 108 careers x 780 weeks: `watch` written to 40% of careers, `campaign` 45%, `house` 21%.
+
+  ⚠ Evidence: `tests/round29p2-ad-ladder.test.ts` walks three real careers to eighteen through
+  `tickWeek`, stands each in a different band (searched, not a points literal, and re-asserted), and
+  checks the letter that ARRIVES is that house's and the money it PAYS reaches both wallets to the
+  cent. `tests/round29p2-ladder-monotone.test.ts` holds the gate at every boundary and the catalogue's
+  own ordering. ⚠ Mutation-verified: handing every standing the bottom rung again reddens the gate
+  arm, and a letter that forgets which house wrote it reddens the arrival arms.
+
+- [x] **20. «предлагать контракт за 20к долларов на год для 100 и выше ракетки мира выглядит весьма
   сомнительно, как мне кажется, поправь меня, если я ошибаюсь»** – **measure and answer.** ⭐ He has
   invited correction, so the answer must be a real comparison against what a real top-100 woman earns
   off court, not agreement.
+
+  ⚙⚙ **YOU ARE RIGHT, AND THE RESEARCH SAYS SO MORE SHARPLY THAN YOU DID – BUT THE NUMBER IS NOT THE
+  DEFECT.** The sourced comparison is `docs/research/off-court-money.md`, tagged `[S]` / `[I]` /
+  `[GAP]` and read from the sources rather than from summaries of them.
+
+  ⭐ **THE STRONGEST THING THE SOURCES SAY IS NOT ABOUT SIZE, IT IS ABOUT ORDER.** Forbes' 2025
+  earnings table and the WTA's own prize-money PDF cross-check each other to the digit, and together
+  they say off-court money is **not ordered by ranking at all**:
+
+  | player | on court `[S]` | her place on the WTA prize list `[S]` | off court `[S]` |
+  | --- | ---: | ---: | ---: |
+  | Zheng Qinwen | $1.6M | **30th** | **$21M** |
+  | Naomi Osaka | $2.5M | 14th | $10M |
+  | Elena Rybakina | $8.5M | **3rd** | $4M |
+
+  **The 30th-best earner on court was the 2nd-best off it.** That is `the-face-and-the-court.md`'s
+  own claim – «a photogenic #40 with a story can out-earn a dour #8» – measured rather than asserted.
+
+  ⚠⚠ **AND THE HONEST `[GAP]`: NO PUBLISHED NON-ENDEMIC CONTRACT VALUE EXISTS FOR ANY WTA PLAYER
+  OUTSIDE ROUGHLY THE TOP 25.** Forbes stops at the sport's top ten; the WTA publishes prize money and
+  not endorsements; the ITF's circuit reporting does not break it out. The figures that circulate for
+  the band below («$50,000–$200,000 outside the top 100») end at an aggregator quoted by a blog, and
+  read carefully they describe *equipment and apparel* – which is the ENDEMIC kit ladder we already
+  model rung for rung, not a house paying cash for a face. Recorded as circulating, and not used.
+
+  ⭐⭐ **SO THE VERDICT SPLITS, AND YOUR INSTINCT IS RIGHT TO THE RANK YOU NAMED.** Measured against
+  the game's own budgets, $20,000 is:
+
+  | band | median annual outgoings | $20,000 is | verdict |
+  | --- | ---: | ---: | --- |
+  | WTA 151–200 | $84,738 | 23.6% | ⭐ defensible |
+  | WTA 101–150 | $80,696 | 24.8% | ⭐ defensible |
+  | WTA 51–100 | $149,582 | 13.4% | thin |
+  | WTA 21–50 | $240,164 | 8.3% | ⚠ thin |
+  | WTA 1–10 | $348,855 | 5.7% | ⚠⚠ noise |
+
+  **The line is crossed at almost exactly WTA #100 – the rank you named** («для 100 и выше»). The
+  bands were split evenly before the numbers were read; nobody went looking for that boundary.
+
+  ⚠ **AND THE REAL WORLD AGREES AT BOTH ENDS.** At the depth of the tour where a season is worth
+  $226k–$358k `[S]` against $53–105k of touring costs `[S]`, a $20,000 endorsement is a fifth to two
+  fifths of what it costs her to be there – real money. In the top ten it sits against $3M–$25M of
+  actual endorsement income `[S]`.
+
+  ⭐ **SO THE FIX IS NOT A RETUNE OF $20,000 – IT IS THE CEILING THAT WAS NEVER THERE.**
+  `maxWtaRank: 200` was a FLOOR with no upper bound, and its comment defended that on the plan's §3:
+  «there is deliberately no UPPER cutoff: a top-10 girl still qualifies, her cheque is simply noise,
+  which is §3's claim and not a bug». That was a defensible reading of a one-row catalogue and it is
+  not a defensible ladder. Item #19 above is the ladder; **$20,000 stays exactly where it is, as the
+  bottom rung it was always written to be**, and it is pinned as such in
+  `tests/round29p2-ladder-monotone.test.ts` so a later wave cannot «fix» #20 by moving the one number
+  the research does not object to.
+
+  ⚠ **ONE DELIBERATE DEPARTURE FROM THE SOURCES, STATED SO NOBODY «CORRECTS» IT BACK.** The real
+  curve is violently convex – Gauff at $25M off court against $8M on it – and a game that copied it
+  would hand a top-ten career eight figures and end its own economy. The ladder holds a **constant
+  share of the stage's outgoings** instead, so every rung is equally felt and none of them solves the
+  endgame. That is a design decision taken against this research, not in ignorance of it, and it is
+  written down in `ECONOMY.advertising.houses` and in §5 of the research file.

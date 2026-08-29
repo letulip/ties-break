@@ -407,7 +407,11 @@ export function main(argv: string[] = process.argv.slice(2)): void {
     local: { kit: S.seasonCents, retainer: 0, appearance: 0, bonus: 0, travel: 0, lines: TIER_COVERS.local.length, seasons: 1 },
     national: { kit: S.national.seasonCents, retainer: 0, appearance: 0, bonus: 0, travel: 0, lines: TIER_COVERS.national.length, seasons: S.national.seasons },
     tour: { kit: S.tour.seasonCents, retainer: S.tour.retainerCents * 4, appearance: 0, bonus: S.tour.bonusShare, travel: S.tour.travelShare, lines: TIER_COVERS.tour.length, seasons: S.tour.seasons },
-    global: { kit: S.global.seasonCents, retainer: 0, appearance: 0, bonus: 0, travel: S.global.travelShare, lines: TIER_COVERS.global.length, seasons: S.global.seasons },
+    // ⭐ ROUND 29 PART TWO #5 – global carries a retainer and a bonus now, and this row was reading
+    // ZERO for both because it was hand-built when they did not exist. A table that prints the
+    // domination warning off stale figures is worse than no table: it was still flagging the defect
+    // for a whole run AFTER the ruling shipped.
+    global: { kit: S.global.seasonCents, retainer: S.global.retainerCents * 4, appearance: 0, bonus: S.global.bonusShare, travel: S.global.travelShare, lines: TIER_COVERS.global.length, seasons: S.global.seasons },
     premium: { kit: S.premium.seasonCents, retainer: S.premium.retainerCents * 4, appearance: S.premium.appearanceFeeCents, bonus: S.premium.bonusShare, travel: S.premium.travelShare, lines: TIER_COVERS.premium.length, seasons: S.premium.seasons },
     icon: { kit: S.icon.seasonCents, retainer: S.icon.retainerCents * 4, appearance: S.icon.appearanceFeeCents, bonus: S.icon.bonusShare, travel: S.icon.travelShare, lines: TIER_COVERS.icon.length, seasons: S.icon.seasons },
   }
@@ -500,11 +504,12 @@ export function main(argv: string[] = process.argv.slice(2)): void {
     )
   }
 
-  // ...AND THE SIZING RULE, MEASURED. A rung is one fifth of the OUTGOINGS of the stage it opens
-  // for (`ECONOMY.advertising.houses`), so the denominator has to be printed with the numerator or
-  // the rule is unfalsifiable. One reading a season, on the sponsor window's own opening week.
-  console.log('\n  ...and what a season COSTS in each of those bands – the denominator the fees are a fifth of:')
-  console.log('    band            n   median outgoings   1/5 of it   this rung pays   realised share')
+  // ...AND THE SIZING RULE, MEASURED. A rung is a fixed SHARE of the OUTGOINGS of the stage it opens
+  // for (`ECONOMY.advertising.houses`), set by the bottom rung's own realised share, so the
+  // denominator has to be printed with the numerator or the rule is unfalsifiable. One reading a
+  // season, on the sponsor window's own opening week.
+  console.log('\n  ...and what a season COSTS in each of those bands – the denominator the fees are a share of:')
+  console.log('    band            n   median outgoings   this rung pays   realised share   $ per shoot')
   const bandOf: { tier: AdTier; label: string; lo: number; hi: number }[] = [
     { tier: 'watch', label: 'WTA 51-200', lo: 51, hi: ECONOMY.advertising.houses.watch.maxWtaRank },
     { tier: 'campaign', label: 'WTA 11-50 ', lo: 11, hi: ECONOMY.advertising.houses.campaign.maxWtaRank },
@@ -520,8 +525,9 @@ export function main(argv: string[] = process.argv.slice(2)): void {
     const med = seen[Math.floor(seen.length / 2)]
     const fee = ECONOMY.advertising.houses[b.tier].cashCents
     console.log(
-      `    ${b.label} ${String(seen.length).padStart(4)}   ${usd(med).padStart(16)}   ${usd(Math.round(med / 5)).padStart(9)}   ` +
-        `${usd(fee).padStart(14)}   ${((100 * fee) / med).toFixed(1)}%`,
+      `    ${b.label} ${String(seen.length).padStart(4)}   ${usd(med).padStart(16)}   ${usd(fee).padStart(14)}   ` +
+        `${`${((100 * fee) / med).toFixed(1)}%`.padStart(13)}   ` +
+        `${usd(Math.round(fee / ECONOMY.advertising.houses[b.tier].shootWeeksPerTerm)).padStart(11)}`,
     )
   }
 
@@ -536,7 +542,10 @@ export function main(argv: string[] = process.argv.slice(2)): void {
   console.log(`    produced no kit letter at all      ${String(shut.length).padStart(4)} ${pct(shut.length, winters.length)}`)
   console.log(`    the season ahead was already promised ${String(spoken.length).padStart(2)} ${pct(spoken.length, winters.length)}` +
     `   (letters raised anyway: ${spoken.filter((w) => w.letters > 0).length})`)
-  console.log(`    ...with a STRICTLY STRONGER rung cleared and turned away ${String(blocked.length).padStart(4)} ${pct(blocked.length, winters.length)}`)
+  // ⚠ THE LABEL IS THE SITUATION AND NOT THE OUTCOME, since round 29 part two #12: these are the
+  // winters in which a running deal stood in front of a BIGGER house. Under the shipped rule every
+  // one of them was silent; under `rungTurnedAway` they are exactly the ones now let through.
+  console.log(`    ...and a STRICTLY STRONGER rung was standing behind that contract ${String(blocked.length).padStart(4)} ${pct(blocked.length, winters.length)}`)
   const byStep = new Map<string, number>()
   for (const w of blocked) {
     const k = `${w.spokenBy} -> ${w.blockedTop}`

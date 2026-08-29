@@ -53,8 +53,9 @@ simply noise, which is §3's claim and not a bug»*.
 Alice's-stage ANNUAL outgoings ($64,000)»* – one career, read off the plan's §3 table – and noted
 that at a later stage it is *«8% of her interest alone – noise»*. Measured across 108 careers x 780
 weeks (`tools/sponsor-ladder-reach.ts`), the median annual outgoings of a season spent in that band
-are **$100,435**, not $64,000, so the shipped rung was really **one fifth** of its stage's budget.
-That correction is what the new ladder is built from – see §5.
+are **$100,435**, not $64,000, so the shipped rung was really **one fifth** of its stage's budget –
+and 23.1% of it after the rest of this wave landed (§5). That share, whichever reading, is what the
+new ladder is built from.
 
 ---
 
@@ -181,6 +182,14 @@ spent in the band, `tools/sponsor-ladder-reach.ts`):
 | WTA 11–50 | $254,972 | 7.8% | ⚠ thin |
 | WTA 1–10 | $348,855 | 5.7% | ⚠⚠ noise – and it was the only offer she would ever get |
 
+⚠ **These are the PRE-WAVE medians and they are kept because they are what the verdict was reached
+against.** Items #5 and #12 of the same wave reduced them – a career that can now be written to by
+`premium` and `icon` mid-contract gets half to three quarters of its fares paid – so the shipped
+catalogue is sized against the post-wave figures ($86,474 / $173,210 / $240,343, in
+`ECONOMY.advertising.houses`). The verdict does not turn on which set is used: $20,000 is a fifth to
+a quarter of a season's costs at the bottom of the band on either, and single digits at the top on
+either.
+
 ⭐⭐ **AND HIS INSTINCT IS RIGHT TO THE RANK HE NAMED.** He wrote «для 100 и выше ракетки мира», and
 the fifth-of-outgoings line is crossed **at almost exactly WTA #100**: the cheque is 24–25% of a
 season's costs from #100 down to the gate at #200, and 13% the moment she is inside the top 100.
@@ -200,9 +209,12 @@ contradict it. From roughly #50 up it stops being defensible – and there was n
 because the catalogue had no second row and no ceiling.
 
 ⚠ **THE FIX IS THEREFORE A LADDER AND NOT A RETUNE, AND $20,000 DOES NOT MOVE BY A CENT.** See
-`ECONOMY.advertising.houses`: three rungs at one fifth of their own band's measured outgoings
-($20,000 / $50,000 / $70,000), gated at the kit ladder's own professional cuts (WTA 200 / 50 / 10),
-asking 2 / 4 / 6 shoot weeks – which is the plan doc's own recorded ladder and its own annual cap.
+`ECONOMY.advertising.houses`: three rungs each at the BOTTOM rung's own realised share of their
+band's measured outgoings – **$20,000 / $40,000 / $55,000**, i.e. 23.1% / 23.1% / 22.9% – gated at
+the kit ladder's own professional cuts (WTA 200 / 50 / 10), asking 2 / 4 / 6 shoot weeks, which is
+the plan doc's own recorded ladder and its own annual cap. ⭐ Sized the other way round, as a price
+per week of her season, the same three rungs come out at $10,000 / $10,000 / $9,167 – two
+independent readings landing within 8% of each other.
 
 ⚠⚠ **AND THE GAME DELIBERATELY DOES NOT COPY THE REAL CURVE.** §2's table is violently convex: at
 the top, off-court money is one to thirteen times on-court money, and a faithful model would hand a

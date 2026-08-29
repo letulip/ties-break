@@ -128,8 +128,8 @@ The owner read step 1's letter line «no appearances scheduled» and ruled it de
   a year**. When a second house ever arrives, it takes these numbers from here, not from a guess.
   ⭐⭐ **BUILT, 29.08 (round 29 part two #19/#20), and it did take these numbers from here.** The
   catalogue is `ECONOMY.advertising.houses`: **Quiet Hour** (a watchmaker, WTA ≤ 200, $20,000,
-  2 shoots) – *unchanged to the cent* – **Northmere Air** (an airline, WTA ≤ 50, $50,000, 4 shoots)
-  and **Rivelle** (a cosmetics house, WTA ≤ 10, $70,000, 6 shoots). The top of each recorded band,
+  2 shoots) – *unchanged to the cent* – **Northmere Air** (an airline, WTA ≤ 50, $40,000, 4 shoots)
+  and **Rivelle** (a cosmetics house, WTA ≤ 10, $55,000, 6 shoots). The top of each recorded band,
   so the annual cap is **structural rather than a rule**: one deal at a time plus a one-year term
   means the most she can ever owe in a year is the biggest single house's six, and a fourth rung
   would have nothing left to ask for.
@@ -224,9 +224,9 @@ had was worse than either: a floor at WTA #200 and **no ceiling at all**, so the
 save was offered exactly what the #199 is.
 
 ⭐ **The number was never the defect.** Measured across 108 careers, $20,000 is 19.9% of the median
-annual outgoings of a season spent in the WTA 51–200 band – and the line is crossed at almost exactly
+annual outgoings of a season spent in the WTA 51–200 band (pre-wave; 23.1% after it) – and the line is crossed at almost exactly
 the rank he named: 24–25% of a season's costs from #100 to #200, 13% inside the top 100. The ladder
-is **one fifth of the stage's outgoings**, at every rung, and `houses.watch` obeys it unchanged.
+holds **the bottom rung's own share of the stage's outgoings** at every rung, and `houses.watch` is unchanged.
 
 ⚠ **STEPS 1-2 ARE A COMPLETE FEATURE.** Everything from 3 on is the second axis, and that is a much
 larger commitment – fame wants a surface, a fog rule and its own calibration. ⭐ The ladder above is

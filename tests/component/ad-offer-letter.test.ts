@@ -20,6 +20,10 @@ import { chooseShootWeeks } from '../../src/engine/offers'
 import { weekLabel } from '../../src/shared/dates'
 import type { AdOfferTerms, Offer, Snapshot } from '../../src/shared/protocol'
 import { careerSnapshot } from '../helpers/career'
+// ⚠ THE APP'S OWN STYLESHEET – without it `.dialog-card`'s height cap is not in the cascade and the
+// fit measurement below is vacuous. Same reason r2-07-dialog-shell.test.ts imports it.
+import '../../src/style.css'
+import { assertDismissReachable, setViewport, PHONE } from './fits'
 
 const AD = ECONOMY.advertising
 /** ⚠ THE CATALOGUE BECAME A LADDER (round 29 part two #19/#20), so the five per-house numbers
@@ -212,6 +216,75 @@ describe('InboxSheet – the letter is in the list, the row says what it is, the
     expect(text).not.toContain('nothing else asked of her')
     // ...and not the KIT confirm's sentence: the branch must not fall through to kit arithmetic.
     expect(text).not.toContain('tournaments a season')
+    wrapper.unmount()
+  })
+})
+
+describe('⭐⭐ OfferLetter – the LADDER on the paper (round 29 part two #19/#20)', () => {
+  beforeEach(() => setActivePinia(createPinia()))
+
+  // ⚠ THE OPENING CLAUSE WAS HARD-CODED «We make watches» IN THE MARKUP while the catalogue had one
+  // house. Three houses and a template that introduced all of them as watchmakers is the same class
+  // of defect as a renewal that says «A kit deal for your daughter» – the letter would be false about
+  // its own author. The clause now comes off the PAPER (`AdOfferTerms.trade`).
+  it.each([['campaign'], ['house']] as const)('the %s rung`s letter says what THAT house makes and asks', (tier) => {
+    const h = ECONOMY.advertising.houses[tier]
+    const open = letter({}, { tier, brand: h.brand, trade: h.trade, cashCents: h.cashCents, shootCount: h.shootWeeksPerTerm })
+    const w = mount(OfferLetter, { props: { offer: open, week: open.week } as never })
+    const text = w.text()
+    expect(text).toContain(h.trade)
+    expect(text).toContain(h.brand)
+    expect(text).not.toContain('We make watches')
+    expect(text).toContain(`$${Math.round(h.cashCents / 100).toLocaleString('en-US')}`)
+    // ...and the count in the house's own words, which now has to run to six.
+    const word = ['', 'One', 'Two', 'Three', 'Four', 'Five', 'Six'][h.shootWeeksPerTerm]
+    expect(text).toContain(`${word} weeks of her season are shoot weeks`)
+    w.unmount()
+  })
+
+  it('⚠ a letter written BEFORE the ladder still reads exactly what it read the day it arrived', () => {
+    // The optional-widening promise, on the surface: an old ad letter carries no `tier` and no
+    // `trade`, and every one of those is a Quiet Hour letter by construction – so the fallback is
+    // exact rather than a guess, and his own inbox does not rewrite itself.
+    const old = letter({}, { trade: undefined, tier: undefined })
+    const w = mount(OfferLetter, { props: { offer: old, week: old.week } as never })
+    expect(w.text()).toContain('We make watches')
+    w.unmount()
+  })
+})
+
+describe('⚠ the confirm the BIGGEST house produces still fits a phone', () => {
+  beforeEach(() => {
+    setActivePinia(createPinia())
+    backing.clear()
+  })
+
+  // CLAUDE.md's own rule: «any dialog you add or LENGTHEN gets a mounted assertion that its dismiss
+  // control's box is inside a 375x667 viewport». Round 29 part two #19 lengthened this one – the ad
+  // confirm names every shoot week the signature will choose, and the top rung asks SIX of them
+  // where the shipped rung asked two, so the sentence grows by four dates. It is a BLOCKING overlay
+  // and this is the failure mode round-20 #3 cost a career to: «a dialog grows by one honest
+  // sentence at a time and nothing objects until it is taller than a phone».
+  it('Rivelle`s six named weeks do not push the buttons off a 375x667 screen', async () => {
+    setViewport(PHONE)
+    const h = ECONOMY.advertising.houses.house
+    const open = letter({}, { tier: 'house', brand: h.brand, trade: h.trade, cashCents: h.cashCents, shootCount: h.shootWeeksPerTerm })
+    const base: Snapshot = careerSnapshot(8, 'ad-inbox-fit')
+    const store = useGameStore()
+    store.snapshot = { ...base, offers: [...base.offers, open], week: open.week }
+    const wrapper = mount(InboxSheet, { attachTo: document.body })
+    const row = wrapper.findAll('.inbox-open').find((b) => b.text().includes(h.brand))!
+    await row.trigger('click')
+    await nextTick()
+    await wrapper.find('button.offer-sign').trigger('click')
+    await nextTick()
+
+    const card = document.querySelector('.dialog-overlay .dialog-card')!
+    const dismiss = document.querySelector('.dialog-overlay .dialog-actions')!
+    // The sentence really did grow: six dates on the paper, not two.
+    expect(card.textContent).toContain(h.brand)
+    expect((card.textContent ?? '').match(/W\d+ '\d+/g) ?? []).toHaveLength(h.shootWeeksPerTerm + 1)
+    assertDismissReachable(card, dismiss, PHONE, "the six-shoot confirm (round 29 part two #19)")
     wrapper.unmount()
   })
 })

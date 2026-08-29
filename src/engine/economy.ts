@@ -1509,15 +1509,29 @@ export const ECONOMY = {
      *  THE SIZING PRINCIPLE IS THE ONE THE SHIPPED COMMENT ALREADY STATED – a rung is a SHARE OF THE
      *  OUTGOINGS OF THE STAGE IT OPENS FOR, not an absolute sum – with one correction it needed. The
      *  old comment sized $20,000 as «about 31% of Alice's-stage ANNUAL outgoings ($64,000)», read
-     *  off ONE career; measured across 108 careers x 780 weeks (`tools/sponsor-ladder-reach.ts`) the
-     *  median annual outgoings of a season spent in that band are **$100,435**, so the shipped rung
-     *  is really **one fifth**, not a third. One fifth is therefore the rule, and it is a rule the
-     *  shipped number obeys rather than a rule invented to justify new ones:
+     *  off ONE career. Measured across 108 careers x 780 weeks (`tools/sponsor-ladder-reach.ts`) the
+     *  median annual outgoings of a season spent in that band are **$86,474**, so the shipped rung's
+     *  own realised share is **23.1%** – and THAT is the rule, because the anchor sets it and the
+     *  rungs above it obey. Nothing here was picked and then justified:
      *
-     *    band            median annual outgoings   1/5 of it   this catalogue   realised share
-     *    WTA 51-200            $100,435             $20,087       $20,000           19.9%
-     *    WTA 11-50             $254,972             $50,994       $50,000           19.6%
-     *    WTA 1-10              $348,855             $69,771       $70,000           20.1%
+     *    band          median annual outgoings   this catalogue   realised share   $ per shoot week
+     *    WTA 51-200           $86,474                 $20,000           23.1%           $10,000
+     *    WTA 11-50           $173,210                 $40,000           23.1%           $10,000
+     *    WTA 1-10            $240,343                 $55,000           22.9%            $9,167
+     *
+     *  ⚠⚠ THE DENOMINATOR MOVED UNDER THIS VERY WAVE AND THE FIRST SIZING WAS TAKEN AGAINST THE OLD
+     *  ONE – recorded because it is the more useful fact. Measured before items #5 and #12 the three
+     *  medians were $100,435 / $254,972 / $348,855; after them they are the figures above, because a
+     *  career that can now be written to by `premium` and `icon` mid-contract gets half to three
+     *  quarters of its FARES paid and more of its kit, so what a season costs her falls. The fees are
+     *  sized against the world as it now is, and the run that produced these numbers is the one in
+     *  the ledger. ⭐ The anchor is unchanged either way: $20,000 is what it is, and the two rungs
+     *  above it hold ITS realised share rather than a round number picked first.
+     *
+     *  ⚠ THE PER-SHOOT COLUMN IS THE CROSS-CHECK AND IT AGREES, WHICH IS WHY IT IS PRINTED. Sized
+     *  the other way round – what a week of her season is worth – the three rungs come out at
+     *  $10,000, $10,000 and $9,167 a shoot week. Two independent readings of the same catalogue
+     *  landing within 8% of each other is what makes this a rule rather than three numbers.
      *
      *  ⚠ A CONSTANT SHARE IS A DECISION AND IT OVERRULES §3 OF THE PLAN, WHICH SAID THIS MECHANIC
      *  ONLY MATTERS EARLY. That was the right reading of a catalogue with one row: a fixed cheque
@@ -1528,9 +1542,9 @@ export const ECONOMY = {
      *  would make the top rung solve the endgame, and the endgame is not short of money.
      *
      *  ⚠ AND THE ENDEMIC LADDER STILL OUT-EARNS THE PHOTOGRAPH AT EVERY PROFESSIONAL RUNG, which is
-     *  the relationship the shipped comment named and this one keeps: $50,000 against `premium`'s
+     *  the relationship the shipped comment named and this one keeps: $40,000 against `premium`'s
      *  $30,000 retainer + $15,000 appearance fee + $8,000 of kit + half the fares + 25% bonuses;
-     *  $70,000 against `icon`'s $150,000 retainer + $40,000 appearance fees + 30% bonuses.
+     *  $55,000 against `icon`'s $150,000 retainer + $40,000 appearance fees + 30% bonuses.
      *
      *  ⚠⚠ THE GATES ARE THE KIT LADDER'S OWN PROFESSIONAL CUTS, READ AND NOT SHARED. 200 / 50 / 10
      *  are `tour` / `premium` / `icon`'s `maxWtaRank`, which is the shipped rung's own derivation
@@ -1552,11 +1566,7 @@ export const ECONOMY = {
      *  week a four-way decision: SIX of her 49 in-season weeks, 12% of the playing year, each
      *  recovering like a travel week instead of a rest week (measured at -9 condition per deficit
      *  shoot week, `docs/specs/ad-shoot-recovery-2026-08.md`) and each one a week she must either
-     *  keep clear or pay `clashConditionPerDay` x 7 to play through. The money reads the same way
-     *  from that side: $10,000, $12,500 and $11,667 per shoot week across the three rungs – the same
-     *  price for the same week, which is the cross-check that says the two sizings agree. (It dips
-     *  slightly at the top because the primary rule is the share and it is deliberately not bent to
-     *  make a secondary reading tidy.) */
+     *  keep clear or pay `clashConditionPerDay` x 7 to play through. */
     houses: {
       watch: {
         /** THE HOUSE THAT WRITES FIRST: a watchmaker – the plan's own first example of non-endemic
@@ -1587,8 +1597,8 @@ export const ECONOMY = {
          *  writes to the band it was written for. */
         maxWtaRank: 200,
         /** THE FEE, in cents, once, on signature. ⭐ UNCHANGED BY THE LADDER, TO THE CENT – it is
-         *  one fifth of the measured median outgoings of its own band ($100,435), which is the rule
-         *  the two rungs above derive from rather than a number this rung was moved to fit. More
+         *  23.1% of the measured median outgoings of its own band ($86,474), which is the share the
+         *  two rungs above derive from rather than a number this rung was moved to fit. More
          *  than three times the tour rung's cash for a season ($1,500/qtr), because «cash, and a lot
          *  of it» is the whole difference between this letter and the kit ladder at her rung; and
          *  under the premium rung's $30,000-a-year retainer, so mid-career the endemic ladder still
@@ -1623,8 +1633,9 @@ export const ECONOMY = {
          *  tour starts requiring her presence and where the endemic ladder starts paying real money,
          *  so it is also where a house stops wanting a face and starts wanting a campaign. */
         maxWtaRank: 50,
-        /** One fifth of the measured median outgoings of the WTA 11-50 band ($254,972). */
-        cashCents: 50_000_00,
+        /** The watch rung's own realised share (23.1%) of the measured median outgoings of the
+         *  WTA 11-50 band ($173,210) – so the anchor sets the rule and this rung obeys it. */
+        cashCents: 40_000_00,
         /** A year, like every rung – which is what makes the plan's «6 shoot weeks a year» cap
          *  structural rather than a rule to remember. */
         termWeeks: 52,
@@ -1638,8 +1649,9 @@ export const ECONOMY = {
         trade: 'We make perfume',
         /** `sponsorship.icon.maxWtaRank`'s figure, read and not imported. */
         maxWtaRank: 10,
-        /** One fifth of the measured median outgoings of the WTA 1-10 band ($348,855). */
-        cashCents: 70_000_00,
+        /** The same share again of the WTA 1-10 band's $240,343 – 22.9%, and $9,167 a shoot week
+         *  against the two rungs below it at $10,000, which is as close as legible round figures get. */
+        cashCents: 55_000_00,
         termWeeks: 52,
         /** The top of the plan's recorded «a global house 5-6», which is also its whole annual cap –
          *  see the block comment above for why that is what stops the ladder at three rungs. */
