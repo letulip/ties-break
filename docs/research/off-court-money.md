@@ -148,10 +148,12 @@ What circulates instead:
   irreconcilable with §3's primary figures – the 20th-largest earner on the WTA's own list made
   $2.1M in total, so an $3–8M endorsement floor for that band would make her earnings two to four
   times what the sport's own accounts show. Recorded here as circulating, and not used.
-* **`[I]` One named case in the band, and it is the exception that proves §2's point.** Eugenie
-  Bouchard's Forbes-listed 2016 earnings were $6.2M total on **$0.7M of prize money** – i.e. ~$5.5M
-  of endorsements in a season she finished in the mid-40s. It is a real data point about how far
-  fame can outrun ranking, and it is not a median.
+* **`[WEAK]` One named case in the band, and it is the exception that proves §2's point.** Eugenie
+  Bouchard is reported at $6.2M of 2016 earnings on **$0.7M of prize money** – ~$5.5M of endorsements
+  in a season she did not finish anywhere near the top ten. ⚠ Tagged `[WEAK]` deliberately: the
+  figure reaches this file through secondary reporting of a Forbes list I could not open, and her
+  exact year-end ranking is not established here. It is offered as a shape (fame outruns ranking),
+  never as a number, and nothing in the catalogue is sized from it.
 
 **What CAN be sourced about the shape of such a contract**, from a sports-law drafting reference for
 endorsement agreements (uslegal.com) `[S]`: compensation is *"a base fee … upon execution of this
