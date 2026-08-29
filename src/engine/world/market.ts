@@ -104,6 +104,13 @@ export function marketWave(seed: string, week: number): number {
  *  a +25% year are the same distance, and no sequence of weeks can wipe a holding out. A linear
  *  `1 + vol·wave` would be neither.
  *
+ *  ⚠⚠ `if (!volBps) return 1` IS A SHORT-CIRCUIT AND NOT A GUARD, and it is written down because a
+ *  clause that cannot change an answer is exactly the dead-guard family this repo keeps catching:
+ *  `Math.exp(0 · wave)` is already 1, so deleting this line changes NO value anywhere – it only
+ *  stops four `rngFromSeed` calls being made per priced holding per tick, on the twelve rungs of the
+ *  catalogue that do not ride the market. Do not write a test that claims to cover it; a mutation
+ *  that removes it is arithmetically identical to the control, which is the trap.
+ *
  *  Pure: no world, no MAIN draw, no clock. */
 export function marketIndex(seed: string, week: number, volBps: number): number {
   if (!volBps) return 1
@@ -118,7 +125,10 @@ export function marketIndex(seed: string, week: number, volBps: number): number 
  *  (`basisWeek = readyWeek`), so every week of the wait asks for a negative span. A contract does
  *  not move with the market any more than it depreciates – there is nothing yet to move. Nothing on
  *  the shelf is both commissioned and market-driven today; the clamp is here so that a rung which is
- *  both cannot be a defect tomorrow. */
+ *  both cannot be a defect tomorrow. ⚠ The `!volBps` half of the same line is `marketIndex`'s
+ *  short-circuit, not a second guard – see the note there. The `toWeek <= fromWeek` half is REAL:
+ *  without it a contract's negative span would price at `index(basis)/index(order)`, a number with
+ *  no meaning, and a mutation that drops it moves values. */
 export function marketRatio(seed: string, fromWeek: number, toWeek: number, volBps: number): number {
   if (!volBps || toWeek <= fromWeek) return 1
   return marketIndex(seed, toWeek, volBps) / marketIndex(seed, fromWeek, volBps)
