@@ -256,7 +256,7 @@ where it exists. «Season» = one real calendar year in the band.
 | rung | at icon scale ($15–25M, 15%) → $2.25–3.75M/yr | at second-circle scale ($3–10M, 15%) → $450k–1.5M/yr |
 | --- | --- | --- |
 | the whole academy, $12M, no upkeep | **3–5 seasons** | 8–27 seasons – i.e. not in a career |
-| the yacht, $12M + $1.2M/yr upkeep | 4–8 seasons buying while carrying | never – upkeep eats most of the band's whole commission |
+| the yacht, $12M + $1.2M/yr upkeep | **5–11 seasons** buying while carrying ($12M ÷ ($2.25–3.75M − $1.2M)) | never – upkeep eats most of the band's whole commission |
 | **the long-range plane, $38M + $3.04M/yr upkeep** | **upkeep ALONE ≈ the entire commission of a $20M portfolio at 15%.** Buying it: 19+ years even at 20% of $25M `[I]` | never |
 
 ⭐ **The one documented career that clears the plane through commission alone is Sharapova's**:
@@ -297,12 +297,12 @@ shelf) or the census's «felt, not budget-solving» floor rule.
 | B `campaign` | WTA ≤50 | **2** | $150,000 | 1–2yr | 1 wk | $30k–$60k |
 | C `house` | WTA ≤10 | **3** | $1,000,000 | 1–2yr, house may not write twice running | 1 wk | $300k–$600k |
 | D capstone | **4 seasons ended inside WTA #10** (tenure, round-29 (d)) | 1 | **$10,000,000** | **8yr**, kit-shaped | 2 wk | **$1M–$2M – his sentence, exactly** |
-| portfolio cap | – | **6 concurrent** (1+2+3; D replaces one C slot) | peak gross ≈ **$14M/yr** ≈ the real Świątek/Sabalenka band `[S]` | | ≤8 shoot wks/yr total | peak **$1.4M–$2.8M/yr** |
+| portfolio cap | – | **6 concurrent** (1+2+3; D replaces one C slot) | peak gross ≈ **$12.3M/yr** ($20k + 2×$150k + 2×$1M + $10M) `[I]` | | ≤8 shoot wks/yr total | peak **$1.2M–$2.5M/yr** |
 
-The numbers, defended: a full C+D portfolio grosses ~$14M/yr – inside the real icon band
-($15–25M), i.e. the resize lands on the dial's sourced segment at factor ~255× of the old $55k
-top rung, not beyond it. The parent's take peaks at $1.4–2.8M/yr, which pays the $12M academy in
-**4–9 seasons of a real reign** – his ads→academy loop closes through the commission alone, as
+The numbers, defended: a full C+D portfolio grosses ~$12.3M/yr – at the doorstep of the real icon
+band ($15–25M), i.e. the resize lands on the dial's sourced segment at factor **~224×** of the old
+$55k top rung, not beyond it. The parent's take peaks at $1.2–2.5M/yr, which pays the $12M academy
+in **5–10 seasons of a real reign** – his ads→academy loop closes through the commission alone, as
 §4b shows the real bands do. The median career (never top-10) still only ever sees A and B:
 $20k–$320k a year gross, $2k–$64k to the parent – bimodal by P5's own ruling. Terms follow the
 sources' law: non-endemic short and churned (several names a rung, no repeat), only the
