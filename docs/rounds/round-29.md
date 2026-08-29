@@ -2780,3 +2780,28 @@ season), or a rate that starts at 20% and falls to 10% as she grows, mirroring h
 
 - [x] **P8. The fame spec** – [fame-and-the-shoots-2026-08.md](../specs/fame-and-the-shoots-2026-08.md),
   written this session; his «здесь полностью согласен» covers the floor-and-multiplier shape.
+
+
+## Part four, continued – his rulings on the research (29.08)
+
+- [ ] **P9. ⚙ «межсезонье – "слишком много съёмок и никакого отпуска" – вот это то, чего у нас вообще
+  нет, у нас 6 пустых недель там.»** – **RULING, and it overturns §5.2's in-season-only rule.** The
+  advertising plan wrote «an off-season cost is free money wearing a cost's clothes» and pinned every
+  shoot in-season. Zheng's own complaint is the counter-model: **real shoots eat the off-season, and
+  the cost there is the VACATION they displace** – recovery into the new season, not condition inside
+  it. Our 6 empty winter weeks become the shoot season; resting through them stays a real choice.
+  ⭐ This also fits the fame spec's floor-and-multiplier shape: the player who shoots all winter buys
+  fame and starts the season less rested.
+
+- [ ] **P10. ⚙ «значит убрать этот самолет за 38М и всех делов =)»** – **RULING: `plane-long` leaves
+  the catalogue.** The reachability measurement (0 of 72 delivered, upkeep alone eats a $20M
+  portfolio's whole commission) said it is a rung nobody can hold; he removes it rather than resizing
+  it. ⚠ Forward-safety: a save that somehow owns one must still value and sell it – tombstone the id,
+  do not strand the money.
+
+- [ ] **P11. ⚙ His calibration correction, with his own data point**: «Доход Александра Бублика от
+  рекламных и спонсорских контрактов оценивается примерно в $1–2 миллиона в год. – это даже не 50
+  ракетка. Твои цифры всё еще мимо частично. **Это доход у топ-100, у топ-50 точно больше, D – очень
+  хорошо.**» – So the bands lift: **top-100 ≈ $1–2M/yr off-court total, top-50 above that, D capstone
+  approved as proposed.** The research's `[GAP]` below top-25 stands, but his data point fills it from
+  the owner's side and the ladder follows it.

@@ -326,3 +326,32 @@ list, contract template, the $20k verdict), [tennis-academies.md](tennis-academi
 cards, RNA brochure, Mouratoglou's 200 spots), [02-tennis-economics.md](02-tennis-economics.md)
 (touring costs), [round-29.md](../rounds/round-29.md) (the reachability report, the (d) contract
 table, P5/P6/P7 verbatim).
+
+
+---
+
+## §6 – the owner's calibration pass (29.08, after reading §5)
+
+Three corrections, his:
+
+1. **The bands in §5 are low.** His data point: Alexander Bublik's endorsement income is estimated at
+   **$1–2M/yr** – «это даже не 50 ракетка. Это доход у топ-100, у топ-50 точно больше». So the ladder
+   lifts: a top-100 portfolio should TOTAL ~$1–2M/yr, top-50 sits above it, and §5's B rung ($150k ×2)
+   was roughly 5× under his line. **D (the capstone, $10M/yr × 8yr) is approved as proposed.**
+2. **Shoots move into the off-season** – Zheng's «no vacation» quote is the model, not a colour note.
+   The 6 empty winter weeks are the shoot season; the cost there is displaced rest, not in-season
+   condition. §5.2's «free money» objection is retired by his ruling.
+3. **`plane-long` ($38M) leaves the catalogue** rather than being resized – the reachability numbers
+   said nobody can hold it, and he agreed by deletion.
+
+Revised proposal under his line (movable, his):
+
+| rung | gate | concurrent × fee | with kit ≈ portfolio/yr |
+| --- | --- | --- | --- |
+| A `watch` | WTA ≤ 200 | 1 × $20,000 | pocket money – the census-defensible tail |
+| B `feature` | WTA ≤ 100 | 2 × $500,000 | **~$1–1.2M** – his Bublik line |
+| C `campaign` | WTA ≤ 50 | 2 × $1M + B slots | **~$2.5–3M** |
+| D `house` | WTA ≤ 10 | 3 × $2M, no house twice running | **~$6–8M** |
+| E `capstone` | 4 seasons ended in top 10 | $10M/yr × 8yr, kit-shaped | **$15M+ – the icon band** |
+
+Cap: 6 concurrent; shoot capacity rises because the winter now carries them.
