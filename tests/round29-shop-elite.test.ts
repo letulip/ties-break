@@ -14,7 +14,8 @@
 //   §4  §3g's academy, in stages, in order, with a legible half-built state;
 //   §5  ⭐⭐ THE PLANE: the fare it cuts (visible) and the point it adds (HIDDEN, and asserted as an
 //       absence – that is the one a careless implementation gets backwards);
-//   §6  ⭐⭐ THE YACHT WEEK as a seventh vacation package – there once owned, and not before.
+//   §6  ⭐⭐ THE YACHT WEEK as a seventh vacation package – there once owned, and not before;
+//   §7  ⭐ P10's TOMBSTONE: the long-range plane is not sold, and an owning save is not stranded.
 //
 // ⚠ EVERY FIGURE IS READ OUT OF A TICKED WORLD, never off the constant that produced it. Where a
 // price or a percentage IS asserted it is the SPEC's own literal, quoted so that a retune has to
@@ -29,6 +30,7 @@ import {
   closeTournament,
   hireMasseur,
   ownedAssets,
+  revalueAssets,
   sellAsset,
   sellableAsset,
   shopItem,
@@ -102,6 +104,8 @@ describe('§1 – the elite ladder is the spec table, and each rung carries THRE
       ['yacht', 12_000_000_00, 156, -500, 1000],
       ['yacht-big', 28_000_000_00, 208, -500, 1000],
       ['plane', 18_000_000_00, 104, -600, 800],
+      // ⚠ P10: retired (see §7 below), but the TOMBSTONE keeps the numbers – an owned one is still
+      // valued and billed by exactly this row, so the pin stays.
       ['plane-long', 38_000_000_00, 156, -600, 800],
     ]
     for (const [id, price, build, lossBps, upkeepBps] of table) {
@@ -128,6 +132,11 @@ describe('§1 – the elite ladder is the spec table, and each rung carries THRE
       ['plane-long', 58_460_00],
     ]
     const w = shopper('r29-5-table')
+    // ⚠ RE-AIMED AT ROUND 29 PART FOUR P10: `plane-long` is RETIRED, and a retired rung is on the
+    // view only for a family that owns one – so this world owns one, delivered, which is also the
+    // tombstone's own claim being exercised: the row is still drawn and still quotes §3f's bill.
+    // The other five stay unowned, so their rows quote off the PRICE exactly as before.
+    w.assets = [{ id: 'plane-long', boughtWeek: 0, paidCents: 38_000_000_00, valueCents: 38_000_000_00 }]
     for (const [id, weekly] of spec) {
       // ⚠ OFF THE VIEW THE SCREEN READS, not off the catalogue: the number the player sees is the
       // claim, and `shopView` is where it is made.
@@ -519,5 +528,49 @@ describe('§6 – ⭐⭐ a week on the yacht is a seventh vacation package (§3f
     sellAsset(w, 'yacht')
     expect(shopView(w).vacationIds).toEqual([])
     expect(() => bookVacation(w, w.week + 2, 'yacht-week')).toThrow(/does not own/i)
+  })
+})
+
+describe('§7 – ⭐ round 29 part four P10: the long-range plane leaves the shelf, tombstoned', () => {
+  // HIS RULING: «значит убрать этот самолет за 38М и всех делов =)» – off the reachability
+  // measurement (72 careers x 780 weeks): 0 of 72 ever took DELIVERY of a `plane-long`, and its
+  // upkeep alone ($58,460/wk) eats a $20M portfolio's whole commission. He removed the rung rather
+  // than resizing it. The three claims below are the ruling's own three verbs: not sold, still
+  // valued/billed, still sellable – «do not strand the money».
+
+  it('⭐ it is not on the shelf and cannot be bought – and the smaller plane still is', () => {
+    const w = shopper('r29-p10-not-sold')
+    expect(shopView(w).rows.some((r) => r.id === 'plane-long'), 'no row for a family without one').toBe(false)
+    // ⚠ ANTI-VACUITY: the FAMILY survives – only the one rung is gone, so a filter that swept the
+    // whole plane family (or the whole shelf) goes red here rather than passing quietly.
+    expect(shopView(w).rows.some((r) => r.id === 'plane'), 'the $18M plane is still sold').toBe(true)
+    const funds = w.fundsCents
+    expect(() => buyAsset(w, 'plane-long')).toThrow(/no longer sold/i)
+    expect(w.fundsCents, 'and the refusal charged nothing').toBe(funds)
+    expect(ownedAssets(w).length, 'and owns nothing').toBe(0)
+  })
+
+  it('⭐⭐ a save that owns one is not stranded: visible, valued, billed – and it sells', () => {
+    const w = shopper('r29-p10-owner')
+    // The owning save, delivered – the state the tombstone exists for. Written directly: no career
+    // can BUY one any more, which is exactly the point.
+    w.assets = [{ id: 'plane-long', boughtWeek: w.week - 52, paidCents: 38_000_000_00, valueCents: 38_000_000_00 }]
+    const row = shopView(w).rows.find((r) => r.id === 'plane-long')
+    expect(row, 'the owner still sees the row').toBeDefined()
+    expect(row!.upkeepCents, 'still billed §3f\'s own weekly figure').toBe(
+      Math.round((38_000_000_00 * 800) / 10_000 / WEEKS_PER_YEAR),
+    )
+    expect(weeklyAssetUpkeepCents(w), 'and the till charges the same number').toBe(row!.upkeepCents)
+    // Valuation still runs on the retired rung's own rate – a year old, it is worth LESS than paid.
+    revalueAssets(w)
+    const owned = ownedAssets(w).find((a) => a.id === 'plane-long')!
+    expect(owned.valueCents, 'a year of -6% really priced in').toBeLessThan(38_000_000_00)
+    expect(owned.valueCents, 'and it is a value, not a write-off').toBeGreaterThan(30_000_000_00)
+    // ...and the way out is open: sold at the stored value, money in the wallet, row off the shelf.
+    const funds = w.fundsCents
+    const worth = owned.valueCents
+    sellAsset(w, 'plane-long')
+    expect(w.fundsCents).toBe(funds + worth)
+    expect(shopView(w).rows.some((r) => r.id === 'plane-long'), 'gone from the view once sold').toBe(false)
   })
 })

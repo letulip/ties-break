@@ -3497,6 +3497,12 @@ export const ECONOMY = {
         buildWeeks: 104,
         upkeepBps: 800,
       },
+      // ⚠ ROUND 29 PART FOUR P10 – RETIRED, HIS RULING: «значит убрать этот самолет за 38М и всех
+      // делов =)». The reachability measurement (72 careers x 780 weeks, the round-29 ledger)
+      // found 0 of 72 ever took DELIVERY of one – nobody could hold the rung, and he removed it
+      // rather than resizing it. The entry stays as a tombstone so a save that somehow owns one is
+      // not stranded: it is still valued by its own rate, still billed its upkeep and still sells;
+      // `retired` is only what keeps it off the shelf and out of `buyAsset`.
       {
         id: 'plane-long',
         family: 'plane',
@@ -3507,6 +3513,7 @@ export const ECONOMY = {
         annualRateBps: -600,
         buildWeeks: 156,
         upkeepBps: 800,
+        retired: true,
       },
       // ⭐⭐ ROUND 29 #5 – HER ACADEMY (§3g), THE END OF THE MONEY.
       //
