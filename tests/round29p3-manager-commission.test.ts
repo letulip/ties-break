@@ -42,6 +42,12 @@
 //      them. ⚠ A `Math.floor` in `managerCommissionCents` is deliberately NOT claimed here: it
 //      rounds ONCE and she still takes the remainder, so the pair still re-adds and no arm in this
 //      file can see it. Measured and left un-guarded rather than asserted and dead.
+//   6. §4's letter arm, twice: the lead's payee put back to «the fee below for the family», and a
+//      «less her 50% share» clause added to `adFeeLine` -> that arm alone reddens on each. ⚠ Its
+//      negatives are asked of the ad letter's own MARKUP with comments stripped and of the fee
+//      sentence's own computed, never of the whole file: a whole-file «no manager» asserts that the
+//      code carries no COMMENT about the manager, and the note explaining this change quotes the
+//      words it removed. The first draft did exactly that and the gate caught it.
 import { describe, it, expect, vi } from 'vitest'
 
 // A driven title is a handful of ticks, but the runner is shared with heavier suites.
@@ -313,12 +319,27 @@ describe('round 29 P3 §4 – «контракт на полную сумму р
   // CLAUDE.md's own rule: widening the corpus makes a negative assertion trip on a symbol defined in
   // some composable it was never talking about.
   it('⭐⭐ the ad letter names the fee and never a split', () => {
+    // ⚠⚠ THE REGION IS THE COPY AND NOT THE FILE, AND THE GATE TAUGHT ME THAT TWICE IN ONE NIGHT.
+    // A whole-file «does not contain 'manager'» asserts that the code carries no COMMENT about the
+    // manager – and the note explaining this very change has to quote the words it removed. So the
+    // negatives are asked of the ad letter's own markup with comments stripped, and of the fee
+    // sentence's own computed. ⚠ Cut with the marker helpers, never a raw `indexOf`: both of these
+    // are negative claims, and a rotted marker widens the slice until they mean nothing.
     const letter = componentFile('components/OfferLetter.vue')
-    // The fee line is really there (anti-vacuity: a file that stopped drawing a fee would satisfy
-    // every «does not contain» below).
-    expect(letter, 'the letter quotes a one-time fee').toContain('A one-time fee of')
-    expect(letter, 'the paper never mentions the manager').not.toContain('manager')
-    expect(letter, 'nor a share of her cheque').not.toContain('less her')
+    const feeLine = region(letter, 'const adFeeLine = computed', '/** ⭐ P6/§7')
+    const paper = region(letter, '<article v-else-if="isAd"', '</article>').replace(/<!--[\s\S]*?-->/g, '')
+
+    // Anti-vacuity first: a file that stopped drawing a fee at all would satisfy every negative below.
+    expect(feeLine, 'the letter quotes a one-time fee').toContain('A one-time fee of')
+    expect(feeLine, 'the fee sentence names no split').not.toContain('manager')
+    expect(feeLine, 'nor a share of her cheque').not.toContain('less her')
+    expect(paper, 'and neither does the paper it is printed on').not.toContain('manager')
+
+    // ⚠ AND THE PAYEE, WHICH IS THE HALF THE GATE CAUGHT. The lead read «the fee below for the
+    // family» – true of the old split, and precisely the sentence the ruling exists to end: a house
+    // buying HER face writes to her.
+    expect(paper, 'the fee on the paper is hers').toContain('the fee below is hers')
+    expect(paper, 'and the old payee is gone from the letter').not.toContain('for the family')
   })
 
   it('⭐ the inbox row and the confirm say the money is HERS, at the whole figure', () => {

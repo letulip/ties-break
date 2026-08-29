@@ -206,7 +206,13 @@ describe('InboxSheet – the letter is in the list, the row says what it is, the
     // term – and the one thing the letter cannot say for itself.
     expect(text).toContain(`Sign with ${WATCH.brand}?`)
     expect(text).toContain('one-time fee')
-    expect(text).toContain('paid to the family now')
+    // ⚠ RE-AIMED BY ROUND 29 PART THREE P3, 29.08 – the payee moved and the FIGURE did not. The
+    // ruling is that «контракт на полную сумму ребенку приходит на почту»: the cheque is addressed
+    // to her at its full value, and the parent's commission appears on the ledger after signing.
+    // The claim this arm makes – the confirm restates the fee before an irreversible press – is
+    // unchanged; a confirm that named the wrong payee was the thing the ruling made wrong.
+    expect(text).toContain('paid to her now')
+    expect(text, 'and the old payee is gone from the confirm').not.toContain('paid to the family now')
     expect(text).toContain('This cannot be undone.')
     // ⭐ STEP 2 (⚠ re-aimed from step 1's «nothing else asked of her», which the owner ruled dead):
     // the confirm PREVIEWS the exact weeks the signature will name – the same `chooseShootWeeks`

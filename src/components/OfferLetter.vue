@@ -679,9 +679,17 @@ const settled = computed(() => {
        deal, the shoot weeks are its whole price, and the last line bounds what is owed. -->
   <article v-else-if="isAd" class="offer-letter">
     <PaperNote class="offer-paper" size="letter" :tilt="0">
+      <!-- ⚠⚠ «THE FEE BELOW IS HERS», AND IT USED TO SAY «for the family» – round 29 part three P3.
+           The owner's ruling of 29.08 is that the contract is addressed to the daughter at its full
+           value and the parent takes a manager's fee off it AFTER signing. His words are in the
+           script block of tests/round29p3-manager-commission.test.ts, because Cyrillic inside a
+           <template> is forbidden (tests/template-copy-rules.test.ts). ⚠ The house is the one
+           speaking here, and a house buying HER face writes to her: the old clause named the payee
+           the old split produced, which is the sentence the ruling exists to end. ⚠ NO FIGURE MOVED
+           and none is split on this paper – the fee below is the whole cheque. -->
       <p class="offer-body">
         {{ adTrade }}, and we have been following her results. We would like her face in our
-        campaign – her photograph beside our name, and the fee below for the family.
+        campaign – her photograph beside our name, and the fee below is hers.
       </p>
       <ul class="offer-terms">
         <li>
