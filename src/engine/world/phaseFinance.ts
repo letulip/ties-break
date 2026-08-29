@@ -54,6 +54,9 @@ import { sponsorNeedMet } from './sponsors'
 // ⚠ THE LEAF, NOT `./shop` – `world/assets.ts` is the shelf's pure reads and imports nothing from
 // this package, which is what keeps the till free of the shop's command-side dependencies.
 import { assetUpkeepCents, deliveredAssets } from './assets'
+// The businesses' one arithmetic (round 29 part four P7) – the till charges what these quote, and
+// the household meter quotes the same two functions, so the strip and the ledger cannot disagree.
+import { academyWeeklyIncomeCents, merchWeeklyIncomeCents } from './business'
 
 // Flavor lists are background-aware but a flavor is always chosen with ONE `pickInt`
 // (a single rng() call regardless of list length), so the per-tick draw count is
@@ -307,6 +310,51 @@ export function coachWorksThisWeek(world: WorldState): boolean {
   if (inCollege(world)) return false
   if (vacationForWeek(world, world.week) !== undefined) return false
   return true
+}
+
+/** ⭐⭐ ROUND 29 PART FOUR P7 – WHAT THE PARENT'S BUSINESSES BRING IN THIS WEEK: the merch brand
+ *  (follows FAME – world/fame.ts) and the academy's stages (follow REPUTATION – seasons in band).
+ *
+ *  ⚠ INCOME BEFORE COSTS – this phase's own stated order, which is why it sits beside the parents'
+ *  contribution rather than somewhere clever. ⚠ ONE ROW PER BUSINESS AND NEVER PER STAGE: the
+ *  academy's line is one number a week (the Nadal accounts are the flavour of the sentence, not
+ *  four lines), and a week that earns nothing books nothing – a $0 income row every week of a
+ *  junior career would be noise, and unlike the coach's stood-down $0 there is no standing
+ *  relationship to explain: a family with no business simply has no line.
+ *
+ *  ⚠ INCOME ONLY, NEVER NEGATIVE («мы ни за что не наказываем») – both functions are bounded at
+ *  zero by construction, and the shelf's upkeep (where a rung has one) stays its own separate
+ *  expense line: round 29 #10's lesson, never net two facts silently.
+ *
+ *  ⚠ ZERO DRAWS ON ANY STREAM. Arithmetic on persisted records (world/business.ts), so the MAIN
+ *  sequence is byte-identical for every career that owns neither – which is every career that
+ *  never bought them, the frozen three included – and the frozen capture (41550 / e6b0c709)
+ *  cannot see it. Nothing here is a die, so the input-independence law is not engaged. */
+function resolveBusinessIncome(world: WorldState): void {
+  const merch = merchWeeklyIncomeCents(world)
+  if (merch > 0) {
+    world.fundsCents += merch
+    addEvent(world, {
+      week: world.week,
+      type: 'income',
+      category: 'business',
+      text: 'Merch – her name on the shelves',
+      amountCents: merch,
+    })
+  }
+  const academy = academyWeeklyIncomeCents(world)
+  if (academy > 0) {
+    world.fundsCents += academy
+    addEvent(world, {
+      week: world.week,
+      type: 'income',
+      category: 'business',
+      // The Nadal shape as flavour (endorsement-tiers-and-academy-money.md §3a): the campus is the
+      // business – programmes, beds, its own sponsors – and ONE number reaches the ledger.
+      text: 'The academy – programmes, lodging and its own sponsors',
+      amountCents: academy,
+    })
+  }
 }
 
 function resolveBaseCosts(world: WorldState, rng: Rng): void {
@@ -621,6 +669,11 @@ export function weeklyFinance(world: WorldState, rng: Rng): void {
 
   // 0. parent's weekly contribution BEFORE costs (no RNG draw)
   resolveParentIncome(world)
+
+  // 0-bis. ⭐⭐ ROUND 29 PART FOUR P7 – the businesses' week: merch (fame) and the academy's stages
+  //     (reputation). Income before costs, beside the parents' line it is the same kind of thing
+  //     as. ZERO DRAWS on any stream – see resolveBusinessIncome.
+  resolveBusinessIncome(world)
 
   // 1. base costs (main stream, plan-independent draw count)
   resolveBaseCosts(world, rng)

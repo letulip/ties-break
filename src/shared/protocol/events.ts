@@ -115,6 +115,21 @@ export type WorldEventCategory =
    *  ⚠ AN OLD SAVE HAS NO ROWS OF IT, by construction: `assets` back-fills empty (see migrations.ts
    *  v62 -> v63) and the shelf did not exist, so nothing is retconned. */
   | 'shop'
+  /** 'business' (v66, round 29 part four P7) is an INCOME-side category: what THE PARENT'S OWN
+   *  BUSINESSES bring in every week – the merch brand (follows FAME, world/fame.ts) and the
+   *  delivered academy stages (follow reputation = seasons ended in band). One row per business
+   *  per week, written by `resolveBusinessIncome`.
+   *
+   *  ⚠ ITS OWN BUCKET AND NOT A REUSE, and both candidate reuses were weighed and refused in the
+   *  round-29 ledger before this shipped: 'income' would fold a business the player BUILT into
+   *  «the parents' job», and 'academy' already means the scholarship SHE receives – making it also
+   *  mean «the business HE owns» is precisely the two-facts-one-name defect the v44 'facility'
+   *  split was built to end. A new member of this union is a schema change by CLAUDE.md invariant
+   *  3 (the v44 precedent, verbatim), so SAVE_SCHEMA_VERSION moved 65 -> 66 with it.
+   *
+   *  ⚠ AN OLD SAVE HAS NO ROWS OF IT, by construction: the businesses did not exist, the v65 -> v66
+   *  migration back-fills nothing, and the ledger stays truthful about what it actually banked. */
+  | 'business'
   | 'income'
   | 'interest'
   | 'physio'

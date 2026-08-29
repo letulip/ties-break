@@ -237,7 +237,19 @@ import type { AcademySupport } from '../academy'
 // call-up reveal above. Two different v64 schemas existed for a day, and a save written by either
 // could not be read by the other. Renumbered on the merge: the version, the migration's place in the
 // append-only chain, and the golden fixture, all three together.
-export const SAVE_SCHEMA_VERSION = 65
+//
+// ⚠ v66 = ONE UNION MEMBER, `WorldEventCategory` gains 'business' (round 29 part four P7 – the
+// merch brand's and the academy's weekly income lines, written by `resolveBusinessIncome`). NO
+// field moved and NOTHING is back-filled: the businesses did not exist, so an old save genuinely
+// has no rows of them. The version moves anyway, BY THE v44 PRECEDENT VERBATIM («'facility'… a new
+// member of that union is a schema change by the rule in CLAUDE.md §3, so the version moves») –
+// events and `financeWeeks.byCategory` are persisted, and a v66 save loaded by a v65 build would
+// carry a category that build's union does not know. The round-29 ledger weighed the two zero-cost
+// reuses and refused both: 'income' folds a built business into «the parents' job», and 'academy'
+// already means the scholarship SHE receives – two facts under one name is the defect v44 was cut
+// to end. Full move: this constant, the v65 -> v66 step in migrations.ts, tests/fixtures/saves/
+// v66.json, and the union member's own doc in shared/protocol/events.ts.
+export const SAVE_SCHEMA_VERSION = 66
 
 
 

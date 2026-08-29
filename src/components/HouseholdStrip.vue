@@ -51,6 +51,21 @@ const shelfCents = computed(() => household.value?.shelfCents ?? 0)
 // one strip the owner asked for two rounds ago. Silent at zero, exactly as the shelf line is: every
 // family that owns nothing with an upkeep is every family that has not commissioned a boat.
 const upkeepCents = computed(() => household.value?.upkeepCents ?? 0)
+// ⭐⭐ ROUND 29 PART FOUR P7 – AND WHAT THE PARENT'S BUSINESSES BRING IN, which is CASH like the
+// upkeep line and unlike the shelf's valuation: the merch brand (follows fame) and the academy's
+// built stages (follow the seasons she finished high) really bank these every week
+// (`resolveBusinessIncome`). Both are already inside the IN figure – the engine's memo discipline –
+// so this line NAMES them and adds nothing. Silent at zero, exactly as the shelf and upkeep lines
+// are: every family that never started a business is every junior career for years.
+const merchCents = computed(() => household.value?.merchCents ?? 0)
+const academyIncomeCents = computed(() => household.value?.academyIncomeCents ?? 0)
+const businessCents = computed(() => merchCents.value + academyIncomeCents.value)
+const businessLine = computed(() => {
+  const parts = []
+  if (merchCents.value > 0) parts.push(`merch ${formatCents(merchCents.value)}`)
+  if (academyIncomeCents.value > 0) parts.push(`the academy ${formatCents(academyIncomeCents.value)}`)
+  return `Their businesses bring in ${formatCents(businessCents.value)} a week of that – ${parts.join(', ')}.`
+})
 // ⚠ THE SIGN IS IN THE WORD, NOT ONLY IN THE MINUS. A household spending more than it earns is the
 // ordinary junior case, and "-$1,234.00 left over" is not a sentence; the magnitude is printed and
 // the noun says which way it points.
@@ -86,6 +101,9 @@ const netMagnitude = computed(() => Math.abs(netCents.value))
     </p>
     <p v-if="upkeepCents > 0" class="hint budget-upkeep">
       {{ `Keeping what they own is ${formatCents(upkeepCents)} a week of that, and it is real money.` }}
+    </p>
+    <p v-if="businessCents > 0" class="hint budget-business">
+      {{ businessLine }}
     </p>
   </div>
 </template>

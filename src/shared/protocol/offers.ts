@@ -414,10 +414,11 @@ export interface KitDealView {
 /** One rung of the shelf, as the Money screen reads it. */
 export interface ShopRowView {
   id: string
-  /** ⭐ ROUND 29 #5 added the last three (§3f, §3g). 'boat' and 'plane' are the COMMISSIONED
-   *  families – ordered, waited for, and kept every week; 'academy' is the one thing on the shelf
-   *  that is built in stages and outlives the career. */
-  family: 'investment' | 'car' | 'house' | 'boat' | 'plane' | 'academy'
+  /** ⭐ ROUND 29 #5 added 'boat' | 'plane' | 'academy' (§3f, §3g): the COMMISSIONED families –
+   *  ordered, waited for, and kept every week – and the one thing on the shelf that is built in
+   *  stages and outlives the career. ⭐ ROUND 29 PART FOUR P7 added 'business': the rungs that
+   *  EARN every week – the merch brand, the parent's first business, income riding on fame. */
+  family: 'investment' | 'car' | 'house' | 'business' | 'boat' | 'plane' | 'academy'
   /** 'fixed' – one price. 'open' – the family names an amount, at least `entryCents`. */
   stake: 'fixed' | 'open'
   label: string
@@ -452,6 +453,15 @@ export interface ShopRowView {
    *  ⚠ IT IS THE PRICE'S OWN PERCENTAGE AND NOT THE CURRENT VALUE'S, so the figure a player was
    *  quoted on the day he ordered is the figure he goes on paying – see `assetUpkeepCents`. */
   upkeepCents: number
+  /** ⭐⭐ ROUND 29 PART FOUR P7 – WHAT IT BRINGS IN EVERY WEEK, RIGHT NOW, in cents: the merch
+   *  brand's fame-driven line and a delivered academy stage's reputation-driven one, each read off
+   *  the same functions the till banks through (world/business.ts – one arithmetic, so the card
+   *  and the ledger cannot quote two businesses). Zero on every rung that earns nothing, on every
+   *  rung not owned, and on a stage still on order.
+   *
+   *  ⚠ THE MIRROR OF `upkeepCents` ONE FIELD UP, and deliberately NOT netted against it (round 29
+   *  #10's lesson): a rung that both kept a crew and sold shirts would carry both figures. */
+  incomeCents: number
   /** ⭐ §3f – HOW MANY WEEKS FROM THE ORDER TO THE THING, for a rung that is commissioned rather
    *  than bought. Zero on everything that arrives at once. */
   buildWeeks: number

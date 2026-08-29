@@ -2048,6 +2048,24 @@ export function migrateSave(raw: unknown): WorldState {
     v = 65
   }
 
+  // ⭐⭐ v65 -> v66: THE 'business' LEDGER CATEGORY (round 29 part four P7 – the merch brand's and
+  // the academy's weekly income lines). A UNION WIDENED AND NOTHING ELSE: no field moved, so this
+  // step writes nothing – it exists because a new `WorldEventCategory` member is a schema change by
+  // CLAUDE.md invariant 3 (the v43 -> v44 'facility' precedent, verbatim: «a new member of that
+  // union is a schema change by the rule in CLAUDE.md §3, so the version moves»).
+  //
+  // ⚠ NOTHING IS BACK-FILLED, BY CONSTRUCTION AND NOT BY OMISSION. The businesses did not exist
+  // before this build – no save can hold a merch brand it could not buy or an academy income it was
+  // never paid – so a v65 career's ledger genuinely contains no 'business' rows and inventing any
+  // would retcon a family's own history (v44's own rule: the ledger stays truthful about what it
+  // actually charged). The income starts from the career's next tick, forward-only.
+  //
+  // Idempotent trivially (it writes nothing), and it writes nothing: ZERO draws on any stream, so
+  // the frozen MAIN capture (41550 / e6b0c709) is untouched by construction.
+  if (v === 65) {
+    v = 66
+  }
+
   if (v !== SAVE_SCHEMA_VERSION) {
     throw new Error(`Save schema ${v} is newer than supported ${SAVE_SCHEMA_VERSION}`)
   }

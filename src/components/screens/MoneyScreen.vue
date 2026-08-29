@@ -266,7 +266,9 @@ const netCents = computed(() => activeFinance.value?.netCents ?? 0)
 // green row under the list. An expense whose category is missing/unknown (pre-round-7 events) falls
 // into 'other'. 'interest' (R9-1, weekly savings interest) is INCOME-side and must never appear as
 // a spending row.
-type ExpenseCategory = Exclude<WorldEventCategory, 'income' | 'sponsor' | 'interest' | 'academy'>
+// ⚠ 'business' (v66) is INCOME-side too – the merch brand's and the academy's weekly lines – and
+// must never appear as a spending row, exactly as 'interest' must not.
+type ExpenseCategory = Exclude<WorldEventCategory, 'income' | 'sponsor' | 'interest' | 'academy' | 'business'>
 const EXPENSE_META: { key: ExpenseCategory; label: string }[] = [
   { key: 'coaching', label: 'Coaching' },
   // ⚠ THE COURT IS ITS OWN ROW (v44, docs/specs/split-the-bill-2026-08.md, owner 08.08: «нам нужно
@@ -679,6 +681,9 @@ const kitDeal = computed(() => game.snapshot?.kitDeal ?? null)
 /** ⭐ ROUND 29 PART FOUR P6/§8 – the portfolio shelf, engine-derived rows (`AdPortfolioRow`), empty
  *  before eighteen. This screen renders states and formats money; it decides nothing. */
 const adPortfolio = computed(() => game.snapshot?.adPortfolio ?? [])
+// ⭐ ROUND 29 PART FOUR P7/P8 – fame, the engine's own whole number (rounded ONCE at the snapshot
+// boundary, `condition`'s rule); this screen never re-rounds it and never re-derives the fold.
+const fame = computed(() => game.snapshot?.fame ?? 0)
 /** The covered lines in the LETTER's words - the paper says "racquets", the equipment model says
  *  "frame", and a parent reading both must not meet two vocabularies for one thing. */
 const KIT_LINE_WORDS: Record<string, string> = { strings: 'strings', frame: 'racquets', shoes: 'shoes' }
@@ -842,6 +847,15 @@ const SHOP_FAMILIES: { key: ShopRowView['family']; title: string; note: string }
     note: 'Every one of these is worth less next season than it is today. That is what a car is.',
   },
   { key: 'house', title: 'Property', note: 'Slow, large, and the end of paying somebody else rent.' },
+  // ⭐⭐ ROUND 29 PART FOUR P7 – THE PARENT'S OWN BUSINESS, and the first rung on the shelf that
+  // EARNS. His words are in `shopBusinessNote` in the comment block below (Cyrillic may not appear
+  // in a template, and this array is read into one). The note says what the family is FOR – §3's
+  // own rule – and names the axis out loud: fame, never rank.
+  {
+    key: 'business',
+    title: 'The business',
+    note: 'The first thing on this shelf that earns. What it brings in follows how known she is – the shoots and the titles – not her ranking.',
+  },
   // ⭐⭐ ROUND 29 #5 – THE THREE STOREYS THE OWNER ASKED FOR. His words are in `shopEliteNote` in the
   // comment block below (Cyrillic may not appear in a template, and this array is read into one).
   // Each note says what the FAMILY is for, which is §3's own rule: «a shop where the only difference
@@ -859,7 +873,9 @@ const SHOP_FAMILIES: { key: ShopRowView['family']; title: string; note: string }
   {
     key: 'academy',
     title: 'Her academy',
-    note: 'Four stages, in order, and each one is a decision. The only thing on this shelf that outlives a career.',
+    // ⭐ ROUND 29 PART FOUR P7 – the second sentence is «нам нужна академия, которая зарабатывает»
+    // made visible: each stage earns weekly once built, scaled by the seasons she finished high.
+    note: 'Four stages, in order, and each one is a decision. Every stage earns once it is built – the higher and longer she placed, the more it brings in – and it outlives the career.',
   },
 ]
 function shopRowsOf(family: ShopRowView['family']): ShopRowView[] {
@@ -899,6 +915,14 @@ function stakeCentsFor(row: ShopRowView): number {
 // BALANCE, and StatRow's own vocabulary already has the word: `plain` = «a number with no direction
 // (a count, a balance)», painted `--ink`, i.e. white. The existing palette, not a new colour. The
 // direction is not lost – it moves to `.shop-row-change`, the signed row that is about a direction.
+
+// ⭐⭐ ROUND 29 PART FOUR P7 – `shopBusinessNote`, THE OWNER'S OWN WORDS, PARKED HERE FOR THE SAME
+// REASON AS ITS NEIGHBOURS (no Cyrillic in a template, and `SHOP_FAMILIES` is read into one):
+// «до академии можно запустить свой бренд одежды (мерча) – это может стать хорошим шагом и
+// подспорьем как в доходе, так и вообще добавить геймплея немного. А еще это дешевле академии» and
+// «нам нужен мерч, растущий от частоты и обилия рекламных контрактов, съемок, выступлений, титулов
+// и прочего» – so the family note names FAME as the axis, never rank, and the row's income line
+// (`incomeCents`, engine-computed) is the mechanic on screen.
 
 // ⭐⭐ ROUND 29 #5 – `shopEliteNote`, THE OWNER'S OWN WORDS, PARKED HERE FOR THE SAME REASON AS THE
 // two above: Cyrillic may not appear in a template, in a string OR in a comment
@@ -1516,6 +1540,15 @@ const TAB_OPTIONS = [
           One deal per category – the cheque grows with her standing, the shelf itself does not.
           Fees run through the family's account with her share taken like any sponsor cheque.
         </p>
+        <!-- ⭐ ROUND 29 PART FOUR P7/P8 – FAME'S ONE LINE, where the sponsors live. The stock of
+             docs/specs/fame-and-the-shoots-2026-08.md, first surfaced here and deliberately
+             MODESTLY: one sentence, the engine's own whole number (`snapshot.fame`, rounded once
+             at the boundary), no meter and no gate re-derived. The full fame surface is a later
+             wave; today it is the number the merch line follows. -->
+        <p class="money-panel-note ad-fame-line">
+          How known she is – {{ fame }} of 100. The court sets that floor, and the shoots she has
+          done multiply it; the merch brand sells on it.
+        </p>
         <div v-for="row in adPortfolio" :key="row.category" class="ad-slot" :class="`is-${row.state}`">
           <div class="ad-slot-head">
             <span class="ad-slot-name">{{ row.label }}</span>
@@ -1660,6 +1693,14 @@ const TAB_OPTIONS = [
                  does not divide a percentage by a year. -->
             <p v-if="row.upkeepCents > 0" class="shop-row-upkeep">
               {{ formatCents(row.upkeepCents) }} a week to keep
+            </p>
+            <!-- ⭐⭐ ROUND 29 PART FOUR P7 – THE MIRROR LINE: what an owned earner brings in RIGHT
+                 NOW, the engine's own figure (`incomeCents`, the same arithmetic the till banks).
+                 Drawn only when it is really flowing – a brand nobody knows and a stage on order
+                 both read $0 and say nothing. Deliberately NOT netted against the upkeep line
+                 above (round 29 #10): two facts, two sentences. -->
+            <p v-if="row.incomeCents > 0" class="shop-row-earning">
+              Brings in {{ formatCents(row.incomeCents) }} a week right now
             </p>
             <!-- ⭐ §3f – THE WAIT, ON THE ROW, BEFORE THE ORDER IS PLACED. Not a teaser and not a
                  lock: the price is beside it and the control is pressable. -->
@@ -2473,6 +2514,16 @@ const TAB_OPTIONS = [
   font-size: 11.5px;
   font-weight: 700;
   color: var(--money-out);
+}
+
+/* ⭐ ROUND 29 PART FOUR P7 – the mirror of the upkeep line: money that ARRIVES every week, in the
+   app's one green for that meaning (note 3 in the script header). Same size and weight as its
+   mirror, deliberately – two facts of equal rank, never netted. */
+.shop-row-earning {
+  margin: 4px 0 0;
+  font-size: 11.5px;
+  font-weight: 700;
+  color: var(--money-in);
 }
 
 /* The wait and the stage under it – facts about WHEN, not about money, so they take the quiet ink

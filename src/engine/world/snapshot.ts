@@ -104,6 +104,8 @@ import { copyByTrack, copyTrophyLedger, emptySeasonRecord, seasonWrapDue } from 
 import { computeLossStreak, fallbackPlayer, flipScore, kidMatchesOf, kidMatchEvent } from './matchNews'
 import { coachLoadViewOf, pendingKnock, radarViewOf } from './knock'
 import { capstoneSeasonsOf, coachTravelFareFor, masseurTravelFareFor, sponsorStandingOf, travelCostFor } from './sponsors'
+// Round 29 part four P7/P8 – the fame fold (zero draws, nothing persisted; see world/fame.ts).
+import { fameAt } from './fame'
 import { summerDayCapacity } from './summer'
 import type { WorldState } from '../world'
 
@@ -1259,6 +1261,11 @@ export function toSnapshot(world: WorldState, stopReasons?: StopReason[]): Snaps
         return { brand: t.brand, weeks: [...(t.shootWeeks ?? [])] }
       })
       .filter((r) => r.weeks.length > 0),
+    // ⭐⭐ ROUND 29 PART FOUR P7/P8 – FAME, the accounted stock (world/fame.ts): results set the
+    // floor, the lived shoot weeks multiply it, everything decays slowly, and NOTHING here is a
+    // die. Rounded ONCE at this boundary – `condition`'s own rule, and the same ratchet
+    // («у пользователя целые в интерфейсе»); no screen may round it again.
+    fame: Math.round(fameAt(world)),
     // ⭐⭐ ROUND 29 PART FOUR P6/§8 – THE PORTFOLIO SHELF, one row per category in shelf order,
     // filled/open/closed, every number the engine's own. Empty before eighteen: no shelf for a
     // junior (`reviewAdOffer`'s own age gate, read through the same constant).

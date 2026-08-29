@@ -74,6 +74,20 @@ export interface HouseholdWeekly {
    *  that bypassed the same total would be that defect again, larger. Zero for every family that
    *  owns nothing with an upkeep. */
   upkeepCents: number
+  /** ⭐⭐ ROUND 29 PART FOUR P7 – WHAT THE MERCH BRAND BRINGS IN A WEEK, in cents, and it is CASH:
+   *  `resolveBusinessIncome` banks exactly this figure each week it is positive. Follows FAME
+   *  (world/fame.ts), never rank. Zero for every family that never started one.
+   *
+   *  ⚠⚠ ALREADY INSIDE `incomeCents` – `upkeepCents`' own discipline mirrored to the income side:
+   *  a consumer that adds it again has misread it. Carried so the strip can NAME the line (round
+   *  28 #8's law: a real weekly stream the household block does not know about is the defect). */
+  merchCents: number
+  /** ⭐⭐ ...AND WHAT THE ACADEMY'S DELIVERED STAGES BRING IN, same contract in every clause: cash,
+   *  already inside `incomeCents`, carried so the strip can name it. Scales with the stages built
+   *  and with reputation (seasons ended in band – «чем выше и дольше место – тем выше доход»).
+   *  ⚠ NOT the scholarship: that is the academy SHE attends ('academy' category); this is the
+   *  business HE built ('business'). Two facts, two names – the v44 lesson. */
+  academyIncomeCents: number
 }
 
 export interface Snapshot {
@@ -130,6 +144,16 @@ export interface Snapshot {
    *  re-derives no gate, the same rule every other derived block on this snapshot keeps. Empty
    *  before her eighteenth birthday: there is no shelf to show a junior. */
   adPortfolio: AdPortfolioRow[]
+  /** ⭐⭐ ROUND 29 PART FOUR P7/P8 – HOW KNOWN SHE IS, 0–100: the fame stock of
+   *  docs/specs/fame-and-the-shoots-2026-08.md, first shipped here. AN ACCOUNTED FOLD, NEVER A
+   *  ROLL – results the world noticed set the floor, the shoot weeks she has lived multiply it,
+   *  and everything decays slowly (world/fame.ts; zero draws, nothing persisted).
+   *
+   *  A WHOLE NUMBER, rounded ONCE by `toSnapshot` – `condition`'s own boundary rule («у
+   *  пользователя целые в интерфейсе»). Surfaced modestly where the sponsors live (the Bills
+   *  portfolio card) and read by exactly one income line today (merch); the fame-gated advertising
+   *  ladder of the spec's §4 is a later wave, deliberately. */
+  fame: number
   fundsCents: number
   profile: PlayerProfile
   plan: WeekPlan

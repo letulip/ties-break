@@ -37,6 +37,8 @@
 // world's dice.
 import { guardNotEndedForGood } from './endings'
 import { addEvent } from './ledger'
+// Round 29 part four P7 – the businesses' one arithmetic; the till banks the same functions.
+import { assetWeeklyIncomeCents } from './business'
 // ⚠ THE ONE THING THIS FILE ASKS THE MARKET DIRECTLY – the season line's crash predicate. Every
 // VALUE still flows through `assetWorthCents`; this is a question about the calendar, not a price.
 import { marketCrashFellIn } from './market'
@@ -525,6 +527,10 @@ export function shopView(world: WorldState): ShopView {
       // week to keep is this, quoted off what the family PAID when it owns one and off the price
       // when it does not, so the card and the bill can never differ.
       upkeepCents: assetUpkeepCents(item, mine ? mine.paidCents : item.entryCents),
+      // ⭐⭐ ROUND 29 PART FOUR P7 – ...AND WHAT IT BRINGS IN RIGHT NOW (the merch brand, a
+      // delivered academy stage), asked of the businesses' one arithmetic so this card and the
+      // till's weekly row cannot quote two figures. Zero everywhere the family owns no earner.
+      incomeCents: assetWeeklyIncomeCents(world, item.id),
       buildWeeks: item.buildWeeks ?? 0,
       // ⚠ NON-NULL ONLY WHILE THEY ARE WAITING. The screen draws no Sell against a contract and says
       // the date instead – `sellableAsset` refuses the same week, so a stale tab cannot sell a boat

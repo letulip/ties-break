@@ -1777,6 +1777,113 @@ export const ECONOMY = {
     decideWeeks: 5,
   },
 
+  // --- FAME (round 29 part four P7/P8, docs/specs/fame-and-the-shoots-2026-08.md) ---------------
+  //
+  // «нам важны разные спонсоры и их появление как можно раньше в плане фотосессий и их количества –
+  // это прямой рычаг известности» – and his «здесь полностью согласен» on the floor-and-multiplier
+  // shape: THE FLOOR IS EARNED ON COURT AND THE SHOOTS MULTIPLY IT. A champion who never shoots is
+  // still famous; a face with no results has nothing for the photographs to multiply.
+  //
+  // ⚠⚠ FAME IS A FOLD, NEVER A ROLL. It is a pure function of what has already happened – dated
+  // titles (`trophiesByTier`, weeks, never pruned), lost Slam finals (same ledger), seasons ended
+  // inside the top 10 (`seasonHistory[].byTrack.wta.endRank`) and shoot weeks already lived
+  // (`AdOfferTerms.shootWeeks` on signed letters) – so RNG input-independence is not merely
+  // respected but unreachable: there is no die anywhere in it, and nothing is persisted for it
+  // (the stock is re-derived from the career's own records on every read). See world/fame.ts.
+  fame: {
+    /** ⭐ THE FLOOR, PER RESULT THE WORLD NOTICES – fame points per TITLE at each professional
+     *  tier, freshest worth the full step and every step fading on `halfLifeWeeks` below. The
+     *  spec's own floor list is «a Slam final, a title at 1000+, a first top-10 season»; the
+     *  ladder below extends it downward with small steps so a climbing career is not a flat zero –
+     *  the local paper notices a W35 title even if the world does not. Tiers absent here (the
+     *  junior and domestic rungs) buy no fame at all: the world does not read junior draws. */
+    titleFloor: {
+      w15: 0.25, w35: 0.5, w50: 0.75, w75: 1, w100: 1.5, wta125: 2,
+      wta250: 4, wta500: 8, wta1000: 14, slam: 25,
+    } as Partial<Record<TierId, number>>,
+    /** a LOST Slam final – the one runner-up plate the world remembers (spec §3's own example).
+     *  Lost finals at every other tier buy nothing: the world remembers who won. */
+    slamFinalFloor: 12,
+    /** a season ENDED inside the WTA top 10 (`byTrack.wta.endRank` ≤ 10) – the «first top-10
+     *  season» of the spec's floor list, counted per season from its wrap week. */
+    top10SeasonFloor: 10,
+    /** ⭐ THE SLOW DECAY – the half-life of every contribution, in weeks. Two seasons: a Slam won
+     *  six seasons ago still carries an eighth of its step, so a reign fades over about four to
+     *  six seasons rather than overnight. ⚠ Decay is what makes fame a lever and not a rank by
+     *  another name (spec §3) – a stock that only rises is a trophy cabinet. */
+    halfLifeWeeks: 104,
+    /** ⭐ THE MULTIPLIER'S STEP – each shoot week ALREADY LIVED multiplies the floor by
+     *  (1 + step), the step itself decaying on the same half-life. Twelve fresh shoots ≈ ×1.6:
+     *  enough to reorder two comparable floors (the census's #30-on-court / #2-off-court shape),
+     *  never enough to make a face out of nothing – zero floor times anything is zero. */
+    shootStep: 0.05,
+    /** ...and the multiplier's ceiling. The photographs can at most double what the court earned –
+     *  the spec's «a multiplier on a floor she earns on court, not the only road», as a bound. */
+    shootMultCap: 2,
+    /** fame is bounded 0–100 – the spec's own scale; the cap is «the whole world knows her». */
+    cap: 100,
+  },
+
+  // --- THE PARENT'S BUSINESSES (round 29 part four P7 – merch and the academy that earns) --------
+  //
+  // His order, verbatim: «нам нужен мерч, растущий от частоты и обилия рекламных контрактов,
+  // съемок, выступлений, титулов и прочего» and «нам нужна академия, которая зарабатывает».
+  //
+  // ⚠ TWO INSTRUMENTS, TWO AXES, DELIBERATELY (P7's own chain): merch follows FAME – the fold over
+  // contracts, shoots and titles he listed, which is NOT rank – and the academy follows
+  // SEASONS-IN-BAND (reputation, the P2 ruling «чем выше и дольше место – тем выше доход»). The
+  // two are different numbers in this game and the businesses keep them apart.
+  //
+  // ⚠⚠ INCOME ONLY, NEVER NEGATIVE – «мы ни за что не наказываем». Both lines are the NET of a
+  // business that simply sells less when nobody is looking; zero is their floor by construction.
+  // ⚠ ZERO DRAWS ON ANY STREAM: both are arithmetic on persisted records (world/business.ts).
+  business: {
+    merch: {
+      /** ⭐ WHAT ONE POINT OF FAME SELLS, in cents a week – the whole merch dial. At fame 10 (a
+       *  few small titles) the brand pays ≈ the index fund on its $250,000 price; at a reign's
+       *  fame 60–80 it is $94k–125k a year – a real «подспорье», still under the academy at any
+       *  reputation the academy's builders actually hold. Sized against the round-29 counterweight
+       *  gap: the 10% commission costs the MEDIAN career ≈ $130k of peak wallet, and five seasons
+       *  of merch at that career's fame roughly hands it back. */
+      perFamePointCents: 3_000,
+    },
+    academy: {
+      /** ⭐⭐ WHAT EACH DELIVERED STAGE BRINGS IN AT REPUTATION 1.0, in cents a week, keyed by the
+       *  catalogue's own stage ids. THE SHAPE IS THE ROUND-29 REACHABILITY PROPOSAL'S OWN TABLE
+       *  (the ledger, part three): the land is a field and earns nothing; the courts rent; the
+       *  clubhouse lodges; the staff run the programmes that are the business. One number reaches
+       *  the ledger per week – the Nadal split (programmes+lodging 56%, its own sponsors 14%,
+       *  merch, restaurants – Forbes España 2023) is the flavour of the LINE, never four lines.
+       *
+       *  ⚠ SIZED A QUARTER ABOVE THE PROPOSAL'S $5,750 BASE ($7,250), AND MEASURED BEFORE IT WAS
+       *  KEPT (docs/specs/merch-and-academy-income-2026-08.md, predicted vs measured): the
+       *  proposal's own sizing was «repay the p90 commission in 7 seasons at the cap»; the P7
+       *  bench criterion is the research's bridge – the $12M academy repays in roughly 5–10
+       *  seasons of a real reign – and every career that can BUILD it holds reputation 2.9–4.0,
+       *  where this base pays back in 8.0–11.0 seasons ($1.09M–$1.51M a year). At reputation 1.0
+       *  it is 3.1% a year against the fund's 7% – the shelf's own law («assets never beat a
+       *  career, they only survive one») still holds everywhere below a top-ten reign. */
+      stageIncomeCents: {
+        'academy-land': 0,
+        'academy-courts': 95_000,
+        'academy-building': 250_000,
+        'academy-staff': 380_000,
+      } as Record<string, number>,
+      /** ⭐ REPUTATION – the fold over `seasonHistory[].byTrack.wta.endRank` the round-29 ledger
+       *  proposed and P2 ruled («чем выше и дольше место – тем выше будет доход»): 1.0 base, plus
+       *  the BEST band of each finished season, counted once per season, capped below. A season
+       *  with no recorded WTA end-rank (pre-v46 rows, null ranks) counts nothing – «not recorded»
+       *  is not «top-100». */
+      reputationBands: [
+        { maxEndRank: 10, add: 0.6 },
+        { maxEndRank: 25, add: 0.35 },
+        { maxEndRank: 50, add: 0.2 },
+        { maxEndRank: 100, add: 0.1 },
+      ] as readonly { maxEndRank: number; add: number }[],
+      reputationCap: 4,
+    },
+  },
+
   // Season-Life condition accumulator (0..100, 100 = fresh). Pure INTEGER arithmetic –
   // accrueCondition draws ZERO main-stream RNG, so none of these can shift the weekly draw
   // sequence (the B1 invariance test guards it).
@@ -3280,6 +3387,29 @@ export const ECONOMY = {
       // while it is BUILDING it cannot be sold and it charges NOTHING; the week it arrives the
       // upkeep starts and it becomes sellable the same week. There is no week in which the family
       // is paying for a thing it cannot get out from under.
+      // ⭐⭐ ROUND 29 PART FOUR P7 – THE MERCH BRAND, the parent's FIRST business rung.
+      //
+      // THE OWNER (P4): «до академии можно запустить свой бренд одежды (мерча) – это может стать
+      // хорошим шагом и подспорьем как в доходе, так и вообще добавить геймплея немного. А еще это
+      // дешевле академии» – so it is CHEAP against the academy ($250,000 against $12,000,000, the
+      // low hundreds of thousands, startable mid-career) and it EARNS: what it brings in each week
+      // follows FAME – «мерч, растущий от частоты и обилия рекламных контрактов, съемок,
+      // выступлений, титулов и прочего» – never rank. See ECONOMY.business.merch and
+      // world/business.ts; the income lands in the till as its own 'business' line.
+      //
+      // ⚠ NO BUILD WAIT, NO UPKEEP AND RATE 0, the academy stages' own reading of §3g: the price
+      // is the decision, the brand holds its value, and the income line – zero when nobody knows
+      // her – is the whole mechanic. A negative week is unreachable by construction («мы ни за
+      // что не наказываем»): fame is bounded at zero from below.
+      {
+        id: 'merch-brand',
+        family: 'business',
+        stake: 'fixed',
+        label: 'The merch brand',
+        blurb: 'Her name on shirts and bags. It sells while she is talked about.',
+        entryCents: 250_000_00,
+        annualRateBps: 0,
+      },
       {
         id: 'boat-launch',
         family: 'boat',

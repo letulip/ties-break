@@ -31,6 +31,8 @@ import { masseurWeeklyCents } from './masseur'
 // the shelf's pure reads and `world/shop.ts` re-exports them, so this is a shorter path to the same
 // symbols and not a change: this file only ever asked the shelf questions.
 import { assetWorthCents, ownedAssets, shopItem, weeklyAssetUpkeepCents } from './assets'
+// Round 29 part four P7 – the businesses' one arithmetic; the till banks the same two functions.
+import { academyWeeklyIncomeCents, merchWeeklyIncomeCents } from './business'
 import { addEvent, seasonIndexOf, seasonStartWeek } from './ledger'
 import { ageAtWeek, kidAgeAt, START_AGE_YEARS } from './age'
 import { activeLadderOf, bookClosedTo, hasOutgrown, kidPoints, tierOpenFor } from './ladder'
@@ -550,7 +552,18 @@ export function familyWeeklyIncomeCents(world: WorldState): number {
   // what has to last thirteen weeks. Pro-rating first and splitting the weekly figure would round in
   // a different place and quote a cap the ledger never delivers.
   const familyRetainerCents = retainerCents - kidPrizeShareCents(retainerCents, kidAgeAt(world, world.week))
-  return parents + Math.round((familyRetainerCents * RETAINERS_A_YEAR) / WEEKS_PER_YEAR)
+  // ⭐⭐ ROUND 29 PART FOUR P7 – AND THE BUSINESSES, because they are «the money that really
+  // arrives»: `resolveBusinessIncome` banks exactly these two figures every week they are
+  // positive, unconditionally – no roll, no window, no stand-down – which is the test this
+  // function's own #12 note sets for a stream's membership. Read off the till's own arithmetic
+  // (world/business.ts), never re-derived, so the cap the coach market draws and the rows the
+  // ledger writes cannot disagree.
+  return (
+    parents +
+    Math.round((familyRetainerCents * RETAINERS_A_YEAR) / WEEKS_PER_YEAR) +
+    merchWeeklyIncomeCents(world) +
+    academyWeeklyIncomeCents(world)
+  )
 }
 
 /** How many times a signed kit deal pays its retainer in a year - `isRetainerWeek` is
@@ -622,9 +635,15 @@ export function householdWeekly(world: WorldState, trainingCents: number): House
   // thirty-eight coaches, and a household block that did not know about it would be round 28 #8's
   // own defect (the masseur's $525) again and larger.
   const upkeepCents = weeklyAssetUpkeepCents(world)
+  // ⭐⭐ ROUND 29 PART FOUR P7 – THE BUSINESSES' TWO LINES, named so the strip can say them. They
+  // are ALREADY INSIDE the income figure below through `familyWeeklyIncomeCents` – `upkeepCents`'
+  // own memo discipline, mirrored to the income side – and they are read off the same two
+  // functions the till banks through, so the strip and the ledger cannot describe two businesses.
+  const merchCents = merchWeeklyIncomeCents(world)
+  const academyIncomeCents = academyWeeklyIncomeCents(world)
   const incomeCents = familyWeeklyIncomeCents(world) + Math.max(0, shelfCents)
   const outgoingCents = trainingCents + staffCents + Math.max(0, -shelfCents) + upkeepCents
-  return { incomeCents, outgoingCents, netCents: incomeCents - outgoingCents, shelfCents, upkeepCents }
+  return { incomeCents, outgoingCents, netCents: incomeCents - outgoingCents, shelfCents, upkeepCents, merchCents, academyIncomeCents }
 }
 
 /** THE MARKET, as the screen needs it: every coach, priced in HER family's corridor at HER age and

@@ -29,9 +29,10 @@ import type { WorldState } from '../world'
  *  shapes the rest of the engine reasons in. */
 export interface ShopItem {
   id: string
-  /** ⭐ ROUND 29 #5 added the last three (§3f, §3g) – the two commissioned families and the one
-   *  thing on the shelf that is built in stages. */
-  family: 'investment' | 'car' | 'house' | 'boat' | 'plane' | 'academy'
+  /** ⭐ ROUND 29 #5 added 'boat' | 'plane' | 'academy' (§3f, §3g) – the two commissioned families
+   *  and the one thing on the shelf that is built in stages. ⭐ ROUND 29 PART FOUR P7 added
+   *  'business' – the rungs that EARN every week (the merch brand; see world/business.ts). */
+  family: 'investment' | 'car' | 'house' | 'business' | 'boat' | 'plane' | 'academy'
   /** 'fixed' – one price. 'open' – the family chooses an amount, at least `entryCents` (§3a's
    *  minimums: a deposit is not a $1,000 thing you buy). */
   stake: 'fixed' | 'open'

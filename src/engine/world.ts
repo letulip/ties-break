@@ -334,6 +334,13 @@ import { assetDelivered, assetUpkeepCents, assetValueCents, assetWorthCents, buy
 export { assetDelivered, assetUpkeepCents, assetValueCents, assetWorthCents, buyAsset, deliverAssets, deliveredAssets, grantedVacationIds, marketSeasonMove, ownedAssets, ownsDeliveredOfFamily, reportMarketSeason, revalueAssets, sellAsset, sellableAsset, shopCatalogue, shopItem, shopView, weeklyAssetUpkeepCents }
 import { marketCrash, marketCrashFellIn, marketCrashLog, marketIndex, marketRatio, marketWave, worstCrashFreeRatio, worstMarketRatio } from './world/market'
 export { marketCrash, marketCrashFellIn, marketCrashLog, marketIndex, marketRatio, marketWave, worstCrashFreeRatio, worstMarketRatio }
+// ⭐⭐ ROUND 29 PART FOUR P7 – FAME (the accounted stock, world/fame.ts) and THE PARENT'S
+// BUSINESSES (merch follows fame, the academy's stages follow reputation – world/business.ts).
+// Re-exported under the historical convention; zero draws anywhere behind these names.
+import { completedShootWeeks, fameAt, fameFloorOf, fameShootMultOf } from './world/fame'
+export { completedShootWeeks, fameAt, fameFloorOf, fameShootMultOf }
+import { academyReputationOf, academyWeeklyIncomeCents, assetWeeklyIncomeCents, merchWeeklyIncomeCents } from './world/business'
+export { academyReputationOf, academyWeeklyIncomeCents, assetWeeklyIncomeCents, merchWeeklyIncomeCents }
 export type { MarketCrash } from './world/market'
 export type { ShopItem } from './world/shop'
 export type { FamilyMeans } from './world/means'
