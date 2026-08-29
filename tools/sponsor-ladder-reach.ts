@@ -146,6 +146,13 @@ interface CareerRow {
   winters: Winter[]
   /** what the sponsors actually banked over the career, gross of her cut. */
   sponsorIncomeCents: number
+  /** ⭐ 29.08 – the GROSS of every sponsor cheque, before any split. The denominator the commission
+   *  ruling is a share of. */
+  sponsorGrossCents: number
+  /** ...and the ADVERTISING fee, which `sponsorIncomeCents` never counted (a different post). */
+  adFeeIncomeCents: number
+  /** what the commission arm took back out of the wallet over the career. Zero on the shipped arm. */
+  commissionHandedBackCents: number
   /** the single largest sponsor cheque the career ever received. */
   biggestChequeCents: number
   biggestChequeText: string
@@ -192,9 +199,33 @@ interface CareerRow {
  *  two files reading the ledger differently would be two answers to one question. The kit allowance
  *  and the travel share are NOT cash and are deliberately absent: they are bills the brand did not
  *  send, which is a different sentence from a cheque it did. */
-const RETAINER_RE = / retainer – quarterly$/
+// ⚠⚠ THE FIRST OF THESE WAS END-ANCHORED AND MATCHED NOTHING, AND IT IS THE MEASUREMENT BEHIND A
+// HEADLINE. `bankSponsorCheque` APPENDS «, less her N% share ($X)» to every row it splits, from her
+// eighteenth birthday onward – and the rungs that pay a retainer at all gate on WTA #200, first
+// cleared at 18-20, so in practice EVERY retainer row carries the suffix and `/…quarterly$/` saw
+// none of them. Probed on one wealthy/player career over 780 weeks: **0 matched, 32 missed.** The
+// other two were prefix-anchored and were never affected, which is why the figure looked plausible.
+// ⚠ So round 29 part two #12's «career sponsor cash: median $1,942,862 -> $4,321,847» was measured
+// with the retainer line MISSING. The doubling is real – both arms had the same blind spot – but the
+// LEVEL was understated. Corrected here and re-reported in the ledger.
+const RETAINER_RE = / retainer – quarterly(?:,|$)/
 const APPEARANCE_RE = /^Appearance fee – /
 const BONUS_RE = /^Sponsor bonus – /
+/** ⭐ THE ADVERTISING FEE, WHICH WAS NEVER IN THE THREE ABOVE AT ALL. It is a different post and
+ *  `sponsorIncomeCents` means «what the KIT brands paid», so it is counted separately rather than
+ *  folded in – but it goes through the same `bankSponsorCheque` and is therefore subject to the same
+ *  share ruling, which is the only reason this file needs to see it. */
+const AD_FEE_RE = / endorsement – the campaign fee, on signing(?:,|$)/
+/** ⭐⭐ HER SHARE, READ OFF THE ROW THAT PAID IT AND NEVER RE-DERIVED. `bankSponsorCheque` writes the
+ *  cents it actually credited her into the text; `family + herCents` is the gross cheque TO THE CENT,
+ *  where `family / (1 - bps/10000)` is a division on a figure that was rounded once on the way in –
+ *  the exact arithmetic `kidPrizeShareCents`' own comment forbids. */
+const HER_SHARE_RE = /, less her [\d.]+% share \(\$([\d,]+(?:\.\d\d)?)\)$/
+function grossOfSponsorRow(text: string, familyCents: number): number {
+  const m = HER_SHARE_RE.exec(text)
+  if (!m) return familyCents
+  return familyCents + Math.round(Number(m[1].replace(/,/g, '')) * 100)
+}
 
 /** Sign the strongest live letter in the inbox, kit or advertising, the week it lands. */
 function answerThePost(
@@ -225,7 +256,15 @@ function answerThePost(
   }
 }
 
-function runCareer(preset: Preset, policy: Policy, index: number, weeks: number): CareerRow {
+function runCareer(
+  preset: Preset,
+  policy: Policy,
+  index: number,
+  weeks: number,
+  /** ⭐ ROUND 29 PART TWO, 29.08 – the manager's commission in basis points, or null for the shipped
+   *  rule (her age ramp). See the withdrawal inside the loop for what it does and does not model. */
+  commissionBps: number | null = null,
+): CareerRow {
   const { world, rng, seed } = openCareer(preset, index, policy)
   const cleared = new Set<SponsorTier>()
   const written = new Set<SponsorTier>()
@@ -241,6 +280,9 @@ function runCareer(preset: Preset, policy: Policy, index: number, weeks: number)
   let bestWtaRank: number | null = null
   let bestItfRank: number | null = null
   let sponsorIncomeCents = 0
+  let sponsorGrossCents = 0
+  let adFeeIncomeCents = 0
+  let commissionHandedBackCents = 0
   let biggestChequeCents = 0
   let biggestChequeText = ''
   let ran = 0
@@ -260,6 +302,47 @@ function runCareer(preset: Preset, policy: Policy, index: number, weeks: number)
     const week = world.week
     stepCareerWeek(world, rng, policy)
     ran++
+    // ⚠ WHAT THE BRANDS PAID, SCANNED AT THE WEEK IT IS WRITTEN AND NOT AT THE END. `world.events`
+    // is pruned at 400 ROWS, so an index that only ever grows walks off the end of a career this
+    // long and reports ZERO for every rung – which is exactly what the first run of this file did.
+    // The sponsor bench dodges the same trap the same way.
+    for (const row of world.events) {
+      if (row.week !== week || row.type !== 'income') continue
+      const amount = row.amountCents ?? 0
+      if (amount <= 0) continue
+      const isKitCash = RETAINER_RE.test(row.text) || APPEARANCE_RE.test(row.text) || BONUS_RE.test(row.text)
+      const isAdFee = AD_FEE_RE.test(row.text)
+      if (!isKitCash && !isAdFee) continue
+      // ⭐⭐ THE SHARE RULING, SIMULATED IN THE BENCH AND NOWHERE ELSE (the owner, 29.08: «контракт на
+      // полную сумму ребенку приходит на почту, после подписания видим на счету уже родительский
+      // кат», at «10-20% например»). Today `bankSponsorCheque` credits the family `gross − her ramp
+      // share`, so the parent keeps 100% before her eighteenth and 50% from her twenty-sixth. Under
+      // the ruling the parent keeps a flat commission and the rest is hers.
+      //
+      // ⚠⚠ THIS IS A REAL B ARM AND NOT A SUBTRACTION AFTERWARDS. The money is taken OUT of the
+      // wallet the week it lands, so the career that follows is genuinely poorer – its reserve is
+      // smaller, and `reserveFor` gates coach rungs and entries off exactly that. A static
+      // re-attribution at the end would have reported the money and none of the consequence.
+      // ⚠ It writes cents and taps NO draw, so it cannot move the frozen MAIN capture. It does make
+      // the two arms diverge in the MAIN sequence downstream (a career that enters fewer events rolls
+      // different dice), which is why this is a bench arm and not a paired A/B on one seed.
+      const grossCents = grossOfSponsorRow(row.text, amount)
+      sponsorGrossCents += grossCents
+      if (isKitCash) sponsorIncomeCents += amount
+      else adFeeIncomeCents += amount
+      if (commissionBps !== null) {
+        const kept = Math.round((grossCents * commissionBps) / 10_000)
+        const handedBack = amount - kept
+        if (handedBack > 0) {
+          world.fundsCents -= handedBack
+          commissionHandedBackCents += handedBack
+        }
+      }
+      if (amount > biggestChequeCents) {
+        biggestChequeCents = amount
+        biggestChequeText = row.text
+      }
+    }
     // ⚠ READ AFTER THE TICK AND KEYED ON `week`, THE WEEK THAT WAS JUST PLAYED. `stepCareerWeek`
     // advances the clock, so `world.week` is already the NEXT week here and a fold keyed on it would
     // find nothing and report a career that spent nothing – which is exactly the shape of the null
@@ -341,21 +424,6 @@ function runCareer(preset: Preset, policy: Policy, index: number, weeks: number)
       // by construction, so the fallback is exact rather than a guess (`AdOfferTerms.tier`).
       if (o.kind === 'ad') adWritten.add((o.terms as AdOfferTerms).tier ?? 'watch')
     }
-    // ⚠ WHAT THE BRANDS PAID, SCANNED AT THE WEEK IT IS WRITTEN AND NOT AT THE END. `world.events`
-    // is pruned at 400 ROWS, so an index that only ever grows walks off the end of a career this
-    // long and reports ZERO for every rung – which is exactly what the first run of this file did.
-    // The sponsor bench dodges the same trap the same way.
-    for (const row of world.events) {
-      if (row.week !== week || row.type !== 'income') continue
-      const amount = row.amountCents ?? 0
-      if (amount <= 0) continue
-      if (!RETAINER_RE.test(row.text) && !APPEARANCE_RE.test(row.text) && !BONUS_RE.test(row.text)) continue
-      sponsorIncomeCents += amount
-      if (amount > biggestChequeCents) {
-        biggestChequeCents = amount
-        biggestChequeText = row.text
-      }
-    }
     answerThePost(world, signed, adSigned, adSignedRungs)
     if (world.ending) break
   }
@@ -388,6 +456,9 @@ function runCareer(preset: Preset, policy: Policy, index: number, weeks: number)
     outgoingsByRank,
     winters,
     sponsorIncomeCents,
+    sponsorGrossCents,
+    adFeeIncomeCents,
+    commissionHandedBackCents,
     biggestChequeCents,
     biggestChequeText,
     peakFundsCents,
@@ -494,17 +565,26 @@ export function main(argv: string[] = process.argv.slice(2)): void {
   const weeks = arg('--weeks', DEFAULT_WEEKS)
   const seeds = arg('--seeds', DEFAULT_SEEDS)
   const jsonAt = argv.indexOf('--json')
+  // ⭐ `--commission 15` runs the 29.08 ruling instead of the shipped ramp: sponsor money is HERS and
+  // the parent keeps 15% of the gross. Absent = the shipped rule, byte for byte.
+  const commissionAt = argv.indexOf('--commission')
+  const commissionBps = commissionAt >= 0 ? Math.round(Number(argv[commissionAt + 1]) * 100) : null
 
   const rows: CareerRow[] = []
   for (const preset of PRESETS) {
     for (const policy of POLICIES) {
-      for (let i = 0; i < seeds; i++) rows.push(runCareer(preset, policy, i, weeks))
+      for (let i = 0; i < seeds; i++) rows.push(runCareer(preset, policy, i, weeks, commissionBps))
     }
   }
 
   const n = rows.length
   console.log(`\nSPONSOR LADDER REACH – ${n} careers x ${weeks} weeks (to age ${START_AGE_YEARS + Math.floor(weeks / WEEKS_PER_YEAR)})`)
-  console.log(`${PRESETS.length} presets x ${POLICIES.length} policies x ${seeds} seeds, eager signing\n`)
+  console.log(
+    `${PRESETS.length} presets x ${POLICIES.length} policies x ${seeds} seeds, eager signing` +
+      (commissionBps === null
+        ? '  ·  SHIPPED share rule (her age ramp on every sponsor cheque)\n'
+        : `  ·  ⭐ COMMISSION ARM: sponsor money is HERS, the parent keeps ${commissionBps / 100}%\n`),
+  )
 
   console.log('  rung        brand                  gate                        cleared  written   signed')
   const gateOf: Record<SponsorTier, string> = {
@@ -691,6 +771,25 @@ export function main(argv: string[] = process.argv.slice(2)): void {
     const xs = rows.map(read)
     console.log(`    ${label.padEnd(38)} ${usd(q(xs, 0.5)).padStart(12)} ${usd(q(xs, 0.9)).padStart(12)} ${usd(q(xs, 1)).padStart(12)}`)
   }
+
+  // ⭐⭐ THE SPONSOR LINE ON ITS OWN – the money the 29.08 commission ruling is about, and the only
+  // line in the game whose OWNER is now in question. Printed gross, because a share needs a base.
+  console.log('\n  ⭐ THE SPONSOR MONEY, WHOSE SHARE IS THE 29.08 RULING:')
+  const sponsorLines: [string, (r: CareerRow) => number][] = [
+    ['GROSS sponsor money (kit cash + ad fees)', (r) => r.sponsorGrossCents],
+    ['  what the kit brands paid the FAMILY', (r) => r.sponsorIncomeCents],
+    ['  what the advertising post paid the FAMILY', (r) => r.adFeeIncomeCents],
+    ['  handed back under the commission arm', (r) => r.commissionHandedBackCents],
+  ]
+  for (const [label, read] of sponsorLines) {
+    const xs = rows.map(read)
+    console.log(`    ${label.padEnd(38)} ${usd(q(xs, 0.5)).padStart(12)} ${usd(q(xs, 0.9)).padStart(12)} ${usd(q(xs, 1)).padStart(12)}`)
+  }
+  const grossAll = rows.reduce((s, r) => s + r.sponsorGrossCents, 0)
+  const keptAll = rows.reduce((s, r) => s + r.sponsorIncomeCents + r.adFeeIncomeCents - r.commissionHandedBackCents, 0)
+  console.log(
+    `    ...so across all ${n} careers the parent kept ${((100 * keptAll) / Math.max(1, grossAll)).toFixed(1)}% of the gross sponsor money`,
+  )
 
   // ⚠⚠ TWO COLUMNS AND NOT ONE, AND THE SECOND IS THE HONEST ONE. «Afford» is `fundsCents >= price`
   // at some week of the career. «Afford + carry» adds ONE YEAR of the rung's own upkeep on top,
