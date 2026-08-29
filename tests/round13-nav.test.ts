@@ -98,8 +98,8 @@ describe('the bottom nav is Season · Calendar · Home · Stats · Trophies, Hom
     // ⚠ ALL TWENTY-FOUR SHIP, AND THEY SHIP AS WEBP UNDER `images/` – the two halves of the art
     // decision, both of which are silently losable. `-fs8` masters are evacuated and never encoded
     // (scripts/optimize-art.mjs), so a set routed through under that name would vanish with a log
-    // line that says "moved"; and `images/` is what workbox's `globIgnores` keys on, so a set that
-    // shipped from anywhere else would land 1.6 MB in every install's precache.
+    // line that says "moved"; and `images/` is where the art lives, which is what the precache glob
+    // and every URL builder in src/art agree on.
     // (RE-AIMED 18 -> 24 by W2-LADDER: the count follows TIER_LADDER x two metals; the three new
     // rungs' pairs are placeholder copies of their neighbours' masters - see art/trophies.ts.)
     const trophies = fileURLToPath(new URL('../public/images/trophies', import.meta.url))
@@ -111,7 +111,26 @@ describe('the bottom nav is Season · Calendar · Home · Stats · Trophies, Hom
         expect(files, `${tier}-${metal}.webp`).toContain(`${tier}-${metal}.webp`)
       }
     }
-    expect(read('../vite.config.ts')).toContain("globIgnores: ['**/images/**']")
+    // ⚠⚠ RE-AIMED 29.08, NEVER DELETED – AND POINTED AT THE OPPOSITE FACT, WHICH IS THE POINT.
+    // This line read `toContain("globIgnores: ['**/images/**']")`: it guarded that the trophies
+    // stayed OUT of the install. Round 29 part two #7 is the owner ruling that they go IN
+    // («надо сделать, чтобы можно было полностью оффлайн играть без помех»), so the old assertion
+    // now guards the wrong side of a decision he has made. It is inverted rather than dropped,
+    // because the thing that must not happen silently is unchanged in KIND: somebody quietly
+    // changing whether a player's install contains this art.
+    //
+    // ⚠⚠ THE NEGATIVE MATCHES A LINE, NOT A WORD, AND NEITHER DRAFT BEFORE THIS ONE WAS HONEST.
+    // `not.toContain('globIgnores')` over the raw file goes red against the very paragraph that
+    // documents the removal. Reaching for `codeOf` to fix that is WORSE and silently so: the
+    // `**/*.{js,...}` inside `globPatterns` contains the two characters `/*`, so the block-comment
+    // stripper opens a match there and eats everything up to the next `*/` in the file – the
+    // positive assertion below then fails, and the negative one would have passed for the wrong
+    // reason. A config KEY is a line that starts with it; prose is a line that starts with `//`.
+    const vite = read('../vite.config.ts')
+    expect(vite, 'the art is in the install now – see round 29 part two #7').not.toMatch(
+      /^\s*globIgnores:/m,
+    )
+    expect(vite).toContain("globPatterns: ['**/*.{js,css,html,svg,png,webp,woff2}']")
   })
 
   it('the cabinet screen obeys the copy rules and dates by SEASON, never by calendar year', () => {

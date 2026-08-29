@@ -341,8 +341,12 @@ describe('the coach portraits', () => {
   })
 
   it('warms exactly ONE file – the 13 the coach-choice slice will need are not preloaded', () => {
-    // They ship (they are outside the service-worker precache, so they cost no player any bytes –
-    // see the NOT_SHIPPED note in src/art/preload.ts) but nothing may FETCH art it cannot show.
+    // ⚠ RE-AIMED 29.08 AND THE CLAIM GOT STRONGER, NOT WEAKER. It read "they are outside the
+    // service-worker precache, so they cost no player any bytes"; round 29 part two #7 put all 16
+    // coach portraits INTO the install, so they cost every player 165 KiB whether anything fetches
+    // them or not. The rule this test enforces is untouched and now matters more: nothing may FETCH
+    // art it cannot show, and unreachable art has to be evacuated at the pipeline (NOT_SHIPPED in
+    // scripts/optimize-art.mjs) rather than tolerated in dist/.
     resetPreloadCache()
     preloadCoachArt('middle')
     expect(warmedCount()).toBe(1)

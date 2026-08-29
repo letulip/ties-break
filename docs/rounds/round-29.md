@@ -1529,12 +1529,183 @@ rest are new.
   years get THE WHOLE SHELF» – rows drawn, the deposit's control live and pressable at 14, with §2's
   three prohibitions (no locked row, no progress bar, no teaser) kept as absences.
 
-- [ ] **7. «Запихнуть туда корты стоило бы +5108 КБ – это не очень большая цена, надо сделать, чтобы
+- [x] **7. «Запихнуть туда корты стоило бы +5108 КБ – это не очень большая цена, надо сделать, чтобы
   можно было полностью оффлайн играть без помех… Возможно все надо в установку PWA добавлять. А с
   обновлением догружать то, чего нет или обновлять то, что обновилось, а не весь сет.»** – ⚙ **RULING,
   and it overturns round 29 #2's conservative choice.** Full offline is the goal. ⚠⚠ **The second
   sentence is the hard half and the more important one**: an update must fetch only what is new or
   changed, never the whole set. Inventory every art directory first and report the total.
+
+  ⚙⚙ **SHIPPED. `globIgnores: ['**/images/**']` IS DELETED AND ALL 205 PAINTINGS ARE IN THE INSTALL.**
+  Read from the build's own output, before and after:
+
+  | | entries | size |
+  | --- | --- | --- |
+  | before (`b8a405d`) | 108 | **2636 KiB** |
+  | after | **313** | **12255 KiB** |
+
+  ⚠ **THE 118 / 2826 KiB IN #2's TABLE IS FOUR WEEKS STALE** – the real baseline on this branch is
+  **108 / 2636**, measured rather than quoted. The direction and the argument are unchanged; the
+  number is not, and this round has already lost time to one stale count.
+
+  ---
+
+  ### THE INVENTORY HE ASKED FOR – «посмотреть что еще там у нас есть из артов»
+
+  Every directory in `public/`, by `stat`, on 29.08. **IN** = swept into the install by
+  `globPatterns: ['**/*.{js,css,html,svg,png,webp,woff2}']`.
+
+  | directory | files IN | KiB IN | files OUT | KiB OUT | status |
+  | --- | ---: | ---: | ---: | ---: | --- |
+  | `images/fields` – courts | 73 | **4989** | – | – | ⭐ **NEW – his +5108 КБ** |
+  | `images/fem-euro-brunnet` – her portraits | 64 | **2915** | – | – | ⭐ NEW |
+  | `images/weeks` – week cards | 14 | 765 | – | – | ⭐ NEW |
+  | `images/trophies` – the cabinet | 32 | 749 | – | – | ⭐ NEW |
+  | `images/coaches` | 16 | 165 | – | – | ⭐ NEW |
+  | `images/sponsors` | 6 | 38 | – | – | ⭐ NEW |
+  | `images/README.md` – rights record | – | – | 1 | 5 | not art, stays out |
+  | `(public root)` – pwa icons, logos, ball | 17 | 1082 | – | – | was already in |
+  | `avatars` – 256px crops | 37 | 369 | – | – | was already in |
+  | `icons` + `icons/styles` | 38 | 58 | – | – | was already in |
+  | `fonts` | 4 | 92 | 4 | 15 | woff2 in, OFL licences out |
+  | `music` | – | – | 3 | **2552** | ⚠ **OUT – his call** |
+  | `sounds` | – | – | 24 | **435** | ⚠ **OUT – his call** |
+  | **total** | **301** | **11221** | **32** | **3007** | |
+
+  The build turns those 301 public files into **313 precache entries / 12255 KiB** once `index.html`
+  and the hashed bundles join them. ⚠ Six entries are DUPLICATES – `ball.svg`, `favicon.png` and the
+  four pwa icons are named by both `includeAssets` and `globPatterns` – so the cache actually holds
+  **307 keys**. Harmless, and worth knowing before anybody counts cache entries and finds six missing.
+
+  ⚠⚠ **AUDIO IS NOT SWEPT IN, AND THAT IS DELIBERATELY LEFT TO HIM.** ~3 MB would be another 25% on
+  the install for one decision that is not obviously his:
+
+  - **`music/theme.mp3` – 2524 KiB.** The single biggest skippable file in the repo, and it is a
+    loop a player can mute on the first screen. ⚠ It is NOT blocked on licensing, contrary to what I
+    was briefed: `public/music/README.md` records it as "Clean Sound" under the **Pixabay Content
+    License** – commercial use permitted, no attribution required. So this is purely a size question.
+  - **`sounds/*.mp3` – 431 KiB across 23 clips**, the owner's own recordings. This is the arguable
+    half: offline the match is **silent today**, because `src/audio/sfx.ts` probes each file, fails,
+    remembers the miss and never retries. If «без помех» includes the applause, this is 431 KiB and
+    the change is one extension in `globPatterns`.
+
+  ⭐ **A one-line question for him: add `mp3` (+3 MB, everything sounds offline), add the sounds only
+  (+431 KiB, the match stops being silent), or leave both?** `tests/round29p2-offline-install.test.ts`
+  holds the current answer so it cannot drift in by accident, and says in its own comment that his
+  ruling re-aims it rather than deleting it.
+
+  ⚠ **FONTS NEEDED NO DECISION** – `woff2` has been in the glob all along, so all four faces (92 KiB)
+  already precache. That is why offline text has never fallen back to a system stack.
+
+  ---
+
+  ### IS 12.3 MB TOO LARGE FOR A MID-RANGE PHONE? NO – AND THE HONEST CAVEAT IS NAMED
+
+  On disk it is nothing: a modern origin quota is a share of free storage measured in GB, and the app
+  was already asking for ~2.6 MB plus a runtime art cache that could reach ~7 MB by itself. **The real
+  cost is the one-time install download** – ~9.6 MB more, about 35 s on a poor 3 Mbit/s link, once.
+  Every visit after that is the same as before.
+
+  ⚠ **And it is the last big jump available.** `public/` is 14.6 MB in total and 12.3 of it is now in
+  the install; the only things left out are 3 MB of audio and the licence files. If he later wants
+  the install smaller, the levers are named rather than guessed: the 11 unreachable
+  `fem-euro-brunnet` frames (**~496 KiB** – 7 story frames waiting on a life-events feature, 4
+  `-sleepy-` files that `docs/art-placeholders.md` already records as superseded) are the only art in
+  the repo that no code path can request, and deleting art is his call, not a builder's.
+
+  ---
+
+  ### ⚠⚠ THE HARD HALF: AN UPDATE FETCHES ONE FILE, NOT 313 – MEASURED, NOT ASSUMED
+
+  Workbox is *documented* to do this and that is not evidence, so it was put to a real browser.
+  `tools/precache-delta.mjs` (committed, re-runnable) builds twice with **one painting altered**,
+  serves build A to a real Chromium until its worker has precached all 307 keys, swaps the served
+  directory to build B, lets the update install, and **counts the requests at the server** – with
+  `Cache-Control: no-store` on everything, so the browser's own HTTP cache cannot hide a fetch and
+  the measurement is biased AGAINST the claim.
+
+  | arm | requests the second install made | of them images | bytes |
+  | --- | ---: | ---: | ---: |
+  | **one painting changed** | **3** | **1** | **120.8 KiB** |
+  | every revision rewritten (control) | 305 | 205 | 11263.8 KiB |
+
+  ⭐ **One painting of 205. 120.8 KiB of 12.3 MB** – and the other two requests are `sw.js` and the
+  workbox runtime, which a browser re-fetches to notice an update at all. **His ruling holds:
+  «догружать то, чего нет… а не весь сет».**
+
+  ⚠⚠ **THE SECOND ROW IS THE INSTRUMENT'S OWN CONTROL AND IT IS WHY THE FIRST ROW MEANS ANYTHING.**
+  A counter that cannot report a full re-download is not evidence that there wasn't one. That arm
+  rewrites every revision in `sw.js` without rebuilding a single file, and the tool duly reports 305
+  requests and 11.3 MB. ⚠ It fetches 303 assets rather than 307, and the four it skips are the right
+  four: `assets/*` are content-hashed filenames carrying `revision: null`, so the URL IS the key and
+  a bundle that did not change is not re-downloaded either.
+
+  ---
+
+  ### THE RUNTIME ART ROUTES ARE GONE, AND THE OLD CACHES ARE DELETED OFF HIS PHONE
+
+  `precacheAndRoute` registers its route FIRST and workbox's router takes the first match, so
+  `tb-art-v1` (CacheFirst, 80) and `tb-art-small-v1` (StaleWhileRevalidate, 48) could never fire
+  again. A route that cannot fire is a dead guard wearing a comment.
+
+  ⭐ **AND THE PRECACHE FIXES WHAT THE SPLIT WAS FOR.** `tb-art-small-v1` existed because he
+  repainted two trophies on 01.08 and his phone kept the old ones – CacheFirst never revalidates. A
+  precache entry is keyed on url+revision, so a repainted trophy has a NEW key and the next update
+  fetches exactly it: one file, which is the 120.8 KiB row above. ⭐ And `maxEntries: 80` against 167
+  reachable files – a silent-eviction risk vite.config has carried since 19.08 – stops being a number
+  anybody has to size.
+
+  ⚠ **`cleanupOutdatedCaches` DOES NOT TOUCH A RUNTIME CACHE**, only old precaches, so up to 128
+  entries of art (~7 MB) would have sat on his phone forever beside the new 12 MB install. The
+  install would have looked twice as expensive as it is. `dropLegacyArtCaches()` in `src/pwa.ts`
+  deletes both – gated on a **positive fact rather than a version guess**: it runs only once the live
+  precache is answering for `/images/`. ⚠ That gate is the safety property, not decoration: with
+  `registerType: 'prompt'` he sits on the old worker until he taps Update, and on that worker
+  `tb-art-v1` still holds the only copy of a painting he has.
+
+  ---
+
+  ### EVIDENCE
+
+  **`e2e/offline.spec.ts` – three claims where round 29 #2 made one**, from a real production build
+  with a real registered worker and the network cut with `context.setOffline`:
+
+  1. **the install carried the art and no warm did** – >200 `/images/` keys in the precache, and
+     `caches.has('tb-art-v1')` is **false**: the runtime cache is not empty, it is never created;
+  2. ⭐ **all 205 shipped paintings answer from cache offline** – the URL list is walked off
+     `public/images/` rather than written out, so it is "every file that ships" on the day, not a
+     list that agrees with itself. No warm could ever satisfy this: a cold install has asked for
+     nothing;
+  3. ⭐ **and he can PLAY there** – Season and the trophy cabinet render with **zero blank plates**,
+     then a week is advanced with the plug pulled: RPC into a real Web Worker, a real engine tick, a
+     real IndexedDB autosave, the diary line coming back.
+
+  ⚠ **ONE GUARD RE-AIMED, NEVER DELETED, AND IT WOULD HAVE REPORTED THE FIX AS A REGRESSION.** #2's
+  poll waited for `tb-art-v1` to fill. That cache no longer exists, so it would have hung to timeout.
+  It is inverted at the precache instead, and the pair is stronger than either half.
+  ⚠ Same for `tests/round13-nav.test.ts`, which asserted `globIgnores: ['**/images/**']` is PRESENT:
+  it now asserts the opposite fact, because what must not happen silently is unchanged in kind –
+  somebody quietly changing whether a player's install contains this art.
+
+  ⚠ **MUTATION-VERIFIED, AND TWO MUTANTS SURVIVED THE FIRST DRAFT** – written up in the test file
+  rather than quietly fixed:
+
+  - **the new unit file's extension set was hand-written**, so deleting `webp` from `globPatterns` –
+    the exact regression it exists to catch, the one that takes all 205 paintings back out – left
+    all ten tests GREEN. A constant compared with itself, the family this round keeps finding. It is
+    parsed out of `vite.config.ts` now, and that mutation reddens two arms.
+  - **the «no CacheStorage» arm was covered by the `try/catch` as well as by the guard it claimed to
+    test**, so deleting that guard changed nothing. Merged into one honest arm; `src/pwa.ts` says so
+    at the guard itself.
+
+  Live mutations, each verified red: `globIgnores` back → the e2e names it AND `round13-nav` goes
+  red; with claim 1 also neutered, claim 2 reports **«205 of 205 paintings are not on the device
+  offline»**; `webp` out of the glob → 2 red; `mp3` INTO the glob → red (audio cannot be swept in
+  silently); the runtime routes back → red; either legacy cache name dropped → red; the call
+  unwired from `initPwa` → red; the `try/catch` removed → red.
+
+  ⚠ **SCHEMA 65 UNMOVED, frozen careers and the frozen MAIN capture (41550 / `e6b0c709`) UNTOUCHED** –
+  a precache manifest is not a world change, and nothing in this item reaches `src/engine`.
 
 - [ ] **8. «она же бесплатная только при наличии яхты, верно? я могу сделать для нее отдельный арт,
   тогда можно просто на постоянку добавить в ленту сначала с реальной стоимостью, а после покупки
