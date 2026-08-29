@@ -12,7 +12,8 @@
 //   §2  an ORDERED thing draws a date and no Sell;
 //   §3  the academy's stages draw in order, priced, with the one under them named;
 //   §4  the household strip carries the weekly bill (round 28 #8's own strip);
-//   §5  the planner sheet gains the yacht week – and only once the yacht is delivered;
+//   §5  the planner sheet carries the yacht week for everybody (part two #8) – priced as a charter,
+//       and «free – their own boat» only once the yacht is delivered;
 //   §6  the order confirm fits a phone (CLAUDE.md's dialog rule – it is a longer sentence now).
 import { describe, it, expect, beforeEach } from 'vitest'
 import { mount } from '@vue/test-utils'
@@ -31,6 +32,8 @@ import {
   toSnapshot,
   type WorldState,
 } from '../../src/engine/world'
+import { vacationPriceCents } from '../../src/engine/economy'
+import { formatCents } from '../../src/shared/money'
 import { rngFromSeed } from '../../src/engine/rng'
 import type { Snapshot } from '../../src/shared/protocol'
 import { assertDismissReachable, setViewport, PHONE } from './fits'
@@ -84,20 +87,23 @@ beforeEach(() => {
 })
 
 describe('§1 – every new rung is on the screen, at its real price', () => {
-  it('⭐⭐ §3f – the six commissioned rungs render with the spec\'s own prices', async () => {
+  it('⭐⭐ §3f – the commissioned rungs ON SALE render with the spec\'s own prices', async () => {
     const wrapper = await mountShop(toSnapshot(rich('r29-5-ui-prices')))
     const text = wrapper.text()
     // §3f's table, as a person reads it. Literals, so a retune has to come through this file.
+    // ⚠ RE-AIMED at part three P1 (the motor boat is the sailing yacht – same price) and part four
+    // P10 (the long-range plane is RETIRED: no row for a family that does not own one, asserted
+    // as an absence right after the loop).
     for (const [label, price] of [
       ['The launch', '$900,000'],
-      ['The motor boat', '$2,400,000'],
+      ['The sailing yacht', '$2,400,000'],
       ['The yacht', '$12,000,000'],
       ['The big yacht', '$28,000,000'],
       ['The plane', '$18,000,000'],
-      ['The long-range plane', '$38,000,000'],
     ] as const) {
       expect(rowFor(wrapper, label).text(), `${label} price`).toContain(price)
     }
+    expect(text, 'P10: the retired rung is simply not on the shelf').not.toContain('The long-range plane')
     // ...under their own family headings, which is §3's rule that a shop is families and not a list.
     expect(text).toContain('On the water')
     expect(text).toContain('In the air')
@@ -127,7 +133,7 @@ describe('§1 – every new rung is on the screen, at its real price', () => {
     // must never render as «1.5 years» (the owner's display ruling of 26.08).
     expect(yacht.text()).toContain('about 3 years')
     expect(rowFor(wrapper, 'The launch').text()).toContain('about 12 months')
-    expect(rowFor(wrapper, 'The motor boat').text()).toContain('about 18 months')
+    expect(rowFor(wrapper, 'The sailing yacht').text()).toContain('about 18 months')
     expect(wrapper.text(), 'no fractional wait anywhere on the shelf').not.toMatch(/\d+\.\d+ years/)
     expect(yacht.find('.shop-action').text()).toBe('Order it')
     // ...and a car is still bought.
@@ -238,27 +244,39 @@ describe('§4 – the weekly bill is on the household strip (round 28 #8)', () =
   })
 })
 
-describe('§5 – ⭐⭐ the yacht week is a line of the vacation ladder, once there is a yacht', () => {
+describe('§5 – ⭐⭐ the yacht week is a line of the vacation ladder – priced for everybody, free with a yacht', () => {
   /** The planner sheet on a plannable week, vacation tab open. */
   function mountVacationTab(snap: Snapshot, week: number) {
     useGameStore().snapshot = snap
     return mount(PlanWeekSheet, { props: { week, initialTab: 'vacation' as const } })
   }
 
-  it('⭐⭐ it is NOT among the options for a family with no yacht', async () => {
+  // ⚠⚠ RE-AIMED AT ROUND 29 PART TWO #8 (29.08), NEVER DELETED. These two arms held «the row is
+  // not drawn without a delivered yacht»; his #8 put the row on every family's sheet «сначала с
+  // реальной стоимостью» (the quote lives in the economy catalogue – no Cyrillic reaches this
+  // file's mounted templates), so the SAME fixtures now assert the row is THERE and it is PRICED –
+  // never the owner's free line.
+  it('⭐⭐ it IS among the options for a family with no yacht – at a real price', async () => {
     const w = rich('r29-5-ui-noyacht')
     const wrapper = mountVacationTab(toSnapshot(w), w.week + 3)
     const text = wrapper.text()
     expect(text, 'the six that are always there').toContain('Elite recovery programme')
-    expect(text).not.toContain('A week on the yacht')
+    expect(text, '#8: the seventh is on the general shelf now').toContain('A week on the yacht')
+    expect(text, 'and it is a charter for this family, not their own boat').not.toContain('their own boat')
+    // The row's own figure is the engine's quote, rendered by the sheet's one price pipe.
+    const quote = vacationPriceCents(w.seed, w.week + 3, 'yacht-week', w.profile.background)
+    expect(quote).toBeGreaterThan(0)
+    expect(text).toContain(formatCents(quote))
     wrapper.unmount()
   })
 
-  it('⚠ ...nor while the yacht is still being built', async () => {
+  it('⚠ ...and while the yacht is still building it stays a PAID line – a contract is not a boat', async () => {
     const w = rich('r29-5-ui-buildingyacht')
     buyAsset(w, 'yacht')
     const wrapper = mountVacationTab(toSnapshot(w), w.week + 3)
-    expect(wrapper.text()).not.toContain('A week on the yacht')
+    const text = wrapper.text()
+    expect(text).toContain('A week on the yacht')
+    expect(text, 'a contract buys no free week').not.toContain('their own boat')
     wrapper.unmount()
   })
 
@@ -274,6 +292,8 @@ describe('§5 – ⭐⭐ the yacht week is a line of the vacation ladder, once t
     const wrapper = mountVacationTab(snap, w.week + 3)
     const text = wrapper.text()
     expect(text).toContain('A week on the yacht')
+    // #8's own words on the price slot: the owner is told WHY it is free, not shown a bare zero.
+    expect(text).toContain('free – their own boat')
     expect(text).toContain('Nowhere to be, and the sea to be nowhere on.')
     // ...and the other six are still there beside it (§3f's veto: it must not kill the ladder).
     for (const label of [
@@ -309,11 +329,13 @@ describe('§6 – the order asks first, and the question fits a phone', () => {
   it('⭐⭐ ...and its dismiss control is inside a 375x667 phone (CLAUDE.md\'s dialog rule)', async () => {
     // ⚠ THE ORDER'S SENTENCE IS THE LONGEST THIS DIALOG HAS EVER CARRIED – three clauses where a
     // purchase had one – which is exactly the «a dialog grows by one honest sentence at a time»
-    // failure round-20 #3 shipped. So the longest one is the one measured.
+    // failure round-20 #3 shipped. So the longest one is the one measured. ⚠ P10 re-aim: the
+    // long-range plane left the shelf, so the worst case ON SALE is the big yacht – the dearest
+    // figure ($28,000,000) and the longest wait (208 weeks) the confirm can now be asked to hold.
     setViewport(PHONE)
     const w = rich('r29-5-ui-fit')
     const wrapper = await mountShop(toSnapshot(w), true)
-    await rowFor(wrapper, 'The long-range plane').find('.shop-action').trigger('click')
+    await rowFor(wrapper, 'The big yacht').find('.shop-action').trigger('click')
     const card = document.querySelector('.dialog-overlay .dialog-card')!
     const dismiss = document.querySelector('.dialog-overlay .dialog-actions')!
     expect(card, 'the confirm is up').toBeTruthy()
