@@ -2224,8 +2224,8 @@ larger one.
 
   ⚠ **The largest single consequence on a SCREEN is the coach market's cap.** `familyWeeklyIncomeCents`
   had to follow the till (round-21 #12's «the meter must read what the till banks»), so the icon
-  rung's retainer term falls from **$2,884.62/wk gross** – or $1,442 at the old 50% cap – to
-  **$433/wk**. Flagged, never refused: `hireCoach` does not consult the budget.
+  rung's retainer term falls from **$2,884.62/wk gross** – or $1,442.31 at the old 50% cap – to
+  **$432.69/wk**. Flagged, never refused: `hireCoach` does not consult the budget.
 
   ⚠⚠ **RNG: FROZEN MAIN CAPTURE 41550 / `e6b0c709` UNMOVED, no re-pin.** Zero draws added – integer
   arithmetic on a cheque already decided. Per-key frozen-career diff, presets 0/1/2 x policy 1,

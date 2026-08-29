@@ -486,13 +486,13 @@ describe('§4 the coaching cap quotes what the till actually banks', () => {
 
     // ⚠ AND THE SIZE OF IT, IN MONEY, PINNED – the same reason §1 carries one literal test. The icon
     // rung pays $37,500 a quarter; at the manager's 15% that is $5,625 to the family, so the
-    // pro-rated weekly quote is $433 against the gross quote's $2,884.62. ⚠ P3 MADE THIS THE LARGEST
+    // pro-rated weekly quote is $432.69 against the gross quote's $2,884.62. ⚠ P3 MADE THIS THE LARGEST
     // single number this ruling moves on a screen: the cap fell by roughly six sevenths of the
     // retainer term. A rate that moved without a red test here would move it silently for the rest
     // of the career.
     expect(gross, 'the icon retainer is thirty-seven and a half thousand a quarter').toBe(37_500_00)
     expect(managerCommissionCents(gross), 'and fifteen percent of it is the family\'s').toBe(5_625_00)
-    expect(quoted - withoutKit, 'so the cap gains $433 a week and not $2,884.62').toBe(
+    expect(quoted - withoutKit, 'so the cap gains $432.69 a week and not $2,884.62').toBe(
       Math.round((5_625_00 * 4) / WEEKS_PER_YEAR),
     )
   })

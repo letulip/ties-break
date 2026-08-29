@@ -562,8 +562,8 @@ export function familyWeeklyIncomeCents(world: WorldState): number {
   // rule does the splitting: it says the meter must read what `bankSponsorCheque` actually banks.
   // ⚠ WHAT IT MOVES, in closed form again because it is still linear: the term falls from
   // `(1 − ramp) × retainer × 4/52` to `commission × retainer × 4/52`, i.e. at the icon rung's $37,500
-  // a quarter from $2,884/wk (before eighteen) or $1,442/wk (at the 50% cap) to $433/wk at 15%. It
-  // moves NOTHING for a family holding no kit deal, which is most of them. And nobody is locked out:
+  // a quarter from $2,884.62/wk (before eighteen) or $1,442.31/wk (at the 50% cap) to $432.69/wk at
+  // 15%. It moves NOTHING for a family holding no kit deal, which is most of them. And nobody is locked out:
   // `hireCoach` never consults the budget, so a narrower cap warns and never refuses.
   const familyRetainerCents = managerCommissionCents(retainerCents)
   // ⭐⭐ ROUND 29 PART FOUR P7 – AND THE BUSINESSES, because they are «the money that really
