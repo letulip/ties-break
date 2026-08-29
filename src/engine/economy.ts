@@ -3058,13 +3058,44 @@ export const ECONOMY = {
         family: 'investment',
         stake: 'open',
         label: 'An index fund',
-        // ⚠ NO PROMISE IN THE WORDS. §3a's index fund «can be DOWN for a whole season and still be
-        // the right holding» – that is slice 2's drift, and until it lands the blurb may not
-        // describe a movement the engine does not make. It says what the thing IS, not what it will
-        // do, which is the one description that stays true across both slices.
-        blurb: 'A slice of the whole market, bought once and left alone.',
+        // ⭐⭐ AND NOW IT MAY SAY IT – ROUND 29 PART THREE #16. The note that stood here said the
+        // blurb «may not describe a movement the engine does not make», because §3a's index fund
+        // «can be DOWN for a whole season and still be the right holding» and slice 1 had no drift.
+        // The engine makes that movement as of this item, so the second sentence is now a true
+        // description of the thing rather than a promise about it.
+        blurb: 'A slice of the whole market. It will have bad years – it has never had a bad decade.',
         entryCents: 5_000_00,
+        // ⭐⭐⭐ ROUND 29 PART THREE #16 – THE DRIFT, AND IT DID NOT MOVE.
+        //
+        // THE OWNER: «Механику фонда надо придумать, да, потому что безрисковые 3 против безрисковых
+        // 7 это весьма странно. Давай подумаем как это можно сделать красиво и просто.»
+        //
+        // ⚠⚠ 700 IS NOW THE LONG-RUN FIGURE RATHER THAN THE WEEK'S, and that is the whole reason the
+        // number is untouched. The market rides EITHER SIDE of this curve (`volBps` below); the
+        // headline the shop card prints is where a holding ends up, not where it stands. Round 29
+        // #12's «the fund would recover 221%» measurement and the 11b under-pricing question are
+        // therefore still answered by exactly this number.
         annualRateBps: 700,
+        // ⭐⭐⭐ ...AND THIS IS THE RISK. See `world/market.ts` for the path and `ShopItem.volBps` for
+        // what the field means. 1,800 bps of log-volatility.
+        //
+        // ⚠⚠ 1,800 IS A CEILING BEFORE IT IS A TUNING, AND THE ARITHMETIC IS WHY. `marketWave` is
+        // bounded in [-1, 1], so the worst the market can ever do to a holding is `e^(-2·vol)`, and
+        // the fund beats the 3.17% deposit at ten years for EVERY seed and every entry week exactly
+        // while `1.07^10 · e^(-2·vol) > 1.0317^10` – which solves to `vol < 1,824 bps`. Above that
+        // the fund becomes a trap for a player who did not read carefully, and «мы ни за что не
+        // наказываем» is house law. This sits just under the line, deliberately: it is the most risk
+        // the design can carry and still be safe to hold.
+        //
+        // ⚠ AND IT IS ABOUT HALF A REAL INDEX'S VOLATILITY, which is a decision and not a mistake. A
+        // true 17% would put a quarter of ten-year holdings behind the deposit. Measured at this
+        // number (`npx vite-node tools/market-probe.ts`, 4,000 seeds): 22.6% of rolling seasons are
+        // negative – «roughly one year in four or five», which is what part three #16 asked for –
+        // and 100.00% of ten-year holds beat the deposit.
+        //
+        // ⚠ PROVISIONAL BY HIS OWN FRAMING: «вроде посмотрел, давай сделаем, а я пощупаю и скажу
+        // свои ощущения потом.» Move this one number and re-run the probe; nothing else has to move.
+        volBps: 1_800,
       },
       // ⚙ 26.08, the owner: «давай гэп сделаем скромнее пока что от 60 до 300к». A five-fold spread
       // rather than the twenty-two-fold one the first draft drew – from $60k to $300k every rung is

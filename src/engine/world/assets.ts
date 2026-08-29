@@ -13,10 +13,15 @@
 // `sellableAsset` and `shopView` are still in `world/shop.ts`, with the guard, the
 // wallet and the ledger rows. This file answers questions; it never writes the world.
 //
-// ⚠⚠ ZERO DRAWS, AND THE IMPORT LIST IS THE GUARANTEE rather than a claim about one: no RNG, no
-// clock, no `Math.random`. The frozen MAIN capture (41550 / e6b0c709) cannot see any of it.
+// ⚠⚠ ZERO **MAIN** DRAWS, AND THE IMPORT LIST IS STILL THE GUARANTEE. Round 29 part three #16
+// amended the first word of this note and nothing else: the market path (`./market`) draws from
+// purpose-scoped SUB-streams keyed on the seed and a week, re-derived at the call site and
+// persisting nothing. There is still no `Rng` argument anywhere in this file, no clock and no
+// `Math.random`, and the frozen MAIN capture (41550 / e6b0c709) still cannot see any of it – which
+// `tests/round29p3-market.test.ts` proves on a ticked world rather than claiming from the imports.
 import { ECONOMY } from '../economy'
 import { WEEKS_PER_YEAR } from '../season/calendar'
+import { marketRatio } from './market'
 import type { OwnedAsset } from '../../shared/protocol'
 import type { WorldState } from '../world'
 
@@ -33,8 +38,29 @@ export interface ShopItem {
   label: string
   blurb: string
   entryCents: number
-  /** signed basis points a year. NEGATIVE IS THE POINT for §3b's family. */
+  /** signed basis points a year. NEGATIVE IS THE POINT for §3b's family.
+   *
+   *  ⚠⚠ SINCE ROUND 29 PART THREE #16 THIS IS THE LONG-RUN FIGURE AND NOT THE WEEK'S. On a rung with
+   *  a `volBps` the market moves the holding either side of this curve; the rate is where it ends up,
+   *  not where it is. That is why the fund's headline stayed at 700 when the market arrived – see
+   *  `volBps` below. */
   annualRateBps: number
+  /** ⭐⭐⭐ ROUND 29 PART THREE #16 – HOW HARD THIS RUNG RIDES THE MARKET, in basis points of
+   *  log-value. Absent on everything whose worth is arithmetic on its rate alone, which is every car,
+   *  house, boat, plane, academy stage and the savings deposit.
+   *
+   *  THE OWNER: «безрисковые 3 против безрисковых 7 это весьма странно.»
+   *
+   *  ⚠ THE PRESENCE OF THIS FIELD IS THE PREDICATE, and it is deliberately the same shape as
+   *  `buildWeeks` / `requiresId` / `grantsVacationId`: a second, wilder fund added to the catalogue
+   *  tomorrow rides the SAME world market harder because of what it says about itself, never because
+   *  somebody remembered to name it in `revalueAssets`. `world/market.ts` owns the path; this number
+   *  is the only thing a rung says about its own relationship to it.
+   *
+   *  ⚠ AND IT IS THE ONE KNOB. The drift stays in `annualRateBps`, so the shop card's «7% a year»
+   *  needs no re-wording and the long-run figure the owner already approved is unchanged by
+   *  construction rather than by tuning. */
+  volBps?: number
   /** ⭐ §3f – HOW LONG FROM THE ORDER TO THE THING, in weeks. Absent on every rung that arrives the
    *  week it is paid for, which is everything slice 1 shipped. */
   buildWeeks?: number
@@ -95,10 +121,71 @@ export function ownedAssets(world: WorldState): OwnedAsset[] {
  *  is answered with the price. A contract does not depreciate – there is nothing yet to wear out –
  *  and that falls out of the clamp rather than out of a second rule.
  *
+ *  ⭐⭐⭐ ROUND 29 PART THREE #16 ADDED `marketRatio`, AND IT IS THE WHOLE OF THE FUND MECHANIC. The
+ *  curve above is the LONG RUN; this is where the holding actually stands on it, read off
+ *  `world/market.ts`'s seeded path between the basis week and this one. Every rung with no `volBps`
+ *  passes 1 and gets the byte-identical arithmetic this function has always done – which is why the
+ *  default is 1 and not a branch, and why no car, house or deposit moved by a cent.
+ *
+ *  ⚠⚠ AND THE DEFAULT IS THE ONE HAZARD IN THIS SIGNATURE, so it is named rather than trusted: a
+ *  caller that priced the FUND and forgot the ratio would silently get the old risk-free 7% and
+ *  nothing would look wrong. That is why `assetWorthCents` below exists and why both writers of a
+ *  worth (`revalueAssets` and `householdWeekly`) go through it instead of here – there is exactly one
+ *  place in the engine that knows how to turn a holding into a number, and
+ *  `tests/round29p3-market.test.ts` reads both of them out of a ticked world rather than the source.
+ *
  *  Pure: no world, no rng, no clock. */
-export function assetValueCents(item: ShopItem, paidCents: number, weeksHeld: number): number {
+export function assetValueCents(item: ShopItem, paidCents: number, weeksHeld: number, marketRatio = 1): number {
   const years = Math.max(0, weeksHeld) / WEEKS_PER_YEAR
-  return Math.round(paidCents * Math.pow(1 + item.annualRateBps / 10_000, years))
+  return Math.round(paidCents * Math.pow(1 + item.annualRateBps / 10_000, years) * marketRatio)
+}
+
+/** ⭐⭐⭐ ROUND 29 PART THREE #16 – WHAT A HOLDING IS WORTH, ASKED OF THE WORLD. THE one entry point:
+ *  `revalueAssets` (which stores it) and `householdWeekly` (which quotes the week's move) both call
+ *  this and nothing else, so the till and the meter cannot describe two different markets.
+ *
+ *  ⚠ THE BASIS AND THE CLOCK ARE THE `??` PAIR ROUND 29 #11 AND PART TWO #4 BOTH WROTE, gathered
+ *  here once instead of copied at two call sites. A top-up rebases `basisCents`/`basisWeek`; a part
+ *  sale rebases the same two by the same arithmetic; an untouched holding has neither and falls back
+ *  to `paidCents`/`boughtWeek`, which is what every save written before those items means.
+ *
+ *  ⭐ `weekOffset` IS `householdWeekly`'S «ONE MORE WEEK OF HOLDING» and the reason this takes a
+ *  world rather than a week: the shelf line is the difference of THIS function at 0 and at 1, so
+ *  when the curve changes the meter changes with it, for free. It was the difference of
+ *  `assetValueCents` before and it is the difference of this now – the same discipline, one level up,
+ *  because the market ratio needs the seed and the absolute week and `assetValueCents` has neither.
+ *
+ *  ⚠ ZERO MAIN DRAWS. The market path is a sub-stream keyed on the seed and a week; see
+ *  `world/market.ts`'s header for why a purchase cannot move the world's dice through it.
+ *
+ *  Pure: reads the world, writes nothing. */
+export function assetWorthCents(world: WorldState, owned: OwnedAsset, item: ShopItem, weekOffset = 0): number {
+  const basisCents = owned.basisCents ?? owned.paidCents
+  const basisWeek = owned.basisWeek ?? owned.boughtWeek
+  const week = world.week + weekOffset
+  return assetValueCents(item, basisCents, week - basisWeek, marketRatio(world.seed, basisWeek, week, item.volBps ?? 0))
+}
+
+/** ⭐⭐ ROUND 29 PART THREE #16 – WHAT THE MARKET DID TO THIS RUNG OVER THE LAST SEASON, as a signed
+ *  fraction (-0.083 is «down 8%»). Zero for every rung that does not ride the market.
+ *
+ *  ⚠⚠ IT IS THE HOLDING'S WHOLE MOVE AND NOT THE WOBBLE'S, drift included, because that is the
+ *  number a player can check against his own row. «The fund this year: −8%» has to be the thing that
+ *  happened to the money, not a component of it that nothing on screen shows.
+ *
+ *  ⚠ AND IT IS A FRACTION RATHER THAN A ROUNDED PERCENT, because the house rule is «round the
+ *  DISPLAY, not the logic». The one caller that prints it rounds once, where it prints.
+ *
+ *  ⚠ A CAREER YOUNGER THAN A SEASON LOOKS BACK TO WEEK 0 rather than to a negative week – the market
+ *  has no history before the career starts, and a shorter window is the honest answer for a shorter
+ *  life. Nothing prints it before week 52 anyway; the clamp is here so the function is total. */
+export function marketSeasonMove(item: ShopItem, seed: string, week: number): number {
+  if (!item.volBps) return 0
+  const from = Math.max(0, week - WEEKS_PER_YEAR)
+  const growth =
+    Math.pow(1 + item.annualRateBps / 10_000, (week - from) / WEEKS_PER_YEAR) *
+    marketRatio(seed, from, week, item.volBps)
+  return growth - 1
 }
 
 /** ⭐⭐ ROUND 29 #5, §3f – WHAT ONE WEEK OF KEEPING IT COSTS, in whole cents. Zero for every rung
