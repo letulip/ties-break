@@ -59,7 +59,10 @@
 // `feedContext` / `feedShows` / `preferredWeekEvent` the screen asks - so the picture warmed is the
 // picture drawn, by construction rather than by two rules happening to agree.
 //
-// ⚠ AND THE LRU CAP IS DELIBERATELY NOT TOUCHED. `tb-art-v1` holds 80 entries against 167 reachable
+// ⚠ AND THE LRU CAP IS DELIBERATELY NOT TOUCHED – ⭐ 29.08: THE CAP NO LONGER EXISTS. The route and
+// its `maxEntries: 80` went with `globIgnores`; a precache has no LRU and nothing to size. The
+// paragraph is kept because it records why the number was left alone at the time.
+// `tb-art-v1` holds 80 entries against 167 reachable
 // files, which vite.config.ts records and leaves at 80 as an owner storage-budget call. It does not
 // need moving for this: a warm write is the most recently used entry in the cache, so the eight the
 // feed is about to draw are the last things eviction would reach.
