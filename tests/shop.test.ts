@@ -80,6 +80,11 @@ describe('the shelf itself', () => {
       'car-unreasonable',
       'house-first',
       'house-garden',
+      // ⚠ RE-AIMED AT ROUND 29 PART FOUR P7, same discipline as the #5 re-aim above: the merch
+      // brand is the parent's FIRST business («дешевле академии»), family 'business', and this
+      // line is the roster's record that it arrived on purpose. The negative claim moves with it:
+      // still no bonds, no club stake, and nothing about HER.
+      'merch-brand',
       'boat-launch',
       'boat-motor',
       'yacht',

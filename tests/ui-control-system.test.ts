@@ -375,7 +375,10 @@ describe('THE ICON IS A COMPONENT (owner 30.07)', () => {
     expect(map).toContain("entry: 'interest-discount-fee-svgrepo-com'")
     expect(map, 'the filename routed itself into an income category').not.toMatch(/^\s*interest:/m)
     // the income category the name belongs to is still excluded from the spending rows entirely
-    expect(money).toContain("Exclude<WorldEventCategory, 'income' | 'sponsor' | 'interest' | 'academy'>")
+    // ⚠ RE-AIMED AT v66 (round 29 part four P7), never deleted: 'business' joined the income side
+    // - the merch brand's and the academy's weekly lines - and must never appear as a spending row
+    // either, so the exclusion the pin quotes widened by exactly that member.
+    expect(money).toContain("Exclude<WorldEventCategory, 'income' | 'sponsor' | 'interest' | 'academy' | 'business'>")
   })
 
   it('a glyph the owner replaced leaves no inline path behind it', () => {
