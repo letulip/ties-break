@@ -384,3 +384,26 @@ campaigns. The kit deal and the ad deal stay separate letters with separate mone
 Tier × category: a category opens at a band (watches early, cars at top-100, fragrance at top-10),
 and the fee inside it follows §6's lifted bands. The cap of 6 concurrent becomes «at most one per
 category», which needs no constant at all.
+
+
+## §8 – the gradient (owner, 29.08): 4–6 concurrent at EVERY tier, cheques do the scaling
+
+«…их тоже можно переиспользовать и на нижних тирах всех с небольшими контрактами, для WTA ≤ 200
+вполне можно и больше 1 ставить, я бы сказал даже, что **на каждой ступени может быть до 4-6
+одновременно, только с разными чеками**, тогда у нас хорошо и гармонично градиентом будут все ступени
+закрываться.»
+
+So the portfolio SHAPE is constant – 4–6 categories filled at any level – and **the cheque is the
+only axis that scales.** A #180 holds a watch deal, a drinks deal, a local car dealer: small money,
+same shelf. A #8 holds the same shelf at icon money. Double-programme brands reach down as well as
+up: the kit brand's small poster campaign is a bottom-tier ad deal.
+
+Revised final shape (movable, his):
+
+| band | categories open | cheque range per deal | portfolio/yr with kit |
+| --- | --- | --- | --- |
+| WTA ≤ 200 | up to 4 | $5k–20k | $30k–80k |
+| WTA ≤ 100 | up to 5 | $100k–500k | **~$1–2M – his Bublik line** |
+| WTA ≤ 50 | up to 5 | $300k–1M | ~$2.5–4M |
+| WTA ≤ 10 | up to 6 | $1M–2.5M | ~$6–10M |
+| capstone (4 seasons top-10) | 6 | one $10M/yr × 8yr kit-shaped deal on top | $15M+ |
