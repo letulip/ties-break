@@ -2762,13 +2762,61 @@ season), or a rate that starts at 20% and falls to 10% as she grows, mirroring h
   **It is not a problem – it is the design.** The top shelf is for exceptional careers; the median is
   not owed a yacht. Do not re-open this from the measurement.
 
-- [ ] **P6. ⚙ «Федерер получал контракт с Nike на 10+ миллионов, это 1-2млн для родителя. Таких
+- [x] **P6. ⚙ «Федерер получал контракт с Nike на 10+ миллионов, это 1-2млн для родителя. Таких
   контрактов может быть несколько.»** – **RULING that resizes the advertising ladder.** My «0.67% of
   a career's money» measured OUR shipped rungs ($20k–$55k), not the concept's ceiling – at real-world
   scale a top contract is $10M+/yr, which at the 10–20% commission is **$1–2M/yr for the parent**, and
   several can run at once. ⚠ «Таких контрактов может быть несколько» also overturns the plan's
   one-ad-deal-at-a-time §4.1 for the upper tiers – a top player holds a PORTFOLIO. Needs the research
   below before numbers are picked.
+
+  ⚙⚙ **BUILT** (`r29p4/ad-portfolio`, schema **still 65** – the capstone gate is a fold over
+  `seasonHistory[].byTrack.wta.endRank`, already persisted; the letter widened with OPTIONAL fields
+  only). Spec: `docs/specs/ad-portfolio-2026-08.md`. The shape is his §7/§8, cell by cell:
+
+  * **One deal per CATEGORY** – watches · cars · drinks · clothing (the kit brand's own poster
+    campaign, «двойной программой» – its author is the live kit deal's brand, separate letter,
+    separate money) · airline · fragrance · the capstone on top. §4.1's one-at-a-time guard is
+    **re-aimed per category** (`adSpokenFor`), never deleted; «up to 4–6 concurrent» needs no
+    constant – it is how many categories a standing has opened.
+  * **§8's gradient**: bands 200/100/50/10 (the kit cuts + his Bublik line), the cheque the only
+    scaling axis, every cell pinned inside his ranges; **watches ≤200 = the shipped $20,000 to the
+    cent** through its second resize. Portfolio/yr, all cells filled: $45k · $1.1M · $2.6M · $9.2M
+    against his column «$30–80k · ~$1–2M · ~$2.5–4M · ~$6–10M with kit».
+  * **Terms churn 1–3yr**, fee PER CONTRACT YEAR (signature + anniversaries via
+    `bankSponsorCheque`), 2–4 fictional houses per category, **no house twice running at the top
+    band** (`pickAdHouse`, witness-seeded test).
+  * **The capstone**: $10M/yr × 8yr, kit-shaped (her kit house writes it; the icon rung's brand
+    between deals), **4 seasons ENDED inside the top 10**, one at a time. Boundary tested 3→no
+    letter / 4→letter, and an 11th-place season or a v45 not-recorded row counts nothing.
+
+  ⚙ **MEASURED** (`tools/sponsor-ladder-reach.ts`, now portfolio-aware: 108 careers × 780 weeks,
+  eager signing): **the most categories any career held at the four bands is exactly 4 / 5 / 5 / 6**
+  – §8's own row; every priced cell was written AND signed by real careers (thinnest cell 17
+  careers, fragrance ≤10 by 27); the capstone reached exactly the 9 careers (8%) that hold ≥4
+  top-10 seasons. **The ad post at the new scale: family-banked ad money median $0 · p90 $27.3M ·
+  best $85.3M** (was median $76k / p90 $219k) – bimodal by P5's own ruling, 52% of careers are
+  never written to; gross sponsor money p90 **$55.4M**. Kit cash is unmoved by this wave: median of
+  careers paid any **$4.76M**, against the corrected $4.44M of the pre-wave run (part-three's
+  measurement fix; the once-quoted $4.32M was the broken-pattern reading). ⚠ Numbers from the eager
+  arm – ceilings, not medians of play.
+
+  ⚠⚠ **RNG**: arrival/author/term draw on `seed:ad:<category>:<week>` – never MAIN. Frozen capture
+  **41550 / `e6b0c709` UNMOVED**; per-key diff (presets 0/1/2 × policy 1, control = this wave's
+  commit reverted in a detached worktree, headers checked) **byte-identical on every key,
+  `rngMain` included** – derived, not inherited: the frozen careers end at age 17, under the ad
+  gate's 18, so zero movement is the expectation and the measurement agrees; coach-travel-edge's
+  three hashes **UNMOVED, no re-freeze**. Input-independence re-proved: a fortnight signing the
+  whole shelf taps the identical MAIN sequence as a silent one.
+
+  ⚠ **Her cut is untouched.** Every cheque still runs the shipped age ramp; the 10–20% manager
+  commission is deliberately NOT in this diff – its own step, its own bench («stacking both makes
+  the money unreviewable»), and at this scale it is where «это 1-2млн для родителя» will land.
+  Mounted: the Bills page carries the portfolio shelf – categories filled/empty with the live deal
+  named, the capstone row counting tenure – mutation-verified
+  (`tests/component/round29p4-ad-portfolio-panel.test.ts`). Two first-draft dead guards were killed
+  by the mutation log itself (a churn arm that passed by luck – re-seeded on a found witness; an
+  unreachable anniversary stop – removed, the liveness window is the stop and is pinned doing it).
 
 - [ ] **P7. His three-part order, verbatim:**
   1. «разнотировые рекламные контракты с реальными суммами, можешь сделать ресерч на эти суммы для
@@ -2782,13 +2830,18 @@ season), or a rate that starts at 20% and falls to 10% as she grows, mirroring h
   fame → merch income → the academy.** Fame's floor comes from court results and shoots MULTIPLY it
   (his explicit agreement in this session), merch follows fame, the academy follows seasons-in-band.
 
+  ⚙ **Part 1 of the three is BUILT** – the portfolio above (P6) is «разнотировые рекламные контракты
+  с реальными суммами», calibrated on the research and his §6–§8 passes. Parts 2 (merch) and 3 (the
+  academy that earns) are untouched by this wave; the shoot RECORDS the fame stock will one day fold
+  are already legible per deal (`AdOfferTerms.shootWeeks` + brand, noted in the fame spec).
+
 - [x] **P8. The fame spec** – [fame-and-the-shoots-2026-08.md](../specs/fame-and-the-shoots-2026-08.md),
   written this session; his «здесь полностью согласен» covers the floor-and-multiplier shape.
 
 
 ## Part four, continued – his rulings on the research (29.08)
 
-- [ ] **P9. ⚙ «межсезонье – "слишком много съёмок и никакого отпуска" – вот это то, чего у нас вообще
+- [x] **P9. ⚙ «межсезонье – "слишком много съёмок и никакого отпуска" – вот это то, чего у нас вообще
   нет, у нас 6 пустых недель там.»** – **RULING, and it overturns §5.2's in-season-only rule.** The
   advertising plan wrote «an off-season cost is free money wearing a cost's clothes» and pinned every
   shoot in-season. Zheng's own complaint is the counter-model: **real shoots eat the off-season, and
@@ -2796,6 +2849,20 @@ season), or a rate that starts at 20% and falls to 10% as she grows, mirroring h
   it. Our 6 empty winter weeks become the shoot season; resting through them stays a real choice.
   ⭐ This also fits the fame spec's floor-and-multiplier shape: the player who shoots all winter buys
   fame and starts the season less rested.
+
+  ⚙⚙ **BUILT** (same branch). `WINTER_SHOOT_WEEKS = 6` – the last six weeks of the season year,
+  DERIVED from the top calendar's own tail (the 1000-tier's last anchor is offset 45, so a top
+  player's year goes quiet at offsets 46–51: his six, counted). `chooseShootWeeks` fills the winter
+  FIRST – adjacency allowed there, a shoot season stacks – and spills the overflow in-season under
+  the old spaced-apart promises; a moved shoot may land in winter too (`shootMoveTarget`, §5.2's
+  skip re-aimed with its note). **The cost is the displaced rest, not a new number**:
+  `accrueCondition` already pays a shoot week the travel figure, so a winter shoot forfeits exactly
+  the empty week's base + slider – proved out of a TICKED world, two identical careers through the
+  same winter week, the difference read back as precisely that rest
+  (`tests/round29p4-ad-portfolio.test.ts`). The in-season four-way clash machinery (round-29 #3) is
+  untouched and its suite stays green; a winter shoot on an entered offset-46–48 week still raises
+  the same question. The letters say it in the house's own words («We book the winter first – the
+  off-season is the shoot season») and §5.2's supersession is recorded in the plan doc itself.
 
 - [ ] **P10. ⚙ «значит убрать этот самолет за 38М и всех делов =)»** – **RULING: `plane-long` leaves
   the catalogue.** The reachability measurement (0 of 72 delivered, upkeep alone eats a $20M
