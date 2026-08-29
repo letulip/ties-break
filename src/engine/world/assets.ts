@@ -10,7 +10,7 @@
 // nothing else, and `world/shop.ts` re-exports every name it used to own, unchanged.
 //
 // ⚠ THE COMMANDS DID NOT MOVE. `buyAsset`, `sellAsset`, `revalueAssets`, `deliverAssets`,
-// `sellableAsset`, `shopUnlocked` and `shopView` are still in `world/shop.ts`, with the guard, the
+// `sellableAsset` and `shopView` are still in `world/shop.ts`, with the guard, the
 // wallet and the ledger rows. This file answers questions; it never writes the world.
 //
 // ⚠⚠ ZERO DRAWS, AND THE IMPORT LIST IS THE GUARANTEE rather than a claim about one: no RNG, no

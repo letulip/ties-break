@@ -57,7 +57,8 @@ import { formatCents } from '../../src/shared/money'
 import { DEFAULT_PROFILE, type Snapshot } from '../../src/shared/protocol'
 
 /** A professional career – her first counting W finish on the never-pruned mark, which is the ONE
- *  door both the masseur and the shelf open behind (`masseurUnlocked` / `shopUnlocked`). Built
+ *  door the masseur opens behind (`masseurUnlocked`; ⚠ the shelf's own copy of it went with
+ *  round 29 part two #6 – it is open from week 0 now). Built
  *  through the real protocol, exactly as tests/component/masseur-card.test.ts builds one. */
 function pro(seed: string): WorldState {
   const world = createWorld(seed, DEFAULT_PROFILE)

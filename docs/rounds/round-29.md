@@ -1192,32 +1192,268 @@ rest are new.
 
 ---
 
-- [ ] **1. «У нас есть одна сумма призовых, допустим 55200, тогда и ее доля будет 27600 и у нас income
+- [x] **1. «У нас есть одна сумма призовых, допустим 55200, тогда и ее доля будет 27600 и у нас income
   должен показывать 27600, а на соседней строчке все остальные расходы. Можно это сделать?»** –
   **build.** ⚠⚠ He did not want the base explained, he wanted the ledger to stop netting silently.
   **One prize figure, her half, the family's half, expenses beside it.** The row must mean what its
   name says.
 
-- [ ] **2. «Her cut 50% of $55,200 – $27,600 – это усложнило и фразу и интерфейс – верни Her cut 50% –
+  ⚙⚙ **SHIPPED, AND THE DECISION HE ASKED FOR IS: THE PERSISTED LEDGER STAYS NET, THE TILE STOPS
+  NETTING.** Both shapes were on the table and this one was chosen for three reasons, all of them
+  about not rewriting a career's past:
+
+  1. **`financeWeeks` IS PERSISTED AND HIS SAVE HOLDS SIXTY OF THEM**, every one written under the NET
+     convention. A gross `byCategory.prize` would make `financeWindow` fold sixty net rows together
+     with new gross ones and print a season income the family never had. ⚠ **Forward-only means the
+     historical weeks read exactly as they read** – and only a display can promise that.
+  2. **`careerTotals.prizeCents` is «prize money THE FAMILY KEPT»** (the album's break-even page), and
+     booking her cut as a family EXPENSE is what `finalizeTournament`'s own note forbids in as many
+     words: it «would count the same cents twice».
+  3. **The engine already carries the gross** – `FinanceWeek.kidShare.baseCents`, added by #10 for
+     exactly this. So nothing new is persisted, **`SAVE_SCHEMA_VERSION` STAYS AT 65**, and the fix is
+     the USE of that field the item actually wanted: rows, not a footnote.
+
+  **THE TILE, on a week that split a cheque** (his w780 figures):
+
+  | row | figure |
+  | --- | --- |
+  | Before her cut | **+$55,200** |
+  | Her cut 50% | **–$27,600** |
+  | Other income | +$1,446 |
+  | Spent | –$6,883 |
+  | **Balance** | **+$22,164** |
+
+  ⭐ **They ADD UP, and that is his own test read literally**: `base − cut + other − spent ≡
+  income − spent ≡ balance`, exactly, in cents. `balanceCents` did not move by a penny.
+
+  ⚠ **«Before her cut» AND NOT «Prize money», deliberately.** `accrueKidShare` sums the gross of every
+  cheque the ramp touched that week – the tournament's prize, the kit contract's result bonus and, on
+  a quarter week, the retainer (#10's own table). A row called «Prize money» would name a source on a
+  week a sponsor cheque supplied half of it. This name is true whatever the mix and it says what the
+  figure is FOR: the base of the percentage on the very next line.
+
+  ⚠ **AND IT FALLS BACK RATHER THAN GUESSING.** No recorded base – which is every week his save has
+  already banked – keeps the Income / Spent / Balance shape it printed before, plus the foot that says
+  out loud what `Income` there is. Same for the rare week where the derivation would print a NEGATIVE
+  «Other income».
+
+  ⚠ Evidence: `tests/component/week-recap-kid-share.test.ts` – a mounted arm that reads the four
+  figures back **off the rendered card**, sums them and compares to the rendered balance (±$2, which
+  is four independently-rounded dollar figures and nothing else). Mutation-verified: `other = income`
+  (the double-count rebuilt), the gross row dropped, and `-split.cut` unsigned each redden that arm
+  and only it.
+
+- [x] **2. «Her cut 50% of $55,200 – $27,600 – это усложнило и фразу и интерфейс – верни Her cut 50% –
   $27,600 как было раньше пожалуйста»** – **build, revert.** ⚠ Round 29 #10 fixed the arithmetic's
   legibility by lengthening the sentence; he wants the sentence back and item 1 fixes the cause
   properly. **Do 1 first, then this is a pure revert.**
 
-- [ ] **3. «не вижу проблем сделать ставку 3.17% на Savings»** – ⚙ **RULING.** Savings takes the rate
+  ⚙ **SHIPPED, AND IT IS ONE LINE SHORTER THAN THE THING HE ASKED TO GO BACK TO.** The memo reads
+  **«Her cut 50% – $27,600 into her own account.»** – his exact string, dash included, with the
+  destination on the same line. The `of $55,200` clause is gone and **so is the branch**: one sentence
+  for every week now, because the only reason the long form existed was that the base was nowhere
+  else on the card, and item 1 has put it on the card as a row.
+
+  ⚠ **HIS DASH, NOT THE PRE-#10 ONE.** The memo before #10 read «Her cut 50% $27,600» with no
+  separator; he quoted the target back as «Her cut 50% **–** $27,600», and a quoted target beats my
+  reading of «как было раньше». One character, said out loud rather than left to be spotted.
+
+  ⚠ **THE OLD FOOT SURVIVES ON THE FALLBACK SHAPE ALONE** – «The income above is what the family
+  kept.» It exists to stop a reader taking the memo for a deduction, and on the new rows that is said
+  by the arithmetic; on a pre-#10 week, where `Income` really is a netted figure with nothing beside
+  it, it still earns its place.
+
+  ⚠⚠ **THE PIN IS RE-AIMED AND STRONGER, NOT DELETED.** #10's guard tied the stated percentage to the
+  engine's actual share by reading one rendered figure against a snapshot field. The base is a ROW
+  now, so the pin reads **two rendered figures**: `round(base × pct / 100) ≈ cut`, both taken off the
+  screen. Mutation-verified – putting the `of $X` clause back reddens the short-sentence arm and the
+  forward-only arm together, which is right: neither shape may carry a base inside the sentence again.
+
+- [x] **3. «не вижу проблем сделать ставку 3.17% на Savings»** – ⚙ **RULING.** Savings takes the rate
   the current account used to pay, so the replacement is whole rather than 63% of one.
 
-- [ ] **4. «при продаже бумаг надо дать возможность только часть продавать, иными словами при продаже
+  ⚙⚙ **SHIPPED: `annualRateBps` 200 → 317 on the deposit, and it is his number, not a tuning.** 3.17%
+  is exactly what the current account used to pay – `ECONOMY.savings.apyWeekly: 0.0006` annualised,
+  `(1.0006)^52 − 1 = 3.17%`, the constant #12 deleted. The index fund is untouched at 700 bps: he
+  named Savings, and #12's own «the fund would recover 221%» is why widening it by hand would have
+  been the tuning he did not ask for. ⚠ The screen prints «Gains about **3%** a season» – the display
+  rounds, the logic does not, which is his own whole-numbers rule of 26.08.
+
+  ⚠⚠ **RE-MEASURED, SIX ARMS, `tools/r29p2-savings-sweep.ts`.** #12's ad-hoc three-career run is not
+  reproducible, so this is its question re-asked at bench scale: 18 cells (9 presets × 2 policies) ×
+  30 seeds × 3 horizons = **1,620 careers per arm**, the same shape #12 used. Total wealth = wallet +
+  shelf. Arms A and B are **separate worktrees at `fd959b0`** (A = that tree with `74cb407` reverted,
+  so the interest is back and its readers confirmed present); C is this branch. The sweep policy keeps
+  a **$5,000** living float and puts the rest in the deposit, taking back exactly what it needs when
+  the float runs short – ⭐ **the second half is only expressible because item 4 shipped part sales.**
+
+  **THE CLEAN HORIZON (14→16, the junior sink – #12's own instruction to read this row and discount
+  the other two, because it is the only one where the arms differ by the money and nothing else):**
+
+  | arm | what it is | end wealth mean | survivors |
+  | --- | --- | --- | --- |
+  | A | the interest, as it was | **$26,155** | 453/540 |
+  | B | neither (shipped `fd959b0`) | **$24,168** | 451/540 |
+  | C | Savings, swept | **$36,500** | **461/540** |
+
+  ⚙ **THE INTEREST WAS WORTH +$1,987 A CAREER** (A − B), positive in **17 of 18 cells** – which
+  reproduces #12's **−$1,954, 18 of 18** on a tree that has moved ~15 commits since 28.08. The old
+  figure is corroborated, not contradicted.
+
+  ⚠⚠ **AND «C − B = +$12,332» IS NOT THE ANSWER TO HIS QUESTION, WHICH IS THE MOST IMPORTANT LINE
+  HERE.** Money swept off the current account also makes the family look POORER to every
+  affordability check in the bench's own policy, so it enters fewer tournaments and buys less
+  coaching – in the junior sink, where none of that pays back. That is a property of my sweep policy,
+  not of his ruling, and calling it «the deposit earned that» would be the false attribution #12's own
+  table warned about. **So the rate was isolated**: the same sweep, the same careers, only
+  `annualRateBps` moved.
+
+  | deposit rate | end wealth mean (14→16, sweep on) | yield vs 0% | recovers of the $1,987 |
+  | --- | --- | --- | --- |
+  | 0 bps | $34,422 | – | – |
+  | 200 bps (shipped) | $35,737 | **+$1,314** | **66%** |
+  | **317 bps (his ruling)** | **$36,500** | **+$2,078** | **105%** |
+
+  ⚙⚙ **SO THE ANSWER IS YES, AND IT IS PARITY RATHER THAN AN OVERSHOOT.** The 200 bps row independently
+  reproduces #12's **63%** at 66% – measured on a different horizon, a different policy and a
+  different instrument, which is the strongest thing that can be said for either number. At his
+  3.17% the replacement pays **105%** of the wage it replaced, and the 5% is inside this instrument's
+  resolution: careers diverge on money (the yield is positive in 15 of 18 cells, not 18), so nothing
+  is tuned and nothing needs to be. ⭐ **Savings now IS the current account's interest, moved behind a
+  decision** – which is precisely what he ruled on 28.08: «одни должны друг друга заменить».
+
+  ⚠⚠ **SURVIVAL, ALL THREE HORIZONS, 1,620 CAREERS PER ARM – AND #12's FIGURE COMES BACK TO THE
+  CAREER:**
+
+  | arm | survivors | #12 said |
+  | --- | --- | --- |
+  | A – the interest | **1,034** / 1,620 | **1,034** |
+  | B – neither | 1,010 / 1,620 | 1,022 |
+  | **C – Savings, swept** | **1,086** / 1,620 | – |
+
+  ⭐ Arm A reproduces #12's 1,034 **exactly**; arm B lands 12 careers below its 1,022, which is the
+  tree having moved ~15 commits. ⚙ **And the replacement does not merely restore survival, it beats
+  it: 1,086 against the interest's 1,034.** That is not a paradox – a family that keeps a $5,000
+  float and pulls money back when it dips is running a better cash policy than one that simply
+  spends, and item 4's partial sale is what makes «pull some back» a move at all.
+
+  ⚠ **AND THE 14→20 WEALTH ROW IS THE ONE TO DISTRUST, exactly as #12 said of its own**: A $538,223 ·
+  B $498,960 · C $383,090. The sweep arm ends POORER and yet survives more often, which is the same
+  spending brake read at the horizon where entering tournaments finally pays: fewer entries, fewer
+  prize cheques, fewer bankruptcies. Those numbers measure career divergence under a bench policy,
+  not this ruling – the 14→16 rate table above is the one that answers his question.
+
+  ⚠⚠ **AND THE NULL ARM IS NAMED HONESTLY, AS THE BRIEF DEMANDED.** Running this same tool on THIS
+  branch with `--sweep=off` reproduces arm B **exactly, on all three horizons** – $24,168 / 451,
+  $36,094 / 303, $498,960 / 256, and **1,010 / 1,620** overall – because
+  nothing in items 3 or 6 has a reader unless somebody BUYS. That is not a null result about the
+  change; it is proof that the sweep is the reader. Proven the other way too: with the deposit set to
+  an absurd **99,999 bps**, the sweep arm's 14→16 mean goes from $33,213 to **$4,057,323** on the same
+  three seeds, while all three frozen careers stay byte-identical.
+
+  ⚠ **FROZEN CAREERS: BYTE-IDENTICAL, AND THAT PROVES NOTHING ON ITS OWN – SO IT WAS PROVEN BY
+  MUTATION.** Per-key diff first (`tools/frozen-key-diff.ts`, control = a detached worktree at
+  `fd959b0`, headers checked against each invocation because ⚠ the word-split trap DID bite once here
+  – zsh does not word-split an unquoted `$var`, and three files came back all reading
+  `# preset 0 policy 1`). All three careers (5/0, 8/0, 0/1) are **byte-identical, `rngMain` included**,
+  and the frozen MAIN capture (41550 / `e6b0c709`) is untouched. ⚠ But the frozen careers are 14–17
+  over 156 weeks and **no bench policy in that file buys anything**, so there is no reader there: the
+  absurd-rate arm above is what makes that a proven absence rather than an assumed one, and
+  `tests/coach-travel-edge.test.ts` already asserts `world.assets === []` in all three.
+
+- [x] **4. «при продаже бумаг надо дать возможность только часть продавать, иными словами при продаже
   надо дать цифровой инпут для ввода суммы продажи»** – **build.** A numeric input on the sale, not
   all-or-nothing. ⭐ His own reasoning: with partial sales the instrument becomes a real cash
   management decision instead of a one-way door.
+
+  ⚙⚙ **SHIPPED.** `sellAsset(world, itemId, amountCents?)` – absent means «sell the lot», which is
+  what every caller written before this meant and still means. The screen draws a numeric box beside
+  the sale control, blank by default, and the control renames itself «Take out $30,000» the moment a
+  smaller figure is in it.
+
+  ⚠ **«БУМАГ» IS LOAD-BEARING AND IT IS THE `stake` AGAIN.** A part sale is offered on `'open'` rungs
+  and refused on `'fixed'` ones – `buyAsset`'s top-up predicate read from the other end. An 'open'
+  rung is «a product you choose an amount for» and takes money in and out in parts; a car has one
+  price and one sale. One property decides both directions, so a third investment added tomorrow is
+  divisible because of what it IS.
+
+  ⚠⚠ **AND IT DOES NOT BREAK #11's P&L – WHICH IS THE TRAP, AND THE FIRST TEST I WROTE FOR IT WAS
+  DEAD.** `revalueAssets` recomputes `valueCents` from `basisCents`/`basisWeek` every tick, so a sale
+  that only lowered the value is undone the following week with the cash already banked. The sale
+  therefore rebases exactly as the top-up does (`basisCents` = what is left, struck today) and gives
+  up the cost of what left (`round(paidCents × proceeds / value)`, **the remainder by subtraction** –
+  `kidPrizeShareCents`' one-rounding discipline), so realised + unrealised = the gain, to the cent.
+  ⚠⚠ **The arm that was supposed to catch this passed under mutation**: a freshly-bought deposit
+  carries no `basisCents` at all, the fallback reads `paidCents`, and `paidCents` had been scaled by
+  the same fraction – which made the rebase-less mutant arithmetically identical on that fixture. The
+  fixture is a TOPPED-UP holding now, where the basis is real and stale, and there the mutant restores
+  the whole holding. Written out in the test rather than quietly fixed.
+
+  ⚠ **THE THREE GUARDS, each mutation-verified alone:** more than is held (refused, with the figure in
+  the sentence), negative (refused), **zero (refused, and NO ledger row written** – a zero-op that
+  still charges would have printed «Sold $0 of:»). Two more that the item did not name and that the
+  code needed:
+  - **`NaN` is the same refusal, and the first draft of the guard did not catch it.** `NaN <= 0` is
+    false and `NaN > value` is false, so a malformed amount off the wire would have walked past every
+    comparison and written `NaN` into `valueCents` and `basisCents` – a corrupted career behind a
+    guard that read like it covered this. `!(asked > 0)` is the form that catches it, and mutating it
+    back to `asked < 0` reddens the zero arm and the NaN arm together.
+  - **An amount on a FIXED rung is refused rather than ignored**, which is the one place this does not
+    mirror `buyAsset` – ignoring a stake on a buy means paying the catalogue's stated price, ignoring
+    an amount on a sale would mean disposing of a whole car when half was asked for.
+
+  ⚠ **DISPLAY ROUNDED, LOGIC NOT.** Every figure in `sellAsset` is integer cents; the only rounding is
+  the one cost split, and `formatCents` does the dollars on screen.
+
+  ⚠ Evidence: `tests/round29p2-part-sale.test.ts` (10 arms – two sales in sequence asserting the
+  wallet, the remaining holding and the P&L identity at each step; the rebase; the top-up interaction;
+  the guards) and `tests/component/round29p2-part-sale.test.ts` (4 mounted arms, `game.sellAsset`
+  spied so the ARGUMENT is what is asserted – a screen that drew a perfect box and then sold the whole
+  holding would pass every rendering check ever written for it).
 
 - [ ] **5. «мировые топы должны иметь все возможности достучаться до топовой спортсменки»** –
   ⚙ **RULING on round 29's `global`-dominated-by-`tour` defect.** The global rung must be at least as
   good as the one below it. ⚠ Its terms, not its gate.
 
-- [ ] **6. «магазин открыт всегда с начала игры»** – ⚙ **RULING.** `shopUnlocked`'s professional gate
+- [x] **6. «магазин открыт всегда с начала игры»** – ⚙ **RULING.** `shopUnlocked`'s professional gate
   goes. ⭐ This also closes round 29's ask 12b: the junior years get the Savings replacement they
   had no access to.
+
+  ⚙⚙ **SHIPPED, AND THE GATE IS DELETED RATHER THAN LEFT RETURNING TRUE.** `shopUnlocked`,
+  `SHOP_LOCKED_DETAIL`, the `ShopView.unlocked` / `lockedDetail` pair, `buyAsset`'s first guard and
+  the screen's shut arm are all gone. That is `ECONOMY.savings`' own precedent from #12 one round
+  earlier, verbatim in its situation: «a live balance constant that nothing charges is a decision
+  nobody can find, and the next reader wires it back up believing it is a knob». A predicate that
+  cannot be false and a refusal string nothing prints are the same hazard. What went, and why, is
+  written out where the predicate stood (`src/engine/world/shop.ts`), and §13e of the shop spec is
+  amended from «THE GATE IS UNCHANGED, AND THAT IS A DECISION» to his ruling.
+
+  ⚠ **`masseurUnlocked` KEEPS THE SAME PREDICATE THIS ONE USED TO SHARE.** His ruling is about the
+  shop; a seat on the staff is not a thing on a shelf.
+
+  ⭐ **WHAT A FOURTEEN-YEAR-OLD CAN NOW SEE AND BUY – and nothing in the catalogue breaks at that
+  age.** Checked rung by rung, because a rung that BREAKS at 14 is a defect where a rung merely out of
+  reach is not:
+  - **Reachable at 14:** the **savings deposit ($1,000)** and, for a wealthy family, the **index fund
+    ($5,000)**. That pair is exactly what ask 12b was about, and it is the whole of what changes
+    materially.
+  - **Visible and priced out:** five cars ($60k–$300k), the houses, the boats, the planes ($38M) and
+    the four academy stages. That is §2's own «a shop window is a thing you look into before you can
+    afford it», and `affordable` moves the CONTROL rather than the row.
+  - **Nothing breaks.** Nothing on the shelf reads about her or reaches her – §1's «the shelf belongs
+    to the PARENT» is the catalogue's rule and the two items that were about her were struck before
+    slice 1 shipped. `requiresId` still orders the academy stages, `buildWeeks` still makes a boat a
+    contract before it is a boat, upkeep is still charged on delivered rungs only, and
+    `guardNotEndedForGood` is now the only door in the file.
+
+  ⚠ **Guard tests RE-AIMED, NOT DELETED** – four of them, and they are the arms that would catch the
+  gate creeping back: `tests/shop.test.ts`' gate block now asserts a junior family CAN buy on the very
+  fixture that used to be refused (plus a week-0 arm), its `shopView` arm asserts the whole shelf where
+  it asserted a shut one, `tests/round24-college-refusals.test.ts`' shop arm now asserts a SUCCESS
+  where it used to assert a second refusal standing in (a strictly stronger claim), and
+  `tests/component/shop-tab.test.ts`' «the junior years get ONE SENTENCE» is inverted to «the junior
+  years get THE WHOLE SHELF» – rows drawn, the deposit's control live and pressable at 14, with §2's
+  three prohibitions (no locked row, no progress bar, no teaser) kept as absences.
 
 - [ ] **7. «Запихнуть туда корты стоило бы +5108 КБ – это не очень большая цена, надо сделать, чтобы
   можно было полностью оффлайн играть без помех… Возможно все надо в установку PWA добавлять. А с

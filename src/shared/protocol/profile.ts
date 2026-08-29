@@ -179,8 +179,15 @@ export interface OwnedAsset {
   /** the `ECONOMY.shop.catalogue` id – one row per id, never two (see `WorldState.assets`). */
   id: string
   boughtWeek: number
-  /** what left the wallet. Never re-written: the loss §2e-1 measures is `valueCents - paidCents`,
-   *  and a paid price that moved would make that difference a different question every week. */
+  /** what left the wallet, net of what has since been taken back out. The loss §2e-1 measures is
+   *  `valueCents - paidCents`, so this has to be the cost of what is STILL HELD.
+   *
+   *  ⚠ IT READ «Never re-written» UNTIL ROUND 29 #11 AND PART TWO #4, AND BOTH WRITERS ARE THE SAME
+   *  SENTENCE READ IN OPPOSITE DIRECTIONS. A top-up ADDS the new cash (round 29 #11); a PART SALE
+   *  SUBTRACTS the cost of the part that left, `round(paidCents x proceeds / value)`, with the
+   *  remainder taken by subtraction so the two halves re-add to the cent. What the old note was
+   *  protecting is intact: this is CASH the family put in and never an accrued gain, which is why
+   *  `basisCents` below exists and why `changeCents` is still `valueCents - paidCents`. */
   paidCents: number
   /** what it is worth THIS week, in cents, whole. Written by `revalueAssets` on every tick. */
   valueCents: number

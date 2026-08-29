@@ -31,7 +31,6 @@
 // call site, and every other line in this file and on the screen is unchanged. That is why the value
 // is a STORED field written by a tick phase rather than a getter the screen calls: a getter would
 // have to be given a stream, and a stream on a read path is how a purchase moves the world's dice.
-import { activeLadderOf } from './ladder'
 import { guardNotEndedForGood } from './endings'
 import { addEvent } from './ledger'
 import { formatCents } from '../../shared/money'
@@ -72,21 +71,36 @@ export {
 }
 export type { ShopItem }
 
-/** ⭐ THE GATE: the shelf opens with the professional era and never in the junior years (§2).
- *
- *  ⚠ IT IS THE MASSEUR'S GATE, DELIBERATELY THE SAME ONE (`masseurUnlocked`, world/masseur.ts:48),
- *  and re-using it rather than inventing a second boundary is the whole point: her first counting
- *  W-series result makes the professional table her table, `activeLadderOf` reads the never-pruned
- *  mark, so the door can never close again behind a layoff, a pruned window or the college freeze.
- *  A second definition of "the professional era" is a second thing to keep in step. */
-export function shopUnlocked(world: WorldState): boolean {
-  return activeLadderOf(world) === 'wta'
-}
-
-/** The refusal, written once – the screen prints it and both commands throw it, so a disabled
- *  control and a refused click can never tell two stories (the R10-16 doctrine). */
-export const SHOP_LOCKED_DETAIL =
-  'The shelf opens with her professional career – her first counting W-series result unlocks it.'
+// ⭐⭐⭐ THE GATE STOOD HERE AND ROUND 29 PART TWO #6 DELETED IT – HIS RULING, 29.08.
+//
+// «магазин открыт всегда с начала игры.»
+//
+// ⚠⚠ WHAT WENT, IN FULL, SO THE DECISION IS FINDABLE. `shopUnlocked(world)` returned
+// `activeLadderOf(world) === 'wta'` – §2's «visible from the first week of the professional era and
+// never in the junior years» – and `SHOP_LOCKED_DETAIL` was the one sentence both the screen and
+// `buyAsset` used to refuse ("The shelf opens with her professional career – her first counting
+// W-series result unlocks it."). The `ShopView.unlocked` / `lockedDetail` pair went with them, along
+// with the screen's locked arm and `buyAsset`'s first guard.
+//
+// ⚠ DELETED RATHER THAN LEFT RETURNING TRUE, and it is `ECONOMY.savings`' own precedent one round
+// earlier, verbatim in its situation: «a live balance constant that nothing charges is a decision
+// nobody can find … and the next reader would wire it back up believing it was a tuning knob». A
+// predicate that cannot be false and a refusal string nothing prints are the same hazard. The gate
+// is recoverable from git and from docs/rounds/round-29.md; it is not recoverable from a dead field.
+//
+// ⭐⭐ AND IT CLOSES ROUND 29's ASK 12b, WHICH IS WHY HE RULED ON IT. #12 removed the current
+// account's automatic interest and measured the loss at its cleanest on the JUNIOR sink (14→16,
+// −$1,954 a career, 18 of 18 presets down) – the exact horizon in which the shelf that was supposed
+// to replace it was shut. «There is now no way to earn yield at all» was the caveat; this is the
+// answer to it, and part two #3's rate is the other half.
+//
+// ⚠ NOTHING ELSE MOVED THROUGH THIS DOOR. `masseurUnlocked` (world/masseur.ts) keeps the SAME
+// professional-era predicate this one used to share – his ruling is about the shop, and a seat on
+// the staff is not a thing on a shelf. This file's `./ladder` import went with the gate, because
+// the gate was its only reader; the shelf now knows nothing about which table she plays on.
+//
+// ⚠ SELLING WAS NEVER GATED and still is not: §4's freeze (`sellableAsset`) remains the one thing
+// allowed to stop a sale, which is now the only door in this file.
 
 /** THE ONE WRITER OF `valueCents`, run at the top of every tick (world/phaseObligations.ts).
  *
@@ -181,7 +195,8 @@ export function sellableAsset(_world: WorldState, owned: OwnedAsset): boolean {
  *  ZERO DRAWS: state, arithmetic and one ledger row. */
 export function buyAsset(world: WorldState, itemId: string, stakeCents?: number): void {
   guardNotEndedForGood(world)
-  if (!shopUnlocked(world)) throw new Error(SHOP_LOCKED_DETAIL)
+  // ⚠ THE PROFESSIONAL-ERA REFUSAL STOOD HERE AND PART TWO #6 DELETED IT (his ruling, the block at
+  // the top of this file). A terminal latch still refuses; a fourteen-year-old's family does not.
   const item = shopItem(itemId)
   if (!item) throw new Error('There is nothing like that on the shelf')
   world.assets ??= []
@@ -291,8 +306,42 @@ export function buyAsset(world: WorldState, itemId: string, stakeCents?: number)
  *  player who has to subtract two rows himself has not been shown the loss, he has been shown two
  *  prices. The ledger keeps both rows anyway, so nothing is hidden by saying it out loud.
  *
- *  Same guard, same class, zero draws. */
-export function sellAsset(world: WorldState, itemId: string): void {
+ *  ⭐⭐⭐ ROUND 29 PART TWO #4 – AND `amountCents` MAKES IT A PART SALE. HIS ASK, 29.08: «при продаже
+ *  бумаг надо дать возможность только часть продавать, иными словами при продаже надо дать цифровой
+ *  инпут для ввода суммы продажи», and his reasoning with it – a holding you can take money OUT of in
+ *  parts is a cash-management decision instead of a one-way door.
+ *
+ *  ⚠⚠ «БУМАГ» IS LOAD-BEARING AND IT IS THE `stake` AGAIN. A part sale is offered on `'open'` rungs
+ *  and refused on `'fixed'` ones, which is `buyAsset`'s top-up predicate read from the other end: an
+ *  'open' rung is «a product you choose an amount for» and takes money in and out in parts, a car is
+ *  «a thing with one price» and does neither. One property decides both directions, so a third
+ *  investment added to the catalogue tomorrow is divisible because of what it IS.
+ *
+ *  ⚠ AND A FIXED RUNG REFUSES THE AMOUNT RATHER THAN IGNORING IT, which is the one place this does
+ *  NOT mirror `buyAsset`. There, ignoring a stake means the family pays the catalogue's stated price;
+ *  here, ignoring an amount would mean the family asked to sell half a car and got rid of all of it.
+ *  A surprise disposal is not the same class of mistake as a known price, so it is a refusal.
+ *
+ *  ⚠⚠ AND IT MUST NOT BREAK THE TOP-UP'S P&L, WHICH IS THE TRAP IN THIS ITEM. Round 29 #11 split the
+ *  two numbers on purpose: `paidCents` accumulates the CASH the family put in, `basisCents` carries
+ *  the COMPOUNDING, and `changeCents = valueCents - paidCents` is the honest lifetime gain. So a part
+ *  sale scales BOTH sides by what left:
+ *    * `basisCents` becomes what is LEFT, struck today, and the clock restarts – identical arithmetic
+ *      to the top-up's own rebase and provably neutral, since `V(1-f)·(1+r)^(s/52)` is exactly the
+ *      curve the untouched holding would have drawn scaled by `(1-f)`. Not doing this is the whole
+ *      trap: `revalueAssets` recomputes `valueCents` from the basis every tick, so a sale that
+ *      lowered the value alone would be silently undone on the next tick.
+ *    * `paidCents` gives up the cost of what was sold, ONE ROUNDING AND THE REMAINDER IS A
+ *      SUBTRACTION – `kidPrizeShareCents`' own discipline – so the cost that left and the cost that
+ *      stayed re-add to the original to the cent, and the realised and unrealised halves of the gain
+ *      re-add to the gain the family actually has.
+ *
+ *  ⚠ ITS `boughtWeek` IS NOT TOUCHED: they have owned this holding since they opened it, and selling
+ *  part of it does not change when that was.
+ *
+ *  Same guard, same class, zero draws. Every figure is integer cents; nothing here rounds for
+ *  display. */
+export function sellAsset(world: WorldState, itemId: string, amountCents?: number): void {
   guardNotEndedForGood(world)
   world.assets ??= []
   const owned = world.assets.find((a) => a.id === itemId)
@@ -301,9 +350,40 @@ export function sellAsset(world: WorldState, itemId: string): void {
 
   const item = shopItem(itemId)
   const label = item?.label ?? owned.id
-  const proceedsCents = owned.valueCents
-  const deltaCents = proceedsCents - owned.paidCents
-  world.assets = world.assets.filter((a) => a !== owned)
+  // ⚠ THE THREE GUARDS, IN THE ORDER A PLAYER MEETS THEM. A missing amount is «sell the lot», which
+  // is what every caller written before this item meant and still means.
+  const asked = amountCents === undefined ? undefined : Math.floor(amountCents)
+  if (asked !== undefined && item && item.stake !== 'open') {
+    throw new Error(`${label} can only be sold whole`)
+  }
+  // ⚠ NO ZERO-OP THAT STILL CHARGES: zero and negative are the same refusal, because both would
+  // write a ledger row and move nothing.
+  // ⚠⚠ AND `NaN` IS THE SAME REFUSAL, WHICH IS NOT PEDANTRY IN A COMMAND THAT MOVES MONEY. `NaN <= 0`
+  // and `NaN > value` are BOTH false, so a malformed amount off the wire would walk past every
+  // comparison below and write `NaN` into `valueCents` and `basisCents` – a career corrupted by a
+  // guard that read like it covered this. `!(asked > 0)` is the form that catches it.
+  if (asked !== undefined && !(asked > 0)) throw new Error('That is not an amount to sell')
+  // ⚠ AND NEVER MORE THAN IS HELD. `>=` the whole value is a whole sale rather than a refusal – a
+  // player asking for everything gets everything, and «мы ни за что не наказываем».
+  if (asked !== undefined && asked > owned.valueCents) {
+    throw new Error(`They only hold ${formatCents(owned.valueCents)} of that`)
+  }
+
+  const whole = asked === undefined || asked >= owned.valueCents
+  const proceedsCents = whole ? owned.valueCents : asked
+  // ONE ROUNDING (see the header): the cost of the part that left. The part that stays is the
+  // subtraction, so the two can never disagree with `paidCents` by a penny.
+  const costSoldCents = whole ? owned.paidCents : Math.round((owned.paidCents * proceedsCents) / owned.valueCents)
+  const deltaCents = proceedsCents - costSoldCents
+
+  if (whole) {
+    world.assets = world.assets.filter((a) => a !== owned)
+  } else {
+    owned.paidCents -= costSoldCents
+    owned.basisCents = owned.valueCents - proceedsCents
+    owned.basisWeek = world.week
+    owned.valueCents = owned.basisCents
+  }
   world.fundsCents += proceedsCents
 
   const tail =
@@ -316,7 +396,11 @@ export function sellAsset(world: WorldState, itemId: string): void {
     week: world.week,
     type: 'income',
     category: 'shop',
-    text: `Sold: ${label} – ${tail}`,
+    // ⚠ TWO VERBS, FOR `buyAsset`'s OWN REASON three functions up: the week a family closed a holding
+    // is not the week it took some money out of one, and the ledger is read as a story. The
+    // difference the sentence names is the REALISED half on a part sale – what the sold part cost
+    // against what it fetched – and the unrealised rest stays on the row upstairs.
+    text: whole ? `Sold: ${label} – ${tail}` : `Sold ${formatCents(proceedsCents)} of: ${label} – ${tail}`,
     amountCents: proceedsCents,
   })
 }
@@ -379,8 +463,6 @@ export function shopView(world: WorldState): ShopView {
   })
   const cheapest = rows.reduce<ShopRowView | null>((best, r) => (!best || r.entryCents < best.entryCents ? r : best), null)
   return {
-    unlocked: shopUnlocked(world),
-    lockedDetail: SHOP_LOCKED_DETAIL,
     rows,
     cheapestId: owned.length === 0 && cheapest ? cheapest.id : null,
     ownedCount: owned.length,

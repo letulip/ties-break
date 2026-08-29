@@ -1967,7 +1967,7 @@ function walkFrozenCareer(presetIndex: number, policyIndex: number, force?: Part
   expect(world.peakPhysical, 'the v62 peak is present and is TODAY at 16.6 – nothing has declined yet')
     .toBeCloseTo(physicalMean(world.skills), 10)
   // ⚠ v63: the shelf is present and EMPTY in every frozen career, and it could not be otherwise –
-  // the shop opens on her first counting W-series result (`shopUnlocked`), no bench policy in this
+  // the shop is open from week 0 since round 29 part two #6, and no bench policy in this
   // file buys anything, and 156 weeks ends at age 16.6. Asserted rather than assumed, because a key
   // that filled itself would move these hashes for a reason no comment could name.
   expect(world.assets, 'the v63 shelf is present and EMPTY in the frozen careers').toEqual([])

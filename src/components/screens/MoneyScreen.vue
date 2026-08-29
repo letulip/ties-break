@@ -916,6 +916,29 @@ function stakeCentsFor(row: ShopRowView): number {
 // бонус скрытым». So no row, no note and no dialog below states a condition number, and none may be
 // added. The spec's §3d rule 4: «Hidden means never a number on a card.»
 
+// ⭐⭐ ROUND 29 PART TWO #4 – `shopPartSaleNote`, HIS WORDS, PARKED HERE FOR THE SAME REASON AS THE
+// others: Cyrillic may not appear in a template, in a string OR in a comment
+// (tests/template-copy-rules.test.ts).
+//
+// «при продаже бумаг надо дать возможность только часть продавать, иными словами при продаже надо
+// дать цифровой инпут для ввода суммы продажи»
+//
+// ⭐ His reasoning, in his own message: a holding money can come back OUT of in parts is a real cash
+// management decision instead of a one-way door. The input is drawn on an 'open' rung only – the
+// same property that decides whether money can go IN in parts – and it is left BLANK by default, so
+// the control still says «Sell it for $X» and still means all of it unless a figure is typed.
+
+// ⭐⭐ ROUND 29 PART TWO #6 – `shopAlwaysOpenNote`, HIS RULING, PARKED HERE FOR THE SAME REASON AS
+// the three above: Cyrillic may not appear in a template, in a string OR in a comment
+// (tests/template-copy-rules.test.ts).
+//
+// «магазин открыт всегда с начала игры»
+//
+// So `shop.unlocked` / `shop.lockedDetail` are gone from the protocol, the engine's gate is gone
+// with them (engine/world/shop.ts writes out what went and why), and the shelf's chapter here no
+// longer has a shut arm. ⭐ It also closes round 29's ask 12b: the junior years, where removing the
+// current account's interest bites hardest, now have the instrument that replaces it.
+
 /** ⭐ ROUND 29 #11 – CAN THE FAMILY PUT MORE INTO THIS ONE? True only for an 'open' rung it already
  *  holds: a deposit and an index fund take more money, a car does not. The predicate is the STAKE
  *  and not a list of ids, exactly as `buyAsset` re-validates it engine-side. */
@@ -981,6 +1004,8 @@ interface PendingShop {
   changeCents: number | null
   /** ⭐ ROUND 29 #11 – adding to a holding they already have, rather than opening one. */
   topUp?: boolean
+  /** ⭐ ROUND 29 PART TWO #4 – set only when this is a PART sale, so the question can say so. */
+  partCents?: number
   /** ⭐ ROUND 29 #5 – how long they would be waiting, in weeks. 0 on everything that arrives at
    *  once, which is every rung the shelf had before §3f. */
   buildWeeks?: number
@@ -1003,14 +1028,54 @@ function askBuy(row: ShopRowView): void {
     upkeepCents: row.upkeepCents,
   }
 }
+// ⭐⭐⭐ ROUND 29 PART TWO #4 – HOW MUCH OF IT TO SELL. His words are in `shopPartSaleNote` below
+// (no Cyrillic in a template, and none in a comment a template reads).
+//
+// ⚠ THE SAME SHAPE AS THE STAKE INPUT ABOVE, deliberately: DOLLARS as typed, kept as a STRING so a
+// half-typed figure is not coerced, and `sellCentsFor` is the one place it becomes cents. Blank
+// means «all of it», which is what the control said before this item and still says.
+const sellDollars = ref<Record<string, string>>({})
+/** Null when the box is empty or unusable – the caller then sells the whole holding, which is the
+ *  engine's own `amountCents === undefined`. ⚠ CLAMPED NOWHERE: `sellAsset` re-derives the floor and
+ *  the ceiling and returns its own sentence, and a screen that silently corrected the number would
+ *  be the R10-16 defect (a control and a refusal telling two stories). */
+function sellCentsFor(row: ShopRowView): number | null {
+  // ⚠ `String(...)` AND NOT A CAST: Vue 3's `v-model` on `type="number"` coerces the bound value to a
+  // NUMBER at runtime, whatever the ref is typed as, so «is the box empty» has to survive both. The
+  // stake input above only ever reaches this through `Number()`, which is why it never noticed.
+  const raw = String(sellDollars.value[row.id] ?? '').trim()
+  const typed = Number(raw)
+  if (!raw || !Number.isFinite(typed) || typed <= 0) return null
+  return Math.round(typed * 100)
+}
+/** ⚠ ADVISORY, NOT THE GATE – `canBuy`'s own rule one function up. An amount over what they hold is
+ *  refused by the engine with the figure in it; this only decides whether the control is pressable. */
+function canSell(row: ShopRowView): boolean {
+  if (game.busy || row.valueCents === null) return false
+  const cents = sellCentsFor(row)
+  return cents === null || (cents > 0 && cents <= row.valueCents)
+}
 function askSell(row: ShopRowView): void {
-  if (game.busy || row.valueCents === null) return
+  if (!canSell(row) || row.valueCents === null) return
+  // ⚠ THE PART IS ONLY OFFERED ON AN 'open' RUNG, which is `isTopUp`'s predicate read from the other
+  // end – see `sellAsset`'s own header. A car is sold whole whatever is in any box.
+  const part = isTopUp(row) ? sellCentsFor(row) : null
+  const amountCents = part !== null && part < row.valueCents ? part : row.valueCents
   pendingShop.value = {
     kind: 'sell',
     id: row.id,
     label: row.label,
-    amountCents: row.valueCents,
-    changeCents: row.changeCents,
+    amountCents,
+    // ⚠ THE REALISED DIFFERENCE, SCALED BY WHAT IS LEAVING. The engine reaches the same figure from
+    // the other side – `proceeds − round(paidCents x proceeds / value)` – which is this expression
+    // rearranged, so the two can differ by at most a cent and never by a dollar on screen. ⚠ IT IS
+    // NOT RE-DERIVED FROM A RATE: `changeCents` is the engine's own subtraction, off `shopView`.
+    // Whole sale: the row's own `changeCents`, untouched.
+    changeCents:
+      row.changeCents === null || amountCents >= row.valueCents
+        ? row.changeCents
+        : Math.round((row.changeCents * amountCents) / row.valueCents),
+    partCents: amountCents < row.valueCents ? amountCents : undefined,
   }
 }
 /** ⚠ THE SALE'S SENTENCE NAMES THE DIFFERENCE, TO THE CENT, and it is the same sentence the ledger
@@ -1042,6 +1107,11 @@ const shopConfirmMessage = computed(() => {
       : p.changeCents < 0
         ? `${formatCents(-p.changeCents)} less than it cost`
         : `${formatCents(p.changeCents)} more than it cost`
+  // ⭐ ROUND 29 PART TWO #4 – a part sale asks a different question, because it leaves something
+  // behind: «Sell the index fund» reads wrong on a family taking $10,000 out of one.
+  if (p.partCents !== undefined) {
+    return `Take ${formatCents(p.partCents)} out of ${p.label}? That part is ${tail}, and the rest stays invested.`
+  }
   return `Sell ${p.label} for ${formatCents(p.amountCents)}? That is ${tail}.`
 })
 function confirmShop(): void {
@@ -1049,7 +1119,9 @@ function confirmShop(): void {
   pendingShop.value = null
   if (!pending) return
   if (pending.kind === 'buy') void game.buyAsset(pending.id, pending.amountCents)
-  else void game.sellAsset(pending.id)
+  // ⚠ `partCents` OR NOTHING: a whole sale sends no amount, which is the engine's «sell the lot» and
+  // is byte for byte the call this screen made before part two #4.
+  else void game.sellAsset(pending.id, pending.partCents)
 }
 
 //
@@ -1501,145 +1573,169 @@ const TAB_OPTIONS = [
            docs/specs/the-shop-2026-08.md §2. The owner's own placement - a fourth chapter here
            rather than a new screen, because it is money and money already has a home.
 
-           ⚠ THE LOCKED ARM NAMES A DOOR, NOT A TARGET. §2: visible from the first week of the
-           professional era and never in the junior years, and on an empty shelf the screen names
+           ⚠⚠ THE LOCKED ARM IS GONE - ROUND 29 PART TWO #6, HIS RULING. It used to print one
+           sentence in place of the whole chapter until her first counting W-series result; his
+           words and the reasoning are in `shopAlwaysOpenNote` in the script block, because Cyrillic
+           may not appear in a template (tests/template-copy-rules.test.ts). What SURVIVES from that
+           paragraph is the half that was never about the door: on an empty shelf the screen names
            the cheapest reachable thing and its price - "never a locked row, a progress bar or a
-           teaser". So there is no per-row lock anywhere below: while the shelf is shut the whole
-           chapter is one sentence, and once it is open every price is on screen whether the family
-           can reach it or not. A shop window is a thing you look into before you can afford it. -->
+           teaser" - so there is no per-row lock anywhere below, and every price is on screen
+           whether the family can reach it or not. A shop window is a thing you look into before you
+           can afford it. -->
       <Card v-if="screenTab === 'shop' && shop" class="money-panel money-shop">
         <Eyebrow as="h2">The shelf</Eyebrow>
-        <p v-if="!shop.unlocked" class="money-panel-note">{{ shop.lockedDetail }}</p>
-        <template v-else>
-          <p class="money-panel-note">
-            This is the family's own money, and none of it is hers. Nothing here makes her better,
-            faster or fitter - it is what the money becomes once the tennis has stopped needing it.
-          </p>
-          <!-- ⭐ THE EMPTY SHELF'S OWN SENTENCE: a real thing at a real price. -->
-          <p v-if="shopCheapest" class="money-panel-note is-empty-shelf">
-            They own nothing yet. The cheapest thing here is
-            {{ shopCheapest.label }}, from {{ formatCents(shopCheapest.entryCents) }}.
-          </p>
-          <StatRow
-            v-else
-            class="money-row"
-            label="What they own"
-            :meta="`${shop.ownedCount} ${shop.ownedCount === 1 ? 'thing' : 'things'}`"
-            :value="formatCents(shop.ownedValueCents)"
-            tone="positive"
-          />
-          <div v-for="family in SHOP_FAMILIES" :key="family.key" class="shop-family">
-            <div class="shop-family-head">{{ family.title }}</div>
-            <p class="shop-family-note">{{ family.note }}</p>
-            <div v-for="row in shopRowsOf(family.key)" :key="row.id" class="shop-row">
-              <div class="shop-row-head">
-                <span class="shop-row-name">{{ row.label }}</span>
-                <span class="shop-row-rate" :class="{ 'is-down': row.annualRatePct < 0 }">
-                  {{ rateLine(row) }}
+        <p class="money-panel-note">
+          This is the family's own money, and none of it is hers. Nothing here makes her better,
+          faster or fitter - it is what the money becomes once the tennis has stopped needing it.
+        </p>
+        <!-- ⭐ THE EMPTY SHELF'S OWN SENTENCE: a real thing at a real price. -->
+        <p v-if="shopCheapest" class="money-panel-note is-empty-shelf">
+          They own nothing yet. The cheapest thing here is
+          {{ shopCheapest.label }}, from {{ formatCents(shopCheapest.entryCents) }}.
+        </p>
+        <StatRow
+          v-else
+          class="money-row"
+          label="What they own"
+          :meta="`${shop.ownedCount} ${shop.ownedCount === 1 ? 'thing' : 'things'}`"
+          :value="formatCents(shop.ownedValueCents)"
+          tone="positive"
+        />
+        <div v-for="family in SHOP_FAMILIES" :key="family.key" class="shop-family">
+          <div class="shop-family-head">{{ family.title }}</div>
+          <p class="shop-family-note">{{ family.note }}</p>
+          <div v-for="row in shopRowsOf(family.key)" :key="row.id" class="shop-row">
+            <div class="shop-row-head">
+              <span class="shop-row-name">{{ row.label }}</span>
+              <span class="shop-row-rate" :class="{ 'is-down': row.annualRatePct < 0 }">
+                {{ rateLine(row) }}
+              </span>
+            </div>
+            <p class="shop-row-blurb">{{ row.blurb }}</p>
+            <!-- ⭐⭐ ROUND 29 #5 – THE THIRD NUMBER (spec §3f): what it cost, what it loses, and
+                 what it takes every week to keep. It is on the row whether the family owns one or
+                 not, because it is the half of the price a shop window normally hides – «the
+                 weekly figure is what appears in the ledger, beside the masseur, which is where
+                 the decision actually lives». The engine computed it (`upkeepCents`); this screen
+                 does not divide a percentage by a year. -->
+            <p v-if="row.upkeepCents > 0" class="shop-row-upkeep">
+              {{ formatCents(row.upkeepCents) }} a week to keep
+            </p>
+            <!-- ⭐ §3f – THE WAIT, ON THE ROW, BEFORE THE ORDER IS PLACED. Not a teaser and not a
+                 lock: the price is beside it and the control is pressable. -->
+            <p v-if="row.buildWeeks > 0 && row.valueCents === null && !isBuilding(row)" class="shop-row-wait">
+              {{ buildWaitLine(row) }}
+            </p>
+            <!-- ⭐ §3g – THE STAGE UNDER IT, WHEN THAT STAGE IS NOT BUILT. Again not a lock and
+                 not a bar: the price stays on screen and the control is simply not pressable,
+                 which is §2's rule read one storey up. -->
+            <p v-if="requiresLabel(row)" class="shop-row-wait">
+              {{ requiresLabel(row) }} has to come first.
+            </p>
+            <!-- ⭐⭐ ROUND 29 #5, §3f – ORDERED, AND NOT HERE YET. «Between those two weeks the
+                 player owns a CONTRACT, not a boat», so there is nothing to value and nothing to
+                 sell – `sellableAsset` refuses the same week, so this is not the gate, it is the
+                 honest face of it (R10-16: a disabled control and a refused click tell one
+                 story). What the row says instead is the date, which is the whole point of a
+                 commission. -->
+            <div v-if="isBuilding(row)" class="shop-row-owned is-building">
+              <StatRow
+                class="money-row"
+                label="On order"
+                :meta="`paid ${formatCents(row.paidCents ?? 0)}`"
+                :value="weekLabel(row.readyWeek ?? 0)"
+                tone="plain"
+              />
+              <p class="shop-row-change">It cannot be sold before it is delivered, and it costs nothing to keep until then.</p>
+            </div>
+            <!-- OWNED: what they paid, what it is worth, and the difference as ONE figure the
+                 engine computed. This screen subtracts nothing. -->
+            <div v-else-if="row.valueCents !== null" class="shop-row-owned">
+              <!-- ⭐⭐ ROUND 29 #9 – `tone="plain"`, AND A DEPRECIATED VALUE IS NOT AN ERROR.
+                   The owner's words and the reasoning are in `shopToneNote` in the script block,
+                   because Cyrillic inside a template is forbidden - strings AND comments
+                   (tests/template-copy-rules.test.ts). In short: `negative` means MONEY OUT, this
+                   figure is a BALANCE, and `plain` is StatRow's own word for a balance. -->
+              <StatRow class="money-row" label="Worth now" :meta="`paid ${formatCents(row.paidCents ?? 0)}`" :value="formatCents(row.valueCents)" tone="plain" />
+              <p class="shop-row-change" :class="{ 'is-down': (row.changeCents ?? 0) < 0 }">
+                {{ formatCentsSigned(row.changeCents ?? 0) }}
+                <span v-if="row.changePct !== null">since they bought it ({{ row.changePct }}%)</span>
+                <span v-else>since they bought it</span>
+              </p>
+              <!-- ⭐⭐ ROUND 29 #11 – PUT MORE IN. His words are in `shopTopUpNote` in the
+                   script block (no Cyrillic in a template). The control is drawn for an 'open'
+                   rung and never for a car; same input, same minimum and same engine command as
+                   the opening stake, and `buyAsset` re-validates every one of them. -->
+              <label v-if="isTopUp(row)" class="shop-stake">
+                <span class="shop-stake-label">
+                  Add more, from {{ formatCents(row.entryCents) }}
                 </span>
-              </div>
-              <p class="shop-row-blurb">{{ row.blurb }}</p>
-              <!-- ⭐⭐ ROUND 29 #5 – THE THIRD NUMBER (spec §3f): what it cost, what it loses, and
-                   what it takes every week to keep. It is on the row whether the family owns one or
-                   not, because it is the half of the price a shop window normally hides – «the
-                   weekly figure is what appears in the ledger, beside the masseur, which is where
-                   the decision actually lives». The engine computed it (`upkeepCents`); this screen
-                   does not divide a percentage by a year. -->
-              <p v-if="row.upkeepCents > 0" class="shop-row-upkeep">
-                {{ formatCents(row.upkeepCents) }} a week to keep
-              </p>
-              <!-- ⭐ §3f – THE WAIT, ON THE ROW, BEFORE THE ORDER IS PLACED. Not a teaser and not a
-                   lock: the price is beside it and the control is pressable. -->
-              <p v-if="row.buildWeeks > 0 && row.valueCents === null && !isBuilding(row)" class="shop-row-wait">
-                {{ buildWaitLine(row) }}
-              </p>
-              <!-- ⭐ §3g – THE STAGE UNDER IT, WHEN THAT STAGE IS NOT BUILT. Again not a lock and
-                   not a bar: the price stays on screen and the control is simply not pressable,
-                   which is §2's rule read one storey up. -->
-              <p v-if="requiresLabel(row)" class="shop-row-wait">
-                {{ requiresLabel(row) }} has to come first.
-              </p>
-              <!-- ⭐⭐ ROUND 29 #5, §3f – ORDERED, AND NOT HERE YET. «Between those two weeks the
-                   player owns a CONTRACT, not a boat», so there is nothing to value and nothing to
-                   sell – `sellableAsset` refuses the same week, so this is not the gate, it is the
-                   honest face of it (R10-16: a disabled control and a refused click tell one
-                   story). What the row says instead is the date, which is the whole point of a
-                   commission. -->
-              <div v-if="isBuilding(row)" class="shop-row-owned is-building">
-                <StatRow
-                  class="money-row"
-                  label="On order"
-                  :meta="`paid ${formatCents(row.paidCents ?? 0)}`"
-                  :value="weekLabel(row.readyWeek ?? 0)"
-                  tone="plain"
+                <input
+                  v-model="stakeDollars[row.id]"
+                  class="shop-stake-input"
+                  type="number"
+                  inputmode="numeric"
+                  :min="Math.round(row.entryCents / 100)"
+                  step="100"
+                  :placeholder="String(Math.round(row.entryCents / 100))"
                 />
-                <p class="shop-row-change">It cannot be sold before it is delivered, and it costs nothing to keep until then.</p>
-              </div>
-              <!-- OWNED: what they paid, what it is worth, and the difference as ONE figure the
-                   engine computed. This screen subtracts nothing. -->
-              <div v-else-if="row.valueCents !== null" class="shop-row-owned">
-                <!-- ⭐⭐ ROUND 29 #9 – `tone="plain"`, AND A DEPRECIATED VALUE IS NOT AN ERROR.
-                     The owner's words and the reasoning are in `shopToneNote` in the script block,
-                     because Cyrillic inside a template is forbidden - strings AND comments
-                     (tests/template-copy-rules.test.ts). In short: `negative` means MONEY OUT, this
-                     figure is a BALANCE, and `plain` is StatRow's own word for a balance. -->
-                <StatRow class="money-row" label="Worth now" :meta="`paid ${formatCents(row.paidCents ?? 0)}`" :value="formatCents(row.valueCents)" tone="plain" />
-                <p class="shop-row-change" :class="{ 'is-down': (row.changeCents ?? 0) < 0 }">
-                  {{ formatCentsSigned(row.changeCents ?? 0) }}
-                  <span v-if="row.changePct !== null">since they bought it ({{ row.changePct }}%)</span>
-                  <span v-else>since they bought it</span>
-                </p>
-                <!-- ⭐⭐ ROUND 29 #11 – PUT MORE IN. His words are in `shopTopUpNote` in the
-                     script block (no Cyrillic in a template). The control is drawn for an 'open'
-                     rung and never for a car; same input, same minimum and same engine command as
-                     the opening stake, and `buyAsset` re-validates every one of them. -->
-                <label v-if="isTopUp(row)" class="shop-stake">
-                  <span class="shop-stake-label">
-                    Add more, from {{ formatCents(row.entryCents) }}
-                  </span>
-                  <input
-                    v-model="stakeDollars[row.id]"
-                    class="shop-stake-input"
-                    type="number"
-                    inputmode="numeric"
-                    :min="Math.round(row.entryCents / 100)"
-                    step="100"
-                    :placeholder="String(Math.round(row.entryCents / 100))"
-                  />
-                </label>
-                <button v-if="isTopUp(row)" class="shop-action" :disabled="!canBuy(row)" @click="askBuy(row)">
-                  Put more in
-                </button>
-                <button class="shop-action" :disabled="game.busy" @click="askSell(row)">
-                  Sell it for {{ formatCents(row.valueCents) }}
-                </button>
-              </div>
-              <!-- NOT OWNED: the price, and a control that is pressable or is not. -->
-              <div v-else class="shop-row-buy">
-                <label v-if="row.stake === 'open'" class="shop-stake">
-                  <span class="shop-stake-label">
-                    How much, from {{ formatCents(row.entryCents) }}
-                  </span>
-                  <input
-                    v-model="stakeDollars[row.id]"
-                    class="shop-stake-input"
-                    type="number"
-                    inputmode="numeric"
-                    :min="Math.round(row.entryCents / 100)"
-                    step="100"
-                    :placeholder="String(Math.round(row.entryCents / 100))"
-                  />
-                </label>
-                <span v-else class="shop-row-price">{{ formatCents(row.entryCents) }}</span>
-                <!-- ⭐ §3f – A COMMISSIONED THING IS ORDERED, NOT BOUGHT, and the verb on the control
-                     is the one difference the player can see before he presses it. -->
-                <button class="shop-action" :disabled="!canBuy(row)" @click="askBuy(row)">
-                  {{ row.stake === 'open' ? 'Put it in' : row.buildWeeks > 0 ? 'Order it' : 'Buy it' }}
-                </button>
-              </div>
+              </label>
+              <button v-if="isTopUp(row)" class="shop-action" :disabled="!canBuy(row)" @click="askBuy(row)">
+                Put more in
+              </button>
+              <!-- ⭐⭐⭐ ROUND 29 PART TWO #4 – HOW MUCH OF IT TO SELL. His words are in
+                   `shopPartSaleNote` in the script block (no Cyrillic in a template). Drawn on an
+                   'open' rung only, because that is the property that says a holding takes money in
+                   and out in parts; a car has one price and one sale. BLANK BY DEFAULT, so the
+                   control below keeps the sentence it has always had and keeps meaning all of it. -->
+              <label v-if="isTopUp(row)" class="shop-stake">
+                <span class="shop-stake-label">
+                  Take out how much, or leave it blank for all {{ formatCents(row.valueCents) }}
+                </span>
+                <input
+                  v-model="sellDollars[row.id]"
+                  class="shop-stake-input shop-sell-input"
+                  type="number"
+                  inputmode="numeric"
+                  min="1"
+                  step="100"
+                  :max="Math.round(row.valueCents / 100)"
+                  placeholder="all of it"
+                />
+              </label>
+              <button class="shop-action" :disabled="!canSell(row)" @click="askSell(row)">
+                {{
+                  isTopUp(row) && sellCentsFor(row) !== null && (sellCentsFor(row) ?? 0) < row.valueCents
+                    ? `Take out ${formatCents(sellCentsFor(row) ?? 0)}`
+                    : `Sell it for ${formatCents(row.valueCents)}`
+                }}
+              </button>
+            </div>
+            <!-- NOT OWNED: the price, and a control that is pressable or is not. -->
+            <div v-else class="shop-row-buy">
+              <label v-if="row.stake === 'open'" class="shop-stake">
+                <span class="shop-stake-label">
+                  How much, from {{ formatCents(row.entryCents) }}
+                </span>
+                <input
+                  v-model="stakeDollars[row.id]"
+                  class="shop-stake-input"
+                  type="number"
+                  inputmode="numeric"
+                  :min="Math.round(row.entryCents / 100)"
+                  step="100"
+                  :placeholder="String(Math.round(row.entryCents / 100))"
+                />
+              </label>
+              <span v-else class="shop-row-price">{{ formatCents(row.entryCents) }}</span>
+              <!-- ⭐ §3f – A COMMISSIONED THING IS ORDERED, NOT BOUGHT, and the verb on the control
+                   is the one difference the player can see before he presses it. -->
+              <button class="shop-action" :disabled="!canBuy(row)" @click="askBuy(row)">
+                {{ row.stake === 'open' ? 'Put it in' : row.buildWeeks > 0 ? 'Order it' : 'Buy it' }}
+              </button>
             </div>
           </div>
-        </template>
+        </div>
       </Card>
 
       <!-- ====================== 9. HER SHARE OF THE CHEQUES ======================

@@ -38,9 +38,9 @@ import {
   cancelEntry,
   cancelPractice,
   cancelVacation,
+  activeLadderOf,
   buyAsset,
   sellAsset,
-  SHOP_LOCKED_DETAIL,
   chooseGift,
   closeTournament,
   createWorld,
@@ -364,23 +364,26 @@ describe('the family may take back a booking it made before the fork', () => {
     // was designed for. The spec rules it directly (§5): «a shop command is about the FAMILY'S OWN
     // money … and NOT the tour-command guard that refuses inside the college freeze.»
     //
-    // ⚠ WHAT IS ASSERTED IS THE SENTENCE, NOT A SUCCESS. This fixture never turned professional, so
-    // the shelf's own gate answers – which is the correct refusal and is the whole shape of this
-    // block: the guard is FIRST in the body, so the fact that a DIFFERENT sentence comes back proves
-    // the freeze let it through.
+    // ⚠⚠ RE-AIMED BY ROUND 29 PART TWO #6, NOT DELETED, AND THE ARM GOT STRONGER FOR IT. This block
+    // used to assert the SENTENCE rather than a success: the fixture never turned professional, so
+    // the shelf's own gate answered first, and «a DIFFERENT sentence came back» was the proof that
+    // the freeze had let the command through. His ruling deleted that gate (his words are quoted in
+    // engine/world/shop.ts where the predicate stood), so there is no second refusal left to stand
+    // in – and the claim this test exists for can now be made directly: a shop command at college
+    // SUCCEEDS.
     const { world } = careerAtCollege('e2-shop-rules')
-    expect(() => buyAsset(world, 'deposit', 100_000), 'the shelf answers, not the freeze').toThrow(
-      SHOP_LOCKED_DETAIL,
-    )
-    expect(() => buyAsset(world, 'deposit', 100_000)).not.toThrow(COLLEGE_FREEZE_REFUSAL)
-    expect(() => sellAsset(world, 'deposit')).toThrow('does not own')
+    expect(activeLadderOf(world), 'the fixture still never turned professional').not.toBe('wta')
+    world.fundsCents = 500_000_00
+    expect(() => buyAsset(world, 'deposit', 100_000), 'the freeze does not answer').not.toThrow()
+    expect(world.assets.map((a) => a.id), 'and it is really owned, inside the freeze').toEqual(['deposit'])
     expect(() => sellAsset(world, 'deposit')).not.toThrow(COLLEGE_FREEZE_REFUSAL)
-    // ⚠⚠ AND WITH THE GATE OUT OF THE WAY IT REALLY BUYS, INSIDE THE FREEZE. Forcing the professional
-    // mark is the only way to ask the question this test exists for on a career that is at
-    // university: without it the lock answers first and the freeze is never actually exercised.
-    // `activeLadderOf`'s professional arm reads the NEVER-PRUNED mark (`wtaEverCounted` off
-    // `bestFinishByTier`), which is the one-way door the gate borrows – so this is the fixture's own
-    // door, opened the way the engine opens it, rather than a flag poked on the side.
+    expect(() => sellAsset(world, 'index-fund'), 'a rung they do not own refuses on its own rule').toThrow(
+      'does not own',
+    )
+    // ⚠⚠ AND IT STILL BUYS WITH THE PROFESSIONAL MARK ON, which is the ORIGINAL half of this arm and
+    // is kept: the freeze is what is under test, and it must let the command through on both sides
+    // of a door that no longer exists.
+    world.assets = []
     world.bestFinishByTier.wta250 = 3
     world.fundsCents = 500_000
     expect(() => buyAsset(world, 'deposit', 200_000), 'a purchase lands with the latch on').not.toThrow()

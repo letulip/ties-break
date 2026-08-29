@@ -1,14 +1,23 @@
-// ⭐⭐⭐ HER CUT ON THE WEEK RECAP – THE MOUNTED HALF: IT SAYS IT, AND IT DOES NOT ADD IT UP.
+// ⭐⭐⭐ HER CUT ON THE WEEK RECAP – AND SINCE ROUND 29 PART TWO #1, THE COLUMN THAT ADDS UP TO IT.
 //
 // THE OWNER, 27.08: «на плашке Finances на week recap после турниров можно писать что-то вроде
 // Income $sum / Spent $sum / Her cut 10% $sum / Balance $sum. Мне кажется так будет нагляднее.»
 //
-// ⚠⚠ AND HIS ARITHMETIC AS WRITTEN DOUBLE-COUNTS. `finalizeTournament` credits the family
-// `prize − herShare` (world.ts), so Income on that tile is ALREADY NET; a fourth row subtracting it
-// again prints a balance the till never had. Shown the two honest layouts he chose the memo: «(B)
-// мемо под балансом - вот это хорошо, да». THE DEFECT THIS FILE EXISTS TO CATCH IS THEREFORE NOT
-// "the line is missing" – it is "the line silently joined the sum", which is why the second `it`
-// below is the strongest one here and mounts the same week twice to prove a negative.
+// ⚠⚠ AND HIS ARITHMETIC AS WRITTEN DOUBLE-COUNTED, WHICH IS WHY IT SHIPPED AS A MEMO – past tense
+// now, and the paragraph is kept because it records what the memo was for. `finalizeTournament`
+// credits the family `prize − herShare` (world.ts), so `Income` on that tile was ALREADY NET, and a
+// fourth row subtracting the cut again printed a balance the till never had.
+//
+// ⚠⚠ ROUND 29 PART TWO #1 REMOVED THE PREMISE RATHER THAN THE ROW. He came back on 29.08: «У нас
+// есть одна сумма призовых, допустим 55200, тогда и ее доля будет 27600 и у нас income должен
+// показывать 27600, а на соседней строчке все остальные расходы.» The tile now prints the GROSS the
+// ramp was applied to, her cut as a signed outgoing row, the rest of the income and the spending –
+// and those four figures sum to the balance under them, in cents, exactly. So her cut IS inside the
+// sum now, and it is honest there because the sum no longer starts from a netted figure.
+//
+// ⭐ THE STRONGEST ARM IN THIS FILE IS THEREFORE HIS OWN TEST, IN HIS OWN WORDS: read the numbers
+// back OFF THE SCREEN and add them. It replaces the old strongest arm ("the memo did not join the
+// sum"), whose invariant – the BALANCE cannot move – is kept intact one case down.
 //
 // ⚠ MOUNTED, NOT PINNED – CLAUDE.md's own rule, and the reason is specific to this card: the tile
 // reads `snapshot.finance.weekly12` while its neighbours read `snapshot.events`, and the last time
@@ -16,14 +25,18 @@
 // green. The engine half lives in tests/kid-share-memo.test.ts.
 //
 // ⚠ MUTATION-VERIFIED – each of these turns exactly the named arm red, and each was watched doing it:
-//   * `v-if="kidShareMemo"` -> `v-if="false"`             -> 3 of 6: "it says it", "no Cyrillic",
-//     and the balance arm ON ITS FIXTURE GUARD (it asserts the memo is really there before it
-//     asserts the figures ignore it, which is what stops that arm passing vacuously). The
-//     under-eighteen arm and BOTH plaque arms stay green – measured, not assumed.
-//   * `balanceCents` -= `kidShareCents`                   -> the balance arm, ALONE – and it is the
-//     only mutation in this wave that a reader could mistake for the feature working.
-//   * `formatCents(cents)` -> `formatCentsSigned(-cents)` -> the "prints his own line" arm, alone
-//     (a leading + or − is exactly the misreading layout (B) was chosen to avoid).
+//   * `other = income − kept` -> `other = income`         -> the "rows add up" arm, ALONE. This is
+//     the double-count itself, rebuilt: the family's half of the cheque counted twice.
+//   * `{ key: 'Before her cut', cents: split.base }` dropped -> the "rows add up" arm, ALONE (the
+//     "50% of what" pin lives inside that same case, and it goes with it – the base is what both
+//     are about, which is why they are one case and not two).
+//   * `-split.cut` -> `split.cut`                         -> the "rows add up" arm, ALONE.
+//   * the `of ${formatCents(base)}` clause put back       -> the "short sentence" arm AND the
+//     forward-only arm, which is right: neither shape may carry a base inside the sentence again.
+//   * `v-if="kidShareMemo"` -> `v-if="false"`             -> the "short sentence" arm and the
+//     "no Cyrillic" arm. The under-eighteen arm and BOTH plaque arms stay green – measured.
+//   * `balanceCents` -= `kidShareCents`                   -> the balance arm AND the "rows add up"
+//     arm – it is the one mutation a reader could mistake for the feature working.
 //   * the plaque moved back above `.money-tabs`           -> the "demoted" arm, ALONE – and
 //     `round26-money-share.test.ts`'s three cases stay green through it, which is the proof that
 //     the move did not touch the copy.
@@ -123,6 +136,19 @@ function withoutMemo(snap: Snapshot): Snapshot {
   }
 }
 
+/** ⭐ ROUND 29 PART TWO #1 – THE SAME WEEK AS ONE OF HIS SAVE'S SIXTY: her cut and its rate on the
+ *  wire, and NO base, because the field did not exist when they were banked. This is the forward-only
+ *  half made testable – a week like this must keep the exact three rows it has always printed. */
+function withoutBase(snap: Snapshot): Snapshot {
+  return {
+    ...snap,
+    finance: {
+      ...snap.finance,
+      weekly12: snap.finance.weekly12.map(({ kidShareBaseCents: _drop, ...p }) => p),
+    },
+  }
+}
+
 function recap(snap: Snapshot) {
   useGameStore().snapshot = snap
   return mount(WeekRecapCard, { global: { stubs: { teleport: true } } })
@@ -130,67 +156,121 @@ function recap(snap: Snapshot) {
 
 const clean = (s: string) => s.replace(/\s+/g, ' ').trim()
 
+/** ⚠⚠ THE NUMBERS AS A PLAYER HAS THEM: parsed back out of the RENDERED string, not read off the
+ *  snapshot. «+$55,200» -> 55200. That is the whole point of his test – the figures that must add up
+ *  are the ones on the screen, and a helper that reached for `incomeCents` would be asserting our
+ *  internals against themselves. Returns whole DOLLARS, because whole dollars are what is printed. */
+function dollarsOf(text: string): number {
+  const m = clean(text).match(/([+-]?)\$([\d,]+)/)
+  if (!m) throw new Error(`no money in ${JSON.stringify(text)}`)
+  return (m[1] === '-' ? -1 : 1) * Number(m[2].replace(/,/g, ''))
+}
+
 describe('the week recap says what her cut was', () => {
   beforeEach(() => setActivePinia(createPinia()))
 
-  it('prints his own line – Her cut N% $sum – on a week the tennis paid her', () => {
-    const snap = paid()
-    const row = snap.finance.weekly12.find((p) => p.week === snap.week)!
-    const wrapper = recap(snap)
-    const memo = wrapper.find('.recap-memo')
-    expect(memo.exists(), 'the memo is on the Finances tile').toBe(true)
-    // HIS SHAPE, AND THE ENGINE'S OWN FIGURES: the percentage arrives whole from the snapshot and
-    // the cents are formatted by the same helper the tile's other rows use.
-    //
-    // ⚠⚠ RE-AIMED BY ROUND 29 #10, NOT WEAKENED – AND THE OLD SHAPE IS THE DEFECT IT REPORTS. This
-    // arm used to read `Her cut N% $sum` and it passed all through the bug the owner filed: «Her
-    // cut 50% $27,600 – это не 50% по сравнению с income». It could not see it, because the only
-    // base on that card is `Income`, which is the family's REMAINDER of the cheque being split, and
-    // this assertion never asked what the percentage was a percentage OF. The line now names the
-    // gross the engine really applied the ramp to (`kidShareBaseCents`), so the rate, its base and
-    // the money are one readable sentence – and the arm below turns that into an arithmetic pin.
-    expect(clean(memo.text())).toContain(
-      `Her cut ${row.kidSharePct}% of ${formatCents(row.kidShareBaseCents!)} – ${formatCents(row.kidShareCents!)}`,
-    )
-    // ⚠⚠ THE COMPANION PIN THE ITEM ASKED FOR: the percentage ON SCREEN must be a percentage OF the
-    // figure ON SCREEN beside it. Rendered text, not the snapshot – this is the surface he read.
-    // Tolerance is one cent per cheque (each rounds once on its own way in; a title week banks up to
-    // three), the same allowance tests/round29-kid-cut-base.test.ts writes out in full.
-    const impliedCut = Math.round((row.kidShareBaseCents! * row.kidSharePct!) / 100)
-    expect(Math.abs(impliedCut - row.kidShareCents!)).toBeLessThanOrEqual(3)
-    // ⚠ AND IT SAYS «THIS ALSO HAPPENED», NOT «THIS WAS DEDUCTED» – the whole reason layout (B) was
-    // chosen over the gross-first one. No sign on the figure, and the second line states out loud
-    // what Income above already is.
-    expect(clean(memo.text()), 'no sign – a leading + or − would read as a subtraction').not.toMatch(
-      /[+-]\$\d/,
-    )
-    expect(clean(memo.text())).toContain('the income above is what the family kept')
+  it('ROUND 29 PART TWO #1 – the rendered rows ADD UP to the rendered balance', () => {
+    // ⚠⚠⚠ HIS OWN TEST, IN HIS OWN WORDS: «у нас income должен показывать 27600, а на соседней
+    // строчке все остальные расходы». Every figure here is taken OFF THE SCREEN and added; nothing
+    // reaches into the snapshot to get it. A player with a calculator and no knowledge of our
+    // internals is exactly the reader this arm impersonates.
+    const tile = recap(paid()).find('.recap-finance')
+    const keys = tile.findAll('.recap-rows .recap-row-key').map((n) => clean(n.text()))
+    const vals = tile.findAll('.recap-rows .recap-row-val').map((n) => dollarsOf(n.text()))
+    const balance = dollarsOf(tile.find('.recap-balance').text())
+
+    // The shape first, so the sum below cannot pass on a card that lost the gross row entirely.
+    expect(keys[0], 'the gross the percentage is a share OF leads the column').toBe('Before her cut')
+    expect(keys[1], 'her cut names its own rate, beside the base it is a rate of').toMatch(/^Her cut \d+%$/)
+    expect(keys.at(-1), 'and the spending closes it').toBe('Spent')
+    expect(keys, 'the netted single Income row is gone from a week that split a cheque').not.toContain('Income')
+
+    // ⭐ AND THE SUM. Signed rows, so this is a plain addition and not a "which ones do I subtract".
+    const summed = vals.reduce((a, b) => a + b, 0)
+    // ⚠ TOLERANCE IS ROUNDING AND NOTHING ELSE, and it is the house rule doing exactly what it is
+    // for: the LOGIC is cents (`base − cut + other − spent === income − spent` identically) and the
+    // DISPLAY is whole dollars. The bound is arithmetic rather than a fudge: four rows each round by
+    // at most half a dollar (≤ $2.0) and the balance rounds once more (≤ $0.5), so two integers that
+    // agree in cents can differ by at most $2 on screen. A real double-count is thousands wide.
+    expect(Math.abs(summed - balance), `rows ${keys.join('/')} = ${vals.join(' ')} vs ${balance}`).toBeLessThanOrEqual(2)
+    expect(Math.abs(balance), 'the fixture is a week with real money in it, not four zeroes').toBeGreaterThan(0)
+
+    // ⚠⚠ THE PIN, RE-AIMED FROM THE MEMO TO THE ROWS AND STRENGTHENED, NEVER DELETED. Round 29 #10
+    // put it there because «50%» had stood beside a base it could not be 50% of; the base is a ROW
+    // now, so the pin reads two rendered figures instead of one rendered figure and a snapshot
+    // field. The percentage ON SCREEN must be a percentage OF the figure ON SCREEN above it.
+    const pct = Number(keys[1].match(/(\d+)%/)![1])
+    const base = vals[0]
+    const cut = -vals[1]
+    // Tolerance: whole-dollar display on both sides, plus one cent per cheque on the way in (a title
+    // week banks up to three) – tests/round29-kid-cut-base.test.ts writes that allowance out in full.
+    expect(Math.abs(Math.round((base * pct) / 100) - cut), `${pct}% of ${base} is not ${cut}`).toBeLessThanOrEqual(2)
   })
 
-  it('leaves Income, Spent and Balance untouched by its presence – the defect this design avoids', () => {
-    // ⚠⚠ THE STRONGEST ARM IN THIS FILE. Same snapshot, same week, twice: once as the engine builds
-    // it and once with the memo stripped off the wire. Every figure on the tile must be identical,
-    // because `Income` is ALREADY `prize − herShare` and a memo that moved the balance would be the
-    // double-count the owner was talking out of.
+  it('leaves the BALANCE untouched by her cut – the double-count this design still avoids', () => {
+    // ⚠⚠ RE-AIMED BY PART TWO #1, NOT WEAKENED, AND THE DIFFERENCE IS THE ITEM. This arm used to
+    // assert that the ROWS were identical with and without her cut on the wire; that is now false BY
+    // DESIGN – the rows are exactly what changes, because the tile no longer nets. What it always
+    // meant is the invariant that survives: the wallet moved by `income − spend` and her cut is not
+    // allowed to move it, because `finalizeTournament` had already taken it out before the family
+    // banked anything. So the BALANCE must be byte-identical across the two mounts, and the rows
+    // must NOT be – asserting both is what stops this arm passing on a card that ignored the item.
     const snap = paid()
     const withIt = recap(snap)
-    const rowsWith = withIt.findAll('.recap-row-val').map((n) => n.text())
+    const rowsWith = withIt.findAll('.recap-finance .recap-rows .recap-row-val').map((n) => n.text())
     const balanceWith = withIt.find('.recap-balance').text()
     expect(withIt.find('.recap-memo').exists()).toBe(true)
     withIt.unmount()
 
     const withoutIt = recap(withoutMemo(snap))
     expect(withoutIt.find('.recap-memo').exists(), 'the counter-example really has no memo').toBe(false)
-    expect(withoutIt.findAll('.recap-row-val').map((n) => n.text())).toEqual(rowsWith)
-    expect(withoutIt.find('.recap-balance').text()).toBe(balanceWith)
+    expect(withoutIt.find('.recap-balance').text(), 'her cut may not move the balance').toBe(balanceWith)
+    expect(
+      withoutIt.findAll('.recap-finance .recap-rows .recap-row-val').map((n) => n.text()),
+      'and the rows DO differ – the netted shape is what part two #1 replaced',
+    ).not.toEqual(rowsWith)
 
-    // ...and the balance is genuinely the two rows above it, not a coincidence of two zeroes.
+    // ...and the balance is genuinely income minus spend, not a coincidence of two zeroes.
     const row = snap.finance.weekly12.find((p) => p.week === snap.week)!
     expect(row.incomeCents, 'the fixture is a week with real money in it').toBeGreaterThan(0)
     expect(balanceWith, 'the printed balance is income minus spend and nothing else').toBe(
       `${row.incomeCents - row.expenseCents < 0 ? '-' : '+'}$${Math.abs(
         Math.round((row.incomeCents - row.expenseCents) / 100),
       ).toLocaleString('en-US')}`,
+    )
+  })
+
+  it('ROUND 29 PART TWO #2 – the SHORT sentence is back, and the long one is gone', () => {
+    // «Her cut 50% of $55,200 – $27,600 – это усложнило и фразу и интерфейс – верни Her cut 50% –
+    // $27,600 как было раньше пожалуйста.» His exact string, dash included, off the rendered card.
+    const snap = paid()
+    const row = snap.finance.weekly12.find((p) => p.week === snap.week)!
+    const memo = clean(recap(snap).find('.recap-memo').text())
+    expect(memo).toContain(`Her cut ${row.kidSharePct}% – ${formatCents(row.kidShareCents!)}`)
+    // ⚠ AND THE LONG FORM IS REALLY GONE, not merely un-asserted. A `toContain` on the short shape
+    // would pass on the long one too, since the long one starts with the same five characters.
+    expect(memo, 'the base has moved to a row – it may not also be in the sentence').not.toMatch(/Her cut \d+% of \$/)
+    // ⚠ The foot is gone WITH it on this shape: the rows say what the family kept, out loud.
+    expect(memo).not.toContain('what the family kept')
+    expect(memo, 'what a sentence can say and a row cannot – where the money went').toContain(
+      'into her own account',
+    )
+  })
+
+  it('and a week his save already banked keeps the exact rows it printed – forward-only', () => {
+    // ⚠⚠ THE FORWARD-ONLY HALF, MOUNTED. `financeWeeks` is persisted and his career holds sixty
+    // weeks of it, every one written before `baseCents` existed. Handed such a week the tile may not
+    // invent a gross by dividing – it keeps Income / Spent / Balance, and the memo carries the SHORT
+    // sentence plus the foot that says out loud what `Income` there still is.
+    const snap = withoutBase(paid())
+    const row = snap.finance.weekly12.find((p) => p.week === snap.week)!
+    const tile = recap(snap).find('.recap-finance')
+    expect(tile.findAll('.recap-rows .recap-row-key').map((n) => clean(n.text()))).toEqual(['Income', 'Spent'])
+    const memo = clean(tile.find('.recap-memo').text())
+    expect(memo).toContain(`Her cut ${row.kidSharePct}% – ${formatCents(row.kidShareCents!)}`)
+    expect(memo, 'no base on the wire, so none on the screen – and none guessed at').not.toMatch(/of \$/)
+    expect(memo, 'the foot earns its place here, where Income really is a netted figure').toContain(
+      'The income above is what the family kept',
     )
   })
 

@@ -2830,7 +2830,26 @@ export const ECONOMY = {
         label: 'A savings deposit',
         blurb: 'The dull one – it will not lose money and it will not make much.',
         entryCents: 1_000_00,
-        annualRateBps: 200,
+        // ⭐⭐⭐ ROUND 29 PART TWO #3 – 200 → 317 BPS, AND IT IS HIS RULING, NOT A TUNING.
+        //
+        // «не вижу проблем сделать ставку 3.17% на Savings.»
+        //
+        // ⚠⚠ 3.17% IS NOT A NEW NUMBER – IT IS THE OLD ONE, MOVED. It is exactly what the current
+        // account used to pay automatically every week (`ECONOMY.savings.apyWeekly: 0.0006`
+        // annualised, deleted by round 29 #12 – the note where it stood is ~1,300 lines up in this
+        // file). #12's own measurement is why he was asked: at 200 bps the deposit recovered only
+        // **63%** of the wage it replaced, so the replacement was not a replacement. His earlier
+        // ruling binds the two – «мы для этого делаем Savings как раз. Одни должны друг друга
+        // заменить» – and a replacement that pays two thirds of what it replaced does not.
+        //
+        // ⚠ THE OTHER HALF OF THE GAP WAS NEVER THE RATE, and part two #6 closes it: the shelf was
+        // SHUT in the junior years, which is the horizon where the removal bites cleanest. No rate
+        // fixes a locked door; both were needed and both are his.
+        //
+        // ⚠ THE INDEX FUND IS UNTOUCHED at 700 bps. He named Savings, and #12's «the fund would
+        // recover 221%» is exactly why widening this by hand would have been the tuning he did not
+        // ask for. The fund's own under-pricing stands as round 29's ask 11b.
+        annualRateBps: 317,
       },
       {
         id: 'index-fund',
