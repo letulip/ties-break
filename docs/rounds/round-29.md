@@ -1830,7 +1830,7 @@ rest are new.
   commission step. – **build.**
   The coach's 10%/5% share on the weekly screen, not only as a sentence on the coaches page.
 
-- [?] **14. «травмы бывают долгими и рехаб может быть с вещами, я бы тут еще подумал – мы это вроде бы
+- [~] **14. «травмы бывают долгими и рехаб может быть с вещами, я бы тут еще подумал – мы это вроде бы
   делали: у нас кроссовки участвуют в рехабе вроде бы. Проверь пожалуйста.»** – **answer.** ⚠ Round 29
   #20 implemented the vacation half of the 09.08 ruling and recorded the injury half as unruled.
 
@@ -1844,9 +1844,14 @@ rest are new.
   ⭐ And he left this half open himself – «я бы тут ещё подумал». **It is an unanswered question, not
   forgotten work.** The question, sharpened: **does rehab stop the wear clock the way a holiday now
   does?** ⚠ The argument against is his own: «рехаб может быть с вещами» – she is in them, she just
-  is not playing. `[?]` his.
+  is not playing.
 
-- [?] **15. «Закупки семьи — это расписание, а не часы… вот это интересно да, что можем сделать, чтобы
+  ⚙ **RULED 29.08: leave it alone** – «давай пока не будем здесь ничего менять.» The 09.08 half stays
+  unruled by his own choice; rehab wears kit at the normal rate and that is the shipped behaviour, not
+  an oversight. ⚠ Do not re-open this from a later audit finding it «open since 09.08» – it is closed
+  by a decision, which is a different thing from forgotten.
+
+- [~] **15. «Закупки семьи — это расписание, а не часы… вот это интересно да, что можем сделать, чтобы
   это исправить? или уже исправили?»** – **answer, then possibly build.** Gear is REPLACED on a
   schedule while it WEARS on a clock, so a holiday changes its condition and never its price.
 
@@ -1860,7 +1865,11 @@ rest are new.
   when wear crosses a threshold. Then a holiday and a rehab both save money, not just kit.
 
   ⚠ **The cost is why this is his call and not mine**: it moves the weekly outgoings of EVERY career,
-  so it is a balance change with a bench and a frozen re-pin, not a one-liner. `[?]` his.
+  so it is a balance change with a bench and a frozen re-pin, not a one-liner.
+
+  ⚙ **RULED 29.08: leave it alone** – «давай пока не будем здесь ничего менять.» The defect is real and
+  recorded; he is declining the churn it would cost every career right now. ⚠ A later audit will find
+  this diagnosis and must read this line before proposing it again.
 
 - [x] **16. «Механику фонда надо придумать, да, потому что безрисковые 3 против безрисковых 7 это
   весьма странно. Давай подумаем как это можно сделать красиво и просто.»** – **design, then his
