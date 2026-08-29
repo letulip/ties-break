@@ -27,6 +27,21 @@ a box it has not proven with a command in this session.
      (CLAUDE.md's standing regime), so the PR body carries the local verdict, with the numbers
      whenever a corridor moved.
 
+2b. **⚠ `npm run test:e2e`, ALWAYS, the same way** (owner, 29.08: «добавить в skill pull-request и
+   гонять на локале как условие отправки кода на сервер»). Measured that day: **30 tests, 22 seconds,
+   the whole suite** – cheaper than a single unit shard. At that price "smoke only" stopped being an
+   economy and became a blind spot we were paying for in hand-caught defects.
+
+       npm run test:e2e > /tmp/pr-e2e.log 2>&1; echo "E2E_EXIT=$?" >> /tmp/pr-e2e.log
+
+   ⭐ **This is a CONDITION OF PUSHING, not a nicety** – his words are «условие отправки кода на
+   сервер». A branch whose e2e is red does not go up, and the sentence «ветка готова» may not follow
+   a run that was skipped. ⚠ The PR gate on CI stays smoke-only by the repo's own recorded cost
+   lesson – this runs LOCALLY, which is where the 22 seconds are.
+
+   ⚠ Read the exit code from the FILE. This suite finishes fast enough that a wrapper's "exit code 0"
+   arrives before the run does – that notification lied four times in one session.
+
 3. **The diff, read before described.** `git log --oneline main..HEAD` and
    `git diff --stat main...HEAD`. The What-section is written from what actually changed, not from
    memory: two sentences, the owner's numbering where the wave answered his items.
