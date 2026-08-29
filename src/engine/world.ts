@@ -327,8 +327,8 @@ export { familyMeans, householdWalletCents, meansOfCents, MEANS_BANDS }
 // `assetUpkeepCents`, `deliverAssets`, `grantedVacationIds`, `ownsDeliveredOfFamily` and
 // `weeklyAssetUpkeepCents` join the list. The pure reads live in `world/assets.ts` now and
 // `world/shop.ts` re-exports every one of them, so this line is unchanged in shape.
-import { assetDelivered, assetUpkeepCents, assetValueCents, buyAsset, deliverAssets, deliveredAssets, grantedVacationIds, ownedAssets, ownsDeliveredOfFamily, revalueAssets, sellAsset, sellableAsset, shopCatalogue, shopItem, shopUnlocked, shopView, weeklyAssetUpkeepCents, SHOP_LOCKED_DETAIL } from './world/shop'
-export { assetDelivered, assetUpkeepCents, assetValueCents, buyAsset, deliverAssets, deliveredAssets, grantedVacationIds, ownedAssets, ownsDeliveredOfFamily, revalueAssets, sellAsset, sellableAsset, shopCatalogue, shopItem, shopUnlocked, shopView, weeklyAssetUpkeepCents, SHOP_LOCKED_DETAIL }
+import { assetDelivered, assetUpkeepCents, assetValueCents, buyAsset, deliverAssets, deliveredAssets, grantedVacationIds, ownedAssets, ownsDeliveredOfFamily, revalueAssets, sellAsset, sellableAsset, shopCatalogue, shopItem, shopView, weeklyAssetUpkeepCents } from './world/shop'
+export { assetDelivered, assetUpkeepCents, assetValueCents, buyAsset, deliverAssets, deliveredAssets, grantedVacationIds, ownedAssets, ownsDeliveredOfFamily, revalueAssets, sellAsset, sellableAsset, shopCatalogue, shopItem, shopView, weeklyAssetUpkeepCents }
 export type { ShopItem } from './world/shop'
 export type { FamilyMeans } from './world/means'
 
@@ -1260,9 +1260,12 @@ export function createWorld(
     // identity in tests/coach-travel-edge.test.ts reproduces the pre-v62 hashes by dropping exactly
     // this key, which only works while the rest of the serialisation order is untouched.
     peakPhysical: physicalMean(withHeadStart(startingSkills(seed, profile), profile.birthMonth)),
-    // ⭐ v63 (the shop, slice 1): the family owns nothing on day one, and the shelf is not even
-    // visible – it opens with her professional career (`shopUnlocked`). Empty is the identity here
-    // in the plainest sense: there was no shop to buy from.
+    // ⭐ v63 (the shop, slice 1): the family owns nothing on day one. Empty is the identity here in
+    // the plainest sense: nothing has been bought yet.
+    // ⚠ THIS NOTE USED TO SAY «and the shelf is not even visible – it opens with her professional
+    // career (`shopUnlocked`)». Round 29 part two #6 deleted that gate on his ruling («магазин
+    // открыт всегда с начала игры»), so the shelf IS visible from week 0 and the family simply owns
+    // nothing on it – see the block where the gate stood, in world/shop.ts.
     // ⚠ LAST KEY OF THE LITERAL, for the reason the masseur's three and `peakPhysical` above give:
     // the frozen-career identity in tests/coach-travel-edge.test.ts reproduces each older schema's
     // hashes by dropping exactly the keys appended since, which only works while every key stays in

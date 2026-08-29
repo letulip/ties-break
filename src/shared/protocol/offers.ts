@@ -419,15 +419,14 @@ export interface ShopRowView {
   requirementMet: boolean
 }
 
-/** THE SHELF. Present on every snapshot; `unlocked` is what the junior years turn off. */
+/** THE SHELF. Present on every snapshot, and OPEN on every snapshot since round 29 part two #6.
+ *
+ *  ⚠ `unlocked: boolean` AND `lockedDetail: string` STOOD AT THE TOP OF THIS INTERFACE and went with
+ *  the gate, on his ruling of 29.08 («магазин открыт всегда с начала игры»). §2's «visible from the
+ *  first week of the PROFESSIONAL era, never in the junior years» is overturned by the owner; the
+ *  reasoning, and what the two fields carried, are written out where the predicate stood in
+ *  engine/world/shop.ts. Not persisted, so nothing is owed: `ShopView` is a snapshot view. */
 export interface ShopView {
-  /** ⭐ §2 – visible from the first week of the PROFESSIONAL era, never in the junior years. The
-   *  same one-way door the masseur's seat uses (`activeLadderOf === 'wta'`), so it cannot close
-   *  again behind a layoff or the college freeze. */
-  unlocked: boolean
-  /** the sentence to print instead of the shelf while it is shut – written once in the engine so a
-   *  disabled control and a refused click cannot tell two stories. */
-  lockedDetail: string
   /** every rung, cheapest first. */
   rows: ShopRowView[]
   /** ⭐ §2 – WHAT AN EMPTY SHELF SAYS: the cheapest thing on it and its price, so the screen names a

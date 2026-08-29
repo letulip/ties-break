@@ -11,8 +11,14 @@
 //   §2e-5  ⚠ the shop may not become the DOMINANT OUTGOING before season 4 – if it does, it is
 //          competing with the coach and the tennis, which the backlog's §0 says it must not do
 //          early;
-//   plus:  WHEN does the shelf actually open (`shopUnlocked` – her first counting W-series result),
-//          and what can a family reach by then? That is what the two house prices are chosen off.
+//   plus:  WHEN does the shelf actually open, and what can a family reach by then? That is what the
+//          two house prices are chosen off.
+//          ⚠⚠ RE-AIMED BY ROUND 29 PART TWO #6: it USED to read «`shopUnlocked` – her first counting
+//          W-series result», and that gate is gone on the owner's ruling («магазин открыт всегда с
+//          начала игры»). The shelf opens in week 0 for every career, so section 1 below now reports
+//          the week the family could first AFFORD the car rather than the week it was allowed to see
+//          it. That is the question the two house prices were always really chosen off; the gate was
+//          standing in front of it.
 //
 // ⚠ THE SHOPPER IS DELIBERATELY EAGER, WHICH IS THE ONLY HONEST WAY TO ASK §2e-5. A player can
 // always make the shop dominant by emptying the wallet into it; what the acceptance is really about
@@ -34,7 +40,7 @@ import {
   type Policy,
   type Preset,
 } from './econ-bench'
-import { buyAsset, sellAsset, shopItem, shopUnlocked, ownedAssets } from '../src/engine/world'
+import { buyAsset, sellAsset, shopItem, ownedAssets } from '../src/engine/world'
 import { seasonIndexOf } from '../src/engine/world/ledger'
 import { WEEKS_PER_YEAR } from '../src/engine/season/calendar'
 import type { WorldEventCategory } from '../src/shared/protocol'
@@ -96,11 +102,15 @@ function walk(preset: Preset, index: number, policy: Policy, seasons: number, sh
   for (let w = 0; w < weeks && world.ending === null; w++) {
     stepCareerWeek(world, rng, policy)
 
-    if (arm.unlockWeek === null && shopUnlocked(world)) arm.unlockWeek = world.week
+    // ⚠ PART TWO #6 – «when could they first afford it», the gate having gone. `unlockWeek` keeps
+    // its name because every reader below is about the same question; what it MEASURES is now the
+    // wallet rather than the ladder.
+    const carPrice = shopItem(THE_CAR)!.entryCents
+    if (arm.unlockWeek === null && world.fundsCents >= carPrice) arm.unlockWeek = world.week
 
     if (shopper) {
       const item = shopItem(THE_CAR)!
-      if (arm.boughtWeek === null && shopUnlocked(world)) {
+      if (arm.boughtWeek === null) {
         // ⚠ THE RESERVE IS THE POLICY'S OWN, not a number invented here: the same
         // `reserveWeeks x the family's own weekly running cost` the entry decision uses. An eager
         // shopper is still a parent who keeps the lights on.
@@ -184,14 +194,14 @@ export function main(argv: string[] = process.argv.slice(2)): void {
 
   // --- 1. WHEN DOES THE SHELF EVEN OPEN? ---------------------------------------------------------
   const unlocks = armsA.map((a) => a.unlockWeek).filter((w): w is number => w !== null)
-  console.log('1. THE GATE – her first counting W-series result (`shopUnlocked`)')
-  console.log(`   opened in ${unlocks.length} of ${armsA.length} careers`)
+  console.log('1. THE SHELF – open from week 0 (part two #6); this is when the car came in REACH')
+  console.log(`   reachable in ${unlocks.length} of ${armsA.length} careers`)
   if (unlocks.length) {
     const bySeason = unlocks.map((w) => seasonIndexOf(w))
-    console.log(`   median unlock: week ${median(unlocks).toFixed(0)} (season ${median(bySeason).toFixed(1)})`)
+    console.log(`   median reach: week ${median(unlocks).toFixed(0)} (season ${median(bySeason).toFixed(1)})`)
     console.log(`   earliest: week ${Math.min(...unlocks)} (season ${seasonIndexOf(Math.min(...unlocks))})`)
     const before4 = bySeason.filter((s) => s < 4).length
-    console.log(`   open before season 4: ${before4} of ${armsA.length} careers (${pct(before4 / armsA.length)})`)
+    console.log(`   reachable before season 4: ${before4} of ${armsA.length} careers (${pct(before4 / armsA.length)})`)
   }
 
   // --- 2. §2e-1 – THE CAR, BOUGHT AND SOLD -------------------------------------------------------

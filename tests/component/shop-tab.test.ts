@@ -81,17 +81,33 @@ describe('the shelf is a fourth chapter of the Budget tab, and nothing else', ()
     wrapper.unmount()
   })
 
-  it('⭐ the junior years get ONE SENTENCE – no rows, no controls, nothing to look at', async () => {
+  it('⭐⭐ ROUND 29 PART TWO #6 – the junior years get THE WHOLE SHELF, rows and controls', async () => {
+    // ⚠⚠ RE-AIMED, NOT DELETED, AND IT IS THE EXACT INVERSION. This arm read «the junior years get
+    // ONE SENTENCE – no rows, no controls, nothing to look at» and asserted §2's shut shelf. His
+    // ruling of 29.08 overturns §2 on this point (his words are in `shopAlwaysOpenNote` in
+    // MoneyScreen.vue, because Cyrillic may not appear in a template or a test's own template), so
+    // the same fixture must now show everything. ⭐ This is the arm that would catch the gate
+    // creeping back, and it is the evidence for what a fourteen-year-old can now see and buy.
     const world = walk('shop-ui-junior', 20)
     const snap = toSnapshot(world)
-    expect(snap.shop.unlocked, 'the fixture really is a junior career').toBe(false)
+    expect(snap.ageYears, 'the fixture really is a junior career').toBeLessThan(16)
     const wrapper = await mountShop(snap)
-    expect(wrapper.text()).toContain(snap.shop.lockedDetail)
-    // ⚠⚠ THE THREE PROHIBITIONS OF §2, AS ABSENCES: not one row, not one control, not one progress
-    // element. A shelf that showed the cars greyed out with their prices would be «a locked row».
-    expect(wrapper.findAll('.shop-row')).toHaveLength(0)
-    expect(wrapper.findAll('.shop-action')).toHaveLength(0)
+    // EVERY rung is drawn – the shelf is a window, and it is open.
+    expect(wrapper.findAll('.shop-row')).toHaveLength(snap.shop.rows.length)
+    expect(wrapper.findAll('.shop-row').length).toBeGreaterThan(5)
+    // ⚠ AND THE THREE PROHIBITIONS OF §2 STILL HOLD, which is the half of the old arm that survives
+    // his ruling untouched: no locked row, no progress bar, no teaser. They are asserted as
+    // absences because that is the only way to test a rule written as a prohibition.
     expect(wrapper.findAll('.money-shop progress')).toHaveLength(0)
+    expect(wrapper.text(), 'no locked sentence is left to print').not.toContain('opens with her professional career')
+    // ⚠⚠ AND SOMETHING IS ACTUALLY PRESSABLE AT FOURTEEN – a shelf drawn but dead would be the
+    // «locked row» §2 forbids wearing a different hat. The deposit is the cheapest rung at $1,000
+    // and this family's starting funds clear it, so its control is live.
+    const deposit = wrapper.findAll('.shop-row').find((r) => r.text().includes('A savings deposit'))
+    expect(deposit, 'the deposit is on the junior shelf').toBeTruthy()
+    const button = deposit!.findAll('button.shop-action').find((b) => b.text().includes('Put it in'))
+    expect(button, 'and it has a control').toBeTruthy()
+    expect(button!.attributes('disabled'), 'which a fourteen-year-old family can really press').toBeUndefined()
     wrapper.unmount()
   })
 

@@ -623,12 +623,37 @@ A week away on a day-boat is not a holiday.
   them, and a refusal the spec does not have is not this slice's to invent. **Flagged for him**, and
   it is small either way.
 
-### 13e. ⚠ THE GATE IS UNCHANGED, AND THAT IS A DECISION
+### 13e. ⚠⚠ THE GATE IS GONE – HIS RULING, ROUND 29 PART TWO #6 (29.08)
 
-`shopUnlocked` (the professional era, `activeLadderOf === 'wta'`) opens the whole shelf, storeys
-included. §12c settled the buy-gate question with his own words – «магазин есть и всё, мы не можем
-запретить там что-то покупать» – so no second gate was invented for the expensive rows. What gates
-them is the price: a $38M aeroplane is out of reach of every career the probe has ever walked, and
+«магазин открыт всегда с начала игры.»
+
+This section read «THE GATE IS UNCHANGED, AND THAT IS A DECISION», and the decision has been made the
+other way by the owner. **§2's «visible from the first week of the professional era and never in the
+junior years» is overturned.** `shopUnlocked` (`activeLadderOf === 'wta'`), `SHOP_LOCKED_DETAIL`, the
+`ShopView.unlocked` / `lockedDetail` pair and the screen's shut arm are all deleted; what went and
+why is written out where the predicate stood in `src/engine/world/shop.ts`.
+
+⭐ **It closes round 29's ask 12b.** #12 removed the current account's automatic interest and measured
+the loss at its cleanest on the junior sink – the one horizon where the shelf that replaces it was
+shut. The replacement now exists there, and part two #3's rate (200 → 317 bps, «не вижу проблем
+сделать ставку 3.17% на Savings») is the other half of the same repair.
+
+⚠ **What a fourteen-year-old can now see and buy, checked rung by rung, because a rung that BREAKS at
+that age would be a real defect where a rung merely out of reach is not.** Nothing on the shelf reads
+about her or reaches her: §1's «the shelf belongs to the PARENT» is the whole catalogue's rule, the
+two items that were about her were struck before slice 1 shipped, and every remaining effect is the
+family's – a car depreciating, a house owned, a boat's upkeep, the plane's fare cut and its kinder
+travelling week (`world/sponsors.ts`, `world/medical.ts`), the academy's stages. **Reachable at 14:**
+the deposit ($1,000) and, for a wealthy family, the index fund ($5,000) – which is exactly the pair
+ask 12b was about. **Visible and priced out:** the five cars, the houses, the boats, the planes and
+the four academy stages, which is §2's own «a shop window is a thing you look into before you can
+afford it». **Nothing breaks:** `requiresId` still orders the academy stages, `buildWeeks` still
+makes a boat a contract before it is a boat, and `guardNotEndedForGood` is still the one refusal.
+
+§12c had already settled the buy-gate question inside the shelf with his own words – «магазин есть и
+всё, мы не можем запретить там что-то покупать» – so no second gate was invented for the expensive
+rows, and this ruling extends the same sentence to the door. What gates them is the price: a $38M
+aeroplane is out of reach of every career the probe has ever walked, and
 §12b's own funds table (median season 8 at $2.5M) says the boats' bottom rung is the first storey a
 very good career can reach at all. ⚠ **That is worth his eye**: most careers will see these rows and
 never press one, which is §2's «a shop window is a thing you look into before you can afford it»
