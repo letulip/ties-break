@@ -2895,3 +2895,8 @@ season), or a rate that starts at 20% and falls to 10% as she grows, mirroring h
   either alone changes nothing, deleting both turns the deposit arm red. A crash top-up arm buys a
   tranche AT A TROUGH (`r29p3-crash-46`, −28.8%) and proves the P&L honest through the rebound; a
   part sale at the same trough stays sold.
+
+- [~] **P12. ⚙ The crash tail – ACCEPTED**: «хвост 1.1% принимаю». At ten years 529 of 48,000
+  holdings lose to the deposit, every one by selling inside a crash arc, zero calm-water losers –
+  holding through a crisis costs nothing. Recorded as his acceptance, 29.08; the knob back is
+  `volBps` and stays where it is.
