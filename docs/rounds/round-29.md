@@ -2818,7 +2818,7 @@ season), or a rate that starts at 20% and falls to 10% as she grows, mirroring h
   by the mutation log itself (a churn arm that passed by luck – re-seeded on a found witness; an
   unreachable anniversary stop – removed, the liveness window is the stop and is pinned doing it).
 
-- [ ] **P7. His three-part order, verbatim:**
+- [x] **P7. His three-part order, verbatim:**
   1. «разнотировые рекламные контракты с реальными суммами, можешь сделать ресерч на эти суммы для
      общего понимания и калибровки»
   2. «нам нужен мерч, растущий от частоты и обилия рекламных контрактов, съемок, выступлений, титулов
@@ -2830,10 +2830,54 @@ season), or a rate that starts at 20% and falls to 10% as she grows, mirroring h
   fame → merch income → the academy.** Fame's floor comes from court results and shoots MULTIPLY it
   (his explicit agreement in this session), merch follows fame, the academy follows seasons-in-band.
 
-  ⚙ **Part 1 of the three is BUILT** – the portfolio above (P6) is «разнотировые рекламные контракты
-  с реальными суммами», calibrated on the research and his §6–§8 passes. Parts 2 (merch) and 3 (the
-  academy that earns) are untouched by this wave; the shoot RECORDS the fame stock will one day fold
-  are already legible per deal (`AdOfferTerms.shootWeeks` + brand, noted in the fame spec).
+  ⚙ **Part 1 BUILT** – the portfolio above (P6). ⚙⚙ **Parts 2 and 3 BUILT 29.08**
+  (`r29p5a/merch-and-academy-income`, spec
+  [merch-and-academy-income-2026-08.md](../specs/merch-and-academy-income-2026-08.md)):
+
+  * **FAME shipped first, engine-side, exactly to P8's spec** (`world/fame.ts`) – an ACCOUNTED
+    stock 0–100, zero draws, nothing persisted: the floor from dated titles by tier / lost Slam
+    finals / top-10 seasons (all already banked, never pruned), the LIVED shoot weeks of signed ad
+    deals as a multiplier (step ×0.05, cap ×2 – zero floor times any number of photographs is
+    zero), everything halving over two seasons. Rounded once at the snapshot boundary; surfaced as
+    one line where the sponsors live (the Bills portfolio card). ⚠ The fame-GATED ad ladder of the
+    spec's §4 is deliberately a later wave – today fame has exactly one reader.
+  * **MERCH – the parent's first business, started from the shop**: one rung (`merch-brand`,
+    family `business`, **$250,000** – «еще это дешевле академии», 48× under), income = **fame ×
+    $30/point a week**, banked weekly under the new `'business'` category, rank nowhere in the
+    arithmetic (mutation-checked by name), floor $0 – «мы ни за что не наказываем».
+  * **THE ACADEMY EARNS**: each of the four stages weekly once DELIVERED × reputation – the
+    ledger's own fold over `seasonHistory[].byTrack.wta.endRank` (+0.10/0.20/0.35/0.60 per season
+    in band, cap 4.0; his save = **1.75**, pinned). Stage bases $0 / $950 / $2,500 / $3,800 =
+    **$7,250/wk whole at reputation 1.0** – the proposal's shape lifted a quarter, and the lift is
+    the bench's: at $5,750 the P7 payback criterion reads 10.06 seasons at the cap (the window's
+    edge); at $7,250 it reads **8.0 at the median builder** (mid-window). ONE row a week, the
+    Nadal split as its flavour; upkeep stays what §13b ruled (none on the stages), and where a
+    rung keeps a crew the two lines are never netted (#10's lesson).
+  * ⚙ **MEASURED** (`tools/sponsor-ladder-reach.ts --buy-business`, 108 × 780, eager): merch
+    started by 51/108 (median week 293), buyers bank **median $858k · p90 $1.35M** (≈ $91k/yr at
+    the median buyer – the counterweight band); fame at the horizon median 3.2 · p90 100 –
+    bimodal by P5's own ruling. The academy: built whole by **40/108** at median week 512 (age
+    ≈ 23.8), builders' reputation min 2.40 · **median 4.00**; banked by the horizon median $6.88M
+    · best $11.94M – **$12M fully repaid in-career by 0/40** (a build at 23.8 leaves ~5 seasons),
+    and the **RATE at the builders' own reputations is 8.0 seasons median (best 8.0, worst
+    13.3)** – the research bridge's «roughly 5–10 seasons of a real reign», mid-window. Family
+    money: median unmoved in both arms ($999,634 – the median career buys nothing); p90 banked
+    $55.18M → $66.11M with the businesses live.
+  * ⚠⚠ **The published figures did NOT move, verified not assumed**: the default arm reproduces
+    kit cash median **$4,759,522** (published $4.76M) and ad p90 family-banked **$27,342,800**
+    (published $27.3M) to the dollar – this wave adds income lines and touches no cheque.
+  * ⚠⚠ **RNG**: zero draws anywhere; frozen MAIN capture **41550 / `e6b0c709` UNMOVED** (no
+    re-pin). Per-key frozen-career diff (presets 0/1/2 × policy 1, control = detached worktree at
+    `14a18f0`, headers checked, reader absent on control): **`schemaVersion` is the ONLY moved
+    key, `rngMain` byte-identical** – coach-travel-edge re-frozen per its own protocol (narrowest
+    diff in its history; `PRE_V66` proves the number-only bump byte for byte). Input-independence
+    re-proved: buying merch + the whole academy taps the identical MAIN sequence.
+  * ⚠ **Schema 65 → 66, said loudly** – `WorldEventCategory` gains `'business'` (both reuses
+    weighed above and refused: 'income' = the parents' job, 'academy' = the scholarship SHE
+    receives). The full move: constant + no-op append-only migration + golden `v66.json` + e2e
+    fixtures regenerated. Guards re-aimed with notes, never deleted (migrations' colliding-64 pin,
+    the build-line's schema pin). Mutation log: 7 engine + 5 mounted mutations, each applied
+    alone, measured red-counts in both test headers.
 
 - [x] **P8. The fame spec** – [fame-and-the-shoots-2026-08.md](../specs/fame-and-the-shoots-2026-08.md),
   written this session; his «здесь полностью согласен» covers the floor-and-multiplier shape.
