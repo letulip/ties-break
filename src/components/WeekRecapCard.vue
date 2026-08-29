@@ -404,6 +404,34 @@ const kidShareMemo = computed(() =>
 /** The old foot, on the old shape only – see the note above. */
 const kidShareFoot = computed(() => (kidCutCents.value > 0 && !grossSplit.value ? 'The income above is what the family kept.' : null))
 
+// ⭐⭐ ROUND 29 PART TWO #13 – THE COACH'S CUT, ON THE WEEKLY SCREEN.
+//
+// HIS WORDS: «вот и можно как раз добавить cut тренера на weekly экране для прозрачности.» This is
+// the FOLLOW-UP to part-one #13, which put the 10%/5% RULE on the coaches page; a rule on a shop
+// page and a figure on the week he reads are two different questions, and he asked both.
+//
+// ⚠⚠ A MEMO AND NOT A ROW, WHICH IS THE OPPOSITE OF HER CUT AND FOR THE OPPOSITE REASON. `Her cut`
+// is a ROW because those cents never entered the family ledger, so the column only adds up if the
+// gross, the cut and the remainder are all in it. The coach's share IS a family expense – a real
+// `coaching` row written the same tick – so it is already inside `Spent` above, and a fourth row
+// would make the column charge one cheque twice. It goes under the balance, where the owner himself
+// put her cut («мемо под балансом - вот это хорошо, да»), and the sentence says where it already is.
+//
+// ⚠⚠ AND THE PERCENTAGE IS THE ENGINE'S OWN, NEVER TYPED – part-one #13's binding rule.
+// `FinanceWeekPoint.coachCutPct` is `staffResultShareBps('coach', finishIdx)` carried through the
+// durable ledger from the very call `finalizeTournament` paid him with, so a retune of
+// `ECONOMY.staffShare` moves this line and the cheque together. Nothing here re-derives a rate, and
+// no rate is written in this file at all.
+//
+// ⚠ SILENT ON EVERY OTHER WEEK, which is most of them: below a final the engine writes no row, so
+// there is no memo, and the card keeps exactly the shape it has always had.
+const coachCutCents = computed(() => weekFinance.value?.coachCutCents ?? 0)
+const coachCutMemo = computed(() =>
+  coachCutCents.value > 0
+    ? `Coach's cut ${weekFinance.value?.coachCutPct ?? 0}% – ${formatCents(coachCutCents.value)}, inside Spent above.`
+    : null,
+)
+
 // The base-cost expense event's own text doubles as this week's flavor line (world.ts
 // picks one of TRAIN_EVENTS/REST_EVENTS for it already) – and it is what D writes by hand across
 // the bottom of the painting.
@@ -664,6 +692,18 @@ const practiceWeekLabel = computed(() => weekLabel(week.value))
         <p v-if="kidShareMemo" class="recap-memo" role="note">
           <span class="recap-memo-line">{{ kidShareMemo }}</span>
           <span v-if="kidShareFoot" class="recap-memo-foot">{{ kidShareFoot }}</span>
+        </p>
+
+        <!-- ⭐⭐ THE COACH'S CUT, ROUND 29 PART TWO #13 – his «cut тренера на weekly экране для
+             прозрачности», in its own memo under the balance. Cyrillic lives in the script block
+             above and in tests/component/round29p2-coach-cut-weekly.test.ts, never here
+             (tests/template-copy-rules.test.ts). ⚠ SEPARATE FROM HERS ON PURPOSE: it is present on a
+             title week and absent on a week she was paid by a brand, so folding the two into one
+             paragraph would make each appear on the other's weeks. ⚠ The percentage comes from
+             `staffResultShareBps` through the ledger – see the script; no rate is typed in this
+             template. -->
+        <p v-if="coachCutMemo" class="recap-memo recap-memo-coach" role="note">
+          <span class="recap-memo-line">{{ coachCutMemo }}</span>
         </p>
       </Card>
 

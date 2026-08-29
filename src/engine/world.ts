@@ -72,7 +72,7 @@ import {
 // more either: the window review went to world/phaseObligations.ts and the letters' own prune to
 // world/bookkeeping.ts, with the steps that call them (R2-10 step 2).
 // The load slice (docs/specs/coach-as-load-manager.md): pure, world-free, world -> coachLoad only.
-import { addEvent, accrueKidShare, seasonIndexOf, seasonStartWeek, financeWindow, financeSeries } from './world/ledger'
+import { addEvent, accrueCoachCut, accrueKidShare, seasonIndexOf, seasonStartWeek, financeWindow, financeSeries } from './world/ledger'
 import { activeLadderOf, toSnapshot } from './world/snapshot'
 export { activeLadderOf, toSnapshot }
 import {
@@ -734,6 +734,24 @@ function finalizeTournament(world: WorldState): void {
         text: `Coach's share of the prize money – ${staffResultShareBps('coach', kidFinish) / 100}% of the ${tier.label} cheque`,
         amountCents: -coachShare,
       })
+      // ⭐⭐ ROUND 29 PART TWO #13 – AND THE SAME CENTS ARE PARKED ON THE DURABLE LEDGER, so the
+      // WEEKLY screen can name them. The owner, 29.08: «вот и можно как раз добавить cut тренера на
+      // weekly экране для прозрачности». Part-one #13 put the RULE on the coaches page; this is the
+      // FIGURE, on the week he actually reads.
+      //
+      // ⚠ NOT ON THE EXPENSE ROW ABOVE, AND THE CHOICE IS THE ONE HER CUT ALREADY MADE, MEASURED:
+      // the recap's Finances tile was moved off the event feed on 05.08 because the feed is
+      // count-capped (EVENTS_CAP = 400) and a save at week 412 deleted every money row on the tick
+      // that wrote it. «The money for one week» is a question a count-capped feed must never be
+      // asked, so this goes where the tile's other figures come from – `financeWeeks`, pruned on a
+      // 60-WEEK window and therefore always holding the week the card is showing.
+      //
+      // ⚠ `coachShare` ITSELF and `staffResultShareBps` ITSELF, the same two values the row above
+      // prints and the wallet was debited by, so the memo and the ledger row can never quote two
+      // different percentages. ⚠ It does NOT re-book the money: `accrueCoachCut` writes a memo
+      // field, never `byCategory` – the expense is the row above and it is counted exactly once.
+      // Zero draws: a state write on a cheque already decided.
+      accrueCoachCut(world, world.week, coachShare, staffResultShareBps('coach', kidFinish))
     }
     const masseurShare = track === 'wta' && (world.masseurHired ?? false) ? staffPrizeShareCents('masseur', prize, kidFinish) : 0
     if (masseurShare > 0) {
