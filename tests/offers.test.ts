@@ -52,6 +52,7 @@ import {
   isSponsorReviewWeek,
   isSponsorWindowWeek,
   sponsorWindowOpensAt,
+  sponsorWindowClosesAt,
   kitOfferDeadline,
   isSponsorLetterWeek,
   contractEndWeek,
@@ -1353,6 +1354,57 @@ describe('⚠ ONE BRAND AT A TIME', () => {
     const goodbye = world.offers.find((o) => o.id === `kit-end-${running.id}`)
     expect(goodbye, 'the brand she left never wrote').toBeDefined()
     expect((goodbye!.terms as KitOfferTerms).ended).toBe('stepped')
+  })
+
+  it('⚠ THE BOUNDARY THE STEP-UP CREATES: signed after the season has opened, it QUEUES instead', () => {
+    // ⚠ THE CASE EXISTS BECAUSE OF ROUND 28 #17-b, and it has to be asserted rather than reasoned
+    //   about. Every kit letter now carries five weeks from its own arrival, so one that lands on the
+    //   window's closing week is still answerable several weeks INTO the season it was for. By then
+    //   the running contract is no longer «covering the season ahead» – she is playing that season in
+    //   its kit – so `signOffer`'s supersede filter (`untilWeek > contractEndWeek(week)`) does not
+    //   fire, and the new deal QUEUES behind the old one through `dealStartsAt` instead of ending it.
+    //
+    //   ⭐ THAT IS THE RIGHT ANSWER AND NOT AN OVERSIGHT: ending a contract in the middle of the
+    //   season she is wearing its kit in would be the strange outcome, and the brand still serves its
+    //   full term and still says goodbye with reason `term` at its own end. What must hold either way
+    //   is the invariant, and it is what this arm measures: at NO week are two contracts live.
+    const { world, id } = worldWithLetter('late-step-up', LETTER_WEEK, worldly(20))
+    acceptOffer(world, id)
+    const running = world.offers[0]
+    const runningUntil = running.untilWeek!
+
+    // ⚠ THE LETTER HAS TO COME FROM A LATE SLOT FOR THIS ARM TO EXIST AT ALL. A slot-0 letter is
+    //   raised on the window's opening week and its five weeks die WITH the window, so it can never
+    //   be answered inside the season. The window's LAST slot is the one whose deadline reaches past
+    //   the close, and that overhang is exactly what round 28 #17-b bought.
+    const stepWeek = LETTER_WEEK + WEEKS_PER_YEAR
+    const lateSlotWeek = stepWeek + SPONSOR_LETTER_WEEKS - 1
+    const raised = raiseKitOffers({
+      offers: world.offers,
+      seed: seedTheShopWritesTo('late-step-up-roll', lateSlotWeek, worldly(1)),
+      week: lateSlotWeek,
+      standing: worldly(1),
+    })
+    const stepUp = [...raised].sort((a, b) => b.deadlineWeek - a.deadlineWeek)[0]
+    expect(stepUp, 'the fixture needs a step-up letter to hold').toBeDefined()
+
+    // He holds it past the window and answers inside the season it was for – legal since #17-b.
+    const lateWeek = stepUp.deadlineWeek
+    expect(lateWeek).toBeGreaterThan(sponsorWindowClosesAt(stepWeek))
+    expect(offerAnswerError(world.offers, stepUp.id, lateWeek)).toBeNull()
+    signOffer(world.offers, stepUp.id, lateWeek)
+
+    // The incumbent was NOT cut short – it is mid-season and serving its own term.
+    expect(running.untilWeek).toBe(runningUntil)
+    // ...the successor queues behind it, and the two never overlap on a single week.
+    expect(stepUp.fromWeek).toBe(runningUntil + 1)
+    const live = (w: number) =>
+      world.offers.filter((o) => o.state === 'signed' && w >= (o.fromWeek ?? 0) && w <= (o.untilWeek ?? -1))
+    for (let w = lateWeek; w <= (stepUp.untilWeek ?? 0); w++) {
+      expect(live(w).length, `week ${w}`).toBeLessThanOrEqual(1)
+    }
+    // ...and no `stepped` goodbye is written, because nobody was stepped over.
+    expect(world.offers.find((o) => o.id === `kit-end-${running.id}`)).toBeUndefined()
   })
 
   it('⚠ REVERSED (05.08): an unanswered letter no longer blocks – that IS the choice', () => {

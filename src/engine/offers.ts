@@ -1146,13 +1146,19 @@ export function signOffer(offers: Offer[], offerId: string, week: number): Offer
   // ⚠ AND IT IS RAISED HERE RATHER THAN LEFT TO `reviewSponsors`, which would reach the same deal on
   // a later week of the same window and call it `term`. `raiseKitEndLetter` is idempotent on
   // `kit-end-<id>`, so posting it first is what makes the true reason the one that survives.
+  // ⚠⚠ THE TEST IS `>= coveredSeasonStart(week)` AND NOTHING ELSE, AND THE FIRST DRAFT CARRIED A
+  // SECOND CLAUSE (`&& untilWeek > contractEndWeek(week)`) THAT WAS ARITHMETICALLY DEAD. It was
+  // caught by mutating it and watching the guard STAY GREEN – `coveredSeasonStart(week)` is
+  // `52k + 52` and `contractEndWeek(week)` is `52k + 49`, so the first test implies the second and
+  // the second could never refuse anything the first admitted. A redundant condition reads as a
+  // decision to the next person; this is the decision, written once.
+  //
+  // ⭐ AND IT IS THE RIGHT TEST RATHER THAN «is it live today». A contract that runs out with the
+  // season she is PLAYING is not superseded by a letter she signs in that season – she is wearing
+  // their kit, the term is being served, and `dealStartsAt` queues the new deal behind it instead.
+  // Only a deal that reaches into the season the new letter is FOR is one this signature displaces.
   const superseded = offers.filter(
-    (o) =>
-      o !== offer &&
-      o.kind === 'kit' &&
-      o.state === 'signed' &&
-      (o.untilWeek ?? -1) >= coveredSeasonStart(week) &&
-      (o.untilWeek ?? -1) > contractEndWeek(week),
+    (o) => o !== offer && o.kind === 'kit' && o.state === 'signed' && (o.untilWeek ?? -1) >= coveredSeasonStart(week),
   )
   for (const old of superseded) {
     endDealWithSeason(old, week)

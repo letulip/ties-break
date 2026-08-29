@@ -1451,7 +1451,8 @@ rest are new.
   every rung **improves somewhere**, so no rung can be pure ceremony. It reads the catalogue through
   `kitTermsFor` – the same function the engine reads it through – so a rung fixed in `ECONOMY` and
   dropped on the floor in `kitTermsFor`, which is exactly how this could have half-shipped, fails
-  there. `global` paid less than `tour` for twenty-eight days and nothing objected, because the
+  there. `global` paid less than `tour` from **04.08** (`dd2997c`, the commit that added the three
+  professional rungs) to today – twenty-five days – and nothing in the repo objected, because the
   ordering's promise lived only in `windowLadder`'s header, and **prose does not fail a build**.
 
   ⚠ **AND THE PROPERTY FOUND A SECOND INVERSION I HAD NOT LOOKED FOR, WHICH IS REPORTED AND NOT
@@ -1581,9 +1582,10 @@ rest are new.
   - **One brand at a time survives literally.** Two contracts are never live at once, because signing
     the stronger letter ENDS the running one with the season it is in – the same `endDealWithSeason`
     snap a failed deal takes – and the successor starts the week after.
-  - **The term still bites.** `premium` cannot be interrupted by `tour`, `global` or `national`; only
-    two of six rungs can ever write over it, and NOTHING can write over `icon`. A long contract is
-    still a real decision, which is what `seasons` is for.
+  - **The term still bites, and it bites hardest where the deals are longest.** A running `premium`
+    contract can be written over by `icon` and by nothing else – one of six rungs – and NOTHING can
+    write over `icon` at all. Only the weak end of the ladder is genuinely permeable. A long contract
+    is still a real decision, which is what `seasons` is for.
   - **Nothing is manufactured.** The stronger rung still has to be one `standingClears` would have,
     and still rolls its own dice on its own slot.
 
@@ -1630,8 +1632,25 @@ rest are new.
   that is too rich, the knob is `premium`/`icon`'s reach and not this rule – say so and it is a
   half-hour.
 
-  ⚠ Mutation-verified four ways: the total bite restored (red), no bite at all (red), the goodbye
-  dropped (red), and the incumbent left running so two contracts overlap (red).
+  ⚠ **AND ONE MORE BOUNDARY ARM, BECAUSE ROUND 28 #17-b MADE IT REACHABLE:** every kit letter now
+  carries five weeks from its own arrival, so one from the window's LAST slot can be answered inside
+  the season it was for. By then the running contract is no longer covering «the season ahead», so
+  the step-up QUEUES behind it (`dealStartsAt`) instead of ending it – which is the right answer, and
+  the invariant is asserted either way: at no week are two contracts live, and no `stepped` goodbye
+  is written because nobody was stepped over.
+
+  ⚠⚠ **AND THAT ARM CAUGHT A DEAD GUARD IN MY OWN DRAFT – THE NINTH IN FOUR DAYS, AND THE SAME SHAPE
+  AS THE LAST ONE.** The supersede test was written as
+  `untilWeek >= coveredSeasonStart(week) && untilWeek > contractEndWeek(week)`, and mutating the
+  second clause away left the suite **GREEN**: `coveredSeasonStart` is `52k + 52` and
+  `contractEndWeek` is `52k + 49`, so the first test implies the second and the trap arm was
+  arithmetically identical to its control. The clause is deleted and the arithmetic written where it
+  stood; the mutation that actually distinguishes the boundary (supersede anything merely LIVE this
+  week) reddens the arm on the first try.
+
+  ⚠ Mutation-verified five ways: the total bite restored (red), no bite at all (red), the goodbye
+  dropped (red), the incumbent left running so two contracts overlap (red), and the queue boundary
+  collapsed into an interruption (red).
 
 - [ ] **13. «вот и можно как раз добавить cut тренера на weekly экране для прозрачности»** – **build.**
   The coach's 10%/5% share on the weekly screen, not only as a sentence on the coaches page.
@@ -1749,6 +1768,13 @@ rest are new.
 
   **The line is crossed at almost exactly WTA #100 – the rank you named** («для 100 и выше»). The
   bands were split evenly before the numbers were read; nobody went looking for that boundary.
+
+  ⚠ **These are the medians BEFORE items #5 and #12 landed, and they are the ones the verdict was
+  reached against** – so they are the ones printed here. Those two items cut what a season costs
+  (the top kit rungs now reach her and pay half to three quarters of her fares), which is why item
+  #19's table quotes lower figures for the same bands. The verdict does not turn on which set is
+  used: a fifth to a quarter of a season's costs at the bottom of the band on either, single digits
+  at the top on either.
 
   ⚠ **AND THE REAL WORLD AGREES AT BOTH ENDS.** At the depth of the tour where a season is worth
   $226k–$358k `[S]` against $53–105k of touring costs `[S]`, a $20,000 endorsement is a fifth to two

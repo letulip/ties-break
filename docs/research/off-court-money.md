@@ -26,7 +26,9 @@ circulates but whose trail ends at an aggregator rather than at a primary source
 > did – but the number is not the defect.** $20,000 a year is a defensible non-endemic fee at the
 > BOTTOM of the professional ladder, where the game first offers it: at WTA ~#150–200 a real woman
 > grosses $226k–$358k of prize money against $53k–$105k of touring costs, so a $20,000 cheque is a
-> fifth to two fifths of what it costs her to be there – felt, not solving. What is indefensible is
+> fifth to two fifths of what it costs her to be there – felt, not solving. **And the line he named
+> is the line the game's own budgets cross**: the cheque is a quarter of a season's costs from #200
+> up to about #100, and 13% the moment she is inside the top hundred. What is indefensible is
 > that the SAME $20,000 was still the only offer at #21, because `ECONOMY.advertising` had a floor
 > (`maxWtaRank: 200`) and **no ceiling at all**. In the real sport that is precisely backwards: the
 > off-court curve is not flat and is not even ordered by ranking – the woman with the second-largest
@@ -191,7 +193,7 @@ a quarter of a season's costs at the bottom of the band on either, and single di
 either.
 
 ⭐⭐ **AND HIS INSTINCT IS RIGHT TO THE RANK HE NAMED.** He wrote «для 100 и выше ракетки мира», and
-the fifth-of-outgoings line is crossed **at almost exactly WTA #100**: the cheque is 24–25% of a
+the line between «real money» and «thin» is crossed **at almost exactly WTA #100**: the cheque is 24–25% of a
 season's costs from #100 down to the gate at #200, and 13% the moment she is inside the top 100.
 That boundary was not looked for – the bands were split evenly before the numbers were read.
 
@@ -203,10 +205,11 @@ And the real-world reading of the same three lines, from §2 and §3 `[I]`:
 | ~#20–50 | $1.15M–$2.1M `[S]` | $200k+ `[I]` | under 10% of costs |
 | top 10 | $2.5M–$15M `[S]` | – | against $3M–$25M of actual endorsements `[S]` – a rounding error |
 
-**So: he is right, and the correction is that he is right for a reason one rung further along than
-the one he named.** At the #100–200 he cites, the number is defensible and the research does not
-contradict it. From roughly #50 up it stops being defensible – and there was nothing above it,
-because the catalogue had no second row and no ceiling.
+**So: he is right, and the correction is only that the number he questioned is not the thing that is
+wrong.** At the #100–200 he cites the fee is defensible and the research does not contradict it; from
+roughly #100 up it stops being defensible – and there was nothing above it, because the catalogue had
+no second row and no ceiling. His «весьма сомнительно» is about the top of a ladder that did not
+exist, and the fix is to build it rather than to move the one number the sources leave standing.
 
 ⚠ **THE FIX IS THEREFORE A LADDER AND NOT A RETUNE, AND $20,000 DOES NOT MOVE BY A CENT.** See
 `ECONOMY.advertising.houses`: three rungs each at the BOTTOM rung's own realised share of their
@@ -219,7 +222,7 @@ independent readings landing within 8% of each other.
 ⚠⚠ **AND THE GAME DELIBERATELY DOES NOT COPY THE REAL CURVE.** §2's table is violently convex: at
 the top, off-court money is one to thirteen times on-court money, and a faithful model would hand a
 top-ten career eight figures and end the economy. A constant share of the stage's outgoings is the
-game's answer instead – **every rung is the same fifth of the budget it arrives against**, so the
+game's answer instead – **every rung is the same 23% of the budget it arrives against**, so the
 mechanic is equally felt at 19 and at 27 without ever solving the endgame. That is a design decision
 made against this research rather than in ignorance of it, and it is written down here so the next
 person to read the Forbes table does not "correct" it back.
