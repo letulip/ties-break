@@ -125,10 +125,18 @@ export function marketIndex(seed: string, week: number, volBps: number): number 
  *  (`basisWeek = readyWeek`), so every week of the wait asks for a negative span. A contract does
  *  not move with the market any more than it depreciates – there is nothing yet to move. Nothing on
  *  the shelf is both commissioned and market-driven today; the clamp is here so that a rung which is
- *  both cannot be a defect tomorrow. ⚠ The `!volBps` half of the same line is `marketIndex`'s
- *  short-circuit, not a second guard – see the note there. The `toWeek <= fromWeek` half is REAL:
- *  without it a contract's negative span would price at `index(basis)/index(order)`, a number with
- *  no meaning, and a mutation that drops it moves values. */
+ *  both cannot be a defect tomorrow.
+ *
+ *  ⚠⚠ AND «TOMORROW» IS EXACT: NEITHER HALF OF THIS LINE CAN CHANGE AN ANSWER TODAY, and it is
+ *  written down because a first draft of this comment claimed otherwise. The `!volBps` half is
+ *  `marketIndex`'s short-circuit (see the note there – `Math.exp(0·wave)` is already 1). The
+ *  `toWeek <= fromWeek` half needs a rung that is BOTH commissioned and market-driven, and the
+ *  catalogue has none: the fund has no `buildWeeks`, and no yacht has a `volBps`. Deleting the whole
+ *  clause was mutation-tested against `tests/round29p3-market.test.ts` and every arm stayed green,
+ *  which is the honest report. It stays because the day somebody puts a `volBps` on a commissioned
+ *  rung, a contract would otherwise be priced at `index(order)/index(delivery)` – a number about two
+ *  weeks the family did not own it – and that is a defect nobody would look for here. Do not write
+ *  an arm that claims to cover it; there is nothing yet to cover. */
 export function marketRatio(seed: string, fromWeek: number, toWeek: number, volBps: number): number {
   if (!volBps || toWeek <= fromWeek) return 1
   return marketIndex(seed, toWeek, volBps) / marketIndex(seed, fromWeek, volBps)

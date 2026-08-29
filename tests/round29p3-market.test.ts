@@ -11,32 +11,38 @@
 // the snapshot back out. The two arms that CANNOT be walked – the [-1, 1] bound and the ten-year
 // inequality – are closed-form statements about the model and say so.
 //
-// ⚠ MUTATION-VERIFIED. Each applied alone to the engine, watched failing, and reverted:
-//   * `assetValueCents`'s `* marketRatio` dropped              -> «off the smooth curve», «the
-//     household meter reads the same market» and «a negative season» RED; the deposit and car arms
-//     GREEN, which is the point of having them.
-//   * `assetWorthCents`'s `item.volBps ?? 0` -> `?? 1_800`     -> «the deposit did not move by a
-//     cent» RED, ALONE. ⚠ This is the mutation that matters for that arm: deleting `marketIndex`'s
-//     `if (!volBps) return 1` instead changes NOTHING, because `Math.exp(0·wave)` is already 1 – a
-//     trap arm arithmetically identical to its control, and the reason that line is documented as a
-//     short-circuit rather than covered as a guard.
-//   * `householdWeekly` reverted to `assetValueCents(basis, held+1) - assetValueCents(basis, held)`
-//                                                              -> «the household meter reads the
-//     same market» RED, ALONE. This is round 29 #11's own defect re-armed: two functions asking one
-//     question.
-//   * `marketWave` replaced by a per-week draw `rngFromSeed(`${seed}:market:${week}`)()*2-1`
-//                                                              -> «it is a market, not noise» RED
-//     (sign flips 4 -> 60+); the independence arms stay GREEN, which is correct and worth recording:
-//     input-independence is a property of the SEEDING, not of the smoothness.
-//   * `revalueAssets` given one MAIN draw (`world.rngMain.n` moved by hand through `resumeMain`)
-//                                                              -> «the market exists whether or not
-//     she buys» RED on the `rngMain` half, ALONE.
-//   * `reportMarketSeason`'s `world.week % WEEKS_PER_YEAR !== 0` -> `< 0`  -> «once a season, on the
-//     boundary» RED (a row every week).
-//   * `marketSeasonMove`'s window `week - WEEKS_PER_YEAR` -> `week - 26`   -> «and the line says
-//     what happened» RED on the percentage, ALONE.
-//   * `ECONOMY.shop.catalogue` index-fund `volBps` 1_800 -> 2_500          -> «ten years beats the
-//     deposit, for every seed» RED. The knob really is the knob.
+// ⚠ MUTATION-VERIFIED, TEN OF THEM, EACH APPLIED ALONE TO THE ENGINE, WATCHED, AND REVERTED. The
+// two that changed NOTHING are recorded beside the eight that worked, because a mutation that cannot
+// move the output is evidence about the design and not a hole in the net:
+//
+//   * `assetValueCents`'s `* marketRatio` -> `* 1`            -> SIX arms red (the value model, the
+//     shelf line's smoothness AND its sign, the household meter, the negative season, and both
+//     horizon measurements). The deposit and car arm stayed GREEN, which is what having it is for.
+//   * `assetWorthCents`'s `item.volBps ?? 0` -> `?? 1_800`    -> «the deposit and the car did NOT
+//     move by a cent», ALONE.
+//   * `householdWeekly` back to `assetValueCents(basis, held+1) - assetValueCents(basis, held)`
+//                                                             -> «the household meter and the till
+//     read ONE market», ALONE. Round 29 #11's own defect, re-armed and caught.
+//   * `marketWave` replaced by a per-week draw                -> THREE red (smoothness, the named
+//     career's season figure, the one-in-five rate). ⭐ The two INPUT-INDEPENDENCE arms stayed green,
+//     correctly: independence is a property of the seeding, not of the smoothness, and it is worth
+//     knowing that this file can tell those two apart.
+//   * a MAIN draw added to the tick when the family owns anything
+//                                                             -> BOTH independence arms red, and
+//     nothing else. That is «a purchase moved the world's dice», which is the permanent law.
+//   * `reportMarketSeason`'s `% WEEKS_PER_YEAR !== 0` -> `< 0` -> «once a season, on the boundary»,
+//     ALONE (a row every week).
+//   * `marketSeasonMove`'s window `- WEEKS_PER_YEAR` -> `- 26` -> the two season-line arms red.
+//   * `volBps` 1_800 -> 2_500                                 -> the CLOSED FORM arm red, and the
+//     named career's figure with it. ⚠⚠ AND THE MEASURED TEN-YEAR ARM STAYED GREEN – 2,400 holdings
+//     and not one of them lost. That is the finding, and it is why both arms exist: sampling cannot
+//     see a ceiling this design is only just inside, and the inequality can.
+//   * `marketIndex`'s `if (!volBps) return 1` deleted         -> NOTHING. `Math.exp(0·wave)` is
+//     already 1, so the clause is a short-circuit and not a guard. Documented at its own source.
+//   * `marketRatio`'s `toWeek <= fromWeek` deleted            -> NOTHING, because no rung in the
+//     catalogue is both commissioned and market-driven. Also documented at its source, and NOT
+//     covered by an arm here: an arm that could not distinguish the mutation would be a dead guard
+//     of exactly the kind this list exists to keep out.
 import { describe, it, expect } from 'vitest'
 import {
   assetValueCents,
