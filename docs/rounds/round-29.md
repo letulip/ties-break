@@ -1655,15 +1655,37 @@ rest are new.
 - [ ] **13. «вот и можно как раз добавить cut тренера на weekly экране для прозрачности»** – **build.**
   The coach's 10%/5% share on the weekly screen, not only as a sentence on the coaches page.
 
-- [ ] **14. «травмы бывают долгими и рехаб может быть с вещами, я бы тут еще подумал – мы это вроде бы
+- [?] **14. «травмы бывают долгими и рехаб может быть с вещами, я бы тут еще подумал – мы это вроде бы
   делали: у нас кроссовки участвуют в рехабе вроде бы. Проверь пожалуйста.»** – **answer.** ⚠ Round 29
-  #20 implemented the vacation half of the 09.08 ruling and recorded the injury half as unruled. Check
-  whether rehab already consumes gear; if it does, the ruling is complete and the ledger is wrong.
+  #20 implemented the vacation half of the 09.08 ruling and recorded the injury half as unruled.
 
-- [ ] **15. «Закупки семьи — это расписание, а не часы… вот это интересно да, что можем сделать, чтобы
+  ⚙ **ANSWERED, and he remembers right but about a different mechanic.** Shoes DO reach injuries –
+  `kitInjuryFactor` lifts the weekly threshold from 1 on new kit to `1 + 0.20` (soles) `+ 0.12`
+  (frame) on dead kit, which is his «экип влияет и на травмы», shipped. ⚠ **But that is whether she
+  gets hurt, not what rehab does to the kit.** His 09.08 sentence was about wear DURING recovery, and
+  no such term exists: `resolveGear` knows about college and, since round 29 #20, about a holiday –
+  **a week in a cast wears her shoes exactly like a week of training.**
+
+  ⭐ And he left this half open himself – «я бы тут ещё подумал». **It is an unanswered question, not
+  forgotten work.** The question, sharpened: **does rehab stop the wear clock the way a holiday now
+  does?** ⚠ The argument against is his own: «рехаб может быть с вещами» – she is in them, she just
+  is not playing. `[?]` his.
+
+- [?] **15. «Закупки семьи — это расписание, а не часы… вот это интересно да, что можем сделать, чтобы
   это исправить? или уже исправили?»** – **answer, then possibly build.** Gear is REPLACED on a
-  schedule while it WEARS on a clock, so a holiday changes its condition and never its price. Say
-  whether that is a defect or a design, and what tying the two together would cost.
+  schedule while it WEARS on a clock, so a holiday changes its condition and never its price.
+
+  ⚙ **ANSWERED: it is a real defect and it is exactly where he felt it.** Wear is derived from the
+  purchase week (and now pauses on holiday); replacement is `ECONOMY.gear.shoes`'s 10–14 week cadence,
+  which fires **whatever condition the old pair is in**. ⚠⚠ **So a holiday hands her fresher shoes and
+  saves her nothing** – she still buys on the calendar and throws away a less worn pair. His «расписание,
+  а не часы», precisely.
+
+  **The fix that makes the two halves agree**: replace on CONDITION rather than on the calendar – buy
+  when wear crosses a threshold. Then a holiday and a rehab both save money, not just kit.
+
+  ⚠ **The cost is why this is his call and not mine**: it moves the weekly outgoings of EVERY career,
+  so it is a balance change with a bench and a frozen re-pin, not a one-liner. `[?]` his.
 
 - [ ] **16. «Механику фонда надо придумать, да, потому что безрисковые 3 против безрисковых 7 это
   весьма странно. Давай подумаем как это можно сделать красиво и просто.»** – **design, then his
