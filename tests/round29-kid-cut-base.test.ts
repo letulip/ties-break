@@ -20,6 +20,22 @@
 // halves of the repair: the SPLIT against the base the engine really used, and the LABEL against
 // that same base, so the two cannot drift apart again.
 //
+// ⚠⚠⚠ RE-AIMED BY ROUND 29 PART THREE P3, 29.08 – NOT ONE ARM DELETED, AND THE ITEM'S CLAIM IS
+// UNCHANGED: «the percentage the card prints must be a percentage OF the figure the card prints
+// beside it». What P3 changed is that there are now TWO rates on one week. A title week pays a
+// prize at her ramp (50% at the cap) and a result bonus at the manager's commission's complement
+// (85%), so «the rate» is no longer a single number the writer can copy down – `accrueKidShare`
+// stores the week's EFFECTIVE rate instead (`cents / baseCents`), which is what makes #10's
+// identity hold by construction rather than by there happening to be one rate in the game.
+// ⚠ THE THREE FIGURES THAT MOVED, and each is arithmetic rather than a judgement call:
+//   * `bps` on this fixture: 5000 -> 5583, which is 0.5P + 0.85 x 0.2P over 0.5P + 0.2P.
+//   * the ratio he measured: 1.20 -> 1.34, i.e. 1 + bonusShare x (1 - commission) / ramp. His 1.20
+//     is the same formula with the bonus at her ramp, and it is still reproduced by the formula –
+//     see §1's last arm, which now DERIVES the number from the two constants instead of pinning it.
+//   * §2's tolerance: 3 cents -> half a percentage point of the base, because `kidSharePct` is a
+//     WHOLE percent and 55.83% renders as 56%. ⚠ That is a rounding the old fixture never showed:
+//     with one rate the effective rate was a whole number of percent by construction.
+//
 // ⚠ MUTATION-VERIFIED. Each applied alone against this file and reverted, and each was watched:
 //   * `ECONOMY.kidShare.capBps` 5000 -> 4000, i.e. THE SPLIT MOVED -> §1's identity arm stays GREEN
 //     (correctly – it asks the ramp for its expectation, so the game moves and the test moves with
@@ -31,6 +47,14 @@
 //   * `bankSponsorCheque` passing `herCents` as its base instead of `grossCents` -> §1's
 //     multi-cheque arm goes RED alone.
 //   * the memo's `of ${formatCents(base)}` dropped from WeekRecapCard -> §2 alone goes RED.
+// ⚠ AND P3's OWN THREE, applied alone and reverted:
+//   * `bankSponsorCheque` reverted to her ramp -> the fixture arm's «two rates really are live»
+//     bound goes RED alone (the effective rate collapses back onto the ramp exactly).
+//   * `ECONOMY.managerCommission.bps` 1500 -> 2500 -> the fixture arm's literal pin and §1's ratio
+//     arm go RED together, which is the pair that has to see a retune.
+//   * `accrueKidShare` storing the handed-in `bps` again instead of the effective one -> §1's
+//     identity arm and §2's label arm go RED together, which is the defect this item is about
+//     arriving by a new route.
 import { describe, it, expect, vi } from 'vitest'
 
 // A real career walked to the cap birthday is ~1,350 ticks; the runner is shared with heavier suites.
@@ -49,7 +73,7 @@ import {
 } from '../src/engine/world'
 import { sponsorStandingOf } from '../src/engine/world/sponsors'
 import { kitTermsFor, signOffer } from '../src/engine/offers'
-import { ECONOMY, kidPrizeShareBps, kidPrizeShareCents } from '../src/engine/economy'
+import { ECONOMY, kidPrizeShareBps, managerCommissionBps } from '../src/engine/economy'
 import { rngFromSeed } from '../src/engine/rng'
 import { TIERS, WEEKS_PER_YEAR } from '../src/engine/season/calendar'
 import { DEFAULT_PROFILE, type KitOfferTerms, type Offer, type Snapshot } from '../src/shared/protocol'
@@ -149,10 +173,21 @@ describe('round 29 #10 – the fixture is the week he was looking at', () => {
 
     expect(row.kidShare, 'the week really split a cheque').toBeTruthy()
     // ⚠ THE GUARD THAT STOPS THE IDENTITY ARM PASSING ON ANY RATE AT ALL. Every other assertion
-    // here asks `kidPrizeShareBps` for its expectation, which is correct for a retune and therefore
-    // BLIND to one; this is the single literal that sees the rate move.
-    expect(row.kidShare!.bps, 'and she is at the shipped cap – his save says 5000').toBe(5000)
+    // here asks the engine for its expectation, which is correct for a retune and therefore BLIND
+    // to one; these are the literals that see a rate move. ⚠ RE-AIMED BY P3: there are two rates to
+    // watch now, and `kidShare.bps` is neither of them – it is the week's effective blend.
+    expect(ECONOMY.kidShare.capBps, 'the ramp still caps at half – his save says 5000').toBe(5000)
+    expect(managerCommissionBps(), 'and the manager keeps the shipped 15%').toBe(1500)
     expect(kidPrizeShareBps(age)).toBe(ECONOMY.kidShare.capBps)
+    // ⭐⭐ AND BOTH RULES ARE REALLY LIVE ON THIS ONE WEEK, which is the P3 fact and the arm that
+    // reddens if the commission is reverted: the blend sits STRICTLY between the prize ramp and the
+    // sponsor rate. A week paying only a prize would read exactly 5000; only a sponsor cheque, 8500.
+    expect(row.kidShare!.bps, 'above the prize ramp – a sponsor cheque pays her more').toBeGreaterThan(
+      ECONOMY.kidShare.capBps,
+    )
+    expect(row.kidShare!.bps, 'and below the sponsor rate – a prize cheque pays her less').toBeLessThan(
+      10_000 - managerCommissionBps(),
+    )
     // The base must EXCEED the prize row, which is the whole defect in one assertion: the prize row
     // is net of her cut, and a second gross cheque (the result bonus) is in the base beside it.
     expect(row.kidShare!.baseCents!).toBeGreaterThan(row.byCategory.prize ?? 0)
@@ -165,12 +200,19 @@ describe('round 29 #10 – §1 the SPLIT, against the base the engine actually u
     const row = world.financeWeeks.find((w) => w.week === week)!
     const { cents, bps, baseCents } = row.kidShare!
 
-    // ⚠ THE TOLERANCE IS REAL AND IS NOT SLOP. Each cheque rounds ONCE on its own way in
-    // (`kidPrizeShareCents`' single-rounding rule, which is what makes the two balances re-add to
-    // the cent), so a sum of rounded halves can differ from the rounded half of a sum by up to one
-    // cent PER CHEQUE. A title week here banks at most three (prize, result bonus, retainer).
-    expect(Math.abs(cents - kidPrizeShareCents(baseCents!, 26))).toBeLessThanOrEqual(3)
-    expect(bps).toBe(kidPrizeShareBps(26))
+    // ⚠ RE-AIMED BY P3, AND THE CLAIM IS THE SAME ONE: her credit is the STATED share of the
+    // recorded base. It used to be stated by the ramp, because the ramp was the only rate; it is
+    // stated by `bps` now, which is the week's effective rate over both rules.
+    // ⚠ THE TOLERANCE IS REAL AND IS NOT SLOP. `bps` is a whole number of basis points, so the
+    // rounding it carries is at most half a basis point of the base, plus the per-cheque cent.
+    expect(Math.abs(cents - Math.round((baseCents! * bps) / 10_000))).toBeLessThanOrEqual(
+      Math.round(baseCents! / 20_000) + 3,
+    )
+    // ⚠ AND THE ANTI-VACUITY BOUND, because the line above is nearly true by construction: the
+    // effective rate has to be a rate a real pair of rules could produce. The ramp's cap is the
+    // floor here (the prize is the larger cheque) and the sponsor rate is the ceiling.
+    expect(bps).toBeGreaterThanOrEqual(kidPrizeShareBps(26))
+    expect(bps).toBeLessThanOrEqual(10_000 - managerCommissionBps())
   })
 
   it('the base is the GROSS of every cheque, so the family kept exactly the remainder', () => {
@@ -201,28 +243,51 @@ describe('round 29 #10 – §1 the SPLIT, against the base the engine actually u
     expect(baseCents!).toBeGreaterThan(grossPrizeAtCap)
   })
 
-  it('the ratio he measured falls straight out of it – 1.20 against the prize row', () => {
+  it('the ratio he measured falls straight out of it – 1.34 against the prize row, and 1.20 was the pre-P3 form of the same formula', () => {
     const { world, week } = capWeekWithBonus()
     const row = world.financeWeeks.find((w) => w.week === week)!
-    // ⭐ HIS OWN NUMBER, REPRODUCED. 24 of the 27 weeks in his save land on exactly 1.20; this is
-    // that figure arriving from the engine rather than from a spreadsheet, and it is here so that a
-    // future change to the bonus or the ramp has to explain itself against his report.
+    // ⭐ HIS OWN NUMBER, RE-DERIVED RATHER THAN RE-PINNED. 24 of the 27 weeks in his save landed on
+    // exactly 1.20, and that figure was `1 + bonusShare x ramp / ramp` – her cut of the prize plus
+    // her cut of the result bonus, over the family's net prize row. ⚠ P3 CHANGED ONE TERM OF IT:
+    // the bonus is a sponsor cheque, so her share of it went from the ramp to the commission's
+    // complement, and the same formula now reads 1.34. The formula is asserted rather than the
+    // number, so a retune of EITHER rate has to explain itself against his report instead of
+    // silently agreeing with a literal.
+    const deal = world.offers.find((o) => o.kind === 'kit' && o.state === 'signed')
+    const bonusShare = (deal?.terms as KitOfferTerms | undefined)?.bonusShare ?? 0
+    expect(bonusShare, 'the fixture really carries a result bonus – his save is a tour deal').toBeGreaterThan(0)
+    const ramp = kidPrizeShareBps(26) / 10_000
+    const expected = 1 + (bonusShare * (1 - managerCommissionBps() / 10_000)) / ramp
     const ratio = row.kidShare!.cents / (row.byCategory.prize ?? 1)
-    expect(ratio).toBeCloseTo(1.2, 2)
+    expect(ratio).toBeCloseTo(expected, 2)
+    // ...and what that formula evaluates to on the shipped numbers, said out loud so the report and
+    // the code carry the same figure.
+    expect(expected).toBeCloseTo(1.34, 2)
   })
 })
 
 describe('round 29 #10 – §2 the LABEL, pinned against that same base', () => {
   it('the point the recap reads carries the base the ledger recorded', () => {
-    const { snap, week } = capWeekWithBonus()
+    const { snap, world, week } = capWeekWithBonus()
     const point = snap.finance.weekly12.find((p) => p.week === week)!
     expect(point.kidShareCents, 'her cut reached the snapshot').toBeGreaterThan(0)
     expect(point.kidShareBaseCents, 'and so did the base it is a share of').toBeGreaterThan(0)
     // ⚠⚠ THE ANTI-DRIFT ASSERTION, AND THE ONE THIS ITEM EXISTS FOR. The percentage the card prints
-    // must be a percentage OF the figure the card prints beside it. Same tolerance as §1 and for
-    // the same reason.
+    // must be a percentage OF the figure the card prints beside it.
+    // ⚠ RE-AIMED BY P3, AND THE TOLERANCE IS A REAL PROPERTY OF THE SCREEN RATHER THAN SLOP.
+    // `kidSharePct` is a WHOLE percent (rounded once at the snapshot boundary, the owner's rule of
+    // 26.08), so the most the printed percentage can misdescribe the printed cents by is HALF A
+    // PERCENTAGE POINT of the base. With one rate in the game the effective rate happened to be a
+    // whole percent and this never showed; a blend of 50% and 85% is 55.83% and renders as 56%.
+    // ⚠ The original defect is still caught by a mile: it put the family's NET income in the base,
+    // which is off by roughly the whole cut and not by half a point of it.
     const impliedCut = Math.round((point.kidShareBaseCents! * point.kidSharePct!) / 100)
-    expect(Math.abs(impliedCut - point.kidShareCents!)).toBeLessThanOrEqual(3)
+    expect(Math.abs(impliedCut - point.kidShareCents!)).toBeLessThanOrEqual(
+      Math.round(point.kidShareBaseCents! / 200) + 3,
+    )
+    // ...and the whole percent really is the ledger's own rate rounded, never a second derivation.
+    const row = world.financeWeeks.find((w) => w.week === week)!
+    expect(point.kidSharePct).toBe(Math.round(row.kidShare!.bps / 100))
   })
 
   it('and the base is NOT the income figure beside it – his complaint, as an assertion', () => {

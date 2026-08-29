@@ -1,5 +1,21 @@
 // ROUND 28 ITEM 15 – HER CUT REACHES THE SPONSORS' CHEQUES.
 //
+// ⚠⚠⚠ RE-AIMED BY ROUND 29 PART THREE P3, 29.08, AND NOT ONE ARM DELETED. The owner: «как менеджер
+// может от этого что-то получать в свою очередь. 10-20% например… контракт на полную сумму ребенку
+// приходит на почту, после подписания видим на счету уже родительский кат.» So round 28 #15's
+// ruling – «с чеков спонсоров ребёнку тоже нужно %» – STANDS and is if anything stronger: her share
+// of a sponsor cheque went from the ramp's slice to nearly all of it. What changed is the RATE and
+// its DIRECTION: the family now takes `managerCommissionBps()` and she takes the remainder.
+//
+// ⚠ SO EVERY ARM BELOW STILL ASKS ITS ORIGINAL QUESTION and only its expectation moved:
+//   §1/§2  «which cheques reach her account, and does the arithmetic re-add to the cent» – yes, at
+//          the commission's complement instead of the ramp.
+//   §3     UNTOUCHED IN KIND. The scope half is the half P3 does not go near: the allowance, the
+//          cameo and the travel share are still not cheques, and still move her account by zero.
+//   §4     the same correctness claim about the coach market's cap, against the new splitter.
+//   ⚠ The one arm that INVERTED is §1's «not one cent before her eighteenth», and that inversion is
+//     the ruling itself rather than a broken test – see the note on it.
+//
 // THE OWNER, 28.08: «С чеков спонсоров мне кажется ребёнку тоже нужно % перечислять, как и с
 // призовых, давай сделаем». A ruling, not a question. «как и с призовых» is the whole spec: the same
 // `ECONOMY.kidShare` ramp, the same single rounding, the same family-keeps-the-remainder
@@ -18,6 +34,19 @@
 //
 // ⚠ MUTATION-VERIFIED, four mutations, each applied alone against this file and reverted. What each
 // one actually reddened, measured rather than predicted:
+//
+// ⚠⚠ THE MUTATION LOG BELOW IS ROUND 28'S, KEPT AS THE RECORD OF WHY EACH ARM EXISTS; the rates it
+// names are the ramp's. ROUND 29 P3's own re-measurement, each mutation applied alone and reverted:
+//   a. `ECONOMY.managerCommission.bps` 1500 -> 2000 -> the two literal-pinned arms redden (§1's «in
+//      the actual money», §4's «$433.65 a week») and NOTHING else, which is exactly the split of
+//      duties round 28 measured: every other arm asks the engine for its expectation and is
+//      therefore correct-but-blind under a retune.
+//   b. `bankSponsorCheque` reverted to the ramp (`kidPrizeShareCents` at her age) -> §1's four, §2's
+//      first two and §3's allowance walk redden (7). §3's cameo and travel arms stay green,
+//      correctly – they assert an absence that both rules keep.
+//   c. an AGE GATE re-added to `bankSponsorCheque` (`if (age < 18) family keeps all`) -> §1's
+//      under-eighteen arm reddens ALONE. That is the arm the ruling inverted, doing its new job.
+//   d. `familyWeeklyIncomeCents` restored to the ramp -> §4 alone reddens.
 //
 //   1. `ECONOMY.kidShare.startBps` 1000 -> 2000, i.e. THE RATE MOVED -> the two literal-pinned tests
 //      redden (§1's «in the actual money» and §4's «$2,596.15»), and NOTHING else. ⚠ THAT IS WHY
@@ -54,7 +83,11 @@ import { payRetainer, isRetainerWeek, appearanceFeeFor, resultBonusFor, sponsorS
 import type { SeasonEvent } from '../src/engine/season/types'
 import { resumeMain } from '../src/engine/rng'
 import { adCategoryOf, adWritesAt, kitTermsFor, signOffer } from '../src/engine/offers'
-import { ECONOMY, kidPrizeShareBps, kidPrizeShareCents, parentIncomeForWeekCents } from '../src/engine/economy'
+import { ECONOMY, kidPrizeShareBps, managerCommissionBps, managerCommissionCents, parentIncomeForWeekCents } from '../src/engine/economy'
+/** ⭐ WHAT SHE KEEPS OF A SPONSOR CHEQUE UNDER P3 – the remainder after the manager's fee, computed
+ *  the way the engine computes it (one rounding on the FEE, hers by subtraction) rather than by a
+ *  second `Math.round` that would disagree with the till by a cent on half the cheques. */
+const hersOf = (grossCents: number): number => grossCents - managerCommissionCents(grossCents)
 import { WEEKS_PER_YEAR } from '../src/engine/season/calendar'
 import { DEFAULT_PROFILE, type AdOfferTerms, type KitOfferTerms, type Offer } from '../src/shared/protocol'
 
@@ -157,7 +190,7 @@ describe('the fixture is what it claims to be', () => {
 // 1 – THE CASH SPONSOR DEAL: signing one moves her account by the ruled share
 // =================================================================================================
 describe('§1 a cash sponsor deal', () => {
-  it('⭐⭐ signing pays her the ramp\'s share of the campaign fee, and the family the rest', () => {
+  it('⭐⭐ signing pays her the fee less the manager\'s commission, and the family that commission', () => {
     const world = structuredClone(life.world)
     const offer = world.offers.find(
       (o) => o.kind === 'ad' && adCategoryOf(o.terms as AdOfferTerms) === 'watches' && o.state === 'open',
@@ -166,16 +199,20 @@ describe('§1 a cash sponsor deal', () => {
 
     const kidBefore = world.kidFundsCents ?? 0
     const fundsBefore = world.fundsCents
-    // ⚠ THE EXPECTATION IS THE SHIPPED RAMP AT HER REAL AGE, never a literal: retuning
-    // `ECONOMY.kidShare` must move the game and this test together, and only a change to the RULE
-    // should redden it.
-    const hers = kidPrizeShareCents(WATCH.cashCents, ageOf(world))
+    // ⚠ THE EXPECTATION IS THE SHIPPED COMMISSION, never a literal: retuning
+    // `ECONOMY.managerCommission` must move the game and this test together, and only a change to
+    // the RULE should redden it. ⚠ P3 SWAPPED WHICH SIDE IS COMPUTED AND WHICH IS THE REMAINDER –
+    // the fee rounds and she takes the rest – so `hersOf` is a subtraction and not a second rounding.
+    const hers = hersOf(WATCH.cashCents)
     expect(hers, 'the arm contains the thing it is measuring').toBeGreaterThan(0)
 
     acceptOffer(world, offer.id)
 
-    expect((world.kidFundsCents ?? 0) - kidBefore, 'her account moved by the ruled share').toBe(hers)
-    expect(world.fundsCents - fundsBefore, 'and the family banked the remainder').toBe(WATCH.cashCents - hers)
+    expect((world.kidFundsCents ?? 0) - kidBefore, 'her account took the fee less the commission').toBe(hers)
+    expect(world.fundsCents - fundsBefore, 'and the family banked the commission').toBe(WATCH.cashCents - hers)
+    // ⭐ AND THE DIRECTION HIS RULING IS ABOUT, ASSERTED RATHER THAN IMPLIED: the money is HERS. A
+    // silent revert to the ramp would leave every equality above true of the other side.
+    expect(hers, 'she keeps the larger half – that is the ruling').toBeGreaterThan(WATCH.cashCents - hers)
     // ⚠ ONE ROUNDING: the two halves re-add to the brand's cheque to the cent, which is the property
     // a player can check by putting the two balances side by side on screen.
     expect((world.kidFundsCents ?? 0) - kidBefore + (world.fundsCents - fundsBefore)).toBe(WATCH.cashCents)
@@ -186,13 +223,14 @@ describe('§1 a cash sponsor deal', () => {
     // Every other assertion here asks `kidPrizeShareCents` for the expectation, which is right for a
     // retune – the game moves and the test moves with it – but it also means NO other test in this
     // file can see the RATE change. A rule whose rate can be moved without a single red test is not
-    // covered. So: her first year is 10% (`ECONOMY.kidShare.startBps`), the campaign fee is $20,000,
-    // and that is $2,000 to her and $18,000 to the family. Move the ramp and this reddens, which is
-    // exactly what it is for – re-aim it deliberately, the way the ramp's own ladder pin in
-    // tests/round23-kid-share.test.ts is re-aimed.
+    // covered. ⚠ RE-AIMED BY P3 AND STILL THE ONLY LITERAL ARM: the manager's commission is 15%
+    // (`ECONOMY.managerCommission.bps`, provisional inside his «10-20% например»), the campaign fee
+    // is $20,000, and that is $3,000 to the family and $17,000 to her. Move the rate and this
+    // reddens, which is exactly what it is for – re-aim it deliberately, the way the ramp's own
+    // ladder pin in tests/round23-kid-share.test.ts is re-aimed.
     const world = structuredClone(life.world)
-    expect(ageOf(world), 'the fixture is in her first year on the ramp').toBe(18)
-    expect(kidPrizeShareBps(18), 'and the first year is ten percent').toBe(1000)
+    expect(ageOf(world), 'the fixture is eighteen – the age the OLD rule turned on').toBe(18)
+    expect(managerCommissionBps(), 'and the shipped commission is fifteen percent').toBe(1500)
     expect(WATCH.cashCents, 'the campaign fee is twenty thousand dollars').toBe(20_000_00)
 
     const offer = world.offers.find(
@@ -201,12 +239,15 @@ describe('§1 a cash sponsor deal', () => {
     const kidBefore = world.kidFundsCents ?? 0
     const fundsBefore = world.fundsCents
     acceptOffer(world, offer.id)
-    expect((world.kidFundsCents ?? 0) - kidBefore, 'two thousand dollars, hers').toBe(2_000_00)
-    expect(world.fundsCents - fundsBefore, 'eighteen thousand, the family\'s').toBe(18_000_00)
+    expect((world.kidFundsCents ?? 0) - kidBefore, 'seventeen thousand dollars, hers').toBe(17_000_00)
+    expect(world.fundsCents - fundsBefore, 'three thousand, the manager\'s').toBe(3_000_00)
     // ...and the row says so in words, at the rate a player can read against the figure beside it.
     const row = world.events.find((e) => e.week === world.week && e.category === 'sponsor')
+    // ⚠ THE ROW NAMES THE FEE AND THE GROSS, not a deduction: the figure ON the row IS the parent's
+    // cut now, so the old «less her N% share» wording would have described the wrong arithmetic.
     // `formatCents` drops a zero cents part, exactly as the prize row's own share clause does.
-    expect(row?.text).toContain('less her 10% share ($2,000)')
+    expect(row?.text).toContain("the manager's 15% of $20,000")
+    expect(row?.text, 'and it no longer reads as a subtraction from the family').not.toContain('less her')
   })
 
   it('the transfer is on the durable ledger too, at the rate that produced it', () => {
@@ -214,23 +255,31 @@ describe('§1 a cash sponsor deal', () => {
     const offer = world.offers.find(
       (o) => o.kind === 'ad' && adCategoryOf(o.terms as AdOfferTerms) === 'watches' && o.state === 'open',
     )!
-    const hers = kidPrizeShareCents(WATCH.cashCents, ageOf(world))
+    const hers = hersOf(WATCH.cashCents)
     acceptOffer(world, offer.id)
 
     // `financeWeeks` prunes on a 60-week window and therefore always holds the week being read –
     // the reason the week recap's memo comes from here and not from the count-capped event feed.
     const week = world.financeWeeks.find((f) => f.week === world.week)
     expect(week?.kidShare?.cents, 'the memo carries the very cents her account received').toBe(hers)
-    expect(week?.kidShare?.bps, 'and the rate that produced them').toBe(kidPrizeShareBps(ageOf(world)))
+    // ⚠ RE-AIMED BY P3: `bps` is the week's EFFECTIVE rate now (see `accrueKidShare`'s header), and
+    // on a week with one sponsor cheque and no prize that is the commission's complement exactly.
+    expect(week?.kidShare?.bps, 'and the rate that produced them').toBe(10_000 - managerCommissionBps())
     // ⚠ AND IT IS A MEMO, NOT A CATEGORY: `byCategory` may never learn about her share, or every
     // income total on every screen would count the split twice. The sponsor row is the NET one.
     expect(week?.byCategory.sponsor).toBe(WATCH.cashCents - hers)
   })
 
-  it('...and not one cent of it before her eighteenth', () => {
-    // The same signing, on a world wound back below the threshold birthday. ⚠ The AGE is what is
-    // varied and nothing else, so a green here is about the ramp's floor rather than about a
-    // different career.
+  it('⭐⭐ ...and P3 INVERTED THIS ARM: the commission has no age term at all', () => {
+    // ⚠⚠ THIS ARM USED TO ASSERT THE OPPOSITE AND IT WAS RE-AIMED, NOT DELETED, BECAUSE THE RULING
+    // IS WHAT MOVED. Round 28 shipped her ramp onto sponsor cheques, and a ramp that starts at
+    // eighteen means the family kept 100% of every sponsor cheque before it – which is most of what
+    // made the measured «the parent keeps 63.1% of gross sponsor money» so much higher than the 50%
+    // everybody quoted. P3 replaced the ramp with a flat manager's fee, and «контракт на полную
+    // сумму ребенку» has no birthday in it. So the claim is now the ABSENCE of an age term, which is
+    // the mutation an age gate re-added to `bankSponsorCheque` reddens alone.
+    // ⚠ The AGE is still the only thing varied, so a green here is about the rule's age-independence
+    // rather than about a different career.
     const world = structuredClone(life.world)
     const offer = world.offers.find(
       (o) => o.kind === 'ad' && adCategoryOf(o.terms as AdOfferTerms) === 'watches' && o.state === 'open',
@@ -241,14 +290,20 @@ describe('§1 a cash sponsor deal', () => {
     offer.deadlineWeek = world.week + AD.decideWeeks - 1
     expect(ageOf(world), 'the arm really is under eighteen').toBeLessThan(ECONOMY.kidShare.fromAgeYears)
 
+    expect(kidPrizeShareBps(ageOf(world)), 'and the PRIZE ramp really is dormant at this age').toBe(0)
+
     const kidBefore = world.kidFundsCents ?? 0
     const fundsBefore = world.fundsCents
     acceptOffer(world, offer.id)
-    expect(world.kidFundsCents ?? 0, 'her account does not exist yet').toBe(kidBefore)
-    expect(world.fundsCents - fundsBefore, 'and the family banks the whole fee').toBe(WATCH.cashCents)
-    // The row says nothing about a share, because there was none to name.
+    expect((world.kidFundsCents ?? 0) - kidBefore, 'the cheque is hers at seventeen exactly as at eighteen').toBe(
+      hersOf(WATCH.cashCents),
+    )
+    expect(world.fundsCents - fundsBefore, 'and the family banks the same commission').toBe(
+      managerCommissionCents(WATCH.cashCents),
+    )
+    // The row names the fee here too – there is one to name at every age.
     const row = world.events.find((e) => e.week === world.week && e.category === 'sponsor')
-    expect(row?.text).not.toContain('share')
+    expect(row?.text).toContain("the manager's")
   })
 })
 
@@ -256,7 +311,7 @@ describe('§1 a cash sponsor deal', () => {
 // 2 – THE OTHER THREE CHEQUES THE RULING REACHES
 // =================================================================================================
 describe('§2 the retainer, the appearance fee and the result bonus', () => {
-  it('the quarterly retainer is split at the same ramp', () => {
+  it('the quarterly retainer is split at the same commission', () => {
     const world = structuredClone(life.world)
     const terms = signKit(world, 'icon')
     // Stand on a real pay week – `payRetainer` returns early on every other one, and an arm that
@@ -264,7 +319,7 @@ describe('§2 the retainer, the appearance fee and the result bonus', () => {
     while (!isRetainerWeek(world.week)) world.week++
     expect(isRetainerWeek(world.week)).toBe(true)
 
-    const hers = kidPrizeShareCents(terms.retainerCents ?? 0, ageOf(world))
+    const hers = hersOf(terms.retainerCents ?? 0)
     expect(hers).toBeGreaterThan(0)
     const kidBefore = world.kidFundsCents ?? 0
     const fundsBefore = world.fundsCents
@@ -275,7 +330,7 @@ describe('§2 the retainer, the appearance fee and the result bonus', () => {
     expect(world.fundsCents - fundsBefore).toBe((terms.retainerCents ?? 0) - hers)
   })
 
-  it('the appearance fee and the result bonus are split at the same ramp', () => {
+  it('the appearance fee and the result bonus are split at the same commission', () => {
     // ⚠ ASKED OF THE SHIPPED PRICE FUNCTIONS rather than of a number typed here, so a retuned
     // catalogue cannot leave this arm measuring a cheque the engine no longer writes.
     const world = structuredClone(life.world)
@@ -287,7 +342,7 @@ describe('§2 the retainer, the appearance fee and the result bonus', () => {
 
     for (const cheque of [fee, bonus]) {
       const w = structuredClone(world)
-      const hers = kidPrizeShareCents(cheque, ageOf(w))
+      const hers = hersOf(cheque)
       const kidBefore = w.kidFundsCents ?? 0
       const fundsBefore = w.fundsCents
       bankSponsorCheque(w, cheque, { category: 'income', text: 'a cheque' })
@@ -323,19 +378,19 @@ describe('§3 the sponsor money that is NOT a cheque to her', () => {
     const rng = resumeMain(world.rngMain)
     const kidBefore = world.kidFundsCents ?? 0
 
-    // A full season of real weeks. Every week her account moves is recorded with the amount AND the
-    // ramp share the retainer owed at that week's age – her nineteenth birthday can fall inside the
-    // walk and the ramp steps with it (this fixture's arrival week moved when the portfolio gave the
-    // watches letter its own dice, and the first draft of this walk froze the share at the start and
-    // reddened on the step). The claim is read off that record afterwards rather than guessed at per
-    // tick – which also keeps the arm free of an off-by-one about whether `tickWeek` pays before or
-    // after it advances.
+    // A full season of real weeks. Every week her account moves is recorded with the amount AND what
+    // the retainer owed her that week. ⚠ RE-AIMED BY P3: `owed` used to step with her birthday
+    // because the ramp did (the first draft of this walk froze the share at the start and reddened
+    // on the step); the commission has no age term, so it is now constant across the walk – kept as a
+    // per-week record anyway, because the claim is read off it afterwards rather than guessed at per
+    // tick, which keeps the arm free of an off-by-one about whether `tickWeek` pays before or after
+    // it advances.
     const moved: { week: number; cents: number; owed: number }[] = []
     for (let i = 0; i < WEEKS_PER_YEAR; i++) {
       const before = world.kidFundsCents ?? 0
       tickWeek(world, rng)
       const delta = (world.kidFundsCents ?? 0) - before
-      if (delta !== 0) moved.push({ week: world.week, cents: delta, owed: kidPrizeShareCents(terms.retainerCents ?? 0, ageOf(world)) })
+      if (delta !== 0) moved.push({ week: world.week, cents: delta, owed: hersOf(terms.retainerCents ?? 0) })
     }
 
     // ⚠⚠ THE ARM CONTAINS THE THING IT IS PROVING ABSENT, and this is the assertion that says so:
@@ -357,7 +412,7 @@ describe('§3 the sponsor money that is NOT a cheque to her', () => {
     // signed in, so a deal signed mid-year covers fewer than four of the quarterly pay weeks. The
     // count is not the claim; what moved her account is.
     expect(moved.length, 'the retainer really paid inside the term').toBeGreaterThanOrEqual(1)
-    expect((world.kidFundsCents ?? 0) - kidBefore, 'and by exactly the ramp, every time').toBe(
+    expect((world.kidFundsCents ?? 0) - kidBefore, 'and by exactly the commission\'s complement, every time').toBe(
       moved.reduce((sum, m) => sum + m.owed, 0),
     )
   })
@@ -407,14 +462,16 @@ describe('§3 the sponsor money that is NOT a cheque to her', () => {
 // 4 – THE ONE FIGURE THE RULING MOVES: the coach market's weekly income cap
 // =================================================================================================
 describe('§4 the coaching cap quotes what the till actually banks', () => {
-  it('⭐ the weekly income is NET of her cut of the retainer, not the gross', () => {
+  it('⭐ the weekly income is what the till BANKS of the retainer, not the gross', () => {
     // ⚠ THIS IS THE ROUND-21 #12 DEFECT IN MIRROR IMAGE. That item was the cap UNDER-reading the
     // family's income; leaving the gross retainer in it after this ruling would make it OVER-read by
-    // exactly her share, every week, for the rest of the career.
+    // exactly her share, every week, for the rest of the career. ⚠ RE-AIMED BY P3 AND THE CLAIM IS
+    // UNCHANGED IN KIND – «the meter reads what the till banks» – while what the till banks went
+    // from the ramp's remainder to the manager's fee, which is a far bigger correction.
     const world = structuredClone(life.world)
     const terms = signKit(world, 'icon')
     const gross = terms.retainerCents ?? 0
-    const hers = kidPrizeShareCents(gross, ageOf(world))
+    const hers = hersOf(gross)
     expect(hers).toBeGreaterThan(0)
 
     const quoted = familyWeeklyIncomeCents(world)
@@ -428,12 +485,16 @@ describe('§4 the coaching cap quotes what the till actually banks', () => {
     expect(quoted).toBeLessThan(withoutKit + Math.round((gross * 4) / WEEKS_PER_YEAR))
 
     // ⚠ AND THE SIZE OF IT, IN MONEY, PINNED – the same reason §1 carries one literal test. The icon
-    // rung pays $37,500 a quarter; at her first 10% that is $3,750 hers, so the family's pro-rated
-    // weekly quote falls from $2,884.62 to $2,596.15 – $288.47 a week. A ramp that moved without a
-    // red test here would move this cap silently for the rest of the career.
+    // rung pays $37,500 a quarter; at the manager's 15% that is $5,625 to the family, so the
+    // pro-rated weekly quote is $433 against the gross quote's $2,884.62. ⚠ P3 MADE THIS THE LARGEST
+    // single number this ruling moves on a screen: the cap fell by roughly six sevenths of the
+    // retainer term. A rate that moved without a red test here would move it silently for the rest
+    // of the career.
     expect(gross, 'the icon retainer is thirty-seven and a half thousand a quarter').toBe(37_500_00)
-    expect(hers, 'and a tenth of it is hers in her first year').toBe(3_750_00)
-    expect(quoted - withoutKit, 'so the cap gains $2,596.15 a week and not $2,884.62').toBe(2_596_15)
+    expect(managerCommissionCents(gross), 'and fifteen percent of it is the family\'s').toBe(5_625_00)
+    expect(quoted - withoutKit, 'so the cap gains $433 a week and not $2,884.62').toBe(
+      Math.round((5_625_00 * 4) / WEEKS_PER_YEAR),
+    )
   })
 
   it('a family with no kit deal is untouched by any of this', () => {

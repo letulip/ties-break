@@ -154,8 +154,14 @@ interface CareerRow {
   sponsorGrossCents: number
   /** ...and the ADVERTISING fee, which `sponsorIncomeCents` never counted (a different post). */
   adFeeIncomeCents: number
-  /** what the commission arm took back out of the wallet over the career. Zero on the shipped arm. */
-  commissionHandedBackCents: number
+  /** ⭐⭐ ROUND 29 P3 – WHAT **SHE** BANKED OUT OF THAT GROSS, read off the till and not subtracted
+   *  at the end: `gross - what the family's row banked` on every sponsor cheque, summed. Under the
+   *  shipped commission this is the large half; it is the figure the ruling moved money INTO, and
+   *  the wave that reported the parent's side needs it beside that side to be honest.
+   *  ⚠ It REPLACES `commissionHandedBackCents`, which simulated the commission inside this bench
+   *  while the engine still split by her ramp. The engine does it now, so the simulation would
+   *  double-charge; `--commission N` overrides the shipped RATE instead. */
+  sponsorHerCents: number
   /** the single largest sponsor cheque the career ever received. */
   biggestChequeCents: number
   biggestChequeText: string
@@ -233,15 +239,25 @@ const AD_FEE_RE = / endorsement – the campaign fee, on signing(?:,|$)/
  *  shape on the same post, counted with the signature fee or the ad line under-reports every
  *  multi-year deal by (years − 1) years of money. */
 const AD_YEAR_RE = / endorsement – year \d+ of \d+(?:,|$)/
-/** ⭐⭐ HER SHARE, READ OFF THE ROW THAT PAID IT AND NEVER RE-DERIVED. `bankSponsorCheque` writes the
- *  cents it actually credited her into the text; `family + herCents` is the gross cheque TO THE CENT,
- *  where `family / (1 - bps/10000)` is a division on a figure that was rounded once on the way in –
- *  the exact arithmetic `kidPrizeShareCents`' own comment forbids. */
-const HER_SHARE_RE = /, less her [\d.]+% share \(\$([\d,]+(?:\.\d\d)?)\)$/
+/** ⭐⭐ THE GROSS, READ OFF THE ROW THAT PAID IT AND NEVER RE-DERIVED.
+ *
+ *  ⚠⚠ ROUND 29 P3 CHANGED THE ROW AND THEREFORE CHANGED THIS. Until the manager's commission the row
+ *  was the cheque MINUS her cut and carried «, less her N% share ($X)», so the gross was
+ *  `family + herCents`. It is now the parent's FEE and carries the gross itself – «, the manager's
+ *  N% of $X» – so the gross is read straight out and nothing is added to anything. ⚠ The old pattern
+ *  is not kept as a fallback: this bench drives the CURRENT engine (`bankSponsorCheque` is called,
+ *  never re-implemented), so a row it cannot parse is a row this file has gone stale against, and a
+ *  silent fallback is exactly how the end-anchored retainer pattern under-reported a headline for a
+ *  whole wave. The `?? familyCents` below is the honest no-fee case (a rate of zero), not a guess.
+ *
+ *  ⚠ AND IT IS STILL A READ RATHER THAN A DIVISION. `family / (bps/10000)` would divide a figure
+ *  that was rounded once on the way in – the exact arithmetic `kidPrizeShareCents`' own comment
+ *  forbids, and the shape that produced two wrong readings of round 29 #10 before it was measured. */
+const MANAGER_FEE_RE = /, the manager's [\d.]+% of \$([\d,]+(?:\.\d\d)?)$/
 function grossOfSponsorRow(text: string, familyCents: number): number {
-  const m = HER_SHARE_RE.exec(text)
+  const m = MANAGER_FEE_RE.exec(text)
   if (!m) return familyCents
-  return familyCents + Math.round(Number(m[1].replace(/,/g, '')) * 100)
+  return Math.round(Number(m[1].replace(/,/g, '')) * 100)
 }
 
 /** Sign the strongest live kit letter AND every live advertising letter, the week they land.
@@ -293,15 +309,12 @@ function runCareer(
   policy: Policy,
   index: number,
   weeks: number,
-  /** ⭐ ROUND 29 PART TWO, 29.08 – the manager's commission in basis points, or null for the shipped
-   *  rule (her age ramp). See the withdrawal inside the loop for what it does and does not model. */
-  commissionBps: number | null = null,
   /** ⭐ ROUND 29 PART FOUR P7 – the BUSINESS arm: eagerly start the merch brand and build the
    *  academy's four stages, each the first week the wallet holds TWICE its price (the eager arm's
    *  own friendliness with the one prudence a real parent has – never the last dollar). Purchases
    *  are player actions through `buyAsset`, so they tap no MAIN draw; the careers do diverge from
    *  the default arm downstream (a poorer wallet enters differently), which is why this is a bench
-   *  arm and not a paired A/B on one seed – the commission arm's own note, one parameter up. */
+   *  arm and not a paired A/B on one seed – the same note the commission override carries. */
   buyBusiness = false,
 ): CareerRow {
   const { world, rng, seed } = openCareer(preset, index, policy)
@@ -321,7 +334,7 @@ function runCareer(
   let sponsorIncomeCents = 0
   let sponsorGrossCents = 0
   let adFeeIncomeCents = 0
-  let commissionHandedBackCents = 0
+  let sponsorHerCents = 0
   let biggestChequeCents = 0
   let biggestChequeText = ''
   let ran = 0
@@ -371,31 +384,26 @@ function runCareer(
       const isKitCash = RETAINER_RE.test(row.text) || APPEARANCE_RE.test(row.text) || BONUS_RE.test(row.text)
       const isAdFee = AD_FEE_RE.test(row.text) || AD_YEAR_RE.test(row.text)
       if (!isKitCash && !isAdFee) continue
-      // ⭐⭐ THE SHARE RULING, SIMULATED IN THE BENCH AND NOWHERE ELSE (the owner, 29.08: «контракт на
-      // полную сумму ребенку приходит на почту, после подписания видим на счету уже родительский
-      // кат», at «10-20% например»). Today `bankSponsorCheque` credits the family `gross − her ramp
-      // share`, so the parent keeps 100% before her eighteenth and 50% from her twenty-sixth. Under
-      // the ruling the parent keeps a flat commission and the rest is hers.
+      // ⭐⭐⭐ THE SHARE RULING IS NOW THE ENGINE'S AND THIS BENCH ONLY READS IT (round 29 part three
+      // P3, shipped). The owner, 29.08: «контракт на полную сумму ребенку приходит на почту, после
+      // подписания видим на счету уже родительский кат», at «10-20% например». `bankSponsorCheque`
+      // credits the family `round(gross x managerCommissionBps / 10_000)` and her the remainder, so
+      // `amount` below IS the parent's fee and `gross - amount` IS hers – both read off the till.
       //
-      // ⚠⚠ THIS IS A REAL B ARM AND NOT A SUBTRACTION AFTERWARDS. The money is taken OUT of the
-      // wallet the week it lands, so the career that follows is genuinely poorer – its reserve is
-      // smaller, and `reserveFor` gates coach rungs and entries off exactly that. A static
-      // re-attribution at the end would have reported the money and none of the consequence.
-      // ⚠ It writes cents and taps NO draw, so it cannot move the frozen MAIN capture. It does make
-      // the two arms diverge in the MAIN sequence downstream (a career that enters fewer events rolls
-      // different dice), which is why this is a bench arm and not a paired A/B on one seed.
+      // ⚠⚠ THE SIMULATED ARM THAT STOOD HERE IS GONE, AND DELETING IT WAS THE ONLY HONEST MOVE. It
+      // withdrew the commission from the wallet AFTER the engine had already credited the family the
+      // ramp's share; run against the shipped engine it would charge the same cheque twice and
+      // report a career poorer than any career the game can produce. What it was FOR survives, one
+      // level up: `--commission N` now overrides `ECONOMY.managerCommission.bps` for the run, so the
+      // band is still sweepable and the sweep now measures the real code path.
+      // ⚠ Its own note is worth keeping and is true of the override too: the arms DIVERGE downstream
+      // in MAIN (a poorer career enters fewer events and rolls different dice), which is why two
+      // rates are not a paired A/B on one seed. Nothing here taps a draw.
       const grossCents = grossOfSponsorRow(row.text, amount)
       sponsorGrossCents += grossCents
+      sponsorHerCents += Math.max(0, grossCents - amount)
       if (isKitCash) sponsorIncomeCents += amount
       else adFeeIncomeCents += amount
-      if (commissionBps !== null) {
-        const kept = Math.round((grossCents * commissionBps) / 10_000)
-        const handedBack = amount - kept
-        if (handedBack > 0) {
-          world.fundsCents -= handedBack
-          commissionHandedBackCents += handedBack
-        }
-      }
       if (amount > biggestChequeCents) {
         biggestChequeCents = amount
         biggestChequeText = row.text
@@ -531,7 +539,7 @@ function runCareer(
     sponsorIncomeCents,
     sponsorGrossCents,
     adFeeIncomeCents,
-    commissionHandedBackCents,
+    sponsorHerCents,
     biggestChequeCents,
     biggestChequeText,
     peakFundsCents,
@@ -645,10 +653,17 @@ export function main(argv: string[] = process.argv.slice(2)): void {
   const weeks = arg('--weeks', DEFAULT_WEEKS)
   const seeds = arg('--seeds', DEFAULT_SEEDS)
   const jsonAt = argv.indexOf('--json')
-  // ⭐ `--commission 15` runs the 29.08 ruling instead of the shipped ramp: sponsor money is HERS and
-  // the parent keeps 15% of the gross. Absent = the shipped rule, byte for byte.
+  // ⭐⭐ `--commission 20` OVERRIDES THE SHIPPED RATE FOR THIS RUN – it no longer simulates a ruling
+  // the engine does not have, because the engine has it (round 29 P3). Absent = the shipped
+  // `ECONOMY.managerCommission.bps`, which is what every published figure is measured at.
+  // ⚠ A DELIBERATE WRITE TO A FROZEN CONSTANT, and it is confined to this file: `ECONOMY` is
+  // `as const` for the ENGINE's benefit, and a bench that wants to sweep a rate the owner named as a
+  // BAND («10-20% например») has exactly two options – this, or a second copy of the split in the
+  // bench, which is the mistake the block this replaces actually made. Written before the first
+  // career opens, so every arm in the run sees one rate.
   const commissionAt = argv.indexOf('--commission')
   const commissionBps = commissionAt >= 0 ? Math.round(Number(argv[commissionAt + 1]) * 100) : null
+  if (commissionBps !== null) (ECONOMY.managerCommission as { bps: number }).bps = commissionBps
   // ⭐ ROUND 29 PART FOUR P7 – `--buy-business` runs the business arm: every career eagerly starts
   // the merch brand and builds the academy (half the wallet always kept). Absent = the shipped
   // world, byte for byte, which is what the published kit/ad figures are checked against.
@@ -657,7 +672,7 @@ export function main(argv: string[] = process.argv.slice(2)): void {
   const rows: CareerRow[] = []
   for (const preset of PRESETS) {
     for (const policy of POLICIES) {
-      for (let i = 0; i < seeds; i++) rows.push(runCareer(preset, policy, i, weeks, commissionBps, buyBusiness))
+      for (let i = 0; i < seeds; i++) rows.push(runCareer(preset, policy, i, weeks, buyBusiness))
     }
   }
 
@@ -665,9 +680,8 @@ export function main(argv: string[] = process.argv.slice(2)): void {
   console.log(`\nSPONSOR LADDER REACH – ${n} careers x ${weeks} weeks (to age ${START_AGE_YEARS + Math.floor(weeks / WEEKS_PER_YEAR)})`)
   console.log(
     `${PRESETS.length} presets x ${POLICIES.length} policies x ${seeds} seeds, eager signing` +
-      (commissionBps === null
-        ? '  ·  SHIPPED share rule (her age ramp on every sponsor cheque)\n'
-        : `  ·  ⭐ COMMISSION ARM: sponsor money is HERS, the parent keeps ${commissionBps / 100}%\n`),
+      `  ·  sponsor money is HERS, the manager keeps ${ECONOMY.managerCommission.bps / 100}%` +
+      (commissionBps === null ? ' (the SHIPPED rate)\n' : ' (--commission override)\n'),
   )
 
   console.log('  rung        brand                  gate                        cleared  written   signed')
@@ -859,14 +873,14 @@ export function main(argv: string[] = process.argv.slice(2)): void {
     ['GROSS sponsor money (kit cash + ad fees)', (r) => r.sponsorGrossCents],
     ['  what the kit brands paid the FAMILY', (r) => r.sponsorIncomeCents],
     ['  what the advertising post paid the FAMILY', (r) => r.adFeeIncomeCents],
-    ['  handed back under the commission arm', (r) => r.commissionHandedBackCents],
+    ['  ...and what SHE banked out of the same gross', (r) => r.sponsorHerCents],
   ]
   for (const [label, read] of sponsorLines) {
     const xs = rows.map(read)
     console.log(`    ${label.padEnd(38)} ${usd(q(xs, 0.5)).padStart(12)} ${usd(q(xs, 0.9)).padStart(12)} ${usd(q(xs, 1)).padStart(12)}`)
   }
   const grossAll = rows.reduce((s, r) => s + r.sponsorGrossCents, 0)
-  const keptAll = rows.reduce((s, r) => s + r.sponsorIncomeCents + r.adFeeIncomeCents - r.commissionHandedBackCents, 0)
+  const keptAll = rows.reduce((s, r) => s + r.sponsorIncomeCents + r.adFeeIncomeCents, 0)
   console.log(
     `    ...so across all ${n} careers the parent kept ${((100 * keptAll) / Math.max(1, grossAll)).toFixed(1)}% of the gross sponsor money`,
   )
@@ -1029,13 +1043,23 @@ export function main(argv: string[] = process.argv.slice(2)): void {
     }
   }
 
+  // ⚠⚠ THE LABEL SAID «what the brands paid» AND REPORTED WHAT THE FAMILY BANKED, WHICH ROUND 29 P3
+  // TURNED FROM A SMALL IMPRECISION INTO A LIE. Under the old ramp the family's share was most of a
+  // kit cheque, so the two readings sat within a third of each other and the wording passed; under a
+  // 15% manager's commission the family banks a seventh of it, and a line headed «what the brands
+  // paid» quoting that figure would misreport the ladder by a factor of six. Both figures are named
+  // now – the brands' side and the family's – and neither has to be inferred from the other.
   const paid = rows.filter((r) => r.sponsorIncomeCents > 0)
-  console.log(`\n  what the brands paid in CASH over a career (retainer + appearance + bonus), ${paid.length}/${n} careers received any:`)
+  console.log(`\n  the KIT brands' cash over a career (retainer + appearance + bonus), ${paid.length}/${n} careers received any:`)
   const cash = paid.map((r) => r.sponsorIncomeCents).sort((a, b) => b - a)
   if (cash.length > 0) {
-    console.log(`    most ${usd(cash[0])}   median ${usd(cash[Math.floor(cash.length / 2)])}   least ${usd(cash[cash.length - 1])}`)
+    console.log(`    what the FAMILY banked of it:  most ${usd(cash[0])}   median ${usd(cash[Math.floor(cash.length / 2)])}   least ${usd(cash[cash.length - 1])}`)
+    // ⚠ NO GROSS LINE HERE ON PURPOSE: `sponsorGrossCents` is the gross of BOTH posts (kit cash AND
+    // the advertising fee) and this line is kit-only, so pairing them would be the same
+    // apples-for-oranges the heading above just had to be corrected for. The gross of both is in
+    // «THE SPONSOR MONEY» above, with her side beside it.
     const biggest = [...rows].sort((a, b) => b.biggestChequeCents - a.biggestChequeCents)[0]
-    console.log(`    the largest SINGLE cheque any career received: ${usd(biggest.biggestChequeCents)} – "${biggest.biggestChequeText}" (${biggest.preset} · ${biggest.policy})`)
+    console.log(`    the largest SINGLE cheque, as the family banked it: ${usd(biggest.biggestChequeCents)} – "${biggest.biggestChequeText}" (${biggest.preset} · ${biggest.policy})`)
   }
 
   const ended = rows.filter((r) => r.endedWeek !== null)

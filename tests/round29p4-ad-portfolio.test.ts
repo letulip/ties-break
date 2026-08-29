@@ -61,7 +61,7 @@ import {
 } from '../src/engine/offers'
 import { reviewAdOffer, acceptOffer, capstoneSeasonsOf, payAdAnniversaries, sponsorStandingOf } from '../src/engine/world/sponsors'
 import { recoveryBaseFor } from '../src/engine/world/medical'
-import { ECONOMY, kidPrizeShareCents } from '../src/engine/economy'
+import { ECONOMY, managerCommissionCents } from '../src/engine/economy'
 import { WEEKS_PER_YEAR } from '../src/engine/season/calendar'
 import { DEFAULT_PROFILE, type AdCategory, type AdOfferTerms, type KitOfferTerms, type Offer, type SeasonHistoryEntry } from '../src/shared/protocol'
 
@@ -362,14 +362,18 @@ describe('the anniversaries – three 1-year deals pay what one 3-year deal pays
     return world
   }
 
-  it('⭐⭐ the anniversary pays the year-fee through her ramp; the off-years and the term`s end pay nothing', () => {
+  // ⚠ RE-AIMED BY ROUND 29 PART THREE P3, 29.08. This arm's claim is «the anniversary pays one
+  // year-fee and it goes through `bankSponsorCheque` like every sponsor cheque» – which is exactly
+  // what P6 said it was for and is unchanged. What moved is the SPLIT that function applies: her
+  // ramp became the manager's commission, so the family banks the fee and she banks the rest.
+  it('⭐⭐ the anniversary pays the year-fee through the splitter; the off-years and the term`s end pay nothing', () => {
     const world = signedTwoYear(300)
-    // Week 352 – the first anniversary: one year-fee, split with her at the ramp.
+    // Week 352 – the first anniversary: one year-fee, split at the manager's commission.
     world.week = 352
     const before = world.fundsCents
     const kidBefore = world.kidFundsCents ?? 0
     payAdAnniversaries(world)
-    const hers = kidPrizeShareCents(100_000_00, ageOf(world))
+    const hers = 100_000_00 - managerCommissionCents(100_000_00)
     expect(world.fundsCents - before).toBe(100_000_00 - hers)
     expect((world.kidFundsCents ?? 0) - kidBefore).toBe(hers)
     const row = world.events.find((e) => e.week === 352 && e.category === 'sponsor')

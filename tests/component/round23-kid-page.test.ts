@@ -104,7 +104,11 @@ describe('⭐⭐ ROUND-23 #6/#18 – her page, mounted', () => {
     expect(note.exists(), 'from eighteen the page says the transfers are happening').toBe(true)
     const text = note.text()
     expect(text).toContain('$512,835')
-    expect(text).toMatch(/\d+% of every cheque/)
+    // ⚠ RE-AIMED BY ROUND 29 P3 – «prize» is load-bearing since the manager's commission gave
+    // sponsor money its own rule. The claim is unchanged: the rate on this page is a real rate the
+    // engine composed, never a literal in the template.
+    expect(text).toMatch(/\d+% of every prize cheque/)
+    expect(text, 'and P3\'s half is here too – the sponsor money is hers').toMatch(/less the manager's [\d.]+%/)
     expect(text, 'player copy: short dash only').not.toContain('—')
     expect(text).toMatch(/^[\x20-\x7e–]+$/)
     w.unmount()
