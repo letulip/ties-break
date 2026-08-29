@@ -209,15 +209,18 @@ export default defineConfig({
         // worker has precached all 313 entries, swaps the served directory to build B, lets the
         // update install, and counts the precache fetches the SECOND install makes at the server.
         // Measured: **1 of 313**. See the tool's header for the run and the numbers.
-        globPatterns: ['**/*.{js,css,html,svg,png,webp,woff2}'],
-        // ⚠ AUDIO IS NOT IN THAT LIST AND ITS ABSENCE IS A DECISION, NOT AN OVERSIGHT. `public/`
-        // holds 2556 KiB of music (`music/theme.mp3`, the looping background track) and 472 KiB of
-        // match sound effects across 24 clips. Adding `mp3` here would put another 3 MB into every
-        // install, and a quarter of that is one file a player can mute on the first screen. The
-        // sound effects are the arguable half – offline the match is silent today, because
-        // `src/audio/sfx.ts` probes each file and remembers a miss – but that is a judgement about
-        // what "play offline with nothing in the way" includes, and it is his, not a builder's. Reported to him
-        // with the sizes in docs/rounds/round-29.md part two #7; not swept in here.
+        globPatterns: ['**/*.{js,css,html,svg,png,webp,woff2,mp3}'],
+        // ⚠ RAISED FOR ONE FILE, AND ONLY JUST. Workbox refuses precache entries over 2 MiB by
+        // default, and `music/theme.mp3` is 2.58 MB – his ruling above is precisely about that
+        // file, so the cap moves to 3 MiB: enough for the theme, tight enough that the next
+        // oversized asset fails the build and has to come and say so, exactly like the 16 MB
+        // ceiling in tests/round29p2-offline-install.test.ts.
+        maximumFileSizeToCacheInBytes: 3 * 1024 * 1024,
+        // ⚠ AUDIO IS IN, BY HIS RULING (29.08: «надо добрать, не вижу проблем»). The question was
+        // put to him with the sizes – 2556 KiB of music, 472 KiB of match clips – and he took the
+        // ~3 MB so that an offline match is a loud one. `mp3` in the glob above is that ruling;
+        // the guard in tests/round29p2-offline-install.test.ts is re-aimed to hold it IN, the same
+        // test that held it out while the call was still his to make.
         //
         // ⚠ FONTS ARE ALREADY IN, AND HAVE BEEN. `woff2` is in the glob above: the four faces
         // (92 KiB) precache today, which is why offline text has never fallen back to a system

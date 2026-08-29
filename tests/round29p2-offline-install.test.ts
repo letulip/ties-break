@@ -78,16 +78,15 @@ describe('round 29 part two #7 – the art is in the PWA install', () => {
     expect(inInstall.length).toBeGreaterThan(290)
   })
 
-  it('audio stays OUT until he rules on it – not swept in by a widened glob', () => {
-    // ⚠ HIS CALL, NOT A BUILDER'S, and the sizes are why it was put to him: music/theme.mp3 is
-    // 2525 KiB for a loop that can be muted on the first screen, and the 24 match clips are 462 KiB
-    // that make the difference between a silent match and a loud one offline. Reported in
-    // docs/rounds/round-29.md part two #7 with both figures. If he says yes, add `mp3` to
-    // `globPatterns` and re-aim this test with his ruling quoted – do not delete it.
+  it('audio is IN, by his ruling – and cannot silently fall back out', () => {
+    // ⚠ RE-AIMED, NEVER DELETED. This test held audio OUT while the call was his to make; he made
+    // it on 29.08 – «надо добрать, не вижу проблем» – with both sizes in front of him (2525 KiB of
+    // music, 462 KiB of match clips). So the same guard now holds it IN: a narrowed glob that
+    // dropped `mp3` would silence every offline match and this is where that regression goes red.
     const audio = PUBLIC.filter((f) => f.rel.startsWith('music/') || f.rel.startsWith('sounds/'))
     expect(audio.some((f) => f.rel.endsWith('.mp3'))).toBe(true) // the fixture has something to say
-    expect(audio.filter((f) => f.precached)).toEqual([])
-    expect(read('vite.config.ts')).not.toMatch(/globPatterns:.*mp3/)
+    expect(audio.filter((f) => f.rel.endsWith('.mp3') && !f.precached)).toEqual([])
+    expect(read('vite.config.ts')).toMatch(/globPatterns:.*mp3/)
   })
 
   it('fonts are already in, and always were – nothing to decide there', () => {
