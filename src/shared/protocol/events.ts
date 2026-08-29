@@ -262,6 +262,42 @@ export interface FinanceWeek {
    *  does not move. The recorded widening precedent is commit 2763caa (the whole `entry` offer
    *  family added with the version left at 36). */
   kidShare?: FinanceWeekKidShare
+
+  /** ⭐⭐ ROUND 29 PART TWO #13 – WHAT THE COACH TOOK OFF THE WEEK'S TITLE CHEQUE. A memo, exactly
+   *  like `kidShare` above and for a mirror-image reason.
+   *
+   *  THE OWNER, 29.08: «вот и можно как раз добавить cut тренера на weekly экране для
+   *  прозрачности» – the follow-up to part-one #13, which put the 10%/5% RULE on the coaches page.
+   *  A rule on a shop page and a figure on the week he actually reads are different questions.
+   *
+   *  ⚠⚠ AND IT IS A MEMO BECAUSE THE CENTS ARE ALREADY COUNTED, WHICH IS THE OPPOSITE OF
+   *  `kidShare`'s reason. Her cut is a memo because it never entered the family ledger at all; the
+   *  coach's cut is a memo because it DID – `finalizeTournament` writes it as a real `coaching`
+   *  EXPENSE row, so it is already inside `byCategory`, inside `expenseCents` and inside
+   *  `careerTotals.spentCents`. This field lets a screen NAME a figure the week's «Spent» already
+   *  contains, and a screen that added it to a column would charge the family twice for one cheque.
+   *
+   *  ⚠ NOT DERIVABLE FROM `byCategory.coaching`, which is why it exists: that key also carries the
+   *  weekly retainer, the travel fare and the facility, so the share cannot be picked back out of
+   *  it. Carried by the site that paid it, never reconstructed.
+   *
+   *  ⚠ OPTIONAL, AND NOT A SCHEMA MOVE – `kidShare`'s own reasoning above, verbatim in its
+   *  situation: absent is exactly what every historical save already means here («no title or final
+   *  paid a share this week»), which is also true of most weeks in every career, so no migration is
+   *  owed, no golden fixture is added and `SAVE_SCHEMA_VERSION` does not move. */
+  coachCut?: FinanceWeekCoachCut
+}
+
+/** What the coach was paid out of one week's prize cheques. Both numbers are the engine's own at the
+ *  moment it paid: `staffResultShareBps('coach', finishIdx)` and the cents that left the wallet. */
+export interface FinanceWeekCoachCut {
+  /** cents charged to the family this week as the coach's result share – summed if a week ever pays
+   *  twice, on `kidShare.cents`' own reasoning */
+  cents: number
+  /** the share the finish paid, in basis points (`staffResultShareBps('coach', …)`) – 1000 on a
+   *  title, 500 on a final. ⚠ A week can only reach `finalizeTournament` for one tournament, so
+   *  unlike `kidShare.bps` there is no second rate to reconcile and this is the rate itself. */
+  bps: number
 }
 
 /** What left the family's half of one week's cheques and landed in hers. Both numbers are the
@@ -350,6 +386,13 @@ export interface FinanceWeekPoint {
    *  drops back to its base-less wording there rather than guessing. Never summed into
    *  `incomeCents`: the family banked the REMAINDER of this, not this. */
   kidShareBaseCents?: number
+  /** ⭐⭐ ROUND 29 PART TWO #13 – THE COACH'S CUT OF THE WEEK'S TITLE CHEQUE (`FinanceWeek.coachCut`,
+   *  straight through). ⚠ ALREADY INSIDE `expenseCents` and deliberately so – see the field's own
+   *  header on `FinanceWeek`: it is a real coaching expense, and this pair exists so a screen can
+   *  name it, never so a screen can subtract it a second time. */
+  coachCutCents?: number
+  /** the share the finish paid, as WHOLE PERCENT – rounded ONCE here, `kidSharePct`'s own rule. */
+  coachCutPct?: number
 }
 
 export type StopReason =
