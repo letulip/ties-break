@@ -34,19 +34,19 @@ portrait ART ORDER for the older ages – lives once, in
 | – | Truthful progression surfaces – the three ranking currencies explained, the professional standing AT the fork, the «lower-ladder wins stop advancing» warning (engine `outgrown` exists, the words do not) | Codex perspective §Economy + `docs/review-codex/12-…response` | nothing – S/M | – | **Next** |
 | ~~`CollegeYearCard` calls a NEGATIVE `fundsDeltaCents` «Banked»~~ – **SHIPPED 24.08**: two labels by the sign (the owner's ruling), the amount unsigned because the word carries it | `CollegeYearCard.vue:338` | – | **done** |
 
-## The album's second half – what the shelf puts in it (owner, 29.08)
+## The album – a different shape, not a longer one (owner, 29.08)
 
-⭐⭐ **The album is NOT unbuilt.** `docs/specs/endings-and-the-album.md` §7 shipped it on **04.08**:
-seven polaroids paged one at a time, each carrying the photograph, a handwritten caption on the
-polaroid's lip, one hard fact off the milestone, and – always, even on an empty page – why that week
-is in the album, with the full milestone scroll underneath. `EndingScreen.vue` renders it. ⚠ **I
-nearly filed «design a photo album concept» as new work; it would have been a duplicate.**
+⚠ **My first filing of this was wrong and he corrected it.** I recorded it as «the shelf puts a page
+in the existing album»; his answer: «Текущий слайдер из 7 не подходит для объемной и насыщенной
+карьеры, **я хочу концептуально другое**.» So the seven-polaroid pager is not the thing to extend –
+it is the thing being replaced.
 
-**What he actually asked for is a different thing, and it is real.** His words, 29.08: «Арты для всех
-вещей и стадий академии я тоже добавлю, **как раз можно будет фотоальбом собрать**» – so in his head
-the album fills up with what the family BOUGHT. The shipped album fills with career milestones: all
-seven slots are tennis and family, **not one is property**.
+⭐ **What is shipped, so nobody re-invents it**: `docs/specs/endings-and-the-album.md` §7, live since
+**04.08** – seven polaroids paged one at a time, each with the photograph, a handwritten caption, one
+hard fact off the milestone and, even when empty, why that week is in the album; the full milestone
+scroll underneath, paged by season. `EndingScreen.vue` renders it. **The content model is sound; the
+CONTAINER is what does not scale.**
 
 | # | what | where it is specified | blocked by | size | state |
 | --- | --- | --- | --- | --- | --- |
-| A1 | **The shelf can put a page in the album.** A delivered yacht, the parents' plane, each academy stage – each is a week the family will remember, and each is about to have art he is drawing himself. ⚠ The slot rules are §9.2's and the seven slots are FULL, so this is a design question before it is a build: does the album grow past seven, does property share a slot, or does it become a second chapter after the milestone pages? **That choice is his and nothing should be built before it.** ⭐ The epilogue naming the academy (round 29 part-two #10) is the first instance of exactly this and ships ahead of it | [endings-and-the-album.md](../specs/endings-and-the-album.md) §7, §9.2; [the-shop-2026-08.md](../specs/the-shop-2026-08.md) §10.4 | his ruling on the slot question; his art | M | **Next – he raised it 29.08** |
+| A1 | **A new shape for the epilogue album.** Seven fixed slots were sized for a 14→18 career; the game now runs thirteen-plus seasons to 26 and beyond, and the shelf is about to add property he is drawing art for – yachts, the plane, four academy stages. ⚠⚠ **This is a design question first and he has reserved it**: how does an epilogue hold a career that big without becoming a list? Chapters, a timeline, a room you walk, seasons as spreads – the shape is open. **Nothing should be built before he rules on it.** ⭐ Two things feed it: the milestone scroll already carries every event in order (the data exists), and the shop's §10.4 epilogue line ships in round 29 as the first property page, which will show in practice whether property belongs beside milestones or apart from them | [endings-and-the-album.md](../specs/endings-and-the-album.md) §7, §9.2; [the-shop-2026-08.md](../specs/the-shop-2026-08.md) §10.4 | **his design ruling**; his art | L | **Next – he raised it 29.08 and reserved the shape** |
