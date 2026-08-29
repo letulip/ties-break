@@ -3,7 +3,7 @@ type: round-ledger
 status: current
 area: rounds/29
 canonical: false
-last-reviewed: 2026-08-28
+last-reviewed: 2026-08-29
 ---
 
 # Round 29 – the pro years, 18 items (28.08.2026)
@@ -1687,10 +1687,14 @@ rest are new.
   ⚠ **The cost is why this is his call and not mine**: it moves the weekly outgoings of EVERY career,
   so it is a balance change with a bench and a frozen re-pin, not a one-liner. `[?]` his.
 
-- [ ] **16. «Механику фонда надо придумать, да, потому что безрисковые 3 против безрисковых 7 это
+- [x] **16. «Механику фонда надо придумать, да, потому что безрисковые 3 против безрисковых 7 это
   весьма странно. Давай подумаем как это можно сделать красиво и просто.»** – **design, then his
   ruling.** ⚠⚠ The hard constraint: **RNG input-independence is permanent law** – a fund that moves
   must not draw from the MAIN weekly stream. Propose mechanics that respect it, cheaply.
+
+  ⚙ **APPROVED AND BUILT** – the seeded market path. The design, his approval and the measured
+  result are in **part three #16** at the foot of this file; the write-up is
+  `docs/specs/the-shop-2026-08.md` §14.
 
 - [ ] **17. «Оставь он это так… починили?»** – **answer.** The `define` trap in round 29 #19.
 
@@ -1886,3 +1890,61 @@ larger one.
   ощущения потом.» Building the seeded market path: `marketIndex(seed, week)` off a purpose-scoped
   sub-stream, value = `paid × index(now) / index(basisWeek)`. ⚠ He will judge it by feel after
   playing, so the numbers are provisional by his own framing.
+
+  ⚙⚙ **BUILT** (`r29p3/market-fund`, schema **still 65** – nothing about a market is persisted).
+  Full write-up: `docs/specs/the-shop-2026-08.md` §14. The model in three lines:
+
+  ```
+  wave(seed, week)  = Σ ampᵢ · smoothstep value noise at periodᵢ            ∈ [-1, 1]
+  index(seed, week) = exp(volBps/10⁴ · wave)
+  worth             = basis · (1 + annualRateBps/10⁴)^years · index(now)/index(basisWeek)
+  ```
+
+  Three octaves – 104 weeks at 0.15, 39 at 0.50, 26 at 0.35 – anchored on
+  `rngFromSeed(\`${seed}:market:${period}:${anchor}\`)`. The fund keeps its **700 bps** headline as
+  the LONG-RUN figure and gains `volBps: 1_800`; every other rung on the shelf is priced to the cent
+  by yesterday's arithmetic.
+
+  ⭐⭐ **The market exists whether or not she buys.** The path is READ at the weeks a holding spans,
+  never DRAWN when one is opened – so input-independence is not merely respected, there is no code
+  path that could violate it. ⚠ **Proved, not claimed**: three careers on one seed and 160 weeks
+  (never buys / buys the fund / buys it inside a busy shelf of top-ups, part sales and a car) have
+  **byte-identical `rngMain`**, and the two holders agree on the fund's worth **to the cent**. Frozen
+  MAIN capture 41550 / `e6b0c709` **UNMOVED**; `coach-travel-edge`'s three frozen career hashes
+  **UNMOVED**.
+
+  ⚠⚠ **THE LONG HORIZON IS A PROOF BEFORE IT IS A SAMPLE.** `wave` is bounded in [-1, 1], so the worst
+  the market can ever do is `e^(-2·vol)` and the fund beats the deposit at ten years for every seed
+  exactly while `vol < 1,824 bps`. 1,800 sits just under it. ⚙ **MEASURED**
+  (`tools/market-probe.ts --seeds 4000`, 228,000 seasons / 48,000 holdings a horizon):
+
+  | | 1y | 3y | 5y | 10y |
+  | --- | ---: | ---: | ---: | ---: |
+  | beats the 3.17% deposit | 67.07% | 90.24% | 98.73% | **100.00%** (0 of 48,000) |
+  | mean fund | +7.3% | +22.9% | +40.7% | +97.3% |
+  | worst fund seen | −18.5% | −11.7% | +5.4% | **+48.5%** vs the deposit's +36.6% |
+
+  **19.9% of seasons negative** – «roughly one year in four or five». Worst peak-to-trough −20.4%.
+  ⚠ Raising `volBps` to 2,500 breaks the inequality and **2,400 sampled ten-year holds still all
+  won**, which is why both arms are pinned: sampling cannot see a ceiling this design is only just
+  inside.
+
+  ⭐ **The season line**, once a season while they hold it: «A season of the market – An index fund is
+  down 8% over the season.» It reports the MARKET and not the holding (a top-up makes those two
+  different numbers, and `changePct` on the row is already the second one). Idempotent off a ledger
+  read, so no persisted flag and no schema move.
+
+  ⚠ **`householdWeekly` really moves now** and that is his to feel: the shelf line on a $120,000 fund
+  is hundreds of dollars a week and the sign flips. It does NOT jitter – fastest anchor is half a
+  season, smoothstep is flat at both ends, **under 20 sign changes in 260 weeks** against 120+ for a
+  per-week draw – and both writers of a worth go through `assetWorthCents`, so the till and the meter
+  cannot describe two markets.
+
+  ⚠ **No early-exit fee or spread**, ruled out and written down in §14e so it is not re-proposed:
+  friction is not risk, and it does not answer his question.
+
+  ⚠ **Ten mutations applied alone and watched** (`tests/round29p3-market.test.ts` header). Two moved
+  NOTHING and are recorded as such rather than covered: `marketIndex`'s `!volBps` short-circuit
+  (`exp(0·wave)` is already 1) and `marketRatio`'s past-week clamp (no rung is both commissioned and
+  market-driven yet). An arm that cannot distinguish its own mutation is the dead guard the log
+  exists to keep out.
