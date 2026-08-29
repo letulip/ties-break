@@ -535,7 +535,11 @@ describe('save migrations', () => {
 
     // The chain runs to the END and not to 64 – which is the whole of what the renumber had to keep.
     expect(migrated.schemaVersion, 'the chain reaches the current schema').toBe(SAVE_SCHEMA_VERSION)
-    expect(SAVE_SCHEMA_VERSION, 'and the current schema is 65, not the colliding 64').toBe(65)
+    // ⚠ RE-AIMED AT v66 (29.08, round 29 part four P7 – the 'business' category), NOT WEAKENED.
+    // The claim this line was cut for survives intact one clause down: the chain must run PAST the
+    // colliding 64, and a chain that stopped there would now miss twice. The pin follows the
+    // ladder's head exactly as the golden-saves guard forces a fixture to.
+    expect(SAVE_SCHEMA_VERSION, 'and the current schema is 66 – past the colliding 64, through 65').toBe(66)
 
     // v64's step ran: the reveal back-fills NULL, which is the TRUE value and not a placeholder – no
     // save written before it can be holding a question in front of the player.
