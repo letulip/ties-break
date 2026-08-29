@@ -1818,3 +1818,50 @@ rest are new.
   share of the stage's outgoings** instead, so every rung is equally felt and none of them solves the
   endgame. That is a design decision taken against this research, not in ignorance of it, and it is
   written down in `ECONOMY.advertising.houses` and in §5 of the research file.
+
+
+---
+
+## Part three – his rulings of 29.08 on the shop and the manager's cut
+
+These arrived while the economy measurement was running and they change what that measurement is FOR:
+it now has to answer «can the parent reach the shelf» against a **smaller** parent income, not a
+larger one.
+
+- [ ] **P1. «моторка $2.4М – давай переделаем на парусную яхту пожалуйста»** – **build.** The
+  `motor boat` rung becomes a sailing yacht: label, art hook and copy. ⚠ Price, build weeks and
+  upkeep unchanged unless he says otherwise – he asked to change what it IS, not what it costs.
+
+- [ ] **P2. ⭐⭐ «для каждой стадии академии нам нужен доход… подвязать пропорционально к
+  максимальному месту ребенка на турнирах… чем выше и дольше место – тем выше будет доход у каждой
+  стадии»** – **build, and it is the biggest idea in this round.**
+
+  ⚙ **Feasible, and the data already exists.** `seasonHistory` keeps a year-end rank per season and
+  survives the 52-week prune – measured on his own save: `#411 → #198 → #155 → #106 → #97 → [college]
+  → #385 → #173 → #98 → #106 → #42 → #23`, i.e. **4 seasons closed inside the top 100, 2 inside the
+  top 50, 1 inside the top 25, 0 inside the top 10.** No schema move.
+
+  ⚠ **Honest limit: the resolution is SEASONAL, not weekly.** Weekly ranks live in a rolling 52-week
+  window and are erased, so «weeks held in the top 10» is unrecoverable; «seasons finished inside the
+  top 10» is exact. ⭐ And the seasonal measure is the better one anyway – «the academy earns because
+  its graduate has closed three straight years in the top 20» is a sentence the game can say.
+
+  ⭐⭐⭐ **Why this matters beyond the feature**: it makes the parent's wealth a function of how well he
+  raised her, instead of a cut of her money. The academy stops being a $12M purchase that only bills
+  upkeep and becomes the business the shop is actually FOR.
+
+- [ ] **P3. ⭐⭐⭐ «как менеджер может от этого что-то получать в свою очередь. 10-20% например…
+  контракт на полную сумму ребенку приходит на почту, после подписания видим на счету уже
+  родительский кат»** – ⚙ **RULING, and it settles the question I could not.**
+
+  I put it to him that taking half of a cheque paid for her face reads as the parent living off the
+  daughter; he agreed – «полностью согласен» – and gave the shape: **the letter is addressed to her
+  at its full value, and after signing the parent sees a manager's commission.** Sponsor money is
+  hers; the parent earns a fee for the work.
+
+  ⚠⚠ **This REDUCES the parent's income (50% → 10-20%) and therefore pushes the shelf FURTHER away,
+  not closer.** He is choosing the honest version knowingly and pairing it with P2 as the answer.
+  **The running economy measurement must be re-read against this, not against the shipped 50%.**
+
+  ⚠ Scope: this is about SPONSOR cheques. Prize money's 50/50 is his standing ruling and is untouched
+  unless he says otherwise. The exact percentage inside 10-20 is still his.
