@@ -355,3 +355,32 @@ Revised proposal under his line (movable, his):
 | E `capstone` | 4 seasons ended in top 10 | $10M/yr × 8yr, kit-shaped | **$15M+ – the icon band** |
 
 Cap: 6 concurrent; shoot capacity rises because the winter now carries them.
+
+
+## §7 – the portfolio is CATEGORIES, not abstract slots (owner, 29.08)
+
+His data point, Bublik's actual sponsor list: **одежда и обувь · ракетки и экипировка · часы ·
+автомобили · гидратация и напитки.** «У нас они частично есть уже. Можно даже текущих использовать
+двойной программой. И еще парочку накинуть – будет полный список.»
+
+⭐ So concurrency is not «N deals» – it is **one deal per CATEGORY**, which is how a real portfolio
+works and is instantly legible on screen: the portfolio is a shelf of named categories, filled or
+empty.
+
+| category | who holds it today | status |
+| --- | --- | --- |
+| clothing & shoes | the kit ladder (Baseline Athletic …) | **exists** – kit side |
+| rackets & equipment | the kit ladder (Netrally …) | **exists** – kit side |
+| watches | Quiet Hour | **exists** – ad side |
+| cars | – (the SHOP sells cars; a car brand can sponsor) | **add** |
+| hydration & drinks | – | **add** |
+| airline | Northmere Air (invented this week) | keep as a 6th |
+| fragrance | Rivelle (invented this week) | keep as a 7th – the icon-band category |
+
+**«Двойной программой»**: a brand she already wears can ALSO buy an ad campaign – Baseline Athletic
+paying for her racket bag AND a poster campaign is two deals, one brand, exactly like Nike does kit +
+campaigns. The kit deal and the ad deal stay separate letters with separate money.
+
+Tier × category: a category opens at a band (watches early, cars at top-100, fragrance at top-10),
+and the fee inside it follows §6's lifted bands. The cap of 6 concurrent becomes «at most one per
+category», which needs no constant at all.
