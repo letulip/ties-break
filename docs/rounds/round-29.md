@@ -1865,3 +1865,24 @@ larger one.
 
   ⚠ Scope: this is about SPONSOR cheques. Prize money's 50/50 is his standing ruling and is untouched
   unless he says otherwise. The exact percentage inside 10-20 is still his.
+
+
+- [ ] **P4. ⭐ «до академии можно запустить свой бренд одежды (мерча) – это может стать хорошим шагом
+  и подспорьем как в доходе, так и вообще добавить геймплея немного. А еще это дешевле академии»** –
+  **design, then build.**
+
+  ⭐⭐ **It lands on exactly the gap P2 and P3 opened.** The manager's commission takes money away from
+  the parent (50% → 10–20%); the academy gives it back but costs **$12M**, which the reachability
+  measurement may well say nobody gets to. **A merch brand is the missing FIRST rung of the parent's
+  own business** – cheap enough to start mid-career, and the same shape: income that scales with how
+  known she is rather than with what she banked.
+
+  ⚠ Open, and his: what it costs to start, what it earns against what, and whether it scales on rank,
+  on seasons-in-band (P2's measure), or on something else entirely – merch plausibly follows FAME
+  rather than ranking, and the two are not the same thing in this game. **Nothing to build until the
+  reachability numbers are in** – they say how big the hole is that this is filling.
+
+- [x] **16. THE FUND** – ⚙ **APPROVED**: «вроде посмотрел, давай сделаем, а я пощупаю и скажу свои
+  ощущения потом.» Building the seeded market path: `marketIndex(seed, week)` off a purpose-scoped
+  sub-stream, value = `paid × index(now) / index(basisWeek)`. ⚠ He will judge it by feel after
+  playing, so the numbers are provisional by his own framing.
