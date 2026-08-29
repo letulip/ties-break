@@ -1144,8 +1144,8 @@ describe('player copy', () => {
       // this grid, and both interpolate something the older cases never did – a BRAND, straight off
       // the signed paper, and a COUNT off the dial. Both arms of the shoot read-out are here (one
       // named day, and several) because they are different sentences.
-      facts({ adShoot: { brand: 'Quiet Hour', weeks: [6] } }),
-      facts({ plan: WEEK_PLAN_PRESETS.grind, adShoot: { brand: 'Quiet Hour', weeks: [6] } }),
+      facts({ adShoots: [{ brand: 'Quiet Hour', weeks: [6] }] }),
+      facts({ plan: WEEK_PLAN_PRESETS.grind, adShoots: [{ brand: 'Quiet Hour', weeks: [6] }] }),
       facts({ masseurHired: true, masseurSessionsPerWeek: 7 }),
       facts({ masseurHired: true, masseurSessionsPerWeek: 2 }),
     ]

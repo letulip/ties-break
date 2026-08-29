@@ -49,7 +49,6 @@ import {
 } from '../src/engine/world'
 import { resumeMain } from '../src/engine/rng'
 import {
-  AD_CATEGORIES,
   activeAdDealIn,
   activeAdDeals,
   adCategoryOf,
