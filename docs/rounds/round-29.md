@@ -1720,7 +1720,7 @@ rest are new.
   the shop spec's §10.4. The epilogue names the academy. He is supplying art for every item and
   academy stage.
 
-- [ ] **11. «добавь пожалуйста вообще идею и концепцию фотоальбома для эпилога в бэклог отдельной
+- [x] **11. «добавь пожалуйста вообще идею и концепцию фотоальбома для эпилога в бэклог отдельной
   задачей»** – **backlog entry**, not a build. A photo album for the epilogue, as a concept.
 
 - [x] **12. «открытое сейчас в вашем ящике продление Baseline закроет и следующую зимнюю почту… вот с
@@ -1823,7 +1823,11 @@ rest are new.
   dropped (red), the incumbent left running so two contracts overlap (red), and the queue boundary
   collapsed into an interruption (red).
 
-- [ ] **13. «вот и можно как раз добавить cut тренера на weekly экране для прозрачности»** – **build.**
+- [ ] **13. ⚠⚠ «вот и можно как раз добавить cut тренера на weekly экране для прозрачности»** –
+  **MISSED BY ME, not by an agent.** Part-one #13 shipped the coach's 10%/5% share as one line on the
+  Coaches tab; this is his FOLLOW-UP asking for it on the WEEKLY screen, and I never briefed it into
+  any step. Found by auditing the ledger when he asked «остальное же доделали?». It ships with the
+  commission step. – **build.**
   The coach's 10%/5% share on the weekly screen, not only as a sentence on the coaches page.
 
 - [?] **14. «травмы бывают долгими и рехаб может быть с вещами, я бы тут еще подумал – мы это вроде бы
@@ -1867,9 +1871,9 @@ rest are new.
   result are in **part three #16** at the foot of this file; the write-up is
   `docs/specs/the-shop-2026-08.md` §14.
 
-- [ ] **17. «Оставь он это так… починили?»** – **answer.** The `define` trap in round 29 #19.
+- [~] **17. «Оставь он это так… починили?»** – **answer.** The `define` trap in round 29 #19.
 
-- [ ] **18. «Что там с playwright? Разобрались, он теперь работает?»** – **answer.**
+- [~] **18. «Что там с playwright? Разобрались, он теперь работает?»** – **answer.**
 
 - [x] **19. «я не увидел наш список спонсоров для съемок и прочего, не спортивных. С ними что и на
   каких уровнях и что дают… Хочу увидеть их список и что дают.»** – **answer.** ⚠ Round 29 #7/#15
@@ -2007,7 +2011,7 @@ larger one.
   `motor boat` rung becomes a sailing yacht: label, art hook and copy. ⚠ Price, build weeks and
   upkeep unchanged unless he says otherwise – he asked to change what it IS, not what it costs.
 
-- [ ] **P2. ⭐⭐ «для каждой стадии академии нам нужен доход… подвязать пропорционально к
+- [x] **P2. ⭐⭐ «для каждой стадии академии нам нужен доход… подвязать пропорционально к
   максимальному месту ребенка на турнирах… чем выше и дольше место – тем выше будет доход у каждой
   стадии»** – **build, and it is the biggest idea in this round.**
 
@@ -2042,7 +2046,7 @@ larger one.
   unless he says otherwise. The exact percentage inside 10-20 is still his.
 
 
-- [ ] **P4. ⭐ «до академии можно запустить свой бренд одежды (мерча) – это может стать хорошим шагом
+- [x] **P4. ⭐ «до академии можно запустить свой бренд одежды (мерча) – это может стать хорошим шагом
   и подспорьем как в доходе, так и вообще добавить геймплея немного. А еще это дешевле академии»** –
   **design, then build.**
 
@@ -2914,7 +2918,7 @@ season), or a rate that starts at 20% and falls to 10% as she grows, mirroring h
   it. ⚠ Forward-safety: a save that somehow owns one must still value and sell it – tombstone the id,
   do not strand the money.
 
-- [ ] **P11. ⚙ His calibration correction, with his own data point**: «Доход Александра Бублика от
+- [x] **P11. ⚙ His calibration correction, with his own data point**: «Доход Александра Бублика от
   рекламных и спонсорских контрактов оценивается примерно в $1–2 миллиона в год. – это даже не 50
   ракетка. Твои цифры всё еще мимо частично. **Это доход у топ-100, у топ-50 точно больше, D – очень
   хорошо.**» – So the bands lift: **top-100 ≈ $1–2M/yr off-court total, top-50 above that, D capstone
