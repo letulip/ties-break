@@ -2746,3 +2746,37 @@ commission is a flat tax on everybody who ever signs a brand, and every counterw
 is a reward for the top of the distribution. **If that is the intent, it ships as is. If it is not,
 the fix belongs on the commission side** – a floor (say, the parent keeps 100% of the first $50,000 a
 season), or a rate that starts at 20% and falls to 10% as she grows, mirroring her own ramp.
+
+
+---
+
+## Part four – his design rulings of 29.08, after the reachability numbers
+
+- [~] **P5. ⚙ «И я ниразу не сказал, что каждая карьера должна иметь возможность скупить весь магазин.
+  Нет такого требования.»** – **RULING, and it retires a framing of mine.** The reachability report
+  presented «22 careers lose and gain nothing» and the bimodal economy as a problem needing a knob.
+  **It is not a problem – it is the design.** The top shelf is for exceptional careers; the median is
+  not owed a yacht. Do not re-open this from the measurement.
+
+- [ ] **P6. ⚙ «Федерер получал контракт с Nike на 10+ миллионов, это 1-2млн для родителя. Таких
+  контрактов может быть несколько.»** – **RULING that resizes the advertising ladder.** My «0.67% of
+  a career's money» measured OUR shipped rungs ($20k–$55k), not the concept's ceiling – at real-world
+  scale a top contract is $10M+/yr, which at the 10–20% commission is **$1–2M/yr for the parent**, and
+  several can run at once. ⚠ «Таких контрактов может быть несколько» also overturns the plan's
+  one-ad-deal-at-a-time §4.1 for the upper tiers – a top player holds a PORTFOLIO. Needs the research
+  below before numbers are picked.
+
+- [ ] **P7. His three-part order, verbatim:**
+  1. «разнотировые рекламные контракты с реальными суммами, можешь сделать ресерч на эти суммы для
+     общего понимания и калибровки»
+  2. «нам нужен мерч, растущий от частоты и обилия рекламных контрактов, съемок, выступлений, титулов
+     и прочего»
+  3. «нам нужна академия, которая зарабатывает» – «Посчитать сколько должна приносить академия или
+     поискать в интернете на примере Надаля»
+
+  ⭐ The chain is his own economy loop, stated end to end: **early and plentiful contracts → shoots →
+  fame → merch income → the academy.** Fame's floor comes from court results and shoots MULTIPLY it
+  (his explicit agreement in this session), merch follows fame, the academy follows seasons-in-band.
+
+- [x] **P8. The fame spec** – [fame-and-the-shoots-2026-08.md](../specs/fame-and-the-shoots-2026-08.md),
+  written this session; his «здесь полностью согласен» covers the floor-and-multiplier shape.
