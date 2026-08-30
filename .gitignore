@@ -87,3 +87,4 @@ ms-playwright/
 
 # `tools/precache-delta.mjs` builds two dists here and deletes them again (`--keep` leaves them).
 .tmp/
+.runs/

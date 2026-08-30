@@ -60,6 +60,28 @@ KNOBS.injuryBaseChance = num('base', KNOBS.injuryBaseChance)
 KNOBS.injuryFatigueSlope = num('slope', KNOBS.injuryFatigueSlope)
 KNOBS.injuryPlayingMultiplier = num('play', KNOBS.injuryPlayingMultiplier)
 if (flag('flatAge')) KNOBS.ageInjuryFactor = { default: 1 }
+// ⭐ ROUND 30 #26 – A WHOLE CANDIDATE AGE CURVE, SWAPPED IN FOR ONE RUN. Same CLI-only counterfactual
+// idiom as `--flatAge` directly above: nothing is written back to any file, and the arm is printed in
+// the header so no output can be misfiled.
+//
+// ⚠ THE SPEC IS A FULL REPLACEMENT AND `default:` IS REQUIRED, deliberately. A "merge onto the
+// shipped rows" form would make the printed arm ambiguous – the reader could not tell a 14 that was
+// stated from a 14 that was inherited – and the whole point of this flag is that what it prints is
+// EXACTLY what would be pasted into `ECONOMY.availability.ageInjuryFactor`. One edit to apply.
+//
+//   --ageCurve "13:0.85,14:0.9,15:1.05,16:1.2,17:1.05,18:0.95,19:0.8,...,default:1.6"
+const ageCurveSpec = str('ageCurve', '')
+if (ageCurveSpec) {
+  const table: { [age: number]: number; default: number } = { default: NaN }
+  for (const pair of ageCurveSpec.split(',')) {
+    const [k, v] = pair.split(':')
+    if (k === undefined || v === undefined || Number.isNaN(Number(v))) throw new Error(`--ageCurve: bad pair "${pair}"`)
+    if (k.trim() === 'default') table.default = Number(v)
+    else table[Number(k)] = Number(v)
+  }
+  if (Number.isNaN(table.default)) throw new Error('--ageCurve: the spec must carry a `default:` rung')
+  KNOBS.ageInjuryFactor = table
+}
 if (flag('flatLoad')) {
   KNOBS.consecutivePlayFactor = [1, 1, 1, 1, 1]
   KNOBS.injuryPlayingMultiplier = 1
@@ -253,6 +275,14 @@ console.log(
 )
 console.log(
   `  ${seasons.length} FULL seasons lived · ${onsets.length} onsets · mean seasons per career ${f(mean(careers.map((c) => c.seasons.length)), 1)}`,
+)
+// ⭐ THE AGE ARM, ALWAYS PRINTED – shipped or counterfactual, in the exact shape `ECONOMY` holds it.
+// A table this run was graded on that the output does not name is a table a later reader will guess.
+console.log(
+  `  ageInjuryFactor${ageCurveSpec ? ' (--ageCurve)' : flag('flatAge') ? ' (--flatAge)' : ' (shipped)'}: ` +
+    Object.entries(KNOBS.ageInjuryFactor)
+      .map(([k, v]) => `${k}:${v}`)
+      .join(', '),
 )
 
 // --- 1. the per-season picture --------------------------------------------------------------------
