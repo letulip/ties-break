@@ -1041,6 +1041,34 @@ function rateLine(row: ShopRowView): string {
   return `Gains about ${row.annualRatePct}% a season`
 }
 
+// ⭐⭐⭐ ROUND 30 #14 – `shopUnitsNote`, HIS RULING, PARKED HERE AND NOT IN THE TEMPLATE, for the
+// reason every other note in this block carries: Cyrillic may not appear in a `<template>`, in a
+// string OR in a comment (tests/template-copy-rules.test.ts).
+//
+// «Волатильность индексного фонда какая-то очень большая по ощущениям +65/-15 это то, что я видел…
+// И надо логику фонда переделать на покупку ДОЛЕЙ в фонде, как раз доли дадут возможность расти на
+// горизонте и будут давать разные точки входа, как в жизни. Стоимость активов будет рассчитываться
+// исходя из стоимости долей. Зашёл, когда доля стоила 4к, через десять лет она может вполне
+// удвоиться. Или зашёл на пике при цене 7-8к и увидел просадку на следующий год – имеешь возможность
+// усредниться или зафиксировать убыток.»
+//
+// ⚠⚠ THE TWO LINES BELOW ARE THE WHOLE OF WHAT THIS ITEM ADDS TO THE SCREEN, and that is invariant 4
+// read literally: a mechanic that cannot be decided without a number gets that number and nothing
+// else moves. He asked to be able to average down or take a loss; both need the same three figures –
+// how many units they hold, what they averaged at, what one costs today – and none of the sentences
+// already on this row is touched, re-worded or removed.
+//
+// ⚠ THE UNOWNED LINE EXISTS FOR «зашёл на пике при цене 7-8к»: the entry price is a fact about the
+// WEEK, so a family looking at the row before it buys is looking at the price it would pay.
+
+/** ⭐ HOW MANY UNITS, AS A PERSON READS THEM. ⚠ THE ONE FRACTIONAL FIGURE ON THIS SCREEN, and the
+ *  owner's rule of 26.08 («у пользователя целые в интерфейсе») is about MONEY: $5,000 into a $4,000
+ *  unit is 1.25 units, and rounding that to 1 would print a quarter of the holding out of existence.
+ *  Two places, which is what a real fund statement uses. */
+function formatUnits(units: number): string {
+  return units.toFixed(2)
+}
+
 interface PendingShop {
   kind: 'buy' | 'sell'
   id: string
@@ -1770,6 +1798,13 @@ const TAB_OPTIONS = [
                    (tests/template-copy-rules.test.ts). In short: `negative` means MONEY OUT, this
                    figure is a BALANCE, and `plain` is StatRow's own word for a balance. -->
               <StatRow class="money-row" label="Worth now" :meta="`paid ${formatCents(row.paidCents ?? 0)}`" :value="formatCents(row.valueCents)" tone="plain" />
+              <!-- ⭐⭐⭐ ROUND 30 #14 – THE THREE FIGURES THE DECISION NEEDS. His words and the
+                   reasoning are in `shopUnitsNote` in the script block (no Cyrillic in a template).
+                   Every number is the engine's: `shopView` counted the units, divided the cost by
+                   them and priced the week. This screen divides nothing. -->
+              <p v-if="row.unitsHeld !== null && row.avgUnitPriceCents !== null && row.unitPriceCents !== null" class="shop-row-units">
+                {{ formatUnits(row.unitsHeld) }} units &ndash; bought at {{ formatCents(row.avgUnitPriceCents) }} each, {{ formatCents(row.unitPriceCents) }} now
+              </p>
               <p class="shop-row-change" :class="{ 'is-down': (row.changeCents ?? 0) < 0 }">
                 {{ formatCentsSigned(row.changeCents ?? 0) }}
                 <span v-if="row.changePct !== null">since they bought it ({{ row.changePct }}%)</span>
@@ -1826,6 +1861,11 @@ const TAB_OPTIONS = [
             </div>
             <!-- NOT OWNED: the price, and a control that is pressable or is not. -->
             <div v-else class="shop-row-buy">
+              <!-- ⭐⭐ ROUND 30 #14 – THE ENTRY PRICE, BEFORE THERE IS A HOLDING. See
+                   `shopUnitsNote` in the script block. -->
+              <p v-if="row.unitPriceCents !== null" class="shop-row-units">
+                One unit is {{ formatCents(row.unitPriceCents) }} this week
+              </p>
               <label v-if="row.stake === 'open'" class="shop-stake">
                 <span class="shop-stake-label">
                   How much, from {{ formatCents(row.entryCents) }}
@@ -2560,6 +2600,14 @@ const TAB_OPTIONS = [
 
 /* The wait and the stage under it – facts about WHEN, not about money, so they take the quiet ink
    the blurb takes rather than either money colour. */
+.shop-row-units {
+  /* ⭐ ROUND 30 #14 – the same muted, small idiom as `.shop-row-upkeep` and `.shop-row-wait`: a
+     supporting fact under the headline figure, never a headline of its own. */
+  margin: 4px 0 0;
+  font-size: 11.5px;
+  color: var(--ink-soft);
+}
+
 .shop-row-wait {
   margin: 4px 0 0;
   font-size: 11.5px;
