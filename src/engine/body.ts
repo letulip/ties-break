@@ -27,6 +27,12 @@
 // (0.48 * 0.3) instead of pre-multiplied.
 
 import type { Rng } from './rng'
+// ⚠ VALUE IMPORT, AND IT ADDS NO CYCLE: `economy.ts` imports `rng`, `shared/dates` and three
+// type-only modules, and none of them reaches back here. It is here for ONE knob –
+// `availability.recurrence.partTilt` – which belongs with the rest of the recurrence group rather
+// than beside this file's two local tilts, because the bench's control arm has to switch the whole
+// group off in one place or the arm is not a control.
+import { ECONOMY } from './economy'
 
 /** Body-region weights (owner research 25.07): ~48% lower-limb / 28% upper / 24% core, with the
  *  WTA skew inside `lower` (girls' pattern = ankle+knee sprains take the majority of the lower
@@ -81,7 +87,7 @@ export function drawBodyRegionFrom(rng: Rng, table: readonly { part: string; wei
 //   generator, tapped, gives the same pull count and the same residual sequence under both tables)
 //   rather than asserted here.
 //
-// TWO TILTS, and they answer two different questions about the same body:
+// THREE TILTS, and they answer three different questions about the same body:
 //
 //   THE WEEK  - what she has been drilling, off `loadedPartShares` (knock.ts's fold over the session
 //               grid). Six weeks of serving develops a shoulder; this is what makes the shoulder pay
@@ -91,6 +97,12 @@ export function drawBodyRegionFrom(rng: Rng, table: readonly { part: string; wei
 //               pushing does not collect a series of unrelated Fridays; it breaks the shoulder it
 //               has been ignoring. Same argument `KNOCK_REPEAT_TAU` makes, applied to WHERE rather
 //               than to HOW LIKELY.
+//   THE SCARS - and the parts that have already BROKEN (`priorParts`, round 30 #27). The owner:
+//               «увеличивать немного вероятность новой такой же травмы». Previous injury is the
+//               best-established risk factor in sports-injury epidemiology, ahead of age and load,
+//               and it is the one tilt of the three that DECAYS - an ankle sound for three seasons
+//               stops being the weak ankle, which is «мы ни за что не наказываем» expressed as a
+//               half-life rather than as a promise.
 //
 // ⚠ IT IS A TILT AND NOT A RISK, exactly as `KNOCK_AIM_TILT` is. Nothing here changes how often she
 // gets hurt - `retireHazard` reads in-match fatigue and how fresh she arrived (`retireDurability`,
@@ -116,13 +128,21 @@ export const BODY_PUSHED_TILT = 2.6
 export function tiltedBodyRegions(
   loaded: ReadonlyMap<string, number>,
   pushed: readonly string[],
+  /** ⭐ THE THIRD TILT (round 30 #27): parts this body has ALREADY BEEN INJURED IN, each carrying its
+   *  own decayed weight in [0,1] – `recurrencePartLoad` in world/injury.ts builds it off
+   *  `injuryHistory` and nothing else. It is the same claim `pushed` makes one line above, made
+   *  about a healed injury instead of about an ignored knock, and it is scaled rather than boolean
+   *  because an ankle that went last month and an ankle that went three seasons ago are not the same
+   *  ankle. Omitted ⇒ empty ⇒ every existing caller and every clean record is byte-identical. */
+  priorParts: ReadonlyMap<string, number> = new Map(),
 ): readonly { part: string; weight: number }[] {
-  if (loaded.size === 0 && pushed.length === 0) return BODY_REGIONS
+  if (loaded.size === 0 && pushed.length === 0 && priorParts.size === 0) return BODY_REGIONS
   let total = 0
   const tilted = BODY_REGIONS.map((r) => {
     const share = loaded.get(r.part) ?? 0
     const onRecord = pushed.includes(r.part) ? BODY_PUSHED_TILT : 1
-    const weight = r.weight * (1 + (BODY_AIM_TILT - 1) * share) * onRecord
+    const prior = 1 + (ECONOMY.availability.recurrence.partTilt - 1) * (priorParts.get(r.part) ?? 0)
+    const weight = r.weight * (1 + (BODY_AIM_TILT - 1) * share) * onRecord * prior
     total += weight
     return { part: r.part, weight }
   })

@@ -14,7 +14,7 @@
 // measured at 8 call-backs in wave 0, 0 here.
 import { ECONOMY } from '../economy'
 import { pickInt, rngFromSeed, type Rng } from '../rng'
-import { BODY_REGIONS, drawBodyRegionFrom, tiltedBodyRegions } from '../body'
+import { bodyPartOf, drawBodyRegionFrom, tiltedBodyRegions } from '../body'
 import { clamp } from '../condition'
 import { kitInjuryFactor, kitWearAt } from '../equipment'
 import { kitFreshCap } from '../offers'
@@ -48,6 +48,187 @@ import type { WorldState } from '../world'
 export function ageInjuryFactor(ageYears: number): number {
   const table = ECONOMY.availability.ageInjuryFactor
   return table[ageYears] ?? table.default
+}
+
+// =================================================================================================
+// RECURRENCE – round 30 #27, the owner's ruling of 30.08
+// =================================================================================================
+//
+// «раз мы храним историю травм у себя, то вполне можно делать алгоритм, который будет увеличивать
+// немного вероятность новой такой же травмы или ее прогрессии (более тяжелой). Мне кажется это
+// похоже на правду.» It is похоже на правду: PREVIOUS INJURY IS THE BEST-ESTABLISHED RISK FACTOR IN
+// SPORTS-INJURY EPIDEMIOLOGY, ahead of age and ahead of load.
+//
+// ⭐⭐ WHAT IT IS FOR, AND IT IS NOT THE RATE. His other complaint was «ни одной травмы я не видел
+// уже несколько сезонов» – and the measured rate is 0.68-0.78 onsets a season against his own
+// lifetime 0.64, so the number was never the problem. INDEPENDENT WEEKLY DRAWS PRODUCE EXACTLY THE
+// FORGETTABLE PATTERN HE DESCRIBES. This mechanic spends its whole budget on CLUSTERING the same
+// total: «three quiet years, then the ankle went twice in one season» is the identical number of
+// injuries told in a way a person can remember. The bench grades it on the clustering columns
+// (`repeat share`, the gap distribution), not on the rate.
+//
+// ⚠⚠ RNG, AND IT IS THE SAME PROMISE THE REST OF THIS FILE MAKES. All three limbs below read
+// `injuryHistory`, which is a CONSEQUENCE OF PLAY – so if any of them reached a draw, a player's
+// choices would re-roll the world's dice and input-independence (invariant 2) would be gone. None of
+// them does:
+//   `recurrenceTauFactor` is a POST-DRAW multiply inside `injuryTau`, exactly `kitInjuryFactor`'s
+//      shape – the occurrence roll is already drawn by the time it is called, so it moves whether
+//      she gets hurt and never which numbers come out of any stream;
+//   `escalatedBands` re-prices thresholds that an ALREADY-DRAWN uniform is compared against, exactly
+//      `severityBandsFor`'s shape;
+//   `recurrencePartLoad` tilts a TABLE that `drawBodyRegionFrom` spends exactly one pull against for
+//      any table, exactly `tiltedBodyRegions`' shape.
+// Zero draws added on any stream. The frozen MAIN capture (41550 / e6b0c709) cannot see any of it.
+//
+// ⚠ NO SCHEMA MOVE. Everything is derived from `injuryHistory`, which already holds `kind`,
+// `severity`, `week` and `weeksOut`; `bodyPartOf` already turns a `kind` back into one of the twelve
+// regions. Nothing new is persisted.
+
+/** How much of a recovered layoff is still on the body, at `week`. Halves every
+ *  `recurrence.halfLifeWeeks`, counted from the RECOVERY week (which is the week an `injuryHistory`
+ *  row carries), so a long absence starts fading when she is back on court rather than when she went
+ *  down. Rows in the future (hand-built probe worlds) and rows at the same week both read 1. */
+function recurrenceDecay(rowWeek: number, week: number): number {
+  const elapsed = week - rowWeek
+  if (elapsed <= 0) return 1
+  return Math.pow(0.5, elapsed / ECONOMY.availability.recurrence.halfLifeWeeks)
+}
+
+/** What one history row weighs before decay.
+ *
+ *  ⚠ THE WIDENING IS DELIBERATE AND IT IS ON THE SAVE'S SIDE, NOT THE KNOB'S. `injuryHistory` rows
+ *  declare `severity: string` (world/state.ts) because they are PERSISTED and a save written by any
+ *  build may be read by this one, while the knob is a `Record<InjurySeverity, number>` because that
+ *  is what it documents. Reading through `Record<string, number | undefined>` is the honest join of
+ *  the two: an unrecognised severity contributes NOTHING rather than `undefined` propagating into
+ *  the sum as `NaN` and poisoning every factor downstream. */
+function recurrenceWeightOf(severity: string): number {
+  const table = ECONOMY.availability.recurrence.severityWeight as Record<string, number | undefined>
+  return table[severity] ?? 0
+}
+
+/**
+ * ⭐ THE ONE STATE QUANTITY ALL THREE LIMBS READ – the decayed, severity-weighted count of what this
+ * body has already been through, saturating at `recurrence.loadCap`.
+ *
+ * ⚠⚠ THE CEILING AND THE DECAY ARE THE DESIGN AND NOT A RAIL BOLTED ON AFTERWARDS. «Мы ни за что не
+ * наказываем»: a first injury may not doom a career, so a mechanic that only ever accumulates is a
+ * death spiral wearing realism's clothes. The cap says a body can carry at most one fresh major
+ * injury's worth of memory however long the list gets, and the half-life says three quiet seasons
+ * take 87.5% of it away.
+ *
+ * ⚠ IT READS THE PRUNED LIST ON PURPOSE. `rollInjury` keeps `injuryHistory` at its last 20 rows, and
+ * unlike `weeksLostSoFar` – whose accumulator had to be rescued in v40 because a career TOTAL that
+ * silently ran short was a bug – a decayed sum wants the recent tail and nothing else. A row old
+ * enough to be pruned is a row worth ~0 here anyway: 20 injuries deep is many seasons back.
+ *
+ * Pure state, zero draws.
+ */
+export function recurrenceLoad(world: WorldState): number {
+  const r = ECONOMY.availability.recurrence
+  let load = 0
+  for (const row of world.injuryHistory) {
+    load += recurrenceWeightOf(row.severity) * recurrenceDecay(row.week, world.week)
+  }
+  return Math.min(load, r.loadCap)
+}
+
+/**
+ * ...and the same sum split BY BODY PART, each capped on its own, for the region tilt. This is the
+ * «новой ТАКОЙ ЖЕ травмы» half of his sentence: the ankle that went last season is what makes the
+ * ankle the likely next one.
+ *
+ * ⚠ EMPTY MAP FOR A CLEAN RECORD, which is what keeps every existing career byte-identical:
+ * `tiltedBodyRegions` returns the shipped `BODY_REGIONS` array itself when nothing tilts it, and its
+ * own note explains why that identity return is load-bearing (the twelve weights sum to 1.0 in
+ * decimal but not in binary, so a renormalising pass over an all-ones tilt could flip a boundary
+ * uniform into the neighbouring part). A row whose `kind` names none of the twelve regions –
+ * possible only in a hand-built world – is skipped rather than guessed at.
+ */
+export function recurrencePartLoad(world: WorldState): Map<string, number> {
+  const r = ECONOMY.availability.recurrence
+  const out = new Map<string, number>()
+  for (const row of world.injuryHistory) {
+    const part = bodyPartOf(row.kind)
+    if (part === null) continue
+    const w = recurrenceWeightOf(row.severity) * recurrenceDecay(row.week, world.week)
+    out.set(part, Math.min(r.loadCap, (out.get(part) ?? 0) + w))
+  }
+  return out
+}
+
+/**
+ * THE FREQUENCY LIMB – `injuryTau *= this`. At the top of the ceiling it is +30% on the weekly
+ * threshold («немного», his word), and it decays to nothing across three seasons.
+ *
+ * ⚠⚠ WEEKLY DOOR ONLY, AND THAT IS SAID OUT LOUD RATHER THAN GLOSSED. The measurement
+ * (docs/specs/age-injury-curve-2026-08.md §2c) found the IN-MATCH RETIREMENT DOOR supplies 73-79% of
+ * adult onsets and carries no age, physio or kit term at all, so a term added here reaches about a
+ * fifth of her injuries. It is NOT extended to that door, and the reason is that the door's rate is
+ * not ours to move: `RETIRE_K = 0.07` is calibrated against a published stoppage rate (2.73% of
+ * matches, PLOS ONE 2024) and the owner reserved it explicitly on 11.08 – «RETIRE_K оставляем как
+ * есть». Reaching it would also mean a new field on `MatchPlayer`, which is frozen into
+ * `WorldMatch.a` for replay, i.e. the schema move #27 says this design does not need.
+ *
+ * ⭐ SO RECURRENCE REACHES BOTH DOORS BY THE OTHER TWO LIMBS INSTEAD, and that is the more important
+ * half: `escalatedBands` and the region tilt both live inside `onsetInjury`, which is THE ONE INJURY
+ * ONSET WRITER for the weekly roll and the retirement alike. The texture he asked for – the same
+ * ankle again, and worse – lands on ~100% of her injuries. Only the TIMING limb is capped at the
+ * weekly door's share, and that is a known, measured ceiling rather than an oversight.
+ *
+ * Pure state, zero draws.
+ */
+export function recurrenceTauFactor(world: WorldState): number {
+  return 1 + ECONOMY.availability.recurrence.tauBump * recurrenceLoad(world)
+}
+
+/**
+ * THE SEVERITY LIMB'S FACTOR – age x history, clamped at the sourced band's own top.
+ *
+ * Limb 1 of #27 («тяжесть надо взять точно, но разумно») is the age half: research §5c has the
+ * severe share running 43% in adolescents against 54-66% in professionals, 1.26-1.53x, where every
+ * INCIDENCE number in the sport shows no gradient at all. Limb 2's «или ее прогрессии (более
+ * тяжелой)» is the history half, on the same instrument.
+ *
+ * ⚠ THE CLAMP IS THE «РАЗУМНО». `severityAgeFactor` tops out at 1.26 – the BOTTOM of the sourced
+ * range, taken as a ceiling rather than as a target – and the history bump can add at most 20% on
+ * top, so the product's own maximum (1.512) is clipped to `severityFactorCap` (1.5). Nothing in this
+ * engine may push the severe share past what was published.
+ *
+ * Pure state, zero draws.
+ */
+export function severityEscalation(world: WorldState): number {
+  const a = ECONOMY.availability
+  const age = a.severityAgeFactor[kidAgeYears(world.week, world.profile.birthMonth, world.profile.birthDay)]
+  const byAge = age ?? a.severityAgeFactor.default
+  return Math.min(byAge * (1 + a.recurrence.severityBump * recurrenceLoad(world)), a.recurrence.severityFactorCap)
+}
+
+/**
+ * ⭐ THE BANDS, RE-PRICED BY A FACTOR – and it moves the ODDS of getting above `minor`, never the
+ * layoff lengths.
+ *
+ * Each band's TAIL probability (the chance of landing in it or anything worse) is multiplied by
+ * `factor` and the cumulative thresholds are rebuilt from the tails, so a factor of 1.26 takes the
+ * weekly table's P(worse than minor) from 40% to 50.4% and P(severe) from 2.5% to 3.15% – which is
+ * exactly the shape §5c publishes. `weeksLo`/`weeksHi` are untouched, which restates round 16 #13's
+ * own ruling: «What changes above moderate is how OFTEN you get there, never what it costs when you
+ * do.» A stress reaction does not heal faster or slower because of the age of the body it happened
+ * to.
+ *
+ * ⚠ MONOTONICITY IS STRUCTURAL, not asserted: tails are non-increasing in band order, scaling them
+ * all by the same positive factor and clamping at 1 keeps them non-increasing, so the rebuilt
+ * cumulatives stay non-decreasing and the last band still closes at exactly 1.
+ *
+ * ⚠ AND IT RETURNS THE SHIPPED ARRAY ITSELF AT `factor <= 1`, the same identity return
+ * `tiltedBodyRegions` makes and for the same reason: a career that escalates nothing must compare
+ * against byte-identical thresholds, not against thresholds that survived a float round trip.
+ */
+export function escalatedBands<T extends { cum: number }>(bands: readonly T[], factor: number): readonly T[] {
+  if (factor <= 1 || bands.length === 0) return bands
+  return bands.map((b, i) =>
+    i === bands.length - 1 ? b : { ...b, cum: 1 - Math.min(1, (1 - b.cum) * factor) },
+  )
 }
 
 /** Overuse multiplier for competed weeks in the trailing 4 (research §3.2). Index = count,
@@ -152,6 +333,16 @@ export function injuryTau(world: WorldState): number {
   // otherwise take a worn body past 13%/wk, and the cap is the promise that no single decision can
   // make her a coin flip.
   tau *= knockTauFactor(world.knock, world.week)
+  // ROUND 30 #27 – AND WHAT HER BODY HAS ALREADY BEEN THROUGH. Deliberately the same shape as every
+  // multiply above it and as `kitInjuryFactor` in particular: POST-DRAW on the threshold, zero draws
+  // on any stream, so the private `seed:injury:<week>` sequence is byte-identical for a career with
+  // a clean record and the frozen MAIN capture (41550 / e6b0c709) cannot move. It reads
+  // `injuryHistory`, which is a consequence of PLAY, so that property is not a nicety here – it is
+  // the whole reason the mechanic is allowed to exist under invariant 2.
+  //
+  // `injuryChanceCap` below still caps it, and the factor is 1.0 exactly for every career that has
+  // never been hurt and for every career whose last injury is three seasons behind her.
+  tau *= recurrenceTauFactor(world)
   return Math.min(tau, a.injuryChanceCap)
 }
 
@@ -266,7 +457,13 @@ export function rollInjury(world: WorldState): void {
   const roll = injuryRng() // unconditional every healthy week – only tau moves
   if (roll >= injuryTau(world)) return
 
-  onsetInjury(world, injuryRng, 'week', BODY_REGIONS)
+  // ⚠ ROUND 30 #27 – THE WEEKLY DOOR NOW HANDS IN A TILTED TABLE TOO, where it used to hand in the
+  // raw twelve. The tilt is the scars and nothing else (the week's sessions and the knock record are
+  // the RETIREMENT door's tilts – she never took the court on an ordinary week, so there is no
+  // in-match loading to read), and `recurrencePartLoad` returns an empty map for a clean record, so
+  // `tiltedBodyRegions` gives back the shipped `BODY_REGIONS` ARRAY ITSELF and a career that has
+  // never been hurt walks byte-identical cumulative sums. One pull either way.
+  onsetInjury(world, injuryRng, 'week', tiltedBodyRegions(new Map(), [], recurrencePartLoad(world)))
 }
 
 /** WHERE AN INJURY COMES FROM. Two doors into the same body, and the distinction is the owner's
@@ -320,7 +517,14 @@ export function onsetInjury(
   // lookup, not a branch in the draw: the uniform below is pulled unconditionally either way, and
   // `pickInt`/`drawBodyRegionFrom` each take exactly one pull for any range and any table. The arity
   // note below still holds to the letter – three pulls, this order, always.
-  const bands = severityBandsFor(cause)
+  //
+  // ⚠ AND ROUND 30 #27 RE-PRICES THAT TABLE BEFORE THE UNIFORM IS PULLED, which is the same
+  // statement wearing a second hat: `escalatedBands` is pure state (age and `injuryHistory`), it runs
+  // ABOVE the `rng()` below, and all it changes is the numbers the already-drawn uniform is compared
+  // against. The arity note holds to the letter – three pulls, this order, always – and it holds at
+  // BOTH doors, because this is the one onset writer and the escalation lives here rather than at
+  // either call site.
+  const bands = escalatedBands(severityBandsFor(cause), severityEscalation(world))
   const sevRoll = rng()
   const band = bands.find((b) => sevRoll < b.cum) ?? bands[bands.length - 1]
   let weeksOut = pickInt(rng, band.weeksLo, band.weeksHi)
@@ -476,7 +680,15 @@ export function retirementInjury(world: WorldState): void {
     world,
     rngFromSeed(`${world.seed}:retire:${world.week}`),
     'retirement',
-    tiltedBodyRegions(loadedPartShares(planWeek(world.plan)), pushedParts(world.knockHistory)),
+    // ⚠ AND THE SCARS RIDE ON THE SAME TABLE (round 30 #27), which is why recurrence reaches this
+    // door at all: a third tilt on the twelve parts, not a second draw. See `recurrenceTauFactor` for
+    // what does NOT reach this door and why (`RETIRE_K` is owner-reserved and calibrated to a
+    // published stoppage rate, so the door's RATE is untouched – only where it lands and how hard).
+    tiltedBodyRegions(
+      loadedPartShares(planWeek(world.plan)),
+      pushedParts(world.knockHistory),
+      recurrencePartLoad(world),
+    ),
   )
 }
 

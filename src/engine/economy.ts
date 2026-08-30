@@ -2670,7 +2670,37 @@ export const ECONOMY = {
     // decision, and stops a later re-tune of `default` (a rule about adults) from silently moving
     // thirteen-year-olds. The shape peaks at 16, which is the growth spurt; 13 sits below 14 because she
     // is pre-spurt and carrying smaller loads.
-    ageInjuryFactor: { 13: 0.85, 14: 0.9, 15: 1.05, 16: 1.2, 17: 1.05, 18: 0.95, default: 0.85 } as {
+    // ⚠⚠ THE ADULT LIMB LANDED 30.08 (round 30 #26/#27), AND THE NUMBERS BELOW ARE THE FITTED ONES –
+    // measured, not chosen. `docs/specs/age-injury-curve-2026-08.md` §4b is the fit and §4c its
+    // predicted-vs-measured table; do not re-derive them, re-run that bench.
+    //
+    // WHAT WAS WRONG. `default: 0.85` was the table's LOWEST value and it carried every year from 19
+    // to retirement, so nineteen, twenty-five and thirty-four were one body and all three were 29%
+    // safer than a sixteen-year-old. The note above is still true – the table was never wrong, it was
+    // UNFINISHED – and the fallback quietly became the adult model when careers grew to forty.
+    //
+    // WHAT THE SHAPE IS, ROW FAMILY BY ROW FAMILY:
+    //   13-18  the shipped junior shape x0.7. The SHAPE is the owner's own research (§3.1) and is not
+    //          re-argued – the peak is still at 16, the ladder is the same – only its HEIGHT moves.
+    //          16-18 measured 64.5% against its own researched anchor of 46-54%, the single most
+    //          over-band row in the table; x0.7 takes it to 59.0% and 13-15 to 49.7%, still in band.
+    //   19-27  the prime, FLAT at 0.25. Both WTA studies that tested age for INCIDENCE returned null
+    //          (research §5b), so a rising limb through the prime is not licensed by anything.
+    //   28-33  the rise, LINEAR, and 34+ is 2x the prime. That 2x is the bottom of the only quantified
+    //          proxy band (2.3-4.9x in football, research §5d) and deliberately nowhere near its top,
+    //          because tennis's own two attempts at the question came back null.
+    //
+    // ⚠ THE LEVEL MOVED WITH THE SHAPE ON PURPOSE, and that is what makes it shippable: season
+    // prevalence measured 58.5% against the professional research band of 30-54%, and the fitted
+    // curve lands 51.4% – IN BAND, from outside it. A level-neutral variant of the same shape is
+    // measured beside it (§4d) and lands 58.4%, i.e. out of band; it was not taken.
+    ageInjuryFactor: {
+      13: 0.6, 14: 0.63, 15: 0.74, 16: 0.84, 17: 0.74, 18: 0.67,
+      19: 0.25, 20: 0.25, 21: 0.25, 22: 0.25, 23: 0.25, 24: 0.25,
+      25: 0.25, 26: 0.25, 27: 0.25,
+      28: 0.29, 29: 0.32, 30: 0.36, 31: 0.39, 32: 0.43, 33: 0.46,
+      default: 0.5,
+    } as {
       [age: number]: number
       default: number
     },
@@ -2770,6 +2800,114 @@ export const ECONOMY = {
       { cum: 0.99, severity: 'major', weeksLo: 8, weeksHi: 14 },
       { cum: 1.0, severity: 'severe', weeksLo: 16, weeksHi: 22 },
     ] as { cum: number; severity: InjurySeverity; weeksLo: number; weeksHi: number }[],
+
+    // --- SEVERITY BY AGE (round 30 #27 limb 1, the owner 30.08: «тяжесть надо взять точно, но
+    // разумно») ---------------------------------------------------------------------------------
+    //
+    // ⭐⭐ THIS IS THE BEST-SOURCED OF THE THREE LIMBS, and it is a different instrument from
+    // `ageInjuryFactor` above. Research §5c: tennis shows BURDEN rising with age, not incidence –
+    // the SEVERE share (>28 days lost) runs 43% in adolescents against 54-66% in
+    // collegiate/professional players, a ratio of 1.26-1.53x, where every incidence number in the
+    // sport shows no gradient at all (§5b, two WTA nulls). So the events stay where the fitted curve
+    // put them and the CONSEQUENCES move.
+    //
+    // ⚠ «РАЗУМНО» IS HIS WORD AND IT IS APPLIED AS A CEILING, NOT AS A TARGET. The whole
+    // adolescent-to-veteran climb below is 1.26x – the BOTTOM of the sourced 1.26-1.53 band, not its
+    // middle and not its top. A model that took 1.53 would be quoting the most generous reading of a
+    // single systematic review as if it were a measurement of this sport at this age.
+    //
+    // THE SPLIT INSIDE THAT CEILING, and only the first half of it is sourced:
+    //   13-18 -> 1.00   the anchor. This IS the 43% the source measures; it must not move, or the
+    //                   ratio the whole table expresses stops being the ratio that was published.
+    //   19-27 -> 1.13   `[I]` the adolescent->professional step, taken at ABOUT HALF the ceiling.
+    //                   The source's contrast is adolescent-vs-professional and a nineteen-year-old
+    //                   IS a professional, so the literal reading would spend the whole 1.26 here –
+    //                   but that leaves no gradient inside adulthood, which is the half he asked
+    //                   for, and it would put a cliff at the birthday.
+    //   28-33 -> linear, 34+ -> 1.26   `[I]` from Williams S et al., J Sci Med Sport 2023 (elite
+    //                   rugby union): a heavy season raises the following season's BURDEN and not
+    //                   its incidence, and the effect is «driven by an increased risk for older
+    //                   (>26y) Forwards». That is the only sourced within-adult burden gradient in
+    //                   a comparably-loaded sport, and 28 is where the frequency curve above starts
+    //                   rising too – ONE age story, told twice, rather than two that can drift.
+    //
+    // ⚠ IT SCALES THE BANDS' CUMULATIVE THRESHOLDS AND NEVER THE LAYOFF LENGTHS. `escalatedBands`
+    // multiplies each band's TAIL probability and leaves `weeksLo`/`weeksHi` exactly as they are,
+    // which is round 16 #13's own ruling restated: «What changes above moderate is how OFTEN you get
+    // there, never what it costs when you do.» A stress reaction does not take longer to heal
+    // because the body it happened to is thirty-four.
+    //
+    // ⚠ AND IT CANNOT MOVE A DRAW. It is read AFTER the severity uniform has been pulled and only
+    // decides what that already-drawn number MEANS – the same post-draw discipline
+    // `severityBandsFor` and every multiply in `injuryTau` are built on.
+    severityAgeFactor: {
+      13: 1, 14: 1, 15: 1, 16: 1, 17: 1, 18: 1,
+      19: 1.13, 20: 1.13, 21: 1.13, 22: 1.13, 23: 1.13, 24: 1.13,
+      25: 1.13, 26: 1.13, 27: 1.13,
+      28: 1.15, 29: 1.17, 30: 1.19, 31: 1.2, 32: 1.22, 33: 1.24,
+      default: 1.26,
+    } as { [age: number]: number; default: number },
+
+    // --- RECURRENCE (round 30 #27 limb 2) ---------------------------------------------------------
+    //
+    // THE OWNER, 30.08: «раз мы храним историю травм у себя, то вполне можно делать алгоритм,
+    // который будет увеличивать немного вероятность новой такой же травмы или ее прогрессии (более
+    // тяжелой). Мне кажется это похоже на правду.» It is the strongest of his three, because
+    // PREVIOUS INJURY IS THE BEST-ESTABLISHED RISK FACTOR IN SPORTS-INJURY EPIDEMIOLOGY – ahead of
+    // age and ahead of load.
+    //
+    // ⭐⭐ AND THE POINT IS CLUSTERING, NOT LEVEL, which is what makes it the answer to his OTHER
+    // complaint («ни одной травмы я не видел уже несколько сезонов»). Measured onsets are 0.68-0.78 a
+    // season and his own lifetime rate is 0.64: the number was never the problem. INDEPENDENT WEEKLY
+    // DRAWS PRODUCE EXACTLY THE FORGETTABLE PATTERN HE DESCRIBES – nothing, nothing, a niggle,
+    // nothing. «Three quiet years, then the ankle went twice in one season» is the SAME TOTAL told
+    // properly, and only a mechanic with memory can tell it.
+    //
+    // ⚠⚠ THE CEILING AND THE DECAY ARE THE DESIGN, NOT A SAFETY RAIL BOLTED ON AFTERWARDS – «мы ни
+    // за что не наказываем». A first injury may not doom a career. Without a decay this is a death
+    // spiral wearing realism's clothes, so:
+    //
+    //   halfLifeWeeks 52   ONE SEASON. An ankle sound for three seasons has 0.5^3 = 12.5% of its
+    //                      weight left, which is the owner's own test («an ankle that has been sound
+    //                      for three seasons stops being the weak ankle») answered in arithmetic
+    //                      rather than in prose. Counted from the RECOVERY week, which is what
+    //                      `injuryHistory` rows carry – so a long layoff starts decaying when she is
+    //                      back on court, not when she went down.
+    //   loadCap 1          THE CEILING. The decayed sum saturates at one unit – "at most one fresh
+    //                      major injury's worth of memory" – so a career cannot stack six niggles
+    //                      into a body that breaks every fortnight. Every factor below is
+    //                      `1 + bump x load`, so the cap is a cap on all three at once.
+    //
+    // ⚠ NO SCHEMA MOVE. `injuryHistory` already holds `kind`, `severity`, `week` and `weeksOut`, and
+    // `bodyPartOf` already turns a `kind` back into one of the twelve regions. Nothing new is
+    // persisted, so `SAVE_SCHEMA_VERSION` does not move and no migration is owed.
+    recurrence: {
+      /** Weight one recovered layoff contributes at zero decay, by what it was. A niggle is a fact
+       *  about a week; a tear is a fact about a body, and the ladder says so. */
+      severityWeight: { minor: 0.4, moderate: 0.7, major: 1, severe: 1 } as Record<InjurySeverity, number>,
+      halfLifeWeeks: 52,
+      loadCap: 1,
+      /** HOW MUCH MORE LIKELY, at full load – `injuryTau *= 1 + tauBump x load`. «Немного» is his
+       *  word: +30% on the weekly threshold at the very top of the ceiling, decaying to nothing
+       *  across three seasons. ⚠ WEEKLY DOOR ONLY, and that is stated rather than hidden – see the
+       *  note on `recurrenceTauFactor` for why the retirement door's RATE is not touched. */
+      tauBump: 0.3,
+      /** ...and how much worse it lands – the same `load`, into the same `escalatedBands` the age
+       *  factor uses, so a body with a recent history draws from a shifted table at BOTH doors. */
+      severityBump: 0.2,
+      /** THE CEILING ON THE PRODUCT `severityAgeFactor x (1 + severityBump x load)`, and it is the
+       *  sourced band's own top: 1.26 x 1.2 = 1.512, so this clamp binds only in the last decimal
+       *  and exists to make the guarantee structural. Nothing in this engine may push the severe
+       *  share past what §5c published. */
+      severityFactorCap: 1.5,
+      /** How far a part the record has ALREADY broken is tilted in the region draw, at full load for
+       *  that part. Sits between `BODY_AIM_TILT` (2.0, what she drilled) and `BODY_PUSHED_TILT`
+       *  (2.6, a knock he sent her back out on): a healed injury is a stronger statement than a
+       *  training week and a weaker one than a joint that gave way while being ignored. ⚠ A TILT,
+       *  NOT A RISK – `tiltedBodyRegions` renormalises, so this moves WHERE it lands and never how
+       *  often, at BOTH doors. */
+      partTilt: 2.3,
+    },
   },
 
   // --- THE ITF ANNUAL ENTRY CAP (docs/research/ranking-points-by-tier.md §2 and §6) -----------
