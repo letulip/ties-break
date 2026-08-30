@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 66,
+  "schemaVersion": 67,
   "careerId": "legacy-golden-v66",
   "seed": "golden-v45",
   "week": 333,
@@ -26771,7 +26771,41 @@
       "id": "merch-brand",
       "boughtWeek": 320,
       "paidCents": 25000000,
-      "valueCents": 25000000
+      "valueCents": 25000000,
+      "name": "VM"
+    },
+    {
+      "id": "index-fund",
+      "boughtWeek": 180,
+      "paidCents": 6000000,
+      "valueCents": 7420000,
+      "units": 15.377794306414003
+    },
+    {
+      "id": "deposit",
+      "boughtWeek": 200,
+      "paidCents": 5000000,
+      "valueCents": 5100000,
+      "units": 44.34466979330543
+    },
+    {
+      "id": "academy-land",
+      "boughtWeek": 300,
+      "paidCents": 40000000,
+      "valueCents": 40000000,
+      "name": "VM"
+    },
+    {
+      "id": "academy-courts",
+      "boughtWeek": 310,
+      "paidCents": 60000000,
+      "valueCents": 60000000
+    },
+    {
+      "id": "car-good",
+      "boughtWeek": 150,
+      "paidCents": 11000000,
+      "valueCents": 9109100
     }
   ],
   "fieldSeasonTitles": {

@@ -249,7 +249,15 @@ import type { AcademySupport } from '../academy'
 // already means the scholarship SHE receives – two facts under one name is the defect v44 was cut
 // to end. Full move: this constant, the v65 -> v66 step in migrations.ts, tests/fixtures/saves/
 // v66.json, and the union member's own doc in shared/protocol/events.ts.
-export const SAVE_SCHEMA_VERSION = 66
+//
+// ⭐⭐ v67 (round 30 #14 and #8/#10 – the fund's UNITS and the brand's / academy's NAME). ⚠ IT IS A
+// RENUMBER RATHER THAN A NEW SLICE OF WORK: both back-fills were written into the v65 -> v66 step
+// above while main still read 65, which was correct at the time and stopped being correct when PR
+// #114 shipped v66. A v66 save – the owner's own, already in play – would have SKIPPED them. The
+// two steps moved out of v66 intact and v66's step is byte-identical to main's; the reasoning, and
+// the rule that keeps the next wave from repeating it, is the header of migrations.ts. Full move:
+// this constant, the v66 -> v67 step in migrations.ts, and tests/fixtures/saves/v67.json.
+export const SAVE_SCHEMA_VERSION = 67
 
 
 
