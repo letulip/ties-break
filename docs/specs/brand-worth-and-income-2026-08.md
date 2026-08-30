@@ -301,3 +301,6 @@ which on this branch is exactly «my commits reverted» – nothing else has lan
   concurrent injury work.
 - The one career-total that moved is `earnedCents`: $281k → $628k over 170 weeks of owning a brand,
   which is the item.
+- ⭐ **Re-run after the crowd overrule (30.08): `rngMain` still byte-identical on all three seeds, and
+  the crowd term moved NO NEW KEYS** – the same money set and nothing else. That is what a term
+  reading a static corridor table and a pure decay curve is supposed to look like.
