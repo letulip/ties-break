@@ -1322,7 +1322,7 @@ owning `index-fund · car-sensible · house-first · merch-brand · deposit · a
   lands in band)? *(d)* the two in 5 above are separate waves – do you want either?
 
 
-- [ ] **27. ⚙ HIS RULING ON THE INJURY SHAPE (30.08), three parts** – «тяжесть надо взять точно, но
+- [x] **27. ⚙ HIS RULING ON THE INJURY SHAPE (30.08), three parts** – «тяжесть надо взять точно, но
   разумно. Однако и с показателем в 1 травму в год надо что-то делать, раз я не увидел ни одной за
   большой промежуток. А еще, раз мы **храним историю травм** у себя, то вполне можно делать алгоритм,
   который будет увеличивать немного вероятность **новой такой же травмы или ее прогрессии** (более
@@ -1354,3 +1354,53 @@ owning `index-fund · car-sensible · house-first · merch-brand · deposit · a
   ⚠ And the measurement's own verdict stands beside all three: **the in-match retirement door supplies
   73–79% of adult onsets and carries no age term at all**, so a frequency curve is a small lever
   whatever else is done. Recurrence should reach BOTH doors or it will inherit the same limit.
+
+  ---
+
+  ⭐⭐ **BUILT AND MEASURED, 30.08 – all three limbs ship.**
+  Spec: [injury-severity-and-recurrence-2026-08.md](../specs/injury-severity-and-recurrence-2026-08.md).
+
+  **THE HEADLINE: season prevalence lands at 52.2%, INSIDE the researched 30–54% band**, from 58.5%
+  outside it. That is the constraint #22 and #26 both named – «более травм на 30+ надо оплатить
+  где-то ещё» – met with 1.8 points to spare, and it is the whole reason the change is shippable
+  rather than merely defensible.
+
+  **1. Severity by age – taken, at the BOTTOM of the sourced range.** `severityAgeFactor` scales the
+  bands' cumulative thresholds: 1.00 for 13–18 (the adolescents the 43% is measured on), 1.13 through
+  the prime, rising to **1.26** at 34+. ⚠ «Разумно» is applied as a **ceiling, not a target** – 1.26
+  is the BOTTOM of §5c's 1.26–1.53, not its middle. Measured: the share of onsets worse than a niggle
+  goes **22.0% → 24.8%**, a ratio of 1.13, which is the prime's own factor exactly. Layoff LENGTHS are
+  untouched – round 16 #13's own ruling: what changes is how often you get there, never what it costs.
+
+  **2. Recurrence – built with the ceiling and the decay you asked for, and it is honest about what
+  moved.** `injuryHistory` feeds one decayed number: **half-life 52 weeks** (three quiet seasons take
+  87.5% of it away – your «an ankle sound for three seasons stops being the weak ankle», in
+  arithmetic) and a **cap of one fresh major injury's worth**, so «мы ни за что не наказываем» holds
+  structurally rather than by promise.
+
+  ⭐ **What it delivered**: repeats now land **WORSE** 18.1% of the time against 15.3% without it
+  (+18% relative), and seasons carrying 2+ onsets go 17.3% → 18.6%. ⚠⚠ **What it did NOT deliver, said
+  plainly: the TIMING clustering barely moved** – the per-season over-dispersion ratio is 1.066 with
+  the mechanic on against 1.075 with it off. **And the reason is your own measurement, again**: of the
+  three effects, two (the same part again, and worse) reach BOTH doors because they live in the one
+  onset writer – but the one that changes WHEN she gets hurt can only reach the **weekly roll**, which
+  is a fifth of her injuries. ⚠ The retirement door's RATE was deliberately not touched: `RETIRE_K` is
+  calibrated to a published stoppage rate and **you reserved it on 11.08** («RETIRE_K оставляем как
+  есть»). That is the lever, and it is yours.
+
+  **3. The frequency curve – the FITTED one applied verbatim, nothing re-derived.** #26's §4b table
+  went in as measured, and the control arm reproduces #26's §4c **to the decimal in every band**
+  (49.7 / 59.0 / 45.8 / 50.5 / 52.3, overall 51.4%). The three limbs together cost **+0.8 pp** on top
+  of it. ⚠ The level-NEUTRAL variant was measured beside it and **not** taken: it lands 58.4%, outside
+  the band.
+
+  ⚠ **AND YOUR DROUGHT SURVIVES, WHICH IS THE TEST THAT MATTERED.** 84.3% of careers still have a
+  3+ season clean stretch. Nothing here makes injuries a drumbeat; the same total is told slightly
+  better.
+
+  ⚠ **RNG, verified rather than assumed.** Recurrence reads `injuryHistory`, which is a consequence of
+  play, so every limb is applied **POST-DRAW** – `kitInjuryFactor`'s shape. The frozen MAIN capture is
+  **UNMOVED (41550 / `e6b0c709`)**, and the per-key diff on all three frozen careers has `rngMain`
+  **byte-identical** against a control built by reverting the engine commit. One career of three moved
+  at all (11 keys of 72, every one downstream of a single layoff landing on a different week).
+  **No schema move** – `injuryHistory` already held everything needed.
