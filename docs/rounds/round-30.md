@@ -1094,3 +1094,37 @@ owning `index-fund · car-sensible · house-first · merch-brand · deposit · a
   is coupled to #23's open question above** – if the dial or the multiple also moves, these two rungs
   want re-sizing with it. **+4 / +1.5 are my proposal, not a measurement: say the numbers and it is
   one line plus a bench re-run.**
+
+
+- [?] **26. ⚠⚠ «богатая семья может купить телу освобождение от старения… вот это очень странно
+  звучит как по мне. Что можем с этим сделать?»** – **his question, and the answer is a principle this
+  house already holds but never applied to age.**
+
+  **What was measured** (round 30 #22): `ECONOMY.availability.ageInjuryFactor` is
+  `{…18: 0.95, default: 0.85}` and `default` – **the lowest value in the table** – carries every year
+  from 19 to retirement. Nineteen, twenty-five and thirty-four are one body, all 29% safer than a
+  sixteen-year-old. The protection stack (elite physio 0.616 × fresh kit × recovery buff) is worth
+  **~4× on the weekly threshold**, and a flat age term has nothing to answer it with.
+
+  ⭐⭐⭐ **The rule already exists, one file away.** `kitInjuryFactor`'s own note: «the FLOOR is new kit,
+  at exactly 1 – the top rung cannot go below it, so **no amount of money buys a safety BONUS, it only
+  buys back the penalty** of playing on worn kit». **Money undoes its own harm and never buys an
+  advantage.** That is the house's answer to exactly this shape, written for gear and never extended
+  to age.
+
+  **So the proposal is not a new idea, it is an unapplied one:**
+
+  1. ⭐ **Age becomes a FLOOR the multipliers cannot go under**, precisely as new kit is. A physio, a
+     masseur and fresh shoes buy back wear and bad luck; they do not buy youth. ⚠ In life this is
+     simply true – a fortieth-year knee is a fortieth-year knee whatever the medical team costs.
+  2. **The curve stops being flat after ~27-28** and rises to retirement, which is what the sport does.
+
+  ⚠⚠ **And the constraint that stops this being a free win**: prevalence already measures **58.5% /
+  76.0%** against the researched **30–54%** band, so it is ALREADY too high. **Adding injuries at 30+
+  must be paid for elsewhere** – this is a RE-SHAPE of the curve, not a level rise, and the total has
+  to land back in band. ⭐ That also makes it a better change than it first looks: the young end gets
+  quieter, the old end gets honest, and the total gets closer to the research than it is today.
+
+  ⚠ It moves every career: a bench, a spec recording predicted-vs-measured, and a frozen re-pin.
+  **`[?]` – his to authorise, and I would run the measurement before the build so the re-shape is
+  fitted to the band rather than guessed at.**
