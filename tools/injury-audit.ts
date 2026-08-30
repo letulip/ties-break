@@ -4,6 +4,8 @@
 //   npx vite-node tools/injury-audit.ts [--seeds N] [--presets N] [--arm plays-on|realistic]
 //                                       [--base X] [--slope X] [--play X] [--flatAge] [--flatLoad]
 //                                       [--ageCurve "13:0.85,...,default:X"] [--riskReduction X]
+//                                       [--noRecurrence] [--flatSeverityAge]
+//                                       [--tauBump X] [--severityBump X] [--halfLife N]
 //
 // WHY IT EXISTS. `tools/pro-season-probe.ts` measures ONE professional schedule from a clean body –
 // it is the re-price's acceptance harness and it deliberately starts at sixteen with no junior
@@ -35,6 +37,7 @@ import { answerFork, answerRetirement, kidAgeYears } from '../src/engine/world'
 import { ENDINGS } from '../src/engine/ending'
 import { ageAtPhysicalShare } from '../src/engine/development'
 import { ECONOMY } from '../src/engine/economy'
+import { bodyPartOf } from '../src/engine/body'
 import { WEEKS_PER_YEAR } from '../src/engine/season/calendar'
 import type { InjurySeverity, CareerEndingType } from '../src/shared/protocol'
 
@@ -96,6 +99,35 @@ if (flag('flatLoad')) {
   KNOBS.consecutivePlayFactor = [1, 1, 1, 1, 1]
   KNOBS.injuryPlayingMultiplier = 1
 }
+// ⭐ ROUND 30 #27 – THE TWO NEW LIMBS, EACH WITH ITS OWN OFF SWITCH, so section 6's clustering
+// columns have a CONTROL rather than an assertion. Same CLI-only counterfactual idiom as everything
+// above: nothing is written back to any file, and both arms are printed in the header.
+//
+// ⚠ `--noRecurrence` MUST NEUTRALISE ALL THREE OF ITS FACTORS AT ONCE or it is not a control. The
+// mechanic is one state quantity (`recurrenceLoad`) read by a tau multiply, a severity escalation
+// and a region tilt; switching off two of the three would measure a half-mechanic and attribute the
+// result to the whole one. Zeroing the two bumps makes `1 + bump x load` exactly 1, and a `partTilt`
+// of 1 makes the region tilt the identity – which is why the tilt strength lives in this knob group
+// rather than beside body.ts's own two tilts.
+const RECUR = ECONOMY.availability.recurrence as unknown as {
+  tauBump: number
+  severityBump: number
+  partTilt: number
+  halfLifeWeeks: number
+  loadCap: number
+}
+if (flag('noRecurrence')) {
+  RECUR.tauBump = 0
+  RECUR.severityBump = 0
+  RECUR.partTilt = 1
+}
+RECUR.tauBump = num('tauBump', RECUR.tauBump)
+RECUR.severityBump = num('severityBump', RECUR.severityBump)
+RECUR.halfLifeWeeks = num('halfLife', RECUR.halfLifeWeeks)
+// ⚠ `--flatSeverityAge` IS THE OTHER HALF OF THE SAME DISCIPLINE. Limb 1 (severity by age) and limb
+// 2 (recurrence) both land on `escalatedBands`, so measuring either one needs the other held still.
+const SEV_AGE = ECONOMY.availability as unknown as { severityAgeFactor: { [age: number]: number; default: number } }
+if (flag('flatSeverityAge')) SEV_AGE.severityAgeFactor = { default: 1 }
 
 const SEEDS = num('seeds', 10)
 const PRESET_COUNT = num('presets', PRESETS.length)
@@ -129,6 +161,10 @@ interface Onset {
   age: number
   severity: InjurySeverity
   weeksOut: number
+  /** ⭐ ROUND 30 #27 – WHICH OF THE TWELVE REGIONS, which is what makes clustering measurable at all.
+   *  Read through `bodyPartOf` rather than by splitting `kind` on its first space: "lower back" is
+   *  two words and the naive split answers "lower" for it. */
+  part: string | null
   /** her condition the week the roll landed (post-accrual read, one week's recovery late) */
   condition: number
   /** weeks her body had already lost, as `weeksLostSoFar` reads it (the ENDING's own accumulator) */
@@ -231,6 +267,7 @@ function runCareer(preset: Preset, index: number, policy: Policy): CareerRow {
           age: kidAgeYears(world.week, world.profile.birthMonth, world.profile.birthDay),
           severity: world.injury.severity,
           weeksOut: world.injury.totalWeeks,
+          part: bodyPartOf(world.injury.kind),
           condition: conditionAtRoll,
           weeksLostBefore,
           trueWeeksLostBefore: trueWeeksLost,
@@ -283,6 +320,18 @@ console.log(
   `  knobs: base ${KNOBS.injuryBaseChance} + slope ${KNOBS.injuryFatigueSlope}/fatigue pt, x${KNOBS.injuryPlayingMultiplier} playing, ` +
     `cap ${ECONOMY.availability.injuryChanceCap} · recoveryBase ${ECONOMY.condition.recoveryBase}` +
     ` · physio.riskReduction ${ECONOMY.physio.riskReduction}`,
+)
+// ⭐ ROUND 30 #27 – BOTH NEW LIMBS IN THE HEADER, for exactly the reason the age arm is: a run graded
+// on a table the output does not name is a run a later reader will guess at.
+console.log(
+  `  severityAgeFactor${flag('flatSeverityAge') ? ' (--flatSeverityAge)' : ' (shipped)'}: ` +
+    Object.entries(SEV_AGE.severityAgeFactor)
+      .map(([k, v]) => `${k}:${v}`)
+      .join(', '),
+)
+console.log(
+  `  recurrence${flag('noRecurrence') ? ' (--noRecurrence)' : ''}: tauBump ${RECUR.tauBump} · severityBump ${RECUR.severityBump}` +
+    ` · partTilt ${RECUR.partTilt} · halfLife ${RECUR.halfLifeWeeks}w · loadCap ${RECUR.loadCap}`,
 )
 console.log(
   `  ${seasons.length} FULL seasons lived · ${onsets.length} onsets · mean seasons per career ${f(mean(careers.map((c) => c.seasons.length)), 1)}`,
@@ -342,6 +391,88 @@ for (const [label, lo, hi] of BANDS) {
       `${f(mean(rows.map((r) => r.onsets.length))).padStart(13)}   ` +
       `${pct(rows.filter((r) => r.onsets.length > 0).length, rows.length)}   ${f(mean(rows.map((r) => r.weeksInjured)), 1).padStart(15)}   ` +
       `${f(mean(rows.map((r) => r.meanCondition)), 0).padStart(9)}   ${factors.join('/')}`,
+  )
+}
+
+// --- 2b. CLUSTERING – round 30 #27's PRIMARY evidence ---------------------------------------------
+//
+// ⭐⭐ THE OWNER'S COMPLAINT WAS TEXTURE, NOT FREQUENCY, so this is the section the recurrence limb is
+// graded on and the rate columns above are not. «Ни одной травмы я не видел уже несколько сезонов»
+// against a measured 0.68-0.78 onsets a season and his own lifetime 0.64: the number was never the
+// problem. INDEPENDENT WEEKLY DRAWS PRODUCE EXACTLY THAT FORGETTABLE PATTERN. The question these
+// columns answer is whether the same total now arrives in a shape a person remembers.
+//
+// ⚠ READ THEM AGAINST `--noRecurrence`, NEVER ON THEIR OWN. Every number here is non-zero under pure
+// independence – twelve body regions means a repeat happens by chance about one time in twelve – so
+// a "31% of onsets are repeats" line proves nothing without the control arm beside it.
+console.log('\n  2b. CLUSTERING (round 30 #27 – the texture columns, read against --noRecurrence)')
+{
+  // Per career, walk the onsets in order and ask of each: had this body already broken this part?
+  let repeats = 0
+  let placed = 0
+  const gaps: number[] = []
+  const seasonCounts: number[] = []
+  let repeatWorse = 0
+  let repeatSame = 0
+  const SEV_RANK: Record<InjurySeverity, number> = { minor: 0, moderate: 1, major: 2, severe: 3 }
+  for (const c of careers) {
+    const ordered = [...c.onsets].sort((a, b) => a.week - b.week)
+    const worstByPart = new Map<string, number>()
+    for (let i = 0; i < ordered.length; i++) {
+      const o = ordered[i]
+      if (i > 0) gaps.push(o.week - ordered[i - 1].week)
+      if (o.part === null) continue
+      placed++
+      const prior = worstByPart.get(o.part)
+      if (prior !== undefined) {
+        repeats++
+        if (SEV_RANK[o.severity] > prior) repeatWorse++
+        else if (SEV_RANK[o.severity] === prior) repeatSame++
+      }
+      worstByPart.set(o.part, Math.max(prior ?? -1, SEV_RANK[o.severity]))
+    }
+    for (const s of c.seasons) seasonCounts.push(s.onsets.length)
+  }
+  console.log(
+    `     onsets that REPEAT a part this body already broke   ${pct(repeats, placed)}   ` +
+      `(chance alone over 12 weighted regions is well under this)`,
+  )
+  console.log(
+    `       ...of those repeats, LANDING WORSE than before    ${pct(repeatWorse, repeats)}` +
+      `   same band ${pct(repeatSame, repeats)}`,
+  )
+  console.log(
+    `     gap between consecutive onsets (weeks)              mean ${f(mean(gaps), 1)}  median ${f(median(gaps), 1)}  ` +
+      `p10 ${quantile(gaps, 0.1)}  p90 ${quantile(gaps, 0.9)}`,
+  )
+  // ⭐ THE ONE LINE THAT SAYS "CLUSTERED" RATHER THAN "MORE". Under independent weekly draws the
+  // per-season count is Poisson, whose variance EQUALS its mean, so the ratio sits at ~1. Clustering
+  // is over-dispersion and pushes it above 1 – and it can rise while the mean does not move at all,
+  // which is the whole design brief. This is the number to quote at him.
+  const mSeason = mean(seasonCounts)
+  const vSeason = mean(seasonCounts.map((n) => (n - mSeason) ** 2))
+  console.log(
+    `     onsets per season: mean ${f(mSeason, 3)}  variance ${f(vSeason, 3)}  ` +
+      `⭐ VARIANCE/MEAN ${f(vSeason / Math.max(1e-9, mSeason), 3)}   (independent draws = 1.00)`,
+  )
+  const quiet3 = careers.filter((c) => {
+    // the longest run of consecutive FULL seasons with no onset at all – his «несколько сезонов»
+    let best = 0
+    let run = 0
+    for (const s of c.seasons) {
+      run = s.onsets.length === 0 ? run + 1 : 0
+      if (run > best) best = run
+    }
+    return best >= 3
+  })
+  console.log(
+    `     careers with a 3+ season clean STRETCH              ${pct(quiet3.length, careers.length)}` +
+      `   (the pattern he described – it should SURVIVE, not vanish)`,
+  )
+  console.log(
+    `     seasons carrying 2+ onsets                          ` +
+      pct(seasonCounts.filter((n) => n >= 2).length, seasonCounts.length) +
+      `   (the other half of the same story)`,
   )
 }
 
