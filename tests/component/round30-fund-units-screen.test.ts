@@ -24,8 +24,12 @@
 //   * `formatUnits` -> `Math.round(units)`               -> «two places» RED (a 12.47-unit holding
 //     renders as 12 and the quarter of it is gone).
 //   * `avgUnitPriceCents` reading `valueCents` instead of `paidCents` -> «what they averaged at» RED.
-//   * the unowned paragraph moved onto every row (`v-if` dropped) -> «a car says nothing about
-//     units» RED, which is the arm that keeps the line off the eight rungs it means nothing on.
+//   * the unowned paragraph moved onto every row (`v-if` dropped) -> ⚠ GREEN in the first draft of
+//     «a car says nothing about units», because that draft BOUGHT the car and an owned row never
+//     reaches the unowned branch. Caught here, in this file's own drafting, and fixed by asserting
+//     the negative on a rung the family does NOT own – which is the only place the line could
+//     appear. It is RED now, and it is the arm that keeps the line off the eight rungs it means
+//     nothing on.
 import { describe, it, expect, beforeEach } from 'vitest'
 import { mount } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
@@ -132,14 +136,22 @@ describe('round 30 #14 – the shop row shows what the decision needs', () => {
     wrapper.unmount()
   })
 
-  it('⚠ a car says nothing about units, owned or not – it is one price and one sale', async () => {
+  it('⚠ a car says nothing about units, OWNED **OR NOT** – it is one price and one sale', async () => {
+    // ⚠⚠ BOTH BRANCHES, AND THE SECOND ONE IS THE REASON THIS ARM WAS REWRITTEN IN ITS OWN DRAFT.
+    // The first version bought a car and looked at the owned row – which meant the mutation «draw
+    // the entry-price line on EVERY rung» stayed GREEN, because an owned row never reaches the
+    // unowned branch at all. A negative claim has to be made where the thing could actually appear.
     const world = walk('r30-screen-car', 30)
     world.fundsCents = 500_000_00
     buyAsset(world, 'car-sensible')
     const wrapper = await mountShop(toSnapshot(world))
-    const node = rowNode(wrapper, shopItem('car-sensible')!.label)
-    expect(node.find('.shop-row-units').exists(), 'no unit line on a fixed rung').toBe(false)
-    expect(node.text()).not.toContain('units')
+    const owned = rowNode(wrapper, shopItem('car-sensible')!.label)
+    expect(owned.find('.shop-row-units').exists(), 'no unit line on an owned fixed rung').toBe(false)
+    expect(owned.text()).not.toContain('units')
+    // ...and the rung they do NOT own, which is where the entry-price line lives.
+    const unowned = rowNode(wrapper, shopItem('car-good')!.label)
+    expect(unowned.find('.shop-row-units').exists(), 'and none on an unowned one either').toBe(false)
+    expect(unowned.text()).not.toContain('One unit is')
     wrapper.unmount()
   })
 
