@@ -91,7 +91,7 @@ byte-identical (C1 hash 9f783705 unchanged).
 
 ---
 
-## 5. THE ADULT LIMB — what the literature does and does not say (round 30 #26, 30.08.2026)
+## 5. THE ADULT LIMB – what the literature does and does not say (round 30 #26, 30.08.2026)
 
 §1 above was scoped to the junior window on purpose («our WTA-first kid starts at 14 → the sim
 window 14→18 spans the girl peak exactly»), and §3.1's `19+: 0.85` was the off-the-end fallback,
