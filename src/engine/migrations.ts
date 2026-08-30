@@ -2125,8 +2125,14 @@ export function migrateSave(raw: unknown): WorldState {
   // next tick. ZERO draws on any stream: the market is sub-stream reads keyed on the seed and a
   // week, so the frozen MAIN capture (41550 / e6b0c709) cannot see this step either.
   //
-  // Idempotent: the first pass leaves no `boat-motor` and no `basisCents` behind, and a second pass
-  // finds neither – a row that already has `units` is not re-divided.
+  // ⚠⚠ IDEMPOTENT BECAUSE OF THE VERSION GATE, AND A PER-ROW `units !== undefined` CHECK WAS
+  // WRITTEN, MUTATION-TESTED AND **DELETED**. It read like the careful thing to do and it was a DEAD
+  // GUARD: a second `migrateSave` on this save enters at `v = 66` and never reaches this block, and
+  // no v65 save can carry a `units` key because the field did not exist at v65 – so the clause could
+  // not be false, and deleting it turned no arm red (watched, on the whole migration and golden
+  // corpus). The idempotence claim is true and is carried by `if (v === 65)`; a second copy of it
+  // inside the loop would have been a line nobody could ever make fail. The yacht rename above is
+  // idempotent the same way, plus its own «no `boat-motor` is left behind».
   if (v === 65) {
     if (Array.isArray(save.assets)) {
       for (const a of save.assets as { id?: unknown }[]) {
@@ -2134,7 +2140,10 @@ export function migrateSave(raw: unknown): WorldState {
       }
       const seed = typeof save.seed === 'string' ? save.seed : ''
       for (const a of save.assets as LegacyAsset[]) {
-        if (!a || typeof a !== 'object' || a.units !== undefined) continue
+        // ⚠ THE NULL CHECK IS LIVE AND IS COVERED: `Array.isArray` says nothing about what is IN the
+        // array, and a corrupted save with a null row would otherwise throw here and take the whole
+        // career down. It mirrors the rename loop above, and `migrations.test.ts` feeds it one.
+        if (!a || typeof a !== 'object') continue
         const item = shopItem(String(a.id))
         if (!item || item.unitBaseCents === undefined) continue
         const basisCents = typeof a.basisCents === 'number' ? a.basisCents : a.paidCents

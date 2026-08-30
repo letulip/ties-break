@@ -632,8 +632,14 @@ describe('save migrations', () => {
   //   * `basisCents ?? paidCents` -> `paidCents` (the top-up forgotten) -> the topped-up row's two
   //     arms RED and the never-topped-up row's green, which is exactly the split that says the
   //     fallback is live in both directions.
-  //   * `if (… a.units !== undefined) continue` deleted -> the idempotence arm RED (a second pass
-  //     re-divides units by a price and produces a holding of about four thousandths of a unit).
+  //   * `if (… a.units !== undefined) continue` deleted -> ⚠⚠ NOTHING, ON THE WHOLE MIGRATION AND
+  //     GOLDEN CORPUS, and that is a finding rather than a hole: the clause could not be false, so
+  //     it was a DEAD GUARD and it is gone from the engine. A second `migrateSave` enters at v66 and
+  //     never reaches the block, and no v65 save can carry a `units` key because the field did not
+  //     exist at v65. The idempotence arm below still stands – it is carried by `if (v === 65)`.
+  //   * `if (!item || item.unitBaseCents === undefined) continue` -> `if (!item) continue`
+  //     -> the car's «untouched» line RED and the yacht-rename arm with it (a commissioned boat
+  //     would gain units and be re-priced off a market it has nothing to do with).
   it('⭐⭐ v65 -> v66 converts an owned fund to UNITS at the price of its own basis week', () => {
     const raw = JSON.parse(readFileSync(fileURLToPath(new URL('./fixtures/saves/v65.json', import.meta.url)), 'utf8'))
     expect(raw.schemaVersion, 'the fixture is a genuine v65 save').toBe(65)
@@ -697,6 +703,17 @@ describe('save migrations', () => {
     // Idempotent: a second pass leaves the units exactly where they are.
     const again = migrateSave(JSON.parse(JSON.stringify(migrated)))
     expect(again.assets).toEqual(migrated.assets)
+  })
+
+  it('⚠ a v65 save with a malformed row still migrates – the null check both asset loops carry', () => {
+    // `Array.isArray` says nothing about what is IN the array. Neither loop in the v66 step may
+    // throw on a null row, or one corrupted entry takes the whole career down – and this is the arm
+    // that makes those two `typeof a === 'object'` clauses live rather than habit.
+    const raw = JSON.parse(readFileSync(fileURLToPath(new URL('./fixtures/saves/v65.json', import.meta.url)), 'utf8'))
+    raw.assets = [null, { id: 'deposit', boughtWeek: 10, paidCents: 20_000_00, valueCents: 20_500_00 }]
+    const migrated = migrateSave(raw)
+    expect(migrated.schemaVersion).toBe(SAVE_SCHEMA_VERSION)
+    expect(migrated.assets!.find((a) => a?.id === 'deposit')!.units).toBeGreaterThan(0)
   })
 
   it('rejects saves from a future schema', () => {
