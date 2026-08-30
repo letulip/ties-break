@@ -975,31 +975,114 @@ owning `index-fund · car-sensible · house-first · merch-brand · deposit · a
   the change is an adult limb on `ageInjuryFactor` (e.g. 19–24 flat, then rising through the
   thirties), and it needs your number, a bench run and a re-pin.**
 
-- [ ] **23. ⚠⚠ MERCH IS MODELLED AS THE WRONG THING – his research, and it is decisive.** «что там
+- [~] **23. ⚠⚠ MERCH IS MODELLED AS THE WRONG THING – his research, and it is decisive.** «что там
   происходит в мире на эту тему с личными брендами мерча у спортсменов? Мне кажется это странным
   немного, если честно, то как сейчас это у нас работает.»
 
-  What he found, to be folded into `docs/research/player-brands-and-what-they-are-worth.md`:
+  **FOLDED IN, MEASURED, AND THE CORRECTION IS SPECIFIED BUT NOT APPLIED – one decision is yours and
+  it is named at the bottom.** All of it is now `docs/research/player-brands-and-what-they-are-worth.md`
+  **§7**, kept as its own section rather than scattered through §1–§5 because the provenance differs:
+  §1–§5 were read here in the primary document, §7 is yours as you stated it. That difference is
+  written at the head of §7 so nobody quotes the two at equal weight.
 
-  - ⭐⭐⭐ **Among active top-20/50 players, owning an independent brand is RARE – 95% take classic
-    sponsorship instead.** A full personal business belongs to historic superstars (Federer, Serena),
-    because running one is impossible on an 11-month tour. **Our shelf sells it as an ordinary rung.**
-  - **The lucrative shape is EQUITY or ROYALTIES, not a shop**: Federer's ~3% of On peaked near
-    **$500M** and out-earned 24 years of prize money; Djokovic takes **$5–10M/yr** in royalties from an
-    Asics signature line; Świątek and Shelton are faces of On with reported stock options.
-  - **The RF mark itself is valued at ~$27M** ⚠ – so my agent's «no published value exists» was wrong,
-    and the number is an order of magnitude above what our brand can reach.
-  - Full own-brands, for scale: Osaka's businesses ~$5–10M/yr, Venus' EleVen $5–12M/yr turnover,
-    Sharapova's Sugarpova peaked at a **$20M** valuation.
-  - Federer's post-career income is **$95–100M/yr**, almost entirely sponsorship and investments; the
-    Uniqlo deal alone is **$30M/yr** for ten years.
+  ⚠ **YOUR RF CORRECTION IS TAKEN AND THE OLD CLAIM IS GONE, not left standing beside it.** The page
+  said «no published valuation of the RF mark exists». That was too strong: **~$27M is an attributable
+  expert estimate** and now stands as the working figure in the lead paragraph, in §1's table and in
+  §6. What survives is narrower and still true – it is an **estimate, not a price**: no transaction,
+  no filing, no audited valuation. Quote the order of magnitude, not the dollar.
 
-  ⚙ **His instruction is narrow and I am keeping it narrow**: «Может быть реально что-то вроде
-  колабораций сделать, **но не сейчас**, сейчас **проанализировать и скорректировать доход мерча**.»
-  So: analyse and re-size merch income against these figures. **Collaborations, equity and royalty
-  lines are recorded as the future shape and NOT built.**
+  ⭐⭐⭐ **AND YOUR RARITY FINDING IS THE ONE THAT CHANGES THE DIAGNOSIS** (§7a). If ~95% of active
+  top-20/50 players take classic sponsorship and a full personal business belongs to historic
+  superstars, then our shelf is not merely mispricing the brand – **it is selling the rare thing as an
+  ordinary rung** ($250,000, general shelf, any family that can afford it), while the ordinary
+  top-20's off-court money in life is somebody else's brand paying her, **which this game already
+  models in the ad and kit ladders**. One instrument is doing two jobs.
 
-- [ ] **24. ⚠ The fame floor ignores «выступления» – his word, from round 30 #13's answer.** A climb
-  built on quarter- and semi-finals is invisible to the brand by construction: the floor counts titles,
-  Slam finals and top-10 seasons only. He raised it again here – «она же топ-20 в мире». **Fold into 23:
-  a top-20 who never wins a title should still be worth something to a brand.**
+  ⭐⭐ **THE RE-SIZE, MEASURED** (`tools/merch-fame-vs-rank.ts`, 9 presets × 8 seeds × 780 weeks):
+
+  | | fame | merch pays | against the researched band |
+  | --- | ---: | ---: | --- |
+  | first week they can afford it (median) | 9.6 | $288/wk = **$15.0k/yr** | – |
+  | peak fame, median career | 58.9 | $1,767/wk = **$91.9k/yr** | **5.4–22× under** |
+  | peak fame, p90 and best | 100.0 | $3,000/wk = **$156k/yr** | **3.2–12.8× under** |
+
+  The band is $0.5M–$2M/yr NET for a top full own-brand, derived in §7d from your own figures through
+  this page's own multiples (Sugarpova's $20M peak valuation, EleVen's $5–12M turnover). ⚠ Income,
+  turnover and valuation are three different units and §7d converts them explicitly rather than
+  averaging them.
+
+  ⚠⚠ **BUT THE BOTTOM OF OUR CURVE IS RIGHT AND IS DELIBERATELY CALIBRATED.** At the median purchase
+  fame the brand yields **6.0% a year on its $250,000** against the index fund's 7% – exactly the
+  anchor `ECONOMY.business.merch` states, confirmed live. **A flat multiplier would break the end that
+  is right to fix the end that is wrong.** So the shape is FORCED rather than chosen: hold the anchor,
+  reach the band, and the only curves left are convex. The simplest, pivoted on the anchor itself
+  (`weekly = perFamePointCents × fame² / 10`) is identical at fame 10, puts the median career's peak
+  at **$541k/yr** (the band's floor) and a fame-100 superstar at **$1.56M/yr** (its ceiling).
+
+  ⚙ **WHY IT IS NOT APPLIED, AND WHAT I NEED FROM YOU.** The brand is also an ASSET and its worth is
+  `earningsMultipleX` (16) × a year of its own income – **income and worth are the same dial.** Under
+  the convex curve the purchase-day worth is unchanged (median $239,761 against a $250,000 price, the
+  «fair on the day they can afford it» criterion #9 chose 16 for), but **the peak worth becomes ~$8.7M
+  on a $250,000 purchase** – bigger than most of the shelf and closing on the $12M academy. The two
+  criteria cannot both hold under one multiple once the curve bends. **Two questions, both one edit:**
+  *(a)* may the merch brand become an eight-figure asset at a superstar's fame, or should the income
+  rise while the valuation is held down (a fame-dependent multiple)? *(b)* given §7a, is «make the
+  existing instrument bigger» even the right repair, or should an ordinary top-20's off-court money
+  come through the sponsorship ladder that already exists and the own-brand stay a superstar's thing?
+
+  ⚙ **Collaborations, equity and royalty lines are NOT built**, per «но не сейчас». They are recorded
+  in §7b as the future shape: Federer's ~3% of On peaking near $500M and out-earning 24 years of prize
+  money (⭐ §3 of the page reaches ~$603M at the same peak by an independent route – the strongest
+  cross-check in the document), Djokovic's $5–10M/yr Asics royalties, Świątek and Shelton on stock
+  options.
+
+- [~] **24. ⚠ The fame floor ignores «выступления» – «она же топ-20 в мире».** **BENCHED, BEFORE AND
+  AFTER, AND NOT SHIPPED – the numbers are below and the choice is yours.**
+
+  ⚠ **FIRST, A CONSTRAINT NOBODY HAD CHECKED: THERE IS NO DEEP-RUN LEDGER TO READ.** `TierTrophies`
+  stores `titles` and `finals` and **nothing below a final**, so a quarter-final leaves no durable
+  trace anywhere in the save. «Count deep runs» is therefore a schema move, not a floor tweak – and it
+  does not need to be, because `seasonHistory[].byTrack.wta.endRank` is already written for every
+  finished season, and **a season ended at #18 IS her deep runs, summed and sorted by the tour
+  itself.** So the measurable answer is a BAND LADDER on the season's end rank.
+
+  **SHIPPED IN THIS WAVE: the plumbing only.** `ECONOMY.fame.top10SeasonFloor` became
+  `ECONOMY.fame.seasonEndBands`, a ladder in the shape `academy.reputationBands` already uses. ⚠ **As
+  shipped it has ONE rung and is the old rule exactly – not one cent moves anywhere** (34/34 green
+  across `round29p5-business` and `round30-brand-value`). It exists so this item is a measurement
+  rather than an argument: `tools/merch-fame-vs-rank.ts --seasonBands 20:4,50:1.5` swaps in a
+  counterfactual for one run and prints the arm in its header so no output can be misfiled.
+
+  ⭐⭐ **BEFORE / AFTER** – same 72 careers, same seeds, the only difference being two extra rungs
+  (a season ended top-20 = +4 fame, top-50 = +1.5, against the top-10's existing +10):
+
+  | | shipped | with the two rungs | |
+  | --- | ---: | ---: | --- |
+  | peak fame, median career | 58.9 | **67.5** | **+14.6%** |
+  | peak merch income, median | $91.9k/yr | **$105.4k/yr** | +14.6% |
+  | fame the week they can first afford the brand | 5.0 / **9.6** / 19.4 | 5.0 / **9.6** / 19.4 | ⭐ **UNCHANGED** |
+  | brand's worth on the day they buy it (median) | $239,761 | **$239,761** | ⭐ **UNCHANGED** |
+  | brand's worth at the career's peak (median) | $1.47M (5.9×) | **$1.69M (6.7×)** | +14.7% |
+  | climbing 52w windows where income FELL | 15.1% | **13.7%** | |
+  | seasons in which the brand's VALUE fell | 29.0%, median −17.9% | **26.6%, median −16.3%** | |
+
+  ⭐ **THE TWO ROWS THAT MAKE IT SAFE ARE THE UNCHANGED ONES.** The purchase-day economics do not
+  move at all – a family reaches first affordability before it has finished top-50 seasons to bank –
+  so round 30 #9's «fair on the day they can afford it» multiple and the fund-parity anchor both
+  survive untouched. The lift lands where you asked it to: **the middle of the distribution**, since
+  p90 and best are already at the fame cap.
+
+  ⭐⭐ **AND IT PARTLY ANSWERS ROUND 30 #13 AS A SIDE EFFECT** – «merch brand приносил 600+, а через
+  несколько месяцев стал 500+, хотя позиция в таблице уже 15». A top-20 season now feeds the stock
+  **while she is climbing**, so climbing windows that lose income fall 15.1% → 13.7% and the seasons
+  in which the brand loses value fall 29.0% → 26.6% with a shallower median drop.
+
+  ⚠ **THE STRUCTURAL CLAIM, which is arithmetic and not a measurement**: for a career with no title,
+  no Slam final and no top-10 season the floor today is **exactly zero**, so her brand is worth
+  **nothing** however high she ranks. The bench cannot show that as a percentage because its careers
+  do win things; the change for that career is from invisible to visible, not from N to N+15%.
+
+  ⚙ **NOT SHIPPED because it moves merch income and the brand's worth on every career, and because it
+  is coupled to #23's open question above** – if the dial or the multiple also moves, these two rungs
+  want re-sizing with it. **+4 / +1.5 are my proposal, not a measurement: say the numbers and it is
+  one line plus a bench re-run.**
