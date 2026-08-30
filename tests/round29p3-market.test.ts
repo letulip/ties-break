@@ -321,14 +321,21 @@ describe('part three #16 – it is a market, not noise, and the household meter 
 
 // -------------------------------------------------------------------------------------------------
 describe('part three #16 + the crash extension – the season line knows a crash from a bad year', () => {
-  // ⚠ THE SEEDS ARE CHOSEN AND SAID SO, re-scanned after the crash layer landed (the previous named
-  // seed, r29p3-career-20, was chosen for a wave-only world and its seasons moved when every epoch
-  // gained a crisis). `r29p3-crash-12` is the owner's own anchor made real: its epoch-0 crash falls
-  // at weeks 4-20 and the STARTING season nets exactly -20% – «стартовый сезон уже может быть как
-  // раз с -20%». `r29p3-crash-41` is the discriminator: season one is down 7% on the WAVE alone,
-  // its crash falling later (weeks 64-72), so its feed row must stay plain.
-  const CRASH_SEED = 'r29p3-crash-12'
-  const PLAIN_SEED = 'r29p3-crash-41'
+  // ⚠ THE SEEDS ARE CHOSEN AND SAID SO, and RE-SCANNED A SECOND TIME AT ROUND 30 #14 – his ruling
+  // halved the wave's `volBps` (1,800 -> 900), so every season figure in the game moved and the two
+  // named fixtures moved with it. That is the third time this note has been rewritten and the reason
+  // it is a note rather than a magic string: a chosen seed is a MEASUREMENT of the shipped model,
+  // and it has to be re-taken whenever the model is re-tuned. ⚠ The two ARMS below are untouched –
+  // only the seeds that satisfy them are new.
+  //
+  // `r29p3-crash-56` is the owner's own anchor made real under the new volatility: its epoch-0 crash
+  // falls at weeks 22-31, is drawn at -21.0% (inside his -15…-30 band), and the STARTING season nets
+  // exactly -20% – «стартовый сезон уже может быть как раз с -20%». `r29p3-crash-272` is the
+  // discriminator: season one is down 4.9% on the WAVE alone, its crash falling later (week 79), so
+  // its feed row must stay plain – and its first fall really is in season two, which is what the
+  // «never on an empty shelf» arm leans on.
+  const CRASH_SEED = 'r29p3-crash-56'
+  const PLAIN_SEED = 'r29p3-crash-272'
 
   it('⭐⭐ HIS ANCHOR, TICKED: the starting season is a crash year, down 20%, and the feed says which', () => {
     // The engine's own calendar, pinned so the fixture cannot drift silently under a re-tune: the
