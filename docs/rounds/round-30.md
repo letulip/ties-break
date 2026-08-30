@@ -1019,13 +1019,15 @@ owning `index-fund · car-sensible · house-first · merch-brand · deposit · a
   (never the income: what she WON is already priced through fame, and pricing it twice is the one-dial
   defect with a new hat).
 
-  ⭐⭐⭐ **MEASURED, 9 presets x 8 seeds x 780 weeks** (`tools/brand-dynamics.ts`, the old model read
-  off the same walk so the before/after is exact):
+  ⭐⭐⭐ **MEASURED, 9 presets x 8 seeds x 780 weeks** (`tools/brand-dynamics.ts`). ⚠ **The «before»
+  column is the PRE-30.08 ARITHMETIC read off the SAME WALK** – so it already carries #24's two fame
+  rungs and isolates #23's own change exactly. (#24 on its own is the separate table below it, and
+  the state before BOTH items is the round-29 baseline: $91.9k/yr and $1.47M.)
 
-  | | before | **after** |
+  | | before (old arithmetic, same walk) | **after** |
   | --- | ---: | ---: |
   | worth on the day they can afford it, median | $239,757 | **$227,878** (−5.0%) ⭐ the #9 criterion HOLDS |
-  | peak brand income, median career | $91.9k/yr | **$711,376/yr** – inside the researched $0.5–2M band |
+  | peak brand income, median career | $105.4k/yr | **$711,376/yr** – inside the researched $0.5–2M band |
   | peak brand income, best | $156k/yr | **$1,560,000/yr** – the band's ceiling |
   | peak brand worth, median career | $1.69M | **$13.46M** |
   | peak brand worth, best | $2.50M | **$31.20M** |

@@ -96,7 +96,7 @@ so the before/after is exact and cannot suffer the arm-divergence hazard.
 | --- | --- | ---: | --- |
 | day-one worth, median (the #9 criterion) | ≈ $240k, within the −4% the convex anchor costs | **$227,878** vs the old model's $239,757 – **−5.0%** | ⭐ **HELD** |
 | day-one multiple, median | ≈ 16 | **15.9** | ⭐ as designed |
-| peak income, median career | the §7d band's floor, ~$0.5M/yr | **$711,376/yr** | ⭐ inside the band |
+| peak income, median career | the §7d band's floor, ~$0.5M/yr | **$711,376/yr** (old arithmetic on the same walk: $105.4k/yr; the round-29 baseline before #24 too: $91.9k/yr) | ⭐ inside the band |
 | peak income, best | the §7d band's ceiling, ~$2M/yr | **$1,560,000/yr** | ⭐ inside the band |
 | peak worth, median career | ~$11–14M | **$13.46M** | ⭐ |
 | peak worth, best | Sugarpova–RF territory | **$31.20M** | ⚠ **above both** – see §4 |
