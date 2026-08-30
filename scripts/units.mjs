@@ -166,9 +166,28 @@ function run(label, args, env = {}) {
 // ⚠ THE SKIP IS AN ENV VAR, NOT `--exclude`. Measured: passing `--exclude` three times on the CLI
 // still ran all 112 files, because the unit project declares its own `exclude` and the CLI flag does
 // not merge into it. vite.config.ts reads TB_UNIT_SKIP_HEAVY and appends the same list there.
-run('bulk', [], { TB_UNIT_SKIP_HEAVY: '1' })
-for (const file of HEAVY_UNIT_FILES) {
-  run(file.replace(/^tests\//, '').replace(/\.test\.ts$/, ''), [file])
+// ⚠⚠ CI SPLIT THE WALL, NOT THE WORK (owner, 30.08, measured on his own Actions log). The gate ran
+// 18m32s and `npm test` was 15m08s of it: `bulk` 501 s, then the eleven heavy files STRICTLY
+// SERIALLY for a further 406 s (501 + 406 = 907, and the log said 908 – the sum, to the second).
+// A heavy file is one process, so for 406 s of every run HALF THE RUNNER IDLED BY CONSTRUCTION.
+//
+// ⚠ AND THE FIX IS NOT TO RUN THEM SIDE BY SIDE HERE. Separate processes exist because of birpc's
+// stall under contention (the note at the top of this file); crowding them back onto two cores is
+// the defect they were carved out of. The split belongs in CI, where each job gets its OWN runner –
+// `npm ci` measured at 6 s, so a second job costs six seconds of billing to save minutes of wall.
+//
+// So this script learns two halves and no scheduling of its own: the default still runs everything,
+// in the same order, on one machine.
+const only = (process.argv.find((a) => a.startsWith('--only=')) ?? '').slice('--only='.length)
+if (only && only !== 'bulk' && only !== 'heavy') {
+  console.error(`units: --only takes 'bulk' or 'heavy', got '${only}'`)
+  process.exit(2)
+}
+if (only !== 'heavy') run('bulk', [], { TB_UNIT_SKIP_HEAVY: '1' })
+if (only !== 'bulk') {
+  for (const file of HEAVY_UNIT_FILES) {
+    run(file.replace(/^tests\//, '').replace(/\.test\.ts$/, ''), [file])
+  }
 }
 
 const total = ((Date.now() - started) / 1000).toFixed(0)

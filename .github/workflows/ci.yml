@@ -84,7 +84,15 @@ jobs:
       # decision, not an omission - see .github/workflows/simulation.yml and the note in
       # vite.config.ts. They are deterministic statistical calibration, they cost 143s of CPU, and
       # they have been losing a fight with vitest's reporter RPC for months.
-      - run: npm test
+      # ⚠⚠ `npm test` LEFT THIS JOB ON 30.08 AND THE REASON IS A MEASUREMENT, NOT A PREFERENCE.
+      # His Actions log: the whole gate 18m32s, of which `npm test` was 15m08s - `bulk` 501 s and
+      # then eleven heavy files strictly serially for 406 s (the sum, to the second). A heavy file
+      # is a process of its own, so for 406 s of every run half this runner idled by construction.
+      # `npm ci` measured at 6 s, so a job of its own costs six seconds of billing and returns
+      # minutes of wall clock. The two halves now run as `unit-bulk` and `unit-heavy` below.
+      # ⚠ NOT parallelised INSIDE a job: separate processes exist because of birpc's stall under
+      # contention (scripts/units.mjs' own header), and crowding them onto two cores re-creates the
+      # defect they were carved out of. Different runners, not more threads on one.
       # The mounted-component project (P9). Seconds of runtime, and it is the ONLY gate that
       # catches a UI regression: every other component test in this repo reads source text.
       - run: npm run test:component
@@ -107,6 +115,33 @@ jobs:
   # A SEPARATE JOB RATHER THAN TWO MORE STEPS ON `test-build`: it runs alongside the typecheck and
   # the unit suite instead of stacking onto them, so it costs a PR roughly nothing in wall clock -
   # and a red `e2e-smoke` names what broke without anyone reading a log to find out.
+  # ⭐ THE LONG POLE, ALONE. 501 s of pooled files - the one block worth its own runner.
+  unit-bulk:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: node scripts/units.mjs --only=bulk --verbose
+
+  # ⭐ THE ELEVEN THAT USED TO WAIT THEIR TURN. Still one process each, still serial WITHIN the job -
+  # that is the birpc rule and it does not bend - but no longer queued behind `bulk` on one runner.
+  unit-heavy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: node scripts/units.mjs --only=heavy --verbose
+
   e2e-smoke:
     runs-on: ubuntu-latest
     # See `test-build`'s note: a wedge has to report, not hold a runner until the six-hour default.
