@@ -1378,15 +1378,29 @@ owning `index-fund · car-sensible · house-first · merch-brand · deposit · a
   stops being the weak ankle») answered in arithmetic – and a **cap of one fresh major injury's
   worth**. So your «мы ни за что не наказываем» holds structurally rather than by promise.
 
-  ⭐ **What it delivered**: repeats now land **WORSE** 18.1% of the time against 15.3% without it
-  (+18% relative), and seasons carrying 2+ onsets go 17.3% → 18.6%. ⚠⚠ **What it did NOT deliver, said
-  plainly: the TIMING clustering barely moved** – the per-season over-dispersion ratio is 1.066 with
-  the mechanic on against 1.075 with it off. **And the reason is your own measurement, again**: of the
-  three effects, two (the same part again, and worse) reach BOTH doors because they live in the one
-  onset writer – but the one that changes WHEN she gets hurt can only reach the **weekly roll**, which
-  is a fifth of her injuries. ⚠ The retirement door's RATE was deliberately not touched: `RETIRE_K` is
-  calibrated to a published stoppage rate and **you reserved it on 11.08** («RETIRE_K оставляем как
-  есть»). That is the lever, and it is yours.
+  ⭐⭐ **BOTH HALVES OF YOUR SENTENCE LAND, MEASURED AGAINST A CONTROL ARM.** «Новой такой же травмы»:
+  she breaks a part she already broke **within the last season** on **14.1%** of onsets against
+  **10.7%** with the mechanic switched off – **a third more often**. «Или её прогрессии (более
+  тяжёлой)»: those repeats land **WORSE than last time 18.1%** of the time against 15.3% – **+18%**.
+  Seasons carrying 2+ onsets go 17.3% → 18.6%.
+
+  ⚠ **AND A MEASUREMENT MISTAKE WORTH OWNING, because it nearly produced the opposite answer.** The
+  first version of that column asked «has she EVER broken this part before» – and the control arm
+  answered **58.5%** with recurrence switched OFF. Twelve body parts and a twenty-injury career means
+  almost everything is a repeat by the end: the metric had no room left, and reading its +1.4 pp as
+  «the mechanic is weak» would have been a conclusion about the ruler, not about the engine. The
+  column was re-cut to the window the decay actually models and both arms re-run.
+
+  ⚠⚠ **WHAT IT DID NOT DELIVER, SAID PLAINLY: she does not get hurt in tighter CLUMPS IN TIME.** The
+  per-season over-dispersion is 1.066 with the mechanic on against 1.075 with it off – flat. **And the
+  reason is your own measurement, a third time**: of the three effects, the two that moved live in the
+  one onset writer and so reach BOTH doors – but the one that changes **WHEN** she breaks is a
+  multiply on the weekly threshold, and that door is ~a fifth of her injuries. ⚠ I did NOT raise the
+  knob to chase the number, though there was room in the band to do it: «немного» is your word,
+  «мы ни за что не наказываем» is the direction, and doubling a lever confined to a fifth of the
+  onsets buys a doubled fraction of a small number. The lever that WOULD move it is the retirement
+  door's rate – and `RETIRE_K` is calibrated to a published stoppage rate and **you reserved it on
+  11.08** («RETIRE_K оставляем как есть»). That one is yours.
 
   **3. The frequency curve – the FITTED one applied verbatim, nothing re-derived.** #26's §4b table
   went in as measured, and the control arm reproduces #26's §4c **to the decimal in every band**
