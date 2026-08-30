@@ -924,3 +924,167 @@ year), worst peak-to-trough −40.1%.
 `CRASH_DEPTH_RANGE` (his −15…−30 band; `[0]` is also the floor the safety bound is built from – move
 them together or the closed form lies), `CRASH_FALL_WEEKS`/`CRASH_RECOVERY_WEEKS` (the shape; keep
 fall + recovery ≤ 104 or arcs overlap and the one-crash-at-a-time theorem dies).
+
+### 14i. ⚙ UNITS, AND THE VOLATILITY COMING DOWN – round 30 #14 (30.08), his ruling on §14 as played
+
+He played the market §14 shipped and ruled on it the next day:
+
+> «Волатильность индексного фонда какая-то очень большая по ощущениям **+65/-15** это то, что я
+> видел… Во-первых она скорее всего будет менее "галопирующая", во-вторых вряд-ли в таких крайностях.
+> И надо логику фонда переделать на **покупку ДОЛЕЙ в фонде**, как раз доли дадут возможность расти
+> на горизонте и будут давать **разные точки входа, как в жизни**. Стоимость активов будет
+> рассчитываться исходя из стоимости долей. Зашёл, когда доля стоила 4к, через десять лет она может
+> вполне удвоиться. Или зашёл на пике при цене 7-8к и увидел просадку на следующий год – **имеешь
+> возможность усредниться или зафиксировать убыток**.»
+
+**Two changes, and they are independent**: the model becomes a unit price with holdings measured in
+units, and the wave's volatility is halved. §14a–§14h stand as the record of what they replace.
+
+#### The model, whole
+
+```
+price(seed, week, rung) = unitBaseCents · (1 + annualRateBps/10⁴)^(week/52) · index(seed, week, volBps)
+units bought           = paidCents / price(seed, THIS week, rung)
+worth                  = round(units · price(seed, now, rung))
+```
+
+The **drift moved into the price**, and that is the whole structural change. §14 valued a holding as
+`basis × (1+r)^(years since the basis week) × index(now)/index(basisWeek)` – three numbers that all
+had to be restated every time money moved, which is what the rebase was. On the price instead, a
+holding is `units × price(now)`: one multiplication, no basis, no per-row clock.
+
+⚠ **It is the SAME PATH re-expressed, not a second model.** `price(t)/price(f)` is exactly the old
+`(1+r)^((t−f)/52) × index(t)/index(f)`, so a single-entry holding is worth the same cents it was
+worth yesterday and every §14 measurement still describes this path. The probe confirms it: rerun at
+`volBps 1_800` the unit model reads **30.9%** negative seasons and a **−39.3%** worst season against
+§14h's 30.8% / −39.9%.
+
+#### What shipped
+
+`ShopItem.unitBaseCents` (deposit **$1,000**, index fund **$4,000** – his own anchor), `unitPriceCents`
+and `avgUnitPriceCents` in `world/assets.ts`, `OwnedAsset.units`, three fields on `ShopRowView`
+(`unitPriceCents` / `unitsHeld` / `avgUnitPriceCents`), two lines on the Money screen's shop row, and
+**`SAVE_SCHEMA_VERSION` stays at 66** – the units back-fill amends the unshipped v66 step, on the same
+ground the P1 yacht rename did (main is at 65, so no v66 save exists outside this wave).
+
+**Deleted**: `OwnedAsset.basisCents`, the rebase in `buyAsset` and in `sellAsset`, `marketRatio` in
+`world/market.ts`, and `assetValueCents`' fourth argument. `basisWeek` survives with ONE meaning and
+ONE writer – §3f's commissioned order, whose value clock starts on delivery.
+
+⭐ **Every `stake: 'open'` rung is unit-priced, the deposit included** – his own expectation from
+round 29 #11 («предполагаю, что Savings deposit будет вести себя так же»). It costs the deposit
+nothing: with no `volBps` its unit price is `1000 × 1.0317^years` dead flat, and `units × price` is
+identically the `(basis + top-up) × (1+r)^t` the rebase computed. **Rebasing at today's worth WAS the
+unit model, written the long way round** – which is why it never produced a wrong number, and why
+what it cost was not accuracy but MEMORY: it destroyed the entry price in the act of adding to it.
+
+#### 14i-1. ⭐⭐⭐ What the player can now DO, which is the point
+
+| | round 29 | round 30 #14 |
+| --- | --- | --- |
+| add money | basis restated, entry price destroyed | more units at today's price, both entries kept |
+| the screen says | worth now, paid, ±% | ...and **units held · the price they averaged at · today's price** |
+| average down | a feeling | a move: buy while the price is under your average, and watch the average fall |
+| take a loss | a feeling | a move: sell part at today's price – the realised loss goes to the ledger and **the average does not move**, so the next decision is the same decision |
+
+The average is `paidCents / units`, so a part sale takes the same fraction out of the cash and out of
+the units and leaves it exactly where it was. Realising the oldest units first would move it by an
+accident of ordering and nothing on screen could explain the new number.
+
+#### 14i-2. The volatility: `volBps` **1_800 → 900**, and his crash band untouched
+
+§14h already named this knob and this direction: «If he wants back toward one-in-four WITH crashes,
+the wave's `volBps` comes down – his call, one knob.» **Halved**, because «half the wobble» is a
+sentence that can be defended later and 1,050 is not.
+
+⚠⚠ **`CRASH_DEPTH_RANGE` IS NOT TOUCHED.** −15…−30% at the trough, one crisis per 2–6 years, no grace
+period: those are **his own numbers from the day before**, and shaving them is his call to make, not
+mine to make quietly. What that leaves is named in 14i-4.
+
+⚙ **MEASURED**, `npx vite-node tools/market-probe.ts --seeds 4000` (30.08) – 228,000 rolling seasons,
+48,000 holdings per horizon, 16,000 crises, the same sample shape §14h used:
+
+| | round 29 (vol 1,800) | **round 30 (vol 900)** |
+| --- | ---: | ---: |
+| seasons negative | 30.8% | **24.5%** |
+| season sd | 16.79% | **15.06%** |
+| season p5 / p95 | −18.3% / +38.9% | **−16.8% / +36.6%** |
+| worst season | −39.9% | **−32.5%** |
+| worst peak-to-trough drawdown | −40.1% | **−33.6%** |
+| beats the 3.17% deposit – 1y | 57.15% | **62.04%** |
+| – 3y | 84.03% | **90.23%** |
+| – 5y | 86.75% | **87.89%** |
+| – 10y | 98.90% | **99.67%** |
+| crisis interval / depth | 4.01y, 75.2% in band, median −22.5% | **unchanged – his numbers** |
+| a career whose first season sees a fall | 49.7% | **unchanged** |
+
+#### 14i-3. ⚠⚠ THE SAFETY PROPERTY, RE-DERIVED – and the tail is **better**, not worse
+
+«Мы ни за что не наказываем» is house law, so this is derived rather than inherited.
+
+**The closed form, both tiers, at the new volatility:**
+
+* **Calm waters** – `worstCrashFreeRatio(900) = e^−0.18 = 0.8353`. Ten years:
+  `1.07¹⁰ × 0.8353 = 1.643 > 1.0317¹⁰ = 1.366`. **The ten-year guarantee holds for every seed and
+  every entry week**, with a far wider margin than 1,800 gave – the §14c ceiling is 1,824 bps and
+  coming down can only widen it.
+* **Selling into the deepest trough** – `worstMarketRatio(900) = 0.8353 × 0.70 = 0.5847`, and
+  `1.07^T × 0.5847 > 1.0317^T` solves at **T ≈ 14.7 years** (round 29: 19.7). Still longer than a
+  ten-year hold, so the tail is still real – and it is a third of what it was.
+
+⭐⭐ **AND UNITS DO NOT CHANGE THE ARITHMETIC OF A SINGLE ENTRY, which is why the bound carries.**
+`units × price(t) = M × price(t)/price(f)` is the old expression exactly. A MULTI-entry holding is
+`Σ Mᵢ · price(t)/price(fᵢ)` – a sum of terms each of which satisfies the bound at its own horizon, so
+the whole beats the deposit whenever every tranche does. ⚠ That is **strictly safer than the rebase**,
+which pulled the WHOLE holding onto the newest clock: under round 29 a top-up in season nine made a
+season-one holding a one-year hold; under units only the new money is on the new clock.
+
+⚙ **MEASURED, the number to put in front of him** – 48,000 ten-year holdings, 4,000 seeds × 12 entry
+weeks, exactly §14h's sample:
+
+> **156 of 48,000 lose to the deposit at ten years – 0.325%**, against round 29's measured **1.10%
+> (529 of 48,000)** which he accepted. **Zero of them sold in calm waters** (round 29: also zero), so
+> tier one's receipt is intact and every single loser is a trough-sell.
+
+At five years the calm-water losers go **245 → 0** and at three years **2,693 → 99**. So the law now
+reads: *holding through a crisis costs nothing – the arc comes home – and only selling into one can
+lose, at 0.325% over ten years.* **He accepted 1.10%; this is a third of it and nothing about the
+shape of the promise changed.**
+
+#### 14i-4. ⚠ WHAT IS STILL HIS TO RULE ON – the +65% he actually quoted
+
+He named **+65/−15** as what he saw. The −15 end is comfortably inside the new distribution (p5 is
+−16.8%). **The +65 end is not**: the best season in 228,000 is **+69.2%**, and **0.56% of seasons are
+over +50%** (round 29: 1.51%). Cut by two thirds, not removed.
+
+⚠ **Those seasons are CRASH REBOUNDS, not the wave**, so the wave's knob cannot delete them: a
+recovery arc is 40–80 weeks, so a season that starts at a trough can catch a whole rebound out of a
+−30% hole, and `1/0.70 × 1.07` is already +53% before the wave adds anything. Two knobs would remove
+it and **both are his**, because both change numbers he gave:
+
+1. `CRASH_DEPTH_RANGE` shallower than his «-15…-30%» – a −20% floor puts the best rebound season near
+   +40%, which is about a real index's best year.
+2. `CRASH_RECOVERY_WEEKS` longer than 40–80, so no single season can hold a whole rebound. ⚠ Bounded:
+   `fall + recovery ≤ 104` or crises overlap and the one-crash-at-a-time theorem – and the closed form
+   above with it – dies. `[60, 88]` is the most that fits.
+
+Say which, and it is one constant either way.
+
+#### 14i-5. The migration, and what a save keeps
+
+A v65 row is converted at **the price of its own basis week** – `units = (basisCents ?? paidCents) /
+price(seed, basisWeek ?? boughtWeek, rung)` – so `units × price(now)` is the number the old model
+would have shown this week, to the rounding. **A career's history survives the change rather than
+being reset**; resetting to today's price would have destroyed the entry price in the act of
+introducing it.
+
+⚠ One consequence, named so it is not read as a defect: a v65 rebase folded accrued GAIN into
+`basisCents`, so on a topped-up row the printed average (`paidCents / units`) comes out **below every
+unit price that career ever saw**. That is correct – cost basis over units is what a broker's
+«average price» means, and a family in profit is under today's price by construction.
+
+⚠ A **fixed** rung is not touched: no `units` key, no market, valued off what was paid exactly as
+before. `tests/round30-fund-units.test.ts`, `tests/component/round30-fund-units-screen.test.ts` and
+the re-aimed round 29 guards carry all of it; the frozen MAIN capture (41550 / `e6b0c709`) and the
+three frozen career hashes are **unmoved, re-derived per key against a control tree** rather than
+inherited.
