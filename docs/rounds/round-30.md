@@ -787,3 +787,72 @@ marked `[!]` and each names what shipped and why it missed – that is the point
   extended rather than replaced – its «inside the phone» arm still guards the overflow direction,
   and the two new arms measure the hero starting at 0 and finishing at 375 while the plate under it
   keeps 16px on both sides.
+
+
+---
+
+## Part two – played to week 896 (30.08)
+
+Save `alice-cfbv_w896` (⚠ personal, `~/Downloads`, READ-ONLY, never a fixture): schema 66, **WTA #23**,
+owning `index-fund · car-sensible · house-first · merch-brand · deposit · academy-land`.
+
+- [ ] **19. «Аватар иконка в левом верхнем углу home экрана для milf стадии показывает только нижнюю
+  часть лица без глаз и волос»** – **build.** A crop/framing defect on one stage's icon.
+
+- [ ] **20. «Картинка hero для milf стадии lateCareer-norm, проверь все. Может быть кто-то из агентов
+  был прав и имеет смысл их переименовать со сленга на **lateCareer** или **grown**, давай сделаем
+  разом»** – ⚙ **RULING plus a check.** Verify every stage's hero, and **rename the slang stage keys**
+  in one move. ⚠ Stage keys reach art paths and possibly saves – check before assuming it is a rename
+  of strings only; if it touches persisted data it is a schema question, and schema is **66**
+  (unshipped, amendable).
+
+- [ ] **21. ⚠⚠ «Почему-то мне пишут "Her cut 61% – $69,750 into her own account", и до этого было про
+  56%… При том, что на экране бюджета написано "She keeps 50% of every prize cheque now"»** –
+  **MEASURED ON HIS SAVE, and it is the round 29 #10 class again.** `kidShare.bps` is not the rule, it
+  is an **effective blend recomputed per week**:
+
+  | week | prize | base | cut | bps shown |
+  | --- | ---: | ---: | ---: | ---: |
+  | 888 | $7,500 | $33,750 | $23,438 | 6944 |
+  | 891 | **$0** | $600,000 | $510,000 | **8500** |
+  | 894 | $40,000 | $115,000 | $69,750 | 6065 |
+
+  ⭐ The 85% week is a sponsor cheque – after his manager-commission ruling she keeps nearly all of it,
+  correctly. **The defect is the LABEL**: one sentence prints a blended rate across monies governed by
+  different rules and calls it «Her cut N%», while the budget screen states the actual rule (50% of a
+  prize cheque). ⚠⚠ **A line that describes a rule must be pinned to the rule** – that pin exists for
+  the prize path and the blend slipped past it.
+
+- [ ] **22. «ни одной травмы я не видел уже несколько сезонов, даже самой маленькой»** – **MEASURED:
+  he is right and it is stark.** 11 injuries lifetime, the last at week **597**; the save is at **896**
+  – **299 weeks, 5.8 seasons, nothing at all**, while she is past thirty. ⚠ Injury risk should RISE
+  with age. Measure the hazard against age and report before changing anything.
+
+- [ ] **23. ⚠⚠ MERCH IS MODELLED AS THE WRONG THING – his research, and it is decisive.** «что там
+  происходит в мире на эту тему с личными брендами мерча у спортсменов? Мне кажется это странным
+  немного, если честно, то как сейчас это у нас работает.»
+
+  What he found, to be folded into `docs/research/player-brands-and-what-they-are-worth.md`:
+
+  - ⭐⭐⭐ **Among active top-20/50 players, owning an independent brand is RARE – 95% take classic
+    sponsorship instead.** A full personal business belongs to historic superstars (Federer, Serena),
+    because running one is impossible on an 11-month tour. **Our shelf sells it as an ordinary rung.**
+  - **The lucrative shape is EQUITY or ROYALTIES, not a shop**: Federer's ~3% of On peaked near
+    **$500M** and out-earned 24 years of prize money; Djokovic takes **$5–10M/yr** in royalties from an
+    Asics signature line; Świątek and Shelton are faces of On with reported stock options.
+  - **The RF mark itself is valued at ~$27M** ⚠ – so my agent's «no published value exists» was wrong,
+    and the number is an order of magnitude above what our brand can reach.
+  - Full own-brands, for scale: Osaka's businesses ~$5–10M/yr, Venus' EleVen $5–12M/yr turnover,
+    Sharapova's Sugarpova peaked at a **$20M** valuation.
+  - Federer's post-career income is **$95–100M/yr**, almost entirely sponsorship and investments; the
+    Uniqlo deal alone is **$30M/yr** for ten years.
+
+  ⚙ **His instruction is narrow and I am keeping it narrow**: «Может быть реально что-то вроде
+  колабораций сделать, **но не сейчас**, сейчас **проанализировать и скорректировать доход мерча**.»
+  So: analyse and re-size merch income against these figures. **Collaborations, equity and royalty
+  lines are recorded as the future shape and NOT built.**
+
+- [ ] **24. ⚠ The fame floor ignores «выступления» – his word, from round 30 #13's answer.** A climb
+  built on quarter- and semi-finals is invisible to the brand by construction: the floor counts titles,
+  Slam finals and top-10 seasons only. He raised it again here – «она же топ-20 в мире». **Fold into 23:
+  a top-20 who never wins a title should still be worth something to a brand.**
