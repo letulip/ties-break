@@ -32,6 +32,12 @@ export type WorldEventType =
  *  onset treatment, and the healthy-week physio retainer.
  *  'interest' (round-9 R9-1) is an INCOME-side category: the weekly savings interest on a
  *  positive balance ("Savings interest").
+ *  ⚠⚠ HISTORICAL SINCE ROUND 29 #12 – NOTHING WRITES IT ANY MORE. The owner ruled the automatic
+ *  interest on the current account out («убрать авто начисление % на текущий счёт»), so the accrual
+ *  is gone from `world/phaseFinance.ts`. THE CATEGORY STAYS because every save already written
+ *  carries rows under it, and a career's own past has to keep rendering – deleting it to tidy up
+ *  would make a real family's real ledger unclassifiable. A new writer of this category is a
+ *  regression, and `tests/round9.test.ts` asserts the absence.
  *  'vacation' / 'practice' (season planner, schema v13) bucket the two planner spends: a family
  *  vacation package and a practice-match court rental (+ the optional coach). Refunds are booked
  *  under the SAME category, so a cancelled booking nets to zero on the Money breakdown. */
@@ -109,6 +115,21 @@ export type WorldEventCategory =
    *  ⚠ AN OLD SAVE HAS NO ROWS OF IT, by construction: `assets` back-fills empty (see migrations.ts
    *  v62 -> v63) and the shelf did not exist, so nothing is retconned. */
   | 'shop'
+  /** 'business' (v66, round 29 part four P7) is an INCOME-side category: what THE PARENT'S OWN
+   *  BUSINESSES bring in every week – the merch brand (follows FAME, world/fame.ts) and the
+   *  delivered academy stages (follow reputation = seasons ended in band). One row per business
+   *  per week, written by `resolveBusinessIncome`.
+   *
+   *  ⚠ ITS OWN BUCKET AND NOT A REUSE, and both candidate reuses were weighed and refused in the
+   *  round-29 ledger before this shipped: 'income' would fold a business the player BUILT into
+   *  «the parents' job», and 'academy' already means the scholarship SHE receives – making it also
+   *  mean «the business HE owns» is precisely the two-facts-one-name defect the v44 'facility'
+   *  split was built to end. A new member of this union is a schema change by CLAUDE.md invariant
+   *  3 (the v44 precedent, verbatim), so SAVE_SCHEMA_VERSION moved 65 -> 66 with it.
+   *
+   *  ⚠ AN OLD SAVE HAS NO ROWS OF IT, by construction: the businesses did not exist, the v65 -> v66
+   *  migration back-fills nothing, and the ledger stays truthful about what it actually banked. */
+  | 'business'
   | 'income'
   | 'interest'
   | 'physio'
@@ -241,6 +262,42 @@ export interface FinanceWeek {
    *  does not move. The recorded widening precedent is commit 2763caa (the whole `entry` offer
    *  family added with the version left at 36). */
   kidShare?: FinanceWeekKidShare
+
+  /** ⭐⭐ ROUND 29 PART TWO #13 – WHAT THE COACH TOOK OFF THE WEEK'S TITLE CHEQUE. A memo, exactly
+   *  like `kidShare` above and for a mirror-image reason.
+   *
+   *  THE OWNER, 29.08: «вот и можно как раз добавить cut тренера на weekly экране для
+   *  прозрачности» – the follow-up to part-one #13, which put the 10%/5% RULE on the coaches page.
+   *  A rule on a shop page and a figure on the week he actually reads are different questions.
+   *
+   *  ⚠⚠ AND IT IS A MEMO BECAUSE THE CENTS ARE ALREADY COUNTED, WHICH IS THE OPPOSITE OF
+   *  `kidShare`'s reason. Her cut is a memo because it never entered the family ledger at all; the
+   *  coach's cut is a memo because it DID – `finalizeTournament` writes it as a real `coaching`
+   *  EXPENSE row, so it is already inside `byCategory`, inside `expenseCents` and inside
+   *  `careerTotals.spentCents`. This field lets a screen NAME a figure the week's «Spent» already
+   *  contains, and a screen that added it to a column would charge the family twice for one cheque.
+   *
+   *  ⚠ NOT DERIVABLE FROM `byCategory.coaching`, which is why it exists: that key also carries the
+   *  weekly retainer, the travel fare and the facility, so the share cannot be picked back out of
+   *  it. Carried by the site that paid it, never reconstructed.
+   *
+   *  ⚠ OPTIONAL, AND NOT A SCHEMA MOVE – `kidShare`'s own reasoning above, verbatim in its
+   *  situation: absent is exactly what every historical save already means here («no title or final
+   *  paid a share this week»), which is also true of most weeks in every career, so no migration is
+   *  owed, no golden fixture is added and `SAVE_SCHEMA_VERSION` does not move. */
+  coachCut?: FinanceWeekCoachCut
+}
+
+/** What the coach was paid out of one week's prize cheques. Both numbers are the engine's own at the
+ *  moment it paid: `staffResultShareBps('coach', finishIdx)` and the cents that left the wallet. */
+export interface FinanceWeekCoachCut {
+  /** cents charged to the family this week as the coach's result share – summed if a week ever pays
+   *  twice, on `kidShare.cents`' own reasoning */
+  cents: number
+  /** the share the finish paid, in basis points (`staffResultShareBps('coach', …)`) – 1000 on a
+   *  title, 500 on a final. ⚠ A week can only reach `finalizeTournament` for one tournament, so
+   *  unlike `kidShare.bps` there is no second rate to reconcile and this is the rate itself. */
+  bps: number
 }
 
 /** What left the family's half of one week's cheques and landed in hers. Both numbers are the
@@ -250,6 +307,35 @@ export interface FinanceWeekKidShare {
   cents: number
   /** the ramp's rate at her real age that week, in basis points (`kidPrizeShareBps`) */
   bps: number
+  /** ⭐⭐ ROUND 29 #10 – WHAT `bps` IS A SHARE **OF**: the GROSS cheques she took a cut of this week,
+   *  summed alongside `cents` and by the same writer at the same commit point.
+   *
+   *  ⚠⚠ THE FIELD THIS ROUND EXISTS FOR, AND THE DEFECT WAS NEVER IN THE ARITHMETIC. The owner, off
+   *  his own w780 save: «Income +$29,046 · Spent -$6,883 · Balance +$22,164 · Her cut 50% $27,600 –
+   *  это не 50% по сравнению с income». Measured, and the split is EXACTLY right – she is credited
+   *  half of every gross cheque, to the cent. What was wrong is that the only base on that card is
+   *  `incomeCents`, which is the family's share AFTER the cut, so «50%» stood beside a figure it can
+   *  never be 50% of. On his week 738 the card said `50%` and `$27,600` against a prize row of
+   *  $23,000, and both were true: the prize was $46,000 gross, the kit contract's result bonus added
+   *  $9,200 gross on top of it, and half of $55,200 is $27,600. **The base was the one number never
+   *  on screen.** So the memo now names it and the percentage has something to be a percentage of.
+   *
+   *  ⚠ CARRIED, NEVER RE-DERIVED, and this is the same penny rule `kidPrizeShareCents` writes out:
+   *  `cents / (bps / 10_000)` is a DIVISION on a figure that was rounded once on the way in, and it
+   *  is also the exact arithmetic that produced two wrong readings of this item before it was
+   *  measured. The gross is added here by the site that banked it.
+   *
+   *  ⚠⚠ AND IT IS FORWARD-ONLY, WHICH IS WHY IT IS OPTIONAL RATHER THAN BACK-FILLED. `kidFundsCents`
+   *  is persisted state and a career's history is not ours to rewrite; a save written before this
+   *  build genuinely does not record the base of the weeks it already paid, and inventing one from a
+   *  ratio would be the same division wearing a migration. Absent means "not recorded", the memo
+   *  falls back to the line it printed before, and the next cheque it splits carries the base.
+   *
+   *  ⚠ OPTIONAL, AND NOT A SCHEMA MOVE – `WorldEvent.entryRef`'s rule above and `kidShare`'s own,
+   *  applied to `kidShare`'s own sub-object: absent is already meaningful on every historical save,
+   *  so no migration is owed, no golden fixture is added and `SAVE_SCHEMA_VERSION` does not move
+   *  (the recorded widening precedent is commit 2763caa). */
+  baseCents?: number
 }
 
 /** A category-accurate rollup of `FinanceWeek[]` over a trailing window (pure fold; the bench and
@@ -295,6 +381,18 @@ export interface FinanceWeekPoint {
    *  owner's rule of 26.08 and `shopView`'s `annualRatePct` two files over. No component divides
    *  basis points again. */
   kidSharePct?: number
+  /** ⭐ ROUND 29 #10 – THE GROSS THE RATE ABOVE IS A SHARE OF (`FinanceWeek.kidShare.baseCents`,
+   *  straight through). Absent on every week written before that field existed, and the recap's memo
+   *  drops back to its base-less wording there rather than guessing. Never summed into
+   *  `incomeCents`: the family banked the REMAINDER of this, not this. */
+  kidShareBaseCents?: number
+  /** ⭐⭐ ROUND 29 PART TWO #13 – THE COACH'S CUT OF THE WEEK'S TITLE CHEQUE (`FinanceWeek.coachCut`,
+   *  straight through). ⚠ ALREADY INSIDE `expenseCents` and deliberately so – see the field's own
+   *  header on `FinanceWeek`: it is a real coaching expense, and this pair exists so a screen can
+   *  name it, never so a screen can subtract it a second time. */
+  coachCutCents?: number
+  /** the share the finish paid, as WHOLE PERCENT – rounded ONCE here, `kidSharePct`'s own rule. */
+  coachCutPct?: number
 }
 
 export type StopReason =
@@ -405,6 +503,18 @@ export type StopReason =
   /** W2-ENDINGS: the natural end has asked her and she has not answered (contract §5.3). Blocks
    *  like the fork; an off-season question a player can tick past is not a decision. */
   | 'retirement'
+  /** ⭐⭐ ROUND 29 #3 – A SIGNED CAMPAIGN'S SHOOT WEEK IS ALSO A WEEK SHE IS ENTERED IN, AND NOBODY
+   *  HAS CHOSEN WHAT TO DO ABOUT IT. Blocks exactly like the knock and the fork, and for the
+   *  strongest version of their reason: two of its four answers are IMPOSSIBLE once the week has
+   *  started (`cancelEntry` refuses on the week itself, and a shoot cannot be moved out of a week
+   *  being lived), so a stop the player could tick past would silently pick one of the other two for
+   *  him. The owner ruled the choice his – «И варианты пользователю предложить» – and named all
+   *  three arms himself.
+   *
+   *  ⚠ IT IS THE ONLY MEMBER OF THIS LIST ABOUT A WEEK THAT HAS NOT HAPPENED YET, which is what
+   *  makes it answerable at all: it is raised for `world.week + 1`. Every other reason here reports
+   *  a week already lived or a state already reached. */
+  | 'shoot-clash'
 
 /** R11-1: the order the UI must SURFACE a week's stop reasons in, and the order `advanceWeeks`
  *  returns them in. One advance can stop for SEVERAL true reasons at once (the owner's lost injury
@@ -501,6 +611,19 @@ export const STOP_PRECEDENCE: readonly StopReason[] = [
   // with 'funds', which is exactly the ordering these two lines decide.
   'fork',
   'retirement',
+  // ⭐⭐ ROUND 29 #3 – THE SHOOT/TOURNAMENT COLLISION, immediately below the two endings questions and
+  // above everything that owns a dismissable toast, on the knock's own argument: it BLOCKS, it has
+  // cost nothing by the time it fires, and a question nobody surfaces would strand the career. It
+  // sits BELOW the fork and the retirement offer because those two decide whether there is a career
+  // at all and this decides one week of one; and BELOW the birthday above them because a nineteenth
+  // birthday is a beat that can be deleted by whatever stands in front of it, while this question
+  // waits – the week it is about cannot start until it is answered.
+  //
+  // It can co-occur with 'season-end' and 'funds' (a shoot week is in-season by construction, so it
+  // can sit next to a wrap-up week and a household under water), which is exactly the ordering this
+  // line decides. It can NEVER co-occur with 'tournament': that reason is a reveal of a week already
+  // played, and this one refuses to let the week begin.
+  'shoot-clash',
   'tournament',
   'season-end',
   'deadline',

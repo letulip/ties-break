@@ -42,7 +42,7 @@ import {
   type WorldState,
 } from '../src/engine/world'
 import { migrateSave } from '../src/engine/migrations'
-import { ECONOMY, kidPrizeShareBps, kidPrizeShareCents } from '../src/engine/economy'
+import { ECONOMY, kidPrizeShareBps, kidPrizeShareCents, managerCommissionBps } from '../src/engine/economy'
 import { ownAccountNote, type KidLifeWorldView } from '../src/engine/kidLife'
 import { WEEKS_PER_YEAR } from '../src/engine/season/calendar'
 
@@ -269,14 +269,26 @@ describe('#18 – the line on her own page', () => {
     ...over,
   })
 
+  // ⚠⚠ RE-AIMED BY ROUND 29 PART THREE P3, 29.08, NOT DELETED. This line is the ONE surface that
+  // tells a player the rule exists, and until the manager's commission there was one rule to tell:
+  // her ramp split every cheque in the game. P3 gave sponsor money its own rule (hers, less the
+  // manager's fee), so «N% of every cheque» became a promise the ramp does not keep – the word
+  // «prize» is now load-bearing, and the sponsor clause is the half that was missing. The claim
+  // this arm makes is unchanged in kind: the line carries the balance AND the rule, and every
+  // percentage in it is the engine's own.
   it('silent before eighteen, and from eighteen it carries the balance AND the rule', () => {
     expect(ownAccountNote(view({ ageYears: 17, kidFundsCents: 0 }))).toBe('')
     const at18 = ownAccountNote(view({ ageYears: 18, kidFundsCents: 90_150_00 }))
     expect(at18).toContain('$90,150')
-    expect(at18).toContain('10% of every cheque')
+    expect(at18).toContain('10% of every prize cheque')
     expect(at18).toContain('50%')
+    // ⭐ P3's half, read off the engine and never typed – the same rule part-one #13 set for the
+    // coach's line: `managerCommissionBps` is the function `bankSponsorCheque` pays by.
+    expect(at18, 'and the sponsor money is named as hers, less the fee').toContain(
+      `Sponsor cheques are hers, less the manager's ${managerCommissionBps() / 100}%.`,
+    )
     const at26 = ownAccountNote(view({ ageYears: 26, kidFundsCents: 8_909_415_00 }))
-    expect(at26).toContain('50% of every cheque')
+    expect(at26).toContain('50% of every prize cheque')
     expect(at26, 'at the cap it stops promising more').toMatch(/goes no higher/)
     expect(at26).not.toContain('every birthday')
     // Player copy: short dash only, and no Cyrillic.
@@ -286,12 +298,24 @@ describe('#18 – the line on her own page', () => {
     }
   })
 
+  it('⭐ THE COMMISSION IS THE ENGINE\'S OWN TOO – P3, and it moves with the constant', () => {
+    // The mirror of the arm below, for the second rate this sentence now carries. A retune of
+    // `ECONOMY.managerCommission` must move the line; a literal typed into kidLife.ts would not.
+    const saved = ECONOMY.managerCommission.bps
+    Object.assign(ECONOMY.managerCommission, { bps: 1234 })
+    try {
+      expect(ownAccountNote(view({ ageYears: 18, kidFundsCents: 100_00 }))).toContain("less the manager's 12.34%")
+    } finally {
+      Object.assign(ECONOMY.managerCommission, { bps: saved })
+    }
+  })
+
   it('⭐ THE PERCENTAGE IS THE ENGINE\'S OWN, not a number typed into a sentence', () => {
     const saved = ECONOMY.kidShare.stepBps
     Object.assign(ECONOMY.kidShare, { stepBps: 100 })
     try {
       // 10% at 18 + one point a year: at 20 the line must say 12%, which no literal could.
-      expect(ownAccountNote(view({ ageYears: 20, kidFundsCents: 100_00 }))).toContain('12% of every cheque')
+      expect(ownAccountNote(view({ ageYears: 20, kidFundsCents: 100_00 }))).toContain('12% of every prize cheque')
     } finally {
       Object.assign(ECONOMY.kidShare, { stepBps: saved })
     }
@@ -302,6 +326,6 @@ describe('#18 – the line on her own page', () => {
     const life = toSnapshot(world).life
     expect(ageOf(world)).toBeGreaterThanOrEqual(ECONOMY.kidShare.fromAgeYears)
     expect(life.ownAccount).toContain('Her own account')
-    expect(life.ownAccount).toContain('% of every cheque')
+    expect(life.ownAccount).toContain('% of every prize cheque')
   })
 })

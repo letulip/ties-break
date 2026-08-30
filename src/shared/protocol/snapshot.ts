@@ -13,7 +13,7 @@ import type { CareerTotals, DebtView, FinanceWeekPoint, FinanceWindow, StopReaso
 import type { InjuryReport, Knock, KnockPrompt, SnapshotInjury } from './health'
 import type { CountingResult, LadderViews, StandingRow } from './ladder'
 import type { BirthdayPrompt, DiarySnapshot, KidLife, Milestone, RadarAxis, TrainingRead } from './narrative'
-import type { CoachMarketRow, KitDealView, KitLineView, Offer, ShopView, SnapshotAcademy, TourBriefing } from './offers'
+import type { AdPortfolioRow, CoachMarketRow, KitDealView, KitLineView, Offer, ShootClashPrompt, ShopView, SnapshotAcademy, TourBriefing } from './offers'
 import type { CoachEdgePlacement, PlayerProfile, PracticeBooking, RecoveryBuff, VacationBooking, WeekPlan } from './profile'
 
 /** ⭐⭐ ROUND-28 #8 – THE WHOLE HOUSEHOLD'S WEEK, IN THREE NUMBERS.
@@ -61,6 +61,33 @@ export interface HouseholdWeekly {
    *  be in the household's weekly picture, and it is deliberately NOT in `weeklyIncomeCents`, which
    *  is the coach market's affordability cap and must stay the money that really arrives. */
   shelfCents: number
+  /** ⭐⭐ ROUND 29 #5, §3f – WHAT THE SHELF COSTS TO KEEP, as a POSITIVE magnitude, and unlike
+   *  `shelfCents` THIS ONE IS CASH. A yacht's crew, berth, fuel, survey and insurance leave the
+   *  wallet every week whether anybody sails or not, which is the whole argument for owning one
+   *  being a statement rather than an investment.
+   *
+   *  ⚠⚠ IT IS ALREADY INSIDE `outgoingCents` – `shelfCents`' own discipline, in the same words: a
+   *  consumer that adds it again has misread it. It is carried so the strip can NAME the bill.
+   *
+   *  ⚠ AND IT IS IN THIS TOTAL BY DESIGN RATHER THAN BESIDE IT. Round 28 #8 exists because the
+   *  masseur's $525 was a real weekly cost the household block did not know about; a $23,080 yacht
+   *  that bypassed the same total would be that defect again, larger. Zero for every family that
+   *  owns nothing with an upkeep. */
+  upkeepCents: number
+  /** ⭐⭐ ROUND 29 PART FOUR P7 – WHAT THE MERCH BRAND BRINGS IN A WEEK, in cents, and it is CASH:
+   *  `resolveBusinessIncome` banks exactly this figure each week it is positive. Follows FAME
+   *  (world/fame.ts), never rank. Zero for every family that never started one.
+   *
+   *  ⚠⚠ ALREADY INSIDE `incomeCents` – `upkeepCents`' own discipline mirrored to the income side:
+   *  a consumer that adds it again has misread it. Carried so the strip can NAME the line (round
+   *  28 #8's law: a real weekly stream the household block does not know about is the defect). */
+  merchCents: number
+  /** ⭐⭐ ...AND WHAT THE ACADEMY'S DELIVERED STAGES BRING IN, same contract in every clause: cash,
+   *  already inside `incomeCents`, carried so the strip can name it. Scales with the stages built
+   *  and with reputation (seasons ended in band – «чем выше и дольше место – тем выше доход»).
+   *  ⚠ NOT the scholarship: that is the academy SHE attends ('academy' category); this is the
+   *  business HE built ('business'). Two facts, two names – the v44 lesson. */
+  academyIncomeCents: number
 }
 
 export interface Snapshot {
@@ -93,15 +120,40 @@ export interface Snapshot {
    *  boolean, `schoolEndsWeek`'s own reason one line up – the look-ahead asks about weeks that are
    *  not this one. */
   collegeDepartsWeek: number | null
-  /** ⭐ AD STEP 2 (the-face-and-the-court.md §4a) – THE RUNNING ENDORSEMENT'S SHOOT WEEKS, or null
-   *  when no signed advertising deal is in force this week. The calendar look-ahead marks them the
-   *  way it marks the college departure – a decision already made, visible before it arrives – and
-   *  the brand rides along so the row can say WHOSE shoot it is without the UI re-deriving a deal.
+  /** ⭐ AD STEP 2 (the-face-and-the-court.md §4a) – EVERY RUNNING ENDORSEMENT'S SHOOT WEEKS, one
+   *  row per live deal, empty when none is in force this week. The calendar look-ahead marks them
+   *  the way it marks the college departure – a decision already made, visible before it arrives –
+   *  and the brand rides along so a row can say WHOSE shoot a week is without the UI re-deriving a
+   *  deal.
    *
-   *  DERIVED, never persisted: `toSnapshot` reads the active deal's own frozen terms
-   *  (`activeAdDeal`), so the markers and the recovery the engine actually charges can never name
-   *  different weeks. Weeks are absolute career weeks, `weekLabel`'s own unit. */
-  adShoot: { brand: string; weeks: number[] } | null
+   *  ⚠ PLURAL SINCE ROUND 29 PART FOUR P6 (it was `adShoot`, one deal's row): the portfolio runs
+   *  several deals at once and each names its own weeks. DERIVED, never persisted: `toSnapshot`
+   *  reads each live deal's own frozen terms (`activeAdDeals`), so the markers and the recovery the
+   *  engine actually charges can never name different weeks. Weeks are absolute career weeks,
+   *  `weekLabel`'s own unit. */
+  adShoots: { brand: string; weeks: number[] }[]
+  /** ⭐⭐ ROUND 29 PART FOUR P6/§8 – THE ADVERTISING PORTFOLIO, AS THE SHELF THE OWNER DESCRIBED:
+   *  one row per category in shelf order, filled or empty, with the live deal named. `filled` rows
+   *  carry the deal's own frozen numbers; `open` rows carry the cheque her CURRENT band would be
+   *  written at, so the surface can say what an empty slot is worth today; `closed` rows carry the
+   *  standing (or, for the capstone, the seasons-in-top-10 tenure) still needed. The capstone row
+   *  is last and appears once any professional band is open, so the shelf always shows where the
+   *  ladder ends.
+   *
+   *  DERIVED at snapshot time from the offers and the catalogue – the screen prices nothing and
+   *  re-derives no gate, the same rule every other derived block on this snapshot keeps. Empty
+   *  before her eighteenth birthday: there is no shelf to show a junior. */
+  adPortfolio: AdPortfolioRow[]
+  /** ⭐⭐ ROUND 29 PART FOUR P7/P8 – HOW KNOWN SHE IS, 0–100: the fame stock of
+   *  docs/specs/fame-and-the-shoots-2026-08.md, first shipped here. AN ACCOUNTED FOLD, NEVER A
+   *  ROLL – results the world noticed set the floor, the shoot weeks she has lived multiply it,
+   *  and everything decays slowly (world/fame.ts; zero draws, nothing persisted).
+   *
+   *  A WHOLE NUMBER, rounded ONCE by `toSnapshot` – `condition`'s own boundary rule («у
+   *  пользователя целые в интерфейсе»). Surfaced modestly where the sponsors live (the Bills
+   *  portfolio card) and read by exactly one income line today (merch); the fame-gated advertising
+   *  ladder of the spec's §4 is a later wave, deliberately. */
+  fame: number
   fundsCents: number
   profile: PlayerProfile
   plan: WeekPlan
@@ -180,6 +232,15 @@ export interface Snapshot {
    *  DERIVED, not persisted: assembled per snapshot (buildBirthdayPrompt) off the birth date and the
    *  record. Once he answers, the row appears in `birthdays` and this goes null. */
   birthdayPrompt: BirthdayPrompt | null
+  /** ⭐⭐ ROUND 29 #3 – THE SHOOT ON A TOURNAMENT WEEK, AND THE FOUR ANSWERS TO IT. Non-null on
+   *  exactly the weeks `shootClashOpen` is true, which is the predicate `advanceWeeks` blocks on –
+   *  so the dialog cannot be missing on a week the engine has refused to tick. Same contract as
+   *  `knockPrompt` and `birthdayPrompt` above, same reason.
+   *
+   *  DERIVED, not persisted: assembled per snapshot (`buildShootClashPrompt`) off the signed deal's
+   *  own named weeks and her entries. What IS persisted is only the latch for «do both»
+   *  (`WorldState.shootClashAccepted`), which is optional and moves no schema. */
+  shootClash: ShootClashPrompt | null
   /** ⭐ round-18 #8 – THE TOUR'S COMMITMENT RULES, EXPLAINED THE FIRST TIME THEY BIND HER. Non-null on
    *  every week `mandatoryBindsRank` is true; the shell shows it ONCE per career and then never again
    *  (a per-career localStorage watermark, exactly like the injury report's). See `TourBriefing`. */

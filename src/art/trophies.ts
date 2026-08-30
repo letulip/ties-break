@@ -45,9 +45,17 @@
 // WHY `images/`, AND WHY THE URL IS BASE-RELATIVE
 // -------------------------------------------------------------------------------------------------
 // `BASE_URL` rather than a leading slash: the PWA ships under a sub-path. And the set lives under
-// `images/` because that is what workbox's `globIgnores: ['**/images/**']` keys on — every one of
-// them stays out of the precache, so an install pays nothing for a cabinet most careers never fill, while
-// the CacheFirst runtime route makes each one offline-durable from the first time it is drawn.
+// `images/` because that is what workbox's `globIgnores: ['**/images/**']` keyed on — every one of
+// them stayed out of the precache, so an install paid nothing for a cabinet most careers never fill,
+// while the CacheFirst runtime route made each one offline-durable from the first time it was drawn.
+//
+// ⚠⚠ BOTH HALVES OF THAT ARE GONE, 29.08 (round 29 part two #7). `globIgnores` is deleted and the
+// 32 trophy webp (749 KiB) are in every install; the CacheFirst and StaleWhileRevalidate routes are
+// deleted with it. `images/` is now simply where the art lives. ⭐ And the freshness problem that
+// forced the trophies into their OWN runtime cache is solved rather than moved: he repainted two
+// trophies on 01.08 and his phone kept the old ones for 60 days, because CacheFirst never
+// revalidates. A precache entry is keyed on url+revision, so a repainted trophy has a new key and
+// the next update fetches exactly it – one file, measured (tools/precache-delta.mjs).
 import type { TierId } from '../engine/season/types'
 
 const TROPHY_DIR = 'images/trophies/'

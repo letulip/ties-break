@@ -332,10 +332,21 @@ describe('⭐⭐⭐ #7 – and the replay is still there afterwards, in the feed
     // The defect, reproduced first: the plain trailing window really has lost them by now.
     const collegeRows = world.events.filter((e) => e.match?.eventId.startsWith('college-w'))
     expect(collegeRows.length, 'four years of championships really happened').toBeGreaterThanOrEqual(4)
+    // ⚠⚠ RE-AIMED BY ROUND 29 #12, AND ONLY THE PRECONDITION MOVED – the claim under test did not.
+    // This read `.toBe(0)`, i.e. «a bare sixty-row tail holds NONE of them». Removing the automatic
+    // interest made this fixture's family poorer, so it enters fewer tour events, so fewer rows are
+    // written a week, so the same sixty-row tail now reaches further back and still holds two of
+    // them. That is the career moving under the fixture, not the feed changing: the DEFECT this arm
+    // exists to reproduce is that a plain trailing window LOSES championship rows, and the honest
+    // form of that is «the window holds strictly fewer than all of them». ⚠ Stated as an inequality
+    // against the real total rather than as a literal, so it cannot go stale the next time the
+    // economy moves, and it still cannot pass vacuously: if the window ever held every one of them
+    // the pinning below would be proving nothing and this line would be red.
+    const inBareTail = world.events.slice(-60).filter((e) => e.match?.eventId.startsWith('college-w')).length
     expect(
-      world.events.slice(-60).filter((e) => e.match?.eventId.startsWith('college-w')).length,
-      'and a bare sixty-row tail holds none of them – this is his w502 state',
-    ).toBe(0)
+      inBareTail,
+      'a bare sixty-row tail really does lose some of them – the w502 defect',
+    ).toBeLessThan(collegeRows.length)
 
     const w = mount(HomeScreen, { props: { recapFresh: false }, global: { stubs: { teleport: true } } })
     const rows = w.findAll('.news-match-btn')

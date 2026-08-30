@@ -237,7 +237,19 @@ import type { AcademySupport } from '../academy'
 // call-up reveal above. Two different v64 schemas existed for a day, and a save written by either
 // could not be read by the other. Renumbered on the merge: the version, the migration's place in the
 // append-only chain, and the golden fixture, all three together.
-export const SAVE_SCHEMA_VERSION = 65
+//
+// ⚠ v66 = ONE UNION MEMBER, `WorldEventCategory` gains 'business' (round 29 part four P7 – the
+// merch brand's and the academy's weekly income lines, written by `resolveBusinessIncome`). NO
+// field moved and NOTHING is back-filled: the businesses did not exist, so an old save genuinely
+// has no rows of them. The version moves anyway, BY THE v44 PRECEDENT VERBATIM («'facility'… a new
+// member of that union is a schema change by the rule in CLAUDE.md §3, so the version moves») –
+// events and `financeWeeks.byCategory` are persisted, and a v66 save loaded by a v65 build would
+// carry a category that build's union does not know. The round-29 ledger weighed the two zero-cost
+// reuses and refused both: 'income' folds a built business into «the parents' job», and 'academy'
+// already means the scholarship SHE receives – two facts under one name is the defect v44 was cut
+// to end. Full move: this constant, the v65 -> v66 step in migrations.ts, tests/fixtures/saves/
+// v66.json, and the union member's own doc in shared/protocol/events.ts.
+export const SAVE_SCHEMA_VERSION = 66
 
 
 
@@ -684,6 +696,30 @@ export interface WorldState {
    *  `null` IS the shipped behaviour, so absence is not a hole - it is the identity element. A real
    *  career always has one: `createWorld` writes it and the v36 -> v37 migration back-fills it. */
   kit?: KitState
+  /** ⭐ THE WEEKS HER KIT STOOD DOWN - every resolved week she spent on a booked family holiday.
+   *  The owner's ruling 5 of 09.08: «Ну да, занятий же нет, по-моему логично» - a vacation stops the
+   *  wear clock. Round-15 #14 asked it, round-16 #8 re-asked it, round-29 #20 is the fourth asking.
+   *
+   *  ⚠ WHY A LEDGER RATHER THAN A COUNTER, and it is the one thing this field cannot be talked out
+   *  of: wear is DERIVED from a purchase week (`weeksSinceGear`), so the question the model asks is
+   *  "how many rest weeks fell between THEN and now" - a span, not a total. A running total cannot
+   *  answer it without a second number captured per line at every purchase, and the scheduled
+   *  purchases are never stored at all.
+   *
+   *  ⚠⚠ AND IT CANNOT BE READ OFF `world.vacations`, which is the trap this field exists to avoid.
+   *  `prunePlannerBookings` keeps only `PLANNER_TRAIL_WEEKS` (4) of trailing bookings, so a holiday
+   *  is GONE from that array long before the shoes it stood down are replaced. Deriving from it
+   *  would have looked right in a unit test and been wrong on every real career.
+   *
+   *  ⚠ OPTIONAL ON THE TYPE, and NOT a schema move - the `kit?` precedent directly above and the
+   *  recorded widening precedent (commit 2763caa, cited twice in shared/protocol/events.ts). Absent
+   *  is exactly what every historical save and every hand-built test world already mean: no rest
+   *  recorded, so the clock runs on calendar weeks, which is the shipped behaviour byte for byte.
+   *  An in-flight career therefore keeps its wear history and gains the pause from the next holiday
+   *  on. `SAVE_SCHEMA_VERSION` does not move, no migration is owed and no golden fixture is added.
+   *
+   *  Bounded by `GEAR_REST_WINDOW` - see `recordGearRestWeek`, which is the only writer. */
+  gearRestWeeks?: number[]
 
   // --- W2-ENDINGS (v39): where the career ends -------------------------------------------------
 
@@ -772,4 +808,24 @@ export interface WorldState {
    *
    *  Required rather than optional – the v62 migration seeds every existing save. */
   peakPhysical: number
+  /** ⭐⭐ ROUND 29 #3 – THE WEEKS THE PARENT SAID "SHOOT AND PLAY ANYWAY".
+   *
+   *  A signed campaign can name a week she is also entered in a tournament, and round 28 shipped
+   *  that collision as nothing at all. The owner ruled it a DECISION and named all three answers
+   *  himself – pull out of the tournament, move or cancel the shoot, or do both and pay for it in
+   *  condition. Three of the four answers REMOVE the collision (the entry goes, or the week leaves
+   *  `shootWeeks`), so nothing has to be remembered for them. Only «do both» leaves the world in the
+   *  state that raised the question, so only it needs a latch – without one `shootClashOpen` would
+   *  ask again on the next press and the week could never be spent.
+   *
+   *  ⚠ IT IS THE LATCH AND NOT THE PRICE. What the week costs is charged off the FACT that she shot
+   *  and played (`accrueCondition` reads the shoot week and `isCompetitionWeek`), never off this
+   *  list – so a career that reaches the collision by some other road, a save written before this
+   *  field existed included, is charged correctly and simply gets asked once.
+   *
+   *  ⚠ OPTIONAL, AND NOT A SCHEMA MOVE (`WorldEvent.entryRef`'s own rule, and `AdOfferTerms`'
+   *  before it): absent means exactly what every historical save already means – nobody has answered
+   *  this question – so no migration is owed, no golden fixture is added, and `SAVE_SCHEMA_VERSION`
+   *  does not move. Every reader normalises with `?? []`. */
+  shootClashAccepted?: number[]
 }

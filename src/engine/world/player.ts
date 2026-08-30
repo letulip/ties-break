@@ -176,6 +176,10 @@ export function kidMatchPlayerFor(
     /** W3-KIT (v37): the rung she is on per line. Optional for the same reason `offers` is - a pure
      *  caller that builds a player without a full world gets the shipped rung, byte-identical. */
     kit?: KitState
+    /** ROUND-29 #20: the weeks a booked family holiday stood her kit down, so the wear clock counts
+     *  the weeks she PLAYED. Optional for the same reason `kit` is – a pure caller without one gets
+     *  the elapsed-calendar answer, which is byte-identical to what this function always gave. */
+    gearRestWeeks?: number[]
     /** her CURRENT build. Optional for the same reason `offers` is – a pure caller without one gets
      *  the birth build, exactly as `kidMatchPlayer`. */
     skills?: KidSkills
@@ -246,12 +250,19 @@ export function kidMatchPlayerFor(
     // Same shape as the sponsor's floor: what the ladder moves is the WEAR that goes in - where on
     // her line's curve a brand-new one of these starts, and how long that curve is - never the
     // arithmetic. `undefined` is the shipped rung, so a save from before v37 composes byte-identically.
+    //
+    // ⚠ AND THE WEEKS SHE DID NOT PLAY, WHICH IS A SIXTH READING AND STILL NOT A SIXTH TERM
+    // (round-29 #20, the owner's ruling 5 of 09.08). Same shape again: a booked family holiday moves
+    // the WEAR that goes in - the clock stands down while nobody is on court - never the arithmetic.
+    // An empty ledger is the identity element, so a career that never booked a holiday composes
+    // byte-identically to what it did before this shipped.
     kitWearAt(
       world.seed,
       world.profile.background,
       world.week,
       kitFreshCap(world.offers ?? [], world.week),
       world.kit ?? null,
+      world.gearRestWeeks ?? [],
     ),
   )
   // ⚠ AND THE COACH IN HER CORNER, WHICH IS A SIXTH READING AND THE FIRST ADDITIVE ONE (see

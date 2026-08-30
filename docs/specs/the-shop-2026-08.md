@@ -3,7 +3,7 @@ type: spec
 status: draft
 area: economy
 canonical: false
-last-reviewed: 2026-08-26
+last-reviewed: 2026-08-29
 ---
 
 # The shop, the assets and the broker – the buildable spec
@@ -201,7 +201,7 @@ numbers rather than one – what it cost, what it loses, and what it takes every
 | thing | price | build | loses / year | upkeep / year | **upkeep / week** |
 | --- | --- | --- | --- | --- | --- |
 | the launch | $900,000 | ~12 months | 7% | 6% | **$1,040** |
-| the boat | $2,400,000 | ~18 months | 7% | 6% | **$2,770** |
+| the sailing yacht (was: the motor boat, part three P1) | $2,400,000 | ~18 months | 7% | 6% | **$2,770** |
 | the yacht | $12,000,000 | ~3 years | 5% | **10%** | **$23,080** |
 | the big yacht | $28,000,000 | ~4 years | 5% | **10%** | **$53,850** |
 | the plane | $18,000,000 | ~2 years | 6% | 8% | **$27,690** |
@@ -259,7 +259,8 @@ week is a seventh, and its shape is unusual in exactly the right way:
 - **`priceCents: [0, 0]` – it is free at the point of use**, because the money went years ago and the
   upkeep is charged every week whether she sails or not;
 - **it appears in `PlanWeekSheet` only while the yacht is owned and delivered** (⚠ not while it is
-  still building – §3f's contract is not a boat);
+  still building – §3f's contract is not a boat); ⚙ **AMENDED by part two #8 – see §13g**: the row
+  is on every family's sheet at a real charter price now, and delivery is what makes it FREE;
 - its gain sits **at or above `elite`**, which is the priciest package in the game.
 
 ⭐⭐ **AND THIS IS WHAT TURNS THE YACHT FROM A TROPHY INTO A DECISION.** Before it, the absurd family
@@ -418,6 +419,14 @@ He asked. Four, in the order I would rank them:
 3. ⚙ **SETTLED 26.08 – her cut of the returns is a SWITCH, not automatic** («договорились»), §7.
 4. **Does the shop survive an ending?** My answer is yes and it is cheap: the retirement card names
    what the family owns. An ending that silently drops the house is a bug the player will feel.
+   ⚙ **SETTLED 29.08, round 29 part two #10, for the academy** – his ruling: «Эпилог… надо
+   добавить, мне кажется. Это всё-таки финал игры.» The epilogue names the academy when the family
+   built any stage: what stands (N of M stages, the catalogue's own count) and – now that the
+   academy EARNS – what it became (its weekly income, off `world/business.ts`' one arithmetic).
+   Built as ONE engine-fed line in `EndingScreen.vue`'s footer (`EndingView.academy`, a wire field:
+   no schema move), because the album's SHAPE is reserved by him – the photo-album concept is his
+   backlog item, and this line deliberately does not touch it. The REST of the shelf at an ending
+   is still open.
 
 ---
 
@@ -438,9 +447,9 @@ that out.
 | --- | --- | --- | --- |
 | **1** | **the tab, static prices, buy / own / sell** – the deposit and index fund (§3a), the four cars (§3b), the first two house tiers (§3c). No movement, no building, no freeze | a bench career buys the good car in season 3, sells it two seasons later, and the ledger shows the loss to the cent; `careerTotals` grows at most two fields; the frozen capture is unmoved; a previous-version save loads with `assets: []` and plays identically; ⚠ the shop is NOT the dominant outgoing before season 4 | ⚙ **BUILT 27.08 – schema v63, see §12** |
 | **2** | **drift** (§4), one sub-stream, no shocks | the four families are distinguishable from the numbers alone, without being told which is which | Next |
-| **3** | **commissioning** (§3f) – the elite ladders, the wait, the contract, the annual loss and the weekly upkeep; ⭐ **the yacht week as a seventh vacation package**; the plane's travel-cost cut and its +1 on travelling weeks | a career orders a yacht, waits three years, and the weekly upkeep sits in the ledger beside the masseur; the yacht week appears in `PlanWeekSheet` only once delivered, and it does not kill the other six packages | Next |
+| **3** | **commissioning** (§3f) – the elite ladders, the wait, the contract, the annual loss and the weekly upkeep; ⭐ **the yacht week as a seventh vacation package**; the plane's travel-cost cut and its +1 on travelling weeks | a career orders a yacht, waits three years, and the weekly upkeep sits in the ledger beside the masseur; the yacht week appears in `PlanWeekSheet` only once delivered, and it does not kill the other six packages | ⚙ **BUILT 29.08 – round 29 #5, see §13** |
 | **4** | **shock and freeze** (§4) | zero bankruptcies whose proximate cause is a freeze, over a sweep | Next |
-| **5** | **the academy** (§3g), in stages | a half-built academy is a legible state, and the epilogue can name the finished one | Later – ⚠ or slice 2, by §10.1 |
+| **5** | **the academy** (§3g), in stages | a half-built academy is a legible state, and the epilogue can name the finished one | ⚙ **BUILT 29.08 – round 29 #5, §13; the epilogue half is NOT built, see §13d** |
 | **6** | **the broker** (§6) | following him beats ignoring him by less than his fee | Later |
 | **7** | **charity** (§8) | a gift changes something unpromised, and the ending can name it | Later |
 
@@ -537,3 +546,381 @@ questions, but it can no longer fail a slice.
   §2e-5 true by construction.
 - **(c) price the first rung under a season of tennis** – rejected here: §3b's ladder is his own
   («от 60 до 300к»), and moving it to satisfy §2e-5 would trade a stated ruling for an unstated one.
+
+---
+
+## 13. ⚙ SLICES 3 AND 5 AS BUILT (29.08, round 29 #5) – and four places this file was silent
+
+Recorded here beside §12 rather than in a second document, for §12's own reason. Everything below is
+round 29 #5, on `r29g/shop-elite-academy`, and **`SAVE_SCHEMA_VERSION` did not move: it is still 65.**
+
+His ask, in full: «В магазине всё ещё не хватает яхт, самолётов и стойки академии».
+
+### 13a. What shipped
+
+Ten new rungs in `ECONOMY.shop.catalogue` – §3f's six commissioned ones and §3g's four academy
+stages – plus `world/assets.ts` (a new LEAF holding the shelf's pure reads), `deliverAssets`,
+`assetUpkeepCents` / `weeklyAssetUpkeepCents`, `resolveAssetUpkeep` in the weekly till,
+`HouseholdWeekly.upkeepCents`, the `yacht-week` vacation package with its own drawn week and its own
+diary lines, and the plane's two effects. Zero draws on any stream; the frozen MAIN capture
+(41550 / `e6b0c709`) is **unmoved**.
+
+⚠ **`OwnedAsset` GAINED `readyWeek?` AND NOTHING ELSE, exactly as §12a predicted it would** – «slice 3
+can add `readyWeek?: number` (absent = delivered) … with **no migration at all**». It did, so there
+is no v66, no migration and no golden fixture. `sellableAsset` is the seam §12a named and it is the
+one function that changed.
+
+⚠ **AND THE VALUE CLOCK RE-USED `basisWeek` RATHER THAN GROWING A SECOND ONE.** A commissioned thing
+is ordered years before it exists, so `buyAsset` writes `basisWeek = readyWeek` and
+`assetValueCents`' own `Math.max(0, weeksHeld)` holds the contract at what was paid for the whole
+wait. One field, one sentence («the compounding clock's start»), no branch in `revalueAssets` and no
+second value model.
+
+### 13b. ⚠⚠ THE FOUR PLACES THIS FILE WAS SILENT, and what was chosen
+
+**1. §3g GIVES NO PER-STAGE PRICES**, only a band and four names. So the four are MEASURED against
+his band rather than declared, the same way §12b's two house tiers were: land $2M, courts $3M, the
+clubhouse $4M, the staff $3M = **$12,000,000**, the middle of «$8–15M». ⚠ They are also the one
+exception to the catalogue's «cheapest first»: the stages read in BUILD order, because `requiresId`
+chains them and a stage cannot be bought before the one under it.
+
+**2. §3g GIVES THE ACADEMY NO WAIT, NO UPKEEP AND NO RATE**, and it was given none. §3f's «время
+постройки» and «годовое обслуживание» are said of the boats and the planes; §3g's own sentence is
+«each stage is a decision and a bill», and a stage IS the wait. The rate is 0, so the shelf says
+«Holds its value» – which is what «the one asset that outlives the career» reads like with no number
+attached.
+
+**3. §3f GIVES THE PLANE'S FARE CUT NO PERCENTAGE.** His verb is «резать» and not «убрать», so it is
+**half** (`ECONOMY.shop.planeTravelShare`), and it comes off every seat the family pays for – hers,
+the coach's and the masseur's – because it is one aeroplane carrying all of them. Three reasons for a
+half rather than the whole fare are written over the constant; the load-bearing one is that a fare
+which fell to zero would take the travel LINE off the ledger, and a cost the player cannot find is
+this repo's own named defect. ⚠ It is **not a balance lever in either direction**: a season of travel
+is four figures and the aircraft costs $27,692 a week to keep.
+
+**4. §3f NAMES THE YACHT WEEK'S TUNING QUESTION AND DOES NOT ANSWER IT** – «Either it ties with
+`elite` and wins on being free, or it beats it slightly and `elite` keeps a reason to exist that is
+not price.» Built on the **first** arm: `conditionGain: 48`, the same as elite, free, and
+`buffFactor: 1` against elite's `0.85`. So the yacht wins on price and elite keeps the injury buff,
+which is a currency a boat cannot pay in – and §3f's veto («the yacht must NOT be the strictly best
+rest week available») holds. ⚠ A gain above 48 would break it, and `tests/planner.test.ts` says so.
+
+### 13c. ⚠ WHICH RUNGS GRANT THE WEEK, and it is the narrow reading
+
+**`yacht` and `yacht-big` only.** «при наличии яхты» is the sentence, and the two rungs below them
+are a launch and a motor boat – the spec calls neither a yacht, and §11 row 3's own acceptance is «a
+career orders a yacht, **waits three years**», which is the $12M rung's build time and not theirs.
+A week away on a day-boat is not a holiday.
+
+⚙ **RE-ARGUED AT PART THREE P1 (29.08), SAME ANSWER.** «моторка $2.4М – давай переделаем на
+парусную яхту пожалуйста» renamed the $2.4M rung to **the sailing yacht** – so «the spec calls
+neither of them a yacht» stopped covering the shelf, and the ruling had to be re-derived rather
+than inherited. It survives on a better leg: the WEEK the package sells is a **crewed** week («crew
+of six, and a week of it is a week nobody can reach them»), and the crew is what the two granting
+rungs' 10% upkeep is buying – the sailing yacht keeps the boats' crewless 6% (hull, berth, survey).
+A family that sails itself has a boat, not a holiday staff. The grant reads what the upkeep pays
+for, never the noun in the label; the sailing yacht grants nothing, and
+`tests/round29-shop-elite.test.ts` holds the claim against the delivered rung.
+
+### 13d. ⚠⚠ WHAT IS **NOT** BUILT, AND IS STILL OPEN
+
+- ⚙ **RESOLVED 29.08 – the epilogue names the academy now** (round 29 part two #10). This bullet
+  stood on «it has never been ruled on», and he ruled: «Эпилог… надо добавить, мне кажется. Это
+  всё-таки финал игры.» The word arrived and the line shipped – see §10.4's ⚙ note for what was
+  built and what stayed deliberately untouched (the album's shape is his).
+- **No academy stage does anything yet.** §3g's own «this is where advertising money lands» is a
+  cross-reference to the face-and-court plan, not a mechanic in this file, and §9.4 («a stage that is
+  HERS to run, after she retires») is explicitly «listed last on purpose, and not proposed for any
+  slice below». The academy is, today, the end of the money and a thing the family owns.
+- **§4's drift, shock and freeze are still slice 2 and slice 4.** Nothing here draws.
+- ⚠ **A STAGE CAN BE SOLD OUT FROM UNDER THE ONE ABOVE IT.** `requiresId` gates BUYING and nothing
+  gates selling, so a family that owns the land and the courts may sell the land and keep the
+  courts – which is not a state that means anything. It is one predicate in `sellableAsset` to
+  close, and it was deliberately NOT written: §3g asks for stages and says nothing about unwinding
+  them, and a refusal the spec does not have is not this slice's to invent. **Flagged for him**, and
+  it is small either way.
+
+### 13e. ⚠⚠ THE GATE IS GONE – HIS RULING, ROUND 29 PART TWO #6 (29.08)
+
+«магазин открыт всегда с начала игры.»
+
+This section read «THE GATE IS UNCHANGED, AND THAT IS A DECISION», and the decision has been made the
+other way by the owner. **§2's «visible from the first week of the professional era and never in the
+junior years» is overturned.** `shopUnlocked` (`activeLadderOf === 'wta'`), `SHOP_LOCKED_DETAIL`, the
+`ShopView.unlocked` / `lockedDetail` pair and the screen's shut arm are all deleted; what went and
+why is written out where the predicate stood in `src/engine/world/shop.ts`.
+
+⭐ **It closes round 29's ask 12b.** #12 removed the current account's automatic interest and measured
+the loss at its cleanest on the junior sink – the one horizon where the shelf that replaces it was
+shut. The replacement now exists there, and part two #3's rate (200 → 317 bps, «не вижу проблем
+сделать ставку 3.17% на Savings») is the other half of the same repair.
+
+⚠ **What a fourteen-year-old can now see and buy, checked rung by rung, because a rung that BREAKS at
+that age would be a real defect where a rung merely out of reach is not.** Nothing on the shelf reads
+about her or reaches her: §1's «the shelf belongs to the PARENT» is the whole catalogue's rule, the
+two items that were about her were struck before slice 1 shipped, and every remaining effect is the
+family's – a car depreciating, a house owned, a boat's upkeep, the plane's fare cut and its kinder
+travelling week (`world/sponsors.ts`, `world/medical.ts`), the academy's stages. **Reachable at 14:**
+the deposit ($1,000) and, for a wealthy family, the index fund ($5,000) – which is exactly the pair
+ask 12b was about. **Visible and priced out:** the five cars, the houses, the boats, the planes and
+the four academy stages, which is §2's own «a shop window is a thing you look into before you can
+afford it». **Nothing breaks:** `requiresId` still orders the academy stages, `buildWeeks` still
+makes a boat a contract before it is a boat, and `guardNotEndedForGood` is still the one refusal.
+
+§12c had already settled the buy-gate question inside the shelf with his own words – «магазин есть и
+всё, мы не можем запретить там что-то покупать» – so no second gate was invented for the expensive
+rows, and this ruling extends the same sentence to the door. What gates them is the price: a $38M
+aeroplane is out of reach of every career the probe has ever walked, and
+§12b's own funds table (median season 8 at $2.5M) says the boats' bottom rung is the first storey a
+very good career can reach at all. ⚠ **That is worth his eye**: most careers will see these rows and
+never press one, which is §2's «a shop window is a thing you look into before you can afford it»
+taken to its limit.
+
+### 13f. ⚠ AND THE ONE THING THAT COULD STRAND A FAMILY WAS CHECKED
+
+A yacht is **$23,076.92 a week**, which is roughly thirty-eight coaches, and the shelf has no
+bankruptcy guard. The two states are disjoint by construction and that is what makes it safe:
+**while it is being built it cannot be sold and it charges nothing; the week it arrives the upkeep
+starts and it becomes sellable the same week.** There is no week in which a family is paying for a
+thing it has no way out from under, which is §4's own acceptance («a freeze may never be the reason a
+family goes bankrupt») met by the shape rather than by a rule. Pinned in
+`tests/round29-shop-elite.test.ts` §2.
+
+### 13g. ⚙ THE YACHT WEEK BECAME A CHARTER – round 29 part two #8 + #9 (29.08)
+
+> «она же бесплатная только при наличии яхты, верно? я могу сделать для нее отдельный арт, тогда
+> можно просто на постоянку добавить в ленту сначала с реальной стоимостью, а после покупки яхты это
+> станет бесплатным» – and, on the price: «изначально стоит дороже немного (х1.4 вроде мы считали,
+> да?)»
+
+**This amends §3f's second bullet** («it appears in `PlanWeekSheet` only while the yacht is owned
+and delivered»): the row is on **every** family's sheet now, at a real charter band, and taking
+delivery of a yacht is what zeroes it. The flag turned with the design – `grantedOnly` (hide the
+row) became `freeOnceGranted` (zero the quote) – and one function prices every surface:
+`vacationPriceCents(seed, week, id, background, grantedIds)` is the sheet's quote, the
+recommendation's weight and the booking's charge, so a screen and the engine cannot price the same
+week two ways. `bookVacation`'s old refusal («The family does not own that») is gone with the
+design it guarded; the engine-side re-validation moved from the row to the **price** – a stale
+sheet books at the world's own quote, never a stale free one.
+
+⚠ **THE ×1.4 WAS VERIFIED BEFORE IT WAS USED**, because «вроде мы считали, да?» is a question and
+the spec outranks his memory. This file carries exactly **one** 1.4 – §3f's own «it is about 1.4
+elite vacations a week in upkeep» – which relates exactly these two packages and no other charter
+figure exists anywhere in it. So his multiplier lands as the figure of record: the charter band is
+**elite ×1.4 = [$5,600, $9,800]** before the wealth corridor, sitting above elite as the ladder's
+top step (strictly ascending floors, all seven, pinned in `tests/planner.test.ts` – the RELATION to
+elite's band is pinned beside the literal, so neither can be retuned alone).
+
+⚠ **§3f's veto survives on both sides of the grant, for free.** The owner's family still ties elite
+at 48 and wins on being free; the boatless family sees the same 48 at a **dearer** price with a
+weaker after-effect, so elite keeps its reason everywhere and the six packages survive the row
+appearing on every sheet.
+
+⚠ **His art for the row is coming** («я могу сделать для нее отдельный арт»); until it lands the
+sheet draws the row artless through `vacationArtUrl`'s documented null fallback – a catalogue entry
+may exist before its frame does, and a missing picture must not cost the row.
+
+⚠ **What did NOT move**: `Snapshot.shop.vacationIds` (same machinery, new meaning: «made free», not
+«may see»), the grant's DELIVERED-only read, `conditionGain` 48 / `buffFactor` 1, the diary's two
+yacht-week sentences (ownership-neutral, they fit a charter), and the week's calendar arc. Zero
+MAIN draws anywhere in this: the charter quote is the same purpose-scoped
+`seed:vacation:week:packageId` sub-stream every package has always used.
+
+---
+
+## 14. ⚙ §4's MOVING PRICE AS BUILT (29.08, round 29 part three #16) – the fund has a market
+
+Recorded here beside §12 and §13, for their reason. Everything below is round 29 part three #16, on
+`r29p3/market-fund`, and **`SAVE_SCHEMA_VERSION` did not move: it is still 65.** No field was added
+to `OwnedAsset`, no migration, no golden fixture – the market is read off the career seed, so there
+is nothing about it to persist.
+
+His ask, in full:
+
+> «Механику фонда надо придумать, да, потому что безрисковые 3 против безрисковых 7 это весьма
+> странно. Давай подумаем как это можно сделать красиво и просто.»
+
+And his ruling on the design: «вроде посмотрел, давай сделаем, а я пощупаю и скажу свои ощущения
+потом.» ⚠ **He will judge it by feel after playing, so every number here is provisional by his own
+framing** – §14d says which knob moves what.
+
+### 14a. What shipped
+
+`src/engine/world/market.ts` (a new leaf: `marketWave`, `marketIndex`, `marketRatio`,
+`worstMarketRatio`), `ShopItem.volBps`, `assetWorthCents` and `marketSeasonMove` in
+`world/assets.ts`, a fourth argument on `assetValueCents`, `reportMarketSeason` in `world/shop.ts`
+called at the end of the obligations phase, and `volBps: 1_800` on the index fund. Every other rung
+on the shelf is priced by exactly the arithmetic it was priced by yesterday, to the cent.
+
+**The model, whole:**
+
+```
+wave(seed, week)  = Σ ampᵢ · smoothstep-interpolated value noise at periodᵢ     ∈ [-1, 1]
+index(seed, week) = exp(volBps/10⁴ · wave)
+worth             = basisCents · (1 + annualRateBps/10⁴)^years · index(now)/index(basisWeek)
+```
+
+Three octaves: **104 weeks at 0.15, 39 at 0.50, 26 at 0.35**. Anchors are drawn from
+`rngFromSeed(\`${seed}:market:${period}:${anchor}\`)` – purpose-scoped sub-streams, the pattern
+`:calweek:` / `:growth:` / `:conveyor:` already use, re-derived at the call site and persisting
+nothing.
+
+### 14b. ⭐⭐ THE LOAD-BEARING PROPERTY: the market exists whether or not she buys
+
+The path is a fact about the world, like the weather. It is **READ** at the two weeks a holding spans,
+never **DRAWN** when one is opened. That is what makes RNG input-independence – the permanent law,
+frozen capture 41550 / `e6b0c709` – unreachable rather than merely respected: there is no code path
+by which a purchase could move the world's dice, because owning nothing draws exactly the same
+numbers as owning everything.
+
+⚠ **It also kept `revalueAssets` idempotent**, which the per-week roll §4 originally sketched would
+have destroyed. A rolled drift depends on how many times the phase ran; a read path does not, so the
+second press of the fast-forward button prices a holding exactly as the first did.
+
+**Proved, not claimed** (`tests/round29p3-market.test.ts`): three careers on one seed and 160 weeks –
+one that never touches the shelf, one that opens the fund, one that opens it inside a busy shelf of
+top-ups, part sales and a car bought and sold. `rngMain` is **byte-identical** in all three
+(`{s, n}` is a complete and self-redundant description of the MAIN position), and the two that hold
+the fund agree on its worth **to the cent**. The frozen MAIN capture is **unmoved**, and
+`tests/coach-travel-edge.test.ts`'s three frozen career hashes are unmoved with it.
+
+### 14c. ⚠⚠ THE LONG HORIZON IS SAFE, and it is a PROOF before it is a sample
+
+«On a long horizon the fund MUST beat Savings. Otherwise it is a trap for a player who did not read
+carefully», and «мы ни за что не наказываем» is house law.
+
+Because `wave` is bounded in `[-1, 1]`, the worst the market can ever do to a holding is
+`e^(-2·vol)` – so the fund beats the 3.17% deposit at ten years for **every seed and every pair of
+weeks** exactly while `1.07¹⁰ · e^(-2·vol) > 1.0317¹⁰`, which solves to **`vol < 1,824 bps`**. The
+shipped 1,800 sits just under that line, deliberately: it is the most risk the design can carry and
+still be safe to hold.
+
+⚙ **MEASURED** (`npx vite-node tools/market-probe.ts --seeds 4000`, 29.08 – 228,000 rolling seasons,
+48,000 holdings per horizon over 4,000 seeds x 12 entry weeks):
+
+| | 1 year | 3 years | 5 years | 10 years |
+| --- | ---: | ---: | ---: | ---: |
+| fund beats the deposit | **67.07%** | **90.24%** | **98.73%** | **100.00%** (0 of 48,000 lose) |
+| mean fund | +7.3% | +22.9% | +40.7% | +97.3% |
+| the deposit | +3.2% | +9.8% | +16.9% | +36.6% |
+| worst fund seen | −18.5% | −11.7% | +5.4% | **+48.5%** |
+
+Negative seasons **19.9%** – «roughly one year in four or five». Season sd **8.35%**; worst
+peak-to-trough on a holding **−20.4%**.
+
+⚠ **AND THE PROOF IS STRICTLY STRONGER THAN THE SAMPLE, which is why both are pinned.** Raising
+`volBps` to 2,500 breaks the inequality – and 2,400 sampled ten-year holdings still all won. Sampling
+cannot see a ceiling this design is only just inside.
+
+⚠⚠ **SUPERSEDED IN PART BY §14h (his crash extension, 29.08)**: the table above is the WAVE-ONLY
+measurement and the ten-year universality is now the CALM-WATERS tier of a two-tier bound. The
+current numbers, the crisis calendar and the measured ten-year tail are all in §14h.
+
+### 14d. The knobs, and what each one moves
+
+| knob | where | moves |
+| --- | --- | --- |
+| `volBps` | `ECONOMY.shop.catalogue` (index-fund) | how hard the fund rides the market. ⚠ **Capped at 1,824** by §14c's inequality. |
+| `annualRateBps` | the same rung | the LONG-RUN figure, unchanged at 700 – the market moves either side of it, so the shop card's «7% a year» needed no re-wording. |
+| the octave mix | `world/market.ts` `OCTAVES` | trends against felt risk. A tide much longer than a season barely moves within one, so amplitude spent there buys texture and costs negative years: a four-year-dominant mix measured **7.3%** negative seasons against this one's **19.9%**. ⚠ The amplitudes must sum to 1.00 or §14c's bound – and its proof – is gone. |
+
+### 14e. ⚠ WHAT IS **NOT** BUILT, and one thing that was ruled out
+
+§4's **SHOCK** and **FREEZE** are still not here, and neither is §6's broker.
+
+⚠⚠ **AN EARLY-EXIT FEE OR SPREAD WAS CONSIDERED AND REJECTED**, and it is written down so it is not
+re-proposed: «that is friction, not risk, and it does not answer "why is a risk-free 7% sitting
+beside a risk-free 3"». A path that moves IS the answer; a toll on the door is a different mechanic
+wearing its coat.
+
+### 14f. ⭐ THE SEASON LINE – the half of the item that is not the mechanic
+
+One `info` row a season, on the season boundary, while the family holds a market rung:
+
+> A season of the market – An index fund is down 8% over the season.
+
+Without it a player sees a smaller number and cannot tell why, which is the blindness that produced
+round 29 #10: **the number moving is not the same as the number being legible.**
+
+⚠ It reports the **MARKET** and not the holding. A family that topped up in week 40 has a personal
+return nothing like the market's year, and quoting that here would be a third arithmetic for a worth
+– the shop row's own `changePct` is where a family's number lives, and it is already on screen.
+
+⚠ **Idempotent without a persisted flag**, and therefore without a schema move: it reads the ledger
+back for its own opening words at this week, which is `academySpokeThisWeek`'s trick.
+
+### 14g. ⚠ AND `householdWeekly` NOW MOVES, which is his to feel
+
+The shelf line on the Money screen is «one more week of holding, signed». It used to be a trickle a
+positive rate could never make negative; on a $120,000 fund it is now hundreds of dollars a week and
+**the sign flips**. That is the honest figure, and the split it feeds (`Math.max(0, shelfCents)` into
+income, `Math.max(0, -shelfCents)` into outgoings) needed no change – it was always signed.
+
+⚠ **It does not jitter.** The market's fastest anchor is HALF A SEASON and the interpolation is
+smoothstep, which is flat at both ends, so the figure walks a curve rather than stepping when a
+quarter turns over. Measured on a real career: **fewer than 20 sign changes in 260 weeks**, against
+120+ for a per-week draw. Both writers of a worth – `revalueAssets` and `householdWeekly` – go
+through `assetWorthCents`, so the till and the meter cannot describe two different markets; that is
+round 29 #11's own defect, re-armed as a mutation and caught.
+
+### 14h. ⚙ THE CRASH LAYER – his extension, same day, and the bound it re-prices
+
+On being shown §14c's one-in-five negative seasons:
+
+> «Каждый пятый сезон отрицательный – круто, но может быть нам добавить вариативность тоже здесь, а
+> не рельсы? например раз в 3-5 лет и стартовый сезон уже может быть как раз с -20%? это добавит
+> невероятной динамики и реализма.»
+
+**The construction** (`world/market.ts`, THE CRASH LAYER block): one crisis per 208-week epoch,
+starting at `epoch·208 + jitter` with jitter in [0, 104) – so gaps between crises are 2–6 years,
+triangular, **centered on exactly four**, with **75.2% inside his 3–5 band** (16,000 crises
+measured). Depth is drawn in his band verbatim – trough multiplier in [0.70, 0.85], **median
+−22.5%** – over a sharp fall (8–16 weeks) and a slower recovery arc (40–80 weeks): the 2008/2020
+shape. An arc is at most 96 weeks against a minimum gap of 104, so **crises never overlap and never
+cross an epoch boundary**, which is what keeps the worst case a closed form. Four draws off
+`${seed}:market:crash:${epoch}` in a fixed, documented order – read, never drawn, so `rngMain`
+cannot see it, a reload replays the same crisis, and input-independence is untouched (the same
+ticked-world proof arms cover it).
+
+**No grace period, by his ask**: epoch 0's crisis starts inside the first two seasons, and **49.7%
+of careers see a fall in season one**. The named fixture is his anchor made real:
+`r29p3-crash-12`'s starting season nets **exactly −20%** and the feed says
+*«A season of the market – a crash year: An index fund is down 20% over the season.»* – the crash
+year has its own sentence, and a wave-only bad year stays plain (the label is the FALL, never mere
+red).
+
+⚠⚠ **THE BOUND, RE-DERIVED – it is now TWO-TIER, and the ten-year tail is his to accept:**
+
+* **Calm waters – the old guarantee stands verbatim.** A crisis arc always returns home, so a hold
+  whose basis and sell weeks both lie outside arcs sees exactly the wave-only bound
+  (`worstCrashFreeRatio`): ten-year universality at vol < 1,824 bps, unchanged.
+* **Selling into a trough – universality needs ~20 years.** The total floor is
+  `e^(−2·vol) · 0.70 = 0.488` (`worstMarketRatio`), and `1.07^T · 0.488 > 1.0317^T` only past
+  T ≈ 19.7 years – longer than a career. Universality at ten years is arithmetically impossible at
+  his crash depths; that is not a tuning miss, it is what a real crisis costs.
+
+⚙ **MEASURED** (`npx vite-node tools/market-probe.ts --seeds 4000`, crash layer in – 228,000
+seasons, 48,000 holdings per horizon):
+
+| | 1y | 3y | 5y | 10y |
+| --- | ---: | ---: | ---: | ---: |
+| fund beats the deposit | 57.15% | 84.03% | 86.75% | **98.90%** |
+| losers selling in calm waters | 6,681 | 2,693 | 245 | **0** |
+
+**⚠⚠ At ten years, 529 of 48,000 holdings (1.10%) lose to the deposit – and every single one sells
+inside a crash arc.** Zero calm-water losers at ten years is the measured receipt of tier one. So
+«мы ни за что не наказываем» now reads: **holding through a crisis costs nothing – only selling into
+one can lose, at 1.10%**. That tail is REAL and it is HIS to accept as the price of «невероятной
+динамики и реализма»; if he wants it gone, the knobs are the depth floor (shallower crises) or an
+epilogue-style rule, not a silent re-tune here.
+
+**The other consequence he sees plainly**: negative seasons rise from 19.9% (wave alone, the number
+he called «круто») to **30.8%** – nearly one in three. His crises are the whole difference. If he
+wants back toward one-in-four WITH crashes, the wave's `volBps` comes down (e.g. ~1,300) – his call,
+one knob. Worst observed season is now **−39.9%** (a deep crash landing on an already-bad wave
+year), worst peak-to-trough −40.1%.
+
+**Knobs** (all in `world/market.ts`): `CRASH_EPOCH_WEEKS`/`CRASH_JITTER_WEEKS` (the calendar),
+`CRASH_DEPTH_RANGE` (his −15…−30 band; `[0]` is also the floor the safety bound is built from – move
+them together or the closed form lies), `CRASH_FALL_WEEKS`/`CRASH_RECOVERY_WEEKS` (the shape; keep
+fall + recovery ≤ 104 or arcs overlap and the one-crash-at-a-time theorem dies).

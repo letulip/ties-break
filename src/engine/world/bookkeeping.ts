@@ -22,6 +22,7 @@ import { pruneEntryLetters } from '../offers'
 import { EVENTS_CAP, EVENTS_ORDINARY_FLOOR, FINANCE_WEEKS, KID_ID, RESULTS_WINDOW, SEASON_CHUNK, SEASON_MIN_FUTURE } from './constants'
 import { addEvent } from './ledger'
 import { captureBreakEven } from './milestones'
+import { recordGearRestWeek } from './kit'
 import { recomputeKidRank } from './ladder'
 import { prunePlannerBookings, pruneInternationalEntries } from './planner'
 
@@ -80,6 +81,12 @@ export function recomputeRankAndMilestones(world: WorldState): void {
 
 // Step 6 of a resolved week: prune ledgers/feeds, roll the calendar forward.
 export function housekeep(world: WorldState): void {
+  // ⭐ ROUND-29 #20 FIRST, AND THE ORDER IS THE POINT: the week that has just resolved goes on the
+  // kit's stand-down ledger BEFORE `prunePlannerBookings` below drops the booking that proves it.
+  // The prune keeps only four trailing weeks, so a holiday is unreadable long before the shoes it
+  // stood down are replaced - which is exactly why the wear model cannot read `world.vacations` and
+  // needs this record. Idempotent and a no-op on every week that is not a booked holiday.
+  recordGearRestWeek(world)
   pruneResults(world)
   pruneEvents(world)
   pruneFinanceWeeks(world)

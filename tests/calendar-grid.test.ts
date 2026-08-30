@@ -76,7 +76,7 @@ import { OFF_SEASON_WEEKS, WEEKS_PER_YEAR } from '../src/engine/season/calendar'
 // Comments are not code – the house helper, now in tests/helpers/source.ts. This codebase documents
 // at length, INCLUDING documenting what it deliberately did not do, so a `not.toContain` over raw
 // source fails on a note that merely names the thing it forbids.
-import { after, codeOf, regionToLast } from './helpers/source'
+import { after, codeOf, region, regionToLast } from './helpers/source'
 
 const read = (rel: string) => readFileSync(new URL(rel, import.meta.url), 'utf8')
 const screen = read('../src/components/screens/CalendarScreen.vue')
@@ -795,7 +795,19 @@ describe('the calendar renders the grid it is handed', () => {
     // grid that needed a new fact would have to reach for the protocol or the engine.
     expect(module_).not.toContain("from '../shared/protocol'")
     expect(module_).not.toContain("from '../engine/")
-    expect(module_).toContain("import type { CalendarDay, CalendarWeek, DayBeat, DayKind } from './weekDays'")
+    // ⚠ RE-AIMED (round 29 P15): a fifth TYPE joined the list – `TripFacts`, the three facts a trip
+    // week hands down (the draw's rounds, the masseur's seat, the rung's press room). The rule this
+    // pin exists for is UNCHANGED and is the two lines above it: the grid may reach for neither the
+    // protocol nor the engine. What it may do, and always could, is name the shapes `weekDays.ts`
+    // hands it. So the assertion matches the import's HEAD and its source rather than its full list,
+    // which would have to be re-typed every time the composable earns a fact – the same weakening
+    // `weekGridFor`'s own call-site pin took, for the same reason.
+    // ⚠ AND `import type` IS LOAD-BEARING IN IT: this module takes no VALUE from `weekDays.ts` (the
+    // v47 invariant in its own header), so a plain `import {` here would be a real regression and
+    // this string would stop matching.
+    expect(module_).toContain("import type { CalendarDay, CalendarWeek, DayBeat, DayKind")
+    expect(module_).toContain("} from './weekDays'")
+    expect(module_, 'the grid started taking a value from weekDays').not.toMatch(/^import \{[^}]*\} from '\.\/weekDays'/m)
   })
 
   it('every block kind has a colour, and it is the design system\'s', () => {
@@ -806,10 +818,21 @@ describe('the calendar renders the grid it is handed', () => {
     // refuse arrived with hours in them (a layoff has physio in it, a family week has the family).
     // Both take a `--cat-*` the wallet already declares - the same hue means the same thing on both
     // screens - which is exactly what this pin exists to keep true of a NEW kind as well as an old.
-    const KINDS: BlockKind[] = [
-      'training', 'trainingAlt', 'gym', 'school', 'schoolLong', 'drills',
-      'match', 'matchLong', 'study', 'travel', 'rest', 'tournament', 'physio', 'vacation',
-    ]
+    //
+    // ⚠⚠ RE-AIMED (round 29 P14), AND THE LIST IS NO LONGER TYPED OUT HERE. `press` was the FIFTEENTH
+    // kind, and adding it exposed what this pin actually was: a hand-copy of the union that a
+    // fifteenth member does not update. The guard would have gone quietly blind to exactly the kind
+    // it exists for. It now READS THE UNION out of the module's own source, so a sixteenth kind
+    // cannot be added without a colour rule - which is the sentence the paragraph above was always
+    // claiming. `region` throws on an absent marker, so a renamed type fails loudly rather than
+    // sweeping an empty list (tests/helpers/source.ts's whole argument).
+    const KINDS = [...region(module_, 'export type BlockKind =', '\n\n').matchAll(/'([A-Za-z]+)'/g)].map(
+      (m) => m[1] as BlockKind,
+    )
+    // ⚠ MUTATION WATCHED: delete `.cal-block--press` from CalendarScreen.vue and this goes red. On
+    // the hand-typed list it stayed green, which is what "blind" means.
+    expect(KINDS.length, 'the union parsed to nothing, so this sweep is empty').toBeGreaterThanOrEqual(15)
+    expect(KINDS, 'the union no longer carries the kind this pin was re-aimed for').toContain('press')
     for (const kind of KINDS) {
       const rule = screen.match(new RegExp(`\\.cal-block--${kind}\\s*\\{([^}]*)\\}`))
       expect(rule, `no colour rule for a ${kind} block`).not.toBeNull()
@@ -1066,8 +1089,23 @@ describe('each family package draws its own week', () => {
         .flatMap((d) => d.blocks)
         .filter((b) => b.kind === 'physio')
         .reduce((n, b) => n + b.span, 0)
-    const ladder = [...ECONOMY.vacation.packages].sort((a, b) => a.conditionGain - b.conditionGain)
+    // ⚠⚠ RE-AIMED AT ROUND 29 #5, NEVER DELETED, AND THE PREMISE IS WHY. This monotonicity says «the
+    // gain is DRAWN as treatment», and it holds for every rung whose gain is a PROGRAMME: a resort
+    // sells one and a clinic sells more of one. §3f's yacht week is the package whose gain is no
+    // programme at all – its 48 is total absence of obligation rather than six massage tables (true
+    // whether the week is chartered at part two #8's price or free on the family's own boat).
+    // Including it would force a clinic's week onto a boat to satisfy an arithmetic, which is the
+    // drawing telling a lie to keep a test green. So the ladder is the SIX WHOSE GAIN IS TREATMENT
+    // (`freeOnceGranted` is the seventh's own flag), and the seventh's week is asserted in the two
+    // cases below (it has an arc, it is a distinct drawing, no tennis on it, and it travels).
+    const ladder = [...ECONOMY.vacation.packages]
+      .filter((p) => !p.freeOnceGranted)
+      .sort((a, b) => a.conditionGain - b.conditionGain)
+    expect(ladder.length, 'the paid ladder is still six rungs, or this guard went blind').toBe(6)
     const hours = ladder.map((p) => physioHours(p.id))
+    // ...and the granted rung really is the exception rather than an untested hole: no treatment on
+    // it at all, which is the claim the filter above is standing on.
+    expect(physioHours('yacht-week'), 'a boat is not a clinic').toBe(0)
     for (let i = 1; i < hours.length; i++) {
       expect(
         hours[i],

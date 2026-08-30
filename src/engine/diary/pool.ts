@@ -419,6 +419,17 @@ export const DIARY_POOL: readonly DiaryPhrase[] = [
     claims: { affect: 'neutral', vacation: true },
     license: (f) => f.vacationWeek && !f.resultFresh && f.emotion === 'norm' && f.vacationPackageId === 'elite',
   },
+  // ⭐ ROUND 29 #5 – the seventh package (the-shop §3f; since part two #8 a chartered week anybody
+  // can book, free on the family's own boat – the sentence below fits both). Its own sentence like
+  // every other rung's: «no two are the same sentence» is a rule this pool is tested against, and
+  // a package that fell through to the generic «A week away» would be the one holiday in the game
+  // the diary could not name.
+  {
+    surface: 'photo',
+    text: 'Seven days of water in every direction, and no telephone worth answering.',
+    claims: { affect: 'neutral', vacation: true },
+    license: (f) => f.vacationWeek && !f.resultFresh && f.emotion === 'norm' && f.vacationPackageId === 'yacht-week',
+  },
   {
     surface: 'photo',
     text: 'A hit-out at the club, nothing on the line.',
@@ -674,6 +685,13 @@ export const DIARY_POOL: readonly DiaryPhrase[] = [
     text: 'The full programme, and it worked – she came back new.',
     claims: { affect: 'positive', vacation: true },
     license: (f) => f.vacationWeek && f.injured === null && !f.resultFresh && f.vacationPackageId === 'elite',
+  },
+  // ⭐ ROUND 29 #5 – and the same rung on the condition surface (the-shop §3f).
+  {
+    surface: 'condition',
+    text: 'A week where nothing could reach her, and her legs noticed first.',
+    claims: { affect: 'positive', vacation: true },
+    license: (f) => f.vacationWeek && f.injured === null && !f.resultFresh && f.vacationPackageId === 'yacht-week',
   },
   // ⚠ ROUND-18 #9: this line named SCHOOL at twenty-one. `facts.ts` has carried `schoolOver` since
   // it was written - for exactly this - and every other surface that says the word already branches

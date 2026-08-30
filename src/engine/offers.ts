@@ -87,8 +87,8 @@ import { seasonIndexOf } from './world/ledger'
 import type { KitFreshCap } from './equipment'
 import type { TierId } from './season/types'
 import type {
-  AcademyLetterTerms, AdOfferTerms, CallUpLetterTerms, EntryLetterTerms, EntryReleaseReason, KitEndReason, KitLine,
-  KitOfferTerms, Offer, PenaltyReason, SponsorTier, TourLetterTerms,
+  AcademyLetterTerms, AdCategory, AdOfferTerms, AdTier, CallUpLetterTerms, EntryLetterTerms, EntryReleaseReason, KitEndReason,
+  KitLine, KitOfferTerms, Offer, PenaltyReason, SponsorTier, TourLetterTerms,
 } from '../shared/protocol'
 
 /** Every sponsor tier's letterhead lives at `public/images/sponsors/<key>.webp`, and this is the
@@ -442,6 +442,25 @@ export function kitTermsFor(standing: SponsorStanding, tier = rungFor(standing))
     covers: TIER_COVERS[tier],
     travelShare: tier === 'global' ? s.global.travelShare : 0,
     seasons: rung.seasons,
+    // ⭐⭐ ROUND 29 PART TWO #5 – GLOBAL CARRIES CASH NOW (the owner: «мировые топы должны иметь все
+    // возможности достучаться до топовой спортсменки»). It is sorted ABOVE `tour` and paid less than
+    // it – no retainer, no result bonus – which is the one thing `windowLadder`'s strongest-first
+    // order promises cannot happen. The three fields are the ones `KitOfferTerms` already carries
+    // for the professional rungs, optional there since W3-ACT2, so nothing about the shape moves.
+    //
+    // ⚠ FROZEN AT ARRIVAL LIKE EVERY OTHER TERM, WHICH MAKES THIS FORWARD-ONLY AND HAS TO BE SAID:
+    // a Play Beyond letter already sitting in an inbox was written from the old catalogue and keeps
+    // the old terms for its whole life. That is `kitTermsFor`'s own standing rule («terms never
+    // improve while you hold the letter») working in the direction nobody enjoys, and repairing it
+    // in place would mean a signed contract whose numbers change under the parent – which is the
+    // property the rule exists to prevent. The NEXT letter from this rung carries the retainer.
+    ...(tier === 'global'
+      ? {
+          retainerCents: s.global.retainerCents,
+          bonusShare: s.global.bonusShare,
+          bonusFromTier: s.global.bonusFromTier,
+        }
+      : {}),
     // ⚠ NATIONAL ALONE CARRIES A DOMESTIC KEEP-CONDITION, and it is this rung's reason to exist
     // beyond the extra line of kit. See `KitOfferTerms.keepDomesticRank`.
     ...(tier === 'national' ? { keepDomesticRank: s.national.keepDomesticRank } : {}),
@@ -517,6 +536,56 @@ export function seasonSpokenFor(offers: Offer[], week: number): Offer | null {
   return (
     offers.find((o) => o.kind === 'kit' && o.state === 'signed' && (o.untilWeek ?? -1) >= seasonAhead) ?? null
   )
+}
+
+/** THE RUNG'S PLACE ON THE LADDER as a number, so "is this one stronger" is a comparison rather than
+ *  a table. `SPONSOR_TIERS` is weakest-first, so a bigger index is a bigger brand – the same reading
+ *  `windowLadder`, `rungFor` and `tools/sponsor-ladder-reach.ts` all take of the same array. */
+export function rungStrength(tier: SponsorTier): number {
+  return SPONSOR_TIERS.indexOf(tier)
+}
+
+/** ⭐⭐ ROUND 29 PART TWO #12 – IS THE POST SHUT AGAINST **THIS RUNG**? The narrowing of
+ *  `seasonSpokenFor`, and the whole of the item.
+ *
+ *  THE OWNER: «открытое сейчас в вашем ящике продление Baseline закроет и следующую зимнюю почту…
+ *  вот с этим надо что-то делать, там без спонсора грустновато немного живется.» He is describing a
+ *  two-season renewal, and he is right about what it does: `seasonSpokenFor` turned away EVERY rung
+ *  for as long as any deal covered the season ahead, so signing the letter he was holding bought a
+ *  winter of silence.
+ *
+ *  ⚠ IT IS NOT ROUND 28 #17 BEING UNDONE. That fix stops ONE BRAND writing twice in a winter
+ *  (`alreadyWritten` seeded from `dealEndingWithSeason`) and is untouched here – this is the OTHER
+ *  rule, the one that turns away every OTHER brand, and only its top edge moves.
+ *
+ *  ⭐ WHAT IT COSTS, MEASURED BEFORE IT WAS CHANGED (108 careers x 780 weeks, `bench:sponsorreach`):
+ *  1,274 winters, **416 of them produced no kit letter at all**, and **360 of those 416 were shut by
+ *  this rule alone** – no letter was raised in a single one of them. In **191** the ladder had a
+ *  STRICTLY STRONGER rung standing behind the closed door, the commonest being **`global` in front
+ *  of `premium` (84)**, which is the owner's own save to the brand.
+ *
+ *  THE RULE NOW: a running deal turns away every rung AT OR BELOW ITS OWN, and a strictly stronger
+ *  one may write. Three things that does NOT change, each of them load-bearing:
+ *   - ONE BRAND AT A TIME survives literally: two deals are never live at once, because signing the
+ *     stronger letter ENDS the running one with the season it is in (`signOffer`, reason `stepped`).
+ *   - THE TERM STILL BITES. A `premium` deal cannot be interrupted by `tour`, `global` or `national`
+ *     – only 2 of the 6 rungs can ever write over `premium`, and none at all over `icon` – so a long
+ *     contract is still a decision with a cost, which is what `KitOfferTerms.seasons` is for.
+ *   - NOTHING IS MANUFACTURED. The stronger rung still has to be one `standingClears` says would
+ *     have her, and still has to roll its own dice on its own slot.
+ *
+ *  ⚠ AND IT IS WHY THE LADDER HAD TO BE MADE MONOTONE FIRST (item #5, `global`'s cash). "A stronger
+ *  rung may interrupt a weaker one" is only safe when a stronger rung is actually worth more –
+ *  otherwise this rule would let a WORSE deal replace a better one, which is the same defect wearing
+ *  the opposite sign. `tests/round29p2-ladder-monotone.test.ts` is the guard under both. */
+export function rungTurnedAway(offers: Offer[], week: number, tier: SponsorTier): Offer | null {
+  const running = seasonSpokenFor(offers, week)
+  if (!running) return null
+  const runningTier = (running.terms as KitOfferTerms).tier
+  // A signed deal whose terms carry no tier cannot be compared, so it keeps the old, total bite -
+  // the safe direction, and unreachable in practice (every `kitTermsFor` result carries one).
+  if (!runningTier) return running
+  return rungStrength(tier) > rungStrength(runningTier) ? null : running
 }
 
 /** THE WEEK A LETTER SIGNED NOW WOULD START COVERING HER: today, unless a contract she is already
@@ -771,10 +840,13 @@ export function raiseKitOffers(args: {
   if (!isSponsorWindowWeek(week)) return raised
   // ⚠ ONE BRAND AT A TIME, and it is enforced HERE so that no caller can forget it (spec §4.1 as the
   // ladder extends it). The season she is about to play may be promised to ONE brand, so a
-  // multi-season contract that is only halfway through turns the whole window away - sign the
-  // two-season national deal and the global letter next winter finds her busy. See `seasonSpokenFor`
-  // for why that is the right shape of the rule and "is anything running" was not.
-  if (seasonSpokenFor(offers, week)) return raised
+  // multi-season contract that is only halfway through turns the window away - sign the two-season
+  // national deal and the global letter next winter finds her busy.
+  //
+  // ⚠⚠ ...EXCEPT FOR A STRICTLY STRONGER RUNG, WHICH IS ROUND 29 PART TWO #12. The test moved from
+  // the top of this function into the loop below (`rungTurnedAway`), because it is no longer one
+  // answer for the whole window: `global` running turns `tour` away and does not turn `premium`
+  // away. The owner's sentence and the 191-winter measurement behind it are on `rungTurnedAway`.
   const opened = sponsorWindowOpensAt(week)
   const ladder = windowLadder(standing)
   // ⭐ WHICH RUNGS HAVE ALREADY WRITTEN IN THIS WINDOW - round-17 #27, and the identity is the TIER.
@@ -856,6 +928,11 @@ export function raiseKitOffers(args: {
     // (round 17 #27), and it does not write as a stranger on top of the renewal it is going to send
     // on the closing week (round 28 #17).
     if (alreadyWritten.has(tier)) continue
+    // ⭐⭐ ROUND 29 PART TWO #12 – THE RUNNING DEAL'S OWN BITE, ASKED PER RUNG. A contract that
+    // covers the season ahead turns away every rung at or below its own and lets a strictly
+    // stronger one through; signing that one ends the contract (`signOffer`). See `rungTurnedAway`
+    // for the owner's sentence, the measurement, and the three properties this does not move.
+    if (rungTurnedAway(offers, week, tier)) continue
     const terms = kitTermsFor(standing, tier)
     if (!terms) continue
     if (!shopWritesAt(seed, opened + slot, offerChanceFor(standing, tier))) continue
@@ -1007,7 +1084,16 @@ export function offerAnswerError(offers: Offer[], offerId: string, week: number)
   // line a parent could sign two of them and the game's oldest invariant - at most one deal - would
   // be broken by the feature meant to make signing a decision. `signOffer` also closes the losers, so
   // this is belt and braces for a stale screen answering a letter that has already been beaten.
-  if (offer.kind === 'kit' && seasonSpokenFor(offers, week)) return 'She is already signed for next season.'
+  //
+  // ⚠⚠ AND IT ASKS `rungTurnedAway` RATHER THAN `seasonSpokenFor` SINCE ROUND 29 PART TWO #12. A
+  // strictly stronger rung may write over a running deal, so it must also be SIGNABLE - a letter the
+  // engine posts and then refuses is worse than no letter at all. The invariant is unchanged and is
+  // still enforced here: at most one deal, because signing the stronger one ends the weaker one in
+  // the same breath (see `signOffer`). A rung at or below the running deal's is refused exactly as
+  // it always was, with exactly the same sentence.
+  if (offer.kind === 'kit' && rungTurnedAway(offers, week, (offer.terms as KitOfferTerms).tier)) {
+    return 'She is already signed for next season.'
+  }
   return null
 }
 
@@ -1047,9 +1133,43 @@ export function signOffer(offers: Offer[], offerId: string, week: number): Offer
     offer.untilWeek = week + termWeeks - 1
     return offer
   }
+  // ⭐⭐ ROUND 29 PART TWO #12 – SHE STEPS UP, AND THE BRAND SHE LEAVES IS TOLD SO. `rungTurnedAway`
+  // lets a strictly stronger rung write over a running deal and `offerAnswerError` lets it be
+  // signed; this is the other half, and without it the game would briefly hold two live contracts.
+  // The outgoing deal ends WITH THE SEASON IT IS IN (`endDealWithSeason` - the same snap a failed
+  // deal takes, so `untilWeek` lands on `contractEndWeek` and the successor's `dealStartsAt` reads
+  // the week after), and its goodbye is posted on the spot with its own reason.
+  //
+  // ⚠ REASON `stepped`, NOT `term`: this contract was not served out, and `term` means it was. The
+  // goodbye is the only place a player learns a deal stopped, so it must not lie about why.
+  //
+  // ⚠ AND IT IS RAISED HERE RATHER THAN LEFT TO `reviewSponsors`, which would reach the same deal on
+  // a later week of the same window and call it `term`. `raiseKitEndLetter` is idempotent on
+  // `kit-end-<id>`, so posting it first is what makes the true reason the one that survives.
+  // ⚠⚠ THE TEST IS `>= coveredSeasonStart(week)` AND NOTHING ELSE, AND THE FIRST DRAFT CARRIED A
+  // SECOND CLAUSE (`&& untilWeek > contractEndWeek(week)`) THAT WAS ARITHMETICALLY DEAD. It was
+  // caught by mutating it and watching the guard STAY GREEN – `coveredSeasonStart(week)` is
+  // `52k + 52` and `contractEndWeek(week)` is `52k + 49`, so the first test implies the second and
+  // the second could never refuse anything the first admitted. A redundant condition reads as a
+  // decision to the next person; this is the decision, written once.
+  //
+  // ⭐ AND IT IS THE RIGHT TEST RATHER THAN «is it live today». A contract that runs out with the
+  // season she is PLAYING is not superseded by a letter she signs in that season – she is wearing
+  // their kit, the term is being served, and `dealStartsAt` queues the new deal behind it instead.
+  // Only a deal that reaches into the season the new letter is FOR is one this signature displaces.
+  const superseded = offers.filter(
+    (o) => o !== offer && o.kind === 'kit' && o.state === 'signed' && (o.untilWeek ?? -1) >= coveredSeasonStart(week),
+  )
+  for (const old of superseded) {
+    endDealWithSeason(old, week)
+    raiseKitEndLetter(offers, week, old, 'stepped', old.eventsPlayed)
+  }
   // Read the start BEFORE the state moves: `dealStartsAt` walks the signed deals, and this one is
   // about to become one of them (with no `untilWeek` yet, so it could not move the answer - but the
-  // order is written to be true rather than merely harmless).
+  // order is written to be true rather than merely harmless). ⚠ AND IT IS READ AFTER THE STEP-UP
+  // ABOVE, deliberately: the superseded deal's `untilWeek` has just been pulled back to this
+  // season's contract end, and a start computed before that would queue the new deal behind a term
+  // that no longer exists.
   const from = dealStartsAt(offers, week)
   offer.state = 'signed'
   offer.decidedWeek = week
@@ -1588,19 +1708,183 @@ export function raiseCallUpLetter(offers: Offer[], week: number, terms: CallUpLe
 // created here, read once, discarded, keyed on the WEEK so a replayed career gets the same answer at
 // the same boundary. ZERO draws on MAIN, so the frozen capture (41550 / e6b0c709) cannot move by one.
 
-/** The identity of an advertising letter: the week it landed. At most one can be raised per week
- *  (`adSpokenFor` turns the writer away while one is live or running), so the week is unique, and it
- *  is stable across a replay the way every other derived id in this file is. */
-export function adOfferId(week: number): string {
-  return `ad-${week}`
+/** The identity of an advertising letter: its category and the week it landed. At most one letter
+ *  per category can be raised per week (`adSpokenFor` turns a category's writer away while its slot
+ *  holds a live letter or a running deal), so the pair is unique, and it is stable across a replay
+ *  the way every other derived id in this file is.
+ *
+ *  ⚠ THE CATEGORY-LESS SPELLING IS THE HISTORICAL ID (`ad-<week>`) and old saves hold letters under
+ *  it; nothing renames them, and the optional parameter keeps this function the one authority on
+ *  both spellings. */
+export function adOfferId(week: number, category?: AdCategory): string {
+  return category ? `ad-${category}-${week}` : `ad-${week}`
+}
+
+/** ⭐⭐ THE WINTER SHOOT WINDOW (round 29 part four P9, overturning §5.2's in-season-only rule).
+ *  The owner: «межсезонье – "слишком много съёмок и никакого отпуска" – вот это то, чего у нас
+ *  вообще нет, у нас 6 пустых недель там.»
+ *
+ *  HIS SIX WEEKS, DERIVED AND NOT INVENTED: the top of the professional calendar goes quiet after
+ *  the 1000-tier's last anchor at season offset 45 (`wta1000.anchorWeeks`), so a top player's year
+ *  ends with offsets 46–51 empty – three playable wind-down weeks nothing big is scheduled in, then
+ *  the three off-season weeks (`OFF_SEASON_WEEKS`). Those six are what he counted in his own save,
+ *  and they are now the shoot season: `chooseShootWeeks` fills them FIRST, and only the overflow
+ *  spills into the season proper, where the round-29 #3 four-way clash machinery prices it exactly
+ *  as before.
+ *
+ *  ⚠ THE COST OF A WINTER SHOOT IS THE REST IT DISPLACES, not a new number: `accrueCondition`
+ *  already pays a shoot week the travel figure instead of the free week's base + slider, so a shoot
+ *  parked on an empty winter week forfeits precisely the recovery that week would have banked – the
+ *  vacation it replaces, priced by the ladder that was already there. §5.2's «an off-season cost is
+ *  free money wearing a cost's clothes» was written when a shoot week charged nothing off-season;
+ *  P9 retires the rule by pointing at the rest. Lower tiers still hold events on offsets 46–48, so
+ *  a winter shoot CAN collide with an entered event there and the clash question is asked exactly
+ *  as in season – nothing about the window exempts it. */
+export const WINTER_SHOOT_WEEKS = OFF_SEASON_WEEKS + 3
+
+/** True for the last `WINTER_SHOOT_WEEKS` weeks of a season year – the shoot season. */
+export function isWinterShootWeek(week: number): boolean {
+  const offset = ((week % WEEKS_PER_YEAR) + WEEKS_PER_YEAR) % WEEKS_PER_YEAR
+  return offset >= WEEKS_PER_YEAR - WINTER_SHOOT_WEEKS
+}
+
+/** ⚠ THE HISTORICAL THREE-RUNG LADDER (round 29 part two #19/#20), kept because letters written
+ *  under it are persisted in real saves and every reader of an old paper still needs its names.
+ *  Round 29 part four P6/§8 replaced the ladder with the CATEGORY portfolio below – the axis moved
+ *  from «which single house writes» to «which categories of a shelf are open». Nothing composes new
+ *  terms from these three values any more; `adCategoryOf` maps each onto the category its house
+ *  always was. */
+export const AD_TIERS: readonly AdTier[] = ['watch', 'campaign', 'house']
+
+/** ⭐⭐⭐ THE PORTFOLIO'S CATEGORIES, IN SHELF ORDER (round 29 part four P6/P7/§8) – the order the
+ *  portfolio surface lists them and the order `reviewAdOffer` walks them, weakest gate first so the
+ *  shelf reads as a climb. The capstone is deliberately LAST: it is not a trade, it is the one
+ *  kit-shaped deal on top of the whole shelf. */
+export const AD_CATEGORIES: readonly AdCategory[] = ['watches', 'cars', 'drinks', 'clothing', 'airline', 'fragrance', 'capstone']
+
+/** WHICH CATEGORY A LETTER'S PAPER FILLS – the one mapping that makes the portfolio rule reach
+ *  every letter ever written, new or old. A new letter names its category; an old one is mapped
+ *  through its tier, EXACTLY rather than by guess: the watch rung's house was a watchmaker, the
+ *  campaign rung's an airline, the house rung's a perfumer, and a letter with neither field is a
+ *  Quiet Hour letter by construction (the catalogue had one house when it was written). */
+export function adCategoryOf(terms: AdOfferTerms): AdCategory {
+  if (terms.category) return terms.category
+  const tier = terms.tier ?? 'watch'
+  return tier === 'watch' ? 'watches' : tier === 'campaign' ? 'airline' : 'fragrance'
+}
+
+/** THE STRONGEST BAND HER STANDING CLEARS, as an index into `ECONOMY.advertising.bands`
+ *  (weakest-first), or null when none does – `rungFor`'s rule, applied to the gradient. The band
+ *  sets the CHEQUE for every category at once, which is §8's whole design: the shelf's shape is
+ *  constant and the cheque is the only axis that scales.
+ *
+ *  ⚠ `wtaRanked` IS THE GUARD AND IT IS NOT OPTIONAL. Everybody without a counting W result ties at
+ *  the FLOOR of that table (`tableSize`, 564 rows), so a position there is not a standing – the
+ *  same trap `standingClears` documents for the kit rungs. */
+export function adBandFor(standing: SponsorStanding): number | null {
+  if (!standing.wtaRanked) return null
+  const bands = ECONOMY.advertising.bands
+  for (let i = bands.length - 1; i >= 0; i--) {
+    if (standing.wtaRank <= bands[i].maxWtaRank) return i
+  }
+  return null
+}
+
+/** THE CHEQUE ONE CATEGORY WRITES AT ONE BAND, in cents per contract year – or null where the
+ *  category has not opened (`feeCentsByBand`'s own nulls, so the gate and the price are one fact).
+ *  The capstone is not a category row and never reaches this: its money is its own constant. */
+export function adFeeFor(category: Exclude<AdCategory, 'capstone'>, band: number): number | null {
+  return ECONOMY.advertising.categories[category].feeCentsByBand[band] ?? null
+}
+
+/** ⭐ P6'S CHURN – WHICH HOUSE OF THE CATEGORY WRITES THIS LETTER. One draw off the letter's own
+ *  rng, over the category's 2–4 names, with the ruling's one exclusion: AT THE TOP BAND a house
+ *  does not write twice running – the previous signed deal's author steps back and a different
+ *  name takes the slot («no house writes twice running at the top band», his terms-churn rule).
+ *  Below the top band a repeat is allowed: a #150 re-signing the same local dealer is life.
+ *
+ *  Deterministic per (seed, category, week) through the caller's rng, so a replayed career gets
+ *  the same author on the same Monday. */
+export function pickAdHouse(
+  houses: readonly string[],
+  lastSignedBrand: string | null,
+  topBand: boolean,
+  roll: number,
+): string {
+  const pool = topBand && lastSignedBrand !== null && houses.length > 1
+    ? houses.filter((h) => h !== lastSignedBrand)
+    : houses
+  return pool[Math.min(pool.length - 1, Math.floor(roll * pool.length))]
+}
+
+/** WHAT ONE CATEGORY'S LETTER SAYS AT ONE BAND – the portfolio's `kitTermsFor`, and the same
+ *  snapshot rule: every field is frozen onto the offer at arrival and never re-read from `ECONOMY`
+ *  again, so a deal signed under one catalogue keeps its own numbers if the catalogue is retuned.
+ *
+ *  ⚠ THE BRAND AND THE YEARS ARE ARGUMENTS, NOT DRAWS – this function is pure so a test or the
+ *  bench can ask what a named cell offers; the dice live with the caller (`reviewAdOffer`), on the
+ *  letter's own purpose-scoped stream. `brand` is required for clothing (the live kit deal's own
+ *  name – the «двойной программой» ruling) and defaults to the category's first house otherwise. */
+export function adTermsForCategory(
+  category: Exclude<AdCategory, 'capstone'>,
+  band: number,
+  termYears: number,
+  brand?: string,
+): AdOfferTerms | null {
+  const def = ECONOMY.advertising.categories[category]
+  const fee = adFeeFor(category, band)
+  if (fee === null) return null
+  const author = brand ?? def.houses[0]
+  if (!author) return null
+  const years = Math.max(1, Math.min(ECONOMY.advertising.termYearsMax, Math.round(termYears)))
+  return {
+    category,
+    brand: author,
+    trade: def.trade,
+    cashCents: fee,
+    termYears: years,
+    termWeeks: years * WEEKS_PER_YEAR,
+    shootCount: ECONOMY.advertising.bands[band].shootWeeksPerYear,
+  }
+}
+
+/** ⭐⭐⭐ THE CAPSTONE'S LETTER (P6, his sentence: «Федерер получал контракт с Nike на 10+
+ *  миллионов») – the one kit-shaped deal on top of the shelf. Eight years, $10M a contract year,
+ *  written by the kit house that already dresses her (the double programme at icon scale); the
+ *  caller hands the brand in because the paper's author is the world's fact, not the catalogue's. */
+export function adCapstoneTerms(brand: string): AdOfferTerms {
+  const c = ECONOMY.advertising.capstone
+  return {
+    category: 'capstone',
+    brand,
+    trade: 'We make her kit',
+    cashCents: c.cashCents,
+    termYears: c.termYears,
+    termWeeks: c.termYears * WEEKS_PER_YEAR,
+    shootCount: c.shootWeeksPerYear,
+  }
 }
 
 /** WHETHER A CAMPAIGN WRITES THIS WEEK - the one random thing about the deal, the same shape as the
  *  kit ladder's `shopWritesAt` and deliberately NOT the same stream: `seed:ad:<week>` is its own
- *  purpose scope, so the kit roll and this one can never read each other's dice. */
-export function adWritesAt(seed: string, week: number, chance: number): boolean {
-  const rng = rngFromSeed(`${seed}:ad:${week}`)
+ *  purpose scope, so the kit roll and this one can never read each other's dice.
+ *
+ *  ⚠ SINCE THE PORTFOLIO THE SCOPE IS PER CATEGORY (`seed:ad:<category>:<week>`): each open
+ *  category rolls its own arrival dice, so seven categories can notice her independently and none
+ *  can read another's draw. The old category-less spelling is exactly the historical stream the
+ *  pre-portfolio letters rolled on; nothing rolls it any more, and keeping the parameter optional
+ *  keeps every recorded derivation readable. */
+export function adWritesAt(seed: string, week: number, chance: number, category?: AdCategory): boolean {
+  const rng = rngFromSeed(category ? `${seed}:ad:${category}:${week}` : `${seed}:ad:${week}`)
   return rng() < chance
+}
+
+/** THE LETTER'S OWN DICE, past the arrival roll: which house writes and for how many years, one
+ *  stream per (category, week) so a replayed career gets the same author and the same term on the
+ *  same Monday. Split from `adWritesAt`'s roll by a scope suffix rather than by draw order, so
+ *  adding a draw to one side can never shift the other. */
+export function adLetterRng(seed: string, week: number, category: AdCategory): () => number {
+  return rngFromSeed(`${seed}:ad:${category}:${week}:letter`)
 }
 
 /** ⭐⭐ THE SHOOT WEEKS, CHOSEN BY THE SIGNATURE (the-face-and-the-court.md §4a, step 2 – the
@@ -1625,9 +1909,25 @@ export function adWritesAt(seed: string, week: number, chance: number): boolean 
  *  purpose-scoped stream at the moment of the action (the arrival roll's own discipline), and the
  *  frozen capture (41550 / e6b0c709) cannot see it.
  *
- *  A degenerate term (shorter than its slices can hold in-season) yields FEWER weeks rather than an
- *  off-season or bunched one – the promises above outrank the count, and the shipped catalogue
- *  (52-week term, 3-week off-season, lead 4) leaves every slice ~20 eligible weeks deep. */
+ *  A degenerate term (shorter than its slices can hold) yields FEWER weeks rather than a bunched
+ *  one – the promises above outrank the count.
+ *
+ *  ⚠⚠ ROUND 29 PART FOUR P9 REWROTE THE POOLS AND THE HISTORY HAS TO BE SAID OUT LOUD: the clause
+ *  «IN-SEASON by construction – the off-season weeks are filtered out of every pool» was §5.2's
+ *  rule («an off-season cost is free money wearing a cost's clothes») and the owner overturned it –
+ *  the winter is now the shoot season (`isWinterShootWeek`, his six empty weeks), so the choice
+ *  PREFERS it: each contract year fills its winter weeks first, adjacency allowed there because a
+ *  real shoot season is back-to-back working weeks («слишком много съёмок и никакого отпуска» is
+ *  the model, not a colour note), and only the overflow spills in-season, where the old promises –
+ *  sliced apart, never adjacent – hold exactly as they did. The cost moved with the rule: an
+ *  in-season shoot still recovers like a trip and still clashes with tournaments (round-29 #3); a
+ *  winter shoot forfeits the empty week's own rest (`accrueCondition` pays the travel figure where
+ *  the free week would have paid base + slider), which is the displaced vacation P9 prices it as.
+ *
+ *  ⚠ `count` IS PER CONTRACT YEAR since the multi-year terms (P6's 1–3yr churn): a 2-year deal at
+ *  2 a year names 4 weeks, each year preferring its own winter, so a long deal cannot dump every
+ *  shoot into its first December. On the 52-week letters every save already holds, per-year and
+ *  per-term were the same number and nothing about them changes. */
 export function chooseShootWeeks(
   seed: string,
   signWeek: number,
@@ -1638,22 +1938,39 @@ export function chooseShootWeeks(
   const rng = rngFromSeed(`${seed}:ad:shoots:${signWeek}`)
   const until = signWeek + Math.max(1, termWeeks) - 1
   const from = Math.min(signWeek + Math.max(0, leadWeeks), until)
-  const span = until - from + 1
-  const slice = Math.max(1, Math.floor(span / Math.max(1, count)))
+  const years = Math.max(1, Math.ceil(Math.max(1, termWeeks) / WEEKS_PER_YEAR))
   const weeks: number[] = []
-  for (let i = 0; i < count; i++) {
-    const lo = from + i * slice
-    const hi = i === count - 1 ? until : Math.min(until, lo + slice - 1)
-    const pool: number[] = []
-    for (let w = lo; w <= hi; w++) {
-      if (isOffSeasonWeek(w)) continue
-      if (weeks.some((s) => Math.abs(s - w) <= 1)) continue
-      pool.push(w)
+  for (let y = 0; y < years; y++) {
+    const yLo = Math.max(from, signWeek + y * WEEKS_PER_YEAR)
+    const yHi = Math.min(until, signWeek + (y + 1) * WEEKS_PER_YEAR - 1)
+    if (yLo > yHi) continue
+    let need = Math.max(0, count)
+    // THE WINTER FIRST (P9): every eligible winter week of this contract year, drawn without an
+    // adjacency filter – the shoot season stacks, that is what makes it a season.
+    const winter: number[] = []
+    for (let w = yLo; w <= yHi; w++) if (isWinterShootWeek(w) && !weeks.includes(w)) winter.push(w)
+    while (need > 0 && winter.length > 0) {
+      const at = Math.floor(rng() * winter.length)
+      weeks.push(winter.splice(at, 1)[0])
+      need--
     }
-    if (pool.length === 0) continue
-    weeks.push(pool[Math.floor(rng() * pool.length)])
+    if (need <= 0) continue
+    // THE SPILL, under the pre-P9 promises: one draw per equal slice of the year, spaced apart.
+    const slice = Math.max(1, Math.floor((yHi - yLo + 1) / need))
+    for (let i = 0; i < need; i++) {
+      const lo = yLo + i * slice
+      const hi = i === need - 1 ? yHi : Math.min(yHi, lo + slice - 1)
+      const pool: number[] = []
+      for (let w = lo; w <= hi; w++) {
+        if (isWinterShootWeek(w)) continue // the winter already had its chance at these
+        if (weeks.some((s) => Math.abs(s - w) <= 1)) continue
+        pool.push(w)
+      }
+      if (pool.length === 0) continue
+      weeks.push(pool[Math.floor(rng() * pool.length)])
+    }
   }
-  return weeks
+  return weeks.sort((a, b) => a - b)
 }
 
 /** IS THIS WEEK A SHOOT WEEK OF THE DEAL IN FORCE? The one question the condition accumulator asks
@@ -1665,32 +1982,69 @@ export function chooseShootWeeks(
  *  owns the freeze. The caller that charges recovery guards the freeze itself (see
  *  `accrueCondition`): a shoot week the freeze swallows lapses silently, no penalty, no makeup. */
 export function adShootWeek(offers: Offer[], week: number): boolean {
-  const deal = activeAdDeal(offers, week)
-  if (!deal) return false
-  return ((deal.terms as AdOfferTerms).shootWeeks ?? []).includes(week)
+  return adDealShootingAt(offers, week) !== null
 }
 
-/** THE ADVERTISING DEAL IN FORCE THIS WEEK, or null. Same contract as `activeKitDeal`: honoured
- *  from `fromWeek` to `untilWeek` and not a week further, off the offer's own frozen terms. */
-export function activeAdDeal(offers: Offer[], week: number): Offer | null {
+/** THE DEAL THAT NAMED THIS WEEK A SHOOT WEEK, or null – the paper the clash machinery writes to.
+ *  With a portfolio several deals run at once and two MAY even name the same week (brands do not
+ *  coordinate calendars); the first by inbox order answers for the week, and resolving its shoot
+ *  simply lets the predicate find the next one, so every campaign's collision gets its own
+ *  question. Pure read, zero draws. */
+export function adDealShootingAt(offers: Offer[], week: number): Offer | null {
   return (
-    offers.find(
-      (o) =>
-        o.kind === 'ad' &&
-        o.state === 'signed' &&
-        week <= (o.untilWeek ?? -1) &&
-        week >= (o.fromWeek ?? o.decidedWeek ?? 0),
-    ) ?? null
+    activeAdDeals(offers, week).find((o) => ((o.terms as AdOfferTerms).shootWeeks ?? []).includes(week)) ?? null
   )
 }
 
-/** ONE DEAL AT A TIME (plan §4.1) – is the post shut against a new advertising letter this week?
- *  Two ways it can be: a letter still on the table (live: open AND inside its window), or a signed
- *  term still running. An expired or refused letter shuts nothing – the next house may notice her
- *  whenever its own week's dice say so – and neither does the KIT ladder: an endorsement and a kit
- *  deal are different categories and deliberately never read each other. */
-export function adSpokenFor(offers: Offer[], week: number): boolean {
-  return offers.some((o) => o.kind === 'ad' && (isOfferLive(o, week) || (o.state === 'signed' && week <= (o.untilWeek ?? -1))))
+/** EVERY ADVERTISING DEAL IN FORCE THIS WEEK – the portfolio itself. Same contract per deal as
+ *  `activeKitDeal`: honoured from `fromWeek` to `untilWeek` and not a week further, off each
+ *  offer's own frozen terms. */
+export function activeAdDeals(offers: Offer[], week: number): Offer[] {
+  return offers.filter(
+    (o) =>
+      o.kind === 'ad' &&
+      o.state === 'signed' &&
+      week <= (o.untilWeek ?? -1) &&
+      week >= (o.fromWeek ?? o.decidedWeek ?? 0),
+  )
+}
+
+/** THE DEAL HOLDING ONE CATEGORY, or null – `activeAdDeals` asked the portfolio's own question. */
+export function activeAdDealIn(offers: Offer[], category: AdCategory, week: number): Offer | null {
+  return activeAdDeals(offers, week).find((o) => adCategoryOf(o.terms as AdOfferTerms) === category) ?? null
+}
+
+/** ONE DEAL PER CATEGORY – is THIS category's slot shut against a new letter this week? Two ways it
+ *  can be: a letter for the category still on the table (live: open AND inside its window), or a
+ *  signed term in the category still running. An expired or refused letter shuts nothing – the next
+ *  house may notice her whenever its own week's dice say so – and neither does the KIT ladder: an
+ *  endorsement and a kit deal are different papers and deliberately never read each other.
+ *
+ *  ⚠⚠ RE-AIMED, NOT DELETED (round 29 part four P6): this predicate WAS the plan's §4.1 «one
+ *  advertising deal at a time», whole-post – ask it with no category and every category answered.
+ *  His ruling «Таких контрактов может быть несколько» replaced one-at-a-time with a PORTFOLIO of
+ *  categories, so the guard now takes the category and shuts exactly one slot: the exclusivity a
+ *  letter states is «in no other <trade> campaign while that runs», which is how the real shelf
+ *  works (§7 – no portfolio read for the research holds two brands of one trade at once). */
+export function adSpokenFor(offers: Offer[], week: number, category: AdCategory): boolean {
+  return offers.some(
+    (o) =>
+      o.kind === 'ad' &&
+      adCategoryOf(o.terms as AdOfferTerms) === category &&
+      (isOfferLive(o, week) || (o.state === 'signed' && week <= (o.untilWeek ?? -1))),
+  )
+}
+
+/** THE MOST RECENT SIGNED AUTHOR OF A CATEGORY, or null – the fact `pickAdHouse`'s top-band churn
+ *  excludes. Read off the paper trail (offers are never pruned), latest signature first. */
+export function lastSignedAdBrand(offers: Offer[], category: AdCategory): string | null {
+  let best: Offer | null = null
+  for (const o of offers) {
+    if (o.kind !== 'ad' || o.state !== 'signed') continue
+    if (adCategoryOf(o.terms as AdOfferTerms) !== category) continue
+    if (best === null || (o.decidedWeek ?? o.week) > (best.decidedWeek ?? best.week)) best = o
+  }
+  return best ? (best.terms as AdOfferTerms).brand : null
 }
 
 /** THE HOUSE WRITES. An `open` letter with a real deadline – refusable and expirable like the kit
@@ -1698,7 +2052,10 @@ export function adSpokenFor(offers: Offer[], week: number): boolean {
  *  both said yes. Idempotent on its id, like every other `raise*` in this file, and NOTHING is
  *  drawn here: the one roll this deal ever takes happened in `adWritesAt` before the caller called. */
 export function raiseAdOffer(offers: Offer[], week: number, terms: AdOfferTerms, deadlineWeek: number): Offer {
-  const id = adOfferId(week)
+  // The id carries the category since the portfolio (P6): several categories may write in one week
+  // and each letter needs its own identity. A letter without a category on its terms is the
+  // historical single-post letter and keeps the historical id.
+  const id = adOfferId(week, terms.category)
   const existing = offers.find((o) => o.id === id)
   if (existing) return existing
   const offer: Offer = {

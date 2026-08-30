@@ -1,6 +1,15 @@
 // R11-9 – warm the portrait art BEFORE the screen or the popup that needs it.
 //
-// THE PROBLEM. The big paintings under public/images/fem-euro-brunnet/ are deliberately outside
+// ⚠⚠ THE PREMISE OF EVERYTHING BELOW WAS OVERTURNED ON 29.08 (round 29 part two #7): the owner
+// ruled the whole of `public/images/**` into the PWA install – 313 precache entries, 12.3 MB – so
+// the art is on the device before any component asks for it, and the CacheFirst runtime route this
+// module was written against is gone from vite.config.ts. This file is NOT dead and is deliberately
+// kept: `warm()` is idempotent and now resolves off the precache, which costs nothing, and it stays
+// the only thing that still works if a future image ever falls outside the precache glob. Read the
+// paragraphs below as the record of why it was written, not as a description of today's caching.
+//
+// THE PROBLEM (as it stood until 29.08). The big paintings under public/images/fem-euro-brunnet/
+// were deliberately outside
 // the service-worker precache (see vite.config: precaching all 2348 KiB would more than double the
 // install, and the five age bands are never all needed at once). They are fetched the moment a
 // component binds them to an <img src>, which means the tournament finale and the Kid screen can
@@ -179,13 +188,23 @@ export function preloadTravelHomeArt(
 // WHY THE OTHER 13 ARE NOT IN `NOT_SHIPPED` (scripts/optimize-art.mjs), even though nothing can
 // request them yet. That list exists for one measured reason, stated in the script: a master whose
 // output no code path can request is "dead weight in every user's download". The coach webp are
-// not in any user's download – vite.config's precache carries `globIgnores: ['**/images/**']`, and
-// /images/*.webp is a CacheFirst RUNTIME route, so a file is fetched if and only if some component
+// not in any user's download – vite.config's precache carried `globIgnores: ['**/images/**']`, and
+// /images/*.webp was a CacheFirst RUNTIME route, so a file is fetched if and only if some component
 // asks for its URL. Three URLs are constructible; three files will ever be fetched. The remaining
 // 13 (~137 KB) sit in dist/ costing nobody anything, and stay ready for the coach-choice slice
 // instead of having to be re-encoded from masters that live only on the author's machine.
 // NOT_SHIPPED's rule is honoured, not bent: its premise simply is not true of art outside the
 // precache. What WOULD be dishonest is preloading them, and none of them is preloaded.
+//
+// ⚠⚠ AND THAT ARGUMENT EXPIRED ON 29.08, WHICH IS WORTH SAYING OUT LOUD RATHER THAN LEAVING TO BE
+// NOTICED. All 16 coach portraits are in the install now (round 29 part two #7), so "costing nobody
+// anything" is no longer true of any file under public/images – every one of them is 165 KiB of
+// coach art in every player's download. That is the owner's ruling and the price he accepted; what
+// it changes here is the WARRANT, not the outcome. `NOT_SHIPPED` is now the only lever that keeps
+// unreachable art out of a player's install, so a master that no code path can request has to be
+// evacuated at the pipeline rather than tolerated in dist/. The 11 unreachable
+// fem-euro-brunnet frames (~496 KiB) are the open case and they are the owner's to rule on – they
+// are parked, not orphaned (see vite.config's history and docs/art-placeholders.md).
 //
 // ⚠ THE COACH-CHOICE SLICE ARRIVED, and all 16 are now requestable: the Coach Market (screen T)
 // renders one row per coach and `ECONOMY.coach.roster` names every portrait as a coach id. The
@@ -234,6 +253,19 @@ export function warmedCount(): number {
 /** Test seam: forget what has been warmed. Not used by the app. */
 export function resetPreloadCache(): void {
   requested.clear()
+}
+
+/** Warm a list of URLs that some OTHER module built with the shipped builders.
+ *
+ *  ⚠ IT IS NOT A LICENCE TO SPELL A FILENAME AT A CALL SITE. This module's standing rule - "the URL
+ *  builders MUST agree with the consumers, or a preload warms a file nobody asks for" - is why every
+ *  entry point above returns the urls it warmed. `art/feedArt.ts` (round 29 #2) keeps that rule by
+ *  going through `venueArtUrl` / `weekArtUrl` / `weekHomeArtUrl` / `vacationArtUrl`, the same four
+ *  functions the Season feed's `<img>` bindings call; what it cannot do is live in HERE, because
+ *  `art/weeks.ts` already imports this file and the cycle would be real. */
+export function warmAll(urls: readonly string[]): string[] {
+  for (const u of urls) warm(u)
+  return [...urls]
 }
 
 function warm(url: string): void {

@@ -132,6 +132,9 @@ describe('every command answers with the arm REPLY_BY_COMMAND names for it', () 
       tournamentClose: { type: 'tournamentClose', baseRevision: 0 },
       decideKnock: { type: 'decideKnock', choice: 'rest', baseRevision: 0 },
       chooseGift: { type: 'chooseGift', giftId: 'no-such-gift', baseRevision: 0 },
+      // ⚠ ROUND 29 #3: a valid choice on a career with no collision open – the engine refuses it, which
+      // is exactly what this table wants (every row is a command the worker must ANSWER, not obey).
+      answerShootClash: { type: 'answerShootClash', choice: 'play-both', baseRevision: 0 },
       // ⚠ v63, the shop: deliberately invalid ids, like every other row here – on a quiet junior
       // career the refusal arrives from the professional-era gate before the id is ever looked up,
       // and a refusal IS a legitimate answer for this suite (it correlates the reply, not the verb).

@@ -205,6 +205,54 @@ export type OfferState = 'open' | 'signed' | 'refused' | 'expired' | 'info'
  *  ELEVATE.". The coverage ladder is written on the pictures; this type only names it. */
 export type SponsorTier = 'local' | 'national' | 'global' | 'tour' | 'premium' | 'icon'
 
+/** ⭐⭐ THE ADVERTISING LADDER – round 29 part two #19/#20, and it is a SECOND ladder rather than
+ *  three more rungs of the one above. Weakest-first, like `SPONSOR_TIERS`, so an index comparison
+ *  is a ladder comparison in both files that do one.
+ *
+ *    watch     WTA <= 200   a watchmaker, 2 shoot weeks – the rung that already shipped
+ *    campaign  WTA <= 50    an airline's campaign, 4 shoot weeks
+ *    house     WTA <= 10    a cosmetics house, 6 shoot weeks – the plan's cap for a whole year
+ *
+ *  ⚠ IT IS NOT THE KIT LADDER AND MUST NEVER BE FOLDED INTO IT. Every rung of `SponsorTier` is
+ *  ENDEMIC – a tennis brand paying for tennis, in kit, fares and result bonuses – and every rung
+ *  here is NON-ENDEMIC: a house that makes something else entirely, paying cash for her FACE. The
+ *  two run at once by construction (`adSpokenFor` and `seasonSpokenFor` never read each other), so
+ *  a girl may wear Baseline Athletic and be photographed for Quiet Hour in the same season, which
+ *  is exactly what happens in the sport.
+ *
+ *  ⚠ AND THE PRICE IS TIME, WHICH IS WHY THE LADDER IS SHORT. A rung here asks for SHOOT WEEKS
+ *  (`AdOfferTerms.shootCount`), and the plan's own ceiling is six a year – so three rungs at 2 / 4
+ *  / 6 spend the whole allowance and there is no room for a fourth. See
+ *  `ECONOMY.advertising.houses`, where the money and the weeks are sized against each other. */
+export type AdTier = 'watch' | 'campaign' | 'house'
+
+/** ⭐⭐⭐ ROUND 29 PART FOUR P6/P7 – THE PORTFOLIO IS CATEGORIES, NOT ABSTRACT SLOTS. The owner, off
+ *  Bublik's actual sponsor list («одежда и обувь · ракетки и экипировка · часы · автомобили ·
+ *  гидратация и напитки»): «У нас они частично есть уже. Можно даже текущих использовать двойной
+ *  программой. И еще парочку накинуть – будет полный список.»
+ *
+ *  So concurrency is not «N deals» – it is ONE DEAL PER CATEGORY, which is how a real portfolio
+ *  works (no portfolio read for the research holds two brands of one trade at once –
+ *  docs/research/endorsement-tiers-and-academy-money.md §2/§7) and is instantly legible on screen:
+ *  a shelf of named categories, filled or empty. The cap of «up to 4–6 concurrent» (§8) needs no
+ *  constant at all – it is how many categories a standing has opened.
+ *
+ *    watches    the rung that already shipped (Quiet Hour) – opens first
+ *    cars       §7 «add» – a local dealer at the bottom band, a marque at the top
+ *    drinks     §7 «add» – hydration & drinks, Bublik's own list
+ *    clothing   the DOUBLE PROGRAMME: the kit brand she already wears buys an ad campaign on top –
+ *               two deals, one brand, separate letters, separate money (kit ≠ face)
+ *    airline    Northmere Air, the shipped `campaign` rung's own trade
+ *    fragrance  Rivelle, the shipped `house` rung's own trade – the icon-band category
+ *    capstone   NOT a trade: the one $10M/yr × 8yr kit-shaped deal on top (§8), gated on tenure
+ *               (4 seasons ENDED inside the top 10), one at a time by the same one-per-category rule
+ *
+ *  ⚠ `AdTier` ABOVE IS NOT DELETED AND MUST NOT BE: letters written under the three-rung ladder are
+ *  persisted in real saves, and `adCategoryOf` (engine/offers.ts) maps each old tier onto the
+ *  category its house always was – watch→watches, campaign→airline, house→fragrance – so an old
+ *  signed deal fills its category exactly as a new one would. */
+export type AdCategory = 'watches' | 'cars' | 'drinks' | 'clothing' | 'airline' | 'fragrance' | 'capstone'
+
 /** THE THREE PROFESSIONAL RUNGS (W3-ACT2, act2-pro-tour.md section 7 - the owner's «да, надо
  *  продумать, предложи что-то», built). They are gated on the WTA rank, which is exactly as real as
  *  the two tables the rungs below read, and what they add is a KIND of money the junior ladder never
@@ -366,7 +414,11 @@ export interface KitDealView {
 /** One rung of the shelf, as the Money screen reads it. */
 export interface ShopRowView {
   id: string
-  family: 'investment' | 'car' | 'house'
+  /** ⭐ ROUND 29 #5 added 'boat' | 'plane' | 'academy' (§3f, §3g): the COMMISSIONED families –
+   *  ordered, waited for, and kept every week – and the one thing on the shelf that is built in
+   *  stages and outlives the career. ⭐ ROUND 29 PART FOUR P7 added 'business': the rungs that
+   *  EARN every week – the merch brand, the parent's first business, income riding on fame. */
+  family: 'investment' | 'car' | 'house' | 'business' | 'boat' | 'plane' | 'academy'
   /** 'fixed' – one price. 'open' – the family names an amount, at least `entryCents`. */
   stake: 'fixed' | 'open'
   label: string
@@ -395,17 +447,44 @@ export interface ShopRowView {
    *  progress bar (§2: «never a locked row, a progress bar or a teaser») – the price stays on screen
    *  and the control is simply not pressable. */
   affordable: boolean
+  /** ⭐⭐ ROUND 29 #5, §3f – WHAT IT COSTS EVERY WEEK TO KEEP, in cents, once it is delivered. Zero
+   *  on every rung that has no upkeep, which is every car, house and investment.
+   *
+   *  ⚠ IT IS THE PRICE'S OWN PERCENTAGE AND NOT THE CURRENT VALUE'S, so the figure a player was
+   *  quoted on the day he ordered is the figure he goes on paying – see `assetUpkeepCents`. */
+  upkeepCents: number
+  /** ⭐⭐ ROUND 29 PART FOUR P7 – WHAT IT BRINGS IN EVERY WEEK, RIGHT NOW, in cents: the merch
+   *  brand's fame-driven line and a delivered academy stage's reputation-driven one, each read off
+   *  the same functions the till banks through (world/business.ts – one arithmetic, so the card
+   *  and the ledger cannot quote two businesses). Zero on every rung that earns nothing, on every
+   *  rung not owned, and on a stage still on order.
+   *
+   *  ⚠ THE MIRROR OF `upkeepCents` ONE FIELD UP, and deliberately NOT netted against it (round 29
+   *  #10's lesson): a rung that both kept a crew and sold shirts would carry both figures. */
+  incomeCents: number
+  /** ⭐ §3f – HOW MANY WEEKS FROM THE ORDER TO THE THING, for a rung that is commissioned rather
+   *  than bought. Zero on everything that arrives at once. */
+  buildWeeks: number
+  /** ⭐ §3f – THE WEEK THIS ONE ARRIVES, while the family is still waiting for it; null once it is
+   *  here and null when it is not owned. A contract cannot be sold, so the screen draws no Sell
+   *  control against it – it says when the thing is due instead. */
+  readyWeek: number | null
+  /** ⭐ §3g – the rung that has to be owned before this one can be bought (the academy's stages),
+   *  or null when the rung stands on its own. Never hides the row: the price and the stage are on
+   *  screen, and the control is simply not pressable yet. */
+  requiresId: string | null
+  /** ...and whether that requirement is met. True on every rung that has none. */
+  requirementMet: boolean
 }
 
-/** THE SHELF. Present on every snapshot; `unlocked` is what the junior years turn off. */
+/** THE SHELF. Present on every snapshot, and OPEN on every snapshot since round 29 part two #6.
+ *
+ *  ⚠ `unlocked: boolean` AND `lockedDetail: string` STOOD AT THE TOP OF THIS INTERFACE and went with
+ *  the gate, on his ruling of 29.08 («магазин открыт всегда с начала игры»). §2's «visible from the
+ *  first week of the PROFESSIONAL era, never in the junior years» is overturned by the owner; the
+ *  reasoning, and what the two fields carried, are written out where the predicate stood in
+ *  engine/world/shop.ts. Not persisted, so nothing is owed: `ShopView` is a snapshot view. */
 export interface ShopView {
-  /** ⭐ §2 – visible from the first week of the PROFESSIONAL era, never in the junior years. The
-   *  same one-way door the masseur's seat uses (`activeLadderOf === 'wta'`), so it cannot close
-   *  again behind a layoff or the college freeze. */
-  unlocked: boolean
-  /** the sentence to print instead of the shelf while it is shut – written once in the engine so a
-   *  disabled control and a refused click cannot tell two stories. */
-  lockedDetail: string
   /** every rung, cheapest first. */
   rows: ShopRowView[]
   /** ⭐ §2 – WHAT AN EMPTY SHELF SAYS: the cheapest thing on it and its price, so the screen names a
@@ -416,6 +495,26 @@ export interface ShopView {
   ownedCount: number
   /** what everything they own is worth added up, in cents. Zero when they own nothing. */
   ownedValueCents: number
+  /** ⭐⭐ ROUND 29 #5, §3f – WHAT THE SHELF COSTS TO KEEP, every week, in cents. The sum of every
+   *  DELIVERED rung's upkeep; zero for a family that owns nothing that has any, which is every
+   *  family that has not commissioned a boat or a plane. Already inside
+   *  `coachBilling.household.outgoingCents` – this is the shelf's own share of it, named. */
+  upkeepCents: number
+  /** ⭐⭐ §3f -> ROUND 29 PART TWO #8 – THE VACATION PACKAGES THE SHELF HAS MADE FREE, by id. Empty
+   *  for every family that has not taken delivery of a yacht.
+   *
+   *  THE OWNER, #5: «а неделя на яхте (при наличии яхты) вполне может стать новой строкой
+   *  отпуска.» Then #8: «на постоянку добавить в ленту сначала с реальной стоимостью, а после
+   *  покупки яхты это станет бесплатным» – so since #8 the row is on every family's sheet and this
+   *  list answers "is it free for THIS family", not "may they see it".
+   *
+   *  ⚠ THE ENGINE ANSWERS THE PRICE, NEVER THE SCREEN, and this is the field that carries the
+   *  answer to the sheet: quote, recommendation and booking all go through `vacationPriceCents`
+   *  with the granted list, and `bookVacation` re-prices off the WORLD's own grant – so a sheet
+   *  left open on a career that has just sold the boat books at the real quote (and the
+   *  affordability guard still refuses a family that cannot pay it), never at the stale free one.
+   *  A package that is not `freeOnceGranted` is never in here – it never needed granting. */
+  vacationIds: string[]
 }
 
 /** What a kit deal actually commits both sides to. FIXED AT ARRIVAL and never re-read from
@@ -603,6 +702,19 @@ export type KitEndReason =
   | 'standing'
   /** it simply ran to the end of its term, terms honoured on both sides */
   | 'term'
+  /** ⭐⭐ ROUND 29 PART TWO #12 – SHE LEFT THEM FOR A BIGGER HOUSE. The owner: «открытое сейчас в
+   *  вашем ящике продление Baseline закроет и следующую зимнюю почту… там без спонсора грустновато
+   *  немного живется». A multi-season deal used to turn the WHOLE post away for as long as it ran
+   *  (`seasonSpokenFor`), so a girl who climbed two rungs during her term heard from nobody until it
+   *  expired – measured at 191 of 1,274 winters (15%), the commonest of them a `global` contract
+   *  standing in front of `premium`'s letter, which is his own save exactly.
+   *
+   *  ⚠ IT IS THE FOURTH REASON AND NOT A RE-USE OF `term`, because `term` means «terms honoured on
+   *  both sides» and this deal was not served out – saying otherwise on the paper would make the
+   *  brand's own goodbye a lie. The letter is the only place a player learns a contract stopped, so
+   *  it has to be able to say why. Additive to an optional persisted union: no save written before
+   *  this wave can contain it, and every reader falls back to a default arm. */
+  | 'stepped'
 
 /** ⭐⭐ THE ACADEMY'S THREE NOTICES, AS PAPER (round 24 #1). The owner, 20.08: «сейчас как-то
  *  незаметно появляется один маленький попапчик сверху, который призывает изучить scholarship и
@@ -700,15 +812,60 @@ export interface AcademyLetterTerms {
  *  contain an `'ad'` letter, so there is nothing to migrate and nothing to back-fill. ⚠ AND THAT
  *  COVERS STEP 2'S WIDENING TOO: `'ad'` has never shipped (step 1 and step 2 ride one unmerged
  *  branch), so no save can contain an ad letter without `shootCount` – widening the shape is free
- *  exactly once, and this is that once. */
+ *  exactly once, and this is that once.
+ *
+ *  ⚠⚠ AND ROUND 29 PART TWO'S LADDER IS THE SAME MOVE A SECOND TIME, WITH ONE DIFFERENCE THAT HAS
+ *  TO BE SAID OUT LOUD: `'ad'` HAS shipped by now (the owner is holding a Quiet Hour letter in his
+ *  own save), so the sentence above no longer covers it. `tier` and `trade` are OPTIONAL and both
+ *  read exactly on an old letter – the catalogue had one house, so every existing ad letter is a
+ *  watchmaker's – which is why `SAVE_SCHEMA_VERSION` still does not move. A required field would
+ *  have needed a migration and a fixture; an optional one whose absence has a single true meaning
+ *  does not. */
 export interface AdOfferTerms {
-  /** who is writing – a FICTIONAL non-endemic house (a watchmaker), never a tennis brand and never
-   *  anything constructible into a real company. It is on the terms, not derived, for the same
-   *  reason `KitOfferTerms.brand` is: the letter is persisted and must keep naming its own author. */
+  /** ⭐⭐ ROUND 29 PART TWO #19/#20 – WHICH HOUSE THIS IS, once there is more than one of them.
+   *
+   *  ⚠ OPTIONAL BECAUSE IT IS A WIDENING OF A SHIPPED SHAPE, and the precedent is the one this
+   *  file already records twice: commit 2763caa added the entire `entry` letter family while
+   *  `SAVE_SCHEMA_VERSION` stayed at 36. Every ad letter written before this wave is a Quiet Hour
+   *  letter by construction – the catalogue had exactly one house – so an absent `tier` reads
+   *  `'watch'` EXACTLY rather than by guess, which is why nothing is back-filled. */
+  tier?: AdTier
+  /** ⭐⭐ ROUND 29 PART FOUR P6/P7 – WHICH CATEGORY OF THE PORTFOLIO THIS LETTER IS FOR, once the
+   *  post is a shelf of categories rather than one ladder.
+   *
+   *  ⚠ OPTIONAL BECAUSE IT IS A WIDENING OF A SHIPPED SHAPE – the same move `tier` itself was, one
+   *  wave earlier, and the same exactness: an absent category is the old ladder's letter, and every
+   *  one of those maps onto exactly one category through its tier (`adCategoryOf`: watch→watches,
+   *  campaign→airline, house→fragrance, absent tier→watch→watches). Nothing is back-filled and
+   *  `SAVE_SCHEMA_VERSION` does not move (65). */
+  category?: AdCategory
+  /** ⭐ P6 – HOW MANY CONTRACT YEARS THE TERM RUNS (1–3 churned, the research's own law for
+   *  non-endemic paper; 8 for the capstone, which is the one kit-shaped exception). `cashCents`
+   *  below is the fee PER CONTRACT YEAR: year one is banked at signature and each remaining year on
+   *  its anniversary while the term runs (`payAdAnniversaries`), so three 1-year deals pay exactly
+   *  what one 3-year deal pays – the ledger's own stated equivalence.
+   *
+   *  ⚠ OPTIONAL, AND ABSENT MEANS EXACTLY 1: every letter written before this wave was a 52-week
+   *  term whose whole fee was banked at signature, which is precisely what one contract year of the
+   *  new arithmetic pays. `termWeeks` stays the operative span (= termYears × 52 on new letters), so
+   *  nothing that reads the span changes meaning. */
+  termYears?: number
+  /** who is writing – a FICTIONAL non-endemic house, never a tennis brand and never anything
+   *  constructible into a real company. It is on the terms, not derived, for the same reason
+   *  `KitOfferTerms.brand` is: the letter is persisted and must keep naming its own author. */
   brand: string
-  /** the one-time fee, in cents, paid into the FAMILY wallet the week the paper is signed. Cash
-   *  only – no kit, no travel share, no retainer schedule: that is the whole difference between
-   *  this letter and the ladder above it. */
+  /** WHAT THE HOUSE MAKES, in its own words and in the plural ("watches", "aircraft seats") – the
+   *  letter's opening clause, which was a hard-coded «We make watches» while the catalogue had one
+   *  house and could not survive a second.
+   *
+   *  ⚠ THE SAME WIDENING AS `tier`, and the same exactness: an absent trade is Quiet Hour's, so
+   *  `OfferLetter` reads `'watches'` and an old letter keeps saying precisely what it always said. */
+  trade?: string
+  /** the fee, in cents, PER CONTRACT YEAR (see `termYears` – absent years mean 1, so on every
+   *  letter written before the portfolio this is the one-time fee it always was, to the cent).
+   *  Banked the week the paper is signed and again on each anniversary the term is still running.
+   *  Cash only – no kit, no travel share, no retainer schedule: that is the whole difference
+   *  between this letter and the ladder above it. */
   cashCents: number
   /** how long her face is theirs, in weeks from signature. While the term runs no second
    *  advertising letter arrives – one deal at a time, over time and not merely one letter at a
@@ -717,11 +874,13 @@ export interface AdOfferTerms {
    *  shoot week the freeze swallows lapses silently with it (see `shootWeeks`): «мы ни за что не
    *  наказываем» applies to contracts too (plan §4c). */
   termWeeks: number
-  /** ⭐ STEP 2 (§4a): how many SHOOT WEEKS the term asks – the campaign's whole price in time,
-   *  frozen at arrival like every other promise so the letter can state its own obligation and keep
-   *  stating it after a catalogue retune (the `AcademyLetterTerms` rule: numbers, never assembled
-   *  prose). Quiet Hour asks exactly 2; the bigger asks (campaigns 3-4, global 5-6, cap 6/yr) are
-   *  RECORDED in the plan doc only and deliberately not built. */
+  /** ⭐ STEP 2 (§4a): how many SHOOT WEEKS the term asks PER CONTRACT YEAR – the campaign's whole
+   *  price in time, frozen at arrival like every other promise so the letter can state its own
+   *  obligation and keep stating it after a catalogue retune (the `AcademyLetterTerms` rule:
+   *  numbers, never assembled prose). Per year and not per term since P6's multi-year churn: a
+   *  2-year deal asking 2 shoots a year names 4 weeks at signature. On every letter written before
+   *  the portfolio the term was one year, so «per term» and «per year» were the same number and an
+   *  old paper keeps meaning exactly what it said. */
   shootCount: number
   /** ⭐ STEP 2 (§4a): THE NAMED WEEKS – absolute career weeks, written ONCE by the signature
    *  (`acceptOffer`'s ad arm via `chooseShootWeeks`), absent exactly while the letter is unsigned.
@@ -731,6 +890,30 @@ export interface AdOfferTerms {
    *  week's recovery, not the rest week's). A week the college freeze swallows simply lapses –
    *  silently, no penalty, no makeup week. */
   shootWeeks?: number[]
+}
+
+/** ⭐⭐ ONE ROW OF THE PORTFOLIO SHELF (round 29 part four P6/§8), as the sponsors surface reads it
+ *  – a category, filled or empty, with the live deal named. Derived at snapshot time; the SCREEN
+ *  prices nothing and re-derives no gate, which is `KitDealView`'s own rule one type up. */
+export interface AdPortfolioRow {
+  category: AdCategory
+  /** the shelf's word for the trade ("Watches"), or "The capstone" for the crowning row */
+  label: string
+  /** filled = a signed deal is running; open = her band writes here and the slot is empty;
+   *  closed = the category has not opened for her yet (the gate rides in `opensAtRank` /
+   *  `seasonsInTop10`) */
+  state: 'filled' | 'open' | 'closed'
+  /** filled rows: the deal's own frozen facts */
+  brand?: string
+  cashCents?: number
+  termYears?: number
+  untilWeek?: number
+  /** open rows: the cheque her current band would be written at, per contract year */
+  openCashCents?: number
+  /** closed rows: the standing the category opens at (trade categories)... */
+  opensAtRank?: number
+  /** ...or the capstone's tenure – seasons ended inside the top 10, held and needed */
+  seasonsInTop10?: { held: number; needed: number }
 }
 
 /** ⭐⭐⭐ ROUND 27 #6 – WHAT THE NATIONAL SQUAD'S INVITATION STATES, WRITTEN BEFORE THE WEEK IT IS
@@ -909,4 +1092,48 @@ export interface SnapshotAcademy {
   sinceWeek: number
   /** travel the academy has paid for since the last review, in cents. */
   coveredCents: number
+}
+
+// =================================================================================================
+// ⭐⭐ ROUND 29 #3 – THE SHOOT THAT LANDS ON A TOURNAMENT WEEK
+// =================================================================================================
+
+/** The four answers the owner named for a shoot week that is also a playing week – «cancel the
+ *  tournament; cancel or move the shoot; or shoot and play with consequences». Four members and not
+ *  three because his second arm is itself a pair, and a card that offered "cancel or move" behind
+ *  one button would be asking him to make the choice twice.
+ *
+ *  ⚠ NOT PERSISTED. The ANSWER is not stored – three of the four remove the collision from the world
+ *  itself (the entry goes, or the week leaves `shootWeeks`) and the fourth latches its week on
+ *  `WorldState.shootClashAccepted`. So no save carries this union and no migration is owed. */
+export type ShootClashChoice = 'withdraw' | 'move-shoot' | 'cancel-shoot' | 'play-both'
+
+/** Everything the decision card shows, DERIVED at snapshot time (no schema cost) – `KnockPrompt`'s
+ *  own shape and its own rule: NUMBERS, never assembled prose, so a copy edit cannot change what the
+ *  player is told a thing costs, and every figure the card prints is the engine's own.
+ *
+ *  ⚠ `moveToWeek` IS NULL WHEN THE TERM HAS NO ROOM LEFT, and the card must then not offer the move
+ *  at all – a control that cannot act is R10-16's bug. The week is carried as a NUMBER and as its
+ *  LABEL because the shell formats no dates of its own (`weekLabel` is the engine's). */
+export interface ShootClashPrompt {
+  /** the week the collision is on – always the week ahead */
+  week: number
+  weekLabel: string
+  /** whose campaign it is */
+  brand: string
+  /** the tournament's rung label, as the desk writes it */
+  eventLabel: string
+  /** what her entry cost, in cents – what a withdrawal forfeits when the list has closed */
+  entryFeeCents: number
+  /** is the list still open, so a withdrawal hands the fee back? */
+  entryRefunded: boolean
+  /** does the tour's commitment rule bind her to this one (a late withdrawal costs points)? */
+  mandatoryPenalty: boolean
+  /** where a moved shoot would land, or null when the term has no room left */
+  moveToWeek: number | null
+  moveToLabel: string | null
+  /** what cancelling the shoot hands back to the brand, in cents – the shoot's own share of the fee */
+  cancelShootCents: number
+  /** what doing both costs her in condition – the owner's «+1 в день», across the week */
+  conditionCost: number
 }

@@ -110,6 +110,54 @@ talent. A player in worn kit who manages her load must still beat a rich one who
 it: a bench arm with best-kit and worst-kit against identical everything else, and the gap reported
 as a number before any coefficient is kept.**
 
+### The clock counts the weeks she PLAYED – the owner's ruling 5 of 09.08 (shipped round-29 #20)
+
+**«Ну да, занятий же нет, по-моему логично.»** Wear was `week - sinceWeek`, pure elapsed calendar
+weeks, so a fortnight camping wore her shoes exactly as hard as a fortnight of doubles. Round-15 #14
+put the fix in one sentence – *wear should count weeks she trained or played* – and it took four
+askings to build (round-15 #14 → round-16 #8 → the round-29 audit → «вот это важно, да»).
+
+**It is the missing symmetry, not a new mechanic.** `masseurWorksThisWeek` already stands down on a
+booked holiday; the coach's salary already stands down in college. Gear was the odd one out.
+⚠ Deliberately NOT folded into either predicate: round-27 #10 recorded an **accepted asymmetry** in
+this family – the physio retainer bills through the college freeze while the coach's salary does not
+– so *"everything stops together"* is explicitly not the house rule, and one stand-down edit must not
+move three seats.
+
+**Scope, and both edges are guarded in `tests/kit-holiday-wear.test.ts`:**
+
+- a **booked family holiday** stands the clock down. Only that.
+- a **training week is a week she plays** – the ruling's reason is «занятий нет», absence of
+  *sessions*, which a training week fails. A week that merely carries no tournament wears at the
+  normal rate. This is the over-reach the change invites and it has its own red-on-mutation guard.
+- **college is not a rest week** (she trains inside the fork), and **an injury layoff is not one
+  either** – the owner left that half unruled on purpose, and even sketched why it is probably not
+  binary: «травмы бывают долгими и рехаб может быть с вещами, я бы тут еще подумал».
+
+**⚠ Why it needed state at all, when wear is otherwise derived.** The question the model asks is
+*"how many rest weeks fell between the purchase and now"* – a span, not a total – and it cannot be
+read off `world.vacations`, because `prunePlannerBookings` keeps only four trailing weeks: a holiday
+is gone from that array long before the shoes it stood down are replaced. Hence `gearRestWeeks`,
+written at `housekeep` **before** that prune runs and windowed at 52 weeks (~3× the longest gear
+cadence). Optional, so absence means "no rest recorded" = the shipped behaviour, and
+`SAVE_SCHEMA_VERSION` did not move.
+
+**MEASURED, `tools/frozen-key-diff.ts`, preset 0, control = this change reverted in a detached
+worktree** (not the previous commit):
+
+| arm | what moved |
+|---|---|
+| **policy 0** (`grinder`, books no vacation) | **nothing – every key byte-identical.** Empty is the identity element, by construction |
+| **policy 1** (the reasonable parent, books vacations) | `events` and the new `gearRestWeeks`, and **nothing else** |
+
+`rngMain` is byte-identical (`d84bcbf0c481`) in **all four** arms – the wear pause rides in on the
+age, post-draw, and spends nothing on any stream. The frozen MAIN capture (41550 / `e6b0c709`) is
+unmoved. ⚠ And the `events` movement is **two match scorelines** over 156 weeks – same opponents,
+same rounds, same winners – with **no money row and no result changed**: her kit is a shade fresher
+coming off holiday, so a few points inside a match she still won fall the other way. The gear *bill*
+is untouched on purpose – the family's recurring buys are a schedule, not a clock (see `sinceWeek`
+in `engine/equipment.ts`), so a holiday changes the CONDITION of her kit and never its price.
+
 ---
 
 ## 3. What this unlocks for the offers (`offers-and-the-inbox.md`)

@@ -56,6 +56,7 @@ import { worldFunction } from './worldSource'
 import { before, region } from './helpers/source'
 import { resumeMain, type Rng } from '../src/engine/rng'
 import { TIERS } from '../src/engine/season/calendar'
+import { ECONOMY } from '../src/engine/economy'
 import { blockingOverlay } from '../src/composables/blockingOverlay'
 import { multiOffered } from '../src/composables/weekAction'
 import { DEFAULT_PROFILE, STOP_PRECEDENCE, type Offer, type OfferState, type StopReason } from '../src/shared/protocol'
@@ -471,7 +472,15 @@ describe('R2-13 B – the span stops before every blocking event, one reason at 
     expect(world.fundsCents).toBeLessThan(0)
   })
 
-  it('SEASON-END – halts on the wrap-up week, before the off-season', () => {
+  // ⚠⚠ RE-AIMED AT ROUND 29 #6 – "HALTS" BECAME "REPORTS", AND THE OLD CASE COULD NOT TELL THEM
+  // APART. It walked to week 45 and pressed four, which lands ON 49: the wrap was the span's LAST
+  // week, so `weeks === 4` was the full span either way and the case never once exercised the break.
+  // The owner pressed from a week where the wrap falls MID-span and bought two weeks of a six-week
+  // gap – «увидел сообщение о конце года ... а календарь так и остался на 51й неделе». The reason is
+  // still collected and still returned in its `STOP_PRECEDENCE` slot (R11-1); what changed is that
+  // it no longer ends the loop. See `SPAN_REPORTS_ONLY` for why this one member may pass and no
+  // other may.
+  it('SEASON-END – is REPORTED on the wrap-up week and no longer truncates the span', () => {
     const { world, rng } = career('r2-13-season-end')
     walkTo(world, rng, 45)
     world.season = []
@@ -479,6 +488,22 @@ describe('R2-13 B – the span stops before every blocking event, one reason at 
     expect(stops).toEqual(['season-end'])
     expect(world.week % 52, 'the season wrapped on 49, as the loop says').toBe(49)
     expect(weeks).toBe(4)
+  })
+
+  it('⭐⭐ ...and a press that STRADDLES the wrap buys every week it offered (round 29 #6)', () => {
+    // THE DISCRIMINATING CASE the block above could not be. Standing on 46 with a clear calendar,
+    // a six-week press crosses the wrap at 49 and must land on 52 – the first week of the next
+    // season – rather than stopping three weeks in. This is the owner's own scenario: the tail of a
+    // season is the longest quiet gap a career has, which is exactly where the pill appears.
+    const { world, rng } = career('r2-13-season-end-through')
+    walkTo(world, rng, 46)
+    world.season = []
+    const before = world.week
+    const stops = advanceWeeks(world, rng, 6)
+    expect(before % 52, 'the fixture stands where the wrap falls mid-span').toBe(46)
+    expect(world.week - before, 'the year end cut the span short').toBe(6)
+    expect(world.week % 52, 'and it really did cross into the new season').toBe(0)
+    expect(stops, 'the wrap-up is still reported – it just no longer ends the press').toContain('season-end')
   })
 
   it('FORK – halts on the week school ends and the question opens (walked, not injected)', () => {
@@ -540,9 +565,11 @@ describe('R2-13 B – the span stops before every blocking event, one reason at 
   it('⚠ every member of STOP_PRECEDENCE is accounted for above – none may be quietly untested', () => {
     // MECHANICAL, on round11.test.ts's own precedent: the list is hand-written, because derived from
     // STOP_PRECEDENCE it could never catch the member nobody wrote a case for.
+    // ⚠ 'shoot-clash' JOINED IT AT ROUND 29 #3 and its case is the first in block B above.
     const covered: StopReason[] = [
       'birthday', 'injury', 'medical', 'walkover', 'academy', 'offer', 'knock',
       'tournament', 'deadline', 'funds', 'season-end', 'fork', 'retirement', 'ending',
+      'shoot-clash',
     ]
     const advanceCannotRaise: StopReason[] = ['call-up', 'college-league']
     expect([...covered, ...advanceCannotRaise].sort()).toEqual([...STOP_PRECEDENCE].sort())
@@ -667,6 +694,33 @@ describe('R2-13 D – the shell offers the span in exactly the states the engine
     const retirement = quietCareer('gate-retire')
     retirement.world.retirementOffer = { askedWeek: retirement.world.week, seasonIndex: 0, reason: 'age', final: false }
 
+    // ⭐⭐ ROUND 29 #3 – THE SEVENTH REFUSAL. A signed campaign names the week ahead and she is
+    // entered in it: the parent has to choose, and two of his four answers stop being possible once
+    // the week begins. Built the cheapest honest way like every other row here – the point of the
+    // table is that the SEVEN are the seven, not how each one is reached.
+    const clash = quietCareer('gate-shoot-clash')
+    const clashEv = injectEvent(clash.world, { week: clash.world.week + 1, tier: 'local', deadlineWeek: clash.world.week })
+    enterEvent(clash.world, clashEv.id)
+    clash.world.offers.push({
+      id: 'ad-gate-clash',
+      kind: 'ad',
+      week: clash.world.week - 5,
+      deadlineWeek: clash.world.week - 2,
+      state: 'signed',
+      decidedWeek: clash.world.week - 5,
+      fromWeek: clash.world.week - 5,
+      untilWeek: clash.world.week + 40,
+      terms: {
+        // The LEGACY watch paper's own shape (real saves hold letters exactly like it): the fee is
+        // the watches category's anchor cell, the term the old 52-week one.
+        brand: ECONOMY.advertising.categories.watches.houses[0],
+        cashCents: ECONOMY.advertising.categories.watches.feeCentsByBand[0]!,
+        termWeeks: 52,
+        shootCount: 2,
+        shootWeeks: [clash.world.week + 1],
+      },
+    })
+
     return [
       { reason: 'ending', world: ending.world },
       { reason: 'tournament', world: tournament.world },
@@ -674,6 +728,7 @@ describe('R2-13 D – the shell offers the span in exactly the states the engine
       { reason: 'birthday', world: birthday.world },
       { reason: 'fork', world: fork.world },
       { reason: 'retirement', world: retirement.world },
+      { reason: 'shoot-clash', world: clash.world },
     ]
   }
 
@@ -801,7 +856,11 @@ describe('R2-13 D – the shell offers the span in exactly the states the engine
     // refusals out of `advanceRefusal`'s own source and block B's last case accounts for every
     // member of STOP_PRECEDENCE; this states the round's claim about them in one place, including
     // the two the item text names – the letter and the college pauses.
-    expect([...ADVANCE_REFUSALS]).toEqual(['ending', 'tournament', 'knock', 'birthday', 'fork', 'retirement'])
+    // ⚠ RE-AIMED AT ROUND 29 #3 – 'shoot-clash' IS THE SEVENTH REFUSAL, and this line is the one place
+    // the round's claim about the list is stated, so it moves WITH the list rather than being loosened.
+    // Everything the case is about is unchanged: the narrowing of the OFFER rule still does not reach
+    // the engine, and the letter is still a halt and not a refusal.
+    expect([...ADVANCE_REFUSALS]).toEqual(['ending', 'tournament', 'knock', 'birthday', 'fork', 'retirement', 'shoot-clash'])
     expect(ADVANCE_REFUSALS, 'the offer is still a halt and not a refusal').not.toContain('offer')
     for (const collegePause of ['ending', 'birthday', 'fork'] as const) {
       expect(STOP_PRECEDENCE, `the college pause '${collegePause}' still has its slot`).toContain(collegePause)
@@ -911,9 +970,17 @@ describe('R2-13 F – a seventh refusal cannot be added without this file notici
     expect([...head.matchAll(/return \['/g)]).toHaveLength(0)
   })
 
-  it('⚠ the span is four, and it is one number', () => {
-    // `ToWorker`'s `advance` accepts `weeks: 1 | 4`; this constant is what the UI presses with, and a
-    // mismatch would be a runtime refusal at the worker's own validator rather than a type error.
+  // ⚠⚠ RE-AIMED AT ROUND 29 #6 – THE CONSTANT IS A FLOOR NOW, NOT THE SPAN. It read «the span is
+  // four, and it is one number», and its stated reason was the wire: «`ToWorker`'s `advance` accepts
+  // `weeks: 1 | 4`; this constant is what the UI presses with, and a mismatch would be a runtime
+  // refusal». That literal union is exactly what made the pill unable to offer the owner's six-week
+  // gap, so the wire widened to a plain count and this constant stopped being what the UI presses
+  // with (`multiSpanOf` -> `spanWeeksFor` is). What it still IS, and what this now pins, is the
+  // smallest slot worth a second button – below it a "span" is the week button pressed twice.
+  it('⚠ the span FLOOR is four, and it is one number', () => {
     expect(MULTI_WEEK_SPAN).toBe(4)
+    // ...and the shell reads that floor rather than carrying a second copy of it.
+    const action = readFileSync(new URL('../src/composables/weekAction.ts', import.meta.url), 'utf8')
+    expect(action, 'the composable invented its own floor').toContain('weeks >= MULTI_WEEK_SPAN ? weeks : 0')
   })
 })

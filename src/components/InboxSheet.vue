@@ -122,7 +122,27 @@ function subjectOf(o: Offer): string {
     const t = o.terms as TourLetterTerms
     if (t.notice === 'due') return `Required event – ${t.label ?? 'the tour'}`
     if (t.notice === 'penalty') return 'Penalty points recorded'
-    return 'Entries suspended'
+    // ⚠⚠ ROUND 29 #16 – THE SEASON BRIEFING USED TO WEAR THE SUSPENSION LETTER'S TITLE, and it was
+    // not a wording complaint. The owner: «письмо с Заголовком Entries Suspended … мне кажется этот
+    // заголовок сбивает с толку, я его перевожу как "Заявки приостановлены", в то время как письмо
+    // вообще о другом.» (his words are in the .ts comments and in
+    // tests/component/round29-inbox-subjects.test.ts – THIS IS A SCRIPT and not a template, but the
+    // sentence below it IS the subject line, so no Cyrillic goes past this comment.)
+    //
+    // The desk raises FOUR notices (`TourLetterTerms.notice`) and this function branched on TWO of
+    // them and then fell through, so `season` – the top-50 mandatory regime, the quiet yearly
+    // briefing – arrived in the list announcing a suspension that had not happened. That is a FALSE
+    // title, not a confusing one, and it is the exact failure this function's own header forbids:
+    // «a subject line that promised something the sheet does not say would be worse than no subject
+    // line». It restates its own sheet's first sentence now, like every other arm: the paper opens
+    // «Her ranking is inside the top N, so the season ahead is a required one.»
+    if (t.notice === 'season') return t.maxRank ? `Required season – the top ${t.maxRank}` : 'Required season'
+    if (t.notice === 'suspension') return 'Entries suspended'
+    // ⚠ AND A FIFTH NOTICE CANNOT INHERIT A TITLE IN SILENCE AGAIN. `notice` is a closed union, so
+    // TypeScript narrows it to `never` here: adding a value to it without adding an arm above stops
+    // the build rather than borrowing whichever line happened to be last.
+    const unhandled: never = t.notice
+    return unhandled
   }
   // ⭐ ROUND 24 #1 – the scholarship's three subjects. Each one restates its own sheet's first
   // sentence, which is this function's rule; the share is on the line because the share is the whole
@@ -244,21 +264,39 @@ const confirmMessage = computed(() => {
   if (pendingSign.value.kind === 'ad') {
     const t = pendingSign.value.terms as AdOfferTerms
     const until = weekLabel(week.value + Math.max(1, t.termWeeks) - 1)
+    const years = Math.max(1, t.termYears ?? 1)
+    // ⭐ P6 – the fee is PER CONTRACT YEAR on a multi-year paper, and the confirm says when the
+    // rest of it arrives; a one-year letter keeps its original sentence to the word.
+    // ⚠⚠ «TO HER», NOT «TO THE FAMILY», SINCE ROUND 29 PART THREE P3. The owner's ruling of 29.08 is
+    // that the contract is addressed to the daughter at its full value and the parent takes a
+    // manager's fee off it after signing – so a confirm that said the money was «paid to the family»
+    // named the wrong payee, on the one screen where the decision is actually taken. ⚠ The FIGURE is
+    // unchanged and stays the whole cheque: no split may be quoted before the signature, which is the
+    // point of his «контракт на полную сумму ребенку приходит на почту».
+    const feeClause =
+      years === 1
+        ? `A one-time fee of ${formatCents(t.cashCents)}, paid to her now`
+        : `${formatCents(t.cashCents)} a year for ${years} years – the first year's fee paid to her now, the rest on each anniversary`
     const shoots = chooseShootWeeks(
       game.snapshot?.seed ?? '',
       week.value,
       t.termWeeks,
       t.shootCount,
       ECONOMY.advertising.shootLeadWeeks,
-    ).map((w) => weekLabel(w))
+    )
+    // ⚠ THE PHONE RULE (round-20 #3, CLAUDE.md): the capstone names 16 weeks over eight years, and
+    // sixteen dates is a dialog taller than a phone. Six are named – more than any single year
+    // books – and the rest are counted, so the sentence grows by one clause however long the term.
+    const named = shoots.slice(0, 6).map((w) => weekLabel(w))
+    const more = shoots.length - named.length
     const shootLine =
-      shoots.length > 1
-        ? `${shoots.slice(0, -1).join(', ')} and ${shoots[shoots.length - 1]}`
-        : (shoots[0] ?? '')
+      named.length > 1 ? `${named.slice(0, -1).join(', ')} and ${named[named.length - 1]}` : (named[0] ?? '')
     // The clause folds away on a degenerate term with no room for a shoot (`chooseShootWeeks`
     // yields fewer weeks rather than a broken promise) – the shipped catalogue always names them.
-    const shootClause = shootLine ? `, with her shoot weeks on ${shootLine} – working weeks, less rest in them` : ''
-    return `Sign with ${t.brand}? A one-time fee of ${formatCents(t.cashCents)}, paid to the family now – her face in their campaign to ${until}${shootClause}. This cannot be undone.`
+    const shootClause = shootLine
+      ? `, with her shoot weeks on ${shootLine}${more > 0 ? ` and ${more} more across the term` : ''} – working weeks, less rest in them`
+      : ''
+    return `Sign with ${t.brand}? ${feeClause} – her face in their campaign to ${until}${shootClause}. This cannot be undone.`
   }
   const t = pendingSign.value.terms as KitOfferTerms
   const value = formatCents(t.kitAllowanceCents)

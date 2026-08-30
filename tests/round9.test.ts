@@ -93,35 +93,43 @@ function tickToPending(seed: string, mutate?: (w: WorldState) => void): {
 }
 
 // ---------------------------------------------------------------------------
-// R9-1 — savings interest.
+// R9-1 — the savings interest, REMOVED by round 29 #12.
 // ---------------------------------------------------------------------------
-describe('R9-1 — savings interest', () => {
-  it('a positive balance earns round(funds × apyWeekly) as an income event, category interest', () => {
-    const w = createWorld('r9-interest') // middle: $25,000 start
-    const carriedIn = w.fundsCents
-    const expected = Math.round(carriedIn * ECONOMY.savings.apyWeekly)
-    expect(expected).toBeGreaterThanOrEqual(1)
+//
+// ⚠⚠ RE-AIMED, NEVER DELETED (CLAUDE.md's guard-test rule). This block used to prove that a positive
+// balance earned `round(funds x ECONOMY.savings.apyWeekly)` every week as an `income` row under the
+// category 'interest'. THE OWNER, 28.08: «И я предлагал убрать авто начисление % на текущий счёт» –
+// a ruling, settling round 28 #9. So the six arms below now assert the ABSENCE of exactly what they
+// used to assert the presence of, which is the only honest way to retire a feature that a save can
+// still contain: a deleted test would have let the accrual come back silently.
+//
+// ⚠ THE ONE ARM THAT DID NOT CHANGE ITS MEANING is the RNG arm. It proved the step drew nothing;
+// it now proves the same about the step's absence, which is what keeps the frozen MAIN capture
+// (41550 / e6b0c709) provably untouched by this removal rather than assumed to be.
+//
+// ⚠ AND `financeWindow`'s 'interest' CATEGORY IS STILL A CATEGORY, deliberately – every save
+// already written carries rows under it and a screen has to be able to render a career's own past.
+// What must be true from here on is that NO NEW ONE IS EVER WRITTEN.
+describe('R9-1 — the current account no longer pays a wage (round 29 #12)', () => {
+  it('⭐⭐ a positive balance earns NOTHING – no row, no category, no cents', () => {
+    const w = createWorld('r9-interest') // middle: $25,000 start, the balance that used to earn
+    const before = w.fundsCents
+    expect(before, 'the fixture really carries a balance that used to earn').toBeGreaterThan(1_000_00)
     tickWeek(w, rngFromSeed(w.seed))
-    const ev = w.events.find((e) => e.week === 1 && e.category === 'interest')
-    expect(ev).toBeDefined()
-    expect(ev!.type).toBe('income')
-    expect(ev!.text).toBe('Savings interest')
-    expect(ev!.amountCents).toBe(expected)
+    expect(w.events.some((e) => e.category === 'interest')).toBe(false)
+    expect(w.events.some((e) => e.text === 'Savings interest')).toBe(false)
   })
 
-  it('interest is computed on the CARRIED-IN balance, before the week\'s other flows', () => {
-    // Week 2's interest must key off funds at the END of week 1 (post all week-1 flows),
-    // not off any intra-week-2 value.
-    const w = createWorld('r9-interest-carry')
-    const rng = rngFromSeed(w.seed)
-    tickWeek(w, rng)
-    const endOfW1 = w.fundsCents
-    tickWeek(w, rng)
-    const ev = w.events.find((e) => e.week === 2 && e.category === 'interest')
-    expect(ev!.amountCents).toBe(Math.round(endOfW1 * ECONOMY.savings.apyWeekly))
+  it('⭐ and a HUGE balance earns nothing either – the line grew with the balance, which was the point', () => {
+    // His own case at round 21 #12 was a million banked, where the interest was $600/wk – larger
+    // than the parents' contribution. That is precisely the wage this ruling removes.
+    const w = createWorld('r9-interest-rich')
+    w.fundsCents = 1_000_000_00
+    tickWeek(w, rngFromSeed(w.seed))
+    expect(w.events.some((e) => e.category === 'interest')).toBe(false)
   })
 
-  it('a negative or zero balance earns nothing', () => {
+  it('a negative or zero balance earns nothing – unchanged, and now for a simpler reason', () => {
     for (const funds of [-100_00, 0]) {
       const w = createWorld(`r9-interest-neg-${funds}`)
       w.fundsCents = funds
@@ -130,30 +138,25 @@ describe('R9-1 — savings interest', () => {
     }
   })
 
-  it('sub-cent interest is not emitted (round() < 1)', () => {
-    const w = createWorld('r9-interest-tiny')
-    w.fundsCents = 500 // 500¢ × 0.0006 = 0.3 → round 0 → nothing
-    tickWeek(w, rngFromSeed(w.seed))
-    expect(w.events.some((e) => e.category === 'interest')).toBe(false)
-  })
-
-  it('folds into the finance ledger as an income-side category (Money breakdown + bench)', () => {
+  it('⭐⭐ NO new interest lands in the ledger over a walked stretch', () => {
     const w = createWorld('r9-interest-fold')
     const rng = rngFromSeed(w.seed)
-    tickWeek(w, rng)
-    tickWeek(w, rng)
-    const win = financeWindow(w.financeWeeks, 0)
-    expect(win.byCategory.interest ?? 0).toBeGreaterThan(0)
-    // income side, never expense
-    const snapWin = toSnapshot(w).finance.window12w
-    expect(snapWin.incomeCents).toBeGreaterThanOrEqual(snapWin.byCategory.interest ?? 0)
-    // the bench's exhaustive income list carries the new category
+    for (let i = 0; i < 12; i++) tickWeek(w, rng)
+    expect(financeWindow(w.financeWeeks, 0).byCategory.interest ?? 0).toBe(0)
+    expect(toSnapshot(w).finance.window12w.byCategory.interest ?? 0).toBe(0)
+  })
+
+  it("⚠ the CATEGORY survives, because a career's own history has to stay readable", () => {
+    // A save written before this build carries 'interest' rows. Removing the category to tidy up
+    // would make those rows unclassifiable on the Money screen – so the bench's income list, which
+    // is the exhaustive one, still names it.
     expect(INCOME_CATS).toContain('interest')
   })
 
-  it('draws zero RNG: the interest step never touches the main stream', () => {
-    // Identical draw streams whether the balance is huge (interest fires) or negative
-    // (it never does) — the funds-variant arm of B1, re-proven against the new step.
+  it('draws zero RNG: removing the step moved no stream', () => {
+    // The funds-variant arm of B1, re-proven against the step's ABSENCE. Identical draw streams
+    // whether the balance is huge or negative – which it must be, since nothing now reads the
+    // balance at the top of the tick at all.
     const record = (funds: number): string => {
       const w = createWorld('r9-interest-rng')
       w.fundsCents = funds

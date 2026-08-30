@@ -67,15 +67,86 @@ function financeWeekEntry(world: WorldState, week: number): FinanceWeek {
  *  this writes `FinanceWeek.kidShare` and touches neither `byCategory` nor `careerTotals`, which is
  *  what lets a screen print the figure under a balance the figure cannot move.
  *
- *  Cents ACCUMULATE (a week that ever pays two cheques owes her both); the rate is the last one
- *  written, and two cheques in one week are one age and therefore one rate by construction.
+ *  Cents ACCUMULATE (a week that ever pays two cheques owes her both).
+ *
+ *  ⚠⚠ AND THE RATE IS THE WEEK'S EFFECTIVE ONE SINCE ROUND 29 P3, WHICH IS A REAL CHANGE OF MEANING.
+ *  Until the manager's commission there was exactly one rate in the game – her age ramp – so «two
+ *  cheques in one week are one age and therefore one rate by construction» was true and this stored
+ *  the last rate handed in. P3 puts a SECOND rate on the same weeks: a title pays a prize at her ramp
+ *  and a result bonus at `10_000 − managerCommissionBps()`, and on the shipped numbers that is 50%
+ *  beside 85%. Storing either one would print a percentage that is not a percentage of the base
+ *  printed beside it, which is precisely the defect round 29 #10 exists to have ended.
+ *
+ *  So `bps` is now `cents / baseCents` – what she actually kept of everything she was actually paid.
+ *  ⚠ THAT IS THE SAFE DIRECTION OF THE DIVISION AND THE FORBIDDEN ONE IS STILL FORBIDDEN. The rule
+ *  below («never re-derive the base by dividing cents by the rate») is about reconstructing MONEY
+ *  from a rounded figure, and it stands. This derives a LABEL from two figures the till really paid,
+ *  neither of which is invented, and it makes `cents === round(baseCents × bps / 10_000)` true by
+ *  construction instead of by coincidence. On a week with a single rate it reproduces that rate
+ *  exactly for any cheque above a few cents, so nothing about the pre-P3 weeks reads differently.
+ *
+
+ *  ⭐⭐ ROUND 29 #10 – AND SO DOES THE BASE, WHICH IS THE WHOLE OF THAT ITEM. `baseCents` is the
+ *  GROSS of the same cheque, handed in by the site that banked it, and it accumulates in lockstep
+ *  with `cents` for exactly the reason `cents` does: a title week pays a prize, a result bonus and
+ *  sometimes a quarterly retainer, and her «50%» is 50% of all three added up. Summing the two
+ *  together is what keeps `cents === round(baseCents * bps / 10_000)` true across a multi-cheque
+ *  week – ⚠ to within the per-cheque rounding, since each cheque rounds once on its own way in and
+ *  a sum of rounded halves is not the rounded half of a sum. `tests/round29-kid-cut-base.test.ts`
+ *  pins that tolerance at one cent per cheque rather than pretending it is zero.
+ *
+ *  ⚠ NEVER RE-DERIVED BY DIVIDING `cents` BY THE RATE. That division is the arithmetic that
+ *  produced two wrong readings of this item before it was measured, and it re-introduces the penny
+ *  `kidPrizeShareCents`' own comment forbids.
  *
  *  A pure state write on integers already decided: no draw, no clock, so the frozen MAIN capture
  *  cannot notice it – `addEvent`'s own guarantee at the top of this file. */
-export function accrueKidShare(world: WorldState, week: number, cents: number, bps: number): void {
+export function accrueKidShare(
+  world: WorldState,
+  week: number,
+  cents: number,
+  bps: number,
+  baseCents: number,
+): void {
   if (cents <= 0) return
   const entry = financeWeekEntry(world, week)
-  entry.kidShare = { cents: (entry.kidShare?.cents ?? 0) + cents, bps }
+  const summedCents = (entry.kidShare?.cents ?? 0) + cents
+  const summedBase = (entry.kidShare?.baseCents ?? 0) + baseCents
+  entry.kidShare = {
+    cents: summedCents,
+    // ⚠ THE FALLBACK IS THE RATE HANDED IN, not zero and not a guess: a caller that has no base to
+    // offer (none does today, and the parameter is optional-by-convention rather than by type) still
+    // gets an honest rate for its single cheque. See the header for why the division is the safe one.
+    bps: summedBase > 0 ? Math.round((summedCents * 10_000) / summedBase) : bps,
+    baseCents: summedBase,
+  }
+}
+
+/** ⭐⭐ ROUND 29 PART TWO #13 – WHAT THE COACH TOOK OFF THE WEEK'S CHEQUE, parked beside the
+ *  arithmetic in the same way `accrueKidShare` parks hers, and for the MIRROR-IMAGE reason.
+ *
+ *  THE OWNER, 29.08: «вот и можно как раз добавить cut тренера на weekly экране для прозрачности.»
+ *
+ *  ⚠⚠ THIS IS NOT `accrueFinance` EITHER, AND HERE THE DANGER RUNS THE OTHER WAY. Her share was
+ *  never a family expense and must not become one; the coach's share ALREADY IS one –
+ *  `finalizeTournament` writes it through `addEvent` as a `coaching` expense the same tick – so
+ *  booking it again here would double it inside `byCategory`, `expenseCents` and
+ *  `careerTotals.spentCents`. This writes `FinanceWeek.coachCut` and touches neither, which is what
+ *  lets a screen print the figure under a balance the figure has already moved once.
+ *
+ *  ⚠ AND IT IS CARRIED RATHER THAN RE-DERIVED, for a harder reason than hers: `byCategory.coaching`
+ *  is the week's WHOLE coaching bill – the retainer, the travel fare, the facility – so the share
+ *  genuinely cannot be recovered from the ledger once it is folded in. The cents handed in are the
+ *  very `coachShare` variable the wallet was debited by, at the same commit point.
+ *
+ *  Cents ACCUMULATE on `accrueKidShare`'s reasoning; the rate is the finish's own and a week reaches
+ *  `finalizeTournament` for at most one tournament, so there is no second rate to reconcile.
+ *
+ *  A pure state write on integers already decided: no draw, no clock. */
+export function accrueCoachCut(world: WorldState, week: number, cents: number, bps: number): void {
+  if (cents <= 0) return
+  const entry = financeWeekEntry(world, week)
+  entry.coachCut = { cents: (entry.coachCut?.cents ?? 0) + cents, bps }
 }
 
 /** THE SEASON'S IDENTITY: the 0-based index of the 52-week block a week belongs to.
@@ -155,13 +226,29 @@ export function financeSeries(
     // the owner's whole-numbers rule of 26.08 and `shopView`'s `annualRatePct`. No component divides
     // the rate a second time; `FinanceWeekPoint` persists nothing, so this is a display figure born
     // whole. Cents are already integers and stay integers (tests/condition-boundary.test.ts).
+    // ⭐⭐ ROUND 29 PART TWO #13 – AND THE COACH'S CUT RIDES ALONG THE SAME WAY, WITH THE OPPOSITE
+    // RELATIONSHIP TO THE SUM. Hers is outside `byCategory` and therefore outside `expenseCents`;
+    // his is a real `coaching` expense row, so the loop above has ALREADY counted it and this is a
+    // name for a figure the week's spend contains. Neither is added here. Rounded once, here.
+    const coachCut = byWeek.get(week)?.coachCut
     const kidShare = byWeek.get(week)?.kidShare
     out.push({
       week,
       incomeCents,
       expenseCents,
       balanceCents: 0,
-      ...(kidShare ? { kidShareCents: kidShare.cents, kidSharePct: Math.round(kidShare.bps / 100) } : {}),
+      ...(coachCut ? { coachCutCents: coachCut.cents, coachCutPct: Math.round(coachCut.bps / 100) } : {}),
+      ...(kidShare
+        ? {
+            kidShareCents: kidShare.cents,
+            kidSharePct: Math.round(kidShare.bps / 100),
+            // ⭐ ROUND 29 #10 – the gross the percentage is a share OF, straight through and only
+            // when the ledger row actually carries it. A week banked before that field existed has
+            // no base and gets none invented here (see `FinanceWeekKidShare.baseCents`): the recap
+            // reads its absence and prints the older, base-less line.
+            ...(kidShare.baseCents ? { kidShareBaseCents: kidShare.baseCents } : {}),
+          }
+        : {}),
     })
   }
   // Backwards: the last week ends on today's funds, and every earlier week ends on the next week's

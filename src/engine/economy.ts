@@ -12,7 +12,40 @@
 // look-ups or post-draw scalings that leave the draw sequence untouched.
 
 import { rngFromSeed, pickInt, type Rng } from './rng'
-import type { CoachTier, FamilyBackground, InjurySeverity, KitGrade, KitLine, PlayStyle } from '../shared/protocol'
+import type { AdCategory, CoachTier, FamilyBackground, InjurySeverity, KitGrade, KitLine, PlayStyle } from '../shared/protocol'
+
+/** ONE CATEGORY OF THE ADVERTISING PORTFOLIO (round 29 part four P6/P7) – see
+ *  `ECONOMY.advertising.categories` for the shelf itself and the gradient it is priced on. Named
+ *  here rather than inlined so `adTermsForCategory` and the reach bench read one shape.
+ *
+ *  ⚠ THIS REPLACES `AdHouse`, the one-rung shape of the #19/#20 ladder, because the axis moved: a
+ *  rung WAS a house, and a category HOLDS several («игрок устанет смотреть на одно и то же название
+ *  без смены ГОДАМИ» – the owner, 29.08). Letters already written under the old shape persist in
+ *  saves untouched; only the catalogue that writes NEW letters changes shape. */
+export interface AdCategoryDef {
+  /** the shelf's own word for the trade, capitalised for the portfolio surface ("Watches") */
+  label: string
+  /** the opening clause of a house's letter, in the houses' shared voice ("We make watches") */
+  trade: string
+  /** 2–4 fictional houses that take turns writing – the variety P6's churn asks for. Never a
+   *  tennis brand and never anything constructible into a real company. EMPTY for the clothing
+   *  category, whose writer is the live kit deal's own brand (the «двойной программой» ruling). */
+  houses: readonly string[]
+  /** the fee PER CONTRACT YEAR, in cents, per band of `AD_BANDS` (same index), and `null` exactly
+   *  where the category has not opened yet – which is also how «which categories are open at this
+   *  band» is derived, so the gate and the price cannot disagree. */
+  feeCentsByBand: readonly (number | null)[]
+}
+
+/** ONE BAND OF THE GRADIENT (§8) – the professional cut it opens at, and what a year of a deal
+ *  signed inside it asks in shoot weeks. The CHEQUE is deliberately not here: it is the one axis
+ *  that scales, and it scales per category (`AdCategoryDef.feeCentsByBand`). */
+export interface AdBandDef {
+  /** the standing at or inside which this band's cheques are written */
+  maxWtaRank: number
+  /** how many shoot weeks one deal asks per contract year at this band */
+  shootWeeksPerYear: number
+}
 import type { TierId } from './season/types'
 // ⚠ THE SEASON LENGTH COMES FROM THE SHARED DATES LEAF, NOT FROM season/calendar.ts – see the note
 // on `upliftHorizonWeeks` below for the browser crash the old edge caused. `shared/dates.ts` imports
@@ -41,6 +74,19 @@ export interface VacationPackage {
   conditionGain: number
   /** injury-tau multiplier carried for ECONOMY.vacation.buffWeeks weeks; 1 = no carry-over buff */
   buffFactor: number
+  /** ⭐⭐ ROUND 29 #5 -> PART TWO #8, the-shop §3f – A PACKAGE THE SHELF CAN MAKE FREE. It used to
+   *  say «ask before offering me» (the row existed only for a family with a delivered yacht); his
+   *  part-two #8 put the row on EVERY family's sheet at a real charter price – «можно просто на
+   *  постоянку добавить в ленту сначала с реальной стоимостью, а после покупки яхты это станет
+   *  бесплатным» – so the flag now zeroes the QUOTE instead of hiding the ROW. Absent on the six
+   *  the planner has always carried, which is why it is optional rather than `false` everywhere.
+   *
+   *  ⚠ THE GRANT IS STILL THE SHOP'S (`ShopView.vacationIds` / `grantedVacationIds`) AND THE PRICE
+   *  IS `vacationPriceCents`'s: nothing here knows what grants what, and every quote – the sheet's,
+   *  the recommendation's and the booking's – goes through that one function with the granted list
+   *  in hand, so a screen and the engine cannot price the same week two ways. A screen that forgot
+   *  the list can only OVERSTATE a price; the booking itself always re-prices off the world. */
+  freeOnceGranted?: boolean
 }
 
 export interface GearLine {
@@ -967,6 +1013,59 @@ export const ECONOMY = {
        *  rather than swept, and travel is the biggest line in the game, so it is the first knob to
        *  put through econ-bench when the ladder has run for a while. */
       travelShare: 0.25,
+
+      // ===============================================================================================
+      // ⭐⭐ ROUND 29 PART TWO #5 – THE CASH THIS RUNG NEVER HAD, AND IT IS THE OWNER'S RULING ON A
+      // DEFECT THE SPEC ITSELF PREDICTED AND NOBODY EVER TOOK TO HIM.
+      // ===============================================================================================
+      //
+      // HIS WORDS: «мировые топы должны иметь все возможности достучаться до топовой спортсменки.»
+      //
+      // WHAT WAS WRONG. `global` is sorted ABOVE `tour` – the chain is national 350 > tour 200 >
+      // global 87 > premium 50 > icon 10 – and it paid LESS: the same $5,000 of kit and the same 25%
+      // of the fare, but NO retainer against tour's $6,000 a season and NO result bonus against
+      // tour's 20% of every W75+ cheque, while locking THREE seasons against two. A parent who signed
+      // the stronger-looking letter on sight was strictly worse off, which is the exact inversion
+      // `windowLadder`'s own header promises cannot happen («signing on sight is always safe and
+      // waiting always optional»). `tools/sponsor-ladder-reach.ts` prints it as a ⚠ line, and
+      // `tests/round29p2-ladder-monotone.test.ts` is now the guard that stops it recurring – written
+      // as a property over the WHOLE ladder rather than as a case about this rung.
+      //
+      // ⚠⚠ AND IT WAS PREDICTED AT DESIGN TIME. `docs/specs/act2-pro-tour.md` §7, verbatim: «`tour`'s
+      // WTA ≤ 200 sits deliberately BELOW global's 31 in strength while above it in kind, which is
+      // the one thing to resolve when it is built … an owner's call at build time, not now.» The call
+      // was never taken and the rungs shipped side by side. This is that call, finally made, and the
+      // spec is amended where it stood open.
+      //
+      // ⚠ THE FIX IS THE TERMS AND NOT THE GATE, on his instruction. Nothing about who Play Beyond
+      // writes to moves by a single rank; what moves is what the letter is worth when it comes.
+      /** ⭐ THE RETAINER, AND IT IS READ OFF THE SPEC'S OWN BAND RATHER THAN PICKED. §7 gives the
+       *  professional retainer a «~$3–8k/yr» band and `tour` takes the MIDDLE of it ($1,500 a
+       *  quarter = $6,000 a season). This rung takes the TOP of the same band – $2,000 a quarter =
+       *  $8,000 a season – which is the smallest honest number that is strictly better than the rung
+       *  below rather than merely equal to it.
+       *
+       *  ⚠ STRICTLY BETTER AND NOT MERELY EQUAL, ON PURPOSE. Equal money would still leave this rung
+       *  the worse deal, because it locks a THIRD season and a running deal turns the post away – so
+       *  a parent who signed it would give up a winter of letters for nothing. (Round 29 part two
+       *  #12 narrows that cost: a strictly stronger rung may now write while a deal runs. It does not
+       *  remove it – `premium` may write over this deal, `tour` may not.)
+       *
+       *  ⚠ AND IT STAYS INSIDE THE CHAIN ABOVE IT: `premium`'s $7,500 a quarter is still §7's
+       *  «retainer ×5–10» of `tour`, which is the relationship that clause names, and $2,000 sits
+       *  between the two without disturbing either. */
+      retainerCents: 2_000_00,
+      /** ⭐ THE RESULT BONUS, AND HERE THE HONEST NUMBER IS EXACTLY TOUR'S. The share ladder is
+       *  20% → 25% → 30% across tour → premium → icon and the reach is w75 → w50 → w50; inserting a
+       *  fourth value between 20 and 25 would be inventing a number to fill a gap the design does not
+       *  have. Taking tour's pair verbatim keeps the whole chain non-decreasing (20 / 20 / 25 / 30,
+       *  w75 / w75 / w50 / w50) and adds nothing to retune.
+       *
+       *  ⚠ WHY THE MONEY LADDER STEPS ON THE RETAINER AND NOT HERE. A retainer is a promise about
+       *  HER; a result bonus is a share of a cheque she has to go and win. This rung's own step up
+       *  over `tour` is a longer, safer term, so the term-shaped money is where its step belongs. */
+      bonusShare: 0.2,
+      bonusFromTier: 'w75' as TierId,
     },
 
     // --- THE PROFESSIONAL RUNGS: tour / premium / icon (W3-ACT2, act2-pro-tour.md section 7) -----
@@ -1289,11 +1388,19 @@ export const ECONOMY = {
     } as Record<KitGrade, Record<KitLine, { label: string; blurb: string }>>,
   },
 
-  // R9-1: weekly deterministic savings interest on a POSITIVE balance, credited on the
-  // carried-in funds as each week opens (before any of the week's flows). ~3.1%/yr – a
-  // realistic family savings account. round(fundsCents × apyWeekly), emitted only when
-  // >= 1 cent as an `income` event under the dedicated 'interest' category. Zero RNG.
-  savings: { apyWeekly: 0.0006 },
+  // ⭐⭐⭐ R9-1's `savings: { apyWeekly: 0.0006 }` STOOD HERE AND ROUND 29 #12 DELETED IT.
+  //
+  // THE OWNER, 28.08: «И я предлагал убрать авто начисление % на текущий счёт.» It paid ~3.1%/yr on
+  // the current account every week, automatically and silently, and it grew with the balance.
+  //
+  // ⚠ DELETED RATHER THAN LEFT AT ZERO, deliberately. A live balance constant that nothing charges
+  // is a decision nobody can find – the exact failure this file's own header exists to prevent – and
+  // the next reader would wire it back up believing it was a tuning knob. The rate is recoverable
+  // from git and from `docs/rounds/round-29.md`; it is not recoverable from a dead field.
+  //
+  // ⚠ WHERE MONEY EARNS NOW: `shop.catalogue` below – the deposit at +2% a season and the index fund
+  // at +7%, both of which round 29 #11 gave top-ups in the same wave. Yield became a decision the
+  // parent makes instead of a wage the wallet pays.
 
   // =================================================================================================
   // HER SHARE OF THE PRIZE MONEY (round-23 #18) – the one income line the family stops keeping
@@ -1371,7 +1478,40 @@ export const ECONOMY = {
   } as Record<'coach' | 'masseur', { titleBps: number; finalBps: number }>,
 
   // =================================================================================================
-  // THE ADVERTISING DEAL (round 24 item 2, docs/plans/the-face-and-the-court.md §6 STEPS 1-2)
+  // ⭐⭐⭐ THE MANAGER'S COMMISSION – round 29 part three P3 (owner, 29.08)
+  // =================================================================================================
+  //
+  // HIS RULING, VERBATIM: «как менеджер может от этого что-то получать в свою очередь. 10-20%
+  // например… контракт на полную сумму ребенку приходит на почту, после подписания видим на счету
+  // уже родительский кат.» Its context: it was put to him that taking half of a cheque paid for her
+  // face reads as the parent living off the daughter, and he answered «полностью согласен».
+  //
+  // ⚠⚠ WHAT IT REPLACES, AND THE HEADLINE UNDERSTATED IT. Until this ruling `bankSponsorCheque`
+  // split sponsor cash by HER PRIZE RAMP – so the family kept 100% before her eighteenth, 90% at
+  // 18 and 50% only from 26. Measured over 72 careers x 780 weeks the parent actually kept **63.1%
+  // of gross sponsor money**, so this is not «50% -> 15%», it is **63.1% -> 15%**.
+  //
+  // ⚠ SPONSOR CHEQUES ONLY. Prize money's own 50/50 ramp is his standing ruling of 23 #18 and is
+  // untouched: `finalizeTournament` still splits the tournament's cheque by `kidPrizeShareBps`, and
+  // the staff shares one block up still come off the gross prize. This constant is read at exactly
+  // one place in the engine, `bankSponsorCheque`, and by the two screens that describe it.
+  //
+  // ⚠ NO AGE GATE, DELIBERATELY, and it is the ruling rather than an omission: «контракт на полную
+  // сумму ребенку» is addressed to HER at any age, so the commission is flat from the first cheque a
+  // brand ever writes. In practice the professional rungs open at WTA #200 and the advertising
+  // ladder at eighteen, so a pre-eighteen sponsor cheque is close to unreachable – but where one
+  // exists, the money is hers minus the fee, not the family's whole.
+  managerCommission: {
+    /** ⚠ PROVISIONAL AND HIS TO MOVE – the midpoint of his own «10-20% например», picked because he
+     *  named a band and not a number. It is ONE constant and every sentence on every screen reads
+     *  it, so moving it is one edit here. The bench (`tools/sponsor-ladder-reach.ts --commission N`)
+     *  overrides it for a run so the band can be swept without a code change. */
+    bps: 1500,
+  },
+
+  // =================================================================================================
+  // THE ADVERTISING LADDER (round 24 item 2, docs/plans/the-face-and-the-court.md §6 STEPS 1-2;
+  // the three rungs are round 29 part two #19/#20)
   // =================================================================================================
   //
   // THE OWNER: «Рекламные контракты будем добавлять какие-то?» – and the plan's answer is that the
@@ -1381,11 +1521,17 @@ export const ECONOMY = {
   // TIME (the shoot weeks below, §4a) – and the build stops there on the plan's own order: fame
   // (step 3+) is paused upstream with the private life.
   //
-  // ⚠ WHERE THE GATE SITS IS THE PLAN'S OWN MEASUREMENT (§3, the owner's two careers): at Ines'
+  // ⚠ WHERE THE GATE SITS WAS THE PLAN'S OWN MEASUREMENT (§3, the owner's two careers): at Ines'
   // level (24, interest $251,439 a year against $220,000 of ALL outgoings) an advertising cheque is
   // noise; at Alice's (18, interest $3,235 against $64,000 of outgoings) it is real money against a
-  // real budget. So the deal belongs EARLY – mid-career, where the budget is still tight – which
+  // real budget. So the deal belonged EARLY – mid-career, where the budget is still tight – which
   // inverts the instinct to gate it on the top ten.
+  //
+  // ⚠⚠ AND ROUND 29 PART TWO #20 IS THE OTHER HALF OF THAT ARGUMENT, WHICH NOBODY EVER BUILT. §3 is
+  // right that a FIXED cheque decays into noise as she climbs; the conclusion it drew – so gate it
+  // low and let it decay – only followed because there was one row. A rung sized on the stage it
+  // opens for does not decay, and the ladder is on `houses` below, with the owner's own words, the
+  // sourced comparison it was checked against, and the measured shares it is built from.
   advertising: {
     /** The age the owner scoped advertising mechanics to («какие у нас могут быть механики этих
      *  контрактов дополнительные от 18+ лет начиная и дальше»). Eighteen is already the engine's
@@ -1393,55 +1539,244 @@ export const ECONOMY = {
      *  over by 18.92 for every birth month, the junior rungs shut – so the boundary exists and this
      *  reads the same clock (`kidAgeYears`, the one-clock ruling of 09.08). */
     fromAgeYears: 18,
-    /** THE RESULTS BAR: a counting W standing inside the world's top 200. Two hundred is the number
-     *  the game already uses for "the first professional rung that pays cash" – the tour rung's
-     *  `maxWtaRank` (Baseline Athletic, the first retainer) – so a non-endemic brand notices her
-     *  exactly when the first endemic cash does: a measured boundary, not an invented one. Its OWN
-     *  constant rather than a read of `sponsorship.tour`, the `appearanceFromTier` instinct: a kit
-     *  retune must never silently retune advertising.
+    /** ⭐⭐⭐ ROUND 29 PART TWO #19/#20 – THE LADDER, WHICH IS WHAT THIS CATALOGUE DID NOT HAVE.
      *
-     *  ⚠ WHY NOT TOP-100 OR TIGHTER: `development.ageCurve` is calibrated «first points 17-18,
-     *  top-100 about 4.5 years later» – a top-100 bar would first clear at ~22, Ines territory,
-     *  where §3 measured the cheque as noise. Top-200 is crossed on the way up, at 18-20, which is
-     *  Alice's stage – the years the plan says the deal is worth building for. And there is
-     *  deliberately no UPPER cutoff: a top-10 girl still qualifies, her cheque is simply noise, which
-     *  is §3's claim and not a bug. The `wtaRanked` guard is the ladder's own: everybody without a
-     *  counting W result ties at the floor of that table, so a position there is not a standing. */
-    maxWtaRank: 200,
-    /** THE FEE, in cents, once, on signature. Sized against the plan's §3 numbers: about 31% of
-     *  Alice's-stage ANNUAL outgoings ($64,000) – felt, not budget-solving; more than three times
-     *  the tour rung's cash for a season ($1,500/qtr), because «cash, and a lot of it» is the whole
-     *  difference between this letter and the kit ladder at her rung; and under the premium rung's
-     *  $30,000-a-year retainer, so mid-career the endemic ladder still out-earns one photograph.
-     *  At Ines' stage it is 8% of her interest alone – noise, exactly as §3 predicts. Its measured
-     *  counterweight is the shoot weeks below: two weeks a term that recover like travel weeks,
-     *  benched in docs/specs/ad-shoot-recovery-2026-08.md. */
-    cashCents: 20_000_00,
-    /** Twelve months of her face, from the week the paper is signed. While the term runs no second
-     *  advertising letter arrives – one deal at a time, the plan's §4.1 – and it survives a college
-     *  enrolment by simply running out on its own clock (plan §4c: no penalty, ever; a shoot week
-     *  the freeze swallows lapses silently with it). */
-    termWeeks: 52,
-    /** ⭐ STEP 2 (§4a, owner ruling 22.08: «съемки должны быть иногда и это надо как-то прописывать
-     *  и отражать потом в свободных неделях, соответственно и восстановления на тех неделях должно
-     *  быть чуть меньше», sized and approved: «утверждаю, для начала точно ок») – HOW MANY SHOOT
-     *  WEEKS the term asks. Exactly two for Quiet Hour, IN-SEASON by construction (§5.2's own
-     *  answer: an off-season cost is free money wearing a cost's clothes), named in the letter at
-     *  signature so the player plans the season around them. Frozen onto `AdOfferTerms.shootCount`
-     *  at arrival. The bigger asks – campaigns 3-4, global houses 5-6, a cap of 6 a year – are
-     *  RECORDED in the plan doc only and deliberately not built: this catalogue has one house.
+     *  HIS TWO QUESTIONS, and the second one invited correction: «я не увидел наш список спонсоров
+     *  для съемок и прочего, не спортивных. С ними что и на каких уровнях и что дают… Хочу увидеть
+     *  их список и что дают.» and «предлагать контракт за 20к долларов на год для 100 и выше ракетки
+     *  мира выглядит весьма сомнительно, как мне кажется, поправь меня, если я ошибаюсь.»
      *
-     *  The COST of a shoot week is not a number here on purpose: it is a SHAPE, the owner's own
-     *  design – the week recovers like a travel week (`condition.matchWeekRecoveryBase`) rather
-     *  than a rest week (`condition.recoveryBase` + the slider). One modifier on an existing weekly
-     *  figure, no second calendar, no blocking: see `accrueCondition`. */
-    shootWeeksPerTerm: 2,
+     *  ⚠ HE IS RIGHT, AND THE MEASUREMENT SAYS SO MORE SHARPLY THAN HE DID – see
+     *  `docs/research/off-court-money.md`, which reads the WTA's own prize-money list and the Forbes
+     *  2025 earnings table rather than quoting either at second hand. In the real sport off-court
+     *  money is not flat and it is not ordered by rank: the woman with the second-largest endorsement
+     *  income in 2025 was the THIRTIETH-largest prize-money earner ($21M off court against $1.6M on
+     *  it), and no non-endemic contract value has ever been published for anybody outside the top 25
+     *  at all. What was shipped here was ONE house, $20,000, with a floor at WTA #200 and **no
+     *  ceiling of any kind** – so the world #21 in his own save was offered exactly what the #199 is.
+     *
+     *  ⭐ AND THE $20,000 ITSELF SURVIVES. The research does not contradict it at the rung it was
+     *  written for; what it contradicts is the same cheque still arriving eleven rungs later. So this
+     *  is a LADDER and not a retune: the bottom row is the shipped deal, unchanged to the cent.
+     *
+     *  THE SIZING PRINCIPLE IS THE ONE THE SHIPPED COMMENT ALREADY STATED – a rung is a SHARE OF THE
+     *  OUTGOINGS OF THE STAGE IT OPENS FOR, not an absolute sum – with one correction it needed. The
+     *  old comment sized $20,000 as «about 31% of Alice's-stage ANNUAL outgoings ($64,000)», read
+     *  off ONE career. Measured across 108 careers x 780 weeks (`tools/sponsor-ladder-reach.ts`) the
+     *  median annual outgoings of a season spent in that band are **$86,474**, so the shipped rung's
+     *  own realised share is **23.1%** – and THAT is the rule, because the anchor sets it and the
+     *  rungs above it obey. Nothing here was picked and then justified:
+     *
+     *    band          median annual outgoings   this catalogue   realised share   $ per shoot week
+     *    WTA 51-200           $86,474                 $20,000           23.1%           $10,000
+     *    WTA 11-50           $173,210                 $40,000           23.1%           $10,000
+     *    WTA 1-10            $240,343                 $55,000           22.9%            $9,167
+     *
+     *  ⚠⚠ THE DENOMINATOR MOVED UNDER THIS VERY WAVE AND THE FIRST SIZING WAS TAKEN AGAINST THE OLD
+     *  ONE – recorded because it is the more useful fact. Measured before items #5 and #12 the three
+     *  medians were $100,435 / $254,972 / $348,855; after them they are the figures above, because a
+     *  career that can now be written to by `premium` and `icon` mid-contract gets half to three
+     *  quarters of its FARES paid and more of its kit, so what a season costs her falls. The fees are
+     *  sized against the world as it now is, and the run that produced these numbers is the one in
+     *  the ledger. ⭐ The anchor is unchanged either way: $20,000 is what it is, and the two rungs
+     *  above it hold ITS realised share rather than a round number picked first.
+     *
+     *  ⚠ THE PER-SHOOT COLUMN IS THE CROSS-CHECK AND IT AGREES, WHICH IS WHY IT IS PRINTED. Sized
+     *  the other way round – what a week of her season is worth – the three rungs come out at
+     *  $10,000, $10,000 and $9,167 a shoot week. Two independent readings of the same catalogue
+     *  landing within 8% of each other is what makes this a rule rather than three numbers.
+     *
+     *  ⚠ A CONSTANT SHARE IS A DECISION AND IT OVERRULES §3 OF THE PLAN, WHICH SAID THIS MECHANIC
+     *  ONLY MATTERS EARLY. That was the right reading of a catalogue with one row: a fixed cheque
+     *  does decay into noise as she climbs. A rung sized on the stage it opens for cannot – it is the
+     *  same fifth of the same budget at every stage, which is what «felt, not budget-solving» has to
+     *  mean once there is more than one rung. It is deliberately NOT the real curve, which is convex
+     *  to the point of absurdity (Gauff: $25M off court against $8M on it); a game that copied that
+     *  would make the top rung solve the endgame, and the endgame is not short of money.
+     *
+     *  ⚠ AND THE ENDEMIC LADDER STILL OUT-EARNS THE PHOTOGRAPH AT EVERY PROFESSIONAL RUNG, which is
+     *  the relationship the shipped comment named and this one keeps: $40,000 against `premium`'s
+     *  $30,000 retainer + $15,000 appearance fee + $8,000 of kit + half the fares + 25% bonuses;
+     *  $55,000 against `icon`'s $150,000 retainer + $40,000 appearance fees + 30% bonuses.
+     *
+     *  ⚠⚠ THE GATES ARE THE KIT LADDER'S OWN PROFESSIONAL CUTS, READ AND NOT SHARED. 200 / 50 / 10
+     *  are `tour` / `premium` / `icon`'s `maxWtaRank`, which is the shipped rung's own derivation
+     *  («a non-endemic brand notices her exactly when the first endemic cash does») extended upward
+     *  with the same argument. They are written out here rather than imported, exactly as the
+     *  original 200 was and for the same reason: a kit retune must never silently retune advertising.
+     *  ⭐ And they are REACHED – `tools/sponsor-ladder-reach.ts` measures 45% of careers ever inside
+     *  WTA #50 and 29% ever inside #10, so neither new rung is a row nobody sees.
+     *
+     *  ⚠⚠ THE SHOOT WEEKS ARE THE PLAN'S RECORDED LADDER, AND THEY ARE WHY IT STOPS AT THREE ROWS.
+     *  `the-face-and-the-court.md` §4a-1 wrote down «bigger campaigns would carry 3-4 shoot weeks, a
+     *  global house 5-6, and the sum of live deals must never exceed 6 shoot weeks a year». Taking
+     *  the top of each band – 2 / 4 / 6 – spends the whole annual allowance on the top rung, so the
+     *  cap is STRUCTURAL rather than a rule somebody has to remember: one deal at a time
+     *  (`adSpokenFor`), every term exactly one year (`termWeeks: 52`), so the most she can ever owe
+     *  in a year is the biggest single house's six. A fourth rung would have nothing left to ask for.
+     *
+     *  ⭐ WHAT THE BIGGEST HOUSE ACTUALLY COSTS HER, since round 29 #3 made a shoot on a tournament
+     *  week a four-way decision: SIX of her 49 in-season weeks, 12% of the playing year, each
+     *  recovering like a travel week instead of a rest week (measured at -9 condition per deficit
+     *  shoot week, `docs/specs/ad-shoot-recovery-2026-08.md`) and each one a week she must either
+     *  keep clear or pay `clashConditionPerDay` x 7 to play through.
+     *
+     *  ⚠⚠⚠ ROUND 29 PART FOUR P6/§6–§8 SUPERSEDES THE THREE-ROW LADDER ABOVE, BY THE OWNER'S OWN
+     *  CALIBRATION, and the history stays because it explains what the anchor is. His three moves,
+     *  in order (docs/research/endorsement-tiers-and-academy-money.md §6–§8):
+     *   1. «Это доход у топ-100, у топ-50 точно больше» – Bublik's $1–2M/yr portfolio is a TOP-100
+     *      figure, so the bands LIFT and a #100 gate joins the kit ladder's own 200/50/10;
+     *   2. the portfolio is CATEGORIES – «одежда и обувь · часы · автомобили · гидратация и
+     *      напитки», one live deal per category, kit brands writing ad campaigns as a second
+     *      programme («Можно даже текущих использовать двойной программой»);
+     *   3. the GRADIENT – «на каждой ступени может быть до 4-6 одновременно, только с разными
+     *      чеками»: the portfolio SHAPE is constant at every band and the CHEQUE is the only axis
+     *      that scales.
+     *  The 23.1%-share sizing rule above therefore holds for exactly ONE cell of the new table –
+     *  the watches fee at the ≤200 band, $20,000 unchanged to the cent, the anchor everything else
+     *  was once derived from – and the cells above it are HIS band ranges (§8, movable, his), not
+     *  shares: at real scale off-court money is 32–99% of an annual income (§4c), so no share of
+     *  outgoings can reach his line and the resize is a chosen point on the measured dial. */
+    /** ⭐⭐⭐ THE GRADIENT'S BANDS (round 29 part four, §8 – his final shape), weakest-first like
+     *  every ladder in this file, so an index comparison is a band comparison everywhere.
+     *
+     *  ⚠⚠ THE GATES ARE THE KIT LADDER'S OWN PROFESSIONAL CUTS PLUS HIS OWN #100. 200 / 50 / 10 are
+     *  `tour` / `premium` / `icon`'s `maxWtaRank`, read and not imported (the shipped rule: a kit
+     *  retune must never silently retune advertising); 100 is the Bublik line, P11 verbatim: «Это
+     *  доход у топ-100, у топ-50 точно больше» – the one band the kit ladder never had, added
+     *  because his data point sits exactly on it.
+     *
+     *  ⚠ THE SHOOT ASK RISES WITH THE BAND AND THE WINTER NOW CARRIES IT (P9, §6: «shoot capacity
+     *  rises because the winter now carries them»). One week per deal-year at the two lower bands,
+     *  two at the two upper – so a full ≤10 shelf of six deals asks 12 weeks a year against a
+     *  6-week winter, and the spill into the season is Zheng's own complaint made mechanical:
+     *  «слишком много съёмок и никакого отпуска». The overflow meets the round-29 #3 four-way
+     *  clash exactly as an in-season shoot always did. */
+    bands: [
+      { maxWtaRank: 200, shootWeeksPerYear: 1 },
+      { maxWtaRank: 100, shootWeeksPerYear: 1 },
+      { maxWtaRank: 50, shootWeeksPerYear: 2 },
+      { maxWtaRank: 10, shootWeeksPerYear: 2 },
+    ] as readonly AdBandDef[],
+    /** ⭐⭐⭐ THE PORTFOLIO'S CATEGORIES (P7, his own list mapped onto ours) – the shelf the player
+     *  sees, one live deal per category, the cheque per band in each row.
+     *
+     *  THE FEES ARE §8'S TABLE, CELL BY CELL, and land inside his ranges by construction (the
+     *  in-band test pins every cell): ≤200 $5k–20k · ≤100 $100k–500k · ≤50 $300k–1M · ≤10
+     *  $1M–2.5M. Portfolio-per-year at each band, all categories filled: $45k · $1.1M · $2.6M ·
+     *  $9.2M – against his own column «$30k–80k · ~$1–2M (Bublik) · ~$2.5–4M · ~$6–10M with kit».
+     *
+     *  ⭐ THE ANCHOR SURVIVES A SECOND RESIZE UNMOVED: watches at ≤200 is the shipped $20,000 to
+     *  the cent – the one cell the 23.1%-share rule still governs, and the cell every earlier
+     *  number in this file's history was derived from.
+     *
+     *  ⚠ A `null` CELL IS THE GATE: the category has not opened at that band. Watches, cars,
+     *  drinks and the kit brand's poster campaign open with the first professional cash (≤200 – «A
+     *  #180 holds a watch deal, a drinks deal, a local car dealer: small money, same shelf», §8);
+     *  the airline waits for the top 100; fragrance is the icon-band category (§7: «watches early,
+     *  cars at top-100, fragrance at top-10»). Derived, never a second constant, so the gate and
+     *  the price cannot disagree.
+     *
+     *  ⚠ 2–4 HOUSES PER CATEGORY IS P6'S CHURN MADE VISIBLE – terms run 1–3 years and a house may
+     *  not write twice running at the top band (`pickAdHouse`), so the shelf shows different names
+     *  across a reign: «игрок устанет смотреть на одно и то же название без смены ГОДАМИ». Every
+     *  name is fictional and constructible into no real company or trademark.
+     *
+     *  ⚠ CLOTHING HAS NO HOUSES OF ITS OWN, BY DESIGN («двойной программой»): the writer is the
+     *  live kit deal's brand – Baseline Athletic paying for her racket bag AND a poster campaign
+     *  is two deals, one brand, separate letters, separate money. No kit deal, no clothing
+     *  campaign; the kit paper stays entirely the kit ladder's. */
+    categories: {
+      watches: {
+        label: 'Watches',
+        trade: 'We make watches',
+        houses: ['Quiet Hour', 'Halfpast', 'Silver Alder'],
+        feeCentsByBand: [20_000_00, 200_000_00, 500_000_00, 1_200_000_00],
+      },
+      cars: {
+        label: 'Cars',
+        trade: 'We make cars',
+        houses: ['Northgate Motors', 'Caldera Auto', 'Faro Automobiles'],
+        feeCentsByBand: [12_000_00, 400_000_00, 800_000_00, 2_000_000_00],
+      },
+      drinks: {
+        label: 'Drinks',
+        trade: 'We make drinks',
+        houses: ['Cold Current', 'Verdel Springs', 'Ninefold'],
+        feeCentsByBand: [8_000_00, 150_000_00, 400_000_00, 1_000_000_00],
+      },
+      clothing: {
+        label: 'Clothing',
+        trade: 'We make her kit',
+        houses: [],
+        feeCentsByBand: [5_000_00, 100_000_00, 300_000_00, 1_000_000_00],
+      },
+      airline: {
+        label: 'Airline',
+        trade: 'We fly people across the world',
+        houses: ['Northmere Air', 'Corvess Airways', 'Palewing Atlantic'],
+        feeCentsByBand: [null, 250_000_00, 600_000_00, 1_500_000_00],
+      },
+      fragrance: {
+        label: 'Fragrance',
+        trade: 'We make perfume',
+        houses: ['Rivelle', 'Maison Ondelle', 'Blanche & Noir'],
+        feeCentsByBand: [null, null, null, 2_500_000_00],
+      },
+    } as Record<Exclude<AdCategory, 'capstone'>, AdCategoryDef>,
+    /** ⭐⭐⭐ THE CAPSTONE (P6, approved twice – §6 «D … очень хорошо» and §8's own last row): the
+     *  one kit-shaped deal on top of the whole shelf. His anchor sentence, verbatim: «Федерер
+     *  получал контракт с Nike на 10+ миллионов, это 1-2млн для родителя.»
+     *
+     *  ⚠⚠ THE GATE IS TENURE, NOT A RANK READ TODAY: four seasons ENDED inside the world's top 10,
+     *  counted off `seasonHistory[].byTrack.wta.endRank` – banked once a season at the wrap,
+     *  never pruned, already persisted, so the gate is a fold over an existing field and NO schema
+     *  moves (65 stays). Measured before it was picked: 4+ seasons in the top 10 is the top ~10%
+     *  of careers (7 of 72, the round-29 reachability run), which is what a career-crowning deal
+     *  should cost.
+     *
+     *  ⚠ KIT-SHAPED MEANS THE SHAPE, SAID PRECISELY: eight years, one at a time, the writer is the
+     *  kit house that already dresses her (the double programme at icon scale – his Federer/Nike
+     *  sentence is a kit brand paying for a FACE), falling back to the icon rung's own brand when
+     *  she happens to be between kit deals so the gate he ruled is the only gate there is. It pays
+     *  cash for her face through `bankSponsorCheque` like every ad deal – NOT kit, fares or
+     *  bonuses – and its year-fee lands each anniversary (`payAdAnniversaries`). */
+    capstone: {
+      /** seasons that must have ENDED inside the top 10 before the letter is written */
+      seasonsInTop10: 4,
+      /** the fee per contract year – his $10M sentence, exactly */
+      cashCents: 10_000_000_00,
+      termYears: 8,
+      shootWeeksPerYear: 2,
+    },
+    /** 1–3 contract years for every category deal – the research's own law for non-endemic paper
+     *  («kit deals run 8–10 years while non-endemic deals run 1–3», off-court-money.md), drawn per
+     *  letter on the letter's own sub-stream. The churn is the variety: short paper is what makes
+     *  the 2–4 houses per category actually rotate. */
+    termYearsMax: 3,
     /** The earliest a shoot may land after the signature, in weeks – the studio is booked about a
      *  month out, and it is the same courtesy the letter's own decide weeks extend: a cost the
      *  player can SEE coming is a plan, a cost that lands the week he agreed to it is a trap. Engine
      *  mechanics of the choice, not a promise on the paper – so it is read at signature, not frozen
      *  into terms. */
     shootLeadWeeks: 4,
+    /** ⭐⭐ ROUND 29 #3 – WHAT SHOOTING AND PLAYING IN THE SAME WEEK COSTS HER, PER DAY OF THAT WEEK.
+     *
+     *  THE OWNER'S OWN FIGURE, verbatim: «+1 в день, т.к. съемка занимает не один час, то нагрузка
+     *  будет мощной на всю неделю». So it is one condition point per day and it is charged across
+     *  the WHOLE week rather than per shoot slot – his sentence says why: a shoot is not an hour,
+     *  and the load it leaves is the week's, not the afternoon's.
+     *
+     *  ⚠ IT IS A PRICE AND NOT A REFUSAL. Round 28's shoot week is «not blocked and not
+     *  double-charged» and that still holds everywhere else; this is the one week the owner asked to
+     *  be paid for, and only when the parent has CHOSEN to have both – the other three answers to
+     *  the collision remove it (see `world/shootClash.ts`).
+     *
+     *  ⚠ PER DAY, MULTIPLIED BY THE WEEK'S DAYS AT THE ONE SITE THAT CHARGES IT
+     *  (`accrueCondition`). Written as a rate rather than as a total because that is the shape he
+     *  named it in, and because a week is seven days everywhere in this engine – the plan matrix,
+     *  `planWeek`, the calendar grid – so the multiplication has one honest reading. */
+    clashConditionPerDay: 1,
     /** The weekly chance a qualifying week produces the letter, on its own sub-stream
      *  (`seed:ad:<week>`, never MAIN). 5% a week puts the median arrival ~13 weeks after she
      *  crosses the bar and the mean ~20 – the plan's §2 row «when it arrives: after results, and it
@@ -1477,10 +1812,115 @@ export const ECONOMY = {
      *  weeks she is playing, which is the exact fault the 01.08 move into the off-season fixed.
      *  Stated on the paper and enforced by `expireOffers`. */
     decideWeeks: 5,
-    /** THE HOUSE THAT WRITES: a watchmaker – the plan's own first example of non-endemic («a watch,
-     *  a bank, an airline, a cosmetics house»). Fictional, like every brand on the ladder above,
-     *  and deliberately nothing constructible into a real company or trademark. */
-    brand: 'Quiet Hour',
+  },
+
+  // --- FAME (round 29 part four P7/P8, docs/specs/fame-and-the-shoots-2026-08.md) ---------------
+  //
+  // «нам важны разные спонсоры и их появление как можно раньше в плане фотосессий и их количества –
+  // это прямой рычаг известности» – and his «здесь полностью согласен» on the floor-and-multiplier
+  // shape: THE FLOOR IS EARNED ON COURT AND THE SHOOTS MULTIPLY IT. A champion who never shoots is
+  // still famous; a face with no results has nothing for the photographs to multiply.
+  //
+  // ⚠⚠ FAME IS A FOLD, NEVER A ROLL. It is a pure function of what has already happened – dated
+  // titles (`trophiesByTier`, weeks, never pruned), lost Slam finals (same ledger), seasons ended
+  // inside the top 10 (`seasonHistory[].byTrack.wta.endRank`) and shoot weeks already lived
+  // (`AdOfferTerms.shootWeeks` on signed letters) – so RNG input-independence is not merely
+  // respected but unreachable: there is no die anywhere in it, and nothing is persisted for it
+  // (the stock is re-derived from the career's own records on every read). See world/fame.ts.
+  fame: {
+    /** ⭐ THE FLOOR, PER RESULT THE WORLD NOTICES – fame points per TITLE at each professional
+     *  tier, freshest worth the full step and every step fading on `halfLifeWeeks` below. The
+     *  spec's own floor list is «a Slam final, a title at 1000+, a first top-10 season»; the
+     *  ladder below extends it downward with small steps so a climbing career is not a flat zero –
+     *  the local paper notices a W35 title even if the world does not. Tiers absent here (the
+     *  junior and domestic rungs) buy no fame at all: the world does not read junior draws. */
+    titleFloor: {
+      w15: 0.25, w35: 0.5, w50: 0.75, w75: 1, w100: 1.5, wta125: 2,
+      wta250: 4, wta500: 8, wta1000: 14, slam: 25,
+    } as Partial<Record<TierId, number>>,
+    /** a LOST Slam final – the one runner-up plate the world remembers (spec §3's own example).
+     *  Lost finals at every other tier buy nothing: the world remembers who won. */
+    slamFinalFloor: 12,
+    /** a season ENDED inside the WTA top 10 (`byTrack.wta.endRank` ≤ 10) – the «first top-10
+     *  season» of the spec's floor list, counted per season from its wrap week. */
+    top10SeasonFloor: 10,
+    /** ⭐ THE SLOW DECAY – the half-life of every contribution, in weeks. Two seasons: a Slam won
+     *  six seasons ago still carries an eighth of its step, so a reign fades over about four to
+     *  six seasons rather than overnight. ⚠ Decay is what makes fame a lever and not a rank by
+     *  another name (spec §3) – a stock that only rises is a trophy cabinet. */
+    halfLifeWeeks: 104,
+    /** ⭐ THE MULTIPLIER'S STEP – each shoot week ALREADY LIVED multiplies the floor by
+     *  (1 + step), the step itself decaying on the same half-life. Twelve fresh shoots ≈ ×1.6:
+     *  enough to reorder two comparable floors (the census's #30-on-court / #2-off-court shape),
+     *  never enough to make a face out of nothing – zero floor times anything is zero. */
+    shootStep: 0.05,
+    /** ...and the multiplier's ceiling. The photographs can at most double what the court earned –
+     *  the spec's «a multiplier on a floor she earns on court, not the only road», as a bound. */
+    shootMultCap: 2,
+    /** fame is bounded 0–100 – the spec's own scale; the cap is «the whole world knows her». */
+    cap: 100,
+  },
+
+  // --- THE PARENT'S BUSINESSES (round 29 part four P7 – merch and the academy that earns) --------
+  //
+  // His order, verbatim: «нам нужен мерч, растущий от частоты и обилия рекламных контрактов,
+  // съемок, выступлений, титулов и прочего» and «нам нужна академия, которая зарабатывает».
+  //
+  // ⚠ TWO INSTRUMENTS, TWO AXES, DELIBERATELY (P7's own chain): merch follows FAME – the fold over
+  // contracts, shoots and titles he listed, which is NOT rank – and the academy follows
+  // SEASONS-IN-BAND (reputation, the P2 ruling «чем выше и дольше место – тем выше доход»). The
+  // two are different numbers in this game and the businesses keep them apart.
+  //
+  // ⚠⚠ INCOME ONLY, NEVER NEGATIVE – «мы ни за что не наказываем». Both lines are the NET of a
+  // business that simply sells less when nobody is looking; zero is their floor by construction.
+  // ⚠ ZERO DRAWS ON ANY STREAM: both are arithmetic on persisted records (world/business.ts).
+  business: {
+    merch: {
+      /** ⭐ WHAT ONE POINT OF FAME SELLS, in cents a week – the whole merch dial. At fame 10 (a
+       *  few small titles) the brand pays ≈ the index fund on its $250,000 price; at a reign's
+       *  fame 60–80 it is $94k–125k a year – a real «подспорье», still under the academy at any
+       *  reputation the academy's builders actually hold. Sized against the round-29 counterweight
+       *  gap: the 10% commission costs the MEDIAN career ≈ $130k of peak wallet, and five seasons
+       *  of merch at that career's fame roughly hands it back. */
+      perFamePointCents: 3_000,
+    },
+    academy: {
+      /** ⭐⭐ WHAT EACH DELIVERED STAGE BRINGS IN AT REPUTATION 1.0, in cents a week, keyed by the
+       *  catalogue's own stage ids. THE SHAPE IS THE ROUND-29 REACHABILITY PROPOSAL'S OWN TABLE
+       *  (the ledger, part three): the land is a field and earns nothing; the courts rent; the
+       *  clubhouse lodges; the staff run the programmes that are the business. One number reaches
+       *  the ledger per week – the Nadal split (programmes+lodging 56%, its own sponsors 14%,
+       *  merch, restaurants – Forbes España 2023) is the flavour of the LINE, never four lines.
+       *
+       *  ⚠ SIZED A QUARTER ABOVE THE PROPOSAL'S $5,750 BASE ($7,250), AND MEASURED BEFORE IT WAS
+       *  KEPT (docs/specs/merch-and-academy-income-2026-08.md, predicted vs measured): the
+       *  proposal's own sizing was «repay the p90 commission in 7 seasons at the cap»; the P7
+       *  bench criterion is the research's bridge – the $12M academy repays in roughly 5–10
+       *  seasons of a real reign. Benched at 108 × 780 (--buy-business): the careers that BUILD
+       *  it hold reputation 2.40–4.00 with the MEDIAN BUILDER AT THE 4.00 CAP, where this base
+       *  repays in **8.0 seasons** ($1.508M/yr) – mid-window – against 10.06 at the unlifted
+       *  anchor (the window's edge); the worst builder (2.40) reads 13.3. At reputation 1.0 it is
+       *  3.1% a year against the fund's 7% – the shelf's own law («assets never beat a career,
+       *  they only survive one») still holds everywhere below a top-ten reign. */
+      stageIncomeCents: {
+        'academy-land': 0,
+        'academy-courts': 95_000,
+        'academy-building': 250_000,
+        'academy-staff': 380_000,
+      } as Record<string, number>,
+      /** ⭐ REPUTATION – the fold over `seasonHistory[].byTrack.wta.endRank` the round-29 ledger
+       *  proposed and P2 ruled («чем выше и дольше место – тем выше будет доход»): 1.0 base, plus
+       *  the BEST band of each finished season, counted once per season, capped below. A season
+       *  with no recorded WTA end-rank (pre-v46 rows, null ranks) counts nothing – «not recorded»
+       *  is not «top-100». */
+      reputationBands: [
+        { maxEndRank: 10, add: 0.6 },
+        { maxEndRank: 25, add: 0.35 },
+        { maxEndRank: 50, add: 0.2 },
+        { maxEndRank: 100, add: 0.1 },
+      ] as readonly { maxEndRank: number; add: number }[],
+      reputationCap: 4,
+    },
   },
 
   // Season-Life condition accumulator (0..100, 100 = fresh). Pure INTEGER arithmetic –
@@ -2679,6 +3119,56 @@ export const ECONOMY = {
         conditionGain: 48,
         buffFactor: 0.85,
       },
+      // ⭐⭐ ROUND 29 #5 – THE SEVENTH RUNG. docs/specs/the-shop-2026-08.md §3f, the owner's own
+      // idea: «а неделя на яхте (при наличии яхты) вполне может стать новой строкой отпуска,
+      // кстати».
+      //
+      // ⭐⭐ PART TWO #8 PUT IT ON THE GENERAL SHELF (29.08): «она же бесплатная только при наличии
+      // яхты, верно? я могу сделать для нее отдельный арт, тогда можно просто на постоянку
+      // добавить в ленту сначала с реальной стоимостью, а после покупки яхты это станет
+      // бесплатным». So the band below is a real CHARTER price every family is quoted, and the
+      // shelf's grant is what zeroes it (`freeOnceGranted` + `grantedVacationIds`, DELIVERED rungs
+      // only) – §3f's «the money went years ago and the upkeep is charged every week whether she
+      // sails or not» is still the whole reason the owner's quote is 0. A granted quote of 0 walks
+      // `bookVacation`'s two zero-price carve-outs (affordable at negative funds, no expense row)
+      // unchanged and correctly: nothing is charged, so nothing has to be afforded and there is no
+      // row to write. ⚠ His art for the row is coming; until it lands `vacationArtUrl` returns
+      // null and the sheet draws the row artless by its documented fallback.
+      //
+      // ⚠ #9's BAND IS x1.4 OF ELITE'S ([4000_00, 7000_00] -> [5600_00, 9800_00]) – HIS 29.08
+      // FIGURE, VERIFIED AGAINST THE SPEC BEFORE USE because he asked rather than decreed
+      // («изначально стоит дороже немного (х1.4 вроде мы считали, да?)»). §3f carries exactly one
+      // 1.4 and it relates the SAME two objects – the yacht week against the elite programme
+      // («about 1.4 elite vacations a week in upkeep») – and no other charter figure anywhere, so
+      // his multiplier stands as the figure of record. A charter dearer than the clinic is also
+      // the honest ladder: same gain, no injury buff, top of a strictly ascending price ladder
+      // (tests/planner.test.ts pins both).
+      //
+      // ⚠⚠ 48 AND `buffFactor: 1` – THE TUNING QUESTION §3f NAMES, ANSWERED ON ITS FIRST ARM. Its
+      // words: «Either it ties with elite and wins on being free, or it beats it slightly and elite
+      // keeps a reason to exist that is not price», and its veto: «the yacht must NOT be the
+      // strictly best rest week available – if it is, every owner takes it every time and the other
+      // six packages die on the same day the yacht arrives.»
+      //
+      // It TIES with the elite programme on the gain (48, the top of the ladder – §3f's «at or above
+      // elite» read at «at») and wins on being free FOR THE OWNER, and ELITE KEEPS THE INJURY BUFF:
+      // `buffFactor` 0.85 against this one's 1, riding `buffWeeks: 4`. So the two are not comparable
+      // on one axis and neither dominates – a family with a yacht still pays for the clinic in the
+      // weeks it wants her tau bought down, which is the only thing money can do that a boat cannot.
+      // ⚠ A NUMBER ABOVE 48 WOULD BREAK THAT: it would beat elite on the gain AND on the price, and
+      // the buff alone is not a reason to pay $7,000 for a smaller reset. ⚠ AND #8's CHARTER MAKES
+      // THE VETO HOLD FOR EVERYBODY ELSE TOO, for free: the boatless family sees the same 48 at a
+      // DEARER price and a weaker after-effect, so the clinic keeps its reason on both sides of the
+      // grant and the six packages survive the row appearing everywhere.
+      {
+        id: 'yacht-week',
+        label: 'A week on the yacht',
+        blurb: 'Nowhere to be, and the sea to be nowhere on.',
+        priceCents: [5600_00, 9800_00],
+        conditionGain: 48,
+        buffFactor: 1,
+        freeOnceGranted: true,
+      },
     ] as VacationPackage[],
   },
 
@@ -2765,20 +3255,92 @@ export const ECONOMY = {
         label: 'A savings deposit',
         blurb: 'The dull one – it will not lose money and it will not make much.',
         entryCents: 1_000_00,
-        annualRateBps: 200,
+        // ⭐⭐⭐ ROUND 29 PART TWO #3 – 200 → 317 BPS, AND IT IS HIS RULING, NOT A TUNING.
+        //
+        // «не вижу проблем сделать ставку 3.17% на Savings.»
+        //
+        // ⚠⚠ 3.17% IS NOT A NEW NUMBER – IT IS THE OLD ONE, MOVED. It is exactly what the current
+        // account used to pay automatically every week (`ECONOMY.savings.apyWeekly: 0.0006`
+        // annualised, deleted by round 29 #12 – the note where it stood is ~1,300 lines up in this
+        // file). #12's own measurement is why he was asked: at 200 bps the deposit recovered only
+        // **63%** of the wage it replaced, so the replacement was not a replacement. His earlier
+        // ruling binds the two – «мы для этого делаем Savings как раз. Одни должны друг друга
+        // заменить» – and a replacement that pays two thirds of what it replaced does not.
+        //
+        // ⚠ THE OTHER HALF OF THE GAP WAS NEVER THE RATE, and part two #6 closes it: the shelf was
+        // SHUT in the junior years, which is the horizon where the removal bites cleanest. No rate
+        // fixes a locked door; both were needed and both are his.
+        //
+        // ⚠ THE INDEX FUND IS UNTOUCHED at 700 bps. He named Savings, and #12's «the fund would
+        // recover 221%» is exactly why widening this by hand would have been the tuning he did not
+        // ask for. The fund's own under-pricing stands as round 29's ask 11b.
+        annualRateBps: 317,
       },
       {
         id: 'index-fund',
         family: 'investment',
         stake: 'open',
         label: 'An index fund',
-        // ⚠ NO PROMISE IN THE WORDS. §3a's index fund «can be DOWN for a whole season and still be
-        // the right holding» – that is slice 2's drift, and until it lands the blurb may not
-        // describe a movement the engine does not make. It says what the thing IS, not what it will
-        // do, which is the one description that stays true across both slices.
-        blurb: 'A slice of the whole market, bought once and left alone.',
+        // ⭐⭐ AND NOW IT MAY SAY IT – ROUND 29 PART THREE #16. The note that stood here said the
+        // blurb «may not describe a movement the engine does not make», because §3a's index fund
+        // «can be DOWN for a whole season and still be the right holding» and slice 1 had no drift.
+        // The engine makes that movement as of this item, so the second sentence is now a true
+        // description of the thing rather than a promise about it.
+        blurb: 'A slice of the whole market. It will have bad years – it has never had a bad decade.',
         entryCents: 5_000_00,
+        // ⭐⭐⭐ ROUND 29 PART THREE #16 – THE DRIFT, AND IT DID NOT MOVE.
+        //
+        // THE OWNER: «Механику фонда надо придумать, да, потому что безрисковые 3 против безрисковых
+        // 7 это весьма странно. Давай подумаем как это можно сделать красиво и просто.»
+        //
+        // ⚠⚠ 700 IS NOW THE LONG-RUN FIGURE RATHER THAN THE WEEK'S, and that is the whole reason the
+        // number is untouched. The market rides EITHER SIDE of this curve (`volBps` below); the
+        // headline the shop card prints is where a holding ends up, not where it stands. Round 29
+        // #12's «the fund would recover 221%» measurement and the 11b under-pricing question are
+        // therefore still answered by exactly this number.
         annualRateBps: 700,
+        // ⭐⭐⭐ ...AND THIS IS THE RISK. See `world/market.ts` for the path and `ShopItem.volBps` for
+        // what the field means. 1,800 bps of log-volatility.
+        //
+        // ⚠⚠ 1,800 IS A CEILING BEFORE IT IS A TUNING, AND THE ARITHMETIC IS WHY. `marketWave` is
+        // bounded in [-1, 1], so the worst the market can ever do to a holding is `e^(-2·vol)`, and
+        // the fund beats the 3.17% deposit at ten years for EVERY seed and every entry week exactly
+        // while `1.07^10 · e^(-2·vol) > 1.0317^10` – which solves to `vol < 1,824 bps`. Above that
+        // the fund becomes a trap for a player who did not read carefully, and «мы ни за что не
+        // наказываем» is house law. This sits just under the line, deliberately: it is the most risk
+        // the design can carry and still be safe to hold.
+        //
+        // ⚠ AND IT IS ABOUT HALF A REAL INDEX'S VOLATILITY, which is a decision and not a mistake. A
+        // true 17% is a random walk's number, and a walk would put roughly a quarter of ten-year
+        // holdings behind the deposit.
+        //
+        // ⭐⭐⭐ THE CRASH LAYER RIDES ON TOP SINCE HIS EXTENSION OF 29.08 («например раз в 3-5 лет и
+        // стартовый сезон уже может быть как раз с -20%») – a crisis every 2-6 years centered on
+        // four, -15…-30% at the trough with a recovery arc, no grace period. The construction and
+        // its own knobs live in `world/market.ts`; this rung participates because it has a volBps,
+        // at full depth (a crisis is not a bigger wobble – the reasoning is at `marketIndex`).
+        //
+        // ⚙ MEASURED, `npx vite-node tools/market-probe.ts --seeds 4000` (29.08, crash layer IN),
+        // 228,000 rolling seasons, 48,000 holdings per horizon, 16,000 crises:
+        //
+        //   crises            mean interval 4.01y (75.2% in his 3-5y band) · median depth −22.5%
+        //   first-season fall 49.7% of careers («стартовый сезон» – exactly his ask)
+        //   negative seasons  30.8%   (the wave alone was 19.9% – his crises are the difference;
+        //                              the knob back toward one-in-four is THIS volBps, his call)
+        //   worst season      −39.9%  (a deep crash landing on a bad wave year; sd 16.79%)
+        //   beats the deposit 1y 57.15%  3y 84.03%  5y 86.75%  10y 98.90%
+        //   ⚠⚠ the 10y tail   529 of 48,000 (1.10%) – EVERY one sold inside a crash arc; selling
+        //                     in calm waters ten years is still universal (the two-tier bound,
+        //                     `worstCrashFreeRatio` / `worstMarketRatio`), so «мы ни за что не
+        //                     наказываем» reads: holding through a crisis costs nothing, only
+        //                     selling into one can lose, at this measured rate. HIS number to
+        //                     accept – docs/specs/the-shop-2026-08.md §14h puts it in front of him.
+        //
+        // The shape is the design: WHEN you sell matters, WHETHER you were right to hold does not.
+        //
+        // ⚠ PROVISIONAL BY HIS OWN FRAMING: «вроде посмотрел, давай сделаем, а я пощупаю и скажу
+        // свои ощущения потом.» Move this one number and re-run the probe; nothing else has to move.
+        volBps: 1_800,
       },
       // ⚙ 26.08, the owner: «давай гэп сделаем скромнее пока что от 60 до 300к». A five-fold spread
       // rather than the twenty-two-fold one the first draft drew – from $60k to $300k every rung is
@@ -2859,7 +3421,254 @@ export const ECONOMY = {
         entryCents: 520_000_00,
         annualRateBps: 300,
       },
+      // ⭐⭐ ROUND 29 #5 – THE ELITE (§3f), AND THEY ARE NOT BOUGHT, THEY ARE COMMISSIONED.
+      //
+      // THE OWNER: «Может что-то элитное добавить - яхты или самолеты? Со временем постройки около
+      // реальным - купил и ждешь пока будет готово, яхты строят несколько лет.» And, on the shape:
+      // «тоже можно разные тиры сделать, кстати и потерю стоимости в год + годовое обслуживание
+      // (недельный кост, ага)».
+      //
+      // ⚠⚠ SO EACH ONE CARRIES THREE NUMBERS AND NOT ONE: what it cost (`entryCents`), what it loses
+      // (`annualRateBps`, negative on every rung here) and what it takes every week to keep
+      // (`upkeepBps`, an annual share of the PRICE – `assetUpkeepCents` divides it by the year).
+      // Every figure below is §3f's own table, verbatim, including the build times.
+      //
+      // ⚠⚠ THE UPKEEP PERCENTAGES ARE THE REAL ONES AND THAT IS WHY THEY HURT (§3f). A yacht
+      // genuinely costs about a tenth of its value a year to keep – crew, berth, fuel, survey,
+      // insurance – and at $12M that is $23,076.92 a week, which is roughly thirty-eight coaches.
+      // The number is not a punishment invented for balance; it is what the thing costs, and it is
+      // the whole argument for owning one being a statement rather than an investment.
+      //
+      // ⚠ AND NOTHING HERE CAN STRAND A FAMILY, which is the house's «мы ни за что не наказываем»
+      // checked against the largest bill in the game. The two states are disjoint by construction:
+      // while it is BUILDING it cannot be sold and it charges NOTHING; the week it arrives the
+      // upkeep starts and it becomes sellable the same week. There is no week in which the family
+      // is paying for a thing it cannot get out from under.
+      // ⭐⭐ ROUND 29 PART FOUR P7 – THE MERCH BRAND, the parent's FIRST business rung.
+      //
+      // THE OWNER (P4): «до академии можно запустить свой бренд одежды (мерча) – это может стать
+      // хорошим шагом и подспорьем как в доходе, так и вообще добавить геймплея немного. А еще это
+      // дешевле академии» – so it is CHEAP against the academy ($250,000 against $12,000,000, the
+      // low hundreds of thousands, startable mid-career) and it EARNS: what it brings in each week
+      // follows FAME – «мерч, растущий от частоты и обилия рекламных контрактов, съемок,
+      // выступлений, титулов и прочего» – never rank. See ECONOMY.business.merch and
+      // world/business.ts; the income lands in the till as its own 'business' line.
+      //
+      // ⚠ NO BUILD WAIT, NO UPKEEP AND RATE 0, the academy stages' own reading of §3g: the price
+      // is the decision, the brand holds its value, and the income line – zero when nobody knows
+      // her – is the whole mechanic. A negative week is unreachable by construction («мы ни за
+      // что не наказываем»): fame is bounded at zero from below.
+      {
+        id: 'merch-brand',
+        family: 'business',
+        stake: 'fixed',
+        label: 'The merch brand',
+        blurb: 'Her name on shirts and bags. It sells while she is talked about.',
+        entryCents: 250_000_00,
+        annualRateBps: 0,
+      },
+      {
+        id: 'boat-launch',
+        family: 'boat',
+        stake: 'fixed',
+        label: 'The launch',
+        blurb: 'Eight metres of teak and one good afternoon a week.',
+        entryCents: 900_000_00,
+        annualRateBps: -700,
+        buildWeeks: 52,
+        upkeepBps: 600,
+      },
+      // ⭐ ROUND 29 PART THREE P1 – THE MOTOR BOAT BECAME A SAILING YACHT, his ask verbatim:
+      // «моторка $2.4М – давай переделаем на парусную яхту пожалуйста». He changed what it IS,
+      // never what it costs: price, build weeks, annual loss and upkeep are the motor boat's own,
+      // untouched. The id moved with the identity – the art hook is the id everywhere on this
+      // shelf – and v66's migration renames owned rows in the same wave, so no save is stranded
+      // on a rung the catalogue no longer carries.
+      {
+        id: 'boat-sail',
+        family: 'boat',
+        stake: 'fixed',
+        label: 'The sailing yacht',
+        blurb: 'Two cabins, a mast, and weekends that answer to the wind.',
+        entryCents: 2_400_000_00,
+        annualRateBps: -700,
+        buildWeeks: 78,
+        upkeepBps: 600,
+      },
+      // ⭐⭐ THE TWO THAT GRANT THE WEEK (§3f, and it is the owner's own idea): «а неделя на яхте
+      // (при наличии яхты) вполне может стать новой строкой отпуска, кстати».
+      //
+      // ⚠ ONLY THESE TWO, AND THAT IS STILL THE NARROW READING OF «при наличии ЯХТЫ» ON PURPOSE –
+      // re-argued at part three P1, because the sailing yacht above made the old sentence («the
+      // spec calls neither of them a yacht») stop covering the shelf. The WEEK is a crewed week:
+      // its own copy is a crew of six and nobody able to reach her, and the crew is what these two
+      // rungs' 10% upkeep is buying – the «real ones» note above names it first. The launch and
+      // the sailing yacht keep the boats' 6%: hull, berth and survey, nobody on the payroll. A
+      // family that sails itself has a boat, not a holiday staff, so the sailing yacht grants
+      // nothing – the grant reads what the upkeep pays for, never the word in the label. §11's own
+      // acceptance – «a career orders a yacht, WAITS THREE YEARS» – is still this rung's build
+      // time and not theirs.
+      {
+        id: 'yacht',
+        family: 'boat',
+        stake: 'fixed',
+        label: 'The yacht',
+        blurb: 'Crew of six, and a week of it is a week nobody can reach them.',
+        entryCents: 12_000_000_00,
+        annualRateBps: -500,
+        buildWeeks: 156,
+        upkeepBps: 1000,
+        grantsVacationId: 'yacht-week',
+      },
+      {
+        id: 'yacht-big',
+        family: 'boat',
+        stake: 'fixed',
+        label: 'The big yacht',
+        blurb: 'The one the harbour has to make room for.',
+        entryCents: 28_000_000_00,
+        annualRateBps: -500,
+        buildWeeks: 208,
+        upkeepBps: 1000,
+        grantsVacationId: 'yacht-week',
+      },
+      // ⭐⭐ THE PLANE IS THE PARENTS', AND THE OWNER CORRECTED ME ON EXACTLY THAT (§3f): «Самолёт не
+      // её, а родителей =) Теоретически может вполне резать косты на перелеты до соревнований,
+      // почему бы и нет. По усталости по аналогии с кортом может 1 накинуть, не вижу причин не
+      // делать, не такая большая величина».
+      //
+      // ⚠ BOTH EFFECTS RIDE ON THE FAMILY, not on the rung: a long-range plane costs more, loses
+      // more and keeps for more, and it flies the same people to the same tournaments. The spec
+      // gives the two aircraft three different numbers and one identical purpose, so inventing a
+      // second, better cut for the dearer one would be a rule this file does not have.
+      {
+        id: 'plane',
+        family: 'plane',
+        stake: 'fixed',
+        label: 'The plane',
+        blurb: 'Eight seats and no airport that keeps them waiting.',
+        entryCents: 18_000_000_00,
+        annualRateBps: -600,
+        buildWeeks: 104,
+        upkeepBps: 800,
+      },
+      // ⚠ ROUND 29 PART FOUR P10 – RETIRED, HIS RULING: «значит убрать этот самолет за 38М и всех
+      // делов =)». The reachability measurement (72 careers x 780 weeks, the round-29 ledger)
+      // found 0 of 72 ever took DELIVERY of one – nobody could hold the rung, and he removed it
+      // rather than resizing it. The entry stays as a tombstone so a save that somehow owns one is
+      // not stranded: it is still valued by its own rate, still billed its upkeep and still sells;
+      // `retired` is only what keeps it off the shelf and out of `buyAsset`.
+      {
+        id: 'plane-long',
+        family: 'plane',
+        stake: 'fixed',
+        label: 'The long-range plane',
+        blurb: 'Melbourne without stopping, and a bed on the way back.',
+        entryCents: 38_000_000_00,
+        annualRateBps: -600,
+        buildWeeks: 156,
+        upkeepBps: 800,
+        retired: true,
+      },
+      // ⭐⭐ ROUND 29 #5 – HER ACADEMY (§3g), THE END OF THE MONEY.
+      //
+      // THE OWNER: «построить свою академию за много миллионов - тоже может быть интересно, кстати.
+      // Как раз будет куда рекламное тратить.»
+      //
+      // ⚠⚠ FOUR STAGES IN THE SPEC'S OWN ORDER – «land, courts, the building, the staff» – AND THE
+      // ORDER IS ENFORCED, not suggested: `requiresId` chains them, so a half-built academy is a
+      // real state the player can sit in (§3g's own words) and courts cannot appear on land nobody
+      // owns. That is why THIS family is the one exception to the catalogue's «cheapest first»: the
+      // stages read in BUILD order, and the last one is not the dearest.
+      //
+      // ⚠⚠ THE FOUR PRICES ARE MINE AND NOT THE SPEC'S, exactly as the two house tiers were (§12b).
+      // §3g gives a band – «Cost: $8–15M, in STAGES rather than one press» – and four stage names,
+      // and stops. $2M + $3M + $4M + $3M = $12,000,000, the middle of his band, and each stage is a
+      // real decision on its own rather than a step nobody notices.
+      //
+      // ⚠ NO BUILD WAIT AND NO UPKEEP, because §3g asks for neither and this file does not invent
+      // what it was not given. §3f's «время постройки» and «годовое обслуживание» are said of the
+      // boats and the planes; the academy's own sentence is «each stage is a decision and a bill»,
+      // and a stage IS the wait. ⚠ AND IT HOLDS ITS VALUE (rate 0) for the same reason: §3g calls it
+      // «the one asset that outlives the career» and gives it no rate, so it neither earns nor
+      // decays, and the shelf says so in as many words («Holds its value»).
+      {
+        id: 'academy-land',
+        family: 'academy',
+        stake: 'fixed',
+        label: 'The land',
+        blurb: 'Twelve hectares outside town, and a name on the deeds.',
+        entryCents: 2_000_000_00,
+        annualRateBps: 0,
+      },
+      {
+        id: 'academy-courts',
+        family: 'academy',
+        stake: 'fixed',
+        label: 'The courts',
+        blurb: 'Sixteen of them, and the lights that keep them open till nine.',
+        entryCents: 3_000_000_00,
+        annualRateBps: 0,
+        requiresId: 'academy-land',
+      },
+      {
+        id: 'academy-building',
+        family: 'academy',
+        stake: 'fixed',
+        label: 'The clubhouse',
+        blurb: 'Gym, kitchen, forty beds and somewhere to do the homework.',
+        entryCents: 4_000_000_00,
+        annualRateBps: 0,
+        requiresId: 'academy-courts',
+      },
+      {
+        id: 'academy-staff',
+        family: 'academy',
+        stake: 'fixed',
+        label: 'The staff',
+        blurb: 'Coaches, physios and the person who answers the telephone.',
+        entryCents: 3_000_000_00,
+        annualRateBps: 0,
+        requiresId: 'academy-building',
+      },
     ],
+    /** ⭐⭐ ROUND 29 #5, §3f – WHAT THE FAMILY'S OWN PLANE TAKES OFF A FARE, as a share of it.
+     *
+     *  THE OWNER: «Теоретически может вполне резать косты на перелеты до соревнований, почему бы и
+     *  нет.» ⚠ THE VERB IS «резать» AND NOT «убрать», and this number is that distinction made
+     *  mechanical: the plane HALVES the family's travel bill, it does not delete it. Three reasons
+     *  the share is a half rather than the whole fare, and the spec gives no figure at all:
+     *
+     *    1. a fare that fell to zero would take the travel LINE off the family's ledger, and a cost
+     *       the player cannot find is this repo's own named defect (the academy's $20,879);
+     *    2. flying your own aeroplane is not free – it is what `upkeepBps` above is charging for,
+     *       and a plane that both zeroed the fare and billed the upkeep would be describing one
+     *       journey twice;
+     *    3. it is not a balance lever in either direction. A season of travel is four figures and
+     *       this aircraft costs $27,692 A WEEK to keep, so the cut can never be the reason to buy
+     *       one. §3f is explicit that owning these is «a statement rather than an investment».
+     *
+     *  ⚠ IT COMES OFF EVERY SEAT THE FAMILY PAYS FOR – hers, the coach's and the masseur's – because
+     *  it is ONE AIRCRAFT carrying all of them. That does not touch the 15.08 ruling that support
+     *  may not pay for the entourage: a scholarship is somebody else's money and this is the
+     *  family's own. */
+    planeTravelShare: 0.5,
+    /** ⭐⭐ §3f – WHAT THE PLANE ADDS TO A WEEK SHE SPENDS TRAVELLING, in condition points.
+     *
+     *  THE OWNER: «По усталости по аналогии с кортом может 1 накинуть, не вижу причин не делать, не
+     *  такая большая величина.»
+     *
+     *  ⚠⚠ IT IS HIDDEN, AND THAT IS HIS OWN RULING ON THE COURT IT IS AN ANALOGY OF: «верно, но
+     *  только если знают об этом, я предложил сделать бонус скрытым». §3d rule 4 spells out what
+     *  hidden means – «never a number on a card» – so no shelf row, no confirm dialog and no note
+     *  anywhere states it. The effect is visible where every effect in this game is visible: in the
+     *  condition line, over weeks.
+     *
+     *  ⚠ AND IT CANNOT STACK WITH THE COURT (§3d), by construction rather than by a cap: the court's
+     *  +1 lands on weeks she is NOT competing and this one lands on weeks she IS. §3f: «No week can
+     *  receive both, so a family owning everything gets a corridor that is one point kinder across
+     *  the board – never two.» */
+    planeTravelRestBonus: 1,
   },
 } as const
 
@@ -2917,15 +3726,28 @@ export function vacationPackage(id: string): VacationPackage | undefined {
 }
 
 /** The deterministic price of ONE vacation offer: `rngFromSeed(seed:vacation:week:packageId)`
- *  (spec §2). Quoted at offer time, charged on booking – same function, same number. */
+ *  (spec §2). Quoted at offer time, charged on booking – same function, same number.
+ *
+ *  ⭐ ROUND 29 PART TWO #8 – `grantedIds` IS THE SHELF'S GRANT (`Snapshot.shop.vacationIds` on a
+ *  screen, `grantedVacationIds(world)` in the engine): a `freeOnceGranted` package the family has
+ *  earned is quoted 0 – «после покупки яхты это станет бесплатным» – and the sub-stream is not
+ *  even derived for it, which no caller can observe (sub-streams persist nothing and are re-keyed
+ *  per call; the world's dice cannot see any of this either way).
+ *
+ *  ⚠ THE DEFAULT IS THE CONSERVATIVE ARM, on `recommendVacationPackage.grantedIds`' own argument:
+ *  a caller that does not know about the shelf quotes the price every family pays. It can only
+ *  OVERSTATE – the booking itself always passes the world's own list, so a forgetful screen shows
+ *  a price and the engine charges less, never the reverse. */
 export function vacationPriceCents(
   seed: string,
   week: number,
   packageId: string,
   background: FamilyBackground,
+  grantedIds: readonly string[] = [],
 ): number {
   const pkg = vacationPackage(packageId)
   if (!pkg) throw new Error(`Unknown vacation package "${packageId}"`)
+  if (pkg.freeOnceGranted && grantedIds.includes(packageId)) return 0
   return corridorPrice(rngFromSeed(`${seed}:vacation:${week}:${packageId}`), pkg.priceCents, background)
 }
 
@@ -2957,11 +3779,23 @@ export function recommendVacationPackage(input: {
   budgetCents?: number
   /** optional override for the condition the pick aims to restore */
   targetCondition?: number
+  /** ⭐ ROUND 29 #5 -> PART TWO #8 – the packages the shelf has made FREE for this family
+   *  (`Snapshot.shop.vacationIds`). Since #8 every package is on every family's shelf, so this no
+   *  longer widens the LIST – it re-prices it: a granted `freeOnceGranted` package is weighed at 0,
+   *  which is what lets the pick name the owner's free week over a paid one. ⚠ DEFAULTS TO NONE,
+   *  and the default is the conservative one: a caller that does not know about the shelf weighs
+   *  the yacht week at the charter price every family pays, and can only over-charge the
+   *  recommendation, never under-charge the booking. */
+  grantedIds?: string[]
 }): string | null {
   const cap = Math.min(input.fundsCents, input.budgetCents ?? input.fundsCents)
   const target = input.targetCondition ?? ECONOMY.practice.rescueTargetCondition
+  const granted = input.grantedIds ?? []
+  // ⚠ PART TWO #8 – the grantedOnly FILTER that stood here is gone rather than inverted: every
+  // package is on the general shelf now, and the grant lives in the PRICE (a granted week weighs
+  // 0, exactly what the sheet quotes for it).
   const priced = ECONOMY.vacation.packages
-    .map((pkg) => ({ pkg, priceCents: vacationPriceCents(input.seed, input.week, pkg.id, input.background) }))
+    .map((pkg) => ({ pkg, priceCents: vacationPriceCents(input.seed, input.week, pkg.id, input.background, granted) }))
     .filter((row) => row.priceCents <= cap)
     // cheapest first, and on a price tie the SMALLER gain first – "cheapest sufficient" has to be
     // read off the quoted price, not the catalogue order (quotes breathe inside their bands).
@@ -3148,4 +3982,26 @@ export function staffResultShareBps(role: 'coach' | 'masseur', finishIdx: number
  *  the tournament's cheque to the cent). Zero draws, no state, no schema. */
 export function staffPrizeShareCents(role: 'coach' | 'masseur', prizeCents: number, finishIdx: number): number {
   return Math.round((prizeCents * staffResultShareBps(role, finishIdx)) / 10_000)
+}
+
+/** ⭐⭐⭐ ROUND 29 PART THREE P3 – WHAT THE PARENT EARNS ON A SPONSOR CHEQUE, in basis points.
+ *
+ *  `ECONOMY.managerCommission` holds the one number and this reads it and nothing else, so a retune
+ *  moves the whole game – the split, the coach market's cap and every sentence that describes it –
+ *  and this function does not change. `staffResultShareBps`' own shape, one block up, for the same
+ *  reason: the screens call the SAME function the till calls, so a line that describes the rule
+ *  cannot drift from the rule. */
+export function managerCommissionBps(): number {
+  return ECONOMY.managerCommission.bps
+}
+
+/** The parent's fee on one sponsor cheque, in whole cents – rounded ONCE.
+ *
+ *  ⚠⚠ AND SHE GETS THE REMAINDER BY SUBTRACTION, WHICH IS THE OTHER HALF OF THE RULING. Every other
+ *  splitter in this engine rounds the small side and leaves the family the rest; here the small side
+ *  IS the family's, so the rounding lands on the fee and `gross - fee` is hers. The pair still
+ *  re-adds to the brand's cheque to the cent, which is `kidPrizeShareCents`' rule and the reason it
+ *  exists: a player can put the two balances side by side on screen. */
+export function managerCommissionCents(grossCents: number): number {
+  return Math.round((grossCents * managerCommissionBps()) / 10_000)
 }

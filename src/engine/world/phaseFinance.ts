@@ -51,6 +51,12 @@ import { ageAtWeek } from './age'
 import { vacationForWeek } from './bookings'
 import { inCollege, resolveCollegeBill } from './college'
 import { sponsorNeedMet } from './sponsors'
+// ⚠ THE LEAF, NOT `./shop` – `world/assets.ts` is the shelf's pure reads and imports nothing from
+// this package, which is what keeps the till free of the shop's command-side dependencies.
+import { assetUpkeepCents, deliveredAssets } from './assets'
+// The businesses' one arithmetic (round 29 part four P7) – the till charges what these quote, and
+// the household meter quotes the same two functions, so the strip and the ledger cannot disagree.
+import { academyWeeklyIncomeCents, merchWeeklyIncomeCents } from './business'
 
 // Flavor lists are background-aware but a flavor is always chosen with ONE `pickInt`
 // (a single rng() call regardless of list length), so the per-tick draw count is
@@ -213,22 +219,32 @@ function facilityFlavor(input: {
 }
 
 // --- weekly resolution pieces ------------------------------------------------
-// R9-1: weekly savings interest on a POSITIVE balance, credited on the CARRIED-IN funds as
-// the week opens – before any of this week's flows (refunds, contribution, costs). Emitted
-// only when it rounds to >= 1 cent, under the dedicated income category 'interest'. Zero RNG.
-function resolveInterest(world: WorldState): void {
-  if (world.fundsCents <= 0) return
-  const interest = Math.round(world.fundsCents * ECONOMY.savings.apyWeekly)
-  if (interest < 1) return
-  world.fundsCents += interest
-  addEvent(world, {
-    week: world.week,
-    type: 'income',
-    category: 'interest',
-    text: 'Savings interest',
-    amountCents: interest,
-  })
-}
+//
+// ⭐⭐⭐ R9-1's SAVINGS INTEREST STOOD HERE, AND ROUND 29 #12 REMOVED IT.
+//
+// THE OWNER, 28.08: «И я предлагал убрать авто начисление % на текущий счёт.» A RULING – it settles
+// round 28 #9, which had been filed as an ask.
+//
+// WHAT IT WAS: `round(fundsCents x ECONOMY.savings.apyWeekly)` credited on the CARRIED-IN balance at
+// the top of every tick, ~3.1%/yr, zero RNG, emitted as an `income` row under the category
+// 'interest'. It was silent, automatic, and it grew with the balance – which is exactly why it had to
+// go: a current account that pays a wage means the richest careers get richer for doing nothing, and
+// a parent who has banked a million earns more from the balance than from the job.
+//
+// ⚠ WHAT REPLACES IT IS ALREADY ON THE SHELF, and that is what makes this a design and not a
+// subtraction. Money now earns where the family DECIDES to put it – `ECONOMY.shop.catalogue`'s
+// deposit (+2%/season) and index fund (+7%/season) – and round 29 #11 gave both of them top-ups in
+// the same wave, so moving the balance into them is a thing a player can actually keep doing. The
+// wallet is a wallet; yield is a choice.
+//
+// ⚠⚠ AND THE CATEGORY 'interest' SURVIVES ON PURPOSE. Every save already written carries `interest`
+// rows in `events` and in `financeWeeks.byCategory`, and `WorldEventCategory` is how a screen knows
+// what they were. Deleting the category to tidy up would leave a career's own history unrenderable –
+// see `shared/protocol/events.ts`, where the category is now marked historical rather than removed.
+//
+// ⚠ ZERO DRAWS THEN, ZERO DRAWS NOW. It never touched the MAIN stream, so removing it moves no
+// sequence: the frozen capture (41550 / e6b0c709) and the input-independence freezes are untouched
+// by construction – `releaseOutgrownEntries`' own note, four lines down, on the identical situation.
 
 // The parent's weekly contribution to the budget. Runs BEFORE costs and draws no MAIN-stream RNG:
 // the per-season growth (round 12, +5-10% compounding each new season) replays from the private
@@ -294,6 +310,51 @@ export function coachWorksThisWeek(world: WorldState): boolean {
   if (inCollege(world)) return false
   if (vacationForWeek(world, world.week) !== undefined) return false
   return true
+}
+
+/** ⭐⭐ ROUND 29 PART FOUR P7 – WHAT THE PARENT'S BUSINESSES BRING IN THIS WEEK: the merch brand
+ *  (follows FAME – world/fame.ts) and the academy's stages (follow REPUTATION – seasons in band).
+ *
+ *  ⚠ INCOME BEFORE COSTS – this phase's own stated order, which is why it sits beside the parents'
+ *  contribution rather than somewhere clever. ⚠ ONE ROW PER BUSINESS AND NEVER PER STAGE: the
+ *  academy's line is one number a week (the Nadal accounts are the flavour of the sentence, not
+ *  four lines), and a week that earns nothing books nothing – a $0 income row every week of a
+ *  junior career would be noise, and unlike the coach's stood-down $0 there is no standing
+ *  relationship to explain: a family with no business simply has no line.
+ *
+ *  ⚠ INCOME ONLY, NEVER NEGATIVE («мы ни за что не наказываем») – both functions are bounded at
+ *  zero by construction, and the shelf's upkeep (where a rung has one) stays its own separate
+ *  expense line: round 29 #10's lesson, never net two facts silently.
+ *
+ *  ⚠ ZERO DRAWS ON ANY STREAM. Arithmetic on persisted records (world/business.ts), so the MAIN
+ *  sequence is byte-identical for every career that owns neither – which is every career that
+ *  never bought them, the frozen three included – and the frozen capture (41550 / e6b0c709)
+ *  cannot see it. Nothing here is a die, so the input-independence law is not engaged. */
+function resolveBusinessIncome(world: WorldState): void {
+  const merch = merchWeeklyIncomeCents(world)
+  if (merch > 0) {
+    world.fundsCents += merch
+    addEvent(world, {
+      week: world.week,
+      type: 'income',
+      category: 'business',
+      text: 'Merch – her name on the shelves',
+      amountCents: merch,
+    })
+  }
+  const academy = academyWeeklyIncomeCents(world)
+  if (academy > 0) {
+    world.fundsCents += academy
+    addEvent(world, {
+      week: world.week,
+      type: 'income',
+      category: 'business',
+      // The Nadal shape as flavour (endorsement-tiers-and-academy-money.md §3a): the campus is the
+      // business – programmes, beds, its own sponsors – and ONE number reaches the ledger.
+      text: 'The academy – programmes, lodging and its own sponsors',
+      amountCents: academy,
+    })
+  }
 }
 
 function resolveBaseCosts(world: WorldState, rng: Rng): void {
@@ -551,14 +612,55 @@ function resolveGear(world: WorldState): void {
   }
 }
 
+/** ⭐⭐ ROUND 29 #5, docs/specs/the-shop-2026-08.md §3f – WHAT THE SHELF COSTS TO KEEP THIS WEEK.
+ *
+ *  THE OWNER: «тоже можно разные тиры сделать, кстати и потерю стоимости в год + годовое
+ *  обслуживание (недельный кост, ага)».
+ *
+ *  ⚠⚠ IT IS A WEEKLY BILL, EXACTLY LIKE THE COACH'S, AND THAT IS THE WHOLE DESIGN (§3f): «the toys
+ *  compete with the team for the same money. A yacht crew and a masseur come out of one wallet, and
+ *  that is a real decision rather than a trophy.» So it is charged HERE, in the phase that charges
+ *  the coach, the court, the tuition and the kit, and not somewhere clever.
+ *
+ *  ⚠ ONE ROW PER THING, AND NOT ONE ROLLED-UP LINE. The masseur has a row, the coach has a row, and
+ *  a family that owns a boat and a plane is paying two crews – a single «Upkeep $81,538» line would
+ *  be a figure with no object attached, which is the shape round 23 #16 named as «you paid and you
+ *  could not tell». `category: 'shop'` so it lands in the breakdown bucket the shelf already owns.
+ *
+ *  ⚠ DELIVERED ONLY – `weeklyAssetUpkeepCents`' own rule, and the reason a commissioned order cannot
+ *  strand a family: while it cannot be sold it costs nothing.
+ *
+ *  ⚠ ZERO DRAWS ON ANY STREAM. It is arithmetic on the catalogue and on what the family paid, so the
+ *  MAIN sequence is byte-identical for every career that owns nothing with an upkeep – which is
+ *  every career that has not commissioned one – and the frozen capture (41550 / e6b0c709) cannot see
+ *  it. Nothing here is a die, so the input-independence law is not engaged. */
+function resolveAssetUpkeep(world: WorldState): void {
+  for (const { owned, item } of deliveredAssets(world)) {
+    const amountCents = assetUpkeepCents(item, owned.paidCents)
+    if (amountCents <= 0) continue
+    world.fundsCents -= amountCents
+    addEvent(world, {
+      week: world.week,
+      type: 'expense',
+      category: 'shop',
+      // Crew, berth, fuel, survey, insurance – §3f's own list, said once in the catalogue's note and
+      // not repeated on every row. The row names the THING, which is what the player is deciding
+      // about when he reads it beside the masseur.
+      text: `Upkeep: ${item.label}`,
+      amountCents: -amountCents,
+    })
+  }
+}
+
 /** ⭐ PHASE 2 OF THE WEEKLY TICK – what the week costs.
  *
  *  Called from `tickWeek` immediately after the season boundary and before anything reads her
  *  body. `rng` is the MAIN stream and reaches exactly one function, `resolveBaseCosts`; see the
  *  header for the draw budget that fact is what keeps stable. */
 export function weeklyFinance(world: WorldState, rng: Rng): void {
-  // 0a0. R9-1: savings interest on the carried-in balance. ZERO draws.
-  resolveInterest(world)
+  // 0a0. RETIRED 28.08 by round 29 #12 – `resolveInterest` stood here and paid a weekly wage on the
+  //      current account. The owner's ruling and what replaces it are written out where the function
+  //      used to live. It drew nothing, so removing it moves no stream.
 
   // 0a. RETIRED 05.08 – `releaseOutgrownEntries` stood here. An entry already taken is honoured;
   //     see the note where the function used to live. It drew nothing, so removing it moves no
@@ -567,6 +669,11 @@ export function weeklyFinance(world: WorldState, rng: Rng): void {
 
   // 0. parent's weekly contribution BEFORE costs (no RNG draw)
   resolveParentIncome(world)
+
+  // 0-bis. ⭐⭐ ROUND 29 PART FOUR P7 – the businesses' week: merch (fame) and the academy's stages
+  //     (reputation). Income before costs, beside the parents' line it is the same kind of thing
+  //     as. ZERO DRAWS on any stream – see resolveBusinessIncome.
+  resolveBusinessIncome(world)
 
   // 1. base costs (main stream, plan-independent draw count)
   resolveBaseCosts(world, rng)
@@ -582,6 +689,15 @@ export function weeklyFinance(world: WorldState, rng: Rng): void {
   //     e6b0c709) is untouched by construction, and the input-independence law is not engaged
   //     because nothing here is a die.
   resolveCollegeBill(world)
+
+  // 1a-bis. ⭐⭐ ROUND 29 #5 – WHAT THE SHELF COSTS TO KEEP (the-shop §3f). It sits between the
+  //     college's bill and the gear because it is the same KIND of thing as both: a standing weekly
+  //     cost the family signed up for, charged whether anybody looks at it or not. ⚠ AND IT IS NOT
+  //     GATED ON COLLEGE, unlike the gear one line below: her kit is the university's for four
+  //     years, but a yacht's crew is paid by the people who own the yacht, and the shop is the
+  //     PARENT's (§1). `buyAsset`'s own guard is `guardNotEndedForGood` for exactly this reason –
+  //     the college years are shoppable. ZERO DRAWS.
+  resolveAssetUpkeep(world)
 
   // 1b. recurring gear line-items (round-7 a). Zero main-stream draws – purpose-scoped
   //     sub-streams only – so this never perturbs the weekly draw count.

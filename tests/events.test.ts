@@ -178,14 +178,17 @@ describe('weekly parent income', () => {
       const fundsBefore = world.fundsCents
       tickWeek(world, rng)
       const weekEvents = world.events.filter((e) => e.week === world.week).sort((a, b) => a.id - b.id)
-      // R9-1 (re-pinned deliberately): the savings interest on the carried-in balance now opens
-      // the week, so the parent contribution is the SECOND event – still before every cost.
-      expect(weekEvents[0].category).toBe('interest')
-      expect(weekEvents[1].type).toBe('income')
-      expect(weekEvents[1].text).toContain("Parents' contribution")
-      expect(weekEvents[1].amountCents).toBe(PARENT_INCOME_CENTS[background])
+      // ⚠⚠ RE-AIMED BY ROUND 29 #12, AND BACK TO WHAT IT ORIGINALLY SAID. R9-1's savings interest
+      // used to open the week, which is why this pin was «re-pinned deliberately» to make the parent
+      // contribution SECOND. The owner has now ruled the accrual out («убрать авто начисление % на
+      // текущий счёт»), so the contribution opens the week again – and the claim this arm actually
+      // protects, that income lands before every cost, is unchanged.
+      expect(weekEvents[0].type).toBe('income')
+      expect(weekEvents[0].text).toContain("Parents' contribution")
+      expect(weekEvents[0].amountCents).toBe(PARENT_INCOME_CENTS[background])
+      expect(weekEvents.some((e) => e.category === 'interest'), 'and nothing pays a wage on the balance').toBe(false)
       const costIdx = weekEvents.findIndex((e) => e.type === 'expense')
-      expect(costIdx).toBeGreaterThan(1)
+      expect(costIdx).toBeGreaterThan(0)
       // funds moved by exactly income minus the week's net spend (income is added to funds)
       const netDelta = world.fundsCents - fundsBefore
       const totalSigned = weekEvents.reduce((s, e) => s + (e.amountCents ?? 0), 0)

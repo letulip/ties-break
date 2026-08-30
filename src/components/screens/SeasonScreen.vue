@@ -539,9 +539,17 @@ const visibleUpcoming = computed(() => upcoming.value.filter((e) => feedShows(e,
 const myEntries = computed(() => upcoming.value.filter((e) => e.entered))
 const vacations = computed<VacationBooking[]>(() => game.snapshot?.vacations ?? [])
 const practices = computed<PracticeBooking[]>(() => game.snapshot?.practices ?? [])
-/** ⭐ ROUND 28 #4 – the running endorsement's named shoot weeks, or none. Read once here so the row
- *  loop below asks the snapshot a single time rather than per week. */
-const shootWeeks = computed<number[]>(() => game.snapshot?.adShoot?.weeks ?? [])
+/** ⭐ ROUND 28 #4 – every running endorsement's named shoot weeks, or none. Read once here so the
+ *  row loop below asks the snapshot a single time rather than per week; a Map so a week can name
+ *  WHOSE shoot it is now that the portfolio runs several deals at once (P6). The first deal naming
+ *  a week lends the name, which is `adDealShootingAt`'s own order on the engine side. */
+const shootBrandByWeek = computed<Map<number, string>>(() => {
+  const map = new Map<number, string>()
+  for (const deal of game.snapshot?.adShoots ?? []) {
+    for (const w of deal.weeks) if (!map.has(w)) map.set(w, deal.brand)
+  }
+  return map
+})
 
 // --- Round 5 item 7: tour guide overlay ---------------------------------------
 const showTierGuide = ref(false)
@@ -636,10 +644,10 @@ const calendarRows = computed<CalendarRow[]>(() => {
       event: e,
       vacation,
       practice,
-      // ⭐ ROUND 28 #4 – off `snapshot.adShoot`, the deal's own frozen terms as `toSnapshot` reads
+      // ⭐ ROUND 28 #4 – off `snapshot.adShoots`, each deal's own frozen terms as `toSnapshot` reads
       // them, so the plate here and the recovery `accrueCondition` charges can never name different
-      // weeks. `shootWeeks` is absolute career weeks, the same unit this loop counts in.
-      shoot: shootWeeks.value.includes(w) ? { brand: game.snapshot!.adShoot!.brand } : undefined,
+      // weeks. Keys are absolute career weeks, the same unit this loop counts in.
+      shoot: shootBrandByWeek.value.has(w) ? { brand: shootBrandByWeek.value.get(w)! } : undefined,
       // "Empty" means empty FOR HER: a week whose only tournament is one she can NOT enter – a
       // locked-ahead "Reach N pts" card (the spec keeps those visible on purpose) or one whose
       // entry list has already closed – is still hers to plan. Otherwise the aspirational cards
@@ -1069,6 +1077,10 @@ const rescuePackageId = computed<string | null>(() => {
     background: snap.profile.background,
     condition: condition.value,
     fundsCents: snap.fundsCents,
+    // ⭐ ROUND 29 #5 – the packages the shelf has unlocked (the-shop §3f). Without this the rescue
+    // card and the planner sheet would recommend different things to the same family, which is the
+    // one thing `recommendVacationPackage` exists to make impossible.
+    grantedIds: snap.shop.vacationIds,
   })
 })
 /** The rescue week as the player reads it. Empty string is unreachable: the card is gated on

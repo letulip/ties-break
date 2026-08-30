@@ -40,7 +40,7 @@ const FREE_DAYS = [2, 6]
 
 const base = (): Snapshot => careerSnapshot(AT, SEED)
 
-/** The brand and the weeks a signed endorsement names. `toSnapshot` derives `adShoot` from the
+/** The brand and the weeks a signed endorsement names. `toSnapshot` derives `adShoots` from the
  *  deal's own frozen terms; a test that walked a career until a letter arrived AND was signed AND
  *  named this week would be testing `chooseShootWeeks`, which `tests/ad-offer.test.ts` already
  *  owns. What is under test here is what the SCREENS do with the fact. */
@@ -48,7 +48,7 @@ const BRAND = 'Quiet Hour'
 
 /** A career whose signed deal has a shoot on the week the calendar is about (`AT + 1`). */
 function shootingNext(): Snapshot {
-  return { ...base(), adShoot: { brand: BRAND, weeks: [AT + 1] } }
+  return { ...base(), adShoots: [{ brand: BRAND, weeks: [AT + 1] }] }
 }
 
 /** ...and one with a masseur at `sessions` a week, which must be one of the shipped rungs. */
@@ -157,7 +157,7 @@ describe('round 28 #1 - the masseur\'s sessions are in the week', () => {
 // #6 – THE BUTTON SAYS IT, AND THE WEEK COMBINES
 // =================================================================================================
 describe('round 28 #6 - the button before a shoot week names it', () => {
-  // ⚠ MUTATION: delete the `adShoot` branch in `useWeekAhead` and the label falls back to
+  // ⚠ MUTATION: delete the `adShoots` branch in `useWeekAhead` and the label falls back to
   // "Training week" - this goes red and the training-week control below stays green, so no single
   // mutation satisfies both.
   it('the week button reads `Shooting week`', () => {
@@ -254,7 +254,7 @@ describe('round 28 #4 - a shoot week is marked in the season feed', () => {
   it('...and it marks exactly the weeks the letter named, not one more', () => {
     // The feed draws `UPCOMING_WEEKS` rows; two named weeks inside that horizon must produce two
     // marks. A chip that appeared on the whole feed would satisfy the test above and fail this one.
-    const two = { ...base(), adShoot: { brand: BRAND, weeks: [AT + 1, AT + 3] } }
+    const two = { ...base(), adShoots: [{ brand: BRAND, weeks: [AT + 1, AT + 3] }] }
     const wrapper = mountSeason(two)
     expect(wrapper.findAll('.shoot-chip').length).toBe(2)
     wrapper.unmount()
@@ -270,26 +270,54 @@ describe('round 28 #4 - a shoot week is marked in the season feed', () => {
 // =================================================================================================
 // WHERE #1 AND #6 MEET – and the engine settles it
 // =================================================================================================
-describe('round 28 #1 x #6 - a shoot week buys no table, because the engine does not pay for one', () => {
-  // ⚠ MUTATION: drop `!shooting` from the masseur predicate in `calendarWeekFor` and this goes red
-  // while every other block in the file stays green.
-  //
-  // `accrueCondition`: "...NOR ON A SHOOT WEEK (round-25 collect): lights and flights, not his table
-  // – the same reason the week recovers at the travel figure at all." A calendar drawing seven
-  // massage sessions into a week the ledger buys none for is the picture lying about the bill.
-  it('a masseur at the top rung draws nothing on a shoot week', () => {
+//
+// ⚠⚠ RE-AIMED AT ROUND 29 #3, AND THE CLAIM IS NOW ITS OWN OPPOSITE – NOT DELETED, REVERSED, because
+// the sentence it was built on was FALSE and this block is the only place that ever checked it.
+//
+// What it asserted: "a shoot week buys no table, because the engine does not pay for one." The
+// second half was never true. `resolveMasseur` bills the salary through `masseurWorksThisWeek`,
+// whose three stand-downs are hired / college / a booked family week – a shoot is not one of them.
+// So the engine DID pay for one, on every shoot week of every career, and this block was pinning a
+// calendar that drew none of it: «вы заплатили и не можете этого заметить», the exact failure the
+// travelling-team plan bans specialists for. The owner found it from first principles while reading
+// an answer built on the same wrong sentence – «Если есть турнир или тренировки, то есть и
+// массажист» (docs/rounds/round-29.md #3).
+//
+// ⚠ WHAT THE OLD BLOCK QUOTED IS STILL TRUE AND IS A DIFFERENT SENTENCE. `accrueCondition`'s
+// «lights and flights, not his table» is about the CONDITION SUM – a shoot week recovers at the
+// travel figure and the masseur's condition term comes off it – and that arithmetic is deliberately
+// UNTOUCHED by round 29. What moved is the drawing, which now matches the BILL.
+describe('round 28 #1 x #6, re-aimed at round 29 #3 - a shoot week draws his table, because the engine bills for one', () => {
+  // ⚠ MUTATION: put `&& !shooting` back into the masseur predicate in `calendarWeekFor` (the shipped
+  // defect) and the first assertion goes red while every other block in the file stays green.
+  it('a masseur at the top rung draws all of his sessions on a shoot week', () => {
     const daily = ECONOMY.masseur.rungs[2].sessions
     const wrapper = mountCalendar(withMasseur(shootingNext(), daily))
-    expect(blocksSaying(wrapper, 'Body work')).toBe(0)
+    expect(blocksSaying(wrapper, 'Body work')).toBe(daily)
     wrapper.unmount()
   })
 
-  it('...and the very same career draws all of them on the week before', () => {
-    // The control. Without it "0" could mean the masseur never draws at all.
+  it('...and the same rung draws exactly as many on the week before, so the shoot changed nothing', () => {
+    // The control, kept from the original block and re-pointed: it used to prove that "0" was not
+    // "he never draws at all"; it now proves the shoot week's count is not an accident of the
+    // fixture. Same career, same rung, a week the letter did not name.
     const daily = ECONOMY.masseur.rungs[2].sessions
-    const elsewhere = { ...base(), adShoot: { brand: BRAND, weeks: [AT + 4] } }
+    const elsewhere = { ...base(), adShoots: [{ brand: BRAND, weeks: [AT + 4] }] }
     const wrapper = mountCalendar(withMasseur(elsewhere, daily))
     expect(blocksSaying(wrapper, 'Body work')).toBe(daily)
+    wrapper.unmount()
+  })
+
+  it('⚠ and the negative it USED to be still exists – on a week the engine really does stand him down', () => {
+    // The block's original shape survives, pointed at a stand-down the ENGINE holds: a booked family
+    // week. Without this, "he always draws" would satisfy both tests above.
+    const daily = ECONOMY.masseur.rungs[2].sessions
+    const booked: Snapshot = {
+      ...shootingNext(),
+      vacations: [{ week: AT + 1, packageId: ECONOMY.vacation.packages[0].id, paidCents: 0 }],
+    }
+    const wrapper = mountCalendar(withMasseur(booked, daily))
+    expect(blocksSaying(wrapper, 'Body work')).toBe(0)
     wrapper.unmount()
   })
 })

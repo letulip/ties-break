@@ -35,6 +35,9 @@ import { retirementInjury } from './injury'
 import { kidMatchPlayerFor } from './player'
 import { fullRanking } from './ladder'
 import { practiceCoachRateFor } from './coachMarket'
+// ⚠ ROUND 29 #5 – the leaf (`world/assets.ts`), never `world/shop.ts`: this file is imported by the
+// shop's own dependency chain and a value import of the commands would close a cycle.
+import { grantedVacationIds } from './assets'
 import type { WorldState } from '../world'
 import { guardNotEnded, guardNotEndedForGood } from './endings'
 
@@ -117,8 +120,29 @@ export function bookVacation(world: WorldState, week: number, packageId: string)
   guardNotEnded(world)
   const pkg = vacationPackage(packageId)
   if (!pkg) throw new Error('Unknown vacation package')
+  // ⭐⭐ ROUND 29 #5 -> PART TWO #8, the-shop §3f – THE YACHT WEEK IS ON EVERY FAMILY'S SHELF NOW,
+  // AND A DELIVERED YACHT IS WHAT MAKES IT FREE.
+  //
+  // THE OWNER, #5: «а неделя на яхте (при наличии яхты) вполне может стать новой строкой отпуска.»
+  // Then #8: «можно просто на постоянку добавить в ленту сначала с реальной стоимостью, а после
+  // покупки яхты это станет бесплатным.»
+  //
+  // ⚠ THE REFUSAL THAT STOOD HERE («The family does not own that») guarded a row that did not
+  // exist for a boatless family; #8 made the row a charter anybody can book, so the engine-side
+  // re-validation moves from the ROW to the PRICE. The worker is still not the gate (CLAUDE.md
+  // invariant 1): the price is computed from the WORLD's own grant below, so a tab left open on a
+  // career that has since sold the boat books at the world's quote, never the stale screen's free
+  // one – and the affordability check two lines down still refuses a family that cannot pay it.
+  // DELIVERED rungs only, exactly as before: a contract is not a boat, and `grantedVacationIds`
+  // reads only what has arrived.
   assertPlannable(world, week, 'vacation')
-  const priceCents = vacationPriceCents(world.seed, week, packageId, world.profile.background)
+  const priceCents = vacationPriceCents(
+    world.seed,
+    week,
+    packageId,
+    world.profile.background,
+    grantedVacationIds(world),
+  )
   // R13-7a: a ZERO-PRICE package is always affordable. The bare `funds < price` refused the free
   // home-rest week the moment funds went negative (-$1 < $0), i.e. exactly when it is the one
   // thing a broke family can still book. Nothing is charged, so nothing has to be afforded.

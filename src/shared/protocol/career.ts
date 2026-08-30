@@ -469,6 +469,29 @@ export interface HandoffView {
   resumesAgeYears: number | null
 }
 
+/** ⭐ ROUND 29 PART TWO #10 – THE ACADEMY, IF THE FAMILY BUILT ONE. Settles the-shop §10.4 by his
+ *  own ruling: «Эпилог… надо добавить, мне кажется. Это всё-таки финал игры.» Null for the family
+ *  that never bought a stage – the epilogue says nothing rather than naming an absence.
+ *
+ *  ⚠ A WIRE FIELD AND NOT A SAVE FIELD, on `CollegeProgressView.billPerYearCents`' own argument:
+ *  read off `world.assets` and the businesses' one arithmetic at snapshot time, so no
+ *  `SAVE_SCHEMA_VERSION` bump, no migration, no golden fixture. ⚠ And it is FACTS, never
+ *  adjectives: the template writes the one sentence the way the `oneMoreYearCount` note already
+ *  does, and §6's «the game never grades her» holds because there is nothing here to grade with –
+ *  the album's own shape is reserved by the owner (the photo-album concept is a backlog item of
+ *  his) and this line does not touch it. */
+export interface AcademyEpilogue {
+  /** delivered stages standing at the end – 1..totalStages (0 never reaches the screen: the
+   *  whole field is null instead) */
+  stagesBuilt: number
+  /** the catalogue's own count of academy stages, so the copy never says «four» from a template */
+  totalStages: number
+  /** what it brings in a week NOW, in cents – the same `world/business.ts` arithmetic the till
+   *  banks, so the epilogue and the ledger cannot quote two figures. 0 while only the land is
+   *  bought (a field earns nothing), and the sentence stays honest about that. */
+  weeklyIncomeCents: number
+}
+
 /** THE EPILOGUE, whole. Present on the snapshot exactly while `world.ending` is latched, which is
  *  why the takeover gates on this FIELD and never on a stop reason: permanent state must survive
  *  any fresh snapshot (the same argument App.vue makes for the knock). */
@@ -486,6 +509,8 @@ export interface EndingView {
   titles: number
   /** how many times she answered "one more year" (§5.3's decade of decisions) */
   oneMoreYearCount: number
+  /** ⭐ round 29 part two #10 – the academy line, or null if no stage was ever built */
+  academy: AcademyEpilogue | null
   /** ⭐ P5: the college years, while she is living them. Null on every other ending and on college
    *  itself once she has left – it is the state of an OPEN question, and there is exactly one screen
    *  allowed to ask it. */

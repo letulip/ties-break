@@ -21,7 +21,7 @@
 import type { Snapshot } from '../shared/protocol'
 
 /** The blocking overlays, HIGHEST PRECEDENCE FIRST. `null` = the shell is free. */
-export type BlockingOverlay = 'ending' | 'knock' | 'birthday' | 'fork' | 'retirement'
+export type BlockingOverlay = 'ending' | 'knock' | 'birthday' | 'fork' | 'retirement' | 'shoot-clash'
 
 /**
  * ⚠ THE ORDER IS THE FEATURE. Each entry says which snapshot field raises it, and every one of these
@@ -60,6 +60,18 @@ export function blockingOverlay(snapshot: Snapshot | null): BlockingOverlay | nu
   if (snapshot.birthdayPrompt) return 'birthday'
   if (snapshot.fork) return 'fork'
   if (snapshot.retirementOffer) return 'retirement'
+  // ⭐⭐ 6. `shoot-clash` – ROUND 29 #3, and it is LAST for the reason every entry above it is where
+  // it is: it is the only question here about a week that has NOT STARTED. The five above are all
+  // about something already true – her body, her birthday, the fork she has reached, the offer she
+  // has been made, the career that has ended – and a question about next week can wait behind any of
+  // them without being lost, because the week it is about cannot begin until it is answered.
+  //
+  // ⚠ THE ORDER MATTERS MOST AGAINST THE FORK, which is why it is not merely tidy. Two of the fork's
+  // three answers END the career, and college takes her off the tour entirely (`releaseEntry` with
+  // reason 'college' pulls every entry she holds) – so answering the fork can delete this collision
+  // outright. Asking about a shoot week first would be asking him to decide a week that may not
+  // happen. `tests/blocking-overlay.test.ts` walks the queue and asserts it always empties.
+  if (snapshot.shootClash) return 'shoot-clash'
   return null
 }
 

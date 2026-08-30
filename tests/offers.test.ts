@@ -52,6 +52,7 @@ import {
   isSponsorReviewWeek,
   isSponsorWindowWeek,
   sponsorWindowOpensAt,
+  sponsorWindowClosesAt,
   kitOfferDeadline,
   isSponsorLetterWeek,
   contractEndWeek,
@@ -64,6 +65,10 @@ import {
   raiseKitEndLetter,
   raiseKitRenewal,
   rungFor,
+  rungStrength,
+  rungTurnedAway,
+  offerAnswerError,
+  signOffer,
   shopWritesAt,
   standingClears,
   seasonSpokenFor,
@@ -1257,9 +1262,23 @@ describe('the three rungs, and the tables they read', () => {
 })
 
 describe('⚠ ONE BRAND AT A TIME', () => {
-  it('a running deal turns the next rung away until it ends', () => {
+  it('a running deal turns AN EQUAL OR WEAKER rung away until it ends', () => {
     // The counterweight to the coverage, and the price of caution. She signs a two-season national
-    // deal; next winter she is inside the world top 8 and the global letter finds her busy.
+    // deal; next winter the LOCAL shop's letter finds her busy.
+    //
+    // ⚠⚠ RE-AIMED, ROUND 29 PART TWO #12, AND THE OWNER'S OWN WORDS ARE WHY: «открытое сейчас в
+    //   вашем ящике продление Baseline закроет и следующую зимнюю почту… там без спонсора
+    //   грустновато немного живется». This test used to sign the national deal and then assert that
+    //   a WORLD TOP-8 standing raised nothing – «she is top 8 in the world now, and it does not
+    //   matter». That sentence was the defect, stated as a property: measured across 108 careers,
+    //   360 of 1,274 winters were shut by this rule and **191 of them had a strictly stronger rung
+    //   standing behind the closed door**, most often `premium` behind a running `global`, which is
+    //   his save exactly.
+    //
+    //   ⚠ THE RULE IS NARROWED AND NOT REMOVED, so this test is narrowed with it rather than
+    //   deleted: a running deal still turns away every rung AT OR BELOW its own, which is what
+    //   `KitOfferTerms.seasons` is for and what keeps a long contract a real decision. The arm below
+    //   asks the weaker direction; its sibling immediately after asks the stronger one.
     const { world, id } = worldWithLetter('one-brand', LETTER_WEEK, worldly(20))
     expect((world.offers[0].terms as KitOfferTerms).tier).toBe('national')
     acceptOffer(world, id)
@@ -1275,14 +1294,117 @@ describe('⚠ ONE BRAND AT A TIME', () => {
 
     const nextReview = LETTER_WEEK + WEEKS_PER_YEAR
     expect(nextReview).toBeLessThan(until)
+    // A DOMESTIC-ONLY standing: the local shop clears, `national` is the incumbent's own rung, and
+    // nothing above it does. Every rung on her ladder is therefore at or below the running deal's.
+    const belowOnly = domestic(1)
+    expect(windowLadder(belowOnly).every((t) => rungStrength(t) <= rungStrength('national'))).toBe(true)
     const blocked = raiseKitOffers({
       offers: world.offers,
       seed: world.seed,
       week: nextReview,
-      standing: worldly(1), // ...she is top 8 in the world now, and it does not matter
+      standing: belowOnly,
     })
-    expect(blocked, 'a competing brand wrote while a deal was running').toEqual([])
+    expect(blocked, 'a weaker brand wrote while a deal was running').toEqual([])
     expect(world.offers).toHaveLength(1)
+  })
+
+  it('⭐⭐ ...but a STRICTLY STRONGER rung writes, and signing it ends the deal she is in', () => {
+    // ROUND 29 PART TWO #12, the other half of the rule above and the whole of the item. Same
+    // fixture: a two-season `national` deal signed in season 0's window. Next winter she is inside
+    // the world top 8 – `global` territory – and under the shipped rule she heard from nobody.
+    const { world, id } = worldWithLetter('step-up', LETTER_WEEK, worldly(20))
+    acceptOffer(world, id)
+    const running = world.offers[0]
+    expect((running.terms as KitOfferTerms).tier).toBe('national')
+    const until = running.untilWeek!
+    const nextReview = LETTER_WEEK + WEEKS_PER_YEAR
+    expect(nextReview, 'the fixture must sit INSIDE the running term').toBeLessThan(until)
+
+    // The seed is chosen so the rung's own dice say yes – the same courtesy every arm in this file
+    // extends, since the roll is a separate question from the gate and a missed roll would make this
+    // arm silently prove nothing.
+    const raised = raiseKitOffers({
+      offers: world.offers,
+      seed: seedTheShopWritesTo('step-up-roll', nextReview, worldly(1)),
+      week: nextReview,
+      standing: worldly(1),
+    })
+    const tiers = raised.map((o) => (o.terms as KitOfferTerms).tier)
+    expect(tiers.length, 'the ladder was still shut').toBeGreaterThan(0)
+    // EVERY letter raised is from a rung strictly above the one she is signed with – the weaker
+    // rungs are still turned away, in the same call, by the same predicate.
+    for (const t of tiers) expect(rungStrength(t)).toBeGreaterThan(rungStrength('national'))
+
+    // ...AND IT IS SIGNABLE. A letter the engine posts and then refuses would be worse than none.
+    const stepUp = raised[0]
+    expect(offerAnswerError(world.offers, stepUp.id, nextReview)).toBeNull()
+    signOffer(world.offers, stepUp.id, nextReview)
+    expect(stepUp.state).toBe('signed')
+
+    // ⚠ ONE BRAND AT A TIME SURVIVES LITERALLY: the deal she was in is pulled back to THIS season's
+    // contract end, so at no week are two contracts live.
+    expect(running.untilWeek).toBe(contractEndWeek(nextReview))
+    expect(stepUp.fromWeek).toBeGreaterThan(running.untilWeek!)
+    const live = (w: number) =>
+      world.offers.filter((o) => o.state === 'signed' && w >= (o.fromWeek ?? 0) && w <= (o.untilWeek ?? -1))
+    for (let w = nextReview; w <= (stepUp.untilWeek ?? 0); w++) expect(live(w).length).toBeLessThanOrEqual(1)
+
+    // ...and the brand she left says so, in its own voice and with its own reason – not `term`,
+    // because the term was not served.
+    const goodbye = world.offers.find((o) => o.id === `kit-end-${running.id}`)
+    expect(goodbye, 'the brand she left never wrote').toBeDefined()
+    expect((goodbye!.terms as KitOfferTerms).ended).toBe('stepped')
+  })
+
+  it('⚠ THE BOUNDARY THE STEP-UP CREATES: signed after the season has opened, it QUEUES instead', () => {
+    // ⚠ THE CASE EXISTS BECAUSE OF ROUND 28 #17-b, and it has to be asserted rather than reasoned
+    //   about. Every kit letter now carries five weeks from its own arrival, so one that lands on the
+    //   window's closing week is still answerable several weeks INTO the season it was for. By then
+    //   the running contract is no longer «covering the season ahead» – she is playing that season in
+    //   its kit – so `signOffer`'s supersede filter (`untilWeek > contractEndWeek(week)`) does not
+    //   fire, and the new deal QUEUES behind the old one through `dealStartsAt` instead of ending it.
+    //
+    //   ⭐ THAT IS THE RIGHT ANSWER AND NOT AN OVERSIGHT: ending a contract in the middle of the
+    //   season she is wearing its kit in would be the strange outcome, and the brand still serves its
+    //   full term and still says goodbye with reason `term` at its own end. What must hold either way
+    //   is the invariant, and it is what this arm measures: at NO week are two contracts live.
+    const { world, id } = worldWithLetter('late-step-up', LETTER_WEEK, worldly(20))
+    acceptOffer(world, id)
+    const running = world.offers[0]
+    const runningUntil = running.untilWeek!
+
+    // ⚠ THE LETTER HAS TO COME FROM A LATE SLOT FOR THIS ARM TO EXIST AT ALL. A slot-0 letter is
+    //   raised on the window's opening week and its five weeks die WITH the window, so it can never
+    //   be answered inside the season. The window's LAST slot is the one whose deadline reaches past
+    //   the close, and that overhang is exactly what round 28 #17-b bought.
+    const stepWeek = LETTER_WEEK + WEEKS_PER_YEAR
+    const lateSlotWeek = stepWeek + SPONSOR_LETTER_WEEKS - 1
+    const raised = raiseKitOffers({
+      offers: world.offers,
+      seed: seedTheShopWritesTo('late-step-up-roll', lateSlotWeek, worldly(1)),
+      week: lateSlotWeek,
+      standing: worldly(1),
+    })
+    const stepUp = [...raised].sort((a, b) => b.deadlineWeek - a.deadlineWeek)[0]
+    expect(stepUp, 'the fixture needs a step-up letter to hold').toBeDefined()
+
+    // He holds it past the window and answers inside the season it was for – legal since #17-b.
+    const lateWeek = stepUp.deadlineWeek
+    expect(lateWeek).toBeGreaterThan(sponsorWindowClosesAt(stepWeek))
+    expect(offerAnswerError(world.offers, stepUp.id, lateWeek)).toBeNull()
+    signOffer(world.offers, stepUp.id, lateWeek)
+
+    // The incumbent was NOT cut short – it is mid-season and serving its own term.
+    expect(running.untilWeek).toBe(runningUntil)
+    // ...the successor queues behind it, and the two never overlap on a single week.
+    expect(stepUp.fromWeek).toBe(runningUntil + 1)
+    const live = (w: number) =>
+      world.offers.filter((o) => o.state === 'signed' && w >= (o.fromWeek ?? 0) && w <= (o.untilWeek ?? -1))
+    for (let w = lateWeek; w <= (stepUp.untilWeek ?? 0); w++) {
+      expect(live(w).length, `week ${w}`).toBeLessThanOrEqual(1)
+    }
+    // ...and no `stepped` goodbye is written, because nobody was stepped over.
+    expect(world.offers.find((o) => o.id === `kit-end-${running.id}`)).toBeUndefined()
   })
 
   it('⚠ REVERSED (05.08): an unanswered letter no longer blocks – that IS the choice', () => {
@@ -1567,23 +1689,30 @@ describe('the sponsor window', () => {
     }
   })
 
-  it('a multi-season deal still turns the whole window away, which is what gives it bite', () => {
+  it('a multi-season deal still turns AN EQUAL OR WEAKER rung away all winter, which is what gives it bite', () => {
+    // ⚠⚠ RE-AIMED, ROUND 29 PART TWO #12. The standing this arm used to pass was `worldly(1)` – a
+    //   world top-8 girl, whose ladder is entirely ABOVE the national deal she is in – and asserting
+    //   that she heard from nobody all winter was asserting the defect the owner reported («там без
+    //   спонсора грустновато немного живется»). The rule it is really about survives untouched and
+    //   is what this arm now asks: a running deal shuts the whole window against every rung at or
+    //   below its own, on ALL FOUR letter weeks and however well she has done in the meantime.
+    //   The step-up direction has its own arm in «⚠ ONE BRAND AT A TIME» above.
     const { world, id } = worldWithLetter('multi-block', LETTER_WEEK, worldly(20))
     acceptOffer(world, id) // ...national, two seasons
     const until = world.offers[0].untilWeek!
-    // The window a whole season later: the deal still covers the season ahead, so nobody writes -
-    // on ANY of the four letter weeks, and however well she has done in the meantime.
+    const belowOnly = domestic(1)
+    expect(windowLadder(belowOnly).every((t) => rungStrength(t) <= rungStrength('national'))).toBe(true)
     for (let slot = 0; slot < SPONSOR_LETTER_WEEKS; slot++) {
       const week = LETTER_WEEK + WEEKS_PER_YEAR + slot
       expect(seasonSpokenFor(world.offers, week)?.id, `week ${week}`).toBe(id)
       expect(
         raiseKitOffers({
           offers: world.offers,
-          seed: seedTheShopWritesTo(`multi-block-${slot}`, week, worldly(1)),
+          seed: seedTheShopWritesTo(`multi-block-${slot}`, week, belowOnly),
           week,
-          standing: worldly(1),
+          standing: belowOnly,
         }),
-        `a competing brand wrote at week ${week}`,
+        `a weaker brand wrote at week ${week}`,
       ).toEqual([])
     }
     expect(world.offers).toHaveLength(1)
@@ -1620,6 +1749,13 @@ describe('the sponsor window', () => {
     // The window deliberately leaves several letters open at once; this is the rule that keeps the
     // game's oldest invariant - at most one deal - from being broken by the feature that makes
     // signing a choice.
+    //
+    // ⚠⚠ RE-AIMED, ROUND 29 PART TWO #12, AND THE ORDER OF THE TWO SIGNATURES IS THE WHOLE RE-AIM.
+    //   It used to sign the LOCAL letter and then force the stronger one through, and under the
+    //   step-up rule that is now legal on purpose - the stronger house may write over a running deal
+    //   and must therefore be signable. So the arm signs the STRONGER letter and forces the weaker
+    //   one, which is where the refusal still lives and where the stale screen actually is. The
+    //   invariant it protects has not moved a millimetre and is asserted below in BOTH directions.
     const { world, id } = worldWithLetter('stale-screen')
     const [second] = raiseKitOffers({
       offers: world.offers,
@@ -1627,12 +1763,17 @@ describe('the sponsor window', () => {
       week: world.week + 1,
       standing: worldly(1),
     })
-    acceptOffer(world, id)
-    // The second letter was refused in the same breath, so a screen still showing it is stale...
-    expect(second.state).toBe('refused')
+    const weakTier = (world.offers.find((o) => o.id === id)!.terms as KitOfferTerms).tier
+    const strongTier = (second.terms as KitOfferTerms).tier
+    expect(rungStrength(strongTier), 'the fixture must offer a STRONGER second rung').toBeGreaterThan(
+      rungStrength(weakTier),
+    )
+    acceptOffer(world, second.id)
+    // The other letter was refused in the same breath, so a screen still showing it is stale...
+    expect(world.offers.find((o) => o.id === id)!.state).toBe('refused')
     // ...and forcing it through the engine's own gate is refused with a reason, not honoured.
-    second.state = 'open' // a corrupted save / a hand-edited screen, in one line
-    expect(() => acceptOffer(world, second.id)).toThrow()
+    world.offers.find((o) => o.id === id)!.state = 'open' // a corrupted save / a hand-edited screen
+    expect(() => acceptOffer(world, id)).toThrow()
     expect(world.offers.filter((o) => o.state === 'signed')).toHaveLength(1)
   })
 })
@@ -2337,7 +2478,95 @@ describe('⚠ THE RENEWAL – the familiar brand writes last, and only last', ()
     expect(row.text).not.toContain(`A letter from ${brand}`)
     expect(row.text).not.toContain(`Letters from ${brand}`)
   })
+
+  // ===============================================================================================
+  // ⭐⭐⭐ ROUND 29 PART TWO #12 – THE RENEWAL THAT SHUT THE WINTER'S POST
+  // ===============================================================================================
+  //
+  // THE OWNER: «открытое сейчас в вашем ящике продление Baseline закроет и следующую зимнюю почту…
+  // вот с этим надо что-то делать, там без спонсора грустновато немного живется.»
+  //
+  // ⚠ IT IS THE COST OF ROUND 28 #17 SURFACING AND NOT A REGRESSION OF IT, so the fix is NOT to undo
+  // the suppression above – it is to stop a RUNNING deal shutting the post against a bigger house.
+  // Baseline Athletic is `tour` and runs TWO seasons, so taking its renewal bought a winter in which
+  // nobody at all wrote. Measured before it was changed (108 careers x 780 weeks): of 1,274 winters,
+  // 416 produced no kit letter, 360 of those were shut by `seasonSpokenFor` – with ZERO letters
+  // raised in a single one of them – and in 191 a STRICTLY STRONGER rung was standing behind the
+  // closed door, most often `premium` behind a running `global`.
+  it('⭐⭐ ROUND 29 PART TWO #12 – a renewal and a DIFFERENT brand write in one winter, and no brand twice', () => {
+    const brandOf = (o: Offer): string => (o.terms as KitOfferTerms).brand
+    // The same fixture the round 28 #17 arm uses, and for the same reason: a LOCAL contract finishing
+    // under a girl who also holds an international standing, so the ladder has somebody else to send.
+    let world: WorldState | null = null
+    for (let attempt = 0; attempt < 60 && !world; attempt++) {
+      const probe = careerWithExpiringDeal(`renew-plus-${attempt}`, { ranked: true })
+      playWinter(probe)
+      const winter = probe.offers.filter((o) => o.kind === 'kit' && o.week >= LATE_OPEN && o.state !== 'info')
+      const renewal = winter.find((o) => o.id.startsWith('kit-renew'))
+      const others = winter.filter((o) => o !== renewal)
+      if (renewal && others.length > 0) world = probe
+    }
+    expect(world, 'no seed in 60 tries produced BOTH a renewal and another brand`s letter').not.toBeNull()
+
+    const winter = world!.offers.filter((o) => o.kind === 'kit' && o.week >= LATE_OPEN && o.state !== 'info')
+    const renewal = winter.find((o) => o.id.startsWith('kit-renew'))!
+    const others = winter.filter((o) => o !== renewal)
+    expect((renewal.terms as KitOfferTerms).renewal).toBe(true)
+    expect(others.length, 'the winter carried nothing but the renewal').toBeGreaterThan(0)
+    // ⚠ ROUND 28 #17 IS UNTOUCHED AND IS ASSERTED HERE TOO, because that is the property this item
+    // is most at risk of breaking: one letter per brand across the whole winter.
+    const names = winter.map(brandOf)
+    expect(new Set(names).size, names.join(', ')).toBe(names.length)
+    // ...and the incumbent's own rung is not among the strangers.
+    expect(others.map(brandOf)).not.toContain(brandOf(renewal))
+  })
+
+  it('⭐⭐ ROUND 29 PART TWO #12 – and the winter AFTER a two-season renewal is no longer silent', () => {
+    // His sentence, as a fixture. A `tour` contract (Baseline Athletic, two seasons) is running and
+    // covers the season ahead, so under the shipped rule the whole window returned empty. She has
+    // climbed into `premium` territory in the meantime – Meridian Sport – which is what his save
+    // shut out.
+    const world = createWorld('renewal-shuts-next', DEFAULT_PROFILE)
+    world.week = LATE_OPEN
+    const running: Offer = {
+      id: 'kit-tour-renewal',
+      kind: 'kit',
+      week: LETTER_WEEK,
+      deadlineWeek: WINDOW_CLOSE_WEEK,
+      terms: { ...kitTermsFor(pro(150), 'tour')!, renewal: true },
+      state: 'signed',
+      decidedWeek: LETTER_WEEK,
+      fromWeek: LETTER_WEEK,
+      // Two seasons: it reaches past the season this window is about, which is what shuts the post.
+      untilWeek: contractEndWeek(LATE_OPEN) + WEEKS_PER_YEAR,
+    }
+    world.offers.push(running)
+    const standing = pro(20) // ...inside `premium`'s gate now, and outside `tour`'s old band
+    expect(seasonSpokenFor(world.offers, LATE_OPEN)?.id, 'the fixture must be inside a running term').toBe(running.id)
+    expect(windowLadder(standing)).toContain('premium')
+
+    const raised = raiseKitOffers({
+      offers: world.offers,
+      seed: seedTheShopWritesTo('renewal-shuts-next-roll', LATE_OPEN, standing),
+      week: LATE_OPEN,
+      standing,
+    })
+    const tiers = raised.map((o) => (o.terms as KitOfferTerms).tier)
+    expect(tiers.length, 'the winter after the renewal was still silent').toBeGreaterThan(0)
+    for (const t of tiers) expect(rungStrength(t)).toBeGreaterThan(rungStrength('tour'))
+    expect(raised.map(brandOfTerms)).toContain(ECONOMY.sponsorship.premium.brand)
+
+    // ⚠ AND THE RENEWAL'S OWN BITE SURVIVES: `tour` itself, and everything under it, is still turned
+    // away by the deal she is in. It is a narrowing, not a removal.
+    for (const weaker of ['local', 'national', 'tour'] as const) {
+      expect(rungTurnedAway(world.offers, LATE_OPEN, weaker)?.id).toBe(running.id)
+    }
+    expect(rungTurnedAway(world.offers, LATE_OPEN, 'premium')).toBeNull()
+    expect(rungTurnedAway(world.offers, LATE_OPEN, 'icon')).toBeNull()
+  })
 })
+
+const brandOfTerms = (o: Offer): string => (o.terms as KitOfferTerms).brand
 
 describe('the letter arrives in the OFF-SEASON, once', () => {
   it('⚠ fires on the FIRST quiet week and on no other one', () => {

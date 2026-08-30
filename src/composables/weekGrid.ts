@@ -98,7 +98,7 @@
 // ⚠ AND SINCE v47 IT TAKES NO VALUE FROM THAT MODULE AT ALL. It used to import `sessionDays` to
 // re-derive which day indexes the plan bought; the plan is a matrix now and the week carries the
 // answer as `planDays` - see `planRoles` below for why that is a repair rather than a rename.
-import type { CalendarDay, CalendarWeek, DayBeat, DayKind } from './weekDays'
+import type { CalendarDay, CalendarWeek, DayBeat, DayKind, TripFacts } from './weekDays'
 import { hash32 } from './fridgeNote'
 
 /** One coloured block in the grid. Hours are PRESENTATION – see the header. */
@@ -114,13 +114,21 @@ export interface DayBlock {
   label: string
 }
 
-/** The design system's `event` palette, one member per kind of hour. Every one is on `:root`
- *  (src/style.css); the three that still have no caller are written down at `DAY_SHAPES` rather
- *  than left as a puzzle. */
+/** The design system's `event` palette, one member per kind of hour; the three that still have no
+ *  caller are written down at `DAY_SHAPES` rather than left as a puzzle.
+ *
+ *  ⚠ `press` IS THE FIRST MEMBER THE DESIGN EXPORT NEVER CARRIED (round 29 P14), and the note that
+ *  used to stand here – "every one is on `:root` (src/style.css)" – meant the `--event-*` family,
+ *  which the grid stopped painting with in round 19: the owner found those colours «грустно-унылые»
+ *  and asked for the wallet's, so the blocks wear `--cat-*` now and `--event-*` survives only as the
+ *  record of what he sent. Inventing an `--event-press` row would make that record lie about it, so
+ *  press takes a `--cat-*` the wallet already declares and NO new colour is added anywhere. The rule
+ *  that matters is unchanged and still pinned: every kind here has a `.cal-block--<kind>` rule
+ *  painted from a declared token (tests/calendar-grid.test.ts). */
 export type BlockKind =
   | 'training' | 'trainingAlt' | 'gym' | 'school' | 'schoolLong'
   | 'drills' | 'match' | 'matchLong' | 'study' | 'travel' | 'rest'
-  | 'tournament' | 'physio' | 'vacation'
+  | 'tournament' | 'physio' | 'vacation' | 'press'
 
 /** The first and last hour the grid has room for, and the labelled rules between them. 07:00–19:00
  *  is the mockup's own span (docs/design/screenshots/H-calendar-week.webp); a block outside it would
@@ -335,11 +343,25 @@ export interface DayContext {
    *  default for the same reason `offSeason` is: a test that forgets it gets the term-time week,
    *  which is the safe direction. Only the ORDINARY day shapes read it - see `summerOrdinary`. */
   summer?: boolean
+  /** ⭐⭐ ROUND 29 P15/P13/P14 – WHAT THIS TRIP IS, on a week that is one. Data, like its four
+   *  neighbours above and for their reason: this module may not import from `../engine/`, and the
+   *  draw's round count, the masseur's seat and the rung's press room are all engine facts.
+   *
+   *  Optional and absent by default, which gives a caller that forgets THE COMMON WEEK: a five-round
+   *  draw – «основная масса», and the one every rung from the National Series to the WTA 500 is –
+   *  with no press room and no masseur, so a test that omits it asks for the least the arc can
+   *  assert rather than the most. See `TRIP_DEFAULT`. */
+  trip?: TripFacts
   /** 0 = Monday … 6 = Sunday */
   index: number
   /** what the PLAN made of this day – or would have, on a week it does not own. */
   role: OrdinaryKind
 }
+
+/** What a trip week is when nobody said – the common draw, no press room, no masseur. See
+ *  `DayContext.trip` for why absence resolves to the quiet middle of the ladder rather than to the
+ *  biggest thing the arc can draw. */
+export const TRIP_DEFAULT: TripFacts = { rounds: 5, masseur: false, press: false }
 
 /** The context a caller that has none gets: Monday, and a rest day. Deliberately the QUIETEST day
  *  the tables can produce, so a caller that forgets to say which day it is asks for the least the
@@ -385,25 +407,212 @@ function examDay(shapes: BandShapes, day: DayContext): readonly DayBlock[] {
   return [{ start: paper[0], span: paper[1], kind: 'school', label: 'Exam' }, ...rest]
 }
 
-/** ⚠ THE TRIP, AND NOT ONE ROUND IS NAMED. Travel out, a hit on court at the venue, the tournament
- *  across the middle of the week, travel home. Every day of the event carries the SAME block, and
- *  what it says is when the tournament is on - not that she is still in it. The week has not been
- *  played: a block reading "R2" on the Thursday would assert she came through Wednesday, which is
- *  the sim's call and not the calendar's.
+// =================================================================================================
+// ⭐⭐ THE TRIP – ROUND 29 P15 / P13 / P14
+// =================================================================================================
+//
+// ⚠ THE TRIP, AND NOT ONE ROUND IS NAMED. Travel out, a hit on court at the venue, the tournament
+// across the middle of the week, travel home. Every day of the event carries the SAME block, and
+// what it says is when the tournament is on - not that she is still in it. The week has not been
+// played: a block reading "R2" on the Thursday would assert she came through Wednesday, which is
+// the sim's call and not the calendar's. That rule is UNCHANGED by the three items below.
+//
+// ⚠⚠ AND IT USED TO BE A FIXED SEVEN-DAY TABLE, FOUR OF WHOSE DAYS WERE THE DRAW – for every rung
+// from a Local Open to Wimbledon. The owner asked for the count to follow the event (P15): «давай
+// здесь тоже сделаем разное количество Draw day в зависимости от уровня турнира: на локалах 3 дня,
+// National 4 (вроде), основная масса 5, а на 1000 вообще 6 (Шлем 7)».
+//
+// ⭐ THE COUNT IS NOT A TABLE OF TASTES – IT IS THE DRAW'S OWN ROUNDS. `weekDays.ts`'s
+// `tripRoundsFor` is `Math.log2(TIERS[tier].drawSize)`, which is `runTournament`'s own arithmetic,
+// and the shipped draw sizes hand back exactly the numbers he asked for: 8 -> 3, 16 -> 4, 32 -> 5,
+// 64 -> 6, 128 -> 7. Nothing here is fitted to his list; his list is what the catalogue already said.
+//
+// ⚠⚠ AND THE BIG TIERS FIT INSIDE THE WEEK BECAUSE THE TRAVEL MOVES, NOT BECAUSE THE TENNIS
+// SHRINKS – his second ruling, and it is the one that made P15 buildable at all. Seven days minus a
+// travel day at each end leaves five, so a 1000 (six rounds) and a Slam (seven) had nowhere to go.
+// Two-week events were put to him and he declined them for now – «Не уверен, что нам в нашу сложную
+// сетку надо вплетать еще и 2х недельные турниры. Подожди с этим» – and proposed this instead:
+//
+//   «Если у нас на неделе ожидается шлем или 1000, то мы вполне можем на предыдущей неделе в
+//    Воскресенье начать ехать на турнир, тогда вся неделя будет в нормальном матчевом расписании с
+//    поездкой домой либо снова в Вс (если был 1000), либо в Пн следующей недели (если был Шлем). И
+//    тогда не надо ничего менять в нашей раскладке, всё остается в пределах недели как было.»
+//
+// So the TOURNAMENT never leaves its week – no entry, no schedule and no tick changes, and the
+// engine is not touched by any of this – and only the JOURNEY spills onto the neighbour's edge. It
+// falls out of the round count with no second switch to keep in step:
+//
+//   rounds <= 5   the arc keeps both its own travel days (5: no court hit – there is no room left)
+//   rounds == 6   the departure is the previous week's Sunday; Mon-Sat play, home on the Sunday
+//   rounds == 7   the departure is the previous week's Sunday and the whole week is the draw
+//
+// ⚠ THE RETURN FROM A SLAM – his «в Пн следующей недели» – IS THE ONE HALF THAT IS NOT DRAWN, and
+// the reason is a fact about the snapshot rather than a decision: `upcoming` is `week > world.week`,
+// so this screen can look FORWARD one week and cannot look BACK one at all. The departure lend is
+// therefore honest and the return lend would have to be guessed. See `lendsSunday` in weekDays.ts
+// and round-29's P16 for the cheapest route to it if the owner wants that Monday drawn.
+
+/** The days a drawn week has. Named because three rules below are arithmetic against it. */
+const WEEK_DAYS = 7
+/** The trip keeps its own DEPARTURE day while the draw leaves room for one at each end. */
+export function tripKeepsDeparture(rounds: number): boolean {
+  return rounds + 2 <= WEEK_DAYS
+}
+/** ...and its own RETURN day while the draw leaves room for one at the end. */
+export function tripKeepsReturn(rounds: number): boolean {
+  return rounds + 1 <= WEEK_DAYS
+}
+
+/** ⚠ THE COURT HIT IS `training` AND NOT `drills`, and it is the one invariant that keeps this week
+ *  from lying about the plan: `drills` MEANS "the session the plan bought", every week, everywhere.
+ *  A trip does not spend the plan's sessions - the family is away - so the hour she spends on court
+ *  at the venue is a different kind of hour and wears a different colour.
  *
- *  The court hit is `training` rather than `drills` on purpose, and it is the one invariant that
- *  keeps this week from lying about the plan: `drills` MEANS "the session the plan bought", every
- *  week, everywhere. A trip does not spend the plan's sessions - the family is away - so the hour
- *  she spends on court at the venue is a different kind of hour and wears a different colour. */
-const TRIP_ARC: readonly (readonly DayBlock[])[] = [
-  [{ start: 9, span: 4, kind: 'travel', label: 'Travel out' }],
-  [{ start: 10, span: 2, kind: 'training', label: 'Court hit' }],
-  [{ start: 10, span: 4, kind: 'tournament', label: 'Draw day' }],
-  [{ start: 10, span: 4, kind: 'tournament', label: 'Draw day' }],
-  [{ start: 10, span: 4, kind: 'tournament', label: 'Draw day' }],
-  [{ start: 10, span: 4, kind: 'tournament', label: 'Draw day' }],
-  [{ start: 11, span: 4, kind: 'travel', label: 'Travel home' }],
-]
+ *  ⚠ AND IT IS THE PIECE THAT GIVES WAY FIRST when the draw gets longer, because it is the only day
+ *  of the arc that is not a fact: the travel has to happen and the matches have to be played, while
+ *  "she practised at the venue on the Tuesday" is the arc's own furniture. From five rounds up there
+ *  are none. */
+const TRIP_TRAVEL_OUT: DayBlock = { start: 9, span: 4, kind: 'travel', label: 'Travel out' }
+const TRIP_COURT_HIT: DayBlock = { start: 10, span: 2, kind: 'training', label: 'Court hit' }
+const TRIP_DRAW_DAY: DayBlock = { start: 10, span: 4, kind: 'tournament', label: 'Draw day' }
+const TRIP_TRAVEL_HOME: DayBlock = { start: 11, span: 4, kind: 'travel', label: 'Travel home' }
+
+/** ⭐⭐ P14 – THE PRESS CONFERENCE, and it is FLAVOUR: it costs nothing, moves no number, spends no
+ *  hour the sim knows about and cannot block a week. The owner scoped it himself – «на тех уровнях
+ *  турниров, где это актуально» – and `tierHoldsPress` (weekDays.ts) draws that line at the WTA main
+ *  tour, where the engine already pays an appearance fee to have her on the poster.
+ *
+ *  ⚠ ONE HOUR, ON A MATCH DAY AND NOWHERE ELSE: no press room opens for a travel day or a practice
+ *  day. Where it sits inside that day is `tripMatchDay`'s decision, not this constant's - see the
+ *  ORDER note there, which is the owner's own enumeration. */
+const TRIP_PRESS: Omit<DayBlock, 'start'> = { span: 1, kind: 'press', label: 'Press' }
+
+/** ⭐⭐ P13 – THE MASSEUR'S HOUR ON TOUR, «сессии массажа после матчей по плану», drawn on the match
+ *  days and only there.
+ *
+ *  ⚠⚠ IT IS NOT THE RUNG'S TABLE AND IT MUST NOT BE COUNTED AS ONE. `addMasseurTable` below draws
+ *  the WEEKLY rung – 2 / 4 / 7 sessions, laid on the days the plan bought – and a trip does not
+ *  spend the plan's days, which is why that table used to land on a tour week's Monday and Tuesday
+ *  (the travel day and the practice day) and miss every match of the week at the entry rung. FOLLOW
+ *  THE MONEY: on the week he boards, the weekly bill STANDS DOWN (`resolveMasseur`) and
+ *  `masseurTourWeekCents` charges MATCHES PLAYED x the session rate instead, while `masseurTourRelief`
+ *  pays back per NIGHT BETWEEN ROUNDS. The rung buys nothing on tour, so drawing the rung on tour
+ *  would be the picture promising a dial the ledger does not read. One session per match day is what
+ *  the engine already bills for.
+ *
+ *  ⚠ WHERE IT SITS IS `tripMatchDay`'s ORDER note, one function down. */
+const TRIP_TABLE: Omit<DayBlock, 'start'> = { span: 1, kind: 'physio', label: 'Body work' }
+
+/** ⭐ P15 – ONE MATCH DAY, with whatever the rung hangs on it, in the order he named them.
+ *
+ *  ⚠⚠ THE ORDER IS THE OWNER'S OWN ENUMERATION AND IT WAS THE OTHER WAY ROUND IN THE FIRST DRAFT.
+ *  I had written match -> microphone -> table on the reasoning that a real press conference follows
+ *  a match within the half-hour. His sentence closing the return («можно сделать в Вс **после
+ *  матчей, массажа и конференций**») lists them in HIS order, and it is the one the day is built in
+ *  now: **draw -> table -> press -> the journey home**. One order on every match day of every rung,
+ *  so the last day of a Slam is the same day as its other six with a flight added rather than a day
+ *  shaped differently from its own week.
+ *
+ *  ⚠ EACH BLOCK SITS DIRECTLY BEHIND THE ONE BEFORE IT – no gaps to reason about, and the day's end
+ *  is `dayEnd` below, which is what the journey home is placed against. */
+function tripMatchDay(trip: TripFacts): DayBlock[] {
+  const day: DayBlock[] = [{ ...TRIP_DRAW_DAY }]
+  if (trip.masseur) day.push({ ...TRIP_TABLE, start: dayEnd(day) })
+  if (trip.press) day.push({ ...TRIP_PRESS, start: dayEnd(day) })
+  return day
+}
+
+/** The hour a day's blocks finish at. Written as a fold over every block rather than as
+ *  `last.start + last.span`, because "the last one in the array" is an assumption about how the day
+ *  was built and this is a fact about the day. */
+function dayEnd(day: readonly DayBlock[]): number {
+  return day.reduce((end, b) => Math.max(end, b.start + b.span), GRID_START_HOUR)
+}
+
+/** ⭐⭐ ROUND 29 P16 – THE JOURNEY HOME ON THE LAST MATCH DAY, when the draw leaves no day for it.
+ *
+ *  ⚠⚠ THIS IS WHAT CLOSED THE ONE HALF OF HIS DESIGN THAT COULD NOT BE DRAWN. He first described a
+ *  Slam's return as «в Пн следующей недели», and that Monday is unreachable from here: the calendar
+ *  draws `snapshot.week + 1` and `upcoming` is filtered to `week > world.week`, so this screen can
+ *  look FORWARD one week and cannot look back one at all. Nothing was drawn rather than something
+ *  guessed. Put to him, he removed the need for the lookback entirely:
+ *
+ *    «возвращение со Шлема в понедельник следующей недели – да, окей, можно сделать в Вс после
+ *     матчей, массажа и конференций»
+ *
+ *  So the flight is the last thing on the Sunday, behind all three, and the whole trip is inside its
+ *  own week again – no neighbour is asked anything.
+ *
+ *  ⚠ IT TAKES THE EVENING THAT IS LEFT, IT DOES NOT TAKE AN HOUR FROM ANYBODY. The block starts at
+ *  `dayEnd` and runs to the end of the grid, so a Sunday that holds a final, a rub-down and a press
+ *  hour still holds all three and the flight is what the rest of the evening is. That is also what a
+ *  real flight home after a final is - an evening one.
+ *
+ *  ⚠ THE `start >= GRID_END_HOUR` ARM IS UNREACHABLE TODAY AND HAS NO TEST OF ITS OWN – said plainly,
+ *  because a branch with a comment claiming coverage it does not have is how a dead guard is born
+ *  (this file's own colour pin was exactly that, one item ago). A match day ends at 16:00 at the very
+ *  most, so nothing can reach it. What IS pinned is its PREMISE: no day of any rung ends late enough
+ *  to need it (tests/component/round29-trip-week.test.ts), so lengthening any of the three blocks
+ *  reddens there and this arm starts mattering on the same commit. It stays because the alternative
+ *  to declining would be a zero- or negative-span block, and declining is the direction every other
+ *  rule in this file keeps.
+ *
+ *  ⚠ THE 1000 DOES NOT COME THROUGH HERE. Six rounds still leave a whole Sunday for the journey
+ *  (`tripKeepsReturn`), which is his own «либо снова в Вс (если был 1000)» - a travel DAY, not a
+ *  travel evening. This is the Slam's rule, and the only shipped rung it can reach. */
+function addEveningReturn(day: DayBlock[]): DayBlock[] {
+  const start = dayEnd(day)
+  if (start >= GRID_END_HOUR) return day
+  return [...day, { start, span: GRID_END_HOUR - start, kind: 'travel', label: 'Travel home' }]
+}
+
+/** ⭐ P15 – THE WHOLE TRIP, seven days of it, as a function of the draw the family entered.
+ *
+ *  ⚠ IT ALWAYS RETURNS SEVEN DAYS and it always spends every one of them: a column the arc forgot
+ *  would be an empty day on a week the family paid to be away for, which is the silent failure this
+ *  file keeps writing tests against. The arithmetic is `hits = 7 - departure - rounds - return`, and
+ *  the two ends fall away in the order the owner's design says they do. */
+export function tripArcFor(trip: TripFacts): readonly (readonly DayBlock[])[] {
+  // ⚠ CLAMPED, AND THE GUARD IS AGAINST A ROUND COUNT THAT IS NOT A NUMBER AT ALL rather than
+  // against a rung that does not exist: a NaN would fall through `Math.min`/`Math.max` untouched and
+  // draw a week of nothing, which is the silent empty column this file spends its tests on.
+  const asked = Number.isFinite(trip.rounds) ? Math.round(trip.rounds) : TRIP_DEFAULT.rounds
+  const rounds = Math.max(1, Math.min(WEEK_DAYS, asked))
+  const out: DayBlock[][] = []
+  if (tripKeepsDeparture(rounds)) out.push([{ ...TRIP_TRAVEL_OUT }])
+  const hits = WEEK_DAYS - out.length - rounds - (tripKeepsReturn(rounds) ? 1 : 0)
+  for (let i = 0; i < hits; i++) out.push([{ ...TRIP_COURT_HIT }])
+  for (let i = 0; i < rounds; i++) out.push(tripMatchDay(trip))
+  // ⭐ P16 – SHE COMES HOME EITHER WAY, and the only question is whether the journey gets a day or an
+  // evening. Both arms are his: «либо снова в Вс (если был 1000)» is the day, «в Вс после матчей,
+  // массажа и конференций» is the evening. So no trip of any length now ends without a way home.
+  if (tripKeepsReturn(rounds)) out.push([{ ...TRIP_TRAVEL_HOME }])
+  else out[out.length - 1] = addEveningReturn(out[out.length - 1])
+  return out
+}
+
+/** ⭐ P15 – THE DEPARTURE THE NEIGHBOUR LENDS, on the Sunday before a draw too long to start at home.
+ *
+ *  ⚠ IT IS THE LAST HOUR OF THE DAY OR IT IS NOTHING, and that is the whole fence. The week that
+ *  lends the Sunday is still an ordinary week - his own «не надо ничего менять в нашей раскладке» -
+ *  so this may not move a session, shorten a rest day or take an hour the plan bought. It asks for
+ *  the one hour at the end of the grid and draws nothing at all when that hour is spoken for.
+ *  Declining to draw is always available; taking a block away from the day it belongs to is not.
+ *
+ *  ⚠⚠ WHICH MAKES IT A PROFESSIONAL'S BLOCK IN PRACTICE, AND THAT IS STATED RATHER THAN DISCOVERED.
+ *  Past school her evening is her own (`dropSchoolFurniture` takes the homework hour off every day),
+ *  so 18:00 is free on a rest Sunday and on a court Sunday alike and the departure is drawn. AT
+ *  FOURTEEN IT IS NOT: the school band puts `Study` at 18:00 on every shape, so a schoolgirl's Sunday
+ *  keeps its homework hour and the loan says nothing. That is the right way round for the two rungs
+ *  this rule exists for - a Slam and a 1000 are entered by a professional - and the alternative was
+ *  a composition rule that could delete a fourteen-year-old's homework to make room for a flight.
+ *  Both arms are pinned in tests/component/round29-trip-week.test.ts so neither is a surprise. */
+const TRIP_LENT_DEPARTURE: DayBlock = {
+  start: GRID_END_HOUR - 1,
+  span: 1,
+  kind: 'travel',
+  label: 'Travel out',
+}
 
 /** THE FAMILY'S WEEK. Two weeks reach this shape - a booked package and the off-season - and the one
  *  thing they share is the one thing the read-out under the grid already says out loud: «no tennis
@@ -554,6 +763,25 @@ const VACATION_ARCS: Record<string, readonly (readonly DayBlock[])[]> = {
     [{ start: 9, span: 3, kind: 'physio', label: 'Final review' }, { start: 13, span: 3, kind: 'vacation', label: 'Free time' }],
     [{ start: 10, span: 4, kind: 'travel', label: 'Home' }],
   ],
+  // ⭐⭐ ROUND 29 #5 – THE SEVENTH, AND IT IS THE ONE RUNG WHOSE GAIN IS NOT BOUGHT WITH TREATMENT.
+  // docs/specs/the-shop-2026-08.md §3f, the owner: «а неделя на яхте (при наличии яхты) вполне может
+  // стать новой строкой отпуска, кстати». It ties the clinic on the number and gets there the other
+  // way: nothing to be on time for, nobody able to reach her, and a week of it. So there is no
+  // physio in this arc AT ALL and that is deliberate rather than an omission – a boat is not a
+  // clinic, and drawing six massage sessions on it would be the clinic's week with a new label.
+  // `tests/calendar-grid.test.ts`'s treatment ladder is re-aimed at the six the money buys, with the
+  // reason written where the guard is.
+  //
+  // TWO TRAVEL DAYS, because the boat is where the boat is: they fly to it and they fly home.
+  'yacht-week': [
+    [{ start: 9, span: 4, kind: 'travel', label: 'Flight out' }, { start: 15, span: 2, kind: 'vacation', label: 'Aboard' }],
+    [{ start: 10, span: 3, kind: 'rest', label: 'Lie-in' }, { start: 13, span: 4, kind: 'vacation', label: 'The sea' }],
+    [{ start: 9, span: 2, kind: 'study', label: 'Study' }, { start: 11, span: 5, kind: 'vacation', label: 'Swim' }],
+    [{ start: 10, span: 3, kind: 'rest', label: 'No plans' }, { start: 13, span: 4, kind: 'vacation', label: 'The sea' }],
+    [{ start: 9, span: 2, kind: 'study', label: 'Study' }, { start: 11, span: 5, kind: 'vacation', label: 'Ashore' }],
+    [{ start: 10, span: 3, kind: 'rest', label: 'Lie-in' }, { start: 13, span: 4, kind: 'vacation', label: 'Last swim' }],
+    [{ start: 10, span: 4, kind: 'travel', label: 'Flight home' }],
+  ],
 }
 
 /** Everything that is her SPORT, as opposed to school, homework, rest, a journey or the family's
@@ -683,7 +911,7 @@ const SHOOT_DAY: readonly DayBlock[] = [
  *  whether or not its neighbours are. */
 const WEEK_SHAPES: Record<WeekKind, (shapes: BandShapes, day: DayContext) => readonly DayBlock[]> = {
   school: examDay,
-  away: (_shapes, day) => TRIP_ARC[day.index] ?? [],
+  away: (_shapes, day) => tripArcFor(day.trip ?? TRIP_DEFAULT)[day.index] ?? [],
   shoot: () => SHOOT_DAY,
   // Three weeks wear one kind, and they are told apart by DATA the composer hands down rather than by
   // anything this module could look up: the off-season block, a named family package, and the generic
@@ -858,7 +1086,13 @@ function dropSchoolFurniture(schoolOver: boolean, blocks: DayBlock[]): DayBlock[
  *  characters (tests/calendar-grid.test.ts, measured in the browser at 375pt – an eight-letter word
  *  has nowhere to break but inside itself). `Body work` is the masseur module's own phrase for what
  *  he sells, and it does not read as the physio's `Physio` / `Rub-down`, which is the distinction
- *  the whole hire rests on. */
+ *  the whole hire rests on.
+ *
+ *  ⚠⚠ AND IT IS THE WEEKLY RUNG'S TABLE, WHICH A TOUR WEEK DOES NOT BUY (round 29 P13). `week.
+ *  masseurDays` is empty on a trip now and the trip draws its own sessions – one per match day, in
+ *  `tripMatchDay` – because the engine stands the weekly bill down on the week he boards and charges
+ *  matches played instead. This rule is therefore the HOME week's, exactly as its own paragraph
+ *  above describes it: the days the plan bought. */
 const MASSEUR_BLOCK: Omit<DayBlock, 'start'> = { span: 1, kind: 'physio', label: 'Body work' }
 function addMasseurTable(masseurDays: readonly number[], index: number, blocks: DayBlock[]): DayBlock[] {
   if (!masseurDays.includes(index)) return blocks
@@ -867,6 +1101,24 @@ function addMasseurTable(masseurDays: readonly number[], index: number, blocks: 
     if (free) return [...blocks, { ...MASSEUR_BLOCK, start: hour }]
   }
   return blocks
+}
+
+/** ⭐ ROUND 29 P15 – THE SUNDAY A WEEK LENDS TO THE NEXT WEEK'S DEPARTURE. See
+ *  `TRIP_LENT_DEPARTURE` for the fence: the last hour of the day or nothing at all, so an ordinary
+ *  week stays exactly the ordinary week it was and this can only ever decline. */
+const LENT_DAY = WEEK_DAYS - 1
+function addLentDeparture(nextTripRounds: number | null, index: number, blocks: DayBlock[]): DayBlock[] {
+  if (nextTripRounds === null || index !== LENT_DAY) return blocks
+  // ⚠ THE ARITHMETIC IS ASKED HERE AND NOWHERE ELSE. `weekDays.ts` hands down the round COUNT and
+  // this file decides what a week that long does with it – the same one-owner rule that keeps the
+  // arc and the loan from disagreeing about which rungs leave at the weekend.
+  if (tripKeepsDeparture(nextTripRounds)) return blocks
+  const free = blocks.every(
+    (b) =>
+      TRIP_LENT_DEPARTURE.start + TRIP_LENT_DEPARTURE.span <= b.start ||
+      TRIP_LENT_DEPARTURE.start >= b.start + b.span,
+  )
+  return free ? [...blocks, { ...TRIP_LENT_DEPARTURE }] : blocks
 }
 
 // =================================================================================================
@@ -966,31 +1218,39 @@ export function weekGridFor(
     beat: d.beat,
     // ⭐ ROUND 28 #1 – the masseur's hour goes on LAST, after every rule that removes, so it can
     // read the day it is actually landing in rather than the one the table proposed. See
-    // `addMasseurTable`: it is the one rule here that adds, and it adds only what it is handed.
+    // `addMasseurTable`: it adds only what it is handed.
+    // ⭐ ROUND 29 P15 – ...and the lent departure goes on BEFORE it, so the masseur's scan can see
+    // the Sunday evening she is actually leaving on rather than the one the table proposed. Two
+    // rules here add now; both draw only what they are handed and neither can paint over a block.
     blocks: addMasseurTable(
       week.masseurDays,
       d.index,
-      namedSession(
-        dropSchoolFurniture(
-          week.schoolOver,
-          dropOffSeasonStudy(
-            week.offSeason,
-            d.kind,
-            dropWeekendSchool(
-              d.index,
-              dayBlocksFor(d.kind, band, {
-                index: d.index,
-                role: roles[i],
-                offSeason: week.offSeason,
-                summer: week.summer,
-                vacationId: week.vacationId,
-              }),
+      addLentDeparture(
+        week.nextTripRounds,
+        d.index,
+        namedSession(
+          dropSchoolFurniture(
+            week.schoolOver,
+            dropOffSeasonStudy(
+              week.offSeason,
+              d.kind,
+              dropWeekendSchool(
+                d.index,
+                dayBlocksFor(d.kind, band, {
+                  index: d.index,
+                  role: roles[i],
+                  offSeason: week.offSeason,
+                  summer: week.summer,
+                  vacationId: week.vacationId,
+                  trip: week.trip ?? undefined,
+                }),
+              ),
             ),
           ),
+          seed,
+          week.week,
+          d.index,
         ),
-        seed,
-        week.week,
-        d.index,
       ),
     ),
   }))

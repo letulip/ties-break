@@ -35,13 +35,13 @@ import { fireMilestone } from './milestones'
 import { inCollege } from './college'
 import { announceFieldFarewells, announceFieldIntake, isFieldFarewellWeek } from './fieldNews'
 import { expireKnock } from './knock'
-import { revalueAssets } from './shop'
+import { deliverAssets, reportMarketSeason, revalueAssets } from './shop'
 import {
   settleMandatoryDeadlines,
   settleMandatoryMisses,
   settleTourSeasonNotice,
 } from './mandatory'
-import { payRetainer, reviewAdOffer, reviewSponsors, rolloverKitAllowance } from './sponsors'
+import { payAdAnniversaries, payRetainer, reviewAdOffer, reviewSponsors, rolloverKitAllowance } from './sponsors'
 
 // --- the junior conveyor -----------------------------------------------------
 // The field turns over once a year: who is still here, and who has just arrived underneath her.
@@ -319,6 +319,14 @@ export function seasonBoundaryAndObligations(world: WorldState): void {
   //         ZERO draws, so it is safe this far up the tick.
   payRetainer(world)
 
+  // ⭐ ROUND 29 PART FOUR P6: AND THE PORTFOLIO'S MULTI-YEAR DEALS PAY THEIR YEAR-FEE ON EACH
+  //         ANNIVERSARY. Beside the retainer because it is the same kind of step – a cheque a
+  //         signed contract owes on a date, ZERO draws – and through `bankSponsorCheque`, so her
+  //         ramp share comes off it exactly as it does off every other sponsor cheque. Letters
+  //         from before the portfolio are 52-week terms whose first anniversary falls past
+  //         `untilWeek`, so this pays them nothing by construction.
+  payAdAnniversaries(world)
+
   // 0a0-w4. W4: retire a knock whose weeks are up. FIRST of the pure-state steps, because everything
   //         below that reads it – `injuryTau` at step 1c most of all – must see the same answer for
   //         the whole week. ZERO draws.
@@ -381,5 +389,24 @@ export function seasonBoundaryAndObligations(world: WorldState): void {
   //         ⚠ ZERO DRAWS, and `world/shop.ts` imports no RNG at all: the value is arithmetic on
   //         `boughtWeek`, so the frozen MAIN capture (41550 / e6b0c709) cannot see it. Slice 2's
   //         drift arrives INSIDE this call on `seed:asset:<id>:<week>` and never on MAIN.
+  //
+  // ⭐⭐ ROUND 29 #5, §3f – AND THE THING THE FAMILY ORDERED THREE YEARS AGO ARRIVES FIRST. It is an
+  //         obligation of the CALENDAR in the purest sense – nobody decided it, a date came round –
+  //         and it has to run AHEAD of `revalueAssets` because delivery is the week the value clock
+  //         starts, and ahead of phase 2 because delivery is the week the upkeep starts being
+  //         charged. ⚠ ZERO DRAWS: it removes one optional key and writes one `entry` row.
+  deliverAssets(world)
   revalueAssets(world)
+  // ⭐⭐⭐ ROUND 29 PART THREE #16 – ...AND ONCE A YEAR THE MARKET SAYS WHAT IT DID.
+  //
+  //         «A season summary line – "the fund this year: −8%". Without it the player sees a smaller
+  //         number and cannot tell why … The number moving is not the same as the number being
+  //         legible.»
+  //
+  //         ⚠ IT RUNS AFTER `revalueAssets` ON PURPOSE, and the ordering is the whole of its
+  //         honesty: the row the feed shows and the worth the screen shows are written in the same
+  //         tick off the same path, so a player who reads the line and then looks at his holding
+  //         cannot find two different markets. ⚠ ZERO MAIN DRAWS; the season figure is read off the
+  //         seeded path, and the guard against a second row is a ledger read, not a persisted flag.
+  reportMarketSeason(world)
 }

@@ -72,7 +72,7 @@ import {
 // more either: the window review went to world/phaseObligations.ts and the letters' own prune to
 // world/bookkeeping.ts, with the steps that call them (R2-10 step 2).
 // The load slice (docs/specs/coach-as-load-manager.md): pure, world-free, world -> coachLoad only.
-import { addEvent, accrueKidShare, seasonIndexOf, seasonStartWeek, financeWindow, financeSeries } from './world/ledger'
+import { addEvent, accrueCoachCut, accrueKidShare, seasonIndexOf, seasonStartWeek, financeWindow, financeSeries } from './world/ledger'
 import { activeLadderOf, toSnapshot } from './world/snapshot'
 export { activeLadderOf, toSnapshot }
 import {
@@ -88,8 +88,13 @@ export { pendingKnock, ordinaryTrainingWeek, expireKnock, rollKnock, radarViewOf
 // ⭐ R2-13 phase 1: the advance's entry gate and the span report, in a leaf module the shell can
 // import without pulling the integration core in. Re-exported under `engine/world` like every other
 // extraction, so the 280-file public API is unchanged.
-import { advanceRefusal, ADVANCE_REFUSALS, MULTI_WEEK_SPAN, spanDigest, spanRowCount, stoppableOfferWeek } from './world/multiWeek'
-export { advanceRefusal, ADVANCE_REFUSALS, MULTI_WEEK_SPAN, spanDigest, spanRowCount, stoppableOfferWeek }
+import { advanceRefusal, ADVANCE_REFUSALS, MULTI_WEEK_SPAN, SPAN_REPORTS_ONLY, spanDigest, spanRowCount, spanWeeksFor, stoppableOfferWeek } from './world/multiWeek'
+export { advanceRefusal, ADVANCE_REFUSALS, MULTI_WEEK_SPAN, SPAN_REPORTS_ONLY, spanDigest, spanRowCount, spanWeeksFor, stoppableOfferWeek }
+// ⭐⭐ ROUND 29 #3 – the shoot that lands on a tournament week, and the four answers to it. Extracted
+// to `world/shootClash.ts` (a leaf) and re-exported here under the historical barrel, exactly as
+// every other decomposed concern is.
+import { answerShootClash, buildShootClashPrompt, shootCancelCents, shootClashOpen, shootClashWeek, shootMoveTarget } from './world/shootClash'
+export { answerShootClash, buildShootClashPrompt, shootCancelCents, shootClashOpen, shootClashWeek, shootMoveTarget }
 // ⭐⭐ ROUND 26 #1 (second pass): WHEN the span is offered, which is the owner's rule and not the
 // engine's refusal – see `world/multiWeek.ts` for why the two are deliberately separate gates.
 import { QUIET_WINDOW_WEEKS, LONG_LAYOFF_WEEKS, calendarClearAhead, eventIsHers, longLayoff, spanWorthOffering } from './world/multiWeek'
@@ -104,8 +109,8 @@ export { openingCoachId, practiceCoachRateFor, hireCoach, coachSinceWeek, matche
 // file until R2-10 step 2; it left with `resolveGear`, its only reader here, and is imported by
 // world/phaseFinance.ts now. See the note at `resolveGear` for why it was priced below world.ts.
 import { defaultKitState } from './equipment'
-import { setKitGrade, kitLineViews, kitDealView, kitAllowanceRemainingCents, kitStateOf, kitPurchaseSplit, goodWeeksFor, KIT_LINES } from './world/kit'
-export { setKitGrade, kitLineViews, kitDealView, kitAllowanceRemainingCents, kitStateOf, kitPurchaseSplit, goodWeeksFor, KIT_LINES }
+import { setKitGrade, kitLineViews, kitDealView, kitAllowanceRemainingCents, kitStateOf, kitPurchaseSplit, goodWeeksFor, KIT_LINES, gearRestWeeksOf, recordGearRestWeek, GEAR_REST_WINDOW } from './world/kit'
+export { setKitGrade, kitLineViews, kitDealView, kitAllowanceRemainingCents, kitStateOf, kitPurchaseSplit, goodWeeksFor, KIT_LINES, gearRestWeeksOf, recordGearRestWeek, GEAR_REST_WINDOW }
 // W3-SUMMER: the holidays as a real training block - one predicate, both halves.
 import { summerBlockWeek, summerLoadFactor, summerConditionCost } from './world/summer'
 export { summerBlockWeek, summerLoadFactor, summerConditionCost }
@@ -113,8 +118,8 @@ import { startingSkills, withHeadStart, kidMatchPlayer, kidMatchPlayerFor } from
 export { startingSkills, kidMatchPlayer, kidMatchPlayerFor }
 import { ageInjuryFactor, consecutivePlayFactor, playedWeeksInTrailing4, injuryTau, rollInjury, resolvePhysio, retirementInjury } from './world/injury'
 export { ageInjuryFactor, consecutivePlayFactor, playedWeeksInTrailing4, injuryTau, rollInjury, resolvePhysio, retirementInjury }
-import { hireMasseur, masseurUnlocked, masseurWorksThisWeek, masseurRoomNote, resolveMasseur, resolveMasseurReturn, masseurRungOf, masseurWeeklyCents, masseurTourRelief, masseurTourWeekCents, setMasseurSessions, setMasseurTravels, MASSEUR_CHANGE_KEY, MASSEUR_LOCKED_DETAIL, MASSEUR_NOTE_WINDOW_WEEKS } from './world/masseur'
-export { hireMasseur, masseurUnlocked, masseurWorksThisWeek, masseurRoomNote, resolveMasseur, resolveMasseurReturn, masseurRungOf, masseurWeeklyCents, masseurTourRelief, masseurTourWeekCents, setMasseurSessions, setMasseurTravels, MASSEUR_CHANGE_KEY, MASSEUR_LOCKED_DETAIL, MASSEUR_NOTE_WINDOW_WEEKS }
+import { hireMasseur, masseurUnlocked, masseurWorksThisWeek, masseurWorksInWeek, masseurRoomNote, resolveMasseur, resolveMasseurReturn, masseurRungOf, masseurWeeklyCents, masseurTourRelief, masseurTourWeekCents, setMasseurSessions, setMasseurTravels, MASSEUR_CHANGE_KEY, MASSEUR_LOCKED_DETAIL, MASSEUR_NOTE_WINDOW_WEEKS } from './world/masseur'
+export { hireMasseur, masseurUnlocked, masseurWorksThisWeek, masseurWorksInWeek, masseurRoomNote, resolveMasseur, resolveMasseurReturn, masseurRungOf, masseurWeeklyCents, masseurTourRelief, masseurTourWeekCents, setMasseurSessions, setMasseurTravels, MASSEUR_CHANGE_KEY, MASSEUR_LOCKED_DETAIL, MASSEUR_NOTE_WINDOW_WEEKS }
 import { enterEvent, withdrawEvent, releaseEntry, cancelEntry, RELEASE_LINE_PREFIX, INJURY_RELEASE_SUFFIX } from './world/entries'
 export { enterEvent, withdrawEvent, releaseEntry, cancelEntry, RELEASE_LINE_PREFIX, INJURY_RELEASE_SUFFIX }
 import { eventById } from './world/bookings'
@@ -318,8 +323,25 @@ import { familyMeans, householdWalletCents, meansOfCents, MEANS_BANDS } from './
 export { familyMeans, householdWalletCents, meansOfCents, MEANS_BANDS }
 // ⭐⭐ v63 – THE SHOP, SLICE 1 (docs/specs/the-shop-2026-08.md §2, §3a-c, §5). The parent's own
 // money, and the first shelf in this game that is his. Re-exported under the historical convention.
-import { assetValueCents, buyAsset, ownedAssets, revalueAssets, sellAsset, sellableAsset, shopCatalogue, shopItem, shopUnlocked, shopView, SHOP_LOCKED_DETAIL } from './world/shop'
-export { assetValueCents, buyAsset, ownedAssets, revalueAssets, sellAsset, sellableAsset, shopCatalogue, shopItem, shopUnlocked, shopView, SHOP_LOCKED_DETAIL }
+// ⭐⭐ ROUND 29 #5 added §3f's commissioned families and §3g's academy stages – `assetDelivered`,
+// `assetUpkeepCents`, `deliverAssets`, `grantedVacationIds`, `ownsDeliveredOfFamily` and
+// `weeklyAssetUpkeepCents` join the list. The pure reads live in `world/assets.ts` now and
+// `world/shop.ts` re-exports every one of them, so this line is unchanged in shape.
+// ⭐⭐⭐ ROUND 29 PART THREE #16 adds §4's moving price – `assetWorthCents` (the ONE thing that turns
+// a holding into a number now that a market is in it), `marketSeasonMove` and `reportMarketSeason`.
+// The path itself is `world/market.ts` and is re-exported one line down.
+import { assetDelivered, assetUpkeepCents, assetValueCents, assetWorthCents, buyAsset, deliverAssets, deliveredAssets, grantedVacationIds, marketSeasonMove, ownedAssets, ownsDeliveredOfFamily, reportMarketSeason, revalueAssets, sellAsset, sellableAsset, shopCatalogue, shopItem, shopView, weeklyAssetUpkeepCents } from './world/shop'
+export { assetDelivered, assetUpkeepCents, assetValueCents, assetWorthCents, buyAsset, deliverAssets, deliveredAssets, grantedVacationIds, marketSeasonMove, ownedAssets, ownsDeliveredOfFamily, reportMarketSeason, revalueAssets, sellAsset, sellableAsset, shopCatalogue, shopItem, shopView, weeklyAssetUpkeepCents }
+import { marketCrash, marketCrashFellIn, marketCrashLog, marketIndex, marketRatio, marketWave, worstCrashFreeRatio, worstMarketRatio } from './world/market'
+export { marketCrash, marketCrashFellIn, marketCrashLog, marketIndex, marketRatio, marketWave, worstCrashFreeRatio, worstMarketRatio }
+// ⭐⭐ ROUND 29 PART FOUR P7 – FAME (the accounted stock, world/fame.ts) and THE PARENT'S
+// BUSINESSES (merch follows fame, the academy's stages follow reputation – world/business.ts).
+// Re-exported under the historical convention; zero draws anywhere behind these names.
+import { completedShootWeeks, fameAt, fameFloorOf, fameShootMultOf } from './world/fame'
+export { completedShootWeeks, fameAt, fameFloorOf, fameShootMultOf }
+import { academyReputationOf, academyWeeklyIncomeCents, assetWeeklyIncomeCents, merchWeeklyIncomeCents } from './world/business'
+export { academyReputationOf, academyWeeklyIncomeCents, assetWeeklyIncomeCents, merchWeeklyIncomeCents }
+export type { MarketCrash } from './world/market'
 export type { ShopItem } from './world/shop'
 export type { FamilyMeans } from './world/means'
 
@@ -670,7 +692,11 @@ function finalizeTournament(world: WorldState): void {
       // rule stated twenty lines up. And the RATE beside it is `kidPrizeShareBps(ageNow)`, the very
       // call the sentence above divides by, so the memo and the ledger row can never quote two
       // different percentages. Zero draws: a state write on a cheque already decided.
-      accrueKidShare(world, world.week, herShare, kidPrizeShareBps(ageNow))
+      // ⭐⭐ ROUND 29 #10 – AND THE BASE IS `prize`, THE GROSS CHEQUE, not the `familyShare` the row
+      // two blocks up reports. That distinction IS the item: the ledger row is deliberately «what
+      // the family actually banked», so the only prize figure any screen could reach was already
+      // net of the very cut the memo was quoting a percentage of.
+      accrueKidShare(world, world.week, herShare, kidPrizeShareBps(ageNow), prize)
     }
     // ⭐⭐ ROUND-24 – AND THE TEAM IS PAID ON THE RESULT (owner 22.08, docs/plans/the-team-share.md
     // §3 as re-ruled). His model verbatim: «3млн призовые из них отчисляется процент дочери (скажем
@@ -708,6 +734,24 @@ function finalizeTournament(world: WorldState): void {
         text: `Coach's share of the prize money – ${staffResultShareBps('coach', kidFinish) / 100}% of the ${tier.label} cheque`,
         amountCents: -coachShare,
       })
+      // ⭐⭐ ROUND 29 PART TWO #13 – AND THE SAME CENTS ARE PARKED ON THE DURABLE LEDGER, so the
+      // WEEKLY screen can name them. The owner, 29.08: «вот и можно как раз добавить cut тренера на
+      // weekly экране для прозрачности». Part-one #13 put the RULE on the coaches page; this is the
+      // FIGURE, on the week he actually reads.
+      //
+      // ⚠ NOT ON THE EXPENSE ROW ABOVE, AND THE CHOICE IS THE ONE HER CUT ALREADY MADE, MEASURED:
+      // the recap's Finances tile was moved off the event feed on 05.08 because the feed is
+      // count-capped (EVENTS_CAP = 400) and a save at week 412 deleted every money row on the tick
+      // that wrote it. «The money for one week» is a question a count-capped feed must never be
+      // asked, so this goes where the tile's other figures come from – `financeWeeks`, pruned on a
+      // 60-WEEK window and therefore always holding the week the card is showing.
+      //
+      // ⚠ `coachShare` ITSELF and `staffResultShareBps` ITSELF, the same two values the row above
+      // prints and the wallet was debited by, so the memo and the ledger row can never quote two
+      // different percentages. ⚠ It does NOT re-book the money: `accrueCoachCut` writes a memo
+      // field, never `byCategory` – the expense is the row above and it is counted exactly once.
+      // Zero draws: a state write on a cheque already decided.
+      accrueCoachCut(world, world.week, coachShare, staffResultShareBps('coach', kidFinish))
     }
     const masseurShare = track === 'wta' && (world.masseurHired ?? false) ? staffPrizeShareCents('masseur', prize, kidFinish) : 0
     if (masseurShare > 0) {
@@ -1247,9 +1291,12 @@ export function createWorld(
     // identity in tests/coach-travel-edge.test.ts reproduces the pre-v62 hashes by dropping exactly
     // this key, which only works while the rest of the serialisation order is untouched.
     peakPhysical: physicalMean(withHeadStart(startingSkills(seed, profile), profile.birthMonth)),
-    // ⭐ v63 (the shop, slice 1): the family owns nothing on day one, and the shelf is not even
-    // visible – it opens with her professional career (`shopUnlocked`). Empty is the identity here
-    // in the plainest sense: there was no shop to buy from.
+    // ⭐ v63 (the shop, slice 1): the family owns nothing on day one. Empty is the identity here in
+    // the plainest sense: nothing has been bought yet.
+    // ⚠ THIS NOTE USED TO SAY «and the shelf is not even visible – it opens with her professional
+    // career (`shopUnlocked`)». Round 29 part two #6 deleted that gate on his ruling («магазин
+    // открыт всегда с начала игры»), so the shelf IS visible from week 0 and the family simply owns
+    // nothing on it – see the block where the gate stood, in world/shop.ts.
     // ⚠ LAST KEY OF THE LITERAL, for the reason the masseur's three and `peakPhysical` above give:
     // the frozen-career identity in tests/coach-travel-edge.test.ts reproduces each older schema's
     // hashes by dropping exactly the keys appended since, which only works while every key stays in
@@ -1649,7 +1696,17 @@ export function advanceWeeks(world: WorldState, rng: Rng, weeks: number): StopRe
     if (world.ending) stops.add('ending')
     if (world.fork !== null && world.fork.answer === null) stops.add('fork')
     if (world.retirementOffer !== null) stops.add('retirement')
-    if (stops.size > 0) break
+    // ⭐⭐ ROUND 29 #6 – THE LOOP BREAKS ON A REASON THAT HALTS, NOT ON EVERY REASON IT COLLECTED.
+    // It used to be `if (stops.size > 0) break`, and the one member that difference is about is
+    // 'season-end': a press made at the tail of a season bought two weeks of a six-week gap and
+    // handed back the wrap-up, which is the owner's «увидел сообщение о конце года ... а календарь
+    // так и остался на 51й неделе». `SPAN_REPORTS_ONLY` carries the whole argument for why that one
+    // reason may pass and no other may – including the measured half, that the recap dialog reads
+    // the SNAPSHOT and not this reason, so nothing about it is lost.
+    //
+    // ⚠ A ONE-WEEK PRESS IS BYTE-IDENTICAL EITHER WAY: the loop runs once and ends on its own
+    // counter, so this line can only ever be reached by a span.
+    if ([...stops].some((r) => !SPAN_REPORTS_ONLY.has(r))) break
   }
   // Precedence order, not insertion order: the caller renders them in this sequence, and the
   // medical pair leads it so nothing can bury them (see STOP_PRECEDENCE).

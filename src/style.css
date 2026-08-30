@@ -1339,6 +1339,15 @@ button.danger:hover:not(:disabled) {
   font-size: 12px;
   margin: 6px 0 0;
 }
+/* ROUND 29 #1 – the two sentences of the rest-cost note stack instead of running together. A caution
+   is a paragraph and stays one; each sentence is a block inside it, so the second one starts on its
+   own line without a second amber block appearing beside the first. */
+.rest-cost-line {
+  display: block;
+}
+.rest-cost-line + .rest-cost-line {
+  margin-top: 2px;
+}
 /* THE HIRED COACH'S OPINION on a trip (load slice). Deliberately NOT `--warning`: it is advice from a
    person, not the engine refusing anything, and amber next to an active Enter reads as a lock. Muted,
    same size as the caution above it, so a card carrying both shows a hierarchy - the rule shouts, the
@@ -1455,6 +1464,27 @@ button.primary.risky {
 
 .span-weeks-btn:disabled {
   opacity: 0.5;
+}
+
+/* ROUND 26 #1's first-use line (shipped at round 29 #6). Fixed ABOVE the bar and out of its flex
+   row – see the template's note on why it may not be a child of `.next-week-bar`. `pointer-events:
+   none` because it explains a control rather than being one, and because the bar it floats over
+   must stay reachable through it. */
+.span-hint {
+  position: fixed;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: 110px;
+  width: 100%;
+  max-width: 520px;
+  margin: 0;
+  padding: 0 20px;
+  text-align: center;
+  font-size: 12px;
+  line-height: 1.35;
+  color: var(--muted);
+  pointer-events: none;
+  z-index: 39;
 }
 
 /* Wave 2: only Home carries the floating week button, so only Home reserves room under it. Every
@@ -3713,6 +3743,18 @@ tr.kid-row td {
   margin: 8px 0 0;
 }
 .cm-travel-cost strong {
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ⭐ ROUND 29 #13 - WHAT A FINISH PAYS HIM, stated once for the whole page. Same register as
+   `.cm-travel-cost` above and deliberately so: they are the two halves of what a coach costs, the
+   weekly bill and the share of a win, and a parent reads them as one paragraph with two lines. The
+   percentages take the same tabular numerals for the same reason the money does. */
+.cm-share-note {
+  margin: 4px 0 0;
+}
+.cm-share-note strong {
   color: var(--ink);
   font-variant-numeric: tabular-nums;
 }

@@ -248,11 +248,14 @@ const balanceCents = computed(() => incomeCents.value + expenseCents.value)
 // again would print a balance the till never had. He was shown the two honest layouts and chose this
 // one: «(B) мемо под балансом - вот это хорошо, да».
 //
-// ⚠ SO NOTHING ABOVE THIS LINE MAY CHANGE. `balanceCents` keeps its definition to the character, and
-// the memo is deliberately NOT a `.recap-row` with a signed `.recap-row-val`: it is prose in the
-// tile's own established idiom (see `.recap-train-read` below, «a short line of prose in a tile»),
-// unsigned, sitting under the balance rather than between the figures. `formatCents` and never
-// `formatCentsSigned` – a leading + or − is the exact misreading the layout exists to prevent.
+// ⚠ SO NOTHING ABOVE THIS LINE MAY CHANGE. `balanceCents` keeps its definition to the character.
+// ⚠⚠ THE SECOND HALF OF THIS PARAGRAPH IS SUPERSEDED BY PART TWO #1 BELOW, AND IS KEPT BECAUSE IT
+// RECORDS WHY THE MEMO WAS RIGHT WHILE THE COLUMN WAS NETTED. It read: «the memo is deliberately NOT
+// a `.recap-row` with a signed `.recap-row-val` … `formatCents` and never `formatCentsSigned` – a
+// leading + or − is the exact misreading the layout exists to prevent.» That was true of a column
+// whose Income was ALREADY net, where a signed cut could only read as a second subtraction. The
+// column is no longer netted, so her cut is a signed row inside the sum and the sign is now the
+// honest thing rather than the misreading. `balanceCents` did not move a cent either way.
 //
 // ⚠ THE FIGURE IS CARRIED, NOT RECONSTRUCTED. `FinanceWeekPoint.kidShareCents` is the `herShare` the
 // engine credited to her account, off the same durable ledger row this card already reads Income and
@@ -266,12 +269,168 @@ const balanceCents = computed(() => incomeCents.value + expenseCents.value)
 //
 // ⚠ THE PERCENTAGE IS ALREADY WHOLE (`kidSharePct`, rounded once in `financeSeries`) – the owner's
 // rule of 26.08. This file must not divide basis points.
-const kidShareMemo = computed(() => {
-  const cents = weekFinance.value?.kidShareCents ?? 0
-  const pct = weekFinance.value?.kidSharePct ?? 0
-  // His shape verbatim – «Her cut 10% $sum» – because the ramp is age-based and the number is the fact.
-  return cents > 0 ? `Her cut ${pct}% ${formatCents(cents)}` : null
+//
+// ⭐⭐⭐ ROUND 29 #10 – AND IT NOW NAMES THE BASE, BECAUSE THE PERCENTAGE HAD NONE ON SCREEN.
+//
+// THE OWNER, off his w780 save: «Income +$29,046 · Spent -$6,883 · Balance +$22,164 · Her cut 50%
+// $27,600 – это не 50% по сравнению с income».
+//
+// ⚠⚠ HE IS RIGHT, AND THE SPLIT IS NOT WHAT IS WRONG. Measured across all 27 weeks of that save
+// that credited her, and reproduced in a live engine run: she is paid EXACTLY half of every gross
+// cheque, to the cent. His week 738 is the whole story – prize row $23,000, her cut $27,600, and
+// both correct: the tournament's cheque was $46,000 GROSS, `finalizeTournament` banks the family
+// `prize − herShare` so the row is already net, and the kit contract's result bonus paid a further
+// $9,200 gross that the same ramp also split. Half of $55,200 is $27,600. The `Income` figure on
+// this very tile is the family's REMAINDER, so it is the one number «50%» can never be a share of –
+// and it was the only base a reader had. **The label was quoting a base that was not on the card.**
+//
+// So the memo prints the base. `kidShareBaseCents` is the gross the engine actually applied the
+// ramp to, carried on the ledger row beside the cents (see `FinanceWeekKidShare.baseCents`) – never
+// `cents / pct`, which is the division that produced two wrong readings of this item before anybody
+// measured it, and which cannot survive the per-cheque rounding anyway.
+//
+// ⚠ AND IT FALLS BACK RATHER THAN GUESSING. The base is FORWARD-ONLY: a week banked before that
+// field existed has none, and no ratio may invent one. Those weeks keep the exact line they printed
+// before, which is why the old wording is still here rather than deleted.
+//
+// =================================================================================================
+// ⭐⭐⭐ ROUND 29 PART TWO #1 – ...AND THAT ANSWER WAS WRONG, BECAUSE HE NEVER ASKED FOR AN EXPLANATION
+// =================================================================================================
+//
+// HIS WORDS, 29.08: «У нас есть одна сумма призовых, допустим 55200, тогда и ее доля будет 27600 и у
+// нас income должен показывать 27600, а на соседней строчке все остальные расходы. Можно это
+// сделать?» – and on the sentence #10 shipped instead: «это усложнило и фразу и интерфейс».
+//
+// ⚠⚠ #10 DIAGNOSED IT CORRECTLY AND FIXED THE WRONG HALF. The diagnosis stands to the cent: the
+// ledger's prize row is already NET and «50%» had no base on screen. But the repair was to put the
+// base INTO THE SENTENCE, and what he wants is for the TILE TO STOP NETTING SILENTLY. One gross
+// figure, her half, the family's half, the expenses beside them – **a row must mean what its name
+// says**, and the test he set himself is that a player can add the numbers on screen and get the
+// right answer without knowing anything about our internals.
+//
+// ⚠⚠ THE STORE STAYS NET AND ONLY THE TILE CHANGES, AND THAT IS A DECISION WITH THREE REASONS.
+// `byCategory.prize` could have become the GROSS with her cut as a real outgoing category; both
+// shapes are defensible and this one was chosen because:
+//   1. `financeWeeks` IS PERSISTED and his save holds sixty of them, all written under the NET
+//      convention. A gross `prize` would make `financeWindow` fold sixty net rows together with new
+//      gross ones and print a season income the family never had. Forward-only means a career's
+//      history keeps reading as it read, and only a display can promise that.
+//   2. `careerTotals.prizeCents` is documented as «prize money THE FAMILY KEPT» (the album's
+//      break-even page), and booking her cut as a family EXPENSE is what `finalizeTournament`'s own
+//      note forbids in as many words: it «would count the same cents twice».
+//   3. The engine ALREADY carries the gross – `FinanceWeek.kidShare.baseCents`, added by #10 for
+//      exactly this. So nothing new is persisted, `SAVE_SCHEMA_VERSION` does not move, and the fix
+//      is the USE of that field the item actually wanted: rows, not a footnote.
+//
+// ⚠ SO THE COLUMN ADDS UP, EXACTLY, IN CENTS. `kept = base − cut` is the family's half of the split
+// cheques, `other = income − kept` is everything else that came in, and
+// `base − cut + other − spent === income − spent === balance` by construction. No figure on the tile
+// is derived by dividing anything, and `balanceCents` above keeps its definition to the character.
+//
+// ⚠ AND IT FALLS BACK ON ANY WEEK IT CANNOT DO HONESTLY: no recorded base (every week his save
+// already banked), or a derivation that would print a NEGATIVE «Other income» because a category
+// that took a split cheque closed the week net-negative. Those weeks keep the exact three rows they
+// printed before. ⚠⚠ HISTORICAL WEEKS THEREFORE READ EXACTLY AS THEY DID – said out loud because
+// the brief asked: the new shape is forward-only, like the base it reads.
+const kidCutCents = computed(() => weekFinance.value?.kidShareCents ?? 0)
+const kidCutPct = computed(() => weekFinance.value?.kidSharePct ?? 0)
+
+/** The gross, her half and the rest of the week's income – or null on a week the tile cannot break
+ *  down honestly, which is exactly when it keeps its old shape. */
+const grossSplit = computed(() => {
+  const base = weekFinance.value?.kidShareBaseCents ?? 0
+  const cut = kidCutCents.value
+  if (base <= 0 || cut <= 0) return null
+  const kept = base - cut
+  const other = incomeCents.value - kept
+  // A negative «Other income» would be a row whose name is a lie, which is the very defect this
+  // change exists to end. Fall back instead.
+  if (other < 0) return null
+  return { base, cut, other }
 })
+
+/** THE FINANCES COLUMN, as a list so the template holds no arithmetic and the test can read the
+ *  rendered figures back off the screen and sum them – which is his own test, in his own words.
+ *  `tone` is the existing `.positive` / `.negative` pair; every value is signed, because a column a
+ *  player is meant to ADD may not hide a direction. */
+const financeRows = computed<{ key: string; cents: number; tone: 'positive' | 'negative' }[]>(() => {
+  const split = grossSplit.value
+  // ⚠ `tone` IS THE ROW'S KIND AND NOT THE SIGN OF ITS FIGURE, which is the pair's historical
+  // behaviour kept to the character: a week that spent nothing printed «+$0» in the money-out colour
+  // before this change and still does. Deriving the class from `cents < 0` would repaint that row on
+  // a quiet week, which is a contrast question and not a money one.
+  if (!split) return [
+    { key: 'Income', cents: incomeCents.value, tone: 'positive' },
+    { key: 'Spent', cents: expenseCents.value, tone: 'negative' },
+  ]
+  return [
+    // ⚠ «Before her cut» AND NOT «Prize money», BECAUSE IT IS NOT ONLY THE PRIZE. `accrueKidShare`
+    // sums the gross of every cheque the ramp touched that week – the tournament's prize, the kit
+    // contract's result bonus and, on a quarter week, the retainer (round 29 #10's own table). A row
+    // called «Prize money» would name a source on a week a sponsor cheque supplied half of it. This
+    // name is true whatever the mix, and it says what the figure is FOR: it is the base of the
+    // percentage on the very next line.
+    { key: 'Before her cut', cents: split.base, tone: 'positive' },
+    { key: `Her cut ${kidCutPct.value}%`, cents: -split.cut, tone: 'negative' },
+    ...(split.other !== 0
+      ? [{ key: 'Other income', cents: split.other, tone: (split.other < 0 ? 'negative' : 'positive') as 'positive' | 'negative' }]
+      : []),
+    { key: 'Spent', cents: expenseCents.value, tone: 'negative' },
+  ]
+})
+
+// ⭐⭐ ROUND 29 PART TWO #2 – THE SHORT SENTENCE IS BACK, AND ONLY THE DESTINATION IS LEFT IN IT.
+//
+// HIS WORDS: «Her cut 50% of $55,200 – $27,600 – это усложнило и фразу и интерфейс – верни Her cut
+// 50% – $27,600 как было раньше пожалуйста.»
+//
+// ⚠ THE LONG FORM IS GONE AND THE BRANCH WENT WITH IT: one string for every week, whether or not the
+// base was recorded. #10's «of $X» clause was only ever needed because the base was nowhere else on
+// the card, and item 1 has now put it on the card as a row.
+//
+// ⚠ HIS EXACT STRING, INCLUDING THE DASH HE TYPED. The pre-#10 memo read «Her cut 50% $27,600» with
+// no separator; he quoted the target back as «Her cut 50% – $27,600», and a quoted target beats my
+// reading of «как было раньше». The short dash is house law either way.
+//
+// ⚠ AND IT IS ONE LINE NOW, NOT TWO. The old foot – «the income above is what the family kept» –
+// exists to stop a reader taking the memo for a deduction, and on the new shape the rows say that
+// out loud: the gross, the cut and the remainder are all on screen. It survives ONLY on the
+// fallback shape, where `Income` really is a netted figure with nothing beside it to say so.
+const kidShareMemo = computed(() =>
+  kidCutCents.value > 0
+    ? `Her cut ${kidCutPct.value}% – ${formatCents(kidCutCents.value)} into her own account.`
+    : null,
+)
+/** The old foot, on the old shape only – see the note above. */
+const kidShareFoot = computed(() => (kidCutCents.value > 0 && !grossSplit.value ? 'The income above is what the family kept.' : null))
+
+// ⭐⭐ ROUND 29 PART TWO #13 – THE COACH'S CUT, ON THE WEEKLY SCREEN.
+//
+// HIS WORDS: «вот и можно как раз добавить cut тренера на weekly экране для прозрачности.» This is
+// the FOLLOW-UP to part-one #13, which put the 10%/5% RULE on the coaches page; a rule on a shop
+// page and a figure on the week he reads are two different questions, and he asked both.
+//
+// ⚠⚠ A MEMO AND NOT A ROW, WHICH IS THE OPPOSITE OF HER CUT AND FOR THE OPPOSITE REASON. `Her cut`
+// is a ROW because those cents never entered the family ledger, so the column only adds up if the
+// gross, the cut and the remainder are all in it. The coach's share IS a family expense – a real
+// `coaching` row written the same tick – so it is already inside `Spent` above, and a fourth row
+// would make the column charge one cheque twice. It goes under the balance, where the owner himself
+// put her cut («мемо под балансом - вот это хорошо, да»), and the sentence says where it already is.
+//
+// ⚠⚠ AND THE PERCENTAGE IS THE ENGINE'S OWN, NEVER TYPED – part-one #13's binding rule.
+// `FinanceWeekPoint.coachCutPct` is `staffResultShareBps('coach', finishIdx)` carried through the
+// durable ledger from the very call `finalizeTournament` paid him with, so a retune of
+// `ECONOMY.staffShare` moves this line and the cheque together. Nothing here re-derives a rate, and
+// no rate is written in this file at all.
+//
+// ⚠ SILENT ON EVERY OTHER WEEK, which is most of them: below a final the engine writes no row, so
+// there is no memo, and the card keeps exactly the shape it has always had.
+const coachCutCents = computed(() => weekFinance.value?.coachCutCents ?? 0)
+const coachCutMemo = computed(() =>
+  coachCutCents.value > 0
+    ? `Coach's cut ${weekFinance.value?.coachCutPct ?? 0}% – ${formatCents(coachCutCents.value)}, inside Spent above.`
+    : null,
+)
 
 // The base-cost expense event's own text doubles as this week's flavor line (world.ts
 // picks one of TRAIN_EVENTS/REST_EVENTS for it already) – and it is what D writes by hand across
@@ -497,17 +656,23 @@ const practiceWeekLabel = computed(() => weekLabel(week.value))
     </PaperNote>
 
     <div class="recap-grid">
-      <!-- FINANCES -->
-      <Card class="recap-tile" pad="12px 13px">
+      <!-- FINANCES. ⚠ `recap-finance` NAMES THE TILE FOR ITS TEST, and it earns the class: the
+           training tile beside it uses the same `.recap-rows` / `.recap-row-key` idiom, so «the
+           column that must add up» is not addressable without it – and part two #1's whole evidence
+           is reading these figures off the screen and summing them. -->
+      <Card class="recap-tile recap-finance" pad="12px 13px">
         <Eyebrow>Finances</Eyebrow>
+        <!-- ⭐⭐⭐ ROUND 29 PART TWO #1 – THE COLUMN ADDS UP TO THE BALANCE UNDER IT. His words and
+             the three reasons the persisted ledger stays net while this tile stops netting are in
+             the script block above and in tests/component/week-recap-kid-share.test.ts, because
+             Cyrillic inside a <template> is forbidden (tests/template-copy-rules.test.ts). On a week
+             that split a cheque the rows are the gross, her cut, the rest of the income and the
+             spending; on every other week – and on every week his save already banked – they are the
+             Income / Spent pair they have always been. No arithmetic here: `financeRows` is a list. -->
         <div class="recap-rows">
-          <div class="recap-row">
-            <span class="recap-row-key">Income</span>
-            <span class="recap-row-val num positive">{{ formatCentsSigned(incomeCents) }}</span>
-          </div>
-          <div class="recap-row">
-            <span class="recap-row-key">Spent</span>
-            <span class="recap-row-val num negative">{{ formatCentsSigned(expenseCents) }}</span>
+          <div v-for="row in financeRows" :key="row.key" class="recap-row">
+            <span class="recap-row-key">{{ row.key }}</span>
+            <span class="recap-row-val num" :class="row.tone">{{ formatCentsSigned(row.cents) }}</span>
           </div>
         </div>
         <span class="recap-hairline"></span>
@@ -518,15 +683,28 @@ const practiceWeekLabel = computed(() => weekLabel(week.value))
             :class="balanceCents < 0 ? 'negative' : 'positive'"
           >{{ formatCentsSigned(balanceCents) }}</span>
         </div>
-        <!-- HER CUT – A MEMO UNDER THE BALANCE, NEVER A FOURTH FIGURE IN IT. The owner's words and
-             the arithmetic that makes this layout the honest one are in the script block above and
-             in tests/component/week-recap-kid-share.test.ts, because Cyrillic inside a <template> is
-             forbidden (tests/template-copy-rules.test.ts). BELOW the balance, unsigned, in prose
-             rather than in a key/value row: it says «this also happened», and the second line says
-             out loud what Income already is, so no reader can take it for a deduction. -->
+        <!-- HER CUT, UNDER THE BALANCE – AND SINCE ROUND 29 PART TWO #2 ONLY THE DESTINATION IS
+             LEFT IN IT. The owner's words are in the script block above and in
+             tests/component/week-recap-kid-share.test.ts, because Cyrillic inside a <template> is
+             forbidden (tests/template-copy-rules.test.ts). The rows above are the arithmetic now;
+             this is the one thing they cannot say, which is where the money went. The foot survives
+             on the fallback shape alone, where `Income` is a netted figure with nothing beside it. -->
         <p v-if="kidShareMemo" class="recap-memo" role="note">
           <span class="recap-memo-line">{{ kidShareMemo }}</span>
-          <span class="recap-memo-foot">Into her own account – the income above is what the family kept.</span>
+          <span v-if="kidShareFoot" class="recap-memo-foot">{{ kidShareFoot }}</span>
+        </p>
+
+        <!-- ⭐⭐ THE COACH'S CUT, ROUND 29 PART TWO #13 – his ask for it on the weekly screen, in
+             its own memo under the balance. His words are in the script block above and in
+             tests/component/round29p2-coach-cut-weekly.test.ts, because Cyrillic inside a <template>
+             is forbidden, comments included (tests/template-copy-rules.test.ts – and it caught the
+             first draft of this very block, exactly as it caught part-one #13's).
+             ⚠ SEPARATE FROM HERS ON PURPOSE: it is present on a title week and absent on a week she
+             was paid by a brand, so folding the two into one paragraph would make each appear on the
+             other's weeks. ⚠ The percentage comes from `staffResultShareBps` through the ledger –
+             see the script; no rate is typed in this template. -->
+        <p v-if="coachCutMemo" class="recap-memo recap-memo-coach" role="note">
+          <span class="recap-memo-line">{{ coachCutMemo }}</span>
         </p>
       </Card>
 
@@ -794,9 +972,12 @@ const practiceWeekLabel = computed(() => weekLabel(week.value))
 
 /* HER CUT, under the balance. It borrows `.recap-train-read`'s shape below rather than
    `.recap-row`'s deliberately: the training read is the other «short line of prose in a tile» on
-   this card, and a key/value row here would put a fourth figure in a column of three that already
-   add up. Neither line takes `.positive`/`.negative` – the money is not a delta to this wallet, it
-   left before the wallet saw it – and the foot is one step quieter than the line above it. */
+   this card.
+   ⚠ RE-AIMED BY ROUND 29 PART TWO #1, NOT REWRITTEN. This note used to end «a key/value row here
+   would put a fourth figure in a column of three that already add up» – and that reasoning died with
+   the netted column: her cut IS a row now, signed and inside the sum, and this prose is what is left
+   over once the arithmetic moved upstairs, which is the destination. It still takes no
+   `.positive`/`.negative`: the sentence is about where money went, not about this wallet's delta. */
 .recap-memo {
   margin: 8px 0 0;
   display: flex;

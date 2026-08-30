@@ -21,7 +21,7 @@ import { formatShortName } from '../../shared/format'
 import { coachById, tierOf } from '../coach'
 import { coachManagesLoad, coachWarnsEntry } from '../coachLoad'
 import { buildKnockPrompt, knockGoverns, knockLive } from '../knock'
-import { activeAdDeal, hasLiveOffer, seasonLastWeek } from '../offers'
+import { AD_CATEGORIES, activeAdDealIn, activeAdDeals, adBandFor, adFeeFor, hasLiveOffer, seasonLastWeek } from '../offers'
 import { travelCoverShare } from '../academy'
 import { buildDiarySnapshot, lastKidTitleOf } from '../diary'
 import { buildKidLife, FRIENDS_WINDOW, nextAcademicYearStart, schoolEndWeek, schoolIsOver } from '../kidLife'
@@ -53,6 +53,7 @@ import { rivalConditions } from '../season/rival'
 import type { AiPlayer, LadderTrack, RankingRow, SeasonEvent, TierId } from '../season/types'
 import {
   type AdOfferTerms,
+  type AdPortfolioRow,
   type ArrivalPreview,
   type CountingResult,
   type InjuryCircumstanceKind,
@@ -81,6 +82,7 @@ import { financeWindow, financeSeries, seasonIndexOf, seasonStartWeek } from './
 import { ageAtWeek, birthdayTurning, kidAgeAt, kidAgeYears, START_AGE_YEARS } from './age'
 // ⭐ v48: the birthday popup's copy, assembled in the engine like every other dialog's.
 import { birthdayHistory, buildBirthdayPrompt, giftNoun } from './birthday'
+import { buildShootClashPrompt } from './shootClash'
 // ⭐ round-18 #8: the tour's commitment rules, spelled out by the module that already enforces them.
 import { buildTourBriefing } from './mandatory'
 // W2-ENDINGS: the epilogue and the debt strip, built by the module that owns the latch.
@@ -101,7 +103,9 @@ import { shopView } from './shop'
 import { copyByTrack, copyTrophyLedger, emptySeasonRecord, seasonWrapDue } from './milestones'
 import { computeLossStreak, fallbackPlayer, flipScore, kidMatchesOf, kidMatchEvent } from './matchNews'
 import { coachLoadViewOf, pendingKnock, radarViewOf } from './knock'
-import { coachTravelFareFor, masseurTravelFareFor, travelCostFor } from './sponsors'
+import { capstoneSeasonsOf, coachTravelFareFor, masseurTravelFareFor, sponsorStandingOf, travelCostFor } from './sponsors'
+// Round 29 part four P7/P8 – the fame fold (zero draws, nothing persisted; see world/fame.ts).
+import { fameAt } from './fame'
 import { summerDayCapacity } from './summer'
 import type { WorldState } from '../world'
 
@@ -1246,15 +1250,74 @@ export function toSnapshot(world: WorldState, stopReasons?: StopReason[]): Snaps
             ? (world.fork.departsWeek ?? null)
             : null
         : null,
-    // ⭐ AD STEP 2 (§4a) – the running endorsement's shoot weeks, off the signed paper's own frozen
-    // terms (`activeAdDeal` honours [fromWeek, untilWeek] and not a week further), so the calendar's
-    // markers and the recovery `accrueCondition` actually charges can never name different weeks.
-    // Null with no deal in force; the brand rides along so the row can say whose shoot it is.
-    adShoot: (() => {
-      const deal = activeAdDeal(world.offers, world.week)
-      if (!deal) return null
-      const t = deal.terms as AdOfferTerms
-      return t.shootWeeks && t.shootWeeks.length > 0 ? { brand: t.brand, weeks: [...t.shootWeeks] } : null
+    // ⭐ AD STEP 2 (§4a) – every running endorsement's shoot weeks, off each signed paper's own
+    // frozen terms (`activeAdDeals` honours [fromWeek, untilWeek] and not a week further), so the
+    // calendar's markers and the recovery `accrueCondition` actually charges can never name
+    // different weeks. One row per live deal since the portfolio (P6); the brand rides along so a
+    // row can say whose shoot a week is.
+    adShoots: activeAdDeals(world.offers, world.week)
+      .map((deal) => {
+        const t = deal.terms as AdOfferTerms
+        return { brand: t.brand, weeks: [...(t.shootWeeks ?? [])] }
+      })
+      .filter((r) => r.weeks.length > 0),
+    // ⭐⭐ ROUND 29 PART FOUR P7/P8 – FAME, the accounted stock (world/fame.ts): results set the
+    // floor, the lived shoot weeks multiply it, everything decays slowly, and NOTHING here is a
+    // die. Rounded ONCE at this boundary – `condition`'s own rule, and the same ratchet
+    // («у пользователя целые в интерфейсе»); no screen may round it again.
+    fame: Math.round(fameAt(world)),
+    // ⭐⭐ ROUND 29 PART FOUR P6/§8 – THE PORTFOLIO SHELF, one row per category in shelf order,
+    // filled/open/closed, every number the engine's own. Empty before eighteen: no shelf for a
+    // junior (`reviewAdOffer`'s own age gate, read through the same constant).
+    adPortfolio: (() => {
+      if (kidAgeAt(world, world.week) < ECONOMY.advertising.fromAgeYears) return []
+      const standing = sponsorStandingOf(world)
+      const band = adBandFor(standing)
+      const rows: AdPortfolioRow[] = []
+      for (const category of AD_CATEGORIES) {
+        const deal = activeAdDealIn(world.offers, category, world.week)
+        if (deal) {
+          const t = deal.terms as AdOfferTerms
+          rows.push({
+            category,
+            label: category === 'capstone' ? 'The capstone' : ECONOMY.advertising.categories[category].label,
+            state: 'filled',
+            brand: t.brand,
+            cashCents: t.cashCents,
+            termYears: Math.max(1, t.termYears ?? 1),
+            untilWeek: deal.untilWeek ?? deal.week,
+          })
+          continue
+        }
+        if (category === 'capstone') {
+          const held = capstoneSeasonsOf(world)
+          const needed = ECONOMY.advertising.capstone.seasonsInTop10
+          // The crowning row shows only once the shelf itself exists for her – any band open – so
+          // the ladder's end is visible from the first professional rung, tenure counted plainly.
+          if (band === null) continue
+          rows.push(
+            held >= needed
+              ? { category, label: 'The capstone', state: 'open', openCashCents: ECONOMY.advertising.capstone.cashCents }
+              : { category, label: 'The capstone', state: 'closed', seasonsInTop10: { held, needed } },
+          )
+          continue
+        }
+        const def = ECONOMY.advertising.categories[category]
+        const fee = band === null ? null : adFeeFor(category, band)
+        if (fee !== null) {
+          rows.push({ category, label: def.label, state: 'open', openCashCents: fee })
+        } else {
+          // the weakest band whose cell is priced = the standing the category opens at
+          const openIdx = def.feeCentsByBand.findIndex((c) => c !== null)
+          rows.push({
+            category,
+            label: def.label,
+            state: 'closed',
+            opensAtRank: openIdx >= 0 ? ECONOMY.advertising.bands[openIdx].maxWtaRank : undefined,
+          })
+        }
+      }
+      return rows
     })(),
     fundsCents: world.fundsCents,
     profile: world.profile,
@@ -1334,6 +1397,11 @@ export function toSnapshot(world: WorldState, stopReasons?: StopReason[]): Snaps
     // `advanceWeeks` blocks on, so the dialog cannot be missing on a week the engine has stopped.
     // `buildBirthdayPrompt` re-checks the predicate itself, so this is one call rather than two.
     birthdayPrompt: buildBirthdayPrompt(world),
+    // ⭐⭐ ROUND 29 #3 – THE SHOOT ON A TOURNAMENT WEEK. Same contract as the two prompts above and
+    // for the same reason: non-null on exactly the weeks `shootClashOpen` is true, which is the
+    // predicate `advanceRefusal` blocks on, so the card cannot be missing on a week the engine has
+    // refused to tick. `buildShootClashPrompt` re-checks that predicate itself, so this is one call.
+    shootClash: buildShootClashPrompt(world),
     // ⭐ round-18 #8 – THE TOUR'S COMMITMENT RULES, AS SENTENCES. Non-null on exactly the weeks
     // `mandatoryBindsRank` is true, which is a READ of the regime that has been enforced since v38 –
     // nothing new is decided here. Unlike the two prompts above this one does NOT stop the world: the

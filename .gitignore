@@ -84,3 +84,6 @@ ms-playwright/
 
 # Agent worktrees – transient, created by isolated subagent runs. Never committed.
 .claude/worktrees/
+
+# `tools/precache-delta.mjs` builds two dists here and deletes them again (`--keep` leaves them).
+.tmp/

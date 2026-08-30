@@ -129,8 +129,15 @@ export async function appliersRefuseTheWrongArm(): Promise<void> {
 // -------------------------------------------------------------------------------------------
 export async function payloadsAreStillChecked(): Promise<void> {
   void (await request({ type: 'new', seed: 's', profile: DEFAULT_PROFILE }))
-  // @ts-expect-error `advance` takes 1 or 4 weeks, not 3
-  void (await request({ type: 'advance', weeks: 3, baseRevision: 0 }))
+  // ⚠⚠ RE-AIMED AT ROUND 29 #6, NOT DELETED. This line used to read «`advance` takes 1 or 4 weeks,
+  // not 3» and it was pinning `weeks: 1 | 4` – the literal union that made the span pill unable to
+  // offer the six-week gap the owner was standing in (see `spanWeeksFor`). The union widened to a
+  // plain count, so `weeks: 3` is now a legal message and the directive had nothing left to catch.
+  // What this block CLAIMS is that correlating the replies did not loosen the request payloads, and
+  // that claim survives intact: the field is still typed, so a count that is not a number is still
+  // refused here.
+  // @ts-expect-error `advance` takes a NUMBER of weeks, not a string
+  void (await request({ type: 'advance', weeks: '3', baseRevision: 0 }))
   // @ts-expect-error `enterEvent` needs the event it is entering
   void (await request({ type: 'enterEvent', baseRevision: 0 }))
   // @ts-expect-error there is no such command

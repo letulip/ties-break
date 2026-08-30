@@ -52,12 +52,13 @@ import CoachMarketScreen from '../../src/components/screens/CoachMarketScreen.vu
 import { useGameStore } from '../../src/stores/game'
 import { buyAsset, createWorld, hireMasseur, toSnapshot, type WorldState } from '../../src/engine/world'
 import { assetValueCents, shopItem } from '../../src/engine/world/shop'
-import { ECONOMY, parentIncomeForWeekCents } from '../../src/engine/economy'
+import { parentIncomeForWeekCents } from '../../src/engine/economy'
 import { formatCents } from '../../src/shared/money'
 import { DEFAULT_PROFILE, type Snapshot } from '../../src/shared/protocol'
 
 /** A professional career – her first counting W finish on the never-pruned mark, which is the ONE
- *  door both the masseur and the shelf open behind (`masseurUnlocked` / `shopUnlocked`). Built
+ *  door the masseur opens behind (`masseurUnlocked`; ⚠ the shelf's own copy of it went with
+ *  round 29 part two #6 – it is open from week 0 now). Built
  *  through the real protocol, exactly as tests/component/masseur-card.test.ts builds one. */
 function pro(seed: string): WorldState {
   const world = createWorld(seed, DEFAULT_PROFILE)
@@ -108,10 +109,11 @@ describe('§1 what the strip totals', () => {
     // mutation that HALVED the family's income entirely – the expectation moved with the defect. The
     // two streams below are the ones this career has (no kit deal is signed on it), computed from
     // the same inputs the engine had, exactly as tests/component/round21-coach.test.ts §12 does.
+    // ⚠ RE-AIMED BY ROUND 29 #12: the savings-interest term is gone from `familyWeeklyIncomeCents`
+    // with the accrual itself, so on a career with no kit deal the parents are the only stream.
     const parents = parentIncomeForWeekCents(world.seed, world.profile.background, world.week)
-    const interest = Math.max(0, Math.round(world.fundsCents * ECONOMY.savings.apyWeekly))
     expect(world.offers.some((o) => o.kind === 'kit' && o.state === 'signed'), 'no deal to pro-rate').toBe(false)
-    const expectedIn = parents + interest
+    const expectedIn = parents
     expect(snap.coachBilling.weeklyIncomeCents, 'the cap is those two streams and nothing else').toBe(expectedIn)
 
     const strip = await stripOf(snap)

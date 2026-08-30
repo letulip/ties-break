@@ -10,18 +10,25 @@
 // imports these values with no runtime cycle. Everything else comes from leaves.
 //
 // ⚠ RNG: the sponsor review draws on a PURPOSE-SCOPED sub-stream, never MAIN.
-import { ECONOMY, kidPrizeShareBps, kidPrizeShareCents } from '../economy'
+// ⚠ `kidPrizeShareBps` / `kidPrizeShareCents` LEFT THIS FILE WITH ROUND 29 P3 and are not to be
+// re-imported here on a hunch: the ramp is the PRIZE money's rule (finalizeTournament) and sponsor
+// cash now pays a flat manager's fee. Two rates in one file is how the two would drift back together.
+import { ECONOMY, managerCommissionBps, managerCommissionCents } from '../economy'
 import { formatCents } from '../../shared/money'
 import { TIERS, TIER_LADDER, WEEKS_PER_YEAR } from '../season/calendar'
 import { netTravelCents, travelCoverShare } from '../academy'
 // The rung ladder, for the cameo's coach cut. coach.ts is a leaf (it imports ECONOMY and rng and
 // nothing else), so this runs one way exactly as every other import in this file does.
 import { COACH_TIERS } from '../coach'
-import { activeKitDeal, adSpokenFor, adWritesAt, chooseShootWeeks, contractEndWeek, dealEndingWithSeason, dealUnderReview, endDealWithSeason, isSponsorWindowCloseWeek, isSponsorWindowWeek, kitTravelShare, letDownThisWindow, raiseAdOffer, raiseKitEndLetter, raiseKitOffers, raiseKitRenewal, refuseOffer as refuseOfferIn, signOffer as signOfferIn, sponsorWindowOpensAt, standingClears, type SponsorStanding } from '../offers'
+import { AD_CATEGORIES, activeAdDeals, activeKitDeal, adBandFor, adCapstoneTerms, adFeeFor, adLetterRng, adSpokenFor, adTermsForCategory, adWritesAt, chooseShootWeeks, contractEndWeek, dealEndingWithSeason, dealUnderReview, endDealWithSeason, isSponsorWindowCloseWeek, isSponsorWindowWeek, kitTravelShare, lastSignedAdBrand, letDownThisWindow, pickAdHouse, raiseAdOffer, raiseKitEndLetter, raiseKitOffers, raiseKitRenewal, refuseOffer as refuseOfferIn, signOffer as signOfferIn, sponsorWindowOpensAt, standingClears, type SponsorStanding } from '../offers'
 import type { SeasonEvent, TierId } from '../season/types'
 import { LADDER_LABEL, type AdOfferTerms, type CoachTier, type KitEndReason, type KitOfferTerms, type Offer, type WorldEventCategory } from '../../shared/protocol'
 import { accrueKidShare, addEvent } from './ledger'
 import { kidPoints, tableSize } from './ladder'
+// ⚠ ROUND 29 #5 – the leaf, never `./shop`: `shop.ts` imports `./endings`, `endings` imports
+// `./entries` and `entries` imports `./medical`, which is a real cycle. `world/assets.ts` imports
+// the catalogue and a type and nothing else.
+import { ownsDeliveredOfFamily } from './assets'
 import { KID_ID } from './constants'
 import { kidAgeAt } from './age'
 import type { WorldState } from '../world'
@@ -556,37 +563,110 @@ export function reviewSponsors(world: WorldState): void {
 // week, so a save reloaded and replayed gets the same letter on the same Monday. The frozen MAIN
 // capture (41550 / e6b0c709) cannot see it.
 
+/** ⭐⭐ THE CAPSTONE'S TENURE, counted where the world already banks it: seasons that ENDED inside
+ *  the professional top 10 – `seasonHistory[].byTrack.wta.endRank`, appended once a year at the
+ *  wrap, capped at 30 seasons, never pruned. A fold over an existing persisted field, so the gate
+ *  the owner ruled («4 seasons ended in top 10», round-29 part four) costs NO schema move (65
+ *  stays). `byTrack` is optional (v46) and absent means «not recorded», never «unranked» – a
+ *  missing row is skipped, exactly as the reach bench reads the same field. */
+export function capstoneSeasonsOf(world: WorldState): number {
+  let n = 0
+  for (const h of world.seasonHistory) {
+    const r = h.byTrack?.wta?.endRank
+    if (r !== undefined && r <= 10) n++
+  }
+  return n
+}
+
 /** WHETHER THIS IS THE WEEK A CAMPAIGN NOTICES HER – and if it is, the letter is raised. Weekly,
  *  not windowed: an endorsement is not an off-season ritual, and the plan's own table says the deal
  *  LAGS results – `ECONOMY.advertising.offerChance` a week, from the week she qualifies, is that
- *  lag with no second calendar. */
+ *  lag with no second calendar.
+ *
+ *  ⭐⭐⭐ SINCE ROUND 29 PART FOUR P6/§8 THE POST IS A PORTFOLIO, so this walks the CATEGORY SHELF
+ *  rather than one ladder: each category that is open at her band and not already spoken for rolls
+ *  its own arrival dice, so several houses can notice her in one season – «Таких контрактов может
+ *  быть несколько», which is his ruling and what overturned the plan's one-at-a-time §4.1 (see
+ *  `adSpokenFor`, re-aimed per category rather than deleted).
+ *
+ *  RNG DISCIPLINE, RESTATED FOR THE SHELF: at most one arrival draw PER CATEGORY, each on its own
+ *  purpose scope `seed:ad:<category>:<week>`, plus the letter's own author/term draws on
+ *  `…:<week>:letter` when a letter is actually written. ZERO draws on MAIN – the frozen capture
+ *  (41550 / e6b0c709) cannot see any of it – and every stream is keyed on the week, so a reloaded
+ *  career gets the same letters on the same Monday. Which categories ROLL depends only on the
+ *  world's own facts (her standing, the paper trail), never on undecided player input this week,
+ *  and each category's stream is untouched by whether another category rolled – so no choice can
+ *  re-roll anybody's dice. */
 export function reviewAdOffer(world: WorldState): void {
   const s = ECONOMY.advertising
   // FROM EIGHTEEN («от 18+ лет начиная») – her real age, `kidAgeYears` through `kidAgeAt`, the
   // one-clock ruling: never the band's clock, never a birthday approximation.
   if (kidAgeAt(world, world.week) < s.fromAgeYears) return
-  // RESULTS ONLY: a counting professional standing inside the bar. The `wtaRanked` guard is the
-  // brand ladder's own – a floor tie is not a standing – and the bar is measured, not invented:
-  // see ECONOMY.advertising.maxWtaRank for the §3 arithmetic that puts it at the tour rung's 200.
+  // RESULTS ONLY: a counting professional standing inside a band of the gradient. The `wtaRanked`
+  // guard is the brand ladder's own – a floor tie is not a standing, and `adBandFor` holds it. The
+  // band sets every category's cheque at once (§8: the cheque is the only axis that scales).
   const standing = sponsorStandingOf(world)
-  if (!standing.wtaRanked || standing.wtaRank > s.maxWtaRank) return
-  // ONE DEAL AT A TIME (plan §4.1): a letter still open on the table, or a signed term still
-  // running, turns the next house away before any dice are read.
-  if (adSpokenFor(world.offers, world.week)) return
-  if (!adWritesAt(world.seed, world.week, s.offerChance)) return
-  // Terms are frozen at arrival from the catalogue – the snapshot rule – and the deadline gives him
-  // `ECONOMY.advertising.decideWeeks` counted INCLUSIVELY from today, so the arrival week is one of
-  // them and the letter is still answerable on the last (round 28 #2: it was four, the owner's
-  // ruling is five, and the constant's own comment carries the argument). `shootCount` is on the
-  // paper from the first read (step 2, §4a): the letter states its own price in time, and a
-  // catalogue retune between arrival and signature cannot change what this letter promised. The
-  // WEEKS themselves are the signature's to name – see `acceptOffer`.
-  raiseAdOffer(
-    world.offers,
-    world.week,
-    { brand: s.brand, cashCents: s.cashCents, termWeeks: s.termWeeks, shootCount: s.shootWeeksPerTerm },
-    world.week + s.decideWeeks - 1,
-  )
+  const band = adBandFor(standing)
+  if (band === null) return
+  const deadline = world.week + s.decideWeeks - 1
+  const topBand = band === s.bands.length - 1
+  for (const category of AD_CATEGORIES) {
+    // ONE DEAL PER CATEGORY (P6/§7): a letter still open for the category, or a signed term still
+    // running in it, turns the category's next house away before any dice are read. A bigger
+    // cheque interrupting a running term would make the letter's own exclusivity clause («in no
+    // other <trade> campaign while that runs») untrue – the same argument the one-post rule always
+    // made, now made per slot.
+    if (adSpokenFor(world.offers, world.week, category)) continue
+    let terms: AdOfferTerms | null = null
+    if (category === 'capstone') {
+      // ⭐⭐ THE CAPSTONE GATE IS TENURE, NOT TODAY'S RANK – four seasons ENDED inside the top 10
+      // (his ruling; `capstoneSeasonsOf` above), one such deal at a time for its whole eight
+      // years. The author is the kit house that already dresses her – his own sentence is a kit
+      // brand paying for a face – falling back to the icon rung's brand between kit deals so the
+      // tenure gate he ruled is the only gate there is.
+      if (capstoneSeasonsOf(world) < s.capstone.seasonsInTop10) continue
+      const kit = activeKitDeal(world.offers, world.week)
+      const author = kit ? (kit.terms as KitOfferTerms).brand : ECONOMY.sponsorship.icon.brand
+      if (!adWritesAt(world.seed, world.week, s.offerChance, category)) continue
+      terms = adCapstoneTerms(author)
+    } else {
+      // A `null` fee cell IS the category's gate at this band – watches/cars/drinks/clothing from
+      // the first professional cash, the airline from the top 100, fragrance at the top 10 (§7).
+      if (adFeeFor(category, band) === null) continue
+      // ⭐ THE DOUBLE PROGRAMME («двойной программой»): the clothing category's author is the live
+      // kit deal's own brand – the poster campaign on top of the racket bag, two deals, one brand,
+      // separate letters, separate money. No kit deal, nobody to write it.
+      let author: string | undefined
+      if (category === 'clothing') {
+        const kit = activeKitDeal(world.offers, world.week)
+        if (!kit) continue
+        author = (kit.terms as KitOfferTerms).brand
+      }
+      if (!adWritesAt(world.seed, world.week, s.offerChance, category)) continue
+      // The letter's own dice, split from the arrival roll by scope: the author (P6's churn – at
+      // the top band the previous signed house steps back, `pickAdHouse`) and the term (1–3
+      // years, the research's non-endemic law).
+      const rng = adLetterRng(world.seed, world.week, category)
+      if (author === undefined) {
+        author = pickAdHouse(
+          ECONOMY.advertising.categories[category].houses,
+          lastSignedAdBrand(world.offers, category),
+          topBand,
+          rng(),
+        )
+      }
+      const years = 1 + Math.floor(rng() * s.termYearsMax)
+      terms = adTermsForCategory(category, band, years, author)
+    }
+    if (!terms) continue
+    // Terms are frozen at arrival from the catalogue – the snapshot rule – and the deadline gives
+    // him `ECONOMY.advertising.decideWeeks` counted INCLUSIVELY from today, so the arrival week is
+    // one of them and the letter is still answerable on the last (round 28 #2's five, on its own
+    // clock). `shootCount` is on the paper from the first read (step 2, §4a): the letter states
+    // its own price in time, and a catalogue retune between arrival and signature cannot change
+    // what this letter promised. The WEEKS themselves are the signature's to name – `acceptOffer`.
+    raiseAdOffer(world.offers, world.week, terms, deadline)
+  }
 }
 
 /** THE PARENT SIGNS. Returns the signed offer, or throws with the engine's own reason – past the
@@ -679,12 +759,50 @@ export function offerAnswerErrorFor(world: WorldState, offerId: string): string 
  *
  *  The two covers COMPOSE rather than add: the brand takes its share of what the family still owes
  *  after the academy has taken its own, so a girl carrying both is never handed more than the fare.
- *  A scholarship at 80% plus a brand at 25% is 85% of a trip covered, not 105%. */
+ *  A scholarship at 80% plus a brand at 25% is 85% of a trip covered, not 105%.
+ *
+ *  ⚠⚠ ROUND 29 #5 PUT A THIRD HAND ON IT AND IT IS NOT A COVER – IT IS THE FAMILY'S OWN AEROPLANE
+ *  (the-shop §3f, the owner: «Теоретически может вполне резать косты на перелеты до соревнований,
+ *  почему бы и нет»). It composes the same way and it comes LAST, off what the family still owes
+ *  after everybody else's help, so a plane can never hand the family more than the fare.
+ *
+ *  ⚠ AND THE SPLIT BELOW IS THE WHOLE REASON THIS IS TWO FUNCTIONS. `travelCoverReachesHer` in
+ *  world/coachMarket.ts asks «is any SUPPORT taking anything off her travel right now», and its own
+ *  note says it is asked of this function precisely so that a support stream added tomorrow is
+ *  inside the answer automatically. A plane is not support – it is the family paying for itself –
+ *  so it must NOT make that sentence true, and the honest way to keep both is to name the support
+ *  half (`supportedTravelCents`) and leave that question pointed at it. */
 export function travelCostFor(world: WorldState, event: SeasonEvent): number {
+  return afterOwnPlaneCents(world, supportedTravelCents(world, event))
+}
+
+/** THE SUPPORT HALF ALONE – the academy's scholarship and the brand's share, composed, and NOTHING
+ *  the family bought for itself. This is the body `travelCostFor` has always had; only the plane
+ *  sits outside it (round 29 #5). Every future SUPPORT stream belongs in here. */
+export function supportedTravelCents(world: WorldState, event: SeasonEvent): number {
   const afterAcademy = netTravelCents(event.travelCostCents, world.academy)
   const share = kitTravelShare(world.offers, world.week)
   if (share <= 0) return afterAcademy
   return afterAcademy - Math.round(afterAcademy * share)
+}
+
+/** ⭐⭐ ROUND 29 #5, the-shop §3f – WHAT THE FAMILY'S OWN PLANE TAKES OFF A SEAT.
+ *
+ *  ⚠ ONE SHARE, ONE FUNCTION, EVERY SEAT. Hers goes through `travelCostFor` above and the staff's
+ *  through `staffSeatFareCents` below, and both arrive here, because it is ONE aircraft carrying all
+ *  of them and a second arithmetic for the second seat is how two figures start disagreeing.
+ *
+ *  ⚠⚠ IT DOES NOT TOUCH THE 15.08 RULING that the support may not pay for the entourage – «этот
+ *  механизм не должен поддерживать их чрезмерные траты». That ruling is about somebody ELSE's money
+ *  reaching the coach's ticket; this is the family flying its own people in its own plane, having
+ *  paid $18,000,000 for it and paying $27,692 a week to keep it. `tests/support-never-pays-the-coach.test.ts`
+ *  measures the scholarship and the brand, and neither of them moved.
+ *
+ *  ⚠ DELIVERED ONLY (`ownsDeliveredOfFamily`) – a contract flies nobody anywhere. Zero draws. */
+function afterOwnPlaneCents(world: WorldState, fareCents: number): number {
+  if (fareCents <= 0) return fareCents
+  if (!ownsDeliveredOfFamily(world, 'plane')) return fareCents
+  return fareCents - Math.round(fareCents * ECONOMY.shop.planeTravelShare)
 }
 
 /** What the ACADEMY alone took off this fare - its own tally must never be credited with the brand's
@@ -845,10 +963,13 @@ export function coachTravelFareFor(world: WorldState, event: SeasonEvent): numbe
  *  (17.08: «a sponsor's travel share comes off both seats; a scholarship comes off hers alone»).
  *  One multiply against the printed price, zero draws. */
 function staffSeatFareCents(world: WorldState, event: SeasonEvent, paysPrizeMoney: boolean): number {
-  if (!paysPrizeMoney) return event.travelCostCents
+  // ⭐ ROUND 29 #5 – the family's own plane carries the staff too (§3f). Wrapped around the whole
+  // expression rather than added to one arm of it, so his seat is halved at a junior rung the brand
+  // does not touch as well as at a W event it does: the aeroplane does not care which tier it is.
+  if (!paysPrizeMoney) return afterOwnPlaneCents(world, event.travelCostCents)
   const share = kitTravelShare(world.offers, world.week)
-  if (share <= 0) return event.travelCostCents
-  return event.travelCostCents - Math.round(event.travelCostCents * share)
+  if (share <= 0) return afterOwnPlaneCents(world, event.travelCostCents)
+  return afterOwnPlaneCents(world, event.travelCostCents - Math.round(event.travelCostCents * share))
 }
 
 /** ⭐ TRAVELLING TEAM STEP 2 – WHAT THE MASSEUR'S SEAT COSTS, and it is the coach's own rule asked
@@ -1025,21 +1146,42 @@ export function chargeTravel(world: WorldState, event: SeasonEvent): void {
 
 /** ⭐ ROUND-28 #15 – BANK ONE SPONSOR CHEQUE INTO THE TWO ACCOUNTS. Returns what each side got.
  *
+ *  ⭐⭐⭐ ROUND 29 PART THREE P3 SUPERSEDES THE SPLIT THIS FUNCTION SHIPPED WITH, AND ONLY THE SPLIT.
+ *  The owner, 29.08: «как менеджер может от этого что-то получать в свою очередь. 10-20% например…
+ *  контракт на полную сумму ребенку приходит на почту, после подписания видим на счету уже
+ *  родительский кат.» So the cheque is HERS and the parent takes a MANAGER'S FEE off it, rather than
+ *  the other way round. Everything the header above establishes still stands and is why this is one
+ *  function: WHICH cheques are «чеки спонсоров» is unchanged to the line, the row order is unchanged,
+ *  the memo is unchanged, the single rounding is unchanged. What is inverted is who the small side
+ *  belongs to.
+ *
+ *  ⚠⚠ AND THE DROP IS BIGGER THAN THE HEADLINE «50% -> 15%». The ramp paid the family 100% before
+ *  her eighteenth and 50% only from her twenty-sixth; measured over 72 careers the parent kept
+ *  **63.1% of gross sponsor money**. The real move is 63.1% -> `ECONOMY.managerCommission.bps`.
+ *
  *  ⚠ ONE FUNCTION FOR ALL FOUR SITES, AND THAT IS THE POINT. Four copies of "split, credit, receipt,
  *  memo" is four chances to forget the memo or to round twice – this repo's most-repeated defect in a
  *  new hat. A fifth sponsor line added later reaches the ruling by calling this and nothing else.
  *
- *  ⚠ ONE ROUNDING, THE FAMILY GETS THE REMAINDER – `kidPrizeShareCents`' own discipline, verbatim:
- *  the cut rounds once and the family's half is a SUBTRACTION, so the two balances re-add to the
- *  brand's cheque to the cent and a player can put them side by side on screen.
+ *  ⚠ ONE ROUNDING, AND NOW **SHE** GETS THE REMAINDER – `kidPrizeShareCents`' discipline with the
+ *  sides swapped, for the reason the ruling gives: the fee is what is computed and the rest is hers,
+ *  so the two balances still re-add to the brand's cheque to the cent and a player can put them side
+ *  by side on screen.
  *
  *  ⚠ ROW ORDER IS THE PRIZE PATH'S. The income row the family actually banked comes FIRST, with the
- *  split named on it – a row that quietly shrank would read as a bug in the till – and the transfer
+ *  fee named on it – a row that quietly shrank would read as a bug in the till – and the transfer
  *  follows as an `info` row with NO `amountCents`: booking her share as a family expense would count
  *  the same cents twice against `careerTotals.spentCents`, the denominator of the album's break-even
  *  page.
  *
- *  ⚠ HER REAL AGE (`kidAgeAt`), never the ITF band's – the one-clock ruling of 09.08.
+ *  ⚠ HER REAL AGE IS NO LONGER READ HERE, and that is the ruling too. The ramp's `kidAgeAt` call is
+ *  gone because the commission has no age term: «контракт на полную сумму ребенку» is addressed to
+ *  her whatever her age. Her age still decides the PRIZE split, in `finalizeTournament`, untouched.
+ *
+ *  ⚠⚠ NO NEW WAY FOR THE PARENT TO GO NEGATIVE, re-checked under the inversion because the standing
+ *  «мы ни за что не наказываем» rule deserves the check rather than the assumption: every site is
+ *  still an INCOME line, the family banks `round(gross x bps / 10_000)` which is `>= 0` for any
+ *  non-negative rate, and a cheque can therefore only ever add less. It can never subtract.
  *
  *  ZERO DRAWS on any stream: integer arithmetic on a cheque that has already been decided. */
 export function bankSponsorCheque(
@@ -1048,17 +1190,20 @@ export function bankSponsorCheque(
   row: { category: WorldEventCategory; text: string },
 ): { herCents: number; familyCents: number } {
   if (grossCents <= 0) return { herCents: 0, familyCents: 0 }
-  const ageNow = kidAgeAt(world, world.week)
-  const bps = kidPrizeShareBps(ageNow)
-  const herCents = kidPrizeShareCents(grossCents, ageNow)
-  const familyCents = grossCents - herCents
+  const bps = managerCommissionBps()
+  const familyCents = managerCommissionCents(grossCents)
+  const herCents = grossCents - familyCents
   world.fundsCents += familyCents
   addEvent(world, {
     week: world.week,
     type: 'income',
     category: row.category,
-    // Silent before her eighteenth, where nothing is deducted – the prize row's own conditional.
-    text: herCents > 0 ? `${row.text}, less her ${bps / 100}% share (${formatCents(herCents)})` : row.text,
+    // ⚠ THE ROW NAMES THE FEE AND THE CHEQUE IT CAME OFF, which is «после подписания видим на счету
+    // уже родительский кат» in one line: the figure on the row is the parent's, and the gross beside
+    // it is what she was actually worth. The old clause said «less her N% share» because the row WAS
+    // the cheque minus a deduction; it is now the deduction, so a subtraction reading would be a lie.
+    // Silent only on a rate of zero, where there is no fee to name – the prize row's own conditional.
+    text: familyCents > 0 ? `${row.text}, the manager's ${bps / 100}% of ${formatCents(grossCents)}` : row.text,
     amountCents: familyCents,
   })
   if (herCents > 0) {
@@ -1071,7 +1216,14 @@ export function bankSponsorCheque(
     // The same cents onto the durable ledger so the week recap's memo can say it too (round-26 #5b).
     // `accrueKidShare` SUMS within a week, which is exactly what a title week paying a prize, an
     // appearance fee and a result bonus needs.
-    accrueKidShare(world, world.week, herCents, bps)
+    // ⭐⭐ ROUND 29 #10 – the base is `grossCents`, the brand's whole cheque. A title week reaches
+    // this function twice (the result bonus, and the retainer when the quarter lands on it) and the
+    // prize path a third time; `accrueKidShare` sums all three bases, so the memo's «N% of $X» is a
+    // share of everything she was paid that week rather than of whichever cheque happened to be last.
+    // ⚠⚠ P3 IS WHY `accrueKidShare` NOW STORES AN EFFECTIVE RATE. Two rates reach one week the moment
+    // a title pays a prize (her ramp) and a result bonus (this fee's complement); the rate handed in
+    // here is this cheque's own, and the sum is reconciled there. See its header.
+    accrueKidShare(world, world.week, herCents, 10_000 - bps, grossCents)
   }
   return { herCents, familyCents }
 }
@@ -1101,6 +1253,40 @@ export function payRetainer(world: WorldState): void {
   const cents = terms.retainerCents ?? 0
   if (cents <= 0) return
   bankSponsorCheque(world, cents, { category: 'income', text: `${terms.brand} retainer – quarterly` })
+}
+
+/** ⭐⭐ PAY THE PORTFOLIO'S ANNIVERSARIES (round 29 part four P6) – the year-fee of every running
+ *  multi-year advertising deal, on each anniversary of its signature while the term runs. Year one
+ *  is banked at the signature (`acceptOffer`); this pays years two and on, so «три однолетних
+ *  контракта платят ровно то же, что один трёхлетний» – the ledger's own stated equivalence – holds
+ *  in the till and not only on paper.
+ *
+ *  ⚠ EVERY LETTER WRITTEN BEFORE THE PORTFOLIO IS UNREACHABLE BY CONSTRUCTION: a 52-week term's
+ *  first anniversary is the week AFTER `untilWeek`, so the guard below never fires for it and an
+ *  old save's money is byte-identical. Zero draws on any stream: arithmetic on decided deals, and
+ *  each cheque runs through `bankSponsorCheque`, so her ramp share comes off it exactly as it does
+ *  off the signature fee. Idempotent per week by construction – the tick calls it once and the
+ *  modulus is exact. */
+export function payAdAnniversaries(world: WorldState): void {
+  for (const deal of activeAdDeals(world.offers, world.week)) {
+    const from = deal.fromWeek ?? deal.decidedWeek ?? 0
+    const at = world.week - from
+    if (at <= 0 || at % WEEKS_PER_YEAR !== 0) continue
+    const t = deal.terms as AdOfferTerms
+    const years = Math.max(1, t.termYears ?? 1)
+    const yearIndex = at / WEEKS_PER_YEAR + 1
+    // ⚠ NO `yearIndex > years` GUARD, AND ITS ABSENCE IS A MEASURED FACT, NOT AN OVERSIGHT. The
+    // first draft carried one and the mutation log killed it as a dead guard: `activeAdDeals`'
+    // own window is the stop – untilWeek = fromWeek + years×52 − 1, so the year-(years+1)
+    // anniversary falls one week PAST the term and the deal is simply not live to be paid
+    // (52k ≤ years×52 − 1 ⇔ k ≤ years − 1, provably). A second spelling of the same stop would
+    // be unreachable code wearing a safety's clothes – the market test's own precedent for
+    // recording a mutant that moves nothing rather than covering it.
+    bankSponsorCheque(world, t.cashCents, {
+      category: 'sponsor',
+      text: `${t.brand} endorsement – year ${yearIndex} of ${years}`,
+    })
+  }
 }
 
 /** WHAT AN EVENT PAYS HER TO TURN UP, in cents, 0 when nothing does. Read at the moment a run

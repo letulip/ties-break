@@ -9,6 +9,7 @@ import { optimizeArt } from './scripts/optimize-art.mjs'
 // three statements of one fact, two of which could go quietly stale on a rename. One module, three
 // importers; scripts/heavy-tests.mjs's header carries the full argument.
 import { HEAVY_SIM_FILES, HEAVY_UNIT_FILES, asProjectGlobs } from './scripts/heavy-tests.mjs'
+import { buildStamp } from './scripts/build-stamp.mjs'
 
 /**
  * build/webp-only — the art pipeline runs INSIDE the build, not beside it.
@@ -105,6 +106,35 @@ function noStowaways(): Plugin {
   }
 }
 
+// THE BUILD STAMP, RESOLVED ONCE PER CONFIG LOAD (round 29 #19).
+//
+// The owner cannot tell which build his phone is running, and it has already cost a wrong diagnosis.
+// `scripts/build-stamp.mjs` carries the whole argument – why a short commit SHA rather than a semver,
+// and the fallback ladder that keeps a git-less build honest.
+//
+// ⚠ IT IS BAKED, NOT LOOKED UP. `import.meta.env.VITE_*` is a build-time SUBSTITUTION: `vite build`
+// rewrites each read into a string literal in the bundle, so what the phone renders is a fact about
+// the bytes it downloaded. Nothing is fetched, and no file, header or manifest can go stale against
+// the code printing it – a version line that lies is worse than no version line.
+//
+// ⚠⚠ AND `define` IS NOT USED, THOUGH IT IS THE OBVIOUS ROAD – measured, not assumed. A root-level
+// `define` reaches the app build and the `unit` project (which sets `extends: true`) and is SILENTLY
+// DROPPED for the `component` project, which does not; a project-level `define` on that project is
+// dropped too, and so is one contributed by a plugin's `config` hook (all three probed). The mounted
+// assertion that the foot of Settings prints the REAL commit would then have passed against
+// `unknown` – a green test measuring its own fallback, which is precisely the class of dead guard
+// this round has been finding. `import.meta.env` is resolved per project through Vite's own
+// `loadEnv`, which copies matching `process.env` keys, so all three surfaces see the same pair.
+//
+// ⚠ THE ENV ASSIGNMENT MUST HAPPEN AT MODULE SCOPE, HERE. `loadEnv` runs during `resolveConfig`,
+// after this file has been evaluated; set inside a hook it would arrive too late.
+//
+// This is also the repo's existing shape for a build-time switch rather than a new one:
+// `VITE_TB_SW` is declared beside these two in src/vite-env.d.ts and has worked this way since e2e.
+const BUILD_STAMP = buildStamp()
+process.env.VITE_BUILD_SHA = BUILD_STAMP.sha
+process.env.VITE_BUILD_DATE = BUILD_STAMP.date
+
 // BASE_PATH is set by CI to "/<repo-name>/" for GitHub Pages; locally the app serves from "/".
 export default defineConfig({
   base: process.env.BASE_PATH ?? '/',
@@ -134,97 +164,90 @@ export default defineConfig({
         ],
       },
       workbox: {
-        globPatterns: ['**/*.{js,css,html,svg,png,webp,woff2}'],
-        // The big character paintings stay OUT of the precache, on purpose (R11-9; re-measured
-        // on build/webp-only, after the duplicate `-fs8` set was deleted).
-        // MEASURED, not guessed, and RE-MEASURED 19.08: public/images/fem-euro-brunnet/ is
-        // 64 webp / 2915 KiB – so precaching the art would still more than DOUBLE the install.
+        // ⚠⚠ THE ART IS IN THE INSTALL, AND `globIgnores: ['**/images/**']` IS GONE (round 29
+        // part two #7, 29.08). This is the owner overruling round 29 #2's conservative fix by name:
+        // shown the +5108 KiB the courts would have cost, he answered that it is not a big price,
+        // that the point is to be able to play FULLY offline with nothing missing, and that
+        // everything may as well go into the PWA install.
         //
-        // ⚠ THE COUNTS IN THIS BLOCK WERE FOUR WEEKS STALE (they read "42 webp / 2348 KiB" and
-        // "35 of the 42"), which matters because the next-but-one paragraph SIZES A CACHE off
-        // them. What arrived since: `rehab` (5 paintings), the 12 `-travel-{mood}-{scene}` journey
-        // frames and the `welcome-1` onboarding hero. Counted by `ls`, not by memory:
+        // ⚠ #2 WAS NOT WRONG, IT WAS ANSWERING A NARROWER QUESTION. Its preloader
+        // (src/art/feedArt.ts) fixed the black plates for a career whose phone had been online in
+        // the week it was looking at, and it did so at zero install cost. What a runtime warm can
+        // never give is the property he actually asked for: a phone installed once and never online
+        // again still paints every court, every trophy and every portrait the career will reach.
+        // Only a precache can promise that, because only a precache fetches art nothing has asked
+        // for yet. The preloader stays – it is now a no-op against a warm precache, and it is the
+        // only thing that still works if a future image ever falls outside this glob.
         //
-        //     reachable   53 / 2419 KiB   5 bands x 8 painted faces (40) + 12 travel + welcome-1
-        //     unreachable 11 /  496 KiB   7 story frames (394 KiB) + 4 `-sleepy-` rename leftovers
+        // WHAT IT COSTS. Measured on this tree, from the build's own output and `stat`, not
+        // estimated:
         //
-        // The 7 STORY frames are bride / funeral / graduated / pregnant-early / pregnant-last /
-        // farewell / retired. They have no `PortraitEmotion` to name them and no surface that
-        // shows them; they wait on a life-events feature, not on a type – docs/lore/setting.md
-        // §"the art" describes each one and docs/research/life-events-motherhood.md counts them as
-        // an in-repo prerequisite for the Phase-6 adult arc. Round 22 proposed deleting them as
-        // dead weight and the deletion was NOT taken: unreachable is proven, but "unused" is the
-        // owner's call and the record says they are parked, not orphaned. The 4 `-sleepy-` files
-        // are a different case with an existing home – docs/art-placeholders.md registers them as
-        // superseded by the `-travel-` group, and tests/art-placeholders.test.ts holds that row.
+        //     before        108 entries    2636 KiB
+        //     + public/images  205 webp    9620 KiB   fields 4989 · fem-euro-brunnet 2915
+        //                                             · weeks 765 · trophies 749 · coaches 165
+        //                                             · sponsors 38
+        //     after         313 entries   12256 KiB
         //
-        // Keeping the art out of the precache matters MORE now, not less: a career only ever
-        // occupies one band at a time, and src/art/preload.ts fetches that band on demand.
+        // ⚠ ~9.6 MB IS A ONE-TIME DOWNLOAD ON A PHONE AND IT IS THE HONEST PRICE OF HIS RULING.
+        // At a poor 3 Mbit/s that is ~35 s of install; on disk it is nothing against any modern
+        // origin quota. It is also the last big jump available: `public/` holds 14.6 MB in total
+        // and 12.3 of it is now in the install.
         //
-        // What IS offline-safe by precache: the small 256px crops in public/avatars (37 files /
-        // 369 KiB, re-measured 19.08 – was 20 files before the adult and milf crops were cut),
-        // which is why the header and the Home card never break offline at any age.
-        globIgnores: ['**/images/**'],
-        // ...and the big paintings get a CacheFirst runtime route instead: one age band is only
-        // ~361-424 KiB, src/art/preload.ts warms the band she is IN (so a finale popup never
-        // renders ahead of its art), and once fetched a painting is offline-durable for 60 days.
-        // ⚠⚠ AND `maxEntries: 80` IS NOT SIZED FOR WHAT THIS ROUTE ACTUALLY MATCHES (19.08, found
-        // while re-checking the counts above – the note that stood here read "still holds the whole
-        // reachable set plus headroom… the margin has narrowed from 35/80 to 53/80"). That
-        // arithmetic is TRUE ABOUT ONE DIRECTORY and the urlPattern below is not scoped to one: it
-        // takes every `/images/*.webp` the trophies|sponsors route above did not catch first, and
-        // public/images holds 205 webp, not 64. Counted by `ls`, not by memory:
+        // ⚠⚠ AND THE SECOND HALF OF HIS RULING IS THE HARDER HALF: an update must fetch what is new
+        // or changed, NEVER the whole set. A 12 MB re-download per deploy would be worse than the
+        // black plates. The manifest above is revision-keyed – every entry is `{url, revision}`
+        // where the revision is the md5 of that file's own bytes – and workbox's
+        // `PrecacheController.install()` fetches an entry only when that exact url+revision pair is
+        // absent from the precache. An unchanged painting is therefore never re-downloaded.
         //
-        //     trophies + sponsors    38   -> tb-art-small-v1, maxEntries 48, holds all of them
-        //     fem-euro-brunnet       64   the character paintings this note was written about
-        //     fields                 73   src/art/venues.ts
-        //     coaches                16   src/art/preload.ts
-        //     weeks                  14   src/art/weeks.ts
-        //     -----------------------------------------------------------------------------
-        //     reaching tb-art-v1    167   against maxEntries 80
+        // ⚠ THAT PROPERTY WAS MEASURED, NOT ASSUMED – it is the claim he cares about most, and the
+        // tool is committed so it can be re-measured whenever this block changes:
         //
-        // All three extra sets are live and reachable, not rename leftovers. So the eviction this
-        // route describes is not a future risk to watch: a career that visits enough venues already
-        // passes eighty distinct entries, and the cache drops the least-recently-used one silently –
-        // a blank frame OFFLINE rather than an error, which is why nothing has reported it.
+        //     node tools/precache-delta.mjs
         //
-        // ⚠ THE NUMBER IS DELIBERATELY LEFT AT 80. It is a phone-storage budget and 167 entries at
-        // these sizes is a different install-footprint promise from 80, which is the owner's call
-        // and not a tidy-up. What is fixed here is the FALSE HEADROOM CLAIM. Whoever sets the cap
-        // next sizes it against the 167, not against one directory – and the same goes for an art
-        // wave that adds a face or a scene to all five bands.
-        // ⚠ CACHEFIRST NEVER REVALIDATES, AND THE OWNER'S UPDATED TROPHIES PROVED IT (01.08). He
-        // replaced two trophy paintings; the new webps reached main the same evening - and his
-        // phone kept showing the old ones, because a CacheFirst entry at the SAME URL is served
-        // without ever asking the network again for 60 days. Deploys cannot touch it. So the art
-        // route splits in two, by how the art actually changes:
-        runtimeCaching: [
-          {
-            // THE SMALL, ITERATED SETS - trophies and sponsor letterheads (≤ ~32 KiB each). The
-            // owner repaints these; a repaint must reach a phone on its own. StaleWhileRevalidate
-            // serves the cached copy instantly and refetches behind it, so an update self-applies
-            // one view later, offline still works, and the revalidation traffic is a few KiB.
-            urlPattern: ({ url }) => /\/images\/(trophies|sponsors)\/.*\.webp$/.test(url.pathname),
-            handler: 'StaleWhileRevalidate',
-            options: {
-              cacheName: 'tb-art-small-v1',
-              expiration: { maxEntries: 48, maxAgeSeconds: 60 * 60 * 24 * 60 },
-              cacheableResponse: { statuses: [0, 200] },
-            },
-          },
-          {
-            // THE BIG CHARACTER PAINTINGS keep CacheFirst - one band is ~361-424 KiB and a phone
-            // must not re-ask for it on every view. The freshness cost above is accepted HERE
-            // because these change ~never; if a band is ever repainted, bump the cache name.
-            urlPattern: ({ url }) => /\/images\/.*\.webp$/.test(url.pathname),
-            handler: 'CacheFirst',
-            options: {
-              cacheName: 'tb-art-v1',
-              expiration: { maxEntries: 80, maxAgeSeconds: 60 * 60 * 24 * 60 },
-              cacheableResponse: { statuses: [0, 200] },
-            },
-          },
-        ],
+        // It builds twice with ONE painting altered, serves build A to a real Chromium until its
+        // worker has precached all 313 entries, swaps the served directory to build B, lets the
+        // update install, and counts the precache fetches the SECOND install makes at the server.
+        // Measured: **1 of 313**. See the tool's header for the run and the numbers.
+        globPatterns: ['**/*.{js,css,html,svg,png,webp,woff2,mp3}'],
+        // ⚠ RAISED FOR ONE FILE, AND ONLY JUST. Workbox refuses precache entries over 2 MiB by
+        // default, and `music/theme.mp3` is 2.58 MB – his ruling above is precisely about that
+        // file, so the cap moves to 3 MiB: enough for the theme, tight enough that the next
+        // oversized asset fails the build and has to come and say so, exactly like the 16 MB
+        // ceiling in tests/round29p2-offline-install.test.ts.
+        maximumFileSizeToCacheInBytes: 3 * 1024 * 1024,
+        // ⚠ AUDIO IS IN, BY HIS RULING (29.08: «надо добрать, не вижу проблем»). The question was
+        // put to him with the sizes – 2556 KiB of music, 472 KiB of match clips – and he took the
+        // ~3 MB so that an offline match is a loud one. `mp3` in the glob above is that ruling;
+        // the guard in tests/round29p2-offline-install.test.ts is re-aimed to hold it IN, the same
+        // test that held it out while the call was still his to make.
+        //
+        // ⚠ FONTS ARE ALREADY IN, AND HAVE BEEN. `woff2` is in the glob above: the four faces
+        // (92 KiB) precache today, which is why offline text has never fallen back to a system
+        // stack. Nothing to decide.
+        //
+        // ⚠⚠ AND THE TWO RUNTIME ART ROUTES ARE GONE WITH `globIgnores`, DELIBERATELY.
+        // `tb-art-v1` (CacheFirst, maxEntries 80) and `tb-art-small-v1` (StaleWhileRevalidate,
+        // maxEntries 48) existed only because the art was outside the precache. Both are now
+        // unreachable: `precacheAndRoute` registers its route FIRST and workbox's router takes the
+        // first match, so every `/images/**.webp` is answered by the precache and neither runtime
+        // route could ever run again. A route that cannot fire is a dead guard wearing a comment,
+        // and this repo has been finding those all week.
+        //
+        // ⭐ THE PRECACHE ALSO FIXES WHAT THE SPLIT WAS FOR. `tb-art-small-v1` existed because
+        // CacheFirst never revalidates and the owner's repainted trophies never reached his phone
+        // (01.08): a cached entry at the same URL is served for 60 days without asking. A precache
+        // entry is keyed on url+revision, so a repainted trophy has a NEW key and the next update
+        // fetches exactly it. Freshness by content rather than by handler – and `maxEntries: 80`
+        // against 167 reachable files, which vite.config has carried as a known silent-eviction
+        // risk since 19.08, stops being a number anybody has to size.
+        //
+        // ⚠ THE TWO STALE CACHES ARE STILL ON DEVICES THAT ALREADY INSTALLED, and workbox's
+        // `cleanupOutdatedCaches` does not touch them – it only prunes old PRECACHES. Up to 128
+        // entries of art (~7 MB) would sit there forever, unreferenced, next to a 12 MB install.
+        // `dropLegacyArtCaches()` in src/pwa.ts deletes them from the page, and only once the
+        // precache demonstrably holds the art, so nothing is thrown away before its replacement
+        // has arrived.
       },
     }),
   ],

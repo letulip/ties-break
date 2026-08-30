@@ -2,13 +2,13 @@
 
 # `engine/world` – area to owner
 
-The barrel `src/engine/world.ts` (2,001 lines) re-exports the decomposed modules under their historical names, so every importer sees one flat surface. That is a COMPATIBILITY contract, not a discovery one – this file is the discovery half.
+The barrel `src/engine/world.ts` (2,058 lines) re-exports the decomposed modules under their historical names, so every importer sees one flat surface. That is a COMPATIBILITY contract, not a discovery one – this file is the discovery half.
 
 Regenerate with `node scripts/world-map.mjs`; `node scripts/world-map.mjs --check` fails when it is stale, and CI runs that on every pull request.
 
 **Do not read this file to answer one question** – that is the habit it exists to replace. `node scripts/world-map.mjs <symbol>` prints the owner and the line, and a plain `grep <symbol> tools/generated/world-symbol-map.md` does the same for a partial name.
 
-324 exported names across 39 owning modules.
+361 exported names across 44 owning modules.
 
 ## Areas
 
@@ -19,25 +19,30 @@ Regenerate with `node scripts/world-map.mjs`; `node scripts/world-map.mjs --chec
 | `src/engine/world/ladder.ts` | THE LADDER: where she stands, and what that standing opens | 22 |
 | `src/engine/world/medical.ts` | THE GATES: condition, the doctor's veto, the layoff, and whether she may enter at all | 21 |
 | `src/engine/world/entryCaps.ts` | THE ANNUAL ENTRY CAPS: the ITF junior allowance, the WTA professional one (AER) – and since P1 the JUNIOR ACCESS rules, which are the same family of rule from the same two rulebooks | 17 |
+| `src/engine/world/masseur.ts` | THE MASSEUR: the first seat of the travelling team (docs/plans/the-travelling-team-2026-08.md, step 1 – the owner's ruling Б, re-cut 22.08) | 16 |
 | `src/engine/world/birthday.ts` | HER BIRTHDAY, AND WHAT YOU GIVE HER | 15 |
 | `src/engine/world/coachMarket.ts` | THE COACH MARKET: who is available at her age and rung, what they cost, and what hiring one does | 15 |
-| `src/engine/world/masseur.ts` | THE MASSEUR: the first seat of the travelling team (docs/plans/the-travelling-team-2026-08.md, step 1 – the owner's ruling Б, re-cut 22.08) | 15 |
+| `src/engine/world/multiWeek.ts` | ⭐ R2-13 PHASE 1 – THE FOUR-WEEK ADVANCE, AND THE TWO FACTS A SECOND WEEK BUTTON NEEDS | 15 |
 | `src/engine/world/sponsors.ts` | THE MONEY FROM OUTSIDE THE FAMILY: sponsors, the offers they make, and what a trip costs once somebody else is helping pay for it | 14 |
+| `src/engine/world/assets.ts` | ⭐⭐ WHAT THE FAMILY OWNS – the shelf's PURE READS, and nothing that spends money | 13 |
 | `src/engine/world/endings.ts` | THE ENDINGS, WIRED INTO THE WORLD: the latch, the two questions, the four-year freeze and the guard that stops a stale screen mutating a career that has stopped | 13 |
-| `src/engine/world/multiWeek.ts` | ⭐ R2-13 PHASE 1 – THE FOUR-WEEK ADVANCE, AND THE TWO FACTS A SECOND WEEK BUTTON NEEDS | 13 |
-| `src/engine/world/shop.ts` | ⭐⭐ THE SHOP, SLICE 1 – the tab, static prices, buy / own / sell | 12 |
+| `src/engine/world/kit.ts` | THE KIT SHE PLAYS WITH, AS A DECISION - the till, and what the Money screen reads off it | 11 |
 | `src/engine/world/mandatory.ts` | THE MANDATORY REGIME AND THE PENALTY LEDGER (W3-ACT2, act2-pro-tour.md §6) | 11 |
 | `src/engine/world/age.ts` | HER AGE: the band and the girl, and the birthday that lands in the feed | 9 |
-| `src/engine/world/kit.ts` | THE KIT SHE PLAYS WITH, AS A DECISION - the till, and what the Money screen reads off it | 8 |
+| `src/engine/world/market.ts` | ⭐⭐⭐ THE MARKET – round 29 part three #16, and it is the answer to one sentence of his | 9 |
 | `src/engine/world/knock.ts` | THE KNOCK: she comes off court sore, and the parent rests it or sends her back out | 8 |
 | `src/engine/world/injury.ts` | INJURIES AND PHYSIO: the weekly roll, the hazard shape behind it, and the recovery the family pays for – plus the sweep that cleans up everything an injury invalidates | 7 |
 | `src/engine/world/planner.ts` | THE SEASON PLANNER: the two things a parent can put on an empty week – a family holiday and a practice match – and what the engine does with them when the week arrives | 7 |
+| `src/engine/world/shop.ts` | ⭐⭐ THE SHOP – the tab, static prices, buy / own / sell, and since round 29 #5 the storeys above | 7 |
 | `src/engine/world/entries.ts` | THE ENTRY COMMANDS: putting her in a draw, and taking her back out | 6 |
 | `src/engine/world/milestones.ts` | WHAT THE FAMILY KEEPS: the moments that are never pruned, and the season they add up to | 6 |
+| `src/engine/world/shootClash.ts` | ⭐⭐ ROUND 29 #3 – THE SHOOT THAT LANDS ON A TOURNAMENT WEEK, AND THE FOUR ANSWERS TO IT | 6 |
 | `src/engine/world/constants.ts` | THE SHARED IDS AND CAPS: the handful of constants more than one world module needs | 5 |
 | `src/engine/world/means.ts` | WHAT THE FAMILY CAN AFFORD, AS ONE FACT – the licence a line of copy asks for before it may assume a wallet | 5 |
 | `src/engine/condition.ts` | THE condition math – one rule, everybody | 4 |
 | `src/engine/season/calendar.ts` | Package L – tournament calendar | 4 |
+| `src/engine/world/business.ts` | ⭐⭐ THE PARENT'S BUSINESSES – round 29 part four P7, parts two and three of his order: «нам нужен мерч, растущий от частоты и обилия рекламных контрактов, съемок, выступлений, титулов и прочего» and «нам нужна академия, которая зарабатывает» | 4 |
+| `src/engine/world/fame.ts` | ⭐⭐ FAME – round 29 part four P7/P8, the first implementation of docs/specs/fame-and-the-shoots-2026-08.md | 4 |
 | `src/engine/world/ledger.ts` | THE LEDGER: the two write primitives every world mutation goes through, and the pure folds that read the finance ledger back out | 4 |
 | `src/engine/kidLife.ts` | HER LIFE OFF THE COURT - the three tiles of screen C's attribute grid that are not about results | 3 |
 | `src/engine/world/fieldNews.ts` | ⭐⭐⭐ THE TOUR HAS A VOICE – the professional field's succession, said out loud (round 26 #10) | 3 |
@@ -194,6 +199,27 @@ THE ANNUAL ENTRY CAPS: the ITF junior allowance, the WTA professional one (AER) 
 - `proSubCapUsage` – `src/engine/world/entryCaps.ts`
 - `yearEndJuniorRank` – `src/engine/world/entryCaps.ts`
 
+### `src/engine/world/masseur.ts`
+
+THE MASSEUR: the first seat of the travelling team (docs/plans/the-travelling-team-2026-08.md, step 1 – the owner's ruling Б, re-cut 22.08).
+
+- `hireMasseur` – `src/engine/world/masseur.ts`
+- `MASSEUR_CHANGE_KEY` – `src/engine/world/masseur.ts`
+- `MASSEUR_LOCKED_DETAIL` – `src/engine/world/masseur.ts`
+- `MASSEUR_NOTE_WINDOW_WEEKS` – `src/engine/world/masseur.ts`
+- `masseurRoomNote` – `src/engine/world/masseur.ts`
+- `masseurRungOf` – `src/engine/world/masseur.ts`
+- `masseurTourRelief` – `src/engine/world/masseur.ts`
+- `masseurTourWeekCents` – `src/engine/world/masseur.ts`
+- `masseurUnlocked` – `src/engine/world/masseur.ts`
+- `masseurWeeklyCents` – `src/engine/world/masseur.ts`
+- `masseurWorksInWeek` – `src/engine/world/masseur.ts`
+- `masseurWorksThisWeek` – `src/engine/world/masseur.ts`
+- `resolveMasseur` – `src/engine/world/masseur.ts`
+- `resolveMasseurReturn` – `src/engine/world/masseur.ts`
+- `setMasseurSessions` – `src/engine/world/masseur.ts`
+- `setMasseurTravels` – `src/engine/world/masseur.ts`
+
 ### `src/engine/world/birthday.ts`
 
 HER BIRTHDAY, AND WHAT YOU GIVE HER.
@@ -234,25 +260,25 @@ THE COACH MARKET: who is available at her age and rung, what they cost, and what
 - `setCoachOnEventWeeks` – `src/engine/world/coachMarket.ts`
 - `setCoachOnJuniorEvents` – `src/engine/world/coachMarket.ts`
 
-### `src/engine/world/masseur.ts`
+### `src/engine/world/multiWeek.ts`
 
-THE MASSEUR: the first seat of the travelling team (docs/plans/the-travelling-team-2026-08.md, step 1 – the owner's ruling Б, re-cut 22.08).
+⭐ R2-13 PHASE 1 – THE FOUR-WEEK ADVANCE, AND THE TWO FACTS A SECOND WEEK BUTTON NEEDS.
 
-- `hireMasseur` – `src/engine/world/masseur.ts`
-- `MASSEUR_CHANGE_KEY` – `src/engine/world/masseur.ts`
-- `MASSEUR_LOCKED_DETAIL` – `src/engine/world/masseur.ts`
-- `MASSEUR_NOTE_WINDOW_WEEKS` – `src/engine/world/masseur.ts`
-- `masseurRoomNote` – `src/engine/world/masseur.ts`
-- `masseurRungOf` – `src/engine/world/masseur.ts`
-- `masseurTourRelief` – `src/engine/world/masseur.ts`
-- `masseurTourWeekCents` – `src/engine/world/masseur.ts`
-- `masseurUnlocked` – `src/engine/world/masseur.ts`
-- `masseurWeeklyCents` – `src/engine/world/masseur.ts`
-- `masseurWorksThisWeek` – `src/engine/world/masseur.ts`
-- `resolveMasseur` – `src/engine/world/masseur.ts`
-- `resolveMasseurReturn` – `src/engine/world/masseur.ts`
-- `setMasseurSessions` – `src/engine/world/masseur.ts`
-- `setMasseurTravels` – `src/engine/world/masseur.ts`
+- `ADVANCE_REFUSALS` – `src/engine/world/multiWeek.ts`
+- `advanceRefusal` – `src/engine/world/multiWeek.ts`
+- `calendarClearAhead` – `src/engine/world/multiWeek.ts`
+- `eventIsHers` – `src/engine/world/multiWeek.ts`
+- `LONG_LAYOFF_WEEKS` – `src/engine/world/multiWeek.ts`
+- `longLayoff` – `src/engine/world/multiWeek.ts`
+- `MULTI_WEEK_SPAN` – `src/engine/world/multiWeek.ts`
+- `QUIET_WINDOW_WEEKS` – `src/engine/world/multiWeek.ts`
+- `SPAN_REPORTS_ONLY` – `src/engine/world/multiWeek.ts`
+- `spanDigest` – `src/engine/world/multiWeek.ts`
+- `spanRowCount` – `src/engine/world/multiWeek.ts`
+- `SpanWeek` *(type)* – `src/engine/world/multiWeek.ts`
+- `spanWeeksFor` – `src/engine/world/multiWeek.ts`
+- `spanWorthOffering` – `src/engine/world/multiWeek.ts`
+- `stoppableOfferWeek` – `src/engine/world/multiWeek.ts`
 
 ### `src/engine/world/sponsors.ts`
 
@@ -273,6 +299,24 @@ THE MONEY FROM OUTSIDE THE FAMILY: sponsors, the offers they make, and what a tr
 - `sponsorNeedMet` – `src/engine/world/sponsors.ts`
 - `travelCostFor` – `src/engine/world/sponsors.ts`
 
+### `src/engine/world/assets.ts`
+
+⭐⭐ WHAT THE FAMILY OWNS – the shelf's PURE READS, and nothing that spends money.
+
+- `assetDelivered` – `src/engine/world/assets.ts`
+- `assetUpkeepCents` – `src/engine/world/assets.ts`
+- `assetValueCents` – `src/engine/world/assets.ts`
+- `assetWorthCents` – `src/engine/world/assets.ts`
+- `deliveredAssets` – `src/engine/world/assets.ts`
+- `grantedVacationIds` – `src/engine/world/assets.ts`
+- `marketSeasonMove` – `src/engine/world/assets.ts`
+- `ownedAssets` – `src/engine/world/assets.ts`
+- `ownsDeliveredOfFamily` – `src/engine/world/assets.ts`
+- `shopCatalogue` – `src/engine/world/assets.ts`
+- `shopItem` – `src/engine/world/assets.ts`
+- `ShopItem` *(type)* – `src/engine/world/assets.ts`
+- `weeklyAssetUpkeepCents` – `src/engine/world/assets.ts`
+
 ### `src/engine/world/endings.ts`
 
 THE ENDINGS, WIRED INTO THE WORLD: the latch, the two questions, the four-year freeze and the guard that stops a stale screen mutating a career that has stopped.
@@ -291,40 +335,21 @@ THE ENDINGS, WIRED INTO THE WORLD: the latch, the two questions, the four-year f
 - `resolveEndings` – `src/engine/world/endings.ts`
 - `wasThereAChild` – `src/engine/world/endings.ts`
 
-### `src/engine/world/multiWeek.ts`
+### `src/engine/world/kit.ts`
 
-⭐ R2-13 PHASE 1 – THE FOUR-WEEK ADVANCE, AND THE TWO FACTS A SECOND WEEK BUTTON NEEDS.
+THE KIT SHE PLAYS WITH, AS A DECISION - the till, and what the Money screen reads off it.
 
-- `ADVANCE_REFUSALS` – `src/engine/world/multiWeek.ts`
-- `advanceRefusal` – `src/engine/world/multiWeek.ts`
-- `calendarClearAhead` – `src/engine/world/multiWeek.ts`
-- `eventIsHers` – `src/engine/world/multiWeek.ts`
-- `LONG_LAYOFF_WEEKS` – `src/engine/world/multiWeek.ts`
-- `longLayoff` – `src/engine/world/multiWeek.ts`
-- `MULTI_WEEK_SPAN` – `src/engine/world/multiWeek.ts`
-- `QUIET_WINDOW_WEEKS` – `src/engine/world/multiWeek.ts`
-- `spanDigest` – `src/engine/world/multiWeek.ts`
-- `spanRowCount` – `src/engine/world/multiWeek.ts`
-- `SpanWeek` *(type)* – `src/engine/world/multiWeek.ts`
-- `spanWorthOffering` – `src/engine/world/multiWeek.ts`
-- `stoppableOfferWeek` – `src/engine/world/multiWeek.ts`
-
-### `src/engine/world/shop.ts`
-
-⭐⭐ THE SHOP, SLICE 1 – the tab, static prices, buy / own / sell.
-
-- `assetValueCents` – `src/engine/world/shop.ts`
-- `buyAsset` – `src/engine/world/shop.ts`
-- `ownedAssets` – `src/engine/world/shop.ts`
-- `revalueAssets` – `src/engine/world/shop.ts`
-- `sellableAsset` – `src/engine/world/shop.ts`
-- `sellAsset` – `src/engine/world/shop.ts`
-- `SHOP_LOCKED_DETAIL` – `src/engine/world/shop.ts`
-- `shopCatalogue` – `src/engine/world/shop.ts`
-- `shopItem` – `src/engine/world/shop.ts`
-- `ShopItem` *(type)* – `src/engine/world/shop.ts`
-- `shopUnlocked` – `src/engine/world/shop.ts`
-- `shopView` – `src/engine/world/shop.ts`
+- `GEAR_REST_WINDOW` – `src/engine/world/kit.ts`
+- `gearRestWeeksOf` – `src/engine/world/kit.ts`
+- `goodWeeksFor` – `src/engine/world/kit.ts`
+- `KIT_LINES` – `src/engine/world/kit.ts`
+- `kitAllowanceRemainingCents` – `src/engine/world/kit.ts`
+- `kitDealView` – `src/engine/world/kit.ts`
+- `kitLineViews` – `src/engine/world/kit.ts`
+- `kitPurchaseSplit` – `src/engine/world/kit.ts`
+- `kitStateOf` – `src/engine/world/kit.ts`
+- `recordGearRestWeek` – `src/engine/world/kit.ts`
+- `setKitGrade` – `src/engine/world/kit.ts`
 
 ### `src/engine/world/mandatory.ts`
 
@@ -356,18 +381,19 @@ HER AGE: the band and the girl, and the birthday that lands in the feed.
 - `kidBirthYear` – `src/engine/world/age.ts`
 - `START_AGE_YEARS` – `src/engine/world/age.ts`
 
-### `src/engine/world/kit.ts`
+### `src/engine/world/market.ts`
 
-THE KIT SHE PLAYS WITH, AS A DECISION - the till, and what the Money screen reads off it.
+⭐⭐⭐ THE MARKET – round 29 part three #16, and it is the answer to one sentence of his.
 
-- `goodWeeksFor` – `src/engine/world/kit.ts`
-- `KIT_LINES` – `src/engine/world/kit.ts`
-- `kitAllowanceRemainingCents` – `src/engine/world/kit.ts`
-- `kitDealView` – `src/engine/world/kit.ts`
-- `kitLineViews` – `src/engine/world/kit.ts`
-- `kitPurchaseSplit` – `src/engine/world/kit.ts`
-- `kitStateOf` – `src/engine/world/kit.ts`
-- `setKitGrade` – `src/engine/world/kit.ts`
+- `marketCrash` – `src/engine/world/market.ts`
+- `MarketCrash` *(type)* – `src/engine/world/market.ts`
+- `marketCrashFellIn` – `src/engine/world/market.ts`
+- `marketCrashLog` – `src/engine/world/market.ts`
+- `marketIndex` – `src/engine/world/market.ts`
+- `marketRatio` – `src/engine/world/market.ts`
+- `marketWave` – `src/engine/world/market.ts`
+- `worstCrashFreeRatio` – `src/engine/world/market.ts`
+- `worstMarketRatio` – `src/engine/world/market.ts`
 
 ### `src/engine/world/knock.ts`
 
@@ -406,6 +432,18 @@ THE SEASON PLANNER: the two things a parent can put on an empty week – a famil
 - `practiceCaution` – `src/engine/world/planner.ts`
 - `PracticeCaution` *(type)* – `src/engine/world/planner.ts`
 
+### `src/engine/world/shop.ts`
+
+⭐⭐ THE SHOP – the tab, static prices, buy / own / sell, and since round 29 #5 the storeys above.
+
+- `buyAsset` – `src/engine/world/shop.ts`
+- `deliverAssets` – `src/engine/world/shop.ts`
+- `reportMarketSeason` – `src/engine/world/shop.ts`
+- `revalueAssets` – `src/engine/world/shop.ts`
+- `sellableAsset` – `src/engine/world/shop.ts`
+- `sellAsset` – `src/engine/world/shop.ts`
+- `shopView` – `src/engine/world/shop.ts`
+
 ### `src/engine/world/entries.ts`
 
 THE ENTRY COMMANDS: putting her in a draw, and taking her back out.
@@ -427,6 +465,17 @@ WHAT THE FAMILY KEEPS: the moments that are never pruned, and the season they ad
 - `emptyTrophyLedger` – `src/engine/world/milestones.ts`
 - `maybeFireSeasonWrapUp` – `src/engine/world/milestones.ts`
 - `seasonWrapDue` – `src/engine/world/milestones.ts`
+
+### `src/engine/world/shootClash.ts`
+
+⭐⭐ ROUND 29 #3 – THE SHOOT THAT LANDS ON A TOURNAMENT WEEK, AND THE FOUR ANSWERS TO IT.
+
+- `answerShootClash` – `src/engine/world/shootClash.ts`
+- `buildShootClashPrompt` – `src/engine/world/shootClash.ts`
+- `shootCancelCents` – `src/engine/world/shootClash.ts`
+- `shootClashOpen` – `src/engine/world/shootClash.ts`
+- `shootClashWeek` – `src/engine/world/shootClash.ts`
+- `shootMoveTarget` – `src/engine/world/shootClash.ts`
 
 ### `src/engine/world/constants.ts`
 
@@ -465,6 +514,24 @@ Package L – tournament calendar.
 - `isExamWeek` – `src/engine/season/calendar.ts`
 - `isTierAgeOpen` – `src/engine/season/calendar.ts`
 - `tierAgeBlock` – `src/engine/season/calendar.ts`
+
+### `src/engine/world/business.ts`
+
+⭐⭐ THE PARENT'S BUSINESSES – round 29 part four P7, parts two and three of his order: «нам нужен мерч, растущий от частоты и обилия рекламных контрактов, съемок, выступлений, титулов и прочего» and «нам нужна академия, которая зарабатывает».
+
+- `academyReputationOf` – `src/engine/world/business.ts`
+- `academyWeeklyIncomeCents` – `src/engine/world/business.ts`
+- `assetWeeklyIncomeCents` – `src/engine/world/business.ts`
+- `merchWeeklyIncomeCents` – `src/engine/world/business.ts`
+
+### `src/engine/world/fame.ts`
+
+⭐⭐ FAME – round 29 part four P7/P8, the first implementation of docs/specs/fame-and-the-shoots-2026-08.md.
+
+- `completedShootWeeks` – `src/engine/world/fame.ts`
+- `fameAt` – `src/engine/world/fame.ts`
+- `fameFloorOf` – `src/engine/world/fame.ts`
+- `fameShootMultOf` – `src/engine/world/fame.ts`
 
 ### `src/engine/world/ledger.ts`
 

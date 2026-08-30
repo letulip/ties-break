@@ -27,6 +27,35 @@ a box it has not proven with a command in this session.
      (CLAUDE.md's standing regime), so the PR body carries the local verdict, with the numbers
      whenever a corridor moved.
 
+2a. **⚠⚠ AND THE LOG MUST BE NEWER THAN THE COMMAND** (29.08, caught in this repo's own final gate).
+   Reading the exit code from a file instead of a pipe or a notification is rule one and two; rule
+   three is that the file you read is **today's**. macOS is case-insensitive, so `/tmp/W29-cap.log`
+   and `/tmp/w29-cap.log` are ONE file – a previous wave's green `CAP_EXIT=0` sat there looking
+   perfect and nineteen hours old. Two of four verdicts were stale and would have been reported as a
+   gate that never ran.
+
+       START=$(date +%s)
+       # ... run the gate ...
+       [ "$(stat -f %m /tmp/gate.log)" -gt "$START" ] || echo "STALE – this log predates the run"
+
+   ⭐ Check the mtime, or use a prefix unique to the run. A stale green is worse than a red: red stops
+   you, stale ships.
+
+2b. **⚠ `npm run test:e2e`, ALWAYS, the same way** (owner, 29.08: «добавить в skill pull-request и
+   гонять на локале как условие отправки кода на сервер»). Measured that day: **30 tests, 22 seconds,
+   the whole suite** – cheaper than a single unit shard. At that price "smoke only" stopped being an
+   economy and became a blind spot we were paying for in hand-caught defects.
+
+       npm run test:e2e > /tmp/pr-e2e.log 2>&1; echo "E2E_EXIT=$?" >> /tmp/pr-e2e.log
+
+   ⭐ **This is a CONDITION OF PUSHING, not a nicety** – his words are «условие отправки кода на
+   сервер». A branch whose e2e is red does not go up, and the sentence «ветка готова» may not follow
+   a run that was skipped. ⚠ The PR gate on CI stays smoke-only by the repo's own recorded cost
+   lesson – this runs LOCALLY, which is where the 22 seconds are.
+
+   ⚠ Read the exit code from the FILE. This suite finishes fast enough that a wrapper's "exit code 0"
+   arrives before the run does – that notification lied four times in one session.
+
 3. **The diff, read before described.** `git log --oneline main..HEAD` and
    `git diff --stat main...HEAD`. The What-section is written from what actually changed, not from
    memory: two sentences, the owner's numbering where the wave answered his items.
@@ -56,6 +85,57 @@ a box it has not proven with a command in this session.
    ruled something; if it moved a volatile fact, `node scripts/doc-facts.mjs` already failed the gate
    and told you which. The rule the review earned: **repair without ownership rots in days** – so a
    wave that changes what is true also changes what the docs say it is, in the same PR.
+
+4c. **⚠⚠ WHAT THE ROUND DID NOT DO – the unfinished-items block** (owner, round 29 #18: «добавить в
+   скилл pull-request проверку несделанных пунктов из раунда»). He asked for this because items go
+   quiet: the round-29 audit found round 8 #1 open for 34 days, kit wear on holiday asked FOUR times
+   with no code, and a `[x]` sample where 1 of 10 was false. **My memory is not the instrument. The
+   PR is.**
+
+   Read the wave's ledger (`docs/rounds/round-<N>.md`) and put EVERY item that is not `[x]` or `[~]`
+   into the body under **What the round did not do**, one line each, with its status mark and a
+   half-sentence reason. `[?]` items are listed as questions HE still owes an answer to, and `[ ]`
+   items say what blocks them.
+
+   ⚠ **This block is never omitted for being long, and never softened.** A wave that closed 8 of 20
+   says so in the PR; the owner decides whether that is enough, and he cannot decide it from a body
+   that only lists wins. ⭐ **If the ledger and the PR disagree, the PR is wrong** – the ledger was
+   written from the work and the body is written from the ledger, never the other way round.
+
+   ⚠ Also carry forward anything the wave REVIVED from an older round, naming the round it came from,
+   so the older debt is visibly shrinking rather than silently re-filed.
+
+4d. **The build line** (owner, round 29 #19: «может быть стоит какую-то версию добавить в настройках
+   внизу строчкой? И в pull-request скилле обновлять при деплое?»). He cannot tell which build he is
+   playing, and it has already cost a wrong diagnosis – I asserted his save predated a merged wave and
+   was wrong by a whole schema version.
+
+   Before the body is written, confirm the version line the app renders is the one this PR ships:
+   the short commit SHA and the date, not a semver. ⭐ **A semver says what we intended; a SHA says
+   what he is holding**, and the second is the question every defect report needs answered.
+
+   ⚠ **CONFIRM IT, DO NOT ASSERT IT – and it is two commands, no browser needed** (round 29 #19
+   shipped the reader so this step could not be decorative). `scripts/build-stamp.mjs` is the single
+   source the build bakes from; `vite build` substitutes it into the bundle as a string literal, so
+   the built file can be grepped for the value the script names:
+
+   ```bash
+   node scripts/build-stamp.mjs                    # -> "<sha> <date>", what a build made NOW bakes
+   grep -l "$(node scripts/build-stamp.mjs | cut -d' ' -f1)" dist/assets/*.js
+   ```
+
+   The second command must name a file. If it names none, `dist/` predates the branch head – rebuild
+   (`npx vite build`) and run it again rather than reporting the first command's answer, which is a
+   statement about git and not about the bundle.
+
+   ⚠ **AND THE SHA IT PRINTS IS THE BRANCH HEAD, NOT THE COMMIT THE OWNER WILL DEPLOY.** A merge
+   makes a new commit, so the line his phone shows after the merge names *that* one. What this step
+   proves is the mechanism – the app renders the commit its bundle was built from – not a value to
+   copy into the body. Do not paste a SHA into the PR as "the version he will see".
+
+   ⚠ If the line reads `unknown`, the build could not reach git (a shallow container, no history).
+   That is the designed fallback, not a defect, and it is `tests/component/round29-build-line.test.ts`
+   and `…-fallback.test.ts` that hold both paths.
 
 5. **The body.** Fill `.github/pull_request_template.md` verbatim – What, then the checklist with
    every earned box ticked `[x]`. ⚠ For an EXISTING PR (a red `checklist` job on an open PR is the

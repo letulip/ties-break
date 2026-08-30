@@ -607,7 +607,17 @@ if (windowArgIdx >= 0 && args[windowArgIdx + 1]) {
     const unit = { id: 'u', name: 'u', serve: 100, ret: 100, composure: 100, stamina: 100, groundstrokes: 100 }
     const out = applyKit(
       applySurfaceStyle(unit, world.profile.playStyle, surface),
-      kitWearAt(world.seed, world.profile.background, week, kitFreshCap(world.offers ?? [], week), world.kit ?? null),
+      // ⚠ The stand-down ledger rides along (round-29 #20) so this probe reads the same wear the
+      // engine composed with. It is a WINDOW (`GEAR_REST_WINDOW`), so a week older than the window
+      // reads as unrested here - which is the same answer the engine would give at that week today.
+      kitWearAt(
+        world.seed,
+        world.profile.background,
+        week,
+        kitFreshCap(world.offers ?? [], week),
+        world.kit ?? null,
+        world.gearRestWeeks ?? [],
+      ),
     )
     const g: Record<string, number> = {}
     for (const k of SK) g[k] = (out as unknown as Record<string, number>)[k] / 100

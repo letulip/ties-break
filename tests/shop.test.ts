@@ -20,11 +20,11 @@ import {
   assetValueCents,
   ownedAssets,
   revalueAssets,
+  sellableAsset,
   shopCatalogue,
   shopItem,
-  shopUnlocked,
+  activeLadderOf,
   shopView,
-  SHOP_LOCKED_DETAIL,
   SAVE_SCHEMA_VERSION,
   skipTournament,
   closeTournament,
@@ -36,14 +36,23 @@ import { WEEKS_PER_YEAR } from '../src/engine/season/calendar'
 import { financeWindow } from '../src/engine/world/ledger'
 import { fnv1aHex } from './helpers/hash'
 
-/** ⚠ THE DOOR IS OPENED THE WAY THE ENGINE OPENS IT. `activeLadderOf`'s professional arm reads the
- *  never-pruned mark `wtaEverCounted` off `bestFinishByTier`, so writing that mark is the same
- *  one-way door a real counting W-series result walks through – not a flag poked on the side of the
- *  gate. Every test below that needs a shoppable career says so by calling this. */
+/** ⚠ THE PROFESSIONAL MARK, SET THE WAY THE ENGINE SETS IT. `activeLadderOf`'s professional arm
+ *  reads the never-pruned mark `wtaEverCounted` off `bestFinishByTier`, so writing that mark is the
+ *  same one-way door a real counting W-series result walks through.
+ *  ⚠ IT NO LONGER OPENS THE SHELF – part two #6 deleted that gate – and it is KEPT because the
+ *  fixtures below are about a career that is on the pro table for every other reason (prize money,
+ *  the masseur, the ladder). Its post-condition used to be `shopUnlocked(world) === true`; that
+ *  predicate is gone, and the assertion is now the mark itself. */
 function turnProfessional(world: WorldState): void {
   world.bestFinishByTier.wta250 = 3
-  expect(shopUnlocked(world), 'the fixture really is professional now').toBe(true)
+  expect(activeLadderOf(world), 'the fixture really is professional now').toBe('wta')
 }
+
+/** ⚠ ROUND 29 PART FOUR P10 – WHAT THE SHELF SELLS: the catalogue minus its tombstones. Every
+ *  «the screen gets every rung» claim below reads THIS, because a retired rung (`plane-long`) is
+ *  deliberately not drawn for a family that does not own one – the roster test holds the list of
+ *  tombstones to exactly one, so this filter cannot quietly widen. */
+const onSale = () => shopCatalogue().filter((i) => !i.retired)
 
 function career(seed: string, weeks: number): WorldState {
   const world = createWorld(seed)
@@ -59,7 +68,14 @@ function career(seed: string, weeks: number): WorldState {
 }
 
 describe('the shelf itself', () => {
-  it('⭐ carries §3a-c and nothing else – two investments, four cars, two house tiers', () => {
+  // ⚠⚠ RE-AIMED AT ROUND 29 #5, NEVER DELETED, AND THE CLAIM IS THE SAME CLAIM. This pin exists so
+  // that a rung cannot arrive on the shelf without a line in a test saying it did; the owner asked
+  // for three storeys – «В магазине всё ещё не хватает яхт, самолётов и стойки академии» – so ten
+  // rows arrive and every one of them is named here. What is STILL absent is what is still absent:
+  // no bonds and no club stake (§3a's upper rungs), and neither of the two items that were about HER
+  // (§3d became a birthday gift, §3e was struck). The negative below moved with the positive, which
+  // is the honest form of a re-aim: it can no longer refuse the words this slice legitimately adds.
+  it('⭐ carries §3a-c, §3f and §3g – and still nothing else', () => {
     const rows = shopCatalogue()
     expect(rows.map((r) => r.id)).toEqual([
       'deposit',
@@ -70,18 +86,49 @@ describe('the shelf itself', () => {
       'car-unreasonable',
       'house-first',
       'house-garden',
+      // ⚠ RE-AIMED AT ROUND 29 PART FOUR P7, same discipline as the #5 re-aim above: the merch
+      // brand is the parent's FIRST business («дешевле академии»), family 'business', and this
+      // line is the roster's record that it arrived on purpose. The negative claim moves with it:
+      // still no bonds, no club stake, and nothing about HER.
+      'merch-brand',
+      'boat-launch',
+      // ⚠ RE-AIMED AT ROUND 29 PART THREE P1 («моторка $2.4М – давай переделаем на парусную яхту
+      // пожалуйста»): `boat-motor` is `boat-sail` now – identity changed, price/build/upkeep did
+      // not (the three-numbers claims live in tests/round29-shop-elite.test.ts, moved with the id).
+      // Owned rows follow through v66's migration, asserted in tests/migrations.test.ts.
+      'boat-sail',
+      'yacht',
+      'yacht-big',
+      'plane',
+      // ⚠ ROUND 29 PART FOUR P10: «значит убрать этот самолет за 38М и всех делов =)» – RETIRED,
+      // not deleted. The id stays in the CATALOGUE as a tombstone (an owning save must still
+      // value, bill and sell it – 0 of 72 careers ever took delivery, so removal is the ruling);
+      // what changed is the SHELF: `shopView` draws it only for an owner and `buyAsset` refuses
+      // it, both asserted in tests/round29-shop-elite.test.ts.
+      'plane-long',
+      'academy-land',
+      'academy-courts',
+      'academy-building',
+      'academy-staff',
     ])
-    // §3a's two minimums and §3b's four prices are the spec's own numbers, quoted here so a retune
+    // ⚠ P10's ANTI-VACUITY, held HERE beside the roster: exactly one tombstone, by name. `onSale`
+    // above filters on this flag, so a `retired` that leaked onto a living rung – or fell off the
+    // plane – would go red in one place with the reason next to it.
+    expect(rows.filter((r) => r.retired).map((r) => r.id)).toEqual(['plane-long'])
+    // §3a's two minimums and §3b's four prices are the spec's own numbers, quoted so a retune
     // has to come through this file.
     expect(shopItem('deposit')!.entryCents).toBe(1_000_00)
     expect(shopItem('index-fund')!.entryCents).toBe(5_000_00)
     expect(rows.filter((r) => r.family === 'car').map((r) => r.entryCents)).toEqual([
       60_000_00, 110_000_00, 190_000_00, 300_000_00,
     ])
-    // ⚠ AND THE SLICES THAT ARE NOT MINE ARE NOT HERE. No bonds, no club stake (§3a's upper rungs),
-    // no elite ladder (§3f), no academy (§3g) – and neither of the two items that were about HER,
-    // which left the shelf entirely (§3d became a birthday gift, §3e was struck).
-    expect(rows.some((r) => /bond|club|yacht|plane|academy|court|flat/i.test(r.id))).toBe(false)
+    // ⚠ AND THE SLICES THAT ARE STILL NOT MINE ARE STILL NOT HERE. No bonds and no club stake (§3a's
+    // upper rungs) – and neither of the two items that were about HER, which left the shelf entirely
+    // (§3d became a birthday gift, §3e was struck). ⚠ `court` and `flat` are the two of hers and
+    // they stay in the pattern; `academy-courts` is the ACADEMY's, so the pattern is anchored on the
+    // word standing alone rather than on a substring, which is what «no court for her» means.
+    expect(rows.some((r) => /bond|club|flat/i.test(r.id))).toBe(false)
+    expect(rows.some((r) => r.id === 'court' || r.id === 'home-court')).toBe(false)
   })
 
   it('⭐⭐ §3b – THE CARS LOSE MONEY, and that is the point of having them', () => {
@@ -122,8 +169,21 @@ describe('what a thing is worth', () => {
   })
 
   it('...and the investments go the other way, at §3a’s rates', () => {
-    expect(assetValueCents(shopItem('deposit')!, 10_000_00, WEEKS_PER_YEAR)).toBe(Math.round(10_000_00 * 1.02))
+    // ⚠ RE-AIMED BY ROUND 29 PART TWO #3, NOT DELETED: the deposit's literal was 1.02 and is 1.0317,
+    // because his ruling moved the current account's own rate onto Savings («не вижу проблем сделать
+    // ставку 3.17% на Savings»). The literal is written out here rather than read off the catalogue
+    // on purpose – a pin that computed `1 + annualRateBps / 10_000` would be comparing the engine
+    // with itself and would have followed the constant anywhere it went.
+    expect(assetValueCents(shopItem('deposit')!, 10_000_00, WEEKS_PER_YEAR)).toBe(Math.round(10_000_00 * 1.0317))
     expect(assetValueCents(shopItem('index-fund')!, 10_000_00, WEEKS_PER_YEAR)).toBe(Math.round(10_000_00 * 1.07))
+    // ⚠⚠ AND IT IS REALLY THE RATE THE CURRENT ACCOUNT USED TO PAY, which is the whole of item 3 –
+    // asserted against the ENGINE's constant and not as an arithmetic identity. `ECONOMY.savings`
+    // was `apyWeekly: 0.0006` before round 29 #12 deleted it, and `(1 + 0.0006)^52 − 1 = 3.17%/yr`.
+    // ⚠ A line reading `expect(Math.round((1.0006 ** 52 - 1) * 10_000)).toBe(317)` would have been a
+    // constant compared with itself: green forever, and green through the rate being moved back.
+    expect(shopItem('deposit')!.annualRateBps, "the deposit pays the deleted account's own rate").toBe(
+      Math.round((1.0006 ** 52 - 1) * 10_000),
+    )
   })
 
   it('⚠ is a WHOLE NUMBER OF CENTS – the fraction never leaves this function', () => {
@@ -135,36 +195,74 @@ describe('what a thing is worth', () => {
   })
 })
 
-describe('the gate – §2, the professional era and never the junior years', () => {
-  it('⭐ refuses in the junior years, with the same sentence the screen prints', () => {
+// ⚠⚠ RE-AIMED BY ROUND 29 PART TWO #6, NOT DELETED – AND THE INVERSION IS THE POINT. This block used
+// to be «the gate – §2, the professional era and never the junior years»: three arms asserting that a
+// junior career could not buy, that the professional mark opened the shelf one-way, and that selling
+// was never gated either way. His ruling of 29.08 – «магазин открыт всегда с начала игры» – overturns
+// the first two, so they now assert the OPPOSITE with the same fixtures. The third is untouched: it
+// was never about the gate. ⭐ These are the arms that would have caught a gate quietly surviving.
+describe('the shelf is open from week one – part two #6, his ruling', () => {
+  it('⭐ a junior family can BUY, on the very fixture that used to be refused', () => {
     const world = career('shop-gate-junior', 30)
-    expect(shopUnlocked(world)).toBe(false)
+    expect(activeLadderOf(world), 'the fixture really is a junior career').not.toBe('wta')
     world.fundsCents = 500_000_00
-    expect(() => buyAsset(world, 'car-sensible')).toThrow(SHOP_LOCKED_DETAIL)
-    // R10-16: one sentence, so the disabled control and the refused click cannot disagree.
-    expect(toSnapshot(world).shop.lockedDetail).toBe(SHOP_LOCKED_DETAIL)
-    expect(toSnapshot(world).shop.unlocked).toBe(false)
+    expect(() => buyAsset(world, 'car-sensible'), 'no professional-era refusal is left').not.toThrow()
+    expect(world.assets.map((a) => a.id)).toEqual(['car-sensible'])
+    // ...and the screen sees the same shelf: every rung ON SALE, no shut arm to print (P10: the
+    // retired plane is a tombstone, not a rung – `onSale` is the honest denominator).
+    expect(toSnapshot(world).shop.rows).toHaveLength(onSale().length)
   })
 
-  it('...and opens on the professional mark, which is a ONE-WAY door', () => {
-    const world = career('shop-gate-pro', 30)
-    turnProfessional(world)
-    // The mark is never pruned, so an empty 52-week window cannot shut the shelf again – the same
-    // property `masseurUnlocked` is built on.
-    world.results = []
-    expect(shopUnlocked(world)).toBe(true)
+  it('⭐⭐ ...and so can a fourteen-year-old family in its very first week', () => {
+    // ⚠ THE HORIZON ASK 12b WAS ABOUT. Round 29 #12 removed the current account's interest and
+    // measured the loss at its cleanest on the junior sink; the deposit that replaces it now exists
+    // there. Week 0, no ticks, no results – the earliest the game can be asked the question.
+    const world = createWorld('shop-open-week-zero')
+    expect(world.week).toBe(0)
+    world.fundsCents = 50_000_00
+    expect(() => buyAsset(world, 'deposit', 10_000_00)).not.toThrow()
+    expect(world.assets[0].paidCents).toBe(10_000_00)
+  })
+
+  it('⭐⭐ ...and NOTHING IN THE CATALOGUE BREAKS AT FOURTEEN – the half of #6 that could be a defect', () => {
+    // ⚠⚠ A RUNG THE PRICE KEEPS OUT OF REACH IS LEGIBLE; A RUNG THAT BREAKS AT THAT AGE IS NOT. So
+    // this walks the WHOLE shelf on a week-0 world and asserts that every row is a sane, finite,
+    // whole-number offer and that every rule that used to sit behind the gate still answers.
+    const world = createWorld('shop-open-catalogue-14')
+    const view = shopView(world)
+    // ⚠ P10 re-aim: every rung ON SALE – the retired plane is drawn for owners only.
+    expect(view.rows).toHaveLength(onSale().length)
+    for (const row of view.rows) {
+      expect(Number.isInteger(row.entryCents) && row.entryCents > 0, `${row.id} price`).toBe(true)
+      expect(Number.isInteger(row.annualRatePct), `${row.id} rate`).toBe(true)
+      expect(Number.isInteger(row.upkeepCents) && row.upkeepCents >= 0, `${row.id} upkeep`).toBe(true)
+      expect(row.valueCents, `${row.id} is not owned on day one`).toBeNull()
+      expect(row.label.length, `${row.id} has a name`).toBeGreaterThan(0)
+      expect(row.blurb.length, `${row.id} says what it is`).toBeGreaterThan(0)
+    }
+    // ⚠ THE TWO RULES THAT USED TO SIT BEHIND THE GATE STILL ANSWER, which is what «does not break»
+    // has to mean: the academy is still ordered, and the price is still the thing that gates.
+    const courts = view.rows.find((r) => r.requiresId !== null)!
+    expect(courts.requirementMet, 'a stage whose predecessor is unbuilt is not orderable').toBe(false)
+    world.fundsCents = 100_000_000_00
+    expect(() => buyAsset(world, courts.id), 'and the engine says which stage comes first').toThrow(
+      /has to come first/,
+    )
+    // ...while the cheapest rung is reachable on a fourteen-year-old's family funds, which is the
+    // whole of what ask 12b was about.
+    const funds = createWorld('shop-open-catalogue-14').fundsCents
+    expect(shopItem('deposit')!.entryCents, 'the deposit clears a starting wallet').toBeLessThanOrEqual(funds)
   })
 
   it('⚠ SELLING IS NOT GATED, and that is deliberate', () => {
-    // A family that owned something before the door could ever close must always be able to get out
-    // of it. The gate is on entering the shop, not on leaving it – and §4's freeze, when it lands,
-    // is the ONE thing allowed to stop a sale (`sellableAsset`).
+    // A family that owned something must always be able to get out of it. §4's freeze, when it
+    // lands, is the ONE thing allowed to stop a sale (`sellableAsset`) – and since part two #6 it is
+    // the only door in the file, which is what the two arms above now assert from the other side.
     const world = career('shop-sell-ungated', 20)
     turnProfessional(world)
     world.fundsCents = 200_000_00
     buyAsset(world, 'car-sensible')
     world.bestFinishByTier = {}
-    expect(shopUnlocked(world), 'the shelf is shut again on this fixture').toBe(false)
     expect(() => sellAsset(world, 'car-sensible')).not.toThrow()
   })
 })
@@ -384,7 +482,13 @@ describe('§2e-3 – the frozen MAIN capture cannot see any of this', () => {
           /* already owned this week */
         }
       }
-      for (const owned of [...ownedAssets(w)]) sellAsset(w, owned.id)
+      // ⚠ RE-AIMED AT ROUND 29 #5, NOT WEAKENED – `sellableAsset` is now false while a commissioned
+      // thing is still being built (§3f: «the contract cannot be sold»), so an unconditional sale
+      // threw and the arm stopped at the first boat. Asking the predicate keeps every rung in the
+      // sweep and makes it STRICTER than it was: the contracts stay on the books, `deliverAssets`
+      // fires on the week each one lands, and the weekly upkeep runs from there – so this now
+      // proves input-independence over the delivery and the bill as well as over buy/sell.
+      for (const owned of [...ownedAssets(w)]) if (sellableAsset(w, owned)) sellAsset(w, owned.id)
     })
     expect(draws.length, 'the same number of MAIN draws').toBe(base.draws.length)
     expect(fnv1aHex(draws.join(',')), 'and the same sequence').toBe(fnv1aHex(base.draws.join(',')))
@@ -443,14 +547,14 @@ describe('the shelf as the screen reads it', () => {
     const world = career('shop-view-empty', 20)
     turnProfessional(world)
     const view = toSnapshot(world).shop
-    expect(view.unlocked).toBe(true)
     expect(view.ownedCount).toBe(0)
     expect(view.cheapestId, 'the deposit, at $1,000').toBe('deposit')
     expect(view.rows.find((r) => r.id === 'deposit')!.entryCents).toBe(1_000_00)
     // ⚠ EVERY ROW IS ON THE SHELF WHETHER SHE CAN REACH IT OR NOT. A shop window is a thing you
     // look into before you can afford it (§2), so nothing is hidden and nothing is locked – only
-    // `affordable` moves, and it moves the CONTROL rather than the row.
-    expect(view.rows).toHaveLength(shopCatalogue().length)
+    // `affordable` moves, and it moves the CONTROL rather than the row. (⚠ P10 re-aim: «every
+    // row» means every row ON SALE – a tombstoned rung is not hidden stock, it is not stock.)
+    expect(view.rows).toHaveLength(onSale().length)
     expect(view.rows.some((r) => !r.affordable), 'a $300,000 car is not affordable at this week').toBe(true)
   })
 
@@ -489,12 +593,14 @@ describe('the shelf as the screen reads it', () => {
     expect(car.changePct).toBe(-17)
   })
 
-  it('a career that never turned professional gets the shelf shut and no rows to press', () => {
+  it('a career that never turned professional gets the WHOLE shelf – part two #6', () => {
+    // ⚠ RE-AIMED, NOT DELETED. This arm read «gets the shelf shut and no rows to press» and asserted
+    // `unlocked: false` beside the locked sentence. Both fields are gone with the gate; what it was
+    // really guarding – that `shopView` is TOTAL and hands the screen every rung whatever the career
+    // has done – is the half that survives his ruling, and it is now the whole claim.
     const view = shopView(career('shop-view-junior', 40))
-    expect(view.unlocked).toBe(false)
-    expect(view.lockedDetail).toBe(SHOP_LOCKED_DETAIL)
-    // ⚠ THE ROWS EXIST EVEN SO, and the screen is what does not draw them: the view is not the gate,
-    // which keeps `shopView` total and keeps one refusal sentence for both sides of the door.
-    expect(view.rows).toHaveLength(shopCatalogue().length)
+    // ⚠ P10 re-aim: the WHOLE shelf = everything on sale; the tombstoned plane is owner-only.
+    expect(view.rows).toHaveLength(onSale().length)
+    expect(view.cheapestId, 'and it introduces itself with a real thing at a real price').toBe('deposit')
   })
 })

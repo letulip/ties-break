@@ -34,8 +34,12 @@ import type { SnapshotInjury, StopReason, WorldEvent } from '../../shared/protoc
 import { isOfferLive } from '../offers'
 import type { WorldState } from '../world'
 import { pendingBirthday } from './birthday'
+import { UPCOMING_WEEKS } from './constants'
 import { pendingKnock } from './knock'
 import { layoffCoversWeek } from './medical'
+// ⭐ ROUND 29 #3: the shoot/tournament collision blocks the tick exactly as the knock and the fork
+// do; `world/shootClash.ts` is a leaf beside this one and imports nothing from here.
+import { shootClashOpen } from './shootClash'
 
 /** THE SPAN, as one number. Four is the engine's own step (`ToWorker`'s `weeks: 1 | 4`) and the step
  *  every stop in the game was tuned against – round-23 #16 is written in terms of "a player stepping
@@ -169,6 +173,82 @@ export function spanWorthOffering(
   return calendarClearAhead(week, calendar) || longLayoff(week, injury)
 }
 
+// =================================================================================================
+// ⭐⭐ ROUND 29 #6 – HOW LONG THE SLOT ACTUALLY IS, WHICH IS NOT THE SAME QUESTION AS WHETHER THERE
+// IS ONE
+// =================================================================================================
+//
+// The owner, on the shipped control: «Листалка на 4 недели кажется весьма бессмысленной: у меня был
+// слот 6 недель, я нажал, увидел сообщение о конце года и странное окошко с отчётом о двух
+// пройденных днях, а календарь так и остался на 51й неделе.» (docs/rounds/round-29.md #6, and this
+// is round 26 #1 coming back a second time.)
+//
+// ⚠⚠ THE PRESS TOLD HIM THREE THINGS AND ALL THREE WERE WRONG BY A DIFFERENT MECHANISM, which is why
+// the repair is in three places rather than one:
+//
+//   1. IT OFFERED FOUR AGAINST A SLOT OF SIX. `MULTI_WEEK_SPAN` was a CONSTANT – the engine's
+//      historical step, the number `weeks: 1 | 4` carried on the wire – so the button's label was a
+//      fact about the code and never about the week it was standing on. That is this function.
+//   2. THE YEAR END TRUNCATED IT. `advanceWeeks` broke on 'season-end', so a press made at the tail
+//      of a season bought the two or three weeks before the wrap and stopped. See `SPAN_REPORTS_ONLY`
+//      below and the note in `advanceWeeks`.
+//   3. AND THE CALENDAR "DID NOT MOVE" because 1 and 2 together left him three weeks further into
+//      the same dead stretch he pressed from, which is not a place a career visibly moves to.
+//
+// ⚠ NOTHING HERE WIDENS WHEN THE PILL IS OFFERED. `spanWorthOffering` above is untouched and still
+// the owner's own 25.08 rule; this only answers "how many" once that has already answered "yes".
+
+/** HOW MANY WEEKS THE PRESS SHOULD BUY – the consecutive weeks ahead with nothing of HERS in them,
+ *  and never more than the shell can actually see.
+ *
+ *  ⚠ THE CAP IS `UPCOMING_WEEKS` AND IT IS DERIVED, NOT PICKED. `Snapshot.upcoming` is clipped to
+ *  `(week, week + UPCOMING_WEEKS]`, so beyond that horizon the shell has NO information about her
+ *  calendar at all – a longer offer would be the button asserting a quiet week it cannot see. That
+ *  also keeps the control modest without a second tuning knob: the owner's objection to the first
+ *  pass was «с которым пропускается всё», and a span can never exceed two months of a career.
+ *
+ *  ⚠ ONE RULE FOR BOTH OF HIS ARMS, DELIBERATELY. A long layoff does not get its own length: a girl
+ *  laid up for nine weeks who is still ENTERED in something in three is a walkover the engine stops
+ *  on (R12-15), so counting to the entry is the honest number in both arms and the layoff needs no
+ *  clause of its own. `eventIsHers` is the same predicate `calendarClearAhead` and the look-ahead
+ *  markers read, so the pill counts the weeks the calendar draws as empty and no others.
+ *
+ *  Pure, zero draws, primitives in – the shell hands it `snapshot.upcoming`, a test hands it
+ *  `world.season`, exactly as `spanWorthOffering` above. */
+export function spanWeeksFor(
+  week: number,
+  calendar: readonly { week: number; entered: boolean; eligible: boolean; deadlineWeek: number }[],
+): number {
+  let clear = 0
+  for (let k = 1; k <= UPCOMING_WEEKS; k++) {
+    if (calendar.some((e) => e.week === week + k && eventIsHers(e, week))) break
+    clear = k
+  }
+  return clear
+}
+
+/** ⭐⭐ THE REASONS A SPAN REPORTS AND DOES NOT HALT ON, and there is exactly one.
+ *
+ *  ⚠⚠ WHY 'season-end' IS ALLOWED TO PASS AND NOTHING ELSE IS. Every other member of
+ *  `STOP_PRECEDENCE` either COSTS her something the week it lands (the medical trio, the walkover,
+ *  the academy's verdict, the funds line) or asks the parent a QUESTION with a clock on it (an
+ *  entry deadline, an open letter) – and the whole of R2-13's licence to exist is that a span never
+ *  buries one of those. The season wrap-up is neither. It costs nothing, asks nothing, and –
+ *  measured rather than assumed – **its dialog does not depend on this stop at all**:
+ *  `showSeasonSummary` in App.vue reads `snapshot.lastSeasonSummary` against a per-season watermark
+ *  and has done since round-19 #2, precisely because a stop reason «dies with the command» and the
+ *  recap was being lost behind questions that answered themselves. So the wrap-up still shows, once,
+ *  on the week it was banked; what stops happening is the SPAN being cut in half to deliver it.
+ *
+ *  ⚠ IT IS STILL COLLECTED AND STILL RETURNED. The caller gets 'season-end' in its
+ *  `STOP_PRECEDENCE` place exactly as before – R11-1's rule is that a week which is several things
+ *  reports all of them, and a reason that stopped being reported would be that bug again. This list
+ *  changes only whether the LOOP breaks.
+ *
+ *  ⚠ AND IT CANNOT SWALLOW A SECOND WRAP. A season is 52 weeks and a span is at most
+ *  `UPCOMING_WEEKS` (8), so no press can cross two of them. */
+export const SPAN_REPORTS_ONLY: ReadonlySet<StopReason> = new Set<StopReason>(['season-end'])
+
 /** The six states in which `advanceWeeks` refuses to tick AT ALL, in the order it asks them.
  *
  *  ⚠ THE ORDER IS THE FUNCTION'S, NOT `STOP_PRECEDENCE`'S, and the difference is real: precedence
@@ -180,7 +260,7 @@ export function spanWorthOffering(
  *  again – so `tests/r2-13-advance-span.test.ts` counts the refusals in the function's own source
  *  against this list. Hand-written on the `STOP_PRECEDENCE` precedent (round11.test.ts): derived
  *  from the code it could never catch the member the code forgot. */
-export const ADVANCE_REFUSALS: readonly StopReason[] = ['ending', 'tournament', 'knock', 'birthday', 'fork', 'retirement']
+export const ADVANCE_REFUSALS: readonly StopReason[] = ['ending', 'tournament', 'knock', 'birthday', 'fork', 'retirement', 'shoot-clash']
 
 /** WHY THE ADVANCE WILL NOT MOVE, or `null` when it will. `advanceWeeks`'s entry gate, extracted
  *  verbatim so the gate and the button read one rule.
@@ -218,6 +298,17 @@ export function advanceRefusal(world: WorldState): StopReason | null {
   // block above exists to answer, one order of magnitude more expensive.
   if (world.fork !== null && world.fork.answer === null) return 'fork'
   if (world.retirementOffer !== null) return 'retirement'
+  // ⭐⭐ ROUND 29 #3 – AND SO DOES AN UNANSWERED SHOOT/TOURNAMENT COLLISION, on the identical
+  // contract and for the sharpest version of the reason above it. Two of its four answers are
+  // IMPOSSIBLE once the week has begun – `cancelEntry` refuses on the week itself and a shoot cannot
+  // be moved out of a week being lived – so an advance that rolled past this would not merely fail
+  // to ask, it would silently pick one of the remaining two for him. The owner ruled the choice his
+  // and named all four arms; see world/shootClash.ts.
+  //
+  // ⚠ LAST IN THE ORDER, WHICH IS THIS FUNCTION'S OWN ORDER AND NOT `STOP_PRECEDENCE`'S (see the
+  // note on ADVANCE_REFUSALS). It is the only question here about a week that has not started, so
+  // every state above it is about something already true and answers first.
+  if (shootClashOpen(world)) return 'shoot-clash'
   return null
 }
 

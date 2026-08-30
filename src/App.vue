@@ -17,11 +17,17 @@ import { needRefresh, applyUpdate } from './pwa'
 // arrival-gate bug, one surface further out. So the label, the mode the handler below switches on and
 // the blocked state are ONE computed with two readers. See composables/weekAction.ts.
 import { useWeekAction } from './composables/weekAction'
-// ⭐ R2-13 PHASE 1 – the span and its report. `MULTI_WEEK_SPAN` is the ONE place the number four is
-// written on the UI side (the composable reads it too, so the button's label and the press cannot
-// disagree), and `spanDigest` is the engine's own answer to "what happened in between" – the shell
-// groups nothing itself, for the reason weekAction.ts's header gives about second opinions.
-import { MULTI_WEEK_SPAN, spanDigest } from './engine/world/multiWeek'
+// ⭐ R2-13 PHASE 1 – the span's report. `spanDigest` is the engine's own answer to "what happened in
+// between"; the shell groups nothing itself, for the reason weekAction.ts's header gives about
+// second opinions.
+//
+// ⚠⚠ ROUND 29 #6 – AND THE SHELL NO LONGER KNOWS A SPAN LENGTH AT ALL. This import used to carry
+// `MULTI_WEEK_SPAN` and the button was wired `@click="playWeek(MULTI_WEEK_SPAN)"`, which is how a
+// press could promise four weeks on a six-week gap. The count now travels ON the action
+// (`weekAction.multi.weeks`, computed by `multiSpanOf` from the week the button is standing on), so
+// the label and the press read one number by construction and there is nothing here for a second
+// opinion to be.
+import { spanDigest } from './engine/world/multiWeek'
 // ⚠ RE-AIMED, NOT RETIRED: `calendarOwnsWeekAhead` used to decide where a week LANDED and now decides
 // which weeks the calendar PLAYS. That is closer to the owner's original sentence than the landing
 // rule ever was - the Calendar tab is «активной при нетурнирных неделях», and a tab that runs the
@@ -57,6 +63,7 @@ import PracticeFlow from './components/PracticeFlow.vue'
 import SeasonSummaryDialog from './components/SeasonSummaryDialog.vue'
 import InjuryStopDialog from './components/InjuryStopDialog.vue'
 import KnockDialog from './components/KnockDialog.vue'
+import ShootClashDialog from './components/ShootClashDialog.vue'
 import BirthdayDialog from './components/BirthdayDialog.vue'
 import TourBriefingDialog from './components/TourBriefingDialog.vue'
 import EndingScreen from './components/EndingScreen.vue'
@@ -769,7 +776,38 @@ const calendarPlays = ref(false)
  *  empty popup and a refusal has its own toast. */
 const weekSpan = ref<{ from: number; to: number } | null>(null)
 
-async function playWeek(weeks: 1 | 4): Promise<void> {
+// =================================================================================================
+// ⭐⭐ ROUND 26 #1's ACTUAL ASK, SHIPPED AT ROUND 29 #6 – THE CONTROL INTRODUCES ITSELF, ONCE
+// =================================================================================================
+//
+// The owner, the day the pill first appeared: «Что за кнопка Next 4 weeks у меня появилась прямо под
+// пальцем на домашнем экране?» That item produced a GATE (his 25.08 rule, `spanWorthOffering`) and
+// it never produced the sentence, which was the half he actually asked for – a feature that arrives
+// without a word is the same complaint however rare it is made rarer. Round 29 #6 is the same
+// control back in his ledger, so the line ships with the repair rather than after it.
+//
+// ⚠ IT IS A FIRST-USE LINE AND NOT A TOUR STOP. The onboarding tour is a blocking sequence with a
+// scrim; this is one muted sentence above the bar that costs nothing to ignore, which is the right
+// weight for a control that is itself optional. It is not in `Popup` and cannot hold a queue.
+//
+// ⚠ ONCE-NESS IS A WATERMARK, PER CAREER, on the injury report's own shape: it clears the first time
+// the pill is actually PRESSED, so the sentence stands for as long as the control is unused and
+// never returns afterwards. A sentinel `absent` ({ value: null }) means a career with nothing stored
+// counts as un-introduced – the same asymmetry `useWatermark`'s own note argues for the report and
+// the briefing: showing it twice costs a glance, never showing it is the bug it exists to fix.
+const SPAN_HINT_PREFIX = 'tb:spanHintUsed'
+const spanHintMark = computed(() => (game.snapshot ? 'used' : null))
+const { unseen: spanHintUnseen, markSeen: markSpanHintUsed } = useWatermark(
+  SPAN_HINT_PREFIX,
+  spanHintMark,
+  (now, seen) => now !== null && now !== seen,
+  { value: null },
+)
+/** The line renders only where the control it explains does – beside the pill, on the week the pill
+ *  is on offer, until it has been used. */
+const showSpanHint = computed(() => weekAction.value.multi !== null && spanHintUnseen.value)
+
+async function playWeek(weeks: number): Promise<void> {
   // ⚠ ANY press clears the last span's report first. A card about weeks 12-15 sitting over week 16
   // is the stale-screen class of bug, and it costs one line to make impossible rather than to test.
   weekSpan.value = null
@@ -804,6 +842,10 @@ async function playWeek(weeks: 1 | 4): Promise<void> {
   // difference between the two week numbers is the honest answer, and it is also what lets the card
   // say "2 weeks passed" instead of the four the button offered.
   const spanFrom = game.snapshot?.week ?? 0
+  // ⚠ THE INTRODUCTION IS SPENT ON THE PRESS AND NOT ON THE RENDER, which is what "first USE" means:
+  // a line marked seen the moment it is drawn is a line nobody reads. Marked BEFORE the await so it
+  // clears even if the advance is refused – the parent has met the control either way.
+  if (weeks > 1) markSpanHintUsed()
   await game.advance(weeks)
   const spanTo = game.snapshot?.week ?? spanFrom
   if (weeks > 1 && spanTo > spanFrom) weekSpan.value = { from: spanFrom, to: spanTo }
@@ -951,6 +993,9 @@ const queued = computed(() => blockingOverlay(game.snapshot ?? null))
 const liveSequence = computed(() => practiceLive.value !== null)
 const overlay = computed(() => visibleOverlay(game.snapshot ?? null, liveSequence.value))
 const showKnock = computed(() => overlay.value === 'knock')
+// ⭐⭐ ROUND 29 #3 – the shoot that landed on a tournament week. Read off `overlay` like every other
+// blocking question, so its place in the queue is `blockingOverlay`'s decision and not this file's.
+const showShootClash = computed(() => overlay.value === 'shoot-clash')
 
 // W2-ENDINGS. Three gates, and every one of them reads a SNAPSHOT FIELD rather than a stop reason -
 // the same argument the knock gate above makes, and here it matters more: an ending is permanent.
@@ -1531,6 +1576,17 @@ function reopenTour(): void {
          the resume button must still render on every tab – it is the ONLY way to clear the state
          `resumeFromCollege` now refuses to tick past (COLLEGE_REVEAL_REFUSAL), and before this wave
          there was no surface in the app that could draw the reveal at all. -->
+    <!-- ⭐⭐ ROUND 26 #1's SENTENCE, SHIPPED AT ROUND 29 #6 – what the pill beside it is for, once.
+         See `showSpanHint` for why it is a first-USE line rather than a tour stop, and why it clears
+         on the press.
+         ⚠ IT IS A SIBLING OF THE BAR AND NOT A CHILD OF IT, deliberately: `.next-week-bar` is a plain
+         flex ROW whose DOM order IS the button order (round 26 #1 put the pill on the left and
+         `tests/component/round26-span-gate-ui.test.ts` asserts index 0 and no `order` override), so a
+         line inside it would either take that first slot or need the CSS that test forbids. -->
+    <p v-if="showSpanHint && tab === 'home' && !showCollege && !game.snapshot?.pending" class="span-hint">
+      Quiet stretch ahead – the left button spends those weeks in one press, and stops early on anything worth
+      reading.
+    </p>
     <div
       v-if="(tab === 'home' && !showCollege) || game.snapshot?.pending"
       class="next-week-bar"
@@ -1560,7 +1616,7 @@ function reopenTour(): void {
         class="span-weeks-btn"
         data-tour="span-weeks"
         :disabled="weekAction.disabled"
-        @click="playWeek(MULTI_WEEK_SPAN)"
+        @click="playWeek(weekAction.multi.weeks)"
       >
         {{ weekAction.multi.label }}
       </button>
@@ -1683,6 +1739,9 @@ function reopenTour(): void {
          no event and has no dismiss: answering it IS the exit, and until it is answered the engine
          will not tick a week. Last in the template so it paints over anything else that is up. -->
     <KnockDialog v-if="showKnock" />
+    <!-- ⭐⭐ ROUND 29 #3 – the shoot on a tournament week. Beside the knock and gated the same way:
+         `overlay` decides which blocking question is on screen, this only renders the one it named. -->
+    <ShootClashDialog v-if="showShootClash" />
 
     <!-- v48: her birthday, and the four presents. Like the knock it emits no event and has no
          dismiss – answering IS the exit – but here that is the owner's ruling rather than a

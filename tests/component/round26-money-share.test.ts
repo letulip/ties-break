@@ -64,7 +64,7 @@ import {
   tickWeek,
   toSnapshot,
 } from '../../src/engine/world'
-import { kidPrizeShareBps } from '../../src/engine/economy'
+import { kidPrizeShareBps, managerCommissionBps } from '../../src/engine/economy'
 import { rngFromSeed } from '../../src/engine/rng'
 import { formatCents } from '../../src/shared/money'
 import { DEFAULT_PROFILE, type Snapshot } from '../../src/shared/protocol'
@@ -116,8 +116,14 @@ describe('round 26 #5b – her share is said out loud on the Money screen', () =
     const text = clean(mountMoney(snap).text())
     // THE ENGINE'S OWN SENTENCE, not a re-worded copy – `kidLife.ownAccountNote`.
     expect(text, 'her balance is on the money screen').toContain(formatCents(funds))
+    // ⚠ RE-AIMED BY ROUND 29 P3, same word, same reason as the kid page's arm: the ramp is the
+    // PRIZE money's rule now. Still asked of `kidPrizeShareBps` rather than of a literal.
     expect(text, 'and the rate the till actually divides by').toContain(
-      `${kidPrizeShareBps(snap.ageYears) / 100}% of every cheque`,
+      `${kidPrizeShareBps(snap.ageYears) / 100}% of every prize cheque`,
+    )
+    // ⭐ P3's own clause, off `managerCommissionBps` – the function `bankSponsorCheque` pays by.
+    expect(text, 'and the sponsor half names the manager\'s fee').toContain(
+      `less the manager's ${managerCommissionBps() / 100}%`,
     )
   })
 

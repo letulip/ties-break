@@ -179,9 +179,71 @@ export interface OwnedAsset {
   /** the `ECONOMY.shop.catalogue` id – one row per id, never two (see `WorldState.assets`). */
   id: string
   boughtWeek: number
-  /** what left the wallet. Never re-written: the loss §2e-1 measures is `valueCents - paidCents`,
-   *  and a paid price that moved would make that difference a different question every week. */
+  /** what left the wallet, net of what has since been taken back out. The loss §2e-1 measures is
+   *  `valueCents - paidCents`, so this has to be the cost of what is STILL HELD.
+   *
+   *  ⚠ IT READ «Never re-written» UNTIL ROUND 29 #11 AND PART TWO #4, AND BOTH WRITERS ARE THE SAME
+   *  SENTENCE READ IN OPPOSITE DIRECTIONS. A top-up ADDS the new cash (round 29 #11); a PART SALE
+   *  SUBTRACTS the cost of the part that left, `round(paidCents x proceeds / value)`, with the
+   *  remainder taken by subtraction so the two halves re-add to the cent. What the old note was
+   *  protecting is intact: this is CASH the family put in and never an accrued gain, which is why
+   *  `basisCents` below exists and why `changeCents` is still `valueCents - paidCents`. */
   paidCents: number
   /** what it is worth THIS week, in cents, whole. Written by `revalueAssets` on every tick. */
   valueCents: number
+  /** ⭐⭐ ROUND 29 #11 – THE COMPOUNDING BASIS AND THE WEEK IT STARTED FROM, written only by a
+   *  TOP-UP and absent on a holding that has never had one.
+   *
+   *  THE OWNER: «Index fund хотелось бы иметь возможность докупать, предполагаю, что Savings deposit
+   *  будет вести себя так же – тоже надо исправить.»
+   *
+   *  ⚠⚠ WHY THIS IS NOT JUST `paidCents += more`. The value is `basis x (1+r)^years` off ONE start
+   *  week, so money added in season six has not been compounding since season one and must not be
+   *  treated as though it had. A top-up therefore REBASES: the basis becomes what the holding is
+   *  worth today plus the new money, and the clock restarts from this week. That is exactly
+   *  `V x (1+r)^t + T x (1+r)^t` – the arithmetic a real account does – with no second value model.
+   *
+   *  ⚠ AND `paidCents` STAYS WHAT THE FAMILY PUT IN, WHICH IS WHY THE BASIS IS A SEPARATE FIELD.
+   *  Folding the rebase into `paidCents` would make it include accrued gains, so §2e-1's «the ledger
+   *  shows the loss to the cent» would reset to zero on every top-up and the shelf would stop
+   *  teaching the one thing it exists to teach. `paidCents` accumulates the CASH; the basis carries
+   *  the COMPOUNDING; `changeCents` is still `valueCents - paidCents` and is still the truth.
+   *
+   *  ⚠ `boughtWeek` IS NOT TOUCHED – it stays the week the family first opened the holding, which is
+   *  what it says it is and what any «how long have they had it» line would mean.
+   *
+   *  ⚠ OPTIONAL, AND NOT A SCHEMA MOVE – `WorldEvent.entryRef`'s recorded rule (commit 2763caa's
+   *  precedent). Absent is exactly what every historical save already means here: «never topped up,
+   *  so the basis IS `paidCents` and the clock IS `boughtWeek`», which is what `revalueAssets` reads
+   *  when they are missing. No migration is owed and `SAVE_SCHEMA_VERSION` does not move. */
+  basisCents?: number
+  /** the week `basisCents` was struck – the compounding clock's start. Absent with it.
+   *
+   *  ⚠ ROUND 29 #5 GAVE IT A SECOND WRITER AND NOT A SECOND MEANING. A COMMISSIONED thing (§3f –
+   *  the boats and the planes) is ordered years before it exists, so its clock starts on the week it
+   *  ARRIVES: `buyAsset` writes `basisWeek = readyWeek` on the order, and `assetValueCents`'s own
+   *  `Math.max(0, weeksHeld)` then holds the contract at what was paid for the whole wait. One
+   *  field, one sentence – «the compounding clock's start» – and no second value model. */
+  basisWeek?: number
+  /** ⭐⭐ ROUND 29 #5, §3f – THE WEEK IT ARRIVES, and ABSENT ONCE IT HAS.
+   *
+   *  THE OWNER: «Со временем постройки около реальным – купил и ждешь пока будет готово, яхты
+   *  строят несколько лет.»
+   *
+   *  Between the order and this week the family owns a CONTRACT and not a boat: `sellableAsset`
+   *  refuses it (§3f – «the contract cannot be sold»), `weeklyAssetUpkeepCents` charges nothing for
+   *  it (there is no crew on a hull), it grants no vacation week and it flies nobody anywhere. A
+   *  rung with no `buildWeeks` never carries this key at all, which is every car, house and
+   *  investment on the shelf and every row any save has ever written.
+   *
+   *  ⚠ THE KEY IS DELETED ON ARRIVAL rather than left behind as a date, because «absent = delivered»
+   *  is the shape §12a of the spec drew for it and the shape every reader below is written against.
+   *  `deliverAssets` is its one remover and it compares `>=`, so a week skipped in a multi-week
+   *  advance still delivers.
+   *
+   *  ⚠ OPTIONAL, AND NOT A SCHEMA MOVE – `WorldEvent.entryRef`'s recorded rule and `basisCents`'s
+   *  own, one paragraph up. Absent is exactly what every historical row already means («it is here,
+   *  it arrived»), so no migration is owed and `SAVE_SCHEMA_VERSION` does not move. The spec named
+   *  this field and this exact reasoning a slice in advance (§12a). */
+  readyWeek?: number
 }

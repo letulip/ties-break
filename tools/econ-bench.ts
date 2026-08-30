@@ -256,7 +256,9 @@ export const EXPENSE_CATS: WorldEventCategory[] = ['coaching', 'facility', 'trav
 /** ⚠ 'prize' LEADS THE INCOME LIST because it is the only one of the four the TENNIS produces – the
  *  other three are a parent, a shop and a bank. It reads $0 for every career under 16 and for every
  *  career that never opens a W15, which is information rather than an empty column. */
-export const INCOME_CATS: WorldEventCategory[] = ['prize', 'income', 'sponsor', 'academy', 'interest']
+// ⚠ 'business' (v66) joins: the merch brand's and the academy's weekly income lines – $0 for every
+// bench policy in this file (none buys the shelf), kept so the income fold stays exhaustive.
+export const INCOME_CATS: WorldEventCategory[] = ['prize', 'income', 'sponsor', 'academy', 'interest', 'business']
 
 /** One completed season, captured at its wrap week off world.lastSeasonSummary + that year's finance fold. */
 export interface PerSeason {
@@ -347,6 +349,9 @@ function zeroCats(): Record<WorldEventCategory, number> {
     academy: 0,
     income: 0,
     interest: 0,
+    // ⚠ v66, the businesses: an income bucket the bench never books – no policy in this file buys
+    // the shelf, so it reads $0 and exists to keep the fold exhaustive, exactly as 'shop' does.
+    business: 0,
     prize: 0,
     tuition: 0,
     other: 0,

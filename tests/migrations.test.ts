@@ -535,7 +535,11 @@ describe('save migrations', () => {
 
     // The chain runs to the END and not to 64 – which is the whole of what the renumber had to keep.
     expect(migrated.schemaVersion, 'the chain reaches the current schema').toBe(SAVE_SCHEMA_VERSION)
-    expect(SAVE_SCHEMA_VERSION, 'and the current schema is 65, not the colliding 64').toBe(65)
+    // ⚠ RE-AIMED AT v66 (29.08, round 29 part four P7 – the 'business' category), NOT WEAKENED.
+    // The claim this line was cut for survives intact one clause down: the chain must run PAST the
+    // colliding 64, and a chain that stopped there would now miss twice. The pin follows the
+    // ladder's head exactly as the golden-saves guard forces a fixture to.
+    expect(SAVE_SCHEMA_VERSION, 'and the current schema is 66 – past the colliding 64, through 65').toBe(66)
 
     // v64's step ran: the reveal back-fills NULL, which is the TRUE value and not a placeholder – no
     // save written before it can be holding a question in front of the player.
@@ -578,6 +582,40 @@ describe('save migrations', () => {
       revealed: 1,
     })
     expect(migrated.fieldSeasonTitles, "v65's step DID run").toEqual({})
+  })
+
+  // ⭐ ROUND 29 PART THREE P1 – v66's SECOND HALF: «моторка $2.4М – давай переделаем на парусную
+  // яхту пожалуйста». The rename rides the SAME unshipped v66 step as the 'business' widening
+  // (main is at 65, so amending it is not editing a shipped migration – the reasoning is on the
+  // step itself). The owning save is built IN MEMORY on the committed v65 fixture, the same way
+  // the v64 arm above builds its open reveal: the fixture on disk stays byte-identical and the
+  // rename is still observable.
+  it('⭐ v65 -> v66 renames an owned boat-motor to boat-sail and touches nothing else on the row', () => {
+    const raw = JSON.parse(readFileSync(fileURLToPath(new URL('./fixtures/saves/v65.json', import.meta.url)), 'utf8'))
+    expect(raw.schemaVersion, 'the fixture is a genuine v65 save').toBe(65)
+    // A commissioned motor boat mid-wait: the delivery clock is the field a sloppy rename loses.
+    raw.assets = [
+      { id: 'boat-motor', boughtWeek: 300, paidCents: 2_400_000_00, valueCents: 2_400_000_00, basisCents: 2_400_000_00, basisWeek: 378, readyWeek: 378 },
+      { id: 'deposit', boughtWeek: 200, paidCents: 50_000_00, valueCents: 51_000_00 },
+    ]
+
+    const migrated = migrateSave(raw)
+
+    expect(migrated.schemaVersion).toBe(SAVE_SCHEMA_VERSION)
+    const boat = migrated.assets!.find((a) => a.id === 'boat-sail')!
+    expect(boat, 'the row survived under the new id').toBeDefined()
+    expect(migrated.assets!.some((a) => a.id === 'boat-motor'), 'and the old id is gone').toBe(false)
+    // Every other field rides untouched – the family paid for this boat and is still waiting for it.
+    expect(boat.paidCents).toBe(2_400_000_00)
+    expect(boat.valueCents).toBe(2_400_000_00)
+    expect(boat.boughtWeek).toBe(300)
+    expect(boat.basisWeek).toBe(378)
+    expect(boat.readyWeek, 'the delivery clock is not reset').toBe(378)
+    // ...and the neighbour is not renamed by an over-wide match.
+    expect(migrated.assets!.find((a) => a.id === 'deposit'), 'the deposit is untouched').toBeDefined()
+    // Idempotent: a second pass finds no boat-motor and changes nothing.
+    const again = migrateSave(JSON.parse(JSON.stringify(migrated)))
+    expect(again.assets).toEqual(migrated.assets)
   })
 
   it('rejects saves from a future schema', () => {

@@ -11,7 +11,7 @@ last-reviewed: 2026-08-24
 when this page and the repository disagree, and it also asserts that `tsconfig.app.json` lists
 exactly the live set.
 
-149 TypeScript files: **25 live**, **124 archival**.
+153 TypeScript files: **25 live**, **128 archival**.
 
 ## Why the split exists
 
@@ -82,11 +82,12 @@ One-shot probes and reproductions. Kept as evidence, typechecked only by `npm ru
 - `one-clock.ts` · `opener-price-bench.ts` · `outcome-odds.ts` · `plateau-probe.ts`
 - `play-down-probe.ts` · `points-audit.ts` · `points-curve.ts` · `policy-vs-owner.ts`
 - `population-depth.ts` · `potential-band-sweep.ts` · `preview-drift.ts` · `pro-season-probe.ts`
-- `reach-sweep.ts` · `real-vs-bench.ts` · `rehab-lever.ts` · `restore-bench.ts`
-- `retirement-shape-probe.ts` · `rival-fatigue-audit.ts` · `round15-read.ts` · `round16-read.ts`
-- `round17-read.ts` · `round18-read.ts` · `round23-read.ts` · `round26-probe.ts`
-- `runway-probe.ts` · `school-bench.ts` · `season-anchor-read.ts` · `skill-gap-odds.ts`
-- `slam-difficulty.ts` · `slam-door-cost.ts` · `summer-bench.ts` · `teen-at-the-top.ts`
+- `r29-item14-anger.ts` · `r29-item14-read.ts` · `reach-sweep.ts` · `real-vs-bench.ts`
+- `rehab-lever.ts` · `restore-bench.ts` · `retirement-shape-probe.ts` · `rival-fatigue-audit.ts`
+- `round15-read.ts` · `round16-read.ts` · `round17-read.ts` · `round18-read.ts`
+- `round23-read.ts` · `round26-probe.ts` · `runway-probe.ts` · `school-bench.ts`
+- `season-anchor-read.ts` · `skill-gap-odds.ts` · `slam-difficulty.ts` · `slam-door-cost.ts`
+- `sponsor-ladder-reach.ts` · `summer-bench.ts` · `teen-at-the-top.ts` · `top50-season-probe.ts`
 - `two-cells.ts` · `two-seasons-read.ts` · `two-tour-overlap.ts` · `w-onramp-probe.ts`
 - `wall-freeze-probe.ts` · `wall-l1-bench.ts` · `wallet-audit.ts` · `week-story-trace.ts`
 - `what-drives-progress.ts` · `what-money-buys.ts` · `wild-card-reach.ts` · `winrate-read.ts`

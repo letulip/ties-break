@@ -13,6 +13,7 @@ import {
   type OkReply,
   type PlayerProfile,
   type SavePeek,
+  type ShootClashChoice,
   type Snapshot,
   type SlotMeta,
   type SlotsReply,
@@ -282,7 +283,9 @@ export const useGameStore = defineStore('game', {
         await this.refreshCareers()
       })
     },
-    async advance(weeks: 1 | 4) {
+    // ⚠ ROUND 29 #6: `1 | 4` widened to a plain count – the span the pill offers is now the length
+    // of the actual quiet slot (`spanWeeksFor`), not the engine's historical step.
+    async advance(weeks: number) {
       await this.run(async () => {
         const res = this.takeOk(await request({ type: 'advance', weeks, baseRevision: this.revision }))
         this.applySnapshot(res)
@@ -416,9 +419,9 @@ export const useGameStore = defineStore('game', {
       })
     },
     /** ...and sell one, at the value the engine stored – never at a price this side computed. */
-    async sellAsset(itemId: string) {
+    async sellAsset(itemId: string, amountCents?: number) {
       await this.run(async () => {
-        const res = this.takeOk(await request({ type: 'sellAsset', itemId, baseRevision: this.revision }))
+        const res = this.takeOk(await request({ type: 'sellAsset', itemId, amountCents, baseRevision: this.revision }))
         this.applySnapshot(res)
         await this.refreshSlots()
       })
@@ -507,6 +510,16 @@ export const useGameStore = defineStore('game', {
     async decideKnock(choice: KnockChoice) {
       await this.run(async () => {
         const res = this.takeOk(await request({ type: 'decideKnock', choice, baseRevision: this.revision }))
+        this.applySnapshot(res)
+      })
+    },
+    /** ⭐⭐ ROUND 29 #3: answer the shoot that landed on a tournament week. Like `decideKnock` above,
+     *  nothing else can clear it and the sim will not tick until it is answered – and unlike the
+     *  knock two of its four answers stop being POSSIBLE once the week starts, which is why the
+     *  engine refuses to move time in front of it rather than merely halting on it. */
+    async answerShootClash(choice: ShootClashChoice) {
+      await this.run(async () => {
+        const res = this.takeOk(await request({ type: 'answerShootClash', choice, baseRevision: this.revision }))
         this.applySnapshot(res)
       })
     },

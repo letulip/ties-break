@@ -44,8 +44,22 @@ import { isOffSeasonWeek } from '../src/engine/season/calendar'
 import { DEFAULT_PROFILE, type AdOfferTerms, type Offer } from '../src/shared/protocol'
 
 const AD = ECONOMY.advertising
+/** ⚠ THE CATALOGUE BECAME A LADDER (round 29 part two #19/#20) AND THEN A PORTFOLIO (part four
+ *  P6/§8), so the shipped rung's numbers moved twice: first into `advertising.houses.watch`, now
+ *  into the watches CATEGORY's bottom-band cell. Every claim in this file is about that one deal –
+ *  a watchmaker, $20,000, two shoot weeks over a one-year term – so it is REPOINTED and not
+ *  re-aimed: `AD` still carries the mechanics every house shares (the age bar, the weekly chance,
+ *  the decide weeks, the lead, the clash price) and `WATCH` freezes the shipped terms this bench
+ *  has always measured. The fee is read off the watches category's ≤200 cell (unchanged to the
+ *  cent – the anchor); the two-shoots-per-year ask and the one-year term are the shipped letter's
+ *  own and are pinned here as literals exactly because the new bands ask differently. */
+const WATCH = {
+  cashCents: ECONOMY.advertising.categories.watches.feeCentsByBand[0]!,
+  termWeeks: 52,
+  shootWeeksPerTerm: 2,
+}
 const CAREERS = 12
-const TERM = AD.termWeeks
+const TERM = WATCH.termWeeks
 
 const ageOf = (w: WorldState) => kidAgeYears(w.week, w.profile.birthMonth, w.profile.birthDay)
 
@@ -110,7 +124,7 @@ function walkTerm(world: WorldState, racing: boolean): Arm {
 console.log('='.repeat(100))
 console.log('AD-SHOOT BENCH - what do two shoot weeks cost, is it felt, and can one land in the off-season?')
 console.log(
-  `  ${CAREERS} careers · term ${TERM}w · shoots/term ${AD.shootWeeksPerTerm} · lead ${AD.shootLeadWeeks}w · ` +
+  `  ${CAREERS} careers · term ${TERM}w · shoots/term ${WATCH.shootWeeksPerTerm} · lead ${AD.shootLeadWeeks}w · ` +
     `rest week +${ECONOMY.condition.recoveryBase}+slider vs travel week +${ECONOMY.condition.matchWeekRecoveryBase}`,
 )
 console.log('='.repeat(100))
@@ -188,8 +202,8 @@ let minGap = Infinity
 const gaps: number[] = []
 for (let s = 0; s < 200; s++) {
   for (let sw = 200; sw < 300; sw++) {
-    const w = chooseShootWeeks(`ad-shoot-c-${s}`, sw, TERM, AD.shootWeeksPerTerm, AD.shootLeadWeeks)
-    if (w.length !== AD.shootWeeksPerTerm) short++
+    const w = chooseShootWeeks(`ad-shoot-c-${s}`, sw, TERM, WATCH.shootWeeksPerTerm, AD.shootLeadWeeks)
+    if (w.length !== WATCH.shootWeeksPerTerm) short++
     for (const x of w) {
       if (isOffSeasonWeek(x)) offSeason++
       if (x < sw + AD.shootLeadWeeks) beforeLead++
