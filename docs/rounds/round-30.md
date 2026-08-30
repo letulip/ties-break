@@ -222,17 +222,96 @@ marked `[!]` and each names what shipped and why it missed – that is the point
   Mutation-verified: with the label put back to `So far` it fails on `expected '12 weeks So far' to
   contain 'This season'`.
 
-- [ ] **5. «Внутри Bills и Shop сделать дополнительные вкладки как на экране Spending (12 weeks/So far)
+- [x] **5. «Внутри Bills и Shop сделать дополнительные вкладки как на экране Spending (12 weeks/So far)
   для каждой категории.** Для Bills – Her Kit / Advs Portfolio. Для Shop – сверху плашкой **The shelf**,
   ниже в ряд **Invest / Cars / Property / Business (Academy is subdivision inside) / Water / Air**.
   Для каждой карточки свой арт, карточки лежат **без общей подложки**, примерно как на экране Season» –
   **build.** ⚠ Art is his; use the documented fallback.
 
-- [ ] **6. «Переделать экран при нажатии на плашку Next tournament на Home** – убрать рамку, картинку
+  **SHIPPED, and the tab names are his, spelled as he spelled them.** `MoneyScreen.vue`:
+
+  * **Bills** gets `Her Kit` / `Advs Portfolio` – the Spending chapter's own switcher (`SegmentedRow`
+    on the plate, not the chapter picker's larger `chapter` appearance), sitting under the budget
+    levers.
+  * **Shop** keeps `The shelf` as the плашка at the head of the chapter and gains the six-segment row
+    under it: `Invest / Cars / Property / Business / Water / Air`. ⚠⚠ **The academy is a SUBDIVISION
+    of Business and not a seventh tab** – `SHELF_TAB_FAMILIES` maps that one segment onto two
+    families, so the brand and the four stages share a page under their own unchanged headings.
+  * **The rungs are cards laid straight on the page** – `Card variant="photo"` in a
+    `.shelf-feed` column with a 12px gap, which is `.event-cards` on Season. The single card that
+    used to hold the whole catalogue is gone, and with it the plate-behind-a-plate.
+  * **Art**: `src/art/shelf.ts`, `vacationArtUrl`'s documented contract verbatim – one key per card,
+    `null` until his painting lands, and a card with no painting simply has no band. The map is EMPTY
+    today, so nothing draws a picture yet and nothing draws a broken box either. Taking delivery of a
+    painting is one line in that map.
+
+  ⚠ **WHAT I DID NOT FILE UNDER HIS TWO BILLS NAMES, and it is a question for him.** The chapter has
+  four blocks; he named two. The **budget levers** (the physio retainer) and **Her academy** (the
+  scholarship) are neither kit nor advertising, so they stay OUTSIDE the switcher – above and below
+  it, in the order they already had. Filing a physio bill under `Her Kit` would be this screen making
+  a classification he did not make. **Say the word and either one moves under a tab.**
+
+  ⚠ **A duplicated heading is visible and was left alone, deliberately.** The `Cars` and `Property`
+  segments open onto family headings that read `Cars` and `Property` – the same word twice. Renaming
+  or deleting the heading to tidy it is exactly the unasked wording change item 4 was about, so it
+  stands. **One sentence from him and it goes.**
+
+  ⭐ **The empty `Advs Portfolio` says something now.** The engine hands an empty shelf below
+  eighteen, which used to mean one missing card among four and would now mean a blank tab. The note
+  reads the age out of `ECONOMY.advertising.fromAgeYears`, so it cannot drift from the gate.
+
+  ⭐ **375px: measured in a real browser, and it needed a fix.** Six pills at the shared metrics is
+  about 450px of control inside the 343px a 375px phone has. `.money-subtabs` tightens the shelf's
+  pills and lets the row wrap rather than overflow; `e2e/responsive.spec.ts` now opens both chapters
+  and asserts no sideways scroll AND that his six are one row. Mutated separately: tightening alone
+  is green, wrap alone is green, **neither is red**.
+
+  ⭐ **Seven mounted files were RE-AIMED, none deleted** – `tests/component/shelf.ts` is the helper
+  that presses the tab a player presses, and every claim those files made is the claim they still
+  make. New guards in `round30-subtabs.test.ts` / `round30-shelf-art.test.ts`, eleven mutations run
+  one at a time (the tab renamed, the academy promoted to its own segment, a family dropped from the
+  map, a family mapped onto two segments, the shared plate restored, a heading tidied to match its
+  tab, the art keyed by family instead of by row id, the age hand-typed, the row given the chapter
+  appearance, the Bills segments stopped hiding each other, and the art map filled).
+
+- [x] **6. «Переделать экран при нажатии на плашку Next tournament на Home** – убрать рамку, картинку
   турнира квадратной (по примеру главной), часть описания на картинке, часть ниже… The read можно на
   картинке, раунды отдельной плашкой ниже на всю ширину с отступами, погоду и поездку тоже на картинку,
   4 иконки под картинкой просто в ряд без плашки, план тренировок внизу остаётся как есть» – **build.**
   ⚠ Round 29 part-two #8 built this panel by reusing the tournament splash; this is its redesign.
+
+  **SHIPPED, and it is a REDESIGN and not a rebuild – the proof is that round 29's own mounted test
+  passed across it unchanged.** `NextTournamentPanel.vue` + one line on `ThisWeekScreen.vue`:
+
+  * **No frame, twice.** The hosting `<section>` is `.bare` – src/style.css's own idiom, the one the
+    Season screen uses so that «the cards themselves are the only objects on the page» – and the hero
+    stopped being a `<Card>`, so its hairline went with it. ⚠ Only while the panel is there: a week
+    with nothing entered keeps the frame it had, because he did not ask about that state.
+  * **Square**, `aspect-ratio: 1 / 1`, which is the declaration Home's own hero carries. ⚠ It is a
+    FLOOR and not a clamp – the box is a flex column, so a three-line read plus a coach's caution
+    pushes it taller instead of clipping an engine-authored sentence.
+  * **On the picture**: the name, the court and the dates; `The read` with its ring; and the weather
+    and the trip, all three readings with all three labels.
+  * **Under it**: the four icons in a row with nothing behind them, then the rounds as the ONE plate
+    on the panel, full width inside the app's 16px gutter.
+  * **The training plan is untouched**, frame included – it is ThisWeekScreen's own second section.
+
+  ⚠⚠ **NOT ONE FIGURE, SENTENCE OR LABEL CHANGED** (invariant 4). `tests/component/round29-next-tournament.test.ts`
+  – thirteen assertions about what this panel says – is green with no edit at all, which is the
+  evidence that only the seating moved. The new placement guards are
+  `round30-next-tournament-layout.test.ts`, six mutations run one at a time (square → 16/9, the hero
+  back to a Card, the read moved off the art, the money moved off the art, a plate behind the four
+  icons, the section frame kept), plus two in a real browser at 375px (the square, and the four icons
+  staying one row).
+
+  ⭐ **375px verdict: it fits.** `e2e/responsive.spec.ts` enters a tournament through the two controls
+  a player uses, opens Home's own Next-tournament card, and measures – no sideways scroll, the hero
+  at or above square inside 375px, the four icons on one row with none of them off the edge.
+
+  ⚠ **One thing I did NOT do, and it is his to call.** Home's hero is square AND full-bleed (it
+  cancels the app gutter). This picture is square inside the gutter, because he asked for the rounds
+  plate to be «на всю ширину с отступами по краям» and a full-bleed picture beside an inset plate is
+  a composition he did not describe. **Edge-to-edge is a one-line change if he wants it.**
 
 - [ ] **7. «Что-то не так с попапом "теперь каждый год начиная с 29 лет" – звучит как механический
   приговор безысходности пока что, надо что-то с этим сделать»** – **build (copy).** ⭐ The mechanic is

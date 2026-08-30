@@ -36,6 +36,7 @@ import { createPinia, setActivePinia } from 'pinia'
 import MoneyScreen from '../../src/components/screens/MoneyScreen.vue'
 import '../../src/style.css'
 import { useGameStore } from '../../src/stores/game'
+import { shelfRow } from './shelf'
 import {
   buyAsset,
   closeTournament,
@@ -73,11 +74,10 @@ async function mountShop(snapshot: Snapshot) {
   return wrapper
 }
 
-function rowNode(wrapper: ReturnType<typeof mount>, label: string) {
-  const node = wrapper.findAll('.shop-row').find((r) => r.text().includes(label))
-  expect(node, `the ${label} row`).toBeTruthy()
-  return node!
-}
+// ⚠ RE-AIMED, ROUND 30 #5 – the shelf gained six segments, so this presses the tab the row lives on
+// before looking for it. `shelfRow` throws by name when nothing matches, which is what this wrapper
+// was doing with its own `expect`. tests/component/shelf.ts carries the argument.
+const rowNode = shelfRow
 
 beforeEach(() => setActivePinia(createPinia()))
 
@@ -100,7 +100,7 @@ describe('round 30 #14 – the shop row shows what the decision needs', () => {
     const snap = toSnapshot(world)
     const row = snap.shop.rows.find((r) => r.id === 'index-fund')!
     const wrapper = await mountShop(snap)
-    const node = rowNode(wrapper, shopItem('index-fund')!.label)
+    const node = (await rowNode(wrapper, shopItem('index-fund')!.label))
     const line = node.find('.shop-row-units')
     expect(line.exists(), 'the units line is drawn on an owned market rung').toBe(true)
 
@@ -127,7 +127,7 @@ describe('round 30 #14 – the shop row shows what the decision needs', () => {
     const snap = toSnapshot(world)
     const row = snap.shop.rows.find((r) => r.id === 'index-fund')!
     const wrapper = await mountShop(snap)
-    const node = rowNode(wrapper, shopItem('index-fund')!.label)
+    const node = (await rowNode(wrapper, shopItem('index-fund')!.label))
     const line = node.find('.shop-row-units')
     expect(line.exists()).toBe(true)
     expect(line.text()).toContain(formatCents(row.unitPriceCents!))
@@ -145,11 +145,11 @@ describe('round 30 #14 – the shop row shows what the decision needs', () => {
     world.fundsCents = 500_000_00
     buyAsset(world, 'car-sensible')
     const wrapper = await mountShop(toSnapshot(world))
-    const owned = rowNode(wrapper, shopItem('car-sensible')!.label)
+    const owned = (await rowNode(wrapper, shopItem('car-sensible')!.label))
     expect(owned.find('.shop-row-units').exists(), 'no unit line on an owned fixed rung').toBe(false)
     expect(owned.text()).not.toContain('units')
     // ...and the rung they do NOT own, which is where the entry-price line lives.
-    const unowned = rowNode(wrapper, shopItem('car-good')!.label)
+    const unowned = (await rowNode(wrapper, shopItem('car-good')!.label))
     expect(unowned.find('.shop-row-units').exists(), 'and none on an unowned one either').toBe(false)
     expect(unowned.text()).not.toContain('One unit is')
     wrapper.unmount()
@@ -163,7 +163,7 @@ describe('round 30 #14 – the shop row shows what the decision needs', () => {
     world.fundsCents = 500_000_00
     buyAsset(world, 'index-fund', 50_000_00)
     const wrapper = await mountShop(toSnapshot(world))
-    const node = rowNode(wrapper, shopItem('index-fund')!.label)
+    const node = (await rowNode(wrapper, shopItem('index-fund')!.label))
     const text = node.find('.shop-row-units').text()
     // ⚠ A CEILING AND NOT A PIN: three figures and four words. Sixty characters at 11.5px wraps to
     // two lines at the very worst on a 375px card, which is what the upkeep line above it already

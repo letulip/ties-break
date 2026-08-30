@@ -25,6 +25,7 @@ import MoneyScreen from '../../src/components/screens/MoneyScreen.vue'
 import SupportStaffTab from '../../src/components/SupportStaffTab.vue'
 import '../../src/style.css'
 import { useGameStore } from '../../src/stores/game'
+import { openBillsTab, openShelfTab } from './shelf'
 import {
   academyWeeklyIncomeCents,
   buyAsset,
@@ -104,6 +105,9 @@ describe('§1 the fame line on the Bills portfolio card', () => {
     expect(snap.fame, 'a Slam winner is known').toBeGreaterThan(0)
     expect(Number.isInteger(snap.fame), 'rounded ONCE at the boundary').toBe(true)
     const wrapper = await mountMoneyTab(snap, 'Bills')
+    // ⚠ RE-AIMED, ROUND 30 #5 – the fame line lives on the portfolio card, and that card is now
+    // behind the `Advs Portfolio` segment of Bills. The claim is untouched.
+    await openBillsTab(wrapper, 'Advs Portfolio')
     const line = wrapper.find('.ad-fame-line')
     expect(line.exists(), 'the fame line lives on the portfolio card').toBe(true)
     expect(line.text()).toContain(`How known she is – ${snap.fame} of 100`)
@@ -129,6 +133,10 @@ describe('§2 the shop shelf carries the business family and quotes what it earn
     expect(merchRow.incomeCents).toBe(merchWeeklyIncomeCents(world))
     expect(merchRow.incomeCents).toBeGreaterThan(0)
     const wrapper = await mountMoneyTab(snap, 'Shop')
+    // ⚠ RE-AIMED, ROUND 30 #5 – «Business (Academy is subdivision inside)»: the brand and the
+    // academy share ONE segment, so this presses it. The family heading is unchanged word for word
+    // (invariant 4) and is still what separates the two inside the tab.
+    await openShelfTab(wrapper, 'Business')
     const heads = wrapper.findAll('.shop-family-head').map((n) => n.text())
     expect(heads).toContain('The business')
     const earners = wrapper.findAll('.shop-row-earning').map((n) => n.text())
@@ -142,6 +150,11 @@ describe('§2 the shop shelf carries the business family and quotes what it earn
     expect(stageRows.length).toBe(3) // the land is a field
     expect(stageRows.reduce((s, r) => s + r.incomeCents, 0)).toBe(academyWeeklyIncomeCents(world))
     const wrapper = await mountMoneyTab(snap, 'Shop')
+    // ⚠ RE-AIMED, ROUND 30 #5 – AND THIS IS THE ARM THAT PROVES THE SUBDIVISION. The academy has no
+    // tab of its own: its four stages are reached through `Business`, which is exactly what «Academy
+    // is subdivision inside» asks for. If the map in `SHELF_TAB_FAMILIES` ever gave the academy its
+    // own segment, this would go red on the tab it presses.
+    await openShelfTab(wrapper, 'Business')
     const earners = wrapper.findAll('.shop-row-earning').map((n) => n.text())
     for (const row of stageRows) {
       expect(earners).toContain(`Brings in ${formatCents(row.incomeCents)} a week right now`)

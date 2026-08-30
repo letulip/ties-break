@@ -23,6 +23,7 @@ import { createPinia, setActivePinia } from 'pinia'
 import MoneyScreen from '../../src/components/screens/MoneyScreen.vue'
 import '../../src/style.css'
 import { useGameStore } from '../../src/stores/game'
+import { shelfRow } from './shelf'
 import { buyAsset, createWorld, toSnapshot, type WorldState } from '../../src/engine/world'
 import type { Snapshot } from '../../src/shared/protocol'
 
@@ -44,8 +45,11 @@ async function mountShop(snapshot: Snapshot) {
   return wrapper
 }
 
-const rowFor = (wrapper: ReturnType<typeof mount>, label: string) =>
-  wrapper.findAll('.shop-row').find((r) => r.text().includes(label))!
+// ⚠ RE-AIMED, ROUND 30 #5 – the shelf is six segments now, so a row is reached by pressing the tab
+// a player presses (a deposit is on `Invest`, a car on `Cars`). Every claim below is unchanged; the
+// helper leaves the row's own segment open so its controls can still be clicked.
+// tests/component/shelf.ts carries the argument.
+const rowFor = shelfRow
 
 beforeEach(() => setActivePinia(createPinia()))
 
@@ -56,7 +60,7 @@ describe('part two #4 – the sale takes a number', () => {
     const store = useGameStore()
     const sell = vi.spyOn(store, 'sellAsset').mockResolvedValue(undefined as never)
 
-    const row = rowFor(wrapper, 'A savings deposit')
+    const row = (await rowFor(wrapper, 'A savings deposit'))
     const box = row.findAll('input.shop-sell-input')
     expect(box, 'the numeric input he asked for').toHaveLength(1)
     expect(box[0].attributes('type'), 'numeric, so a phone shows the right keypad').toBe('number')
@@ -90,7 +94,7 @@ describe('part two #4 – the sale takes a number', () => {
     const store = useGameStore()
     const sell = vi.spyOn(store, 'sellAsset').mockResolvedValue(undefined as never)
 
-    const row = rowFor(wrapper, 'A savings deposit')
+    const row = (await rowFor(wrapper, 'A savings deposit'))
     const button = row.findAll('button.shop-action').find((b) => b.text().includes('Sell it for'))
     expect(button!.text()).toContain('Sell it for $100,000')
     await button!.trigger('click')
@@ -103,7 +107,7 @@ describe('part two #4 – the sale takes a number', () => {
   it('⚠ the box is on the investments and on nothing else – a car is sold whole', async () => {
     const world = owning('p2ui-car', 'car-sensible')
     const wrapper = await mountShop(toSnapshot(world))
-    const row = rowFor(wrapper, 'The sensible estate')
+    const row = (await rowFor(wrapper, 'The sensible estate'))
     expect(row.findAll('input.shop-sell-input'), 'no part sale on a car').toHaveLength(0)
     expect(
       row.findAll('button.shop-action').map((b) => b.text()),
@@ -118,7 +122,7 @@ describe('part two #4 – the sale takes a number', () => {
     // two stories – ask for more than is held and nothing is pressable.
     const world = owning('p2ui-over', 'deposit', 100_000_00)
     const wrapper = await mountShop(toSnapshot(world))
-    const row = rowFor(wrapper, 'A savings deposit')
+    const row = (await rowFor(wrapper, 'A savings deposit'))
     await row.findAll('input.shop-sell-input')[0].setValue('250000')
     const button = row.findAll('button.shop-action').find((b) => /Take out|Sell it for/.test(b.text()))!
     expect(button.attributes('disabled'), 'more than they hold is not pressable').toBeDefined()

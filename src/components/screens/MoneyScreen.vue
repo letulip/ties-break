@@ -69,6 +69,9 @@ import { seasonYear, weekLabel } from '../../shared/dates'
 import { formatCents, formatCentsSigned } from '../../shared/money'
 import { venueArtUrl } from '../../art/venues'
 import { vacationArtUrl } from '../../art/weeks'
+// ⭐ ROUND 30 #5 – one picture per card on the two chapters below. Its header carries the whole
+// contract: a key with no painting yet returns null and the card simply draws without a band.
+import { BILLS_ART_KEYS, shelfArtUrl } from '../../art/shelf'
 // The scholarship's share, from the module the two event cards read it out of. Same rate, same
 // rounding – this page reports it as a season total and they print it per trip.
 import { useAcademyCoverPct } from '../../composables/eventCard'
@@ -1214,6 +1217,74 @@ const TAB_OPTIONS = [
   { value: 'history', label: 'History', title: 'Every season, and every transaction' },
   { value: 'shop', label: 'Shop', title: 'What the family can buy with what is left' },
 ]
+
+// =================================================================================================
+// ⭐⭐ ROUND 30 #5 – A SECOND ROW OF TABS INSIDE BILLS AND INSIDE SHOP.
+//
+// The owner: «Внутри Bills и Shop сделать дополнительные вкладки как на экране Spending (12 weeks /
+// So far) для каждой категории. Для Bills будет Her Kit / Advs Portfolio. Для Shop будет отдельно
+// сверху плашкой The shelf, а ниже под ней вкладки в ряд Invest / Cars / Property / Business
+// (Academy is subdivision inside) / Water / Air. Для каждой карточки будет свой арт, карточки лежат
+// без общей подложки, примерно как на экране Season».
+//
+// ⚠ HE NAMED THE MODEL, SO IT IS COPIED RATHER THAN INVENTED. «как на экране Spending» is the period
+// switcher a few lines above (`WINDOW_OPTIONS`): the same `SegmentedRow`, the same default `plate`
+// appearance, sitting INSIDE a chapter rather than picking one. That is also why neither of these
+// rows asks for `appearance="chapter"` – the chapter picker is `TAB_OPTIONS` at the top of the
+// screen, and two identically-sized rows six pixels apart is the exact confusion `chapter` exists to
+// avoid (SegmentedRow.vue's own note).
+//
+// ⚠⚠ THE TAB NAMES BELOW ARE HIS, SPELLED AS HE SPELLED THEM, and nothing else on either chapter
+// changed a word (CLAUDE.md invariant 4, which this round wrote). In particular the family headings
+// INSIDE the shelf keep the words they shipped with – `Investments`, `Cars`, `Property`,
+// `The business`, `On the water`, `In the air`, `Her academy` – even where a heading now repeats its
+// own tab. Renaming one to match would be exactly the unasked tidy-up item 4 was about; the
+// duplication is visible, cheap and his to remove with one sentence.
+type BillsTab = 'kit' | 'ads'
+const billsTab = ref<BillsTab>('kit')
+const BILLS_TAB_OPTIONS = [
+  { value: 'kit', label: 'Her Kit', title: 'What she plays with, and what replacing it costs' },
+  { value: 'ads', label: 'Advs Portfolio', title: 'The advertising categories, filled and open' },
+]
+/** The age the portfolio opens at, READ OUT OF THE ENGINE and never typed – the same constant
+ *  `toSnapshot` gates the shelf on, so the empty tab's sentence and the gate cannot drift apart. */
+const adFromAgeYears = ECONOMY.advertising.fromAgeYears
+
+// ⚠ WHAT IS *NOT* BEHIND THESE TWO TABS, AND WHY IT IS DELIBERATE. He named two categories for Bills
+// and the chapter carries four blocks: the budget levers (the physio retainer) and her academy's
+// scholarship are neither kit nor advertising. Filing them under one of his two names would be this
+// screen deciding that a physio bill is "kit", which is a classification he did not make – so they
+// stay OUTSIDE the switcher, the levers above it and the academy below, in the order they already
+// had. That is the Spending chapter's own shape as well: the summary sits above its period switcher
+// because the switcher does not govern it. ⭐ Say the word and either one moves under a tab.
+
+type ShelfTab = 'invest' | 'cars' | 'property' | 'business' | 'water' | 'air'
+const shelfTab = ref<ShelfTab>('invest')
+const SHELF_TAB_OPTIONS = [
+  { value: 'invest', label: 'Invest', title: 'Money that stays money' },
+  { value: 'cars', label: 'Cars', title: 'The garage' },
+  { value: 'property', label: 'Property', title: 'Somewhere to live' },
+  { value: 'business', label: 'Business', title: 'What the family owns that earns – the academy included' },
+  { value: 'water', label: 'Water', title: 'Boats, ordered rather than bought' },
+  { value: 'air', label: 'Air', title: 'The family aeroplane' },
+]
+/** ⚠⚠ «Business (Academy is subdivision inside)» – THE ACADEMY IS NOT A SEVENTH TAB. It is a
+ *  subdivision of Business, so that tab holds TWO families and the academy's four stages appear
+ *  under it, below the brand. Every other tab holds exactly one. This map is the whole mechanism:
+ *  the engine's families are untouched, and so is `SHOP_FAMILIES` and every word in it. */
+const SHELF_TAB_FAMILIES: Record<ShelfTab, ShopRowView['family'][]> = {
+  invest: ['investment'],
+  cars: ['car'],
+  property: ['house'],
+  business: ['business', 'academy'],
+  water: ['boat'],
+  air: ['plane'],
+}
+/** The families the open shelf tab shows, in `SHOP_FAMILIES`' own order – so Business shows the
+ *  brand and then the academy under it, which is what "subdivision inside" means on screen. */
+const shelfFamilies = computed(() =>
+  SHOP_FAMILIES.filter((f) => SHELF_TAB_FAMILIES[shelfTab.value].includes(f.key)),
+)
 </script>
 
 <template>
@@ -1446,11 +1517,32 @@ const TAB_OPTIONS = [
         <p class="money-panel-note">Started this career with {{ startingBudget }}.</p>
       </Card>
 
+      <!-- ===================== 5a. THE BILLS CHAPTER'S OWN TABS =====================
+           ⭐⭐ ROUND 30 #5. The Spending chapter's period switcher, one chapter along: same control,
+           same plate, and it governs the two blocks he named. Which blocks it does NOT govern, and
+           why the levers above and the academy below stay outside it, is argued at
+           `BILLS_TAB_OPTIONS` in the script - his words live there, because Cyrillic may not appear
+           in a template (tests/template-copy-rules.test.ts). -->
+      <SegmentedRow
+        v-if="screenTab === 'bills'"
+        v-model="billsTab"
+        class="money-window money-subtabs"
+        :options="BILLS_TAB_OPTIONS"
+        group-label="Which bills"
+      />
+
       <!-- ========================= 5b. HER KIT, AND WHAT IT COSTS ===================
            W3-KIT. Three lines, four rungs each. The rung she owns is marked; a dearer one asks
            before it charges, a cheaper one just takes effect at the next purchase. Every price,
            name and condition word comes off the snapshot - see the script. -->
-      <Card v-if="screenTab === 'bills'" class="money-panel money-kit">
+      <Card v-if="screenTab === 'bills' && billsTab === 'kit'" class="money-panel money-kit">
+        <!-- ⭐ ROUND 30 #5 – THE CARD'S OWN ART, when there is one. `shelfArtUrl` returns null
+             until his painting lands and the band is simply absent: a designed empty state, never
+             a broken box. Its header carries the contract. -->
+        <div v-if="shelfArtUrl(BILLS_ART_KEYS.kit)" class="card-art">
+          <img :src="shelfArtUrl(BILLS_ART_KEYS.kit) ?? undefined" alt="" />
+          <span class="card-art-scrim" aria-hidden="true"></span>
+        </div>
         <Eyebrow as="h2">Her kit</Eyebrow>
         <!-- ⚠ THE OLD LINE SAID "plays truer" AND THAT WAS THE ONE THING IT DOES NOT DO (08.08).
              engine/equipment.ts is explicit: fresh kit is EXACTLY neutral at every rung, every
@@ -1583,7 +1675,15 @@ const TAB_OPTIONS = [
            the offers and the catalogue: this screen prices nothing, gates nothing and re-derives
            nothing, which is the kit-deal block's own rule one card up. Absent for a junior – the
            engine hands an empty shelf before eighteen and the card simply is not there. -->
-      <Card v-if="screenTab === 'bills' && adPortfolio.length > 0" class="money-panel">
+      <Card
+        v-if="screenTab === 'bills' && billsTab === 'ads' && adPortfolio.length > 0"
+        class="money-panel money-ads"
+      >
+        <!-- ⭐ ROUND 30 #5 – this card's own art, absent until it exists. See `Her kit` above. -->
+        <div v-if="shelfArtUrl(BILLS_ART_KEYS.ads)" class="card-art">
+          <img :src="shelfArtUrl(BILLS_ART_KEYS.ads) ?? undefined" alt="" />
+          <span class="card-art-scrim" aria-hidden="true"></span>
+        </div>
         <Eyebrow as="h2">The advertising portfolio</Eyebrow>
         <!-- ⭐⭐⭐ ROUND 29 PART THREE P3 – THE SECOND SENTENCE IS THE MANAGER'S COMMISSION, AND IT
              REPLACES THE ONE THAT DESCRIBED THE OLD SPLIT. It used to read «Fees run through the
@@ -1634,6 +1734,20 @@ const TAB_OPTIONS = [
           </p>
         </div>
       </Card>
+
+      <!-- ⚠ AND WHAT THE SECOND TAB SAYS BEFORE THERE IS A PORTFOLIO. The engine hands an empty
+           shelf below eighteen (`snapshot.adPortfolio` is `[]` under
+           `ECONOMY.advertising.fromAgeYears`), and until now that meant the card simply was not on
+           the screen - which is fine when it is one card among four and a hole when it is a whole
+           tab. The age is READ OUT OF THE ENGINE, never typed, so a retune moves this sentence and
+           the gate together. -->
+      <p
+        v-if="screenTab === 'bills' && billsTab === 'ads' && adPortfolio.length === 0"
+        class="money-panel-note money-subtab-empty"
+      >
+        Nothing to show yet – the categories open at {{ adFromAgeYears }}, and they fill one letter
+        at a time as she climbs.
+      </p>
 
       <!-- ======================= 5c. HER ACADEMY, AND WHAT IT HAS PAID ===============
            Backlog #90. The scholarship pays as a discount on every fare, so it never becomes a line
@@ -1737,162 +1851,202 @@ const TAB_OPTIONS = [
           :value="formatCents(shop.ownedValueCents)"
           tone="positive"
         />
-        <div v-for="family in SHOP_FAMILIES" :key="family.key" class="shop-family">
+      </Card>
+
+      <!-- ===================== 8a. THE SHELF'S OWN TABS =====================
+           ⭐⭐ ROUND 30 #5 – «сверху плашкой The shelf, а ниже под ней вкладки в ряд». The plate
+           above is that плашка; this is the row under it. Six segments, and the sixth thing on the
+           shelf - the academy - is deliberately NOT one of them: it is a subdivision of Business and
+           rides inside that tab. The map and his words are at `SHELF_TAB_OPTIONS` in the script. -->
+      <SegmentedRow
+        v-if="screenTab === 'shop' && shop"
+        v-model="shelfTab"
+        class="money-window money-subtabs shelf-tabs"
+        :options="SHELF_TAB_OPTIONS"
+        group-label="Which part of the shelf"
+      />
+
+      <!-- ===================== 8b. THE SHELF ITSELF, CARD BY CARD =====================
+           ⭐⭐ ROUND 30 #5 – «карточки лежат без общей подложки, примерно как на экране Season».
+           This is the Season feed's own arrangement, and it is a real change rather than a restyle:
+           every rung on the shelf used to sit inside ONE card, so the page had a plate behind a
+           plate behind a row. Now each rung IS a card, laid straight on the page, exactly as
+           `.event-cards` lays the calendar - `Card variant="photo"`, so a painting can bleed into
+           it from behind the words the moment his art lands.
+           ⚠ THE FAMILY HEADING AND ITS NOTE STAY, WORD FOR WORD, and they are OUTSIDE the cards:
+           they are the sentence that says what a family is FOR (the spec's §3), and under Business
+           they are also what separates the brand from the academy under it. -->
+      <div v-if="screenTab === 'shop' && shop" class="shelf-feed">
+        <div v-for="family in shelfFamilies" :key="family.key" class="shop-family">
           <div class="shop-family-head">{{ family.title }}</div>
           <p class="shop-family-note">{{ family.note }}</p>
-          <div v-for="row in shopRowsOf(family.key)" :key="row.id" class="shop-row">
-            <div class="shop-row-head">
-              <span class="shop-row-name">{{ row.label }}</span>
-              <span class="shop-row-rate" :class="{ 'is-down': row.annualRatePct < 0 }">
-                {{ rateLine(row) }}
-              </span>
+          <Card
+            v-for="row in shopRowsOf(family.key)"
+            :key="row.id"
+            variant="photo"
+            class="shop-row"
+          >
+            <!-- ⭐ ROUND 30 #5 – «для каждой карточки будет свой арт». Null until his painting
+                 lands, and then the card simply has no band: `shelfArtUrl`'s header carries the
+                 contract, which is `vacationArtUrl`'s, for the reason it was written. -->
+            <div v-if="shelfArtUrl(row.id)" class="card-art shop-row-art">
+              <img :src="shelfArtUrl(row.id) ?? undefined" alt="" />
+              <span class="card-art-scrim" aria-hidden="true"></span>
             </div>
-            <p class="shop-row-blurb">{{ row.blurb }}</p>
-            <!-- ⭐⭐ ROUND 29 #5 – THE THIRD NUMBER (spec §3f): what it cost, what it loses, and
-                 what it takes every week to keep. It is on the row whether the family owns one or
-                 not, because it is the half of the price a shop window normally hides – «the
-                 weekly figure is what appears in the ledger, beside the masseur, which is where
-                 the decision actually lives». The engine computed it (`upkeepCents`); this screen
-                 does not divide a percentage by a year. -->
-            <p v-if="row.upkeepCents > 0" class="shop-row-upkeep">
-              {{ formatCents(row.upkeepCents) }} a week to keep
-            </p>
-            <!-- ⭐⭐ ROUND 29 PART FOUR P7 – THE MIRROR LINE: what an owned earner brings in RIGHT
-                 NOW, the engine's own figure (`incomeCents`, the same arithmetic the till banks).
-                 Drawn only when it is really flowing – a brand nobody knows and a stage on order
-                 both read $0 and say nothing. Deliberately NOT netted against the upkeep line
-                 above (round 29 #10): two facts, two sentences. -->
-            <p v-if="row.incomeCents > 0" class="shop-row-earning">
-              Brings in {{ formatCents(row.incomeCents) }} a week right now
-            </p>
-            <!-- ⭐ §3f – THE WAIT, ON THE ROW, BEFORE THE ORDER IS PLACED. Not a teaser and not a
-                 lock: the price is beside it and the control is pressable. -->
-            <p v-if="row.buildWeeks > 0 && row.valueCents === null && !isBuilding(row)" class="shop-row-wait">
-              {{ buildWaitLine(row) }}
-            </p>
-            <!-- ⭐ §3g – THE STAGE UNDER IT, WHEN THAT STAGE IS NOT BUILT. Again not a lock and
-                 not a bar: the price stays on screen and the control is simply not pressable,
-                 which is §2's rule read one storey up. -->
-            <p v-if="requiresLabel(row)" class="shop-row-wait">
-              {{ requiresLabel(row) }} has to come first.
-            </p>
-            <!-- ⭐⭐ ROUND 29 #5, §3f – ORDERED, AND NOT HERE YET. «Between those two weeks the
-                 player owns a CONTRACT, not a boat», so there is nothing to value and nothing to
-                 sell – `sellableAsset` refuses the same week, so this is not the gate, it is the
-                 honest face of it (R10-16: a disabled control and a refused click tell one
-                 story). What the row says instead is the date, which is the whole point of a
-                 commission. -->
-            <div v-if="isBuilding(row)" class="shop-row-owned is-building">
-              <StatRow
-                class="money-row"
-                label="On order"
-                :meta="`paid ${formatCents(row.paidCents ?? 0)}`"
-                :value="weekLabel(row.readyWeek ?? 0)"
-                tone="plain"
-              />
-              <p class="shop-row-change">It cannot be sold before it is delivered, and it costs nothing to keep until then.</p>
-            </div>
-            <!-- OWNED: what they paid, what it is worth, and the difference as ONE figure the
-                 engine computed. This screen subtracts nothing. -->
-            <div v-else-if="row.valueCents !== null" class="shop-row-owned">
-              <!-- ⭐⭐ ROUND 29 #9 – `tone="plain"`, AND A DEPRECIATED VALUE IS NOT AN ERROR.
-                   The owner's words and the reasoning are in `shopToneNote` in the script block,
-                   because Cyrillic inside a template is forbidden - strings AND comments
-                   (tests/template-copy-rules.test.ts). In short: `negative` means MONEY OUT, this
-                   figure is a BALANCE, and `plain` is StatRow's own word for a balance. -->
-              <StatRow class="money-row" label="Worth now" :meta="`paid ${formatCents(row.paidCents ?? 0)}`" :value="formatCents(row.valueCents)" tone="plain" />
-              <!-- ⭐⭐⭐ ROUND 30 #14 – THE THREE FIGURES THE DECISION NEEDS. His words and the
-                   reasoning are in `shopUnitsNote` in the script block (no Cyrillic in a template).
-                   Every number is the engine's: `shopView` counted the units, divided the cost by
-                   them and priced the week. This screen divides nothing. -->
-              <p v-if="row.unitsHeld !== null && row.avgUnitPriceCents !== null && row.unitPriceCents !== null" class="shop-row-units">
-                {{ formatUnits(row.unitsHeld) }} units &ndash; bought at {{ formatCents(row.avgUnitPriceCents) }} each, {{ formatCents(row.unitPriceCents) }} now
-              </p>
-              <p class="shop-row-change" :class="{ 'is-down': (row.changeCents ?? 0) < 0 }">
-                {{ formatCentsSigned(row.changeCents ?? 0) }}
-                <span v-if="row.changePct !== null">since they bought it ({{ row.changePct }}%)</span>
-                <span v-else>since they bought it</span>
-              </p>
-              <!-- ⭐⭐ ROUND 29 #11 – PUT MORE IN. His words are in `shopTopUpNote` in the
-                   script block (no Cyrillic in a template). The control is drawn for an 'open'
-                   rung and never for a car; same input, same minimum and same engine command as
-                   the opening stake, and `buyAsset` re-validates every one of them. -->
-              <label v-if="isTopUp(row)" class="shop-stake">
-                <span class="shop-stake-label">
-                  Add more, from {{ formatCents(row.entryCents) }}
+            <div class="shop-row-body">
+              <div class="shop-row-head">
+                <span class="shop-row-name">{{ row.label }}</span>
+                <span class="shop-row-rate" :class="{ 'is-down': row.annualRatePct < 0 }">
+                  {{ rateLine(row) }}
                 </span>
-                <input
-                  v-model="stakeDollars[row.id]"
-                  class="shop-stake-input"
-                  type="number"
-                  inputmode="numeric"
-                  :min="Math.round(row.entryCents / 100)"
-                  step="100"
-                  :placeholder="String(Math.round(row.entryCents / 100))"
-                />
-              </label>
-              <button v-if="isTopUp(row)" class="shop-action" :disabled="!canBuy(row)" @click="askBuy(row)">
-                Put more in
-              </button>
-              <!-- ⭐⭐⭐ ROUND 29 PART TWO #4 – HOW MUCH OF IT TO SELL. His words are in
-                   `shopPartSaleNote` in the script block (no Cyrillic in a template). Drawn on an
-                   'open' rung only, because that is the property that says a holding takes money in
-                   and out in parts; a car has one price and one sale. BLANK BY DEFAULT, so the
-                   control below keeps the sentence it has always had and keeps meaning all of it. -->
-              <label v-if="isTopUp(row)" class="shop-stake">
-                <span class="shop-stake-label">
-                  Take out how much, or leave it blank for all {{ formatCents(row.valueCents) }}
-                </span>
-                <input
-                  v-model="sellDollars[row.id]"
-                  class="shop-stake-input shop-sell-input"
-                  type="number"
-                  inputmode="numeric"
-                  min="1"
-                  step="100"
-                  :max="Math.round(row.valueCents / 100)"
-                  placeholder="all of it"
-                />
-              </label>
-              <button class="shop-action" :disabled="!canSell(row)" @click="askSell(row)">
-                {{
-                  isTopUp(row) && sellCentsFor(row) !== null && (sellCentsFor(row) ?? 0) < row.valueCents
-                    ? `Take out ${formatCents(sellCentsFor(row) ?? 0)}`
-                    : `Sell it for ${formatCents(row.valueCents)}`
-                }}
-              </button>
-            </div>
-            <!-- NOT OWNED: the price, and a control that is pressable or is not. -->
-            <div v-else class="shop-row-buy">
-              <!-- ⭐⭐ ROUND 30 #14 – THE ENTRY PRICE, BEFORE THERE IS A HOLDING. See
-                   `shopUnitsNote` in the script block. -->
-              <p v-if="row.unitPriceCents !== null" class="shop-row-units">
-                One unit is {{ formatCents(row.unitPriceCents) }} this week
+              </div>
+              <p class="shop-row-blurb">{{ row.blurb }}</p>
+              <!-- ⭐⭐ ROUND 29 #5 – THE THIRD NUMBER (spec §3f): what it cost, what it loses, and
+                   what it takes every week to keep. It is on the row whether the family owns one or
+                   not, because it is the half of the price a shop window normally hides – «the
+                   weekly figure is what appears in the ledger, beside the masseur, which is where
+                   the decision actually lives». The engine computed it (`upkeepCents`); this screen
+                   does not divide a percentage by a year. -->
+              <p v-if="row.upkeepCents > 0" class="shop-row-upkeep">
+                {{ formatCents(row.upkeepCents) }} a week to keep
               </p>
-              <label v-if="row.stake === 'open'" class="shop-stake">
-                <span class="shop-stake-label">
-                  How much, from {{ formatCents(row.entryCents) }}
-                </span>
-                <input
-                  v-model="stakeDollars[row.id]"
-                  class="shop-stake-input"
-                  type="number"
-                  inputmode="numeric"
-                  :min="Math.round(row.entryCents / 100)"
-                  step="100"
-                  :placeholder="String(Math.round(row.entryCents / 100))"
+              <!-- ⭐⭐ ROUND 29 PART FOUR P7 – THE MIRROR LINE: what an owned earner brings in RIGHT
+                   NOW, the engine's own figure (`incomeCents`, the same arithmetic the till banks).
+                   Drawn only when it is really flowing – a brand nobody knows and a stage on order
+                   both read $0 and say nothing. Deliberately NOT netted against the upkeep line
+                   above (round 29 #10): two facts, two sentences. -->
+              <p v-if="row.incomeCents > 0" class="shop-row-earning">
+                Brings in {{ formatCents(row.incomeCents) }} a week right now
+              </p>
+              <!-- ⭐ §3f – THE WAIT, ON THE ROW, BEFORE THE ORDER IS PLACED. Not a teaser and not a
+                   lock: the price is beside it and the control is pressable. -->
+              <p v-if="row.buildWeeks > 0 && row.valueCents === null && !isBuilding(row)" class="shop-row-wait">
+                {{ buildWaitLine(row) }}
+              </p>
+              <!-- ⭐ §3g – THE STAGE UNDER IT, WHEN THAT STAGE IS NOT BUILT. Again not a lock and
+                   not a bar: the price stays on screen and the control is simply not pressable,
+                   which is §2's rule read one storey up. -->
+              <p v-if="requiresLabel(row)" class="shop-row-wait">
+                {{ requiresLabel(row) }} has to come first.
+              </p>
+              <!-- ⭐⭐ ROUND 29 #5, §3f – ORDERED, AND NOT HERE YET. «Between those two weeks the
+                   player owns a CONTRACT, not a boat», so there is nothing to value and nothing to
+                   sell – `sellableAsset` refuses the same week, so this is not the gate, it is the
+                   honest face of it (R10-16: a disabled control and a refused click tell one
+                   story). What the row says instead is the date, which is the whole point of a
+                   commission. -->
+              <div v-if="isBuilding(row)" class="shop-row-owned is-building">
+                <StatRow
+                  class="money-row"
+                  label="On order"
+                  :meta="`paid ${formatCents(row.paidCents ?? 0)}`"
+                  :value="weekLabel(row.readyWeek ?? 0)"
+                  tone="plain"
                 />
-              </label>
-              <span v-else class="shop-row-price">{{ formatCents(row.entryCents) }}</span>
-              <!-- ⭐ §3f – A COMMISSIONED THING IS ORDERED, NOT BOUGHT, and the verb on the control
-                   is the one difference the player can see before he presses it. -->
-              <button class="shop-action" :disabled="!canBuy(row)" @click="askBuy(row)">
-                {{ row.stake === 'open' ? 'Put it in' : row.buildWeeks > 0 ? 'Order it' : 'Buy it' }}
-              </button>
+                <p class="shop-row-change">It cannot be sold before it is delivered, and it costs nothing to keep until then.</p>
+              </div>
+              <!-- OWNED: what they paid, what it is worth, and the difference as ONE figure the
+                   engine computed. This screen subtracts nothing. -->
+              <div v-else-if="row.valueCents !== null" class="shop-row-owned">
+                <!-- ⭐⭐ ROUND 29 #9 – `tone="plain"`, AND A DEPRECIATED VALUE IS NOT AN ERROR.
+                     The owner's words and the reasoning are in `shopToneNote` in the script block,
+                     because Cyrillic inside a template is forbidden - strings AND comments
+                     (tests/template-copy-rules.test.ts). In short: `negative` means MONEY OUT, this
+                     figure is a BALANCE, and `plain` is StatRow's own word for a balance. -->
+                <StatRow class="money-row" label="Worth now" :meta="`paid ${formatCents(row.paidCents ?? 0)}`" :value="formatCents(row.valueCents)" tone="plain" />
+                <!-- ⭐⭐⭐ ROUND 30 #14 – THE THREE FIGURES THE DECISION NEEDS. His words and the
+                     reasoning are in `shopUnitsNote` in the script block (no Cyrillic in a template).
+                     Every number is the engine's: `shopView` counted the units, divided the cost by
+                     them and priced the week. This screen divides nothing. -->
+                <p v-if="row.unitsHeld !== null && row.avgUnitPriceCents !== null && row.unitPriceCents !== null" class="shop-row-units">
+                  {{ formatUnits(row.unitsHeld) }} units &ndash; bought at {{ formatCents(row.avgUnitPriceCents) }} each, {{ formatCents(row.unitPriceCents) }} now
+                </p>
+                <p class="shop-row-change" :class="{ 'is-down': (row.changeCents ?? 0) < 0 }">
+                  {{ formatCentsSigned(row.changeCents ?? 0) }}
+                  <span v-if="row.changePct !== null">since they bought it ({{ row.changePct }}%)</span>
+                  <span v-else>since they bought it</span>
+                </p>
+                <!-- ⭐⭐ ROUND 29 #11 – PUT MORE IN. His words are in `shopTopUpNote` in the
+                     script block (no Cyrillic in a template). The control is drawn for an 'open'
+                     rung and never for a car; same input, same minimum and same engine command as
+                     the opening stake, and `buyAsset` re-validates every one of them. -->
+                <label v-if="isTopUp(row)" class="shop-stake">
+                  <span class="shop-stake-label">
+                    Add more, from {{ formatCents(row.entryCents) }}
+                  </span>
+                  <input
+                    v-model="stakeDollars[row.id]"
+                    class="shop-stake-input"
+                    type="number"
+                    inputmode="numeric"
+                    :min="Math.round(row.entryCents / 100)"
+                    step="100"
+                    :placeholder="String(Math.round(row.entryCents / 100))"
+                  />
+                </label>
+                <button v-if="isTopUp(row)" class="shop-action" :disabled="!canBuy(row)" @click="askBuy(row)">
+                  Put more in
+                </button>
+                <!-- ⭐⭐⭐ ROUND 29 PART TWO #4 – HOW MUCH OF IT TO SELL. His words are in
+                     `shopPartSaleNote` in the script block (no Cyrillic in a template). Drawn on an
+                     'open' rung only, because that is the property that says a holding takes money in
+                     and out in parts; a car has one price and one sale. BLANK BY DEFAULT, so the
+                     control below keeps the sentence it has always had and keeps meaning all of it. -->
+                <label v-if="isTopUp(row)" class="shop-stake">
+                  <span class="shop-stake-label">
+                    Take out how much, or leave it blank for all {{ formatCents(row.valueCents) }}
+                  </span>
+                  <input
+                    v-model="sellDollars[row.id]"
+                    class="shop-stake-input shop-sell-input"
+                    type="number"
+                    inputmode="numeric"
+                    min="1"
+                    step="100"
+                    :max="Math.round(row.valueCents / 100)"
+                    placeholder="all of it"
+                  />
+                </label>
+                <button class="shop-action" :disabled="!canSell(row)" @click="askSell(row)">
+                  {{
+                    isTopUp(row) && sellCentsFor(row) !== null && (sellCentsFor(row) ?? 0) < row.valueCents
+                      ? `Take out ${formatCents(sellCentsFor(row) ?? 0)}`
+                      : `Sell it for ${formatCents(row.valueCents)}`
+                  }}
+                </button>
+              </div>
+              <!-- NOT OWNED: the price, and a control that is pressable or is not. -->
+              <div v-else class="shop-row-buy">
+                <!-- ⭐⭐ ROUND 30 #14 – THE ENTRY PRICE, BEFORE THERE IS A HOLDING. See
+                     `shopUnitsNote` in the script block. -->
+                <p v-if="row.unitPriceCents !== null" class="shop-row-units">
+                  One unit is {{ formatCents(row.unitPriceCents) }} this week
+                </p>
+                <label v-if="row.stake === 'open'" class="shop-stake">
+                  <span class="shop-stake-label">
+                    How much, from {{ formatCents(row.entryCents) }}
+                  </span>
+                  <input
+                    v-model="stakeDollars[row.id]"
+                    class="shop-stake-input"
+                    type="number"
+                    inputmode="numeric"
+                    :min="Math.round(row.entryCents / 100)"
+                    step="100"
+                    :placeholder="String(Math.round(row.entryCents / 100))"
+                  />
+                </label>
+                <span v-else class="shop-row-price">{{ formatCents(row.entryCents) }}</span>
+                <!-- ⭐ §3f – A COMMISSIONED THING IS ORDERED, NOT BOUGHT, and the verb on the control
+                     is the one difference the player can see before he presses it. -->
+                <button class="shop-action" :disabled="!canBuy(row)" @click="askBuy(row)">
+                  {{ row.stake === 'open' ? 'Put it in' : row.buildWeeks > 0 ? 'Order it' : 'Buy it' }}
+                </button>
+              </div>
             </div>
-          </div>
+          </Card>
         </div>
-      </Card>
+      </div>
 
       <!-- ====================== 9. HER SHARE OF THE CHEQUES ======================
            ROUND 26 #5b. His words are in the script block above and in
@@ -2119,6 +2273,38 @@ const TAB_OPTIONS = [
 /* --- 3. THE PERIOD ---------------------------------------------------------------------------- */
 
 .money-window {
+  margin-top: 14px;
+}
+
+/* ⭐⭐ ROUND 30 #5 – THE SECOND ROW OF TABS, INSIDE A CHAPTER. It is `.money-window`'s object (the
+   Spending period switcher he named as the model) with one addition, and the addition is a 375px
+   argument rather than a taste one.
+
+   ⚠⚠ SIX SEGMENTS DO NOT FIT ON A PHONE AT THE SHARED PILL METRICS. `.tab-pill` is 13px type in
+   6px/16px padding, which puts Invest/Cars/Property/Business/Water/Air at roughly 450px against the
+   343px a 375px phone actually has inside `--app-pad-x`. `.tab-row` is a bare `display: flex` with
+   no wrap, so the overflow would push the DOCUMENT sideways - and "at 375 px the app does not scroll
+   sideways" is one of the two invariants `e2e/responsive.spec.ts` has held since it was written.
+
+   The row is therefore allowed to WRAP rather than to overflow, and the pills are tightened so that
+   on the phone it does not have to. Both halves are wanted: the tightening is what keeps his «в ряд»
+   true at the width he plays at, and the wrap is the guarantee that a longer word, a larger font or
+   a 320px screen costs a second line instead of a broken page. Verified in a real browser at 375px
+   by `e2e/responsive.spec.ts`, which now opens both chapters. */
+.money-subtabs {
+  flex-wrap: wrap;
+  row-gap: 4px;
+  justify-content: center;
+  border-radius: var(--radius-card);
+}
+
+.shelf-tabs :deep(.tab-pill) {
+  padding-inline: 9px;
+  font-size: 12px;
+}
+
+/* The empty arm of a sub-tab still has to say something – see the note in the template. */
+.money-subtab-empty {
   margin-top: 14px;
 }
 
@@ -2516,10 +2702,32 @@ const TAB_OPTIONS = [
   color: var(--ink);
 }
 
+/* ⭐⭐ ROUND 30 #5 – THE FEED, and it is the Season screen's arrangement rather than a card full of
+   rows. `.event-cards` on SeasonScreen is a 12px-gap column of cards laid straight on the page; so
+   is this. The 14px above it is the same gap `.money-tabs` leaves under the chapter picker, so the
+   first card opens the same distance below the tab row as the first block of every other chapter. */
+.shelf-feed {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 14px;
+}
+
+/* ⚠ THE HAIRLINE ABOVE A FAMILY IS GONE WITH THE PLATE IT DIVIDED. It was a rule INSIDE one card,
+   separating a family from the one above it; on a page of free-standing cards there is nothing on
+   either side of it to divide, and a line drawn across the page between two cards reads as a
+   separator the design does not have. The heading and its note are the divider now, which is what
+   they always were doing. */
 .shop-family {
-  margin-top: 16px;
-  padding-top: 14px;
-  border-top: 1px solid var(--line);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* The heading and its note are one object with the cards under them, so they keep the tighter
+   spacing they had inside the card rather than the feed's 12px. */
+.shop-family-head + .shop-family-note {
+  margin-top: -8px;
 }
 
 .shop-family-head {
@@ -2538,11 +2746,43 @@ const TAB_OPTIONS = [
   text-wrap: pretty;
 }
 
-.shop-row {
-  margin-top: 12px;
-  padding: 10px;
-  border: 1px solid var(--line);
-  border-radius: 11px;
+/* ⚠ THE ROW IS A CARD NOW, so the hand-rolled border and the 11px radius are gone: `Card`'s own
+   hairline and the radius ladder's card rung do that job, and a second set of both inside them was
+   the "plate behind a plate" this item is undoing. `variant="photo"` pads to zero on purpose - the
+   art band bleeds to the card's own edges and the words below it carry the inset. */
+.shop-row-body {
+  padding: 12px;
+}
+
+/* THE CARD'S OWN PICTURE, when there is one. A band rather than a bleed-behind-the-words: the
+   objects on this shelf are things (a car, a boat, an aeroplane), and a thing wants to be seen
+   whole rather than read through. The scrim is the Season card's, softened, so a bright painting
+   cannot fight the hairline under it. ⚠ THE WHOLE BLOCK IS ABSENT when there is no painting - see
+   `shelfArtUrl` - and the card is then simply a card, which is the state it ships in today. */
+.card-art {
+  position: relative;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+}
+
+.card-art img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.card-art-scrim {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgb(0 0 0 / 0%) 55%, rgb(0 0 0 / 45%) 100%);
+}
+
+/* On the two Bills cards the band sits inside a padded card, so it cancels that padding to reach
+   the card's edges the way it does on a shop row. */
+.money-panel > .card-art:first-child {
+  margin: -14px -14px 12px;
+  border-radius: var(--radius-card) var(--radius-card) 0 0;
 }
 
 .shop-row-head {

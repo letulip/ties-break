@@ -59,6 +59,7 @@ import MoneyScreen from '../../src/components/screens/MoneyScreen.vue'
 import TierGuide from '../../src/components/TierGuide.vue'
 import '../../src/style.css'
 import { useGameStore } from '../../src/stores/game'
+import { shelfRow } from './shelf'
 import {
   avgUnitPriceCents,
   buyAsset,
@@ -287,7 +288,9 @@ describe('round 29 #11 – a car is still a car', () => {
     expect(() => buyAsset(world, 'car-sensible')).toThrow('already owns')
 
     const wrapper = await mountShop(toSnapshot(world))
-    const node = wrapper.findAll('.shop-row').find((r) => r.text().includes('The sensible estate'))!
+    // ⚠ RE-AIMED, ROUND 30 #5 – a car lives on the `Cars` segment of the shelf now, so the row is
+    // reached by pressing that tab. The claim is untouched. See tests/component/shelf.ts.
+    const node = await shelfRow(wrapper, 'The sensible estate')
     expect(node.findAll('.shop-action').map((b) => b.text())).not.toContain('Put more in')
     wrapper.unmount()
   })
@@ -305,7 +308,9 @@ describe('round 29 #9 – a depreciated value is not an error', () => {
     expect(row.changeCents!, 'the fixture really has depreciated').toBeLessThan(0)
 
     const wrapper = await mountShop(snap)
-    const node = wrapper.findAll('.shop-row').find((r) => r.text().includes('The sensible estate'))!
+    // ⚠ RE-AIMED, ROUND 30 #5 – a car lives on the `Cars` segment of the shelf now, so the row is
+    // reached by pressing that tab. The claim is untouched. See tests/component/shelf.ts.
+    const node = await shelfRow(wrapper, 'The sensible estate')
     const worth = node.findAll('.tb-statrow').find((r) => r.text().includes('Worth now'))!
     // ⚠⚠ THE RENDERED TOKEN, NOT THE SOURCE LINE. `plain` is StatRow's `--ink` – white – and its own
     // documented sense is «a number with no direction (a count, a balance)», which is exactly what a

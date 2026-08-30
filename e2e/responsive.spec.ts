@@ -18,7 +18,7 @@
 // is actually broken.
 
 import { test, expect } from './careerAt'
-import { answerOpeningKnock, openMoney } from './journey'
+import { answerOpeningKnock, dismissTourBriefing, enterConfirmButton, openMoney } from './journey'
 import type { Page } from '@playwright/test'
 
 test.use({ viewport: { width: 375, height: 812 } })
@@ -93,11 +93,119 @@ test('at 375 px the app does not scroll sideways, and the season strip stays sho
 
   await page.getByRole('navigation').getByRole('button', { name: 'Home', exact: true }).click()
   await openMoney(page)
-  await page.getByRole('group', { name: 'Which part of the budget' })
-    .getByRole('button', { name: 'History' })
-    .click()
+  const chapters = page.getByRole('group', { name: 'Which part of the budget' })
+  await chapters.getByRole('button', { name: 'History' }).click()
   await expect(page.getByRole('heading', { name: 'All transactions' })).toBeVisible()
   expect(await sideScroll(page), 'the Money screen overflows sideways at 375 px').toBeLessThanOrEqual(0)
+
+  // ⭐⭐ ROUND 30 #5 – THE TWO CHAPTERS THAT GREW A SECOND ROW OF TABS, and this is the file that can
+  // answer for them. The owner asked for sub-tabs inside Bills and Shop; Shop's row carries SIX
+  // segments (Invest / Cars / Property / Business / Water / Air), which at the shared pill metrics
+  // is about 450px of control inside the 343px this viewport actually has. `.tab-row` is a bare
+  // flex with no wrap, so without the `.money-subtabs` rule in MoneyScreen.vue that row would push
+  // the DOCUMENT sideways – and "at 375 px the app does not scroll sideways" is what this file is
+  // for. happy-dom cannot see this: it has no layout engine, so a mounted test would pass on the
+  // broken version.
+  //
+  // ⚠ MEASURED, NOT ASSUMED, AND THE TWO HALVES OF THE FIX WERE MUTATED SEPARATELY. `.money-subtabs`
+  // does two things – it tightens the shelf's pills, and it lets the row wrap rather than overflow –
+  // and taking either one away ALONE leaves this file green:
+  //   * tightening alone (no wrap)  -> the six fit one row at 375 and nothing overflows;
+  //   * wrap alone (no tightening)  -> the row breaks to two lines, still inside the page.
+  //   * NEITHER                     -> `the shelf sub-tabs overflow sideways at 375 px`, red.
+  // So the tightening is what makes his «в ряд» true at the width he plays at, the wrap is the net
+  // under it, and the two assertions below are aimed one at each: the overflow check answers for the
+  // page, the one-row check answers for the design.
+  await chapters.getByRole('button', { name: 'Bills' }).click()
+  await expect(page.getByRole('group', { name: 'Which bills' })).toBeVisible()
+  expect(await sideScroll(page), 'the Bills sub-tabs overflow sideways at 375 px').toBeLessThanOrEqual(0)
+
+  await chapters.getByRole('button', { name: 'Shop' }).click()
+  const shelf = page.getByRole('group', { name: 'Which part of the shelf' })
+  await expect(shelf).toBeVisible()
+  expect(await sideScroll(page), 'the shelf sub-tabs overflow sideways at 375 px').toBeLessThanOrEqual(0)
+  // ...and every one of his six is really on the screen, not merely in the document: a segment
+  // clipped off the right edge is a tab the player cannot reach. ⚠ AND THEY ARE ON ONE ROW, which is
+  // «вкладки в ряд» as a measurement rather than as an intention – it is the assertion that reddens
+  // when the pill tightening is taken away and the row breaks to two lines.
+  const tops: number[] = []
+  for (const segment of ['Invest', 'Cars', 'Property', 'Business', 'Water', 'Air']) {
+    const box = await shelf.getByRole('button', { name: segment }).boundingBox()
+    expect(box, `the ${segment} segment is not laid out`).not.toBeNull()
+    expect(box!.x, `the ${segment} segment starts off the left of a 375px phone`).toBeGreaterThanOrEqual(0)
+    expect(box!.x + box!.width, `the ${segment} segment runs off a 375px phone`).toBeLessThanOrEqual(375)
+    tops.push(Math.round(box!.y))
+  }
+  expect(new Set(tops).size, 'his six segments are one row at 375 px, not two').toBe(1)
+  // The rungs behind the open segment are cards laid on the page, and they fit it too.
+  await shelf.getByRole('button', { name: 'Cars' }).click()
+  expect(await sideScroll(page), 'the shelf cards overflow sideways at 375 px').toBeLessThanOrEqual(0)
+
+  expect(crashes, 'the app threw at 375 px').toEqual([])
+})
+
+// =================================================================================================
+// ⭐⭐ ROUND 30 #6 – THE NEXT-TOURNAMENT SCREEN, WHOSE PICTURE IS NOW SQUARE.
+//
+// The owner asked for the tournament picture to be square «по примеру главной», with part of the
+// description, `The read`, the weather and the trip laid ON it. A square at the full width of the
+// phone is the tallest that block has ever been, and this is the only layer that can say whether the
+// screen still fits: happy-dom has no layout engine, so a mounted test measures zeros.
+//
+// ⚠ THE ENTRY IS MADE RATHER THAN ASSUMED, and that is the difference between this and a dead guard.
+// The panel is drawn only for an ENTERED tournament (`upcoming.find(e => e.entered)`), and a seeded
+// career has entered nothing – a version of this test that simply opened the tab would have measured
+// a screen with no panel on it and passed on every broken layout. So it enters one first, through
+// the two controls a player uses, and then asserts the panel is really there before measuring it.
+test('at 375 px the Next-tournament screen fits, square picture and all', async ({
+  page,
+  careerAt,
+}) => {
+  const crashes: string[] = []
+  page.on('pageerror', (error) => crashes.push(error.message))
+
+  await careerAt('pro')
+  await answerOpeningKnock(page)
+  // The `pro` fixture opens onto the tour briefing, and it is a BLOCKING overlay – the same one
+  // round-20 #3 was about. Dismissed the way a player dismisses it.
+  await dismissTourBriefing(page)
+
+  // Season -> the first thing she may enter, and its confirm. Both locators are journey.ts's own
+  // closed sets, so a fourth verb or a renamed pill goes red here rather than passing quietly.
+  await page.getByRole('navigation').getByRole('button', { name: 'Season', exact: true }).click()
+  const entry = page.getByRole('button', { name: /^Enter the / }).first()
+  await expect(entry, 'the fixture must have something she may enter').toBeVisible()
+  await entry.click()
+  await enterConfirmButton(page).click()
+
+  // Home -> the card he clicks, which is the door this panel lives behind.
+  await page.getByRole('navigation').getByRole('button', { name: 'Home', exact: true }).click()
+  await page.getByRole('button', { name: /^Next tournament/ }).click()
+  const panel = page.locator('.next-tourn')
+  await expect(panel, 'the entry really opened onto the panel').toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Training plan', level: 2 })).toBeVisible()
+
+  expect(await sideScroll(page), 'the Next-tournament screen overflows sideways at 375 px').toBeLessThanOrEqual(0)
+
+  // ⭐ THE PICTURE IS SQUARE ON A REAL PHONE, measured rather than read off a stylesheet. `aspect-ratio`
+  // is a floor here and not a clamp (the read can push the box taller on a narrow phone), so this
+  // asserts it is AT LEAST square and never wider than the column it sits in.
+  const hero = (await panel.locator('.nt-hero').boundingBox())!
+  expect(hero, 'the hero is laid out').not.toBeNull()
+  expect(hero.width, 'the picture is inside the phone').toBeLessThanOrEqual(375)
+  expect(hero.height / hero.width, 'square, or taller when the read needs the room').toBeGreaterThanOrEqual(0.99)
+  // ...and the four icons under it are all on the screen, in one row, which is the clause a square
+  // picture plus four cells is most likely to break.
+  const facts = panel.locator('.nt-fact')
+  expect(await facts.count()).toBe(4)
+  const boxes = await facts.all()
+  const tops = await Promise.all(boxes.map(async (f) => (await f.boundingBox())!.y))
+  expect(new Set(tops.map((t) => Math.round(t))).size, 'the four icons are one row, not two').toBe(1)
+  for (const f of boxes) {
+    const b = (await f.boundingBox())!
+    expect(b.x, 'an icon starts off the left of a 375px phone').toBeGreaterThanOrEqual(0)
+    expect(b.x + b.width, 'an icon runs off a 375px phone').toBeLessThanOrEqual(375)
+  }
 
   expect(crashes, 'the app threw at 375 px').toEqual([])
 })
