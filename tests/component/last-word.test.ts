@@ -95,13 +95,19 @@ describe('the last offer is hers', () => {
   // symbol so a re-wording moves it; this one is a BYTE-IDENTITY claim about copy the step promised
   // not to touch, so the bytes are the assertion. If a future wave genuinely re-words the offers she
   // can still answer, this test is supposed to go red and be re-aimed deliberately.
+  // ⚠⚠ RE-AIMED AT ROUND 30 #7 – THE FUTURE WAVE THE NOTE ABOVE PREDICTED, AND EXACTLY ONE LINE OF
+  // THIS ARM MOVED. The owner asked for this lede and only this lede: «попап "теперь каждый год
+  // начиная с 29 лет" звучит как механический приговор безысходности». The heading, the kicker and
+  // both controls are the bytes step 4 promised not to touch and are unchanged, which is the whole
+  // reason they are still written out here – a re-aim that rewrote the arm would stop being the
+  // guard the note describes.
   it('⚠ every offer she may still answer is untouched – the age reading, to the byte', () => {
     showOffer(AGE, { ageYears: 30 })
     const w = mount(RetirementDialog)
     expect(said(w.get('.retire-kicker').text())).toBe('Off-season – she is 30')
     expect(said(w.get('.retire-title').text())).toBe('Is there another year in this?')
     expect(said(w.get('.retire-lede').text())).toBe(
-      'The off-season question, the way it gets asked from twenty-nine onward. There is no wrong answer and it will be asked again next winter.',
+      'Twenty-nine is when the question starts being asked, not a countdown to anything. There is no wrong answer, and she can say no for as many winters as her body gives her.',
     )
     const controls = w.findAll('.retire-answer')
     expect(controls).toHaveLength(2)
