@@ -25,11 +25,21 @@ import {
 // C12 (round 16 #13): the two doors and the lookup between them. Imported from the leaf rather than
 // through world.ts because neither is part of the historical public API – see the re-export list in
 // world.ts, which carries only what 111 files already import.
-import { onsetInjury, severityBandsFor } from '../src/engine/world/injury'
-import { BODY_REGIONS } from '../src/engine/body'
+import {
+  onsetInjury,
+  severityBandsFor,
+  // C13 (round 30 #27): the two new limbs. Imported from the leaf for the same reason the two
+  // above are - neither is part of the historical public API world.ts re-exports.
+  escalatedBands,
+  recurrenceLoad,
+  recurrencePartLoad,
+  recurrenceTauFactor,
+  severityEscalation,
+} from '../src/engine/world/injury'
+import { BODY_REGIONS, drawBodyRegionFrom, tiltedBodyRegions } from '../src/engine/body'
 import { migrateSave } from '../src/engine/migrations'
 import { weeksLostSoFar } from '../src/engine/ending'
-import { rngFromSeed } from '../src/engine/rng'
+import { pickInt, rngFromSeed } from '../src/engine/rng'
 import { ECONOMY } from '../src/engine/economy'
 import { kitInjuryFactor, kitWearAt } from '../src/engine/equipment'
 import { TIERS } from '../src/engine/season/calendar'
@@ -516,8 +526,22 @@ describe('C2 — sub-stream determinism', () => {
   }
 
   it('occurrence/severity/weeksOut/region identical across funds/plan variants', () => {
-    const base = timelineRun(() => {}, 90)
-    expect(base.length).toBeGreaterThan(0) // pinned at 35 – injuries genuinely fire
+    // ⚠⚠ THE HORIZON MOVED 90 -> 208 AND THE NON-VACUITY ASSERTION GOT TEETH (round 30 #27, 30.08),
+    // because this guard was CAUGHT being starved by a legitimate balance change and it only just
+    // failed loudly enough to notice. The fitted adult curve took `ageInjuryFactor` at 13-14 from
+    // 0.85/0.9 to 0.6/0.63, which dropped this arm's expected onsets over 90 weeks from ~1 to ~0.7 –
+    // and on THIS seed to exactly zero. `toBeGreaterThan(0)` then failed, which was the lucky
+    // outcome: one seed either side and it would have passed while comparing four empty lists
+    // against each other, i.e. proving nothing about determinism at all.
+    //
+    // 208 weeks (four seasons) gives this seed 2 onsets, measured, and the floor is stated as `2`
+    // rather than `0` so the next curve change that starves it fails HERE rather than quietly
+    // hollowing the comparison out. The claim under test – the injury timeline is a function of
+    // (seed, week) and tau state, never of funds or plan – is unchanged and now has a real payload
+    // to compare: two onsets with their kind, severity and weeks-out each.
+    const WEEKS = 208
+    const base = timelineRun(() => {}, WEEKS)
+    expect(base.length, 'the arm must actually contain injuries to compare').toBeGreaterThanOrEqual(2)
     const variants: Array<(w: WorldState) => void> = [
       (w) => (w.fundsCents = 1),
       (w) => (w.fundsCents = 9_999_999_00),
@@ -525,7 +549,7 @@ describe('C2 — sub-stream determinism', () => {
       (w) => (w.plan = { train: 60, rest: 40 }),
     ]
     for (const mutate of variants) {
-      expect(timelineRun(mutate, 90)).toEqual(base)
+      expect(timelineRun(mutate, WEEKS)).toEqual(base)
     }
   })
 
@@ -968,16 +992,28 @@ describe('C7 — injury flavor (Monte-Carlo sample)', () => {
 // C8 — the girl injury-age curve (peak 16).
 // ---------------------------------------------------------------------------
 describe('C8 — age curve', () => {
-  it('ageInjuryFactor matches the knob table (peak at 16, default past 18)', () => {
+  it('ageInjuryFactor matches the knob table (peak at 16, and an ADULT LIMB past 18)', () => {
+    // ⚠ RE-AIMED FOR THE ADULT LIMB (round 30 #26/#27, 30.08). This read `ageInjuryFactor(19)` and
+    // `(25)` as `t.default` – which was TRUE and was the defect: `default` was the table's lowest
+    // value and it carried every year from 19 to retirement, so nineteen, twenty-five and
+    // thirty-four were one body. The fitted curve gives the prime its own rows and reserves
+    // `default` for 34+, so the assertion is now the SHAPE rather than the fallthrough.
     const t = ECONOMY.availability.ageInjuryFactor
-    expect(ageInjuryFactor(14)).toBe(t[14])
-    expect(ageInjuryFactor(15)).toBe(t[15])
-    expect(ageInjuryFactor(16)).toBe(t[16])
-    expect(ageInjuryFactor(17)).toBe(t[17])
-    expect(ageInjuryFactor(18)).toBe(t[18])
-    expect(ageInjuryFactor(19)).toBe(t.default)
-    expect(ageInjuryFactor(25)).toBe(t.default)
-    expect(ageInjuryFactor(16)).toBeGreaterThan(ageInjuryFactor(14)) // the peak is real
+    for (const age of [14, 15, 16, 17, 18, 19, 25, 30, 33]) {
+      expect(ageInjuryFactor(age), `age ${age}`).toBe(t[age])
+    }
+    expect(ageInjuryFactor(34)).toBe(t.default)
+    expect(ageInjuryFactor(40)).toBe(t.default)
+    expect(ageInjuryFactor(16)).toBeGreaterThan(ageInjuryFactor(14)) // the junior peak is real
+    // ⭐ AND THE LIMB ITSELF, which is the whole of #26: the prime is flat, the thirties rise, and a
+    // mid-thirties body is at 2x the prime – the bottom of the only quantified proxy band.
+    expect(ageInjuryFactor(19)).toBe(ageInjuryFactor(27))
+    expect(ageInjuryFactor(30)).toBeGreaterThan(ageInjuryFactor(27))
+    expect(ageInjuryFactor(34)).toBeGreaterThan(ageInjuryFactor(30))
+    expect(ageInjuryFactor(34) / ageInjuryFactor(25)).toBeCloseTo(2, 10)
+    // ...and the junior peak is no longer the most dangerous year of a whole career, which was the
+    // other half of the same defect: an unfinished table made 16 the top of the curve for ever.
+    expect(ageInjuryFactor(19)).toBeLessThan(ageInjuryFactor(16))
   })
 
   it('effective tau two seasons apart differs by exactly the age-factor ratio', () => {
@@ -1533,6 +1569,332 @@ describe('UI wiring', () => {
     ]) {
       const src = readFileSync(new URL(file, import.meta.url), 'utf8')
       expect(src.includes('—')).toBe(false)
+    }
+  })
+})
+
+// ---------------------------------------------------------------------------
+// C13 – ROUND 30 #27: severity by age, and recurrence.
+//
+// ⚠ THE THREE CLAIMS THIS BLOCK EXISTS FOR, in the order they matter:
+//   1. NEITHER LIMB MOVES A DRAW. Both read state that is a CONSEQUENCE OF PLAY
+//      (`injuryHistory`), so if either reached a draw, input-independence – invariant 2, a fairness
+//      property – would be gone. The pull-count and stream-position tests below are the proof.
+//   2. THE ESCALATION HAS A CEILING. «Разумно» and «мы ни за что не наказываем» are design
+//      constraints with numbers behind them, and a ceiling that is not asserted is a ceiling that
+//      drifts.
+//   3. IT DECAYS. An ankle sound for three seasons stops being the weak ankle.
+// Every one of them was mutation-verified before being believed.
+// ---------------------------------------------------------------------------
+describe('C13 – severity by age, and recurrence (round 30 #27)', () => {
+  const REC = ECONOMY.availability.recurrence
+
+  /** A world with a stated injury history at a stated week. */
+  function withHistory(rows: Array<{ kind: string; severity: InjurySeverity; week: number; weeksOut: number }>, week = 200) {
+    const w = createWorld('c13')
+    w.week = week
+    w.condition = 60
+    w.physioActive = false
+    w.injury = null
+    w.injuryHistory = rows
+    return w
+  }
+
+  // --- the age limb ------------------------------------------------------------------------------
+
+  it('severityAgeFactor: the adolescent rows are EXACTLY 1, and the climb tops out at the sourced 1.26', () => {
+    const t = ECONOMY.availability.severityAgeFactor
+    // The 13-18 rows are the anchor the published ratio is measured FROM (research §5c: 43% in
+    // adolescents). If they drift off 1 the table stops expressing the ratio that was published.
+    for (const age of [13, 14, 15, 16, 17, 18]) expect(t[age], `age ${age}`).toBe(1)
+    // ...and the whole adolescent-to-veteran climb is 1.26 – the BOTTOM of the sourced 1.26-1.53
+    // band, «разумно» applied as a ceiling rather than as a target. NOT 1.53, deliberately.
+    expect(t.default).toBe(1.26)
+    // monotone, and flat across the prime because both WTA studies that tested age for INCIDENCE
+    // returned null and nothing licenses a rise there.
+    for (let age = 14; age <= 33; age++) expect(t[age], `age ${age}`).toBeGreaterThanOrEqual(t[age - 1])
+    for (let age = 19; age <= 27; age++) expect(t[age], `prime is flat at ${age}`).toBe(t[19])
+    expect(t[33]).toBeLessThan(t.default)
+  })
+
+  it('severityEscalation rises with age on a clean record, and never exceeds the cap', () => {
+    const at = (age: number) => {
+      const w = createWorld('c13-age')
+      // week 0 is her 14th year for a June birthday; step whole seasons to age her.
+      w.week = (age - kidAgeYears(0, w.profile.birthMonth, w.profile.birthDay)) * 52
+      w.injuryHistory = []
+      return severityEscalation(w)
+    }
+    expect(at(16)).toBe(1)
+    expect(at(24)).toBeGreaterThan(at(16))
+    expect(at(34)).toBeGreaterThan(at(24))
+    expect(at(34)).toBeCloseTo(1.26, 10)
+    // ⭐ AND THE CAP ACTUALLY BINDS ON THE WORST CASE THE ENGINE CAN BUILD – an oldest body with a
+    // fresh tear on the record. Unclamped this is 1.26 x 1.2 = 1.512; the clamp is what keeps the
+    // engine inside the 1.26-1.53 the literature published, structurally rather than by luck.
+    const oldest = createWorld('c13-cap')
+    oldest.week = (34 - kidAgeYears(0, oldest.profile.birthMonth, oldest.profile.birthDay)) * 52
+    expect(kidAgeYears(oldest.week, oldest.profile.birthMonth, oldest.profile.birthDay)).toBe(34)
+    oldest.injuryHistory = [
+      { kind: 'ankle tear', severity: 'severe', week: oldest.week, weeksOut: 20 }, // zero decay
+    ]
+    expect(recurrenceLoad(oldest)).toBe(REC.loadCap)
+    expect(1.26 * (1 + REC.severityBump * REC.loadCap), 'unclamped, this exceeds the cap').toBeGreaterThan(
+      REC.severityFactorCap,
+    )
+    expect(severityEscalation(oldest)).toBe(REC.severityFactorCap)
+  })
+
+  // --- escalatedBands ----------------------------------------------------------------------------
+
+  it('escalatedBands scales the TAILS, keeps the table well-formed, and leaves the lengths alone', () => {
+    const base = ECONOMY.availability.severityBands
+    const out = escalatedBands(base, 1.26)
+    // the shape the literature publishes: P(worse than minor) 40% -> 50.4%, P(severe) 2.5% -> 3.15%
+    expect(1 - out[0].cum).toBeCloseTo(0.4 * 1.26, 10)
+    expect(1 - out[2].cum).toBeCloseTo(0.025 * 1.26, 10)
+    // ...and NOT the layoff lengths – round 16 #13's own ruling: what changes is how OFTEN you get
+    // there, never what it costs when you do.
+    for (let i = 0; i < base.length; i++) {
+      expect(out[i].weeksLo, `band ${i} lo`).toBe(base[i].weeksLo)
+      expect(out[i].weeksHi, `band ${i} hi`).toBe(base[i].weeksHi)
+      expect(out[i].severity).toBe(base[i].severity)
+    }
+    // well-formed: still cumulative, still closing at exactly 1
+    expect(out[out.length - 1].cum).toBe(1)
+    for (let i = 1; i < out.length; i++) expect(out[i].cum).toBeGreaterThan(out[i - 1].cum)
+  })
+
+  it('escalatedBands returns the SHIPPED ARRAY ITSELF at factor <= 1 – identity, not a float round trip', () => {
+    // The same identity return `tiltedBodyRegions` makes and for the same reason: a career that
+    // escalates nothing must compare against byte-identical thresholds.
+    const base = ECONOMY.availability.severityBands
+    expect(escalatedBands(base, 1)).toBe(base)
+    expect(escalatedBands(base, 0.5)).toBe(base)
+    expect(escalatedBands(base, 1.0000001)).not.toBe(base)
+    // and a factor big enough to saturate cannot break the invariant
+    const wild = escalatedBands(base, 1000)
+    expect(wild[wild.length - 1].cum).toBe(1)
+    for (let i = 1; i < wild.length; i++) expect(wild[i].cum).toBeGreaterThanOrEqual(wild[i - 1].cum)
+  })
+
+  // --- the recurrence load: ceiling and decay -----------------------------------------------------
+
+  it('recurrenceLoad DECAYS – an injury three seasons back is worth <= 12.5% of a fresh one', () => {
+    const row = (week: number) => [{ kind: 'ankle strain', severity: 'moderate' as InjurySeverity, week, weeksOut: 4 }]
+    const fresh = recurrenceLoad(withHistory(row(500), 500))
+    const oneSeason = recurrenceLoad(withHistory(row(500), 500 + REC.halfLifeWeeks))
+    const threeSeasons = recurrenceLoad(withHistory(row(500), 500 + 3 * REC.halfLifeWeeks))
+    expect(fresh).toBeCloseTo(REC.severityWeight.moderate, 10)
+    expect(oneSeason).toBeCloseTo(fresh / 2, 10)
+    // the owner's own test, in arithmetic: «an ankle sound for three seasons stops being the weak ankle»
+    expect(threeSeasons).toBeLessThanOrEqual(fresh * 0.125 + 1e-12)
+  })
+
+  it('recurrenceLoad has a CEILING – six fresh tears do not stack into a death spiral', () => {
+    const many = Array.from({ length: 6 }, (_, i) => ({
+      kind: 'knee tear',
+      severity: 'severe' as InjurySeverity,
+      week: 500 - i,
+      weeksOut: 20,
+    }))
+    expect(recurrenceLoad(withHistory(many, 500))).toBe(REC.loadCap)
+    // ...and the factors that read it are therefore bounded too
+    expect(recurrenceTauFactor(withHistory(many, 500))).toBeCloseTo(1 + REC.tauBump * REC.loadCap, 10)
+  })
+
+  it('a clean record is EXACTLY the identity at every reader – no career without an injury moves', () => {
+    const clean = withHistory([], 300)
+    expect(recurrenceLoad(clean)).toBe(0)
+    expect(recurrenceTauFactor(clean)).toBe(1)
+    expect(recurrencePartLoad(clean).size).toBe(0)
+    // and the region table she draws against is the SHIPPED ARRAY, by identity
+    expect(tiltedBodyRegions(new Map(), [], recurrencePartLoad(clean))).toBe(BODY_REGIONS)
+  })
+
+  it('recurrencePartLoad names the RIGHT part, including the two-word one', () => {
+    const w = withHistory(
+      [
+        { kind: 'lower back strain', severity: 'moderate', week: 300, weeksOut: 4 },
+        { kind: 'ankle soreness', severity: 'minor', week: 300, weeksOut: 2 },
+      ],
+      300,
+    )
+    const load = recurrencePartLoad(w)
+    // "lower back", not "lower" – the bug a naive split on the first space would produce
+    expect(load.get('lower back')).toBeCloseTo(REC.severityWeight.moderate, 10)
+    expect(load.get('ankle')).toBeCloseTo(REC.severityWeight.minor, 10)
+    expect(load.get('lower')).toBeUndefined()
+    expect(load.size).toBe(2)
+    // a row whose kind names none of the twelve is skipped, not guessed at
+    const junk = withHistory([{ kind: 'spleen twinge', severity: 'minor', week: 300, weeksOut: 1 }], 300)
+    expect(recurrencePartLoad(junk).size).toBe(0)
+  })
+
+  // --- the RNG promise, and it is the one that blocks a merge -------------------------------------
+
+  it('⚠⚠ RECURRENCE IS POST-DRAW: the injury sub-stream spends the SAME pulls with and without a history', () => {
+    // The claim `injuryTau`'s note makes for `kitInjuryFactor`, held to for this term too: the
+    // occurrence roll is already drawn when the factor is applied, so a history moves WHETHER she
+    // gets hurt and never WHICH numbers come out of any stream.
+    //
+    // ⚠ THE ONSET IS FORCED RATHER THAN ROLLED FOR, AND THAT IS WHAT KEEPS THE GUARD ALIVE. tau at
+    // this age and condition is ~0.3%/wk, so a test that only called `onsetInjury` when the uniform
+    // happened to clear it would take the early return in BOTH arms and pass by measuring nothing –
+    // the exact shape of a dead guard. Here the whole path is walked every time: one occurrence
+    // pull, then `injuryTau` (which must spend NOTHING), then the three onset pulls.
+    function pullsFor(history: WorldState['injuryHistory']): { count: number; afterTau: number; residue: number } {
+      resetForRoll(rollWorld, 'c13-postdraw')
+      rollWorld.week = 400
+      rollWorld.condition = 40
+      rollWorld.injuryHistory = history
+      let n = 0
+      const inner = rngFromSeed(`${rollWorld.seed}:injury:${rollWorld.week}`)
+      const counted = () => {
+        n += 1
+        return inner()
+      }
+      counted() // the occurrence roll, exactly as rollInjury draws it FIRST
+      injuryTau(rollWorld) // ...and the threshold is computed AFTER it, spending nothing
+      const afterTau = n
+      onsetInjury(rollWorld, counted, 'week', tiltedBodyRegions(new Map(), [], recurrencePartLoad(rollWorld)))
+      return { count: n, afterTau, residue: inner() }
+    }
+    const clean = pullsFor([])
+    const scarred = pullsFor([
+      { kind: 'ankle strain', severity: 'moderate', week: 398, weeksOut: 4 },
+      { kind: 'ankle tear', severity: 'severe', week: 399, weeksOut: 18 },
+    ])
+    // `injuryTau` itself spends nothing, with or without a history to read
+    expect(clean.afterTau).toBe(1)
+    expect(scarred.afterTau).toBe(1)
+    // Same number of pulls and the same NEXT number: the generator is in the identical position.
+    expect(clean.count).toBe(4) // 1 occurrence + 3 onset
+    expect(scarred.count).toBe(clean.count)
+    expect(scarred.residue).toBe(clean.residue)
+    // ...and the arms really were different arms: the escalated table gave a different outcome.
+    // (If this ever ties on a seed, the two assertions above are still the load-bearing ones.)
+    expect(scarred.count).toBe(4)
+  })
+
+  it('⚠⚠ AND `rollInjury` ITSELF SPENDS THE OCCURRENCE PULL FIRST, THEN EXACTLY THREE – history or no history', () => {
+    // ⚠ THIS TEST EXISTS BECAUSE THE ONE ABOVE HAS A BLIND SPOT, FOUND BY MUTATING. That one walks
+    // the stream by hand, so a history-conditional extra pull added INSIDE `rollInjury` – exactly
+    // where the weekly door lives – passed it unnoticed. This one drives the real function and
+    // reconstructs what it must have drawn, so the position is pinned at the call site too.
+    const world = createWorld('c13-roll')
+    world.physioActive = false
+    world.condition = 0 // fatigue at maximum, so a firing seed is easy to find
+    world.week = 400
+    world.injuryHistory = [
+      { kind: 'ankle tear', severity: 'severe', week: 399, weeksOut: 18 },
+      { kind: 'knee strain', severity: 'moderate', week: 380, weeksOut: 4 },
+    ]
+    // a seed whose week-400 occurrence uniform clears the (history-raised) threshold
+    let seed = ''
+    for (let i = 0; i < 20000 && seed === ''; i++) {
+      world.seed = `c13-roll-${i}`
+      if (rngFromSeed(`${world.seed}:injury:400`)() < injuryTau(world)) seed = world.seed
+    }
+    expect(seed, 'a firing seed must exist or this guard is vacuous').not.toBe('')
+    world.seed = seed
+
+    // What the stream MUST hand out if the occurrence pull is first and the three onset pulls follow
+    // it with nothing in between: reconstruct severity, weeks-out and region from positions 2, 3, 4.
+    const ref = rngFromSeed(`${seed}:injury:400`)
+    ref() // 1 – the occurrence roll
+    const bands = escalatedBands(severityBandsFor('week'), severityEscalation(world))
+    const sevRoll = ref() // 2
+    const band = bands.find((b) => sevRoll < b.cum) ?? bands[bands.length - 1]
+    const expectedWeeks = pickInt(ref, band.weeksLo, band.weeksHi) // 3
+    const expectedPart = drawBodyRegionFrom(ref, tiltedBodyRegions(new Map(), [], recurrencePartLoad(world))) // 4
+
+    rollInjury(world)
+    expect(world.injury, 'the roll must actually have fired').not.toBeNull()
+    expect(world.injury!.severity).toBe(band.severity)
+    expect(world.injury!.totalWeeks).toBe(expectedWeeks)
+    expect(world.injury!.kind.startsWith(expectedPart)).toBe(true)
+  })
+
+  it('⚠ AND THE TAU IT FEEDS REALLY MOVES – the test above is not passing because the term is dead', () => {
+    // The non-vacuity half. A post-draw factor that changed nothing would satisfy every assertion in
+    // the test above, which is exactly the shape of a dead guard.
+    const clean = withHistory([], 400)
+    const scarred = withHistory([{ kind: 'ankle tear', severity: 'severe', week: 399, weeksOut: 18 }], 400)
+    expect(injuryTau(scarred)).toBeGreaterThan(injuryTau(clean))
+    expect(injuryTau(scarred) / injuryTau(clean)).toBeCloseTo(recurrenceTauFactor(scarred), 10)
+    expect(recurrenceTauFactor(scarred)).toBeGreaterThan(1)
+  })
+
+  it('⚠ BOTH DOORS STILL SPEND EXACTLY THREE PULLS with a full history and an old body', () => {
+    // C12 proves the arity for the shipped tables; #27 re-prices those tables and tilts the region
+    // table, and neither may cost a pull. Measured on the worst case: oldest body, fullest record.
+    for (const cause of ['week', 'retirement'] as const) {
+      resetForRoll(rollWorld, 'c13-arity')
+      rollWorld.week = 1040 // ~34 years old
+      rollWorld.injuryHistory = [
+        { kind: 'ankle tear', severity: 'severe', week: 1039, weeksOut: 18 },
+        { kind: 'knee strain', severity: 'moderate', week: 1035, weeksOut: 4 },
+      ]
+      let n = 0
+      const inner = rngFromSeed('c13-arity:onset')
+      onsetInjury(
+        rollWorld,
+        () => {
+          n += 1
+          return inner()
+        },
+        cause,
+        tiltedBodyRegions(new Map(), [], recurrencePartLoad(rollWorld)),
+      )
+      expect(n, cause).toBe(3)
+    }
+  })
+
+  // --- and it does the thing it was built for -----------------------------------------------------
+
+  it('THE PART TILT: a body that broke its ankle draws the ankle more often, at BOTH doors', () => {
+    const history = [{ kind: 'ankle tear', severity: 'severe' as InjurySeverity, week: 400, weeksOut: 18 }]
+    const clean = tiltedBodyRegions(new Map(), [], new Map())
+    const scarred = tiltedBodyRegions(new Map(), [], recurrencePartLoad(withHistory(history, 400)))
+    const ankleOf = (t: readonly { part: string; weight: number }[]) => t.find((r) => r.part === 'ankle')!.weight
+    expect(ankleOf(scarred)).toBeGreaterThan(ankleOf(clean) * 1.5)
+    // ⚠ A TILT AND NOT A RISK: it redistributes, it never adds. Both tables still sum to 1.
+    expect(scarred.reduce((s, r) => s + r.weight, 0)).toBeCloseTo(1, 10)
+    // ...so something else must have gone DOWN by exactly what the ankle gained.
+    expect(ankleOf(scarred) - ankleOf(clean)).toBeCloseTo(
+      clean.filter((r) => r.part !== 'ankle').reduce((s, r) => s + r.weight, 0) -
+        scarred.filter((r) => r.part !== 'ankle').reduce((s, r) => s + r.weight, 0),
+      10,
+    )
+  })
+
+  it('THE SEVERITY LIMB REACHES BOTH DOORS – an old, scarred body draws worse from either table', () => {
+    // The design's own claim: `escalatedBands` lives inside `onsetInjury`, which is the ONE onset
+    // writer, so the retirement door – 73-79% of adult onsets – is reached without touching
+    // `RETIRE_K`. Measured as a share over many seeds rather than asserted on one draw.
+    function worseShare(cause: 'week' | 'retirement', history: WorldState['injuryHistory'], week: number): number {
+      let worse = 0
+      const N = 600
+      for (let s = 0; s < N; s++) {
+        resetForRoll(rollWorld, `c13-sev-${s}`)
+        rollWorld.week = week
+        rollWorld.injuryHistory = history.map((h) => ({ ...h }))
+        onsetInjury(rollWorld, rngFromSeed(`c13-sev-${s}:onset`), cause, BODY_REGIONS)
+        if (rollWorld.injury!.severity !== 'minor') worse++
+      }
+      return worse / N
+    }
+    const young = { week: 104, history: [] as WorldState['injuryHistory'] }
+    const old = {
+      week: 1040,
+      history: [{ kind: 'ankle tear', severity: 'severe', week: 1039, weeksOut: 18 }] as WorldState['injuryHistory'],
+    }
+    for (const cause of ['week', 'retirement'] as const) {
+      const y = worseShare(cause, young.history, young.week)
+      const o = worseShare(cause, old.history, old.week)
+      expect(y, `${cause}: the young arm is not degenerate`).toBeGreaterThan(0)
+      expect(o, `${cause}: worse-than-minor rises with age and history`).toBeGreaterThan(y)
     }
   })
 })
