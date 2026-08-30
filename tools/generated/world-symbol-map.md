@@ -8,7 +8,7 @@ Regenerate with `node scripts/world-map.mjs`; `node scripts/world-map.mjs --chec
 
 **Do not read this file to answer one question** – that is the habit it exists to replace. `node scripts/world-map.mjs <symbol>` prints the owner and the line, and a plain `grep <symbol> tools/generated/world-symbol-map.md` does the same for a partial name.
 
-361 exported names across 44 owning modules.
+362 exported names across 44 owning modules.
 
 ## Areas
 
@@ -20,17 +20,17 @@ Regenerate with `node scripts/world-map.mjs`; `node scripts/world-map.mjs --chec
 | `src/engine/world/medical.ts` | THE GATES: condition, the doctor's veto, the layoff, and whether she may enter at all | 21 |
 | `src/engine/world/entryCaps.ts` | THE ANNUAL ENTRY CAPS: the ITF junior allowance, the WTA professional one (AER) – and since P1 the JUNIOR ACCESS rules, which are the same family of rule from the same two rulebooks | 17 |
 | `src/engine/world/masseur.ts` | THE MASSEUR: the first seat of the travelling team (docs/plans/the-travelling-team-2026-08.md, step 1 – the owner's ruling Б, re-cut 22.08) | 16 |
+| `src/engine/world/assets.ts` | ⭐⭐ WHAT THE FAMILY OWNS – the shelf's PURE READS, and nothing that spends money | 15 |
 | `src/engine/world/birthday.ts` | HER BIRTHDAY, AND WHAT YOU GIVE HER | 15 |
 | `src/engine/world/coachMarket.ts` | THE COACH MARKET: who is available at her age and rung, what they cost, and what hiring one does | 15 |
 | `src/engine/world/multiWeek.ts` | ⭐ R2-13 PHASE 1 – THE FOUR-WEEK ADVANCE, AND THE TWO FACTS A SECOND WEEK BUTTON NEEDS | 15 |
 | `src/engine/world/sponsors.ts` | THE MONEY FROM OUTSIDE THE FAMILY: sponsors, the offers they make, and what a trip costs once somebody else is helping pay for it | 14 |
-| `src/engine/world/assets.ts` | ⭐⭐ WHAT THE FAMILY OWNS – the shelf's PURE READS, and nothing that spends money | 13 |
 | `src/engine/world/endings.ts` | THE ENDINGS, WIRED INTO THE WORLD: the latch, the two questions, the four-year freeze and the guard that stops a stale screen mutating a career that has stopped | 13 |
 | `src/engine/world/kit.ts` | THE KIT SHE PLAYS WITH, AS A DECISION - the till, and what the Money screen reads off it | 11 |
 | `src/engine/world/mandatory.ts` | THE MANDATORY REGIME AND THE PENALTY LEDGER (W3-ACT2, act2-pro-tour.md §6) | 11 |
 | `src/engine/world/age.ts` | HER AGE: the band and the girl, and the birthday that lands in the feed | 9 |
-| `src/engine/world/market.ts` | ⭐⭐⭐ THE MARKET – round 29 part three #16, and it is the answer to one sentence of his | 9 |
 | `src/engine/world/knock.ts` | THE KNOCK: she comes off court sore, and the parent rests it or sends her back out | 8 |
+| `src/engine/world/market.ts` | ⭐⭐⭐ THE MARKET – round 29 part three #16, and it is the answer to one sentence of his | 8 |
 | `src/engine/world/injury.ts` | INJURIES AND PHYSIO: the weekly roll, the hazard shape behind it, and the recovery the family pays for – plus the sweep that cleans up everything an injury invalidates | 7 |
 | `src/engine/world/planner.ts` | THE SEASON PLANNER: the two things a parent can put on an empty week – a family holiday and a practice match – and what the engine does with them when the week arrives | 7 |
 | `src/engine/world/shop.ts` | ⭐⭐ THE SHOP – the tab, static prices, buy / own / sell, and since round 29 #5 the storeys above | 7 |
@@ -220,6 +220,26 @@ THE MASSEUR: the first seat of the travelling team (docs/plans/the-travelling-te
 - `setMasseurSessions` – `src/engine/world/masseur.ts`
 - `setMasseurTravels` – `src/engine/world/masseur.ts`
 
+### `src/engine/world/assets.ts`
+
+⭐⭐ WHAT THE FAMILY OWNS – the shelf's PURE READS, and nothing that spends money.
+
+- `assetDelivered` – `src/engine/world/assets.ts`
+- `assetUpkeepCents` – `src/engine/world/assets.ts`
+- `assetValueCents` – `src/engine/world/assets.ts`
+- `assetWorthCents` – `src/engine/world/assets.ts`
+- `avgUnitPriceCents` – `src/engine/world/assets.ts`
+- `deliveredAssets` – `src/engine/world/assets.ts`
+- `grantedVacationIds` – `src/engine/world/assets.ts`
+- `marketSeasonMove` – `src/engine/world/assets.ts`
+- `ownedAssets` – `src/engine/world/assets.ts`
+- `ownsDeliveredOfFamily` – `src/engine/world/assets.ts`
+- `shopCatalogue` – `src/engine/world/assets.ts`
+- `shopItem` – `src/engine/world/assets.ts`
+- `ShopItem` *(type)* – `src/engine/world/assets.ts`
+- `unitPriceCents` – `src/engine/world/assets.ts`
+- `weeklyAssetUpkeepCents` – `src/engine/world/assets.ts`
+
 ### `src/engine/world/birthday.ts`
 
 HER BIRTHDAY, AND WHAT YOU GIVE HER.
@@ -299,24 +319,6 @@ THE MONEY FROM OUTSIDE THE FAMILY: sponsors, the offers they make, and what a tr
 - `sponsorNeedMet` – `src/engine/world/sponsors.ts`
 - `travelCostFor` – `src/engine/world/sponsors.ts`
 
-### `src/engine/world/assets.ts`
-
-⭐⭐ WHAT THE FAMILY OWNS – the shelf's PURE READS, and nothing that spends money.
-
-- `assetDelivered` – `src/engine/world/assets.ts`
-- `assetUpkeepCents` – `src/engine/world/assets.ts`
-- `assetValueCents` – `src/engine/world/assets.ts`
-- `assetWorthCents` – `src/engine/world/assets.ts`
-- `deliveredAssets` – `src/engine/world/assets.ts`
-- `grantedVacationIds` – `src/engine/world/assets.ts`
-- `marketSeasonMove` – `src/engine/world/assets.ts`
-- `ownedAssets` – `src/engine/world/assets.ts`
-- `ownsDeliveredOfFamily` – `src/engine/world/assets.ts`
-- `shopCatalogue` – `src/engine/world/assets.ts`
-- `shopItem` – `src/engine/world/assets.ts`
-- `ShopItem` *(type)* – `src/engine/world/assets.ts`
-- `weeklyAssetUpkeepCents` – `src/engine/world/assets.ts`
-
 ### `src/engine/world/endings.ts`
 
 THE ENDINGS, WIRED INTO THE WORLD: the latch, the two questions, the four-year freeze and the guard that stops a stale screen mutating a career that has stopped.
@@ -381,20 +383,6 @@ HER AGE: the band and the girl, and the birthday that lands in the feed.
 - `kidBirthYear` – `src/engine/world/age.ts`
 - `START_AGE_YEARS` – `src/engine/world/age.ts`
 
-### `src/engine/world/market.ts`
-
-⭐⭐⭐ THE MARKET – round 29 part three #16, and it is the answer to one sentence of his.
-
-- `marketCrash` – `src/engine/world/market.ts`
-- `MarketCrash` *(type)* – `src/engine/world/market.ts`
-- `marketCrashFellIn` – `src/engine/world/market.ts`
-- `marketCrashLog` – `src/engine/world/market.ts`
-- `marketIndex` – `src/engine/world/market.ts`
-- `marketRatio` – `src/engine/world/market.ts`
-- `marketWave` – `src/engine/world/market.ts`
-- `worstCrashFreeRatio` – `src/engine/world/market.ts`
-- `worstMarketRatio` – `src/engine/world/market.ts`
-
 ### `src/engine/world/knock.ts`
 
 THE KNOCK: she comes off court sore, and the parent rests it or sends her back out.
@@ -407,6 +395,19 @@ THE KNOCK: she comes off court sore, and the parent rests it or sends her back o
 - `pendingKnock` – `src/engine/world/knock.ts`
 - `radarViewOf` – `src/engine/world/knock.ts`
 - `rollKnock` – `src/engine/world/knock.ts`
+
+### `src/engine/world/market.ts`
+
+⭐⭐⭐ THE MARKET – round 29 part three #16, and it is the answer to one sentence of his.
+
+- `marketCrash` – `src/engine/world/market.ts`
+- `MarketCrash` *(type)* – `src/engine/world/market.ts`
+- `marketCrashFellIn` – `src/engine/world/market.ts`
+- `marketCrashLog` – `src/engine/world/market.ts`
+- `marketIndex` – `src/engine/world/market.ts`
+- `marketWave` – `src/engine/world/market.ts`
+- `worstCrashFreeRatio` – `src/engine/world/market.ts`
+- `worstMarketRatio` – `src/engine/world/market.ts`
 
 ### `src/engine/world/injury.ts`
 
