@@ -54,12 +54,18 @@ export function fameFloorOf(world: WorldState, week: number): number {
   // the one runner-up plate the world remembers – `finals` means she LOST the final (the trophy
   // ledger's own contract), so a Slam title never counts twice.
   for (const w of world.trophiesByTier?.slam?.finals ?? []) floor += F.slamFinalFloor * decayAt(week - w)
-  // seasons ended inside the top 10, decaying from each season's own wrap – the wrap fires on the
-  // season's last week, so the date is the row's own identity and nothing new is stored.
+  // Seasons ended inside a band the world notices, decaying from each season's own wrap – the wrap
+  // fires on the season's last week, so the date is the row's own identity and nothing new is
+  // stored. ⚠ BEST MATCHING BAND ONLY, once per season: `academy.reputationBands`' own rule, so a
+  // top-10 season is a top-10 season and never also a top-20 one.
+  // ⚠⚠ AS SHIPPED THE LADDER HAS ONE RUNG AND THIS IS THE OLD `top10SeasonFloor` LINE EXACTLY – see
+  // the constant's header, and round 30 #24 for the question a second rung would answer.
   for (const row of world.seasonHistory ?? []) {
     const endRank = row.byTrack?.wta?.endRank
-    if (endRank == null || endRank > 10) continue
-    floor += F.top10SeasonFloor * decayAt(week - (row.seasonIndex + 1) * WEEKS_PER_YEAR)
+    if (endRank == null) continue
+    const band = F.seasonEndBands.find((b) => endRank <= b.maxEndRank)
+    if (!band) continue
+    floor += band.add * decayAt(week - (row.seasonIndex + 1) * WEEKS_PER_YEAR)
   }
   return Math.min(F.cap, floor)
 }
