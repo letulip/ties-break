@@ -266,7 +266,7 @@ marked `[!]` and each names what shipped and why it missed – that is the point
   by design). A rising rank with a falling fame stock is possible and may be correct – but it may also
   be the decay outrunning what play can add. Measure before touching.
 
-- [ ] **14. ⚠⚠ «Волатильность индексного фонда какая-то очень большая по ощущениям +65/-15… И надо
+- [x] **14. ⚠⚠ «Волатильность индексного фонда какая-то очень большая по ощущениям +65/-15… И надо
   логику фонда переделать на покупку ДОЛЕЙ в фонде, как раз доли дадут возможность расти на горизонте
   и будут давать разные точки входа, как в жизни. Стоимость активов будет рассчитываться исходя из
   стоимости долей. Зашёл, когда доля стоила 4к, через десять лет она может вполне удвоиться. Или зашёл
@@ -274,6 +274,76 @@ marked `[!]` and each names what shipped and why it missed – that is the point
   ⚙ **RULING, and it replaces the model shipped hours ago.** Units, not a ratio: a unit PRICE the
   market moves, holdings measured in units bought at the price of their day. ⭐ That is what makes
   averaging down a real move rather than a feeling. And the volatility comes down.
+
+  **SHIPPED.** `docs/specs/the-shop-2026-08.md` §14i is the record; the mechanic in one line:
+
+  ```
+  price(week) = $4,000 · 1.07^(week/52) · index(seed, week)     <- a unit, your $4k anchor
+  buying      = money / price(THIS week)                        <- units, at your own entry
+  worth       = units · price(now)                              <- and nothing else
+  ```
+
+  ⭐⭐ **THE REBASE IS GONE ENTIRELY, and it turns out that is a memory change rather than an
+  arithmetic one.** Round 29's top-up restated the holding (`basis = worth today + new money`, clock
+  back to this week) and its part sale scaled the same two numbers – and that arithmetic was
+  **algebraically the unit model already**, which is why it never produced a wrong number. What it
+  could not do is REMEMBER: folding every entry into one restated basis destroys the price you came
+  in at in the very act of adding to it, so «усредниться» had nothing to average against. Units keep
+  every entry, and `basisCents` and `marketRatio` are deleted with the mechanism.
+
+  ⭐⭐⭐ **AND BOTH MOVES YOU NAMED ARE NOW MOVES.** The shop row gains ONE line –
+  `12.47 units – bought at $4,012 each, $4,208 now` – and that is the only copy this item adds
+  (invariant 4: nothing else on the row was touched, re-worded or removed).
+  - **усредниться**: buy while today's price is under your average, and the average really falls.
+    Measured: the price is lower a season after entry in **29.4%** of entries, and that second
+    tranche is worth **6.4%** more at ten years than doubling in at the peak.
+  - **зафиксировать убыток**: sell part at today's price. The realised loss goes to the ledger to the
+    cent, and ⚠ **the average price does not move** – the sale takes the same fraction of the cash and
+    of the units – so what is left says the same thing it said before and the next decision is the
+    same decision.
+
+  ⚙ **THE VOLATILITY: `volBps` 1_800 → 900, HALVED** (4,000 seeds, 228,000 rolling seasons,
+  48,000 holdings per horizon – §14h's own sample shape):
+
+  | | round 29 | now |
+  | --- | ---: | ---: |
+  | seasons negative | 30.8% | **24.5%** – «one year in four» |
+  | worst season | −39.9% | **−32.5%** |
+  | season sd · p5 · p95 | 16.8% · −18.3% · +38.9% | **15.1% · −16.8% · +36.6%** |
+  | worst drawdown | −40.1% | **−33.6%** |
+  | beats the deposit 1 / 3 / 5 / 10y | 57.2 / 84.0 / 86.8 / 98.9% | **62.0 / 90.2 / 87.9 / 99.7%** |
+  | crises: interval · depth · first-season | 4.01y · −22.5% · 49.7% | **unchanged – your numbers** |
+
+  ⚠⚠ **THE SAFETY PROPERTY, RE-DERIVED RATHER THAN ASSUMED, and it came out BETTER.** Round 29 proved
+  calm-water ten-year holdings beat the deposit for every seed and measured the trough-sell tail at
+  **1.10%** (529 of 48,000), which you accepted. At vol 900 the same measurement reads **0.325%
+  (156 of 48,000)**, **zero of them selling in calm waters** – so tier one is intact and the tail is
+  a third of what you accepted. ⭐ Units also make the multi-entry case *safer* than the rebase did:
+  the old model pulled the WHOLE holding onto the newest clock, so a top-up in season nine turned a
+  season-one holding into a one-year hold; now only the new money is on the new clock.
+
+  ⚠⚠ **ONE THING IS STILL YOURS, and it is the «+65» end of what you saw.** The −15 end is inside the
+  new distribution (p5 is −16.8%). The +65 is not: the best season in 228,000 is **+69.2%** and
+  **0.56%** of seasons clear +50% (was 1.51%). Those seasons are **crash REBOUNDS, not the wave**, so
+  the knob I moved cannot delete them – a 40-week recovery out of a −30% hole is +53% before the wave
+  adds anything. Removing them means changing a number **you** gave the day before: either
+  `CRASH_DEPTH_RANGE` shallower than «-15…-30%» (a −20% floor puts the best rebound near +40%, about a
+  real index's best year), or a slower `CRASH_RECOVERY_WEEKS` so no single season holds a whole
+  rebound (bounded at `[60, 88]`, or crises overlap and the safety proof dies). **Say which and it is
+  one constant.** I did not shave your crash band on my own.
+
+  ⚠ **Schema: v66 AMENDED, not a new v67** – main is at 65, so no v66 save exists outside this wave
+  and the append-only rule has not bitten yet (the same ground the P1 yacht rename used, in the same
+  step). A save from your device converts **at the price of its own basis week**, so the holding is
+  worth the same cents it was worth this morning and the entry price is recovered rather than reset.
+
+  ⚠ Frozen MAIN capture (41550 / `e6b0c709`) **unmoved**, and derived rather than inherited: per-key
+  hashes of all three frozen careers are byte-identical against a control tree with this change
+  reverted, and a 239,713-draw MAIN capture matches on both trees. ⚠ Every round 29 top-up and
+  part-sale guard is **re-aimed with a note, none deleted**; both of round 29's own latent flakes were
+  re-checked and one of them turned out to guard something smaller than it looked (written down at its
+  line). ⭐ And a dead guard was caught in this item's own draft – a per-row idempotence check in the
+  migration that could not be false – and deleted.
 
 - [ ] **15. «Для машин вполне можно ввести годовую стоимость обслуживания, которая может с каждым годом
   немного расти, как в реальности, пока стоимость авто на рынке падает»** – **build.**
