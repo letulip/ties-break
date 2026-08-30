@@ -3,6 +3,7 @@
 //
 //   npx vite-node tools/injury-audit.ts [--seeds N] [--presets N] [--arm plays-on|realistic]
 //                                       [--base X] [--slope X] [--play X] [--flatAge] [--flatLoad]
+//                                       [--ageCurve "13:0.85,...,default:X"] [--riskReduction X]
 //
 // WHY IT EXISTS. `tools/pro-season-probe.ts` measures ONE professional schedule from a clean body –
 // it is the re-price's acceptance harness and it deliberately starts at sixteen with no junior
@@ -59,6 +60,15 @@ const KNOBS = ECONOMY.availability as unknown as {
 KNOBS.injuryBaseChance = num('base', KNOBS.injuryBaseChance)
 KNOBS.injuryFatigueSlope = num('slope', KNOBS.injuryFatigueSlope)
 KNOBS.injuryPlayingMultiplier = num('play', KNOBS.injuryPlayingMultiplier)
+// ⭐ ROUND 30 #26 – THE PROTECTION AXIS, so a floor on it can be BRACKETED rather than asserted.
+// `physioRiskFactor` reads this and nothing else beside the rung's quality, so `--riskReduction 1`
+// makes the medical team worth exactly nothing at every rung and at every age – which is the UPPER
+// bound on what a floor that closes at the top of the age curve can cost a population. Same CLI-only
+// idiom as the rest of this block: nothing is written back to any file.
+;(ECONOMY.physio as unknown as { riskReduction: number }).riskReduction = num(
+  'riskReduction',
+  ECONOMY.physio.riskReduction,
+)
 if (flag('flatAge')) KNOBS.ageInjuryFactor = { default: 1 }
 // ⭐ ROUND 30 #26 – A WHOLE CANDIDATE AGE CURVE, SWAPPED IN FOR ONE RUN. Same CLI-only counterfactual
 // idiom as `--flatAge` directly above: nothing is written back to any file, and the arm is printed in
@@ -271,7 +281,8 @@ console.log(
 )
 console.log(
   `  knobs: base ${KNOBS.injuryBaseChance} + slope ${KNOBS.injuryFatigueSlope}/fatigue pt, x${KNOBS.injuryPlayingMultiplier} playing, ` +
-    `cap ${ECONOMY.availability.injuryChanceCap} · recoveryBase ${ECONOMY.condition.recoveryBase}`,
+    `cap ${ECONOMY.availability.injuryChanceCap} · recoveryBase ${ECONOMY.condition.recoveryBase}` +
+    ` · physio.riskReduction ${ECONOMY.physio.riskReduction}`,
 )
 console.log(
   `  ${seasons.length} FULL seasons lived · ${onsets.length} onsets · mean seasons per career ${f(mean(careers.map((c) => c.seasons.length)), 1)}`,
