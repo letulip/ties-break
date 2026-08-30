@@ -21,7 +21,7 @@
 // `tests/round29p3-market.test.ts` proves on a ticked world rather than claiming from the imports.
 import { ECONOMY } from '../economy'
 import { WEEKS_PER_YEAR } from '../season/calendar'
-import { fameAt } from './fame'
+import { brandGrossWorthCents, brandSignalsOf, brandWeeklyGrossCents } from './brand'
 import { marketIndex } from './market'
 import type { OwnedAsset } from '../../shared/protocol'
 import type { WorldState } from '../world'
@@ -311,13 +311,23 @@ export function assetWorthCents(world: WorldState, owned: OwnedAsset, item: Shop
   // worth what was paid for it, worn down by a rate; a fund is worth its units times a price; a
   // BUSINESS is worth some years of what it takes in, and what this one takes in is her fame.
   if (item.earningsMultipleX !== undefined) {
-    const annualCents = assetEarningsRateCents(world, item, week) * WEEKS_PER_YEAR * item.earningsMultipleX
+    // ⭐⭐⭐ ROUND 30 #23 – THE OWNERSHIP BOUNDARY, and it is the only line in the engine that turns a
+    // BRAND into a HOLDING. `world/brand.ts` prices a whole brand off the career and knows nothing
+    // about who owns it; this is where the owned row applies itself, and today the family owns all of
+    // one, so the share is an unwritten multiplication by 1.
+    //
+    // ⚠⚠ THAT IS A DOOR AND NOT A HINGE (the owner: «по сути этот мерч бренд это фундамент для этого
+    // слоя»). A partner buying into her brand is a share on THIS row and a `x share` on THIS line –
+    // not a second income model beside the first. No field is added for it today, because an unused
+    // field is a dead field and this repo has spent the week digging out dead guards. See
+    // docs/specs/brand-worth-and-income-2026-08.md §6.
+    const grossCents = brandGrossWorthCents(brandSignalsOf(world, week), item.earningsMultipleX)
     // ⚠⚠ THE FLOOR IS THE MARK, AND IT IS A SOURCED IDEA RATHER THAN A KINDNESS. Björn Borg's own
     // company went bankrupt in 1990 and the NAME was still bought outright for $18M in 2006 and is a
     // listed company today (the research §4d) – a brand with no earnings left is not a brand with no
     // value. It is also what keeps «мы ни за что не наказываем» true of the week she is between
     // reigns: the family can always sell the name.
-    return Math.round(Math.max(owned.paidCents * ECONOMY.shop.businessValueFloorShare, annualCents))
+    return Math.round(Math.max(owned.paidCents * ECONOMY.shop.businessValueFloorShare, grossCents))
   }
   return assetValueCents(item, owned.paidCents, week - (owned.basisWeek ?? owned.boughtWeek))
 }
@@ -339,7 +349,11 @@ export function assetWorthCents(world: WorldState, owned: OwnedAsset, item: Shop
  *  already keeps (world/fame.ts). */
 export function assetEarningsRateCents(world: WorldState, item: ShopItem, week = world.week): number {
   if (item.family !== 'business') return 0
-  return Math.round(fameAt(world, week) * ECONOMY.business.merch.perFamePointCents)
+  // ⭐⭐⭐ ROUND 30 #23 – CONVEX IN FAME SINCE 30.08, and the curve is `world/brand.ts`'s, not a second
+  // copy of it here. This function keeps the job it has always had – the ONE place a career becomes
+  // a weekly cheque – and hands the shape to the file that also prices the worth, so the income the
+  // ledger pays and the income the valuation multiplies are the same arithmetic by construction.
+  return brandWeeklyGrossCents(brandSignalsOf(world, week))
 }
 
 /** ⭐⭐ ROUND 30 #14 – WHAT THE FAMILY PAID PER UNIT, AVERAGED OVER EVERY PURCHASE, in cents. Null

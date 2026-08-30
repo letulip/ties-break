@@ -339,6 +339,13 @@ export { marketCrash, marketCrashFellIn, marketCrashLog, marketIndex, marketWave
 // Re-exported under the historical convention; zero draws anywhere behind these names.
 import { completedShootWeeks, fameAt, fameFloorOf, fameShootMultOf } from './world/fame'
 export { completedShootWeeks, fameAt, fameFloorOf, fameShootMultOf }
+// ⭐⭐⭐ ROUND 30 #23/#24 – THE BRAND'S OWN ECONOMICS (world/brand.ts): what a WHOLE brand takes in
+// (convex in fame), what multiple the CAREER has earned it, and the two joined. Ownership is applied
+// in `world/assets.ts`, not here. Zero draws behind every one of these names – a valuation is a fold
+// over history.
+import { brandGrossWorthCents, brandMultipleX, brandSignalsOf, brandWeeklyGrossCents } from './world/brand'
+export { brandGrossWorthCents, brandMultipleX, brandSignalsOf, brandWeeklyGrossCents }
+export type { BrandSignals } from './world/brand'
 import { academyReputationOf, academyWeeklyIncomeCents, assetWeeklyIncomeCents, merchWeeklyIncomeCents } from './world/business'
 export { academyReputationOf, academyWeeklyIncomeCents, assetWeeklyIncomeCents, merchWeeklyIncomeCents }
 export type { MarketCrash } from './world/market'

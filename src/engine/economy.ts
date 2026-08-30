@@ -1845,23 +1845,34 @@ export const ECONOMY = {
      *  season from its wrap week. The spec's floor list says «a first top-10 season»; this is that
      *  entry as a LADDER, in the shape `academy.reputationBands` already uses two blocks up.
      *
-     *  ⚠⚠ AS SHIPPED IT IS EXACTLY THE OLD `top10SeasonFloor: 10` AND NOT ONE CENT MOVES. One band,
-     *  the same rank bound, the same step. The ladder exists so round 30 #24's question can be
-     *  MEASURED rather than argued – `tools/merch-fame-vs-rank.ts --seasonBands` swaps in a
-     *  counterfactual ladder for a run and never writes one back.
+     *  ⭐⭐⭐ ROUND 30 #24 – SHIPPED 30.08, AND THE TWO LOWER RUNGS ARE THE ITEM. The owner, three
+     *  times: «она же топ-20 в мире». Before them a career built on quarter- and semi-finals earned
+     *  no title, reached no Slam final and ended no season in the top ten, so its fame floor was
+     *  EXACTLY ZERO and its brand was worth nothing however high it ranked – a top-20 player was
+     *  invisible to her own brand by construction. That is arithmetic, not a measurement, and it is
+     *  what the two rungs end.
      *
-     *  ⭐ ROUND 30 #24 IS THE OPEN QUESTION AND IT IS THE OWNER'S. Twice now: «она же топ-20 в
-     *  мире». A career built on quarter- and semi-finals earns no title, reaches no Slam final and
-     *  ends no season in the top ten, so its fame floor is ZERO and its brand is worth nothing – a
-     *  top-20 player is invisible to her own brand by construction. A second band would end that.
-     *  ⚠ THE DATA FOR «DEEP RUNS» ITSELF DOES NOT EXIST: `TierTrophies` records `titles` and
-     *  `finals` and nothing below a final, so a quarter-final leaves no durable trace anywhere in
-     *  the save. The END-RANK ladder is the answer that needs no schema move, because
-     *  `seasonHistory[].byTrack.wta.endRank` is already written for every finished season – and a
-     *  season ended at #18 IS the deep runs, summed and sorted by the tour itself.
-     *  ⚠ Measured before/after in docs/rounds/round-30.md #24. Changing it moves merch income and
-     *  the brand's worth on every career, so the numbers are his to pick. */
-    seasonEndBands: [{ maxEndRank: 10, add: 10 }] as readonly { maxEndRank: number; add: number }[],
+     *  ⚠ THE DATA FOR «DEEP RUNS» ITSELF DOES NOT EXIST AT THE TOURNAMENT LEVEL: `TierTrophies`
+     *  records `titles` and `finals` and nothing below a final, so a quarter-final leaves no durable
+     *  trace anywhere in the save. The END-RANK ladder is the answer that needs no schema move,
+     *  because `seasonHistory[].byTrack.wta.endRank` is already written for every finished season –
+     *  and a season ended at #18 IS the deep runs, summed and sorted by the tour itself.
+     *
+     *  ⚠⚠ IT MOVES MERCH INCOME AND THE BRAND'S WORTH ON EVERY CAREER, and it was benched before it
+     *  was kept: 72 careers x 780 weeks, median peak fame 58.9 -> 67.5 (+14.6%), with the two rows
+     *  that make it safe UNCHANGED – the fame the week a family can first afford the brand (9.6) and
+     *  the brand's worth on the day they buy it. A family reaches first affordability before it has
+     *  finished top-50 seasons to bank, so round 30 #9's «fair on the day they can afford it»
+     *  multiple and the fund-parity anchor both survive untouched. The lift lands in the MIDDLE of
+     *  the distribution, which is where he asked for it: p90 and best are already at the fame cap.
+     *  ⭐ It also partly answers round 30 #13 as a side effect – a top-20 season feeds the stock
+     *  WHILE SHE IS CLIMBING, so climbing windows that lose income fall 15.1% -> 13.7%.
+     *  Predicted vs measured: docs/specs/brand-worth-and-income-2026-08.md. */
+    seasonEndBands: [
+      { maxEndRank: 10, add: 10 },
+      { maxEndRank: 20, add: 4 },
+      { maxEndRank: 50, add: 1.5 },
+    ] as readonly { maxEndRank: number; add: number }[],
     /** ⭐ THE SLOW DECAY – the half-life of every contribution, in weeks. Two seasons: a Slam won
      *  six seasons ago still carries an eighth of its step, so a reign fades over about four to
      *  six seasons rather than overnight. ⚠ Decay is what makes fame a lever and not a rank by
@@ -1894,13 +1905,87 @@ export const ECONOMY = {
   // ⚠ ZERO DRAWS ON ANY STREAM: both are arithmetic on persisted records (world/business.ts).
   business: {
     merch: {
-      /** ⭐ WHAT ONE POINT OF FAME SELLS, in cents a week – the whole merch dial. At fame 10 (a
-       *  few small titles) the brand pays ≈ the index fund on its $250,000 price; at a reign's
-       *  fame 60–80 it is $94k–125k a year – a real «подспорье», still under the academy at any
-       *  reputation the academy's builders actually hold. Sized against the round-29 counterweight
-       *  gap: the 10% commission costs the MEDIAN career ≈ $130k of peak wallet, and five seasons
-       *  of merch at that career's fame roughly hands it back. */
+      /** ⭐ WHAT ONE POINT OF FAME SELLS, in cents a week – the merch dial's SCALE. At fame 10 (a
+       *  few small titles) the brand pays ≈ the index fund on its $250,000 price; that anchor is the
+       *  one end of the curve that was already right, and round 30 #23 kept it to the cent by
+       *  pivoting the new curve on it (`famePivot`). Sized originally against the round-29
+       *  counterweight gap: the 10% commission costs the MEDIAN career ≈ $130k of peak wallet.
+       *
+       *  ⚠ IT IS NO LONGER THE WHOLE DIAL – see `famePivot` directly below. Reading this constant
+       *  alone as «dollars per fame point» has been true only up to fame 10 since round 30 #23. */
       perFamePointCents: 3_000,
+      /** ⭐⭐⭐ ROUND 30 #23 – THE PIVOT OF THE CONVEX INCOME CURVE, in fame points:
+       *      weekly = perFamePointCents x fame² / famePivot
+       *
+       *  THE OWNER: «проанализировать и скорректировать доход мерча». Measured
+       *  (docs/research/player-brands-and-what-they-are-worth.md §7e), the linear dial paid $91.9k a
+       *  year at the median career's peak fame and $156k at fame 100, against a researched band of
+       *  **$0.5M–$2M a year NET** for a top full own-brand (§7d, derived from Sugarpova's $20M peak
+       *  valuation and EleVen's $5–12M turnover through §5.4's multiples) – 3–13x under.
+       *
+       *  ⚠⚠ AND THE SHAPE IS FORCED, NOT CHOSEN. The BOTTOM of the old curve measured true: at the
+       *  fame a family holds the week it can first afford the brand it yielded 6.0% a year against
+       *  the index fund's 7%, which is this block's own anchor confirmed live. A flat multiplier
+       *  would have broken the end that was right to fix the end that was wrong. Hold the anchor,
+       *  reach the band, and the only curves left are convex; this is the simplest member, pivoted on
+       *  the anchor itself so it is IDENTICAL at fame 10 by construction (fame²/10 = fame there) and
+       *  diverges only above it.
+       *
+       *  ⚠ TEN IS THE ANCHOR'S OWN FAME AND NOT A FREE PARAMETER. Moving it moves the day-one
+       *  economics of the rung, which round 30 #9's multiple was sized against. */
+      famePivot: 10,
+      /** ⭐⭐⭐ ROUND 30 #23/#24 – WHAT THE CAREER ADDS TO THE BRAND'S MULTIPLE. The arithmetic is
+       *  `world/brand.ts`; this is its ladder.
+       *
+       *  THE OWNER: «У нас есть её профессионализм, сколько играет, сколько выигрывает, как глубоко
+       *  проходит и вся остальная информация… Всё это можно использовать в расчете так или иначе.»
+       *  The four rungs below are that sentence, in his order, each read off a record the save
+       *  already keeps and never prunes – no schema move, no new field, a fold over history.
+       *
+       *  ⚠⚠ THEY MOVE THE WORTH AND NOT THE INCOME, WHICH IS THE POINT OF THEM. Before round 30 #23
+       *  the brand's worth was `16 x a year of its income` and the two were ONE dial – nothing could
+       *  reach one without moving the other in exactly the same proportion, which is why #23 stalled.
+       *  Income is CURRENT FORM (fame, which falls); this is the ACCUMULATED CAREER, which is finding
+       *  §5.1 of the research verbatim – «brand value follows the accumulated stock, not current
+       *  form». Two careers at identical fame are now worth different money.
+       *
+       *  ⚠ AND NOTHING HERE IS SUBTRACTED. Every rung is a non-negative addition over a base, so a
+       *  short career, a losing season and an unranked year cost nothing – «мы ни за что не
+       *  наказываем» read against a valuation. */
+      value: {
+        /** ⭐ «ОНА ЖЕ ТОП-20 В МИРЕ» – the end-rank a finished season has to beat to count as one of
+         *  her top seasons. ⚠ The SAME 20 as `fame.seasonEndBands`' new rung, and deliberately: #24
+         *  is one claim about one number, and a brand that valued «top-20» differently from the fame
+         *  floor that pays it would be two answers to his one question. */
+        topEndRank: 20,
+        /** «сколько играет» – per finished PROFESSIONAL season (one carrying a WTA end-rank). */
+        seasonX: 0.5,
+        seasonCapN: 10,
+        /** «она же топ-20» – per season ended inside `topEndRank`. The heaviest rung, because it is
+         *  the one he has raised three times. */
+        topSeasonX: 0.8,
+        topSeasonCapN: 6,
+        /** ⭐⭐ «как глубоко проходит» – per professional final REACHED AND LOST (`TierTrophies
+         *  .finals`, every tier `fame.titleFloor` names). ⚠ Round 30 #24 established that there is
+         *  no ledger below a final, which is true and which is why a quarter-final cannot count; it
+         *  does not stop a FINAL counting, and the fame floor reads `finals` only at 'slam', so every
+         *  lost final from w15 to wta1000 is a dated professional result nothing in this game has
+         *  ever read. Titles are deliberately NOT here – they are already fully priced into the
+         *  income through fame, and pricing them twice is the one-dial defect wearing a new hat. */
+        finalX: 0.25,
+        finalCapN: 10,
+        /** «сколько выигрывает» – her WTA-track career win rate, as a share of the window below. A
+         *  career at or under `winRateFrom` adds nothing and is charged nothing. */
+        winRateX: 2.5,
+        winRateFrom: 0.5,
+        winRateTo: 0.75,
+        /** the ceiling on the whole multiple, base included. ⚠ IT BINDS THE TOP OF THE SHELF: at
+         *  fame 100 the convex curve pays $1.56M a year, so this is what decides whether the best
+         *  career in a run exits at the RF mark's ~$27M or somewhere absurd. Sized in
+         *  docs/specs/brand-worth-and-income-2026-08.md against the researched valuations rather
+         *  than picked. */
+        maxX: 20,
+      },
     },
     academy: {
       /** ⭐⭐ WHAT EACH DELIVERED STAGE BRINGS IN AT REPUTATION 1.0, in cents a week, keyed by the
@@ -3592,17 +3677,34 @@ export const ECONOMY = {
         // and On Holding's filings name it only in a risk factor, never in the financials. So this
         // figure is a CHOICE inside a wide, thin band and the measurement is what chose it.
         //
-        // ⭐⭐ SIXTEEN, AND THE CRITERION IS «FAIR ON THE DAY THEY CAN AFFORD IT».
-        // `tools/merch-fame-vs-rank.ts` walks 108 careers x 780 weeks and reads the fame a family
-        // holds the first week its wallet can carry twice the $250,000 price. At 16x the brand is
-        // worth about what it cost at the fame those families actually hold, so the purchase is not
-        // a paper loss the week it is made – which is what a punishing multiple would have made it,
-        // on the one rung whose whole pitch is «дешевле академии». Above that fame it grows; below
-        // it the family is down; and both directions are the item.
+        // ⭐⭐⭐ ROUND 30 #23 – AND SINCE 30.08 IT IS THE *BASE* MULTIPLE AND NOT THE WHOLE ONE. The
+        // career earns more on top of it: `world/brand.ts` adds seasons played, seasons ended
+        // top-20, professional finals reached and her win rate, capped at
+        // `ECONOMY.business.merch.value.maxX`. Everything the two paragraphs below say about SIZING
+        // still holds – it is the same criterion measured against the same week – but the number a
+        // given career is priced at is now a range and not this constant.
         //
-        // ⚠ AND IT FALLS: fame halves over 104 weeks, so a career that goes quiet is worth less
-        // every week. The floor under it is `ECONOMY.shop.businessValueFloorShare`.
-        earningsMultipleX: 16,
+        // ⚠⚠ WHY THE BASE LIVES HERE AND THE LADDER LIVES IN `ECONOMY.business.merch.value`: this
+        // field is the PREDICATE («this rung is priced on its earnings» – `assetWorthCents` branches
+        // on its presence and `tests/round30-brand-value.test.ts` holds the catalogue to exactly one
+        // rung carrying it), so the number that says where that pricing STARTS belongs on the row the
+        // shop actually sells. A copy in the constants block would be a second home for one fact.
+        //
+        // ⭐⭐ THE CRITERION IS «FAIR ON THE DAY THEY CAN AFFORD IT».
+        // `tools/merch-fame-vs-rank.ts` walks 108 careers x 780 weeks and reads the fame a family
+        // holds the first week its wallet can carry twice the $250,000 price. The brand has to be
+        // worth about what it cost at the fame AND the career those families actually hold, so the
+        // purchase is not a paper loss the week it is made – which is what a punishing multiple would
+        // have made it, on the one rung whose whole pitch is «дешевле академии». Above that the
+        // family gains; below it the family is down; and both directions are the item. ⚠ The
+        // measurement that picked this base against the earned ladder is
+        // docs/specs/brand-worth-and-income-2026-08.md.
+        //
+        // ⚠ AND IT FALLS DURING HER CAREER, which is the only fall the game is in frame for: fame
+        // halves over 104 weeks and the income is CONVEX in it, so a year with no title costs the
+        // brand more than a proportional share of its value. The floor under it is
+        // `ECONOMY.shop.businessValueFloorShare`.
+        earningsMultipleX: 10,
       },
       {
         id: 'boat-launch',
