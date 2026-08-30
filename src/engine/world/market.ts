@@ -202,20 +202,19 @@ export function marketCrashFellIn(seed: string, fromWeek: number, toWeek: number
  *  a +25% year are the same distance, and no sequence of weeks can wipe a holding out. A linear
  *  `1 + vol·wave` would be neither.
  *
- *  ⚠⚠ `if (!volBps) return 1` BECAME HALF OF A REAL GUARD THE DAY THE CRASH LAYER LANDED, and the
- *  note that stood here – «a short-circuit and not a guard … do not write a test that claims to
- *  cover it» – is CORRECTED rather than deleted. It used to be true outright: `Math.exp(0 · wave)`
- *  is already 1, so removing the clause moved no value. The crash term does NOT scale with `volBps`
- *  – see below – so a zero-vol rung reaching the `exp` would now price as `exp(0 + crashLog)` and
- *  every deposit, car and house would ride the crises.
+ *  ⚠⚠ `if (!volBps) return 1` IS THE WHOLE GUARD SINCE ROUND 30 #14, AND IT IS SINGLE NOW. It used
+ *  to be true outright that removing it moved nothing (`Math.exp(0 · wave)` is already 1); the crash
+ *  layer made it load-bearing, because the crash term does NOT scale with `volBps` – see below – so
+ *  a zero-vol rung reaching the `exp` would price as `exp(0 + crashLog)` and every deposit, car and
+ *  house would ride the crises.
  *
- *  ⚠⚠ AND THE PRECISE SHAPE WAS MEASURED, NOT ASSERTED, BECAUSE A FIRST DRAFT OF THIS CORRECTION
- *  OVERCLAIMED: the zero-vol guard is WRITTEN TWICE – here and in `marketRatio`'s own first clause –
- *  and each shadows the other. Deleting EITHER alone was watched leaving every arm green (the other
- *  still answers 1); deleting BOTH was watched turning «the deposit and the car did NOT move by a
- *  cent» RED, alone. So the PAIR is load-bearing and the existing arm covers it; each single clause
- *  is kept because this function is exported and must honour «volBps 0 → exactly 1» on its own,
- *  without knowing who fronts it.
+ *  ⚠⚠ AND ROUND 30 #14 DELETED ITS SHADOW. The guard used to be WRITTEN TWICE – here and in
+ *  `marketRatio`'s own first clause – and each shadowed the other, so deleting either alone was
+ *  watched leaving every arm green and only the PAIR was load-bearing. `marketRatio` went with the
+ *  rebase (units are priced off `unitPriceCents`, which asks this function directly), so this clause
+ *  is now the only copy and it fails ALONE: deleting it was watched turning «the deposit and the car
+ *  did NOT move by a cent» red on its own. A shadowed guard became a live one by subtraction, which
+ *  is the cheapest way this file has ever gained coverage.
  *
  *  ⚠ AND THE CRASH AT FULL DEPTH ON PURPOSE, NOT AT `volBps` STRENGTH. `volBps` is how hard a rung
  *  rides the everyday wobble; a crisis is not a bigger wobble, it is the market event of the year,
@@ -227,31 +226,6 @@ export function marketCrashFellIn(seed: string, fromWeek: number, toWeek: number
 export function marketIndex(seed: string, week: number, volBps: number): number {
   if (!volBps) return 1
   return Math.exp((volBps / 10_000) * marketWave(seed, week) + marketCrashLog(seed, week))
-}
-
-/** ⭐⭐ WHAT THE MARKET DID BETWEEN TWO WEEKS – the only shape any caller actually wants, because a
- *  holding's worth is `paid × index(now) / index(basisWeek)` and the level itself is meaningless.
- *
- *  ⚠ `toWeek <= fromWeek` IS EXACTLY 1, and it is `assetValueCents`'s own `Math.max(0, weeksHeld)`
- *  said once more for the same reason: a COMMISSIONED rung's clock starts on DELIVERY
- *  (`basisWeek = readyWeek`), so every week of the wait asks for a negative span. A contract does
- *  not move with the market any more than it depreciates – there is nothing yet to move. Nothing on
- *  the shelf is both commissioned and market-driven today; the clamp is here so that a rung which is
- *  both cannot be a defect tomorrow.
- *
- *  ⚠⚠ THE TWO HALVES OF THIS LINE, RE-MEASURED UNDER THE CRASH LAYER (the note has been corrected
- *  once already and says so). The `!volBps` half is the second copy of the zero-vol guard – see
- *  `marketIndex`'s note: each copy shadows the other, deleting either alone changes nothing
- *  (watched), deleting both turns the deposit arm red (watched). The `toWeek <= fromWeek` half
- *  still needs a rung that is BOTH commissioned and market-driven, and the catalogue still has
- *  none: the fund has no `buildWeeks`, no yacht has a `volBps`. It stays because the day somebody
- *  builds such a rung, a contract would otherwise be priced at `index(order)/index(delivery)` – a
- *  number about two weeks the family did not own it, and under the crash layer that number can now
- *  swing by a third. Do not write an arm that claims to cover that half; there is nothing yet to
- *  cover. */
-export function marketRatio(seed: string, fromWeek: number, toWeek: number, volBps: number): number {
-  if (!volBps || toWeek <= fromWeek) return 1
-  return marketIndex(seed, toWeek, volBps) / marketIndex(seed, fromWeek, volBps)
 }
 
 /** ⭐ THE WORST THE MARKET CAN EVER DO TO A HOLDING, as a multiplier, and still a CLOSED FORM:

@@ -21,7 +21,7 @@
 // `tests/round29p3-market.test.ts` proves on a ticked world rather than claiming from the imports.
 import { ECONOMY } from '../economy'
 import { WEEKS_PER_YEAR } from '../season/calendar'
-import { marketRatio } from './market'
+import { marketIndex } from './market'
 import type { OwnedAsset } from '../../shared/protocol'
 import type { WorldState } from '../world'
 
@@ -62,6 +62,29 @@ export interface ShopItem {
    *  needs no re-wording and the long-run figure the owner already approved is unchanged by
    *  construction rather than by tuning. */
   volBps?: number
+  /** ⭐⭐⭐ ROUND 30 #14 – WHAT ONE UNIT OF THIS RUNG COST IN WEEK ZERO, in cents. Its PRESENCE is
+   *  the predicate, the same shape as `volBps` / `buildWeeks` / `requiresId`: a rung that carries it
+   *  is bought and sold in UNITS at a price the world moves, and a rung that does not is bought
+   *  whole and valued off what was paid for it.
+   *
+   *  THE OWNER, 30.08: «И надо логику фонда переделать на покупку ДОЛЕЙ в фонде, как раз доли дадут
+   *  возможность расти на горизонте и будут давать разные точки входа, как в жизни. Стоимость
+   *  активов будет рассчитываться исходя из стоимости долей. Зашёл, когда доля стоила 4к, через
+   *  десять лет она может вполне удвоиться. Или зашёл на пике при цене 7-8к и увидел просадку на
+   *  следующий год – имеешь возможность усредниться или зафиксировать убыток.»
+   *
+   *  ⚠⚠ EVERY 'open' RUNG CARRIES IT AND NO 'fixed' RUNG DOES, and that is a GUARD rather than a
+   *  type: `stake: 'open'` already means «a product you choose an amount for» – it is what makes a
+   *  rung toppable (`buyAsset`) and divisible (`sellAsset`), and a holding you can add to and take
+   *  parts out of is exactly a holding measured in units. TypeScript cannot say «required when
+   *  `stake` is open», so `tests/round30-fund-units.test.ts` says it instead, on the catalogue, in
+   *  both directions. A third investment added tomorrow is unit-priced because of what it IS.
+   *
+   *  ⚠ WEEK ZERO AND NOT «TODAY», because the price is a function of the career's own clock: the
+   *  drift and the market both ride on top of this number (`unitPriceCents`), so what a unit costs
+   *  in week 400 is this times fourteen seasons of the rung's own rate times where the market
+   *  stands. His «доля стоила 4к» is this constant; his «через десять лет удвоиться» is the rate. */
+  unitBaseCents?: number
   /** ⭐ §3f – HOW LONG FROM THE ORDER TO THE THING, in weeks. Absent on every rung that arrives the
    *  week it is paid for, which is everything slice 1 shipped. */
   buildWeeks?: number
@@ -133,49 +156,117 @@ export function ownedAssets(world: WorldState): OwnedAsset[] {
  *  is answered with the price. A contract does not depreciate – there is nothing yet to wear out –
  *  and that falls out of the clamp rather than out of a second rule.
  *
- *  ⭐⭐⭐ ROUND 29 PART THREE #16 ADDED `marketRatio`, AND IT IS THE WHOLE OF THE FUND MECHANIC. The
- *  curve above is the LONG RUN; this is where the holding actually stands on it, read off
- *  `world/market.ts`'s seeded path between the basis week and this one. Every rung with no `volBps`
- *  passes 1 and gets the byte-identical arithmetic this function has always done – which is why the
- *  default is 1 and not a branch, and why no car, house or deposit moved by a cent.
+ *  ⭐⭐⭐ ROUND 30 #14 TOOK THE MARKET BACK OUT OF THIS FUNCTION, AND THAT IS THE SHAPE OF THE ITEM.
+ *  Part three #16 had added a fourth `marketRatio` argument here, defaulting to 1, and the note that
+ *  stood in its place named the default as «the one hazard in this signature»: a caller that priced
+ *  the FUND and forgot the ratio would silently get the old risk-free 7%. There is no such caller
+ *  and no such argument any more. A market rung is held in UNITS and worth `units × price`
+ *  (`unitPriceCents`); this function is what a thing the family bought WHOLE is worth after wearing
+ *  or earning for a while, which is every car, house, boat, plane, academy stage and business – and
+ *  it is the three-argument arithmetic it had at slice 1, to the cent.
  *
- *  ⚠⚠ AND THE DEFAULT IS THE ONE HAZARD IN THIS SIGNATURE, so it is named rather than trusted: a
- *  caller that priced the FUND and forgot the ratio would silently get the old risk-free 7% and
- *  nothing would look wrong. That is why `assetWorthCents` below exists and why both writers of a
- *  worth (`revalueAssets` and `householdWeekly`) go through it instead of here – there is exactly one
- *  place in the engine that knows how to turn a holding into a number, and
- *  `tests/round29p3-market.test.ts` reads both of them out of a ticked world rather than the source.
+ *  ⚠ THE ONE ENTRY POINT IS STILL `assetWorthCents` BELOW, and both writers of a worth
+ *  (`revalueAssets` and `householdWeekly`) still go through it rather than here: it is the function
+ *  that knows WHICH of the two arithmetics a row is under, and `tests/round30-fund-units.test.ts`
+ *  reads both writers out of a ticked world rather than out of the source.
  *
  *  Pure: no world, no rng, no clock. */
-export function assetValueCents(item: ShopItem, paidCents: number, weeksHeld: number, marketRatio = 1): number {
+export function assetValueCents(item: ShopItem, paidCents: number, weeksHeld: number): number {
   const years = Math.max(0, weeksHeld) / WEEKS_PER_YEAR
-  return Math.round(paidCents * Math.pow(1 + item.annualRateBps / 10_000, years) * marketRatio)
+  return Math.round(paidCents * Math.pow(1 + item.annualRateBps / 10_000, years))
 }
 
-/** ⭐⭐⭐ ROUND 29 PART THREE #16 – WHAT A HOLDING IS WORTH, ASKED OF THE WORLD. THE one entry point:
- *  `revalueAssets` (which stores it) and `householdWeekly` (which quotes the week's move) both call
- *  this and nothing else, so the till and the meter cannot describe two different markets.
+/** ⭐⭐⭐ ROUND 30 #14 – WHAT ONE UNIT OF `item` COSTS IN WEEK `week`, in cents.
  *
- *  ⚠ THE BASIS AND THE CLOCK ARE THE `??` PAIR ROUND 29 #11 AND PART TWO #4 BOTH WROTE, gathered
- *  here once instead of copied at two call sites. A top-up rebases `basisCents`/`basisWeek`; a part
- *  sale rebases the same two by the same arithmetic; an untouched holding has neither and falls back
- *  to `paidCents`/`boughtWeek`, which is what every save written before those items means.
+ *  THE OWNER: «Стоимость активов будет рассчитываться исходя из стоимости долей.»
+ *
+ *  ```
+ *  price(week) = unitBaseCents · (1 + annualRateBps/10⁴)^(week/52) · index(seed, week, volBps)
+ *  ```
+ *
+ *  ⭐⭐ THE DRIFT LIVES IN THE PRICE NOW, AND THAT IS THE WHOLE STRUCTURAL CHANGE. Round 29 valued a
+ *  holding as `basis × (1+r)^(years SINCE THE BASIS WEEK) × index(now)/index(basisWeek)` – three
+ *  numbers that all had to be restated every time money moved, which is what the rebase was. Put the
+ *  rate on the PRICE instead and a holding is `units × price(now)`: one multiplication, no basis, no
+ *  clock per row, and «зашёл, когда доля стоила 4к» is a fact the save can carry.
+ *
+ *  ⚠ IT IS THE SAME PATH ROUND 29 SHIPPED, RE-EXPRESSED, NOT A SECOND MODEL. `price(t)/price(f)` is
+ *  exactly the old `(1+r)^((t−f)/52) × index(t)/index(f)`, so a single-entry holding is worth the
+ *  same cents it was worth yesterday and every measurement round 29 made still describes this path.
+ *  What changed is that a SECOND entry no longer restates the first one's clock.
+ *
+ *  ⚠ FRACTIONAL CENTS ON PURPOSE – «round the display, not the logic». Units are fractional and so
+ *  is a price; the ONE rounding is `assetWorthCents`, and `shopView` rounds again only for the eye.
+ *
+ *  ⚠ A RUNG WITH NO `volBps` IS STILL PRICED HERE, dead flat: `marketIndex` answers exactly 1 for
+ *  it (its own zero-vol guard, now the only copy), so the deposit's unit walks its 3.17% and rides
+ *  no crisis. That is the arm that dies if that guard is deleted.
+ *
+ *  ⚠ AND THE CALLER MUST HAVE CHECKED `unitBaseCents` – the `?? 0` here is a total-function
+ *  courtesy, not a branch anybody reaches: a rung with no unit price has no units to multiply.
+ *
+ *  Pure: no world, no MAIN draw, no clock. */
+export function unitPriceCents(seed: string, week: number, item: ShopItem): number {
+  const years = week / WEEKS_PER_YEAR
+  return (
+    (item.unitBaseCents ?? 0) *
+    Math.pow(1 + item.annualRateBps / 10_000, years) *
+    marketIndex(seed, week, item.volBps ?? 0)
+  )
+}
+
+/** ⭐⭐⭐ WHAT A HOLDING IS WORTH, ASKED OF THE WORLD. THE one entry point: `revalueAssets` (which
+ *  stores it) and `householdWeekly` (which quotes the week's move) both call this and nothing else,
+ *  so the till and the meter cannot describe two different markets.
+ *
+ *  ⭐⭐ ROUND 30 #14 – TWO ARITHMETICS, AND **THE ROW** SAYS WHICH. A row that carries `units` is
+ *  worth `units × price(now)` and nothing else; a row that does not is worth what was paid,
+ *  compounded over its own span. ⚠ THE PREDICATE IS THE ROW AND NOT THE RUNG **HERE**, deliberately
+ *  and only here: `units` is the field that makes the multiplication possible, so reading it is the
+ *  same question as «can this be priced that way», and there is no `?? 0` to hide a corrupt row
+ *  behind. Everywhere a DECISION is made – `buyAsset`, `shopView`, the migration – the predicate is
+ *  the RUNG's `unitBaseCents`, because that is the thing that says what a rung is. `buyAsset` writes
+ *  the units and the v66 migration back-fills them, so the two predicates agree on every row any
+ *  save can hold, and `tests/round30-fund-units.test.ts` walks a career to prove it rather than
+ *  asserting it here.
+ *
+ *  ⚠⚠ AND THE REBASE IS GONE WITH THE `??` PAIR THAT SERVED IT. Round 29 #11's top-up and part two
+ *  #4's part sale both restated `basisCents`/`basisWeek`, and this function opened by falling back
+ *  through them. `basisCents` no longer exists: money buys units at the week's price and the units
+ *  are the memory. `basisWeek` survives with ONE meaning and one writer – §3f's commissioned order,
+ *  whose value clock starts on DELIVERY – so the fallback below is live in both directions on every
+ *  save (a car has none, a yacht has one).
  *
  *  ⭐ `weekOffset` IS `householdWeekly`'S «ONE MORE WEEK OF HOLDING» and the reason this takes a
  *  world rather than a week: the shelf line is the difference of THIS function at 0 and at 1, so
- *  when the curve changes the meter changes with it, for free. It was the difference of
- *  `assetValueCents` before and it is the difference of this now – the same discipline, one level up,
- *  because the market ratio needs the seed and the absolute week and `assetValueCents` has neither.
+ *  when the curve changes the meter changes with it, for free.
  *
  *  ⚠ ZERO MAIN DRAWS. The market path is a sub-stream keyed on the seed and a week; see
  *  `world/market.ts`'s header for why a purchase cannot move the world's dice through it.
  *
  *  Pure: reads the world, writes nothing. */
 export function assetWorthCents(world: WorldState, owned: OwnedAsset, item: ShopItem, weekOffset = 0): number {
-  const basisCents = owned.basisCents ?? owned.paidCents
-  const basisWeek = owned.basisWeek ?? owned.boughtWeek
   const week = world.week + weekOffset
-  return assetValueCents(item, basisCents, week - basisWeek, marketRatio(world.seed, basisWeek, week, item.volBps ?? 0))
+  if (owned.units !== undefined) return Math.round(owned.units * unitPriceCents(world.seed, week, item))
+  return assetValueCents(item, owned.paidCents, week - (owned.basisWeek ?? owned.boughtWeek))
+}
+
+/** ⭐⭐ ROUND 30 #14 – WHAT THE FAMILY PAID PER UNIT, AVERAGED OVER EVERY PURCHASE, in cents. Null
+ *  for a holding that is not measured in units.
+ *
+ *  ⭐⭐⭐ THIS IS THE NUMBER THE ITEM EXISTS TO PUT ON SCREEN. «Имеешь возможность усредниться или
+ *  зафиксировать убыток» is not a mechanic a player can use unless the game tells him where his
+ *  average is against today's price – averaging down is a DECISION when you can see you are below
+ *  it and a feeling when you cannot. Round 29's rebased basis could not say it at all: it folded
+ *  every entry into one restated number.
+ *
+ *  ⚠ IT IS `paidCents / units` AND THEREFORE SURVIVES A PART SALE UNCHANGED, which is what makes
+ *  «зафиксировать убыток» honest: a sale takes the same fraction out of the cash and out of the
+ *  units (`sellAsset`), so the average the family entered at does not move when they realise part of
+ *  a loss. Only a BUY moves it – which is exactly what averaging down means. */
+export function avgUnitPriceCents(owned: OwnedAsset): number | null {
+  if (owned.units === undefined || owned.units <= 0) return null
+  return owned.paidCents / owned.units
 }
 
 /** ⭐⭐ ROUND 29 PART THREE #16 – WHAT THE MARKET DID TO THIS RUNG OVER THE LAST SEASON, as a signed
@@ -194,10 +285,9 @@ export function assetWorthCents(world: WorldState, owned: OwnedAsset, item: Shop
 export function marketSeasonMove(item: ShopItem, seed: string, week: number): number {
   if (!item.volBps) return 0
   const from = Math.max(0, week - WEEKS_PER_YEAR)
-  const growth =
-    Math.pow(1 + item.annualRateBps / 10_000, (week - from) / WEEKS_PER_YEAR) *
-    marketRatio(seed, from, week, item.volBps)
-  return growth - 1
+  // ⭐ ROUND 30 #14 – A RATIO OF TWO UNIT PRICES, which is the same number the two-factor form
+  // computed (`(1+r)^span × index(now)/index(then)`) said in the shape the shop card now speaks in.
+  return unitPriceCents(seed, week, item) / unitPriceCents(seed, from, item) - 1
 }
 
 /** ⭐⭐ ROUND 29 #5, §3f – WHAT ONE WEEK OF KEEPING IT COSTS, in whole cents. Zero for every rung
