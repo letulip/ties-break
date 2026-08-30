@@ -94,7 +94,10 @@ import type { TierId } from './season/types'
 //   moment you assemble the PR, which in a wave running across several merges is a different day.
 //   If main's constant already equals the version you are amending, that version is SHIPPED: take
 //   the next number, move your additions to it, and leave main's step byte-identical.
-// `tests/schema-ladder.test.ts` makes the check mechanical for the case it can see offline.
+// `scripts/schema-ladder.mjs` makes it mechanical: it fails when this branch's constant equals
+// main's while the step for that version differs. ⚠ IT IS A CI STEP AND NOT A VITEST FILE ON
+// PURPOSE – a test reading a STALE `origin/main` would give the same wrong answer from the same
+// expired fact. The script's own header carries that argument; CI fetches before it runs.
 
 
 /** The absolute career week she turned nineteen, for the v39 fork back-fill.
