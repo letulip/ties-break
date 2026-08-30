@@ -2598,16 +2598,17 @@ const TAB_OPTIONS = [
   color: var(--money-in);
 }
 
-/* The wait and the stage under it – facts about WHEN, not about money, so they take the quiet ink
-   the blurb takes rather than either money colour. */
+/* ⭐ ROUND 30 #14 – the units line: a supporting fact under the headline figure and never a headline
+   of its own, so it takes the blurb's quiet ink rather than either money colour. It is a COUNT and a
+   PRICE, not money moving. */
 .shop-row-units {
-  /* ⭐ ROUND 30 #14 – the same muted, small idiom as `.shop-row-upkeep` and `.shop-row-wait`: a
-     supporting fact under the headline figure, never a headline of its own. */
   margin: 4px 0 0;
   font-size: 11.5px;
   color: var(--ink-soft);
 }
 
+/* The wait and the stage under it – facts about WHEN, not about money, so they take the quiet ink
+   the blurb takes rather than either money colour. */
 .shop-row-wait {
   margin: 4px 0 0;
   font-size: 11.5px;
