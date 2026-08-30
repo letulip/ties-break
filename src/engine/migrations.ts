@@ -35,6 +35,24 @@ import { declineFactor, physicalMean, rollPotential, type KidSkills } from './de
 // would be two conventions the calendar and the save could drift apart on.
 import { PLAN_DAYS, sessionDays, sessionsForPlan } from './plan'
 import { coachIncludesPhysio } from './coach'
+// ⭐ v66 (round 30 #14): the units back-fill prices a legacy row off the SAME functions the engine
+// prices it with – a migration with its own copy of the market would convert the copy. `shopItem`
+// also answers `undefined` for an id the catalogue no longer carries, which is the courtesy that
+// lets a retired rung migrate untouched instead of throwing.
+import { shopItem, unitPriceCents } from './world/shop'
+
+/** The v65 shape of an owned row, as the units back-fill has to read it: `basisCents`/`basisWeek`
+ *  were OPTIONAL keys on v63-v65 saves (round 29 #11 and part two #4 wrote them without a version
+ *  move), and `units` is the v66 key the step writes. Local to the migration on purpose – nothing
+ *  else in the engine may reason about a shape that no longer exists. */
+interface LegacyAsset {
+  id?: unknown
+  boughtWeek: number
+  paidCents: number
+  basisCents?: number
+  basisWeek?: number
+  units?: number
+}
 import { COHORT } from './season/cohort'
 import type { PlayerProfile } from '../shared/protocol'
 // v27: her birth day is clamped to her own month, and February is never 29 - see daysInBirthMonth.
@@ -2071,13 +2089,51 @@ export function migrateSave(raw: unknown): WorldState {
   // is not editing a shipped migration – the append-only rule bites at the moment of shipping, and
   // this wave is that moment.
   //
-  // Idempotent: the first pass leaves no `boat-motor` behind and a second pass finds none. The
-  // union half still writes nothing. ZERO draws on any stream either way, so the frozen MAIN
-  // capture (41550 / e6b0c709) is untouched by construction.
+  // ⭐⭐⭐ AND – SAME WAVE, SAME STEP AGAIN – ROUND 30 #14's UNITS. «И надо логику фонда переделать на
+  // покупку ДОЛЕЙ в фонде… Стоимость активов будет рассчитываться исходя из стоимости долей.» Every
+  // row of a unit-priced rung gains `units` and gives up `basisCents`; the rebase that wrote that
+  // field no longer exists.
+  //
+  // ⚠⚠ IT AMENDS v66 RATHER THAN TAKING A v67, ON THE SAME GROUND THE YACHT RENAME DID AND FOR THE
+  // SAME REASON: main is at 65, so no save with `schemaVersion: 66` exists outside this wave's own
+  // worktrees and there is nothing shipped to edit. The append-only rule bites at the moment of
+  // shipping and this wave is still that moment. ⚠ The rows this step must convert are v65 rows –
+  // `basisCents`/`basisWeek` shipped as OPTIONAL keys without a version move (round 29 #11's own
+  // note), so a save on main can carry them and does.
+  //
+  // ⭐⭐ CONVERTED AT THE PRICE OF ITS OWN BASIS WEEK, WHICH IS WHAT MAKES IT HONEST RATHER THAN
+  // MERELY TOTAL. `units = basis / price(basisWeek)` gives `units × price(now)` ≡
+  // `basis × (1+r)^((now−basis)/52) × index(now)/index(basis)` – the exact number the old model
+  // would have shown this week, to the rounding. So a family that opened the fund in season three
+  // is still up by what it was up by, and the average price the screen now prints is the one they
+  // really came in at. Resetting to today's price would have wiped the entry price out of a career
+  // in the act of introducing it.
+  //
+  // ⚠ THE FALLBACK PAIR IS THE OLD READER'S, VERBATIM. `basisCents ?? paidCents` and
+  // `basisWeek ?? boughtWeek` are what `assetWorthCents` used to open with; a row that was never
+  // topped up carries neither and means exactly that. This is the last place either name appears.
+  //
+  // ⚠ THE SEED IS THE CAREER'S OWN, so the price this reads is the same path the world will read
+  // next tick. ZERO draws on any stream: the market is sub-stream reads keyed on the seed and a
+  // week, so the frozen MAIN capture (41550 / e6b0c709) cannot see this step either.
+  //
+  // Idempotent: the first pass leaves no `boat-motor` and no `basisCents` behind, and a second pass
+  // finds neither – a row that already has `units` is not re-divided.
   if (v === 65) {
     if (Array.isArray(save.assets)) {
       for (const a of save.assets as { id?: unknown }[]) {
         if (a && typeof a === 'object' && a.id === 'boat-motor') a.id = 'boat-sail'
+      }
+      const seed = typeof save.seed === 'string' ? save.seed : ''
+      for (const a of save.assets as LegacyAsset[]) {
+        if (!a || typeof a !== 'object' || a.units !== undefined) continue
+        const item = shopItem(String(a.id))
+        if (!item || item.unitBaseCents === undefined) continue
+        const basisCents = typeof a.basisCents === 'number' ? a.basisCents : a.paidCents
+        const basisWeek = typeof a.basisWeek === 'number' ? a.basisWeek : a.boughtWeek
+        a.units = basisCents / unitPriceCents(seed, basisWeek, item)
+        delete a.basisCents
+        delete a.basisWeek
       }
     }
     v = 66

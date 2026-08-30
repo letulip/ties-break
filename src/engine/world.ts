@@ -330,10 +330,10 @@ export { familyMeans, householdWalletCents, meansOfCents, MEANS_BANDS }
 // ⭐⭐⭐ ROUND 29 PART THREE #16 adds §4's moving price – `assetWorthCents` (the ONE thing that turns
 // a holding into a number now that a market is in it), `marketSeasonMove` and `reportMarketSeason`.
 // The path itself is `world/market.ts` and is re-exported one line down.
-import { assetDelivered, assetUpkeepCents, assetValueCents, assetWorthCents, buyAsset, deliverAssets, deliveredAssets, grantedVacationIds, marketSeasonMove, ownedAssets, ownsDeliveredOfFamily, reportMarketSeason, revalueAssets, sellAsset, sellableAsset, shopCatalogue, shopItem, shopView, weeklyAssetUpkeepCents } from './world/shop'
-export { assetDelivered, assetUpkeepCents, assetValueCents, assetWorthCents, buyAsset, deliverAssets, deliveredAssets, grantedVacationIds, marketSeasonMove, ownedAssets, ownsDeliveredOfFamily, reportMarketSeason, revalueAssets, sellAsset, sellableAsset, shopCatalogue, shopItem, shopView, weeklyAssetUpkeepCents }
-import { marketCrash, marketCrashFellIn, marketCrashLog, marketIndex, marketRatio, marketWave, worstCrashFreeRatio, worstMarketRatio } from './world/market'
-export { marketCrash, marketCrashFellIn, marketCrashLog, marketIndex, marketRatio, marketWave, worstCrashFreeRatio, worstMarketRatio }
+import { assetDelivered, assetUpkeepCents, assetValueCents, assetWorthCents, avgUnitPriceCents, buyAsset, deliverAssets, deliveredAssets, grantedVacationIds, marketSeasonMove, ownedAssets, ownsDeliveredOfFamily, reportMarketSeason, revalueAssets, sellAsset, sellableAsset, shopCatalogue, shopItem, shopView, unitPriceCents, weeklyAssetUpkeepCents } from './world/shop'
+export { assetDelivered, assetUpkeepCents, assetValueCents, assetWorthCents, avgUnitPriceCents, buyAsset, deliverAssets, deliveredAssets, grantedVacationIds, marketSeasonMove, ownedAssets, ownsDeliveredOfFamily, reportMarketSeason, revalueAssets, sellAsset, sellableAsset, shopCatalogue, shopItem, shopView, unitPriceCents, weeklyAssetUpkeepCents }
+import { marketCrash, marketCrashFellIn, marketCrashLog, marketIndex, marketWave, worstCrashFreeRatio, worstMarketRatio } from './world/market'
+export { marketCrash, marketCrashFellIn, marketCrashLog, marketIndex, marketWave, worstCrashFreeRatio, worstMarketRatio }
 // ⭐⭐ ROUND 29 PART FOUR P7 – FAME (the accounted stock, world/fame.ts) and THE PARENT'S
 // BUSINESSES (merch follows fame, the academy's stages follow reputation – world/business.ts).
 // Re-exported under the historical convention; zero draws anywhere behind these names.

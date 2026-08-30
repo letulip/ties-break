@@ -3275,6 +3275,23 @@ export const ECONOMY = {
         // recover 221%» is exactly why widening this by hand would have been the tuning he did not
         // ask for. The fund's own under-pricing stands as round 29's ask 11b.
         annualRateBps: 317,
+        // ⭐⭐ ROUND 30 #14 – A DEPOSIT IS HELD IN UNITS TOO, AND IT IS HIS OWN EXPECTATION, ROUND 29
+        // #11: «Index fund хотелось бы иметь возможность докупать, предполагаю, что Savings deposit
+        // будет вести себя так же – тоже надо исправить.» Adding to a holding and taking part of one
+        // out is what `stake: 'open'` MEANS, and a holding you can do both to is a holding measured
+        // in units. That is what let the rebase be deleted outright rather than kept for one rung.
+        //
+        // ⚠⚠ AND NOT ONE CENT OF THE DEPOSIT MOVED, WHICH IS ARITHMETIC AND NOT LUCK. With no
+        // `volBps` this unit's price is `1000 × 1.0317^years` dead flat (`marketIndex` answers
+        // exactly 1), and `units × price` is identically the `(basis + top-up) × (1+r)^t` the rebase
+        // computed – rebasing at today's worth WAS the unit model, written the long way round. The
+        // deposit's arm in `tests/round30-fund-units.test.ts` measures that equality rather than
+        // trusting it.
+        //
+        // ⚠ $1,000 IS ITS OWN MINIMUM STAKE, chosen so the dullest rung on the shelf quotes the
+        // roundest possible price. Nothing depends on the number: units are fractional, so a $1,000
+        // opening stake buys exactly one and a $1,500 one buys one and a half.
+        unitBaseCents: 1_000_00,
       },
       {
         id: 'index-fund',
@@ -3340,7 +3357,29 @@ export const ECONOMY = {
         //
         // ⚠ PROVISIONAL BY HIS OWN FRAMING: «вроде посмотрел, давай сделаем, а я пощупаю и скажу
         // свои ощущения потом.» Move this one number and re-run the probe; nothing else has to move.
+        //
+        // ⭐⭐⭐ HE PLAYED IT AND MOVED IT – ROUND 30 #14, 1_800 -> ROUND30_VOL_BPS.
+        //
+        // «Волатильность индексного фонда какая-то очень большая по ощущениям +65/-15 это то, что я
+        // видел… Во-первых она скорее всего будет менее "галопирующая", во-вторых вряд-ли в таких
+        // крайностях.»
+        //
+        // ⚠ THE KNOB THE SPEC ALREADY NAMED FOR THIS, and §14h named the direction too: «If he wants
+        // back toward one-in-four WITH crashes, the wave's volBps comes down – his call, one knob.»
+        // It is his call and this is him making it. His crash band is UNTOUCHED: −15…−30% at the
+        // trough is his own number from the day before and not mine to shave.
+        //
+        // ⚙ MEASURED – see §14i and `tools/market-probe.ts`.
         volBps: 1_800,
+        // ⭐⭐⭐ ROUND 30 #14 – WHAT ONE UNIT COSTS AT THE START, and it is HIS anchor to the dollar:
+        // «Зашёл, когда доля стоила 4к, через десять лет она может вполне удвоиться. Или зашёл на
+        // пике при цене 7-8к.»
+        //
+        // ⚠ THE DOUBLING IS THE RATE AND NOT A SECOND CONSTANT. $4,000 at 700 bps is $7,869 after
+        // ten years – «вполне удвоиться» – and it passes through his $7,000-8,000 peak band in the
+        // ninth and tenth seasons of a career, which is where a family that has been earning long
+        // enough to buy at a peak actually is. The market rides either side of that all the way.
+        unitBaseCents: 4_000_00,
       },
       // ⚙ 26.08, the owner: «давай гэп сделаем скромнее пока что от 60 до 300к». A five-fold spread
       // rather than the twenty-two-fold one the first draft drew – from $60k to $300k every rung is

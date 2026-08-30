@@ -59,6 +59,7 @@ import {
   assetUpkeepCents,
   assetValueCents,
   assetWorthCents,
+  avgUnitPriceCents,
   deliveredAssets,
   grantedVacationIds,
   marketSeasonMove,
@@ -66,6 +67,7 @@ import {
   ownsDeliveredOfFamily,
   shopCatalogue,
   shopItem,
+  unitPriceCents,
   weeklyAssetUpkeepCents,
   type ShopItem,
 } from './assets'
@@ -74,6 +76,7 @@ export {
   assetUpkeepCents,
   assetValueCents,
   assetWorthCents,
+  avgUnitPriceCents,
   deliveredAssets,
   grantedVacationIds,
   marketSeasonMove,
@@ -81,6 +84,7 @@ export {
   ownsDeliveredOfFamily,
   shopCatalogue,
   shopItem,
+  unitPriceCents,
   weeklyAssetUpkeepCents,
 }
 export type { ShopItem }
@@ -124,8 +128,11 @@ export type { ShopItem }
  *  here. An item whose rung has been retired from the catalogue keeps its last value rather than
  *  being re-priced by a rate that no longer exists.
  *
- *  ⚠ IDEMPOTENT AND ORDER-FREE: the value is a function of (basisCents, basisWeek, week, seed), not
- *  of the previous value, so running it twice in a week or skipping a week changes nothing.
+ *  ⚠ IDEMPOTENT AND ORDER-FREE: the value is a function of (units, week, seed) on a unit-priced row
+ *  and of (paidCents, basisWeek, week) on every other, never of the previous value, so running it
+ *  twice in a week or skipping a week changes nothing. ⭐ ROUND 30 #14 made the first of those two
+ *  as short as it can be – there is no basis to restate any more, so a holding's whole history is
+ *  one number and the week.
  *
  *  ⭐⭐ ROUND 29 PART THREE #16 KEPT THAT TRUE AND IT IS WHY THE MARKET IS A PATH RATHER THAN A DRIFT.
  *  The note here used to say idempotence «stops being true in slice 2, when drift accumulates». It
@@ -323,24 +330,43 @@ export function buyAsset(world: WorldState, itemId: string, stakeCents?: number)
   if (world.fundsCents < paidCents) throw new Error('Not enough funds for that')
 
   world.fundsCents -= paidCents
-  if (held) {
-    // ⚠⚠ THE REBASE, AND IT IS THE WHOLE OF THE TOP-UP. New money has not been compounding since the
-    // original purchase and must not be treated as though it had, so the basis becomes what the
-    // holding is worth TODAY plus what was just added, and the clock restarts here. `paidCents`
-    // meanwhile keeps accumulating the CASH the family put in, so `changeCents` stays the honest
-    // lifetime gain or loss – the reasoning is written out over `OwnedAsset.basisCents`.
-    held.basisCents = held.valueCents + paidCents
-    held.basisWeek = world.week
-    held.valueCents = held.basisCents
-    held.paidCents += paidCents
+  if (item.unitBaseCents !== undefined) {
+    // ⭐⭐⭐ ROUND 30 #14 – MONEY BECOMES UNITS, AT THIS WEEK'S PRICE, AND THAT IS THE WHOLE ITEM.
+    //
+    // THE OWNER: «доли дадут возможность расти на горизонте и будут давать разные точки входа, как
+    // в жизни… имеешь возможность усредниться или зафиксировать убыток.»
+    //
+    // ⚠⚠ AND THE REBASE IS GONE, WHICH IS WHAT THIS BRANCH REPLACES. A top-up used to restate the
+    // holding – `basisCents = valueCents + paid`, clock back to this week – and that arithmetic was
+    // CORRECT: it is algebraically the same money as buying units at today's price, which is exactly
+    // why it never produced a wrong number. What it could not do is REMEMBER. Rebasing folds every
+    // entry into one restated basis, so the price the family came in at is destroyed in the act of
+    // adding to it, and «усредниться» has nothing to average against. Units keep every entry: this
+    // purchase gets the price of THIS week, the first one keeps the price of its own, and the
+    // average of the two is a number the screen can show and the player can decide against.
+    //
+    // ⚠ ONE BRANCH, NOT TWO, AND THE GUARD ABOVE IS WHY: a `held` row can only be an 'open' rung
+    // (a 'fixed' one refuses a second copy four lines up), and every 'open' rung carries
+    // `unitBaseCents`. So «first purchase» and «top-up» differ by a single term – the units they
+    // already had – and there is no second write of a value anywhere in this file.
+    const price = unitPriceCents(world.seed, world.week, item)
+    const units = (held?.units ?? 0) + paidCents / price
+    if (held) {
+      held.units = units
+      held.paidCents += paidCents
+      held.valueCents = Math.round(units * price)
+    } else {
+      world.assets.push({ id: item.id, boughtWeek: world.week, paidCents, valueCents: Math.round(units * price), units })
+    }
   } else if (item.buildWeeks) {
     // ⭐⭐ ROUND 29 #5, §3f – COMMISSIONED. «The money leaves on order. The thing arrives N weeks
     // later. Between those two weeks the player owns a CONTRACT, not a boat.»
     //
-    // ⚠⚠ THE VALUE CLOCK STARTS AT DELIVERY, and it is `basisWeek` that says so – the field round 29
-    // #11 added for the top-up, used for its own sentence («the compounding clock's start») rather
-    // than widened. `assetValueCents`'s `Math.max(0, weeksHeld)` then holds the contract at exactly
-    // what was paid for the whole wait, with no second value model and no branch in `revalueAssets`.
+    // ⚠⚠ THE VALUE CLOCK STARTS AT DELIVERY, and it is `basisWeek` that says so. ⭐ ROUND 30 #14 made
+    // that its ONLY sentence: the field arrived with round 29 #11's top-up and was shared with the
+    // rebase, and the rebase is gone, so this order is now its one writer in the whole engine.
+    // `assetValueCents`'s `Math.max(0, weeksHeld)` then holds the contract at exactly what was paid
+    // for the whole wait, with no second value model and no branch in `revalueAssets`.
     //
     // ⚠ AND A CONTRACT THAT DEPRECIATED WOULD BE A PUNISHMENT FOR WAITING. Three years of losing 5%
     // a year on a thing that does not exist yet, on top of the wait itself, is not what §3f asks
@@ -352,7 +378,6 @@ export function buyAsset(world: WorldState, itemId: string, stakeCents?: number)
       boughtWeek: world.week,
       paidCents,
       valueCents: paidCents,
-      basisCents: paidCents,
       basisWeek: readyWeek,
       readyWeek,
     })
@@ -404,19 +429,29 @@ export function buyAsset(world: WorldState, itemId: string, stakeCents?: number)
  *  here, ignoring an amount would mean the family asked to sell half a car and got rid of all of it.
  *  A surprise disposal is not the same class of mistake as a known price, so it is a refusal.
  *
- *  ⚠⚠ AND IT MUST NOT BREAK THE TOP-UP'S P&L, WHICH IS THE TRAP IN THIS ITEM. Round 29 #11 split the
- *  two numbers on purpose: `paidCents` accumulates the CASH the family put in, `basisCents` carries
- *  the COMPOUNDING, and `changeCents = valueCents - paidCents` is the honest lifetime gain. So a part
- *  sale scales BOTH sides by what left:
- *    * `basisCents` becomes what is LEFT, struck today, and the clock restarts – identical arithmetic
- *      to the top-up's own rebase and provably neutral, since `V(1-f)·(1+r)^(s/52)` is exactly the
- *      curve the untouched holding would have drawn scaled by `(1-f)`. Not doing this is the whole
- *      trap: `revalueAssets` recomputes `valueCents` from the basis every tick, so a sale that
- *      lowered the value alone would be silently undone on the next tick.
+ *  ⚠⚠ AND IT MUST NOT BREAK THE P&L, WHICH IS THE TRAP IN THIS ITEM. Round 29 #11 split two numbers
+ *  on purpose: `paidCents` accumulates the CASH the family put in, and `changeCents = valueCents -
+ *  paidCents` is the honest lifetime gain. ⭐⭐ ROUND 30 #14 REPLACED THE OTHER HALF OF THAT SPLIT –
+ *  the rebased `basisCents` – WITH `units`, and a part sale is now the plainest sentence in this
+ *  file: **sell units.** One fraction, `f = proceeds / value`, applied to both sides:
+ *    * `units` gives up `f` of itself. That is what makes the sale stick – `revalueAssets` recomputes
+ *      `valueCents` from the units every tick, so a sale that lowered the value alone would be
+ *      silently undone on the next tick, which is exactly the trap part two #4 caught.
  *    * `paidCents` gives up the cost of what was sold, ONE ROUNDING AND THE REMAINDER IS A
  *      SUBTRACTION – `kidPrizeShareCents`' own discipline – so the cost that left and the cost that
  *      stayed re-add to the original to the cent, and the realised and unrealised halves of the gain
  *      re-add to the gain the family actually has.
+ *
+ *  ⭐⭐⭐ AND BECAUSE BOTH SIDES TAKE THE **SAME** FRACTION, THE AVERAGE ENTRY PRICE DOES NOT MOVE –
+ *  which is «зафиксировать убыток» built rather than described. A family that sells a third of a
+ *  sunken holding realises a third of the loss in the ledger and keeps the same average price on
+ *  what is left, so the screen still says whether they are above or below it and the next decision
+ *  is the same decision. Realising the oldest units first would move that average by an accident of
+ *  ordering, and nothing on screen could explain the new number.
+ *
+ *  ⚠ `proceeds / value` IS `unitsSold / units`, so this is not a second arithmetic sitting beside
+ *  the old one – it is the old one, read in units. That is why `paidCents`' rounding is unchanged to
+ *  the cent and every part-sale figure round 29 measured still holds.
  *
  *  ⚠ ITS `boughtWeek` IS NOT TOUCHED: they have owned this holding since they opened it, and selling
  *  part of it does not change when that was.
@@ -442,7 +477,7 @@ export function sellAsset(world: WorldState, itemId: string, amountCents?: numbe
   // write a ledger row and move nothing.
   // ⚠⚠ AND `NaN` IS THE SAME REFUSAL, WHICH IS NOT PEDANTRY IN A COMMAND THAT MOVES MONEY. `NaN <= 0`
   // and `NaN > value` are BOTH false, so a malformed amount off the wire would walk past every
-  // comparison below and write `NaN` into `valueCents` and `basisCents` – a career corrupted by a
+  // comparison below and write `NaN` into `valueCents` and `units` – a career corrupted by a
   // guard that read like it covered this. `!(asked > 0)` is the form that catches it.
   if (asked !== undefined && !(asked > 0)) throw new Error('That is not an amount to sell')
   // ⚠ AND NEVER MORE THAN IS HELD. `>=` the whole value is a whole sale rather than a refusal – a
@@ -461,10 +496,12 @@ export function sellAsset(world: WorldState, itemId: string, amountCents?: numbe
   if (whole) {
     world.assets = world.assets.filter((a) => a !== owned)
   } else {
+    // ⭐ ROUND 30 #14 – THE UNITS GO WITH THE MONEY. `owned.units` is present on exactly the rungs a
+    // part sale is offered on (an 'open' rung carries `unitBaseCents`; a 'fixed' one refused the
+    // amount at the third guard above), so this is the only shape a partial row can be in.
+    if (owned.units !== undefined) owned.units -= (owned.units * proceedsCents) / owned.valueCents
     owned.paidCents -= costSoldCents
-    owned.basisCents = owned.valueCents - proceedsCents
-    owned.basisWeek = world.week
-    owned.valueCents = owned.basisCents
+    owned.valueCents -= proceedsCents
   }
   world.fundsCents += proceedsCents
 
@@ -485,6 +522,12 @@ export function sellAsset(world: WorldState, itemId: string, amountCents?: numbe
     text: whole ? `Sold: ${label} – ${tail}` : `Sold ${formatCents(proceedsCents)} of: ${label} – ${tail}`,
     amountCents: proceedsCents,
   })
+}
+
+/** Round the display, never the logic – `avgUnitPriceCents` answers in fractional cents or in null,
+ *  and `shopView` is the one boundary where both become what a person reads. */
+function roundOrNull(cents: number | null): number | null {
+  return cents === null ? null : Math.round(cents)
 }
 
 /** ⭐⭐ THE SHELF AS THE MONEY SCREEN READS IT (§2). `kitLineViews`' own shape and its own rule: the
@@ -529,6 +572,23 @@ export function shopView(world: WorldState): ShopView {
       changePct:
         mine && mine.paidCents > 0 && changeCents !== null ? Math.round((changeCents / mine.paidCents) * 100) : null,
       boughtWeek: mine ? mine.boughtWeek : null,
+      // ⭐⭐⭐ ROUND 30 #14 – THE THREE NUMBERS A DECISION NEEDS, and the reason the item is not
+      // finished at the engine's edge. «Зашёл, когда доля стоила 4к… или зашёл на пике при цене 7-8к
+      // и увидел просадку – имеешь возможность усредниться или зафиксировать убыток»: a player can
+      // only average down if he can SEE that today's price is under the one he came in at.
+      //
+      // ⚠ THE PRICE IS ON THE ROW WHETHER OR NOT THEY OWN ONE, because it is the entry price – a
+      // shop window with no price in it is the one thing §2 rules out. The other two are null until
+      // there is a holding to describe.
+      //
+      // ⚠ ROUNDED ONCE, HERE, and this view's own rule is why (the owner, 26.08: «у пользователя
+      // целые в интерфейсе»): a unit price is genuinely fractional cents behind this boundary and no
+      // component may round it a second time. ⚠⚠ `unitsHeld` is the ONE figure on this view that
+      // crosses fractional, and it must: a count of shares is not money, and rounding 1.25 units to
+      // 1 would hide a quarter of the family's holding. The screen shows it to two places.
+      unitPriceCents: item.unitBaseCents === undefined ? null : Math.round(unitPriceCents(world.seed, world.week, item)),
+      unitsHeld: mine?.units ?? null,
+      avgUnitPriceCents: mine ? roundOrNull(avgUnitPriceCents(mine)) : null,
       // ⚠ THE PRICE IS ON SCREEN EITHER WAY. This says whether the control is pressable, never
       // whether the row is drawn: §2 rules out the locked row and the progress bar, and a shop
       // window is a thing you look into before you can afford it.

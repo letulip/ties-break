@@ -187,43 +187,60 @@ export interface OwnedAsset {
    *  SUBTRACTS the cost of the part that left, `round(paidCents x proceeds / value)`, with the
    *  remainder taken by subtraction so the two halves re-add to the cent. What the old note was
    *  protecting is intact: this is CASH the family put in and never an accrued gain, which is why
-   *  `basisCents` below exists and why `changeCents` is still `valueCents - paidCents`. */
+   *  `changeCents` is still `valueCents - paidCents`.
+   *
+   *  ⚠⚠ ROUND 30 #14 KEPT BOTH WRITERS AND CHANGED NEITHER'S ARITHMETIC. A unit buy adds the cash; a
+   *  part sale takes out the cost of the units that left – and because `proceeds / value` IS
+   *  `unitsSold / units`, that is the same rounding it has always done. What the field gained is a
+   *  second job: divided by `units` it is the AVERAGE PRICE the family entered at
+   *  (`avgUnitPriceCents`), which is the number «усредниться или зафиксировать убыток» is decided
+   *  against. That is also why the part sale scales it PROPORTIONALLY rather than realising the
+   *  oldest units first: the average must not move when a family takes money out. */
   paidCents: number
   /** what it is worth THIS week, in cents, whole. Written by `revalueAssets` on every tick. */
   valueCents: number
-  /** ⭐⭐ ROUND 29 #11 – THE COMPOUNDING BASIS AND THE WEEK IT STARTED FROM, written only by a
-   *  TOP-UP and absent on a holding that has never had one.
+  /** ⭐⭐⭐ ROUND 30 #14 – HOW MANY UNITS OF THE RUNG THEY HOLD. Present on every row of a rung that
+   *  carries `unitBaseCents` and absent on every other, which is every car, house, boat, plane,
+   *  academy stage and business.
    *
-   *  THE OWNER: «Index fund хотелось бы иметь возможность докупать, предполагаю, что Savings deposit
-   *  будет вести себя так же – тоже надо исправить.»
+   *  THE OWNER, 30.08: «И надо логику фонда переделать на покупку ДОЛЕЙ в фонде, как раз доли дадут
+   *  возможность расти на горизонте и будут давать разные точки входа, как в жизни… Зашёл, когда
+   *  доля стоила 4к, через десять лет она может вполне удвоиться. Или зашёл на пике при цене 7-8к и
+   *  увидел просадку на следующий год – имеешь возможность усредниться или зафиксировать убыток.»
    *
-   *  ⚠⚠ WHY THIS IS NOT JUST `paidCents += more`. The value is `basis x (1+r)^years` off ONE start
-   *  week, so money added in season six has not been compounding since season one and must not be
-   *  treated as though it had. A top-up therefore REBASES: the basis becomes what the holding is
-   *  worth today plus the new money, and the clock restarts from this week. That is exactly
-   *  `V x (1+r)^t + T x (1+r)^t` – the arithmetic a real account does – with no second value model.
+   *  ⚠⚠ THIS FIELD REPLACES `basisCents` AND THE WHOLE REBASE. Round 29 #11 valued a topped-up
+   *  holding by restating its basis at today's worth and restarting its clock; part two #4's part
+   *  sale scaled the same two numbers down. Both were arithmetically the unit model already – that
+   *  is WHY they were correct – but they threw the entry price away in the act, and the entry price
+   *  is the thing he asked to be able to see and to average against. Units keep it: money buys units
+   *  at the price of ITS OWN week, and nothing a later purchase does can restate an earlier one.
    *
-   *  ⚠ AND `paidCents` STAYS WHAT THE FAMILY PUT IN, WHICH IS WHY THE BASIS IS A SEPARATE FIELD.
-   *  Folding the rebase into `paidCents` would make it include accrued gains, so §2e-1's «the ledger
-   *  shows the loss to the cent» would reset to zero on every top-up and the shelf would stop
-   *  teaching the one thing it exists to teach. `paidCents` accumulates the CASH; the basis carries
-   *  the COMPOUNDING; `changeCents` is still `valueCents - paidCents` and is still the truth.
+   *  ⚠ FRACTIONAL, AND THAT IS NOT A BREACH OF «money is in cents». Cents are money; this is a
+   *  COUNT of shares and a real one is fractional – $5,000 into a $4,000 unit is 1.25 units, not one
+   *  unit and a lost thousand. The cents are `Math.round(units × price)`, rounded ONCE in
+   *  `assetWorthCents`, and the owner's «у пользователя целые в интерфейсе» is honoured where it is
+   *  addressed – at the display, which rounds both PRICES and shows the count to two places.
    *
-   *  ⚠ `boughtWeek` IS NOT TOUCHED – it stays the week the family first opened the holding, which is
-   *  what it says it is and what any «how long have they had it» line would mean.
-   *
-   *  ⚠ OPTIONAL, AND NOT A SCHEMA MOVE – `WorldEvent.entryRef`'s recorded rule (commit 2763caa's
-   *  precedent). Absent is exactly what every historical save already means here: «never topped up,
-   *  so the basis IS `paidCents` and the clock IS `boughtWeek`», which is what `revalueAssets` reads
-   *  when they are missing. No migration is owed and `SAVE_SCHEMA_VERSION` does not move. */
-  basisCents?: number
-  /** the week `basisCents` was struck – the compounding clock's start. Absent with it.
+   *  ⚠ OPTIONAL IN THE TYPE AND REQUIRED IN FACT: `buyAsset` writes it on every unit-priced purchase
+   *  and the v66 migration back-fills it on every historical row, converting at the price of the
+   *  row's own basis week so the family's history is preserved rather than reset. Absence means «not
+   *  a unit-priced rung», never «a unit-priced rung with no units» – and
+   *  `tests/round30-fund-units.test.ts` holds the catalogue and the migration to that, both ways. */
+  units?: number
+  /** the compounding clock's start, when it is not `boughtWeek`. Absent on everything bought and
+   *  delivered in the same week, which is most of the shelf.
    *
    *  ⚠ ROUND 29 #5 GAVE IT A SECOND WRITER AND NOT A SECOND MEANING. A COMMISSIONED thing (§3f –
    *  the boats and the planes) is ordered years before it exists, so its clock starts on the week it
    *  ARRIVES: `buyAsset` writes `basisWeek = readyWeek` on the order, and `assetValueCents`'s own
    *  `Math.max(0, weeksHeld)` then holds the contract at what was paid for the whole wait. One
-   *  field, one sentence – «the compounding clock's start» – and no second value model. */
+   *  field, one sentence – «the compounding clock's start» – and no second value model.
+   *
+   *  ⚠⚠ ROUND 30 #14 TOOK THE **OTHER** WRITER AWAY AND LEFT THE SENTENCE STANDING. The top-up and
+   *  the part sale used to restate this week along with `basisCents`; there is no rebase any more,
+   *  so the commissioned order is its ONLY writer and no unit-priced row ever carries it. That is
+   *  what keeps `assetWorthCents`'s `?? boughtWeek` live in both directions rather than a habit: a
+   *  car has none, a yacht has one, and neither of them has units. */
   basisWeek?: number
   /** ⭐⭐ ROUND 29 #5, §3f – THE WEEK IT ARRIVES, and ABSENT ONCE IT HAS.
    *
@@ -241,8 +258,8 @@ export interface OwnedAsset {
    *  `deliverAssets` is its one remover and it compares `>=`, so a week skipped in a multi-week
    *  advance still delivers.
    *
-   *  ⚠ OPTIONAL, AND NOT A SCHEMA MOVE – `WorldEvent.entryRef`'s recorded rule and `basisCents`'s
-   *  own, one paragraph up. Absent is exactly what every historical row already means («it is here,
+   *  ⚠ OPTIONAL, AND NOT A SCHEMA MOVE – `WorldEvent.entryRef`'s recorded rule, the one `basisWeek`
+   *  is written under. Absent is exactly what every historical row already means («it is here,
    *  it arrived»), so no migration is owed and `SAVE_SCHEMA_VERSION` does not move. The spec named
    *  this field and this exact reasoning a slice in advance (§12a). */
   readyWeek?: number
