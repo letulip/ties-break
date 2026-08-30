@@ -21,6 +21,7 @@
 // `tests/round29p3-market.test.ts` proves on a ticked world rather than claiming from the imports.
 import { ECONOMY } from '../economy'
 import { WEEKS_PER_YEAR } from '../season/calendar'
+import { fameAt } from './fame'
 import { marketIndex } from './market'
 import type { OwnedAsset } from '../../shared/protocol'
 import type { WorldState } from '../world'
@@ -118,6 +119,37 @@ export interface ShopItem {
    *  ⚠ CAPPED – see `ECONOMY.shop.upkeepGrowthCapX`. A bill that compounds forever is a bill that
    *  eventually eats a career, and «мы ни за что не наказываем» is house law. */
   upkeepGrowthBps?: number
+  /** ⭐⭐⭐ ROUND 30 #9 – WHAT THE RUNG IS WORTH, AS A MULTIPLE OF WHAT IT TAKES IN OVER A YEAR.
+   *  Absent on everything valued off what was PAID for it, which is every car, house, boat, plane
+   *  and academy stage; absent on everything valued in units, which is the two investments.
+   *
+   *  THE OWNER, 30.08: «сам Merch brand тоже вполне может расти в цене как бизнес по какой-то
+   *  логике, похожей на привязку к её рекламе и результатам. Можно провести анализ доходов и
+   *  стоимости бренда RF (Roger Federer) для референса.»
+   *
+   *  ⚠⚠ ITS PRESENCE IS THE THIRD VALUATION IN THE ENGINE, and the three are exclusive by
+   *  construction: units (`unitBaseCents`), a business (this), or what was paid times a rate. A rung
+   *  carrying two of them would be a rung with two prices, and `tests/round30-brand-value.test.ts`
+   *  holds the catalogue to exactly one, in both directions.
+   *
+   *  ⭐⭐ IT IS THE SAME FUEL AS THE INCOME, WHICH IS HIS OWN «похожей на привязку к её рекламе и
+   *  результатам»: the brand takes in `fame x perFamePointCents` a week, and it is WORTH some years
+   *  of that. So a title, a Slam final, a top-10 season and a photo shoot each move the value and
+   *  the income at once, through one number, and nothing else on the career can move either.
+   *
+   *  ⚠⚠ AND IT FALLS, WHICH IS THE HALF THAT HAD TO BE DESIGNED IN RATHER THAN HOPED FOR. Fame
+   *  decays on a 104-week half-life, so a brand whose career goes quiet is worth less every week –
+   *  and that is not a punishment invented for balance, it is the best-documented case in the sport:
+   *  Federer's On stake fell about HALF, some $300M, between January 2025 and August 2026 while he
+   *  was retired and nothing whatsoever about him changed
+   *  (docs/research/player-brands-and-what-they-are-worth.md §3). A shelf rung whose value only ever
+   *  rises is the risk-free 7% the fund spent two rounds removing.
+   *
+   *  ⚠ THE NUMBER IS A CHOICE AND THE RESEARCH SAYS SO: no player-brand transaction publishes both
+   *  an earnings figure and a price. The nearest two are Beckham's DRJB at ~10.9x profit and the
+   *  Nadal academy at ~31x, which is a band and not a citation (§5.4). See
+   *  `ECONOMY.business.merch.valueMultipleX` for why this one is 16 and what was measured to pick it. */
+  earningsMultipleX?: number
   /** ⭐ §3g – the rung that must already be owned before this one may be bought (the academy's
    *  stages). Absent on every rung that stands on its own. */
   requiresId?: string
@@ -275,7 +307,39 @@ export function unitPriceCents(seed: string, week: number, item: ShopItem): numb
 export function assetWorthCents(world: WorldState, owned: OwnedAsset, item: ShopItem, weekOffset = 0): number {
   const week = world.week + weekOffset
   if (owned.units !== undefined) return Math.round(owned.units * unitPriceCents(world.seed, week, item))
+  // ⭐⭐⭐ ROUND 30 #9 – THE THIRD ARITHMETIC, AND IT IS THE ONLY ONE THAT READS THE CAREER. A car is
+  // worth what was paid for it, worn down by a rate; a fund is worth its units times a price; a
+  // BUSINESS is worth some years of what it takes in, and what this one takes in is her fame.
+  if (item.earningsMultipleX !== undefined) {
+    const annualCents = assetEarningsRateCents(world, item, week) * WEEKS_PER_YEAR * item.earningsMultipleX
+    // ⚠⚠ THE FLOOR IS THE MARK, AND IT IS A SOURCED IDEA RATHER THAN A KINDNESS. Björn Borg's own
+    // company went bankrupt in 1990 and the NAME was still bought outright for $18M in 2006 and is a
+    // listed company today (the research §4d) – a brand with no earnings left is not a brand with no
+    // value. It is also what keeps «мы ни за что не наказываем» true of the week she is between
+    // reigns: the family can always sell the name.
+    return Math.round(Math.max(owned.paidCents * ECONOMY.shop.businessValueFloorShare, annualCents))
+  }
   return assetValueCents(item, owned.paidCents, week - (owned.basisWeek ?? owned.boughtWeek))
+}
+
+/** ⭐⭐⭐ ROUND 30 #9 – WHAT AN EARNING RUNG TAKES IN THIS WEEK, in cents, BEFORE the question of
+ *  whether the family owns one. THE arithmetic for the merch line, and it lives here rather than in
+ *  `world/business.ts` for one structural reason: `assetWorthCents` above has to ask it, `business.ts`
+ *  imports THIS file, and a leaf that imported it back would be a cycle. `assetWeeklyIncomeCents`
+ *  calls this and adds the ownership and delivery guards, so there is still exactly ONE place where
+ *  fame becomes money – `world/business.ts`' own «ONE DEFINITION, MANY READERS» rule, moved rather
+ *  than broken.
+ *
+ *  ⚠ IT ANSWERS ZERO FOR EVERY RUNG THAT IS NOT A BUSINESS, so the guard on `earningsMultipleX`
+ *  above cannot silently price an academy stage off the merch dial. A second earning family added
+ *  tomorrow extends THIS function; `tests/round30-brand-value.test.ts` holds the catalogue to one
+ *  rung carrying the multiple, so a second one cannot arrive without the arm to price it.
+ *
+ *  Pure: reads the world, writes nothing, draws nothing – `fameAt` is a fold over records the career
+ *  already keeps (world/fame.ts). */
+export function assetEarningsRateCents(world: WorldState, item: ShopItem, week = world.week): number {
+  if (item.family !== 'business') return 0
+  return Math.round(fameAt(world, week) * ECONOMY.business.merch.perFamePointCents)
 }
 
 /** ⭐⭐ ROUND 30 #14 – WHAT THE FAMILY PAID PER UNIT, AVERAGED OVER EVERY PURCHASE, in cents. Null
@@ -447,4 +511,173 @@ export function weeklyAssetUpkeepCents(world: WorldState): number {
     total += assetUpkeepCents(item, owned.paidCents, assetHeldWeeks(world, owned))
   }
   return total
+}
+
+// =================================================================================================
+// ⭐⭐⭐ ROUND 30 #8 AND #10 – THE FAMILY NAMES THE THINGS IT BUILDS.
+//
+// THE OWNER, 30.08, on the brand: «Merch brand давай предложим пользователю несколько вариантов
+// именования при покупке… один из вариантов "ввести своё название" – это придаст +100 к
+// индивидуальности сразу. Среди вариантов по дефолту могут быть инициалы ребёнка или что-то
+// связанное с именем или фамилией.» And on the academy: «И нейминг для академии тоже по принципу
+// бренда, как раз одним из вариантов можно предложить уже существующее название бренда (если он
+// есть) или снова "ввести своё".»
+//
+// ⚠⚠ THE NAME BELONGS TO THE FAMILY OF RUNGS, NOT TO THE ROW, and that is what makes the academy
+// work at all: it is FOUR purchases and one institution. The name is written on the first rung of
+// its family the household buys and every later stage reads it, so «The Martin Academy» does not
+// become four differently-named buildings. One field, one reader, no second place for it to live.
+//
+// ⚠⚠ IT IS PLAYER-AUTHORED TEXT THAT IS PERSISTED AND RENDERED, so the rules are stated rather than
+// assumed – see `sanitiseAssetName` for all four of them (a length cap, an allow-list, what an empty
+// entry becomes, and why none of it can break a 375px row).
+// =================================================================================================
+
+/** ⭐ THE FAMILIES THAT CARRY A NAME. The cars, the houses, the boats, the planes and the two
+ *  investments do not: you do not name a saloon, and «+100 к индивидуальности» is about the things
+ *  the family BUILDS with her name on them. */
+export const NAMEABLE_FAMILIES: readonly ShopItem['family'][] = ['business', 'academy']
+
+export function isNameable(item: ShopItem): boolean {
+  return NAMEABLE_FAMILIES.includes(item.family)
+}
+
+/** ⭐ WHAT THE FAMILY CALLED ITS `family`, or null when it owns nothing of it yet.
+ *
+ *  ⚠ THE FIRST OWNED ROW OF THE FAMILY, in purchase order (`world.assets` is oldest-first – see
+ *  `ownedAssets`), so a four-stage academy answers with the name given when the LAND was bought and
+ *  a later stage cannot rename it. ⚠ AND A ROW WITH NO NAME IS SKIPPED rather than answering null:
+ *  a save that owned a brand before this item exists (v66 back-fills it, but a hand-built probe
+ *  world does not) must not make the whole family nameless. */
+export function assetNameOf(world: WorldState, family: ShopItem['family']): string | null {
+  for (const owned of ownedAssets(world)) {
+    if (shopItem(owned.id)?.family !== family) continue
+    if (!owned.name) continue
+    // ⚠⚠ SANITISED ON THE WAY **OUT** AS WELL AS ON THE WAY IN, AND THAT IS THE POINT OF DOING IT
+    // HERE. `buyAsset` bounds what the game itself stores, which covers every name any player can
+    // create – but a save file is a file, and an imported or hand-edited one can carry a row with a
+    // ten-thousand-character name that no command ever wrote. `saveGuard`'s bounds walk caps a string
+    // at 32,768 characters, which stops a hostile PAYLOAD and is four hundred times too loose to stop
+    // a broken LAYOUT. Re-bounding at the one function every reader goes through makes «no name that
+    // reaches a screen is longer than `ASSET_NAME_MAX_CHARS`» a property rather than a hope, and it
+    // costs one pass over at most twenty-four characters.
+    const safe = sanitiseAssetName(owned.name, '')
+    if (safe) return safe
+  }
+  return null
+}
+
+/** ⭐⭐ THE NAMES THE GAME OFFERS, in the order they are shown, and every one of them is made out of
+ *  HER – which is the whole of «придаст +100 к индивидуальности сразу». A generic list would be the
+ *  opposite of what he asked for.
+ *
+ *  For a girl called Vera Martin the brand reads `VM` / `Martin` / `Vera Martin` / `House of Martin`,
+ *  and the academy reads her brand's name FIRST when she has one (his own «уже существующее название
+ *  бренда»), then `Martin Academy` / `Vera Martin Academy` / `VM Academy`.
+ *
+ *  ⚠ THE LIST IS NEVER EMPTY AND ITS FIRST ENTRY IS THE DEFAULT, which is what makes «what happens
+ *  to an empty entry» answerable without a refusal: `sanitiseAssetName` falls back to it.
+ *
+ *  ⚠ DE-DUPLICATED, because the academy's first suggestion can equal one of the others when the
+ *  brand was itself named after the surname – two identical chips is a bug the eye sees instantly.
+ *
+ *  ⚠ AND EVERY ENTRY GOES THROUGH THE SAME CAP THE FREE-TEXT FIELD DOES: a long surname must not
+ *  produce a suggestion the player could not have typed. */
+export function assetNameSuggestions(world: WorldState, family: ShopItem['family']): string[] {
+  return nameSuggestionsFor(
+    world.profile?.kidName ?? '',
+    world.profile?.kidLastName ?? '',
+    family,
+    assetNameOf(world, 'business'),
+  )
+}
+
+/** ⭐ THE SAME LIST, ASKED WITHOUT A WORLD – the pure core `assetNameSuggestions` wraps.
+ *
+ *  ⚠⚠ IT EXISTS FOR ONE CALLER AND THAT CALLER IS THE MIGRATION, which back-fills v66 rows from a
+ *  RAW SAVE OBJECT and has no `WorldState` to ask. Splitting it is the only way the migration's
+ *  default and the shop's default can be the same list – and if they were not, a save that arrived
+ *  through the migration would carry a name the game itself would never have offered. */
+export function nameSuggestionsFor(
+  kidName: string,
+  kidLastName: string,
+  family: ShopItem['family'],
+  brandName: string | null,
+): string[] {
+  const first = kidName.trim()
+  const last = kidLastName.trim()
+  const initials = `${first.slice(0, 1)}${last.slice(0, 1)}`.toUpperCase()
+  const both = [first, last].filter(Boolean).join(' ')
+  const out: string[] = []
+  if (family === 'academy') {
+    // ⭐ HIS OWN FIRST OPTION: the brand they already built, if they built one.
+    if (brandName) out.push(brandName)
+    if (last) out.push(`${last} Academy`)
+    if (both) out.push(`${both} Academy`)
+    if (initials.length === 2) out.push(`${initials} Academy`)
+  } else {
+    if (initials.length === 2) out.push(initials)
+    if (last) out.push(last)
+    if (both && both !== last) out.push(both)
+    if (last) out.push(`House of ${last}`)
+  }
+  const capped = out.map((n) => cutToLimit(n)).filter((n) => n.length > 0)
+  const seen = new Set<string>()
+  const unique = capped.filter((n) => (seen.has(n) ? false : (seen.add(n), true)))
+  // ⚠ THE LAST-RESORT ENTRY EXISTS SO THE LIST CANNOT BE EMPTY. A profile with no name at all is not
+  // reachable through onboarding (`kidName` is required and the save guard bounds it), but a
+  // hand-built probe world is, and a default that is `undefined` is how a null reaches a template.
+  return unique.length > 0 ? unique : [family === 'academy' ? 'The Academy' : 'The Brand']
+}
+
+/** ⭐⭐⭐ THE FOUR RULES FOR PLAYER-AUTHORED TEXT, STATED RATHER THAN ASSUMED. This string is typed by
+ *  a person, written into a save, carried across versions and rendered on a phone, so each of those
+ *  four has an answer and this function is all four of them.
+ *
+ *  **1. A LENGTH CAP OF `ASSET_NAME_MAX_CHARS` (24), COUNTED IN CODE POINTS.** Twenty-four is what a
+ *  shop row holds on a 375px screen beside its price without wrapping to a third line, and the
+ *  screen sets the same number as the field's `maxlength` so the cap is felt while typing rather
+ *  than applied silently afterwards. ⚠ CODE POINTS AND NOT `.slice`: `str.slice(0, 24)` can cut a
+ *  surrogate pair in half and produce an unrenderable character, and some scripts' letters are
+ *  astral. `[...str]` iterates code points.
+ *
+ *  **2. AN ALLOW-LIST, NOT A DENY-LIST.** Unicode letters and digits, the space, and `& . ' -` –
+ *  which is every character real brands use (`S by Serena`, `H&M`, `Levi's`, `Ben & Jerry's`) and
+ *  nothing else. ⚠ IT IS AN ALLOW-LIST BECAUSE A DENY-LIST IS A LIST OF THE THINGS SOMEBODY THOUGHT
+ *  OF: control characters, bidirectional overrides, zero-width joiners and combining stacks are all
+ *  refused by not being on it. ⚠ CYRILLIC IS ALLOWED and that is deliberate – the house rule against
+ *  it is about OUR copy in a template (`tests/template-copy-rules.test.ts` reads source files), and
+ *  a player typing his daughter's name in his own alphabet is data, not copy.
+ *  ⚠ Vue escapes interpolated text, so markup is a LAYOUT question here and never an injection one;
+ *  nothing in this engine renders a name through `v-html`.
+ *
+ *  **3. AN EMPTY ENTRY IS NOT A REFUSAL, IT IS THE DEFAULT.** Blank, whitespace-only, or a string
+ *  that is nothing but disallowed characters all become `fallback` – the first suggestion, which is
+ *  built from her own name. «мы ни за что не наказываем» applies to a text field too: a player who
+ *  clears the box and presses Buy gets a brand called after his daughter, not an error.
+ *
+ *  **4. WHITESPACE IS COLLAPSED AND TRIMMED**, so `  V   M  ` and `V M` are the same brand and no
+ *  name can be made of spaces to hide the row.
+ *
+ *  Pure: no world, no rng, no clock. */
+export const ASSET_NAME_MAX_CHARS = 24
+
+/** The allow-list of rule 2, as one class. `u` is required for `\p{...}` to mean anything at all. */
+const NAME_ALLOWED = /[\p{L}\p{N} &.'-]/u
+
+function cutToLimit(raw: string): string {
+  return [...raw].slice(0, ASSET_NAME_MAX_CHARS).join('').trim()
+}
+
+export function sanitiseAssetName(raw: string | undefined, fallback: string): string {
+  // ⚠⚠ WHITESPACE BECOMES A SPACE **BEFORE** THE ALLOW-LIST, AND THE ORDER IS THE BUG THIS FUNCTION
+  // ALREADY HAD ONCE. The list allows the plain space and nothing else, so filtering first turned a
+  // pasted `Martin\n\tHouse` into `MartinHouse` – two words glued into one, silently. Normalising
+  // first keeps the word boundary and still refuses the character itself. Caught by
+  // `tests/round30-brand-naming.test.ts` rule 2, on its first run.
+  const spaced = (raw ?? '').replace(/\s/gu, ' ')
+  const kept = [...spaced].filter((ch) => NAME_ALLOWED.test(ch)).join('')
+  const collapsed = kept.replace(/ +/g, ' ').trim()
+  const cut = cutToLimit(collapsed)
+  return cut.length > 0 ? cut : fallback
 }

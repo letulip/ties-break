@@ -3559,6 +3559,32 @@ export const ECONOMY = {
         blurb: 'Her name on shirts and bags. It sells while she is talked about.',
         entryCents: 250_000_00,
         annualRateBps: 0,
+        // ⭐⭐⭐ ROUND 30 #9 – AND IT IS NOW WORTH WHAT A BUSINESS IS WORTH: years of its own income,
+        // which is years of her fame. `annualRateBps: 0` above is left where it is and is now DEAD
+        // for this rung – `assetWorthCents` branches on `earningsMultipleX` before it reaches the
+        // rate – and it is kept rather than deleted because the type requires it and because zero is
+        // the honest answer to «what rate does it drift at»: none, it is priced off earnings.
+        //
+        // ⚠⚠ THE RESEARCH GAVE A BAND AND NOT A NUMBER, AND SAYS SO
+        // (docs/research/player-brands-and-what-they-are-worth.md §5.4): NO player-brand transaction
+        // publishes both an earnings figure and a price. The two nearest are Beckham's DRJB – 55%
+        // sold for ~$269M, implying ~$489M against FY2024 profit of $44.9M, so ~10.9x – and the
+        // Nadal academy at ~€209M against €6.8M net profit, ~31x. HIS OWN REFERENCE, the RF mark,
+        // has no published valuation at all: it sits in a private Swiss holding company (Tenro AG)
+        // and On Holding's filings name it only in a risk factor, never in the financials. So this
+        // figure is a CHOICE inside a wide, thin band and the measurement is what chose it.
+        //
+        // ⭐⭐ SIXTEEN, AND THE CRITERION IS «FAIR ON THE DAY THEY CAN AFFORD IT».
+        // `tools/merch-fame-vs-rank.ts` walks 108 careers x 780 weeks and reads the fame a family
+        // holds the first week its wallet can carry twice the $250,000 price. At 16x the brand is
+        // worth about what it cost at the fame those families actually hold, so the purchase is not
+        // a paper loss the week it is made – which is what a punishing multiple would have made it,
+        // on the one rung whose whole pitch is «дешевле академии». Above that fame it grows; below
+        // it the family is down; and both directions are the item.
+        //
+        // ⚠ AND IT FALLS: fame halves over 104 weeks, so a career that goes quiet is worth less
+        // every week. The floor under it is `ECONOMY.shop.businessValueFloorShare`.
+        earningsMultipleX: 16,
       },
       {
         id: 'boat-launch',
@@ -3780,6 +3806,20 @@ export const ECONOMY = {
      *  ⚠ IT BINDS THE MULTIPLIER AND NOT THE YEARS, deliberately: a cap in years would have to be
      *  re-derived every time the growth rate moved, and the promise would silently change with it. */
     upkeepGrowthCapX: 2,
+    /** ⭐⭐⭐ ROUND 30 #9 – THE FLOOR UNDER A BUSINESS RUNG'S VALUE, as a share of what was paid.
+     *
+     *  ⚠⚠ IT IS THE MARK, AND IT IS A SOURCED IDEA RATHER THAN A KINDNESS. Björn Borg's own company
+     *  went bankrupt in 1990; the NAME was licensed from 1997, bought outright for $18 million at the
+     *  end of 2006 and is a Nasdaq Stockholm company doing SEK 1,044M today
+     *  (docs/research/player-brands-and-what-they-are-worth.md §4d). A brand with no earnings left is
+     *  not a brand with no value – somebody will buy the name.
+     *
+     *  ⭐ A QUARTER, so a family between reigns is meaningfully down and never wiped out: «мы ни за
+     *  что не наказываем» read against a rung they CHOSE to buy, on a shelf whose own §3b law is
+     *  «THIS FAMILY EXISTS TO LOSE MONEY AND THAT IS THE POINT». It is also the one thing that keeps
+     *  a sale possible in the years she is quiet, which is what makes the decision to sell a real
+     *  fork rather than a trap. */
+    businessValueFloorShare: 0.25,
   },
 } as const
 

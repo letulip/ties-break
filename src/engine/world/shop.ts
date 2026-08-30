@@ -55,17 +55,24 @@ import type { WorldState } from '../world'
 // split. Every name below is re-exported under the historical convention, so `engine/world`, the
 // tests that import `world/shop` directly and every screen are untouched.
 import {
+  ASSET_NAME_MAX_CHARS,
   assetDelivered,
+  assetEarningsRateCents,
   assetHeldWeeks,
+  assetNameOf,
+  assetNameSuggestions,
   assetUpkeepCents,
   assetValueCents,
   assetWorthCents,
   avgUnitPriceCents,
   deliveredAssets,
   grantedVacationIds,
+  isNameable,
   marketSeasonMove,
+  nameSuggestionsFor,
   ownedAssets,
   ownsDeliveredOfFamily,
+  sanitiseAssetName,
   shopCatalogue,
   shopItem,
   unitPriceCents,
@@ -73,17 +80,24 @@ import {
   type ShopItem,
 } from './assets'
 export {
+  ASSET_NAME_MAX_CHARS,
   assetDelivered,
+  assetEarningsRateCents,
   assetHeldWeeks,
+  assetNameOf,
+  assetNameSuggestions,
   assetUpkeepCents,
   assetValueCents,
   assetWorthCents,
   avgUnitPriceCents,
   deliveredAssets,
   grantedVacationIds,
+  isNameable,
   marketSeasonMove,
+  nameSuggestionsFor,
   ownedAssets,
   ownsDeliveredOfFamily,
+  sanitiseAssetName,
   shopCatalogue,
   shopItem,
   unitPriceCents,
@@ -279,12 +293,16 @@ export function sellableAsset(_world: WorldState, owned: OwnedAsset): boolean {
  *  a tab left open on a junior career, or on a rung already owned, must not be able to spend.
  *
  *  ZERO DRAWS: state, arithmetic and one ledger row. */
-export function buyAsset(world: WorldState, itemId: string, stakeCents?: number): void {
+export function buyAsset(world: WorldState, itemId: string, stakeCents?: number, name?: string): void {
   guardNotEndedForGood(world)
   // ⚠ THE PROFESSIONAL-ERA REFUSAL STOOD HERE AND PART TWO #6 DELETED IT (his ruling, the block at
   // the top of this file). A terminal latch still refuses; a fourteen-year-old's family does not.
   const item = shopItem(itemId)
   if (!item) throw new Error('There is nothing like that on the shelf')
+  // ⭐ ROUND 30 #8/#10 – read BEFORE anything is pushed: «does this family already have a name». Read
+  // after the push it would always be true for a business (the new row is the family's only row) and
+  // the brand could never be named at all.
+  const wasNamed = assetNameOf(world, item.family) !== null
   // ⚠ ROUND 29 PART FOUR P10 – a retired rung refuses HERE as well as being hidden, because the
   // worker is not the gate (CLAUDE.md invariant 1): a stale tab that still draws the row must not
   // be able to order a plane the shop no longer sells. Selling is untouched two functions down –
@@ -384,7 +402,34 @@ export function buyAsset(world: WorldState, itemId: string, stakeCents?: number)
       readyWeek,
     })
   } else {
-    world.assets.push({ id: item.id, boughtWeek: world.week, paidCents, valueCents: paidCents })
+    // ⭐⭐ ROUND 30 #9 – PRICED THE WEEK IT IS BOUGHT, not on the next tick. `revalueAssets` runs at
+    // the top of every tick and would have corrected this a week later, which is invisible on every
+    // rung this branch used to hold – `assetValueCents(item, paid, 0)` IS `paid`, to the cent, for a
+    // car and a house – and would have been a visibly wrong figure on a BUSINESS, whose worth is not
+    // what was paid for it. One function decides it, the same one `revalueAssets` will ask next week.
+    const row: OwnedAsset = { id: item.id, boughtWeek: world.week, paidCents, valueCents: paidCents }
+    row.valueCents = assetWorthCents(world, row, item)
+    world.assets.push(row)
+  }
+  // ⭐⭐⭐ ROUND 30 #8 AND #10 – AND THE FAMILY NAMES IT, ON THE FIRST RUNG OF ITS FAMILY AND ONLY
+  // THERE. «Merch brand давай предложим пользователю несколько вариантов именования при покупке…
+  // это придаст +100 к индивидуальности сразу», and the academy «по принципу бренда».
+  //
+  // ⚠⚠ THE ENGINE RE-DERIVES BOTH HALVES AND TRUSTS THE SCREEN FOR NEITHER (invariant 1). The
+  // WHETHER is `assetNameOf(...) === null` asked BEFORE this purchase's row could answer it – so a
+  // second academy stage cannot rename the institution however the tab was left – and the WHAT is
+  // `sanitiseAssetName` over the game's own first suggestion, so a blank, a whitespace-only entry,
+  // a name made of emoji and a name a thousand characters long all land on something sayable.
+  // A command that arrives with no name at all is a purchase from a screen that did not ask, and it
+  // gets the default rather than a refusal.
+  //
+  // ⚠ AFTER THE PUSH AND ON THE LAST ROW, because the three branches above build three different
+  // rows and only one of them is reached; naming here is the one place all three meet. A top-up is
+  // NOT a purchase of a first rung – `held` is true and `wasNamed` was read before anything moved –
+  // so it cannot rename anything either.
+  if (isNameable(item) && !wasNamed) {
+    const row = world.assets[world.assets.length - 1]
+    if (row.id === item.id) row.name = sanitiseAssetName(name, assetNameSuggestions(world, item.family)[0])
   }
   addEvent(world, {
     week: world.week,
@@ -568,6 +613,15 @@ export function shopView(world: WorldState): ShopView {
       blurb: item.blurb,
       entryCents: item.entryCents,
       annualRatePct: Math.round(item.annualRateBps / 100),
+      // ⭐ ROUND 30 #9 – ...and the one rung the rate above cannot describe says so here instead.
+      earningsMultipleX: item.earningsMultipleX ?? null,
+      // ⭐⭐ ROUND 30 #8/#10 – what they called it, and what the game would offer if this purchase is
+      // the one that names it. Both answered HERE, so the screen renders a decision it never makes.
+      name: isNameable(item) ? assetNameOf(world, item.family) : null,
+      nameOptions:
+        isNameable(item) && assetNameOf(world, item.family) === null && !mine
+          ? assetNameSuggestions(world, item.family)
+          : [],
       paidCents: mine ? mine.paidCents : null,
       valueCents: mine ? mine.valueCents : null,
       changeCents,
