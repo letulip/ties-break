@@ -35,7 +35,11 @@ import type { WorldState } from '../world'
 /** How much of a step survives `delta` weeks after the event – 1 fresh, half at the half-life,
  *  never negative and never amplifying (an event in the future contributes nothing: it has not
  *  happened, and fame is an account of what has). */
-function decayAt(deltaWeeks: number): number {
+// ⭐ EXPORTED SINCE ROUND 30 #23 (30.08) so `world/brand.ts` can decay the crowd ledger on the SAME
+// half-life rather than keeping a second copy of this curve. One definition, many readers – the rule
+// `world/business.ts` states and the one a copied three-line decay would quietly break the day the
+// half-life is retuned.
+export function decayAt(deltaWeeks: number): number {
   if (deltaWeeks < 0) return 0
   return Math.pow(0.5, deltaWeeks / ECONOMY.fame.halfLifeWeeks)
 }

@@ -237,6 +237,26 @@ const CROWD_BANDS: Record<TierId, readonly [number, number]> = {
   slam: [25000, 70000],
 }
 
+/** ⭐⭐⭐ ROUND 30 #23 (30.08) – THE CORRIDOR'S MIDPOINT FOR A RUNG, and it is the ONE thing outside
+ *  this file that may read the crowd. The owner, overruling the `[GAP]` the brand wave had filed:
+ *  «у нас есть понимание **коридора зрителей на каждом турнире**, мне кажется этого достаточно
+ *  вполне.»
+ *
+ *  ⚠⚠ THE CORRIDOR IS NOT THE DRAW, AND THE DISTINCTION IS WHAT KEEPS THE RULING ABOVE INTACT.
+ *  `eventCrowd` is a per-event ROLL off `seed:crowd:<eventId>`; nothing in the simulation reads it,
+ *  the grep guard in tests/preview.test.ts still says so, and it stays decorative. THIS is the static
+ *  table under it – how big the room is at that rung – and it is a pure constant with no stream, no
+ *  event id and no week. That matters beyond tidiness: `world/brand.ts`' whole contract is «a
+ *  valuation is a fold over history, zero draws», and reading the ROLL would have put a die inside a
+ *  valuation. Reading the CORRIDOR cannot.
+ *
+ *  ⚠ It is a MIDPOINT and never a sample: two careers that played the same rung must be credited the
+ *  same room, or the brand would price the dice rather than the schedule. */
+export function tierCrowdMid(tier: TierId): number {
+  const band = CROWD_BANDS[tier]
+  return band ? (band[0] + band[1]) / 2 : 0
+}
+
 /** Decorative crowd. Its own sub-stream so it can never perturb the draw, and keyed on the event so
  *  a tournament's gate is the same every time the card is rendered. Banded by tier – see the table
  *  above for where the numbers come from and why nothing may read them.
