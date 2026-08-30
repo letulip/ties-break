@@ -3257,3 +3257,126 @@ season), or a rate that starts at 20% and falls to 10% as she grows, mirroring h
   holdings lose to the deposit, every one by selling inside a crash arc, zero calm-water losers –
   holding through a crisis costs nothing. Recorded as his acceptance, 29.08; the knob back is
   `volBps` and stays where it is.
+
+## Part five – the tournament week in the Calendar tab (his items of 30.08)
+
+⚠ **Scope, in his own words: «Под календарем я понимаю вкладку Календарь с разбивкой недели по
+дням.»** So all four items below are about the day-strip week view (`CalendarScreen` +
+`composables/weekGrid.ts`), never the season feed. **No engine change of any kind is in this
+diff** – no tick, no entry, no schedule, no save field. Schema stays **66**.
+
+- [x] **P15. ⚙ «давай здесь тоже сделаем разное количество Draw day в зависимости от уровня турнира:
+  на локалах 3 дня, National 4 (вроде), основная масса 5, а на 1000 вообще 6 (Шлем 7…)»**
+
+  ⭐ **THE COUNT IS THE ENGINE'S OWN ARITHMETIC, NOT A TABLE I PICKED.** `TIERS[tier].drawSize` is
+  documented as powers of two only *because* `runTournament` reads `Math.log2(drawSize)` as its
+  round count – so the trip's match days are that same number, and the shipped catalogue hands back
+  exactly the list he asked for: **local 8 → 3 · regional 16 → 4 · every 32-draw → 5 · wta1000
+  64 → 6 · slam 128 → 7.** Nothing was fitted to his numbers; his numbers are what the table already
+  said. ⚠ **His «National 4 (вроде)» is answered by the table rather than around it**: the National
+  Series is a **32-draw** in this game, so it is a five-day week like the junior tour, the W-series
+  and the WTA 250/500 – the four-day rung is **`regional`**. He hedged the number himself.
+
+  ⚠⚠ **THE BIG RUNGS FIT INSIDE ONE WEEK BECAUSE THE TRAVEL MOVES, NOT BECAUSE THE TENNIS SHRINKS** –
+  his second ruling, and it is the one that made this buildable. Two-week events were put to him and
+  declined – «Не уверен, что нам в нашу сложную сетку надо вплетать еще и 2х недельные турниры.
+  **Подожди с этим**» – and he proposed the edge-travel instead: «на предыдущей неделе в Воскресенье
+  начать ехать на турнир … И тогда **не надо ничего менять в нашей раскладке**». Built exactly so,
+  and it falls out of the round count with no second switch to keep in step:
+
+  | rounds | the week | the neighbour |
+  | --- | --- | --- |
+  | 3 (local) | travel out · 2 practice days · 3 match days · travel home | – |
+  | 4 (regional) | travel out · 1 practice day · 4 match days · travel home | – |
+  | 5 (the main body) | travel out · 5 match days · travel home | – |
+  | 6 (wta1000) | 6 match days · travel home | departs the previous Sunday |
+  | 7 (slam) | 7 match days, Mon–Sun | departs the previous Sunday |
+
+  ⚠ **The court hit is what gives way, and only it.** `training` on a trip is the venue practice –
+  never `drills`, which means the session the plan bought – so it is the arc's own furniture rather
+  than a fact, and from five rounds up there is no room for one. Not one match day is ever
+  compressed, and no rung leaves an empty column: every arc spends all seven days, pinned.
+
+  ⚠ **The lent Sunday can only ever ADD one hour, and it declines rather than pushing anything.** It
+  asks for 18:00 on the lending week's Sunday and draws nothing at all when that hour is spoken for.
+  **Edge cases decided and pinned**, conservative in every direction: an event she did **not enter**
+  lends nothing (it is somebody else's fortnight); **no event next week / no fixture list** lends
+  nothing; and **her own week's identity outranks the loan** – a trip of her own (so two big events
+  back to back never fight over one evening), a booked family week, the off-season and a layoff all
+  keep their Sunday. ⚠ And it is **a professional's block in practice**: past school the evening is
+  hers, while at fourteen `Study` holds 18:00 on every shape and the loan says nothing rather than
+  deleting a schoolgirl's homework to make room for a flight. Both arms are pinned, so neither is a
+  surprise.
+
+  ⚠ **NOT ONE ROUND IS EVER NAMED** – the rule that predates these items survives all three of them.
+  Every match day of every rung carries the identical block: when the tournament is on, never how far
+  she got.
+
+- [x] **P13. ⚙ «когда массажист есть и ездит на турниры давай добавим в календарь сессии массажа
+  после матчей по плану. (если еще нет)»**
+
+  ⚠⚠ **THE HONEST ANSWER TO HIS «(если еще нет)» IS "HALF".** The sessions **were** drawn on a tour
+  week – this is **not** «вы заплатили и не можете этого заметить» a second time – but they were laid
+  on the wrong days, and measured on the shipped build before the fix:
+
+  | rung | days his table was drawn on | of them, match days |
+  | --- | --- | --- |
+  | 2 / wk (entry) | Mon (travel out) · Tue (the practice hit) | **0 of 4** |
+  | 4 / wk | Mon · Tue · two of the match days | 2 of 4 |
+  | 7 / wk (daily) | all seven | 4 of 4, by covering everything |
+
+  **The cause:** `masseurDaysFor` lays the WEEKLY rung over `planDays` – the training plan – and a
+  trip does not spend the plan's days («the family is away», `weekGrid.ts`'s own header). So the
+  table followed a week that was not happening.
+
+  ⭐ **FOLLOW THE MONEY, and the money is unambiguous.** On the week he boards, `resolveMasseur`
+  stands the **weekly bill down** and `finalizeTournament` charges `masseurTourWeekCents` =
+  **matches played × $75** instead, while `masseurTourRelief` pays back **per night between rounds**.
+  The rung buys *nothing at all* on tour. So the trip draws **one session per match day** – the
+  count the ledger already prices – and the rung deliberately makes no difference there: a picture
+  showing 2 against 7 would promise a dial the ledger does not read. Pinned against the engine's own
+  arithmetic (`masseurTourWeekCents(n) === n × perSessionCents`), so the picture and the bill are one
+  sum.
+
+  ⚠ **Unchanged, deliberately:** the HOME week still draws the rung's own 2 / 4 / 7 on the days the
+  plan bought (round 28 #1), and a masseur who **stays home** still draws nothing while the retainer
+  still runs – the engine's own asymmetry, and the truth about both.
+
+- [x] **P14. ⚙ «после матчей на турнирах бывают пресс-конференции … на тех уровнях турниров, где это
+  актуально.»**
+
+  **The cut is the WTA main tour: `wta250` · `wta500` · `wta1000` · `slam`, and nothing below.** Two
+  reasons, and the second is the game's own: a tour-level event runs a press room and an ITF W15 in a
+  municipal park does not (his own example); and ⭐ **the engine already drew this exact line
+  somewhere else** – `ECONOMY.endorsements` pays an **appearance fee from `wta250` up** («$15,000 to
+  be on the poster of a WTA 250 or better»), so the rung where a tournament starts paying for her
+  presence is the rung where it starts asking for her time. Written as a **threshold on
+  `TIER_LADDER`**, not a list of four ids, so a seventeenth rung above the 250 inherits the press
+  room instead of silently falling out of a hand-typed set.
+
+  ⚠ **It is flavour and it is fenced as flavour**: one hour, on a match day, immediately after the
+  draw block – it costs no cents, spends no condition, moves no schedule and cannot block a week. A
+  WTA 250 week and a WTA 125 week are pinned identical in every respect except those blocks. **No new
+  colour was invented**: `press` takes the wallet's declared `--cat-other` grey, because the
+  `--event-*` family is the record of what he sent and a new row in it would make that record lie.
+
+- [~] **P16. Two-week Slams and 1000s – DEFERRED BY HIS OWN RULING, not an oversight.**
+
+  ⚠⚠ **A future reader must not re-propose this without seeing that he already looked at it and said
+  wait.** The engine resolves a tournament inside one tick and one week; a real Slam is two calendar
+  weeks and a 1000 is 10–12 days, and spanning them would touch entries, the schedule and the tick.
+  It was put to him as its own wave. **He declined it for now** – «Не уверен, что нам в нашу сложную
+  сетку надо вплетать еще и 2х недельные турниры. Подожди с этим» – and the edge-travel design in P15
+  is what replaces the need: the tournament stays inside its own week and only the journey spills
+  onto the neighbour's edge, «всё остается в пределах недели как было».
+
+  ⚠ **One half of his own edge-travel sentence is NOT drawn, and the reason is a fact about the
+  snapshot rather than a decision.** He described a Slam's return as «в Пн следующей недели». The
+  calendar draws `snapshot.week + 1` and `upcoming` is filtered to `week > world.week`, so this
+  screen **can look forward one week and cannot look back one at all**: the departure lend is
+  answerable and honest, and a return lend would have to be guessed from something like
+  `diary.facts.resultTier`, which is null on every week `resultFresh` is false. Nothing is drawn
+  rather than something invented. **The cheapest honest routes, when he wants that Monday**: widen
+  `upcomingEvents()` to `>=` (it would then carry the week just played), or carry a one-field
+  «came home from» on the snapshot. Either is a small engine-side change and belongs with whoever
+  next opens that file – it is **not** the two-week wave above.

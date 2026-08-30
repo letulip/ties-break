@@ -795,7 +795,19 @@ describe('the calendar renders the grid it is handed', () => {
     // grid that needed a new fact would have to reach for the protocol or the engine.
     expect(module_).not.toContain("from '../shared/protocol'")
     expect(module_).not.toContain("from '../engine/")
-    expect(module_).toContain("import type { CalendarDay, CalendarWeek, DayBeat, DayKind } from './weekDays'")
+    // ⚠ RE-AIMED (round 29 P15): a fifth TYPE joined the list – `TripFacts`, the three facts a trip
+    // week hands down (the draw's rounds, the masseur's seat, the rung's press room). The rule this
+    // pin exists for is UNCHANGED and is the two lines above it: the grid may reach for neither the
+    // protocol nor the engine. What it may do, and always could, is name the shapes `weekDays.ts`
+    // hands it. So the assertion matches the import's HEAD and its source rather than its full list,
+    // which would have to be re-typed every time the composable earns a fact – the same weakening
+    // `weekGridFor`'s own call-site pin took, for the same reason.
+    // ⚠ AND `import type` IS LOAD-BEARING IN IT: this module takes no VALUE from `weekDays.ts` (the
+    // v47 invariant in its own header), so a plain `import {` here would be a real regression and
+    // this string would stop matching.
+    expect(module_).toContain("import type { CalendarDay, CalendarWeek, DayBeat, DayKind")
+    expect(module_).toContain("} from './weekDays'")
+    expect(module_, 'the grid started taking a value from weekDays').not.toMatch(/^import \{[^}]*\} from '\.\/weekDays'/m)
   })
 
   it('every block kind has a colour, and it is the design system\'s', () => {

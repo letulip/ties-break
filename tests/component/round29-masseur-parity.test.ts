@@ -240,7 +240,16 @@ describe('round 29 #3 – a masseur left at home on a tournament week', () => {
     // difference is deliberate, and it is the reason §2 sets `masseurTravels` on.
     const world = payrolled([])
     setMasseurTravels(world, false)
-    const snap: Snapshot = { ...toSnapshot(world), arrival: { ...(toSnapshot(world).arrival ?? ({} as never)), week: SHOOT_WEEK } }
+    // ⚠ RE-AIMED (round 29 P15): the arrival used to be spread from `{} as never`, so the fixture's
+    // `arrival` carried a WEEK and nothing else – no event id, no verdict and no TIER. That was
+    // invisible until the trip arc became a function of the draw's rounds and asked for the tier it
+    // had never been given. A real `ArrivalPreview` always names one, so the fixture names one too;
+    // the tier is deliberately the common 32-draw, because this case is about the masseur's seat and
+    // not about the length of the week.
+    const snap: Snapshot = {
+      ...toSnapshot(world),
+      arrival: { eventId: 'r29-p15-fixture', tier: 'w15', week: SHOOT_WEEK, verdict: 'play', outgrown: false },
+    }
     expect(engineWorks(world), 'the retainer stopped running on a week she is away').toBe(true)
     expect(screenDrawsTable(snap), 'the calendar promised a table nobody is on').toBe(false)
   })

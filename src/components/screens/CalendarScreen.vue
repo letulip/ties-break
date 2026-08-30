@@ -864,6 +864,16 @@ const showGo = computed(() => !game.snapshot?.pending)
   background: var(--cat-vacation);
 }
 
+/* ⭐ ROUND 29 P14 – THE PRESS ROOM, on the wallet's `other` grey. It is the one block kind the
+   design export never carried (there was no tournament week in the grid when it was drawn), so it
+   borrows a declared token rather than inventing a fourteenth colour – the `--event-*` family is the
+   record of what the owner sent and a new row in it would make that record lie. Grey is also the
+   right reading: a press conference is neither her tennis nor her school, it is an hour the sport
+   takes, and the wallet spells exactly that hour «other». */
+.cal-block--press {
+  background: var(--cat-other);
+}
+
 /* The tournament block is the one the design OUTLINES – its border is the thirteenth token, and the
    only place in the palette where a colour is a stroke rather than a fill. Its caller is the trip
    week's middle days (weekGrid.ts's TRIP_ARC), which is what it was always waiting for. */

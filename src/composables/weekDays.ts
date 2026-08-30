@@ -72,6 +72,8 @@ import { computed, type ComputedRef } from 'vue'
 import { useGameStore } from '../stores/game'
 import {
   SUMMER_WEEKS,
+  TIERS,
+  TIER_LADDER,
   dominantSurface,
   isExamWeek,
   isOffSeasonWeek,
@@ -96,6 +98,7 @@ import { vacationPackage } from '../engine/economy'
 import { feedContext, feedShows, preferredWeekEvent } from './tierState'
 import { weekLabel, weekSpan } from '../shared/dates'
 import type { Surface } from '../engine/match/types'
+import type { TierDef, TierId } from '../engine/season/types'
 import type { SessionKind, Snapshot, UpcomingEvent } from '../shared/protocol'
 
 /** The grid's column heads, Monday first – the same Monday..Sunday span `shared/dates.ts` builds
@@ -241,10 +244,57 @@ export interface CalendarWeek {
    *  `days` are the Monday..Sunday indices the shoot took; `brand` is whose it is, so the grid and
    *  the read-out can name it without re-deriving a deal. */
   shoot: { brand: string; days: number[] } | null
+  /** ⭐⭐ ROUND 29 P13/P14/P15 – WHAT THIS TRIP IS, when the week is a committed tournament trip.
+   *  Null on every other week. See `TripFacts` for what each field decides. */
+  trip: TripFacts | null
+  /** ⭐ ROUND 29 P15 – HOW LONG NEXT WEEK'S DRAW IS, when she is entered in one and this week's days
+   *  are still hers to lend. Null otherwise, which is the answer on almost every week of a career.
+   *
+   *  ⚠ IT IS A NUMBER AND NOT A VERDICT, deliberately. Whether a draw that long needs to start
+   *  travelling on the Sunday before is a LAYOUT question – seven days, a travel day at each end –
+   *  and `weekGrid.ts` owns it (`tripKeepsDeparture`). This file's job is the FACT: she is entered,
+   *  next week, in a draw of this many rounds. Handing down a boolean would have put the arc's
+   *  arithmetic in two files and made them able to disagree about which rungs leave at the weekend.
+   *
+   *  ⚠ NULL IS THE CONSERVATIVE ANSWER AND FOUR THINGS PRODUCE IT: no event next week, an event she
+   *  did not enter, the end of the fixture list – and a week whose own identity outranks the loan.
+   *  A trip week, a booked family week, the off-season and a layoff all keep their Sunday: her own
+   *  week owns its days, so two big events back to back never fight over one evening and a girl in a
+   *  cast is not drawn boarding a plane. */
+  nextTripRounds: number | null
   /** Should the days cross themselves out when the week is played? False when another surface owns
    *  the week: a tournament trip has its own flow and its own screens, and a week whose reveal is
    *  already paused is not a week anybody is about to watch pass. */
   animates: boolean
+}
+
+/** ⭐⭐ ROUND 29 P15/P13/P14 – THE THREE FACTS THAT SHAPE A TRIP WEEK, carried as DATA for the reason
+ *  `offSeason`, `summer` and `masseurDays` are: `weekGrid.ts` may not import from `../engine/`, and a
+ *  guard holds it to that. This file is the one that legitimately talks to the engine, so it asks
+ *  once and the arc reads.
+ *
+ *  ⚠ NOTHING HERE IS PERSISTED AND NOTHING HERE IS DRAWN. All three are arithmetic over facts the
+ *  save already carries (the entered event's tier, the hire, the travel stance), so the schema is
+ *  untouched and no RNG stream – MAIN or sub – is tapped. A week's picture is not a roll. */
+export interface TripFacts {
+  /** ⭐ P15 – HOW MANY DAYS OF THE WEEK ARE MATCH DAYS: the draw's own round count,
+   *  `log2(drawSize)`, which is `runTournament`'s own arithmetic rather than a second table.
+   *  The owner asked for exactly this shape – «на локалах 3 дня, National 4 (вроде), основная масса
+   *  5, а на 1000 вообще 6 (Шлем 7)» – and the engine's draw sizes produce his numbers without a
+   *  taste being exercised anywhere: 8 / 16 / 32 / 64 / 128 are 3 / 4 / 5 / 6 / 7 rounds.
+   *
+   *  ⚠ IT IS THE DRAW'S ROUNDS AND NOT THE ROUNDS SHE SURVIVES. Seven days are drawn before the week
+   *  is played, so this says HOW LONG THE EVENT RUNS, never how far she got – see `tripArcFor`, which
+   *  labels every one of them identically for that reason. */
+  rounds: number
+  /** ⭐ P13 – DID THE MASSEUR MAKE THIS TRIP? The engine's own predicate (`masseurWorksInWeek`) and
+   *  the travel stance, asked once. False when nobody is hired, when the college freeze covers the
+   *  week, or when he stayed home – and on the last of those the engine still charges the retainer,
+   *  which is the truth about both (see `resolveMasseur`). */
+  masseur: boolean
+  /** ⭐ P14 – DOES THIS RUNG HOLD PRESS CONFERENCES? `tierHoldsPress`, which is a threshold on the
+   *  ladder rather than a taste per event. */
+  press: boolean
 }
 
 /** The snapshot facts the layout reads. A `Pick`, so a test can hand in a plain object – the
@@ -346,6 +396,62 @@ export function masseurDaysFor(sessions: number, planDays: readonly PlanRole[]):
   const working = planDays.flatMap((role, d) => (role === 'rest' ? [] : [d]))
   const free = planDays.flatMap((role, d) => (role === 'rest' ? [d] : []))
   return [...working, ...free].slice(0, sessions).sort((a, b) => a - b)
+}
+
+// =================================================================================================
+// ⭐⭐ ROUND 29 P15 / P14 – THE TWO THINGS THE TRIP WEEK NEEDS TO KNOW ABOUT THE RUNG
+// =================================================================================================
+
+/** ⭐ P15 – HOW MANY MATCH DAYS THE EVENT RUNS FOR: `log2(drawSize)`, the draw's own round count.
+ *
+ *  ⚠ IT IS DERIVED FROM THE CATALOGUE, NOT A SECOND TABLE OF NUMBERS, and that is what makes it
+ *  checkable rather than a taste. `TierDef.drawSize` is documented as POWERS OF TWO ONLY because
+ *  `runTournament` reads `Math.log2(drawSize)` as its round count – so this is the engine's own
+ *  arithmetic asked from the outside, and a rung whose draw grows gets a longer week for free.
+ *
+ *  ⚠ AND IT LANDS ON THE OWNER'S OWN NUMBERS WITHOUT BEING FITTED TO THEM. He asked for «на локалах
+ *  3 дня, National 4 (вроде), основная масса 5, а на 1000 вообще 6 (Шлем 7)»; the shipped draws give
+ *  local 8 -> 3, regional 16 -> 4, every 32-draw -> 5, wta1000 64 -> 6, slam 128 -> 7. His «вроде»
+ *  is answered by the table rather than around it: the FOUR-day rung is `regional`, not `national` –
+ *  the National Series is a 32-draw in this game, so it is one of the five-day «основная масса»
+ *  alongside the junior tour, the W-series and the WTA 250/500.
+ *
+ *  ⚠ AN ID THE CATALOGUE DOES NOT KNOW GETS THE COMMON WEEK rather than an exception. Nothing in the
+ *  shipped app can produce one – `arrival.tier` is the engine's own – but hand-built fixtures and a
+ *  save written by a build with a rung this one lacks both can, and a calendar is not the place to
+ *  throw: five rounds is what almost every rung on the ladder is, and it is the same answer
+ *  `weekGrid.ts`'s `TRIP_DEFAULT` gives a caller who said nothing at all (a test ties the two to the
+ *  catalogue so neither can drift into being a number somebody picked). */
+export const TRIP_ROUNDS_FALLBACK = 5
+export function tripRoundsFor(tier: TierId): number {
+  const def = TIERS[tier] as TierDef | undefined
+  return def ? Math.log2(def.drawSize) : TRIP_ROUNDS_FALLBACK
+}
+
+/** ⭐ P14 – THE RUNG FROM WHICH A TOURNAMENT PUTS HER IN FRONT OF A MICROPHONE.
+ *
+ *  The owner scoped this item himself – «на тех уровнях турниров, где это актуально» – and the cut
+ *  is the WTA main tour: WTA 250, 500, 1000 and the Slams. Two reasons, and the second is the game's
+ *  own:
+ *
+ *    * the sport's. A tour-level event runs a press room and a player who has played is required in
+ *      it; an ITF W15 in a municipal park does not have one, which is his own example.
+ *    * ⭐ THE ENGINE ALREADY DREW THIS LINE SOMEWHERE ELSE. `ECONOMY.endorsements` pays an APPEARANCE
+ *      FEE from `wta250` up – «$15,000 to be on the poster of a WTA 250 or better» – so the rung
+ *      where a tournament starts paying for her presence is exactly the rung where it starts asking
+ *      for her time. One line, two mechanics, and this one is the free half of it.
+ *
+ *  ⚠ A THRESHOLD ON `TIER_LADDER`, NOT A LIST OF FOUR IDS. The ladder is the single source of truth
+ *  for "is A above B", so a seventeenth rung slotted above the 250 inherits the press room instead of
+ *  silently falling out of a hand-written set – the failure `ART_TIER_ORDER` records having had.
+ *
+ *  ⚠⚠ AND IT IS FLAVOUR, NOT A MECHANIC. Nothing downstream of this reads a number: it adds one
+ *  block to a day that is already drawn, it costs no cents, spends no condition, moves no schedule
+ *  and cannot block a week. If that ever stops being true it needs the owner, not a follow-up. */
+export const PRESS_FROM_TIER: TierId = 'wta250'
+export function tierHoldsPress(tier: TierId): boolean {
+  const rung = TIER_LADDER.indexOf(tier)
+  return rung >= 0 && rung >= TIER_LADDER.indexOf(PRESS_FROM_TIER)
 }
 
 /** ⭐ ROUND 28 #6 – WHICH DAYS THE SHOOT TAKES, and the rule is the ENGINE'S OWN CHARGE DRAWN.
@@ -450,10 +556,21 @@ export function calendarWeekFor(snap: CalendarWeekFacts, week: number): Calendar
   // nothing on the weeks she is not home (`accrueCondition`'s `!playedThisWeek`). The retainer runs
   // on a tournament week he stays home from – `resolveMasseur` says so – and the calendar draws no
   // table for it, which is the truth about both.
+  const masseurOnTour =
+    masseurWorksInWeek(snap.masseurHired ?? false, frozen, bookedOff) && (snap.masseurTravels ?? false)
   const masseurSessions =
-    masseurWorksInWeek(snap.masseurHired ?? false, frozen, bookedOff) && (!awayThisWeek || (snap.masseurTravels ?? false))
+    masseurWorksInWeek(snap.masseurHired ?? false, frozen, bookedOff) && (!awayThisWeek || masseurOnTour)
       ? (snap.masseurSessionsPerWeek ?? 0)
       : 0
+  // ⭐ ROUND 29 P15 – DOES SHE LEAVE FOR NEXT WEEK'S DRAW ON THIS WEEK'S SUNDAY? The fact only: how
+  // many rounds next week's entered event runs for, and `weekGrid.ts` decides whether a draw that
+  // long has to start travelling at the weekend (see `CalendarWeek.nextTripRounds`).
+  //
+  // ⚠ ENTERED, NOT MERELY LISTED. `upcoming` is the whole fixture list she can see; a Slam she is not
+  // in is somebody else's fortnight and lends nothing. And it is `upcoming` rather than `arrival`
+  // because `arrival` describes THIS week by construction, one week short of the question.
+  const nextEntered = snap.upcoming.find((e) => e.week === week + 1 && e.entered)
+  const nextTripRounds = nextEntered ? tripRoundsFor(nextEntered.tier) : null
   const base = {
     week,
     sessions,
@@ -464,6 +581,12 @@ export function calendarWeekFor(snap: CalendarWeekFacts, week: number): Calendar
     masseurDays: masseurDaysFor(masseurSessions, planDays),
     // Null here and filled in on the ordinary-week branch alone - see the precedence note above.
     shoot: null as CalendarWeek['shoot'],
+    // ⭐ ROUND 29 P13/P14/P15 – null here and filled in on the TRIP branch alone, for the same
+    // reason: a week that is not a trip has no draw, no press room and no masseur on the road.
+    trip: null as CalendarWeek['trip'],
+    // ...and the loan is offered by default and withdrawn by the three branches whose week is not
+    // hers to lend from (see the field's own note for the list and the argument).
+    nextTripRounds,
     // Asked once, here, and carried on the week - see the field's note on CalendarWeek for why the
     // grid may not ask it itself. Summer travels the same way (R15-8).
     offSeason: isOffSeasonWeek(week),
@@ -480,6 +603,10 @@ export function calendarWeekFor(snap: CalendarWeekFacts, week: number): Calendar
     return {
       ...base,
       days: uniform('rehab', 'injury', 'Rehab'),
+      // ⚠ P15: a girl in a cast is not drawn boarding a plane on the Sunday. The engine can still
+      // list her as entered next week – a committed entry survives a layoff and resolves as a
+      // walkover – so this is the one refusal that is about her body rather than about the week.
+      nextTripRounds: null,
       title: 'On the bench',
       // The RETURN WEEK is the same arithmetic every other surface prints (weekLabel of
       // week + weeksRemaining), so the date can never differ from the Season screen's injury
@@ -512,6 +639,24 @@ export function calendarWeekFor(snap: CalendarWeekFacts, week: number): Calendar
         ? { surface: event.surface, surfaceNote: surfaceStyleHint(snap.profile.playStyle, event.surface) }
         : {}),
       days: uniform('away', null, 'Away'),
+      // ⭐⭐ ROUND 29 P15/P13/P14 – WHAT THIS TRIP IS. `arrival.tier` is the ENGINE's own verdict for
+      // the week ahead, so the arc's length, its press room and the masseur's seat are all read off
+      // the entry that was actually committed rather than off a card the player happened to look at.
+      trip: {
+        rounds: tripRoundsFor(arrival.tier),
+        masseur: masseurOnTour,
+        press: tierHoldsPress(arrival.tier),
+      },
+      // ⚠ P15: her own trip owns all seven of its days, so two big events back to back never fight
+      // over one Sunday evening – this week's Sunday is either its own travel home or its last match.
+      nextTripRounds: null,
+      // ⚠⚠ P13 – AND THE WEEKLY RUNG'S TABLE IS NOT DRAWN ON A TRIP, because the engine does not
+      // charge for it: `resolveMasseur` stands the weekly bill DOWN on the week he boards and
+      // `masseurTourWeekCents` bills matches played x the session rate instead. Laying the rung's
+      // 2 / 4 / 7 days over a week whose plan is not being spent is what put his table on the travel
+      // day and the practice day and off every match of the week at the entry rung. The trip's own
+      // sessions are on the match days, in `trip.masseur` above.
+      masseurDays: [],
       title: 'Tournament week',
       readout: event
         ? `She is away at ${event.label} – the draw owns the week.`
@@ -530,6 +675,9 @@ export function calendarWeekFor(snap: CalendarWeekFacts, week: number): Calendar
     return {
       ...base,
       days: uniform('off', null, 'Away'),
+      // ⚠ P15: the family is somewhere else and the week says «no tennis at all» out loud. It has no
+      // Sunday evening to lend, and the engine agrees – a booked week refuses entries.
+      nextTripRounds: null,
       title: 'Family week',
       // ⚠ THE READOUT SAYS WHAT THIS PARTICULAR WEEK IS NOW. It used to be one sentence for all six
       // packages, which is the half of the owner's complaint the grid does not cover: «куда бы ни
@@ -547,6 +695,8 @@ export function calendarWeekFor(snap: CalendarWeekFacts, week: number): Calendar
     return {
       ...base,
       days: uniform('off', null, 'Off'),
+      // ⚠ P15: the tour is shut, so there is nothing next week to leave for.
+      nextTripRounds: null,
       title: 'Off-season',
       // ⚠ AND SHE IS NOT AT HOME DOING NOTHING - see PRE_SEASON_ARC in weekGrid.ts. The tour is
       // shut, so there is nothing to play; the coach is still billed and her skills still move,
