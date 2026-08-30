@@ -74,6 +74,18 @@ cannot be counted. It does not stop a **final** being counted – and `fameFloor
 at `slam`, so **every lost final from w15 to wta1000 is a dated professional result that nothing in
 this game had ever read.** It is read now, into the multiple only.
 
+### 2a. ⚠ THE SIGNALS THAT WERE AVAILABLE AND ARE NOT USED, each with its reason
+
+He said «и вся остальная информация», so the omissions are decisions and are named here rather than
+left to look like oversights.
+
+| signal | why not |
+| --- | --- |
+| `careerTotals.prizeCents` / `earnedCents` | **Circular.** Pricing a brand off the family's money makes a rich family's brand worth more for being rich, and the whole shelf is bought out of that same wallet. What the prize money MEANS – the results that won it – already reaches the brand through fame and through the season bands. |
+| `careerTotals.weeksLostToInjury` | **It would be a punishment, and «мы ни за что не наказываем».** Injury already reaches the brand the honest way: through what it costs her on court – fewer seasons, fewer top-20 finishes, fewer finals. ⚠ It is also live ground for a concurrent wave (round 30 #27), and the control arm confirms this change leaves `weeksLostToInjury` identical to the week. |
+| `seasonHistory[].bestFinish` | **Not tier-gated.** It is the best finish that season across ALL tables, so a junior title reads as `bestFinish: 0` – a career of junior silverware would rate as a professional deep run, which is exactly what `world/fame.ts`' «the world does not read junior draws» refuses. `TierTrophies.finals` at the professional tiers says the same thing and is gated. |
+| `seasonHistory[].points` | Already expressed, better, by `endRank`: points are a raw quantity and the rank is the tour's own sort of them. |
+
 ## 3. ⭐⭐ PREDICTED VS MEASURED (invariant 5)
 
 `npx vite-node tools/brand-dynamics.ts -- --seeds 8 --weeks 780` – 9 presets × 8 seeds × 780 weeks,
