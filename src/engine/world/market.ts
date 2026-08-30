@@ -37,6 +37,26 @@
 // which is exactly what he asked for. Same discipline as the wave: READ off
 // `${seed}:market:crash:${epoch}`, never drawn, so a reload replays the same crisis and a purchase
 // still cannot move anything. See THE CRASH LAYER below for the construction and the bound it costs.
+// ⭐⭐⭐ ROUND 30 #14 – HIS RULING ON THIS FILE, HAVING PLAYED IT, AND IT MOVED ONE NUMBER AND
+// DELETED ONE FUNCTION.
+//
+// «Волатильность индексного фонда какая-то очень большая по ощущениям +65/-15 это то, что я видел…
+// Во-первых она скорее всего будет менее "галопирующая", во-вторых вряд-ли в таких крайностях. И
+// надо логику фонда переделать на покупку ДОЛЕЙ в фонде…»
+//
+//   * `volBps` 1_800 -> 900 on the fund (`ECONOMY.shop.catalogue`, not here): 24.5% of seasons
+//     negative against 30.8%, worst season -32.5% against -39.9%, and the ten-year loss tail down
+//     from the 1.10% he accepted to 0.325%. ⚠ HIS CRASH BAND IS UNTOUCHED – -15…-30% at the trough,
+//     one crisis per 2-6 years, no grace period are his own numbers from the day before, and what
+//     they still cost is stated to him in §14i-4 rather than shaved here.
+//   * `marketRatio` IS GONE. A holding is a count of UNITS at a price now (`unitPriceCents` in
+//     `world/assets.ts`), so nothing asks «what did the market do between two weeks» any more – the
+//     price ratio IS that question, asked of one function. Its two guards went with it, and the
+//     consequence for the survivor is written at `marketIndex`.
+//
+// Everything else in this file – the octaves, the crash calendar, the bounds – is unchanged, and
+// §14i's own measurement is that the unit model re-run at 1_800 reproduces §14h to a tenth of a
+// percent. The model did not change; the way a holding is expressed on it did.
 import { rngFromSeed } from '../rng'
 
 /** ⭐⭐ THE OCTAVES – four tides of different length, added together, and this is the whole of
@@ -240,10 +260,12 @@ export function marketIndex(seed: string, week: number, volBps: number): number 
  *      outside crash arcs sees a crash contribution of exactly 0 at both ends – the arc always
  *      returns home – so `worstCrashFreeRatio` governs and the OLD guarantee stands verbatim: at
  *      ten years the fund beats the 3.17% deposit for EVERY seed while vol < 1,824 bps.
- *    * SELL INTO A TROUGH AND UNIVERSALITY NEEDS ~20 YEARS: with this floor at 0.70,
- *      `1.07^T · worstMarketRatio > 1.0317^T` solves to T > ~19.7 years – longer than a career. At
- *      ten years the loss tail is therefore REAL and is MEASURED, not asserted: see
- *      `tools/market-probe.ts` and §14h. Every ten-year loser sells inside a crash arc; that is a
+ *    * SELL INTO A TROUGH AND UNIVERSALITY NEEDS ~15 YEARS: with this floor at 0.70,
+ *      `1.07^T · worstMarketRatio > 1.0317^T` solves to T > ~14.7 years at round 30 #14's halved
+ *      volatility (it was ~19.7 at 1,800 bps) – still longer than a ten-year hold. At ten years the
+ *      loss tail is therefore REAL and is MEASURED, not asserted: 0.325% of 48,000 holdings, every
+ *      one of them a trough-sell, against the 1.10% he accepted in round 29. See
+ *      `tools/market-probe.ts` and §14i-3. Every ten-year loser sells inside a crash arc; that is a
  *      theorem (tier one), and the tests assert it on the sample.
  *
  *  «мы ни за что не наказываем» survives as: holding through a crisis costs nothing – the arc comes
