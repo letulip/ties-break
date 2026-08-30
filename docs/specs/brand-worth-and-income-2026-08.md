@@ -198,3 +198,23 @@ was added for it**: an unused field is a dead field, which is the same disease a
 
 ⚠ **ZERO MAIN DRAWS.** `world/brand.ts` takes no `Rng`, no clock and no `Math.random`; a valuation is
 a fold over history. The frozen capture (41550 / `e6b0c709`) is unmoved and verified.
+
+### 7a. ⭐⭐ THE CONTROL ARM, PER KEY – measured, not argued
+
+A probe walks three careers 260 weeks, **plants a fame stock and buys the brand at week 90** (so the
+arm contains the reader – without the titles the career holds fame 0 for 260 weeks and the money path
+this wave changed never runs, which is a null result dressed as a null finding), and prints `rngMain`
+plus a per-key hash of the whole world. Run on **B** (this branch) and on **A** (the branch point,
+which on this branch is exactly «my commits reverted» – nothing else has landed on it).
+
+- ⭐⭐ **`rngMain` is BYTE-IDENTICAL on all three seeds.** The fairness property holds.
+- **The keys that moved are the money and only the money**: `assets` (the brand's `valueCents`),
+  `fundsCents`, `careerTotals`, `events`, `financeWeeks`, `lastSeasonSummary`, `seasonHistory`, and
+  `fork` – whose quotes, tiers, shares and week are **identical**, with only its derived
+  `canPayPerYearCents` moving with the wallet.
+- **Nothing else moved at all**: the calendar, the cohort, the results, the trophy ledger, the
+  ranking keys and `injuryHistory` are byte-identical. `careerTotals.spentCents` and
+  `weeksLostToInjury` are identical to the cent and to the week – so this wave does not touch the
+  concurrent injury work.
+- The one career-total that moved is `earnedCents`: $281k → $628k over 170 weeks of owning a brand,
+  which is the item.
