@@ -690,7 +690,7 @@ marked `[!]` and each names what shipped and why it missed – that is the point
   moves. ⚠ Two round-29 guards **re-aimed with notes, neither deleted**, and one of them was a guard
   that could never have been false again once a car bills weekly.
 
-- [ ] **16. CI: the build is 18m32s and the shape is measured.** `npm test` is **15m08s of it** –
+- [x] **16. CI: the build is 18m32s and the shape is measured.** `npm test` is **15m08s of it** –
   `bulk` 501 s then **eleven heavy files strictly serially, 406 s**, so for 406 s of every run half the
   runner is idle by construction (`scripts/units.mjs` loops `spawnSync`). `npm ci` is **6 s**, so extra
   jobs are nearly free. ⭐ Three jobs – bulk · the heavy shards · component+types+build+static – put the
@@ -1096,7 +1096,7 @@ owning `index-fund · car-sensible · house-first · merch-brand · deposit · a
   one line plus a bench re-run.**
 
 
-- [?] **26. ⚠⚠ «богатая семья может купить телу освобождение от старения… вот это очень странно
+- [~] **26. ⚠⚠ «богатая семья может купить телу освобождение от старения… вот это очень странно
   звучит как по мне. Что можем с этим сделать?»** – **his question, and the answer is a principle this
   house already holds but never applied to age.**
 
@@ -1126,8 +1126,9 @@ owning `index-fund · car-sensible · house-first · merch-brand · deposit · a
   quieter, the old end gets honest, and the total gets closer to the research than it is today.
 
   ⚠ It moves every career: a bench, a spec recording predicted-vs-measured, and a frozen re-pin.
-  **`[?]` – his to authorise, and I would run the measurement before the build so the re-shape is
-  fitted to the band rather than guessed at.**
+  ⚙ **SETTLED**: he authorised the measurement («давай, ставь замер»), it ran, and it **corrected
+  this item's own premise** – the stack is worth 9% on realised injuries, not 4×, and his drought is
+  a tail at ≈1 in 45. His follow-up ruling is item **27**, which supersedes this line.
 ---
 
 - [x] **25. NOT YOUR ITEM – THE WAVE'S OWN DEFECT, FOUND AND REPAIRED ON 30.08.** «Main is at N» is a
@@ -1322,7 +1323,7 @@ owning `index-fund · car-sensible · house-first · merch-brand · deposit · a
   lands in band)? *(d)* the two in 5 above are separate waves – do you want either?
 
 
-- [ ] **27. ⚙ HIS RULING ON THE INJURY SHAPE (30.08), three parts** – «тяжесть надо взять точно, но
+- [>] **27. ⚙ HIS RULING ON THE INJURY SHAPE (30.08), three parts** – «тяжесть надо взять точно, но
   разумно. Однако и с показателем в 1 травму в год надо что-то делать, раз я не увидел ни одной за
   большой промежуток. А еще, раз мы **храним историю травм** у себя, то вполне можно делать алгоритм,
   который будет увеличивать немного вероятность **новой такой же травмы или ее прогрессии** (более
