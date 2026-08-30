@@ -26,6 +26,30 @@
 // tournament resolves in its own week exactly as it did. Every number below is arithmetic over facts
 // the snapshot already carried, and no RNG stream – MAIN or sub – is touched, which is why the frozen
 // capture (41550 / e6b0c709) is unmoved by the whole wave.
+//
+// -------------------------------------------------------------------------------------------------
+// ⚠⚠ THE MUTATION LOG – twelve, every one red, run one at a time against this file
+// -------------------------------------------------------------------------------------------------
+// A guard that cannot fail on the version of the code it is describing is decoration. Each of these
+// was applied to the shipped source, this file was run, and the source restored from a FILE COPY
+// (`git checkout --` restores from the index, which is not the same thing).
+//
+//   M1   `tripArcFor` ignores its round count (four Draw days for everybody – the pre-P15 shape)  11 red
+//   M2   `tripKeepsDeparture` one day looser (`rounds + 1 <= 7`)                                   2 red
+//   M3   `addLentDeparture` drops the length guard – every rung borrows a Sunday                   1 red
+//   M4   the loan stops asking whether she ENTERED next week's event                               1 red
+//   M5   `addLentDeparture` stops checking the hour is free (paints over her homework)             1 red
+//   M6   the trip draws the WEEKLY rung's table again – the defect P13 is about                    6 red
+//   M7   `PRESS_FROM_TIER` moved down to the ITF W15                                               2 red
+//   M8   the tour massage moves to 07:00, before the match                                         1 red
+//   M9   `trip.masseur` stops asking whether he travels                                            1 red
+//   M10  a trip week lends its own Sunday to the next trip                                         1 red
+//   M11  the press block stops sitting one hour behind the draw                                    2 red
+//   M12  the court hit survives at every rung, so the arc overruns the week                       10 red
+//
+// ⚠ AND THE TWO "NOT ALL THE SAME" ARMS EXIST BECAUSE OF M1 AND M7: a sixteen-rung sweep whose rows
+// all read one number is satisfied by a constant, and a press sweep whose rows all read `false` is
+// satisfied by a screen that never draws one.
 import { describe, it, expect, beforeEach } from 'vitest'
 import { mount } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
