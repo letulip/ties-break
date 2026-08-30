@@ -187,7 +187,7 @@ marked `[!]` and each names what shipped and why it missed – that is the point
   birpc's stalls under contention.
 
 
-- [ ] **17. ⚙ «на турнирных неделях с пресс-конференциями всё-таки давай сделаем как в реальности:
+- [x] **17. ⚙ «на турнирных неделях с пресс-конференциями всё-таки давай сделаем как в реальности:
   матч, конференция через 30 минут, потом массаж»** – **RULING, and it restores the agent's own first
   instinct over my correction.**
 
@@ -204,3 +204,22 @@ marked `[!]` and each names what shipped and why it missed – that is the point
   run 07:00–19:00. So «через 30 минут» renders as **the next hour block after the match**, which is
   the same thing the eye reads. **Do not add half-hour support for this** – it would re-shape every
   day in the game for one gap; if the half-hour ever matters, it is its own decision.
+
+  **SHIPPED.** `tripMatchDay` (`weekGrid.ts`) pushes the press hour before the table, so every match
+  day of every rung reads **Draw day → Press → Body work**. Two `if` lines swapped; nothing else in
+  the arc moved, because the two blocks are one hour each.
+
+  ⚠ **The Slam's Sunday still fits, and it was measured rather than assumed.** `Draw 10–14 ·
+  Press 14–15 · Body work 15–16 · Travel home 16–19` – four blocks ending exactly on the grid's last
+  row, the same arithmetic as before the swap. Nothing was shortened; the two arms that would have
+  caught a compression (`the flight starts at 16`, `no block's span changed between the Sunday and
+  the Monday`) are green as they stand.
+
+  ⚠ **The order pins were re-aimed, never deleted, and re-measured.** Two of them assert the
+  sequence – the Slam-Sunday four-label arm and P14's «it follows the match» arm – and both carry a
+  ⚠ note naming this ruling and the misreading it undoes. The mutation log entry M17 was rewritten
+  and re-run in its new direction: swapping back to `draw → table → press` reddens both, 2 red.
+
+  ⭐ **The lesson is in the code too**, at `tripMatchDay`: a list of three things is not a sequence
+  of them, and the correction that turned «после матчей, массажа и конференций» into an order is
+  what built the wrong day. The builder's first instinct was right and is restored.

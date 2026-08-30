@@ -44,13 +44,18 @@
 //   M8   the tour massage moves to 07:00, before the match                                         1 red
 //   M9   `trip.masseur` stops asking whether he travels                                            1 red
 //   M10  a trip week lends its own Sunday to the next trip                                         1 red
-//   M11  the press block stops sitting one hour behind the draw                                    2 red
+//   M11  the press block stops sitting directly behind the draw                                    2 red
 //   M12  the court hit survives at every rung, so the arc overruns the week                       10 red
 //   M13  the OFF-SEASON lends its Sunday                                                          1 red
 //   M14  a booked FAMILY week lends its Sunday                                                    1 red
 //   M15  a LAYOFF week lends its Sunday                                                           1 red
 //   M16  the Slam's evening return deleted – she never comes home                                 5 red
-//   M17  the match day's order swapped back to draw -> press -> table                             2 red
+//   M17  the match day's order swapped to draw -> table -> press                                  2 red
+//        ⚠ RE-AIMED BY ROUND 30 #17 AND RE-MEASURED, not merely re-worded. It used to read "swapped
+//        BACK to draw -> press -> table", because the shipped order was draw -> table -> press. He
+//        has now ruled the other way («матч, конференция через 30 минут, потом массаж»), so the
+//        mutation is the swap in the other direction and it was applied and watched: the Slam
+//        Sunday's four-label arm and the P14 order arm, 2 red.
 //   M18  `tripKeepsReturn` tightened, so the 1000 loses its travel DAY                            2 red
 //   M19  the flight eats the press hour – the compression he has twice refused                    3 red
 //   M20  `addEveningReturn`'s `start >= GRID_END_HOUR` guard removed             ⚠⚠ STILL GREEN
@@ -427,12 +432,16 @@ describe('round 29 P15 – the previous week lends its Sunday', () => {
 describe('round 29 P16 – the Slam flies home on its own Sunday', () => {
   const lastDay = (f: CalendarWeekFacts) => gridOf(f)[SUNDAY].blocks
 
-  it('⚠⚠ the Sunday of a Slam holds a final, a rub-down, a press hour AND the flight – all four', () => {
+  it('⚠⚠ the Sunday of a Slam holds a final, a press hour, a rub-down AND the flight – all four', () => {
     // ⚠ MUTATION: delete the `else out[out.length - 1] = addEveningReturn(...)` arm and this reddens
     // with three blocks instead of four.
+    // ⚠⚠ RE-AIMED BY ROUND 30 #17, NEVER DELETED – it read `Draw day / Body work / Press / Travel
+    // home` until he ruled on the order outright: «матч, конференция через 30 минут, потом массаж».
+    // The four blocks and the fact that the day holds all four are what this arm has always been
+    // about; only their sequence moved, and the arm is what proves the flight still fits behind them.
     const day = lastDay(trip('slam', withMasseur(DAILY, true)))
-    expect(day.map((b) => b.label), 'his own order: matches, massage, conferences, then home').toEqual([
-      'Draw day', 'Body work', 'Press', 'Travel home',
+    expect(day.map((b) => b.label), 'his order: the match, the microphone, the table, then home').toEqual([
+      'Draw day', 'Press', 'Body work', 'Travel home',
     ])
   })
 
@@ -626,25 +635,30 @@ describe('round 29 P14 – the press conference, at the rungs that hold one', ()
     expect(yes).toBeLessThan(RUNGS.length)
   })
 
-  it('⚠ it follows the match, in the order the OWNER named – draw, table, press', () => {
-    // ⚠ RE-AIMED (P16): the first draft asserted the press hour sat directly on the draw block, on my
-    // own reasoning that a real conference follows a match within the half-hour. His sentence closing
-    // the return lists them in his order – «после матчей, массажа и конференций» – so the table comes
-    // first and this asserts HIS sequence rather than mine. ⚠ MUTATION: swap the two pushes in
-    // `tripMatchDay` and this reddens on the masseur arm while the no-masseur arm stays green, which
-    // is why both arms are here.
+  it('⚠ it follows the match, in the order the OWNER ruled – draw, press, table', () => {
+    // ⚠⚠ RE-AIMED TWICE, NEVER DELETED, AND THE THIRD SHAPE IS THE FIRST ONE. The first draft put
+    // the press hour directly on the draw block, on the reasoning that a real conference follows a
+    // match within the half-hour. P16 swapped it to `draw -> table -> press` on a reading of his
+    // «после матчей, массажа и конференций» as a SEQUENCE - it was a LIST, and turning one into the
+    // other is what built the wrong day. ROUND 30 #17 is him settling it outright: «матч,
+    // конференция через 30 минут, потом массаж». So the microphone is straight off the court again.
+    //
+    // ⚠ MUTATION: swap the two pushes in `tripMatchDay` and this reddens on the masseur arm while
+    // the no-masseur arm stays green, which is why both arms are here.
     for (const day of gridOf(trip('slam'))) {
       const draw = day.blocks.find((b) => b.kind === 'tournament')!
       const press = day.blocks.find((b) => b.kind === 'press')!
-      expect(press.start, 'a press conference before the match').toBe(draw.start + draw.span)
+      expect(press.start, 'the conference is not straight off the court').toBe(draw.start + draw.span)
       expect(press.span).toBe(1)
     }
     for (const day of gridOf(trip('slam', withMasseur(DAILY, true)))) {
       const draw = day.blocks.find((b) => b.kind === 'tournament')!
       const table = day.blocks.find((b) => b.kind === 'physio')!
       const press = day.blocks.find((b) => b.kind === 'press')!
-      expect(table.start, 'the table is not straight off the court').toBe(draw.start + draw.span)
-      expect(press.start, 'the microphone came before the table').toBe(table.start + table.span)
+      expect(press.start, 'the conference is not straight off the court').toBe(draw.start + draw.span)
+      // ⚠ «через 30 минут» IS THE NEXT HOUR BLOCK AND NOT A HALF-HOUR: `DayBlock` counts whole hours
+      // and the grid's rows are hours, so the half-hour is not drawable and is deliberately not drawn.
+      expect(table.start, 'the table came before the microphone').toBe(press.start + press.span)
     }
   })
 

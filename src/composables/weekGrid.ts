@@ -484,7 +484,8 @@ const TRIP_TRAVEL_HOME: DayBlock = { start: 11, span: 4, kind: 'travel', label: 
  *
  *  ⚠ ONE HOUR, ON A MATCH DAY AND NOWHERE ELSE: no press room opens for a travel day or a practice
  *  day. Where it sits inside that day is `tripMatchDay`'s decision, not this constant's - see the
- *  ORDER note there, which is the owner's own enumeration. */
+ *  ORDER note there. ⚠ ROUND 30 #17 put it STRAIGHT off the court, ahead of the table: «матч,
+ *  конференция через 30 минут, потом массаж». */
 const TRIP_PRESS: Omit<DayBlock, 'start'> = { span: 1, kind: 'press', label: 'Press' }
 
 /** ⭐⭐ P13 – THE MASSEUR'S HOUR ON TOUR, «сессии массажа после матчей по плану», drawn on the match
@@ -500,25 +501,39 @@ const TRIP_PRESS: Omit<DayBlock, 'start'> = { span: 1, kind: 'press', label: 'Pr
  *  would be the picture promising a dial the ledger does not read. One session per match day is what
  *  the engine already bills for.
  *
- *  ⚠ WHERE IT SITS IS `tripMatchDay`'s ORDER note, one function down. */
+ *  ⚠ WHERE IT SITS IS `tripMatchDay`'s ORDER note, one function down. ⚠ ROUND 30 #17 moved it
+ *  BEHIND the press hour, which is also what a rub-down after a match and its conference is. */
 const TRIP_TABLE: Omit<DayBlock, 'start'> = { span: 1, kind: 'physio', label: 'Body work' }
 
 /** ⭐ P15 – ONE MATCH DAY, with whatever the rung hangs on it, in the order he named them.
  *
- *  ⚠⚠ THE ORDER IS THE OWNER'S OWN ENUMERATION AND IT WAS THE OTHER WAY ROUND IN THE FIRST DRAFT.
- *  I had written match -> microphone -> table on the reasoning that a real press conference follows
- *  a match within the half-hour. His sentence closing the return («можно сделать в Вс **после
- *  матчей, массажа и конференций**») lists them in HIS order, and it is the one the day is built in
- *  now: **draw -> table -> press -> the journey home**. One order on every match day of every rung,
- *  so the last day of a Slam is the same day as its other six with a flight added rather than a day
- *  shaped differently from its own week.
+ *  ⚠⚠ ROUND 30 #17 – THE OWNER RULED ON THE ORDER OUTRIGHT, AND IT IS **draw -> press -> table**.
+ *  «на турнирных неделях с пресс-конференциями всё-таки давай сделаем как в реальности: матч,
+ *  конференция через 30 минут, потом массаж» (30.08).
+ *
+ *  ⚠ THIS RESTORES THE FIRST DRAFT AND UNDOES A CORRECTION, WHICH IS WORTH RECORDING BECAUSE THE
+ *  CORRECTION WAS THE MISTAKE. P15 shipped `draw -> table -> press` on a reading of his earlier
+ *  sentence «можно сделать в Вс после матчей, массажа и конференций» as a SEQUENCE. It was a LIST –
+ *  three things that all happen before the flight – and turning a list into an order is how the
+ *  wrong day got built. The first draft had `draw -> press -> table` on exactly the reasoning he has
+ *  now given: a real conference follows the match within the half-hour.
+ *
+ *  ⚠ THE HALF-HOUR IS NOT DRAWABLE AND IS NOT DRAWN. `DayBlock` is `{ start, span }` in WHOLE HOURS
+ *  and the grid's rows run 07:00–19:00, so «через 30 минут» renders as THE NEXT HOUR BLOCK after the
+ *  match, which reads the same to the eye. Half-hour support would re-shape every day in the game
+ *  for one gap; if the half-hour ever genuinely matters it is its own decision and his.
+ *
+ *  One order on every match day of every rung, so the last day of a Slam is the same day as its
+ *  other six with a flight added rather than a day shaped differently from its own week.
  *
  *  ⚠ EACH BLOCK SITS DIRECTLY BEHIND THE ONE BEFORE IT – no gaps to reason about, and the day's end
- *  is `dayEnd` below, which is what the journey home is placed against. */
+ *  is `dayEnd` below, which is what the journey home is placed against. The Slam's Sunday still ends
+ *  exactly on the grid's last row after the swap (10-14 draw, 14-15 press, 15-16 table, 16-19 home);
+ *  the arithmetic is unchanged because the two swapped blocks are one hour each. */
 function tripMatchDay(trip: TripFacts): DayBlock[] {
   const day: DayBlock[] = [{ ...TRIP_DRAW_DAY }]
-  if (trip.masseur) day.push({ ...TRIP_TABLE, start: dayEnd(day) })
   if (trip.press) day.push({ ...TRIP_PRESS, start: dayEnd(day) })
+  if (trip.masseur) day.push({ ...TRIP_TABLE, start: dayEnd(day) })
   return day
 }
 
