@@ -472,3 +472,19 @@ marked `[!]` and each names what shipped and why it missed – that is the point
   ⭐ **The lesson is in the code too**, at `tripMatchDay`: a list of three things is not a sequence
   of them, and the correction that turned «после матчей, массажа и конференций» into an order is
   what built the wrong day. The builder's first instinct was right and is restored.
+
+
+- [ ] **18. ⚙ «в край, как hero картинка на главной, если можно. И плашки дальше как на главной на
+  своих подложках, **кроме этих 4х характеристик турнира** про призовые, зрителей и т.п.»** –
+  **RULING on the Next-tournament screen, settling the one thing its builder left open.**
+
+  He asked for the rounds plate «full width with side padding», and the builder correctly refused to
+  guess whether the picture should then run edge to edge beside it. It should:
+
+  - the tournament image goes **full-bleed, exactly like Home's hero**;
+  - the plates below sit **on their own backings, as on Home**;
+  - ⚠ **except the four tournament facts** (prize money, crowd and the rest) – those stay a bare row
+    with no plate, which is what round 30 #6 already asked for and shipped.
+
+  ⭐ So the screen ends up Home's own composition: a full-bleed hero, a bare row of four under it,
+  and everything after that on plates.
