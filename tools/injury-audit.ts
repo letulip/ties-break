@@ -411,16 +411,31 @@ console.log('\n  2b. CLUSTERING (round 30 #27 – the texture columns, read agai
   let repeats = 0
   let placed = 0
   const gaps: number[] = []
+  const repeatGaps: number[] = []
+  const freshGaps: number[] = []
   const seasonCounts: number[] = []
   let repeatWorse = 0
   let repeatSame = 0
+  // ⚠⚠ THE LIFETIME COLUMN SATURATES AND THE WINDOWED ONE IS THE HONEST INSTRUMENT. "Has this body
+  // ever broken this part before" reads ~59% even with the mechanic switched OFF – twelve regions and
+  // a twenty-injury career means almost everything is a repeat by the end, so the metric runs out of
+  // room to show anything. `recurrence.halfLifeWeeks` is the window the mechanic actually models, so
+  // the second counter asks the question the DESIGN asks: was this part broken RECENTLY?
+  const WINDOW = ECONOMY.availability.recurrence.halfLifeWeeks
+  let recentRepeats = 0
   const SEV_RANK: Record<InjurySeverity, number> = { minor: 0, moderate: 1, major: 2, severe: 3 }
   for (const c of careers) {
     const ordered = [...c.onsets].sort((a, b) => a.week - b.week)
     const worstByPart = new Map<string, number>()
+    const lastWeekByPart = new Map<string, number>()
     for (let i = 0; i < ordered.length; i++) {
       const o = ordered[i]
-      if (i > 0) gaps.push(o.week - ordered[i - 1].week)
+      if (i > 0) {
+        const gap = o.week - ordered[i - 1].week
+        gaps.push(gap)
+        const recent = o.part !== null && (lastWeekByPart.get(o.part) ?? -Infinity) >= o.week - WINDOW
+        ;(recent ? repeatGaps : freshGaps).push(gap)
+      }
       if (o.part === null) continue
       placed++
       const prior = worstByPart.get(o.part)
@@ -429,13 +444,23 @@ console.log('\n  2b. CLUSTERING (round 30 #27 – the texture columns, read agai
         if (SEV_RANK[o.severity] > prior) repeatWorse++
         else if (SEV_RANK[o.severity] === prior) repeatSame++
       }
+      if ((lastWeekByPart.get(o.part) ?? -Infinity) >= o.week - WINDOW) recentRepeats++
       worstByPart.set(o.part, Math.max(prior ?? -1, SEV_RANK[o.severity]))
+      lastWeekByPart.set(o.part, o.week)
     }
     for (const s of c.seasons) seasonCounts.push(s.onsets.length)
   }
   console.log(
     `     onsets that REPEAT a part this body already broke   ${pct(repeats, placed)}   ` +
-      `(chance alone over 12 weighted regions is well under this)`,
+      `(⚠ SATURATES - ~59% with the mechanic OFF)`,
+  )
+  console.log(
+    `     ⭐ ...broken again INSIDE ${WINDOW}w of the last time     ${pct(recentRepeats, placed)}   ` +
+      `(the window the half-life models - THIS is the column to read)`,
+  )
+  console.log(
+    `     gap after a recent repeat / after a fresh part      ` +
+      `${f(mean(repeatGaps), 1)}w (n=${repeatGaps.length})  vs  ${f(mean(freshGaps), 1)}w (n=${freshGaps.length})`,
   )
   console.log(
     `       ...of those repeats, LANDING WORSE than before    ${pct(repeatWorse, repeats)}` +
