@@ -3369,8 +3369,17 @@ export const ECONOMY = {
         // It is his call and this is him making it. His crash band is UNTOUCHED: −15…−30% at the
         // trough is his own number from the day before and not mine to shave.
         //
-        // ⚙ MEASURED – see §14i and `tools/market-probe.ts`.
-        volBps: 1_800,
+        // ⚠⚠ HALVED, AND «HALF» IS THE RULING RATHER THAN A FITTED NUMBER. 1,800 -> 900 is a
+        // sentence he can hold («half the wobble»); 1,050 or 875 would be a number nobody could
+        // defend later. It lands the felt figure back where he approved it: 24.5% of seasons
+        // negative – «roughly one year in four» – against 30.9% before, with a season sd of 15.0%
+        // which is about a real index's own.
+        //
+        // ⚠ AND THE CEILING IS UNMOVED AND UNTOUCHED BY THIS: §14c's inequality caps `volBps` at
+        // 1,824 for the ten-year calm-water guarantee, and coming DOWN can only widen the margin.
+        //
+        // ⚙ MEASURED, `npx vite-node tools/market-probe.ts --seeds 4000` (30.08) – see §14i.
+        volBps: 900,
         // ⭐⭐⭐ ROUND 30 #14 – WHAT ONE UNIT COSTS AT THE START, and it is HIS anchor to the dollar:
         // «Зашёл, когда доля стоила 4к, через десять лет она может вполне удвоиться. Или зашёл на
         // пике при цене 7-8к.»

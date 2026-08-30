@@ -8,8 +8,12 @@
 //   4. what the path actually looks like – the annual volatility and the deepest drawdown a career
 //      can sit in, because «enough that the risk is felt» is a number too.
 //
-// ⚠ IT PRICES OFF THE ENGINE'S OWN FUNCTIONS (`assetValueCents`, `marketRatio`, the catalogue's
-// `annualRateBps` / `volBps`) and never restates the arithmetic. A probe with its own copy of the
+// ⭐ ROUND 30 #14 RE-AIMED IT AT THE UNIT PRICE and added claim 5 – averaging down, which is the
+// decision the units exist to make possible: two entries, the second below the first, against one
+// entry of the same money. That is «имеешь возможность усредниться», measured.
+//
+// ⚠ IT PRICES OFF THE ENGINE'S OWN FUNCTIONS (`unitPriceCents`, `assetValueCents`, the catalogue's
+// `annualRateBps` / `volBps` / `unitBaseCents`) and never restates the arithmetic. A probe with its own copy of the
 // model measures the copy – CLAUDE.md's own «two sides asking different functions about one
 // question», in the one place it would be hardest to notice.
 //
@@ -19,12 +23,11 @@
 // without editing the constant – the owner will judge this by feel («я пощупаю и скажу свои
 // ощущения потом») and the numbers have to be cheap to move.
 import { WEEKS_PER_YEAR } from '../src/engine/season/calendar'
-import { assetValueCents, shopItem, type ShopItem } from '../src/engine/world/assets'
+import { assetValueCents, shopItem, unitPriceCents, type ShopItem } from '../src/engine/world/assets'
 import {
   marketCrash,
   marketCrashFellIn,
   marketCrashLog,
-  marketRatio,
   marketWave,
   worstCrashFreeRatio,
   worstMarketRatio,
@@ -43,10 +46,13 @@ const VOL = arg('vol', fund.volBps ?? 0)
 // arithmetic the engine uses rather than a second one.
 const rung: ShopItem = { ...fund, volBps: VOL }
 
-/** What $1 in the fund is worth after `weeks`, entered at `from`. The ENGINE's arithmetic. */
+/** ⭐⭐ ROUND 30 #14 – WHAT $1 IN THE FUND IS WORTH AFTER `weeks`, ENTERED AT `from`, **IN UNITS**.
+ *  Money buys units at the price of its own week and is worth `units × price(now)` – the engine's
+ *  own two functions, not a restatement of them. It is the same number the ratio form produced
+ *  (`price(t)/price(f)` IS `(1+r)^span × index(t)/index(f)`), measured through the shape that now
+ *  ships, which is the point of a probe that prices off the engine. */
 function fundAt(seed: string, from: number, weeks: number): number {
-  const to = from + weeks
-  return assetValueCents(rung, 1_000_000_00, weeks, marketRatio(seed, from, to, VOL)) / 1_000_000_00
+  return unitPriceCents(seed, from + weeks, rung) / unitPriceCents(seed, from, rung)
 }
 /** ...and the same dollar in the deposit, off the deposit's own rate. */
 function depositAt(weeks: number): number {
@@ -135,6 +141,12 @@ console.log(`  mean ${(meanYear * 100).toFixed(2)}%  sd ${(sdYear * 100).toFixed
 console.log(
   `  p5 ${(pct(0.05) * 100).toFixed(1)}%  p25 ${(pct(0.25) * 100).toFixed(1)}%  p50 ${(pct(0.5) * 100).toFixed(1)}%  p75 ${(pct(0.75) * 100).toFixed(1)}%  p95 ${(pct(0.95) * 100).toFixed(1)}%`,
 )
+// ⭐ ROUND 30 #14 – THE TWO ENDS HE ACTUALLY QUOTED («+65/-15 это то, что я видел»), so the tuning
+// can be judged against what he saw rather than against a percentile he never met.
+console.log(
+  `  p99 ${(pct(0.99) * 100).toFixed(1)}%  best ${(sorted[sorted.length - 1] * 100).toFixed(1)}%  worst ${(sorted[0] * 100).toFixed(1)}%` +
+    `   – seasons over +50%: ${((sorted.filter((m) => m > 0.5).length / sorted.length) * 100).toFixed(2)}%`,
+)
 const csm = (q: number) => crashSeasonMoves[Math.floor(q * (crashSeasonMoves.length - 1))]
 console.log(
   `  CRASH seasons (a fall touched the calendar year, ${crashSeasonMoves.length.toLocaleString()} of them): ` +
@@ -187,3 +199,42 @@ for (const seed of seeds.slice(0, Math.min(1000, SEEDS))) {
   }
 }
 console.log(`\nDRAWDOWN  worst peak-to-trough on a week-0 holding: ${(deepest * 100).toFixed(1)}%  (${deepestSeed})`)
+
+// --- 5. ⭐⭐ AVERAGING DOWN, THE MOVE THE UNITS EXIST FOR (round 30 #14) --------------------------
+// «Или зашёл на пике при цене 7-8к и увидел просадку на следующий год – имеешь возможность
+// усредниться или зафиксировать убыток.» So: enter at week `from`, and a season later, IF the price
+// has fallen, put the same money in again. Against the control – all of it at week `from` – and
+// against the family that waited and put all of it in at the lower price.
+//
+// ⚠ IT IS A MEASUREMENT AND NOT A RECOMMENDATION. The interesting number is not «averaging wins»
+// (it must, arithmetically, whenever the second price is lower) but HOW OFTEN THE SITUATION ARISES
+// and how much it is worth – if a drawdown a season after entry is rare, the decision he asked for
+// is a decision nobody meets.
+{
+  const HOLD = 10 * WEEKS_PER_YEAR
+  let met = 0
+  let n = 0
+  let avgGain = 0
+  let worstAvg = Infinity
+  for (const seed of seeds) {
+    for (const from of ENTRIES) {
+      n++
+      const p0 = unitPriceCents(seed, from, rung)
+      const p1 = unitPriceCents(seed, from + WEEKS_PER_YEAR, rung)
+      if (p1 >= p0) continue
+      met++
+      const pEnd = unitPriceCents(seed, from + HOLD, rung)
+      // $100k at the peak, $100k a season later at the lower price…
+      const averaged = (100 / p0 + 100 / p1) * pEnd
+      // …against $200k all at the peak.
+      const allAtOnce = (200 / p0) * pEnd
+      avgGain += averaged / allAtOnce - 1
+      worstAvg = Math.min(worstAvg, averaged / allAtOnce - 1)
+    }
+  }
+  console.log(`\nAVERAGING DOWN  the price is lower a season after entry in ${((met / n) * 100).toFixed(1)}% of entries`)
+  console.log(
+    `  and the second tranche is worth ${((avgGain / met) * 100).toFixed(1)}% more at ten years than doubling in at the peak ` +
+      `(worst case ${(worstAvg * 100).toFixed(1)}%, which must be > 0 or the units are not doing anything)`,
+  )
+}
