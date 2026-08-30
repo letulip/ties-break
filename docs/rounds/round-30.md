@@ -113,3 +113,22 @@ marked `[!]` and each names what shipped and why it missed – that is the point
   wall at **~9-10 min**; splitting `bulk` itself with vitest's `--shard` reaches ~7-8. ⚠ Parallelising
   the heavy files INSIDE one job is the one thing not to do: separate processes exist because of
   birpc's stalls under contention.
+
+
+- [ ] **17. ⚙ «на турнирных неделях с пресс-конференциями всё-таки давай сделаем как в реальности:
+  матч, конференция через 30 минут, потом массаж»** – **RULING, and it restores the agent's own first
+  instinct over my correction.**
+
+  ⚠ The builder wrote `draw → press → massage` first, reasoning that a real press conference follows
+  within the half-hour. **I made him swap it** to `draw → massage → press` on a literal reading of the
+  owner's earlier enumeration «после матчей, массажа и конференций» – which was a LIST, not an order.
+  He has now said the order outright and it is the builder's original. ⭐ Worth keeping as a lesson:
+  a list of things is not a sequence of them, and I turned one into the other.
+
+  **Order on every match day of every rung: draw block → press → massage.**
+
+  ⚠ **The 30 minutes cannot be drawn literally and that is a grid fact, not a shortcut**: `DayBlock`
+  is `{ start, span }` in WHOLE HOURS (`span: number` – «length in hours, >= 1»), and the grid's rows
+  run 07:00–19:00. So «через 30 минут» renders as **the next hour block after the match**, which is
+  the same thing the eye reads. **Do not add half-hour support for this** – it would re-shape every
+  day in the game for one gap; if the half-hour ever matters, it is its own decision.
