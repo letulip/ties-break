@@ -37,7 +37,3 @@ export function shelfArtUrl(key: string): string | null {
   const stem = SHELF_ART[key]
   return stem ? `${import.meta.env.BASE_URL}${SHELF_DIR}${stem}.webp` : null
 }
-
-/** Exported for the test that checks every painting on the shelf is reachable from a real card –
- *  the same both-directions check `VACATION_ART_STEMS` gets. Empty while the map is. */
-export const SHELF_ART_KEYS: readonly string[] = Object.keys(SHELF_ART)

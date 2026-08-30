@@ -1854,10 +1854,11 @@ const shelfFamilies = computed(() =>
       </Card>
 
       <!-- ===================== 8a. THE SHELF'S OWN TABS =====================
-           ⭐⭐ ROUND 30 #5 – «сверху плашкой The shelf, а ниже под ней вкладки в ряд». The plate
-           above is that плашка; this is the row under it. Six segments, and the sixth thing on the
-           shelf - the academy - is deliberately NOT one of them: it is a subdivision of Business and
-           rides inside that tab. The map and his words are at `SHELF_TAB_OPTIONS` in the script. -->
+           ⭐⭐ ROUND 30 #5 – his second clause: "The shelf as a plate on top, and under it the tabs
+           in a row". The card above is that plate; this is the row under it. Six segments, and the
+           seventh thing on the shelf - the academy - is deliberately NOT one of them: it is a
+           subdivision of Business and rides inside that tab. The map and his words in full are at
+           `SHELF_TAB_OPTIONS` in the script, where Cyrillic is allowed and a template's is not. -->
       <SegmentedRow
         v-if="screenTab === 'shop' && shop"
         v-model="shelfTab"
@@ -1867,7 +1868,7 @@ const shelfFamilies = computed(() =>
       />
 
       <!-- ===================== 8b. THE SHELF ITSELF, CARD BY CARD =====================
-           ⭐⭐ ROUND 30 #5 – «карточки лежат без общей подложки, примерно как на экране Season».
+           ⭐⭐ ROUND 30 #5 – "the cards lie with no shared backing, roughly as on the Season screen".
            This is the Season feed's own arrangement, and it is a real change rather than a restyle:
            every rung on the shelf used to sit inside ONE card, so the page had a plate behind a
            plate behind a row. Now each rung IS a card, laid straight on the page, exactly as
@@ -1886,9 +1887,9 @@ const shelfFamilies = computed(() =>
             variant="photo"
             class="shop-row"
           >
-            <!-- ⭐ ROUND 30 #5 – «для каждой карточки будет свой арт». Null until his painting
-                 lands, and then the card simply has no band: `shelfArtUrl`'s header carries the
-                 contract, which is `vacationArtUrl`'s, for the reason it was written. -->
+            <!-- ⭐ ROUND 30 #5 – "each card gets its own art". Null until his painting lands, and
+                 until then the card simply has no band: `shelfArtUrl`'s header carries the contract,
+                 which is `vacationArtUrl`'s, for the reason it was written. -->
             <div v-if="shelfArtUrl(row.id)" class="card-art shop-row-art">
               <img :src="shelfArtUrl(row.id) ?? undefined" alt="" />
               <span class="card-art-scrim" aria-hidden="true"></span>
@@ -2294,7 +2295,6 @@ const shelfFamilies = computed(() =>
 .money-subtabs {
   flex-wrap: wrap;
   row-gap: 4px;
-  justify-content: center;
   border-radius: var(--radius-card);
 }
 
