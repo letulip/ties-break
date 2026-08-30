@@ -13,29 +13,49 @@
 // for: **averaging down and taking a loss are moves the game can express**, not feelings. Two arms
 // carry that – «усредниться» and «зафиксировать убыток» – and both drive real commands.
 //
-// ⚠ MUTATION-VERIFIED. Each applied ALONE to the engine, watched, and reverted:
-//   * `buyAsset`'s `unitPriceCents(world.seed, world.week, item)` -> `(…, held?.boughtWeek ?? 0, …)`
-//     (every cheque back-dated to the first) -> «different weeks are different prices» and
-//     «усредниться» RED, and `round29p3-market.test.ts`'s two top-up arms with them.
+// ⚠ MUTATION-VERIFIED. Each applied ALONE to the engine, watched, reverted, and the red set below is
+// what was MEASURED rather than what was expected – two of them are recorded precisely because they
+// did not turn red where the first draft of this list said they would:
+//   * `buyAsset`'s `unitPriceCents(world.seed, world.week, item)` -> `(…, held?.boughtWeek ?? …)`
+//     (every cheque after the first back-dated) -> EIGHT red across three files: «a second cheque
+//     ADDS units», «усредниться», «the average moves only when they BUY», «a DEPOSIT is held in
+//     units too», `round29p3-market`'s two top-up arms and `round29p2-part-sale`'s two.
+//     ⚠ «DIFFERENT WEEKS ARE DIFFERENT PRICES» STAYED GREEN and correctly so: both its careers buy
+//     exactly ONCE, so there is no earlier row to back-date onto. It is armed for the OTHER half of
+//     the sentence – that two entry weeks give two prices – and `assetWorthCents`' branch is what
+//     kills it (M5 below). Recorded because a mutation list that guesses is worse than none.
 //   * `const units = (held?.units ?? 0) + …` -> `= paidCents / price` (the old money forgotten)
-//     -> «a second cheque adds to what they hold» RED, ALONE.
-//   * `sellAsset`'s `owned.units -= (owned.units * proceedsCents) / owned.valueCents` deleted
-//     -> «зафиксировать убыток» RED and `round29p2-part-sale.test.ts`'s «a sold part stays sold»
-//     RED. Two files, one defect, which is the division of labour they are supposed to have.
-//   * the same line's `if (owned.units !== undefined)` guard deleted -> «a rung the catalogue has
-//     forgotten» RED, ALONE, with `units: 0` written onto a car-shaped row and the row then priced
-//     at nothing. ⚠ THAT IS WHY THE GUARD IS NOT DEAD: `sellAsset` only refuses an amount on a rung
-//     it can still FIND (`item && item.stake !== 'open'`), so a part sale of a row whose id has left
-//     the catalogue is reachable and must not grow a `units` key.
-//   * `assetWorthCents`'s `owned.units !== undefined` branch forced false -> the value arms RED and
-//     the deposit arm with them; forced TRUE -> the car arm RED (`NaN` cents).
+//     -> SEVEN red, the same set minus «a sold part stays sold».
+//   * `sellAsset`'s `owned.units -= (owned.units * proceedsCents) / owned.valueCents` neutered
+//     -> THREE red: «зафиксировать убыток», «the average moves only when they BUY», and
+//     `round29p2-part-sale`'s «a sold part STAYS sold». Two files, one defect, which is the
+//     division of labour those two files are supposed to have.
+//   * the same line's `if (owned.units !== undefined)` guard replaced by `?? 0` -> «a rung the
+//     catalogue has forgotten» RED, ALONE, with `units: 0` written onto a car-shaped row and the row
+//     then priced at nothing. ⚠ THAT IS WHY THE GUARD IS NOT DEAD: `sellAsset` only refuses an
+//     amount on a rung it can still FIND (`item && item.stake !== 'open'`), so a part sale of a row
+//     whose id has left the catalogue is reachable and must not grow a `units` key.
+//   * `assetWorthCents`'s `owned.units !== undefined` branch forced OFF -> ELEVEN red across this
+//     file and `round29p3-market`; forced ON (`?? 1`) -> THREE red, all of them a car or a deposit
+//     («the deposit and the car did NOT move by a cent», and two of `shop.test.ts`'s own).
+//     Both directions, which is what a two-arithmetic function needs.
 //   * `avgUnitPriceCents`'s `owned.paidCents / owned.units` -> `owned.valueCents / owned.units`
-//     (today's price wearing the average's name) -> «the average moves only when they BUY» RED,
-//     ALONE. That is the mutation the whole screen line exists to be safe from.
-//   * `unitBaseCents: 4_000_00` -> `1_000_00` on the fund -> «his anchor» RED, ALONE, and nothing
-//     else moved by a cent – which is the arm's own point: the base is a UNIT of account, so every
-//     worth in the game is invariant to it.
-//   * `volBps` 900 -> 1_800 (the round 29 number back) -> «the volatility came down» RED, ALONE.
+//     (today's price wearing the average's name) -> THREE red, every one of them an average arm:
+//     «a second cheque ADDS units», «усредниться», «the average moves only when they BUY». That is
+//     the mutation the whole screen line exists to be safe from, and it is red in the component
+//     file too (`round30-fund-units-screen.test.ts`).
+//   * `unitBaseCents: 4_000_00` -> `1_000_00` on the fund -> TWO red and both of them are about the
+//     CONSTANT: «his anchor» and «the base is a unit of account» (whose own fixture is built as a
+//     ratio against it). ⭐ Not one worth, ledger row or horizon measurement moved by a cent, which
+//     is the unit-of-account arm's claim proved by the mutation rather than by the assertion.
+//   * `volBps` 900 -> 1_800 (the round 29 number back) -> TWO red: «the volatility came down» and
+//     `round29p3-market`'s named crash fixture, whose season was re-scanned for the new number.
+//   * `marketIndex`'s `if (!volBps) return 1` deleted -> FOUR red, ALL of them the deposit
+//     («a DEPOSIT is held in units too», «the deposit and the car did NOT move by a cent», and both
+//     part-sale deposit fixtures). ⚠⚠ IT USED TO BE A SHADOWED PAIR – round 29 measured that
+//     deleting either copy alone changed nothing, because `marketRatio` carried the other. Round 30
+//     #14 deleted `marketRatio` with the rebase, so this clause is now the only copy and it fails on
+//     its own. A shadowed guard became a live one by subtraction.
 import { describe, it, expect } from 'vitest'
 import {
   assetWorthCents,

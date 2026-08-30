@@ -27,13 +27,25 @@
 // reproduce the REBASE by hand now names all three tranches and their three prices – strictly
 // sharper than what it replaces, because it can see an entry the rebase had folded away. ⚠ The two
 // #11 claims it carries are untouched: the cash is the cash, and a tranche is worth what its own
-// entry bought. ⚠ Two mutations were watched for the new form, each applied alone to the engine and
-// reverted: `buyAsset`'s `units` written off `unitPriceCents(world.seed, held.boughtWeek, item)`
-// instead of `world.week` (i.e. the back-dating this arm is named for) -> the units, the value and
-// the average-price arms RED on the FUND, and green on the deposit only because its price curve is
-// monotone – which is exactly why the directional line below stays narrowed; and the part-sale's
-// `owned.units -=` deleted -> this file green and `round29p2-part-sale.test.ts` red, which is the
-// division of labour those two files are supposed to have.
+// entry bought.
+//
+// ⚠ MEASURED, not predicted, three applied alone to the engine and reverted:
+//   * `buyAsset`'s price read off `held?.boughtWeek` instead of `world.week` (the back-dating this
+//     arm is named for) -> the compounding arm RED on BOTH rungs of the `describe.each`, plus the
+//     shelf-line arm below.
+//   * `avgUnitPriceCents` reading `valueCents` instead of `paidCents` -> the compounding arm RED on
+//     both rungs, ALONE in this file – the average-price block at the end of it is what speaks.
+//   * `householdWeekly`'s shelf line forced flat -> «the shelf line is the REAL week-over-week move»
+//     RED, ALONE. ⭐ THAT IS THE LATENT FLAKE OF ROUND 29 PART THREE #16 RE-CHECKED: it was narrowed
+//     from `toBeGreaterThan(0)` to `not.toBe(0)` because a market rung's weekly sign is a fact about
+//     the seed, and the narrowed form still fails on the defect it is for.
+//
+// ⚠⚠ AND THE OTHER LATENT FLAKE WAS RE-CHECKED THE SAME WAY, with a result worth writing down. The
+// directional line at the end of the compounding arm (`if (!item.volBps) … toBeLessThan(backDated)`)
+// cannot be made red by back-dating – it is arithmetically implied whenever the deposit's price only
+// goes UP. It IS red under `annualRateBps: 317 -> -317` on the deposit, watched with every other
+// assertion in the arm blinded, so what it really guards is «the dull rung is the one that only goes
+// up». That is a smaller claim than it looks and it is now written down rather than assumed.
 //
 // ⚠⚠ THREE ASSERTIONS WERE RE-AIMED BY ROUND 29 PART THREE #16, and each carries its reason at its
 // own line rather than here. The fund now rides a seeded market (`world/market.ts`), so an
