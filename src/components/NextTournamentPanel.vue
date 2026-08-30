@@ -81,6 +81,33 @@
 // files. Duplicating that table here would give two surfaces two different sentences for one
 // engine verdict - the failure this repo has already paid for four times. This panel prints the
 // VERDICT plainly and lets the feed keep the voice.
+//
+// =================================================================================================
+// ⭐⭐ ROUND 30 #18 – THE ONE THING #6 LEFT OPEN, SETTLED. His words:
+//
+// «в край, как hero картинка на главной, если можно. И плашки дальше как на главной на своих
+//  подложках, кроме этих 4х характеристик турнира про призовые, зрителей и т.п.»
+//
+// #6's builder shipped the picture SQUARE but inside the app's gutter, and said out loud why he
+// stopped there: Home's hero is square AND full-bleed, and a photograph running to the phone's edge
+// beside an inset plate is a composition the owner had not described. He has now described it, and
+// it is Home's own: a full-bleed hero, a bare row of four under it, and everything after that on a
+// plate. Three clauses, and each one is a placement:
+//
+//   * THE PICTURE GOES TO THE EDGE. `.nt-hero` cancels `--app-pad-x` with a negative margin - the
+//     same declaration `.diary-hero` uses on Home, spelled with the same token. The style block
+//     below carries the whole argument, including why only the horizontal half of Home's rule is
+//     taken here.
+//   * THE PLATES BELOW KEEP THEIR BACKINGS. «плашки дальше как на главной на своих подложках» -
+//     the rounds plate stays the `<Card>` it already was, inside the gutter, so the composition
+//     reads exactly as Home's does: the photograph is the page, the plates are objects ON it.
+//   * ⚠ EXCEPT THE FOUR FACTS, which stay bare. That is #6's own clause, restated here so it
+//     cannot be tidied away by a later reading of «плашки ... на своих подложках»: prize money,
+//     the crowd and the other two are a row of icons with nothing behind them.
+//
+// ⚠⚠ AND NOTHING ELSE MOVED. Same figures, same sentences, same labels, same order - round 29 #8's
+// mounted net passes unedited across this change exactly as it did across #6's, which is the whole
+// evidence that a ruling about placement was answered with placement (CLAUDE.md invariant 4).
 import { computed } from 'vue'
 import { useGameStore } from '../stores/game'
 import { firstMatchLabel, firstMatchTitle, useEventCard } from '../composables/eventCard'
@@ -151,7 +178,10 @@ const courtRead = computed(() => {
          ⭐ ROUND 30 #6 – SQUARE AND FRAMELESS, and it carries three of the blocks that used to sit
          under it. It is a plain element rather than a `<Card>` now: a card's hairline is the frame
          he asked to lose, and a photograph that IS the block does not need one. His words are in
-         the script block above, where this file's rule allows them. -->
+         the script block above, where this file's rule allows them.
+         ⭐ ROUND 30 #18 – AND IT RUNS TO THE EDGE, the way Home's hero does and by the same
+         cancelled gutter. The plates below stay inside that gutter on their own backings; the four
+         facts under the picture stay bare. The style block carries the argument. -->
     <div class="nt-hero">
       <img class="nt-hero-art" :src="venueUrl(event)" alt="" />
       <span class="nt-hero-scrim" aria-hidden="true"></span>
@@ -295,17 +325,34 @@ const courtRead = computed(() => {
    off the bottom of the picture. A tall card is a design compromise; a truncated engine-authored
    read is a defect - and this panel's whole argument is that it never invents and never hides.
 
-   No `border` and no gradient: it is not a `<Card>` any more, which is half of «убрать рамку». The
-   corners stay on the app's own radius so it still reads as one of this app's objects. */
+   No `border` and no gradient: it is not a `<Card>` any more, which is half of «убрать рамку».
+
+   ⭐⭐ ROUND 30 #18 – AND NOW IT RUNS TO THE EDGE, BY HOME'S OWN MECHANISM AND NOT A SECOND ONE.
+   «в край, как hero картинка на главной, если можно.» The margin below is the SAME declaration
+   `.diary-hero` carries in HomeScreen.vue and `.kid-hero` carries in KidScreen.vue: cancel the
+   shell's gutter by the exact token that sets it, `--app-pad-x`. ⚠ Never a literal `-16px` – the
+   token exists BECAUSE that number was once guessed in one place and spelled in another, and the
+   pair drifted by 8px (src/style.css says so where the tokens are declared).
+
+   ⚠ ONLY THE SIDES, unlike Home's and Kid's. Both of those heroes are the first thing on their
+   screen, so they cancel `--app-pad-top` as well and sit under the status bar. This one has a
+   heading and the week's status line above it, and eating the top inset would pull the photograph
+   up into them. Same mechanism, one axis of it.
+
+   No radius any more: a 17px corner against the phone's own edge leaves a wedge of page colour in
+   each corner, which is the frame he asked to lose coming back in miniature. Home's hero and Kid's
+   are square-cornered for the same reason. And the padding is `--app-pad-x` rather than 14px, so
+   the title, the read and the three readings laid ON the photograph line up with the icon row and
+   the plate BELOW it instead of sitting 2px inside them. */
 .nt-hero {
   position: relative;
+  margin: 0 calc(-1 * var(--app-pad-x));
   aspect-ratio: 1 / 1;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
   gap: 8px;
-  padding: 12px 14px 14px;
-  border-radius: var(--radius-card);
+  padding: 12px var(--app-pad-x) 14px;
   overflow: hidden;
   background: var(--card-bottom);
 }

@@ -14,10 +14,24 @@
 //
 // ⚠ MOUNTED AGAINST A REAL SNAPSHOT, engine-built, never a hand-written shape – round20-ui's house
 // rule, and the reason the fixture below walks a real career.
+//
+// ⭐⭐ ROUND 30 #18 – THE SAME SCREEN, AND THE ONE THING #6 LEFT OPEN. Its builder shipped the
+// picture square but INSIDE the app's gutter and asked, because Home's hero is square AND
+// full-bleed and he had not been told which. The owner then told him:
+//
+//     «в край, как hero картинка на главной, если можно. И плашки дальше как на главной на своих
+//      подложках, кроме этих 4х характеристик турнира про призовые, зрителей и т.п.»
+//
+// Three claims, one describe block each way down this file: the picture breaks the gutter the way
+// Home's does, the plate under it keeps its backing and its gutter, and the four facts still have
+// no plate at all. ⚠ AND THE COPY DID NOT MOVE FOR ANY OF IT – `round29-next-tournament.test.ts`
+// passes unedited across this change too, which is the same evidence #6 produced.
 import { describe, it, expect, beforeEach } from 'vitest'
 import { mount } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
 import '../../src/style.css'
+import { readFileSync } from 'node:fs'
+import { region } from '../helpers/source'
 import NextTournamentPanel from '../../src/components/NextTournamentPanel.vue'
 import ThisWeekScreen from '../../src/components/screens/ThisWeekScreen.vue'
 import { useGameStore } from '../../src/stores/game'
@@ -40,6 +54,18 @@ function mountPanel(): ReturnType<typeof mount> {
   // (`getComputedStyle` is live in the component project – vitest sets `css: true`), and a detached
   // tree gets none of it.
   return mount(NextTournamentPanel, { props: { event }, attachTo: document.body })
+}
+
+/** One component's own file, read the way this directory already reads templates
+ *  (`round29-next-tournament.test.ts`'s copy-rule loop): `tests/worldSource.ts` builds its base from
+ *  `import.meta.url` at MODULE scope, and under the component project that module's URL is not a
+ *  file: one, so `componentFile()` throws here. The regions below are cut with `helpers/source`,
+ *  which throws on an absent marker – never a raw slice.
+ *  ⚠ THE PATH IS A PLAIN VARIABLE AND NOT AN INLINE TEMPLATE LITERAL. Vite rewrites
+ *  `new URL(\`…${x}…\`, import.meta.url)` into its own asset resolver, which under this runner
+ *  resolved to the string "undefined" and made the read fail on a path nobody wrote. */
+function sfc(rel: string): string {
+  return readFileSync(new URL(rel, import.meta.url), 'utf8')
 }
 
 /** A career with something ENTERED – the only state Home's "Next tournament" card opens onto. */
@@ -138,6 +164,88 @@ describe('round 30 #6 – what is ON the picture, and what is under it', () => {
     const box = getComputedStyle(plates[0].element)
     expect(box.width, 'the rounds plate is not narrowed').toBe('')
     expect(box.maxWidth === '' || box.maxWidth === 'none').toBe(true)
+    w.unmount()
+  })
+})
+
+describe('round 30 #18 – the picture goes to the edge, and only the picture does', () => {
+  it('⭐ FULL-BLEED: the shell gutter, cancelled by the token that sets it', () => {
+    const w = mountPanel()
+    const hero = getComputedStyle(w.find('.nt-hero').element)
+    // ⚠ THE TOKEN IS READ OFF `:root`, NEVER TYPED HERE AS A NUMBER. `--app-pad-x` is what `#app`
+    // pads every tabbed screen by, and src/style.css says in its own comment why it had to become a
+    // token: the 16 was spelled in the sheet and GUESSED as `-16px` over in `.diary-hero`, and the
+    // two drifted into an 8px band of page colour above Home's photograph. A pin that hard-codes
+    // 16px is green on exactly that class of bug.
+    const padX = getComputedStyle(document.documentElement).getPropertyValue('--app-pad-x').trim()
+    expect(padX, 'the app still declares its gutter as a token').toBe('16px')
+    expect(hero.marginLeft, 'the picture cancels the gutter on the left').toBe(`calc(-1 * ${padX})`)
+    expect(hero.marginRight, 'the picture cancels the gutter on the right').toBe(`calc(-1 * ${padX})`)
+    // ⚠ THE SIDES ONLY, and that is the one place this differs from Home. `.diary-hero` and
+    // `.kid-hero` also eat `--app-pad-top`, because each is the first thing on its screen; this one
+    // has a heading and the week's status line above it, and eating the top inset would pull the
+    // photograph up into them.
+    expect(hero.marginTop, 'the top inset stays – there is a heading above this hero').toBe('0px')
+    w.unmount()
+  })
+
+  it("⭐ ...and it is HOME'S mechanism, not a second one that happens to look like it", () => {
+    // «в край, как hero картинка на главной» – so the claim is not "it reaches the edge" but "it
+    // reaches it the way Home does". Both rules are read and compared: if Home ever changes how it
+    // breaks the gutter, this goes red and names the divergence, which is what comparing buys over
+    // copying.
+    const home = region(sfc('../../src/components/screens/HomeScreen.vue'), '.diary-hero {', '}')
+    const here = region(sfc('../../src/components/NextTournamentPanel.vue'), '.nt-hero {', '}')
+    expect(home, "Home's hero cancels the shell gutter by the token").toContain('calc(-1 * var(--app-pad-x))')
+    expect(here, 'and this one cancels the same token, not a literal').toContain('calc(-1 * var(--app-pad-x))')
+    // ⚠ NOT A VACUOUS PAIR OF READS: Home's rule also carries the clamp this one deliberately does
+    // not (see the floor test below), so an empty or mis-cut region cannot pass this quietly.
+    expect(home, "Home's own hero clamps its height").toContain('max-height')
+  })
+
+  it('⭐ the plate below sits on its own backing, as on Home – and keeps the gutter', () => {
+    const w = mountPanel()
+    const plate = w.find('.nt-first')
+    expect(plate.classes(), 'the rounds are a card').toContain('tb-card')
+    // ⚠ READ THROUGH THE REAL CASCADE. The class name proves the markup; the paint proves the
+    // backing actually reaches the element, which is the half a class-name pin cannot answer.
+    const paint = getComputedStyle(plate.element)
+    expect(paint.backgroundImage, 'the plate is painted').toContain('linear-gradient')
+    expect(paint.borderWidth, 'and it carries the hairline that cuts it out of the page').toBe('1px')
+    // ...and it does NOT break the gutter. The photograph is the only object on this screen that does.
+    expect(paint.marginLeft === '' || parseFloat(paint.marginLeft) === 0, 'the plate stays inset').toBe(true)
+    w.unmount()
+  })
+
+  it('⚠ ...EXCEPT the four facts, which have no plate and must not grow one', () => {
+    const w = mountPanel()
+    const facts = w.find('.nt-facts')
+    const paint = getComputedStyle(facts.element)
+    // «кроме этих 4х характеристик турнира про призовые, зрителей и т.п.» – his exception, and it is
+    // the clause a later reading of «плашки на своих подложках» would most easily tidy away.
+    expect(paint.backgroundImage === '' || paint.backgroundImage === 'none', 'no fill behind the icons').toBe(true)
+    expect(
+      paint.backgroundColor === '' || paint.backgroundColor === 'initial' || paint.backgroundColor === 'transparent',
+      'and no tone either',
+    ).toBe(true)
+    expect(paint.borderWidth === '' || paint.borderWidth === '0px', 'and no hairline').toBe(true)
+    expect(facts.element.closest('.tb-card'), 'nothing is behind the icons').toBeNull()
+    // One plate on the panel, still: the rounds. The facts row did not become a second one.
+    expect(w.findAll('.tb-card').length, 'exactly one plate on the panel').toBe(1)
+    w.unmount()
+  })
+
+  it('⚠ the square is still a FLOOR – no ceiling came across with the full bleed', () => {
+    // #6's own decision, and the full width makes it matter more rather than less: the box is now
+    // 375px tall on the owner's phone, and a three-line read with a coach's caution must push it
+    // TALLER rather than lose a sentence off the bottom.
+    // ⚠ HOME'S HERO CLAMPS AT `max-height: 60vh` because a painting may be cropped without loss.
+    // Copying that rule across with the margin is the mutation this test exists to redden on.
+    const w = mountPanel()
+    const hero = getComputedStyle(w.find('.nt-hero').element)
+    expect(hero.maxHeight === '' || hero.maxHeight === 'none', 'no ceiling on the picture').toBe(true)
+    expect(hero.height === '' || hero.height === 'auto', 'and no fixed height either').toBe(true)
+    expect(hero.aspectRatio.replace(/\s+/g, ''), 'square, as a floor').toBe('1/1')
     w.unmount()
   })
 })
