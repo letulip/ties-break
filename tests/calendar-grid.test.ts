@@ -76,7 +76,7 @@ import { OFF_SEASON_WEEKS, WEEKS_PER_YEAR } from '../src/engine/season/calendar'
 // Comments are not code – the house helper, now in tests/helpers/source.ts. This codebase documents
 // at length, INCLUDING documenting what it deliberately did not do, so a `not.toContain` over raw
 // source fails on a note that merely names the thing it forbids.
-import { after, codeOf, regionToLast } from './helpers/source'
+import { after, codeOf, region, regionToLast } from './helpers/source'
 
 const read = (rel: string) => readFileSync(new URL(rel, import.meta.url), 'utf8')
 const screen = read('../src/components/screens/CalendarScreen.vue')
@@ -818,10 +818,21 @@ describe('the calendar renders the grid it is handed', () => {
     // refuse arrived with hours in them (a layoff has physio in it, a family week has the family).
     // Both take a `--cat-*` the wallet already declares - the same hue means the same thing on both
     // screens - which is exactly what this pin exists to keep true of a NEW kind as well as an old.
-    const KINDS: BlockKind[] = [
-      'training', 'trainingAlt', 'gym', 'school', 'schoolLong', 'drills',
-      'match', 'matchLong', 'study', 'travel', 'rest', 'tournament', 'physio', 'vacation',
-    ]
+    //
+    // ⚠⚠ RE-AIMED (round 29 P14), AND THE LIST IS NO LONGER TYPED OUT HERE. `press` was the FIFTEENTH
+    // kind, and adding it exposed what this pin actually was: a hand-copy of the union that a
+    // fifteenth member does not update. The guard would have gone quietly blind to exactly the kind
+    // it exists for. It now READS THE UNION out of the module's own source, so a sixteenth kind
+    // cannot be added without a colour rule - which is the sentence the paragraph above was always
+    // claiming. `region` throws on an absent marker, so a renamed type fails loudly rather than
+    // sweeping an empty list (tests/helpers/source.ts's whole argument).
+    const KINDS = [...region(module_, 'export type BlockKind =', '\n\n').matchAll(/'([A-Za-z]+)'/g)].map(
+      (m) => m[1] as BlockKind,
+    )
+    // ⚠ MUTATION WATCHED: delete `.cal-block--press` from CalendarScreen.vue and this goes red. On
+    // the hand-typed list it stayed green, which is what "blind" means.
+    expect(KINDS.length, 'the union parsed to nothing, so this sweep is empty').toBeGreaterThanOrEqual(15)
+    expect(KINDS, 'the union no longer carries the kind this pin was re-aimed for').toContain('press')
     for (const kind of KINDS) {
       const rule = screen.match(new RegExp(`\\.cal-block--${kind}\\s*\\{([^}]*)\\}`))
       expect(rule, `no colour rule for a ${kind} block`).not.toBeNull()
