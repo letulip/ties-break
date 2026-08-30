@@ -21,6 +21,7 @@
 // `tests/round29p3-market.test.ts` proves on a ticked world rather than claiming from the imports.
 import { ECONOMY } from '../economy'
 import { WEEKS_PER_YEAR } from '../season/calendar'
+import { fameAt } from './fame'
 import { marketIndex } from './market'
 import type { OwnedAsset } from '../../shared/protocol'
 import type { WorldState } from '../world'
@@ -88,9 +89,67 @@ export interface ShopItem {
   /** ⭐ §3f – HOW LONG FROM THE ORDER TO THE THING, in weeks. Absent on every rung that arrives the
    *  week it is paid for, which is everything slice 1 shipped. */
   buildWeeks?: number
-  /** ⭐ §3f – WHAT IT TAKES EVERY YEAR TO KEEP, in basis points OF THE PRICE. Absent on everything
-   *  that costs nothing to own. See `assetUpkeepCents` for why it is read off the price. */
+  /** ⭐ §3f – WHAT IT TAKES EVERY YEAR TO KEEP, in basis points OF THE PRICE, IN ITS FIRST YEAR.
+   *  Absent on everything that costs nothing to own. See `assetUpkeepCents` for why it is read off
+   *  the price. ⚠ «IN ITS FIRST YEAR» IS NEW IN ROUND 30 #15 and it is the only thing that changed
+   *  about this field: a rung that carries no `upkeepGrowthBps` below pays this every week forever,
+   *  to the cent, exactly as it did before. */
   upkeepBps?: number
+  /** ⭐⭐⭐ ROUND 30 #15 – HOW MUCH DEARER IT GETS TO KEEP EACH YEAR, in basis points a year,
+   *  compounding on the age of the thing. Absent on every rung whose bill never moves.
+   *
+   *  THE OWNER, 30.08: «Для машин вполне можно ввести годовую стоимость обслуживания, которая может
+   *  с каждым годом немного расти, как в реальности, пока стоимость авто на рынке падает.»
+   *
+   *  ⚠⚠ THE SHAPE IS HIS AND IT IS TWO CURVES CROSSING, not one. `annualRateBps` already takes the
+   *  car's market value DOWN; this takes the bill to keep it UP – and because the bill is a share of
+   *  what was PAID while the worth is a share that keeps shrinking, the bill as a fraction of what
+   *  the thing is now worth climbs far faster than either curve alone. An eight-year-old car worth
+   *  half what it cost and costing half again as much to run is exactly «как в реальности», and it
+   *  falls out of the two fields rather than out of a third rule.
+   *
+   *  ⚠ PRESENCE IS THE PREDICATE, the shelf's own habit (`volBps` / `unitBaseCents` / `buildWeeks` /
+   *  `requiresId`). ⚠⚠ AND IT IS DELIBERATELY ABSENT ON THE BOATS AND THE PLANES, which is a scope
+   *  decision rather than an oversight: he said «для машин», and the elite rungs' flat 6–10% is the
+   *  number §3f's «nothing here can strand a family» was MEASURED against ($23,076.92 a week at
+   *  10% of $12M). Compounding that bill is a balance change to a rung whose safety property was
+   *  proved at the flat figure, and it is his call, not this item's. The arithmetic for every rung
+   *  without this field is byte-identical to what shipped.
+   *
+   *  ⚠ CAPPED – see `ECONOMY.shop.upkeepGrowthCapX`. A bill that compounds forever is a bill that
+   *  eventually eats a career, and «мы ни за что не наказываем» is house law. */
+  upkeepGrowthBps?: number
+  /** ⭐⭐⭐ ROUND 30 #9 – WHAT THE RUNG IS WORTH, AS A MULTIPLE OF WHAT IT TAKES IN OVER A YEAR.
+   *  Absent on everything valued off what was PAID for it, which is every car, house, boat, plane
+   *  and academy stage; absent on everything valued in units, which is the two investments.
+   *
+   *  THE OWNER, 30.08: «сам Merch brand тоже вполне может расти в цене как бизнес по какой-то
+   *  логике, похожей на привязку к её рекламе и результатам. Можно провести анализ доходов и
+   *  стоимости бренда RF (Roger Federer) для референса.»
+   *
+   *  ⚠⚠ ITS PRESENCE IS THE THIRD VALUATION IN THE ENGINE, and the three are exclusive by
+   *  construction: units (`unitBaseCents`), a business (this), or what was paid times a rate. A rung
+   *  carrying two of them would be a rung with two prices, and `tests/round30-brand-value.test.ts`
+   *  holds the catalogue to exactly one, in both directions.
+   *
+   *  ⭐⭐ IT IS THE SAME FUEL AS THE INCOME, WHICH IS HIS OWN «похожей на привязку к её рекламе и
+   *  результатам»: the brand takes in `fame x perFamePointCents` a week, and it is WORTH some years
+   *  of that. So a title, a Slam final, a top-10 season and a photo shoot each move the value and
+   *  the income at once, through one number, and nothing else on the career can move either.
+   *
+   *  ⚠⚠ AND IT FALLS, WHICH IS THE HALF THAT HAD TO BE DESIGNED IN RATHER THAN HOPED FOR. Fame
+   *  decays on a 104-week half-life, so a brand whose career goes quiet is worth less every week –
+   *  and that is not a punishment invented for balance, it is the best-documented case in the sport:
+   *  Federer's On stake fell about HALF, some $300M, between January 2025 and August 2026 while he
+   *  was retired and nothing whatsoever about him changed
+   *  (docs/research/player-brands-and-what-they-are-worth.md §3). A shelf rung whose value only ever
+   *  rises is the risk-free 7% the fund spent two rounds removing.
+   *
+   *  ⚠ THE NUMBER IS A CHOICE AND THE RESEARCH SAYS SO: no player-brand transaction publishes both
+   *  an earnings figure and a price. The nearest two are Beckham's DRJB at ~10.9x profit and the
+   *  Nadal academy at ~31x, which is a band and not a citation (§5.4). See
+   *  `ECONOMY.business.merch.valueMultipleX` for why this one is 16 and what was measured to pick it. */
+  earningsMultipleX?: number
   /** ⭐ §3g – the rung that must already be owned before this one may be bought (the academy's
    *  stages). Absent on every rung that stands on its own. */
   requiresId?: string
@@ -248,7 +307,39 @@ export function unitPriceCents(seed: string, week: number, item: ShopItem): numb
 export function assetWorthCents(world: WorldState, owned: OwnedAsset, item: ShopItem, weekOffset = 0): number {
   const week = world.week + weekOffset
   if (owned.units !== undefined) return Math.round(owned.units * unitPriceCents(world.seed, week, item))
+  // ⭐⭐⭐ ROUND 30 #9 – THE THIRD ARITHMETIC, AND IT IS THE ONLY ONE THAT READS THE CAREER. A car is
+  // worth what was paid for it, worn down by a rate; a fund is worth its units times a price; a
+  // BUSINESS is worth some years of what it takes in, and what this one takes in is her fame.
+  if (item.earningsMultipleX !== undefined) {
+    const annualCents = assetEarningsRateCents(world, item, week) * WEEKS_PER_YEAR * item.earningsMultipleX
+    // ⚠⚠ THE FLOOR IS THE MARK, AND IT IS A SOURCED IDEA RATHER THAN A KINDNESS. Björn Borg's own
+    // company went bankrupt in 1990 and the NAME was still bought outright for $18M in 2006 and is a
+    // listed company today (the research §4d) – a brand with no earnings left is not a brand with no
+    // value. It is also what keeps «мы ни за что не наказываем» true of the week she is between
+    // reigns: the family can always sell the name.
+    return Math.round(Math.max(owned.paidCents * ECONOMY.shop.businessValueFloorShare, annualCents))
+  }
   return assetValueCents(item, owned.paidCents, week - (owned.basisWeek ?? owned.boughtWeek))
+}
+
+/** ⭐⭐⭐ ROUND 30 #9 – WHAT AN EARNING RUNG TAKES IN THIS WEEK, in cents, BEFORE the question of
+ *  whether the family owns one. THE arithmetic for the merch line, and it lives here rather than in
+ *  `world/business.ts` for one structural reason: `assetWorthCents` above has to ask it, `business.ts`
+ *  imports THIS file, and a leaf that imported it back would be a cycle. `assetWeeklyIncomeCents`
+ *  calls this and adds the ownership and delivery guards, so there is still exactly ONE place where
+ *  fame becomes money – `world/business.ts`' own «ONE DEFINITION, MANY READERS» rule, moved rather
+ *  than broken.
+ *
+ *  ⚠ IT ANSWERS ZERO FOR EVERY RUNG THAT IS NOT A BUSINESS, so the guard on `earningsMultipleX`
+ *  above cannot silently price an academy stage off the merch dial. A second earning family added
+ *  tomorrow extends THIS function; `tests/round30-brand-value.test.ts` holds the catalogue to one
+ *  rung carrying the multiple, so a second one cannot arrive without the arm to price it.
+ *
+ *  Pure: reads the world, writes nothing, draws nothing – `fameAt` is a fold over records the career
+ *  already keeps (world/fame.ts). */
+export function assetEarningsRateCents(world: WorldState, item: ShopItem, week = world.week): number {
+  if (item.family !== 'business') return 0
+  return Math.round(fameAt(world, week) * ECONOMY.business.merch.perFamePointCents)
 }
 
 /** ⭐⭐ ROUND 30 #14 – WHAT THE FAMILY PAID PER UNIT, AVERAGED OVER EVERY PURCHASE, in cents. Null
@@ -298,7 +389,7 @@ export function marketSeasonMove(item: ShopItem, seed: string, week: number): nu
 }
 
 /** ⭐⭐ ROUND 29 #5, §3f – WHAT ONE WEEK OF KEEPING IT COSTS, in whole cents. Zero for every rung
- *  that carries no `upkeepBps`, which is every car, house and investment on the shelf.
+ *  that carries no `upkeepBps`, which is every house and investment on the shelf.
  *
  *  ⚠⚠ IT IS A SHARE OF WHAT WAS PAID AND NOT OF WHAT IT IS WORTH TODAY, and the choice is the
  *  spec's own arithmetic rather than a preference. §3f's table quotes «upkeep / week» beside
@@ -307,14 +398,54 @@ export function marketSeasonMove(item: ShopItem, seed: string, week: number): nu
  *  week as the boat ages, which is a second mechanic the spec never asks for and which nothing on
  *  screen could explain: a crew does not take a pay cut because the hull got older.
  *
- *  ⚠ AND IT IS THE FIGURE THE PLAYER WAS QUOTED, FOREVER. A weekly cost that drifts away from the
- *  number on the card is the shape of defect this file's own «one arithmetic, one writer» rule
- *  exists to stop.
+ *  ⭐⭐⭐ ROUND 30 #15 GAVE IT AN AGE, AND THE SENTENCE ABOVE IS WHY IT IS AN AGE AND NOT A VALUE.
+ *  The owner: «годовая стоимость обслуживания, которая может с каждым годом немного расти, как в
+ *  реальности, пока стоимость авто на рынке падает.» A bill indexed to the CURRENT worth would fall
+ *  as the car aged, which is backwards; a bill indexed to the price and multiplied by the thing's
+ *  own age rises, which is what happens to a car. Both curves are now on screen and they run in
+ *  opposite directions, which is the item.
+ *
+ *  ⚠ CONTINUOUS AND NOT A YEARLY STEP – `assetValueCents`' own argument twenty lines up, read in the
+ *  other direction. A step would hold the bill flat for fifty-one weeks and then raise it overnight
+ *  on an anniversary nothing on screen names, and it would create a week to sell before. His «с
+ *  каждым годом» is the RATE; a smooth curve is exact at every anniversary he could check.
+ *
+ *  ⚠⚠ AND THE OLD PROMISE STILL HOLDS WHERE IT WAS MADE. This function's note used to end «AND IT IS
+ *  THE FIGURE THE PLAYER WAS QUOTED, FOREVER», which is now true of every rung that carries no
+ *  `upkeepGrowthBps` – the boats, the planes, and everything the elite shelf shipped – and cannot be
+ *  true of one whose whole point is that it grows. The promise it was protecting is kept the other
+ *  way round: `shopView` quotes an OWNED row at THIS week's figure, so what the card says and what
+ *  the till charges are still one number asked of one function. Both are proved on a ticked world in
+ *  `tests/round30-car-upkeep.test.ts` rather than trusted from here.
+ *
+ *  ⚠ `weeksHeld` IS REQUIRED, NOT DEFAULTED, and that is round 30 #14's lesson taken literally: the
+ *  fund's `marketRatio` argument defaulted to 1 and its own note called the default «the one hazard
+ *  in this signature», because a caller that forgot it got the wrong answer silently. A caller that
+ *  forgets this one does not compile.
  *
  *  Pure: no world, no rng, no clock. */
-export function assetUpkeepCents(item: ShopItem, paidCents: number): number {
+export function assetUpkeepCents(item: ShopItem, paidCents: number, weeksHeld: number): number {
   if (!item.upkeepBps) return 0
-  return Math.round((paidCents * item.upkeepBps) / 10_000 / WEEKS_PER_YEAR)
+  const weekly = (paidCents * item.upkeepBps) / 10_000 / WEEKS_PER_YEAR
+  if (!item.upkeepGrowthBps) return Math.round(weekly)
+  // ⚠ `Math.max(0, weeksHeld)` FOR `assetValueCents`' OWN REASON: a commissioned rung's clock starts
+  // on delivery, so every week of the wait asks for a negative span. Nothing with a build time
+  // carries growth today, and the clamp is what keeps that from being an assumption.
+  const years = Math.max(0, weeksHeld) / WEEKS_PER_YEAR
+  const grown = Math.min(Math.pow(1 + item.upkeepGrowthBps / 10_000, years), ECONOMY.shop.upkeepGrowthCapX)
+  return Math.round(weekly * grown)
+}
+
+/** ⭐ ROUND 30 #15 – HOW LONG THIS FAMILY HAS HAD THIS THING, in weeks, off the world's own clock.
+ *
+ *  ⚠⚠ IT IS THE **SAME** SPAN `assetWorthCents` DEPRECIATES OVER – `basisWeek ?? boughtWeek` – and
+ *  that is the whole reason it is a function rather than an expression repeated at three call sites.
+ *  The two curves he described only cross honestly if they are drawn against one clock: a car whose
+ *  value has fallen for six years must be a car whose upkeep has risen for six years, and a second
+ *  copy of this arithmetic is exactly how those two would drift apart. `world/assets.ts`' own «one
+ *  arithmetic, one writer» rule, applied before there was a second writer. */
+export function assetHeldWeeks(world: WorldState, owned: OwnedAsset): number {
+  return world.week - (owned.basisWeek ?? owned.boughtWeek)
 }
 
 /** ⭐ §3f – IS IT HERE YET? Absent `readyWeek` means «delivered», which is what every row written
@@ -373,6 +504,180 @@ export function grantedVacationIds(world: WorldState): string[] {
  *  sides asking different functions about one question. */
 export function weeklyAssetUpkeepCents(world: WorldState): number {
   let total = 0
-  for (const { owned, item } of deliveredAssets(world)) total += assetUpkeepCents(item, owned.paidCents)
+  // ⭐ ROUND 30 #15 – ...AND AT THIS WEEK'S FIGURE, which is the same figure the till charges: both
+  // sides ask `assetUpkeepCents` with `assetHeldWeeks`, so the meter and the bill still cannot
+  // disagree once one of them started moving.
+  for (const { owned, item } of deliveredAssets(world)) {
+    total += assetUpkeepCents(item, owned.paidCents, assetHeldWeeks(world, owned))
+  }
   return total
+}
+
+// =================================================================================================
+// ⭐⭐⭐ ROUND 30 #8 AND #10 – THE FAMILY NAMES THE THINGS IT BUILDS.
+//
+// THE OWNER, 30.08, on the brand: «Merch brand давай предложим пользователю несколько вариантов
+// именования при покупке… один из вариантов "ввести своё название" – это придаст +100 к
+// индивидуальности сразу. Среди вариантов по дефолту могут быть инициалы ребёнка или что-то
+// связанное с именем или фамилией.» And on the academy: «И нейминг для академии тоже по принципу
+// бренда, как раз одним из вариантов можно предложить уже существующее название бренда (если он
+// есть) или снова "ввести своё".»
+//
+// ⚠⚠ THE NAME BELONGS TO THE FAMILY OF RUNGS, NOT TO THE ROW, and that is what makes the academy
+// work at all: it is FOUR purchases and one institution. The name is written on the first rung of
+// its family the household buys and every later stage reads it, so «The Martin Academy» does not
+// become four differently-named buildings. One field, one reader, no second place for it to live.
+//
+// ⚠⚠ IT IS PLAYER-AUTHORED TEXT THAT IS PERSISTED AND RENDERED, so the rules are stated rather than
+// assumed – see `sanitiseAssetName` for all four of them (a length cap, an allow-list, what an empty
+// entry becomes, and why none of it can break a 375px row).
+// =================================================================================================
+
+/** ⭐ THE FAMILIES THAT CARRY A NAME. The cars, the houses, the boats, the planes and the two
+ *  investments do not: you do not name a saloon, and «+100 к индивидуальности» is about the things
+ *  the family BUILDS with her name on them. */
+export const NAMEABLE_FAMILIES: readonly ShopItem['family'][] = ['business', 'academy']
+
+export function isNameable(item: ShopItem): boolean {
+  return NAMEABLE_FAMILIES.includes(item.family)
+}
+
+/** ⭐ WHAT THE FAMILY CALLED ITS `family`, or null when it owns nothing of it yet.
+ *
+ *  ⚠ THE FIRST OWNED ROW OF THE FAMILY, in purchase order (`world.assets` is oldest-first – see
+ *  `ownedAssets`), so a four-stage academy answers with the name given when the LAND was bought and
+ *  a later stage cannot rename it. ⚠ AND A ROW WITH NO NAME IS SKIPPED rather than answering null:
+ *  a save that owned a brand before this item exists (v66 back-fills it, but a hand-built probe
+ *  world does not) must not make the whole family nameless. */
+export function assetNameOf(world: WorldState, family: ShopItem['family']): string | null {
+  for (const owned of ownedAssets(world)) {
+    if (shopItem(owned.id)?.family !== family) continue
+    if (!owned.name) continue
+    // ⚠⚠ SANITISED ON THE WAY **OUT** AS WELL AS ON THE WAY IN, AND THAT IS THE POINT OF DOING IT
+    // HERE. `buyAsset` bounds what the game itself stores, which covers every name any player can
+    // create – but a save file is a file, and an imported or hand-edited one can carry a row with a
+    // ten-thousand-character name that no command ever wrote. `saveGuard`'s bounds walk caps a string
+    // at 32,768 characters, which stops a hostile PAYLOAD and is four hundred times too loose to stop
+    // a broken LAYOUT. Re-bounding at the one function every reader goes through makes «no name that
+    // reaches a screen is longer than `ASSET_NAME_MAX_CHARS`» a property rather than a hope, and it
+    // costs one pass over at most twenty-four characters.
+    const safe = sanitiseAssetName(owned.name, '')
+    if (safe) return safe
+  }
+  return null
+}
+
+/** ⭐⭐ THE NAMES THE GAME OFFERS, in the order they are shown, and every one of them is made out of
+ *  HER – which is the whole of «придаст +100 к индивидуальности сразу». A generic list would be the
+ *  opposite of what he asked for.
+ *
+ *  For a girl called Vera Martin the brand reads `VM` / `Martin` / `Vera Martin` / `House of Martin`,
+ *  and the academy reads her brand's name FIRST when she has one (his own «уже существующее название
+ *  бренда»), then `Martin Academy` / `Vera Martin Academy` / `VM Academy`.
+ *
+ *  ⚠ THE LIST IS NEVER EMPTY AND ITS FIRST ENTRY IS THE DEFAULT, which is what makes «what happens
+ *  to an empty entry» answerable without a refusal: `sanitiseAssetName` falls back to it.
+ *
+ *  ⚠ DE-DUPLICATED, because the academy's first suggestion can equal one of the others when the
+ *  brand was itself named after the surname – two identical chips is a bug the eye sees instantly.
+ *
+ *  ⚠ AND EVERY ENTRY GOES THROUGH THE SAME CAP THE FREE-TEXT FIELD DOES: a long surname must not
+ *  produce a suggestion the player could not have typed. */
+export function assetNameSuggestions(world: WorldState, family: ShopItem['family']): string[] {
+  return nameSuggestionsFor(
+    world.profile?.kidName ?? '',
+    world.profile?.kidLastName ?? '',
+    family,
+    assetNameOf(world, 'business'),
+  )
+}
+
+/** ⭐ THE SAME LIST, ASKED WITHOUT A WORLD – the pure core `assetNameSuggestions` wraps.
+ *
+ *  ⚠⚠ IT EXISTS FOR ONE CALLER AND THAT CALLER IS THE MIGRATION, which back-fills v66 rows from a
+ *  RAW SAVE OBJECT and has no `WorldState` to ask. Splitting it is the only way the migration's
+ *  default and the shop's default can be the same list – and if they were not, a save that arrived
+ *  through the migration would carry a name the game itself would never have offered. */
+export function nameSuggestionsFor(
+  kidName: string,
+  kidLastName: string,
+  family: ShopItem['family'],
+  brandName: string | null,
+): string[] {
+  const first = kidName.trim()
+  const last = kidLastName.trim()
+  const initials = `${first.slice(0, 1)}${last.slice(0, 1)}`.toUpperCase()
+  const both = [first, last].filter(Boolean).join(' ')
+  const out: string[] = []
+  if (family === 'academy') {
+    // ⭐ HIS OWN FIRST OPTION: the brand they already built, if they built one.
+    if (brandName) out.push(brandName)
+    if (last) out.push(`${last} Academy`)
+    if (both) out.push(`${both} Academy`)
+    if (initials.length === 2) out.push(`${initials} Academy`)
+  } else {
+    if (initials.length === 2) out.push(initials)
+    if (last) out.push(last)
+    if (both && both !== last) out.push(both)
+    if (last) out.push(`House of ${last}`)
+  }
+  const capped = out.map((n) => cutToLimit(n)).filter((n) => n.length > 0)
+  const seen = new Set<string>()
+  const unique = capped.filter((n) => (seen.has(n) ? false : (seen.add(n), true)))
+  // ⚠ THE LAST-RESORT ENTRY EXISTS SO THE LIST CANNOT BE EMPTY. A profile with no name at all is not
+  // reachable through onboarding (`kidName` is required and the save guard bounds it), but a
+  // hand-built probe world is, and a default that is `undefined` is how a null reaches a template.
+  return unique.length > 0 ? unique : [family === 'academy' ? 'The Academy' : 'The Brand']
+}
+
+/** ⭐⭐⭐ THE FOUR RULES FOR PLAYER-AUTHORED TEXT, STATED RATHER THAN ASSUMED. This string is typed by
+ *  a person, written into a save, carried across versions and rendered on a phone, so each of those
+ *  four has an answer and this function is all four of them.
+ *
+ *  **1. A LENGTH CAP OF `ASSET_NAME_MAX_CHARS` (24), COUNTED IN CODE POINTS.** Twenty-four is what a
+ *  shop row holds on a 375px screen beside its price without wrapping to a third line, and the
+ *  screen sets the same number as the field's `maxlength` so the cap is felt while typing rather
+ *  than applied silently afterwards. ⚠ CODE POINTS AND NOT `.slice`: `str.slice(0, 24)` can cut a
+ *  surrogate pair in half and produce an unrenderable character, and some scripts' letters are
+ *  astral. `[...str]` iterates code points.
+ *
+ *  **2. AN ALLOW-LIST, NOT A DENY-LIST.** Unicode letters and digits, the space, and `& . ' -` –
+ *  which is every character real brands use (`S by Serena`, `H&M`, `Levi's`, `Ben & Jerry's`) and
+ *  nothing else. ⚠ IT IS AN ALLOW-LIST BECAUSE A DENY-LIST IS A LIST OF THE THINGS SOMEBODY THOUGHT
+ *  OF: control characters, bidirectional overrides, zero-width joiners and combining stacks are all
+ *  refused by not being on it. ⚠ CYRILLIC IS ALLOWED and that is deliberate – the house rule against
+ *  it is about OUR copy in a template (`tests/template-copy-rules.test.ts` reads source files), and
+ *  a player typing his daughter's name in his own alphabet is data, not copy.
+ *  ⚠ Vue escapes interpolated text, so markup is a LAYOUT question here and never an injection one;
+ *  nothing in this engine renders a name through `v-html`.
+ *
+ *  **3. AN EMPTY ENTRY IS NOT A REFUSAL, IT IS THE DEFAULT.** Blank, whitespace-only, or a string
+ *  that is nothing but disallowed characters all become `fallback` – the first suggestion, which is
+ *  built from her own name. «мы ни за что не наказываем» applies to a text field too: a player who
+ *  clears the box and presses Buy gets a brand called after his daughter, not an error.
+ *
+ *  **4. WHITESPACE IS COLLAPSED AND TRIMMED**, so `  V   M  ` and `V M` are the same brand and no
+ *  name can be made of spaces to hide the row.
+ *
+ *  Pure: no world, no rng, no clock. */
+export const ASSET_NAME_MAX_CHARS = 24
+
+/** The allow-list of rule 2, as one class. `u` is required for `\p{...}` to mean anything at all. */
+const NAME_ALLOWED = /[\p{L}\p{N} &.'-]/u
+
+function cutToLimit(raw: string): string {
+  return [...raw].slice(0, ASSET_NAME_MAX_CHARS).join('').trim()
+}
+
+export function sanitiseAssetName(raw: string | undefined, fallback: string): string {
+  // ⚠⚠ WHITESPACE BECOMES A SPACE **BEFORE** THE ALLOW-LIST, AND THE ORDER IS THE BUG THIS FUNCTION
+  // ALREADY HAD ONCE. The list allows the plain space and nothing else, so filtering first turned a
+  // pasted `Martin\n\tHouse` into `MartinHouse` – two words glued into one, silently. Normalising
+  // first keeps the word boundary and still refuses the character itself. Caught by
+  // `tests/round30-brand-naming.test.ts` rule 2, on its first run.
+  const spaced = (raw ?? '').replace(/\s/gu, ' ')
+  const kept = [...spaced].filter((ch) => NAME_ALLOWED.test(ch)).join('')
+  const collapsed = kept.replace(/ +/g, ' ').trim()
+  const cut = cutToLimit(collapsed)
+  return cut.length > 0 ? cut : fallback
 }

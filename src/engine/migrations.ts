@@ -40,6 +40,10 @@ import { coachIncludesPhysio } from './coach'
 // also answers `undefined` for an id the catalogue no longer carries, which is the courtesy that
 // lets a retired rung migrate untouched instead of throwing.
 import { shopItem, unitPriceCents } from './world/shop'
+// ⭐ ROUND 30 #8/#10 – the naming default, asked of the SAME function the shop offers the player, so
+// a back-filled name is one the game itself would have suggested. `nameSuggestionsFor` is the
+// world-free core of `assetNameSuggestions` and exists for exactly this caller.
+import { nameSuggestionsFor, sanitiseAssetName } from './world/assets'
 
 /** The v65 shape of an owned row, as the units back-fill has to read it: `basisCents`/`basisWeek`
  *  were OPTIONAL keys on v63-v65 saves (round 29 #11 and part two #4 wrote them without a version
@@ -52,6 +56,8 @@ interface LegacyAsset {
   basisCents?: number
   basisWeek?: number
   units?: number
+  /** ⭐ ROUND 30 #8/#10 – the name v66 back-fills onto the first owned row of a nameable family. */
+  name?: string
 }
 import { COHORT } from './season/cohort'
 import type { PlayerProfile } from '../shared/protocol'
@@ -2151,6 +2157,42 @@ export function migrateSave(raw: unknown): WorldState {
         a.units = basisCents / unitPriceCents(seed, basisWeek, item)
         delete a.basisCents
         delete a.basisWeek
+      }
+      // ⭐⭐⭐ AND – SAME WAVE, SAME STEP, THE FOURTH THING v66 CARRIES – ROUND 30 #8/#10's NAME.
+      //
+      // «Merch brand давай предложим пользователю несколько вариантов именования при покупке… это
+      // придаст +100 к индивидуальности сразу», and the academy «по принципу бренда».
+      //
+      // ⚠⚠ THIS ONE IS BACK-FILLED AND THE 'business' CATEGORY ABOVE IS NOT, WHICH LOOKS LIKE A
+      // CONTRADICTION AND IS NOT ONE. That step refused to invent LEDGER ROWS – events that never
+      // happened – because a ledger must stay truthful about what it actually charged. A name is
+      // not a record of an event: a family that owns a brand has always had something to call it,
+      // and the alternative is a career that owns a nameless business forever with no way to name it
+      // (the shop offers the picker on the FIRST purchase of a family, and that purchase is in the
+      // past). Leaving it blank would ship the item and exclude every save that already bought one.
+      //
+      // ⚠ THE DEFAULT IS THE GAME'S OWN FIRST SUGGESTION, from `nameSuggestionsFor` – so it is a
+      // name the player could have chosen from the list, built out of her initials or her surname,
+      // and never a string invented here. `sanitiseAssetName` applies the same cap and allow-list the
+      // typed field gets, so a back-filled name and a typed one are the same kind of value.
+      //
+      // ⚠ THE FIRST ROW OF EACH FAMILY ONLY, in purchase order – `assetNameOf`'s own rule, so a
+      // four-stage academy comes out of this with ONE name rather than four.
+      //
+      // ⚠ AND THE BRAND IS NAMED BEFORE THE ACADEMY IS ASKED, because his own first academy option
+      // is «уже существующее название бренда»: the loop below runs 'business' first and hands the
+      // result to the academy's list, exactly as the live shop does.
+      const profile = (save.profile ?? {}) as Partial<PlayerProfile>
+      let brandName: string | null = null
+      for (const family of ['business', 'academy'] as const) {
+        const rows = (save.assets as LegacyAsset[]).filter(
+          (a) => a && typeof a === 'object' && shopItem(String(a.id))?.family === family,
+        )
+        if (rows.length === 0) continue
+        const suggestions = nameSuggestionsFor(profile.kidName ?? '', profile.kidLastName ?? '', family, brandName)
+        const named = sanitiseAssetName(rows[0].name, suggestions[0])
+        rows[0].name = named
+        if (family === 'business') brandName = named
       }
     }
     v = 66

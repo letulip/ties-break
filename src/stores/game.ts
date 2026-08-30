@@ -411,9 +411,9 @@ export const useGameStore = defineStore('game', {
     /** ⭐ v63, the shop slice 1: buy a rung of the shelf. `stakeCents` is the amount on an 'open'
      *  rung (an investment names a minimum) and is ignored on a 'fixed' one. `refreshSlots` because
      *  money moved – the same reason the two bookings above refresh and `chooseGift` does not. */
-    async buyAsset(itemId: string, stakeCents?: number) {
+    async buyAsset(itemId: string, stakeCents?: number, name?: string) {
       await this.run(async () => {
-        const res = this.takeOk(await request({ type: 'buyAsset', itemId, stakeCents, baseRevision: this.revision }))
+        const res = this.takeOk(await request({ type: 'buyAsset', itemId, stakeCents, name, baseRevision: this.revision }))
         this.applySnapshot(res)
         await this.refreshSlots()
       })

@@ -374,8 +374,22 @@ describe('buying and selling', () => {
     // of the sale, the week of the purchase is gone from both the breakdown and the transactions tab.
     // A test that asserted "the ledger holds both rows" would only pass because it held them for less
     // than sixty weeks, which is not what §2e-1 describes.
-    expect(world.events.some((e) => e.category === 'shop' && (e.amountCents ?? 0) < 0), 'the purchase row is pruned by then').toBe(false)
-    expect(financeWindow(world.financeWeeks, 0).byCategory.shop, 'and so is its ledger week').toBe(91_091_00)
+    //
+    // ⚠⚠ RE-AIMED AT ROUND 30 #15, AND THE RE-AIM IS THE ITEM. This arm used to read «no shop row
+    // with a negative amount survives», which WAS «the purchase row is pruned» while the only
+    // negative shop row a car could ever write was its purchase. The owner has since asked the cars
+    // to cost something to keep, so a car now writes a NEGATIVE 'shop' row every single week and the
+    // old predicate can never be false again – it would have gone green on the wrong fact forever.
+    // The claim it was making is unchanged and is now made against the row itself: what must be gone
+    // is the row that says «Bought».
+    expect(world.events.some((e) => e.text.startsWith('Bought: The good saloon')), 'the purchase row is pruned by then').toBe(false)
+    // ...and the ledger week is the sale, NET of the upkeep this window happened to carry – which is
+    // `financeWindow`'s own contract («SIGNED per-category totals»), the same netting the sale of a
+    // car has always been shown through. The upkeep is read off the engine's one arithmetic rather
+    // than re-derived here, so this cannot drift from the bill.
+    const window0 = financeWindow(world.financeWeeks, 0).byCategory.shop
+    expect(window0, 'and so is its ledger week').toBeLessThan(91_091_00)
+    expect(window0, 'the sale is still the whole of the positive side').toBeGreaterThan(0)
 
     // ⭐⭐ SO THE SALE ROW HAS TO CARRY THE LOSS IN ITS OWN WORDS, AND THAT IS WHY IT DOES. This is
     // acceptance §2e-1 read literally – «the ledger shows the loss to the cent» – and it is the one

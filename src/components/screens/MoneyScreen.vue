@@ -52,7 +52,7 @@ import { ECONOMY, kidPrizeShareBps, managerCommissionBps } from '../../engine/ec
 // STARTING_FUNDS_CENTS: the ENGINE's own number, not a hand copy – see `startingBudget` below.
 // world.ts is already in the UI chunk (PracticeFlow/BracketTabs import from it), so this costs
 // nothing at bundle time and removes a "must match" comment that was one retune away from a lie.
-import { STARTING_FUNDS_CENTS, ageAtWeek } from '../../engine/world'
+import { ASSET_NAME_MAX_CHARS, STARTING_FUNDS_CENTS, ageAtWeek } from '../../engine/world'
 // The bill's own arithmetic, so the note under the breakdown quotes the number the engine charges
 // rather than a mirror of it - the same rule `startingBudget` above is written under.
 import { coachBillRangeCents, coachById, facilityRateCents, tierOf, weeklyBillSplit } from '../../engine/coach'
@@ -1039,8 +1039,29 @@ function buildWaitLine(row: ShopRowView): string {
  *  block every other figure on this screen is quoted over, and the spec's own «/yr» and «a season»
  *  are the same span. The number is `annualRatePct`, whole, rounded once in the engine. */
 function rateLine(row: ShopRowView): string {
+  // ⭐⭐⭐ ROUND 30 #9 – A BUSINESS IS NOT PRICED BY A RATE, so it does not read one out. Its worth is
+  // years of what it takes in, and what it takes in is her fame – so this line is what the row is
+  // ABOUT rather than a percentage it does not have. See `assetWorthCents`' third branch.
+  if (row.earningsMultipleX !== null) return `Worth ${row.earningsMultipleX} years of what it sells`
   if (row.annualRatePct < 0) return `Loses ${-row.annualRatePct}% a season`
-  if (row.annualRatePct === 0) return 'Holds its value'
+  // ⭐⭐⭐ ROUND 30 #11 – RE-WORDED, AND THE ENGINE WAS CHECKED BEFORE A WORD MOVED.
+  //
+  // THE OWNER, 30.08: «И как будто бы Holds its value странно звучит тоже – это напрямую значит, что
+  // оно обесценивается, а это вроде бы не совсем так.»
+  //
+  // ⚠⚠ HE IS RIGHT AND THE ENGINE SAYS SO. A rung at `annualRateBps: 0` is worth `paidCents x 1^n` –
+  // exactly what was paid for it, every week, forever – and `sellAsset` hands back `valueCents`
+  // whole with no spread, no fee and no haircut. There is no inflation anywhere in this engine, so
+  // there is not even a real-terms slide hiding behind the nominal figure. It does NOT depreciate;
+  // the words were the only thing suggesting it might. ⭐ AND THE ROW HE WAS PROBABLY READING IT ON
+  // IS GONE FROM THIS BRANCH ENTIRELY – the merch brand is priced as a business one line up, which
+  // is item 9, his own next sentence.
+  //
+  // ⚠ THE PARALLEL IS THE POINT: its two siblings are about a RATE («Loses 6% a season», «Gains
+  // about 7% a season») and the third had better be a rate too. «Neither gains nor loses» is the
+  // zero of that sentence and cannot be read as a slow slide. It is now said of the four academy
+  // stages and of nothing else.
+  if (row.annualRatePct === 0) return 'Neither gains nor loses'
   return `Gains about ${row.annualRatePct}% a season`
 }
 
@@ -1091,7 +1112,38 @@ interface PendingShop {
   /** ⚠ ...and what keeping it costs a week. §3f's whole argument is that this is the number the
    *  decision is actually about, so it is on the question and not only on the row. */
   upkeepCents?: number
+  /** ⭐ ROUND 30 #8/#10 – what the family is calling it, on the one purchase that names it. */
+  name?: string
 }
+// ⭐⭐⭐ ROUND 30 #8 AND #10 – `shopNamingNote`, HIS ASK, PARKED HERE AND NOT IN THE TEMPLATE for the
+// reason every other note in this block carries: Cyrillic may not appear in a template, in a string
+// OR in a comment (tests/template-copy-rules.test.ts).
+//
+// #8: «Merch brand давай предложим пользователю несколько вариантов именования при покупке… один из
+// вариантов "ввести своё название" – это придаст +100 к индивидуальности сразу. Среди вариантов по
+// дефолту могут быть инициалы ребёнка или что-то связанное с именем или фамилией.»
+// #10: «И нейминг для академии тоже по принципу бренда, как раз одним из вариантов можно предложить
+// уже существующее название бренда (если он есть) или снова "ввести своё".»
+//
+// ⚠⚠ THE FOUR RULES FOR THE TYPED VALUE ARE THE ENGINE'S AND NOT THIS SCREEN'S – `sanitiseAssetName`
+// in `world/assets.ts` states all four (a 24-code-point cap, an allow-list, an empty entry becoming
+// the first suggestion, and collapsed whitespace) and `buyAsset` applies them to whatever arrives.
+// What this screen does is make the cap FELT rather than applied silently: `maxlength` is the same
+// constant, imported rather than retyped. A screen that validated instead of the engine would be
+// invariant 1 broken in the direction the worker exists to prevent.
+//
+// ⚠ AND THE SUGGESTIONS ARE THE ENGINE'S TOO (`ShopRowView.nameOptions`), because whether a purchase
+// names anything is a fact about the world – it is the FIRST rung of a nameable family – and a
+// screen that worked it out would be a second copy of `buyAsset`'s own question.
+const nameDrafts = ref<Record<string, string>>({})
+/** What is in the box for this row – the first suggestion until the player touches it. ⚠ `??` AND
+ *  NOT `||`: a player who clears the field should see it empty rather than have the default snap
+ *  back under his cursor, and the engine turns an empty entry into that same default at the command.
+ *  `''` is a value here and only `undefined` means «never touched». */
+function nameFor(row: ShopRowView): string {
+  return nameDrafts.value[row.id] ?? row.nameOptions[0] ?? ''
+}
+
 const pendingShop = ref<PendingShop | null>(null)
 function askBuy(row: ShopRowView): void {
   if (!canBuy(row)) return
@@ -1105,6 +1157,9 @@ function askBuy(row: ShopRowView): void {
     topUp: isTopUp(row),
     buildWeeks: row.buildWeeks,
     upkeepCents: row.upkeepCents,
+    // ⭐ ROUND 30 #8/#10 – carried on the pending question and sent with the command. Undefined on
+    // every row that names nothing, which is every row whose `nameOptions` the engine left empty.
+    name: row.nameOptions.length > 0 ? nameFor(row) : undefined,
   }
 }
 // ⭐⭐⭐ ROUND 29 PART TWO #4 – HOW MUCH OF IT TO SELL. His words are in `shopPartSaleNote` below
@@ -1197,7 +1252,7 @@ function confirmShop(): void {
   const pending = pendingShop.value
   pendingShop.value = null
   if (!pending) return
-  if (pending.kind === 'buy') void game.buyAsset(pending.id, pending.amountCents)
+  if (pending.kind === 'buy') void game.buyAsset(pending.id, pending.amountCents, pending.name)
   // ⚠ `partCents` OR NOTHING: a whole sale sends no amount, which is the engine's «sell the lot» and
   // is byte for byte the call this screen made before part two #4.
   else void game.sellAsset(pending.id, pending.partCents)
@@ -1962,6 +2017,10 @@ const shelfFamilies = computed(() =>
                 <p v-if="row.unitsHeld !== null && row.avgUnitPriceCents !== null && row.unitPriceCents !== null" class="shop-row-units">
                   {{ formatUnits(row.unitsHeld) }} units &ndash; bought at {{ formatCents(row.avgUnitPriceCents) }} each, {{ formatCents(row.unitPriceCents) }} now
                 </p>
+                <!-- ⭐⭐⭐ ROUND 30 #8 AND #10 – WHAT THEY CALLED IT. See `shopNamingNote` in the
+                     script block (no Cyrillic in a template). One line, the engine's own string,
+                     and the row's own label above it is untouched. -->
+                <p v-if="row.name" class="shop-row-given-name">Trading as {{ row.name }}</p>
                 <p class="shop-row-change" :class="{ 'is-down': (row.changeCents ?? 0) < 0 }">
                   {{ formatCentsSigned(row.changeCents ?? 0) }}
                   <span v-if="row.changePct !== null">since they bought it ({{ row.changePct }}%)</span>
@@ -2038,6 +2097,37 @@ const shelfFamilies = computed(() =>
                   />
                 </label>
                 <span v-else class="shop-row-price">{{ formatCents(row.entryCents) }}</span>
+                <!-- ⭐⭐⭐ ROUND 30 #8 AND #10 – NAME IT. See `shopNamingNote` in the script block for
+                     his words (no Cyrillic in a template) and for the four rules the typed value is
+                     bound by. The chips WRITE INTO THE FIELD rather than sitting beside it, so there
+                     is exactly one value on screen and «I picked a chip but there was text in the
+                     box» is not a state this control can be in. The field starts on the first
+                     suggestion, so a player who never touches it still buys a brand with her name
+                     on it. -->
+                <div v-if="row.nameOptions.length > 0" class="shop-naming">
+                  <span class="shop-stake-label">What is it called</span>
+                  <div class="shop-naming-chips">
+                    <button
+                      v-for="option in row.nameOptions"
+                      :key="option"
+                      type="button"
+                      class="shop-naming-chip"
+                      :class="{ 'is-on': nameFor(row) === option }"
+                      @click="nameDrafts[row.id] = option"
+                    >
+                      {{ option }}
+                    </button>
+                  </div>
+                  <input
+                    :value="nameFor(row)"
+                    class="shop-stake-input shop-naming-input"
+                    type="text"
+                    :maxlength="ASSET_NAME_MAX_CHARS"
+                    placeholder="or type your own"
+                    aria-label="What it is called"
+                    @input="nameDrafts[row.id] = ($event.target as HTMLInputElement).value"
+                  />
+                </div>
                 <!-- ⭐ §3f – A COMMISSIONED THING IS ORDERED, NOT BOUGHT, and the verb on the control
                      is the one difference the player can see before he presses it. -->
                 <button class="shop-action" :disabled="!canBuy(row)" @click="askBuy(row)">
@@ -2848,6 +2938,62 @@ const shelfFamilies = computed(() =>
   margin: 4px 0 0;
   font-size: 11.5px;
   color: var(--ink-soft);
+}
+
+/* ⭐⭐⭐ ROUND 30 #8 AND #10 – WHAT THEY CALLED IT, and the naming control that set it.
+   ⚠⚠ `overflow-wrap: anywhere` IS THE 375px GUARANTEE AND NOT A GARNISH. The string is
+   player-authored: `sanitiseAssetName` caps it at 24 code points and forbids everything but letters,
+   digits, the space and `& . ' -`, which bounds the LENGTH – but twenty-four unbroken letters is a
+   word no browser will break on its own, and a shop card is 343px of content at 375px. The cap and
+   this rule together are what make «it cannot break a layout at 375px» true rather than likely, and
+   `tests/component/round30-brand-naming.test.ts` measures it against the viewport rather than
+   trusting either half. */
+.shop-row-given-name {
+  margin: 4px 0 0;
+  font-size: 11.5px;
+  color: var(--ink-soft);
+  overflow-wrap: anywhere;
+}
+
+.shop-naming {
+  display: block;
+  margin-top: 8px;
+}
+
+.shop-naming-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 4px 0 6px;
+}
+
+.shop-naming-chip {
+  padding: 5px 10px;
+  border: 1px solid var(--line);
+  /* ⚠ THE TOKEN AND NOT A BARE 999px – the owner's capsule-vs-circle ruling of 26.07, pinned in
+     tests/round10.test.ts: a wide short element wants the CAPSULE (clamped to half the height), and
+     the magic number has to be findable by grep. Caught by that pin on this wave's first gate. */
+  border-radius: var(--radius-pill);
+  background: transparent;
+  color: var(--ink-soft);
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  /* the chips carry suggestions built from her surname, so the same 24-cap and the same wrap. */
+  overflow-wrap: anywhere;
+  max-width: 100%;
+}
+
+.shop-naming-chip.is-on {
+  border-color: var(--ink);
+  color: var(--ink);
+}
+
+/* ⚠ WIDER THAN THE MONEY BOXES ON PURPOSE: `.shop-stake-input` is 8.5em because it holds a figure,
+   and a name is words. `max-width: 100%` keeps it inside the card at 375px either way. */
+.shop-naming-input {
+  width: 100%;
+  font-weight: 600;
 }
 
 /* The wait and the stage under it – facts about WHEN, not about money, so they take the quiet ink

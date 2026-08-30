@@ -199,6 +199,28 @@ export interface OwnedAsset {
   paidCents: number
   /** what it is worth THIS week, in cents, whole. Written by `revalueAssets` on every tick. */
   valueCents: number
+  /** ⭐⭐⭐ ROUND 30 #8 AND #10 – WHAT THE FAMILY CALLED IT. Present on the FIRST row of a nameable
+   *  family the household bought (the merch brand; the academy's land) and absent on every other row
+   *  – including the academy's three later stages, which read the land's name rather than carrying
+   *  three copies of it (`assetNameOf`).
+   *
+   *  THE OWNER, 30.08: «Merch brand давай предложим пользователю несколько вариантов именования при
+   *  покупке… один из вариантов "ввести своё название" – это придаст +100 к индивидуальности сразу.»
+   *
+   *  ⚠⚠ IT IS THE ONLY PLAYER-AUTHORED FREE TEXT IN A SAVE BESIDES HER NAME, so it is bounded TWICE
+   *  and neither pass is a substitute for the other. `buyAsset` runs `sanitiseAssetName` before it is
+   *  ever stored – a cap of `ASSET_NAME_MAX_CHARS` code points over an allow-list – which covers
+   *  every name a player of this game can create. `assetNameOf` runs the SAME function again on every
+   *  read, which is what covers a file: an imported or hand-edited save can carry a row no command
+   *  ever wrote, and `saveGuard`'s 32,768-character ceiling stops a hostile payload without going
+   *  anywhere near a broken layout.
+   *
+   *  ⚠ OPTIONAL, AND ABSENCE IS A REAL STATE rather than a missing value: a probe world built by
+   *  hand and any row of a family whose name lives on an earlier row both have none. `assetNameOf`
+   *  skips a nameless row instead of answering null for the whole family, which is what keeps the
+   *  academy's stages readable in any order. ⚠ v66 back-fills it on every owned business and academy
+   *  row so no career the game itself produced is ever nameless. */
+  name?: string
   /** ⭐⭐⭐ ROUND 30 #14 – HOW MANY UNITS OF THE RUNG THEY HOLD. Present on every row of a rung that
    *  carries `unitBaseCents` and absent on every other, which is every car, house, boat, plane,
    *  academy stage and business.

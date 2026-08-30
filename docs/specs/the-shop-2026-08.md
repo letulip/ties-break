@@ -1088,3 +1088,225 @@ before. `tests/round30-fund-units.test.ts`, `tests/component/round30-fund-units-
 the re-aimed round 29 guards carry all of it; the frozen MAIN capture (41550 / `e6b0c709`) and the
 three frozen career hashes are **unmoved, re-derived per key against a control tree** rather than
 inherited.
+
+---
+
+## 15. ⚙ THE CARS COST SOMETHING TO KEEP, AND IT GROWS – round 30 #15 (30.08)
+
+> «Для машин вполне можно ввести годовую стоимость обслуживания, которая может с каждым годом
+> немного расти, как в реальности, пока стоимость авто на рынке падает.»
+
+⭐⭐ **THE SHAPE IS HIS AND IT IS TWO CURVES CROSSING.** `annualRateBps` (already on every car,
+negative by §3b's design) takes the market value DOWN; a new `upkeepGrowthBps` takes the weekly bill
+UP. Neither is a new mechanism – both are fields on the catalogue read by functions that already
+existed – and the whole item is that `assetUpkeepCents` now has an AGE to read them against.
+
+⚠ **WHY THE CARS HAD NONE UNTIL NOW, because it was a decision rather than an omission.** §3f's
+«годовое обслуживание» table is written about the BOATS AND THE PLANES and quotes no car; §3b gives
+the cars a price and a loss and stops. This is the third column, on the family the spec left out.
+
+### 15a. What shipped
+
+| rung | price | loses / yr | **upkeep / yr** | **upkeep / week, yr 1** |
+| --- | ---: | ---: | ---: | ---: |
+| the sensible estate | $60,000 | 6% | **5.0%** | **$57.69** |
+| the good saloon | $110,000 | 9% | **5.5%** | **$116.35** |
+| the one from the poster | $190,000 | 12% | **7.0%** | **$255.77** |
+| the unreasonable one | $300,000 | 15% | **9.0%** | **$519.23** |
+
+⭐ **The four rates are a real-world ladder and not a multiple of the price.** Servicing, insurance,
+tyres and tax on an ordinary estate run about a twentieth of what it cost; the same list on a
+two-seater with carbon brakes and an annual major service runs nearly twice that share, and it is the
+SHARE that climbs, not just the money. **Fuel is excluded on purpose** – nothing in this game knows
+how far anybody drove, and a cost nobody can influence should not be modelled as if they could.
+
+⭐⭐ **The last row is the point of the ladder, and it is §3f's own design sentence read one family
+down**: «the toys compete with the team for the same money». A $300,000 car costs roughly what the
+best coach in the game costs, every week, for as long as it sits there.
+
+**The growth: `upkeepGrowthBps: 600`** – 6% a year, compounding on the car's own age, **capped at
+double** (`ECONOMY.shop.upkeepGrowthCapX`, reached in the twelfth season of ownership). ⚠ CONTINUOUS
+and not a yearly step, which is `assetValueCents`' own argument read in the other direction: a step
+would hold the bill flat for fifty-one weeks and then raise it overnight on an anniversary nothing
+on screen names, and it would create a week to sell before.
+
+### 15b. ⚠⚠ THE SCOPE IS «для машин», AND THE BOATS AND PLANES DID NOT MOVE ONE CENT
+
+They carry **no** `upkeepGrowthBps`, so `assetUpkeepCents` ignores the age argument entirely on them
+and answers what it always answered, at any age at all. That is a decision and not an oversight: the
+flat 6–10% is the number §3f's «nothing here can strand a family» was MEASURED against ($23,076.92 a
+week at 10% of $12M), and compounding a bill whose safety property was proved at the flat figure is a
+balance change to a shipped rung. **It is his call, not this item's.**
+
+### 15c. ⚙ MEASURED – predicted vs measured
+
+**Predicted:** the bill is small against the price, so the early economy barely moves; over a long
+hold the KEEPING starts to cost more than the LOSING, which is what happens to a real car.
+
+**Measured, on the engine's own two functions:**
+
+| rung | yr 1 / wk | 10 yrs of upkeep | 10 yrs of lost value | **the year keeping overtakes losing** |
+| --- | ---: | ---: | ---: | ---: |
+| the sensible estate | $58 | **$40,694** | $27,683 | **4** |
+| the good saloon | $116 | **$82,067** | $67,164 | **8** |
+| the one from the poster | $256 | **$180,412** | $137,085 | **7** |
+| the unreasonable one | $519 | **$366,249** | $240,938 | **6** |
+
+⭐ **That crossover is the finding and it is real rather than a balance choice.** Running costs on an
+ordinary older car really do exceed its remaining depreciation, and the ladder now says so.
+
+**And the early economy, A/B on one tree** (`TB_SHOP_PROBE_RUN=1 npx vite-node tools/shop-probe.ts --
+--seeds 6 --seasons 8`; arm A is this same commit with the four cars' two upkeep fields stripped, so
+the READER is present in both arms and only the data moves):
+
+| | arm A (no car upkeep) | arm B (shipped) |
+| --- | ---: | ---: |
+| careers that bought before season 4 | 17 of 54 | 17 of 54 – unchanged |
+| season-slots where the shop was the largest outgoing | 17 of 216 | **19 of 216** |
+| worst shop share of a season, seasons 0–3 | 82.3% | **84.1%** |
+| the funds ladder (arm A, no shopping) | – | **byte-identical**, as it must be: a bill only reaches a family that owns one |
+
+⚠ **NOTHING CAN STRAND A FAMILY, on §3f's own test:** a car has NO build wait, so it is sellable from
+the week it is bought and every week after. There is no week in which the family is paying for a
+thing it cannot get out from under – checked on a ticked world in `tests/round30-car-upkeep.test.ts`
+rather than inherited from §3f.
+
+⚠ **The card and the till still quote ONE number.** `assetUpkeepCents`' old note promised «the figure
+the player was quoted, FOREVER», which cannot be true of a bill whose point is that it grows. The
+promise is kept the other way round: `shopView` quotes an OWNED row at THIS week's figure and an
+unowned one at the first year's, so what the row says is what the ledger charged.
+
+---
+
+## 16. ⚙ THE MERCH BRAND IS AN ASSET WITH A VALUE – round 30 #9 (30.08), and #11 with it
+
+> «сам Merch brand тоже вполне может расти в цене как бизнес по какой-то логике, похожей на привязку
+> к её рекламе и результатам. Можно провести анализ доходов и стоимости бренда RF (Roger Federer) для
+> референса.»
+
+The research is [player-brands-and-what-they-are-worth.md](../research/player-brands-and-what-they-are-worth.md),
+written before the number was picked and tagged `[S]`/`[I]`/`[GAP]`/`[WEAK]` throughout.
+
+### 16a. ⚠⚠ WHAT THE RESEARCH SAID, AND THE FIRST ANSWER IS A GAP
+
+**His own reference has no published value.** The RF mark sits in Tenro AG, Federer's private Swiss
+holding company; On Holding's IPO prospectus and its FY2025 annual report both name Tenro **only** in
+a risk factor and never in the financials, so not even the royalty is public. **A model that depends
+on the RF mark's value being knowable cannot be built.** Three findings that could be built on:
+
+1. **Brand value follows the ACCUMULATED stock, not current form.** Sugarpova expanded THROUGH a
+   fifteen-month doping ban; Federer's off-court income went **$90M → $95M in the year he retired**;
+   Jordan Brand did ~$8.7bn twenty-one years after he last played. ⭐ The game's existing decaying
+   fame stock is already the right driver and rank should carry no weight – which is what
+   `world/fame.ts` does and what round 30 #13 measured.
+2. **⭐⭐⭐ IT FALLS, and the best-documented case is the citation for «it must be able to».**
+   Federer's On stake ran `[I]` ~$603M in January 2025 and ~$289M in August 2026 – **down about half
+   while he was retired and nothing whatsoever about him changed.**
+3. **A name-attached brand that stops earning is still worth the MARK.** Björn Borg's own company
+   went bankrupt in 1990; the NAME was bought outright for $18M in 2006 and is a listed company doing
+   SEK 1,044M today.
+
+### 16b. What shipped
+
+```
+worth = max( paidCents x 0.25 ,  fame x $30/wk x 52 x 16 )
+        └── the mark ────────┘   └── years of what it earns ──┘
+```
+
+A fourth field on the rung, `earningsMultipleX`, and a third branch in `assetWorthCents` – the three
+valuations (units, a business, what was paid times a rate) are **exclusive by construction** and a
+test holds the catalogue to that in both directions. The merch rung's `annualRateBps: 0` is now DEAD
+for it and kept rather than deleted: the type requires it, and zero is the honest answer to «what
+rate does it drift at» – none, it is priced off earnings.
+
+⚠ **NO SCHEMA MOVE FOR THE VALUE.** `valueCents` is already persisted and already rewritten by
+`revalueAssets` every tick, so a save that owns a brand is re-priced on its next tick with no
+migration at all. (The NAME is a save field and rides v66 – see §16d.)
+
+### 16c. ⚙ MEASURED – how the multiple was chosen
+
+⚠ **The research gives a band, not a number, and says so.** No player-brand transaction publishes
+both an earnings figure and a price. The nearest two are Beckham's DRJB at `[I]` ~10.9x profit and
+the Nadal academy at `[I]` ~31x. **So the multiple is a choice inside a wide, thin band, and the
+criterion is the game's, not the sources':** *the brand should be worth about what it cost on the day
+a family can actually afford it.* A rung whose whole pitch is «дешевле академии» must not read as a
+paper loss the week it is bought.
+
+**Measured, 108 careers x 780 weeks, `npx vite-node tools/merch-fame-vs-rank.ts -- --weeks 780
+--seeds 12`:**
+
+| | measured |
+| --- | ---: |
+| careers that could ever carry the price | **100 of 108**, median first week **306** |
+| fame the week they could – p10 / median / p90 | 5.4 / **9.6** / 18.7 |
+| ...so the brand's worth that day at **16x** | $134,374 / **$240,852** / $466,149 |
+| **against a price of** | **$250,000** |
+| at or above what it cost on day one | **46 of 100** |
+| at the career's PEAK fame | median **$1,447,283 – 5.8x the price**, p90 $2.50M |
+| **seasons in which the VALUE FELL** | **28.7%**, median −19.7%, worst −29.3% |
+
+⭐⭐ **The median family is 96.3% of the way to square on the day it buys, and it is a coin flip
+whether they are up or down.** That is the number the multiple was picked for. ⭐ And the last row is
+the property the item was required to have: **roughly one season in three takes value off it**, which
+is the same order as the index fund's own «one year in four» – a risk asset, not a savings account
+with a picture on it.
+
+### 16d. The naming – round 30 #8 and #10, and the rules for text a player typed
+
+> #8 «Merch brand давай предложим пользователю несколько вариантов именования при покупке… один из
+> вариантов "ввести своё название" – это придаст +100 к индивидуальности сразу. Среди вариантов по
+> дефолту могут быть инициалы ребёнка или что-то связанное с именем или фамилией.»
+> #10 «И нейминг для академии тоже по принципу бренда, как раз одним из вариантов можно предложить
+> уже существующее название бренда (если он есть) или снова "ввести своё".»
+
+The suggestions are **made out of her, every one of them** – for a Vera Martin the brand offers
+`VM` / `Martin` / `Vera Martin` / `House of Martin`, and the academy offers **her brand's own name
+first** when there is one, then `Martin Academy` / `Vera Martin Academy` / `VM Academy`. A free-text
+field sits under the chips; pressing a chip WRITES INTO the field, so there is one value on screen
+and «I picked a chip but there was text in the box» is not a state the control can be in.
+
+⚠ **The name belongs to the FAMILY of rungs, not to the row**, which is what makes the academy work:
+four purchases, one institution, one name, given when the land was bought.
+
+⚠⚠ **FOUR RULES FOR PERSISTED, PLAYER-AUTHORED, RENDERED TEXT** (`sanitiseAssetName`):
+
+1. **A cap of 24 code points** – what a shop row holds at 375px beside its price. Code points and not
+   `.slice`, which can cut a surrogate pair in half. The screen sets the same constant as the field's
+   `maxlength`, so the cap is felt while typing rather than applied silently.
+2. **An allow-list, not a deny-list**: Unicode letters and digits, the space, and `& . ' -` – every
+   character real brands use. Control characters, bidi overrides and zero-width joiners are refused
+   by not being on it. ⚠ Cyrillic is ALLOWED: the house rule against it is about our copy in a
+   template, and a player typing in his own alphabet is data.
+3. **An empty entry is the DEFAULT, never a refusal** – blank, whitespace-only, or nothing but
+   disallowed characters all become the first suggestion, which is built from her own name.
+4. **Whitespace is normalised BEFORE the allow-list, then collapsed and trimmed** – filtering first
+   turned a pasted `Martin\n\tHouse` into `MartinHouse`, caught by the test on its first run.
+
+⚠ **Bounded twice, and neither pass replaces the other.** `buyAsset` sanitises what the game stores;
+`assetNameOf` sanitises again on every READ, because a save file is not a command and `saveGuard`'s
+32,768-character ceiling is four hundred times too loose to protect a layout. **375px is measured**
+against the viewport in `tests/component/round30-brand-naming-screen.test.ts`, on a 24-character
+unbroken name, with `overflow-wrap: anywhere` as the belt.
+
+⚠ **Schema: v66 AMENDED, not a new v67** – main is at 65, so no v66 save exists outside this wave and
+the append-only rule has not bitten. The step **back-fills a name** onto any brand or academy a save
+already owns, from the game's own first suggestion. That is deliberately the opposite of the same
+step's refusal to back-fill LEDGER rows: a ledger must stay truthful about what it charged, and a
+name is not a record of an event – the alternative is a career that owns a nameless business forever
+with no way to name it, because the picker is offered on the first purchase and that purchase is past.
+
+### 16e. ⚙ AND #11 – «Holds its value», checked before a word moved
+
+> «И как будто бы Holds its value странно звучит тоже – это напрямую значит, что оно обесценивается,
+> а это вроде бы не совсем так.»
+
+**He is right, and the engine says so.** A rung at `annualRateBps: 0` is worth `paidCents x 1^n` –
+exactly what was paid, every week, forever – and `sellAsset` hands back `valueCents` whole with no
+spread, no fee and no haircut. There is no inflation anywhere in this engine either, so there is not
+even a real-terms slide behind the nominal figure. **It does not depreciate; the words were the only
+thing suggesting it might.** Pinned on a ticked world at 1, 5 and 15 seasons plus a real sale.
+
+The line is now **«Neither gains nor loses»** – the zero of the sentence its two siblings say («Loses
+6% a season», «Gains about 7% a season»), which cannot be read as a slow slide. ⭐ And the row he was
+most likely reading it on is gone from that branch entirely: the merch brand is priced as a business
+by §16b, which is his own next sentence.

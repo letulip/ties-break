@@ -3393,6 +3393,43 @@ export const ECONOMY = {
       // ⚙ 26.08, the owner: «давай гэп сделаем скромнее пока что от 60 до 300к». A five-fold spread
       // rather than the twenty-two-fold one the first draft drew – from $60k to $300k every rung is
       // a real decision for a real career, and the ladder can always be extended upward later.
+      //
+      // ⭐⭐⭐ ROUND 30 #15 – AND NOW THEY COST SOMETHING TO KEEP, AND IT GROWS.
+      //
+      // THE OWNER, 30.08: «Для машин вполне можно ввести годовую стоимость обслуживания, которая
+      // может с каждым годом немного расти, как в реальности, пока стоимость авто на рынке падает.»
+      //
+      // ⚠⚠ WHY THE CARS HAD NONE UNTIL NOW, because it was a decision rather than an omission: §3f's
+      // «годовое обслуживание» table is written about the BOATS AND THE PLANES and quotes no car, so
+      // round 29 #5 gave the cars none. §3b's own table gives them a price and a loss and stops.
+      // This is the third column he has now asked for, and it lands on the family the spec left out.
+      //
+      // ⭐⭐ THE FOUR RATES ARE A REAL-WORLD LADDER AND NOT A MULTIPLE OF THE PRICE. Servicing,
+      // insurance, tyres and tax on an ordinary estate run about a twentieth of what it cost; the
+      // same list on a two-seater with carbon brakes and an annual major service runs nearly twice
+      // that share, and the share is what climbs, not just the money. Fuel is excluded on purpose –
+      // nothing in this game knows how far anybody drove, and a cost nobody can influence should not
+      // be modelled as if they could.
+      //
+      //   the sensible estate   5.0%   $3,000/yr    $57.69/wk
+      //   the good saloon       5.5%   $6,050/yr   $116.35/wk
+      //   the one from poster   7.0%  $13,300/yr   $255.77/wk
+      //   the unreasonable one  9.0%  $27,000/yr   $519.23/wk   <- about one elite coach
+      //
+      // ⚠ THE LAST ROW IS THE POINT OF THE LADDER, AND IT IS §3f's OWN DESIGN SENTENCE READ ONE
+      // FAMILY DOWN: «the toys compete with the team for the same money». A $300,000 car costs
+      // roughly what the best coach in the game costs, every week, for as long as it sits there.
+      //
+      // ⚠⚠ NOTHING HERE CAN STRAND A FAMILY, on §3f's own test: a car has NO build wait, so it is
+      // sellable from the week it is bought – there is no week in which the family is paying for a
+      // thing it cannot get out from under, which is the property the yacht's ten per cent was
+      // measured against.
+      //
+      // ⭐ AND `upkeepGrowthBps` IS THE HALF THAT IS NEW TO THE SHELF: 6% a year, compounding on the
+      // car's own age and capped at double (`ECONOMY.shop.upkeepGrowthCapX`). Beside a value falling
+      // 6–15% a year it is the two curves he described – a car worth less every season and dearer
+      // every season – and neither of them is a second rule: they are the same two fields every rung
+      // on this shelf already carries, with an age put through them.
       {
         id: 'car-sensible',
         family: 'car',
@@ -3401,6 +3438,8 @@ export const ECONOMY = {
         blurb: 'Five doors and a boot that takes the kit bags. Nobody looks at it twice.',
         entryCents: 60_000_00,
         annualRateBps: -600,
+        upkeepBps: 500,
+        upkeepGrowthBps: 600,
       },
       {
         id: 'car-good',
@@ -3410,6 +3449,8 @@ export const ECONOMY = {
         blurb: 'Quiet, quick, and quietly expensive the day it stops being new.',
         entryCents: 110_000_00,
         annualRateBps: -900,
+        upkeepBps: 550,
+        upkeepGrowthBps: 600,
       },
       {
         id: 'car-nineteen',
@@ -3425,6 +3466,8 @@ export const ECONOMY = {
         blurb: 'Two seats, no boot, and twenty-five years late.',
         entryCents: 190_000_00,
         annualRateBps: -1200,
+        upkeepBps: 700,
+        upkeepGrowthBps: 600,
       },
       {
         id: 'car-unreasonable',
@@ -3434,6 +3477,8 @@ export const ECONOMY = {
         blurb: 'No boot, no back seats, no defence for any of it.',
         entryCents: 300_000_00,
         annualRateBps: -1500,
+        upkeepBps: 900,
+        upkeepGrowthBps: 600,
       },
       // ⭐ §3c – THE FIRST RUNG MATTERS MOST: «the earliest seasons are measured in debt, and a
       // family that finally owns where it lives is a real milestone this game currently has no way
@@ -3514,6 +3559,32 @@ export const ECONOMY = {
         blurb: 'Her name on shirts and bags. It sells while she is talked about.',
         entryCents: 250_000_00,
         annualRateBps: 0,
+        // ⭐⭐⭐ ROUND 30 #9 – AND IT IS NOW WORTH WHAT A BUSINESS IS WORTH: years of its own income,
+        // which is years of her fame. `annualRateBps: 0` above is left where it is and is now DEAD
+        // for this rung – `assetWorthCents` branches on `earningsMultipleX` before it reaches the
+        // rate – and it is kept rather than deleted because the type requires it and because zero is
+        // the honest answer to «what rate does it drift at»: none, it is priced off earnings.
+        //
+        // ⚠⚠ THE RESEARCH GAVE A BAND AND NOT A NUMBER, AND SAYS SO
+        // (docs/research/player-brands-and-what-they-are-worth.md §5.4): NO player-brand transaction
+        // publishes both an earnings figure and a price. The two nearest are Beckham's DRJB – 55%
+        // sold for ~$269M, implying ~$489M against FY2024 profit of $44.9M, so ~10.9x – and the
+        // Nadal academy at ~€209M against €6.8M net profit, ~31x. HIS OWN REFERENCE, the RF mark,
+        // has no published valuation at all: it sits in a private Swiss holding company (Tenro AG)
+        // and On Holding's filings name it only in a risk factor, never in the financials. So this
+        // figure is a CHOICE inside a wide, thin band and the measurement is what chose it.
+        //
+        // ⭐⭐ SIXTEEN, AND THE CRITERION IS «FAIR ON THE DAY THEY CAN AFFORD IT».
+        // `tools/merch-fame-vs-rank.ts` walks 108 careers x 780 weeks and reads the fame a family
+        // holds the first week its wallet can carry twice the $250,000 price. At 16x the brand is
+        // worth about what it cost at the fame those families actually hold, so the purchase is not
+        // a paper loss the week it is made – which is what a punishing multiple would have made it,
+        // on the one rung whose whole pitch is «дешевле академии». Above that fame it grows; below
+        // it the family is down; and both directions are the item.
+        //
+        // ⚠ AND IT FALLS: fame halves over 104 weeks, so a career that goes quiet is worth less
+        // every week. The floor under it is `ECONOMY.shop.businessValueFloorShare`.
+        earningsMultipleX: 16,
       },
       {
         id: 'boat-launch',
@@ -3637,9 +3708,16 @@ export const ECONOMY = {
       // ⚠ NO BUILD WAIT AND NO UPKEEP, because §3g asks for neither and this file does not invent
       // what it was not given. §3f's «время постройки» and «годовое обслуживание» are said of the
       // boats and the planes; the academy's own sentence is «each stage is a decision and a bill»,
-      // and a stage IS the wait. ⚠ AND IT HOLDS ITS VALUE (rate 0) for the same reason: §3g calls it
-      // «the one asset that outlives the career» and gives it no rate, so it neither earns nor
-      // decays, and the shelf says so in as many words («Holds its value»).
+      // and a stage IS the wait. ⚠ AND IT NEITHER GAINS NOR LOSES (rate 0) for the same reason: §3g
+      // calls it «the one asset that outlives the career» and gives it no rate.
+      //
+      // ⚠ THIS NOTE USED TO END «and the shelf says so in as many words («Holds its value»)» AND THAT
+      // SENTENCE IS GONE FROM THE SHELF – round 30 #11, the owner: «Holds its value странно звучит –
+      // это напрямую значит, что оно обесценивается, а это вроде бы не совсем так». The MECHANIC did
+      // not move a cent (checked first: a rate-0 rung is worth what was paid for it forever and the
+      // sale is whole), only the words. A comment naming a string that no longer exists is the one
+      // way a comment must not be wrong, so it names the new one: **«Neither gains nor loses»**, said
+      // of these four stages and of nothing else since the merch brand became a business (#9).
       {
         id: 'academy-land',
         family: 'academy',
@@ -3717,6 +3795,38 @@ export const ECONOMY = {
      *  receive both, so a family owning everything gets a corridor that is one point kinder across
      *  the board – never two.» */
     planeTravelRestBonus: 1,
+    /** ⭐⭐⭐ ROUND 30 #15 – THE CEILING ON A RISING UPKEEP, as a multiple of its first-year figure.
+     *
+     *  THE OWNER: «годовая стоимость обслуживания, которая может с каждым годом НЕМНОГО расти».
+     *
+     *  ⚠⚠ «НЕМНОГО» IS WHAT THIS NUMBER IS FOR. `upkeepGrowthBps` is 6% a year, which is a small
+     *  step and a large product: unbounded, a car kept fifteen seasons would cost 2.4x its first
+     *  year, and one kept longer would keep going. A bill that compounds without a stop is the
+     *  shape «мы ни за что не наказываем» rules out – it turns a purchase the family made once
+     *  into a debt that grows for as long as they keep it.
+     *
+     *  ⭐ AND IT IS THE SENTENCE A PLAYER CAN HOLD: **the bill can at most double.** 6% a year
+     *  reaches it in the twelfth season of ownership, which is longer than any car in a fifteen-
+     *  season career is realistically held, so the cap is the guarantee rather than the common case
+     *  – it binds the tail and leaves the curve he asked for alone.
+     *
+     *  ⚠ IT BINDS THE MULTIPLIER AND NOT THE YEARS, deliberately: a cap in years would have to be
+     *  re-derived every time the growth rate moved, and the promise would silently change with it. */
+    upkeepGrowthCapX: 2,
+    /** ⭐⭐⭐ ROUND 30 #9 – THE FLOOR UNDER A BUSINESS RUNG'S VALUE, as a share of what was paid.
+     *
+     *  ⚠⚠ IT IS THE MARK, AND IT IS A SOURCED IDEA RATHER THAN A KINDNESS. Björn Borg's own company
+     *  went bankrupt in 1990; the NAME was licensed from 1997, bought outright for $18 million at the
+     *  end of 2006 and is a Nasdaq Stockholm company doing SEK 1,044M today
+     *  (docs/research/player-brands-and-what-they-are-worth.md §4d). A brand with no earnings left is
+     *  not a brand with no value – somebody will buy the name.
+     *
+     *  ⭐ A QUARTER, so a family between reigns is meaningfully down and never wiped out: «мы ни за
+     *  что не наказываем» read against a rung they CHOSE to buy, on a shelf whose own §3b law is
+     *  «THIS FAMILY EXISTS TO LOSE MONEY AND THAT IS THE POINT». It is also the one thing that keeps
+     *  a sale possible in the years she is quiet, which is what makes the decision to sell a real
+     *  fork rather than a trap. */
+    businessValueFloorShare: 0.25,
   },
 } as const
 

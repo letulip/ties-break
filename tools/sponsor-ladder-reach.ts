@@ -435,7 +435,7 @@ function runCareer(
     }
     for (const item of shopCatalogue()) {
       if (affordWeek[item.id] === null && world.fundsCents >= item.entryCents) affordWeek[item.id] = week
-      const carry = item.entryCents + assetUpkeepCents(item, item.entryCents) * WEEKS_PER_YEAR
+      const carry = item.entryCents + assetUpkeepCents(item, item.entryCents, 0) * WEEKS_PER_YEAR
       if (affordAndCarryWeek[item.id] === null && world.fundsCents >= carry) affordAndCarryWeek[item.id] = week
     }
     // ⭐⭐ P7 – THE BUSINESS ARM BUYS, in the ladder's own order, half the wallet always kept. The
@@ -892,7 +892,7 @@ export function main(argv: string[] = process.argv.slice(2)): void {
   console.log('\n  ⭐⭐ THE SHELF, AND WHETHER ANY CAREER REACHES IT:')
   console.log('    rung                      price   upkeep/wk    afforded   ...+1yr upkeep   median week afforded')
   for (const item of shopCatalogue()) {
-    const up = assetUpkeepCents(item, item.entryCents)
+    const up = assetUpkeepCents(item, item.entryCents, 0)
     const got = rows.filter((r) => r.affordWeek[item.id] !== null)
     const carried = rows.filter((r) => r.affordAndCarryWeek[item.id] !== null)
     const at = got.map((r) => r.affordWeek[item.id]!).sort((a, b) => a - b)

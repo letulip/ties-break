@@ -454,7 +454,9 @@ async function handle(msg: ToWorker): Promise<ToUI> {
     // cannot spend or liquidate. Zero draws on any stream: the values are arithmetic on `boughtWeek`,
     // which is why a purchase cannot move the world's dice (CLAUDE.md invariant 2).
     case 'buyAsset': {
-      return mutate(msg.id, msg.baseRevision, (world) => buyAsset(world, msg.itemId, msg.stakeCents))
+      // ⭐ ROUND 30 #8/#10 – the typed name rides the same command. It is NOT trusted: `buyAsset`
+      // decides whether this purchase names anything and sanitises whatever arrived.
+      return mutate(msg.id, msg.baseRevision, (world) => buyAsset(world, msg.itemId, msg.stakeCents, msg.name))
     }
     case 'sellAsset': {
       return mutate(msg.id, msg.baseRevision, (world) => sellAsset(world, msg.itemId, msg.amountCents))
