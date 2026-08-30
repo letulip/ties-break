@@ -95,7 +95,6 @@ beforeEach(() => {
 describe('§1 – every new rung is on the screen, at its real price', () => {
   it('⭐⭐ §3f – the commissioned rungs ON SALE render with the spec\'s own prices', async () => {
     const wrapper = await mountShop(toSnapshot(rich('r29-5-ui-prices')))
-    const text = wrapper.text()
     // §3f's table, as a person reads it. Literals, so a retune has to come through this file.
     // ⚠ RE-AIMED at part three P1 (the motor boat is the sailing yacht – same price) and part four
     // P10 (the long-range plane is RETIRED: no row for a family that does not own one, asserted
