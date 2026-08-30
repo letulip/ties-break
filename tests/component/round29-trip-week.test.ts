@@ -46,6 +46,9 @@
 //   M10  a trip week lends its own Sunday to the next trip                                         1 red
 //   M11  the press block stops sitting one hour behind the draw                                    2 red
 //   M12  the court hit survives at every rung, so the arc overruns the week                       10 red
+//   M13  the OFF-SEASON lends its Sunday                                                          1 red
+//   M14  a booked FAMILY week lends its Sunday                                                    1 red
+//   M15  a LAYOFF week lends its Sunday                                                           1 red
 //
 // ⚠ AND THE TWO "NOT ALL THE SAME" ARMS EXIST BECAUSE OF M1 AND M7: a sixteen-rung sweep whose rows
 // all read one number is satisfied by a constant, and a press sweep whose rows all read `false` is
@@ -74,7 +77,8 @@ import {
   type GridDay,
 } from '../../src/composables/weekGrid'
 import { weekDayNumbers } from '../../src/shared/dates'
-import { TIERS, TIER_LADDER } from '../../src/engine/season/calendar'
+import { OFF_SEASON_WEEKS, TIERS, TIER_LADDER, WEEKS_PER_YEAR, isOffSeasonWeek } from '../../src/engine/season/calendar'
+import type { TierId } from '../../src/engine/season/types'
 import { ECONOMY } from '../../src/engine/economy'
 import {
   createWorld,
@@ -84,7 +88,7 @@ import {
   setMasseurTravels,
   toSnapshot,
 } from '../../src/engine/world'
-import { DEFAULT_PROFILE, WEEK_PLAN_PRESETS, type Snapshot, type TierId } from '../../src/shared/protocol'
+import { DEFAULT_PROFILE, WEEK_PLAN_PRESETS, type Snapshot } from '../../src/shared/protocol'
 
 // =================================================================================================
 // FIXTURES
@@ -269,13 +273,16 @@ describe('round 29 P15 – the previous week lends its Sunday', () => {
    *  evening is hers, and at fourteen it is homework. A Slam and a 1000 are entered by a professional,
    *  so this is the arm the rule exists for – and the schoolgirl's is asserted on its own below rather
    *  than left as a surprise. */
-  function withNextEvent(tier: TierId, entered: boolean, over: Partial<CalendarWeekFacts> = {}) {
+  function nextEventTemplate() {
     const snap = toSnapshot(createWorld('r29-p15-lend', DEFAULT_PROFILE))
     const template = snap.upcoming[0]
     expect(template, 'the fixture world offers no events at all').toBeDefined()
+    return template
+  }
+  function withNextEvent(tier: TierId, entered: boolean, over: Partial<CalendarWeekFacts> = {}) {
     return facts({
       schoolEndsWeek: 0,
-      upcoming: [{ ...template, week: WEEK + 1, tier, entered }],
+      upcoming: [{ ...nextEventTemplate(), week: WEEK + 1, tier, entered }],
       ...over,
     })
   }
@@ -344,9 +351,13 @@ describe('round 29 P15 – the previous week lends its Sunday', () => {
     for (const [what, f] of arms) {
       expect(weekOf(f).nextTripRounds, `${what} lent a Sunday that was not its own to lend`).toBeNull()
     }
-    // ...and the off-season, which has its own week number rather than its own fact.
-    const off = withNextEvent('slam', true)
-    expect(calendarWeekFor(off, ECONOMY.availability.offSeasonWeeks?.[0] ?? 49).nextTripRounds).toBeNull()
+    // ...and the off-season, which is told apart by its WEEK NUMBER rather than by a fact on the
+    // bag – the first of the season's closing weeks, taken off the engine's own constant so this
+    // cannot drift if the shutdown moves.
+    const shut = WEEKS_PER_YEAR - OFF_SEASON_WEEKS
+    expect(isOffSeasonWeek(shut), 'the fixture week is not actually the off-season').toBe(true)
+    const off = facts({ upcoming: [{ ...nextEventTemplate(), week: shut + 1, tier: 'slam', entered: true }] })
+    expect(calendarWeekFor(off, shut).nextTripRounds, 'the tour is shut and it lent a Sunday').toBeNull()
   })
 
   it('⚠⚠ it can only ever DECLINE – a SCHOOLGIRL\'S Sunday evening is homework and keeps it', () => {
