@@ -960,7 +960,15 @@ owning `index-fund · car-sensible · house-first · merch-brand · deposit · a
 
   ⚠⚠ **SO: AGAINST A GENERIC CAREFUL CAREER YOU ARE A TAIL (≈1 in 190 at the measured 29+ rate of
   0.91/season); AGAINST YOUR OWN PROTECTION STACK YOU ARE THE MODAL OUTCOME (≈1 in 3).** Those two
-  answers differ by a factor of about seventy and the whole difference is your purchases. Your
+  answers differ by a factor of about seventy and the whole difference is your purchases.
+  ⚠ **AND THE TWO ARE NOT LIKE FOR LIKE, SAID OUT LOUD RATHER THAN GLOSSED**: the 0.91/season is the
+  bench's population rate through BOTH doors (the weekly roll and the in-match retirement hazard),
+  while the table above is the WEEKLY DOOR ONLY – it is arithmetic on the shipped constants, not a
+  walk. Round 16 measured the retirement door at most of all onsets, so the true P(zero) for a
+  protected veteran is somewhere BELOW 37%. ⚠ How far below depends on a factor that also favours
+  her: `retireHazard` reads in-match spentness, and a top-20 winning in straight sets accrues little
+  of it. The direction of the finding does not move either way – **the age term is flat at its own
+  minimum and cannot rise** – but the exact odds of your drought are bracketed, not pinned. Your
   lifetime rate is 11 injuries over 17.2 seasons = **0.64/season**, against the careful bench's 0.88
   – below it, not impossibly so. ⚠ The stack is worth roughly **4× on the threshold** (elite physio
   0.616, elite recovery 0.85, fresh kit 1.00 against a worn 1.32, and the condition it buys), and the
