@@ -295,6 +295,25 @@ export interface TripFacts {
   /** ⭐ P14 – DOES THIS RUNG HOLD PRESS CONFERENCES? `tierHoldsPress`, which is a threshold on the
    *  ladder rather than a taste per event. */
   press: boolean
+  /** ⭐⭐ ROUND 30 #2 – IS A SPONSOR'S SHOOT RUNNING ON THIS TOURNAMENT WEEK? True on exactly the
+   *  weeks the player answered «do both» to round 29 #3's four-way question, and false on every
+   *  other trip.
+   *
+   *  ⚠⚠ THE OWNER PAID FOR THIS AND COULD NOT SEE IT – «Если выбрать Do both для съёмок и турнира,
+   *  то в расписании не отображаются съёмки». `answerShootClash`'s «do both» arm charges
+   *  `clashConditionPerDay` x 7 and leaves the week standing; `calendarWeekFor`'s trip branch
+   *  returned before `shoot` was ever filled in, so the grid drew an ordinary tournament week and
+   *  the charge had no picture. See `tripMatchDay` in weekGrid.ts for where the hours go.
+   *
+   *  ⚠ IT NEEDS NO NEW SNAPSHOT FIELD AND MOVES NO SCHEMA, WHICH IS WHY THE LATCH IS NOT READ HERE.
+   *  `shootClashAccepted` is world state and is deliberately not on the wire. It does not have to
+   *  be: the other three answers REMOVE the collision – `withdraw` cancels the entry (no `arrival`),
+   *  `move-shoot` and `cancel-shoot` take the week out of `shootWeeks` (no `adShoots` row) – so a
+   *  week that is BOTH an entered trip and a named shoot week is the «do both» week by construction
+   *  once the question has been answered. Before it is answered the clash dialog is blocking the
+   *  tick, and what the grid draws is the week the dialog is asking about, which is the right
+   *  picture to be looking at while deciding. */
+  shoot: boolean
 }
 
 /** The snapshot facts the layout reads. A `Pick`, so a test can hand in a plain object – the
@@ -646,6 +665,10 @@ export function calendarWeekFor(snap: CalendarWeekFacts, week: number): Calendar
         rounds: tripRoundsFor(arrival.tier),
         masseur: masseurOnTour,
         press: tierHoldsPress(arrival.tier),
+        // ⭐⭐ ROUND 30 #2 – ...AND WHETHER A BRAND IS SHOOTING HER THROUGH IT. `shooting` is asked
+        // once above every branch, off `adShoots`, so this is the same fact the ordinary-week branch
+        // reads and there is no second spelling of it. See `TripFacts.shoot`.
+        shoot: shooting,
       },
       // ⚠ P15: her own trip owns all seven of its days, so two big events back to back never fight
       // over one Sunday evening – this week's Sunday is either its own travel home or its last match.

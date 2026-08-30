@@ -80,9 +80,57 @@ marked `[!]` and each names what shipped and why it missed – that is the point
     listed back to back. Two adjacent memos at two different weights would read as a defect. If the
     coach's should stay bold it is a modifier class and one line.
 
-- [!] **2. «Если выбрать Do both для съёмок и турнира, то в расписании не отображаются съёмки»** –
+- [x] **2. «Если выбрать Do both для съёмок и турнира, то в расписании не отображаются съёмки»** –
   ⚠⚠ **REOPENED against round 29 #3.** The four-way clash shipped; its «do both» arm charges the
   7 condition and **draws nothing**. The same «you paid and cannot see it» shape a third time.
+
+  ⚠⚠⚠ **THIS IS THE THIRD «YOU PAID AND CANNOT SEE IT» OF THE MONTH, AND THE REPETITION IS THE
+  FINDING – not this one bug.** Three times in four weeks, in three different files, one shape:
+
+  1. **round 29 #3 – the shoot week's MASSEUR.** `masseurSessions` carried a `&& !shooting` the
+     engine never had, so the salary was charged on a shoot week and none of his days were drawn.
+  2. **round 29 P13 – the tour week's MASSAGE DAYS.** The weekly rung's 2/4/7 were laid over a week
+     whose plan is not spent, so the table landed on the travel day and the practice day and missed
+     every match of the week at the entry rung – while `masseurTourWeekCents` billed matches played.
+  3. **this one.** `answerShootClash`'s «do both» arm charges `clashConditionPerDay × 7` and latches
+     the week; `calendarWeekFor`'s trip branch **returned before `shoot` was ever filled in**, so the
+     grid drew an ordinary tournament week and the charge had no picture at all.
+
+  One rule was broken all three times and `weekGrid.ts` already states it: **«the picture is the same
+  sentence the sim charges for»**. Worth reading before the next block is added, not after – and
+  worth a standing habit: **when a mechanic charges, ask what draws it, in the same commit.**
+
+  **SHIPPED.** `TripFacts` gains `shoot`, `calendarWeekFor`'s trip branch fills it from the same
+  `shooting` fact every other branch already reads, and `tripMatchDay` hangs a two-hour `Shoot`
+  block on the end of each match day.
+
+  ⚠ **On the match days, by the same mechanism as the press hour and the table**, and that is the
+  only rule that always draws SOMETHING: from five rounds up a trip has no practice day left to give
+  (`tripArcFor`'s `hits` is 0 at the WTA main tour and above, and a Slam is seven match days), so a
+  rule hanging the shoot on the arc's free days would draw nothing at exactly the rungs a campaign is
+  written around – this item's own defect, rebuilt.
+
+  ⚠ **Last in the day, behind the order you ruled in #17.** Match → conference → massage → the
+  brand's hours. Two hours and not six: `SHOOT_DAY` is a whole working day because on an ordinary
+  week the call sheet owns the day, and here the draw owns it – «the shoot never pretends to own the
+  week» is the mechanic's own design. It is also what keeps the day inside the grid: the longest
+  match day becomes 10–18 and the Slam's evening flight still has 18–19, nothing shortened.
+
+  ⚠ **No new snapshot field and no schema move, and that is an ARM rather than a claim.**
+  `shootClashAccepted` is world state and is not on the wire; it does not need to be, because the
+  other three answers REMOVE the collision – `withdraw` cancels the entry, `move-shoot` and
+  `cancel-shoot` take the week out of `shootWeeks`. `tests/component/round30-do-both-shoot.test.ts`
+  §2 drives **all four** answers through the real command and reads the grid back, so «an entered
+  trip AND a named shoot week» is proved to be the «do both» week and nothing else.
+
+  ⚠ Display only – both files are `src/composables/`, no engine call, no RNG stream, no schema.
+  Four mutations, each watched: `shoot: shooting → false` (the defect, 5 red), the block pushed ahead
+  of the press hour (2 red), its span grown to 5 so the Slam's Sunday overruns the grid (2 red), and
+  the shoot hung on every day of the arc instead of the match days (3 red).
+
+  ⚠ **What I did NOT add:** the tournament week's read-out still says only «She is away at X – the
+  draw owns the week.» A sentence naming the brand would be new copy you did not ask for
+  (invariant 4). Say the word and it is one line.
 
 - [!] **3. «Странная серая нечитаемая надпись над кнопками… Quiet stretch ahead… Идея хорошая,
   реализация не очень. Нам в это время приходят письма и идёт запись на новые турниры – давай вообще
