@@ -6,7 +6,7 @@ canonical: false
 last-reviewed: 2026-08-30
 ---
 
-# Round 30 – an intermediate round, 15 items + CI (30.08.2026)
+# Round 30 – an intermediate round, 17 items + CI (30.08.2026)
 
 Status: `[x]` shipped · `[~]` answered, nothing to build · `[>]` in flight · `[ ]` open · `[?]` his ·
 `[!]` REOPENED.
