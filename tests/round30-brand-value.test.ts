@@ -61,6 +61,7 @@ import { ECONOMY } from '../src/engine/economy'
 import { rngFromSeed } from '../src/engine/rng'
 import { WEEKS_PER_YEAR } from '../src/engine/season/calendar'
 // (SeasonHistoryEntry is inferred at both fixture sites now that byTrack is complete – no cast)
+import type { TierId } from '../src/engine/season/types'
 
 const MERCH = 'merch-brand'
 const PRICE = 250_000_00
@@ -99,7 +100,7 @@ function shopper(seed: string, weeks = 12): WorldState {
 /** ⭐ FAME, PUT ON THE CAREER THE WAY THE CAREER PUTS IT ON: dated titles in the trophy ledger, which
  *  is one of the four sources `world/fame.ts` folds. ⚠ NOT A FAME FIELD – there isn't one; fame is
  *  re-derived from records on every read, which is the property that keeps it off the MAIN stream. */
-function winTitles(world: WorldState, tier: 'wta250' | 'wta1000' | 'slam', weeks: number[]): void {
+function winTitles(world: WorldState, tier: TierId, weeks: number[]): void {
   world.trophiesByTier[tier] ??= { titles: [], finals: [] }
   world.trophiesByTier[tier]!.titles.push(...weeks)
 }
@@ -417,7 +418,11 @@ function proSeasons(world: WorldState, n: number, endRank: number, wins: number,
   }
 }
 
-function loseFinals(world: WorldState, tier: 'wta250' | 'wta500', weeks: number[]): void {
+/** ⚠ `TierId` AND NOT A HAND-PICKED UNION, since round 30 #23's crowd arms: the room is read off
+ *  EVERY shelf a career holds, juniors included, so a helper that only accepted the two professional
+ *  rungs the earlier arms happened to use could not express the claim. `vue-tsc` caught this – the
+ *  unit runner does not typecheck, so the arms ran green for a while against a narrower signature. */
+function loseFinals(world: WorldState, tier: TierId, weeks: number[]): void {
   world.trophiesByTier[tier] ??= { titles: [], finals: [] }
   world.trophiesByTier[tier]!.finals.push(...weeks)
 }
