@@ -3393,6 +3393,43 @@ export const ECONOMY = {
       // ⚙ 26.08, the owner: «давай гэп сделаем скромнее пока что от 60 до 300к». A five-fold spread
       // rather than the twenty-two-fold one the first draft drew – from $60k to $300k every rung is
       // a real decision for a real career, and the ladder can always be extended upward later.
+      //
+      // ⭐⭐⭐ ROUND 30 #15 – AND NOW THEY COST SOMETHING TO KEEP, AND IT GROWS.
+      //
+      // THE OWNER, 30.08: «Для машин вполне можно ввести годовую стоимость обслуживания, которая
+      // может с каждым годом немного расти, как в реальности, пока стоимость авто на рынке падает.»
+      //
+      // ⚠⚠ WHY THE CARS HAD NONE UNTIL NOW, because it was a decision rather than an omission: §3f's
+      // «годовое обслуживание» table is written about the BOATS AND THE PLANES and quotes no car, so
+      // round 29 #5 gave the cars none. §3b's own table gives them a price and a loss and stops.
+      // This is the third column he has now asked for, and it lands on the family the spec left out.
+      //
+      // ⭐⭐ THE FOUR RATES ARE A REAL-WORLD LADDER AND NOT A MULTIPLE OF THE PRICE. Servicing,
+      // insurance, tyres and tax on an ordinary estate run about a twentieth of what it cost; the
+      // same list on a two-seater with carbon brakes and an annual major service runs nearly twice
+      // that share, and the share is what climbs, not just the money. Fuel is excluded on purpose –
+      // nothing in this game knows how far anybody drove, and a cost nobody can influence should not
+      // be modelled as if they could.
+      //
+      //   the sensible estate   5.0%   $3,000/yr    $57.69/wk
+      //   the good saloon       5.5%   $6,050/yr   $116.35/wk
+      //   the one from poster   7.0%  $13,300/yr   $255.77/wk
+      //   the unreasonable one  9.0%  $27,000/yr   $519.23/wk   <- about one elite coach
+      //
+      // ⚠ THE LAST ROW IS THE POINT OF THE LADDER, AND IT IS §3f's OWN DESIGN SENTENCE READ ONE
+      // FAMILY DOWN: «the toys compete with the team for the same money». A $300,000 car costs
+      // roughly what the best coach in the game costs, every week, for as long as it sits there.
+      //
+      // ⚠⚠ NOTHING HERE CAN STRAND A FAMILY, on §3f's own test: a car has NO build wait, so it is
+      // sellable from the week it is bought – there is no week in which the family is paying for a
+      // thing it cannot get out from under, which is the property the yacht's ten per cent was
+      // measured against.
+      //
+      // ⭐ AND `upkeepGrowthBps` IS THE HALF THAT IS NEW TO THE SHELF: 6% a year, compounding on the
+      // car's own age and capped at double (`ECONOMY.shop.upkeepGrowthCapX`). Beside a value falling
+      // 6–15% a year it is the two curves he described – a car worth less every season and dearer
+      // every season – and neither of them is a second rule: they are the same two fields every rung
+      // on this shelf already carries, with an age put through them.
       {
         id: 'car-sensible',
         family: 'car',
@@ -3401,6 +3438,8 @@ export const ECONOMY = {
         blurb: 'Five doors and a boot that takes the kit bags. Nobody looks at it twice.',
         entryCents: 60_000_00,
         annualRateBps: -600,
+        upkeepBps: 500,
+        upkeepGrowthBps: 600,
       },
       {
         id: 'car-good',
@@ -3410,6 +3449,8 @@ export const ECONOMY = {
         blurb: 'Quiet, quick, and quietly expensive the day it stops being new.',
         entryCents: 110_000_00,
         annualRateBps: -900,
+        upkeepBps: 550,
+        upkeepGrowthBps: 600,
       },
       {
         id: 'car-nineteen',
@@ -3425,6 +3466,8 @@ export const ECONOMY = {
         blurb: 'Two seats, no boot, and twenty-five years late.',
         entryCents: 190_000_00,
         annualRateBps: -1200,
+        upkeepBps: 700,
+        upkeepGrowthBps: 600,
       },
       {
         id: 'car-unreasonable',
@@ -3434,6 +3477,8 @@ export const ECONOMY = {
         blurb: 'No boot, no back seats, no defence for any of it.',
         entryCents: 300_000_00,
         annualRateBps: -1500,
+        upkeepBps: 900,
+        upkeepGrowthBps: 600,
       },
       // ⭐ §3c – THE FIRST RUNG MATTERS MOST: «the earliest seasons are measured in debt, and a
       // family that finally owns where it lives is a real milestone this game currently has no way
@@ -3717,6 +3762,24 @@ export const ECONOMY = {
      *  receive both, so a family owning everything gets a corridor that is one point kinder across
      *  the board – never two.» */
     planeTravelRestBonus: 1,
+    /** ⭐⭐⭐ ROUND 30 #15 – THE CEILING ON A RISING UPKEEP, as a multiple of its first-year figure.
+     *
+     *  THE OWNER: «годовая стоимость обслуживания, которая может с каждым годом НЕМНОГО расти».
+     *
+     *  ⚠⚠ «НЕМНОГО» IS WHAT THIS NUMBER IS FOR. `upkeepGrowthBps` is 6% a year, which is a small
+     *  step and a large product: unbounded, a car kept fifteen seasons would cost 2.4x its first
+     *  year, and one kept longer would keep going. A bill that compounds without a stop is the
+     *  shape «мы ни за что не наказываем» rules out – it turns a purchase the family made once
+     *  into a debt that grows for as long as they keep it.
+     *
+     *  ⭐ AND IT IS THE SENTENCE A PLAYER CAN HOLD: **the bill can at most double.** 6% a year
+     *  reaches it in the twelfth season of ownership, which is longer than any car in a fifteen-
+     *  season career is realistically held, so the cap is the guarantee rather than the common case
+     *  – it binds the tail and leaves the curve he asked for alone.
+     *
+     *  ⚠ IT BINDS THE MULTIPLIER AND NOT THE YEARS, deliberately: a cap in years would have to be
+     *  re-derived every time the growth rate moved, and the promise would silently change with it. */
+    upkeepGrowthCapX: 2,
   },
 } as const
 

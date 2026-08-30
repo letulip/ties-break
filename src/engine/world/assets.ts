@@ -88,9 +88,36 @@ export interface ShopItem {
   /** ⭐ §3f – HOW LONG FROM THE ORDER TO THE THING, in weeks. Absent on every rung that arrives the
    *  week it is paid for, which is everything slice 1 shipped. */
   buildWeeks?: number
-  /** ⭐ §3f – WHAT IT TAKES EVERY YEAR TO KEEP, in basis points OF THE PRICE. Absent on everything
-   *  that costs nothing to own. See `assetUpkeepCents` for why it is read off the price. */
+  /** ⭐ §3f – WHAT IT TAKES EVERY YEAR TO KEEP, in basis points OF THE PRICE, IN ITS FIRST YEAR.
+   *  Absent on everything that costs nothing to own. See `assetUpkeepCents` for why it is read off
+   *  the price. ⚠ «IN ITS FIRST YEAR» IS NEW IN ROUND 30 #15 and it is the only thing that changed
+   *  about this field: a rung that carries no `upkeepGrowthBps` below pays this every week forever,
+   *  to the cent, exactly as it did before. */
   upkeepBps?: number
+  /** ⭐⭐⭐ ROUND 30 #15 – HOW MUCH DEARER IT GETS TO KEEP EACH YEAR, in basis points a year,
+   *  compounding on the age of the thing. Absent on every rung whose bill never moves.
+   *
+   *  THE OWNER, 30.08: «Для машин вполне можно ввести годовую стоимость обслуживания, которая может
+   *  с каждым годом немного расти, как в реальности, пока стоимость авто на рынке падает.»
+   *
+   *  ⚠⚠ THE SHAPE IS HIS AND IT IS TWO CURVES CROSSING, not one. `annualRateBps` already takes the
+   *  car's market value DOWN; this takes the bill to keep it UP – and because the bill is a share of
+   *  what was PAID while the worth is a share that keeps shrinking, the bill as a fraction of what
+   *  the thing is now worth climbs far faster than either curve alone. An eight-year-old car worth
+   *  half what it cost and costing half again as much to run is exactly «как в реальности», and it
+   *  falls out of the two fields rather than out of a third rule.
+   *
+   *  ⚠ PRESENCE IS THE PREDICATE, the shelf's own habit (`volBps` / `unitBaseCents` / `buildWeeks` /
+   *  `requiresId`). ⚠⚠ AND IT IS DELIBERATELY ABSENT ON THE BOATS AND THE PLANES, which is a scope
+   *  decision rather than an oversight: he said «для машин», and the elite rungs' flat 6–10% is the
+   *  number §3f's «nothing here can strand a family» was MEASURED against ($23,076.92 a week at
+   *  10% of $12M). Compounding that bill is a balance change to a rung whose safety property was
+   *  proved at the flat figure, and it is his call, not this item's. The arithmetic for every rung
+   *  without this field is byte-identical to what shipped.
+   *
+   *  ⚠ CAPPED – see `ECONOMY.shop.upkeepGrowthCapX`. A bill that compounds forever is a bill that
+   *  eventually eats a career, and «мы ни за что не наказываем» is house law. */
+  upkeepGrowthBps?: number
   /** ⭐ §3g – the rung that must already be owned before this one may be bought (the academy's
    *  stages). Absent on every rung that stands on its own. */
   requiresId?: string
@@ -298,7 +325,7 @@ export function marketSeasonMove(item: ShopItem, seed: string, week: number): nu
 }
 
 /** ⭐⭐ ROUND 29 #5, §3f – WHAT ONE WEEK OF KEEPING IT COSTS, in whole cents. Zero for every rung
- *  that carries no `upkeepBps`, which is every car, house and investment on the shelf.
+ *  that carries no `upkeepBps`, which is every house and investment on the shelf.
  *
  *  ⚠⚠ IT IS A SHARE OF WHAT WAS PAID AND NOT OF WHAT IT IS WORTH TODAY, and the choice is the
  *  spec's own arithmetic rather than a preference. §3f's table quotes «upkeep / week» beside
@@ -307,14 +334,54 @@ export function marketSeasonMove(item: ShopItem, seed: string, week: number): nu
  *  week as the boat ages, which is a second mechanic the spec never asks for and which nothing on
  *  screen could explain: a crew does not take a pay cut because the hull got older.
  *
- *  ⚠ AND IT IS THE FIGURE THE PLAYER WAS QUOTED, FOREVER. A weekly cost that drifts away from the
- *  number on the card is the shape of defect this file's own «one arithmetic, one writer» rule
- *  exists to stop.
+ *  ⭐⭐⭐ ROUND 30 #15 GAVE IT AN AGE, AND THE SENTENCE ABOVE IS WHY IT IS AN AGE AND NOT A VALUE.
+ *  The owner: «годовая стоимость обслуживания, которая может с каждым годом немного расти, как в
+ *  реальности, пока стоимость авто на рынке падает.» A bill indexed to the CURRENT worth would fall
+ *  as the car aged, which is backwards; a bill indexed to the price and multiplied by the thing's
+ *  own age rises, which is what happens to a car. Both curves are now on screen and they run in
+ *  opposite directions, which is the item.
+ *
+ *  ⚠ CONTINUOUS AND NOT A YEARLY STEP – `assetValueCents`' own argument twenty lines up, read in the
+ *  other direction. A step would hold the bill flat for fifty-one weeks and then raise it overnight
+ *  on an anniversary nothing on screen names, and it would create a week to sell before. His «с
+ *  каждым годом» is the RATE; a smooth curve is exact at every anniversary he could check.
+ *
+ *  ⚠⚠ AND THE OLD PROMISE STILL HOLDS WHERE IT WAS MADE. This function's note used to end «AND IT IS
+ *  THE FIGURE THE PLAYER WAS QUOTED, FOREVER», which is now true of every rung that carries no
+ *  `upkeepGrowthBps` – the boats, the planes, and everything the elite shelf shipped – and cannot be
+ *  true of one whose whole point is that it grows. The promise it was protecting is kept the other
+ *  way round: `shopView` quotes an OWNED row at THIS week's figure, so what the card says and what
+ *  the till charges are still one number asked of one function. Both are proved on a ticked world in
+ *  `tests/round30-car-upkeep.test.ts` rather than trusted from here.
+ *
+ *  ⚠ `weeksHeld` IS REQUIRED, NOT DEFAULTED, and that is round 30 #14's lesson taken literally: the
+ *  fund's `marketRatio` argument defaulted to 1 and its own note called the default «the one hazard
+ *  in this signature», because a caller that forgot it got the wrong answer silently. A caller that
+ *  forgets this one does not compile.
  *
  *  Pure: no world, no rng, no clock. */
-export function assetUpkeepCents(item: ShopItem, paidCents: number): number {
+export function assetUpkeepCents(item: ShopItem, paidCents: number, weeksHeld: number): number {
   if (!item.upkeepBps) return 0
-  return Math.round((paidCents * item.upkeepBps) / 10_000 / WEEKS_PER_YEAR)
+  const weekly = (paidCents * item.upkeepBps) / 10_000 / WEEKS_PER_YEAR
+  if (!item.upkeepGrowthBps) return Math.round(weekly)
+  // ⚠ `Math.max(0, weeksHeld)` FOR `assetValueCents`' OWN REASON: a commissioned rung's clock starts
+  // on delivery, so every week of the wait asks for a negative span. Nothing with a build time
+  // carries growth today, and the clamp is what keeps that from being an assumption.
+  const years = Math.max(0, weeksHeld) / WEEKS_PER_YEAR
+  const grown = Math.min(Math.pow(1 + item.upkeepGrowthBps / 10_000, years), ECONOMY.shop.upkeepGrowthCapX)
+  return Math.round(weekly * grown)
+}
+
+/** ⭐ ROUND 30 #15 – HOW LONG THIS FAMILY HAS HAD THIS THING, in weeks, off the world's own clock.
+ *
+ *  ⚠⚠ IT IS THE **SAME** SPAN `assetWorthCents` DEPRECIATES OVER – `basisWeek ?? boughtWeek` – and
+ *  that is the whole reason it is a function rather than an expression repeated at three call sites.
+ *  The two curves he described only cross honestly if they are drawn against one clock: a car whose
+ *  value has fallen for six years must be a car whose upkeep has risen for six years, and a second
+ *  copy of this arithmetic is exactly how those two would drift apart. `world/assets.ts`' own «one
+ *  arithmetic, one writer» rule, applied before there was a second writer. */
+export function assetHeldWeeks(world: WorldState, owned: OwnedAsset): number {
+  return world.week - (owned.basisWeek ?? owned.boughtWeek)
 }
 
 /** ⭐ §3f – IS IT HERE YET? Absent `readyWeek` means «delivered», which is what every row written
@@ -373,6 +440,11 @@ export function grantedVacationIds(world: WorldState): string[] {
  *  sides asking different functions about one question. */
 export function weeklyAssetUpkeepCents(world: WorldState): number {
   let total = 0
-  for (const { owned, item } of deliveredAssets(world)) total += assetUpkeepCents(item, owned.paidCents)
+  // ⭐ ROUND 30 #15 – ...AND AT THIS WEEK'S FIGURE, which is the same figure the till charges: both
+  // sides ask `assetUpkeepCents` with `assetHeldWeeks`, so the meter and the bill still cannot
+  // disagree once one of them started moving.
+  for (const { owned, item } of deliveredAssets(world)) {
+    total += assetUpkeepCents(item, owned.paidCents, assetHeldWeeks(world, owned))
+  }
   return total
 }

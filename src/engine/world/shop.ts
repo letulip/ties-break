@@ -56,6 +56,7 @@ import type { WorldState } from '../world'
 // tests that import `world/shop` directly and every screen are untouched.
 import {
   assetDelivered,
+  assetHeldWeeks,
   assetUpkeepCents,
   assetValueCents,
   assetWorthCents,
@@ -73,6 +74,7 @@ import {
 } from './assets'
 export {
   assetDelivered,
+  assetHeldWeeks,
   assetUpkeepCents,
   assetValueCents,
   assetWorthCents,
@@ -597,7 +599,15 @@ export function shopView(world: WorldState): ShopView {
       // What it costs is `entryCents` above; what it loses is `annualRatePct`; what it takes every
       // week to keep is this, quoted off what the family PAID when it owns one and off the price
       // when it does not, so the card and the bill can never differ.
-      upkeepCents: assetUpkeepCents(item, mine ? mine.paidCents : item.entryCents),
+      // ⭐⭐⭐ ROUND 30 #15 – ...AND AT THIS WEEK'S AGE ONCE THEY OWN ONE. An unowned row quotes the
+      // FIRST year's figure (`weeksHeld` 0), which is what the shop window is for: the bill this
+      // purchase would start. An owned row quotes what the till is charging today, because the
+      // alternative is a card that keeps repeating a number the ledger stopped agreeing with – the
+      // exact defect `assetUpkeepCents`' old «the figure the player was quoted, FOREVER» note was
+      // protecting, kept by moving the card rather than by freezing the bill.
+      upkeepCents: mine
+        ? assetUpkeepCents(item, mine.paidCents, assetHeldWeeks(world, mine))
+        : assetUpkeepCents(item, item.entryCents, 0),
       // ⭐⭐ ROUND 29 PART FOUR P7 – ...AND WHAT IT BRINGS IN RIGHT NOW (the merch brand, a
       // delivered academy stage), asked of the businesses' one arithmetic so this card and the
       // till's weekly row cannot quote two figures. Zero everywhere the family owns no earner.

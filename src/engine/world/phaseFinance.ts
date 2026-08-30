@@ -53,7 +53,7 @@ import { inCollege, resolveCollegeBill } from './college'
 import { sponsorNeedMet } from './sponsors'
 // ⚠ THE LEAF, NOT `./shop` – `world/assets.ts` is the shelf's pure reads and imports nothing from
 // this package, which is what keeps the till free of the shop's command-side dependencies.
-import { assetUpkeepCents, deliveredAssets } from './assets'
+import { assetHeldWeeks, assetUpkeepCents, deliveredAssets } from './assets'
 // The businesses' one arithmetic (round 29 part four P7) – the till charges what these quote, and
 // the household meter quotes the same two functions, so the strip and the ledger cannot disagree.
 import { academyWeeklyIncomeCents, merchWeeklyIncomeCents } from './business'
@@ -636,7 +636,10 @@ function resolveGear(world: WorldState): void {
  *  it. Nothing here is a die, so the input-independence law is not engaged. */
 function resolveAssetUpkeep(world: WorldState): void {
   for (const { owned, item } of deliveredAssets(world)) {
-    const amountCents = assetUpkeepCents(item, owned.paidCents)
+    // ⭐ ROUND 30 #15 – AT THE THING'S OWN AGE. A rung with no `upkeepGrowthBps` ignores the third
+    // argument entirely and charges what it always charged, to the cent; a car pays a little more
+    // each year while its market value falls (`assetUpkeepCents`, and the owner's own shape).
+    const amountCents = assetUpkeepCents(item, owned.paidCents, assetHeldWeeks(world, owned))
     if (amountCents <= 0) continue
     world.fundsCents -= amountCents
     addEvent(world, {
