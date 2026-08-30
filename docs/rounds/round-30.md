@@ -1320,3 +1320,37 @@ owning `index-fund · car-sensible · house-first · merch-brand · deposit · a
   ⚙ **STILL `[?]` – four questions, each one edit:** *(a)* the fitted curve or the level-neutral one?
   *(b)* the floor with it, or the curve alone? *(c)* may the junior rows move (they are why the total
   lands in band)? *(d)* the two in 5 above are separate waves – do you want either?
+
+
+- [ ] **27. ⚙ HIS RULING ON THE INJURY SHAPE (30.08), three parts** – «тяжесть надо взять точно, но
+  разумно. Однако и с показателем в 1 травму в год надо что-то делать, раз я не увидел ни одной за
+  большой промежуток. А еще, раз мы **храним историю травм** у себя, то вполне можно делать алгоритм,
+  который будет увеличивать немного вероятность **новой такой же травмы или ее прогрессии** (более
+  тяжелой). Мне кажется это похоже на правду. Что скажешь?»
+
+  ⭐⭐⭐ **My answer: recurrence is the best of the three and it repairs the second one.**
+
+  **1. Severity by age – TAKE IT, «разумно».** It is what the literature actually supports: tennis
+  shows **burden rising with age, not incidence** (severe share 43% → 54–66%), while both WTA studies
+  that tested age for INCIDENCE returned null. ⚠ So this is the honest limb and the age-frequency
+  curve is the licensed-but-weak one.
+
+  **2. The rate – ⭐⭐ he is describing TEXTURE, not frequency.** Measured onsets are 0.68–0.78 a
+  season and his own lifetime rate is 0.64; the number is not the complaint. **Independent weekly
+  draws produce exactly the forgettable pattern he is describing** – nothing, nothing, a niggle,
+  nothing. **His 5.8 quiet years are a side effect of independence**, not of a low rate.
+
+  **3. ⭐⭐⭐ Recurrence – the strongest of the three, and the reason it fixes 2.** *Previous injury is
+  the best-established risk factor in sports-injury epidemiology*, ahead of age and load. And it
+  CLUSTERS the same total: «three quiet years, then the ankle went twice in one season» is both truer
+  and memorable, where independence is neither. ⭐ The data already exists – `injuryHistory` holds
+  `kind`, `severity`, `week`, `weeksOut`, so **no schema move.**
+
+  ⚠⚠ **The design caution that must be built in from the start**: «мы ни за что не наказываем». A
+  first injury may not doom a career, so escalation needs **a ceiling and a decay** – an ankle that has
+  been sound for three seasons stops being the weak ankle. Without the decay this is a death spiral
+  dressed as realism.
+
+  ⚠ And the measurement's own verdict stands beside all three: **the in-match retirement door supplies
+  73–79% of adult onsets and carries no age term at all**, so a frequency curve is a small lever
+  whatever else is done. Recurrence should reach BOTH doors or it will inherit the same limit.
