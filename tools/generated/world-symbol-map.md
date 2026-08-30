@@ -2,13 +2,13 @@
 
 # `engine/world` – area to owner
 
-The barrel `src/engine/world.ts` (2,061 lines) re-exports the decomposed modules under their historical names, so every importer sees one flat surface. That is a COMPATIBILITY contract, not a discovery one – this file is the discovery half.
+The barrel `src/engine/world.ts` (2,068 lines) re-exports the decomposed modules under their historical names, so every importer sees one flat surface. That is a COMPATIBILITY contract, not a discovery one – this file is the discovery half.
 
 Regenerate with `node scripts/world-map.mjs`; `node scripts/world-map.mjs --check` fails when it is stale, and CI runs that on every pull request.
 
 **Do not read this file to answer one question** – that is the habit it exists to replace. `node scripts/world-map.mjs <symbol>` prints the owner and the line, and a plain `grep <symbol> tools/generated/world-symbol-map.md` does the same for a partial name.
 
-370 exported names across 44 owning modules.
+375 exported names across 45 owning modules.
 
 ## Areas
 
@@ -37,6 +37,7 @@ Regenerate with `node scripts/world-map.mjs`; `node scripts/world-map.mjs --chec
 | `src/engine/world/entries.ts` | THE ENTRY COMMANDS: putting her in a draw, and taking her back out | 6 |
 | `src/engine/world/milestones.ts` | WHAT THE FAMILY KEEPS: the moments that are never pruned, and the season they add up to | 6 |
 | `src/engine/world/shootClash.ts` | ⭐⭐ ROUND 29 #3 – THE SHOOT THAT LANDS ON A TOURNAMENT WEEK, AND THE FOUR ANSWERS TO IT | 6 |
+| `src/engine/world/brand.ts` | ⭐⭐⭐ THE BRAND – round 30 #23 and #24, and it is TWO functions of ONE signal set | 5 |
 | `src/engine/world/constants.ts` | THE SHARED IDS AND CAPS: the handful of constants more than one world module needs | 5 |
 | `src/engine/world/means.ts` | WHAT THE FAMILY CAN AFFORD, AS ONE FACT – the licence a line of copy asks for before it may assume a wallet | 5 |
 | `src/engine/condition.ts` | THE condition math – one rule, everybody | 4 |
@@ -485,6 +486,16 @@ WHAT THE FAMILY KEEPS: the moments that are never pruned, and the season they ad
 - `shootClashOpen` – `src/engine/world/shootClash.ts`
 - `shootClashWeek` – `src/engine/world/shootClash.ts`
 - `shootMoveTarget` – `src/engine/world/shootClash.ts`
+
+### `src/engine/world/brand.ts`
+
+⭐⭐⭐ THE BRAND – round 30 #23 and #24, and it is TWO functions of ONE signal set.
+
+- `brandGrossWorthCents` – `src/engine/world/brand.ts`
+- `brandMultipleX` – `src/engine/world/brand.ts`
+- `BrandSignals` *(type)* – `src/engine/world/brand.ts`
+- `brandSignalsOf` – `src/engine/world/brand.ts`
+- `brandWeeklyGrossCents` – `src/engine/world/brand.ts`
 
 ### `src/engine/world/constants.ts`
 
