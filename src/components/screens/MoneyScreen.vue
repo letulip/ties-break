@@ -1042,8 +1042,11 @@ function rateLine(row: ShopRowView): string {
 }
 
 // ⭐⭐⭐ ROUND 30 #14 – `shopUnitsNote`, HIS RULING, PARKED HERE AND NOT IN THE TEMPLATE, for the
-// reason every other note in this block carries: Cyrillic may not appear in a `<template>`, in a
-// string OR in a comment (tests/template-copy-rules.test.ts).
+// reason every other note in this block carries: Cyrillic may not appear in a template, in a string
+// OR in a comment (tests/template-copy-rules.test.ts). ⚠ AND THE TAG IS NOT SPELLED OUT HERE, which
+// is not fussiness – `templateOf` in that test scans from the FIRST literal opening tag in the file,
+// so a script-side note that writes the tag out drags the whole script into the scanned region and
+// fails the guard on its own comment. Every sibling note above says «a template» for that reason.
 //
 // «Волатильность индексного фонда какая-то очень большая по ощущениям +65/-15 это то, что я видел…
 // И надо логику фонда переделать на покупку ДОЛЕЙ в фонде, как раз доли дадут возможность расти на
