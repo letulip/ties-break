@@ -174,9 +174,9 @@ describe('round 30 #18 – the picture goes to the edge, and only the picture do
     const hero = getComputedStyle(w.find('.nt-hero').element)
     // ⚠ THE TOKEN IS READ OFF `:root`, NEVER TYPED HERE AS A NUMBER. `--app-pad-x` is what `#app`
     // pads every tabbed screen by, and src/style.css says in its own comment why it had to become a
-    // token: the 16 was spelled in the sheet and GUESSED as `-16px` over in `.diary-hero`, and the
-    // two drifted into an 8px band of page colour above Home's photograph. A pin that hard-codes
-    // 16px is green on exactly that class of bug.
+    // token: the shell's insets were spelled in the sheet and GUESSED as `-16px` over in
+    // `.diary-hero`, and the guess left an 8px band of page colour above Home's photograph. A pin
+    // that hard-codes 16px here is green on exactly that class of bug.
     const padX = getComputedStyle(document.documentElement).getPropertyValue('--app-pad-x').trim()
     expect(padX, 'the app still declares its gutter as a token').toBe('16px')
     expect(hero.marginLeft, 'the picture cancels the gutter on the left').toBe(`calc(-1 * ${padX})`)
@@ -236,9 +236,9 @@ describe('round 30 #18 – the picture goes to the edge, and only the picture do
   })
 
   it('⚠ the square is still a FLOOR – no ceiling came across with the full bleed', () => {
-    // #6's own decision, and the full width makes it matter more rather than less: the box is now
-    // 375px tall on the owner's phone, and a three-line read with a coach's caution must push it
-    // TALLER rather than lose a sentence off the bottom.
+    // #6's own decision, and the full width makes it matter more rather than less: on a 375px phone
+    // the box is now 375px tall rather than 343, and a three-line read with a coach's caution must
+    // push it TALLER still rather than lose a sentence off the bottom.
     // ⚠ HOME'S HERO CLAMPS AT `max-height: 60vh` because a painting may be cropped without loss.
     // Copying that rule across with the margin is the mutation this test exists to redden on.
     const w = mountPanel()

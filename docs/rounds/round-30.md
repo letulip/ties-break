@@ -516,8 +516,9 @@ marked `[!]` and each names what shipped and why it missed – that is the point
   and the rounds plate given the hero's own full bleed).
 
   ⚠ **The square is still a FLOOR, not a clamp** (#6's decision, and the full width makes it matter
-  more: the box is 375px tall on his phone now). Home's own hero clamps at `max-height: 60vh`;
-  copying that across with the margin is one of the nine mutations, and it goes red.
+  more: on a 375px phone the box is now 375px tall rather than 343). Home's own hero clamps at
+  `max-height: 60vh`; copying that across with the margin is one of the nine mutations, and it goes
+  red.
 
   ⭐ **375px verdict: green, and the page does not scroll sideways.** `e2e/responsive.spec.ts` was
   extended rather than replaced – its «inside the phone» arm still guards the overflow direction,

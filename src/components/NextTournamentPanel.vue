@@ -330,20 +330,21 @@ const courtRead = computed(() => {
    ⭐⭐ ROUND 30 #18 – AND NOW IT RUNS TO THE EDGE, BY HOME'S OWN MECHANISM AND NOT A SECOND ONE.
    «в край, как hero картинка на главной, если можно.» The margin below is the SAME declaration
    `.diary-hero` carries in HomeScreen.vue and `.kid-hero` carries in KidScreen.vue: cancel the
-   shell's gutter by the exact token that sets it, `--app-pad-x`. ⚠ Never a literal `-16px` – the
-   token exists BECAUSE that number was once guessed in one place and spelled in another, and the
-   pair drifted by 8px (src/style.css says so where the tokens are declared).
+   shell's gutter by the exact token that sets it, `--app-pad-x`. ⚠ Never a literal. The tokens
+   exist BECAUSE the shell's insets were spelled in the sheet and GUESSED as `-16px` over in
+   `.diary-hero`, and the guess left an 8px band of page colour above Home's photograph –
+   src/style.css records the whole episode where the tokens are declared.
 
    ⚠ ONLY THE SIDES, unlike Home's and Kid's. Both of those heroes are the first thing on their
    screen, so they cancel `--app-pad-top` as well and sit under the status bar. This one has a
    heading and the week's status line above it, and eating the top inset would pull the photograph
    up into them. Same mechanism, one axis of it.
 
-   No radius any more: a 17px corner against the phone's own edge leaves a wedge of page colour in
-   each corner, which is the frame he asked to lose coming back in miniature. Home's hero and Kid's
-   are square-cornered for the same reason. And the padding is `--app-pad-x` rather than 14px, so
-   the title, the read and the three readings laid ON the photograph line up with the icon row and
-   the plate BELOW it instead of sitting 2px inside them. */
+   No radius any more: a corner against the phone's own edge leaves a wedge of page colour in each
+   one, which is the frame he asked to lose coming back in miniature. Home's hero and Kid's carry no
+   radius either. And the padding is `--app-pad-x` rather than 14px, so the title, the read and the
+   three readings laid ON the photograph line up with the icon row and the plate BELOW it instead of
+   sitting 2px inside them. */
 .nt-hero {
   position: relative;
   margin: 0 calc(-1 * var(--app-pad-x));
