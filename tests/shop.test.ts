@@ -586,6 +586,13 @@ describe('the shelf as the screen reads it', () => {
       expect(Number.isInteger(row.annualRatePct), `${row.id} rate`).toBe(true)
       expect(row.changePct === null || Number.isInteger(row.changePct), `${row.id} change`).toBe(true)
       expect(row.valueCents === null || Number.isInteger(row.valueCents), `${row.id} value`).toBe(true)
+      // ⭐ ROUND 30 #14 – THE TWO NEW PRICES JOIN THE RULE, and the COUNT is named as the one
+      // exception rather than quietly left out of the loop. A unit price is fractional cents behind
+      // this boundary and is rounded once in `shopView`; `unitsHeld` is not money at all – it is a
+      // count of shares, and $5,000 into a $4,000 unit is 1.25 of them, so rounding it would print
+      // a quarter of a family's holding out of existence. The screen shows it to two places.
+      expect(row.unitPriceCents === null || Number.isInteger(row.unitPriceCents), `${row.id} unit price`).toBe(true)
+      expect(row.avgUnitPriceCents === null || Number.isInteger(row.avgUnitPriceCents), `${row.id} avg`).toBe(true)
     }
     const car = toSnapshot(world).shop.rows.find((r) => r.id === 'car-good')!
     expect(car.annualRatePct).toBe(-9)
