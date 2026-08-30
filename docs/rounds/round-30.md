@@ -1128,3 +1128,142 @@ owning `index-fund · car-sensible · house-first · merch-brand · deposit · a
   ⚠ It moves every career: a bench, a spec recording predicted-vs-measured, and a frozen re-pin.
   **`[?]` – his to authorise, and I would run the measurement before the build so the re-shape is
   fitted to the band rather than guessed at.**
+
+  ---
+
+  **MEASURED, 30.08 – and the headline is that he is a TAIL, not a defect.** Full working in
+  `docs/specs/age-injury-curve-2026-08.md`; the sourced age evidence is
+  `docs/research/injury-stats-by-age.md` **§5**. ⚠⚠ **NOTHING SHIPPED: `src/` carries no diff, the
+  fitted curve is a proposal, and the frozen MAIN capture (41550 / `e6b0c709`) is verified UNMOVED.**
+
+  ⭐⭐⭐ **1. HIS DROUGHT, BY SIMULATION, THROUGH BOTH DOORS – ≈ 1 IN 45, AND HIS MONEY BARELY MOVES
+  IT.** 190 careers walked week by week through `stepCareerWeek`, 151,123 adult weeks lived from age
+  25, every onset attributed to the door it came through:
+
+  | arm | 299-week windows | **CLEAN** | mean tau | onsets/100w | **via the RETIREMENT door** |
+  | --- | ---: | ---: | ---: | ---: | ---: |
+  | a generic careful career | 46,170 | **2.2 %** | 0.559 % | 1.68 | **72.6 %** |
+  | his rungs (elite medical team) | 25,596 | **2.2 %** | 0.453 % | 1.61 | **78.6 %** |
+  | **his stack** (elite team + new-kit floor) | 24,441 | **2.0 %** | 0.429 % | 1.53 | **78.1 %** |
+
+  ⭐ The control that makes it his: the bench's careful career competes in **45.2 %** of its adult
+  weeks and **his own file reads 45.3 %**. Same schedule, not a busier one.
+
+  ⚠⚠ **NEITHER OF #22'S TWO FIGURES SURVIVES, AND #22'S CENTRAL CLAIM NEEDS CORRECTING.** «≈1 in 190»
+  and «≈1 in 3» were both the weekly door only. Through both doors it is **1 in 45**, and the whole
+  stack is worth **2.2 % → 2.0 %** – because `retireHazard = RETIRE_K × spentness × retireDurability`
+  has **no physio term, no kit term and no age term in it at all**, and it supplies three quarters of
+  every adult injury. So «the game currently lets a wealthy family buy a body out of ageing» is too
+  strong: on the THRESHOLD the stack is worth 23 %, on **injuries she actually suffers** it is worth
+  **9 %**. ⭐ And one correction that moves his odds the unfavourable way: his elite recovery buff had
+  **three weeks left on it** off a holiday booked the week before he exported – it is not a standing
+  part of the stack, and #22's 0.327 %/wk row is a buffed WEEK, not a drought.
+
+  ⭐ His lifetime rate is **0.64 onsets/season against the careful bench's 0.88**. He is a tail inside
+  a career that was already running a little lucky. **The drought is luck. The flat age term is still
+  a defect, and it is a smaller lever than it looked.**
+
+  ⭐⭐ **2. THE REAL-WORLD CURVE – and the headline there is a `[GAP]`, not a number.** There is **no
+  published age-stratified injury incidence for professional women's tennis**: the field's own
+  consensus paper (Pluim et al., *BJSM* 2021) recommends a single **adult 19–49** band, and the 2024
+  French Open surveillance paper says in as many words it could not evaluate age because the
+  non-injured players' demographics were unavailable. ⚠⚠ **And the two studies that DID test age in
+  the WTA both returned NULL** – Palau et al. (*PLOS ONE* 2024, 267,380 matches) and Oliver et al.
+  (*EJSS* 2024, 46,268 matches), both on mid-match retirement risk. The only quantified rising-
+  incidence proxies are football's **2.3×** (Premier League) to **4.9×** (LaLiga), 30+ against
+  under-21 – the least transferable evidence there is. **So the limb is a PROXY and is licensed at
+  ~1.5–2×, no more.** ⭐⭐ What tennis DOES show with age is **burden, not incidence**: the severe
+  share (>28 days) runs **43 % in adolescents against 54–66 % in professionals** – and
+  `ageInjuryFactor` cannot express that at all (see 5 below).
+
+  ⭐⭐⭐ **3. THE FITTED CURVE – 51.4 %, INSIDE THE BAND, MEASURED NOT PREDICTED.** ⚠ First the thing
+  nobody had measured: **with the weekly injury roll switched off at EVERY age, prevalence is still
+  45.8 %.** So the entire reachable window for this table is **45.8 % – 58.5 %** against a 30–54 %
+  band – it can land in the band's **top quarter and nowhere else**, and three of the five bands
+  cannot reach the band's midpoint even at zero. The retirement door is most of the level problem and
+  `ageInjuryFactor` is not the instrument for it.
+
+  ```ts
+  ageInjuryFactor: {
+    13: 0.6, 14: 0.63, 15: 0.74, 16: 0.84, 17: 0.74, 18: 0.67,   // the shipped junior SHAPE x0.7
+    19: 0.25, …, 27: 0.25,                                        // the prime, flat
+    28: 0.29, 29: 0.32, 30: 0.36, 31: 0.39, 32: 0.43, 33: 0.46,   // the rise, linear, x2 by 34
+    default: 0.5,                                                  // 34 to retirement
+  }
+  ```
+
+  | band | shipped | predicted | **MEASURED** | Δ |
+  | --- | ---: | ---: | ---: | ---: |
+  | 13–15 | 52.5 % | 49.4 % | **49.7 %** | −2.8 pp |
+  | 16–18 | 64.5 % | 60.5 % | **59.0 %** | −5.5 pp |
+  | 19–22 | 58.6 % | 49.5 % | **45.8 %** | −12.8 pp |
+  | 23–28 | 56.6 % | 49.1 % | **50.5 %** | −6.1 pp |
+  | **29+** | 59.5 % | 55.1 % | **52.3 %** | −7.2 pp |
+  | **OVERALL** | **58.5 %** | 52.9 % | ⭐ **51.4 %** | **−7.1 pp** |
+
+  ⭐ **And the shape is the one you asked for**: onsets/season now read **0.68 → 0.68 → 0.78** across
+  19–22 / 23–28 / 29+, where the shipped table reads 0.88 → 0.84 → **0.91 with 29+ the second-quietest
+  adult band.** The oldest band is the worst adult band for the first time.
+
+  ⚠ **The junior rows move, and it is not scope creep**: 16–18 measures **64.5 % against its own
+  researched 46–54 %** – the most over-band row in the table – and ×0.7 keeps the peak at 16 and the
+  whole relative ladder §3.1 sourced, moving only its height. 13–15 stays inside its own band
+  (52.5 % → 49.7 %).
+
+  ⚠ **A LEVEL-NEUTRAL ALTERNATIVE IS MEASURED TOO, IF YOU WOULD RATHER NOT MOVE THE LEVEL IN THE SAME
+  EDIT** (prime 0.6 rising to 1.2 at 34, juniors untouched): **58.4 % overall against the shipped
+  58.5 %** – the prime falls (58.6 → 52.8), the veterans rise (59.5 → **63.1**), and the aggregate does
+  not move at all. Same shape, no level change, does not land in band because it is not trying to.
+
+  ⚠ **The grinder cannot be brought into band by any age curve** – 76.0 % → 71.5 % under the fitted
+  curve, and its own floor with the roll switched off is **67.8 %**. It runs at mean condition 55, so
+  its injuries are a fatigue story.
+
+  ⭐⭐ **4. THE FLOOR, MEASURED – and money still helps at 20 and cannot rescue at 34.** ⚠ The two
+  obvious ways to write your rule are both NULL, and the reason is arithmetic: a floor of the form
+  `tau ≥ injuryBaseChance × ageInjuryFactor(age)` puts the age factor on **both sides** of the
+  comparison, so it divides out and the protected/unprotected ratio is identical at 20 and at 34. The
+  floor has to sit on the **protection PRODUCT**:
+
+  ```
+  protection      = physioRiskFactor × recoveryBuffFactor            // kit excluded: never below 1
+  protectionFloor = pBest + (1 − pBest) × climb(age)
+  tau            *= max(protection, protectionFloor(age))
+  ```
+
+  ⭐⭐ **and `climb(age)` has no free numbers in it – it is read off the age curve itself**:
+  `climb = (ageF(age) − ageF(prime)) / (ageF(top) − ageF(prime))`. **The share of her protection age
+  has taken is exactly the share of the age curve she has already climbed.** The two cannot drift
+  apart in a later re-tune.
+
+  | age | floor | **% off tau still buyable** | tau with the full stack | unfloored |
+  | ---: | ---: | ---: | ---: | ---: |
+  | **20** | 0.524 | **47.6 %** | 0.069 % | 0.069 % |
+  | 24 | 0.524 | **47.6 %** | 0.069 % | 0.069 % |
+  | **28** | 0.600 | **40.0 %** | 0.091 % | 0.080 % |
+  | 30 | 0.733 | 26.7 % | 0.139 % | 0.099 % |
+  | 32 | 0.867 | 13.3 % | 0.196 % | 0.118 % |
+  | **34** | **1.000** | **0.0 %** | **0.262 %** | 0.137 % |
+
+  ⭐ A fully-equipped 34-year-old ends at **3.8× the threshold of a fully-equipped 20-year-old**,
+  where the curve alone gives 2.0×. **The floor is what makes the age curve legible to a wealthy
+  family at all** – without it, money just shifts the whole curve down 47.6 % and the shape reads the
+  same. ⚠ It costs nobody who did not buy protection (`protectionFloor` maxes at exactly 1, so an
+  unprotected family's `max` is a no-op at every age) and it can never raise a threshold above the
+  unprotected one. **Population cost bracketed at +1.8 pp upper bound** (fitted curve with the medical
+  team worth nothing at every rung and age: 51.4 % → 53.2 %) – both ends inside the band, so the floor
+  is safe to add on top of the fitted curve without re-fitting.
+
+  ⚠⚠ **5. WHAT THE MEASUREMENT SAYS YOU SHOULD PROBABLY DO INSTEAD, OR AS WELL.** Two things, both
+  bigger than a table edit and neither proposed here:
+  - **The retirement door has no age term and it is three quarters of the problem.** A 2× age curve
+    buys a **15 %** rise in realised 29+ onsets, because everything else comes through a door the
+    curve does not reach. If ageing should be something a player can FEEL, that is the lever.
+  - **The best-sourced tennis age effect is on SEVERITY, and this table cannot express it.** Under the
+    fitted curve **weeks lost per season barely move** (2.1 → 1.7 overall, and flat at 1.7/1.6/1.7
+    across the adult bands): only the COUNT moved, not the consequence. An age-scaled `severityBands`
+    draw is what the literature actually supports.
+
+  ⚙ **STILL `[?]` – four questions, each one edit:** *(a)* the fitted curve or the level-neutral one?
+  *(b)* the floor with it, or the curve alone? *(c)* may the junior rows move (they are why the total
+  lands in band)? *(d)* the two in 5 above are separate waves – do you want either?
