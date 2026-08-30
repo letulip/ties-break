@@ -33,6 +33,7 @@ import {
   closeTournament,
   createWorld,
   ownedAssets,
+  shopItem,
   skipTournament,
   tickWeek,
   toSnapshot,
@@ -229,8 +230,26 @@ describe('round 30 #11 and #9 – what the rate line says now', () => {
     const wrapper = await mountShop(toSnapshot(world))
 
     const merch = await shelfRow(wrapper, 'The merch brand')
-    expect(merch.find('.shop-row-rate').text()).toBe('Worth 16 years of what it sells')
+    // ⭐⭐⭐ ROUND 30 #23 – THE SENTENCE IS UNTOUCHED AND THE NUMBER IN IT NOW MOVES. `earningsMultipleX`
+    // on the ROW used to be the catalogue constant; it is now `base + what the career earned`
+    // (`world/brand.ts`), so a career with nothing behind it reads the base and a career with
+    // seasons, top-20 finishes and finals behind it reads more. ⚠ INVARIANT 4 IS INTACT: the wording
+    // is byte-for-byte what round 30 #11 licensed – what changed is the value it interpolates, from a
+    // number that had stopped being true to the one the shelf actually prices the row at.
+    const base = shopItem('merch-brand')!.earningsMultipleX!
+    expect(merch.find('.shop-row-rate').text()).toBe(`Worth ${base} years of what it sells`)
     expect(merch.text(), 'the sentence he read is gone from this row').not.toContain('Holds its value')
+
+    // ⚠⚠ AND THE ARM THAT MAKES THAT A CLAIM RATHER THAN A RESTATEMENT: the SAME row, on a career
+    // that has earned a higher multiple, says a bigger number through the same sentence. Without it
+    // this test passes on a screen that had gone back to printing a constant.
+    const earned = shopper('r30-11-screen-earned')
+    earned.trophiesByTier.wta500 ??= { titles: [], finals: [] }
+    earned.trophiesByTier.wta500.finals.push(1, 2, 3, 4, 5, 6, 7, 8, 9, 10)
+    const richer = await mountShop(toSnapshot(earned))
+    const merchRicher = await shelfRow(richer, 'The merch brand')
+    expect(merchRicher.find('.shop-row-rate').text()).toBe(`Worth ${base + 1} years of what it sells`)
+    richer.unmount()
 
     const land = await shelfRow(wrapper, 'The land')
     expect(land.find('.shop-row-rate').text()).toBe('Neither gains nor loses')
@@ -253,6 +272,10 @@ describe('round 30 #11 and #9 – what the rate line says now', () => {
 //  N2  the «Trading as» line's `v-if` forced false      -> 2 RED here, 0 in the engine file.
 //  N3  `askBuy` sends `name: undefined`                 -> 1 RED here, ALONE, 0 in the engine file –
 //      a screen that stops sending is invisible to every arm that calls `buyAsset` directly.
+//  N4  ROUND 30 #23 – `shopView` sending the CATALOGUE base instead of the career's own multiple
+//      -> 1 RED here (the rate line), alongside 1 in the engine file. ⚠ The arm that catches it is
+//      the SECOND mount, on a career that has earned a higher multiple: an arm reading only the base
+//      off the catalogue and comparing it with the screen is true of a constant too.
 //  N9  `overflow-wrap: anywhere` removed from the line  -> 1 RED here, ALONE: the 375px arm. The
 //      belt is measured, not decorative.
 // =================================================================================================
