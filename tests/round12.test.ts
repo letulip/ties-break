@@ -153,7 +153,16 @@ describe('R12-15 — the dead Play button after an injury (the round\'s worst it
     // threshold at a wrecked condition fell from 8.6% to 1.6% - so a sweep of the same 400 seeds
     // returns eight careers instead of six (r12-repro-102 / 114 / 140 / 201 / 220 / 225 / 235 / 259)
     // rather than none: the state is still readily reachable by playing, which is the whole claim.
-    const world = createWorld('r12-repro-102')
+    //
+    // ⚠ RE-DERIVED AGAIN (30.08, round 30 #26/#27's fitted adult age curve), for the fourth time and
+    // for the same reason every time before: this state is a coincidence of one career's calendar and
+    // injuries, and a wave moved the injuries. The junior rows went to x0.7 of what they were
+    // (13-14: 0.85/0.9 -> 0.6/0.63), so a state that needs an injury to land on a week she is already
+    // committed to got rarer again. The same 400-seed sweep returns FOUR careers – r12-repro-15 / 49 /
+    // 120 / 225 – and 225 was already on the 03.08 list above, so the fixture moves to the one seed
+    // that has now survived two re-calibrations. Still readily reachable by playing, which is the
+    // whole claim and the only thing this test has ever guarded.
+    const world = createWorld('r12-repro-225')
     const rng = rngFromSeed(world.seed)
     let hit: { week: number; eventWeek: number } | null = null
     for (let i = 0; i < 60 && hit === null; i++) {

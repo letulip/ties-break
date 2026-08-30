@@ -1841,9 +1841,38 @@ export const ECONOMY = {
     /** a LOST Slam final – the one runner-up plate the world remembers (spec §3's own example).
      *  Lost finals at every other tier buy nothing: the world remembers who won. */
     slamFinalFloor: 12,
-    /** a season ENDED inside the WTA top 10 (`byTrack.wta.endRank` ≤ 10) – the «first top-10
-     *  season» of the spec's floor list, counted per season from its wrap week. */
-    top10SeasonFloor: 10,
+    /** ⭐⭐ WHAT A FINISHED SEASON'S END-RANK IS WORTH, best matching band only, counted once per
+     *  season from its wrap week. The spec's floor list says «a first top-10 season»; this is that
+     *  entry as a LADDER, in the shape `academy.reputationBands` already uses two blocks up.
+     *
+     *  ⭐⭐⭐ ROUND 30 #24 – SHIPPED 30.08, AND THE TWO LOWER RUNGS ARE THE ITEM. The owner, three
+     *  times: «она же топ-20 в мире». Before them a career built on quarter- and semi-finals earned
+     *  no title, reached no Slam final and ended no season in the top ten, so its fame floor was
+     *  EXACTLY ZERO and its brand was worth nothing however high it ranked – a top-20 player was
+     *  invisible to her own brand by construction. That is arithmetic, not a measurement, and it is
+     *  what the two rungs end.
+     *
+     *  ⚠ THE DATA FOR «DEEP RUNS» ITSELF DOES NOT EXIST AT THE TOURNAMENT LEVEL: `TierTrophies`
+     *  records `titles` and `finals` and nothing below a final, so a quarter-final leaves no durable
+     *  trace anywhere in the save. The END-RANK ladder is the answer that needs no schema move,
+     *  because `seasonHistory[].byTrack.wta.endRank` is already written for every finished season –
+     *  and a season ended at #18 IS the deep runs, summed and sorted by the tour itself.
+     *
+     *  ⚠⚠ IT MOVES MERCH INCOME AND THE BRAND'S WORTH ON EVERY CAREER, and it was benched before it
+     *  was kept: 72 careers x 780 weeks, median peak fame 58.9 -> 67.5 (+14.6%), with the two rows
+     *  that make it safe UNCHANGED – the fame the week a family can first afford the brand (9.6) and
+     *  the brand's worth on the day they buy it. A family reaches first affordability before it has
+     *  finished top-50 seasons to bank, so round 30 #9's «fair on the day they can afford it»
+     *  multiple and the fund-parity anchor both survive untouched. The lift lands in the MIDDLE of
+     *  the distribution, which is where he asked for it: p90 and best are already at the fame cap.
+     *  ⭐ It also partly answers round 30 #13 as a side effect – a top-20 season feeds the stock
+     *  WHILE SHE IS CLIMBING, so climbing windows that lose income fall 15.1% -> 13.7%.
+     *  Predicted vs measured: docs/specs/brand-worth-and-income-2026-08.md. */
+    seasonEndBands: [
+      { maxEndRank: 10, add: 10 },
+      { maxEndRank: 20, add: 4 },
+      { maxEndRank: 50, add: 1.5 },
+    ] as readonly { maxEndRank: number; add: number }[],
     /** ⭐ THE SLOW DECAY – the half-life of every contribution, in weeks. Two seasons: a Slam won
      *  six seasons ago still carries an eighth of its step, so a reign fades over about four to
      *  six seasons rather than overnight. ⚠ Decay is what makes fame a lever and not a rank by
@@ -1876,13 +1905,127 @@ export const ECONOMY = {
   // ⚠ ZERO DRAWS ON ANY STREAM: both are arithmetic on persisted records (world/business.ts).
   business: {
     merch: {
-      /** ⭐ WHAT ONE POINT OF FAME SELLS, in cents a week – the whole merch dial. At fame 10 (a
-       *  few small titles) the brand pays ≈ the index fund on its $250,000 price; at a reign's
-       *  fame 60–80 it is $94k–125k a year – a real «подспорье», still under the academy at any
-       *  reputation the academy's builders actually hold. Sized against the round-29 counterweight
-       *  gap: the 10% commission costs the MEDIAN career ≈ $130k of peak wallet, and five seasons
-       *  of merch at that career's fame roughly hands it back. */
+      /** ⭐ WHAT ONE POINT OF FAME SELLS, in cents a week – the merch dial's SCALE. At fame 10 (a
+       *  few small titles) the brand pays ≈ the index fund on its $250,000 price; that anchor is the
+       *  one end of the curve that was already right, and round 30 #23 kept it to the cent by
+       *  pivoting the new curve on it (`famePivot`). Sized originally against the round-29
+       *  counterweight gap: the 10% commission costs the MEDIAN career ≈ $130k of peak wallet.
+       *
+       *  ⚠ IT IS NO LONGER THE WHOLE DIAL – see `famePivot` directly below. Reading this constant
+       *  alone as «dollars per fame point» has been true only up to fame 10 since round 30 #23. */
       perFamePointCents: 3_000,
+      /** ⭐⭐⭐ ROUND 30 #23 – THE PIVOT OF THE CONVEX INCOME CURVE, in fame points:
+       *      weekly = perFamePointCents x fame² / famePivot
+       *
+       *  THE OWNER: «проанализировать и скорректировать доход мерча». Measured
+       *  (docs/research/player-brands-and-what-they-are-worth.md §7e), the linear dial paid $91.9k a
+       *  year at the median career's peak fame and $156k at fame 100, against a researched band of
+       *  **$0.5M–$2M a year NET** for a top full own-brand (§7d, derived from Sugarpova's $20M peak
+       *  valuation and EleVen's $5–12M turnover through §5.4's multiples) – 3–13x under.
+       *
+       *  ⚠⚠ AND THE SHAPE IS FORCED, NOT CHOSEN. The BOTTOM of the old curve measured true: at the
+       *  fame a family holds the week it can first afford the brand it yielded 6.0% a year against
+       *  the index fund's 7%, which is this block's own anchor confirmed live. A flat multiplier
+       *  would have broken the end that was right to fix the end that was wrong. Hold the anchor,
+       *  reach the band, and the only curves left are convex; this is the simplest member, pivoted on
+       *  the anchor itself so it is IDENTICAL at fame 10 by construction (fame²/10 = fame there) and
+       *  diverges only above it.
+       *
+       *  ⚠ TEN IS THE ANCHOR'S OWN FAME AND NOT A FREE PARAMETER. Moving it moves the day-one
+       *  economics of the rung, which round 30 #9's multiple was sized against. */
+      famePivot: 10,
+      /** ⭐⭐⭐ ROUND 30 #23/#24 – WHAT THE CAREER ADDS TO THE BRAND'S MULTIPLE. The arithmetic is
+       *  `world/brand.ts`; this is its ladder.
+       *
+       *  THE OWNER: «У нас есть её профессионализм, сколько играет, сколько выигрывает, как глубоко
+       *  проходит и вся остальная информация… Всё это можно использовать в расчете так или иначе.»
+       *  The four rungs below are that sentence, in his order, each read off a record the save
+       *  already keeps and never prunes – no schema move, no new field, a fold over history.
+       *
+       *  ⚠⚠ THEY MOVE THE WORTH AND NOT THE INCOME, WHICH IS THE POINT OF THEM. Before round 30 #23
+       *  the brand's worth was `16 x a year of its income` and the two were ONE dial – nothing could
+       *  reach one without moving the other in exactly the same proportion, which is why #23 stalled.
+       *  Income is CURRENT FORM (fame, which falls); this is the ACCUMULATED CAREER, which is finding
+       *  §5.1 of the research verbatim – «brand value follows the accumulated stock, not current
+       *  form». Two careers at identical fame are now worth different money.
+       *
+       *  ⚠ AND NOTHING HERE IS SUBTRACTED. Every rung is a non-negative addition over a base, so a
+       *  short career, a losing season and an unranked year cost nothing – «мы ни за что не
+       *  наказываем» read against a valuation. */
+      value: {
+        /** ⭐ «ОНА ЖЕ ТОП-20 В МИРЕ» – the end-rank a finished season has to beat to count as one of
+         *  her top seasons. ⚠ The SAME 20 as `fame.seasonEndBands`' new rung, and deliberately: #24
+         *  is one claim about one number, and a brand that valued «top-20» differently from the fame
+         *  floor that pays it would be two answers to his one question. */
+        topEndRank: 20,
+        /** «сколько играет» – per finished PROFESSIONAL season (one carrying a WTA end-rank). */
+        seasonX: 0.2,
+        seasonCapN: 12,
+        /** «она же топ-20» – per season ended inside `topEndRank`. The heaviest rung, because it is
+         *  the one he has raised three times. */
+        topSeasonX: 0.3,
+        topSeasonCapN: 8,
+        /** ⭐⭐ «как глубоко проходит» – per professional final REACHED AND LOST (`TierTrophies
+         *  .finals`, every tier `fame.titleFloor` names). ⚠ Round 30 #24 established that there is
+         *  no ledger below a final, which is true and which is why a quarter-final cannot count; it
+         *  does not stop a FINAL counting, and the fame floor reads `finals` only at 'slam', so every
+         *  lost final from w15 to wta1000 is a dated professional result nothing in this game has
+         *  ever read. Titles are deliberately NOT here – they are already fully priced into the
+         *  income through fame, and pricing them twice is the one-dial defect wearing a new hat. */
+        finalX: 0.1,
+        finalCapN: 12,
+        /** «сколько выигрывает» – her WTA-track career win rate, as a share of the window below. A
+         *  career at or under `winRateFrom` adds nothing and is charged nothing. */
+        winRateX: 1.0,
+        winRateFrom: 0.6,
+        winRateTo: 0.85,
+        /** the ceiling on the whole multiple, base included. ⚠ IT BINDS THE TOP OF THE SHELF: at
+         *  fame 100 the convex curve pays $1.56M a year, so this is what decides whether the best
+         *  career in a run exits at the RF mark's ~$27M or somewhere absurd. Sized in
+         *  docs/specs/brand-worth-and-income-2026-08.md against the researched valuations rather
+         *  than picked. */
+        maxX: 20,
+      },
+      /** ⭐⭐⭐ ROUND 30 #23, 30.08 – THE ROOM SHE PLAYS IN. Its own block, and the arithmetic is
+       *  `world/brand.ts`' `brandCrowdMult`.
+       *
+       *  THE OWNER, overruling the `[GAP]` this wave had filed on the crowd: «у нас есть понимание
+       *  коридора зрителей на каждом турнире, мне кажется этого достаточно вполне.»
+       *
+       *  ⚠⚠ THE CORRIDOR, NEVER THE DRAW. `season/preview.ts`' `eventCrowd` is a per-event roll and
+       *  stays decorative – its grep guard in tests/preview.test.ts is untouched and still passes.
+       *  What the brand reads is `tierCrowdMid`, the static table under it, so a valuation stays a
+       *  fold over history with zero draws.
+       *
+       *  ⚠ IT MULTIPLIES THE INCOME, CENTRED ON 1, AND IS BOUNDED BOTH WAYS – it can tilt what the
+       *  brand earns and can never carry it. Sized so the median career reads ≈1.00 the week it can
+       *  first afford the brand, which is what keeps round 30 #9's day-one anchor where it was.
+       *  Measured in docs/specs/brand-worth-and-income-2026-08.md §5. */
+      crowd: {
+        /** ⭐⭐ THE ROOM THE MULTIPLIER IS CENTRED ON, in people, AND IT IS MEASURED RATHER THAN
+         *  PICKED: the median room a family is playing in the week it can first afford the brand.
+         *  ⚠ THAT POPULATION AND NOT THE CAREER-WIDE ONE, on purpose – centring on the career-wide
+         *  median (≈2,277) is what the first draft did, and it moved round 30 #9's day-one worth by
+         *  4.4% because a young career plays smaller rooms than an old one. Centring here is what
+         *  makes the term neutral on the day the decision is made.
+         *  ⚠⚠ SOLVED BACKWARDS FROM THE BENCH RATHER THAN GUESSED, twice. 1,500 (the first draft's
+         *  guess) moved the day-one worth −4.4%; 1,250 (the measured median room at first
+         *  affordability) still left −2.8%, because the population's rooms straddle the clamp and the
+         *  median of a clamped ratio is not the ratio of the medians. 940 is the value at which the
+         *  MEDIAN DAY-ONE MULTIPLIER IS 1.00 and round 30 #9's anchor comes back to the cent it was
+         *  published at. The criterion is the anchor, so the criterion sets the constant. */
+        refRoom: 940,
+        /** ⚠⚠ A TENTH-POWER, AND THE FIRST DRAFT'S QUARTER WAS MEASURABLY WRONG. At 0.25 the term
+         *  ran 0.85–1.35 with BOTH clamps binding inside the deciles, pushed the best career's income
+         *  to $2.1M/yr – through the ceiling of the researched band – and moved the day-one anchor.
+         *  It was not tilting the answer, it was carrying it, and since the room is 0.93-correlated
+         *  with fame (spec §5) an amplifier here is mostly a second fame ramp. At 0.10 the term is a
+         *  tilt: what survives is the part of the room that rank does NOT predict, which is the only
+         *  part worth having. */
+        exponent: 0.1,
+        minMult: 0.9,
+        maxMult: 1.15,
+      },
     },
     academy: {
       /** ⭐⭐ WHAT EACH DELIVERED STAGE BRINGS IN AT REPUTATION 1.0, in cents a week, keyed by the
@@ -2567,7 +2710,37 @@ export const ECONOMY = {
     // decision, and stops a later re-tune of `default` (a rule about adults) from silently moving
     // thirteen-year-olds. The shape peaks at 16, which is the growth spurt; 13 sits below 14 because she
     // is pre-spurt and carrying smaller loads.
-    ageInjuryFactor: { 13: 0.85, 14: 0.9, 15: 1.05, 16: 1.2, 17: 1.05, 18: 0.95, default: 0.85 } as {
+    // ⚠⚠ THE ADULT LIMB LANDED 30.08 (round 30 #26/#27), AND THE NUMBERS BELOW ARE THE FITTED ONES –
+    // measured, not chosen. `docs/specs/age-injury-curve-2026-08.md` §4b is the fit and §4c its
+    // predicted-vs-measured table; do not re-derive them, re-run that bench.
+    //
+    // WHAT WAS WRONG. `default: 0.85` was the table's LOWEST value and it carried every year from 19
+    // to retirement, so nineteen, twenty-five and thirty-four were one body and all three were 29%
+    // safer than a sixteen-year-old. The note above is still true – the table was never wrong, it was
+    // UNFINISHED – and the fallback quietly became the adult model when careers grew to forty.
+    //
+    // WHAT THE SHAPE IS, ROW FAMILY BY ROW FAMILY:
+    //   13-18  the shipped junior shape x0.7. The SHAPE is the owner's own research (§3.1) and is not
+    //          re-argued – the peak is still at 16, the ladder is the same – only its HEIGHT moves.
+    //          16-18 measured 64.5% against its own researched anchor of 46-54%, the single most
+    //          over-band row in the table; x0.7 takes it to 59.0% and 13-15 to 49.7%, still in band.
+    //   19-27  the prime, FLAT at 0.25. Both WTA studies that tested age for INCIDENCE returned null
+    //          (research §5b), so a rising limb through the prime is not licensed by anything.
+    //   28-33  the rise, LINEAR, and 34+ is 2x the prime. That 2x is the bottom of the only quantified
+    //          proxy band (2.3-4.9x in football, research §5d) and deliberately nowhere near its top,
+    //          because tennis's own two attempts at the question came back null.
+    //
+    // ⚠ THE LEVEL MOVED WITH THE SHAPE ON PURPOSE, and that is what makes it shippable: season
+    // prevalence measured 58.5% against the professional research band of 30-54%, and the fitted
+    // curve lands 51.4% – IN BAND, from outside it. A level-neutral variant of the same shape is
+    // measured beside it (§4d) and lands 58.4%, i.e. out of band; it was not taken.
+    ageInjuryFactor: {
+      13: 0.6, 14: 0.63, 15: 0.74, 16: 0.84, 17: 0.74, 18: 0.67,
+      19: 0.25, 20: 0.25, 21: 0.25, 22: 0.25, 23: 0.25, 24: 0.25,
+      25: 0.25, 26: 0.25, 27: 0.25,
+      28: 0.29, 29: 0.32, 30: 0.36, 31: 0.39, 32: 0.43, 33: 0.46,
+      default: 0.5,
+    } as {
       [age: number]: number
       default: number
     },
@@ -2667,6 +2840,114 @@ export const ECONOMY = {
       { cum: 0.99, severity: 'major', weeksLo: 8, weeksHi: 14 },
       { cum: 1.0, severity: 'severe', weeksLo: 16, weeksHi: 22 },
     ] as { cum: number; severity: InjurySeverity; weeksLo: number; weeksHi: number }[],
+
+    // --- SEVERITY BY AGE (round 30 #27 limb 1, the owner 30.08: «тяжесть надо взять точно, но
+    // разумно») ---------------------------------------------------------------------------------
+    //
+    // ⭐⭐ THIS IS THE BEST-SOURCED OF THE THREE LIMBS, and it is a different instrument from
+    // `ageInjuryFactor` above. Research §5c: tennis shows BURDEN rising with age, not incidence –
+    // the SEVERE share (>28 days lost) runs 43% in adolescents against 54-66% in
+    // collegiate/professional players, a ratio of 1.26-1.53x, where every incidence number in the
+    // sport shows no gradient at all (§5b, two WTA nulls). So the events stay where the fitted curve
+    // put them and the CONSEQUENCES move.
+    //
+    // ⚠ «РАЗУМНО» IS HIS WORD AND IT IS APPLIED AS A CEILING, NOT AS A TARGET. The whole
+    // adolescent-to-veteran climb below is 1.26x – the BOTTOM of the sourced 1.26-1.53 band, not its
+    // middle and not its top. A model that took 1.53 would be quoting the most generous reading of a
+    // single systematic review as if it were a measurement of this sport at this age.
+    //
+    // THE SPLIT INSIDE THAT CEILING, and only the first half of it is sourced:
+    //   13-18 -> 1.00   the anchor. This IS the 43% the source measures; it must not move, or the
+    //                   ratio the whole table expresses stops being the ratio that was published.
+    //   19-27 -> 1.13   `[I]` the adolescent->professional step, taken at ABOUT HALF the ceiling.
+    //                   The source's contrast is adolescent-vs-professional and a nineteen-year-old
+    //                   IS a professional, so the literal reading would spend the whole 1.26 here –
+    //                   but that leaves no gradient inside adulthood, which is the half he asked
+    //                   for, and it would put a cliff at the birthday.
+    //   28-33 -> linear, 34+ -> 1.26   `[I]` from Williams S et al., J Sci Med Sport 2023 (elite
+    //                   rugby union): a heavy season raises the following season's BURDEN and not
+    //                   its incidence, and the effect is «driven by an increased risk for older
+    //                   (>26y) Forwards». That is the only sourced within-adult burden gradient in
+    //                   a comparably-loaded sport, and 28 is where the frequency curve above starts
+    //                   rising too – ONE age story, told twice, rather than two that can drift.
+    //
+    // ⚠ IT SCALES THE BANDS' CUMULATIVE THRESHOLDS AND NEVER THE LAYOFF LENGTHS. `escalatedBands`
+    // multiplies each band's TAIL probability and leaves `weeksLo`/`weeksHi` exactly as they are,
+    // which is round 16 #13's own ruling restated: «What changes above moderate is how OFTEN you get
+    // there, never what it costs when you do.» A stress reaction does not take longer to heal
+    // because the body it happened to is thirty-four.
+    //
+    // ⚠ AND IT CANNOT MOVE A DRAW. It is read AFTER the severity uniform has been pulled and only
+    // decides what that already-drawn number MEANS – the same post-draw discipline
+    // `severityBandsFor` and every multiply in `injuryTau` are built on.
+    severityAgeFactor: {
+      13: 1, 14: 1, 15: 1, 16: 1, 17: 1, 18: 1,
+      19: 1.13, 20: 1.13, 21: 1.13, 22: 1.13, 23: 1.13, 24: 1.13,
+      25: 1.13, 26: 1.13, 27: 1.13,
+      28: 1.15, 29: 1.17, 30: 1.19, 31: 1.2, 32: 1.22, 33: 1.24,
+      default: 1.26,
+    } as { [age: number]: number; default: number },
+
+    // --- RECURRENCE (round 30 #27 limb 2) ---------------------------------------------------------
+    //
+    // THE OWNER, 30.08: «раз мы храним историю травм у себя, то вполне можно делать алгоритм,
+    // который будет увеличивать немного вероятность новой такой же травмы или ее прогрессии (более
+    // тяжелой). Мне кажется это похоже на правду.» It is the strongest of his three, because
+    // PREVIOUS INJURY IS THE BEST-ESTABLISHED RISK FACTOR IN SPORTS-INJURY EPIDEMIOLOGY – ahead of
+    // age and ahead of load.
+    //
+    // ⭐⭐ AND THE POINT IS CLUSTERING, NOT LEVEL, which is what makes it the answer to his OTHER
+    // complaint («ни одной травмы я не видел уже несколько сезонов»). Measured onsets are 0.68-0.78 a
+    // season and his own lifetime rate is 0.64: the number was never the problem. INDEPENDENT WEEKLY
+    // DRAWS PRODUCE EXACTLY THE FORGETTABLE PATTERN HE DESCRIBES – nothing, nothing, a niggle,
+    // nothing. «Three quiet years, then the ankle went twice in one season» is the SAME TOTAL told
+    // properly, and only a mechanic with memory can tell it.
+    //
+    // ⚠⚠ THE CEILING AND THE DECAY ARE THE DESIGN, NOT A SAFETY RAIL BOLTED ON AFTERWARDS – «мы ни
+    // за что не наказываем». A first injury may not doom a career. Without a decay this is a death
+    // spiral wearing realism's clothes, so:
+    //
+    //   halfLifeWeeks 52   ONE SEASON. An ankle sound for three seasons has 0.5^3 = 12.5% of its
+    //                      weight left, which is the owner's own test («an ankle that has been sound
+    //                      for three seasons stops being the weak ankle») answered in arithmetic
+    //                      rather than in prose. Counted from the RECOVERY week, which is what
+    //                      `injuryHistory` rows carry – so a long layoff starts decaying when she is
+    //                      back on court, not when she went down.
+    //   loadCap 1          THE CEILING. The decayed sum saturates at one unit – "at most one fresh
+    //                      major injury's worth of memory" – so a career cannot stack six niggles
+    //                      into a body that breaks every fortnight. Every factor below is
+    //                      `1 + bump x load`, so the cap is a cap on all three at once.
+    //
+    // ⚠ NO SCHEMA MOVE. `injuryHistory` already holds `kind`, `severity`, `week` and `weeksOut`, and
+    // `bodyPartOf` already turns a `kind` back into one of the twelve regions. Nothing new is
+    // persisted, so `SAVE_SCHEMA_VERSION` does not move and no migration is owed.
+    recurrence: {
+      /** Weight one recovered layoff contributes at zero decay, by what it was. A niggle is a fact
+       *  about a week; a tear is a fact about a body, and the ladder says so. */
+      severityWeight: { minor: 0.4, moderate: 0.7, major: 1, severe: 1 } as Record<InjurySeverity, number>,
+      halfLifeWeeks: 52,
+      loadCap: 1,
+      /** HOW MUCH MORE LIKELY, at full load – `injuryTau *= 1 + tauBump x load`. «Немного» is his
+       *  word: +30% on the weekly threshold at the very top of the ceiling, decaying to nothing
+       *  across three seasons. ⚠ WEEKLY DOOR ONLY, and that is stated rather than hidden – see the
+       *  note on `recurrenceTauFactor` for why the retirement door's RATE is not touched. */
+      tauBump: 0.3,
+      /** ...and how much worse it lands – the same `load`, into the same `escalatedBands` the age
+       *  factor uses, so a body with a recent history draws from a shifted table at BOTH doors. */
+      severityBump: 0.2,
+      /** THE CEILING ON THE PRODUCT `severityAgeFactor x (1 + severityBump x load)`, and it is the
+       *  sourced band's own top: 1.26 x 1.2 = 1.512, so this clamp binds only in the last decimal
+       *  and exists to make the guarantee structural. Nothing in this engine may push the severe
+       *  share past what §5c published. */
+      severityFactorCap: 1.5,
+      /** How far a part the record has ALREADY broken is tilted in the region draw, at full load for
+       *  that part. Sits between `BODY_AIM_TILT` (2.0, what she drilled) and `BODY_PUSHED_TILT`
+       *  (2.6, a knock he sent her back out on): a healed injury is a stronger statement than a
+       *  training week and a weaker one than a joint that gave way while being ignored. ⚠ A TILT,
+       *  NOT A RISK – `tiltedBodyRegions` renormalises, so this moves WHERE it lands and never how
+       *  often, at BOTH doors. */
+      partTilt: 2.3,
+    },
   },
 
   // --- THE ITF ANNUAL ENTRY CAP (docs/research/ranking-points-by-tier.md §2 and §6) -----------
@@ -3275,6 +3556,23 @@ export const ECONOMY = {
         // recover 221%» is exactly why widening this by hand would have been the tuning he did not
         // ask for. The fund's own under-pricing stands as round 29's ask 11b.
         annualRateBps: 317,
+        // ⭐⭐ ROUND 30 #14 – A DEPOSIT IS HELD IN UNITS TOO, AND IT IS HIS OWN EXPECTATION, ROUND 29
+        // #11: «Index fund хотелось бы иметь возможность докупать, предполагаю, что Savings deposit
+        // будет вести себя так же – тоже надо исправить.» Adding to a holding and taking part of one
+        // out is what `stake: 'open'` MEANS, and a holding you can do both to is a holding measured
+        // in units. That is what let the rebase be deleted outright rather than kept for one rung.
+        //
+        // ⚠⚠ AND NOT ONE CENT OF THE DEPOSIT MOVED, WHICH IS ARITHMETIC AND NOT LUCK. With no
+        // `volBps` this unit's price is `1000 × 1.0317^years` dead flat (`marketIndex` answers
+        // exactly 1), and `units × price` is identically the `(basis + top-up) × (1+r)^t` the rebase
+        // computed – rebasing at today's worth WAS the unit model, written the long way round. The
+        // deposit's arm in `tests/round30-fund-units.test.ts` measures that equality rather than
+        // trusting it.
+        //
+        // ⚠ $1,000 IS ITS OWN MINIMUM STAKE, chosen so the dullest rung on the shelf quotes the
+        // roundest possible price. Nothing depends on the number: units are fractional, so a $1,000
+        // opening stake buys exactly one and a $1,500 one buys one and a half.
+        unitBaseCents: 1_000_00,
       },
       {
         id: 'index-fund',
@@ -3340,11 +3638,79 @@ export const ECONOMY = {
         //
         // ⚠ PROVISIONAL BY HIS OWN FRAMING: «вроде посмотрел, давай сделаем, а я пощупаю и скажу
         // свои ощущения потом.» Move this one number and re-run the probe; nothing else has to move.
-        volBps: 1_800,
+        //
+        // ⭐⭐⭐ HE PLAYED IT AND MOVED IT – ROUND 30 #14, 1_800 -> ROUND30_VOL_BPS.
+        //
+        // «Волатильность индексного фонда какая-то очень большая по ощущениям +65/-15 это то, что я
+        // видел… Во-первых она скорее всего будет менее "галопирующая", во-вторых вряд-ли в таких
+        // крайностях.»
+        //
+        // ⚠ THE KNOB THE SPEC ALREADY NAMED FOR THIS, and §14h named the direction too: «If he wants
+        // back toward one-in-four WITH crashes, the wave's volBps comes down – his call, one knob.»
+        // It is his call and this is him making it. His crash band is UNTOUCHED: −15…−30% at the
+        // trough is his own number from the day before and not mine to shave.
+        //
+        // ⚠⚠ HALVED, AND «HALF» IS THE RULING RATHER THAN A FITTED NUMBER. 1,800 -> 900 is a
+        // sentence he can hold («half the wobble»); 1,050 or 875 would be a number nobody could
+        // defend later. It lands the felt figure back where he approved it: 24.5% of seasons
+        // negative – «roughly one year in four» – against 30.9% before, with a season sd of 15.0%
+        // which is about a real index's own.
+        //
+        // ⚠ AND THE CEILING IS UNMOVED AND UNTOUCHED BY THIS: §14c's inequality caps `volBps` at
+        // 1,824 for the ten-year calm-water guarantee, and coming DOWN can only widen the margin.
+        //
+        // ⚙ MEASURED, `npx vite-node tools/market-probe.ts --seeds 4000` (30.08) – see §14i.
+        volBps: 900,
+        // ⭐⭐⭐ ROUND 30 #14 – WHAT ONE UNIT COSTS AT THE START, and it is HIS anchor to the dollar:
+        // «Зашёл, когда доля стоила 4к, через десять лет она может вполне удвоиться. Или зашёл на
+        // пике при цене 7-8к.»
+        //
+        // ⚠ THE DOUBLING IS THE RATE AND NOT A SECOND CONSTANT. $4,000 at 700 bps is $7,869 after
+        // ten years – «вполне удвоиться» – and it passes through his $7,000-8,000 peak band in the
+        // ninth and tenth seasons of a career, which is where a family that has been earning long
+        // enough to buy at a peak actually is. The market rides either side of that all the way.
+        unitBaseCents: 4_000_00,
       },
       // ⚙ 26.08, the owner: «давай гэп сделаем скромнее пока что от 60 до 300к». A five-fold spread
       // rather than the twenty-two-fold one the first draft drew – from $60k to $300k every rung is
       // a real decision for a real career, and the ladder can always be extended upward later.
+      //
+      // ⭐⭐⭐ ROUND 30 #15 – AND NOW THEY COST SOMETHING TO KEEP, AND IT GROWS.
+      //
+      // THE OWNER, 30.08: «Для машин вполне можно ввести годовую стоимость обслуживания, которая
+      // может с каждым годом немного расти, как в реальности, пока стоимость авто на рынке падает.»
+      //
+      // ⚠⚠ WHY THE CARS HAD NONE UNTIL NOW, because it was a decision rather than an omission: §3f's
+      // «годовое обслуживание» table is written about the BOATS AND THE PLANES and quotes no car, so
+      // round 29 #5 gave the cars none. §3b's own table gives them a price and a loss and stops.
+      // This is the third column he has now asked for, and it lands on the family the spec left out.
+      //
+      // ⭐⭐ THE FOUR RATES ARE A REAL-WORLD LADDER AND NOT A MULTIPLE OF THE PRICE. Servicing,
+      // insurance, tyres and tax on an ordinary estate run about a twentieth of what it cost; the
+      // same list on a two-seater with carbon brakes and an annual major service runs nearly twice
+      // that share, and the share is what climbs, not just the money. Fuel is excluded on purpose –
+      // nothing in this game knows how far anybody drove, and a cost nobody can influence should not
+      // be modelled as if they could.
+      //
+      //   the sensible estate   5.0%   $3,000/yr    $57.69/wk
+      //   the good saloon       5.5%   $6,050/yr   $116.35/wk
+      //   the one from poster   7.0%  $13,300/yr   $255.77/wk
+      //   the unreasonable one  9.0%  $27,000/yr   $519.23/wk   <- about one elite coach
+      //
+      // ⚠ THE LAST ROW IS THE POINT OF THE LADDER, AND IT IS §3f's OWN DESIGN SENTENCE READ ONE
+      // FAMILY DOWN: «the toys compete with the team for the same money». A $300,000 car costs
+      // roughly what the best coach in the game costs, every week, for as long as it sits there.
+      //
+      // ⚠⚠ NOTHING HERE CAN STRAND A FAMILY, on §3f's own test: a car has NO build wait, so it is
+      // sellable from the week it is bought – there is no week in which the family is paying for a
+      // thing it cannot get out from under, which is the property the yacht's ten per cent was
+      // measured against.
+      //
+      // ⭐ AND `upkeepGrowthBps` IS THE HALF THAT IS NEW TO THE SHELF: 6% a year, compounding on the
+      // car's own age and capped at double (`ECONOMY.shop.upkeepGrowthCapX`). Beside a value falling
+      // 6–15% a year it is the two curves he described – a car worth less every season and dearer
+      // every season – and neither of them is a second rule: they are the same two fields every rung
+      // on this shelf already carries, with an age put through them.
       {
         id: 'car-sensible',
         family: 'car',
@@ -3353,6 +3719,8 @@ export const ECONOMY = {
         blurb: 'Five doors and a boot that takes the kit bags. Nobody looks at it twice.',
         entryCents: 60_000_00,
         annualRateBps: -600,
+        upkeepBps: 500,
+        upkeepGrowthBps: 600,
       },
       {
         id: 'car-good',
@@ -3362,6 +3730,8 @@ export const ECONOMY = {
         blurb: 'Quiet, quick, and quietly expensive the day it stops being new.',
         entryCents: 110_000_00,
         annualRateBps: -900,
+        upkeepBps: 550,
+        upkeepGrowthBps: 600,
       },
       {
         id: 'car-nineteen',
@@ -3377,6 +3747,8 @@ export const ECONOMY = {
         blurb: 'Two seats, no boot, and twenty-five years late.',
         entryCents: 190_000_00,
         annualRateBps: -1200,
+        upkeepBps: 700,
+        upkeepGrowthBps: 600,
       },
       {
         id: 'car-unreasonable',
@@ -3386,6 +3758,8 @@ export const ECONOMY = {
         blurb: 'No boot, no back seats, no defence for any of it.',
         entryCents: 300_000_00,
         annualRateBps: -1500,
+        upkeepBps: 900,
+        upkeepGrowthBps: 600,
       },
       // ⭐ §3c – THE FIRST RUNG MATTERS MOST: «the earliest seasons are measured in debt, and a
       // family that finally owns where it lives is a real milestone this game currently has no way
@@ -3466,6 +3840,49 @@ export const ECONOMY = {
         blurb: 'Her name on shirts and bags. It sells while she is talked about.',
         entryCents: 250_000_00,
         annualRateBps: 0,
+        // ⭐⭐⭐ ROUND 30 #9 – AND IT IS NOW WORTH WHAT A BUSINESS IS WORTH: years of its own income,
+        // which is years of her fame. `annualRateBps: 0` above is left where it is and is now DEAD
+        // for this rung – `assetWorthCents` branches on `earningsMultipleX` before it reaches the
+        // rate – and it is kept rather than deleted because the type requires it and because zero is
+        // the honest answer to «what rate does it drift at»: none, it is priced off earnings.
+        //
+        // ⚠⚠ THE RESEARCH GAVE A BAND AND NOT A NUMBER, AND SAYS SO
+        // (docs/research/player-brands-and-what-they-are-worth.md §5.4): NO player-brand transaction
+        // publishes both an earnings figure and a price. The two nearest are Beckham's DRJB – 55%
+        // sold for ~$269M, implying ~$489M against FY2024 profit of $44.9M, so ~10.9x – and the
+        // Nadal academy at ~€209M against €6.8M net profit, ~31x. HIS OWN REFERENCE, the RF mark,
+        // has no published valuation at all: it sits in a private Swiss holding company (Tenro AG)
+        // and On Holding's filings name it only in a risk factor, never in the financials. So this
+        // figure is a CHOICE inside a wide, thin band and the measurement is what chose it.
+        //
+        // ⭐⭐⭐ ROUND 30 #23 – AND SINCE 30.08 IT IS THE *BASE* MULTIPLE AND NOT THE WHOLE ONE. The
+        // career earns more on top of it: `world/brand.ts` adds seasons played, seasons ended
+        // top-20, professional finals reached and her win rate, capped at
+        // `ECONOMY.business.merch.value.maxX`. Everything the two paragraphs below say about SIZING
+        // still holds – it is the same criterion measured against the same week – but the number a
+        // given career is priced at is now a range and not this constant.
+        //
+        // ⚠⚠ WHY THE BASE LIVES HERE AND THE LADDER LIVES IN `ECONOMY.business.merch.value`: this
+        // field is the PREDICATE («this rung is priced on its earnings» – `assetWorthCents` branches
+        // on its presence and `tests/round30-brand-value.test.ts` holds the catalogue to exactly one
+        // rung carrying it), so the number that says where that pricing STARTS belongs on the row the
+        // shop actually sells. A copy in the constants block would be a second home for one fact.
+        //
+        // ⭐⭐ THE CRITERION IS «FAIR ON THE DAY THEY CAN AFFORD IT».
+        // `tools/merch-fame-vs-rank.ts` walks 108 careers x 780 weeks and reads the fame a family
+        // holds the first week its wallet can carry twice the $250,000 price. The brand has to be
+        // worth about what it cost at the fame AND the career those families actually hold, so the
+        // purchase is not a paper loss the week it is made – which is what a punishing multiple would
+        // have made it, on the one rung whose whole pitch is «дешевле академии». Above that the
+        // family gains; below it the family is down; and both directions are the item. ⚠ The
+        // measurement that picked this base against the earned ladder is
+        // docs/specs/brand-worth-and-income-2026-08.md.
+        //
+        // ⚠ AND IT FALLS DURING HER CAREER, which is the only fall the game is in frame for: fame
+        // halves over 104 weeks and the income is CONVEX in it, so a year with no title costs the
+        // brand more than a proportional share of its value. The floor under it is
+        // `ECONOMY.shop.businessValueFloorShare`.
+        earningsMultipleX: 14,
       },
       {
         id: 'boat-launch',
@@ -3589,9 +4006,16 @@ export const ECONOMY = {
       // ⚠ NO BUILD WAIT AND NO UPKEEP, because §3g asks for neither and this file does not invent
       // what it was not given. §3f's «время постройки» and «годовое обслуживание» are said of the
       // boats and the planes; the academy's own sentence is «each stage is a decision and a bill»,
-      // and a stage IS the wait. ⚠ AND IT HOLDS ITS VALUE (rate 0) for the same reason: §3g calls it
-      // «the one asset that outlives the career» and gives it no rate, so it neither earns nor
-      // decays, and the shelf says so in as many words («Holds its value»).
+      // and a stage IS the wait. ⚠ AND IT NEITHER GAINS NOR LOSES (rate 0) for the same reason: §3g
+      // calls it «the one asset that outlives the career» and gives it no rate.
+      //
+      // ⚠ THIS NOTE USED TO END «and the shelf says so in as many words («Holds its value»)» AND THAT
+      // SENTENCE IS GONE FROM THE SHELF – round 30 #11, the owner: «Holds its value странно звучит –
+      // это напрямую значит, что оно обесценивается, а это вроде бы не совсем так». The MECHANIC did
+      // not move a cent (checked first: a rate-0 rung is worth what was paid for it forever and the
+      // sale is whole), only the words. A comment naming a string that no longer exists is the one
+      // way a comment must not be wrong, so it names the new one: **«Neither gains nor loses»**, said
+      // of these four stages and of nothing else since the merch brand became a business (#9).
       {
         id: 'academy-land',
         family: 'academy',
@@ -3669,6 +4093,38 @@ export const ECONOMY = {
      *  receive both, so a family owning everything gets a corridor that is one point kinder across
      *  the board – never two.» */
     planeTravelRestBonus: 1,
+    /** ⭐⭐⭐ ROUND 30 #15 – THE CEILING ON A RISING UPKEEP, as a multiple of its first-year figure.
+     *
+     *  THE OWNER: «годовая стоимость обслуживания, которая может с каждым годом НЕМНОГО расти».
+     *
+     *  ⚠⚠ «НЕМНОГО» IS WHAT THIS NUMBER IS FOR. `upkeepGrowthBps` is 6% a year, which is a small
+     *  step and a large product: unbounded, a car kept fifteen seasons would cost 2.4x its first
+     *  year, and one kept longer would keep going. A bill that compounds without a stop is the
+     *  shape «мы ни за что не наказываем» rules out – it turns a purchase the family made once
+     *  into a debt that grows for as long as they keep it.
+     *
+     *  ⭐ AND IT IS THE SENTENCE A PLAYER CAN HOLD: **the bill can at most double.** 6% a year
+     *  reaches it in the twelfth season of ownership, which is longer than any car in a fifteen-
+     *  season career is realistically held, so the cap is the guarantee rather than the common case
+     *  – it binds the tail and leaves the curve he asked for alone.
+     *
+     *  ⚠ IT BINDS THE MULTIPLIER AND NOT THE YEARS, deliberately: a cap in years would have to be
+     *  re-derived every time the growth rate moved, and the promise would silently change with it. */
+    upkeepGrowthCapX: 2,
+    /** ⭐⭐⭐ ROUND 30 #9 – THE FLOOR UNDER A BUSINESS RUNG'S VALUE, as a share of what was paid.
+     *
+     *  ⚠⚠ IT IS THE MARK, AND IT IS A SOURCED IDEA RATHER THAN A KINDNESS. Björn Borg's own company
+     *  went bankrupt in 1990; the NAME was licensed from 1997, bought outright for $18 million at the
+     *  end of 2006 and is a Nasdaq Stockholm company doing SEK 1,044M today
+     *  (docs/research/player-brands-and-what-they-are-worth.md §4d). A brand with no earnings left is
+     *  not a brand with no value – somebody will buy the name.
+     *
+     *  ⭐ A QUARTER, so a family between reigns is meaningfully down and never wiped out: «мы ни за
+     *  что не наказываем» read against a rung they CHOSE to buy, on a shelf whose own §3b law is
+     *  «THIS FAMILY EXISTS TO LOSE MONEY AND THAT IS THE POINT». It is also the one thing that keeps
+     *  a sale possible in the years she is quiet, which is what makes the decision to sell a real
+     *  fork rather than a trap. */
+    businessValueFloorShare: 0.25,
   },
 } as const
 

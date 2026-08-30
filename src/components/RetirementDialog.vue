@@ -35,6 +35,35 @@
 // worse, so nothing here may read as "she is too tired to go on"; and her body's share is a
 // function of her age alone, so nothing here may read as "she wore out faster" or "you did this".
 //
+// ⭐⭐⭐ ROUND 30 #7 – THE AGE LEDE WAS RE-WORDED, AND IT IS THE ONE STRING THIS ITEM MOVES.
+//
+// THE OWNER, 30.08: «Что-то не так с попапом "теперь каждый год начиная с 29 лет" - звучит как
+// механический приговор безысходности пока что, надо что-то с этим сделать».
+//
+// ⚠⚠ THE MECHANIC IS CORRECT AND WAS NOT TOUCHED. What was wrong is that the sentence announced a
+// SCHEDULE - «the way it gets asked from twenty-nine onward» is the game explaining its own rule,
+// and a rule read out at a person is a verdict. It also was not the whole truth, which is the half
+// that makes the kinder version the more accurate one as well
+// (docs/specs/the-long-goodbye-2026-08.md):
+//
+//   * the question is asked every off-season from 29 and she MAY ALWAYS REFUSE - that path is
+//     untouched here, down to the byte;
+//   * how many refusals she has is NOT a fixed count and not a countdown. The last offer arrives
+//     when her physical falls below 55% of HER OWN PEAK (§3a, his ruling of 26.08), which is age
+//     ~41.2 on a body kept well and earlier on one that never got there. Every one of those years
+//     is bought with physio, load and luck;
+//   * and the corridor fades rather than stopping - §4a's recovery curve returns less each year
+//     from 29 on, so the body is the thing that decides, continuously.
+//
+// ⚠ NO NUMBER FROM THE ENGINE IS SPELLED OUT IN THE NEW SENTENCE, deliberately: «41» is
+// `ENDINGS.lastOfferPeakShare` seen through a curve, and a prose figure that cannot move with its
+// constant is the R2-02 hazard pointing the other way. «As many winters as her body gives her» is
+// exactly what the rule says and stays true at any share he ever sets it to.
+//
+// ⚠ THE OTHER TWO HEADINGS AND EVERY CONTROL ARE UNTOUCHED (invariant 4, and item 7 asked for one
+// popup): the final card is hers and the plateau card is her own reason, and neither is what he was
+// reading. `tests/component/last-word.test.ts` still holds all three to the byte.
+//
 // ⚠ AND THE PLATEAU IS THE SAME OFFER, ASKED EARLY. «Не могу выйти в топ – уйду» is not a sixth
 // mechanism (§5.2): it is a reading that puts this card in front of her before 29, and the reason
 // is printed on it so the epilogue's own line about which of the two it was is already true here.
@@ -148,11 +177,13 @@ useDialogFocus(card)
           her to.
         </p>
       </template>
+      <!-- ⭐⭐⭐ ROUND 30 #7 – RE-WORDED, AND THE LEDE ONLY. See the note at the top of this file for
+           what the mechanic actually promises and why the old sentence was not the whole of it. -->
       <template v-else>
         <h2 id="retire-dialog-title" class="retire-title">Is there another year in this?</h2>
         <p class="retire-lede">
-          The off-season question, the way it gets asked from twenty-nine onward. There is no wrong
-          answer and it will be asked again next winter.
+          Twenty-nine is when the question starts being asked, not a countdown to anything. There is
+          no wrong answer, and she can say no for as many winters as her body gives her.
         </p>
       </template>
 

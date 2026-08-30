@@ -199,7 +199,15 @@ const spendRange = computed<[number, number]>(() => {
 
     <WeekRecapCard v-if="showRecap" />
 
-    <section>
+    <!-- ⭐⭐ ROUND 30 #6 – THE FRAME COMES OFF (his first clause; the quote is in
+         NextTournamentPanel.vue's script header, because Cyrillic may not appear in a template).
+         `section.bare` is src/style.css's own answer and it is not a new one: the Season screen uses it so that "the cards themselves are the only objects on
+         the page", which is exactly the shape he described for this screen - a photograph, a row of
+         icons, and one plate. His words in full are in NextTournamentPanel.vue's header.
+         ⚠ ONLY WHEN THE PANEL IS THERE. A week with nothing entered is a heading and one line of
+         hint, and un-framing that is a change to a state he did not ask about (invariant 4's habit
+         applied to layout: not asked is not permission). -->
+    <section :class="{ bare: !!nearestEntered }">
       <h2>This week</h2>
       <div class="this-week-status">
         <span v-if="nearestEntered" class="pill ok">

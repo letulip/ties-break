@@ -1,7 +1,14 @@
 // The owner's 27.07 call, pinned: FIVE portrait bands, `angry` a real emotion, and no band
 // wearing another band's face.
 //
-//   jun <11 · young 11-16 · teen 17-22 · adult 23-30 · lateCareer 31+ (files: milf-*, see the alias)
+//   jun <11 · young 11-16 · teen 17-22 · adult 23-30 · lateCareer 31+
+//
+// ⚠ ROUND 30 #20 – THE FILES CARRY THE BAND'S OWN NAME NOW. R2-18 moved the TYPE off the slang word
+// and deliberately left the assets on it; the owner ruled the other half on 30.08 («переименовать со
+// сленга на lateCareer или grown, давай сделаем разом»), so seventeen files moved and
+// `portraitAssetStem` is identity on all five bands. This file is what makes that safe: it sweeps
+// every band × emotion against the files ON DISK, so a rename that missed one goes red here rather
+// than showing a player an empty frame at thirty-one.
 //
 // Three things are worth a test here and one thing is worth a test AGAINST:
 //   1. the band boundaries, including the upper bound `adult` did not used to have;
@@ -92,12 +99,14 @@ describe('the five portrait bands', () => {
   })
 
   it('a 31-year-old does not wear a 17-year-old\'s face – the adult->teen clamp is gone', () => {
-    // ⚠ RE-AIMED BY R2-18, AND THE CLAIM IS UNCHANGED: every band resolves to its OWN file, so no
-    // band borrows another's face. What moved is that the fifth band's TYPE NAME is no longer its
-    // FILE NAME - the paintings were not renamed and must not be (see `portraitAssetStem`) - so the
-    // expectation is built through the alias instead of by interpolating the stage.
+    // ⚠ RE-AIMED TWICE, AND THE CLAIM IS UNCHANGED BOTH TIMES: every band resolves to its OWN file,
+    // so no band borrows another's face. R2-18 moved the fifth band's TYPE NAME off its FILE NAME and
+    // this expectation went through the alias; ROUND 30 #20 moved the files to match, so the two are
+    // one word again. The literal below is the whole point of keeping it a literal rather than an
+    // interpolation - it is the line that would have to be edited by hand if a stem ever diverged
+    // again, and editing it by hand is the moment somebody notices.
     expect(avatarCropPath('adult', 'norm')).toBe('avatars/adult-norm.webp')
-    expect(avatarCropPath('lateCareer', 'norm')).toBe('avatars/milf-norm.webp')
+    expect(avatarCropPath('lateCareer', 'norm')).toBe('avatars/lateCareer-norm.webp')
     for (const stage of STAGES) {
       for (const emotion of EMOTIONS) {
         expect(avatarCropPath(stage, emotion)).toBe(`avatars/${portraitAssetStem(stage)}-${emotion}.webp`)
@@ -170,7 +179,7 @@ describe('the art matrix is complete on disk', () => {
 describe('`angry` is reachable only through its trigger', () => {
   it('is a member of the union the surfaces accept', () => {
     // Compile-time is the real assertion; this keeps it honest at runtime too.
-    expect(avatarCropPath('lateCareer', 'angry')).toBe('avatars/milf-angry.webp')
+    expect(avatarCropPath('lateCareer', 'angry')).toBe('avatars/lateCareer-angry.webp')
   })
 
   it('the art pipeline no longer skips it', () => {

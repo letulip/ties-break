@@ -299,3 +299,100 @@ describe('round 29 #10 – §2 the LABEL, pinned against that same base', () => 
     expect(point.kidShareBaseCents!).toBeGreaterThan(point.incomeCents)
   })
 })
+
+// =================================================================================================
+// ⭐⭐⭐ ROUND 30 #21 – §3 THE RATE IS A **RULE**, AND §2 ABOVE COULD NEVER HAVE CAUGHT THAT IT WASN'T
+// =================================================================================================
+//
+// THE OWNER, 30.08: «Почему-то мне пишут "Her cut 61% – $69,750 into her own account", и до этого
+// было про 56%… При том, что на экране бюджета написано "She keeps 50% of every prize cheque now"».
+//
+// ⚠⚠ HIS «56%» IS THIS FILE'S OWN FIXTURE. `capWeekWithBonus` walks a title week that banks a prize
+// at her ramp and a result bonus at the manager's complement, and §2 above records the blend it
+// produces in as many words: «a blend of 50% and 85% is 55.83% and renders as 56%». The number he
+// reported was sitting in a green pin.
+//
+// ⚠⚠ AND THAT IS THE WHOLE LESSON, SO IT IS WRITTEN WHERE THE NEXT PERSON WILL READ IT. §2 is the
+// round 29 #10 anti-drift pin – «the percentage the card prints must be a percentage OF the figure
+// the card prints beside it» – and P3 defined `kidShare.bps` as `cents / baseCents`. From that
+// moment §2 asserts `round(base × round(cents / base)) ≈ cents`, which is ARITHMETIC AND NOT A
+// PROPERTY OF THE GAME: it is true of any pair of figures whatsoever, so no blend, no matter how far
+// from every rule in the game, could ever redden it. The guard was not absent and not asleep – its
+// CLAIM had become unfalsifiable. The second pin, the mounted one in
+// tests/component/week-recap-kid-share.test.ts, does ask the falsifiable question («the percentage
+// on screen is the ramp the engine paid her by») and missed for the other reason: its fixture stops
+// on the FIRST week the tennis paid her, which is prize-only by construction, so the one case the
+// claim is about was never in it.
+//
+// So §3 asks the question neither could: **is the printed rate a rate this engine STATES?**
+//
+// ⚠ MUTATION-VERIFIED, each applied alone and reverted, each watched. ⭐ THE COLUMN THAT MATTERS IS
+// THE SECOND ONE: on all three defect mutations §1 and §2 above stayed GREEN on all seven of their
+// arms, which is the demonstration – not the argument – that they cannot see this class.
+//   * `accrueKidShare` dropping its `[source]: part` write        -> all 3 arms RED, §1/§2 7/7 green
+//   * the part storing `summedCents`/`summedBase` (the blend's own operands) rather than the
+//     source's own                                                -> all 3 arms RED, §1/§2 7/7 green
+//   * `bankSponsorCheque` tagged `'prize'` instead of `'sponsor'`  -> all 3 arms RED, §1/§2 7/7 green
+//   * `ECONOMY.managerCommission.bps` 1500 -> 2500 (a RETUNE, not a defect) -> all 3 arms here stay
+//     GREEN, correctly – they ask the engine for their expectation – while the fixture arm's literal
+//     pin and §1's ratio arm go RED, which is the pair that must see a retune and did.
+describe('round 30 #21 – §3 the rate a label may quote is a RULE, not the blend', () => {
+  it('the week records BOTH sources, each under the rule that governed it', () => {
+    const { world, week } = capWeekWithBonus()
+    const row = world.financeWeeks.find((w) => w.week === week)!
+    const age = kidAgeYears(week, world.profile.birthMonth, world.profile.birthDay)
+    const share = row.kidShare!
+
+    expect(share.prize, 'the tournament cheque is recorded as prize money').toBeTruthy()
+    expect(share.sponsor, 'and the result bonus as sponsor money').toBeTruthy()
+
+    // ⭐⭐ THE ARM THE ITEM EXISTS FOR. Each part's rate is a rate the ENGINE STATES – her age ramp,
+    // or the sponsor rule the same functions the till uses spell out. Not a quotient of anything.
+    // ⚠ ASKED OF THE ENGINE, NOT PINNED AS A LITERAL, so a retune moves the game and this with it;
+    // the literals that must SEE a retune are in the fixture arm at the top of this file.
+    expect(share.prize!.bps, 'her prize cut is the ramp at her real age').toBe(kidPrizeShareBps(age))
+    expect(share.sponsor!.bps, 'her sponsor cut is what the manager leaves').toBe(10_000 - managerCommissionBps())
+
+    // ⚠⚠ ...AND THE BLEND IS NEITHER OF THEM ON THIS WEEK, which is the defect stated as an
+    // assertion rather than described. If this ever passes because the two rates converged, the
+    // fixture has stopped being a mixed week and the arm above says so first.
+    expect(share.bps, 'the stored blend is not the prize rule').not.toBe(share.prize!.bps)
+    expect(share.bps, 'and not the sponsor rule either – it is an average of both').not.toBe(share.sponsor!.bps)
+  })
+
+  it('the parts are the SAME cents, split – never a second helping of them', () => {
+    const { world, week } = capWeekWithBonus()
+    const share = world.financeWeeks.find((w) => w.week === week)!.kidShare!
+    const parts = [share.prize!, share.sponsor!]
+    // Exact, in cents: the writer sums into both the parent row and the part at one commit point, so
+    // any drift here is a double-count or a lost cheque and not a rounding.
+    expect(parts.reduce((a, p) => a + p.cents, 0), 'the parts add up to her week').toBe(share.cents)
+    expect(parts.reduce((a, p) => a + p.baseCents, 0), 'and so do the grosses').toBe(share.baseCents)
+    // Each part is internally honest on its OWN money, which is what lets a sentence quote it: this
+    // is #10's identity applied per rule, where it is a real claim instead of a tautology.
+    for (const p of parts) {
+      expect(Math.abs(Math.round((p.baseCents * p.bps) / 10_000) - p.cents), `${p.bps}bps of ${p.baseCents}`)
+        .toBeLessThanOrEqual(3)
+    }
+  })
+
+  it('and the snapshot carries the split through, rounded once, in a fixed order', () => {
+    const { snap, world, week } = capWeekWithBonus()
+    const point = snap.finance.weekly12.find((p) => p.week === week)!
+    const share = world.financeWeeks.find((w) => w.week === week)!.kidShare!
+    expect(point.kidShareParts, 'the parts reached the wire').toBeTruthy()
+    expect(point.kidShareParts!.map((p) => p.source), 'prize first, so two weeks cannot print two orders')
+      .toEqual(['prize', 'sponsor'])
+    // Rounded ONCE at the snapshot boundary – `kidSharePct`'s own rule, applied per part.
+    expect(point.kidShareParts!.map((p) => p.pct)).toEqual([
+      Math.round(share.prize!.bps / 100),
+      Math.round(share.sponsor!.bps / 100),
+    ])
+    expect(point.kidShareParts!.reduce((a, p) => a + p.cents, 0)).toBe(point.kidShareCents)
+    // ⚠ AND THE BLEND IS STILL ON THE WIRE, deliberately: it is the only rate a save written before
+    // this item can offer, and the memo falls back to it. Removing it would break those weeks.
+    expect(point.kidSharePct, 'the legacy blend survives for the weeks that have nothing else').toBe(
+      Math.round(share.bps / 100),
+    )
+  })
+})

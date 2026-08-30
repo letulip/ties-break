@@ -147,11 +147,21 @@ describe('§1 – the elite ladder is the spec table, and each rung carries THRE
       // ...and it really is a year of the percentage divided by the year.
       expect(row.upkeepCents).toBe(Math.round((row.entryCents * shopItem(id)!.upkeepBps!) / 10_000 / WEEKS_PER_YEAR))
     }
-    // ⚠ ANTI-VACUITY: nothing that shipped in slice 1 has an upkeep, so a `upkeepBps` defaulted to
-    // some non-zero number would light up here rather than passing quietly.
-    for (const id of ['deposit', 'car-good', 'house-first', 'academy-land']) {
+    // ⚠ ANTI-VACUITY: a `upkeepBps` defaulted to some non-zero number would light up here rather
+    // than passing quietly.
+    //
+    // ⚠⚠ RE-AIMED AT ROUND 30 #15, AND `car-good` MOVED SIDES RATHER THAN BEING DROPPED. This list
+    // read «nothing that shipped in slice 1 has an upkeep» and named the good saloon among four
+    // free-to-keep rungs; the owner has since asked for the cars to cost something to keep («Для
+    // машин вполне можно ввести годовую стоимость обслуживания»), so that clause is no longer a
+    // fact about the shelf. What the arm was FOR – catching a default that gives upkeep to a rung
+    // that should have none – is intact on the three that genuinely have none, and the car is now
+    // asserted from the OTHER side one line down, which is a stronger reading of the same guard:
+    // it fails both if the free rungs start charging and if the car stops.
+    for (const id of ['deposit', 'house-first', 'academy-land']) {
       expect(rowOf(w, id).upkeepCents, `${id} costs nothing to keep`).toBe(0)
     }
+    expect(rowOf(w, 'car-good').upkeepCents, 'round 30 #15 – and a car now does').toBeGreaterThan(0)
   })
 })
 

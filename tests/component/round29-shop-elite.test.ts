@@ -37,6 +37,7 @@ import { formatCents } from '../../src/shared/money'
 import { rngFromSeed } from '../../src/engine/rng'
 import type { Snapshot } from '../../src/shared/protocol'
 import { assertDismissReachable, setViewport, PHONE } from './fits'
+import { shelfRow, shelfText } from './shelf'
 
 /** A real career, walked by the real engine – `shop-tab.test.ts`'s own recipe. */
 function walk(seed: string, weeks: number): WorldState {
@@ -79,8 +80,13 @@ async function mountShop(snapshot: Snapshot, attach = false) {
   return wrapper
 }
 
-const rowFor = (wrapper: ReturnType<typeof mount>, label: string) =>
-  wrapper.findAll('.shop-row').find((r) => r.text().includes(label))!
+// ⚠⚠ RE-AIMED, ROUND 30 #5 – THE SHELF HAS SIX SEGMENTS NOW. This used to be a synchronous
+// `findAll('.shop-row').find(...)` over the whole catalogue; a boat and an aeroplane live on
+// different tabs, so the row is reached by pressing the tab a player presses. Every assertion below
+// is the one it always made – the price, the wait, the upkeep, the hidden bonus's absence – and the
+// helper leaves the row's own segment open so a control on it can still be clicked.
+// `tests/component/shelf.ts` carries the argument and the owner's words.
+const rowFor = shelfRow
 
 beforeEach(() => {
   setActivePinia(createPinia())
@@ -89,7 +95,6 @@ beforeEach(() => {
 describe('§1 – every new rung is on the screen, at its real price', () => {
   it('⭐⭐ §3f – the commissioned rungs ON SALE render with the spec\'s own prices', async () => {
     const wrapper = await mountShop(toSnapshot(rich('r29-5-ui-prices')))
-    const text = wrapper.text()
     // §3f's table, as a person reads it. Literals, so a retune has to come through this file.
     // ⚠ RE-AIMED at part three P1 (the motor boat is the sailing yacht – same price) and part four
     // P10 (the long-range plane is RETIRED: no row for a family that does not own one, asserted
@@ -101,43 +106,59 @@ describe('§1 – every new rung is on the screen, at its real price', () => {
       ['The big yacht', '$28,000,000'],
       ['The plane', '$18,000,000'],
     ] as const) {
-      expect(rowFor(wrapper, label).text(), `${label} price`).toContain(price)
+      expect((await rowFor(wrapper, label)).text(), `${label} price`).toContain(price)
     }
-    expect(text, 'P10: the retired rung is simply not on the shelf').not.toContain('The long-range plane')
+    // ⚠ RE-AIMED, ROUND 30 #5 – read across the six segments. The absence below is the arm that
+    // needed it most: "not on the shelf" asserted against ONE open tab would have gone green on a
+    // rung that was merely one tab away, which is a dead guard rather than a check.
+    const shelf = await shelfText(wrapper)
+    expect(shelf, 'P10: the retired rung is simply not on the shelf').not.toContain('The long-range plane')
     // ...under their own family headings, which is §3's rule that a shop is families and not a list.
-    expect(text).toContain('On the water')
-    expect(text).toContain('In the air')
-    expect(text).toContain('Her academy')
+    // ⚠ AND THE HEADINGS ARE UNCHANGED WORD FOR WORD (invariant 4): the sub-tabs are named
+    // `Water` / `Air` / `Business` because those are the owner's spellings for the TABS, and the
+    // family headings under them still read exactly as they shipped.
+    expect(shelf).toContain('On the water')
+    expect(shelf).toContain('In the air')
+    expect(shelf).toContain('Her academy')
     wrapper.unmount()
   })
 
   it('⭐⭐ ...and each one carries the THIRD number: what it costs a week to keep', async () => {
     const wrapper = await mountShop(toSnapshot(rich('r29-5-ui-upkeep')))
     // §3f's own weekly figures, rounded to the dollar by `formatCents`.
-    expect(rowFor(wrapper, 'The launch').text()).toContain('$1,038 a week to keep')
-    expect(rowFor(wrapper, 'The yacht').text()).toContain('$23,077 a week to keep')
-    expect(rowFor(wrapper, 'The plane').text()).toContain('$27,692 a week to keep')
-    // ⚠ AND NOTHING THAT COSTS NOTHING SAYS IT DOES – a «$0.00 a week to keep» on every car would be
+    expect((await rowFor(wrapper, 'The launch')).text()).toContain('$1,038 a week to keep')
+    expect((await rowFor(wrapper, 'The yacht')).text()).toContain('$23,077 a week to keep')
+    expect((await rowFor(wrapper, 'The plane')).text()).toContain('$27,692 a week to keep')
+    // ⚠ AND NOTHING THAT COSTS NOTHING SAYS IT DOES – a «$0.00 a week to keep» on every rung would be
     // noise on a phone, and the shelf had eight rungs before this slice.
-    expect(rowFor(wrapper, 'The good saloon').text()).not.toContain('a week to keep')
-    expect(rowFor(wrapper, 'The land').text()).not.toContain('a week to keep')
+    //
+    // ⚠⚠ RE-AIMED AT ROUND 30 #15, AND THE CAR MOVED SIDES RATHER THAN BEING DROPPED. The owner has
+    // asked the cars to cost something to keep («Для машин вполне можно ввести годовую стоимость
+    // обслуживания»), so «the good saloon says nothing» stopped being a fact about the shelf. What
+    // this arm was FOR – a line that appears on rungs it means nothing on – is intact on the academy
+    // stage, and the car is now asserted from the OTHER side, which fails in both directions: if a
+    // free rung starts charging, or if the car stops.
+    expect((await rowFor(wrapper, 'The land')).text()).not.toContain('a week to keep')
+    expect((await rowFor(wrapper, 'The good saloon')).text(), 'round 30 #15 – and a car now does').toContain(
+      '$116 a week to keep',
+    )
     wrapper.unmount()
   })
 
   it('⭐ §3f – the WAIT is on the row before anything is ordered, and the control says «Order»', async () => {
     const wrapper = await mountShop(toSnapshot(rich('r29-5-ui-wait')))
-    const yacht = rowFor(wrapper, 'The yacht')
+    const yacht = (await rowFor(wrapper, 'The yacht'))
     expect(yacht.text()).toContain('Built to order')
     // ⚠ §3f's OWN UNITS – its table says «~3 years» for this rung and «~12 months» / «~18 months»
     // for the two below it, and the screen says the same. ⚠ WHOLE NUMBERS: an eighteen-month build
     // must never render as «1.5 years» (the owner's display ruling of 26.08).
     expect(yacht.text()).toContain('about 3 years')
-    expect(rowFor(wrapper, 'The launch').text()).toContain('about 12 months')
-    expect(rowFor(wrapper, 'The sailing yacht').text()).toContain('about 18 months')
+    expect((await rowFor(wrapper, 'The launch')).text()).toContain('about 12 months')
+    expect((await rowFor(wrapper, 'The sailing yacht')).text()).toContain('about 18 months')
     expect(wrapper.text(), 'no fractional wait anywhere on the shelf').not.toMatch(/\d+\.\d+ years/)
     expect(yacht.find('.shop-action').text()).toBe('Order it')
     // ...and a car is still bought.
-    expect(rowFor(wrapper, 'The good saloon').find('.shop-action').text()).toBe('Buy it')
+    expect((await rowFor(wrapper, 'The good saloon')).find('.shop-action').text()).toBe('Buy it')
     wrapper.unmount()
   })
 
@@ -147,7 +168,7 @@ describe('§1 – every new rung is on the screen, at its real price', () => {
     // screen here; the point it adds to a travelling week is not, and this is the case that a
     // careless implementation gets backwards.
     const wrapper = await mountShop(toSnapshot(rich('r29-5-ui-hidden')))
-    const plane = rowFor(wrapper, 'The plane').text()
+    const plane = (await rowFor(wrapper, 'The plane')).text()
     expect(plane).toContain('$18,000,000')
     expect(plane.toLowerCase()).not.toMatch(/condition|fatigue|tired|fresher|recover|\+1/)
     // ⚠ THE FAMILY NOTE MAY SAY WHAT THE MONEY DOES, and does – that half is not hidden.
@@ -172,7 +193,7 @@ describe('§2 – an ordered thing draws a date, and no Sell', () => {
   it('⭐⭐ the row says when it is due and offers nothing to sell', async () => {
     const snap = orderedSnapshot('r29-5-ui-order')
     const wrapper = await mountShop(snap)
-    const yacht = rowFor(wrapper, 'The yacht')
+    const yacht = (await rowFor(wrapper, 'The yacht'))
     expect(yacht.text()).toContain('On order')
     expect(yacht.text()).toContain('paid $12,000,000')
     expect(yacht.text()).toContain('cannot be sold before it is delivered')
@@ -195,14 +216,14 @@ describe('§3 – §3g, the academy: four stages, priced, in order', () => {
       ['The clubhouse', '$4,000,000'],
       ['The staff', '$3,000,000'],
     ] as const) {
-      expect(rowFor(wrapper, label).text(), `${label} price`).toContain(price)
+      expect((await rowFor(wrapper, label)).text(), `${label} price`).toContain(price)
     }
     // ⚠ §2's rule one storey up: never a locked row and never a progress bar. The price stays on
     // screen and the control is simply not pressable, with the stage under it named.
-    const courts = rowFor(wrapper, 'The courts')
+    const courts = (await rowFor(wrapper, 'The courts'))
     expect(courts.text()).toContain('The land has to come first')
     expect(courts.find('.shop-action').attributes('disabled')).toBeDefined()
-    expect(rowFor(wrapper, 'The land').find('.shop-action').attributes('disabled')).toBeUndefined()
+    expect((await rowFor(wrapper, 'The land')).find('.shop-action').attributes('disabled')).toBeUndefined()
     wrapper.unmount()
   })
 
@@ -210,11 +231,11 @@ describe('§3 – §3g, the academy: four stages, priced, in order', () => {
     const w = rich('r29-5-ui-half')
     buyAsset(w, 'academy-land')
     const wrapper = await mountShop(toSnapshot(w))
-    expect(rowFor(wrapper, 'The land').text()).toContain('Worth now')
-    const courts = rowFor(wrapper, 'The courts')
+    expect((await rowFor(wrapper, 'The land')).text()).toContain('Worth now')
+    const courts = (await rowFor(wrapper, 'The courts'))
     expect(courts.text(), 'the stage under it is built now').not.toContain('has to come first')
     expect(courts.find('.shop-action').attributes('disabled')).toBeUndefined()
-    expect(rowFor(wrapper, 'The clubhouse').text()).toContain('The courts has to come first')
+    expect((await rowFor(wrapper, 'The clubhouse')).text()).toContain('The courts has to come first')
     wrapper.unmount()
   })
 })
@@ -314,7 +335,7 @@ describe('§6 – the order asks first, and the question fits a phone', () => {
   it('⭐ the confirm names the money, the wait and the weekly bill', async () => {
     const w = rich('r29-5-ui-confirm')
     const wrapper = await mountShop(toSnapshot(w))
-    await rowFor(wrapper, 'The yacht').find('.shop-action').trigger('click')
+    await (await rowFor(wrapper, 'The yacht')).find('.shop-action').trigger('click')
     const card = wrapper.find('.dialog-card')
     expect(card.exists(), 'the confirm is up').toBe(true)
     expect(card.text()).toContain('Order The yacht for $12,000,000?')
@@ -335,7 +356,7 @@ describe('§6 – the order asks first, and the question fits a phone', () => {
     setViewport(PHONE)
     const w = rich('r29-5-ui-fit')
     const wrapper = await mountShop(toSnapshot(w), true)
-    await rowFor(wrapper, 'The big yacht').find('.shop-action').trigger('click')
+    await (await rowFor(wrapper, 'The big yacht')).find('.shop-action').trigger('click')
     const card = document.querySelector('.dialog-overlay .dialog-card')!
     const dismiss = document.querySelector('.dialog-overlay .dialog-actions')!
     expect(card, 'the confirm is up').toBeTruthy()

@@ -117,7 +117,7 @@ and are gone from this list. Rounds 4, 6, 9, 12, 13, 18, 19, 20, 21 and 23 have 
 **Round 16** ([round-16.md](../rounds/round-16.md)) – four.
 
 - #6, the intermittently empty W-card chance field; the latent path is live in `season/preview.ts` and it has never been reproduced. **Parked – needs a second sighting** · [injuries-gear-and-open-bugs.md](injuries-gear-and-open-bugs.md) #5
-- #8, kit wear on holiday – asked three times; `kitWearAt` still walks pure elapsed weeks with no vacation term. **Next** · [injuries-gear-and-open-bugs.md](injuries-gear-and-open-bugs.md) #1
+- ~~#8, kit wear on holiday~~ – ⚙ **SHIPPED 29.08, round 29 #20, after a FOURTH asking.** His 09.08 ruling («A VACATION PAUSES WEAR») is implemented: `gearRestWeeks` is written at `housekeep` before `prunePlannerBookings` discards the holiday, because `world.vacations` keeps only four trailing weeks and could never have answered «how many rest weeks fell in this span» – which is why three earlier passes called it a one-liner and none landed it. ⚠ The INJURY half of that ruling stays unruled by his own choice, 29.08: «давай пока не будем здесь ничего менять».
 - #10, `key`/`full` driving the match rather than the text; explicitly left alone by his own instruction. **his standing word** · [awaiting-his-word.md](awaiting-his-word.md) #4
 - #20, the wake lock during a match; zero `wakeLock` references in `src/`. **Next** · [the-quality-rig.md](the-quality-rig.md) #10
 

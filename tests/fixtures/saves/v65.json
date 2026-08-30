@@ -26752,7 +26752,22 @@
   "masseurSessionsPerWeek": 4,
   "masseurTravels": false,
   "peakPhysical": 57.422085721354264,
-  "assets": [],
+  "assets": [
+    {
+      "id": "index-fund",
+      "boughtWeek": 180,
+      "paidCents": 6000000,
+      "valueCents": 7420000,
+      "basisCents": 7100000,
+      "basisWeek": 280
+    },
+    {
+      "id": "car-good",
+      "boughtWeek": 150,
+      "paidCents": 11000000,
+      "valueCents": 9109100
+    }
+  ],
   "fieldSeasonTitles": {
     "wta1000": {
       "fp-63": 2,

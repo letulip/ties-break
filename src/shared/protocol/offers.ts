@@ -430,6 +430,38 @@ export interface ShopRowView {
    *  boundary rather than on screen – the owner's rule of 26.08, «у пользователя целые в
    *  интерфейсе», the same one `shownCondition` follows. */
   annualRatePct: number
+  /** ⭐⭐⭐ ROUND 30 #9 – HOW MANY YEARS OF ITS OWN INCOME THIS RUNG IS WORTH, or null on every rung
+   *  that is not a business (which is all but one of them today).
+   *
+   *  ⚠ IT IS ON THE VIEW BECAUSE `annualRatePct` CANNOT DESCRIBE THIS RUNG. A merch brand's worth is
+   *  not what was paid for it worn down by a rate – it is years of what it takes in, and its rate is
+   *  a dead 0. A screen reading only the rate would say «neither gains nor loses» about the one thing
+   *  on the shelf whose value moves with her career, which is exactly the sentence round 30 #11 is
+   *  about. See `assetWorthCents`' third branch.
+   *
+   *  ⚠⚠ ROUND 30 #23 – IT IS THE CAREER'S OWN MULTIPLE AND NOT THE CATALOGUE CONSTANT, and the
+   *  distinction is load-bearing since 30.08: the rung's `ShopItem.earningsMultipleX` is now the BASE
+   *  a brand starts at, and `world/brand.ts` adds what her seasons, her top-20 finishes, her finals
+   *  and her win rate earned on top. So this field MOVES over a career, where it used to be a
+   *  constant, and a consumer that compares it against the catalogue is comparing two different
+   *  numbers. WHOLE, rounded once in `shopView` – «у пользователя целые в интерфейсе». */
+  earningsMultipleX: number | null
+  /** ⭐⭐⭐ ROUND 30 #8 AND #10 – WHAT THE FAMILY CALLED THIS FAMILY OF RUNGS, or null on a rung whose
+   *  family carries no name (every car, house, boat, plane and investment) and on one it has not
+   *  bought yet. ⚠ IT IS THE **FAMILY'S** NAME AND NOT THE ROW'S, so all four academy stages read the
+   *  same string – the institution has one name and it was given when the land was bought. */
+  name: string | null
+  /** ⭐⭐⭐ ROUND 30 #8 AND #10 – THE NAMES THE GAME OFFERS FOR THIS PURCHASE, best first, and EMPTY
+   *  on every row that is not about to name anything.
+   *
+   *  ⚠⚠ NON-EMPTY IS THE PREDICATE THE SCREEN DRAWS THE PICKER ON, and the engine decides it – a
+   *  nameable family the household does not own yet. The screen never works out whether a purchase
+   *  names something; `buyAsset` re-derives the same question and would ignore a name it did not ask
+   *  for (invariant 1: every command is re-validated engine-side).
+   *
+   *  ⚠ EVERY ENTRY IS ALREADY SANITISED AND WITHIN `ASSET_NAME_MAX_CHARS`, so a suggestion is
+   *  something the player could have typed and the chip and the field cannot disagree about length. */
+  nameOptions: string[]
   /** what the family paid for it, or null when it does not own one. */
   paidCents: number | null
   /** what it is worth now (the stored `valueCents`), or null when it does not own one. */
@@ -443,6 +475,28 @@ export interface ShopRowView {
   changePct: number | null
   /** which week it was bought, so the screen can say how long they have had it. Null when unowned. */
   boughtWeek: number | null
+  /** ⭐⭐⭐ ROUND 30 #14 – WHAT ONE UNIT COSTS THIS WEEK, in whole cents. Null on every rung that is
+   *  not held in units, which is every car, house, boat, plane, academy stage and business.
+   *
+   *  THE OWNER: «доли… будут давать разные точки входа, как в жизни.» The entry price is a fact
+   *  about the WEEK and not about the family, so it is on the row whether or not they own one –
+   *  that is what makes «зашёл на пике при цене 7-8к» a thing a player can see himself doing. */
+  unitPriceCents: number | null
+  /** ...HOW MANY THEY HOLD. Null when unowned or when the rung is not unit-priced.
+   *
+   *  ⚠ THE ONE FRACTIONAL FIGURE ON THIS VIEW, and it is deliberate: units are a COUNT of shares,
+   *  not money, and $5,000 into a $4,000 unit is 1.25 of them. The owner's «у пользователя целые в
+   *  интерфейсе» is about money – rounding this would hide a quarter of a holding. Two places on
+   *  screen; `tests/shop.test.ts`'s whole-numbers arm names it as the exception it is. */
+  unitsHeld: number | null
+  /** ...AND THE PRICE THEY AVERAGED AT, in whole cents – `paidCents / units`. Null when unowned or
+   *  not unit-priced.
+   *
+   *  ⭐⭐ THE NUMBER THE DECISION IS MADE AGAINST. Below today's price and the family is up; above it
+   *  and «усредниться или зафиксировать убыток» is a real fork rather than a feeling. It moves only
+   *  when they BUY – a part sale takes the same fraction of the cash and of the units, so realising
+   *  a loss leaves the average where it was. */
+  avgUnitPriceCents: number | null
   /** can the family afford to open this rung THIS WEEK? False never hides the row and never draws a
    *  progress bar (§2: «never a locked row, a progress bar or a teaser») – the price stays on screen
    *  and the control is simply not pressable. */

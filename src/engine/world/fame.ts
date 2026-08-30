@@ -35,7 +35,11 @@ import type { WorldState } from '../world'
 /** How much of a step survives `delta` weeks after the event – 1 fresh, half at the half-life,
  *  never negative and never amplifying (an event in the future contributes nothing: it has not
  *  happened, and fame is an account of what has). */
-function decayAt(deltaWeeks: number): number {
+// ⭐ EXPORTED SINCE ROUND 30 #23 (30.08) so `world/brand.ts` can decay the crowd ledger on the SAME
+// half-life rather than keeping a second copy of this curve. One definition, many readers – the rule
+// `world/business.ts` states and the one a copied three-line decay would quietly break the day the
+// half-life is retuned.
+export function decayAt(deltaWeeks: number): number {
   if (deltaWeeks < 0) return 0
   return Math.pow(0.5, deltaWeeks / ECONOMY.fame.halfLifeWeeks)
 }
@@ -54,12 +58,18 @@ export function fameFloorOf(world: WorldState, week: number): number {
   // the one runner-up plate the world remembers – `finals` means she LOST the final (the trophy
   // ledger's own contract), so a Slam title never counts twice.
   for (const w of world.trophiesByTier?.slam?.finals ?? []) floor += F.slamFinalFloor * decayAt(week - w)
-  // seasons ended inside the top 10, decaying from each season's own wrap – the wrap fires on the
-  // season's last week, so the date is the row's own identity and nothing new is stored.
+  // Seasons ended inside a band the world notices, decaying from each season's own wrap – the wrap
+  // fires on the season's last week, so the date is the row's own identity and nothing new is
+  // stored. ⚠ BEST MATCHING BAND ONLY, once per season: `academy.reputationBands`' own rule, so a
+  // top-10 season is a top-10 season and never also a top-20 one.
+  // ⚠⚠ AS SHIPPED THE LADDER HAS ONE RUNG AND THIS IS THE OLD `top10SeasonFloor` LINE EXACTLY – see
+  // the constant's header, and round 30 #24 for the question a second rung would answer.
   for (const row of world.seasonHistory ?? []) {
     const endRank = row.byTrack?.wta?.endRank
-    if (endRank == null || endRank > 10) continue
-    floor += F.top10SeasonFloor * decayAt(week - (row.seasonIndex + 1) * WEEKS_PER_YEAR)
+    if (endRank == null) continue
+    const band = F.seasonEndBands.find((b) => endRank <= b.maxEndRank)
+    if (!band) continue
+    floor += band.add * decayAt(week - (row.seasonIndex + 1) * WEEKS_PER_YEAR)
   }
   return Math.min(F.cap, floor)
 }

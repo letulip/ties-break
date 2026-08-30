@@ -24,6 +24,7 @@ import { mount, type VueWrapper } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
 import MoneyScreen from '../../src/components/screens/MoneyScreen.vue'
 import { useGameStore } from '../../src/stores/game'
+import { openBillsTab } from './shelf'
 import { createWorld, toSnapshot, KID_ID, type WorldState } from '../../src/engine/world'
 import { acceptOffer, reviewAdOffer } from '../../src/engine/world/sponsors'
 import { adCategoryOf, adWritesAt } from '../../src/engine/offers'
@@ -65,6 +66,11 @@ async function mountBills(snap: Snapshot): Promise<VueWrapper> {
   const bills = wrapper.findAll('button.tab-pill').find((n) => n.text().trim() === 'Bills')
   expect(bills, 'the Bills tab control').toBeTruthy()
   await bills!.trigger('click')
+  // ⚠ RE-AIMED, ROUND 30 #5 – Bills has two segments now (`Her Kit` / `Advs Portfolio`, his own
+  // spellings) and the portfolio is behind the second. Every assertion in this file is the one it
+  // always made; what changed is that the page needs one more press to reach the card, exactly as a
+  // player's does. tests/component/shelf.ts carries the argument.
+  await openBillsTab(wrapper, 'Advs Portfolio')
   return wrapper
 }
 

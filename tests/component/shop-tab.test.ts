@@ -18,6 +18,11 @@ import { createWorld, tickWeek, toSnapshot, buyAsset, skipTournament, closeTourn
 import { rngFromSeed } from '../../src/engine/rng'
 import type { Snapshot } from '../../src/shared/protocol'
 import { assertDismissReachable, setViewport, PHONE } from './fits'
+// ⭐⭐ ROUND 30 #5 – THE SHELF HAS SIX SEGMENTS NOW, so a mounted test reaches a rung by pressing the
+// tab a player would press. Every claim in this file is the one it always made; what changed is the
+// route to the row. The helpers' own header carries the argument, including why «every rung is on
+// the shelf» is now walked rather than counted in one document.
+import { allShelfRows, shelfRow, shelfText } from './shelf'
 
 /** A real career, walked by the real engine – `tests/helpers/career.ts`'s own recipe, kept local
  *  because these fixtures need the world afterwards (the professional mark, the purchase) and that
@@ -78,6 +83,12 @@ describe('the shelf is a fourth chapter of the Budget tab, and nothing else', ()
     expect(wrapper.find('.money-summary').exists()).toBe(false)
     expect(wrapper.find('.money-kit').exists()).toBe(false)
     expect(wrapper.find('.money-shop').exists()).toBe(true)
+    // ⚠ RE-AIMED, ROUND 30 #5: `.money-shop` is now the «The shelf» plate at the head of the
+    // chapter and the rungs are free-standing cards in `.shelf-feed` beneath it – «карточки лежат
+    // без общей подложки». Both are asserted, because "the shelf is one chapter" is the claim and
+    // it is now made by two elements.
+    expect(wrapper.find('.shelf-feed').exists(), 'the rungs are laid on the page').toBe(true)
+    expect(wrapper.find('.shelf-tabs').exists(), 'and the shelf has its own tabs').toBe(true)
     wrapper.unmount()
   })
 
@@ -93,19 +104,26 @@ describe('the shelf is a fourth chapter of the Budget tab, and nothing else', ()
     expect(snap.ageYears, 'the fixture really is a junior career').toBeLessThan(16)
     const wrapper = await mountShop(snap)
     // EVERY rung is drawn – the shelf is a window, and it is open.
-    expect(wrapper.findAll('.shop-row')).toHaveLength(snap.shop.rows.length)
-    expect(wrapper.findAll('.shop-row').length).toBeGreaterThan(5)
+    // ⚠ RE-AIMED, ROUND 30 #5, AND THE CLAIM IS UNCHANGED: §2's rule is that every price is on
+    // screen whether the family can reach it or not, and with six segments the honest form of that
+    // is REACHABLE ACROSS THE SIX rather than present in one document. `allShelfRows` presses each
+    // tab in turn – if a rung fell out of the map in `SHELF_TAB_FAMILIES` it would go missing here.
+    const everyRung = await allShelfRows(wrapper)
+    expect(everyRung).toHaveLength(snap.shop.rows.length)
+    expect(everyRung.length).toBeGreaterThan(5)
     // ⚠ AND THE THREE PROHIBITIONS OF §2 STILL HOLD, which is the half of the old arm that survives
     // his ruling untouched: no locked row, no progress bar, no teaser. They are asserted as
     // absences because that is the only way to test a rule written as a prohibition.
-    expect(wrapper.findAll('.money-shop progress')).toHaveLength(0)
-    expect(wrapper.text(), 'no locked sentence is left to print').not.toContain('opens with her professional career')
+    // ⚠ RE-AIMED at `.shelf-feed`, which is where the rungs live now – asserted against
+    // `.money-shop` it would have been a check on a plate that no longer contains a single row.
+    expect(wrapper.findAll('.shelf-feed progress')).toHaveLength(0)
+    expect(await shelfText(wrapper), 'no locked sentence is left to print').not.toContain('opens with her professional career')
     // ⚠⚠ AND SOMETHING IS ACTUALLY PRESSABLE AT FOURTEEN – a shelf drawn but dead would be the
     // «locked row» §2 forbids wearing a different hat. The deposit is the cheapest rung at $1,000
     // and this family's starting funds clear it, so its control is live.
-    const deposit = wrapper.findAll('.shop-row').find((r) => r.text().includes('A savings deposit'))
+    const deposit = await shelfRow(wrapper, 'A savings deposit')
     expect(deposit, 'the deposit is on the junior shelf').toBeTruthy()
-    const button = deposit!.findAll('button.shop-action').find((b) => b.text().includes('Put it in'))
+    const button = deposit.findAll('button.shop-action').find((b) => b.text().includes('Put it in'))
     expect(button, 'and it has a control').toBeTruthy()
     expect(button!.attributes('disabled'), 'which a fourteen-year-old family can really press').toBeUndefined()
     wrapper.unmount()
@@ -116,13 +134,17 @@ describe('the shelf is a fourth chapter of the Budget tab, and nothing else', ()
     const wrapper = await mountShop(snap)
     const text = wrapper.text()
     // The engine chose the row and the words quote it – the screen does not sort the catalogue.
+    // ⚠ THIS SENTENCE IS ON THE «The shelf» PLATE, which is above the tabs and true on all six, so
+    // it is still read off the chapter as it opens.
     expect(snap.shop.cheapestId).toBe('deposit')
     expect(text).toContain('The cheapest thing here is')
     expect(text).toContain('A savings deposit')
     expect(text).toContain('$1,000')
     // ...and every rung is on the shelf, priced, whether the family can reach it or not.
-    expect(wrapper.findAll('.shop-row')).toHaveLength(snap.shop.rows.length)
-    expect(text).toContain('$300,000')
+    // ⚠ RE-AIMED, ROUND 30 #5 – walked across the six segments; $300,000 is a car and lives one tab
+    // away from the one the chapter opens on, which is precisely why the walk is the assertion.
+    expect(await allShelfRows(wrapper)).toHaveLength(snap.shop.rows.length)
+    expect(await shelfText(wrapper)).toContain('$300,000')
     wrapper.unmount()
   })
 })
@@ -144,7 +166,9 @@ describe('what the shelf says about a thing the family owns', () => {
     expect(row.changeCents).toBe(-18_909_00)
     expect(row.changePct).toBe(-17)
     const wrapper = await mountShop(snap)
-    const text = wrapper.text()
+    // ⚠ RE-AIMED, ROUND 30 #5: a car lives on the `Cars` segment, so the text this arm reads is the
+    // shelf's across its six tabs rather than the one page that happens to be open first.
+    const text = await shelfText(wrapper)
     expect(text).toContain('$110,000') // paid
     expect(text).toContain('$91,091') // worth now
     expect(text).toContain('-$18,909') // the loss, signed
@@ -161,6 +185,9 @@ describe('what the shelf says about a thing the family owns', () => {
 
   it('⭐ a rung that is owned offers a SALE at the stored value and no second Buy', async () => {
     const wrapper = await mountShop(ownedSnapshot('shop-ui-sell'))
+    // ⚠ RE-AIMED, ROUND 30 #5 – the car's own segment, opened the way a player opens it.
+    const car = await shelfRow(wrapper, 'The good saloon')
+    expect(car, 'the owned car is on the shelf').toBeTruthy()
     const actions = wrapper.findAll('.shop-action').map((b) => b.text())
     expect(actions.some((t) => t === 'Sell it for $91,091')).toBe(true)
     // One row per rung, and the owned one cannot be bought again – the engine refuses a second copy,
@@ -172,8 +199,8 @@ describe('what the shelf says about a thing the family owns', () => {
   it('⚠ a rung the family cannot afford keeps its price and loses only its control', async () => {
     const snap = toSnapshot(professional(walk('shop-ui-afford', 20)))
     const wrapper = await mountShop(snap)
-    const rows = wrapper.findAll('.shop-row')
-    const unreasonable = rows.find((r) => r.text().includes('The unreasonable one'))!
+    // ⚠ RE-AIMED, ROUND 30 #5 – found by pressing its tab, asserted exactly as before.
+    const unreasonable = await shelfRow(wrapper, 'The unreasonable one')
     expect(unreasonable.text(), 'the price is still on screen').toContain('$300,000')
     expect(unreasonable.find('.shop-action').attributes('disabled')).toBeDefined()
     wrapper.unmount()
@@ -187,10 +214,9 @@ describe('the purchase asks first, and the question fits a phone', () => {
     // different row than it means to.
     snap.fundsCents = 70_000_00
     const wrapper = await mountShop(snap)
-    const buy = wrapper
-      .findAll('.shop-row')
-      .find((r) => r.text().includes('The sensible estate'))!
-      .find('.shop-action')
+    // ⚠ RE-AIMED, ROUND 30 #5 – `shelfRow` leaves the row's own segment open, so the control it
+    // returns is the one on screen and the click is the click a player makes.
+    const buy = (await shelfRow(wrapper, 'The sensible estate')).find('.shop-action')
     await buy.trigger('click')
     const card = wrapper.find('.dialog-card')
     expect(card.exists(), 'the confirm is up').toBe(true)
@@ -203,11 +229,8 @@ describe('the purchase asks first, and the question fits a phone', () => {
     const snap = toSnapshot(professional(walk('shop-ui-fit', 20)))
     snap.fundsCents = 70_000_00
     const wrapper = await mountShop(snap, true)
-    await wrapper
-      .findAll('.shop-row')
-      .find((r) => r.text().includes('The sensible estate'))!
-      .find('.shop-action')
-      .trigger('click')
+    // ⚠ RE-AIMED, ROUND 30 #5 – same row, reached through its segment.
+    await (await shelfRow(wrapper, 'The sensible estate')).find('.shop-action').trigger('click')
     const card = document.querySelector('.dialog-overlay .dialog-card')!
     const dismiss = document.querySelector('.dialog-overlay .dialog-actions')!
     expect(card, 'the confirm is up').toBeTruthy()

@@ -22,6 +22,31 @@
 //     RED.
 //   * `tone="plain"` back to the old `:tone="… ? 'negative' : 'positive'"` -> the #9 arm RED, alone.
 //
+// ⚠⚠ ROUND 30 #14 RE-AIMED THE COMPOUNDING ARM A SECOND TIME AND DELETED NOTHING. His ruling made a
+// holding a count of UNITS bought at the price of their own week, so the assertion that used to
+// reproduce the REBASE by hand now names all three tranches and their three prices – strictly
+// sharper than what it replaces, because it can see an entry the rebase had folded away. ⚠ The two
+// #11 claims it carries are untouched: the cash is the cash, and a tranche is worth what its own
+// entry bought.
+//
+// ⚠ MEASURED, not predicted, three applied alone to the engine and reverted:
+//   * `buyAsset`'s price read off `held?.boughtWeek` instead of `world.week` (the back-dating this
+//     arm is named for) -> the compounding arm RED on BOTH rungs of the `describe.each`, plus the
+//     shelf-line arm below.
+//   * `avgUnitPriceCents` reading `valueCents` instead of `paidCents` -> the compounding arm RED on
+//     both rungs, ALONE in this file – the average-price block at the end of it is what speaks.
+//   * `householdWeekly`'s shelf line forced flat -> «the shelf line is the REAL week-over-week move»
+//     RED, ALONE. ⭐ THAT IS THE LATENT FLAKE OF ROUND 29 PART THREE #16 RE-CHECKED: it was narrowed
+//     from `toBeGreaterThan(0)` to `not.toBe(0)` because a market rung's weekly sign is a fact about
+//     the seed, and the narrowed form still fails on the defect it is for.
+//
+// ⚠⚠ AND THE OTHER LATENT FLAKE WAS RE-CHECKED THE SAME WAY, with a result worth writing down. The
+// directional line at the end of the compounding arm (`if (!item.volBps) … toBeLessThan(backDated)`)
+// cannot be made red by back-dating – it is arithmetically implied whenever the deposit's price only
+// goes UP. It IS red under `annualRateBps: 317 -> -317` on the deposit, watched with every other
+// assertion in the arm blinded, so what it really guards is «the dull rung is the one that only goes
+// up». That is a smaller claim than it looks and it is now written down rather than assumed.
+//
 // ⚠⚠ THREE ASSERTIONS WERE RE-AIMED BY ROUND 29 PART THREE #16, and each carries its reason at its
 // own line rather than here. The fund now rides a seeded market (`world/market.ts`), so an
 // expectation written as the smooth curve is no longer the engine's arithmetic. ⚠ ONE OF THEM WENT
@@ -34,8 +59,9 @@ import MoneyScreen from '../../src/components/screens/MoneyScreen.vue'
 import TierGuide from '../../src/components/TierGuide.vue'
 import '../../src/style.css'
 import { useGameStore } from '../../src/stores/game'
+import { shelfRow } from './shelf'
 import {
-  assetValueCents,
+  avgUnitPriceCents,
   buyAsset,
   createWorld,
   ownedAssets,
@@ -46,7 +72,7 @@ import {
   toSnapshot,
   type WorldState,
 } from '../../src/engine/world'
-import { marketRatio } from '../../src/engine/world/market'
+import { unitPriceCents } from '../../src/engine/world/assets'
 import { rngFromSeed } from '../../src/engine/rng'
 import type { Snapshot } from '../../src/shared/protocol'
 
@@ -157,50 +183,56 @@ describe.each(['deposit', 'index-fund'] as const)('round 29 #11 – %s takes top
     const item = shopItem(itemId)!
     const held = t.held()
 
-    // The value at the moment of the second top-up is the FIRST rebase grown over the 26 weeks since
-    // it was struck – not the whole stake grown from `openedWeek`, which is what a naive
-    // `paidCents += more` would have produced.
+    // ⚠⚠ RE-AIMED A SECOND TIME, AT ROUND 30 #14, AND THE CLAIM IS THE SAME ONE #11 WROTE: a tranche
+    // is worth what its OWN entry bought, never what the first purchase's entry would have bought.
+    // What moved is how the engine says it. There is no rebase left to assert – money buys UNITS at
+    // the price of its own week – so the arm is written in units, which is also the form that makes
+    // the claim exact rather than approximate: three tranches, three prices, one multiplication.
     //
-    // ⚠⚠ RE-AIMED, NOT WIDENED, AT ROUND 29 PART THREE #16 – and it went RED first, which is the
-    // whole reason this note exists. The fund now rides a seeded market, so «grown over the 26 weeks
-    // since it was struck» is `(1+r)^(26/52)` TIMES `index(now)/index(firstTopUpWeek)`. The old
-    // three-argument form was asserting the smooth curve against an engine that had stopped drawing
-    // it. ⚠ The CLAIM is unchanged and is still #11's: a tranche compounds over its own span. Part
-    // three #16 only adds a second half to it – a tranche also ENTERS THE MARKET at its own index –
-    // and `marketRatio` from `firstTopUpWeek` is that sentence. The deposit passes `volBps ?? 0` and
-    // gets exactly the arithmetic this line has always done.
-    expect(t.worthBeforeSecondTopUp).toBe(
-      assetValueCents(
-        item,
-        t.worthBeforeFirstTopUp + TOP_1,
-        t.world.week - t.firstTopUpWeek,
-        marketRatio(t.world.seed, t.firstTopUpWeek, t.world.week, item.volBps ?? 0),
-      ),
-    )
-    // And the holding now stands at that worth plus the money just added – the clock restarted here.
+    // ⚠ THE OLD FORM ASSERTED `assetValueCents(worthBeforeFirstTopUp + TOP_1, 26 weeks, ratio)`, i.e.
+    // the rebase reproduced by hand. That equality is gone with the field it was about; this one
+    // replaces it and is STRICTLY sharper – it names every tranche instead of the last restatement.
+    const units =
+      OPEN / unitPriceCents(t.world.seed, t.openedWeek, item) +
+      TOP_1 / unitPriceCents(t.world.seed, t.firstTopUpWeek, item) +
+      TOP_2 / unitPriceCents(t.world.seed, t.world.week, item)
+    expect(held.units!).toBeCloseTo(units, 8)
+    expect(held.valueCents).toBe(Math.round(units * unitPriceCents(t.world.seed, t.world.week, item)))
+    // ...and the worth at the moment of the second top-up plus the money just added is still the
+    // holding, to the cent – #11's own sentence, which units keep true without restating anything.
     expect(held.valueCents).toBe(t.worthBeforeSecondTopUp + TOP_2)
-    expect(held.basisCents).toBe(t.worthBeforeSecondTopUp + TOP_2)
-    expect(held.basisWeek).toBe(t.world.week)
+    // ⚠ NO REBASE ANYWHERE ON THE ROW. `basisWeek` is the COMMISSIONED clock now and nothing else
+    // writes it, so a fund that has been topped up twice must not carry one.
+    expect(held.basisWeek, 'a top-up restarts no clock any more').toBeUndefined()
     // ⚠ THE ORIGINAL PURCHASE WEEK IS NOT REWRITTEN – it still says when the family opened this.
     expect(held.boughtWeek).toBe(t.openedWeek)
 
-    // ⭐ THE BACK-DATING MUTATION, NAMED EXACTLY: had the new money been treated as though it had
-    // been there since week one (`paidCents += more`, no rebase), the holding would be worth this.
-    const backDated = assetValueCents(
-      item,
-      OPEN + TOP_1 + TOP_2,
-      t.world.week - t.openedWeek,
-      marketRatio(t.world.seed, t.openedWeek, t.world.week, item.volBps ?? 0),
+    // ⭐ THE BACK-DATING MUTATION, NAMED EXACTLY: had every tranche been treated as though it had
+    // been bought at the OPENING price, the holding would hold this many units and be worth this.
+    const backDated = Math.round(
+      ((OPEN + TOP_1 + TOP_2) / unitPriceCents(t.world.seed, t.openedWeek, item)) *
+        unitPriceCents(t.world.seed, t.world.week, item),
     )
     expect(held.valueCents).not.toBe(backDated)
-    // ⚠⚠ AND THE DIRECTION IS ASSERTED ONLY WHERE IT IS GUARANTEED – re-aimed at part three #16 and
-    // NARROWED on purpose. On a rate-only rung, back-dating money onto an appreciating curve can only
-    // make it worth MORE, so the inequality is arithmetic. On a MARKET rung it is not: the extra
-    // tranches would also have ridden `index(openedWeek) -> index(now)`, and if the market fell over
-    // that span the back-dated holding is worth LESS. The old unconditional `toBeLessThan` passed on
-    // this seed by luck, which is a latent flake and not a guard. The equality above is what carries
-    // the claim for the fund; this is the deposit's cheap corroboration of it.
+    // ⚠⚠ AND THE DIRECTION IS ASSERTED ONLY WHERE IT IS GUARANTEED – the round 29 part three #16
+    // narrowing, kept verbatim in its reasoning. On a rate-only rung the opening price is the lowest
+    // of the three by arithmetic, so back-dating can only buy MORE units. On a MARKET rung it is
+    // not: if the market fell after the opening, a later tranche bought its units cheaper. The old
+    // unconditional `toBeLessThan` passed on this seed by luck, which is a latent flake and not a
+    // guard – it is still narrowed, and the equality above is what carries the claim for the fund.
     if (!item.volBps) expect(held.valueCents).toBeLessThan(backDated)
+    // ⭐⭐ ROUND 30 #14 – AND THE AVERAGE PRICE IS THE THING HE ASKED TO SEE: the cash over the units,
+    // which is a real weighted average of the three entry prices and therefore strictly between the
+    // cheapest and the dearest of them.
+    const prices = [
+      unitPriceCents(t.world.seed, t.openedWeek, item),
+      unitPriceCents(t.world.seed, t.firstTopUpWeek, item),
+      unitPriceCents(t.world.seed, t.world.week, item),
+    ]
+    const avg = avgUnitPriceCents(held)!
+    expect(avg).toBeCloseTo((OPEN + TOP_1 + TOP_2) / units, 6)
+    expect(avg).toBeGreaterThanOrEqual(Math.min(...prices))
+    expect(avg).toBeLessThanOrEqual(Math.max(...prices))
   })
 
   it('⭐ and the screen shows the topped-up holding and offers to add again', async () => {
@@ -225,9 +257,11 @@ describe('round 29 #11 – the household meter and the ledger agree after a top-
     // ⚠⚠ THE DEFECT THIS ARM CAUGHT, IN THIS WAVE. `householdWeekly` computes what one more week of
     // holding does to the shelf as `assetValueCents(held + 1) - assetValueCents(held)`, and it was
     // reading `paidCents` / `boughtWeek`. After a top-up those are no longer the compounding inputs
-    // – `revalueAssets` reads the REBASED basis – so the meter and the till would have quietly
+    // – `revalueAssets` read the REBASED basis – so the meter and the till would have quietly
     // disagreed about the same holding, which is the «two functions asking one question» defect this
-    // repo names as its most-repeated. Both now read `basisCents ?? paidCents`.
+    // repo names as its most-repeated. ⭐ ROUND 30 #14 removed the way for them to disagree rather
+    // than keeping them in step: both call `assetWorthCents`, and on a unit-priced row that is
+    // `units × price(week)` with no basis to read wrongly.
     const t = toppedUpTwice('r29-household', 'index-fund')
     const before = t.held().valueCents
     const shelf = toSnapshot(t.world).coachBilling.household.shelfCents
@@ -254,7 +288,9 @@ describe('round 29 #11 – a car is still a car', () => {
     expect(() => buyAsset(world, 'car-sensible')).toThrow('already owns')
 
     const wrapper = await mountShop(toSnapshot(world))
-    const node = wrapper.findAll('.shop-row').find((r) => r.text().includes('The sensible estate'))!
+    // ⚠ RE-AIMED, ROUND 30 #5 – a car lives on the `Cars` segment of the shelf now, so the row is
+    // reached by pressing that tab. The claim is untouched. See tests/component/shelf.ts.
+    const node = await shelfRow(wrapper, 'The sensible estate')
     expect(node.findAll('.shop-action').map((b) => b.text())).not.toContain('Put more in')
     wrapper.unmount()
   })
@@ -272,7 +308,9 @@ describe('round 29 #9 – a depreciated value is not an error', () => {
     expect(row.changeCents!, 'the fixture really has depreciated').toBeLessThan(0)
 
     const wrapper = await mountShop(snap)
-    const node = wrapper.findAll('.shop-row').find((r) => r.text().includes('The sensible estate'))!
+    // ⚠ RE-AIMED, ROUND 30 #5 – a car lives on the `Cars` segment of the shelf now, so the row is
+    // reached by pressing that tab. The claim is untouched. See tests/component/shelf.ts.
+    const node = await shelfRow(wrapper, 'The sensible estate')
     const worth = node.findAll('.tb-statrow').find((r) => r.text().includes('Worth now'))!
     // ⚠⚠ THE RENDERED TOKEN, NOT THE SOURCE LINE. `plain` is StatRow's `--ink` – white – and its own
     // documented sense is «a number with no direction (a count, a balance)», which is exactly what a
@@ -291,13 +329,21 @@ describe('round 29 #9 – a depreciated value is not an error', () => {
 // FOLDED IN FROM THE ROUND-29 AUDIT – two labels on surfaces this wave was already inside.
 // =================================================================================================
 
-describe('round 27 #8 (folded in) – the two «season» figures say which season they mean', () => {
-  it('⭐⭐ the spending period says SO FAR and the history card says COMPLETED', async () => {
-    // ⚠⚠ THE ARITHMETIC WAS NEVER WRONG, which is why this is a label test and not a sum test. The
-    // owner: «в History расход за сезон написан 36 тысяч, а на вкладке расходов 25 тысяч ... явно
-    // что-то не ладно с нашей математикой». Both figures were right about DIFFERENT seasons – the
-    // period switcher folds the season still running, the history card lists seasons that wrapped –
-    // and neither surface said which. He is owed the words, not a repair.
+describe('round 30 #4 – the spending period is HIS word, and it is back', () => {
+  // ⚠⚠ RE-AIMED, NOT DELETED (round 30 #4). This assertion shipped in round 29 pointing the other
+  // way – it demanded `So far` and forbade `This season`, because the round-27 #8 fold renamed the
+  // tab on the way past. THE OWNER, 30.08: «В Family budget вкладка This season изменилась на So
+  // far. Я это не просил. Верни как было пожалуйста». The pin is the record of what the label used
+  // to be asserted to be, so it turns round instead of going away, and it now guards the restored
+  // word against the next agent who thinks it reads better another way (CLAUDE.md invariant 4).
+  //
+  // ⚠ ROUND 27 #8 IS STILL TRUE AND STILL UNSOLVED. «в History расход за сезон написан 36 тысяч, а
+  // на вкладке расходов 25 тысяч» – both figures were right about DIFFERENT seasons (this switcher
+  // folds the season still running; the history card lists seasons that wrapped) and the ARITHMETIC
+  // WAS NEVER WRONG. The rename was never the fix, so restoring the word re-opens no defect. The
+  // history card's own eyebrow is left exactly as round 29 left it – he did not ask about it, and
+  // changing it back would be a second unasked wording change.
+  it('⭐⭐ the period switcher says «This season», the word he had before round 29', async () => {
     const world = professional(walk('r29-season-labels', 20))
     // ⚠ NOT `mountShop` – the period switcher lives on the SPENDING chapter, which is where the
     // screen opens, and pressing Shop would `v-if` it straight back out of the document.
@@ -306,12 +352,14 @@ describe('round 27 #8 (folded in) – the two «season» figures say which seaso
 
     const periods = wrapper.findAll('.money-window button.tab-pill').map((b) => b.text().trim())
     expect(periods.length, 'the period switcher is on screen').toBeGreaterThan(0)
-    expect(periods.join(' '), 'the running season is named as unfinished').toMatch(/So far/)
-    expect(periods.join(' '), 'and no longer as a bare «This season»').not.toContain('This season')
+    expect(periods.join(' '), 'his word, restored').toContain('This season')
+    expect(periods.join(' '), 'and the round-29 rename is gone').not.toMatch(/So far/)
 
     const history = wrapper.findAll('button.tab-pill').find((n) => n.text().trim() === 'History')!
     await history.trigger('click')
-    expect(wrapper.text(), 'the other side of the same confusion').toContain('Completed seasons')
+    expect(wrapper.text(), 'the history card is untouched – he did not ask').toContain(
+      'Completed seasons',
+    )
     wrapper.unmount()
   })
 })

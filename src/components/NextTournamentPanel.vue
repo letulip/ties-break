@@ -39,11 +39,75 @@
 //                         draw is made on the week. A list of eight invented names would be worse
 //                         than an honest sentence.
 //
+// =================================================================================================
+// ⭐⭐ ROUND 30 #6 – THE SAME PANEL, RESEATED. His words, and every clause of them is a placement:
+//
+// «Переделать экран при нажатии на плашку Next tournament на Home – убрать рамку, сделать картинку
+// турнира квадратной (по примеру главной), часть описания на картинке, часть просто ниже аккуратно,
+// можно как на главной в отдельных плашках, чтобы стало красиво и наглядно. The read можно как раз
+// на картинке турнира делать, раунды отдельной плашкой ниже на всю ширину с отступами по краям,
+// погоду и поездку тоже на картинку, 4 иконки под картинкой просто в ряд без плашки, план
+// тренировок внизу остаётся как есть»
+//
+// ⚠⚠ NOT ONE FIGURE, SENTENCE OR LABEL CHANGED, AND THAT IS THE POINT (CLAUDE.md invariant 4). He
+// asked for a re-lay, not a rewrite: the four facts keep their four words and their order, `The
+// read` keeps its label and both of its engine-authored lines, `Entry fee` / `Travel budget` /
+// `Conditions` keep theirs, and the first-round block is untouched below its own heading. What moved
+// is where each block SITS, which is why the round-29 mounted test above still holds every one of
+// them - the classes travelled with the blocks on purpose.
+//
+// THE FOUR MOVES, in his order:
+//   * NO FRAME. Two of them, actually. The hosting `<section>` on ThisWeekScreen becomes `.bare` -
+//     the Season screen's own idiom, "the cards themselves are the only objects on the page" - and
+//     the hero stops being a `<Card>`, so its hairline goes with it. What is left is a photograph
+//     and, under it, exactly one plate.
+//   * SQUARE, «по примеру главной». Home's hero is `aspect-ratio: 1 / 1` because the paintings are
+//     square; the venue frames are not, so `cover` crops as it always has. ⚠ The square is a FLOOR,
+//     not a clamp: the box is a flex column whose content can push it taller (a three-line read plus
+//     a coach's caution on a narrow phone), because a clipped read would be worse than a tall card.
+//   * ON THE PICTURE: the description's first half (the name, the court, the dates), `The read` with
+//     its ring, and the weather and the trip. Legibility is bought with scrims, the same two Home
+//     lays over its own hero, not by dimming the photograph.
+//   * UNDER IT: the four icons in a row with nothing behind them (they already had nothing - what
+//     changed is that the panel frame around them is gone), then the rounds as the one plate on the
+//     screen, full width inside the app's own gutter.
+//
+// ⚠ THE TRAINING PLAN IS NOT THIS COMPONENT'S and was not touched: it is ThisWeekScreen's own
+// second section, and «план тренировок внизу остаётся как есть» is honoured by leaving that section
+// exactly as it was, frame included.
+//
 // ⚠ AND THE COACH'S VOICE STAYS SEASONSCREEN'S. `coachSays` there picks one of four wordings per
 // verdict off the event's own sub-stream, and it is bounded by source-region pins in three test
 // files. Duplicating that table here would give two surfaces two different sentences for one
 // engine verdict - the failure this repo has already paid for four times. This panel prints the
 // VERDICT plainly and lets the feed keep the voice.
+//
+// =================================================================================================
+// ⭐⭐ ROUND 30 #18 – THE ONE THING #6 LEFT OPEN, SETTLED. His words:
+//
+// «в край, как hero картинка на главной, если можно. И плашки дальше как на главной на своих
+//  подложках, кроме этих 4х характеристик турнира про призовые, зрителей и т.п.»
+//
+// #6's builder shipped the picture SQUARE but inside the app's gutter, and said out loud why he
+// stopped there: Home's hero is square AND full-bleed, and a photograph running to the phone's edge
+// beside an inset plate is a composition the owner had not described. He has now described it, and
+// it is Home's own: a full-bleed hero, a bare row of four under it, and everything after that on a
+// plate. Three clauses, and each one is a placement:
+//
+//   * THE PICTURE GOES TO THE EDGE. `.nt-hero` cancels `--app-pad-x` with a negative margin - the
+//     same declaration `.diary-hero` uses on Home, spelled with the same token. The style block
+//     below carries the whole argument, including why only the horizontal half of Home's rule is
+//     taken here.
+//   * THE PLATES BELOW KEEP THEIR BACKINGS. «плашки дальше как на главной на своих подложках» -
+//     the rounds plate stays the `<Card>` it already was, inside the gutter, so the composition
+//     reads exactly as Home's does: the photograph is the page, the plates are objects ON it.
+//   * ⚠ EXCEPT THE FOUR FACTS, which stay bare. That is #6's own clause, restated here so it
+//     cannot be tidied away by a later reading of «плашки ... на своих подложках»: prize money,
+//     the crowd and the other two are a row of icons with nothing behind them.
+//
+// ⚠⚠ AND NOTHING ELSE MOVED. Same figures, same sentences, same labels, same order - round 29 #8's
+// mounted net passes unedited across this change exactly as it did across #6's, which is the whole
+// evidence that a ruling about placement was answered with placement (CLAUDE.md invariant 4).
 import { computed } from 'vue'
 import { useGameStore } from '../stores/game'
 import { firstMatchLabel, firstMatchTitle, useEventCard } from '../composables/eventCard'
@@ -110,17 +174,69 @@ const courtRead = computed(() => {
 <template>
   <div class="next-tourn">
     <!-- THE PHOTOGRAPH. Same picker every other surface uses, so this tournament wears the same
-         court here that it wears on Home, on the Season feed and on its own start screen. -->
-    <Card variant="photo" class="nt-hero">
+         court here that it wears on Home, on the Season feed and on its own start screen.
+         ⭐ ROUND 30 #6 – SQUARE AND FRAMELESS, and it carries three of the blocks that used to sit
+         under it. It is a plain element rather than a `<Card>` now: a card's hairline is the frame
+         he asked to lose, and a photograph that IS the block does not need one. His words are in
+         the script block above, where this file's rule allows them.
+         ⭐ ROUND 30 #18 – AND IT RUNS TO THE EDGE, the way Home's hero does and by the same
+         cancelled gutter. The plates below stay inside that gutter on their own backings; the four
+         facts under the picture stay bare. The style block carries the argument. -->
+    <div class="nt-hero">
       <img class="nt-hero-art" :src="venueUrl(event)" alt="" />
       <span class="nt-hero-scrim" aria-hidden="true"></span>
-      <div class="nt-hero-caption">
-        <h3 class="nt-hero-title">{{ event.label }}</h3>
-        <p class="nt-hero-meta">{{ event.surface }} &middot; {{ dates }}</p>
-      </div>
-    </Card>
+      <span class="nt-hero-scrim-top" aria-hidden="true"></span>
 
-    <!-- THE FACTS, the splash's own four in the splash's own order. -->
+      <!-- THE MONEY AND THE WEATHER, ON THE PICTURE. Same three readings, same three labels, same
+           engine figures - the event's own quotes, restated and never re-derived. They ride the top
+           of the frame because the caption owns the bottom of it. -->
+      <div class="nt-money">
+        <div class="nt-money-row">
+          <span class="hint">Entry fee</span>
+          <span class="num negative">{{ formatCents(Math.abs(event.entryFeeCents)) }}</span>
+        </div>
+        <div class="nt-money-row">
+          <span class="hint">Travel budget</span>
+          <span class="num negative">{{ formatCents(Math.abs(event.travelCostCents)) }}</span>
+        </div>
+        <div class="nt-money-row">
+          <span class="hint">Conditions</span>
+          <WeatherPlate :temperature-c="event.preview.temperatureC" :size="13" on-art />
+        </div>
+      </div>
+
+      <div class="nt-hero-foot">
+        <div class="nt-hero-caption">
+          <h3 class="nt-hero-title">{{ event.label }}</h3>
+          <p class="nt-hero-meta">{{ event.surface }} &middot; {{ dates }}</p>
+        </div>
+
+        <!-- THE READ + THE FORECAST, ON THE PICTURE. Same block, same ring, same ramp, same two
+             engine-authored sentences - it simply lost the card it used to sit in. -->
+        <div class="nt-read">
+          <div class="nt-read-said">
+            <p class="nt-read-label">The read</p>
+            <p class="nt-read-line">{{ fieldRead }}</p>
+            <p v-if="courtRead" class="nt-read-line">{{ courtRead }}</p>
+            <p v-if="event.coachCaution" class="coach-note">{{ event.coachCaution }}</p>
+          </div>
+          <ProgressRing
+            class="nt-ring"
+            :value="event.preview.firstMatchChance"
+            :color="readingColor({ fraction: event.preview.firstMatchChance })"
+            :label="firstMatchLabel(event.preview)"
+            :title="firstMatchTitle(event.preview)"
+          >
+            <b>{{ Math.round(event.preview.firstMatchChance * 100) }}</b><i>%</i>
+          </ProgressRing>
+        </div>
+      </div>
+    </div>
+
+    <!-- THE FACTS, the splash's own four in the splash's own order. ⭐ ROUND 30 #6 – his fourth
+         clause, "four icons under the picture, simply in a row, with no plate": they sit directly
+         under the photograph now, and the panel frame that used to be behind them is gone. The row
+         itself never had a plate. -->
     <div class="nt-facts">
       <div class="nt-fact">
         <span class="nt-fact-tile" aria-hidden="true">
@@ -154,7 +270,10 @@ const courtRead = computed(() => {
     </div>
 
     <!-- THE FIRST ROUND. Two mirrored panels either side of a VS, exactly as the start screen draws
-         them, and the draw size beside the round - "how far the top is" said once. -->
+         them, and the draw size beside the round - "how far the top is" said once.
+         ⭐ ROUND 30 #6 – his "rounds as their own plate below, full width with padding at the
+         edges": this is now the ONE plate on the panel, full width inside the app's own 16px
+         gutter, which is where the side padding comes from once the hosting section is bare. -->
     <Card class="nt-first">
       <div class="nt-round-row">
         <p class="nt-round">First round</p>
@@ -185,41 +304,6 @@ const courtRead = computed(() => {
       </p>
     </Card>
 
-    <!-- THE READ + THE FORECAST. Same block the start screen carries, same ring, same ramp. -->
-    <Card class="nt-read">
-      <div class="nt-read-said">
-        <p class="nt-read-label">The read</p>
-        <p class="nt-read-line">{{ fieldRead }}</p>
-        <p v-if="courtRead" class="nt-read-line">{{ courtRead }}</p>
-        <p v-if="event.coachCaution" class="coach-note">{{ event.coachCaution }}</p>
-      </div>
-      <ProgressRing
-        class="nt-ring"
-        :value="event.preview.firstMatchChance"
-        :color="readingColor({ fraction: event.preview.firstMatchChance })"
-        :label="firstMatchLabel(event.preview)"
-        :title="firstMatchTitle(event.preview)"
-      >
-        <b>{{ Math.round(event.preview.firstMatchChance * 100) }}</b><i>%</i>
-      </ProgressRing>
-    </Card>
-
-    <!-- THE MONEY, which is the half of a trip the parent actually decides on. Both figures are the
-         event's own, already quoted on the card he entered from - restated here, never re-derived. -->
-    <div class="nt-money">
-      <div class="nt-money-row">
-        <span class="hint">Entry fee</span>
-        <span class="num negative">{{ formatCents(Math.abs(event.entryFeeCents)) }}</span>
-      </div>
-      <div class="nt-money-row">
-        <span class="hint">Travel budget</span>
-        <span class="num negative">{{ formatCents(Math.abs(event.travelCostCents)) }}</span>
-      </div>
-      <div class="nt-money-row">
-        <span class="hint">Conditions</span>
-        <WeatherPlate :temperature-c="event.preview.temperatureC" />
-      </div>
-    </div>
   </div>
 </template>
 
@@ -231,13 +315,47 @@ const courtRead = computed(() => {
   margin-top: 10px;
 }
 
-/* THE HERO – the splash's proportions, one step shorter because this sits inside a scrolling tab
-   rather than at the top of a takeover. */
+/* ⭐⭐ ROUND 30 #6 – THE HERO: SQUARE, FRAMELESS, AND IT CARRIES THREE BLOCKS.
+   «сделать картинку турнира квадратной (по примеру главной)» – Home's `.diary-hero` is
+   `aspect-ratio: 1 / 1`, so this is the same declaration on the same kind of object.
+
+   ⚠ THE SQUARE IS A FLOOR, NOT A CLAMP, and that is deliberate. This is a flex column with the
+   caption at its foot; `aspect-ratio` yields to content when the content is taller, so a three-line
+   read plus a coach's caution on a 320px phone pushes the box down instead of clipping the sentence
+   off the bottom of the picture. A tall card is a design compromise; a truncated engine-authored
+   read is a defect - and this panel's whole argument is that it never invents and never hides.
+
+   No `border` and no gradient: it is not a `<Card>` any more, which is half of «убрать рамку».
+
+   ⭐⭐ ROUND 30 #18 – AND NOW IT RUNS TO THE EDGE, BY HOME'S OWN MECHANISM AND NOT A SECOND ONE.
+   «в край, как hero картинка на главной, если можно.» The margin below is the SAME declaration
+   `.diary-hero` carries in HomeScreen.vue and `.kid-hero` carries in KidScreen.vue: cancel the
+   shell's gutter by the exact token that sets it, `--app-pad-x`. ⚠ Never a literal. The tokens
+   exist BECAUSE the shell's insets were spelled in the sheet and GUESSED as `-16px` over in
+   `.diary-hero`, and the guess left an 8px band of page colour above Home's photograph –
+   src/style.css records the whole episode where the tokens are declared.
+
+   ⚠ ONLY THE SIDES, unlike Home's and Kid's. Both of those heroes are the first thing on their
+   screen, so they cancel `--app-pad-top` as well and sit under the status bar. This one has a
+   heading and the week's status line above it, and eating the top inset would pull the photograph
+   up into them. Same mechanism, one axis of it.
+
+   No radius any more: a corner against the phone's own edge leaves a wedge of page colour in each
+   one, which is the frame he asked to lose coming back in miniature. Home's hero and Kid's carry no
+   radius either. And the padding is `--app-pad-x` rather than 14px, so the title, the read and the
+   three readings laid ON the photograph line up with the icon row and the plate BELOW it instead of
+   sitting 2px inside them. */
 .nt-hero {
   position: relative;
-  aspect-ratio: 16 / 9;
-  padding: 0;
+  margin: 0 calc(-1 * var(--app-pad-x));
+  aspect-ratio: 1 / 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 12px var(--app-pad-x) 14px;
   overflow: hidden;
+  background: var(--card-bottom);
 }
 
 .nt-hero-art {
@@ -248,17 +366,31 @@ const courtRead = computed(() => {
   object-fit: cover;
 }
 
+/* TWO SCRIMS, and they do the two different jobs Home's hero splits them into: the bottom one takes
+   the caption and the read out of the photograph, the top one does the same for the three readings
+   in the corner. Neither dims the middle of the picture, which is where the court is. */
 .nt-hero-scrim {
   position: absolute;
   inset: 0;
-  background: linear-gradient(180deg, rgb(0 0 0 / 0%) 32%, rgb(0 0 0 / 62%) 100%);
+  background: linear-gradient(180deg, rgb(0 0 0 / 0%) 30%, rgb(0 0 0 / 52%) 62%, rgb(0 0 0 / 82%) 100%);
 }
 
-.nt-hero-caption {
+.nt-hero-scrim-top {
   position: absolute;
-  left: 14px;
-  right: 14px;
-  bottom: 12px;
+  inset: 0;
+  background: linear-gradient(180deg, rgb(0 0 0 / 62%) 0%, rgb(0 0 0 / 22%) 24%, rgb(0 0 0 / 0%) 42%);
+}
+
+/* The two blocks laid ON the photograph sit above both scrims. */
+.nt-money,
+.nt-hero-foot {
+  position: relative;
+}
+
+.nt-hero-foot {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }
 
 .nt-hero-title {
@@ -278,11 +410,13 @@ const courtRead = computed(() => {
 }
 
 /* THE FACTS ROW – four equal cells, wrapping to two-and-two on a narrow phone rather than
-   scrolling sideways. */
+   scrolling sideways. ⭐ ROUND 30 #6: «просто в ряд без плашки», and it sits directly under the
+   photograph now – the small top margin is the only thing between them. */
 .nt-facts {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 8px;
+  margin-top: 2px;
 }
 
 @media (max-width: 359px) {
@@ -393,7 +527,10 @@ const courtRead = computed(() => {
   margin: 10px 0 0;
 }
 
-/* THE READ + RING – the brief card's own two-column split. */
+/* THE READ + RING – the brief card's own two-column split, now laid on the photograph.
+   ⚠ EVERY COLOUR IN THIS BLOCK IS LIGHTENED BECAUSE THE GROUND CHANGED, not because the design did:
+   `--ink-2` and `--ink-dim` are read against a panel, and on a sunlit court they disappear. Same
+   four steps of ink, one ground brighter, with the export's own scrim shadow under each. */
 .nt-read {
   display: flex;
   align-items: center;
@@ -410,30 +547,51 @@ const courtRead = computed(() => {
   font-size: 10.5px;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: var(--ink-dim);
+  color: rgb(255 255 255 / 72%);
+  text-shadow: 0 1px 3px rgb(0 0 0 / 60%);
 }
 
 .nt-read-line {
   margin: 0;
   font-size: 12.5px;
-  color: var(--ink-2);
+  color: rgb(255 255 255 / 92%);
+  text-shadow: 0 1px 3px rgb(0 0 0 / 60%);
+}
+
+.nt-hero .coach-note {
+  color: rgb(255 255 255 / 82%);
+  text-shadow: 0 1px 3px rgb(0 0 0 / 60%);
 }
 
 .nt-ring {
   flex: none;
 }
 
-/* THE MONEY */
+/* THE MONEY AND THE WEATHER, in the top corner of the photograph. A narrow right-aligned stack
+   rather than three full-width rows: at the foot of a square frame the caption and the read already
+   own the width, and three label/figure pairs across 343px would collide with the title. */
 .nt-money {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  align-items: flex-end;
+  gap: 3px;
 }
 
 .nt-money-row {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 10px;
+  justify-content: flex-end;
+  gap: 8px;
+  font-size: 11.5px;
+  text-shadow: 0 1px 3px rgb(0 0 0 / 70%);
+}
+
+.nt-money-row .hint {
+  margin: 0;
+  color: rgb(255 255 255 / 74%);
+}
+
+.nt-money-row .num.negative {
+  color: rgb(255 209 199 / 96%);
 }
 </style>

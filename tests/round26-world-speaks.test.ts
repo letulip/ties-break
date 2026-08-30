@@ -195,6 +195,17 @@ describe('round 26 #5b – the prize row says where the missing money went', () 
     // about. The high-water id is the honest cursor.
     const split: WorldEvent[] = []
     const summaries: WorldEvent[] = []
+    // ⚠⚠ THE LEDGER SNAPSHOT IS TAKEN WHEN A SPLIT ROW IS WRITTEN, NOT AT THE END OF THE WALK
+    // (30.08, round 30 #27). `snapshot.financialEvents` is the last `SNAPSHOT_FINANCIAL_EVENTS`
+    // rows BY COUNT, not by date - so whether a prize row is still inside it after twelve seasons
+    // depends on how many expense rows happened to land after the last cheque. This wave re-priced
+    // the injury curve, which changed the medical rows in her final months, and the assertion below
+    // went red on a window that held no prize row at all: a guard about WHETHER THE ROW REACHES THE
+    // SCREEN was silently keyed on WHICH MONTH THE WALK STOPPED IN.
+    //
+    // Snapshotting at the moment the row is written tests the actual claim - the row the Money
+    // screen renders is the row the till wrote - and it cannot be starved by a later balance change.
+    let ledgerSnap: ReturnType<typeof toSnapshot> | null = null
     let cursor = 0
     while (world.week < WEEKS_PER_YEAR * 12) {
       world.fundsCents = Math.max(world.fundsCents, 5_000_000_00)
@@ -214,11 +225,13 @@ describe('round 26 #5b – the prize row says where the missing money went', () 
         skipTournament(world)
         closeTournament(world)
       }
+      const splitCountBefore = split.length
       for (const e of world.events) {
         if (e.id <= cursor) continue
         if (e.category === 'prize' && e.text.includes('less her')) split.push(e)
         if (e.type === 'tournament' && e.finishIdx !== undefined) summaries.push(e)
       }
+      if (split.length > splitCountBefore) ledgerSnap = toSnapshot(world)
       if (world.events.length) cursor = Math.max(cursor, ...world.events.map((e) => e.id))
     }
     expect(split.length, 'the walk won money after her eighteenth').toBeGreaterThan(0)
@@ -240,7 +253,8 @@ describe('round 26 #5b – the prize row says where the missing money went', () 
     }
 
     // ...and a split row really reaches the Money screen's ledger window, which is what renders it.
-    const snap = toSnapshot(world)
+    expect(ledgerSnap, 'the walk took a snapshot on a week that wrote a split row').not.toBeNull()
+    const snap = ledgerSnap!
     const onLedger = snap.financialEvents.filter((e) => e.category === 'prize')
     expect(onLedger.length, 'the ledger window holds prize rows at all').toBeGreaterThan(0)
     expect(

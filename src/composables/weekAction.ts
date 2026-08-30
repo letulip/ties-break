@@ -199,6 +199,14 @@ export function useWeekAction(): ComputedRef<WeekAction> {
  * next five weeks" is a question both sides of the wire can answer, and this codebase's most
  * expensive recurring defect is two surfaces answering one question their own way. Nothing is
  * re-derived here; the snapshot's own `upcoming` and `injury` are handed straight to it.
+ *
+ * ⚠⚠ ROUND 30 #3 NARROWED THAT FOURTH CLAUSE TO ITS SECOND ARM, AND IT OVERTURNED A DECISION OF MINE
+ * RATHER THAN A BUG. The pill was repaired in round 29 #6 and I recorded that deleting it stayed
+ * available; he has now played the repaired version and deleted it: «давай вообще эту кнопку про 6
+ * недель уберём. Её можно оставить только на длинные травмы». A quiet FIXTURE LIST is not a quiet
+ * stretch – «нам в это время приходят письма и идёт запись на новые турниры» – so the arm that read
+ * the calendar is gone and only the long layoff is left. `spanWorthOffering` carries the whole
+ * ruling; nothing about the three dead-click clauses above changed.
  */
 export function multiOffered(snap: Parameters<typeof blockingOverlay>[0], kind: WeekAheadKind): boolean {
   if (!snap) return false
@@ -227,10 +235,16 @@ export function multiOffered(snap: Parameters<typeof blockingOverlay>[0], kind: 
  *  rule runs in.
  *
  *  ⚠ AND IT NEVER EXCEEDS WHAT THE SNAPSHOT CAN SEE – `spanWeeksFor` caps at `UPCOMING_WEEKS`, the
- *  clip on `snapshot.upcoming` itself. See that function for why the cap is derived and not picked. */
+ *  clip on `snapshot.upcoming` itself. See that function for why the cap is derived and not picked.
+ *
+ *  ⚠⚠ ROUND 30 #3 – AND IT NEVER SPENDS THE LAST WEEK OF A LAYOFF, which is why the injury is handed
+ *  down. `spanWeeksFor` caps the count at `weeksRemaining - 1` («минус 1 день от длины окна»), so a
+ *  six-week layoff offers five and a week is always left inside the window to answer a letter or
+ *  enter the tournament she comes back for. Off a layoff it returns 0, so this and `multiOffered`
+ *  agree by construction rather than by inspection. */
 export function multiSpanOf(snap: Parameters<typeof blockingOverlay>[0], kind: WeekAheadKind): number {
   if (!snap) return 0
   if (!multiOffered(snap, kind)) return 0
-  const weeks = spanWeeksFor(snap.week, snap.upcoming)
+  const weeks = spanWeeksFor(snap.week, snap.upcoming, snap.injury)
   return weeks >= MULTI_WEEK_SPAN ? weeks : 0
 }

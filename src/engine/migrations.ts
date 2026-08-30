@@ -35,6 +35,30 @@ import { declineFactor, physicalMean, rollPotential, type KidSkills } from './de
 // would be two conventions the calendar and the save could drift apart on.
 import { PLAN_DAYS, sessionDays, sessionsForPlan } from './plan'
 import { coachIncludesPhysio } from './coach'
+// ⭐ v67 (round 30 #14): the units back-fill prices a legacy row off the SAME functions the engine
+// prices it with – a migration with its own copy of the market would convert the copy. `shopItem`
+// also answers `undefined` for an id the catalogue no longer carries, which is the courtesy that
+// lets a retired rung migrate untouched instead of throwing.
+import { shopItem, unitPriceCents } from './world/shop'
+// ⭐ ROUND 30 #8/#10 – the naming default, asked of the SAME function the shop offers the player, so
+// a back-filled name is one the game itself would have suggested. `nameSuggestionsFor` is the
+// world-free core of `assetNameSuggestions` and exists for exactly this caller.
+import { nameSuggestionsFor, sanitiseAssetName } from './world/assets'
+
+/** The pre-v67 shape of an owned row, as the units back-fill has to read it: `basisCents`/`basisWeek`
+ *  were OPTIONAL keys on v63-v66 saves (round 29 #11 and part two #4 wrote them without a version
+ *  move, and v66 does not touch them), and `units` is the v67 key the step writes. Local to the
+ *  migration on purpose – nothing else in the engine may reason about a shape that no longer exists. */
+interface LegacyAsset {
+  id?: unknown
+  boughtWeek: number
+  paidCents: number
+  basisCents?: number
+  basisWeek?: number
+  units?: number
+  /** ⭐ ROUND 30 #8/#10 – the name v67 back-fills onto the first owned row of a nameable family. */
+  name?: string
+}
 import { COHORT } from './season/cohort'
 import type { PlayerProfile } from '../shared/protocol'
 // v27: her birth day is clamped to her own month, and February is never 29 - see daysInBirthMonth.
@@ -49,6 +73,31 @@ import type { TierId } from './season/types'
 
 // Save-data migrations. Append-only: never renumber, never delete a block.
 // Each `if (v < N)` block upgrades from N-1 to N and must be idempotent for its version.
+//
+// ⚠⚠⚠ «MAIN IS AT N» IS A FACT WITH A SHELF LIFE, AND CHECKING IT AT THE WRONG MOMENT CORRUPTS A
+// SAVE. THIS IS THE ONE PIECE OF PROCESS THAT LIVES IN THE SOURCE RATHER THAN IN A DOC, because it
+// is unreadable from the diff and it has already cost a repair (round 30 item 25, 30.08).
+//
+// WHAT HAPPENED. Amending an UNSHIPPED step instead of taking a new version is legitimate – the
+// append-only rule bites at the moment of SHIPPING, and a version main has never seen has no saves
+// in the world to break. Three agents in the round-29/30 wave each applied that rule correctly to
+// v66, each having read `origin/main` and found 65, and each wrote the reasoning down. Then PR #114
+// merged round 29 and main declared 66. The reasoning did not become wrong; its PREMISE expired
+// underneath it, and no test could see that because nothing in this repo compares the branch's
+// ladder to main's. What it produced: the owner was already playing a main build, so his save said
+// `schemaVersion: 66`, so `migrateSave` skipped the step – and his fund kept `basisCents`, never
+// gained `units`, and was then valued by a function that multiplies units by a price. A migration
+// that never runs is worse than one that runs wrong: it is silent.
+//
+// THE RULE THAT FOLLOWS, and it is a rule about WHEN, not about what:
+//   Re-read `git show origin/main:src/engine/world/state.ts` AT THE MOMENT YOU BUMP – and at the
+//   moment you assemble the PR, which in a wave running across several merges is a different day.
+//   If main's constant already equals the version you are amending, that version is SHIPPED: take
+//   the next number, move your additions to it, and leave main's step byte-identical.
+// `scripts/schema-ladder.mjs` makes it mechanical: it fails when this branch's constant equals
+// main's while the step for that version differs. ⚠ IT IS A CI STEP AND NOT A VITEST FILE ON
+// PURPOSE – a test reading a STALE `origin/main` would give the same wrong answer from the same
+// expired fact. The script's own header carries that argument; CI fetches before it runs.
 
 
 /** The absolute career week she turned nineteen, for the v39 fork back-fill.
@@ -2081,6 +2130,113 @@ export function migrateSave(raw: unknown): WorldState {
       }
     }
     v = 66
+  }
+
+
+  // ⭐⭐⭐ v66 -> v67: THE FUND'S UNITS (round 30 #14) AND THE BRAND'S / ACADEMY'S NAME (round 30
+  // #8/#10). TWO BACK-FILLS THAT SPENT MOST OF THIS WAVE WRITTEN INTO THE v66 STEP ABOVE, MOVED
+  // HERE INTACT. Why they moved is the header note at the top of this file, and it is the only
+  // interesting thing about this renumber: v66 shipped underneath them.
+  //
+  // ⚠ WHAT THEY READ IS UNCHANGED BY THE MOVE, which is what makes it a renumber rather than a
+  // rewrite. `basisCents`/`basisWeek` shipped as OPTIONAL keys at v63-v65 WITHOUT a version move
+  // (round 29 #11 and part two #4 both wrote them that way, and said so), and v66 does not touch
+  // them – so a v66 save on main carries exactly the rows these two steps were written against,
+  // and the owner's own save is one of them. Reading a v66 row is reading a v65 row.
+  //
+  // ⚠ AND THE ORDER THEY USED TO DEPEND ON IS STILL THE ORDER THEY GET. These ran inside v66's own
+  // `if (Array.isArray(save.assets))` block, AFTER the yacht rename, so a `boat-motor` row reached
+  // them already renamed. It still does: v66 runs before v67 in the same `migrateSave` call. The
+  // dependency turns out to be theoretical either way – a boat has no `unitBaseCents` and is in
+  // neither nameable family, so both steps skip it under either id – but the walk preserves it, and
+  // that is the property to state rather than the accident that makes it not matter.
+  //
+  // ⭐⭐ CONVERTED AT THE PRICE OF ITS OWN BASIS WEEK, WHICH IS WHAT MAKES IT HONEST RATHER THAN
+  // MERELY TOTAL. `units = basis / price(basisWeek)` gives `units × price(now)` ≡
+  // `basis × (1+r)^((now−basis)/52) × index(now)/index(basis)` – the exact number the old model
+  // would have shown this week, to the rounding. So a family that opened the fund in season three
+  // is still up by what it was up by, and the average price the screen now prints is the one they
+  // really came in at. Resetting to today's price would have wiped the entry price out of a career
+  // in the act of introducing it.
+  //
+  // ⚠⚠ ONE CONSEQUENCE, NAMED SO IT IS NOT READ AS A DEFECT LATER. A v65 rebase folded accrued GAIN
+  // into `basisCents` (a holding worth 110k on 80k of cash carried a 110k basis), so the units this
+  // recovers are the units the family really holds while `paidCents` stays the cash they really
+  // spent – and the AVERAGE PRICE the shop row now prints, `paidCents / units`, therefore comes out
+  // BELOW every unit price that career ever saw. That is the correct number and it is what a
+  // broker's «average price» means: cost basis over units. A family in profit is under today's price
+  // by construction, which is exactly the sentence the screen should be saying about them.
+  //
+  // ⚠ THE FALLBACK PAIR IS THE OLD READER'S, VERBATIM. `basisCents ?? paidCents` and
+  // `basisWeek ?? boughtWeek` are what `assetWorthCents` used to open with; a row that was never
+  // topped up carries neither and means exactly that. This is the last place either name appears.
+  //
+  // ⚠ THE SEED IS THE CAREER'S OWN, so the price this reads is the same path the world will read
+  // next tick. ZERO draws on any stream: the market is sub-stream reads keyed on the seed and a
+  // week, so the frozen MAIN capture (41550 / e6b0c709) cannot see this step either.
+  //
+  // ⚠⚠ IDEMPOTENT BECAUSE OF THE VERSION GATE, AND A PER-ROW `units !== undefined` CHECK WAS
+  // WRITTEN, MUTATION-TESTED AND **DELETED**. It read like the careful thing to do and it was a DEAD
+  // GUARD: a second `migrateSave` on this save enters at `v = 67` and never reaches this block, and
+  // no v66 save can carry a `units` key because the field does not exist at v66 either – main's v66
+  // step writes no field at all beyond the yacht's id. ⚠ THAT SECOND CLAUSE IS THE ONE THE MOVE
+  // COULD HAVE BROKEN and it was re-checked against `origin/main`'s step rather than assumed: the
+  // clause still could not be false, so the guard would still be a line nobody could make fail. The
+  // idempotence claim is true and is carried by `if (v === 66)`.
+  if (v === 66) {
+    if (Array.isArray(save.assets)) {
+      const seed = typeof save.seed === 'string' ? save.seed : ''
+      for (const a of save.assets as LegacyAsset[]) {
+        // ⚠ THE NULL CHECK IS LIVE AND IS COVERED: `Array.isArray` says nothing about what is IN the
+        // array, and a corrupted save with a null row would otherwise throw here and take the whole
+        // career down. It mirrors v66's rename loop above, and `migrations.test.ts` feeds it one.
+        if (!a || typeof a !== 'object') continue
+        const item = shopItem(String(a.id))
+        if (!item || item.unitBaseCents === undefined) continue
+        const basisCents = typeof a.basisCents === 'number' ? a.basisCents : a.paidCents
+        const basisWeek = typeof a.basisWeek === 'number' ? a.basisWeek : a.boughtWeek
+        a.units = basisCents / unitPriceCents(seed, basisWeek, item)
+        delete a.basisCents
+        delete a.basisWeek
+      }
+      // ⭐⭐⭐ AND THE SECOND OF THE TWO – ROUND 30 #8/#10's NAME.
+      //
+      // «Merch brand давай предложим пользователю несколько вариантов именования при покупке… это
+      // придаст +100 к индивидуальности сразу», and the academy «по принципу бренда».
+      //
+      // ⚠⚠ THIS ONE IS BACK-FILLED AND v66's 'business' CATEGORY IS NOT, WHICH LOOKS LIKE A
+      // CONTRADICTION AND IS NOT ONE. That step refused to invent LEDGER ROWS – events that never
+      // happened – because a ledger must stay truthful about what it actually charged. A name is
+      // not a record of an event: a family that owns a brand has always had something to call it,
+      // and the alternative is a career that owns a nameless business forever with no way to name it
+      // (the shop offers the picker on the FIRST purchase of a family, and that purchase is in the
+      // past). Leaving it blank would ship the item and exclude every save that already bought one.
+      //
+      // ⚠ THE DEFAULT IS THE GAME'S OWN FIRST SUGGESTION, from `nameSuggestionsFor` – so it is a
+      // name the player could have chosen from the list, built out of her initials or her surname,
+      // and never a string invented here. `sanitiseAssetName` applies the same cap and allow-list the
+      // typed field gets, so a back-filled name and a typed one are the same kind of value.
+      //
+      // ⚠ THE FIRST ROW OF EACH FAMILY ONLY, in purchase order – `assetNameOf`'s own rule, so a
+      // four-stage academy comes out of this with ONE name rather than four.
+      //
+      // ⚠ AND THE BRAND IS NAMED BEFORE THE ACADEMY IS ASKED, because his own first academy option
+      // is «уже существующее название бренда»: the loop below runs 'business' first and hands the
+      // result to the academy's list, exactly as the live shop does.
+      const profile = (save.profile ?? {}) as Partial<PlayerProfile>
+      let brandName: string | null = null
+      for (const family of ['business', 'academy'] as const) {
+        const rows = (save.assets as LegacyAsset[]).filter(
+          (a) => a && typeof a === 'object' && shopItem(String(a.id))?.family === family,
+        )
+        if (rows.length === 0) continue
+        const suggestions = nameSuggestionsFor(profile.kidName ?? '', profile.kidLastName ?? '', family, brandName)
+        const named = sanitiseAssetName(rows[0].name, suggestions[0])
+        rows[0].name = named
+        if (family === 'business') brandName = named
+      }
+    }
+    v = 67
   }
 
   if (v !== SAVE_SCHEMA_VERSION) {

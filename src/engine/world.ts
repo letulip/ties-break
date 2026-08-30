@@ -330,15 +330,22 @@ export { familyMeans, householdWalletCents, meansOfCents, MEANS_BANDS }
 // ⭐⭐⭐ ROUND 29 PART THREE #16 adds §4's moving price – `assetWorthCents` (the ONE thing that turns
 // a holding into a number now that a market is in it), `marketSeasonMove` and `reportMarketSeason`.
 // The path itself is `world/market.ts` and is re-exported one line down.
-import { assetDelivered, assetUpkeepCents, assetValueCents, assetWorthCents, buyAsset, deliverAssets, deliveredAssets, grantedVacationIds, marketSeasonMove, ownedAssets, ownsDeliveredOfFamily, reportMarketSeason, revalueAssets, sellAsset, sellableAsset, shopCatalogue, shopItem, shopView, weeklyAssetUpkeepCents } from './world/shop'
-export { assetDelivered, assetUpkeepCents, assetValueCents, assetWorthCents, buyAsset, deliverAssets, deliveredAssets, grantedVacationIds, marketSeasonMove, ownedAssets, ownsDeliveredOfFamily, reportMarketSeason, revalueAssets, sellAsset, sellableAsset, shopCatalogue, shopItem, shopView, weeklyAssetUpkeepCents }
-import { marketCrash, marketCrashFellIn, marketCrashLog, marketIndex, marketRatio, marketWave, worstCrashFreeRatio, worstMarketRatio } from './world/market'
-export { marketCrash, marketCrashFellIn, marketCrashLog, marketIndex, marketRatio, marketWave, worstCrashFreeRatio, worstMarketRatio }
+import { ASSET_NAME_MAX_CHARS, assetDelivered, assetEarningsRateCents, assetHeldWeeks, assetNameOf, assetNameSuggestions, assetUpkeepCents, assetValueCents, assetWorthCents, avgUnitPriceCents, buyAsset, deliverAssets, deliveredAssets, grantedVacationIds, isNameable, marketSeasonMove, nameSuggestionsFor, ownedAssets, ownsDeliveredOfFamily, reportMarketSeason, revalueAssets, sanitiseAssetName, sellAsset, sellableAsset, shopCatalogue, shopItem, shopView, unitPriceCents, weeklyAssetUpkeepCents } from './world/shop'
+export { ASSET_NAME_MAX_CHARS, assetDelivered, assetEarningsRateCents, assetHeldWeeks, assetNameOf, assetNameSuggestions, assetUpkeepCents, assetValueCents, assetWorthCents, avgUnitPriceCents, buyAsset, deliverAssets, deliveredAssets, grantedVacationIds, isNameable, marketSeasonMove, nameSuggestionsFor, ownedAssets, ownsDeliveredOfFamily, reportMarketSeason, revalueAssets, sanitiseAssetName, sellAsset, sellableAsset, shopCatalogue, shopItem, shopView, unitPriceCents, weeklyAssetUpkeepCents }
+import { marketCrash, marketCrashFellIn, marketCrashLog, marketIndex, marketWave, worstCrashFreeRatio, worstMarketRatio } from './world/market'
+export { marketCrash, marketCrashFellIn, marketCrashLog, marketIndex, marketWave, worstCrashFreeRatio, worstMarketRatio }
 // ⭐⭐ ROUND 29 PART FOUR P7 – FAME (the accounted stock, world/fame.ts) and THE PARENT'S
 // BUSINESSES (merch follows fame, the academy's stages follow reputation – world/business.ts).
 // Re-exported under the historical convention; zero draws anywhere behind these names.
 import { completedShootWeeks, fameAt, fameFloorOf, fameShootMultOf } from './world/fame'
 export { completedShootWeeks, fameAt, fameFloorOf, fameShootMultOf }
+// ⭐⭐⭐ ROUND 30 #23/#24 – THE BRAND'S OWN ECONOMICS (world/brand.ts): what a WHOLE brand takes in
+// (convex in fame), what multiple the CAREER has earned it, and the two joined. Ownership is applied
+// in `world/assets.ts`, not here. Zero draws behind every one of these names – a valuation is a fold
+// over history.
+import { brandCrowdMult, brandGrossWorthCents, brandMultipleX, brandSignalsOf, brandWeeklyGrossCents } from './world/brand'
+export { brandCrowdMult, brandGrossWorthCents, brandMultipleX, brandSignalsOf, brandWeeklyGrossCents }
+export type { BrandSignals } from './world/brand'
 import { academyReputationOf, academyWeeklyIncomeCents, assetWeeklyIncomeCents, merchWeeklyIncomeCents } from './world/business'
 export { academyReputationOf, academyWeeklyIncomeCents, assetWeeklyIncomeCents, merchWeeklyIncomeCents }
 export type { MarketCrash } from './world/market'
@@ -696,7 +703,10 @@ function finalizeTournament(world: WorldState): void {
       // two blocks up reports. That distinction IS the item: the ledger row is deliberately «what
       // the family actually banked», so the only prize figure any screen could reach was already
       // net of the very cut the memo was quoting a percentage of.
-      accrueKidShare(world, world.week, herShare, kidPrizeShareBps(ageNow), prize)
+      // ⭐⭐⭐ ROUND 30 #21 – tagged `prize`, so the week recap can name HER RAMP («50% of every prize
+      // cheque», the rule the budget screen states) instead of averaging it with a brand cheque that
+      // splits under a different rule entirely. The rate handed in is unchanged.
+      accrueKidShare(world, world.week, herShare, kidPrizeShareBps(ageNow), prize, 'prize')
     }
     // ⭐⭐ ROUND-24 – AND THE TEAM IS PAID ON THE RESULT (owner 22.08, docs/plans/the-team-share.md
     // §3 as re-ruled). His model verbatim: «3млн призовые из них отчисляется процент дочери (скажем

@@ -924,3 +924,389 @@ year), worst peak-to-trough −40.1%.
 `CRASH_DEPTH_RANGE` (his −15…−30 band; `[0]` is also the floor the safety bound is built from – move
 them together or the closed form lies), `CRASH_FALL_WEEKS`/`CRASH_RECOVERY_WEEKS` (the shape; keep
 fall + recovery ≤ 104 or arcs overlap and the one-crash-at-a-time theorem dies).
+
+### 14i. ⚙ UNITS, AND THE VOLATILITY COMING DOWN – round 30 #14 (30.08), his ruling on §14 as played
+
+He played the market §14 shipped and ruled on it the next day:
+
+> «Волатильность индексного фонда какая-то очень большая по ощущениям **+65/-15** это то, что я
+> видел… Во-первых она скорее всего будет менее "галопирующая", во-вторых вряд-ли в таких крайностях.
+> И надо логику фонда переделать на **покупку ДОЛЕЙ в фонде**, как раз доли дадут возможность расти
+> на горизонте и будут давать **разные точки входа, как в жизни**. Стоимость активов будет
+> рассчитываться исходя из стоимости долей. Зашёл, когда доля стоила 4к, через десять лет она может
+> вполне удвоиться. Или зашёл на пике при цене 7-8к и увидел просадку на следующий год – **имеешь
+> возможность усредниться или зафиксировать убыток**.»
+
+**Two changes, and they are independent**: the model becomes a unit price with holdings measured in
+units, and the wave's volatility is halved. §14a–§14h stand as the record of what they replace.
+
+#### The model, whole
+
+```
+price(seed, week, rung) = unitBaseCents · (1 + annualRateBps/10⁴)^(week/52) · index(seed, week, volBps)
+units bought           = paidCents / price(seed, THIS week, rung)
+worth                  = round(units · price(seed, now, rung))
+```
+
+The **drift moved into the price**, and that is the whole structural change. §14 valued a holding as
+`basis × (1+r)^(years since the basis week) × index(now)/index(basisWeek)` – three numbers that all
+had to be restated every time money moved, which is what the rebase was. On the price instead, a
+holding is `units × price(now)`: one multiplication, no basis, no per-row clock.
+
+⚠ **It is the SAME PATH re-expressed, not a second model.** `price(t)/price(f)` is exactly the old
+`(1+r)^((t−f)/52) × index(t)/index(f)`, so a single-entry holding is worth the same cents it was
+worth yesterday and every §14 measurement still describes this path. The probe confirms it: rerun at
+`volBps 1_800` the unit model reads **30.9%** negative seasons and a **−39.3%** worst season against
+§14h's 30.8% / −39.9%.
+
+#### What shipped
+
+`ShopItem.unitBaseCents` (deposit **$1,000**, index fund **$4,000** – his own anchor), `unitPriceCents`
+and `avgUnitPriceCents` in `world/assets.ts`, `OwnedAsset.units`, three fields on `ShopRowView`
+(`unitPriceCents` / `unitsHeld` / `avgUnitPriceCents`), two lines on the Money screen's shop row, and
+**`SAVE_SCHEMA_VERSION` stays at 66** – the units back-fill amends the unshipped v66 step, on the same
+ground the P1 yacht rename did (main is at 65, so no v66 save exists outside this wave).
+
+**Deleted**: `OwnedAsset.basisCents`, the rebase in `buyAsset` and in `sellAsset`, `marketRatio` in
+`world/market.ts`, and `assetValueCents`' fourth argument. `basisWeek` survives with ONE meaning and
+ONE writer – §3f's commissioned order, whose value clock starts on delivery.
+
+⭐ **Every `stake: 'open'` rung is unit-priced, the deposit included** – his own expectation from
+round 29 #11 («предполагаю, что Savings deposit будет вести себя так же»). It costs the deposit
+nothing: with no `volBps` its unit price is `1000 × 1.0317^years` dead flat, and `units × price` is
+identically the `(basis + top-up) × (1+r)^t` the rebase computed. **Rebasing at today's worth WAS the
+unit model, written the long way round** – which is why it never produced a wrong number, and why
+what it cost was not accuracy but MEMORY: it destroyed the entry price in the act of adding to it.
+
+#### 14i-1. ⭐⭐⭐ What the player can now DO, which is the point
+
+| | round 29 | round 30 #14 |
+| --- | --- | --- |
+| add money | basis restated, entry price destroyed | more units at today's price, both entries kept |
+| the screen says | worth now, paid, ±% | ...and **units held · the price they averaged at · today's price** |
+| average down | a feeling | a move: buy while the price is under your average, and watch the average fall |
+| take a loss | a feeling | a move: sell part at today's price – the realised loss goes to the ledger and **the average does not move**, so the next decision is the same decision |
+
+The average is `paidCents / units`, so a part sale takes the same fraction out of the cash and out of
+the units and leaves it exactly where it was. Realising the oldest units first would move it by an
+accident of ordering and nothing on screen could explain the new number.
+
+#### 14i-2. The volatility: `volBps` **1_800 → 900**, and his crash band untouched
+
+§14h already named this knob and this direction: «If he wants back toward one-in-four WITH crashes,
+the wave's `volBps` comes down – his call, one knob.» **Halved**, because «half the wobble» is a
+sentence that can be defended later and 1,050 is not.
+
+⚠⚠ **`CRASH_DEPTH_RANGE` IS NOT TOUCHED.** −15…−30% at the trough, one crisis per 2–6 years, no grace
+period: those are **his own numbers from the day before**, and shaving them is his call to make, not
+mine to make quietly. What that leaves is named in 14i-4.
+
+⚙ **MEASURED**, `npx vite-node tools/market-probe.ts --seeds 4000` (30.08) – 228,000 rolling seasons,
+48,000 holdings per horizon, 16,000 crises, the same sample shape §14h used:
+
+| | round 29 (vol 1,800) | **round 30 (vol 900)** |
+| --- | ---: | ---: |
+| seasons negative | 30.8% | **24.5%** |
+| season sd | 16.79% | **15.06%** |
+| season p5 / p95 | −18.3% / +38.9% | **−16.8% / +36.6%** |
+| worst season | −39.9% | **−32.5%** |
+| worst peak-to-trough drawdown | −40.1% | **−33.6%** |
+| beats the 3.17% deposit – 1y | 57.15% | **62.04%** |
+| – 3y | 84.03% | **90.23%** |
+| – 5y | 86.75% | **87.89%** |
+| – 10y | 98.90% | **99.67%** |
+| crisis interval / depth | 4.01y, 75.2% in band, median −22.5% | **unchanged – his numbers** |
+| a career whose first season sees a fall | 49.7% | **unchanged** |
+
+#### 14i-3. ⚠⚠ THE SAFETY PROPERTY, RE-DERIVED – and the tail is **better**, not worse
+
+«Мы ни за что не наказываем» is house law, so this is derived rather than inherited.
+
+**The closed form, both tiers, at the new volatility:**
+
+* **Calm waters** – `worstCrashFreeRatio(900) = e^−0.18 = 0.8353`. Ten years:
+  `1.07¹⁰ × 0.8353 = 1.643 > 1.0317¹⁰ = 1.366`. **The ten-year guarantee holds for every seed and
+  every entry week**, with a far wider margin than 1,800 gave – the §14c ceiling is 1,824 bps and
+  coming down can only widen it.
+* **Selling into the deepest trough** – `worstMarketRatio(900) = 0.8353 × 0.70 = 0.5847`, and
+  `1.07^T × 0.5847 > 1.0317^T` solves at **T ≈ 14.7 years** (round 29: 19.7). Still longer than a
+  ten-year hold, so the tail is still real – and it is a third of what it was.
+
+⭐⭐ **AND UNITS DO NOT CHANGE THE ARITHMETIC OF A SINGLE ENTRY, which is why the bound carries.**
+`units × price(t) = M × price(t)/price(f)` is the old expression exactly. A MULTI-entry holding is
+`Σ Mᵢ · price(t)/price(fᵢ)` – a sum of terms each of which satisfies the bound at its own horizon, so
+the whole beats the deposit whenever every tranche does. ⚠ That is **strictly safer than the rebase**,
+which pulled the WHOLE holding onto the newest clock: under round 29 a top-up in season nine made a
+season-one holding a one-year hold; under units only the new money is on the new clock.
+
+⚙ **MEASURED, the number to put in front of him** – 48,000 ten-year holdings, 4,000 seeds × 12 entry
+weeks, exactly §14h's sample:
+
+> **156 of 48,000 lose to the deposit at ten years – 0.325%**, against round 29's measured **1.10%
+> (529 of 48,000)** which he accepted. **Zero of them sold in calm waters** (round 29: also zero), so
+> tier one's receipt is intact and every single loser is a trough-sell.
+
+At five years the calm-water losers go **245 → 0** and at three years **2,693 → 99**. So the law now
+reads: *holding through a crisis costs nothing – the arc comes home – and only selling into one can
+lose, at 0.325% over ten years.* **He accepted 1.10%; this is a third of it and nothing about the
+shape of the promise changed.**
+
+#### 14i-4. ⚠ WHAT IS STILL HIS TO RULE ON – the +65% he actually quoted
+
+He named **+65/−15** as what he saw. The −15 end is comfortably inside the new distribution (p5 is
+−16.8%). **The +65 end is not**: the best season in 228,000 is **+69.2%**, and **0.56% of seasons are
+over +50%** (round 29: 1.51%). Cut by two thirds, not removed.
+
+⚠ **Those seasons are CRASH REBOUNDS, not the wave**, so the wave's knob cannot delete them: a
+recovery arc is 40–80 weeks, so a season that starts at a trough can catch a whole rebound out of a
+−30% hole, and `1/0.70 × 1.07` is already +53% before the wave adds anything. Two knobs would remove
+it and **both are his**, because both change numbers he gave:
+
+1. `CRASH_DEPTH_RANGE` shallower than his «-15…-30%» – a −20% floor puts the best rebound season near
+   +40%, which is about a real index's best year.
+2. `CRASH_RECOVERY_WEEKS` longer than 40–80, so no single season can hold a whole rebound. ⚠ Bounded:
+   `fall + recovery ≤ 104` or crises overlap and the one-crash-at-a-time theorem – and the closed form
+   above with it – dies. `[60, 88]` is the most that fits.
+
+Say which, and it is one constant either way.
+
+#### 14i-5. The migration, and what a save keeps
+
+A v65 row is converted at **the price of its own basis week** – `units = (basisCents ?? paidCents) /
+price(seed, basisWeek ?? boughtWeek, rung)` – so `units × price(now)` is the number the old model
+would have shown this week, to the rounding. **A career's history survives the change rather than
+being reset**; resetting to today's price would have destroyed the entry price in the act of
+introducing it.
+
+⚠ One consequence, named so it is not read as a defect: a v65 rebase folded accrued GAIN into
+`basisCents`, so on a topped-up row the printed average (`paidCents / units`) comes out **below every
+unit price that career ever saw**. That is correct – cost basis over units is what a broker's
+«average price» means, and a family in profit is under today's price by construction.
+
+⚠ A **fixed** rung is not touched: no `units` key, no market, valued off what was paid exactly as
+before. `tests/round30-fund-units.test.ts`, `tests/component/round30-fund-units-screen.test.ts` and
+the re-aimed round 29 guards carry all of it; the frozen MAIN capture (41550 / `e6b0c709`) and the
+three frozen career hashes are **unmoved, re-derived per key against a control tree** rather than
+inherited.
+
+---
+
+## 15. ⚙ THE CARS COST SOMETHING TO KEEP, AND IT GROWS – round 30 #15 (30.08)
+
+> «Для машин вполне можно ввести годовую стоимость обслуживания, которая может с каждым годом
+> немного расти, как в реальности, пока стоимость авто на рынке падает.»
+
+⭐⭐ **THE SHAPE IS HIS AND IT IS TWO CURVES CROSSING.** `annualRateBps` (already on every car,
+negative by §3b's design) takes the market value DOWN; a new `upkeepGrowthBps` takes the weekly bill
+UP. Neither is a new mechanism – both are fields on the catalogue read by functions that already
+existed – and the whole item is that `assetUpkeepCents` now has an AGE to read them against.
+
+⚠ **WHY THE CARS HAD NONE UNTIL NOW, because it was a decision rather than an omission.** §3f's
+«годовое обслуживание» table is written about the BOATS AND THE PLANES and quotes no car; §3b gives
+the cars a price and a loss and stops. This is the third column, on the family the spec left out.
+
+### 15a. What shipped
+
+| rung | price | loses / yr | **upkeep / yr** | **upkeep / week, yr 1** |
+| --- | ---: | ---: | ---: | ---: |
+| the sensible estate | $60,000 | 6% | **5.0%** | **$57.69** |
+| the good saloon | $110,000 | 9% | **5.5%** | **$116.35** |
+| the one from the poster | $190,000 | 12% | **7.0%** | **$255.77** |
+| the unreasonable one | $300,000 | 15% | **9.0%** | **$519.23** |
+
+⭐ **The four rates are a real-world ladder and not a multiple of the price.** Servicing, insurance,
+tyres and tax on an ordinary estate run about a twentieth of what it cost; the same list on a
+two-seater with carbon brakes and an annual major service runs nearly twice that share, and it is the
+SHARE that climbs, not just the money. **Fuel is excluded on purpose** – nothing in this game knows
+how far anybody drove, and a cost nobody can influence should not be modelled as if they could.
+
+⭐⭐ **The last row is the point of the ladder, and it is §3f's own design sentence read one family
+down**: «the toys compete with the team for the same money». A $300,000 car costs roughly what the
+best coach in the game costs, every week, for as long as it sits there.
+
+**The growth: `upkeepGrowthBps: 600`** – 6% a year, compounding on the car's own age, **capped at
+double** (`ECONOMY.shop.upkeepGrowthCapX`, reached in the twelfth season of ownership). ⚠ CONTINUOUS
+and not a yearly step, which is `assetValueCents`' own argument read in the other direction: a step
+would hold the bill flat for fifty-one weeks and then raise it overnight on an anniversary nothing
+on screen names, and it would create a week to sell before.
+
+### 15b. ⚠⚠ THE SCOPE IS «для машин», AND THE BOATS AND PLANES DID NOT MOVE ONE CENT
+
+They carry **no** `upkeepGrowthBps`, so `assetUpkeepCents` ignores the age argument entirely on them
+and answers what it always answered, at any age at all. That is a decision and not an oversight: the
+flat 6–10% is the number §3f's «nothing here can strand a family» was MEASURED against ($23,076.92 a
+week at 10% of $12M), and compounding a bill whose safety property was proved at the flat figure is a
+balance change to a shipped rung. **It is his call, not this item's.**
+
+### 15c. ⚙ MEASURED – predicted vs measured
+
+**Predicted:** the bill is small against the price, so the early economy barely moves; over a long
+hold the KEEPING starts to cost more than the LOSING, which is what happens to a real car.
+
+**Measured, on the engine's own two functions:**
+
+| rung | yr 1 / wk | 10 yrs of upkeep | 10 yrs of lost value | **the year keeping overtakes losing** |
+| --- | ---: | ---: | ---: | ---: |
+| the sensible estate | $58 | **$40,694** | $27,683 | **4** |
+| the good saloon | $116 | **$82,067** | $67,164 | **8** |
+| the one from the poster | $256 | **$180,412** | $137,085 | **7** |
+| the unreasonable one | $519 | **$366,249** | $240,938 | **6** |
+
+⭐ **That crossover is the finding and it is real rather than a balance choice.** Running costs on an
+ordinary older car really do exceed its remaining depreciation, and the ladder now says so.
+
+**And the early economy, A/B on one tree** (`TB_SHOP_PROBE_RUN=1 npx vite-node tools/shop-probe.ts --
+--seeds 6 --seasons 8`; arm A is this same commit with the four cars' two upkeep fields stripped, so
+the READER is present in both arms and only the data moves):
+
+| | arm A (no car upkeep) | arm B (shipped) |
+| --- | ---: | ---: |
+| careers that bought before season 4 | 17 of 54 | 17 of 54 – unchanged |
+| season-slots where the shop was the largest outgoing | 17 of 216 | **19 of 216** |
+| worst shop share of a season, seasons 0–3 | 82.3% | **84.1%** |
+| the funds ladder (arm A, no shopping) | – | **byte-identical**, as it must be: a bill only reaches a family that owns one |
+
+⚠ **NOTHING CAN STRAND A FAMILY, on §3f's own test:** a car has NO build wait, so it is sellable from
+the week it is bought and every week after. There is no week in which the family is paying for a
+thing it cannot get out from under – checked on a ticked world in `tests/round30-car-upkeep.test.ts`
+rather than inherited from §3f.
+
+⚠ **The card and the till still quote ONE number.** `assetUpkeepCents`' old note promised «the figure
+the player was quoted, FOREVER», which cannot be true of a bill whose point is that it grows. The
+promise is kept the other way round: `shopView` quotes an OWNED row at THIS week's figure and an
+unowned one at the first year's, so what the row says is what the ledger charged.
+
+---
+
+## 16. ⚙ THE MERCH BRAND IS AN ASSET WITH A VALUE – round 30 #9 (30.08), and #11 with it
+
+> «сам Merch brand тоже вполне может расти в цене как бизнес по какой-то логике, похожей на привязку
+> к её рекламе и результатам. Можно провести анализ доходов и стоимости бренда RF (Roger Federer) для
+> референса.»
+
+The research is [player-brands-and-what-they-are-worth.md](../research/player-brands-and-what-they-are-worth.md),
+written before the number was picked and tagged `[S]`/`[I]`/`[GAP]`/`[WEAK]` throughout.
+
+### 16a. ⚠⚠ WHAT THE RESEARCH SAID, AND THE FIRST ANSWER IS A GAP
+
+**His own reference has no published value.** The RF mark sits in Tenro AG, Federer's private Swiss
+holding company; On Holding's IPO prospectus and its FY2025 annual report both name Tenro **only** in
+a risk factor and never in the financials, so not even the royalty is public. **A model that depends
+on the RF mark's value being knowable cannot be built.** Three findings that could be built on:
+
+1. **Brand value follows the ACCUMULATED stock, not current form.** Sugarpova expanded THROUGH a
+   fifteen-month doping ban; Federer's off-court income went **$90M → $95M in the year he retired**;
+   Jordan Brand did ~$8.7bn twenty-one years after he last played. ⭐ The game's existing decaying
+   fame stock is already the right driver and rank should carry no weight – which is what
+   `world/fame.ts` does and what round 30 #13 measured.
+2. **⭐⭐⭐ IT FALLS, and the best-documented case is the citation for «it must be able to».**
+   Federer's On stake ran `[I]` ~$603M in January 2025 and ~$289M in August 2026 – **down about half
+   while he was retired and nothing whatsoever about him changed.**
+3. **A name-attached brand that stops earning is still worth the MARK.** Björn Borg's own company
+   went bankrupt in 1990; the NAME was bought outright for $18M in 2006 and is a listed company doing
+   SEK 1,044M today.
+
+### 16b. What shipped
+
+```
+worth = max( paidCents x 0.25 ,  fame x $30/wk x 52 x 16 )
+        └── the mark ────────┘   └── years of what it earns ──┘
+```
+
+A fourth field on the rung, `earningsMultipleX`, and a third branch in `assetWorthCents` – the three
+valuations (units, a business, what was paid times a rate) are **exclusive by construction** and a
+test holds the catalogue to that in both directions. The merch rung's `annualRateBps: 0` is now DEAD
+for it and kept rather than deleted: the type requires it, and zero is the honest answer to «what
+rate does it drift at» – none, it is priced off earnings.
+
+⚠ **NO SCHEMA MOVE FOR THE VALUE.** `valueCents` is already persisted and already rewritten by
+`revalueAssets` every tick, so a save that owns a brand is re-priced on its next tick with no
+migration at all. (The NAME is a save field and rides v66 – see §16d.)
+
+### 16c. ⚙ MEASURED – how the multiple was chosen
+
+⚠ **The research gives a band, not a number, and says so.** No player-brand transaction publishes
+both an earnings figure and a price. The nearest two are Beckham's DRJB at `[I]` ~10.9x profit and
+the Nadal academy at `[I]` ~31x. **So the multiple is a choice inside a wide, thin band, and the
+criterion is the game's, not the sources':** *the brand should be worth about what it cost on the day
+a family can actually afford it.* A rung whose whole pitch is «дешевле академии» must not read as a
+paper loss the week it is bought.
+
+**Measured, 108 careers x 780 weeks, `npx vite-node tools/merch-fame-vs-rank.ts -- --weeks 780
+--seeds 12`:**
+
+| | measured |
+| --- | ---: |
+| careers that could ever carry the price | **100 of 108**, median first week **306** |
+| fame the week they could – p10 / median / p90 | 5.4 / **9.6** / 18.7 |
+| ...so the brand's worth that day at **16x** | $134,374 / **$240,852** / $466,149 |
+| **against a price of** | **$250,000** |
+| at or above what it cost on day one | **46 of 100** |
+| at the career's PEAK fame | median **$1,447,283 – 5.8x the price**, p90 $2.50M |
+| **seasons in which the VALUE FELL** | **28.7%**, median −19.7%, worst −29.3% |
+
+⭐⭐ **The median family is 96.3% of the way to square on the day it buys, and it is a coin flip
+whether they are up or down.** That is the number the multiple was picked for. ⭐ And the last row is
+the property the item was required to have: **roughly one season in three takes value off it**, which
+is the same order as the index fund's own «one year in four» – a risk asset, not a savings account
+with a picture on it.
+
+### 16d. The naming – round 30 #8 and #10, and the rules for text a player typed
+
+> #8 «Merch brand давай предложим пользователю несколько вариантов именования при покупке… один из
+> вариантов "ввести своё название" – это придаст +100 к индивидуальности сразу. Среди вариантов по
+> дефолту могут быть инициалы ребёнка или что-то связанное с именем или фамилией.»
+> #10 «И нейминг для академии тоже по принципу бренда, как раз одним из вариантов можно предложить
+> уже существующее название бренда (если он есть) или снова "ввести своё".»
+
+The suggestions are **made out of her, every one of them** – for a Vera Martin the brand offers
+`VM` / `Martin` / `Vera Martin` / `House of Martin`, and the academy offers **her brand's own name
+first** when there is one, then `Martin Academy` / `Vera Martin Academy` / `VM Academy`. A free-text
+field sits under the chips; pressing a chip WRITES INTO the field, so there is one value on screen
+and «I picked a chip but there was text in the box» is not a state the control can be in.
+
+⚠ **The name belongs to the FAMILY of rungs, not to the row**, which is what makes the academy work:
+four purchases, one institution, one name, given when the land was bought.
+
+⚠⚠ **FOUR RULES FOR PERSISTED, PLAYER-AUTHORED, RENDERED TEXT** (`sanitiseAssetName`):
+
+1. **A cap of 24 code points** – what a shop row holds at 375px beside its price. Code points and not
+   `.slice`, which can cut a surrogate pair in half. The screen sets the same constant as the field's
+   `maxlength`, so the cap is felt while typing rather than applied silently.
+2. **An allow-list, not a deny-list**: Unicode letters and digits, the space, and `& . ' -` – every
+   character real brands use. Control characters, bidi overrides and zero-width joiners are refused
+   by not being on it. ⚠ Cyrillic is ALLOWED: the house rule against it is about our copy in a
+   template, and a player typing in his own alphabet is data.
+3. **An empty entry is the DEFAULT, never a refusal** – blank, whitespace-only, or nothing but
+   disallowed characters all become the first suggestion, which is built from her own name.
+4. **Whitespace is normalised BEFORE the allow-list, then collapsed and trimmed** – filtering first
+   turned a pasted `Martin\n\tHouse` into `MartinHouse`, caught by the test on its first run.
+
+⚠ **Bounded twice, and neither pass replaces the other.** `buyAsset` sanitises what the game stores;
+`assetNameOf` sanitises again on every READ, because a save file is not a command and `saveGuard`'s
+32,768-character ceiling is four hundred times too loose to protect a layout. **375px is measured**
+against the viewport in `tests/component/round30-brand-naming-screen.test.ts`, on a 24-character
+unbroken name, with `overflow-wrap: anywhere` as the belt.
+
+⚠ **Schema: v66 AMENDED, not a new v67** – main is at 65, so no v66 save exists outside this wave and
+the append-only rule has not bitten. The step **back-fills a name** onto any brand or academy a save
+already owns, from the game's own first suggestion. That is deliberately the opposite of the same
+step's refusal to back-fill LEDGER rows: a ledger must stay truthful about what it charged, and a
+name is not a record of an event – the alternative is a career that owns a nameless business forever
+with no way to name it, because the picker is offered on the first purchase and that purchase is past.
+
+### 16e. ⚙ AND #11 – «Holds its value», checked before a word moved
+
+> «И как будто бы Holds its value странно звучит тоже – это напрямую значит, что оно обесценивается,
+> а это вроде бы не совсем так.»
+
+**He is right, and the engine says so.** A rung at `annualRateBps: 0` is worth `paidCents x 1^n` –
+exactly what was paid, every week, forever – and `sellAsset` hands back `valueCents` whole with no
+spread, no fee and no haircut. There is no inflation anywhere in this engine either, so there is not
+even a real-terms slide behind the nominal figure. **It does not depreciate; the words were the only
+thing suggesting it might.** Pinned on a ticked world at 1, 5 and 15 seasons plus a real sale.
+
+The line is now **«Neither gains nor loses»** – the zero of the sentence its two siblings say («Loses
+6% a season», «Gains about 7% a season»), which cannot be read as a slow slide. ⭐ And the row he was
+most likely reading it on is gone from that branch entirely: the merch brand is priced as a business
+by §16b, which is his own next sentence.

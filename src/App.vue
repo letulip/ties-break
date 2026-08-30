@@ -777,35 +777,26 @@ const calendarPlays = ref(false)
 const weekSpan = ref<{ from: number; to: number } | null>(null)
 
 // =================================================================================================
-// ⭐⭐ ROUND 26 #1's ACTUAL ASK, SHIPPED AT ROUND 29 #6 – THE CONTROL INTRODUCES ITSELF, ONCE
+// ⚠⚠ ROUND 30 #3 – THE FIRST-USE LINE IS GONE, WITH THE CONTROL IT EXPLAINED
 // =================================================================================================
 //
-// The owner, the day the pill first appeared: «Что за кнопка Next 4 weeks у меня появилась прямо под
-// пальцем на домашнем экране?» That item produced a GATE (his 25.08 rule, `spanWorthOffering`) and
-// it never produced the sentence, which was the half he actually asked for – a feature that arrives
-// without a word is the same complaint however rare it is made rarer. Round 29 #6 is the same
-// control back in his ledger, so the line ships with the repair rather than after it.
+// It read «Quiet stretch ahead – the left button spends those weeks in one press, and stops early on
+// anything worth reading», rendered once per career above the week bar, cleared by the first press
+// and watermarked at `tb:spanHintUsed`. It was round 26 #1's actual ask, shipped with round 29 #6's
+// repair, and it lasted one round:
 //
-// ⚠ IT IS A FIRST-USE LINE AND NOT A TOUR STOP. The onboarding tour is a blocking sequence with a
-// scrim; this is one muted sentence above the bar that costs nothing to ignore, which is the right
-// weight for a control that is itself optional. It is not in `Popup` and cannot hold a queue.
+//   «Странная серая нечитаемая надпись над кнопками… Quiet stretch ahead… Идея хорошая, реализация
+//    не очень.» (owner, 30.08)
 //
-// ⚠ ONCE-NESS IS A WATERMARK, PER CAREER, on the injury report's own shape: it clears the first time
-// the pill is actually PRESSED, so the sentence stands for as long as the control is unused and
-// never returns afterwards. A sentinel `absent` ({ value: null }) means a career with nothing stored
-// counts as un-introduced – the same asymmetry `useWatermark`'s own note argues for the report and
-// the briefing: showing it twice costs a glance, never showing it is the bug it exists to fix.
-const SPAN_HINT_PREFIX = 'tb:spanHintUsed'
-const spanHintMark = computed(() => (game.snapshot ? 'used' : null))
-const { unseen: spanHintUnseen, markSeen: markSpanHintUsed } = useWatermark(
-  SPAN_HINT_PREFIX,
-  spanHintMark,
-  (now, seen) => now !== null && now !== seen,
-  { value: null },
-)
-/** The line renders only where the control it explains does – beside the pill, on the week the pill
- *  is on offer, until it has been used. */
-const showSpanHint = computed(() => weekAction.value.multi !== null && spanHintUnseen.value)
+// ⚠ IT GOES BECAUSE ITS SUBJECT WENT, AND NOT BECAUSE HE DISLIKED THE STYLING. The same sentence
+// deleted the control it introduces: the span is now offered ONLY inside a long injury layoff
+// (`spanWorthOffering`), so a line that opens «Quiet stretch ahead» would be describing a week that
+// no longer offers anything. A muted sentence is fixable; a false one is not, and the fix he asked
+// for is the button's removal.
+//
+// ⚠ THE WATERMARK KEY IS DELIBERATELY NOT REUSED. `tb:spanHintUsed` may be set in his save and in
+// every playtest save; nothing reads it now and nothing should, so a future first-use line for some
+// other control must take its own key rather than inherit a mark this one already spent.
 
 async function playWeek(weeks: number): Promise<void> {
   // ⚠ ANY press clears the last span's report first. A card about weeks 12-15 sitting over week 16
@@ -842,10 +833,8 @@ async function playWeek(weeks: number): Promise<void> {
   // difference between the two week numbers is the honest answer, and it is also what lets the card
   // say "2 weeks passed" instead of the four the button offered.
   const spanFrom = game.snapshot?.week ?? 0
-  // ⚠ THE INTRODUCTION IS SPENT ON THE PRESS AND NOT ON THE RENDER, which is what "first USE" means:
-  // a line marked seen the moment it is drawn is a line nobody reads. Marked BEFORE the await so it
-  // clears even if the advance is refused – the parent has met the control either way.
-  if (weeks > 1) markSpanHintUsed()
+  // ⚠ ROUND 30 #3 – the `markSpanHintUsed()` call that stood here went with the first-use line it
+  // spent (see the script note above). Nothing else about the press changed.
   await game.advance(weeks)
   const spanTo = game.snapshot?.week ?? spanFrom
   if (weeks > 1 && spanTo > spanFrom) weekSpan.value = { from: spanFrom, to: spanTo }
@@ -1576,17 +1565,11 @@ function reopenTour(): void {
          the resume button must still render on every tab – it is the ONLY way to clear the state
          `resumeFromCollege` now refuses to tick past (COLLEGE_REVEAL_REFUSAL), and before this wave
          there was no surface in the app that could draw the reveal at all. -->
-    <!-- ⭐⭐ ROUND 26 #1's SENTENCE, SHIPPED AT ROUND 29 #6 – what the pill beside it is for, once.
-         See `showSpanHint` for why it is a first-USE line rather than a tour stop, and why it clears
-         on the press.
-         ⚠ IT IS A SIBLING OF THE BAR AND NOT A CHILD OF IT, deliberately: `.next-week-bar` is a plain
-         flex ROW whose DOM order IS the button order (round 26 #1 put the pill on the left and
-         `tests/component/round26-span-gate-ui.test.ts` asserts index 0 and no `order` override), so a
-         line inside it would either take that first slot or need the CSS that test forbids. -->
-    <p v-if="showSpanHint && tab === 'home' && !showCollege && !game.snapshot?.pending" class="span-hint">
-      Quiet stretch ahead – the left button spends those weeks in one press, and stops early on anything worth
-      reading.
-    </p>
+    <!-- ⚠⚠ ROUND 30 #3 – THE FIRST-USE LINE THAT STOOD HERE IS GONE. It opened «Quiet stretch
+         ahead», and there is no quiet-stretch span any more: the pill is offered only inside a long
+         injury layoff. The owner's words and the reason the sentence goes with its subject rather
+         than being restyled are in the script block above, because Cyrillic inside a <template> is
+         forbidden (tests/template-copy-rules.test.ts). -->
     <div
       v-if="(tab === 'home' && !showCollege) || game.snapshot?.pending"
       class="next-week-bar"

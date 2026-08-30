@@ -73,7 +73,13 @@ slice returning −1. Verify scope, range arithmetic and anchoring before filing
 
 **3. Save schema changes are a three-part move.** Bump `SAVE_SCHEMA_VERSION`, add an **append-only** migration in `engine/migrations.ts`, add a golden fixture in `tests/fixtures/saves/`. `tests/goldenSaves.test.ts` enforces one fixture per version. Migrations are append-only: never edit a shipped one.
 
-**4. Tuning is measured, not guessed.** Balance changes ship with a bench run and a spec in `docs/specs/` recording predicted vs measured. `docs/specs/rank-plateau.md` is the model: predict a fix, measure it doing nothing, find the real cause.
+**4. ⚠⚠ USER-FACING WORDING IS NOT AN AGENT'S TO CHANGE** (owner, 30.08: «Я это не просил. Верни как было пожалуйста и **запрети на уровне документации и спек агентам самовольно изменять вординг**»). A label, tab, button or sentence on screen may only change when the task ASKED for it. Fixing something adjacent is not permission: round 29 renamed the Family-budget tab `This season` → `So far` while solving a different complaint about two screens meaning different seasons, and the owner found the rename in play and had not asked for it.
+
+- If a fix seems to *require* a wording change, say so and ask – the copy is his, and the ask costs a sentence.
+- This binds agents and me equally, and it holds while «fixing» a string that looks wrong: **looks wrong to us is not the same as wrong to him.**
+- ⭐ The corollary that makes it cheap to obey: a string you did not touch cannot regress, and a wording change is the one kind of diff no test catches — the pins assert what the string IS, so they move with it and stay green.
+
+**5. Tuning is measured, not guessed.** Balance changes ship with a bench run and a spec in `docs/specs/` recording predicted vs measured. `docs/specs/rank-plateau.md` is the model: predict a fix, measure it doing nothing, find the real cause.
 
 ## The simulation suite's standing regime (owner's final ruling, 22.08 – do not revisit)
 

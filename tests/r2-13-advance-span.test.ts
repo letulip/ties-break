@@ -746,20 +746,41 @@ describe('R2-13 D – the shell offers the span in exactly the states the engine
     }
   })
 
-  it('⚠ on a quiet week with nothing pending, the span IS offered', () => {
+  it('⚠ on a LAYOFF week with nothing pending, the span IS offered', () => {
     // The other half – without it the gate above is satisfied by a control that never appears.
-    // ⚠ RE-AIMED NOTE (round 26 #1): this stays green for a DIFFERENT REASON than it used to.
+    // ⚠ RE-AIMED NOTE (round 26 #1): this stayed green for a DIFFERENT REASON than it used to.
     // `quietCareer` empties `world.season`, so the owner's first arm – nothing in the calendar for
-    // five weeks – now holds as well as the engine's refusal being null. Both are needed and this
-    // case pins the pair; the arms themselves are measured on walked careers in
-    // `tests/round26-span-gate.test.ts`, which is where a change to either one goes red first.
+    // five weeks – held as well as the engine's refusal being null.
+    //
+    // ⚠⚠ RE-AIMED AGAIN BY ROUND 30 #3, AND THE FIRST ARM IS GONE. He played the repaired control
+    // and deleted it: «давай вообще эту кнопку про 6 недель уберём. Её можно оставить только на
+    // длинные травмы». An empty calendar is no longer a reason to offer a skip – «нам в это время
+    // приходят письма и идёт запись на новые турниры» – so this case now reaches the offered state
+    // through the arm that survives, and asserts BOTH halves of the new rule: an empty calendar on
+    // its own says no, and the layoff over it says yes.
     const { world } = quietCareer('gate-quiet')
     const snap = toSnapshot(world)
     expect(advanceRefusal(world), 'the engine can move time').toBeNull()
-    expect(snap.upcoming, 'and the owner\'s first arm holds – an empty calendar').toHaveLength(0)
-    expect(multiOffered(snap, 'training'), 'so the quiet week offers the span').toBe(true)
-    expect(multiOffered(snap, 'off-season')).toBe(true)
-    expect(multiOffered(snap, 'exam')).toBe(true)
+    expect(snap.upcoming, 'the calendar really is empty').toHaveLength(0)
+    expect(
+      multiOffered(snap, 'training'),
+      'an empty calendar still offers the span – the quiet-stretch arm is back',
+    ).toBe(false)
+
+    // ...and the layoff is what makes the control legal, on the identical week.
+    const hurt = {
+      ...snap,
+      injury: {
+        kind: 'stress fracture',
+        severity: 'major' as const,
+        weeksRemaining: 20,
+        totalWeeks: 20,
+        sinceWeek: snap.week - 1,
+      },
+    }
+    expect(multiOffered(hurt, 'training'), 'so the layoff week offers the span').toBe(true)
+    expect(multiOffered(hurt, 'off-season')).toBe(true)
+    expect(multiOffered(hurt, 'exam')).toBe(true)
   })
 
   it('⭐⭐ an unanswered LETTER is a halt and not a refusal – so the pill stays on offer', () => {
@@ -804,7 +825,23 @@ describe('R2-13 D – the shell offers the span in exactly the states the engine
     // which is the half a "the shell invented a refusal" regression would break. The calendar is
     // emptied on the SNAPSHOT rather than in the world, so the offer, the inbox dot and every other
     // fact about this week are untouched.
-    const clear = { ...snap, upcoming: [] }
+    // ⚠⚠ RE-AIMED AGAIN BY ROUND 30 #3. The cleared reading used to be `{ ...snap, upcoming: [] }`,
+    // because an empty calendar was the arm that satisfied his rule. That arm is gone – he deleted
+    // it – so the reading that satisfies the rule today is a LAYOFF, and the claim is unchanged:
+    // with his rule satisfied the pill IS on offer WITH the letter still lying open. The layoff is
+    // laid on the SNAPSHOT rather than in the world, so the offer, the inbox dot and every other
+    // fact about this week are untouched, exactly as the empty calendar was.
+    const clear = {
+      ...snap,
+      upcoming: [],
+      injury: {
+        kind: 'stress fracture',
+        severity: 'major' as const,
+        weeksRemaining: 20,
+        totalWeeks: 20,
+        sinceWeek: snap.week - 1,
+      },
+    }
     expect(clear.offerOpen, 'the letter is still open on the cleared reading').toBe(true)
     expect(multiOffered(clear, 'off-season'), 'so the span is still on offer – no reason to withhold it').toBe(true)
   })

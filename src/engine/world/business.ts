@@ -26,8 +26,12 @@
 // shop card (`shopView`) prints them: three surfaces, one function each, so they cannot disagree –
 // the repo's most-repeated defect, refused the way `weeklyAssetUpkeepCents` refuses it.
 import { ECONOMY } from '../economy'
-import { deliveredAssets } from './assets'
-import { fameAt } from './fame'
+// ⭐⭐ ROUND 30 #9 MOVED THE MERCH RATE ONE FILE DOWN, and «one arithmetic» is exactly why. The
+// brand now carries a VALUE as well as an income (`assetWorthCents`), and that valuation lives in
+// `world/assets.ts` – which this file imports, so the rate had to be reachable from there or there
+// would be two copies of `fame x the dial`. `assetEarningsRateCents` is that one copy; everything
+// this file adds to it is the ownership and delivery guards.
+import { assetEarningsRateCents, deliveredAssets, shopItem } from './assets'
 import type { WorldState } from '../world'
 
 /** ⭐⭐ WHAT ONE OWNED RUNG BRINGS IN THIS WEEK, in whole cents – THE arithmetic, and the only
@@ -40,7 +44,11 @@ import type { WorldState } from '../world'
  *  merch brand and the academy's stages. */
 export function assetWeeklyIncomeCents(world: WorldState, id: string): number {
   if (!deliveredAssets(world).some((row) => row.owned.id === id)) return 0
-  if (id === 'merch-brand') return Math.round(fameAt(world) * ECONOMY.business.merch.perFamePointCents)
+  // ⭐ ROUND 30 #9 – THE RATE IS ASKED OF `world/assets.ts` RATHER THAN COMPUTED HERE, so the weekly
+  // cheque and the brand's own worth are the same fame times the same dial. What this file still
+  // owns is everything the valuation must NOT ask: is it theirs, and has it been delivered.
+  const item = shopItem(id)
+  if (item && item.family === 'business') return assetEarningsRateCents(world, item)
   const baseCents = ECONOMY.business.academy.stageIncomeCents[id] ?? 0
   if (baseCents <= 0) return 0
   return Math.round(baseCents * academyReputationOf(world))

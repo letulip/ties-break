@@ -6,7 +6,8 @@
 // one-way door.
 //
 // ⚠⚠ THE TRAP THIS FILE EXISTS FOR IS THE ONE ROUND 29 #11 FELL INTO AND CAUGHT. `revalueAssets`
-// recomputes `valueCents` from `basisCents`/`basisWeek` on EVERY tick, so a sale that only lowered
+// recomputes `valueCents` from the row's own state on EVERY tick – `basisCents`/`basisWeek` when
+// this file was written, `units` since round 30 #14 – so a sale that only lowered
 // the value would be silently undone the following week – the money would land in the wallet and the
 // holding would grow it straight back. And `paidCents` is the CASH the family put in, so a sale that
 // left it alone would make `changeCents = valueCents - paidCents` report the whole holding's gain
@@ -15,6 +16,14 @@
 // ⚠ MUTATION-VERIFIED – each turns exactly the named case red, and each was watched doing it:
 //   * `owned.basisCents = owned.valueCents - proceedsCents` deleted -> "a sold part stays sold",
 //     ALONE. This is the trap itself: the next tick reinflates the holding.
+//     ⭐ ROUND 30 #14 RE-AIMED THAT LINE AT `owned.units -= (owned.units * proceeds) / value`, and
+//     the mutation was re-run against the new engine: deleting it turns "a sold part stays sold" red
+//     ALONE, the same way and for the same reason – the next revaluation prices `units × price` and
+//     the units never left. ⚠ AND THE FIXTURE'S OWN CAVEAT BELOW IS NOW MOOT AND IS KEPT ANYWAY: a
+//     freshly-bought deposit would ALSO catch it under units (its units are real from the first
+//     cheque, where its `basisCents` was absent), so the top-up in the fixture is no longer
+//     load-bearing. It stays because a topped-up holding is a strictly harder case and because
+//     deleting the evidence for a caught defect is how the defect comes back.
 //   * `owned.paidCents -= costSoldCents` deleted             -> "twice over" (the P&L half) and
 //     "the top-up's own P&L survives it", together – they are the same claim on two fixtures.
 //   * `Math.round(...)` -> `Math.floor(...)` in `costSoldCents` -> nothing, and that is CORRECT: the
@@ -48,9 +57,11 @@ function withDeposit(seed: string, stakeCents = 100_000_00): WorldState {
   return world
 }
 
-/** Move the world's CLOCK without ticking it – the shelf's value is pure arithmetic on
- *  `(basisCents, basisWeek, week)`, so this is the honest, cheap way to age a holding and it is what
- *  `revalueAssets` reads. No draws, no phases, nothing else about the world moves. */
+/** Move the world's CLOCK without ticking it – the shelf's value is pure arithmetic on the row and
+ *  the week, so this is the honest, cheap way to age a holding and it is what
+ *  `revalueAssets` reads. ⭐ ROUND 30 #14: on a unit-priced row that arithmetic is `units × price(week)`
+ *  and the clock is the same clock, so this helper needed nothing. No draws, no phases, nothing else
+ *  about the world moves. */
 function ageWeeks(world: WorldState, weeks: number): void {
   world.week += weeks
   revalueAssets(world)
@@ -111,9 +122,9 @@ describe('part two #4 – a part sale takes money out and leaves the rest workin
 
   it('⚠⚠ a sold part STAYS sold – the next tick may not grow it back', () => {
     // ⚠⚠⚠ THE TRAP, AND THE FIXTURE IS THE HALF THAT MAKES THIS ARM HONEST. `revalueAssets` is the
-    // one writer of `valueCents` and recomputes it from `(basisCents ?? paidCents, basisWeek ??
-    // boughtWeek)`, so a part sale that lowered the value alone would be undone on the next tick with
-    // the cash already banked.
+    // one writer of `valueCents` and recomputes it from `units × price(week)` (round 30 #14; it was
+    // `(basisCents ?? paidCents, basisWeek ?? boughtWeek)` when this arm was written), so a part sale
+    // that lowered the value alone would be undone on the next tick with the cash already banked.
     //
     // ⚠⚠ AND THE FIRST VERSION OF THIS ARM WAS DEAD – recorded rather than quietly fixed, because it
     // is the trap's own shape. It used a freshly-bought deposit, which carries NO `basisCents` at
@@ -124,17 +135,23 @@ describe('part two #4 – a part sale takes money out and leaves the rest workin
     const sold = withDeposit('p2-part-sale-stays', 50_000_00)
     ageWeeks(sold, WEEKS_PER_YEAR)
     buyAsset(sold, 'deposit', 50_000_00)
-    expect(sold.assets[0].basisCents, 'the fixture really carries a basis of its own').toBeGreaterThan(0)
+    expect(sold.assets[0].units, 'the fixture really carries units of its own').toBeGreaterThan(0)
     ageWeeks(sold, WEEKS_PER_YEAR)
 
     const before = sold.assets[0].valueCents
+    const unitsBefore = sold.assets[0].units!
     const half = Math.round(before / 2)
     sellAsset(sold, 'deposit', half)
     const held = sold.assets[0]
-    // ⭐ THE REBASE ITSELF, ASSERTED: what is left, struck today.
+    // ⭐ WHAT IS LEFT, ASSERTED: the value the family did not take out.
     expect(held.valueCents).toBe(before - half)
-    expect(held.basisCents, 'the basis is what is LEFT, not what it was').toBe(before - half)
-    expect(held.basisWeek, 'and the compounding clock restarted here').toBe(sold.week)
+    // ⚠⚠ RE-AIMED AT ROUND 30 #14, AND THE CLAIM IS THE SAME SENTENCE IN THE NEW NOUN. It read «the
+    // basis is what is LEFT» and «the compounding clock restarted here»; there is no basis and no
+    // restart any more, because a part sale sells UNITS. What is left is what is left – the same
+    // fraction of the units the sale took of the value – and it is that fraction, not a restated
+    // basis, that stops the next tick growing the holding back.
+    expect(held.units!, 'the units left are the units that were not sold').toBeCloseTo(unitsBefore / 2, 8)
+    expect(held.basisWeek, 'and a part sale restarts no clock any more').toBeUndefined()
     // ...so a revaluation in the SAME week changes nothing, which is `revalueAssets`' own contract.
     revalueAssets(sold)
     expect(held.valueCents).toBe(before - half)
@@ -146,19 +163,33 @@ describe('part two #4 – a part sale takes money out and leaves the rest workin
     expect(held.valueCents, 'the sale was not quietly reversed').toBeLessThan(before)
     // NEUTRAL, TO THE CENT: what is left tracks the same curve, scaled. No punishment for selling and
     // no free money either – «мы ни за что не наказываем», and its mirror.
-    expect(held.valueCents).toBe(assetValueCents(shopItem('deposit')!, leftAtSale, WEEKS_PER_YEAR))
+    //
+    // ⚠ ROUND 30 #14 – `assetValueCents` IS NO LONGER THE FUNCTION THAT PRICES THIS ROW, so the
+    // comparison is stated as what it always meant: a deposit's unit price grows at exactly its rate
+    // (no `volBps`, so `marketIndex` is exactly 1), and the units did not change, so a season later
+    // the holding is a season of the rate on what was left. `toBeCloseTo(…, -1)` is one cent of
+    // slack for the second rounding a unit price introduces – the old form rounded once, this rounds
+    // `units × price` at the sale and again a season on.
+    expect(held.valueCents).toBeCloseTo(assetValueCents(shopItem('deposit')!, leftAtSale, WEEKS_PER_YEAR), -1)
   })
 
   it("⚠⚠ the top-up's own P&L survives a part sale – round 29 #11's split, both directions", () => {
-    // ⭐ THE SAME FIELDS FROM THE OTHER END. A top-up REBASES `basisCents` and ADDS to `paidCents`;
-    // a part sale rebases the other way and SUBTRACTS. Doing one after the other must leave
+    // ⭐ THE SAME FIELDS FROM THE OTHER END. A top-up ADDS units and ADDS to `paidCents`; a part sale
+    // takes the same fraction out of both. Doing one after the other must leave
     // `changeCents = valueCents - paidCents` meaning what it has always meant.
     const world = withDeposit('p2-part-sale-after-topup', 50_000_00)
     ageWeeks(world, WEEKS_PER_YEAR)
     const held = world.assets[0]
-    buyAsset(world, 'deposit', 50_000_00) // the top-up: rebases, and paidCents becomes the cash in
+    const unitsAtOpen = held.units!
+    buyAsset(world, 'deposit', 50_000_00) // the top-up: more units, and paidCents becomes the cash in
     expect(held.paidCents, 'the cash the family put in, both cheques').toBe(100_000_00)
-    expect(held.basisWeek, 'and the compounding clock restarted').toBe(world.week)
+    // ⚠ RE-AIMED AT ROUND 30 #14: «the compounding clock restarted» was the rebase, and there is no
+    // rebase. The claim underneath it – that the second cheque really bought something of its own –
+    // is the units, and they are what the arm reads now. A season of a 3.17% rate has passed, so the
+    // second $50,000 buys FEWER units than the first: the entry price went up.
+    expect(held.units!, 'the second cheque bought units of its own').toBeGreaterThan(unitsAtOpen)
+    expect(held.units! - unitsAtOpen, 'and fewer of them, at a dearer price').toBeLessThan(unitsAtOpen)
+    expect(held.basisWeek, 'and no clock was restarted').toBeUndefined()
     ageWeeks(world, WEEKS_PER_YEAR)
     const gainBefore = held.valueCents - held.paidCents
     expect(gainBefore, 'there is a real gain to split').toBeGreaterThan(0)
@@ -229,7 +260,7 @@ describe('part two #4 – the three guards, and one more the item did not name',
 
   it('⚠⚠ refuses a NaN amount – the guard that read like it covered this and did not', () => {
     // `NaN <= 0` is FALSE and `NaN > value` is FALSE, so a malformed amount off the wire walks past
-    // both comparisons and writes NaN into `valueCents` and `basisCents`. A career corrupted by a
+    // both comparisons and writes NaN into `valueCents` and `units`. A career corrupted by a
     // guard nobody had mutated. `!(asked > 0)` is the form that catches it.
     const world = withDeposit('p2-guard-nan')
     const wallet = world.fundsCents

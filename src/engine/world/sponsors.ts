@@ -1223,7 +1223,9 @@ export function bankSponsorCheque(
     // ⚠⚠ P3 IS WHY `accrueKidShare` NOW STORES AN EFFECTIVE RATE. Two rates reach one week the moment
     // a title pays a prize (her ramp) and a result bonus (this fee's complement); the rate handed in
     // here is this cheque's own, and the sum is reconciled there. See its header.
-    accrueKidShare(world, world.week, herCents, 10_000 - bps, grossCents)
+    // ⭐⭐⭐ ROUND 30 #21 – tagged `sponsor`, so the week recap can name THIS rule («hers, less the
+    // manager's fee») instead of averaging it with her prize ramp. The rate handed in is unchanged.
+    accrueKidShare(world, world.week, herCents, 10_000 - bps, grossCents, 'sponsor')
   }
   return { herCents, familyCents }
 }

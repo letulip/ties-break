@@ -361,7 +361,7 @@ export interface DayContext {
 /** What a trip week is when nobody said – the common draw, no press room, no masseur. See
  *  `DayContext.trip` for why absence resolves to the quiet middle of the ladder rather than to the
  *  biggest thing the arc can draw. */
-export const TRIP_DEFAULT: TripFacts = { rounds: 5, masseur: false, press: false }
+export const TRIP_DEFAULT: TripFacts = { rounds: 5, masseur: false, press: false, shoot: false }
 
 /** The context a caller that has none gets: Monday, and a rest day. Deliberately the QUIETEST day
  *  the tables can produce, so a caller that forgets to say which day it is asks for the least the
@@ -484,7 +484,8 @@ const TRIP_TRAVEL_HOME: DayBlock = { start: 11, span: 4, kind: 'travel', label: 
  *
  *  ⚠ ONE HOUR, ON A MATCH DAY AND NOWHERE ELSE: no press room opens for a travel day or a practice
  *  day. Where it sits inside that day is `tripMatchDay`'s decision, not this constant's - see the
- *  ORDER note there, which is the owner's own enumeration. */
+ *  ORDER note there. ⚠ ROUND 30 #17 put it STRAIGHT off the court, ahead of the table: «матч,
+ *  конференция через 30 минут, потом массаж». */
 const TRIP_PRESS: Omit<DayBlock, 'start'> = { span: 1, kind: 'press', label: 'Press' }
 
 /** ⭐⭐ P13 – THE MASSEUR'S HOUR ON TOUR, «сессии массажа после матчей по плану», drawn on the match
@@ -500,25 +501,79 @@ const TRIP_PRESS: Omit<DayBlock, 'start'> = { span: 1, kind: 'press', label: 'Pr
  *  would be the picture promising a dial the ledger does not read. One session per match day is what
  *  the engine already bills for.
  *
- *  ⚠ WHERE IT SITS IS `tripMatchDay`'s ORDER note, one function down. */
+ *  ⚠ WHERE IT SITS IS `tripMatchDay`'s ORDER note, one function down. ⚠ ROUND 30 #17 moved it
+ *  BEHIND the press hour, which is also what a rub-down after a match and its conference is. */
 const TRIP_TABLE: Omit<DayBlock, 'start'> = { span: 1, kind: 'physio', label: 'Body work' }
+
+/** ⭐⭐ ROUND 30 #2 – THE SPONSOR'S HOURS ON A WEEK SHE IS ALSO PLAYING, and this block exists
+ *  because the owner paid for them and could not see them: «Если выбрать Do both для съёмок и
+ *  турнира, то в расписании не отображаются съёмки».
+ *
+ *  ⚠⚠ THE THIRD «YOU PAID AND CANNOT SEE IT» OF THE MONTH, and the repetition is the finding rather
+ *  than this one bug. The shoot week's MASSEUR was drawn out of a week the salary was charged for
+ *  (round 29 #3, `masseurSessions`' `&& !shooting`); the tour week's MASSAGE DAYS were laid on the
+ *  travel day and the practice day while the engine billed matches played (round 29 P13); and now
+ *  the «do both» arm charges `clashConditionPerDay` x 7 and drew nothing at all. Three different
+ *  files, one shape: a charge with no picture. The rule this file already had – «the picture is the
+ *  same sentence the sim charges for» – is the rule all three broke, and it is worth reading before
+ *  the next block is added rather than after.
+ *
+ *  ⚠ ON THE MATCH DAYS, BY THE SAME MECHANISM AS THE PRESS HOUR AND THE TABLE, and that is the only
+ *  rule that always draws SOMETHING: from five rounds up a trip has no practice day left to give
+ *  (`tripArcFor`'s `hits` is 0 at the WTA main tour and above, and a Slam is seven match days), so a
+ *  rule that hung the shoot on the arc's free days would draw nothing at exactly the rungs a brand
+ *  campaign is written around – which is this item's own defect, rebuilt.
+ *
+ *  ⚠ LAST IN THE DAY, BEHIND HIS RULED ORDER. Round 30 #17 fixed match -> press -> table as the real
+ *  sequence; the brand's hours are what the day has left after the tennis and its conference, so they
+ *  go on the end and his three blocks do not move for them.
+ *
+ *  ⚠ TWO HOURS, NOT SIX. `SHOOT_DAY` below is a whole working day because on an ordinary week the
+ *  call sheet OWNS the day; here the draw owns it and the brand gets what is left. That is the
+ *  mechanic's own design – «the shoot never pretends to own the week» – and it is also what keeps
+ *  the day inside the grid: the longest match day becomes 10-18 and the Slam's evening flight still
+ *  has 18-19 (`addEveningReturn`), so nothing is shortened to make room.
+ *
+ *  ⚠ IT WEARS `travel` FOR `SHOOT_DAY`'s REASON, restated because it matters more here: «lights,
+ *  flights and a working day» is what `accrueCondition` charges the week at, so the hour that is not
+ *  hers reads in the palette the app uses for an hour spent getting somewhere. No new colour, and no
+ *  new `--cat-*` row – the round 29 P14 rule for `press` applies unchanged. */
+const TRIP_SHOOT: Omit<DayBlock, 'start'> = { span: 2, kind: 'travel', label: 'Shoot' }
 
 /** ⭐ P15 – ONE MATCH DAY, with whatever the rung hangs on it, in the order he named them.
  *
- *  ⚠⚠ THE ORDER IS THE OWNER'S OWN ENUMERATION AND IT WAS THE OTHER WAY ROUND IN THE FIRST DRAFT.
- *  I had written match -> microphone -> table on the reasoning that a real press conference follows
- *  a match within the half-hour. His sentence closing the return («можно сделать в Вс **после
- *  матчей, массажа и конференций**») lists them in HIS order, and it is the one the day is built in
- *  now: **draw -> table -> press -> the journey home**. One order on every match day of every rung,
- *  so the last day of a Slam is the same day as its other six with a flight added rather than a day
- *  shaped differently from its own week.
+ *  ⚠⚠ ROUND 30 #17 – THE OWNER RULED ON THE ORDER OUTRIGHT, AND IT IS **draw -> press -> table**.
+ *  «на турнирных неделях с пресс-конференциями всё-таки давай сделаем как в реальности: матч,
+ *  конференция через 30 минут, потом массаж» (30.08).
+ *
+ *  ⚠ THIS RESTORES THE FIRST DRAFT AND UNDOES A CORRECTION, WHICH IS WORTH RECORDING BECAUSE THE
+ *  CORRECTION WAS THE MISTAKE. P15 shipped `draw -> table -> press` on a reading of his earlier
+ *  sentence «можно сделать в Вс после матчей, массажа и конференций» as a SEQUENCE. It was a LIST –
+ *  three things that all happen before the flight – and turning a list into an order is how the
+ *  wrong day got built. The first draft had `draw -> press -> table` on exactly the reasoning he has
+ *  now given: a real conference follows the match within the half-hour.
+ *
+ *  ⚠ THE HALF-HOUR IS NOT DRAWABLE AND IS NOT DRAWN. `DayBlock` is `{ start, span }` in WHOLE HOURS
+ *  and the grid's rows run 07:00–19:00, so «через 30 минут» renders as THE NEXT HOUR BLOCK after the
+ *  match, which reads the same to the eye. Half-hour support would re-shape every day in the game
+ *  for one gap; if the half-hour ever genuinely matters it is its own decision and his.
+ *
+ *  One order on every match day of every rung, so the last day of a Slam is the same day as its
+ *  other six with a flight added rather than a day shaped differently from its own week.
+ *
+ *  ⭐⭐ ROUND 30 #2 – AND THE SPONSOR'S HOURS GO ON THE END OF IT, on a week the player answered «do
+ *  both» to. Behind his ruled order, because the brand gets what the tennis and its conference leave.
+ *  See `TRIP_SHOOT`.
  *
  *  ⚠ EACH BLOCK SITS DIRECTLY BEHIND THE ONE BEFORE IT – no gaps to reason about, and the day's end
- *  is `dayEnd` below, which is what the journey home is placed against. */
+ *  is `dayEnd` below, which is what the journey home is placed against. The Slam's Sunday still ends
+ *  exactly on the grid's last row after the swap (10-14 draw, 14-15 press, 15-16 table, 16-19 home);
+ *  the arithmetic is unchanged because the two swapped blocks are one hour each. */
 function tripMatchDay(trip: TripFacts): DayBlock[] {
   const day: DayBlock[] = [{ ...TRIP_DRAW_DAY }]
-  if (trip.masseur) day.push({ ...TRIP_TABLE, start: dayEnd(day) })
   if (trip.press) day.push({ ...TRIP_PRESS, start: dayEnd(day) })
+  if (trip.masseur) day.push({ ...TRIP_TABLE, start: dayEnd(day) })
+  if (trip.shoot) day.push({ ...TRIP_SHOOT, start: dayEnd(day) })
   return day
 }
 
@@ -891,8 +946,15 @@ function summerOrdinary(blocks: readonly DayBlock[], kind: OrdinaryKind, index: 
  *  ⚠ IT WEARS `travel`, WHICH IS NOT A SHORTAGE OF COLOURS. The plan's own words for what this costs
  *  are «lights, flights and a working day» - `accrueCondition` charges the week at the TRAVEL figure
  *  for exactly that reason - so the hour that is not hers reads in the palette the app already uses
- *  for an hour spent getting somewhere. A trip week draws `travel` too and the two can never share a
- *  column: an entered tournament outranks the shoot, and `calendarWeekFor` returns before it.
+ *  for an hour spent getting somewhere.
+ *
+ *  ⚠⚠ ROUND 30 #2 CORRECTED THE SENTENCE THAT USED TO CLOSE THIS PARAGRAPH. It read: «A trip week
+ *  draws `travel` too and the two can never share a column: an entered tournament outranks the
+ *  shoot, and `calendarWeekFor` returns before it.» That WAS true and it was also the bug: the trip
+ *  branch returning before the shoot is exactly why «do both» drew nothing. The two DO share a week
+ *  now - not this shape, though. A trip week draws `TRIP_SHOOT`, two hours on the end of each match
+ *  day; this whole-day shape stays what an ordinary shoot week looks like, where the call sheet owns
+ *  the day.
  *
  *  ⚠ AND IT CARRIES NO SCHOOL BLOCK, deliberately. A call sheet takes the day it is on; the
  *  fourteen-year-old shape's eight o'clock lesson is exactly what a shoot day does not have. The

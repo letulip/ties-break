@@ -124,14 +124,34 @@ function busyWeek(): WeekRow {
 // =================================================================================================
 // A. ARM 1 – NOTHING ON HER CALENDAR FOR FIVE WEEKS
 // =================================================================================================
-describe('round 26 #1 – arm 1: an empty five-week window', () => {
-  it('⭐⭐ a quiet stretch offers the pill – found by walking, not by construction', () => {
+describe('round 26 #1 – arm 1: an empty five-week window (DELETED by round 30 #3)', () => {
+  it('⭐⭐ a quiet stretch offers NOTHING – the arm he deleted, on the weeks it used to fire on', () => {
+    // ⚠⚠ INVERTED BY ROUND 30 #3, NEVER DELETED, AND THE INVERSION IS THE POINT. This case read «so
+    // the pill is on offer» and was the measurement arm 1 rested on. The owner played the repaired
+    // control and struck the arm out:
+    //
+    //   «Нам в это время приходят письма и идёт запись на новые турниры – давай вообще эту кнопку
+    //    про 6 недель уберём. Её можно оставить только на длинные травмы» (30.08)
+    //
+    // ⚠ WHAT IS STILL ASSERTED IS THE SAME PAIR OF FACTS, and keeping them together is what makes
+    // this a record rather than a hole: the window really IS empty on these weeks
+    // (`calendarClearAhead` is unchanged and still measures it), and an empty window is no longer a
+    // reason to offer a skip. A quiet FIXTURE LIST is not a quiet stretch – those are the weeks the
+    // letters arrive and the entry lists open, which is the fact the original measurement could not
+    // see, and it is why deleting the case would have deleted the evidence.
     const quiet = walk().filter((r) => r.hersAhead.length === 0)
     // The measurement, and the reason this case is not vacuous: they exist and they are rare.
     expect(quiet.length, 'a walked career really does contain quiet stretches').toBeGreaterThan(0)
     for (const row of quiet) {
       expect(calendarClearAhead(row.week, row.snap.upcoming), `w${row.week}: the window is empty`).toBe(true)
-      expect(multiOffered(row.snap, 'training'), `w${row.week}: so the pill is on offer`).toBe(true)
+      expect(row.snap.injury, `w${row.week}: this arm is about a HEALTHY quiet week`).toBeNull()
+      expect(multiOffered(row.snap, 'training'), `w${row.week}: the deleted arm is back`).toBe(false)
+      // ...and the layoff arm would have offered it on the very same week, which is what keeps this
+      // from passing on a control that has simply stopped existing.
+      expect(
+        multiOffered({ ...row.snap, injury: hurt(20, 20, row.week - 1) }, 'training'),
+        `w${row.week}: the surviving arm is dead too`,
+      ).toBe(true)
     }
   })
 
@@ -287,17 +307,25 @@ describe('round 26 #1 – the screen and the engine cannot disagree about the fi
     expect(checked, 'the sweep really covered the career').toBeGreaterThan(150)
   })
 
-  it('⚠⚠ THE MEASUREMENT THE RULING RESTS ON: 204 of 208 weeks before, 5 after', () => {
-    // The owner's objection as a number, and the fix as a number. Not exact equality – a seed change
-    // may move them by one or two – but the ORDERS have to stay apart, because "the pill is nearly
-    // always there" is the defect and "the pill is rare" is the fix.
+  it('⚠⚠ THE MEASUREMENT, THREE RULINGS DEEP: 204 of 208 weeks, then 5, and now 0', () => {
+    // ⚠⚠ RE-AIMED BY ROUND 30 #3 AND IT IS THE HISTORY OF THE CONTROL IN THREE NUMBERS. The first
+    // pass offered the pill wherever the engine could move (204 / 208). Round 26 #1 narrowed it to
+    // the owner's two arms (5 / 208). Round 30 #3 deleted the calendar arm outright, so on a HEALTHY
+    // walked career the answer is now ZERO – and «a rule that never fires is not a rule» has become
+    // the point rather than the objection: what fires it is a long layoff, which this passive walk
+    // does not contain and the line below supplies.
     const rows = walk()
     const couldMove = rows.filter((r) => r.engineCanMove).length
     const offered = rows.filter((r) => r.offered).length
     expect(rows.length, 'a full four seasons walked').toBe(208)
     expect(couldMove, 'the FIRST pass would have offered it on nearly every week').toBeGreaterThan(rows.length * 0.9)
-    expect(offered, 'and the owner\'s rule offers it on a small minority').toBeLessThan(rows.length * 0.1)
-    expect(offered, 'but not on none of them – a rule that never fires is not a rule').toBeGreaterThan(0)
+    expect(offered, 'a healthy career is offered no skip at all now – his ruling, as a number').toBe(0)
+    // ⚠ AND THE RULE IS NOT MERELY DEAD, which is the arm this measurement needs to stay honest: lay
+    // a long layoff on any of those weeks and the surviving arm fires on every one of them.
+    const hurtOffers = rows.filter((r) =>
+      spanWorthOffering(r.week, r.snap.upcoming, hurt(20, 20, r.week - 1)),
+    ).length
+    expect(hurtOffers, 'the layoff arm fires on none of them either – the control is simply gone').toBe(rows.length)
   })
 })
 
