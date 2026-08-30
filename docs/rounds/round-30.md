@@ -474,7 +474,7 @@ marked `[!]` and each names what shipped and why it missed – that is the point
   what built the wrong day. The builder's first instinct was right and is restored.
 
 
-- [ ] **18. ⚙ «в край, как hero картинка на главной, если можно. И плашки дальше как на главной на
+- [x] **18. ⚙ «в край, как hero картинка на главной, если можно. И плашки дальше как на главной на
   своих подложках, **кроме этих 4х характеристик турнира** про призовые, зрителей и т.п.»** –
   **RULING on the Next-tournament screen, settling the one thing its builder left open.**
 
@@ -488,3 +488,38 @@ marked `[!]` and each names what shipped and why it missed – that is the point
 
   ⭐ So the screen ends up Home's own composition: a full-bleed hero, a bare row of four under it,
   and everything after that on plates.
+
+  **SHIPPED, and it is one declaration.** `.nt-hero` now carries
+  `margin: 0 calc(-1 * var(--app-pad-x))` – the same gutter cancellation `.diary-hero` uses on Home
+  and `.kid-hero` on the kid page, by the same token rather than a guessed `-16px` (the sheet records
+  what happened the one time that number was guessed: an 8px band of page colour above Home's
+  photograph). Two details came with it and both are geometry: the 17px radius goes, because a
+  rounded corner against the phone's own edge leaves a wedge of page colour in each one – the frame
+  he asked to lose, in miniature – and the on-art padding becomes the gutter token, so the title,
+  `The read` and the three readings line up with the icon row and the plate below them.
+
+  ⚠ **Only the horizontal half of Home's rule.** `.diary-hero` and `.kid-hero` eat `--app-pad-top`
+  as well, because each is the first thing on its screen; this one has a heading and the week's
+  status line above it, and eating the top inset would pull the photograph up into them.
+
+  ⚠ **The other two clauses needed no code and are now pinned anyway.** The rounds plate was already
+  a `<Card>` inside the gutter and the four facts were already bare – so what this wave adds for them
+  is the guard that says so: the plate's backing and its gutter are read through the real cascade,
+  and the facts row is asserted to have neither fill, nor tone, nor hairline, nor a card anywhere
+  above it.
+
+  **Nothing else moved: `round29-next-tournament.test.ts`'s thirteen assertions pass UNEDITED**, the
+  same evidence #6 produced. Five new mounted assertions and two new browser ones, all
+  mutation-verified – nine mutations, each reddening exactly its own claim (margin removed, token
+  replaced by a literal, Home's shorthand copied whole so the top inset is eaten, Home's
+  `max-height` clamp copied across, a plate grown behind the four facts, the rounds plate unpainted,
+  and the rounds plate given the hero's own full bleed).
+
+  ⚠ **The square is still a FLOOR, not a clamp** (#6's decision, and the full width makes it matter
+  more: the box is 375px tall on his phone now). Home's own hero clamps at `max-height: 60vh`;
+  copying that across with the margin is one of the nine mutations, and it goes red.
+
+  ⭐ **375px verdict: green, and the page does not scroll sideways.** `e2e/responsive.spec.ts` was
+  extended rather than replaced – its «inside the phone» arm still guards the overflow direction,
+  and the two new arms measure the hero starting at 0 and finishing at 375 while the plate under it
+  keeps 16px on both sides.
