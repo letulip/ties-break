@@ -121,6 +121,16 @@ describe('round 30 #9 §1 – the catalogue carries exactly one business valuati
     expect(assetEarningsRateCents(w, shopItem('academy-land')!)).toBe(0)
     expect(assetEarningsRateCents(w, shopItem('car-good')!)).toBe(0)
     expect(assetEarningsRateCents(w, shopItem(MERCH)!)).toBeGreaterThan(0)
+    // ⚠⚠ AND THE *WORTH* IS GATED THE SAME WAY, which round 30 #23 made a separate claim. The
+    // valuation used to inherit this gate for free by going through the rate above; it now goes
+    // through `world/brand.ts`, which prices a brand and has no idea what a shelf family is. An
+    // academy stage handed a multiple by mistake must still be worth its floor and never the merch
+    // dial – so the gate is repeated in `assetWorthCents`, and this is the arm that keeps it there.
+    const land = shopItem('academy-land')!
+    const owned = { id: land.id, boughtWeek: 0, paidCents: land.entryCents, valueCents: land.entryCents }
+    const mislabelled = { ...land, earningsMultipleX: shopItem(MERCH)!.earningsMultipleX }
+    expect(assetWorthCents(w, owned, mislabelled), 'a non-earner priced on earnings is worth its floor')
+      .toBe(Math.round(land.entryCents * ECONOMY.shop.businessValueFloorShare))
   })
 })
 

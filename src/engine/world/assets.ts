@@ -321,7 +321,15 @@ export function assetWorthCents(world: WorldState, owned: OwnedAsset, item: Shop
     // not a second income model beside the first. No field is added for it today, because an unused
     // field is a dead field and this repo has spent the week digging out dead guards. See
     // docs/specs/brand-worth-and-income-2026-08.md §6.
-    const grossCents = brandGrossWorthCents(brandSignalsOf(world, week), item.earningsMultipleX)
+    //
+    // ⚠⚠ THE FAMILY GATE IS REPEATED HERE ON PURPOSE and is not a tidy-up waiting to happen. It is
+    // the same guard `assetEarningsRateCents` applies below, and before round 30 #23 this branch
+    // inherited it for free by going THROUGH that function. It now goes through `world/brand.ts`,
+    // which prices a brand and does not know what a shelf family is – so an academy stage handed a
+    // multiple by mistake would have been valued off the merch dial. `tests/round30-brand-value.test.ts`
+    // §1 asserts the zero in both directions.
+    const grossCents =
+      item.family === 'business' ? brandGrossWorthCents(brandSignalsOf(world, week), item.earningsMultipleX) : 0
     // ⚠⚠ THE FLOOR IS THE MARK, AND IT IS A SOURCED IDEA RATHER THAN A KINDNESS. Björn Borg's own
     // company went bankrupt in 1990 and the NAME was still bought outright for $18M in 2006 and is a
     // listed company today (the research §4d) – a brand with no earnings left is not a brand with no

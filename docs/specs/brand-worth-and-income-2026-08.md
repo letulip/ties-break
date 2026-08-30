@@ -91,6 +91,26 @@ so the before/after is exact and cannot suffer the arm-divergence hazard.
 | the multiple at that peak | a real spread, not a saturated cap | p10 **16.4** · median **18.7** · p90 **20.0** | ⭐ the cap binds only at the top |
 | worth falls in a LIVE career | more often and deeper than before | **25.7%** of live 52-week windows, median **−29.7%**, worst −50.5% (old model: 26.6%, median −16.3%) | ⭐ **deeper, as designed** |
 
+### 3a. ⭐⭐ ROUND 30 #24 ON ITS OWN – the control arm, run on today's engine
+
+`--bands0` restores the single top-10 rung for one run and changes nothing else, so this isolates the
+two new fame bands from the income curve and the earned multiple:
+
+| | one rung (before #24) | **three rungs (shipped)** | |
+| --- | ---: | ---: | --- |
+| peak fame, median career | 58.9 | **67.5** | +14.6% – reproduces the pre-wave bench exactly |
+| peak brand income, median | $540,908/yr | **$711,376/yr** | +31.5% |
+| peak brand worth, median | $10.32M | **$13.46M** | +30.4% |
+| **worth on the day they buy it, median** | $227,878 | **$227,878** | ⭐⭐ **IDENTICAL TO THE CENT** |
+| **the multiple that week, median** | 15.9 | **15.9** | ⭐⭐ **IDENTICAL** |
+| live 52w windows where the worth fell | 28.2%, median −32.2% | **25.7%, median −29.7%** | fewer and shallower |
+
+⭐⭐ **THE TWO UNCHANGED ROWS ARE THE ONES THAT MAKE #24 SAFE, and they are unchanged to the cent
+rather than approximately.** That is #24's own prediction confirmed: a family reaches first
+affordability **before** it has finished top-50 seasons to bank, so nothing the new rungs do can reach
+the day-one economics that round 30 #9's multiple was sized against. The lift lands where the owner
+asked for it – the **middle** of the distribution; p90 and best were already at the fame cap.
+
 ⚠ **THE ONE THAT MISSED ITS PREDICTION WAS THE FIRST DRAFT'S LADDER, AND THE MEASUREMENT CAUGHT IT.**
 Base 10 with a ×2.5 win-rate term put the multiple at the `maxX` cap for the **median** career
 (p10 17.0 / median 20.0 / p90 20.0) – i.e. worth was a flat multiple of income again for the top half

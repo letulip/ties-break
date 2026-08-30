@@ -1096,16 +1096,18 @@ owning `index-fund · car-sensible · house-first · merch-brand · deposit · a
   to its own brand, and `tests/round30-brand-value.test.ts` holds it – a fixture with four top-20
   seasons and no trophy at all now earns and is worth more than the bare mark.
 
-  ⭐⭐ **BENCHED BEFORE AND AFTER, and the two rows that make it safe are the UNCHANGED ones** – 72
-  careers, same seeds:
+  ⭐⭐ **BENCHED BEFORE AND AFTER ON TODAY'S ENGINE, with ONLY the two rungs moving** (72 careers,
+  same seeds, `tools/brand-dynamics.ts --bands0` for the control) – **and the two rows that make it
+  safe are unchanged TO THE CENT**, not approximately:
 
-  | | before | **after** | |
+  | | one rung (before) | **three rungs (shipped)** | |
   | --- | ---: | ---: | --- |
   | peak fame, median career | 58.9 | **67.5** | **+14.6%** |
-  | fame the week they can first afford the brand | 9.6 | **9.6** | ⭐ **UNCHANGED** |
-  | brand's worth on the day they buy it | – | **unmoved by these two rungs** | ⭐ **UNCHANGED** |
-  | climbing 52w windows where income FELL | 15.1% | **13.7%** | |
-  | seasons in which the brand's VALUE fell | 29.0%, median −17.9% | **26.6%, median −16.3%** | |
+  | peak brand income, median | $540,908/yr | **$711,376/yr** | +31.5% |
+  | peak brand worth, median | $10.32M | **$13.46M** | +30.4% |
+  | **worth on the day they buy it, median** | $227,878 | **$227,878** | ⭐⭐ **IDENTICAL** |
+  | **the multiple that week, median** | 15.9 | **15.9** | ⭐⭐ **IDENTICAL** |
+  | live 52w windows where the worth fell | 28.2%, median −32.2% | **25.7%, median −29.7%** | |
 
   A family reaches first affordability **before** it has finished top-50 seasons to bank, so round 30
   #9's «fair on the day they can afford it» multiple and the fund-parity anchor both survive untouched.
