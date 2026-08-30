@@ -109,32 +109,49 @@ export const ANGER_STREAK_MAX = 6
 // modding hook away from a tool, and one generated report away from a screenshot. A band name is
 // the sort of thing that escapes by accident, and this one has nowhere good to land.
 //
-// ⚠⚠ AND THE ART IS UNTOUCHED. NO FILE WAS RENAMED, MOVED OR CREATED. The paintings and crops keep
-// their shipped stems (`milf-norm.webp` and the rest) and `portraitAssetStem` below is the one place
-// that knows it. An atomic rename of ~20 assets plus the recovered-rectangle table in
-// art/faceRects.ts is a different change with a different risk, and the review says so in as many
-// words: "retaining an asset alias during an atomic rename if filenames cannot move immediately".
-// The TYPE is what leaks; the type is what moved.
+// ⚠⚠ AND THE ART WAS UNTOUCHED AT THE TIME – past tense since round 30 #20, below. R2-18 moved the
+// TYPE and deliberately left the files: "An atomic rename of ~20 assets plus the recovered-rectangle
+// table in art/faceRects.ts is a different change with a different risk, and the review says so in
+// as many words: retaining an asset alias during an atomic rename if filenames cannot move
+// immediately." That was the right call then and the deferred half has now been taken.
+//
+// ⭐⭐⭐ ROUND 30 #20 – AND THE OTHER HALF IS DONE, AT THE OWNER'S OWN RULING.
+//
+// HIS WORDS, 30.08: «Может быть кто-то из агентов был прав и имеет смысл их переименовать со сленга
+// на lateCareer или grown, давай сделаем разом.» So the seventeen files moved too – six crops under
+// `public/avatars/`, ten paintings under `public/images/fem-euro-brunnet/`, and every key of the
+// rectangle table – and `lateCareer` was chosen over `grown` because it makes the STEM equal the
+// STAGE, which retires the whole class of bug the alias below exists to prevent.
+//
+// ⚠ AND IT IS NOT A SCHEMA QUESTION – checked before it was assumed. A stage is DERIVED from her age
+// at snapshot time (`portraitStage`) and reaches the UI on `Snapshot` only: `MemoryCard.stage` and
+// the narrative cards are snapshot types, `WorldState` holds no stage and no portrait URL, and there
+// is no `'milf'` string literal anywhere under `src/engine` or `src/db`. No save records a band, so
+// `SAVE_SCHEMA_VERSION` does not move and no migration is owed.
 export type PortraitStage = 'jun' | 'young' | 'teen' | 'adult' | 'lateCareer'
 
-/** ⚠⚠ THE COMPATIBILITY ALIAS, AND THE ONLY PLACE THE OLD WORD SURVIVES IN CODE.
+/** THE STEM SEAM – IDENTITY ON ALL FIVE BANDS SINCE ROUND 30 #20, AND KEPT ANYWAY.
  *
  *  A stage is TWO things that happened to be one string: a band of her life, and the stem of the
- *  files painted for it. Renaming the band without this would have produced
- *  `avatars/lateCareer-norm.webp` – a 404 on every face of every career past thirty – so the two
- *  are separated here rather than by touching `public/`.
+ *  files painted for it. Until #20 those two disagreed on the last band, and this table was what
+ *  stopped `avatars/lateCareer-norm.webp` being a 404 on every face of every career past thirty.
+ *  The files have moved, so it maps each band to itself – ⚠ AND IT STAYS, because the next art set
+ *  that arrives under someone else's filenames needs exactly this seam, and deleting it would push
+ *  the interpolation back out into four call sites where the same divergence could reappear
+ *  unnoticed for a decade of game time.
  *
  *  ⚠ EVERY URL AND EVERY CROP-TABLE KEY GOES THROUGH THIS, and there are four builders that compose
  *  a stem (`portraitUrl`, `cropUrl`, `avatarCropPath`, and the Memory card's `facePoint` lookup).
- *  A fifth that interpolates the stage directly would work for four bands and 404 on the fifth,
- *  which is the failure mode worth naming: it is invisible until a career is thirty-one years old.
+ *  A fifth that interpolates the stage directly is harmless TODAY and would break again the moment
+ *  a stem stops being identity, which is the failure mode worth naming: it is invisible until a
+ *  career is thirty-one years old.
  *  tests/portrait-bands.test.ts sweeps every band × emotion against the files on disk. */
 const STAGE_ASSET: Record<PortraitStage, string> = {
   jun: 'jun',
   young: 'young',
   teen: 'teen',
   adult: 'adult',
-  lateCareer: 'milf',
+  lateCareer: 'lateCareer',
 }
 
 /** The file stem for a stage – identity for four of the five bands. See `STAGE_ASSET`. */

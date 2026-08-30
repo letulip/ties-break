@@ -31,7 +31,7 @@ export const CROPS: Record<string, [number, number, number]> = {
   'young-angry': [285, 122, 165],
   'teen-angry': [290, 148, 145],
   'adult-angry': [300, 150, 155],
-  'milf-angry': [252, 140, 155],
+  'lateCareer-angry': [252, 140, 155],
   // second pass: 155 framed her head noticeably smaller than the rest of the set, and this is the
   // DEFAULT face for 23-30, so it is the one worth getting tight.
   'adult-norm': [302, 140, 128],
@@ -40,12 +40,32 @@ export const CROPS: Record<string, [number, number, number]> = {
   'adult-serious': [292, 182, 165],
   'adult-tired': [295, 168, 172],
   'adult-injury': [328, 188, 165],
-  'milf-norm': [257, 150, 145],
-  'milf-happy': [265, 95, 185],
-  'milf-sad': [300, 152, 172],
-  'milf-serious': [235, 130, 185],
-  'milf-tired': [247, 118, 185],
-  'milf-injury': [297, 197, 165],
+  // ⭐⭐⭐ ROUND 30 #19 – THE ONE RECTANGLE IN THIS TABLE THAT WAS NOT ON A FACE.
+  //
+  // THE OWNER, 30.08: «Аватар иконка в левом верхнем углу home экрана для milf стадии показывает
+  // только нижнюю часть лица без глаз и волос».
+  //
+  // ⚠ REPRODUCED EXACTLY, AND IT WAS THIS LINE. `[257, 150, 145]` put the window at y 77-222 of a
+  // 512px painting whose face centre is at y~85: the crop opened at her chin and ran down to her
+  // chest, so `public/avatars/lateCareer-norm.webp` really did ship a neck and a necklace. It is the
+  // DEFAULT emotion of the 31+ band, which is why he sees it every week and nobody saw it before.
+  //
+  // ⚠ ALL FORTY RECTANGLES WERE CHECKED, not just the reported one – every entry drawn back over
+  // its own painting (5 stages x 8 faces). This was the only miss. `lateCareer-angry` reads low in a
+  // thumbnail because her head is TILTED DOWN in that painting and the crop is correct; it was cut
+  // and looked at rather than adjusted on the strength of the thumbnail.
+  //
+  // ⚠ THE NEW RECTANGLE OBEYS THE FILE'S OWN FRAMING RULE and is not eyeballed against the others:
+  // her head spans y~25-135, so the centre is (240, 85) and the side is 1.5x the ~110px head = 165,
+  // inside the set's measured 124-182 spread. ⚠ AND THE SAME LINE STEERS THE HERO: `facePoint`
+  // reads columns 0-1 for `object-position`, so this fixed two surfaces – the icon he reported and
+  // every non-square window that frames this painting (the fork, retirement and finale cards).
+  'lateCareer-norm': [240, 85, 165],
+  'lateCareer-happy': [265, 95, 185],
+  'lateCareer-sad': [300, 152, 172],
+  'lateCareer-serious': [235, 130, 185],
+  'lateCareer-tired': [247, 118, 185],
+  'lateCareer-injury': [297, 197, 165],
 
   // --- RECOVERED, not authored ------------------------------------------------------------
   // The 18 crops that shipped before this table existed were cut by hand and their rectangles
@@ -79,7 +99,7 @@ export const CROPS: Record<string, [number, number, number]> = {
   'young-rehab': [240, 105, 150],
   'teen-rehab': [252, 118, 150],
   'adult-rehab': [228, 118, 160],
-  'milf-rehab': [250, 115, 155],
+  'lateCareer-rehab': [250, 115, 155],
 }
 
 /** The emotions that have a PAINTING but no 256px crop – the set the cutter must skip.
