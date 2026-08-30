@@ -605,6 +605,9 @@ export function shopView(world: WorldState): ShopView {
     .map((item) => {
     const mine = owned.find((a) => a.id === item.id)
     const changeCents = mine ? mine.valueCents - mine.paidCents : null
+    // §3g – the stage under it, hoisted because `nameOptions` below has to read it too: a naming
+    // control on a stage that cannot be bought yet is a control the player cannot use.
+    const requirementMet = !item.requiresId || owned.some((a) => a.id === item.requiresId)
     return {
       id: item.id,
       family: item.family,
@@ -618,8 +621,12 @@ export function shopView(world: WorldState): ShopView {
       // ⭐⭐ ROUND 30 #8/#10 – what they called it, and what the game would offer if this purchase is
       // the one that names it. Both answered HERE, so the screen renders a decision it never makes.
       name: isNameable(item) ? assetNameOf(world, item.family) : null,
+      // ⚠ AND ONLY ON A ROW THE PURCHASE COULD ACTUALLY HAPPEN ON. Without `requirementMet` all four
+      // academy stages offer a name before the land is bought – three of them on rows whose control
+      // is not pressable, which is a picker the player cannot use. `buyAsset` names the first rung
+      // of the family whichever one that turns out to be, so this narrows the OFFER and not the rule.
       nameOptions:
-        isNameable(item) && assetNameOf(world, item.family) === null && !mine
+        isNameable(item) && requirementMet && !mine && assetNameOf(world, item.family) === null
           ? assetNameSuggestions(world, item.family)
           : [],
       paidCents: mine ? mine.paidCents : null,
@@ -674,7 +681,7 @@ export function shopView(world: WorldState): ShopView {
       requiresId: item.requiresId ?? null,
       // §3g – the stage under it, answered here rather than on screen: a shelf that worked out its
       // own chain would be a second copy of `buyAsset`'s refusal.
-      requirementMet: !item.requiresId || owned.some((a) => a.id === item.requiresId),
+      requirementMet,
     }
   })
   const cheapest = rows.reduce<ShopRowView | null>((best, r) => (!best || r.entryCents < best.entryCents ? r : best), null)

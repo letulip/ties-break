@@ -2124,7 +2124,7 @@ const shelfFamilies = computed(() =>
                     type="text"
                     :maxlength="ASSET_NAME_MAX_CHARS"
                     placeholder="or type your own"
-                    aria-label="What the brand is called"
+                    aria-label="What it is called"
                     @input="nameDrafts[row.id] = ($event.target as HTMLInputElement).value"
                   />
                 </div>
@@ -2970,7 +2970,10 @@ const shelfFamilies = computed(() =>
 .shop-naming-chip {
   padding: 5px 10px;
   border: 1px solid var(--line);
-  border-radius: 999px;
+  /* ⚠ THE TOKEN AND NOT A BARE 999px – the owner's capsule-vs-circle ruling of 26.07, pinned in
+     tests/round10.test.ts: a wide short element wants the CAPSULE (clamped to half the height), and
+     the magic number has to be findable by grep. Caught by that pin on this wave's first gate. */
+  border-radius: var(--radius-pill);
   background: transparent;
   color: var(--ink-soft);
   font-size: 12px;

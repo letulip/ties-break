@@ -129,10 +129,19 @@ describe('§1 – every new rung is on the screen, at its real price', () => {
     expect((await rowFor(wrapper, 'The launch')).text()).toContain('$1,038 a week to keep')
     expect((await rowFor(wrapper, 'The yacht')).text()).toContain('$23,077 a week to keep')
     expect((await rowFor(wrapper, 'The plane')).text()).toContain('$27,692 a week to keep')
-    // ⚠ AND NOTHING THAT COSTS NOTHING SAYS IT DOES – a «$0.00 a week to keep» on every car would be
+    // ⚠ AND NOTHING THAT COSTS NOTHING SAYS IT DOES – a «$0.00 a week to keep» on every rung would be
     // noise on a phone, and the shelf had eight rungs before this slice.
-    expect((await rowFor(wrapper, 'The good saloon')).text()).not.toContain('a week to keep')
+    //
+    // ⚠⚠ RE-AIMED AT ROUND 30 #15, AND THE CAR MOVED SIDES RATHER THAN BEING DROPPED. The owner has
+    // asked the cars to cost something to keep («Для машин вполне можно ввести годовую стоимость
+    // обслуживания»), so «the good saloon says nothing» stopped being a fact about the shelf. What
+    // this arm was FOR – a line that appears on rungs it means nothing on – is intact on the academy
+    // stage, and the car is now asserted from the OTHER side, which fails in both directions: if a
+    // free rung starts charging, or if the car stops.
     expect((await rowFor(wrapper, 'The land')).text()).not.toContain('a week to keep')
+    expect((await rowFor(wrapper, 'The good saloon')).text(), 'round 30 #15 – and a car now does').toContain(
+      '$116 a week to keep',
+    )
     wrapper.unmount()
   })
 

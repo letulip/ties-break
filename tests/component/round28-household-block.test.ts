@@ -50,7 +50,7 @@ import { nextTick } from 'vue'
 import '../../src/style.css'
 import CoachMarketScreen from '../../src/components/screens/CoachMarketScreen.vue'
 import { useGameStore } from '../../src/stores/game'
-import { buyAsset, createWorld, hireMasseur, toSnapshot, type WorldState } from '../../src/engine/world'
+import { buyAsset, createWorld, hireMasseur, toSnapshot, weeklyAssetUpkeepCents, type WorldState } from '../../src/engine/world'
 import { assetValueCents, shopItem } from '../../src/engine/world/shop'
 import { parentIncomeForWeekCents } from '../../src/engine/economy'
 import { formatCents } from '../../src/shared/money'
@@ -209,8 +209,17 @@ describe('§3 the shelf is in the household week', () => {
     const weekly = assetValueCents(item, owned.paidCents, held + 1) - assetValueCents(item, owned.paidCents, held)
     expect(weekly, 'and it loses real money in a week').toBeLessThan(0)
 
+    // ⚠⚠ RE-AIMED AT ROUND 30 #15 – THE SHELF NOW PUTS **TWO** FACTS ON THE OUT SIDE, not one. The
+    // owner asked the cars to cost something to keep, so a car is a week of lost VALUE and a week of
+    // UPKEEP, and this arm's expectation was the first of those alone. ⚠ The second is asked of the
+    // engine's own `weeklyAssetUpkeepCents` – the function `householdWeekly` itself quotes – for the
+    // reason the note above gives about `assetValueCents`: a figure re-derived here would be a
+    // second definition and would drift the day the curve changes. The claim is unchanged: the
+    // shelf is what moves the OUT figure, and it moves it by exactly what the shelf costs.
+    const upkeep = weeklyAssetUpkeepCents(world)
+    expect(upkeep, 'round 30 #15 – a car really does cost something to keep now').toBeGreaterThan(0)
     const strip = await stripOf(snap)
-    expect(strip).toContain(`${formatCents(snap.coachBilling.weeklyCents + -weekly)} out`)
+    expect(strip).toContain(`${formatCents(snap.coachBilling.weeklyCents + -weekly + upkeep)} out`)
     // ⚠ AND THE BARE ARM DID NOT: the shelf is what moved the figure, not the purchase's dent in the
     // balance. (Buying moves `fundsCents` and therefore the interest, so the IN figure differs
     // between the arms – which is why this claim is read off the OUT side alone.)
