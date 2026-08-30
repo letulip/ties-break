@@ -1389,7 +1389,7 @@ owning `index-fund · car-sensible · house-first · merch-brand · deposit · a
   lands in band)? *(d)* the two in 5 above are separate waves – do you want either?
 
 
-- [>] **27. ⚙ HIS RULING ON THE INJURY SHAPE (30.08), three parts** – «тяжесть надо взять точно, но
+- [x] **27. ⚙ HIS RULING ON THE INJURY SHAPE (30.08), three parts** – «тяжесть надо взять точно, но
 - [x] **27. ⚙ HIS RULING ON THE INJURY SHAPE (30.08), three parts** – «тяжесть надо взять точно, но
   разумно. Однако и с показателем в 1 травму в год надо что-то делать, раз я не увидел ни одной за
   большой промежуток. А еще, раз мы **храним историю травм** у себя, то вполне можно делать алгоритм,
