@@ -3708,9 +3708,16 @@ export const ECONOMY = {
       // ⚠ NO BUILD WAIT AND NO UPKEEP, because §3g asks for neither and this file does not invent
       // what it was not given. §3f's «время постройки» and «годовое обслуживание» are said of the
       // boats and the planes; the academy's own sentence is «each stage is a decision and a bill»,
-      // and a stage IS the wait. ⚠ AND IT HOLDS ITS VALUE (rate 0) for the same reason: §3g calls it
-      // «the one asset that outlives the career» and gives it no rate, so it neither earns nor
-      // decays, and the shelf says so in as many words («Holds its value»).
+      // and a stage IS the wait. ⚠ AND IT NEITHER GAINS NOR LOSES (rate 0) for the same reason: §3g
+      // calls it «the one asset that outlives the career» and gives it no rate.
+      //
+      // ⚠ THIS NOTE USED TO END «and the shelf says so in as many words («Holds its value»)» AND THAT
+      // SENTENCE IS GONE FROM THE SHELF – round 30 #11, the owner: «Holds its value странно звучит –
+      // это напрямую значит, что оно обесценивается, а это вроде бы не совсем так». The MECHANIC did
+      // not move a cent (checked first: a rate-0 rung is worth what was paid for it forever and the
+      // sale is whole), only the words. A comment naming a string that no longer exists is the one
+      // way a comment must not be wrong, so it names the new one: **«Neither gains nor loses»**, said
+      // of these four stages and of nothing else since the merch brand became a business (#9).
       {
         id: 'academy-land',
         family: 'academy',
