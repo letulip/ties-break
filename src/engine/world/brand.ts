@@ -193,7 +193,10 @@ export function brandMultipleX(signals: BrandSignals, baseX: number): number {
   // ⚠ THE WIN-RATE TERM IS A SHARE OF A WINDOW AND NOT A RATE TIMES A WEIGHT, so a career that loses
   // more than it wins earns nothing here and is never charged for it – «мы ни за что не наказываем»
   // read against a signal that is below its window for most of a climbing career.
-  const span = V.winRateTo - V.winRateFrom
+  // ⚠ THE FLOOR ON THE SPAN IS NOT DEFENSIVE NOISE: `winRateTo === winRateFrom` is a one-character
+  // retune away, and it would divide by zero into a NaN multiple, which would reach the wallet as a
+  // NaN valuation rather than as a crash. Money must not be able to become NaN quietly.
+  const span = Math.max(1e-9, V.winRateTo - V.winRateFrom)
   const over = Math.min(1, Math.max(0, (signals.winRate - V.winRateFrom) / span))
   x += V.winRateX * over
   return Math.min(V.maxX, x)

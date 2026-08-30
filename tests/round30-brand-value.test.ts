@@ -18,7 +18,19 @@
 //   §4  the floor: the mark, and a brand at fame zero is not worth nothing;
 //   §5  it is priced the week it is bought and it sells for what the row says;
 //   §6  ⭐ #11 – the rungs that still say «neither gains nor loses» really do neither, for fifteen
-//       seasons, and the merch brand is no longer one of them.
+//       seasons, and the merch brand is no longer one of them;
+//   §7  ⭐⭐⭐ ROUND 30 #23 – THE DECOUPLING. Income and worth are two functions of one signal set,
+//       and the arm that proves it is two careers at IDENTICAL fame worth different money – which
+//       was IMPOSSIBLE to write before 30.08, when worth was `16 x a year of income`;
+//   #24 ⭐⭐⭐ the season-end band ladder: a top-20 who never wins is no longer invisible to her own
+//       brand, and the ladder is best-band-only.
+//
+// ⚠⚠ ROUND 30 #23 ALSO CORRECTED ONE OF THIS HEADER'S OWN CLAIMS. The paragraph above cites
+// Federer's retired On stake falling ~52% as the case for the value falling. The owner ruled that
+// out of frame – «но это уже будет после завершения игры, по сути нас это не очень интересует, разве
+// нет?» – and NOTHING models a post-career decline. The fall the game is in frame for is the
+// IN-CAREER one, and §7's last arm is the one that measures it: a slump where the multiple rises and
+// the brand is still worth less.
 //
 // ⚠ MUTATION-VERIFIED, each applied alone and reverted, each watched – the log is at the foot of
 // this file.
@@ -141,7 +153,11 @@ describe('round 30 #9 §2 – the worth is years of what it earns, and the earni
     // ⭐ ROUND 30 #23 – and a CAREER behind the titles, so the multiple under test is the earned one
     // and not the base. Lost finals move the multiple and never the income (world/brand.ts), which
     // is what makes the ratio below a reading of the ladder rather than of the catalogue.
-    loseFinals(w, 'wta250', [1, 3, 5])
+    // ⚠ SIX, NOT THREE, AND THE NUMBER IS LOAD-BEARING. With three the earned multiple was 14.3,
+    // which ROUNDS TO THE BASE – so the card arm below passed on a `shopView` that had gone back to
+    // sending the catalogue constant. Found in this file's own mutation pass (M14, green on the first
+    // run). Six finals put it at 14.6, which rounds to 15, and the two answers are distinguishable.
+    loseFinals(w, 'wta250', [1, 3, 5, 7, 9, 11])
     buyAsset(w, MERCH)
     walk(w, 4, true)
 
@@ -497,6 +513,56 @@ describe('round 30 #23 §7 – income and worth are two functions, not one dial'
     expect(mult(legend)).toBe(V.maxX)
   })
 
+  it('⚠⚠ a TITLE moves the income and NOT the multiple – it is priced once, through fame', () => {
+    // ⚠ FOUND BY MUTATION (M15): making the depth signal count titles as well as lost finals left
+    // every arm green. It is exactly the one-dial defect coming back in through the ladder – what she
+    // WON is already fully priced into the income through fame, so a title in the multiple as well is
+    // the same fact charged twice.
+    const base = shopItem(MERCH)!.earningsMultipleX!
+    const W = 6 * WEEKS_PER_YEAR
+    const quiet = parkAt(shopper('r30-23-title-a'), W)
+    const decorated = parkAt(shopper('r30-23-title-b'), W)
+    winTitles(quiet, 'wta250', [W - 3])
+    winTitles(decorated, 'wta250', [W - 3])
+    winTitles(decorated, 'slam', [W - 2, W - 4])
+    expect(fameAt(decorated), 'the Slams really are worth something to her fame').toBeGreaterThan(fameAt(quiet))
+    expect(assetEarningsRateCents(decorated, shopItem(MERCH)!), '...and to the income')
+      .toBeGreaterThan(assetEarningsRateCents(quiet, shopItem(MERCH)!))
+    expect(brandMultipleX(brandSignalsOf(decorated), base), 'but NOT to the multiple')
+      .toBe(brandMultipleX(brandSignalsOf(quiet), base))
+  })
+
+  it('⚠⚠ the win rate is the WTA track alone – a junior season of easy wins buys no multiple', () => {
+    // ⚠ FOUND BY MUTATION (M16): reading `SeasonHistoryEntry.wins`, which ADDS all three tables
+    // together, left every arm green – and it would let a junior record rate her as a professional
+    // winner. `byTrack.wta` is the professional record and is the only one a brand may see, which is
+    // the same rule that keeps junior draws out of the fame floor.
+    const base = shopItem(MERCH)!.earningsMultipleX!
+    const w = shopper('r30-23-junior')
+    w.seasonHistory = [
+      {
+        seasonIndex: 0,
+        endRank: 60,
+        // the FOLD says she won 96 of 100 – almost all of it junior
+        points: 0,
+        wins: 96,
+        losses: 4,
+        byTrack: {
+          itf: { endRank: 60, points: 0, wins: 0, losses: 0 },
+          // ...and on the professional table she is under the window and buys nothing for it
+          wta: { endRank: 60, points: 0, wins: 1, losses: 3 },
+          junior: { points: 0, wins: 95, losses: 1 },
+        },
+        fundsDeltaCents: 0,
+        endFundsCents: 0,
+      } as SeasonHistoryEntry,
+    ]
+    const V = ECONOMY.business.merch.value
+    expect(brandSignalsOf(w).winRate, 'read off the WTA track, not the fold').toBeCloseTo(0.25, 5)
+    expect(brandMultipleX(brandSignalsOf(w), base), 'so only the season itself counts')
+      .toBeCloseTo(base + V.seasonX, 5)
+  })
+
   it('⭐⭐⭐ the worth FALLS during a live career, and the multiple going UP does not save it', () => {
     // ⚠⚠ THE OWNER'S OWN CORRECTION SCOPES THIS ARM (30.08): a retired player's brand decaying is
     // «после завершения игры» and out of frame. What is IN frame is the slump he plays through – a
@@ -592,4 +658,29 @@ describe('round 30 #24 – a top-20 who never wins is no longer invisible to her
 //      off the catalogue's own figure, and pinning 16 is the other arm's job.
 //  M10 `academy-land`'s rate 0 -> -300                          -> 1 RED, ALONE: «they really do
 //      neither, for fifteen seasons» – which is the fact round 30 #11's re-wording rests on.
+//
+// --- ROUND 30 #23/#24, 30.08. Same regime, each applied ALONE and reverted FROM A FILE COPY. THREE
+//     OF THE EIGHT WERE GREEN ON THE FIRST PASS and each one is written up beside the arm that now
+//     catches it. -------------------------------------------------------------------------------
+//  M11 the income curve flattened back to linear (`famePivot` dropped) -> 2 RED: §2's «pays a curve»
+//      in round29p5-business, and §3's half-life band here – half the fame is a QUARTER of the money
+//      now, and the band knows it.
+//  M12 `brandMultipleX` returning the base (the earned ladder deleted) -> 4 RED, including «two
+//      careers at IDENTICAL fame … worth different money», which is the whole item.
+//  M13 `seasonEndBands` back to one top-10 rung (#24 reverted)   -> 3 RED: the ladder arm in
+//      round29p5-business and both #24 arms here.
+//  M14 `shopView` sending the CATALOGUE base instead of the career's multiple -> ⚠ **GREEN on the
+//      first pass.** The §2 fixture's earned multiple was 14.3, which ROUNDS TO THE BASE – so the
+//      card arm could not tell a live number from a constant. Closed by taking the fixture to six
+//      lost finals (14.6 -> 15) and RED after.
+//  M15 the depth signal counting TITLES as well as lost finals   -> ⚠ **GREEN on the first pass**,
+//      and it is the one-dial defect coming back through the ladder: a title is already fully priced
+//      into the income through fame. Closed by «a TITLE moves the income and NOT the multiple» and
+//      RED after.
+//  M16 the win rate reading `SeasonHistoryEntry.wins` (the three-table FOLD) instead of
+//      `byTrack.wta` -> ⚠ **GREEN on the first pass**, and it would rate a junior record as
+//      professional form. Closed by the junior-season arm and RED after.
+//  M17 `maxX` removed (the ceiling on the whole multiple)        -> 1 RED, ALONE: the caps arm.
+//  M18 the worth ignoring the multiple entirely (`x baseX`)      -> 2 RED: the ratio arm and the
+//      decoupling arm.
 // =================================================================================================
