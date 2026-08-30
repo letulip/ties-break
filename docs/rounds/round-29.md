@@ -3312,6 +3312,13 @@ diff** – no tick, no entry, no schedule, no save field. Schema stays **66**.
   Every match day of every rung carries the identical block: when the tournament is on, never how far
   she got.
 
+  ⚙ **AMENDED 30.08 BY HIS RULING ON THE RETURN (see P16):** the Slam no longer ends without a way
+  home. The table row above read «7 (slam) · 7 match days, Mon–Sun · departs the previous Sunday» and
+  said nothing about the journey back, because his first sketch put it on a Monday this screen cannot
+  see. It comes home on **its own Sunday evening**, after the match, the massage and the press hour –
+  so **every trip of every length now shows her coming home**, which is an assertion the sweep could
+  not make before.
+
 - [x] **P13. ⚙ «когда массажист есть и ездит на турниры давай добавим в календарь сессии массажа
   после матчей по плану. (если еще нет)»**
 
@@ -3360,23 +3367,47 @@ diff** – no tick, no entry, no schedule, no save field. Schema stays **66**.
   colour was invented**: `press` takes the wallet's declared `--cat-other` grey, because the
   `--event-*` family is the record of what he sent and a new row in it would make that record lie.
 
-- [~] **P16. Two-week Slams and 1000s – DEFERRED BY HIS OWN RULING, not an oversight.**
+- [~] **P16. Two-week events – DEFERRED BY HIS OWN RULING. The Slam's return is BUILT.**
 
-  ⚠⚠ **A future reader must not re-propose this without seeing that he already looked at it and said
-  wait.** The engine resolves a tournament inside one tick and one week; a real Slam is two calendar
-  weeks and a 1000 is 10–12 days, and spanning them would touch entries, the schedule and the tick.
-  It was put to him as its own wave. **He declined it for now** – «Не уверен, что нам в нашу сложную
-  сетку надо вплетать еще и 2х недельные турниры. Подожди с этим» – and the edge-travel design in P15
-  is what replaces the need: the tournament stays inside its own week and only the journey spills
-  onto the neighbour's edge, «всё остается в пределах недели как было».
+  ⚠⚠ **A future reader must not re-propose the two-week event without seeing that he already looked
+  at it and said wait.** The engine resolves a tournament inside one tick and one week; a real Slam
+  is two calendar weeks and a 1000 is 10–12 days, and spanning them would touch entries, the schedule
+  and the tick. It was put to him as its own wave. **He declined it for now** – «Не уверен, что нам в
+  нашу сложную сетку надо вплетать еще и 2х недельные турниры. Подожди с этим» – and the edge-travel
+  design in P15 replaces the need: the tournament never leaves its own week.
 
-  ⚠ **One half of his own edge-travel sentence is NOT drawn, and the reason is a fact about the
-  snapshot rather than a decision.** He described a Slam's return as «в Пн следующей недели». The
-  calendar draws `snapshot.week + 1` and `upcoming` is filtered to `week > world.week`, so this
-  screen **can look forward one week and cannot look back one at all**: the departure lend is
-  answerable and honest, and a return lend would have to be guessed from something like
-  `diary.facts.resultTier`, which is null on every week `resultFresh` is false. Nothing is drawn
-  rather than something invented. **The cheapest honest routes, when he wants that Monday**: widen
-  `upcomingEvents()` to `>=` (it would then carry the week just played), or carry a one-field
-  «came home from» on the snapshot. Either is a small engine-side change and belongs with whoever
-  next opens that file – it is **not** the two-week wave above.
+  ⚙⚙ **AND THE ONE HALF THAT COULD NOT BE DRAWN IS NOW DRAWN, because he removed the need for it.**
+  His first sketch put a Slam's return on «в Пн следующей недели», and that Monday is unreachable
+  from this screen: the calendar draws `snapshot.week + 1` and `upcoming` is filtered to
+  `week > world.week`, so it **looks forward one week and cannot look back one at all**. It was
+  reported as not drawn rather than guessed from something like `diary.facts.resultTier` (null on
+  every week `resultFresh` is false). His ruling of 30.08:
+
+  > «возвращение со Шлема в понедельник следующей недели – да, окей, **можно сделать в Вс после
+  > матчей, массажа и конференций**»
+
+  So the flight is the **last thing on the Slam's own Sunday**, behind all three, and the whole trip
+  is inside its own week again – **no lookback exists, and none is hidden.** A Slam Sunday now reads,
+  in his own order: **Draw day 10:00–14:00 · Body work 14:00–15:00 · Press 15:00–16:00 · Travel home
+  16:00–19:00.** All four fit the grid's 07:00–19:00 rows exactly, **with nothing shortened** – the
+  flight takes the evening that is left rather than an hour from any of the three, which is also what
+  a real flight home after a final is. Pinned block by block against the same trip's midweek days, so
+  a compression would redden rather than pass.
+
+  ⚠ **The match day's order changed with this, on his enumeration and against my first draft.** I had
+  written match to microphone to table, reasoning that a real press conference follows a match within
+  the half-hour. «после матчей, **массажа и конференций**» is his order, and it is now the order on
+  every match day of every rung – so the last day of a Slam is the same day as its other six with a
+  flight added, rather than a day shaped differently from its own week.
+
+  ⚠ **The 1000 is untouched by this**: six rounds still leave a whole Sunday for the journey, which
+  is his other arm – «либо снова в Вс (если был 1000)», a travel DAY, not a travel evening. The
+  evening return is the Slam's rule and the only shipped rung it can reach.
+
+  ⚠ **One branch is unreachable and is recorded as such rather than papered over.** `addEveningReturn`
+  declines when a day has no evening left; nothing can produce that today (a match day ends at 16:00
+  at the very most), so **deleting that guard reddens no test** – it was run and stayed green. Its
+  PREMISE is pinned instead, and the mutation that breaks the premise reddens. Written down because a
+  comment claiming coverage it does not have is exactly how this week's dead guards were made.
+
+  **What is still deferred here is only the two-week event itself**, on his «Подожди с этим».

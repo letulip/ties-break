@@ -28,7 +28,7 @@
 // capture (41550 / e6b0c709) is unmoved by the whole wave.
 //
 // -------------------------------------------------------------------------------------------------
-// ⚠⚠ THE MUTATION LOG – twelve, every one red, run one at a time against this file
+// ⚠⚠ THE MUTATION LOG – twenty applied, nineteen red, one honestly recorded GREEN
 // -------------------------------------------------------------------------------------------------
 // A guard that cannot fail on the version of the code it is describing is decoration. Each of these
 // was applied to the shipped source, this file was run, and the source restored from a FILE COPY
@@ -49,6 +49,18 @@
 //   M13  the OFF-SEASON lends its Sunday                                                          1 red
 //   M14  a booked FAMILY week lends its Sunday                                                    1 red
 //   M15  a LAYOFF week lends its Sunday                                                           1 red
+//   M16  the Slam's evening return deleted – she never comes home                                 5 red
+//   M17  the match day's order swapped back to draw -> press -> table                             2 red
+//   M18  `tripKeepsReturn` tightened, so the 1000 loses its travel DAY                            2 red
+//   M19  the flight eats the press hour – the compression he has twice refused                    3 red
+//   M20  `addEveningReturn`'s `start >= GRID_END_HOUR` guard removed             ⚠⚠ STILL GREEN
+//   M21  `TRIP_PRESS` grown to four hours, which breaks M20's premise                             1 red
+//
+// ⚠⚠ M20 IS IN THIS LIST BECAUSE IT STAYED GREEN, and that is the entry worth reading. The guard is
+// unreachable – a match day ends at 16:00 at the very most – so no fixture can redden on it, and a
+// comment claiming otherwise would have been the seventeenth dead guard of the week. The PREMISE is
+// pinned instead (the "no evening left" test), and M21 is that pin failing on the exact change that
+// would make M20's branch start mattering.
 //
 // ⚠ AND THE TWO "NOT ALL THE SAME" ARMS EXIST BECAUSE OF M1 AND M7: a sixteen-rung sweep whose rows
 // all read one number is satisfied by a constant, and a press sweep whose rows all read `false` is
@@ -215,18 +227,30 @@ describe('round 29 P15 – a trip is as long as its draw', () => {
   })
 
   it('⚠ the JOURNEY is what gives way at the big rungs, never the tennis', () => {
-    // His own design: the tournament stays inside its week and the travel moves to the edges. So the
-    // travel days fall away in order – both up to five rounds, the departure at six, both at seven –
-    // and the match days are never compressed to make room.
+    // His own design: the tournament stays inside its week and the travel moves to the edges. The
+    // DEPARTURE day falls away first (lent by the previous Sunday from six rounds up).
+    //
+    // ⚠⚠ RE-AIMED (P16, his 30.08 ruling): the RETURN never falls away at all any more. It used to –
+    // a Slam drew no travel block whatever, because his first sketch put the journey on the Monday of
+    // the next week and this screen cannot see that Monday. He then removed the need for it – «можно
+    // сделать в Вс после матчей, массажа и конференций» – so the Slam's Sunday carries the flight in
+    // its own evening. Every trip of every length now shows her coming home, which is the assertion
+    // this row could not make before.
     for (const tier of RUNGS) {
       const rounds = tripRoundsFor(tier)
       const travel = countKind(gridOf(trip(tier)), 'travel')
-      const expected = (tripKeepsDeparture(rounds) ? 1 : 0) + (tripKeepsReturn(rounds) ? 1 : 0)
+      const expected = (tripKeepsDeparture(rounds) ? 1 : 0) + 1
       expect(travel, `${tier}: ${rounds} rounds`).toBe(expected)
     }
     expect(countKind(gridOf(trip('w15')), 'travel'), 'out and back').toBe(2)
-    expect(countKind(gridOf(trip('wta1000')), 'travel'), 'home on the Sunday, out on the last one').toBe(1)
-    expect(countKind(gridOf(trip('slam')), 'travel'), 'both ends are the neighbours\'').toBe(0)
+    expect(countKind(gridOf(trip('wta1000')), 'travel'), 'a whole Sunday for the journey home').toBe(1)
+    expect(countKind(gridOf(trip('slam')), 'travel'), 'the Sunday evening after the final').toBe(1)
+    // ⚠ AND NOT ONE TRIP ENDS WITHOUT A WAY HOME – the sweep above is satisfied by "some travel
+    // somewhere", this is the sentence it is really making.
+    for (const tier of RUNGS) {
+      const home = blocksOf(gridOf(trip(tier))).filter((b) => b.label === 'Travel home')
+      expect(home.length, `${tier}: she never comes home`).toBe(1)
+    }
   })
 
   it('the court hit is the arc\'s furniture and it is the first thing to go', () => {
@@ -387,6 +411,111 @@ describe('round 29 P15 – the previous week lends its Sunday', () => {
 })
 
 // =================================================================================================
+// §2b – P16: THE SLAM COMES HOME ON ITS OWN SUNDAY EVENING
+// =================================================================================================
+//
+// ⚠⚠ THE HALF OF HIS DESIGN THAT COULD NOT BE DRAWN, AND HOW HE CLOSED IT. His first sketch put the
+// return on «в Пн следующей недели», which this screen cannot reach: the calendar draws
+// `snapshot.week + 1` and `upcoming` is `week > world.week`, so it looks forward one week and cannot
+// look back one at all. Nothing was drawn rather than something guessed. He then removed the need:
+//
+//   «возвращение со Шлема в понедельник следующей недели – да, окей, можно сделать в Вс после
+//    матчей, массажа и конференций»
+//
+// So the flight is the LAST thing on the Slam's own Sunday, behind all three, and the whole trip is
+// inside its own week again.
+describe('round 29 P16 – the Slam flies home on its own Sunday', () => {
+  const lastDay = (f: CalendarWeekFacts) => gridOf(f)[SUNDAY].blocks
+
+  it('⚠⚠ the Sunday of a Slam holds a final, a rub-down, a press hour AND the flight – all four', () => {
+    // ⚠ MUTATION: delete the `else out[out.length - 1] = addEveningReturn(...)` arm and this reddens
+    // with three blocks instead of four.
+    const day = lastDay(trip('slam', withMasseur(DAILY, true)))
+    expect(day.map((b) => b.label), 'his own order: matches, massage, conferences, then home').toEqual([
+      'Draw day', 'Body work', 'Press', 'Travel home',
+    ])
+  })
+
+  it('⚠⚠ ...and all four FIT the grid\'s own hours, with nothing shortened to make room', () => {
+    // The compression he has twice refused. Every block keeps the span it has on every other match
+    // day of the same trip, and the day ends exactly on the grid's last hour rather than past it.
+    const day = lastDay(trip('slam', withMasseur(DAILY, true)))
+    const midweek = gridOf(trip('slam', withMasseur(DAILY, true)))[0].blocks
+    for (const kind of ['tournament', 'physio', 'press'] as BlockKind[]) {
+      const onSunday = day.find((b) => b.kind === kind)!
+      const onMonday = midweek.find((b) => b.kind === kind)!
+      expect(onSunday.span, `the ${kind} hour was shortened for the flight`).toBe(onMonday.span)
+      expect(onSunday.start, `the ${kind} hour was moved for the flight`).toBe(onMonday.start)
+    }
+    const flight = day.find((b) => b.label === 'Travel home')!
+    expect(flight.start, 'the flight starts before the press hour is over').toBe(16)
+    expect(flight.start + flight.span, 'the day runs past the end of the grid').toBe(19)
+    expect(flight.span, 'an evening flight, which is what a flight home after a final is').toBeGreaterThan(0)
+  })
+
+  it('the evening it takes is whatever the day left it, at every combination', () => {
+    // Four arms, because the Sunday's content varies with the hire and the rung: the flight is the
+    // rest of the evening in each, and never less than nothing.
+    const arms: [string, CalendarWeekFacts, number][] = [
+      ['a final, nothing else', trip('slam'), 15],
+      ['a final and the table', trip('slam', withMasseur(DAILY, true)), 16],
+    ]
+    for (const [what, f, start] of arms) {
+      const flight = lastDay(f).find((b) => b.label === 'Travel home')!
+      expect(flight.start, `${what}: the flight is in the wrong hour`).toBe(start)
+      expect(flight.start + flight.span, `${what}: the flight does not run to the evening`).toBe(19)
+    }
+  })
+
+  it('⚠ the 1000 keeps a whole DAY for the journey – that is his other arm, not this one', () => {
+    // «либо снова в Вс (если был 1000)» is a travel DAY; only the Slam's evening comes through
+    // `addEveningReturn`. ⚠ MUTATION: change `tripKeepsReturn` to `rounds + 1 < WEEK_DAYS` and the
+    // 1000 loses its Sunday to a match day, which this catches.
+    const sunday = lastDay(trip('wta1000', withMasseur(DAILY, true)))
+    expect(sunday.map((b) => b.label)).toEqual(['Travel home'])
+    expect(sunday.some((b) => b.kind === 'tournament'), 'the 1000 played on its travel day').toBe(false)
+  })
+
+  it('⚠ no other rung grew an evening flight on a match day', () => {
+    // The rule is the Slam's alone among shipped rungs, and this is what says so: everywhere else the
+    // journey home has a day to itself and no match day carries travel.
+    for (const tier of RUNGS) {
+      if (!tripKeepsReturn(tripRoundsFor(tier))) continue
+      for (const day of gridOf(trip(tier, withMasseur(DAILY, true)))) {
+        const mixed = day.blocks.some((b) => b.kind === 'tournament') && day.blocks.some((b) => b.kind === 'travel')
+        expect(mixed, `${tier}/${day.short}: a match day grew a flight it does not need`).toBe(false)
+      }
+    }
+  })
+
+  it('⚠⚠ the "no evening left" branch is UNREACHABLE, and its PREMISE is what is pinned', () => {
+    // ⚠ HONEST ABOUT WHAT THIS IS. `addEveningReturn` declines when the day already runs to the end
+    // of the grid, and nothing can produce that today – a match day ends at 16:00 at the very most –
+    // so deleting that guard changes no behaviour and NO test can redden on it. I ran that mutation
+    // and it stayed green, which is the definition of a dead guard, so this asserts the premise
+    // instead of pretending to cover the branch: no day of any rung ends late enough to need it.
+    // ⚠ MUTATION: give `TRIP_PRESS` a span of 4 and this reddens, which is exactly the commit on
+    // which that branch would start mattering.
+    for (const tier of RUNGS) {
+      for (const day of gridOf(trip(tier, withMasseur(DAILY, true)))) {
+        const ends = day.blocks.filter((b) => b.kind !== 'travel').map((b) => b.start + b.span)
+        const end = ends.length === 0 ? 7 : Math.max(...ends)
+        expect(end, `${tier}/${day.short}: no evening left to fly home in`).toBeLessThan(19)
+      }
+    }
+  })
+
+  it('⚠⚠ AND NO NEIGHBOUR IS ASKED FOR THE RETURN – the lookback is gone, not hidden', () => {
+    // The property that closes P16: the whole trip is inside its own week, so `nextTripRounds` (the
+    // one thing this screen hands its neighbour) is still only ever about a DEPARTURE. A Slam week
+    // asks nothing of anybody, and a week after a Slam is an ordinary week with nothing borrowed.
+    expect(weekOf(trip('slam')).nextTripRounds, 'a trip week started lending days again').toBeNull()
+    const plainAfter = gridOf(facts({ schoolEndsWeek: 0 }), WEEK + 1)
+    expect(plainAfter[0].blocks.some((b) => b.kind === 'travel'), 'a Monday grew a flight from nowhere').toBe(false)
+  })
+})
+
+// =================================================================================================
 // §3 – P13: THE MASSAGE, AFTER THE MATCHES
 // =================================================================================================
 //
@@ -497,12 +626,25 @@ describe('round 29 P14 – the press conference, at the rungs that hold one', ()
     expect(yes).toBeLessThan(RUNGS.length)
   })
 
-  it('it sits immediately after the match, which is what a press conference is', () => {
+  it('⚠ it follows the match, in the order the OWNER named – draw, table, press', () => {
+    // ⚠ RE-AIMED (P16): the first draft asserted the press hour sat directly on the draw block, on my
+    // own reasoning that a real conference follows a match within the half-hour. His sentence closing
+    // the return lists them in his order – «после матчей, массажа и конференций» – so the table comes
+    // first and this asserts HIS sequence rather than mine. ⚠ MUTATION: swap the two pushes in
+    // `tripMatchDay` and this reddens on the masseur arm while the no-masseur arm stays green, which
+    // is why both arms are here.
     for (const day of gridOf(trip('slam'))) {
       const draw = day.blocks.find((b) => b.kind === 'tournament')!
       const press = day.blocks.find((b) => b.kind === 'press')!
       expect(press.start, 'a press conference before the match').toBe(draw.start + draw.span)
       expect(press.span).toBe(1)
+    }
+    for (const day of gridOf(trip('slam', withMasseur(DAILY, true)))) {
+      const draw = day.blocks.find((b) => b.kind === 'tournament')!
+      const table = day.blocks.find((b) => b.kind === 'physio')!
+      const press = day.blocks.find((b) => b.kind === 'press')!
+      expect(table.start, 'the table is not straight off the court').toBe(draw.start + draw.span)
+      expect(press.start, 'the microphone came before the table').toBe(table.start + table.span)
     }
   })
 
@@ -613,6 +755,8 @@ describe('round 29 P13/P14 – the Calendar tab draws both', () => {
     expect(saying(wrapper, 'Press')).toBe(7)
     expect(saying(wrapper, 'Body work')).toBe(7)
     expect(wrapper.findAll('.cal-block--press').length, 'the press block has no colour rule').toBe(7)
+    // ⭐ P16 – ...and she flies home on the Sunday evening, after all three.
+    expect(saying(wrapper, 'Travel home'), 'the Slam week never brings her home').toBe(1)
     wrapper.unmount()
   })
 

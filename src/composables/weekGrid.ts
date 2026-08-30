@@ -482,10 +482,10 @@ const TRIP_TRAVEL_HOME: DayBlock = { start: 11, span: 4, kind: 'travel', label: 
  *  турниров, где это актуально» – and `tierHoldsPress` (weekDays.ts) draws that line at the WTA main
  *  tour, where the engine already pays an appearance fee to have her on the poster.
  *
- *  ⚠ IT SITS IMMEDIATELY AFTER THE DRAW BLOCK, which is what a press conference IS - you come off
- *  court and you go to the room. One hour, on a match day and nowhere else: no press room opens for
- *  a travel day or a practice day. */
-const TRIP_PRESS: DayBlock = { start: 14, span: 1, kind: 'press', label: 'Press' }
+ *  ⚠ ONE HOUR, ON A MATCH DAY AND NOWHERE ELSE: no press room opens for a travel day or a practice
+ *  day. Where it sits inside that day is `tripMatchDay`'s decision, not this constant's - see the
+ *  ORDER note there, which is the owner's own enumeration. */
+const TRIP_PRESS: Omit<DayBlock, 'start'> = { span: 1, kind: 'press', label: 'Press' }
 
 /** ⭐⭐ P13 – THE MASSEUR'S HOUR ON TOUR, «сессии массажа после матчей по плану», drawn on the match
  *  days and only there.
@@ -500,20 +500,70 @@ const TRIP_PRESS: DayBlock = { start: 14, span: 1, kind: 'press', label: 'Press'
  *  would be the picture promising a dial the ledger does not read. One session per match day is what
  *  the engine already bills for.
  *
- *  ⚠ AFTER THE PRESS ROOM WHERE THERE IS ONE. The order of a match day is match, microphone, table -
- *  so the hour is `TRIP_PRESS`'s if the rung holds one and the block sits directly behind whichever
- *  of the two came last. */
+ *  ⚠ WHERE IT SITS IS `tripMatchDay`'s ORDER note, one function down. */
 const TRIP_TABLE: Omit<DayBlock, 'start'> = { span: 1, kind: 'physio', label: 'Body work' }
 
-/** ⭐ P15 – ONE MATCH DAY, with whatever the rung hangs on it. */
+/** ⭐ P15 – ONE MATCH DAY, with whatever the rung hangs on it, in the order he named them.
+ *
+ *  ⚠⚠ THE ORDER IS THE OWNER'S OWN ENUMERATION AND IT WAS THE OTHER WAY ROUND IN THE FIRST DRAFT.
+ *  I had written match -> microphone -> table on the reasoning that a real press conference follows
+ *  a match within the half-hour. His sentence closing the return («можно сделать в Вс **после
+ *  матчей, массажа и конференций**») lists them in HIS order, and it is the one the day is built in
+ *  now: **draw -> table -> press -> the journey home**. One order on every match day of every rung,
+ *  so the last day of a Slam is the same day as its other six with a flight added rather than a day
+ *  shaped differently from its own week.
+ *
+ *  ⚠ EACH BLOCK SITS DIRECTLY BEHIND THE ONE BEFORE IT – no gaps to reason about, and the day's end
+ *  is `dayEnd` below, which is what the journey home is placed against. */
 function tripMatchDay(trip: TripFacts): DayBlock[] {
   const day: DayBlock[] = [{ ...TRIP_DRAW_DAY }]
-  if (trip.press) day.push({ ...TRIP_PRESS })
-  if (trip.masseur) {
-    const after = day[day.length - 1]
-    day.push({ ...TRIP_TABLE, start: after.start + after.span })
-  }
+  if (trip.masseur) day.push({ ...TRIP_TABLE, start: dayEnd(day) })
+  if (trip.press) day.push({ ...TRIP_PRESS, start: dayEnd(day) })
   return day
+}
+
+/** The hour a day's blocks finish at. Written as a fold over every block rather than as
+ *  `last.start + last.span`, because "the last one in the array" is an assumption about how the day
+ *  was built and this is a fact about the day. */
+function dayEnd(day: readonly DayBlock[]): number {
+  return day.reduce((end, b) => Math.max(end, b.start + b.span), GRID_START_HOUR)
+}
+
+/** ⭐⭐ ROUND 29 P16 – THE JOURNEY HOME ON THE LAST MATCH DAY, when the draw leaves no day for it.
+ *
+ *  ⚠⚠ THIS IS WHAT CLOSED THE ONE HALF OF HIS DESIGN THAT COULD NOT BE DRAWN. He first described a
+ *  Slam's return as «в Пн следующей недели», and that Monday is unreachable from here: the calendar
+ *  draws `snapshot.week + 1` and `upcoming` is filtered to `week > world.week`, so this screen can
+ *  look FORWARD one week and cannot look back one at all. Nothing was drawn rather than something
+ *  guessed. Put to him, he removed the need for the lookback entirely:
+ *
+ *    «возвращение со Шлема в понедельник следующей недели – да, окей, можно сделать в Вс после
+ *     матчей, массажа и конференций»
+ *
+ *  So the flight is the last thing on the Sunday, behind all three, and the whole trip is inside its
+ *  own week again – no neighbour is asked anything.
+ *
+ *  ⚠ IT TAKES THE EVENING THAT IS LEFT, IT DOES NOT TAKE AN HOUR FROM ANYBODY. The block starts at
+ *  `dayEnd` and runs to the end of the grid, so a Sunday that holds a final, a rub-down and a press
+ *  hour still holds all three and the flight is what the rest of the evening is. That is also what a
+ *  real flight home after a final is - an evening one.
+ *
+ *  ⚠ THE `start >= GRID_END_HOUR` ARM IS UNREACHABLE TODAY AND HAS NO TEST OF ITS OWN – said plainly,
+ *  because a branch with a comment claiming coverage it does not have is how a dead guard is born
+ *  (this file's own colour pin was exactly that, one item ago). A match day ends at 16:00 at the very
+ *  most, so nothing can reach it. What IS pinned is its PREMISE: no day of any rung ends late enough
+ *  to need it (tests/component/round29-trip-week.test.ts), so lengthening any of the three blocks
+ *  reddens there and this arm starts mattering on the same commit. It stays because the alternative
+ *  to declining would be a zero- or negative-span block, and declining is the direction every other
+ *  rule in this file keeps.
+ *
+ *  ⚠ THE 1000 DOES NOT COME THROUGH HERE. Six rounds still leave a whole Sunday for the journey
+ *  (`tripKeepsReturn`), which is his own «либо снова в Вс (если был 1000)» - a travel DAY, not a
+ *  travel evening. This is the Slam's rule, and the only shipped rung it can reach. */
+function addEveningReturn(day: DayBlock[]): DayBlock[] {
+  const start = dayEnd(day)
+  if (start >= GRID_END_HOUR) return day
+  return [...day, { start, span: GRID_END_HOUR - start, kind: 'travel', label: 'Travel home' }]
 }
 
 /** ⭐ P15 – THE WHOLE TRIP, seven days of it, as a function of the draw the family entered.
@@ -533,7 +583,11 @@ export function tripArcFor(trip: TripFacts): readonly (readonly DayBlock[])[] {
   const hits = WEEK_DAYS - out.length - rounds - (tripKeepsReturn(rounds) ? 1 : 0)
   for (let i = 0; i < hits; i++) out.push([{ ...TRIP_COURT_HIT }])
   for (let i = 0; i < rounds; i++) out.push(tripMatchDay(trip))
+  // ⭐ P16 – SHE COMES HOME EITHER WAY, and the only question is whether the journey gets a day or an
+  // evening. Both arms are his: «либо снова в Вс (если был 1000)» is the day, «в Вс после матчей,
+  // массажа и конференций» is the evening. So no trip of any length now ends without a way home.
   if (tripKeepsReturn(rounds)) out.push([{ ...TRIP_TRAVEL_HOME }])
+  else out[out.length - 1] = addEveningReturn(out[out.length - 1])
   return out
 }
 
