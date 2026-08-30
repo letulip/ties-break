@@ -1986,6 +1986,46 @@ export const ECONOMY = {
          *  than picked. */
         maxX: 20,
       },
+      /** ⭐⭐⭐ ROUND 30 #23, 30.08 – THE ROOM SHE PLAYS IN. Its own block, and the arithmetic is
+       *  `world/brand.ts`' `brandCrowdMult`.
+       *
+       *  THE OWNER, overruling the `[GAP]` this wave had filed on the crowd: «у нас есть понимание
+       *  коридора зрителей на каждом турнире, мне кажется этого достаточно вполне.»
+       *
+       *  ⚠⚠ THE CORRIDOR, NEVER THE DRAW. `season/preview.ts`' `eventCrowd` is a per-event roll and
+       *  stays decorative – its grep guard in tests/preview.test.ts is untouched and still passes.
+       *  What the brand reads is `tierCrowdMid`, the static table under it, so a valuation stays a
+       *  fold over history with zero draws.
+       *
+       *  ⚠ IT MULTIPLIES THE INCOME, CENTRED ON 1, AND IS BOUNDED BOTH WAYS – it can tilt what the
+       *  brand earns and can never carry it. Sized so the median career reads ≈1.00 the week it can
+       *  first afford the brand, which is what keeps round 30 #9's day-one anchor where it was.
+       *  Measured in docs/specs/brand-worth-and-income-2026-08.md §5. */
+      crowd: {
+        /** ⭐⭐ THE ROOM THE MULTIPLIER IS CENTRED ON, in people, AND IT IS MEASURED RATHER THAN
+         *  PICKED: the median room a family is playing in the week it can first afford the brand.
+         *  ⚠ THAT POPULATION AND NOT THE CAREER-WIDE ONE, on purpose – centring on the career-wide
+         *  median (≈2,277) is what the first draft did, and it moved round 30 #9's day-one worth by
+         *  4.4% because a young career plays smaller rooms than an old one. Centring here is what
+         *  makes the term neutral on the day the decision is made.
+         *  ⚠⚠ SOLVED BACKWARDS FROM THE BENCH RATHER THAN GUESSED, twice. 1,500 (the first draft's
+         *  guess) moved the day-one worth −4.4%; 1,250 (the measured median room at first
+         *  affordability) still left −2.8%, because the population's rooms straddle the clamp and the
+         *  median of a clamped ratio is not the ratio of the medians. 940 is the value at which the
+         *  MEDIAN DAY-ONE MULTIPLIER IS 1.00 and round 30 #9's anchor comes back to the cent it was
+         *  published at. The criterion is the anchor, so the criterion sets the constant. */
+        refRoom: 940,
+        /** ⚠⚠ A TENTH-POWER, AND THE FIRST DRAFT'S QUARTER WAS MEASURABLY WRONG. At 0.25 the term
+         *  ran 0.85–1.35 with BOTH clamps binding inside the deciles, pushed the best career's income
+         *  to $2.1M/yr – through the ceiling of the researched band – and moved the day-one anchor.
+         *  It was not tilting the answer, it was carrying it, and since the room is 0.93-correlated
+         *  with fame (spec §5) an amplifier here is mostly a second fame ramp. At 0.10 the term is a
+         *  tilt: what survives is the part of the room that rank does NOT predict, which is the only
+         *  part worth having. */
+        exponent: 0.1,
+        minMult: 0.9,
+        maxMult: 1.15,
+      },
     },
     academy: {
       /** ⭐⭐ WHAT EACH DELIVERED STAGE BRINGS IN AT REPUTATION 1.0, in cents a week, keyed by the

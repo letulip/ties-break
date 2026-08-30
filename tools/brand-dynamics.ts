@@ -39,6 +39,7 @@
  */
 import { writeFileSync } from 'node:fs'
 import {
+  brandCrowdMult,
   brandMultipleX,
   brandSignalsOf,
   brandWeeklyGrossCents,
@@ -92,6 +93,8 @@ interface WeekRow {
   weeklyCents: number
   /** ...and what a whole brand is worth, cents, BEFORE the owned row's mark floor. */
   worthCents: number
+  /** ⭐ ROUND 30 #23 (30.08) – the crowd multiplier this week, for the correlation section. */
+  crowdMult: number
 }
 
 interface CareerRun {
@@ -138,6 +141,7 @@ function runCareer(preset: Preset, policy: Policy, index: number, weeks: number)
       multipleX: brandMultipleX(signals, BASE_X),
       weeklyCents: brandWeeklyGrossCents(signals),
       worthCents: 0,
+      crowdMult: brandCrowdMult(signals),
     }
     row.worthCents = Math.round(row.weeklyCents * WEEKS_PER_YEAR * row.multipleX)
     if (alive) lastAliveIndex = rows.length
@@ -235,7 +239,8 @@ function printCurve(run: CareerRun): void {
         `${r.fame.toFixed(1).padStart(5)}   ` +
         `${String(g.proSeasons).padStart(2)}/${String(g.topSeasons).padStart(2)}/${String(g.finalsLost).padStart(2)}/` +
         `${(g.winRate * 100).toFixed(0).padStart(3)}%   ` +
-        `${r.multipleX.toFixed(1).padStart(5)}  ${yr(r.weeklyCents).padStart(12)}  ` +
+        `${r.multipleX.toFixed(1).padStart(5)}  ${Math.round(r.signals.roomSize).toLocaleString('en-US').padStart(6)}  ` +
+        `${r.crowdMult.toFixed(2).padStart(5)}  ${yr(r.weeklyCents).padStart(12)}  ` +
         `${musd(r.worthCents).padStart(9)}   ${yr(oldWeeklyCents(r.fame)).padStart(10)}  ${musd(oldWorthCents(r.fame)).padStart(8)}` +
         `${r.alive ? '' : '   (career over)'}`,
     )
@@ -388,6 +393,76 @@ export function main(argv: string[] = process.argv.slice(2)): void {
       `    worth , OLD model: fell in ${down}/${n} windows  ${((down / Math.max(1, n)) * 100).toFixed(1)}%` +
         (drops.length > 0 ? `, median ${q(drops, 0.5).toFixed(1)}%, worst ${q(drops, 0).toFixed(1)}%` : ''),
     )
+  }
+
+  // ---- §4b THE CROWD, AND WHETHER IT IS THE LADDER WEARING A HAT ---------------------------
+  // ⚠⚠ THE TEST THE OWNER'S OWN INSTRUCTION SET: «If crowd ends up a monotone function of rank in
+  // your own numbers, say so with the correlation and drop it.» Spearman, because rank is a skewed
+  // integer and a Pearson on it would answer a question about outliers.
+  const spearman = (xs: number[], ys: number[]): number => {
+    const n = xs.length
+    if (n < 3) return 0
+    const rank = (v: number[]): number[] => {
+      const idx = v.map((x, i) => [x, i] as [number, number]).sort((a, b) => a[0] - b[0])
+      const out = new Array<number>(n)
+      let i = 0
+      while (i < n) {
+        let j = i
+        while (j + 1 < n && idx[j + 1][0] === idx[i][0]) j++
+        const avg = (i + j) / 2 + 1
+        for (let k = i; k <= j; k++) out[idx[k][1]] = avg
+        i = j + 1
+      }
+      return out
+    }
+    const rx = rank(xs)
+    const ry = rank(ys)
+    const mx = rx.reduce((a, b) => a + b, 0) / n
+    const my = ry.reduce((a, b) => a + b, 0) / n
+    let num = 0
+    let dx = 0
+    let dy = 0
+    for (let i = 0; i < n; i++) {
+      num += (rx[i] - mx) * (ry[i] - my)
+      dx += (rx[i] - mx) ** 2
+      dy += (ry[i] - my) ** 2
+    }
+    return dx > 0 && dy > 0 ? num / Math.sqrt(dx * dy) : 0
+  }
+  const room: number[] = []
+  const invRank: number[] = []
+  const fameAt_: number[] = []
+  for (const run of runs) {
+    for (let i = 0; i <= run.lastAliveIndex; i++) {
+      const r = run.rows[i]
+      // only weeks where BOTH questions have an answer: she is ranked and she has played a final
+      if (r.wtaRank === null || r.signals.roomSize <= 0) continue
+      room.push(r.signals.roomSize)
+      invRank.push(-r.wtaRank) // so a POSITIVE correlation means «better rank, bigger room»
+      fameAt_.push(r.fame)
+    }
+  }
+  console.log(`\n  ⭐⭐ §4b THE CROWD SIGNAL – is it the ladder wearing a hat? (${room.length} weeks with a rank and a room)`)
+  console.log(`    Spearman(room, better rank) = ${spearman(room, invRank).toFixed(3)}`)
+  console.log(`    Spearman(room, fame)        = ${spearman(room, fameAt_).toFixed(3)}`)
+  console.log(`    the crowd multiplier itself: p10 ${q(runs.flatMap((r) => r.rows.map((x) => x.crowdMult)), 0.1).toFixed(2)}` +
+    `  median ${q(runs.flatMap((r) => r.rows.map((x) => x.crowdMult)), 0.5).toFixed(2)}` +
+    `  p90 ${q(runs.flatMap((r) => r.rows.map((x) => x.crowdMult)), 0.9).toFixed(2)}`)
+  // ...and the separation that is the whole case for keeping it: two careers at a SIMILAR rank in
+  // very different rooms. Weeks ranked #15-35, split by the room they were playing in.
+  const band = runs.flatMap((r) => r.rows.filter((x) => x.wtaRank !== null && x.wtaRank >= 15 && x.wtaRank <= 35 && x.signals.roomSize > 0))
+  if (band.length > 0) {
+    const rooms = band.map((x) => x.signals.roomSize).sort((a, b) => a - b)
+    console.log(`    ⭐ AT THE SAME RANK (#15-35, ${band.length} weeks) the room still spans` +
+      ` p10 ${Math.round(q(rooms, 0.1)).toLocaleString('en-US')} – median ${Math.round(q(rooms, 0.5)).toLocaleString('en-US')}` +
+      ` – p90 ${Math.round(q(rooms, 0.9)).toLocaleString('en-US')} people`)
+  }
+  for (const type of ['reign', 'journeywoman', 'cut short', 'late bloomer'] as Archetype[]) {
+    const pool = byType.get(type) ?? []
+    const rooms = pool.flatMap((r) => r.rows.filter((x) => x.signals.roomSize > 0).map((x) => x.signals.roomSize)).sort((a, b) => a - b)
+    if (rooms.length > 0) {
+      console.log(`      ${type.padEnd(13)} median room ${Math.round(q(rooms, 0.5)).toLocaleString('en-US')} people`)
+    }
   }
 
   // ---- §5 AGAINST THE RESEARCH -------------------------------------------------------------

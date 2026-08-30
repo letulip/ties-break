@@ -1062,12 +1062,47 @@ owning `index-fund · car-sensible · house-first · merch-brand · deposit · a
   $28.1M, 17 gives $26.5M, at the cost of flattening the multiple for reigns. **Say a number and it is
   one line plus a bench re-run.**
 
-  ⚠⚠ **CROWD/ATTENDANCE IS A `[GAP]` AND I DID NOT PROXY IT.** You named it. The engine DOES model a
-  crowd (`eventCrowd`) – but it is a corridor **per tournament tier**, decorative by construction, read
-  by nothing, and **never persisted**: no attendance figure attributable to HER exists anywhere in a
-  save. Feeding it to the brand would be feeding the tier ladder in through a second door under a
-  different name. The honest version of your ask is a persisted per-event attendance driven by her
-  standing, which is a schema move and its own item.
+  ⭐⭐⭐ **THE CROWD – YOU OVERRULED MY `[GAP]` AND YOU WERE RIGHT, SO IT IS BUILT.** «У нас есть
+  понимание **коридора зрителей на каждом турнире**, мне кажется этого достаточно вполне.»
+
+  ⚠ **My objection was to the wrong noun.** `eventCrowd` is a per-event **roll**, and that stays
+  decorative – its guard is untouched and still green, because a roll inside a valuation would break
+  «a valuation is a fold, zero draws». But under it sits the **corridor**: a static table of how big
+  the room is at each rung, which is exactly what you named. The brand reads that.
+
+  ⭐⭐ **AND IT IS NOT THE LADDER THROUGH A SECOND DOOR, because the corridor is NOT ordered by
+  prestige.** A J300 draws 900–2,600 and a W15 draws 20–70 – **a junior on the feeder circuit plays to
+  forty times the room a new professional does.** The brand now reads the **average size of the room
+  she reaches finals day in** (recency-weighted, so the decay cancels and what is left is her
+  SCHEDULE, not her haul), as a bounded ±10–15% tilt on the **income** – being seen is current form,
+  the same tense as fame.
+
+  ⚠⚠ **THE HALF OF MY `[GAP]` THAT STANDS, said plainly: her full watched audience is NOT
+  recoverable.** Nothing keeps a career-long record of what she ENTERED – results prune at 52 weeks,
+  the feed caps at 400 rows, the entry ledgers reset every season. The trophy shelf is the only dated,
+  per-tier, never-pruned appearance record in the game, so what is counted is **finals day** and not
+  every match. Narrower than your ask, and it is the part a save can still answer for.
+
+  ⚠⚠ **AND THE NUMBER THAT MIGHT MAKE YOU KILL IT, given first:** over 44,506 career-weeks the room
+  is **0.87-correlated with her rank and 0.93 with her fame** – and fame is what it multiplies. So
+  most of what it does is steepen a curve that was already there. ⭐ **What is genuinely new is the
+  residual, and it is real: at the SAME rank (#15–35, 14,227 weeks) the room still spans 2,926 →
+  8,075 → 12,665 people**, and the archetypes separate (a reign plays to 7,541, a journeywoman to
+  2,269, a late bloomer to 113). **Two players can finish a season in the same place having played to
+  four times the house** – which is your point, measured. If you would rather not carry an
+  0.93-correlated term for that, **one constant turns it off** and nothing else moves.
+
+  ⚠ **Both protected anchors held, and the sizing was solved backwards from them rather than picked** –
+  my first two attempts moved the day-one worth by −4.4% and −2.8% and pushed the best career's income
+  **through the ceiling** of the researched band; the bench caught both:
+
+  | | published | **with the crowd** |
+  | --- | ---: | ---: |
+  | worth on the day they buy it, median | $227,878 | **$227,886** ⭐⭐ held, $8 apart |
+  | the multiple at peak | 16.4 / 18.7 / 20.0 | **identical** ⭐⭐ held |
+  | peak brand income, best | $1,560,000/yr | **$1,794,000/yr** – still inside the researched band |
+  | peak brand worth, median | $13.46M | **$15.48M** |
+  | peak brand worth, best | $31.20M | **$35.88M** ⚠ +15% on the figure already flagged as yours |
 
   ⭐⭐⭐ **AND IT IS BUILT AS THE FOUNDATION YOU CALLED IT** – «по сути этот мерч бренд это фундамент
   для этого слоя». Nothing of the collaboration layer is built («но не сейчас» stands). What is left

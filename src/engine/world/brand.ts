@@ -59,7 +59,8 @@
 // the frozen MAIN capture (41550 / e6b0c709) cannot see it. A valuation is a fold over history.
 import { ECONOMY } from '../economy'
 import { WEEKS_PER_YEAR } from '../season/calendar'
-import { fameAt } from './fame'
+import { decayAt, fameAt } from './fame'
+import { tierCrowdMid } from '../season/preview'
 import type { TierId } from '../season/types'
 import type { WorldState } from '../world'
 
@@ -93,6 +94,34 @@ export interface BrandSignals {
    *  here, and only into the multiple: what she WON is already priced into the income through fame,
    *  and pricing it twice would be one dial wearing two hats again. */
   finalsLost: number
+  /** ⭐⭐⭐ «ДАЖЕ ТО, СКОЛЬКО ЗРИТЕЛЕЙ НА ТРИБУНЫ ПРИХОДИТ» – THE SIZE OF THE ROOM SHE PLAYS FINALS
+   *  IN, in people, decayed on the same half-life as everything else. 0 when the career has no
+   *  recorded appearance at all, which is «no evidence» and never «an empty stand».
+   *
+   *  THE OWNER, 30.08, overruling the `[GAP]` this wave had filed: «у нас есть понимание коридора
+   *  зрителей на каждом турнире, мне кажется этого достаточно вполне.»
+   *
+   *  ⚠⚠ A MEAN AND NOT A TOTAL, WHICH IS THE WHOLE REASON IT IS NOT FAME WEARING A HAT. A decayed
+   *  TOTAL audience is a decayed sum over the same dated records the fame floor already sums, with
+   *  different per-tier weights – it would measure how much she has done, twice. The decay cancels
+   *  between numerator and denominator here, so what is left is a recency-weighted MEAN: «how big is
+   *  the room she is playing in these days», which is a fact about her SCHEDULE and not about her
+   *  haul.
+   *
+   *  ⚠⚠ AND IT IS «FINALS», NOT «EVERY MATCH», BECAUSE THAT IS ALL THE SAVE CAN ANSWER FOR – said
+   *  plainly rather than papered over. There is no career-long record of what she ENTERED:
+   *  `world.results` prunes at 52 weeks, the news feed caps at 400 rows, `seasonEntries` and
+   *  `proEntryWeeks` are both pruned to the current season. `trophiesByTier[tier].titles/finals` is
+   *  the only dated, per-tier, never-pruned appearance ledger in the game. So this reads «the rooms
+   *  she reaches finals day in», which is a narrower claim than «who saw her» and is the honest one.
+   *
+   *  ⭐ IT IS NOT THE LADDER THROUGH A SECOND DOOR, and the corridor table says so itself: crowd is
+   *  NOT monotone in tier. A J300 draws 900–2,600 and a W15 draws 20–70, so a junior on the feeder
+   *  circuit plays in front of forty times the room a new professional does – «the crowd she plays in
+   *  front of gets smaller as the tennis gets better», in `season/preview.ts`' own words. Two careers
+   *  can finish a season at the same rank having played to very different houses. The measured
+   *  correlations are in docs/specs/brand-worth-and-income-2026-08.md §5. */
+  roomSize: number
   /** ⭐ «СКОЛЬКО ВЫИГРЫВАЕТ» – her career win rate ON THE WTA TRACK, 0..1, over finished seasons.
    *  ⚠ THE WTA TRACK AND NOT THE FOLD: `SeasonHistoryEntry.wins` adds all three tables together, so
    *  a junior season of easy wins would read as professional form. `byTrack.wta` is the professional
@@ -128,14 +157,58 @@ export function brandSignalsOf(world: WorldState, week = world.week): BrandSigna
   for (const tier of Object.keys(ECONOMY.fame.titleFloor) as TierId[]) {
     finalsLost += world.trophiesByTier?.[tier]?.finals.length ?? 0
   }
+  // ⭐⭐⭐ THE ROOM. ⚠ EVERY TIER SHE HOLDS A SHELF ON, JUNIORS INCLUDED, and that is deliberate and is
+  // the opposite of the rule two lines up. The fame floor ignores junior draws because the WORLD does
+  // not read them; the CROWD does not care what the world reads – a J300 final is played in front of
+  // 900–2,600 people whether or not anybody writes it down, and that is the fact the owner asked to
+  // have counted. So this walks the shelves, not `titleFloor`'s key set.
+  let audience = 0
+  let appearances = 0
+  for (const [tier, shelf] of Object.entries(world.trophiesByTier ?? {}) as [TierId, { titles: number[]; finals: number[] }][]) {
+    if (!shelf) continue
+    const room = tierCrowdMid(tier)
+    for (const w of [...shelf.titles, ...shelf.finals]) {
+      const d = decayAt(week - w)
+      audience += room * d
+      appearances += d
+    }
+  }
   const played = wins + losses
   return {
     fame: fameAt(world, week),
     proSeasons,
     topSeasons,
     finalsLost,
+    // ⚠ THE DECAY CANCELS IN THE RATIO and that is the point – see the field's own note. A career
+    // with no recorded appearance answers 0, which `brandCrowdMult` reads as «no evidence».
+    roomSize: appearances > 0 ? audience / appearances : 0,
     winRate: played > 0 ? wins / played : 0,
   }
+}
+
+/** ⭐⭐ HOW MUCH THE ROOM IS WORTH TO THE BRAND – a bounded multiplier on the WEEKLY INCOME, centred
+ *  on 1 at `ECONOMY.business.merch.crowd.refRoom`.
+ *
+ *  ⚠⚠ ON THE INCOME AND NOT ON THE MULTIPLE, and that is the tense argument this file is built on:
+ *  being seen is CURRENT FORM – the same tense as fame – while the multiple is the accumulated
+ *  career. A player who has stopped playing the big rooms is being watched by fewer people NOW, and
+ *  that belongs where the fall lives. It reaches the WORTH anyway, through the income, which is
+ *  exactly how fame reaches it.
+ *
+ *  ⚠ CENTRED, BOUNDED AND A QUARTER-POWER, so it can only ever tilt the answer and never carry it.
+ *  A room a hundred times bigger than the reference is worth about ×3.2 before the clamp; the clamp
+ *  then holds the whole term inside [`minMult`, `maxMult`]. The reference is the room a family is
+ *  typically playing in the week it can first afford the brand, which is what keeps round 30 #9's
+ *  day-one anchor where it was – measured, not assumed.
+ *
+ *  ⚠ 0 IS «NO EVIDENCE» AND ANSWERS 1. A career that has reached no final has an empty appearance
+ *  ledger, not an empty stand, and `shared/money.ts`' house rule is that a fact and a missing value
+ *  must not look the same. */
+export function brandCrowdMult(signals: BrandSignals): number {
+  const C = ECONOMY.business.merch.crowd
+  if (signals.roomSize <= 0) return 1
+  const raw = Math.pow(signals.roomSize / C.refRoom, C.exponent)
+  return Math.min(C.maxMult, Math.max(C.minMult, raw))
 }
 
 /** ⭐⭐⭐ WHAT A WHOLE BRAND TAKES IN THIS WEEK, in cents, before anybody owns it – §7e's convex
@@ -159,7 +232,10 @@ export function brandSignalsOf(world: WorldState, week = world.week): BrandSigna
  *  fell, which is the only fall the game is in frame for. */
 export function brandWeeklyGrossCents(signals: BrandSignals): number {
   const M = ECONOMY.business.merch
-  return Math.round((M.perFamePointCents * signals.fame * signals.fame) / M.famePivot)
+  // ⭐⭐⭐ AND THE ROOM TILTS IT (30.08, the owner overruling this wave's `[GAP]` on the crowd). It is
+  // a bounded multiplier centred on 1, so the curve above is still the shape and this is still a
+  // tilt – see `brandCrowdMult`.
+  return Math.round(((M.perFamePointCents * signals.fame * signals.fame) / M.famePivot) * brandCrowdMult(signals))
 }
 
 /** ⭐⭐⭐ WHAT A BUYER PAYS PER DOLLAR OF WHAT IT EARNS – the multiple, EARNED rather than constant.

@@ -8,7 +8,7 @@ Regenerate with `node scripts/world-map.mjs`; `node scripts/world-map.mjs --chec
 
 **Do not read this file to answer one question** – that is the habit it exists to replace. `node scripts/world-map.mjs <symbol>` prints the owner and the line, and a plain `grep <symbol> tools/generated/world-symbol-map.md` does the same for a partial name.
 
-375 exported names across 45 owning modules.
+376 exported names across 45 owning modules.
 
 ## Areas
 
@@ -34,10 +34,10 @@ Regenerate with `node scripts/world-map.mjs`; `node scripts/world-map.mjs --chec
 | `src/engine/world/injury.ts` | INJURIES AND PHYSIO: the weekly roll, the hazard shape behind it, and the recovery the family pays for – plus the sweep that cleans up everything an injury invalidates | 7 |
 | `src/engine/world/planner.ts` | THE SEASON PLANNER: the two things a parent can put on an empty week – a family holiday and a practice match – and what the engine does with them when the week arrives | 7 |
 | `src/engine/world/shop.ts` | ⭐⭐ THE SHOP – the tab, static prices, buy / own / sell, and since round 29 #5 the storeys above | 7 |
+| `src/engine/world/brand.ts` | ⭐⭐⭐ THE BRAND – round 30 #23 and #24, and it is TWO functions of ONE signal set | 6 |
 | `src/engine/world/entries.ts` | THE ENTRY COMMANDS: putting her in a draw, and taking her back out | 6 |
 | `src/engine/world/milestones.ts` | WHAT THE FAMILY KEEPS: the moments that are never pruned, and the season they add up to | 6 |
 | `src/engine/world/shootClash.ts` | ⭐⭐ ROUND 29 #3 – THE SHOOT THAT LANDS ON A TOURNAMENT WEEK, AND THE FOUR ANSWERS TO IT | 6 |
-| `src/engine/world/brand.ts` | ⭐⭐⭐ THE BRAND – round 30 #23 and #24, and it is TWO functions of ONE signal set | 5 |
 | `src/engine/world/constants.ts` | THE SHARED IDS AND CAPS: the handful of constants more than one world module needs | 5 |
 | `src/engine/world/means.ts` | WHAT THE FAMILY CAN AFFORD, AS ONE FACT – the licence a line of copy asks for before it may assume a wallet | 5 |
 | `src/engine/condition.ts` | THE condition math – one rule, everybody | 4 |
@@ -454,6 +454,17 @@ THE SEASON PLANNER: the two things a parent can put on an empty week – a famil
 - `sellAsset` – `src/engine/world/shop.ts`
 - `shopView` – `src/engine/world/shop.ts`
 
+### `src/engine/world/brand.ts`
+
+⭐⭐⭐ THE BRAND – round 30 #23 and #24, and it is TWO functions of ONE signal set.
+
+- `brandCrowdMult` – `src/engine/world/brand.ts`
+- `brandGrossWorthCents` – `src/engine/world/brand.ts`
+- `brandMultipleX` – `src/engine/world/brand.ts`
+- `BrandSignals` *(type)* – `src/engine/world/brand.ts`
+- `brandSignalsOf` – `src/engine/world/brand.ts`
+- `brandWeeklyGrossCents` – `src/engine/world/brand.ts`
+
 ### `src/engine/world/entries.ts`
 
 THE ENTRY COMMANDS: putting her in a draw, and taking her back out.
@@ -486,16 +497,6 @@ WHAT THE FAMILY KEEPS: the moments that are never pruned, and the season they ad
 - `shootClashOpen` – `src/engine/world/shootClash.ts`
 - `shootClashWeek` – `src/engine/world/shootClash.ts`
 - `shootMoveTarget` – `src/engine/world/shootClash.ts`
-
-### `src/engine/world/brand.ts`
-
-⭐⭐⭐ THE BRAND – round 30 #23 and #24, and it is TWO functions of ONE signal set.
-
-- `brandGrossWorthCents` – `src/engine/world/brand.ts`
-- `brandMultipleX` – `src/engine/world/brand.ts`
-- `BrandSignals` *(type)* – `src/engine/world/brand.ts`
-- `brandSignalsOf` – `src/engine/world/brand.ts`
-- `brandWeeklyGrossCents` – `src/engine/world/brand.ts`
 
 ### `src/engine/world/constants.ts`
 

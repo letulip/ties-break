@@ -39,6 +39,7 @@ import {
   assetEarningsRateCents,
   assetValueCents,
   assetWorthCents,
+  brandCrowdMult,
   brandMultipleX,
   brandSignalsOf,
   buyAsset,
@@ -60,6 +61,7 @@ import { ECONOMY } from '../src/engine/economy'
 import { rngFromSeed } from '../src/engine/rng'
 import { WEEKS_PER_YEAR } from '../src/engine/season/calendar'
 // (SeasonHistoryEntry is inferred at both fixture sites now that byTrack is complete – no cast)
+import type { TierId } from '../src/engine/season/types'
 
 const MERCH = 'merch-brand'
 const PRICE = 250_000_00
@@ -98,7 +100,7 @@ function shopper(seed: string, weeks = 12): WorldState {
 /** ⭐ FAME, PUT ON THE CAREER THE WAY THE CAREER PUTS IT ON: dated titles in the trophy ledger, which
  *  is one of the four sources `world/fame.ts` folds. ⚠ NOT A FAME FIELD – there isn't one; fame is
  *  re-derived from records on every read, which is the property that keeps it off the MAIN stream. */
-function winTitles(world: WorldState, tier: 'wta250' | 'wta1000' | 'slam', weeks: number[]): void {
+function winTitles(world: WorldState, tier: TierId, weeks: number[]): void {
   world.trophiesByTier[tier] ??= { titles: [], finals: [] }
   world.trophiesByTier[tier]!.titles.push(...weeks)
 }
@@ -416,7 +418,11 @@ function proSeasons(world: WorldState, n: number, endRank: number, wins: number,
   }
 }
 
-function loseFinals(world: WorldState, tier: 'wta250' | 'wta500', weeks: number[]): void {
+/** ⚠ `TierId` AND NOT A HAND-PICKED UNION, since round 30 #23's crowd arms: the room is read off
+ *  EVERY shelf a career holds, juniors included, so a helper that only accepted the two professional
+ *  rungs the earlier arms happened to use could not express the claim. `vue-tsc` caught this – the
+ *  unit runner does not typecheck, so the arms ran green for a while against a narrower signature. */
+function loseFinals(world: WorldState, tier: TierId, weeks: number[]): void {
   world.trophiesByTier[tier] ??= { titles: [], finals: [] }
   world.trophiesByTier[tier]!.finals.push(...weeks)
 }
@@ -591,6 +597,99 @@ describe('round 30 #23 §7 – income and worth are two functions, not one dial'
   })
 })
 
+describe('round 30 #23 §8 – ⭐⭐⭐ THE CROWD, and it is the corridor and never the draw', () => {
+  it('⭐⭐⭐ two careers with the SAME fame and the SAME multiple earn differently by the ROOM', () => {
+    // ⚠⚠ THE ARM THE OWNER'S OVERRULE TURNS ON. «У нас есть понимание коридора зрителей на каждом
+    // турнире, мне кажется этого достаточно вполне.» Both careers hold the same title in the same
+    // week, so the fame stock is identical to the last decimal; both lost four professional finals,
+    // so `finalsLost` and therefore the MULTIPLE are identical. The only difference is WHERE those
+    // finals were played – a W15 draws 20-70 people and a WTA-1000 draws 15,000-35,000.
+    const W = 6 * WEEKS_PER_YEAR
+    const small = parkAt(shopper('r30-23-room-small'), W)
+    const big = parkAt(shopper('r30-23-room-big'), W)
+    winTitles(small, 'wta250', [W - 2])
+    winTitles(big, 'wta250', [W - 2])
+    loseFinals(small, 'w15', [W - 3, W - 4, W - 5, W - 6])
+    loseFinals(big, 'wta1000', [W - 3, W - 4, W - 5, W - 6])
+
+    const base = shopItem(MERCH)!.earningsMultipleX!
+    expect(fameAt(big), 'fame is EQUAL by construction – a final below a Slam buys none')
+      .toBeCloseTo(fameAt(small), 10)
+    expect(brandMultipleX(brandSignalsOf(big), base), '...and so is the multiple: four finals each')
+      .toBeCloseTo(brandMultipleX(brandSignalsOf(small), base), 10)
+
+    expect(brandSignalsOf(big).roomSize, 'the room really is the thing that differs')
+      .toBeGreaterThan(brandSignalsOf(small).roomSize * 10)
+    expect(assetEarningsRateCents(big, shopItem(MERCH)!), 'so the bigger room sells more')
+      .toBeGreaterThan(assetEarningsRateCents(small, shopItem(MERCH)!))
+  })
+
+  it('⚠ it is BOUNDED both ways and 1 with no evidence – it tilts the answer, never carries it', () => {
+    const C = ECONOMY.business.merch.crowd
+    const bare = shopper('r30-23-room-none')
+    expect(brandSignalsOf(bare).roomSize, 'no recorded appearance at all').toBe(0)
+    expect(brandCrowdMult(brandSignalsOf(bare)), 'no evidence is 1, never 0 – an empty ledger is not an empty stand')
+      .toBe(1)
+    // the two ends, driven to absurdity and clamped
+    const tiny = { ...brandSignalsOf(bare), roomSize: 1 }
+    const huge = { ...brandSignalsOf(bare), roomSize: 10_000_000 }
+    expect(brandCrowdMult(tiny)).toBe(C.minMult)
+    expect(brandCrowdMult(huge)).toBe(C.maxMult)
+    // ...and it is CENTRED: the reference room reads exactly 1, which is what holds the day-one anchor
+    expect(brandCrowdMult({ ...brandSignalsOf(bare), roomSize: C.refRoom })).toBeCloseTo(1, 10)
+  })
+
+  it('⭐⭐ the room is RECOMPUTABLE FROM THE SAVE – it is a signal, not a session artefact', () => {
+    // ⚠⚠ THE COORDINATOR'S OWN TEST, and it is why the signal reads the trophy ledger rather than her
+    // entries: NO career-long record of what she ENTERED survives. `world.results` prunes at 52
+    // weeks, the news feed caps at 400 rows, and `seasonEntries` and `proEntryWeeks` are both pruned
+    // to the current season. `trophiesByTier[tier].titles/finals` is the only dated, per-tier,
+    // NEVER-PRUNED appearance ledger in the game – so this reads the rooms she reached finals day in,
+    // which is narrower than «who saw her» and is the part a save can still answer for.
+    const W = 6 * WEEKS_PER_YEAR
+    const w = parkAt(shopper('r30-23-room-reload'), W)
+    winTitles(w, 'wta500', [W - 2])
+    loseFinals(w, 'wta1000', [W - 3, W - 9])
+    const before = brandSignalsOf(w).roomSize
+    expect(before).toBeGreaterThan(0)
+    // a round trip through the wire, which is what a load is
+    const reloaded = JSON.parse(JSON.stringify(w)) as WorldState
+    expect(brandSignalsOf(reloaded).roomSize, 'the same answer after a save and a load').toBe(before)
+    // ⚠ AND IT IS THE CORRIDOR AND NOT THE DRAW, which is what keeps `eventCrowd` decorative and its
+    // grep guard green: the same tier gives the same room every time, with no event id anywhere in it.
+    expect(brandSignalsOf(w).roomSize).toBe(brandSignalsOf(w).roomSize)
+  })
+
+  it('⚠⚠ a JUNIOR final counts a room even though it buys no fame – the two ledgers disagree on purpose', () => {
+    // ⚠ THE FAME FLOOR IGNORES JUNIOR DRAWS BECAUSE THE WORLD DOES NOT READ THEM. The crowd does not
+    // care what the world reads: a J300 is played in front of 900-2,600 people – FORTY TIMES a W15's
+    // 20-70 – and that is the fact «сколько зрителей на трибуны приходит» is about. This is also the
+    // arm that fails if the room ever gets narrowed to `titleFloor`'s key set.
+    // ⚠⚠ THE FIRST DRAFT OF THIS ARM WAS A DEAD GUARD and the mutation pass caught it (M20). It gave
+    // both careers a professional title and compared the means, so narrowing the room to
+    // `titleFloor`'s key set – which deletes the junior shelf outright – still left the junior side
+    // larger, for a reason that had nothing to do with juniors. The claim has to be made on a career
+    // that has NOTHING ELSE, or the professional shelf answers it.
+    const W = 6 * WEEKS_PER_YEAR
+    const junior = parkAt(shopper('r30-23-room-junior'), W)
+    junior.trophiesByTier.j300 ??= { titles: [], finals: [] }
+    junior.trophiesByTier.j300.titles.push(W - 3, W - 4)
+    expect(fameFloorOf(junior, junior.week), 'the junior shelf buys no fame at all').toBe(0)
+    expect(brandSignalsOf(junior).roomSize, '...and yet a J300 final is played in front of people')
+      .toBeGreaterThan(0)
+
+    // ...and the corridor's own shape is the thing being read: a J300 is a junior Slam feeder with a
+    // federation busing children in (900-2,600), a W15 is an outside court at a club nobody has heard
+    // of (20-70). The professional rung is the SMALLER room, which is exactly what
+    // `season/preview.ts` says out loud – «the crowd she plays in front of gets smaller as the tennis
+    // gets better».
+    const w15only = parkAt(shopper('r30-23-room-w15'), W)
+    loseFinals(w15only, 'w15', [W - 3, W - 4])
+    expect(brandSignalsOf(w15only).roomSize).toBeGreaterThan(0)
+    expect(brandSignalsOf(junior).roomSize).toBeGreaterThan(brandSignalsOf(w15only).roomSize * 10)
+  })
+})
+
 describe('round 30 #24 – a top-20 who never wins is no longer invisible to her own brand', () => {
   it('⭐⭐⭐ a career with no title, no Slam final and no top-10 season is worth something', () => {
     // ⚠ THE STRUCTURAL CLAIM, and it is arithmetic rather than a measurement: before the two lower
@@ -686,4 +785,20 @@ describe('round 30 #24 – a top-20 who never wins is no longer invisible to her
 //  M17 `maxX` removed (the ceiling on the whole multiple)        -> 1 RED, ALONE: the caps arm.
 //  M18 the worth ignoring the multiple entirely (`x baseX`)      -> 2 RED: the ratio arm and the
 //      decoupling arm.
+//
+// --- THE CROWD OVERRULE, 30.08 (§8). One more dead guard, and the mutation pass found it. --------
+//  M19 the crowd term dropped from the income                    -> 1 RED, ALONE: «two careers with
+//      the SAME fame and the SAME multiple earn differently by the ROOM».
+//  M20 the room narrowed to `titleFloor`'s key set (juniors deleted) -> ⚠ **GREEN on the first
+//      pass.** The junior arm gave BOTH careers a professional title and compared the means, so the
+//      professional shelf answered it and the junior shelf was never load-bearing. Closed by making
+//      the claim on a career that has NOTHING but junior silverware – fame floor 0, room > 0 – and
+//      RED after.
+//  M21 the room made a decayed TOTAL instead of a mean           -> 1 RED: the same-fame arm. This is
+//      the mutation that turns the signal back into fame wearing a hat, which is what the mean exists
+//      to prevent.
+//  M22 the clamp removed                                          -> 2 RED, including §7's decoupling
+//      arm – an unbounded tilt stops being a tilt.
+//  M23 «no evidence» answering `minMult` instead of 1             -> 2 RED. An empty appearance ledger
+//      is not an empty stand, which is `shared/money.ts`' house rule about facts and missing values.
 // =================================================================================================
