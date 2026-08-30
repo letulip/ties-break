@@ -83,7 +83,10 @@ describe('the build line renders at the foot of Settings, with the values the bu
     // moved by P7's ledger category with its full move (migration, golden fixture, e2e fixtures
     // regenerated), never by this line's item. The pin follows the ladder's head so the sentence
     // above it stays checkable.
-    expect(SAVE_SCHEMA_VERSION).toBe(66)
+    // ⚠ RE-AIMED AGAIN AT v67 (30.08, round 30 item 25 – the units and name back-fills moved off
+    // the shipped v66 step), NOT WEAKENED, and for the same reason verbatim: 67 was moved by that
+    // repair with its full three-part move, never by this line's item. The claim above is untouched.
+    expect(SAVE_SCHEMA_VERSION).toBe(67)
   })
 
   it('is one line at the FOOT of the screen, and it is there whichever tab is open', async () => {

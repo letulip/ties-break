@@ -836,6 +836,29 @@ describe('the two readouts say the bonus exists, without overstating it', () => 
 // and the walk below asserts the business inertness by name rather than leaving it to the hashes.
 // `PRE_V66` below is the byte-level half of the same proof: rolling ONLY the version number back
 // reproduces all three v65 constants exactly, which is what a pure bump on unmoved careers means.
+//
+// ⭐⭐ RE-FROZEN AGAIN AT v67 (30.08, ROUND 30 ITEM 25 – the units and name back-fills moved off the
+// SHIPPED v66 step, which main declared while this wave was still amending it). SAME VERDICT AS THE
+// v66 RE-FREEZE, AND BY A NARROWER ARGUMENT: v67 is a RENUMBER. Both steps are the v66 step's own
+// former contents moved character for character, so «no career moved» is what the change MEANS and
+// not merely what was hoped of it.
+//
+// THE PER-KEY DIFF WAS TAKEN FIRST, AS THE PROTOCOL DEMANDS – `tools/frozen-key-diff.ts`, presets
+// 0/1/2 × policy 1, a DETACHED worktree at `89e0e794` against this branch. ⚠ THE CONTROL IS THIS
+// WAVE REVERTED, not merely an earlier commit: `git log 89e0e794..HEAD` is four commits and all four
+// are this repair's, so the base IS the change backed out. Headers checked against the invocation on
+// both arms (`# preset N policy 1 weeks 156`). The verdict, identical on all three:
+//
+//   MOVED    schemaVersion – and NOTHING else. 1 key of 72, 72 and 73.
+//   UNMOVED  every other key, `rngMain` INCLUDED, byte for byte (d84bcbf0c481 on all six captures).
+//
+// ⚠ ZERO MOVEMENT IS THE DERIVED EXPECTATION, NOT A RELIEF, and one layer in from v66's version of
+// this sentence: v67's two steps write `units` and `name` onto ROWS of `assets`, and the shelf is
+// EMPTY on all three frozen careers (the v63 assertion in `walkFrozenCareer`), so there is no row
+// for either to reach. Neither takes a draw – the market is sub-stream reads keyed on the seed and a
+// week – so the frozen MAIN capture (41550 / e6b0c709) is untouched by construction and UNMOVED in
+// `tests/condition.test.ts`. `PRE_V67` below is the byte-level half: rolling ONLY the number back to
+// 66 reproduces all three v66 constants exactly.
 const FROZEN = {
   /** ⭐⭐ ONE OF THE THREE MOVED (28.08, ROUND 29 #20 – the owner's ruling 5 of 09.08: a booked family
    *  holiday stops the kit wearing), AND WHICH ONE IT IS *IS* THE MEASUREMENT. `selfTravelling` moved
@@ -1280,7 +1303,7 @@ const FROZEN = {
    *  unreadable by the other. The renumber moved all three parts together: the constant, the
    *  migration's PLACE in the append-only chain (it runs at `v === 64`, after the reveal), and the
    *  golden fixture – `v65.json`, with college's `v64.json` untouched beside it. */
-  middleGrinder: '8a95060b2521fa3643e561298eda0b56516a251f4bc226e5c1545ae27d70876f',  /** PRESETS[8] · 120k wealthy family, elite coach · grinder policy (never travels)
+  middleGrinder: '61b691741f53f557b126b8e24b2dd9ae82473291dfaf05ddbd472f71b326b6f6',  /** PRESETS[8] · 120k wealthy family, elite coach · grinder policy (never travels)
    *
    *  ⭐⭐ RE-FROZEN FOR ROUND 28 #17-b (28.08) – AND ALONE, WHICH IS THE FINDING, exactly as the
    *  16.08 re-freeze below was alone for its own reason. The owner's ruling put a kit letter's
@@ -1315,7 +1338,7 @@ const FROZEN = {
    *  drop `fieldSeasonTitles`, roll the number back to 64, and the merge value above comes back. So
    *  this career carries all three of the day's moves and its constant matches no branch that exists,
    *  which is what a renumbered collision looks like from inside a fixture. */
-  eliteGrinder: 'f122b29fb33ed3a65c2cc6dabfe831da02f3393d9a2c5e44f4448615c0211f4d',  /** PRESETS[0] · 8k working family, SELF-COACHED · player policy (switch on, nobody to send)
+  eliteGrinder: '8866c10dfaf417af590a210f8a98fc05f1f667e1d9581896ca48fd0cbd67389d',  /** PRESETS[0] · 8k working family, SELF-COACHED · player policy (switch on, nobody to send)
    *
    *  ⭐⭐ RE-FROZEN A FIFTH TIME (16.08) – AND ALONE, WHICH IS THE FINDING. The owner's correction of
    *  that afternoon made the Junior Accelerator a reserved place instead of a ceiling, so a junior
@@ -1545,6 +1568,26 @@ const FROZEN = {
    *
    *  ⚠ AND A FOURTH TIME BY v66 (29.08), with both twins and by `schemaVersion` ALONE – see the
    *  block over `FROZEN`. `PRE_V66` rolls only the number back and reproduces the v65 value. */
+  selfTravelling: '645bd1177e78611433a6849eb894f659d6d715da2c0897567c80655f940502d8',}
+
+/** ⭐⭐ THE SAME THREE CAREERS AS THEY HASHED UNDER v66 – the identity that proves the v67 re-freeze
+ *  moved the VERSION NUMBER and nothing else, in the exact sense v49 set and v66 repeated: the
+ *  narrowest legitimate re-freeze this file recognises.
+ *
+ *  ⚠ v67 APPENDS NO WORLD KEY EITHER, and for a reason one layer further in than v66's. It writes
+ *  `units` and `name` onto ROWS OF `assets` – fields inside an array element, not keys of the world –
+ *  and `walkFrozenCareer` asserts that array is EMPTY on all three careers (the v63 note), so there
+ *  is no row for either back-fill to reach. No bench policy buys anything from the shelf. So
+ *  `careerHashAtSchema(…, 66)` – the same serialisation with one number changed, no key peeled –
+ *  reproduces all three v66 constants byte for byte, and these ARE those constants, verbatim.
+ *
+ *  ⭐ AND THIS ONE HAD A SECOND REASON TO BE ZERO WORTH STATING SEPARATELY: v67 is a RENUMBER. Its
+ *  two steps are the v66 step's own former contents, moved without a character changed, so «nothing
+ *  moved» is what the change means rather than what it was hoped to do. The per-key diff over
+ *  `FROZEN` is the independent half of the same finding. */
+const PRE_V67 = {
+  middleGrinder: '8a95060b2521fa3643e561298eda0b56516a251f4bc226e5c1545ae27d70876f',
+  eliteGrinder: 'f122b29fb33ed3a65c2cc6dabfe831da02f3393d9a2c5e44f4448615c0211f4d',
   selfTravelling: 'ac290a85e2b9417486a0868559d1b2b21d6bcfce6de45f8ba9f31ca933e12403',}
 
 /** ⭐⭐ THE SAME THREE CAREERS AS THEY HASHED UNDER v65 – the identity that proves the v66 re-freeze
@@ -1612,9 +1655,9 @@ const PRE_V66 = {
  *  `middleGrinder` and `selfTravelling` equal their `FROZEN` twins, `eliteGrinder` differs by the
  *  one moved letter. The numbers moved together, the argument did not – again. */
 const PRE_R28B = {
-  middleGrinder: '8a95060b2521fa3643e561298eda0b56516a251f4bc226e5c1545ae27d70876f',
-  eliteGrinder: '1923fb36556679a465aafcf399fdf07d6f16f0458f63f8af46810264153485f4',
-  selfTravelling: 'ac290a85e2b9417486a0868559d1b2b21d6bcfce6de45f8ba9f31ca933e12403',}
+  middleGrinder: '61b691741f53f557b126b8e24b2dd9ae82473291dfaf05ddbd472f71b326b6f6',
+  eliteGrinder: '1b23853e8f9b74c9fc344959d704d1762f9e6683665a78fe628a35271d315300',
+  selfTravelling: '645bd1177e78611433a6849eb894f659d6d715da2c0897567c80655f940502d8',}
 
 /** ⭐ THE SAME THREE CAREERS AS THEY HASHED UNDER v56 – the identity that proves the v57 re-freeze
  *  moved ONE key and nothing else.
@@ -2218,6 +2261,20 @@ describe('the byte-identity of a career that does not travel', () => {
     expect(careerHashAtSchema(5, 0, 62), '25k · middle coach · grinder').toBe(PRE_V63.middleGrinder)
     expect(careerHashAtSchema(8, 0, 62), '120k · elite coach · grinder').toBe(PRE_V63.eliteGrinder)
     expect(careerHashAtSchema(0, 1, 62), '8k · self-coached · player').toBe(PRE_V63.selfTravelling)
+  })
+
+  it('⭐⭐ v67: rolling ONLY the schema number back to 66 reproduces the v66 hashes byte for byte', () => {
+    // ⚠ THE WHOLE OF WHAT ROUND 30 ITEM 25's REPAIR DID TO A FROZEN CAREER, AS AN IDENTITY – and the
+    // answer is NOTHING, which is the derived expectation and not a relief. v67 is a RENUMBER: the
+    // units and name back-fills are the v66 step's own former contents, moved character for
+    // character onto a new rung because v66 had shipped underneath them. They write `units` and
+    // `name` onto ROWS of `assets`, and `walkFrozenCareer` asserts that array is empty here, so
+    // neither has a row to reach and no bench policy buys one. If the move had altered a single
+    // character of behaviour on the way across – a fallback, a price, an order – changing one number
+    // back would not be enough and this case would be red beside the freeze, naming the wave.
+    expect(careerHashAtSchema(5, 0, 66), '25k · middle coach · grinder').toBe(PRE_V67.middleGrinder)
+    expect(careerHashAtSchema(8, 0, 66), '120k · elite coach · grinder').toBe(PRE_V67.eliteGrinder)
+    expect(careerHashAtSchema(0, 1, 66), '8k · self-coached · player').toBe(PRE_V67.selfTravelling)
   })
 
   it('⭐⭐ v66: rolling ONLY the schema number back to 65 reproduces the v65 hashes byte for byte', () => {

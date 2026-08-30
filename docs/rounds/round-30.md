@@ -1128,3 +1128,56 @@ owning `index-fund · car-sensible · house-first · merch-brand · deposit · a
   ⚠ It moves every career: a bench, a spec recording predicted-vs-measured, and a frozen re-pin.
   **`[?]` – his to authorise, and I would run the measurement before the build so the re-shape is
   fitted to the band rather than guessed at.**
+---
+
+- [x] **25. NOT YOUR ITEM – THE WAVE'S OWN DEFECT, FOUND AND REPAIRED ON 30.08.** «Main is at N» is a
+  fact with a shelf life, and three agents in this wave read it at the only moment it was true.
+
+  **WHAT WENT WRONG.** Amending an UNSHIPPED migration step instead of taking a new version is
+  legitimate and it is the rule this repo runs on: append-only bites at the moment of **shipping**,
+  and a version `main` has never seen has no saves in the world to break. Three separate agents
+  applied that rule to v66 – the sailing-yacht rename (round 29 P1), the fund's units (#14) and the
+  brand/academy name (#8/#10) – each having checked `origin/main`, each having found **65**, each
+  having written the reasoning into the step. Then **PR #114 merged round 29 and `main` declared 66.**
+
+  ⚠ **Nothing about their code became wrong. Its PREMISE expired underneath it** – and that is the
+  part no review catches, because the diff still reads correctly and every test still passes.
+
+  **WHAT IT DID TO YOUR SAVE, measured on `alice-cfbv_w896` (read-only, never copied).** You are
+  playing a `main` build, so your save says `schemaVersion: 66`. On installing this wave's build,
+  `migrateSave` would see 66, decide there was nothing to do, and **skip the step entirely**:
+
+  - `index-fund` and `deposit` keep `basisCents`/`basisWeek` and never gain `units` – and the shipped
+    value function is now `units × price`, so it would have multiplied by `undefined`;
+  - `merch-brand` never gains a name, and the picker is only offered on a FIRST purchase, which is
+    720 weeks in your past. A nameless business, for ever, with no way to name it.
+
+  ⚠⚠ **A migration that never runs is worse than one that runs wrong: it is silent.**
+
+  **THE REPAIR.** The two back-fills that had NOT shipped moved to a new **v67** step, unchanged;
+  `SAVE_SCHEMA_VERSION` is 67; `tests/fixtures/saves/v67.json` and the README row are added. ⚠ The
+  yacht rename did **not** move – it went out INSIDE v66 (`eaf61759`), so it is frozen with the rest
+  of that step, and v66's migration and its golden fixture are now **byte-identical to `origin/main`**.
+
+  ⭐ **THE PROOF IS A TEST THAT STARTS WHERE YOU START.** Every migration arm in this repo entered at
+  v65 or below – and from below the rung, a step numbered 66 and a step numbered 67 are
+  indistinguishable, which is exactly why the whole suite stayed green over a broken save. The new
+  arm builds a v66 save in your save's shape (retyped from it, never copied) and walks it to 67.
+  **Mutation-verified by restoring the defect**: 1 failed – the new arm, `units` undefined – and
+  **102 passed**, every older arm and the entire golden corpus included. That 102 is the finding.
+
+  **THE RULE, and it is about WHEN rather than what** – now in the header of `src/engine/migrations.ts`:
+
+  > Re-read `git show origin/main:src/engine/world/state.ts` **at the moment you BUMP**, and again
+  > when you assemble the PR – in a wave that runs for days across several merges that is a different
+  > day. If main's constant already equals the version you are amending, that version is **shipped**:
+  > take the next number, move your additions to it, leave main's step byte-identical.
+
+  ⭐ **AND A MACHINE CHECK, because a rule nobody can forget is better than one everybody must
+  remember.** `scripts/schema-ladder.mjs` fails when this branch's `SAVE_SCHEMA_VERSION` equals
+  main's while the step producing that version differs from main's. Verified against the real
+  pre-repair tree: it exits 1 and names the fix. ⚠ **It is a CI step and not a unit test, on
+  purpose** – it reads `origin/main`, a remote-tracking ref is only as fresh as the last fetch, and a
+  check reading a stale one would give the same wrong answer from the same expired fact. A guard that
+  can reproduce the bug it guards against is worse than none. So CI fetches first (one line, on a
+  runner that is already on the network) and `npm run check` stays offline and deterministic.

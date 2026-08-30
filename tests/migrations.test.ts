@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest'
 import { readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { migrateSave } from '../src/engine/migrations'
-import { marketIndex, SAVE_SCHEMA_VERSION, shopItem, unitPriceCents } from '../src/engine/world'
+import { marketIndex, nameSuggestionsFor, SAVE_SCHEMA_VERSION, shopItem, unitPriceCents } from '../src/engine/world'
 import { WEEKS_PER_YEAR } from '../src/engine/season/calendar'
 import { mainStateConsistent } from '../src/engine/rng'
 import { planSessions, planWeek } from '../src/engine/plan'
@@ -540,7 +540,10 @@ describe('save migrations', () => {
     // The claim this line was cut for survives intact one clause down: the chain must run PAST the
     // colliding 64, and a chain that stopped there would now miss twice. The pin follows the
     // ladder's head exactly as the golden-saves guard forces a fixture to.
-    expect(SAVE_SCHEMA_VERSION, 'and the current schema is 66 – past the colliding 64, through 65').toBe(66)
+    // ⚠ RE-AIMED AGAIN AT v67 (30.08, round 30 item 25 – the units and name back-fills moved off the
+    // shipped v66 step), for the same reason and with the same claim: the chain must run past the
+    // colliding 64, and it now has two more rungs to cross before it arrives.
+    expect(SAVE_SCHEMA_VERSION, 'and the current schema is 67 – past the colliding 64, through 65').toBe(67)
 
     // v64's step ran: the reveal back-fills NULL, which is the TRUE value and not a placeholder – no
     // save written before it can be holding a question in front of the player.
@@ -591,6 +594,11 @@ describe('save migrations', () => {
   // step itself). The owning save is built IN MEMORY on the committed v65 fixture, the same way
   // the v64 arm above builds its open reveal: the fixture on disk stays byte-identical and the
   // rename is still observable.
+  //
+  // ⚠⚠ THE PARENTHETICAL ABOVE IS KEPT AS THE RECORD OF A PREMISE THAT EXPIRED, and its conclusion
+  // held: main is at 66 now, and the rename is INSIDE what shipped (eaf61759, merged by PR #114),
+  // so it stays on the v66 step and this test still measures a v65 -> v66 effect. Its two NEIGHBOURS
+  // in that step did not ship and moved to v67 – see the walk below and round 30 item 25.
   it('⭐ v65 -> v66 renames an owned boat-motor to boat-sail and touches nothing else on the row', () => {
     const raw = JSON.parse(readFileSync(fileURLToPath(new URL('./fixtures/saves/v65.json', import.meta.url)), 'utf8'))
     expect(raw.schemaVersion, 'the fixture is a genuine v65 save').toBe(65)
@@ -619,8 +627,15 @@ describe('save migrations', () => {
     expect(again.assets).toEqual(migrated.assets)
   })
 
-  // ⭐⭐⭐ ROUND 30 #14 – THE SAME UNSHIPPED v66 STEP, THIRD HALF: legacy rows become UNITS, and the
-  // conversion has to preserve the family's history rather than reset it.
+  // ⭐⭐⭐ ROUND 30 #14 – legacy rows become UNITS, and the conversion has to preserve the family's
+  // history rather than reset it.
+  //
+  // ⚠⚠ RE-AIMED FROM «v65 -> v66» TO «v65 -> ... -> v67» (30.08, round 30 item 25), NOT WEAKENED
+  // AND NOT NARROWED BY ONE ASSERTION. The step this measures moved off v66 when PR #114 shipped
+  // v66 to main; a v65 save still reaches it, because the walk now runs 65 -> 66 -> 67 in the one
+  // `migrateSave` call and this arm asserts the ARRIVAL rather than the rung. What it can no longer
+  // see on its own is the case the move exists for – a save that ENTERS at 66 – so that arm is a
+  // new test below («⭐⭐⭐ THE DEFECT ITSELF»), and this one keeps the arithmetic.
   //
   // THE OWNER: «Стоимость активов будет рассчитываться исходя из стоимости долей. Зашёл, когда доля
   // стоила 4к…» – so what the row must carry forward is the price they came in at, and the only
@@ -634,13 +649,15 @@ describe('save migrations', () => {
   //     fallback is live in both directions.
   //   * `if (… a.units !== undefined) continue` deleted -> ⚠⚠ NOTHING, ON THE WHOLE MIGRATION AND
   //     GOLDEN CORPUS, and that is a finding rather than a hole: the clause could not be false, so
-  //     it was a DEAD GUARD and it is gone from the engine. A second `migrateSave` enters at v66 and
-  //     never reaches the block, and no v65 save can carry a `units` key because the field did not
-  //     exist at v65. The idempotence arm below still stands – it is carried by `if (v === 65)`.
+  //     it was a DEAD GUARD and it is gone from the engine. A second `migrateSave` enters at v67 and
+  //     never reaches the block, and no v66 save can carry a `units` key because the field does not
+  //     exist at v66 either – main's shipped v66 step writes no field beyond the yacht's id, which
+  //     was RE-CHECKED against `origin/main` when the step moved rather than carried over on faith.
+  //     The idempotence arm below still stands – it is carried by `if (v === 66)`.
   //   * `if (!item || item.unitBaseCents === undefined) continue` -> `if (!item) continue`
   //     -> the car's «untouched» line RED and the yacht-rename arm with it (a commissioned boat
   //     would gain units and be re-priced off a market it has nothing to do with).
-  it('⭐⭐ v65 -> v66 converts an owned fund to UNITS at the price of its own basis week', () => {
+  it('⭐⭐ a v65 save walks to v67 and its owned fund converts to UNITS at the price of its own basis week', () => {
     const raw = JSON.parse(readFileSync(fileURLToPath(new URL('./fixtures/saves/v65.json', import.meta.url)), 'utf8'))
     expect(raw.schemaVersion, 'the fixture is a genuine v65 save').toBe(65)
     const seed = raw.seed as string
@@ -706,14 +723,161 @@ describe('save migrations', () => {
   })
 
   it('⚠ a v65 save with a malformed row still migrates – the null check both asset loops carry', () => {
-    // `Array.isArray` says nothing about what is IN the array. Neither loop in the v66 step may
-    // throw on a null row, or one corrupted entry takes the whole career down – and this is the arm
-    // that makes those two `typeof a === 'object'` clauses live rather than habit.
+    // `Array.isArray` says nothing about what is IN the array. Neither of the asset loops – v66's
+    // rename or v67's units and names – may throw on a null row, or one corrupted entry takes the
+    // whole career down, and this is the arm that makes those `typeof a === 'object'` clauses live
+    // rather than habit. ⚠ RE-AIMED, NOT WEAKENED (30.08): the two loops are now on different rungs,
+    // so a v65 save crosses BOTH of them here and the arm covers strictly more than it did.
     const raw = JSON.parse(readFileSync(fileURLToPath(new URL('./fixtures/saves/v65.json', import.meta.url)), 'utf8'))
     raw.assets = [null, { id: 'deposit', boughtWeek: 10, paidCents: 20_000_00, valueCents: 20_500_00 }]
     const migrated = migrateSave(raw)
     expect(migrated.schemaVersion).toBe(SAVE_SCHEMA_VERSION)
     expect(migrated.assets!.find((a) => a?.id === 'deposit')!.units).toBeGreaterThan(0)
+  })
+
+  // ⭐⭐⭐ THE DEFECT ITSELF, REPRODUCED – ROUND 30 ITEM 25. A SAVE THAT ENTERS AT v66.
+  //
+  // ⚠⚠ THIS IS THE ONE ARM NO TEST IN THIS FILE COULD MAKE BEFORE, and its absence is the whole
+  // reason the defect shipped as far as it did. Every arm above starts at v65 or lower, so every
+  // one of them crossed the units and name back-fills no matter WHICH rung they sat on – a step
+  // wrongly numbered v66 and a step correctly numbered v67 are indistinguishable from below. The
+  // save that can tell them apart is one that arrives ALREADY at 66, and until PR #114 shipped v66
+  // to main no such save could exist. Now they all do: main declares 66, so every career in play is
+  // one of these.
+  //
+  // THE SHAPE IS THE OWNER'S OWN, READ OFF HIS SAVE AND RETYPED HERE – never copied, never a
+  // fixture (`tools/e2e-fixtures.ts`: «THE OWNER'S OWN SAVE IS NEVER A FIXTURE»). What it carries,
+  // and what each field is here to catch:
+  //   * `schemaVersion: 66` – the gate. This is the field that made `migrateSave` do nothing.
+  //   * an `index-fund` and a `deposit` with `basisCents`/`basisWeek` and NO `units` – v65 keys
+  //     that shipped WITHOUT a version move, so a v66 save carries them, so `assetWorthCents`'s
+  //     `units × price` reads `undefined` on a career that had done nothing wrong.
+  //   * a `merch-brand` with no `name`.
+  //
+  // ⚠ MUTATION-VERIFIED, AND THE NUMBERS ARE THE POINT (30.08). The v67 body was grafted back onto
+  // `if (v === 65)` and the v67 step left empty – the defect exactly as it stood – and both files
+  // re-run:
+  //
+  //   1 FAILED  – this test, at the first units assertion: «expected undefined to be close to
+  //               59.869…». `undefined` is what `assetWorthCents` would have multiplied by a price.
+  //   102 PASSED – EVERY OTHER ARM, this file's v65-entry tests and the whole golden-save corpus
+  //               included.
+  //
+  // ⚠⚠ THAT 102 IS THE FINDING, not the 1. A suite this size stayed green over a migration that
+  // silently skipped itself on every save in play, because nothing in it entered at 66. One test
+  // that starts where the player starts is worth more here than any number of tests that start
+  // below the rung being measured.
+  it('⭐⭐⭐ a v66 save – basisCents, no units, an unnamed brand – migrates to v67 and comes out correct', () => {
+    const raw = JSON.parse(readFileSync(fileURLToPath(new URL('./fixtures/saves/v66.json', import.meta.url)), 'utf8'))
+    expect(raw.schemaVersion, 'the fixture is a genuine v66 save – main ships this version').toBe(66)
+    const seed = raw.seed as string
+    const week = raw.week as number
+    const FUND = shopItem('index-fund')!
+    const DEPOSIT = shopItem('deposit')!
+    raw.profile.kidName = 'Alice'
+    raw.profile.kidLastName = 'Fisher'
+    raw.assets = [
+      { id: 'index-fund', boughtWeek: 676, paidCents: 554_807_63, valueCents: 767_797_61, basisCents: 767_797_61, basisWeek: 884 },
+      { id: 'deposit', boughtWeek: 700, paidCents: 500_000_00, valueCents: 609_695_81, basisCents: 609_695_81, basisWeek: 884 },
+      { id: 'merch-brand', boughtWeek: 782, paidCents: 250_000_00, valueCents: 250_000_00 },
+    ]
+
+    const migrated = migrateSave(JSON.parse(JSON.stringify(raw)))
+
+    expect(migrated.schemaVersion, 'the step RAN – this is the assertion the defect fails').toBe(67)
+    expect(SAVE_SCHEMA_VERSION, 'and the ladder head is past the shipped v66').toBe(67)
+
+    const fund = migrated.assets!.find((a) => a.id === 'index-fund')!
+    const dep = migrated.assets!.find((a) => a.id === 'deposit')!
+    const brand = migrated.assets!.find((a) => a.id === 'merch-brand')!
+
+    // ⭐ UNITS APPEAR, AND AT THE ROW'S OWN `basisWeek` – not at today's price. Both rows were
+    // rebased in the same week, so a step that priced at `week` instead would move both together
+    // and still look plausible; the arithmetic below is what refuses it.
+    expect(fund.units!).toBeCloseTo(767_797_61 / unitPriceCents(seed, 884, FUND), 8)
+    expect(dep.units!).toBeCloseTo(609_695_81 / unitPriceCents(seed, 884, DEPOSIT), 8)
+    expect(fund.units!, 'a real holding, not a zero').toBeGreaterThan(0)
+    // ⚠ AND THE OLD KEYS ARE GONE – this is the last version that can read them.
+    expect((fund as { basisCents?: number }).basisCents).toBeUndefined()
+    expect(fund.basisWeek).toBeUndefined()
+    expect((dep as { basisCents?: number }).basisCents).toBeUndefined()
+
+    // ⭐⭐ THE ENTRY PRICE AND THE GAIN ARE PRESERVED RATHER THAN RESET, which is the claim the whole
+    // step is FOR, written out as the old model's own arithmetic rather than as a number off a run.
+    for (const [row, item, basis, bWeek] of [
+      [fund, FUND, 767_797_61, 884],
+      [dep, DEPOSIT, 609_695_81, 884],
+    ] as const) {
+      const oldWorth = Math.round(
+        basis *
+          Math.pow(1 + item.annualRateBps / 10_000, (week - bWeek) / WEEKS_PER_YEAR) *
+          (item.volBps === undefined
+            ? 1
+            : marketIndex(seed, week, item.volBps) / marketIndex(seed, bWeek, item.volBps)),
+      )
+      expect(Math.round(row.units! * unitPriceCents(seed, week, item))).toBe(oldWorth)
+    }
+
+    // ⭐ THE BRAND GAINS A NAME THE GAME ITSELF WOULD HAVE SUGGESTED – its own first option, and
+    // never a string the migration invented. Asserted as an IDENTITY with the shop's list rather
+    // than as the literal 'AF', so a change to the suggestion rules moves both together or fails.
+    expect(brand.name, 'the brand is named').toBeTruthy()
+    expect(brand.name).toBe(nameSuggestionsFor('Alice', 'Fisher', 'business', null)[0])
+    expect(brand.name, "...and that really is her initials, so the assertion above is not vacuous").toBe('AF')
+
+    // ⚠ IDEMPOTENT: a second pass enters at 67 and changes nothing, units and name included.
+    const again = migrateSave(JSON.parse(JSON.stringify(migrated)))
+    expect(again.assets).toEqual(migrated.assets)
+  })
+
+  // ⭐⭐ THE WALK, END TO END: 63 -> 64 -> 65 -> 66 -> 67 IN ONE CALL, with an effect asserted at
+  // EVERY rung so a step left on a stale guard cannot hide behind its neighbours. The v63 fixture is
+  // the only one old enough to cross all four, and the asset rows are built in memory on it – the
+  // fixture on disk stays byte-identical, the same way the v64 and v65 arms above build theirs.
+  //
+  // ⚠ AND THE ORDER IS PART OF THE CLAIM, not just the arrival: the `boat-motor` row must be renamed
+  // by v66 BEFORE v67 looks at it, which is the coupling the two steps used to get for free by
+  // sharing one block. Reversing the two blocks in migrations.ts leaves this green (a boat is in no
+  // nameable family and has no `unitBaseCents`, so neither step can touch it either way) – which is
+  // worth knowing rather than worth hiding: the dependency is REAL in the source and INERT in the
+  // data, and the assertion below states the arrival it guarantees.
+  it('⭐⭐ the whole 63 -> 64 -> 65 -> 66 -> 67 walk runs in one call, and is idempotent', () => {
+    const raw = JSON.parse(readFileSync(fileURLToPath(new URL('./fixtures/saves/v63.json', import.meta.url)), 'utf8'))
+    expect(raw.schemaVersion, 'the fixture is a genuine v63 save').toBe(63)
+    raw.profile.kidName = 'Alice'
+    raw.profile.kidLastName = 'Fisher'
+    raw.assets = [
+      { id: 'boat-motor', boughtWeek: 300, paidCents: 2_400_000_00, valueCents: 2_400_000_00, readyWeek: 378 },
+      { id: 'index-fund', boughtWeek: 100, paidCents: 80_000_00, valueCents: 123_456_00, basisCents: 110_000_00, basisWeek: 260 },
+      { id: 'merch-brand', boughtWeek: 320, paidCents: 250_000_00, valueCents: 250_000_00 },
+      { id: 'academy-land', boughtWeek: 330, paidCents: 400_000_00, valueCents: 400_000_00 },
+      { id: 'academy-courts', boughtWeek: 340, paidCents: 600_000_00, valueCents: 600_000_00 },
+    ]
+
+    const migrated = migrateSave(JSON.parse(JSON.stringify(raw)))
+
+    expect(migrated.schemaVersion).toBe(67)
+    // v64 ran – the reveal back-fills null, and the KEY is present rather than absent-and-undefined.
+    expect('callUpReveal' in migrated.college!).toBe(true)
+    // v65 ran – the champion tally back-fills empty.
+    expect(migrated.fieldSeasonTitles).toEqual({})
+    // v66 ran – the boat is a yacht and its delivery clock survived the crossing.
+    expect(migrated.assets!.some((a) => a.id === 'boat-motor')).toBe(false)
+    const boat = migrated.assets!.find((a) => a.id === 'boat-sail')!
+    expect(boat.readyWeek, 'v66 renamed the row rather than rebuilding it').toBe(378)
+    expect(boat.units, 'and v67 left the boat alone – it is not held in units').toBeUndefined()
+    // v67 ran – units on the fund, a name on the brand.
+    expect(migrated.assets!.find((a) => a.id === 'index-fund')!.units).toBeGreaterThan(0)
+    expect(migrated.assets!.find((a) => a.id === 'merch-brand')!.name).toBe('AF')
+    // ⚠ ...and the ACADEMY takes the brand's name, because his own first academy option is the brand
+    // they already built – so v67's two families ran in the right order, not merely both.
+    expect(migrated.assets!.find((a) => a.id === 'academy-land')!.name).toBe('AF')
+    // ⚠ FIRST ROW OF THE FAMILY ONLY: a two-stage academy comes out of this with ONE name.
+    expect(migrated.assets!.find((a) => a.id === 'academy-courts')!.name).toBeUndefined()
+
+    // Idempotent across the whole ladder, not merely at its head.
+    const again = migrateSave(JSON.parse(JSON.stringify(migrated)))
+    expect(again).toEqual(migrated)
   })
 
   it('rejects saves from a future schema', () => {

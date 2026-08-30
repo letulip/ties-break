@@ -70,6 +70,20 @@ jobs:
       # rotted repeatedly in hand-maintained context packs; seconds of file reading now owns them.
       - run: node scripts/doc-facts.mjs
       - run: node scripts/engine-purity.mjs
+      # ⭐⭐ THE SHELF-LIFE CHECK (round 30 item 25, 30.08). Fails when this branch's
+      # SAVE_SCHEMA_VERSION equals main's AND the migration step for that version differs from
+      # main's – the signature of a step amended after its version shipped, which makes migrateSave
+      # skip it for ever on every save already in play. One save was corrupted this way before the
+      # check existed.
+      #
+      # ⚠⚠ THE FETCH IS THE CHECK. `actions/checkout` is shallow and leaves no `origin/main`, and –
+      # more to the point – a check that reads a STALE origin/main gives the same wrong answer, from
+      # the same expired fact, that produced the bug. That is exactly why this cannot live in the
+      # unit suite: `npm run check` is offline and deterministic and must stay that way, so the
+      # comparison runs here, where the network already is and where a PR is being assembled –
+      # «the moment you bump». `--require` makes a missing ref a failure rather than a skip.
+      - run: git fetch --depth=1 origin main
+      - run: node scripts/schema-ladder.mjs --require
       # ⚠ THE GENERATED SYMBOL MAP, AND THE CHECK IS THE WHOLE POINT OF GENERATING IT (TOK-4).
       # `tools/generated/world-symbol-map.md` says which module DECLARES each of the 233 names the
       # `engine/world` barrel re-exports - the question 277 importers cannot otherwise answer

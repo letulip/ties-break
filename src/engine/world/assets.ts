@@ -594,8 +594,11 @@ export function assetNameSuggestions(world: WorldState, family: ShopItem['family
 
 /** ⭐ THE SAME LIST, ASKED WITHOUT A WORLD – the pure core `assetNameSuggestions` wraps.
  *
- *  ⚠⚠ IT EXISTS FOR ONE CALLER AND THAT CALLER IS THE MIGRATION, which back-fills v66 rows from a
- *  RAW SAVE OBJECT and has no `WorldState` to ask. Splitting it is the only way the migration's
+ *  ⚠⚠ IT EXISTS FOR ONE CALLER AND THAT CALLER IS THE MIGRATION – the v66 -> v67 step, which names
+ *  a v66 save's rows from a RAW SAVE OBJECT and has no `WorldState` to ask. (It was written against
+ *  the v65 -> v66 step and moved with the rest of that back-fill when v66 shipped underneath it;
+ *  what it reads did not change, since v66 writes no field this cares about.) Splitting it is the
+ *  only way the migration's
  *  default and the shop's default can be the same list – and if they were not, a save that arrived
  *  through the migration would carry a name the game itself would never have offered. */
 export function nameSuggestionsFor(
