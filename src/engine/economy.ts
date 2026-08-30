@@ -1959,12 +1959,12 @@ export const ECONOMY = {
          *  floor that pays it would be two answers to his one question. */
         topEndRank: 20,
         /** «сколько играет» – per finished PROFESSIONAL season (one carrying a WTA end-rank). */
-        seasonX: 0.5,
-        seasonCapN: 10,
+        seasonX: 0.2,
+        seasonCapN: 12,
         /** «она же топ-20» – per season ended inside `topEndRank`. The heaviest rung, because it is
          *  the one he has raised three times. */
-        topSeasonX: 0.8,
-        topSeasonCapN: 6,
+        topSeasonX: 0.3,
+        topSeasonCapN: 8,
         /** ⭐⭐ «как глубоко проходит» – per professional final REACHED AND LOST (`TierTrophies
          *  .finals`, every tier `fame.titleFloor` names). ⚠ Round 30 #24 established that there is
          *  no ledger below a final, which is true and which is why a quarter-final cannot count; it
@@ -1972,13 +1972,13 @@ export const ECONOMY = {
          *  lost final from w15 to wta1000 is a dated professional result nothing in this game has
          *  ever read. Titles are deliberately NOT here – they are already fully priced into the
          *  income through fame, and pricing them twice is the one-dial defect wearing a new hat. */
-        finalX: 0.25,
-        finalCapN: 10,
+        finalX: 0.1,
+        finalCapN: 12,
         /** «сколько выигрывает» – her WTA-track career win rate, as a share of the window below. A
          *  career at or under `winRateFrom` adds nothing and is charged nothing. */
-        winRateX: 2.5,
-        winRateFrom: 0.5,
-        winRateTo: 0.75,
+        winRateX: 1.0,
+        winRateFrom: 0.6,
+        winRateTo: 0.85,
         /** the ceiling on the whole multiple, base included. ⚠ IT BINDS THE TOP OF THE SHELF: at
          *  fame 100 the convex curve pays $1.56M a year, so this is what decides whether the best
          *  career in a run exits at the RF mark's ~$27M or somewhere absurd. Sized in
@@ -3704,7 +3704,7 @@ export const ECONOMY = {
         // halves over 104 weeks and the income is CONVEX in it, so a year with no title costs the
         // brand more than a proportional share of its value. The floor under it is
         // `ECONOMY.shop.businessValueFloorShare`.
-        earningsMultipleX: 10,
+        earningsMultipleX: 14,
       },
       {
         id: 'boat-launch',

@@ -39,6 +39,9 @@ import { guardNotEndedForGood } from './endings'
 import { addEvent } from './ledger'
 // Round 29 part four P7 – the businesses' one arithmetic; the till banks the same functions.
 import { assetWeeklyIncomeCents } from './business'
+// ⭐⭐⭐ ROUND 30 #23 – the shelf quotes the multiple the CAREER has earned, so it reads the same
+// function the valuation does rather than the catalogue's base. One arithmetic, many readers.
+import { brandMultipleX, brandSignalsOf } from './brand'
 // ⚠ THE ONE THING THIS FILE ASKS THE MARKET DIRECTLY – the season line's crash predicate. Every
 // VALUE still flows through `assetWorthCents`; this is a question about the calendar, not a price.
 import { marketCrashFellIn } from './market'
@@ -617,7 +620,20 @@ export function shopView(world: WorldState): ShopView {
       entryCents: item.entryCents,
       annualRatePct: Math.round(item.annualRateBps / 100),
       // ⭐ ROUND 30 #9 – ...and the one rung the rate above cannot describe says so here instead.
-      earningsMultipleX: item.earningsMultipleX ?? null,
+      // ⭐⭐⭐ ROUND 30 #23 – AND SINCE 30.08 IT IS THE CAREER'S OWN MULTIPLE, NOT THE CATALOGUE'S BASE.
+      // The rung's `earningsMultipleX` is now where the pricing STARTS and `world/brand.ts` adds what
+      // the career earned on top, so sending the constant would have printed a number the shelf does
+      // not use – a screen and a valuation disagreeing, which is this repo's most-repeated defect.
+      // ⚠ NOT A WORDING CHANGE AND NOT ONE TO MAKE: `rateLine` interpolates this field into a
+      // sentence that was already there («Worth N years of what it sells») and the sentence is
+      // untouched. What moved is the value inside it, from a number that stopped being true to the
+      // one the row is actually priced at.
+      // ⚠ WHOLE, ROUNDED HERE at the boundary – `annualRatePct` two lines up and the owner's rule of
+      // 26.08, «у пользователя целые в интерфейсе»; the engine keeps the fraction.
+      earningsMultipleX:
+        item.earningsMultipleX !== undefined
+          ? Math.round(brandMultipleX(brandSignalsOf(world), item.earningsMultipleX))
+          : null,
       // ⭐⭐ ROUND 30 #8/#10 – what they called it, and what the game would offer if this purchase is
       // the one that names it. Both answered HERE, so the screen renders a decision it never makes.
       name: isNameable(item) ? assetNameOf(world, item.family) : null,

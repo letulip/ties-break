@@ -44,7 +44,6 @@ import {
   brandWeeklyGrossCents,
   shopItem,
   type BrandSignals,
-  type WorldState,
 } from '../src/engine/world'
 import { sponsorStandingOf } from '../src/engine/world/sponsors'
 import { ECONOMY } from '../src/engine/economy'
@@ -198,18 +197,26 @@ function peakLive(run: CareerRun, read: (r: WeekRow) => number): { value: number
 // synthetic world would prove the arithmetic and say nothing about the game.
 type Archetype = 'reign' | 'journeywoman' | 'cut short' | 'late bloomer'
 
+/** ⚠⚠ «CUT SHORT» IS AN INJURY BURDEN AND NOT AN EARLY ENDING, and that correction is itself a
+ *  finding. The first draft looked for a career that ENDED before the horizon: over 72 careers x 780
+ *  weeks exactly ONE did, at week 730, so the archetype was empty and the arm proved nothing. What
+ *  the loop DOES produce is careers whose peak years were eaten – the injury total runs to 65 weeks,
+ *  a season and a quarter off court – and that is the shape the owner means. The bar is the run's own
+ *  top decile (p90 = 48 weeks), typed as a constant so a career that simply plays long cannot drift
+ *  into it. */
+const CUT_SHORT_WEEKS = 45
+/** ...and a late bloomer is a girl the professional table did not notice for five seasons. */
+const LATE_BLOOM_WEEK = 5 * WEEKS_PER_YEAR
+
 function classify(run: CareerRun): Archetype | null {
   if (run.bestWtaRank === null) return null
-  // A career cut short: it ENDED with seasons left on the horizon and a body that paid for it.
-  // Checked FIRST, because a reign that ends at 26 is the injury story and not the reign story.
-  if (run.endedWeek !== null && run.endedWeek < 620 && run.weeksLostToInjury >= 20) return 'cut short'
+  // Checked FIRST, because a reign that loses a season and a quarter to her body is the injury story
+  // and not the reign story – and it is the one the owner asked to see.
+  if (run.weeksLostToInjury >= CUT_SHORT_WEEKS) return 'cut short'
   if (run.topTenSeasons >= 2) return 'reign'
-  if (run.bestWtaRank <= 60 && run.proSeasons >= 6) {
-    // A late bloomer's first ranked season lands in the BACK half of the career.
-    const firstRanked = run.rows.find((r) => r.wtaRank !== null)
-    if (firstRanked && firstRanked.week >= 8 * WEEKS_PER_YEAR) return 'late bloomer'
-    return 'journeywoman'
-  }
+  const firstRanked = run.rows.find((r) => r.wtaRank !== null)
+  if (firstRanked && firstRanked.week >= LATE_BLOOM_WEEK) return 'late bloomer'
+  if (run.bestWtaRank <= 60 && run.proSeasons >= 6) return 'journeywoman'
   return null
 }
 
@@ -314,9 +321,11 @@ export function main(argv: string[] = process.argv.slice(2)): void {
     const sorted = [...pool].sort((a, b) => peakLive(a, (x) => x.worthCents).value - peakLive(b, (x) => x.worthCents).value)
     const rep = sorted[Math.floor(sorted.length / 2)]
     const peak = peakLive(rep, (x) => x.worthCents)
+    const firstRanked = rep.rows.find((r) => r.wtaRank !== null)
     console.log(
       `      representative: ${rep.seed} (${rep.label.trim()}), best WTA #${rep.bestWtaRank}, ` +
-        `${rep.proSeasons} pro seasons, ${rep.weeksLostToInjury}w lost to injury` +
+        `${rep.proSeasons} pro seasons, ${rep.weeksLostToInjury}w lost to injury, ` +
+        `first ranked w${firstRanked?.week ?? '–'}` +
         `${rep.endedWeek !== null ? `, career ended w${rep.endedWeek}` : ''}`,
     )
     console.log(`      peak worth ${musd(peak.value)} at week ${peak.row.week} (fame ${peak.row.fame.toFixed(1)}, multiple ${peak.row.multipleX.toFixed(1)})`)

@@ -389,6 +389,10 @@ actually pays, read off `tools/merch-fame-vs-rank.ts` (9 presets x 8 seeds x 780
 | peak fame, MEDIAN career that gets one | 58.9 | **$1,767/wk = $91.9k/yr** | **5.4–22x under** |
 | peak fame, p90 and the best careers | 100.0 | **$3,000/wk = $156k/yr** | **3.2–12.8x under** |
 
+⭐⭐⭐ **SHIPPED 30.08 – the convex curve below is `ECONOMY.business.merch.famePivot` and is what the
+engine pays today. §7f carries the applied form and the measurement; the table below is the sizing
+that chose it.**
+
 ⚠⚠ **AND THE BOTTOM OF THE CURVE IS NOT WRONG – IT IS DELIBERATELY CALIBRATED AND IT MEASURES TRUE.**
 At the median purchase fame the brand yields $15.0k/yr on its $250,000 price = **6.0% a year**,
 against the index fund's 7%. That is `ECONOMY.business.merch`'s own stated anchor («at fame 10 the
@@ -411,10 +415,47 @@ the anchor itself:
 **The median own-brand career lands on the floor of the researched band and the superstar on its
 ceiling – which is 7a's finding restated as a curve.**
 
-### 7f. ⚠⚠ AND IT IS NOT A ONE-LINE CHANGE, WHICH IS WHY THIS PAGE STOPS HERE
+### 7f. ⭐⭐⭐ APPLIED 30.08 – AND THE «CONFLICT» WAS NEVER ONE
 
-The brand is also an **asset**, and its worth is `earningsMultipleX` × a year of its own income
-(round 30 #9, multiple **16**). Income and worth are the same dial:
+This section used to say the correction could not be applied because the brand is also an **asset**
+whose worth is `earningsMultipleX` × a year of its own income, so income and worth were one dial: the
+convex curve that fixes the income hands a $250,000 rung an **~$8.7M peak valuation**, and «the two
+criteria cannot both hold under one multiple».
+
+⚠⚠ **THE OWNER REJECTED THAT FRAMING AND HE IS RIGHT.** «а что с этой цифрой не так? вроде бы как раз
+спонсорские коллаборации со спортсменами дают и не такое, а **кратно большее**.» Checked against this
+page's own figures: the RF mark ~$27M (§1, §7c), Sugarpova's peak valuation $20M (§4a, §7c), Federer's
+~3% of On near $500M (§3, §7b). **$8.7M for a top-fame player's brand is the modest end of reality.**
+There was never a conflict between the two sizing criteria – only a wrong belief that $8.7M was an
+overshoot. What there WAS is one instrument doing two jobs, and that is what shipped:
+
+- **INCOME is current form** – fame, convex, pivoted on the anchor (`ECONOMY.business.merch.famePivot`),
+  so the bottom of the curve does not move and the top reaches §7d's band.
+- **THE MULTIPLE is the accumulated career** – seasons played, seasons ended top-20, professional
+  finals reached, WTA win rate (`ECONOMY.business.merch.value`, arithmetic in `engine/world/brand.ts`).
+  ⭐ **That is finding §5.1 of this page written as arithmetic**: brand value follows the accumulated
+  stock, not current form. Two careers at identical fame are now worth different money.
+
+⭐ **ONE ARITHMETIC CONSEQUENCE IS WORTH STATING BECAUSE IT IS FORCED AND NOT CHOSEN.** Holding the
+day-one anchor (worth ≈ price at the fame a family can first afford it) under a convex curve fixes the
+fame-100 valuation at roughly `price × (100 / 9.6)²` ≈ **$26M before any multiple growth**. Our best
+career therefore exits in the Sugarpova–RF neighbourhood by construction, not by a dial. See
+`docs/specs/brand-worth-and-income-2026-08.md` for predicted vs measured and the four archetypes.
+
+⚙ **STILL NOT BUILT, and deliberately** (his «но не сейчас»): equity, royalties and collaborations.
+§7b records them as the future shape. ⚠ And 7a still stands as the deeper open question – whether an
+own-brand at ordinary top-20 fame should exist at all, or whether that money belongs in the
+sponsorship ladder. Nothing here answers it; the instrument was re-sized, not re-scoped.
+
+### 7g. ⚠ THE OLD ARGUMENT, KEPT FOR THE RECORD – IT IS SUPERSEDED, NOT DELETED
+
+⚠⚠ **EVERY CLAIM BELOW THIS LINE WAS TRUE OF THE 30.08 MORNING CODE AND IS NOT TRUE OF THE ENGINE
+TODAY.** It is kept because the reasoning is the thing 7f overturns, and a page that quietly deleted
+its own rejected argument would leave the correction unexplained. **Do not quote the numbers in this
+sub-section as current** – §7f and the spec carry the live ones.
+
+The brand was also an **asset**, and its worth was `earningsMultipleX` × a year of its own income
+(round 30 #9, multiple **16**). Income and worth were the same dial:
 
 - Today, measured: worth on the day they buy it, median **$239,761** against a $250,000 price – the
   «fair on the day they can afford it» criterion #9 chose 16 for. At the career's peak, median

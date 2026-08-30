@@ -46,7 +46,15 @@
  *       npx vite-node tools/merch-fame-vs-rank.ts -- --buy        (the owning arm, income off the till)
  */
 import { writeFileSync } from 'node:fs'
-import { buyAsset, fameAt, merchWeeklyIncomeCents, type WorldState } from '../src/engine/world'
+import {
+  brandMultipleX,
+  brandSignalsOf,
+  brandWeeklyGrossCents,
+  buyAsset,
+  fameAt,
+  merchWeeklyIncomeCents,
+  type WorldState,
+} from '../src/engine/world'
 import { completedShootWeeks } from '../src/engine/world/fame'
 import { sponsorStandingOf } from '../src/engine/world/sponsors'
 import { ECONOMY } from '../src/engine/economy'
@@ -63,41 +71,46 @@ const DEFAULT_SEEDS = 6
  *  against exactly this number, so a retune of the price has to move this reading with it. */
 const MERCH_PRICE_CENTS = ECONOMY.shop.catalogue.find((r) => r.id === 'merch-brand')!.entryCents
 
-/** ⭐⭐⭐ ROUND 30 #9 – THE CANDIDATE MULTIPLE UNDER TEST. What the brand is worth, as a multiple of
- *  what it takes in over a year. Sized here and then written into `ECONOMY.business.merch`; the
+/** ⭐⭐⭐ ROUND 30 #9 – THE CANDIDATE *BASE* MULTIPLE UNDER TEST. What the brand is worth, as a
+ *  multiple of what it takes in over a year, BEFORE the career earns more on top of it. The
  *  research's band is wide and thin (Beckham ~10.9x profit, the Nadal academy ~31x – see
- *  docs/research/player-brands-and-what-they-are-worth.md §5.4), so the number is a CHOICE and this
- *  is the measurement that chooses it. */
+ *  docs/research/player-brands-and-what-they-are-worth.md §5.4), so the number is a CHOICE and the
+ *  measurement is what chooses it.
+ *
+ *  ⚠⚠ ROUND 30 #23 SPLIT THIS IN TWO AND THIS FILE READS BOTH. The default is the CATALOGUE's own
+ *  base rather than a typed 16 – a retune of the rung has to move this reading with it – and the
+ *  worth below goes through `brandMultipleX`, so what this tool prints is what the shelf prices.
+ *  `--multiple` still overrides the base for a sweep. */
 const CANDIDATE_MULTIPLE = Number(process.argv.includes('--multiple')
   ? process.argv[process.argv.indexOf('--multiple') + 1]
-  : 16)
+  : (ECONOMY.shop.catalogue.find((r) => r.id === 'merch-brand') as { earningsMultipleX: number }).earningsMultipleX)
 
-/** ⭐⭐⭐ ROUND 30 #24 – THE DEEP-RUN COUNTERFACTUAL ARM. CLI ONLY, NEVER WRITTEN BACK.
+/** ⭐⭐⭐ ROUND 30 #24 – THE END-RANK LADDER, AS A COUNTERFACTUAL ARM. CLI ONLY, NEVER WRITTEN BACK.
  *
- *  THE OWNER, twice: «она же топ-20 в мире». The fame floor counts titles, lost Slam finals and
- *  seasons ended in the top ten and nothing else, so a career built on quarter- and semi-finals has
- *  a floor of ZERO and its brand is worth nothing however high it ranks. ⚠ THERE IS NO DEEP-RUN
- *  LEDGER TO READ – `TierTrophies` stores `titles` and `finals` and nothing below a final – so the
- *  measurable proxy is the END-RANK ladder `ECONOMY.fame.seasonEndBands` already expresses: a season
- *  finished at #18 IS her deep runs, summed and sorted by the tour.
+ *  THE OWNER, three times: «она же топ-20 в мире». The fame floor used to count titles, lost Slam
+ *  finals and seasons ended in the TOP TEN and nothing else, so a career built on quarter- and
+ *  semi-finals had a floor of ZERO and its brand was worth nothing however high it ranked. ⚠ THERE
+ *  IS NO DEEP-RUN LEDGER TO READ AT THE TOURNAMENT LEVEL – `TierTrophies` stores `titles` and
+ *  `finals` and nothing below a final – so the measurable answer is the END-RANK ladder
+ *  `ECONOMY.fame.seasonEndBands` expresses: a season finished at #18 IS her deep runs, summed and
+ *  sorted by the tour.
  *
- *  `--seasonBands 20:4,50:1.5` swaps in extra rungs BELOW the shipped top-ten one for this run only,
- *  which is what makes the item's before/after a measurement instead of an argument. The shipped
- *  ladder is untouched by default and no engine value is persisted from here – `injury-audit.ts`'s
- *  own counterfactual-arm idiom, and the same rule: the arm is printed in the header so no output
- *  can be misfiled. */
+ *  ⚠⚠ THE TOP-20 AND TOP-50 RUNGS SHIPPED ON 30.08, so this arm now REPLACES the ladder rather than
+ *  appending to it – appending to a three-rung ladder would have measured the shipped state plus
+ *  duplicates and reported it as a counterfactual. `--seasonBands 10:10` restores the old one-rung
+ *  floor for a run; `--seasonBands 20:4,50:1.5` re-states today's. No engine value is persisted from
+ *  here – `injury-audit.ts`'s own counterfactual-arm idiom, and the same rule: the arm is printed in
+ *  the header so no output can be misfiled. */
 const BANDS_ARG = process.argv.includes('--seasonBands')
   ? process.argv[process.argv.indexOf('--seasonBands') + 1]
   : ''
 if (BANDS_ARG) {
-  const extra = BANDS_ARG.split(',').map((pair) => {
+  const swapped = BANDS_ARG.split(',').map((pair) => {
     const [rank, add] = pair.split(':').map(Number)
     return { maxEndRank: rank, add }
   })
-  ;(ECONOMY.fame as { seasonEndBands: readonly { maxEndRank: number; add: number }[] }).seasonEndBands = [
-    ...ECONOMY.fame.seasonEndBands,
-    ...extra,
-  ].sort((a, b) => a.maxEndRank - b.maxEndRank)
+  ;(ECONOMY.fame as { seasonEndBands: readonly { maxEndRank: number; add: number }[] }).seasonEndBands =
+    swapped.sort((a, b) => a.maxEndRank - b.maxEndRank)
 }
 
 /** The windows the question is asked over, in weeks. 13 is «несколько месяцев» – his own span –
@@ -117,6 +130,13 @@ interface WeekRow {
   /** fame-earning events dated to THIS week – titles at a professional tier, a lost Slam final, a
    *  top-10 season wrap, a shoot week lived. The number the (a)/(b) fork turns on. */
   fameEvents: number
+  /** ⭐⭐⭐ ROUND 30 #23 – what a whole brand would be WORTH this week, cents. Recorded HERE, on the
+   *  week, because the worth is no longer a function of fame alone: `brandMultipleX` reads the
+   *  career, so it can only be asked while the world is in front of you. The old shape asked it
+   *  afterwards off a fame quantile, which stopped being answerable the day the multiple was
+   *  earned – and «the worth of the median fame» was never the same statistic as «the median
+   *  worth» anyway. */
+  worthCents: number
 }
 
 /** How many fame-earning events the career's own records date to `week` – the same four sources
@@ -159,6 +179,10 @@ interface CareerRun {
    *  the direction that matters (it sizes the multiple against a poorer brand). */
   affordWeek: number | null
   fameAtAfford: number
+  /** ⭐ ROUND 30 #23 – and what it would have been WORTH that week, cents. */
+  worthAtAfford: number
+  /** ...and at the peak of her fame, cents. */
+  peakWorthCents: number
 }
 
 function runCareer(preset: Preset, policy: Policy, index: number, weeks: number, buy: boolean): CareerRun {
@@ -170,6 +194,8 @@ function runCareer(preset: Preset, policy: Policy, index: number, weeks: number,
   let peakFameWeek = 0
   let affordWeek: number | null = null
   let fameAtAfford = 0
+  let worthAtAfford = 0
+  let peakWorthCents = 0
 
   for (let i = 0; i < weeks; i++) {
     const week = world.week
@@ -190,18 +216,32 @@ function runCareer(preset: Preset, policy: Policy, index: number, weeks: number,
     if (affordWeek === null && world.fundsCents >= MERCH_PRICE_CENTS * 2) {
       affordWeek = week
       fameAtAfford = fame
+      worthAtAfford = Math.round(
+        brandWeeklyGrossCents(brandSignalsOf(world, week)) *
+          WEEKS_PER_YEAR *
+          brandMultipleX(brandSignalsOf(world, week), CANDIDATE_MULTIPLE),
+      )
     }
     if (fame > peakFame) {
       peakFame = fame
       peakFameWeek = week
+      peakWorthCents = Math.round(
+        brandWeeklyGrossCents(brandSignalsOf(world, week)) *
+          WEEKS_PER_YEAR *
+          brandMultipleX(brandSignalsOf(world, week), CANDIDATE_MULTIPLE),
+      )
     }
     if (standing.wtaRanked && (bestWtaRank === null || standing.wtaRank < bestWtaRank)) {
       bestWtaRank = standing.wtaRank
     }
+    const signals = brandSignalsOf(world, week)
     rows.push({
       week,
       wtaRank: standing.wtaRanked ? standing.wtaRank : null,
       fame,
+      worthCents: Math.round(
+        brandWeeklyGrossCents(signals) * WEEKS_PER_YEAR * brandMultipleX(signals, CANDIDATE_MULTIPLE),
+      ),
       // ⭐ THE OWNING ARM READS THE TILL'S OWN FUNCTION rather than re-deriving it, so the two arms
       // can be compared without this file owning a second copy of the merch arithmetic.
       incomeCents: buy
@@ -210,7 +250,7 @@ function runCareer(preset: Preset, policy: Policy, index: number, weeks: number,
       fameEvents: fameEventsAt(world, week),
     })
   }
-  return { label: preset.label, seed, rows, merchBoughtWeek, bestWtaRank, peakFame, peakFameWeek, affordWeek, fameAtAfford }
+  return { label: preset.label, seed, rows, merchBoughtWeek, bestWtaRank, peakFame, peakFameWeek, affordWeek, fameAtAfford, worthAtAfford, peakWorthCents }
 }
 
 /** The 2x2 one window length produces, plus what the disputed cell looked like. */
@@ -378,10 +418,17 @@ export function main(argv: string[] = process.argv.slice(2)): void {
   // ⭐⭐⭐ ROUND 30 #9 – WHAT A BRAND VALUED AT `CANDIDATE_MULTIPLE` YEARS OF ITS OWN INCOME WOULD BE
   // WORTH, against the $250,000 it cost. Three questions, and the first one is the one that decides
   // the multiple: is the family roughly square on the day it can afford to buy?
-  console.log(`\n  ⭐ THE BRAND AS AN ASSET – worth = ${CANDIDATE_MULTIPLE} x a year of its own income, price ${usd(MERCH_PRICE_CENTS)}`)
-  const worthOf = (fame: number): number => fame * ECONOMY.business.merch.perFamePointCents * WEEKS_PER_YEAR * CANDIDATE_MULTIPLE
+  console.log(`\n  ⭐ THE BRAND AS AN ASSET – worth = (${CANDIDATE_MULTIPLE} + what the career earned) x a year of its own income, price ${usd(MERCH_PRICE_CENTS)}`)
+  // ⭐⭐⭐ ROUND 30 #23 – EVERY FIGURE BELOW IS A MEDIAN OF PER-CAREER WORTHS, recorded on the week
+  // it happened (`WeekRow.worthCents`), never the worth of a median fame. The two were the same
+  // number while the multiple was a constant and stopped being the same number the day it became
+  // something the career EARNS – `brandMultipleX` reads the seasons, the finals and the win rate, so
+  // it can only be asked while a world is in front of you.
+  // ⚠ THE SEASON-BY-SEASON CURVES AND THE FOUR ARCHETYPES LIVE IN `tools/brand-dynamics.ts`. This
+  // file keeps round 30 #13's question and reports the asset only as a distribution.
   const afforders = runs.filter((r) => r.affordWeek !== null)
   const fameThen = afforders.map((r) => r.fameAtAfford).sort((a, b) => a - b)
+  const worthThen = afforders.map((r) => r.worthAtAfford).sort((a, b) => a - b)
   console.log(`    ${afforders.length}/${runs.length} careers could ever carry it; median first week ${q(afforders.map((r) => r.affordWeek!), 0.5)}`)
   if (fameThen.length > 0) {
     console.log(
@@ -389,14 +436,14 @@ export function main(argv: string[] = process.argv.slice(2)): void {
         `  p90 ${q(fameThen, 0.9).toFixed(1)}`,
     )
     console.log(
-      `    ...so the brand would be worth p10 ${usd(worthOf(q(fameThen, 0.1)))}` +
-        `  median ${usd(worthOf(q(fameThen, 0.5)))}  p90 ${usd(worthOf(q(fameThen, 0.9)))} on the day they bought it`,
+      `    ...so the brand was worth p10 ${usd(q(worthThen, 0.1))}` +
+        `  median ${usd(q(worthThen, 0.5))}  p90 ${usd(q(worthThen, 0.9))} on the day they bought it`,
     )
-    const square = fameThen.filter((f) => worthOf(f) >= MERCH_PRICE_CENTS).length
-    console.log(`    at or above what it cost on day one: ${square}/${fameThen.length}  ${pct(square, fameThen.length)}`)
+    const square = worthThen.filter((c) => c >= MERCH_PRICE_CENTS).length
+    console.log(`    at or above what it cost on day one: ${square}/${worthThen.length}  ${pct(square, worthThen.length)}`)
   }
   // ...and what it is worth at the PEAK of the career, which is the reward half.
-  const peakWorth = famous.map((r) => worthOf(r.peakFame)).sort((a, b) => a - b)
+  const peakWorth = famous.map((r) => r.peakWorthCents).sort((a, b) => a - b)
   if (peakWorth.length > 0) {
     console.log(
       `    at the career's peak fame: median ${usd(q(peakWorth, 0.5))} (${(q(peakWorth, 0.5) / MERCH_PRICE_CENTS).toFixed(1)}x the price)` +
@@ -409,8 +456,8 @@ export function main(argv: string[] = process.argv.slice(2)): void {
   const drops: number[] = []
   for (const run of runs) {
     for (let i = WEEKS_PER_YEAR; i < run.rows.length; i++) {
-      const a = worthOf(run.rows[i - WEEKS_PER_YEAR].fame)
-      const b = worthOf(run.rows[i].fame)
+      const a = run.rows[i - WEEKS_PER_YEAR].worthCents
+      const b = run.rows[i].worthCents
       if (a <= 0) continue
       seasons++
       if (b < a) {

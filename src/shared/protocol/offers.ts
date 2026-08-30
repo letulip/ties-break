@@ -437,7 +437,14 @@ export interface ShopRowView {
    *  not what was paid for it worn down by a rate – it is years of what it takes in, and its rate is
    *  a dead 0. A screen reading only the rate would say «neither gains nor loses» about the one thing
    *  on the shelf whose value moves with her career, which is exactly the sentence round 30 #11 is
-   *  about. See `assetWorthCents`' third branch. */
+   *  about. See `assetWorthCents`' third branch.
+   *
+   *  ⚠⚠ ROUND 30 #23 – IT IS THE CAREER'S OWN MULTIPLE AND NOT THE CATALOGUE CONSTANT, and the
+   *  distinction is load-bearing since 30.08: the rung's `ShopItem.earningsMultipleX` is now the BASE
+   *  a brand starts at, and `world/brand.ts` adds what her seasons, her top-20 finishes, her finals
+   *  and her win rate earned on top. So this field MOVES over a career, where it used to be a
+   *  constant, and a consumer that compares it against the catalogue is comparing two different
+   *  numbers. WHOLE, rounded once in `shopView` – «у пользователя целые в интерфейсе». */
   earningsMultipleX: number | null
   /** ⭐⭐⭐ ROUND 30 #8 AND #10 – WHAT THE FAMILY CALLED THIS FAMILY OF RUNGS, or null on a rung whose
    *  family carries no name (every car, house, boat, plane and investment) and on one it has not
