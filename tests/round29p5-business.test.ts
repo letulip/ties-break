@@ -29,6 +29,8 @@ import {
   academyReputationOf,
   academyWeeklyIncomeCents,
   assetWeeklyIncomeCents,
+  brandSignalsOf,
+  brandWeeklyGrossCents,
   buyAsset,
   createWorld,
   fameAt,
@@ -134,13 +136,35 @@ describe('§1 fame – an accounted stock, 0–100, zero draws', () => {
     expect(fameAt(world), 'the world remembers who won everywhere below a Slam').toBeCloseTo(FAME.slamFinalFloor, 5)
   })
 
-  it('⭐ a season ended inside the top 10 counts; an 11th place and a not-recorded row count nothing', () => {
+  it('⭐⭐⭐ the season-end LADDER – top 10, then top 20, then top 50, and best band only', () => {
+    // ⚠⚠ ROUND 30 #24 RE-AIMED THIS ARM AND REVERSED HALF OF IT. It read «an 11th place counts
+    // NOTHING», which was the whole of the owner's complaint, three times over: «она же топ-20 в
+    // мире». A career built on quarter- and semi-finals won no title, reached no Slam final and
+    // ended no season in the top ten, so its fame floor was EXACTLY ZERO and its brand was worth
+    // nothing however high it ranked. Two rungs ended that on 30.08.
     const world = still('p5a-seasons', 4 * WEEKS_PER_YEAR)
-    world.seasonHistory = [seasonAt(2, 8)]
-    const withTop10 = fameAt(world)
-    expect(withTop10).toBeGreaterThan(0)
-    world.seasonHistory = [seasonAt(2, 11)]
-    expect(fameAt(world)).toBe(0)
+    const bands = FAME.seasonEndBands
+    const floorFor = (endRank: number): number => {
+      world.seasonHistory = [seasonAt(2, endRank)]
+      return fameAt(world)
+    }
+    // ⚠ THE DECAY IS IN EVERY READING, so the arm compares the rungs to EACH OTHER rather than to
+    // their raw steps – the ratios are exact and the absolute figures are not.
+    const top10 = floorFor(8)
+    const top20 = floorFor(15)
+    const top50 = floorFor(40)
+    expect(top10).toBeGreaterThan(top20)
+    expect(top20).toBeGreaterThan(top50)
+    expect(top50).toBeGreaterThan(0)
+    expect(top20 / top10).toBeCloseTo(bands[1].add / bands[0].add, 5)
+    expect(top50 / top10).toBeCloseTo(bands[2].add / bands[0].add, 5)
+    // ⚠ BEST BAND ONLY, once per season: a top-10 season is a top-10 season and never also a
+    // top-20 and a top-50 one, which is `academy.reputationBands`' own rule.
+    expect(top10 / (bands[0].add + bands[1].add + bands[2].add)).toBeLessThan(1)
+    expect(top10).toBeCloseTo(floorFor(8), 5)
+    // ...and the ladder still ENDS. A season outside every band counts nothing, and so does a row
+    // that never recorded a WTA rank – «not recorded» is not «unranked».
+    expect(floorFor(200)).toBe(0)
     world.seasonHistory = [{ ...seasonAt(2, 8), byTrack: undefined }] // a v45 row: not recorded
     expect(fameAt(world)).toBe(0)
   })
@@ -227,18 +251,39 @@ describe('§2 the merch brand – income follows fame', () => {
     expect(row!.entryCents * 10).toBeLessThanOrEqual(12_000_000_00)
   })
 
-  it('⭐⭐ owned, the brand pays fame × the dial – and the shop card quotes the till\'s own figure', () => {
+  it('⭐⭐ owned, the brand pays a curve in fame – and the shop card quotes the till\'s own figure', () => {
     const world = still('p5a-merch')
     world.trophiesByTier.wta1000.titles.push(world.week - 2)
     world.fundsCents = 300_000_00
     buyAsset(world, 'merch-brand')
-    const expected = Math.round(fameAt(world) * BIZ.merch.perFamePointCents)
-    expect(expected).toBeGreaterThan(0)
-    expect(merchWeeklyIncomeCents(world)).toBe(expected)
-    expect(shopView(world).rows.find((r) => r.id === 'merch-brand')!.incomeCents).toBe(expected)
+    // ⭐⭐⭐ ROUND 30 #23 RE-AIMED THIS ARM AND KEPT ITS CLAIM. It read `fame x perFamePointCents`,
+    // which was the whole dial until 30.08 and is now only the SCALE of a convex curve
+    // (`weekly = perFamePointCents x fame² / famePivot` – research §7e: hold the anchor at the bottom,
+    // reach the researched band at the top, and the only curves left are convex). ⚠ THE ARM ASSERTS
+    // THE CURVE'S PROPERTIES rather than re-deriving it: a test that re-typed the new formula would
+    // pass on a second copy of it, which is the defect this file's §4 exists to refuse.
+    const paid = merchWeeklyIncomeCents(world)
+    expect(paid).toBeGreaterThan(0)
+    expect(shopView(world).rows.find((r) => r.id === 'merch-brand')!.incomeCents).toBe(paid)
+    // ⭐ THE ANCHOR: at exactly `famePivot` the curve is IDENTICAL to the old linear dial, by
+    // construction, which is what keeps the day-one 6%-a-year reading the rung was sized against.
+    // Read through the earnings rate rather than the till, so no purchase is needed to ask it.
+    const atPivot = still('p5a-merch-pivot')
+    const pivot = BIZ.merch.famePivot
+    expect(fameAt(atPivot), 'the control fixture is genuinely at fame 0').toBe(0)
+    // a hand-built signal set is the only way to hold fame at an exact value – the career cannot be
+    // asked for one – and `brandWeeklyGrossCents` is the same function the till pays out of.
+    expect(brandWeeklyGrossCents({ ...brandSignalsOf(atPivot), fame: pivot }))
+      .toBe(Math.round(pivot * BIZ.merch.perFamePointCents))
+    // ⭐⭐ AND IT IS CONVEX ABOVE THE PIVOT: double the fame, MORE than double the money. This is the
+    // arm that fails on a flat multiplier, which is the fix §7e explicitly refused.
+    const one = brandWeeklyGrossCents({ ...brandSignalsOf(atPivot), fame: pivot })
+    const two = brandWeeklyGrossCents({ ...brandSignalsOf(atPivot), fame: pivot * 2 })
+    expect(two).toBeGreaterThan(one * 2)
+    expect(two).toBe(one * 4)
     // ...and rank is nowhere in it: a rank change moves nothing.
     world.kidRankWta = 5
-    expect(merchWeeklyIncomeCents(world)).toBe(expected)
+    expect(merchWeeklyIncomeCents(world)).toBe(paid)
   })
 
   it('not owned – or owned by a family nobody has heard of – it pays zero, never a negative cent', () => {
