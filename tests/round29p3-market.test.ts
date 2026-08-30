@@ -77,7 +77,6 @@ import {
   marketCrashFellIn,
   marketCrashLog,
   marketIndex,
-  marketRatio,
   marketSeasonMove,
   marketWave,
   ownedAssets,
@@ -86,6 +85,7 @@ import {
   skipTournament,
   tickWeek,
   toSnapshot,
+  unitPriceCents,
   worstCrashFreeRatio,
   worstMarketRatio,
   type WorldState,
@@ -118,6 +118,17 @@ function career(seed: string, weeks: number, act?: (w: WorldState) => void): Wor
 }
 
 const heldOf = (world: WorldState, id: string) => ownedAssets(world).find((a) => a.id === id)!
+
+/** ⭐ ROUND 30 #14 – WHAT $1,000,000 PUT INTO THE FUND AT WEEK `from` IS WORTH `weeks` LATER, in
+ *  cents, THROUGH THE SHIPPED ARITHMETIC: money buys units at the price of its own week and is worth
+ *  `units × price(now)`. It replaces `assetValueCents(…, marketRatio(…))` at four call sites below –
+ *  the same number, said the way the engine now says it, so these measurements keep pricing off the
+ *  engine rather than off a copy of a model that no longer exists (`tools/market-probe.ts`'s own
+ *  rule, and this file's). */
+function fundOverWeeks(seed: string, from: number, weeks: number): number {
+  const units = 1_000_000_00 / unitPriceCents(seed, from, FUND)
+  return Math.round(units * unitPriceCents(seed, from + weeks, FUND))
+}
 
 // -------------------------------------------------------------------------------------------------
 describe('part three #16 – the market exists whether or not she buys', () => {
@@ -177,7 +188,7 @@ describe('part three #16 – the market exists whether or not she buys', () => {
 
 // -------------------------------------------------------------------------------------------------
 describe('part three #16 – what the fund is worth is the market, not a rate', () => {
-  it('⭐⭐ the stored value is `basis x index(now) / index(basisWeek)`, and it is OFF the smooth curve', () => {
+  it('⭐⭐ the stored value is `units x price(now)`, and it is OFF the smooth curve', () => {
     const world = career('r29p3-value', 130, (w) => {
       if (w.week === 10) buyAsset(w, 'index-fund', 80_000_00)
     })
@@ -186,14 +197,21 @@ describe('part three #16 – what the fund is worth is the market, not a rate', 
 
     // The engine's own answer, asked of the one function both writers use.
     expect(held.valueCents).toBe(assetWorthCents(world, held, FUND))
-    // ...and it is the market path times the long-run curve, stated independently of that function.
-    const smooth = assetValueCents(FUND, held.paidCents, span)
-    const ratio = marketRatio(world.seed, held.boughtWeek, world.week, VOL)
-    expect(held.valueCents).toBe(Math.round(held.paidCents * Math.pow(1 + FUND.annualRateBps / 10_000, span / WEEKS_PER_YEAR) * ratio))
+    // ⚠⚠ RE-AIMED AT ROUND 30 #14 AND THE CLAIM IS SHARPER, NOT WIDER. It read «`basis x index(now)
+    // / index(basisWeek)`» and reproduced that by hand; the rebase is gone, so the sentence is now
+    // «the money bought units at the price of week 10, and they are worth today's price» – which is
+    // stated here independently of `assetWorthCents`, the same way the old line was.
+    expect(held.units!).toBeCloseTo(80_000_00 / unitPriceCents(world.seed, 10, FUND), 8)
+    expect(held.valueCents).toBe(Math.round(held.units! * unitPriceCents(world.seed, world.week, FUND)))
 
     // ⭐ THE CLAIM THAT WOULD BE VACUOUS WITHOUT THIS LINE: the market really took it somewhere the
-    // old risk-free 7% would not have. `ratio` is a market fact, so this is «the fund is no longer a
-    // deterministic compound» and it is the arm that dies when `marketRatio` is dropped.
+    // old risk-free 7% would not have. The price ratio is a market fact, so this is «the fund is no
+    // longer a deterministic compound», and it is the arm that dies when the market is disconnected.
+    const smooth = assetValueCents(FUND, held.paidCents, span)
+    const ratio =
+      unitPriceCents(world.seed, world.week, FUND) /
+      unitPriceCents(world.seed, 10, FUND) /
+      Math.pow(1 + FUND.annualRateBps / 10_000, span / WEEKS_PER_YEAR)
     expect(ratio).not.toBe(1)
     expect(held.valueCents).not.toBe(smooth)
   })
@@ -206,8 +224,20 @@ describe('part three #16 – what the fund is worth is the market, not a rate', 
     const dep = heldOf(world, 'deposit')
     const car = heldOf(world, 'car-sensible')
     // The THREE-ARGUMENT arithmetic this function has had since slice 1, to the cent.
-    expect(dep.valueCents).toBe(assetValueCents(DEPOSIT, dep.paidCents, world.week - dep.boughtWeek))
+    //
+    // ⚠⚠ THE DEPOSIT IS HELD IN UNITS SINCE ROUND 30 #14 AND STILL ANSWERS THIS, WHICH IS THE POINT
+    // OF LEAVING THE LINE ALONE. A zero-`volBps` unit price is `base × (1+r)^years` with
+    // `marketIndex` answering exactly 1, so `units × price(now)` and «paid, compounded over its own
+    // span» are the same number – to a cent of rounding, which is the only reason this is
+    // `toBeCloseTo(…, -1)` rather than `toBe`. ⭐ IT IS ALSO THE ARM THAT NOW KILLS THE ZERO-VOL
+    // GUARD ALONE: with `marketRatio` deleted there is only one copy left, and without it the
+    // deposit would ride every crisis in the career.
+    expect(dep.valueCents).toBeCloseTo(assetValueCents(DEPOSIT, dep.paidCents, world.week - dep.boughtWeek), -1)
     expect(car.valueCents).toBe(assetValueCents(CAR, car.paidCents, world.week - car.boughtWeek))
+    // ⚠ AND THE CAR CARRIES NO UNITS AT ALL – a 'fixed' rung is bought whole and valued off what was
+    // paid, which is the other half of «the market is one rung's business».
+    expect(car.units, 'a car is not a count of shares').toBeUndefined()
+    expect(dep.units, 'and a deposit is').toBeGreaterThan(0)
     // ...and they really went in opposite directions, so neither line is asserting a no-op.
     expect(dep.valueCents).toBeGreaterThan(dep.paidCents)
     expect(car.valueCents).toBeLessThan(car.paidCents)
@@ -252,11 +282,14 @@ describe('part three #16 – it is a market, not noise, and the household meter 
     expect(shelf).toBe(assetWorthCents(world, held, FUND, 1) - assetWorthCents(world, held, FUND))
     // ⚠ AND IT IS NOT THE OLD SMOOTH WEEK, which is the inequality that dies when `householdWeekly`
     // goes back to `assetValueCents`.
+    // ⚠ RE-AIMED AT ROUND 30 #14 AND THE COMPARISON IS UNCHANGED: this is what the meter WOULD say
+    // if the shelf line had gone back to the rate alone. There is no basis to read any more, so the
+    // «smooth week» is the cash the family put in compounded over its own span – which is exactly
+    // the number the pre-market engine produced and the number this arm must NOT match.
     const smoothWeekAt = (w: WorldState) => {
       const h = heldOf(w, 'index-fund')
-      const basis = h.basisCents ?? h.paidCents
-      const n = w.week - (h.basisWeek ?? h.boughtWeek)
-      return assetValueCents(FUND, basis, n + 1) - assetValueCents(FUND, basis, n)
+      const n = w.week - h.boughtWeek
+      return assetValueCents(FUND, h.paidCents, n + 1) - assetValueCents(FUND, h.paidCents, n)
     }
     expect(shelf).not.toBe(smoothWeekAt(world))
 
@@ -465,7 +498,7 @@ describe('part three #16 – ⚠⚠ THE LONG HORIZON, re-derived under crashes: 
       let won = 0
       for (const seed of seeds) {
         for (const from of entries) {
-          const v = assetValueCents(FUND, 1_000_000_00, weeks, marketRatio(seed, from, from + weeks, VOL))
+          const v = fundOverWeeks(seed, from, weeks)
           n++
           if (v > deposit) won++
         }
@@ -484,7 +517,7 @@ describe('part three #16 – ⚠⚠ THE LONG HORIZON, re-derived under crashes: 
     for (const seed of seeds) {
       for (const from of entries) {
         const weeks = 10 * WEEKS_PER_YEAR
-        const v = assetValueCents(FUND, 1_000_000_00, weeks, marketRatio(seed, from, from + weeks, VOL))
+        const v = fundOverWeeks(seed, from, weeks)
         if (v <= assetValueCents(DEPOSIT, 1_000_000_00, weeks)) {
           expect(marketCrashLog(seed, from + weeks), `${seed}@${from} lost selling in calm waters`).toBeLessThan(0)
         }
@@ -509,7 +542,7 @@ describe('part three #16 – ⚠⚠ THE LONG HORIZON, re-derived under crashes: 
     for (let s = 0; s < 400; s++) {
       const seed = `neg-${s}`
       for (let w = 0; w + WEEKS_PER_YEAR <= 780; w += 26) {
-        const v = assetValueCents(FUND, 1_000_000_00, WEEKS_PER_YEAR, marketRatio(seed, w, w + WEEKS_PER_YEAR, VOL))
+        const v = fundOverWeeks(seed, w, WEEKS_PER_YEAR)
         seasons++
         if (v < 1_000_000_00) negative++
       }
@@ -527,24 +560,34 @@ describe('part three #16 – ⚠⚠ THE LONG HORIZON, re-derived under crashes: 
 
 // -------------------------------------------------------------------------------------------------
 describe('part three #16 – the top-up and the part sale still hold under a market', () => {
-  it('⭐⭐ a top-up rebases the MARKET too: new money enters at today`s index, not week one`s', () => {
+  it('⭐⭐ a second cheque buys units at TODAY`s price, not week one`s', () => {
     const world = career('r29p3-topup', 120, (w) => {
       if (w.week === 10) buyAsset(w, 'index-fund', 40_000_00)
       if (w.week === 70) buyAsset(w, 'index-fund', 30_000_00)
     })
     const held = heldOf(world, 'index-fund')
     expect(held.paidCents, 'the cash the family put in').toBe(70_000_00)
-    expect(held.basisWeek, 'and the clock restarted at the top-up').toBe(70)
+    // ⚠⚠ RE-AIMED AT ROUND 30 #14 AND THE TITLE WITH IT – it read «a top-up rebases the MARKET too»,
+    // and there is no rebase to assert. The claim underneath was always the same one: new money
+    // enters where the market IS, not where it was. Units say that without a restatement, and the
+    // two prices are named rather than folded into one number.
+    expect(held.basisWeek, 'and the clock restarted nowhere').toBeUndefined()
     expect(held.valueCents).toBe(assetWorthCents(world, held, FUND))
+    const p10 = unitPriceCents(world.seed, 10, FUND)
+    const p70 = unitPriceCents(world.seed, 70, FUND)
+    expect(held.units!).toBeCloseTo(40_000_00 / p10 + 30_000_00 / p70, 8)
     // ⭐ THE TRAP #11 CAUGHT, RE-ARMED FOR A MARKET: had the new money been back-dated to week 10 it
-    // would have ridden the market from week 10, which is a different – and here, larger – number.
-    const backDated = assetValueCents(FUND, 70_000_00, world.week - 10, marketRatio(world.seed, 10, world.week, VOL))
+    // would have bought its units at week 10's price, which is a different – and here, larger –
+    // number of them.
+    const backDated = Math.round((70_000_00 / p10) * unitPriceCents(world.seed, world.week, FUND))
     expect(held.valueCents).not.toBe(backDated)
     // ...and the market between weeks 10 and 70 really moved, so the inequality is not a rounding.
-    // ⚠ The floor was 0.02 and the CRASH LAYER moved this seed's ratio to 0.0174 – the epoch-0
-    // excursion partially cancels the wave here. 0.01 is still a hundred times any rounding, and
-    // the claim this guards (the not-equal above is substantive) does not need more.
-    expect(Math.abs(marketRatio(world.seed, 10, 70, VOL) - 1)).toBeGreaterThan(0.01)
+    // ⚠ The floor was 0.02, the CRASH LAYER moved this seed's ratio to 0.0174, and round 30 #14's
+    // halved volatility moves it again – the drift is divided out here so what is left is the market
+    // alone. 0.01 is still a hundred times any rounding, and the claim this guards (that the
+    // not-equal above is substantive) does not need more.
+    const marketOnly = p70 / p10 / Math.pow(1 + FUND.annualRateBps / 10_000, 60 / WEEKS_PER_YEAR)
+    expect(Math.abs(marketOnly - 1)).toBeGreaterThan(0.01)
   })
 
   it('⭐⭐ THE CRASH CASE HIS EXTENSION ADDS: a tranche bought AT THE TROUGH, and the P&L stays honest', () => {
@@ -569,19 +612,30 @@ describe('part three #16 – the top-up and the part sale still hold under a mar
     expect(troughValue, 'the fixture is a real crash, not a dip').toBeLessThan(42_500_00)
 
     const held = heldOf(world, 'index-fund')
-    // The P&L, whole: cash is cash, the basis was struck at the trough, and the value is the one
-    // arithmetic (`assetWorthCents`) – so the trough tranche rode the WHOLE rebound.
+    // The P&L, whole: cash is cash, the second tranche bought its units AT THE TROUGH PRICE, and the
+    // value is the one arithmetic (`assetWorthCents`) – so those units rode the WHOLE rebound.
+    //
+    // ⚠⚠ RE-AIMED AT ROUND 30 #14 AND THE FIXTURE IS THE SAME CRISIS. «The basis was struck at the
+    // trough» was the rebase's way of saying it; units say it directly and say MORE – the trough
+    // tranche is a countable number of shares bought at the cheapest price in the career, which is
+    // «усредниться» in one line.
     expect(held.paidCents).toBe(80_000_00)
     expect(held.boughtWeek).toBe(10)
-    expect(held.basisWeek).toBe(c.troughWeek)
+    expect(held.basisWeek, 'and no clock was restarted by the second cheque').toBeUndefined()
     expect(held.valueCents).toBe(assetWorthCents(world, held, FUND))
-    expect(held.valueCents, 'the recovery really carried the rebased basis up').toBeGreaterThan(held.basisCents!)
+    const priceAtOpen = unitPriceCents(SEED, 10, FUND)
+    const priceAtTrough = unitPriceCents(SEED, c.troughWeek, FUND)
+    expect(priceAtTrough, 'the fixture really is a cheaper entry').toBeLessThan(priceAtOpen)
+    expect(held.units!).toBeCloseTo(50_000_00 / priceAtOpen + 30_000_00 / priceAtTrough, 8)
     // ⚠ AND NOT THE BACK-DATED ARITHMETIC: money pretending to have been there since week 10 would
-    // have ridden down into the crash first. Under a crash the two REALLY diverge.
-    const backDated = assetValueCents(FUND, 80_000_00, world.week - 10, marketRatio(SEED, 10, world.week, VOL))
+    // have bought its units at the pre-crash price. Under a crash the two REALLY diverge.
+    const backDated = Math.round((80_000_00 / priceAtOpen) * unitPriceCents(SEED, world.week, FUND))
     expect(held.valueCents).not.toBe(backDated)
     // The direction is the crash speaking: entering at the bottom beats entering before the fall.
     expect(held.valueCents).toBeGreaterThan(backDated)
+    // ⭐⭐ AND THE AVERAGE CAME DOWN, WHICH IS THE WHOLE OF «имеешь возможность усредниться»: the
+    // family's own entry price is now below what it was before they doubled in.
+    expect(held.paidCents / held.units!, 'averaging down really moved the average').toBeLessThan(priceAtOpen)
   })
 
   it('⚠ and a part sale AT THE TROUGH stays sold – the crisis does not reinflate it', () => {
@@ -603,9 +657,9 @@ describe('part three #16 – the top-up and the part sale still hold under a mar
       }
     })
     const held = heldOf(world, 'index-fund')
-    // Three ticks later the holding is priced off the REBASED trough basis – riding the early
+    // Three ticks later the holding is priced off the units that were LEFT – riding the early
     // rebound, not reinflated to the pre-sale curve.
-    expect(held.basisWeek).toBe(c.troughWeek)
+    expect(held.basisWeek, 'a part sale restarts no clock (round 30 #14)').toBeUndefined()
     expect(held.valueCents).toBe(assetWorthCents(world, held, FUND))
     expect(held.paidCents, 'the cost of what left went with it').toBeLessThan(50_000_00)
     expect(walletAfter, 'the sale really happened inside the run').toBeGreaterThan(0)
@@ -621,7 +675,8 @@ describe('part three #16 – the top-up and the part sale still hold under a mar
     expect(world.fundsCents).toBe(wallet + 30_000_00)
     const held = heldOf(world, 'index-fund')
     expect(held.valueCents).toBe(before - 30_000_00)
-    expect(held.basisWeek).toBe(world.week)
+    expect(held.basisWeek, 'and no clock was restarted (round 30 #14)').toBeUndefined()
+    const unitsAfter = held.units!
 
     // The trap: `revalueAssets` recomputes from the basis every tick. A sale that only lowered the
     // value would be undone here – and under a market the reinflation is masked by the path moving,
@@ -630,7 +685,10 @@ describe('part three #16 – the top-up and the part sale still hold under a mar
     tickWeek(world, rng)
     const after = heldOf(world, 'index-fund')
     expect(after.valueCents).toBe(assetWorthCents(world, after, FUND))
-    expect(after.basisCents).toBe(before - 30_000_00)
+    // ⚠ RE-AIMED AT ROUND 30 #14: the field that survived the tick was `basisCents`; it is `units`
+    // now, and the claim is the same one – the tick re-priced the holding and did NOT restore what
+    // was sold.
+    expect(after.units).toBe(unitsAfter)
     expect(after.paidCents, 'and the cost of what left went with it').toBeLessThan(100_000_00)
   })
 })
