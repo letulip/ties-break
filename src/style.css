@@ -1466,26 +1466,14 @@ button.primary.risky {
   opacity: 0.5;
 }
 
-/* ROUND 26 #1's first-use line (shipped at round 29 #6). Fixed ABOVE the bar and out of its flex
-   row – see the template's note on why it may not be a child of `.next-week-bar`. `pointer-events:
-   none` because it explains a control rather than being one, and because the bar it floats over
-   must stay reachable through it. */
-.span-hint {
-  position: fixed;
-  left: 50%;
-  transform: translateX(-50%);
-  bottom: 110px;
-  width: 100%;
-  max-width: 520px;
-  margin: 0;
-  padding: 0 20px;
-  text-align: center;
-  font-size: 12px;
-  line-height: 1.35;
-  color: var(--muted);
-  pointer-events: none;
-  z-index: 39;
-}
+/* ⚠⚠ ROUND 30 #3 – `.span-hint` IS GONE, WITH THE SENTENCE IT PAINTED. It was round 26 #1's
+   first-use line, fixed above the week bar in `--muted` at 12px, and the owner read it in play:
+   «Странная серая нечитаемая надпись над кнопками… Quiet stretch ahead… Идея хорошая, реализация не
+   очень.» The line went with the control it explained – the span is offered only inside a long
+   injury layoff now – so the rule goes too rather than being restyled to say a false thing legibly.
+   ⚠ IF A FIRST-USE LINE IS EVER WANTED AGAIN it needs its own class AND its own watermark key: 12px
+   `--muted` over the app background is what he called unreadable, and that is the measurement to
+   start from. */
 
 /* Wave 2: only Home carries the floating week button, so only Home reserves room under it. Every
    other screen gets its space back – which is most of a card's height on a 390px phone. */

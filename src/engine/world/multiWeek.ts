@@ -113,6 +113,15 @@ export function eventIsHers(e: { entered: boolean; eligible: boolean; deadlineWe
 
 /** ARM 1 – NOTHING ON HER CALENDAR IN THE NEXT FIVE WEEKS.
  *
+ *  ⚠⚠ SUPERSEDED AS A GATE BY ROUND 30 #3, AND KEPT BECAUSE IT IS THE RECORD OF WHAT THE CONTROL
+ *  USED TO DO. The owner played the repaired pill and deleted this arm outright: «давай вообще эту
+ *  кнопку про 6 недель уберём. Её можно оставить только на длинные травмы». `spanWorthOffering` no
+ *  longer reads this function – the quiet stretch is not a reason to offer a skip any more, because
+ *  «нам в это время приходят письма и идёт запись на новые турниры». Nothing production-side calls
+ *  it today; it stays exported with its measurement intact (0 / 900 weeks on the literal reading,
+ *  ~2 % on hers) so the day the rule is wanted back it is a one-line change and not a re-derivation.
+ *  The guards that used to prove it are RE-AIMED at the layoff rule, never deleted.
+ *
  *  ⚠⚠ "NO EVENT" IS "NO EVENT OF HERS", AND THAT READING IS MEASURED RATHER THAN ASSUMED. The
  *  literal reading – any dated row in `world.season` – was built first and walked: over three
  *  careers of 300 weeks it fired on **0 of 900 weeks**, because the generated tour always has
@@ -162,15 +171,35 @@ export function longLayoff(week: number, injury: SnapshotInjury | null): boolean
   return layoffCoversWeek(week, injury.weeksRemaining, week + LONG_LAYOFF_WEEKS - 1)
 }
 
-/** THE OWNER'S RULE, AS ONE PREDICATE: the two arms, ORed, and nothing else. Pure, no RNG, no
- *  mutation, no persistence – so the shell may call it on a `Snapshot` and a test on a `WorldState`
- *  and get the same answer. */
+/** THE OWNER'S RULE, AS ONE PREDICATE. Pure, no RNG, no mutation, no persistence – so the shell may
+ *  call it on a `Snapshot` and a test on a `WorldState` and get the same answer.
+ *
+ *  ⚠⚠⚠ ROUND 30 #3 – ONE ARM NOW, NOT TWO, AND THE OWNER OVERTURNED A STANDING DECISION TO GET
+ *  HERE. It read `calendarClearAhead(week, calendar) || longLayoff(week, injury)` – his own 25.08
+ *  rule, both arms. He has since played the repaired control and deleted the first one:
+ *
+ *    «Странная серая нечитаемая надпись над кнопками… Quiet stretch ahead… Идея хорошая, реализация
+ *     не очень. Нам в это время приходят письма и идёт запись на новые турниры – давай вообще эту
+ *     кнопку про 6 недель уберём. Её можно оставить только на длинные травмы и с обязательным
+ *     правилом "минус 1 день от длины окна" – иначе даже на турниры не записаться никак. Плохой
+ *     паттерн» (30.08)
+ *
+ *  ⚠ HIS REASON IS THE ONE THE MEASUREMENT COULD NOT SEE. `calendarClearAhead` asks whether an EVENT
+ *  is dated in the window, and a quiet calendar is exactly when the letters arrive and the entry
+ *  lists open – so the weeks the rule picked out as "nothing to do" are the weeks with the most to
+ *  do. The stretch was never quiet; only the fixture list was.
+ *
+ *  ⚠ THE OTHER ARM SURVIVES BECAUSE THERE IS NOTHING TO DO IN IT. A girl five weeks into a layoff
+ *  cannot train, cannot enter and cannot play – the calendar genuinely does not matter, which is his
+ *  own wording for this arm from the start («у нее травма на 5+ недель… либо до конца травмы
+ *  осталось не меньше 5 недель»). And `spanWeeksFor` now stops the skip ONE WEEK SHORT of the window
+ *  so a week is always left to enter something in, which is the «минус 1 день» clause. */
 export function spanWorthOffering(
   week: number,
-  calendar: readonly { week: number; entered: boolean; eligible: boolean; deadlineWeek: number }[],
+  _calendar: readonly { week: number; entered: boolean; eligible: boolean; deadlineWeek: number }[],
   injury: SnapshotInjury | null,
 ): boolean {
-  return calendarClearAhead(week, calendar) || longLayoff(week, injury)
+  return longLayoff(week, injury)
 }
 
 // =================================================================================================
@@ -207,24 +236,46 @@ export function spanWorthOffering(
  *  also keeps the control modest without a second tuning knob: the owner's objection to the first
  *  pass was «с которым пропускается всё», and a span can never exceed two months of a career.
  *
- *  ⚠ ONE RULE FOR BOTH OF HIS ARMS, DELIBERATELY. A long layoff does not get its own length: a girl
- *  laid up for nine weeks who is still ENTERED in something in three is a walkover the engine stops
- *  on (R12-15), so counting to the entry is the honest number in both arms and the layoff needs no
- *  clause of its own. `eventIsHers` is the same predicate `calendarClearAhead` and the look-ahead
- *  markers read, so the pill counts the weeks the calendar draws as empty and no others.
+ *  ⚠ IT USED TO BE ONE RULE FOR BOTH OF HIS ARMS. That note read: «A long layoff does not get its
+ *  own length: a girl laid up for nine weeks who is still ENTERED in something in three is a
+ *  walkover the engine stops on (R12-15), so counting to the entry is the honest number in both arms
+ *  and the layoff needs no clause of its own.» There is only one arm now (round 30 #3), and the
+ *  layoff HAS been given a length of its own – see below. The counting half is unchanged and still
+ *  reads `eventIsHers`, the same predicate the look-ahead markers use, so the span still counts the
+ *  weeks the calendar draws as empty and no others.
  *
- *  Pure, zero draws, primitives in – the shell hands it `snapshot.upcoming`, a test hands it
- *  `world.season`, exactly as `spanWorthOffering` above. */
+ *  ⚠⚠⚠ ROUND 30 #3 – AND IT STOPS ONE WEEK SHORT OF THE LAYOFF, WHICH IS HIS OWN CLAUSE:
+ *  «Её можно оставить только на длинные травмы и с обязательным правилом "минус 1 день от длины
+ *  окна" – иначе даже на турниры не записаться никак.»
+ *
+ *  A skip that consumed the whole window would land the career on the first week she is fit and
+ *  leave NO week inside the layoff in which to answer a letter or enter the tournament she comes
+ *  back for – which is the pattern he called bad. `weeksRemaining - 1` is that clause, and it is the
+ *  engine's own figure rather than a fourth spelling of the window (R10-17): `layoffCoversWeek` and
+ *  `longLayoff` read the same field.
+ *
+ *  ⚠ AND IT IS WHY THE INJURY IS A REQUIRED ARGUMENT AND NOT AN OPTIONAL ONE. A caller that omitted
+ *  it would silently get the pre-round-30 answer – the whole quiet stretch – which is exactly the
+ *  control he deleted. With no injury the span is ZERO, so this function and `spanWorthOffering`
+ *  agree by construction rather than by inspection: no layoff, no skip, from either side.
+ *
+ *  Pure, zero draws, primitives in – the shell hands it `snapshot.upcoming` / `snapshot.injury`, a
+ *  test hands it `world.season` / `world.injury`, exactly as `spanWorthOffering` above. */
 export function spanWeeksFor(
   week: number,
   calendar: readonly { week: number; entered: boolean; eligible: boolean; deadlineWeek: number }[],
+  injury: SnapshotInjury | null,
 ): number {
+  // ⚠ THE WINDOW FIRST, because it is the cheap refusal and the one that makes the loop's answer
+  // irrelevant on every week of a career that is not a layoff.
+  const window = injury === null ? 0 : Math.max(0, injury.weeksRemaining - 1)
+  if (window === 0) return 0
   let clear = 0
   for (let k = 1; k <= UPCOMING_WEEKS; k++) {
     if (calendar.some((e) => e.week === week + k && eventIsHers(e, week))) break
     clear = k
   }
-  return clear
+  return Math.min(clear, window)
 }
 
 /** ⭐⭐ THE REASONS A SPAN REPORTS AND DOES NOT HALT ON, and there is exactly one.

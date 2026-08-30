@@ -132,13 +132,57 @@ marked `[!]` and each names what shipped and why it missed – that is the point
   draw owns the week.» A sentence naming the brand would be new copy you did not ask for
   (invariant 4). Say the word and it is one line.
 
-- [!] **3. «Странная серая нечитаемая надпись над кнопками… Quiet stretch ahead… Идея хорошая,
+- [x] **3. «Странная серая нечитаемая надпись над кнопками… Quiet stretch ahead… Идея хорошая,
   реализация не очень. Нам в это время приходят письма и идёт запись на новые турниры – давай вообще
   эту кнопку про 6 недель уберём. Её можно оставить только на длинные травмы и с обязательным правилом
   "минус 1 день от длины окна" – иначе даже на турниры не записаться никак. Плохой паттерн»** –
   ⚙ **RULING, and it overturns my own standing decision.** I kept the control repaired and said
   deleting stays available; he has now looked at it in play and deleted it. **The multi-week skip goes
   except for a long layoff, and there it must stop one day SHORT of the window.**
+
+  **SHIPPED, in three places.**
+
+  1. **The quiet-stretch arm is gone.** `spanWorthOffering` was
+     `calendarClearAhead(...) || longLayoff(...)` – both halves of your own 25.08 rule – and it is
+     `longLayoff(...)` alone now. ⭐ **Your reason is the one the measurement could not see:**
+     `calendarClearAhead` asks whether an EVENT is dated in the window, and a quiet fixture list is
+     exactly when the letters arrive and the entry lists open. The stretch was never quiet; only the
+     calendar was.
+  2. **The skip stops one week short of the window.** `spanWeeksFor` takes
+     `min(clear weeks, weeksRemaining − 1)`, so a seven-week layoff buys six and a week of the
+     window always survives to enter something in – «иначе даже на турниры не записаться никак».
+     ⚠ The injury is a REQUIRED argument now, not an optional one: a caller that forgot it would
+     silently get the pre-ruling answer, which is the control you deleted. Off a layoff it returns
+     **0**, so the two rules agree by construction – no layoff, no skip, from either side.
+  3. **The first-use line is gone**, with the control it explained. It opened «Quiet stretch ahead»,
+     and there is no quiet-stretch span left for it to introduce – a muted sentence is fixable, a
+     false one is not. `.span-hint`, its watermark and the `markSpanHintUsed()` call went with it.
+     ⚠ The watermark key `tb:spanHintUsed` is deliberately NOT reused: it is already spent in your
+     save, so a future first-use line must take its own key.
+
+  ⚠ **Every guard is re-aimed, none deleted** – they are the record of what the control used to do:
+  - `round26-span-gate.test.ts` arm 1 is **inverted**: it still measures that those weeks really are
+    empty, and now asserts an empty window offers nothing – with the layoff arm firing on the very
+    same week, so it cannot pass on a control that has simply stopped existing.
+  - its measurement arm is **three rulings deep** now: 204 / 208 weeks under the first pass, 5 under
+    round 26 #1, **0** on a healthy career under yours.
+  - `round29-span-repair.test.ts` keeps its whole chain (six on the label, six on the press, six on
+    the calendar, six on the card) – the fixture gained a seven-week layoff, so the numbers did not
+    move and only the reason the pill exists did. Its first-use block is **inverted** into the guard
+    that would catch the sentence coming back.
+  - `r2-13-span-report.test.ts` and `round26-span-gate-ui.test.ts` reach the two-control bar through
+    a long layoff instead of an empty calendar; every width, order and mutation arm is untouched.
+
+  ⚠⚠ **One mutation is worth reading, because it was green when it should not have been.** Putting
+  the deleted arm back left the pill absent and the case passing – `spanWeeksFor`'s window guard was
+  catching it too. Two rules, one visible effect, and a case that reads only the screen cannot say
+  which of them it is testing. The arm now pins `spanWorthOffering` itself as well as the screen.
+
+  ⚠ **What is NOT deleted:** `calendarClearAhead` and `QUIET_WINDOW_WEEKS` survive, unreferenced by
+  production code, carrying their measurement (0 / 900 weeks on the literal reading, ~2 % on hers)
+  and a ⚠ note saying they are superseded as a gate. If you want the rule back it is a one-line
+  change; say so and it returns. Deleting them would have thrown away the evidence for a ruling you
+  might revisit.
 
 - [x] **4. «В Family budget вкладка This season изменилась на So far. Я это не просил. Верни как было
   пожалуйста и запрети на уровне документации и спек агентам самовольно изменять вординг»** –

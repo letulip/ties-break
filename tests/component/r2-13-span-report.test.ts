@@ -210,10 +210,28 @@ describe('R2-13 – the span pill, in the real shell', () => {
     return { w, game }
   }
 
-  /** A career on an ordinary training week – no entry ahead, nothing booked, nothing pending. */
+  /** A career on an ordinary training week – no entry ahead, nothing booked, nothing pending.
+   *
+   *  ⚠⚠ RE-AIMED BY ROUND 30 #3, AND THE FIXTURE GAINED A LAYOFF RATHER THAN LOSING A CLAIM. A quiet
+   *  calendar no longer offers the span at all: the owner played the repaired control and deleted
+   *  that arm – «давай вообще эту кнопку про 6 недель уберём. Её можно оставить только на длинные
+   *  травмы» – so every arm below would have gone vacuous against an absent pill. The LONG LAYOFF is
+   *  what makes the control legal now, and it is deliberately long (20 weeks) so that the span these
+   *  cases measure is still capped by the SNAPSHOT HORIZON and not by the window: `spanWeeksFor`
+   *  takes `min(clear, weeksRemaining - 1)`, and 19 is far above `UPCOMING_WEEKS`. The «минус 1
+   *  день» rule has its own arms in `round29-span-repair.test.ts` §4, where it is the subject.
+   *
+   *  ⚠ THE LAYOFF OPENED LAST WEEK, because `advanceWeeks` stops on one that opened THIS week. */
   function quietWorld(seed: string): { world: WorldState; rng: () => number } {
     const world = createWorld(seed, DEFAULT_PROFILE)
     world.season = []
+    world.injury = {
+      kind: 'stress fracture',
+      severity: 'major',
+      weeksRemaining: 20,
+      totalWeeks: 20,
+      sinceWeek: world.week - 1,
+    }
     return { world, rng: resumeMain(world.rngMain) }
   }
 
@@ -233,7 +251,7 @@ describe('R2-13 – the span pill, in the real shell', () => {
     // `spanWeeksFor`), so the assertion compares the button against the engine's own count of the
     // slot – and this fixture (`world.season = []`) has a slot of `UPCOMING_WEEKS`, not four, so a
     // pill that fell back to the constant would fail here.
-    const slot = spanWeeksFor(world.week, toSnapshot(world).upcoming)
+    const slot = spanWeeksFor(world.week, toSnapshot(world).upcoming, toSnapshot(world).injury)
     expect(slot, 'a fixture whose slot equals the old constant would prove nothing').not.toBe(MULTI_WEEK_SPAN)
     expect(pill.text()).toBe(`Next ${slot} weeks`)
     expect(pill.text()).not.toMatch(/^Play /)
@@ -301,7 +319,7 @@ describe('R2-13 – the span pill, in the real shell', () => {
     const { world, rng } = quietWorld('r2-13-ui-press')
     const { w, game } = await openShell(world)
     const from = world.week
-    const slot = spanWeeksFor(from, toSnapshot(world).upcoming)
+    const slot = spanWeeksFor(from, toSnapshot(world).upcoming, toSnapshot(world).injury)
 
     // The store is the ONLY thing stubbed, and it is stubbed onto the real engine: the worker is not
     // available here, so `advance` runs `advanceWeeks` in-process and republishes the snapshot –
@@ -346,12 +364,22 @@ describe('R2-13 – the span pill, in the real shell', () => {
     // are covered), so the four weeks this case just spent have handed the career a full calendar.
     // Under the owner's rule that is no longer a quiet stretch, and asserting `true` here would be
     // asserting the old gate.
+    // ⚠⚠ RE-AIMED AGAIN BY ROUND 30 #3, AND IT IS THE SAME CLAIM WITH THE SECOND HALF SPELLED OUT.
+    // `spanWorthOffering` is now the LAYOFF rule alone, and it says nothing about how many weeks are
+    // left to spend – so "the pill follows the owner's rule" needs both of his clauses: the window
+    // must be open AND `spanWeeksFor` (capped at `weeksRemaining - 1`) must still reach the floor.
+    // That pair is exactly what `multiSpanOf` computes; written out here so this arm keeps reading
+    // the ENGINE's rule rather than the composable's answer to it.
     const after = toSnapshot(world)
     expect(w.find('.span-weeks-btn').exists(), 'the pill follows the owner\'s rule and nothing else').toBe(
-      spanWorthOffering(after.week, after.upcoming, after.injury),
+      spanWorthOffering(after.week, after.upcoming, after.injury) &&
+        spanWeeksFor(after.week, after.upcoming, after.injury) >= MULTI_WEEK_SPAN,
     )
     // …and the re-arm itself, which is what this line was always for: clear his five-week window on
     // the world and the control comes back without anything else changing.
+    // ⚠ ROUND 30 #3 – the window it clears is the same one; what brings the pill back is now the
+    // LAYOFF standing over it, which this fixture has carried since the first tick. `QUIET_WINDOW_WEEKS`
+    // is no longer a gate (see `calendarClearAhead`) and is kept here as the span's own reach.
     world.season = world.season.filter((e) => e.week > world.week + QUIET_WINDOW_WEEKS)
     game.snapshot = toSnapshot(world)
     await flushPromises()

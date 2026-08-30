@@ -67,11 +67,30 @@ Object.defineProperty(globalThis, 'localStorage', {
   },
 })
 
-/** A career on an ordinary training week with nothing on her calendar – the owner's first arm, and
- *  the only state in which the bar carries two controls. */
+/** A career on an ordinary training week with nothing on her calendar – and, since round 30 #3, a
+ *  long layoff standing over it, which is what makes the bar carry two controls at all.
+ *
+ *  ⚠⚠ RE-AIMED, NOT WEAKENED. This file owns the POSITION half of round 26 #1 («давай сделаем ее
+ *  во-первых слева от основной») and the phone-fit of a two-control bar; it uses the gate only to
+ *  REACH the state it looks at. Round 30 #3 changed which state that is: the owner deleted the
+ *  quiet-stretch arm outright – «давай вообще эту кнопку про 6 недель уберём. Её можно оставить
+ *  только на длинные травмы» – so an empty calendar alone now draws ONE control and every width,
+ *  order and mutation arm below would have measured a bar that is no longer the bar under test.
+ *  The layoff is the reach; nothing about what is asserted has moved.
+ *
+ *  ⚠ 20 WEEKS, deliberately far above the horizon: `spanWeeksFor` caps at `weeksRemaining - 1`, so a
+ *  short layoff would put the WINDOW in charge of the label this file's own arms read. It opened
+ *  last week because `advanceWeeks` stops on a layoff that opened this one. */
 function quietWorld(seed: string): WorldState {
   const world = createWorld(seed, DEFAULT_PROFILE)
   world.season = []
+  world.injury = {
+    kind: 'stress fracture',
+    severity: 'major',
+    weeksRemaining: 20,
+    totalWeeks: 20,
+    sinceWeek: world.week - 1,
+  }
   return world
 }
 

@@ -51,6 +51,13 @@ import { weekDateLine } from '../src/shared/dates'
 // locator moves: the pill still begins with "Next", still never with "Play", and is still outside
 // the closed set. A spec that wants the SPAN must still ask for it by its own name – and must now
 // match the number rather than assume four.
+//
+// ⚠⚠ ROUND 30 #3 MADE THE PILL RARE AND THE LOCATOR STRICTLY SAFER. The owner deleted the
+// quiet-stretch arm – «давай вообще эту кнопку про 6 недель уберём. Её можно оставить только на
+// длинные травмы» – so on an ordinary week Home now carries ONE advance control again and the pill
+// appears only inside a long injury layoff. No journey here presses it, and none needs to: fewer
+// buttons cannot make a strict-mode locator ambiguous. A future spec that wants the span must put
+// the career in a layoff to reach it.
 export const WEEK_ACTION_NAME =
   /^(Training week|Shooting week|Practice match|Exam week|Off-season week|Leave on vacation|Injured – walkover|Play .+|.+ \(outgrown\))$/
 
