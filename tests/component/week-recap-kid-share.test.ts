@@ -78,7 +78,7 @@ import {
   type WorldState,
 } from '../../src/engine/world'
 import { rngFromSeed } from '../../src/engine/rng'
-import { kidPrizeShareBps } from '../../src/engine/economy'
+import { kidPrizeShareBps, managerCommissionBps } from '../../src/engine/economy'
 import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { after, before } from '../helpers/source'
@@ -163,6 +163,47 @@ function withoutBase(snap: Snapshot): Snapshot {
     finance: {
       ...snap.finance,
       weekly12: snap.finance.weekly12.map(({ kidShareBaseCents: _drop, ...p }) => p),
+    },
+  }
+}
+
+/** ⭐⭐⭐ ROUND 30 #21 – THE SAME WEEK, PAID BY BOTH RULES. `paid()` above stops on the FIRST week the
+ *  tennis paid her, which is a prize-only week by construction – and that is exactly why the round 29
+ *  #10 arm below could never redden on the blend, however far the blend drifted from every rule in
+ *  the game. This is the case the fixture never contained.
+ *
+ *  ⚠ SYNTHESISED FROM THE REAL WEEK, `withoutMemo`/`withoutBase`'s own device, and legitimate for the
+ *  same reason: every claim in this file is about what a COMPONENT does with a snapshot. The ENGINE
+ *  half – that a walked title week really records both parts under their own rules – is measured on a
+ *  real 32-season career in tests/round29-kid-cut-base.test.ts §3, which is where the fixture that
+ *  produces his «56%» already lived.
+ *
+ *  ⚠ THE RATES ARE THE ENGINE'S OWN, never literals: her ramp at her real age, and what the manager
+ *  leaves of a brand cheque. The split of the cents is arbitrary (40/60) because nothing about the
+ *  claim depends on it – what matters is that the two rules differ and that the blend is neither. */
+function mixed(snap: Snapshot): Snapshot {
+  const rampBps = kidPrizeShareBps(snap.ageYears)
+  const sponsorBps = 10_000 - managerCommissionBps()
+  return {
+    ...snap,
+    finance: {
+      ...snap.finance,
+      weekly12: snap.finance.weekly12.map((p) => {
+        if (p.week !== snap.week || !p.kidShareCents) return p
+        const prizeCents = Math.round(p.kidShareCents * 0.4)
+        const sponsorCents = p.kidShareCents - prizeCents
+        // The blend the old card would have printed: her whole cut over the gross both rules split.
+        const baseCents = Math.round((prizeCents * 10_000) / rampBps) + Math.round((sponsorCents * 10_000) / sponsorBps)
+        return {
+          ...p,
+          kidShareBaseCents: baseCents,
+          kidSharePct: Math.round(p.kidShareCents * 100 / baseCents),
+          kidShareParts: [
+            { source: 'prize' as const, pct: Math.round(rampBps / 100), cents: prizeCents },
+            { source: 'sponsor' as const, pct: Math.round(sponsorBps / 100), cents: sponsorCents },
+          ],
+        }
+      }),
     },
   }
 }
@@ -373,6 +414,66 @@ describe('the week recap says what her cut was', () => {
     expect(memo, 'the legacy shape keeps the sentence it has always carried').toContain(
       'The income above is what the family kept',
     )
+  })
+
+  it('ROUND 30 #21 – on a MIXED week every percentage on screen is a RULE, and the blend is on none of them', () => {
+    // «Почему-то мне пишут "Her cut 61% – $69,750 into her own account", и до этого было про 56%…
+    // При том, что на экране бюджета написано "She keeps 50% of every prize cheque now".»
+    //
+    // ⚠⚠ AND THIS IS THE ARM THE ROUND 29 #10 PIN COULD NOT BE. The arm above asks the right question
+    // – «the percentage on screen is the ramp the engine paid her by» – of a fixture that only ever
+    // contains one rule, where the blend and the ramp are the same number. Here two rules pay one
+    // week, and the blend is neither of them.
+    const snap = mixed(paid())
+    const row = snap.finance.weekly12.find((p) => p.week === snap.week)!
+    const lines = recap(snap)
+      .findAll('.recap-finance .recap-memo:not(.recap-memo-coach) .recap-memo-line')
+      .map((n) => clean(n.text()))
+
+    expect(lines, 'two rules paid this week, so two sentences say so').toHaveLength(2)
+
+    // ⭐⭐ THE CLAIM. Every percentage the card prints is a rate this engine STATES – her age ramp, or
+    // what the manager leaves – asked of the engine rather than pinned, so a retune moves both.
+    const RULES = [kidPrizeShareBps(snap.ageYears) / 100, (10_000 - managerCommissionBps()) / 100]
+    const printed = lines.map((l) => Number(l.match(/(\d+)%/)![1]))
+    for (const pct of printed) expect(RULES, `${pct}% is not a rule this game states`).toContain(pct)
+    expect(new Set(printed).size, 'and the two lines really do quote two DIFFERENT rules').toBe(2)
+
+    // ⚠⚠ ...AND THE BLEND IS NOWHERE, which is the defect as an assertion. The fixture's blend sits
+    // strictly between the two rules, so it can only reach the screen by being printed as one.
+    expect(row.kidSharePct, 'the fixture really is a blend – above the prize rule').toBeGreaterThan(RULES[0])
+    expect(row.kidSharePct, 'and below the sponsor rule').toBeLessThan(RULES[1])
+    expect(printed, 'the average of two rules is not a rule and may not be labelled as one').not.toContain(
+      row.kidSharePct,
+    )
+
+    // ⚠ NO CENT IS LOST AND NONE IS INVENTED: the sentences still account for her whole week.
+    const cents = lines.map((l) => dollarsOf(l))
+    expect(cents.reduce((a, b) => a + b, 0)).toBe(Math.round(row.kidShareCents! / 100))
+    // ⚠ AND EACH LINE'S OWN FIGURE IS THAT LINE'S OWN MONEY – the round 29 #10 identity applied per
+    // rule, where it is a real claim rather than the tautology it becomes against a derived blend.
+    for (const [i, part] of row.kidShareParts!.entries()) {
+      expect(lines[i], `line ${i} names its own source`).toContain(part.source)
+      expect(dollarsOf(lines[i])).toBe(Math.round(part.cents / 100))
+    }
+    // The destination clause he asked to keep survives on both.
+    for (const l of lines) expect(l).toContain('into her own account')
+  })
+
+  it('ROUND 30 #21 – a single-rule week keeps his sentence to the character', () => {
+    // ⚠⚠ INVARIANT 4, AS AN ASSERTION. Item 21 licensed the mixed week and nothing else, so the line
+    // he approved must survive untouched wherever one rule governs – which is every week in the game
+    // before the manager's commission shipped, and most weeks after it. `paid()` is prize-only, and
+    // the fix must render it through the SAME branch and come out byte-identical.
+    const snap = paid()
+    const row = snap.finance.weekly12.find((p) => p.week === snap.week)!
+    const lines = recap(snap)
+      .findAll('.recap-finance .recap-memo:not(.recap-memo-coach) .recap-memo-line')
+      .map((n) => clean(n.text()))
+    expect(lines, 'one rule, one sentence').toHaveLength(1)
+    expect(lines[0]).toBe(`Her cut ${row.kidSharePct}% – ${formatCents(row.kidShareCents!)} into her own account.`)
+    // ...and the source word the mixed shape adds stays OFF this line: it is his string, unchanged.
+    expect(lines[0], 'no source word on a week that has only one').not.toMatch(/Her (prize|sponsor) cut/)
   })
 
   it('says nothing on a week that split no cheque, and nothing at all before her eighteenth', () => {

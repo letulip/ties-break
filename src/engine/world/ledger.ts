@@ -99,6 +99,35 @@ function financeWeekEntry(world: WorldState, week: number): FinanceWeek {
  *  produced two wrong readings of this item before it was measured, and it re-introduces the penny
  *  `kidPrizeShareCents`' own comment forbids.
  *
+ *  =================================================================================================
+ *  ⭐⭐⭐ ROUND 30 #21 – AND THE EFFECTIVE RATE IS NOT A RULE, SO IT MAY NOT BE LABELLED AS ONE
+ *  =================================================================================================
+ *
+ *  THE OWNER, 30.08, off his w896 save: «Почему-то мне пишут "Her cut 61% – $69,750 into her own
+ *  account", и до этого было про 56%… При том, что на экране бюджета написано "She keeps 50% of
+ *  every prize cheque now"».
+ *
+ *  ⚠⚠ HE IS RIGHT AND NEITHER FIGURE IS WRONG – MEASURED ON HIS SAVE. Week 894 banked $80,000 of
+ *  GROSS prize (the ledger's row is the family's net $40,000) at her ramp of 50%, and $35,000 of
+ *  brand money at 85%. $40,000 + $29,750 = $69,750 out of a $115,000 base is 60.65%, which rounds to
+ *  the 61% he read. Week 891 was a sponsor cheque alone and printed 85%, correctly. The arithmetic
+ *  has never been wrong; ONE SENTENCE WAS BLENDING TWO RULES AND CALLING THE AVERAGE A RULE.
+ *
+ *  ⚠⚠ AND THE BLEND WAS A CORRECT ANSWER TO A SCREEN THAT NO LONGER EXISTS. P3 chose it so that
+ *  `cents === round(baseCents × bps / 10_000)` would hold against the BASE ROUND 29 #10 HAD PUT IN
+ *  THE SENTENCE. Part two #2 took the base out of the sentence at the owner's ask («это усложнило и
+ *  фразу и интерфейс») and round 30 #1 took it off the card entirely – so the constraint the blend
+ *  was serving went away, and what was left was a percentage with nothing to be a percentage of and
+ *  no rule behind it. That is round 29 #10's own class, one turn later.
+ *
+ *  So the SOURCE's own rate is stored beside the blend, and a label quotes the part. The blend is
+ *  kept, unchanged, because it is the only rate a save written before this can offer and because
+ *  `kidSharePct` still rides on it – see `FinanceWeekKidShare.bps`.
+ *
+ *  ⚠ THE PARTS ARE CARRIED, NOT SOLVED. Two rules and one blended pair is a solvable 2x2, and
+ *  solving it is exactly the forbidden direction: it reconstructs MONEY from rounded figures and it
+ *  assumes both rules were the ones live at read time. Weeks banked before this field fall back.
+ *
  *  A pure state write on integers already decided: no draw, no clock, so the frozen MAIN capture
  *  cannot notice it – `addEvent`'s own guarantee at the top of this file. */
 export function accrueKidShare(
@@ -107,18 +136,33 @@ export function accrueKidShare(
   cents: number,
   bps: number,
   baseCents: number,
+  source: 'prize' | 'sponsor',
 ): void {
   if (cents <= 0) return
   const entry = financeWeekEntry(world, week)
   const summedCents = (entry.kidShare?.cents ?? 0) + cents
   const summedBase = (entry.kidShare?.baseCents ?? 0) + baseCents
+  // ⭐⭐⭐ ROUND 30 #21 – AND THE SOURCE'S OWN RULE IS KEPT BESIDE THE BLEND, WHICH IS THE ITEM.
+  // `bps` above answers "what fraction of everything she was paid did she keep"; this answers "under
+  // which rule". A part is one source, so its rate is the one handed in and it never averages: the
+  // caller passes her ramp for a prize and the manager's complement for a brand cheque, and both are
+  // the very numbers the till divided by. Cents and base accumulate within the source for the same
+  // reason the parent row does – a title week reaches the sponsor path twice.
+  const prev = entry.kidShare?.[source]
+  const part = {
+    cents: (prev?.cents ?? 0) + cents,
+    bps,
+    baseCents: (prev?.baseCents ?? 0) + baseCents,
+  }
   entry.kidShare = {
+    ...entry.kidShare,
     cents: summedCents,
     // ⚠ THE FALLBACK IS THE RATE HANDED IN, not zero and not a guess: a caller that has no base to
     // offer (none does today, and the parameter is optional-by-convention rather than by type) still
     // gets an honest rate for its single cheque. See the header for why the division is the safe one.
     bps: summedBase > 0 ? Math.round((summedCents * 10_000) / summedBase) : bps,
     baseCents: summedBase,
+    [source]: part,
   }
 }
 
@@ -247,6 +291,18 @@ export function financeSeries(
             // no base and gets none invented here (see `FinanceWeekKidShare.baseCents`): the recap
             // reads its absence and prints the older, base-less line.
             ...(kidShare.baseCents ? { kidShareBaseCents: kidShare.baseCents } : {}),
+            // ⭐⭐⭐ ROUND 30 #21 – AND THE PARTS, so a label can quote a RULE rather than the blend
+            // above. Each part's rate is rounded once here, `kidSharePct`'s own rule; the order is
+            // fixed (prize, then sponsor) so the card cannot print two orderings on two weeks.
+            // Omitted entirely on a week that recorded no part – the fallback the recap reads.
+            ...(kidShare.prize || kidShare.sponsor
+              ? {
+                  kidShareParts: (['prize', 'sponsor'] as const).flatMap((source) => {
+                    const part = kidShare[source]
+                    return part ? [{ source, pct: Math.round(part.bps / 100), cents: part.cents }] : []
+                  }),
+                }
+              : {}),
           }
         : {}),
     })

@@ -29,12 +29,17 @@ shape.
 ---
 
 > **THE FOUR ANSWERS, IN ONE PARAGRAPH.**
-> **(1) HIS OWN REFERENCE HAS NO PUBLISHED VALUE, and that is the finding rather than a failure of
-> searching.** The RF mark sits in Tenro AG, Federer's private Swiss holding company, which files no
-> accounts; On Holding's own IPO prospectus and its FY2025 annual report both name Tenro **only** in a
-> risk factor and never in the financials, so not even the royalty is public. The two figures in
-> circulation – $27M and a rule-of-thumb $6.75M – are a lawyer's aside and an illustration `[WEAK]`.
-> **A model that depends on the RF mark's value being knowable cannot be built.**
+> **(1) ⚠⚠ CORRECTED 30.08 – THE WORKING FIGURE FOR THE RF MARK IS ~$27M, AND THE EARLIER «NO
+> PUBLISHED VALUE EXISTS» WAS TOO STRONG.** The owner's own research came back with the number and he
+> is right that it stands: ~$27M is an attributable expert estimate in a named trade publication, and
+> a figure with weak provenance is not the same thing as no figure. What survives of the original
+> finding is the PROVENANCE, and it is worth keeping precisely: the mark sits in Tenro AG, Federer's
+> private Swiss holding company, which files no accounts; On Holding's IPO prospectus and its FY2025
+> annual report both name Tenro **only** in a risk factor and never in the financials, so no
+> transacted price, no royalty and no audited valuation is public. **~$27M is an estimate, not a
+> price** – quote it as the order of magnitude it is, and build nothing that needs it to be exact.
+> The competing ~$6.75M is Brand Finance's 20–25%-of-company rule of thumb applied illustratively and
+> is the weaker of the two `[WEAK]`.
 > **(2) BUT THE INCOME ANSWER IS UNAMBIGUOUS AND IT IS THE OPPOSITE OF WHAT A DECAY WOULD PREDICT.**
 > Federer's off-court earnings went **$90M → $95M in the year he retired**, and he was the
 > highest-paid tennis player in the world for a 17th consecutive year having not played a match for
@@ -61,7 +66,7 @@ shape.
 | **On does not own THE ROGER brand.** Its IPO prospectus risk factors state it depends on a licence from Tenro AG for the marks and for his name, image and likeness `[S]` | On Holding AG, Form 424B4, 16.09.2021, p.47 – read directly |
 | The identical risk factor still stands four and a half years later `[S]` | On Holding AG, Form 20-F FY2025, filed 03.03.2026 – read directly |
 | What On pays Tenro `[GAP]` – Tenro appears in the risk factor and **nowhere in the financials or the related-party notes** of either filing | as above |
-| A valuation of the RF mark `[GAP]`. The circulating $27M is a solicitor's remark in a commentary piece and the ~$6.75M is Brand Finance's 20–25%-of-company rule of thumb applied illustratively `[WEAK]` | The Fashion Law, 29.01.2021 |
+| **The mark is valued at ~$27M** – an expert estimate, corrected upward in status 30.08 from this page's original `[GAP]` `[S]`. ⚠ It is an ESTIMATE and not a price: no transaction, no filing and no audited valuation exists `[GAP]`. The competing ~$6.75M is Brand Finance's 20–25%-of-company rule of thumb applied illustratively and is weaker `[WEAK]` | The Fashion Law, 29.01.2021; owner's research 30.08 |
 
 ⭐⭐ **THE STRUCTURE IS THE FINDING, NOT THE NUMBER.** The mark is not inside the operating business.
 It sits in a separate holding company and is **licensed out** – to Uniqlo for the apparel line, to On
@@ -289,6 +294,142 @@ Stayed attached and died – Sugarpova, S by Serena, EleVen, TB12. Federer took 
 - **Deliberately NOT carried forward:** Sugarpova's «$187M valuation»; V Starr's «$60M»; Serena
   Ventures' «$33bn portfolio»; the «Sugarpova was sold in 2021» claim, which contradicts the same
   outlet's «shut down» reporting.
-- ⚠⚠ **THE TWO THINGS THE OWNER WILL MOST WANT DO NOT EXIST:** there is **no published valuation of the
-  RF mark**, and **no disclosed size for the On stake**. Build nothing that depends on either being
-  right.
+- ⚠⚠ **CORRECTED 30.08, AND THE CORRECTION IS THE OWNER'S.** This bullet used to read «there is no
+  published valuation of the RF mark». That was too strong and he was right to push back: **~$27M is
+  an attributable expert estimate** and is now carried in §1 and §7 as the working figure. What is
+  genuinely absent is narrower and still worth stating – **no transacted price, no audited valuation
+  and no disclosed size for the On stake** `[GAP]`. Quote ~$27M as an order of magnitude; build
+  nothing that needs it to the dollar.
+
+---
+
+## 7. THE OWNER'S OWN RESEARCH, 30.08 – and it changes the SHAPE, not only the size
+
+**Round 30 #23, verbatim:** «что там происходит в мире на эту тему с личными брендами мерча у
+спортсменов? Мне кажется это странным немного, если честно, то как сейчас это у нас работает.»
+
+⚠⚠ **PROVENANCE, SAID FIRST BECAUSE THIS SECTION IS NOT SOURCED THE WAY §1–§5 ARE.** Everything above
+was read here, in the primary document where the tag says `[S]`. Everything in this section was
+**supplied by the owner** and is carried as he stated it: `[S]` below means «stated in his research
+against a named subject», not «read in the filing». That is a weaker warrant than §1–§5 hold
+themselves to and the difference is the whole reason this is a separate section rather than edits
+scattered through the others. Where his finding and this page's own work touch the same fact, the
+agreement is noted – and where they disagreed, §1 and §6 have been corrected in his favour.
+
+### 7a. ⭐⭐⭐ THE RARITY FINDING – our shelf is selling the wrong thing, not merely mispricing it
+
+- Among **ACTIVE top-20/50 players, owning an independent brand is RARE – about 95% take classic
+  sponsorship instead** `[S]`.
+- A full personal business belongs to **historic superstars** (Federer, Serena), because an
+  **eleven-month tour leaves nobody the time to run one** `[S]`.
+
+⚠ **AND THAT IS EXACTLY WHAT OUR SHELF DOES NOT SAY.** `merch-brand` is an ordinary rung on the
+general shelf at $250,000, available to any family that can afford it, and it then pays a straight
+line in fame. The research says the thing itself is the rare case and the ordinary top-20's off-court
+money is somebody ELSE's brand paying her – which this game already models, in the ad and kit
+ladders. **The mis-modelling is that one instrument is doing two jobs.**
+
+⭐ This does not contradict §5.1. Brand value still follows the accumulated stock and not current
+form; what 7a adds is that the stock has to be a SUPERSTAR's before an own-brand exists at all.
+
+### 7b. THE LUCRATIVE SHAPE IS EQUITY OR ROYALTIES, NOT A SHOP
+
+- **Federer's ~3% of On peaked near $500M and out-earned twenty-four years of prize money** `[S]`.
+  ⭐ §3 of this page reaches ~$603M at the January-2025 peak by an entirely independent route `[I]`,
+  so the two agree on the order of magnitude and on the direction – this is the strongest
+  cross-check in the whole document.
+- **Djokovic takes $5–10M/yr in royalties** on an Asics signature line `[S]`.
+- **Świątek and Shelton are faces of On with reported stock options** `[S]`.
+- Federer's post-career income is **$95–100M/yr, almost entirely sponsorship and investments**; the
+  Uniqlo deal alone is **$30M/yr for ten years** `[S]`.
+
+⚙ **NOT BUILT, AND DELIBERATELY.** His instruction in the same message: «Может быть реально что-то
+вроде колабораций сделать, **но не сейчас**, сейчас **проанализировать и скорректировать доход
+мерча**.» Equity, royalties and collaborations are recorded here as **the future shape** and nothing
+in the engine implements them.
+
+### 7c. THE SCALE OF A FULL OWN-BRAND – what the merch line has to be sized against
+
+| brand | figure | unit |
+| --- | --- | --- |
+| Osaka's businesses | ~$5–10M/yr `[S]` | income |
+| Venus' EleVen | $5–12M/yr `[S]` | **turnover** |
+| Sharapova's Sugarpova, at peak | $20M `[S]` | **valuation** |
+| The RF mark | ~$27M `[S]` (§1, corrected 30.08) | **valuation, estimated** |
+
+### 7d. ⚠⚠ THREE UNITS, AND THEY MUST NOT BE AVERAGED
+
+Income, turnover and valuation are three different things and the table above holds all three. Our
+merch line is a **NET WEEKLY INCOME** (`ECONOMY.business.merch`, «the NET of a business that simply
+sells less when nobody is looking»), so only one of those units is directly comparable and the
+others have to be converted through §5.4's multiples – which are wide, thin and a choice.
+
+Doing it explicitly, so the arithmetic is arguable rather than assumed `[I]`:
+
+- Sugarpova's $20M peak valuation at §5.4's ~5.2–5.3× **revenue** ⇒ ~$3.8M/yr revenue; at ~10.9–31×
+  **profit** ⇒ ~$0.65–1.8M/yr profit.
+- EleVen's $5–12M/yr turnover at an apparel net margin (thin – single digits to mid-teens) ⇒ roughly
+  **$0.3–1.8M/yr** net.
+- Osaka's ~$5–10M/yr is stated as income but is a portfolio of businesses AND endorsements, so it is
+  an upper bound on the own-brand line rather than a reading of it.
+
+⭐⭐ **THE TARGET BAND, AND IT IS A DERIVATION AND NOT A CITATION: the NET of a top full own-brand –
+the Venus/Sharapova/Osaka tier, i.e. our fame cap of 100, «the whole world knows her» – is on the
+order of $0.5M–$2M a year** `[I]`. Anything quoted tighter than that is invention.
+
+### 7e. ⭐⭐⭐ THE RE-SIZE, MEASURED – our top is 3–13x under the band and our BOTTOM is right
+
+His instruction was «проанализировать и **скорректировать** доход мерча», so this is what the dial
+actually pays, read off `tools/merch-fame-vs-rank.ts` (9 presets x 8 seeds x 780 weeks, policy
+`player`, 30.08 – the log is the round-30 ledger's #23):
+
+| | fame | merch pays | vs the §7d band |
+| --- | ---: | ---: | --- |
+| the week a family can first afford the brand (median) | 9.6 | **$288/wk = $15.0k/yr** | n/a – she is nobody yet |
+| peak fame, MEDIAN career that gets one | 58.9 | **$1,767/wk = $91.9k/yr** | **5.4–22x under** |
+| peak fame, p90 and the best careers | 100.0 | **$3,000/wk = $156k/yr** | **3.2–12.8x under** |
+
+⚠⚠ **AND THE BOTTOM OF THE CURVE IS NOT WRONG – IT IS DELIBERATELY CALIBRATED AND IT MEASURES TRUE.**
+At the median purchase fame the brand yields $15.0k/yr on its $250,000 price = **6.0% a year**,
+against the index fund's 7%. That is `ECONOMY.business.merch`'s own stated anchor («at fame 10 the
+brand pays ≈ the index fund on its $250,000 price»), confirmed live. **A flat multiplier on the dial
+would break the one end that is right in order to fix the other.**
+
+⭐⭐ **SO THE SHAPE IS FORCED, NOT CHOSEN.** Hold the anchor at the bottom, reach the band at the top,
+and the only family of curves left is convex in fame. The simplest member, with the pivot placed on
+the anchor itself:
+
+> `weekly = perFamePointCents × fame² / 10`   (identical at fame 10 by construction)
+
+| fame | today | convex | |
+| ---: | ---: | ---: | --- |
+| 9.6 (purchase) | $15.0k/yr | **$14.4k/yr** | the anchor holds – −4% |
+| 20 (his career's shape) | $31.2k/yr | **$62.4k/yr** | |
+| 58.9 (median peak) | $91.9k/yr | **$541k/yr** | the band's FLOOR |
+| 100 (p90, «the whole world knows her») | $156k/yr | **$1.56M/yr** | the band's CEILING |
+
+**The median own-brand career lands on the floor of the researched band and the superstar on its
+ceiling – which is 7a's finding restated as a curve.**
+
+### 7f. ⚠⚠ AND IT IS NOT A ONE-LINE CHANGE, WHICH IS WHY THIS PAGE STOPS HERE
+
+The brand is also an **asset**, and its worth is `earningsMultipleX` × a year of its own income
+(round 30 #9, multiple **16**). Income and worth are the same dial:
+
+- Today, measured: worth on the day they buy it, median **$239,761** against a $250,000 price – the
+  «fair on the day they can afford it» criterion #9 chose 16 for. At the career's peak, median
+  **$1.47M** (5.9× the price).
+- Under the convex curve the purchase-day worth is unchanged (the anchor holds) but **the peak worth
+  becomes ~$8.7M on a $250,000 purchase** `[I]` – larger than most of the shelf and closing on the
+  $12M academy.
+
+⚠ **The two criteria cannot both hold under one multiple once the income curve bends**: dropping the
+multiple to restore the peak destroys the day-one fair value, and keeping it hands a cheap rung an
+eight-figure exit. Making the multiple itself fame-dependent is a second structural change.
+
+⚙ **SO THE CORRECTION IS SPECIFIED AND NOT APPLIED, AND THE DECISION NAMED IS HIS**: may the merch
+brand become an eight-figure asset at a superstar's fame, or should the income rise while the
+valuation is held down? Both are one edit. Neither is a measurement. ⚠ And 7a is the reason not to
+answer it by reflex: the research says an own-brand at ordinary top-20 fame is **the rare case**, so
+«make the existing instrument bigger» may be the wrong repair, and «the ordinary top-20's off-court
+money should come through the sponsorship ladder that already exists» may be the right one.

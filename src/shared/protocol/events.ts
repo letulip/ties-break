@@ -300,12 +300,35 @@ export interface FinanceWeekCoachCut {
   bps: number
 }
 
+/** ⭐⭐⭐ ROUND 30 #21 – ONE SOURCE'S SHARE OF THE WEEK, UNDER THE RULE THAT ACTUALLY GOVERNS IT.
+ *
+ *  ⚠⚠ `FinanceWeekKidShare.bps` IS A BLEND AND CANNOT NAME A RULE, which is the whole of item 21.
+ *  Two rules reach one week since round 29 P3: a prize splits at her age ramp (`kidPrizeShareBps`)
+ *  and a sponsor cheque is hers less the manager's fee (`10_000 − managerCommissionBps()`). The
+ *  parent row stores `cents / baseCents` across both, so a week that banked $80,000 of prize at 50%
+ *  and $35,000 of brand money at 85% reports 61% – a number no rule in this game states.
+ *
+ *  A part is ONE source and therefore ONE rule: `bps` here is the rate the engine applied, handed in
+ *  by the site that paid, never divided out of anything. */
+export interface FinanceWeekKidSharePart {
+  /** cents credited to her out of this source this week – summed if the source pays twice */
+  cents: number
+  /** THE RULE'S OWN RATE for this money, in basis points. Never a blend, never re-derived. */
+  bps: number
+  /** the gross this source paid her a share of, summed alongside `cents` */
+  baseCents: number
+}
+
 /** What left the family's half of one week's cheques and landed in hers. Both numbers are the
  *  engine's own at the moment it paid: no ratio is inverted, no cheque is reconstructed. */
 export interface FinanceWeekKidShare {
   /** cents credited to `world.kidFundsCents` this week – summed if a week ever pays twice */
   cents: number
-  /** the ramp's rate at her real age that week, in basis points (`kidPrizeShareBps`) */
+  /** ⚠⚠ THE WEEK'S EFFECTIVE RATE ACROSS EVERY SOURCE (`cents / baseCents`), AND SINCE ROUND 30 #21
+   *  IT IS EXPLICITLY NOT A RULE. It exists so `cents === round(baseCents × bps / 10_000)` holds on
+   *  a multi-cheque week, and it is the ONLY rate a save written before `prize`/`sponsor` below can
+   *  offer – so it stays, and the screens read it only as a fallback. See `FinanceWeekKidSharePart`
+   *  for why a label may not quote it. */
   bps: number
   /** ⭐⭐ ROUND 29 #10 – WHAT `bps` IS A SHARE **OF**: the GROSS cheques she took a cut of this week,
    *  summed alongside `cents` and by the same writer at the same commit point.
@@ -336,6 +359,20 @@ export interface FinanceWeekKidShare {
    *  so no migration is owed, no golden fixture is added and `SAVE_SCHEMA_VERSION` does not move
    *  (the recorded widening precedent is commit 2763caa). */
   baseCents?: number
+
+  /** ⭐⭐⭐ ROUND 30 #21 – HER CUT OF THE WEEK'S **PRIZE** MONEY, at her age ramp and nothing else.
+   *
+   *  ⚠ OPTIONAL AND FORWARD-ONLY, ON `baseCents`' OWN REASONING ABOVE, VERBATIM IN ITS SITUATION: a
+   *  save written before this field genuinely does not record which of its cheques was which, and
+   *  the two bases cannot be solved back out of `cents`/`baseCents` without exactly the division
+   *  `accrueKidShare`'s header forbids. Absent means "not recorded"; the memo falls back to the one
+   *  blended line it printed before, and the next cheque it splits carries the parts. No migration
+   *  is owed, no golden fixture is added and `SAVE_SCHEMA_VERSION` does not move. */
+  prize?: FinanceWeekKidSharePart
+  /** ⭐⭐⭐ ROUND 30 #21 – HER CUT OF THE WEEK'S **SPONSOR** MONEY: hers less the manager's fee, which
+   *  is a different rule from the ramp above and is why one percentage could not describe both.
+   *  Optional and forward-only on `prize`'s reasoning. */
+  sponsor?: FinanceWeekKidSharePart
 }
 
 /** A category-accurate rollup of `FinanceWeek[]` over a trailing window (pure fold; the bench and
@@ -386,6 +423,15 @@ export interface FinanceWeekPoint {
    *  drops back to its base-less wording there rather than guessing. Never summed into
    *  `incomeCents`: the family banked the REMAINDER of this, not this. */
   kidShareBaseCents?: number
+  /** ⭐⭐⭐ ROUND 30 #21 – HER CUT SPLIT BY THE RULE THAT GOVERNED IT, so a label can name a rule
+   *  instead of quoting the blend above (`FinanceWeek.kidShare.prize` / `.sponsor`, straight
+   *  through, with each part's own rate rounded ONCE here – `kidSharePct`'s rule).
+   *
+   *  ⚠ THE PARTS SUM TO `kidShareCents` AND ARE NOT A SECOND HELPING OF IT. A consumer that adds
+   *  a part to the total has counted the same cents twice, which is `kidShareCents`' own warning
+   *  one field up. ⚠ ABSENT TOGETHER on every week banked before round 30 #21, where the blend is
+   *  all there is. */
+  kidShareParts?: { source: 'prize' | 'sponsor'; pct: number; cents: number }[]
   /** ⭐⭐ ROUND 29 PART TWO #13 – THE COACH'S CUT OF THE WEEK'S TITLE CHEQUE (`FinanceWeek.coachCut`,
    *  straight through). ⚠ ALREADY INSIDE `expenseCents` and deliberately so – see the field's own
    *  header on `FinanceWeek`: it is a real coaching expense, and this pair exists so a screen can

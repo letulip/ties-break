@@ -72,6 +72,34 @@ const CANDIDATE_MULTIPLE = Number(process.argv.includes('--multiple')
   ? process.argv[process.argv.indexOf('--multiple') + 1]
   : 16)
 
+/** ⭐⭐⭐ ROUND 30 #24 – THE DEEP-RUN COUNTERFACTUAL ARM. CLI ONLY, NEVER WRITTEN BACK.
+ *
+ *  THE OWNER, twice: «она же топ-20 в мире». The fame floor counts titles, lost Slam finals and
+ *  seasons ended in the top ten and nothing else, so a career built on quarter- and semi-finals has
+ *  a floor of ZERO and its brand is worth nothing however high it ranks. ⚠ THERE IS NO DEEP-RUN
+ *  LEDGER TO READ – `TierTrophies` stores `titles` and `finals` and nothing below a final – so the
+ *  measurable proxy is the END-RANK ladder `ECONOMY.fame.seasonEndBands` already expresses: a season
+ *  finished at #18 IS her deep runs, summed and sorted by the tour.
+ *
+ *  `--seasonBands 20:4,50:1.5` swaps in extra rungs BELOW the shipped top-ten one for this run only,
+ *  which is what makes the item's before/after a measurement instead of an argument. The shipped
+ *  ladder is untouched by default and no engine value is persisted from here – `injury-audit.ts`'s
+ *  own counterfactual-arm idiom, and the same rule: the arm is printed in the header so no output
+ *  can be misfiled. */
+const BANDS_ARG = process.argv.includes('--seasonBands')
+  ? process.argv[process.argv.indexOf('--seasonBands') + 1]
+  : ''
+if (BANDS_ARG) {
+  const extra = BANDS_ARG.split(',').map((pair) => {
+    const [rank, add] = pair.split(':').map(Number)
+    return { maxEndRank: rank, add }
+  })
+  ;(ECONOMY.fame as { seasonEndBands: readonly { maxEndRank: number; add: number }[] }).seasonEndBands = [
+    ...ECONOMY.fame.seasonEndBands,
+    ...extra,
+  ].sort((a, b) => a.maxEndRank - b.maxEndRank)
+}
+
 /** The windows the question is asked over, in weeks. 13 is «несколько месяцев» – his own span –
  *  and the other two bracket it so a finding cannot be an artefact of one window length. */
 const WINDOWS = [13, 26, 52] as const
@@ -273,6 +301,12 @@ export function main(argv: string[] = process.argv.slice(2)): void {
   console.log(
     `  fame half-life ${ECONOMY.fame.halfLifeWeeks}w · merch dial ` +
       `${usd(ECONOMY.business.merch.perFamePointCents)}/fame point/week`,
+  )
+  // ⚠ THE ARM, PRINTED, so no run's output can be misfiled – `injury-audit.ts`'s own rule. The
+  // shipped ladder is one rung and says so; a `--seasonBands` run says which rungs it added.
+  console.log(
+    `  season-end fame bands: ${ECONOMY.fame.seasonEndBands.map((b) => `top${b.maxEndRank}=+${b.add}`).join(' ')}` +
+      `${BANDS_ARG ? '   <- ROUND 30 #24 COUNTERFACTUAL ARM, not shipped' : '   (shipped)'}`,
   )
 
   const runs: CareerRun[] = []

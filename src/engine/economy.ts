@@ -1841,9 +1841,27 @@ export const ECONOMY = {
     /** a LOST Slam final – the one runner-up plate the world remembers (spec §3's own example).
      *  Lost finals at every other tier buy nothing: the world remembers who won. */
     slamFinalFloor: 12,
-    /** a season ENDED inside the WTA top 10 (`byTrack.wta.endRank` ≤ 10) – the «first top-10
-     *  season» of the spec's floor list, counted per season from its wrap week. */
-    top10SeasonFloor: 10,
+    /** ⭐⭐ WHAT A FINISHED SEASON'S END-RANK IS WORTH, best matching band only, counted once per
+     *  season from its wrap week. The spec's floor list says «a first top-10 season»; this is that
+     *  entry as a LADDER, in the shape `academy.reputationBands` already uses two blocks up.
+     *
+     *  ⚠⚠ AS SHIPPED IT IS EXACTLY THE OLD `top10SeasonFloor: 10` AND NOT ONE CENT MOVES. One band,
+     *  the same rank bound, the same step. The ladder exists so round 30 #24's question can be
+     *  MEASURED rather than argued – `tools/merch-fame-vs-rank.ts --seasonBands` swaps in a
+     *  counterfactual ladder for a run and never writes one back.
+     *
+     *  ⭐ ROUND 30 #24 IS THE OPEN QUESTION AND IT IS THE OWNER'S. Twice now: «она же топ-20 в
+     *  мире». A career built on quarter- and semi-finals earns no title, reaches no Slam final and
+     *  ends no season in the top ten, so its fame floor is ZERO and its brand is worth nothing – a
+     *  top-20 player is invisible to her own brand by construction. A second band would end that.
+     *  ⚠ THE DATA FOR «DEEP RUNS» ITSELF DOES NOT EXIST: `TierTrophies` records `titles` and
+     *  `finals` and nothing below a final, so a quarter-final leaves no durable trace anywhere in
+     *  the save. The END-RANK ladder is the answer that needs no schema move, because
+     *  `seasonHistory[].byTrack.wta.endRank` is already written for every finished season – and a
+     *  season ended at #18 IS the deep runs, summed and sorted by the tour itself.
+     *  ⚠ Measured before/after in docs/rounds/round-30.md #24. Changing it moves merch income and
+     *  the brand's worth on every career, so the numbers are his to pick. */
+    seasonEndBands: [{ maxEndRank: 10, add: 10 }] as readonly { maxEndRank: number; add: number }[],
     /** ⭐ THE SLOW DECAY – the half-life of every contribution, in weeks. Two seasons: a Slam won
      *  six seasons ago still carries an eighth of its step, so a reign fades over about four to
      *  six seasons rather than overnight. ⚠ Decay is what makes fame a lever and not a rank by

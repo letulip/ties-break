@@ -129,6 +129,14 @@ her this is. Do not invent player-facing labels for them, do not letter them int
 treat `milf` as a description of anything – it is a legacy folder token for "the oldest band", and
 it is the reason this section carries this warning.
 
+> ⚠⚠ **THE FIFTH BAND IS `lateCareer` EVERYWHERE AS OF 30.08 – IN CODE, IN THE CROP TABLE AND ON
+> DISK.** The owner's ruling, round 30 #20: «имеет смысл их переименовать со сленга на **lateCareer**
+> или **grown**, давай сделаем разом.» R2-18 had already moved the TYPE; that round moved the
+> seventeen files and every key of `src/art/faceRects.ts`, so `portraitAssetStem` is now identity on
+> all five bands. **Name new art `lateCareer-<emotion>`, never `milf-<emotion>`.** The rest of this
+> section keeps the old word where it is recounting history – that is the record of how the band got
+> here and it is not restated as instruction. The table below is the live mapping.
+
 There are **five** bands in the art set. Only four of them exist in code.
 
 | Band | Shipped resolver (`portraitStage`) | Owner canon (`docs/decisions.md`, 24.07) | Art on disk |
@@ -137,7 +145,7 @@ There are **five** bands in the art set. Only four of them exist in code.
 | `young` | 11–16 | 12–15 | yes |
 | `teen` | 17–22 | 16–22 | yes |
 | `adult` | **23–30** | 23–28 | yes |
-| `milf` | **31 and up** | 29 and up | yes |
+| `lateCareer` | **31 and up** | 29 and up | yes |
 
 The shipped resolver is the one the build actually runs, and it is the later instruction: the owner
 moved `young` down to 11 on 25.07 so the coming childhood prologue has a band to live in.
@@ -187,7 +195,7 @@ This band carries the mid-life milestones, and each one already exists as a pain
 `graduated`, `pregnant-early`, `pregnant-last`, `funeral`. Play them straight, domestic and quiet.
 The game does not yet reach any of them.
 
-### `milf` – 29 and up. After.
+### `lateCareer` – 29 and up. After.
 *The band the previous draft of this document omitted entirely. Named in the owner's decision log as
 29+; not implemented in the resolver; eight paintings shipped.*
 
@@ -207,11 +215,11 @@ where the "unglamorous" rule is suspended, because by then she has earned it.
 
 ⚠ Every currently-shipped frame in this band is on the fix list – see §9. They are the frames that
 carry a real player's surname, real tour and Slam names, and recognisable kit and equipment brands.
-**Do not use the shipped `milf` frames as style reference for de-branded work.**
+**Do not use the shipped `lateCareer` frames as style reference for de-branded work.**
 
 **What the game is doing at this point in the career.** Nothing yet, and that is the honest answer.
 `portraitStage` stops at `adult`; there is no retirement, no post-career, and no code path that can
-request a `milf` file. The later-life design work that would drive this band lives in
+request a `lateCareer` file. The later-life design work that would drive this band lives in
 `docs/research/life-events-motherhood.md`, which puts marriage around 22–30, a first pregnancy across
 a wide 24–35 window, a return to the tour at roughly six months post-birth with about a 40% success
 rate, and a second child at 28–38. Career end is not settled: the plan says retirement around 33, the
@@ -325,7 +333,7 @@ duplicate, it 404'd for `adult`, and it has been deleted. Do not reintroduce the
 | `young` | all six | – |
 | `teen` | all six | – |
 | `adult` | all six | `bride`, `graduated`, `pregnant-early`, `pregnant-last`, `funeral` |
-| `milf` | all six | `retired`, `farewell` |
+| `lateCareer` | all six | `retired`, `farewell` |
 
 Every band × emotion the code can resolve exists. The milestone frames are later-life content
 nothing reaches yet – deliberately kept out of the service worker's precache for that reason. Exact
@@ -347,7 +355,7 @@ crop of the same painting, cut from the 1254px master with an explicit crop rect
 the `jun` set is recorded in `docs/specs/round5-brand.md`). Crops exist for `jun`, `young` and `teen`
 only – **18 files**. There is no emotion-keyed `adult` crop, so `adult` clamps to `teen` on both crop
 surfaces. (A stray emotionless `adult.webp` sits in the folder; nothing references it.) **A full
-`adult` crop set, and then a `milf` one, is the cheapest high-value art work on this list.**
+`adult` crop set, and then a `lateCareer` one, is the cheapest high-value art work on this list.**
 
 **Style of the existing set.** Painterly semi-realistic illustration, close to high-end
 anime-adjacent digital painting: soft brushwork, warm rim light, shallow depth of field, richly
@@ -396,12 +404,12 @@ and every prompt in §10.
 4. **Any sexualisation of a minor.** She is 14 through most of the game and a child before that. No
    posing for the viewer, no camera interest in the body, no adult styling, no cropping that frames
    anything but sport and face. Sportswear as sportswear. This one is absolute and no brief
-   overrides it. It is also the reason the internal band token `milf` must never surface in a prompt,
+   overrides it. It is also the reason the internal band token `lateCareer` must never surface in a prompt,
    a caption or a filename anyone outside the team sees – see the warning at the top of §5.
 5. **Glamour the economics forbid.** No private jets, no sports cars, no designer luggage, no
    sponsor-drenched pro kit in the junior bands, no packed stadium below the top tier, no cash. The
    family is spending $300–400k and earning nothing. A frame that says otherwise sells the fantasy
-   the whole game exists to argue with. (The `milf` `happy` frame is the one sanctioned exception –
+   the whole game exists to argue with. (The `lateCareer` `happy` frame is the one sanctioned exception –
    by then she has actually won the things on the table.)
 6. **Heightened misery.** No tears streaming in the rain, no injury as body horror, no parental
    shouting. Understatement always.
@@ -411,8 +419,8 @@ and every prompt in §10.
 > **Status note, 27.07.2026 – shipped-set compliance. Remove this block once the re-art lands.**
 >
 > At the time of writing, known violations of rules 1–3 are concentrated in the **`milf` band**, not
-> in `adult` as an earlier draft of this document said. Across `milf-retired`, `milf-farewell` and
-> `milf-norm`: a real player's surname (L. Svitolina) appears as the opponent on career scoreboards;
+> in `adult` as an earlier draft of this document said. Across `lateCareer-retired`, `lateCareer-farewell` and
+> `lateCareer-norm`: a real player's surname (L. Svitolina) appears as the opponent on career scoreboards;
 > career-highlight boards read in real-tour and Grand Slam vocabulary; and kit, wristbands, racquet
 > bag and drinks bottle carry recognisable real brand marks, alongside a real tournament's identity
 > on a scoreboard.
@@ -465,7 +473,7 @@ names. Blank unbranded sportswear, unbranded racquet, unbranded bag.
         lighting or strong late sun. Close, waist-up. She looks like the same person
         as the teen frame, older and harder.
 
-[milf]  A woman of about thirty, a professional at the end of a long career. The same
+[lateCareer]  A woman of about thirty, a professional at the end of a long career. The same
         face as the adult frame, five or six years further on: fine lines at the eyes,
         a squarer jaw, hair up and slightly greying at the temple, shoulders and
         forearms carrying two decades of load. Plain unbranded kit, plain wristbands,
@@ -489,7 +497,7 @@ injury   – strapping or ice on a limb, sitting out on a physio table or bench,
            physio's hands in frame, calm and clinical
 ```
 
-### Milestone frames (`adult` and `milf` only)
+### Milestone frames (`adult` and `lateCareer` only)
 
 One painting each, all of them quiet. No crowd reaction, no ceremony staging, no swelling moment.
 

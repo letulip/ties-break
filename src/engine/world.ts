@@ -696,7 +696,10 @@ function finalizeTournament(world: WorldState): void {
       // two blocks up reports. That distinction IS the item: the ledger row is deliberately «what
       // the family actually banked», so the only prize figure any screen could reach was already
       // net of the very cut the memo was quoting a percentage of.
-      accrueKidShare(world, world.week, herShare, kidPrizeShareBps(ageNow), prize)
+      // ⭐⭐⭐ ROUND 30 #21 – tagged `prize`, so the week recap can name HER RAMP («50% of every prize
+      // cheque», the rule the budget screen states) instead of averaging it with a brand cheque that
+      // splits under a different rule entirely. The rate handed in is unchanged.
+      accrueKidShare(world, world.week, herShare, kidPrizeShareBps(ageNow), prize, 'prize')
     }
     // ⭐⭐ ROUND-24 – AND THE TEAM IS PAID ON THE RESULT (owner 22.08, docs/plans/the-team-share.md
     // §3 as re-ruled). His model verbatim: «3млн призовые из них отчисляется процент дочери (скажем

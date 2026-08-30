@@ -796,63 +796,301 @@ marked `[!]` and each names what shipped and why it missed – that is the point
 Save `alice-cfbv_w896` (⚠ personal, `~/Downloads`, READ-ONLY, never a fixture): schema 66, **WTA #23**,
 owning `index-fund · car-sensible · house-first · merch-brand · deposit · academy-land`.
 
-- [ ] **19. «Аватар иконка в левом верхнем углу home экрана для milf стадии показывает только нижнюю
-  часть лица без глаз и волос»** – **build.** A crop/framing defect on one stage's icon.
+- [x] **19. «Аватар иконка в левом верхнем углу home экрана для milf стадии показывает только нижнюю
+  часть лица без глаз и волос»** – **REPRODUCED AND FIXED, and it was one line of a table.**
 
-- [ ] **20. «Картинка hero для milf стадии lateCareer-norm, проверь все. Может быть кто-то из агентов
-  был прав и имеет смысл их переименовать со сленга на **lateCareer** или **grown**, давай сделаем
-  разом»** – ⚙ **RULING plus a check.** Verify every stage's hero, and **rename the slang stage keys**
-  in one move. ⚠ Stage keys reach art paths and possibly saves – check before assuming it is a rename
-  of strings only; if it touches persisted data it is a schema question, and schema is **66**
-  (unshipped, amendable).
+  `src/art/faceRects.ts` held `'milf-norm': [257, 150, 145]`. That opens the crop window at y 77 of a
+  512px painting whose face centre is at **y ≈ 85**, so the shipped 256px avatar really was a chin, a
+  neck and a necklace – exactly what you saw. It is the **default** emotion of the 31+ band, which is
+  why it is on your screen every week and why nobody caught it before: every other band's `norm` is
+  correct, so nothing looked wrong until a career got past thirty.
 
-- [ ] **21. ⚠⚠ «Почему-то мне пишут "Her cut 61% – $69,750 into her own account", и до этого было про
+  New rectangle `[240, 85, 165]`, and it is **not eyeballed against the neighbours** – it obeys the
+  file's own framing rule (centre on the face; side = 1.5× the head height, here ~110px), landing
+  inside the set's measured 124–182 spread. The crop was re-cut through the pipeline's own two steps
+  (the cutter's extract/resize, then `optimize-art`'s quality ladder) so its byte profile matches the
+  other thirty-four.
+
+  ⭐ **AND THE SAME LINE STEERS THE HERO.** `facePoint` reads columns 0–1 of this table for
+  `object-position`, so the one edit fixed both the icon you reported and every non-square window
+  that frames that painting – the fork card, the retirement card and the tournament finale.
+
+- [x] **20. «Картинка hero для milf стадии lateCareer-norm, проверь все. Может быть кто-то из агентов
+  был прав и имеет смысл их переименовать со сленга на lateCareer или grown, давай сделаем разом»** –
+  **BOTH HALVES DONE.**
+
+  **«ПРОВЕРЬ ВСЕ» – all forty rectangles were checked, not just the reported one.** Every entry was
+  drawn back over its own painting as a contact sheet (5 stages × 8 faces) and looked at. **#19 was
+  the only miss.** ⚠ `lateCareer-angry` reads low in a thumbnail and is **correct** – her head is
+  tilted down in that painting; it was cut and looked at rather than adjusted on the strength of a
+  thumbnail. The Home hero itself frames every painting whole (`.diary-hero` is square and the
+  paintings are 512×512, so `object-fit: cover` has no overflow to slide) – the face centre only
+  bites on the non-square cards, which is where #19's bad centre was also showing.
+
+  ⚙ **THE RENAME – and half of it had already happened.** The TYPE has been `lateCareer` since
+  R2-18/PROD-13, which moved the band name off the slang word and **deliberately left the files**:
+  «an atomic rename of ~20 assets plus the recovered-rectangle table is a different change with a
+  different risk». Your ruling takes that deferred half: **seventeen files renamed** (six crops under
+  `public/avatars/`, ten paintings under `public/images/fem-euro-brunnet/`, plus the one re-cut),
+  every key of the crop table, the alias now identity on all five bands, and the lore bible's live
+  instruction lines. `lateCareer` over `grown` because it makes the **stem equal the stage**, which
+  retires the entire class of bug the alias exists to prevent.
+
+  ⚠ **NOT A SCHEMA QUESTION – checked before assuming, as asked.** A stage is DERIVED from her age at
+  snapshot time (`portraitStage`). `MemoryCard.stage` and the narrative cards are Snapshot types;
+  `WorldState` holds no stage and no portrait URL; there is no `'milf'` literal anywhere under
+  `src/engine` or `src/db`. **No save records a band**, so `SAVE_SCHEMA_VERSION` stays at 66 and no
+  migration is owed.
+
+  ⚠ **The mapping is pinned and the pin was proved.** `tests/portrait-bands.test.ts` sweeps every band
+  × emotion against the files on disk; renaming one file back turns two arms red naming the missing
+  stem. That is what stops a half-done rename showing a player an empty frame at thirty-one.
+
+- [x] **21. ⚠⚠ «Почему-то мне пишут "Her cut 61% – $69,750 into her own account", и до этого было про
   56%… При том, что на экране бюджета написано "She keeps 50% of every prize cheque now"»** –
-  **MEASURED ON HIS SAVE, and it is the round 29 #10 class again.** `kidShare.bps` is not the rule, it
-  is an **effective blend recomputed per week**:
+  **FIXED, and the shape is: the memo prints ONE LINE PER RULE.**
 
-  | week | prize | base | cut | bps shown |
-  | --- | ---: | ---: | ---: | ---: |
-  | 888 | $7,500 | $33,750 | $23,438 | 6944 |
-  | 891 | **$0** | $600,000 | $510,000 | **8500** |
-  | 894 | $40,000 | $115,000 | $69,750 | 6065 |
+  Your week 894 decomposes exactly: **$80,000 gross of prize at her 50% ramp** (the ledger's row is
+  the family's net $40,000) **plus $35,000 of brand money at 85%** = $40,000 + $29,750 = $69,750 of a
+  $115,000 base, which is **60.65% and rounds to the 61%** you read. Week 891 was a sponsor cheque
+  alone and said 85%, correctly. **No figure was ever wrong. One sentence was averaging two rules and
+  calling the average a rule.**
 
-  ⭐ The 85% week is a sponsor cheque – after his manager-commission ruling she keeps nearly all of it,
-  correctly. **The defect is the LABEL**: one sentence prints a blended rate across monies governed by
-  different rules and calls it «Her cut N%», while the budget screen states the actual rule (50% of a
-  prize cheque). ⚠⚠ **A line that describes a rule must be pinned to the rule** – that pin exists for
-  the prize path and the blend slipped past it.
+  ⚠⚠ **AND THE BLEND WAS A CORRECT ANSWER TO A SCREEN THAT NO LONGER EXISTS.** Round 29 P3 defined
+  `kidShare.bps` as `cents / baseCents` so that the percentage would be a percentage of **the base
+  #10 had put in the sentence**. Part two #2 took the base out of the sentence at your own ask («это
+  усложнило и фразу и интерфейс») and round 30 #1 took it off the card. The constraint the blend was
+  serving went away and what was left was a rate with nothing behind it.
 
-- [ ] **22. «ни одной травмы я не видел уже несколько сезонов, даже самой маленькой»** – **MEASURED:
-  he is right and it is stark.** 11 injuries lifetime, the last at week **597**; the save is at **896**
-  – **299 weeks, 5.8 seasons, nothing at all**, while she is past thirty. ⚠ Injury risk should RISE
-  with age. Measure the hazard against age and report before changing anything.
+  **THE SHAPE, stated as asked.** `accrueKidShare` now records each source's own rate beside the
+  blend (`FinanceWeekKidShare.prize` / `.sponsor`) and the memo prints one sentence per rule that
+  paid her that week:
 
-- [ ] **23. ⚠⚠ MERCH IS MODELLED AS THE WRONG THING – his research, and it is decisive.** «что там
+  ```
+  Her cut 50% – $23,438 into her own account.              <- one rule: YOUR sentence, unchanged
+  Her prize cut 50% – $40,000 into her own account.        <- two rules: one word added, per line
+  Her sponsor cut 85% – $29,750 into her own account.
+  ```
+
+  ⚠ **On every week governed by a single rule the string is yours to the character** – that is every
+  week in the game before the manager's commission shipped, and most weeks after it. Only a genuinely
+  mixed week prints two lines, and each is separately true: its percentage × its own gross = its own
+  cents. The two source words are the game's own vocabulary, not new copy – the event feed already
+  writes «her share of the **prize money**» and «her share of the **sponsor money**», and her page
+  says «She keeps 50% of every **prize cheque** now. **Sponsor cheques** are hers, less the manager's
+  15%.»
+
+  ⚠ **Forward-only, and the reason is a house rule rather than laziness**: the two bases cannot be
+  solved back out of a blend without exactly the division `accrueKidShare`'s header forbids. Weeks
+  already banked keep the line they printed – and since this tile only ever draws `snapshot.week`,
+  **your card corrects itself from her next cheque onward.** No migration, no golden fixture, schema
+  still 66.
+
+  ⚠⚠ **WHY THE ROUND 29 #10 PIN DID NOT CATCH IT – TWO PINS, TWO DIFFERENT BLIND SPOTS, BOTH FIXED.**
+  This is the part that matters more than the item.
+
+  1. **The engine pin (`round29-kid-cut-base.test.ts` §2) had become UNFALSIFIABLE.** Its claim is
+     «the percentage the card prints must be a percentage OF the figure beside it». The moment P3
+     defined `bps` as `cents / baseCents`, that assertion reads `round(base × round(cents/base)) ≈
+     cents` – **arithmetic, not a property of the game.** It is true of any two numbers whatsoever, so
+     no blend, however far from every rule, could ever redden it. ⚠ Worse: **that file's own fixture
+     is a mixed week and its comment records the blend in as many words** – «a blend of 50% and 85%
+     is 55.83% and renders as 56%». **Your «56%» was sitting inside a green pin.**
+  2. **The mounted pin (`week-recap-kid-share.test.ts`) asks the right, falsifiable question** – «the
+     percentage on screen is the ramp the engine paid her by» – **of a fixture that cannot contain the
+     case.** `paid()` stops on the FIRST week the tennis paid her, which is prize-only by
+     construction, and on a prize-only week the blend IS the ramp.
+
+  **The repair is to pin the rate to a RULE rather than to the money.** New §3 in the engine file
+  asks: is each printed rate a rate this engine STATES (`kidPrizeShareBps(age)`, or
+  `10_000 − managerCommissionBps()`)? New mounted arm mounts a MIXED week and asks the same of every
+  percentage on screen. ⚠ Mutation-verified, each applied alone and watched: three separate defect
+  mutations turn all three new engine arms red **while §1 and §2 stay 7/7 green** – which is the
+  demonstration, not the argument, that the old pins cannot see this class; the card ignoring the
+  parts turns the new mounted arm red **alone**, with the #10 pin still green; and a retune of the
+  commission (1500 → 2500) leaves the new arms green, correctly, while reddening the literals that
+  must see a retune. A fourth arm pins your single-rule sentence byte-for-byte, and it goes red if the
+  source word ever leaks onto a week that has only one rule.
+
+- [~] **22. «ни одной травмы я не видел уже несколько сезонов, даже самой маленькой»** –
+  **MEASURED, NOT TUNED, as this is a balance decision and it is yours. You are right, and there IS a
+  defect: the hazard does not rise with age because THERE IS NO ADULT AGE CURVE AT ALL.**
+
+  ⭐⭐⭐ **THE TERM RESPONSIBLE, NAMED.** `ECONOMY.availability.ageInjuryFactor`:
+
+  ```
+  { 13: 0.85, 14: 0.9, 15: 1.05, 16: 1.2, 17: 1.05, 18: 0.95, default: 0.85 }
+  ```
+
+  **`default: 0.85` is the table's LOWEST value, and it carries every year from 19 to retirement.** A
+  body of 19, 25, 31 and 34 are the same body to this engine, and all four are 29% safer than a
+  sixteen-year-old. ⚠ **The table is not wrong, it is UNFINISHED**: its own research
+  (`docs/research/injury-stats-by-age.md`) scoped itself to the junior window – «our WTA-first kid
+  starts at 14 → the sim window 14→18 spans the girl peak exactly» – and the `default` was the
+  off-the-end fallback, not an adult limb. The same document says what the adult limb should be about
+  and never supplied one: «Adults 18+: risk shifts to chronic lower-limb wear (48–56% lower limb),
+  retirements rising». The game then grew careers to forty and the fallback quietly became the model.
+
+  ⭐⭐ **THE REALISED HAZARD BY AGE BAND** – `tools/injury-audit.ts`, 9 presets × 12 seeds, arm
+  `plays-on` (maximum late-career exposure), both entry policies. Nothing was written to any constant.
+
+  | band | onsets/season, **grinder** | onsets/season, **careful** | wks lost/season (careful) | ageFactor |
+  | --- | ---: | ---: | ---: | --- |
+  | 13–15 | 1.72 | 0.77 | 1.7 | 0.85 / 0.9 / 1.05 |
+  | 16–18 | 1.49 | 0.99 | 2.2 | **1.2** / 1.05 / 0.95 |
+  | 19–22 | 1.78 | 0.88 | 2.3 | 0.85 |
+  | 23–28 | **1.95** | 0.84 | 2.1 | 0.85 |
+  | **29+** | **1.49** | **0.91** | **2.0** | 0.85 |
+
+  (2,595 and 2,853 full seasons lived; the 29+ band alone carries 920 and 1,137 of them, so this is
+  not thin.) **The curve is flat across adulthood and the 29+ band is the QUIETEST of the grinder's
+  adult bands – fewer onsets and fewer weeks lost than at 23–28.** Nothing in the model pushes back
+  on age, because the only age term cannot move after eighteen. ⚠ And she is not playing less: 29+
+  is the band with the MOST events per season in both arms.
+
+  ⭐ **WHERE YOUR CAREER SITS – and the answer depends entirely on what you have bought, which is
+  itself the finding.** The weekly threshold at 31, computed exactly from the shipped constants:
+
+  | | tau on a play week | expected onsets in 299 weeks | **P(zero)** |
+  | --- | ---: | ---: | ---: |
+  | no physio, condition 61, worn kit | 1.390%/wk | 3.61 | 2.7% |
+  | budget physio, condition 61, half-worn kit | 0.928%/wk | 2.41 | 9.0% |
+  | **elite physio, condition 85, fresh kit** | **0.385%/wk** | **1.00** | **36.8%** |
+  | …and an elite recovery package live | 0.327%/wk | 0.85 | **42.8%** |
+
+  ⚠⚠ **SO: AGAINST A GENERIC CAREFUL CAREER YOU ARE A TAIL (≈1 in 190 at the measured 29+ rate of
+  0.91/season); AGAINST YOUR OWN PROTECTION STACK YOU ARE THE MODAL OUTCOME (≈1 in 3).** Those two
+  answers differ by a factor of about seventy and the whole difference is your purchases.
+  ⚠ **AND THE TWO ARE NOT LIKE FOR LIKE, SAID OUT LOUD RATHER THAN GLOSSED**: the 0.91/season is the
+  bench's population rate through BOTH doors (the weekly roll and the in-match retirement hazard),
+  while the table above is the WEEKLY DOOR ONLY – it is arithmetic on the shipped constants, not a
+  walk. Round 16 measured the retirement door at most of all onsets, so the true P(zero) for a
+  protected veteran is somewhere BELOW 37%. ⚠ How far below depends on a factor that also favours
+  her: `retireHazard` reads in-match spentness, and a top-20 winning in straight sets accrues little
+  of it. The direction of the finding does not move either way – **the age term is flat at its own
+  minimum and cannot rise** – but the exact odds of your drought are bracketed, not pinned. Your
+  lifetime rate is 11 injuries over 17.2 seasons = **0.64/season**, against the careful bench's 0.88
+  – below it, not impossibly so. ⚠ The stack is worth roughly **4× on the threshold** (elite physio
+  0.616, elite recovery 0.85, fresh kit 1.00 against a worn 1.32, and the condition it buys), and the
+  age term – flat at its own minimum – has nothing to answer it with. **The game currently lets a
+  wealthy family buy a body out of ageing.**
+
+  ⚠⚠ **AND THE FIX IS A SHAPE CHANGE, NOT A LEVEL CHANGE – which is exactly why it is yours.** The
+  aggregate is already HOT: season prevalence reads 58.5% (careful) and 76.0% (grinder) against the
+  professional research band of **30–54%**, and `docs/backlog/injuries-gear-and-open-bugs.md` #7 is
+  an open item about precisely that overshoot. So «more injuries at 30+» must be paid for by fewer
+  somewhere else, or the whole model gets hotter still. **Nothing was tuned. The one-line shape of
+  the change is an adult limb on `ageInjuryFactor` (e.g. 19–24 flat, then rising through the
+  thirties), and it needs your number, a bench run and a re-pin.**
+
+- [~] **23. ⚠⚠ MERCH IS MODELLED AS THE WRONG THING – his research, and it is decisive.** «что там
   происходит в мире на эту тему с личными брендами мерча у спортсменов? Мне кажется это странным
   немного, если честно, то как сейчас это у нас работает.»
 
-  What he found, to be folded into `docs/research/player-brands-and-what-they-are-worth.md`:
+  **FOLDED IN, MEASURED, AND THE CORRECTION IS SPECIFIED BUT NOT APPLIED – one decision is yours and
+  it is named at the bottom.** All of it is now `docs/research/player-brands-and-what-they-are-worth.md`
+  **§7**, kept as its own section rather than scattered through §1–§5 because the provenance differs:
+  §1–§5 were read here in the primary document, §7 is yours as you stated it. That difference is
+  written at the head of §7 so nobody quotes the two at equal weight.
 
-  - ⭐⭐⭐ **Among active top-20/50 players, owning an independent brand is RARE – 95% take classic
-    sponsorship instead.** A full personal business belongs to historic superstars (Federer, Serena),
-    because running one is impossible on an 11-month tour. **Our shelf sells it as an ordinary rung.**
-  - **The lucrative shape is EQUITY or ROYALTIES, not a shop**: Federer's ~3% of On peaked near
-    **$500M** and out-earned 24 years of prize money; Djokovic takes **$5–10M/yr** in royalties from an
-    Asics signature line; Świątek and Shelton are faces of On with reported stock options.
-  - **The RF mark itself is valued at ~$27M** ⚠ – so my agent's «no published value exists» was wrong,
-    and the number is an order of magnitude above what our brand can reach.
-  - Full own-brands, for scale: Osaka's businesses ~$5–10M/yr, Venus' EleVen $5–12M/yr turnover,
-    Sharapova's Sugarpova peaked at a **$20M** valuation.
-  - Federer's post-career income is **$95–100M/yr**, almost entirely sponsorship and investments; the
-    Uniqlo deal alone is **$30M/yr** for ten years.
+  ⚠ **YOUR RF CORRECTION IS TAKEN AND THE OLD CLAIM IS GONE, not left standing beside it.** The page
+  said «no published valuation of the RF mark exists». That was too strong: **~$27M is an attributable
+  expert estimate** and now stands as the working figure in the lead paragraph, in §1's table and in
+  §6. What survives is narrower and still true – it is an **estimate, not a price**: no transaction,
+  no filing, no audited valuation. Quote the order of magnitude, not the dollar.
 
-  ⚙ **His instruction is narrow and I am keeping it narrow**: «Может быть реально что-то вроде
-  колабораций сделать, **но не сейчас**, сейчас **проанализировать и скорректировать доход мерча**.»
-  So: analyse and re-size merch income against these figures. **Collaborations, equity and royalty
-  lines are recorded as the future shape and NOT built.**
+  ⭐⭐⭐ **AND YOUR RARITY FINDING IS THE ONE THAT CHANGES THE DIAGNOSIS** (§7a). If ~95% of active
+  top-20/50 players take classic sponsorship and a full personal business belongs to historic
+  superstars, then our shelf is not merely mispricing the brand – **it is selling the rare thing as an
+  ordinary rung** ($250,000, general shelf, any family that can afford it), while the ordinary
+  top-20's off-court money in life is somebody else's brand paying her, **which this game already
+  models in the ad and kit ladders**. One instrument is doing two jobs.
 
-- [ ] **24. ⚠ The fame floor ignores «выступления» – his word, from round 30 #13's answer.** A climb
-  built on quarter- and semi-finals is invisible to the brand by construction: the floor counts titles,
-  Slam finals and top-10 seasons only. He raised it again here – «она же топ-20 в мире». **Fold into 23:
-  a top-20 who never wins a title should still be worth something to a brand.**
+  ⭐⭐ **THE RE-SIZE, MEASURED** (`tools/merch-fame-vs-rank.ts`, 9 presets × 8 seeds × 780 weeks):
+
+  | | fame | merch pays | against the researched band |
+  | --- | ---: | ---: | --- |
+  | first week they can afford it (median) | 9.6 | $288/wk = **$15.0k/yr** | – |
+  | peak fame, median career | 58.9 | $1,767/wk = **$91.9k/yr** | **5.4–22× under** |
+  | peak fame, p90 and best | 100.0 | $3,000/wk = **$156k/yr** | **3.2–12.8× under** |
+
+  The band is $0.5M–$2M/yr NET for a top full own-brand, derived in §7d from your own figures through
+  this page's own multiples (Sugarpova's $20M peak valuation, EleVen's $5–12M turnover). ⚠ Income,
+  turnover and valuation are three different units and §7d converts them explicitly rather than
+  averaging them.
+
+  ⚠⚠ **BUT THE BOTTOM OF OUR CURVE IS RIGHT AND IS DELIBERATELY CALIBRATED.** At the median purchase
+  fame the brand yields **6.0% a year on its $250,000** against the index fund's 7% – exactly the
+  anchor `ECONOMY.business.merch` states, confirmed live. **A flat multiplier would break the end that
+  is right to fix the end that is wrong.** So the shape is FORCED rather than chosen: hold the anchor,
+  reach the band, and the only curves left are convex. The simplest, pivoted on the anchor itself
+  (`weekly = perFamePointCents × fame² / 10`) is identical at fame 10, puts the median career's peak
+  at **$541k/yr** (the band's floor) and a fame-100 superstar at **$1.56M/yr** (its ceiling).
+
+  ⚙ **WHY IT IS NOT APPLIED, AND WHAT I NEED FROM YOU.** The brand is also an ASSET and its worth is
+  `earningsMultipleX` (16) × a year of its own income – **income and worth are the same dial.** Under
+  the convex curve the purchase-day worth is unchanged (median $239,761 against a $250,000 price, the
+  «fair on the day they can afford it» criterion #9 chose 16 for), but **the peak worth becomes ~$8.7M
+  on a $250,000 purchase** – bigger than most of the shelf and closing on the $12M academy. The two
+  criteria cannot both hold under one multiple once the curve bends. **Two questions, both one edit:**
+  *(a)* may the merch brand become an eight-figure asset at a superstar's fame, or should the income
+  rise while the valuation is held down (a fame-dependent multiple)? *(b)* given §7a, is «make the
+  existing instrument bigger» even the right repair, or should an ordinary top-20's off-court money
+  come through the sponsorship ladder that already exists and the own-brand stay a superstar's thing?
+
+  ⚙ **Collaborations, equity and royalty lines are NOT built**, per «но не сейчас». They are recorded
+  in §7b as the future shape: Federer's ~3% of On peaking near $500M and out-earning 24 years of prize
+  money (⭐ §3 of the page reaches ~$603M at the same peak by an independent route – the strongest
+  cross-check in the document), Djokovic's $5–10M/yr Asics royalties, Świątek and Shelton on stock
+  options.
+
+- [~] **24. ⚠ The fame floor ignores «выступления» – «она же топ-20 в мире».** **BENCHED, BEFORE AND
+  AFTER, AND NOT SHIPPED – the numbers are below and the choice is yours.**
+
+  ⚠ **FIRST, A CONSTRAINT NOBODY HAD CHECKED: THERE IS NO DEEP-RUN LEDGER TO READ.** `TierTrophies`
+  stores `titles` and `finals` and **nothing below a final**, so a quarter-final leaves no durable
+  trace anywhere in the save. «Count deep runs» is therefore a schema move, not a floor tweak – and it
+  does not need to be, because `seasonHistory[].byTrack.wta.endRank` is already written for every
+  finished season, and **a season ended at #18 IS her deep runs, summed and sorted by the tour
+  itself.** So the measurable answer is a BAND LADDER on the season's end rank.
+
+  **SHIPPED IN THIS WAVE: the plumbing only.** `ECONOMY.fame.top10SeasonFloor` became
+  `ECONOMY.fame.seasonEndBands`, a ladder in the shape `academy.reputationBands` already uses. ⚠ **As
+  shipped it has ONE rung and is the old rule exactly – not one cent moves anywhere** (34/34 green
+  across `round29p5-business` and `round30-brand-value`). It exists so this item is a measurement
+  rather than an argument: `tools/merch-fame-vs-rank.ts --seasonBands 20:4,50:1.5` swaps in a
+  counterfactual for one run and prints the arm in its header so no output can be misfiled.
+
+  ⭐⭐ **BEFORE / AFTER** – same 72 careers, same seeds, the only difference being two extra rungs
+  (a season ended top-20 = +4 fame, top-50 = +1.5, against the top-10's existing +10):
+
+  | | shipped | with the two rungs | |
+  | --- | ---: | ---: | --- |
+  | peak fame, median career | 58.9 | **67.5** | **+14.6%** |
+  | peak merch income, median | $91.9k/yr | **$105.4k/yr** | +14.6% |
+  | fame the week they can first afford the brand | 5.0 / **9.6** / 19.4 | 5.0 / **9.6** / 19.4 | ⭐ **UNCHANGED** |
+  | brand's worth on the day they buy it (median) | $239,761 | **$239,761** | ⭐ **UNCHANGED** |
+  | brand's worth at the career's peak (median) | $1.47M (5.9×) | **$1.69M (6.7×)** | +14.7% |
+  | climbing 52w windows where income FELL | 15.1% | **13.7%** | |
+  | seasons in which the brand's VALUE fell | 29.0%, median −17.9% | **26.6%, median −16.3%** | |
+
+  ⭐ **THE TWO ROWS THAT MAKE IT SAFE ARE THE UNCHANGED ONES.** The purchase-day economics do not
+  move at all – a family reaches first affordability before it has finished top-50 seasons to bank –
+  so round 30 #9's «fair on the day they can afford it» multiple and the fund-parity anchor both
+  survive untouched. The lift lands where you asked it to: **the middle of the distribution**, since
+  p90 and best are already at the fame cap.
+
+  ⭐⭐ **AND IT PARTLY ANSWERS ROUND 30 #13 AS A SIDE EFFECT** – «merch brand приносил 600+, а через
+  несколько месяцев стал 500+, хотя позиция в таблице уже 15». A top-20 season now feeds the stock
+  **while she is climbing**, so climbing windows that lose income fall 15.1% → 13.7% and the seasons
+  in which the brand loses value fall 29.0% → 26.6% with a shallower median drop.
+
+  ⚠ **THE STRUCTURAL CLAIM, which is arithmetic and not a measurement**: for a career with no title,
+  no Slam final and no top-10 season the floor today is **exactly zero**, so her brand is worth
+  **nothing** however high she ranks. The bench cannot show that as a percentage because its careers
+  do win things; the change for that career is from invisible to visible, not from N to N+15%.
+
+  ⚙ **NOT SHIPPED because it moves merch income and the brand's worth on every career, and because it
+  is coupled to #23's open question above** – if the dial or the multiple also moves, these two rungs
+  want re-sizing with it. **+4 / +1.5 are my proposal, not a measurement: say the numbers and it is
+  one line plus a bench re-run.**
