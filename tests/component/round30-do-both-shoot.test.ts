@@ -274,7 +274,7 @@ describe('round 30 #2 §2 – driven through `answerShootClash`', () => {
   it('⚠⚠ «do both» – the week keeps the tournament, keeps the shoot, and DRAWS the shoot', () => {
     const world = clashWorld('r30-both')
     expect(shootClashOpen(world), 'the fixture really has the question standing').toBe(true)
-    answerShootClash(world, 'both')
+    answerShootClash(world, 'play-both')
     expect(shootClashOpen(world), 'and the latch closed it').toBe(false)
 
     const grid = drawnClashWeek(world)
