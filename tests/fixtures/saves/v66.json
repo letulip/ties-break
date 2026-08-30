@@ -17895,7 +17895,7 @@
       "id": 48,
       "week": 5,
       "type": "milestone",
-      "text": "🏆 First career title: Local Open!",
+      "text": "\ud83c\udfc6 First career title: Local Open!",
       "keep": true,
       "milestoneKey": "first-title"
     },
@@ -19457,7 +19457,7 @@
       "id": 406,
       "week": 38,
       "type": "milestone",
-      "text": "🏆 First win at National level!",
+      "text": "\ud83c\udfc6 First win at National level!",
       "keep": true,
       "milestoneKey": "first-national"
     },
@@ -19835,7 +19835,7 @@
       "id": 515,
       "week": 49,
       "type": "milestone",
-      "text": "Season 2031 wrap-up: National rank #14 · 364 pts this season · Champion · 33-23 (W-L) · funds +$11,832",
+      "text": "Season 2031 wrap-up: National rank #14 \u00b7 364 pts this season \u00b7 Champion \u00b7 33-23 (W-L) \u00b7 funds +$11,832",
       "keep": true,
       "milestoneKey": "season-wrap-0"
     },
@@ -19843,7 +19843,7 @@
       "id": 533,
       "week": 52,
       "type": "milestone",
-      "text": "An academy has taken her on – a scholarship covering 15% of her travel.",
+      "text": "An academy has taken her on \u2013 a scholarship covering 15% of her travel.",
       "keep": true,
       "milestoneKey": "academy-in-1"
     },
@@ -21923,7 +21923,7 @@
       "id": 1073,
       "week": 101,
       "type": "milestone",
-      "text": "Season 2032 wrap-up: National rank #3 · 513 pts this season · Champion · 32-24 (W-L) · funds +$6,620",
+      "text": "Season 2032 wrap-up: National rank #3 \u00b7 513 pts this season \u00b7 Champion \u00b7 32-24 (W-L) \u00b7 funds +$6,620",
       "keep": true,
       "milestoneKey": "season-wrap-1"
     },
@@ -22828,14 +22828,14 @@
       "week": 131,
       "type": "expense",
       "category": "travel",
-      "text": "Travel to Local Open – academy covers 19%",
+      "text": "Travel to Local Open \u2013 academy covers 19%",
       "amountCents": -4894
     },
     {
       "id": 1404,
       "week": 131,
       "type": "info",
-      "text": "🏆 K. Paredes won the WTA 250."
+      "text": "\ud83c\udfc6 K. Paredes won the WTA 250."
     },
     {
       "id": 1405,
@@ -22878,14 +22878,14 @@
       "id": 1406,
       "week": 131,
       "type": "tournament",
-      "text": "Local Open (hard, W28 '33): Vera – Quarterfinalist (+0 pts)",
+      "text": "Local Open (hard, W28 '33): Vera \u2013 Quarterfinalist (+0 pts)",
       "finishIdx": 3
     },
     {
       "id": 1407,
       "week": 131,
       "type": "info",
-      "text": "🏆 A. Malek won the Local Open (hard)."
+      "text": "\ud83c\udfc6 A. Malek won the Local Open (hard)."
     },
     {
       "id": 1408,
@@ -22899,7 +22899,7 @@
       "id": 1409,
       "week": 131,
       "type": "entry",
-      "text": "Entered Junior Tour 30 – W31 '33 (hard)"
+      "text": "Entered Junior Tour 30 \u2013 W31 '33 (hard)"
     },
     {
       "id": 1410,
@@ -22930,7 +22930,7 @@
       "week": 132,
       "type": "expense",
       "category": "facility",
-      "text": "Academy courts – 5 h, off-peak rate",
+      "text": "Academy courts \u2013 5 h, off-peak rate",
       "amountCents": -11207
     },
     {
@@ -22938,7 +22938,7 @@
       "week": 132,
       "type": "expense",
       "category": "stringing",
-      "text": "Restring – multifilament",
+      "text": "Restring \u2013 multifilament",
       "amountCents": -4050
     },
     {
@@ -22954,14 +22954,14 @@
       "week": 132,
       "type": "expense",
       "category": "travel",
-      "text": "Travel to Junior Tour 60 – academy covers 19%",
+      "text": "Travel to Junior Tour 60 \u2013 academy covers 19%",
       "amountCents": -105081
     },
     {
       "id": 1417,
       "week": 132,
       "type": "info",
-      "text": "🏆 Z. Varga won the WTA 500."
+      "text": "\ud83c\udfc6 Z. Varga won the WTA 500."
     },
     {
       "id": 1418,
@@ -23004,14 +23004,14 @@
       "id": 1419,
       "week": 132,
       "type": "tournament",
-      "text": "Junior Tour 60 (hard, W29 '33): Vera – Round of 32 (+0 pts)",
+      "text": "Junior Tour 60 (hard, W29 '33): Vera \u2013 Round of 32 (+0 pts)",
       "finishIdx": 5
     },
     {
       "id": 1420,
       "week": 132,
       "type": "info",
-      "text": "🏆 B. Chen won the Junior Tour 60 (hard)."
+      "text": "\ud83c\udfc6 B. Chen won the Junior Tour 60 (hard)."
     },
     {
       "id": 1421,
@@ -23025,7 +23025,7 @@
       "id": 1422,
       "week": 132,
       "type": "entry",
-      "text": "Entered Junior Tour 60 – W32 '33 (hard)"
+      "text": "Entered Junior Tour 60 \u2013 W32 '33 (hard)"
     },
     {
       "id": 1423,
@@ -23056,14 +23056,14 @@
       "week": 133,
       "type": "expense",
       "category": "facility",
-      "text": "Academy courts – 5 h, peak slots",
+      "text": "Academy courts \u2013 5 h, peak slots",
       "amountCents": -12723
     },
     {
       "id": 1427,
       "week": 133,
       "type": "injury",
-      "text": "Injury: wrist niggle – out ~1 wk."
+      "text": "Injury: wrist niggle \u2013 out ~1 wk."
     },
     {
       "id": 1428,
@@ -23077,7 +23077,7 @@
       "id": 1429,
       "week": 133,
       "type": "injury",
-      "text": "Walkover: too injured to play the Junior Tour 300 – 0 pts, entry fee forfeited."
+      "text": "Walkover: too injured to play the Junior Tour 300 \u2013 0 pts, entry fee forfeited."
     },
     {
       "id": 1430,
@@ -23108,14 +23108,14 @@
       "week": 134,
       "type": "expense",
       "category": "facility",
-      "text": "Academy courts – 5 h, prime time",
+      "text": "Academy courts \u2013 5 h, prime time",
       "amountCents": -12747
     },
     {
       "id": 1434,
       "week": 134,
       "type": "recovery",
-      "text": "Back on court – cleared to play."
+      "text": "Back on court \u2013 cleared to play."
     },
     {
       "id": 1435,
@@ -23130,20 +23130,20 @@
       "week": 134,
       "type": "expense",
       "category": "travel",
-      "text": "Travel to Junior Tour 30 – academy covers 19%",
+      "text": "Travel to Junior Tour 30 \u2013 academy covers 19%",
       "amountCents": -138059
     },
     {
       "id": 1437,
       "week": 134,
       "type": "info",
-      "text": "🏆 X. Sartori won the WTA 125."
+      "text": "\ud83c\udfc6 X. Sartori won the WTA 125."
     },
     {
       "id": 1438,
       "week": 134,
       "type": "info",
-      "text": "🏆 P. Nemec won the World Tour 100."
+      "text": "\ud83c\udfc6 P. Nemec won the World Tour 100."
     },
     {
       "id": 1439,
@@ -23223,14 +23223,14 @@
       "id": 1441,
       "week": 134,
       "type": "tournament",
-      "text": "Junior Tour 30 (hard, W31 '33): Vera – Round of 16 (+2 pts) (does not improve best 6)",
+      "text": "Junior Tour 30 (hard, W31 '33): Vera \u2013 Round of 16 (+2 pts) (does not improve best 6)",
       "finishIdx": 4
     },
     {
       "id": 1442,
       "week": 134,
       "type": "info",
-      "text": "🏆 O. Nair won the Junior Tour 30 (hard)."
+      "text": "\ud83c\udfc6 O. Nair won the Junior Tour 30 (hard)."
     },
     {
       "id": 1443,
@@ -23261,7 +23261,7 @@
       "week": 135,
       "type": "expense",
       "category": "facility",
-      "text": "Academy courts – 5 h, evenings",
+      "text": "Academy courts \u2013 5 h, evenings",
       "amountCents": -11902
     },
     {
@@ -23269,14 +23269,14 @@
       "week": 135,
       "type": "expense",
       "category": "stringing",
-      "text": "Restring – multifilament",
+      "text": "Restring \u2013 multifilament",
       "amountCents": -3470
     },
     {
       "id": 1448,
       "week": 135,
       "type": "injury",
-      "text": "Injury: wrist niggle – out ~1 wk."
+      "text": "Injury: wrist niggle \u2013 out ~1 wk."
     },
     {
       "id": 1449,
@@ -23290,13 +23290,13 @@
       "id": 1450,
       "week": 135,
       "type": "injury",
-      "text": "Walkover: too injured to play the Junior Tour 60 – 0 pts, entry fee forfeited."
+      "text": "Walkover: too injured to play the Junior Tour 60 \u2013 0 pts, entry fee forfeited."
     },
     {
       "id": 1451,
       "week": 135,
       "type": "info",
-      "text": "🏆 F. Kamau won the WTA 1000."
+      "text": "\ud83c\udfc6 F. Kamau won the WTA 1000."
     },
     {
       "id": 1452,
@@ -23310,7 +23310,7 @@
       "id": 1453,
       "week": 135,
       "type": "entry",
-      "text": "Entered Junior Tour 60 – W35 '33 (hard)"
+      "text": "Entered Junior Tour 60 \u2013 W35 '33 (hard)"
     },
     {
       "id": 1454,
@@ -23341,7 +23341,7 @@
       "week": 136,
       "type": "expense",
       "category": "facility",
-      "text": "Academy courts – 5 h, the busy hours",
+      "text": "Academy courts \u2013 5 h, the busy hours",
       "amountCents": -11937
     },
     {
@@ -23349,14 +23349,14 @@
       "week": 136,
       "type": "expense",
       "category": "gear",
-      "text": "New shoes – mid-range performance",
+      "text": "New shoes \u2013 mid-range performance",
       "amountCents": -12675
     },
     {
       "id": 1459,
       "week": 136,
       "type": "recovery",
-      "text": "Back on court – cleared to play."
+      "text": "Back on court \u2013 cleared to play."
     },
     {
       "id": 1460,
@@ -23378,7 +23378,7 @@
       "id": 1462,
       "week": 136,
       "type": "entry",
-      "text": "Entered Junior Tour 30 – W36 '33 (hard)"
+      "text": "Entered Junior Tour 30 \u2013 W36 '33 (hard)"
     },
     {
       "id": 1463,
@@ -23409,7 +23409,7 @@
       "week": 137,
       "type": "expense",
       "category": "facility",
-      "text": "Academy courts – 5 h, the usual slot",
+      "text": "Academy courts \u2013 5 h, the usual slot",
       "amountCents": -11802
     },
     {
@@ -23424,7 +23424,7 @@
       "id": 1468,
       "week": 137,
       "type": "info",
-      "text": "🏆 X. Rinaldi won the WTA 500."
+      "text": "\ud83c\udfc6 X. Rinaldi won the WTA 500."
     },
     {
       "id": 1469,
@@ -23455,7 +23455,7 @@
       "week": 138,
       "type": "expense",
       "category": "facility",
-      "text": "Academy courts – 5 h, weekday hours",
+      "text": "Academy courts \u2013 5 h, weekday hours",
       "amountCents": -11427
     },
     {
@@ -23463,7 +23463,7 @@
       "week": 138,
       "type": "expense",
       "category": "stringing",
-      "text": "Restring – multifilament",
+      "text": "Restring \u2013 multifilament",
       "amountCents": -3769
     },
     {
@@ -23479,14 +23479,14 @@
       "week": 138,
       "type": "expense",
       "category": "travel",
-      "text": "Travel to Junior Tour 60 – academy covers 19%",
+      "text": "Travel to Junior Tour 60 \u2013 academy covers 19%",
       "amountCents": -140916
     },
     {
       "id": 1476,
       "week": 138,
       "type": "info",
-      "text": "🏆 T. Oberg won the Grand Slam."
+      "text": "\ud83c\udfc6 T. Oberg won the Grand Slam."
     },
     {
       "id": 1477,
@@ -23677,7 +23677,7 @@
       "id": 1482,
       "week": 138,
       "type": "tournament",
-      "text": "Junior Tour 60 (hard, W35 '33): Vera – Champion (+60 pts) (ranking total +55)",
+      "text": "Junior Tour 60 (hard, W35 '33): Vera \u2013 Champion (+60 pts) (ranking total +55)",
       "finishIdx": 0
     },
     {
@@ -23709,7 +23709,7 @@
       "week": 139,
       "type": "expense",
       "category": "facility",
-      "text": "Academy courts – 5 h, evenings",
+      "text": "Academy courts \u2013 5 h, evenings",
       "amountCents": -11703
     },
     {
@@ -23724,13 +23724,13 @@
       "id": 1488,
       "week": 139,
       "type": "injury",
-      "text": "Withdrawn from the Junior Tour 30 – not cleared to play on medical advice. 0 pts, entry fee forfeited."
+      "text": "Withdrawn from the Junior Tour 30 \u2013 not cleared to play on medical advice. 0 pts, entry fee forfeited."
     },
     {
       "id": 1489,
       "week": 139,
       "type": "info",
-      "text": "🏆 R. Varma won the WTA 250."
+      "text": "\ud83c\udfc6 R. Varma won the WTA 250."
     },
     {
       "id": 1490,
@@ -23761,7 +23761,7 @@
       "week": 140,
       "type": "expense",
       "category": "facility",
-      "text": "Academy courts – 5 h, peak slots",
+      "text": "Academy courts \u2013 5 h, peak slots",
       "amountCents": -13301
     },
     {
@@ -23784,7 +23784,7 @@
       "id": 1496,
       "week": 140,
       "type": "entry",
-      "text": "Entered World Tour 15 – W39 '33 (hard)"
+      "text": "Entered World Tour 15 \u2013 W39 '33 (hard)"
     },
     {
       "id": 1497,
@@ -23798,7 +23798,7 @@
       "id": 1498,
       "week": 140,
       "type": "entry",
-      "text": "Entered Local Open – W40 '33 (clay)"
+      "text": "Entered Local Open \u2013 W40 '33 (clay)"
     },
     {
       "id": 1499,
@@ -23829,7 +23829,7 @@
       "week": 141,
       "type": "expense",
       "category": "facility",
-      "text": "Academy courts – 5 h, early slots",
+      "text": "Academy courts \u2013 5 h, early slots",
       "amountCents": -11040
     },
     {
@@ -23837,7 +23837,7 @@
       "week": 141,
       "type": "expense",
       "category": "stringing",
-      "text": "Restring – multifilament",
+      "text": "Restring \u2013 multifilament",
       "amountCents": -3583
     },
     {
@@ -23852,19 +23852,19 @@
       "id": 1505,
       "week": 141,
       "type": "info",
-      "text": "Her wrist is sore again – the same one."
+      "text": "Her wrist is sore again \u2013 the same one."
     },
     {
       "id": 1506,
       "week": 141,
       "type": "info",
-      "text": "The coach is keeping her off the court this week – the wrist."
+      "text": "The coach is keeping her off the court this week \u2013 the wrist."
     },
     {
       "id": 1507,
       "week": 141,
       "type": "info",
-      "text": "🏆 L. Falk won the WTA 1000."
+      "text": "\ud83c\udfc6 L. Falk won the WTA 1000."
     },
     {
       "id": 1508,
@@ -23878,7 +23878,7 @@
       "id": 1509,
       "week": 141,
       "type": "entry",
-      "text": "Entered World Tour 15 – W41 '33 (hard)"
+      "text": "Entered World Tour 15 \u2013 W41 '33 (hard)"
     },
     {
       "id": 1510,
@@ -23909,7 +23909,7 @@
       "week": 142,
       "type": "expense",
       "category": "facility",
-      "text": "Academy courts – 5 h, off-peak rate",
+      "text": "Academy courts \u2013 5 h, off-peak rate",
       "amountCents": -11390
     },
     {
@@ -23925,7 +23925,7 @@
       "week": 142,
       "type": "expense",
       "category": "travel",
-      "text": "Travel to World Tour 15 – academy covers 19%",
+      "text": "Travel to World Tour 15 \u2013 academy covers 19%",
       "amountCents": -136249
     },
     {
@@ -23970,14 +23970,14 @@
       "week": 142,
       "type": "income",
       "category": "prize",
-      "text": "World Tour 15 prize money – Round of 32",
+      "text": "World Tour 15 prize money \u2013 Round of 32",
       "amountCents": 13000
     },
     {
       "id": 1518,
       "week": 142,
       "type": "milestone",
-      "text": "💰 First prize money – $130 at the World Tour 15!",
+      "text": "\ud83d\udcb0 First prize money \u2013 $130 at the World Tour 15!",
       "keep": true,
       "milestoneKey": "first-prize"
     },
@@ -23985,14 +23985,14 @@
       "id": 1519,
       "week": 142,
       "type": "tournament",
-      "text": "World Tour 15 (hard, W39 '33): Vera – Round of 32 (+0 pts)",
+      "text": "World Tour 15 (hard, W39 '33): Vera \u2013 Round of 32 (+0 pts)",
       "finishIdx": 5
     },
     {
       "id": 1520,
       "week": 142,
       "type": "info",
-      "text": "🏆 I. Zeman won the World Tour 15 (hard)."
+      "text": "\ud83c\udfc6 I. Zeman won the World Tour 15 (hard)."
     },
     {
       "id": 1521,
@@ -24006,7 +24006,7 @@
       "id": 1522,
       "week": 142,
       "type": "entry",
-      "text": "Entered World Tour 15 – W42 '33 (hard)"
+      "text": "Entered World Tour 15 \u2013 W42 '33 (hard)"
     },
     {
       "id": 1523,
@@ -24037,7 +24037,7 @@
       "week": 143,
       "type": "expense",
       "category": "facility",
-      "text": "Academy courts – 5 h, after school",
+      "text": "Academy courts \u2013 5 h, after school",
       "amountCents": -11744
     },
     {
@@ -24045,7 +24045,7 @@
       "week": 143,
       "type": "expense",
       "category": "gear",
-      "text": "New racket – current retail model",
+      "text": "New racket \u2013 current retail model",
       "amountCents": -21408
     },
     {
@@ -24053,7 +24053,7 @@
       "week": 143,
       "type": "expense",
       "category": "gear",
-      "text": "Apparel refresh – brand kit",
+      "text": "Apparel refresh \u2013 brand kit",
       "amountCents": -12488
     },
     {
@@ -24069,14 +24069,14 @@
       "week": 143,
       "type": "expense",
       "category": "travel",
-      "text": "Travel to Local Open – academy covers 19%",
+      "text": "Travel to Local Open \u2013 academy covers 19%",
       "amountCents": -5835
     },
     {
       "id": 1531,
       "week": 143,
       "type": "info",
-      "text": "🏆 B. Cieslak won the WTA 500."
+      "text": "\ud83c\udfc6 B. Cieslak won the WTA 500."
     },
     {
       "id": 1532,
@@ -24193,14 +24193,14 @@
       "id": 1535,
       "week": 143,
       "type": "tournament",
-      "text": "Local Open (clay, W40 '33): Vera – Runner-up (+18 pts)",
+      "text": "Local Open (clay, W40 '33): Vera \u2013 Runner-up (+18 pts)",
       "finishIdx": 1
     },
     {
       "id": 1536,
       "week": 143,
       "type": "info",
-      "text": "🏆 H. Teixeira won the Local Open (clay)."
+      "text": "\ud83c\udfc6 H. Teixeira won the Local Open (clay)."
     },
     {
       "id": 1537,
@@ -24214,7 +24214,7 @@
       "id": 1538,
       "week": 143,
       "type": "entry",
-      "text": "Entered Junior Tour 300 – W43 '33 (clay)"
+      "text": "Entered Junior Tour 300 \u2013 W43 '33 (clay)"
     },
     {
       "id": 1539,
@@ -24245,7 +24245,7 @@
       "week": 144,
       "type": "expense",
       "category": "facility",
-      "text": "Academy courts – 5 h, weekday hours",
+      "text": "Academy courts \u2013 5 h, weekday hours",
       "amountCents": -11389
     },
     {
@@ -24253,7 +24253,7 @@
       "week": 144,
       "type": "expense",
       "category": "stringing",
-      "text": "Restring – multifilament",
+      "text": "Restring \u2013 multifilament",
       "amountCents": -2938
     },
     {
@@ -24269,20 +24269,20 @@
       "week": 144,
       "type": "expense",
       "category": "travel",
-      "text": "Travel to World Tour 15 – academy covers 19%",
+      "text": "Travel to World Tour 15 \u2013 academy covers 19%",
       "amountCents": -140119
     },
     {
       "id": 1546,
       "week": 144,
       "type": "info",
-      "text": "Doctor's warning – she is cleared for the World Tour 15, but only just. A warning is all it is; nobody can forbid it."
+      "text": "Doctor's warning \u2013 she is cleared for the World Tour 15, but only just. A warning is all it is; nobody can forbid it."
     },
     {
       "id": 1547,
       "week": 144,
       "type": "info",
-      "text": "🏆 C. Duval won the WTA 250."
+      "text": "\ud83c\udfc6 C. Duval won the WTA 250."
     },
     {
       "id": 1548,
@@ -24437,21 +24437,21 @@
       "week": 144,
       "type": "income",
       "category": "prize",
-      "text": "World Tour 15 prize money – Semifinalist",
+      "text": "World Tour 15 prize money \u2013 Semifinalist",
       "amountCents": 75000
     },
     {
       "id": 1553,
       "week": 144,
       "type": "tournament",
-      "text": "World Tour 15 (hard, W41 '33): Vera – Semifinalist (+6 pts) (+6 banked – a ranking needs 3 events with points, or 10)",
+      "text": "World Tour 15 (hard, W41 '33): Vera \u2013 Semifinalist (+6 pts) (+6 banked \u2013 a ranking needs 3 events with points, or 10)",
       "finishIdx": 2
     },
     {
       "id": 1554,
       "week": 144,
       "type": "info",
-      "text": "🏆 O. Bhatia won the World Tour 15 (hard)."
+      "text": "\ud83c\udfc6 O. Bhatia won the World Tour 15 (hard)."
     },
     {
       "id": 1555,
@@ -24482,7 +24482,7 @@
       "week": 145,
       "type": "expense",
       "category": "facility",
-      "text": "Academy courts – 5 h, off-peak rate",
+      "text": "Academy courts \u2013 5 h, off-peak rate",
       "amountCents": -11125
     },
     {
@@ -24497,19 +24497,19 @@
       "id": 1560,
       "week": 145,
       "type": "injury",
-      "text": "Withdrawn from the World Tour 15 – not cleared to play on medical advice. 0 pts, entry fee forfeited."
+      "text": "Withdrawn from the World Tour 15 \u2013 not cleared to play on medical advice. 0 pts, entry fee forfeited."
     },
     {
       "id": 1561,
       "week": 145,
       "type": "info",
-      "text": "🏆 T. Oberg won the WTA 1000."
+      "text": "\ud83c\udfc6 T. Oberg won the WTA 1000."
     },
     {
       "id": 1562,
       "week": 145,
       "type": "info",
-      "text": "🏆 G. Okonkwo won the WTA 125."
+      "text": "\ud83c\udfc6 G. Okonkwo won the WTA 125."
     },
     {
       "id": 1563,
@@ -24540,7 +24540,7 @@
       "week": 146,
       "type": "expense",
       "category": "facility",
-      "text": "Academy courts – 5 h, evenings",
+      "text": "Academy courts \u2013 5 h, evenings",
       "amountCents": -11736
     },
     {
@@ -24555,7 +24555,7 @@
       "id": 1568,
       "week": 146,
       "type": "injury",
-      "text": "Withdrawn from the Junior Tour 300 – not cleared to play on medical advice. 0 pts, entry fee forfeited."
+      "text": "Withdrawn from the Junior Tour 300 \u2013 not cleared to play on medical advice. 0 pts, entry fee forfeited."
     },
     {
       "id": 1569,
@@ -24569,7 +24569,7 @@
       "id": 1570,
       "week": 146,
       "type": "entry",
-      "text": "Entered Junior Tour 60 – W45 '33 (clay)"
+      "text": "Entered Junior Tour 60 \u2013 W45 '33 (clay)"
     },
     {
       "id": 1571,
@@ -24583,7 +24583,7 @@
       "id": 1572,
       "week": 146,
       "type": "entry",
-      "text": "Entered Junior Tour 30 – W46 '33 (hard)"
+      "text": "Entered Junior Tour 30 \u2013 W46 '33 (hard)"
     },
     {
       "id": 1573,
@@ -24614,7 +24614,7 @@
       "week": 147,
       "type": "expense",
       "category": "facility",
-      "text": "Academy courts – 5 h, early slots",
+      "text": "Academy courts \u2013 5 h, early slots",
       "amountCents": -11844
     },
     {
@@ -24622,7 +24622,7 @@
       "week": 147,
       "type": "expense",
       "category": "stringing",
-      "text": "Restring – multifilament",
+      "text": "Restring \u2013 multifilament",
       "amountCents": -4093
     },
     {
@@ -24630,7 +24630,7 @@
       "week": 147,
       "type": "expense",
       "category": "gear",
-      "text": "New shoes – mid-range performance",
+      "text": "New shoes \u2013 mid-range performance",
       "amountCents": -10358
     },
     {
@@ -24645,7 +24645,7 @@
       "id": 1580,
       "week": 147,
       "type": "info",
-      "text": "🏆 O. Halvorsen won the WTA 500."
+      "text": "\ud83c\udfc6 O. Halvorsen won the WTA 500."
     },
     {
       "id": 1581,
@@ -24659,7 +24659,7 @@
       "id": 1582,
       "week": 147,
       "type": "entry",
-      "text": "Entered World Tour 15 – W47 '33 (hard)"
+      "text": "Entered World Tour 15 \u2013 W47 '33 (hard)"
     },
     {
       "id": 1583,
@@ -24690,7 +24690,7 @@
       "week": 148,
       "type": "expense",
       "category": "facility",
-      "text": "Academy courts – 5 h, peak slots",
+      "text": "Academy courts \u2013 5 h, peak slots",
       "amountCents": -12958
     },
     {
@@ -24706,7 +24706,7 @@
       "week": 148,
       "type": "expense",
       "category": "travel",
-      "text": "Travel to Junior Tour 60 – academy covers 19%",
+      "text": "Travel to Junior Tour 60 \u2013 academy covers 19%",
       "amountCents": -179529
     },
     {
@@ -24750,14 +24750,14 @@
       "id": 1590,
       "week": 148,
       "type": "tournament",
-      "text": "Junior Tour 60 (clay, W45 '33): Vera – Round of 32 (+0 pts)",
+      "text": "Junior Tour 60 (clay, W45 '33): Vera \u2013 Round of 32 (+0 pts)",
       "finishIdx": 5
     },
     {
       "id": 1591,
       "week": 148,
       "type": "info",
-      "text": "🏆 Y. Ahlberg won the Junior Tour 60 (clay)."
+      "text": "\ud83c\udfc6 Y. Ahlberg won the Junior Tour 60 (clay)."
     },
     {
       "id": 1592,
@@ -24771,7 +24771,7 @@
       "id": 1593,
       "week": 148,
       "type": "entry",
-      "text": "Entered Local Open – W48 '33 (clay)"
+      "text": "Entered Local Open \u2013 W48 '33 (clay)"
     },
     {
       "id": 1594,
@@ -24802,7 +24802,7 @@
       "week": 149,
       "type": "expense",
       "category": "facility",
-      "text": "Academy courts – 5 h, quiet hours",
+      "text": "Academy courts \u2013 5 h, quiet hours",
       "amountCents": -11120
     },
     {
@@ -24818,26 +24818,26 @@
       "week": 149,
       "type": "expense",
       "category": "travel",
-      "text": "Travel to Junior Tour 30 – academy covers 19%",
+      "text": "Travel to Junior Tour 30 \u2013 academy covers 19%",
       "amountCents": -97094
     },
     {
       "id": 1600,
       "week": 149,
       "type": "info",
-      "text": "🏆 L. Falk won the WTA 1000."
+      "text": "\ud83c\udfc6 L. Falk won the WTA 1000."
     },
     {
       "id": 1601,
       "week": 149,
       "type": "info",
-      "text": "🏆 X. Filipovic won the WTA 250."
+      "text": "\ud83c\udfc6 X. Filipovic won the WTA 250."
     },
     {
       "id": 1602,
       "week": 149,
       "type": "info",
-      "text": "🏆 O. Vaughn won the World Tour 100."
+      "text": "\ud83c\udfc6 O. Vaughn won the World Tour 100."
     },
     {
       "id": 1603,
@@ -24917,14 +24917,14 @@
       "id": 1605,
       "week": 149,
       "type": "tournament",
-      "text": "Junior Tour 30 (hard, W46 '33): Vera – Round of 16 (+2 pts) (does not improve best 6)",
+      "text": "Junior Tour 30 (hard, W46 '33): Vera \u2013 Round of 16 (+2 pts) (does not improve best 6)",
       "finishIdx": 4
     },
     {
       "id": 1606,
       "week": 149,
       "type": "info",
-      "text": "🏆 V. Perotti won the Junior Tour 30 (hard)."
+      "text": "\ud83c\udfc6 V. Perotti won the Junior Tour 30 (hard)."
     },
     {
       "id": 1607,
@@ -24938,7 +24938,7 @@
       "id": 1608,
       "week": 149,
       "type": "entry",
-      "text": "Entered World Tour 15 – W49 '33 (hard)"
+      "text": "Entered World Tour 15 \u2013 W49 '33 (hard)"
     },
     {
       "id": 1609,
@@ -24969,7 +24969,7 @@
       "week": 150,
       "type": "expense",
       "category": "facility",
-      "text": "Academy courts – 5 h, the usual slot",
+      "text": "Academy courts \u2013 5 h, the usual slot",
       "amountCents": -12247
     },
     {
@@ -24977,7 +24977,7 @@
       "week": 150,
       "type": "expense",
       "category": "stringing",
-      "text": "Restring – multifilament",
+      "text": "Restring \u2013 multifilament",
       "amountCents": -2805
     },
     {
@@ -24993,14 +24993,14 @@
       "week": 150,
       "type": "expense",
       "category": "travel",
-      "text": "Travel to World Tour 15 – academy covers 19%",
+      "text": "Travel to World Tour 15 \u2013 academy covers 19%",
       "amountCents": -166443
     },
     {
       "id": 1616,
       "week": 150,
       "type": "info",
-      "text": "Doctor's warning – she is cleared for the World Tour 15, but only just. A warning is all it is; nobody can forbid it."
+      "text": "Doctor's warning \u2013 she is cleared for the World Tour 15, but only just. A warning is all it is; nobody can forbid it."
     },
     {
       "id": 1617,
@@ -25044,21 +25044,21 @@
       "week": 150,
       "type": "income",
       "category": "prize",
-      "text": "World Tour 15 prize money – Round of 32",
+      "text": "World Tour 15 prize money \u2013 Round of 32",
       "amountCents": 13000
     },
     {
       "id": 1619,
       "week": 150,
       "type": "tournament",
-      "text": "World Tour 15 (hard, W47 '33): Vera – Round of 32 (+0 pts)",
+      "text": "World Tour 15 (hard, W47 '33): Vera \u2013 Round of 32 (+0 pts)",
       "finishIdx": 5
     },
     {
       "id": 1620,
       "week": 150,
       "type": "info",
-      "text": "🏆 O. Bhatia won the World Tour 15 (hard)."
+      "text": "\ud83c\udfc6 O. Bhatia won the World Tour 15 (hard)."
     },
     {
       "id": 1621,
@@ -25089,7 +25089,7 @@
       "week": 151,
       "type": "expense",
       "category": "facility",
-      "text": "Academy courts – 5 h, weekday hours",
+      "text": "Academy courts \u2013 5 h, weekday hours",
       "amountCents": -11631
     },
     {
@@ -25105,20 +25105,20 @@
       "week": 151,
       "type": "expense",
       "category": "travel",
-      "text": "Travel to Local Open – academy covers 19%",
+      "text": "Travel to Local Open \u2013 academy covers 19%",
       "amountCents": -6918
     },
     {
       "id": 1627,
       "week": 151,
       "type": "info",
-      "text": "Doctor's warning – she is cleared for the Local Open, but only just. A warning is all it is; nobody can forbid it."
+      "text": "Doctor's warning \u2013 she is cleared for the Local Open, but only just. A warning is all it is; nobody can forbid it."
     },
     {
       "id": 1628,
       "week": 151,
       "type": "info",
-      "text": "🏆 T. Toma won the WTA 500."
+      "text": "\ud83c\udfc6 T. Toma won the WTA 500."
     },
     {
       "id": 1629,
@@ -25161,14 +25161,14 @@
       "id": 1630,
       "week": 151,
       "type": "tournament",
-      "text": "Local Open (clay, W48 '33): Vera – Quarterfinalist (+0 pts)",
+      "text": "Local Open (clay, W48 '33): Vera \u2013 Quarterfinalist (+0 pts)",
       "finishIdx": 3
     },
     {
       "id": 1631,
       "week": 151,
       "type": "info",
-      "text": "🏆 K. Ndiaye won the Local Open (clay)."
+      "text": "\ud83c\udfc6 K. Ndiaye won the Local Open (clay)."
     },
     {
       "id": 1632,
@@ -25199,7 +25199,7 @@
       "week": 152,
       "type": "expense",
       "category": "facility",
-      "text": "Academy courts – 5 h, the busy hours",
+      "text": "Academy courts \u2013 5 h, the busy hours",
       "amountCents": -13044
     },
     {
@@ -25214,7 +25214,7 @@
       "id": 1637,
       "week": 152,
       "type": "injury",
-      "text": "Withdrawn from the World Tour 15 – not cleared to play on medical advice. 0 pts, entry fee forfeited."
+      "text": "Withdrawn from the World Tour 15 \u2013 not cleared to play on medical advice. 0 pts, entry fee forfeited."
     },
     {
       "id": 1638,
@@ -25245,7 +25245,7 @@
       "week": 153,
       "type": "expense",
       "category": "facility",
-      "text": "Academy courts – 5 h, off-peak rate",
+      "text": "Academy courts \u2013 5 h, off-peak rate",
       "amountCents": -11217
     },
     {
@@ -25253,7 +25253,7 @@
       "week": 153,
       "type": "expense",
       "category": "stringing",
-      "text": "Restring – multifilament",
+      "text": "Restring \u2013 multifilament",
       "amountCents": -3049
     },
     {
@@ -25268,7 +25268,7 @@
       "id": 1644,
       "week": 153,
       "type": "milestone",
-      "text": "Season 2033 wrap-up: International rank #28 (↑48 vs season start) · 186 pts this season · Champion · 20-26 (W-L) · funds -$10,994",
+      "text": "Season 2033 wrap-up: International rank #28 (\u219148 vs season start) \u00b7 186 pts this season \u00b7 Champion \u00b7 20-26 (W-L) \u00b7 funds -$10,994",
       "keep": true,
       "milestoneKey": "season-wrap-2"
     },
@@ -25290,7 +25290,7 @@
       "id": 1647,
       "week": 153,
       "type": "entry",
-      "text": "Entered World Tour 15 – W1 '34 (hard)"
+      "text": "Entered World Tour 15 \u2013 W1 '34 (hard)"
     },
     {
       "id": 1648,
@@ -25321,7 +25321,7 @@
       "week": 154,
       "type": "expense",
       "category": "facility",
-      "text": "Academy courts – 5 h, after school",
+      "text": "Academy courts \u2013 5 h, after school",
       "amountCents": -11442
     },
     {
@@ -25336,7 +25336,7 @@
       "id": 1653,
       "week": 155,
       "type": "info",
-      "text": "A letter from String House – they want to put her in their kit (National #87). It is in the inbox."
+      "text": "A letter from String House \u2013 they want to put her in their kit (National #87). It is in the inbox."
     },
     {
       "id": 1654,
@@ -25367,7 +25367,7 @@
       "week": 155,
       "type": "expense",
       "category": "facility",
-      "text": "Academy courts – 5 h, off-peak rate",
+      "text": "Academy courts \u2013 5 h, off-peak rate",
       "amountCents": -11752
     },
     {
@@ -25375,7 +25375,7 @@
       "week": 155,
       "type": "expense",
       "category": "gear",
-      "text": "New racket – current retail model",
+      "text": "New racket \u2013 current retail model",
       "amountCents": -20287
     },
     {
@@ -25391,7 +25391,7 @@
       "week": 333,
       "type": "income",
       "category": "business",
-      "text": "Merch – her name on the shelves",
+      "text": "Merch \u2013 her name on the shelves",
       "amountCents": 45000
     }
   ],
@@ -26772,6 +26772,13 @@
       "boughtWeek": 320,
       "paidCents": 25000000,
       "valueCents": 25000000
+    },
+    {
+      "id": "index-fund",
+      "boughtWeek": 180,
+      "paidCents": 6000000,
+      "valueCents": 7420000,
+      "units": 14.873
     }
   ],
   "fieldSeasonTitles": {

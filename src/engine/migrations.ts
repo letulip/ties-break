@@ -2109,6 +2109,14 @@ export function migrateSave(raw: unknown): WorldState {
   // really came in at. Resetting to today's price would have wiped the entry price out of a career
   // in the act of introducing it.
   //
+  // ⚠⚠ ONE CONSEQUENCE, NAMED SO IT IS NOT READ AS A DEFECT LATER. A v65 rebase folded accrued GAIN
+  // into `basisCents` (a holding worth 110k on 80k of cash carried a 110k basis), so the units this
+  // recovers are the units the family really holds while `paidCents` stays the cash they really
+  // spent – and the AVERAGE PRICE the shop row now prints, `paidCents / units`, therefore comes out
+  // BELOW every unit price that career ever saw. That is the correct number and it is what a
+  // broker's «average price» means: cost basis over units. A family in profit is under today's price
+  // by construction, which is exactly the sentence the screen should be saying about them.
+  //
   // ⚠ THE FALLBACK PAIR IS THE OLD READER'S, VERBATIM. `basisCents ?? paidCents` and
   // `basisWeek ?? boughtWeek` are what `assetWorthCents` used to open with; a row that was never
   // topped up carries neither and means exactly that. This is the last place either name appears.

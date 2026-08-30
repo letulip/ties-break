@@ -2,7 +2,8 @@ import { describe, it, expect } from 'vitest'
 import { readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { migrateSave } from '../src/engine/migrations'
-import { SAVE_SCHEMA_VERSION } from '../src/engine/world'
+import { marketIndex, SAVE_SCHEMA_VERSION, shopItem, unitPriceCents } from '../src/engine/world'
+import { WEEKS_PER_YEAR } from '../src/engine/season/calendar'
 import { mainStateConsistent } from '../src/engine/rng'
 import { planSessions, planWeek } from '../src/engine/plan'
 import { DEFAULT_PROFILE, WEEK_PLAN_PRESETS } from '../src/shared/protocol'
@@ -614,6 +615,86 @@ describe('save migrations', () => {
     // ...and the neighbour is not renamed by an over-wide match.
     expect(migrated.assets!.find((a) => a.id === 'deposit'), 'the deposit is untouched').toBeDefined()
     // Idempotent: a second pass finds no boat-motor and changes nothing.
+    const again = migrateSave(JSON.parse(JSON.stringify(migrated)))
+    expect(again.assets).toEqual(migrated.assets)
+  })
+
+  // ⭐⭐⭐ ROUND 30 #14 – THE SAME UNSHIPPED v66 STEP, THIRD HALF: legacy rows become UNITS, and the
+  // conversion has to preserve the family's history rather than reset it.
+  //
+  // THE OWNER: «Стоимость активов будет рассчитываться исходя из стоимости долей. Зашёл, когда доля
+  // стоила 4к…» – so what the row must carry forward is the price they came in at, and the only
+  // honest way to recover it from a v65 row is to divide the basis by the price of ITS OWN week.
+  //
+  // ⚠ MUTATION-VERIFIED, three, each applied alone to `migrations.ts` and reverted:
+  //   * `unitPriceCents(seed, basisWeek, item)` -> `(seed, 0, item)` (converted at week zero)
+  //     -> the «worth the same cents» arm RED, and the average-price arm with it.
+  //   * `basisCents ?? paidCents` -> `paidCents` (the top-up forgotten) -> the topped-up row's two
+  //     arms RED and the never-topped-up row's green, which is exactly the split that says the
+  //     fallback is live in both directions.
+  //   * `if (… a.units !== undefined) continue` deleted -> the idempotence arm RED (a second pass
+  //     re-divides units by a price and produces a holding of about four thousandths of a unit).
+  it('⭐⭐ v65 -> v66 converts an owned fund to UNITS at the price of its own basis week', () => {
+    const raw = JSON.parse(readFileSync(fileURLToPath(new URL('./fixtures/saves/v65.json', import.meta.url)), 'utf8'))
+    expect(raw.schemaVersion, 'the fixture is a genuine v65 save').toBe(65)
+    const seed = raw.seed as string
+    const week = raw.week as number
+    const FUND = shopItem('index-fund')!
+    const DEPOSIT = shopItem('deposit')!
+    // Two shapes, and both are shapes a real v65 save can hold: one holding that was TOPPED UP (so
+    // it carries the rebased pair) and one that never was (so it carries neither).
+    raw.assets = [
+      { id: 'index-fund', boughtWeek: 100, paidCents: 80_000_00, valueCents: 123_456_00, basisCents: 110_000_00, basisWeek: 260 },
+      { id: 'deposit', boughtWeek: 200, paidCents: 50_000_00, valueCents: 51_000_00 },
+      // ⚠ AND ONE THAT MUST NOT BE TOUCHED AT ALL: a car is not held in units, so a step that
+      // converted every row would give it a `units` key and price it off a market it has nothing to
+      // do with. The absence below is the assertion.
+      { id: 'car-good', boughtWeek: 150, paidCents: 110_000_00, valueCents: 91_091_00 },
+    ]
+
+    const migrated = migrateSave(JSON.parse(JSON.stringify(raw)))
+
+    const fund = migrated.assets!.find((a) => a.id === 'index-fund')!
+    const dep = migrated.assets!.find((a) => a.id === 'deposit')!
+    const car = migrated.assets!.find((a) => a.id === 'car-good')!
+
+    // ⭐ THE CONVERSION ITSELF: the REBASED basis over the price of the week it was struck.
+    expect(fund.units!).toBeCloseTo(110_000_00 / unitPriceCents(seed, 260, FUND), 8)
+    // ...and the one that was never topped up falls back to what it paid, at the week it bought.
+    expect(dep.units!).toBeCloseTo(50_000_00 / unitPriceCents(seed, 200, DEPOSIT), 8)
+    // ⚠ THE FIELDS THE REBASE OWNED ARE GONE FROM BOTH – there is no rebase for them to feed.
+    expect((fund as { basisCents?: number }).basisCents).toBeUndefined()
+    expect(fund.basisWeek).toBeUndefined()
+    // ⚠ AND THE CAR IS UNTOUCHED, key for key.
+    expect(car.units).toBeUndefined()
+    expect(car.valueCents).toBe(91_091_00)
+
+    // ⭐⭐ HONEST, NOT MERELY TOTAL: the holding is worth the same cents this week that the OLD model
+    // would have shown, so the career's history survives the conversion. That is the whole claim of
+    // the step, and it is stated here as the round 29 arithmetic written out longhand rather than as
+    // a number copied off a run.
+    const oldWorth = Math.round(
+      110_000_00 *
+        Math.pow(1 + FUND.annualRateBps / 10_000, (week - 260) / WEEKS_PER_YEAR) *
+        (marketIndex(seed, week, FUND.volBps!) / marketIndex(seed, 260, FUND.volBps!)),
+    )
+    expect(Math.round(fund.units! * unitPriceCents(seed, week, FUND))).toBe(oldWorth)
+    // ⭐⭐ AND THE AVERAGE PRICE THE SCREEN WILL NOW PRINT IS THE COST BASIS OVER THE UNITS, which on
+    // the row that was NEVER topped up is exactly the price it paid on its own week – the sharpest
+    // form of «the entry price survived the conversion», and it is only sayable on that row.
+    expect(dep.paidCents / dep.units!).toBeCloseTo(unitPriceCents(seed, 200, DEPOSIT), 6)
+    // ⚠⚠ ON THE TOPPED-UP ROW IT IS DELIBERATELY **BELOW** EVERY PRICE THE CAREER SAW, and that is
+    // right rather than a rounding artefact: a v65 rebase folded accrued GAIN into `basisCents`
+    // (110k of holding on 80k of cash), so the units recovered from it are the units the family
+    // really holds while `paidCents` is the cash they really spent. Cost basis over units is what a
+    // broker's «average price» means, and a family in profit is under today's price by construction.
+    // The equivalence is the assertion: they are below it exactly when they are up.
+    const avg = fund.paidCents / fund.units!
+    const worthNow = Math.round(fund.units! * unitPriceCents(seed, week, FUND))
+    expect(avg < unitPriceCents(seed, week, FUND)).toBe(worthNow > fund.paidCents)
+    expect(worthNow, 'and this fixture really is a family in profit').toBeGreaterThan(fund.paidCents)
+
+    // Idempotent: a second pass leaves the units exactly where they are.
     const again = migrateSave(JSON.parse(JSON.stringify(migrated)))
     expect(again.assets).toEqual(migrated.assets)
   })
