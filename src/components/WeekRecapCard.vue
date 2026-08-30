@@ -439,11 +439,62 @@ const familyIncomeCents = computed<number | null>(() => {
 // before round 29 #10 existed. He listed the lines he wants and did not name this one, and invariant
 // 4 binds a DELETION as hard as a rename – a sentence I was not asked to remove stays. It is flagged
 // in docs/rounds/round-30.md instead: say the word and it goes.
-const kidShareMemo = computed(() =>
-  kidCutCents.value > 0
-    ? `Her cut ${kidCutPct.value}% – ${formatCents(kidCutCents.value)} into her own account.`
-    : null,
-)
+//
+// =================================================================================================
+// ⭐⭐⭐ ROUND 30 #21 – ...AND ONE SENTENCE WAS BLENDING TWO RULES AND CALLING THE AVERAGE A RULE
+// =================================================================================================
+//
+// HIS WORDS, 30.08, off the w896 save: «Почему-то мне пишут "Her cut 61% – $69,750 into her own
+// account", и до этого было про 56%… При том, что на экране бюджета написано "She keeps 50% of every
+// prize cheque now"».
+//
+// ⚠⚠ MEASURED ON HIS SAVE, AND NO FIGURE WAS EVER WRONG. Two rules reach one week since round 29 P3:
+// a prize splits at her age ramp and a brand cheque is hers less the manager's fee. His week 894
+// banked $80,000 gross of prize at 50% and $35,000 of sponsor money at 85% – $40,000 + $29,750 =
+// $69,750 of a $115,000 base, which is 60.65% and rounds to the 61% he read. Week 891 was a sponsor
+// cheque alone and said 85%, correctly. What was wrong is that ONE SENTENCE quoted the average of
+// two rules as if it were a rule, while the budget screen states the real one.
+//
+// ⚠⚠ AND IT IS ROUND 29 #10's CLASS AGAIN – a label describing a rule while printing a derived
+// number. #10's pin lives below in tests/component/week-recap-kid-share.test.ts and it did not
+// catch this, for a reason worth writing down where the next person will read it: the pin asserted
+// `pct === kidPrizeShareBps(age)/100` against a fixture that STOPS ON THE FIRST WEEK THE TENNIS PAID
+// HER, which is a prize-only week by construction. On a prize-only week the blend IS the ramp, so
+// the assertion could not fail on the case it was written to protect. The guard was alive and the
+// case was absent from it. The pin now carries a MIXED week too.
+//
+// ⚠⚠ THE FIX IS THE SPLIT, NOT A RELABEL. `accrueKidShare` records each source's own rate beside the
+// blend (`FinanceWeekKidShare.prize` / `.sponsor`), and this memo prints ONE LINE PER RULE. On every
+// week governed by a single rule – which is every week in the game before the manager's commission
+// shipped, and most weeks after it – the sentence is HIS, to the character, because the part's rate
+// and the blend are the same number there. Only a genuinely mixed week prints two lines, and each
+// one is separately true: its percentage times its own gross is its own cents.
+//
+// ⚠ ONE WORD IS ADDED AND ONLY ON THE MIXED WEEK: «Her prize cut …» / «Her sponsor cut …». The two
+// monies are already named in exactly these words elsewhere in the game – the event feed writes
+// «her share of the prize money» and «her share of the sponsor money», and her own page says «She
+// keeps 50% of every prize cheque now. Sponsor cheques are hers, less the manager's 15%.» This
+// borrows that vocabulary rather than inventing a third name for either.
+//
+// ⚠ AND IT IS FORWARD-ONLY, on `kidShareBaseCents`' own reasoning: a week banked before the parts
+// existed records only the blend, and the two bases cannot be solved back out of it without the
+// division `accrueKidShare`'s header forbids. Those weeks keep the exact line they printed before –
+// which for the card he is looking at means the memo corrects itself from her next cheque onward,
+// since this tile only ever draws `snapshot.week`.
+/** One line per RULE that paid her this week – or the single blended line on a week that recorded no
+ *  parts. Never both: `kidShareParts` sum to `kidShareCents`, so printing the fallback beside them
+ *  would put the same cents on screen twice. */
+const kidShareMemo = computed<string[]>(() => {
+  if (kidCutCents.value <= 0) return []
+  const parts = weekFinance.value?.kidShareParts ?? []
+  // The single-source case renders through the same branch and comes out byte-identical to the
+  // legacy line, because one part's cents ARE the week's cents and its rate IS the blend.
+  if (parts.length === 1) return [`Her cut ${parts[0].pct}% – ${formatCents(parts[0].cents)} into her own account.`]
+  if (parts.length > 1) {
+    return parts.map((p) => `Her ${p.source} cut ${p.pct}% – ${formatCents(p.cents)} into her own account.`)
+  }
+  return [`Her cut ${kidCutPct.value}% – ${formatCents(kidCutCents.value)} into her own account.`]
+})
 /** The old foot, on the old shape only – see the note above. */
 const kidShareFoot = computed(() => (kidCutCents.value > 0 && !grossSplit.value ? 'The income above is what the family kept.' : null))
 
@@ -733,9 +784,13 @@ const practiceWeekLabel = computed(() => weekLabel(week.value))
              cannot say, which is where the money went.
              ⚠ ROUND 30 #1 UNBOLDED IT AT HIS INSTRUCTION – see the stylesheet; the weight is the
              only thing about this line that moved. The foot survives on the legacy shape alone,
-             untouched: he named the weight and the rows, not this sentence. -->
-        <p v-if="kidShareMemo" class="recap-memo" role="note">
-          <span class="recap-memo-line">{{ kidShareMemo }}</span>
+             untouched: he named the weight and the rows, not this sentence.
+             ⚠⚠ ROUND 30 #21 – ONE LINE PER RULE, and on a week governed by a single rule that is
+             still exactly one line, byte-identical to the one he approved. `.recap-memo` is already
+             a flex column with a gap, so a second line needs no style. See the script block for the
+             measurement and for why the round 29 #10 pin could not catch the blend. -->
+        <p v-if="kidShareMemo.length > 0" class="recap-memo" role="note">
+          <span v-for="line in kidShareMemo" :key="line" class="recap-memo-line">{{ line }}</span>
           <span v-if="kidShareFoot" class="recap-memo-foot">{{ kidShareFoot }}</span>
         </p>
 
