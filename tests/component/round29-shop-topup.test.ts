@@ -291,13 +291,21 @@ describe('round 29 #9 – a depreciated value is not an error', () => {
 // FOLDED IN FROM THE ROUND-29 AUDIT – two labels on surfaces this wave was already inside.
 // =================================================================================================
 
-describe('round 27 #8 (folded in) – the two «season» figures say which season they mean', () => {
-  it('⭐⭐ the spending period says SO FAR and the history card says COMPLETED', async () => {
-    // ⚠⚠ THE ARITHMETIC WAS NEVER WRONG, which is why this is a label test and not a sum test. The
-    // owner: «в History расход за сезон написан 36 тысяч, а на вкладке расходов 25 тысяч ... явно
-    // что-то не ладно с нашей математикой». Both figures were right about DIFFERENT seasons – the
-    // period switcher folds the season still running, the history card lists seasons that wrapped –
-    // and neither surface said which. He is owed the words, not a repair.
+describe('round 30 #4 – the spending period is HIS word, and it is back', () => {
+  // ⚠⚠ RE-AIMED, NOT DELETED (round 30 #4). This assertion shipped in round 29 pointing the other
+  // way – it demanded `So far` and forbade `This season`, because the round-27 #8 fold renamed the
+  // tab on the way past. THE OWNER, 30.08: «В Family budget вкладка This season изменилась на So
+  // far. Я это не просил. Верни как было пожалуйста». The pin is the record of what the label used
+  // to be asserted to be, so it turns round instead of going away, and it now guards the restored
+  // word against the next agent who thinks it reads better another way (CLAUDE.md invariant 4).
+  //
+  // ⚠ ROUND 27 #8 IS STILL TRUE AND STILL UNSOLVED. «в History расход за сезон написан 36 тысяч, а
+  // на вкладке расходов 25 тысяч» – both figures were right about DIFFERENT seasons (this switcher
+  // folds the season still running; the history card lists seasons that wrapped) and the ARITHMETIC
+  // WAS NEVER WRONG. The rename was never the fix, so restoring the word re-opens no defect. The
+  // history card's own eyebrow is left exactly as round 29 left it – he did not ask about it, and
+  // changing it back would be a second unasked wording change.
+  it('⭐⭐ the period switcher says «This season», the word he had before round 29', async () => {
     const world = professional(walk('r29-season-labels', 20))
     // ⚠ NOT `mountShop` – the period switcher lives on the SPENDING chapter, which is where the
     // screen opens, and pressing Shop would `v-if` it straight back out of the document.
@@ -306,12 +314,14 @@ describe('round 27 #8 (folded in) – the two «season» figures say which seaso
 
     const periods = wrapper.findAll('.money-window button.tab-pill').map((b) => b.text().trim())
     expect(periods.length, 'the period switcher is on screen').toBeGreaterThan(0)
-    expect(periods.join(' '), 'the running season is named as unfinished').toMatch(/So far/)
-    expect(periods.join(' '), 'and no longer as a bare «This season»').not.toContain('This season')
+    expect(periods.join(' '), 'his word, restored').toContain('This season')
+    expect(periods.join(' '), 'and the round-29 rename is gone').not.toMatch(/So far/)
 
     const history = wrapper.findAll('button.tab-pill').find((n) => n.text().trim() === 'History')!
     await history.trigger('click')
-    expect(wrapper.text(), 'the other side of the same confusion').toContain('Completed seasons')
+    expect(wrapper.text(), 'the history card is untouched – he did not ask').toContain(
+      'Completed seasons',
+    )
     wrapper.unmount()
   })
 })

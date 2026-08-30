@@ -203,17 +203,23 @@ const kidShareNote = computed<string | null>(() => {
 // global (it is on the template global-allowlist), so a ref by that name is unreachable from the
 // template and the toggle would silently no-op.
 const breakdownWindow = ref<'12w' | 'season'>('12w')
-// ⭐⭐ ROUND 27 #8 (folded into round 29) – «SO FAR», BECAUSE IT IS THE SEASON SO FAR.
+// ⚠⚠ ROUND 30 #4 – «THIS SEASON», AND IT IS NOT OURS TO RENAME.
 //
-// THE OWNER: «в History расход за сезон написан 36 тысяч, а на вкладке расходов 25 тысяч», and
-// «явно что-то не ладно с нашей математикой». ⚠⚠ THE ARITHMETIC WAS NEVER WRONG. Both figures were
-// right about DIFFERENT SEASONS: this toggle folds the CURRENT 52-week block, which on the save he
-// reported from was 34 weeks old, while `Every season` below lists seasons that have FINISHED. Two
-// screens said «season» and meant two things, and neither said which – so the only honest repair is
-// a label on each, not a change to a number. Its twin is the eyebrow on the history card.
+// Round 29 folded in a fix for round 27 #8 and renamed this tab `This season` → `Season so far` /
+// `So far` on the way past. THE OWNER, 30.08: «В Family budget вкладка This season изменилась на
+// So far. Я это не просил. Верни как было пожалуйста». It is restored, and the prohibition is now
+// CLAUDE.md invariant 4: a label may only change when the task ASKED for it, and fixing something
+// adjacent is not permission.
+//
+// ⚠ ROUND 27 #8 IS STILL TRUE AND STILL UNSOLVED. His complaint was real – «в History расход за
+// сезон написан 36 тысяч, а на вкладке расходов 25 тысяч» – and the ARITHMETIC WAS NEVER WRONG:
+// both figures are right about DIFFERENT seasons. This toggle folds the CURRENT 52-week block
+// (34 weeks old on the save he reported from) while the history card below lists seasons that have
+// FINISHED. The rename was never the fix, so restoring the word re-opens no defect; it only stops
+// answering a question he did not ask. The two-seasons confusion waits for him to choose a repair.
 const WINDOW_OPTIONS = [
   { value: '12w', label: 'Last 12 weeks', short: '12 weeks' },
-  { value: 'season', label: 'Season so far', short: 'So far' },
+  { value: 'season', label: 'This season', short: 'This season' },
 ]
 // The engine-side finance window for the active toggle (12w: last 12 weeks; season: the current
 // 52-week block) - category-accurate over the full retained history, not the trailing event feed.
@@ -1623,10 +1629,12 @@ const TAB_OPTIONS = [
            One row per season she has finished. Read-only, and honest about the years it cannot
            answer for - see the script for why some rows say nothing. -->
       <Card v-if="screenTab === 'history'" class="money-panel money-years">
-        <!-- ⭐⭐ ROUND 27 #8 (folded into round 29) – «COMPLETED», and its twin is the period
-             switcher's «Season so far». These rows are seasons that have WRAPPED; that one is the
-             season still running. The two numbers he could not reconcile were each right about a
-             different season and neither card said which. See WINDOW_OPTIONS in the script. -->
+        <!-- ⭐⭐ ROUND 27 #8 (folded into round 29) – «COMPLETED». These rows are seasons that have
+             WRAPPED; the period switcher above folds the season still running. The two numbers he
+             could not reconcile were each right about a different season.
+             ⚠ ROUND 30 #4: its twin USED to read «Season so far» – that half was an unasked rename
+             and is back to `This season`. This eyebrow is left as round 29 left it because he did
+             not ask about it, so #8 stands OPEN: half-labelled is not solved. See WINDOW_OPTIONS. -->
         <Eyebrow as="h2">Completed seasons</Eyebrow>
         <p v-if="!seasonRows.length" class="money-panel-note">
           Her first season is still running – it lands here when the year wraps up.

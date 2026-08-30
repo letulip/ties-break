@@ -43,12 +43,35 @@ marked `[!]` and each names what shipped and why it missed – that is the point
   deleting stays available; he has now looked at it in play and deleted it. **The multi-week skip goes
   except for a long layoff, and there it must stop one day SHORT of the window.**
 
-- [!] **4. «В Family budget вкладка This season изменилась на So far. Я это не просил. Верни как было
+- [x] **4. «В Family budget вкладка This season изменилась на So far. Я это не просил. Верни как было
   пожалуйста и запрети на уровне документации и спек агентам самовольно изменять вординг»** –
   ⚠⚠ **REOPENED, and it is a HOUSE-LAW item, not only a string.** Round 29's folded-in fix for round
   27 #8 renamed the tab while solving a different complaint. **Restore `This season`, and write the
   prohibition into `CLAUDE.md`**: an agent may not change user-facing wording it was not asked to
   change, even while fixing something adjacent.
+
+  **SHIPPED.** `MoneyScreen.vue`'s `WINDOW_OPTIONS` reads `{ label: 'This season', short: 'This
+  season' }` again – exactly the pair `db6da62` overwrote. One line of copy; the rest of the diff is
+  the record of why.
+
+  ⚠ **ROUND 27 #8 IS STILL TRUE AND STILL UNSOLVED, and restoring the word does not re-open it.**
+  His #8 complaint was real – «в History расход за сезон написан 36 тысяч, а на вкладке расходов
+  25 тысяч» – and **the arithmetic was never wrong**: the two figures are each right about a
+  DIFFERENT season (this switcher folds the 52-week block still running; the history card lists
+  seasons that have wrapped). **The rename was never the fix.** Renaming the tab answered a question
+  he had not asked and left the one he did ask exactly where it was, so putting the word back costs
+  nothing that was ever earned. #8 waits for him to choose a repair.
+
+  ⚠ **One half of that rename is still standing and I did not touch it.** The same commit also
+  changed the history card's eyebrow `Every season` → `Completed seasons`. He named only the tab, so
+  reverting the eyebrow would be a **second** unasked wording change – invariant 4 binds the revert
+  as hard as the rename. Flagging it rather than moving it: **say the word and it goes back.**
+
+  ⭐ The round-29 pin that demanded `So far` and forbade `This season` was **re-aimed, not deleted**
+  (`tests/component/round29-shop-topup.test.ts`) – it now guards the restored word against the next
+  agent who finds it reads better another way, and it carries the history of what it used to assert.
+  Mutation-verified: with the label put back to `So far` it fails on `expected '12 weeks So far' to
+  contain 'This season'`.
 
 - [ ] **5. «Внутри Bills и Shop сделать дополнительные вкладки как на экране Spending (12 weeks/So far)
   для каждой категории.** Для Bills – Her Kit / Advs Portfolio. Для Shop – сверху плашкой **The shelf**,
