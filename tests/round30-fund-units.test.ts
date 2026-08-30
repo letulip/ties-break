@@ -369,6 +369,22 @@ describe('round 30 #14 – what the screen is given, and the volatility that cam
     expect(toSnapshot(world).shop.rows.find((r) => r.id === 'index-fund')!.unitsHeld).toBe(held.units)
   })
 
+  it('⚠ a zero-unit row shows NO average rather than `Infinity` – the divide-by-nothing clause', () => {
+    // ⚠ NO COMMAND CAN BUILD THIS ROW: a whole sale deletes it, a part sale leaves units behind, and
+    // the v66 back-fill divides a positive basis. A corrupted save can, and `shared/money.ts`' house
+    // rule is that a fact and a missing value must not look the same – so the screen has to be given
+    // null and not a division by nothing. Driven through `shopView`, because that is where it would
+    // reach a person.
+    const world = career('r30-zero-units', 12)
+    world.assets = [{ id: 'index-fund', boughtWeek: 2, paidCents: 50_000_00, valueCents: 0, units: 0 }]
+    expect(avgUnitPriceCents(world.assets[0])).toBeNull()
+    const row = shopView(world).rows.find((r) => r.id === 'index-fund')!
+    expect(row.avgUnitPriceCents, 'no average, rather than Infinity dollars').toBeNull()
+    expect(row.unitsHeld, 'and the count it does have is still reported honestly').toBe(0)
+    // ...and the rung's own price is unaffected: it is a fact about the week, not about the row.
+    expect(row.unitPriceCents).toBeGreaterThan(0)
+  })
+
   it('⭐⭐ the average moves only when they BUY – a part sale leaves it exactly where it was', () => {
     const world = career('r30-avg-stable', 120, (w) => {
       if (w.week === 20) buyAsset(w, 'index-fund', 80_000_00)

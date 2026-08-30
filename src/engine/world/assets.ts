@@ -260,6 +260,13 @@ export function assetWorthCents(world: WorldState, owned: OwnedAsset, item: Shop
  *  it and a feeling when you cannot. Round 29's rebased basis could not say it at all: it folded
  *  every entry into one restated number.
  *
+ *  ⚠⚠ AND `units <= 0` IS A REAL CLAUSE, NOT A HABIT: it is the difference between a screen that
+ *  says nothing and a screen that says `Infinity`. No command can produce a zero-unit row – a whole
+ *  sale deletes the row, a part sale leaves units behind by construction, and the v66 back-fill
+ *  divides a positive basis – but a corrupted or hand-built row can, and `shared/money.ts`' house
+ *  rule is that a fact and a missing value must not look the same. `tests/round30-fund-units.test.ts`
+ *  drives one through `shopView` rather than leaving the clause to be trusted.
+ *
  *  ⚠ IT IS `paidCents / units` AND THEREFORE SURVIVES A PART SALE UNCHANGED, which is what makes
  *  «зафиксировать убыток» honest: a sale takes the same fraction out of the cash and out of the
  *  units (`sellAsset`), so the average the family entered at does not move when they realise part of
