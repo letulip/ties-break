@@ -59,7 +59,7 @@ import {
 import { ECONOMY } from '../src/engine/economy'
 import { rngFromSeed } from '../src/engine/rng'
 import { WEEKS_PER_YEAR } from '../src/engine/season/calendar'
-import type { SeasonHistoryEntry } from '../src/shared/protocol'
+// (SeasonHistoryEntry is inferred at both fixture sites now that byTrack is complete – no cast)
 
 const MERCH = 'merch-brand'
 const PRICE = 250_000_00
@@ -406,13 +406,13 @@ function proSeasons(world: WorldState, n: number, endRank: number, wins: number,
       wins,
       losses,
       byTrack: {
-        itf: { endRank, points: 0, wins: 0, losses: 0 },
+        domestic: { points: 0, wins: 0, losses: 0 },
+        itf: { points: 0, wins: 0, losses: 0 },
         wta: { endRank, points: 0, wins, losses },
-        junior: { points: 0, wins: 0, losses: 0 },
       },
       fundsDeltaCents: 0,
       endFundsCents: 0,
-    } as SeasonHistoryEntry)
+    })
   }
 }
 
@@ -548,14 +548,17 @@ describe('round 30 #23 §7 – income and worth are two functions, not one dial'
         wins: 96,
         losses: 4,
         byTrack: {
-          itf: { endRank: 60, points: 0, wins: 0, losses: 0 },
+          // ⚠ THE JUNIOR AND DOMESTIC WINS LIVE IN THE FOLD ABOVE AND NOWHERE ELSE, which is the
+          // point: `LadderTrack` is domestic / itf / wta, so a junior record reaches a reader only
+          // through `SeasonHistoryEntry.wins` – the very field this arm forbids the brand to read.
+          domestic: { points: 0, wins: 0, losses: 0 },
+          itf: { points: 0, wins: 0, losses: 0 },
           // ...and on the professional table she is under the window and buys nothing for it
           wta: { endRank: 60, points: 0, wins: 1, losses: 3 },
-          junior: { points: 0, wins: 95, losses: 1 },
         },
         fundsDeltaCents: 0,
         endFundsCents: 0,
-      } as SeasonHistoryEntry,
+      },
     ]
     const V = ECONOMY.business.merch.value
     expect(brandSignalsOf(w).winRate, 'read off the WTA track, not the fold').toBeCloseTo(0.25, 5)
