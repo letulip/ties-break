@@ -152,6 +152,11 @@ test('at 375 px the app does not scroll sideways, and the season strip stays sho
 // phone is the tallest that block has ever been, and this is the only layer that can say whether the
 // screen still fits: happy-dom has no layout engine, so a mounted test measures zeros.
 //
+// ⭐⭐ AND ROUND 30 #18 SENT IT TO THE EDGE, which makes that square 32px wider and 32px taller than
+// it was at this width. The full-bleed assertions are inline below, with the page-level "does not
+// scroll sideways" check above them – a photograph that cancels the shell's gutter is exactly the
+// kind of object that takes a phone sideways if the cancellation is off by a pixel.
+//
 // ⚠ THE ENTRY IS MADE RATHER THAN ASSUMED, and that is the difference between this and a dead guard.
 // The panel is drawn only for an ENTERED tournament (`upcoming.find(e => e.entered)`), and a seeded
 // career has entered nothing – a version of this test that simply opened the tab would have measured
@@ -194,6 +199,27 @@ test('at 375 px the Next-tournament screen fits, square picture and all', async 
   expect(hero, 'the hero is laid out').not.toBeNull()
   expect(hero.width, 'the picture is inside the phone').toBeLessThanOrEqual(375)
   expect(hero.height / hero.width, 'square, or taller when the read needs the room').toBeGreaterThanOrEqual(0.99)
+
+  // ⭐⭐ ROUND 30 #18 – AND NOW IT RUNS TO THE EDGE: «в край, как hero картинка на главной». #6 left
+  // this open on purpose and asked; the owner ruled, and this is the layer that can answer for it.
+  // `.nt-hero` cancels `--app-pad-x` with a negative margin, which happy-dom can only read as a
+  // DECLARATION – it has no layout engine, so a mounted test cannot tell a margin that reaches the
+  // phone's edge from one that is simply written down.
+  //
+  // ⚠ THE ASSERTION ABOVE IS RE-AIMED, NOT REPLACED. «inside the phone» is now an equality at both
+  // edges, and it keeps guarding the direction that must never relax: wider than 375 is overflow,
+  // and the page-level check further up is what that would break.
+  expect(hero.x, 'the picture does not start at the left edge of a 375px phone').toBeLessThanOrEqual(0.5)
+  expect(hero.x + hero.width, 'the picture does not reach the right edge of a 375px phone').toBeGreaterThanOrEqual(374.5)
+
+  // ...and the plate below does NOT follow it out of the gutter – «И плашки дальше как на главной на
+  // своих подложках». That is Home's composition exactly: the photograph is the page, and every
+  // object after it is laid ON the page, inset. A full-bleed hero with a full-bleed plate under it
+  // is a different screen from the one he described, and this is the assertion that tells them apart.
+  const plate = (await panel.locator('.nt-first').boundingBox())!
+  expect(plate, 'the rounds plate is laid out').not.toBeNull()
+  expect(plate.x, 'the rounds plate lost the app gutter on the left').toBeGreaterThanOrEqual(15.5)
+  expect(plate.x + plate.width, 'the rounds plate lost the app gutter on the right').toBeLessThanOrEqual(359.5)
   // ...and the four icons under it are all on the screen, in one row, which is the clause a square
   // picture plus four cells is most likely to break.
   const facts = panel.locator('.nt-fact')
