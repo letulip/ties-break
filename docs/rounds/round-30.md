@@ -19,7 +19,7 @@ marked `[!]` and each names what shipped and why it missed – that is the point
 
 ---
 
-- [!] **1. «Поправить результаты недели после чемпионата, вернуть все цифры и надписи как было**:
+- [x] **1. «Поправить результаты недели после чемпионата, вернуть все цифры и надписи как было**:
   Income / Spent / Balance, ниже her cut **без жирного шрифта**, ниже coach's cut если есть результат.
   Всё остальное лишнее, дублирующее и сбивает с толку. **Other income странно звучит**, можно
   переименовать… например Family income и тогда эту строчку тоже оставить здесь» – ⚠⚠ **REOPENED
@@ -30,6 +30,55 @@ marked `[!]` and each names what shipped and why it missed – that is the point
 
   ⭐ And his own extension: «если она на самокоучинге, то это тоже актуальная строчка по аналогии
   с тренером» – a self-coached family still owes itself the line.
+
+  **SHIPPED, and it is FEWER lines than what it replaces.** `WeekRecapCard.vue`'s Finances tile:
+
+  ```
+  Income          +$X
+  Spent           -$Y
+  ────────────────────
+  Balance         +$Z
+  Her cut 50% – $N into her own account.        <- a memo, and NOT bold any more
+  Coach's cut 10% – $M, inside Spent above.     <- only on a week with a result
+  Family income   +$K                           <- the renamed `Other income`
+  ```
+
+  `financeRows` is the Income / Spent pair on **every** week and every save again – the branch that
+  produced `Before her cut` / `Her cut N%` is gone. ⚠ **Her cut had been on screen twice**, as a
+  signed row and as the memo below it, which is exactly the «дублирующее» he names. `Family income`
+  keeps the old `Other income` figure to the cent (`income − (base − cut)`) under the name he chose,
+  and it sits **below the balance with the memos, outside `.recap-rows`** – it is a SLICE of the
+  Income row above, so a term beside Income would count the family's own money twice.
+
+  ⚠ **The round 29 #10 pin is re-aimed for the second time and still alive.** It exists so a stated
+  «50%» can never drift from the money beside it. #10 put it on the memo, part two #1 moved it onto
+  two rendered rows, and this reshape takes the base back off the card – so it now reads the RATE off
+  the screen and the BASE off the wire, and adds a tie to the engine's own ramp
+  (`kidPrizeShareBps`, which reads `ECONOMY.kidShare` and nothing else). It never divides cents by a
+  rate to invent a base, which is what `accrueKidShare`'s header forbids. The coach's twin pin
+  (`staffResultShareBps`, `round29p2-coach-cut-weekly.test.ts` §3) was untouched by the reshape and
+  is green as it stands.
+
+  ⚠ **THE SELF-COACHING LINE: the engine pays a self-coached family NOTHING, and I did not invent a
+  payment.** `finalizeTournament` gates it on a filled seat –
+  `track === 'wta' && world.coachId !== null` – and that gate is **your own round-24 ruling**, quoted
+  in the code beside it: «a self-coached family owes no coach share and an empty table no masseur
+  share». There is already a green test arm for it («a self-coached family owes nothing, and the card
+  is silent for them too»). So the LINE may well be right while the MONEY is zero, and printing
+  `Coach's cut 10% – $0` today would break the house rule that a fact and a missing value must not
+  look the same (`shared/money.ts`). **Two different asks, and both are yours to make:**
+  *(a)* a self-coached family PAYS ITSELF the result share – an economy change that overturns round
+  24 and moves real cents; or *(b)* the line appears as a note with no figure, saying the share
+  stayed in the family. Say which and it is a small build either way.
+
+  ⚠ **Two things I did NOT touch, flagged rather than guessed at** (invariant 4 binds a deletion as
+  hard as a rename):
+  - the foot «The income above is what the family kept.» still fires exactly where it did – a week
+    with a cut and no recorded gross, i.e. one your save banked before round 29 #10. You listed the
+    lines you want and did not name this one. Say the word and it goes.
+  - the coach's memo **unbolded with hers**: they are one class, one idiom and the two lines you
+    listed back to back. Two adjacent memos at two different weights would read as a defect. If the
+    coach's should stay bold it is a modifier class and one line.
 
 - [!] **2. «Если выбрать Do both для съёмок и турнира, то в расписании не отображаются съёмки»** –
   ⚠⚠ **REOPENED against round 29 #3.** The four-way clash shipped; its «do both» arm charges the

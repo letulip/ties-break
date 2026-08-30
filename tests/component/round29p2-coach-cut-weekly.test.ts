@@ -85,11 +85,17 @@ function weekOf(
   prefix: string,
   finish: number,
   coached = true,
-  /** ⚠⚠ THE CARD HAS TWO SHAPES AND THIS PICKS WHICH ONE IS UNDER TEST, WHICH A MUTATION FOUND
-   *  RATHER THAN A DESIGN. `financeRows` returns `[Income, Spent]` on a week that split no cheque
-   *  with her, and `[Before her cut, Her cut N%, Other income, Spent]` on a week that did – two
-   *  different early returns. The first draft of §2 only ever mounted the first shape, and a coach
-   *  row inserted into the SECOND one passed every arm in this file. Both are driven now.
+  /** ⚠⚠ THE CARD HAD TWO SHAPES AND THIS PICKED WHICH ONE WAS UNDER TEST, WHICH A MUTATION FOUND
+   *  RATHER THAN A DESIGN. `financeRows` used to return `[Income, Spent]` on a week that split no
+   *  cheque with her and `[Before her cut, Her cut N%, Other income, Spent]` on a week that did –
+   *  two early returns – and the first draft of §2 only ever mounted the first, so a coach row
+   *  inserted into the SECOND passed every arm in this file.
+   *  ⚠ ROUND 30 #1 COLLAPSED THE TWO SHAPES BACK INTO ONE at the owner's instruction («вернуть все
+   *  цифры и надписи как было до этого: Income / Spent / Balance… Всё остальное лишнее»), so the
+   *  column is the pair on every week. THE FLAG STAYS, AND SO DOES THE ARM IT DRIVES: what it now
+   *  selects is a week carrying her cut AND the coach's at once – still the case the mutation
+   *  escaped through, still the ordinary week for a player, and the arm that would catch either memo
+   *  being folded into the column.
    *  ⚠ `fromAge18` also makes the fixture the realistic one: a title with a coach on the payroll is
    *  something that happens to a nineteen-year-old, not to the fourteen-year-old `createWorld`
    *  hands back. */
@@ -203,13 +209,18 @@ describe('round 29 part two #13 §2 – a memo, never a row', () => {
     expect(tile.find('.recap-memo-coach').exists()).toBe(true)
   })
 
-  it('⭐⭐ ...ON BOTH SHAPES OF THE CARD, which is the arm a mutation had to teach this file', () => {
-    // ⚠⚠ THE FIRST DRAFT OF §2 MOUNTED ONE SHAPE AND WAS THEREFORE HALF DEAD. `financeRows` has two
+  it('⭐⭐ ...ON A WEEK CARRYING BOTH CUTS, which is the arm a mutation had to teach this file', () => {
+    // ⚠⚠ THE FIRST DRAFT OF §2 MOUNTED ONE SHAPE AND WAS THEREFORE HALF DEAD. `financeRows` HAD two
     // early returns – the netted `[Income, Spent]` pair on a week that split no cheque with her, and
-    // the four-row gross column on a week that did – and the double-count mutation inserted into the
-    // SECOND one passed every assertion in this file. The measurement is in the file header. A week
-    // with a coach's share AND her cut on it is also the ordinary case for a player: an
-    // eighteen-year-old winning a title with a coach on the payroll.
+    // a four-row gross column on a week that did – and the double-count mutation inserted into the
+    // SECOND one passed every assertion in this file. The measurement is in the file header.
+    //
+    // ⚠ RE-AIMED BY ROUND 30 #1, NOT DELETED. The owner sent the four-row column back – «вернуть все
+    // цифры и надписи как было до этого: Income / Spent / Balance… Всё остальное лишнее,
+    // дублирующее и сбивает с толку» – so there is one shape now and the arm's subject changes from
+    // «the other shape» to «the week that carries BOTH cuts». That is still the ordinary case for a
+    // player (an eighteen-year-old winning a title with a coach on the payroll) and still the arm
+    // that reddens if either memo is ever folded into the column.
     const { world, snap } = weekOf('both-shapes', 0, true, true)
     const point = snap.finance.weekly12.find((p) => p.week === snap.week)
     expect(point?.kidShareCents, 'the fixture really is on the gross-split shape').toBeGreaterThan(0)
@@ -221,7 +232,11 @@ describe('round 29 part two #13 §2 – a memo, never a row', () => {
 
     const tile = recap(snap).find('.recap-finance')
     const keys = tile.findAll('.recap-rows .recap-row-key').map((n) => clean(n.text()))
-    expect(keys[0], 'the gross column really is the shape on screen').toBe('Before her cut')
+    // ⚠ RE-AIMED BY ROUND 30 #1 – this line read `.toBe('Before her cut')` while the gross column
+    // existed. It asserts the same thing it always did: that the fixture really put the shape under
+    // test on screen, so the loop below cannot pass by looking at nothing.
+    expect(keys, 'his restored column really is the shape on screen').toEqual(['Income', 'Spent'])
+    expect(tile.find('.recap-memo').exists(), 'and her cut is on this week too, as a memo').toBe(true)
     for (const key of keys) expect(key, 'and the coach is not a row in THIS column either').not.toContain('Coach')
 
     const vals = tile.findAll('.recap-rows .recap-row-val').map((n) => dollarsOf(n.text()))
