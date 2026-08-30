@@ -154,6 +154,14 @@ marked `[!]` and each names what shipped and why it missed – that is the point
      ⚠ The injury is a REQUIRED argument now, not an optional one: a caller that forgot it would
      silently get the pre-ruling answer, which is the control you deleted. Off a layoff it returns
      **0**, so the two rules agree by construction – no layoff, no skip, from either side.
+
+     ⚠⚠ **ONE READING TO CONFIRM: «минус 1 день» is built as MINUS ONE WEEK.** The control is
+     week-granular end to end – the layoff window is `weeksRemaining`, the press buys whole weeks,
+     and there is no day-sized skip to subtract a day from – so a literal day would round to either
+     nothing at all or to the week I built. **The week is what makes your own reason true**
+     («иначе даже на турниры не записаться никак»): a week of the window survives, and a week is the
+     unit an entry list or a letter is answered in. If you meant something else by «день», say so –
+     it is one constant.
   3. **The first-use line is gone**, with the control it explained. It opened «Quiet stretch ahead»,
      and there is no quiet-stretch span left for it to introduce – a muted sentence is fixable, a
      false one is not. `.span-hint`, its watermark and the `markSpanHintUsed()` call went with it.
