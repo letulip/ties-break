@@ -86,7 +86,10 @@ describe('the build line renders at the foot of Settings, with the values the bu
     // ⚠ RE-AIMED AGAIN AT v67 (30.08, round 30 item 25 – the units and name back-fills moved off
     // the shipped v66 step), NOT WEAKENED, and for the same reason verbatim: 67 was moved by that
     // repair with its full three-part move, never by this line's item. The claim above is untouched.
-    expect(SAVE_SCHEMA_VERSION).toBe(67)
+    // ⚠ AND AGAIN AT v68 (31.08, round 31 #10/#13 – the per-career age curve), NOT WEAKENED, for the
+    // third time and for the reason verbatim: 68 was moved by that wave with its full four-part move
+    // (migration, golden fixture, e2e fixtures regenerated, spec), never by this line's item.
+    expect(SAVE_SCHEMA_VERSION).toBe(68)
   })
 
   it('is one line at the FOOT of the screen, and it is there whichever tab is open', async () => {
