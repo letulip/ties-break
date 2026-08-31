@@ -543,7 +543,9 @@ describe('save migrations', () => {
     // ⚠ RE-AIMED AGAIN AT v67 (30.08, round 30 item 25 – the units and name back-fills moved off the
     // shipped v66 step), for the same reason and with the same claim: the chain must run past the
     // colliding 64, and it now has two more rungs to cross before it arrives.
-    expect(SAVE_SCHEMA_VERSION, 'and the current schema is 67 – past the colliding 64, through 65').toBe(67)
+    // ⚠ AND AT v68 (31.08, round 31 #10/#13 – the per-career age curve), for the third time and with
+    // the claim unchanged: one more rung between the collision and the head.
+    expect(SAVE_SCHEMA_VERSION, 'and the current schema is 68 – past the colliding 64, through 65').toBe(68)
 
     // v64's step ran: the reveal back-fills NULL, which is the TRUE value and not a placeholder – no
     // save written before it can be holding a question in front of the player.
@@ -784,8 +786,12 @@ describe('save migrations', () => {
 
     const migrated = migrateSave(JSON.parse(JSON.stringify(raw)))
 
-    expect(migrated.schemaVersion, 'the step RAN – this is the assertion the defect fails').toBe(67)
-    expect(SAVE_SCHEMA_VERSION, 'and the ladder head is past the shipped v66').toBe(67)
+    // ⚠ THE HEAD, NOT THE LITERAL 67, AND THE RE-AIM IS THE POINT OF THE CASE. What this line claims
+    // is that a v66 save walks the WHOLE ladder – the defect it was cut for was a step that never ran
+    // – so it must follow the head rather than be repinned every time a rung is added (v68 added one).
+    // The v67-specific claims are the `units` / `name` assertions below, and they are untouched.
+    expect(migrated.schemaVersion, 'the step RAN – this is the assertion the defect fails').toBe(SAVE_SCHEMA_VERSION)
+    expect(SAVE_SCHEMA_VERSION, 'and the ladder head is past the shipped v66').toBeGreaterThan(66)
 
     const fund = migrated.assets!.find((a) => a.id === 'index-fund')!
     const dep = migrated.assets!.find((a) => a.id === 'deposit')!
@@ -856,7 +862,9 @@ describe('save migrations', () => {
 
     const migrated = migrateSave(JSON.parse(JSON.stringify(raw)))
 
-    expect(migrated.schemaVersion).toBe(67)
+    // ⚠ THE HEAD, NOT A LITERAL – see the note on the v66 case above. The per-rung claims below are
+    // what this case is actually about, and every one of them is unchanged.
+    expect(migrated.schemaVersion).toBe(SAVE_SCHEMA_VERSION)
     // v64 ran – the reveal back-fills null, and the KEY is present rather than absent-and-undefined.
     expect('callUpReveal' in migrated.college!).toBe(true)
     // v65 ran – the champion tally back-fills empty.

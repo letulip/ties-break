@@ -263,32 +263,114 @@ export function relativeAgeHeadStart(birthMonth: number): number {
   return relativeAgeYears(birthMonth) * SKILL_POINTS_PER_YEAR
 }
 
-/** How much of the available headroom a week can take, by age. The plan's calibration targets:
- *  first points at 17-18, top-100 about four and a half years later, peak 23-28, decline from 29. */
-export function ageFactor(ageYears: number): number {
+// =================================================================================================
+// THE PER-CAREER CURVE (round 31 #10 + #13) – the two ages that are HERS rather than the game's
+// =================================================================================================
+//
+// ⚠⚠ EVERY FUNCTION BELOW TAKES THE PAIR AS AN OPTIONAL ARGUMENT DEFAULTING TO
+// `ECONOMY.development.ageCurve`, WHICH IS NOT A CONVENIENCE – IT IS WHAT MAKES THIS SLICE SAFE.
+// `declineFactor` is called by a SHIPPED MIGRATION (the v61 -> v62 peak reconstruction, which runs
+// its arithmetic backwards off the shipped curve), and a shipped migration may never be edited. A
+// defaulted parameter leaves that call, and every other existing caller, byte-identical.
+
+/** The two ages a career's own curve can move. Everything else in `ageCurve` is shape, not age. */
+export interface AgeCurveBounds {
+  plateauStart: number
+  declineStart: number
+}
+
+/** ⭐⭐⭐ WHAT A CAREER PERSISTS – see `WorldState.ageCurve` for the full argument, and note that this
+ *  is NOT the number the engine reads. `declineStart` here is her DRAWN age; the injury pull is
+ *  applied on the way out, by `ageCurveOf`, so the two halves stay separable and the drawn value is
+ *  still legible in the save after a career of layoffs. */
+export interface CareerAgeCurve extends AgeCurveBounds {
+  /** ⚠ THE ZERO POINT OF THE INJURY PULL, AND IT EXISTS FOR THE OWNER'S LIVE CAREER. Weeks lost
+   *  BEFORE this mark are not charged. A career that resolves its curve at the fork writes 0 here
+   *  and pays for every week it has ever lost; a career the v68 migration pinned writes whatever it
+   *  had already lost, so it loads reading exactly the 29 it was reading before the update and the
+   *  mechanic reaches only its future. */
+  injuryFrom: number
+}
+
+/** THE SPREAD, AS ONE DRAW. Uniform on ±`declineSpreadYears`, off a purpose-scoped sub-stream keyed
+ *  on the seed alone (CLAUDE.md invariant 2) – so it is the same number whenever it is asked for,
+ *  which is what lets the curve be resolved at the fork rather than at week 0.
+ *
+ *  ⚠ NOT MAIN, AND KEYED ON NOTHING BUT THE SEED. A week in the key would make her body's ending a
+ *  function of WHEN the question was asked; a player input in it would be an input re-rolling the
+ *  world's dice. */
+export function declineSpreadOf(seed: string): number {
+  return ECONOMY.development.declineSpreadYears * (2 * rngFromSeed(`${seed}:decline`)() - 1)
+}
+
+/** HER CURVE, RESOLVED: the route's pair with the career's own spread on `declineStart`. Pure. */
+export function resolveAgeCurve(seed: string, route: 'direct' | 'college'): AgeCurveBounds {
+  const base = ECONOMY.development.ageRoutes[route]
+  return { plateauStart: base.plateauStart, declineStart: base.declineStart + declineSpreadOf(seed) }
+}
+
+/** YEARS OF PEAK A BODY HAS SPENT, off the weeks it has spent off court. Linear and unbounded here;
+ *  the floor that keeps it sane is in `ageCurveOf`, applied where the plateau is also known. */
+export function injuryPullYears(weeksLost: number): number {
+  return Math.max(0, weeksLost) * ECONOMY.development.declinePullPerInjuryWeek
+}
+
+/** ⭐⭐ THE ONE READER EVERY OTHER READER GOES THROUGH: the pair the engine should use for a career,
+ *  given what it persisted and how many weeks it has lost.
+ *
+ *  ⚠ ABSENT MEANS THE SHIPPED CURVE, AND IT CANNOT BITE. A career resolves its curve when the fork
+ *  is answered (age 18-19); `plateauStart` first matters at 18 and `declineStart` at 22, so a career
+ *  that has not reached the fork is younger than either and reads the default identically to how it
+ *  read it before this slice existed. That is also what keeps the frozen career hashes still: they
+ *  stop at week 156, age 16.6, with no `ageCurve` key written and nothing able to read one.
+ *
+ *  ⚠ THE FLOOR IS `plateauStart + 1` AND IT IS A CORRECTNESS GUARD, not a balance dial. `ageFactor`
+ *  reads `plateauStart` before `declineStart`, so a decline age that fell BELOW the plateau would put
+ *  a career in a band that is still climbing and already falling – arithmetic nobody wrote. A body
+ *  wrecked past this point is finished by `ENDINGS.lastOfferPeakShare` long before the floor bites. */
+export function ageCurveOf(stored: CareerAgeCurve | undefined, weeksLost: number): AgeCurveBounds {
   const c = ECONOMY.development.ageCurve
+  if (!stored) return { plateauStart: c.plateauStart, declineStart: c.declineStart }
+  const pulled = stored.declineStart - injuryPullYears(weeksLost - stored.injuryFrom)
+  return { plateauStart: stored.plateauStart, declineStart: Math.max(stored.plateauStart + 1, pulled) }
+}
+
+/** How much of the available headroom a week can take, by age. The plan's calibration targets:
+ *  first points at 17-18, top-100 about four and a half years later, peak 23-28, decline from 29.
+ *
+ *  ⚠ `bounds` IS THE CAREER'S OWN PAIR SINCE ROUND 31 #10 (`ageCurveOf`). It defaults to the shipped
+ *  curve, so every caller that does not pass one is byte-identical to before. */
+export function ageFactor(ageYears: number, bounds: AgeCurveBounds = ECONOMY.development.ageCurve): number {
+  const c = ECONOMY.development.ageCurve
+  const { plateauStart, declineStart } = bounds
   if (ageYears < c.growthEnd) {
     // 13-17: the steep years, easing off towards the top of the band rather than stopping dead.
     const t = Math.max(0, (ageYears - c.growthStart) / (c.growthEnd - c.growthStart))
     return c.peakRate * (1 - c.growthEase * t)
   }
-  if (ageYears < c.plateauStart) {
+  if (ageYears < plateauStart) {
     // 18-22: still climbing, and this is where the real gap between a managed career and a
     // squandered one opens up.
-    const t = (ageYears - c.growthEnd) / (c.plateauStart - c.growthEnd)
+    const t = (ageYears - c.growthEnd) / (plateauStart - c.growthEnd)
     return c.peakRate * (1 - c.growthEase) * (1 - t) + c.plateauRate * t
   }
-  if (ageYears < c.declineStart) return c.plateauRate // 23-28: the peak. Maintenance, not growth.
-  return 0 // 29+: handled by `declineFactor` – past the peak she is not gaining at all.
+  if (ageYears < declineStart) return c.plateauRate // the peak. Maintenance, not growth.
+  return 0 // past it: handled by `declineFactor` – she is not gaining at all.
 }
 
-/** Past the peak, what she LOSES per week. Physical only; composure is handled by the caller. */
-export function declineFactor(ageYears: number): number {
+/** Past the peak, what she LOSES per week. Physical only; composure is handled by the caller.
+ *
+ *  ⚠ `bounds` DEFAULTS TO THE SHIPPED CURVE, AND THE v61 -> v62 MIGRATION IS WHY THAT DEFAULT IS
+ *  LOAD-BEARING RATHER THAN TIDY. That shipped step reconstructs a legacy save's peak by running
+ *  this function backwards; it may never be edited, so this call has to keep meaning exactly what it
+ *  meant the day it was written – and it does, because every save that step can ever see is a save
+ *  the v68 pin puts on the shipped curve. */
+export function declineFactor(ageYears: number, bounds: AgeCurveBounds = ECONOMY.development.ageCurve): number {
   const c = ECONOMY.development.ageCurve
-  if (ageYears < c.declineStart) return 0
+  if (ageYears < bounds.declineStart) return 0
   // Gentle at first and steeper every year, which is how careers actually end: a season of "still
   // fine", then a season where the legs are gone.
-  return c.declineRate * (1 + (ageYears - c.declineStart) * c.declineAccel)
+  return c.declineRate * (1 + (ageYears - bounds.declineStart) * c.declineAccel)
 }
 
 /** ⭐⭐ THE AGE AN UNDAMAGED BODY FALLS TO `share` OF ITS PEAK, walked off the curve above (the long
@@ -311,14 +393,13 @@ export function declineFactor(ageYears: number): number {
  *  is proportional per attribute, so the share is the same function of age for every career ever
  *  played. Measured on walked careers whose peaks are 31% apart: identical to three decimals. See
  *  the note on `ENDINGS.lastOfferPeakShare`. */
-export function ageAtPhysicalShare(share: number): number {
-  const c = ECONOMY.development.ageCurve
-  if (share >= 1) return c.declineStart
+export function ageAtPhysicalShare(share: number, bounds: AgeCurveBounds = ECONOMY.development.ageCurve): number {
+  if (share >= 1) return bounds.declineStart
   if (share <= 0) return Infinity
   let left = 1
-  let age = c.declineStart
+  let age = bounds.declineStart
   while (left > share) {
-    left *= 1 - declineFactor(age)
+    left *= 1 - declineFactor(age, bounds)
     // ⚠ `WEEKS_IN_SEASON` IS `WEEKS_PER_YEAR` – season/calendar.ts exports it under that name and
     // this is the same constant, imported from the leaf `economy.ts` already reads it from so that
     // nothing new joins this module's import graph.
@@ -480,12 +561,19 @@ export function growWeek(args: {
    *  ⚠ UNDEFINED EVERYWHERE ELSE, so every existing call site is byte-identical and no shipped
    *  career's growth moves. ZERO RNG IMPLICATIONS: a multiplier, drawn from nothing. */
   coachFactorOverride?: number
+  /** ⭐⭐⭐ HER OWN TWO AGES (round 31 #10/#13) – the pair `ageCurveOf` resolved for this career: the
+   *  route's plateau, and the decline age she drew and then paid for in layoffs.
+   *
+   *  ⚠ UNDEFINED EVERYWHERE ELSE, so every existing call site is byte-identical and no shipped
+   *  career's growth moves. ZERO RNG IMPLICATIONS: two numbers, drawn nowhere near here. */
+  bounds?: AgeCurveBounds
 }): KidSkills {
   const d = ECONOMY.development
   const { skills, potential, ageYears, plan, coach, playStyle, matchesThisWeek } = args
-  const decline = declineFactor(ageYears)
+  const bounds = args.bounds ?? d.ageCurve
+  const decline = declineFactor(ageYears, bounds)
   const rate =
-    ageFactor(ageYears) *
+    ageFactor(ageYears, bounds) *
     trainFactor(plan) *
     (args.loadFactor ?? 1) *
     (args.coachFactorOverride ?? coachFactor(tierOf(coach), coachFitFor(coach, playStyle))) *

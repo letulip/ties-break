@@ -38,6 +38,7 @@ import {
   PRE_V65,
   PRE_V66,
   PRE_V67,
+  PRE_V68,
 } from './coachTravelEdgeFixtures'
 
 describe('the byte-identity of a career that does not travel', () => {
@@ -89,6 +90,25 @@ describe('the byte-identity of a career that does not travel', () => {
     expect(careerHashAtSchema(5, 0, 62), '25k · middle coach · grinder').toBe(PRE_V63.middleGrinder)
     expect(careerHashAtSchema(8, 0, 62), '120k · elite coach · grinder').toBe(PRE_V63.eliteGrinder)
     expect(careerHashAtSchema(0, 1, 62), '8k · self-coached · player').toBe(PRE_V63.selfTravelling)
+  })
+
+  it('⭐⭐ v68: rolling the schema back to 67 – and dropping the key v68 added – reproduces the v67 hashes byte for byte', () => {
+    // ⚠ THE WHOLE OF WHAT ROUND 31 #10/#13 DID TO A FROZEN CAREER, AS AN IDENTITY – and the answer is
+    // NOTHING, which is derived rather than hoped for. The per-career age curve is resolved when the
+    // FORK AT NINETEEN is answered, and these careers stop at week 156, age 16.6: `world.ageCurve` is
+    // never written, so the key `careerHashAtSchema` peels is not there to peel. The cohort's half of
+    // the wave is derived, never stored, and cannot bite a field whose oldest player is 22.
+    //
+    // ⚠⚠ SO THIS CASE IS A STRICTLY STRONGER STATEMENT THAN v66's AND v67's, AND IT IS THE ONE THE
+    // WAVE HAD TO EARN. Those two moved no key because they had none to move; this one appends a
+    // world key and still moves nothing, because WHERE the key is written was chosen so that it could
+    // not. If the resolve had been put in `createWorld` – the obvious place – all three constants
+    // would have moved for a reason no comment could call inert, and a moved career hash is the
+    // owner's call. Measured before the re-freeze, not after: `tools/frozen-key-diff.ts` on 0/1
+    // against this branch's base reports ONE key of sixty-one, `schemaVersion`.
+    expect(careerHashAtSchema(5, 0, 67), '25k · middle coach · grinder').toBe(PRE_V68.middleGrinder)
+    expect(careerHashAtSchema(8, 0, 67), '120k · elite coach · grinder').toBe(PRE_V68.eliteGrinder)
+    expect(careerHashAtSchema(0, 1, 67), '8k · self-coached · player').toBe(PRE_V68.selfTravelling)
   })
 
   it('⭐⭐ v67: rolling ONLY the schema number back to 66 reproduces the v66 hashes byte for byte', () => {

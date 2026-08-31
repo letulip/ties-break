@@ -22,7 +22,11 @@
 import type { Rng } from '../rng'
 import type { WorldState } from './state'
 import { driftCohort } from '../season/cohort'
-import { growWeek, physicalMean } from '../development'
+import { ageCurveOf, growWeek, physicalMean } from '../development'
+// ⚠ THE ONE ANSWER TO "HOW MANY WEEKS HAS THIS BODY LOST", and not a second one taken off
+// `careerTotals` directly: `weeksLostSoFar` is the max of the monotone v40 total and what the pruned
+// `injuryHistory` still holds, which is the reading the career-ending injury already judges her by.
+import { weeksLostSoFar } from '../ending'
 import { coachById } from '../coach'
 import { KNOCK_REST_GROWTH, knockRestWeek } from '../knock'
 import { coachWorksThisWeek } from './phaseFinance'
@@ -45,7 +49,12 @@ import { summerLoadFactor } from './summer'
  *  run. `rng` is the MAIN stream and reaches exactly one line, `driftCohort`; see the header. */
 export function growAndLive(world: WorldState, rng: Rng): void {
   // 3. cohort drift (main stream, fixed 4-draws-per-player)
-  driftCohort(world.cohort, rng)
+  //
+  // ⚠ THE SEED JOINED THE SIGNATURE IN ROUND 31 #13 AND IT SPENDS NOTHING ON THIS STREAM. The cohort
+  // gets the same per-player decline spread the kid gets («полностью согласен, если это реализуемо»),
+  // and a spread stored on the row would be persisted state on 199 players; derived per read off
+  // `seed:decline:<id>` it costs one sub-stream and moves no draw here. Still exactly four.
+  driftCohort(world.cohort, rng, world.seed)
 
   // 3b. SHE DEVELOPS (Phase 4). Deliberately here, beside the cohort's own drift: the whole point
   //     is that both sides of the ladder move, and putting them on adjacent lines is the cheapest
@@ -119,6 +128,10 @@ export function growAndLive(world: WorldState, rng: Rng): void {
     // is what the BILL reads: the family is not paying for the programme's coaching and must not be.
     // The override replaces the rate; it does not hire anybody.
     coachFactorOverride: collegeCoachFactor(world),
+    // ⭐⭐⭐ HER OWN CURVE (round 31 #10/#13). `ageCurveOf` answers the shipped 23/29 pair until the
+    // fork at nineteen is answered and for every career the v68 pin covers, so this line is inert on
+    // the whole junior era and on every save that already existed. See `WorldState.ageCurve`.
+    bounds: ageCurveOf(world.ageCurve, weeksLostSoFar(world)),
     seed: world.seed,
     week: world.week,
     // ⚠ W4 – THE PRICE OF RESTING A KNOCK, and the whole reason `growWeek` gained this knob. She is

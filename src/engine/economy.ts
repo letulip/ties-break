@@ -2099,9 +2099,15 @@ export const ECONOMY = {
       growthStart: 13,
       /** ...and ease off into the late teens */
       growthEnd: 18,
-      /** by the plan's calibration: first points 17-18, top-100 about 4.5 years later */
+      /** by the plan's calibration: first points 17-18, top-100 about 4.5 years later.
+       *
+       *  ⚠⚠ SINCE ROUND 31 #10 THIS PAIR IS THE **DEFAULT** CURVE, NOT THE ONLY ONE. It is what a
+       *  career runs on before the fork at nineteen has been answered – nothing can read it there,
+       *  because `plateauStart` first bites at 18 and `declineStart` at 23 – and it is what the v68
+       *  migration PINS every career that already existed onto. The per-route pair a new career
+       *  resolves at the fork is `ageRoutes` below. See `development.ts#resolveAgeCurve`. */
       plateauStart: 23,
-      /** peak 23-28 */
+      /** peak 23-28 – and it is the COLLEGE window, which is the whole of round 31 #10 */
       declineStart: 29,
       /** share of remaining headroom taken per week at the steepest age */
       peakRate: 0.0062,
@@ -2114,6 +2120,71 @@ export const ECONOMY = {
       /** ...growing each year past it, so a career ends rather than fading forever */
       declineAccel: 0.28,
     },
+    /** ⭐⭐⭐ ROUND 31 #10 – THE FORK SHAPES THE CURVE, and until now it only priced it.
+     *
+     *  The owner supplied real WTA reference data and the round-31 ledger checked the engine against
+     *  it (docs/rounds/round-31.md §10). His table:
+     *
+     *      modern top-100 peak window   24-26  direct       |  25-28  via college
+     *      entry to top 100             ~21    direct       |  23-25  via college
+     *
+     *  The shipped `ageCurve` above peaks 23-28, which is EXACTLY the college window's top edge and
+     *  two to four years late for a girl who went straight to the tour – so one curve was being worn
+     *  by both routes, and it was the college one. His ruling, 31.08: «я думал уже так и есть, но
+     *  тоже неплохо звучит.» He believed the fork already did this.
+     *
+     *  ⚠ THE COLLEGE PAIR IS TODAY'S PAIR, UNCHANGED. This is a change to the DIRECT route only:
+     *  nothing about a college career moves, which is why the owner's own career (Alice went through
+     *  college, weeks 294-502) reads identically under it before the pin is even considered.
+     *
+     *  ⚠ THE ROUTE IS THE FORK'S ANSWER AND NOT `world.college`. A career that leaves the programme
+     *  early still went; reading the enrolment state would flip her back to the direct curve the week
+     *  she came home. `ForkState.answer` is the decision itself and never changes once made.
+     *
+     *  ⚠ THE TOUR'S OWN POOL IS NOT THIS AND MUST NOT BE TUNED WITH IT. `FIELD.career` is separately
+     *  and correctly calibrated – §10 measured the top-100 mean age at 25.3 against his real 25-27 –
+     *  and it is a MIXED field that legitimately spans both routes. */
+    ageRoutes: {
+      /** straight to the tour: earlier, sharper. Peak 22-26, decline from 27. */
+      direct: { plateauStart: 22, declineStart: 27 },
+      /** via college: today's numbers, kept. Peak 23-28, decline from 29. */
+      college: { plateauStart: 23, declineStart: 29 },
+    },
+    /** ⭐⭐ THE PER-CAREER SPREAD, IN YEARS EITHER SIDE OF THE ROUTE'S `declineStart` (round 31 #13,
+     *  his ruling: «полностью согласен, если это реализуемо»). One uniform draw off the career's own
+     *  `seed:decline` sub-stream, so the age she stops performing is not the same number for
+     *  everybody.
+     *
+     *  ⚠ WHY 1.5, AND IT IS READ OFF HIS OWN REFERENCE RATHER THAN PICKED. His table gives WINDOWS,
+     *  not modes – «24-26 direct, 25-28 via college» – i.e. three-to-four-year ranges inside which
+     *  real peaks fall, with the modern tail «stretched to 30-35 for the exceptional». A uniform
+     *  draw over ±1.5 reproduces a WINDOW (3 years wide, matching his) instead of pretending to know
+     *  its shape; a bell would be a claim about clustering his data does not make.
+     *
+     *  ⚠ AND THE TWO ROUTES THEN OVERLAP, WHICH IS THE POINT. Direct lands in 25.5-28.5 and college
+     *  in 27.5-30.5: a long-lasting direct player and an early-fading college one are both possible,
+     *  the route only moves the ODDS by two years. A band narrower than the route gap would have made
+     *  the fork a strictly-dominant choice, which is the failure mode the owner named when he held
+     *  back option B (physical build) for exactly that reason.
+     *
+     *  ⚠ `plateauStart` DOES NOT GET THE SPREAD – his ruling names `declineStart` alone. The plateau
+     *  is where a route stops climbing; the decline is where a BODY goes, and only the second is a
+     *  fact about the individual. */
+    declineSpreadYears: 1.5,
+    /** ⭐⭐ ROUND 31 #13 – WHAT A BROKEN BODY COSTS HER AT THE FAR END: years of peak lost per week
+     *  she has spent off court, counted off `weeksLostSoFar` (the monotone v40 total, never the
+     *  pruned `injuryHistory`).
+     *
+     *  ⚠ SCALED TO LOSE YEARS, NOT WEEKS – the task's own bar. 0.025 is one year of peak per 40
+     *  weeks of absence: a clean career (a handful of weeks) sits within a month of its drawn value,
+     *  and a career that has lost three seasons to injury finishes two years early. Measured
+     *  distributions in docs/specs/age-curve-fork-and-spread.md §4.
+     *
+     *  ⚠ IT IS NOT A SECOND INJURY PENALTY. The weeks themselves are already charged – she does not
+     *  play them, does not train them and does not earn in them. This is the LONG-RUN half round 30
+     *  #27's recurrence had no way to express: an injury that only costs the week it happens in is a
+     *  week, and a body is a career. */
+    declinePullPerInjuryWeek: 0.025,
     /** The plan slider, end to end. Roughly a factor of two between coasting and committing. */
     trainAt60: 0.72,
     trainAt85: 1.28,

@@ -53,7 +53,7 @@ import type {
 import type { MatchPlayer } from '../match/types'
 import type { AiPlayer, LadderTrack, SeasonEvent, TierId, TournamentResult } from '../season/types'
 import type { SeasonResult } from '../season/ranking'
-import type { KidSkills } from '../development'
+import type { CareerAgeCurve, KidSkills } from '../development'
 import type { AcademySupport } from '../academy'
 
 // Phase 3 world: the living-season integration. The worker owns this state; the UI
@@ -257,7 +257,20 @@ import type { AcademySupport } from '../academy'
 // two steps moved out of v66 intact and v66's step is byte-identical to main's; the reasoning, and
 // the rule that keeps the next wave from repeating it, is the header of migrations.ts. Full move:
 // this constant, the v66 -> v67 step in migrations.ts, and tests/fixtures/saves/v67.json.
-export const SAVE_SCHEMA_VERSION = 67
+//
+// ⭐⭐⭐ v68 (round 31 #10 + #13 – THE AGE CURVE STOPS BEING ONE CURVE). World `+ageCurve`, optional:
+// `{plateauStart, declineStart, injuryFrom}`. A new career resolves it when the fork at nineteen is
+// answered – the direct route peaks 22-26 and declines from 27, college keeps today's 23-28/29 – with
+// a per-career spread drawn off `seed:decline` and the weeks her body has lost pulling it earlier.
+//
+// ⚠⚠ AND THE MIGRATION IS THE POINT OF THE VERSION MOVE RATHER THAN THE PRICE OF IT. The step writes
+// {plateauStart: 23, declineStart: 29, injuryFrom: <weeks already lost>} onto EVERY existing save:
+// today's behaviour exactly, pinned, so the owner's live career (Alice, week 933, 31.7) reads the
+// same decline on the load after the update as on the load before it. The field is optional because
+// `createWorld` does NOT write it – see `WorldState.ageCurve` for why the fork is the honest moment
+// and what that buys the frozen career hashes. Full move: this constant, the v67 -> v68 step in
+// migrations.ts, tests/fixtures/saves/v68.json, and docs/specs/age-curve-fork-and-spread.md.
+export const SAVE_SCHEMA_VERSION = 68
 
 
 
@@ -836,4 +849,29 @@ export interface WorldState {
    *  this question – so no migration is owed, no golden fixture is added, and `SAVE_SCHEMA_VERSION`
    *  does not move. Every reader normalises with `?? []`. */
   shootClashAccepted?: number[]
+  /** ⭐⭐⭐ THE TWO AGES THAT ARE HERS (v68, round 31 #10 + #13 – docs/specs/age-curve-fork-and-spread.md).
+   *
+   *  `ECONOMY.development.ageCurve` peaked every career 23-28, which §10 measured against the owner's
+   *  own WTA reference as EXACTLY the college window worn by everybody. Three things move it now: the
+   *  fork's ROUTE (direct 22/27, college 23/29), a per-career SPREAD drawn once off `seed:decline`,
+   *  and the weeks her body has spent off court.
+   *
+   *  ⚠⚠ WHY IT IS PERSISTED AT ALL, AND IT IS THE WHOLE REASON THIS FIELD EXISTS. The owner is
+   *  PLAYING a career – Alice, week 933, 31.7, at 93.1% of her peak – and a curve re-derived from her
+   *  seed on the next load would change HER clock mid-game, under a player who has been reading that
+   *  decline for a season. The v68 migration therefore writes {23, 29} onto every save that already
+   *  exists, and this field is what makes that pin permanent: a stored pair is read as-is and nothing
+   *  re-derives it, ever.
+   *
+   *  ⚠ OPTIONAL, AND WRITTEN AT THE FORK RATHER THAN AT `createWorld`. Absent means "she has not
+   *  answered the fork yet", which is every career under nineteen – and nothing can read the field
+   *  there, because `plateauStart` first bites at 18 and `declineStart` at 22. Two things follow, and
+   *  both are load-bearing: the ROUTE is not knowable at week 0 (it is the fork's own answer), and the
+   *  eighteen frozen career hashes in tests/coachTravelEdgeFixtures.ts walk 156 weeks to age 16.6, so
+   *  a key that is never written there cannot move a hash. Measured, not assumed – §6 of the spec.
+   *
+   *  ⚠ `declineStart` IS THE DRAWN AGE, NOT THE AGE SHE ACTUALLY DECLINES AT. The injury pull is
+   *  applied on READ (`ageCurveOf`), against `injuryFrom`, so the two halves stay separable and a
+   *  save still says what she was born with after a career of layoffs. */
+  ageCurve?: CareerAgeCurve
 }

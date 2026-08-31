@@ -24,7 +24,10 @@ import { LADDER_LABEL, LADDER_POINTS_LABEL, type EntryCapUsage } from '../../sha
 // `development.ts` is an engine LEAF (rng / economy / coach / plan / protocol / dates – no world.ts
 // edge), which is the same reason world/endings.ts imports `physicalMean` from it for the ending's
 // own share. The dependency direction in this file's header is unchanged.
-import { physicalMean } from '../development'
+import { ageCurveOf, physicalMean } from '../development'
+// ⚠ ROUND 31 #13: the same one answer `phaseGrowth` asks, for the same reason – the two files must
+// not disagree about how many weeks this body has lost.
+import { weeksLostSoFar } from '../ending'
 import { kidAgeAt, kidAgeExact } from './age'
 import { alternateListPlace } from './ladder'
 import {
@@ -148,7 +151,13 @@ export function recoveryBaseFor(world: WorldState): number {
  *  an age without walking `accrueCondition` a thousand times to infer it. Pure read, zero draws. */
 export function recoveryAgeFade(world: WorldState): number {
   const age = kidAgeExact(world.week, world.profile.birthMonth, world.profile.birthDay)
-  if (age < ECONOMY.development.ageCurve.declineStart) return 1
+  // ⭐⭐ ROUND 31 #10/#13 – THIS GATE FOLLOWS HER OWN DECLINE AGE, NOT THE CONSTANT, AND THE DECISION
+  // IS THE PARAGRAPH FOUR LINES UP. That note already says two clocks here «would open a gap of up to
+  // a year in which her body is falling and her recovery is not»; a per-career curve makes that gap a
+  // permanent two years for every direct-route career if this line stayed on 29. So the gate is
+  // `ageCurveOf`'s answer, and the junior-era guarantee it exists for is untouched: a career under
+  // nineteen has no stored curve and reads exactly the 29 it read before.
+  if (age < ageCurveOf(world.ageCurve, weeksLostSoFar(world)).declineStart) return 1
   const share = physicalMean(world.skills) / world.peakPhysical
   return Math.max(ECONOMY.condition.recoveryAgeFloor, share)
 }
