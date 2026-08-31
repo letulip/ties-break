@@ -24,6 +24,12 @@
 // and lost. That makes this an estimate about a field she would meet if it started now, which is
 // the information the PLAYER has when deciding whether to enter. Never a prophecy.
 //
+// ⭐⭐ AND SINCE ROUND 31 #4 IT NO LONGER PRINTS ONE. The paragraph above was true and the card did
+// not read as though it were: an estimate about a field can be quoted as a percentage, but the same
+// estimate quoted as a NAME is a promise, and the name changed every week. So the opponent and the
+// percentage now wait for the draw - see `DRAW_LEAD_WEEKS` below for the owner's ruling, the
+// measurement, and why nothing needed to be persisted to keep them still.
+//
 // WHO TURNS UP AND HOW STRONG THEY ARE ARE TWO QUESTIONS, and the preview answers them from two
 // different places. The bracket now gates entry on condition exactly as the kid is gated (a wrecked
 // rival sits the week out), so WHO is in the draw depends on today's fatigue - and the preview must
@@ -67,10 +73,59 @@ import type { SeasonResult } from './ranking'
  *  short clause and the player only needs to know which way to lean. */
 export type FieldStrength = 'favourite' | 'even' | 'strong'
 
+/** ⭐⭐ ROUND 31 #4 – HOW MANY WEEKS BEFORE AN EVENT ITS DRAW IS MADE, and it is the whole of the
+ *  fix the owner asked for.
+ *
+ *  HIS COMPLAINT, 31.08: «каждую неделю это другой турнир с другой соперницей в первом круге –
+ *  разве такое бывает в реальности? по-моему они точно знают с кем будут играть в первом туре и
+ *  этот персонаж не меняется» (his words are kept in docs/rounds/round-31.md, where the Russian
+ *  belongs). Measured on his own w933 save with tools/r31-draw-stability.ts: **20 of 24 tournaments
+ *  changed their round-one opponent** while he watched them, the largest single swing 40 points of
+ *  chance. Nothing was broken about the RNG – `drawnField` below is rebuilt on every read, and
+ *  `ranking` and `conditions` are TODAY's, so a card six weeks out was answering a question about a
+ *  field that has not been picked yet and printing the answer as a NAME. A player reads a name as a
+ *  commitment.
+ *
+ *  ⚠ THE FIX IS NOT TO FREEZE THE ANSWER, IT IS TO STOP ASKING THE QUESTION. His own ruling:
+ *  «можно писать, что жеребьевки еще не было, а потом (когда она происходит за 1 неделю, 2, 3?)
+ *  прямо на карточке турнира писать имя и ранг соперницы на 1й круг». So a far-out card says the
+ *  draw has not been made and shows only the FIELD STRENGTH band; the name appears at week − 1.
+ *
+ *  ⚠ WHY ONE WEEK AND NOT THREE. Entries close at the END of week − 2 (`makeEvent`'s
+ *  `deadlineWeek`), so a draw at week − 1 lands the week AFTER he has committed: he chooses on the
+ *  band and then learns the opponent, which is both how a real entry list works and the better
+ *  scene. It also makes the name STRUCTURALLY unable to re-roll rather than merely unlikely to:
+ *  `upcomingEvents` shows a card while `e.week > world.week`, so week − 1 is the LAST week a card
+ *  exists at all and a named opponent is therefore read at exactly one week, once.
+ *
+ *  ⚠⚠ AND NOTHING IS PERSISTED, WHICH IS DELIBERATE AND WAS CHECKED BEFORE IT WAS CHOSEN. Freezing
+ *  the draw on the entry would have been a save-schema move AND a change to `buildKidTournament`,
+ *  whose brackets are pinned by the frozen career hashes in tests/coach-travel-edge.test.ts – a
+ *  balance change dressed as a readout fix. The band was measured stable as it stands – 0 of 24
+ *  events moved over six weeks on the owner's w933 save, with all three bands present – so the
+ *  honest fix touches no stored byte, no bracket and no stream.
+ *
+ *  ⭐ THIS IS NOT A NEW IDEA, IT IS A THIRTEEN-MONTH-OLD RECOMMENDATION FINALLY SHIPPED.
+ *  docs/specs/preview-odds-honesty.md §4.2 (31.07): "Keep the named opponent for the event's OWN week
+ *  only… Before that week, naming an opponent is naming someone she has a 72% chance of never
+ *  meeting." §6 of that file records what shipped, what the owner overruled, and the one gap this
+ *  did NOT close – the week − 1 name still disagrees with the bracket's on 59.2% of draw-week cards,
+ *  because the two fold the rivals' condition at different weeks (tools/r31-draw-promise.ts). That
+ *  is a decision for him, and closing it moves brackets. */
+export const DRAW_LEAD_WEEKS = 1
+
 export interface EventPreview {
+  /** ⭐ HAS THE DRAW BEEN MADE (round 31 #4)? False on every card further out than
+   *  `DRAW_LEAD_WEEKS`, and while it is false there is no opponent and no percentage – see the
+   *  note on the constant. It is carried as its own fact rather than left to be inferred from a
+   *  null so a screen has to ask the question in the language the owner asked it in. */
+  drawMade: boolean
   /** her probability of winning the FIRST match, 0..1 – the only round a preview can speak for
-   *  without simulating a whole bracket, and the round that decides whether the trip was worth it */
-  firstMatchChance: number
+   *  without simulating a whole bracket, and the round that decides whether the trip was worth it.
+   *  ⚠ NULL, NOT ZERO, when there is nobody to play: before the draw is made, and on the (unreached)
+   *  card where she is not in her own bracket. Zero is a real reading and this is the absence of
+   *  one, and the type is what stops a screen printing "0%" for "we do not know yet". */
+  firstMatchChance: number | null
   /** the opponent that chance is against, so the card can name her rather than assert a number */
   opponentName: string
   opponentRank: number | null
@@ -296,13 +351,24 @@ export function previewEvent(
     world.seed,
     excluded,
   )
-  const opp = firstRoundOpponent(alive, kid)
+  // ⭐ ROUND 31 #4 – THE DRAW, OR THE ABSENCE OF ONE. The field above is still built, because the
+  // BAND is what a far-out card is for and the band is a reading of the whole field; what waits for
+  // week − 1 is naming one player out of it. See DRAW_LEAD_WEEKS for the owner's ruling and the
+  // measurement behind it.
+  //
+  // ⚠ ZERO RNG CONSEQUENCE, BY CONSTRUCTION. `drawnField` is untouched and runs on every card, so
+  // `seed:kidtour:<eventId>` is spent in the same order and to the same depth it always was;
+  // `firstRoundOpponent` is a pure index lookup into the finished draw. The MAIN weekly stream was
+  // never in this file at all.
+  const drawMade = event.week - world.week <= DRAW_LEAD_WEEKS
+  const opp = drawMade ? firstRoundOpponent(alive, kid) : null
   const posOf = new Map<string, number>()
   ranking.forEach((r, i) => posOf.set(r.playerId, i))
   return {
+    drawMade,
     firstMatchChance: opp
       ? fastMatchProbability(kid, opp, { surface: event.surface, tour: JUNIOR_TOUR, seed: '' })
-      : 0,
+      : null,
     // Same (player, surface, tour) the chance above is computed from - one source, two readings, so
     // the card can never quote a rating that disagrees with the ring beside it.
     kidRating: ratingOf(kid, event.surface, JUNIOR_TOUR),

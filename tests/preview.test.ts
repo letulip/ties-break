@@ -12,7 +12,7 @@
 import { describe, it, expect } from 'vitest'
 import { worldSource } from './worldSource'
 import { readFileSync } from 'node:fs'
-import { previewEvent, eventTemperature, eventCrowd } from '../src/engine/season/preview'
+import { previewEvent, eventTemperature, eventCrowd, DRAW_LEAD_WEEKS } from '../src/engine/season/preview'
 import {
   buildDraw,
   firstRoundOpponent,
@@ -73,10 +73,18 @@ const EXPECTED_BANDS: Record<TierId, readonly [number, number]> = {
  *  the test spells the same thing rather than widening the engine's surface for a test's sake. */
 const roster = (w: { cohort: { id: string }[] }) => [...w.cohort.map((p) => p.id), KID_ID]
 
+/** ⭐ ROUND 31 #4 – THE FIXTURE STANDS AT THE DRAW WEEK. Every property in this file is about the
+ *  NAMED opponent, and since round 31 a name exists only inside `DRAW_LEAD_WEEKS` of the event: a
+ *  fixture parked at week 0 against an event in week 4 would be asserting on the pre-draw card and
+ *  three tests would go green on empty strings. Walking the world's own clock to `event.week - 1` is
+ *  the smallest change that keeps each test aimed at what it was written for – the world is
+ *  otherwise untouched, and `rivalConditions`/`computeRanking` are read at the same week the preview
+ *  is, exactly as they were before. The pre-draw half is asserted on its own, further down. */
 function fixture(seed: string) {
   const world = createWorld(seed)
-  const ranking = computeRanking(world.results, world.week, BEST_N_BY_TRACK.itf, roster(world))
   const event = world.season.find((e) => e.week > world.week)!
+  world.week = event.week - DRAW_LEAD_WEEKS
+  const ranking = computeRanking(world.results, world.week, BEST_N_BY_TRACK.itf, roster(world))
   const kid = kidMatchPlayerFor(world, event.surface)
   return { world, ranking, event, kid }
 }
@@ -208,8 +216,13 @@ describe('what the numbers say', () => {
     for (const seed of ['pv-r1', 'pv-r2', 'pv-r3']) {
       const world = createWorld(seed)
       const ranking = computeRanking(world.results, world.week, BEST_N_BY_TRACK.itf, roster(world))
+      // ⭐ ROUND 31 #4 – read at each event's OWN draw week, because that is the only week a chance
+      // exists. The property under test is unchanged: on every tier and surface the calendar can
+      // produce, the number is a probability and it is against a named person.
       for (const e of world.season.filter((x) => x.week > world.week).slice(0, 12)) {
+        world.week = e.week - DRAW_LEAD_WEEKS
         const p = previewEvent(world, e, ranking, kidMatchPlayerFor(world, e.surface))
+        expect(p.drawMade, `${seed}/${e.tier}`).toBe(true)
         expect(p.firstMatchChance, `${seed}/${e.tier}/${e.surface}`).toBeGreaterThan(0)
         expect(p.firstMatchChance).toBeLessThan(1)
         expect(p.opponentName).not.toBe('')
@@ -230,8 +243,12 @@ describe('what the numbers say', () => {
       const l = world.season.find((e) => e.tier === 'local' && e.week > world.week)
       const j = world.season.find((e) => e.tier === 'j30' && e.week > world.week)
       if (!l || !j) continue
-      local += previewEvent(world, l, ranking, kidMatchPlayerFor(world, l.surface)).firstMatchChance
-      j30 += previewEvent(world, j, ranking, kidMatchPlayerFor(world, j.surface)).firstMatchChance
+      // Each read at its own draw week – round 31 #4, and the same reason as the test above: a
+      // chance only exists once the draw has been made.
+      world.week = l.week - DRAW_LEAD_WEEKS
+      local += previewEvent(world, l, ranking, kidMatchPlayerFor(world, l.surface)).firstMatchChance!
+      world.week = j.week - DRAW_LEAD_WEEKS
+      j30 += previewEvent(world, j, ranking, kidMatchPlayerFor(world, j.surface)).firstMatchChance!
       n++
     }
     expect(n).toBeGreaterThan(4)
@@ -266,6 +283,12 @@ describe('what the numbers say', () => {
       strong.results.push({ playerId: KID_ID, week: w, points: 60, tier: 'regional' })
     }
     const event = bare.season.find((e) => e.tier === 'regional' && e.week > bare.week)!
+    // ⭐ ROUND 31 #4 – BOTH CLOCKS AT THE DRAW WEEK, or both cards are pre-draw cards and this test
+    // compares two blanks. It caught itself: `expected { drawMade: false, … } to not deeply equal
+    // { drawMade: false, … }`. The property is about the OPPONENT her standing draws her against,
+    // and an opponent only exists inside `DRAW_LEAD_WEEKS`.
+    bare.week = event.week - DRAW_LEAD_WEEKS
+    strong.week = event.week - DRAW_LEAD_WEEKS
     const pBare = previewEvent(
       bare,
       event,
@@ -440,11 +463,69 @@ describe('every upcoming card on the snapshot carries one', () => {
     const snap = toSnapshot(world)
     expect(snap.upcoming.length).toBeGreaterThan(0)
     for (const u of snap.upcoming) {
-      expect(u.preview.opponentName, u.id).not.toBe('')
-      expect(u.preview.firstMatchChance).toBeGreaterThan(0)
       expect(u.preview.temperatureC).toBeGreaterThan(0)
       expect(u.preview.crowd, u.id).toBeGreaterThan(0)
+      // ⭐ ROUND 31 #4 – and the OPPONENT half now depends on the draw. Every card still carries a
+      // band (that is the thing a far-out card is FOR); the name and the number arrive at week − 1.
+      expect(['favourite', 'even', 'strong'], u.id).toContain(u.preview.fieldStrength)
     }
+  })
+
+  it('⭐ ROUND 31 #4 – the draw exists at week − 1 and at no week before it', () => {
+    // THE ENGINE HALF OF THE THREE STATES. The owner: «можно писать, что жеребьевки еще не было, а
+    // потом ... прямо на карточке турнира писать имя и ранг соперницы». So a snapshot must hold BOTH
+    // kinds of card, and each must be complete in its own way - a far-out card with a blank name and
+    // no percentage, a week-away card with both.
+    const world = createWorld('pv-drawweek')
+    const rng = rngFromSeed(world.seed)
+    for (let i = 0; i < 9; i++) tickWeek(world, rng)
+    const snap = toSnapshot(world)
+    const drawn = snap.upcoming.filter((u) => u.week - snap.week <= DRAW_LEAD_WEEKS)
+    const pending = snap.upcoming.filter((u) => u.week - snap.week > DRAW_LEAD_WEEKS)
+    // ⚠ BOTH ARMS MUST BE NON-EMPTY or one half of the assertion is vacuous - the failure mode the
+    // repo's own note about `x ? y : y` guards is the same one.
+    expect(drawn.length, 'no card at its draw week').toBeGreaterThan(0)
+    expect(pending.length, 'no card ahead of its draw week').toBeGreaterThan(0)
+    for (const u of drawn) {
+      expect(u.preview.drawMade, u.id).toBe(true)
+      expect(u.preview.opponentName, u.id).not.toBe('')
+      expect(u.preview.firstMatchChance, u.id).toBeGreaterThan(0)
+      expect(u.preview.opponentRating, u.id).not.toBeNull()
+    }
+    for (const u of pending) {
+      expect(u.preview.drawMade, u.id).toBe(false)
+      expect(u.preview.opponentName, u.id).toBe('')
+      expect(u.preview.firstMatchChance, u.id).toBeNull()
+      expect(u.preview.opponentRank, u.id).toBeNull()
+      expect(u.preview.opponentRating, u.id).toBeNull()
+    }
+  })
+
+  it('⭐⭐ ROUND 31 #4 – the BAND is the same at every week the card is on screen', () => {
+    // «эта полоса тоже должна быть более-менее статична ... может быть игрок планирует турниры и
+    // выбирает более выгодные для себя». The band is the ONLY thing a pre-draw card says, so it is
+    // the thing he plans on, and a band that moved would be the same defect one storey down.
+    //
+    // ⚠ THE WORLD IS TICKED BETWEEN READINGS, not re-read - the whole point is that the standings,
+    // the rivals' fatigue and her own results have all moved and the word has not.
+    const world = createWorld('pv-band-stability')
+    const rng = rngFromSeed(world.seed)
+    for (let i = 0; i < 10; i++) tickWeek(world, rng)
+    const seen = new Map<string, Set<string>>()
+    let observations = 0
+    for (let i = 0; i < 7; i++) {
+      for (const u of toSnapshot(world).upcoming) {
+        const set = seen.get(u.id) ?? new Set<string>()
+        set.add(u.preview.fieldStrength)
+        seen.set(u.id, set)
+        observations++
+      }
+      tickWeek(world, rng)
+    }
+    // The card is on screen for eight weeks, so a seven-week walk sees most of them repeatedly.
+    expect(observations).toBeGreaterThan(20)
+    const moved = [...seen.entries()].filter(([, v]) => v.size > 1).map(([id]) => id)
+    expect(moved, 'a band moved while the card sat on screen').toEqual([])
   })
 
   it('the E brief and the Season card quote the SAME crowd for the same tournament', () => {

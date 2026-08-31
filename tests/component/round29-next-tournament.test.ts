@@ -28,15 +28,29 @@ import { TIERS } from '../../src/engine/season/calendar'
 import { formatCents } from '../../src/shared/money'
 import { regionToLast } from '../helpers/source'
 import { venueArtUrl } from '../../src/art/venues'
+import { DRAW_NOT_MADE_NOTE } from '../../src/composables/eventCard'
 import { DEFAULT_PROFILE, type Snapshot, type UpcomingEvent } from '../../src/shared/protocol'
 
-/** A ticked career and the first tournament in its horizon – both the engine's. */
-function careerAndEvent(weeks = 12): { snap: Snapshot; event: UpcomingEvent } {
+/** A ticked career and one of its tournaments – both the engine's.
+ *
+ *  ⭐ ROUND 31 #4 – AND IT WALKS TO A DRAWN CARD BY DEFAULT. The panel's opponent block, its ring
+ *  and its two ranks only exist once the draw has been made (`DRAW_LEAD_WEEKS`), so a fixture that
+ *  grabbed `upcoming[0]` at an arbitrary week would have been asserting on an absent block and every
+ *  one of round 29 #8's assertions would have gone green on nothing. The world is walked until a
+ *  card matching `pick` is at its draw week; nothing about the world is hand-made. */
+function careerAndEvent(
+  pick: (e: UpcomingEvent) => boolean = () => true,
+  drawn = true,
+): { snap: Snapshot; event: UpcomingEvent } {
   const world = createWorld('r29-next-tournament', DEFAULT_PROFILE)
   const rng = rngFromSeed(world.seed)
-  for (let i = 0; i < weeks; i++) tickWeek(world, rng)
-  const snap = toSnapshot(world)
-  return { snap, event: snap.upcoming[0] }
+  for (let i = 0; i < 160; i++) {
+    tickWeek(world, rng)
+    const snap = toSnapshot(world)
+    const hit = snap.upcoming.find((e) => e.preview.drawMade === drawn && pick(e))
+    if (hit && world.week >= 12) return { snap, event: hit }
+  }
+  throw new Error('no matching card in 160 weeks – the fixture, not the panel, is broken')
 }
 
 function mountPanel(): { w: ReturnType<typeof mount>; snap: Snapshot; event: UpcomingEvent } {
@@ -89,7 +103,7 @@ describe('round 29 #8 – the panel draws the tournament, off the snapshot', () 
     expect(ring.exists()).toBe(true)
     expect(ring.props('value')).toBe(event.preview.firstMatchChance)
     // ⚠ INTEGERS ON SCREEN, the figure rounded and never the logic (house law).
-    expect(w.find('.nt-ring').text()).toContain(`${Math.round(event.preview.firstMatchChance * 100)}`)
+    expect(w.find('.nt-ring').text()).toContain(`${Math.round(event.preview.firstMatchChance! * 100)}`)
     // A ring is a graphic, so it says what it is out loud.
     expect(ring.props('label')).toContain(event.preview.opponentName)
     w.unmount()
@@ -116,10 +130,11 @@ describe('round 29 #8 – the panel draws the tournament, off the snapshot', () 
     // fixture's first event happens to be an ITF rung and a week-12 career is unranked in every
     // table – so it was comparing a value with itself, which is precisely the dead-guard class this
     // round found twice elsewhere. Three DIFFERENT places, and a rung on each track.
-    const { snap, event } = careerAndEvent()
-    const domestic = snap.upcoming.find((e) => TIERS[e.tier].track === 'domestic')
-    expect(domestic, 'the fixture must hold a domestic rung or this proves nothing').toBeTruthy()
-    expect(TIERS[domestic!.tier].track).not.toBe(TIERS[event.tier].track)
+    // ⭐ ROUND 31 #4 – the DOMESTIC rung has to be at its own draw week now, or the block whose rank
+    // this test reads is not rendered at all. The three tables still have to disagree for the
+    // assertion to mean anything, which is what the three stamped ranks below are for.
+    const { snap, event: domestic } = careerAndEvent((e) => TIERS[e.tier].track === 'domestic')
+    expect(TIERS[domestic.tier].track).toBe('domestic')
     const placed: Snapshot = {
       ...snap,
       ladders: {
@@ -129,7 +144,7 @@ describe('round 29 #8 – the panel draws the tournament, off the snapshot', () 
       },
     }
     useGameStore().snapshot = placed
-    const w = mount(NextTournamentPanel, { props: { event: domestic! } })
+    const w = mount(NextTournamentPanel, { props: { event: domestic } })
     expect(w.find('.nt-first-side .nt-first-rank').text()).toBe('#41')
     w.unmount()
   })
@@ -172,6 +187,61 @@ describe('round 29 #8 – the panel draws the tournament, off the snapshot', () 
     // ⚠ AND NO FLAG OPPOSITE HERS: `EventPreview` carries no nation, so inventing one is the defect
     // this assertion exists to catch. Absent, not blank.
     expect(w.findAll('.nt-first-flag').length).toBe(1)
+    w.unmount()
+  })
+})
+
+// =================================================================================================
+// ⭐⭐ ROUND 31 #4 – THE THREE STATES OF ONE CARD, ON THIS PANEL
+// =================================================================================================
+describe('round 31 #4 – before the draw the panel names nobody', () => {
+  beforeEach(() => {
+    setActivePinia(createPinia())
+    document.body.innerHTML = ''
+  })
+
+  it('a card ahead of its draw week: no name, no percentage, and it says why', () => {
+    // «можно писать, что жеребьевки еще не было». The engine refuses to name anybody; this is the
+    // assertion that the panel refuses to print a hole where the name was.
+    const { snap, event } = careerAndEvent(() => true, false)
+    expect(event.preview.drawMade, 'the fixture must be a PRE-draw card').toBe(false)
+    useGameStore().snapshot = snap
+    const w = mount(NextTournamentPanel, { props: { event } })
+    expect(w.findAll('.nt-first-side').length, 'no VS row before there is anybody to face').toBe(0)
+    expect(w.findComponent({ name: 'ProgressRing' }).exists(), 'no ring without a chance').toBe(false)
+    expect(w.find('.nt-first-note').text()).toBe(DRAW_NOT_MADE_NOTE)
+    // ⚠ NO STRAY PERCENTAGE ANYWHERE ON THE PANEL. The ring is the only one it ever drew, and a
+    // `0%` left behind would be the exact lie this item is about.
+    expect(w.text()).not.toMatch(/\d+%/)
+    w.unmount()
+  })
+
+  it('...and the FIELD READING survives, because that is the thing he plans on', () => {
+    // «эта полоса тоже должна быть более-менее статична ... игрок планирует турниры и выбирает
+    // более выгодные для себя». The band is a reading of the whole field and needs no draw, so it
+    // is the one thing a pre-draw card still says.
+    const { snap, event } = careerAndEvent(() => true, false)
+    useGameStore().snapshot = snap
+    const w = mount(NextTournamentPanel, { props: { event } })
+    const expected = {
+      strong: 'Most of this field is ranked above her.',
+      even: 'A field of about her own level.',
+      favourite: 'She is among the strongest entered.',
+    }[event.preview.fieldStrength]
+    expect(w.findAll('.nt-read-line').map((n) => n.text())[0]).toBe(expected)
+    w.unmount()
+  })
+
+  it('at the draw week the same panel names her, ranks her, and rings the chance', () => {
+    // The other end of the same switch – and it is here rather than only above so one mutation
+    // cannot satisfy both halves (a panel that always hides, or always shows, fails one of them).
+    const { w, event } = mountPanel()
+    expect(event.preview.drawMade).toBe(true)
+    expect(w.findAll('.nt-first-side').length).toBe(2)
+    expect(w.find('.nt-first-note').text()).not.toBe(DRAW_NOT_MADE_NOTE)
+    expect(w.findComponent({ name: 'ProgressRing' }).exists()).toBe(true)
+    expect(w.text()).toContain(event.preview.opponentName)
+    expect(w.text()).toMatch(/\d+%/)
     w.unmount()
   })
 })

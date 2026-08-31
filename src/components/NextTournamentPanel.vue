@@ -108,9 +108,28 @@
 // ⚠⚠ AND NOTHING ELSE MOVED. Same figures, same sentences, same labels, same order - round 29 #8's
 // mounted net passes unedited across this change exactly as it did across #6's, which is the whole
 // evidence that a ruling about placement was answered with placement (CLAUDE.md invariant 4).
+//
+// =================================================================================================
+// ⭐⭐ ROUND 31 #4 – THE DRAW, AND THE ONE DECISION THIS PANEL HAD TO MAKE FOR ITSELF.
+//
+// The card now has three states (engine/season/preview.ts, `DRAW_LEAD_WEEKS`): no draw and no name,
+// the draw at week − 1, and the named opponent after it. Two of the three were already drawn here –
+// the FIELD's reading (`The read`) needs no draw at all, and the first-round plate already carried
+// the opponent's name and rank beside the ring, which is exactly where the owner asked for them.
+// What changed is that both the ring and the plate now WAIT: `event.preview.drawMade` gates them,
+// and before it the plate says the one sentence the composable owns.
+//
+// ⚠ AND NO `Coach says:` LINE WAS ADDED HERE, WHICH WAS THE OPEN QUESTION. The owner named that
+// field on the SEASON card («можно как раз в поле Coach says это делать элегантно») and this panel
+// deliberately has no such field – see «AND THE COACH'S VOICE STAYS SEASONSCREEN'S» above, which is
+// this file's own standing rule and the reason it prints the verdict plainly. Giving the panel a
+// coach's voice would put two different sentences behind one engine verdict on two surfaces, which
+// is the drift that rule exists to prevent. The panel already says both halves of what he asked for
+// in its own register, in the place he asked for them: the name and the rank sit next to the ring,
+// on the first-round plate.
 import { computed } from 'vue'
 import { useGameStore } from '../stores/game'
-import { firstMatchLabel, firstMatchTitle, useEventCard } from '../composables/eventCard'
+import { DRAW_NOT_MADE_NOTE, firstMatchLabel, firstMatchTitle, useEventCard } from '../composables/eventCard'
 import { readingColor } from '../composables/readingColor'
 import { flagEmoji } from '../composables/countries'
 import { TIERS } from '../engine/season/calendar'
@@ -220,7 +239,11 @@ const courtRead = computed(() => {
             <p v-if="courtRead" class="nt-read-line">{{ courtRead }}</p>
             <p v-if="event.coachCaution" class="coach-note">{{ event.coachCaution }}</p>
           </div>
+          <!-- ⭐⭐ ROUND 31 #4 – the ring is her odds against ONE named girl, so it waits for the
+               draw exactly as the feed's does. `The read` above it is the FIELD's reading and needs
+               no draw at all, which is why it is untouched: the band is the thing he plans on. -->
           <ProgressRing
+            v-if="event.preview.drawMade && event.preview.firstMatchChance !== null"
             class="nt-ring"
             :value="event.preview.firstMatchChance"
             :color="readingColor({ fraction: event.preview.firstMatchChance })"
@@ -279,7 +302,12 @@ const courtRead = computed(() => {
         <p class="nt-round">First round</p>
         <p class="nt-draw">{{ spec.drawSize }}-player draw</p>
       </div>
-      <div class="nt-first-grid">
+      <!-- ⭐⭐ ROUND 31 #4 – AND NOW THERE ARE TWO STATES, because for seven of its eight weeks on
+           screen this card has no opponent to mirror. A VS row with a blank on one side is the same
+           defect the missing flag note below is about, one storey up, so the whole grid waits for
+           the draw and the plate says the one sentence instead. Nothing here was re-worded: the
+           existing note keeps its words and simply stops claiming a draw that has not happened. -->
+      <div v-if="event.preview.drawMade" class="nt-first-grid">
         <div class="nt-first-side">
           <div class="nt-first-flag">{{ herFlag }}</div>
           <div class="nt-first-name">{{ herName }}</div>
@@ -298,10 +326,11 @@ const courtRead = computed(() => {
       <!-- ⚠ THE HONEST GAP, and it is the answer to his ask for a list of opponents. One opponent
            exists before the week; the rest of the bracket is built by `runTournament` on the tick.
            His own words are on the script side, where this file's header rule allows them. -->
-      <p class="hint nt-first-note">
+      <p v-if="event.preview.drawMade" class="hint nt-first-note">
         Only the first round is drawn before the week starts – the rest of the bracket is made when
         she gets there.
       </p>
+      <p v-else class="hint nt-first-note">{{ DRAW_NOT_MADE_NOTE }}</p>
     </Card>
 
   </div>

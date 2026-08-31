@@ -9,6 +9,13 @@
 //
 // This walks real careers and records every upcoming event's quoted chance every week it is on
 // screen, then reports the swing per event.
+//
+// ⚠⚠ ARCHIVAL SINCE ROUND 31 #4 (31.08.2026). Its finding is what shipped: the swing was the DRAWN
+// OPPONENT changing, so the card now names nobody until week − 1 (`DRAW_LEAD_WEEKS`) and a
+// percentage exists on exactly one week per event. Re-running this measures almost nothing, by
+// construction – cards with no chance are skipped below, which leaves at most one reading per event
+// and therefore no step to measure. The numbers it produced are preserved in
+// docs/specs/preview-odds-honesty.md §2, and §6 of that file records what shipped.
 import { createWorld, tickWeek, toSnapshot } from '../src/engine/world'
 import { DEFAULT_PROFILE } from '../src/shared/protocol'
 import { rngFromSeed } from '../src/engine/rng'
@@ -42,6 +49,8 @@ for (let s = 0; s < SEEDS; s++) {
   for (let w = 0; w < WEEKS; w++) {
     const snap = toSnapshot(world)
     for (const e of snap.upcoming) {
+      // No draw, no chance – see the archival note at the top of this file.
+      if (e.preview.firstMatchChance === null) continue
       const t = tracks.get(e.id) ?? { chances: [], opponents: [], strengths: [], conds: [], tier: e.tier }
       t.chances.push(e.preview.firstMatchChance)
       t.opponents.push(e.preview.opponentName)
