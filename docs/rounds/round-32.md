@@ -185,3 +185,10 @@ Both boxes are ticked with the place, per `docs/rounds/README.md` §"Keeping thi
   ⚠ NOT DONE, AND NAMED: a top-20 career with no titles now prices at the mark rather than above it
   (round 30 #24's second arm), because its fame floor is ~7. That is the fame wall this ledger already
   filed above, and this wave makes it matter more rather than creating it. Recorded in spec §7a.
+
+  Gated on `r32b/brand-multiple` at the end, each read out of its own log file rather than a pipe or
+  a background notice: `npm run check` exit 0 (1,116 component tests, unit green in 310s),
+  `npm run test:e2e` exit 0 (31 tests), `npm run test:sim` exit 0 (12 files, 283s). ⚠ The FIRST check
+  run came back exit 1 on one component arm – the shop row's rate line, which interpolates the
+  multiple – and the background notice for that same run announced «exit code 0», which is the lie
+  CLAUDE.md records, caught by reading the log.
