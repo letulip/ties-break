@@ -587,9 +587,9 @@ export const COACH_EDGE_CORRIDOR_PP: Record<CoachTier, [number, number]> = {
 // helping is the SAME uniform, multiplied - no second draw, no second sub-stream, not one extra tap
 // on `seed:coachedge:<id>` and nothing whatsoever on MAIN. A career that does not travel therefore
 // runs byte-identically to the one it ran before this shipped: same stream, same draw, same
-// arithmetic, same bits (the arithmetic asserted in tests/coach-travel-edge-helping.test.ts, the byte
-// identity in tests/coach-travel-edge.test.ts). It also keeps the property the
-// whole design rests on - the number is a fact about a PERSON - because a coach who is a find is a
+// arithmetic, same bits (the arithmetic asserted in tests/coach-travel-edge-helping.test.ts, the
+// byte identity in tests/coach-travel-edge.test.ts). It also keeps the property the whole design
+// rests on - the number is a fact about a PERSON - because a coach who is a find is a
 // find twice over on the road, rather than being re-rolled into somebody else at the airport.
 
 /** HIS OWN NUMBER, in percentage points per match: one uniform into his tier's corridor, off his id

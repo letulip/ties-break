@@ -1287,9 +1287,9 @@ export function createWorld(
     // tests/coach-travel-edge-older-schemas.test.ts reproduces the pre-v59 hashes by dropping
     // exactly these three keys, which only works while the rest of the serialisation order is
     // untouched. (The peel itself is `careerHashAtSchema` in tests/coachTravelEdgeFixtures.ts,
-    // which the v49-v61 file and tests/coach-travel-edge.test.ts share.) The
-    // dial opens on the middle rung (the professional default the pricing is anchored to) and the
-    // travel stance opens OFF – the coach's own default: the switch is what buys the seat.
+    // which that file and tests/coach-travel-edge.test.ts share.) The dial opens on the middle
+    // rung (the professional default the pricing is anchored to) and the travel stance opens
+    // OFF – the coach's own default: the switch is what buys the seat.
     masseurHired: false,
     masseurSessionsPerWeek: ECONOMY.masseur.defaultSessions,
     masseurTravels: false,

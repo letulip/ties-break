@@ -31,9 +31,10 @@
 //     coach-travel-edge-older-schemas       15.0 s   10 cases  (v61 down to P5/v49)
 //     coach-travel-edge-helping              0.9 s   23 cases
 //
-// The largest is 15.0 s, which is where radar's largest third landed, and it needs a 4x unlucky
-// stretch to reach the wall against the 2.24x this file measured between a quiet Mac and that CI
-// runner (62,889 / 28,083).
+// The largest is 15.06 s, which is where radar's largest third landed. This file's own local -> CI
+// factor is 2.24x (62,889 / 28,083 ms, the same 43 tests on both), so 15.06 s projects to ~34 s on
+// that runner and needs a further 1.8x unlucky stretch to reach the wall; the other frozen file
+// projects to ~28 s and the behaviour file to ~1 s.
 //
 // ⚠ IT IS A SPLIT AND NOT A DIET. Every seed, every preset, every policy, every 156-week horizon
 // and all 43 test names crossed over unchanged, and NOT ONE HASH MOVED – the same 18 constants

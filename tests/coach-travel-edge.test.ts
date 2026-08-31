@@ -1,11 +1,13 @@
 // THE FROZEN CAREERS – the live hashes, and the version ladder's top (v62 – v67).
 //
 // ⚠ THIS FILE KEEPS ITS PATH BECAUSE IT IS THE ONE THE CITATIONS MEAN. `src/engine/world.ts` cites
-// it three times for the schema roll-backs, `tools/frozen-key-diff.ts`'s own first line calls
-// itself "the diff `tests/coach-travel-edge.test.ts` demands", `tests/migrations.test.ts` and
-// `tests/fixtures/saves/README.md` name it for the frozen careers, and some thirty dated entries in
-// docs/specs and docs/rounds are the ledger of its re-freezes. Every one of them means the byte
-// identity, so the byte identity is what was left here.
+// it for the schema roll-backs, `tools/frozen-key-diff.ts` is the tool this protocol demands,
+// `tests/migrations.test.ts` and `tests/fixtures/saves/README.md` name it for the frozen careers,
+// and some thirty dated entries in docs/specs and docs/rounds are the ledger of its re-freezes.
+// Every one of them means the byte identity, so the byte identity is what was left here – and the
+// handful that mean the ARITHMETIC (`src/engine/coach.ts`, `src/engine/world/player.ts`, the two
+// round21-coach-travel suites) were repointed at tests/coach-travel-edge-helping.test.ts in the
+// same commit rather than left resolving to a file that no longer holds what they describe.
 //
 // ⚠ WHY THERE ARE THREE FILES – the 62,889 ms CI stall with all 43 tests green, the measurement
 // that put 98.5 % of the cost in ONE describe, and why cutting the behaviour off would not have
