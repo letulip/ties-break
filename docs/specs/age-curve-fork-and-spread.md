@@ -1,8 +1,8 @@
 ---
 type: spec
-status: shipped
+status: current
 area: simulation-and-balance
-canonical: true
+canonical: false
 last-reviewed: 2026-08-31
 ---
 
