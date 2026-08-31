@@ -33,6 +33,20 @@
 //     prop-level pair green.
 // Two of those are the two halves of the trade, and they fail apart, which is the property that
 // makes this a net rather than a pair of restatements.
+//
+// ⚠⚠ ROUND 32 #2 MOVED FOUR EXPECTATIONS IN THIS FILE, AND THE HISTORY IS THE POINT OF THE NOTE.
+// He came back with «на result of the week ... надо турнир ... убрать»: the story arrival showed the
+// results AND the whole tournament plate under them, and he wanted the plate off that arrival
+// entirely. The panel's `v-if` gained `&& (!showRecap || tournamentFirst)`, so on every STORY
+// arrival `blockOrder` is now one element instead of two, and the four arms below say `['story']`.
+//
+// ⚠ NOT ONE OF THIS FILE'S CLAIMS WAS DROPPED. Round 31's subject is which block the ARRIVAL puts
+// first, and the three arms that carry it - the prop pair's tournament half, the plate tap, and the
+// tick-while-standing-here flip - still read `['tournament', 'story']` and still fail apart. The
+// tick arms still prove the reason was reset: without it they would read `['tournament', 'story']`
+// after the tick, which is a different list from `['story']`. What is NOT in this file is the state
+// round 32 added - the × revealing the panel - and it is in `round32-week-results.test.ts`, from
+// both sides.
 import { describe, it, expect, beforeEach } from 'vitest'
 import { mount, flushPromises, type VueWrapper } from '@vue/test-utils'
 import { nextTick } from 'vue'
@@ -166,7 +180,8 @@ describe('round 31 #1 - the screen honours what the arrival was for', () => {
     // No `entry` prop at all - the shape every other mounted test of this screen already uses, and
     // the reason none of them had to change.
     const w = mount(ThisWeekScreen, { attachTo: document.body })
-    expect(blockOrder(w.element)).toEqual(['story', 'tournament'])
+    // ⚠ ROUND 32 #2 TOOK THE SECOND BLOCK OFF THIS ARRIVAL - see the note at the top of this file.
+    expect(blockOrder(w.element)).toEqual(['story'])
     w.unmount()
   })
 
@@ -240,7 +255,6 @@ describe('round 31 #1 - and a resolved week still opens on its story', () => {
 
     expect(blockOrder(weekScreenOf(wrapper)), 'the new story outranks the old arrival').toEqual([
       'story',
-      'tournament',
     ])
     wrapper.unmount()
   })
@@ -255,10 +269,7 @@ describe('round 31 #1 - and a resolved week still opens on its story', () => {
     useGameStore().snapshot = afterTick
     await nextTick()
 
-    expect(blockOrder(weekScreenOf(wrapper)), 'the story opened itself, on top').toEqual([
-      'story',
-      'tournament',
-    ])
+    expect(blockOrder(weekScreenOf(wrapper)), 'the story opened itself, on top').toEqual(['story'])
     wrapper.unmount()
   })
 
@@ -282,7 +293,6 @@ describe('round 31 #1 - and a resolved week still opens on its story', () => {
     await nextTick()
     expect(blockOrder(weekScreenOf(wrapper)), 'the tick brought him back to his story').toEqual([
       'story',
-      'tournament',
     ])
     wrapper.unmount()
   })

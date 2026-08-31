@@ -250,7 +250,19 @@ const spendRange = computed<[number, number]>(() => {
            of text. The panel is the tournament-start screen shown one entry early, which is his own
            implementation hint - his words, the whole argument, and the one thing he asked for that
            the snapshot cannot supply are all in NextTournamentPanel.vue's header. -->
-      <NextTournamentPanel v-if="nearestEntered" :event="nearestEntered" />
+      <!-- ⭐⭐ ROUND 32 #2 – ...AND NOT WHILE THE SCREEN IS SHOWING THE WEEK THAT JUST ENDED. His
+           words are in docs/rounds/round-32.md item 2, where they may be quoted in his own
+           language; the sentence in English is that the results view carries the whole tournament
+           plate underneath the results, described exactly as the tournament's own screen describes
+           it, and the tournament should come off it. So the panel waits for the story to be gone:
+           the results view shows results, the × that already dismisses the story then reveals what
+           is next, and the arrival through Home's plate still opens on the tournament with the
+           story below it - round 31 #1, intact, which is what `|| tournamentFirst` is holding open.
+           ⚠⚠ THE CONDITION IS THE WHOLE DIFF. This is the FOURTH pass over these two blocks - round
+           29 part two grew the recap, round 30 #1 cut it back, round 31 #1 moved the order - and
+           every one of the three changed more than the complaint asked for. Nothing else on this
+           screen moves: no copy, no spacing, no reordering. -->
+      <NextTournamentPanel v-if="nearestEntered && (!showRecap || tournamentFirst)" :event="nearestEntered" />
     </section>
 
     <!-- ...and on that arrival the story sits directly under the tournament, not at the end of the

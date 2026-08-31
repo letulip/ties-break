@@ -283,10 +283,16 @@ describe('round 29 #8 – the door Home opens is no longer empty', () => {
     return toSnapshot(world)
   }
 
+  // ⚠⚠ RE-AIMED BY ROUND 32 #2, NOT LOOSENED. The subject of this arm is «the door Home opens is no
+  // longer empty» - the panel is on the screen the CARD opens - and the card's arrival is now named
+  // (round 31 #1's `entry` prop, which Home's plate passes). What round 32 #2 removed is the panel
+  // on the OTHER arrival, the results view a tick lands on: «на result of the week ... надо турнир
+  // ... убрать». So this mounts the arrival it was always about, and the state it no longer covers
+  // is covered by `round32-week-results.test.ts` from both sides.
   it('the This-week screen carries the panel for the entered tournament', () => {
     const snap = enteredCareer()
     useGameStore().snapshot = snap
-    const w = mount(ThisWeekScreen)
+    const w = mount(ThisWeekScreen, { props: { entry: 'tournament' } })
     const entered = snap.upcoming.find((e) => e.entered)!
     expect(w.find('.next-tourn').exists(), 'the panel is on the screen the card opens').toBe(true)
     expect(w.find('.nt-hero-title').text()).toBe(entered.label)
