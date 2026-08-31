@@ -41,10 +41,21 @@
  * re-implemented here.
  *
  * TWO ARMS, and they answer different halves:
- *   --sweep       N fresh careers × W weeks (default 8 × 120). Establishes the CAUSE with enough n
- *                 that a constant may be moved on it.
+ *   --sweep N     N fresh careers ticked `--weeks` weeks, every card observed every `--every` weeks
+ *                 from `--from`. ⚠ THE HORIZON IS ITSELF A MEASUREMENT: at 120 weeks the ladder is
+ *                 already monotone and nothing is wrong, because the conveyor has not yet turned a
+ *                 class over. Use `--from 500 --every 8 --weeks 950` to reach the steady state the
+ *                 owner's saves are in.
  *   --save <path> the owner's own career, read-only. Reproduces the round's table so the sweep can
  *                 be trusted to be measuring the same thing he saw.
+ *
+ * ⚠ THE "BEFORE" COLUMN OF docs/specs/tier-ladder-and-band.md CANNOT BE TAKEN WITH THIS FILE, and
+ * that is a property of the fix rather than an oversight: it imports `aiSelectionRanking`, which the
+ * pre-change engine does not export. The A arm was measured with a reduced twin importing only
+ * symbols BOTH arms have (`upcomingEvents`, `createWorld`, `tickWeek`), byte-identical in the two
+ * worktrees – md5 checked – run in a detached worktree at origin/main with the reader confirmed
+ * absent (`git grep aiSelectionRanking -- src` empty). To re-take it, revert the engine commit into
+ * a worktree of its own and run that twin, never this file.
  *
  * ⚠ MEASUREMENT ONLY. Imports the engine read-only, changes no constant, ships no fixture. The
  * owner's saves are never written back and nothing is derived from one beyond the aggregates below.
@@ -305,6 +316,27 @@ function report(title: string, by: Map<TierId, Row>): void {
         `${mean(r.headRat).toFixed(0).padStart(8)} ${mean(r.poolAge).toFixed(1).padStart(8)} ${mean(r.drawnAge).toFixed(1).padStart(7)}  ${bands}`,
     )
   }
+  // ⭐ THE BAND, AS A DISTRIBUTION AND AGAINST THE RING BESIDE IT (round 31 #3 defect (b)). A band
+  // that takes one value cannot be planned against, and a band that disagrees with its own ring is
+  // a new defect rather than a fix – so both are printed, over every card and over the cards she
+  // can actually ENTER, which is the population the owner plans from.
+  const bands: { band: string; chance: number }[] = []
+  for (const [, r] of by) r.bandLabel.forEach((b, i) => { if (i < r.chance.length) bands.push({ band: b, chance: r.chance[i] }) })
+  console.log('')
+  console.log('  BAND vs RING – the two readings the card shows side by side')
+  for (const b of ['favourite', 'even', 'strong']) {
+    const g = bands.filter((x) => x.band === b)
+    if (!g.length) { console.log(`    ${b.padEnd(10)} n=0`); continue }
+    // A `favourite` that shows a ring under 50%, or a `strong` that shows one over it, is the shape
+    // the owner named: «says favourite and then shows 24%».
+    const bad = b === 'favourite' ? g.filter((x) => x.chance < 0.5).length : b === 'strong' ? g.filter((x) => x.chance > 0.5).length : 0
+    console.log(`    ${b.padEnd(10)} n=${String(g.length).padStart(5)}  mean ring ${(mean(g.map((x) => x.chance)) * 100).toFixed(1).padStart(5)}%  CONTRADICTS the ring on ${bad} (${((bad / g.length) * 100).toFixed(1)}%)`)
+  }
+  const all = by.size ? [...by.values()].flatMap((r) => r.bandLabel) : []
+  const missing = ['favourite', 'even', 'strong'].filter((b) => !all.includes(b))
+  console.log(`  BAND DISTRIBUTION over ${all.length} cards: ` + ['favourite', 'even', 'strong'].map((b) => `${b} ${all.filter((x) => x === b).length}`).join('  '))
+  console.log(`    ${missing.length ? `⚠ DEGENERATE – never occurs: ${missing.join(', ')}` : '✓ all three bands occur'}`)
+
   // ⭐ MONOTONICITY, STATED AS THE CLAIM IT IS – and PER FAMILY, because the three ladders are three
   // ladders. Walking UP a family, the first round must not get easier. The cross-family step
   // (a J300 to a World Tour 15) is NOT a claim this makes: a W15 is the first rung of a different

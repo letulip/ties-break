@@ -263,10 +263,8 @@ export function upcomingEvents(world: WorldState): UpcomingEvent[] {
   // because that is what `computeShadowTournament` seeds her off (`rankingFor(world,
   // TIERS[event.tier].track)`) and what `overlayRanks` below prints opponent ranks from. Three
   // possible tables, at most three folds, and the card can no longer seed her from a table the
-  // tournament does not use - which for a DOMESTIC event was the whole of round 31 #3's band defect:
-  // 199 of 200 in the ITF table against #1 in the domestic one, so every domestic card read
-  // `strong`. ⚠ On the W track it resolves to the very table the W branch already passes, so every
-  // W card is byte-identical.
+  // tournament does not use. ⚠ On the W track it resolves to the very table the W branch already
+  // passes, so every W card is byte-identical.
   const standingCache = new Map<LadderTrack, RankingRow[]>()
   const standingFor = (tier: TierId): RankingRow[] => {
     const track = TIERS[tier].track

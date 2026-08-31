@@ -332,8 +332,7 @@ export function previewEvent(
    *  table every other surface answers it with, so the draw now agrees with the Season card instead
    *  of contradicting it."* The preview was handed ONE table and used it for both, so the card and
    *  the bracket seeded her from different places – and for a DOMESTIC event they are different
-   *  places by a whole table: 199 of 200 in the ITF one against #1 in the domestic one, on the
-   *  owner's w933 save. Two readings, two tables, exactly as the bracket has them.
+   *  places by a whole table. Two readings, two tables, exactly as the bracket has them.
    *
    *  ⚠ OPTIONAL, AND ABSENT ⇒ `ranking`, WHICH IS BYTE-IDENTICAL TO WHAT THIS FUNCTION ALWAYS DID.
    *  Same discipline as `excluded` above and as `kidMatchPlayerFor`'s optional world keys: a pure
