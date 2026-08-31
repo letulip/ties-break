@@ -237,9 +237,15 @@ export interface CalendarWeek {
    *  DATA for the reason `offSeason` and `summer` are: `weekGrid.ts` may not ask the engine. */
   masseurDays: number[]
   /** ⭐ ROUND 28 #4/#6 – THE SPONSOR'S SHOOT, when this week is one of the signed deal's named shoot
-   *  weeks and the week is otherwise hers to plan. Null on every other week, and null on the five
-   *  weeks whose own identity outranks it – a layoff, a trip, a family week, the off-season and the
-   *  exam fortnight (see `calendarWeekFor`'s precedence note).
+   *  weeks and the week is otherwise hers to plan. Null on every other week, and null on the three
+   *  weeks whose own identity outranks it – a layoff, a trip and a family week (see
+   *  `calendarWeekFor`'s precedence note).
+   *
+   *  ⚠⚠ ROUND 32 #1 TOOK THE OFF-SEASON OFF THAT LIST. It read «the five weeks ... the off-season and
+   *  the exam fortnight» and the off-season half of it was the defect the owner found in play: the
+   *  winter IS the shoot season (`WINTER_SHOOT_WEEKS`, round 29 part four P9), so the weeks a booked
+   *  shoot lands on FIRST were the weeks this field was null on. The exam fortnight stays on the
+   *  list, unfixed and deliberately so – see the off-season branch's note in `calendarWeekFor`.
    *
    *  `days` are the Monday..Sunday indices the shoot took; `brand` is whose it is, so the grid and
    *  the read-out can name it without re-deriving a deal. */
@@ -527,8 +533,16 @@ function uniform(kind: DayKind, beat: DayBeat | null, note: string | null): Cale
  *  (round 28 #6). The two surfaces must not disagree about what a week IS, and the mechanic's own
  *  design settles the order anyway: a shoot week is «not blocked and not double-charged» – a
  *  tournament, a family week or a layoff on a shoot week genuinely happens, and the shoot never
- *  pretends to own the week. So `shoot` is non-null on exactly the branch where the shoot actually
- *  shapes the days: the ordinary week, the one the owner asked to see the combination on. */
+ *  pretends to own the week. So `shoot` is non-null on exactly the branches where the shoot actually
+ *  shapes the days.
+ *
+ *  ⚠⚠ ROUND 32 #1 WIDENED THAT FROM ONE BRANCH TO TWO, AND THE SENTENCE IT REPLACES IS WORTH
+ *  KEEPING: it used to read «the ordinary week, the one the owner asked to see the combination on».
+ *  That was true of round 28 #6 and it stopped being true at round 29 part four P9, which made the
+ *  winter the shoot SEASON – `chooseShootWeeks` fills the off-season weeks first – so the one branch
+ *  a booked shoot is likeliest to land on was the one branch that could not draw it. The off-season
+ *  branch fills `shoot` too now. The rest of the list is unchanged and the reasons are unchanged: a
+ *  layoff, a trip and a family week each answer for their own days. */
 export function calendarWeekFor(snap: CalendarWeekFacts, week: number): CalendarWeek {
   const block = surfaceBlockFor(week)
   const surface = dominantSurface(block)
@@ -598,7 +612,8 @@ export function calendarWeekFor(snap: CalendarWeekFacts, week: number): Calendar
     surface,
     surfaceNote,
     masseurDays: masseurDaysFor(masseurSessions, planDays),
-    // Null here and filled in on the ordinary-week branch alone - see the precedence note above.
+    // Null here and filled in on the two branches whose days a shoot shapes - the ordinary week and
+    // (round 32 #1) the off-season, which is the shoot season by construction. Precedence note above.
     shoot: null as CalendarWeek['shoot'],
     // ⭐ ROUND 29 P13/P14/P15 – null here and filled in on the TRIP branch alone, for the same
     // reason: a week that is not a trip has no draw, no press room and no masseur on the road.
@@ -715,9 +730,40 @@ export function calendarWeekFor(snap: CalendarWeekFacts, week: number): Calendar
   // 4. THE CALENDAR'S OWN BLACKOUTS. Neither is hers to plan, and both are the reason a week she
   //    expected to train in has nothing on it.
   if (isOffSeasonWeek(week)) {
+    // ⭐⭐ ROUND 32 #1 – AND THE SHOOT IS THE ONE THING THAT DOES STILL HAPPEN IN ONE OF THEM. The
+    // owner, playing the merged round-31 build: a shoot week that falls in the off-season draws no
+    // shoot at all. His words are in docs/rounds/round-32.md item 1, where they may be quoted in his
+    // own language.
+    //
+    // ⚠⚠ THE ENGINE WAS ALREADY RIGHT AND THIS BRANCH WAS BLIND. `WINTER_SHOOT_WEEKS =
+    // OFF_SEASON_WEEKS + 3` (engine/offers.ts) since round 29 part four P9, so the shoot season
+    // CONTAINS the whole off-season by construction and `chooseShootWeeks` fills those weeks FIRST -
+    // a brand shoots its campaign in the winter precisely because she is not playing then. The
+    // defect was an ORDER OF BRANCHES and nothing else: the shoot's days were computed on the
+    // ordinary-week branch BELOW, which an off-season week returns above, so the grid was handed
+    // `base`'s `shoot: null` and seven plain `off` days. `weekGrid.ts` needed no new shape either -
+    // `WEEK_SHAPES.shoot` and `SHOOT_DAY` have drawn a call time and a shoot block since round 28
+    // #6, and nothing reached them because no off-season day was ever given the kind.
+    //
+    // ⚠ EVERYTHING ELSE ABOUT THE WEEK IS UNTOUCHED, and that is the whole shape of the fix. The
+    // tour is still shut, the eyebrow still says Off-season, the read-out is still the one sentence
+    // about the block where next year gets built, and the Sunday is still not lent to a draw that
+    // does not exist. A shoot takes DAYS of this week; it does not make it a different week - the
+    // same subordination `TripFacts.shoot` already expresses on a tournament week (round 30 #2).
+    //
+    // ⚠ AND THE DAYS ARE `shootDaysFor`'S, NOT A SECOND RULE FOR THE WINTER: the plan's free days,
+    // exactly as in July, so the picture the off-season draws and the picture an ordinary week draws
+    // cannot disagree about which days a shoot takes. The match index is `null` because this branch
+    // draws no booked friendly - a blackout week has no `match` day for the shoot to step around.
+    const shootDays = shooting ? shootDaysFor(planDays, null) : []
     return {
       ...base,
-      days: uniform('off', null, 'Off'),
+      days: uniform('off', null, 'Off').map((day) =>
+        shootDays.includes(day.index) ? { ...day, kind: 'shoot', note: 'Shoot' } : day,
+      ),
+      // ...and the deal is named here for the reason it is named on the ordinary branch: a surface
+      // that draws a shoot has to be able to say whose it is without re-deriving a portfolio.
+      shoot: shootDeal ? { brand: shootDeal.brand, days: shootDays } : null,
       // ⚠ P15: the tour is shut, so there is nothing next week to leave for.
       nextTripRounds: null,
       title: 'Off-season',
@@ -728,6 +774,23 @@ export function calendarWeekFor(snap: CalendarWeekFacts, week: number): Calendar
       readout: 'The tour is closed – this is the block where next year gets built.',
     }
   }
+  // ⚠⚠ ROUND 32 #1 – THE EXAM FORTNIGHT HAS THE SAME LATENT GAP AND IS DELIBERATELY LEFT WITH IT.
+  // Named rather than silently widened, because the round asked for the off-season and an unasked
+  // fix is the habit invariant 4 exists against. Three reasons it is not the same defect:
+  //
+  //   * FREQUENCY, MEASURED RATHER THAN ASSUMED. `chooseShootWeeks` PREFERS the winter (offsets
+  //     46-51) and fills it first; the exam fortnight is offsets 23-24 (`ECONOMY.availability.
+  //     examWeeks`) and can only be reached by the in-season SPILL, which the winter usually leaves
+  //     nothing for. Over 8,000 booked weeks from 4,000 one-year deals, 45.4% land in an off-season
+  //     week and 0.4% in an exam week - a hundredfold difference in how often the hole is looked
+  //     at. His own save says the same thing from the other end: 11 of its 30 booked shoot weeks
+  //     are off-season weeks.
+  //   * IT IS NOT ALWAYS A WEEK AT ALL. `isExamWeek` answers false past `schoolEndsWeek`, so the
+  //     gap closes itself for the whole professional half of a career.
+  //   * AND THE FIX WOULD NEED HIS COPY. This branch's read-out counts her sessions out loud
+  //     («her N sessions stand»); a shoot standing beside that sentence is a wording question, and
+  //     the wording is his (invariant 4). The off-season's read-out names no days, so it takes the
+  //     shoot without a word moving.
   if (isExamWeek(week, base.schoolOver)) {
     return {
       ...base,
