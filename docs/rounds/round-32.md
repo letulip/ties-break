@@ -89,3 +89,64 @@ Both boxes are ticked with the place, per `docs/rounds/README.md` §"Keeping thi
   SPACING change, and this round was told to change the visibility condition and nothing else after
   three previous passes each moved more than was asked.
 
+
+- [ ] **3. «личный бренд в цене подрос с 250к до 1.8м, а доход у него 1800 в неделю =))) что
+  как-будто бы не очень соответствует стоимости. Надо как-то настроить этот момент»** – the merch
+  brand's valuation and its income do not describe the same business. **measure, spec, bench**.
+
+  ⭐ MEASURED ON HIS w933 SAVE BEFORE ANY PROPOSAL, and it reproduces his screen almost exactly:
+
+      fame              22.3 / 100
+      weekly gross      $1,720      = perFamePointCents($30) x fame^2 / famePivot(10)
+      annual gross      $89,428
+      multiple          18.23x      (cap maxX = 20)
+      worth             $1,630,191  = weekly x 52 x multiple
+
+  The arithmetic is internally consistent – his $1.8M at $1,800/wk is ~19x, all but at the ceiling.
+  Nothing here is a typo or a unit slip.
+
+  ⚠⚠ THE DEFECT IS WHAT THE MULTIPLE ASKS ABOUT. Every term of `brandMultipleX`
+  (`engine/world/brand.ts:263`) reads her TENNIS CAREER and none reads the brand:
+
+      base                            14.00
+      14 pro seasons        +0.2 ea   +2.40
+      1 top-20 season       +0.3 ea   +0.30
+      19 finals lost        +0.1 ea   +1.20
+      win rate 68.2%                  +0.33
+
+  So a fourteen-season veteran earns an all-but-maximum multiple on a business turning over $89k a
+  year. Real multiples rise with the SIZE, durability and growth of the business, not with the
+  founder's résumé: a firm earning $89k a year changes hands at two to five times earnings, not
+  eighteen. ⚠ And `baseX` is already 14 before a single achievement, so even an unknown's brand
+  trades at 14x.
+
+  ⭐⭐ HIS RULING SHARPENS THE FIX, and it is a better statement than my first one: «её известность
+  22.3 – да, это ок, главное, чтобы **эта известность участвовала в механизме**, тогда мы увидим
+  разницу на других карьерах». Fame 22.3 is not the defect and is not to be retuned. The defect is
+  that fame sits in the INCOME alone (`fame^2`) and nowhere in the MULTIPLE, so two careers with the
+  same tennis record and different fame value their brands identically.
+
+  SO: fame enters `brandMultipleX`, and the career terms become a premium ON TOP rather than the
+  whole of it.
+
+  ⭐ AND THE CEILING PROTECTS ITSELF, which is why this satisfies both his rulings at once: with
+  `maxX = 20` unchanged, a fame-scaled multiple SATURATES at the top – at fame 100 the brand already
+  takes $1.56M a year and the multiple is at its cap either way, so the top of the shelf does not
+  move by a cent. Only the bottom does: at his 22.3 the multiple should read single digits instead
+  of 18.23, and the brand should be worth hundreds of thousands rather than $1.63M.
+
+  ⚠ WATCH THE COMPOUNDING AND MEASURE IT: income already goes as `fame^2`, so a multiple that also
+  rises with fame makes worth go as `fame^3` UNTIL the cap bites. Where the cap starts binding is
+  the number the spec must report – if it binds only at fame 90+, the middle of the range grows
+  faster than anyone intended and the curve needs its shape chosen, not inherited.
+
+  ⚠⚠ THE CEILING IS NOT TO BE CUT. He rejected that framing once already, and correctly – «а что с
+  этой цифрой не так? вроде бы как раз спонсорские коллаборации со спортсменами дают и не такое,
+  кратно большее». This change may only move the BOTTOM of the scale.
+
+  ⭐ AND A SEPARATE FINDING, NOT PART OF THIS FIX: her fame is 22.3 because fame is fed by TITLES
+  (`fameFloorOf` sums title weeks, decayed on a 104-week half-life) and she has none. That is the
+  same wall as round 31 §5 (20 of 24 entries at World Tour 500 and above) and the elite-shape
+  research. Filed there, not here.
+
+  ⚠ Invariant 5 – balance: a spec in `docs/specs/` with predicted vs measured, and a bench.
