@@ -26,10 +26,17 @@ last-reviewed: 2026-08-30
 
 ## Now
 
-⚙ THE LIVE WAVE IS ROUND 30 – this line is machine-checked against the newest ledger in
+⚙ THE LIVE WAVE IS ROUND 31 – this line is machine-checked against the newest ledger in
 `docs/rounds/` by `scripts/doc-facts.mjs`; edit the number only by shipping a ledger.
 
-**Round 30 is the open wave** ([round-30.md](rounds/round-30.md), 30.08) – seventeen items from a
+**Round 31 is the open wave** ([round-31.md](rounds/round-31.md), 31.08). Its first two items are
+built: the This-week screen now knows WHY it was opened, so Home's `Next tournament` plate lands on
+the tournament while a resolved week still lands on its story (#1); and the week recap's Finances
+tile is his own four lines – Income (the tournament's own cheque) / Family income / Spent / Balance –
+with one memo under them, her cut of the PRIZE money alone (#2). **Read the ledger for state; do not
+count boxes here.**
+
+**Round 30 was the previous wave** ([round-30.md](rounds/round-30.md), 30.08) – seventeen items from a
 playthrough plus a second part read off his week-896 save, and the CI split. ⚠ Several of its items
 are REGRESSIONS from round 29's own work, found in play within hours, and they are marked `[!]` with
 what shipped and why it missed. **Read the ledger for state; do not count boxes here.**
