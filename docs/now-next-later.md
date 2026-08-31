@@ -3,7 +3,7 @@ type: plan
 status: current
 area: delivery
 canonical: true
-last-reviewed: 2026-08-30
+last-reviewed: 2026-08-31
 ---
 
 # Now / next / later
@@ -26,17 +26,25 @@ last-reviewed: 2026-08-30
 
 ## Now
 
-⚙ THE LIVE WAVE IS ROUND 31 – this line is machine-checked against the newest ledger in
+⚙ THE LIVE WAVE IS ROUND 32 – this line is machine-checked against the newest ledger in
 `docs/rounds/` by `scripts/doc-facts.mjs`; edit the number only by shipping a ledger.
 
-**Round 31 is the open wave** ([round-31.md](rounds/round-31.md), 31.08). Its first two items are
-built: the This-week screen now knows WHY it was opened, so Home's `Next tournament` plate lands on
-the tournament while a resolved week still lands on its story (#1); and the week recap's Finances
-tile is his own four lines – Income (the tournament's own cheque) / Family income / Spent / Balance –
-with one memo under them, her cut of the PRIZE money alone (#2). **Read the ledger for state; do not
-count boxes here.**
+**Round 32 is the open wave** ([round-32.md](rounds/round-32.md), 31.08) – two items read off his
+play on the merged round-31 build, both diagnosed before they were filed. A shoot booked in an
+off-season week was drawn as an empty week: the winter IS the shoot season by construction
+(`WINTER_SHOOT_WEEKS`), and the calendar's off-season branch returned before the shoot's days were
+ever computed (#1). And the week-results view carried the whole upcoming-tournament plate underneath
+the results, which is the FOURTH pass over that pair of blocks (#2). **Read the ledger for state; do
+not count boxes here.**
 
-**Round 30 was the previous wave** ([round-30.md](rounds/round-30.md), 30.08) – seventeen items from a
+**Round 31 was the previous wave** ([round-31.md](rounds/round-31.md), 31.08), merged in
+[#117](https://github.com/letulip/ties-break/pull/117): the This-week screen learned WHY it was
+opened, so Home's `Next tournament` plate lands on the tournament while a resolved week still lands
+on its story (#1), and the week recap's Finances tile became his own four lines – Income (the
+tournament's own cheque) / Family income / Spent / Balance – with one memo under them, her cut of
+the PRIZE money alone (#2). **Read the ledger for state; do not count boxes here.**
+
+**Round 30 was the wave before it** ([round-30.md](rounds/round-30.md), 30.08) – seventeen items from a
 playthrough plus a second part read off his week-896 save, and the CI split. ⚠ Several of its items
 are REGRESSIONS from round 29's own work, found in play within hours, and they are marked `[!]` with
 what shipped and why it missed. **Read the ledger for state; do not count boxes here.**

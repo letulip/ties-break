@@ -11,7 +11,7 @@ last-reviewed: 2026-08-31
 Reported after he merged PR #117 and played it. Both items diagnosed before filing; neither was
 guessed at.
 
-- [ ] **1. «в игре заметил, что у нас в межсезонье на shooting week самих shooting в календаре и
+- [x] **1. «в игре заметил, что у нас в межсезонье на shooting week самих shooting в календаре и
   нет»** – a booked shoot lands in an off-season week and the calendar draws that week empty.
   **build**.
 
@@ -36,7 +36,7 @@ guessed at.
   not be reproduced from it; the evidence above is the code path, and he read the defect off a live
   career the save predates. A fix must therefore build its own fixture rather than lean on his.
 
-- [ ] **2. «на result of the week внизу под самими результатами висит кусок THIS WEEK где предстоящий
+- [x] **2. «на result of the week внизу под самими результатами висит кусок THIS WEEK где предстоящий
   турнир описан, как на экране самого турнира – надо турнир с result of the week всё-таки убрать»** –
   the week's results and the upcoming tournament are on screen together. **build**.
 
@@ -54,3 +54,38 @@ guessed at.
   Results view shows results; the × that already dismisses the story then reveals what is next; and
   an arrival through Home's Next-tournament plate still opens on the tournament with the story
   below it, exactly as he asked in round 31.
+
+## Where they landed
+
+Both boxes are ticked with the place, per `docs/rounds/README.md` §"Keeping this true". Branch
+`round/32`, gated once at the end: `npm run check` exit 0, `npm run test:e2e` exit 0 (31 tests),
+`npm run test:sim` exit 0 (12 files), each read out of its own log file rather than a pipe.
+
+- **1** – `cbbbd868`, `src/composables/weekDays.ts`. The off-season branch of `calendarWeekFor` now
+  marks the shoot's days (`shootDaysFor(planDays, null)`, the ordinary week's own rule) and names the
+  deal, and `weekGrid.ts` draws them through the `SHOOT_DAY` shape that already existed. Nothing else
+  about the week moved: the eyebrow still says Off-season, the read-out is unchanged, `nextTripRounds`
+  is still refused. Guard: `tests/component/round32-off-season-shoot.test.ts`, 13 arms driven from a
+  signed `ad` offer's `terms.shootWeeks` through `toSnapshot` into the grid, on week 933 – the
+  off-season week his save sits on – plus all three off-season slots and the three winter weeks that
+  already drew.
+
+  ⚠ NOT DONE, AND NAMED: the **exam fortnight** has the identical latent gap and was left with it.
+  Measured over 8,000 booked weeks from 4,000 one-year deals, 45.4% land in an off-season week and
+  0.4% in an exam week; the gap also closes itself once she leaves school; and that branch's read-out
+  counts her sessions out loud, so drawing a shoot beside it is a WORDING question and the wording is
+  his (invariant 4). The reasons are recorded above the branch in `weekDays.ts` and pinned in §3 of
+  the guard, so a later reader sees a decision rather than an oversight.
+
+- **2** – `cc04cfb7`, `src/components/screens/ThisWeekScreen.vue`, one expression:
+  `v-if="nearestEntered && (!showRecap || tournamentFirst)"`. Guard:
+  `tests/component/round32-week-results.test.ts`, three states from both sides, mutation-verified so
+  that «forgetting round 31 #1» and «rebuilding the defect» fail apart.
+
+  ⚠ ONE THING DELIBERATELY NOT CHANGED, for the owner to rule on: the hosting `<section>` still takes
+  its `bare` class from `nearestEntered` rather than from the panel's new condition, so on the results
+  view that section is now un-framed while showing only its heading and the entry pill. Its own
+  comment says «ONLY WHEN THE PANEL IS THERE», so the two have parted company – but re-binding it is a
+  SPACING change, and this round was told to change the visibility condition and nothing else after
+  three previous passes each moved more than was asked.
+
