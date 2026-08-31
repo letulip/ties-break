@@ -291,3 +291,48 @@ HIS REFINEMENT on the reveal: «можно писать, что жеребьев
 DECIDED, and he may overrule: the draw is made at **week − 1**. Entries close at the END of week − 2
 (`calendar.ts:2060`), so the draw lands the week AFTER he has committed – he chooses on the band and
 then learns the opponent, which is both how tennis works and the better scene.
+
+## 9. She is 93% of her peak and the game has never said so
+
+HIS ASK: «да, заведи находку про пик и спад, и тренер вполне может что-то такое говорить. Да и она
+сама в конце сезона … могла бы что-то тоже сказать на эту тему. Может уже сейчас что-то можем
+сделать в эту сторону?»
+
+HIS QUESTION, ANSWERED: the end-of-season card with two buttons is `RetirementDialog.vue`, and YES
+it was changed – round 30 #7 re-worded the lede of its `age` branch. The two buttons stay on purpose:
+it is a real choice (retire / one more year), not an oversight. What round 30 did NOT touch, because
+nobody had measured it yet, is the decline itself.
+
+⭐⭐ THE NUMBER ALREADY EXISTS AND IS NEVER SHOWN. `physicalShare = physicalMean(skills) /
+peakPhysical` (`world/endings.ts:231`) – 1 at her peak and falling every week from `declineStart`
+(29). Measured across his saves:
+
+    week 502  age 23.0   share 100.0%
+    week 675  age 26.0   share 100.0%
+    week 780  age 28.0   share 100.0%
+    week 896  age 31.0   share  95.2%
+    week 933  age 31.7   share  93.1%
+
+⚠ THE ONLY THING THE GAME DOES WITH IT IS READ IT AS A BOOLEAN: `final: physicalShare <=
+ENDINGS.lastOfferPeakShare` (0.55) decides whether this winter's question is the last one. Between
+100% and 55% there are forty-five points of the story this game is ABOUT, and not one of them
+reaches the screen. That is why item 7 happened: he watched his daughter decline for a season and
+concluded the software was broken, because nothing ever told him otherwise.
+
+⚠ Same shape as item 2 and worth naming as a pattern: **the fact was already there and only the
+readout was missing.** Third time in this round.
+
+THREE PLACES IT COULD BE SAID, cheapest first – FOR HIS CALL, not dispatched yet:
+ (a) `RetirementDialog`'s `age` branch. Its lede is generic today («Twenty-nine is when the question
+     starts being asked, not a countdown to anything») while the engine knows she is at 93%.
+ (b) The coach, in season – `coachSays` already exists and is already deterministic per event.
+ (c) Her own line at season end, which is what he asked for.
+
+⚠⚠ INVARIANT 4 BINDS HERE HARDER THAN USUAL: every one of those is NEW COPY in her voice and the
+voice is his. The mechanism can be built and gated, but the sentences go to him for sign-off BEFORE
+merge – they must not arrive in his game unread, which is the whole complaint behind invariant 4.
+
+⏸ NOT DISPATCHED. One agent at a time, on his standing instruction («одновременно не надо делать, а
+пошагово вполне отлично»); `r31b/draw-reveal` is in flight. This is next in the queue.
+
+TOOL: `tools/r31-peak-share.ts`.
