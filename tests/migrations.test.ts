@@ -524,7 +524,7 @@ describe('save migrations', () => {
   // carries a non-null `college` with no `callUpReveal`, and no `fieldSeasonTitles` – so this walks
   // the whole ladder in a single call and asserts BOTH effects rather than the version number at the
   // end. Mutate either guard and it goes red; mutate the peel boundary in
-  // `tests/coach-travel-edge.test.ts` and the frozen careers go red beside it.
+  // `careerHashAtSchema` in `tests/coachTravelEdgeFixtures.ts` and the frozen careers go red beside it.
   it('⭐⭐ v63 -> v64 -> v65: a v63 save walks BOTH of the day\'s schema moves and arrives correct', () => {
     const raw = JSON.parse(readFileSync(fileURLToPath(new URL('./fixtures/saves/v63.json', import.meta.url)), 'utf8'))
     expect(raw.schemaVersion, 'the fixture is a genuine v63 save').toBe(63)

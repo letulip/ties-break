@@ -661,7 +661,8 @@ describe('v49 – the junior fare is opt-in, and the helping follows it', () => 
   it('⚠ ...AND NO CALL SITE DECIDES IT SEPARATELY – the helping is handed the FARE, in source', () => {
     // ⚠ THE ONE STRUCTURAL PIN IN THIS BLOCK, and it is here because the behavioural test above
     // computes the argument itself and therefore cannot see a call site that stopped passing it. The
-    // hazard is specific and has already happened once (15.08, the two leaks `coach-travel-edge.ts`
+    // hazard is specific and has already happened once (15.08, the two leaks
+    // `coach-travel-edge-helping.test.ts`
     // records): the helping read `world.coachOnEventWeeks` - the standing STANCE - and so applied at
     // junior events and at home friendlies, where nobody had been sent. The fix was to make the FARE
     // the single answer to "is he at this court", and v49 is exactly why that must not drift back:

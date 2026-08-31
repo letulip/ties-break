@@ -68,7 +68,7 @@ const CSV_PATH = strArgOf('csv')
  *  Object.assign idiom) – the combined grid's task-3 arms: the owner's «+2 за каждый круг не
  *  многовато?» is answered by running the same grid at 1 and at 2 and reading the tour channel's
  *  SEM. The header line below prints the effective value so an arm can never be mislabelled (the
- *  zsh word-split incident, coach-travel-edge.test.ts). */
+ *  zsh word-split incident, coachTravelEdgeFixtures.ts). */
 const RELIEF = argOf('relief', ECONOMY.masseur.tourRecoveryPerRound)
 Object.assign(ECONOMY.masseur, { tourRecoveryPerRound: RELIEF })
 const POLICY = POLICIES[1] // 'player' – the reasonable parent

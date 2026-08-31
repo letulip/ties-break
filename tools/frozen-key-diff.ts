@@ -1,5 +1,7 @@
-// PER-KEY HASHES OF ONE FROZEN CAREER – the diff `tests/coach-travel-edge.test.ts` demands before
-// any of its three hashes may be re-frozen.
+// PER-KEY HASHES OF ONE FROZEN CAREER – the diff `tests/coachTravelEdgeFixtures.ts` demands before
+// any of its three hashes may be re-frozen. (That module is where the protocol and the eighteen
+// constants went in the 31.08 cut; the assertions read them from tests/coach-travel-edge.test.ts
+// and tests/coach-travel-edge-older-schemas.test.ts.)
 //
 // Its protocol, in its own words: re-freezing without the per-key check "would have been the exact
 // defect the file exists to catch". So this walks the same career the test walks and prints a hash

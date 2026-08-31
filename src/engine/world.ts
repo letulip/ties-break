@@ -1284,10 +1284,12 @@ export function createWorld(
     college: null,
     // v59: no masseur on day one – he is pro-career gated, and the hire is a decision, never a
     // default. ⚠ LAST KEYS OF THE LITERAL, deliberately: the frozen-career identity in
-    // tests/coach-travel-edge.test.ts reproduces the pre-v59 hashes by dropping exactly these
-    // three keys, which only works while the rest of the serialisation order is untouched. The
-    // dial opens on the middle rung (the professional default the pricing is anchored to) and the
-    // travel stance opens OFF – the coach's own default: the switch is what buys the seat.
+    // tests/coach-travel-edge-older-schemas.test.ts reproduces the pre-v59 hashes by dropping
+    // exactly these three keys, which only works while the rest of the serialisation order is
+    // untouched. (The peel itself is `careerHashAtSchema` in tests/coachTravelEdgeFixtures.ts,
+    // which that file and tests/coach-travel-edge.test.ts share.) The dial opens on the middle
+    // rung (the professional default the pricing is anchored to) and the travel stance opens
+    // OFF – the coach's own default: the switch is what buys the seat.
     masseurHired: false,
     masseurSessionsPerWeek: ECONOMY.masseur.defaultSessions,
     masseurTravels: false,
@@ -1308,9 +1310,11 @@ export function createWorld(
     // открыт всегда с начала игры»), so the shelf IS visible from week 0 and the family simply owns
     // nothing on it – see the block where the gate stood, in world/shop.ts.
     // ⚠ LAST KEY OF THE LITERAL, for the reason the masseur's three and `peakPhysical` above give:
-    // the frozen-career identity in tests/coach-travel-edge.test.ts reproduces each older schema's
-    // hashes by dropping exactly the keys appended since, which only works while every key stays in
-    // the order it was appended in.
+    // the frozen-career identity reproduces each older schema's hashes by dropping exactly the keys
+    // appended since, which only works while every key stays in the order it was appended in. That
+    // ladder is asserted across a PAIR since 31.08 – tests/coach-travel-edge.test.ts holds v62-v67,
+    // tests/coach-travel-edge-older-schemas.test.ts holds v61 down to v49 – off one shared peel in
+    // tests/coachTravelEdgeFixtures.ts.
     assets: [],
   }
   addEvent(world, {
