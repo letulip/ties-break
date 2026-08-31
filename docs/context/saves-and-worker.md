@@ -12,7 +12,7 @@ last-reviewed: 2026-08-03
 
 - The worker owns the mutable `WorldState`; UI code talks through the typed protocol and
   consumes snapshots.
-- `SAVE_SCHEMA_VERSION` is v67 (`src/engine/world.ts`); the persisted main RNG position arrived at
+- `SAVE_SCHEMA_VERSION` is v68 (`src/engine/world.ts`); the persisted main RNG position arrived at
   v35, so loads resume `{s, n}` rather than replaying the career.
 - ⭐ THAT NUMBER NO LONGER ROTS SILENTLY – `scripts/doc-facts.mjs` reads the constant out of
   `src/engine/world.ts` and fails the gate when this line disagrees (in `npm run check` and in CI
