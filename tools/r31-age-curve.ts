@@ -115,7 +115,7 @@ console.log(`\n  ⚠ the world seed is in the key, so slot 'ai-3' is a different
 // A GROWTH-ONLY WALK. `growWeek` is the only writer of her build, so a walk over it IS her career's
 // physical arc – with none of a world's noise, which is what makes the route the only difference.
 function walkBuild(seed: string, bounds: AgeCurveBounds, weeksLostAtAge?: (age: number) => number) {
-  let skills: KidSkills = startingSkills(seed, DEFAULT_PROFILE.playStyle)
+  let skills: KidSkills = startingSkills(seed, DEFAULT_PROFILE)
   const potential = rollPotential(seed, skills)
   let peak = physicalMean(skills)
   let peakAge = 14
