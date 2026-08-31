@@ -387,3 +387,55 @@ The women's college route is genuinely rarer and harder than the men's – mater
 is described to the player, and an argument for sharpening its trade rather than softening it.
 
 TOOL: `tools/r31-top100-age.ts`.
+
+## 11. His rulings on items 9 and 10 (31.08)
+
+### 9 – ALL NINE LINES APPROVED
+
+«мне нравятся все вариации диалогов, они могу добавить жизни и разнообразия мне кажется, давай все
+использовать, сможем сделать разумно?»
+
+⭐ THE SENSIBLE SHAPE IS ALREADY IN THE THREE DRAFTS AND HE MAY NOT HAVE SEEN IT: the retirement
+trio is not three alternatives, it is three RUNGS of the same decline, and `physicalShare` is the
+number that picks between them. Ordered by how far gone she is:
+
+    share 95-100%  «She is not slower than last year by much - a step, maybe two, over a long
+                    match. It is the third set where the year shows.»
+    share 85-95%   «Nothing has fallen off a cliff. It is just that the season costs her more than
+                    it used to, and pays the same.»          <- Alice is here, at 93.1%
+    share <85%     «Her best tennis was three years ago. She knows the number as well as you do,
+                    and she has not brought it up once.»
+
+⚠ ADDED TO HIS ROUND-30 LEDE, NOT REPLACING IT. He approved that sentence in round 30 #7; invariant
+4 protects it from us as much as from anyone.
+
+The coach's three go in a POOL on the existing `coachSays` machinery, and the paired one is
+CONDITIONAL rather than drawn – «At this age you choose your weeks. This is one to choose.» / «...
+This is not one of them.» reads off the event's own field strength, which is the coach starting to
+advise WHICH tournaments to take. ⭐ That lands straight on the planning layer item 4 is fixing.
+
+Her own three go in a pool drawn once per SEASON.
+
+⚠⚠ THE TRAP, AND IT IS ITEM 4'S TRAP WEARING DIFFERENT CLOTHES: a line drawn afresh on every read
+changes every time he opens the screen, and he will report it as a defect exactly as he reported the
+opponent. Every pick is deterministic on a purpose-scoped sub-stream keyed to what the line is ABOUT
+– `seed:decline:<seasonIndex>` for hers, the existing `seed:coachsay:<eventId>` for the coach's, and
+the band (not a draw) for the dialog's. Never MAIN. ⚠ A mounted test must read the same screen twice
+and get the same sentence.
+
+### 10 – THE AGE-CURVE FORK APPROVED
+
+«я думал уже так и есть, но тоже неплохо звучит.»
+
+⚠ NOTE WHAT HE SAID: he believed the fork already shifted the curve. It does not – one curve,
+`plateauStart 23 / declineStart 29`, for every route, mirrored in `season/cohort.ts:35`. Approved as
+proposed: direct route plateau ~22-26 with decline from 27; college route unchanged at 23-28.
+Invariant 5 applies – spec in `docs/specs/`, bench, predicted vs measured, and the frozen capture
+proven unmoved.
+
+### The college-share sharpening – PARKED BY HIM
+
+«мне кажется у нас пока нормально, запиши в беклог, я понаблюдаю еще, мало данных и игровой
+статистики от живых людей пока что.» Filed as row 9 of `docs/backlog/college-the-remainder.md`. Not
+a refusal – a wait for playtest data. ⚠ Not to be confused with the age-curve fork above, which he
+approved.
