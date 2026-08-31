@@ -77,3 +77,19 @@ does both jobs and neither well.
 - A career that never built anything gains nothing – strength is accumulated, so an unknown's brand
   is still worth an unknown's brand.
 - ⚠ Invariant 5: predicted vs measured, and a bench.
+
+## 7. HIS RULINGS (31.08) – §5 is closed, this spec is ready to build
+
+1. **Does strength fall?** «падает, но с полураспадом в годах, плюс пол в доле от пика – чтобы
+   карьера, которая реально была большой, никогда не оценивалась по минимуму. – да» ⭐ Both halves
+   are his: a half-life measured in YEARS, and a floor as a SHARE OF HER OWN PEAK. The floor is
+   personal, not global – a big career never prices at the mark, a small one still can.
+2. **Retroactive?** «вообще всё равно, игроков нет пока.» ⭐ So it is my call and I take the cheap
+   one: seed the stock from the CURRENT fame, so no existing career's number jumps on the tick after
+   the merge. Nothing about that choice is load-bearing and a later wave may revisit it.
+3. **The save.** «главное обратная совместимость чтобы работала» ⚠ The four-part move, and the
+   binding half of his sentence is the migration: append-only, every older schema still loads, a
+   golden fixture per version, `npm run e2e:fixtures`. A save that cannot be opened is the one
+   failure this feature is not allowed to have.
+4. **Measured together with the collaboration spec.** «совместный эффект – мерить, да» ⚠ Both push
+   on the same number; the bench reports the COMBINED arm, not two separate ones summed.

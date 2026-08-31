@@ -72,3 +72,35 @@ Open shape questions, deliberately not answered here:
   same number and a wave that ships them together must report the combined effect, not two separate
   ones.
 - ⚠ Invariant 5: predicted vs measured, and a bench.
+
+## 6. HIS RULINGS (31.08) – §4 is closed, this spec is ready to build
+
+1. **Scaled by the deal's band?** «по полосе сделки (глобальный дом это не локальный ретейнер) – да»
+2. **Does the multiplier stay as well?** «давай, да» – the addition is the early rung, the existing
+   multiplier the late one, and a career carrying both should feel it.
+3. **Measured together with brand inertia.** «совместный эффект – мерить, да»
+
+4. **DOES THE ADDITION DECAY?** He put the question back to me with both halves of the tension named:
+   «наверное истлевает (мало кто смотрит журналы 2 годичной давности) … с другой стороны "что попало
+   в интернет осталось навсегда"».
+
+   ⭐⭐ THE TWO HALVES ARE NOT IN CONFLICT – THEY ARE TWO DIFFERENT THINGS, and separating them is
+   the design:
+
+   - **the campaign's noise** – her face on a shelf THIS season. It fades, and it should fade
+     **faster than a title**: a championship is a sporting fact recited in every broadcast for years,
+     a campaign is one season's wallpaper. His magazines are this half.
+   - **the association** – «she was the face of Faro Automobiles» is a line in her biography and does
+     not expire when the spots stop running. His internet is this half.
+
+   ⭐ DECIDED: **the fame addition decays, on a half-life SHORTER than a title's 104 weeks, and
+   carries no permanent residue of its own.** The permanence is not dropped – it is carried by BRAND
+   STRENGTH (`brand-inertia-2026-08.md`), which this addition feeds while it is high.
+
+   ⚠ THE ARGUMENT FOR NOT PUTTING A PERMANENT RESIDUE HERE TOO: strength already exists to be the
+   stock that remembers. A second permanent term inside fame would be two systems doing one job –
+   precisely the fault the inertia spec was written to cure («today one number does both jobs and
+   neither well»). One mechanism for what fades, one for what was built, and no overlap.
+
+   ⚠ AND IT REMOVES AN UNBOUNDED TERM: a permanent per-shoot addition accumulates without limit over
+   a twenty-season career and would need a cap chosen out of the air. A decaying pulse needs none.
