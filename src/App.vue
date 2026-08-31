@@ -175,6 +175,46 @@ function openMarket(from: TabId): void {
   tab.value = 'market'
 }
 
+// ⭐⭐ ROUND 31 #1 — THE WEEK SCREEN HAS TWO ENTRANCES AND THEY WANT DIFFERENT THINGS ON TOP.
+//
+// The owner, playing the build: pressing `Next tournament` on Home gives him a page whose first
+// block is the results of the week just gone, with everything about the tournament below it.
+//
+// ⚠ AND THE ORDER IS NOT THE DEFECT. After a tick the story belongs on top – that is the design's
+// own beat («Конец недели (игровой тик) → D. Weekly Story», quoted in full at the `week` watcher
+// below) and it is why the tab's accent dot fires on a fresh recap. Swapping the two blocks would
+// have answered his tap by breaking the arrival he never complained about, which is round 30 #1's
+// trade exactly: one reading fixed by another going wrong.
+//
+// What is actually missing is that `navigate('week')` said WHERE and never WHAT FOR, so both
+// arrivals reached one screen indistinguishable from each other. So the entry is part of the
+// navigation now, the same way `marketFrom` above is: the opener records the reason, the screen
+// reads it as a prop, and nothing else in the app changes. `'story'` is the default in every sense –
+// it is what a tick, a tab and a reload all mean.
+//
+// ⚠ IT IS AN ARRIVAL, NOT A MODE. Two things clear it back to `'story'`, and both matter:
+//   * leaving the screen (the watcher below) – the reason expired with the visit;
+//   * A WEEK RESOLVING (the `week` watcher) – a new story outranks an old arrival even when the
+//     player is standing on this screen and the tab therefore never changes. That is the half a
+//     `watch(tab)` alone cannot see, and it is the regression this fix would otherwise cause.
+type WeekEntry = 'story' | 'tournament'
+const weekEntry = ref<WeekEntry>('story')
+function openWeek(entry: WeekEntry): void {
+  weekEntry.value = entry
+  tab.value = 'week'
+}
+watch(tab, (t) => {
+  if (t !== 'week') weekEntry.value = 'story'
+})
+
+/** Home's doors, all of them. Two of the five are not plain tab moves – they carry a reason the
+ *  shell has to act on – so this is a function rather than the inline ternary it used to be. */
+function openFromHome(target: 'money' | 'week:tournament' | 'more' | 'kid' | 'market'): void {
+  if (target === 'market') openMarket('home')
+  else if (target === 'week:tournament') openWeek('tournament')
+  else tab.value = target
+}
+
 // Package J: the 'play' tab id stays (per spec – no router, minimal diff) but
 // is now the Season tab (calendar placeholder + the old exhibition block).
 // Round-6: emoji tab glyphs replaced by the owner's SVG icon set (public/icons/*.svg,
@@ -415,6 +455,12 @@ watch(
     // The advance can resolve a week WHILE the tab is up – the player is looking at the fresh
     // recap, so it is seen the moment it lands.
     if (tab.value === 'week') markThisWeekSeen()
+    // ⚠ ROUND 31 #1 – AND A RESOLVED WEEK TAKES THE TOP OF THAT SCREEN BACK. The Home plate's entry
+    // (see `openWeek` above) is one arrival, not a mode: a tick has a new story to tell and it goes
+    // first, exactly as it always did. This line is why the fix cannot break the week-advance flow
+    // while the player is STANDING on the screen he arrived at from the plate – the tab does not
+    // change on that path, so the `watch(tab)` reset never fires and only this one does.
+    if (advanced || runClosed) weekEntry.value = 'story'
     // A paused reveal has not finished being a week yet; that falls out of the predicate rather than
     // being listed here, and is the reason `runClosed` needs a door of its own.
     //
@@ -1487,11 +1533,10 @@ function reopenTour(): void {
            next-tournament card opens This week). The shell owns `tab`, so the screen ASKS – one
            event, no router, no store field. `recapFresh` is the This-week dot, still decided by the
            shared rule here (this file owns the per-career seen watermark) and only RENDERED there. -->
-      <HomeScreen
-        v-if="tab === 'home'"
-        :recap-fresh="weekTabDot"
-        @navigate="$event === 'market' ? openMarket('home') : (tab = $event)"
-      />
+      <!-- ⭐ ROUND 31 #1: the ternary became `openFromHome` when a second of Home's doors grew a
+           reason to carry ("take me to the tournament", not merely "take me to the week screen").
+           Both interceptions live in one named function now instead of nesting in an attribute. -->
+      <HomeScreen v-if="tab === 'home'" :recap-fresh="weekTabDot" @navigate="openFromHome($event)" />
       <SeasonScreen v-else-if="tab === 'play'" />
       <!-- Screen H, the calendar. It ASKS to play the week rather than doing it: `playWeek` is the
            app's one advance, and a second caller of `game.advance` is how "what does this press cost"
@@ -1512,7 +1557,10 @@ function reopenTour(): void {
            are `home` again (the other is the watcher in the script), so the two still cannot disagree
            and switching the story off still changes nothing about navigation. The calendar is where a
            week is WATCHED now; see the detour in `playWeek`. -->
-      <ThisWeekScreen v-else-if="tab === 'week'" @close="tab = 'home'" />
+      <!-- ⭐⭐ ROUND 31 #1: `entry` is WHY the player is here – see `openWeek` in the script. `'story'`
+           on a tick, a reload and every other route; `'tournament'` only from Home's Next-tournament
+           plate. The × and its destination are untouched by it. -->
+      <ThisWeekScreen v-else-if="tab === 'week'" :entry="weekEntry" @close="tab = 'home'" />
       <!-- ⚠ MERGE NOTE (round-19): the calendar branch forked before round-18 landed, so it still
            carried the flat `tab = 'kid'` market routing. Both halves are kept - the story's close is
            the shared one above, and the market keeps round-18's `marketFrom`, which is the whole

@@ -52,6 +52,20 @@ import ScreenShell from '../ui/ScreenShell.vue'
 // navigation is the half that was missing while nobody was ever sent here.
 const emit = defineEmits<{ close: [] }>()
 
+// ⭐⭐ ROUND 31 #1 – WHAT THE ARRIVAL WAS FOR. The owner pressed Home's `Next tournament` plate and
+// got a page opening on the results of the week just gone. The shell carries the reason now
+// (App.vue's `openWeek`; the whole argument is there), and this screen honours it by putting the
+// block that was asked for at the top – nothing is hidden, nothing is dismissed, and no scrolling is
+// involved. A scroll was the other candidate shape and it was rejected on two counts: this screen
+// has a sticky header AND a `has-proceed` footer, so the target can land under either of them, and
+// happy-dom computes no layout, which means the assertion that it did not is unwritable here – a
+// guard that cannot fail is not a guard.
+//
+// ⚠ `'story'` IS THE DEFAULT AND IT IS THE OLD BEHAVIOUR, BYTE FOR BYTE. A tick, the tab, a reload
+// and every mounted test that does not pass the prop all get the recap on top, which is D's own
+// order and the reason the tab's accent dot points here.
+const props = withDefaults(defineProps<{ entry?: 'story' | 'tournament' }>(), { entry: 'story' })
+
 const game = useGameStore()
 
 const week = computed(() => game.snapshot?.week ?? 0)
@@ -109,6 +123,13 @@ function dismissRecap(): void {
 // --- This week: the kid's nearest entered event (soonest upcoming week with
 // `entered: true`), or a plain "training week" hint when nothing is entered.
 const nearestEntered = computed(() => game.snapshot?.upcoming.find((e) => e.entered) ?? null)
+
+// ⭐⭐ ROUND 31 #1 – the one thing `entry` decides: does the tournament come before the week's story.
+// ⚠ AND THERE MUST BE A TOURNAMENT TO PUT FIRST. On a training week the plate on Home is a door onto
+// a heading and one line of hint, and reordering the page around a block that is not drawn would
+// only move the story down for nothing. `nearestEntered` is the same fact the panel renders by, so
+// the two cannot disagree.
+const tournamentFirst = computed(() => props.entry === 'tournament' && !!nearestEntered.value)
 
 // Round-8 R8-4: once this week's tournament has been played, the status block carries
 // the kid's LATEST match score (kid-perspective), read straight off the snapshot's match
@@ -197,7 +218,14 @@ const spendRange = computed<[number, number]>(() => {
       </div>
     </template>
 
-    <WeekRecapCard v-if="showRecap" />
+    <!-- ⭐⭐ ROUND 31 #1 – THE STORY IS FIRST, EXCEPT FOR THE ONE ARRIVAL THAT ASKED FOR THE
+         TOURNAMENT. `showRecap` is untouched: the same card, the same week silenced by the same ×,
+         the same `has-proceed` footer. Only its PLACE moves, and only when the shell says the player
+         came through Home's Next-tournament plate onto a week with something entered. Two `v-if`s on
+         one exclusive flag rather than a CSS `order`, because reading order is the thing being fixed
+         and `order` moves the paint without moving the document – a screen reader would still be
+         given the week's results first. -->
+    <WeekRecapCard v-if="showRecap && !tournamentFirst" />
 
     <!-- ⭐⭐ ROUND 30 #6 – THE FRAME COMES OFF (his first clause; the quote is in
          NextTournamentPanel.vue's script header, because Cyrillic may not appear in a template).
@@ -224,6 +252,11 @@ const spendRange = computed<[number, number]>(() => {
            the snapshot cannot supply are all in NextTournamentPanel.vue's header. -->
       <NextTournamentPanel v-if="nearestEntered" :event="nearestEntered" />
     </section>
+
+    <!-- ...and on that arrival the story sits directly under the tournament, not at the end of the
+         page: «план тренировок внизу остаётся как есть» is round 30 #6's, and the plan stays last on
+         both entries. The story loses its position on this one screen-load and loses nothing else. -->
+    <WeekRecapCard v-if="showRecap && tournamentFirst" />
 
     <section>
       <h2>Training plan</h2>
