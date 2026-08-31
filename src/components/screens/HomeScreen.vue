@@ -86,8 +86,21 @@ import { flagEmoji } from '../../composables/countries'
 // The shell owns `tab`; the notecards that are doors ASK it to move. One event, no router.
 // `recapFresh` is App.vue's own This-week dot rule (composables/weekRecap) – it left the bottom bar
 // with the tab and is RENDERED here, on the card that opens that screen.
+//
+// ⭐⭐ ROUND 31 #1 – A DOOR SAYS WHERE IT GOES **AND WHAT IT WAS PRESSED FOR**. The owner, playing
+// the build: pressing `Next tournament` on Home landed him on a page that opened with the results of
+// the week just gone, with the whole tournament block below it. Every word of that page is right –
+// it is the This-week screen and the story on top is the whole point of it AFTER a tick. What was
+// wrong is that this card asked for `'week'`, which names a DESTINATION and throws the REASON away,
+// so one screen served two arrivals with no way to tell them apart.
+//
+// `'week:tournament'` is the reason, carried. It is the same idiom `'market'` already uses here: the
+// shell intercepts the token and calls its own opener (`openWeek` / `openMarket`) rather than
+// assigning `tab` blindly, which is also why the union below is not simply `TabId`. The union no
+// longer carries a bare `'week'` on purpose – Home has exactly one door into that screen and this is
+// it, so a future second door has to state its own reason rather than inherit this one by accident.
 defineProps<{ recapFresh: boolean }>()
-const emit = defineEmits<{ navigate: ['money' | 'week' | 'more' | 'kid' | 'market'] }>()
+const emit = defineEmits<{ navigate: ['money' | 'week:tournament' | 'more' | 'kid' | 'market'] }>()
 
 const game = useGameStore()
 /** Vite's base path, so the brand mark resolves under a sub-path deploy the same way the art does. */
@@ -1302,12 +1315,16 @@ async function leaveCollege(): Promise<void> {
       <div class="card-grid">
         <!-- NEXT TOURNAMENT -> the This-week screen (plan presets, planned spend, week recap).
              U0: `<Card as="button">` - the ELEMENT is still what says "this is a door", which is
-             what keeps the lift, the keyboard reach and the focus ring free of any new prop. -->
+             what keeps the lift, the keyboard reach and the focus ring free of any new prop.
+             ⭐⭐ ROUND 31 #1: it asks for `week:tournament`, not `week` - the reason travels with the
+             tap, so the screen can put the tournament in front of the player who pressed THIS card
+             while a tick keeps putting the week's story in front of everyone else. The whole
+             argument is in the script header above. -->
         <Card
           as="button"
           class="note-card"
           data-tour="next-tournament"
-          @click="emit('navigate', 'week')"
+          @click="emit('navigate', 'week:tournament')"
         >
           <Eyebrow>Next tournament</Eyebrow>
           <span v-if="recapFresh" class="note-dot" title="A new week recap is waiting"></span>

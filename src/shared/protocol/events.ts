@@ -406,6 +406,25 @@ export interface FinanceWeekPoint {
    *  draws the line the export draws, and the line a parent actually watches is the balance, not
    *  the per-week churn – the slope toward zero is the whole game.) */
   balanceCents: number
+  /** ⭐⭐ ROUND 31 #2 – HOW MUCH OF `incomeCents` CAME FROM THE TOURNAMENT, so the week recap can
+   *  print the owner's own four lines: «Income – то, что пришло с турнира / Other income – другие
+   *  семейные доходы / Spent / Balance». `incomeCents` is the family's whole week, so the tournament
+   *  row could not be drawn from it and the card was deriving its family-income line out of her
+   *  cut's base instead – a figure that existed only on weeks that split a cheque.
+   *
+   *  ⚠⚠ A SLICE OF `incomeCents`, NEVER A TERM BESIDE IT – `kidShareCents`' own warning above, in
+   *  its own situation. The rest of the week's income is `incomeCents − prizeIncomeCents`, and that
+   *  subtraction is the only way to read it. A consumer that adds this to income has banked the
+   *  prize twice.
+   *
+   *  ⚠ NOT A SCHEMA MOVE AND NOT A NEW FACT. `'prize'` has been its own `WorldEventCategory` since
+   *  task #17, so this is `FinanceWeek.byCategory.prize` reaching the snapshot for the first time,
+   *  not a field the engine started recording: `FinanceWeek` is untouched, `SAVE_SCHEMA_VERSION`
+   *  does not move, no migration is owed, and a career loaded from an old save reads correctly on
+   *  its very first week rather than from its next cheque on.
+   *
+   *  ⚠ ABSENT ON EVERY WEEK THE TENNIS PAID NOTHING – most of them – and absent means zero. */
+  prizeIncomeCents?: number
   /** ⭐ HER CUT, CARRIED ONTO THE POINT SO THE WEEK RECAP'S MEMO CAN READ IT OFF THE SAME OBJECT it
    *  already reads Income and Spent from (`FinanceWeek.kidShare`, straight through).
    *

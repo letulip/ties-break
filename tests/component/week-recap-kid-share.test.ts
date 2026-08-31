@@ -138,7 +138,12 @@ function paid(): Snapshot {
 }
 
 /** The same week with the memo taken off the wire and NOTHING else touched – the counter-example the
- *  balance arm needs. */
+ *  balance arm needs.
+ *
+ *  ⚠ ROUND 31 #2: `prizeIncomeCents` IS KEPT, and that is what makes this helper still say what its
+ *  name says. It is not part of her cut – it is the ledger's own `prize` category reaching the
+ *  snapshot – so dropping it here would change the COLUMN as well as the memo and the balance arm
+ *  below would then be comparing two different cards. The kid-share fields, and only those, go. */
 function withoutMemo(snap: Snapshot): Snapshot {
   return {
     ...snap,
@@ -149,7 +154,22 @@ function withoutMemo(snap: Snapshot): Snapshot {
         incomeCents: p.incomeCents,
         expenseCents: p.expenseCents,
         balanceCents: p.balanceCents,
+        ...(p.prizeIncomeCents !== undefined ? { prizeIncomeCents: p.prizeIncomeCents } : {}),
       })),
+    },
+  }
+}
+
+/** ⭐⭐ ROUND 31 #2 – THE SAME WEEK AS ONE HIS SAVE BANKED BEFORE ROUND 30 #21: her cut and the BLEND
+ *  on the wire, and no parts, because the field did not exist when they were banked. A week like this
+ *  must print NO memo line at all – the blend is the number #21 measured as belonging to no rule in
+ *  this game, and a missing line is honest where a wrong percentage is not. */
+function withoutParts(snap: Snapshot): Snapshot {
+  return {
+    ...snap,
+    finance: {
+      ...snap.finance,
+      weekly12: snap.finance.weekly12.map(({ kidShareParts: _drop, ...p }) => p),
     },
   }
 }
@@ -228,7 +248,7 @@ function dollarsOf(text: string): number {
 describe('the week recap says what her cut was', () => {
   beforeEach(() => setActivePinia(createPinia()))
 
-  it('ROUND 30 #1 – the column is Income / Spent again, and it still adds up', () => {
+  it('ROUND 31 #2 – the column is Income / Family income / Spent, and it adds up to the Balance', () => {
     // ⚠⚠ RE-AIMED FROM PART TWO #1's FIVE ROWS TO HIS THREE FIGURES, NOT DELETED. He played the
     // five-row column and sent it back: «вернуть все цифры и надписи как было до этого: Income /
     // Spent / Balance, ниже her cut без жирного шрифта, ниже coach's cut если есть результат. Всё
@@ -244,10 +264,22 @@ describe('the week recap says what her cut was', () => {
     const vals = tile.findAll('.recap-rows .recap-row-val').map((n) => dollarsOf(n.text()))
     const balance = dollarsOf(tile.find('.recap-balance').text())
 
-    // The shape first, so the sum below cannot pass on a card that kept a fifth row nobody wanted.
-    expect(keys, 'his three figures, and the column is exactly the pair again').toEqual(['Income', 'Spent'])
+    // ⚠⚠ RE-AIMED A THIRD TIME BY ROUND 31 #2, AND HIS SPECIFICATION IS NOW LITERALLY THIS LIST. He
+    // wrote it out himself: «Income - то, что пришло с турнира / Other income - Другие семейные
+    // доходы / Spent - То, что потрачено на дорогу + другие траты недели / Balance - что в итоге
+    // пришло на счет», and settled the name in the same breath – «Other income – другие семейные
+    // доходы (можно и Family income)» – so the label he typed in round 30 #1 stays to the character
+    // and only its POSITION moved. `Balance` is the fourth line, under the hairline, where it has
+    // always been.
+    //
+    // ⭐⭐ THE `toEqual` IS THE GUARD AGAINST A FIFTH PASS OVER THIS CARD. It fails when anyone ADDS a
+    // row, not only when someone changes one, and this card has now been reshaped four times because
+    // each round could only see the row it was about.
+    expect(keys, 'his figures, in his order').toEqual(['Income', 'Family income', 'Spent'])
     // ⚠⚠ AND THE FIVE-ROW SHAPE IS REALLY GONE, not merely un-asserted – this is the regression.
     // A `toEqual` above would already catch it; naming them makes the failure say which one is back.
+    // ⚠ `Other income` STAYS ON THIS LIST although the row is now real: the row is `Family income`,
+    // the name he called strange has not come back, and confusing the two is a rename.
     for (const gone of ['Before her cut', 'Other income']) {
       expect(keys, `${gone} was one of the rows he called superfluous`).not.toContain(gone)
     }
@@ -260,9 +292,15 @@ describe('the week recap says what her cut was', () => {
     const summed = vals.reduce((a, b) => a + b, 0)
     // ⚠ TOLERANCE IS ROUNDING AND NOTHING ELSE, and it is the house rule doing exactly what it is
     // for: the LOGIC is cents (`income − spent === balance` identically) and the DISPLAY is whole
-    // dollars. Two rows each round by at most half a dollar and the balance rounds once more, so two
+    // dollars. THREE rows each round by at most half a dollar and the balance rounds once more, so
     // integers that agree in cents can differ by at most $2 on screen. A double-count is thousands.
     expect(Math.abs(summed - balance), `rows ${keys.join('/')} = ${vals.join(' ')} vs ${balance}`).toBeLessThanOrEqual(2)
+    // ⚠⚠ AND BOTH INCOME ROWS CARRY REAL MONEY ON THIS FIXTURE, which is what stops the sum above
+    // passing on a card that silently put the whole week in one of them. A tournament week where
+    // `Family income` came out $0 would satisfy the addition while proving nothing about the split,
+    // and that is precisely the state the old derived line used to be stuck in.
+    expect(vals[0], 'the tournament really paid this week').toBeGreaterThan(0)
+    expect(vals[1], 'and the family really banked something else besides').toBeGreaterThan(0)
     expect(Math.abs(balance), 'the fixture is a week with real money in it, not two zeroes').toBeGreaterThan(0)
 
     // ⚠⚠ THE ROUND 29 #10 PIN, RE-AIMED A SECOND TIME AND NEVER DELETED – it is the reason «50%»
@@ -295,27 +333,74 @@ describe('the week recap says what her cut was', () => {
     )
   })
 
-  it('ROUND 30 #1 – «Family income» is the one row of the five he asked to keep', () => {
-    // «Other income странно звучит, можно переименовать… например Family income и тогда эту строчку
-    // тоже оставить здесь.» ⚠ THE FIGURE IS UNCHANGED AND ONLY THE NAME MOVED: it is still
-    // `income − (base − cut)`, everything the family banked that was not its half of a split cheque.
+  it('ROUND 31 #2 – ...and it adds up when the week ends BELOW zero, which is his own caveat', () => {
+    // «Balance - что в итоге пришло на счет (ну или ушло, в зависимости от исхода)». A signed balance
+    // is today's behaviour and stays, so the addition has to hold with the sum on the wrong side of
+    // zero too – the one arithmetic case a fixture of winning weeks can never reach.
+    //
+    // ⚠ SYNTHESISED FROM THE REAL WEEK, `mixed`/`withoutBase`'s own device: the claim is about what a
+    // COMPONENT does with a snapshot, and a week that spent more than it banked is a snapshot.
+    const base = paid()
+    const snap: Snapshot = {
+      ...base,
+      finance: {
+        ...base.finance,
+        weekly12: base.finance.weekly12.map((p) =>
+          p.week === base.week ? { ...p, expenseCents: p.incomeCents + 1_234_500 } : p,
+        ),
+      },
+    }
+    const tile = recap(snap).find('.recap-finance')
+    const vals = tile.findAll('.recap-rows .recap-row-val').map((n) => dollarsOf(n.text()))
+    const balance = dollarsOf(tile.find('.recap-balance').text())
+    expect(balance, 'the fixture really ended the week down').toBeLessThan(0)
+    expect(vals.reduce((a, b) => a + b, 0) - balance, 'the column still adds to the balance').toBeLessThanOrEqual(2)
+    expect(tile.find('.recap-balance').classes(), 'and it is painted as a loss').toContain('negative')
+  })
+
+  it('ROUND 31 #2 – «Income» is the tournament`s cheque and «Family income» is the rest of the week', () => {
+    // ⚠⚠ RE-AIMED, AND THE DEFECT IT NOW GUARDS IS THE ONE HE REPORTED. Round 30 #1 kept this row as
+    // an aside under the balance, derived out of her cut's base (`income − (base − cut)`) – so it
+    // existed only on weeks that split a cheque, and the `Income` row above it silently contained
+    // sponsor and brand money while being labelled «то, что пришло с турнира». Both halves are fixed
+    // by the same field: `Income` is the ledger's own `prize` category and this row is the remainder.
+    //
+    // ⚠ THE NAME DID NOT MOVE A CHARACTER. «Other income странно звучит, можно переименовать…
+    // например Family income и тогда эту строчку тоже оставить здесь» was round 30 #1's, he
+    // confirmed it again here, and invariant 4 cuts both ways.
     const snap = paid()
     const row = snap.finance.weekly12.find((p) => p.week === snap.week)!
     const tile = recap(snap).find('.recap-finance')
-    const aside = tile.find('.recap-row-aside')
-    const expected = row.incomeCents - (row.kidShareBaseCents! - row.kidShareCents!)
-    if (expected === 0) throw new Error('fixture has no other income – this arm would prove nothing')
-    expect(aside.exists(), 'the line he kept is on the card').toBe(true)
-    expect(clean(aside.text()), 'in the name he chose himself').toContain('Family income')
-    expect(clean(aside.text()), 'and the name he called strange is gone').not.toContain('Other income')
-    expect(dollarsOf(aside.text()), 'the same figure the old row carried').toBe(Math.round(expected / 100))
+    const cells = tile.findAll('.recap-rows .recap-row')
+    const named = (key: string) => cells.find((c) => clean(c.find('.recap-row-key').text()) === key)!
 
-    // ⚠⚠ AND IT IS OUTSIDE THE COLUMN THAT ADDS UP, WHICH IS THE WHOLE OF ITS SAFETY. It is a SLICE
-    // of the Income row above, so a term beside Income would count the family's own money twice.
-    expect(
-      tile.findAll('.recap-rows .recap-row-key').map((n) => clean(n.text())),
-      'it is under the balance with the memos, not in the sum',
-    ).toEqual(['Income', 'Spent'])
+    expect(row.prizeIncomeCents, 'the fixture is a real tournament week').toBeGreaterThan(0)
+    expect(row.prizeIncomeCents, 'and the tournament is not the whole of its income').toBeLessThan(row.incomeCents)
+    // ⚠⚠ AND THE ROW IS TIED TO THE ENGINE'S OWN PRIZE ROWS, NOT MERELY TO THE FIELD THAT FEEDS IT.
+    // Every other assertion here reads the screen against `prizeIncomeCents`, so all of them would
+    // stay green if that field were computed off the wrong category – which is exactly how a row
+    // ends up labelled «то, что пришло с турнира» while containing something else, the defect this
+    // item is about. This is the independent binding: what the engine BOOKED as prize this week.
+    const bookedPrize = snap.financialEvents
+      .filter((e) => e.week === snap.week && e.category === 'prize')
+      .reduce((a, e) => a + (e.amountCents ?? 0), 0)
+    expect(bookedPrize, 'the fixture really booked prize rows this week').toBeGreaterThan(0)
+    expect(row.prizeIncomeCents, 'the Income row is the tournament`s own cheques').toBe(bookedPrize)
+
+    expect(named('Income'), 'the tournament row is on the card').toBeTruthy()
+    expect(dollarsOf(named('Income').text()), 'and it is the tournament cheque alone').toBe(
+      Math.round(row.prizeIncomeCents! / 100),
+    )
+    expect(named('Family income'), 'the line he kept is on the card, in the name he chose').toBeTruthy()
+    expect(dollarsOf(named('Family income').text()), 'and it is everything else the week banked').toBe(
+      Math.round((row.incomeCents - row.prizeIncomeCents!) / 100),
+    )
+    expect(clean(tile.text()), 'and the name he called strange never came back').not.toContain('Other income')
+
+    // ⚠⚠ AND IT IS INSIDE THE COLUMN NOW, WHICH IS THE CHANGE. It was an aside precisely because it
+    // was a SLICE of the Income row; it is an ADDEND beside it now, so the aside must be gone – the
+    // same cents in two places is the double-count the aside itself existed to prevent.
+    expect(tile.find('.recap-row-aside').exists(), 'the aside went where the row came from').toBe(false)
   })
 
   it('ROUND 30 #1 – her cut is NOT bold any more, which is what he asked about it', () => {
@@ -357,11 +442,17 @@ describe('the week recap says what her cut was', () => {
     expect(withoutIt.find('.recap-balance').text(), 'her cut may not move the balance').toBe(balanceWith)
     expect(
       withoutIt.findAll('.recap-finance .recap-rows .recap-row-val').map((n) => n.text()),
-      'and the ROWS do not move either – the column is Income / Spent on every week again',
+      'and the ROWS do not move either – the column is the same three on every week',
     ).toEqual(rowsWith)
-    // ⚠ «Family income» is the one thing that does go, and it goes for the right reason: with no cut
-    // on the wire there is no split to take a slice out of, so the line would be a second Income.
-    expect(withoutIt.find('.recap-row-aside').exists(), 'no split, no slice of it').toBe(false)
+    // ⚠ ROUND 31 #2 STRENGTHENED THIS, IT DID NOT LOOSEN IT. «Family income» used to be the one
+    // thing that DID go when the cut left the wire, because it was derived from her cut's base – a
+    // dependency that had nothing to do with the family's own money and everything to do with where
+    // the figure was being fetched from. It is `income − prize` now, so it survives the cut leaving,
+    // exactly as Income and Spent always did, and the whole column is invariant under her share.
+    expect(
+      withoutIt.findAll('.recap-finance .recap-rows .recap-row-key').map((n) => clean(n.text())),
+      'her cut moves no row, and removes none',
+    ).toEqual(['Income', 'Family income', 'Spent'])
 
     // ...and the balance is genuinely income minus spend, not a coincidence of two zeroes.
     const row = snap.finance.weekly12.find((p) => p.week === snap.week)!
@@ -396,17 +487,22 @@ describe('the week recap says what her cut was', () => {
     // invent a gross by dividing – it keeps Income / Spent / Balance and the SHORT sentence.
     //
     // ⚠ ROUND 30 #1 MADE THE COLUMN THE SAME ON BOTH WIRES, so the rows are no longer what separates
-    // a legacy week from a fresh one. What separates them is `Family income`: it needs the recorded
-    // gross to be a slice of anything, and a week without one gets no line rather than a guess.
+    // a legacy week from a fresh one. ⚠ ROUND 31 #2 MADE THAT TRUE OF `Family income` TOO, and it is
+    // a repair rather than a loss: the row used to need the recorded gross to be a slice of anything,
+    // which is why a legacy week had none. It is `income − prize` now, and `prize` is the ledger
+    // category every save has always carried, so this week gets its real split rather than a gap.
     const snap = withoutBase(paid())
     const row = snap.finance.weekly12.find((p) => p.week === snap.week)!
     const tile = recap(snap).find('.recap-finance')
-    expect(tile.findAll('.recap-rows .recap-row-key').map((n) => clean(n.text()))).toEqual(['Income', 'Spent'])
-    expect(tile.find('.recap-row-aside').exists(), 'no recorded gross, so no slice of it – and none divided out').toBe(
-      false,
-    )
+    expect(tile.findAll('.recap-rows .recap-row-key').map((n) => clean(n.text()))).toEqual([
+      'Income',
+      'Family income',
+      'Spent',
+    ])
+    expect(tile.find('.recap-row-aside').exists(), 'and the aside it used to be drawn as is gone').toBe(false)
+    const prize = row.kidShareParts!.find((p) => p.source === 'prize')!
     const memo = clean(tile.find('.recap-memo').text())
-    expect(memo).toContain(`Her cut ${row.kidSharePct}% – ${formatCents(row.kidShareCents!)}`)
+    expect(memo).toContain(`Her cut ${prize.pct}% – ${formatCents(prize.cents)}`)
     expect(memo, 'no base on the wire, so none on the screen – and none guessed at').not.toMatch(/of \$/)
     // ⚠ THE FOOT IS UNTOUCHED BY ROUND 30 #1 AND STILL FIRES EXACTLY WHERE IT DID. He listed the
     // lines he wants and did not name this one; invariant 4 binds a DELETION as hard as a rename, so
@@ -416,48 +512,89 @@ describe('the week recap says what her cut was', () => {
     )
   })
 
-  it('ROUND 30 #21 – on a MIXED week every percentage on screen is a RULE, and the blend is on none of them', () => {
-    // «Почему-то мне пишут "Her cut 61% – $69,750 into her own account", и до этого было про 56%…
-    // При том, что на экране бюджета написано "She keeps 50% of every prize cheque now".»
+  it('ROUND 31 #2 – on a MIXED week there is ONE line, it is the PRIZE rule, and the blend is nowhere', () => {
+    // ⚠⚠ RE-AIMED BY ROUND 31 #2 AND THE HALF THAT MATTERS IS UNCHANGED. Round 30 #21 was right that
+    // the blend belongs on no label – «Почему-то мне пишут "Her cut 61% – $69,750 into her own
+    // account", и до этого было про 56%… При том, что на экране бюджета написано "She keeps 50% of
+    // every prize cheque now"» – and wrong about the remedy: it printed one line PER RULE, so his
+    // week grew a «Her sponsor cut 85%» he had never asked for. His answer, 31.08: «Я изначально
+    // просил просто отразить, что ребенку идет его % с призовых и всё», and, restating the card,
+    // «и вот здесь her cut от Income».
     //
-    // ⚠⚠ AND THIS IS THE ARM THE ROUND 29 #10 PIN COULD NOT BE. The arm above asks the right question
-    // – «the percentage on screen is the ramp the engine paid her by» – of a fixture that only ever
-    // contains one rule, where the blend and the ramp are the same number. Here two rules pay one
-    // week, and the blend is neither of them.
+    // ⚠ SO THE SECOND LINE GOES AND THE BLEND STAYS BANISHED. Both are asserted below: the mixed
+    // week that used to print two sentences prints one, and the number that belongs to no rule is
+    // still not on the card.
     const snap = mixed(paid())
     const row = snap.finance.weekly12.find((p) => p.week === snap.week)!
     const lines = recap(snap)
       .findAll('.recap-finance .recap-memo:not(.recap-memo-coach) .recap-memo-line')
       .map((n) => clean(n.text()))
 
-    expect(lines, 'two rules paid this week, so two sentences say so').toHaveLength(2)
+    expect(lines, 'two rules paid this week and exactly one of them is weekly news').toHaveLength(1)
+    expect(lines[0], 'the sponsor line he is complaining about is gone').not.toContain('sponsor')
+    // ⚠ AND NOT BY RENAMING IT EITHER: it is the prize rule's own money, not the week's total.
+    expect(lines[0], 'his string, unchanged – no source word on it').not.toMatch(/Her (prize|sponsor) cut/)
 
-    // ⭐⭐ THE CLAIM. Every percentage the card prints is a rate this engine STATES – her age ramp, or
-    // what the manager leaves – asked of the engine rather than pinned, so a retune moves both.
-    const RULES = [kidPrizeShareBps(snap.ageYears) / 100, (10_000 - managerCommissionBps()) / 100]
-    const printed = lines.map((l) => Number(l.match(/(\d+)%/)![1]))
-    for (const pct of printed) expect(RULES, `${pct}% is not a rule this game states`).toContain(pct)
-    expect(new Set(printed).size, 'and the two lines really do quote two DIFFERENT rules').toBe(2)
+    // ⭐⭐ THE PIN THAT SURVIVES ALL OF THIS: the percentage on screen is a rate this engine STATES,
+    // asked of `kidPrizeShareBps` rather than typed, so a retune moves the cheque and the sentence
+    // together. ⚠ Round 29 #10's pin could not catch a blend because its fixture was prize-only;
+    // this one is deliberately mixed, so the rate and the blend are different numbers here.
+    const RULES = { prize: kidPrizeShareBps(snap.ageYears) / 100, sponsor: (10_000 - managerCommissionBps()) / 100 }
+    const printed = Number(lines[0].match(/(\d+)%/)![1])
+    expect(printed, 'the percentage on screen is her prize ramp').toBe(RULES.prize)
 
-    // ⚠⚠ ...AND THE BLEND IS NOWHERE, which is the defect as an assertion. The fixture's blend sits
-    // strictly between the two rules, so it can only reach the screen by being printed as one.
-    expect(row.kidSharePct, 'the fixture really is a blend – above the prize rule').toBeGreaterThan(RULES[0])
-    expect(row.kidSharePct, 'and below the sponsor rule').toBeLessThan(RULES[1])
-    expect(printed, 'the average of two rules is not a rule and may not be labelled as one').not.toContain(
-      row.kidSharePct,
-    )
+    // ⚠⚠ ...AND THE BLEND IS NOWHERE, which is #21's defect kept as an assertion. The fixture's blend
+    // sits strictly between the two rules, so it can only reach the screen by being printed as one.
+    expect(row.kidSharePct, 'the fixture really is a blend – above the prize rule').toBeGreaterThan(RULES.prize)
+    expect(row.kidSharePct, 'and below the sponsor rule').toBeLessThan(RULES.sponsor)
+    expect(printed, 'the average of two rules is not a rule and may not be labelled as one').not.toBe(row.kidSharePct)
 
-    // ⚠ NO CENT IS LOST AND NONE IS INVENTED: the sentences still account for her whole week.
-    const cents = lines.map((l) => dollarsOf(l))
-    expect(cents.reduce((a, b) => a + b, 0)).toBe(Math.round(row.kidShareCents! / 100))
-    // ⚠ AND EACH LINE'S OWN FIGURE IS THAT LINE'S OWN MONEY – the round 29 #10 identity applied per
-    // rule, where it is a real claim rather than the tautology it becomes against a derived blend.
-    for (const [i, part] of row.kidShareParts!.entries()) {
-      expect(lines[i], `line ${i} names its own source`).toContain(part.source)
-      expect(dollarsOf(lines[i])).toBe(Math.round(part.cents / 100))
+    // ⚠ AND THE CENTS ARE THE PRIZE PART'S OWN, PICKED AND NEVER RECOMPUTED. The week's total is
+    // strictly larger here, so a line that quoted `kidShareCents` against the prize rate – the exact
+    // shape of a blend wearing a rule's label – would redden on this assertion.
+    const prize = row.kidShareParts!.find((p) => p.source === 'prize')!
+    expect(dollarsOf(lines[0]), 'the prize rule`s own money').toBe(Math.round(prize.cents / 100))
+    expect(prize.cents, 'and the fixture really does pay her from two sources').toBeLessThan(row.kidShareCents!)
+    expect(lines[0], 'the destination clause he asked to keep').toContain('into her own account')
+  })
+
+  it('ROUND 31 #2 – a week only a brand paid her says nothing at all', () => {
+    // The other half of «что за Her sponsor cut 85% мне каждую неделю пишут»: on a week with no prize
+    // money there is no prize rule to state, so the card is silent rather than reaching for the one
+    // rule he did not ask about. ⚠ The fixture is the mixed week with its prize part removed, so
+    // `kidShareCents` is still large and positive – a card that fell back to the total would print a
+    // sentence here, which is what this arm exists to catch.
+    const base = mixed(paid())
+    const snap: Snapshot = {
+      ...base,
+      finance: {
+        ...base.finance,
+        weekly12: base.finance.weekly12.map((p) =>
+          p.kidShareParts ? { ...p, kidShareParts: p.kidShareParts.filter((k) => k.source !== 'prize') } : p,
+        ),
+      },
     }
-    // The destination clause he asked to keep survives on both.
-    for (const l of lines) expect(l).toContain('into her own account')
+    const row = snap.finance.weekly12.find((p) => p.week === snap.week)!
+    expect(row.kidShareCents, 'she really was paid this week, just not by a tournament').toBeGreaterThan(0)
+    expect(
+      recap(snap).findAll('.recap-finance .recap-memo:not(.recap-memo-coach) .recap-memo-line'),
+      'no prize, no sentence',
+    ).toHaveLength(0)
+  })
+
+  it('ROUND 31 #2 – a week banked before the parts existed says nothing rather than a blend', () => {
+    // ⚠⚠ THE FORWARD-ONLY RULE, AND THE REASON THE FALLBACK HAD TO GO RATHER THAN SHRINK. A week with
+    // only `kidSharePct` on the wire carries the blend and nothing else, and on a mixed week that
+    // number is exactly the «61%» he reported. Printing it under the shorter label would restore
+    // round 30 #21's defect with the warning removed, so the card prints nothing at all.
+    const snap = withoutParts(mixed(paid()))
+    const row = snap.finance.weekly12.find((p) => p.week === snap.week)!
+    expect(row.kidSharePct, 'the legacy wire still carries the blend').toBeGreaterThan(0)
+    expect(row.kidShareParts, 'and carries no parts, which is what makes it legacy').toBeUndefined()
+    expect(
+      recap(snap).findAll('.recap-finance .recap-memo:not(.recap-memo-coach) .recap-memo-line'),
+      'a missing line is honest; a wrong percentage is not',
+    ).toHaveLength(0)
   })
 
   it('ROUND 30 #21 – a single-rule week keeps his sentence to the character', () => {
