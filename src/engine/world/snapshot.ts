@@ -88,7 +88,7 @@ import { buildShootClashPrompt } from './shootClash'
 // ⭐ round-18 #8: the tour's commitment rules, spelled out by the module that already enforces them.
 import { buildTourBriefing } from './mandatory'
 // W2-ENDINGS: the epilogue and the debt strip, built by the module that owns the latch.
-import { buildDebtView, buildEndingView } from './endings'
+import { buildDebtView, buildEndingView, physicalShareOf } from './endings'
 import { finishLabel, stageLabel } from './labels'
 import { entryCapUsage, proEntryCapUsage, isCappedProTier, isCappedTier } from './entryCaps'
 import { alternateQueuePosition } from './ladder'
@@ -1757,6 +1757,12 @@ export function toSnapshot(world: WorldState, stopReasons?: StopReason[]): Snaps
         }
       : null,
     retirementOffer: world.retirementOffer,
+    // ⭐⭐⭐ ROUND 31 #9 – THE NUMBER THAT WAS ALREADY THERE AND NEVER SHOWN. The ending has read it
+    // as a boolean since v62; three screens read it as a story now (the retirement card's rung, the
+    // coach's line on a season card, her own line at the wrap). The full argument is on the field in
+    // shared/protocol/snapshot.ts, and the arithmetic is `physicalShareOf`'s – called, not repeated.
+    // ⚠ ZERO DRAWS, like everything else in this builder.
+    physicalShare: physicalShareOf(world),
     // ⭐ THE LONG GOODBYE STEP 4 – the one piece of state her last word reads, and the retirement
     // card is drawn long before `buildEndingView` above has anything to return.
     oneMoreYearCount: world.oneMoreYearCount,

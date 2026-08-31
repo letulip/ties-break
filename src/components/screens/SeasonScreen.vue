@@ -56,6 +56,7 @@ import { WILD_CARD } from '../../engine/season/tournament'
 import { vacationArtUrl, weekArtUrl, weekHomeArtUrl } from '../../art/weeks'
 import { portraitStage } from '../../shared/avatarEmotion'
 import { rngFromSeed } from '../../engine/rng'
+import { coachDeclineLine } from '../../composables/declineVoice'
 import type { FieldStrength } from '../../engine/season/preview'
 import { ECONOMY, recommendVacationPackage, vacationPackage } from '../../engine/economy'
 // R11-5a: the ONE tier-state rule, shared with the Home season ladder. R15-9 adds the sliding
@@ -425,6 +426,21 @@ function coachSays(e: UpcomingEvent): string {
   // her"), and there is nobody to have drawn yet.
   if (chance !== null && strength === 'strong' && chance >= RING_COMFORTABLE) parts.push(pick(DRAW_CLAUSES.kind, 'coachdraw'))
   else if (chance !== null && strength === 'favourite' && chance <= RING_HARD) parts.push(pick(DRAW_CLAUSES.cruel, 'coachdraw'))
+
+  // ⭐⭐⭐ ROUND 31 #9 – AND ONCE SHE IS PAST HER PEAK, THE PLAQUE SAYS SO. The owner asked for it
+  // here in as many words: «тренер вполне может что-то такое говорить». `coachDeclineLine` returns
+  // null on every week of every career before her own decline starts, so this line is provably inert
+  // for the first fifteen seasons and cannot move a single card the owner has already seen.
+  //
+  // ⚠ THE SAME SUB-STREAM DISCIPLINE AS THE TWO CLAUSES ABOVE – the event's own key, `coachage`
+  // beside `coachsay` and `coachdraw`, never MAIN and never the week. A card that re-voiced itself
+  // as the tournament came closer is round 31 #4, and he reports that one.
+  //
+  // ⚠ IT READS THE FIELD, NOT THE RING, which is why it is placed with the field clause rather than
+  // beside the draw: «At this age you choose your weeks» is advice about WHICH tournament to enter,
+  // and the entry decision is made two weeks before there is an opponent to have a ring against.
+  const declineSay = coachDeclineLine(game.snapshot?.physicalShare, game.snapshot?.seed ?? '', e.id, strength)
+  if (declineSay) parts.push(declineSay)
 
   // "suits her game" -> "The court suits her game." Capitalised into a sentence, because the coach
   // speaks in sentences and the engine's fragment does not.

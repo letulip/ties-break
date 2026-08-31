@@ -649,6 +649,28 @@ export interface Snapshot {
   } | null
   /** the natural end's offer while it is OPEN and unanswered, else null */
   retirementOffer: RetirementOffer | null
+  /** ⭐⭐⭐ ROUND 31 #9 – HOW MUCH OF HER OWN BODY IS LEFT: `physicalMean(skills) / peakPhysical`
+   *  (`physicalShareOf`, engine/world/endings.ts). 1 at her peak, falling every week from HER OWN
+   *  `declineStart` – 100% at 28, 95.2% at 31.0, 93.1% at 31.7 on the owner's saves.
+   *
+   *  ⚠⚠ IT EXISTS BECAUSE THE ONLY THING THE GAME DID WITH IT WAS READ IT AS A BOOLEAN. The ending
+   *  asks `physicalShare <= ENDINGS.lastOfferPeakShare` (0.55) to decide whether this winter's
+   *  question is the last one, and between 100% and 55% lie forty-five points of the story this game
+   *  is about, none of which reached a screen. The owner, 31.08: «да, заведи находку про пик и спад,
+   *  и тренер вполне может что-то такое говорить. Да и она сама в конце сезона … могла бы что-то
+   *  тоже сказать на эту тему.» He had spent a season believing the software was broken (round 31
+   *  #7) because nothing ever told him she was past her peak.
+   *
+   *  ⚠ AND IT IS THE GATE AS WELL AS THE READING, which is why nothing that reads it needs to know
+   *  her `declineStart`. The share is exactly 1 until she is past her own peak – see
+   *  `physicalShareOf` – so `< 1` IS "past it", per career, including the pair round 31 #10 drew for
+   *  her and the pull her layoffs put on it. Reading `ECONOMY.development.ageCurve.declineStart`
+   *  instead would be the shipped 29 for everybody, which is precisely the bug that round fixed.
+   *
+   *  DERIVED, AND NOT A SCHEMA MOVE – the `oneMoreYearCount` precedent exactly. Nothing new is
+   *  stored: this is computed from `world.skills` and `world.peakPhysical`, both of which have been
+   *  on the save since v62, so `SAVE_SCHEMA_VERSION` does not move for it. */
+  physicalShare: number
   /** ⭐⭐ HOW MANY TIMES SHE HAS SAID «one more year» (the long goodbye step 4). On the snapshot
    *  ALWAYS, not only at the end, and that is the change: `EndingView.oneMoreYearCount` has carried
    *  it since the album shipped, but the ending view is null until a career has one – and the

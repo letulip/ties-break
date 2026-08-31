@@ -202,6 +202,36 @@ export function lastRungSeasonIndexOf(
  *  season before it: four comparable seasons on one table, minimum, or no plateau. A career that
  *  cannot answer the question is not told it has answered it. Refusing costs one off-season question
  *  nobody sees; asking wrongly is what he has now been shown twice. */
+/** ⭐⭐⭐ HOW MUCH OF HER OWN BODY IS LEFT, AS ONE NUMBER – `physicalMean(skills) / peakPhysical`
+ *  (the long goodbye §3a, v62's stored peak). 1 at her peak and falling every week from HER
+ *  `declineStart`, which since round 31 #10 is a per-career pair rather than the shipped 29.
+ *
+ *  ⚠ EXTRACTED FOR ROUND 31 #9 AND FOR ONE REASON ONLY: THERE MAY NOT BE TWO HOMES FOR IT. The
+ *  expression lived inline in `plateauViewOf` below, where the ending reads it; the snapshot now
+ *  carries it to three screens as well, and a second copy of a ratio is a ratio that can be edited
+ *  in one place and not the other. Same arithmetic, one site, both callers.
+ *
+ *  ⚠ THE NUMERATOR AND THE DENOMINATOR CANNOT COME APART. `physicalMean(world.skills)` and
+ *  `world.peakPhysical` are written on ADJACENT LINES of the growth phase (world/phaseGrowth.ts,
+ *  step 3b/3b-bis), by the only code in the engine that moves `world.skills` at all, so there is no
+ *  week in which one has moved and the other has not.
+ *
+ *  ⚠ THE DIVISION IS TOTAL. Every attribute is clamped at `ECONOMY.development.floor` (20) and she
+ *  is born far above it, so the peak is never 0 – on a fresh world, on a walked one, and on a
+ *  migrated one (the v62 migration reconstructs it and `tests/goldenSaves.test.ts` asserts a finite
+ *  number at or above today's mean for every fixture).
+ *
+ *  ⚠ AND IT IS EXACTLY 1 UNTIL SHE IS PAST HER OWN PEAK, which is what makes it a gate as well as a
+ *  reading. `growWeek`'s loss term is `declineFactor(...) > 0`, `ageFactor` and `declineFactor` both
+ *  read the career's own `ageCurveOf` pair, and the peak is a running maximum taken on the line
+ *  after the gain – so the numerator IS the denominator, to the bit, on every week before her
+ *  decline starts. Nothing has to know what her `declineStart` is to ask whether she has passed it.
+ *
+ *  ZERO DRAWS: a division over state the tick has already computed. */
+export function physicalShareOf(world: WorldState): number {
+  return physicalMean(world.skills) / world.peakPhysical
+}
+
 export function plateauViewOf(world: WorldState): PlateauView {
   const track = activeLadderOf(world)
   const seasonEndRanks: { seasonIndex: number; endRank: number }[] = []
@@ -217,18 +247,9 @@ export function plateauViewOf(world: WorldState): PlateauView {
     // coincidence: the track is resolved once, here, and handed down.
     lastRungSeasonIndex: lastRungSeasonIndexOf(world, track),
     // ⭐⭐⭐ v62's STORED PEAK, FINALLY SPENT (the long goodbye step 2, §3a). This is what makes the
-    // last offer final instead of her 38th birthday.
-    //
-    // ⚠ THE NUMERATOR AND THE DENOMINATOR CANNOT COME APART. `physicalMean(world.skills)` and
-    // `world.peakPhysical` are written on ADJACENT LINES of the growth phase (world/phaseGrowth.ts,
-    // step 3b/3b-bis), by the only code in the engine that moves `world.skills` at all, so there is
-    // no week in which one has moved and the other has not.
-    //
-    // ⚠ THE DIVISION IS TOTAL. Every attribute is clamped at `ECONOMY.development.floor` (20) and
-    // she is born far above it, so the peak is never 0 – on a fresh world, on a walked one, and on a
-    // migrated one (the v62 migration reconstructs it and `tests/goldenSaves.test.ts` asserts a
-    // finite number at or above today's mean for every fixture).
-    physicalShare: physicalMean(world.skills) / world.peakPhysical,
+    // last offer final instead of her 38th birthday. The arithmetic and every caveat on it are on
+    // `physicalShareOf` above, which the snapshot reads too – one home, two callers.
+    physicalShare: physicalShareOf(world),
   }
 }
 
