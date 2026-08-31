@@ -235,7 +235,11 @@ describe('round 29 part two #13 §2 – a memo, never a row', () => {
     // ⚠ RE-AIMED BY ROUND 30 #1 – this line read `.toBe('Before her cut')` while the gross column
     // existed. It asserts the same thing it always did: that the fixture really put the shape under
     // test on screen, so the loop below cannot pass by looking at nothing.
-    expect(keys, 'his restored column really is the shape on screen').toEqual(['Income', 'Spent'])
+    // ⚠ RE-AIMED AGAIN BY ROUND 31 #2, AND THE SUBJECT IS UNCHANGED. `Income` is the tournament's own
+    // cheque now and `Family income` is the rest of the week, moved up out of its aside because the
+    // owner asked for the column to be an addition. Neither cut became a row, which is the whole of
+    // what this arm is about; only the list of rows that are legitimately there grew by one.
+    expect(keys, 'his column really is the shape on screen').toEqual(['Income', 'Family income', 'Spent'])
     expect(tile.find('.recap-memo').exists(), 'and her cut is on this week too, as a memo').toBe(true)
     for (const key of keys) expect(key, 'and the coach is not a row in THIS column either').not.toContain('Coach')
 

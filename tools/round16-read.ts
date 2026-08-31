@@ -141,8 +141,11 @@ async function main(): Promise<void> {
           kid,
           excluded,
         )
-        previewLine = `chance ${(p.firstMatchChance * 100).toFixed(0)}% vs "${p.opponentName}" (${p.fieldStrength})`
-        if (p.opponentName === '') empties++
+        // ROUND 31 #4: no draw before week − 1, so a far-out card has no chance and no name.
+        previewLine = p.drawMade
+          ? `chance ${((p.firstMatchChance ?? 0) * 100).toFixed(0)}% vs "${p.opponentName}" (${p.fieldStrength})`
+          : `no draw yet (${p.fieldStrength})`
+        if (p.drawMade && p.opponentName === '') empties++
       } catch (err) {
         previewLine = `PREVIEW THREW: ${(err as Error).message}`
         throws++

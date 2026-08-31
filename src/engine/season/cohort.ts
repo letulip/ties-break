@@ -40,6 +40,21 @@ export const COHORT = {
     declineRate: 0.0003,
     declineAccel: 0.25,
   },
+  /** ⭐⭐⭐ ROUND 31 #13 – THE FIELD GETS THE SPREAD TOO («полностью согласен, если это реализуемо»).
+   *  Years either side of `ageCurve.declineStart`, per rival, so the age a career stops performing is
+   *  not one number for the whole world.
+   *
+   *  ⚠ SHE HAS A FORK AND THEY DO NOT, WHICH IS THE ONE PLACE THE TWO CURVES NOW DIVERGE ON PURPOSE.
+   *  The header above says the day the shapes diverge is the day the ladder stops making sense, and
+   *  that still holds for the SHAPE: rates, accel, the plateau are hers. What a rival has no model of
+   *  is the college choice – there is no junior in this cohort who enrols anywhere – so they sit on
+   *  ONE base, `ageCurve.declineStart`, and get only the individual variation.
+   *
+   *  ⚠ SAME WIDTH AS HERS (`ECONOMY.development.declineSpreadYears`) AND WRITTEN OUT RATHER THAN
+   *  IMPORTED. This file's knobs describe the WORLD's population and the header is explicit that they
+   *  live here; importing the family's number would make a rival's body a function of the family's
+   *  economy object. If the two are ever tuned apart, that is a decision and not a drift. */
+  declineSpreadYears: 1.5,
 } as const
 
 function clamp01to100(x: number): number {
@@ -236,10 +251,14 @@ export function power(p: AiPlayer): number {
 // EXACTLY FOUR DRAWS PER PLAYER, in the same fixed order as before. This is the constraint the
 // change is built around: the weekly draw count must not depend on player input or on world state,
 // or the frozen MAIN capture moves. Every number below is arithmetic applied AFTER the draw.
-export function driftCohort(cohort: AiPlayer[], rng: Rng): void {
+export function driftCohort(cohort: AiPlayer[], rng: Rng, seedStr: string): void {
   for (const p of cohort) {
-    const rate = aiAgeFactor(p.ageYears) * p.growth
-    const decline = aiDeclineFactor(p.ageYears)
+    // ⚠ ROUND 31 #13: `seedStr` reaches exactly these two lines and NOT the draw loop below. The
+    // per-rival decline age is derived (`aiDeclineStart`), never drawn from `rng` – the four draws
+    // per player and their order are untouched, so the frozen MAIN capture cannot see this.
+    const declineStart = aiDeclineStart(seedStr, p.id)
+    const rate = aiAgeFactor(p.ageYears, declineStart) * p.growth
+    const decline = aiDeclineFactor(p.ageYears, declineStart)
     p.serve = clamp01to100(step(p.serve, p.potential.serve, rate, decline, rng()))
     p.ret = clamp01to100(step(p.ret, p.potential.ret, rate, decline, rng()))
     // Composure is the one thing that does not fade – the veteran is slower and calmer.
@@ -254,24 +273,44 @@ function step(current: number, ceiling: number, rate: number, decline: number, r
   return current + gain - decline * current
 }
 
+/** ⭐⭐ ONE RIVAL'S OWN DECLINE AGE (round 31 #13). `COHORT.ageCurve.declineStart` plus a uniform
+ *  draw on ±`COHORT.declineSpreadYears`, off a sub-stream keyed on the world seed AND on her id.
+ *
+ *  ⚠ DERIVED, NEVER STORED, AND THAT IS `rivalGroundstrokePotential`'S RULING APPLIED AGAIN. A number
+ *  on the row is persisted state: it would want its own draw inside `makeJunior`, whose draw order is
+ *  load-bearing (adding one re-maps every existing seed's entire field), on top of a schema move for
+ *  199 players. Derived it costs one `rngFromSeed` per player per week and moves nothing.
+ *
+ *  ⚠ THE WORLD SEED IS IN THE KEY, unlike `gs:<id>`. Ids are positional (`ai-3`, `ai-s7-2`), so a key
+ *  without the seed would hand every career in existence the same rival at the same slot the same
+ *  body – which is exactly the mistake `juniorBirthMonth` avoids one screen up, for the same reason.
+ *
+ *  ⚠ NOT MAIN: `driftCohort` still spends exactly four draws per player, in the same order. */
+export function aiDeclineStart(seedStr: string, id: string): number {
+  return COHORT.ageCurve.declineStart + COHORT.declineSpreadYears * (2 * rngFromSeed(`${seedStr}:decline:${id}`)() - 1)
+}
+
 /** The cohort's age curve. Deliberately the same shape as the kid's (engine/development.ts) rather
- *  than a second model: the whole point is that she and the field are the same kind of thing. */
-export function aiAgeFactor(ageYears: number): number {
+ *  than a second model: the whole point is that she and the field are the same kind of thing.
+ *
+ *  ⚠ `declineStart` DEFAULTS TO THE FIELD-WIDE NUMBER so every caller that has no player in hand –
+ *  and every probe in `tools/` – is byte-identical to before round 31 #13. */
+export function aiAgeFactor(ageYears: number, declineStart: number = COHORT.ageCurve.declineStart): number {
   const c = COHORT.ageCurve
   if (ageYears < c.growthEnd) return c.peakRate
   if (ageYears < c.plateauStart) {
     const t = (ageYears - c.growthEnd) / (c.plateauStart - c.growthEnd)
     return c.peakRate * (1 - t) + c.plateauRate * t
   }
-  if (ageYears < c.declineStart) return c.plateauRate
+  if (ageYears < declineStart) return c.plateauRate
   return 0
 }
 
 /** What she loses per week past the peak, steepening each year so careers end rather than fade. */
-export function aiDeclineFactor(ageYears: number): number {
+export function aiDeclineFactor(ageYears: number, declineStart: number = COHORT.ageCurve.declineStart): number {
   const c = COHORT.ageCurve
-  if (ageYears < c.declineStart) return 0
-  return c.declineRate * (1 + (ageYears - c.declineStart) * c.declineAccel)
+  if (ageYears < declineStart) return 0
+  return c.declineRate * (1 + (ageYears - declineStart) * c.declineAccel)
 }
 
 /** A season has passed: everybody is a year older. Pure arithmetic, no draws, called once a year

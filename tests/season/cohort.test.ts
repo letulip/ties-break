@@ -90,7 +90,7 @@ describe('driftCohort — development, bounded by a ceiling and an age', () => {
     // distance still to go, so nobody can pass her own limit, however long the save runs.
     const cohort = generateCohort('drift', 60)
     const before = clone(cohort)
-    driftCohort(cohort, rngFromSeed('drift-week'))
+    driftCohort(cohort, rngFromSeed('drift-week'), 'drift')
     for (let i = 0; i < cohort.length; i++) {
       const b = before[i]
       const a = cohort[i]
@@ -113,7 +113,7 @@ describe('driftCohort — development, bounded by a ceiling and an age', () => {
     // The property the old flat step could not have, stated the only way worth stating it.
     const cohort = generateCohort('ceiling', 40)
     const ceilings = clone(cohort).map((p) => ({ ...p.potential }))
-    for (let w = 0; w < 520; w++) driftCohort(cohort, rngFromSeed(`ceil-${w}`))
+    for (let w = 0; w < 520; w++) driftCohort(cohort, rngFromSeed(`ceil-${w}`), 'ceiling')
     for (let i = 0; i < cohort.length; i++) {
       for (const k of ['serve', 'ret', 'composure', 'stamina'] as const) {
         expect(cohort[i][k], `${cohort[i].id}.${k}`).toBeLessThanOrEqual(ceilings[i][k] + 1e-9)
@@ -125,7 +125,7 @@ describe('driftCohort — development, bounded by a ceiling and an age', () => {
     const cohort = generateCohort('veteran', 12)
     for (const p of cohort) p.ageYears = 33
     const before = clone(cohort)
-    for (let w = 0; w < 52; w++) driftCohort(cohort, rngFromSeed(`vet-${w}`))
+    for (let w = 0; w < 52; w++) driftCohort(cohort, rngFromSeed(`vet-${w}`), 'veteran')
     for (let i = 0; i < cohort.length; i++) {
       expect(cohort[i].serve, 'serve').toBeLessThan(before[i].serve)
       expect(cohort[i].stamina, 'stamina').toBeLessThan(before[i].stamina)
@@ -136,15 +136,15 @@ describe('driftCohort — development, bounded by a ceiling and an age', () => {
   it('is deterministic given the same rng seed', () => {
     const c1 = generateCohort('det', 30)
     const c2 = generateCohort('det', 30)
-    driftCohort(c1, rngFromSeed('same'))
-    driftCohort(c2, rngFromSeed('same'))
+    driftCohort(c1, rngFromSeed('same'), 'det')
+    driftCohort(c2, rngFromSeed('same'), 'det')
     expect(c1).toEqual(c2)
   })
 
   it('clamps at 100 for a maxed skill', () => {
     const cohort = generateCohort('clamp', 5)
     for (const p of cohort) p.serve = 100
-    driftCohort(cohort, rngFromSeed('w'))
+    driftCohort(cohort, rngFromSeed('w'), 'clamp')
     for (const p of cohort) expect(p.serve).toBe(100)
   })
 })
@@ -188,7 +188,7 @@ describe('the fifth axis – a rival specialises off the ground, and grows into 
     for (let i = 0; i < cohort.length; i++) {
       expect(start[i], `${cohort[i].id} starts under her ceiling`).toBeLessThanOrEqual(ceilings[i] + 1e-9)
     }
-    for (let w = 0; w < 520; w++) driftCohort(cohort, rngFromSeed(`gs-ceil-${w}`))
+    for (let w = 0; w < 520; w++) driftCohort(cohort, rngFromSeed(`gs-ceil-${w}`), 'gs-ceiling')
     let climbed = 0
     for (let i = 0; i < cohort.length; i++) {
       const now = rivalGroundstrokes(cohort[i])
@@ -220,10 +220,14 @@ describe('the fifth axis – a rival specialises off the ground, and grows into 
     const cohort = generateCohort('draw-count', 10)
     let spent = 0
     const base = rngFromSeed('count')
-    driftCohort(cohort, () => {
-      spent++
-      return base()
-    })
+    driftCohort(
+      cohort,
+      () => {
+        spent++
+        return base()
+      },
+      'draw-count',
+    )
     expect(spent).toBe(4 * cohort.length)
     // ...and neither derivation draws on a passed stream at all – they take no generator.
     for (const p of cohort) {

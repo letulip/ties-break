@@ -37,19 +37,32 @@ export interface PaintableEvent {
 
 /** Just enough of a preview to name the odds ring. */
 export interface FirstMatchOdds {
-  firstMatchChance: number
+  firstMatchChance: number | null
   opponentName: string
 }
 
+/** ⭐⭐ ROUND 31 #4 – WHAT A CARD SAYS WHILE ITS DRAW DOES NOT EXIST, and it is said in ONE place for
+ *  the same reason `firstMatchLabel` is: three surfaces draw this card (the season feed, the
+ *  calendar marker and the next-tournament panel) and three literals is how one fact comes to be
+ *  worded three ways. The owner asked for exactly this sentence and no more: «можно писать, что
+ *  жеребьевки еще не было». */
+export const DRAW_NOT_MADE_NOTE = 'The draw has not been made yet.'
+
 /** The odds ring's ACCESSIBLE NAME. A ring is a graphic and its visible `42%` is a bare number, so
  *  this sentence is the whole of what a screen reader is told about it – hence "percent" spelled out
- *  and the opponent named, and hence one owner rather than a literal per screen. */
+ *  and the opponent named, and hence one owner rather than a literal per screen.
+ *
+ *  ⚠ NULL IS A REAL ANSWER since round 31 #4 – no draw, no opponent, no percentage. No screen should
+ *  be drawing a ring at all in that state, and this arm is here so that if one ever does it says the
+ *  true thing rather than reading "0 percent, against ". */
 export function firstMatchLabel(p: FirstMatchOdds): string {
+  if (p.firstMatchChance === null) return DRAW_NOT_MADE_NOTE
   return `Her chance to win the first match: ${Math.round(p.firstMatchChance * 100)} percent, against ${p.opponentName}`
 }
 
 /** ...and its hover title, which is the short form of the same fact and travelled with it. */
 export function firstMatchTitle(p: FirstMatchOdds): string {
+  if (p.firstMatchChance === null) return DRAW_NOT_MADE_NOTE
   return `First round vs ${p.opponentName}`
 }
 

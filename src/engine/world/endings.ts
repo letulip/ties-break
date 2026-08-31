@@ -43,7 +43,7 @@ import { weekLabel } from '../../shared/dates'
 import { kidAgeYears } from './age'
 // ⚠ A VALUE IMPORT FROM A LEAF, NOT A CYCLE – `engine/development.ts` imports economy, rng, coach
 // and plan, and none of them reaches back here. `plateauViewOf` spends it on the share of her peak.
-import { physicalMean } from '../development'
+import { physicalMean, resolveAgeCurve } from '../development'
 import { buildAlbum, buildScroll } from './album'
 import { CAREER_ENDED_REFUSAL, COLLEGE_FREEZE_REFUSAL, guardNotEnded, guardNotEndedForGood } from './constants'
 // ⚠ THE ENTRY RULEBOOK, IMPORTED RATHER THAN RE-STATED (round 24, the freeze's hygiene). `answerFork`
@@ -202,6 +202,36 @@ export function lastRungSeasonIndexOf(
  *  season before it: four comparable seasons on one table, minimum, or no plateau. A career that
  *  cannot answer the question is not told it has answered it. Refusing costs one off-season question
  *  nobody sees; asking wrongly is what he has now been shown twice. */
+/** ⭐⭐⭐ HOW MUCH OF HER OWN BODY IS LEFT, AS ONE NUMBER – `physicalMean(skills) / peakPhysical`
+ *  (the long goodbye §3a, v62's stored peak). 1 at her peak and falling every week from HER
+ *  `declineStart`, which since round 31 #10 is a per-career pair rather than the shipped 29.
+ *
+ *  ⚠ EXTRACTED FOR ROUND 31 #9 AND FOR ONE REASON ONLY: THERE MAY NOT BE TWO HOMES FOR IT. The
+ *  expression lived inline in `plateauViewOf` below, where the ending reads it; the snapshot now
+ *  carries it to three screens as well, and a second copy of a ratio is a ratio that can be edited
+ *  in one place and not the other. Same arithmetic, one site, both callers.
+ *
+ *  ⚠ THE NUMERATOR AND THE DENOMINATOR CANNOT COME APART. `physicalMean(world.skills)` and
+ *  `world.peakPhysical` are written on ADJACENT LINES of the growth phase (world/phaseGrowth.ts,
+ *  step 3b/3b-bis), by the only code in the engine that moves `world.skills` at all, so there is no
+ *  week in which one has moved and the other has not.
+ *
+ *  ⚠ THE DIVISION IS TOTAL. Every attribute is clamped at `ECONOMY.development.floor` (20) and she
+ *  is born far above it, so the peak is never 0 – on a fresh world, on a walked one, and on a
+ *  migrated one (the v62 migration reconstructs it and `tests/goldenSaves.test.ts` asserts a finite
+ *  number at or above today's mean for every fixture).
+ *
+ *  ⚠ AND IT IS EXACTLY 1 UNTIL SHE IS PAST HER OWN PEAK, which is what makes it a gate as well as a
+ *  reading. `growWeek`'s loss term is `declineFactor(...) > 0`, `ageFactor` and `declineFactor` both
+ *  read the career's own `ageCurveOf` pair, and the peak is a running maximum taken on the line
+ *  after the gain – so the numerator IS the denominator, to the bit, on every week before her
+ *  decline starts. Nothing has to know what her `declineStart` is to ask whether she has passed it.
+ *
+ *  ZERO DRAWS: a division over state the tick has already computed. */
+export function physicalShareOf(world: WorldState): number {
+  return physicalMean(world.skills) / world.peakPhysical
+}
+
 export function plateauViewOf(world: WorldState): PlateauView {
   const track = activeLadderOf(world)
   const seasonEndRanks: { seasonIndex: number; endRank: number }[] = []
@@ -217,18 +247,9 @@ export function plateauViewOf(world: WorldState): PlateauView {
     // coincidence: the track is resolved once, here, and handed down.
     lastRungSeasonIndex: lastRungSeasonIndexOf(world, track),
     // ⭐⭐⭐ v62's STORED PEAK, FINALLY SPENT (the long goodbye step 2, §3a). This is what makes the
-    // last offer final instead of her 38th birthday.
-    //
-    // ⚠ THE NUMERATOR AND THE DENOMINATOR CANNOT COME APART. `physicalMean(world.skills)` and
-    // `world.peakPhysical` are written on ADJACENT LINES of the growth phase (world/phaseGrowth.ts,
-    // step 3b/3b-bis), by the only code in the engine that moves `world.skills` at all, so there is
-    // no week in which one has moved and the other has not.
-    //
-    // ⚠ THE DIVISION IS TOTAL. Every attribute is clamped at `ECONOMY.development.floor` (20) and
-    // she is born far above it, so the peak is never 0 – on a fresh world, on a walked one, and on a
-    // migrated one (the v62 migration reconstructs it and `tests/goldenSaves.test.ts` asserts a
-    // finite number at or above today's mean for every fixture).
-    physicalShare: physicalMean(world.skills) / world.peakPhysical,
+    // last offer final instead of her 38th birthday. The arithmetic and every caveat on it are on
+    // `physicalShareOf` above, which the snapshot reads too – one home, two callers.
+    physicalShare: physicalShareOf(world),
   }
 }
 
@@ -490,6 +511,29 @@ export function answerFork(world: WorldState, answer: ForkAnswer, tier?: College
   // nothing for the engine to re-validate: the guard above ("the fork is not open") is still the
   // whole of what this command can refuse, and it is still engine-side.
   world.fork = { ...world.fork, answer }
+  // ⭐⭐⭐ ROUND 31 #10 – THE ROUTE IS DECIDED HERE, SO THE CURVE IS RESOLVED HERE. The owner believed
+  // the fork already shaped the age curve («я думал уже так и есть»); it only ever priced it, in lost
+  // ranking time. Direct to the tour peaks 22-26 and declines from 27; college keeps today's 23-28.
+  //
+  // ⚠ THIS WEEK AND NOT `createWorld`, for two reasons that point the same way. The ROUTE does not
+  // exist before this line – a curve written at week 0 would have to guess it – and the two ages it
+  // carries cannot be read by anything before 18 and 22 respectively, so nothing has gone unmodelled
+  // in the fourteen-to-nineteen years this write comes after. See `WorldState.ageCurve`.
+  //
+  // ⚠ ALL THREE ANSWERS, INCLUDING «stop». The write is above the college branch's early return so a
+  // career cannot end up with a route that depends on which of two paragraphs ran; a latched ending
+  // simply never reads it. `world.ageCurve` is written ONCE – `answerFork` refuses a second answer at
+  // its guard – so this is not a value the rest of the career can drift.
+  //
+  // ⚠ RNG: `resolveAgeCurve` spends ONE draw on `seed:decline`, a purpose-scoped sub-stream derived
+  // at the call site and thrown away (CLAUDE.md invariant 2). It is keyed on the seed ALONE, with no
+  // week and no answer in it, so a player's choice cannot re-roll it and the MAIN stream never sees
+  // this line: the frozen capture (41550 / e6b0c709) is untouched by construction.
+  //
+  // ⚠ `injuryFrom: 0` – a career that resolves its own curve pays for every week it has ever lost,
+  // junior layoffs included. The non-zero case is the v68 migration's alone.
+  const resolved = resolveAgeCurve(world.seed, answer === 'college' ? 'college' : 'direct')
+  world.ageCurve = { ...resolved, injuryFrom: 0 }
   if (answer === 'college') {
     // ⭐⭐ THE PLACE SHE PICKED IS RECORDED HERE AND NOWHERE ELSE (17.08, the-college-choice spec).
     //

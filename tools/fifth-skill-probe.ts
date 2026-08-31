@@ -199,7 +199,7 @@ rule(`3. GROWTH – ${SEASONS} seasons of driftCohort: does it climb toward a ce
   }
   snapshot('week 0')
   for (let s = 0; s < SEASONS; s++) {
-    for (let w = 0; w < WEEKS_PER_YEAR; w++) driftCohort(cohort, rng)
+    for (let w = 0; w < WEEKS_PER_YEAR; w++) driftCohort(cohort, rng, SEEDS[0])
     ageCohort(cohort)
     snapshot(`season ${s + 1}`)
   }
@@ -216,7 +216,7 @@ rule(`3. GROWTH – ${SEASONS} seasons of driftCohort: does it climb toward a ce
     for (const p of old) p.ageYears = 31
     const oldRng = rngFromSeed(`${SEEDS[0]}:probe:decline`)
     const at0 = mean(old.map(rivalGroundstrokes))
-    for (let w = 0; w < WEEKS_PER_YEAR * 3; w++) driftCohort(old, oldRng)
+    for (let w = 0; w < WEEKS_PER_YEAR * 3; w++) driftCohort(old, oldRng, SEEDS[0])
     const at3 = mean(old.map(rivalGroundstrokes))
     line(`  DECLINE (same cohort forced to 31, 3 seasons of drift): mean gs ${f(at0)} -> ${f(at3)}` +
       `  (${at3 < at0 ? 'falls with the rest of her game' : '⚠ DOES NOT FALL – the claim is wrong'})`)

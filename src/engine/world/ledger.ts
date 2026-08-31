@@ -257,9 +257,31 @@ export function financeSeries(
   for (let week = fromWeek; week <= toWeek; week++) {
     let incomeCents = 0
     let expenseCents = 0
-    for (const amt of Object.values(byWeek.get(week)?.byCategory ?? {})) {
-      if ((amt ?? 0) > 0) incomeCents += amt!
-      else expenseCents += -(amt ?? 0)
+    // ⭐⭐ ROUND 31 #2 – AND THE TOURNAMENT'S OWN HALF OF THE INCOME, SPLIT OUT OF THE SAME PASS.
+    //
+    // The owner asked for the week's money to read as an ADDITION: «Income – то, что пришло с
+    // турнира / Other income – другие семейные доходы / Spent / Balance». `incomeCents` above is the
+    // family's WHOLE week, so a row labelled "what came from the tournament" could not be drawn from
+    // it, and the recap's "Family income" line was being derived from her cut's base instead – which
+    // is why it appeared only on weeks that split a cheque and why the column never visibly added up.
+    //
+    // ⚠⚠ NOTHING NEW IS PERSISTED AND NO SAVE MOVES. `'prize'` has been its own ledger category since
+    // task #17 – «the only income the tennis itself produces», its own header two files over – so the
+    // fact was already on every save, in `byCategory`, and only the READOUT was missing. That is the
+    // whole reason this is a display change: `FinanceWeekPoint` persists nothing, `FinanceWeek` is
+    // untouched, `SAVE_SCHEMA_VERSION` does not move and no migration is owed. It also means the
+    // split is right on a career loaded from an old save rather than only from the next cheque on.
+    //
+    // ⚠ THE SAME `> 0` GATE AS `incomeCents` ITSELF, and that is what makes the card's arithmetic
+    // true by construction rather than by luck: a category whose week nets negative is spend, so
+    // taking prize under any other condition could make `prize > income` and leave the card printing
+    // a negative "Family income" for a week that had none.
+    let prizeIncomeCents = 0
+    for (const [category, amt] of Object.entries(byWeek.get(week)?.byCategory ?? {})) {
+      if ((amt ?? 0) > 0) {
+        incomeCents += amt!
+        if (category === 'prize') prizeIncomeCents += amt!
+      } else expenseCents += -(amt ?? 0)
     }
     // ⚠ HER CUT RIDES ALONG AND IS NOT SUMMED – it is not in `byCategory`, so the loop above cannot
     // have seen it, and the two figures the card prints (`incomeCents`, `expenseCents`) are byte for
@@ -281,6 +303,11 @@ export function financeSeries(
       incomeCents,
       expenseCents,
       balanceCents: 0,
+      // ⭐⭐ ROUND 31 #2 – omitted on a week the tennis paid nothing, which is the same shape every
+      // other memo on this point uses, and reads as the zero it is. ⚠ IT IS A SLICE OF
+      // `incomeCents`, NEVER A TERM BESIDE IT: a consumer that adds it to income has counted the
+      // prize twice. The rest of the week's income is `incomeCents − this`.
+      ...(prizeIncomeCents > 0 ? { prizeIncomeCents } : {}),
       ...(coachCut ? { coachCutCents: coachCut.cents, coachCutPct: Math.round(coachCut.bps / 100) } : {}),
       ...(kidShare
         ? {

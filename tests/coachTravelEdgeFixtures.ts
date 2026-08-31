@@ -1013,7 +1013,7 @@ export const FROZEN = {
    *  unreadable by the other. The renumber moved all three parts together: the constant, the
    *  migration's PLACE in the append-only chain (it runs at `v === 64`, after the reveal), and the
    *  golden fixture – `v65.json`, with college's `v64.json` untouched beside it. */
-  middleGrinder: '61b691741f53f557b126b8e24b2dd9ae82473291dfaf05ddbd472f71b326b6f6',  /** PRESETS[8] · 120k wealthy family, elite coach · grinder policy (never travels)
+  middleGrinder: '4776877776d00dc657dae2f2d0192b1587cdb6db44183e4b9e0b7a62c930a1e8',  /** PRESETS[8] · 120k wealthy family, elite coach · grinder policy (never travels)
    *
    *  ⭐⭐ RE-FROZEN FOR ROUND 28 #17-b (28.08) – AND ALONE, WHICH IS THE FINDING, exactly as the
    *  16.08 re-freeze below was alone for its own reason. The owner's ruling put a kit letter's
@@ -1048,7 +1048,7 @@ export const FROZEN = {
    *  drop `fieldSeasonTitles`, roll the number back to 64, and the merge value above comes back. So
    *  this career carries all three of the day's moves and its constant matches no branch that exists,
    *  which is what a renumbered collision looks like from inside a fixture. */
-  eliteGrinder: '461ef6b68b40c88077644f8d1679423bb7500cba6d91f2476162f83f39be9825',  /** PRESETS[0] · 8k working family, SELF-COACHED · player policy (switch on, nobody to send)
+  eliteGrinder: '6e04f854ea8b83eb9b87296402c8bfae1234f3d0a9ae908264a89d4e1d471eaf',  /** PRESETS[0] · 8k working family, SELF-COACHED · player policy (switch on, nobody to send)
    *
    *  ⭐⭐ RE-FROZEN A FIFTH TIME (16.08) – AND ALONE, WHICH IS THE FINDING. The owner's correction of
    *  that afternoon made the Junior Accelerator a reserved place instead of a ceiling, so a junior
@@ -1277,8 +1277,18 @@ export const FROZEN = {
    *  and reproduces the merge value; `PRE_V64` rolls it back to 63 and reproduces `8d6b056f…`.
    *
    *  ⚠ AND A FOURTH TIME BY v66 (29.08), with both twins and by `schemaVersion` ALONE – see the
-   *  block over `FROZEN`. `PRE_V66` rolls only the number back and reproduces the v65 value. */
-  selfTravelling: '645bd1177e78611433a6849eb894f659d6d715da2c0897567c80655f940502d8',}
+   *  block over `FROZEN`. `PRE_V66` rolls only the number back and reproduces the v65 value.
+   *
+   *  ⚠ AND MOVED AGAIN BY v68 (31.08, ROUND 31 #10/#13 – the per-career age curve), with both twins
+   *  and by `schemaVersion` ALONE. `PRE_V68` rolls only the number back and reproduces the v67 value.
+   *  The per-key diff was taken FIRST, as this file's protocol demands, against this branch's own base
+   *  (`r31d/wave-reconcile`) in a separate worktree: `npx vite-node tools/frozen-key-diff.ts --preset 0
+   *  --policy 1` differs on **ONE key of sixty-one, `schemaVersion`**. `cohort`, `skills`, `results`,
+   *  `rngMain`, `events`, `fundsCents` – every one byte-identical. The wave writes `ageCurve` when the
+   *  fork at nineteen is answered and gives the cohort a derived (never stored) decline spread, and a
+   *  frozen career is 156 weeks old: she is 16.6 and no rival is over 22, so neither reader is
+   *  reachable. That is the claim, and this is its measurement rather than its assertion. */
+  selfTravelling: '4383a5970f4b3827aa6245be671700129d6735743a4abc29589811c40d32d7ca',}
 
 /** ⭐⭐ THE SAME THREE CAREERS AS THEY HASHED UNDER v66 – the identity that proves the v67 re-freeze
  *  moved the VERSION NUMBER and nothing else, in the exact sense v49 set and v66 repeated: the
@@ -1295,6 +1305,32 @@ export const FROZEN = {
  *  two steps are the v66 step's own former contents, moved without a character changed, so «nothing
  *  moved» is what the change means rather than what it was hoped to do. The per-key diff over
  *  `FROZEN` is the independent half of the same finding. */
+/** ⭐⭐ THE SAME THREE CAREERS AS THEY HASHED UNDER v67 – the identity that proves the v68 re-freeze
+ *  moved the VERSION NUMBER and nothing else, in the exact sense v49 set and v66 / v67 repeated: the
+ *  narrowest legitimate re-freeze this file recognises.
+ *
+ *  ⚠ v68 DOES APPEND A WORLD KEY – `ageCurve`, the per-career age curve of round 31 #10/#13 – AND NO
+ *  FROZEN CAREER CARRIES IT, which is a stronger statement than the three sets below can make and is
+ *  the whole reason this wave could be built at all. The curve is resolved when the FORK AT NINETEEN
+ *  is answered (`answerFork`, world/endings.ts) rather than by `createWorld`, because the route is the
+ *  fork's own answer and does not exist before it; these careers stop at week 156, age 16.6, with the
+ *  fork never raised. `careerHashAtSchema` peels the key anyway – see its v68 note – and on these
+ *  three that peel is provably a no-op, so `careerHashAtSchema(…, 67)` is the same serialisation with
+ *  one number changed and reproduces all three v67 constants byte for byte. These ARE those
+ *  constants, verbatim.
+ *
+ *  ⭐ AND THE SECOND HALF THE COHORT COULD HAVE BROKEN AND DID NOT. Round 31 #13 gives every rival a
+ *  decline age of her own, derived off `seed:decline:<id>` and never stored – so `world.cohort` gains
+ *  no field – and it is unreachable here for the same kind of reason: `COHORT.ageBand` tops out at 19,
+ *  three seasons of `ageCohort` make that 22, and a decline age of 27.5-30.5 cannot bite a
+ *  twenty-two-year-old. `driftCohort` still spends exactly four MAIN draws per player, in the same
+ *  order, so the frozen capture (41550 / e6b0c709) is untouched and `rngMain` is byte-identical on all
+ *  three careers. */
+export const PRE_V68 = {
+  middleGrinder: '61b691741f53f557b126b8e24b2dd9ae82473291dfaf05ddbd472f71b326b6f6',
+  eliteGrinder: '461ef6b68b40c88077644f8d1679423bb7500cba6d91f2476162f83f39be9825',
+  selfTravelling: '645bd1177e78611433a6849eb894f659d6d715da2c0897567c80655f940502d8',}
+
 export const PRE_V67 = {
   middleGrinder: '8a95060b2521fa3643e561298eda0b56516a251f4bc226e5c1545ae27d70876f',
   eliteGrinder: 'c1090044f3a42f03273c0741b5d594ba02d264934ddc1ad6959e1607dd884b8a',
@@ -1364,10 +1400,17 @@ export const PRE_V66 = {
  *  all three presets, `rngMain` included among the unmoved). All three relations above still hold:
  *  `middleGrinder` and `selfTravelling` equal their `FROZEN` twins, `eliteGrinder` differs by the
  *  one moved letter. The numbers moved together, the argument did not – again. */
+/** ⚠ RE-STAMPED FOR v68 (31.08, round 31 #10/#13) AND FOR NO OTHER REASON. Unlike every `PRE_V*` set
+ *  below, this one is NOT a schema roll-back – `careerHashUnderTheWindowRule` hashes the reconstructed
+ *  world at the LIVE version, so a schema bump moves these three the same way it moves `FROZEN`, and
+ *  the identity they assert (put the deadline back on the window and the pre-ruling career returns)
+ *  is untouched. The per-key diff over the same three careers is ONE key, `schemaVersion` – see the
+ *  v68 note over `FROZEN` – and the rewrite this helper applies reads only `offers`, which that diff
+ *  reports byte-identical. */
 export const PRE_R28B = {
-  middleGrinder: '61b691741f53f557b126b8e24b2dd9ae82473291dfaf05ddbd472f71b326b6f6',
-  eliteGrinder: 'd14ed032491122c664354833a1e38d1d524ea9ff1033581848e07bfa6d5c3f5a',
-  selfTravelling: '645bd1177e78611433a6849eb894f659d6d715da2c0897567c80655f940502d8',}
+  middleGrinder: '4776877776d00dc657dae2f2d0192b1587cdb6db44183e4b9e0b7a62c930a1e8',
+  eliteGrinder: 'bd8166570107ce3a62b7f14ff324fb89db6a167127a56e99e12e2e76bd644285',
+  selfTravelling: '4383a5970f4b3827aa6245be671700129d6735743a4abc29589811c40d32d7ca',}
 
 /** ⭐ THE SAME THREE CAREERS AS THEY HASHED UNDER v56 – the identity that proves the v57 re-freeze
  *  moved ONE key and nothing else.
@@ -1859,7 +1902,15 @@ export function careerHashAtSchema(presetIndex: number, policyIndex: number, sch
   // `SAVE_SCHEMA_VERSION` stays 65 and there is no version to branch on – the key simply did not exist
   // at any earlier shape, so every branch below drops it and only the live `world` keeps it. Verified
   // rather than argued: all the older constants below reproduce byte for byte with this line in place.
-  const { gearRestWeeks: _rest, ...preRest } = world
+  // ⚠ RE-AIMED FOR v68 (round 31 #10/#13), NOT WEAKENED, AND IT PEELS AHEAD OF ALL FIVE BELOW because
+  // `ageCurve` is the newest key and the peel order is reverse order of arrival. It is the THIRD key
+  // here that is not in `createWorld`'s literal, and the only one that is BY DESIGN rather than by
+  // accident of where its writer runs: the per-career age curve is resolved when the fork at nineteen
+  // is answered, so a frozen career – 156 weeks, age 16.6 – never writes it and this line is a no-op
+  // on every constant in this file. That is exactly what the wave claims, and `FROZEN` below is the
+  // proof: all three careers reproduce byte for byte with a schema bump in the tree.
+  const { ageCurve: _curve, ...preCurve } = world
+  const { gearRestWeeks: _rest, ...preRest } = preCurve
   const { fieldSeasonTitles: _titles, ...preTitles } = preRest
   const { assets: _assets, ...preAssets } = preTitles
   const { peakPhysical: _peak, ...prePeak } = preAssets
@@ -1873,7 +1924,9 @@ export function careerHashAtSchema(presetIndex: number, policyIndex: number, sch
           ? preAssets
           : schemaVersion < 65
             ? preTitles
-            : world
+            : schemaVersion < 68
+              ? preCurve
+              : world
   return createHash('sha256').update(JSON.stringify({ ...shape, schemaVersion })).digest('hex')
 }
 

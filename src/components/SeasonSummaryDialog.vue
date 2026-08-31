@@ -22,9 +22,25 @@
 // not a tidy. The kicker also stays MUTED rather than becoming the lime eyebrow: `src/style.css`
 // and `ui/Eyebrow.vue` both say `.season-summary-kicker` is the app's muted label, a different
 // object, and recolouring it is the owner's call and he has not made it.
+//
+// ⭐⭐⭐ ROUND 31 #9 – AND SHE SAYS SOMETHING OF HER OWN, ONCE SHE IS PAST HER PEAK. The owner asked
+// for exactly this surface: «Да и она сама в конце сезона … могла бы что-то тоже сказать на эту
+// тему.» One sentence, drawn once per SEASON from the three he approved, and silent on every wrap of
+// every career before her own decline starts – so the card the owner has seen fifteen times is
+// byte-identical until the winter the engine says otherwise.
+//
+// ⚠ IT IS HERS AND THE SCRAP BELOW IT IS THE PARENT'S, which is why they are two separate objects on
+// the card rather than two lines of one note. The closing scrap is the parent's own note about the
+// year; this is the daughter answering the question the card is really about.
+//
+// ⚠ ONCE PER SEASON MEANS THE KEY IS THE SEASON, NOT THE WEEK – `seed:decline:<seasonYear>`, never
+// MAIN. This card outlives the advance that follows it, so a week in the key would change her
+// sentence under the parent while he was still reading it: round 31 #4's defect, on a smaller card.
+// composables/declineVoice.ts carries the full argument and the three sentences.
 import { computed, useTemplateRef } from 'vue'
 import { useGameStore } from '../stores/game'
 import { useDialogFocus } from '../composables/dialogFocus'
+import { herDeclineLine } from '../composables/declineVoice'
 import { formatCentsSigned } from '../shared/money'
 import { LADDER_LABEL } from '../shared/protocol'
 import Card from './ui/Card.vue'
@@ -118,6 +134,16 @@ const showRankMove = computed(() => ranked.value && rankTrack.value === 'itf')
 // of a career migrated mid-season, because the counter cannot honestly speak for weeks it did not
 // watch. No row, rather than a zero that would read as "none of them" - the `spentCents` precedent.
 const entryMirror = computed(() => summary.value?.entryMirror)
+
+// ⭐⭐ HER LINE, or null while she is still at her peak – see the note at the top of this file. The
+// season this card is about names its own stream, so the sentence is fixed for that winter and the
+// same on every machine.
+const herLine = computed(() => {
+  const snap = game.snapshot
+  const year = summary.value?.seasonYear
+  if (!snap || year === undefined) return null
+  return herDeclineLine(snap.physicalShare, snap.seed, year)
+})
 </script>
 
 <template>
@@ -238,6 +264,11 @@ const entryMirror = computed(() => summary.value?.entryMirror)
         </Card>
       </div>
 
+      <!-- ⭐⭐⭐ ROUND 31 #9 – HER OWN LINE, above the parent's scrap and in her own voice. Absent on
+           every wrap before she is past her peak, so the card is unchanged for the whole first half
+           of a career. See the note at the top of this file for the key it is drawn on. -->
+      <p v-if="herLine" class="season-her-line">{{ herLine }}</p>
+
       <!-- D's closing scrap. It was already the most human line in this dialog and it was set as a
            grey hint; on paper it reads as what it is – the parent's own note about the year. -->
       <!-- W4-SCHOOL: past her last school year the list is one item shorter, and the engine's own
@@ -328,6 +359,17 @@ const entryMirror = computed(() => summary.value?.entryMirror)
 .season-net {
   font-size: 16px;
   font-weight: 800;
+}
+
+/* ROUND 31 #9 – her line. It sits between the tiles and the parent's scrap and is set apart from
+   both: the tiles are figures and the scrap is paper, so hers is neither – a quiet centred sentence
+   in the card's own ink. No margin games, so the scrap under it keeps the spacing it shipped with. */
+.season-her-line {
+  margin: 0 0 14px;
+  font-size: 14px;
+  line-height: 1.5;
+  text-align: center;
+  color: var(--ink-soft);
 }
 
 /* ⚠ THE TYPE IS SET ON THE SHEET, NOT ON THE COMPONENT, since PaperNote's root became a wrapper so

@@ -56,6 +56,7 @@ import { WILD_CARD } from '../../engine/season/tournament'
 import { vacationArtUrl, weekArtUrl, weekHomeArtUrl } from '../../art/weeks'
 import { portraitStage } from '../../shared/avatarEmotion'
 import { rngFromSeed } from '../../engine/rng'
+import { coachDeclineLine } from '../../composables/declineVoice'
 import type { FieldStrength } from '../../engine/season/preview'
 import { ECONOMY, recommendVacationPackage, vacationPackage } from '../../engine/economy'
 // R11-5a: the ONE tier-state rule, shared with the Home season ladder. R15-9 adds the sliding
@@ -71,7 +72,7 @@ import { UPCOMING_WEEKS } from '../../engine/world/constants'
 // THE UPCOMING-EVENT CARD'S OWN PARTS, shared with the Calendar's marker card: the photograph, the
 // court's verdict for her build, the scholarship's share, and how an odds ring is NAMED. Its colour
 // is no longer one of them – that ramp is drawn on five surfaces, not two, so it lives a line below.
-import { firstMatchLabel, firstMatchTitle, useEventCard } from '../../composables/eventCard'
+import { DRAW_NOT_MADE_NOTE, firstMatchLabel, firstMatchTitle, useEventCard } from '../../composables/eventCard'
 // The app's one red-to-green ramp, shared with the three condition rings. `{ fraction }` names the
 // scale IN the call: this number is a 0..1 chance, not a 0..100 percentage, and the signature will
 // not let the two be confused.
@@ -81,6 +82,7 @@ import { readingColor } from '../../composables/readingColor'
 import { enterActionName } from '../../composables/eventName'
 import { TIER_SHORT } from '../../composables/weekAhead'
 import { consumePostAdvanceNav, holdPostAdvanceNav } from '../../composables/weekRecap'
+import { rankLabel } from '../../shared/format'
 import { seasonWeekRange, weekLabel, weekRange } from '../../shared/dates'
 import { formatCents, entryFeeLabel } from '../../shared/money'
 import type { MatchOptions, MatchPlayer, Surface } from '../../engine/match/types'
@@ -399,6 +401,11 @@ function coachSays(e: UpcomingEvent): string {
   // `surfaceFit` is the engine's own verdict with the surface name sliced off (R11-15) – the card
   // names the court once, beside its ring, so the coach must not name it a second time.
   const fit = surfaceFit(e.surface)
+  // ⭐⭐ ROUND 31 #4 – NULL UNTIL THE DRAW IS MADE, and every clause below that reads it has to say
+  // so rather than assume a number. His ruling put the draw in THIS field: «прямо на карточке
+  // турнира писать имя и ранг соперницы на 1й круг внизу возле этого круга с шансом, можно как раз
+  // в поле Coach says это делать элегантно». So the plaque gains one sentence at its foot – beside
+  // the ring, which is where he put it – and that sentence is the draw's state, either way.
   const chance = e.preview.firstMatchChance
   const strength = e.preview.fieldStrength
   const pick = (pool: readonly string[], salt: string) =>
@@ -411,16 +418,45 @@ function coachSays(e: UpcomingEvent): string {
   // the same `seed:coachsay:<eventId>` draw, so hiring somebody mid-season re-voices the card and
   // never re-rolls it – the same property the event sub-stream was chosen for in the first place.
   const all = (selfCoached.value ? SELF_FIELD_LINES : COACH_FIELD_LINES)[strength]
-  const pool = chance >= RING_CERTAIN ? all.filter((l) => !HEDGED_LINES.has(l)) : all
+  const pool = chance !== null && chance >= RING_CERTAIN ? all.filter((l) => !HEDGED_LINES.has(l)) : all
   const parts = [pick(pool.length ? pool : all, 'coachsay')]
 
-  if (strength === 'strong' && chance >= RING_COMFORTABLE) parts.push(pick(DRAW_CLAUSES.kind, 'coachdraw'))
-  else if (strength === 'favourite' && chance <= RING_HARD) parts.push(pick(DRAW_CLAUSES.cruel, 'coachdraw'))
+  // ⚠ THE SEAM CLAUSE NEEDS A RING TO CUT AGAINST, so it is silent before the draw rather than
+  // guessing. Both arms below are about a named opponent ("she has drawn the one who can stop
+  // her"), and there is nobody to have drawn yet.
+  if (chance !== null && strength === 'strong' && chance >= RING_COMFORTABLE) parts.push(pick(DRAW_CLAUSES.kind, 'coachdraw'))
+  else if (chance !== null && strength === 'favourite' && chance <= RING_HARD) parts.push(pick(DRAW_CLAUSES.cruel, 'coachdraw'))
+
+  // ⭐⭐⭐ ROUND 31 #9 – AND ONCE SHE IS PAST HER PEAK, THE PLAQUE SAYS SO. The owner asked for it
+  // here in as many words: «тренер вполне может что-то такое говорить». `coachDeclineLine` returns
+  // null on every week of every career before her own decline starts, so this line is provably inert
+  // for the first fifteen seasons and cannot move a single card the owner has already seen.
+  //
+  // ⚠ THE SAME SUB-STREAM DISCIPLINE AS THE TWO CLAUSES ABOVE – the event's own key, `coachage`
+  // beside `coachsay` and `coachdraw`, never MAIN and never the week. A card that re-voiced itself
+  // as the tournament came closer is round 31 #4, and he reports that one.
+  //
+  // ⚠ IT READS THE FIELD, NOT THE RING, which is why it is placed with the field clause rather than
+  // beside the draw: «At this age you choose your weeks» is advice about WHICH tournament to enter,
+  // and the entry decision is made two weeks before there is an opponent to have a ring against.
+  const declineSay = coachDeclineLine(game.snapshot?.physicalShare, game.snapshot?.seed ?? '', e.id, strength)
+  if (declineSay) parts.push(declineSay)
 
   // "suits her game" -> "The court suits her game." Capitalised into a sentence, because the coach
   // speaks in sentences and the engine's fragment does not.
   if (fit) parts.unshift(`The court ${fit}.`)
+  // ...and the draw LAST, at the foot of the plaque next to the ring – his placement. One sentence
+  // either way: the state of the draw, or the person it produced with her rank beside her.
+  parts.push(e.preview.drawMade ? drawnLine(e) : DRAW_NOT_MADE_NOTE)
   return parts.join(' ')
+}
+
+/** ⭐ THE OPPONENT, NAMED, once the draw exists – «имя и ранг соперницы на 1й круг». The rank is
+ *  rendered the way every other surface renders an opponent's: `#212`, or `Unranked` for a girl with
+ *  no counted results, which is `rankLabel`'s own pair and not a second spelling of it. */
+function drawnLine(e: UpcomingEvent): string {
+  const rank = rankLabel(e.preview.opponentRank ?? 0, e.preview.opponentRank !== null)
+  return `First round: ${e.preview.opponentName}, ${rank}.`
 }
 
 // U0: the ring's geometry and the arithmetic that turns a chance into a dash offset left for
@@ -1541,7 +1577,12 @@ function closeExhibition(): void {
                 <p class="event-coach-label">{{ readLabel }}</p>
                 <p class="event-coach-line">{{ coachSays(row.event) }}</p>
               </div>
+              <!-- ⭐⭐ ROUND 31 #4 – NO RING UNTIL THE DRAW IS MADE. A percentage here is her chance
+                   against ONE named girl, so before there is a girl there is no number to draw and
+                   an empty ring would be a reading of nothing. The plaque beside it says which state
+                   this card is in, in the field the owner chose for it. -->
               <ProgressRing
+                v-if="row.event.preview.drawMade && row.event.preview.firstMatchChance !== null"
                 class="chance-ring"
                 :value="row.event.preview.firstMatchChance"
                 :color="readingColor({ fraction: row.event.preview.firstMatchChance })"

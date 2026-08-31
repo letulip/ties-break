@@ -49,10 +49,16 @@ for (const preset of PRESETS) {
         // week keeps the sweep spread across the season without paying a snapshot per week.
         if (w % 4 !== 0) continue
         for (const e of toSnapshot(world).upcoming) {
+          // ⚠ ROUND 31 #4 – a card only carries a chance once its draw has been made, so the seam
+          // this file measures only exists on those. Skipping the rest is the honest arm: a null
+          // scored as 0 would band every far-out card as "hopeless" and invent the very seam being
+          // counted. It costs sample size, not validity.
+          const chance = e.preview.firstMatchChance
+          if (chance === null) continue
           const field = e.preview.fieldStrength as Field
-          const key = `${field}|${bandOf(e.preview.firstMatchChance)}`
+          const key = `${field}|${bandOf(chance)}`
           counts.set(key, (counts.get(key) ?? 0) + 1)
-          chanceIn.set(key, [...(chanceIn.get(key) ?? []), e.preview.firstMatchChance])
+          chanceIn.set(key, [...(chanceIn.get(key) ?? []), chance])
           cards++
         }
       }

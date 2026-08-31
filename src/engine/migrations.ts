@@ -2239,6 +2239,53 @@ export function migrateSave(raw: unknown): WorldState {
     v = 67
   }
 
+  // ⭐⭐⭐ v67 -> v68 – ROUND 31 #10/#13: THE AGE CURVE IS PER-CAREER NOW, AND THIS STEP IS THE PROMISE
+  // THAT IT DOES NOT REACH BACKWARDS.
+  //
+  // ⚠⚠ THE OWNER IS PLAYING A CAREER AND THAT IS THE WHOLE DESIGN CONSTRAINT, not a courtesy. Alice
+  // is at week 933, 31.7 years old, standing at 93.1% of her peak – a number he has been watching
+  // fall for a season (docs/rounds/round-31.md §9). A curve re-derived from her seed on the next load
+  // would move her clock mid-game: she went through college, so the route is right, but the SPREAD
+  // would hand her some other decline age and her remaining seasons would re-shape under her.
+  //
+  // So every save that already exists is PINNED on the shipped pair – `plateauStart: 23,
+  // declineStart: 29`, which is exactly what the engine read for it yesterday – and nothing ever
+  // re-derives a stored curve (`ageCurveOf` returns it as-is). New careers vary; his does not move.
+  //
+  // ⚠ `injuryFrom` IS THE WEEKS SHE HAS ALREADY LOST, WHICH IS THE OTHER HALF OF "TODAY'S BEHAVIOUR".
+  // The pull is applied on read against this mark, so a migrated career reads 29.000 on the first
+  // load however broken it is – its past layoffs were lived under a rule that did not charge them and
+  // are not charged now – and only the weeks it loses AFTER the update pull it earlier. A career that
+  // resolves its own curve at the fork writes 0 here and pays for all of them.
+  //
+  // ⚠ THE PIN IS UNCONDITIONAL, INCLUDING FOR A CAREER TOO YOUNG TO HAVE ANSWERED THE FORK. It costs
+  // that career the new route shape, and it is still the right trade: "every existing save behaves as
+  // it did" is a guarantee a player can rely on, and "every existing save except the ones we judged
+  // young enough" is not. A new career gets the fork.
+  //
+  // ⚠ IDEMPOTENT and DRAW-FREE. Two literals and one sum over a persisted list – no stream is touched,
+  // on any key, so the frozen capture (41550 / e6b0c709) cannot move. `weeksLostSoFar`'s own reading
+  // is reproduced here rather than imported, because a migration may not depend on a rule that is
+  // free to change under it: this step must keep meaning what it meant on the day it shipped.
+  //
+  // ⚠⚠ AND 23 / 29 ARE LITERALS RATHER THAN `ECONOMY.development.ageCurve`, WHICH IS THE ONE LINE OF
+  // THIS STEP THAT IS EASIEST TO GET WRONG. The pin's promise is «the pair the engine read for this
+  // save YESTERDAY», and that is a historical fact, not a live constant: reading the object would
+  // hand every legacy career whatever the curve is re-tuned to next, which is precisely the retroactive
+  // move the step exists to prevent. The default pair happens to be these two numbers today; the day
+  // it stops being, this step must not follow.
+  if (v === 67) {
+    const history = (Array.isArray(save.injuryHistory) ? save.injuryHistory : []) as { weeksOut?: unknown }[]
+    const fromHistory = history.reduce((sum, h) => sum + (typeof h?.weeksOut === 'number' ? h.weeksOut : 0), 0)
+    const totals = (save.careerTotals ?? {}) as { weeksLostToInjury?: unknown }
+    const monotone =
+      typeof totals.weeksLostToInjury === 'number' && Number.isFinite(totals.weeksLostToInjury)
+        ? totals.weeksLostToInjury
+        : 0
+    save.ageCurve = { plateauStart: 23, declineStart: 29, injuryFrom: Math.max(fromHistory, monotone) }
+    v = 68
+  }
+
   if (v !== SAVE_SCHEMA_VERSION) {
     throw new Error(`Save schema ${v} is newer than supported ${SAVE_SCHEMA_VERSION}`)
   }

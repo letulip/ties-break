@@ -94,7 +94,25 @@ export const ENDINGS = {
 
   // --- #5/#6 THE NATURAL END -------------------------------------------------------------------
   /** her own decline starts here (`ECONOMY.development.ageCurve.declineStart`), so this is where
-   *  the question starts being a real one rather than a rhetorical one */
+   *  the question starts being a real one rather than a rhetorical one.
+   *
+   *  ⭐⭐ ROUND 31 #10/#13 GAVE EVERY CAREER ITS OWN DECLINE AGE AND THIS NUMBER DELIBERATELY DID NOT
+   *  FOLLOW IT. A direct-route career now declines from about 27; it is still first asked about
+   *  retiring at 29, and that is a decision rather than an oversight – three reasons, in the order
+   *  they decided it:
+   *
+   *  1. THE ASK IS SOCIAL, NOT PHYSICAL. `lastOfferPeakShare` below is the half that reads her BODY,
+   *     and it already does: the winter the question runs out moves with the career, per player, and
+   *     always has. What this constant sets is when the sport starts asking – the age at which "how
+   *     much longer" becomes a normal thing to be asked, which is a fact about tennis and not about
+   *     her legs.
+   *  2. THE SENTENCE IS HIS. `RetirementDialog`'s approved lede says «Twenty-nine is when the question
+   *     starts being asked, not a countdown to anything» – round 30 #7, signed off by the owner. A
+   *     per-career ask-age makes that line false for most careers, and CLAUDE.md invariant 4 puts the
+   *     copy out of an agent's reach: moving the number here would have moved his words by proxy.
+   *  3. AND THE GAP IS THE STORY. A player whose body went at 27 and who is first asked at 29 has had
+   *     two seasons of knowing before anybody offers her the door, which is the shape §9 of the round
+   *     is about – she is at 93% and nothing has said so. */
   askFromAgeYears: 29,
   /** ⚠ THE LAST OFFER, AND IT IS READ OFF HER BODY RATHER THAN OFF A BIRTHDAY (the long goodbye,
    *  docs/specs/the-long-goodbye-2026-08.md §3a). The share of her OWN PEAK PHYSICAL below which the

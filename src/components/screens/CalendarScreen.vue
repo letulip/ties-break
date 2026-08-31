@@ -86,7 +86,7 @@ import { formatCents, entryFeeLabel } from '../../shared/money'
 // D4 (docs/specs/e2e-coverage.md §12): the ONE accessible name for an Enter, shared with Season.
 import { enterActionName } from '../../composables/eventName'
 // The upcoming-event card's shared parts, owned once and drawn by the Season feed too.
-import { firstMatchLabel, firstMatchTitle, useEventCard } from '../../composables/eventCard'
+import { DRAW_NOT_MADE_NOTE, firstMatchLabel, firstMatchTitle, useEventCard } from '../../composables/eventCard'
 // The app's one red-to-green ramp, shared with the three condition rings. `{ fraction }` names the
 // scale IN the call: this number is a 0..1 chance, not a 0..100 percentage, and the signature will
 // not let the two be confused.
@@ -562,7 +562,12 @@ const showGo = computed(() => !game.snapshot?.pending)
         </div>
 
         <div class="cal-card-odds">
+          <!-- ⭐⭐ ROUND 31 #4 – THE SAME THREE STATES THE SEASON CARD HAS, because it is the same
+               card twice and a marker that named an opponent the feed refused to name would be the
+               two-surfaces-one-fact drift this repo has already paid for. Ring and name only once
+               `drawMade`; before that the one sentence, from the composable that owns it. -->
           <ProgressRing
+            v-if="marker.preview.drawMade && marker.preview.firstMatchChance !== null"
             class="cal-card-ring"
             :value="marker.preview.firstMatchChance"
             :color="readingColor({ fraction: marker.preview.firstMatchChance })"
@@ -571,7 +576,8 @@ const showGo = computed(() => !game.snapshot?.pending)
           >
             <b>{{ Math.round(marker.preview.firstMatchChance * 100) }}</b><i>%</i>
           </ProgressRing>
-          <p class="cal-card-odds-note">First round vs {{ marker.preview.opponentName }}</p>
+          <p v-if="marker.preview.drawMade" class="cal-card-odds-note">First round vs {{ marker.preview.opponentName }}</p>
+          <p v-else class="cal-card-odds-note">{{ DRAW_NOT_MADE_NOTE }}</p>
           <!-- ⚠⚠ THE "Rating 1642 vs 1801" LINE WAS HERE AND IS REMOVED BY OWNER RULING (round 21).
                His words, in translation because this file carries no Cyrillic: "I did not ask for
                this, it is surplus information, please take it out." The line shipped one commit

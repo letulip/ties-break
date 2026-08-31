@@ -175,6 +175,46 @@ function openMarket(from: TabId): void {
   tab.value = 'market'
 }
 
+// ⭐⭐ ROUND 31 #1 — THE WEEK SCREEN HAS TWO ENTRANCES AND THEY WANT DIFFERENT THINGS ON TOP.
+//
+// The owner, playing the build: pressing `Next tournament` on Home gives him a page whose first
+// block is the results of the week just gone, with everything about the tournament below it.
+//
+// ⚠ AND THE ORDER IS NOT THE DEFECT. After a tick the story belongs on top – that is the design's
+// own beat («Конец недели (игровой тик) → D. Weekly Story», quoted in full at the `week` watcher
+// below) and it is why the tab's accent dot fires on a fresh recap. Swapping the two blocks would
+// have answered his tap by breaking the arrival he never complained about, which is round 30 #1's
+// trade exactly: one reading fixed by another going wrong.
+//
+// What is actually missing is that `navigate('week')` said WHERE and never WHAT FOR, so both
+// arrivals reached one screen indistinguishable from each other. So the entry is part of the
+// navigation now, the same way `marketFrom` above is: the opener records the reason, the screen
+// reads it as a prop, and nothing else in the app changes. `'story'` is the default in every sense –
+// it is what a tick, a tab and a reload all mean.
+//
+// ⚠ IT IS AN ARRIVAL, NOT A MODE, and the invariant that keeps it one is: THE SCREEN HAS EXACTLY
+// TWO DOORS AND BOTH STATE THEIR REASON. `openWeek` here is one (Home's plate); the post-advance
+// branch in the `week` watcher below is the other, and it clears the entry back to `'story'` for
+// EVERY resolved week – not only the ones that navigate. That last word is the whole guard: when a
+// week resolves while the player is standing on the screen he reached from the plate, the tab does
+// not change, so a reset hung off a tab change would never fire and his next tick would open on the
+// tournament. That is the regression this item is most likely to cause, and it is pinned in
+// tests/component/round31-week-entry.test.ts.
+type WeekEntry = 'story' | 'tournament'
+const weekEntry = ref<WeekEntry>('story')
+function openWeek(entry: WeekEntry): void {
+  weekEntry.value = entry
+  tab.value = 'week'
+}
+
+/** Home's doors, all of them. Two of the five are not plain tab moves – they carry a reason the
+ *  shell has to act on – so this is a function rather than the inline ternary it used to be. */
+function openFromHome(target: 'money' | 'week:tournament' | 'more' | 'kid' | 'market'): void {
+  if (target === 'market') openMarket('home')
+  else if (target === 'week:tournament') openWeek('tournament')
+  else tab.value = target
+}
+
 // Package J: the 'play' tab id stays (per spec – no router, minimal diff) but
 // is now the Season tab (calendar placeholder + the old exhibition block).
 // Round-6: emoji tab glyphs replaced by the owner's SVG icon set (public/icons/*.svg,
@@ -415,6 +455,14 @@ watch(
     // The advance can resolve a week WHILE the tab is up – the player is looking at the fresh
     // recap, so it is seen the moment it lands.
     if (tab.value === 'week') markThisWeekSeen()
+    // ⚠ ROUND 31 #1 – AND A RESOLVED WEEK TAKES THE TOP OF THAT SCREEN BACK. The Home plate's entry
+    // (see `openWeek` above) is one arrival, not a mode: a tick has a new story to tell and it goes
+    // first, exactly as it always did. ⚠ IT IS DELIBERATELY NOT FOLDED INTO THE `tab.value = 'week'`
+    // BRANCH BELOW: this must fire on every resolved week, including the ones that navigate nowhere
+    // (the player is already on this screen, or the story's auto-open switch is off), and the branch
+    // below fires on neither. Fold it and the week-advance flow breaks for exactly the player who
+    // arrived from the plate and stayed.
+    if (advanced || runClosed) weekEntry.value = 'story'
     // A paused reveal has not finished being a week yet; that falls out of the predicate rather than
     // being listed here, and is the reason `runClosed` needs a door of its own.
     //
@@ -1487,11 +1535,10 @@ function reopenTour(): void {
            next-tournament card opens This week). The shell owns `tab`, so the screen ASKS – one
            event, no router, no store field. `recapFresh` is the This-week dot, still decided by the
            shared rule here (this file owns the per-career seen watermark) and only RENDERED there. -->
-      <HomeScreen
-        v-if="tab === 'home'"
-        :recap-fresh="weekTabDot"
-        @navigate="$event === 'market' ? openMarket('home') : (tab = $event)"
-      />
+      <!-- ⭐ ROUND 31 #1: the ternary became `openFromHome` when a second of Home's doors grew a
+           reason to carry ("take me to the tournament", not merely "take me to the week screen").
+           Both interceptions live in one named function now instead of nesting in an attribute. -->
+      <HomeScreen v-if="tab === 'home'" :recap-fresh="weekTabDot" @navigate="openFromHome($event)" />
       <SeasonScreen v-else-if="tab === 'play'" />
       <!-- Screen H, the calendar. It ASKS to play the week rather than doing it: `playWeek` is the
            app's one advance, and a second caller of `game.advance` is how "what does this press cost"
@@ -1512,7 +1559,10 @@ function reopenTour(): void {
            are `home` again (the other is the watcher in the script), so the two still cannot disagree
            and switching the story off still changes nothing about navigation. The calendar is where a
            week is WATCHED now; see the detour in `playWeek`. -->
-      <ThisWeekScreen v-else-if="tab === 'week'" @close="tab = 'home'" />
+      <!-- ⭐⭐ ROUND 31 #1: `entry` is WHY the player is here – see `openWeek` in the script. `'story'`
+           on a tick, a reload and every other route; `'tournament'` only from Home's Next-tournament
+           plate. The × and its destination are untouched by it. -->
+      <ThisWeekScreen v-else-if="tab === 'week'" :entry="weekEntry" @close="tab = 'home'" />
       <!-- ⚠ MERGE NOTE (round-19): the calendar branch forked before round-18 landed, so it still
            carried the flat `tab = 'kid'` market routing. Both halves are kept - the story's close is
            the shared one above, and the market keeps round-18's `marketFrom`, which is the whole

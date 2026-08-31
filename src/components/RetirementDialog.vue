@@ -78,11 +78,29 @@
 // the week is safe to read it on: an open offer BLOCKS the world, so the table she is on when the
 // card is drawn is the table the offer was raised about. Lower-cased into her sentence – she says
 // "the professional table", not "Professional".
+//
+// ⭐⭐⭐ ROUND 31 #9 – AND THE AGE BRANCH NOW SAYS WHICH YEAR IT IS. The lede above answers «why is
+// this being asked»; it could not answer «how far gone is she», because the number that knows –
+// `physicalShare`, 100% at 28 and 93.1% at 31.7 on his own save – never left the engine. The card
+// gains ONE paragraph under the lede, picked by the share off `declineRung`
+// (composables/declineVoice.ts, where the owner's three approved sentences live).
+//
+// ⚠⚠ HIS ROUND-30 LEDE IS UNTOUCHED, DOWN TO THE BYTE, and it is a separate `<p>` for exactly that
+// reason. «ADDED TO HIS ROUND-30 LEDE, NOT REPLACING IT» – round-31 §11. `tests/component/
+// last-word.test.ts` pins that sentence literally and stays green because nothing about it moved.
+//
+// ⚠ THE OTHER TWO READINGS DRAW NOTHING NEW. The plateau card is a RESULTS reading (§7.2: «a
+// body-driven last word and a results-driven mid-career question are different things») and the
+// final card is already hers – a rung under her own last word would be the game talking over her.
+//
+// ⚠ AND NOTHING IS DRAWN HERE, ON PURPOSE. The band picks the sentence, so re-opening this card
+// cannot change it – round 31 #4's defect, which he reported the first time it happened.
 import { computed, useTemplateRef } from 'vue'
 import { useGameStore } from '../stores/game'
 import { useDialogFocus } from '../composables/dialogFocus'
 import { activeLadderOfSnapshot } from '../shared/protocol'
 import { lastWordLine } from '../engine/ending'
+import { declineRung } from '../composables/declineVoice'
 import { portraitStage } from '../shared/avatarEmotion'
 import { portraitUrl } from '../art/preload'
 import { facePoint } from '../art/faceRects'
@@ -96,6 +114,10 @@ const tableName = computed(() => activeLadderOfSnapshot(game.snapshot).label.toL
 // the line ALONE while the feed prints `She is 41.` in front of it - the same sentence, and neither
 // surface repeats the other's furniture.
 const lastWord = computed(() => lastWordLine(game.snapshot?.oneMoreYearCount ?? 0))
+
+// ⭐⭐ WHICH YEAR IT IS, off the share alone – null at her peak and on any snapshot that carries no
+// share, which is what keeps this paragraph off the card until there is something true to put in it.
+const rung = computed(() => declineRung(game.snapshot?.physicalShare))
 
 const stage = computed(() => portraitStage(age.value))
 const artUrl = computed(() => portraitUrl(stage.value, 'serious'))
@@ -185,6 +207,11 @@ useDialogFocus(card)
           Twenty-nine is when the question starts being asked, not a countdown to anything. There is
           no wrong answer, and she can say no for as many winters as her body gives her.
         </p>
+        <!-- ⭐⭐⭐ ROUND 31 #9 – HOW FAR GONE SHE IS, which the lede above deliberately does not say.
+             Its own paragraph so the sentence he approved in round 30 stays byte-identical; absent
+             entirely while she is at her peak, so this card reads exactly as it always did until the
+             week the engine says otherwise. The three sentences are in composables/declineVoice.ts. -->
+        <p v-if="rung" class="retire-rung">{{ rung }}</p>
       </template>
 
       <div class="retire-answers">
@@ -239,6 +266,17 @@ useDialogFocus(card)
 }
 
 .retire-lede {
+  margin: 0 0 18px;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--ink-soft);
+}
+
+/* ROUND 31 #9 – the rung, set exactly as the lede it follows: it is a second paragraph of one
+   thought, not a second kind of thing. Adjacent block margins collapse to 18px, so the gap to the
+   answers is unchanged whether this paragraph is on the card or not – no negative margin, which is
+   also what keeps `tests/component/fits.ts` measuring a real box rather than a clever one. */
+.retire-rung {
   margin: 0 0 18px;
   font-size: 14px;
   line-height: 1.5;
