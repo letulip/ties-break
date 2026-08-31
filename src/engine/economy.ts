@@ -1951,8 +1951,46 @@ export const ECONOMY = {
        *
        *  ⚠ AND NOTHING HERE IS SUBTRACTED. Every rung is a non-negative addition over a base, so a
        *  short career, a losing season and an unranked year cost nothing – «мы ни за что не
-       *  наказываем» read against a valuation. */
+       *  наказываем» read against a valuation.
+       *
+       *  ⚠⚠ ROUND 32 #3 (31.08) AMENDED THE PARAGRAPH ABOVE AND IT IS NAMED HERE RATHER THAN QUIETLY
+       *  LEFT WRONG. «They move the worth and not the income» is still true of these four rungs. What
+       *  is no longer true is «the multiple is the accumulated career and fame does not appear in it»:
+       *  the BASE the four rungs sit on is now a ramp in fame (`unknownX` below), on the owner's
+       *  ruling «главное, чтобы эта известность участвовала в механизме». So the four rungs are a
+       *  PREMIUM ON TOP of what the brand's own size already earns, which is what they were always
+       *  described as and were not. Two consequences, both deliberate and both measured in
+       *  docs/specs/brand-multiple-follows-fame-2026-08.md: a title is now priced in the multiple as
+       *  well as in the income (§3), and the multiple can FALL (§6). */
       value: {
+        /** ⭐⭐⭐ ROUND 32 #3, 31.08 – THE MULTIPLE A BRAND NOBODY HAS HEARD OF EARNS, and the bottom
+         *  of the fame ramp that replaced the flat base. The arithmetic is `world/brand.ts`.
+         *
+         *  THE OWNER, on his own w933 career – fame 22.3, the brand taking $1,720 a week and priced
+         *  at $1.63M: «личный бренд в цене подрос с 250к до 1.8м, а доход у него 1800 в неделю =)))
+         *  что как-будто бы не очень соответствует стоимости.» And his ruling on the repair: «её
+         *  известность 22.3 – да, это ок, главное, чтобы **эта известность участвовала в механизме**,
+         *  тогда мы увидим разницу на других карьерах.»
+         *
+         *  ⚠⚠ THE DEFECT WAS THAT `earningsMultipleX` WAS THE WHOLE BASE AT EVERY FAME. Every term of
+         *  the ladder below reads her TENNIS CAREER and none read the brand, so an unknown's brand
+         *  traded at 14x and a fourteen-season veteran earned 18.23x on a business turning over $89k
+         *  a year. Real multiples rise with the SIZE of the business, and the size of this business
+         *  is her fame.
+         *
+         *  ⭐⭐ THE RAMP RUNS FROM HERE TO THE RUNG'S OWN `earningsMultipleX` AT `ECONOMY.fame.cap`,
+         *  so at fame 100 the multiple is EXACTLY what it was before this change for every career –
+         *  the ceiling is not cut, which is his other standing ruling («вроде бы как раз спонсорские
+         *  коллаборации со спортсменами дают и не такое, кратно большее»). Only the bottom moves.
+         *
+         *  ⚠⚠ 2.5 IS THE HIGHEST VALUE THAT STILL READS SINGLE DIGITS AT THE FAME HE ASKED ABOUT, and
+         *  it is chosen that way ON PURPOSE: every point of it is a point of the day-one anchor round
+         *  30 #9 measured, so the setting is the LEAST aggressive one that answers him. At 2.5 his
+         *  w933 row reads 9.30x and $832k; at 4 it reads 10.5x, which the shop rounds to «11 years»
+         *  and does not answer him at all. It also sits inside the two-to-five band a firm earning
+         *  $89k a year changes hands at. The frontier, and what it costs the day-one anchor, is
+         *  measured in docs/specs/brand-multiple-follows-fame-2026-08.md §4. */
+        unknownX: 2.5,
         /** ⭐ «ОНА ЖЕ ТОП-20 В МИРЕ» – the end-rank a finished season has to beat to count as one of
          *  her top seasons. ⚠ The SAME 20 as `fame.seasonEndBands`' new rung, and deliberately: #24
          *  is one claim about one number, and a brand that valued «top-20» differently from the fame
@@ -1983,7 +2021,15 @@ export const ECONOMY = {
          *  fame 100 the convex curve pays $1.56M a year, so this is what decides whether the best
          *  career in a run exits at the RF mark's ~$27M or somewhere absurd. Sized in
          *  docs/specs/brand-worth-and-income-2026-08.md against the researched valuations rather
-         *  than picked. */
+         *  than picked.
+         *
+         *  ⚠⚠ ROUND 32 #3 – AND IT IS NO LONGER WHAT HOLDS THE TOP, WHICH IS THE MEASUREMENT THAT
+         *  WAVE WAS ASKED FOR. With the base a ramp in fame, worth goes as fame³ until this binds,
+         *  and it binds at fame ≈ 92 for a career maxed on all four rungs and NEVER for a typical
+         *  one. What holds the top instead is the ramp's own endpoint: it reaches the rung's
+         *  `earningsMultipleX` exactly at `ECONOMY.fame.cap`, so at fame 100 the multiple is
+         *  identical to the pre-round-32 one for every career, cap or no cap. The crossover and the
+         *  proof are docs/specs/brand-multiple-follows-fame-2026-08.md §5. */
         maxX: 20,
       },
       /** ⭐⭐⭐ ROUND 30 #23, 30.08 – THE ROOM SHE PLAYS IN. Its own block, and the arithmetic is

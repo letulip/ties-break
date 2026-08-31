@@ -159,6 +159,9 @@ describe('round 30 #9 §2 – the worth is years of what it earns, and the earni
     // which ROUNDS TO THE BASE – so the card arm below passed on a `shopView` that had gone back to
     // sending the catalogue constant. Found in this file's own mutation pass (M14, green on the first
     // run). Six finals put it at 14.6, which rounds to 15, and the two answers are distinguishable.
+    // ⚠ ROUND 32 #3 WIDENED THAT GAP RATHER THAN CLOSING IT: with the base a ramp in fame this
+    // fixture's earned multiple is nowhere near 14, so M14's mutation is even easier to see. The
+    // sentence above is kept because the REASON six was chosen has to survive the retune.
     loseFinals(w, 'wta250', [1, 3, 5, 7, 9, 11])
     buyAsset(w, MERCH)
     walk(w, 4, true)
@@ -176,8 +179,13 @@ describe('round 30 #9 §2 – the worth is years of what it earns, and the earni
     // `brandMultipleX` AND checks the SHOP ROW quotes the same number to the whole unit. One
     // arithmetic, two surfaces: a screen that said «Worth 10 years of what it sells» while the shelf
     // priced the row at 14 would be this repo's most-repeated defect with a new coat on.
+    // ⭐⭐ ROUND 32 #3 RE-AIMED IT AGAIN, AND THE FLOOR OF THE LADDER IS NO LONGER THE CATALOGUE'S
+    // BASE. The base is now what the fame RAMP reaches at `ECONOMY.fame.cap`; the floor a career with
+    // nothing behind it and nobody watching sits at is `value.unknownX`. The claim is unchanged –
+    // this career earned something above the floor – and the number it is read against moved.
     const earned = brandMultipleX(brandSignalsOf(w), shopItem(MERCH)!.earningsMultipleX!)
-    expect(earned, 'the career has earned something above the base').toBeGreaterThan(shopItem(MERCH)!.earningsMultipleX!)
+    expect(earned, 'the career has earned something above the floor of the ladder')
+      .toBeGreaterThan(ECONOMY.business.merch.value.unknownX)
     expect(row.valueCents! / (weekly * WEEKS_PER_YEAR)).toBeCloseTo(earned, 1)
     expect(row.earningsMultipleX, 'and the card quotes the same multiple, whole').toBe(Math.round(earned))
     // ⭐ SAME FUEL, WHICH IS HIS OWN «похожей на привязку к её рекламе и результатам»: more titles,
@@ -214,12 +222,22 @@ describe('round 30 #9 §3 – ⭐⭐ IT FALLS', () => {
     winTitles(w, 'slam', [2, 4])
     winTitles(w, 'wta1000', [3, 6, 9])
     buyAsset(w, MERCH)
+    // ⭐⭐ ROUND 32 #3's CONTROL, READ OFF THE SAME WALK. Asking the shipped `brandMultipleX` at
+    // fame = cap returns the PRE-ROUND-32 multiple for the same career exactly, because the base now
+    // ramps to it there – so the before/after below is one walk read twice and cannot suffer the
+    // arm-divergence hazard. ⚠ NOT a copy of the old formula: there is nothing here to drift from.
+    const preWorth = (world: WorldState): number =>
+      assetEarningsRateCents(world, shopItem(MERCH)!) *
+      WEEKS_PER_YEAR *
+      brandMultipleX({ ...brandSignalsOf(world), fame: ECONOMY.fame.cap }, shopItem(MERCH)!.earningsMultipleX!)
     walk(w, 2, true)
     const atPeak = ownedOf(w, MERCH)!.valueCents
+    const preAtPeak = preWorth(w)
     const titlesThen = w.trophiesByTier.slam!.titles.length + w.trophiesByTier.wta1000!.titles.length
 
     walk(w, 2 * WEEKS_PER_YEAR, true)
     const twoOn = ownedOf(w, MERCH)!.valueCents
+    const preTwoOn = preWorth(w)
     walk(w, 2 * WEEKS_PER_YEAR, true)
     const fourOn = ownedOf(w, MERCH)!.valueCents
 
@@ -233,8 +251,18 @@ describe('round 30 #9 §3 – ⭐⭐ IT FALLS', () => {
     // the money. ⚠ THE BAND MOVED AND THE CLAIM DID NOT. It read 0.40–0.65 (a fall of about a half)
     // against the linear dial; it is the same half-life doing the same thing to a curve that squares
     // it, and this is the arm that would have caught the curve being flattened back out.
-    expect(twoOn / atPeak).toBeGreaterThan(0.16)
-    expect(twoOn / atPeak).toBeLessThan(0.42)
+    // ⚠⚠ AND IT MOVED AGAIN IN ROUND 32 #3, DOWNWARD, WHICH IS THAT WAVE'S OWN COST MADE VISIBLE:
+    // the multiple now falls with fame too, so the fall COMPOUNDS – a quarter of the income times a
+    // smaller multiple. The band is read off the measurement rather than guessed
+    // (docs/specs/brand-multiple-follows-fame-2026-08.md §6).
+    expect(twoOn / atPeak).toBeGreaterThan(0.10)
+    expect(twoOn / atPeak).toBeLessThan(0.19)
+    // ⭐⭐⭐ AND THE COMPOUNDING IS ASSERTED AGAINST ITS OWN CONTROL RATHER THAN DESCRIBED. The same
+    // two weeks priced by the pre-round-32 multiple fall by LESS, because that multiple could not
+    // fall at all. This is the arm that reddens if the ramp is ever flattened back to a constant –
+    // the two ratios become equal – and it needs no second worktree and no second walk to say so.
+    expect(preTwoOn / preAtPeak, 'the pre-32 multiple could not fall, so the fall was shallower')
+      .toBeGreaterThan(twoOn / atPeak)
   })
 
   it('⚠⚠ ...and a NEW title turns it back up, so the fall is a stock and not a clock', () => {
@@ -362,13 +390,17 @@ describe('round 30 #11 – what the engine does to the rungs that say they neith
     expect(shopItem(MERCH)!.annualRateBps, 'its rate is still a dead 0 in the catalogue').toBe(0)
     expect(shopItem(MERCH)!.earningsMultipleX, '...and the valuation no longer reads it').toBeDefined()
     const w = shopper('r30-11-merch')
-    // ⭐⭐ ROUND 30 #23 – A CAREER WITH NOTHING BEHIND IT IS PRICED AT THE BASE, and that is the
-    // discriminating reading of the new ladder: `shopper` has banked no season, lost no final and
+    // ⭐⭐ ROUND 30 #23 – A CAREER WITH NOTHING BEHIND IT IS PRICED AT THE FLOOR OF THE LADDER, and
+    // that is the discriminating reading of it: `shopper` has banked no season, lost no final and
     // played no professional match, so every rung of `world/brand.ts` adds exactly zero and the row
-    // quotes the catalogue's own figure. An arm that pinned a number would pass on a base that had
-    // silently stopped being the floor of the ladder.
+    // quotes the floor. An arm that pinned a number would pass on a floor that had silently moved.
+    // ⭐⭐⭐ ROUND 32 #3 MOVED WHICH CONSTANT THAT IS, AND IT IS THE POINT OF THE WAVE. It used to be
+    // the catalogue's `earningsMultipleX` – «even an unknown's brand trades at 14x», which is what
+    // the owner was looking at. It is now `value.unknownX`, because this fixture has fame 0 and the
+    // base ramps with fame. The row is still rounded whole at the boundary (his 26.08 rule).
     expect(rowOf(w, MERCH).earningsMultipleX, 'the screen is told which sentence to say')
-      .toBe(shopItem(MERCH)!.earningsMultipleX)
+      .toBe(Math.round(ECONOMY.business.merch.value.unknownX))
+    expect(fameAt(w), 'and it says the FLOOR because nobody has heard of her – the ramp is at 0').toBe(0)
     expect(rowOf(w, 'academy-land').earningsMultipleX, 'and the academy is not').toBeNull()
   })
 })
@@ -472,35 +504,39 @@ describe('round 30 #23 §7 – income and worth are two functions, not one dial'
     const V = ECONOMY.business.merch.value
     const mult = (w: WorldState): number => brandMultipleX(brandSignalsOf(w), base)
 
+    // ⚠⚠ ROUND 32 #3 – EVERY ARM IN THIS BLOCK IS READ AGAINST `unknownX` AND NOT `base`, because
+    // these fixtures carry no fame at all: the base is now the TOP of a ramp that starts here. The
+    // four rungs themselves are untouched by that wave, which is what these arms are about.
     const bare = shopper('r30-23-bare')
-    expect(mult(bare), 'nothing behind it is the base and nothing more').toBe(base)
+    expect(fameAt(bare), 'the fixtures in this arm are fameless, so the ramp is at its floor').toBe(0)
+    expect(mult(bare), 'nothing behind it and nobody watching is the floor and nothing more').toBe(V.unknownX)
 
     // «сколько играет» – seasons on tour, at a rank no band notices
     const played = shopper('r30-23-played')
     proSeasons(played, 3, 60, 0, 0)
     // ⚠ the multiple is week-independent by construction (it reads records, not their dates), which
     // is why these arms need no parking and the fame arms below do.
-    expect(mult(played)).toBeCloseTo(base + 3 * V.seasonX, 5)
+    expect(mult(played)).toBeCloseTo(V.unknownX + 3 * V.seasonX, 5)
 
     // «она же топ-20» – and it is worth more per season than merely being there
     const high = shopper('r30-23-high')
     proSeasons(high, 3, 15, 0, 0)
-    expect(mult(high)).toBeCloseTo(base + 3 * V.seasonX + 3 * V.topSeasonX, 5)
+    expect(mult(high)).toBeCloseTo(V.unknownX + 3 * V.seasonX + 3 * V.topSeasonX, 5)
     expect(mult(high), 'a top-20 season is worth more than an unnoticed one').toBeGreaterThan(mult(played))
 
     // «как глубоко проходит» – professional finals reached and LOST, which nothing else in the game
     // has ever read below a Slam
     const deep = shopper('r30-23-deep')
     loseFinals(deep, 'wta250', [2, 3, 4])
-    expect(mult(deep)).toBeCloseTo(base + 3 * V.finalX, 5)
+    expect(mult(deep)).toBeCloseTo(V.unknownX + 3 * V.finalX, 5)
 
     // «сколько выигрывает» – the win rate, as a share of its own window
     const winner = shopper('r30-23-winner')
     proSeasons(winner, 1, 60, 9, 1) // 90% – at or above the top of the window, so the term is full
-    expect(mult(winner)).toBeCloseTo(base + V.seasonX + V.winRateX, 5)
+    expect(mult(winner)).toBeCloseTo(V.unknownX + V.seasonX + V.winRateX, 5)
     const loser = shopper('r30-23-loser')
     proSeasons(loser, 1, 60, 1, 3) // 25% – under the window, and charged NOTHING for it
-    expect(mult(loser)).toBeCloseTo(base + V.seasonX, 5)
+    expect(mult(loser)).toBeCloseTo(V.unknownX + V.seasonX, 5)
     // ⚠ AND THE WINDOW REALLY IS A WINDOW: a rate INSIDE it earns a proportional share, which is the
     // arm that fails on a term that had silently become a step.
     const middling = shopper('r30-23-middling')
@@ -510,20 +546,36 @@ describe('round 30 #23 §7 – income and worth are two functions, not one dial'
     const mid = (V.winRateFrom + V.winRateTo) / 2
     expect(mid, 'the fixture below is the shipped window\'s own midpoint').toBeCloseTo(0.725, 5)
     proSeasons(middling, 1, 60, 29, 11)
-    expect(mult(middling)).toBeCloseTo(base + V.seasonX + V.winRateX * 0.5, 5)
+    expect(mult(middling)).toBeCloseTo(V.unknownX + V.seasonX + V.winRateX * 0.5, 5)
 
     // ⚠ AND THE CEILING BINDS, which is what stops a $250,000 rung running away with the shelf.
+    // ⚠⚠ ROUND 32 #3 – AND IT NOW TAKES FAME AS WELL AS A CAREER TO REACH IT, which is the wave's
+    // headline measurement written as an arm: with the base a ramp, `maxX` binds only near the top of
+    // the fame range and a fameless legend sits far below it. Both directions are asserted, because a
+    // cap that had silently stopped binding would pass on the first alone.
     const legend = shopper('r30-23-legend')
     proSeasons(legend, 20, 5, 40, 5)
     loseFinals(legend, 'wta500', Array.from({ length: 30 }, (_, i) => i + 1))
-    expect(mult(legend)).toBe(V.maxX)
+    expect(mult(legend), 'every rung capped, and nobody watching – still nowhere near the ceiling')
+      .toBeLessThan(V.maxX)
+    const famous = brandMultipleX({ ...brandSignalsOf(legend), fame: ECONOMY.fame.cap }, base)
+    expect(famous, '...and the same career, known to the whole world, is at it').toBe(V.maxX)
   })
 
-  it('⚠⚠ a TITLE moves the income and NOT the multiple – it is priced once, through fame', () => {
+  it('⚠⚠ a TITLE reaches the multiple through FAME and never through the four career rungs', () => {
     // ⚠ FOUND BY MUTATION (M15): making the depth signal count titles as well as lost finals left
     // every arm green. It is exactly the one-dial defect coming back in through the ladder – what she
-    // WON is already fully priced into the income through fame, so a title in the multiple as well is
+    // WON is already fully priced into the income through fame, so a title in the LADDER as well is
     // the same fact charged twice.
+    //
+    // ⚠⚠ ROUND 32 #3 OVERTURNED HALF OF THIS ARM AND KEPT THE HALF M15 GUARDS. The old title said «a
+    // title moves the income and NOT the multiple», and that stopped being true the week the base
+    // became a ramp in fame: a title raises fame, so it raises the multiple too. That is deliberate
+    // and it is the OWNER'S OWN RULING – «главное, чтобы эта известность участвовала в механизме» –
+    // and its defence is that these are not one fact priced twice but the two questions a buyer
+    // actually asks: how much does it earn, and how BIG is it. What must still be true, and is what
+    // M15 was really protecting, is that the four CAREER rungs never see a title: at fame held equal
+    // the two careers below are worth the same multiple to the cent.
     const base = shopItem(MERCH)!.earningsMultipleX!
     const W = 6 * WEEKS_PER_YEAR
     const quiet = parkAt(shopper('r30-23-title-a'), W)
@@ -534,8 +586,16 @@ describe('round 30 #23 §7 – income and worth are two functions, not one dial'
     expect(fameAt(decorated), 'the Slams really are worth something to her fame').toBeGreaterThan(fameAt(quiet))
     expect(assetEarningsRateCents(decorated, shopItem(MERCH)!), '...and to the income')
       .toBeGreaterThan(assetEarningsRateCents(quiet, shopItem(MERCH)!))
-    expect(brandMultipleX(brandSignalsOf(decorated), base), 'but NOT to the multiple')
-      .toBe(brandMultipleX(brandSignalsOf(quiet), base))
+    // ⭐⭐ THE LADDER, READ ALONE. Asking the shipped function at fame = cap puts both careers at the
+    // top of the ramp, so what is left of the difference between them IS the four rungs – and there
+    // is none, which is M15's claim intact. ⚠ NOT a re-derivation: it is `brandMultipleX` itself.
+    const ladderOnly = (w: WorldState): number =>
+      brandMultipleX({ ...brandSignalsOf(w), fame: ECONOMY.fame.cap }, base)
+    expect(ladderOnly(decorated), 'but the four career rungs never see a title').toBe(ladderOnly(quiet))
+    // ...and the multiple really does move, which is the anti-vacuity direction of the arm above: a
+    // ramp that had been flattened back to a constant would pass on `ladderOnly` alone.
+    expect(brandMultipleX(brandSignalsOf(decorated), base), 'while the multiple itself rises with her fame')
+      .toBeGreaterThan(brandMultipleX(brandSignalsOf(quiet), base))
   })
 
   it('⚠⚠ the win rate is the WTA track alone – a junior season of easy wins buys no multiple', () => {
@@ -568,8 +628,11 @@ describe('round 30 #23 §7 – income and worth are two functions, not one dial'
     ]
     const V = ECONOMY.business.merch.value
     expect(brandSignalsOf(w).winRate, 'read off the WTA track, not the fold').toBeCloseTo(0.25, 5)
+    // ⚠ ROUND 32 #3 – read against `unknownX`: this fixture carries no fame, so the ramp is at its
+    // floor and the only thing above it is the one banked season.
+    expect(fameAt(w), 'a hand-built season list and no trophy shelf – fame is 0 here').toBe(0)
     expect(brandMultipleX(brandSignalsOf(w), base), 'so only the season itself counts')
-      .toBeCloseTo(base + V.seasonX, 5)
+      .toBeCloseTo(V.unknownX + V.seasonX, 5)
   })
 
   it('⭐⭐⭐ the worth FALLS during a live career, and the multiple going UP does not save it', () => {
@@ -701,8 +764,21 @@ describe('round 30 #24 – a top-20 who never wins is no longer invisible to her
     expect(fameFloorOf(w, w.week), 'and the world now notices her anyway').toBeGreaterThan(0)
     buyAsset(w, MERCH)
     expect(assetEarningsRateCents(w, shopItem(MERCH)!), 'so the brand sells').toBeGreaterThan(0)
-    expect(ownedOf(w, MERCH)!.valueCents, '...and is worth more than the bare mark')
-      .toBeGreaterThan(Math.round(PRICE * ECONOMY.shop.businessValueFloorShare))
+    // ⚠⚠ ROUND 32 #3 TOOK THE SECOND HALF OF THIS ARM AND IT IS NAMED RATHER THAN QUIETLY WEAKENED.
+    // It used to read «...and is worth more than the bare mark». With the multiple's base a ramp in
+    // fame, this career – four top-20 seasons, no title, fame ≈ 7 – prices BELOW the mark, so the
+    // mark is what the row is worth again. #24's own claim survives and is asserted above and below:
+    // the brand SELLS, where before #24 it earned exactly zero. What is gone is the capital gain,
+    // and it is gone because her fame is small, which is the wall round 31 §5 and the elite-shape
+    // research already filed. ⚠ THE COST IS RECORDED in docs/specs/brand-multiple-follows-fame-2026-08.md
+    // §7 and the dial that would buy it back is `ECONOMY.business.merch.value.unknownX`.
+    expect(ownedOf(w, MERCH)!.valueCents, 'and the mark is the floor under her, never zero')
+      .toBe(Math.round(PRICE * ECONOMY.shop.businessValueFloorShare))
+    // ⭐ AND THE SAME CAREER, ONCE THE WORLD KNOWS HER, IS WORTH REAL MONEY – which is the direction
+    // #24 was about and the arm that stops «worth the mark» being read as «invisible again».
+    const known = brandMultipleX({ ...brandSignalsOf(w), fame: ECONOMY.fame.cap }, shopItem(MERCH)!.earningsMultipleX!)
+    expect(known, 'her top-20 seasons are still on the ladder and still paid for')
+      .toBeGreaterThan(shopItem(MERCH)!.earningsMultipleX!)
   })
 
   it('⚠ the ladder is BEST-BAND-ONLY, so a top-10 season is never also a top-20 and a top-50 one', () => {
