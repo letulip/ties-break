@@ -60,12 +60,24 @@ const PEAK_RUNG = DECLINE_RUNGS[0].line
 const MIDDLE_RUNG = DECLINE_RUNGS[1].line
 const GONE_RUNG = DECLINE_RUNGS[2].line
 
-/** A real snapshot, so everything besides the share is the engine's own. */
+/** A real snapshot, so everything besides the share is the engine's own.
+ *
+ *  ⚠ MEMOISED, AND FOR A MEASURED REASON. The walk is fixture FURNITURE – no case below is a claim
+ *  about ticking – and the first draft re-walked sixty weeks for each of twenty seasons, which ran
+ *  in 4.5s alone and TIMED OUT at 5s inside the full component pool. A snapshot is a plain object
+ *  every caller spreads before touching, so one walk per (weeks, seed) is the same fixture at a
+ *  twentieth of the cost. */
+const WALKS = new Map<string, Snapshot>()
 function walked(weeks: number, seed: string): Snapshot {
+  const key = `${weeks}:${seed}`
+  const held = WALKS.get(key)
+  if (held) return held
   const world = createWorld(seed)
   const rng = rngFromSeed(world.seed)
   for (let i = 0; i < weeks; i++) tickWeek(world, rng)
-  return toSnapshot(world)
+  const snap = toSnapshot(world)
+  WALKS.set(key, snap)
+  return snap
 }
 
 // =================================================================================================
