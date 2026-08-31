@@ -439,3 +439,50 @@ proven unmoved.
 статистики от живых людей пока что.» Filed as row 9 of `docs/backlog/college-the-remainder.md`. Not
 a refusal – a wait for playtest data. ⚠ Not to be confused with the age-curve fork above, which he
 approved.
+
+## 12. «Почему не можем даже за минус 1 неделю закрепить, в чем сложность?»
+
+His question about the 59.2% promise gap, and it deserves a straight answer: **there is no
+fundamental blocker. There is a cost, and the previous agent treated it as a wall.**
+
+WHY THE TWO DISAGREE. `deriveWeekField` folds `rivalConditions(world.results, world.week)` ONCE per
+week before any bracket runs (`weekField.ts:103`); the card folds the same function at
+`event.week - 1` (`preview.ts:294`). Same results ledger, different week number – and one more week
+of rival recovery changes who clears the tier's availability floor.
+
+THREE ROUTES, AND ONLY ONE IS GOOD:
+
+ (a) Preview at the EVENT's week. Impossible at week − 1: that week's own results are not in yet.
+ (b) ⚠ REJECTED – build her bracket at week 0 from week − 1's fold. `weekField.ts:98` says in its own
+     comment why the fold is derived once per week: so the kid's shadow run and the canonical AI
+     brackets «can never disagree about how tired an opponent is». Folding her event at a different
+     week than the rest of the week's brackets recreates precisely the incoherence that block exists
+     to prevent.
+ (c) ⭐ SETTLE THE DRAW AT WEEK − 1 AND STORE IT; at week 0 the bracket is READ, not rebuilt. This is
+     how tennis actually works – the draw is published, then played – and it is the only route that
+     makes the name a promise.
+
+THE COST OF (c), stated plainly rather than used as a refusal: a save-schema move (the settled draw
+persisted per entered event), and existing careers' brackets change, so the career-outcome pins in
+`coach-travel-edge` are re-aimed **with a ⚠ note, never deleted or weakened** – his own standing
+rule, and the established procedure in this repo. Both are known work, not unknowns.
+
+⭐ AND IT BUYS SOMETHING: a rival injured during week − 1 stays in the published draw and withdraws
+from it, which is real tennis and gives us lucky losers for free.
+
+HIS SECOND POINT, ACCEPTED: «остальным наблюдениям тренера это вроде бы не противоречит, примерный
+состав участников он знать вполне может» – correct, and useful. A coach legitimately knows the
+likely field before the draw is out, so the pre-draw card can carry his read of the FIELD even while
+it names nobody. ⭐ That is also a partial answer to item 3's degenerate band: the pre-draw card
+stops depending on one three-valued label.
+
+## 13. His rulings (31.08, second batch)
+
+ – **Item 3 dispatched now**, at his «так а в чем проблема сделать сейчас?» – branch
+   `r31c/tier-ladder-and-band`, carrying the degenerate band with it.
+ – **The age curve gets A + C**: a per-career seeded `declineStart` drawn from a band, plus injury
+   history pulling it earlier. B (earned by physical build) held back – it risks making physical
+   training strictly dominant, which narrows the training choice.
+ – **The cohort gets the spread too** («полностью согласен, если это реализуемо») – rivals sit on
+   the same hard 23/29 pair copied into `season/cohort.ts:35`, so a spread given only to her would
+   leave the world around her uniform.
