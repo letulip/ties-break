@@ -91,11 +91,13 @@ import { finishLabel, stageLabel } from './labels'
 import { entryCapUsage, proEntryCapUsage, isCappedProTier, isCappedTier } from './entryCaps'
 import { alternateQueuePosition } from './ladder'
 import { alternatePlacesOpen } from '../season/tournament'
-import { acceptanceRank, activeLadderOf, fieldProsOf, fullRanking, hasOutgrown, homeWildCardPlace, inTrack, kidLadderRank, kidPoints, prevRankIn, rankIn, rankingFor, tierOpenFor, wtaEverCounted } from './ladder'
+import { acceptanceRank, activeLadderOf, fieldProsOf, hasOutgrown, homeWildCardPlace, inTrack, kidLadderRank, kidPoints, prevRankIn, rankIn, rankingFor, tierOpenFor, wtaEverCounted } from './ladder'
+import { aiSelectionRanking } from './weekField'
 export { activeLadderOf, wtaEverCounted }
 import { arrivalStatus, entryStatus, layoffCovering, tierVerdict } from './medical'
 import { eventById, vacationForWeek } from './bookings'
 import { kidMatchPlayerFor } from './player'
+import type { MatchPlayer } from '../match/types'
 import { coachBilling, coachEdgeView, coachEntryLine, coachLadderNote, coachMarket, coachRoomNote, coachTravelsWithHer } from './coachMarket'
 import { masseurRoomNote, masseurRungOf, masseurUnlocked, masseurWeeklyCents } from './masseur'
 import { kitDealView, kitLineViews } from './kit'
@@ -247,7 +249,51 @@ export function upcomingEvents(world: WorldState): UpcomingEvent[] {
   // once per card: both are the same for every event in the window, and rebuilding them per event
   // would be the expensive half of this function. Surface-specific scaling still happens per event
   // inside the preview, which is where it belongs.
-  const ranking = fullRanking(world)
+  //
+  // ⭐⭐ ROUND 31 #3 – AND THE ONE FOR THE NON-W CARDS IS NOW `aiSelectionRanking`, THE TABLE THE
+  // BRACKET ITSELF SELECTS FROM, not `fullRanking`. It was the ITF table, which is not the table
+  // any junior or domestic bracket has ever positioned candidates on (`deriveWeekField`'s
+  // `aiRanking` is), and the two disagree about who is good: measured on the owner's w933 save, the
+  // Spearman between standings position and actual rating is **0.11** on the ITF table against
+  // **0.53** on this one. That is not a small difference in a heuristic, it is the difference
+  // between a window that caps strength and one that does not - a Local Open card previewed a field
+  // of mean rating 1829 and a mean age of 23.5 at a rung whose own comment calls it "the draw a kid
+  // can genuinely win her first title in". See docs/specs/tier-ladder-and-band.md.
+  const ranking = aiSelectionRanking(world)
+  // ⭐ ...AND THE SECOND TABLE, WHICH IS WHERE **SHE** STANDS AMONG THEM. Per TRACK, memoised,
+  // because that is what `computeShadowTournament` seeds her off (`rankingFor(world,
+  // TIERS[event.tier].track)`) and what `overlayRanks` below prints opponent ranks from. Three
+  // possible tables, at most three folds, and the card can no longer seed her from a table the
+  // tournament does not use. ⚠ On the W track it resolves to the very table the W branch already
+  // passes, so every W card is byte-identical.
+  // ⭐ ...AND HER AT FULL CONDITION, WHICH IS THE **BAND'S** READING OF HER (round 31 #3). The field
+  // on a card is previewed rested – `season/preview.ts`'s header argues that at length – and the band
+  // is a statement about that field's level relative to hers, so it must not move because she was
+  // tired the week he opened the screen. Measured: read at today's condition the band moved on 3 of
+  // 24 tournaments over six weeks on the w933 save, against 0 of 24 before. ⚠ The RING is untouched
+  // and still quotes her as she is. Built through the SAME composer, with one key overridden, so
+  // nothing is inverted; memoised on (surface, is-the-coach-coming) because that is all it varies
+  // by and a card would otherwise pay for a second composition it shares with its neighbours.
+  const restedCache = new Map<string, MatchPlayer>()
+  const kidAtRestFor = (surface: SeasonEvent['surface'], help: boolean): MatchPlayer => {
+    const key = `${surface}:${help}`
+    let p = restedCache.get(key)
+    if (!p) {
+      p = kidMatchPlayerFor({ ...world, condition: ECONOMY.condition.max }, surface, help)
+      restedCache.set(key, p)
+    }
+    return p
+  }
+  const standingCache = new Map<LadderTrack, RankingRow[]>()
+  const standingFor = (tier: TierId): RankingRow[] => {
+    const track = TIERS[tier].track
+    let table = standingCache.get(track)
+    if (!table) {
+      table = rankingFor(world, track)
+      standingCache.set(track, table)
+    }
+    return table
+  }
   // ...and the W cards get the W world (living-field phase W, 01.08). A W-track preview must draw
   // from the population its bracket will actually be made of – LIVE cohort ∪ field pros, positioned
   // by the merged W standings – or the card would name a junior the professional draw does not
@@ -369,8 +415,18 @@ export function upcomingEvents(world: WorldState): UpcomingEvent[] {
                 // on the standing stance would show a junior card an edge the week never applies.
                 kidMatchPlayerFor(world, e.surface, coachTravelFareFor(world, e) > 0),
                 wtaExclusionFor(e),
+                standingFor(e.tier),
+                kidAtRestFor(e.surface, coachTravelFareFor(world, e) > 0),
               )
-            : previewEvent(world, e, ranking, kidMatchPlayerFor(world, e.surface, coachTravelFareFor(world, e) > 0)),
+            : previewEvent(
+                world,
+                e,
+                ranking,
+                kidMatchPlayerFor(world, e.surface, coachTravelFareFor(world, e) > 0),
+                undefined,
+                standingFor(e.tier),
+                kidAtRestFor(e.surface, coachTravelFareFor(world, e) > 0),
+              ),
         // v21: the price the FAMILY pays, scholarship included – the planner has to quote what
         // entering will actually cost, and it is the same number chargeTravel will take.
         travelCostCents: travelCostFor(world, e),
