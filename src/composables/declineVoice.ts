@@ -14,10 +14,19 @@
 //
 // ⚠ WHY THEY LIVE HERE AND NOT IN THE THREE COMPONENTS. Three surfaces say one thing – the same
 // decline, in three voices – and copy split across three `.vue` files is copy that drifts. It is
-// also the house law working for us: the owner's words belong on the script side, never in a
-// `<template>` (tests/template-copy-rules.test.ts), and a module the three import is the script side
-// of all three at once. Nothing here is engine: it is display, it draws no MAIN randomness, and the
-// engine cannot import it (invariant 1 runs the other way).
+// also the house law working for us: the owner's words belong on the script side, never inside a
+// Vue markup block (tests/template-copy-rules.test.ts), and a module the three import is the script
+// side of all three at once. Nothing here is engine: it is display, it draws no MAIN randomness, and
+// the engine cannot import it (invariant 1 runs the other way).
+//
+// ⚠⚠ AND THE OPENING TAG OF A VUE MARKUP BLOCK IS NOT SPELLED OUT ANYWHERE IN THIS FILE, WHICH IS
+// NOT FUSSINESS – IT IS CLAUDE.md's raw-`indexOf` HAZARD, MET IN THE WILD. `tests/coach-voice.test.ts`
+// splits every source file at the index of that tag; the first draft of this header quoted it, no
+// closing tag existed to bound the slice, and the "rendered template" the sweep then read was the
+// whole rest of the file. Six prose sentences about the OWNER (approved by him, seen on his career)
+// came back as the game calling a professional by a masculine pronoun. Nothing was wrong with either
+// the sweep or the copy: a marker rotted into a comment and a region silently widened, which is the
+// failure the source helpers exist to stop. Quote that tag here again and the test goes red again.
 //
 // ⚠⚠ THE TRAP, AND IT IS ROUND 31 #4's TRAP WEARING DIFFERENT CLOTHES. A line drawn afresh on every
 // read changes every time the screen is opened, and he will report it as a defect exactly as he

@@ -273,6 +273,22 @@ describe('round 31 #9 (b) – the coach starts advising which weeks to take', ()
     expect(atPeak).not.toEqual(past)
   })
 
+  it('⚠ THE TRAP – the same feed read twice is the same set of sentences', () => {
+    // The literal form of the ask: open the screen, close it, open it again. It cannot change.
+    const snap = feedAtShare(0.9)
+    expect(plaquesByCard(snap)).toEqual(plaquesByCard(snap))
+  })
+
+  it('the coach\'s line is GATED by the share and does not band on it', () => {
+    // Unlike the retirement card, which has three rungs, the coach has one register: past her peak
+    // he says one of the four, and how far past does not change which. Two shares, one answer per
+    // card – so a future wave that bands this has to do it deliberately rather than by accident.
+    const near = plaquesByCard(feedAtShare(0.99))
+    const far = plaquesByCard(feedAtShare(0.6))
+    expect(near.size).toBeGreaterThan(0)
+    expect(far, 'the coach re-voiced himself as she got older').toEqual(near)
+  })
+
   it('the age line is placed with the FIELD and never after the draw', () => {
     // His placement for round 31 #4 was «имя и ранг соперницы … внизу возле этого круга»: the draw
     // stays at the foot of the plaque. The age line is advice about WHICH week to take, which is a
