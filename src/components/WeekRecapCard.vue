@@ -358,7 +358,12 @@ const balanceCents = computed(() => incomeCents.value + expenseCents.value)
 // income + spend, and her cut has never been allowed to touch it because `finalizeTournament` took
 // it out before the family banked anything.
 const kidCutCents = computed(() => weekFinance.value?.kidShareCents ?? 0)
-const kidCutPct = computed(() => weekFinance.value?.kidSharePct ?? 0)
+// ⚠ ROUND 31 #2 REMOVED `kidCutPct` (`FinanceWeekPoint.kidSharePct`) FROM THIS FILE, AND THE FIELD
+// IS DELIBERATELY STILL ON THE WIRE. It is the week's BLEND across every rule that paid her, which
+// round 30 #21 measured as a number no rule in this game states – and it was the memo's fallback on
+// a save too old to carry the parts. The memo prints the prize part's own rate now or prints
+// nothing, so the last reader of the blend on this card is gone; the field stays because it is what
+// makes `cents === round(baseCents × bps / 10_000)` checkable, and its own header says so.
 
 /** The gross, her half and the rest of the week's income – or null on a week the tile cannot break
  *  that down honestly.
@@ -380,43 +385,64 @@ const grossSplit = computed(() => {
   return { base, cut, other }
 })
 
-/** THE FINANCES COLUMN – the Income / Spent pair it has been since the card existed, and which
- *  round 30 #1 put back. As a list so the template holds no arithmetic and the test can read the
- *  rendered figures back off the screen and sum them, which is still his own test in his own words:
- *  a player with a calculator adds what is on screen and gets the balance under it.
+// =================================================================================================
+// ⭐⭐⭐ ROUND 31 #2 – THE COLUMN IS AN ADDITION AGAIN, AND `Income` FINALLY MEANS WHAT IT SAYS
+// =================================================================================================
+//
+// HIS WORDS, 31.08, restating the target himself for the third time: «еще раз, у нас изначально
+// было: Income - то, что пришло с турнира / Spent - То, что потрачено на дорогу + другие траты
+// недели / Balance - что в итоге пришло на счет. Я просил: Income - то, что пришло с турнира /
+// Other income - Другие семейные доходы / Spent - То, что потрачено на дорогу + другие траты недели
+// / Balance - что в итоге пришло на счет. и вот здесь her cut от Income»
+//
+// ⚠⚠ TWO DEFECTS, AND THE SECOND IS WHY HIS FIGURES LOOKED INVENTED.
+//
+//  (a) `Income` WAS NOT WHAT ITS LABEL SAID. `incomeCents` is the family's WHOLE week – every
+//      positive category, so a sponsor cheque, a brand fee, the parents' wages and the bank's
+//      interest were all inside a row he reads as «то, что пришло с турнира». `prizeIncomeCents` is
+//      the tournament's own half of it, carried on the point since this round (engine/world/ledger.ts;
+//      nothing new is persisted – `'prize'` has been a ledger category since task #17).
+//
+//  (b) `Family income` WAS A SLICE, NOT AN ADDEND, and it was derived from HER CUT'S BASE –
+//      `income − (base − cut)`. That is why it appeared and vanished: it existed only on weeks that
+//      split a cheque, and could say nothing at all about an ordinary week's other money. It is
+//      `income − prize` now, which is the same idea stated against the row above it rather than
+//      against a memo below it, and it is defined on EVERY week.
+//
+// ⭐ SO THE THREE ROWS ADD UP TO THE BALANCE, ON EVERY WEEK AND EVERY SAVE, and that is the property
+// he has been asking for since part two #1: Income + Family income − Spent === Balance, by
+// construction rather than by coincidence, because `prizeIncomeCents` is taken out of `incomeCents`
+// under the same `> 0` gate that built it.
+//
+// ⚠ THE LABEL IS UNTOUCHED. It is still `Family income`, the name he typed himself in round 30 #1
+// («Other income странно звучит, можно переименовать… например Family income и тогда эту строчку
+// тоже оставить здесь»), and he confirmed it again here – «Other income – другие семейные доходы
+// (можно и Family income)». Invariant 4 cuts both ways: only the row's POSITION and its ARITHMETIC
+// moved, not one character of its name.
+//
+// ⚠ AND `balanceCents` STILL HAS NOT MOVED A CENT, through what is now its fourth reshape. It is
+// income + spend, signed, and a week that ended below zero prints below zero – his «что пришло на
+// счет (ну или ушло, в зависимости от исхода)».
+
+/** THE FINANCES COLUMN – Income / Family income / Spent, his own three, in his own order. As a list
+ *  so the template holds no arithmetic and the test can read the rendered figures back off the
+ *  screen and sum them, which is still his own test in his own words: a player with a calculator
+ *  adds what is on screen and gets the balance under it.
  *
  *  ⚠ `tone` IS THE ROW'S KIND AND NOT THE SIGN OF ITS FIGURE, which is the pair's historical
  *  behaviour kept to the character: a week that spent nothing printed «+$0» in the money-out colour
  *  before any of this and still does. Deriving the class from `cents < 0` would repaint that row on
- *  a quiet week, which is a contrast question and not a money one. */
+ *  a quiet week, which is a contrast question and not a money one.
+ *
+ *  ⚠ ALL THREE ON EVERY WEEK, INCLUDING THE ZEROES. A row that comes and goes is exactly what made
+ *  the old `Family income` unreadable – he could not tell a week with none from a week the card had
+ *  nothing to say about – and a column that changes length cannot be added up by eye. */
+const prizeIncomeCents = computed(() => weekFinance.value?.prizeIncomeCents ?? 0)
 const financeRows = computed<{ key: string; cents: number; tone: 'positive' | 'negative' }[]>(() => [
-  { key: 'Income', cents: incomeCents.value, tone: 'positive' },
+  { key: 'Income', cents: prizeIncomeCents.value, tone: 'positive' },
+  { key: 'Family income', cents: incomeCents.value - prizeIncomeCents.value, tone: 'positive' },
   { key: 'Spent', cents: expenseCents.value, tone: 'negative' },
 ])
-
-// ⭐⭐ ROUND 30 #1 – «FAMILY INCOME», THE ONE ROW OF THE FIVE HE ASKED TO KEEP.
-//
-// «Other income странно звучит, можно переименовать… например Family income и тогда эту строчку
-// тоже оставить здесь.» ⚠ HIS NAME, NOT A BETTER ONE OF MINE – invariant 4 cuts both ways, and he
-// typed this one himself.
-//
-// ⚠ THE FIGURE IS EXACTLY WHAT `Other income` WAS AND IS DERIVED THE SAME WAY: `income − (base −
-// cut)` – everything the family banked that week that was NOT its half of a split cheque. Nothing
-// about the money moved; the label did, at his instruction.
-//
-// ⚠ AND IT LIVES BELOW THE BALANCE, WITH THE MEMOS, WHICH IS WHY IT CANNOT RE-BREAK THE SUM. It is
-// a SLICE of the Income row above, not a term beside it: adding it into the column would double-count
-// the family's own money, which is the exact defect the five-row shape was built to avoid and then
-// committed in another direction. Under the hairline it reads as what it is – a note about where
-// that Income came from – and `.recap-rows` (the column the tests sum) does not contain it.
-//
-// ⚠ SILENT WHERE IT WOULD BE A DUPLICATE OR A LIE: no recorded base (every week his save banked
-// before round 29 #10), no cut that week, or `other === 0` – on a week no cheque was split, ALL of
-// Income is the family's and the line would merely repeat the row above it.
-const familyIncomeCents = computed<number | null>(() => {
-  const split = grossSplit.value
-  return split && split.other !== 0 ? split.other : null
-})
 
 // ⭐⭐ ROUND 29 PART TWO #2 – THE SHORT SENTENCE IS BACK, AND ONLY THE DESTINATION IS LEFT IN IT.
 //
@@ -481,19 +507,40 @@ const familyIncomeCents = computed<number | null>(() => {
 // division `accrueKidShare`'s header forbids. Those weeks keep the exact line they printed before –
 // which for the card he is looking at means the memo corrects itself from her next cheque onward,
 // since this tile only ever draws `snapshot.week`.
-/** One line per RULE that paid her this week – or the single blended line on a week that recorded no
- *  parts. Never both: `kidShareParts` sum to `kidShareCents`, so printing the fallback beside them
- *  would put the same cents on screen twice. */
-const kidShareMemo = computed<string[]>(() => {
-  if (kidCutCents.value <= 0) return []
-  const parts = weekFinance.value?.kidShareParts ?? []
-  // The single-source case renders through the same branch and comes out byte-identical to the
-  // legacy line, because one part's cents ARE the week's cents and its rate IS the blend.
-  if (parts.length === 1) return [`Her cut ${parts[0].pct}% – ${formatCents(parts[0].cents)} into her own account.`]
-  if (parts.length > 1) {
-    return parts.map((p) => `Her ${p.source} cut ${p.pct}% – ${formatCents(p.cents)} into her own account.`)
-  }
-  return [`Her cut ${kidCutPct.value}% – ${formatCents(kidCutCents.value)} into her own account.`]
+// =================================================================================================
+// ⭐⭐⭐ ROUND 31 #2 – ...AND ONE LINE PER RULE WAS ONE LINE TOO MANY
+// =================================================================================================
+//
+// HIS WORDS, 31.08: «что за Her sponsor cut 85% мне каждую неделю пишут на week results и что там
+// снова за цифры странные появились? Я изначально просил просто отразить, что ребенку идет его % с
+// призовых и всё. А мы уже второй раз там городим неизвестные суммы какие-то.» And, restating the
+// whole card: «и вот здесь her cut от Income».
+//
+// ⚠⚠ #21's DEFECT WAS REAL AND ITS FIX MUST NOT COME BACK EITHER. The blend – `kidShareCents /
+// kidShareBaseCents` across two rules – is a number no rule in this game states, and a label may not
+// quote it (see `FinanceWeekKidSharePart`). What #21 got wrong was the REMEDY: it answered a wrong
+// percentage by printing a second row on a card he had twice asked to make shorter, and the second
+// row was about money he never asked to see weekly.
+//
+// SO: THE PRIZE RULE, ITS OWN RATE, ITS OWN CENTS, ONE LINE. `kidShareParts` already carries the
+// prize part with the rate the engine applied – it is PICKED here, never recomputed, and no total is
+// ever divided by another total. Her share of a sponsor cheque is hers in full under the
+// manager-commission ruling and is stated on her own page; it is not weekly news.
+//
+// ⚠ AND THE LINE IS ABSENT RATHER THAN APPROXIMATE, on three weeks:
+//   * a week the tennis paid her nothing – there is no prize part, so there is nothing to say;
+//   * a week only a brand paid her – same, and it is the «Her sponsor cut 85%» he is complaining of;
+//   * a week banked before the parts existed, which carries the blend alone. ⚠⚠ THAT LAST ONE IS
+//     WHY THE `kidCutPct` FALLBACK IS GONE: on a mixed legacy week the blend is exactly the number
+//     #21 measured as wrong, and printing it under the shorter label would restore the defect with
+//     no warning attached. A missing line is honest; a wrong percentage is not.
+//
+/** HER CUT OF THE PRIZE MONEY – one line, or none. Never a blend, never a second rule's line. */
+const kidShareMemo = computed<string | null>(() => {
+  if (kidCutCents.value <= 0) return null
+  const prize = weekFinance.value?.kidShareParts?.find((p) => p.source === 'prize')
+  if (!prize || prize.cents <= 0) return null
+  return `Her cut ${prize.pct}% – ${formatCents(prize.cents)} into her own account.`
 })
 /** The old foot, on the old shape only – see the note above. */
 const kidShareFoot = computed(() => (kidCutCents.value > 0 && !grossSplit.value ? 'The income above is what the family kept.' : null))
@@ -756,13 +803,16 @@ const practiceWeekLabel = computed(() => weekLabel(week.value))
            is reading these figures off the screen and summing them. -->
       <Card class="recap-tile recap-finance" pad="12px 13px">
         <Eyebrow>Finances</Eyebrow>
-        <!-- ⭐⭐⭐ ROUND 30 #1 – INCOME / SPENT / BALANCE, THE THREE FIGURES HE ASKED BACK FOR. His
-             words are in the script block above and in tests/component/week-recap-kid-share.test.ts,
-             because Cyrillic inside a <template> is forbidden (tests/template-copy-rules.test.ts).
+        <!-- ⭐⭐⭐ ROUND 31 #2 – INCOME / FAMILY INCOME / SPENT, AND THE BALANCE UNDER THE HAIRLINE:
+             the owner's own four lines, in his own order. His words are in the script block above and
+             in tests/component/week-recap-kid-share.test.ts, because Cyrillic inside a <template> is
+             forbidden (tests/template-copy-rules.test.ts).
              ⚠ ROUND 29 PART TWO #1 PUT FIVE ROWS HERE AND THAT WAS MORE THAN HE WANTED, NOT FEWER –
-             her cut appeared as a row AND as the memo below, which is the duplication he names. The
-             column is the pair again, on every week and every save; everything else the week has to
-             say is under the balance. No arithmetic here: `financeRows` is a list. -->
+             her cut appeared as a row AND as the memo below, which is the duplication he named. Her
+             cut is still NOT a row here and must not become one: the engine banks the family
+             `prize − herShare`, so those cents never entered this column at all.
+             ⚠ AND THESE THREE REALLY ADD UP TO THE BALANCE, on every week and every save – the
+             property he has asked for three times. No arithmetic here: `financeRows` is a list. -->
         <div class="recap-rows">
           <div v-for="row in financeRows" :key="row.key" class="recap-row">
             <span class="recap-row-key">{{ row.key }}</span>
@@ -785,12 +835,14 @@ const practiceWeekLabel = computed(() => weekLabel(week.value))
              ⚠ ROUND 30 #1 UNBOLDED IT AT HIS INSTRUCTION – see the stylesheet; the weight is the
              only thing about this line that moved. The foot survives on the legacy shape alone,
              untouched: he named the weight and the rows, not this sentence.
-             ⚠⚠ ROUND 30 #21 – ONE LINE PER RULE, and on a week governed by a single rule that is
-             still exactly one line, byte-identical to the one he approved. `.recap-memo` is already
-             a flex column with a gap, so a second line needs no style. See the script block for the
-             measurement and for why the round 29 #10 pin could not catch the blend. -->
-        <p v-if="kidShareMemo.length > 0" class="recap-memo" role="note">
-          <span v-for="line in kidShareMemo" :key="line" class="recap-memo-line">{{ line }}</span>
+             ⚠⚠ ROUND 31 #2 – THE PRIZE RULE, AND ONLY IT, IN ONE LINE OR NONE. Round 30 #21 printed
+             one line PER RULE and so wrote him a sponsor line every week; he asked for her share of
+             the prize money and nothing else. The shape is `string | null` rather than a list, so a
+             second line is not a policy here but an impossibility. ⚠ The blend fallback is gone with
+             it: on a mixed legacy week that number is the one #21 measured as wrong, and a missing
+             line is honest where a wrong percentage is not. See the script block for both. -->
+        <p v-if="kidShareMemo || kidShareFoot" class="recap-memo" role="note">
+          <span v-if="kidShareMemo" class="recap-memo-line">{{ kidShareMemo }}</span>
           <span v-if="kidShareFoot" class="recap-memo-foot">{{ kidShareFoot }}</span>
         </p>
 
@@ -807,18 +859,14 @@ const practiceWeekLabel = computed(() => weekLabel(week.value))
           <span class="recap-memo-line">{{ coachCutMemo }}</span>
         </p>
 
-        <!-- ⭐⭐ FAMILY INCOME, ROUND 30 #1 – the one row of part two #1's five he asked to keep, in
-             the name he chose himself. His words are in the script block above, because Cyrillic
-             inside a <template> is forbidden (tests/template-copy-rules.test.ts).
-             ⚠ BELOW THE BALANCE AND OUTSIDE `.recap-rows`, WHICH IS THE WHOLE OF ITS SAFETY: it is a
-             SLICE of the Income row (the part that was not the family's half of a split cheque), so
-             a term beside Income would count the family's own money twice. Down here it is a note
-             about where that Income came from, and the column the tests sum does not contain it.
-             ⚠ Absent on every week it would be a duplicate or a guess – see `familyIncomeCents`. -->
-        <div v-if="familyIncomeCents !== null" class="recap-row recap-row-aside">
-          <span class="recap-row-key">Family income</span>
-          <span class="recap-row-val num positive">{{ formatCentsSigned(familyIncomeCents) }}</span>
-        </div>
+        <!-- ⭐⭐ ROUND 31 #2 – FAMILY INCOME MOVED UP INTO THE COLUMN, and this is where it used to
+             be drawn. It was a note UNDER the balance because it was a SLICE of the Income row above
+             it (the part that was not the family's half of a split cheque), and a term beside Income
+             would have counted the family's own money twice. That is no longer true of it: `Income`
+             is the tournament's own cheque now, so the family's other money is an ADDEND, and the
+             owner asked for it as one. Keeping both would put the same cents on screen twice, which
+             is the very defect this aside was written to avoid. The label did not change a
+             character – see the script block. -->
       </Card>
 
       <!-- TRAINING. The week's training DECISION, what it is starting to do to her, and the days it
@@ -1121,13 +1169,11 @@ const practiceWeekLabel = computed(() => weekLabel(week.value))
   color: var(--ink-2);
 }
 
-/* FAMILY INCOME, round 30 #1. A `.recap-row` living under the balance rather than in `.recap-rows`,
-   so it needs the gap the flex column would have given it. Nothing else about the row changes -
-   the key and the value keep the column's own type, which is what makes the figure line up with
-   Income and Spent above it even though it is not one of them. */
-.recap-row-aside {
-  margin-top: 8px;
-}
+/* ⭐⭐ ROUND 31 #2 – `.recap-row-aside` WENT WITH THE ASIDE. It existed to give a `.recap-row` living
+   OUTSIDE `.recap-rows` the gap the flex column would have given it, and Family income is inside
+   that column now (it is an addend, not a slice), so it inherits the gap like every other row and
+   the rule had nothing left to style. Nothing about the row's type changed - the key and the value
+   always kept the column's own, which is why it lines up with Income and Spent without a rule. */
 
 /* WHAT CAME ALONG, under the hairline. The wing's name and then the coach's sentence, on the
    Highlights card's own idiom (12.5px/500, --ink-2) because it is the same object: a short line of
