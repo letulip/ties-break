@@ -336,3 +336,54 @@ merge – they must not arrive in his game unread, which is the whole complaint 
 пошагово вполне отлично»); `r31b/draw-reveal` is in flight. This is next in the queue.
 
 TOOL: `tools/r31-peak-share.ts`.
+
+## 10. His WTA research vs our constants – what correlates and what does not
+
+He supplied real ATP/WTA reference data on peak age and on the college route. Checked against the
+engine rather than accepted or waved through.
+
+WHAT HE GAVE (WTA rows only – this game is WTA-first):
+
+    absolute Elo peak            22-23
+    modern top-100 peak window   24-26  direct       |  25-28  via college
+    entry to top 100             ~21    direct       |  23-25  via college
+    mean age of top 100          25-27
+    college share of WTA top 100 ~5% (4-7 players)   |  ~40% of the top-50 doubles
+    modern trend                 peak conditions stretched to 30-35 for the exceptional
+
+⭐ THE TOUR IS CORRECTLY CALIBRATED – measured, not assumed, on w933 through `fieldProsOf`:
+
+    top 10   mean 25.8  median 27  range 20..32
+    top 100  mean 25.3  median 26  range 17..32
+    distribution: <20 5 | 20-22 22 | 23-25 22 | 26-28 28 | 29-31 22 | 32+ 1
+
+His reference for the mean age of a WTA top 100 is 25-27; ours is 25.3. `FIELD.career` is
+`peakFrom 22, peakTo 28, debutAge 16-19, retireAge 26-34` – a single band spanning both routes,
+which is the right shape for a mixed field. Nothing to change here.
+
+⚠⚠ THE KID'S OWN CURVE IS THE MISMATCH, AND IT IS A COLLEGE CURVE WORN BY EVERYONE.
+`ECONOMY.development.ageCurve` is `plateauStart 23, declineStart 29` – peak 23-28 – and
+`season/cohort.ts:35` carries the same pair. Against his table:
+
+    peak ends 28  ==  25-28 via college     ✓ exactly the college window's top edge
+    peak ends 28  vs  24-26 direct          ✗ two to four years late
+
+⭐ AND THE GAME HAS THE FORK. Alice went through college (weeks 294-502), so HER arc is right and
+her peak at 28 is correct – which is why item 7's measurement looked so clean. But a player who
+goes straight to the tour gets the same 23-28 plateau, and his own research says the fork should
+move the peak 2-3 years. We already model the fork's COST (she starts her ranking late) and none of
+its SHAPE.
+
+PROPOSAL, for his call – not dispatched:
+ – direct route: plateau ~22-26, decline from 27. Earlier, sharper.
+ – college route: plateau ~24-28, decline from 29. Today's numbers, kept.
+This makes the fork mean something beyond lost ranking time, and it is exactly the trade his data
+describes. ⚠ It is a balance change: invariant 5 applies – spec in `docs/specs/`, bench, predicted
+vs measured. ⚠ And it touches `careerAt`/`cohort` shared constants, so the frozen capture must be
+proven unmoved.
+
+ALSO USABLE, filed not proposed: the WTA college share is ~5% against ~40% of the top-50 in DOUBLES.
+The women's college route is genuinely rarer and harder than the men's – material for how the fork
+is described to the player, and an argument for sharpening its trade rather than softening it.
+
+TOOL: `tools/r31-top100-age.ts`.
