@@ -158,6 +158,25 @@ function drawnField(
  *  field, and both are read at the same instant off the same `ratingOf`. tests/preview.test.ts
  *  asserts the pair cannot contradict and mutates to prove the assertion bites.
  *
+ *  ⚠⚠ AND SHE IS READ RESTED, WHICH IS THE OTHER HALF OF A RULE THIS FILE ALREADY STATES AND WAS
+ *  ONLY APPLYING TO THE FIELD. The header's own paragraph – *"THE FIELD IS PREVIEWED RESTED, and
+ *  that is a correction, not a simplification… Their exhaustion today says nothing about their
+ *  condition on a week that has not happened; quoting it turns a transient into a promise"* – is
+ *  exactly as true of HER. `kid` arrives with `conditionMatchFactor(world.condition)` already
+ *  multiplied into her five attributes, so a rating-based band read off it would move every time she
+ *  got tired.
+ *
+ *  ⚠ IT WAS MEASURED MOVING, NOT REASONED ABOUT. With `kid` used for both readings,
+ *  `tools/r31-draw-stability.ts` on the w933 save reported **3 of 24** tournaments changing band over
+ *  six weeks, against **0 of 24** before – a regression against exactly the property round 31 #4
+ *  shipped the band for. Read rested it is 0 of 24 again.
+ *
+ *  ⚠ THE RING IS DELIBERATELY NOT CHANGED. `firstMatchChance` is her chance in a match she would
+ *  play in the state she is in, and the owner's card has quoted it that way since wave 2; what moves
+ *  here is the BAND, which is a statement about the FIELD's level relative to her own and has no
+ *  business asking how tired she was the week he happened to look. `kidAtRest` defaults to `kid`, so
+ *  a caller that does not distinguish them gets the pre-change reading.
+ *
  *  ⚠ IT IS STILL A READING OF THE **FIELD**, WHICH IS WHY IT HOLDS STILL WHILE THE RING MOVES. The
  *  share is over every entrant, so it changes only when the field's composition does – the property
  *  round 31 #4 measured (0 of 24 events moved band on the w933 save) and the reason the band is the
@@ -339,6 +358,12 @@ export function previewEvent(
    *  caller that has only one table (a bench, an older test) gets the pre-change preview rather than
    *  a silently different one. */
   standing?: RankingRow[],
+  /** ⭐ HER, AT FULL CONDITION – the BAND's reading of her, and the symmetric half of the header's
+   *  "THE FIELD IS PREVIEWED RESTED" rule. Built by the caller through the same composer `kid` comes
+   *  from, so nothing is inverted here; see `strengthOf` for what it is for and for the 3-of-24
+   *  regression that produced it. Absent ⇒ `kid`, which is byte-identical to what this function did
+   *  before it existed. */
+  kidAtRest?: MatchPlayer,
 ): EventPreview {
   const standingTable = standing ?? ranking
   const alive = drawnField(
@@ -367,7 +392,7 @@ export function previewEvent(
     // the draw are one number. Before this they were two for every DOMESTIC event, because the card
     // was handed the ITF table and the overlay reads the domestic one.
     opponentRank: opp ? (standingTable.find((r) => r.playerId === opp.id)?.rank ?? null) : null,
-    fieldStrength: strengthOf(alive, kid, event.surface),
+    fieldStrength: strengthOf(alive, kidAtRest ?? kid, event.surface),
     temperatureC: eventTemperature(world.seed, event),
     crowd: eventCrowd(world.seed, event),
   }
