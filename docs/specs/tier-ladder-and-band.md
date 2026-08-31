@@ -339,3 +339,166 @@ a promise"* – and the same sentence is true of her, now that the band is the w
 card. ⚠ It is pinned by a test that puts BOTH arms under the knee (conditions 30 and 65, where
 `conditionMatchFactor` actually bites), asserts the two worlds compose different players, and then
 asserts the band is identical across them. Mutation-verified: dropping `kidAtRest` reddens it.
+
+---
+
+## 8. ⭐⭐⭐ THE RECONCILIATION (round 31, #3 merged with #4) – §7's price was not payable, so the band changed question
+
+§7 above shipped a band that moved on **3 of 24** tournaments and said, in as many words, *"the
+acceptance criterion asked for 0"*. It also named the two ways out it would not take on its own –
+widening the thresholds until nothing can cross them, and freezing the field – and left the call to
+the owner. This section is the third way, found by merging r31b and r31c and gating the pair.
+
+⚠ **Nothing in §1–§6 is revised.** The ladder fix is a fix to the RING and it is untouched: §8.4
+restates every rung's number from a repositioned measurement and it is identical to r31c's. What
+moves here is the BAND, which §7 already identified as the thing that had got worse.
+
+### 8.1 Two branches, each green alone, red together
+
+`npm run check` on the merge: `Tests 4 failed | 3798 passed`.
+
+| # | failure | cause |
+| --- | --- | --- |
+| A | `tier-ladder-and-band` – three arms, the first being its own vacuity guard (`expected 134 to be greater than 400`) | r31c's fixture walks upcoming cards every EIGHTH week and reads the first-round opponent; r31b hides that opponent past `DRAW_LEAD_WEEKS`, so the walk caught one event in eight |
+| B | `preview` – *"the BAND is the same at every week the card is on screen"* | r31c's `strengthOf` counts the drawn field, and `drawnField` rebuilds weekly |
+
+### 8.2 Failure A – the measurement moved to the week the draw exists
+
+⭐ **The guard did exactly what it was built for and was not weakened.** The 400 stands, the two
+claims stand. What moved is where the file looks: it observes the last **110** weeks EVERY week and
+keeps only the cards that carry a ring, which is one reading per event **at the week its own draw is
+made** – instead of eight readings per sampled week, seven of which no longer exist. Sample 134 →
+**1,588 cards**, 212 of them enterable. Cost 4.7 s → 13.7 s.
+
+⚠ Mutation-verified: `OBSERVE_WEEKS` 110 → 14 reddens the vacuity guard (214 cards) and the
+enterable-card guard (28), which is the same red the merge produced.
+
+### 8.3 Failure B – the band is now a reading of the RUNG
+
+Three changes, and each one is answering the same question: *what can a card say about a field that
+does not exist yet, that will still be true next week?*
+
+1. **The population is the TIER's expected field, not this week's draw** (`tierExpectedField`). It is
+   built from the tier's own definition, in `selectEntrants`' own order – `isTierAgeOpen`, then
+   `entrantPctBand` read off a table sorted by **strength** rather than by a standings table (§4's
+   substitution carried one storey up), then the head of that window the entry jitter can reach.
+   Neither the standings, nor the availability gate, nor the per-event die is in it.
+2. **The head is `2 × drawSize`, which is the jitter's own reach.** `selectEntrants` keys candidates
+   on `position + rng() × drawSize` and takes the lowest `drawSize`, so a candidate can enter from up
+   to `drawSize` places below the cut: the reachable population is twice the draw, and the
+   availability backfill reaches further down still. Slicing exactly `drawSize` models the draw's
+   MODE; twice it models the EXPECTATION. It is also the smoother of the two – see 8.5.
+3. **The reading is an expected CHANCE, not a headcount.** A rung's expected field is ~90 rating
+   points wide across 32 players, so one player is 3.1% of a share and under three rating points; the
+   conveyor's annual turnover moves the domestic slab **13 points** and a headcount inside it turned
+   that into a share swing of 0.813 → 0.500. `strengthOf` now takes her mean `chanceFromRatings`
+   against the field, which is the formula the ring already satisfies to inside a point, and the same
+   13 points move it by 0.03.
+
+⚠ **And she is read at her BEST, which is the rested rule one seam along.** `kidAtRest` already put
+her at `ECONOMY.condition.max`; it now also puts her in `FRESH_KIT`. Equipment wear is the same class
+of weekly transient as condition and it is much the larger of the two here: measured on w933 her
+rested rating ran a saw-tooth of **7 points a week** on a build whose five skills moved by one.
+`kidMatchPlayerFor` gained an optional `kitWear` override for it – absent ⇒ the clock is read, so
+every other caller composes byte-identically, and the RING still plays her in the racket she owns.
+
+### 8.4 The tier table, restated from the repositioned measurement
+
+Two careers × 450 weeks, the last 110 weeks observed every week, two vantage points (the girl the
+career grew and the same five skills at 0.72), **1,588 cards**. Three arms, each measured with the
+SAME repositioned reader: **A** = the merge before r31c (`fb6825ee`), **B0** = r31c as merged
+(`71b243ab`), **C** = this branch.
+
+| rung | n | A: pre-r31c | B0: r31c | C: here |
+| --- | --- | --- | --- | --- |
+| Local Open | 212 | **51%** | 59% | **59%** |
+| Regional Championship | 104 | 57% | 56% | **56%** |
+| National Series | 50 | 60% | 55% | **55%** |
+| Junior Tour 30 | 212 | 65% | 59% | **59%** |
+| Junior Tour 60 | 132 | 61% | 59% | **59%** |
+| Junior Tour 300 | 34 | 59% | 63% | **63%** |
+| World Tour 15 | 212 | 85% | 85% | **85%** |
+| World Tour 35 | 136 | 83% | 83% | **83%** |
+| World Tour 50 | 102 | 80% | 80% | **80%** |
+| World Tour 75 | 66 | 71% | 71% | **71%** |
+| World Tour 100 | 34 | 60% | 60% | **60%** |
+| World Tour 125 | 36 | 53% | 53% | **53%** |
+| World Tour 250 | 70 | 54% | 54% | **54%** |
+| World Tour 500 | 84 | 47% | 47% | **47%** |
+| World Tour 1000 | 68 | 37% | 37% | **37%** |
+| Grand Slam | 36 | 46% | 46% | **46%** |
+| **domestic inversions** | | **2** | **0** | **0** |
+| **hardest domestic rung** | | **Local Open, 51%** | National, 55% | **National, 55%** |
+
+⭐⭐ **Column C is column B0 to the percentage point, on all sixteen rungs.** That is the proof that
+this wave moved the BAND and nothing else: the ring is `firstMatchChance` and no line of this change
+touches it. §3's two claims are re-established at the repositioned reading – **domestic inversions 0,
+and the Local Open is no longer the hardest rung on her domestic ladder** (it is the easiest of the
+three, at 59% against National's 55%).
+
+And the band, over the same 1,588 cards:
+
+| | A: pre-r31c | B0: r31c | C: here |
+| --- | --- | --- | --- |
+| `favourite` / `even` / `strong` | 0 / 0 / **1,588** | 1,039 / 161 / 388 | 791 / 323 / 474 |
+| `strong` contradicts its own ring | **69.8%** | 6.2% | **12.7%** |
+| bands occurring on an ENTERABLE card | `strong` only | all three | **all three** |
+
+⚠ **`strong`'s contradiction rate is 12.7% here against r31c's 6.2%, and that is the trade being
+made rather than a regression that slipped through.** A band about the RUNG cannot know which girl
+this week's draw hands her, so a strong rung will sometimes produce a soft opener; a band about the
+DRAW knows, and pays for it by moving every week. The claim r31c bought – that the pair cannot point
+opposite ways – survives with room: `tests/tier-ladder-and-band.test.ts` bounds it at 0.35 and it is
+mutation-verified. Against the 69.8% the shipped engine ran, both are the same fix.
+
+### 8.5 Acceptance – and the residue, stated rather than hidden
+
+`npx vite-node tools/r31-draw-stability.ts -- --save <the owner's w933 save>`:
+
+| | opponent changes | band changes |
+| --- | --- | --- |
+| `r31b` alone | 0 of 24 | 0 of 24 – but every junior/domestic card said `strong`, so nothing COULD move |
+| `r31b` + r31c (§7) | 0 of 24 | **3 of 24** |
+| here | **0 of 24** | **0 of 24**, with all three bands on screen (72 `favourite`, 32 `even`, 6 `strong`) |
+
+⚠ **The dead zone's width is the one free number, so it was swept rather than picked** (invariant 5).
+±0.125 is ±88 Elo, just inside the 100-point class `chanceFromRatings` quotes from its own source.
+The sweep behind that anchor: eight careers (w933 and seven fresh), seven weeks each, **382
+card-observations**, every width from ±0.09 to ±0.17 in steps of 0.005.
+
+- Between ±0.11 and ±0.13 the band's composition barely moves – a plateau, meaning no cluster of
+  cards lives there – and ±0.125's cuts sit furthest from the nearest card on both acceptance
+  fixtures (margin 0.0029 against a median of 0.0004 across the other widths).
+- Wider is not safer, only quieter: by ±0.17 `even` has swallowed three cards in five, which is the
+  degeneracy this whole wave exists to undo.
+
+⚠⚠ **AND THE SWEEP'S OTHER FINDING, WHICH IS THE HONEST ONE: NO WIDTH MAKES THE RESIDUE ZERO.** At
+every one of the seventeen widths some card in the 382 sits within 0.0005 of a cut, and 3 to 12
+observations step. The cause is not the preview: it is that a card sits on screen for eight weeks and
+in that time she genuinely outgrows a rung by about **5 rating points** (measured at 13: +9 for her,
++4 for the field, over six weeks), and a three-valued readout of a moving quantity crosses a cut that
+lies inside those 5 points. So roughly one card in a hundred steps ONCE, monotonically, in the
+direction she is actually going. That is news and not flicker – **nothing left in this design can
+move because the preview was re-read**, which is the whole of what the owner asked for. The two
+acceptance fixtures are clean at ±0.125; a different save may show one such step, and it will be a
+single step in her favour rather than a word that changes back.
+
+### 8.6 Invariant 2, again – nothing moved that must not move
+
+Same argument as §6 and it is still by construction: `previewEvent`, `ratedField` and
+`tierExpectedField` are pure reads with zero draws, `upcomingEvents` is a snapshot reader asserted
+mutation-free, and `kidMatchPlayerFor`'s new `kitWear` is an override on an argument, not a term.
+The frozen capture (41550 / `e6b0c709`) and all eighteen career hashes re-derive green in
+`tests/condition.test.ts` and `tests/coach-travel-edge.test.ts` – **run, not asserted**.
+`SAVE_SCHEMA_VERSION` is unmoved and nothing is persisted.
+
+### 8.7 What is NOT resolved
+
+- **The ITF family still inverts at its top** (§5's filed-not-fixed item): the cause is
+  `minConditionToEnter.j300` and the backfill, and this wave does not touch it. The domestic-only
+  claim in `tests/tier-ladder-and-band.test.ts` is unchanged.
+- **The week − 1 name still disagrees with the bracket's on 59.2% of draw-week cards**
+  (`tools/r31-draw-promise.ts`, recorded by r31b). Closing it moves brackets and is the owner's call.
+- **`strong` on an enterable card in the owner's own saves** is rarer than the deep fixture's –
+  6 of 110 observations on w933. §5's reading of that still holds: his careers are of a very strong
+  player, and `strong` requires a rung that genuinely outrates her.
