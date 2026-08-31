@@ -283,5 +283,59 @@ Two smaller ones, both pre-existing and both unchanged by this wave: `slam` read
   so a change confined to the preview cannot reach `walkFrozenCareer`'s world at all.
 - **No schema move.** `SAVE_SCHEMA_VERSION` stays at 67; nothing is persisted.
 - **Round 31 #4's acceptance harness** – `tools/r31-draw-stability.ts`, re-run against this change
-  merged onto `r31b/draw-reveal`: still **0 of 24** tournaments change their round-one opponent and
-  **0 of 24** change their band.
+  merged onto `r31b/draw-reveal`: still **0 of 24** tournaments change their round-one opponent.
+  ⚠ The band is **3 of 24**, not 0 – §7.
+
+---
+
+## 7. ⚠ THE ONE NUMBER THAT GOT WORSE, AND WHY IT IS THE PRICE RATHER THAN A DEFECT
+
+`tools/r31-draw-stability.ts` watches the owner's w933 save for six weeks and asks whether a
+tournament ever showed two different bands. Merged onto `r31b/draw-reveal`:
+
+| | opponent changes | band changes |
+| --- | --- | --- |
+| `r31b` alone | 0 of 24 | **0 of 24** |
+| `r31b` + this wave | 0 of 24 | **3 of 24** |
+
+**Stated plainly: this wave moves that number from 0 to 3, and the acceptance criterion asked for 0.**
+The three are `wk937 Regional`, `wk939 World Tour 250` and `wk940 Junior Tour 300`, each flipping
+once or twice between the ADJACENT bands `favourite` and `even` – about **5 changes in ~120
+week-to-week steps, 4.2%**. Nothing ever crosses from `favourite` to `strong`.
+
+⚠⚠ **THE 0 IT REPLACES WAS BOUGHT WITH THE DEGENERACY THIS WAVE EXISTS TO FIX.** On the shipped
+engine every junior and domestic card reads `strong` – 9,826 of 9,826 in the deep sweep – and a
+constant is trivially stable. r31b's §6 says as much about its own synthetic arm: *"A value that only
+ever takes one value cannot be observed to move."* The same sentence applies to the save arm on the
+six rungs that carry the complaint.
+
+**The cause is the preview, not the band.** `drawnField` rebuilds the field on every read from
+today's standings and today's availability, which `preview.ts` has documented since wave 2 and which
+round 31 #4 deliberately did not change. A share counted over 31 entrants has a granularity of
+1/31 = 3.2%, so a field sitting within one player of the 0.35 threshold flips when the weekly redraw
+swaps one entrant. Two candidate fixes were measured and both are recorded rather than shipped:
+
+- **read her rested rather than at today's condition** – shipped for a different and separately
+  proven reason (below), and it moved this number by exactly **zero cards**: `matchStrengthKnee` is
+  70 and she is at 87 on that save, so the rested composition is the same player. A null arm, caught
+  by checking the reader rather than by trusting the result.
+- **count the share over the UN-GATED field**, removing the weekly fatigue churn – measured **worse,
+  4 of 24**. The churn is the standings, not the availability gate.
+
+Making it 0 from here means either widening the thresholds until nothing can cross them – the repaint
+the round explicitly forbade, and it would take the discrimination with it – or freezing the field
+itself, which is round 31 #4's own filed-not-fixed question (*"either previewing the field at the
+EVENT's week or settling the draw into the save, and both move brackets that the career hashes
+pin"*). **Both are the owner's call, not an agent's.** What is shipped is the honest trade: a band
+that flips between two neighbouring values on one card in eight, against one that said the same word
+on every card it was the only information on.
+
+### The rested reading, which is kept on its own evidence
+
+She is composed at `ECONOMY.condition.max` for the band and at her real condition for the ring. The
+header of `season/preview.ts` has argued the field's half since wave 2 – *"Their exhaustion today
+says nothing about their condition on a week that has not happened; quoting it turns a transient into
+a promise"* – and the same sentence is true of her, now that the band is the whole of a pre-draw
+card. ⚠ It is pinned by a test that puts BOTH arms under the knee (conditions 30 and 65, where
+`conditionMatchFactor` actually bites), asserts the two worlds compose different players, and then
+asserts the band is identical across them. Mutation-verified: dropping `kidAtRest` reddens it.

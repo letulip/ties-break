@@ -166,10 +166,20 @@ function drawnField(
  *  multiplied into her five attributes, so a rating-based band read off it would move every time she
  *  got tired.
  *
- *  ⚠ IT WAS MEASURED MOVING, NOT REASONED ABOUT. With `kid` used for both readings,
- *  `tools/r31-draw-stability.ts` on the w933 save reported **3 of 24** tournaments changing band over
- *  six weeks, against **0 of 24** before – a regression against exactly the property round 31 #4
- *  shipped the band for. Read rested it is 0 of 24 again.
+ *  ⚠⚠ AND ITS OWN MEASUREMENT IS A LESSON IN NULL ARMS, RECORDED BECAUSE IT NEARLY GOT THIS CHANGE
+ *  THROWN AWAY. It was written to explain a band that moved on 3 of 24 tournaments on the owner's
+ *  w933 save, and it did not move that number by one card. The reason is that
+ *  `ECONOMY.condition.matchStrengthKnee` is **70** and she is at **87** there, so
+ *  `conditionMatchFactor` returns 1 and the rested composition is the SAME PLAYER – a change whose
+ *  reader the arm never reached (CLAUDE.md's own warning, arriving from the other side). Those three
+ *  cards move because the FIELD is rebuilt every week from today's standings, which is a property of
+ *  the preview and not of her; see docs/specs/tier-ladder-and-band.md §7.
+ *
+ *  ⚠ IT IS KEPT ANYWAY, ON AN ARGUMENT THAT OUTLIVES THAT SAVE, and pinned by a test that DOES reach
+ *  the reader: below condition 70 the factor bites, and the fatigue spec's own measurement has the
+ *  elite band living at a median condition of 10. Without this the band – the ONE thing a pre-draw
+ *  card says since round 31 #4 – would swing on how tired she happened to be the week he opened the
+ *  screen, which is the transient the header refuses to quote for everybody else.
  *
  *  ⚠ THE RING IS DELIBERATELY NOT CHANGED. `firstMatchChance` is her chance in a match she would
  *  play in the state she is in, and the owner's card has quoted it that way since wave 2; what moves

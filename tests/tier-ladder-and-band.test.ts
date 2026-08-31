@@ -194,6 +194,35 @@ describe('round 31 #3 – the band and the ring cannot point opposite ways', () 
     for (let i = 1; i < seen.length; i++) expect(seen[i]).toBeLessThanOrEqual(seen[i - 1])
   })
 
+  it('a tired week does not move the band – she is read at full condition, as the field is', () => {
+    // ⚠ THIS TEST EXISTS BECAUSE THE OBVIOUS ARM DOES NOT REACH THE READER.
+    // `ECONOMY.condition.matchStrengthKnee` is 70, so any career sitting above it composes the
+    // IDENTICAL player rested and tired, and a save at condition 87 – the owner's w933 – measures
+    // this fix doing nothing while proving nothing. Both worlds below are put UNDER the knee, where
+    // `conditionMatchFactor` actually bites, and the two conditions are far enough apart (30 vs 65)
+    // that her five attributes differ by a fifth.
+    //
+    // The claim: the BAND is a statement about the FIELD's level relative to hers and must not move
+    // because she is tired this week. The RING is not part of the claim and is expected to move –
+    // it is her chance in a match she would play in the state she is in.
+    const tired = createWorld('band-condition')
+    const fresh = createWorld('band-condition')
+    for (let w = 0; w < 60; w++) {
+      tickWeek(tired, rngFromSeed('band-condition:bench'))
+      tickWeek(fresh, rngFromSeed('band-condition:bench'))
+    }
+    tired.condition = 30
+    fresh.condition = 65
+    const a = upcomingEvents(tired)
+    const b = upcomingEvents(fresh)
+    expect(a.length, 'no cards to compare').toBeGreaterThan(4)
+    expect(b.map((e) => e.id)).toEqual(a.map((e) => e.id))
+    // The arm has to contain the change AND its reader, so prove the two worlds are actually
+    // different girls before asserting the band ignores it.
+    expect(a.some((e, i) => e.preview.kidRating !== b[i].preview.kidRating), 'the two arms compose the same player – the knee was not crossed').toBe(true)
+    expect(a.map((e) => e.preview.fieldStrength)).toEqual(b.map((e) => e.preview.fieldStrength))
+  })
+
   it('the band is not one word: it discriminates across the cards she can enter', () => {
     // ⚠ THE DEFECT THIS REPLACES, stated as its own test. Before round 31 #3 every junior and every
     // domestic card read `strong` – on the shipped engine at this depth, 1,122 of 1,122 – so the
