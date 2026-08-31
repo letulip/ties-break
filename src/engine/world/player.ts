@@ -131,8 +131,8 @@ export const COACH_EDGE_POINTS_PER_PP = 0.5225
  *  nothing else: `coachOnEventWeeks` is THE STANCE, and «there is somebody to send» is the `coachId`
  *  clause this function already had and `coachEdgePp` already refuses on. So this is not a second copy
  *  of that predicate - it is the same two facts, one of them the edge has always owned - and
- *  tests/coach-travel-edge.test.ts pins the two to the same answer on real worlds so they cannot
- *  drift apart.
+ *  tests/coach-travel-edge-helping.test.ts pins the two to the same answer on real worlds so they
+ *  cannot drift apart.
  *
  *  ⚠ THE PREDICATE IS READ STRUCTURALLY RATHER THAN IMPORTED, and the reason is the file header's
  *  first line: this module is a LEAF. `coachTravelsWithHer` lives in world/coachMarket.ts, which

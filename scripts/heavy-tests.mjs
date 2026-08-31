@@ -193,6 +193,8 @@ export const HEAVY_UNIT_FILES = [
   //
   //     college-birthday    77.7 -> 27      college-second-act  42.0 -> 14
   //     coach-travel-edge   59.9 -> 21      goldenSaves         41.4 -> 14
+  //       <- cut into three on 31.08; this row is the record of the reading, not of a file that
+  //          still measures it. See the block against the entries below.
   //     season-mirror       45.8 -> 16      world-trio          36.7 -> 13
   //     viz/commentary      42.8 -> 14      coach-load          36.2 -> 13
   //     blocking-overlay    42.3 -> 15      round23-kid-share   33.8 -> 13
@@ -207,7 +209,50 @@ export const HEAVY_UNIT_FILES = [
   // --reporter=json` and move it here. If the serial tail ever costs more than the pool saves, the
   // honest next step is fewer workers per core, measured – not fewer tests.
   'tests/college-birthday.test.ts',
+  // ⚠⚠ 31.08: `coach-travel-edge` HAD TO BE CUT, AND THE HONEST SEAM WAS NOT THE ONE THAT MOVED THE
+  // NUMBER. A process of its own stopped being enough on CI – `43 passed (43)`,
+  // `Test Files 1 passed (1)`, then ONE unhandled `Timeout calling "onTaskUpdate"`, exit 1, at
+  // 62,889 ms of test time on a two-core runner. That is the all-green-non-zero shape
+  // scripts/units.mjs's header is written about, arriving on a file that was already alone in its
+  // process – so the FILE was the unit and the file had to be cut, as radar's was on 11.08 and
+  // fatigue-bench-policy's on 27.08. What pushed it over was this wave: eighteen frozen hashes
+  // re-cut and two new schema roll-backs (v66, v67) at ~1.5 s each, on a file that had been sitting
+  // two seconds under the wall.
+  //
+  // ⚠ THE SEAM EVERY READER WOULD PICK IS BEHAVIOUR / FROZEN IDENTITY – two different kinds of test
+  // that happen to share a fixture – and it buys 0.43 s of the 62.9 s. MEASURED SOLO before
+  // anything moved, one vitest process, `--project unit --reporter=json`, 43 tests / 28.09 s:
+  //
+  //     the byte-identity describe          27.65 s   20 cases · 55 career walks at ~0.50 s each
+  //     the other seven describes            0.43 s   23 cases
+  //
+  // 98.5 % of the cost is in ONE describe, so the frozen half ALONE would still have read ~62 s on
+  // that runner: a file left sitting ON the wall, which fatigue-bench-policy spent two weeks
+  // proving is not a cut. The second seam therefore runs through the VERSION LADDER, and it is the
+  // only seam here that moves the number. Solo, same invocation, after:
+  //
+  //     coach-travel-edge                   12.43 s   10 cases   FROZEN · PRE_R28B · v62-v67
+  //     coach-travel-edge-older-schemas     15.06 s   10 cases   v61 down to P5/v49
+  //     coach-travel-edge-helping            0.39 s   23 cases   -> the BULK pool, see below
+  //
+  // ⚠ AND THE SHORTFALL WAS CONTROLLED FOR RATHER THAN POCKETED, as 27.08's cut demands.
+  // 12.43 + 15.06 + 0.39 = 27.88 s against 28.09 s for the file they replaced – 55 career walks
+  // before and 55 after, ~0.50 s each either way, and that sum is the proof no walk went missing.
+  // The wall clock costs +2 s, which is two extra vitest starts.
+  //
+  // ⚠ NOT ONE SEED, HORIZON, CONSTANT OR ASSERTION MOVED, and no test name changed either: all 43
+  // full names are byte-identical to the multiset the one file produced, because both frozen files
+  // keep the ORIGINAL describe name. The 54 frozen hashes (18 constants x 3 careers) are unmoved
+  // and still reproduce from the same walk. tests/coachTravelEdgeFixtures.ts holds the constants,
+  // the walk and the per-key protocol, so `careerHashAtSchema`'s key-peeling – the one piece that
+  // must never have two truths – is imported by both halves rather than copied into each.
+  //
+  // ⚠ THE THIRD FILE IS NOT HERE, ON PURPOSE. `coach-travel-edge-helping` is 0.39 s solo and about
+  // 1.1 s at the pool's measured x2.9, an order of magnitude under this list's ~32 s in-pool line,
+  // so promoting it would cost the gate a vitest start to serialise nothing. The bar is cost, and
+  // it does not meet it.
   'tests/coach-travel-edge.test.ts',
+  'tests/coach-travel-edge-older-schemas.test.ts',
   // ⚠⚠ AN ORPHANED COMMENT LIVED HERE AND IT WAS MINE (corrected 27.08). It read «THE FROZEN MAIN
   // CAPTURE LIVES HERE NOW» – true when twelve files were promoted on 26.08, false four hours later
   // when the list was cut back to two and `tests/condition.test.ts` went out with the other nine.

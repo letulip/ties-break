@@ -660,7 +660,8 @@ describe('§4 the week\'s story keeps the second fare', () => {
 //   * the component doubling `r.edgePct` itself instead of printing `r.edgeTravelPct` -> the "no
 //     arithmetic on the screen" test ALONE, which is precisely what that test is for;
 //   * `TRAVEL_EDGE_LINE` rewritten to "The corridor is doubled - up to 1.8% per match." -> the
-//     sentence test here, and the engine's own copy test in tests/coach-travel-edge.ts. This is the
+//     sentence test here, and the engine's own copy test in
+//     tests/coach-travel-edge-helping.test.ts. This is the
 //     overstatement the item's brief names, and it reddens on all three counts: the flat claim, the
 //     figure, and the missing condition;
 //   * `.cm-travel-edge` given `margin-left: -20px` -> both geometry tests and nothing else, which is
