@@ -90,7 +90,7 @@ Both boxes are ticked with the place, per `docs/rounds/README.md` §"Keeping thi
   three previous passes each moved more than was asked.
 
 
-- [ ] **3. «личный бренд в цене подрос с 250к до 1.8м, а доход у него 1800 в неделю =))) что
+- [x] **3. «личный бренд в цене подрос с 250к до 1.8м, а доход у него 1800 в неделю =))) что
   как-будто бы не очень соответствует стоимости. Надо как-то настроить этот момент»** – the merch
   brand's valuation and its income do not describe the same business. **measure, spec, bench**.
 
@@ -150,3 +150,38 @@ Both boxes are ticked with the place, per `docs/rounds/README.md` §"Keeping thi
   research. Filed there, not here.
 
   ⚠ Invariant 5 – balance: a spec in `docs/specs/` with predicted vs measured, and a bench.
+
+- **3** – `79f5cd23`, `src/engine/world/brand.ts` + `ECONOMY.business.merch.value.unknownX`. The
+  multiple's BASE is now a ramp from 2.5 – what a brand nobody has heard of trades at – to the rung's
+  own `earningsMultipleX` at `ECONOMY.fame.cap`, with the four career rungs a premium ON TOP. His
+  ruling, exactly: «главное, чтобы эта известность участвовала в механизме». His row goes 18.23x /
+  $1,630,191 -> **9.30x / $831,382** on the same untouched $1,720 a week.
+
+  ⭐⭐ THE TOP DID NOT MOVE, AND IT IS NOT THE CAP THAT HELD IT. The ramp reaches `baseX` exactly at
+  fame 100, so the multiple there is the pre-wave expression term for term – measured at
+  **56,160/56,160 career-weeks in the bench, worst |delta| 0.0**. `maxX` binds at fame **91.3** for a
+  career maxed on all four rungs and **never** for the median one, so the cap is no longer what holds
+  anything; the ramp's own endpoint is, which is why the shape was chosen rather than inherited from
+  the `fame³` multiplication. Spec: `docs/specs/brand-multiple-follows-fame-2026-08.md`; bench:
+  `tools/brand-dynamics.ts`, which now reads both arms off ONE walk (`pre32MultipleX` asks the
+  shipped function at fame = cap). Guard: `tests/round32-brand-multiple.test.ts`, 14 arms,
+  mutation-verified against seven mutations including the constant.
+
+  ⚠⚠ AND IT COST ROUND 30 #9's DAY-ONE ANCHOR, which is arithmetic and not a tuning miss – §4 of the
+  spec proves no monotone multiple can hold both. Day-one median worth **$233,173 -> $78,740**, and
+  27 of 70 careers that can afford the brand would see it pinned at the mark floor the week they buy
+  it (6 of 70 before). The dial that restores it without touching his row is the rung's own
+  `entryCents`: the model now says a brand at fame ~10 is worth about $79k, and the price is
+  $250,000. NOT DONE, because the price is also the affordability gate, so moving it moves which week
+  a family buys and therefore the day-one fame – a fixed point that needs its own bench pass.
+  **His to rule on.**
+
+  ⚠ TWO SHIPPED CLAIMS OVERTURNED, both named in the code: a title now reaches the multiple (through
+  fame, never through the four rungs, which stay blind to it), and the multiple can now FALL – so a
+  slump compounds, measured at median −36.9% against −32.8% over 40,935 live 52-week windows. A live
+  career's brand re-prices at the next tick; no schema move was needed (`valueCents` is persisted but
+  rewritten every tick by `revalueAssets`, and `SAVE_SCHEMA_VERSION` stays 68).
+
+  ⚠ NOT DONE, AND NAMED: a top-20 career with no titles now prices at the mark rather than above it
+  (round 30 #24's second arm), because its fame floor is ~7. That is the fame wall this ledger already
+  filed above, and this wave makes it matter more rather than creating it. Recorded in spec §7a.
