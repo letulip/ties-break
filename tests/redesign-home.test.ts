@@ -600,7 +600,14 @@ describe('the diary page: the structure the redesign decided', () => {
   })
 
   it('the cards that are DOORS ask the shell to move; nothing else navigates', () => {
-    expect(home).toContain(`emit('navigate', 'week')`) // next tournament -> This week
+    // ⚠ RE-AIMED BY ROUND 31 #1, NOT LOOSENED. The next-tournament card asked for `'week'`, which
+    // names a DESTINATION and drops the REASON – so the This-week screen could not tell his tap from
+    // the tick that also lands there, and he got the results of the week just gone on top of the
+    // page he pressed «Next tournament» to reach. The card now asks for `'week:tournament'` and the
+    // shell's `openWeek` reads it (`tests/component/round31-week-entry.test.ts` mounts both
+    // arrivals). THE PROTECTED FACT IS UNTOUCHED and is all this arm is about: the card ASKS, it
+    // does not move the shell itself, which is the `not.toContain('tab.value')` two lines down.
+    expect(home).toContain(`emit('navigate', 'week:tournament')`) // next tournament -> This week
     expect(home).toContain(`emit('navigate', 'money')`) // family budget -> the wallet
     expect(app).toContain('@navigate="tab = $event"')
     // A screen may never write the shell's tab itself.
