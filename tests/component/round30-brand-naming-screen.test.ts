@@ -33,12 +33,12 @@ import {
   closeTournament,
   createWorld,
   ownedAssets,
-  shopItem,
   skipTournament,
   tickWeek,
   toSnapshot,
   type WorldState,
 } from '../../src/engine/world'
+import { ECONOMY } from '../../src/engine/economy'
 import { rngFromSeed } from '../../src/engine/rng'
 import type { Snapshot } from '../../src/shared/protocol'
 
@@ -236,8 +236,15 @@ describe('round 30 #11 and #9 – what the rate line says now', () => {
     // seasons, top-20 finishes and finals behind it reads more. ⚠ INVARIANT 4 IS INTACT: the wording
     // is byte-for-byte what round 30 #11 licensed – what changed is the value it interpolates, from a
     // number that had stopped being true to the one the shelf actually prices the row at.
-    const base = shopItem('merch-brand')!.earningsMultipleX!
-    expect(merch.find('.shop-row-rate').text()).toBe(`Worth ${base} years of what it sells`)
+    // ⭐⭐⭐ ROUND 32 #3 – AND THE NUMBER A CAREER WITH NOTHING BEHIND IT READS IS NO LONGER THE
+    // CATALOGUE'S BASE. The multiple's base is now a ramp from `value.unknownX` at fame 0 to the
+    // rung's own `earningsMultipleX` at `ECONOMY.fame.cap` (the owner: «главное, чтобы эта
+    // известность участвовала в механизме»), and `shopper` builds a world nobody has heard of. ⚠
+    // INVARIANT 4 IS STILL INTACT: the sentence is byte-for-byte the one round 30 #11 licensed –
+    // what moved, again, is the value it interpolates.
+    const V = ECONOMY.business.merch.value
+    expect(merch.find('.shop-row-rate').text())
+      .toBe(`Worth ${Math.round(V.unknownX)} years of what it sells`)
     expect(merch.text(), 'the sentence he read is gone from this row').not.toContain('Holds its value')
 
     // ⚠⚠ AND THE ARM THAT MAKES THAT A CLAIM RATHER THAN A RESTATEMENT: the SAME row, on a career
@@ -248,7 +255,8 @@ describe('round 30 #11 and #9 – what the rate line says now', () => {
     earned.trophiesByTier.wta500.finals.push(1, 2, 3, 4, 5, 6, 7, 8, 9, 10)
     const richer = await mountShop(toSnapshot(earned))
     const merchRicher = await shelfRow(richer, 'The merch brand')
-    expect(merchRicher.find('.shop-row-rate').text()).toBe(`Worth ${base + 1} years of what it sells`)
+    expect(merchRicher.find('.shop-row-rate').text())
+      .toBe(`Worth ${Math.round(V.unknownX + 10 * V.finalX)} years of what it sells`)
     richer.unmount()
 
     const land = await shelfRow(wrapper, 'The land')
