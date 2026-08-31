@@ -125,6 +125,21 @@ describe('round 32 #2 §1 – the week results do not carry the tournament under
     w.unmount()
   })
 
+  it('⭐⭐ AND THE FRAME FOLLOWS THE PANEL, because `section.bare` says it does', () => {
+    // ⚠ `section.bare` un-frames the block so the plate is the only object on the page - and its own
+    // comment reads «ONLY WHEN THE PANEL IS THERE». When the panel learned to wait for the story,
+    // that sentence and its binding parted company: the results view un-framed a section holding
+    // nothing but a heading and a pill. This arm is why they cannot part again.
+    // ⚠ MUTATION: bind the class back to `!!nearestEntered` and the first expectation reddens alone.
+    const shown = screenOn(enteredCareer('r32-frame-story'))
+    expect(shown.find('section.bare').exists(), 'no frame is dropped while the plate is away').toBe(false)
+    shown.unmount()
+
+    const first = screenOn(enteredCareer('r32-frame-tournament'), 'tournament')
+    expect(first.find('section.bare').exists(), '...and it is dropped when the plate is there').toBe(true)
+    first.unmount()
+  })
+
   it('⚠ a week with nothing entered is untouched by this item', () => {
     // There is no panel to take off, so nothing about this state may move. Home's plate opens onto
     // it too (round 31 #1's own training-week arm).

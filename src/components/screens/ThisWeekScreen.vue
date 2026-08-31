@@ -130,6 +130,12 @@ const nearestEntered = computed(() => game.snapshot?.upcoming.find((e) => e.ente
 // only move the story down for nothing. `nearestEntered` is the same fact the panel renders by, so
 // the two cannot disagree.
 const tournamentFirst = computed(() => props.entry === 'tournament' && !!nearestEntered.value)
+/** ⚠ ROUND 32 #2 – THE PANEL'S RULE, STATED ONCE, because `section.bare` has to obey the same one.
+ *  Its own comment below reads «ONLY WHEN THE PANEL IS THERE», and when the panel learned to wait
+ *  for the story that sentence and the binding parted company: the results view un-framed a section
+ *  holding nothing but a heading and a pill. The `v-if` still ends in `nearestEntered` so the
+ *  template keeps narrowing it for `:event`. */
+const tournamentShown = computed(() => (!showRecap.value || tournamentFirst.value) && !!nearestEntered.value)
 
 // Round-8 R8-4: once this week's tournament has been played, the status block carries
 // the kid's LATEST match score (kid-perspective), read straight off the snapshot's match
@@ -235,7 +241,7 @@ const spendRange = computed<[number, number]>(() => {
          ⚠ ONLY WHEN THE PANEL IS THERE. A week with nothing entered is a heading and one line of
          hint, and un-framing that is a change to a state he did not ask about (invariant 4's habit
          applied to layout: not asked is not permission). -->
-    <section :class="{ bare: !!nearestEntered }">
+    <section :class="{ bare: tournamentShown }">
       <h2>This week</h2>
       <div class="this-week-status">
         <span v-if="nearestEntered" class="pill ok">
@@ -262,7 +268,7 @@ const spendRange = computed<[number, number]>(() => {
            29 part two grew the recap, round 30 #1 cut it back, round 31 #1 moved the order - and
            every one of the three changed more than the complaint asked for. Nothing else on this
            screen moves: no copy, no spacing, no reordering. -->
-      <NextTournamentPanel v-if="nearestEntered && (!showRecap || tournamentFirst)" :event="nearestEntered" />
+      <NextTournamentPanel v-if="tournamentShown && nearestEntered" :event="nearestEntered" />
     </section>
 
     <!-- ...and on that arrival the story sits directly under the tournament, not at the end of the
