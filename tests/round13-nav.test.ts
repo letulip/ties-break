@@ -704,19 +704,37 @@ describe('W1 — the end of a week lands on the story', () => {
     // doors out of a week name the same destination, which is the property `afterWeekTab` existed to
     // guarantee and the reason it can be deleted rather than inverted: `home` is written twice
     // because it is one word, not because there are two rules.
+    //
+    // ⚠ RE-AIMED A THIRD TIME BY ROUND 31 #1, AND OFF THE WHOLE-TAG FORM FOR THE SAME REASON THE
+    // SIBLING ABOVE WAS SPLIT ("the assertion is split so it pins the state and the id rather than
+    // the exact attribute list, which is what let one added handler read as a nav change"). The
+    // mount grew `:entry="weekEntry"` – WHY the player is on the screen, so the Home plate can put
+    // the tournament first – and the whole-tag literal went red on an attribute that says nothing
+    // about the ×. THE GUARDED FACT IS UNCHANGED: the close still names `home`, and it is now
+    // asserted as its own substring, which is what this test was ever about.
     expect(weekScreen).toContain('const emit = defineEmits<{ close: [] }>()')
     const dismiss = after(weekScreen, 'function dismissRecap')
     expect(dismiss.slice(0, 200)).toContain("emit('close')")
     expect(dismiss.slice(0, 200)).toContain('dismissedRecapKey.value')
-    expect(app).toContain(`<ThisWeekScreen v-else-if="tab === 'week'" @close="tab = 'home'" />`)
+    const weekMount = region(app, '<ThisWeekScreen v-else-if="tab === \'week\'"', '/>')
+    expect(weekMount, "the story's × still leaves by the week's own door").toContain(`@close="tab = 'home'"`)
     expect(codeOf(app), 'the landing rule is back to one destination').toContain("else if (advanced || runClosed) tab.value = 'home'")
     expect(codeOf(app), 'the two-destination helper is gone, not inverted').not.toContain('afterWeekTab')
   })
 
   it('Home keeps its door and its dot – the manual route back into the story is untouched', () => {
-    expect(home).toContain(`@click="emit('navigate', 'week')"`)
+    // ⚠ RE-AIMED BY ROUND 31 #1. The plate asks for `'week:tournament'` now, not `'week'`: the owner
+    // pressed it and got the results of the week just gone on top, because `'week'` named a
+    // destination and dropped the REASON, leaving one screen unable to tell his tap from a tick.
+    // THE GUARDED FACT – Home still has a door into the story, on the same card, with the same dot –
+    // is exactly what it was; only the token it sends changed, and the assertion now names the card
+    // rather than the tab id so the door and the dot stay pinned to the same element.
+    expect(home).toContain(`@click="emit('navigate', 'week:tournament')"`)
     expect(home).toContain('v-if="recapFresh"')
     expect(app).toContain(':recap-fresh="weekTabDot"')
+    // ...and the shell still answers it, rather than the token falling through to a `tab` that has no
+    // such id. `openWeek` is the opener; round31-week-entry.test.ts mounts both arrivals.
+    expect(codeOf(app), 'the shell intercepts the reason').toContain("openWeek('tournament')")
   })
 })
 

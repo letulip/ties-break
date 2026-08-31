@@ -254,8 +254,10 @@ const spendRange = computed<[number, number]>(() => {
     </section>
 
     <!-- ...and on that arrival the story sits directly under the tournament, not at the end of the
-         page: «план тренировок внизу остаётся как есть» is round 30 #6's, and the plan stays last on
-         both entries. The story loses its position on this one screen-load and loses nothing else. -->
+         page. Round 30 #6 asked for the training plan to stay at the bottom (his words are quoted in
+         NextTournamentPanel.vue's script header, because Cyrillic may not appear in a template), so
+         the plan is still last on BOTH entries. The story loses its POSITION on this one screen-load
+         and loses nothing else. -->
     <WeekRecapCard v-if="showRecap && tournamentFirst" />
 
     <section>

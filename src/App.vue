@@ -192,20 +192,20 @@ function openMarket(from: TabId): void {
 // reads it as a prop, and nothing else in the app changes. `'story'` is the default in every sense –
 // it is what a tick, a tab and a reload all mean.
 //
-// ⚠ IT IS AN ARRIVAL, NOT A MODE. Two things clear it back to `'story'`, and both matter:
-//   * leaving the screen (the watcher below) – the reason expired with the visit;
-//   * A WEEK RESOLVING (the `week` watcher) – a new story outranks an old arrival even when the
-//     player is standing on this screen and the tab therefore never changes. That is the half a
-//     `watch(tab)` alone cannot see, and it is the regression this fix would otherwise cause.
+// ⚠ IT IS AN ARRIVAL, NOT A MODE, and the invariant that keeps it one is: THE SCREEN HAS EXACTLY
+// TWO DOORS AND BOTH STATE THEIR REASON. `openWeek` here is one (Home's plate); the post-advance
+// branch in the `week` watcher below is the other, and it clears the entry back to `'story'` for
+// EVERY resolved week – not only the ones that navigate. That last word is the whole guard: when a
+// week resolves while the player is standing on the screen he reached from the plate, the tab does
+// not change, so a reset hung off a tab change would never fire and his next tick would open on the
+// tournament. That is the regression this item is most likely to cause, and it is pinned in
+// tests/component/round31-week-entry.test.ts.
 type WeekEntry = 'story' | 'tournament'
 const weekEntry = ref<WeekEntry>('story')
 function openWeek(entry: WeekEntry): void {
   weekEntry.value = entry
   tab.value = 'week'
 }
-watch(tab, (t) => {
-  if (t !== 'week') weekEntry.value = 'story'
-})
 
 /** Home's doors, all of them. Two of the five are not plain tab moves – they carry a reason the
  *  shell has to act on – so this is a function rather than the inline ternary it used to be. */
@@ -457,9 +457,11 @@ watch(
     if (tab.value === 'week') markThisWeekSeen()
     // ⚠ ROUND 31 #1 – AND A RESOLVED WEEK TAKES THE TOP OF THAT SCREEN BACK. The Home plate's entry
     // (see `openWeek` above) is one arrival, not a mode: a tick has a new story to tell and it goes
-    // first, exactly as it always did. This line is why the fix cannot break the week-advance flow
-    // while the player is STANDING on the screen he arrived at from the plate – the tab does not
-    // change on that path, so the `watch(tab)` reset never fires and only this one does.
+    // first, exactly as it always did. ⚠ IT IS DELIBERATELY NOT FOLDED INTO THE `tab.value = 'week'`
+    // BRANCH BELOW: this must fire on every resolved week, including the ones that navigate nowhere
+    // (the player is already on this screen, or the story's auto-open switch is off), and the branch
+    // below fires on neither. Fold it and the week-advance flow breaks for exactly the player who
+    // arrived from the plate and stayed.
     if (advanced || runClosed) weekEntry.value = 'story'
     // A paused reveal has not finished being a week yet; that falls out of the predicate rather than
     // being listed here, and is the reason `runClosed` needs a door of its own.
