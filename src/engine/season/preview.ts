@@ -115,7 +115,12 @@ function drawnField(
   conditions: ReadonlyMap<string, number>,
   kid: MatchPlayer,
   seed: string,
-  excluded?: ReadonlySet<string>,
+  excluded: ReadonlySet<string> | undefined,
+  /** ⭐ ROUND 31 #3 – and it is the SECOND table, exactly as `computeShadowTournament` takes one.
+   *  `selectEntrants` above positions the CANDIDATES (`ranking`); `kidSeedIndexIn` below positions
+   *  HER, and the bracket has read those two off different tables since round 21 #4. See
+   *  `previewEvent`'s `standing` parameter for the full argument. */
+  standing: RankingRow[],
 ): MatchPlayer[] {
   const rng = rngFromSeed(`${seed}:kidtour:${event.id}`)
   // `conditions` decides WHO is drawn (the same availability gate the bracket applies); the max
@@ -123,18 +128,47 @@ function drawnField(
   const entrants = selectEntrants(event, cohort, ranking, rng, conditions, excluded).map((p) =>
     rivalMatchPlayer(p, event.surface, ECONOMY.condition.max),
   )
-  return buildDraw(event, entrants, kid, kidSeedIndexIn(entrants, ranking, kid.id), rng)
+  return buildDraw(event, entrants, kid, kidSeedIndexIn(entrants, standing, kid.id), rng)
 }
 
 /** Where she would sit among the entrants if the field were drawn today. `strong` = most of them
  *  are ahead of her, `favourite` = most are behind. The thresholds are deliberately coarse: this
- *  is a lean, not a measurement, and the number beside it is the one that has to be right. */
-function strengthOf(alive: readonly MatchPlayer[], kid: MatchPlayer, ranking: RankingRow[]): FieldStrength {
-  const posOf = new Map<string, number>()
-  ranking.forEach((r, i) => posOf.set(r.playerId, i))
-  const last = ranking.length
-  const mine = posOf.get(kid.id) ?? last
-  const ahead = alive.filter((p) => p.id !== kid.id && (posOf.get(p.id) ?? last) < mine).length
+ *  is a lean, not a measurement, and the number beside it is the one that has to be right.
+ *
+ *  ⭐⭐⭐ ROUND 31 #3 – IT COUNTS WHO IS BETTER, NOT WHO IS RANKED HIGHER, AND THE TWO THRESHOLDS
+ *  DID NOT MOVE ONE POINT. This used to read a STANDINGS TABLE, and the round's defect (b) is what
+ *  that costs: on the owner's w933 save a thirty-one-year-old professional sits **199 of 200** in
+ *  the ITF table – her junior points expired thirteen years ago – so every junior and every
+ *  domestic card read `strong` against fields she outrates by 120 points, and the promise probe
+ *  reported `DEGENERATE: only one band occurs in these careers`.
+ *
+ *  ⚠⚠ AND RE-SCALING 0.75/0.35 WOULD HAVE BEEN EXACTLY THE WRONG FIX, because the bands were never
+ *  mis-cut – they were being applied to a quantity that does not measure the thing. Measured over
+ *  the cohort on that save, the Spearman between a player's STANDINGS POSITION and her actual
+ *  rating is **0.11** on the ITF table, 0.53 on the table the bracket selects from, 0.59 on the
+ *  domestic one and 0.64 on the professional one. Not one of the four tables answers "who is
+ *  better" well, and a wider threshold on a bad proxy just spreads the labels out over noise.
+ *
+ *  ⭐ SO IT READS THE SAME SOURCE THE RING BESIDE IT IS MADE OF. `ratingOf` on this event's surface
+ *  is what `fastMatchProbability` plays the match with and what `kidRating` / `opponentRating`
+ *  already quote – the file's own rule, three lines down, is *"one source, two readings, so the card
+ *  can never quote a rating that disagrees with the ring beside it"*. This is the third reading of
+ *  that one source, which is what makes band-versus-ring agreement STRUCTURAL rather than hoped for:
+ *  the ring is a function of (her rating − the opponent's), the opponent is drawn out of this very
+ *  field, and both are read at the same instant off the same `ratingOf`. tests/preview.test.ts
+ *  asserts the pair cannot contradict and mutates to prove the assertion bites.
+ *
+ *  ⚠ IT IS STILL A READING OF THE **FIELD**, WHICH IS WHY IT HOLDS STILL WHILE THE RING MOVES. The
+ *  share is over every entrant, so it changes only when the field's composition does – the property
+ *  round 31 #4 measured (0 of 24 events moved band on the w933 save) and the reason the band is the
+ *  one thing a pre-draw card is allowed to say. See docs/specs/tier-ladder-and-band.md. */
+function strengthOf(
+  alive: readonly MatchPlayer[],
+  kid: MatchPlayer,
+  surface: Surface,
+): FieldStrength {
+  const mine = ratingOf(kid, surface, JUNIOR_TOUR)
+  const ahead = alive.filter((p) => p.id !== kid.id && ratingOf(p, surface, JUNIOR_TOUR) > mine).length
   const share = alive.length > 1 ? ahead / (alive.length - 1) : 0
   if (share >= 0.75) return 'strong'
   if (share <= 0.35) return 'favourite'
@@ -280,13 +314,34 @@ export function previewEvent(
     results: SeasonResult[]
   },
   event: SeasonEvent,
+  /** ⭐ WHO TURNS UP – the table `selectEntrants` positions the candidates on, and it must be the
+   *  one the BRACKET selects from or the card previews a field the tournament will not field. See
+   *  the `standing` note below for the pair this is half of. */
   ranking: RankingRow[],
   kid: MatchPlayer,
   /** WEEK EXCLUSIVITY (W2-FIELD2): whoever a HIGHER W rung of this same week has already drawn. The
    *  CALLER computes it, because only the caller holds the season – and it must, or the card would
    *  name an opponent the bracket will not contain. See `weekFieldExclusion`. */
   excluded?: ReadonlySet<string>,
+  /** ⭐⭐ WHERE **SHE** STANDS AMONG THEM (round 31 #3) – the tier's OWN track's table, and it is a
+   *  SECOND table on purpose rather than a widening of the first.
+   *
+   *  `computeShadowTournament` (world/phaseHerWeek.ts) has taken two tables since round 21 #4 and
+   *  spells out why: *"Who TURNS UP must not depend on her… Where SHE STANDS among them must depend
+   *  on her and on nothing else - it is the acceptance list's own question, and `rankingFor` is the
+   *  table every other surface answers it with, so the draw now agrees with the Season card instead
+   *  of contradicting it."* The preview was handed ONE table and used it for both, so the card and
+   *  the bracket seeded her from different places – and for a DOMESTIC event they are different
+   *  places by a whole table: 199 of 200 in the ITF one against #1 in the domestic one, on the
+   *  owner's w933 save. Two readings, two tables, exactly as the bracket has them.
+   *
+   *  ⚠ OPTIONAL, AND ABSENT ⇒ `ranking`, WHICH IS BYTE-IDENTICAL TO WHAT THIS FUNCTION ALWAYS DID.
+   *  Same discipline as `excluded` above and as `kidMatchPlayerFor`'s optional world keys: a pure
+   *  caller that has only one table (a bench, an older test) gets the pre-change preview rather than
+   *  a silently different one. */
+  standing?: RankingRow[],
 ): EventPreview {
+  const standingTable = standing ?? ranking
   const alive = drawnField(
     event,
     world.cohort,
@@ -295,10 +350,9 @@ export function previewEvent(
     kid,
     world.seed,
     excluded,
+    standingTable,
   )
   const opp = firstRoundOpponent(alive, kid)
-  const posOf = new Map<string, number>()
-  ranking.forEach((r, i) => posOf.set(r.playerId, i))
   return {
     firstMatchChance: opp
       ? fastMatchProbability(kid, opp, { surface: event.surface, tour: JUNIOR_TOUR, seed: '' })
@@ -308,8 +362,13 @@ export function previewEvent(
     kidRating: ratingOf(kid, event.surface, JUNIOR_TOUR),
     opponentRating: opp ? ratingOf(opp, event.surface, JUNIOR_TOUR) : null,
     opponentName: opp?.name ?? '',
-    opponentRank: opp ? (ranking.find((r) => r.playerId === opp.id)?.rank ?? null) : null,
-    fieldStrength: strengthOf(alive, kid, ranking),
+    // ⚠ HER RANK COMES OFF THE SAME TABLE THE TOURNAMENT OVERLAY PRINTS IT FROM (round 31 #3).
+    // `standingTable` is the tier's own track's, which is exactly what `overlayRanks` in
+    // world/snapshot.ts reads – so the rank beside her name on the card and the rank beside it in
+    // the draw are one number. Before this they were two for every DOMESTIC event, because the card
+    // was handed the ITF table and the overlay reads the domestic one.
+    opponentRank: opp ? (standingTable.find((r) => r.playerId === opp.id)?.rank ?? null) : null,
+    fieldStrength: strengthOf(alive, kid, event.surface),
     temperatureC: eventTemperature(world.seed, event),
     crowd: eventCrowd(world.seed, event),
   }

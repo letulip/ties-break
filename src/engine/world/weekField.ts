@@ -74,26 +74,41 @@ export interface WeekField {
   tour: TourWeek
 }
 
+/** ⭐⭐ THE TABLE `selectEntrants` POSITIONS CANDIDATES ON FOR EVERY NON-W EVENT – lifted out of
+ *  `deriveWeekField` unchanged (round 31 #3) so the SEASON CARD can read the same one the bracket
+ *  reads instead of a second table that happens to be nearby.
+ *
+ *  Canonical ranking excludes the kid so AI-field selection never depends on the kid's own
+ *  results / entry history – the canonical AI world stays the same world whatever she does.
+ *  ⚠ THE MIXED SELECTION TABLE KEEPS THE JUNIOR 6 (W2-LADDER §3, an explicit non-move). This fold
+ *  is not one of the three ranking tables - it is the AI side's ordinal ambience, all tracks in
+ *  one pot, feeding `selectEntrants`' percentile bands - and the best-16 rule is about what a
+ *  PROFESSIONAL SEASON IS WORTH where professional points are read (rankingFor / the merged W
+ *  table / kidPoints), none of which flow through here. Widening this one would permute every
+ *  event sub-stream's composition to make a selection heuristic agree with a rule it never
+ *  implements. The N is stated, not defaulted, so the split cannot land here by accident.
+ *
+ *  ⚠ WHY IT IS EXPORTED RATHER THAN COPIED, and it is the same argument `byAllocationPriority`
+ *  makes one file over: `upcomingEvents` needs this exact fold, and a second copy of it is a second
+ *  place for a correction to miss one. Measured on the owner's w933 save, the card and the bracket
+ *  were positioning candidates on tables whose Spearman against actual strength is **0.11** (the
+ *  ITF table the card used) and **0.53** (this one) – so the card previewed a Local Open field of
+ *  mean rating 1829 that the tournament was never going to field. ZERO draws, on any stream. */
+export function aiSelectionRanking(world: WorldState): RankingRow[] {
+  return computeRanking(
+    world.results.filter((r) => r.playerId !== KID_ID),
+    world.week,
+    BEST_N_BY_TRACK.itf,
+    cohortIds(world),
+  )
+}
+
 /** ⭐ Fold the week once. Called from `tickWeek` between her body and her competition, exactly where
  *  these seven `const`s stood inline before R2-10 step 2 – same order, same expressions, zero draws. */
 export function deriveWeekField(world: WorldState): WeekField {
   const ids = cohortIds(world)
   const scheduled = world.season.filter((e) => e.week === world.week)
-  // Canonical ranking excludes the kid so AI-field selection never depends on the kid's own
-  // results / entry history – the canonical AI world stays the same world whatever she does.
-  // ⚠ THE MIXED SELECTION TABLE KEEPS THE JUNIOR 6 (W2-LADDER §3, an explicit non-move). This fold
-  // is not one of the three ranking tables - it is the AI side's ordinal ambience, all tracks in
-  // one pot, feeding `selectEntrants`' percentile bands - and the best-16 rule is about what a
-  // PROFESSIONAL SEASON IS WORTH where professional points are read (rankingFor / the merged W
-  // table / kidPoints), none of which flow through here. Widening this one would permute every
-  // event sub-stream's composition to make a selection heuristic agree with a rule it never
-  // implements. The N is stated, not defaulted, so the split cannot land here by accident.
-  const aiRanking = computeRanking(
-    world.results.filter((r) => r.playerId !== KID_ID),
-    world.week,
-    BEST_N_BY_TRACK.itf,
-    ids,
-  )
+  const aiRanking = aiSelectionRanking(world)
 
   // RIVALS BECOME REAL: every cohort player's condition for THIS week, derived ONCE from the
   // results ledger before any of the week's brackets run. Deriving it up front (rather than per
