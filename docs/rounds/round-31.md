@@ -181,3 +181,61 @@ stranger six weeks early. Together the card only ever says what the engine has a
 
 TOOL: `tools/r31-draw-stability.ts` – the measurement above, and the acceptance harness for the fix:
 after it, the CHANGES count must be zero for entered events.
+
+## 5. «Очередной сезон без кубка и почти 100% ранних вылетов» – measured, on the w933 save
+
+HIS WORDS: «Я продолжаю немного фрустрировать из-за очередного сезона без кубка и с почти 100%
+ранних вылетов, пытаюсь свыкнуться с мыслью, что это нормально в теннисе.»
+
+⚠ HE SHOULD NOT SWEAR HIMSELF TO THAT THOUGHT UNTIL IT IS CHECKED, so it was. `world.results` keeps
+a rolling 52-week window; 24 entries are in it, 21 of which map cleanly onto their tier's points
+table (3 do not – walkover/retirement rows, not counted below).
+
+WHERE SHE FINISHED                    WHERE SHE ENTERED
+    final      2                          World Tour 500    9  (lost first match 4)
+    quarter    1                          World Tour 1000   7  (lost first match 2)
+    R16        6                          Grand Slam        4  (lost first match 0)
+    R32        9                          World Tour 250    2
+    R64        3                          World Tour 100    1
+                                          World Tour 125    1
+
+⭐⭐ THE PREMISE IS WRONG IN BOTH HALVES. First-round exits are 33%, not «почти 100%». And 20 of her
+24 entries are at World Tour 500 and above, with four of them Slams – she is playing very nearly
+nothing but the hardest events on the calendar. Two finals, a quarter and six R16s at that level is
+a strong season, not a broken one; at a Slam she has never lost her opener.
+
+⭐ THE REAL CAUSE OF THE MISSING CUP IS THE CALENDAR MIX, NOT HER LEVEL. Titles on the real tour are
+won at 250s and 500s; her window contains two 250s and one 125. This is his own Bublik observation
+turned into a measurement – and it is the argument FOR item 4's fix, because a card whose opponent
+is re-rolled every week cannot support the choice he wants to make.
+
+## 6. Are there surface kings?
+
+HIS WORDS: «а вот в реальности есть что-то вроде "король травы" или "король глины" … у нас как с
+этим дела?»
+
+MEASURED over the 199-player cohort on w933, rating each player on each surface:
+
+    surface spread across the cohort : min 0, mean 31, max 93 rating points
+    best-surface distribution        : hard 65, clay 73, grass 61   (balanced)
+    HER                              : hard 1773, clay 1791, grass 1755 – a generalist
+
+⚠ BUT THE SPREAD IS THE WRONG METRIC and it flattered the answer. The top of the spread list is
+simply the strongest players (a bigger absolute gap follows from a bigger absolute rating). The
+metric that makes a specialist is a player's edge over her OWN second-best surface:
+
+    best clay  : Mila Duval +23,  Olga Varga +22,  Mila Mansouri +22
+    best grass : Clara Bermudez +21, Quinn Pavic +21, Talia Adler +22
+    best hard  : Emma Hendriks +46, Sasha Janssen +44, Rina Marchetti +46
+
+VERDICT: the world has surface PREFERENCES and no surface KINGS. 22 points is a 53% edge between
+equals – indistinguishable from noise across a season. A recognisable king of clay needs something
+in the 150–250 range (65–75% between equals). The hard-court edge is also systematically double the
+other two, which is an asymmetry nobody chose.
+
+⭐ This is a lever, not just a gap: if surfaces carried identity, choosing events by surface becomes
+a real strategy – the same planning layer item 4 is about, and the same thing he is asking for when
+he talks about picking favourable tournaments. NOT filed as a fix; awaiting his call, and it would
+need a spec and a bench under invariant 5.
+
+TOOLS: `tools/r31-exit-where.ts`, `tools/r31-surface-kings.ts`.
