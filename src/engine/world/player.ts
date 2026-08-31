@@ -9,7 +9,7 @@
 // coach's edge, which is a re-derivation off `seed:coachedge:<id>` (engine/coach.ts).
 import { pickInt, rngFromSeed } from '../rng'
 import { applySurfaceStyle } from '../match/style'
-import { applyKit, kitWearAt } from '../equipment'
+import { applyKit, kitWearAt, type KitWear } from '../equipment'
 import { kitFreshCap } from '../offers'
 import { conditionMatchFactor } from '../condition'
 import { relativeAgeHeadStart, SKILL_KEYS, STARTING_SKILL_BAND, type KidSkills } from '../development'
@@ -180,6 +180,21 @@ export function kidMatchPlayerFor(
      *  the weeks she PLAYED. Optional for the same reason `kit` is – a pure caller without one gets
      *  the elapsed-calendar answer, which is byte-identical to what this function always gave. */
     gearRestWeeks?: number[]
+    /** ⭐ HER KIT'S WEAR, OVERRIDDEN – the SEVENTH reading and still not a seventh term, exactly like
+     *  the sponsor's floor, the rung and the holiday stand-down before it: what arrives here is the
+     *  WEAR that goes into `applyKit`, never the arithmetic. Absent ⇒ `kitWearAt` reads the clock, so
+     *  every existing caller composes byte-identically.
+     *
+     *  ⚠ IT EXISTS FOR ONE CALLER AND THE REASON IS THE SAME ONE `condition` HAS. The field-strength
+     *  BAND compares a RUNG's level with hers, and `season/preview.ts` has argued since wave 2 that a
+     *  level comparison must not quote a transient – *"their exhaustion today says nothing about their
+     *  condition on a week that has not happened"*. Kit wear is that same transient one seam along: it
+     *  runs a saw-tooth as strings go and are replaced, and measured on the owner's w933 save it moved
+     *  her rested rating by **7 points a week** while her five skills moved by one. The BAND therefore
+     *  reads her at `FRESH_KIT`, exactly as it reads the field at `ECONOMY.condition.max` – both sides
+     *  at their best, which is the only way the comparison is like-for-like. ⚠ THE RING IS UNTOUCHED
+     *  and still plays her in the racket she owns this week. */
+    kitWear?: KitWear
     /** her CURRENT build. Optional for the same reason `offers` is – a pure caller without one gets
      *  the birth build, exactly as `kidMatchPlayer`. */
     skills?: KidSkills
@@ -256,14 +271,15 @@ export function kidMatchPlayerFor(
     // the WEAR that goes in - the clock stands down while nobody is on court - never the arithmetic.
     // An empty ledger is the identity element, so a career that never booked a holiday composes
     // byte-identically to what it did before this shipped.
-    kitWearAt(
-      world.seed,
-      world.profile.background,
-      world.week,
-      kitFreshCap(world.offers ?? [], world.week),
-      world.kit ?? null,
-      world.gearRestWeeks ?? [],
-    ),
+    world.kitWear ??
+      kitWearAt(
+        world.seed,
+        world.profile.background,
+        world.week,
+        kitFreshCap(world.offers ?? [], world.week),
+        world.kit ?? null,
+        world.gearRestWeeks ?? [],
+      ),
   )
   // ⚠ AND THE COACH IN HER CORNER, WHICH IS A SIXTH READING AND THE FIRST ADDITIVE ONE (see
   // COACH_EDGE_POINTS_PER_PP above). A zero edge - nobody hired - returns the composed player

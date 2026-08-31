@@ -42,11 +42,21 @@ import type { FieldStrength } from '../src/engine/season/preview'
  *  ~8.6 seasons; the defect is fully present from about week 400 (measured, see the header) and the
  *  cost is linear in this number. */
 const WEEKS = 450
-/** Sampled, not every week: a snapshot is 39 ms and a tick is 3.5 ms, so observing every week would
- *  cost fifteen times what the ticking does and add nothing – consecutive weeks show nearly the same
- *  cards. */
-const SAMPLE_EVERY = 8
-const SAMPLES = 12
+/** ⭐⭐ HOW MANY OF THE LAST WEEKS ARE OBSERVED, AND IT IS **EVERY** ONE OF THEM (round 31, reconciling #3 with #4).
+ *
+ *  This file used to sample every eighth week, on the argument that *"consecutive weeks show nearly
+ *  the same cards"*. That was true and is now false, and the branch that made it false is round 31
+ *  #4's: a card carries a RING only inside `DRAW_LEAD_WEEKS`, so the only week an event can be
+ *  measured at is `event.week − 1`, and an every-eighth-week walk catches one event in eight. It
+ *  caught 134 cards where the file needs 400+, and the vacuity guard below – which exists for
+ *  exactly this – said so.
+ *
+ *  ⚠ THE FIX IS WHERE THE TEST LOOKS, NOT WHAT IT CLAIMS. Both claims are about the field a card
+ *  shows a ring against; the ring simply moved to one specific week per event. So the walk observes
+ *  every week and keeps the cards that have a draw, which is the SAME population per event – one
+ *  reading each, at the week its own draw exists – gathered from more weeks instead of fewer. The
+ *  numbers below are re-established against it, not carried over. */
+const OBSERVE_WEEKS = 110
 const SEEDS = ['ladder-depth-a', 'ladder-depth-b'] as const
 
 interface Card {
@@ -77,9 +87,9 @@ const cards: Card[] = (() => {
   for (const seed of SEEDS) {
     const world = createWorld(seed)
     const rng = rngFromSeed(`${seed}:bench`)
-    const firstSample = WEEKS - SAMPLE_EVERY * SAMPLES
+    const firstSample = WEEKS - OBSERVE_WEEKS
     for (let w = 0; w < WEEKS; w++) {
-      if (w >= firstSample && (w - firstSample) % SAMPLE_EVERY === 0) {
+      if (w >= firstSample) {
         const grew = { ...world.skills }
         for (const scale of [1, WEAKENED]) {
           world.skills = {
@@ -90,9 +100,11 @@ const cards: Card[] = (() => {
             groundstrokes: grew.groundstrokes * scale,
           }
           for (const e of upcomingEvents(world)) {
-            // ⚠ A CARD WITH NO RING IS NOT A READING OF ONE. `firstMatchChance` is typed `number`
-            // here and `number | null` on the draw-reveal branch, where a card further out than the
-            // draw shows no percentage at all; skipping a null keeps this file true on both.
+            // ⚠⚠ A CARD WITH NO RING IS NOT A READING OF ONE, AND SINCE ROUND 31 #4 THAT IS THE
+            // SAMPLING RULE RATHER THAN A COMPATIBILITY NOTE. `firstMatchChance` is null on every
+            // card further out than `DRAW_LEAD_WEEKS`, so this line is what positions the whole
+            // measurement AT THE WEEK EACH EVENT'S DRAW EXISTS – one observation per event, taken
+            // where the ring is real, instead of eight taken where it is a guess.
             const chance = e.preview.firstMatchChance as number | null
             if (chance === null) continue
             out.push({ tier: e.tier, band: e.preview.fieldStrength, chance, eligible: !!e.eligible })

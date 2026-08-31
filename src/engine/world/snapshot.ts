@@ -45,7 +45,9 @@ import { rngFromSeed } from '../rng'
 import { COLLEGE_LEAGUE, COLLEGE_LEAGUE_ROUNDS, wonTheLeague } from '../collegeLeague'
 import { NATIONAL_TEAM, NATIONS_CUP_AWARDS_NOTHING, callUpOpponent, nationFinishLabel } from '../nationalTeam'
 import { axisReadings, buildRadar, buildTrainingRead } from '../radar'
-import { previewEvent, eventCrowd, eventTemperature } from '../season/preview'
+import { previewEvent, eventCrowd, eventTemperature, ratedField } from '../season/preview'
+import { FRESH_KIT } from '../equipment'
+import type { RatedEntrant } from '../season/preview'
 import { BEST_N_BY_TRACK, WINDOW_BY_TRACK, isCountingResult, windowFromWeek, windowSlots, windowedBestSum } from '../season/ranking'
 import { isFieldProId, universeForTier } from '../season/fieldPros'
 import { entrantNationAt, weekFieldExclusion } from '../season/tournament'
@@ -279,10 +281,36 @@ export function upcomingEvents(world: WorldState): UpcomingEvent[] {
     const key = `${surface}:${help}`
     let p = restedCache.get(key)
     if (!p) {
-      p = kidMatchPlayerFor({ ...world, condition: ECONOMY.condition.max }, surface, help)
+      // ⚠ AND IN BRAND-NEW KIT, which is the same sentence one seam along – see `kitWear` on
+      // `kidMatchPlayerFor`. Condition and wear are both weekly transients about her circumstances
+      // rather than her level, the field is read at its best on exactly that argument, and measured
+      // on the owner's w933 save the wear saw-tooth moved her rested rating by 7 points a week
+      // against her skills' one. ⚠ The RING still quotes the racket she actually owns.
+      p = kidMatchPlayerFor(
+        { ...world, condition: ECONOMY.condition.max, kitWear: FRESH_KIT },
+        surface,
+        help,
+      )
       restedCache.set(key, p)
     }
     return p
+  }
+  // ⭐ ...AND THE POPULATION THE **BAND** IS COUNTED OVER: the cohort rated rested on a surface,
+  // strongest first (`ratedField`). The band stopped being a reading of this week's draw and became
+  // a reading of the RUNG – see `tierExpectedField` in season/preview.ts and
+  // docs/specs/tier-ladder-and-band.md §7 – and a rung's expected field is a fold over the whole
+  // cohort, which every card of that surface shares. Memoised on (universe, surface) for the same
+  // reason `ranking` is hoisted out of the loop: at most six folds against one per card, and the two
+  // universes are genuinely different populations (a W card previews LIVE cohort ∪ field pros).
+  const ratedCache = new Map<string, RatedEntrant[]>()
+  const ratedFor = (universe: 'junior' | 'wta', surface: SeasonEvent['surface']): RatedEntrant[] => {
+    const key = `${universe}:${surface}`
+    let table = ratedCache.get(key)
+    if (!table) {
+      table = ratedField(universe === 'wta' ? wtaCtx!.universe : world.cohort, surface)
+      ratedCache.set(key, table)
+    }
+    return table
   }
   const standingCache = new Map<LadderTrack, RankingRow[]>()
   const standingFor = (tier: TierId): RankingRow[] => {
@@ -417,6 +445,7 @@ export function upcomingEvents(world: WorldState): UpcomingEvent[] {
                 wtaExclusionFor(e),
                 standingFor(e.tier),
                 kidAtRestFor(e.surface, coachTravelFareFor(world, e) > 0),
+                ratedFor('wta', e.surface),
               )
             : previewEvent(
                 world,
@@ -426,6 +455,7 @@ export function upcomingEvents(world: WorldState): UpcomingEvent[] {
                 undefined,
                 standingFor(e.tier),
                 kidAtRestFor(e.surface, coachTravelFareFor(world, e) > 0),
+                ratedFor('junior', e.surface),
               ),
         // v21: the price the FAMILY pays, scholarship included – the planner has to quote what
         // entering will actually cost, and it is the same number chargeTravel will take.

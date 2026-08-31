@@ -12,15 +12,24 @@
 import { describe, it, expect } from 'vitest'
 import { worldSource } from './worldSource'
 import { readFileSync } from 'node:fs'
-import { previewEvent, eventTemperature, eventCrowd, DRAW_LEAD_WEEKS } from '../src/engine/season/preview'
+import {
+  previewEvent,
+  eventTemperature,
+  eventCrowd,
+  ratedField,
+  tierExpectedField,
+  DRAW_LEAD_WEEKS,
+} from '../src/engine/season/preview'
 import {
   buildDraw,
   firstRoundOpponent,
+  isEntrantBand,
   kidSeedIndexIn,
   selectEntrants,
   runTournament,
   JUNIOR_TOUR,
 } from '../src/engine/season/tournament'
+import { TIERS, isTierAgeOpen } from '../src/engine/season/calendar'
 import { BEST_N_BY_TRACK, computeRanking } from '../src/engine/season/ranking'
 import { rivalConditions, rivalMatchPlayer } from '../src/engine/season/rival'
 import { fastMatchProbability } from '../src/engine/match/engine'
@@ -183,9 +192,20 @@ describe('the preview is stable, and free', () => {
     // preview would otherwise name someone who is not in the draw. What must never happen is
     // fatigue reaching the STRENGTH of the players, and that is what is pinned: the only place a
     // condition is handed to `rivalMatchPlayer` is the constant maximum.
+    // ⚠ RE-AIMED AND STRENGTHENED, NOT LOOSENED (round 31, reconciling #3 with #4). The guard used to be a COUNT – "there
+    // is exactly one `rivalMatchPlayer(` in this file" – which was a proxy for the claim, and the
+    // proxy expired the moment the module gained a second, equally rested reading of the cohort
+    // (`ratedField`, which rates every player at the constant maximum to build the tier's expected
+    // field). Counting would have reddened on a change that obeys the rule. So the claim is now
+    // asserted directly and over EVERY call: whatever condition this module hands `rivalMatchPlayer`,
+    // it is `ECONOMY.condition.max` and never a fatigue reading. That is what the paragraph above
+    // says, it is stronger than the count (a tenth call obeying the rule passes, a first call
+    // breaking it fails), and it is the form a source pin should have taken from the start.
     const src = read('../src/engine/season/preview.ts')
     expect(src).toContain('rivalMatchPlayer(p, event.surface, ECONOMY.condition.max)')
-    expect(src.match(/rivalMatchPlayer\(/g) ?? []).toHaveLength(1)
+    const rivalCalls = [...src.matchAll(/rivalMatchPlayer\(([^)]*)\)/g)].map((m) => m[1])
+    expect(rivalCalls.length).toBeGreaterThan(0)
+    for (const args of rivalCalls) expect(args, `rivalMatchPlayer(${args})`).toContain('ECONOMY.condition.max')
     expect(src).not.toMatch(/rivalMatchPlayer\([^)]*conditions/)
     // ...and the fatigue map only ever reaches the entrant SELECTION.
     // ⚠ RE-AIMED (W2-FIELD2): the call gained a sixth argument, `excluded` – whoever a HIGHER W rung
@@ -526,6 +546,45 @@ describe('every upcoming card on the snapshot carries one', () => {
     expect(observations).toBeGreaterThan(20)
     const moved = [...seen.entries()].filter(([, v]) => v.size > 1).map(([id]) => id)
     expect(moved, 'a band moved while the card sat on screen').toEqual([])
+  })
+
+  it('the band reads the HEAD of a rung\'s entrant window – the part the draw can reach', () => {
+    // ⚠ THIS PINS `ENTRY_JITTER_REACH`, AND IT EXISTS BECAUSE THE OBVIOUS ARM DOES NOT REACH IT.
+    // Widening the constant to the whole window leaves tests/tier-ladder-and-band.test.ts green (its
+    // weakened vantage point still produces `strong` cards), so the deep fixture cannot speak for
+    // this choice - measured, by mutation, before this test was written. What the constant decides is
+    // WHO the rung is expected to field: `selectEntrants` keys candidates on `position + rng() x
+    // drawSize` and takes the lowest `drawSize`, so the reachable population is the top TWO draws'
+    // worth of the window and never the whole of it. Read the whole window and a Local Open is priced
+    // at its weakest ninety instead of the eight it fields - measured on the owner's w933 save, that
+    // costs the word `strong` entirely.
+    const world = createWorld('pv-tier-field')
+    for (const surface of ['hard', 'clay', 'grass'] as const) {
+      const rated = ratedField(world.cohort, surface)
+      expect(rated.length).toBe(world.cohort.length)
+      // strongest first, which is what makes a percentile window a STRENGTH window
+      for (let i = 1; i < rated.length; i++) expect(rated[i].rating).toBeLessThanOrEqual(rated[i - 1].rating)
+      for (const tier of ['local', 'j30', 'j300'] as const) {
+        const field = tierExpectedField(tier, rated)
+        const ofAge = rated.filter((p) => isTierAgeOpen(tier, p.ageYears))
+        const window = ofAge.filter((_, i) => isEntrantBand(tier, (i + 1) / ofAge.length))
+        expect(field.length, `${tier}/${surface} field size`).toBe(
+          Math.min(TIERS[tier].drawSize * 2, window.length),
+        )
+        // ...and it is the STRONG end of that window, not a slice of the middle and not the whole of
+        // it. ⚠ The strict comparison is conditional because the FILLABILITY escape is real: a J300's
+        // window is the top quarter of the under-eighteens and is smaller than two of its 32-draws,
+        // so its head IS the whole window and the two means are equal by construction. Asserting a
+        // strict inequality there would be asserting the escape does not exist.
+        const mean = (xs: readonly number[]) => xs.reduce((a, b) => a + b, 0) / xs.length
+        expect(field[0], `${tier}/${surface} starts at the window's head`).toBe(window[0].rating)
+        if (field.length < window.length) {
+          expect(mean(field), `${tier}/${surface} head vs whole window`).toBeGreaterThan(
+            mean(window.map((p) => p.rating)),
+          )
+        }
+      }
+    }
   })
 
   it('the E brief and the Season card quote the SAME crowd for the same tournament', () => {
