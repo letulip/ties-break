@@ -102,3 +102,58 @@ hides the same instability behind bigger numbers.
 unseeded #124 in a J30 can therefore land against any seed in round one, #22 included. That is
 ordinary bracket behaviour and not a bug — but it is a second reason the pre-event percentage could
 never have been about that match.
+
+---
+
+## 6. What shipped, thirteen months of playing later (31.08.2026, round 31 #4)
+
+§4's recommendation **2** is now the code. Recommendation **1** is not, and **3** is not, and both
+were overruled by the owner rather than dropped.
+
+**The complaint that forced it.** He read the same instability again, this time as people rather than
+as a percentage: «по-моему они точно знают с кем будут играть в первом туре и этот персонаж не
+меняется, разве нет?». Re-measured on his own w933 save with `tools/r31-draw-stability.ts`:
+**20 of 24 tournaments changed their round-one opponent** over three to six weekly readings.
+
+**His ruling on the shape.** «можно писать, что жеребьевки еще не было, а потом (когда она
+происходит за 1 неделю, 2, 3?) прямо на карточке турнира писать имя и ранг соперницы на 1й круг внизу
+возле этого круга с шансом, можно как раз в поле Coach says это делать элегантно» – and, on the band,
+«эта полоса тоже должна быть более-менее статична … Мы здесь вполне можем немного обойти реальность в
+пользу игры и наглядности, может быть игрок планирует турниры и выбирает более выгодные для себя».
+
+So the card has three states, and `DRAW_LEAD_WEEKS = 1` in `engine/season/preview.ts` is the whole
+rule: no name and no percentage further out than a week, both from week − 1. Entries close at the end
+of week − 2, so he commits on the band and then learns the opponent.
+
+**Why NOT §4.1 (a field-level percentage).** He asked for the named opponent and her rank beside the
+ring. A field-level number would have answered a question he did not ask and would have left the ring
+saying one thing while the plaque named another – the seam this file's own §3 is about.
+
+**Why nothing is persisted.** Freezing the draw at entry would have needed a save-schema move AND a
+change to `buildKidTournament`, whose brackets are pinned by the frozen career hashes in
+`tests/coach-travel-edge.test.ts`. It is not needed: `upcomingEvents` shows a card only while
+`e.week > world.week`, so week − 1 is the last week a card exists and a named opponent is read at
+exactly one week, once. After the change the same harness reports **0 of 24**.
+
+**§2's other measurement held.** `fieldStrength` moved in 0.0% of 15,384 steps then; it moved on
+**0 of 24** tournaments on the w933 save now, across three to six readings each and with all three
+bands present (favourite / even / strong). The band was already the stable reading, which is why it
+is the one thing a pre-draw card still says and why no new mechanic was invented to make it stand
+still.
+
+⚠ **The synthetic arm of that is worth less than it looks and is quoted here with its caveat.**
+`tools/r31-draw-promise.ts` reports 0 of 12,268 steps over six fresh careers – but every one of those
+14,091 readings is `strong`, because a young girl sits at the bottom of the ITF table and
+`strengthOf` counts how much of the field is ranked above her. A value that only ever takes one value
+cannot be observed to move. The w933 save is the arm that carries this claim.
+
+**⚠ ONE THING THIS DID NOT CLOSE, and it is filed rather than fixed.** The name revealed at week − 1
+is not guaranteed to be the girl the bracket produces at week 0. The card at week − 1 and
+`buildKidTournament` at week 0 hold the SAME results and differ only in the week number they fold
+`rivalConditions` and the ranking at – and that single number is worth a lot: measured over six
+careers and 1,749 draw-week cards (`tools/r31-draw-promise.ts`), the two disagree on the opponent
+**59.2%** of the time, because one more week of rival recovery changes who clears the tier's
+availability floor. Closing it means either previewing the field at the EVENT's week or settling the
+draw into the save, and both move brackets that the career hashes pin. It is a smaller lie than the
+one this round fixed – one wrong name, once, instead of a new name every week – but it is the next
+thing to decide.
