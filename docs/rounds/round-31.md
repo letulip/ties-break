@@ -239,3 +239,55 @@ he talks about picking favourable tournaments. NOT filed as a fix; awaiting his 
 need a spec and a bench under invariant 5.
 
 TOOLS: `tools/r31-exit-where.ts`, `tools/r31-surface-kings.ts`.
+
+## 7. «Цифра победы/заявки ощутимо снижается» – he is right, and the cause is her age
+
+HIS WORDS: «я передал тебе "фрустрацию игрока" и его ощущения … я вижу также, что цифра
+победы/заявки ощутимо снижается. Возможно это теннис и здесь так должно быть и ты прав.»
+
+⚠ HE WAS RIGHT AND MY ITEM-5 ANSWER WAS TOO NARROW. `world.results` keeps 52 weeks, so one save
+cannot show a trend; five of his kept saves can, since each carries its own window. Union of
+w502/w675/w780/w896/w933, deduped by week+tier+points – 86 distinct entries, weeks 626..931:
+
+    season  entries  matches  won  win rate  titles  wins/entry
+    12      21       40       21   53%       2       1.00
+    14      23       58       35   60%       0       1.52
+    16      18       39       21   54%       0       1.17
+    17      24       46       22   48%       0       0.92
+
+NOT THE FIELD. Share of entries at World Tour 500 and above: 91% (s14) → 89% (s16) → 83% (s17). The
+calendar got slightly EASIER while the win rate fell twelve points, so "she moved up" is refuted.
+
+⭐⭐ IT IS HER AGE, AND THE MAGNITUDE MATCHES:
+
+    week  age   hard  clay  grass  condition
+    502   23.0  1838  1857  1819   100
+    675   26.0  1850  1870  1831   100
+    780   28.0  1856  1875  1837   100
+    896   31.0  1795  1813  1777   83
+    933   31.7  1773  1791  1755   87
+
+She peaked at 28 (1856 hard) and is 83 rating points below it at 31.7, with condition off its
+ceiling too. Against a fixed opponent, −83 points moves a 62% match to 50% – which is very nearly
+the 60% → 48% the results show. The age curve is doing exactly what it was built to do.
+
+⭐ THE DEFECT IS NOT IN THE ENGINE, IT IS THAT THE GAME NEVER TOLD HIM. He spent a season assuming
+something was broken, and was ready to «свыкнуться с мыслью, что это нормально», because nothing on
+screen says she is past her peak. A parent watching a 31-year-old decline is the emotional core of
+this game and it is currently silent. FILED AS A FINDING for his call – not a fix, and not part of
+item 4.
+
+TOOLS: `tools/r31-winrate-trend.ts`, `tools/r31-her-arc.ts`.
+
+## 8. The draw: what he approved
+
+HIS RULING on the order: «Предлагаю такой порядок … давай и учти вышесказанное мной» – item 4 first,
+then surface identity, the inverted tier ladder fixed in passing.
+
+HIS REFINEMENT on the reveal: «можно писать, что жеребьевки еще не было, а потом (когда она
+происходит за 1 неделю, 2, 3?) прямо на карточке турнира писать имя и ранг соперницы на 1й круг
+внизу возле этого круга с шансом, можно как раз в поле Coach says это делать элегантно».
+
+DECIDED, and he may overrule: the draw is made at **week − 1**. Entries close at the END of week − 2
+(`calendar.ts:2060`), so the draw lands the week AFTER he has committed – he chooses on the band and
+then learns the opponent, which is both how tennis works and the better scene.
