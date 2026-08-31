@@ -131,3 +131,53 @@ arbitrary as the weeks pass: the swing is not her form, it is a tier ladder that
 many seeds, many weeks, mean opponent rating and draw size per tier – because the CAUSE is not yet
 established: candidates are the local pool not being strength-capped to its tier, and seeding
 protection failing on small draws. NOT filed as a fix; filed as a measured finding awaiting his call.
+
+## 4. The round-one opponent is re-drawn every week, for a tournament that has not happened
+
+HIS WORDS: «каждую неделю это другой турнир с другой соперницей в первом круге – разве такое бывает
+в реальности? по-моему они точно знают с кем будут играть в первом туре и этот персонаж не меняется,
+разве нет? Это применимо к любому турниру в нашей сетке»
+
+⚠⚠ HE IS RIGHT AND MY ITEM-3 ANSWER WAS WRONG ON ITS MAIN POINT. I told him each week's card is a
+different tournament. It is not only that: **the SAME tournament re-draws its first-round opponent
+as the weeks pass.** Measured on his w896 save by ticking the world forward with no player actions
+and re-reading `upcomingEvents` each week, following every event by its own id:
+
+    19 of 27 tournaments changed their round-one opponent while being watched (3–4 observations each)
+
+    wk902 World Tour 1000   [w896: Camila Aydin 69%] [w897: Quinn Sartori 40%] [w898: 39%] [w899: 38%]
+    wk903 Junior Tour 60    [w896: Vera Costa 81%]   [w898: Hana Brennan 41%]  [w899: Marta Simic 70%]
+    wk902 Junior Tour 30    [w896: Mila Falk 81%]    [w897: Olga Moller 78%]   [w898: Emma Wouters 70%]
+                            [w899: Hana Rutledge 96%]
+    wk900 World Tour 250    [w896..w898: Bianca Quintero 66%] [w899: Clara Simic 53%]
+
+⭐ THAT IS HIS 80 → 54 → 31 EXACTLY, and it is one card, not three. The largest observed swing on a
+single event is 40 points (Junior Tour 60: 81% → 41%). His careers are not moving; the draw is.
+
+CAUSE: `previewEvent` → `drawnField` (`src/engine/season/preview.ts:111`) rebuilds the field on every
+read from `selectEntrants(event, cohort, ranking, rng, conditions, excluded)`. The per-event rng is
+deterministic (`seed:kidtour:event.id`), but `ranking` and `conditions = rivalConditions(results,
+world.week)` are TODAY's – so who is available and how they are seeded changes weekly, and a
+different entrant list yields a different neighbour in the bracket. The card's own comment already
+concedes this («her odds in round one against the field as it stands TODAY»); what nobody checked is
+that a player reads a NAME as a commitment, not as a projection.
+
+⚠ Determinism is still intact – replaying the same seed and choices reproduces these same numbers at
+these same weeks. This is not an RNG defect. It is a card promising something the engine has not
+decided yet.
+
+THE DESIGN QUESTION FOR THE OWNER, because the honest fix depends on which he wants:
+ (a) FREEZE AT ENTRY – once she enters, her round-one opponent is fixed and never re-rolls. Matches
+     his «этот персонаж не меняется» and his standing refusal of dice in the planning layer («заявка
+     станет частично броском кубика, а это реальная потеря в игре про планирование сезона»).
+     Needs the drawn opponent persisted on the entry ⇒ a save-schema move.
+ (b) NAME NOBODY UNTIL THE DRAW IS REAL – a far-out card shows the field strength band it already
+     computes and no name; the name appears at the deadline week. Truthful to real tennis, where a
+     draw six weeks out does not exist. No schema change.
+ (c) Both: band before entry, frozen name after.
+
+⭐ RECOMMENDED: (c). (b) alone still lets the number jump between viewings; (a) alone still names a
+stranger six weeks early. Together the card only ever says what the engine has actually settled.
+
+TOOL: `tools/r31-draw-stability.ts` – the measurement above, and the acceptance harness for the fix:
+after it, the CHANGES count must be zero for entered events.
