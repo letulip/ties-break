@@ -1,3 +1,11 @@
+---
+type: spec
+status: draft
+area: engine/balance
+canonical: false
+last-reviewed: 2026-08-27
+---
+
 # Is the first-round exit real, or is it the draw? – the W50/W75 replay, 27.08
 
 **Asked by the owner, 27.08:** «возьми пожалуйста вот этот сейв и сыграй в нем первую связку

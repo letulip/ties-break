@@ -26,10 +26,20 @@ last-reviewed: 2026-08-31
 
 ## Now
 
-⚙ THE LIVE WAVE IS ROUND 32 – this line is machine-checked against the newest ledger in
+⚙ THE LIVE WAVE IS ROUND 33 – this line is machine-checked against the newest ledger in
 `docs/rounds/` by `scripts/doc-facts.mjs`; edit the number only by shipping a ledger.
 
-**Round 32 is the open wave** ([round-32.md](rounds/round-32.md), 31.08) – two items read off his
+**Round 33 is the open wave** ([round-33.md](rounds/round-33.md), 01.09) – a tidy-up of three August
+measurements that never reached main, and one item off his play. ⭐⭐ Its item #1 is the FIFTH report
+of the same complaint and the first with the structural answer: **there is no tournament screen.**
+Home's `Next tournament` plate opens `ThisWeekScreen` with an `entry` prop, so four rounds in a row
+rearranged blocks inside one screen while he was describing two. The prop now decides what the screen
+IS – on that arrival the page is the date line, the way back to Home and the tournament, and none of
+the week's own furniture. ⚙ **One thread is his to rule on and is not ours to build**: whether the
+tournament becomes a real `TournamentScreen.vue`. The cost of both answers is written out in the
+ledger. **Read the ledger for state; do not count boxes here.**
+
+**Round 32 was the previous wave** ([round-32.md](rounds/round-32.md), 31.08) – two items read off his
 play on the merged round-31 build, both diagnosed before they were filed. A shoot booked in an
 off-season week was drawn as an empty week: the winter IS the shoot season by construction
 (`WINTER_SHOOT_WEEKS`), and the calendar's off-season branch returned before the shoot's days were
@@ -37,14 +47,14 @@ ever computed (#1). And the week-results view carried the whole upcoming-tournam
 the results, which is the FOURTH pass over that pair of blocks (#2). **Read the ledger for state; do
 not count boxes here.**
 
-**Round 31 was the previous wave** ([round-31.md](rounds/round-31.md), 31.08), merged in
+**Round 31 was the wave before it** ([round-31.md](rounds/round-31.md), 31.08), merged in
 [#117](https://github.com/letulip/ties-break/pull/117): the This-week screen learned WHY it was
 opened, so Home's `Next tournament` plate lands on the tournament while a resolved week still lands
 on its story (#1), and the week recap's Finances tile became his own four lines – Income (the
 tournament's own cheque) / Family income / Spent / Balance – with one memo under them, her cut of
 the PRIZE money alone (#2). **Read the ledger for state; do not count boxes here.**
 
-**Round 30 was the wave before it** ([round-30.md](rounds/round-30.md), 30.08) – seventeen items from a
+**Round 30 came before that** ([round-30.md](rounds/round-30.md), 30.08) – seventeen items from a
 playthrough plus a second part read off his week-896 save, and the CI split. ⚠ Several of its items
 are REGRESSIONS from round 29's own work, found in play within hours, and they are marked `[!]` with
 what shipped and why it missed. **Read the ledger for state; do not count boxes here.**
