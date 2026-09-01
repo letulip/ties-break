@@ -3,8 +3,10 @@ import {
   DEFAULT_PROFILE,
   STOP_PRECEDENCE,
   WEEK_PLAN_PRESETS,
+  type CoachTier,
   type FamilyBackground,
   type PlayerProfile,
+  type PrologueHandover,
   type StopReason,
 } from '../shared/protocol'
 import { formatShortName } from '../shared/format'
@@ -31,9 +33,21 @@ import { clamp, tournamentRunStrain } from './condition'
 import { ECONOMY,
   kidPrizeShareBps,
   kidPrizeShareCents,
+  prologueFundsCents,
   staffPrizeShareCents,
   staffResultShareBps,
 } from './economy'
+// ⭐⭐ THE CHILDHOOD PROLOGUE, AND THIS IS THE ONLY IMPORT OF IT IN THE WHOLE OF `src/`.
+// `tests/childhood.test.ts` pins the importer set of `engine/childhood.ts` as exactly
+// `['engine/world.ts']` – phase 1 shipped it EMPTY («the module exists, is measured, and is
+// unreachable») and phase 4 is the one-line reviewed change that opens it. Nothing else may import
+// it: not the card table, not the pool, not a screen. What that buys is unchanged from phase 1's
+// argument – a module nothing on the tick path imports cannot be reached by an ordinary in-game
+// week – and it is now a claim about ONE named importer instead of none.
+import { childhoodArrival, weightAt, type ChildhoodYear } from './childhood'
+// The style she EARNED, read by the game's own derivation (`styleOf`, season/rival.ts) – see
+// `prologuePlayStyle`. rival.ts imports nothing from this file, so this is a leaf edge.
+import { styleOf } from './season/rival'
 // v54 (round-23 #18): the one string the engine writes about her own account. `shared/money.ts` is
 // the ONE cents-to-dollars implementation in the app and `weekLabel` above records why the engine is
 // allowed to reach into shared/ for a player-facing string.
@@ -1149,13 +1163,109 @@ export function closeTournament(world: WorldState): void {
 // again. At most one competitive loss can exist per week (one tournament a week, and a bracket
 // eliminates her exactly once), so a start week identifies its streak uniquely.
 
+// =================================================================================================
+// ⭐⭐⭐ THE HANDOVER – what nine years of her childhood are allowed to move (build spec §4)
+// =================================================================================================
+//
+// ⚠⚠ AND WHAT THEY MAY NOT: `potential`. Build spec §4 – «her ceiling is talent and what you did at
+// eight does not change it. Let the prologue raise it and "you made her" quietly becomes "she was
+// always going to be good"» – which is the same rule task 55 keeps twenty lines below, in the
+// comment on the `potential:` key itself: a timing or effort effect must never become a talent
+// effect. It is STRUCTURAL here rather than a promise, and the structure is worth naming because it
+// is not obvious from the call site:
+//
+//   `rollPotential(seed, startingSkills(seed, profile))` is a function of the SEED ALONE.
+//   `startingSkills(seed, _profile)` ignores its profile argument (world/player.ts – the underscore
+//   is in the signature), so no field the prologue derives – not the earned style, not the rung, not
+//   the background – can reach the ceiling roll even in principle. The arrival build is computed
+//   AFTER it and handed only to `skills`.
+//
+// `tests/prologue-handover.test.ts` proves it byte-for-byte against a wizard career on the same
+// seed, and the proof is mutation-verified by feeding the arrival to `rollPotential` and watching it
+// redden.
+//
+// ⚠ NO DRAW OF ANY KIND IS ADDED. `childhoodWalk` takes no seed and imports no generator (phase 1),
+// `styleOf` is pure arithmetic on five attributes, and the rung below is a weighted mean. The frozen
+// capture (41550 draws / e6b0c709) and every career hash therefore cannot move for a WIZARD career –
+// not «were checked and did not move», cannot – and `tests/condition.test.ts`'s pin is untouched.
+
+/** ⭐ THE RUNG SHE ARRIVES ON, read off who actually taught her across the nine years.
+ *
+ *  ⚠ THE LADDER IS EVEN AND NOTHING WAS CALIBRATED. `teaching` is 0..1 by construction (0 = a parent
+ *  on a municipal court, 1 = a club where the coaches are) and `CoachTier` has five rungs, so the
+ *  honest reading of one onto the other is the plain fifth – no threshold was chosen, and there is
+ *  nothing here for a later wave to re-tune by feel. The years are weighted by `weightAt`, phase 1's
+ *  own share of the childhood, so the thirteenth year counts for more than the fifth: a family that
+ *  found the money late arrives higher than one that spent it on a six-year-old, which is what
+ *  actually happens.
+ *
+ *  Measured over the 32 reachable runs the shipped card table can produce, this returns `budget`,
+ *  `middle` or `high` – see docs/specs/childhood-prologue-money-2026-09.md §3. `self` and `elite` are
+ *  unreachable from today's cards and that is honest rather than dead: nine years of ordinary
+ *  coaching does not buy an elite coach at fourteen, and it does not leave the parent on the court
+ *  either. A card that offers a year with no teaching in it reaches `self` without this changing. */
+export function prologueCoachTier(years: readonly ChildhoodYear[]): CoachTier {
+  const ladder: readonly CoachTier[] = ['self', 'budget', 'middle', 'high', 'elite']
+  let taught = 0
+  let mass = 0
+  for (const y of years) {
+    const w = weightAt(y.age)
+    taught += w * Math.max(0, Math.min(1, y.teaching))
+    mass += w
+  }
+  const share = mass > 0 ? taught / mass : 0
+  return ladder[Math.max(0, Math.min(ladder.length - 1, Math.floor(share * ladder.length)))]
+}
+
+/** ⭐ THE STYLE SHE EARNED, WHICH DELETES A MENU (§4: «`playStyle`, earned rather than picked – it
+ *  emerges from what she actually practised»).
+ *
+ *  ⚠ IT IS THE GAME'S OWN DERIVATION AND NOT A NEW ONE. `styleOf` (season/rival.ts) is how every one
+ *  of the 199 rivals gets a style: a serve clearly ahead of the return is serve-first, a return with
+ *  the legs behind it is a counterpuncher, two weapons without the legs is an aggressive baseliner,
+ *  and everything else is all-court. Reading her the same way is the whole answer – what the nine
+ *  years did to her wings (`childhoodWalk`'s `shape` channel, which redistributes and never adds) is
+ *  what decides it, so the style is a CONSEQUENCE of the focus a parent bought rather than a fifth
+ *  question on a form. */
+export function prologuePlayStyle(arrival: Parameters<typeof styleOf>[0]): PlayerProfile['playStyle'] {
+  return styleOf(arrival)
+}
+
 // --- lifecycle ---------------------------------------------------------------
+/**
+ * A new career at week 0.
+ *
+ * ⭐ `prologue` IS THE ONLY NEW ARGUMENT AND IT IS OPTIONAL, which is what makes §6's two paths one
+ * function: absent, this is byte-for-byte the wizard's career the game has always created, and the
+ * frozen career hashes are unmoved by construction rather than by measurement. Present, the four
+ * things §4 permits are applied on top – all of them onto fields every save has carried for dozens
+ * of versions, so no schema moves and no migration is owed.
+ */
 export function createWorld(
   seed: string,
   profile: PlayerProfile = DEFAULT_PROFILE,
   careerId: string = `legacy-${seed}`,
+  prologue?: PrologueHandover,
 ): WorldState {
-  const fundsCents = STARTING_FUNDS_CENTS[profile.background]
+  // ⭐ THE NINE YEARS, SPENT. Everything below reads `arrival` and `profile`; when there is no
+  // prologue both are what they have always been, so there is ONE code path and not two.
+  const years: readonly ChildhoodYear[] = prologue?.years ?? []
+  const born = withHeadStart(startingSkills(seed, profile), profile.birthMonth)
+  // ⚠ POST-DRAW, ON TOP OF THE HEAD START, exactly the shipped `relativeAgeHeadStart` pattern
+  // (`childhoodArrival`'s own note says so, and phase 1 clamps the result to `STARTING_SKILL_BAND`
+  // so the set of girls a prologue can hand over is the SAME SET a fresh fourteen-year-old is drawn
+  // from). No stream is touched and no schema is owed.
+  const arrival = years.length > 0 ? childhoodArrival(born, years) : born
+  if (prologue) {
+    profile = {
+      ...profile,
+      playStyle: prologuePlayStyle(arrival),
+      coachTier: prologueCoachTier(years),
+    }
+  }
+  const fundsCents = prologue
+    ? prologueFundsCents(profile.background, prologue.spentCents)
+    : STARTING_FUNDS_CENTS[profile.background]
   const cohort = generateCohort(seed)
   // Ladder-up Part A: the cohort arrives with a season already behind it (season/prehistory.ts),
   // so week-1 entrant fields are ranking-MEANINGFUL and the standings are not a 199-way tie at 0.
@@ -1208,7 +1318,11 @@ export function createWorld(
     // documented as the birth build and two girls with the same seed really do have the same one, and
     // every save written before this existed keeps a radar baseline that has not moved.
     // POST-DRAW arithmetic, so no stream is touched.
-    skills: withHeadStart(startingSkills(seed, profile), profile.birthMonth),
+    // ⚠ AND SINCE PHASE 4 THIS IS `arrival` – the head-started birth build with the childhood's nine
+    // years already folded in, or exactly the head-started birth build when there is no prologue.
+    // The expression it replaces was `withHeadStart(startingSkills(seed, profile), profile.birthMonth)`
+    // and that is verbatim what `arrival` is on the wizard path, computed once above instead of twice.
+    skills: arrival,
     // ⚠ THE CEILING IS ROLLED OFF THE BIRTH BUILD, NOT THE HEAD-STARTED ONE. `rollPotential` adds a band
     // on top of where she starts, so feeding it the head start would hand the January girl a higher
     // CEILING as well as a better start - turning a timing effect into a talent effect, which is exactly
@@ -1306,7 +1420,7 @@ export function createWorld(
     // ⚠ LAST KEY OF THE LITERAL, for the reason the masseur's three above give: the frozen-career
     // identity in tests/coach-travel-edge.test.ts reproduces the pre-v62 hashes by dropping exactly
     // this key, which only works while the rest of the serialisation order is untouched.
-    peakPhysical: physicalMean(withHeadStart(startingSkills(seed, profile), profile.birthMonth)),
+    peakPhysical: physicalMean(arrival),
     // ⭐ v63 (the shop, slice 1): the family owns nothing on day one. Empty is the identity here in
     // the plainest sense: nothing has been bought yet.
     // ⚠ THIS NOTE USED TO SAY «and the shelf is not even visible – it opens with her professional

@@ -298,11 +298,18 @@ describe('what the childhood may not touch', () => {
     expect(CHILDHOOD_CODE).not.toMatch(/\bseed\b\s*:/)
   })
 
-  it('⚠⚠ cannot be reached by an ordinary in-game week – nothing in src/ imports it', () => {
-    // Phase 1 wires NOTHING into the app: the module exists, is measured, and is unreachable. When
-    // phase 4 hands the prologue's build to `createWorld` this expectation moves to exactly
-    // `['engine/world.ts']` and that is a one-line, reviewed change – which is the point of pinning
-    // the set rather than merely asserting the tick path.
+  it('⚠⚠ cannot be reached by an ordinary in-game week – only engine/world.ts imports it', () => {
+    // ⭐ THE ONE-LINE, REVIEWED CHANGE PHASE 1 PROMISED, MADE. It shipped as `[]` – «the module
+    // exists, is measured, and is unreachable» – with its own note saying that when phase 4 hands
+    // the prologue's build to `createWorld` this expectation moves to exactly `['engine/world.ts']`.
+    // It has, and the set is still the point: the card table may not import it, the pool may not
+    // import it, no screen and no store may import it, and a second importer appearing anywhere in
+    // `src/` reddens this line rather than quietly putting the childhood on the tick path.
+    //
+    // ⚠ WHAT IT STILL BUYS, WHICH IS THE SAME THING PHASE 1 BOUGHT. `createWorld` runs ONCE, at the
+    // birth of a career; `tickWeek` never calls it. So a module reachable from `world.ts` alone is
+    // still a module an ordinary in-game week cannot reach, and `development.ts` is still untouched
+    // – which is why the frozen capture (41550 / e6b0c709) and every career hash cannot move.
     const SRC = fileURLToPath(new URL('../src/', import.meta.url))
     const files: string[] = []
     const walk = (dir: string) => {
@@ -317,6 +324,6 @@ describe('what the childhood may not touch', () => {
       .filter((f) => !f.endsWith(`engine${'/'}childhood.ts`))
       .filter((f) => /from\s*['"][^'"]*\bchildhood['"]/.test(readFileSync(f, 'utf8')))
       .map((f) => f.slice(SRC.length))
-    expect(importers).toEqual([])
+    expect(importers).toEqual(['engine/world.ts'])
   })
 })

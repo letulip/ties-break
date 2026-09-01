@@ -82,6 +82,49 @@ export type SessionKind = 'general' | 'serve' | 'rally' | 'fitness' | 'matchplay
  *  but the plan tab's block order is read off it and a save carries the strings. Order is display. */
 export const SESSION_KINDS: readonly SessionKind[] = ['general', 'serve', 'rally', 'fitness', 'matchplay']
 
+// --- the childhood prologue's handover (phase 4) --------------------------------------------------
+// docs/specs/childhood-prologue-build-2026-09.md §4. The nine years the player lived, on the wire,
+// so `createWorld` can spend them on a girl who is already fourteen when the game opens.
+//
+// ⚠⚠ NOTHING HERE IS PERSISTED AND NO SAVE FIELD IS OWED. This rides the `new` COMMAND, not the
+// world: §4's whole list – `startingSkills` shifted post-draw, `fundsCents`, `playStyle`,
+// the coach rung – is applied AT CREATION onto fields every save has carried since v22, so a career
+// that came through the prologue and one that came through the wizard are the same object with
+// different numbers in it. `SAVE_SCHEMA_VERSION` (69) does not move, no migration is owed and no
+// fixture is added. See `createWorld` for the applied end and docs/specs/childhood-prologue-money-
+// 2026-09.md for the one piece of arithmetic that is new.
+
+/** ONE YEAR OF HER CHILDHOOD, as the prologue hands it over.
+ *
+ *  ⚠ IT LIVES HERE RATHER THAN IN `src/prologue/cards.ts` (where phase 2 declared it) BECAUSE IT
+ *  CROSSES THE WIRE. The card table and the worker now read one declaration instead of two, and the
+ *  engine's own `ChildhoodYear` (engine/childhood.ts) stays where it is: that module is pinned as
+ *  importable by `engine/world.ts` alone, so the protocol may not reach it, and
+ *  `tests/prologue-cards.test.ts` asserts the two shapes are assignable in both directions. */
+export interface PrologueYear {
+  /** her age at the START of the year: 5 through 13 */
+  age: number
+  /** how much tennis, 0 (none) .. 1 (as much as anyone does at any age) – ABSOLUTE, not relative to
+   *  her age. That is phase 1's anti-grind mechanism and nothing downstream may soften it. */
+  practice: number
+  /** who taught her, 0 (a parent on a municipal court) .. 1 (a club, where the coaches are) */
+  teaching: number
+  focus: SessionKind
+}
+
+/** WHAT THE NINE CARDS CAME TO – the whole of what a prologue hands `createWorld`.
+ *
+ *  ⚠ TWO FIELDS AND NOT FIVE. The build she arrives with, the rung she arrives on and the style she
+ *  earned are all DERIVED in the engine from `years`, because deriving them in the UI would mean the
+ *  UI importing `engine/childhood.ts` – which `tests/childhood.test.ts` pins as reachable from
+ *  `engine/world.ts` and nothing else. `spentCents` is here because the costs live in the card table
+ *  and the engine has no way to re-derive them. */
+export interface PrologueHandover {
+  readonly years: readonly PrologueYear[]
+  /** what the nine years cost, in cents (house law: money is in cents everywhere) */
+  readonly spentCents: number
+}
+
 /** Weekly time split in percent; train + rest === 100. */
 export interface WeekPlan {
   /** ⚠ LEGACY AND KEPT, AND SINCE v47 A PROJECTION OF `week` RATHER THAN THE PLAN ITSELF: 4 sessions

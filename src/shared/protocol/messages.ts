@@ -10,7 +10,7 @@
 import type { CollegeTier, ForkAnswer } from './career'
 import type { KnockChoice } from './health'
 import type { KitGrade, KitLine, ShootClashChoice } from './offers'
-import type { PlayerProfile, WeekPlan } from './profile'
+import type { PlayerProfile, PrologueHandover, WeekPlan } from './profile'
 import type { Snapshot } from './snapshot'
 
 export interface SlotMeta {
@@ -87,7 +87,11 @@ export interface SavePeek {
 export type WorkerErrorCode = 'STALE_REVISION' | 'SAVE_CONFLICT'
 
 export type ToWorker =
-  | { id: number; type: 'new'; seed: string; profile: PlayerProfile }
+  // ⭐ `prologue` IS OPTIONAL AND ITS ABSENCE IS THE WIZARD (build spec §6: «new game -> the prologue
+  // (default), or skip -> the existing wizard»). Present, `createWorld` spends the nine years on
+  // her build, the family's reserve, the style she earned and the rung she arrives on – all of them
+  // fields every save already carries, so this widens the COMMAND and not the schema.
+  | { id: number; type: 'new'; seed: string; profile: PlayerProfile; prologue?: PrologueHandover }
   | { id: number; type: 'tick'; weeks: number; baseRevision: number }
   // ⚠ `weeks` WAS `1 | 4` UNTIL ROUND 29 #6. The literal union was the engine's historical step
   // written into the wire, and it is exactly what made the span pill unable to say anything true

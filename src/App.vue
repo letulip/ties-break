@@ -57,6 +57,7 @@ import { blockingOverlay, popupMayShow, visibleOverlay } from './composables/blo
 import { playSfx, primeSfx } from './audio/sfx'
 import SplashScreen from './components/SplashScreen.vue'
 import OnboardingWizard from './components/OnboardingWizard.vue'
+import ChildhoodPrologue from './components/ChildhoodPrologue.vue'
 import OnboardingTour from './components/OnboardingTour.vue'
 import TournamentFlow from './components/TournamentFlow.vue'
 import PracticeFlow from './components/PracticeFlow.vue'
@@ -288,6 +289,29 @@ function iconUrl(icon: string): string {
 // No active snapshot once init() has settled means: no auto-loaded slot and no
 // in-progress career (fresh install, or a client-side reset from More).
 const showOnboarding = computed(() => game.ready && !game.snapshot)
+
+// =================================================================================================
+// ⭐⭐ THE TWO PATHS INTO A CAREER (docs/specs/childhood-prologue-build-2026-09.md §6)
+// =================================================================================================
+//
+//     new game -+- the prologue (default) -- 9 cards -- the handover -- the game
+//               +- skip ------------------- the existing wizard
+//
+// His ruling (§2.6): «это создание персонажа будет как альтернативная ветка у нас при скипе
+// пролога» - the wizard is not replaced, it becomes the skip branch, and NOT ONE LINE OF ITS COPY
+// MOVES HERE (a separate branch owns that rewording; CLAUDE.md invariant 4).
+//
+// ⚠ THE ROUTE OUTLIVES `showOnboarding`, AND THAT IS THE WHOLE REASON IT IS A REF. The career is
+// created BEFORE the handover is drawn - the rose and the coach's read are read off the snapshot -
+// so `game.snapshot` is set while the most important screen in the game is still unanswered. A gate
+// written as `!game.snapshot` would flash the app shell up behind it at the exact moment the player
+// is deciding whether to keep her.
+//
+// ⚠ IT OPENS ON `in-game` AND THE WATCHER IS WHAT SETS IT. Defaulting to `prologue` would draw the
+// nine cards over a career auto-loaded at startup, because the route is read before init settles.
+const newGameRoute = ref<'prologue' | 'wizard' | 'in-game'>('in-game')
+watch(showOnboarding, (on) => { if (on) newGameRoute.value = 'prologue' }, { immediate: true })
+const showPrologue = computed(() => game.ready && newGameRoute.value === 'prologue')
 
 // A career appearing after onboarding must land on Home, not whatever tab was
 // active before the reset (e.g. More, where "New career" lives).
@@ -1469,6 +1493,16 @@ function reopenTour(): void {
   <div v-else-if="!game.ready" class="app-loading">Loading…</div>
 
   <SplashScreen v-else-if="!splashDone" @done="splashDone = true" />
+
+  <!-- §6: THE PROLOGUE IS THE DEFAULT, and it is branched HERE - beside the wizard and above it -
+       because it is the same kind of thing: a full-screen takeover that replaces the shell until a
+       career exists and has been accepted. It stays up across the moment the career is created; see
+       `newGameRoute`. -->
+  <ChildhoodPrologue
+    v-else-if="showPrologue"
+    @skip="newGameRoute = 'wizard'"
+    @done="newGameRoute = 'in-game'"
+  />
 
   <OnboardingWizard v-else-if="showOnboarding" />
 

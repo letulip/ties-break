@@ -56,18 +56,15 @@
 // shapes cannot drift apart without a red gate. Same for `APPETITE_AT` below.
 import type { SessionKind } from '../shared/protocol'
 
-/** ONE YEAR AS THE MODEL SEES IT – the structural twin of `engine/childhood.ts`'s `ChildhoodYear`,
- *  declared here rather than imported for the reason in the header. The test asserts assignability
- *  in both directions, so this is a duplicate that cannot go stale. */
-export interface PrologueYear {
-  age: number
-  /** how much tennis, 0 (none) .. 1 (as much as anyone does at any age) – ABSOLUTE, not relative to
-   *  her age. That is phase 1's anti-grind mechanism and this table must not soften it. */
-  practice: number
-  /** who taught her, 0 (a parent on a municipal court) .. 1 (a club, where the coaches are) */
-  teaching: number
-  focus: SessionKind
-}
+/** ONE YEAR AS THE MODEL SEES IT – the structural twin of `engine/childhood.ts`'s `ChildhoodYear`.
+ *
+ *  ⚠ PHASE 2 DECLARED IT HERE; PHASE 4 MOVED IT TO `shared/protocol` AND LEFT THIS RE-EXPORT.
+ *  Nothing about the header's argument changed – this table still may not import the engine module
+ *  it feeds – but the shape now CROSSES THE WIRE (the `new` command carries the nine years to
+ *  `createWorld`), and a wire type belongs to the protocol. There are still exactly two declarations
+ *  of it, this file's readers still spell it `PrologueYear`, and the test still asserts assignability
+ *  against `ChildhoodYear` in both directions, so it is a duplicate that cannot go stale. */
+export type { PrologueYear } from '../shared/protocol'
 
 /** ⚠ A COPY OF `appetiteAt(age)`, FOR THE SAME REASON AS `PrologueYear` – and it is pinned against
  *  the real function for all nine ages, so it is a copy that cannot drift. It is here because the

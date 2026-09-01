@@ -151,6 +151,34 @@ export const ECONOMY = {
     working: 8_000_00,
   } as Record<FamilyBackground, number>,
 
+  /** ⭐⭐ WHAT THE NINE YEARS DID TO THAT NUMBER – the childhood prologue's only money model
+   *  (docs/specs/childhood-prologue-money-2026-09.md; build spec §4, «the prologue makes it yours»).
+   *
+   *  ⚠⚠ THERE IS NO CHOSEN DIAL HERE, AND THAT IS THE DESIGN. Both figures are FACTS ABOUT THE CARD
+   *  TABLE – the cheapest and dearest childhoods `src/prologue/cards.ts` can produce – and the
+   *  swing they buy is read off `startingFundsCents.middle` rather than picked, so the arithmetic
+   *  for the family the whole economy is anchored on is the plain subtraction a parent would do:
+   *  `25,000 + (reference - spent)`. The other two backgrounds move by the same PROPORTION of their
+   *  own reserve, which is §2.4's ruling in one line – «the player chooses where the family is FROM,
+   *  not a sum, and the nine years move the number from there».
+   *
+   *  ⚠ WHY A PROPORTION AND NOT THE SAME CENTS FOR EVERYONE. The reachable childhoods span
+   *  $8,200 - $28,150, which is more than a working family's entire reserve: subtracting cents would
+   *  open a career in debt, and «you went bankrupt before she was fourteen» is a mechanic this game
+   *  does not have and §7 forbids inventing here.
+   *
+   *  ⚠ PINNED AGAINST THE TABLE, NEVER RE-TYPED FROM IT. `tests/prologue-handover.test.ts` recomputes
+   *  both numbers by walking every reachable run and fails if a card's price moves without these
+   *  moving with it – the same discipline `APPETITE_AT` is held to one directory over. */
+  prologue: {
+    /** the childhood today's flat reserve already represents: the midpoint of what the nine cards
+     *  can cost, `(cheapest + dearest) / 2` */
+    referenceSpendCents: 18_175_00,
+    /** ...and half the spread, `(dearest - cheapest) / 2`, which is the furthest either way a run
+     *  can move the reference. */
+    spendSwingCents: 9_975_00,
+  },
+
   // Weekly parent contribution to the war chest, by family background. Emitted as an
   // `income` event BEFORE costs each week; NO rng draw. TUNED (round-7 economy pass) so
   // that an UNSPONSORED kid (rank > 30 all year, no tournaments) lands the owner's target
@@ -4653,6 +4681,32 @@ export function parentIncomeForWeekCents(seedStr: string, background: FamilyBack
     income *= 1 + lo + rng() * (hi - lo)
   }
   return Math.round(income)
+}
+
+/** ⭐⭐ WHAT THE FAMILY HAS LEFT ON WEEK 0, AFTER NINE YEARS OF HER CHILDHOOD – the prologue's whole
+ *  money model, and the only new arithmetic phase 4 adds (build spec §4).
+ *
+ *  For the family the economy is anchored on it is the plain subtraction:
+ *
+ *      middle, cheapest childhood ($8,200)   ->  25,000 + 9,975  = $34,975
+ *      middle, the reference ($18,175)       ->  25,000          = $25,000  (today's flat number)
+ *      middle, dearest childhood ($28,150)   ->  25,000 - 9,975  = $15,025
+ *
+ *  ...and the other two backgrounds move by the same SHARE of their own reserve: working
+ *  $4,808 - $11,192, wealthy $72,120 - $167,880. Measured over all 32 reachable runs in
+ *  docs/specs/childhood-prologue-money-2026-09.md.
+ *
+ *  ⚠ THE CLAMP IS A GUARD AND NOT A DIAL. `spentCents` arrives over the wire, and invariant 1 says
+ *  every command is re-validated engine-side – so a payload claiming a childhood that costs nothing,
+ *  or one that costs a million, moves the reserve by exactly the swing the real table can produce and
+ *  no further. A run through the shipped cards can never reach the clamp.
+ *
+ *  ⚠ NO DRAW, NO STATE, NO SCHEMA. Integer cents out, rounded once. */
+export function prologueFundsCents(background: FamilyBackground, spentCents: number): number {
+  const base = ECONOMY.startingFundsCents[background]
+  const { referenceSpendCents, spendSwingCents } = ECONOMY.prologue
+  const moved = Math.max(-spendSwingCents, Math.min(spendSwingCents, referenceSpendCents - spentCents))
+  return Math.round(base * (1 + moved / ECONOMY.startingFundsCents.middle))
 }
 
 /** ⭐⭐ ROUND-23 #18 – WHAT SHARE OF A CHEQUE IS HERS, in basis points, at a given age.

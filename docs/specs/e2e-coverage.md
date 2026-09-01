@@ -182,6 +182,7 @@ produced a *defect list* instead of a workaround list.
 | spec | the journey, in one sentence | seam |
 |---|---|---|
 | `smoke.spec.ts` | the app boots, a new career starts, week 1 renders | 1 |
+| `prologue.spec.ts` | the childhood's nine cards run, the handover draws her, and «go on» starts the career | 1, 5 |
 | `seeded-careers.spec.ts` | each of the six fixtures boots into the state its manifest describes | 1, 2 |
 | `week-advance.spec.ts` | a decision on the table stops the week; answering it starts it, and the answer comes back as news | 1 |
 | `week-advance.spec.ts` | a week that ends a season: the wrap-up card, then Home and the money screen move together | 1, 5 |

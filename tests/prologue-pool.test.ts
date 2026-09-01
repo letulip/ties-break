@@ -229,15 +229,22 @@ describe('⚠⚠ the pool may never enter world.cohort or any table', () => {
    *  the file and the specifier named. The measured exception is the one that matters:
    *  `engine/childhood.ts` is reachable from NOTHING here, which is phase 1's own guarantee and is
    *  pinned where it belongs, in tests/childhood.test.ts. */
+  // ⚠ PHASE 4 CHANGED TWO THINGS HERE AND NEITHER WEAKENS IT. `handover.ts` joined the directory and
+  // is pinned like its three siblings; and the list is a SET now, because `cards.ts` names
+  // `../shared/protocol` twice since the wire type moved there (once to import `SessionKind`, once to
+  // re-export `PrologueYear`). What is pinned is which modules the prologue NAMES – the count of
+  // times it names one was never the claim, and a duplicate would otherwise redden a pin about
+  // reachability for a reason that has nothing to do with reachability.
   it('⚠ the prologue names four modules of the engine and no more – and never the world', () => {
-    const files = ['cards.ts', 'pool.ts', 'run.ts']
+    const files = ['cards.ts', 'handover.ts', 'pool.ts', 'run.ts']
     const imports: Record<string, string[]> = {}
     for (const name of files) {
       const src = readFileSync(join(SRC, 'prologue', name), 'utf8')
-      imports[name] = [...src.matchAll(/from\s*'(\.[^']*)'/g)].map((m) => m[1]).sort()
+      imports[name] = [...new Set([...src.matchAll(/from\s*'(\.[^']*)'/g)].map((m) => m[1]))].sort()
     }
     expect(imports).toEqual({
       'cards.ts': ['../shared/protocol'],
+      'handover.ts': ['../engine/rng', '../shared/money'],
       'pool.ts': [
         '../engine/development',
         '../engine/match/types',
@@ -268,7 +275,7 @@ describe('⚠⚠ the pool may never enter world.cohort or any table', () => {
     const stripComments = (src: string): string =>
       src.replace(/\/\*[\s\S]*?\*\//g, ' ').replace(/(^|[^:'"`\\])\/\/[^\n]*/g, '$1')
     const banned = ['createWorld', 'generateCohort', 'driftCohort', 'makeJunior', 'ageCohort', 'computeRanking']
-    for (const name of ['cards.ts', 'pool.ts', 'run.ts']) {
+    for (const name of ['cards.ts', 'handover.ts', 'pool.ts', 'run.ts']) {
       const code = stripComments(readFileSync(join(SRC, 'prologue', name), 'utf8'))
       for (const symbol of banned) expect(`${name}: ${code.includes(symbol)}`).toBe(`${name}: false`)
       // ...and the scan is real: it can see a symbol that IS there.

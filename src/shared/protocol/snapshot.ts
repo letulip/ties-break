@@ -401,6 +401,23 @@ export interface Snapshot {
    *  is relative to, since a rung's worth is a share of remaining headroom and collapses as she
    *  fills her ceiling. Never quotes the ceiling itself; see `coachRoomNote`. */
   coachRoomNote: string
+  /** ⭐⭐ THE HANDOVER'S READ, AND IT IS EMPTY ON EVERY WEEK BUT THE FIRST (childhood prologue §5).
+   *
+   *  One of the three words this game already grades remaining room in – `Huge potential` /
+   *  `Still room to grow` / `Close to her ceiling` – answering the question the prologue's last
+   *  screen asks: how much was in her when she was born. `engine/world/coachMarket.ts`'s
+   *  `handoverRoomBand` is the derivation and carries the measurement behind it.
+   *
+   *  ⚠⚠ IT IS `''` FROM WEEK 1 ONWARDS, AND THAT BOUND IS STRUCTURAL RATHER THAN A CONVENTION. A
+   *  three-way reading of her TRUE ceiling, published every week for the whole career, is the fog
+   *  undone by a field – «you finish the career still not certain how good she could have been»
+   *  (SkillsRadar.vue) is the thesis this would quietly retire. So the engine emits it for the one
+   *  week the handover exists and for no other, and `tests/prologue-handover.test.ts` pins both
+   *  halves: it is non-empty at week 0 and empty at week 1.
+   *
+   *  ⚠ DERIVED AT SNAPSHOT TIME, exactly like `coachRoomNote` and `radar`: it persists nothing, owes
+   *  no migration and does not move `SAVE_SCHEMA_VERSION`. */
+  handoverBand: string
   /** WHAT THE COACH'S EDGE IS WORTH HERE (docs/specs/coach-match-edge.md §4 and §7): the corridor of
    *  the rung she is on, and WHERE IN IT the man she actually has turned out to sit, once she has
    *  had him for a full season.

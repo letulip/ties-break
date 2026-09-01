@@ -36,12 +36,20 @@ const props = defineProps<{
   warmth: Warmth
   /** the twelfth's derived reasons, empty on every other card */
   reasons?: readonly string[]
+  /** ⭐ PHASE 4 – THE WAY OUT OF THE PROLOGUE ENTIRELY (build spec §6: «skip -> the existing wizard»),
+   *  and it is a LABEL rather than a sentence for the reason the whole card is a table: the copy is
+   *  the caller's and this component still holds none. Absent on eight of the nine cards – the
+   *  container offers it on the first one only, because a skip that follows you to the eighth year is
+   *  a screen asking whether you would rather be somewhere else. */
+  skipLabel?: string
   busy?: boolean
 }>()
 
 const emit = defineEmits<{
   /** the id of the option or origin taken, or null for a card with nothing to decide */
   (e: 'answer', id: string | null): void
+  /** the player would rather have the wizard */
+  (e: 'skip'): void
 }>()
 
 /** ⭐ ONE LIST, THREE KINDS OF CARD. An origin card, a decision card and a quiet card all render the
@@ -106,6 +114,22 @@ useDialogFocus(cardEl)
         >
           <span class="prologue-answer-label">{{ control.label }}</span>
           <span v-if="control.note" class="prologue-answer-note">{{ control.note }}</span>
+        </button>
+
+        <!-- ⭐ PHASE 4, §6 - THE OTHER PATH. Inside `.prologue-answers` and last within it, which is
+             what keeps `.prologue-answers` the card's last element: the fit measurement reads the
+             way out off the card's bottom edge, and a control added anywhere after it would make
+             every fit number on the walk quietly wrong while every one of them stayed green. Quieter
+             than an answer because it is not one - it is the door out of the story, not a year of
+             it. -->
+        <button
+          v-if="skipLabel"
+          class="prologue-answer prologue-skip"
+          type="button"
+          :disabled="busy"
+          @click="emit('skip')"
+        >
+          <span class="prologue-answer-label">{{ skipLabel }}</span>
         </button>
       </div>
     </div>
@@ -211,6 +235,19 @@ useDialogFocus(cardEl)
 .prologue-answer:disabled {
   opacity: 0.55;
   cursor: default;
+}
+
+/* ⚠ QUIETER, AND STILL A DECLARED TOKEN PAIR WITH NO FALLBACK. The border goes and the wash goes;
+   the LABEL keeps `var(--text)` so this control is held to the same AA measurement every answer on
+   the card is - a way out nobody can read is not a way out. */
+.prologue-skip {
+  border-color: transparent;
+  background: transparent;
+  padding: 8px 13px;
+}
+
+.prologue-skip:hover:not(:disabled) {
+  background: var(--accent-wash);
 }
 
 .prologue-answer-label {

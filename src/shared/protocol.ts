@@ -46,6 +46,8 @@ export type {
   PlayStyle,
   PlayerProfile,
   SessionKind,
+  PrologueYear,
+  PrologueHandover,
   WeekPlan,
   VacationBooking,
   PracticeBooking,

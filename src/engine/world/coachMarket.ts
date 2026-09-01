@@ -35,6 +35,10 @@ import { assetWorthCents, ownedAssets, shopItem, weeklyAssetUpkeepCents } from '
 import { academyWeeklyIncomeCents, merchWeeklyIncomeCents } from './business'
 import { addEvent, seasonIndexOf, seasonStartWeek } from './ledger'
 import { ageAtWeek, START_AGE_YEARS } from './age'
+// ⭐ HER BIRTH BUILD, RE-DERIVED – see `handoverRoomBand`. Pure and seed-only (`startingSkills`
+// ignores its profile argument), and `engine/radar.ts` already re-derives it at snapshot time for
+// exactly the same reason: it is cheaper than a stored field and it cannot go stale.
+import { startingSkills } from './player'
 import { activeLadderOf, bookClosedTo, hasOutgrown, kidPoints, tierOpenFor } from './ladder'
 import type { WorldState } from '../world'
 import { guardNotEnded } from './endings'
@@ -1104,6 +1108,55 @@ export const ROOM_NOTE_SEP = ' – '
 export function coachRoomBand(note: string): string {
   const at = note.indexOf(ROOM_NOTE_SEP)
   return at > 0 ? note.slice(0, at) : ''
+}
+
+// =================================================================================================
+// ⭐⭐⭐ THE HANDOVER'S READ – the same three WORDS, a different question (childhood prologue, §5)
+// =================================================================================================
+//
+// docs/specs/childhood-prologue-build-2026-09.md §8a asks the handover to speak «in the register of
+// COACH_FIELD_LINES» and in the vocabulary this file already owns – `Huge potential` /
+// `Still room to grow` / `Close to her ceiling`. It does. What it may NOT do is reuse
+// `coachRoomBandIndex`, and the reason is measured rather than argued:
+//
+//   ⚠⚠ AT WEEK 0 THAT LADDER SAYS `Huge potential` TO 93% OF CAREERS. Walked over 300 seeds on a
+//   fresh world: 280 band 0, 19 band 1, 1 band 2, 0 band 3. That is not a defect in the ladder –
+//   its own note above records the calibration, «band 0 from week 0, band 1 at weeks 12-82» – it is
+//   what a REALISATION SHARE means at fourteen, when nobody has realised anything yet. A handover
+//   built on it would promise nearly every player a star, which is the wizard's «anything is
+//   possible» (§8b) walking back in through the one screen written to stop it.
+//
+// SO THE HANDOVER READS THE OTHER QUANTITY: how much was in her when she was born. And there are
+// two claims in that sentence, both load-bearing:
+//
+//   1. IT IS `potential - BIRTH BUILD`, WHICH IS THE POTENTIAL ROLL ITSELF – pure talent, uniform in
+//      `ECONOMY.development.potentialBand` by construction (`rollPotential`). ⚠⚠ IT IS NOT
+//      `potential - world.skills`. Measured: reading her ARRIVAL build moves the band on 23.9% of
+//      seeds between the cheapest and the dearest childhood, and it moves it DOWNWARD for the girl
+//      whose parents did everything – so the screen would answer nine good years with «she is near
+//      what she has». §5 puts the rose and the read side by side precisely because they are
+//      different statements: the rose is who you raised, the read is the truth about her ceiling.
+//      Reading the arrival would collapse the two into one and invert the second.
+//   2. THE THIRDS ARE THE BAND'S OWN, so no threshold is chosen here. Measured over 2,000 seeds the
+//      shares are about 10% / 80% / 10% – which is what a mean of five uniforms does, and which is
+//      the honest shape: most girls are ordinary, one in ten is a dud (§1c: «a career at the bottom
+//      of this band is a girl who was never going to make it, and that has to be a career the game
+//      can tell») and one in ten is a star. Every low-ceiling girl reads honest: 0 misreads in 4,000.
+//
+// ⚠ AND THE FOURTH BAND IS NOT REACHABLE FROM HERE. `At her ceiling` is a ceiling claim in three
+// words and §5 forbids the coach ever naming one; this returns three labels, never that one.
+//
+// Pure, zero draws, derived at snapshot time – exactly like `coachRoomNote` above.
+export function handoverRoomBand(world: WorldState): string {
+  const born = startingSkills(world.seed, world.profile)
+  let room = 0
+  for (const k of SKILL_KEYS) room += world.potential[k] - born[k]
+  room /= SKILL_KEYS.length
+  const [lo, hi] = ECONOMY.development.potentialBand
+  const t = hi > lo ? Math.max(0, Math.min(1, (room - lo) / (hi - lo))) : 0
+  // Index 2 is the most room and index 0 the least, which is `ROOM_BANDS` read from the bottom –
+  // the ladder there is ordered most-room-first and this is the same three strings, not a copy.
+  return ROOM_BANDS[2 - Math.min(2, Math.floor(t * 3))].label
 }
 
 /** THE FOUR BANDS, cheapest headroom last, in the owner's own vocabulary.

@@ -244,7 +244,7 @@ async function handle(msg: ToWorker): Promise<ToUI> {
       // createWorld owns the stream's birth now: `rngMain` is position zero, on the world.
       // Candidate-first like every other path: the fresh world only becomes the active one after
       // its first autosave is durable, so a storage failure cannot strand an unsaveable career.
-      const candidate = createWorld(seed, msg.profile, makeCareerId(seed))
+      const candidate = createWorld(seed, msg.profile, makeCareerId(seed), msg.prologue)
       const { revision } = await adoptAutosave(candidate)
       world = candidate
       committedRevision = revision
