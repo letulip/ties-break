@@ -175,18 +175,45 @@ describe('§1 fame – an accounted stock, 0–100, zero draws', () => {
     expect(fameAt(world)).toBeCloseTo(FAME.titleFloor.slam! / 2, 5)
   })
 
-  it('⭐⭐⭐ shoots MULTIPLY the floor – and multiply nothing when there is no floor', () => {
+  it('⭐⭐⭐ shoots MULTIPLY the floor – and since round 32 #5 they ADD to it as well', () => {
+    // ⚠⚠ A SHIPPED CLAIM MOVED HERE AND IT IS NAMED RATHER THAN LEFT TO ROT. This arm used to assert
+    // `fameAt === floorOnly x mult` – shoots reach fame through the MULTIPLIER and through nothing
+    // else. Round 32 #5 overturns that half on the owner's own instruction («на раннем этапе
+    // коллаборации нам должны помочь»): a delivered shoot is a public event in its own right and now
+    // ADDS to the floor as well, scaled by the deal's band. The multiplier is untouched and is still
+    // asserted; what is gone is the claim that it is the ONLY road.
+    // ⚠ AND THE OTHER HALF OF THE ORIGINAL CLAIM SURVIVES INTACT, which is why it is still the
+    // headline: a face with no results still has nothing to multiply. See below.
     const a = still('p5a-shoots')
     a.trophiesByTier.wta500.titles.push(a.week)
-    const floorOnly = fameAt(a)
+    const floorOnly = fameFloorOf(a, a.week)
     plantShoots(a, [a.week - 4, a.week - 8, a.week - 12])
     const mult = fameShootMultOf(a, a.week)
-    expect(mult).toBeGreaterThan(1)
-    expect(fameAt(a)).toBeCloseTo(floorOnly * mult, 5)
-    // ...and the census's counter-face: a face with no results has nothing to multiply.
+    expect(mult, 'the photographs still multiply').toBeGreaterThan(1)
+    const floorWithShoots = fameFloorOf(a, a.week)
+    expect(floorWithShoots, '...and since round 32 #5 they add to the floor too').toBeGreaterThan(floorOnly)
+    // the identity still holds against the floor AS IT NOW READS – fame is the floor times the
+    // multiplier and always was; what changed is what goes into the floor.
+    expect(fameAt(a)).toBeCloseTo(floorWithShoots * mult, 5)
+    // ⚠⚠ AND THE CENSUS'S COUNTER-FACE MOVED TOO, WHICH IS THE HONEST HALF OF #5 AND IS STATED HERE
+    // RATHER THAN QUIETLY DROPPED. «Zero floor times any number of photographs is zero» was true
+    // while the shoots only multiplied. An ADD makes fame out of a photograph by design – that is
+    // what «a source of fame in its own right, on the same ledger as a title» means. So a career with
+    // NO tennis and hand-planted shoots now reads a small fame, and this arm says so.
     const b = still('p5a-shoots-bare')
+    expect(fameAt(b), 'nothing at all before the letters').toBe(0)
     plantShoots(b, [b.week - 4, b.week - 8, b.week - 12])
-    expect(fameAt(b), 'zero floor times any number of photographs is zero').toBe(0)
+    expect(fameAt(b), 'three delivered campaigns are three public events').toBeGreaterThan(0)
+    // ⭐ ...AND IT IS STILL A ROUNDING ERROR NEXT TO WHAT THE COURT PAYS, which is the part of the
+    // original claim that survives and the part that matters: the same three shoots on top of one
+    // World Tour 500 title are worth many times more, because the floor they add to is the thing the
+    // multiplier then works on.
+    expect(fameAt(a)).toBeGreaterThan(fameAt(b) * 10)
+    // ⚠ AND WHAT KEEPS IT OUT OF A REAL CAREER IS UPSTREAM, not here: `adBandFor` refuses a standing
+    // that is not WTA-ranked, so the post never writes a letter to a career with no professional
+    // result and there is no shoot to plant. The gate is the offers system's; this fixture plants the
+    // letters by hand precisely because the engine would not.
+    expect(fameFloorOf(still('p5a-shoots-none'), 0), 'no results, no letters, no floor').toBe(0)
   })
 
   it('a shoot week still ahead is a promise, not a photograph – it buys nothing yet', () => {

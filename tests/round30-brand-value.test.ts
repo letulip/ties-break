@@ -39,9 +39,11 @@ import {
   assetEarningsRateCents,
   assetValueCents,
   assetWorthCents,
+  brandBuiltSignals,
   brandCrowdMult,
   brandMultipleX,
   brandSignalsOf,
+  brandWeeklyGrossCents,
   buyAsset,
   closeTournament,
   createWorld,
@@ -183,11 +185,25 @@ describe('round 30 #9 §2 – the worth is years of what it earns, and the earni
     // BASE. The base is now what the fame RAMP reaches at `ECONOMY.fame.cap`; the floor a career with
     // nothing behind it and nobody watching sits at is `value.unknownX`. The claim is unchanged –
     // this career earned something above the floor – and the number it is read against moved.
-    const earned = brandMultipleX(brandSignalsOf(w), shopItem(MERCH)!.earningsMultipleX!)
+    // ⭐⭐⭐ ROUND 32 #4 RE-AIMED IT A THIRD TIME, AND THE RATIO IS NO LONGER THE MULTIPLE. The brand's
+    // INCOME reads this week's fame and its WORTH reads the slow stock (`brandBuiltSignals`), so
+    // «what the row is worth divided by a year of what the ledger pays it» is now the multiple times
+    // the ratio the two clocks are apart – which is the whole of docs/specs/brand-inertia-2026-08.md
+    // §4 and is a FEATURE. The claim that survives, and it is the one that mattered, is that the row
+    // and the SHOP CARD quote the same arithmetic: one valuation, two surfaces.
+    const built = brandBuiltSignals(brandSignalsOf(w))
+    const earned = brandMultipleX(built, shopItem(MERCH)!.earningsMultipleX!)
     expect(earned, 'the career has earned something above the floor of the ladder')
       .toBeGreaterThan(ECONOMY.business.merch.value.unknownX)
-    expect(row.valueCents! / (weekly * WEEKS_PER_YEAR)).toBeCloseTo(earned, 1)
+    // ⚠ THE RATIO IS STILL THE CLAIM, asked against the income the WORTH was priced on rather than
+    // against this week's. A test that recomputed `fame x dial x 52 x N` would pass on a second copy
+    // of the formula; this reads the engine's own steady income for the stock she has built.
+    expect(row.valueCents! / (brandWeeklyGrossCents(built) * WEEKS_PER_YEAR)).toBeCloseTo(earned, 1)
     expect(row.earningsMultipleX, 'and the card quotes the same multiple, whole').toBe(Math.round(earned))
+    // ⚠ AND THE TWO CLOCKS REALLY HAVE PARTED, on this fixture, which is what stops the arm above
+    // being a tautology: the stock is at or above this week's fame and the row is worth more than a
+    // fame-priced valuation would say.
+    expect(built.fame, 'the stock is never below the noise').toBeGreaterThanOrEqual(brandSignalsOf(w).fame)
     // ⭐ SAME FUEL, WHICH IS HIS OWN «похожей на привязку к её рекламе и результатам»: more titles,
     // more income AND more value, off ONE number.
     const richer = shopper('r30-9-multiple')
@@ -230,14 +246,22 @@ describe('round 30 #9 §3 – ⭐⭐ IT FALLS', () => {
       assetEarningsRateCents(world, shopItem(MERCH)!) *
       WEEKS_PER_YEAR *
       brandMultipleX({ ...brandSignalsOf(world), fame: ECONOMY.fame.cap }, shopItem(MERCH)!.earningsMultipleX!)
+    // the round-32-#3 reading of the SAME week, on the fame clock – the other half of the control
+    // pair below. It is a function of the world, so it is captured at the two moments that matter.
+    const fameClock = (world: WorldState): number =>
+      assetEarningsRateCents(world, shopItem(MERCH)!) *
+      WEEKS_PER_YEAR *
+      brandMultipleX(brandSignalsOf(world), shopItem(MERCH)!.earningsMultipleX!)
     walk(w, 2, true)
     const atPeak = ownedOf(w, MERCH)!.valueCents
     const preAtPeak = preWorth(w)
+    const at32Peak = fameClock(w)
     const titlesThen = w.trophiesByTier.slam!.titles.length + w.trophiesByTier.wta1000!.titles.length
 
     walk(w, 2 * WEEKS_PER_YEAR, true)
     const twoOn = ownedOf(w, MERCH)!.valueCents
     const preTwoOn = preWorth(w)
+    const at32TwoOn = fameClock(w)
     walk(w, 2 * WEEKS_PER_YEAR, true)
     const fourOn = ownedOf(w, MERCH)!.valueCents
 
@@ -255,14 +279,28 @@ describe('round 30 #9 §3 – ⭐⭐ IT FALLS', () => {
     // the multiple now falls with fame too, so the fall COMPOUNDS – a quarter of the income times a
     // smaller multiple. The band is read off the measurement rather than guessed
     // (docs/specs/brand-multiple-follows-fame-2026-08.md §6).
-    expect(twoOn / atPeak).toBeGreaterThan(0.10)
-    expect(twoOn / atPeak).toBeLessThan(0.19)
+    // ⭐⭐⭐ AND IT MOVED BACK UP IN ROUND 32 #4, WHICH IS THAT WAVE'S WHOLE POINT AND NOT A
+    // REGRESSION. «Инерция бренда – звучит интересно, давай попробуем»: the WORTH now reads a stock
+    // that halves on four years instead of this week's fame, which halves on two, so two quiet
+    // seasons no longer take three quarters of the asset. IT STILL FALLS – that is asserted three
+    // lines up and is the claim this arm exists for – and it falls by about a THIRD rather than by
+    // five sixths. ⚠ The income is untouched and still falls the whole way; the gap between the two
+    // is the feature (docs/specs/brand-inertia-2026-08.md §8).
+    expect(twoOn / atPeak).toBeGreaterThan(0.25)
+    expect(twoOn / atPeak).toBeLessThan(0.50)
     // ⭐⭐⭐ AND THE COMPOUNDING IS ASSERTED AGAINST ITS OWN CONTROL RATHER THAN DESCRIBED. The same
     // two weeks priced by the pre-round-32 multiple fall by LESS, because that multiple could not
     // fall at all. This is the arm that reddens if the ramp is ever flattened back to a constant –
     // the two ratios become equal – and it needs no second worktree and no second walk to say so.
+    //
+    // ⚠⚠ ROUND 32 #4 RE-AIMED THE COMPARISON AND DID NOT WEAKEN IT. `preWorth` prices at fame; the
+    // OWNED ROW is now priced at the STOCK, so the two readings answer different questions and the
+    // inequality between them stopped meaning what #3 wrote it to mean (measured: the row now falls
+    // LESS than its own pre-32 control, which is #4 working and says nothing about the ramp). Both
+    // sides are therefore asked ON THE SAME CLOCK – this week's fame, which is what #3's claim is
+    // about – so the arm still catches the one thing it was built to catch and catches nothing else.
     expect(preTwoOn / preAtPeak, 'the pre-32 multiple could not fall, so the fall was shallower')
-      .toBeGreaterThan(twoOn / atPeak)
+      .toBeGreaterThan(at32TwoOn / at32Peak)
   })
 
   it('⚠⚠ ...and a NEW title turns it back up, so the fall is a stock and not a clock', () => {
@@ -766,13 +804,32 @@ describe('round 30 #24 – a top-20 who never wins is no longer invisible to her
     expect(assetEarningsRateCents(w, shopItem(MERCH)!), 'so the brand sells').toBeGreaterThan(0)
     // ⚠⚠ ROUND 32 #3 TOOK THE SECOND HALF OF THIS ARM AND IT IS NAMED RATHER THAN QUIETLY WEAKENED.
     // It used to read «...and is worth more than the bare mark». With the multiple's base a ramp in
-    // fame, this career – four top-20 seasons, no title, fame ≈ 7 – prices BELOW the mark, so the
-    // mark is what the row is worth again. #24's own claim survives and is asserted above and below:
-    // the brand SELLS, where before #24 it earned exactly zero. What is gone is the capital gain,
-    // and it is gone because her fame is small, which is the wall round 31 §5 and the elite-shape
-    // research already filed. ⚠ THE COST IS RECORDED in docs/specs/brand-multiple-follows-fame-2026-08.md
-    // §7 and the dial that would buy it back is `ECONOMY.business.merch.value.unknownX`.
-    expect(ownedOf(w, MERCH)!.valueCents, 'and the mark is the floor under her, never zero')
+    // fame, this career – four top-20 seasons, no title, fame ≈ 7 – priced BELOW the mark, so the
+    // mark was what the row was worth again. #24's own claim survived and is asserted above and
+    // below: the brand SELLS, where before #24 it earned exactly zero. What went was the capital
+    // gain, and it went because her fame is small, which is the wall round 31 §5 and the elite-shape
+    // research already filed. THE COST WAS RECORDED in docs/specs/brand-multiple-follows-fame-2026-08.md
+    // §7.
+    //
+    // ⭐⭐⭐ AND ROUND 32 #4 GAVE IT BACK, WHICH IS THE CASE THE OWNER NAMED AND THE ACCEPTANCE
+    // CRITERION THAT WAVE WAS BUILT AGAINST. «карьера топ-20 без титулов». Her WORTH now reads the
+    // brand's slow stock rather than this week's fame – 8.61 against 7.24 here, the fame she was
+    // carrying at her last season's wrap – so the row clears the mark: gross $46,095 -> $67,011,
+    // measured in docs/specs/brand-inertia-2026-08.md §11a.
+    //
+    // ⚠⚠ AND IT IS *#4* THAT DOES IT, NOT #5, which is exactly why the owner asked for the two to be
+    // measured together rather than summed. This fixture has signed NOTHING, so the collaboration
+    // addition has no delivered shoot to act on and leaves the row untouched. The two items ship
+    // together and only the combined arm answers this case.
+    expect(ownedOf(w, MERCH)!.valueCents, 'and she is now worth more than the bare mark, not merely equal to it')
+      .toBeGreaterThan(Math.round(PRICE * ECONOMY.shop.businessValueFloorShare))
+    // ⚠ THE MARK IS STILL THE FLOOR UNDER HER and is still the thing that stops a quiet brand
+    // reaching zero – asserted on a career with no results at all, so the guard cannot be read as
+    // «the floor was removed».
+    const unknown = parkAt(shopper('r30-24-unknown'), 5 * WEEKS_PER_YEAR)
+    buyAsset(unknown, MERCH)
+    expect(fameAt(unknown, unknown.week), 'nobody has heard of her').toBe(0)
+    expect(ownedOf(unknown, MERCH)!.valueCents, 'and the mark is what her name is worth')
       .toBe(Math.round(PRICE * ECONOMY.shop.businessValueFloorShare))
     // ⭐ AND THE SAME CAREER, ONCE THE WORLD KNOWS HER, IS WORTH REAL MONEY – which is the direction
     // #24 was about and the arm that stops «worth the mark» being read as «invisible again».
