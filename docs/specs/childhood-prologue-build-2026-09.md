@@ -96,19 +96,25 @@ parent actually faces – which are not about tournaments.
 
 | age | the scene | the decision |
 | --- | --- | --- |
-| 5 | she can barely hold it | **none** – this card is the hook and the family's origin (§2.4) |
-| 6 | she can hold it, and she likes it | a racquet and a group class – does she start at all |
-| 7 | the group works | **none** – a year passes; the first quiet card, on purpose |
-| 8 | the club across town, or the municipal court | the first real money: a club is ~3x, and it is where the coaches are |
+| 5 | she can barely hold it | **none** – the hook, and the family's origin (§2.4) |
+| 6 | she can hold it, and she likes it | **none** – she starts. That choice was made by starting the game |
+| 7 | the group works | **none** – a year passes |
+| 8 | the club across town, or the municipal court | ⭐ the first real money: a club is ~3x, and it is where the coaches are |
 | 9 | the group is full of eight-year-olds | group or one-to-one – the first "what share of our income is this" |
-| 10 | there is a Local Open in six weeks | enter her? ⭐ **A real tournament, on the prologue's own pool** |
+| 10 | there is a Local Open in six weeks | enter her? **A real tournament with the match viewer**, on the prologue's own pool |
 | 11 | the sports school takes children at eleven | sports school or ordinary school – **how much childhood we spend** |
 | 12 | she is tired of it / she wants more | the fork, **derived from years 5–11**, never a menu |
-| 13 | the junior tour opens (already true in code) | do you go? the first passport, the first real bill |
+| 13 | the junior tour opens (already true in code) | **none** – it opens, and «do we go» belongs to the handover, beside the coach's read |
 | 14 | — | **the handover** (§5) |
 
-⚠ Two cards carry no decision (5 and 7) and that is deliberate: nine consecutive choices is not ten
-minutes, it is a quiz. The quiet cards are where the years are allowed to pass.
+⚠ **FOUR CARDS CARRY NO DECISION – 5, 6, 7 and 13 – and the count is his** («может тогда больше без
+решений, 3 или 4?»). Nine consecutive choices is not ten minutes, it is a quiz.
+
+⭐ AND THE SHAPE IS THE ARGUMENT: three quiet years while she is small and nothing costs anything,
+five years of real decisions from 8 to 12, then a quiet thirteenth as the run-up to the handover.
+**The money starts when the club does, at eight** – which is what actually happens to families.
+
+⚠ THE AGE-10 TOURNAMENT SHOWS THE MATCH VIEWER (his ruling: «да»). §8's open question is closed.
 
 ---
 
@@ -214,5 +220,43 @@ worth playing) – both are real, both are his to rule on, and neither is a prol
 ## 8. What this spec does not decide
 
 - The money's texture on screen (§2.4) – he will play it and say.
-- Whether the age-10 tournament shows the match viewer or only its result.
-- The coach's actual sentences at the handover, and the wizard's reworded promise: **his copy.**
+- The money's texture on screen (§2.4) – he will play it and say.
+- ⭐ The copy below is DRAFTED, not decided – he asked for drafts in our own pool and tone
+  («покажешь текст … исходя из нашего пула и тон-оф-войс общего»). It ships only with his word.
+
+### 8a. The coach's read at the handover – drafted
+
+⭐ IT USES THE VOCABULARY THE COACH ALREADY HAS. `coachMarket.ts:1120` already grades her remaining
+room in WORDS, not numbers: `Huge potential` / `Still room to grow` / `Close to her ceiling`. The
+handover speaks in those three bands, in the register of `COACH_FIELD_LINES` – short, declarative,
+no adjective stacks – and **he is allowed to be wrong**, which is what keeps the fog meaning
+something.
+
+**Close to her ceiling** (the weak draw, and the case this screen exists for)
+- «She is near what she has. I have been wrong before – but not often about this.»
+- «What you see is close to what you get. Some find another gear at seventeen. Most do not.»
+- «There is not much more in there. She can have a good life in this sport. She will not have a famous one.»
+
+**Still room to grow**
+- «There is more in there. How much, I could not tell you yet.»
+- «She is not finished. The next three years will say how far.»
+
+**Huge potential**
+- «I do not say this often. There is a great deal more in there.»
+- «Whatever she is now, she is nowhere near the end of it.»
+
+### 8b. The wizard's promise, reworded – drafted
+
+It reads «Your kid has real talent. With the right support, anything is possible.» and
+`potentialBand: [4, 26]` does not guarantee it. The promise belongs to the PARENT.
+
+- **A** «The talent is hers. The bills, the drives and the decisions are yours.»  ⭐ recommended – it
+  is the game's thesis in one line and it promises nothing about her
+- **B** «Your kid can play. What happens next is mostly about you – and it will cost more than you
+  think, sooner than you think.»
+- **C** «She has something. Whether it becomes anything is a question about your time, your money and
+  your nerve.»
+
+⚠ TWO MORE LINES CARRY THE SAME FAULT and must move with it or the wizard contradicts itself:
+«Let's get to know your future champion.» and «Here's your champion in the making.» Both promise a
+champion.
