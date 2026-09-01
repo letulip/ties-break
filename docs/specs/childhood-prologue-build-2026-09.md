@@ -174,6 +174,13 @@ with "run the tour again" available in More. It converts a wrong tour into no to
 better, and it builds nothing the prologue will later delete. ⚠ Do NOT build the click-capturing
 overlay (option A): that is the overloaded tour he does not want, in a component C replaces.
 
+**SHIPPED 02.09 (phase 5), both halves.** B: `OnboardingTour.vue` takes the shell's `tab` as a
+`screen` prop and ends the moment it moves – the same exit **Skip tour** takes, so More's existing
+**Show the tour** re-arms it. The click-capturing overlay was NOT built and `pointer-events: none`
+stays. C: `App.vue`'s `finishPrologue` marks the device onboarded on the handover's «go on», so a
+prologue player never meets the marks. No step's wording moved and no new sentence reaches the
+screen. The record, the mutations and the test map are in `docs/specs/onboarding-tour.md`.
+
 ---
 
 ## 7. The build plan
@@ -209,6 +216,10 @@ same SHAPE of world – same schema, same invariants, only different numbers.
 **Phase 5 – the tour, both halves.**
 B (the screen-change exit) ships with phase 4 or before it; C is phases 2–4 doing their job.
 *Acceptance*: the reproduction in §6 no longer reproduces; a prologue player never sees a tour.
+⭐ **DONE 02.09.** The reproduction is a mounted test that walks the exact path (tapping Stats, then
+four presses of Next that have nothing to press) and a browser test that makes the tap for real;
+`e2e/prologue.spec.ts` asserts the prologue reaches week 1 with the tour absent, the device flag
+written and still absent after a reload. Every claim was mutation-verified – see §6.
 
 ⚠ **NOT IN v1, and named so nobody smuggles them in:** the motivation system (his, later); a
 difficulty menu (§2.4 replaces it); any change to `potential`; any change to the main cohort;

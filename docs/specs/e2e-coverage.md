@@ -182,7 +182,7 @@ produced a *defect list* instead of a workaround list.
 | spec | the journey, in one sentence | seam |
 |---|---|---|
 | `smoke.spec.ts` | the app boots, a new career starts, week 1 renders | 1 |
-| `prologue.spec.ts` | the childhood's nine cards run, the handover draws her, and «go on» starts the career | 1, 5 |
+| `prologue.spec.ts` | the childhood's nine cards run, the handover draws her, «go on» starts the career – and no tour follows it | 1, 5 |
 | `seeded-careers.spec.ts` | each of the six fixtures boots into the state its manifest describes | 1, 2 |
 | `week-advance.spec.ts` | a decision on the table stops the week; answering it starts it, and the answer comes back as news | 1 |
 | `week-advance.spec.ts` | a week that ends a season: the wrap-up card, then Home and the money screen move together | 1, 5 |
@@ -199,6 +199,8 @@ produced a *defect list* instead of a workaround list.
 | `save-file.spec.ts` | an untrusted file is refused at the door and the career on disk is untouched | 6 |
 | `onboarding-tour.spec.ts` | a new player is shown the interface tour, walks it, and dismisses it | 2, 5 |
 | `onboarding-tour.spec.ts` | it does not come back on the next boot – and an *unanswered* one still does | 2 |
+| `onboarding-tour.spec.ts` | changing tab ends the tour instead of describing a screen the player has left | 4, 5 |
+| `onboarding-tour.spec.ts` | ...and More still brings it back after the screen change took it away | 2, 5 |
 | `onboarding-tour.spec.ts` | More can ask for the tour again, and asking moves the player to Home | 2, 5 |
 | `responsive.spec.ts` | at 375 px nothing scrolls sideways and the season strip stays short | 4 |
 | `offline.spec.ts` | after one visit the app boots with the network cut | 3 |

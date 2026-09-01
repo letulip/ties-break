@@ -39,6 +39,12 @@
 // ⚠ NO `waitForTimeout`. Every step is an action or a web-first assertion.
 import { test, expect, type Page } from '@playwright/test'
 
+/** "This device has been onboarded" - App.vue's one durable record, written by the tour's dismiss
+ *  and, since phase 5, by the prologue reaching its end. Spelled out here rather than imported from
+ *  `careerAt.ts`: this spec boots the real app from nothing and takes none of the fixture
+ *  machinery, and one key name is a cheaper duplicate than that whole dependency. */
+const TOUR_SEEN_KEY = 'tb:onboardingTourSeen'
+
 /** ⚠ THE NINE CARDS, AS A SHAPE. Four of them carry no decision (ages 5, 6, 7 and 13 – the count is
  *  the owner's, §3) and five do, and card 5 also carries the family's origin and the way out. So the
  *  control count per card is the sequence below, and it is asserted rather than assumed: it is the
@@ -118,15 +124,43 @@ test('the nine cards run, the handover draws her, and going on starts the career
   // so week 1 would never render below.
   await answers.first().click()
 
-  // The first-run tour lands on top of Home, exactly as it does out of the wizard. Phase 5 is what
-  // takes it away from a prologue player; until then it is dismissed by name, as smoke.spec.ts does.
-  await page.getByRole('button', { name: 'Skip tour' }).click()
-
   // Week 1, painted off a Snapshot the worker built from a world the prologue's nine years were
   // spent on. This is the assertion the whole file exists for: the round trip happened.
   await expect(page.getByRole('heading', { name: /^W1 \d{4} · /, level: 1 })).toBeVisible()
   await expect(page.getByText(/career started \(seed "/)).toBeVisible()
   await expect(page.getByRole('navigation', { name: 'Main' })).toBeVisible()
+
+  // --- ⭐⭐ §6 C: ...AND NO TOUR (phase 5) -------------------------------------------------------
+  //
+  // His ruling is B and C together: B for the player who SKIPS the prologue, C for the player who
+  // plays it, and after C «В уже не будет». C is not something built beside the tour - it is the
+  // nine cards doing their job. A player who has just been walked through the interface does not
+  // then need eleven coach marks explaining the same screen.
+  //
+  // ⚠ ASSERTED AFTER THE SHELL IS UP, NEVER BEFORE. `toHaveCount(0)` is true of a page that has not
+  // rendered yet, so this is a green that means nothing if it runs before the nav exists. The three
+  // assertions above are what make the absence below a fact: the shell is on screen, the marks
+  // render in the same tick as the shell, and they are not there.
+  await expect(
+    page.getByRole('button', { name: 'Skip tour' }),
+    'a player who walked the childhood is shown the tour as well',
+  ).toHaveCount(0)
+  await expect(page.locator('.coach-tooltip')).toHaveCount(0)
+
+  // ⚠ AND FOR GOOD, which is a claim about what was WRITTEN DOWN rather than about this render.
+  // `tourWanted` offers the marks to any device that has never answered them for as long as the
+  // career sits at week 0, so a prologue that merely happened to be quiet here would meet them on
+  // the next boot. The key is the one the dismiss writes: "this device has been onboarded" is a
+  // single durable fact, and finishing the childhood is one of the ways of acquiring it.
+  expect(await page.evaluate((k) => localStorage.getItem(k), TOUR_SEEN_KEY)).toBe('1')
+
+  await page.reload()
+  await page.getByRole('button', { name: 'Tap to start' }).click()
+  await expect(page.getByRole('heading', { name: /^W1 \d{4} · /, level: 1 })).toBeVisible()
+  await expect(
+    page.getByRole('button', { name: 'Skip tour' }),
+    'the tour came back on the next boot of a career that started in the prologue',
+  ).toHaveCount(0)
 
   expect(crashes, 'the app threw while the prologue ran').toEqual([])
 })

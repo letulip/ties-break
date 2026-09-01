@@ -85,6 +85,16 @@ test('the app boots, a new career starts, and week 1 renders', async ({ page }) 
 
   // The first-run tour lands on top of Home. Dismissed by name, so what follows is asserted against
   // the screen a player is actually looking at rather than one behind a scrim.
+  //
+  // ⭐⭐ AND THIS IS ALSO THE OTHER HALF OF §6, ASSERTED RATHER THAN INCIDENTAL (phase 5). His ruling
+  // is B and C together: C takes the tour away from a player who WALKED the childhood, and B keeps
+  // it for the player who skipped it – which is the player this walk has been since the click above.
+  // The dismiss below would already time out if the marks were gone, but a claim that only fails as
+  // a timeout on the next line names the wrong thing when it breaks.
+  await expect(
+    page.getByRole('button', { name: 'Skip tour' }),
+    'the player who skipped the prologue was not offered the tour either',
+  ).toBeVisible()
   await page.getByRole('button', { name: 'Skip tour' }).click()
 
   // --- week 1 renders -------------------------------------------------------------------------
