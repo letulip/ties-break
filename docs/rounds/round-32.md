@@ -287,7 +287,9 @@ Both boxes are ticked with the place, per `docs/rounds/README.md` §"Keeping thi
   there is no per-week write to get wrong, and **the frozen career hashes move by `schemaVersion`
   alone**. A stock written weekly WOULD have landed on `selfTravelling` (fame 2.55 by week 156,
   measured). `tools/frozen-key-diff.ts` against the branch's own base, all three careers: **1 key of
-  59, 59 and 60 – `schemaVersion`**, with `rngMain` AND `offers` byte-identical.
+  72 – `schemaVersion`**, with `rngMain` AND `offers` byte-identical and `brandStrengthSeed` absent
+  from all six captures. ⚠ The first reading of that diff said «59, 59 and 60»: those are the LINE
+  NUMBERS `diff` printed, not counts. Corrected by counting the captures.
 
   Specs: `docs/specs/brand-inertia-2026-08.md` and `docs/specs/collaborations-as-early-fame-2026-08.md`,
   both with predicted vs measured and the frontier either way. Bench: `tools/r32-brand-inertia.ts`.

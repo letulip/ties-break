@@ -268,8 +268,8 @@ on all three frozen careers.
 4. ⭐⭐ **The frozen career hashes move by `schemaVersion` alone.** A stock written weekly WOULD have
    appeared on `selfTravelling` – her fame is 2.55 at week 156, first positive at week 122, measured –
    and the re-freeze would have moved two keys instead of one. `tools/frozen-key-diff.ts` against the
-   branch's own base, all three careers: **1 key of 59, 59 and 60 – `schemaVersion`**, with `rngMain`
-   AND `offers` byte-identical. `PRE_V69` is the byte-level half: rolling only the number back to 68
+   branch's own base, all three careers: **1 key of 72 – `schemaVersion`**, with `rngMain` AND
+   `offers` byte-identical, and `brandStrengthSeed` appearing on none of the six captures. `PRE_V69` is the byte-level half: rolling only the number back to 68
    reproduces all three v68 constants.
 
 **Every older schema still loads, and the ladder is how it is proven rather than asserted:**

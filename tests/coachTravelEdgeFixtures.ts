@@ -585,8 +585,13 @@ import { openCareer, stepCareerWeek, PRESETS, POLICIES } from '../tools/econ-ben
 // them are this wave's), headers checked against the invocation on all six captures. The verdict,
 // identical on all three:
 //
-//   MOVED    `schemaVersion` – and NOTHING else. 1 key of 59, 59 and 60.
+//   MOVED    `schemaVersion` – and NOTHING else. 1 key of 72, on all three.
 //   UNMOVED  every other key, `rngMain` AND `offers` INCLUDED, byte for byte.
+//
+// ⚠ THE COUNT IS THE HASHED KEYS AND NOT A DIFF LINE NUMBER, said because the first reading of this
+// diff got it wrong: `59c59` in the output is WHERE the line sits, not how many there are. Counted
+// (`tail -n +2 <capture> | wc -l`): 72 on every one of the six captures, and `brandStrengthSeed`
+// appears on none of them.
 //
 // ⭐⭐ AND ZERO MOVEMENT IS THE DERIVED EXPECTATION HERE FOR TWO SEPARATE REASONS, one per item.
 //   · #4 persists a PIN and not a stock: the only writer is the migration, so a career that is walked
@@ -1357,9 +1362,9 @@ export const FROZEN = {
  *  branch's own base in a separate worktree (`r32b/brand-multiple`, the commit this branch forked
  *  from). `tools/frozen-key-diff.ts` on all three careers:
  *
- *    · 5/0 (25k middle, grinder)          – **1 key of 59: `schemaVersion`.**
- *    · 8/0 (120k wealthy, elite, grinder) – **1 key of 59: `schemaVersion`.**
- *    · 0/1 (8k working, self-coached, PLAYER) – **1 key of 60: `schemaVersion`.**
+ *    · 5/0 (25k middle, grinder)          – **1 key of 72: `schemaVersion`.**
+ *    · 8/0 (120k wealthy, elite, grinder) – **1 key of 72: `schemaVersion`.**
+ *    · 0/1 (8k working, self-coached, PLAYER) – **1 key of 72: `schemaVersion`.**
  *
  *  ⚠⚠ AND `rngMain` IS BYTE-IDENTICAL ON ALL THREE, which is the load-bearing half. Neither round 32
  *  #4 nor #5 takes a draw on any stream: fame and brand strength are folds over dated records the
