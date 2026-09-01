@@ -1,14 +1,18 @@
 ---
 type: spec
-status: draft
+status: current
 area: economy
 canonical: false
-last-reviewed: 2026-08-31
+last-reviewed: 2026-09-01
 ---
 
 # Collaborations as the early lever on fame
 
-**Status: DRAFT FOR THE OWNER'S REVIEW. Nothing is built.**
+**Status: SHIPPED, round 32 #5 (01.09.2026). §6 was his ruling; §7-§9 are predicted vs measured.**
+
+⚠ **Measured TOGETHER with `brand-inertia-2026-08.md` (round 32 #4)** on his own instruction –
+«совместный эффект – мерить, да». The COMBINED table is that spec's §8; this one records what THIS
+item does, what it costs, and the finding that changed the sizing.
 
 ## 1. What he asked
 
@@ -104,3 +108,146 @@ Open shape questions, deliberately not answered here:
 
    ⚠ AND IT REMOVES AN UNBOUNDED TERM: a permanent per-shoot addition accumulates without limit over
    a twenty-season career and would need a cap chosen out of the air. A decaying pulse needs none.
+
+---
+
+## 7. What was built, and the finding that set the size
+
+`fameFloorOf` gains one term. For every shoot week she has actually LIVED – the same predicate
+`fameShootMultOf` already uses, extracted so the two folds cannot drift – the floor gains
+`shootFloorByBand[band]`, faded on the campaign's own half-life:
+
+```
+floor += shootFloorByBand[adBandOfTerms(letter)] × 2^(−(week − shootWeek) / shootFloorHalfLifeWeeks)
+```
+
+with `ECONOMY.fame.shootFloorByBand = [0.04, 0.06, 0.08, 0.11]` and
+`shootFloorHalfLifeWeeks = 52` – **one season, against a title's two.**
+
+⭐ **THE BAND IS RECOVERED FROM THE PAPER, so no save needs a new field.** `adBandOfTerms` reads the
+cheque the letter froze at signature back against `categories[c].feeCentsByBand`, walking from the
+top exactly as `adBandFor` walks the ranks. A letter written under today's table lands on its own cell
+exactly; a legacy letter lands on the strongest rung its fee can pay for; the capstone is the top band
+by name. `SAVE_SCHEMA_VERSION` moves for round 32 #4, not for this – **this item adds no field to
+`AdOfferTerms` and back-fills nothing.**
+
+⭐ **BOTH SURVIVE, on his ruling «давай, да».** `fameShootMultOf` is untouched: the add is the early
+rung and the multiplier is the late one, and a career carrying both feels both. The guard asserts the
+two ledgers read the same weeks.
+
+### ⚠⚠ THE FINDING THAT CHANGED THE SIZING: a steep gradient destroys the thing the item is for
+
+The first draft read his ruling «глобальный дом это не локальный ретейнер» as *proportional to the
+cheque* and shipped `[0.15, 0.35, 0.6, 1.0]` – 6.7× across the bands. **Measured on his own w933
+career that setting moved fame +43.7% and the brand's worth +131%, back to $1.92M.** That is a retune
+of the top wearing an early-career label.
+
+**And the arithmetic says a steep gradient is backwards, not merely large.** The high bands are where
+the shoot ASK is highest (two weeks a year per deal against one) *and* where a career already has a
+floor for the multiplier to work on. A steeply banded add therefore lands hardest exactly where it is
+least needed, and the proportional lift – which is what «a lever» means – ends up roughly EQUAL for a
+veteran and a newcomer. A gentle gradient keeps the asymmetry: the same absolute add is worth far more
+on a floor of 2 than on a floor of 12.8.
+
+⭐ **So the gradient is 2.75×, and the argument is REACH rather than money.** The cheques across those
+four bands span sixty-fold ($20,000 to $1.2M in `categories.watches`); what a shoot buys HERE is how
+many people see her face, and that does not scale with the cheque – a bigger house means better
+placements in more countries, not a hundred times the faces.
+
+### The sizing criterion, and it is round 32 #3's own
+
+That wave chose `value.unknownX = 2.5` as **«the highest value that still reads single digits on the
+shop row at his fame»**, and this wave may not undo it by pushing that fame back up. The shipped
+gradient is **the largest of its shape under which his w933 row still reads 9 years.** The frontier:
+
+| `shootFloorByBand` | half-life | his fame | his worth | shop row | verdict |
+| --- | ---: | ---: | ---: | ---: | --- |
+| off | – | 22.33 | $831,382 | 9 | the control |
+| **[0.04, 0.06, 0.08, 0.11]** | **52w** | **23.69 (+6.1%)** | **$952,076 (+14.5%)** | **9** | **shipped** |
+| [0.06, 0.08, 0.11, 0.15] | 52w | 24.20 (+8.4%) | $999,104 (+20.2%) | **10** | undoes #3's criterion |
+| [0.06, 0.08, 0.11, 0.15] | 39w | 23.93 (+7.2%) | $973,793 (+17.1%) | 9 | half-life picked to fit |
+| [0.10, 0.14, 0.18, 0.24] | 52w | 25.43 (+13.9%) | $1,119,683 (+34.7%) | 10 | – |
+| [0.15, 0.35, 0.60, 1.00] | 52w | 32.07 (+43.7%) | $1,922,441 (+131%) | 10 | the first draft |
+
+⚠ A shorter half-life buys almost nothing here and was measured rather than assumed: his shoots are
+recent and dense, so 26 weeks with a bigger per-shoot step lands in the same place as 52 with a smaller
+one (fame +7.8% at `[0.08, 0.11, 0.15, 0.20]` / 26w). **52 is kept because it is a fact rather than a
+fitted parameter** – «мало кто смотрит журналы 2 годичной давности», i.e. half of a campaign is
+forgotten by the next winter, against a championship's two seasons.
+
+---
+
+## 8. Predicted vs measured
+
+**⭐ Alice's own row barely moves, which was §5's requirement.** Her floor 12.85 → 13.63, her fame
+22.33 → 23.69 (**+6.1%**), and the +14.5% on worth is round 32 #3's `fame³` amplification of that,
+arriving beside a matching **+12.6% on the income** ($1,720 → $1,937/week). The shop row still prints
+**9**.
+
+**⚠ A top-20 career with no titles – and the honest answer is that THIS item is not what saves the
+case he named.** Round 30 #24's own guard arm (four seasons ended #18, nothing signed, fame 7.24) has
+**no delivered shoot for the add to act on**, so C is byte-identical to A: $46,095 gross, priced at the
+$62,500 mark. What lifts it over the mark is round 32 #4's stock ($67,011). ⭐ **That is precisely why
+the owner asked for the combined measurement, and summing the two items' own deltas would have got it
+wrong.** Where this item DOES act – the same career once she signs what her band already writes her,
+two band-2 deals at two shoots a year – it is worth real money:
+
+| the named case, once she signs | fame | gross worth |
+| --- | ---: | ---: |
+| A control | 10.60 | $105,512 |
+| B inertia only | 10.60 | $140,243 |
+| **C collabs only** | **11.33** | **$122,111** |
+| **D COMBINED (ships)** | **11.33** | **$154,741** |
+
+⚠⚠ **AND THE STRUCTURAL FINDING BEHIND IT, which is bigger than this item and is filed rather than
+fixed: a top-20 career that signs its own shelf was ALREADY above the mark before this wave.** The
+existing multiplier reaches ×1.31 on two deals and its ×2 cap on five, so `$46,095 → $105,512` with no
+new mechanism at all. The career that prices at the mark is the one that signs NOTHING. The wall is
+`fameFloorOf`'s title currency – one World Tour 500 title is worth 8 points against a whole top-20
+season's 4 – and neither item moves it. §3's table stands as the diagnosis; the repair, if he wants
+one, is the season-end ladder, and that is a retune of the top and his to rule on.
+
+**⚠ A career with no results and no deals gains exactly nothing**, in every arm and at every week –
+fame 0, strength 0, the owned row at the mark. Measured on the 72-career walk: 2 careers never reach
+fame 1 at all and neither moved by a cent.
+
+**⚠ And the row that shows the change honestly**: five band-2 campaigns hand-planted on a career that
+won nothing and ranked nowhere read **fame 2.34 and a gross worth of $2,357** – up from zero. That is
+the addition doing what it is for, it is why the paragraph above says «and no deals», and the owned
+row is still worth the mark. In play it does not arise, because `adBandFor` would never have written
+those letters.
+
+**⚠ AND ONE THING IS TRUE THAT WAS NOT TRUE BEFORE, said plainly.** The add is on the FLOOR, so a
+delivered shoot makes fame out of nothing – which is exactly what «a source of fame in its own right,
+on the same ledger as a title» means and is the change the owner asked for. What stops a face with no
+tennis buying a brand is **upstream**: `adBandFor` refuses a standing that is not WTA-ranked, so the
+post never writes her a letter to sign. The gate is the offers system's, and the guard records where
+it lives so a later reader does not go looking for it in `fameFloorOf`.
+
+---
+
+## 9. The decay, the residue, and the save
+
+⭐ **The addition decays on 52 weeks and carries NO permanent residue of its own** – §6.4's ruling
+implemented exactly. Forty years on, less than a millionth of a campaign is left in the floor. The
+permanence his internet sentence asks for is carried by BRAND STRENGTH, which is the other item, and
+that is what keeps one mechanism for what fades and one for what was built – with no overlap and no
+unbounded term needing a cap chosen out of the air.
+
+**⚠ NO SCHEMA MOVE IS OWED BY THIS ITEM.** It adds no field, back-fills nothing, and reads a letter's
+existing `cashCents`. The v69 bump belongs to round 32 #4. ⚠ One consequence is named in the migration
+itself: the v69 pin is taken with the NEW `fameAt`, so a save carrying signed campaigns pins a
+slightly higher fame than it read yesterday. That is this item's intent – it is a change to what fame
+IS – and pinning the pre-#5 number would have frozen a live career out of the feature it shipped
+alongside.
+
+**⚠ Zero draws.** The term is a fold over dated shoot weeks that the save already carries and never
+prunes. `offers` is byte-identical on all three frozen careers, which is the independent confirmation
+that nothing about WHICH letters get written moved. The frozen MAIN capture (41550 / `e6b0c709`) is
+untouched.
+
+**The guard** is `tests/round32-brand-inertia.test.ts` §6-§8 – the add is on the floor, it is monotone
+in the band, the band is read off the cheque (every cell, plus a legacy letter, plus the capstone), it
+decays faster than a title and leaves no residue, the multiplier still moves too, a shoot still ahead
+buys nothing, and a week the college freeze swallowed lapses silently. Mutation-verified; the log is
+at the foot of the file.

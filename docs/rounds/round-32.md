@@ -3,7 +3,7 @@ type: round
 status: current
 area: rounds
 canonical: false
-last-reviewed: 2026-08-31
+last-reviewed: 2026-09-01
 ---
 
 # Round 32 – from his play on the merged round-31 build (31.08.2026)
@@ -192,3 +192,104 @@ Both boxes are ticked with the place, per `docs/rounds/README.md` §"Keeping thi
   run came back exit 1 on one component arm – the shop row's rate line, which interpolates the
   multiple – and the background notice for that same run announced «exit code 0», which is the lie
   CLAUDE.md records, caught by reading the log.
+
+- [x] **4. «А еще интересно, что будет происходить с годами падения в таблице (как у нее сейчас) –
+  известность тоже будет падать и стоимость бренда, соответственно?»** – and, on being shown the
+  answer, «Инерция бренда – звучит интересно, давай попробуем». **build** (spec first, then built).
+
+  ⭐⭐ THE MEASUREMENT THAT FORCED IT, off his own w933 save projected five years with nothing won:
+  **$831,382 -> $9,098. A 99% capital loss.** The cause is arithmetic and not tuning – fame halves
+  every 104 weeks, the income goes as `fame²`, and after #3 the multiple rises with fame too, so the
+  worth goes as `fame³` and falls eightfold every two years. ⚠ NOT a defect #3 introduced: before it
+  the worth went as `fame²` and still fell fourfold every two years.
+
+- [x] **5. «карьера топ-20 без титулов … Мне кажется здесь как раз на раннем этапе коллаборации нам
+  должны помочь, они станут хорошим рычагом роста известности и стоимости бренда как раз»** – and «и
+  это надо внедрять да». **build** (spec first, then built).
+
+  ⚠ A CLAIM OF MINE HE WAS RIGHT TO CHALLENGE, recorded because it changed the item: I said a top-20
+  player with no titles has no contracts to multiply, and he asked «как такое возможно?». `adBandFor`
+  selects the band from `standing.wtaRank`, so a top-20 career is written contracts on schedule. The
+  claim was inherited from an agent's report and repeated without measuring.
+
+- **4 + 5** – ONE branch, `r32c/brand-inertia-and-collabs`, and ONE bench, on his own ruling
+  «совместный эффект – мерить, да». Both items push on the same number, so two separately measured
+  features summed is not the answer.
+
+  ⭐⭐⭐ **THE COMBINED ARM, his w933 career, five years forward with nothing new won:**
+
+  | | A control | B inertia only | C collabs only | **D COMBINED** |
+  | --- | ---: | ---: | ---: | ---: |
+  | now | $831,382 | $831,382 | $952,076 | **$952,076** |
+  | +5 years | **$9,098** | $141,579 | $9,442 | **$166,060** |
+  | the fall in WORTH | **−98.9%** | −83.0% | −99.0% | **−82.6%** |
+  | the fall in INCOME | −98.6% | −98.6% | −98.7% | −98.7% |
+
+  ⚠ The acceptance was «not 99%, and a decline of the same ORDER as the income's rather than its
+  cube». Before the wave the worth fell HARDER than the income; it now falls sixteen points less far,
+  and the residual is 18x what it was. ⭐ AND THE INTERACTION IS NOT ADDITIVE: #5 alone does nothing
+  for the fall (−99.0%), #4 alone answers it (−83.0%), and together the residual is 17% larger than #4
+  alone – because #5 raises the number the migration pins, and the floor is a share of that.
+
+  **#4** – `world/brandStrength.ts`: `strength(w) = max over t ≤ w of fame(t) × max(floorShare,
+  2^(−(w−t)/halfLifeWeeks))`, at 208 weeks and 0.4. His ruling in one kernel – a half-life measured in
+  YEARS, and a floor that is a share of HER OWN peak because the maximum already contains that peak.
+  The INCOME still reads fame; the WORTH reads the stock (`brandBuiltSignals`), and so does the shop
+  row's «Worth N years of what it sells» so the screen and the valuation cannot disagree. ⚠ Not a
+  character of user-facing copy moved.
+
+  ⭐⭐ THE TOP OF THE SHELF DID NOT MOVE, BY CONSTRUCTION: strength ≥ fame always (the candidate at
+  `t = w` is fame itself) and strength ≤ cap always (every candidate is a past fame times a kernel ≤ 1),
+  so at fame 100 the two bounds meet. Measured to #3's own standard – **56,160/56,160 career-weeks
+  unchanged at fame = cap, worst |delta| 0 cents**, and **72/72 careers' PEAK worth unchanged, worst
+  |delta| $0**.
+
+  **#5** – one term in `fameFloorOf`: a delivered shoot ADDS `shootFloorByBand[band]` to the floor, on
+  a 52-week half-life against a title's 104, with no permanent residue (that is carried by #4's stock).
+  The band is recovered from the CHEQUE the letter froze (`adBandOfTerms`), so **no field is added to
+  `AdOfferTerms` and no save is back-filled**. The existing multiplier stays, on his ruling.
+
+  ⚠⚠ THE SIZING CHANGED ON A MEASUREMENT. The first draft read «глобальный дом это не локальный
+  ретейнер» as proportional to the cheque – `[0.15, 0.35, 0.6, 1.0]`, 6.7x – and that moved his own row
+  **+43.7% on fame and +131% on worth**, back to $1.92M: a retune of the top wearing an early-career
+  label. It is also backwards, because the high bands ask for MORE shoots and already have a floor to
+  multiply. The shipped gradient is **2.75x** (`[0.04, 0.06, 0.08, 0.11]`) – reach, not money – and is
+  the largest of its shape under which his shop row still reads **9 years**, which was #3's own sizing
+  criterion and this wave may not undo it. His row: fame 22.33 -> 23.69 (+6.1%), worth +14.5%, beside a
+  +12.6% income.
+
+  ⭐⭐⭐ THE CASE HE NAMED CLEARS THE MARK, AND #4 IS WHAT CLEARS IT. Round 30 #24's own guard arm –
+  four seasons ended #18, no title, nothing signed, fame 7.24 – priced at the **$62,500 mark** before
+  this wave (gross $46,095) and prices at **$67,011, above it**, after. ⚠ #5 alone cannot touch it: she
+  has signed nothing, so there is no delivered shoot to add. **That is exactly why he asked for the
+  combined measurement.** Once she signs what her band already writes her (two band-2 deals), the same
+  career reads $105,512 control -> **$154,741 combined**.
+
+  ⚠ AND A STRUCTURAL FINDING, FILED NOT FIXED: a top-20 career that SIGNS its shelf was already above
+  the mark before this wave – the existing multiplier reaches its x2 cap on five deals. The career that
+  prices at the mark is the one that signs nothing, and the wall is `fameFloorOf`'s title currency (one
+  World Tour 500 title is worth 8 against a whole top-20 season's 4). Neither item moves it; the repair
+  is the season-end ladder and it is a retune of the top, so it is HIS to rule on.
+
+  ⭐ AND #3's DAY-ONE COST IS PARTLY REPAID, unasked: median day-one worth **$93,480 -> $103,918**, and
+  the careers pinned at the mark the week they buy go **25/70 -> 21/70**. The in-career slump is
+  shallower too: 52-week falls median **−34.4% -> −26.0%**.
+
+  ⚠ NOT DONE, AND NAMED: nothing was done about `entryCents` (#3 filed it and it is still his), and the
+  fame ladder itself is untouched. A career with no results and no deals gains exactly nothing from
+  either item, in every arm and at every week.
+
+  ⭐⭐ THE SAVE – the four-part move, and the field is a PIN rather than a stock. `SAVE_SCHEMA_VERSION`
+  **68 -> 69** (main's value read, not assumed), an append-only v68 -> v69 step, `tests/fixtures/saves/
+  v69.json`, `npm run e2e:fixtures`. `brandStrengthSeed = {week, value}` is written ONCE by the
+  migration and by nothing else – not `createWorld`, not any phase of the tick – which buys four
+  things: his career does not jump on the tick after the merge, a new career reads its own history,
+  there is no per-week write to get wrong, and **the frozen career hashes move by `schemaVersion`
+  alone**. A stock written weekly WOULD have landed on `selfTravelling` (fame 2.55 by week 156,
+  measured). `tools/frozen-key-diff.ts` against the branch's own base, all three careers: **1 key of
+  59, 59 and 60 – `schemaVersion`**, with `rngMain` AND `offers` byte-identical.
+
+  Specs: `docs/specs/brand-inertia-2026-08.md` and `docs/specs/collaborations-as-early-fame-2026-08.md`,
+  both with predicted vs measured and the frontier either way. Bench: `tools/r32-brand-inertia.ts`.
+  Guard: `tests/round32-brand-inertia.test.ts`, 25 arms in nine sections, mutation-verified against
+  twelve mutations.
