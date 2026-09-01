@@ -371,7 +371,15 @@ describe('R13-12 — the This-week tab owns the plan and the recap', () => {
   })
 
   it('the screen leaves room structurally: status and plan are sibling sections', () => {
-    expect(weekScreen).toContain('<h2>This week</h2>')
+    // ⚠ RE-AIMED BY ROUND 33 #1, NOT WEAKENED. Both headings are still on this screen and still in
+    // sibling sections - what they gained is a `v-if`, because Home's Next-tournament plate opens
+    // THIS screen with `entry: 'tournament'` and the owner asked for the week's own furniture to be
+    // off that arrival («это разные экраны, нужны для разных вещей» - docs/rounds/round-33.md item
+    // 1). The protected fact here is the STRUCTURE, so the pin reads the heading text and lets the
+    // condition live where the condition is asserted:
+    // `tests/component/round33-tournament-arrival.test.ts` mounts both arrivals and asserts each
+    // one's whole section list, which is a stronger statement than either of these lines.
+    expect(weekScreen).toContain('>This week</h2>')
     expect(weekScreen).toContain('<h2>Training plan</h2>')
   })
 
@@ -763,7 +771,12 @@ describe('W4 — the story has a way out, and its painting is the week it is abo
     expect(bar).toContain('justify-content: center')
     expect(bar).toContain('bottom: 58px')
     // ...and it exists only while there is a story to leave.
-    expect(weekScreen).toContain(`<template v-if="showRecap" #footer>`)
+    // ⚠ RE-AIMED BY ROUND 33 #1: the flag is `showStory` now, which is `showRecap` minus the
+    // tournament arrival. The pin's claim is unchanged and is if anything stricter - the footer is
+    // gated on the STORY, and the story's four parts (this pill, the card, the header's × and the
+    // `has-proceed` padding) hang off one flag on purpose so they cannot part company.
+    expect(weekScreen).toContain(`<template v-if="showStory" #footer>`)
+    expect(weekScreen).toContain('const showStory = computed(() => showRecap.value && !tournamentOnly.value)')
   })
 
   it('Proceed is NOT an advance: same handler as the ×, and a label naming where it goes', () => {

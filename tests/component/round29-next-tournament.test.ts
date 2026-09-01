@@ -297,8 +297,13 @@ describe('round 29 #8 – the door Home opens is no longer empty', () => {
     expect(w.find('.next-tourn').exists(), 'the panel is on the screen the card opens').toBe(true)
     expect(w.find('.nt-hero-title').text()).toBe(entered.label)
     expect(w.findAll('.nt-fact').length).toBe(4)
-    // The screen keeps everything it already had.
-    expect(w.text()).toContain('Training plan')
+    // ⚠⚠ RE-AIMED AGAIN BY ROUND 33 #1, AND ONE LINE CAME OFF: this used to add «the screen keeps
+    // everything it already had» and read the training plan off this arrival. It no longer does,
+    // because the owner asked for the opposite - «это разные экраны, нужны для разных вещей» - and
+    // the week's furniture is off the tournament arrival entirely. THE CLAIM WAS NOT DROPPED, only
+    // re-homed: the plan is still pinned on the week's own arrival by
+    // `round30-next-tournament-layout.test.ts`'s «план тренировок внизу остаётся как есть» arm, and
+    // round 33's own file asserts the whole section list of BOTH arrivals as a list.
     w.unmount()
   })
 
