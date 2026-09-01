@@ -172,13 +172,34 @@ const RADAR_INNER = '28,17 38.5,24.6 34.5,36.9 21.6,36.9 17.6,24.6'
  *  Coach Market): every word capitalised EXCEPT articles and short prepositions – hence "Raise a
  *  Champion". The SUBTITLES stay sentence case; they are sentences, and every other screen's
  *  sub-line is one too. */
+/** ⭐⭐ THE OPENING PROMISE, AND IT IS A POOL BECAUSE HE ASKED FOR ONE (01.09): «можно все 3
+ *  рандомно использовать, как и предыдущие реплики тренера, все хороши».
+ *
+ *  ⚠ IT REPLACED A PROMISE THE ENGINE DOES NOT KEEP. The line read «Your kid has real talent. With
+ *  the right support, anything is possible.» - and `ECONOMY.development.potentialBand` is [4, 26],
+ *  whose own comment says a career at the bottom of that band «is a girl who was never going to make
+ *  it, and that has to be a career the game can tell». The wizard was promising the player something
+ *  the world may simply not contain, to the very player who would then spend a hundred hours finding
+ *  out. The promise belongs to the PARENT; the uncertainty stays hers.
+ *
+ *  ⚠ PICKED ONCE, ON MOUNT, AND NEVER AGAIN. A line re-drawn on every render is the defect round 31
+ *  #4 spent a wave removing from the tournament card - the player reads a sentence as a statement,
+ *  not as a roll. There is no seed here (no world exists yet), so the pick is a `ref` set at setup
+ *  and read for the life of the wizard. */
+const OPENING_PROMISE: readonly string[] = [
+  'The talent is hers. The bills, the drives and the decisions are yours.',
+  'Your kid can play. What happens next is mostly about you, and it will cost more than you think, sooner than you think.',
+  'She has something. Whether it becomes anything is a question about your time, your money and your nerve.',
+]
+const openingPromise = ref(OPENING_PROMISE[Math.floor(Math.random() * OPENING_PROMISE.length)])
+
 const STEP_HEADS: { title: string; sub: string }[] = [
   { title: 'Raise a Champion', sub: '' },
-  { title: 'Who Is Your Player?', sub: "Let's get to know your future champion." },
+  { title: 'Who Is Your Player?', sub: "Let's start with who she is." },
   { title: 'Where Are You Starting?', sub: 'Select your country.' },
   { title: 'Family Setup', sub: 'Your resources and support shape the path.' },
   { title: 'Choose Play Style', sub: 'This shapes strengths and training focus.' },
-  { title: 'All Set!', sub: "Here's your champion in the making." },
+  { title: 'All Set!', sub: 'Here she is. The rest is the two of you.' },
 ]
 
 /** The pose art for a style, addressed BY ITS ID – see the ⚠ on PLAY_STYLES for why that is safe. */
@@ -328,7 +349,7 @@ function start(): void {
       <section v-if="step === 1" class="ob-pane bare ob-welcome" aria-labelledby="ob-hero-title">
         <div class="ob-copy">
           <p>You're the parent now – every choice, every dollar, every away tournament is yours to carry.</p>
-          <p>Your kid has real talent. With the right support, anything is possible.</p>
+          <p>{{ openingPromise }}</p>
           <p>Rackets, coaches, flights, hotels – the costs are honest, and they don't wait for a breakthrough.</p>
         </div>
         <div class="ob-art ob-art--hero">
