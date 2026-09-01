@@ -28,6 +28,7 @@
     "src/**/*.vue",
     "tests/**/*.ts",
     "tools/ad-shoot-bench.ts",
+    "tools/childhood-bench.ts",
     "tools/dead-week-probe.ts",
     "tools/demo-save.ts",
     "tools/dual-universe-bench.ts",
