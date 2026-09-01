@@ -42,6 +42,7 @@ import { KID_ID, ageAtWeek, flipScore } from '../../engine/world'
 import { recapExists } from '../../composables/weekRecap'
 import WeekRecapCard from '../WeekRecapCard.vue'
 import NextTournamentPanel from '../NextTournamentPanel.vue'
+import IconButton from '../ui/IconButton.vue'
 import PrimaryPill from '../ui/PrimaryPill.vue'
 import ScreenShell from '../ui/ScreenShell.vue'
 
@@ -124,18 +125,49 @@ function dismissRecap(): void {
 // `entered: true`), or a plain "training week" hint when nothing is entered.
 const nearestEntered = computed(() => game.snapshot?.upcoming.find((e) => e.entered) ?? null)
 
-// ⭐⭐ ROUND 31 #1 – the one thing `entry` decides: does the tournament come before the week's story.
-// ⚠ AND THERE MUST BE A TOURNAMENT TO PUT FIRST. On a training week the plate on Home is a door onto
-// a heading and one line of hint, and reordering the page around a block that is not drawn would
-// only move the story down for nothing. `nearestEntered` is the same fact the panel renders by, so
-// the two cannot disagree.
-const tournamentFirst = computed(() => props.entry === 'tournament' && !!nearestEntered.value)
+// ⭐⭐ ROUND 33 #1 – THE ARRIVAL IS THE SCREEN, AND THE OWNER'S QUESTION IS WHY IT TOOK FIVE PASSES.
+//
+// «опять экран next tournament содержит next week – объясни мне пожалуйста, почему вообще получилось
+//  так, что эти два на одном экране постоянно оказываются? это разные экраны, нужны для разных вещей,
+//  мне кажется у них ничего общего нет. На экране family budget ведь нет ничего такого. На экране
+//  конца недели теперь нет информации о next tournament и это правильно.»
+//
+// Two halves, and the second one is a receipt: round 32 #2 took the tournament off the results view
+// and he confirms that was right. What is left is the same removal in the other direction.
+//
+// ⭐⭐ THE ANSWER IS STRUCTURAL, AND IT IS THE WHOLE ITEM: THERE IS NO TOURNAMENT SCREEN.
+// `src/components/screens/` holds ten screens and not one of them is one. Home's plate emits
+// `navigate -> 'week:tournament'`; App.vue's `openWeek('tournament')` sets `tab = 'week'` and hands
+// THIS screen an `entry` prop. The «next tournament screen» IS the This-week screen wearing a prop,
+// which is why rounds 29, 30, 31 and 32 all rearranged blocks INSIDE one screen while he was
+// describing two, and why none of them could answer him. His own comparison is the proof: the family
+// budget has `MoneyScreen.vue` AND a door of its own; the tournament was never given either.
+//
+// SO THE PROP DECIDES WHAT THE SCREEN IS, not merely what comes first on it. On the tournament
+// arrival the page is the tournament: the header's date line, the panel, and the way back to Home.
+// None of the week's own furniture rides along – not the «This week» heading, not the status pill,
+// not the week's story, not the training plan – because none of it is what the plate is a door to.
+//
+// ⚠ AND THERE MUST BE A TOURNAMENT TO BE A SCREEN ABOUT. On a training week the plate opens onto a
+// heading and one line of hint; there is nothing to build a screen around, so that arrival falls back
+// to the week exactly as it always did (round 31 #1's own training-week arm, unchanged).
+// `nearestEntered` is the same fact the panel renders by, so the two cannot disagree.
+const tournamentOnly = computed(() => props.entry === 'tournament' && !!nearestEntered.value)
+/** ⭐⭐ ROUND 33 #1 – THE STORY IS THE WEEK'S, AND IT BELONGS TO THE WEEK'S OWN ARRIVAL. This is the
+ *  mirror of round 32 #2, which took the tournament off the results view – and he confirmed that
+ *  half was right in the same message. FOUR THINGS HANG OFF THIS ONE FLAG AND THEY MOVE TOGETHER:
+ *  the card, the header's ×, the footer's way off the story, and the padding that footer needs. A
+ *  screen showing three of the story's four parts and not the story is how this block drifted before.
+ *  ⚠ `showRecap` ITSELF IS UNTOUCHED – the story still EXISTS on the tournament arrival's week, and
+ *  it is not dismissed, not silenced and not consumed: it is simply not this screen's subject. The
+ *  week's own arrival still opens on it, which is the door a tick uses (App.vue's `week` watcher). */
+const showStory = computed(() => showRecap.value && !tournamentOnly.value)
 /** ⚠ ROUND 32 #2 – THE PANEL'S RULE, STATED ONCE, because `section.bare` has to obey the same one.
  *  Its own comment below reads «ONLY WHEN THE PANEL IS THERE», and when the panel learned to wait
  *  for the story that sentence and the binding parted company: the results view un-framed a section
  *  holding nothing but a heading and a pill. The `v-if` still ends in `nearestEntered` so the
  *  template keeps narrowing it for `:event`. */
-const tournamentShown = computed(() => (!showRecap.value || tournamentFirst.value) && !!nearestEntered.value)
+const tournamentShown = computed(() => (!showRecap.value || tournamentOnly.value) && !!nearestEntered.value)
 
 // Round-8 R8-4: once this week's tournament has been played, the status block carries
 // the kid's LATEST match score (kid-perspective), read straight off the snapshot's match
@@ -192,12 +224,30 @@ const spendRange = computed<[number, number]>(() => {
 </script>
 
 <template>
-  <ScreenShell v-if="game.snapshot" class="this-week" :class="{ 'has-proceed': showRecap }">
+  <ScreenShell v-if="game.snapshot" class="this-week" :class="{ 'has-proceed': showStory }">
     <!-- D's header: the week, centred, with the story's close on the right. The left spacer is what
          centres the line against the × – the design's own three-slot row. -->
     <template #header>
       <div class="week-topbar">
-        <span class="week-topbar-slot" aria-hidden="true"></span>
+        <!-- ⭐⭐ ROUND 33 #1 – THE WAY OFF THE TOURNAMENT SCREEN, and it is the app's own back control
+             rather than a new one. `week` has no seat in the bottom bar, so a screen of its own needs
+             a door of its own – which is exactly what the screen he compared it to already has
+             (MoneyScreen's and KidScreen's `.back-link`: same component, same variant, same icon, same
+             label, same destination). The × beside it cannot do this job and must not be asked to: it
+             is the STORY's close, it silences that week's story for good, and on this arrival the
+             story is not on the page to be closed.
+             ⚠ NO NEW WORDING ENTERS THE APP (CLAUDE.md invariant 4). `Back to Home` is the label those
+             two screens already carry on this same control for this same trip, so nothing here is a
+             string he has not already approved somewhere else. -->
+        <IconButton
+          v-if="tournamentOnly"
+          class="back-link"
+          variant="bare"
+          icon="back"
+          label="Back to Home"
+          @click="emit('close')"
+        />
+        <span v-else class="week-topbar-slot" aria-hidden="true"></span>
         <!-- ⚠ D10 (docs/specs/e2e-coverage.md §12), the half that was on nobody's list. This is the
              app's most-asserted string and it was a plain `<p>`: the one line that says WHICH week
              this screen is about could not be reached as a heading, so a screen-reader user landing
@@ -209,7 +259,7 @@ const spendRange = computed<[number, number]>(() => {
              Level 1 because it is the screen's title and the two `<h2>`s below it are its sections. -->
         <p class="week-topbar-line" role="heading" aria-level="1">{{ dateLine }}</p>
         <button
-          v-if="showRecap"
+          v-if="showStory"
           class="week-topbar-slot week-close"
           type="button"
           aria-label="Close the week's story"
@@ -220,18 +270,26 @@ const spendRange = computed<[number, number]>(() => {
             <path d="M6 6l12 12M18 6L6 18" />
           </svg>
         </button>
-        <span v-else class="week-topbar-slot" aria-hidden="true"></span>
+        <!-- ⚠ AND THE SPACER MATCHES WHATEVER IS OPPOSITE IT. The row centres the date line BETWEEN
+             its two ends, so a 20px spacer against a 32px back control would push the line 6px off
+             centre – the one thing D's three-slot header exists to prevent. -->
+        <span
+          v-else
+          class="week-topbar-slot"
+          :class="{ 'week-topbar-slot-wide': tournamentOnly }"
+          aria-hidden="true"
+        ></span>
       </div>
     </template>
 
-    <!-- ⭐⭐ ROUND 31 #1 – THE STORY IS FIRST, EXCEPT FOR THE ONE ARRIVAL THAT ASKED FOR THE
-         TOURNAMENT. `showRecap` is untouched: the same card, the same week silenced by the same ×,
-         the same `has-proceed` footer. Only its PLACE moves, and only when the shell says the player
-         came through Home's Next-tournament plate onto a week with something entered. Two `v-if`s on
-         one exclusive flag rather than a CSS `order`, because reading order is the thing being fixed
-         and `order` moves the paint without moving the document – a screen reader would still be
-         given the week's results first. -->
-    <WeekRecapCard v-if="showRecap && !tournamentFirst" />
+    <!-- ⭐⭐ ROUND 33 #1 – THE STORY IS ON THE WEEK'S OWN ARRIVAL, AND THERE IS ONE OF IT AGAIN.
+         Round 31 #1 answered his tap by MOVING this card below the tournament, which kept the two
+         screens on one page in a new order; round 33 is the same complaint arriving for the fifth
+         time, and the answer this time is that the tournament arrival is not the week. So the second
+         copy of this card is gone and the flag is `showStory` – the same `showRecap` it always was,
+         minus the arrival the card is not part of. Nothing about the story itself changed: same
+         card, same ×, same one week silenced, same footer, same `has-proceed`. -->
+    <WeekRecapCard v-if="showStory" />
 
     <!-- ⭐⭐ ROUND 30 #6 – THE FRAME COMES OFF (his first clause; the quote is in
          NextTournamentPanel.vue's script header, because Cyrillic may not appear in a template).
@@ -241,9 +299,16 @@ const spendRange = computed<[number, number]>(() => {
          ⚠ ONLY WHEN THE PANEL IS THERE. A week with nothing entered is a heading and one line of
          hint, and un-framing that is a change to a state he did not ask about (invariant 4's habit
          applied to layout: not asked is not permission). -->
+    <!-- ⭐⭐ ROUND 33 #1 – THE HEADING AND THE PILL ARE THE WEEK'S, and they are the block he was
+         naming (his words are quoted in this file's script header and in docs/rounds/round-33.md
+         item 1, because Cyrillic may not appear in a template): a section titled for the week, naming
+         the week's entry and the week's latest score, sitting on the screen his Next-tournament plate
+         opened. The `<section>` itself stays as the panel's host, so `section.bare` still says what
+         round 30 #6 made it say and round 32 #2 re-bound it to – on the tournament arrival the plate
+         is the only object on the page, which is now literally true. -->
     <section :class="{ bare: tournamentShown }">
-      <h2>This week</h2>
-      <div class="this-week-status">
+      <h2 v-if="!tournamentOnly">This week</h2>
+      <div v-if="!tournamentOnly" class="this-week-status">
         <span v-if="nearestEntered" class="pill ok">
           {{ nearestEntered.label }} · {{ nearestEntered.surface }} · {{ weekLabel(nearestEntered.week) }}
         </span>
@@ -262,23 +327,23 @@ const spendRange = computed<[number, number]>(() => {
            plate underneath the results, described exactly as the tournament's own screen describes
            it, and the tournament should come off it. So the panel waits for the story to be gone:
            the results view shows results, the × that already dismisses the story then reveals what
-           is next, and the arrival through Home's plate still opens on the tournament with the
-           story below it - round 31 #1, intact, which is what `|| tournamentFirst` is holding open.
-           ⚠⚠ THE CONDITION IS THE WHOLE DIFF. This is the FOURTH pass over these two blocks - round
-           29 part two grew the recap, round 30 #1 cut it back, round 31 #1 moved the order - and
-           every one of the three changed more than the complaint asked for. Nothing else on this
-           screen moves: no copy, no spacing, no reordering. -->
+           is next, and the arrival through Home's plate still opens on the tournament - which is
+           what `|| tournamentOnly` is holding open.
+           ⚠⚠ THE COUNT IS THE FINDING. Round 29 part two grew the recap, round 30 #1 cut it back,
+           round 31 #1 moved the order, round 32 #2 took the panel off the results view - four passes
+           over two blocks, and he came back a fifth time. Round 33 #1 is why: he was never describing
+           two blocks. He was describing two SCREENS, and they were one file. -->
       <NextTournamentPanel v-if="tournamentShown && nearestEntered" :event="nearestEntered" />
     </section>
 
-    <!-- ...and on that arrival the story sits directly under the tournament, not at the end of the
-         page. Round 30 #6 asked for the training plan to stay at the bottom (his words are quoted in
-         NextTournamentPanel.vue's script header, because Cyrillic may not appear in a template), so
-         the plan is still last on BOTH entries. The story loses its POSITION on this one screen-load
-         and loses nothing else. -->
-    <WeekRecapCard v-if="showRecap && tournamentFirst" />
-
-    <section>
+    <!-- ⭐⭐ ROUND 33 #1 – AND THE TRAINING PLAN IS THE WEEK'S TOO. Round 30 #6 asked for it to stay
+         at the bottom of this screen and it does, on the screen it belongs to. His clause about it
+         (quoted in NextTournamentPanel.vue's script header, because Cyrillic may not appear in a
+         template) was a placement INSIDE the week, written before anybody had noticed that the week
+         and the tournament were one file. It is the last thing on the week's arrival, framed, with
+         its presets, its plan line and its spend row untouched – and it is not on a screen whose
+         subject is a tournament that has not been played yet. -->
+    <section v-if="!tournamentOnly">
       <h2>Training plan</h2>
       <div class="option-row" style="margin-top: 10px">
         <button
@@ -305,8 +370,11 @@ const spendRange = computed<[number, number]>(() => {
     </section>
 
     <!-- The story's way off the page (owner, 30.07). Floating and centred, the same CTA pill Home's
-         week button is - and named for where it goes, because it does NOT spend a week. -->
-    <template v-if="showRecap" #footer>
+         week button is - and named for where it goes, because it does NOT spend a week.
+         ⚠ ROUND 33 #1: it is the STORY's control, so it goes where the story goes. The tournament
+         arrival has its own way off in the header, and it is a back arrow rather than this pill
+         because this one silences a week's story on the way out. -->
+    <template v-if="showStory" #footer>
       <div class="week-proceed">
         <PrimaryPill variant="cta" class="week-proceed-btn" @click="dismissRecap">Proceed to Home</PrimaryPill>
       </div>
@@ -329,6 +397,14 @@ const spendRange = computed<[number, number]>(() => {
 .week-topbar-slot {
   width: 20px;
   flex: none;
+}
+
+/* ⭐⭐ ROUND 33 #1 – the spacer that balances the back control. `IconButton variant="bare"` is a 32px
+   box (its own `.tb-iconbtn--bare`), and this row centres the date line BETWEEN its two ends, so the
+   opposite slot has to be the same width or the line drifts 6px left. Two classes rather than one
+   value, because the × arrival is still 20px and must not move by a pixel. */
+.week-topbar-slot.week-topbar-slot-wide {
+  width: 32px;
 }
 
 .week-topbar-line {

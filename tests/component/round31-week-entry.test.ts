@@ -47,6 +47,27 @@
 // after the tick, which is a different list from `['story']`. What is NOT in this file is the state
 // round 32 added - the × revealing the panel - and it is in `round32-week-results.test.ts`, from
 // both sides.
+//
+// =================================================================================================
+// ⚠⚠ ROUND 33 #1 SHORTENED EVERY TOURNAMENT-ARRIVAL LIST IN THIS FILE FROM TWO ELEMENTS TO ONE, AND
+// THE NOTE IS THE POINT, because a shortened expectation is exactly what a drifting fix looks like.
+//
+// He came back a FIFTH time - «опять экран next tournament содержит next week ... это разные экраны,
+// нужны для разных вещей» (docs/rounds/round-33.md item 1) - and the diagnosis is that there is no
+// tournament screen: Home's plate opens THIS screen with `entry: 'tournament'`, so the four previous
+// rounds were all rearranging blocks inside one screen while he was describing two. Round 33 makes
+// the prop decide what the screen IS: on that arrival the page is the tournament, the header's date
+// line and the way back to Home, and NONE of the week's own furniture - the story included.
+//
+// ⭐ SO THE LISTS HERE READ `['tournament']`, AND THE CLAIM THIS FILE EXISTS FOR IS UNTOUCHED.
+// Round 31's subject is that the REASON FOR THE ARRIVAL SURVIVES THE TRIP and that a resolved week
+// takes the screen back, and every arm that carries it still does: without App.vue's
+// `if (advanced || runClosed) weekEntry.value = 'story'` the tick arms would still read
+// `['tournament']` where they must read `['story']`, which is still a different list. What round 33
+// really replaced is the arm below that said the promotion must not become a suppression - it is a
+// suppression now, by his instruction, so the arm asks the question that is live instead: the
+// removal must not become a DESTRUCTION. The whole shape is asserted as a section list in
+// `round33-tournament-arrival.test.ts`.
 import { describe, it, expect, beforeEach } from 'vitest'
 import { mount, flushPromises, type VueWrapper } from '@vue/test-utils'
 import { nextTick } from 'vue'
@@ -168,10 +189,13 @@ beforeEach(() => {
 describe('round 31 #1 - the screen honours what the arrival was for', () => {
   // The prop on its own, with no shell in the way: the two orders, from the same fixture, decided by
   // nothing but `entry`. If this pair cannot be told apart, nothing above it can be either.
-  it('⭐ `entry="tournament"` puts the tournament in front of the story', () => {
+  it('⭐ `entry="tournament"` makes the page the tournament', () => {
+    // ⚠ ROUND 33 #1 SHORTENED THIS LIST - see the note at the top of this file. It read
+    // `['tournament', 'story']` while the arrival was an ORDER; it is an arrival onto a different
+    // screen now, so the story is not on it at all.
     useGameStore().snapshot = enteredCareer('r31-prop-tournament').arrival
     const w = mount(ThisWeekScreen, { props: { entry: 'tournament' }, attachTo: document.body })
-    expect(blockOrder(w.element)).toEqual(['tournament', 'story'])
+    expect(blockOrder(w.element)).toEqual(['tournament'])
     w.unmount()
   })
 
@@ -215,24 +239,37 @@ describe("round 31 #1 - his tap, end to end, through the shell he is playing", (
 
     expect(blockOrder(weekScreenOf(wrapper)), 'the tournament is what he asked for').toEqual([
       'tournament',
-      'story',
     ])
     wrapper.unmount()
   })
 
-  it('⚠ ...and the story is still THERE, with its close and its way off the page', async () => {
-    // The promotion may not become a suppression. Nothing is dismissed, nothing is hidden: the same
-    // card, one screenful down, with the same × in the header and the same footer control.
+  it('⚠ ...and the story is not DESTROYED by the trip - it is waiting on the week', async () => {
+    // ⚠⚠ ROUND 33 #1 RE-AIMED THIS ARM RATHER THAN DELETING IT, and the two versions are the same
+    // worry asked of two different fixes. Round 31's was «the promotion may not become a
+    // suppression»: the card had moved down the page and had to still be on it. Round 33 makes it a
+    // suppression on purpose - the tournament arrival is not the week - so the live question is
+    // whether the week's story SURVIVES an arrival that does not show it.
+    //
+    // ⭐ IT IS A REAL HAZARD AND NOT A FORMALITY. `dismissedRecapKey` is MODULE scope (R9-18), so a
+    // dismissal outlives any unmount: had the tournament arrival been built by dismissing the story
+    // instead of by not rendering it, this second mount would come up empty and the owner would have
+    // lost a week's story to a tap on a plate. Same snapshot, same career, same week - the key the
+    // dismissal would have written.
     const { arrival } = enteredCareer('r31-plate-keeps-story')
     const wrapper = await mountShell(arrival)
     await wrapper.find('[data-tour="next-tournament"]').trigger('click')
     await nextTick()
 
     const screen = weekScreenOf(wrapper)
-    expect(screen.querySelector('.recap-card'), "the week's story is on the page").toBeTruthy()
-    expect(screen.querySelector('.week-close'), 'and its × is still in the header').toBeTruthy()
-    expect(wrapper.find('.week-proceed-btn').exists(), 'and its way off the page is still there').toBe(true)
+    expect(screen.querySelector('.recap-card'), "the week's story is NOT on the tournament").toBeFalsy()
+    expect(screen.querySelector('.week-close'), 'and neither is the story\'s close').toBeFalsy()
     wrapper.unmount()
+
+    const still = mount(ThisWeekScreen, { attachTo: document.body })
+    expect(still.find('.recap-card').exists(), 'the week still has its story to tell').toBe(true)
+    expect(still.find('.week-close').exists(), 'with its × where it always was').toBe(true)
+    expect(still.find('.week-proceed-btn').exists(), 'and its way off the page').toBe(true)
+    still.unmount()
   })
 })
 
@@ -246,7 +283,7 @@ describe('round 31 #1 - and a resolved week still opens on its story', () => {
     const wrapper = await mountShell(arrival)
     await wrapper.find('[data-tour="next-tournament"]').trigger('click')
     await nextTick()
-    expect(blockOrder(weekScreenOf(wrapper)), 'he arrived on the tournament').toEqual(['tournament', 'story'])
+    expect(blockOrder(weekScreenOf(wrapper)), 'he arrived on the tournament').toEqual(['tournament'])
 
     // The week resolves. This is exactly what `game.advance` delivers to the shell: a new snapshot
     // for the same career, one week on.
@@ -281,7 +318,7 @@ describe('round 31 #1 - and a resolved week still opens on its story', () => {
     const wrapper = await mountShell(arrival)
     await wrapper.find('[data-tour="next-tournament"]').trigger('click')
     await nextTick()
-    expect(blockOrder(weekScreenOf(wrapper))).toEqual(['tournament', 'story'])
+    expect(blockOrder(weekScreenOf(wrapper))).toEqual(['tournament'])
 
     const bar = wrapper.findAll('.tab-btn')
     expect(bar.length, 'the bottom bar is on screen').toBeGreaterThan(0)

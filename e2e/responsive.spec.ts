@@ -188,7 +188,18 @@ test('at 375 px the Next-tournament screen fits, square picture and all', async 
   await page.getByRole('button', { name: /^Next tournament/ }).click()
   const panel = page.locator('.next-tourn')
   await expect(panel, 'the entry really opened onto the panel').toBeVisible()
-  await expect(page.getByRole('heading', { name: 'Training plan', level: 2 })).toBeVisible()
+  // ⭐⭐ ROUND 33 #1 – AND THE WEEK IS NOT ON IT. This line read «the Training plan heading is
+  // visible» for three rounds, which is precisely the state the owner came back about a fifth time:
+  // «опять экран next tournament содержит next week ... это разные экраны, нужны для разных вещей»
+  // (docs/rounds/round-33.md item 1). Home's plate opens `ThisWeekScreen` with `entry: 'tournament'`
+  // and that arrival is now the tournament alone, so the assertion is inverted rather than deleted -
+  // this is the only layer that sees the real cascade, and «not rendered» and «rendered off-screen»
+  // are the same thing to a mounted test.
+  await expect(page.getByRole('heading', { name: 'Training plan', level: 2 })).toHaveCount(0)
+  await expect(page.getByRole('heading', { name: 'This week', level: 2 })).toHaveCount(0)
+  // ...and the way off it is real, which is the round-20 #3 rule applied to a screen that has just
+  // lost the story's × and its Proceed pill along with the story.
+  await expect(page.getByRole('button', { name: 'Back to Home' })).toBeVisible()
 
   expect(await sideScroll(page), 'the Next-tournament screen overflows sideways at 375 px').toBeLessThanOrEqual(0)
 

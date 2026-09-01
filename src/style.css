@@ -2733,6 +2733,16 @@ tr.kid-row td {
 
 /* Same muted caption treatment as .hint, minus .hint's 8px top margin (it is the tile's first
    child, so that margin was pure dead space) and pinned to one line. */
+/* ⚠⚠ `nowrap` IS CORRECT HERE AND HAS BEEN CHECKED THREE TIMES – DO NOT "FIX" IT.
+   Filed as a clipping regression on 13.08 (round 10, `[!] R10-2 / R10-8`), re-filed as the 28.08
+   audit's headline "one LIVE regression", and re-filed again on 01.09. All three reasoned from the
+   CHARACTER COUNT of the longest label ("International rank", 18 chars) and none of them ever
+   measured a rendered width.
+   ⭐ THE OWNER SETTLED IT WITH A SCREENSHOT of the live screen on 01.09 – the three tiles render
+   inside their boxes with room to spare – and asked for this note because he had already said so
+   once: «про эти подписи я тебе уже говорил … там ничего не вылезает, всё ок».
+   The full account is docs/rounds/round-33.md item 2. If a future reader believes this overflows,
+   the thing to produce is a measured width, not a character count. */
 .stats-tile-label {
   color: var(--muted);
   font-size: 11.5px;

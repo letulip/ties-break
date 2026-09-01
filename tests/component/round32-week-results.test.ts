@@ -26,10 +26,24 @@
 //     ONLY that one, with all of §1 and §2 green. Those two mutations fail apart, which is what
 //     makes this a net rather than one claim written twice - and the second of them is the trade
 //     rounds 30 #1 and 31 #1 were both spent undoing;
-//   * hiding the recap instead of the panel (`WeekRecapCard v-if="showRecap && !tournamentFirst &&
-//     !nearestEntered"`) reddens three arms, and the one that matters is §1's «the results are
-//     still there»: it is the half of his complaint that must NOT be answered by removing the
-//     other block.
+//   * hiding the recap instead of the panel (`WeekRecapCard v-if="showStory && !nearestEntered"`)
+//     reddens three arms, and the one that matters is §1's «the results are still there»: it is the
+//     half of his complaint that must NOT be answered by removing the other block.
+//
+// =================================================================================================
+// ⚠⚠ ROUND 33 #1 REWROTE §3 AND DID NOT TOUCH ONE CHARACTER OF §1 OR §2, WHICH IS THE POINT.
+//
+// §1 and §2 ARE HIS ITEM - «the results view shows results», and the × revealing what is next - and
+// he confirmed in round 33 that this half is right: «На экране конца недели теперь нет информации о
+// next tournament и это правильно». They are untouched, and a re-run of them is the evidence that
+// round 33 stayed on its own side of the screen.
+//
+// §3 was never round 32's subject. Its heading says so - «round 31 #1 is intact» - and round 33 #1
+// is precisely the round that stopped it being intact: the owner asked the mirror question («опять
+// экран next tournament содержит next week»), the answer is that the tournament arrival is a screen
+// of its own with none of the week's furniture on it, and the story is the week's. So §3 now pins
+// the mirror of §1 - the tournament view shows the tournament - and the shape of both arrivals is
+// asserted as a section list in `round33-tournament-arrival.test.ts`.
 import { describe, it, expect, beforeEach } from 'vitest'
 import { mount, type VueWrapper } from '@vue/test-utils'
 import { nextTick } from 'vue'
@@ -190,30 +204,36 @@ describe('round 32 #2 §2 – dismissing the story reveals what is next', () => 
 // =================================================================================================
 // §3 – ROUND 31 #1 IS INTACT: the arrival through Home's plate still opens on the tournament
 // =================================================================================================
-describe('round 32 #2 §3 – the tournament arrival keeps everything round 31 #1 gave it', () => {
-  it('⭐⭐ `entry="tournament"` still shows the panel, with the story below it', () => {
-    // ⚠ MUTATION: narrow the condition to `&& !showRecap` - forgetting round 31 #1 - and this
-    // reddens while §1 and §2 stay green. That is the trade this round had to avoid making, and it
-    // is the trade rounds 30 #1 and 31 #1 were both spent undoing.
+describe('round 32 #2 §3 – and the mirror of §1: the tournament arrival shows the tournament', () => {
+  it('⭐⭐ `entry="tournament"` still shows the panel, and now shows nothing else', () => {
+    // ⚠ MUTATION: narrow the condition to `&& !showRecap` - forgetting the tournament arrival
+    // entirely - and this reddens while §1 and §2 stay green. That is still the trade this file
+    // exists to prevent: the panel must not be taken off the arrival that is ABOUT it.
+    // ⚠⚠ ROUND 33 #1 SHORTENED THE LIST from `['tournament', 'story']`. See the note at the top.
     const w = screenOn(enteredCareer('r32-tournament-arrival'), 'tournament')
-    expect(blockOrder(w.element), "his tap's own order, unchanged").toEqual(['tournament', 'story'])
+    expect(blockOrder(w.element), "his tap's own screen").toEqual(['tournament'])
     w.unmount()
   })
 
-  it('⚠ ...and the story on that arrival is still whole, not a stub', () => {
+  it('⭐⭐ ...and the story is not on it - the mirror of §1, in his own words', () => {
+    // ⚠ MUTATION: put the second `<WeekRecapCard v-if="showRecap && tournamentOnly" />` back - round
+    // 31 #1's shape, rebuilt - and this reddens on its own while every arm of §1 and §2 stays green.
+    // The two halves fail apart, which is what makes the pair a net.
     const w = screenOn(enteredCareer('r32-tournament-story-whole'), 'tournament')
-    expect(w.find('.recap-card').exists(), 'the story is on the page').toBe(true)
+    expect(w.find('.recap-card').exists(), "the week's story is the week's").toBe(false)
+    expect(w.find('.week-close').exists(), "and so is the story's ×").toBe(false)
+    expect(w.find('.week-proceed-btn').exists(), "and so is the story's way off the page").toBe(false)
+    w.unmount()
+  })
+
+  it('⚠ ...and the week itself still has all three of them, from the same snapshot', () => {
+    // ⭐ THE ARMS ABOVE ARE NEGATIVE, AND A NEGATIVE PASSES ON A BROKEN FIXTURE. This is the same
+    // career and the same week, arriving the other way: if the three controls were simply gone, this
+    // would go red too, and the pair above would be proving nothing.
+    const w = screenOn(enteredCareer('r32-tournament-story-whole'))
+    expect(w.find('.recap-card').exists(), "the week's story is on the week").toBe(true)
     expect(w.find('.week-close').exists(), 'with its × in the header').toBe(true)
     expect(w.find('.week-proceed-btn').exists(), 'and its way off the page').toBe(true)
-    w.unmount()
-  })
-
-  it('⚠ dismissing the story on THAT arrival leaves the tournament where it already was', async () => {
-    // The × is the same control on both arrivals and it may not reorder the page it is on.
-    const w = screenOn(enteredCareer('r32-tournament-dismiss'), 'tournament')
-    await w.find('.week-close').trigger('click')
-    await nextTick()
-    expect(blockOrder(w.element), 'the panel does not move when the story goes').toEqual(['tournament'])
     w.unmount()
   })
 })
