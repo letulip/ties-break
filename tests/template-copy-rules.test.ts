@@ -71,4 +71,27 @@ describe('every Vue template obeys the copy rules', () => {
       .map((f) => `${f.name}: ${(f.template.match(/.*—.*/) ?? [''])[0].trim().slice(0, 90)}`)
     expect(offenders).toEqual([])
   })
+  // ⭐⭐ THE PLAYER IS "YOU", NEVER "THEY" (owner, 01.09): «нужно проверить и вычитать интерфейсы,
+  // где мы к игроку обращаемся или про него говорим, а не про его ребенка и поправить вординг.
+  // Например: в Shop - They own nothing yet. Кто "they"? You здесь вроде.»
+  //
+  // ⚠ MEASURED BEFORE IT WAS FIXED, because five strings looked like typos and were not: across the
+  // whole rendered surface the app says you/your 21 times and they/their 19 - and ELEVEN of those
+  // nineteen were in MoneyScreen alone, which carried exactly ONE "you" and that one a placeholder.
+  // The family's money surface had been written in the third person while every other screen
+  // addressed the player directly. It was a voice, not a slip.
+  //
+  // ⚠ NARROW ON PURPOSE. "They" is correct and common for a SPONSOR, an academy, points or weeks -
+  // «They take 12% off every trip she enters» is right and must keep passing. What can never be
+  // third person is the player's own possession, so the rule names those three constructions and
+  // nothing else. A wider rule would be false, and a false guard gets deleted by whoever it blocks.
+  it('the player owns things in the second person - "you own", never "they own"', () => {
+    const FORBIDDEN = [/\bthey own\b/i, /\bthey bought\b/i, /\bwhat they own\b/i]
+    const offenders = files.flatMap((f) =>
+      FORBIDDEN.filter((re) => re.test(f.template)).map(
+        (re) => `${f.name}: ${(f.template.match(new RegExp(`.*${re.source}.*`, 'i')) ?? [''])[0].trim().slice(0, 90)}`,
+      ),
+    )
+    expect(offenders).toEqual([])
+  })
 })
