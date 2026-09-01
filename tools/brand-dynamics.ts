@@ -82,6 +82,23 @@ const OLD_MULTIPLE_X = 16
 const oldWeeklyCents = (fame: number): number => Math.round(fame * ECONOMY.business.merch.perFamePointCents)
 const oldWorthCents = (fame: number): number => Math.round(oldWeeklyCents(fame) * WEEKS_PER_YEAR * OLD_MULTIPLE_X)
 
+/** ⭐⭐⭐ ROUND 32 #3's CONTROL ARM – THE PRE-ROUND-32 MULTIPLE, AND IT IS NOT A COPY OF A FORMULA.
+ *  Round 32 made the multiple's base a ramp from `V.unknownX` at fame 0 to `baseX` at
+ *  `ECONOMY.fame.cap`. So `brandMultipleX` asked at fame = cap RETURNS the old flat-base answer for
+ *  the same career, exactly, through the shipped function – there is nothing here to drift from the
+ *  engine, and no second worktree and no second walk are needed.
+ *
+ *  ⚠⚠ IT IS ALSO THE PROOF THE TOP DID NOT MOVE, which is the owner's standing ruling («спонсорские
+ *  коллаборации со спортсменами дают и не такое, кратно большее» – the ceiling is not to be cut). If
+ *  this ever stops equalling `brandMultipleX(signals, baseX)` at fame 100, the ramp no longer lands
+ *  on `baseX` and the ceiling HAS moved. §6 asserts it on the run. */
+const pre32MultipleX = (signals: BrandSignals): number =>
+  brandMultipleX({ ...signals, fame: ECONOMY.fame.cap }, BASE_X)
+/** ...and what the same week would have been worth under it. The INCOME is untouched by round 32, so
+ *  this reads the shipped weekly gross and re-multiplies it. */
+const pre32WorthCents = (signals: BrandSignals): number =>
+  Math.round(brandWeeklyGrossCents(signals) * WEEKS_PER_YEAR * pre32MultipleX(signals))
+
 interface WeekRow {
   week: number
   alive: boolean
@@ -261,7 +278,8 @@ export function main(argv: string[] = process.argv.slice(2)): void {
   console.log(`  ${PRESETS.length} presets x ${seeds} seeds x ${weeks} weeks, policy '${policy.id}'`)
   console.log(
     `  income: ${usd(ECONOMY.business.merch.perFamePointCents)}/fame point x fame / ${ECONOMY.business.merch.famePivot}` +
-      `  ·  multiple: base ${BASE_X} + career, capped ${V.maxX}  ·  price ${usd(PRICE_CENTS)}`,
+      `  ·  multiple: ${V.unknownX} -> ${BASE_X} across fame 0..${ECONOMY.fame.cap}, + career, capped ${V.maxX}` +
+      `  ·  price ${usd(PRICE_CENTS)}`,
   )
   console.log(
     `  season-end fame bands: ${ECONOMY.fame.seasonEndBands.map((b) => `top${b.maxEndRank}=+${b.add}`).join(' ')}` +
@@ -284,6 +302,9 @@ export function main(argv: string[] = process.argv.slice(2)): void {
   console.log(`    peak brand income  median ${yr(q(peakIncomes, 0.5))}/yr   p90 ${yr(q(peakIncomes, 0.9))}/yr   best ${yr(Math.max(...peakIncomes))}/yr`)
   console.log(`    peak brand worth   median ${musd(q(peakWorths, 0.5))}   p90 ${musd(q(peakWorths, 0.9))}   best ${musd(Math.max(...peakWorths))}`)
   console.log(`    ...under the OLD model  median ${musd(q(oldPeakWorths, 0.5))}   p90 ${musd(q(oldPeakWorths, 0.9))}   best ${musd(Math.max(...oldPeakWorths))}`)
+  // ⭐ ROUND 32 #3 – the same peaks priced by the PRE-ROUND-32 multiple, off the same walk.
+  const pre32PeakWorths = famous.map((r) => pre32WorthCents(peakLive(r, (x) => x.worthCents).row.signals))
+  console.log(`    ...under the PRE-32 multiple  median ${musd(q(pre32PeakWorths, 0.5))}   p90 ${musd(q(pre32PeakWorths, 0.9))}   best ${musd(Math.max(...pre32PeakWorths))}`)
   // ⚠ AND WHAT A CAREER THAT IS NOT ONE OF THOSE SEES, because P5's bimodality ruling stands and the
   // median career is owed nothing: the top shelf is for exceptional careers.
   const nobody = runs.length - famous.length
@@ -303,8 +324,22 @@ export function main(argv: string[] = process.argv.slice(2)): void {
   console.log(`    multiple that week  p10 ${q(dayOneMult, 0.1).toFixed(1)}  median ${q(dayOneMult, 0.5).toFixed(1)}  p90 ${q(dayOneMult, 0.9).toFixed(1)}`)
   console.log(`    worth that week     p10 ${usd(q(dayOne, 0.1))}  median ${usd(q(dayOne, 0.5))}  p90 ${usd(q(dayOne, 0.9))}   (price ${usd(PRICE_CENTS)})`)
   console.log(`    ...under the OLD model              median ${usd(q(dayOneOld, 0.5))}`)
+  // ⭐⭐⭐ ROUND 32 #3 – AND THIS IS THE ROW THE WAVE COULD NOT HOLD, printed rather than left to be
+  // discovered. Round 30 #9 sized the base so the brand is worth about what it cost on the day the
+  // family can first afford it; a multiple that RISES with fame is necessarily lower at the day-one
+  // fame than at the fame the owner complained about, so his complaint and this anchor cannot both
+  // be satisfied. See docs/specs/brand-multiple-follows-fame-2026-08.md §4.
+  const dayOnePre32 = afforders.map((r) => pre32WorthCents(r.affordRow!.signals)).sort((a, b) => a - b)
+  const dayOnePre32Mult = afforders.map((r) => pre32MultipleX(r.affordRow!.signals))
+  console.log(`    ...under the PRE-32 multiple        median ${usd(q(dayOnePre32, 0.5))}  (multiple ${q(dayOnePre32Mult, 0.5).toFixed(1)})`)
   const square = dayOne.filter((c) => c >= PRICE_CENTS).length
-  console.log(`    at or above what it cost on day one: ${square}/${dayOne.length}`)
+  console.log(`    at or above what it cost on day one: ${square}/${dayOne.length}` +
+    `   (pre-32: ${dayOnePre32.filter((c) => c >= PRICE_CENTS).length}/${dayOnePre32.length})`)
+  // ⚠ AND WHETHER THE MARK FLOOR IS NOW CARRYING THE ROW, which is the difference between «the
+  // family is down on it» and «the rung is a dead asset the week it is bought».
+  const floorCents = PRICE_CENTS * ECONOMY.shop.businessValueFloorShare
+  console.log(`    under the mark floor (${usd(floorCents)}) on day one: ${dayOne.filter((c) => c < floorCents).length}/${dayOne.length}` +
+    `   (pre-32: ${dayOnePre32.filter((c) => c < floorCents).length}/${dayOnePre32.length})`)
 
   // ---- §3 THE FOUR ARCHETYPES, WITH THEIR CURVES -------------------------------------------
   console.log(`\n  ⭐⭐⭐ §3 THE DYNAMICS – four archetypes, season by season`)
@@ -351,6 +386,10 @@ export function main(argv: string[] = process.argv.slice(2)): void {
   for (const [label, read] of [
     ['worth ', (r: WeekRow) => r.worthCents],
     ['income', (r: WeekRow) => r.weeklyCents],
+    // ⭐⭐ ROUND 32 #3 – the SAME windows priced by the pre-32 multiple. The fall is expected to get
+    // DEEPER, because the multiple now falls with fame on top of a convex income: `brand.ts`' own
+    // «the multiple does not fall» note is overturned by this wave and this row is how much it cost.
+    ['worth , PRE-32 multiple', (r: WeekRow) => pre32WorthCents(r.signals)],
   ] as [string, (r: WeekRow) => number][]) {
     let n = 0
     let down = 0
@@ -475,6 +514,57 @@ export function main(argv: string[] = process.argv.slice(2)): void {
   console.log(`    Sugarpova's peak VALUATION $20M · the RF mark ~$27M (§7c)`)
   console.log(`      our best peak worth   ${musd(Math.max(...peakWorths))}      median peak ${musd(q(peakWorths, 0.5))}`)
   console.log(`      the $12M academy, for scale: the shelf's most expensive rung`)
+
+  // ---- §6 ROUND 32 #3 – THE FAME RANGE, THE CROSSOVER, AND THE PROOF THE TOP DID NOT MOVE -----
+  //
+  // ⚠⚠ THE HEADLINE MEASUREMENT THE WAVE WAS ASKED FOR. The income already goes as fame², so a
+  // multiple that rises with fame makes the WORTH go as fame³ until `maxX` binds – and WHERE it
+  // binds decides whether the shape was chosen or inherited from a multiplication. It is asked here
+  // of a REAL career's record rather than an invented one: the median-worth career's own signals,
+  // with fame swept and everything else held.
+  console.log(`\n  ⭐⭐⭐ §6 ROUND 32 #3 – THE FAME RANGE, one career's record held fixed`)
+  const mid = famous
+    .map((r) => ({ r, peak: peakLive(r, (x) => x.worthCents) }))
+    .sort((a, b) => a.peak.value - b.peak.value)[Math.floor(famous.length / 2)]
+  const held = mid.peak.row.signals
+  console.log(`    the record: ${mid.r.label} / ${mid.r.seed} at its peak week – ` +
+    `${held.proSeasons} pro seasons, ${held.topSeasons} top-${V.topEndRank}, ${held.finalsLost} finals lost, ` +
+    `win rate ${(held.winRate * 100).toFixed(1)}%, room ${Math.round(held.roomSize).toLocaleString('en-US')}`)
+  console.log(`    fame  |  pre-32 x   worth      |   now x   worth      |  ratio`)
+  for (const f of [10, 22.3, 40, 60, 80, ECONOMY.fame.cap]) {
+    const s = { ...held, fame: f }
+    const now = Math.round(brandWeeklyGrossCents(s) * WEEKS_PER_YEAR * brandMultipleX(s, BASE_X))
+    const was = pre32WorthCents(s)
+    console.log(
+      `    ${String(f).padStart(5)} |   ${pre32MultipleX(s).toFixed(2).padStart(5)}   ${musd(was).padStart(9)}  |  ` +
+        `${brandMultipleX(s, BASE_X).toFixed(2).padStart(5)}   ${musd(now).padStart(9)}  |  ${(now / Math.max(1, was)).toFixed(3)}`,
+    )
+  }
+  // ⭐⭐ THE TOP, ASSERTED AND NOT EYEBALLED – every career in the run, re-asked at fame = cap.
+  let moved = 0
+  let worstDelta = 0
+  for (const run of runs) {
+    for (const row of run.rows) {
+      const atCap = { ...row.signals, fame: ECONOMY.fame.cap }
+      const d = Math.abs(brandMultipleX(atCap, BASE_X) - pre32MultipleX(atCap))
+      if (d > 1e-9) moved++
+      worstDelta = Math.max(worstDelta, d)
+    }
+  }
+  console.log(`    ⭐ AT FAME ${ECONOMY.fame.cap} THE MULTIPLE IS UNCHANGED for ${runs.reduce((n, r) => n + r.rows.length, 0) - moved}` +
+    `/${runs.reduce((n, r) => n + r.rows.length, 0)} career-weeks in the run; worst |delta| ${worstDelta.toExponential(1)}`)
+  // ⚠ WHERE `maxX` STARTS BINDING – the crossover the spec has to report. Asked of the maximum
+  // career (every rung capped) and of the median career above, by a sweep rather than by algebra so
+  // a retune of any rung moves the reading with it.
+  const maxLadder = { ...held, proSeasons: 1e6, topSeasons: 1e6, finalsLost: 1e6, winRate: 1 }
+  const bindsAt = (s: BrandSignals): string => {
+    for (let f = 0; f <= ECONOMY.fame.cap; f += 0.05) {
+      if (brandMultipleX({ ...s, fame: f }, BASE_X) >= V.maxX - 1e-9) return f.toFixed(1)
+    }
+    return 'never'
+  }
+  console.log(`    ⚠ maxX (${V.maxX}) starts binding at fame ${bindsAt(maxLadder)} for a career maxed on all four rungs, ` +
+    `${bindsAt(held)} for the record above`)
 
   const jsonAt = argv.indexOf('--json')
   if (jsonAt >= 0) {

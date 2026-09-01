@@ -89,7 +89,10 @@ describe('the build line renders at the foot of Settings, with the values the bu
     // ⚠ AND AGAIN AT v68 (31.08, round 31 #10/#13 – the per-career age curve), NOT WEAKENED, for the
     // third time and for the reason verbatim: 68 was moved by that wave with its full four-part move
     // (migration, golden fixture, e2e fixtures regenerated, spec), never by this line's item.
-    expect(SAVE_SCHEMA_VERSION).toBe(68)
+    // ⚠ AND AGAIN AT v69 (01.09, round 32 #4 – the brand's slow stock pinned at the week it arrived),
+    // NOT WEAKENED, for the fourth time and for the reason verbatim: 69 was moved by that wave with
+    // its full four-part move, never by this line's item.
+    expect(SAVE_SCHEMA_VERSION).toBe(69)
   })
 
   it('is one line at the FOOT of the screen, and it is there whichever tab is open', async () => {

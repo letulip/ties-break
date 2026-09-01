@@ -1886,6 +1886,92 @@ export const ECONOMY = {
     /** ...and the multiplier's ceiling. The photographs can at most double what the court earned –
      *  the spec's «a multiplier on a floor she earns on court, not the only road», as a bound. */
     shootMultCap: 2,
+    /** ⭐⭐⭐ ROUND 32 #5 (31.08) – WHAT A DELIVERED SHOOT ADDS TO THE FLOOR, per band of the deal
+     *  that asked for it. `docs/specs/collaborations-as-early-fame-2026-08.md`, and it is the item.
+     *
+     *  THE OWNER: «карьера топ-20 без титулов … Мне кажется здесь как раз на раннем этапе
+     *  коллаборации нам должны помочь, они станут хорошим рычагом роста известности и стоимости
+     *  бренда как раз» – and «и это надо внедрять да».
+     *
+     *  ⚠⚠ AN ADDITION AND NOT A COEFFICIENT, WHICH IS THE WHOLE ITEM. `shootStep` above MULTIPLIES
+     *  the floor, and a multiplier cannot lift a career that has nothing to multiply: fame in this
+     *  game is a TITLE currency (`titleFloor` pays 8 for one World Tour 500 against 4 for a whole
+     *  season ended in the top 20), so the early career the owner is asking about has a floor of
+     *  almost nothing and five live deals buy a multiple of almost nothing. A signed campaign is a
+     *  public event in its own right – a face on a shelf reaches people who have never watched a
+     *  match – so it belongs on the same ledger as a title, not on the coefficient applied to titles
+     *  she has not won.
+     *
+     *  ⭐ BOTH SURVIVE, ON HIS RULING («давай, да»): the ADD is the early rung and `shootStep`'s
+     *  multiplier is the late one, so a champion who also sells feels both.
+     *
+     *  ⚠⚠ BY THE DEAL'S BAND, ON HIS RULING – «по полосе сделки (глобальный дом это не локальный
+     *  ретейнер) – да». The index is `advertising.bands`' own, weakest-first like every ladder in
+     *  this file, and the band a letter was written at is recovered from the cheque it states
+     *  (`adBandOfTerms`) rather than stored – so no letter needs a new field and every paper already
+     *  in a save answers the question it was always carrying.
+     *
+     *  ⭐⭐ AND THE GRADIENT IS GENTLE ON PURPOSE – 2.75x from the local retainer to the global house,
+     *  against the SIXTY-FOLD span of the cheques those two bands write ($20,000 to $1.2M in
+     *  `categories.watches`). What a shoot buys here is REACH, and reach does not scale with the
+     *  cheque: a bigger house means better placements in more countries, not a hundred times the
+     *  faces. ⚠⚠ A STEEP GRADIENT ALSO DESTROYS THE THING THE ITEM IS FOR, which is a measurement
+     *  rather than an aesthetic – the high bands are where the shoot ASK is highest (2 weeks a year
+     *  a deal against 1) and where a career already has a floor to multiply, so a steeply banded add
+     *  lands hardest exactly where it is least needed. Benched at [0.15, 0.35, 0.6, 1.0] it moved the
+     *  owner's own week-933 row +44% on fame and +131% on worth, which is a retune of the top wearing
+     *  an early-career label.
+     *
+     *  ⚠ THE SIZES ARE THE MEASUREMENT'S, not a guess, and the binding criterion is ROUND 32 #3'S OWN:
+     *  that wave sized `value.unknownX` as «the highest value that still reads single digits on the
+     *  shop row at his fame», and this wave may not undo it by pushing that fame back up. This is the
+     *  largest gradient of its shape under which his w933 row still reads 9 years – fame 22.33 -> 23.69
+     *  (+6.1%), the floor 12.85 -> 13.63. docs/specs/collaborations-as-early-fame-2026-08.md §7
+     *  records predicted vs measured and the frontier either way. */
+    shootFloorByBand: [0.04, 0.06, 0.08, 0.11] as readonly number[],
+    /** ⭐⭐ ...AND IT IS FORGOTTEN FASTER THAN A TITLE, WHICH IS THE OTHER HALF OF HIS RULING. He put
+     *  the decay question back with both halves of the tension named: «наверное истлевает (мало кто
+     *  смотрит журналы 2 годичной давности) … с другой стороны "что попало в интернет осталось
+     *  навсегда"».
+     *
+     *  ⭐⭐ THE TWO HALVES ARE TWO DIFFERENT THINGS AND SEPARATING THEM IS THE DESIGN. The CAMPAIGN'S
+     *  NOISE – her face on a shelf this season – fades, and faster than a championship, which is a
+     *  sporting fact recited in every broadcast for years. THE ASSOCIATION – «she was the face of
+     *  Faro Automobiles» – does not expire, and it is carried by BRAND STRENGTH
+     *  (`business.merch.strength`), not by a second permanent term in here.
+     *
+     *  ⚠ AROUND ONE SEASON, AGAINST A TITLE'S TWO. Half of a campaign is forgotten by the next
+     *  winter, which is his magazine sentence as a number.
+     *
+     *  ⚠⚠ AND IT IS WHAT KEEPS THE TERM BOUNDED. A permanent per-shoot addition accumulates without
+     *  limit over a twenty-season career and would need a cap chosen out of the air; a decaying
+     *  pulse needs none, because a steady cadence of shoots converges.
+     *
+     *  ⭐⭐⭐ ROUND 32 #5 EXTENSION (31.08) – AND IT IS A LADDER RATHER THAN ONE NUMBER, BECAUSE REACH
+     *  BUYS DURABILITY AND NOT ONLY VOLUME. THE OWNER: «у нас есть популярные сайты, журналы и
+     *  бренды, а есть менее популярные, о которых знает мало людей … чем больше она была в сильных
+     *  контрактах – тем больше у нее велосити». What shipped first scaled only the SIZE of the
+     *  addition by the band and gave every band the same 52 weeks – so a global house and a local
+     *  retainer were told apart by loudness and then forgotten at identical speed. A placement seen
+     *  by millions leaves a mark that outlives its campaign; a flyer in one town is gone by the next
+     *  season.
+     *
+     *  ⚠ HIS OWN EXAMPLE IS NOT THE ARGUMENT. He hedged it himself («как то женщин из номинации
+     *  плейбоя помнят довольно долго … но может быть я ошибаюсь») and it has not been checked here,
+     *  so it carries no weight. The general principle carries the design on its own.
+     *
+     *  ⚠⚠ THE TOP RUNG IS STILL SHORTER THAN A TITLE'S 104 WEEKS, which is the binding half of his
+     *  earlier ruling and is not negotiable by this extension: a campaign is one season's wallpaper
+     *  and a championship is recited in every broadcast for years. 78 weeks is a season and a half.
+     *
+     *  ⚠ THE SIZES ARE MEASURED, and the criterion is the one this ladder exists to satisfy: two
+     *  careers with the SAME delivered shoots at different bands must diverge VISIBLY years later.
+     *  At the shoot week the bands differ 2.75x (the sizes above); three years on this ladder has
+     *  widened that to ~44x, because band 0 has faded through six half-lives and band 3 through two.
+     *  ⚠ Band 2 is left at the shipped 52 on purpose – the anchor round 32 #5 was sized on does not
+     *  move, so what this extension changes is the SPREAD and not the level.
+     *  docs/specs/collaborations-as-early-fame-2026-08.md §11 records the frontier either way. */
+    shootFloorHalfLifeByBand: [26, 39, 52, 78] as readonly number[],
     /** fame is bounded 0–100 – the spec's own scale; the cap is «the whole world knows her». */
     cap: 100,
   },
@@ -1951,8 +2037,46 @@ export const ECONOMY = {
        *
        *  ⚠ AND NOTHING HERE IS SUBTRACTED. Every rung is a non-negative addition over a base, so a
        *  short career, a losing season and an unranked year cost nothing – «мы ни за что не
-       *  наказываем» read against a valuation. */
+       *  наказываем» read against a valuation.
+       *
+       *  ⚠⚠ ROUND 32 #3 (31.08) AMENDED THE PARAGRAPH ABOVE AND IT IS NAMED HERE RATHER THAN QUIETLY
+       *  LEFT WRONG. «They move the worth and not the income» is still true of these four rungs. What
+       *  is no longer true is «the multiple is the accumulated career and fame does not appear in it»:
+       *  the BASE the four rungs sit on is now a ramp in fame (`unknownX` below), on the owner's
+       *  ruling «главное, чтобы эта известность участвовала в механизме». So the four rungs are a
+       *  PREMIUM ON TOP of what the brand's own size already earns, which is what they were always
+       *  described as and were not. Two consequences, both deliberate and both measured in
+       *  docs/specs/brand-multiple-follows-fame-2026-08.md: a title is now priced in the multiple as
+       *  well as in the income (§3), and the multiple can FALL (§6). */
       value: {
+        /** ⭐⭐⭐ ROUND 32 #3, 31.08 – THE MULTIPLE A BRAND NOBODY HAS HEARD OF EARNS, and the bottom
+         *  of the fame ramp that replaced the flat base. The arithmetic is `world/brand.ts`.
+         *
+         *  THE OWNER, on his own w933 career – fame 22.3, the brand taking $1,720 a week and priced
+         *  at $1.63M: «личный бренд в цене подрос с 250к до 1.8м, а доход у него 1800 в неделю =)))
+         *  что как-будто бы не очень соответствует стоимости.» And his ruling on the repair: «её
+         *  известность 22.3 – да, это ок, главное, чтобы **эта известность участвовала в механизме**,
+         *  тогда мы увидим разницу на других карьерах.»
+         *
+         *  ⚠⚠ THE DEFECT WAS THAT `earningsMultipleX` WAS THE WHOLE BASE AT EVERY FAME. Every term of
+         *  the ladder below reads her TENNIS CAREER and none read the brand, so an unknown's brand
+         *  traded at 14x and a fourteen-season veteran earned 18.23x on a business turning over $89k
+         *  a year. Real multiples rise with the SIZE of the business, and the size of this business
+         *  is her fame.
+         *
+         *  ⭐⭐ THE RAMP RUNS FROM HERE TO THE RUNG'S OWN `earningsMultipleX` AT `ECONOMY.fame.cap`,
+         *  so at fame 100 the multiple is EXACTLY what it was before this change for every career –
+         *  the ceiling is not cut, which is his other standing ruling («вроде бы как раз спонсорские
+         *  коллаборации со спортсменами дают и не такое, кратно большее»). Only the bottom moves.
+         *
+         *  ⚠⚠ 2.5 IS THE HIGHEST VALUE THAT STILL READS SINGLE DIGITS AT THE FAME HE ASKED ABOUT, and
+         *  it is chosen that way ON PURPOSE: every point of it is a point of the day-one anchor round
+         *  30 #9 measured, so the setting is the LEAST aggressive one that answers him. At 2.5 his
+         *  w933 row reads 9.30x and $832k; at 4 it reads 10.5x, which the shop rounds to «11 years»
+         *  and does not answer him at all. It also sits inside the two-to-five band a firm earning
+         *  $89k a year changes hands at. The frontier, and what it costs the day-one anchor, is
+         *  measured in docs/specs/brand-multiple-follows-fame-2026-08.md §4. */
+        unknownX: 2.5,
         /** ⭐ «ОНА ЖЕ ТОП-20 В МИРЕ» – the end-rank a finished season has to beat to count as one of
          *  her top seasons. ⚠ The SAME 20 as `fame.seasonEndBands`' new rung, and deliberately: #24
          *  is one claim about one number, and a brand that valued «top-20» differently from the fame
@@ -1983,7 +2107,15 @@ export const ECONOMY = {
          *  fame 100 the convex curve pays $1.56M a year, so this is what decides whether the best
          *  career in a run exits at the RF mark's ~$27M or somewhere absurd. Sized in
          *  docs/specs/brand-worth-and-income-2026-08.md against the researched valuations rather
-         *  than picked. */
+         *  than picked.
+         *
+         *  ⚠⚠ ROUND 32 #3 – AND IT IS NO LONGER WHAT HOLDS THE TOP, WHICH IS THE MEASUREMENT THAT
+         *  WAVE WAS ASKED FOR. With the base a ramp in fame, worth goes as fame³ until this binds,
+         *  and it binds at fame ≈ 92 for a career maxed on all four rungs and NEVER for a typical
+         *  one. What holds the top instead is the ramp's own endpoint: it reaches the rung's
+         *  `earningsMultipleX` exactly at `ECONOMY.fame.cap`, so at fame 100 the multiple is
+         *  identical to the pre-round-32 one for every career, cap or no cap. The crossover and the
+         *  proof are docs/specs/brand-multiple-follows-fame-2026-08.md §5. */
         maxX: 20,
       },
       /** ⭐⭐⭐ ROUND 30 #23, 30.08 – THE ROOM SHE PLAYS IN. Its own block, and the arithmetic is
@@ -2025,6 +2157,71 @@ export const ECONOMY = {
         exponent: 0.1,
         minMult: 0.9,
         maxMult: 1.15,
+      },
+      /** ⭐⭐⭐ ROUND 32 #4 (31.08) – THE BRAND'S SECOND, SLOWER STOCK. `world/brandStrength.ts` is
+       *  the arithmetic and docs/specs/brand-inertia-2026-08.md is why.
+       *
+       *  THE OWNER: «А еще интересно, что будет происходить с годами падения в таблице (как у нее
+       *  сейчас) – известность тоже будет падать и стоимость бренда, соответственно?» – and, on
+       *  being shown the answer: «Инерция бренда – звучит интересно, давай попробуем».
+       *
+       *  ⚠⚠ THE MEASUREMENT THAT FORCED IT, off his own week-933 career projected five years with
+       *  nothing won: $831,382 -> $9,098, a 99% capital loss. The cause is arithmetic and not
+       *  tuning – fame halves every 104 weeks, the income goes as fame² and since round 32 #3 the
+       *  multiple rises with fame too, so the WORTH goes as fame³ and falls eightfold every two
+       *  years. A brand is not a live reading of attention: once built it holds a name, a shelf, a
+       *  distribution and a customer who already owns two of its shirts.
+       *
+       *  ⭐⭐ SO INCOME AND WORTH READ DIFFERENT CLOCKS. Income is a FLOW and keeps reading fame –
+       *  this year's noise really does sell this year's shirts. Worth is a STOCK and reads STRENGTH:
+       *  the best she has ever been, faded on a half-life measured in YEARS and never falling below
+       *  a share of that best. HIS RULING, both halves: «падает, но с полураспадом в годах, плюс пол
+       *  в доле от пика – чтобы карьера, которая реально была большой, никогда не оценивалась по
+       *  минимуму. – да» ⚠ The floor is HER OWN peak and not a global mark: a big career never
+       *  prices at the minimum, a small one still can. */
+      strength: {
+        /** ⭐⭐ THE STOCK'S HALF-LIFE, IN WEEKS – four years against fame's two. «с полураспадом в
+         *  годах» as a number: two seasons after a reign the brand is still worth ~70% of it, four
+         *  years ~50%, and it lands on the floor below rather than on zero. ⚠ It must be LONGER
+         *  than `ECONOMY.fame.halfLifeWeeks` or there is no second stock at all – only fame wearing
+         *  a slower coat, and the split the spec exists for collapses. */
+        halfLifeWeeks: 208,
+        /** ⭐⭐ ...AND THE FLOOR, AS A SHARE OF HER OWN PEAK. A career that was genuinely big never
+         *  prices at the minimum however long the silence runs; a career that was never noticed has
+         *  a peak of nothing and a floor of nothing, so this hands an unknown exactly zero.
+         *  ⚠ IT IS A SHARE AND NOT A FLOOR IN POINTS, which is the personal half of his ruling: 0.4
+         *  of a Slam champion's peak is a large brand and 0.4 of a club player's is still nothing. */
+        floorShare: 0.4,
+        /** ⭐⭐⭐ REVISION (31.08) – HOW MUCH OF THE STOCK STILL SELLS SHIRTS, 0..1. THE OWNER, reading
+         *  the first shipped result and stopping it: «меня смущает вот это: На пятом году бренд
+         *  стоит $166 060 при годовом доходе $1 352».
+         *
+         *  ⚠⚠ HE IS RIGHT AND THE FAULT WAS THE SPEC'S. The first pass floored the WORTH and left
+         *  the INCOME a bare function of fame, so the income still fell 98.7% over five years while
+         *  the valuation held – 123x annual earnings, which is not a valuation. THE MEMORY WAS IN
+         *  THE WRONG PLACE: the premise was always that a brand keeps «a name, a shelf, a
+         *  distribution and a customer who already owns two of its shirts», and that customer keeps
+         *  BUYING when she stops winning. So it is the REVENUE that must not collapse; a stable
+         *  valuation is the consequence and not a second thing to install.
+         *
+         *      effectiveReach = max(fame, retention x strength)
+         *
+         *  ⭐⭐ THE TOP IS PRESERVED BY CONSTRUCTION AND NOT BY A CLAMP, and this constant being
+         *  STRICTLY BELOW 1 is the whole of that proof: strength equals fame at the cap and at every
+         *  running peak, so `retention x strength < fame` there and the reach IS fame – the income
+         *  curve at the top is the pre-wave one term for term. The floor can only ever bind on the
+         *  way down, which is the only place he asked anything to move.
+         *
+         *  ⚠⚠ AND THE SIZE IS MEASURED AGAINST THE ONE DOCUMENTED CASE THIS REPO HOLDS OF AN
+         *  OFF-COURT INCOME WHEN THE WINNING STOPS: Naomi Osaka, ~$60M (2021) -> $12.0M (2024),
+         *  −75% in three years WITH ESSENTIALLY NO SPONSORS LOST – «the fall is playing time»
+         *  (docs/research/player-brands-and-what-they-are-worth.md §4e). The income goes as reach²,
+         *  so a −75% three-year fall is a reach holding half of itself, and this is the value that
+         *  lands there on his own row. Before the revision that same three-year fall was −92%.
+         *  ⚠ It is a BOUND drawn from one case and not a law; the frontier either side of it is in
+         *  docs/specs/brand-inertia-2026-08.md §18, and moving it is a decision about how much of a
+         *  business survives its founder's silence rather than a correction. */
+        retention: 0.78,
       },
     },
     academy: {

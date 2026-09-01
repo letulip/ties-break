@@ -251,9 +251,13 @@ describe('round 30 #18 – the picture goes to the edge, and only the picture do
 })
 
 describe('round 30 #6 – the screen around it', () => {
+  // ⚠⚠ RE-AIMED BY ROUND 32 #2, NOT LOOSENED - the same move `round29-next-tournament.test.ts`'s
+  // screen arm made, for the same reason. This arm's subject is «while the panel is there», so it
+  // mounts the arrival where it IS there: Home's plate, which names itself (round 31 #1's `entry`).
+  // Round 32 #2 took the panel off the results view and nothing about the frame rule moved with it.
   it('⭐ the hosting section loses its frame while the panel is there', () => {
     useGameStore().snapshot = enteredCareer()
-    const w = mount(ThisWeekScreen, { attachTo: document.body })
+    const w = mount(ThisWeekScreen, { props: { entry: 'tournament' }, attachTo: document.body })
     const section = w.find('.next-tourn').element.closest('section')!
     expect(section.classList.contains('bare'), '«убрать рамку»').toBe(true)
     // ⚠ AND THE FRAME IS REALLY OFF, read through the cascade rather than off the class name –

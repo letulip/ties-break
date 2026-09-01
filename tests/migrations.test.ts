@@ -545,7 +545,10 @@ describe('save migrations', () => {
     // colliding 64, and it now has two more rungs to cross before it arrives.
     // ⚠ AND AT v68 (31.08, round 31 #10/#13 – the per-career age curve), for the third time and with
     // the claim unchanged: one more rung between the collision and the head.
-    expect(SAVE_SCHEMA_VERSION, 'and the current schema is 68 – past the colliding 64, through 65').toBe(68)
+    // ⚠ AND AT v69 (01.09, round 32 #4 – the brand's slow stock pinned at the week it arrived), for
+    // the fourth time and with the claim unchanged again: the chain must run PAST the colliding 64,
+    // and it now has three more rungs to cross before it arrives.
+    expect(SAVE_SCHEMA_VERSION, 'and the current schema is 69 – past the colliding 64, through 65').toBe(69)
 
     // v64's step ran: the reveal back-fills NULL, which is the TRUE value and not a placeholder – no
     // save written before it can be holding a question in front of the player.

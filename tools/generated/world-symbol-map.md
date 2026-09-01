@@ -2,13 +2,13 @@
 
 # `engine/world` – area to owner
 
-The barrel `src/engine/world.ts` (2,072 lines) re-exports the decomposed modules under their historical names, so every importer sees one flat surface. That is a COMPATIBILITY contract, not a discovery one – this file is the discovery half.
+The barrel `src/engine/world.ts` (2,076 lines) re-exports the decomposed modules under their historical names, so every importer sees one flat surface. That is a COMPATIBILITY contract, not a discovery one – this file is the discovery half.
 
 Regenerate with `node scripts/world-map.mjs`; `node scripts/world-map.mjs --check` fails when it is stale, and CI runs that on every pull request.
 
 **Do not read this file to answer one question** – that is the habit it exists to replace. `node scripts/world-map.mjs <symbol>` prints the owner and the line, and a plain `grep <symbol> tools/generated/world-symbol-map.md` does the same for a partial name.
 
-376 exported names across 45 owning modules.
+383 exported names across 46 owning modules.
 
 ## Areas
 
@@ -31,10 +31,11 @@ Regenerate with `node scripts/world-map.mjs`; `node scripts/world-map.mjs --chec
 | `src/engine/world/age.ts` | HER AGE: the band and the girl, and the birthday that lands in the feed | 9 |
 | `src/engine/world/knock.ts` | THE KNOCK: she comes off court sore, and the parent rests it or sends her back out | 8 |
 | `src/engine/world/market.ts` | ⭐⭐⭐ THE MARKET – round 29 part three #16, and it is the answer to one sentence of his | 8 |
+| `src/engine/world/brand.ts` | ⭐⭐⭐ THE BRAND – round 30 #23 and #24, and it is TWO functions of ONE signal set | 7 |
+| `src/engine/world/fame.ts` | ⭐⭐ FAME – round 29 part four P7/P8, the first implementation of docs/specs/fame-and-the-shoots-2026-08.md | 7 |
 | `src/engine/world/injury.ts` | INJURIES AND PHYSIO: the weekly roll, the hazard shape behind it, and the recovery the family pays for – plus the sweep that cleans up everything an injury invalidates | 7 |
 | `src/engine/world/planner.ts` | THE SEASON PLANNER: the two things a parent can put on an empty week – a family holiday and a practice match – and what the engine does with them when the week arrives | 7 |
 | `src/engine/world/shop.ts` | ⭐⭐ THE SHOP – the tab, static prices, buy / own / sell, and since round 29 #5 the storeys above | 7 |
-| `src/engine/world/brand.ts` | ⭐⭐⭐ THE BRAND – round 30 #23 and #24, and it is TWO functions of ONE signal set | 6 |
 | `src/engine/world/entries.ts` | THE ENTRY COMMANDS: putting her in a draw, and taking her back out | 6 |
 | `src/engine/world/milestones.ts` | WHAT THE FAMILY KEEPS: the moments that are never pruned, and the season they add up to | 6 |
 | `src/engine/world/shootClash.ts` | ⭐⭐ ROUND 29 #3 – THE SHOOT THAT LANDS ON A TOURNAMENT WEEK, AND THE FOUR ANSWERS TO IT | 6 |
@@ -43,16 +44,16 @@ Regenerate with `node scripts/world-map.mjs`; `node scripts/world-map.mjs --chec
 | `src/engine/condition.ts` | THE condition math – one rule, everybody | 4 |
 | `src/engine/season/calendar.ts` | Package L – tournament calendar | 4 |
 | `src/engine/world/business.ts` | ⭐⭐ THE PARENT'S BUSINESSES – round 29 part four P7, parts two and three of his order: «нам нужен мерч, растущий от частоты и обилия рекламных контрактов, съемок, выступлений, титулов и прочего» and «нам нужна академия, которая зарабатывает» | 4 |
-| `src/engine/world/fame.ts` | ⭐⭐ FAME – round 29 part four P7/P8, the first implementation of docs/specs/fame-and-the-shoots-2026-08.md | 4 |
 | `src/engine/world/ledger.ts` | THE LEDGER: the two write primitives every world mutation goes through, and the pure folds that read the finance ledger back out | 4 |
+| `src/engine/world/state.ts` | ⭐ R2-10 STEP 1 – THE PERSISTED SCHEMA, MOVED WITHOUT TOUCHING SERIALISATION | 4 |
 | `src/engine/kidLife.ts` | HER LIFE OFF THE COURT - the three tiles of screen C's attribute grid that are not about results | 3 |
 | `src/engine/world/fieldNews.ts` | ⭐⭐⭐ THE TOUR HAS A VOICE – the professional field's succession, said out loud (round 26 #10) | 3 |
 | `src/engine/world/phaseObligations.ts` | ⭐ R2-10 STEP 2, PHASE 1 – THE SEASON BOUNDARY AND THE RECURRING OBLIGATIONS | 3 |
 | `src/engine/world/player.ts` | THE KID AS A MATCH PLAYER: turning a career's persisted state into the two numbers the match engine actually consumes | 3 |
-| `src/engine/world/state.ts` | ⭐ R2-10 STEP 1 – THE PERSISTED SCHEMA, MOVED WITHOUT TOUCHING SERIALISATION | 3 |
 | `src/engine/world/summer.ts` | THE SUMMER TRAINING BLOCK - nine weeks with no school in them, and what the engine does about it | 3 |
 | `src/engine/world/album.ts` | THE ALBUM: seven polaroids, and the rule printed on every one of them | 2 |
 | `src/engine/world/bookings.ts` | THE BOOKINGS, read side: what the family has put in the diary for a given week | 2 |
+| `src/engine/world/brandStrength.ts` | ⭐⭐⭐ BRAND STRENGTH – round 32 #4, docs/specs/brand-inertia-2026-08.md | 2 |
 | `src/engine/world/labels.ts` | FINISH AND STAGE LABELS: how far she got, said the way a draw sheet says it | 2 |
 | `src/engine/world/matchNews.ts` | MATCH NEWS: turning a resolved tournament into the lines the feed shows, and the streak the Home card reads off them | 2 |
 | `src/engine/world/bookkeeping.ts` | ⭐ R2-10 STEP 2 – CLOSING THE BOOKS ON A RESOLVED WEEK: the rank recompute, the prunes and the rolling calendar | 1 |
@@ -418,6 +419,30 @@ THE KNOCK: she comes off court sore, and the parent rests it or sends her back o
 - `worstCrashFreeRatio` – `src/engine/world/market.ts`
 - `worstMarketRatio` – `src/engine/world/market.ts`
 
+### `src/engine/world/brand.ts`
+
+⭐⭐⭐ THE BRAND – round 30 #23 and #24, and it is TWO functions of ONE signal set.
+
+- `brandCrowdMult` – `src/engine/world/brand.ts`
+- `brandGrossWorthCents` – `src/engine/world/brand.ts`
+- `brandMultipleX` – `src/engine/world/brand.ts`
+- `brandReachOf` – `src/engine/world/brand.ts`
+- `BrandSignals` *(type)* – `src/engine/world/brand.ts`
+- `brandSignalsOf` – `src/engine/world/brand.ts`
+- `brandWeeklyGrossCents` – `src/engine/world/brand.ts`
+
+### `src/engine/world/fame.ts`
+
+⭐⭐ FAME – round 29 part four P7/P8, the first implementation of docs/specs/fame-and-the-shoots-2026-08.md.
+
+- `completedShootsByBand` – `src/engine/world/fame.ts`
+- `completedShootWeeks` – `src/engine/world/fame.ts`
+- `fameAt` – `src/engine/world/fame.ts`
+- `fameEventWeeks` – `src/engine/world/fame.ts`
+- `fameFloorOf` – `src/engine/world/fame.ts`
+- `fameShootMultOf` – `src/engine/world/fame.ts`
+- `shootFloorDecayAt` – `src/engine/world/fame.ts`
+
 ### `src/engine/world/injury.ts`
 
 INJURIES AND PHYSIO: the weekly roll, the hazard shape behind it, and the recovery the family pays for – plus the sweep that cleans up everything an injury invalidates.
@@ -453,17 +478,6 @@ THE SEASON PLANNER: the two things a parent can put on an empty week – a famil
 - `sellableAsset` – `src/engine/world/shop.ts`
 - `sellAsset` – `src/engine/world/shop.ts`
 - `shopView` – `src/engine/world/shop.ts`
-
-### `src/engine/world/brand.ts`
-
-⭐⭐⭐ THE BRAND – round 30 #23 and #24, and it is TWO functions of ONE signal set.
-
-- `brandCrowdMult` – `src/engine/world/brand.ts`
-- `brandGrossWorthCents` – `src/engine/world/brand.ts`
-- `brandMultipleX` – `src/engine/world/brand.ts`
-- `BrandSignals` *(type)* – `src/engine/world/brand.ts`
-- `brandSignalsOf` – `src/engine/world/brand.ts`
-- `brandWeeklyGrossCents` – `src/engine/world/brand.ts`
 
 ### `src/engine/world/entries.ts`
 
@@ -545,15 +559,6 @@ Package L – tournament calendar.
 - `assetWeeklyIncomeCents` – `src/engine/world/business.ts`
 - `merchWeeklyIncomeCents` – `src/engine/world/business.ts`
 
-### `src/engine/world/fame.ts`
-
-⭐⭐ FAME – round 29 part four P7/P8, the first implementation of docs/specs/fame-and-the-shoots-2026-08.md.
-
-- `completedShootWeeks` – `src/engine/world/fame.ts`
-- `fameAt` – `src/engine/world/fame.ts`
-- `fameFloorOf` – `src/engine/world/fame.ts`
-- `fameShootMultOf` – `src/engine/world/fame.ts`
-
 ### `src/engine/world/ledger.ts`
 
 THE LEDGER: the two write primitives every world mutation goes through, and the pure folds that read the finance ledger back out.
@@ -562,6 +567,15 @@ THE LEDGER: the two write primitives every world mutation goes through, and the 
 - `financeWindow` – `src/engine/world/ledger.ts`
 - `seasonIndexOf` – `src/engine/world/ledger.ts`
 - `seasonStartWeek` – `src/engine/world/ledger.ts`
+
+### `src/engine/world/state.ts`
+
+⭐ R2-10 STEP 1 – THE PERSISTED SCHEMA, MOVED WITHOUT TOUCHING SERIALISATION.
+
+- `BrandStrengthSeed` *(type)* – `src/engine/world/state.ts`
+- `PendingTournament` *(type)* – `src/engine/world/state.ts`
+- `SAVE_SCHEMA_VERSION` – `src/engine/world/state.ts`
+- `WorldState` *(type)* – `src/engine/world/state.ts`
 
 ### `src/engine/kidLife.ts`
 
@@ -595,14 +609,6 @@ THE KID AS A MATCH PLAYER: turning a career's persisted state into the two numbe
 - `kidMatchPlayerFor` – `src/engine/world/player.ts`
 - `startingSkills` – `src/engine/world/player.ts`
 
-### `src/engine/world/state.ts`
-
-⭐ R2-10 STEP 1 – THE PERSISTED SCHEMA, MOVED WITHOUT TOUCHING SERIALISATION.
-
-- `PendingTournament` *(type)* – `src/engine/world/state.ts`
-- `SAVE_SCHEMA_VERSION` – `src/engine/world/state.ts`
-- `WorldState` *(type)* – `src/engine/world/state.ts`
-
 ### `src/engine/world/summer.ts`
 
 THE SUMMER TRAINING BLOCK - nine weeks with no school in them, and what the engine does about it.
@@ -624,6 +630,13 @@ THE BOOKINGS, read side: what the family has put in the diary for a given week.
 
 - `practiceForWeek` – `src/engine/world/bookings.ts`
 - `vacationForWeek` – `src/engine/world/bookings.ts`
+
+### `src/engine/world/brandStrength.ts`
+
+⭐⭐⭐ BRAND STRENGTH – round 32 #4, docs/specs/brand-inertia-2026-08.md.
+
+- `brandStrengthAt` – `src/engine/world/brandStrength.ts`
+- `strengthDecayAt` – `src/engine/world/brandStrength.ts`
 
 ### `src/engine/world/labels.ts`
 

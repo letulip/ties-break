@@ -270,7 +270,29 @@ import type { AcademySupport } from '../academy'
 // `createWorld` does NOT write it – see `WorldState.ageCurve` for why the fork is the honest moment
 // and what that buys the frozen career hashes. Full move: this constant, the v67 -> v68 step in
 // migrations.ts, tests/fixtures/saves/v68.json, and docs/specs/age-curve-fork-and-spread.md.
-export const SAVE_SCHEMA_VERSION = 68
+//
+// ⭐⭐⭐ v69 (round 32 #4 – THE BRAND STOPS EVAPORATING). World `+brandStrengthSeed`, optional:
+// `{week, value}`.
+//
+// ⚠⚠ AND THE MIGRATION IS THE POINT OF THE VERSION MOVE RATHER THAN THE PRICE OF IT, exactly as v68's
+// was. The brand's WORTH now reads a slow stock instead of this week's fame (`world/brandStrength.ts`),
+// and that stock is DERIVED – nothing is carried week to week. What cannot be derived is «what was
+// this career reading the day before the update», so the step writes {week: <the save's own week>,
+// value: <the fame it holds there>} onto EVERY existing save: today's number exactly, pinned, so a
+// career already in play reads the same brand value on the load after the update as on the load
+// before it, and only the years AFTER it are flattened.
+//
+// ⚠ THE FIELD IS OPTIONAL BECAUSE `createWorld` DOES NOT WRITE IT and no phase of the tick writes it
+// either – a career started after this ships has no pin and derives its whole own history, which is
+// the behaviour a new career should have. See `WorldState.brandStrengthSeed` for the four things that
+// buys, including the one that keeps the eighteen frozen career hashes moving by `schemaVersion`
+// alone.
+//
+// ⚠ IDEMPOTENT and DRAW-FREE. One read of `fameAt` – a fold over records the save already carries –
+// and two literals; no stream is touched on any key, so the frozen capture (41550 / e6b0c709) cannot
+// move. Full move: this constant, the v68 -> v69 step in migrations.ts, tests/fixtures/saves/v69.json,
+// docs/specs/brand-inertia-2026-08.md and docs/specs/collaborations-as-early-fame-2026-08.md.
+export const SAVE_SCHEMA_VERSION = 69
 
 
 
@@ -874,4 +896,38 @@ export interface WorldState {
    *  applied on READ (`ageCurveOf`), against `injuryFrom`, so the two halves stay separable and a
    *  save still says what she was born with after a career of layoffs. */
   ageCurve?: CareerAgeCurve
+  /** ⭐⭐⭐ WHERE THE BRAND'S SLOW STOCK STOOD THE WEEK IT ARRIVED (v69, round 32 #4 –
+   *  docs/specs/brand-inertia-2026-08.md).
+   *
+   *  ⚠⚠ IT IS A PIN, NOT A STOCK, AND THE DIFFERENCE IS THE WHOLE DESIGN. `brandStrengthAt` derives
+   *  strength from records the career already keeps and never prunes, so nothing has to be carried
+   *  from week to week; what CANNOT be derived is «what was this career reading the day before the
+   *  update», and that is the one number stored here. `value` is the fame the career held at `week`,
+   *  and the derivation treats every week at or before `week` as already answered by it.
+   *
+   *  ⭐ SO NO EXISTING CAREER'S NUMBER JUMPS ON THE TICK AFTER THE MERGE. The owner ruled the
+   *  retroactivity question open («вообще всё равно, игроков нет пока»); the cheap half of that
+   *  latitude is taken here – his Alice reads $831,382 on the load after the update exactly as she
+   *  read it before – and the expensive half, re-pricing a fifteen-season history through a new
+   *  kernel, is refused. Nothing about the choice is load-bearing and a later wave may revisit it.
+   *
+   *  ⚠⚠ WRITTEN ONCE, BY THE v68 -> v69 MIGRATION, AND BY NOTHING ELSE – not `createWorld`, not any
+   *  phase of the weekly tick. Four things follow and all four are load-bearing:
+   *    · a career started after this ships never carries the key and reads its whole own history,
+   *      which is the behaviour a new career should have;
+   *    · there is no per-week write, so there is no ordering to get wrong and no idempotence to
+   *      protect – the second press of the fast-forward button prices the brand exactly as the first;
+   *    · a save cannot drift the stock, because a load restores a pin and re-derives everything else;
+   *    · and the eighteen frozen career hashes in tests/coachTravelEdgeFixtures.ts walk 156 weeks of a
+   *      LIVE career, which the migration never touches – so the v69 bump moves `schemaVersion` and
+   *      nothing else, the narrowest re-freeze that file recognises (`ageCurve`'s own v68 argument,
+   *      by a different road). */
+  brandStrengthSeed?: BrandStrengthSeed
+}
+
+/** ⭐⭐ THE v69 PIN'S SHAPE – see `WorldState.brandStrengthSeed`. Two numbers and no history: the
+ *  week the stock arrived on this career and the fame it was carrying that week. */
+export interface BrandStrengthSeed {
+  week: number
+  value: number
 }

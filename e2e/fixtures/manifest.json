@@ -1,7 +1,7 @@
 {
   "generatedBy": "tools/e2e-fixtures.ts",
   "command": "npm run e2e:fixtures",
-  "schemaVersion": 68,
+  "schemaVersion": 69,
   "fixtures": [
     {
       "name": "fresh",
@@ -11,7 +11,7 @@
       "careerId": "c-e2e-fresh",
       "slot": "auto:c-e2e-fresh:a",
       "targetWeek": 0,
-      "schemaVersion": 68,
+      "schemaVersion": 69,
       "background": "middle",
       "coachTier": "middle",
       "policy": "player",
@@ -22,7 +22,7 @@
       },
       "bytes": 24034,
       "payloadBytes": 23990,
-      "sha256": "fc9e8e3366cb52e38b148c9af87a39afeb5efbde2b0e15384f51c103247de5f0",
+      "sha256": "1f8b7885039d7251d95ddda8546316a79f2e6ac01850453b10db76aaa2e840f3",
       "seedsTried": 1,
       "facts": {
         "week": 0,
@@ -60,7 +60,7 @@
       "careerId": "c-e2e-junior",
       "slot": "auto:c-e2e-junior:a",
       "targetWeek": 120,
-      "schemaVersion": 68,
+      "schemaVersion": 69,
       "background": "middle",
       "coachTier": "middle",
       "policy": "player",
@@ -69,9 +69,9 @@
         "kidLastName": "Sartori",
         "country": "US"
       },
-      "bytes": 58564,
-      "payloadBytes": 58520,
-      "sha256": "7e9746d3197145414072a056f7b93d75706ed0b40d6f40421fe27ca15b8aafc6",
+      "bytes": 58562,
+      "payloadBytes": 58518,
+      "sha256": "40931229d4772f8fa464ec311cb8b1368b37afa2ac71d435c68bb759c0c999bd",
       "seedsTried": 3,
       "facts": {
         "week": 120,
@@ -109,7 +109,7 @@
       "careerId": "c-e2e-pro",
       "slot": "auto:c-e2e-pro:a",
       "targetWeek": 412,
-      "schemaVersion": 68,
+      "schemaVersion": 69,
       "background": "middle",
       "coachTier": "middle",
       "policy": "player",
@@ -118,9 +118,9 @@
         "kidLastName": "Ostrowski",
         "country": "US"
       },
-      "bytes": 81937,
-      "payloadBytes": 81893,
-      "sha256": "d1bfbef8c9488e361ea8573ee9ec888387903ff622f2949ee53cef3a52f89f4e",
+      "bytes": 81936,
+      "payloadBytes": 81892,
+      "sha256": "5c2f8089499c261054e3e13b5d953d56aec28d42f911c3a441c6210bd8a0392b",
       "seedsTried": 1,
       "facts": {
         "week": 412,
@@ -158,7 +158,7 @@
       "careerId": "c-e2e-sinking",
       "slot": "auto:c-e2e-sinking:a",
       "targetWeek": 47,
-      "schemaVersion": 68,
+      "schemaVersion": 69,
       "background": "working",
       "coachTier": "middle",
       "policy": "grinder",
@@ -169,7 +169,7 @@
       },
       "bytes": 53466,
       "payloadBytes": 53422,
-      "sha256": "8eb0881d242a92e2952bd7462e3976127fce55e2a3bae654f10e8631adeac793",
+      "sha256": "f38bfd57a92f8aa130c2f6ced362af67effb97003203b2016334dc0da5846f6d",
       "seedsTried": 1,
       "facts": {
         "week": 47,
@@ -207,7 +207,7 @@
       "careerId": "c-e2e-broke",
       "slot": "auto:c-e2e-broke:a",
       "targetWeek": 168,
-      "schemaVersion": 68,
+      "schemaVersion": 69,
       "background": "working",
       "coachTier": "middle",
       "policy": "grinder",
@@ -216,9 +216,9 @@
         "kidLastName": "Kern",
         "country": "US"
       },
-      "bytes": 68870,
-      "payloadBytes": 68826,
-      "sha256": "250e2783596dfd96036cf302591daca0624f1b602c766e82d6f80ee9f3ea51d6",
+      "bytes": 68871,
+      "payloadBytes": 68827,
+      "sha256": "7c4aadc5d3479abc6460494d489bcd8d1badd861e25908c153b69949c0b7901f",
       "seedsTried": 1,
       "facts": {
         "week": 168,
@@ -256,7 +256,7 @@
       "careerId": "c-e2e-ending",
       "slot": "auto:c-e2e-ending:a",
       "targetWeek": 242,
-      "schemaVersion": 68,
+      "schemaVersion": 69,
       "background": "middle",
       "coachTier": "middle",
       "policy": "player",
@@ -265,9 +265,9 @@
         "kidLastName": "Kobayashi",
         "country": "US"
       },
-      "bytes": 81830,
-      "payloadBytes": 81786,
-      "sha256": "2f76c77e0394cde021af091da33850265ed9c26f9e76a562b13f46f89ff8f30f",
+      "bytes": 81831,
+      "payloadBytes": 81787,
+      "sha256": "d6abc9438110f326066559e537cb0c7d00251788d0ba887dbe28b182b44d37e5",
       "seedsTried": 1,
       "facts": {
         "week": 242,

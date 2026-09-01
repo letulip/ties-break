@@ -19,12 +19,22 @@
 //   * INCOME IS CURRENT FORM. It is fame – the decaying fold over titles, lost Slam finals, seasons
 //     ended in band and lived shoot weeks – and it goes UP AND DOWN with her. A season with no
 //     titles is a season the brand sells less.
-//   * THE MULTIPLE IS THE ACCUMULATED CAREER. How long she played, how high she finished, how deep
-//     she went, how often she won. «BRAND VALUE FOLLOWS THE ACCUMULATED STOCK, NOT CURRENT FORM» is
-//     §5.1's first finding verbatim (Sugarpova expanded through a doping ban; EleVen survived
-//     thirteen years of decline), and an accumulated stock is exactly what a buyer's multiple is:
-//     what he will pay PER DOLLAR of what the thing earns, which is a judgement about durability and
-//     not about this week.
+//   * THE MULTIPLE IS HOW BIG THE BUSINESS IS, PLUS THE ACCUMULATED CAREER ON TOP. How long she
+//     played, how high she finished, how deep she went, how often she won – a judgement about
+//     durability, «BRAND VALUE FOLLOWS THE ACCUMULATED STOCK, NOT CURRENT FORM», §5.1's first
+//     finding verbatim (Sugarpova expanded through a doping ban; EleVen survived thirteen years of
+//     decline) – sitting on a BASE that ramps with fame, because a buyer's multiple is also a
+//     judgement about size and the size of this business is how loudly she is talked about.
+//
+// ⚠⚠ THE SECOND HALF OF THAT LINE IS ROUND 32 #3 (31.08) AND IT REVERSES WHAT THIS FILE SHIPPED
+// WITH. Round 30 #23 put fame in the income alone, so two careers with the same tennis record and
+// different fame valued their brands identically and an unknown's brand traded at the full 14x. THE
+// OWNER, shown his own w933 row – $1,720 a week priced at $1.63M: «личный бренд в цене подрос с 250к
+// до 1.8м, а доход у него 1800 в неделю =))) что как-будто бы не очень соответствует стоимости», and
+// then the ruling that specified the repair: «её известность 22.3 – да, это ок, главное, чтобы ЭТА
+// ИЗВЕСТНОСТЬ УЧАСТВОВАЛА В МЕХАНИЗМЕ, тогда мы увидим разницу на других карьерах.» See
+// `brandMultipleX` for the arithmetic and docs/specs/brand-multiple-follows-fame-2026-08.md for what
+// it cost.
 //
 // ⚠⚠ SO THE WORTH FALLS IN-CAREER AND THAT IS THE POINT (the owner, correcting the argument for it:
 // «но это уже будет после завершения игры, по сути нас это не очень интересует, разве нет?» – the
@@ -33,10 +43,18 @@
 // while she is not winning. Income is convex in fame, so those falls are felt harder than they used
 // to be, and `tools/brand-dynamics.ts` measures how often they happen inside a live career.
 //
-// ⚠ AND THE MULTIPLE DOES NOT FALL, WHICH IS DELIBERATE AND IS NOT A RATCHET SMUGGLED IN. A career
-// that happened cannot un-happen: twelve seasons on tour are twelve seasons on tour in the year she
-// is hurt. The FALL lives in the income, where the player can feel it and act on it; the multiple is
-// the part of the story that is already written.
+// ⚠ AND THE FOUR CAREER RUNGS DO NOT FALL, WHICH IS DELIBERATE AND IS NOT A RATCHET SMUGGLED IN. A
+// career that happened cannot un-happen: twelve seasons on tour are twelve seasons on tour in the
+// year she is hurt. That is still true of every rung in `ECONOMY.business.merch.value`.
+//
+// ⚠⚠ WHAT IS NO LONGER TRUE, SINCE ROUND 32 #3, IS «THE MULTIPLE DOES NOT FALL» – the BASE those
+// rungs sit on ramps with fame, and fame falls. What can un-happen is being TALKED ABOUT, and a
+// business the world has stopped noticing is smaller as well as poorer. So a slump now compounds:
+// the income falls as fame² and the multiple falls with fame on top of it. That is the asset
+// behaving like an asset twice over, it is the arithmetic consequence of his ruling rather than a
+// second decision, and it is MEASURED – docs/specs/brand-multiple-follows-fame-2026-08.md §6 counts
+// the in-career falls on the same 72-career walk round 30 #23 was sized on. The mark floor
+// (`ECONOMY.shop.businessValueFloorShare`) still stops it reaching zero.
 //
 // ⭐⭐⭐ WHY THIS FILE EXISTS AT ALL, AND IT IS THE FOUNDATION NOTE (the owner: «по сути этот мерч
 // бренд это фундамент для этого слоя» – the collaboration layer). Everything below is arithmetic on
@@ -53,6 +71,19 @@
 // hung. See docs/specs/brand-worth-and-income-2026-08.md §6 for which of the three future shapes
 // this accommodates cheaply and which one needs different machinery.
 //
+// ⭐⭐⭐ AND THE 31.08 REVISION OF ROUND 32 #4 CORRECTS THE FIRST BULLET ABOVE, so a reader does not
+// take it for current. «INCOME IS CURRENT FORM. It is fame» was true until the owner read what it
+// cost: «меня смущает вот это: На пятом году бренд стоит $166 060 при годовом доходе $1 352». #4 had
+// floored the WORTH on the brand's slow stock and left the INCOME a bare function of fame, so the
+// valuation floated free of the business it was pricing – 123x annual earnings at the tail.
+//
+// ⭐⭐ THE MEMORY MOVED INTO THE REVENUE, WHICH IS WHERE THE SPEC'S OWN PREMISE ALWAYS PUT IT: a brand
+// keeps «a name, a shelf, a distribution and a customer who already owns two of its shirts», and that
+// customer KEEPS BUYING when she stops winning. So the income reads `brandReachOf` –
+// `max(fame, retention x strength)` – and the worth is a plain multiple of that income. ONE clock,
+// one mechanism, and `worth / a year of income` is `brandMultipleX` again, to the cent.
+// docs/specs/brand-inertia-2026-08.md §14-§19.
+//
 // ⚠⚠ ZERO DRAWS ON ANY STREAM, AND THE SAME PROOF `world/fame.ts` CARRIES. There is no `Rng`
 // argument in this file, no clock, no `Math.random` and no persisted field: every number below is
 // re-derived from records the career already keeps and never prunes, so a load cannot drift it and
@@ -60,6 +91,7 @@
 import { ECONOMY } from '../economy'
 import { WEEKS_PER_YEAR } from '../season/calendar'
 import { decayAt, fameAt } from './fame'
+import { brandStrengthAt } from './brandStrength'
 import { tierCrowdMid } from '../season/preview'
 import type { TierId } from '../season/types'
 import type { WorldState } from '../world'
@@ -74,6 +106,18 @@ import type { WorldState } from '../world'
 export interface BrandSignals {
   /** the fame stock, fractional, at the week asked for – `world/fame.ts`, unrounded. */
   fame: number
+  /** ⭐⭐⭐ ROUND 32 #4 – THE BRAND'S SLOW STOCK at the same week (`world/brandStrength.ts`): the best
+   *  she has ever been, faded on a half-life measured in YEARS and floored at a share of that best.
+   *
+   *  ⚠⚠ SINCE THE 31.08 REVISION IT IS READ THROUGH `brandReachOf` AND BY THE INCOME FIRST, which is
+   *  the opposite of how it shipped. #4 gave the stock to the WORTH alone and left the income a bare
+   *  function of fame; the owner read the result and stopped it, because a valuation whose earnings
+   *  have evaporated under it is not a valuation. The stock now floors the REACH, the reach drives
+   *  the income, and the worth is floored through the income it is a multiple of.
+   *
+   *  ⚠ NEVER BELOW `fame`, BY CONSTRUCTION, and equal to it at the cap and at every running peak –
+   *  see `brandStrengthAt`'s header for why that is what pins the top of the shelf. */
+  strength: number
   /** ⭐ «СКОЛЬКО ИГРАЕТ» – finished seasons that carry a WTA end-rank, i.e. seasons she spent as a
    *  professional. ⚠ A season with no recorded WTA rank counts NOTHING and is not counted as a bad
    *  one: «not recorded» is not «unranked», which is `academyReputationOf`'s own distinction and the
@@ -176,6 +220,7 @@ export function brandSignalsOf(world: WorldState, week = world.week): BrandSigna
   const played = wins + losses
   return {
     fame: fameAt(world, week),
+    strength: brandStrengthAt(world, week),
     proSeasons,
     topSeasons,
     finalsLost,
@@ -232,27 +277,75 @@ export function brandCrowdMult(signals: BrandSignals): number {
  *  fell, which is the only fall the game is in frame for. */
 export function brandWeeklyGrossCents(signals: BrandSignals): number {
   const M = ECONOMY.business.merch
+  // ⭐⭐⭐ REVISION (31.08) – AND THE THING SQUARED IS THE REACH, NOT THIS WEEK'S NOISE. Not a
+  // character of the curve moved; what moved is what it is asked about. See `brandReachOf`.
+  const reach = brandReachOf(signals)
   // ⭐⭐⭐ AND THE ROOM TILTS IT (30.08, the owner overruling this wave's `[GAP]` on the crowd). It is
   // a bounded multiplier centred on 1, so the curve above is still the shape and this is still a
   // tilt – see `brandCrowdMult`.
-  return Math.round(((M.perFamePointCents * signals.fame * signals.fame) / M.famePivot) * brandCrowdMult(signals))
+  return Math.round(((M.perFamePointCents * reach * reach) / M.famePivot) * brandCrowdMult(signals))
 }
 
 /** ⭐⭐⭐ WHAT A BUYER PAYS PER DOLLAR OF WHAT IT EARNS – the multiple, EARNED rather than constant.
  *
  *  ⚠⚠ THIS FUNCTION IS THE WHOLE DECOUPLING. While the multiple was a constant, worth was income
  *  wearing a bigger number and no signal could reach one without reaching the other in the same
- *  proportion. Here the career's own durability moves it, and fame does not appear at all – so two
- *  careers at IDENTICAL fame are worth different money, which is the thing the old model could not
- *  express: a girl who was famous for one enormous season is not the asset a girl who was top-20 for
- *  eight years is, however loud the two seasons sounded.
+ *  proportion. Here the career's own durability moves it – so two careers at IDENTICAL fame are
+ *  worth different money, which is the thing the old model could not express: a girl who was famous
+ *  for one enormous season is not the asset a girl who was top-20 for eight years is, however loud
+ *  the two seasons sounded.
  *
- *  ⚠ THE BAND IS NARROW ON PURPOSE AND THE SCALE LIVES IN THE INCOME. `baseX` is the multiple a brand
- *  with nothing behind it earns and `maxX` is the ceiling; the research's own band is wide, thin and
- *  a choice (Beckham's DRJB ~10.9x profit, the Nadal academy ~31x – §5.4), so the sizing criterion is
- *  ours: hold the day-one «fair on the day they can afford it» reading that round 30 #9 measured,
- *  and let the spread between a flash and a reign be the item. See
- *  docs/specs/brand-worth-and-income-2026-08.md for predicted vs measured.
+ *  ⭐⭐⭐ ROUND 32 #3, 31.08 – AND THE BASE IS NOW A RAMP IN FAME, WHICH IS THE HALF THIS FUNCTION WAS
+ *  MISSING. On his own w933 career the multiple read 18.23x – all but the 20x ceiling – on a brand
+ *  turning over $89,428 a year, and every term of it was about her TENNIS: «личный бренд в цене
+ *  подрос с 250к до 1.8м, а доход у него 1800 в неделю =))) что как-будто бы не очень соответствует
+ *  стоимости.» HIS RULING ON THE REPAIR, and it is the specification: «её известность 22.3 – да, это
+ *  ок, главное, чтобы ЭТА ИЗВЕСТНОСТЬ УЧАСТВОВАЛА В МЕХАНИЗМЕ, тогда мы увидим разницу на других
+ *  карьерах.»
+ *
+ *  So the base runs from `V.unknownX` – what a brand nobody has heard of is worth per dollar – to
+ *  `baseX` at `ECONOMY.fame.cap`, and the four career rungs are a PREMIUM ON TOP of it rather than
+ *  the whole of it. ⭐⭐ THE TOP CANNOT MOVE, BY CONSTRUCTION AND NOT BY A CAP: at fame 100 the ramp
+ *  IS `baseX`, so the multiple there is identical to the pre-round-32 one for every career, and his
+ *  standing ruling that the ceiling is not to be cut («спонсорские коллаборации со спортсменами дают
+ *  и не такое, кратно большее») is satisfied to the cent. Only the bottom of the scale moves.
+ *
+ *  ⚠⚠ TWO SHIPPED CLAIMS ARE OVERTURNED BY THIS AND BOTH ARE NAMED RATHER THAN LEFT TO ROT:
+ *
+ *    1. «A TITLE MOVES THE INCOME AND NOT THE MULTIPLE.» It moves both now, because it moves fame
+ *       and fame is the base. That was written as a defence against the one-dial defect – pricing
+ *       one fact twice – and the answer to it is that these are not one fact priced twice but the
+ *       two halves of what a buyer actually asks: how much does it earn, and how BIG is it. The
+ *       size of this business is her fame, so the size term is a fame term. A brand doing $89k of
+ *       trade does not change hands at the multiple of one doing $1.5M, whatever the founder's
+ *       résumé says.
+ *    2. «THE MULTIPLE DOES NOT FALL.» It can now, because fame falls. The file's argument for the
+ *       ratchet was that a career that happened cannot un-happen, and that is still true of the four
+ *       rungs – they are monotone and nothing here subtracts. What can un-happen is being TALKED
+ *       ABOUT, and a business the world has stopped noticing is smaller as well as poorer. ⚠ The
+ *       consequence is that a slump now compounds – income falls as fame² and the multiple falls
+ *       with fame on top – and it is MEASURED rather than hoped about:
+ *       docs/specs/brand-multiple-follows-fame-2026-08.md §6, against the same 72-career walk round
+ *       30 #23 was sized on. The mark floor (`ECONOMY.shop.businessValueFloorShare`) is what stops
+ *       it reaching zero, exactly as before.
+ *
+ *  ⚠ AND IT COSTS THE DAY-ONE ANCHOR, WHICH IS THE ONE THING THIS CHANGE COULD NOT HOLD. Round 30
+ *  #9 sized `earningsMultipleX` so the brand is worth about what it cost at the fame a family holds
+ *  the week it can first afford it (median fame 9.6). A multiple that rises with fame must be LOWER
+ *  at fame 9.6 than at 22.3, so bringing his number down necessarily brings the day-one number down
+ *  with it – there is no monotone shape that does one without the other, and §4 of the spec proves
+ *  it as arithmetic rather than asserting it. The size of the move is measured there, and the one
+ *  dial that restores the anchor is the rung's own `entryCents`, which is HIS to rule on.
+ *
+ *  ⚠ THE BAND IS WIDE SINCE ROUND 32 #3 AND THAT IS THE ITEM. `V.unknownX` is the multiple a brand
+ *  with nothing behind it and nobody watching earns, `baseX` is what the ramp reaches at
+ *  `ECONOMY.fame.cap` and `maxX` is the ceiling; the research's own band is wide, thin and a choice
+ *  (Beckham's DRJB ~10.9x profit, the Nadal academy ~31x – §5.4), so the sizing criterion is ours.
+ *  It USED to be the day-one «fair on the day they can afford it» reading round 30 #9 measured; that
+ *  criterion and the owner's round-32 complaint cannot both be satisfied by any multiple that rises
+ *  with fame, and the arithmetic of why is docs/specs/brand-multiple-follows-fame-2026-08.md §4. His
+ *  complaint won; the day-one number moved and is reported there rather than papered over. See
+ *  docs/specs/brand-worth-and-income-2026-08.md for the round-30 predicted vs measured.
  *
  *  ⚠⚠ `baseX` IS THE RUNG'S OWN `earningsMultipleX` AND IS PASSED IN RATHER THAN READ HERE, so the
  *  catalogue keeps exactly one number saying «this rung is priced on its earnings, and this is where
@@ -262,7 +355,19 @@ export function brandWeeklyGrossCents(signals: BrandSignals): number {
  *  Pure arithmetic on a value object: no world, no clock, no draw. */
 export function brandMultipleX(signals: BrandSignals, baseX: number): number {
   const V = ECONOMY.business.merch.value
-  let x = baseX
+  // ⭐⭐⭐ ROUND 32 #3 – HOW BIG THE BUSINESS IS, 0..1, and the fame axis is `ECONOMY.fame.cap`'s own
+  // rather than a typed 100: the ramp has to reach `baseX` exactly where fame stops, or the top of
+  // the shelf moves. ⚠ CLAMPED BOTH WAYS. `fameAt` already answers inside [0, cap], so neither bound
+  // can bite today – they are here because a ramp that ran past 1 would lift the ceiling this change
+  // is forbidden to touch, and that must be impossible by construction rather than by a caller's
+  // good behaviour.
+  // ⭐⭐ REVISION (31.08) – AND IT IS THE REACH, ON THE SAME CLOCK AS THE INCOME. The size of this
+  // business is how many people it reaches, and after the revision that is `brandReachOf` and not
+  // this week's attention. ⚠ IT HAS TO BE THE SAME NUMBER THE INCOME READS, or the two halves of the
+  // worth would price different brands – which is precisely the disagreement `brandBuiltSignals`
+  // was deleted for. `reach ≤ cap` because both fame and strength are, and `retention < 1`.
+  const known = Math.min(1, Math.max(0, brandReachOf(signals) / ECONOMY.fame.cap))
+  let x = V.unknownX + (baseX - V.unknownX) * known
   x += V.seasonX * Math.min(signals.proSeasons, V.seasonCapN)
   x += V.topSeasonX * Math.min(signals.topSeasons, V.topSeasonCapN)
   x += V.finalX * Math.min(signals.finalsLost, V.finalCapN)
@@ -282,9 +387,52 @@ export function brandMultipleX(signals: BrandSignals, baseX: number): number {
  *  times the multiple the career has earned. The two functions above, joined – and the only place
  *  they are joined, so a screen and a valuation cannot disagree about what a brand is worth.
  *
+ *  ⭐⭐⭐ REVISION (31.08) – AND THE SUBSTITUTION THAT USED TO SIT HERE IS GONE, WHICH IS THE POINT.
+ *  Round 32 #4 shipped a second mechanism (`brandBuiltSignals`) that priced the WORTH on the slow
+ *  stock while the income kept reading fame. That floored the valuation and left the revenue to
+ *  collapse, and the owner stopped it: «На пятом году бренд стоит $166 060 при годовом доходе
+ *  $1 352». With the memory moved into the REACH the income already reads, worth is floored THROUGH
+ *  the income and this function is a plain product again – one mechanism doing one job, which is the
+ *  argument §4 of the spec was written on.
+ *
+ *  ⭐⭐ SO `worth / a year of income` IS THE MULTIPLE AGAIN, exactly, and round 30 #9's claim – which
+ *  round 32 #4 had to record as overturned – is restored rather than merely repaired. That ratio is
+ *  therefore bounded by the multiple's own band, [`value.unknownX`, `value.maxX`], at EVERY week of
+ *  every career, by construction and not by tuning. It is the acceptance the revision exists to meet.
+ *
  *  ⚠ NO FLOOR HERE. The mark's floor is a share of what the FAMILY PAID (`businessValueFloorShare`),
  *  which is a fact about the owned row and not about the brand, so it is applied at the ownership
  *  boundary in `world/assets.ts` where the row is. */
 export function brandGrossWorthCents(signals: BrandSignals, baseX: number): number {
   return Math.round(brandWeeklyGrossCents(signals) * WEEKS_PER_YEAR * brandMultipleX(signals, baseX))
+}
+
+/** ⭐⭐⭐ REVISION (31.08) – THE REACH THE BRAND ACTUALLY SELLS INTO: this week's attention, or what
+ *  is left of the brand she built, whichever is larger. `docs/specs/brand-inertia-2026-08.md` §14.
+ *
+ *      effectiveReach = max(fame, retention x strength)
+ *
+ *  ⚠⚠ THE MEMORY BELONGS HERE AND NOT IN THE VALUATION, AND THAT IS THE WHOLE REVISION. Round 32 #4
+ *  read §3's premise correctly – a brand keeps «a name, a shelf, a distribution and a customer who
+ *  already owns two of its shirts» – and then put the memory in the wrong place: it floored the
+ *  WORTH and left the INCOME a bare function of fame. The customer who already owns two shirts KEEPS
+ *  BUYING when she stops winning, so it is the REVENUE that must not collapse; a valuation that
+ *  holds while its earnings evaporate is not a valuation, and 123x annual earnings at the tail is
+ *  what that looks like.
+ *
+ *  ⭐⭐ THE TOP OF THE SHELF IS PRESERVED BY CONSTRUCTION, NOT BY A CLAMP, and `retention < 1` is the
+ *  entire proof. `brandStrengthAt` pins strength to fame at the cap and at every running peak
+ *  (its own header's properties 1 and 2), so `retention x strength < fame` exactly where the best
+ *  careers live and the max resolves to `fame`. The floor can only bind on the way DOWN – the one
+ *  place the owner asked anything to move – and the peak income curve is the pre-wave one term for
+ *  term.
+ *
+ *  ⚠ IT IS READ BY BOTH HALVES OF THE PRICING, deliberately: `brandWeeklyGrossCents` squares it and
+ *  `brandMultipleX` ramps on it. A business is as big as the audience it reaches, so the size term
+ *  and the revenue term have to be asked about the same audience or the worth would price a
+ *  different brand from the one the ledger pays.
+ *
+ *  Pure arithmetic on a value object: no world, no clock, no draw. */
+export function brandReachOf(signals: BrandSignals): number {
+  return Math.max(signals.fame, ECONOMY.business.merch.strength.retention * signals.strength)
 }

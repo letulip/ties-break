@@ -630,6 +630,12 @@ export function shopView(world: WorldState): ShopView {
       // one the row is actually priced at.
       // ⚠ WHOLE, ROUNDED HERE at the boundary – `annualRatePct` two lines up and the owner's rule of
       // 26.08, «у пользователя целые в интерфейсе»; the engine keeps the fraction.
+      // ⚠⚠ ROUND 32 #4 asked this through a second signal set (`brandBuiltSignals`) so the sentence
+      // would quote the multiple the VALUATION used rather than a second one. THE 31.08 REVISION
+      // DELETED THAT SUBSTITUTION and there is now only one signal set to ask: the reach floors the
+      // income and the multiple together (`brandReachOf`), so the shop row and the shelf read the
+      // same arithmetic without anything standing between them. The screen-and-valuation
+      // disagreement the paragraph above forbids is now impossible rather than avoided.
       earningsMultipleX:
         item.earningsMultipleX !== undefined
           ? Math.round(brandMultipleX(brandSignalsOf(world), item.earningsMultipleX))

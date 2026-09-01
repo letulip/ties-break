@@ -35,6 +35,9 @@ import { declineFactor, physicalMean, rollPotential, type KidSkills } from './de
 // would be two conventions the calendar and the save could drift apart on.
 import { PLAN_DAYS, sessionDays, sessionsForPlan } from './plan'
 import { coachIncludesPhysio } from './coach'
+// ⭐ v69 (round 32 #4): the pin is the SAVE'S OWN fame, asked of the same function the engine asks –
+// a migration with its own copy of the fame fold would pin a copy. Zero draws; see the v68 -> v69 step.
+import { fameAt } from './world/fame'
 // ⭐ v67 (round 30 #14): the units back-fill prices a legacy row off the SAME functions the engine
 // prices it with – a migration with its own copy of the market would convert the copy. `shopItem`
 // also answers `undefined` for an id the catalogue no longer carries, which is the courtesy that
@@ -2284,6 +2287,50 @@ export function migrateSave(raw: unknown): WorldState {
         : 0
     save.ageCurve = { plateauStart: 23, declineStart: 29, injuryFrom: Math.max(fromHistory, monotone) }
     v = 68
+  }
+
+  // ⭐⭐⭐ v68 -> v69 – ROUND 32 #4: THE BRAND'S WORTH MOVES ONTO A SLOW STOCK, AND THIS STEP IS THE
+  // PROMISE THAT THE MOVE DOES NOT REACH BACKWARDS.
+  //
+  // ⚠⚠ THE OWNER IS PLAYING A CAREER, and it is the SAME career and the same constraint v68 was
+  // written under. Alice sits at week 933 with a brand round 32 #3 has just re-priced to ~$831,000;
+  // `brandStrengthAt` reads «the best she has ever been, faded on a half-life measured in years», and
+  // her best was a great deal more than her 22.3 today. Left unpinned she would open the game after
+  // the update on a brand worth several times what it said the evening before – a number moving under
+  // a player for a reason he did not do anything to cause.
+  //
+  // So every save that already exists is PINNED on the fame it is holding right now, and
+  // `brandStrengthAt` treats every week at or before that as answered by the pin. At the pinned week
+  // the stock IS that fame, so the valuation is unchanged to the cent; from the next week on the stock
+  // fades on the new kernel instead of on fame's, which is the whole feature.
+  //
+  // ⚠ HIS RULING GAVE THE LATITUDE AND THIS IS THE CHEAP HALF OF IT: «вообще всё равно, игроков нет
+  // пока». Retroactive re-pricing is not forbidden – it is simply not worth the surprise, and nothing
+  // about the choice is load-bearing. What IS binding is the other half of his sentence, «главное
+  // обратная совместимость чтобы работала»: the step is append-only, every older schema still loads,
+  // and tests/fixtures/saves/v69.json is the fixture that says so.
+  //
+  // ⚠⚠ `fameAt` IS CALLED ON THE PARTLY-MIGRATED SAVE AND THAT IS SAFE HERE, said explicitly because
+  // it is the kind of line a later reader is right to be suspicious of. It reads exactly four things –
+  // `trophiesByTier` (v31), `seasonHistory[].byTrack` (v46), `offers` (v36) and `college` (v57) – and
+  // every one of them is complete before this block runs, on every save from v0 up. It writes nothing
+  // and draws nothing, so a pin is a pure reading of the save as it stands.
+  //
+  // ⚠ IDEMPOTENT: the step is gated on `v === 68` and the key it writes is read by nothing during the
+  // migration, so running the chain twice cannot double-pin.
+  //
+  // ⚠⚠ AND IT IS THE *NEW* `fameAt`, WHICH IS ROUND 32 #5 ARRIVING IN THE SAME PIN AND IS DELIBERATE.
+  // A delivered collaboration now adds to the fame floor, so a save carrying signed campaigns pins a
+  // slightly HIGHER fame than it read yesterday. That is item #5's whole intent – it is a change to
+  // what fame IS – and pinning the pre-#5 number instead would freeze a live career out of the feature
+  // it shipped alongside. The two items are measured together for the same reason («совместный эффект
+  // – мерить, да»), and the combined arm is docs/specs/brand-inertia-2026-08.md §6.
+  if (v === 68) {
+    save.brandStrengthSeed = {
+      week: save.week as number,
+      value: fameAt(save as unknown as WorldState, save.week as number),
+    }
+    v = 69
   }
 
   if (v !== SAVE_SCHEMA_VERSION) {

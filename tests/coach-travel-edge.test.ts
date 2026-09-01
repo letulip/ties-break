@@ -39,6 +39,7 @@ import {
   PRE_V66,
   PRE_V67,
   PRE_V68,
+  PRE_V69,
 } from './coachTravelEdgeFixtures'
 
 describe('the byte-identity of a career that does not travel', () => {
@@ -90,6 +91,25 @@ describe('the byte-identity of a career that does not travel', () => {
     expect(careerHashAtSchema(5, 0, 62), '25k · middle coach · grinder').toBe(PRE_V63.middleGrinder)
     expect(careerHashAtSchema(8, 0, 62), '120k · elite coach · grinder').toBe(PRE_V63.eliteGrinder)
     expect(careerHashAtSchema(0, 1, 62), '8k · self-coached · player').toBe(PRE_V63.selfTravelling)
+  })
+
+  it('⭐⭐⭐ v69: rolling the schema back to 68 reproduces the v68 hashes byte for byte', () => {
+    // ⚠⚠ THE WHOLE OF WHAT ROUND 32 #4/#5 DID TO A FROZEN CAREER, AS AN IDENTITY – and the answer is
+    // NOTHING, for two independent reasons, one per item. #4 appends `brandStrengthSeed`, and the ONLY
+    // writer of it is the v68 -> v69 MIGRATION: `createWorld` does not write it, no phase of the tick
+    // writes it, and `walkFrozenCareer` builds a live career and never migrates one. #5 changes how a
+    // SIGNED advertising letter is read into the fame floor, and no bench policy signs one – 102 ad
+    // letters raised over 780 weeks on preset 0, every one of them expired.
+    //
+    // ⭐⭐ SO THIS IS A STRONGER STATEMENT THAN v68's, NOT A REPEAT OF IT. v68's key was absent because
+    // these careers stop before the fork that writes it; this one is absent because nothing but a
+    // migration can write it at any week. A stock written weekly WOULD have landed here – `selfTravelling`
+    // reaches fame 2.55 by week 156 – so where the write lives was chosen to keep this identity true.
+    // Measured before the re-freeze, not after: `tools/frozen-key-diff.ts` on all three careers against
+    // the branch's own base reports ONE key, `schemaVersion`, with `rngMain` and `offers` byte-identical.
+    expect(careerHashAtSchema(5, 0, 68), '25k · middle coach · grinder').toBe(PRE_V69.middleGrinder)
+    expect(careerHashAtSchema(8, 0, 68), '120k · elite coach · grinder').toBe(PRE_V69.eliteGrinder)
+    expect(careerHashAtSchema(0, 1, 68), '8k · self-coached · player').toBe(PRE_V69.selfTravelling)
   })
 
   it('⭐⭐ v68: rolling the schema back to 67 – and dropping the key v68 added – reproduces the v67 hashes byte for byte', () => {

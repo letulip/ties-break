@@ -569,6 +569,66 @@ import { openCareer, stepCareerWeek, PRESETS, POLICIES } from '../tools/econ-ben
 // ⚠ NO SCHEMA MOVED. `injuryHistory` already carried `kind`, `severity`, `week` and `weeksOut`, so
 // nothing new is persisted; `SAVE_SCHEMA_VERSION` stays 67 and `PRE_V67` above still reproduces the
 // v66 constants for the two careers that did not move.
+//
+// =================================================================================================
+// ⭐⭐ RE-STAMPED FOR v69 – 01.09.2026, ROUND 32 #4 (brand inertia) + #5 (collaborations as fame).
+// =================================================================================================
+//
+// ⚠ ALL THREE CONSTANTS MOVE AND ALL THREE MOVE BY ONE KEY, which is the narrowest re-freeze this
+// file recognises and the fourth version in a row to take it (v66, v67, v68, v69). The bump is
+// `SAVE_SCHEMA_VERSION` 68 -> 69 for `brandStrengthSeed`, the pin the v68 -> v69 migration writes so a
+// career already in play does not see its brand re-priced under it (docs/specs/brand-inertia-2026-08.md).
+//
+// PER-KEY DIFF TAKEN FIRST, AS THE PROTOCOL DEMANDS – `tools/frozen-key-diff.ts` on THE THREE CAREERS
+// THIS FILE ACTUALLY FREEZES (5/0, 8/0, 0/1). ⚠ The control is the branch's own base in a separate
+// worktree (`r32b/brand-multiple`, the commit this branch forked from and the only commits between
+// them are this wave's), headers checked against the invocation on all six captures. The verdict,
+// identical on all three:
+//
+//   MOVED    `schemaVersion` – and NOTHING else. 1 key of 72, on all three.
+//   UNMOVED  every other key, `rngMain` AND `offers` INCLUDED, byte for byte.
+//
+// ⚠ THE COUNT IS THE HASHED KEYS AND NOT A DIFF LINE NUMBER, said because the first reading of this
+// diff got it wrong: `59c59` in the output is WHERE the line sits, not how many there are. Counted
+// (`tail -n +2 <capture> | wc -l`): 72 on every one of the six captures, and `brandStrengthSeed`
+// appears on none of them.
+//
+// ⭐⭐ AND ZERO MOVEMENT IS THE DERIVED EXPECTATION HERE FOR TWO SEPARATE REASONS, one per item.
+//   · #4 persists a PIN and not a stock: the only writer is the migration, so a career that is walked
+//     rather than loaded never carries the key. ⚠ This was a design constraint and not luck – a stock
+//     written weekly would have appeared on `selfTravelling`, whose fame is 2.55 at week 156 and first
+//     goes positive at week 122 (measured). See `WorldState.brandStrengthSeed`.
+//   · #5 changes how a SIGNED advertising letter is read, and no bench policy signs one: `econ-bench`
+//     raises 102 ad letters over 780 weeks on preset 0 and every one of them expires. `offers` being
+//     byte-identical is the independent confirmation that nothing about WHICH letters are written moved.
+//
+// ⚠ NEITHER ITEM TAKES A DRAW ON ANY STREAM. `world/brandStrength.ts` has no `Rng` argument, no clock
+// and no `Math.random`; the fame floor's new term is a fold over dated shoot weeks; the migration reads
+// `fameAt` and writes two numbers. The frozen MAIN capture in tests/condition.test.ts is untouched –
+// count 41550, hash e6b0c709 – and `PRE_V69` below is the byte-level half of the same proof: rolling
+// ONLY the version number back to 68 reproduces all three v68 constants exactly.
+//
+// =================================================================================================
+// ⭐⭐ NOT RE-STAMPED – 01.09.2026, THE SAME DAY'S REVISION OF #4 AND EXTENSION OF #5.
+// =================================================================================================
+//
+// He read the shipped result and stopped it: «На пятом году бренд стоит $166 060 при годовом доходе
+// $1 352». The memory moved out of the valuation and into the REVENUE (`brandReachOf` =
+// `max(fame, retention x strength)`), the separate worth floor was deleted, and #5's shoot addition
+// gained a per-band half-life ladder. **NOT ONE CONSTANT IN THIS FILE MOVES**, and the per-key diff
+// is what says so rather than the absence of a failing test.
+//
+// PER-KEY DIFF TAKEN FIRST, AS THE PROTOCOL DEMANDS – `tools/frozen-key-diff.ts` on the same three
+// careers (5/0, 8/0, 0/1), against `r32c/brand-inertia-and-collabs` in its own worktree, headers
+// checked on all six captures (`# preset N policy 1 weeks 156`). The verdict, on all three:
+//
+//   MOVED    nothing. **0 keys of 72 / 72 / 73. Byte-identical, every key, every career.**
+//
+// ⭐⭐ AND ZERO IS THE DERIVED EXPECTATION, for the same two reasons one paragraph up plus a third:
+// `SAVE_SCHEMA_VERSION` DOES NOT MOVE either, because the revision persists nothing new – `retention`
+// and the half-life ladder are constants and the reach is derived from two numbers the world already
+// answers. A wave with no schema move and no reader inside a bench career must produce exactly this,
+// and «must» is not proof, which is why it was run.
 export const FROZEN = {
   /** ⭐⭐ ONE OF THE THREE MOVED (28.08, ROUND 29 #20 – the owner's ruling 5 of 09.08: a booked family
    *  holiday stops the kit wearing), AND WHICH ONE IT IS *IS* THE MEASUREMENT. `selfTravelling` moved
@@ -1013,7 +1073,7 @@ export const FROZEN = {
    *  unreadable by the other. The renumber moved all three parts together: the constant, the
    *  migration's PLACE in the append-only chain (it runs at `v === 64`, after the reveal), and the
    *  golden fixture – `v65.json`, with college's `v64.json` untouched beside it. */
-  middleGrinder: '4776877776d00dc657dae2f2d0192b1587cdb6db44183e4b9e0b7a62c930a1e8',  /** PRESETS[8] · 120k wealthy family, elite coach · grinder policy (never travels)
+  middleGrinder: '69d0c91b32f5b4887916f7ef75277a4e523d629c0a28b39c9cb807478690b71b',  /** PRESETS[8] · 120k wealthy family, elite coach · grinder policy (never travels)
    *
    *  ⭐⭐ RE-FROZEN FOR ROUND 28 #17-b (28.08) – AND ALONE, WHICH IS THE FINDING, exactly as the
    *  16.08 re-freeze below was alone for its own reason. The owner's ruling put a kit letter's
@@ -1048,7 +1108,7 @@ export const FROZEN = {
    *  drop `fieldSeasonTitles`, roll the number back to 64, and the merge value above comes back. So
    *  this career carries all three of the day's moves and its constant matches no branch that exists,
    *  which is what a renumbered collision looks like from inside a fixture. */
-  eliteGrinder: '6e04f854ea8b83eb9b87296402c8bfae1234f3d0a9ae908264a89d4e1d471eaf',  /** PRESETS[0] · 8k working family, SELF-COACHED · player policy (switch on, nobody to send)
+  eliteGrinder: '837a1b4951ce430c6532399ea43e6ef231f5751b22db21f4cf92803bf1f5f18b',  /** PRESETS[0] · 8k working family, SELF-COACHED · player policy (switch on, nobody to send)
    *
    *  ⭐⭐ RE-FROZEN A FIFTH TIME (16.08) – AND ALONE, WHICH IS THE FINDING. The owner's correction of
    *  that afternoon made the Junior Accelerator a reserved place instead of a ceiling, so a junior
@@ -1288,7 +1348,7 @@ export const FROZEN = {
    *  fork at nineteen is answered and gives the cohort a derived (never stored) decline spread, and a
    *  frozen career is 156 weeks old: she is 16.6 and no rival is over 22, so neither reader is
    *  reachable. That is the claim, and this is its measurement rather than its assertion. */
-  selfTravelling: '4383a5970f4b3827aa6245be671700129d6735743a4abc29589811c40d32d7ca',}
+  selfTravelling: '846ee4c381229f910a90280f283bbce2bf17b0400b5e3e1c570e0a762648038e',}
 
 /** ⭐⭐ THE SAME THREE CAREERS AS THEY HASHED UNDER v66 – the identity that proves the v67 re-freeze
  *  moved the VERSION NUMBER and nothing else, in the exact sense v49 set and v66 repeated: the
@@ -1305,6 +1365,41 @@ export const FROZEN = {
  *  two steps are the v66 step's own former contents, moved without a character changed, so «nothing
  *  moved» is what the change means rather than what it was hoped to do. The per-key diff over
  *  `FROZEN` is the independent half of the same finding. */
+/** ⭐⭐⭐ THE SAME THREE CAREERS AS THEY HASHED UNDER v68 – the identity that proves the v69 re-freeze
+ *  moved the VERSION NUMBER and nothing else, in the exact sense v49 set and v66 / v67 / v68 repeated:
+ *  the narrowest legitimate re-freeze this file recognises.
+ *
+ *  ⚠⚠ v69 APPENDS A WORLD KEY – `brandStrengthSeed`, the brand's slow stock pinned at the week it
+ *  arrived (round 32 #4) – AND NO CAREER IN THIS FILE CAN EVER CARRY IT, which is a STRONGER statement
+ *  than v68's and not merely a repeat of it. v68's `ageCurve` is absent from these careers because
+ *  they stop at week 156, before the fork that writes it; this key is absent because THE ONLY WRITER
+ *  IS THE v68 -> v69 MIGRATION. `createWorld` does not write it, no phase of the weekly tick writes
+ *  it, and `walkFrozenCareer` builds a live career and never migrates one – so the peel
+ *  `careerHashAtSchema` performs is provably a no-op here today and for every future wave that keeps
+ *  the writer where it is. That is a design choice and not an accident: a stock written weekly WOULD
+ *  have landed on `selfTravelling` (her fame is 2.55 at week 156, first positive at week 122,
+ *  measured), moved a second key, and made this re-freeze the owner's call rather than a renumber.
+ *
+ *  ⭐ MEASURED BEFORE THE CONSTANTS WERE TOUCHED, as this file's protocol demands, and against the
+ *  branch's own base in a separate worktree (`r32b/brand-multiple`, the commit this branch forked
+ *  from). `tools/frozen-key-diff.ts` on all three careers:
+ *
+ *    · 5/0 (25k middle, grinder)          – **1 key of 72: `schemaVersion`.**
+ *    · 8/0 (120k wealthy, elite, grinder) – **1 key of 72: `schemaVersion`.**
+ *    · 0/1 (8k working, self-coached, PLAYER) – **1 key of 72: `schemaVersion`.**
+ *
+ *  ⚠⚠ AND `rngMain` IS BYTE-IDENTICAL ON ALL THREE, which is the load-bearing half. Neither round 32
+ *  #4 nor #5 takes a draw on any stream: fame and brand strength are folds over dated records the
+ *  career already keeps, `world/brandStrength.ts` has no `Rng` argument and no clock, and the v69
+ *  migration reads `fameAt` and writes two numbers. The frozen MAIN capture in tests/condition.test.ts
+ *  is untouched – count 41550, hash e6b0c709 – and needs no re-pin. `offers` is byte-identical too,
+ *  which is the independent confirmation that #5 changed how a signed letter is READ and not whether
+ *  one is written. */
+export const PRE_V69 = {
+  middleGrinder: '4776877776d00dc657dae2f2d0192b1587cdb6db44183e4b9e0b7a62c930a1e8',
+  eliteGrinder: '6e04f854ea8b83eb9b87296402c8bfae1234f3d0a9ae908264a89d4e1d471eaf',
+  selfTravelling: '4383a5970f4b3827aa6245be671700129d6735743a4abc29589811c40d32d7ca',}
+
 /** ⭐⭐ THE SAME THREE CAREERS AS THEY HASHED UNDER v67 – the identity that proves the v68 re-freeze
  *  moved the VERSION NUMBER and nothing else, in the exact sense v49 set and v66 / v67 repeated: the
  *  narrowest legitimate re-freeze this file recognises.
@@ -1407,10 +1502,15 @@ export const PRE_V66 = {
  *  is untouched. The per-key diff over the same three careers is ONE key, `schemaVersion` – see the
  *  v68 note over `FROZEN` – and the rewrite this helper applies reads only `offers`, which that diff
  *  reports byte-identical. */
+/** ⚠ RE-STAMPED AGAIN FOR v69 (01.09, round 32 #4/#5) AND FOR NO OTHER REASON – v68's note above
+ *  applies word for word, and the v69 per-key diff over the same three careers is again ONE key,
+ *  `schemaVersion`, with `offers` – the only thing this helper's rewrite reads – byte-identical. All
+ *  three relations still hold: `middleGrinder` and `selfTravelling` equal their `FROZEN` twins and
+ *  `eliteGrinder` differs by the one moved letter. The numbers moved together, the argument did not. */
 export const PRE_R28B = {
-  middleGrinder: '4776877776d00dc657dae2f2d0192b1587cdb6db44183e4b9e0b7a62c930a1e8',
-  eliteGrinder: 'bd8166570107ce3a62b7f14ff324fb89db6a167127a56e99e12e2e76bd644285',
-  selfTravelling: '4383a5970f4b3827aa6245be671700129d6735743a4abc29589811c40d32d7ca',}
+  middleGrinder: '69d0c91b32f5b4887916f7ef75277a4e523d629c0a28b39c9cb807478690b71b',
+  eliteGrinder: '08fec4bca84cc7b1eb6877070496941c9c835a3f6d8b3386a25255c8f6d598f5',
+  selfTravelling: '846ee4c381229f910a90280f283bbce2bf17b0400b5e3e1c570e0a762648038e',}
 
 /** ⭐ THE SAME THREE CAREERS AS THEY HASHED UNDER v56 – the identity that proves the v57 re-freeze
  *  moved ONE key and nothing else.
@@ -1909,7 +2009,18 @@ export function careerHashAtSchema(presetIndex: number, policyIndex: number, sch
   // is answered, so a frozen career – 156 weeks, age 16.6 – never writes it and this line is a no-op
   // on every constant in this file. That is exactly what the wave claims, and `FROZEN` below is the
   // proof: all three careers reproduce byte for byte with a schema bump in the tree.
-  const { ageCurve: _curve, ...preCurve } = world
+  // ⚠ RE-AIMED FOR v69 (round 32 #4 – the brand's slow stock), NOT WEAKENED, AND IT PEELS AHEAD OF
+  // ALL SIX BELOW because `brandStrengthSeed` is the newest key and the peel order is reverse order of
+  // arrival. ⭐⭐ IT IS THE FIRST KEY HERE THAT NO LIVE CAREER CAN EVER WRITE: the pin is written by the
+  // v68 -> v69 MIGRATION and by nothing else – not `createWorld`, not a phase of the tick – and
+  // `walkFrozenCareer` builds a live career, so this line is a no-op on every constant in this file
+  // and will stay one. It is here anyway, because the invariant that keeps the next wave out of
+  // trouble is «peel every key appended after the version being rolled back to», and an exception
+  // argued from today's writer set is exactly how that invariant rots. Measured before it was written:
+  // `tools/frozen-key-diff.ts` on all three careers reports ONE moved key, `schemaVersion` – see the
+  // v69 note over `FROZEN`.
+  const { brandStrengthSeed: _pin, ...preSeed } = world
+  const { ageCurve: _curve, ...preCurve } = preSeed
   const { gearRestWeeks: _rest, ...preRest } = preCurve
   const { fieldSeasonTitles: _titles, ...preTitles } = preRest
   const { assets: _assets, ...preAssets } = preTitles
@@ -1926,7 +2037,9 @@ export function careerHashAtSchema(presetIndex: number, policyIndex: number, sch
             ? preTitles
             : schemaVersion < 68
               ? preCurve
-              : world
+              : schemaVersion < 69
+                ? preSeed
+                : world
   return createHash('sha256').update(JSON.stringify({ ...shape, schemaVersion })).digest('hex')
 }
 
