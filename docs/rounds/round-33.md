@@ -138,24 +138,23 @@ build round.
   («проверь предыдущие раунды на предмет "что забыто и не сделано"»), written 28.08 and left on an
   unmerged branch for four days. Landed with a dated header saying what it is: a snapshot, not a
   current list. ⚠ Only that one file was taken; the branch's other file is already on main.
-- [ ] **2. The Stats header tiles – the audit's one LIVE regression, RE-MEASURED on `main` 01.09 and
-  still live.** **build**.
-  It is filed as `[!] R10-2 / R10-8`, was first reported 13.08, and the audit found it unmoved on
-  28.08. Checked again today against `origin/main` rather than taken on the audit's word:
-  - `StatsScreen.vue:243` still renders `{{ LADDER_LABEL[shown] }} rank`, `:254` still renders
-    `{{ LADDER_LABEL[shown] }} W–L`, and `LADDER_LABEL` is still
-    `National / International / Professional` – so the longest labels are **"International rank" and
-    "International W–L", 18 characters**.
-  - `.stats-tile-label` (`style.css:2739`) is still `white-space: nowrap`.
-  - `git grep "stats-tile-label" -- tests/` still returns **nothing**.
-  ⭐ AND THE FAILURE IS SHARPER THAN THE AUDIT SAID, which is why it was re-measured rather than
-  quoted: `.stats-tile` is `flex: 1` with **no `min-width: 0`**, so its default `min-width: auto`
-  stops it shrinking below its content. With `nowrap` the tiles therefore do not clip cleanly – they
-  **refuse to shrink and push the row past the viewport**. On a 375px screen the row has about 89px
-  of content width per tile against roughly 99px of label.
-  ⚠ THE DECISION IS HIS, and the audit named the same three: shorten the label, drop the ladder word
-  from two of the three tiles, or let it wrap. ⭐ What is NOT his to decide is the missing guard: this
-  is CLAUDE.md's own rule about measuring a screen against a phone before it ships, and the row has
-  never had one. The mounted assertion at 375x667 goes in whichever way the label question is
-  answered.
-  ⚠ **He reads Stats every season**, which is why a nineteen-day-old cosmetic defect is worth the row.
+- [x] **2. The Stats header tiles – REFUTED BY THE OWNER, and closed. Do not re-file this.**
+
+  The 13.08 filing (`[!] R10-2 / R10-8`), the 28.08 audit's headline "one LIVE regression", and my
+  own 01.09 re-check all said the same thing: that "International rank" overflows its tile at 375px.
+
+  ⚠⚠ **IT DOES NOT. He sent a screenshot of the live screen on 01.09 and the three tiles render
+  inside their boxes with room to spare** – `International rank / Points / International W–L`, all
+  three whole, nothing clipped and nothing pushed off. His words: «про эти подписи я тебе уже
+  говорил и прошу сделать пометку: там ничего не вылезает, всё ок» – ⭐ **and he had told me before**,
+  which is why this note is written into the CODE as well as here.
+
+  ⭐ WHY THREE PASSES GOT IT WRONG, because the mistake is more useful than the finding: nobody ever
+  measured it. The audit reasoned from a character COUNT (18 characters); I compounded it by
+  multiplying that count by an ASSUMED per-character width (~5.5px at 11.5px type) to produce
+  "~99px against ~89px of tile". **That is arithmetic on a guess, presented as a measurement** – the
+  exact failure CLAUDE.md records under "prove the arm contains both the change and its reader",
+  applied to a font metric instead of a constant. One `getBoundingClientRect` in a mounted test, or
+  one screenshot, would have closed it either way on 13.08.
+
+  ⚠ NO CODE CHANGE, and none is wanted. `.stats-tile-label`'s `white-space: nowrap` stays.
