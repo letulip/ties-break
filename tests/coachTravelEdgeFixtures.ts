@@ -607,6 +607,28 @@ import { openCareer, stepCareerWeek, PRESETS, POLICIES } from '../tools/econ-ben
 // `fameAt` and writes two numbers. The frozen MAIN capture in tests/condition.test.ts is untouched –
 // count 41550, hash e6b0c709 – and `PRE_V69` below is the byte-level half of the same proof: rolling
 // ONLY the version number back to 68 reproduces all three v68 constants exactly.
+//
+// =================================================================================================
+// ⭐⭐ NOT RE-STAMPED – 01.09.2026, THE SAME DAY'S REVISION OF #4 AND EXTENSION OF #5.
+// =================================================================================================
+//
+// He read the shipped result and stopped it: «На пятом году бренд стоит $166 060 при годовом доходе
+// $1 352». The memory moved out of the valuation and into the REVENUE (`brandReachOf` =
+// `max(fame, retention x strength)`), the separate worth floor was deleted, and #5's shoot addition
+// gained a per-band half-life ladder. **NOT ONE CONSTANT IN THIS FILE MOVES**, and the per-key diff
+// is what says so rather than the absence of a failing test.
+//
+// PER-KEY DIFF TAKEN FIRST, AS THE PROTOCOL DEMANDS – `tools/frozen-key-diff.ts` on the same three
+// careers (5/0, 8/0, 0/1), against `r32c/brand-inertia-and-collabs` in its own worktree, headers
+// checked on all six captures (`# preset N policy 1 weeks 156`). The verdict, on all three:
+//
+//   MOVED    nothing. **0 keys of 72 / 72 / 73. Byte-identical, every key, every career.**
+//
+// ⭐⭐ AND ZERO IS THE DERIVED EXPECTATION, for the same two reasons one paragraph up plus a third:
+// `SAVE_SCHEMA_VERSION` DOES NOT MOVE either, because the revision persists nothing new – `retention`
+// and the half-life ladder are constants and the reach is derived from two numbers the world already
+// answers. A wave with no schema move and no reader inside a bench career must produce exactly this,
+// and «must» is not proof, which is why it was run.
 export const FROZEN = {
   /** ⭐⭐ ONE OF THE THREE MOVED (28.08, ROUND 29 #20 – the owner's ruling 5 of 09.08: a booked family
    *  holiday stops the kit wearing), AND WHICH ONE IT IS *IS* THE MEASUREMENT. `selfTravelling` moved

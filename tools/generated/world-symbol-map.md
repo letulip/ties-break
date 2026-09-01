@@ -423,10 +423,10 @@ THE KNOCK: she comes off court sore, and the parent rests it or sends her back o
 
 ⭐⭐⭐ THE BRAND – round 30 #23 and #24, and it is TWO functions of ONE signal set.
 
-- `brandBuiltSignals` – `src/engine/world/brand.ts`
 - `brandCrowdMult` – `src/engine/world/brand.ts`
 - `brandGrossWorthCents` – `src/engine/world/brand.ts`
 - `brandMultipleX` – `src/engine/world/brand.ts`
+- `brandReachOf` – `src/engine/world/brand.ts`
 - `BrandSignals` *(type)* – `src/engine/world/brand.ts`
 - `brandSignalsOf` – `src/engine/world/brand.ts`
 - `brandWeeklyGrossCents` – `src/engine/world/brand.ts`

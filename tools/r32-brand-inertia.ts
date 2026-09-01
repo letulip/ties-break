@@ -39,8 +39,9 @@ import { readFileSync } from 'node:fs'
 import { basename } from 'node:path'
 import {
   acceptOffer,
-  brandBuiltSignals,
+  brandReachOf,
   createWorld,
+  fameFloorOf,
   brandGrossWorthCents,
   brandMultipleX,
   brandSignalsOf,
@@ -88,10 +89,15 @@ function setBands(bands: readonly number[]): void {
   ;(ECONOMY.fame as { shootFloorByBand: readonly number[] }).shootFloorByBand = bands
 }
 
-/** ⭐⭐ THE PRE-#4 WORTH, THROUGH THE SHIPPED FUNCTION. `brandBuiltSignals` substitutes `strength`
- *  for `fame`; hand it a signal set whose strength IS its fame and the substitution is the identity,
- *  so this is `brandGrossWorthCents`' own pre-wave expression and not a copy of it. */
+/** ⭐⭐ THE PRE-WAVE WORTH, THROUGH THE SHIPPED FUNCTION. Since the 31.08 revision the whole of #4
+ *  reaches the pricing through `brandReachOf` = `max(fame, retention x strength)`; hand it a signal
+ *  set whose strength IS its fame and – because `retention < 1` – the max resolves to `fame`, so
+ *  `brandGrossWorthCents` reduces to its own pre-wave expression term for term. Nothing here is a
+ *  copy of the engine and nothing can drift from it. */
 const flatWorthCents = (s: BrandSignals): number => brandGrossWorthCents({ ...s, strength: s.fame }, BASE_X)
+
+/** ...and the same identity for the INCOME, which the revision moved onto the reach as well. */
+const flatWeeklyCents = (s: BrandSignals): number => brandWeeklyGrossCents({ ...s, strength: s.fame })
 
 // ---------------------------------------------------------------------------------------------
 // §1 HIS OWN CAREER – the measurement that forced #4, and the five-year projection in every arm
@@ -101,21 +107,29 @@ const flatWorthCents = (s: BrandSignals): number => brandGrossWorthCents({ ...s,
 function readRow(world: WorldState, week: number, inertia: boolean): {
   fame: number
   strength: number
+  reach: number
   weeklyCents: number
   multipleX: number
   worthCents: number
+  /** ⭐⭐⭐ THE HEADLINE OF THE REVISION – worth over a YEAR of what the brand takes in. */
+  ratioX: number
   signals: BrandSignals
 } {
   const raw = brandSignalsOf(world, week)
   // ⚠ THE INERTIA ARM IS ONE SUBSTITUTION AND NOT A SECOND FUNCTION – see `flatWorthCents`.
   const s: BrandSignals = inertia ? raw : { ...raw, strength: raw.fame }
+  const weeklyCents = brandWeeklyGrossCents(s)
+  const worthCents = brandGrossWorthCents(s, BASE_X)
   return {
     fame: s.fame,
     strength: s.strength,
-    // ⚠ THE INCOME READS FAME AND ONLY FAME, in every arm – that is the split #4 exists for.
-    weeklyCents: brandWeeklyGrossCents(s),
-    multipleX: brandMultipleX(brandBuiltSignals(s), BASE_X),
-    worthCents: brandGrossWorthCents(s, BASE_X),
+    // ⭐⭐ SINCE THE REVISION THE INCOME READS THE REACH, so the memory is in the revenue and the
+    // valuation is floored THROUGH it rather than beside it.
+    reach: brandReachOf(s),
+    weeklyCents,
+    multipleX: brandMultipleX(s, BASE_X),
+    worthCents,
+    ratioX: worthCents / Math.max(1, weeklyCents * WEEKS_PER_YEAR),
     signals: s,
   }
 }
@@ -141,16 +155,30 @@ async function projectSave(path: string): Promise<void> {
     const base = readRow(world, w0, inertia)
     console.log(`\n   ${armLabel}`)
     console.log(
-      `      ${'when'.padEnd(10)}${'fame'.padStart(7)}${'strength'.padStart(10)}${'weekly'.padStart(10)}` +
-        `${'multiple'.padStart(10)}${'worth'.padStart(14)}${'vs now'.padStart(9)}`,
+      `      ${'when'.padEnd(10)}${'fame'.padStart(7)}${'strength'.padStart(10)}${'reach'.padStart(8)}` +
+        `${'weekly'.padStart(10)}${'a year'.padStart(11)}${'multiple'.padStart(10)}${'worth'.padStart(14)}` +
+        `${'worth/yr'.padStart(10)}${'vs now'.padStart(9)}`,
     )
+    // ⭐⭐⭐ EVERY WEEK OF THE FIVE YEARS IS ASKED, and the printed rows are a sample of it. The
+    // acceptance is «inside the band at EVERY point», so the extremes below are a sweep and not five
+    // spot readings – a ratio that spikes in month seven would not show in an annual table.
+    let lo = Infinity
+    let hi = 0
+    for (let w = w0; w <= w0 + 5 * WEEKS_PER_YEAR; w++) {
+      const r = readRow(world, w, inertia)
+      if (r.weeklyCents <= 0) continue
+      lo = Math.min(lo, r.ratioX)
+      hi = Math.max(hi, r.ratioX)
+    }
     for (const years of [0, 1, 2, 3, 5]) {
       const r = readRow(world, w0 + years * WEEKS_PER_YEAR, inertia)
       console.log(
         `      ${(years === 0 ? 'now' : `+${years} year${years > 1 ? 's' : ''}`).padEnd(10)}` +
-          `${r.fame.toFixed(1).padStart(7)}${r.strength.toFixed(1).padStart(10)}` +
-          `${usd(r.weeklyCents).padStart(10)}${`${r.multipleX.toFixed(2)}x`.padStart(10)}` +
-          `${usd(r.worthCents).padStart(14)}${pct(r.worthCents / Math.max(1, base.worthCents)).padStart(9)}`,
+          `${r.fame.toFixed(1).padStart(7)}${r.strength.toFixed(1).padStart(10)}${r.reach.toFixed(1).padStart(8)}` +
+          `${usd(r.weeklyCents).padStart(10)}${usd(r.weeklyCents * WEEKS_PER_YEAR).padStart(11)}` +
+          `${`${r.multipleX.toFixed(2)}x`.padStart(10)}` +
+          `${usd(r.worthCents).padStart(14)}${`${r.ratioX.toFixed(1)}x`.padStart(10)}` +
+          `${pct(r.worthCents / Math.max(1, base.worthCents)).padStart(9)}`,
       )
     }
     const five = readRow(world, w0 + 5 * WEEKS_PER_YEAR, inertia)
@@ -158,6 +186,11 @@ async function projectSave(path: string): Promise<void> {
       `      ⭐ five-year fall:  worth ${pct(1 - five.worthCents / Math.max(1, base.worthCents))}` +
         `   ·   income ${pct(1 - five.weeklyCents / Math.max(1, base.weeklyCents))}` +
         `   ·   fame ${pct(1 - five.fame / Math.max(1e-9, base.fame))}`,
+    )
+    console.log(
+      `      ⭐⭐ worth / a year of income over the WHOLE five years: ${lo.toFixed(1)}x – ${hi.toFixed(1)}x` +
+        `   (the multiple's own band is ${ECONOMY.business.merch.value.unknownX}x – ${ECONOMY.business.merch.value.maxX}x)` +
+        `   ·   three-year income fall ${pct(1 - readRow(world, w0 + 3 * WEEKS_PER_YEAR, inertia).weeklyCents / Math.max(1, base.weeklyCents))}`,
     )
     if (inertia && bands === SHIPPED_BANDS) {
       const s = base.signals
@@ -172,6 +205,88 @@ async function projectSave(path: string): Promise<void> {
     }
   }
   setBands(SHIPPED_BANDS)
+}
+
+// ---------------------------------------------------------------------------------------------
+// §1b THE TWO DIALS THE REVISION ADDS, SWEPT ON HIS OWN ROW
+//
+// ⚠ `retention` is not a guess and neither is the half-life ladder: both are chosen against a stated
+// criterion and the frontier either side of them is printed here so the trade stays the owner's.
+// ---------------------------------------------------------------------------------------------
+
+/** ⭐ THE RETENTION KNOB. CLI-only, restored by the caller, never persisted. */
+function setRetention(x: number): void {
+  ;(ECONOMY.business.merch.strength as { retention: number }).retention = x
+}
+
+/** ⭐ THE HALF-LIFE LADDER KNOB. Same rules. */
+function setHalfLives(ladder: readonly number[]): void {
+  ;(ECONOMY.fame as { shootFloorHalfLifeByBand: readonly number[] }).shootFloorHalfLifeByBand = ladder
+}
+
+const SHIPPED_RETENTION = ECONOMY.business.merch.strength.retention
+const SHIPPED_HALFLIVES = ECONOMY.fame.shootFloorHalfLifeByBand
+
+async function sweepSave(path: string): Promise<void> {
+  const bytes = new Uint8Array(readFileSync(path))
+  console.log(`\n  ⭐⭐⭐ §1b THE FRONTIER on ${basename(path).replace('.tsave', '')}, COMBINED arm`)
+  console.log(
+    `      ⚠ the sizing criterion for retention is the one documented case of an off-court income when the winning stops:`,
+  )
+  console.log(
+    `        Osaka ~$60M (2021) -> $12.0M (2024), −75% in three years with essentially no sponsors lost (research §4e).`,
+  )
+  console.log(
+    `      ${'retention'.padStart(10)}${'reach +5y'.padStart(11)}${'income now'.padStart(12)}${'income +3y'.padStart(12)}` +
+      `${'3y fall'.padStart(9)}${'income +5y'.padStart(12)}${'5y fall'.padStart(9)}${'worth +5y'.padStart(12)}` +
+      `${'5y fall'.padStart(9)}${'ratio band'.padStart(16)}`,
+  )
+  for (const r of [0.0, 0.5, 0.7, 0.75, 0.78, 0.8, 0.82, 0.85, 0.9, 0.95, 0.99]) {
+    setRetention(r)
+    const world = await decodeExportFile(bytes)
+    const w0 = world.week
+    const base = readRow(world, w0, true)
+    const three = readRow(world, w0 + 3 * WEEKS_PER_YEAR, true)
+    const five = readRow(world, w0 + 5 * WEEKS_PER_YEAR, true)
+    let lo = Infinity
+    let hi = 0
+    for (let w = w0; w <= w0 + 5 * WEEKS_PER_YEAR; w++) {
+      const row = readRow(world, w, true)
+      if (row.weeklyCents <= 0) continue
+      lo = Math.min(lo, row.ratioX)
+      hi = Math.max(hi, row.ratioX)
+    }
+    console.log(
+      `      ${r.toFixed(2).padStart(10)}${five.reach.toFixed(1).padStart(11)}` +
+        `${usd(base.weeklyCents * WEEKS_PER_YEAR).padStart(12)}${usd(three.weeklyCents * WEEKS_PER_YEAR).padStart(12)}` +
+        `${pct(1 - three.weeklyCents / Math.max(1, base.weeklyCents)).padStart(9)}` +
+        `${usd(five.weeklyCents * WEEKS_PER_YEAR).padStart(12)}` +
+        `${pct(1 - five.weeklyCents / Math.max(1, base.weeklyCents)).padStart(9)}` +
+        `${usd(five.worthCents).padStart(12)}${pct(1 - five.worthCents / Math.max(1, base.worthCents)).padStart(9)}` +
+        `${`${lo.toFixed(1)}x – ${hi.toFixed(1)}x`.padStart(16)}${r === SHIPPED_RETENTION ? '  <- shipped' : ''}`,
+    )
+  }
+  setRetention(SHIPPED_RETENTION)
+
+  console.log(`\n      the half-life ladder – his own row, and the shop row's «N years» is round 32 #3's binding criterion`)
+  console.log(`      ${'ladder'.padStart(20)}${'fame now'.padStart(10)}${'worth now'.padStart(13)}${'shop row'.padStart(10)}`)
+  for (const ladder of [
+    [52, 52, 52, 52],
+    [39, 45, 52, 65],
+    [26, 39, 52, 78],
+    [26, 45, 65, 91],
+    [26, 52, 78, 103],
+  ]) {
+    setHalfLives(ladder)
+    const world = await decodeExportFile(bytes)
+    const row = readRow(world, world.week, true)
+    console.log(
+      `      ${ladder.join('/').padStart(20)}${row.fame.toFixed(2).padStart(10)}${usd(row.worthCents).padStart(13)}` +
+        `${String(Math.round(row.multipleX)).padStart(10)}` +
+        `${ladder.join('/') === SHIPPED_HALFLIVES.join('/') ? '  <- shipped' : ''}`,
+    )
+  }
+  setHalfLives(SHIPPED_HALFLIVES)
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -344,7 +459,8 @@ function main(): void {
       `   ·   fame half-life ${ECONOMY.fame.halfLifeWeeks}w`,
   )
   console.log(
-    `  shoot floor by band: ${SHIPPED_BANDS.join(' / ')} points, half-life ${ECONOMY.fame.shootFloorHalfLifeWeeks}w` +
+    `  shoot floor by band: ${SHIPPED_BANDS.join(' / ')} points, half-lives ${ECONOMY.fame.shootFloorHalfLifeByBand.join('/')}w` +
+      `   ·   retention ${ECONOMY.business.merch.strength.retention}` +
       `   ·   mark floor ${usd(FLOOR_CENTS)} on a ${usd(PRICE_CENTS)} rung`,
   )
 
@@ -366,10 +482,47 @@ function main(): void {
   armSummary('B  inertia only', noCollab, (r) => r.worthCents)
   armSummary('C  collabs only', withCollab, (r) => r.flatWorthCents)
   armSummary('D  COMBINED (ships)', withCollab, (r) => r.worthCents)
+  // ⚠⚠ AND SINCE THE 31.08 REVISION #4 REACHES THE INCOME TOO, which is the whole of it. The line
+  // that stood here said «the income is untouched by #4 and moves only with #5» and it is no longer
+  // true: the memory is now IN the revenue. What is still true, and is the top-is-unmoved half, is
+  // that the PEAK income does not move – at a running peak `retention x strength < fame`, so the
+  // floor cannot bind there. Both numbers are printed so the claim is read rather than believed.
+  const peakIncome = (runs: CareerRun[], read: (r: WeekRow) => number): number =>
+    q(runs.map((r) => peakLive(r, read).value), 0.5) * WEEKS_PER_YEAR
   console.log(
-    `    ⚠ the income line is untouched by #4 and moves only with #5:` +
-      ` A/B median peak ${usd(q(noCollab.map((r) => peakLive(r, (x) => x.weeklyCents).value), 0.5) * WEEKS_PER_YEAR)}/yr` +
-      ` · C/D ${usd(q(withCollab.map((r) => peakLive(r, (x) => x.weeklyCents).value), 0.5) * WEEKS_PER_YEAR)}/yr`,
+    `    ⭐ PEAK income, floored vs pre-wave: A/B ${usd(peakIncome(noCollab, (x) => x.weeklyCents))}/yr` +
+      ` vs ${usd(peakIncome(noCollab, (x) => flatWeeklyCents(x.signals)))}/yr` +
+      `  ·  C/D ${usd(peakIncome(withCollab, (x) => x.weeklyCents))}/yr` +
+      ` vs ${usd(peakIncome(withCollab, (x) => flatWeeklyCents(x.signals)))}/yr`,
+  )
+  // ...and the income the floor actually lifts, measured where it lives: the LAST live week of a
+  // career at least three years past its own peak fame.
+  const lateLift: number[] = []
+  const lateGap: number[] = []
+  for (const run of withCollab) {
+    const peak = peakLive(run, (r) => r.signals.fame)
+    const idx = run.rows.findIndex((r) => r.week === peak.row.week)
+    if (peak.value <= 0 || idx < 0 || run.lastAliveIndex - idx < 3 * WEEKS_PER_YEAR) continue
+    const row = run.rows[run.lastAliveIndex]
+    const flat = flatWeeklyCents(row.signals)
+    if (flat <= 0) continue
+    lateLift.push(row.weeklyCents / flat)
+    lateGap.push(row.signals.strength / Math.max(1e-9, row.signals.fame))
+  }
+  // ⚠⚠ AND THE DIAGNOSTIC THAT EXPLAINS THE ANSWER RATHER THAN LEAVING IT TO BE GUESSED AT. The
+  // floor binds only where `retention x strength > fame`, i.e. where the stock is more than
+  // `1/retention` times this week's attention. If the median gap below is under that threshold the
+  // population simply has not declined far enough to need a floor – which is a finding about the
+  // BENCH (its careers are alive and competing at week 780) and not about the feature.
+  console.log(
+    `    ⭐⭐ ...and 3y+ past her own peak the INCOME is ${q(lateLift, 0.5).toFixed(2)}x median / ` +
+      `${Math.max(...lateLift, 0).toFixed(2)}x best what it would be without the floor ` +
+      `(${lateLift.length} careers, ${lateLift.filter((x) => x > 1.0001).length} of them lifted at all)`,
+  )
+  console.log(
+    `    ⚠ the reason, measured: strength / fame at that week runs ${q(lateGap, 0.5).toFixed(2)}x median, ` +
+      `${Math.max(...lateGap, 0).toFixed(2)}x worst, and the floor needs ` +
+      `${(1 / ECONOMY.business.merch.strength.retention).toFixed(2)}x before it binds at all`,
   )
 
   // ---- §3 THE TOP DOES NOT MOVE ---------------------------------------------------------------
@@ -403,6 +556,33 @@ function main(): void {
   }
   console.log(`    ⭐ and at each career's OWN peak-fame week: unchanged for ${withCollab.length - peakMoved}/${withCollab.length} careers; ` +
     `worst |delta| ${usd(peakWorst)}`)
+
+  // ---- §3b ⭐⭐⭐ THE RATIO, ACROSS EVERY LIVE CAREER-WEEK OF THE RUN ---------------------------
+  // The revision's own acceptance: «worth / annual income must stay inside a defensible band at
+  // EVERY point». With the separate worth floor removed the ratio IS `brandMultipleX`, so the band
+  // is the multiple's own – bounded by construction rather than by tuning. This measures it anyway,
+  // because a claim of the form «by construction» is exactly the kind that hides an arithmetic slip.
+  const V = ECONOMY.business.merch.value
+  let ratioLo = Infinity
+  let ratioHi = 0
+  let ratioN = 0
+  let outside = 0
+  for (const run of withCollab) {
+    for (const row of run.rows) {
+      const annual = brandWeeklyGrossCents(row.signals) * WEEKS_PER_YEAR
+      if (annual <= 0) continue
+      const ratio = row.worthCents / annual
+      ratioN++
+      ratioLo = Math.min(ratioLo, ratio)
+      ratioHi = Math.max(ratioHi, ratio)
+      if (ratio < V.unknownX - 1e-6 || ratio > V.maxX + 1e-6) outside++
+    }
+  }
+  console.log(
+    `\n  ⭐⭐⭐ §3b WORTH / A YEAR OF INCOME across ${ratioN.toLocaleString('en-US')} earning career-weeks: ` +
+      `${ratioLo.toFixed(2)}x – ${ratioHi.toFixed(2)}x, ${outside} outside the multiple's band ` +
+      `[${V.unknownX}x, ${V.maxX}x]`,
+  )
 
   namedCases()
 
@@ -585,5 +765,106 @@ function namedCases(): void {
   )
 }
 
+// ---------------------------------------------------------------------------------------------
+// §6 ⭐⭐⭐ REACH BUYS DURABILITY – two careers, the SAME delivered shoots, different bands
+//
+// «чем больше она была в сильных контрактах – тем больше у нее велосити». The claim is about YEARS
+// LATER and not about the shoot week, so a comparison taken in the shoot week proves nothing: the
+// sizes alone already differ 2.75x there and always did. What this measures is the SPREAD OPENING.
+// ---------------------------------------------------------------------------------------------
+
+function durabilityCareer(band: number, shootWeeks: number[], at: number, seasons: number, endRank: number): WorldState {
+  const world = createWorld(`r32-durable-${band}`)
+  world.week = at
+  world.seasonHistory = []
+  for (let i = 0; i < seasons; i++) {
+    world.seasonHistory.push({
+      seasonIndex: i,
+      endRank,
+      points: 0,
+      wins: 26,
+      losses: 14,
+      byTrack: {
+        domestic: { points: 0, wins: 0, losses: 0 },
+        itf: { points: 0, wins: 0, losses: 0 },
+        wta: { endRank, points: 0, wins: 26, losses: 14 },
+      },
+      fundsDeltaCents: 0,
+      endFundsCents: 0,
+    })
+  }
+  world.offers = [
+    {
+      id: 'ad-0',
+      kind: 'ad',
+      week: 1,
+      deadlineWeek: 6,
+      state: 'signed',
+      terms: {
+        brand: 'House',
+        category: 'watches',
+        cashCents: ECONOMY.advertising.categories.watches.feeCentsByBand[band]!,
+        termWeeks: at,
+        shootCount: 2,
+        shootWeeks,
+      },
+    },
+  ]
+  return world
+}
+
+function durability(): void {
+  console.log(`\n  ⭐⭐⭐ §6 REACH BUYS DURABILITY – the SAME delivered shoots, at the weakest band and the strongest`)
+  console.log(`      half-life ladder: ${ECONOMY.fame.shootFloorHalfLifeByBand.join(' / ')} weeks  ·  sizes ${SHIPPED_BANDS.join(' / ')} points`)
+  const top = ECONOMY.fame.shootFloorHalfLifeByBand.length - 1
+  // ⚠⚠ TWO SHAPES, AND THE FIRST ONE IS THE CASE THE ITEM IS FOR. A career with a big tennis floor
+  // swamps the collaboration term whatever band it was at – that is `fameFloorOf`'s title currency
+  // and is filed rather than fixed – so a divergence measured only there would understate the effect
+  // to the point of hiding it. The EARLY career is where «a lever on fame» means anything.
+  for (const [label, seasons, endRank, years, perYear] of [
+    ['⭐ THE EARLY CAREER the item is for – 3 seasons ended #45, four shoots a year', 3, 45, 4, 4],
+    ['a settled top-20 career – 6 seasons ended #18, two shoots a year', 6, 18, 6, 2],
+  ] as [string, number, number, number, number][]) {
+    const last = years * WEEKS_PER_YEAR
+    const shoots: number[] = []
+    for (let k = 0; k < years * perYear; k++) shoots.push(last - 4 - Math.round((k * WEEKS_PER_YEAR) / perYear))
+    console.log(`\n      ── ${label}`)
+    console.log(
+      `      ${'years after the last shoot'.padEnd(28)}${'band 0 fame'.padStart(13)}${'band 3 fame'.padStart(13)}` +
+        `${'spread'.padStart(9)}${'band 0 worth'.padStart(14)}${'band 3 worth'.padStart(14)}${'spread'.padStart(9)}`,
+    )
+    for (const y of [0, 1, 2, 3, 5]) {
+      const week = last + y * WEEKS_PER_YEAR
+      const weak = durabilityCareer(0, shoots, week, seasons, endRank)
+      const strong = durabilityCareer(top, shoots, week, seasons, endRank)
+      // ⚠ THE SHOOT TERM ALONE for the fame columns, not the whole floor: both careers carry the same
+      // banked seasons, so subtracting a shootless twin isolates what the collaborations bought.
+      const bare = durabilityCareer(0, [], week, seasons, endRank)
+      const base = fameFloorOf(bare, week)
+      const a = fameFloorOf(weak, week) - base
+      const b = fameFloorOf(strong, week) - base
+      const wa = brandGrossWorthCents(brandSignalsOf(weak, week), BASE_X)
+      const wb = brandGrossWorthCents(brandSignalsOf(strong, week), BASE_X)
+      console.log(
+        `      ${(y === 0 ? 'the shoot week itself' : `+${y} year${y > 1 ? 's' : ''}`).padEnd(28)}` +
+          `${a.toFixed(4).padStart(13)}${b.toFixed(4).padStart(13)}${`${(b / Math.max(1e-12, a)).toFixed(1)}x`.padStart(9)}` +
+          `${usd(wa).padStart(14)}${usd(wb).padStart(14)}${`${(wb / Math.max(1, wa)).toFixed(2)}x`.padStart(9)}`,
+      )
+    }
+    // ⚠ THE CONTROL: on the SHIPPED-BEFORE flat 52w ladder the spread never opens at all.
+    const week = last + 3 * WEEKS_PER_YEAR
+    setHalfLives([52, 52, 52, 52])
+    const fa = brandGrossWorthCents(brandSignalsOf(durabilityCareer(0, shoots, week, seasons, endRank), week), BASE_X)
+    const fb = brandGrossWorthCents(brandSignalsOf(durabilityCareer(top, shoots, week, seasons, endRank), week), BASE_X)
+    setHalfLives(SHIPPED_HALFLIVES)
+    console.log(
+      `      ⚠ the control – the flat 52w ladder at +3 years: ${usd(fa)} vs ${usd(fb)} = ` +
+        `${(fb / Math.max(1, fa)).toFixed(2)}x, against ${(brandGrossWorthCents(brandSignalsOf(durabilityCareer(top, shoots, week, seasons, endRank), week), BASE_X) / Math.max(1, brandGrossWorthCents(brandSignalsOf(durabilityCareer(0, shoots, week, seasons, endRank), week), BASE_X))).toFixed(2)}x on the shipped ladder`,
+    )
+  }
+}
+
 if (SAVES.length > 0) for (const path of SAVES) await projectSave(path)
+if (SAVES.length > 0 && argv.includes('--sweep')) for (const path of SAVES) await sweepSave(path)
+durability()
 main()

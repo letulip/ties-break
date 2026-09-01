@@ -13,11 +13,20 @@
 // weeks, income goes as fame², and since round 32 #3 the multiple rises with fame too, so worth goes
 // as fame³ and falls eightfold every two years.
 //
+// ⭐⭐⭐ AND THE 31.08 REVISION, WHICH IS WHY SEVERAL ARMS BELOW POINT SOMEWHERE ELSE THAN THEY DID.
+// He read the shipped measurement and stopped it: «меня смущает вот это: На пятом году бренд стоит
+// $166 060 при годовом доходе $1 352». #4 had floored the WORTH and left the INCOME a bare function
+// of fame, so a valuation held while its earnings evaporated under it. The memory moved into the
+// REVENUE – `brandReachOf` = `max(fame, retention x strength)` – the separate worth floor
+// (`brandBuiltSignals`) was deleted, and `worth / a year of income` is the multiple again.
+//
 // ⚠ WHAT THIS FILE HOLDS:
 //   §1  the kernel's two ends – fresh is 1, ancient is `floorShare`, and it never goes below;
-//   §2  ⭐⭐⭐ THE TOP DOES NOT MOVE. Strength equals fame at the cap and at every running peak, so the
-//       best career in the game prices exactly as it did – by construction, not by a clamp;
-//   §3  ⭐⭐ THE ASSET HOLDS WHILE THE INCOME BREATHES – five years with nothing won, on his shape;
+//   §2  ⭐⭐⭐ THE TOP DOES NOT MOVE. Strength equals fame at the cap and at every running peak and
+//       `retention < 1`, so the best career in the game prices exactly as it did – both its WORTH
+//       and, since the revision, its INCOME – by construction rather than by a clamp;
+//   §3  ⭐⭐ THE INCOME IS WHAT STOPS COLLAPSING, and the ratio it is priced at stays in band –
+//       five years with nothing won, on his shape;
 //   §4  the floor is a share of HER OWN peak – personal, never a global mark;
 //   §5  ⭐⭐ THE SAVE. The v69 pin, «no existing career jumps», idempotence, and every older schema;
 //   §6  ⭐⭐ #5: a delivered shoot ADDS to the floor, by the deal's band, on a SHORTER half-life;
@@ -37,6 +46,8 @@ import { readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import {
   brandGrossWorthCents,
+  brandMultipleX,
+  brandReachOf,
   brandSignalsOf,
   brandStrengthAt,
   brandWeeklyGrossCents,
@@ -142,10 +153,15 @@ function signDeal(world: WorldState, id: string, band: number, shootWeeks: numbe
   })
 }
 
-/** the pre-#4 worth, THROUGH THE SHIPPED FUNCTION: `brandBuiltSignals` substitutes `strength` for
- *  `fame`, so a signal set whose strength IS its fame reduces `brandGrossWorthCents` to the
- *  expression it had before this wave, term for term. Nothing here can drift from the engine. */
+/** the pre-wave worth, THROUGH THE SHIPPED FUNCTION. Since the 31.08 revision the whole of #4
+ *  reaches the pricing through `brandReachOf` = `max(fame, retention x strength)`; hand it a signal
+ *  set whose strength IS its fame and – because `retention < 1` – the max resolves to `fame`, so
+ *  `brandGrossWorthCents` reduces to the expression it had before this wave, term for term. Nothing
+ *  here can drift from the engine. */
 const flatWorth = (s: BrandSignals): number => brandGrossWorthCents({ ...s, strength: s.fame }, BASE_X)
+
+/** ...and the same identity for the INCOME, which the revision moved onto the reach as well. */
+const flatWeekly = (s: BrandSignals): number => brandWeeklyGrossCents({ ...s, strength: s.fame })
 
 describe('round 32 #4 §1 – the kernel: a years-long fade with a floor', () => {
   it('⭐ fresh is 1, and the fade is a half-life measured in YEARS rather than in weeks', () => {
@@ -224,6 +240,41 @@ describe('round 32 #4 §2 – ⭐⭐⭐ THE TOP OF THE SHELF DOES NOT MOVE', () 
     expect(brandGrossWorthCents(s, BASE_X)).toBe(flatWorth(s))
   })
 
+  it('⭐⭐⭐ the REACH is fame wherever fame is at its own maximum – `retention < 1` is the proof', () => {
+    // ⚠⚠ THE 31.08 REVISION MOVED THE MEMORY INTO THE INCOME, so «the top does not move» is now a
+    // claim about `brandReachOf` and not only about the worth. It holds for the same reason and by
+    // the same two lines: `brandStrengthAt` pins strength to fame at the cap and at every running
+    // peak, and `retention` is strictly below 1 – so `retention x strength < fame` exactly where the
+    // best careers live and the max resolves to fame. If `retention` ever reaches 1 this arm reddens,
+    // which is what makes the constant's own bound load-bearing rather than decorative.
+    expect(ECONOMY.business.merch.strength.retention, 'strictly below 1, or the top moves').toBeLessThan(1)
+    expect(ECONOMY.business.merch.strength.retention, '...and a real share of the stock').toBeGreaterThan(0)
+    const atCap: BrandSignals = {
+      fame: CAP, strength: CAP, proSeasons: 14, topSeasons: 8, finalsLost: 19, roomSize: 4_743, winRate: 0.7,
+    }
+    expect(brandReachOf(atCap), 'at the cap the reach IS the cap').toBe(CAP)
+    expect(brandWeeklyGrossCents(atCap), '...so the INCOME at the top is the pre-wave one, to the cent')
+      .toBe(flatWeekly(atCap))
+
+    // ...and on a real career, at every week fame is at its own running maximum.
+    const w = shopper('r32-4-reach-peak')
+    winTitles(w, 'wta1000', [30, 90, 150])
+    winTitles(w, 'wta500', [60, 120])
+    proSeasons(w, 4, 6, 40, 12)
+    let best = -1
+    let checked = 0
+    for (let week = 0; week <= 6 * WEEKS_PER_YEAR; week++) {
+      const f = fameAt(w, week)
+      if (f <= best || f <= 0) continue
+      best = f
+      checked++
+      const s = brandSignalsOf(w, week)
+      expect(brandReachOf(s), `week ${week} is a running peak`).toBeCloseTo(s.fame, 9)
+      expect(brandWeeklyGrossCents(s), `week ${week}: the income is untouched there`).toBe(flatWeekly(s))
+    }
+    expect(checked, 'and the sweep really found running peaks to ask about').toBeGreaterThan(3)
+  })
+
   it('⚠ strength is NEVER below fame, on every week of a real career – so nobody loses money', () => {
     const w = shopper('r32-4-monotone')
     winTitles(w, 'wta500', [40, 90, 150])
@@ -250,35 +301,91 @@ describe('round 32 #4 §3 – ⭐⭐ THE ASSET HOLDS WHILE THE INCOME BREATHES',
     return w
   }
 
-  it('⭐⭐⭐ five years with nothing new won: the worth falls FAR less than the income does', () => {
+  it('⭐⭐⭐ five years with nothing new won: the INCOME is what stops collapsing', () => {
+    // ⚠⚠ THIS ARM IS AIMED WHERE THE 31.08 REVISION AIMED IT, and the claim it USED to make is
+    // written out rather than deleted. It asserted «the worth falls FAR less than the income does» –
+    // which was true of what #4 shipped and was exactly the defect: a valuation floored while its
+    // earnings evaporated under it. THE OWNER: «меня смущает вот это: На пятом году бренд стоит
+    // $166 060 при годовом доходе $1 352». The memory is now in the REVENUE, so what has to hold is
+    // the income, and the worth follows it as a multiple.
     const w = hisShape()
     const now = brandSignalsOf(w, w.week)
     const later = brandSignalsOf(w, w.week + 5 * WEEKS_PER_YEAR)
     const incomeFall = 1 - brandWeeklyGrossCents(later) / brandWeeklyGrossCents(now)
+    const bareFall = 1 - flatWeekly(later) / flatWeekly(now)
     const wornFall = 1 - flatWorth(later) / flatWorth(now)
     const heldFall = 1 - brandGrossWorthCents(later, BASE_X) / brandGrossWorthCents(now, BASE_X)
 
-    // ⚠⚠ THE DEFECT, RE-MEASURED ON THE MIRROR: before this wave the worth fell HARDER than the
-    // income, because it went as fame³ against the income's fame². That is what a 99% capital loss
-    // in five years is made of.
-    expect(wornFall, 'the pre-wave worth falls at least as hard as the income').toBeGreaterThan(incomeFall)
-    // ...and after it, the asset holds. His acceptance: «a decline of the same ORDER as the income's,
-    // not its cube» – comfortably met, because the stock decays on years and the income on weeks.
-    expect(heldFall, 'the held worth falls less than the income').toBeLessThan(incomeFall)
-    expect(heldFall, '...and much less than it used to').toBeLessThan(wornFall - 0.1)
-    expect(heldFall, 'a 99% capital loss is what this feature exists to end').toBeLessThan(0.9)
+    // ⭐⭐ THE FEATURE: five years of silence used to take all but a hundredth of the revenue.
+    expect(bareFall, 'the pre-wave income all but disappears').toBeGreaterThan(0.95)
+    expect(incomeFall, 'and with the floor it does not').toBeLessThan(bareFall - 0.05)
+    // ⭐⭐⭐ AND THE WORTH NOW FALLS WITH IT rather than floating free of it – «of the same ORDER as
+    // the fall in income» is the acceptance, and this is that sentence as arithmetic. The pre-wave
+    // worth fell HARDER than its own income (fame³ against fame²) and it still does; what changed is
+    // that both numbers are now much smaller.
+    expect(wornFall, 'the pre-wave worth fell at least as hard as the pre-wave income').toBeGreaterThan(bareFall)
+    expect(heldFall, 'the held worth is of the same order as its own income').toBeLessThan(incomeFall + 0.1)
+    expect(heldFall, '...and far shallower than the pre-wave collapse').toBeLessThan(wornFall - 0.05)
   })
 
-  it('⚠ the INCOME is untouched by #4 – it still reads fame, week by week', () => {
-    // The split, asserted rather than described: income is a flow and follows attention. If this ever
-    // goes green on a strength-priced income, the two clocks have been collapsed back into one.
+  it('⭐⭐⭐ worth / a year of income IS the multiple, at EVERY week of the five years', () => {
+    // ⚠⚠ THE HEADLINE ACCEPTANCE OF THE REVISION, and it holds BY CONSTRUCTION rather than by tuning:
+    // with the separate worth floor deleted, `brandGrossWorthCents` is `income x 52 x multiple` and
+    // nothing stands between the two, so the ratio is bounded by the multiple's own band for every
+    // career at every week. Round 30 #9's claim, which #4 had to record as overturned, is restored.
+    const V = ECONOMY.business.merch.value
     const w = hisShape()
-    for (const offset of [0, WEEKS_PER_YEAR, 3 * WEEKS_PER_YEAR]) {
+    for (let offset = 0; offset <= 5 * WEEKS_PER_YEAR; offset += 4) {
       const s = brandSignalsOf(w, w.week + offset)
-      expect(brandWeeklyGrossCents(s), `+${offset}w`).toBe(brandWeeklyGrossCents({ ...s, strength: s.fame }))
-      expect(s.strength, '...while the stock has genuinely diverged from fame').toBeGreaterThan(
-        offset === 0 ? s.fame - 1e-9 : s.fame,
-      )
+      const annual = brandWeeklyGrossCents(s) * WEEKS_PER_YEAR
+      if (annual <= 0) continue
+      const ratio = brandGrossWorthCents(s, BASE_X) / annual
+      expect(ratio, `+${offset}w: the ratio IS the multiple`).toBeCloseTo(brandMultipleX(s, BASE_X), 4)
+      expect(ratio, `+${offset}w: inside the multiple's own band`).toBeGreaterThanOrEqual(V.unknownX - 1e-6)
+      expect(ratio, `+${offset}w: inside the multiple's own band`).toBeLessThanOrEqual(V.maxX + 1e-6)
+    }
+  })
+
+  it('⭐⭐⭐ BOTH HALVES OF THE WORTH READ ONE CLOCK – same reach, same income AND same multiple', () => {
+    // ⚠⚠ THE ARM «the ratio IS the multiple» CANNOT CATCH THIS ON ITS OWN, which is why this one
+    // exists: it compares the ratio against `brandMultipleX` itself, so a multiple that quietly went
+    // back to reading raw fame would keep that identity and pass. Measured – the mutation was run and
+    // came back green before this arm was written.
+    //
+    // ⭐ THE CLAIM: a business is as big as the audience it reaches, so the SIZE term and the REVENUE
+    // term must be asked about the same audience. Two careers with an identical reach built from
+    // different halves – one at her peak, one living off the stock – price identically.
+    const R = ECONOMY.business.merch.strength.retention
+    const record = { proSeasons: 8, topSeasons: 3, finalsLost: 9, roomSize: 4_000, winRate: 0.7 }
+    const loud: BrandSignals = { fame: 10, strength: 10, ...record }
+    const remembered: BrandSignals = { fame: 5, strength: 10 / R, ...record }
+    expect(brandReachOf(loud), 'the two reaches are the same number').toBeCloseTo(brandReachOf(remembered), 9)
+    expect(brandWeeklyGrossCents(remembered), 'so the income is the same').toBe(brandWeeklyGrossCents(loud))
+    expect(brandMultipleX(remembered, BASE_X), '...and so is the multiple').toBeCloseTo(brandMultipleX(loud, BASE_X), 9)
+    expect(brandGrossWorthCents(remembered, BASE_X), '...and therefore the worth, to the cent')
+      .toBe(brandGrossWorthCents(loud, BASE_X))
+    // ⚠ AND THE FIXTURE IS NOT VACUOUS: the two careers really do differ in this week's attention.
+    expect(remembered.fame).toBeLessThan(loud.fame / 1.5)
+  })
+
+  it('⭐⭐ the INCOME carries the memory now, and that is the whole of the revision', () => {
+    // ⚠ THE ARM THIS REPLACED SAID «the INCOME is untouched by #4 – it still reads fame, week by
+    // week», and it was the defect stated as a guarantee. It now reads the REACH, and the direction
+    // is asserted so a revert cannot pass quietly.
+    const w = hisShape()
+    // ⚠ THE FLOOR DOES NOT BIND THE MOMENT THE DECLINE STARTS, AND THAT IS THE DESIGN RATHER THAN A
+    // SHORTFALL: `retention < 1`, so it takes hold only once fame has fallen to `retention` of the
+    // stock. A year in it has not; by two it has. Both halves are asserted so a retention pushed to
+    // 1 – which would move the top of the shelf – reddens the arm above instead of passing here.
+    const early = brandSignalsOf(w, w.week + WEEKS_PER_YEAR)
+    expect(early.strength, 'a year in the stock is already above fame').toBeGreaterThan(early.fame)
+    expect(brandWeeklyGrossCents(early), '...but the floor has not taken hold yet').toBe(flatWeekly(early))
+    for (const offset of [2 * WEEKS_PER_YEAR, 3 * WEEKS_PER_YEAR, 5 * WEEKS_PER_YEAR]) {
+      const s = brandSignalsOf(w, w.week + offset)
+      expect(s.strength, `+${offset}w: the stock has genuinely diverged from fame`).toBeGreaterThan(s.fame)
+      expect(brandReachOf(s), `+${offset}w: ...so the reach is above this week's noise`).toBeGreaterThan(s.fame)
+      expect(brandWeeklyGrossCents(s), `+${offset}w: and the income is above the bare one`)
+        .toBeGreaterThan(flatWeekly(s))
     }
   })
 })
@@ -431,19 +538,78 @@ describe('round 32 #5 §6 – ⭐⭐ a delivered shoot ADDS to the floor, by the
     // HIS RULING, both halves separated: the CAMPAIGN'S NOISE fades faster than a championship
     // («мало кто смотрит журналы 2 годичной давности»); the ASSOCIATION is permanent and is carried
     // by BRAND STRENGTH, not by a second permanent term in here.
-    expect(ECONOMY.fame.shootFloorHalfLifeWeeks, 'faster than a title')
-      .toBeLessThan(ECONOMY.fame.halfLifeWeeks)
-    expect(shootFloorDecayAt(0)).toBe(1)
-    expect(shootFloorDecayAt(ECONOMY.fame.shootFloorHalfLifeWeeks)).toBeCloseTo(0.5, 10)
-    // ⚠⚠ NO PERMANENT RESIDUE, WHICH IS WHAT KEEPS THE TERM BOUNDED WITHOUT A CAP PICKED OUT OF THE
-    // AIR. A permanent per-shoot addition accumulates without limit over a twenty-season career.
-    expect(shootFloorDecayAt(40 * WEEKS_PER_YEAR), 'forty years on, nothing is left of the campaign')
-      .toBeLessThan(1e-6)
+    const ladder = ECONOMY.fame.shootFloorHalfLifeByBand
+    for (let b = 0; b < ladder.length; b++) {
+      expect(ladder[b], `band ${b} is forgotten faster than a title`).toBeLessThan(ECONOMY.fame.halfLifeWeeks)
+      expect(shootFloorDecayAt(0, b), `band ${b} is fresh at zero`).toBe(1)
+      expect(shootFloorDecayAt(ladder[b]!, b), `band ${b} is half at its own half-life`).toBeCloseTo(0.5, 10)
+      // ⚠⚠ NO PERMANENT RESIDUE, WHICH IS WHAT KEEPS THE TERM BOUNDED WITHOUT A CAP PICKED OUT OF
+      // THE AIR. A permanent per-shoot addition accumulates without limit over a twenty-season career.
+      expect(shootFloorDecayAt(40 * WEEKS_PER_YEAR, b), `band ${b}: forty years on, nothing is left`)
+        .toBeLessThan(1e-6)
+    }
     const w = parkAt(shopper('r32-5-decay'), 3 * WEEKS_PER_YEAR)
     signDeal(w, 'a', 3, [w.week - 2])
     const fresh = fameFloorOf(w, w.week)
     expect(fameFloorOf(w, w.week + 40 * WEEKS_PER_YEAR), 'and it really does leave the floor')
       .toBeLessThan(fresh * 1e-3)
+  })
+
+  it('⭐⭐⭐ REACH BUYS DURABILITY – the same shoots at a stronger band are still there years later', () => {
+    // THE OWNER (31.08): «у нас есть популярные сайты, журналы и бренды, а есть менее популярные …
+    // чем больше она была в сильных контрактах – тем больше у нее велосити». What shipped first
+    // scaled only the SIZE by the band and forgot every band at the same 52 weeks.
+    //
+    // ⚠⚠ AND THE TEST HAS TO BE ABOUT YEARS LATER, NOT ABOUT THE SHOOT WEEK – the sizes alone already
+    // separate the bands there and always did, so a shoot-week comparison proves nothing about
+    // durability. What is asserted is that the GAP OPENS: the ratio between the two floors at three
+    // years is far larger than the ratio in the shoot week, which cannot happen on a flat ladder.
+    const ladder = ECONOMY.fame.shootFloorHalfLifeByBand
+    const top = ladder.length - 1
+    expect(ladder[top], 'the global house is remembered longest').toBeGreaterThan(ladder[0]!)
+    for (let b = 1; b < ladder.length; b++) {
+      expect(ladder[b], `band ${b} outlasts band ${b - 1}`).toBeGreaterThan(ladder[b - 1]!)
+    }
+
+    // ⚠⚠ ONE SEED FOR BOTH BANDS, AND THAT IS NOT COSMETIC. The first draft of this arm seeded the
+    // two careers on their own band and measured two DIFFERENT careers – the confound CLAUDE.md's
+    // «prove the arm contains both the change and its reader» note is about, arriving from the other
+    // side. Everything below is the same career; the band index is the only thing that varies.
+    // ⚠ AND A BARE CAREER RATHER THAN `shopper`'s, because `shopper` walks twelve weeks and arrives
+    // carrying a floor of its own – which would drown a term this item is for in one it is not.
+    // This is the EARLY career the lever exists for: three seasons ended #45, a deal at two shoots a
+    // season, and no title anywhere.
+    const shoots = Array.from({ length: 12 }, (_, k) => 3 * WEEKS_PER_YEAR - 4 - k * 13).filter((x) => x > 0)
+    const career = (band: number | null, week: number): WorldState => {
+      const w = parkAt(createWorld('r32-5-durable'), week)
+      proSeasons(w, 3, 45, 26, 14)
+      if (band !== null) signDeal(w, 'd', band, shoots)
+      return w
+    }
+    // ⚠ THE SHOOT TERM ALONE. The shootless twin carries the SAME three banked seasons, so this
+    // subtraction isolates what the collaborations bought and nothing else – a baseline that forgot
+    // the seasons would drown the effect in a floor both careers already had.
+    const at = (band: number, week: number): number =>
+      fameFloorOf(career(band, week), week) - fameFloorOf(career(null, week), week)
+    const fresh = at(top, 3 * WEEKS_PER_YEAR) / at(0, 3 * WEEKS_PER_YEAR)
+    const late = at(top, 6 * WEEKS_PER_YEAR) / at(0, 6 * WEEKS_PER_YEAR)
+    expect(late, 'three years on the gap is far wider than it was in the shoot week')
+      .toBeGreaterThan(fresh * 4)
+    // ⚠ AND THE WORTH FEELS IT, which is the half a player can see. The strength stock compresses the
+    // difference – it remembers both careers' peaks – so this is a real number rather than a large one.
+    const worthAt = (band: number, week: number): number =>
+      brandGrossWorthCents(brandSignalsOf(career(band, week), week), BASE_X)
+    const spread = worthAt(top, 6 * WEEKS_PER_YEAR) / worthAt(0, 6 * WEEKS_PER_YEAR)
+    expect(spread, 'three years after the last shoot the stronger shelf is still worth visibly more')
+      .toBeGreaterThan(1.25)
+    // ⚠⚠ AND AGAINST ITS OWN CONTROL, which is the claim the extension actually makes: on the FLAT
+    // 52-week ladder that shipped first, the same two careers are much closer together three years
+    // on. A test that only asserted «they differ» would pass on the flat ladder too.
+    const flat = ECONOMY.fame.shootFloorHalfLifeByBand
+    ;(ECONOMY.fame as { shootFloorHalfLifeByBand: readonly number[] }).shootFloorHalfLifeByBand = flat.map(() => 52)
+    const flatSpread = worthAt(top, 6 * WEEKS_PER_YEAR) / worthAt(0, 6 * WEEKS_PER_YEAR)
+    ;(ECONOMY.fame as { shootFloorHalfLifeByBand: readonly number[] }).shootFloorHalfLifeByBand = flat
+    expect(spread, 'the ladder is what opens the gap, not the sizes').toBeGreaterThan(flatSpread * 1.1)
   })
 })
 
@@ -555,6 +721,26 @@ describe('round 32 §9 – ⭐⭐⭐ NOTHING WRITES THE PIN BUT THE MIGRATION', 
 
 // ⚠⚠ MUTATION LOG – each applied ALONE to the shipped source and reverted, on this branch.
 //
+// ⭐ THE REVISION'S OWN FOUR ARE 13-16; 1-12 are the first pass's and were re-run against the revised
+// source, with the two that changed meaning noted in place.
+//
+// 13. `brandReachOf` reduced to `signals.fame` (the floor deleted)
+//     -> §3 «the INCOME is what stops collapsing» RED, §3 «the INCOME carries the memory» RED;
+//        §2 «the REACH is fame wherever fame is at its own maximum» GREEN – which is exactly the
+//        shape a change that keeps the top and loses the feature must have.
+// 14. `strength.retention` set to 1
+//     -> §2 «`retention < 1` is the proof» RED, and §3 «the INCOME carries the memory» RED with it
+//        (the floor starts binding the week after the peak). The top of the shelf moves, which is
+//        what that bound exists to forbid.
+// 15. `shootFloorHalfLifeByBand` flattened to one half-life for every band
+//     -> §6 «REACH BUYS DURABILITY» RED; §6 «by the deal's band» still GREEN – the sizes are a
+//        different claim and the mutation must not touch it.
+// 16. ⭐⭐ `brandMultipleX` pointed back at `signals.fame` instead of the reach
+//     -> ⚠⚠ RAN GREEN THE FIRST TIME, AND THAT IS WHY §3's «BOTH HALVES READ ONE CLOCK» EXISTS.
+//        «worth / a year of income IS the multiple» compares the ratio against `brandMultipleX`
+//        itself, so a multiple that quietly moved to a different clock keeps the identity and passes.
+//        With the new arm the mutation is RED, and it is the only arm that catches it.
+//
 //  1. `strengthDecayAt` floor removed (`Math.max(S.floorShare, …)` -> the bare power)
 //     -> §1 «never falls below floorShare» RED (3 arms), §4 «a share of her own peak» RED.
 //  2. `brandStrengthAt` week-itself candidate deleted
@@ -562,17 +748,17 @@ describe('round 32 §9 – ⭐⭐⭐ NOTHING WRITES THE PIN BUT THE MIGRATION', 
 //  3. `brandStrengthAt` seed cut-off removed (candidates from -1 always)
 //     -> §5 «the v69 pin makes an existing career read the SAME brand value» RED.
 //  4. `brandGrossWorthCents` reverted to pricing at `signals` rather than `brandBuiltSignals`
-//     -> §3 «the worth falls FAR less than the income» RED, §5 «unchanged to the cent» still green
-//        (the pin makes strength = fame there, which is the point), §2 green – exactly the shape a
-//        change that keeps the top and loses the feature should have.
+//     ⚠ SUPERSEDED BY THE REVISION: `brandBuiltSignals` no longer exists, and the mutation it names
+//     is now the shipped code. Mutation 13 is what took its place.
 //  5. `strength.halfLifeWeeks` set to `ECONOMY.fame.halfLifeWeeks`
 //     -> §1 «slower than fame's» RED.
 //  6. the collaboration term deleted from `fameFloorOf`
 //     -> §6 «the addition is on the floor» RED, §6 «by the deal's band» RED, §7 «BOTH» RED.
 //  7. `shootFloorByBand` flattened to a constant
 //     -> §6 «by the deal's band» RED (the monotone sweep), everything else green.
-//  8. `shootFloorHalfLifeWeeks` set to `fame.halfLifeWeeks`
-//     -> §6 «shorter than a title's» RED.
+//  8. `shootFloorHalfLifeByBand` set to `fame.halfLifeWeeks` throughout (was `shootFloorHalfLifeWeeks`
+//     before the 31.08 extension made it a ladder)
+//     -> §6 «shorter than a title's» RED on every band.
 //  9. `adBandOfTerms` walking the ladder from the bottom instead of the top
 //     -> §6 «read off the cheque» RED (bands 1..3 all answer 0).
 // 10. `fameEventWeeks` dating a shoot at `w` instead of `w + 1`

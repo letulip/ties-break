@@ -1940,13 +1940,38 @@ export const ECONOMY = {
      *  Faro Automobiles» – does not expire, and it is carried by BRAND STRENGTH
      *  (`business.merch.strength`), not by a second permanent term in here.
      *
-     *  ⚠ ONE SEASON, AGAINST A TITLE'S TWO. Half of a campaign is forgotten by the next winter,
-     *  which is his magazine sentence as a number.
+     *  ⚠ AROUND ONE SEASON, AGAINST A TITLE'S TWO. Half of a campaign is forgotten by the next
+     *  winter, which is his magazine sentence as a number.
      *
      *  ⚠⚠ AND IT IS WHAT KEEPS THE TERM BOUNDED. A permanent per-shoot addition accumulates without
      *  limit over a twenty-season career and would need a cap chosen out of the air; a decaying
-     *  pulse needs none, because a steady cadence of shoots converges. */
-    shootFloorHalfLifeWeeks: 52,
+     *  pulse needs none, because a steady cadence of shoots converges.
+     *
+     *  ⭐⭐⭐ ROUND 32 #5 EXTENSION (31.08) – AND IT IS A LADDER RATHER THAN ONE NUMBER, BECAUSE REACH
+     *  BUYS DURABILITY AND NOT ONLY VOLUME. THE OWNER: «у нас есть популярные сайты, журналы и
+     *  бренды, а есть менее популярные, о которых знает мало людей … чем больше она была в сильных
+     *  контрактах – тем больше у нее велосити». What shipped first scaled only the SIZE of the
+     *  addition by the band and gave every band the same 52 weeks – so a global house and a local
+     *  retainer were told apart by loudness and then forgotten at identical speed. A placement seen
+     *  by millions leaves a mark that outlives its campaign; a flyer in one town is gone by the next
+     *  season.
+     *
+     *  ⚠ HIS OWN EXAMPLE IS NOT THE ARGUMENT. He hedged it himself («как то женщин из номинации
+     *  плейбоя помнят довольно долго … но может быть я ошибаюсь») and it has not been checked here,
+     *  so it carries no weight. The general principle carries the design on its own.
+     *
+     *  ⚠⚠ THE TOP RUNG IS STILL SHORTER THAN A TITLE'S 104 WEEKS, which is the binding half of his
+     *  earlier ruling and is not negotiable by this extension: a campaign is one season's wallpaper
+     *  and a championship is recited in every broadcast for years. 78 weeks is a season and a half.
+     *
+     *  ⚠ THE SIZES ARE MEASURED, and the criterion is the one this ladder exists to satisfy: two
+     *  careers with the SAME delivered shoots at different bands must diverge VISIBLY years later.
+     *  At the shoot week the bands differ 2.75x (the sizes above); three years on this ladder has
+     *  widened that to ~44x, because band 0 has faded through six half-lives and band 3 through two.
+     *  ⚠ Band 2 is left at the shipped 52 on purpose – the anchor round 32 #5 was sized on does not
+     *  move, so what this extension changes is the SPREAD and not the level.
+     *  docs/specs/collaborations-as-early-fame-2026-08.md §11 records the frontier either way. */
+    shootFloorHalfLifeByBand: [26, 39, 52, 78] as readonly number[],
     /** fame is bounded 0–100 – the spec's own scale; the cap is «the whole world knows her». */
     cap: 100,
   },
@@ -2167,6 +2192,36 @@ export const ECONOMY = {
          *  ⚠ IT IS A SHARE AND NOT A FLOOR IN POINTS, which is the personal half of his ruling: 0.4
          *  of a Slam champion's peak is a large brand and 0.4 of a club player's is still nothing. */
         floorShare: 0.4,
+        /** ⭐⭐⭐ REVISION (31.08) – HOW MUCH OF THE STOCK STILL SELLS SHIRTS, 0..1. THE OWNER, reading
+         *  the first shipped result and stopping it: «меня смущает вот это: На пятом году бренд
+         *  стоит $166 060 при годовом доходе $1 352».
+         *
+         *  ⚠⚠ HE IS RIGHT AND THE FAULT WAS THE SPEC'S. The first pass floored the WORTH and left
+         *  the INCOME a bare function of fame, so the income still fell 98.7% over five years while
+         *  the valuation held – 123x annual earnings, which is not a valuation. THE MEMORY WAS IN
+         *  THE WRONG PLACE: the premise was always that a brand keeps «a name, a shelf, a
+         *  distribution and a customer who already owns two of its shirts», and that customer keeps
+         *  BUYING when she stops winning. So it is the REVENUE that must not collapse; a stable
+         *  valuation is the consequence and not a second thing to install.
+         *
+         *      effectiveReach = max(fame, retention x strength)
+         *
+         *  ⭐⭐ THE TOP IS PRESERVED BY CONSTRUCTION AND NOT BY A CLAMP, and this constant being
+         *  STRICTLY BELOW 1 is the whole of that proof: strength equals fame at the cap and at every
+         *  running peak, so `retention x strength < fame` there and the reach IS fame – the income
+         *  curve at the top is the pre-wave one term for term. The floor can only ever bind on the
+         *  way down, which is the only place he asked anything to move.
+         *
+         *  ⚠⚠ AND THE SIZE IS MEASURED AGAINST THE ONE DOCUMENTED CASE THIS REPO HOLDS OF AN
+         *  OFF-COURT INCOME WHEN THE WINNING STOPS: Naomi Osaka, ~$60M (2021) -> $12.0M (2024),
+         *  −75% in three years WITH ESSENTIALLY NO SPONSORS LOST – «the fall is playing time»
+         *  (docs/research/player-brands-and-what-they-are-worth.md §4e). The income goes as reach²,
+         *  so a −75% three-year fall is a reach holding half of itself, and this is the value that
+         *  lands there on his own row. Before the revision that same three-year fall was −92%.
+         *  ⚠ It is a BOUND drawn from one case and not a law; the frontier either side of it is in
+         *  docs/specs/brand-inertia-2026-08.md §18, and moving it is a decision about how much of a
+         *  business survives its founder's silence rather than a correction. */
+        retention: 0.78,
       },
     },
     academy: {

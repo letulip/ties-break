@@ -347,8 +347,8 @@ export { brandStrengthAt, strengthDecayAt }
 // (convex in fame), what multiple the CAREER has earned it, and the two joined. Ownership is applied
 // in `world/assets.ts`, not here. Zero draws behind every one of these names – a valuation is a fold
 // over history.
-import { brandBuiltSignals, brandCrowdMult, brandGrossWorthCents, brandMultipleX, brandSignalsOf, brandWeeklyGrossCents } from './world/brand'
-export { brandBuiltSignals, brandCrowdMult, brandGrossWorthCents, brandMultipleX, brandSignalsOf, brandWeeklyGrossCents }
+import { brandCrowdMult, brandGrossWorthCents, brandMultipleX, brandReachOf, brandSignalsOf, brandWeeklyGrossCents } from './world/brand'
+export { brandCrowdMult, brandGrossWorthCents, brandMultipleX, brandReachOf, brandSignalsOf, brandWeeklyGrossCents }
 export type { BrandSignals } from './world/brand'
 import { academyReputationOf, academyWeeklyIncomeCents, assetWeeklyIncomeCents, merchWeeklyIncomeCents } from './world/business'
 export { academyReputationOf, academyWeeklyIncomeCents, assetWeeklyIncomeCents, merchWeeklyIncomeCents }

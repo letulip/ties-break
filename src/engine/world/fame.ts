@@ -54,10 +54,22 @@ export function decayAt(deltaWeeks: number): number {
  *  campaign is one season's wallpaper.
  *
  *  ⚠ A SECOND CURVE AND NOT A SECOND COPY OF THE FIRST. `decayAt` is the title clock and this is the
- *  campaign clock; they are two facts about the world, so they are two constants and one shape. */
-export function shootFloorDecayAt(deltaWeeks: number): number {
+ *  campaign clock; they are two facts about the world, so they are two constants and one shape.
+ *
+ *  ⭐⭐⭐ ...AND SINCE THE 31.08 EXTENSION THE CLOCK IS THE DEAL'S OWN. «чем больше она была в сильных
+ *  контрактах – тем больше у нее велосити»: reach buys DURABILITY and not only volume, so a global
+ *  house is remembered longer as well as heard louder. What shipped first gave every band the same
+ *  52 weeks, which told the two apart at the shoot and then forgot them at identical speed.
+ *
+ *  ⚠ AN UNKNOWN BAND READS THE LADDER'S TOP RUNG AND NOT ZERO WEEKS. `adBandOfTerms` answers inside
+ *  `advertising.bands` by construction, so the fallback is unreachable today; a half-life of 0 would
+ *  divide into an Infinity and hand the floor a NaN, and money must not be able to become NaN
+ *  quietly (`brandMultipleX`'s own rule about the win-rate span). */
+export function shootFloorDecayAt(deltaWeeks: number, band: number): number {
   if (deltaWeeks < 0) return 0
-  return Math.pow(0.5, deltaWeeks / ECONOMY.fame.shootFloorHalfLifeWeeks)
+  const ladder = ECONOMY.fame.shootFloorHalfLifeByBand
+  const halfLife = ladder[band] ?? ladder[ladder.length - 1]!
+  return Math.pow(0.5, deltaWeeks / halfLife)
 }
 
 /** ⭐ THE FLOOR – what the court earned, decayed to `week`, clamped to the cap. Zero for a career
@@ -100,8 +112,14 @@ export function fameFloorOf(world: WorldState, week: number): number {
   // ретейнер». And on the CAMPAIGN's own half-life, which is shorter than a title's – what lasts is
   // carried by brand STRENGTH (`world/brandStrength.ts`), so there is no permanent residue here and
   // therefore no unbounded term needing a cap picked out of the air.
+  //
+  // ⭐⭐ THE BAND REACHES BOTH TERMS SINCE THE 31.08 EXTENSION – the size AND the clock. «чем больше
+  // она была в сильных контрактах – тем больше у нее велосити»: a placement seen by millions is
+  // remembered longer, so the same delivered shoot at a stronger band is worth more today and is
+  // still worth something three years from now, when the local retainer has faded through six
+  // half-lives. One index, read twice, and no second ledger.
   for (const shoot of completedShootsByBand(world, week)) {
-    floor += (F.shootFloorByBand[shoot.band] ?? 0) * shootFloorDecayAt(week - shoot.week)
+    floor += (F.shootFloorByBand[shoot.band] ?? 0) * shootFloorDecayAt(week - shoot.week, shoot.band)
   }
   return Math.min(F.cap, floor)
 }

@@ -71,6 +71,19 @@
 // hung. See docs/specs/brand-worth-and-income-2026-08.md §6 for which of the three future shapes
 // this accommodates cheaply and which one needs different machinery.
 //
+// ⭐⭐⭐ AND THE 31.08 REVISION OF ROUND 32 #4 CORRECTS THE FIRST BULLET ABOVE, so a reader does not
+// take it for current. «INCOME IS CURRENT FORM. It is fame» was true until the owner read what it
+// cost: «меня смущает вот это: На пятом году бренд стоит $166 060 при годовом доходе $1 352». #4 had
+// floored the WORTH on the brand's slow stock and left the INCOME a bare function of fame, so the
+// valuation floated free of the business it was pricing – 123x annual earnings at the tail.
+//
+// ⭐⭐ THE MEMORY MOVED INTO THE REVENUE, WHICH IS WHERE THE SPEC'S OWN PREMISE ALWAYS PUT IT: a brand
+// keeps «a name, a shelf, a distribution and a customer who already owns two of its shirts», and that
+// customer KEEPS BUYING when she stops winning. So the income reads `brandReachOf` –
+// `max(fame, retention x strength)` – and the worth is a plain multiple of that income. ONE clock,
+// one mechanism, and `worth / a year of income` is `brandMultipleX` again, to the cent.
+// docs/specs/brand-inertia-2026-08.md §14-§19.
+//
 // ⚠⚠ ZERO DRAWS ON ANY STREAM, AND THE SAME PROOF `world/fame.ts` CARRIES. There is no `Rng`
 // argument in this file, no clock, no `Math.random` and no persisted field: every number below is
 // re-derived from records the career already keeps and never prunes, so a load cannot drift it and
@@ -96,10 +109,11 @@ export interface BrandSignals {
   /** ⭐⭐⭐ ROUND 32 #4 – THE BRAND'S SLOW STOCK at the same week (`world/brandStrength.ts`): the best
    *  she has ever been, faded on a half-life measured in YEARS and floored at a share of that best.
    *
-   *  ⚠⚠ IT IS THE OTHER CLOCK AND IT IS READ BY THE WORTH ALONE. `brandWeeklyGrossCents` still reads
-   *  `fame` – income is a FLOW and follows attention – and `brandGrossWorthCents` prices at this,
-   *  because worth is a STOCK and follows what was built. Before round 32 #4 one number did both
-   *  jobs, and a career that stopped winning lost 99% of its brand in five years.
+   *  ⚠⚠ SINCE THE 31.08 REVISION IT IS READ THROUGH `brandReachOf` AND BY THE INCOME FIRST, which is
+   *  the opposite of how it shipped. #4 gave the stock to the WORTH alone and left the income a bare
+   *  function of fame; the owner read the result and stopped it, because a valuation whose earnings
+   *  have evaporated under it is not a valuation. The stock now floors the REACH, the reach drives
+   *  the income, and the worth is floored through the income it is a multiple of.
    *
    *  ⚠ NEVER BELOW `fame`, BY CONSTRUCTION, and equal to it at the cap and at every running peak –
    *  see `brandStrengthAt`'s header for why that is what pins the top of the shelf. */
@@ -263,10 +277,13 @@ export function brandCrowdMult(signals: BrandSignals): number {
  *  fell, which is the only fall the game is in frame for. */
 export function brandWeeklyGrossCents(signals: BrandSignals): number {
   const M = ECONOMY.business.merch
+  // ⭐⭐⭐ REVISION (31.08) – AND THE THING SQUARED IS THE REACH, NOT THIS WEEK'S NOISE. Not a
+  // character of the curve moved; what moved is what it is asked about. See `brandReachOf`.
+  const reach = brandReachOf(signals)
   // ⭐⭐⭐ AND THE ROOM TILTS IT (30.08, the owner overruling this wave's `[GAP]` on the crowd). It is
   // a bounded multiplier centred on 1, so the curve above is still the shape and this is still a
   // tilt – see `brandCrowdMult`.
-  return Math.round(((M.perFamePointCents * signals.fame * signals.fame) / M.famePivot) * brandCrowdMult(signals))
+  return Math.round(((M.perFamePointCents * reach * reach) / M.famePivot) * brandCrowdMult(signals))
 }
 
 /** ⭐⭐⭐ WHAT A BUYER PAYS PER DOLLAR OF WHAT IT EARNS – the multiple, EARNED rather than constant.
@@ -344,7 +361,12 @@ export function brandMultipleX(signals: BrandSignals, baseX: number): number {
   // can bite today – they are here because a ramp that ran past 1 would lift the ceiling this change
   // is forbidden to touch, and that must be impossible by construction rather than by a caller's
   // good behaviour.
-  const known = Math.min(1, Math.max(0, signals.fame / ECONOMY.fame.cap))
+  // ⭐⭐ REVISION (31.08) – AND IT IS THE REACH, ON THE SAME CLOCK AS THE INCOME. The size of this
+  // business is how many people it reaches, and after the revision that is `brandReachOf` and not
+  // this week's attention. ⚠ IT HAS TO BE THE SAME NUMBER THE INCOME READS, or the two halves of the
+  // worth would price different brands – which is precisely the disagreement `brandBuiltSignals`
+  // was deleted for. `reach ≤ cap` because both fame and strength are, and `retention < 1`.
+  const known = Math.min(1, Math.max(0, brandReachOf(signals) / ECONOMY.fame.cap))
   let x = V.unknownX + (baseX - V.unknownX) * known
   x += V.seasonX * Math.min(signals.proSeasons, V.seasonCapN)
   x += V.topSeasonX * Math.min(signals.topSeasons, V.topSeasonCapN)
@@ -365,29 +387,52 @@ export function brandMultipleX(signals: BrandSignals, baseX: number): number {
  *  times the multiple the career has earned. The two functions above, joined – and the only place
  *  they are joined, so a screen and a valuation cannot disagree about what a brand is worth.
  *
+ *  ⭐⭐⭐ REVISION (31.08) – AND THE SUBSTITUTION THAT USED TO SIT HERE IS GONE, WHICH IS THE POINT.
+ *  Round 32 #4 shipped a second mechanism (`brandBuiltSignals`) that priced the WORTH on the slow
+ *  stock while the income kept reading fame. That floored the valuation and left the revenue to
+ *  collapse, and the owner stopped it: «На пятом году бренд стоит $166 060 при годовом доходе
+ *  $1 352». With the memory moved into the REACH the income already reads, worth is floored THROUGH
+ *  the income and this function is a plain product again – one mechanism doing one job, which is the
+ *  argument §4 of the spec was written on.
+ *
+ *  ⭐⭐ SO `worth / a year of income` IS THE MULTIPLE AGAIN, exactly, and round 30 #9's claim – which
+ *  round 32 #4 had to record as overturned – is restored rather than merely repaired. That ratio is
+ *  therefore bounded by the multiple's own band, [`value.unknownX`, `value.maxX`], at EVERY week of
+ *  every career, by construction and not by tuning. It is the acceptance the revision exists to meet.
+ *
  *  ⚠ NO FLOOR HERE. The mark's floor is a share of what the FAMILY PAID (`businessValueFloorShare`),
  *  which is a fact about the owned row and not about the brand, so it is applied at the ownership
  *  boundary in `world/assets.ts` where the row is. */
 export function brandGrossWorthCents(signals: BrandSignals, baseX: number): number {
-  const built = brandBuiltSignals(signals)
-  return Math.round(brandWeeklyGrossCents(built) * WEEKS_PER_YEAR * brandMultipleX(built, baseX))
+  return Math.round(brandWeeklyGrossCents(signals) * WEEKS_PER_YEAR * brandMultipleX(signals, baseX))
 }
 
-/** ⭐⭐⭐ ROUND 32 #4 – THE SIGNALS A *WORTH* QUESTION IS ASKED OF: the career's own, with the brand's
- *  slow stock standing in for this week's noise. `docs/specs/brand-inertia-2026-08.md` §4.
+/** ⭐⭐⭐ REVISION (31.08) – THE REACH THE BRAND ACTUALLY SELLS INTO: this week's attention, or what
+ *  is left of the brand she built, whichever is larger. `docs/specs/brand-inertia-2026-08.md` §14.
  *
- *  ⚠⚠ IT SUBSTITUTES RATHER THAN ADDING A PARAMETER, and that is deliberate: every term of the
- *  valuation that reads `fame` – the convex income curve AND round 32 #3's ramp in the multiple –
- *  has to move onto the same clock together, or the two halves of the worth would disagree about
- *  which brand they are pricing. One substitution, one clock, no term left behind.
+ *      effectiveReach = max(fame, retention x strength)
  *
- *  ⚠ THE INCOME LINE DOES NOT GO THROUGH HERE. `assetEarningsRateCents` asks `brandWeeklyGrossCents`
- *  with the raw signals, so what the brand PAYS this week still follows this week's attention. That
- *  is the split, and collapsing it back is the defect the inertia spec was written to cure.
+ *  ⚠⚠ THE MEMORY BELONGS HERE AND NOT IN THE VALUATION, AND THAT IS THE WHOLE REVISION. Round 32 #4
+ *  read §3's premise correctly – a brand keeps «a name, a shelf, a distribution and a customer who
+ *  already owns two of its shirts» – and then put the memory in the wrong place: it floored the
+ *  WORTH and left the INCOME a bare function of fame. The customer who already owns two shirts KEEPS
+ *  BUYING when she stops winning, so it is the REVENUE that must not collapse; a valuation that
+ *  holds while its earnings evaporate is not a valuation, and 123x annual earnings at the tail is
+ *  what that looks like.
  *
- *  ⚠ AND THE SHOP ROW GOES THROUGH IT TOO (`shopView`), so «Worth N years of what it sells» quotes
- *  the multiple the valuation actually used. Not a character of that sentence moved – invariant 4 –
- *  only the number in it. */
-export function brandBuiltSignals(signals: BrandSignals): BrandSignals {
-  return { ...signals, fame: signals.strength }
+ *  ⭐⭐ THE TOP OF THE SHELF IS PRESERVED BY CONSTRUCTION, NOT BY A CLAMP, and `retention < 1` is the
+ *  entire proof. `brandStrengthAt` pins strength to fame at the cap and at every running peak
+ *  (its own header's properties 1 and 2), so `retention x strength < fame` exactly where the best
+ *  careers live and the max resolves to `fame`. The floor can only bind on the way DOWN – the one
+ *  place the owner asked anything to move – and the peak income curve is the pre-wave one term for
+ *  term.
+ *
+ *  ⚠ IT IS READ BY BOTH HALVES OF THE PRICING, deliberately: `brandWeeklyGrossCents` squares it and
+ *  `brandMultipleX` ramps on it. A business is as big as the audience it reaches, so the size term
+ *  and the revenue term have to be asked about the same audience or the worth would price a
+ *  different brand from the one the ledger pays.
+ *
+ *  Pure arithmetic on a value object: no world, no clock, no draw. */
+export function brandReachOf(signals: BrandSignals): number {
+  return Math.max(signals.fame, ECONOMY.business.merch.strength.retention * signals.strength)
 }

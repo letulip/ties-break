@@ -34,6 +34,7 @@ import { describe, it, expect } from 'vitest'
 import {
   brandMultipleX,
   brandSignalsOf,
+  brandReachOf,
   brandWeeklyGrossCents,
   closeTournament,
   createWorld,
@@ -343,11 +344,18 @@ describe('round 32 #3 §7 – his own row, MIRRORED and not imported', () => {
     expect(pre32(s), '...and the pre-wave arithmetic on the same career was all but at the ceiling')
       .toBeGreaterThan(18)
     expect(Math.round(mult), 'so the shop row says a single-digit number of years').toBeLessThan(10)
-    // ⚠ AND THE INCOME IS UNTOUCHED, which is the half of his sentence that was never wrong: this
-    // wave moved the price of the business and not what it takes in.
+    // ⚠ AND THE INCOME IS UNTOUCHED BY ROUND 32 #3, which is the half of his sentence that was never
+    // wrong: THAT wave moved the price of the business and not what it takes in.
+    // ⚠⚠ THE THING SQUARED IS `brandReachOf` AND NO LONGER `s.fame`, on the 31.08 revision of round
+    // 32 #4 – the income now carries the brand's memory (`max(fame, retention x strength)`). The
+    // mirror below therefore reads the reach, which is what the shipped curve reads; what this arm
+    // is claiming about round 32 #3 – that #3 moved the price and not what the business takes in –
+    // is untouched by that, because #3 lives entirely in `brandMultipleX`.
+    expect(brandReachOf(s), 'the fixture is past its peak, so the floor is live on it')
+      .toBeGreaterThan(s.fame)
     expect(brandWeeklyGrossCents(s)).toBe(
       Math.round(
-        ((ECONOMY.business.merch.perFamePointCents * s.fame * s.fame) / ECONOMY.business.merch.famePivot) *
+        ((ECONOMY.business.merch.perFamePointCents * brandReachOf(s) * brandReachOf(s)) / ECONOMY.business.merch.famePivot) *
           Math.min(
             ECONOMY.business.merch.crowd.maxMult,
             Math.max(
