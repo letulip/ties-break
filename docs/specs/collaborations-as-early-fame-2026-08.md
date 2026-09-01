@@ -160,6 +160,10 @@ That wave chose `value.unknownX = 2.5` as **«the highest value that still reads
 shop row at his fame»**, and this wave may not undo it by pushing that fame back up. The shipped
 gradient is **the largest of its shape under which his w933 row still reads 9 years.** The frontier:
 
+⚠ The rows are the **C arm** – this item alone, with round 32 #4's stock held off – so what moves
+between them is this item's setting and nothing else. The «off» row is the control and is round 32
+#3's shipped number to the cent.
+
 | `shootFloorByBand` | half-life | his fame | his worth | shop row | verdict |
 | --- | ---: | ---: | ---: | ---: | --- |
 | off | – | 22.33 | $831,382 | 9 | the control |

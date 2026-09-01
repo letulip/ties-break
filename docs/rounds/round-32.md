@@ -293,3 +293,15 @@ Both boxes are ticked with the place, per `docs/rounds/README.md` §"Keeping thi
   both with predicted vs measured and the frontier either way. Bench: `tools/r32-brand-inertia.ts`.
   Guard: `tests/round32-brand-inertia.test.ts`, 25 arms in nine sections, mutation-verified against
   twelve mutations.
+
+  Gated on `r32c/brand-inertia-and-collabs` at the end, each verdict read out of its own uniquely
+  named log file rather than a pipe or a background notice: `npm run check` **exit 0** (unit green in
+  313s, 1,116 component tests), `npm run test:e2e` **exit 0** (31 tests), `npm run test:sim` **exit 0**
+  (12 files, 306s).
+
+  ⚠ FOUR RED CHECK RUNS PRECEDED IT AND EVERY ONE WAS A VERSION PIN FOLLOWING THE LADDER'S HEAD, which
+  is what a schema bump costs and is worth naming so the next one budgets for it: the doc-fact line in
+  `docs/context/saves-and-worker.md`, the migration chain's own `toBe(68)`, the build line's, and two
+  type errors in the new guard. ⚠⚠ AND EVERY BACKGROUND NOTICE FOR THOSE RUNS SAID «exit code 0» while
+  the log said `CHECK_EXIT=1` or `=2` – four more entries on the tally CLAUDE.md keeps, caught by
+  reading the file every time.
