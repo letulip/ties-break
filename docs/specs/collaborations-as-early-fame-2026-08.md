@@ -8,7 +8,8 @@ last-reviewed: 2026-09-01
 
 # Collaborations as the early lever on fame
 
-**Status: SHIPPED, round 32 #5 (01.09.2026). §6 was his ruling; §7-§9 are predicted vs measured.**
+**Status: SHIPPED, round 32 #5 (01.09.2026), and EXTENDED the same day. §6 was his ruling and §7-§9
+are the first pass's predicted vs measured; ⭐⭐ §10 IS HIS EXTENSION AND §11-§12 ARE ITS MEASUREMENT.**
 
 ⚠ **Measured TOGETHER with `brand-inertia-2026-08.md` (round 32 #4)** on his own instruction –
 «совместный эффект – мерить, да». The COMBINED table is that spec's §8; this one records what THIS
@@ -112,6 +113,9 @@ Open shape questions, deliberately not answered here:
 ---
 
 ## 7. What was built, and the finding that set the size
+
+⚠ **SUPERSEDED IN PART BY §11**: the half-life below became a per-band LADDER on 31.08 (his extension,
+§10). The sizes, the band recovery and the sizing criterion in this section all still stand.
 
 `fameFloorOf` gains one term. For every shoot week she has actually LIVED – the same predicate
 `fameShootMultOf` already uses, extracted so the two folds cannot drift – the floor gains
@@ -256,7 +260,11 @@ decays faster than a title and leaves no residue, the multiplier still moves too
 buys nothing, and a week the college freeze swallowed lapses silently. Mutation-verified; the log is
 at the foot of the file.
 
-## 7. ⚠ EXTENSION (31.08) – REACH BUYS DURABILITY, NOT ONLY VOLUME
+## 10. ⚠ HIS EXTENSION (31.08) – REACH BUYS DURABILITY, NOT ONLY VOLUME
+
+⚠ *This block is his, verbatim, and is the specification §11-§12 are measured against. It was written
+as «§7» and is renumbered here only because §7 above was already taken – nothing in it moved.*
+
 
 His words: «у нас есть популярные сайты, журналы и бренды, а есть менее популярные, о которых знает
 мало людей. Что если мы это тоже отразим в нашей формуле доходности? т.е. чем больше она была в
@@ -285,3 +293,85 @@ house longest; pick the range by measurement and report it.
   nothing about durability.
 - Alice's own row still barely moves; the top of the shelf is still unmoved.
 - ⚠ measured in the COMBINED arm with the revised inertia, per his standing ruling.
+
+---
+
+## 11. What was built – the band now sets the CLOCK as well as the size
+
+`ECONOMY.fame.shootFloorHalfLifeWeeks = 52` becomes
+**`shootFloorHalfLifeByBand = [26, 39, 52, 78]`**, and `shootFloorDecayAt` takes the band:
+
+```
+floor += shootFloorByBand[band] × 2^(−(week − shootWeek) / shootFloorHalfLifeByBand[band])
+```
+
+One index, read twice. No new ledger, no new field, and **`adBandOfTerms` already answered the
+question** – §7's «the band is recovered from the paper» does both jobs unchanged.
+
+⭐ **BAND 2 STAYS AT THE SHIPPED 52**, deliberately: the anchor round 32 #5 was sized on does not
+move, so what this extension changes is the SPREAD and not the level.
+
+⚠ **AND THE TOP RUNG IS STILL SHORTER THAN A TITLE'S 104 WEEKS**, which is the binding half of §6.4's
+ruling and is not the extension's to renegotiate: a campaign is one season's wallpaper, a
+championship is recited in every broadcast for years. 78 weeks is a season and a half.
+
+### The frontier, on his own row, with round 32 #3's criterion still binding
+
+| `shootFloorHalfLifeByBand` | his fame now | his worth now | the shop row |
+| --- | ---: | ---: | ---: |
+| 52 / 52 / 52 / 52 – what shipped first | 23.69 | $952,076 | 9 |
+| 39 / 45 / 52 / 65 | 23.66 | $949,072 | 9 |
+| **26 / 39 / 52 / 78 – shipped** | **23.63** | **$946,611** | **9** |
+| 26 / 45 / 65 / 91 | 23.76 | $958,620 | 9 |
+| 26 / 52 / 78 / 103 | 23.87 | $968,567 | 9 |
+
+⭐ **ALICE'S OWN ROW BARELY MOVES – −0.6% on the worth, and DOWNWARD**, which is worth stating because
+it is the opposite of what a «reach buys more» change sounds like. Her delivered shoots are
+**6 / 5 / 14 / 0 by band**: she has never signed a global house, so shortening the two weakest rungs
+costs her slightly more than lengthening the strongest one gives back. The shop row still reads
+**9 years**, so #3's sizing criterion is intact, and every rung of the frontier above holds it.
+
+## 12. ⭐⭐⭐ Predicted vs measured – does the gap actually OPEN?
+
+His acceptance is explicit that the shoot week proves nothing, so this is measured years later. Two
+careers, the SAME twelve delivered shoots over three seasons, one at band 0 and one at band 3,
+read at intervals after the last of them (`tools/r32-brand-inertia.ts` §6):
+
+**⭐ The early career the item is for – three seasons ended #45, four shoots a year:**
+
+| after the last shoot | band 0's shoot floor | band 3's | spread | band 0 worth | band 3 worth | spread |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| the shoot week | 0.1223 | 0.8198 | 6.7x | $7,277 | $12,354 | 1.70x |
+| +1 year | 0.0306 | 0.5164 | **16.9x** | $3,827 | $5,492 | 1.44x |
+| +3 years | 0.0019 | 0.2049 | **107.3x** | $1,867 | $2,667 | **1.43x** |
+| +5 years | 0.0001 | 0.0813 | **681.1x** | $1,180 | $1,651 | 1.40x |
+
+⚠ **AND THE CONTROL IS THE LADDER THAT SHIPPED FIRST, not «they differ».** On the flat 52-week ladder
+the same two careers are **$1,966 against $2,436 = 1.24x** at three years, against **1.43x** here –
+and the floor spread stays at a flat **2.75x** forever, exactly what it was in the shoot week. **That
+is the whole claim: on the old setting the gap never opens.**
+
+**...and a settled top-20 career – six seasons ended #18, two shoots a year:**
+
+| after the last shoot | band 0 worth | band 3 worth | spread | flat-ladder spread |
+| --- | ---: | ---: | ---: | ---: |
+| the shoot week | $270,040 | $291,116 | 1.08x | – |
+| +3 years | $50,760 | $54,520 | **1.07x** | 1.04x |
+
+⚠⚠ **THE HONEST HALF: THE WORTH FEELS THIS FAR LESS THAN THE FLOOR DOES, AND MORE SO THE BIGGER THE
+CAREER.** Two things compress it, and neither is a defect: the collaboration term is a small share of
+a floor built mostly of tennis (`fameFloorOf`'s title currency, §8's structural finding, unmoved), and
+the brand's slow stock remembers BOTH careers' peaks, where the shoots were fresh in either arm. So
+the effect is real, permanent and modest – 1.43x on the early career, 1.07x on the settled one – and
+it is largest exactly where the item was asked for. ⭐ A design that made it larger would be moving
+the top of the shelf, which is forbidden.
+
+⚠ **MEASURED IN THE COMBINED ARM WITH THE REVISED INERTIA**, per his standing ruling: every number in
+§11 and §12 is read with `brand-inertia-2026-08.md` §14's revision live, and the top of the shelf is
+unmoved in that arm – 56,160 / 56,160 career-weeks at the cap, worst |delta| 0 cents.
+
+**⚠ NO SCHEMA MOVE, AND NO NEW FIELD.** The ladder is a constant; the band was already recoverable
+from the cheque. `SAVE_SCHEMA_VERSION` stays at 69 and the frozen career hashes are byte-identical on
+all three presets – 0 keys of 72 / 72 / 73.
+
+**⚠ Zero draws.** `shootFloorDecayAt` gained an argument, not a stream.

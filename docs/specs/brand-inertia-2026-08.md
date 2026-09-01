@@ -8,7 +8,9 @@ last-reviewed: 2026-09-01
 
 # Brand inertia – a built brand must not evaporate with this year's noise
 
-**Status: SHIPPED, round 32 #4 (01.09.2026). §7 was his ruling; §8-§12 are predicted vs measured.**
+**Status: SHIPPED, round 32 #4 (01.09.2026), and REVISED the same day. §7 was his ruling and §8-§13
+are the first pass's predicted vs measured; ⭐⭐⭐ §14 IS HIS REVISION AND §15-§19 ARE ITS MEASUREMENT.
+READ §14 FIRST – it overturns where the memory lives, and §8's headline table is superseded by §16.**
 
 ⚠ **Measured TOGETHER with `collaborations-as-early-fame-2026-08.md` (round 32 #5)** on his own
 instruction – «совместный эффект – мерить, да». The headline is the COMBINED arm; each feature alone
@@ -144,6 +146,10 @@ the setting.
 
 ## 9. What was built
 
+⚠ **SUPERSEDED BY §15**: the stock survives unchanged – same kernel, same half-life, same floor – but
+the SPLIT described below was corrected on 31.08. The income no longer reads bare fame and the worth
+no longer prices on the stock directly; both read `brandReachOf`, and `brandBuiltSignals` is gone.
+
 A second stock, `world/brandStrength.ts`, on fame's own 0..100 scale:
 
 > `strength(w) = max over t ≤ w of  fame(t) × max(floorShare, 2^(−(w − t) / halfLifeWeeks))`
@@ -191,6 +197,10 @@ in the middle and the bottom of the range, which is where the owner pointed.
 ---
 
 ## 11. What else moved, named rather than discovered later
+
+⚠ **(a) AND (b) BELOW ARE WITHDRAWN BY §19** – the named case is back at the mark and the day-one
+repair is gone, both because the mechanism that produced them is the one he stopped. (c) and (d)
+stand, with (c)'s numbers re-measured in §19b.
 
 **a. ⭐⭐⭐ THE CASE HE NAMED CLEARS THE MARK, and INERTIA is what clears it.** Round 30 #24's own guard
 arm – four seasons ended #18, no title, no Slam final, no top-10 season, nothing signed, fame **7.24**
@@ -306,7 +316,11 @@ further out. The shipped pair is «half after four years, never below two-fifths
 Anything longer or higher is a bigger permanent residue, which is a decision about how much of a
 career survives it rather than a correction – so it is filed here rather than chosen.
 
-## 8. ⚠⚠ REVISION (31.08) – THE MEMORY WAS PUT IN THE WRONG PLACE
+## 14. ⚠⚠ HIS REVISION (31.08) – THE MEMORY WAS PUT IN THE WRONG PLACE
+
+⚠ *This block is his, verbatim, and is the specification §15 onwards is measured against. It was
+written as «§8» and is renumbered here only because §8 above was already taken – nothing in it moved.*
+
 
 He read the shipped measurement and stopped it: «меня смущает вот это: На пятом году бренд стоит
 $166 060 при годовом доходе $1 352». He is right, and the fault is this spec's, not the build's.
@@ -346,3 +360,190 @@ acceptance below still met, drop it – one mechanism doing one job is the whole
 - the top of the shelf is unmoved: prove it across the bench's career-weeks as before.
 - his rulings in §7 stand unchanged: years-long half-life, a floor as a share of HER OWN peak,
   seeded from current fame, append-only migration, backwards compatibility.
+
+---
+
+## 15. What the revision changed, in three lines
+
+```
+reach  = max(fame, retention x strength)          world/brand.ts, `brandReachOf`
+income = perFamePointCents x reach² / famePivot   x the crowd tilt   – unchanged curve, new argument
+worth  = income x WEEKS_PER_YEAR x multiple       – and the multiple ramps on the same reach
+```
+
+`ECONOMY.business.merch.strength.retention = 0.78`, alongside the half-life and floor §7 already
+ruled on. **Nothing else about the stock moved**: same kernel, same 208-week half-life, same 0.4
+floor on her own peak, same v69 pin.
+
+⭐⭐⭐ **AND THE SEPARATE WORTH FLOOR IS GONE.** `brandBuiltSignals` – the second signal set that
+priced the WORTH on the stock while the income read fame – is deleted, along with the shop row's
+detour through it. That was the mechanism he stopped. What replaces it is nothing: the reach floors
+the income, and the worth is a multiple OF that income.
+
+⭐⭐ **SO `worth / a year of income` IS THE MULTIPLE AGAIN, to the cent** – round 30 #9's own claim,
+which §12's wave had to record as overturned, restored rather than merely repaired.
+
+---
+
+## 16. ⭐⭐⭐ THE HEADLINE – and it is now a RATIO, because that is what he stopped
+
+`npx vite-node tools/r32-brand-inertia.ts -- --save ~/Downloads/tennis-sim_alice-cfbv_w933.tsave --sweep`.
+⚠ **The save is READ-ONLY and nothing derived from it is in this repo.**
+
+**⭐ THE COMBINED ARM, five years forward with nothing new won:**
+
+| | fame | strength | reach | a year of income | multiple | worth | **worth / income** |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| now | 23.6 | 23.6 | 23.6 | $100,203 | 9.45x | **$946,611** | **9.4x** |
+| +1 year | 16.2 | 21.5 | 16.8 | $50,455 | 8.66x | $436,818 | 8.7x |
+| +2 years | 10.2 | 18.1 | 14.1 | $35,677 | 8.35x | $297,929 | 8.4x |
+| +3 years | 6.4 | 15.2 | 11.9 | $25,227 | 8.09x | $204,159 | 8.1x |
+| +5 years | 2.7 | 10.8 | 8.4 | **$12,614** | 7.69x | **$97,041** | **7.7x** |
+| **five-year fall** | **−88.5%** | | | **−87.4%** | | **−89.7%** | |
+
+⚠ **AND THE A-CONTROL ROW STILL REPRODUCES HIS TWO NUMBERS TO THE CENT – $831,382 now, $9,098 at five
+years** – which is what says the arms are honest: with `strength := fame` the reach resolves to fame
+(`retention < 1`) and every function above reduces to its pre-wave expression, through the shipped
+code and not a copy of it. §8's table was the pre-revision arm and is superseded by this one.
+
+⭐⭐⭐ **THE ACCEPTANCE, MET AND THEN SOME. The band is `[unknownX, maxX]` = `[2.5x, 20x]`, and it holds
+BY CONSTRUCTION rather than by tuning** – with the worth floor deleted the ratio IS `brandMultipleX`,
+whose own clamp is that band. Named, justified and swept:
+
+* **the band** is the multiple's own – what a buyer pays per dollar of earnings. Its ends are round
+  32 #3's: 2.5x for a brand nobody has heard of, 20x the ceiling, and the research's own comparables
+  sit inside it (Beckham's DRJB ~10.9x profit / ~5.3x revenue; the Nadal academy ~31x is the outlier
+  §5.4 already refused to size on).
+* **on his row it runs 7.8x – 9.6x across every one of the 261 weeks of the projection.** The 123x
+  is gone. It is not clipped: 123x was never reachable once the two halves read one clock.
+* **across the bench: 44,575 earning career-weeks, 2.53x – 20.00x, ZERO outside the band.**
+
+⚠ **AND BOTH FALLS ARE QUOTED, because the revision changed the income's own.** The income used to
+fall **−98.7%** over the five years and now falls **−87.4%**; the worth used to fall −99.0% in the
+control and −82.6% in the first pass, and now falls **−89.7%** – of the same order as its own income
+and no longer floating free of it. ⭐ The first pass's −82.6% was the shallower number and it is the
+one he rejected: it was shallow because the valuation had stopped being about the business.
+
+---
+
+## 17. ⭐⭐⭐ THE TOP OF THE SHELF IS STILL UNMOVED, and now the INCOME is too
+
+The first pass proved the WORTH unmoved at the cap. The revision moves the memory into the income, so
+the same proof is owed for the income – and it is the same two lines: `brandStrengthAt` pins strength
+to fame at the cap and at every running peak, and `retention < 1`, so `retention x strength < fame`
+exactly where the best careers live and the max resolves to `fame`.
+
+⭐⭐ **PROVEN ON THE RUN, to the same standard as the first pass:**
+
+| | measured |
+| --- | --- |
+| worth at fame = cap, every career-week of the bench | **56,160 / 56,160 unchanged, worst \|delta\| 0 cents** |
+| worth at each career's own peak-fame week | **72 / 72 unchanged, worst \|delta\| $0** |
+| peak weekly income, floored vs pre-wave (median career) | **$1,794,000/yr in both** |
+| median / best peak worth, all four arms | **$34.49M / $35.88M, to the cent** |
+
+⚠ `retention < 1` is therefore load-bearing rather than decorative, and the guard asserts it directly:
+a retention of 1 would lift the top of the shelf, which his standing ruling forbids.
+
+---
+
+## 18. ⚙ THE FRONTIER, and how `retention` was chosen
+
+⚠ **IT IS ONE CONSTANT AND IT WAS MEASURED AGAINST A SOURCED ANCHOR, not picked.** The criterion is
+the only documented case this repo holds of an off-court income when the winning stops:
+**Naomi Osaka, ~$60M (2021) → $12.0M (2024) – −75% in three years with essentially no sponsors lost,
+«the fall is playing time»** (`docs/research/player-brands-and-what-they-are-worth.md` §4e). The
+income goes as reach², so that is a reach holding about half of itself over three years.
+
+Measured on his own row in the combined arm, three- and five-year falls in the INCOME:
+
+| `retention` | reach at +5y | income at +3y | **3y fall** | income at +5y | 5y fall | worth at +5y | ratio band |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| 0.00 (the first pass) | 2.7 | $7,346 | −92.7% | $1,334 | −98.7% | $9,397 | 7.0x – 9.6x |
+| 0.50 | 5.4 | $10,366 | −89.7% | $5,183 | −94.8% | $38,083 | 7.3x – 9.6x |
+| 0.70 | 7.5 | $20,318 | −79.7% | $10,159 | −89.9% | $77,150 | 7.6x – 9.6x |
+| 0.75 | 8.1 | $23,324 | −76.7% | $11,662 | −88.4% | $89,288 | 7.7x – 9.6x |
+| **0.78 – shipped** | **8.4** | **$25,227** | **−74.8%** | **$12,614** | **−87.4%** | **$97,041** | **7.7x – 9.6x** |
+| 0.85 | 9.1 | $29,959 | −70.1% | $14,979 | −85.1% | $116,536 | 7.8x – 9.6x |
+| 0.95 | 10.2 | $37,422 | −62.7% | $18,711 | −81.3% | $147,884 | 7.9x – 9.6x |
+| 0.99 | 10.6 | $40,640 | −59.4% | $20,320 | −79.7% | $161,605 | 8.0x – 9.6x |
+
+⭐ **0.78 is the value whose three-year income fall lands on the researched −75%** (−74.8%). ⚠ It is
+a bound drawn from ONE case and it is a career that kept her sponsors while playing less, which is a
+gentler shape than «nothing won for five years» – so if anything it is generous. **Every row above is
+inside the ratio band**, so the band does not choose this dial and moving it is a decision about how
+much of a business survives its founder's silence rather than a correction.
+
+⚠ **AND THE RATIO BAND BARELY MOVES ACROSS THE WHOLE SWEEP (7.0x → 8.0x at the bottom end)** – which
+is the cleanest statement of what the revision did: with one clock, the ratio is the multiple whatever
+the floor is set to.
+
+---
+
+## 19. ⚠⚠ WHAT THE REVISION COSTS, said plainly rather than discovered later
+
+**a. ⚠⚠ THE CASE HE NAMED GOES BACK TO THE MARK, AND IT IS THE ONE ACCEPTANCE CRITERION THIS PASS
+LOSES.** §11a recorded round 30 #24's own guard arm – four seasons ended #18, no title, **nothing
+signed**, fame 7.24 – clearing the mark at $67,011 because the first pass priced the WORTH straight
+off the stock. It no longer does:
+
+| the named case, nothing signed | gross worth | the owned row |
+| --- | ---: | --- |
+| A control | $46,095 | $62,500 – the mark |
+| B inertia only | **$46,095** | **$62,500 – the mark** |
+| D COMBINED (ships) | **$46,095** | **$62,500 – the mark** |
+
+⭐ **AND THE REASON IS EXACT RATHER THAN A TUNING SHORTFALL.** She is ONE season past her wrap, so her
+stock is **8.61 against a fame of 7.24 – 1.19x**, and an income-side floor binds only above
+`1 / retention = 1.28x`. Measured across the whole sweep: the floor does not touch her at 0.78, at
+0.85 or at 0.95, and would need **~0.97** to lift her over the mark – a retention that has stopped
+being one. ⚠ **THIS IS THE ANSWER TO §14's «measure it, do not assume it»**: the separate worth floor
+was NOT redundant for this one criterion, and it is dropped anyway, because keeping it means keeping
+the mechanism that priced a valuation off a business it had stopped describing.
+
+⭐ **What clears the mark for her is signing the letters her band already writes her**, which is the
+owner's own item #5 answering his own question – and it needs no new mechanism at all:
+
+| the same career, 2 band-2 deals at 2 shoots a year | fame | gross worth |
+| --- | ---: | ---: |
+| A control | 10.93 | $112,844 – already above the mark |
+| **D COMBINED (ships)** | **11.70** | **$131,257** |
+
+⚠ *§8's table and the collaboration spec's §8 quote 10.60 / $105,512 for that control row. Re-run on
+the base branch itself it reads 10.93 / $112,844; the older figures are from an earlier draft of the
+bench and are corrected here.*
+
+**b. ⚠⚠ THE POPULATION EFFECT IS SMALL, AND THE MEASUREMENT SAYS WHY RATHER THAN LEAVING IT TO BE
+GUESSED AT.** The floor binds only where the stock is more than `1 / retention` = **1.28x** this
+week's fame. Measured at the last live week of every bench career whose peak fame is at least three
+years behind it: **strength / fame runs 1.00x median and 1.55x at its worst across 43 careers, and
+only 3 of them are lifted at all** (best 1.46x on the income). ⭐ That is a fact about the BENCH and
+not about the feature – its careers are alive and competing at week 780, so they end AT their own
+peak fame rather than years past it, which is exactly the state in which a memory floor should do
+nothing. The five-year projection off his own save is the only place the question is asked at all:
+
+| 72 careers x 780 weeks | A control | B first pass (r32c) | **D COMBINED (ships)** |
+| --- | ---: | ---: | ---: |
+| 52-week falls, median depth | −34.4% | −26.2% | **−32.1%** |
+| 3y+ past its peak, what the brand still holds | 45.3% | 47.6% | **45.9%** |
+| day-one worth, median | $93,480 | $103,918 | **$93,480** |
+| under the mark on day one | 25/70 | 21/70 | **25/70** |
+
+⚠ **SO THE FIRST PASS'S §11b – «round 32 #3's day-one cost is partly repaid, unasked» – IS WITHDRAWN.**
+It was repaid by pricing a climbing career's worth off a stock it was sitting on top of, i.e. by the
+mechanism he stopped. A career at or near its own peak now reads exactly what it read before this
+wave, which is the top-does-not-move property doing its job at the middle of the range as well.
+
+**c. Nothing else moved.** No user-facing string (invariant 4). No new randomness, no clock, no
+`Math.random`: `brandReachOf` is one `Math.max` over a value object. **The frozen career hashes are
+byte-identical – 0 keys of 72 / 72 / 73 on all three presets against the base branch**, which is the
+narrowest possible result and is what a wave with no schema move must produce.
+
+**d. ⭐⭐ AND NO SCHEMA MOVE IS OWED.** `SAVE_SCHEMA_VERSION` stays at **69**. The revision adds no
+persisted field and reads none: `retention` is a constant, the reach is derived from two numbers the
+world already answers, and the v69 pin (`brandStrengthSeed`) is unchanged in shape and in meaning.
+⚠ The pin's VALUE on a freshly-migrated v68 save moves by a fraction, because it is taken with the
+current `fameAt` and round 32 #5's half-life ladder is part of that – the same consequence §12 named
+the first time, for the same reason, and `tests/fixtures/saves/v69.json` is a frozen artefact of the
+version rather than a re-derivation, so nothing regenerates. All seventy fixtures v0…v69 still
+migrate: `tests/goldenSaves.test.ts` and `round32-brand-inertia.test.ts` §5's named ladder.

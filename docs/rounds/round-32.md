@@ -307,3 +307,61 @@ Both boxes are ticked with the place, per `docs/rounds/README.md` §"Keeping thi
   type errors in the new guard. ⚠⚠ AND EVERY BACKGROUND NOTICE FOR THOSE RUNS SAID «exit code 0» while
   the log said `CHECK_EXIT=1` or `=2` – four more entries on the tally CLAUDE.md keeps, caught by
   reading the file every time.
+
+- **4 + 5, REVISED THE SAME DAY** – `r32d/inertia-in-the-income`, branched off `r32c`. HE READ THE
+  SHIPPED RESULT AND STOPPED IT: «меня смущает вот это: На пятом году бренд стоит $166 060 при годовом
+  доходе $1 352». ⭐⭐⭐ HE IS RIGHT AND THE FAULT WAS THE SPEC'S. #4 floored the WORTH and left the
+  INCOME a bare function of fame, so the income still fell 98.7% over five years and the floored
+  valuation floated free of the business – **123x annual earnings, which is not a valuation.**
+
+  ⭐⭐ THE PREMISE WAS ALREADY IN THE INERTIA SPEC'S OWN §3: a brand keeps «a name, a shelf, a
+  distribution and a customer who already owns two of its shirts», and that customer KEEPS BUYING when
+  she stops winning. So the memory moved into the REVENUE:
+  `reach = max(fame, retention x strength)`, the income squares the reach, the multiple ramps on it,
+  and the worth is a plain multiple of the income. **`retention = 0.78`, measured against the one
+  documented case this repo holds** – Osaka's off-court money, −75% in three years with essentially no
+  sponsors lost (research §4e) – which lands at −74.8% on his own row.
+
+  ⭐⭐⭐ AND THE SEPARATE WORTH FLOOR IS GONE. `brandBuiltSignals` is deleted: one mechanism doing one
+  job. **`worth / a year of income` IS `brandMultipleX` again, to the cent** – round 30 #9's claim,
+  restored – so the ratio is bounded by the multiple's own band **[2.5x, 20x]** by construction. On his
+  row it runs **7.8x – 9.6x across all 261 weeks** of the projection; across the bench, **44,575
+  earning career-weeks, 2.53x – 20.00x, ZERO outside the band.** The income's five-year fall goes
+  −98.7% → **−87.4%** and the worth's −99.0% → **−89.7%** – the same order as its own income.
+
+  **#5's extension** – «чем больше она была в сильных контрактах – тем больше у нее велосити». The
+  shoot addition's half-life becomes a ladder, `shootFloorHalfLifeByBand = [26, 39, 52, 78]`, so reach
+  buys DURABILITY and not only volume. Band 2 stays at the shipped 52 so the level does not move, and
+  78 < a title's 104, which is his earlier ruling. Two careers with the SAME twelve shoots at bands 0
+  and 3 diverge **6.7x → 107x on the shoot floor and 1.70x → 1.43x on the worth at three years**,
+  against **1.24x** on the flat ladder that shipped first – which is the claim, because on the flat
+  ladder the gap never opens at all.
+
+  ⭐⭐⭐ THE TOP OF THE SHELF IS STILL UNMOVED, and now the income is too: **56,160 / 56,160
+  career-weeks at the cap, worst |delta| 0 cents; 72 / 72 careers' peak worth unchanged; the median
+  peak income $1,794,000/yr in both arms.** `retention < 1` is the whole proof and the guard asserts
+  the bound directly. ⚠ The A-control row still reproduces **$831,382 → $9,098**.
+
+  ⚠⚠ WHAT IT COSTS, said plainly: **round 30 #24's named case goes back to the mark.** That career is
+  one season past her wrap, so her stock is 1.19x her fame and an income-side floor binds only above
+  1.28x – it would need a retention of ~0.97 to lift her, which is a retention that has stopped being
+  one. **So the separate worth floor was NOT redundant for that one criterion, and it is dropped
+  anyway**, because keeping it means keeping the mechanism that priced a valuation off a business it
+  had stopped describing. The same career once she signs the letters her band already writes her is
+  **$112,844 in the control and $131,257 combined** – well clear, with no new mechanism.
+  The first pass's day-one repair (§11b) is withdrawn with it.
+
+  ⚠ NO SCHEMA MOVE. `SAVE_SCHEMA_VERSION` stays at **69**, no field is added, and the frozen career
+  hashes are **byte-identical – 0 keys of 72 / 72 / 73 on all three presets** against the base branch.
+  ⚠ Invariant 4: not a character of user-facing copy changed. ⚠ Zero draws.
+
+  Specs: `brand-inertia-2026-08.md` §14–§19 (his revision is §14, verbatim, renumbered off a collision)
+  and `collaborations-as-early-fame-2026-08.md` §10–§12. Guard: 29 arms, and the mutation log gained
+  four – ⚠ one of which («the multiple back on raw fame») RAN GREEN and forced a new arm, «both halves
+  of the worth read one clock», which is the only thing that catches it.
+
+  Gated on `r32d/inertia-in-the-income` at the end, each verdict read out of its own uniquely named
+  log whose mtime is newer than the run – never a pipe and never a background notice: `npm run check`
+  **exit 0** (105 files, 1,116 tests), `npm run test:e2e` **exit 0** (31 tests, 17s), `npm run
+  test:sim` **exit 0** (12 files, 309s). ⚠ An earlier green `check` was DISCARDED rather than quoted:
+  two files were edited while it ran, so it had gated a tree that no longer existed.
