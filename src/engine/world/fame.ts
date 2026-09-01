@@ -27,6 +27,10 @@
 // stays famous through itself and fades over four to six seasons after, which is «a rolling
 // memory, not a trophy».
 import { ECONOMY } from '../economy'
+// ⭐ ROUND 32 #5 – the band a signed letter was written at, read off the cheque the paper states.
+// `offers.ts` does not import this file (it reaches `world/ledger` and stops), so the edge is a
+// straight one and not a cycle.
+import { adBandOfTerms } from '../offers'
 import { WEEKS_PER_YEAR } from '../season/calendar'
 import type { TierId } from '../season/types'
 import type { AdOfferTerms } from '../../shared/protocol'
@@ -42,6 +46,18 @@ import type { WorldState } from '../world'
 export function decayAt(deltaWeeks: number): number {
   if (deltaWeeks < 0) return 0
   return Math.pow(0.5, deltaWeeks / ECONOMY.fame.halfLifeWeeks)
+}
+
+/** ⭐⭐ ROUND 32 #5 – HOW MUCH OF A DELIVERED SHOOT'S OWN FAME SURVIVES `delta` WEEKS, on the
+ *  CAMPAIGN's half-life rather than the title's. Same curve, shorter memory: «мало кто смотрит
+ *  журналы 2 годичной давности», and a championship is recited in every broadcast for years while a
+ *  campaign is one season's wallpaper.
+ *
+ *  ⚠ A SECOND CURVE AND NOT A SECOND COPY OF THE FIRST. `decayAt` is the title clock and this is the
+ *  campaign clock; they are two facts about the world, so they are two constants and one shape. */
+export function shootFloorDecayAt(deltaWeeks: number): number {
+  if (deltaWeeks < 0) return 0
+  return Math.pow(0.5, deltaWeeks / ECONOMY.fame.shootFloorHalfLifeWeeks)
 }
 
 /** ⭐ THE FLOOR – what the court earned, decayed to `week`, clamped to the cap. Zero for a career
@@ -71,6 +87,22 @@ export function fameFloorOf(world: WorldState, week: number): number {
     if (!band) continue
     floor += band.add * decayAt(week - (row.seasonIndex + 1) * WEEKS_PER_YEAR)
   }
+  // ⭐⭐⭐ ROUND 32 #5 – AND THE COLLABORATIONS SHE HAS ACTUALLY DELIVERED, on the same ledger as a
+  // title (docs/specs/collaborations-as-early-fame-2026-08.md). The owner: «на раннем этапе
+  // коллаборации нам должны помочь, они станут хорошим рычагом роста известности».
+  //
+  // ⚠⚠ ADDED HERE AND NOT MULTIPLIED BELOW, WHICH IS THE ITEM. `fameShootMultOf` reads the same
+  // weeks and still multiplies – both survive on his ruling («давай, да»), the add being the early
+  // rung and the multiplier the late one. A multiplier cannot lift a career with nothing to
+  // multiply, and that career – top 20, no titles – is exactly the one he asked the lever for.
+  //
+  // ⚠ BY THE BAND OF THE DEAL THAT ASKED FOR THE WEEK, never flat: «глобальный дом это не локальный
+  // ретейнер». And on the CAMPAIGN's own half-life, which is shorter than a title's – what lasts is
+  // carried by brand STRENGTH (`world/brandStrength.ts`), so there is no permanent residue here and
+  // therefore no unbounded term needing a cap picked out of the air.
+  for (const shoot of completedShootsByBand(world, week)) {
+    floor += (F.shootFloorByBand[shoot.band] ?? 0) * shootFloorDecayAt(week - shoot.week)
+  }
   return Math.min(F.cap, floor)
 }
 
@@ -80,14 +112,44 @@ export function fameFloorOf(world: WorldState, week: number): number {
  *  наказываем» applies to contracts too), so it bought no fame either. */
 export function completedShootWeeks(world: WorldState, week: number): number[] {
   const out: number[] = []
-  const c = world.college
   for (const offer of world.offers ?? []) {
     if (offer.kind !== 'ad' || offer.state !== 'signed') continue
-    for (const w of (offer.terms as AdOfferTerms).shootWeeks ?? []) {
-      if (w >= week) continue
-      if (c && w >= c.fromWeek && w < c.untilWeek) continue
-      out.push(w)
-    }
+    for (const w of shootWeeksLived(world, offer.terms as AdOfferTerms, week)) out.push(w)
+  }
+  return out
+}
+
+/** ⭐ ONE LETTER'S SHOOT WEEKS THAT WERE ACTUALLY LIVED, strictly before `week` – the predicate the
+ *  two folds above share so a delivered shoot cannot mean one thing to the multiplier and another to
+ *  the floor. ⚠ Extracted verbatim by round 32 #5; not a rule change. */
+function shootWeeksLived(world: WorldState, terms: AdOfferTerms, week: number): number[] {
+  const c = world.college
+  const out: number[] = []
+  for (const w of terms.shootWeeks ?? []) {
+    if (w >= week) continue
+    if (c && w >= c.fromWeek && w < c.untilWeek) continue
+    out.push(w)
+  }
+  return out
+}
+
+/** ⭐⭐ ROUND 32 #5 – THE SAME WEEKS, EACH CARRYING THE BAND OF THE DEAL THAT BOUGHT IT.
+ *
+ *  ⚠ THE FILTER IS `completedShootWeeks`' OWN, not a second copy of it – a week still ahead is a
+ *  promise and a week the college freeze swallowed lapsed silently, and both rules have to mean the
+ *  same thing in the floor as they do in the multiplier or one delivered shoot would be two
+ *  different facts. This walks the offers a second time only because it needs the LETTER as well as
+ *  the week; the predicate lives in one place and is called from both.
+ *
+ *  ⚠ SIGNED LETTERS ONLY, so a refused campaign buys nothing and an expired offer buys nothing –
+ *  the fame ledger reads what happened, never what was proposed. */
+export function completedShootsByBand(world: WorldState, week: number): { week: number; band: number }[] {
+  const out: { week: number; band: number }[] = []
+  for (const offer of world.offers ?? []) {
+    if (offer.kind !== 'ad' || offer.state !== 'signed') continue
+    const terms = offer.terms as AdOfferTerms
+    const band = adBandOfTerms(terms)
+    for (const w of shootWeeksLived(world, terms, week)) out.push({ week: w, band })
   }
   return out
 }
@@ -101,6 +163,41 @@ export function fameShootMultOf(world: WorldState, week: number): number {
   let steps = 0
   for (const w of completedShootWeeks(world, week)) steps += decayAt(week - w)
   return Math.min(F.shootMultCap, 1 + F.shootStep * steps)
+}
+
+/** ⭐⭐⭐ ROUND 32 #4 – EVERY WEEK ON WHICH FAME CAN GO UP, deduplicated and sorted.
+ *
+ *  ⚠⚠ IT EXISTS BECAUSE FAME IS PIECEWISE-DECAYING, AND THAT IS THE WHOLE ARGUMENT. Every term of
+ *  the floor and of the multiplier is a fixed step faded by `decayAt` / `shootFloorDecayAt`, both of
+ *  which are strictly decreasing in the gap – so between two of these dates fame can only FALL, and
+ *  a maximum of fame over any span is attained ON one of them (or at the span's own end). That is
+ *  what lets `world/brandStrength.ts` find the best she has ever been by asking O(records)
+ *  questions instead of O(weeks) ones, EXACTLY rather than on a grid.
+ *
+ *  ⚠ A SHOOT DATES AT `w + 1`, NOT AT `w` – `completedShootWeeks`' own «strictly before `week`»
+ *  rule, so the week a photograph is taken is the week AFTER it that first pays for it. Off by one
+ *  here would put the maximum a week early and quietly under-read every stock built on shoots.
+ *
+ *  ⚠ IT LISTS DATES AND PRICES NOTHING. The steps are `fameAt`'s to apply, so a retune of any rung
+ *  moves the answer without moving this list – and a source of fame added tomorrow has to be added
+ *  here too, which is the one coupling this function has and is stated so it is not discovered.
+ *
+ *  Pure: reads the world, writes nothing, draws nothing. */
+export function fameEventWeeks(world: WorldState): number[] {
+  const seen = new Set<number>()
+  for (const tier of Object.keys(ECONOMY.fame.titleFloor) as TierId[]) {
+    for (const w of world.trophiesByTier?.[tier]?.titles ?? []) seen.add(w)
+  }
+  for (const w of world.trophiesByTier?.slam?.finals ?? []) seen.add(w)
+  for (const row of world.seasonHistory ?? []) {
+    if (row.byTrack?.wta?.endRank == null) continue
+    seen.add((row.seasonIndex + 1) * WEEKS_PER_YEAR)
+  }
+  for (const offer of world.offers ?? []) {
+    if (offer.kind !== 'ad' || offer.state !== 'signed') continue
+    for (const w of (offer.terms as AdOfferTerms).shootWeeks ?? []) seen.add(w + 1)
+  }
+  return [...seen].sort((a, b) => a - b)
 }
 
 /** ⭐⭐ FAME, 0–100 – the floor times the shoot multiplier, capped. FRACTIONAL: the house rule is

@@ -78,6 +78,7 @@
 import { ECONOMY } from '../economy'
 import { WEEKS_PER_YEAR } from '../season/calendar'
 import { decayAt, fameAt } from './fame'
+import { brandStrengthAt } from './brandStrength'
 import { tierCrowdMid } from '../season/preview'
 import type { TierId } from '../season/types'
 import type { WorldState } from '../world'
@@ -92,6 +93,17 @@ import type { WorldState } from '../world'
 export interface BrandSignals {
   /** the fame stock, fractional, at the week asked for – `world/fame.ts`, unrounded. */
   fame: number
+  /** ⭐⭐⭐ ROUND 32 #4 – THE BRAND'S SLOW STOCK at the same week (`world/brandStrength.ts`): the best
+   *  she has ever been, faded on a half-life measured in YEARS and floored at a share of that best.
+   *
+   *  ⚠⚠ IT IS THE OTHER CLOCK AND IT IS READ BY THE WORTH ALONE. `brandWeeklyGrossCents` still reads
+   *  `fame` – income is a FLOW and follows attention – and `brandGrossWorthCents` prices at this,
+   *  because worth is a STOCK and follows what was built. Before round 32 #4 one number did both
+   *  jobs, and a career that stopped winning lost 99% of its brand in five years.
+   *
+   *  ⚠ NEVER BELOW `fame`, BY CONSTRUCTION, and equal to it at the cap and at every running peak –
+   *  see `brandStrengthAt`'s header for why that is what pins the top of the shelf. */
+  strength: number
   /** ⭐ «СКОЛЬКО ИГРАЕТ» – finished seasons that carry a WTA end-rank, i.e. seasons she spent as a
    *  professional. ⚠ A season with no recorded WTA rank counts NOTHING and is not counted as a bad
    *  one: «not recorded» is not «unranked», which is `academyReputationOf`'s own distinction and the
@@ -194,6 +206,7 @@ export function brandSignalsOf(world: WorldState, week = world.week): BrandSigna
   const played = wins + losses
   return {
     fame: fameAt(world, week),
+    strength: brandStrengthAt(world, week),
     proSeasons,
     topSeasons,
     finalsLost,
@@ -356,5 +369,25 @@ export function brandMultipleX(signals: BrandSignals, baseX: number): number {
  *  which is a fact about the owned row and not about the brand, so it is applied at the ownership
  *  boundary in `world/assets.ts` where the row is. */
 export function brandGrossWorthCents(signals: BrandSignals, baseX: number): number {
-  return Math.round(brandWeeklyGrossCents(signals) * WEEKS_PER_YEAR * brandMultipleX(signals, baseX))
+  const built = brandBuiltSignals(signals)
+  return Math.round(brandWeeklyGrossCents(built) * WEEKS_PER_YEAR * brandMultipleX(built, baseX))
+}
+
+/** ⭐⭐⭐ ROUND 32 #4 – THE SIGNALS A *WORTH* QUESTION IS ASKED OF: the career's own, with the brand's
+ *  slow stock standing in for this week's noise. `docs/specs/brand-inertia-2026-08.md` §4.
+ *
+ *  ⚠⚠ IT SUBSTITUTES RATHER THAN ADDING A PARAMETER, and that is deliberate: every term of the
+ *  valuation that reads `fame` – the convex income curve AND round 32 #3's ramp in the multiple –
+ *  has to move onto the same clock together, or the two halves of the worth would disagree about
+ *  which brand they are pricing. One substitution, one clock, no term left behind.
+ *
+ *  ⚠ THE INCOME LINE DOES NOT GO THROUGH HERE. `assetEarningsRateCents` asks `brandWeeklyGrossCents`
+ *  with the raw signals, so what the brand PAYS this week still follows this week's attention. That
+ *  is the split, and collapsing it back is the defect the inertia spec was written to cure.
+ *
+ *  ⚠ AND THE SHOP ROW GOES THROUGH IT TOO (`shopView`), so «Worth N years of what it sells» quotes
+ *  the multiple the valuation actually used. Not a character of that sentence moved – invariant 4 –
+ *  only the number in it. */
+export function brandBuiltSignals(signals: BrandSignals): BrandSignals {
+  return { ...signals, fame: signals.strength }
 }

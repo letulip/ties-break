@@ -1790,6 +1790,45 @@ export function adBandFor(standing: SponsorStanding): number | null {
   return null
 }
 
+/** ⭐⭐⭐ ROUND 32 #5 – WHICH BAND A LETTER WAS WRITTEN AT, recovered from the paper itself.
+ *
+ *  THE OWNER'S RULING that needs it: «по полосе сделки (глобальный дом это не локальный ретейнер) –
+ *  да». A delivered shoot adds to the fame floor and the size of the addition is the size of the
+ *  deal, so the fame ledger has to be able to ask a SIGNED letter which rung of the gradient wrote
+ *  it – on every letter in every save, including the ones written before the gradient existed.
+ *
+ *  ⚠⚠ READ OFF `cashCents` RATHER THAN STORED, AND THAT IS THE POINT. The band is not a fact about
+ *  the letter, it is a fact about her STANDING THE WEEK IT ARRIVED (`adBandFor` above) – and that
+ *  standing is long gone by the time the shoot is folded into fame. What the letter does carry, and
+ *  has carried since the portfolio shipped, is the cheque; the cheque IS the band, cell by cell, in
+ *  `categories[c].feeCentsByBand`. So nothing is added to `AdOfferTerms`, no save is back-filled,
+ *  and a paper signed in round 29 answers the question it was always carrying.
+ *
+ *  ⚠ THE STRONGEST BAND THE CHEQUE AT LEAST MATCHES, walked from the top exactly as `adBandFor`
+ *  walks the ranks – so a letter written under today's table lands on its own cell EXACTLY (the
+ *  ladders are strictly increasing wherever they are not null), and a legacy letter whose fee
+ *  belongs to no cell lands on the strongest rung it can actually pay for rather than throwing. An
+ *  unrecognised or under-scale cheque is band 0: the weakest rung, never a refusal, and never more
+ *  than the paper proves.
+ *
+ *  ⚠ THE CAPSTONE IS THE TOP BAND AND IS NOT A CATEGORY ROW. Its money is its own constant
+ *  ($10M/yr, the icon-of-icons letter) and `adFeeFor` deliberately cannot price it, so it is named
+ *  here rather than falling through to 0 – which is what «глобальный дом» means if it means
+ *  anything.
+ *
+ *  Pure: reads the terms and the catalogue, writes nothing, draws nothing. */
+export function adBandOfTerms(terms: AdOfferTerms): number {
+  const bands = ECONOMY.advertising.bands
+  const category = adCategoryOf(terms)
+  if (category === 'capstone') return bands.length - 1
+  const ladder = ECONOMY.advertising.categories[category].feeCentsByBand
+  for (let i = bands.length - 1; i >= 0; i--) {
+    const cell = ladder[i]
+    if (cell != null && terms.cashCents >= cell) return i
+  }
+  return 0
+}
+
 /** THE CHEQUE ONE CATEGORY WRITES AT ONE BAND, in cents per contract year – or null where the
  *  category has not opened (`feeCentsByBand`'s own nulls, so the gate and the price are one fact).
  *  The capstone is not a category row and never reaches this: its money is its own constant. */

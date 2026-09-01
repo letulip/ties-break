@@ -41,7 +41,7 @@ import { addEvent } from './ledger'
 import { assetWeeklyIncomeCents } from './business'
 // ⭐⭐⭐ ROUND 30 #23 – the shelf quotes the multiple the CAREER has earned, so it reads the same
 // function the valuation does rather than the catalogue's base. One arithmetic, many readers.
-import { brandMultipleX, brandSignalsOf } from './brand'
+import { brandBuiltSignals, brandMultipleX, brandSignalsOf } from './brand'
 // ⚠ THE ONE THING THIS FILE ASKS THE MARKET DIRECTLY – the season line's crash predicate. Every
 // VALUE still flows through `assetWorthCents`; this is a question about the calendar, not a price.
 import { marketCrashFellIn } from './market'
@@ -630,9 +630,14 @@ export function shopView(world: WorldState): ShopView {
       // one the row is actually priced at.
       // ⚠ WHOLE, ROUNDED HERE at the boundary – `annualRatePct` two lines up and the owner's rule of
       // 26.08, «у пользователя целые в интерфейсе»; the engine keeps the fraction.
+      // ⚠⚠ ROUND 32 #4 – ASKED THROUGH `brandBuiltSignals`, so the number in that sentence is the
+      // multiple the VALUATION used and not a second one. `brandGrossWorthCents` prices the row on
+      // the brand's slow stock (income is a flow, worth is a stock – docs/specs/brand-inertia-2026-08.md
+      // §4), and a shop row quoting the fame multiple while the shelf sold at the strength multiple
+      // would be the screen-and-valuation disagreement the paragraph above exists to forbid.
       earningsMultipleX:
         item.earningsMultipleX !== undefined
-          ? Math.round(brandMultipleX(brandSignalsOf(world), item.earningsMultipleX))
+          ? Math.round(brandMultipleX(brandBuiltSignals(brandSignalsOf(world)), item.earningsMultipleX))
           : null,
       // ⭐⭐ ROUND 30 #8/#10 – what they called it, and what the game would offer if this purchase is
       // the one that names it. Both answered HERE, so the screen renders a decision it never makes.

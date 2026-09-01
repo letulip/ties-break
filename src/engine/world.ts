@@ -337,14 +337,18 @@ export { marketCrash, marketCrashFellIn, marketCrashLog, marketIndex, marketWave
 // ⭐⭐ ROUND 29 PART FOUR P7 – FAME (the accounted stock, world/fame.ts) and THE PARENT'S
 // BUSINESSES (merch follows fame, the academy's stages follow reputation – world/business.ts).
 // Re-exported under the historical convention; zero draws anywhere behind these names.
-import { completedShootWeeks, fameAt, fameFloorOf, fameShootMultOf } from './world/fame'
-export { completedShootWeeks, fameAt, fameFloorOf, fameShootMultOf }
+import { completedShootsByBand, completedShootWeeks, fameAt, fameEventWeeks, fameFloorOf, fameShootMultOf, shootFloorDecayAt } from './world/fame'
+export { completedShootsByBand, completedShootWeeks, fameAt, fameEventWeeks, fameFloorOf, fameShootMultOf, shootFloorDecayAt }
+// ⭐⭐⭐ ROUND 32 #4 – THE BRAND'S SLOW STOCK (world/brandStrength.ts). Income keeps reading fame;
+// the WORTH reads this. Zero draws, nothing written per week – see the module header.
+import { brandStrengthAt, strengthDecayAt } from './world/brandStrength'
+export { brandStrengthAt, strengthDecayAt }
 // ⭐⭐⭐ ROUND 30 #23/#24 – THE BRAND'S OWN ECONOMICS (world/brand.ts): what a WHOLE brand takes in
 // (convex in fame), what multiple the CAREER has earned it, and the two joined. Ownership is applied
 // in `world/assets.ts`, not here. Zero draws behind every one of these names – a valuation is a fold
 // over history.
-import { brandCrowdMult, brandGrossWorthCents, brandMultipleX, brandSignalsOf, brandWeeklyGrossCents } from './world/brand'
-export { brandCrowdMult, brandGrossWorthCents, brandMultipleX, brandSignalsOf, brandWeeklyGrossCents }
+import { brandBuiltSignals, brandCrowdMult, brandGrossWorthCents, brandMultipleX, brandSignalsOf, brandWeeklyGrossCents } from './world/brand'
+export { brandBuiltSignals, brandCrowdMult, brandGrossWorthCents, brandMultipleX, brandSignalsOf, brandWeeklyGrossCents }
 export type { BrandSignals } from './world/brand'
 import { academyReputationOf, academyWeeklyIncomeCents, assetWeeklyIncomeCents, merchWeeklyIncomeCents } from './world/business'
 export { academyReputationOf, academyWeeklyIncomeCents, assetWeeklyIncomeCents, merchWeeklyIncomeCents }
@@ -394,8 +398,8 @@ import { growAndLive } from './world/phaseGrowth'
 import { closeTheWeek } from './world/phaseAiWeek'
 import { ensureSeason, housekeep, recomputeRankAndMilestones } from './world/bookkeeping'
 export { ensureSeason }
-import type { PendingTournament, WorldState } from './world/state'
-export type { PendingTournament, WorldState }
+import type { BrandStrengthSeed, PendingTournament, WorldState } from './world/state'
+export type { BrandStrengthSeed, PendingTournament, WorldState }
 import { SAVE_SCHEMA_VERSION } from './world/state'
 export { SAVE_SCHEMA_VERSION }
 
