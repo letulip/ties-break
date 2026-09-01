@@ -10,6 +10,11 @@
 // named beside the claim it breaks.
 import { describe, expect, it } from 'vitest'
 import { readFileSync } from 'node:fs'
+// ⚠ THE MARKER HELPERS, NEVER A RAW `indexOf` SLICE. CLAUDE.md's gotcha and `npm run pins:check`:
+// `slice(indexOf(a), indexOf(b))` does not fail when a marker rots, it silently WIDENS to almost the
+// whole file and the pin stays green. `regionToLast` throws instead. `scriptCodeOf` strips JS
+// comments and leaves the file's own prose out of the code pins below.
+import { regionToLast, scriptCodeOf } from './helpers/source'
 import { appetiteAt, childhoodWalk, medianChildhood, type ChildhoodYear } from '../src/engine/childhood'
 import { ECONOMY } from '../src/engine/economy'
 import {
@@ -218,7 +223,7 @@ describe('⚠ the copy rules hold over the table, which is where the copy now li
   // The template is allowed the words it needs to be markup – tag names, class names, bindings – so
   // the check is for PROSE: a run of three or more words in a row between tags.
   it('the component holds no copy of its own – every sentence comes from the table', () => {
-    const template = COMPONENT_SRC.slice(COMPONENT_SRC.indexOf('<template>'), COMPONENT_SRC.lastIndexOf('</template>'))
+    const template = regionToLast(COMPONENT_SRC, '<template>', '</template>')
     const bare = template.replace(/<!--[\s\S]*?-->/g, ' ').replace(/<[^>]*>/g, '\n')
     const prose = bare
       .split('\n')
@@ -255,6 +260,14 @@ describe('⭐ the years feed engine/childhood.ts, and neither copy may drift', (
   // MUTATION: rename `teaching` to `coaching` on `PrologueYear` -> `npm run check` goes red at type
   // check, before a single test runs.
   it('a finished run is exactly what childhoodWalk takes – nine years, and it walks them', () => {
+    // BOTH DIRECTIONS, AND THE COMPILER IS WHAT ENFORCES THEM. These three lines are the entire
+    // defence against the duplicate `PrologueYear` drifting from `ChildhoodYear`: rename a field on
+    // either side and `vue-tsc -b --force` fails before a single test runs.
+    const mine: PrologueYear = { age: 5, practice: 0.25, teaching: 0.5, focus: 'general' }
+    const asTheModelSeesIt: ChildhoodYear = mine
+    const backAgain: PrologueYear = asTheModelSeesIt
+    expect(backAgain).toEqual(mine)
+
     const run = finish(runOf(CARRIED_ROAD), 'heavy')
     expect(isComplete(run)).toBe(true)
     const years: ChildhoodYear[] = chosenYears(run)
@@ -457,7 +470,9 @@ describe('⭐⭐ the age-12 fork is DERIVED, and there are no dice in a derived 
     const run = runOf(MIDDLE_ROAD)
     const first = readTwelfth(run).reading
     for (let i = 0; i < 200; i++) expect(readTwelfth(runOf(MIDDLE_ROAD)).reading).toBe(first)
-    const code = RUN_SRC.replace(/\/\*[\s\S]*?\*\//g, ' ').replace(/(^|[^:])\/\/.*$/gm, '$1')
+    const code = scriptCodeOf(RUN_SRC)
+    // the strip left the module and not an empty string – the negative pins below are worthless
+    // without this line, and it is the mutation guard for the strip itself
     expect(code).toMatch(/export function readTwelfth/)
     expect(code).not.toMatch(/\bMath\.random\b/)
     expect(code).not.toMatch(/\brngFromSeed\b/)
@@ -471,7 +486,8 @@ describe('⭐⭐ the age-12 fork is DERIVED, and there are no dice in a derived 
     const run = finish(runOf(CARRIED_ROAD), 'heavy')
     expect(Object.keys(run).sort()).toEqual(['origin', 'picks'])
     for (const v of Object.values(run.picks)) expect(typeof v).toBe('string')
-    const code = RUN_SRC.replace(/\/\*[\s\S]*?\*\//g, ' ').replace(/(^|[^:])\/\/.*$/gm, '$1')
+    const code = scriptCodeOf(RUN_SRC)
+    expect(code).toMatch(/export function readTwelfth/)
     expect(code).not.toMatch(/\bmotivation\b/i)
   })
 })

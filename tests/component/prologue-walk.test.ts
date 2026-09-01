@@ -27,6 +27,7 @@ import { createPinia, setActivePinia } from 'pinia'
 // ⚠ THE APP'S OWN STYLESHEET. Without it `.dialog-card`'s height bound is not in the cascade and
 // every measurement below is vacuous – the same reason tour-briefing.test.ts imports it.
 import '../../src/style.css'
+import { assertLegible } from './contrast'
 import { assertDismissReachable, measureDialog, setViewport, PHONE, NARROW_PHONE } from './fits'
 import PrologueCardView from '../../src/components/PrologueCard.vue'
 import { PROLOGUE_CARDS, TWELFTH_WANTS_MORE, type PrologueCard } from '../../src/prologue/cards'
@@ -117,6 +118,39 @@ describe('⭐⭐ nine cards on a 375x667 phone, and the way on is on every one o
     for (const { card, run } of walk(CARRIED_ROAD, 'working')) {
       const { wrapper, el, answers } = mountCard(card, run, NARROW_PHONE)
       assertDismissReachable(el, answers, NARROW_PHONE, `narrow, age ${card.age}`)
+      wrapper.unmount()
+    }
+  })
+
+  // ⚠⚠ AND THE ORDERING IS ASSERTED RATHER THAN ASSUMED, WHICH A MUTATION PASS IS WHAT FOUND.
+  // `measureDialog` reads the dismiss control's box off the card's own bottom edge once the card is
+  // scrolled to its end – its own docstring says the control «must be the LAST thing in the card's
+  // flow» – so a template that puts a paragraph AFTER the answers makes every fit number above
+  // quietly wrong while every one of them stays green. Nothing in `fits.ts` can notice that, because
+  // happy-dom does no layout and the helper is handed the element to measure. So the precondition is
+  // a test of its own: moving `.prologue-answers` above `.prologue-read` was the one mutation of
+  // twenty that survived the first pass, and this is what it bought.
+  it('the answers are the last thing on the card – the precondition every fit number above rests on', () => {
+    for (const { card, run } of walk(CARRIED_ROAD, 'middle')) {
+      const { wrapper, el, answers } = mountCard(card, run, PHONE)
+      expect(el.lastElementChild, `age ${card.age} – something follows the way out`).toBe(answers)
+      wrapper.unmount()
+    }
+  })
+
+  // ⚠ ROUND-17 #3, THE OTHER WAY A NEW DIALOG SHIPS UNREADABLE. `BirthdayDialog` painted its four
+  // choice rows `var(--card, #fff)` on `var(--ink, #1c1c1e)` – a light-theme pair in a dark app,
+  // with `--card` declared nowhere, so the fallbacks won and four buttons shipped at a MEASURED
+  // 1.09:1 on a dialog the player could not dismiss. Every structural test passed. This card uses
+  // the same tokens as `.birthday-choice` and no fallback anywhere; here is the number.
+  it('every line on the card clears AA against what is actually behind it', () => {
+    for (const { card, run } of walk(CARRIED_ROAD, 'middle')) {
+      const { wrapper } = mountCard(card, run, PHONE)
+      assertLegible(document.querySelector('.prologue-title')!, `age ${card.age} title`)
+      assertLegible(document.querySelector('.prologue-lede')!, `age ${card.age} lede`)
+      assertLegible(document.querySelector('.prologue-read-line')!, `age ${card.age} her`)
+      for (const el of document.querySelectorAll('.prologue-answer-label')) assertLegible(el, `age ${card.age} answer`)
+      for (const el of document.querySelectorAll('.prologue-answer-note')) assertLegible(el, `age ${card.age} note`)
       wrapper.unmount()
     }
   })

@@ -13,17 +13,30 @@
 // tests, and replacing his copy would then be a refactor with a test run at the end of it. Here it
 // is A TABLE EDIT AND NOTHING ELSE, and that is literally true and mechanically checked:
 //
-//   * NOT ONE PLAYER-FACING SENTENCE IS IN A `<template>`. `PrologueCard.vue` renders `{{ }}`
+//   * NOT ONE PLAYER-FACING SENTENCE IS IN A VUE TEMPLATE. `PrologueCard.vue` renders `{{ }}`
 //     bindings off this table and holds no copy of its own – `tests/prologue-cards.test.ts` asserts
 //     that the component's template contains no sentence at all, so a card's words can never leak
 //     back into markup where changing them would mean editing a component.
+//     ⚠ AND THIS COMMENT MAY NOT SPELL THE TAG OUT, which cost a gate run and is worth recording.
+//     `tests/coach-voice.test.ts` takes a file's rendered surface from the first literal opening tag
+//     to the LAST closing one – and a `.ts` file has no closing tag, so `to > from` is false and the
+//     region runs to the END OF THE FILE. Naming the tag in prose turned this whole table, comments
+//     included, into "rendered template text" and the R15-7 sweep reported nineteen offenders, three
+//     of which were the owner's own quoted rulings in comments that the rule explicitly exempts. The
+//     same silent-widening family CLAUDE.md's marker-helper gotcha is about, arriving through a
+//     COMMENT rather than through a pin.
 //   * THE STRUCTURE IS UNIFORM ACROSS ALL NINE. A quiet card is a card with no `options`, not a
 //     different kind of thing, so nothing downstream branches on which card it is drawing.
-//   * THE COPY RULES ARE ENFORCED HERE RATHER THAN IN THE TEMPLATE. `template-copy-rules.test.ts`
-//     reads `<template>` blocks, and none of these strings are in one, so the same three rules (no
+//   * THE COPY RULES ARE ENFORCED HERE RATHER THAN IN THE MARKUP. `template-copy-rules.test.ts`
+//     reads Vue templates, and none of these strings are in one, so the same three rules (no
 //     Cyrillic, the short dash `–` only, the player is «you» and never «they») are re-asserted over
 //     this table by `tests/prologue-cards.test.ts`. Moving copy out of the markup must not move it
 //     out of the guard.
+//   * ⚠ AND R15-7 ALREADY REACHES THIS TABLE, so it is NOT re-asserted here. `coach-voice.test.ts`
+//     sweeps every string literal in `src/**` for a masculine pronoun – «the player is "you", the
+//     girl is "she", and every professional is UNNAMED» – and that is exactly the cast of these nine
+//     cards. The first draft of the coach's read called the person teaching her "he" fourteen times
+//     and the house sweep caught all fourteen; the owner's own fix is to drop the pronoun.
 //
 // ⚠ FOUR CARDS CARRY NO DECISION – 5, 6, 7 AND 13 – AND THE COUNT IS HIS («может тогда больше без
 // решений, 3 или 4?»). Build spec §3: nine consecutive choices is not ten minutes, it is a quiz. The
@@ -204,8 +217,8 @@ export const PROLOGUE_CARDS: readonly PrologueCard[] = [
       'is twenty minutes away.',
     her: { cool: 'She likes it. That is all you know.', warm: 'She likes it. That is all you know.' },
     coach: {
-      cool: 'The man who runs the group learns her name in the second week.',
-      warm: 'The man who runs the group learns her name in the second week.',
+      cool: 'The coach who runs the group learns her name in the second week.',
+      warm: 'The coach who runs the group learns her name in the second week.',
     },
     continueLabel: 'Sign her up',
     share: 0.65,
@@ -223,8 +236,8 @@ export const PROLOGUE_CARDS: readonly PrologueCard[] = [
       'noticed. A year goes by like this and none of it costs you anything you have to think about.',
     her: { cool: 'She still asks to go.', warm: 'She still asks to go.' },
     coach: {
-      cool: 'He says she listens, and at seven he means it as a compliment.',
-      warm: 'He says she listens, and at seven he means it as a compliment.',
+      cool: 'The coach says she listens – at seven that is a compliment.',
+      warm: 'The coach says she listens – at seven that is a compliment.',
     },
     continueLabel: 'A year passes',
     share: 0.7,
@@ -246,8 +259,8 @@ export const PROLOGUE_CARDS: readonly PrologueCard[] = [
       warm: 'She has a forehand now and she wants you to watch it.',
     },
     coach: {
-      cool: 'He says she could do more than this group gives her.',
-      warm: 'He says she could do more than this group gives her.',
+      cool: 'The coach says she could do more than this group gives her.',
+      warm: 'The coach says she could do more than this group gives her.',
     },
     continueLabel: 'Go on',
     options: [
@@ -285,8 +298,8 @@ export const PROLOGUE_CARDS: readonly PrologueCard[] = [
       warm: 'She is one of the ones who stays behind afterwards.',
     },
     coach: {
-      cool: 'He says she is fine. He says that about all of them.',
-      warm: 'He wants her twice a week instead of once.',
+      cool: 'The coach says she is fine, and says it about all of them.',
+      warm: 'The coach wants her twice a week instead of once.',
     },
     continueLabel: 'Go on',
     options: [
@@ -324,8 +337,8 @@ export const PROLOGUE_CARDS: readonly PrologueCard[] = [
       warm: 'She has started watching how other people serve.',
     },
     coach: {
-      cool: 'He has not mentioned the tournament to you.',
-      warm: 'He thinks she would not embarrass herself in a draw.',
+      cool: 'The coach has not mentioned the tournament to you.',
+      warm: 'The coach thinks she would not embarrass herself in a draw.',
     },
     continueLabel: 'Go on',
     options: [
@@ -367,8 +380,8 @@ export const PROLOGUE_CARDS: readonly PrologueCard[] = [
       warm: 'She has asked whether she can go more often.',
     },
     coach: {
-      cool: 'He says she has kept up. He does not say more than that.',
-      warm: 'He says the ceiling on this is her week, not her hands.',
+      cool: 'The coach says she has kept up, and nothing more than that.',
+      warm: 'The coach says the limit on this is her week, not her hands.',
     },
     continueLabel: 'Go on',
     options: [
@@ -412,8 +425,8 @@ export const PROLOGUE_CARDS: readonly PrologueCard[] = [
       warm: 'She is not tired of tennis. She is tired of this week.',
     },
     coach: {
-      cool: 'He has seen it before and he is not surprised by it.',
-      warm: 'He says she is not the first one to go quiet at twelve.',
+      cool: 'The coach has seen it before and is not surprised by it.',
+      warm: 'The coach says she is not the first to go quiet at twelve.',
     },
     continueLabel: 'Go on',
     options: [
@@ -450,8 +463,8 @@ export const PROLOGUE_CARDS: readonly PrologueCard[] = [
       warm: 'She knows which of the girls on the board are going, and when.',
     },
     coach: {
-      cool: 'He says he will tell you what he thinks in the spring.',
-      warm: 'He says he will tell you what he thinks in the spring.',
+      cool: 'The coach will tell you what it looks like in the spring.',
+      warm: 'The coach will tell you what it looks like in the spring.',
     },
     continueLabel: 'Wait for the coach',
     sameAsLastYear: true,
@@ -474,8 +487,8 @@ export const TWELFTH_WANTS_MORE: PrologueCard = {
     warm: 'She has worked out what the next step is and she wants it.',
   },
   coach: {
-    cool: 'He says she is asking the right question a little early.',
-    warm: 'He says he has been waiting for her to ask.',
+    cool: 'The coach says she is asking the right question a little early.',
+    warm: 'The coach has been waiting for her to ask.',
   },
   continueLabel: 'Go on',
   options: [
