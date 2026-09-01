@@ -305,3 +305,44 @@ through a 0.5 floor at a 260-week half-life, so `0.4` and `0.5` read the same th
 further out. The shipped pair is «half after four years, never below two-fifths of her own best».
 Anything longer or higher is a bigger permanent residue, which is a decision about how much of a
 career survives it rather than a correction – so it is filed here rather than chosen.
+
+## 8. ⚠⚠ REVISION (31.08) – THE MEMORY WAS PUT IN THE WRONG PLACE
+
+He read the shipped measurement and stopped it: «меня смущает вот это: На пятом году бренд стоит
+$166 060 при годовом доходе $1 352». He is right, and the fault is this spec's, not the build's.
+
+**WHAT WENT WRONG.** §4 split flow from stock and assigned them: income reads fame, worth reads
+strength. The split is right; **the assignment is not.** Income was left a bare function of fame and
+falls **98.7%** over five years, so a worth that is floored while its income is not floats free of
+the business: 123x annual earnings at the tail is not a valuation, it is a number that has stopped
+being about the thing it prices.
+
+**AND THE PREMISE WAS ALREADY IN THIS SPEC'S OWN §3**: a brand holds «a name, a shelf, a
+distribution and a customer who already owns two of its shirts». That customer keeps buying when she
+stops winning. So it is the REVENUE that should not collapse – the valuation's stability is a
+consequence, not a thing to install separately.
+
+**THE REVISED SHAPE, and it is fewer mechanisms rather than more:**
+
+    effectiveReach = max(fame, retention x strength)      // retention < 1
+    income          = f(effectiveReach)                   // the existing curve, unchanged
+    worth           = income x multiple                   // as today
+
+⭐ **The top is preserved by construction, not by a clamp.** Strength converges on fame at the cap,
+so at the top `retention x strength < fame` and `effectiveReach` IS fame – the income curve at the
+peak is the shipped one, term for term. The floor only ever binds on the way down, which is the only
+place he asked anything to move.
+
+⭐ **AND THE SEPARATE WORTH FLOOR MAY NOW BE REDUNDANT.** With income floored, worth is floored
+through it. ⚠ MEASURE THIS RATHER THAN ASSUME IT: if the worth floor can be dropped with the
+acceptance below still met, drop it – one mechanism doing one job is the whole argument of §4.
+
+**NEW ACCEPTANCE, and this one is a number rather than an observation:**
+- ⭐⭐ **worth / annual income must stay inside a defensible band at EVERY point of the five-year
+  projection.** Today it runs 9.5x at week 933 and 123x at +5 years. A business does not trade at
+  123x its earnings; name the band you hold it to and show the whole curve inside it.
+- the five-year fall in worth is of the same order as the fall in INCOME – and income's own fall is
+  now part of what changed, so quote both.
+- the top of the shelf is unmoved: prove it across the bench's career-weeks as before.
+- his rulings in §7 stand unchanged: years-long half-life, a floor as a share of HER OWN peak,
+  seeded from current fame, append-only migration, backwards compatibility.

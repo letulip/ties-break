@@ -255,3 +255,33 @@ in the band, the band is read off the cheque (every cell, plus a legacy letter, 
 decays faster than a title and leaves no residue, the multiplier still moves too, a shoot still ahead
 buys nothing, and a week the college freeze swallowed lapses silently. Mutation-verified; the log is
 at the foot of the file.
+
+## 7. ⚠ EXTENSION (31.08) – REACH BUYS DURABILITY, NOT ONLY VOLUME
+
+His words: «у нас есть популярные сайты, журналы и бренды, а есть менее популярные, о которых знает
+мало людей. Что если мы это тоже отразим в нашей формуле доходности? т.е. чем больше она была в
+сильных контрактах – тем больше у нее велосити … Как то женщин из номинации плейбоя помнят довольно
+долго, как мне кажется, но может быть я ошибаюсь».
+
+**WHAT SHIPPED IS HALF OF THIS.** §6 scaled the addition's SIZE by the deal's band
+(`0.04 / 0.06 / 0.08 / 0.11`) and gave every band the SAME 52-week half-life. So a global house and
+a local retainer are told apart by loudness and forgotten at identical speed.
+
+⭐ **They should differ in both.** A placement seen by millions leaves a mark that outlives the
+campaign; a flyer in one town is gone by the next season. That is precisely his «велосити»: a career
+spent in strong contracts should be remembered, not merely have been louder at the time.
+
+⚠ ON HIS EXAMPLE: he hedged it himself («может быть я ошибаюсь») and it has not been checked here,
+so it is not evidence. It is not needed – the general principle, that high-reach placements are
+remembered longer than low-reach ones, carries the design on its own.
+
+**THE CHANGE IS ONE PARAMETER, into machinery that already exists:** the shoot addition's half-life
+becomes a function of the band, alongside the size that already is. Weakest band shortest, global
+house longest; pick the range by measurement and report it.
+
+**ACCEPTANCE:**
+- ⭐ two careers with the SAME number of delivered shoots but different bands must diverge visibly
+  years later – that is the whole claim, and a test that only compares them in the shoot week proves
+  nothing about durability.
+- Alice's own row still barely moves; the top of the shelf is still unmoved.
+- ⚠ measured in the COMBINED arm with the revised inertia, per his standing ruling.
