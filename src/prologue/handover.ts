@@ -203,7 +203,7 @@ export const HANDOVER_COPY = {
    *  говорим»: no candidate may mention a reroll, odds, a seed, a floor or a chance, and each one
    *  has to stay a choice about HER rather than about a mechanism. `tests/prologue-handover.test.ts`
    *  sweeps this whole table, drafts included. */
-  startAgain: 'Raise a different girl',
+  startAgain: 'Start again',
 } as const
 
 /** ⭐ THE THREE THE OWNER HAS TO PICK FROM, and the recommended one is `HANDOVER_COPY.startAgain`
@@ -228,6 +228,11 @@ export const HANDOVER_COPY = {
  *  candidate, «Someone else's nine years», was drafted and dropped for exactly that: it is about the
  *  YEARS and mentions no child at all, which is the half of his ruling that is easiest to lose. */
 export const START_AGAIN_DRAFTS: readonly string[] = [
+  // ⭐ HIS CHOICE, 02.09, and it is none of the three that were offered: «Raise another child –
+  // давай просто Start again и всё.» Shortest of all of them, mentions no mechanism, and – the
+  // thing the three drafts kept failing at – it does not have to decide whether the next girl is
+  // another girl, a different girl or the same nine years again. It simply does not say.
+  'Start again',
   'Raise a different girl',
   'Start again with another girl',
   'Give the nine years to another girl',

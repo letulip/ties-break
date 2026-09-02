@@ -26,7 +26,7 @@
 // PWA precache at the owner's ruling – 313 entries, 12.3 MB – so every frame below is on the device
 // before the first card renders. `preloadKidArt` is not called here and must not be: it would warm
 // files the service worker already holds.
-import { onboardingHeroUrl, portraitUrl } from './preload'
+import { onboardingHeroUrl, portraitUrl, prologueSceneUrl } from './preload'
 import { facePoint } from './faceRects'
 import { portraitAssetStem, portraitStage } from '../shared/avatarEmotion'
 import type { PortraitEmotion } from '../shared/avatarEmotion'
@@ -63,7 +63,7 @@ import type { PortraitEmotion } from '../shared/avatarEmotion'
 /** One card's frame: a scene instead of a portrait, a pinned face, or neither (derive it). */
 export interface PrologueFrame {
   /** ⭐ the welcome painting rather than a portrait of her alone – the arrival on a court */
-  readonly scene?: 'welcome'
+  readonly scene?: 'welcome' | 'training'
   /** ⭐ the face the owner named. Absent -> `moodAt`'s derivation stands. */
   readonly face?: PortraitEmotion
 }
@@ -76,11 +76,10 @@ export const PROLOGUE_FRAMES: Readonly<Record<number, PrologueFrame>> = {
   // ⚠ `norm` AND NOT A SECOND `serious`: 7 and 9 are already his serious frame, and «другой портрет»
   // was the ask. It is also the honest face for a card whose tournament has not been played.
   10: { face: 'norm' },
-  // ⚠ THE STAND-IN FOR THE PAINTING HE IS COMMISSIONING. `young-norm` rather than `young-serious`
-  // because the twelfth's own derived arm is `serious` on the carried road, and two identical
-  // frames in a row is the one thing a placeholder must not do. Replace this line when his art
-  // lands – it is one row of a table and nothing else moves.
-  11: { face: 'norm' },
+  // ⭐ HIS PAINTING, DELIVERED 02.09 – the sports school at first light, which the stand-in could
+  // never say: a portrait of one girl cannot carry «every child here is doing this», and that is
+  // the sentence the eleventh card turns on. `young-norm` stood here until it landed.
+  11: { scene: 'training' },
   13: { face: 'norm' },
 }
 
@@ -132,9 +131,19 @@ export function prologueFace(age: number, mood: PortraitEmotion, outcome?: Prolo
 
 /** Is this card drawn on the welcome scene? A result takes it back to a portrait: the scene is two
  *  people arriving at a court and cannot report a draw sheet. */
-function showsScene(age: number, outcome?: PrologueOutcome): boolean {
-  return !outcome && PROLOGUE_FRAMES[age]?.scene === 'welcome'
+function sceneAt(age: number, outcome?: PrologueOutcome): 'welcome' | 'training' | null {
+  return outcome ? null : (PROLOGUE_FRAMES[age]?.scene ?? null)
 }
+
+/** ⭐ HIS OWN PAINTING FOR THE SPORTS-SCHOOL CARD (02.09), commissioned off the proposal in that
+ *  round's report and delivered as `jun-training.jpg`; converted to a 512x512 webp master at the
+ *  weight the other masters carry (56 KB against their 44-76 KB).
+ *
+ *  ⚠ IT IS A SCENE, NOT AN EMOTION, which is why it joins `welcome` rather than `PortraitEmotion`.
+ *  A `face` builds `<stem>-<band>-<emotion>.webp` and would make this file band-dependent; the
+ *  painting is one image and the eleventh card is one card. Same reason the welcome scene is a
+ *  scene. */
+const TRAINING_STEM = 'fem-euro-brunnet-jun-training'
 
 /** The painting for one year of the childhood.
  *
@@ -144,7 +153,9 @@ function showsScene(age: number, outcome?: PrologueOutcome): boolean {
  *  `moodAt` in `src/prologue/run.ts` is one producer and `PROLOGUE_FRAMES` above is the other, and
  *  both deal only in `PortraitEmotion`. */
 export function prologueArtUrl(age: number, mood: PortraitEmotion, outcome?: PrologueOutcome): string {
-  if (showsScene(age, outcome)) return onboardingHeroUrl()
+  const scene = sceneAt(age, outcome)
+  if (scene === 'welcome') return onboardingHeroUrl()
+  if (scene === 'training') return prologueSceneUrl(TRAINING_STEM)
   return portraitUrl(portraitStage(age), prologueFace(age, mood, outcome))
 }
 
@@ -155,7 +166,9 @@ export function prologueArtUrl(age: number, mood: PortraitEmotion, outcome?: Pro
  *  otherwise reintroduce: «a fifth that interpolates the stage directly is harmless TODAY and would
  *  break again the moment a stem stops being identity». This is that fifth builder. */
 export function prologueArtStem(age: number, mood: PortraitEmotion, outcome?: PrologueOutcome): string {
-  if (showsScene(age, outcome)) return 'welcome-1'
+  const scene = sceneAt(age, outcome)
+  if (scene === 'welcome') return 'welcome-1'
+  if (scene === 'training') return TRAINING_STEM
   return `${portraitAssetStem(portraitStage(age))}-${prologueFace(age, mood, outcome)}`
 }
 
@@ -210,6 +223,12 @@ export function prologueFacePoint(
   mood: PortraitEmotion,
   outcome?: PrologueOutcome,
 ): { x: number; y: number } {
-  if (showsScene(age, outcome)) return { x: WELCOME_POINT.x, y: WELCOME_POINT.y }
+  const scene = sceneAt(age, outcome)
+  if (scene === 'welcome') return { x: WELCOME_POINT.x, y: WELCOME_POINT.y }
+  // ⚠ THE TRAINING PAINTING IS CENTRED AND STAYS CENTRED. Its subject is a ROW of children, not one
+  // face, so there is no point to steer to - and `facePoint` returns 50/50 for a stem it does not
+  // know, which is exactly right here rather than a fallback being tolerated. Said out loud because
+  // the welcome scene needed the opposite and the next reader will wonder why this one does not.
+  if (scene === 'training') return { x: 50, y: 50 }
   return facePoint(prologueArtStem(age, mood, outcome))
 }

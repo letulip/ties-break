@@ -123,6 +123,15 @@ export function onboardingHeroUrl(): string {
   return `${base()}${ART_DIR}welcome-1.webp`
 }
 
+/** ⭐ A NAMED PAINTING IN HER OWN ART DIRECTORY, for a prologue card whose subject is not a face.
+ *  `onboardingHeroUrl` above is the same thing with the stem baked in; this takes it as an argument
+ *  because the prologue now has two such scenes and will have more. ⚠ It is deliberately NOT a
+ *  portrait: `portraitUrl` builds `<name>-<band>-<emotion>`, and a painting that is one image has
+ *  no band and no emotion to build from. */
+export function prologueSceneUrl(stem: string): string {
+  return `${base()}${ART_DIR}${stem}.webp`
+}
+
 /** 256px crop URL. No clamp any more: `adult` used to redirect to the teen crops because the adult
  *  ones had never been cut, and with the 31+ band reachable that would have put a teenager's face on a
  *  31-year-old. The missing crops were cut instead, so every stage now has its own — same rule as
