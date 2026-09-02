@@ -1156,3 +1156,89 @@ shoots would have bought zero fame**. Both gained a fifth rung – **0.03** and 
 the four shipped values unchanged and moved one index right. The 0.03 is round 32 #5's own measured
 bound: 0.02 stretches the ladder 2.75x → 5.5x and breaks its «a global house, not a hundred of them»
 guard.
+
+---
+
+# The three items I owned – no agent, no code
+
+## Item 8 `[~]` – «а что будет если отказать?» **Nothing, because there is nothing to refuse.**
+
+Traced end to end: `ECONOMY.kidShare.fromAgeYears: 18` («Her own bank account is the eighteenth's
+gift»), and `kidPrizeShareBps(ageYears)` reads **her age and nothing else** – 0 before 18, then
+10 / 15 / 20 / 25 / 30 / 35 / 40 / 45 / 50 % at 18…26+. **No consent flag, no decision, no offer and
+no refusal path exists anywhere in the engine.**
+
+What he saw is `life.ownAccount` (`narrative.ts`, rendered at `KidScreen.vue:499`) – a NOTE stating
+what the account holds and what she keeps this year. ⚠ It reads like a request and is an
+announcement. That mismatch is the only real defect in the item, and it is copy, not mechanics.
+
+⚙ His own instruction covers the rest and it is **backlog, not this wave**: «если отказали – она
+сама пошла и открыла и на морали/отношениях отразится (это в бэклог)».
+
+## Item 22 `[~]` – his save, read in full against our benchmarks
+
+**She is precisely average.** Against the 199 live professionals in her own save, on the four skills
+they share: hers **54.89**, field mean 53.74, median 53.73, best 71.77, worst 36.06 – above 107 of
+199, the **54th percentile**.
+
+**What that girl achieved in eleven seasons:**
+
+    domestic  s0-2:  #11  -> #6   -> #2
+    ITF       s2-4:  #69  -> #30  -> #27
+    WTA       s3-10: #349 -> #177 -> #95 -> #92 -> #89 -> #93 -> #97 -> #113
+
+* career high **#89**, today #113, never outside the top ~115 in six seasons
+* **Slam quarter-final**, WTA 500 semi-final, **2 x WTA 250 titles**, WTA 125 final
+* **14 titles and 16 finals** across every tier from local to WTA 250
+* 6 injuries, 18 weeks lost, one retirement question already asked and answered
+
+**Against `docs/specs/career-outcome-targets.md`:** lives from tennis ✅ (held eight seasons);
+top-100 ever ✅ at #89; top-100 by 18 ❌; Slam-level ❌. ⚠ Read the second honestly – the game makes
+a top-100 player **93.3%** of the time against a 35% target, a known open finding in that spec.
+
+**The money, which is the real answer:**
+
+| | |
+| --- | --- |
+| career prize | $3,076,136 |
+| earned / spent (family side) | $4,969,007 / $4,829,142 |
+| **family net over eleven seasons** | **+$139,865** |
+| **she holds** | **$5,449,406** |
+
+⭐⭐ **His hypothesis is right and stronger than he put it.** A 54th-percentile girl took a Slam
+quarter-final, two tour titles and five and a half million dollars. Nothing about her talent needed
+fixing; what was broken is that the game looked at that career and offered her **$244 a week**.
+
+⭐ The half worth his eye: the FAMILY cleared $139,865 across eleven seasons while the daughter
+banked $5.45M. Thematically right for a game where you play the parent – but the parent's own
+balance is nearly flat however well she does. ⚠ Not routing: endorsement money IS split at her age's
+rate (round-28 #15). It is spending – eleven seasons of coaching, travel, court and academy cost
+$4.83M of the $4.97M that came in.
+
+## Item 5 `[?]` – the ask, sharpened. See ruling 3 in the section above.
+
+---
+
+# ⚙ MERGE ORDER FOR HIM – measured, with the one conflict already resolved on paper
+
+Two branches wait on him and both touch `src/engine/world/coachMarket.ts`. Dry-run merge against
+their real merge base `c6114b71`:
+
+* `docs/now-next-later.md` – auto-merges
+* `src/engine/world/coachMarket.ts` – **exactly ONE conflict, and it is a comment**
+* `review/principles-2026-09-02` – **zero** overlap with round/34, merges cleanly in any order
+
+⭐ The two functions do NOT duplicate each other and both should live: `handoverRoomBand` (prologue)
+measures how BIG her room is, `realisedShare` (round 34) how much of it she has FILLED. Both
+branches rewrote the same comment above the `startingSkills` import to name their own consumer.
+**The resolution is one comment naming both:**
+
+    // ⭐ HER BIRTH BUILD, RE-DERIVED, and two readers need it: `handoverRoomBand` measures how big
+    // her room is (`potential − born`) and `realisedShare` – round 34 #2b – measures how much of it
+    // she has FILLED, because the skill she was born with is not an achievement. Pure and seed-only
+    // (`startingSkills` ignores its profile argument), and `engine/radar.ts` already re-derives it
+    // at snapshot time for exactly the same reason: it is cheaper than a stored field and it cannot
+    // go stale. `player.ts` imports nothing from this module, so this runs one way.
+
+⚠ Not applied to `round/34` – that would put prologue's text on a branch without prologue's code.
+Either merge order works.
