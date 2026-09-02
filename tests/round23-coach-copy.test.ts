@@ -48,6 +48,23 @@
 //     the two-seeds identity test green, correctly: a tier lookup is still stable across seeds, so
 //     "not a draw" and "not the rung" are two different claims and two different tests.
 //   * the `<span class="cm-blurb">` deleted from the row -> |c| all three of #5, |u| nothing.
+//
+// ⚠⚠ ROUND 34 #2b MOVED THE THRESHOLDS THIS FILE PINS, AND IT MOVED THE MEASURE UNDER THEM. The
+// ledger above still names 0.6 / 0.8 / 0.92 as the shipped ladder and 0.82 / 0.88 / 0.92 as the
+// re-cut one; both were read off `mean(skills) / mean(potential)`, which counts the skill she was
+// BORN with as achievement. `coachRoomBandOf` now divides `(skills - born)` by `(potential - born)`
+// and the edges are 0.40 / 0.75 / 0.90 (owner-approved 02.09, docs/rounds/round-34.md §A1). Why:
+// measured on his save, Vera heard «Close to her ceiling» with 41.6% of her headroom realised and a
+// high-ceiling girl heard it at 72.3% – ⭐ the verdict arrived EARLIER for the girl with LESS talent,
+// which is the inversion the wave fixes. His words: «написал 14 летней девочке Close to her ceiling …
+// звучит как приговор … не рановато ли?»
+//
+// ⚠ NOTHING BELOW WAS DELETED OR LOOSENED FOR IT. What changed is arithmetic in `worldAt` (a share
+// is now placed against her birth build, so the number in the test is the number the engine reads)
+// and the SAMPLE POINTS that name each band. The claims – four bands, monotone, entered in order,
+// never a digit – are the same claims, and the career walk got STRONGER: it now pins the shape of a
+// normal career exactly (`[0, 1, 2]` to 23, no ceiling verdict) and a second walk carries the
+// reachability of the top band, which is what the round-23 mutation ledger used one walk to do.
 import { describe, it, expect } from 'vitest'
 import {
   coachBlurb,
@@ -61,6 +78,9 @@ import { buildCoachRoster } from '../src/engine/coach'
 import { ECONOMY } from '../src/engine/economy'
 import { SKILL_KEYS } from '../src/engine/development'
 import { createWorld, tickWeek } from '../src/engine/world'
+// ⭐ ROUND 34 #2b – the birth build, which is what the band now measures FROM. Same re-derivation the
+// engine does (`realisedShare` in world/coachMarket.ts): pure, seed-only, stored nowhere.
+import { startingSkills } from '../src/engine/world/player'
 import { rngFromSeed } from '../src/engine/rng'
 import { DEFAULT_PROFILE, type CoachTier } from '../src/shared/protocol'
 
@@ -69,13 +89,21 @@ import { DEFAULT_PROFILE, type CoachTier } from '../src/shared/protocol'
 // =================================================================================================
 
 /** A world pinned to one realisation share, the same construction the room-note pin in
- *  coachTiers.test.ts uses: a flat ceiling and a flat level, so `realised` is exactly what is asked
- *  for and nothing else in the engine has to be persuaded of it. */
+ *  coachTiers.test.ts uses: a flat headroom and a level placed inside it, so `realised` is exactly
+ *  what is asked for and nothing else in the engine has to be persuaded of it.
+ *
+ *  ⚠ RE-CUT BY ROUND 34 #2b. It used to be `potential = 60, skills = 60 * realised`, which was the
+ *  share the OLD measure read. The band now reads how much of the room she was BORN with she has
+ *  taken, so both ends are placed against her birth build: 20 points of headroom on every attribute
+ *  and `realised` of it taken. ⚠ The 20 is not decoration – a flat ceiling of 60 would give a
+ *  born-at-60 stamina NO headroom at all (`STARTING_SKILL_BAND.stamina` tops out there), and a
+ *  denominator that can be zero is how a pin starts reading NaN and passing. */
 function worldAt(realised: number) {
   const world = createWorld('r23-room', DEFAULT_PROFILE)
+  const born = startingSkills(world.seed, world.profile)
   for (const k of SKILL_KEYS) {
-    world.potential[k] = 60
-    world.skills[k] = 60 * realised
+    world.potential[k] = born[k] + 20
+    world.skills[k] = born[k] + 20 * realised
   }
   return world
 }
@@ -84,8 +112,10 @@ describe('#1 the room note leads with a named band', () => {
   it('opens with a label and separates it from the argument the way the screen expects', () => {
     // The label is the FIRST clause and `ROOM_NOTE_SEP` is what ends it. Screen T splits on that
     // separator to bold the label, so this is the contract between the two files and not decoration.
+    // ⚠ THE SAMPLE POINTS MOVED WITH THE EDGES (round 34 #2b): one inside each of 0-0.40 / 0.40-0.75
+    // / 0.75-0.90 / 0.90-1, on TRUE realisation. They are the only thing about this test that moved.
     for (let band = 0; band < 4; band++) {
-      const note = coachRoomNote(worldAt([0.7, 0.85, 0.9, 0.97][band]))
+      const note = coachRoomNote(worldAt([0.2, 0.6, 0.8, 0.95][band]))
       const at = note.indexOf(ROOM_NOTE_SEP)
       expect(at, `band ${band} carries a separator`).toBeGreaterThan(0)
       expect(note.slice(0, at)).toBe(coachRoomBandLabel(band))
@@ -155,12 +185,66 @@ describe('#1 the room note leads with a named band', () => {
       last = band
       if (seen[seen.length - 1] !== band) seen.push(band)
     }
-    // ⚠⚠ AND ALL FOUR ARE REACHED, WHICH IS THE HALF THAT WOULD HAVE CAUGHT THE SHIPPED DEFECT. The
-    // 08.08 thresholds (0.6 / 0.8 / 0.92) were written before anybody measured `realised`, and she is
-    // never below 68% at any age in any career - so the first band was a string no player could be
-    // shown and the second expired inside the first season. Monotonicity alone passes happily on dead
-    // copy; "every band is entered, in order, exactly once" does not. The measurement that re-cut
-    // them is written out over `coachRoomBandIndex`.
+    // ⚠⚠ AND THE SHAPE IS PINNED EXACTLY, WHICH IS THE HALF THAT CATCHES DEAD COPY. The 08.08
+    // thresholds (0.6 / 0.8 / 0.92) were written before anybody measured `realised`, and on the old
+    // measure she was never below 68% at any age in any career - so the first band was a string no
+    // player could be shown and the second expired inside the first season. Monotonicity alone passes
+    // happily on dead copy; an exact list does not.
+    //
+    // ⚠⚠ ROUND 34 #2b: THIS LIST IS NOW `[0, 1, 2]` AND THAT IS THE ITEM, NOT A CONCESSION. The
+    // assertion is stricter than it was, not looser - `toEqual` on the whole walk still forbids a
+    // skipped band, a repeated one and any step backwards, and it now ALSO forbids the top band
+    // arriving on a middle-rung career inside nine seasons. Measured on this very walk (age at the
+    // 52-week marks, share of the room she was born with):
+    //
+    //     age    14     15     16     17     18     19     20     21     22     23
+    //     new   0.000  0.295  0.471  0.591  0.670  0.722  0.762  0.792  0.813  0.827
+    //     old   0.805  0.862  0.896  0.920  0.935  0.945  0.953  0.959  0.963  0.966
+    //
+    // ⚠ READ THE TWO ROWS TOGETHER: the old one opens at 0.805 in WEEK ZERO, before a session has
+    // been coached, because four fifths of it is the build she was born with.
+    //
+    // ⭐ WHICH IS THE OWNER'S OWN ASK, MECHANICALLY. «написал 14 летней девочке Close to her ceiling …
+    // не рановато ли?» - and on the OLD measure this very career heard «Close to her ceiling» at week
+    // 78 (age 15.5) and «At her ceiling» at week 158 (age 17.0), which is his complaint reproduced to
+    // the week. On the approved ladder she reads «Still room to grow» at 16 and «Close to her ceiling»
+    // at 24 - the same pair of ages §A1 predicted for his Vera - and a middle rung never tells her she
+    // is finished. The top band's reachability is the next test's job, because it is a different claim
+    // and it needs a different career.
+    expect(seen, 'the bands a middle-rung career passes through, in order').toEqual([0, 1, 2])
+    expect(steps, 'every change is a step it never takes back').toBe(seen.length - 1)
+  })
+
+  it('⭐ and the FOURTH band is not dead copy – an elite career reaches it, late, on its own', () => {
+    // ⚠⚠ THIS IS THE ROUND-23 CLAIM, RE-AIMED RATHER THAN DROPPED. That item found the bottom band
+    // unreachable and re-cut the ladder rather than shipping a string no player could see; round 34
+    // moved the measure, so the same question has to be asked again at the OTHER end - and asked on a
+    // real career through the real engine, because an index-level check passes happily on copy no
+    // career can reach.
+    //
+    // ⚠ IT IS A LATE, ELITE READING NOW, AND THAT IS MEASURED. Walked to 29 - the whole growth arc,
+    // `declineFactor` opens after it - the top band is entered at week 720 here (age ~27.8), and
+    // across eight seeds on the elite rung six reached it (weeks 745-776) while two did not. On the
+    // budget, middle and high rungs none of eight did, peaking at 0.855 / 0.879 / 0.895. ⭐ That is
+    // the approved 0.90 doing exactly what it was approved to do - «At her ceiling» is a verdict about
+    // a finished player - and it is recorded here because it is the fact a future reader will want:
+    // the fourth band is rare and it is REACHABLE, which is the difference between a strict ladder and
+    // a dead string.
+    const world = createWorld('r34-walk', { ...DEFAULT_PROFILE, coachTier: 'elite' })
+    const rng = rngFromSeed(world.seed)
+    const seen: number[] = []
+    let last = coachRoomBandOf(world)!
+    seen.push(last)
+    let steps = 0
+    for (let w = 0; w < 780; w++) {
+      // 15 seasons: 14 -> 29, the whole growth arc and none of the decline past it
+      tickWeek(world, rng)
+      const band = coachRoomBandOf(world)!
+      expect(band, `week ${world.week} went backwards, ${last} -> ${band}`).toBeGreaterThanOrEqual(last)
+      if (band !== last) steps++
+      last = band
+      if (seen[seen.length - 1] !== band) seen.push(band)
+    }
     expect(seen, 'every band is reachable on a real career, in order').toEqual([0, 1, 2, 3])
     expect(steps, 'every change is a step it never takes back').toBe(seen.length - 1)
   })
