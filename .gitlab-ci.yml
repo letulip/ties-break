@@ -18,8 +18,9 @@
 # on this remote. If GitLab ever becomes the primary remote, port simulation.yml then - do not
 # quietly add a sim job to `test`.
 #
-# ⚠ THE E2E SMOKE IS GITHUB-ONLY FOR THE SAME REASON (S0, 08.08). .github/workflows/ci.yml gained an
-# `e2e-smoke` job; this file deliberately does not mirror it. Every run of it downloads ~273 MiB of
+# ⚠ THE E2E JOB IS GITHUB-ONLY FOR THE SAME REASON (S0, 08.08; renamed from `e2e-smoke` 02.09 – it
+# runs the whole suite and always did). .github/workflows/ci.yml gained an
+# `e2e` job; this file deliberately does not mirror it. Every run of it downloads ~273 MiB of
 # Chromium and boots a real browser, and GitLab's minutes are the metered ones - so mirroring would
 # double the cost of the least-read gate on the less-used remote. The e2e layer's own reasoning
 # (e2e/README.md) says the PR gate exists to be trusted, and one trustworthy gate on the remote

@@ -6,7 +6,7 @@ import { ratingOf } from '../src/engine/match/rating'
 import { rivalMatchPlayer } from '../src/engine/season/rival'
 import { kidMatchPlayerFor } from '../src/engine/world/player'
 import { ECONOMY } from '../src/engine/economy'
-import type { Surface } from '../src/shared/protocol/competition'
+import type { Surface } from '../src/engine/match/types'
 
 const argv = process.argv.slice(2)
 const world = (await decodeExportFile(

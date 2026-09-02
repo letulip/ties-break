@@ -31,14 +31,17 @@ component is [`docs/plans/e2e-fixtures.md`](../plans/e2e-fixtures.md); the worki
 
 The repository runs four vitest/Playwright projects. Mapped onto the standard levels:
 
-| project | ISTQB level | test environment | what it may assert | size |
-|---|---|---|---|---|
-| `unit` | **component testing** | node, no DOM | engine arithmetic, ledgers, migrations, invariants | 105 files |
-| `component` | **component integration testing** | happy-dom, real mount | a component plus its composables, rendered | 12 files |
-| `sim` | **system testing, non-functional** | node, Monte-Carlo | balance and long-run behaviour over seed populations | 9 files |
-| **`e2e`** | **system testing, functional, through the UI** | **real Chromium, real production build** | **the integration seams no lower level contains** | **12 spec files** |
+| project | ISTQB level | test environment | what it may assert |
+|---|---|---|---|
+| `unit` | **component testing** | node, no DOM | engine arithmetic, ledgers, migrations, invariants |
+| `component` | **component integration testing** | happy-dom, real mount | a component plus its composables, rendered |
+| `sim` | **system testing, non-functional** | node, Monte-Carlo | balance and long-run behaviour over seed populations |
+| **`e2e`** | **system testing, functional, through the UI** | **real Chromium, real production build** | **the integration seams no lower level contains** |
 
-Sizes are point-in-time; the shape is the part that matters.
+⚠ **The size column was here and has been removed (02.09).** It carried a point-in-time count per
+project, the table said so, and all four had rotted anyway – by a factor of eight on `component`.
+The shape is the part that matters and it is the part that is stable; every runner prints its own
+file and test totals, which is the only figure that cannot be wrong.
 
 ⚠ **`sim` is a test level boundary that is easy to misread.** It runs in node like `unit`, but it is
 not component testing: it exercises the whole assembled engine over hundreds of simulated careers and
@@ -382,8 +385,9 @@ current Playwright release.
 - no `data-testid` introduced;
 - any element a spec could not reach is filed as a defect, not worked around.
 
-**The suite is deliberately NOT part of `npm run check`.** The pre-push gate is already about four
-minutes; this is a browser suite and belongs in its own parallel CI job (`e2e-smoke`). That is a
+**The suite is deliberately NOT part of `npm run check`.** The pre-push gate is already about seven
+minutes (429 s, measured quiet 02.09 – it said "four" until then); this is a browser suite and
+belongs in its own parallel CI job (`e2e`). That is a
 test-execution-schedule decision and it is the reason the gate stays fast enough to be run.
 
 ## 10. Maintenance testing: the impact of a schema change (CTFL §2.3)
@@ -505,7 +509,13 @@ which is an argument for regenerating on every schema bump rather than migrating
 
 ## 13. Metrics (CTFL §5.3)
 
-| metric | value | was, 09.08 |
+⚠ **THIS TABLE IS A DATED READING, NOT A LIVE ONE, AND ITS TOP ROW IS ALREADY BEHIND.** It was
+measured on 10.08 and every column is a snapshot of that day – which is what a coverage report is
+for. It has not been re-measured since, and the suite has grown: `npx playwright test --list` prints
+the current test and file totals in a second, and it is the figure to quote. The row is left as
+written so the 09.08 → 10.08 comparison beside it still reads; **do not cite it as today.**
+
+| metric | value, 10.08 | was, 09.08 |
 |---|---|---|
 | test cases at this level | **25**, in **12** spec files | 18 in 9 |
 | execution time | **~19 s** local, parallel across 5 workers | ~17 s |

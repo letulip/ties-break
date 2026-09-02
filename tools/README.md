@@ -18,7 +18,9 @@ exactly the live set.
 Every one of these files used to enter the primary TypeScript project, so `vite build` typechecked
 a hundred one-shot probes on every run, and a reader had a flat directory with no signal about
 which ones are supported. The live set stays in `tsconfig.app.json`; the whole directory is still
-typechecked on demand with `npm run check:tools` (`tsconfig.tools.json`).
+typechecked by `npm run check:tools` (`tsconfig.tools.json`) – which runs inside `npm run check`
+and as its own CI step since 02.09. It used to run on demand, which meant it ran never, and the
+02.09 review found it red with nine errors across six tools.
 
 ⚠ **Archival is not dead.** A probe here is the reproduction that settled an argument, and the
 review's rule is explicit: do not delete measurement instruments to reduce a file count. If a
@@ -62,7 +64,8 @@ question comes back to one, run it, and if it answers again, give it a line in `
 
 ## Archival
 
-One-shot probes and reproductions. Kept as evidence, typechecked only by `npm run check:tools`.
+One-shot probes and reproductions. Kept as evidence; typechecked by `npm run check:tools`, which
+the gate now runs – so evidence that stops compiling reddens a pull request instead of rotting.
 
 - `_p12probe.ts` · `_seeds.ts` · `acceptance-cuts.ts` · `aer-cohort.ts`
 - `age-clock-cost.ts` · `age-composition.ts` · `age-gate-shift.ts` · `age-injury-fit.ts`

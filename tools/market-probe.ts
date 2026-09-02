@@ -69,8 +69,6 @@ console.log(`  fund ${fund.annualRateBps} bps/yr · deposit ${deposit.annualRate
 
 // --- 3. THE BOUND, first, because every other claim leans on it ----------------------------------
 let maxAbsWave = 0
-let maxRatioSeen = 0
-let minRatioSeen = Infinity
 for (const seed of seeds.slice(0, Math.min(400, SEEDS))) {
   for (let w = 0; w <= 780; w++) {
     maxAbsWave = Math.max(maxAbsWave, Math.abs(marketWave(seed, w)))

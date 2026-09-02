@@ -1,11 +1,14 @@
 #!/usr/bin/env node
 
-// THE TOOLS REGISTRY – R2-12 / TOK-09. WHICH OF THE 144 FILES IN `tools/` IS AN INSTRUMENT.
+// THE TOOLS REGISTRY – R2-12 / TOK-09. WHICH FILE IN `tools/` IS AN INSTRUMENT.
 //
 // ⚠ THE PROBLEM. "All 136 tools enter the primary TypeScript project, but only a subset has package
 // commands. A reader cannot cheaply distinguish supported benchmark, reproducibility instrument and
 // scratch probe." Two costs follow: every build typechecks a hundred one-shot probes, and a reader
-// looking for "the bench that answers X" has 144 filenames and no signal.
+// looking for "the bench that answers X" has a directory of filenames and no signal.
+// ⚠ THE COUNTS THAT USED TO BE ON THESE THREE LINES ARE GONE (02.09). This script PRINTS the live
+// figures every time it runs, and three documents that copied them out by hand – this header,
+// tsconfig.tools.json and docs/context-index.md – had all rotted to 24/114 against a real 26/146.
 //
 // ⚠ NOTHING IS DELETED, AND THAT IS THE REVIEW'S OWN RULE: "Do not delete measurement instruments
 // solely to reduce file count." An archival probe is EVIDENCE – the reproduction that settled an
@@ -23,7 +26,7 @@
 // The registry is written to `tools/README.md` and checked by `npm run tools:registry:check`, which
 // ALSO asserts that `tsconfig.app.json`'s `tools/` entries are exactly the live set. That second
 // assertion is the one that matters: without it the two lists drift and the build quietly grows
-// back to 144 files.
+// back to the whole directory.
 
 import { promises as fs } from 'node:fs'
 import path from 'node:path'
@@ -161,7 +164,9 @@ function renderReadme({ toolFiles, live, archival, role, commandOf, fromTests })
     'Every one of these files used to enter the primary TypeScript project, so `vite build` typechecked',
     'a hundred one-shot probes on every run, and a reader had a flat directory with no signal about',
     'which ones are supported. The live set stays in `tsconfig.app.json`; the whole directory is still',
-    'typechecked on demand with `npm run check:tools` (`tsconfig.tools.json`).',
+    'typechecked by `npm run check:tools` (`tsconfig.tools.json`) – which runs inside `npm run check`',
+    'and as its own CI step since 02.09. It used to run on demand, which meant it ran never, and the',
+    '02.09 review found it red with nine errors across six tools.',
     '',
     '⚠ **Archival is not dead.** A probe here is the reproduction that settled an argument, and the',
     "review's rule is explicit: do not delete measurement instruments to reduce a file count. If a",
@@ -176,7 +181,8 @@ function renderReadme({ toolFiles, live, archival, role, commandOf, fromTests })
     '',
     '## Archival',
     '',
-    'One-shot probes and reproductions. Kept as evidence, typechecked only by `npm run check:tools`.',
+    'One-shot probes and reproductions. Kept as evidence; typechecked by `npm run check:tools`, which',
+    'the gate now runs – so evidence that stops compiling reddens a pull request instead of rotting.',
     '',
     ...chunk(archival.map((file) => `\`${path.basename(file)}\``), 4).map((row) => `- ${row.join(' · ')}`),
     '',
