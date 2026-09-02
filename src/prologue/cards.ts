@@ -119,6 +119,82 @@ export interface PrologueOption {
   readonly focus?: SessionKind
 }
 
+// =================================================================================================
+// ⭐⭐⭐ THIS YEAR'S TOURNAMENT QUESTION – phase 11, and it is HIS CORRECTION of a reading I had wrong
+// =================================================================================================
+//
+// THE FIRST READING, WHICH WAS MINE AND WAS WRONG: the age-10 card decides whether she becomes a
+// competitor at all, and everything after follows from it. THE OWNER: «Сказали "не в этом году" –
+// значит не в этом году, дальше тоже можно спрашивать, не вижу проблем. Может быть в следующие года
+// уже тренер будет чуть более настойчив, например, или она сама.»
+//
+// So «not this year» closes THAT YEAR and nothing else, the question comes back, and – the better
+// half of his note – THE ASKING ESCALATES. Year one it is an event in six weeks. Then it is the
+// person teaching her, twice. Then it is HER, with the date already written down. A parent who keeps
+// saying no should feel the question getting harder to answer, and that is the prologue's own drama
+// arriving with no new system behind it.
+//
+// ⚠⚠ WHY IT IS THIS FIELD AND NOT AN `options` ROW, WHICH IS THE STRUCTURAL PROBLEM THIS SLICE HAD
+// TO SOLVE. Three pins collide on the ages the repeat needs:
+//
+//   * `DECISION_AGES` is DERIVED from `options` and pinned as exactly [8, 9, 10, 11, 12], so an
+//     answer added to a card's `options` array changes the shape the owner counted.
+//   * THE THIRTEENTH IS ONE OF THE FOUR QUIET CARDS, and the count is his: «может тогда больше без
+//     решений, 3 или 4?»
+//   * THE TWELFTH IS THE FORK, and a second decision on the card the whole childhood builds to would
+//     be the fork sharing its screen.
+//
+// The way out that keeps all three: the tournament question is A LIGHTER CONTROL AND NOT A YEAR'S
+// DECISION – a separate field, invisible to `DECISION_AGES`, buying no `share`, no `teaching` and no
+// `focus`. It changes ONE thing about the year, which is whether a weekend happened, and it costs
+// the entry. ⚠ THE PRICE OF THAT CHOICE, SAID PLAINLY: the thirteenth card carries a yes/no now,
+// so it is quiet in the sense the pin measures (no `options`, no year shaped by it) and not in the
+// sense of «nothing is asked». That is a real cost and it is the owner's to overrule – but it is the
+// only one of the three shapes that leaves his own count of decision years standing, and widening
+// `DECISION_AGES` is his ruling to give rather than a builder's.
+//
+// ⚠ AND IT IS ASKED AS A SECOND BEAT ON THE SAME CARD, not as a tenth screen. Same painting, same
+// kicker, same title; the ask's own line replaces the lede and its two answers replace the card's.
+// A separate scene for it would be three more screens in a walk §3 already keeps under nine, and the
+// two read lines are deliberately not drawn on the ask beat – they are the card's reading of a YEAR
+// and this beat is a question about one weekend.
+
+/** ONE YEAR'S TOURNAMENT QUESTION. Two answers, a line saying who is asking, and the entry's price.
+ *
+ *  ⚠ NO `share`, NO `teaching`, NO `focus` – that is what makes it lighter than a decision rather
+ *  than a decision wearing a different name. Entering a Local Open is not more coaching and is not a
+ *  different kind of year; it is a weekend. (The age-10 card's own `matchplay` option is the
+ *  exception and is deliberate: at ten the question IS the year's decision, because becoming
+ *  somebody who plays tournaments is what that year is about.) */
+export interface TournamentAsk {
+  /** DRAFT – WHO IS ASKING, AND HOW HARD. This is the escalation, and it is the only thing that
+   *  differs between the three rows: the same question, asked by somebody else each year. */
+  readonly lede: string
+  /** DRAFT – say yes */
+  readonly enterLabel: string
+  /** DRAFT – and what the yes costs, in relative terms. ⚠ NO FIGURE, like every other note. */
+  readonly enterNote: string
+  /** DRAFT – say no */
+  readonly declineLabel: string
+  /** DRAFT */
+  readonly declineNote: string
+}
+
+/** ⭐ WHAT AN ENTRY COSTS ON TOP OF THE YEAR, in cents – DERIVED FROM THE TENTH CARD'S OWN TWO
+ *  ANSWERS and never typed a second time. The difference between «Enter her» and «Not this year» IS
+ *  the price of a weekend in this table (150_00 today, and the tenth's own note calls it «about a
+ *  month of the group»), so a re-priced tenth card moves every later entry with it and no second
+ *  number can go stale. Read by `spentCents` in run.ts; declared below the table because it reads
+ *  it. */
+export function entryCostCents(): number {
+  const tenth = PROLOGUE_CARDS.find((c) => c.age === 10)
+  const costs = (tenth?.options ?? []).map((o) => o.costCents)
+  return costs.length < 2 ? 0 : Math.max(...costs) - Math.min(...costs)
+}
+
+/** The two answer ids, spelled once. `enteredIn` in run.ts compares against `ENTER`. */
+export const TOURNAMENT_ANSWER = { enter: 'enter-open', decline: 'skip-open' } as const
+
 export interface PrologueCard {
   readonly age: number
   /** DRAFT */
@@ -157,6 +233,10 @@ export interface PrologueCard {
    *  what she is doing when the coach speaks at the handover. A thirteenth year with its own fixed
    *  numbers would be the game forgetting the fork one card after showing it. */
   readonly sameAsLastYear?: true
+  /** ⭐⭐ PHASE 11 – THIS YEAR'S TOURNAMENT QUESTION, ASKED AGAIN. See `TournamentAsk` below and the
+   *  section under the table for the whole argument. Absent on 5..10: below his floor there is
+   *  nothing to ask, and at ten the card's OWN decision is the question. */
+  readonly tournament?: TournamentAsk
   /** the decisions. ⚠ ABSENT on 5, 6, 7 and 13 – see the header. */
   readonly options?: readonly PrologueOption[]
   /** where the family is FROM (§2.4), and it is NOT a decision: build spec §3 lists card 5's
@@ -467,6 +547,17 @@ export const PROLOGUE_CARDS: readonly PrologueCard[] = [
         focus: 'fitness',
       },
     ],
+    // ⭐ THE SECOND ASKING, AND IT IS THE COACH. DRAFT. A year ago the tournament was a poster on a
+    // motorway; this year somebody who watches her every week has an opinion about it.
+    tournament: {
+      lede:
+        'There is a Local Open in the spring, and the coach has mentioned it twice now – once to ' +
+        'her, once to you.',
+      enterLabel: 'Put her name down',
+      enterNote: 'An entry and a weekend, on top of the year.',
+      declineLabel: 'Not this year',
+      declineNote: 'Nothing extra. She practises that weekend like any other.',
+    },
   },
 
   // ⭐⭐ THE FORK. This row is the «she is tired of it» face; `TWELFTH_WANTS_MORE` below is the other
@@ -514,6 +605,19 @@ export const PROLOGUE_CARDS: readonly PrologueCard[] = [
         focus: 'general',
       },
     ],
+    // ⭐⭐ THE THIRD ASKING, ON THE FACE WHERE SHE HAS GONE QUIET – so it is the coach, and it is the
+    // most insistent version of it. DRAFT. ⚠ THE OTHER FACE OF THE TWELFTH ASKS DIFFERENTLY, and
+    // that is the whole reason the ask lives on a card row: `TWELFTH_WANTS_MORE` carries its own,
+    // and on that one it is HER.
+    tournament: {
+      lede:
+        'The coach asked about the Local Open again, and asked you to think about it before ' +
+        'answering this time.',
+      enterLabel: 'Put her name down',
+      enterNote: 'An entry and a weekend, on top of the year.',
+      declineLabel: 'Not this year',
+      declineNote: 'Nothing extra. She practises that weekend like any other.',
+    },
   },
 
   {
@@ -533,6 +637,16 @@ export const PROLOGUE_CARDS: readonly PrologueCard[] = [
     },
     continueLabel: 'Wait for the coach',
     sameAsLastYear: true,
+    // ⭐⭐⭐ THE LAST ASKING, AND IT IS HER – the end of the escalation the owner named («или она
+    // сама»). Nobody mentions it to you this year; the date is already on the wall in her writing,
+    // which is a harder question to say no to than either of the two before it. DRAFT.
+    tournament: {
+      lede: 'She has written the date of the Local Open on the kitchen calendar herself.',
+      enterLabel: 'Put her name down',
+      enterNote: 'An entry and a weekend, on top of the year.',
+      declineLabel: 'Not this year',
+      declineNote: 'Nothing extra. She practises that weekend like any other.',
+    },
   },
 ]
 
@@ -583,6 +697,17 @@ export const TWELFTH_WANTS_MORE: PrologueCard = {
       focus: 'rally',
     },
   ],
+  // ⭐⭐ THE THIRD ASKING, ON THE FACE WHERE SHE IS THE ONE PUSHING – so on this face it is HER, a
+  // year before the thirteenth's is. The escalation the owner named («тренер … или она сама») runs
+  // through the FORK rather than around it: the childhood that carried her reaches her own asking
+  // sooner, and the one that did not hears it from the coach for one more year. DRAFT.
+  tournament: {
+    lede: 'She wants to enter the Local Open in the spring. She asked twice, on two different days.',
+    enterLabel: 'Put her name down',
+    enterNote: 'An entry and a weekend, on top of the year.',
+    declineLabel: 'Not this year',
+    declineNote: 'Nothing extra. She practises that weekend like any other.',
+  },
 }
 
 /** ⭐ WHY THE TWELFTH SAYS WHAT IT READ. A fork that simply arrives is a fork the player will read
@@ -662,6 +787,126 @@ export const TWELFTH_REASONS = {
 // ⚠ SO THE READ IS QUALITATIVE, AND IT IS STILL DERIVED – it is not decoration. The arm is chosen by
 // what the player actually bought in the years before (`warmthAt` in run.ts), off the same counts
 // the twelfth's fork reads. One mechanism, two consumers, no dice in either.
+
+// =================================================================================================
+// ⭐⭐⭐ THE LOCAL OPEN'S OWN SCENE – phase 11, and it is A ROW OF THIS TABLE LIKE EVERY OTHER SCENE
+// =================================================================================================
+//
+// THE OWNER, on the age-10 card: «И как раз после этого экрана хотелось бы реально увидеть турнир,
+// если игрок выбрал "участвовать", а не просто пролистать. В конце турнира либо победный арт, либо
+// serious если в финал выбралась, либо грустный, если до финала не дошла.» And, later, the rhythm:
+// «мы договаривались, что турниры в прологе тоже будут … надо с 10 лет по 1 хотя бы добавить в год,
+// как в колледже.»
+//
+// ⚠⚠ EVERY SENTENCE BELOW IS A DRAFT AND HE HAS READ NONE OF IT, exactly like the nine cards above.
+// It is here rather than in a component for the reason the whole table exists: replacing his copy is
+// a data edit and nothing else. `PrologueLocalOpen.vue` renders `{{ }}` bindings off this and holds
+// no sentence of its own, and the result scene is a `PrologueCard` – the SAME row shape the nine
+// years use – so it goes through `PrologueCard.vue` unchanged and inherits its fit, its contrast and
+// its painting for free.
+//
+// ⚠ THREE OUTCOMES AND NOT TWO, WHICH IS HIS SPLIT AND NOT A DESIGN OF MINE. `won` / `final` /
+// `lost` are the three faces he named in one sentence, and the table is TOTAL over them – the same
+// reason handover.ts keys its coach reads on the wire's own band union.
+//
+// ⚠ AND NOT ONE DIGIT REACHES IT. The nine cards are pinned digit-free (tests/component/
+// prologue-walk.test.ts) and a result scene is not the place to start: the scoreline was on the
+// screen the player just came off, and a card that repeats it in numbers is the stat screen §"what a
+// card shows" exists to keep out.
+
+/** WHAT ONE WEEKEND CAME TO, in the three faces the owner named. Declared HERE rather than beside
+ *  the bracket because the copy table has to be total over it and because `art/prologue.ts` reads
+ *  the same union for the face it hangs – one declaration, three consumers, nothing to keep in step.
+ *
+ *  ⚠ IT MAY NOT LIVE IN `pool.ts`: that module imports this one, so the arrow only points one way. */
+export type LocalOpenOutcome = 'won' | 'final' | 'lost'
+
+/** One result scene's words – the same five fields `PrologueCard` carries, minus the age, which is
+ *  the year the weekend happened in. DRAFT, all of it. */
+export interface LocalOpenResultCopy {
+  readonly kicker: string
+  readonly title: string
+  readonly lede: string
+  readonly her: string
+  readonly coach: string
+  readonly continueLabel: string
+}
+
+export const LOCAL_OPEN_COPY = {
+  /** DRAFT – what the weekend is called, above her match. It is the age-10 card's own words for the
+   *  thing («There is a Local Open in six weeks»), so the screen the player arrives on is named the
+   *  same way the screen that sold it to them was. */
+  kicker: 'The Local Open',
+
+  /** DRAFT – the way on at the end of one of her matches. `MatchViewer` holds the press until it is
+   *  pressed (`proceedLabel`), which is what stops a finished match ejecting the player. */
+  proceed: 'Go on',
+
+  /** ⭐ DRAFT – THE WAY PAST THE REST OF THE WEEKEND, and it is the ten-minute budget's own control.
+   *  The viewer already ships a per-match escape («Skip to the result», MatchControls.vue) and that
+   *  one is untouched; this is the one that leaves the whole draw at once, because a player who is
+   *  not here for tennis should not have to press the other one three times a year for four years. */
+  skipRest: 'Skip the rest of the weekend',
+
+  /** ⭐⭐ THE THREE RESULT SCENES. DRAFT. The face each one hangs is NOT written here – it is
+   *  `OUTCOME_FACES` in art/prologue.ts, which is art direction and not copy, the same split
+   *  `PROLOGUE_FRAMES` is on the other side of.
+   *
+   *  ⚠⚠ THESE ARE DELIBERATELY THE SHORTEST SCENES IN THE PROLOGUE, AND THE REASON IS REPETITION.
+   *  Each of the nine cards is read ONCE in a childhood; one of these three is read up to four
+   *  times, and the same one twice over on a childhood that keeps going out early. A paragraph here
+   *  is a paragraph four times.
+   *
+   *  ⚠ AND IT IS NOT ABOUT A CLOCK. THE OWNER: «Десять минут это ваша цифра … ничего не случится,
+   *  если у нас будут турниры … это одна из основных частей игры вообще-то.» The ten-minute figure
+   *  was ours, it was approximate, and the tournaments are not an interruption to be minimised.
+   *  Nothing here was cut to protect a number – `tests/component/prologue-walk.test.ts` MEASURES the
+   *  walk and prints it so he can see what he is shipping, and asserts only that the measurement is
+   *  real. */
+  result: {
+    won: {
+      kicker: 'The Local Open',
+      title: 'She won it.',
+      lede: 'Three matches on one weekend, and she is the last one still on the court.',
+      her: 'She has not put the cup down since.',
+      coach: 'The coach says the draw was small and she still had to win it.',
+      continueLabel: 'Go on',
+    },
+    final: {
+      kicker: 'The Local Open',
+      title: 'She got to the final.',
+      lede: 'Saturday, then Sunday morning, then one more match she did not win.',
+      her: 'She wants to know when the next one is.',
+      coach: 'The coach says the last one is the hard one.',
+      continueLabel: 'Go on',
+    },
+    lost: {
+      kicker: 'The Local Open',
+      title: 'She went out before the final.',
+      lede: 'A long drive, a court she had never seen, and it was over sooner than the journey.',
+      her: 'She watched the girls who were still in it.',
+      coach: 'The coach says the first one is never the one that counts.',
+      continueLabel: 'Go on',
+    },
+  } as Readonly<Record<LocalOpenOutcome, LocalOpenResultCopy>>,
+} as const
+
+/** ⭐ THE RESULT SCENE AS A CARD ROW, so the shipped card component draws it with no branch of its
+ *  own. `her` and `coach` are the same sentence in both arms deliberately, and it is the rule cards
+ *  5..8 are written under: a scene may not claim to have read something it cannot have seen, and
+ *  what this one has seen is a draw sheet, not nine years. */
+export function localOpenCard(age: number, outcome: LocalOpenOutcome): PrologueCard {
+  const copy = LOCAL_OPEN_COPY.result[outcome]
+  return {
+    age,
+    kicker: copy.kicker,
+    title: copy.title,
+    lede: copy.lede,
+    her: { cool: copy.her, warm: copy.her },
+    coach: { cool: copy.coach, warm: copy.coach },
+    continueLabel: copy.continueLabel,
+  }
+}
 
 /** THE AGES THAT CARRY A DECISION – DERIVED FROM THE TABLE, never declared. `tests/prologue-cards
  *  .test.ts` pins it as the list [8, 9, 10, 11, 12], so giving a quiet card an `options` array

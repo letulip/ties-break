@@ -33,9 +33,9 @@ import { setViewport, PHONE } from './fits'
 import ChildhoodPrologue from '../../src/components/ChildhoodPrologue.vue'
 import { useGameStore } from '../../src/stores/game'
 import { createWorld, toSnapshot } from '../../src/engine/world'
-import { CARD_AGES, PROLOGUE_CARDS } from '../../src/prologue/cards'
+import { CARD_AGES, LOCAL_OPEN_COPY, PROLOGUE_CARDS, TOURNAMENT_ANSWER } from '../../src/prologue/cards'
 import { WALK_COPY, HANDOVER_COPY } from '../../src/prologue/handover'
-import { EMPTY_RUN, chosenYears, spentCents, withOrigin, withPick } from '../../src/prologue/run'
+import { EMPTY_RUN, chosenYears, spentCents, withEntry, withOrigin, withPick } from '../../src/prologue/run'
 import { OPENING_IDENTITY } from '../../src/prologue/identity'
 import { IDENTITY_COPY } from '../../src/composables/identityCopy'
 import { AUDIO_COPY } from '../../src/composables/audioCopy'
@@ -76,21 +76,61 @@ async function answer(wrapper: ReturnType<typeof mount>, label: string): Promise
   await wrapper.vm.$nextTick()
 }
 
-/** Answer whichever card is up, taking the carried road. */
+/** ⭐⭐ PHASE 11 – WALK PAST WHATEVER TENNIS THIS YEAR HELD. The carried road enters her at ten, so
+ *  every year from ten holds one or two Local Opens, and each one is a takeover with the real match
+ *  viewer on it followed by a result card. This is the SKIPPING player: the weekend's own header
+ *  control, then the way on off the result scene.
+ *
+ *  ⚠ IT LOOPS RATHER THAN COUNTING, and the guard is what makes that safe: the loop stops the moment
+ *  neither surface is up, and the ceiling is well above the two weekends a year the cap allows. A
+ *  fixed count here would have to be kept in step with the rhythm, which is the typed list this
+ *  whole slice exists to avoid. */
+async function clearWeekends(wrapper: ReturnType<typeof mount>): Promise<number> {
+  let weekends = 0
+  for (let guard = 0; guard < 12; guard++) {
+    // ⭐ THIS YEAR'S TOURNAMENT QUESTION, if the card asked one – the SECOND BEAT on the same card
+    // (the owner's «дальше тоже можно спрашивать»). This walk always says yes, so the road it takes
+    // is the busiest one the table can produce.
+    const enter = wrapper.findAll('.prologue-answer-label').find((b) => b.text() === 'Put her name down')
+    if (enter) {
+      await answer(wrapper, 'Put her name down')
+      continue
+    }
+    const skip = wrapper.find('.plo-skip')
+    if (skip.exists()) {
+      weekends += 1
+      await skip.trigger('click')
+      await Promise.resolve()
+      await wrapper.vm.$nextTick()
+      continue
+    }
+    // The result scene, which is a card row with exactly one way on.
+    if (wrapper.text().includes(LOCAL_OPEN_COPY.kicker)) {
+      await answer(wrapper, LOCAL_OPEN_COPY.result.won.continueLabel)
+      continue
+    }
+    return weekends
+  }
+  throw new Error('the weekends never ended')
+}
+
+/** Answer whichever card is up, taking the carried road – and then play out the year's tennis. */
 async function answerCurrent(wrapper: ReturnType<typeof mount>, age: number): Promise<void> {
   const card = PROLOGUE_CARDS.find((c) => c.age === age)!
-  if (card.origins) return answer(wrapper, card.origins[1].label)
-  if (age === 12) {
+  if (card.origins) {
+    await answer(wrapper, card.origins[1].label)
+  } else if (age === 12) {
     // The twelfth has two faces and the carried road earns the other one, so the pick is taken off
     // the card that is actually on the screen rather than off the table's default row.
     const buttons = wrapper.findAll('.prologue-answer-label').map((b) => b.text())
-    return answer(wrapper, buttons[1])
-  }
-  if (card.options) {
+    await answer(wrapper, buttons[1])
+  } else if (card.options) {
     const wanted = card.options.find((o) => o.id === CARRIED[age])!
-    return answer(wrapper, wanted.label)
+    await answer(wrapper, wanted.label)
+  } else {
+    await answer(wrapper, card.continueLabel)
   }
-  return answer(wrapper, card.continueLabel)
+  await clearWeekends(wrapper)
 }
 
 describe('⭐⭐ §6 – the prologue is the default, and skip is the other path', () => {
@@ -145,8 +185,14 @@ describe('⭐⭐ the nine cards reach the handover, carrying what they came to',
     expect(calls.length, 'one career, not nine').toBe(1)
 
     // What the engine was handed is exactly what the table says that road costs and comes to.
+    // ⭐ PHASE 11 – AND THE THREE ENTRIES THE WALK BOUGHT. `answerCurrent` says yes to every year's
+    // tournament question, so the total has to carry three of them: `entryCostCents` is the tenth
+    // card's own difference and this is the same arithmetic `spentCents` does, built here off the
+    // same table rather than typed as a number.
     let run = withOrigin(EMPTY_RUN, 'middle')
     for (const age of Object.keys(CARRIED).map(Number)) run = withPick(run, age, CARRIED[age])
+    for (const age of [11, 12, 13]) run = withEntry(run, age, TOURNAMENT_ANSWER.enter)
+    expect(spentCents(run) - spentCents(withOrigin(EMPTY_RUN, 'middle'))).toBeGreaterThan(0)
     expect(calls[0].prologue?.spentCents).toBe(spentCents(run))
     expect(calls[0].prologue?.years).toEqual(chosenYears(run))
     expect(calls[0].prologue?.years.length).toBe(9)

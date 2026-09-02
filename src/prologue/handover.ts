@@ -70,6 +70,8 @@ import { rngFromSeed } from '../engine/rng'
 import { formatCents } from '../shared/money'
 import { WEEKS_IN_SEASON } from '../shared/dates'
 import { CARD_AGES } from './cards'
+import type { LocalOpenOutcome } from './cards'
+import type { PlayedOpen } from './run'
 import type { HandoverBaseBand } from '../shared/protocol'
 
 /** ⭐ THE COACH'S READ, PER BAND – §8a, verbatim, keyed by the label `coachRoomBand` returns.
@@ -289,4 +291,70 @@ export function spentLine(cents: number): string {
 export function weeklySpentLine(cents: number): string {
   const weeks = CARD_AGES.length * WEEKS_IN_SEASON
   return `That is about ${formatCents(Math.round(cents / weeks))} a week, every week of it.`
+}
+
+// =================================================================================================
+// ⭐⭐ WHAT SHE PLAYED – phase 11, and it is one sentence that is absent more often than it is there
+// =================================================================================================
+//
+// The prologue's tournaments are thrown away at the handover (pool.ts's third guard: nothing is
+// stored, by anybody), so this screen is the LAST place they can be mentioned at all – and the
+// player watched them, so a handover that never referred to them would be the account of nine years
+// with the four weekends the player actually sat through missing from it.
+//
+// ⚠⚠ IT SAYS WHAT HAPPENED AND NOT WHAT IT IS WORTH. No points, no ranking, no trophy count and no
+// comparison to anybody: `PlayedOpen` carries a finish INDEX and this reads the best of them into a
+// clause. pool.ts's fourth guard is what keeps a local under-twelves weekend from becoming a
+// currency, and a sentence here that added them up would be the first half of exactly that.
+//
+// ⚠ AND IT IS ABSENT WHEN SHE PLAYED NONE. A player who said «Not this year» at ten gets no line,
+// not a line saying nothing happened – the same rule the twelfth's two faces are written under: a
+// screen may not report a year the player did not live.
+
+/** DRAFT, every word – the owner has read none of this screen. `{n}` and `{best}` are the ONLY
+ *  things substituted; every other character, punctuation included, is copy, so replacing the fold
+ *  is the same table edit as replacing a clause. */
+export const PLAYED_COPY = {
+  sentence: 'She played {n}, and {best}.',
+  /** ⚠ THE NOUN IS IN THE COUNT AND NOT IN THE SENTENCE, so «one local tournament» and «two local
+   *  tournaments» are both a table entry rather than a plural rule in code. One less thing that
+   *  cannot be replaced by editing this table.
+   *
+   *  ⚠ WORDS AND NOT DIGITS, and the fallback is the digit rather than a hole. The shipped table
+   *  cannot produce more than eight (four years from his floor, at his cap of two), so the tail of
+   *  this list is unreachable today – it is there so a future card cannot make this function return
+   *  `undefined` on a screen. */
+  counts: [
+    'no local tournaments',
+    'one local tournament',
+    'two local tournaments',
+    'three local tournaments',
+    'four local tournaments',
+    'five local tournaments',
+    'six local tournaments',
+    'seven local tournaments',
+    'eight local tournaments',
+  ] as readonly string[],
+  best: {
+    /** DRAFT – she won at least one of them */
+    won: 'she has won one',
+    /** DRAFT – she reached at least one final and won none */
+    final: 'she has been in a final',
+    /** DRAFT – she never reached a final */
+    lost: 'she has not been past a semifinal yet',
+  },
+} as const
+
+/** ⭐ THE LINE, or the empty string when there is nothing to say. Derived from the run's own list of
+ *  weekends and from nothing else – the caller passes `run.opens` and this counts them. */
+export function playedLine(opens: readonly PlayedOpen[]): string {
+  if (opens.length === 0) return ''
+  const best: LocalOpenOutcome = opens.some((o) => o.outcome === 'won')
+    ? 'won'
+    : opens.some((o) => o.outcome === 'final')
+      ? 'final'
+      : 'lost'
+  return PLAYED_COPY.sentence
+    .replace('{n}', PLAYED_COPY.counts[opens.length] ?? String(opens.length))
+    .replace('{best}', PLAYED_COPY.best[best])
 }

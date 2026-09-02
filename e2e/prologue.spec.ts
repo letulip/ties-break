@@ -64,8 +64,50 @@ const TYPED_NAME = 'Zenobia'
  *  («the way out sits LAST, after the answers»); it is now named instead of assumed. */
 const CONTROLS_PER_CARD = [4, 1, 1, 2, 2, 2, 2, 2, 1]
 
-/** Walk the nine cards, taking the second answer wherever there is one. */
-async function walkTheChildhood(page: Page): Promise<void> {
+/** ⭐⭐ PHASE 11 – WHATEVER TENNIS THE YEAR HELD, CLEARED IN A REAL BROWSER. The walk takes the
+ *  SECOND answer on every card, and on the tenth that is «Enter her»; 11, 12 and 13 ask again as a
+ *  second beat and this says yes to each. So every year from ten puts one Local Open on the screen,
+ *  a takeover with the real match viewer on it followed by a result scene. This is the skipping
+ *  player: the weekend's own header control, then the single way on off the result.
+ *
+ *  ⚠ IT LOOPS RATHER THAN COUNTING, deliberately. A fixed number here would be a second statement of
+ *  the rhythm, kept in step with `localOpensIn` by hand – which is the typed list the whole slice
+ *  exists to avoid. The guard bounds it instead, well above the two a year the cap allows.
+ *
+ *  ⚠ AND IT RETURNS THE COUNT, so the test can assert the weekends really happened rather than that
+ *  a loop ran zero times. */
+async function clearWeekends(page: Page): Promise<number> {
+  let weekends = 0
+  for (let guard = 0; guard < 14; guard++) {
+    // ⭐⭐ THIS YEAR'S TOURNAMENT QUESTION, if the card asked one – the SECOND BEAT on the same card.
+    // The owner: «Сказали "не в этом году" – значит не в этом году, дальше тоже можно спрашивать.»
+    // This walk always says yes, so it takes the busiest road the table can produce.
+    const enter = page.getByRole('button').filter({ hasText: 'Put her name down' })
+    if (await enter.count()) {
+      await enter.first().click()
+      continue
+    }
+    const skip = page.locator('.plo-skip')
+    if (await skip.count()) {
+      weekends += 1
+      await skip.click()
+      continue
+    }
+    // The result scene: a card row with exactly one way on, and its picture is the outcome's face.
+    const result = page.locator('.prologue-card .prologue-kicker', { hasText: 'The Local Open' })
+    if (await result.count()) {
+      await page.getByRole('dialog').locator('.prologue-answers').getByRole('button').first().click()
+      continue
+    }
+    return weekends
+  }
+  throw new Error('the prologue never ran out of weekends')
+}
+
+/** Walk the nine cards, taking the second answer wherever there is one – and playing out whatever
+ *  tennis each year held. Returns how many weekends the walk actually saw. */
+async function walkTheChildhood(page: Page): Promise<number> {
+  let weekends = 0
   for (const [index, expected] of CONTROLS_PER_CARD.entries()) {
     const card = page.getByRole('dialog')
     const heading = await card.getByRole('heading').textContent()
@@ -77,12 +119,16 @@ async function walkTheChildhood(page: Page): Promise<void> {
     // measures this prologue against.
     await buttons.nth(expected > 1 ? 1 : 0).click()
 
+    // ⭐ PHASE 11 – and then the year's tennis, if it had any.
+    weekends += await clearWeekends(page)
+
     // ⚠ AND THE CARD REALLY CHANGED. Without this a click that landed on nothing would be invisible
     // until the walk ran out of cards, and the failure would name the wrong step.
     if (index < CONTROLS_PER_CARD.length - 1) {
       await expect(page.getByRole('dialog').getByRole('heading')).not.toHaveText(heading ?? '')
     }
   }
+  return weekends
 }
 
 test('the nine cards run, the handover draws her, and going on starts the career', async ({ page }) => {
@@ -117,11 +163,21 @@ test('the nine cards run, the handover draws her, and going on starts the career
   await expect(identityCard.locator('#prologue-first'), 'the five asks who she is').toBeVisible()
   await identityCard.locator('#prologue-first').fill(TYPED_NAME)
 
-  await walkTheChildhood(page)
+  const weekends = await walkTheChildhood(page)
+
+  // ⭐⭐ PHASE 11 – THE TOURNAMENTS REALLY RAN, IN A REAL BROWSER, THROUGH A REAL POINT ENGINE.
+  // His ruling: «надо с 10 лет по 1 хотя бы добавить в год». The walk takes the second answer on
+  // every card and on the tenth that is «Enter her», so a childhood that saw NO weekend here means
+  // the wiring is gone – and the loop above would have run zero times and said nothing.
+  expect(weekends, 'saying yes every year produced no tournament at all').toBe(4)
 
   // --- the handover (§5) ------------------------------------------------------------------------
   const handover = page.getByRole('dialog')
   await expect(handover).toBeVisible()
+
+  // ⭐ ...and the handover remembers them. One line, and it exists because the run carries the
+  // weekends – see `playedLine`. A childhood that entered none draws nothing here.
+  await expect(handover.locator('.handover-played'), 'the handover says nothing about her tournaments').toBeVisible()
 
   // 1. THE FORMED ROSE, drawn by the shipped radar off a snapshot a real worker built.
   //    ⚠ IT IS NAMED, NOT COUNTED, SINCE PHASE 7 – and the reason is that the old note here («it is

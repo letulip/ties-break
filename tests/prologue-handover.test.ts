@@ -42,8 +42,10 @@ import {
   COACH_BASE_READS,
   COACH_READS,
   HANDOVER_COPY,
+  PLAYED_COPY,
   START_AGAIN_DRAFTS,
   WALK_COPY,
+  playedLine,
   coachBaseReadFor,
   coachReadFor,
   spentLine,
@@ -812,6 +814,12 @@ describe('⚠ the copy obeys the house rules, and says nothing the ruling forbid
     // be a landmine sitting in the table waiting for him to pick it.
     ...START_AGAIN_DRAFTS,
     spentLine(1_234_00),
+    // ⭐ PHASE 11 – the one line the handover says about the weekends she played. Every clause of it
+    // is swept, not just the fold: a table entry outside the sweep is copy outside the rules.
+    PLAYED_COPY.sentence,
+    ...PLAYED_COPY.counts,
+    ...Object.values(PLAYED_COPY.best),
+    playedLine([{ age: 10, index: 0, finish: 0, rounds: 3, wins: 3, outcome: 'won' }]),
   ]
 
   it('no Cyrillic, no long dash, and the player is never «they»', () => {

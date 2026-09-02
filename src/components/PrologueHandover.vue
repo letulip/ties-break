@@ -47,6 +47,12 @@ const props = defineProps<{
   read: string
   /** what the nine years cost, in cents (house law: money is in cents everywhere) */
   spentCents: number
+  /** ⭐ PHASE 11 – WHAT SHE PLAYED, already folded into a sentence by `playedLine`. The prologue's
+   *  tournaments are thrown away here (pool.ts's third guard), so this screen is the last place they
+   *  can be mentioned at all – and the player watched them. Empty renders nothing, which is the same
+   *  total-by-omission handling `base` has and the honest answer for a childhood that entered none:
+   *  a screen may not report a year the player did not live. */
+  played?: string
   busy?: boolean
 }>()
 
@@ -109,6 +115,10 @@ useDialogFocus(cardEl)
         <p v-if="base" class="handover-read-line handover-read-base">{{ base }}</p>
         <p class="handover-read-line">{{ read }}</p>
       </div>
+
+      <!-- WHAT SHE PLAYED, ONCE, AND ONLY IF SHE DID. One line, above the money, because it is
+           still about her and the money is about you. -->
+      <p v-if="played" class="handover-played">{{ played }}</p>
 
       <!-- THE MONEY, ONCE. §2.4: the cards name their costs in relative terms and carry no figure at
            all; the total surfaces here and nowhere else in the prologue. -->
@@ -209,6 +219,15 @@ useDialogFocus(cardEl)
    absence of a positional selector, as `.handover-answer`. */
 .handover-read-base {
   margin-bottom: 6px;
+}
+
+/* WHAT SHE PLAYED. The money line's own treatment, one step brighter, because it is about her and
+   the line under it is about the bill. */
+.handover-played {
+  margin: 0 0 4px;
+  font-size: 13px;
+  line-height: 1.4;
+  color: var(--ink-2);
 }
 
 .handover-spent {

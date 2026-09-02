@@ -29,6 +29,7 @@ import {
   CARD_AGES,
   DECISION_AGES,
   PROLOGUE_CARDS,
+  TOURNAMENT_ANSWER,
   TWELFTH_REASONS,
   TWELFTH_WANTS_MORE,
   type PrologueCard,
@@ -37,9 +38,11 @@ import {
 } from '../src/prologue/cards'
 import {
   EMPTY_RUN,
+  askAt,
   cardFor,
   chosenYears,
   isComplete,
+  withEntry,
   originStartCents,
   pickAt,
   readTwelfth,
@@ -78,6 +81,15 @@ function everySentence(): { where: string; text: string }[] {
       out.push({ where: `${face}.${o.id}.label`, text: o.label })
       out.push({ where: `${face}.${o.id}.note`, text: o.note })
     }
+    // ⚠ AND THE YEAR'S TOURNAMENT QUESTION (phase 11), for the reason `question` is swept: a copy
+    // field the sweep does not enumerate is a copy field outside the three rules.
+    if (c.tournament) {
+      out.push({ where: `${face}.tournament.lede`, text: c.tournament.lede })
+      out.push({ where: `${face}.tournament.enterLabel`, text: c.tournament.enterLabel })
+      out.push({ where: `${face}.tournament.enterNote`, text: c.tournament.enterNote })
+      out.push({ where: `${face}.tournament.declineLabel`, text: c.tournament.declineLabel })
+      out.push({ where: `${face}.tournament.declineNote`, text: c.tournament.declineNote })
+    }
   }
   // ⚠ AND SO IS THE FORK'S FOLDED SENTENCE, which is not on a card row and would otherwise be the
   // one player-facing string in this module nothing checked.
@@ -104,7 +116,17 @@ function finish(run: PrologueRun, take: 'light' | 'heavy'): PrologueRun {
   const options = twelfth.options ?? []
   const byShare = [...options].sort((a, b) => (a.share ?? 0) - (b.share ?? 0))
   const chosen = take === 'light' ? byShare[0] : byShare[byShare.length - 1]
-  return withPick(run, 12, chosen.id)
+  return answerAsks(withPick(run, 12, chosen.id), take === 'light' ? 'decline' : 'enter')
+}
+
+/** ⭐ PHASE 11 – ANSWER EVERY YEAR'S TOURNAMENT QUESTION. A childhood is not finished while one is
+ *  open (`isComplete`), and «not this year» finishes a card exactly as «put her name down» does. */
+function answerAsks(run: PrologueRun, take: 'enter' | 'decline'): PrologueRun {
+  let out = run
+  for (const card of PROLOGUE_CARDS) {
+    if (askAt(card.age, out)) out = withEntry(out, card.age, TOURNAMENT_ANSWER[take])
+  }
+  return out
 }
 
 /** Every childhood the table can produce: four binary decisions at 8..11 settle the twelfth's face,
@@ -690,13 +712,25 @@ describe('⭐⭐ the age-12 fork is DERIVED, and there are no dice in a derived 
 
   // ⚠ NO STORED MOTIVATION NUMBER AND NO NEW FIELD (§2.5, and §7 names the motivation system as NOT
   // IN v1 and his). The run holds two things: where the family is from, and what was picked.
-  it('the run holds no number about her – an origin and a set of answers, and nothing else', () => {
+  // ⚠⚠ PHASE 11 ADDED THE THIRD FIELD AND THE CLAIM DID NOT MOVE. `opens` is the list of Local Open
+  // weekends she actually played, and every number in it is the BRACKET's: a finish index, a round
+  // count and a win count that pool.ts already computed. It is still not a number ABOUT HER – there
+  // is no motivation, no form, no rating and no talent anywhere in the run – and it is deliberately
+  // not a trophy count either: pool.ts's fourth guard («NO POINTS ARE EVER COMPUTED») is what keeps
+  // a local under-twelves weekend from becoming a currency, and a run that started counting cups
+  // would be the first half of exactly that. The sweep below is what says so mechanically.
+  it('the run holds no number about her – an origin, a set of answers, and the weekends she played', () => {
     const run = finish(runOf(CARRIED_ROAD), 'heavy')
-    expect(Object.keys(run).sort()).toEqual(['origin', 'picks'])
+    expect(Object.keys(run).sort()).toEqual(['entries', 'opens', 'origin', 'picks'])
     for (const v of Object.values(run.picks)) expect(typeof v).toBe('string')
+    expect(run.opens).toEqual([])
     const code = scriptCodeOf(RUN_SRC)
     expect(code).toMatch(/export function readTwelfth/)
     expect(code).not.toMatch(/\bmotivation\b/i)
+    // ⚠ AND NO CURRENCY GOT IN WITH THE LIST. MUTATION: add a `points` field to `PlayedOpen` -> red.
+    for (const banned of ['points', 'ranking', 'trophy', 'title']) {
+      expect(`${banned}: ${new RegExp(`\\b${banned}\\b`, 'i').test(code)}`).toBe(`${banned}: false`)
+    }
   })
 })
 

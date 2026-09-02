@@ -50,8 +50,8 @@ import { WEEKS_PER_YEAR, TIERS } from '../engine/season/calendar'
 import { FIRST_NAMES, SURNAMES } from '../engine/season/names'
 import { runTournament } from '../engine/season/tournament'
 import type { MatchPlayer } from '../engine/match/types'
-import type { SeasonEvent, TierId, TournamentResult } from '../engine/season/types'
-import { PROLOGUE_CARDS, APPETITE_AT, type PrologueYear } from './cards'
+import type { MatchRecord, SeasonEvent, TierId, TournamentResult } from '../engine/season/types'
+import { PROLOGUE_CARDS, type LocalOpenOutcome, type PrologueYear } from './cards'
 
 /** ⚠ THE ONE PLACE A PROLOGUE EVENT IS NAMED, and the prefix is load-bearing rather than decorative.
  *  A world event's id is `${year}-w${week}-${tier}` (season/types.ts), so every id the calendar can
@@ -164,6 +164,37 @@ export function localPool(seed: string, age: number, index = 0): MatchPlayer[] {
   return pool.sort((a, b) => standardOf(b) - standardOf(a) || (a.id < b.id ? -1 : 1))
 }
 
+/** ⭐⭐ HER, AS A LOCAL OPEN MEETS HER – phase 11, and it is the NINTH CHILD and nothing more.
+ *
+ *  Drawn from the same `STARTING_SKILL_BAND`, by the same `pickInt`, in the same `SKILL_KEYS` order
+ *  as the eight above, on her own purpose-scoped sub-stream `seed:prologue:her` (invariant 2). One
+ *  draw for the whole childhood, with `age` moved on each time: the same girl, a year older.
+ *
+ *  ⚠⚠ THE CHILDHOOD DOES NOT MOVE HER HERE, AND THAT IS A REFUSAL RATHER THAN AN OVERSIGHT. The
+ *  honest way to make nine years of decisions show up on a court is `childhoodArrival`, and this
+ *  module may not reach it: `tests/childhood.test.ts` pins `engine/childhood.ts`'s importer set as
+ *  exactly `['engine/world.ts']`, which is phase 1's guarantee that the childhood model cannot be
+ *  reached from the tick path. The alternatives are both worse than the gap:
+ *
+ *    * A SECOND STRENGTH MODEL HERE would be two copies of one model, which CLAUDE.md forbids by
+ *      name and `foldYears` was written to avoid («Two copies of one model is a model that drifts»).
+ *    * A PARTIAL WALK WOULD NOT MEAN WHAT IT SAYS EVEN IF IT WERE REACHABLE. `childhoodWalk`
+ *      normalises the level against a MEDIAN and a DEVOTED childhood over all nine years, so a walk
+ *      of the first six would read as far below median simply for being short – the same trap
+ *      cards.ts §"what a card shows" §4 already records about drawing a number at seven.
+ *
+ *  ⭐ WHAT THE PLAYER'S CHOICES DO REACH is the RHYTHM below: a year she gave everything to holds
+ *  two of these weekends and an ordinary one holds one, so a devoted childhood plays more draws and
+ *  therefore wins more of them. That is the connection, it is derived from the table, and it is the
+ *  only one this phase claims. Making the girl herself stronger is the owner's call and is named in
+ *  the report as a thing NOT done. */
+export function prologueEntrant(seed: string, id: string, name: string, age: number): MatchPlayer {
+  const rng = rngFromSeed(`${seed}:prologue:her`)
+  const skills = {} as Record<SkillKey, number>
+  for (const k of SKILL_KEYS) skills[k] = pickInt(rng, ...STARTING_SKILL_BAND[k])
+  return { id, name, age, ...skills }
+}
+
 // =================================================================================================
 // THE WEEKEND
 // =================================================================================================
@@ -247,6 +278,33 @@ export function playLocalOpen(seed: string, kid: MatchPlayer, age: number, index
   return { event, field, result, wins: rounds - finish, finish, rounds }
 }
 
+/** ⭐⭐ WHAT THE WEEKEND CAME TO, IN THE OWNER'S OWN THREE FACES – «либо победный арт, либо serious
+ *  если в финал выбралась, либо грустный, если до финала не дошла».
+ *
+ *  ⚠ IT IS READ OFF `finish`, WHICH IS AN INDEX AND NOT A PRIZE. 0 is the title and 1 is the match
+ *  she lost on the last day, because `finish` is `rounds - round` for a loser – so «she reached the
+ *  final» is `finish === 1` by the bracket's own arithmetic and needs no flag, no points table and
+ *  nothing stored. The header's fourth guard («NO POINTS ARE EVER COMPUTED») is untouched: this
+ *  reads the same index and still never opens `TIERS[tier].points`. */
+export function outcomeOf(open: LocalOpen): LocalOpenOutcome {
+  if (open.finish === 0) return 'won'
+  if (open.finish === 1) return 'final'
+  return 'lost'
+}
+
+/** ⭐ HER MATCHES, IN THE ORDER SHE PLAYED THEM – one to `rounds` of them, and every one carries the
+ *  `seed` `playMatch` wrote onto it, so a screen can replay any of them through the real point
+ *  engine and get exactly the match the bracket already resolved. That replayability is what makes
+ *  the shipped viewer able to show this weekend with no new mechanism.
+ *
+ *  ⚠ HERS ONLY. The other three quarters of the draw are AI-AI rows resolved by the closed form –
+ *  they carry no seed and no scoreline and there is nothing to watch in them (`playMatch`). */
+export function herMatches(open: LocalOpen, kidId: string): MatchRecord[] {
+  return open.result.matches
+    .filter((m) => m.aId === kidId || m.bId === kidId)
+    .sort((a, b) => a.round - b.round)
+}
+
 // =================================================================================================
 // ⭐ THE RHYTHM – 1-2 A YEAR, FROM TEN, AND DERIVED FROM WHAT THE PLAYER BOUGHT
 // =================================================================================================
@@ -257,31 +315,62 @@ export function playLocalOpen(seed: string, kid: MatchPlayer, age: number, index
 // stale. It is the same mechanism `readTwelfth` uses one file over: a comparison against the table,
 // no flag, no field anywhere saying «this year has a tournament in it».
 
-/** HOW MANY LOCAL OPENS A YEAR HOLDS. Zero before ten (his floor) and zero in a year she did not play
- *  matches; otherwise one, or two in a year she gave everything a child that age can take.
+// ⚠⚠ PHASE 11 CORRECTED THE READING OF HIS RHYTHM – TWICE, AND THE SECOND CORRECTION IS HIS OWN.
+//
+// FIRST, PHASE 3's reading: «1-2 a year» is a property of THE YEAR – a year is a matchplay year or
+// it is not. Phase 3 measured the consequence honestly: no card at 11, 12 or 13 is a matchplay year,
+// so the table produced exactly one Open, at ten, «because no card there is a matchplay year – that
+// is a card-table question, not a pool question». He then said what he meant: «мы договаривались,
+// что турниры в прологе тоже будут, сейчас этого нет, надо с 10 лет по 1 хотя бы добавить в год, как
+// в колледже.»
+//
+// SECOND, AND WRONG, WAS MINE: that the age-10 card decides whether she becomes a competitor at all
+// and every later year follows from it – a switch thrown once. THE OWNER: «Сказали "не в этом году"
+// – значит не в этом году, дальше тоже можно спрашивать, не вижу проблем.»
+//
+// ⭐ SO THE RHYTHM IS A YEAR-BY-YEAR ANSWER AND NOT A STATE. The question is asked in every year
+// from his floor (the card's own decision at ten, the lighter `tournament` ask at 11, 12 and 13 –
+// see cards.ts), and a year holds a weekend if and only if the player said yes THAT YEAR. Nothing is
+// carried forward, nothing is remembered between years, and «not this year» means what it says.
+//
+// ⭐⭐ ONE YES BUYS ONE WEEKEND, and that is a reading of his correction rather than of his range.
+// «1-2 a year» is his phrase and `maxPerYear` below is still his cap – but the question is now asked
+// ONCE a year, and a year that quietly produced TWO weekends off a hidden appetite threshold would
+// be the game deciding something it had just asked the player about. So a yes is a weekend. The cap
+// is what holds a future card that asks twice; today's table asks once, so today one is what a yes
+// buys, and `tests/prologue-pool.test.ts` pins both halves.
+
+/** HOW MANY LOCAL OPENS A YEAR HOLDS. Zero before ten (his floor) and zero in a year the player did
+ *  not enter her; otherwise one, and never more than his cap.
  *
- *  ⚠ THE `matchplay` READ IS NOT A NEW FLAG. `focus` is the engine's own `SessionKind` and the age-10
- *  card's «Enter her» is already a `matchplay` year – run.ts's fork counts tournaments off exactly
- *  this, so the two readers agree by construction rather than by being kept in step.
- *
- *  ⚠ AND THE SECOND OPEN IS UNREACHABLE FROM TODAY'S TABLE, WHICH IS HONEST AND NOT DEAD CODE. No
- *  card offers a matchplay year at full appetite (age 10's «Enter her» buys 0.75 of it), so the table
- *  as it stands produces exactly one Open, at ten. The cap is what his rhythm asks for; the day a
- *  card offers a fuller year the second one appears without this function changing. The test proves
- *  both halves by feeding a row the table does not contain. */
-export function localOpensIn(year: PrologueYear): number {
+ *  ⚠ `entered` IS NOT A FLAG ON ANYTHING AND NOT A STATE. It is `enteredIn(age, run)` in run.ts –
+ *  the ONE reader of this year's answer, which knows that at ten the answer is the card's own
+ *  `matchplay` decision and at eleven and after it is the lighter ask. This module never sees a run
+ *  and never sees a card's ask; it is handed the answer. */
+export function localOpensIn(year: PrologueYear, entered: boolean): number {
   if (year.age < LOCAL_POOL.fromAge) return 0
-  if (year.focus !== 'matchplay') return 0
-  const full = year.practice >= (APPETITE_AT[year.age] ?? 1)
-  return Math.min(full ? 2 : 1, LOCAL_POOL.maxPerYear)
+  if (!entered) return 0
+  return Math.min(1, LOCAL_POOL.maxPerYear)
+}
+
+/** ⭐ HOW MANY WEEKENDS THE YEAR AT `age` HOLDS – the ONE entry point a screen needs. `entered` is
+ *  the set of ages the player said yes in (`enteredAges` in run.ts). A year that is not in `years`
+ *  yet holds nothing, which is what a childhood still in progress looks like. */
+export function localOpensAt(years: readonly PrologueYear[], age: number, entered: readonly number[]): number {
+  const year = years.find((y) => y.age === age)
+  if (!year) return 0
+  return localOpensIn(year, entered.includes(age))
 }
 
 /** Every Local Open of a whole childhood, in order, as `(age, index)` pairs. The caller plays them;
  *  this only says which weekends happened. */
-export function prologueSchedule(years: readonly PrologueYear[]): { age: number; index: number }[] {
+export function prologueSchedule(
+  years: readonly PrologueYear[],
+  entered: readonly number[],
+): { age: number; index: number }[] {
   const out: { age: number; index: number }[] = []
   for (const y of years) {
-    for (let i = 0; i < localOpensIn(y); i++) out.push({ age: y.age, index: i })
+    for (let i = 0; i < localOpensAt(years, y.age, entered); i++) out.push({ age: y.age, index: i })
   }
   return out
 }

@@ -58,7 +58,7 @@
 // the two read lines read, so the picture cannot disagree with the sentence under it, and there is
 // no `mood` column in the card table for anybody to keep in sync by hand.
 import { computed, ref, useTemplateRef } from 'vue'
-import { prologueArtUrl, prologueFacePoint } from '../art/prologue'
+import { prologueArtUrl, prologueFacePoint, type PrologueOutcome } from '../art/prologue'
 import { useDialogFocus } from '../composables/dialogFocus'
 import { COUNTRIES, COUNTRY_NAMES, POPULAR_COUNTRIES, flagEmoji } from '../composables/countries'
 // ⚠⚠ THE THREE FIELDS ARE THE WIZARD'S AND SO ARE THEIR WORDS. Not one label, placeholder or
@@ -68,7 +68,8 @@ import { COUNTRIES, COUNTRY_NAMES, POPULAR_COUNTRIES, flagEmoji } from '../compo
 import { IDENTITY_COPY, MONTHS } from '../composables/identityCopy'
 import { daysInBirthMonth } from '../shared/dates'
 import type { PortraitEmotion } from '../shared/avatarEmotion'
-import type { PrologueCard, PrologueOption } from '../prologue/cards'
+import { TOURNAMENT_ANSWER } from '../prologue/cards'
+import type { PrologueCard, PrologueOption, TournamentAsk } from '../prologue/cards'
 import type { PrologueIdentity } from '../prologue/identity'
 import type { Warmth } from '../prologue/run'
 
@@ -85,6 +86,23 @@ const props = defineProps<{
    *  three-item list until the owner met it (02.09, «мне кажется вот это лишнее»); see
    *  `TWELFTH_REASONS` in cards.ts for why the function survived the list. */
   reason?: string
+  /** ⭐⭐ PHASE 11 – WHAT THE YEAR'S TOURNAMENT CAME TO, and it is the ONE argument phase 7 left the
+   *  hook for: «the wiring, when it comes, is one argument at one call site». Present only on a
+   *  Local Open's result scene, where it OUTRANKS both the owner's pinned frame and `mood`'s
+   *  derivation – a result is the strongest thing the game knows about that year, and a card showing
+   *  `norm` over a won draw sheet would be the picture disagreeing with the screen the player just
+   *  came off. See `prologueFace` in src/art/prologue.ts for the ranking. */
+  outcome?: PrologueOutcome
+  /** ⭐⭐ PHASE 11 – THIS YEAR'S TOURNAMENT QUESTION, AS A SECOND BEAT ON THE SAME CARD. Present only
+   *  while the ask is open (`askAt`), and while it is, it takes over the bottom half of the card: the
+   *  ask's own line replaces the lede and its two answers replace the card's.
+   *
+   *  ⚠ THE TWO READ LINES ARE NOT DRAWN ON THIS BEAT, deliberately. `her` and `coach` are the card's
+   *  reading of a YEAR and this beat is a question about one weekend – the same rule cards 5..8 are
+   *  written under, that a scene may not claim to have read something it cannot have seen. It also
+   *  makes the ask beat strictly SHORTER than the card's own, so the round-20 #3 fit measured on the
+   *  card covers it. */
+  ask?: TournamentAsk
   /** ⭐ WHO SHE IS – present only while the card that asks is up (`card.identity`), and owned by the
    *  container so that walking off the card and back does not forget what was typed. */
   identity?: PrologueIdentity
@@ -98,7 +116,9 @@ const props = defineProps<{
 }>()
 
 const emit = defineEmits<{
-  /** the id of the option or origin taken, or null for a card with nothing to decide */
+  /** the id of the option or origin taken, or null for a card with nothing to decide. ⭐ On the ask
+   *  beat it is one of `TOURNAMENT_ANSWER`'s two ids – the container knows which beat it is on,
+   *  because it is the one that put the `ask` prop there. */
   (e: 'answer', id: string | null): void
   /** the player would rather have the wizard */
   (e: 'skip'): void
@@ -185,10 +205,23 @@ function chooseCountry(code: string): void {
  *  changes kind changes no markup. The quiet card's single control is synthesised from
  *  `continueLabel`, which is why it has no note. */
 const controls = computed<{ id: string | null; label: string; note: string }[]>(() => {
+  // ⭐ PHASE 11 – THE ASK BEAT IS A FOURTH KIND OF CARD AND STILL ONE COLUMN. Two answers, same
+  // shape, same markup; it comes first because while the ask is open it IS the card's question.
+  const ask = props.ask
+  if (ask) {
+    return [
+      { id: TOURNAMENT_ANSWER.enter, label: ask.enterLabel, note: ask.enterNote },
+      { id: TOURNAMENT_ANSWER.decline, label: ask.declineLabel, note: ask.declineNote },
+    ]
+  }
   const list: readonly PrologueOption[] | undefined = props.card.origins ?? props.card.options
   if (list) return list.map((o) => ({ id: o.id, label: o.label, note: o.note }))
   return [{ id: null, label: props.card.continueLabel, note: '' }]
 })
+
+/** ⭐ THE LINE UNDER THE TITLE. On the ask beat it is the ask's own – who is asking this year, and
+ *  how hard – so the scene stays the same painting and the same year while the question changes. */
+const lede = computed(() => props.ask?.lede ?? props.card.lede)
 
 const her = computed(() => props.card.her[props.warmth])
 const coach = computed(() => props.card.coach[props.warmth])
@@ -200,11 +233,11 @@ const coach = computed(() => props.card.coach[props.warmth])
 // builder, the other three stay derived off `mood`, and this file asks one function and draws what
 // it is handed. Same reason the copy is a table: art direction is his, and a component that chose
 // its own frame would be a second place to change it.
-const artUrl = computed(() => prologueArtUrl(props.card.age, props.mood))
+const artUrl = computed(() => prologueArtUrl(props.card.age, props.mood, props.outcome))
 /** Framed off the ONE face table for a portrait, and off the welcome scene's own recorded point for
  *  `welcome-1` – see `prologueFacePoint`, which carries the account of «отец без головы». */
 const artStyle = computed(() => {
-  const p = prologueFacePoint(props.card.age, props.mood)
+  const p = prologueFacePoint(props.card.age, props.mood, props.outcome)
   return { objectPosition: `${p.x}% ${p.y}%` }
 })
 
@@ -240,11 +273,16 @@ useDialogFocus(cardEl)
 
       <p id="prologue-kicker" class="prologue-kicker">{{ card.kicker }}</p>
       <h2 id="prologue-title" class="prologue-title">{{ card.title }}</h2>
-      <p class="prologue-lede">{{ card.lede }}</p>
+      <p class="prologue-lede">{{ lede }}</p>
 
       <!-- WHAT YOU CAN SEE OF HER, AND IT IS NEVER A NUMBER. Two sentences: whether she is enjoying
-           it, and what the person teaching her makes of it. The full argument is in cards.ts. -->
-      <div class="prologue-read">
+           it, and what the person teaching her makes of it. The full argument is in cards.ts.
+
+           ⚠ NOT ON THE ASK BEAT. These two lines are the card's reading of a YEAR and the ask is a
+           question about one weekend, so a beat that kept them would be the scene reporting the year
+           twice - see the `ask` prop. It also keeps the ask beat strictly shorter than the card's
+           own, which is what makes the round-20 #3 fit measured on the card cover it. -->
+      <div v-if="!ask" class="prologue-read">
         <p class="prologue-read-line">{{ her }}</p>
         <p class="prologue-read-line prologue-read-coach">{{ coach }}</p>
       </div>

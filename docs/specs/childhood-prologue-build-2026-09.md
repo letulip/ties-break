@@ -278,6 +278,101 @@ age-5 card uses `welcome-1`; the mood is derived, not typed; every control reach
 cuts, the distribution, the height before and after and two findings recorded rather than fixed are
 in §8c.
 
+**Phase 11 – the tournaments are in the walk, and the question comes back every year. SHIPPED 02.09.**
+His ruling: «мы договаривались, что турниры в прологе тоже будут, сейчас этого нет, надо **с 10 лет по
+1 хотя бы добавить в год, как в колледже**», and, on the age-10 card, «хотелось бы реально увидеть
+турнир … а не просто пролистать. В конце турнира либо победный арт, либо serious если в финал
+выбралась, либо грустный, если до финала не дошла.» Phase 3 built the machine and left it unwired;
+this is the wiring, and it is the CARD-TABLE half of the rhythm.
+
+⚠⚠ **AND HE CORRECTED THE FIRST READING OF IT, WHICH WAS OURS.** The build read the age-10 card as the
+decision that makes her a competitor for the rest of the childhood – a switch thrown once. He:
+«Сказали "не в этом году" – значит **не в этом году**, дальше тоже можно спрашивать, не вижу проблем.
+Может быть в следующие года уже **тренер будет чуть более настойчив**, например, или **она сама**.»
+
+*What shipped:*
+
+- **The question is asked in every year from his floor, and «not this year» closes that year only.**
+  At ten it is the card's own decision (`options`, unchanged). At 11, 12 and 13 it is a LIGHTER
+  CONTROL – a new `tournament` field on the card row, with two answers and no `share`, `teaching` or
+  `focus`. `enteredIn(age, run)` is the ONE reader that knows both halves; nothing else does.
+- **The asking escalates**, which is the better half of his note and is the whole of the drama: at 11
+  the coach has mentioned it twice; at 12 the coach asks again and asks you to think about it – or,
+  on the fork's other face, SHE asks, twice, on two different days; at 13 nobody tells you, because
+  the date is already on the kitchen calendar in her writing. Four sentences, one per scene, all
+  DRAFT.
+- **The weekend is a screen.** `PrologueLocalOpen.vue` plays HER matches in the shipped `MatchViewer`
+  under the seed `playMatch` already wrote onto each record, so the bracket is the authority and the
+  screen only shows what it decided.
+- **The result is the picture.** `PrologueOutcome` gained `final` (three faces, his split), and
+  `ChildhoodPrologue.vue` passes it down – the one argument at the one call site phase 7 left the
+  hook for. The result scene is a `PrologueCard` row built by `localOpenCard`, so it inherits the
+  nine cards' fit, contrast and painting rather than being a fourth screen.
+- **The run remembers.** `PrologueRun.opens` is the list of weekends with the bracket's own three
+  numbers on each; the handover says one sentence about them and nothing about what they are worth.
+  ⚠ No points, no trophy, no standing – pool.ts's fourth guard is unchanged.
+
+⚠⚠ **THE STRUCTURAL PROBLEM, AND WHAT THE CHOSEN SHAPE COSTS.** The repeat needs a question at 11, 12
+and 13, where three pins collide: `DECISION_AGES` is pinned as exactly `[8, 9, 10, 11, 12]`; the
+thirteenth is one of the four quiet cards, and the count is his; and the twelfth is the fork, which
+should not share its screen with a second decision. Three shapes were available:
+
+1. **a lighter control on the card** – what shipped;
+2. the repeat only where a card can carry it (10 and 11), 12–13 following the last answer;
+3. widening `DECISION_AGES` – ⚠ **his ruling to give, not a builder's**, so it was not taken.
+
+(1) keeps all three pins standing: the ask is invisible to `DECISION_AGES` (which reads `options`),
+shapes no year, and is asked as a SECOND BEAT on the same card – same painting, same kicker, same
+title, the ask's line in place of the lede, its two answers in place of the card's, and the two read
+lines dropped because they are the card's reading of a YEAR. **The price, said plainly: the thirteenth
+card now carries a yes/no.** It is quiet in the sense the pin measures and not in the sense of
+«nothing is asked», and that is the owner's to overrule.
+
+⚠ **THE FORK'S TOURNAMENT COUNT MOVED WITH IT, and it was measured on both roads.** `readTwelfth`
+counted `taken.focus === 'matchplay'`, which was the whole question while ten was the only year that
+asked; it now counts through `enteredIn`, so an entry at eleven counts too. Measured
+(`tests/prologue-pool.test.ts` prints it):
+
+| road | entries | oneToOne | tournaments | light | reading |
+| --- | --- | --- | --- | --- | --- |
+| light | none | 0 | 0 | 4 | tired |
+| light | every year | 0 | 1 | 4 | tired |
+| carried | none | 3 | 1 | 0 | wants-more |
+| carried | every year | 3 | 2 | 0 | wants-more |
+
+The fork still splits on the childhood and not on the tournament answer, which is §2.5's claim; what
+moved is the number the card prints, and it moves in the direction it should.
+
+*Acceptance, measured:* entering at ten produces a played draw with the real viewer, a result and the
+matching art; the per-year counts on the carried road are **1, 1, 1, 1** at ages 10–13 when the
+player says yes every year and **0, 0, 0, 0** when he says no every year – and, because the answers
+are independent, **0, 1, 1, 1** for a refusal at ten followed by three yeses and **1, 0, 0, 0** for
+the reverse; the main cohort is byte-identical with and without a prologue (phase 3's proof, re-run
+and widened); every control reachable at 375x667, including each of the four ask scenes and the
+weekend's own escape above the court.
+
+⚠ **THE TEN-MINUTE FIGURE IS NOT A GATE, AND THE OWNER SAID SO:** «Десять минут это ваша цифра, и
+турниры не должны её съесть – это была примерная цифра, ничего не случится, если у нас будут
+турниры, там есть больше скорости – вообще не проблема, и это одна из основных частей игры
+вообще-то.» So nothing was designed around it: no match is cut, no default sends a player past the
+viewer, and the draw is the draw. It is still MEASURED and printed, four arms, carried road:
+
+| arm | weekends | her matches | reading | skip the weekend | skip each match | watch every match |
+| --- | --- | --- | --- | --- | --- | --- |
+| light, no to every year | 0 | 0 | 6.9 | 6.9 | 6.9 | 6.9 |
+| light, yes from eleven | 3 | 3 | 7.9 | 8.2 | 8.2 | 12.0 |
+| carried, ten only | 1 | 2 | 7.3 | 7.4 | 7.5 | 10.4 |
+| carried, yes every year | 4 | 5 | 8.4 | 8.8 | 8.9 | 15.6 |
+
+Minutes. Reading is estimated at 200 wpm; **watching is measured** off the real `buildTimeline`
+durations at the shipped `key`/2× opening, which the viewer's own pills halve again at 4×.
+
+⚠ **What phase 11 did NOT do, and it is the owner's to rule on:** the childhood does not move HER
+BUILD at a Local Open. She is drawn from `STARTING_SKILL_BAND` on her own sub-stream – the ninth
+child, on the same scale as the eight – because `engine/childhood.ts`'s importer set is pinned as
+exactly `['engine/world.ts']` and a second strength model in `src/prologue` is the duplication
+CLAUDE.md forbids by name. What the player's choices DO reach is how many draws she enters.
+
 ⚠ **NOT IN v1, and named so nobody smuggles them in:** the motivation system (his, later); a
 difficulty menu (§2.4 replaces it); any change to `potential`; any change to the main cohort;
 the second and third «lекarstva» for a weak draw (a rising floor, and a capped career's own way to be

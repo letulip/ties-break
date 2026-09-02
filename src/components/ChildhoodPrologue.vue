@@ -23,29 +23,53 @@
 // `createWorld` derives them from the nine years. The identity is the opposite kind of field: the
 // nine years cannot derive a girl's name.
 //
-// ⚠ THE AGE-10 LOCAL OPEN IS NOT PLAYED HERE. Phase 3 built the field (`src/prologue/pool.ts`) and
-// proved the shipped viewer will show one (tests/component/prologue-local-open.test.ts); putting it
-// INTO the walk is a screen with a tournament flow in it, and phase 4's three items are the
-// handover, the wiring and the two paths. The card at ten still charges for the weekend and still
-// counts as a matchplay year, so the childhood the engine is handed is unchanged either way.
+// ⭐⭐ PHASE 11 – THE TOURNAMENTS ARE IN THE WALK NOW, and this header used to record why they were
+// not. It said: «THE AGE-10 LOCAL OPEN IS NOT PLAYED HERE … putting it INTO the walk is a screen
+// with a tournament flow in it, and phase 4's three items are the handover, the wiring and the two
+// paths.» That was true of phase 4 and the owner then asked for the other half: «мы договаривались,
+// что турниры в прологе тоже будут, сейчас этого нет, надо с 10 лет по 1 хотя бы добавить в год, как
+// в колледже», and, on the age-10 card, «хотелось бы реально увидеть турнир … а не просто
+// пролистать».
+//
+// SO THE ORDER THIS COMPONENT OWNS IS LONGER BY ONE BEAT, AND ONLY IN THE YEARS THAT HAVE ONE:
+//
+//     card at N -- (weekend, then its result) x localOpensAt(...) -- card at N+1
+//
+// ⚠ THE RHYTHM IS NOT DECIDED HERE. `localOpensAt` reads the years the player actually chose and
+// answers with a count; this component asks it once per year and plays what it is told. There is no
+// list of tournament ages anywhere, in this file or beside the table – see pool.ts's rhythm section.
+//
+// ⚠ AND THE RESULT SCENE IS A CARD, not a fourth screen. `localOpenCard` builds a `PrologueCard` row
+// out of the DRAFT copy table, so `PrologueCard.vue` draws it with the nine years' own fit, contrast
+// and painting – and the painting is the owner's three faces, through the `outcome` argument phase 7
+// left the hook for («the wiring, when it comes, is one argument at one call site»).
 import { computed, ref } from 'vue'
 import MuteButton from './MuteButton.vue'
 import PrologueCard from './PrologueCard.vue'
 import PrologueHandover from './PrologueHandover.vue'
+import PrologueLocalOpen from './PrologueLocalOpen.vue'
 import { useGameStore } from '../stores/game'
-import { CARD_AGES } from '../prologue/cards'
-import { coachBaseReadFor, coachReadFor, WALK_COPY } from '../prologue/handover'
+import { CARD_AGES, localOpenCard } from '../prologue/cards'
+import { coachBaseReadFor, coachReadFor, playedLine, WALK_COPY } from '../prologue/handover'
+import { KID_ID } from '../engine/world'
+import { localOpensAt, outcomeOf, playLocalOpen, prologueEntrant, type LocalOpen } from '../prologue/pool'
+import type { MatchPlayer } from '../engine/match/types'
 import {
   EMPTY_RUN,
   cardFor,
   chosenYears,
   isComplete,
+  askAt,
+  enteredAges,
   moodAt,
   readTwelfth,
   spentCents,
   warmthAt,
+  withEntry,
+  withOpen,
   withOrigin,
   withPick,
+  yearsSoFar,
   type PrologueRun,
 } from '../prologue/run'
 import { OPENING_IDENTITY, settleIdentity, type PrologueIdentity } from '../prologue/identity'
@@ -69,13 +93,117 @@ const at = ref(0)
  *  snapshot arrives the instant the career is created, and this screen has to outlive that. */
 const handoverOpen = ref(false)
 
-const card = computed(() => cardFor(CARD_AGES[at.value], run.value))
+// =================================================================================================
+// ⭐⭐ THE WEEKENDS – phase 11
+// =================================================================================================
+
+/** ⚠ THE PROLOGUE'S OWN SEED, AND IT IS NOT THE CAREER'S. There is no career while the nine cards
+ *  are being walked – `newCareer` is called on the far side of the ninth – so the tournaments need a
+ *  seed of their own, and it must be stable for the whole run or a weekend re-entered would be a
+ *  different weekend.
+ *
+ *  ⚠ `Math.random` IS THE STORE'S OWN IDIOM AND IS UI-SIDE, NOT ENGINE-SIDE. `game.newCareer` reads
+ *  «UI randomness is fine outside the engine» in as many words and generates a career seed the same
+ *  way. Everything downstream of this line is a purpose-scoped sub-stream off it (`rngFromSeed`), so
+ *  invariant 2 holds: not one draw of the prologue's tennis reaches MAIN, and the frozen capture
+ *  cannot see any of it.
+ *
+ *  ⚠ AND IT IS DROPPED BY `startAgain`, with the run and the identity – a different childhood means
+ *  a different girl, and it would be a strange kind of «start again» that replayed the same draws. */
+function freshSeed(): string {
+  return `prologue-${(Math.random().toString(36).slice(2) + '0000').slice(0, 8)}`
+}
+const seed = ref(freshSeed())
+
+/** THE WEEKENDS OF THE YEAR JUST ANSWERED, still to be played – `(age, index)` pairs, taken from the
+ *  front. Empty in every year that holds none, which is every year of a childhood that never
+ *  entered one. */
+const queue = ref<{ age: number; index: number }[]>([])
+/** ⚠ THE WEEKEND ON SCREEN – the bracket, the year, AND THE GIRL WHO PLAYED IT, held together.
+ *  She is kept here rather than recomputed for the template, and that is not tidiness: a `:kid`
+ *  bound to a function call is a NEW object on every render of this component, which invalidates
+ *  `PrologueLocalOpen`'s `annotated` computed and re-runs a whole `simulateMatch` for nothing. */
+const openNow = ref<{ age: number; open: LocalOpen; kid: MatchPlayer } | null>(null)
+/** ...and its result scene, once the player has left the court. */
+const resultNow = ref<{ age: number; outcome: ReturnType<typeof outcomeOf> } | null>(null)
+
+/** ⭐ HER, AS THE DRAW MEETS HER – the ninth child, drawn on the game's own band by `prologueEntrant`
+ *  and named by whatever the age-5 card was told. `KID_ID` is what makes the viewer point at the
+ *  right girl (`matchReadout`'s `kidSide`), and pool.ts guarantees no child can collide with it. */
+function kidAt(age: number): MatchPlayer {
+  const named = settleIdentity(identity.value)
+  return prologueEntrant(seed.value, KID_ID, `${named.kidName} ${named.kidLastName}`, age)
+}
+
+/** ⭐⭐ THE NEXT WEEKEND, PLAYED. The bracket is resolved HERE, before the screen opens, and the run
+ *  remembers it at that moment – so what she did does not depend on whether the player watched it,
+ *  which is the same rule round 16 #19 states about a report being a consequence of what happened
+ *  rather than of a screen having been seen. */
+function playNext(): boolean {
+  const next = queue.value.shift()
+  if (!next) return false
+  const kid = kidAt(next.age)
+  const open = playLocalOpen(seed.value, kid, next.age, next.index)
+  const outcome = outcomeOf(open)
+  run.value = withOpen(run.value, {
+    age: next.age,
+    index: next.index,
+    finish: open.finish,
+    rounds: open.rounds,
+    wins: open.wins,
+    outcome,
+  })
+  openNow.value = { age: next.age, open, kid }
+  resultNow.value = null
+  return true
+}
+
+/** The weekend is over – watched or left, the result is the same one the bracket decided. */
+function closeOpen(): void {
+  const playing = openNow.value
+  if (!playing) return
+  openNow.value = null
+  resultNow.value = { age: playing.age, outcome: outcomeOf(playing.open) }
+}
+
+/** ⭐ THE SCENE ON SCREEN. A weekend's result scene is a card row like any other, so this one
+ *  computed is the whole of the branch and `PrologueCard.vue` gets no `v-if` of its own. */
+const card = computed(() =>
+  resultNow.value
+    ? localOpenCard(resultNow.value.age, resultNow.value.outcome)
+    : cardFor(CARD_AGES[at.value], run.value),
+)
 const warmth = computed(() => warmthAt(card.value.age, run.value))
 /** ⭐ WHICH FACE THE YEAR WEARS – phase 7, and it is DERIVED off the same counts `warmth` is
  *  (`moodAt`). Computed here for the same reason `warmth` is: the card draws a row it is handed and
  *  reads no run of its own. There is no `mood` column in the table for anybody to keep in sync. */
 const mood = computed(() => moodAt(card.value.age, run.value))
-const reason = computed(() => (card.value.age === 12 ? readTwelfth(run.value).reason : undefined))
+/** ⚠ THE FORK'S FOLDED REASON BELONGS TO THE TWELFTH CARD AND TO NOTHING ELSE. A weekend's result
+ *  scene carries the year's age too, so without `!resultNow` a Local Open played at twelve would
+ *  print the fork's account of the years behind it under a draw sheet. */
+const reason = computed(() =>
+  !resultNow.value && card.value.age === 12 ? readTwelfth(run.value).reason : undefined,
+)
+/** ⭐ THE RESULT'S FACE, and it is the ONE argument phase 7 left the hook for. Undefined on all nine
+ *  cards, so every frame there is still exactly the one the owner picked. */
+const outcome = computed(() => resultNow.value?.outcome)
+/** ⭐⭐ THIS YEAR'S TOURNAMENT QUESTION, WHILE IT IS OPEN – the SECOND BEAT on the same card. Null on
+ *  the card's own beat, on a card that carries no ask, and once the year has been answered either
+ *  way. `askAt` is the whole of the decision; this component only asks whether there is one.
+ *
+ *  ⚠ AND NEVER OVER A WEEKEND'S RESULT SCENE. That scene is a synthesised row and carries no ask of
+ *  its own, but `askAt` is keyed on the AGE – so without the guard the eleventh's question would be
+ *  drawn again on top of the result of the weekend it just bought. */
+/** ⚠⚠ WHICH BEAT OF THE YEAR IS ON SCREEN, and it is a ref rather than a derivation because the
+ *  derivation LIED on the thirteenth. `askAt` is open the moment the year is settled – and the
+ *  thirteenth's year is settled by the TWELFTH (`sameAsLastYear`), so a computed keyed on it alone
+ *  showed the ask the instant the card arrived and the thirteenth's own scene was never drawn.
+ *  Caught by the mounted walk, which could not find the card's way on. */
+const beat = ref<'card' | 'ask'>('card')
+const ask = computed(() => {
+  if (resultNow.value || beat.value !== 'ask') return undefined
+  return askAt(CARD_AGES[at.value], run.value) ?? undefined
+})
 /** ⚠ THE FIRST CARD ONLY – see `WALK_COPY.skip`. */
 const skipLabel = computed(() => (at.value === 0 ? WALK_COPY.skip : undefined))
 
@@ -99,9 +227,39 @@ const coachBase = computed(() =>
   game.snapshot ? coachBaseReadFor(game.snapshot.handoverBaseBand, game.snapshot.seed) : '',
 )
 
+/** ⭐ WHAT SHE PLAYED, on the one screen that can still mention it – the weekends are thrown away at
+ *  the handover, so this is the last of them. Empty for a childhood that never entered one, and the
+ *  handover draws nothing at all then. */
+const played = computed(() => playedLine(run.value.opens))
+
 /** ⭐ ONE ANSWER, WHATEVER KIND OF CARD IT WAS. An origin, a decision and a quiet year all arrive
  *  here; the table says which of the three it was, so nothing branches on the age. */
 async function answer(id: string | null): Promise<void> {
+  // ⭐ A WEEKEND'S RESULT SCENE IS ANSWERED HERE TOO, and it answers nothing: it has no `origins`
+  // and no `options`, so it falls straight through to «what comes next», which is the next weekend
+  // of that year or the next card. One control, one path out of a scene.
+  if (resultNow.value) {
+    resultNow.value = null
+    if (playNext()) return
+    await step()
+    return
+  }
+  const age = CARD_AGES[at.value]
+
+  // ⭐⭐ THE ASK BEAT. While the year's tournament question is open, THIS is what the card's answers
+  // are – so one control moves the player on, exactly as on every other beat, and «not this year»
+  // finishes the card as completely as «put her name down» does. The owner's correction is the whole
+  // of this branch: the answer closes THIS year and nothing else.
+  if (ask.value) {
+    if (id === null) return
+    run.value = withEntry(run.value, age, id)
+    beat.value = 'card'
+    queue.value = opensForYear(age)
+    if (playNext()) return
+    await step()
+    return
+  }
+
   const row = card.value
   if (row.origins) {
     if (id === null) return
@@ -110,6 +268,30 @@ async function answer(id: string | null): Promise<void> {
     if (id === null) return
     run.value = withPick(run.value, row.age, id)
   }
+  // ⭐ AND NOW THIS YEAR'S TOURNAMENT QUESTION, IF THE CARD CARRIES ONE – the second beat, on the
+  // same painting. `ask` recomputes off the run the line above just moved, so nothing here has to
+  // decide which cards ask: the table does.
+  if (askAt(age, run.value)) {
+    beat.value = 'ask'
+    return
+  }
+  // ⭐⭐ OR, ON THE TENTH, THE WEEKEND THE CARD'S OWN DECISION JUST BOUGHT – asked of `localOpensAt`,
+  // which answers with a count off the childhood the player has actually chosen. The tournament
+  // plays WHERE THE CARD SITS: this year's answer is in the run by the lines above.
+  queue.value = opensForYear(row.age)
+  if (playNext()) return
+  await step()
+}
+
+/** How many weekends the year at `age` holds, as `(age, index)` pairs to be played in order. */
+function opensForYear(age: number): { age: number; index: number }[] {
+  const count = localOpensAt(yearsSoFar(run.value), age, enteredAges(run.value))
+  return Array.from({ length: count }, (_, index) => ({ age, index }))
+}
+
+/** On to the next card, or – after the ninth – into the career. */
+async function step(): Promise<void> {
+  beat.value = 'card'
   if (at.value < CARD_AGES.length - 1) {
     at.value += 1
     return
@@ -154,6 +336,14 @@ async function startAgain(): Promise<void> {
   // is the one thing this control does not mean.
   identity.value = { ...OPENING_IDENTITY }
   at.value = 0
+  // ⚠ AND SO DO THE WEEKENDS. `EMPTY_RUN` already drops the list of them; these three drop the ones
+  // in flight and the seed they were drawn on, so the next childhood plays its own draws rather than
+  // replaying this one's.
+  queue.value = []
+  openNow.value = null
+  resultNow.value = null
+  beat.value = 'card'
+  seed.value = freshSeed()
 }
 </script>
 
@@ -172,9 +362,20 @@ async function startAgain(): Promise<void> {
     :base="coachBase"
     :read="coachRead"
     :spent-cents="spentCents(run)"
+    :played="played"
     :busy="game.busy"
     @go-on="emit('done')"
     @start-again="startAgain()"
+  />
+  <!-- ⭐⭐ THE WEEKEND ITSELF - her matches, in the shipped viewer, when the year holds one. It is a
+       TAKEOVER and not a card, exactly as every other match screen in the app is, and the way out of
+       it is its own header control plus the viewer's own per-match one. See PrologueLocalOpen.vue
+       for the ten-minute argument behind having two of them. -->
+  <PrologueLocalOpen
+    v-else-if="openNow"
+    :open="openNow.open"
+    :kid="openNow.kid"
+    @done="closeOpen()"
   />
   <PrologueCard
     v-else
@@ -182,6 +383,8 @@ async function startAgain(): Promise<void> {
     :warmth="warmth"
     :mood="mood"
     :reason="reason"
+    :outcome="outcome"
+    :ask="ask"
     :identity="identity"
     :skip-label="skipLabel"
     :busy="game.busy"

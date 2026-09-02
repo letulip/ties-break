@@ -24,14 +24,51 @@ import {
   LOCAL_POOL,
   PROLOGUE_EVENT_PREFIX,
   localOpenEvent,
+  herMatches,
   localOpensIn,
   localPool,
+  outcomeOf,
   playLocalOpen,
+  prologueEntrant,
   prologueSchedule,
   type LocalOpen,
 } from '../src/prologue/pool'
-import { PROLOGUE_CARDS, type PrologueYear } from '../src/prologue/cards'
-import { EMPTY_RUN, chosenYears, withOrigin, withPick } from '../src/prologue/run'
+import {
+  DECISION_AGES,
+  PROLOGUE_CARDS,
+  TOURNAMENT_ANSWER,
+  TWELFTH_WANTS_MORE,
+  entryCostCents,
+  type PrologueYear,
+} from '../src/prologue/cards'
+import {
+  EMPTY_RUN,
+  askAt,
+  askOn,
+  chosenYears,
+  enteredAges,
+  enteredIn,
+  readTwelfth,
+  spentCents,
+  withEntry,
+  withOrigin,
+  withPick,
+} from '../src/prologue/run'
+
+/** The two roads through the decision cards, named by what the player did – the same pair every
+ *  other prologue test uses, so no two files are talking about different childhoods. */
+const LIGHT: Record<number, string> = { 8: 'municipal', 9: 'group', 10: 'stay-home', 11: 'ordinary-school', 12: 'let-her-stop' }
+const CARRIED: Record<number, string> = { 8: 'club', 9: 'one-to-one', 10: 'enter', 11: 'sports-school', 12: 'give-her-the-year' }
+
+/** ⭐ A WHOLE RUN DOWN ONE ROAD, with every year's tournament question answered the same way. The
+ *  tenth is answered by the road (its question IS its decision); 11, 12 and 13 by `entered`. */
+function roadRun(road: Record<number, string>, entered: boolean): import('../src/prologue/run').PrologueRun {
+  let run = withOrigin(EMPTY_RUN, 'middle')
+  for (const card of PROLOGUE_CARDS) if (card.options) run = withPick(run, card.age, road[card.age])
+  const answer = entered ? TOURNAMENT_ANSWER.enter : TOURNAMENT_ANSWER.decline
+  for (const age of [11, 12, 13]) run = withEntry(run, age, answer)
+  return run
+}
 import { SKILL_KEYS, STARTING_SKILL_BAND } from '../src/engine/development'
 import { TIERS } from '../src/engine/season/calendar'
 import { createWorld, KID_ID } from '../src/engine/world'
@@ -143,10 +180,16 @@ describe('⚠⚠ the pool may never enter world.cohort or any table', () => {
    *  creates the same world from the same seed. The two cohorts are compared as BYTES. */
   function cohortBytes(prologueFirst: boolean): string {
     if (prologueFirst) {
-      const her = girl()
+      // ⚠ PHASE 11 WIDENED ARM B AND DID NOT LOOSEN IT. The wired prologue plays up to TWO weekends
+      // in a year and draws HER off a sub-stream of her own (`prologueEntrant`), so arm B now taps
+      // every generator the shipped walk taps: the field, the bracket, and the girl. An arm that
+      // only did what phase 3 did would be proving something the app no longer does.
       for (let age = LOCAL_POOL.fromAge; age <= 13; age++) {
-        localPool('cohort-proof', age)
-        playLocalOpen('cohort-proof', { ...her, age }, age)
+        const her = prologueEntrant('cohort-proof', KID_ID, 'Vera Novak', age)
+        for (let index = 0; index < LOCAL_POOL.maxPerYear; index++) {
+          localPool('cohort-proof', age, index)
+          playLocalOpen('cohort-proof', her, age, index)
+        }
       }
     }
     return JSON.stringify(createWorld('cohort-proof', DEFAULT_PROFILE, 'career-x').cohort)
@@ -170,8 +213,9 @@ describe('⚠⚠ the pool may never enter world.cohort or any table', () => {
 
   it('...and so is the WHOLE world, which is the stronger claim and the one that would catch a stream', () => {
     const a = JSON.stringify(createWorld('whole-world', DEFAULT_PROFILE, 'career-x'))
-    const her = girl()
+    const her = prologueEntrant('whole-world', KID_ID, 'Vera Novak', 10)
     playLocalOpen('whole-world', her, 10)
+    playLocalOpen('whole-world', her, 10, 1)
     localPool('whole-world', 11)
     const b = JSON.stringify(createWorld('whole-world', DEFAULT_PROFILE, 'career-x'))
     expect(b).toBe(a)
@@ -257,9 +301,22 @@ describe('⚠⚠ the pool may never enter world.cohort or any table', () => {
     // `tests/childhood.test.ts` forbids, because that module's importer set is pinned as exactly
     // `['engine/world.ts']`. The card table is the honest source anyway: the sentence is about what
     // the PLAYER walked, and what the player walked is the cards.
+    //
+    // ⚠ PHASE 11 ADDED ONE, AND IT IS A SIBLING RATHER THAN AN ENGINE MODULE. `handover.ts` names
+    // `./run` for `PlayedOpen` – the record of one weekend the run keeps – because the handover's
+    // last line is about what she played and the run is what remembers it. Type-only, inside
+    // `src/prologue`, and the claim under this list is unchanged: still four engine modules, still
+    // never the world and never the childhood.
     expect(imports).toEqual({
       'cards.ts': ['../shared/protocol'],
-      'handover.ts': ['../engine/rng', '../shared/dates', '../shared/money', '../shared/protocol', './cards'],
+      'handover.ts': [
+        '../engine/rng',
+        '../shared/dates',
+        '../shared/money',
+        '../shared/protocol',
+        './cards',
+        './run',
+      ],
       'pool.ts': [
         '../engine/development',
         '../engine/match/types',
@@ -388,59 +445,289 @@ describe('a played Local Open produces a result and a memory and nothing else', 
 // THE RHYTHM
 // =================================================================================================
 
-describe('⭐ 1-2 tournaments a year, from ten – his rhythm', () => {
+describe('⭐ a tournament a year from ten, asked every year – his rhythm', () => {
   it('⚠ none before ten, whatever the player bought', () => {
     for (const age of [5, 6, 7, 8, 9]) {
-      expect(localOpensIn(year({ age, focus: 'matchplay', practice: 1 }))).toBe(0)
+      expect(localOpensIn(year({ age }), true), `age ${age}`).toBe(0)
     }
-    expect(localOpensIn(year({ age: 10, focus: 'matchplay', practice: 1 }))).toBeGreaterThan(0)
+    expect(localOpensIn(year({ age: 10 }), true)).toBeGreaterThan(0)
   })
 
-  it('none in a year she did not play matches', () => {
-    for (const focus of ['general', 'serve', 'rally', 'fitness'] as const) {
-      expect(localOpensIn(year({ age: 11, focus, practice: 1 }))).toBe(0)
+  // ⚠⚠ PHASE 11 REPLACED THE CASE THAT USED TO STAND HERE, TWICE, AND BOTH REPLACEMENTS ARE THE
+  // OWNER'S CORRECTIONS RATHER THAN A WEAKENING.
+  //   * It first read «none in a year she did not play matches», asserting that a year whose own
+  //     `focus` is not `matchplay` holds nothing – which is exactly the reading that produced
+  //     «сейчас этого нет»: no card at 11, 12 or 13 is a matchplay year, so a whole childhood held
+  //     one weekend.
+  //   * It then read «none in a childhood the player never ENTERED», with the tenth's answer carried
+  //     forward as a state. THE OWNER: «Сказали "не в этом году" – значит не в этом году, дальше
+  //     тоже можно спрашивать.» A refusal is not a switch.
+  // What stands is the year-by-year property: a year holds a weekend if and only if the player said
+  // yes THAT YEAR, and the answer to one year says nothing about any other.
+  it('⭐⭐ a year holds a weekend if and only if the player said yes THAT year', () => {
+    for (const age of [10, 11, 12, 13]) {
+      expect(localOpensIn(year({ age }), false), `age ${age}`).toBe(0)
+      expect(localOpensIn(year({ age }), true), `age ${age}`).toBe(1)
     }
+    const years = [10, 11, 12, 13].map((age) => year({ age }))
+    // ⭐ SAYING NO ONE YEAR DOES NOT CLOSE THE NEXT – the whole of his correction, in one case.
+    expect(prologueSchedule(years, [11, 13])).toEqual([
+      { age: 11, index: 0 },
+      { age: 13, index: 0 },
+    ])
+    // ...and a childhood that never said yes holds none at all.
+    expect(prologueSchedule(years, [])).toEqual([])
+    // ...and one that said yes every year holds one a year, which is his floor.
+    expect(prologueSchedule(years, [10, 11, 12, 13]).map((o) => o.age)).toEqual([10, 11, 12, 13])
   })
 
-  it('⚠ never more than two in one year, at any age and any effort', () => {
+  it('⚠ a yes below his floor still buys nothing – the age is a floor and not a card rule', () => {
+    const early = [8, 9, 10].map((age) => year({ age }))
+    expect(prologueSchedule(early, [8, 9, 10])).toEqual([{ age: 10, index: 0 }])
+  })
+
+  // ⭐⭐ ONE YES, ONE WEEKEND – and it is a reading of his correction, not of his range. The cap is
+  // still «1-2 a year»; what changed is that the question is asked once a year, so a year that
+  // quietly produced two weekends would be the game deciding something it had just asked about.
+  it('⭐ one yes buys exactly one weekend, at any age and any effort, and never more than his cap', () => {
     for (let age = 5; age <= 13; age++) {
       for (const practice of [0, 0.5, 1, 4]) {
-        expect(localOpensIn(year({ age, practice, focus: 'matchplay' }))).toBeLessThanOrEqual(LOCAL_POOL.maxPerYear)
+        const n = localOpensIn(year({ age, practice }), true)
+        expect(n, `age ${age}, practice ${practice}`).toBeLessThanOrEqual(LOCAL_POOL.maxPerYear)
+        expect(n, `age ${age}, practice ${practice}`).toBe(age < LOCAL_POOL.fromAge ? 0 : 1)
       }
     }
     expect(LOCAL_POOL.maxPerYear).toBe(2)
   })
 
-  it('⭐ and both numbers of his range are reachable – one for a part year, two for a full one', () => {
-    // 0.71875 is what a ten-year-old can take (`APPETITE_AT[10]`, pinned against the real
-    // `appetiteAt` in tests/prologue-cards.test.ts).
-    expect(localOpensIn(year({ age: 10, focus: 'matchplay', practice: 0.5 }))).toBe(1)
-    expect(localOpensIn(year({ age: 10, focus: 'matchplay', practice: 0.71875 }))).toBe(2)
-  })
+  // ⭐⭐⭐ THE ACCEPTANCE, AGAINST THE REAL CARD TABLE. His ruling: «надо с 10 лет по 1 хотя бы
+  // добавить в год» – so a player who says yes every year gets a weekend at 10, 11, 12 and 13, and
+  // one who says no every year gets none. The counts are computed off the table, not typed.
+  it('⭐⭐ across the real card table: yes every year is 10, 11, 12 and 13; no every year is none', () => {
+    const perYear = (rows: { age: number }[]) => [10, 11, 12, 13].map((a) => rows.filter((o) => o.age === a).length)
 
-  it('⭐⭐ across the real card table: entering the Open at ten is one weekend, and staying home is none', () => {
-    // The join with phase 2, made in the test rather than in the source – the same shape
-    // tests/prologue-cards.test.ts uses to keep the card table and `childhoodWalk` from drifting.
-    const answer = (tenth: string): PrologueYear[] => {
-      let run = withOrigin(EMPTY_RUN, 'middle')
-      for (const card of PROLOGUE_CARDS) {
-        if (!card.options) continue
-        run = withPick(run, card.age, card.age === 10 ? tenth : card.options[0].id)
-      }
-      return chosenYears(run)
-    }
-    expect(prologueSchedule(answer('enter'))).toEqual([{ age: 10, index: 0 }])
-    expect(prologueSchedule(answer('stay-home'))).toEqual([])
-  })
-
-  it('⚠ and no decision year 8..12 can hold more than his two, whatever the table grows into', () => {
-    const every = prologueSchedule(
-      [8, 9, 10, 11, 12, 13].map((age) => year({ age, focus: 'matchplay', practice: 4 })),
+    // ⚠ «NO EVERY YEAR» HAS TO ANSWER THE TENTH TOO, and the tenth's answer is its own OPTION rather
+    // than the lighter ask – so the road, not the flag, is what refuses there. Getting this wrong is
+    // how a «he said no» arm quietly still plays a weekend at ten.
+    const yesRun = roadRun(CARRIED, true)
+    const noRun = roadRun({ ...CARRIED, 10: 'stay-home' }, false)
+    const yes = prologueSchedule(chosenYears(yesRun), enteredAges(yesRun))
+    const no = prologueSchedule(chosenYears(noRun), enteredAges(noRun))
+    console.log(
+      `\n  LOCAL OPENS PER YEAR (10, 11, 12, 13)\n` +
+        `  yes every year: ${perYear(yes).join(', ')}\n` +
+        `  no every year:  ${perYear(no).join(', ')}\n`,
     )
-    for (const age of [8, 9, 10, 11, 12]) {
-      expect(every.filter((o) => o.age === age).length).toBeLessThanOrEqual(LOCAL_POOL.maxPerYear)
+    for (const age of [10, 11, 12, 13]) {
+      expect(yes.filter((o) => o.age === age).length, `age ${age}`).toBe(1)
     }
-    // Below ten there is nothing at all, which is his floor rather than a cap.
-    expect(every.filter((o) => o.age < LOCAL_POOL.fromAge)).toEqual([])
+    expect(yes.filter((o) => o.age < LOCAL_POOL.fromAge)).toEqual([])
+    expect(no).toEqual([])
+  })
+
+  // ⭐ THE OWNER'S OWN CASE: «not this year» at ten, and the question comes back at eleven.
+  it('⭐⭐ saying no at ten does not close eleven, twelve or thirteen', () => {
+    let run = withOrigin(EMPTY_RUN, 'middle')
+    for (const card of PROLOGUE_CARDS) if (card.options) run = withPick(run, card.age, CARRIED[card.age] ?? card.options[0].id)
+    run = withPick(run, 10, 'stay-home')
+    // The tenth is answered and closed; the eleventh still asks.
+    expect(enteredIn(10, run)).toBe(false)
+    expect(askAt(11, run), 'the eleventh stopped asking after a refusal at ten').toBeTruthy()
+    run = withEntry(run, 11, TOURNAMENT_ANSWER.enter)
+    run = withEntry(run, 12, TOURNAMENT_ANSWER.decline)
+    run = withEntry(run, 13, TOURNAMENT_ANSWER.enter)
+    expect(enteredAges(run)).toEqual([11, 13])
+    expect(prologueSchedule(chosenYears(run), enteredAges(run)).map((o) => o.age)).toEqual([11, 13])
+  })
+})
+
+// =================================================================================================
+// ⭐⭐ THE ESCALATION – the same question, asked by somebody else each year
+// =================================================================================================
+
+describe('⭐⭐ the asking escalates: an event, then the coach, then her', () => {
+  it('⚠ every year from eleven asks, and the tenth asks through its own decision', () => {
+    const run = roadRun(CARRIED, true)
+    // 11, 12 and 13 carry the lighter ask; the tenth's question IS its two options.
+    for (const age of [11, 12, 13]) expect(askOn(age, EMPTY_RUN), `age ${age}`).toBeTruthy()
+    for (const age of [5, 6, 7, 8, 9, 10]) expect(askOn(age, EMPTY_RUN), `age ${age}`).toBeNull()
+    expect(PROLOGUE_CARDS.find((c) => c.age === 10)!.options!.some((o) => o.focus === 'matchplay')).toBe(true)
+    expect(enteredIn(10, run)).toBe(true)
+  })
+
+  it('⭐⭐ and it is a different voice each year – the coach, then the coach again, then her', () => {
+    const eleven = askOn(11, EMPTY_RUN)!
+    const twelveTired = askOn(12, roadRun(LIGHT, false))!
+    const twelveWantsMore = askOn(12, roadRun(CARRIED, true))!
+    const thirteen = askOn(13, EMPTY_RUN)!
+    const asks = [eleven.lede, twelveTired.lede, twelveWantsMore.lede, thirteen.lede]
+    console.log(`\n  THE ASKING, YEAR BY YEAR\n  ${asks.map((a, i) => `${[11, 12, 12, 13][i]}: ${a}`).join('\n  ')}\n`)
+    // Four different sentences: the same question is never asked the same way twice.
+    expect(new Set(asks).size).toBe(4)
+    // The coach carries the middle years; by thirteen nobody is telling you – she is.
+    expect(eleven.lede).toContain('coach')
+    expect(twelveTired.lede).toContain('coach')
+    expect(thirteen.lede).not.toContain('coach')
+    expect(thirteen.lede.startsWith('She ')).toBe(true)
+    // ⚠ AND THE FORK'S OWN FACE ASKS IN HER VOICE A YEAR EARLIER, which is what makes the escalation
+    // run through the childhood rather than beside it.
+    expect(twelveWantsMore.lede).not.toContain('coach')
+    expect(twelveWantsMore.lede.startsWith('She ')).toBe(true)
+  })
+
+  it('⚠ the ask is not a decision – it buys no year, and `DECISION_AGES` is unmoved', () => {
+    expect(DECISION_AGES).toEqual([8, 9, 10, 11, 12])
+    for (const card of [...PROLOGUE_CARDS, TWELFTH_WANTS_MORE]) {
+      if (!card.tournament) continue
+      // The ask carries copy and nothing that shapes a year.
+      expect(Object.keys(card.tournament).sort()).toEqual([
+        'declineLabel',
+        'declineNote',
+        'enterLabel',
+        'enterNote',
+        'lede',
+      ])
+    }
+    // ...and the thirteenth still has no `options`, which is the sense `DECISION_AGES` measures.
+    expect(PROLOGUE_CARDS.find((c) => c.age === 13)!.options).toBeUndefined()
+  })
+
+  it('⭐ an entry costs the tenth card`s own difference, and it is never billed twice', () => {
+    const tenth = PROLOGUE_CARDS.find((c) => c.age === 10)!
+    const [home, enter] = [...tenth.options!].sort((a, b) => a.costCents - b.costCents)
+    expect(entryCostCents()).toBe(enter.costCents - home.costCents)
+
+    let run = roadRun(CARRIED, false)
+    const nothing = spentCents(run)
+    run = withEntry(run, 11, TOURNAMENT_ANSWER.enter)
+    expect(spentCents(run) - nothing).toBe(entryCostCents())
+    // ⚠ THE TENTH IS NOT CHARGED A SECOND TIME: its price is inside the option the player took.
+    const stayed = roadRun({ ...CARRIED, 10: 'stay-home' }, false)
+    const entered = roadRun(CARRIED, false)
+    expect(spentCents(entered) - spentCents(stayed)).toBe(entryCostCents())
+  })
+})
+
+// =================================================================================================
+// ⭐⭐ WHAT THE FORK READS NOW – measured on both roads, because the count`s input moved
+// =================================================================================================
+
+describe('⭐⭐ the twelfth`s fork still splits, with tournaments counted per year', () => {
+  it('⭐ quoted: what `readTwelfth` reads on the two roads, with and without the entries', () => {
+    const rows: string[] = []
+    for (const [name, road] of [['light', LIGHT], ['carried', CARRIED]] as const) {
+      for (const entered of [false, true]) {
+        const run = roadRun(road as Record<number, string>, entered)
+        const read = readTwelfth(run)
+        rows.push(
+          `${name.padEnd(8)} ${entered ? 'entered every year' : 'entered none     '} -> ` +
+            `oneToOne ${read.oneToOne}, tournaments ${read.tournaments}, light ${read.light} => ${read.reading}`,
+        )
+      }
+    }
+    console.log(`\n  WHAT THE TWELFTH READS\n  ${rows.join('\n  ')}\n`)
+
+    // ⭐⭐ THE FORK STILL SPLITS ON THE CHILDHOOD, which is §2.5's whole claim: the road decides the
+    // face, on either answer to the tournament question.
+    for (const entered of [false, true]) {
+      expect(readTwelfth(roadRun(LIGHT, entered)).reading, `light, entered=${entered}`).toBe('tired')
+      expect(readTwelfth(roadRun(CARRIED, entered)).reading, `carried, entered=${entered}`).toBe('wants-more')
+    }
+    // ...and the count really moved: entering at ten AND eleven is two, not one.
+    expect(readTwelfth(roadRun(CARRIED, true)).tournaments).toBe(2)
+    expect(readTwelfth(roadRun(CARRIED, false)).tournaments).toBe(1)
+    expect(readTwelfth(roadRun(LIGHT, false)).tournaments).toBe(0)
+  })
+
+  it('⚠ ...and a refusal really can move the light road, which is the honest half of that', () => {
+    // The light road refuses at ten, so entering at ELEVEN is its only tournament. It is one signal
+    // against `light`'s three, so the reading is unchanged – but the number is not, and a fork that
+    // silently ignored the entries would print the same three counts either way.
+    const refused = readTwelfth(roadRun(LIGHT, false))
+    const entered = readTwelfth(roadRun(LIGHT, true))
+    expect(entered.tournaments).toBeGreaterThan(refused.tournaments)
+    expect(entered.reason).not.toBe(refused.reason)
+  })
+})
+
+// =================================================================================================
+// ⭐⭐ WHAT THE WEEKEND CAME TO – phase 11
+// =================================================================================================
+
+describe('⭐⭐ the three faces of a result, and they are the owner\'s own split', () => {
+  it('⭐ the title, the final, and out before it – read off the finish index and nothing else', () => {
+    const open = (finish: number): LocalOpen =>
+      ({ finish, rounds: 3, wins: 3 - finish }) as unknown as LocalOpen
+    expect(outcomeOf(open(0))).toBe('won')
+    expect(outcomeOf(open(1))).toBe('final')
+    for (const finish of [2, 3]) expect(outcomeOf(open(finish))).toBe('lost')
+  })
+
+  it('⚠ and `final` really is the match she lost on the last day – checked against a played bracket', () => {
+    // The anti-vacuity half: every arm below comes out of a REAL draw rather than a hand-built
+    // object, so the arithmetic that maps a lost final onto `finish === 1` is the bracket's own.
+    const seen = new Set<string>()
+    for (let i = 0; i < 200; i++) {
+      const played = playLocalOpen(`outcomes-${i}`, girl(), 10)
+      const outcome = outcomeOf(played)
+      seen.add(outcome)
+      if (outcome === 'won') expect(played.wins).toBe(played.rounds)
+      if (outcome === 'final') expect(played.wins).toBe(played.rounds - 1)
+      if (outcome === 'lost') expect(played.wins).toBeLessThan(played.rounds - 1)
+    }
+    // ...and all three are reachable by an ordinary ten-year-old, or the case above is decoration.
+    expect([...seen].sort()).toEqual(['final', 'lost', 'won'])
+  })
+
+  it('⭐ her matches come back in the order she played them, every one replayable', () => {
+    for (let i = 0; i < 40; i++) {
+      const kid = girl()
+      const played = playLocalOpen(`hers-${i}`, kid, 10)
+      const mine = herMatches(played, kid.id)
+      expect(mine.length).toBe(played.finish === 0 ? played.rounds : played.wins + 1)
+      expect(mine.map((m) => m.round)).toEqual([...mine.map((m) => m.round)].sort((a, b) => a - b))
+      for (const rec of mine) {
+        expect(rec.aId === kid.id || rec.bId === kid.id).toBe(true)
+        // ⚠ THE SEED IS WHAT MAKES A SCREEN ABLE TO SHOW THIS. `playMatch` writes it on every match
+        // she played and on no AI-AI row, so a viewer can re-simulate exactly what the bracket did.
+        expect(rec.seed, `round ${rec.round} carries no seed`).toBeTruthy()
+      }
+      // ...and the rows that are NOT hers carry none, which is what makes the filter meaningful.
+      const theirs = played.result.matches.filter((m) => m.aId !== kid.id && m.bId !== kid.id)
+      expect(theirs.length).toBeGreaterThan(0)
+      for (const rec of theirs) expect(rec.seed).toBeUndefined()
+    }
+  })
+})
+
+describe('⭐ she enters on the game\'s own band, drawn once for the whole childhood', () => {
+  it('⭐⭐ the same girl, a year older – one draw, and `age` is the only thing that moves', () => {
+    const ten = prologueEntrant('entrant', KID_ID, 'Vera Novak', 10)
+    const thirteen = prologueEntrant('entrant', KID_ID, 'Vera Novak', 13)
+    expect(ten.age).toBe(10)
+    expect(thirteen.age).toBe(13)
+    for (const k of SKILL_KEYS) expect(thirteen[k]).toBe(ten[k])
+    expect(thirteen.id).toBe(KID_ID)
+  })
+
+  it('⚠ on the exact band the eight children are drawn from – she is the ninth, not a visitor', () => {
+    for (let i = 0; i < 50; i++) {
+      const her = prologueEntrant(`band-${i}`, KID_ID, 'Vera Novak', 10)
+      for (const k of SKILL_KEYS) {
+        const [lo, hi] = STARTING_SKILL_BAND[k]
+        expect(her[k], `${k} out of band`).toBeGreaterThanOrEqual(lo)
+        expect(her[k], `${k} out of band`).toBeLessThanOrEqual(hi)
+      }
+    }
+    // ...and a different career draws a different girl, so nothing above is pinned to one lucky seed.
+    const a = prologueEntrant('one', KID_ID, 'A', 10)
+    const b = prologueEntrant('two', KID_ID, 'A', 10)
+    expect(SKILL_KEYS.some((k) => a[k] !== b[k])).toBe(true)
+  })
+
+  it('⚠ and her sub-stream is her own – drawing her does not move the field', () => {
+    const withoutHer = JSON.stringify(localPool('stream', 10))
+    prologueEntrant('stream', KID_ID, 'Vera Novak', 10)
+    expect(JSON.stringify(localPool('stream', 10))).toBe(withoutHer)
   })
 })

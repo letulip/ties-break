@@ -19,7 +19,7 @@
 //   * a `mood` column added to a card row -> the "no face is typed" test goes red.
 import { describe, expect, it } from 'vitest'
 import { existsSync } from 'node:fs'
-import { PROLOGUE_CARDS, TWELFTH_WANTS_MORE, type PrologueCard } from '../src/prologue/cards'
+import { PROLOGUE_CARDS, TWELFTH_WANTS_MORE, localOpenCard, type PrologueCard } from '../src/prologue/cards'
 import { EMPTY_RUN, cardFor, moodAt, readTwelfth, warmthAt, withOrigin, withPick, type PrologueRun } from '../src/prologue/run'
 import {
   PROLOGUE_FRAMES,
@@ -252,16 +252,40 @@ describe('⭐⭐⭐ the frames the owner picked, 02.09 – card by card, in his 
   it('⭐ a result outranks both the pick and the derivation, and takes a scene back to a portrait', () => {
     expect(prologueArtStem(10, 'norm', 'won')).toBe('jun-happy')
     expect(prologueArtStem(10, 'norm', 'lost')).toBe('jun-sad')
+    // ⭐⭐ PHASE 11 – THE THIRD FACE, AND IT IS THE OWNER'S OWN: «либо победный арт, либо serious
+    // если в финал выбралась, либо грустный, если до финала не дошла». A final reached is neither of
+    // the other two, and `lost` used to carry both of the ways a draw ends badly.
+    expect(prologueArtStem(10, 'norm', 'final')).toBe('jun-serious')
+    // ...and at eleven and up it is the other band's frame, on the same three words.
+    expect(prologueArtStem(11, 'norm', 'final')).toBe('young-serious')
     // the eighth is a SCENE; a result has to put her face back on the card, because two people
     // arriving at a court cannot report a draw sheet.
     expect(prologueArtStem(8, 'norm', 'won')).toBe('jun-happy')
-    // and nothing passes one today, so every frame on the walk is the one he picked.
+    // and nothing passes one on the nine cards, so every frame on the walk is the one he picked.
     expect(prologueArtStem(10, 'norm')).toBe('jun-norm')
-    // ⚠ both faces the hook can reach ship, in both bands the walk uses.
-    for (const age of [10, 11]) {
-      for (const outcome of ['won', 'lost'] as const) {
+    // ⚠ every face the hook can reach ships, in both bands the walk uses.
+    for (const age of [10, 11, 12, 13]) {
+      for (const outcome of ['won', 'final', 'lost'] as const) {
         const path = `public/${prologueArtUrl(age, 'norm', outcome).replace(/^\/+/, '')}`
         expect(existsSync(path), `age ${age} ${outcome} -> ${path}`).toBe(true)
+      }
+    }
+  })
+
+  // ⭐⭐ THE RESULT SCENE IS A CARD ROW, so the painting on it is the nine cards' own machinery and
+  // not a second set of it. MUTATION: drop `outcome` from `PrologueCard.vue`'s `artUrl` -> red, and
+  // the card draws the owner's pinned `norm` over a won draw sheet.
+  it('⭐ every result scene the table can produce hangs a face, and it is the outcome\'s', () => {
+    const faces: Record<string, string> = { won: 'happy', final: 'serious', lost: 'sad' }
+    for (const age of [10, 11, 12, 13]) {
+      for (const outcome of ['won', 'final', 'lost'] as const) {
+        const row = localOpenCard(age, outcome)
+        expect(row.age).toBe(age)
+        // The row is a real card: it has the five text fields `PrologueCard.vue` binds, and a way on.
+        expect(row.kicker && row.title && row.lede && row.continueLabel).toBeTruthy()
+        expect(row.options).toBeUndefined()
+        // ...and the picture answers the result rather than the year.
+        expect(prologueArtStem(row.age, moodAt(age, EMPTY_RUN), outcome)).toContain(faces[outcome])
       }
     }
   })

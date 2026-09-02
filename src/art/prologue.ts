@@ -30,6 +30,7 @@ import { onboardingHeroUrl, portraitUrl, prologueSceneUrl } from './preload'
 import { facePoint } from './faceRects'
 import { portraitAssetStem, portraitStage } from '../shared/avatarEmotion'
 import type { PortraitEmotion } from '../shared/avatarEmotion'
+import type { LocalOpenOutcome } from '../prologue/cards'
 
 // =================================================================================================
 // ⭐⭐⭐ WHICH FRAME EACH CARD SHOWS – THE OWNER'S OWN PICKS, 02.09, AND WHY THEY LIVE HERE
@@ -110,14 +111,32 @@ export const WELCOME_AGES: readonly number[] = Object.keys(PROLOGUE_FRAMES)
 // Nothing in this module has to change, no card row gains a column, and until that day every caller
 // passes nothing and every frame is exactly the one the owner picked. `tests/prologue-art.test.ts`
 // proves the hook is live rather than decorative by exercising it.
+//
+// ⭐⭐ PHASE 11 WIRED IT, AND THE PARAGRAPH ABOVE HELD: one argument, one call site. What did change
+// is the union – `lost` used to carry both of the ways a draw ends badly, and the owner's split has
+// three faces in it, so `final` joined and `OUTCOME_FACES` answers it. Everything else here is the
+// code phase 7 left. The result scene is drawn by `PrologueCard.vue` off a row `localOpenCard`
+// builds, so the painting, the framing point and the fit are the nine cards' own and not a second
+// set of them.
 
-/** What the year's tournament came to, when the year has had one. */
-export type PrologueOutcome = 'won' | 'lost'
+/** What the year's tournament came to, when the year has had one.
+ *
+ *  ⚠ ONE DECLARATION, IN THE TABLE, AND THIS IS AN ALIAS OF IT. The result copy is keyed on the same
+ *  union (`LOCAL_OPEN_COPY.result` in src/prologue/cards.ts) and so is the face below, so a fourth
+ *  outcome would have to be answered in both places or fail to compile. Type-only, so this adds no
+ *  runtime edge from the art set to the prologue's table. */
+export type PrologueOutcome = LocalOpenOutcome
 
-/** ⚠ TWO FACES OUT OF THE SHIPPED EIGHT, so the hook cannot 404: `portrait-bands.test.ts` sweeps
- *  every band x emotion against the files on disk, and both of these are in it. */
+/** ⚠ THREE FACES OUT OF THE SHIPPED EIGHT, so the hook cannot 404: `portrait-bands.test.ts` sweeps
+ *  every band x emotion against the files on disk, and all three of these are in it.
+ *
+ *  ⭐⭐ AND THE MIDDLE ROW IS THE OWNER'S OWN, in his own words on the age-10 card: «либо победный
+ *  арт, либо serious если в финал выбралась, либо грустный, если до финала не дошла». A final
+ *  reached is not a win and it is not a bad weekend, and `serious` is the frame he already picked
+ *  twice in this set for exactly that register – she is not delighted and she is not finished. */
 const OUTCOME_FACES: Readonly<Record<PrologueOutcome, PortraitEmotion>> = {
   won: 'happy',
+  final: 'serious',
   lost: 'sad',
 }
 

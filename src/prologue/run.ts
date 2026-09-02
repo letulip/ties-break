@@ -19,29 +19,115 @@ import type { FamilyBackground } from '../shared/protocol'
 import {
   APPETITE_AT,
   PROLOGUE_CARDS,
+  TOURNAMENT_ANSWER,
   TWELFTH_REASONS,
   TWELFTH_WANTS_MORE,
+  entryCostCents,
+  type LocalOpenOutcome,
   type PrologueCard,
   type PrologueOption,
   type PrologueYear,
+  type TournamentAsk,
 } from './cards'
 
-/** WHAT THE PLAYER HAS DONE. Two fields, and neither of them is a number about her. */
+/** ⭐ ONE WEEKEND SHE PLAYED, as the run remembers it – phase 11.
+ *
+ *  ⚠⚠ IT IS THE BRACKET'S OWN NUMBERS AND NOTHING ELSE, AND THAT IS A LIMIT RATHER THAN A START.
+ *  `LocalOpen` already carries `finish`, `rounds` and `wins`; this is those three plus which weekend
+ *  it was, and the outcome, which is `outcomeOf` and is derived from `finish` rather than stored
+ *  beside it. There is deliberately NO title count, no trophy, no points and no standing: pool.ts's
+ *  fourth guard («NO POINTS ARE EVER COMPUTED») is what stops a local under-twelves weekend becoming
+ *  a currency, and a run that started counting cups here would be the first half of exactly that. */
+export interface PlayedOpen {
+  readonly age: number
+  readonly index: number
+  /** 0 is the title, `rounds` is a first-round exit – the same index `LocalOpen.finish` carries */
+  readonly finish: number
+  readonly rounds: number
+  readonly wins: number
+  /** derived from `finish` by `outcomeOf`, kept here so a screen reads one thing */
+  readonly outcome: LocalOpenOutcome
+}
+
+/** WHAT THE PLAYER HAS DONE. Four fields, and none of them is a number about her. */
 export interface PrologueRun {
   /** where the family is from – card 5's origin, and it is the game's own `FamilyBackground` */
   readonly origin: FamilyBackground | null
   /** age -> the id of the option taken that year. Only the decision ages ever appear. */
   readonly picks: Readonly<Record<number, string>>
+  /** ⭐ age -> the answer to THAT YEAR'S tournament question (`TOURNAMENT_ANSWER`). Only the ages
+   *  whose card carries a `tournament` ask ever appear – 11, 12 and 13; the tenth's answer is its
+   *  own `picks` entry, because at ten the question IS the card's decision. `enteredIn` below is the
+   *  ONE reader that knows both halves, so nothing else has to. */
+  readonly entries: Readonly<Record<number, string>>
+  /** ⭐ the weekends she played, in the order she played them. Empty for a childhood that never
+   *  entered one, which is most of the reason it is a list and not a count. */
+  readonly opens: readonly PlayedOpen[]
 }
 
-export const EMPTY_RUN: PrologueRun = { origin: null, picks: {} }
+export const EMPTY_RUN: PrologueRun = { origin: null, picks: {}, entries: {}, opens: [] }
 
 export function withOrigin(run: PrologueRun, origin: FamilyBackground): PrologueRun {
-  return { origin, picks: run.picks }
+  return { ...run, origin }
 }
 
 export function withPick(run: PrologueRun, age: number, optionId: string): PrologueRun {
-  return { origin: run.origin, picks: { ...run.picks, [age]: optionId } }
+  return { ...run, picks: { ...run.picks, [age]: optionId } }
+}
+
+/** ⭐ THIS YEAR'S ANSWER TO THE TOURNAMENT QUESTION. «Не в этом году» closes THIS year and nothing
+ *  else – the owner's own correction – so this writes one age and reads back one age. */
+export function withEntry(run: PrologueRun, age: number, answerId: string): PrologueRun {
+  return { ...run, entries: { ...run.entries, [age]: answerId } }
+}
+
+/** ⭐ ONE WEEKEND, PLAYED AND FILED. Append-only within a run – the childhood moves forwards, and a
+ *  weekend that happened cannot un-happen. `startAgain` drops the whole run, which is the only way
+ *  this list ever gets shorter. */
+export function withOpen(run: PrologueRun, open: PlayedOpen): PrologueRun {
+  return { ...run, opens: [...run.opens, open] }
+}
+
+// =================================================================================================
+// ⭐⭐⭐ THIS YEAR'S TOURNAMENT QUESTION – the one reader, and it knows both halves
+// =================================================================================================
+
+/** THE ASK ON THE CARD AT `age`, or null if that card does not carry one. Resolves the twelfth's two
+ *  faces first, so the fork's own asking (hers) cannot be read off the face the run did not reach –
+ *  the same rule `pickAt` is written under. */
+export function askOn(age: number, run: PrologueRun): TournamentAsk | null {
+  return cardFor(age, run).tournament ?? null
+}
+
+/** ⭐ IS THE ASK STILL OPEN THIS YEAR? Only once the year's own decision is settled: the ask is a
+ *  SECOND BEAT on the same card, not a second question asked at the same time. */
+export function askAt(age: number, run: PrologueRun): TournamentAsk | null {
+  const ask = askOn(age, run)
+  if (!ask) return null
+  if (yearAt(age, run) === null) return null
+  return run.entries[age] === undefined ? ask : null
+}
+
+/** ⭐⭐ DID SHE ENTER A TOURNAMENT IN THE YEAR AT `age`? THE ONE READER, and it is the whole of the
+ *  rhythm's input.
+ *
+ *  ⚠ IT ANSWERS OFF TWO DIFFERENT FIELDS AND THAT IS DELIBERATE, not a seam waiting to rot. At ten
+ *  the question is the CARD'S OWN DECISION – «Enter her» is what makes that year a `matchplay` year,
+ *  and the year's shape and its price both move with it. At eleven and after the year's decision is
+ *  something else (the sports school, the fork) and the tournament is a weekend bought beside it, so
+ *  it is the lighter `tournament` ask. Two shapes of question, ONE reader, and every consumer –
+ *  the schedule, the fork's count, the money – goes through this function rather than through either
+ *  field. */
+export function enteredIn(age: number, run: PrologueRun): boolean {
+  if (askOn(age, run)) return run.entries[age] === TOURNAMENT_ANSWER.enter
+  // The tenth: a `matchplay` year is exactly what «Enter her» buys, and it is the engine's own
+  // `SessionKind` rather than a flag added for this.
+  return pickAt(age, run)?.focus === 'matchplay'
+}
+
+/** Every age she was entered in, in order – what `prologueSchedule` takes. */
+export function enteredAges(run: PrologueRun): number[] {
+  return PROLOGUE_CARDS.map((c) => c.age).filter((age) => enteredIn(age, run))
 }
 
 /** The row for an age, with the twelfth resolved. */
@@ -90,8 +176,27 @@ export function yearAt(age: number, run: PrologueRun): PrologueYear | null {
   return yearOf(age, card.share ?? 0, card.teaching ?? 0, card.focus ?? 'general')
 }
 
+/** ⭐ THE YEARS DECIDED SO FAR, in order – `chosenYears` without the requirement that the childhood
+ *  be finished. Phase 11 needs it because the rhythm is read while the player is still walking: the
+ *  weekend at eleven is scheduled off a childhood that has no twelfth year in it yet.
+ *
+ *  ⚠ A YEAR WITH NO ANSWER IS ABSENT, NOT ZEROED. A row of zeros would be a claim that she did
+ *  nothing that year, and `competingFrom` would then read a childhood that has not happened. */
+export function yearsSoFar(run: PrologueRun): PrologueYear[] {
+  const out: PrologueYear[] = []
+  for (const card of PROLOGUE_CARDS) {
+    const year = yearAt(card.age, run)
+    if (year) out.push(year)
+  }
+  return out
+}
+
+/** ⚠ AND EVERY YEAR'S TOURNAMENT QUESTION IS ANSWERED TOO. A childhood is not finished while a card
+ *  still has an open ask on it – `askAt` returns null once the year holds an answer either way, so
+ *  «not this year» finishes the card exactly as «put her name down» does. */
 export function isComplete(run: PrologueRun): boolean {
-  return run.origin !== null && PROLOGUE_CARDS.every((c) => yearAt(c.age, run) !== null)
+  if (run.origin === null) return false
+  return PROLOGUE_CARDS.every((c) => yearAt(c.age, run) !== null && askAt(c.age, run) === null)
 }
 
 /** ⭐ THE NINE YEARS, IN ORDER – and this array is exactly what `engine/childhood.ts`'s
@@ -133,6 +238,11 @@ export function spentCents(run: PrologueRun): number {
     } else {
       total += card.costCents ?? 0
     }
+    // ⭐ AND THE WEEKEND, IF THIS YEAR HELD ONE. ⚠ ONLY WHERE THE ASK IS THE LIGHTER CONTROL: at ten
+    // the entry's price is already inside the option the player took (1_950_00 against 1_800_00),
+    // and adding it again here would bill that weekend twice. `entryCostCents` IS that difference,
+    // read off the tenth card rather than typed a second time.
+    if (askOn(card.age, run) && enteredIn(card.age, run)) total += entryCostCents()
   }
   return total
 }
@@ -214,8 +324,16 @@ export function readTwelfth(run: PrologueRun): TwelfthRead {
   let light = 0
   for (const { card, taken } of before) {
     if (isSoleHighestTeaching(card, taken)) oneToOne++
-    if (taken.focus === 'matchplay') tournaments++
     if (isSoleLowestShare(card, taken)) light++
+  }
+  // ⚠⚠ TOURNAMENTS ARE COUNTED THROUGH `enteredIn` SINCE PHASE 11, NOT OFF `taken.focus`, and the
+  // difference is a year. The count used to be «the year's answer is a `matchplay` year», which was
+  // the whole of the question while ten was the only year that asked it. The owner's correction –
+  // «дальше тоже можно спрашивать» – put the question on eleven as well, as the lighter ask, and a
+  // fork that read only the focus would have counted a girl who entered at ten and eleven as having
+  // entered once. Same three signals §2.5 names; one of them now reads the field that holds it.
+  for (const card of PROLOGUE_CARDS) {
+    if (card.age < 12 && enteredIn(card.age, run)) tournaments++
   }
   const pull = oneToOne + tournaments - light
   // ⚠ THE THREE CLAUSES ARE FRAGMENTS AND THE SENTENCE THAT HOLDS THEM IS THE TABLE'S. Not one

@@ -564,3 +564,205 @@ describe('⭐⭐ the ten-minute budget, measured as a reading length', () => {
     expect(Math.max(...measured.map((r) => r.words))).toBeGreaterThan(100)
   })
 })
+
+// =================================================================================================
+// ⭐⭐⭐ HOW LONG THE WALK IS WITH THE TOURNAMENTS IN IT – phase 11, MEASURED AND REPORTED
+// =================================================================================================
+//
+// ⚠⚠ AND IT IS NOT A GATE, WHICH IS THE OWNER'S OWN CORRECTION OF A NUMBER THAT WAS NEVER HIS:
+// «Десять минут это ваша цифра, и турниры не должны её съесть – это была примерная цифра, ничего не
+// случится, если у нас будут турниры, там есть больше скорости – вообще не проблема, и это одна из
+// основных частей игры вообще-то.»
+//
+// So the section above still bounds THE COPY of the nine cards, which is what §7's estimate was
+// really protecting and is the thing that grows one honest sentence at a time. This section measures
+// the tournaments and PRINTS the numbers, because he should know what he is shipping – but nothing
+// here is designed around a clock: no match is cut, no default sends the player past the viewer, and
+// the draw is the draw. The assertions below are about the measurement being REAL, not about it
+// being small.
+//
+// THE MODEL, stated so it can be argued with:
+//   READING   the nine cards as above, PLUS the year's tournament question where a card asks one,
+//             PLUS one result scene per weekend – the same words, the same rate.
+//   SKIPPING  the two escapes, priced apart: the WEEKEND's own header control (one press per draw)
+//             and the viewer's own «Skip to the result» (one press per match of hers). Both exist,
+//             both are the player's choice, and neither is a default.
+//   WATCHING  MEASURED, not guessed: `buildTimeline` returns the playback's length in seconds at
+//             speed 1, and a match surface opens on `'key'` at 2x (`composables/matchDefaults.ts`).
+//             The viewer's own pills reach 4x and «Full», so this is the middle of what a player can
+//             choose rather than a ceiling.
+import { buildTimeline } from '../../src/viz/timeline'
+import { simulateMatch } from '../../src/engine/match/engine'
+import { annotateMatch } from '../../src/engine/match/rally'
+import { JUNIOR_TOUR } from '../../src/engine/season/tournament'
+import { KID_ID } from '../../src/engine/world'
+import { LOCAL_OPEN_COPY, TOURNAMENT_ANSWER, localOpenCard } from '../../src/prologue/cards'
+import { chosenYears, enteredAges, withEntry } from '../../src/prologue/run'
+import { herMatches, outcomeOf, playLocalOpen, prologueEntrant, prologueSchedule } from '../../src/prologue/pool'
+
+/** One press of an escape and a glance at the finished panel behind it. A flat guess, named as one –
+ *  the same standing `DECIDE_SECONDS` and `QUIET_SECONDS` are given. */
+const SKIP_SECONDS = 6
+/** The shipped opening of a match surface: key points, double speed. The pills reach 4x and «Full». */
+const DEFAULT_SPEED = 2
+
+/** A whole run down one road, with every year's tournament question answered the same way. */
+function runOn(road: Record<number, string>, enter: boolean): PrologueRun {
+  let run = withOrigin(EMPTY_RUN, 'middle')
+  for (const card of PROLOGUE_CARDS) if (card.options) run = withPick(run, card.age, road[card.age])
+  const answer = enter ? TOURNAMENT_ANSWER.enter : TOURNAMENT_ANSWER.decline
+  for (const age of [11, 12, 13]) run = withEntry(run, age, answer)
+  return run
+}
+
+/** What one childhood's tennis costs, measured against real brackets on a real seed. */
+function tennisOf(road: Record<number, string>, enter: boolean): {
+  weekends: number
+  matches: number
+  askWords: number
+  askSeconds: number
+  skipWeekendSeconds: number
+  skipMatchSeconds: number
+  watchSeconds: number
+  resultWords: number
+} {
+  const run = runOn(road, enter)
+  const scheduled = prologueSchedule(chosenYears(run), enteredAges(run))
+  const seed = 'budget'
+  let matches = 0
+  let watchSeconds = 0
+  let resultWords = 0
+  for (const slot of scheduled) {
+    const kid = prologueEntrant(seed, KID_ID, 'Vera Novak', slot.age)
+    const open = playLocalOpen(seed, kid, slot.age, slot.index)
+    const mine = herMatches(open, KID_ID)
+    matches += mine.length
+    for (const rec of mine) {
+      const oppId = rec.aId === KID_ID ? rec.bId : rec.aId
+      const opp = open.field.find((p) => p.id === oppId)!
+      const a = rec.aId === KID_ID ? kid : opp
+      const b = rec.aId === KID_ID ? opp : kid
+      const opts = { surface: open.event.surface, tour: JUNIOR_TOUR, seed: rec.seed! }
+      const annotated = annotateMatch(simulateMatch(a, b, opts), a, b, opts)
+      watchSeconds += buildTimeline(annotated, 'key').duration / DEFAULT_SPEED
+    }
+    resultWords += wordsOn(localOpenCard(slot.age, outcomeOf(open)), run)
+  }
+  // ⭐ THE ASK IS ITS OWN BEAT AND IS CHARGED AS A DECISION – it is one, whichever way it is
+  // answered, and it happens whether or not a weekend follows.
+  const asks = PROLOGUE_CARDS.map((c) => cardFor(c.age, run).tournament).filter(Boolean)
+  const askWords = asks
+    .map((a) => [a!.lede, a!.enterLabel, a!.enterNote, a!.declineLabel, a!.declineNote].join(' '))
+    .join(' ')
+    .split(/\s+/)
+    .filter(Boolean).length
+  return {
+    weekends: scheduled.length,
+    matches,
+    askWords,
+    askSeconds: asks.length * DECIDE_SECONDS,
+    skipWeekendSeconds: scheduled.length * SKIP_SECONDS,
+    skipMatchSeconds: matches * SKIP_SECONDS,
+    watchSeconds,
+    resultWords,
+  }
+}
+
+describe('⭐⭐⭐ how long the walk is with the tournaments in it – measured, and reported', () => {
+  it('⭐⭐ the four arms, printed: reading, the two escapes, and watching every match', () => {
+    const rows: string[] = []
+    const measured: { name: string; skipping: number; watching: number; weekends: number }[] = []
+    for (const [name, road, enter] of [
+      ['light, no', LIGHT_ROAD, false],
+      ['light, yes', LIGHT_ROAD, true],
+      ['carried, no', CARRIED_ROAD, false],
+      ['carried, yes', CARRIED_ROAD, true],
+    ] as const) {
+      const run = runOn(road as Record<number, string>, enter)
+      let words = 0
+      let seconds = 0
+      for (const { card, run: at } of walk(road as Record<number, string>, 'middle')) {
+        words += wordsOn(card, at)
+        seconds += card.options || card.origins ? DECIDE_SECONDS : QUIET_SECONDS
+      }
+      const tennis = tennisOf(road as Record<number, string>, enter)
+      words += tennis.resultWords + tennis.askWords
+      seconds += tennis.weekends * QUIET_SECONDS + tennis.askSeconds
+      const cards = words / WORDS_PER_MINUTE + seconds / 60
+      const skipWeekend = cards + tennis.skipWeekendSeconds / 60
+      const skipMatch = cards + tennis.skipMatchSeconds / 60
+      const watching = cards + tennis.watchSeconds / 60
+      measured.push({ name, skipping: Math.max(skipWeekend, skipMatch), watching, weekends: tennis.weekends })
+      rows.push(
+        `${name.padEnd(12)} ${String(tennis.weekends)} weekends, ${String(tennis.matches).padStart(2)} of her matches` +
+          ` | reading ${cards.toFixed(1)} min | skip the weekend ${skipWeekend.toFixed(1)}` +
+          ` | skip each match ${skipMatch.toFixed(1)} | WATCH every match ${watching.toFixed(1)}`,
+      )
+      void run
+    }
+    console.log(
+      `\n  THE WALK, IN MINUTES (reading estimated at ${WORDS_PER_MINUTE} wpm; WATCHING measured off` +
+        ` the real timelines at the shipped key/${DEFAULT_SPEED}x opening, which the viewer's own` +
+        ` pills can halve again)\n  ${rows.join('\n  ')}\n`,
+    )
+
+    // ⚠ THE ASSERTIONS ARE ABOUT THE MEASUREMENT BEING REAL, NOT ABOUT IT BEING SMALL – the owner's
+    // own ruling on the ten-minute figure. What must hold is that the numbers can SEE the
+    // tournaments: a childhood that entered every year is measurably longer than one that entered
+    // none, on both arms, or this whole block is printing a constant.
+    // ⭐⭐ AND THE FOUR ARMS ARE THE OWNER'S CORRECTION MADE ARITHMETIC. The tenth's answer and the
+    // three later ones are INDEPENDENT: «light, yes» is a childhood that refused at ten and played
+    // three weekends afterwards, and «carried, no» is one that entered at ten and refused the other
+    // three. Neither is reachable if the tenth is a switch.
+    const yes = measured.find((m) => m.name === 'carried, yes')!
+    const no = measured.find((m) => m.name === 'carried, no')!
+    const refusedAtTen = measured.find((m) => m.name === 'light, yes')!
+    const refusedAll = measured.find((m) => m.name === 'light, no')!
+    expect(refusedAll.weekends).toBe(0)
+    expect(no.weekends, 'the tenth`s own decision still buys its weekend').toBe(1)
+    expect(refusedAtTen.weekends, 'a refusal at ten did not close the three years after it').toBe(3)
+    expect(yes.weekends).toBe(4)
+    expect(yes.skipping).toBeGreaterThan(no.skipping)
+    expect(yes.watching).toBeGreaterThan(yes.skipping + 5)
+  })
+
+  it('⚠ the measurement is not vacuous – the weekends really are real brackets', () => {
+    const none = tennisOf(LIGHT_ROAD, false)
+    const every = tennisOf(CARRIED_ROAD, true)
+    expect(none.weekends).toBe(0)
+    expect(none.watchSeconds).toBe(0)
+    expect(every.weekends).toBe(4)
+    expect(every.matches).toBeGreaterThanOrEqual(every.weekends)
+    expect(every.watchSeconds).toBeGreaterThan(60)
+    expect(every.skipMatchSeconds).toBeGreaterThan(every.skipWeekendSeconds)
+    // ...and both escapes exist, which is what makes the two skipping arms mean anything.
+    expect(LOCAL_OPEN_COPY.skipRest.length).toBeGreaterThan(0)
+  })
+
+  it('⚠ every result scene and every ask is a card the walk`s own rules already bind', () => {
+    const scenes = [10, 11, 12, 13].flatMap((age) =>
+      (['won', 'final', 'lost'] as const).map((outcome) => ({ age, outcome, row: localOpenCard(age, outcome) })),
+    )
+    for (const { age, outcome, row } of scenes) {
+      expect(wordsOn(row, EMPTY_RUN), `age ${age} ${outcome} is a page, not a card`).toBeLessThanOrEqual(170)
+      const said = [row.kicker, row.title, row.lede, row.her.cool, row.coach.cool, row.continueLabel].join(' ')
+      expect(/\d/.test(said), `age ${age} ${outcome} puts a digit on a card`).toBe(false)
+      expect(/[А-Яа-яЁё]/.test(said), `age ${age} ${outcome} carries Cyrillic`).toBe(false)
+      expect(said.includes('—'), `age ${age} ${outcome} uses a long dash`).toBe(false)
+    }
+    // ...and the asks, on both faces of the twelfth.
+    const asks = [...PROLOGUE_CARDS, TWELFTH_WANTS_MORE].map((c) => c.tournament).filter(Boolean)
+    expect(asks.length).toBe(4)
+    for (const ask of asks) {
+      const said = [ask!.lede, ask!.enterLabel, ask!.enterNote, ask!.declineLabel, ask!.declineNote].join(' ')
+      expect(/\d/.test(said), `«${ask!.lede}» puts a digit on a card`).toBe(false)
+      expect(/[А-Яа-яЁё]/.test(said), `«${ask!.lede}» carries Cyrillic`).toBe(false)
+      expect(said.includes('—'), `«${ask!.lede}» uses a long dash`).toBe(false)
+      expect(/\bthey own\b|\bthey bought\b/i.test(said)).toBe(false)
+    }
+    // ...and the weekend's own two controls obey the same rules.
+    for (const label of [LOCAL_OPEN_COPY.kicker, LOCAL_OPEN_COPY.proceed, LOCAL_OPEN_COPY.skipRest]) {
+      expect(/\d|[А-Яа-яЁё]|—/.test(label), `«${label}»`).toBe(false)
+    }
+  })
+})
