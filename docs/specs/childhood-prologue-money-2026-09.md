@@ -44,6 +44,13 @@ recomputes both by walking the 32 runs, so a card whose price changes without th
 
 ## 2. The reserve she starts the game with
 
+> ⚠⚠ **SUPERSEDED IN PART, 02.09 – see `childhood-prologue-balance-2026-09.md` §3.** The MODEL below
+> is unchanged in shape and §2.4's ruling still holds, but the divisor was a dial nobody had written
+> down: dividing the clamped spend by `startingFundsCents.middle` chose 0.399 of every family's
+> reserve in silence. It is now `ECONOMY.prologue.reserveSwingShare` and it is 0.20, because the
+> owner found the bottom of this range too harsh in play. **The measured table at the end of this
+> section is the BEFORE column of that pass** and is kept for exactly that reason.
+
 **PREDICTED.** `fundsCents` at week 0 is flat today – $8k / $25k / $120k by background – and §4 asks
 the prologue to make it yours. The design constraint is three-sided: the mean over the reachable
 childhoods must stay near the flat number (the whole economy was tuned against those three
@@ -87,6 +94,12 @@ table fact is now. **His call, not a build decision.**
 ---
 
 ## 3. The rung she arrives on
+
+> ⚠⚠ **SUPERSEDED, 02.09 – see `childhood-prologue-balance-2026-09.md` §1.** The even fifth below was
+> the shipped rule and it is gone: the owner found its defect in play («карьера за 25к начала у меня
+> с 15к на руках и тренером high тира»), because it read the childhood and never the family. The rung
+> is now a two-rung ladder per origin, ruled by him. **The distribution below is the BEFORE column of
+> that pass.**
 
 **PREDICTED.** §4 lists «the coach rung she arrives with» among the things the prologue may move.
 `teaching` is 0..1 by construction on every card (0 = a parent on a municipal court, 1 = a club where

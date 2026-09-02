@@ -248,9 +248,18 @@ describe('⚠⚠ the pool may never enter world.cohort or any table', () => {
     // names `../shared/avatarEmotion` for `PortraitEmotion`, the face `moodAt` returns. Both are
     // type-only, both are `shared/`, and the claim under this list – that the prologue never names
     // the world or the childhood – is unchanged and re-asserted below.
+    //
+    // ⚠⚠ PHASE 9 ADDED TWO MORE TO `handover.ts`, AND THE SECOND IS THE ONE WORTH READING TWICE.
+    // The weekly money line divides the player's own total by the weeks the childhood actually took,
+    // and both halves of that divisor had to come from somewhere that is not the engine's childhood
+    // module: `../shared/dates` for `WEEKS_IN_SEASON` and `./cards` for `CARD_AGES.length`. The
+    // natural spelling would have been `CHILDHOOD.startAge`/`endAge` – and it is precisely what
+    // `tests/childhood.test.ts` forbids, because that module's importer set is pinned as exactly
+    // `['engine/world.ts']`. The card table is the honest source anyway: the sentence is about what
+    // the PLAYER walked, and what the player walked is the cards.
     expect(imports).toEqual({
       'cards.ts': ['../shared/protocol'],
-      'handover.ts': ['../engine/rng', '../shared/money', '../shared/protocol'],
+      'handover.ts': ['../engine/rng', '../shared/dates', '../shared/money', '../shared/protocol', './cards'],
       'pool.ts': [
         '../engine/development',
         '../engine/match/types',

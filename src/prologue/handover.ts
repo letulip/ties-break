@@ -31,8 +31,8 @@
 // make it» and a hundred hours of finding that out.
 //
 // ⚠ NO NUMBER APPEARS IN A COACH LINE, and `tests/prologue-handover.test.ts` sweeps every string in
-// this table for a digit. The money is the one figure on the screen (§2.4 – the total, once), and it
-// is not in his mouth.
+// this table for a digit. The money is the only figure on the screen (§2.4 – the total, once, and
+// since the balance pass the same total said per week), and it is not in his mouth.
 //
 // =================================================================================================
 // ⭐⭐⭐ HE SAYS TWO THINGS, AND THEY ARE NOT THE SAME THING (phase 7)
@@ -68,6 +68,8 @@
 // go, which is what leaves the fog doing its job.
 import { rngFromSeed } from '../engine/rng'
 import { formatCents } from '../shared/money'
+import { WEEKS_IN_SEASON } from '../shared/dates'
+import { CARD_AGES } from './cards'
 import type { HandoverBaseBand } from '../shared/protocol'
 
 /** ⭐ THE COACH'S READ, PER BAND – §8a, verbatim, keyed by the label `coachRoomBand` returns.
@@ -256,4 +258,30 @@ export const WALK_COPY = {
  *  §2.4 says the prologue must not have. */
 export function spentLine(cents: number): string {
   return `Nine years of it cost you ${formatCents(cents)}.`
+}
+
+/** ⭐⭐ WHAT THAT WAS PER WEEK – HIS IDEA, AND IT IS THE THESIS OF THE GAME IN ONE FIGURE.
+ *
+ *  The nine years come to $8,200 at the cheapest and $28,150 at the dearest, which reads as a large
+ *  number either way. Divided by the weeks it actually took, it is about $18 a week against $60 –
+ *  and a coach in the game costs $130 to $450 A WEEK (`ECONOMY.coach.hourlyRateCents`, priced by the
+ *  rung). So the sentence that follows the total is the one that tells the player what scale they
+ *  are about to be charged at, on the screen immediately before the first weekly bill arrives. The
+ *  childhood was the cheap part, and this is where that stops being a surprise.
+ *
+ *  ⚠⚠ THE FIGURE IS DERIVED FROM THE RUN AND NEVER TYPED. `cents` is the player's own total and the
+ *  divisor is the card table's own length times the season's own length – `CARD_AGES.length` is nine
+ *  because there are nine cards, `WEEKS_IN_SEASON` is the game's own year. A card whose price moves,
+ *  or a tenth card, moves this sentence with no edit here, and `tests/prologue-handover.test.ts`
+ *  recomputes it from the table rather than pinning a string.
+ *
+ *  ⚠ IT MAY NOT IMPORT `engine/childhood.ts` for the nine, however natural `CHILDHOOD.startAge`
+ *  would read: `tests/childhood.test.ts` pins that module's importer set as exactly
+ *  `['engine/world.ts']`, and the card table is the honest source here anyway – the sentence is about
+ *  what the PLAYER walked, and what the player walked is the cards.
+ *
+ *  DRAFT, like every other sentence on this screen, and he has not read it. */
+export function weeklySpentLine(cents: number): string {
+  const weeks = CARD_AGES.length * WEEKS_IN_SEASON
+  return `That is about ${formatCents(Math.round(cents / weeks))} a week, every week of it.`
 }

@@ -20,7 +20,9 @@
 //   * `.handover-answers` moved above `.handover-read` in the template -> red, because the controls
 //     are no longer the card's last element and the measurement's precondition is asserted.
 //   * the coach's line swapped for another band's -> the band test goes red.
-//   * a second money figure added to the card -> the once-ness test goes red.
+//   * a THIRD money figure added to the card -> the two-ness test goes red (it was once-ness
+//     until the balance pass; the second figure is the same total said per week, and its own test
+//     proves it is derived from the first rather than typed beside it).
 import { describe, expect, it, beforeEach } from 'vitest'
 import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
@@ -33,10 +35,11 @@ import '../../src/style.css'
 import { assertLegible } from './contrast'
 import { assertDismissReachable, measureDialog, setViewport, PHONE, NARROW_PHONE } from './fits'
 import PrologueHandover from '../../src/components/PrologueHandover.vue'
-import { COACH_BASE_READS, COACH_READS, HANDOVER_COPY, coachBaseReadFor, coachReadFor, spentLine } from '../../src/prologue/handover'
+import { COACH_BASE_READS, COACH_READS, HANDOVER_COPY, coachBaseReadFor, coachReadFor, spentLine, weeklySpentLine } from '../../src/prologue/handover'
 import { createWorld, toSnapshot } from '../../src/engine/world'
 import { handoverBaseBand, handoverRoomBand } from '../../src/engine/world/coachMarket'
-import { PROLOGUE_CARDS, TWELFTH_WANTS_MORE } from '../../src/prologue/cards'
+import { CARD_AGES, PROLOGUE_CARDS, TWELFTH_WANTS_MORE } from '../../src/prologue/cards'
+import { WEEKS_IN_SEASON } from '../../src/shared/dates'
 import { DEFAULT_PROFILE, type HandoverBaseBand, type RadarAxis } from '../../src/shared/protocol'
 
 /** A REAL career's rose, not a hand-built one: the axes the handover draws are exactly what the
@@ -302,14 +305,44 @@ describe('⭐ the money, exactly once, here and nowhere else in the prologue', (
     document.body.innerHTML = ''
   })
 
-  it('the total is on the handover, and it is the only figure on it', () => {
+  it('the total is on the handover, and beside it the SAME total said per week', () => {
     const { wrapper } = mountHandover('hand-1', 28_150_00, PHONE)
     const text = wrapper.text()
     expect(text).toContain(spentLine(28_150_00))
-    // ⚠ ONCE. Every `$` on the screen, counted – a second figure anywhere (a balance, a running
-    // total, the same number twice) reddens this.
-    expect((text.match(/\$/g) ?? []).length, text).toBe(1)
-    expect((text.match(/[\d,]*\d/g) ?? []).join('|')).toBe('28,150')
+    expect(text).toContain(weeklySpentLine(28_150_00))
+    // ⚠ TWO FIGURES AND NO MORE. Every `$` on the screen, counted – a THIRD figure anywhere (a
+    // balance, a running total, the same number twice) reddens this. It was one until the balance
+    // pass added the weekly line, which is a second SAYING of one number rather than a second
+    // number: see the assertion below, which is the whole reason the count was allowed to move.
+    expect((text.match(/\$/g) ?? []).length, text).toBe(2)
+    expect((text.match(/[\d,]*\d/g) ?? []).join('|')).toBe('28,150|60')
+    wrapper.unmount()
+  })
+
+  it('⭐⭐ the weekly figure is DERIVED FROM THE RUN AND NEVER TYPED – his idea, and the game`s thesis', () => {
+    // Over nine years the cheapest childhood is about $18 a week and the dearest about $60, and a
+    // coach in the game she is one screen away from costs $105-$816 A WEEK. The point of the
+    // sentence is that the player meets the first weekly bill already knowing the scale.
+    const weeks = CARD_AGES.length * WEEKS_IN_SEASON
+    expect(weeks).toBe(468)
+    for (const total of [8_200_00, 15_400_00, 28_150_00]) {
+      const { wrapper } = mountHandover('hand-w', total, PHONE)
+      const shown = (wrapper.text().match(/\$[\d,]+/g) ?? []).map((m) => Number(m.slice(1).replace(/,/g, '')))
+      expect(shown[0], `total ${total}`).toBe(Math.round(total / 100))
+      expect(shown[1], `weekly ${total}`).toBe(Math.round(Math.round(total / weeks) / 100))
+      wrapper.unmount()
+    }
+    // MUTATION: a typed figure would not move with the total. Three totals, three different weeks.
+    const weekly = [8_200_00, 15_400_00, 28_150_00].map((c) => weeklySpentLine(c))
+    expect(new Set(weekly).size).toBe(3)
+  })
+
+  it('⚠ ...and the sentence it added still leaves both controls on a 375x667 phone', () => {
+    // The round-20 #3 rule, re-run for the line this pass added: a dialog that grows by one honest
+    // sentence at a time is exactly how a dismiss control leaves the screen, and this is the screen
+    // with nothing behind it. The dearest childhood is the longest the money line ever gets.
+    const { wrapper, el, answers } = mountHandover('hand-fit', 28_150_00, PHONE)
+    assertDismissReachable(el, answers, PHONE, 'the handover with the weekly line')
     wrapper.unmount()
   })
 

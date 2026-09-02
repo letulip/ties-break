@@ -72,12 +72,18 @@ for (const bg of BACKGROUNDS) {
 }
 
 console.log('\n=== PART B2 – the rung she arrives on ===')
-const rungs: Record<string, number> = {}
-for (const run of runs) {
-  const rung = prologueCoachTier(chosenYears(run))
-  rungs[rung] = (rungs[rung] ?? 0) + 1
+// ⚠ SINCE THE BALANCE PASS THE RUNG TAKES THE FAMILY, and that is the whole of the change: the
+// origin picks a PAIR of rungs and the childhood picks within it (his ruling, 02.09). The full
+// distribution and its control live in `npm run bench:balance` / the balance spec's §1; this row
+// stays here so the handover bench keeps saying what a career opens with.
+for (const bg of BACKGROUNDS) {
+  const rungs: Record<string, number> = {}
+  for (const run of everyRun(bg)) {
+    const rung = prologueCoachTier(bg, chosenYears(run))
+    rungs[rung] = (rungs[rung] ?? 0) + 1
+  }
+  console.log(`${bg.padEnd(9)} ` + Object.entries(rungs).map(([k, n]) => `${k} ${n}/32`).join('   '))
 }
-console.log(Object.entries(rungs).map(([k, n]) => `${k} ${n}/${runs.length}`).join('   '))
 
 console.log(`\n=== PART C – the coach's read, over ${SEEDS} seeds ===`)
 const cheapest = runs.reduce((a, b) => (spentCents(a) <= spentCents(b) ? a : b))

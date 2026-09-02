@@ -138,9 +138,20 @@ test('the nine cards run, the handover draws her, and going on starts the career
   //    paragraph – the only digits allowed on this screen are the money, §2.4's total, once.
   const screen = ((await handover.textContent()) ?? '').replace(/\s+/g, ' ').trim()
   expect(screen.length, 'the handover is empty').toBeGreaterThan(80)
-  expect((screen.match(/\$/g) ?? []).length, `the money is not said exactly once: ${screen}`).toBe(1)
+  // ⚠ TWO FIGURES SINCE THE BALANCE PASS, AND THEY ARE ONE NUMBER SAID TWICE. §2.4's «the total,
+  // once» gained a second saying of the same total – what those nine years came to PER WEEK – so the
+  // player meets the first weekly coaching bill already knowing the scale. A THIRD figure (a
+  // balance, a running total) still reddens this, and the derivation is proved in
+  // tests/component/prologue-handover.test.ts rather than here: this walk cannot know the seed's
+  // childhood, only that the screen says its money exactly twice and says nothing else numeric.
+  expect((screen.match(/\$/g) ?? []).length, `the money is not said exactly twice: ${screen}`).toBe(2)
   const figures = screen.match(/[\d,]*\d/g) ?? []
-  expect(figures.length, `a number on this screen is not the money: ${figures.join(' | ')}`).toBe(1)
+  expect(figures.length, `a number on this screen is not the money: ${figures.join(' | ')}`).toBe(2)
+  // ...and the second IS the first divided by the nine years, to the dollar – so the pair cannot
+  // drift into being two unrelated numbers on the one screen §2.4 allows a figure on at all.
+  const total = Number(figures[0].replace(/,/g, ''))
+  const weekly = Number(figures[1].replace(/,/g, ''))
+  expect(weekly, `${total} a childhood is not ${weekly} a week`).toBe(Math.round(Math.round((total * 100) / (9 * 52)) / 100))
 
   // 3. THE HONEST CHOICE – two controls, and the game says NOTHING about rerolling, odds or a floor
   //    (his ruling, §2.3). The words below are a denylist and not a transcription: none of them may
