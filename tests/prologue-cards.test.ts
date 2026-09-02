@@ -15,7 +15,14 @@ import { readFileSync } from 'node:fs'
 // whole file and the pin stays green. `regionToLast` throws instead. `scriptCodeOf` strips JS
 // comments and leaves the file's own prose out of the code pins below.
 import { regionToLast, scriptCodeOf } from './helpers/source'
-import { appetiteAt, childhoodWalk, medianChildhood, type ChildhoodYear } from '../src/engine/childhood'
+import {
+  appetiteAt,
+  childhoodWalk,
+  devotedChildhood,
+  medianChildhood,
+  neglectedChildhood,
+  type ChildhoodYear,
+} from '../src/engine/childhood'
 import { ECONOMY } from '../src/engine/economy'
 import {
   APPETITE_AT,
@@ -99,6 +106,27 @@ function finish(run: PrologueRun, take: 'light' | 'heavy'): PrologueRun {
   const chosen = take === 'light' ? byShare[0] : byShare[byShare.length - 1]
   return withPick(run, 12, chosen.id)
 }
+
+/** Every childhood the table can produce: four binary decisions at 8..11 settle the twelfth's face,
+ *  and the face offers two answers of its own, so the reachable set is 2^4 x 2 = 32. */
+function everyRun(): PrologueRun[] {
+  const out: PrologueRun[] = []
+  const step = (i: number, run: PrologueRun): void => {
+    if (i === DECISION_AGES.length - 1) {
+      for (const opt of cardFor(12, run).options ?? []) out.push(withPick(run, 12, opt.id))
+      return
+    }
+    for (const opt of PROLOGUE_CARDS.find((c) => c.age === DECISION_AGES[i])?.options ?? []) {
+      step(i + 1, withPick(run, DECISION_AGES[i], opt.id))
+    }
+  }
+  step(0, withOrigin(EMPTY_RUN, 'middle'))
+  return out
+}
+
+/** the childhood's own level for a set of years – the pre-clamp model quantity, so a claim about it
+ *  is a claim about the TABLE rather than about `STARTING_SKILL_BAND` doing its job */
+const level = (years: readonly ChildhoodYear[]) => childhoodWalk(years).level
 
 const LIGHT_ROAD = { 8: 'municipal', 9: 'group', 10: 'stay-home', 11: 'ordinary-school' }
 const CARRIED_ROAD = { 8: 'club', 9: 'one-to-one', 10: 'enter', 11: 'sports-school' }
@@ -368,6 +396,99 @@ describe('⭐ the years feed engine/childhood.ts, and neither copy may drift', (
     expect(median).toBeCloseTo(0, 12)
     expect(light, `the light road (${light.toFixed(3)}) is below a median childhood`).toBeLessThan(0)
     expect(carried, `the carried road (${carried.toFixed(3)}) is above it`).toBeGreaterThan(0)
+  })
+
+  // ⭐⭐ HOW MUCH OF THE MODEL THE CARD TABLE ACTUALLY REACHES – the balance pass's own acceptance
+  // (docs/specs/childhood-prologue-balance-2026-09.md §2). The claim is a SHARE and not a level, so
+  // it survives a retune of `CHILDHOOD.swingPoints`: what is asserted is that the nine cards reach
+  // a real fraction of the distance between the model's own two ends, because a table that only
+  // reaches a sliver of it is a set of decisions that do not decide anything.
+  //
+  // ⚠ THE TARGET WAS ~60% AND NOT MORE, DELIBERATELY. The game's own growth closes 71% of an
+  // arrival gap by her peak (measured 02.09), so buying a wider prologue costs balance risk for an
+  // effect that half-lives away by eighteen. The band below is wide enough to be a claim about the
+  // table rather than a re-pin of one measurement.
+  //
+  // MUTATION: put `club` back to share 0.85 / teaching 0.8 -> the share falls out of the band.
+  it('⭐⭐ the nine cards reach about three fifths of what the MODEL can move her by', () => {
+    const modelSpan = level(devotedChildhood()) - level(neglectedChildhood())
+    const levels = everyRun().map((run) => level(chosenYears(run)))
+    const span = Math.max(...levels) - Math.min(...levels)
+    const reached = span / modelSpan
+    // ⚠ THE BAND IS A CLAIM, NOT A RE-PIN. The shipped table reached 42.3% of the model and this one
+    // reaches 54.3%; the bound below separates the two without asking a later retune of
+    // `CHILDHOOD.swingPoints` to move with it (both terms are levels, so the dial cancels).
+    expect(reached, `the table reaches ${(reached * 100).toFixed(1)}% of the model`).toBeGreaterThan(0.5)
+    expect(reached, `the table reaches ${(reached * 100).toFixed(1)}% of the model`).toBeLessThan(0.65)
+  })
+
+  // ⭐⭐ ...AND THE WIDTH IS IN THE THREE PAIRS HE NAMED – «widen the gaps between municipal court /
+  // club, group / one-to-one, ordinary school / sports school». The band above is a claim about the
+  // WHOLE table and is only sensitive to the whole table: the model's habit and joy terms carry
+  // across the years, so one card's contribution is not separable from the rest and a per-card
+  // measurement cannot be mutation-checked by reverting one card. Measured, not assumed – the first
+  // draft of this block tried exactly that and all three single-pair mutations survived it.
+  //
+  // So the per-pair claim is made where it IS separable: in the table's own two numbers. Each arm is
+  // pinned against what it was, in the direction the pass moved it, and reverting either end of any
+  // pair reddens the row that names it.
+  //
+  // ⚠ THE COSTS ARE DELIBERATELY ABSENT FROM THIS PIN. Not one price moved – every note's claimed
+  // multiplier («about three times the municipal court») is checked elsewhere in this file against
+  // the cents below it, and a widening that moved a price would have had to move his copy with it.
+  it('⭐⭐ the three money decisions each buy more than they did – and no arm went the wrong way', () => {
+    const arm = (age: number, id: string) => {
+      const card = age === 12 ? TWELFTH_WANTS_MORE : PROLOGUE_CARDS.find((c) => c.age === age)!
+      const o = (card.options ?? []).find((x) => x.id === id)
+      expect(o, `age ${age} has an option ${id}`).toBeTruthy()
+      return { share: o!.share ?? 0, teaching: o!.teaching ?? 0 }
+    }
+    // age 8 – the municipal court against the club. The cheap arm keeps its hours («she keeps the
+    // group») and loses teaching; the dear arm gains both.
+    expect(arm(8, 'municipal').share).toBe(0.6)
+    expect(arm(8, 'municipal').teaching).toBeLessThanOrEqual(0.35)
+    expect(arm(8, 'club').share).toBeGreaterThanOrEqual(0.95)
+    expect(arm(8, 'club').teaching).toBeGreaterThanOrEqual(0.95)
+    // age 9 – the group against the hour to herself. ⚠ THE SHARES DO NOT MOVE, and that is the copy
+    // holding the arithmetic to account: the card says in as many words that an hour one-to-one «is
+    // not a different amount of tennis. It is a different price», so the width here is teaching and
+    // only teaching. Widening the share gap would have deepened a contradiction that is already in
+    // the shipped table – recorded in the balance spec's §2 rather than made worse.
+    expect(arm(9, 'group').share).toBe(0.6)
+    expect(arm(9, 'one-to-one').share).toBe(0.85)
+    expect(arm(9, 'group').teaching).toBeLessThanOrEqual(0.25)
+    expect(arm(9, 'one-to-one').teaching).toBeGreaterThanOrEqual(1)
+    // age 11 – ordinary school against the sports school, the widest pair in the table and the one
+    // whose copy asks for it: «it takes most of her week with it» against «her afternoons stay hers».
+    expect(arm(11, 'ordinary-school').share).toBeLessThanOrEqual(0.5)
+    expect(arm(11, 'ordinary-school').teaching).toBeLessThanOrEqual(0.25)
+    expect(arm(11, 'sports-school').share).toBeGreaterThanOrEqual(1)
+    expect(arm(11, 'sports-school').teaching).toBeGreaterThanOrEqual(1)
+    // ⚠ AND THE GAP IS WIDER THAN IT WAS ON EVERY ONE OF THE THREE, stated as the sum so a reader
+    // can check it by hand against the shipped table (0.70 / 0.80 / 0.70).
+    const gap = (age: number, cheap: string, dear: string) =>
+      arm(age, dear).share - arm(age, cheap).share + (arm(age, dear).teaching - arm(age, cheap).teaching)
+    expect(gap(8, 'municipal', 'club')).toBeGreaterThan(0.7)
+    expect(gap(9, 'group', 'one-to-one')).toBeGreaterThan(0.8)
+    expect(gap(11, 'ordinary-school', 'sports-school')).toBeGreaterThan(0.7)
+  })
+
+  // ⚠ AND THE WIDENING DID NOT MOVE THE FORK, which is a separate claim and the one most likely to
+  // break by accident: `readTwelfth` reads which option had the sole highest `teaching` and the sole
+  // lowest `share` on each card, so nudging a pair can silently change which face of the twelfth a
+  // player sees. MUTATION: give `enter` a higher `teaching` than `stay-home` -> red.
+  it('⚠ every paired card still orders its two answers the same way the fork reads them', () => {
+    for (const card of [...PROLOGUE_CARDS, TWELFTH_WANTS_MORE]) {
+      const opts = card.options
+      if (!opts || opts.length !== 2) continue
+      const [cheap, dear] = opts
+      expect((dear.share ?? 0), `age ${card.age} share`).toBeGreaterThan(cheap.share ?? 0)
+      // the tenth is the ONE card whose two answers are equally taught, and that is deliberate:
+      // playing a tournament is not more coaching, and if it read as more coaching the fork would
+      // count one choice twice.
+      if (card.age === 10) expect(dear.teaching).toBe(cheap.teaching)
+      else expect((dear.teaching ?? 0), `age ${card.age} teaching`).toBeGreaterThan(cheap.teaching ?? 0)
+    }
   })
 
   // ⚠ THE THIRTEENTH IS THE TWELFTH AGAIN – `sameAsLastYear`. A thirteenth year with its own fixed

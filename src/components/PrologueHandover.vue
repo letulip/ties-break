@@ -31,7 +31,7 @@
 import { computed, useTemplateRef } from 'vue'
 import SkillsRadar from './SkillsRadar.vue'
 import { useDialogFocus } from '../composables/dialogFocus'
-import { HANDOVER_COPY, spentLine } from '../prologue/handover'
+import { HANDOVER_COPY, spentLine, weeklySpentLine } from '../prologue/handover'
 import type { RadarAxis } from '../shared/protocol'
 
 const props = defineProps<{
@@ -57,6 +57,10 @@ const emit = defineEmits<{
 
 const copy = HANDOVER_COPY
 const spent = computed(() => spentLine(props.spentCents))
+// ⭐ THE SAME TOTAL, SAID PER WEEK – his idea, and the one figure on this screen that is about the
+// game rather than about the childhood: a coach is billed by the week, and the player meets that
+// bill one screen from here. Derived in the table, never typed – see `weeklySpentLine`.
+const spentWeekly = computed(() => weeklySpentLine(props.spentCents))
 
 // Named `cardEl` and not `card` for the reason PrologueCard.vue records: a local called `card`
 // shadows a prop of that name and the whole screen renders off null.
@@ -108,7 +112,7 @@ useDialogFocus(cardEl)
 
       <!-- THE MONEY, ONCE. §2.4: the cards name their costs in relative terms and carry no figure at
            all; the total surfaces here and nowhere else in the prologue. -->
-      <p class="handover-spent">{{ spent }}</p>
+      <p class="handover-spent">{{ spent }} {{ spentWeekly }}</p>
 
       <!-- 3. THE HONEST CHOICE, LAST IN THE FLOW. Nothing here marks one of them as the one to take:
            the whole subject of this screen is that the decision is yours. Same rule, and the same

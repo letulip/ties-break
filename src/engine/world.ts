@@ -44,7 +44,7 @@ import { ECONOMY,
 // it: not the card table, not the pool, not a screen. What that buys is unchanged from phase 1's
 // argument – a module nothing on the tick path imports cannot be reached by an ordinary in-game
 // week – and it is now a claim about ONE named importer instead of none.
-import { childhoodArrival, weightAt, type ChildhoodYear } from './childhood'
+import { childhoodArrival, medianChildhood, weightAt, type ChildhoodYear } from './childhood'
 // The style she EARNED, read by the game's own derivation (`styleOf`, season/rival.ts) – see
 // `prologuePlayStyle`. rival.ts imports nothing from this file, so this is a leaf edge.
 import { styleOf } from './season/rival'
@@ -1189,23 +1189,41 @@ export function closeTournament(world: WorldState): void {
 // capture (41550 draws / e6b0c709) and every career hash therefore cannot move for a WIZARD career –
 // not «were checked and did not move», cannot – and `tests/condition.test.ts`'s pin is untouched.
 
-/** ⭐ THE RUNG SHE ARRIVES ON, read off who actually taught her across the nine years.
+/** ⭐⭐ THE COACH LADDER – WHERE YOU START BOUNDS WHERE YOU CAN REACH. The owner's ruling, 02.09,
+ *  transcribed as a table because it IS a table:
  *
- *  ⚠ THE LADDER IS EVEN AND NOTHING WAS CALIBRATED. `teaching` is 0..1 by construction (0 = a parent
- *  on a municipal court, 1 = a club where the coaches are) and `CoachTier` has five rungs, so the
- *  honest reading of one onto the other is the plain fifth – no threshold was chosen, and there is
- *  nothing here for a later wave to re-tune by feel. The years are weighted by `weightAt`, phase 1's
- *  own share of the childhood, so the thirteenth year counts for more than the fifth: a family that
- *  found the money late arrives higher than one that spent it on a six-year-old, which is what
- *  actually happens.
+ *      working    the cheap branch -> self-coached     the dear branch -> a budget coach
+ *      middle     cheap -> budget                      dear -> middle
+ *      wealthy    cheap -> middle                      dear -> high
  *
- *  Measured over the 32 reachable runs the shipped card table can produce, this returns `budget`,
- *  `middle` or `high` – see docs/specs/childhood-prologue-money-2026-09.md §3. `self` and `elite` are
- *  unreachable from today's cards and that is honest rather than dead: nine years of ordinary
- *  coaching does not buy an elite coach at fourteen, and it does not leave the parent on the court
- *  either. A card that offers a year with no teaching in it reaches `self` without this changing. */
-export function prologueCoachTier(years: readonly ChildhoodYear[]): CoachTier {
-  const ladder: readonly CoachTier[] = ['self', 'budget', 'middle', 'high', 'elite']
+ *  ⚠⚠ IT REPLACES AN EVEN FIFTH OF WEIGHTED `teaching`, AND THE DEFECT THE EVEN FIFTH SHIPPED WITH
+ *  IS WHY. He found it in play: «карьера за 25к начала у меня с 15к на руках и тренером high тира» –
+ *  a MIDDLE family, on the dearest branch the card table has, arriving with the reserve spent AND a
+ *  high-tier coach on the payroll. The old reading knew nothing about the family: nine years of
+ *  club-and-one-to-one read the same whether the money came out of a working family's rent or a
+ *  wealthy one's petty cash, and the ladder is what puts the family back into the answer.
+ *
+ *  ⭐ AND THE SHAPE IS THE MEANING. Two rungs per origin, overlapping by exactly one with the origin
+ *  above, so a working family that did everything right arrives where a middle family that did
+ *  nothing special starts. That is the sentence the whole prologue is for.
+ *
+ *  ⚠ NO «I COACH HER MYSELF» FOR MIDDLE OR WEALTHY. He ruled against it and the reasons are parked
+ *  in docs/backlog/the-team-around-her.md row 9: it collapses all three origins onto one outcome at
+ *  the cheap end, and `developmentFactor.self = 0.82` is the whole of what the engine knows about
+ *  that rung – so a rich parent who chose the court and a poor one who could not afford anything
+ *  else would be the identical number wearing two different stories. */
+export const PROLOGUE_COACH_LADDER: Readonly<Record<FamilyBackground, readonly [CoachTier, CoachTier]>> = {
+  working: ['self', 'budget'],
+  middle: ['budget', 'middle'],
+  wealthy: ['middle', 'high'],
+}
+
+/** WHAT THE NINE YEARS PAID FOR TEACHING, 0..1 – the years weighted by `weightAt`, phase 1's own
+ *  share of the childhood, so the thirteenth year counts for more than the fifth: a family that
+ *  found the money late arrives higher than one that spent it on a six-year-old.
+ *
+ *  ⚠ SHARED WITH THE BRANCH TEST BELOW SO THERE IS ONE READING AND NOT TWO. */
+function taughtShareOf(years: readonly ChildhoodYear[]): number {
   let taught = 0
   let mass = 0
   for (const y of years) {
@@ -1213,8 +1231,33 @@ export function prologueCoachTier(years: readonly ChildhoodYear[]): CoachTier {
     taught += w * Math.max(0, Math.min(1, y.teaching))
     mass += w
   }
-  const share = mass > 0 ? taught / mass : 0
-  return ladder[Math.max(0, Math.min(ladder.length - 1, Math.floor(share * ladder.length)))]
+  return mass > 0 ? taught / mass : 0
+}
+
+/** ⭐ THE RUNG SHE ARRIVES ON – the origin picks the pair, the childhood picks within it.
+ *
+ *  ⚠⚠ THE BRANCH IS DECIDED AGAINST THE ORDINARY CHILDHOOD, AND THAT THRESHOLD IS NOT A NUMBER
+ *  ANYBODY CHOSE. `medianChildhood()` is the anchor `childhoodWalk` already normalises the level
+ *  against – the childhood that lands EXACTLY on `startingSkills` – so its own weighted `teaching`
+ *  is the one place in this codebase where «an ordinary amount of coaching» is already defined. A
+ *  childhood that bought her better teaching than an ordinary one takes the dear rung; one that did
+ *  not takes the cheap one. Nothing here is available for a later wave to re-tune by feel.
+ *
+ *  ⚠ MONEY WAS THE OTHER CANDIDATE AND IT IS NEARLY THE SAME READING – the two agree on 24 of the
+ *  32 reachable runs, because in this table the dearer answer is also the better-taught one on every
+ *  card but the tenth. Teaching wins because a RUNG is a statement about who teaches her, and
+ *  because it leaves the modal prologue on the rung the wizard's own default sits on. Measured, both
+ *  arms, in docs/specs/childhood-prologue-balance-2026-09.md §1.
+ *
+ *  Measured over the 32 reachable runs x 3 origins, this produces exactly his six outcomes and
+ *  nothing else – the distribution is in that spec. `elite` is unreachable from any origin, which is
+ *  honest rather than dead: nine years of a childhood does not buy an elite coach at fourteen. */
+export function prologueCoachTier(
+  background: FamilyBackground,
+  years: readonly ChildhoodYear[],
+): CoachTier {
+  const [cheap, dear] = PROLOGUE_COACH_LADDER[background]
+  return taughtShareOf(years) >= taughtShareOf(medianChildhood()) ? dear : cheap
 }
 
 /** ⭐ THE STYLE SHE EARNED, WHICH DELETES A MENU (§4: «`playStyle`, earned rather than picked – it
@@ -1260,7 +1303,7 @@ export function createWorld(
     profile = {
       ...profile,
       playStyle: prologuePlayStyle(arrival),
-      coachTier: prologueCoachTier(years),
+      coachTier: prologueCoachTier(profile.background, years),
     }
   }
   const fundsCents = prologue

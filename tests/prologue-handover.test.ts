@@ -22,6 +22,7 @@ import { createHash } from 'node:crypto'
 import {
   createWorld,
   prologueCoachTier,
+  PROLOGUE_COACH_LADDER,
   prologuePlayStyle,
   startingSkills,
   tickWeek,
@@ -167,13 +168,30 @@ describe('⭐⭐ a prologue career and a wizard career are the same SHAPE of wor
   it('same schema version, same key set, same types – on every background', () => {
     for (const background of BACKGROUNDS) {
       const profile = profileFor(background)
-      const wizard = createWorld('same-seed', profile, 'w')
       for (const prologue of [CHEAPEST, DEAREST]) {
         const played = createWorld('same-seed', profile, 'p', prologue)
+        // ⚠⚠ THE WIZARD CONTROL CARRIES THE RUNG THE PROLOGUE DERIVED, and that is a correction the
+        // coach ladder forced rather than a weakening. `coachId` is `string | null` – `openingCoachId`
+        // returns null for a `self` rung, on BOTH paths – and since the ladder a working family's
+        // cheap branch really does arrive self-coached, so a wizard control frozen on the default
+        // `middle` rung was comparing a career with a coach against one without and calling the
+        // difference a shape change. The claim is that the PATH does not change the shape; the rung
+        // changes it, and it changes it identically whichever door the career came through.
+        const wizard = createWorld('same-seed', { ...profile, coachTier: played.profile.coachTier }, 'w')
         expect(played.schemaVersion, background).toBe(wizard.schemaVersion)
         expect(shapeOf(played), background).toEqual(shapeOf(wizard))
       }
     }
+  })
+
+  it('⚠ ...and the rung is the ONLY thing that moves the shape – proved by moving it', () => {
+    // The exemption above is only honest if it is narrow. A wizard career at `self` and one at
+    // `middle` differ in exactly one line of the shape, and that line is `coachId`.
+    const profile = profileFor('working')
+    const selfCoached = shapeOf(createWorld('same-seed', { ...profile, coachTier: 'self' }, 'w'))
+    const hired = shapeOf(createWorld('same-seed', { ...profile, coachTier: 'middle' }, 'w'))
+    const only = selfCoached.filter((l) => !hired.includes(l))
+    expect(only).toEqual(['.coachId: null'])
   })
 
   it('...and only the numbers differ – which is what makes the sameness worth asserting', () => {
@@ -286,33 +304,95 @@ describe('⭐ the style she earned, and the rung she arrives on', () => {
     expect(styles.size).toBeGreaterThan(1)
   })
 
-  it('the rung is an EVEN read of `teaching` onto the five-rung ladder – no threshold was chosen', () => {
-    const ladder = ['self', 'budget', 'middle', 'high', 'elite'] as const
-    for (const share of [0, 0.19, 0.2, 0.39, 0.4, 0.59, 0.6, 0.79, 0.8, 1]) {
-      const years = PROLOGUE_CARDS.map((c) => ({ age: c.age, practice: 0.5, teaching: share, focus: 'general' as const }))
-      expect(prologueCoachTier(years), `teaching ${share}`).toBe(ladder[Math.min(4, Math.floor(share * 5))])
+  // ⭐⭐ THE LADDER – his ruling of 02.09, and the six outcomes are the acceptance.
+  // docs/specs/childhood-prologue-balance-2026-09.md §1.
+
+  it('⭐⭐ the ladder is HIS TABLE, transcribed – where you start bounds where you can reach', () => {
+    expect(PROLOGUE_COACH_LADDER).toEqual({
+      working: ['self', 'budget'],
+      middle: ['budget', 'middle'],
+      wealthy: ['middle', 'high'],
+    })
+  })
+
+  it('⭐⭐ every reachable childhood x origin lands on exactly one of his six outcomes', () => {
+    const seen = new Map<string, Set<string>>()
+    for (const background of BACKGROUNDS) {
+      const rungs = new Set<string>()
+      for (const run of everyRun(background)) rungs.add(prologueCoachTier(background, chosenYears(run)))
+      seen.set(background, rungs)
+    }
+    expect([...(seen.get('working') ?? [])].sort()).toEqual(['budget', 'self'])
+    expect([...(seen.get('middle') ?? [])].sort()).toEqual(['budget', 'middle'])
+    expect([...(seen.get('wealthy') ?? [])].sort()).toEqual(['high', 'middle'])
+  })
+
+  it('⚠ ...and BOTH rungs of every pair are actually reached – a ladder with a dead half is not one', () => {
+    for (const background of BACKGROUNDS) {
+      const [cheap, dear] = PROLOGUE_COACH_LADDER[background]
+      const rungs = everyRun(background).map((run) => prologueCoachTier(background, chosenYears(run)))
+      expect(rungs.filter((r) => r === cheap).length, background).toBeGreaterThan(0)
+      expect(rungs.filter((r) => r === dear).length, background).toBeGreaterThan(0)
+    }
+  })
+
+  it('⚠⚠ THE DEFECT HE FOUND IN PLAY CANNOT RECUR – no middle family reaches high, whatever it spends', () => {
+    // «карьера за 25к начала у меня с 15к на руках и тренером high тира». The old rule was an even
+    // fifth of weighted `teaching` and knew nothing about the family, so the dearest branch of the
+    // card table handed a middle family the same rung a wealthy one got.
+    for (const run of everyRun('middle')) {
+      expect(['budget', 'middle']).toContain(prologueCoachTier('middle', chosenYears(run)))
+    }
+    // ...and the SAME childhood on a wealthy origin does reach it, which is what makes the bound mean
+    // something rather than being a cap nobody could have hit.
+    expect(prologueCoachTier('wealthy', DEAREST.years)).toBe('high')
+  })
+
+  it('⭐ the branch cut is the ORDINARY childhood`s own teaching – no threshold was chosen', () => {
+    // `medianChildhood()` is the anchor `childhoodWalk` normalises the level against, and its
+    // teaching is flat 0.5, so this is where «an ordinary amount of coaching» is already defined.
+    const flatAt = (teaching: number) =>
+      PROLOGUE_CARDS.map((c) => ({ age: c.age, practice: 0.5, teaching, focus: 'general' as const }))
+    for (const background of BACKGROUNDS) {
+      const [cheap, dear] = PROLOGUE_COACH_LADDER[background]
+      expect(prologueCoachTier(background, flatAt(0.49)), background).toBe(cheap)
+      expect(prologueCoachTier(background, flatAt(0.5)), background).toBe(dear)
+      expect(prologueCoachTier(background, flatAt(0.51)), background).toBe(dear)
+      expect(prologueCoachTier(background, flatAt(0)), background).toBe(cheap)
+      expect(prologueCoachTier(background, flatAt(1)), background).toBe(dear)
     }
   })
 
   it('...weighted by the year, so the thirteenth counts for more than the fifth', () => {
     const flat = PROLOGUE_CARDS.map((c) => ({ age: c.age, practice: 0.5, teaching: 0, focus: 'general' as const }))
-    const late = flat.map((y) => (y.age >= 12 ? { ...y, teaching: 1 } : y))
-    const early = flat.map((y) => (y.age <= 6 ? { ...y, teaching: 1 } : y))
     expect(weightAt(13)).toBeGreaterThan(weightAt(5))
-    expect(prologueCoachTier(late)).not.toBe('self')
-    expect(prologueCoachTier(early)).toBe('self')
+    // ⭐ THE SAME FOUR YEARS OF GOOD TEACHING, BOUGHT LATE OR EARLY. Late crosses the cut and early
+    // does not – a family that found the money at ten arrives with a coach, one that spent it on a
+    // six-year-old does not, which is what actually happens.
+    const late4 = flat.map((y) => (y.age >= 10 ? { ...y, teaching: 1 } : y))
+    const early4 = flat.map((y) => (y.age <= 8 ? { ...y, teaching: 1 } : y))
+    expect(prologueCoachTier('working', late4)).toBe('budget')
+    expect(prologueCoachTier('working', early4)).toBe('self')
   })
 
-  it('every reachable childhood lands on budget, middle or high – measured, not assumed', () => {
-    const rungs = new Set(everyRun().map((run) => prologueCoachTier(chosenYears(run))))
-    expect([...rungs].sort()).toEqual(['budget', 'high', 'middle'])
+  it('⚠ `elite` is unreachable from every origin – nine years does not buy an elite coach at fourteen', () => {
+    for (const background of BACKGROUNDS) {
+      for (const run of everyRun(background)) {
+        expect(prologueCoachTier(background, chosenYears(run)), background).not.toBe('elite')
+      }
+    }
   })
 
   it('⚠ the rung reaches the world – `physioActive` and the opening coach follow it', () => {
-    const w = createWorld('rung', profileFor('middle'), 'p', DEAREST)
-    expect(w.profile.coachTier).toBe(prologueCoachTier(DEAREST.years))
-    expect(typeof w.physioActive).toBe('boolean')
-    expect(w.coachId === null || typeof w.coachId === 'string').toBe(true)
+    for (const background of BACKGROUNDS) {
+      const w = createWorld('rung', profileFor(background), 'p', DEAREST)
+      expect(w.profile.coachTier).toBe(prologueCoachTier(background, DEAREST.years))
+      expect(typeof w.physioActive).toBe('boolean')
+      expect(w.coachId === null || typeof w.coachId === 'string').toBe(true)
+    }
+    // ⭐ the same nine years, three origins, three different rungs – the ladder reaching the save
+    const rungs = BACKGROUNDS.map((b) => createWorld('rung', profileFor(b), 'p', DEAREST).profile.coachTier)
+    expect(new Set(rungs).size).toBe(3)
   })
 })
 
@@ -330,25 +410,60 @@ describe('⭐⭐ what the nine years did to the family`s reserve', () => {
     expect(ECONOMY.prologue.spendSwingCents).toBe((dearest - cheapest) / 2)
   })
 
-  it('the family the economy is anchored on gets the plain subtraction', () => {
-    const { referenceSpendCents: ref, spendSwingCents: swing } = ECONOMY.prologue
-    const base = STARTING_FUNDS_CENTS.middle
-    expect(prologueFundsCents('middle', ref)).toBe(base)
-    expect(prologueFundsCents('middle', ref - swing)).toBe(base + swing)
-    expect(prologueFundsCents('middle', ref + swing)).toBe(base - swing)
+  it('⭐ the reference childhood is the flat number, and the ends are the named share of it', () => {
+    const { referenceSpendCents: ref, spendSwingCents: swing, reserveSwingShare: share } = ECONOMY.prologue
+    for (const background of BACKGROUNDS) {
+      const base = STARTING_FUNDS_CENTS[background]
+      expect(prologueFundsCents(background, ref), background).toBe(base)
+      expect(prologueFundsCents(background, ref - swing), background).toBe(Math.round(base * (1 + share)))
+      expect(prologueFundsCents(background, ref + swing), background).toBe(Math.round(base * (1 - share)))
+    }
   })
 
-  it('...and the other two move by the same SHARE of their own reserve, never into debt', () => {
+  it('...and EVERY background moves by the same proportion – §2.4, the family is where she is FROM', () => {
+    // the whole ruling in one assertion: two backgrounds walking the same childhood come off it at
+    // the same MULTIPLE of their own reserve, never at the same number of cents.
+    for (const run of everyRun()) {
+      const ratios = BACKGROUNDS.map(
+        (b) => prologueFundsCents(b, spentCents(run)) / STARTING_FUNDS_CENTS[b],
+      )
+      for (const r of ratios) expect(r).toBeCloseTo(ratios[0], 4)
+    }
+  })
+
+  it('⚠ nothing reaches debt, and nothing crosses a background step of the price corridor', () => {
+    const share = ECONOMY.prologue.reserveSwingShare
+    // ⭐ THE CEILING ON THE SHARE IS THE GAME'S OWN. `wealthCorridor` puts one background step at
+    // 0.25 of the middle centre (0.75 / 1.00 / 1.25), and §2.4 says the player picks where the
+    // family is FROM – so a childhood able to move the reserve by a quarter could carry a family
+    // across a class boundary. This is the bound, not a taste.
+    const [wLo] = ECONOMY.wealthCorridor.working
+    const [mLo, mHi] = ECONOMY.wealthCorridor.middle
+    const step = (mLo + mHi) / 2 - (wLo + ECONOMY.wealthCorridor.working[1]) / 2
+    expect(share).toBeLessThan(step)
     for (const background of BACKGROUNDS) {
       const base = STARTING_FUNDS_CENTS[background]
       for (const run of everyRun(background)) {
         const funds = prologueFundsCents(background, spentCents(run))
         expect(funds, background).toBeGreaterThan(0)
-        expect(funds, background).toBeGreaterThanOrEqual(Math.round(base * 0.6))
-        expect(funds, background).toBeLessThanOrEqual(Math.round(base * 1.4))
+        expect(funds, background).toBeGreaterThanOrEqual(Math.round(base * (1 - share)))
+        expect(funds, background).toBeLessThanOrEqual(Math.round(base * (1 + share)))
       }
       expect(prologueFundsCents(background, ECONOMY.prologue.referenceSpendCents), background).toBe(base)
     }
+  })
+
+  it('⭐⭐ the swing NARROWED, and by how much is the measurement – the poorest arrival is not sad', () => {
+    // His words, 02.09: «По суммам минимальным как-то совсем грустно, особенно у рабочих и средних»,
+    // and the aim «прийти как можно ближе к нашему коридору изначальному, который поигран и померян».
+    // The shipped model divided the clamped spend by `startingFundsCents.middle`, which IS a share –
+    // 0.399 – nobody had written down. This asserts the direction, not the value.
+    const shipped = ECONOMY.prologue.spendSwingCents / STARTING_FUNDS_CENTS.middle
+    expect(ECONOMY.prologue.reserveSwingShare).toBeLessThan(shipped)
+    const poorest = Math.min(...everyRun('working').map((r) => prologueFundsCents('working', spentCents(r))))
+    const before = Math.round(STARTING_FUNDS_CENTS.working * (1 - shipped))
+    expect(poorest).toBeGreaterThan(before)
+    expect(poorest / STARTING_FUNDS_CENTS.working).toBeGreaterThanOrEqual(0.75)
   })
 
   it('⚠ the clamp is a guard against the wire, and a real run can never reach it', () => {

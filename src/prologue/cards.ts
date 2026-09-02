@@ -316,7 +316,7 @@ export const PROLOGUE_CARDS: readonly PrologueCard[] = [
         note: 'What you are already paying. She keeps the group and you keep your evenings.',
         costCents: 600_00,
         share: 0.6,
-        teaching: 0.35,
+        teaching: 0.3,
         focus: 'general',
       },
       {
@@ -324,8 +324,8 @@ export const PROLOGUE_CARDS: readonly PrologueCard[] = [
         label: 'The club across town',
         note: 'About three times the municipal court, every month, and the drive on top.',
         costCents: 1_800_00,
-        share: 0.85,
-        teaching: 0.8,
+        share: 0.95,
+        teaching: 0.95,
         focus: 'general',
       },
     ],
@@ -371,7 +371,7 @@ export const PROLOGUE_CARDS: readonly PrologueCard[] = [
         note: 'The same money as this year. She keeps her place in the queue.',
         costCents: 1_800_00,
         share: 0.6,
-        teaching: 0.45,
+        teaching: 0.25,
         focus: 'general',
       },
       {
@@ -419,7 +419,7 @@ export const PROLOGUE_CARDS: readonly PrologueCard[] = [
         // 1_950_00 - 1_800_00 = 150_00, and a month of the group is 1_800_00 / 12 = 150_00.
         note: 'An entry and a weekend – about a month of the group, once.',
         costCents: 1_950_00,
-        share: 0.75,
+        share: 0.8,
         // ⚠ THE SAME `teaching` AS NOT ENTERING, DELIBERATELY. Playing a tournament is not more
         // coaching, and if it read as more coaching the fork below would count one choice twice –
         // once as a tournament and once as a year of one-to-one. The three signals §2.5 names have
@@ -452,8 +452,8 @@ export const PROLOGUE_CARDS: readonly PrologueCard[] = [
         label: 'Ordinary school',
         note: 'No change to what you pay. Her afternoons stay hers.',
         costCents: 2_400_00,
-        share: 0.6,
-        teaching: 0.5,
+        share: 0.5,
+        teaching: 0.25,
         focus: 'general',
       },
       {
@@ -462,8 +462,8 @@ export const PROLOGUE_CARDS: readonly PrologueCard[] = [
         // 4_800_00 / 2_400_00 = 2.
         note: 'About twice the club, and it takes most of her week with it.',
         costCents: 4_800_00,
-        share: 0.95,
-        teaching: 0.85,
+        share: 1,
+        teaching: 1,
         focus: 'fitness',
       },
     ],
@@ -500,8 +500,8 @@ export const PROLOGUE_CARDS: readonly PrologueCard[] = [
         label: 'Let her stop for a season',
         note: 'A quarter of what this year was going to cost. She keeps her Thursdays.',
         costCents: 600_00,
-        share: 0.35,
-        teaching: 0.3,
+        share: 0.2,
+        teaching: 0.1,
         focus: 'general',
       },
       {
@@ -509,8 +509,8 @@ export const PROLOGUE_CARDS: readonly PrologueCard[] = [
         label: 'Ask her to finish the year',
         note: 'What you are paying now, for one more year of it.',
         costCents: 2_400_00,
-        share: 0.75,
-        teaching: 0.6,
+        share: 0.8,
+        teaching: 0.65,
         focus: 'general',
       },
     ],
@@ -579,7 +579,7 @@ export const TWELFTH_WANTS_MORE: PrologueCard = {
       note: 'About two and a half times what you pay now, for as long as it lasts.',
       costCents: 6_000_00,
       share: 1,
-      teaching: 0.95,
+      teaching: 1,
       focus: 'rally',
     },
   ],
