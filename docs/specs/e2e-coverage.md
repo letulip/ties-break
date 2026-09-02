@@ -31,14 +31,17 @@ component is [`docs/plans/e2e-fixtures.md`](../plans/e2e-fixtures.md); the worki
 
 The repository runs four vitest/Playwright projects. Mapped onto the standard levels:
 
-| project | ISTQB level | test environment | what it may assert | size |
-|---|---|---|---|---|
-| `unit` | **component testing** | node, no DOM | engine arithmetic, ledgers, migrations, invariants | 105 files |
-| `component` | **component integration testing** | happy-dom, real mount | a component plus its composables, rendered | 12 files |
-| `sim` | **system testing, non-functional** | node, Monte-Carlo | balance and long-run behaviour over seed populations | 9 files |
-| **`e2e`** | **system testing, functional, through the UI** | **real Chromium, real production build** | **the integration seams no lower level contains** | **12 spec files** |
+| project | ISTQB level | test environment | what it may assert |
+|---|---|---|---|
+| `unit` | **component testing** | node, no DOM | engine arithmetic, ledgers, migrations, invariants |
+| `component` | **component integration testing** | happy-dom, real mount | a component plus its composables, rendered |
+| `sim` | **system testing, non-functional** | node, Monte-Carlo | balance and long-run behaviour over seed populations |
+| **`e2e`** | **system testing, functional, through the UI** | **real Chromium, real production build** | **the integration seams no lower level contains** |
 
-Sizes are point-in-time; the shape is the part that matters.
+⚠ **The size column was here and has been removed (02.09).** It carried a point-in-time count per
+project, the table said so, and all four had rotted anyway – by a factor of eight on `component`.
+The shape is the part that matters and it is the part that is stable; every runner prints its own
+file and test totals, which is the only figure that cannot be wrong.
 
 ⚠ **`sim` is a test level boundary that is easy to misread.** It runs in node like `unit`, but it is
 not component testing: it exercises the whole assembled engine over hundreds of simulated careers and
@@ -182,6 +185,7 @@ produced a *defect list* instead of a workaround list.
 | spec | the journey, in one sentence | seam |
 |---|---|---|
 | `smoke.spec.ts` | the app boots, a new career starts, week 1 renders | 1 |
+| `prologue.spec.ts` | the childhood's nine cards run, the handover draws her, «go on» starts the career – and no tour follows it | 1, 5 |
 | `seeded-careers.spec.ts` | each of the six fixtures boots into the state its manifest describes | 1, 2 |
 | `week-advance.spec.ts` | a decision on the table stops the week; answering it starts it, and the answer comes back as news | 1 |
 | `week-advance.spec.ts` | a week that ends a season: the wrap-up card, then Home and the money screen move together | 1, 5 |
@@ -198,6 +202,8 @@ produced a *defect list* instead of a workaround list.
 | `save-file.spec.ts` | an untrusted file is refused at the door and the career on disk is untouched | 6 |
 | `onboarding-tour.spec.ts` | a new player is shown the interface tour, walks it, and dismisses it | 2, 5 |
 | `onboarding-tour.spec.ts` | it does not come back on the next boot – and an *unanswered* one still does | 2 |
+| `onboarding-tour.spec.ts` | changing tab ends the tour instead of describing a screen the player has left | 4, 5 |
+| `onboarding-tour.spec.ts` | ...and More still brings it back after the screen change took it away | 2, 5 |
 | `onboarding-tour.spec.ts` | More can ask for the tour again, and asking moves the player to Home | 2, 5 |
 | `responsive.spec.ts` | at 375 px nothing scrolls sideways and the season strip stays short | 4 |
 | `offline.spec.ts` | after one visit the app boots with the network cut | 3 |
@@ -379,8 +385,9 @@ current Playwright release.
 - no `data-testid` introduced;
 - any element a spec could not reach is filed as a defect, not worked around.
 
-**The suite is deliberately NOT part of `npm run check`.** The pre-push gate is already about four
-minutes; this is a browser suite and belongs in its own parallel CI job (`e2e-smoke`). That is a
+**The suite is deliberately NOT part of `npm run check`.** The pre-push gate is already about seven
+minutes (429 s, measured quiet 02.09 – it said "four" until then); this is a browser suite and
+belongs in its own parallel CI job (`e2e`). That is a
 test-execution-schedule decision and it is the reason the gate stays fast enough to be run.
 
 ## 10. Maintenance testing: the impact of a schema change (CTFL §2.3)
@@ -502,7 +509,13 @@ which is an argument for regenerating on every schema bump rather than migrating
 
 ## 13. Metrics (CTFL §5.3)
 
-| metric | value | was, 09.08 |
+⚠ **THIS TABLE IS A DATED READING, NOT A LIVE ONE, AND ITS TOP ROW IS ALREADY BEHIND.** It was
+measured on 10.08 and every column is a snapshot of that day – which is what a coverage report is
+for. It has not been re-measured since, and the suite has grown: `npx playwright test --list` prints
+the current test and file totals in a second, and it is the figure to quote. The row is left as
+written so the 09.08 → 10.08 comparison beside it still reads; **do not cite it as today.**
+
+| metric | value, 10.08 | was, 09.08 |
 |---|---|---|
 | test cases at this level | **25**, in **12** spec files | 18 in 9 |
 | execution time | **~19 s** local, parallel across 5 workers | ~17 s |

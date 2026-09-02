@@ -18,7 +18,8 @@ call sites that already exist.**
 
 | Ask about | Owner |
 | --- | --- |
-| The weekly lifecycle, `WorldState`, `createWorld`, `tickWeek`, `advanceWeeks`, `SAVE_SCHEMA_VERSION` | `engine/world.ts` itself – not yet extracted |
+| The persisted shape and its version – `WorldState`, `SAVE_SCHEMA_VERSION` | `engine/world/state.ts` |
+| The weekly lifecycle – `createWorld`, `tickWeek`, `advanceWeeks` | `engine/world.ts` itself – not yet extracted |
 | Age, the birthday week, every `age >= N` gate | `engine/world/age.ts` |
 | The birthday prompt, gift choice, gift history | `engine/world/birthday.ts` |
 | Rank, points, tier eligibility, the doors, play-down, outgrowing a rung | `engine/world/ladder.ts` |
@@ -55,12 +56,28 @@ wrong:
 
 ## Keeping it true
 
-The barrel's own import lines are the source of this table, and they are one command:
+⭐⭐ **PER-SYMBOL, ASK THE GENERATED MAP – IT IS THE ONE THAT IS CHECKED.**
+
+```bash
+node scripts/world-map.mjs <symbol>     # or read tools/generated/world-symbol-map.md
+```
+
+`npm run map:world:check` fails the gate when that file drifts from the tree, in `npm run check` and
+in CI. **This page is hand-written and nothing checks it**, which is not a theoretical weakness: the
+row above split on 02.09 because it had gone on naming the barrel as the owner of `WorldState` and
+`SAVE_SCHEMA_VERSION` for the nine days after commit `1e1f5fea` moved the declaration to
+`world/state.ts`, while the generated map named the new owner correctly the whole time. **When the
+two disagree, the generated map wins.**
+
+What this page is FOR, then, is the half a per-symbol lookup cannot give you: **an AREA, phrased the
+way a question arrives** – "the mandatory regime", "when school ends" – for a reader who does not yet
+know which symbol to ask about. Keep it coarse. A row that names individual symbols is a row that
+will rot, and the row above is the receipt.
+
+The barrel's own import lines are the coarse source of the table, and they are one command:
 
 ```bash
 grep -n "from './world/" src/engine/world.ts
 ```
 
-When the two disagree, **the barrel wins and this file is stale** – it is a router derived from the
-code, not a second source of truth. Re-derive it when a module is extracted or renamed; the split is
-still in progress.
+Re-derive it when a module is extracted or renamed; the split is still in progress.

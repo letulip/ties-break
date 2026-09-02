@@ -36,7 +36,7 @@ async function main(): Promise<void> {
   console.log(`...of which the kid is NOT a participant: ${notHers.length}`)
   if (notHers.length > 0) {
     for (const e of notHers.slice(0, 12)) {
-      console.log(`   w${e.week} id=${e.id} kind=${e.kind} a=${e.match!.aId} b=${e.match!.bId} winner=${e.match!.winnerId} :: ${e.text?.slice(0, 70)}`)
+      console.log(`   w${e.week} id=${e.id} type=${e.type} a=${e.match!.aId} b=${e.match!.bId} winner=${e.match!.winnerId} :: ${e.text?.slice(0, 70)}`)
     }
   }
   const friendlies = world.events.filter((e) => !!e.match && e.friendly).length
@@ -101,8 +101,10 @@ async function main(): Promise<void> {
 
   section('FEED: every NON-match row in 2045 (looking for a second anger surface)')
   const others = world.events.filter((e) => !e.match && seasonIndexOf(e.week) === target)
+  // ⚠ `WorldEvent`'s discriminant is `type`, never `kind`. Written as `e.kind` this histogram had
+  // exactly one bucket – `undefined` – for the whole of its life, because nothing typechecked it.
   const kinds = new Map<string, number>()
-  for (const e of others) kinds.set(e.kind, (kinds.get(e.kind) ?? 0) + 1)
+  for (const e of others) kinds.set(e.type, (kinds.get(e.type) ?? 0) + 1)
   console.log([...kinds.entries()].map(([k, n]) => `${k}:${n}`).join('  '))
 }
 

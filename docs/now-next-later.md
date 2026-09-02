@@ -14,7 +14,10 @@ last-reviewed: 2026-08-31
   [launch plan](plans/launch-plan-2026-08.md) are `superseded` and kept as history: they schedule
   save-schema work in the v35–v39 range, and `SAVE_SCHEMA_VERSION` – which DECLARES itself in
   `src/engine/world/state.ts` since the decomposition, re-exported through the `world` barrel – is
-  long past it (v61). Take neither ordering nor state from them.
+  long past it. Take neither ordering nor state from them. ⚠ The number itself is deliberately NOT
+  written here: this line carried a stale `(v61)` while the code ran to v69, and it is the second
+  bullet below that says why – the constant is the state, and the one place that quotes it
+  ([saves and worker](context/saves-and-worker.md)) is machine-checked by `scripts/doc-facts.mjs`.
 - **Nothing on this page is a new priority.** Every line is transcribed from [the owner's dated
   log](decisions.md) or from a [round ledger](rounds/README.md) and names its source. A line with no
   source does not belong here.
@@ -87,8 +90,10 @@ Four rounds have merged since, and the correction is the point: **naming a sourc
 Each of these is already diagnosed in writing and none is waiting on a ruling.
 
 - ⭐⭐ **Grow the e2e suite, and keep growing it** – the backlog's only `Now` row and his own call of
-  29.08. The whole suite is **30 tests in 22 seconds**, cheaper than one unit shard, and it now runs
-  locally as a condition of pushing. It is HEALTHY and under-covered: `coverage-map.spec.ts` checks
+  29.08. The whole suite is **cheaper than one unit shard** – tens of seconds against minutes – and
+  it now runs locally as a condition of pushing. ⚠ No test count here on purpose: the runner prints
+  its own total, and the two written down (30 here, 25 in `e2e/README.md`) had both rotted past it
+  by 02.09. It is HEALTHY and under-covered: `coverage-map.spec.ts` checks
   screens because they are a closed set, and §7 declares mechanics uncheckable for completeness –
   **which is exactly where all three of round 29's engine/UI parity defects lived.** Standing work:
   every wave that ships a mechanic owes a case. ([the-quality-rig.md](backlog/the-quality-rig.md) row 15.)

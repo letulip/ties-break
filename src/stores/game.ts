@@ -12,6 +12,7 @@ import {
   type KnockChoice,
   type OkReply,
   type PlayerProfile,
+  type PrologueHandover,
   type SavePeek,
   type ShootClashChoice,
   type Snapshot,
@@ -263,12 +264,16 @@ export const useGameStore = defineStore('game', {
       this.saveOp = this.error ? { op, status: 'error', message: this.error } : { op, status: 'ok' }
       return out
     },
-    async newCareer(seed: string, profile: PlayerProfile = DEFAULT_PROFILE) {
+    /** ⭐ `prologue` IS THE SECOND PATH AND IT IS OPTIONAL (build spec §6). The wizard calls this with
+     *  two arguments exactly as it always has; the nine cards call it with three. Everything the
+     *  prologue earned is applied engine-side by `createWorld` – this store does no arithmetic and
+     *  holds no prologue state. */
+    async newCareer(seed: string, profile: PlayerProfile = DEFAULT_PROFILE, prologue?: PrologueHandover) {
       // Empty seed -> generate a readable one store-side (UI randomness is fine outside the engine).
       const finalSeed =
         seed.trim() || `${profile.kidName.toLowerCase()}-${(Math.random().toString(36).slice(2) + '0000').slice(0, 4)}`
       await this.run(async () => {
-        const res = this.takeOk(await request({ type: 'new', seed: finalSeed, profile }))
+        const res = this.takeOk(await request({ type: 'new', seed: finalSeed, profile, prologue }))
         this.applySnapshot(res)
         this.recovered = false
         await this.refreshCareers()

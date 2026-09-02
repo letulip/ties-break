@@ -100,6 +100,76 @@ test.describe('the first-run tour of the interface', () => {
     ).toBeVisible()
   })
 
+  // ⭐⭐ THE 01.09 REPRODUCTION, IN THE BROWSER IT WAS MEASURED IN
+  // (docs/specs/childhood-prologue-build-2026-09.md §6, phase 5).
+  //
+  // `.coach-tour` is `pointer-events: none` so the page beneath can scroll, which means the tap on
+  // the bottom bar goes THROUGH the overlay and changes the screen under the marks. On `main` the
+  // tour did not notice: tapping Stats and pressing Next four times walked all four of "You are the
+  // parent", "Her page", "News and letters" and "The money is yours" while the player stood on
+  // Stats, with no highlight cut into the overlay at all - every anchor those four name lives on
+  // Home. The tour could never break VISIBLY; it just became untrue.
+  //
+  // ⚠ WHICH SEAM THIS OWNS, and it is why the claim is repeated here after
+  // tests/component/onboarding-tour.test.ts has already made it: REAL INPUT AT A REAL SIZE. The
+  // mounted test drives the `screen` prop, so the one thing it can never say is that a real tap on a
+  // real tab, through a real click-through overlay, reaches the shell and moves it. That is the
+  // whole mechanism of the defect.
+  //
+  // ⚠ AND THE FIX IS NOT A CLICK TRAP. The overlay is still click-through - Stats really does open
+  // below - because the version that swallows the tap is the overloaded tour the owner refused. A
+  // wrong tour becomes no tour, and the way back is the test below this one.
+  test('⭐⭐ changing tab ends it, instead of describing a screen the player has left', async ({ page, careerAt }) => {
+    await careerAt('fresh')
+    await expect(page.getByRole('button', { name: skipTour })).toBeVisible()
+    await expect(page.getByText('You do not play the matches')).toBeVisible()
+
+    // THE TAP THE REPORT MADE. Not the tour's own control - a tab, underneath it.
+    await page.getByRole('button', { name: 'Stats', exact: true }).click()
+
+    // The marks are gone, and with them the only two controls they had: there is no Next to press
+    // four times. Asserted by the button rather than by the card so the failure names what a player
+    // would be looking at.
+    await expect(
+      page.getByRole('button', { name: skipTour }),
+      'the tour is still up over a screen it does not describe',
+    ).toBeHidden()
+    await expect(page.getByRole('button', { name: 'Next', exact: true })).toHaveCount(0)
+    for (const mark of ['You do not play the matches', 'The bell is the week just gone']) {
+      await expect(page.getByText(mark)).toHaveCount(0)
+    }
+
+    // AND STATS REALLY IS OPEN. The overlay never ate the tap and still does not - this is the half
+    // that says the repair is "the tour stops", not "the tour blocks the app".
+    await expect(page.getByRole('button', { name: 'Stats', exact: true })).toHaveAttribute('aria-current', 'page')
+
+    // It ended the way Skip ends it: the device is marked, so the marks do not come back by
+    // themselves on the next screen or the next boot. `tourWanted` is the gate; this is its input.
+    expect(await page.evaluate((k) => localStorage.getItem(k), TOUR_SEEN_KEY)).toBe('1')
+    await page.getByRole('button', { name: 'Home', exact: true }).click()
+    await expect(page.getByRole('button', { name: skipTour })).toBeHidden()
+  })
+
+  // ⭐ THE OTHER HALF OF THE SAME RULING: ending the tour early is only acceptable because the
+  // player can ask for it back. Same control as the test below, but reached from the NEW exit - a
+  // re-arm that worked after Skip and not after this one would leave the phase-5 player stranded.
+  test('...and More can still bring it back after the screen change took it away', async ({ page, careerAt }) => {
+    await careerAt('fresh')
+    await expect(page.getByRole('button', { name: skipTour })).toBeVisible()
+    await page.getByRole('button', { name: 'Stats', exact: true }).click()
+    await expect(page.getByRole('button', { name: skipTour })).toBeHidden()
+
+    await page.getByRole('button', { name: 'Home', exact: true }).click()
+    await page.getByRole('button', { name: 'Settings', exact: true }).click()
+    await expect(page.getByRole('group', { name: 'Which settings' })).toBeVisible()
+    await page.getByRole('button', { name: 'Show the tour' }).click()
+
+    // Back from the first mark, on Home, where the marks have something to point at.
+    await expect(page.getByRole('button', { name: skipTour })).toBeVisible()
+    await expect(page.getByText('You do not play the matches')).toBeVisible()
+    await expect(page.getByRole('heading', { name: /^W1 \d{4} · /, level: 1 })).toBeVisible()
+  })
+
   // The way back, for the player who skipped it by accident or came back a month later. It is a
   // navigation claim as much as a visibility one: the marks point at Home's furniture and at the
   // bottom bar, so asking for them from More has to move the player to Home.

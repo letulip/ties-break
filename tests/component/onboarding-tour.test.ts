@@ -118,10 +118,14 @@ afterEach(() => {
   wrapper = null
 })
 
+/** ⚠ `screen` IS THE SHELL'S `tab`, AND 'home' IS WHERE THE TOUR REALLY OPENS. App.vue moves the
+ *  player to Home before the marks are shown (`reopenTour`) and the automatic offer only fires on a
+ *  week-0 career, which lands on Home too - so every mount below starts on the screen the marks
+ *  describe, exactly as the app does. */
 async function openTour(vp = PHONE): Promise<VueWrapper> {
   setViewport(vp)
   plantAnchors(ANCHORS)
-  const w = mount(OnboardingTour, { attachTo: document.body })
+  const w = mount(OnboardingTour, { attachTo: document.body, props: { screen: 'home' } })
   await w.vm.$nextTick()
   wrapper = w
   return w
@@ -199,6 +203,93 @@ describe('a player can always get out of it', () => {
       w.unmount()
     }
     wrapper = null
+  })
+})
+
+// =================================================================================================
+// ⭐⭐ §6 – THE TOUR ENDS WHEN THE PLAYER LEAVES THE SCREEN IT DESCRIBES
+// =================================================================================================
+//
+// THE DEFECT, as it was measured on `main` on 01.09 and written into
+// docs/specs/childhood-prologue-build-2026-09.md §6: `.coach-tour` is `pointer-events: none` so the
+// page beneath can scroll, which means a tap on the bottom bar passes THROUGH the overlay and
+// changes the screen underneath the marks. With the tour up, tapping **Stats** and pressing Next
+// four times walked all four of "You are the parent", "Her page", "News and letters" and "The money
+// is yours" - while the player stood on Stats the whole time, with no highlight cut into the overlay
+// at all, because every anchor those four name lives on Home.
+//
+// ⚠ THE FIX IS NOT A CLICK TRAP AND THIS FILE MUST NOT DRIFT INTO ASSERTING ONE. The overlay stays
+// click-through; what changed is that the tour STOPS when the screen moves. A wrong tour becomes no
+// tour, and More's "Show the tour" is the way back (e2e/onboarding-tour.spec.ts owns that half,
+// because it is a claim about the shell's navigation).
+//
+// ⚠ MUTATION-VERIFIED, each watched failing before it was believed:
+//   * the `watch` on `props.screen` deleted outright -> both reproduction tests go red, and the
+//     first one names how many marks it walked on a screen the player had left. This is the one the
+//     task asks for: delete the screen-change exit and the 01.09 report comes back.
+//   * `over` left unset (the tour tells the shell it is done but keeps drawing) -> the same two go
+//     red, on the card that is still on screen rather than on the missing `done`.
+//   * the `now === openedOn` guard dropped and the watcher made `immediate` -> ten of the twelve
+//     tests in this file go red, the third one below included: a tour that ends on a WRITE to `tab`
+//     rather than on a MOVE can never be opened from More, because `reopenTour` writes it.
+describe('⭐⭐ the 01.09 reproduction, walked step for step', () => {
+  it('tapping Stats ends it - the four marks cannot be walked from another screen', async () => {
+    const w = await openTour()
+
+    // 1. The tour is up, on Home, on the first mark. This is the state the report starts in.
+    expect(w.find('.coach-tooltip-title').text()).toBe('You are the parent')
+
+    // 2. The player taps Stats. The overlay does not eat the tap - it never did and still does not -
+    //    so the shell swaps the screen underneath the marks. `screen` is App.vue's `tab`.
+    await w.setProps({ screen: 'stats' })
+
+    // 3. THE TOUR IS OVER. Not "was told to close" - there is nothing left on the screen to press,
+    //    which is what makes the four presses below impossible rather than merely wrong.
+    expect(w.emitted('done'), 'the tour did not tell the shell it was finished').toHaveLength(1)
+    expect(w.find('.coach-tour').exists(), 'the marks are still drawn over the new screen').toBe(false)
+
+    // 4. THE EXACT PATH FROM THE REPORT: four presses of Next. There is no Next.
+    const walked: string[] = []
+    for (let press = 0; press < 4; press++) {
+      const btn = w.findAll('.coach-tooltip-actions button').at(1)
+      if (!btn) break
+      await btn.trigger('click')
+      walked.push(w.find('.coach-tooltip-title').text())
+    }
+    expect(walked, `the tour walked ${walked.length} marks on a screen the player had left`).toEqual([])
+
+    // And none of the four sentences the report names is anywhere on screen.
+    for (const mark of ['You are the parent', 'Her page', 'News and letters', 'The money is yours']) {
+      expect(w.text(), `"${mark}" is still being told to a player who is on Stats`).not.toContain(mark)
+    }
+  })
+
+  it('it ends from any step, and on any screen the shell can move to', async () => {
+    // Every id in App.vue's `TabId` except the one the tour opens on. The claim is about LEAVING,
+    // not about which tab was tapped - the week screen after an advance and the Kid page behind the
+    // avatar take the marks away exactly as Stats does.
+    for (const [stepsIn, screen] of [[0, 'play'], [3, 'kid'], [7, 'week'], [9, 'more']] as const) {
+      document.body.innerHTML = ''
+      const w = await openTour()
+      for (let i = 0; i < stepsIn; i++) await nextButton(w).trigger('click')
+      await w.setProps({ screen })
+      expect(w.emitted('done'), `leaving for ${screen} at step ${stepsIn} did not end it`).toHaveLength(1)
+      expect(w.find('.coach-tooltip').exists()).toBe(false)
+      w.unmount()
+    }
+    wrapper = null
+  })
+
+  it('⚠ and it does NOT end on a re-render that leaves the player where they were', async () => {
+    // The other half, and the one that makes this a rule rather than a tripwire: the shell writes
+    // `tab` on paths that do not move the player (the snapshot watcher sets 'home' on a career
+    // arriving, and `reopenTour` sets it again on its way in). A tour that closed itself on any
+    // write would be unopenable from More.
+    const w = await openTour()
+    await w.setProps({ screen: 'home' })
+    await nextButton(w).trigger('click')
+    expect(w.emitted('done'), 'the tour closed itself without the player going anywhere').toBeUndefined()
+    expect(w.find('.coach-tooltip-title').text()).toBe('Her page')
   })
 })
 

@@ -100,7 +100,7 @@ const netMagnitude = computed(() => Math.abs(netCents.value))
       }}
     </p>
     <p v-if="upkeepCents > 0" class="hint budget-upkeep">
-      {{ `Keeping what they own is ${formatCents(upkeepCents)} a week of that, and it is real money.` }}
+      {{ `Keeping what you own is ${formatCents(upkeepCents)} a week of that, and it is real money.` }}
     </p>
     <p v-if="businessCents > 0" class="hint budget-business">
       {{ businessLine }}

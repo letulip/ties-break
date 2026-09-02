@@ -57,6 +57,7 @@ import { blockingOverlay, popupMayShow, visibleOverlay } from './composables/blo
 import { playSfx, primeSfx } from './audio/sfx'
 import SplashScreen from './components/SplashScreen.vue'
 import OnboardingWizard from './components/OnboardingWizard.vue'
+import ChildhoodPrologue from './components/ChildhoodPrologue.vue'
 import OnboardingTour from './components/OnboardingTour.vue'
 import TournamentFlow from './components/TournamentFlow.vue'
 import PracticeFlow from './components/PracticeFlow.vue'
@@ -288,6 +289,49 @@ function iconUrl(icon: string): string {
 // No active snapshot once init() has settled means: no auto-loaded slot and no
 // in-progress career (fresh install, or a client-side reset from More).
 const showOnboarding = computed(() => game.ready && !game.snapshot)
+
+// =================================================================================================
+// ⭐⭐ THE TWO PATHS INTO A CAREER (docs/specs/childhood-prologue-build-2026-09.md §6)
+// =================================================================================================
+//
+//     new game -+- the prologue (default) -- 9 cards -- the handover -- the game
+//               +- skip ------------------- the existing wizard
+//
+// His ruling (§2.6): «это создание персонажа будет как альтернативная ветка у нас при скипе
+// пролога» - the wizard is not replaced, it becomes the skip branch, and NOT ONE LINE OF ITS COPY
+// MOVES HERE (a separate branch owns that rewording; CLAUDE.md invariant 4).
+//
+// ⚠ THE ROUTE OUTLIVES `showOnboarding`, AND THAT IS THE WHOLE REASON IT IS A REF. The career is
+// created BEFORE the handover is drawn - the rose and the coach's read are read off the snapshot -
+// so `game.snapshot` is set while the most important screen in the game is still unanswered. A gate
+// written as `!game.snapshot` would flash the app shell up behind it at the exact moment the player
+// is deciding whether to keep her.
+//
+// ⚠ IT OPENS ON `in-game` AND THE WATCHER IS WHAT SETS IT. Defaulting to `prologue` would draw the
+// nine cards over a career auto-loaded at startup, because the route is read before init settles.
+const newGameRoute = ref<'prologue' | 'wizard' | 'in-game'>('in-game')
+watch(showOnboarding, (on) => { if (on) newGameRoute.value = 'prologue' }, { immediate: true })
+const showPrologue = computed(() => game.ready && newGameRoute.value === 'prologue')
+
+// ⭐⭐ §6 C – A PLAYER WHO WALKED THE CHILDHOOD NEVER MEETS THE TOUR, and this one line is the whole
+// of it. His ruling: «про тур нам нужен В и С вместе, В будет когда пролог скипают, а С будет в
+// прологе … после него В уже не будет.» C is not a feature to be built beside the tour, it is
+// phases 2-4 doing their job – the nine cards teach the interface AS THEY GO, so a tour after them
+// is a second explanation of a screen the player has already been walked through.
+//
+// ⚠ IT MARKS THE SAME DEVICE FLAG THE DISMISS DOES, and that is deliberate rather than a shortcut.
+// "Has this device been onboarded" is one durable fact – see `tourWanted` further down for why it
+// is durable STATE and not an event – and finishing the prologue is one of the ways of acquiring it.
+// Anything career-scoped would contradict the owner's «once, ever, per device» ruling and would
+// re-offer the tour on this player's second career.
+//
+// ⚠ AND ONLY ON `done`. Taking the way out on the first card emits `skip`, which routes to the
+// wizard and leaves the flag alone – that player gets the tour, which is exactly B. «Raise another
+// child» on the handover emits neither, so a childhood that is started over is not an onboarding.
+function finishPrologue(): void {
+  markTourSeen()
+  newGameRoute.value = 'in-game'
+}
 
 // A career appearing after onboarding must land on Home, not whatever tab was
 // active before the reset (e.g. More, where "New career" lives).
@@ -1470,6 +1514,16 @@ function reopenTour(): void {
 
   <SplashScreen v-else-if="!splashDone" @done="splashDone = true" />
 
+  <!-- §6: THE PROLOGUE IS THE DEFAULT, and it is branched HERE - beside the wizard and above it -
+       because it is the same kind of thing: a full-screen takeover that replaces the shell until a
+       career exists and has been accepted. It stays up across the moment the career is created; see
+       `newGameRoute`. -->
+  <ChildhoodPrologue
+    v-else-if="showPrologue"
+    @skip="newGameRoute = 'wizard'"
+    @done="finishPrologue"
+  />
+
   <OnboardingWizard v-else-if="showOnboarding" />
 
   <!-- W2-ENDINGS: THE EPILOGUE REPLACES THE APP SHELL. Branched here, beside the wizard, and not laid
@@ -1789,7 +1843,13 @@ function reopenTour(): void {
 
     <!-- Round 5 item 10, re-gated 16.08: the coach-mark tour of the interface. Shown to any player
          on a device that has never ANSWERED it (Skip or Got it), and re-openable from More – see
-         `tourWanted` in the script for why the old one-shot signal lost it for whole players. -->
-    <OnboardingTour v-if="showTour" @done="dismissTour" />
+         `tourWanted` in the script for why the old one-shot signal lost it for whole players.
+
+         ⭐⭐ §6 B: `:screen` IS THE REPAIR. The marks point at Home's furniture and at the bottom
+         bar, and the overlay is click-through by design – so a tap on Stats used to change the
+         screen underneath them and leave the tour describing a page the player had left. It ends
+         instead, on `tab` moving, and `dismissTour` is the same exit Skip takes: the mark is
+         written and More's «Show the tour» is the way back in. -->
+    <OnboardingTour v-if="showTour" :screen="tab" @done="dismissTour" />
   </template>
 </template>

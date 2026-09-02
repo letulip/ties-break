@@ -25,7 +25,8 @@
 //     npm run test:e2e -- -g "week 1"       one spec by name
 //     npm run test:e2e:ui                   the time-travel UI (this script, with --ui)
 //
-// ⚠ NOT PART OF `npm run check`, ON PURPOSE. The pre-push gate is already ~4 minutes and this is a
+// ⚠ NOT PART OF `npm run check`, ON PURPOSE. The pre-push gate is already ~7 minutes (429 s,
+// measured on a quiet machine 02.09; this line said ~4 until then) and this is a
 // browser suite; the PR gate calls it as its own job (.github/workflows/ci.yml). See e2e/README.md.
 
 import { spawnSync } from 'node:child_process'

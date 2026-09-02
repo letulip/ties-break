@@ -88,7 +88,7 @@ import { formatCents, entryFeeLabel } from '../../shared/money'
 import type { MatchOptions, MatchPlayer, Surface } from '../../engine/match/types'
 import type { TierId } from '../../engine/season/types'
 import type { AnnotatedMatch } from '../../viz/types'
-import { activeLadderOfSnapshot } from '../../shared/protocol'
+import { activeLadderOfSnapshot, DEFAULT_PROFILE } from '../../shared/protocol'
 import type { PracticeBooking, UpcomingEvent, VacationBooking, WorldEvent, WorldMatch } from '../../shared/protocol'
 
 const game = useGameStore()
@@ -1263,7 +1263,10 @@ async function playPracticeWeek(): Promise<void> {
 // exported from engine/world.ts); the opponent stays the fixed "Top seed" block.
 // This is the sandbox hit-out; a BOOKED practice match (above) is the real, costed one. --
 const exhibitionSurface: Surface = 'clay'
-const kidName = computed(() => game.snapshot?.profile.kidName ?? 'Vera')
+// ⚠ THE FALLBACK IS `DEFAULT_PROFILE`'s OWN NAME and is read from it rather than written out again –
+// it was a second copy of the literal 'Vera' and went stale the moment the owner moved the default
+// to Alice (02.09.2026). There is no snapshot-less path to this screen; the `??` is a type guard.
+const kidName = computed(() => game.snapshot?.profile.kidName ?? DEFAULT_PROFILE.kidName)
 // Her CURRENT build as this clay court lets her play it (surface-style). Condition is deliberately
 // NOT applied here – the sandbox hit-out has always shown her raw build, unlike a real match week.
 const exhibitionPlayerA = computed<MatchPlayer>(() =>

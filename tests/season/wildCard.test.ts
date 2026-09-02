@@ -25,6 +25,7 @@
 // the tests each one reddened are listed in docs/specs/the-wild-cards-2026-08.md §5.
 
 import { describe, it, expect } from 'vitest'
+import { COUNTRIES, POPULAR_COUNTRIES } from '../../src/composables/countries'
 import {
   WILD_CARD,
   HOST_NATIONS,
@@ -56,8 +57,6 @@ import {
 } from '../../src/engine/world'
 import type { WorldState } from '../../src/engine/world'
 import type { RankingRow, SeasonEvent } from '../../src/engine/season/types'
-import { componentFile } from '../worldSource'
-import { region } from '../helpers/source'
 
 function ticked(seed: string, weeks: number): WorldState {
   const world = createWorld(seed)
@@ -137,19 +136,24 @@ describe('the host nation is derived, not stored', () => {
 // =================================================================================================
 
 describe('the host pool covers every country the player may pick', () => {
-  // ⚠ A SOURCE PIN, AND IT HAS TO BE ONE. The engine may never import a component (invariant 1), and
-  // the onboarding wizard's twenty-four countries are declared inside its `<script setup>` where no
-  // runtime import can reach them. This is `componentFile` used for exactly what CLAUDE.md says it
-  // is for – a claim about a FILE – and the claim is a cross-boundary equality that would otherwise
-  // be checkable only by a person remembering to check it.
-  it('contains every code in OnboardingWizard COUNTRIES', () => {
-    const src = componentFile('components/OnboardingWizard.vue')
-    // ⚠ if this throws, the COUNTRIES array moved – re-aim this pin, do not delete it.
-    const body = region(src, 'const COUNTRIES = [', ']')
-    const codes = [...body.matchAll(/'([A-Z]{2})'/g)].map((m) => m[1])
+  // ⚠⚠ RE-AIMED 02.09, AND IT STOPPED BEING A SOURCE PIN – which is the pin getting STRONGER, not
+  // looser. It used to read `const COUNTRIES = [` out of `OnboardingWizard.vue` and said so in its
+  // own words: «if this throws, the COUNTRIES array moved – re-aim this pin, do not delete it». It
+  // moved, to `composables/countries.ts`, because the prologue's age-5 card now asks for her country
+  // too and a second copy inside a second `<script setup>` is exactly what that module prevents.
+  // A pin read the SOURCE only because the array was locked inside a component where no runtime
+  // import could reach it; from a composable it can simply be imported, so this now measures the
+  // real value rather than the text that declares it. Invariant 1 is untouched: the TEST imports the
+  // view helper, the engine never does.
+  it('contains every code onboarding offers', () => {
+    const codes = COUNTRIES
     expect(codes.length).toBeGreaterThan(20)
     for (const code of codes) {
       expect(HOST_NATIONS, `${code} is playable but can never host – a mechanic that never fires`).toContain(code)
+    }
+    // ...and the nine POPULAR tiles are a shortcut into that same list, never a different one.
+    for (const code of POPULAR_COUNTRIES) {
+      expect(codes, `${code} is offered as a popular tile but is not a playable country`).toContain(code)
     }
   })
 

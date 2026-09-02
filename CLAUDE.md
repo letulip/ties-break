@@ -5,11 +5,12 @@ PWA tennis career sim where you play the **parent** raising a future star (WTA-f
 ## Commands
 
 ```bash
-npm run check      # vue-tsc -b --force + unit tests + build — the pre-push gate
+npm run check      # doc gates + registry + typecheck + check:tools + tests + build — the pre-push gate
+npm run check:tools # typechecks ALL of tools/, archival probes too – in `check` since 02.09
 npm run test:quiet # unit project, dot reporter — PREFER THIS: 5.6k chars of output vs 29k
-npm test           # unit project, full reporter – 148 files, ~4 min
-npm run test:sim   # sim project (~70s, serialised) — exits 0 on green since the P6 wave
-npm run test:component # mounted Vue components (~1s) — the only real UI regression gate
+npm test           # unit project, full reporter – ~6 min (372s quiet, 02.09)
+npm run test:sim   # sim project (~5 min, serialised) — exits 0 on green since the P6 wave
+npm run test:component # mounted Vue components (~45s) — the only real UI regression gate
 npm run build      # vue-tsc -b && vite build
 ```
 
@@ -117,10 +118,10 @@ docs/review/     2026-08 full review + P1–P9 proposals
 
 `world.ts` is being decomposed into `src/engine/world/*.ts` (see `docs/review/proposals/P4-world-decomposition.md`). Rules for that work:
 - Extracted modules import `WorldState` as **`import type`** from `../world` — type-only, erased at compile time, so no runtime cycle.
-- `world.ts` imports the values back and **re-exports them under their historical names**: **280** files
-  import from `engine/world` (19.08) and that public API must not change. ⚠ Count it, do not quote it –
+- `world.ts` imports the values back and **re-exports them under their historical names**: **hundreds of
+  files** import from `engine/world` and that public API must not change. ⚠ Count it, do not quote it –
   three numbers for this were in circulation on one day (277 / 279 / 280) and all three were "essentially
-  right" under different scopes, which is how a stale number survives:
+  right" under different scopes, which is how a stale number survives, as **280 (19.08)** did here:
   ```bash
   git grep -lE "from '[^']*/world'" -- src tests tools scripts e2e | wc -l
   ```

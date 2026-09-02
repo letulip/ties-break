@@ -50,7 +50,10 @@ async function main(): Promise<void> {
   const target = wantSeason ?? seasonNow - 1
 
   section(`SAVE: week ${world.week} · season index ${seasonNow} (${seasonYear(seasonNow)}) · schema v${world.schemaVersion}`)
-  console.log(`kid: ${world.profile.kidName} ${world.profile.kidLastName}, age ${kidAgeExact(world).toFixed(2)}`)
+  // ⚠ `kidAgeExact` takes (week, birthMonth, birthDay) – handed the whole world it returned NaN, and
+  // nothing typechecked this file, so the header printed "age NaN" for the life of the tool.
+  const kidAge = kidAgeExact(world.week, world.profile.birthMonth, world.profile.birthDay)
+  console.log(`kid: ${world.profile.kidName} ${world.profile.kidLastName}, age ${kidAge.toFixed(2)}`)
   console.log(`rank ITF ${world.kidRank} · WTA ${world.kidRankWta ?? '-'} · domestic ${world.kidRankDomestic ?? '-'}`)
   console.log(`events in save: ${world.events.length} · results rows: ${world.results.length}`)
   console.log(`TARGET SEASON: index ${target} = year ${seasonYear(target)}, weeks ${target * 52}..${target * 52 + 51}`)

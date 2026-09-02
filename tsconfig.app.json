@@ -17,7 +17,7 @@
   },
   // ⚠ `tools/` IS LISTED FILE BY FILE, NOT GLOBBED – R2-12 / TOK-09. The glob pulled all 138
   // TypeScript files in `tools/` into every build, 114 of which are one-shot archival probes.
-  // These 24 are the live instruments (a package command, an import from the test suite, or a
+  // These 30 are the live instruments (a package command, an import from the test suite, or a
   // named entry in `scripts/tools-registry.mjs`); the rest are swept on demand by
   // `npm run check:tools` (tsconfig.tools.json) and are still in git, unchanged.
   //
@@ -28,6 +28,7 @@
     "src/**/*.vue",
     "tests/**/*.ts",
     "tools/ad-shoot-bench.ts",
+    "tools/childhood-bench.ts",
     "tools/dead-week-probe.ts",
     "tools/demo-save.ts",
     "tools/dual-universe-bench.ts",
@@ -44,6 +45,9 @@
     "tools/money-decomposition.ts",
     "tools/outgrown-entry-probe.ts",
     "tools/points-economy.ts",
+    "tools/prologue-balance-bench.ts",
+    "tools/prologue-court-bench.ts",
+    "tools/prologue-handover-bench.ts",
     "tools/r31-age-curve.ts",
     "tools/radar-bench.ts",
     "tools/retired-college-rule.ts",

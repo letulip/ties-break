@@ -362,17 +362,27 @@ function zeroCats(): Record<WorldEventCategory, number> {
 
 /** Open a fresh, deterministic career for a preset+index: createWorld + rngFromSeed(world.seed) are
  *  the ONLY entropy sources, so the same (preset, index) reproduces exactly. Exported so tests can
- *  replay a career week by week without duplicating the engine wiring. */
+ *  replay a career week by week without duplicating the engine wiring.
+ *
+ *  ⚠ `profileOverride` IS APPLIED BEFORE `createWorld`, WHICH IS THE WHOLE POINT OF IT and not a
+ *  convenience. `createWorld` writes the career's opening events, and those events PRINT her name –
+ *  so a field patched onto `world.profile` afterwards leaves the birth week still speaking about
+ *  somebody else, and the world it produces is a shape no run ever wrote. Measured on 02.09 while
+ *  re-freezing for the `Vera -> Alice` default: patching after `openCareer` reproduced everything
+ *  except `events`, and `events` alone. See `careerHashUnderTheOldName` in
+ *  tests/coachTravelEdgeFixtures.ts, which is the only caller. */
 export function openCareer(
   preset: Preset,
   index: number,
   policy: Policy = POLICIES[0],
+  profileOverride?: Partial<PlayerProfile>,
 ): { world: WorldState; rng: Rng; seed: string } {
   const seed = `bench-${preset.background}-${index}`
   const profile: PlayerProfile = {
     ...DEFAULT_PROFILE,
     background: preset.background,
     coachTier: preset.coachTier,
+    ...profileOverride,
   }
   const world = createWorld(seed, profile)
   // R4: the tournament-week toggle is a career-long stance, so it is set at birth rather than

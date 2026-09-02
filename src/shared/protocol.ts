@@ -46,6 +46,8 @@ export type {
   PlayStyle,
   PlayerProfile,
   SessionKind,
+  PrologueYear,
+  PrologueHandover,
   WeekPlan,
   VacationBooking,
   PracticeBooking,
@@ -214,6 +216,7 @@ export type {
 
 // --- snapshot ------------------------------------------------------------------------------------
 export type {
+  HandoverBaseBand,
   HouseholdWeekly,
   Snapshot,
 } from './protocol/snapshot'
