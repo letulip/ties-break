@@ -11,7 +11,7 @@ last-reviewed: 2026-08-24
 when this page and the repository disagree, and it also asserts that `tsconfig.app.json` lists
 exactly the live set.
 
-177 TypeScript files: **30 live**, **147 archival**.
+176 TypeScript files: **30 live**, **146 archival**.
 
 ## Why the split exists
 
@@ -67,40 +67,40 @@ question comes back to one, run it, and if it answers again, give it a line in `
 One-shot probes and reproductions. Kept as evidence; typechecked by `npm run check:tools`, which
 the gate now runs – so evidence that stops compiling reddens a pull request instead of rotting.
 
-- `_p12probe.ts` · `_seeds.ts` · `acceptance-cuts.ts` · `aer-cohort.ts`
-- `age-clock-cost.ts` · `age-composition.ts` · `age-gate-shift.ts` · `age-injury-fit.ts`
-- `band-probe.ts` · `band-vs-field.ts` · `best16-bench.ts` · `big-draw-cost.ts`
-- `big-rung-finishes.ts` · `big-rung-odds.ts` · `birthday-age-read.ts` · `birthday-pool.ts`
-- `boredom-guard.ts` · `brand-dynamics.ts` · `brand-gate-bench.ts` · `calendar-shape.ts`
-- `career-vs-bench.ts` · `ceiling-walk.ts` · `clone-bench.ts` · `coach-court-price.ts`
-- `coach-eye-bench.ts` · `coach-ladder-claim-probe.ts` · `coach-line-drift.ts` · `coach-travel-bench.ts`
-- `college-choice-probe.ts` · `college-fork.ts` · `college-freeze-probe.ts` · `college-home-place.ts`
-- `college-news-probe.ts` · `college-price-probe.ts` · `college-return-probe.ts` · `college-talent-bands.ts`
-- `college-year-content.ts` · `commentary-register-probe.ts` · `commentary-rung-probe.ts` · `compound-cost.ts`
-- `counting-window.ts` · `deep-run-cost.ts` · `domestic-ladder-probe.ts` · `domestic-season-to-date.ts`
-- `double-booked.ts` · `draw-vs-band.ts` · `drought-probe.ts` · `empty-week-census.ts`
-- `failure-modes.ts` · `fatigue-ledger-diag.ts` · `feed-audit.ts` · `field-quality.ts`
-- `fifth-skill-probe.ts` · `first-pair-replay.ts` · `first-ranking-probe.ts` · `fork-birthday-probe.ts`
-- `grid-visibility.ts` · `growth-age-sweep.ts` · `growth-pace-probe.ts` · `head-ladder-sweep.ts`
-- `his-cadence-probe.ts` · `his-cadence-read.ts` · `his-careers-brackets.ts` · `his-careers-dose.ts`
-- `injury-audit.ts` · `injury-cause-probe.ts` · `injury-ratio-probe.ts` · `injury-saves-read.ts`
-- `j30-onramp-lock.ts` · `junior-access.ts` · `junior-door-calibration.ts` · `kid-share-audit.ts`
-- `kit-bench.ts` · `ladder-baseline.ts` · `ladder-vs-targets.ts` · `ladder-walk.ts`
-- `live-table-inflation.ts` · `load-and-injury.ts` · `market-probe.ts` · `masseur-bench.ts`
-- `match-clock-probe.ts` · `merch-fame-vs-rank.ts` · `mirror-probe.ts` · `mixed-ladder-impact.ts`
-- `nation-depth.ts` · `next-goal-bench.ts` · `odds-calibration.ts` · `one-clock.ts`
-- `opener-price-bench.ts` · `outcome-odds.ts` · `plateau-probe.ts` · `play-down-probe.ts`
-- `points-audit.ts` · `points-curve.ts` · `policy-vs-owner.ts` · `population-depth.ts`
-- `potential-band-sweep.ts` · `preview-drift.ts` · `pro-season-probe.ts` · `r29-item14-anger.ts`
-- `r29-item14-read.ts` · `r29p2-savings-sweep.ts` · `r31-draw-promise.ts` · `r31-draw-stability.ts`
-- `r31-elite-tenure.ts` · `r31-exit-where.ts` · `r31-her-arc.ts` · `r31-peak-share.ts`
-- `r31-surface-kings.ts` · `r31-tier-ladder.ts` · `r31-top100-age.ts` · `r31-winrate-trend.ts`
-- `r32-brand-inertia.ts` · `reach-sweep.ts` · `real-vs-bench.ts` · `rehab-lever.ts`
-- `restore-bench.ts` · `retirement-shape-probe.ts` · `rival-fatigue-audit.ts` · `round15-read.ts`
-- `round16-read.ts` · `round17-read.ts` · `round18-read.ts` · `round23-read.ts`
-- `round26-probe.ts` · `runway-probe.ts` · `school-bench.ts` · `season-anchor-read.ts`
-- `skill-gap-odds.ts` · `slam-difficulty.ts` · `slam-door-cost.ts` · `sponsor-ladder-reach.ts`
-- `summer-bench.ts` · `teen-at-the-top.ts` · `top50-season-probe.ts` · `two-cells.ts`
-- `two-seasons-read.ts` · `two-tour-overlap.ts` · `w-onramp-probe.ts` · `wall-freeze-probe.ts`
-- `wall-l1-bench.ts` · `wallet-audit.ts` · `week-story-trace.ts` · `what-drives-progress.ts`
-- `what-money-buys.ts` · `wild-card-reach.ts` · `winrate-read.ts`
+- `_seeds.ts` · `acceptance-cuts.ts` · `aer-cohort.ts` · `age-clock-cost.ts`
+- `age-composition.ts` · `age-gate-shift.ts` · `age-injury-fit.ts` · `band-probe.ts`
+- `band-vs-field.ts` · `best16-bench.ts` · `big-draw-cost.ts` · `big-rung-finishes.ts`
+- `big-rung-odds.ts` · `birthday-age-read.ts` · `birthday-pool.ts` · `boredom-guard.ts`
+- `brand-dynamics.ts` · `brand-gate-bench.ts` · `calendar-shape.ts` · `career-vs-bench.ts`
+- `ceiling-walk.ts` · `clone-bench.ts` · `coach-court-price.ts` · `coach-eye-bench.ts`
+- `coach-ladder-claim-probe.ts` · `coach-line-drift.ts` · `coach-travel-bench.ts` · `college-choice-probe.ts`
+- `college-fork.ts` · `college-freeze-probe.ts` · `college-home-place.ts` · `college-news-probe.ts`
+- `college-price-probe.ts` · `college-return-probe.ts` · `college-talent-bands.ts` · `college-year-content.ts`
+- `commentary-register-probe.ts` · `commentary-rung-probe.ts` · `compound-cost.ts` · `counting-window.ts`
+- `deep-run-cost.ts` · `domestic-ladder-probe.ts` · `domestic-season-to-date.ts` · `double-booked.ts`
+- `draw-vs-band.ts` · `drought-probe.ts` · `empty-week-census.ts` · `failure-modes.ts`
+- `fatigue-ledger-diag.ts` · `feed-audit.ts` · `field-quality.ts` · `fifth-skill-probe.ts`
+- `first-pair-replay.ts` · `first-ranking-probe.ts` · `fork-birthday-probe.ts` · `grid-visibility.ts`
+- `growth-age-sweep.ts` · `growth-pace-probe.ts` · `head-ladder-sweep.ts` · `his-cadence-probe.ts`
+- `his-cadence-read.ts` · `his-careers-brackets.ts` · `his-careers-dose.ts` · `injury-audit.ts`
+- `injury-cause-probe.ts` · `injury-ratio-probe.ts` · `injury-saves-read.ts` · `j30-onramp-lock.ts`
+- `junior-access.ts` · `junior-door-calibration.ts` · `kid-share-audit.ts` · `kit-bench.ts`
+- `ladder-baseline.ts` · `ladder-vs-targets.ts` · `ladder-walk.ts` · `live-table-inflation.ts`
+- `load-and-injury.ts` · `market-probe.ts` · `masseur-bench.ts` · `match-clock-probe.ts`
+- `merch-fame-vs-rank.ts` · `mirror-probe.ts` · `mixed-ladder-impact.ts` · `nation-depth.ts`
+- `next-goal-bench.ts` · `odds-calibration.ts` · `one-clock.ts` · `opener-price-bench.ts`
+- `outcome-odds.ts` · `plateau-probe.ts` · `play-down-probe.ts` · `points-audit.ts`
+- `points-curve.ts` · `policy-vs-owner.ts` · `population-depth.ts` · `potential-band-sweep.ts`
+- `preview-drift.ts` · `pro-season-probe.ts` · `r29-item14-anger.ts` · `r29-item14-read.ts`
+- `r29p2-savings-sweep.ts` · `r31-draw-promise.ts` · `r31-draw-stability.ts` · `r31-elite-tenure.ts`
+- `r31-exit-where.ts` · `r31-her-arc.ts` · `r31-peak-share.ts` · `r31-surface-kings.ts`
+- `r31-tier-ladder.ts` · `r31-top100-age.ts` · `r31-winrate-trend.ts` · `r32-brand-inertia.ts`
+- `reach-sweep.ts` · `real-vs-bench.ts` · `rehab-lever.ts` · `restore-bench.ts`
+- `retirement-shape-probe.ts` · `rival-fatigue-audit.ts` · `round15-read.ts` · `round16-read.ts`
+- `round17-read.ts` · `round18-read.ts` · `round23-read.ts` · `round26-probe.ts`
+- `runway-probe.ts` · `school-bench.ts` · `season-anchor-read.ts` · `skill-gap-odds.ts`
+- `slam-difficulty.ts` · `slam-door-cost.ts` · `sponsor-ladder-reach.ts` · `summer-bench.ts`
+- `teen-at-the-top.ts` · `top50-season-probe.ts` · `two-cells.ts` · `two-seasons-read.ts`
+- `two-tour-overlap.ts` · `w-onramp-probe.ts` · `wall-freeze-probe.ts` · `wall-l1-bench.ts`
+- `wallet-audit.ts` · `week-story-trace.ts` · `what-drives-progress.ts` · `what-money-buys.ts`
+- `wild-card-reach.ts` · `winrate-read.ts`
