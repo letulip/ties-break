@@ -208,6 +208,20 @@ export const HEAVY_UNIT_FILES = [
   // the next one crosses, measure in-pool with `TB_UNIT_SKIP_HEAVY=1 npx vitest run --project unit
   // --reporter=json` and move it here. If the serial tail ever costs more than the pool saves, the
   // honest next step is fewer workers per core, measured – not fewer tests.
+  'tests/prologue-handover.test.ts',
+  // ⚠⚠ 02.09: THE NEXT ONE CROSSED, exactly as the block above predicted it would («it will keep
+  // claiming files every round or two»). CI failed `units.mjs --only=bulk` on a single test –
+  // `prologue-handover > the same girl, raised two ways` – with `Test timed out in 20000ms`, on a
+  // run whose other 4,062 tests passed. Measured by this file's own prescribed method
+  // (`TB_UNIT_SKIP_HEAVY=1 npx vitest run --project unit --reporter=json`):
+  //
+  //     solo    15.1 s      in-pool  31.0 s      penalty x2.06 – and the SLOWEST file in the pool
+  //
+  // ⭐ THE TEST IS NOT THE PROBLEM AND IS NOT TRIMMED. It builds 300 real worlds because its claim is
+  // about what a childhood does to `createWorld`, and its own header says the cheap substitution is
+  // not available to it. Solo on CI it is ~28 s of the 60 s window, comparable to `endings-bench`'s
+  // ~23 s two entries up, so it clears both halves of the bar: a regression test by its own header,
+  // and real headroom under birpc's wall.
   'tests/college-birthday.test.ts',
   // ⚠⚠ 31.08: `coach-travel-edge` HAD TO BE CUT, AND THE HONEST SEAM WAS NOT THE ONE THAT MOVED THE
   // NUMBER. A process of its own stopped being enough on CI – `43 passed (43)`,
