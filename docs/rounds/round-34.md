@@ -331,6 +331,62 @@ for and would otherwise have no line.
   сет показывали, что игроку на 240 месте в мире предлагают контракты за 5к за каждый сыгранный матч
   с нашивкой спонсора. У нас сейчас 5000-12000 в год да ещё и на расцвет карьеры. Давай
   пересмотрим»** — **measure, then balance**. With **11**, **12** and **13** this is one subject.
+  — `[x]` **SHIPPED – A FIFTH BAND AT ≤400, AND THE ≤200 ROW LIFTED TENFOLD.** His approved table,
+  built cell by cell and generated back out of `ECONOMY` by a test so a later edit cannot move it
+  quietly (`tests/round29p2-ladder-monotone.test.ts`, «ROUND 34 – THE BAND TOTALS ARE THE OWNER'S OWN
+  TABLE»):
+
+  | band | per deal-year, all categories | what changed |
+  | --- | --- | --- |
+  | 201–400 | **$200,000** | new: clothing $120,000 + drinks $80,000, everything else shut |
+  | 101–200 | **$450,000** | the four open cells x10, their shape preserved to the cent |
+  | 51–100 | $1,100,000 | untouched |
+  | 11–50 | $2,600,000 | untouched |
+  | top 10 | $9,200,000 | untouched |
+
+  ⭐ The two cliffs are gone and both are asserted: there is a shelf below #200 at all, and the step
+  from #101 to #100 fell from **24x to 2.4x**. A rank-300 career now receives a drinks letter at the
+  ≤400 cell and a rank-401 receives nothing (`tests/ad-offer.test.ts`, «THE SHELF NOW REACHES #400»).
+
+  **THE TWO HAZARDS, BOTH RE-VERIFIED RATHER THAN ASSUMED.**
+
+  * **The index shift is safe for saves – confirmed.** `AdOfferTerms` carries nine fields and none of
+    them is a band index (`tier`, `category`, `termYears`, `brand`, `trade`, `cashCents`, `termWeeks`,
+    `shootCount`, `shootWeeks`); `adTermsForCategory` spends the index at construction and freezes
+    `cashCents` and `bands[band].shootWeeksPerYear` as VALUES. Nothing persisted moves.
+  * **The kit ladder is NOT disturbed – confirmed by grep and now by a test.** `tour` / `premium` /
+    `icon`'s `maxWtaRank` are literals in `ECONOMY.sponsorship`; no code path reads `advertising.bands`
+    into the kit ladder or the reverse (`git grep advertising -- offers.ts equipment.ts world/sponsors.ts
+    world/kit.ts` finds only advertising's own call sites). The monotone test now pins
+    `[tour, premium, icon].maxWtaRank === [200, 50, 10]` beside the band list, so a future prepend that
+    DID disturb them reddens.
+
+  **⚠⚠ WHAT THE APPROVED CELLS BROKE, AND WHAT IT COST TO REPAIR.** The per-category ladders are no
+  longer monotone – clothing pays **$120,000 at ≤400 against $50,000 at ≤200**, drinks pays **$80,000
+  at both**, and the tenfold lift put watches at **$200,000 at ≤200 as well as at ≤100**. That is the
+  approved table and nothing about it was changed. But it falsifies the premise `adBandOfTerms` was
+  written on – «the ladders are strictly increasing wherever they are not null» – and that function is
+  how a delivered shoot finds its band in the fame floor. A plain walk from the top read a $120,000
+  clothing letter written at ≤400 as a **≤100** letter. Repaired by matching the cheque EXACTLY first
+  (strongest match wins, which is the shipped rule unchanged) and keeping the old walk only as the
+  fallback for a legacy fee that is nobody's cell.
+
+  ⚠ **One ambiguity is left standing and is his to close.** A new ≤400 **drinks** letter states
+  $80,000, which is also the ≤200 cell, so it reads back one rung high. Nothing on the paper can tell
+  them apart – round 32 #5's design is that the cheque IS the record of the band – and the cost is
+  bounded to one rung of `fame.shootFloorByBand`, i.e. 0.01 of a fame point per delivered shoot.
+  Closing it means storing the band on `AdOfferTerms`, which is a save-schema move. Pinned by name in
+  `tests/round32-brand-inertia.test.ts` so a third collision cannot appear silently.
+
+  **⚠ TWO FIGURES THE PREPEND FORCED THAT HE NEVER SAW.** `ECONOMY.fame.shootFloorByBand` and
+  `shootFloorHalfLifeByBand` are indexed BY the advertising band, and both had four entries. Left at
+  four, the new top index would have read `undefined` – `?? 0` – and **the global house's shoots would
+  have started buying zero fame**. Both gained a fifth rung; the four shipped values are unchanged to
+  the digit and simply moved one index right. The new ≤400 rungs are **0.03** and **13 weeks**. The
+  0.03 is not free choice: 0.02 (the ladder's own first difference continued down) stretches the whole
+  ladder's span from 2.75x to 5.5x and breaks round 32 #5's measured «a global house, not a hundred of
+  them» bound of 4x; 0.03 holds it at 3.67x and leaves the span above the round-32 anchor identical.
+  The criterion set the constant. **Both are his to overrule.**
 
 - [ ] **8. «на 18 она просит свой счёт в банке, а что будет если отказать? … Можно как-то обыграть,
   например если отказали – она сама пошла и открыла и на морали/отношениях отразится (это в
@@ -425,12 +481,33 @@ for and would otherwise have no line.
   into the live document and watch both counts move, so a real double could not hide from them.
 
 - [ ] **11. «129 место в мире, тот же контракт на 12к в год на 3 года. Не верю»** — with 7/12/13.
+  — `[x]` **ANSWERED BY THE ≤200 LIFT (item 7).** A #129 stood in the ≤200 band and the whole shelf
+  there was worth $45,000 a year – watches $20,000, cars $12,000, drinks $8,000, clothing $5,000. The
+  same shelf now writes **$450,000**: $200,000 / $120,000 / $80,000 / $50,000, the shipped row times
+  ten with its shape preserved to the cent. The «12к в год» letter he did not believe was the cars
+  cell; it is $120,000 now.
 
 - [ ] **12. «99 место в мире, тот же контракт на 20к в год на 2 года»** — with 7/11/13.
+  — `[x]` **ANSWERED BY THE SAME LIFT (item 7).** A #99 is already in the ≤100 band, where he ruled
+  nothing was to be touched – «Про 50–100 отвечаю прямо: пересматривать не надо» – so the $20,000 he
+  was reading at #99 was **not** that band's cheque. It was the ≤200 watches cell arriving at a
+  standing that had since climbed past it, and the letter's terms are frozen at arrival by design (the
+  snapshot rule): a paper written at #150 states $20,000 for its whole term however high she goes. Two
+  things follow, and both are now true: the ≤200 watches cell is $200,000, so the same letter written
+  today is ten times the cheque; and the ≤100 shelf it graduates into is unchanged at $1,100,000 a
+  year. ⭐ Nothing above the top 100 moved, which is his ruling honoured to the cent.
 
 - [ ] **13. «А 100 позиции и выше это как раз Бублик с его кучей спонсоров. Хотя может быть для
   нашего масштаба наша система нормальная, цифры только на первом тире и условия не очень, надо
   разумно сделать»** — ⭐ his own hedge: the ladder may be right in shape and wrong at its foot.
+  — `[~]` **HIS HEDGE WAS RIGHT, AND IT IS WORTH SAYING SO PLAINLY: the shape is sound, the foot was
+  broken.** «Может быть для нашего масштаба наша система нормальная, цифры только на первом тире и
+  условия не очень» – that is exactly what the measurement found. The ladder's DESIGN – one live deal
+  per category, the shelf's shape constant at every band, the cheque the only axis that scales, 2.4x /
+  2.4x / 3.5x steps above the top 100 – is the round-29 part four design and not one line of it was
+  touched. What was wrong was two rungs at the bottom: nothing at all below #200, and a 24x jump on a
+  single ranking place from #101 to #100. Both are fixed under item 7; everything he suspected might be
+  «нормальная» is, and stayed.
 
 - [ ] **14. «Календарь сезона надо ещё раз переделать … на 105 месте доступны 50, 250, 500 и шлемы,
   при этом нет 75, 100 и 125. Мне кажется, они прячутся на тех же неделях… Предлагаю с повышением
@@ -582,6 +659,120 @@ for and would otherwise have no line.
   надо улучшить формулу рассчета доходности и стоимости ее бренда»** — **measure**. ⚠ Round 32
   reworked exactly this; a fall from $200 to $65 while she is top-100 is either the fame decay
   working as designed or a defect the rework introduced. Must be read off HIS save.
+  — `[x]` **SHIPPED IN THREE PARTS – F1 finals pay fame, F2 the season ladder reaches below the top
+  100, F4 the brand follows the contracts. Read off his own save through the game's own import door
+  (`tools/r34-brand-foot.ts`, read-only, never copied into the repo).**
+
+  **WHERE SHE ACTUALLY STANDS**, week 569: WTA **#113**, eleven seasons banked, eight of them carrying
+  a WTA end-rank – **#349, #177, #95, #92, #89, #93, #97, #113**. Fame **8.925**, the brand taking
+  **$244** a week and priced at **$76,822** on a multiple of **6.04x**. Live sponsor deals worth
+  **$550,000** a year.
+
+  **F1 – A LOST FINAL PAYS 40% OF ITS TIER'S TITLE, on the title clock.** `trophiesByTier[tier]
+  .finals` has been a dated, per-tier, never-pruned ledger since schema v31 and NOTHING read it except
+  at 'slam'. His save carries **16** runner-up plates worth exactly zero – 5 local, 2 regional, 1
+  national, 1 w15, 4 w50, 2 w100, 1 wta125. Eight of them are at tiers `fame.titleFloor` names and
+  therefore pay; the domestic eight stay at zero, because the world does not read those draws, and his
+  approved target reproduces on exactly that reading:
+
+  | | before | after | approved |
+  | --- | --- | --- | --- |
+  | fame | 8.925 | **10.258** | 10.3 |
+  | weekly | $244 | **$323** | $323 |
+  | worth | $76,822 | **$104,044** | $104,044 |
+
+  ⭐ To the cent on two of the three. `fameEventWeeks` gained the finals as well, or `brandStrengthAt`
+  would have walked a list that no longer holds every week fame can rise on.
+
+  **⚠⚠ THE `finalX` DECISION, WITH THE MEASUREMENT, because the brief asked for it explicitly. IT
+  STAYS.** `business.merch.value.finalX` prices the same finals into the valuation MULTIPLE and has
+  since round 30 #24, so after F1 a lost final moves the income AND the multiple – exactly as a title
+  has since round 32 #3. The test for a double-count is the corridor round 32 repaired the free float
+  to, and it passes: **with both terms live the multiple reads 6.20x**, inside 6–9x. Held out, it
+  drops to 5.40x and the worth to **$90,614** – against the **$104,044 he approved**. His own approved
+  figure was therefore measured with `finalX` live, so the approved figure is the ruling. Nothing was
+  removed and nothing shrank.
+
+  ⚠ Slam finals are excluded BY NAME, not by arithmetic: `slamFinalFloor` (12) already pays that plate
+  and pays more than the share would (0.4 x 25 = 10). Two arms in `tests/round29p5-business.test.ts`
+  fail if either half breaks – one if finals stop paying, one if a second Slam final ever adds
+  `slamFinalFloor + the share` instead of `slamFinalFloor`.
+
+  **F2 – THE SEASON-END LADDER REACHES BELOW THE TOP 100.** `academy.reputationBands` gained
+  **top-150 +0.05** and **top-250 +0.025**, and the flat career cap of 4 became **4 + 0.5 per
+  professional season played**. On his save the ladder picks up two seasons it could not see – #113
+  (top-150) and #177 (top-250) – so his reputation goes **1.500 -> 1.575**.
+
+  ⚠⚠ **THE CAP MEASUREMENT HE ASKED FOR, AND IT SAYS THE CAP STOPS BEING A CAP.** The bands add at
+  most 0.6 a season, so the ceiling only overtakes the ladder when `1 + 0.6n > 4 + 0.5n`, i.e. past
+  **thirty** professional seasons:
+
+  | professional seasons | cap (4 + 0.5n) | most the ladder can reach (1 + 0.6n) | does the cap bind? |
+  | --- | --- | --- | --- |
+  | 5 | 6.5 | 4.0 | no |
+  | 10 | 9.0 | 7.0 | no |
+  | 12 | 10.0 | 8.2 | no – it used to sit ON the old flat 4 |
+  | 20 | 14.0 | 13.0 | **no** |
+  | 31 | 19.5 | 19.6 | yes, first |
+
+  ⭐ So it does not run away – the ladder holds it well under the ceiling at every career length the
+  engine can produce – but the ceiling is no longer what holds reputation. The band ladder is.
+  ⚠ **AND IT MOVES A WINDOW HE DID NOT ASK ABOUT.** `academy.stageIncomeCents` was sized so the $12M
+  academy repays in 5–10 seasons at the cap; that window is reputation **3.18–6.37**, and nine top-10
+  seasons now reach 6.4. A long elite career repays the academy in under five seasons. Not compensated
+  for here – the figure is his – and pinned by name in `tests/round29p5-business.test.ts`.
+
+  **F4 – THE BRAND FOLLOWS THE CONTRACTS: +1 reach per $50,000 of LIVE annual contract value, capped
+  at +30.** Fed into `brandReachOf` as a signal and into nothing else: her sponsor money already
+  arrives through the deals themselves, and a second line in the brand's income would pay one contract
+  twice. It is added OUTSIDE the `max(fame, retention x strength)` – a contract is current form and
+  has no business raising a career's high-water mark – and the total is clamped at `ECONOMY.fame.cap`,
+  so round 32 #3's ceiling cannot move. `baseX` and the fame³ slope were not touched.
+
+  His approved row reproduces:
+
+  | | fame | weekly | a year | worth | multiple |
+  | --- | --- | --- | --- | --- | --- |
+  | approved: his shape, $1M of deals, own fame 8.9 | 8.9 -> 28.9 | $2,600 | $135,000 | $1,130,000 | 8.4x |
+  | measured | 8.9 -> **28.9** | **$2,567** | **$133,479** | **$1,113,823** | **8.34x** |
+
+  ⭐ Inside 1.5% on every money column and inside the 6–9x corridor, so the free-float defect does not
+  return.
+
+  ---
+
+  **⚠⚠ FOUR FIGURES OF HIS THAT MY MEASUREMENT CONTRADICTS. Reported, not adjusted.**
+
+  1. **«Vera #144» is wrong; she is #113.** `kidRankWta` reads 113 at week 569 and her last banked
+     season ended #113. Nothing was built on the 144, so nothing moved – but the approved section says
+     it twice and it should be corrected before it is quoted again.
+  2. **«a decade of top-150 tennis has earned her 0.27 in total» is wrong; it is 0.500.** Five of her
+     seasons ended inside #100 and each paid the ladder's lowest rung, **+0.1**. The two new rungs
+     take that to **0.575**, not from 0.27. The case for the change is unaffected and is if anything
+     sharper: three of her eleven seasons ended below every rung the ladder had.
+  3. **F4's first row cannot be produced by the shipped income curve.** «top-100, $600k of deals, own
+     fame 6» gives fame **18 exactly**, which reproduces – but the weekly at reach 18 is
+     `perFamePointCents x 18² / famePivot x crowdMult` = **$972 x crowdMult**, and `crowdMult` is
+     clamped to [0.9, 1.15]. **The most the curve can pay at reach 18 is $1,118 a week**, against the
+     approved **$1,350** – 17% short, and no career shape can close it because every other signal
+     reaches the income only through the crowd tilt. $1,350 corresponds to a reach of ~21.2, i.e.
+     $750,000 of deals rather than $600,000. ⚠ The mechanic is built as approved; it is the money
+     column of that one row that the arithmetic will not produce.
+  4. **«his save, $1M of deals» is not his save's present state.** At week 569 his LIVE annual
+     contract value is **$550,000** – drinks $150,000 (to w572) and cars $400,000 (to w658). The
+     $1,000,000 was his shelf through weeks **404–452**, when the airline, drinks, cars and watches
+     ran together. The approved row reproduces as a SCENARIO at $1M (table above); applied to the save
+     as it stands today the term is +11, and his brand reads fame-signal **19.9**, **$1,218** a week,
+     **$462,972** and **7.31x** – still a sixfold repair of the $244 he complained about, and still
+     inside the corridor.
+
+  **AND THE COMPLAINT ITSELF, ANSWERED.** «доход опустился с 200 до 65 долларов в неделю» is the fame
+  half-life doing exactly what round 29 designed it to do on a career whose fame the model could
+  barely see: eight professional seasons, five of them inside the top 100, sixteen finals and a
+  million dollars of sponsor paper, adding up to a fame stock of 8.9. All three parts of this item
+  attack that one number rather than the payout curve. Together on his save, at his real $550,000 of
+  live paper: fame signal **8.9 -> 21.3**, weekly **$244 -> $1,386**, worth **$76,822 -> $538,030**,
+  multiple **6.04x -> 7.46x**.
 
 - [ ] **18. «В магазине те пункты, которые во владении находятся давай цветом выделять рамку жёлтую,
   как с тренером делали»** — **build**.
