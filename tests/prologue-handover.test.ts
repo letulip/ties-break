@@ -843,10 +843,20 @@ describe('⚠ the copy obeys the house rules, and says nothing the ruling forbid
     expect(START_AGAIN_DRAFTS.length, 'two or three, so it is a choice and not a rewrite').toBeGreaterThanOrEqual(2)
     for (const draft of [...START_AGAIN_DRAFTS, HANDOVER_COPY.startAgain]) {
       expect(/another child/i.test(draft), draft).toBe(false)
-      // ⚠ AND EVERY ONE OF THEM IS STILL ABOUT HER – §2.3 says the second control is «честный выбор
-      // игрока», a choice about a child and never about a mechanism.
-      expect(/\b(girl|daughter|child|her|she)\b/i.test(draft), `${draft} is not about her`).toBe(true)
     }
+    // ⚠⚠ RE-AIMED 02.09, AND THE REASON MATTERS. This asserted that EVERY draft names her
+    // («girl|daughter|child|her|she»), which was right while all three drafts did. He then chose a
+    // fourth that does not: «Raise another child – давай просто Start again и всё.»
+    //
+    // ⭐ The requirement was never that the LABEL names her – §2.3 says the CHOICE is «честный выбор
+    // игрока», a choice about a child rather than about a mechanism – and on this screen the choice
+    // is a PAIR. «Go on with her» carries the subject for both, the way a question carries it for
+    // its answers. So the claim moves to the pair, where it was always true, and is not dropped.
+    //
+    // ⚠ NOT WEAKENED: the no-mechanism sweep two arms up is untouched and still reads every draft,
+    // so «Start again» would still fail if it said reroll, odds, seed or restart.
+    const pair = `${HANDOVER_COPY.goOn} ${HANDOVER_COPY.startAgain}`
+    expect(/\b(girl|daughter|child|her|she)\b/i.test(pair), `the pair is not about her: ${pair}`).toBe(true)
   })
 
   it('the money is said once, and it is what the childhood COST', () => {

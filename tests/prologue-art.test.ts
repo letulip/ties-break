@@ -124,6 +124,26 @@ describe('⭐⭐ every frame the walk can ask for is a file that ships', () => {
     }
   })
 
+  // ⭐⭐ HIS OWN PAINTING FOR THE SPORTS SCHOOL (02.09) – «jun-training.jpg – арт для 7го экрана
+  // лежит в public – перегоняй в webp и забирай». It replaced a `young-norm` stand-in, and until
+  // this arm existed NOTHING held it: reverting the frame table to the stand-in left every test in
+  // this file green, which is the whole reason the arm is here rather than the change being trusted.
+  //
+  // ⚠ IT IS A SCENE, NOT AN EMOTION – one painting, no band and no mood to build a stem from, which
+  // is why it sits beside `welcome` instead of joining `PortraitEmotion`.
+  it('⭐ the sports-school painting is the eleventh card, and it is not a portrait', () => {
+    expect(prologueArtStem(11, 'norm')).toBe('fem-euro-brunnet-jun-training')
+    // ...and no mood the card could derive can talk it out of that.
+    for (const mood of ['norm', 'happy', 'sad', 'tired', 'serious'] as const) {
+      expect(prologueArtStem(11, mood), `mood ${mood}`).toBe('fem-euro-brunnet-jun-training')
+    }
+    // ⚠ It belongs to ONE card. A painting that leaked onto a second would be the stand-in problem
+    // wearing the new file's name.
+    for (const card of PROLOGUE_CARDS.filter((c) => c.age !== 11)) {
+      expect(prologueArtStem(card.age, 'norm'), `age ${card.age}`).not.toBe('fem-euro-brunnet-jun-training')
+    }
+  })
+
   // ⚠ THE BAND BOUNDARY WAS SET FOR THIS, months before the prologue existed – owner, 25.07:
   // «young starts at 11 – the childhood prologue is coming, so the boundary is deliberately set
   // where the prologue will need it». So the nine cards use exactly two bands and no third.
@@ -185,7 +205,9 @@ describe('⭐⭐⭐ the frames the owner picked, 02.09 – card by card, in his 
     expect(prologueArtStem(8, 'happy')).toBe('welcome-1')
     expect(prologueArtStem(9, 'happy')).toBe('jun-serious')
     expect(prologueArtStem(10, 'happy')).toBe('jun-norm')
-    expect(prologueArtStem(11, 'happy')).toBe('young-norm')
+    // ⚠ RE-AIMED 02.09, NOT WEAKENED: the eleventh was `young-norm` only as the stand-in for the
+    // painting he was commissioning, and it landed the same day. The arm above owns that card now.
+    expect(prologueArtStem(11, 'happy')).toBe('fem-euro-brunnet-jun-training')
     expect(prologueArtStem(13, 'happy')).toBe('young-norm')
   })
 
