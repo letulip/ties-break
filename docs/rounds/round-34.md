@@ -23,6 +23,63 @@ for and would otherwise have no line.
   — **measure first, then answer or build.** The ranking window is a rolling 52 weeks, so a season
   boundary CAN look like a reset; whether the tier gates re-close is the actual question. ⚠ His last
   sentence is the real complaint: the route to the J tour is unreadable.
+  — `[x]` **MEASURED, ANSWERED, AND THE LAST SENTENCE SHIPPED.** Three questions, three different
+  answers, and the premise in the triage line above is wrong: the domestic table is **not** a rolling
+  52 weeks.
+
+  **THE MEASUREMENT** (`tools/r34-domestic-reset.ts`, 25k middle career, seed 0, four seasons walked
+  through the real engine; only the boundary weeks and the weeks a gate MOVED are printed):
+
+  | week | season week | national pts | Regional | National | J30 | J30 chip |
+  | --- | --- | --- | --- | --- | --- | --- |
+  | 25 | 25 | 68 | open | shut | shut | `68 / 250 national pts` |
+  | **51** | **51** | **106** | **open** | shut | shut | `106 / 250 national pts` |
+  | **52** | **0** | **0** | **SHUT** | shut | shut | `0 / 250 national pts` |
+  | 66 | 14 | 150 | open | open | shut | `150 / 250 national pts` |
+  | 77 | 25 | 251 | open | open | **open** | `Open – on the calendar` |
+  | **103** | **51** | **251** | **open** | **open** | open | – |
+  | **104** | **0** | **0** | **SHUT** | **SHUT** | **open** | – |
+  | 155 | 51 | 0 | shut | shut | open | – |
+  | 207 | 51 | 0 | shut | shut | open | – |
+
+  1. **DO THE POINTS ZERO AT A SEASON BOUNDARY? YES – and it is HIS OWN RULING, not a bug.**
+     `WINDOW_BY_TRACK.domestic` is `'seasonToDate'` (round 23 #12/#13: shown leave-it /
+     season-to-date / widen-the-window, he chose season-to-date – «да, это мелочь, а будет хорошо,
+     мне кажется. Тем более, что первый сезон у нас показательный»). The two hypotheses are told
+     apart by folding the same ledger twice at week 52: a rolling-52 window still carries **all** of
+     season one there, the shipped rule carries only what season TWO has paid. So it is a RESET, not
+     an ageing-out, and «оно обнуляется каждый год» is exactly right. ⚠ Only the domestic table: the
+     ITF and WTA tables are `'rolling52'` and genuinely do carry over.
+  2. **DO THE GATES RE-CLOSE? YES, MEASURED – w52 Regional, w104 Regional AND National.**
+     `tierFloorOpen` reads that season-to-date total LIVE, so a rung she cleared in September is shut
+     again in January. ⚠⚠ **This is the consequence nobody priced when the race was approved, and it
+     is the half of his report that is NOT covered by the round-23 ruling.** ⭐ The engine already
+     owns the mechanism that would fix it: the two on-ramps LATCH (`onRampCleared`), which is why in
+     the table above J30 is still open at w207 on a book of 0 while Regional – cleared at w25 – is
+     shut. **Not changed here: latching a cleared domestic floor is a balance decision and his to
+     make.** It is a ~1-line change (`tierFloorOpen`'s domestic arm ORed with a never-pruned
+     `bestFinishByTier` read – no schema bump), and it is pinned as a red-on-change guard so it
+     cannot move in silence.
+  3. **«СОВЕРШЕННО НЕПОНЯТНО КАК ВЫЙТИ В J УРОВЕНЬ» – SHIPPED, and it is presentational.** The route
+     is J30's floor of 250 national points, and the screen never said those 250 have to be earned
+     **inside one season**. The table above is the cost of that silence: 106 at week 51 is not 106 of
+     the way to 250, and she did not cross until week 77 of the NEXT season. `tierOpensWhen`'s points
+     clause now names the window it is counted over – «age 13 and 250 national pts **in one
+     season**» – and the lock's long form ends «…, and the table starts again each season.»
+     ⚠ **DERIVED FROM `WINDOW_BY_TRACK`, never written down**: that constant is a plain object
+     precisely so `tools/domestic-season-to-date.ts` can patch it for an A/B arm, and a hardcoded
+     clause would lie through such a run and through a re-ruling. W15's 120 ITF points are untouched.
+     ⚠ **NEW COPY, and he should see the exact strings** – it is the one thing invariant 4 asks be
+     named. Two clauses, both additive, on the surface whose own header says it exists so a player
+     can read «what do I need to earn to get there» off one screen.
+
+  Evidence: `tests/round34-ladder-plaques.test.ts` (the fold-it-twice arm that separates reset from
+  ageing-out, the two measured gate closures, the J-latch asymmetry, the derivation) and the MOUNTED
+  `tests/component/round34-j-route.test.ts` – the real Tour guide rendered over a real career, the
+  `Opens at` cell read back for J30/Regional/National, and the two arms that fail if the clause
+  spreads to a table that does not reset. ⚠ Mutation-verified: dropping the clause reddens 2 unit +
+  2 mounted arms; hardcoding it instead of deriving reddens the derivation arm; deleting the
+  tooltip's half reddens its own.
 
 - [ ] **2. «Тренер на главном экране (почему-то, давай на карточку тренера вернём лучше) написал 14
   летней девочке Close to her ceiling … звучит как приговор … не рановато ли? … давай подумаем в
@@ -98,6 +155,48 @@ for and would otherwise have no line.
 - [ ] **6. «W35 · 🔒 163 / 0 international pts вот это вот что значит? И на следующих тирах такое
   же»** — **measure**, then build or answer. A lock showing `163 / 0` is either a swapped pair or a
   zero that should be the requirement.
+  — `[x]` **SHIPPED.** Neither guess: it is a **requirement that failed to resolve**, and «на
+  следующих тирах такое же» is literally true – EVERY acceptance rung printed it.
+
+  **THE REPRODUCTION** (`tools/r34-zero-lock.ts` – nine presets x two seeds, walked 13→21 through the
+  real `toSnapshot` and the shipped `tierState`, so a hit is the string the strip renders):
+
+  | rung | first week it printed a requirement of 0 | chip | tooltip |
+  | --- | --- | --- | --- |
+  | J60 / J300 | career **week 0**, age 13 | `0 / 0 national pts` | `locked: 0 more national pts (she has 0 of 0)` |
+  | W35 / W50 / W75 / W100 / Slam | week 23, age 14 | `0 / 0 international pts` | same shape |
+  | WT125 / WT250 / WT500 / WT1000 | week 76, age 15 | `64 / 0 international pts` | `locked: **-64** more international pts (she has 64 of 0)` |
+
+  ⭐ **HIS 163 IS THE SAME ROW AT A BIGGER JUNIOR BOOK.** The tooltip is worse than the chip: the
+  arithmetic goes NEGATIVE.
+
+  **THE CAUSE.** Since PR-09 / TB-05 the ENGINE's refusal decides whether `tierState` calls a rung
+  locked, and an acceptance-list rung is refused on a **rank** (`rankToEnter`), never on points. The
+  points arm then fell back to the tier's own `enterPointBand[0]`, which is `0` on every acceptance
+  rung – so it printed her book over a threshold that does not exist. ⚠ **It is a regression the
+  projection introduced**: before the refusal existed, `bandLocked` was `bandPoints < 0` = false on
+  those rungs, so they fell through to the acceptance arm and read «Opens in the top 700».
+
+  **THE FIX.** `refusedOnRank` (a `locked` refusal carrying `rankToEnter` and no `pointsToEnter`)
+  routes to the acceptance arm instead of the points arm. The rung is still LOCKED – `isTierOpen` is
+  false either way, no rung opened – and the chip is the string that arm **already** printed for this
+  state, so no new wording enters the app: `Opens in the top 700`. The tooltip becomes the ENGINE's
+  own `detail` («World Tour 35 takes the top 700 – she has no professional ranking yet»), which also
+  names the right table: the arm's fallback sentence says "her international ranking" for every rung,
+  true of the J rungs it was written for and false of the W ones.
+
+  ⭐ **IT CLOSES THE W15 CASE `tierState.ts`'s OWN NOTES DESCRIBE, from the far side.** Their fix was
+  `engineOpen === true` short-circuiting the band; what stayed live was the engine holding W15 SHUT
+  on the junior RESERVED PLACE – `rankToEnter`, no `pointsToEnter` – where the plaque priced her book
+  against W15's 120 and never mentioned the place. Same arm, same repair. This is the **fifth**
+  occurrence of that family and the notes now name it.
+
+  After: `tools/r34-zero-lock.ts` reports **0** distinct (preset, rung) pairs printing a requirement
+  of zero, against 11 rungs before. Evidence: `tests/round34-ladder-plaques.test.ts` – the
+  reproduction at his own numbers, a sweep over every rung x six books that fails on `/ 0 `, on
+  `of 0)` and on any negative distance, the W15 reserved-place arm, and two non-regression arms (a
+  genuine points refusal still prints `112 / 150 national pts`; a lock with NO distance is still
+  «Outgrown», round 28 #12's arm). ⚠ Mutation-verified: reverting the one boolean reddens 3 arms.
 
 - [ ] **7. «в 18 лет предлагают подписать копеечные контракты на 2 и 3 года … в фильме Финальный
   сет показывали, что игроку на 240 месте в мире предлагают контракты за 5к за каждый сыгранный матч
@@ -130,6 +229,86 @@ for and would otherwise have no line.
   ранга заменять более низкие турниры в сетке более высокими… они не конфликтуют в сетке, а
   заменяются динамично один другим видом»** — **measure, then design**. ⚠ The largest item in the
   round and it touches the calendar the last three rounds worked on.
+  — `[?]` **MEASURED IN FULL. HIS DIAGNOSIS IS CONFIRMED TO THE TIER. HIS REMEDY IS ALREADY SHIPPED
+  AND IS THE MECHANISM PRODUCING THE SYMPTOM – so nothing was built, and the two candidate designs
+  are below for him to rule on.**
+
+  **THE MEASUREMENT** (`tools/r34-calendar-tiers.ts`): careers walked to WTA #95–#117 at a season
+  start, then ONE FULL SEASON recorded week by week through the shipped predicates the two calendar
+  surfaces use – `toSnapshot` for the cards, `feedContext` / `feedShows` / `preferredWeekEvent` for
+  the row – so the table cannot disagree with the screen. Six seasons that stayed outside the top 50
+  (a seventh climbed to #15 and is excluded: play-down then shuts W50–W100 and it measures a
+  different player).
+
+  | rung | generated / season | SHOWN by the calendar | share | rows a season |
+  | --- | --- | --- | --- | --- |
+  | WT500 | 10 | 60 of 60 | **100%** | 10.0 |
+  | W50 | 12 | 31 of 72 | 43% | **5.2** |
+  | WT250 | 8 | 30 of 48 | 63% | **5.0** |
+  | Slam | 4 | 24 of 24 | **100%** | 4.0 |
+  | WT125 | 4 | 20 of 24 | 83% | 3.3 |
+  | W75 | 8 | 18 of 48 | 38% | 3.0 |
+  | W100 | 4 | 12 of 24 | 50% | 2.0 |
+
+  ⭐⭐ **THE CUT FALLS EXACTLY WHERE HE PUT IT.** Ordered by rows a season, his «доступны» set
+  {50, 250, 500, шлемы} is the top four and his «нет» set {75, 100, 125} is the bottom three, in
+  order. ⚠ Note it is ROWS and not share that reproduces his reading: W50 is the second least
+  visible rung by percentage and he still sees it, because 43% of twelve is more cards than 83% of
+  four.
+
+  ⭐ **AND «ОНИ ПРЯЧУТСЯ НА ТЕХ ЖЕ НЕДЕЛЯХ» IS EXACTLY THE MECHANISM.** Every missing row is a
+  same-week loss, recorded by the thief. One season, week by week (elite seed 0, w468, age 22,
+  WTA #111 – `gen` is every event the engine put on the week, strongest first):
+
+  ```
+  w470  gen [Slam W75 J30 Regional Local]              shown Slam
+  w476  gen [WT1000 WT125 W75 W35 W15 J30 Local]       shown WT125
+  w483  gen [WT500 W75 J60]                            shown WT500
+  w489  gen [Slam WT250 W75 Regional Local]            shown Slam
+  w494  gen [Slam W75 W50 W15 J300 J60 J30 Local]      shown Slam
+  w502  gen [Slam W75 W35 W15 J60 J30]                 shown Slam
+  w506  gen [W75 W50 W35 J30 National]                 shown W75   <- the only one
+  w512  gen [WT125 W75 J300 J60]                       shown WT125
+  ```
+
+  ⚠⚠ **AND THE HALF HE DID NOT NAME, WHICH IS THE BIGGER NUMBER: 12 of the 48 eventful weeks show
+  her NOTHING** (w474, 477, 480, 481, 488, 491, 493, 499, 504, 505, 509, 516). Every event on those
+  weeks is a rung she has outgrown (W15/W35 play-down-barred at #111, the J rungs age-shut at 22, the
+  domestic three shut on the pro table) or one she cannot reach (WT1000 takes the top 65). So the
+  season is not short of tennis – it carries ~50 events she may enter across 48 weeks – it is
+  **badly distributed for her rank**: a quarter of her weeks are empty while a quarter stack two to
+  four rungs she could play and only one survives.
+
+  **⚠⚠ WHY NOTHING WAS BUILT.** «Заменять более низкие турниры в сетке более высокими с повышением
+  ранга» is `preferredWeekEvent`'s third tiebreak, shipped 05.08/06.08 and measured in
+  `docs/specs/ladder-floor-2026-08.md` §2: on a stacked week the row shows the ENTERED event, else
+  the one she may actually ENTER, else the **highest rung** – so as her rank rises the taller rung
+  takes the slot and the lower one is replaced. That rule IS the thing hiding his W75. Building it
+  would be building the cause, and the brief's own instruction is to stop and report rather than
+  invent a third design.
+
+  **THE REAL CAUSE, for whichever design he picks.** The three anchored rungs – Slam `[2,21,26,34]`,
+  WT500 `[4,10,15,19,24,28,33,39,43,47]`, WT1000 `[5,8,12,18,31,37,41,45]` – claim **22 of the 49
+  playable week-offsets, the same offsets in every world for ever**, before a single cadence rung is
+  placed. `buildSeason` then places the cadence rungs by `tierPhase` + jitter with no knowledge of
+  the anchors, so a rung with 4–8 events a season loses roughly half of them to a taller rung on the
+  same week – and the sparser the rung, the fewer survive. That is the same fixed-grid failure
+  `tierPhase`'s own note records and fixes for the cadence rungs; the anchors reintroduced it.
+
+  **THE TWO DESIGNS, AND WHAT EACH COSTS – his call:**
+  - **(A) SUPPLY.** Place a cadence rung away from weeks already claimed by a taller one («они не
+    конфликтуют в сетке»). ~6 lines in `buildSeason`. ⚠ It changes `world.season`, so the AI field
+    and the season RNG stream move → invariant 5 wants a bench and a spec, and it partly reverses his
+    own ruling recorded in `calendar.ts`: «ONE EVENT PER TIER PER WEEK, NOT ONE EVENT PER WEEK … with
+    J-tiers, empty weeks stop being boredom and become CHOICE». Existing saves keep their dealt
+    blocks (`ensureSeason` never re-deals), so only future seasons change.
+  - **(B) DISPLAY.** Let a week that stacks several rungs she may enter offer more than one card.
+    ⚠ It is NOT what he proposed – he asked for them not to conflict – and it retires R15-9's
+    one-row-per-week rule that rounds 31/32/33 all built on.
+
+  ⚠ A generation-time fix cannot be rank-aware (a year block is dealt once, and her rank moves
+  through the season) and a rank-aware fix cannot be at generation time – which is why (A) and (B)
+  are genuinely different games rather than two spellings of one.
 
 - [ ] **15. «Сумма дохода на savings меняется вниз если деньги вывести. Мне кажется она не должна
   меняться, просто новое поступление будет меньше»** — **reproduce**, then build.
