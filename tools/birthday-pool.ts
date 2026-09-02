@@ -31,7 +31,6 @@ import { BIRTHDAY_BANDS, BIRTHDAY_COLLEGE_BAND, BIRTHDAY_DAY_TOGETHER, birthdayO
 import { inCollege } from '../src/engine/world/college'
 import { meansOfCents, MEANS_BANDS } from '../src/engine/world/means'
 import { ENDINGS } from '../src/engine/ending'
-import type { Rng } from '../src/engine/rng'
 import type { WorldState } from '../src/engine/world'
 
 const args = process.argv.slice(2)

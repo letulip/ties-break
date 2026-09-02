@@ -91,9 +91,21 @@ jobs:
       # that goes stale, so this fails the PR that moves a symbol without regenerating. It reads
       # source text and runs in about a second; the fix is one command, named in the failure.
       - run: node scripts/world-map.mjs --check
+      # ⚠ WHICH TOOLS ARE LIVE, AND THE ASSERTION THAT MATTERS IS THE SECOND ONE. The registry
+      # rewrites `tools/README.md` from the tree and checks that `tsconfig.app.json`'s `tools/`
+      # entries are exactly the live set; without it the two lists drift and the build quietly grows
+      # back to every file in the directory. Sub-second of file reading.
+      - run: npm run tools:registry:check
       # --force: vue-tsc -b trusts its incremental cache, which has hidden real type errors
       # (a duplicate-import TS2300 shipped past a cached build on 25.07). Full check, always.
       - run: npx vue-tsc -b --force
+      # ⚠⚠ THE ARCHIVAL HALF OF `tools/`, WHICH `vue-tsc -b` ABOVE DOES NOT SEE (P-01, 02.09).
+      # `tsconfig.tools.json` is deliberately outside the root project graph, and until now it was
+      # invoked from `package.json` and from nowhere else - so nothing ever ran it. The 02.09 review
+      # found it red with nine errors across six tools, one of them written the day before. An
+      # archival probe is evidence, and evidence that no longer compiles cannot be re-run.
+      # Measured at 4.2 s locally; it is a typecheck, so it sits beside the one above.
+      - run: npm run check:tools
       # ⚠ THE GATE RUNS THE `unit` PROJECT. The Monte-Carlo files are NOT in it and that is a
       # decision, not an omission - see .github/workflows/simulation.yml and the note in
       # vite.config.ts. They are deterministic statistical calibration, they cost 143s of CPU, and
@@ -112,23 +124,6 @@ jobs:
       - run: npm run test:component
       - run: npm run build
 
-  # THE E2E SMOKE, AND ONLY THE SMOKE (S0 of docs/plans/playwright.md).
-  #
-  # ⚠ THE SCOPE OF THIS JOB IS simulation.yml's LESSON APPLIED BEFORE THE FIRST RED BUILD RATHER THAN
-  # AFTER IT: "a gate that fails for reasons unrelated to the code teaches people to ignore the gate,
-  # which is worse than not having one." A browser suite is the easiest thing in this repo to break
-  # that rule with, so the gate takes the cheapest useful slice:
-  #   ONE BROWSER - chromium. Firefox and WebKit are several hundred MiB more of download, for a
-  #                 smoke test that would assert exactly the same three facts in each of them.
-  #   ONE SPEC    - the app boots, a career starts, week 1 renders. ~1s of test time.
-  #   ONE RETRY   - and a spec that NEEDS it gets fixed, not tolerated (playwright.config.ts).
-  # The full device matrix, visual regression and a11y belong to S3, in a nightly workflow of their
-  # own. Do not grow this job into that: a PR gate that spends minutes driving three browsers is the
-  # Monte-Carlo story a second time, and it ends the same way.
-  #
-  # A SEPARATE JOB RATHER THAN TWO MORE STEPS ON `test-build`: it runs alongside the typecheck and
-  # the unit suite instead of stacking onto them, so it costs a PR roughly nothing in wall clock -
-  # and a red `e2e-smoke` names what broke without anyone reading a log to find out.
   # ⭐ THE LONG POLE, ALONE. 501 s of pooled files - the one block worth its own runner.
   unit-bulk:
     runs-on: ubuntu-latest
@@ -156,7 +151,38 @@ jobs:
       - run: npm ci
       - run: node scripts/units.mjs --only=heavy --verbose
 
-  e2e-smoke:
+  # THE E2E SUITE – ALL OF IT, IN ONE BROWSER (S0–S2 of docs/plans/playwright.md).
+  #
+  # ⚠⚠ THE NAME AND THIS COMMENT USED TO SAY «SMOKE, AND ONLY THE SMOKE … ONE SPEC», AND THE STEP
+  # BELOW HAS ALWAYS RUN THE UNFILTERED SUITE (QA-37 of the 02.09 review). Two things were wrong at
+  # once: the label described work the job does not do, and the block describing it had drifted up
+  # the file onto `unit-bulk`. Corrected by moving the LABEL to the work, not the work to the label,
+  # and the reason is a measurement plus a standing owner priority:
+  #   THE COST IS THE BROWSER, NOT THE SUITE. The step below it fetches ~273 MiB of Chromium and
+  #     spends ~2 minutes doing it. The suite itself measured 31 tests in 13 files, 17 s of test time
+  #     (02.09), against this job's 20-minute ceiling. Filtering to one spec would save seconds off a
+  #     job whose cost is dominated by a download that both arms pay in full.
+  #   NARROWING WOULD DELETE LIVE COVERAGE. Those 31 tests are green on every PR today. «Restore an
+  #     intentional smoke selection» reads as a cleanup and lands as a coverage cut.
+  #   ⭐ AND IT WOULD CONTRADICT A STANDING CALL. «Grow the e2e suite, and keep growing it» is the
+  #     owner's own of 29.08 (docs/now-next-later.md, Next). A gate pinned to one spec while the
+  #     suite grows is the exact defect P-01 exists to remove: a gate nobody runs.
+  #
+  # WHAT STAYS DELIBERATELY NARROW – and this half of the old note was never a lie:
+  #   ONE BROWSER - chromium. Firefox and WebKit are several hundred MiB more of download for the
+  #                 same assertions. The full device matrix, visual regression and a11y belong to S3,
+  #                 in a nightly workflow of their own. Do not grow THIS job into that: a PR gate
+  #                 that spends minutes driving three browsers is the Monte-Carlo story a second
+  #                 time, and it ends the same way (simulation.yml's header tells that story).
+  #   ONE RETRY   - and a spec that NEEDS it gets fixed, not tolerated (playwright.config.ts).
+  #
+  # A SEPARATE JOB RATHER THAN TWO MORE STEPS ON `test-build`: it runs alongside the typecheck and
+  # the unit suite instead of stacking onto them, so it costs a PR roughly nothing in wall clock -
+  # and a red `e2e` names what broke without anyone reading a log to find out.
+  #
+  # ⚠ RENAMED FROM `e2e-smoke` ON 02.09. If branch protection lists a required status check by the
+  # old name, update it – a required check that no job reports blocks the merge queue silently.
+  e2e:
     runs-on: ubuntu-latest
     # See `test-build`'s note: a wedge has to report, not hold a runner until the six-hour default.
     timeout-minutes: 20

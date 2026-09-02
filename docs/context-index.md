@@ -49,7 +49,7 @@ A lower source can justify changing a higher one; it never silently overrides it
 | Screens, components, accessibility, PWA | [UI and design](context/ui-and-design.md) | `src/App.vue`, `src/components`, `src/composables`, `src/style.css`, `vite.config.ts` | screen, design-token, UI-control and PWA tests |
 | Pitch, daughter agency, story, endings | [Product and narrative](context/product-and-narrative.md) | `src/engine/world/endings.ts`, `EndingScreen.vue`, protocol/world state, diary, milestones | `ending`, `college-*`, diary, event and week-story tests; psyche has none – it has no runtime |
 | Where an engine symbol lives | [Engine symbol map](context/engine-symbol-map.md) | The owner it names, not the `engine/world` barrel | Its owner's tests |
-| Which bench or probe answers a question | [Tools registry](../tools/README.md) – 24 live, 114 archival | `tools/`, its live half typechecked by the build | `npm run check:tools` sweeps the whole directory |
+| Which bench or probe answers a question | [Tools registry](../tools/README.md) – it is generated, and it prints the live/archival split; no count is written here | `tools/`, its live half typechecked by the build | `npm run tools:registry:check` (the split) and `npm run check:tools` (the whole directory) – both in `npm run check` and in CI since 02.09 |
 | Delivery sequence | [Now / next / later](now-next-later.md) | The wave named there | That wave's gate plus `npm run check` |
 | Funding and commercial scenarios | [Funding routes and cost model](funding-and-roadmap.md) | Not runtime code | Recheck assumptions and source dates before external use |
 | Architecture or quality audit | Relevant context packs, then dated reviews | Verify every claim against current code | Reproduce findings; do not inherit old severity blindly |
@@ -84,11 +84,19 @@ Use `current`, `draft`, `reference`, `audit`, `historical`, or `superseded` for 
 Superseded documents must name `superseded-by`. Only one document may be canonical for an area.
 Canonical documents must begin their body with a concise `Current truth` section.
 
-⚠ **A NEW document without this frontmatter fails `npm run context:audit`.** The 136 legacy
+⚠ **A NEW document without this frontmatter fails `npm run context:audit`.** The legacy
 unclassified documents are grandfathered by a snapshot in `tools/generated/context-baseline.json`
 and stay legal until they are materially edited; a document added after 24.08 is not. This is a
 one-way ratchet – classify old files when you touch them, never by banking a new one into the
-baseline.
+baseline. (`npm run context:audit` prints how many are left; the figure that used to stand here had
+already drifted by one, and it is not a number any routing decision turns on.)
+
+⚠⚠ **AND «UNTIL THEY ARE MATERIALLY EDITED» IS A PROMISE NOTHING KEEPS – QA-35 of the 02.09 review,
+STILL OPEN.** `scripts/context-audit.mjs` stores the legacy PATHS and checks membership; it holds no
+content hash and reads no diff, so a grandfathered document can be rewritten end to end and stay
+legal. Read the sentence above as "stay legal until someone classifies them by hand". The fix is a
+SHA-256 per legacy path in the baseline, failing when the hash moves while metadata is still absent,
+with deletion and classification staying one-way and non-failing.
 
 ## Retrieval budget
 
