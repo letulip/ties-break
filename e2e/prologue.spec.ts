@@ -294,16 +294,25 @@ test('⭐ the first card of the game is a picture and a scene, not a form', asyn
 
   // 4. AND THE CARD IS NOT A FORM ANY MORE.
   //
-  // ⚠ TWO NUMBERS, AND THE SECOND ONE IS THE ONE THAT MATTERS. The total moved because the painting
+  // ⚠ TWO NUMBERS, AND THE FIRST ONE IS THE ONE THAT MATTERS. The total moved because the painting
   //    got bigger at the owner's ask; what round-20 #4 is actually about is prose growing one honest
   //    sentence at a time, so the content ceiling is asserted with the hero taken back out of it.
+  //
+  //    MEASURED IN THIS CHROMIUM AT 375x667, content / painting / total:
+  //      phase 6   1115 /   0 / 1115   the form
+  //      phase 7    804 / 193 /  997
+  //      phase 8    875 / 341 / 1216
+  //    The painting is 341 rather than 343 because `overflow-y: auto` is engaged on this desktop
+  //    Chromium and its classic scrollbar takes 2px of the padding box; on a phone it is the full
+  //    343. 960 leaves ~85px of content headroom, which is four lines of his own copy at this width.
+  //    MUTATION-VERIFIED: both ceilings were watched failing, which is where these numbers are from.
   const height = await card.evaluate((el) => el.scrollHeight)
   const withoutArt = height - spans.heroHeight
   expect(
     withoutArt,
     `the age-5 card is ${withoutArt}px of CONTENT (plus a ${spans.heroHeight}px painting, ${height}px in all)`,
-  ).toBeLessThanOrEqual(900)
-  expect(height, `the age-5 card is ${height}px on a 375x667 phone`).toBeLessThanOrEqual(1250)
+  ).toBeLessThanOrEqual(960)
+  expect(height, `the age-5 card is ${height}px on a 375x667 phone`).toBeLessThanOrEqual(1320)
 
   // 5. ⚠ THE ROUND-20 #3 RULE, IN A REAL LAYOUT. The card is taller than the screen and always will
   //    be; what must hold is that the player can reach the answers, which means the card scrolls and

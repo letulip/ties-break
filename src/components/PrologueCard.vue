@@ -745,6 +745,32 @@ useDialogFocus(cardEl)
   text-align: center;
 }
 
+/* ⚠ 10px OF SIDE PADDING INSTEAD OF 13, ON THIS ROW ONLY. Measured in a real Chromium at 375x667,
+   where the row is 309px wide and the two controls want, on one line each:
+
+     the tile     22 flag + 10 gap + 96 «United States» + padding + border   150
+     the door    137 «Browse all countries» + padding + border               159
+     the gap                                                                   8
+                                                                            ----
+                                                                             317
+
+   ⚠⚠ SO THE LABELS STILL WRAP, AND THAT IS SAID PLAINLY RATHER THAN CLAIMED AWAY. Six pixels off
+   each side of each control does not close an eight-pixel gap; what it buys is headroom for the
+   shorter names, and the row is 62px against the ~93px the two cost stacked. The owner's ask was
+   the two controls on ONE LINE – one row, side by side – and that is what this is; a label taking
+   two lines inside its own box is not a second row.
+
+   ⚠ AND `nowrap` IS DELIBERATELY NOT THE FIX. Holding the door's label on one line would take the
+   room out of the tile, which at 320px leaves a country name 35px to live in – or, if the door is
+   allowed to shrink instead, overflows its text sideways where nothing can be read at all. A
+   control that WRAPS gives ground vertically, which is the trade `fits.ts`'s `demandedWidth` note
+   makes in the same words about crediting an ellipsis. The open picker keeps its 13px either way. */
+.prologue-country.is-closed .prologue-tile,
+.prologue-country.is-closed .prologue-browse {
+  padding-left: 10px;
+  padding-right: 10px;
+}
+
 /* ⭐ THE QUESTION ABOVE THE ANSWERS (owner, 02.09). The lede's own size and colour, because it is
    the same voice saying the same kind of thing; what marks it is that it is the last line before
    the column and it is the only line on the card with a question mark in it. Not a `label` and not

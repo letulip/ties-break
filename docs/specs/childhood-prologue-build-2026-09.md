@@ -584,11 +584,11 @@ direction that file documents itself as erring in.
 
 ### The height, re-measured
 
-|  | model (`fits.ts`) | Chromium at 375x667 |
+|  | model (`fits.ts`) | Chromium at 375x667: content / painting / total |
 | --- | --- | --- |
-| phase 6 (the form) | 2301 | 1115 |
-| phase 7 | 1940 | 997 |
-| phase 8 | 2058 | see `e2e/prologue.spec.ts` |
+| phase 6 (the form) | 2301 | 1115 / 0 / 1115 |
+| phase 7 | 1940 | 804 / 193 / 997 |
+| phase 8 | 2058 | 875 / 341 / 1216 |
 
 The phase-8 delta is three of his own corrections: **+118** the square hero, **+48** the question
 above the three origins, **−48** the country slot and `Browse all countries` sharing a line. The
