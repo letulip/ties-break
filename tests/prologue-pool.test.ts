@@ -53,6 +53,7 @@ import {
   withEntry,
   withOrigin,
   withPick,
+  yearsLivedBy,
 } from '../src/prologue/run'
 
 /** The two roads through the decision cards, named by what the player did – the same pair every
@@ -69,6 +70,7 @@ function roadRun(road: Record<number, string>, entered: boolean): import('../src
   for (const age of [11, 12, 13]) run = withEntry(run, age, answer)
   return run
 }
+import { childhoodArrival } from '../src/engine/childhood'
 import { SKILL_KEYS, STARTING_SKILL_BAND } from '../src/engine/development'
 import { TIERS } from '../src/engine/season/calendar'
 import { createWorld, KID_ID } from '../src/engine/world'
@@ -184,8 +186,12 @@ describe('⚠⚠ the pool may never enter world.cohort or any table', () => {
       // in a year and draws HER off a sub-stream of her own (`prologueEntrant`), so arm B now taps
       // every generator the shipped walk taps: the field, the bracket, and the girl. An arm that
       // only did what phase 3 did would be proving something the app no longer does.
+      // ⚠⚠ AND PHASE 12 WIDENED IT AGAIN, FOR THE SAME REASON. She is `childhoodArrival` over the
+      // years she has lived now, so arm B spends a real childhood on the way through – the engine's
+      // own module, called from the prologue, before a world exists. If ANY of that reached MAIN,
+      // the cohort below would move. It does not, because `childhoodArrival` imports no generator.
       for (let age = LOCAL_POOL.fromAge; age <= 13; age++) {
-        const her = prologueEntrant('cohort-proof', KID_ID, 'Vera Novak', age)
+        const her = prologueEntrant('cohort-proof', KID_ID, 'Vera Novak', age, yearsLivedBy(roadRun(CARRIED, true), age))
         for (let index = 0; index < LOCAL_POOL.maxPerYear; index++) {
           localPool('cohort-proof', age, index)
           playLocalOpen('cohort-proof', her, age, index)
@@ -270,9 +276,18 @@ describe('⚠⚠ the pool may never enter world.cohort or any table', () => {
    *
    *  ⭐ WHAT IS STILL TRUE, AND WORTH PINNING, IS WHAT THE PROLOGUE NAMES. These four lists are the
    *  whole surface `src/prologue` touches, and adding `engine/world` to any of them reddens this with
-   *  the file and the specifier named. The measured exception is the one that matters:
-   *  `engine/childhood.ts` is reachable from NOTHING here, which is phase 1's own guarantee and is
-   *  pinned where it belongs, in tests/childhood.test.ts. */
+   *  the file and the specifier named.
+   *
+   *  ⚠⚠ PHASE 12 MOVED THE CHILDHOOD FROM ONE SIDE OF THAT SENTENCE TO THE OTHER, DELIBERATELY.
+   *  `engine/childhood.ts` used to be reachable from nothing here – and that is precisely the refusal
+   *  the owner rejected: a Local Open drew her out of `STARTING_SKILL_BAND` with no connection to the
+   *  childhood, so «a player who paid for the club, one-to-one hours and the sports school watches
+   *  her play exactly like a neglected girl». `pool.ts` names it now, the list below says so, and the
+   *  count is still pinned in `tests/childhood.test.ts` from the other end – at exactly two importers
+   *  in the whole of `src/`, with the tick-path claim asserted there rather than inferred here.
+   *
+   *  ⚠ THE CLAIM THAT DID NOT MOVE IS THE ONE ABOUT THE WORLD. No file in `src/prologue` names
+   *  `engine/world` or anything under it, and the per-specifier loop below still asserts it. */
   // ⚠ PHASE 4 CHANGED TWO THINGS HERE AND NEITHER WEAKENS IT. `handover.ts` joined the directory and
   // is pinned like its three siblings; and the list is a SET now, because `cards.ts` names
   // `../shared/protocol` twice since the wire type moved there (once to import `SessionKind`, once to
@@ -305,8 +320,13 @@ describe('⚠⚠ the pool may never enter world.cohort or any table', () => {
     // ⚠ PHASE 11 ADDED ONE, AND IT IS A SIBLING RATHER THAN AN ENGINE MODULE. `handover.ts` names
     // `./run` for `PlayedOpen` – the record of one weekend the run keeps – because the handover's
     // last line is about what she played and the run is what remembers it. Type-only, inside
-    // `src/prologue`, and the claim under this list is unchanged: still four engine modules, still
-    // never the world and never the childhood.
+    // `src/prologue`, and the claim under this list is unchanged: still never the world.
+    //
+    // ⚠⚠ PHASE 12 ADDED `../engine/childhood` TO `pool.ts`, AND IT IS THE ONE ADDITION HERE THAT IS
+    // A REVERSAL RATHER THAN A GROWTH. The header above says why the refusal it replaces was wrong;
+    // what it buys is that the girl a Local Open meets is `childhoodArrival` over the years she has
+    // lived instead of a bare band draw. The counter-claim moved to `tests/childhood.test.ts`, which
+    // pins the whole of `src/` at exactly two importers and proves neither is on the tick path.
     expect(imports).toEqual({
       'cards.ts': ['../shared/protocol'],
       'handover.ts': [
@@ -318,6 +338,7 @@ describe('⚠⚠ the pool may never enter world.cohort or any table', () => {
         './run',
       ],
       'pool.ts': [
+        '../engine/childhood',
         '../engine/development',
         '../engine/match/types',
         '../engine/rng',
@@ -330,13 +351,20 @@ describe('⚠⚠ the pool may never enter world.cohort or any table', () => {
       'run.ts': ['../engine/economy', '../shared/avatarEmotion', '../shared/protocol', './cards'],
     })
     // Named as its own claim so the reason survives a future re-pin of the list above.
+    //
+    // ⚠ THE `childhood` CLAUSE IS NARROWED, NOT DELETED. It used to be a blanket ban and now names
+    // the ONE file allowed to reach it, because that is what the owner's fix required and because a
+    // clause deleted outright would let `run.ts` or `cards.ts` acquire it in silence. `pool.ts` is
+    // the file that composes an entrant; nothing else in this directory has a reason to know how a
+    // childhood is spent.
     for (const name of files) {
       for (const spec of imports[name]) {
         expect(spec).not.toMatch(/\/world$/)
         expect(spec).not.toMatch(/\/world\//)
-        expect(spec).not.toMatch(/childhood/)
+        if (name !== 'pool.ts') expect(spec).not.toMatch(/childhood/)
       }
     }
+    expect(imports['pool.ts'].filter((s) => /childhood/.test(s))).toEqual(['../engine/childhood'])
   })
 
   it('⚠ ...and no prologue module names a thing that could write a world', () => {
@@ -729,5 +757,172 @@ describe('⭐ she enters on the game\'s own band, drawn once for the whole child
     const withoutHer = JSON.stringify(localPool('stream', 10))
     prologueEntrant('stream', KID_ID, 'Vera Novak', 10)
     expect(JSON.stringify(localPool('stream', 10))).toBe(withoutHer)
+  })
+})
+
+// =================================================================================================
+// ⭐⭐ PHASE 12 – THE YEARS SHOW ON THE COURT
+// =================================================================================================
+//
+// THE DEFECT, in the owner's own words: at a Local Open she was drawn as «a ninth child out of
+// STARTING_SKILL_BAND, with no connection to the childhood», so «a player who paid for the club,
+// one-to-one hours and the sports school watches her play exactly like a neglected girl».
+//
+// ⚠ THE CONTROL HE ASKED FOR BY NAME is the last block: the eight opponents are drawn from the
+// FOURTEEN-year-old band, and phase 3's justification for that («basePServe reads only the
+// DIFFERENCE, so the absolute level cancels») holds only while SHE is drawn from the same band.
+// Once her build comes from a partial childhood she could sit systematically below them and a
+// ten-year-old's tournament would become a guaranteed first-round exit. Measured below and, at
+// twenty thousand seeds a cell, in `npm run bench:court` / docs/specs/childhood-on-court-2026-09.md.
+
+describe('⭐⭐ the girl a Local Open meets is the childhood the player bought', () => {
+  /** The years she has lived by the weekend at `age`, down one road – exactly what the screen's
+   *  `kidAt` passes (`yearsLivedBy(run, age)`). */
+  const lived = (road: Record<number, string>, age: number) => yearsLivedBy(roadRun(road, true), age)
+
+  it('⭐⭐ her build IS `childhoodArrival` over the years lived – not a bare band draw', () => {
+    for (const age of [10, 11, 12, 13]) {
+      for (const road of [LIGHT, CARRIED]) {
+        const born = prologueEntrant(`entrant-${age}`, KID_ID, 'Vera Novak', age)
+        const played = prologueEntrant(`entrant-${age}`, KID_ID, 'Vera Novak', age, lived(road, age))
+        // The engine's own handover arithmetic, called on the same born build. If this file grew a
+        // strength model of its own, this line is what would go red.
+        expect(played, `${age}`).toEqual({ ...born, ...childhoodArrival(born, lived(road, age)) })
+        // ⚠ THE MUTATION ARM. Reverting `prologueEntrant` to the phase-11 band draw makes her equal
+        // to `born`, and these two lines are what would catch it.
+        expect(SKILL_KEYS.some((k) => played[k] !== born[k]), `${age} is still the band draw`).toBe(true)
+        expect(played.id).toBe(born.id)
+        expect(played.age).toBe(age)
+      }
+    }
+  })
+
+  it('⚠ and with no years she is the phase-11 girl, to the hundredth – the default is not a fudge', () => {
+    const born = prologueEntrant('unchanged', KID_ID, 'Vera Novak', 10)
+    expect(prologueEntrant('unchanged', KID_ID, 'Vera Novak', 10, [])).toEqual(born)
+    for (const k of SKILL_KEYS) expect(Number.isInteger(born[k])).toBe(true)
+  })
+
+  it('⭐ she is still inside the band the eight children come from – the clamp holds at every age', () => {
+    for (const age of [10, 11, 12, 13]) {
+      for (const road of [LIGHT, CARRIED]) {
+        for (let i = 0; i < 40; i++) {
+          const her = prologueEntrant(`band12-${i}`, KID_ID, 'Vera Novak', age, lived(road, age))
+          for (const k of SKILL_KEYS) {
+            const [lo, hi] = STARTING_SKILL_BAND[k]
+            expect(her[k], `${k} at ${age}`).toBeGreaterThanOrEqual(lo)
+            expect(her[k], `${k} at ${age}`).toBeLessThanOrEqual(hi)
+          }
+        }
+      }
+    }
+  })
+
+  it('⭐⭐ the gap is SMALL AT TEN AND VISIBLE AT THIRTEEN – and it grows with every year between', () => {
+    const meanOf = (p: MatchPlayer) => SKILL_KEYS.reduce((s, k) => s + p[k], 0) / SKILL_KEYS.length
+    const gaps = [10, 11, 12, 13].map((age) => {
+      let total = 0
+      for (let i = 0; i < 400; i++) {
+        const seed = `gap-${i}`
+        total +=
+          meanOf(prologueEntrant(seed, KID_ID, 'V N', age, lived(CARRIED, age))) -
+          meanOf(prologueEntrant(seed, KID_ID, 'V N', age, lived(LIGHT, age)))
+      }
+      return total / 400
+    })
+    for (let i = 1; i < gaps.length; i++) expect(gaps[i], `age ${10 + i}`).toBeGreaterThan(gaps[i - 1])
+    // The bench's own numbers at 20k seeds: 0.49 at ten, 2.38 at thirteen. Four hundred seeds is
+    // enough for the SHAPE, which is what this pin is about.
+    expect(gaps[0]).toBeLessThan(0.8)
+    expect(gaps[3]).toBeGreaterThan(2)
+    expect(gaps[3] / gaps[0]).toBeGreaterThan(3)
+  })
+
+  it('⚠⚠ the thirteenth year is not lived at twelve – `yearsLivedBy` cuts at the weekend`s own age', () => {
+    // The off-by-a-year that would have flattened the gradient. The thirteenth year is
+    // `sameAsLastYear`, so `yearsSoFar` reports NINE the moment the twelfth card is answered.
+    const run = roadRun(CARRIED, true)
+    expect(lived(CARRIED, 10).map((y) => y.age)).toEqual([5, 6, 7, 8, 9, 10])
+    expect(lived(CARRIED, 12).map((y) => y.age)).toEqual([5, 6, 7, 8, 9, 10, 11, 12])
+    expect(lived(CARRIED, 13).map((y) => y.age)).toEqual([5, 6, 7, 8, 9, 10, 11, 12, 13])
+    // ...and the mutation arm: the uncut list is nine years at TWELVE, which is the bug.
+    expect(chosenYears(run)).toHaveLength(9)
+    // A weekend's childhood is a PREFIX, so a decision taken later cannot change a year already
+    // played – walking only as far as the tenth card gives the identical six years.
+    let partial = withOrigin(EMPTY_RUN, 'middle')
+    for (const card of PROLOGUE_CARDS) {
+      if (card.age > 10) break
+      if (card.options) partial = withPick(partial, card.age, CARRIED[card.age])
+    }
+    expect(yearsLivedBy(partial, 10)).toEqual(lived(CARRIED, 10))
+  })
+})
+
+// =================================================================================================
+// ⚠⚠ THE CONTROL – IS A FOURTEEN-YEAR-OLD'S BAND STILL THE RIGHT FIELD FOR HER?
+// =================================================================================================
+
+describe('⚠⚠ the field is still fair at every age – she is neither hopeless nor unbeatable', () => {
+  const lived = (road: Record<number, string>, age: number) => yearsLivedBy(roadRun(road, true), age)
+  const SEEDS = 500
+
+  /** Her finish distribution over `SEEDS` careers – the real bracket, the real point engine. */
+  function finishes(age: number, road: Record<number, string>) {
+    const years = lived(road, age)
+    const t = { title: 0, exit: 0, wins: 0 }
+    for (let i = 0; i < SEEDS; i++) {
+      const seed = `control-${i}`
+      const open = playLocalOpen(seed, prologueEntrant(seed, KID_ID, 'V N', age, years), age)
+      if (open.finish === 0) t.title++
+      if (open.finish === open.rounds) t.exit++
+      t.wins += open.wins
+    }
+    return { title: t.title / SEEDS, exit: t.exit / SEEDS, wins: t.wins / SEEDS }
+  }
+
+  it('⭐⭐ no age is degenerate – she neither always loses at ten nor always wins at thirteen', () => {
+    for (const age of [10, 11, 12, 13]) {
+      for (const road of [LIGHT, CARRIED]) {
+        const f = finishes(age, road)
+        // A first-round exit is what a random one of eight gets half the time; «essentially always»
+        // would be four fifths. The bench measures 48-55% at every cell, at 20k seeds.
+        expect(f.exit, `${age} exit`).toBeLessThan(0.7)
+        expect(f.exit, `${age} exit`).toBeGreaterThan(0.3)
+        // ...and the title is 12.5% for a random one of eight. The bench measures 9-14%.
+        expect(f.title, `${age} title`).toBeLessThan(0.3)
+        expect(f.title, `${age} title`).toBeGreaterThan(0.03)
+      }
+    }
+  })
+
+  it('⭐⭐ the roads differ IN HER FAVOUR, and the difference grows with age', () => {
+    const swing = [10, 13].map((age) => finishes(age, CARRIED).wins - finishes(age, LIGHT).wins)
+    // The devoted road wins more matches than the light one at both ends...
+    for (const s of swing) expect(s).toBeGreaterThan(0)
+    // ...and by more at thirteen than at ten, which is the whole shape of the phase. The bench's
+    // own numbers at 20k seeds: +0.04 matches a weekend at ten, +0.18 at thirteen.
+    expect(swing[1]).toBeGreaterThan(swing[0])
+  })
+
+  it('⭐ SHE IS NOT SYSTEMATICALLY BELOW THE FIELD – the fourteen-year-old band is still hers too', () => {
+    // ⚠ THE ARGUMENT PHASE 3 MADE, RE-CHECKED UNDER PHASE 12'S BUILD. The eight children come from
+    // `STARTING_SKILL_BAND`, which is the fourteen-year-old band, and that was safe because she was
+    // drawn from it too. She is not a bare draw any more – so this measures the thing that changed:
+    // her mean against the field's, on the road that hurts her most, at the age it hurts most.
+    const meanOf = (p: MatchPlayer) => SKILL_KEYS.reduce((s, k) => s + p[k], 0) / SKILL_KEYS.length
+    let her = 0
+    let field = 0
+    for (let i = 0; i < 400; i++) {
+      const seed = `fair-${i}`
+      her += meanOf(prologueEntrant(seed, KID_ID, 'V N', 13, lived(LIGHT, 13)))
+      const pool = localPool(seed, 13)
+      field += pool.reduce((s, p) => s + meanOf(p), 0) / pool.length
+    }
+    her /= 400
+    field /= 400
+    // The worst cell in the whole table, and she is barely more than a point under the field – a
+    // fifth of the band's own width on the narrowest axis. The bench: 47.22 against 48.40.
+    expect(field - her).toBeLessThan(2)
+    expect(field - her).toBeGreaterThan(0)
   })
 })

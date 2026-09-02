@@ -205,6 +205,121 @@ describe('the arrival at fourteen', () => {
   })
 })
 
+// =================================================================================================
+// ⭐⭐ PHASE 12 – A CHILDHOOD THAT IS STILL RUNNING, and the anchor that was lying about it
+// =================================================================================================
+//
+// THE DEFECT, in the owner's own words: at a Local Open she was drawn as «a ninth child out of
+// STARTING_SKILL_BAND, with no connection to the childhood», so «a player who paid for the club,
+// one-to-one hours and the sports school watches her play exactly like a neglected girl».
+//
+// Phase 11 declined to fix it and gave a real reason – a partial walk «would read as far below
+// median simply for being short». It did, and the fault was the DENOMINATOR: both anchors were
+// folded over all nine years whatever length of childhood the function was handed, so a six-year
+// numerator was measured against a nine-year median. See `childhoodWalk`.
+describe('⭐⭐ the level answers the years she has lived', () => {
+  /** THE OLD ARITHMETIC, RECONSTRUCTED FROM PUBLIC EXPORTS – the arm this phase replaces. Every term
+   *  is on `childhoodWalk`'s own result, so this cannot drift away from the thing it is contrasted
+   *  with the way a hard-coded table would. */
+  const qMedianFull = childhoodWalk(medianChildhood()).quality
+  const qDevotedFull = childhoodWalk(devotedChildhood()).quality
+  const levelBefore = (years: readonly ChildhoodYear[]) =>
+    (CHILDHOOD.swingPoints * (childhoodWalk(years).quality - qMedianFull)) / (qDevotedFull - qMedianFull)
+
+  it('⚠⚠ AND AT FOURTEEN NOTHING MOVED – byte-for-byte against the arithmetic phase 11 shipped', () => {
+    // ⭐ THE PROOF THE BALANCE PASS NEEDS. `childhood-prologue-balance-2026-09.md` measured the
+    // handover on these exact numbers, so a phase that moved the FULL childhood by a hundredth would
+    // silently invalidate a spec the owner has accepted. These four rows were captured by running
+    // `childhoodArrival` in a worktree at `prologue/p11-tournaments` – the commit BEFORE this change
+    // – and pasted here unedited.
+    //
+    // ⚠ IT IS ALSO TRUE BY CONSTRUCTION, WHICH IS THE STRONGER HALF: a finished childhood has lived
+    // all nine years, so the median filtered to «the years she has lived» IS the whole median, and
+    // the expression reduces to the one that was there. The capture is what proves the argument is
+    // about this code rather than about a story told over it.
+    const P11: Record<string, KidSkills> = {
+      'a/neglected': { serve: 53.71, ret: 44.71, composure: 39.71, stamina: 44.71, groundstrokes: 40 },
+      'a/median': { serve: 56, ret: 47, composure: 42, stamina: 47, groundstrokes: 41 },
+      'a/devoted': { serve: 58, ret: 49.4, composure: 44.4, stamina: 49.4, groundstrokes: 43.4 },
+      'b/neglected': { serve: 48.71, ret: 45.71, composure: 35.71, stamina: 53.71, groundstrokes: 52.71 },
+      'b/median': { serve: 51, ret: 48, composure: 38, stamina: 56, groundstrokes: 55 },
+      'b/devoted': { serve: 53.4, ret: 50.4, composure: 40.4, stamina: 58.4, groundstrokes: 57.4 },
+      'career-7/neglected': { serve: 50.71, ret: 52.71, composure: 51.71, stamina: 40.71, groundstrokes: 51.71 },
+      'career-7/median': { serve: 53, ret: 55, composure: 54, stamina: 43, groundstrokes: 54 },
+      'career-7/devoted': { serve: 55.4, ret: 57.4, composure: 55, stamina: 45.4, groundstrokes: 56.4 },
+      'zzz/neglected': { serve: 43.71, ret: 51.71, composure: 44.71, stamina: 40.71, groundstrokes: 40 },
+      'zzz/median': { serve: 46, ret: 54, composure: 47, stamina: 43, groundstrokes: 41 },
+      'zzz/devoted': { serve: 48.4, ret: 56.4, composure: 49.4, stamina: 45.4, groundstrokes: 43.4 },
+    }
+    const roads: Record<string, ChildhoodYear[]> = {
+      neglected: neglectedChildhood(),
+      median: medianChildhood(),
+      devoted: devotedChildhood(),
+    }
+    for (const [key, expected] of Object.entries(P11)) {
+      const [seed, road] = key.split('/')
+      const got = childhoodArrival(startingSkills(seed, DEFAULT_PROFILE), roads[road])
+      expect(got, key).toEqual(expected)
+    }
+    // ...and the walk's own three numbers, to twelve places, because the arrival is rounded to two
+    // and a rounded pin cannot see a small drift.
+    expect(childhoodWalk(medianChildhood()).level).toBe(0)
+    expect(childhoodWalk(devotedChildhood()).level).toBeCloseTo(2.4, 12)
+    expect(childhoodWalk(neglectedChildhood()).level).toBeCloseTo(-2.2854594381043194, 12)
+    expect(childhoodWalk(neglectedChildhood()).quality).toBeCloseTo(0.2634684674844444, 15)
+    expect(childhoodWalk(devotedChildhood()).quality).toBeCloseTo(0.9327670499555555, 15)
+  })
+
+  it('⭐⭐ a partial childhood is measured against a partial median – the fault was the denominator', () => {
+    // Five years of the best decisions a parent can make used to read as a girl who had been
+    // neglected for nine. Both arms are in the file so the fix is legible as a difference.
+    const devotedFive = devotedChildhood().slice(0, 5)
+    expect(levelBefore(devotedFive)).toBeLessThan(-1.5) // -1.81: far below an ordinary childhood
+    expect(childhoodWalk(devotedFive).level).toBeGreaterThan(0.5) // +0.87: better than ordinary
+    // ⚠ THE MUTATION ARM. Point the numerator's anchor back at the full median and the line above
+    // goes red – which is what says this pin is about the change and not about the model.
+    const mutated =
+      (CHILDHOOD.swingPoints * (childhoodWalk(devotedFive).quality - qMedianFull)) / (qDevotedFull - qMedianFull)
+    expect(mutated).toBe(levelBefore(devotedFive))
+    expect(mutated).not.toBeCloseTo(childhoodWalk(devotedFive).level, 6)
+  })
+
+  it('⭐ an ordinary childhood is exactly zero at EVERY length, which is what «matched» means', () => {
+    const median = medianChildhood()
+    for (let n = 1; n <= median.length; n++) {
+      expect(childhoodWalk(median.slice(0, n)).level, `${n} years`).toBeCloseTo(0, 12)
+    }
+    // ...and the old arithmetic could not say that about a single one of the first eight.
+    for (let n = 1; n < median.length; n++) {
+      expect(levelBefore(median.slice(0, n)), `${n} years`).toBeLessThan(-0.5)
+    }
+  })
+
+  it('⭐⭐ the gap is SMALL AT TEN AND VISIBLE AT THIRTEEN – it grows with every year she lives', () => {
+    // The consequence the phase exists for: five years of investment barely show, nine years do, and
+    // the tournament reveals the upbringing gradually rather than in a jump.
+    const gaps: number[] = []
+    for (let n = 1; n <= 9; n++) {
+      gaps.push(childhoodWalk(devotedChildhood().slice(0, n)).level - childhoodWalk(neglectedChildhood().slice(0, n)).level)
+    }
+    for (let i = 1; i < gaps.length; i++) expect(gaps[i], `${i + 1} years`).toBeGreaterThan(gaps[i - 1])
+    // Six years lived is the weekend at ten; nine is the weekend at thirteen and the handover.
+    expect(gaps[5]).toBeCloseTo(2.3, 1)
+    expect(gaps[8]).toBeCloseTo(4.69, 2)
+    expect(gaps[8] / gaps[5]).toBeGreaterThan(1.9)
+    // ⚠ AND THE FULL CHILDHOOD STILL SPANS EXACTLY ONE SWING EITHER SIDE OF ORDINARY.
+    expect(childhoodWalk(devotedChildhood()).level).toBeCloseTo(CHILDHOOD.swingPoints, 12)
+  })
+
+  it('an empty childhood is the girl she was born – there is nothing to have lived', () => {
+    // `createWorld` guards this case (`years.length > 0`) and so does `prologueEntrant`, but the
+    // arithmetic should not need the guard to be sane: no years lived is no distance from ordinary.
+    expect(childhoodWalk([]).level).toBe(0)
+    const born = startingSkills('empty', DEFAULT_PROFILE)
+    expect(childhoodArrival(born, [])).toEqual(born)
+  })
+})
+
 describe('the three terms, and the decision they make', () => {
   it('coordination saturates at what a child that age can absorb, not at a ceiling', () => {
     // twice the age-appropriate hours buy exactly the same coordination as the right amount
@@ -298,18 +413,26 @@ describe('what the childhood may not touch', () => {
     expect(CHILDHOOD_CODE).not.toMatch(/\bseed\b\s*:/)
   })
 
-  it('⚠⚠ cannot be reached by an ordinary in-game week – only engine/world.ts imports it', () => {
-    // ⭐ THE ONE-LINE, REVIEWED CHANGE PHASE 1 PROMISED, MADE. It shipped as `[]` – «the module
-    // exists, is measured, and is unreachable» – with its own note saying that when phase 4 hands
-    // the prologue's build to `createWorld` this expectation moves to exactly `['engine/world.ts']`.
-    // It has, and the set is still the point: the card table may not import it, the pool may not
-    // import it, no screen and no store may import it, and a second importer appearing anywhere in
-    // `src/` reddens this line rather than quietly putting the childhood on the tick path.
+  it('⚠⚠ cannot be reached by an ordinary in-game week – two named importers and no others', () => {
+    // ⭐ THE ONE-LINE, REVIEWED CHANGE PHASE 1 PROMISED, MADE – AND WIDENED ONCE MORE, BY PHASE 12.
+    // It shipped as `[]` («the module exists, is measured, and is unreachable»), phase 4 opened it to
+    // `['engine/world.ts']` when `createWorld` began spending the nine years, and phase 12 adds
+    // `prologue/pool.ts` because the owner found the gap that refusal left: a girl at a Local Open
+    // was drawn straight out of `STARTING_SKILL_BAND` and played like a neglected one whatever her
+    // parent had paid for. The build she plays on is `childhoodArrival` now, so the pool imports it.
     //
-    // ⚠ WHAT IT STILL BUYS, WHICH IS THE SAME THING PHASE 1 BOUGHT. `createWorld` runs ONCE, at the
-    // birth of a career; `tickWeek` never calls it. So a module reachable from `world.ts` alone is
-    // still a module an ordinary in-game week cannot reach, and `development.ts` is still untouched
-    // – which is why the frozen capture (41550 / e6b0c709) and every career hash cannot move.
+    // ⚠⚠ THE SET IS STILL THE POINT, AND THE CLAIM IT CARRIES IS UNCHANGED. It was never «one
+    // importer»; it is «nothing an in-game week runs». Both names below are off the tick path, and
+    // the second one is proved so by the assertion underneath rather than asserted here:
+    //   * `engine/world.ts` reaches it from `createWorld`, which runs ONCE at the birth of a career
+    //     and is never called by `tickWeek`;
+    //   * `prologue/pool.ts` is walked by the prologue's two components BEFORE a world exists, and
+    //     no framework-free zone imports `src/prologue` at all.
+    // The card table still may not import it, no store and no other screen may, and a THIRD importer
+    // appearing anywhere in `src/` reddens this line rather than quietly widening the reach.
+    //
+    // ⚠ AND `development.ts` IS STILL UNTOUCHED, which is why the frozen capture (41550 / e6b0c709)
+    // and every career hash cannot move – not «were checked and did not move», cannot.
     const SRC = fileURLToPath(new URL('../src/', import.meta.url))
     const files: string[] = []
     const walk = (dir: string) => {
@@ -324,6 +447,19 @@ describe('what the childhood may not touch', () => {
       .filter((f) => !f.endsWith(`engine${'/'}childhood.ts`))
       .filter((f) => /from\s*['"][^'"]*\bchildhood['"]/.test(readFileSync(f, 'utf8')))
       .map((f) => f.slice(SRC.length))
-    expect(importers).toEqual(['engine/world.ts'])
+    expect(importers.sort()).toEqual(['engine/world.ts', 'prologue/pool.ts'])
+
+    // ⭐⭐ AND HERE IS WHY THE SECOND NAME COSTS THE GUARANTEE NOTHING – the half the widened set
+    // cannot state on its own. `src/prologue` is UI-side: not one file in the four framework-free
+    // zones (invariant 1's own list, and `scripts/engine-purity.mjs` walks the same four) imports
+    // it, so no path from `tickWeek` reaches `pool.ts` and therefore none reaches the childhood
+    // through it. Mutation-checked: swapping `prologue\/` for `childhood` in the pattern below
+    // makes it name `engine/world.ts`, so the walk and the read are live rather than vacuous.
+    const ZONES = ['engine/', 'worker/', 'db/', 'shared/']
+    const leaks = files
+      .map((f) => f.slice(SRC.length))
+      .filter((rel) => ZONES.some((z) => rel.startsWith(z)))
+      .filter((rel) => /from\s*['"][^'"]*\bprologue\//.test(readFileSync(join(SRC, rel), 'utf8')))
+    expect(leaks).toEqual([])
   })
 })

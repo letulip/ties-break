@@ -367,11 +367,17 @@ viewer, and the draw is the draw. It is still MEASURED and printed, four arms, c
 Minutes. Reading is estimated at 200 wpm; **watching is measured** off the real `buildTimeline`
 durations at the shipped `key`/2× opening, which the viewer's own pills halve again at 4×.
 
-⚠ **What phase 11 did NOT do, and it is the owner's to rule on:** the childhood does not move HER
-BUILD at a Local Open. She is drawn from `STARTING_SKILL_BAND` on her own sub-stream – the ninth
-child, on the same scale as the eight – because `engine/childhood.ts`'s importer set is pinned as
+⚠⚠ **What phase 11 did NOT do – AND PHASE 12 DID.** Phase 11 shipped with the childhood NOT moving
+her build at a Local Open: she was drawn from `STARTING_SKILL_BAND` on her own sub-stream, the ninth
+child on the same scale as the eight, because `engine/childhood.ts`'s importer set was pinned as
 exactly `['engine/world.ts']` and a second strength model in `src/prologue` is the duplication
-CLAUDE.md forbids by name. What the player's choices DO reach is how many draws she enters.
+CLAUDE.md forbids by name. The owner found it in play – «a player who paid for the club, one-to-one
+hours and the sports school watches her play exactly like a neglected girl» – and both objections
+turned out to be answered by one line, because the fault was the DENOMINATOR in `childhoodWalk`.
+Her build at every weekend is `childhoodArrival` over the years she has actually lived now, the full
+childhood at fourteen is byte-identical to what phase 11 shipped, and the field was re-measured at
+every age against the risk that a partial childhood would leave her below it. See
+**`childhood-on-court-2026-09.md`** – the fix, the control table and the bench (`npm run bench:court`).
 
 ⚠ **NOT IN v1, and named so nobody smuggles them in:** the motivation system (his, later); a
 difficulty menu (§2.4 replaces it); any change to `potential`; any change to the main cohort;

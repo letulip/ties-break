@@ -27,6 +27,7 @@
     "bench:adshoot": "vite-node tools/ad-shoot-bench.ts",
     "bench:agecurve": "vite-node tools/r31-age-curve.ts",
     "bench:childhood": "vite-node tools/childhood-bench.ts",
+    "bench:court": "vite-node tools/prologue-court-bench.ts",
     "bench:econ": "vite-node tools/econ-bench.ts",
     "bench:endings": "vite-node tools/endings-bench.ts",
     "bench:fatigue": "vite-node tools/fatigue-bench.ts",

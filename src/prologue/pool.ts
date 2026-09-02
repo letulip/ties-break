@@ -41,9 +41,25 @@
 // capture (41550 draws / e6b0c709) and every career hash cannot move: this file never sees `rngMain`
 // and nothing on the tick path imports it.
 //
-// ⚠ AND IT DOES NOT IMPORT `engine/childhood.ts` – see cards.ts's header. Phase 1's importer set is
-// pinned EMPTY and phase 4 is the wiring phase; the join between a childhood and a tournament is made
-// in the test, not in the source.
+// ⚠⚠ AND SINCE PHASE 12 IT IS THE SECOND – AND LAST – IMPORTER OF `engine/childhood.ts`. That
+// module's importer set is pinned in `tests/childhood.test.ts` and now reads exactly
+// `['engine/world.ts', 'prologue/pool.ts']`; phase 1 shipped it EMPTY, phase 4 opened it to one, and
+// this is the reviewed one-line widening the owner's defect asked for. What the pin buys is
+// UNCHANGED, because it was never a claim about the count:
+//
+//   * `world.ts` reaches it from `createWorld`, which runs ONCE at the birth of a career and is
+//     never called by `tickWeek`.
+//   * THIS FILE IS NOT ON THE TICK PATH EITHER, and the check is mechanical rather than a promise:
+//     nothing in `src/engine`, `src/worker`, `src/db` or `src/shared` imports `src/prologue` at all,
+//     and `tests/childhood.test.ts` asserts that too. The prologue is walked by two components
+//     before a world exists; the worker never sees it.
+//   * `development.ts` IS STILL NOT EDITED, so the frozen MAIN capture (41550 draws / e6b0c709) and
+//     every career hash cannot move – not «were checked and did not move», cannot.
+//
+// ⚠ AND IT TAKES THE FUNCTION, NOT THE TYPE. The years arrive as `PrologueYear` (shared/protocol,
+// which this file already speaks); `tests/prologue-cards.test.ts` asserts the two shapes are
+// assignable in both directions, so there is no second type import here to keep in step.
+import { childhoodArrival } from '../engine/childhood'
 import { rngFromSeed, pickInt, type Rng } from '../engine/rng'
 import { SKILL_KEYS, STARTING_SKILL_BAND, type SkillKey } from '../engine/development'
 import { WEEKS_PER_YEAR, TIERS } from '../engine/season/calendar'
@@ -164,34 +180,51 @@ export function localPool(seed: string, age: number, index = 0): MatchPlayer[] {
   return pool.sort((a, b) => standardOf(b) - standardOf(a) || (a.id < b.id ? -1 : 1))
 }
 
-/** ⭐⭐ HER, AS A LOCAL OPEN MEETS HER – phase 11, and it is the NINTH CHILD and nothing more.
+/** ⭐⭐ HER, AS A LOCAL OPEN MEETS HER – the ninth child, AND THE YEARS SHE HAS LIVED.
  *
- *  Drawn from the same `STARTING_SKILL_BAND`, by the same `pickInt`, in the same `SKILL_KEYS` order
- *  as the eight above, on her own purpose-scoped sub-stream `seed:prologue:her` (invariant 2). One
+ *  She is BORN the same way the eight above are: `STARTING_SKILL_BAND`, the same `pickInt`, the same
+ *  `SKILL_KEYS` order, on her own purpose-scoped sub-stream `seed:prologue:her` (invariant 2). One
  *  draw for the whole childhood, with `age` moved on each time: the same girl, a year older.
  *
- *  ⚠⚠ THE CHILDHOOD DOES NOT MOVE HER HERE, AND THAT IS A REFUSAL RATHER THAN AN OVERSIGHT. The
- *  honest way to make nine years of decisions show up on a court is `childhoodArrival`, and this
- *  module may not reach it: `tests/childhood.test.ts` pins `engine/childhood.ts`'s importer set as
- *  exactly `['engine/world.ts']`, which is phase 1's guarantee that the childhood model cannot be
- *  reached from the tick path. The alternatives are both worse than the gap:
+ *  ⭐⭐ AND THEN THE CHILDHOOD MOVES HER – phase 12, which is the defect the owner found in phase 11:
+ *  «a player who paid for the club, one-to-one hours and the sports school watches her play exactly
+ *  like a neglected girl». `years` is what she has actually lived by this weekend – `yearsSoFar` in
+ *  run.ts, which is the run's own list and holds no year the player has not answered – and
+ *  `childhoodArrival` is the SHIPPED handover arithmetic, the same function `createWorld` calls at
+ *  fourteen. There is no second strength model here, which was phase 11's own objection to fixing
+ *  it, and no age argument: the LENGTH of the list is her age.
  *
- *    * A SECOND STRENGTH MODEL HERE would be two copies of one model, which CLAUDE.md forbids by
- *      name and `foldYears` was written to avoid («Two copies of one model is a model that drifts»).
- *    * A PARTIAL WALK WOULD NOT MEAN WHAT IT SAYS EVEN IF IT WERE REACHABLE. `childhoodWalk`
- *      normalises the level against a MEDIAN and a DEVOTED childhood over all nine years, so a walk
- *      of the first six would read as far below median simply for being short – the same trap
- *      cards.ts §"what a card shows" §4 already records about drawing a number at seven.
+ *  ⚠ PHASE 11'S SECOND OBJECTION WAS REAL AND IS FIXED IN `childhoodWalk`, NOT WORKED AROUND HERE.
+ *  It said a partial walk «would read as far below median simply for being short», and it did –
+ *  because the level normalised a six-year numerator against a nine-year median. Phase 12 matches
+ *  the numerator's anchor to the years lived and keeps the DENOMINATOR at the full childhood, so a
+ *  devoted road reads about half the swing at ten and all of it at thirteen. See that function.
  *
- *  ⭐ WHAT THE PLAYER'S CHOICES DO REACH is the RHYTHM below: a year she gave everything to holds
- *  two of these weekends and an ordinary one holds one, so a devoted childhood plays more draws and
- *  therefore wins more of them. That is the connection, it is derived from the table, and it is the
- *  only one this phase claims. Making the girl herself stronger is the owner's call and is named in
- *  the report as a thing NOT done. */
-export function prologueEntrant(seed: string, id: string, name: string, age: number): MatchPlayer {
+ *  ⭐ WHAT THAT BUYS, AND IT IS THE POINT OF THE PROLOGUE: the gap is SMALL AT TEN AND VISIBLE AT
+ *  THIRTEEN. Five years of investment barely show; nine years do. The tournament reveals the
+ *  upbringing gradually rather than in a jump – measured, both roads, all four ages, in
+ *  `docs/specs/childhood-on-court-2026-09.md` and `npm run bench:court`.
+ *
+ *  ⚠ `years` IS OPTIONAL AND AN EMPTY LIST IS THE BORN GIRL. That is not a convenience default: a
+ *  weekend before any year has been answered is not reachable in the walk (his floor is ten and the
+ *  card at ten is answered before the queue is filled), so the branch exists for callers that are
+ *  asking about the DRAW rather than about a childhood – and it keeps every phase-11 pin honest by
+ *  meaning exactly what it did.
+ *
+ *  ⚠ NO SECOND DRAW AND NO SECOND STREAM. `childhoodArrival` takes a build and imports no generator
+ *  (childhood.ts's own RNG note), so this function taps exactly the five draws it always did,
+ *  whatever it is handed – which is why the cohort proof below still compares byte for byte. */
+export function prologueEntrant(
+  seed: string,
+  id: string,
+  name: string,
+  age: number,
+  years: readonly PrologueYear[] = [],
+): MatchPlayer {
   const rng = rngFromSeed(`${seed}:prologue:her`)
-  const skills = {} as Record<SkillKey, number>
-  for (const k of SKILL_KEYS) skills[k] = pickInt(rng, ...STARTING_SKILL_BAND[k])
+  const born = {} as Record<SkillKey, number>
+  for (const k of SKILL_KEYS) born[k] = pickInt(rng, ...STARTING_SKILL_BAND[k])
+  const skills = years.length > 0 ? childhoodArrival(born, years) : born
   return { id, name, age, ...skills }
 }
 

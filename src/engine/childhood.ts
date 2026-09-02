@@ -244,7 +244,14 @@ function foldYears(years: readonly ChildhoodYear[]): {
  *
  *  ⚠ AND THAT IS WHY THE GRINDER LOSES. knock.ts's standing rule is that a branch which always ends
  *  better is not a decision. Maximum practice at every age is the branch a player reaches for first,
- *  and here it lands BELOW a median childhood – measured, see the spec's §3a and §4. */
+ *  and here it lands BELOW a median childhood – measured, see the spec's §3a and §4.
+ *
+ *  ⭐⭐ AND IT ANSWERS A CHILDHOOD THAT IS STILL RUNNING – phase 12, and the change is one anchor.
+ *  See `docs/specs/childhood-on-court-2026-09.md`. The owner found the gap at a Local Open: a
+ *  ten-year-old was drawn straight out of `STARTING_SKILL_BAND`, so «a player who paid for the club,
+ *  one-to-one hours and the sports school watches her play exactly like a neglected girl». The
+ *  honest build for a girl who has lived six years of a childhood is this function over those six
+ *  years – and it used to lie about them, because the FAULT WAS IN THE DENOMINATOR. */
 export function childhoodWalk(years: readonly ChildhoodYear[]): ChildhoodWalk {
   const { rows, quality, mass } = foldYears(years)
   // ⚠ THE LEVEL IS NORMALISED AGAINST THE TWO REFERENCE CHILDHOODS, and that is what makes the dial
@@ -252,9 +259,40 @@ export function childhoodWalk(years: readonly ChildhoodYear[]): ChildhoodWalk {
   // hands the game the same girl `startingSkills` has always produced – and a devoted one is exactly
   // `swingPoints`. Without the anchor `swingPoints` would be "roughly this much, depending on the
   // shape of the weights", which is the kind of dial that drifts.
-  const qMedian = foldYears(medianChildhood()).quality
-  const qDevoted = foldYears(devotedChildhood()).quality
-  const level = CHILDHOOD.swingPoints * ((quality - qMedian) / (qDevoted - qMedian))
+  //
+  // ⭐⭐ THE TWO ANCHORS ARE READ AT DIFFERENT LENGTHS, AND THAT IS THE WHOLE OF PHASE 12.
+  //
+  //     level = swingPoints x (quality_so_far - qMedian_SO_FAR) / (qDevoted_FULL - qMedian_FULL)
+  //
+  // The NUMERATOR asks «how far off ordinary are the years she has actually lived?» and must
+  // therefore compare like with like: `quality` is a sum over the years it was handed, so the median
+  // it is measured against has to be a sum over THE SAME YEARS. Before phase 12 both anchors were
+  // folded over all nine whatever it was handed, so six lived years were a six-year sum against a
+  // nine-year median and every partial childhood – a devoted one included – read as far below
+  // ordinary purely for being short. Measured: a devoted childhood truncated at age nine read
+  // -1.81 of a +2.40 swing.
+  //
+  // The DENOMINATOR stays the FULL childhood, deliberately, because it is the unit the dial is
+  // written in: `swingPoints` is «what nine years of the best decisions a parent can make are
+  // worth», so dividing by a six-year span would re-scale a six-year-old's answer up to the full
+  // swing and the years would stop showing at all. Kept full, a devoted road reads about half the
+  // swing at ten and all of it at fourteen – ⭐ the gap is SMALL AT TEN AND VISIBLE AT THIRTEEN,
+  // which is the prologue revealing an upbringing gradually rather than in a jump.
+  //
+  // ⚠ AND AT FOURTEEN NOTHING MOVED, BY CONSTRUCTION rather than by measurement. A finished
+  // childhood has lived all nine years, so `qMedianSoFar` IS `qMedianFull` – the same subtraction,
+  // the same division, the same double. The balance pass's numbers stay true.
+  //
+  // ⚠ IT IS THE SAME FUNCTION WITH MATCHED ANCHORS, NOT A SECOND STRENGTH MODEL. `foldYears` is
+  // still the one loop everything goes through (see its own note), and the years it is handed are
+  // still the player's own – phase 11's objection was to a SECOND model in `src/prologue`, and this
+  // is the first one, answering a shorter question.
+  const median = medianChildhood()
+  const lived = new Set(years.map((y) => y.age))
+  const qMedianSoFar = foldYears(median.filter((y) => lived.has(y.age))).quality
+  const qMedianFull = foldYears(median).quality
+  const qDevotedFull = foldYears(devotedChildhood()).quality
+  const level = CHILDHOOD.swingPoints * ((quality - qMedianSoFar) / (qDevotedFull - qMedianFull))
 
   let massMean = 0
   for (const k of SKILL_KEYS) massMean += mass[k]
@@ -267,11 +305,18 @@ export function childhoodWalk(years: readonly ChildhoodYear[]): ChildhoodWalk {
   return { years: rows, quality, level, shape }
 }
 
-/** ⭐⭐ THE GIRL THE PROLOGUE HANDS OVER, at fourteen.
+/** ⭐⭐ THE GIRL THE PROLOGUE HANDS OVER, at fourteen – AND THE GIRL A LOCAL OPEN MEETS, at ten.
  *
  *  ⚠ IT TAKES A BUILD, NOT A SEED, and that is the RNG answer in one line: there is nothing here to
  *  draw with. `born` is `startingSkills(seed, profile)` – the draw the game has always made – and
  *  the nine years MOVE her inside the band rather than generating a second one.
+ *
+ *  ⭐ SINCE PHASE 12 `years` MAY BE THE YEARS SHE HAS ACTUALLY LIVED and not only the finished nine,
+ *  which is what puts the childhood on a prologue court (`prologueEntrant`, src/prologue/pool.ts).
+ *  There is no second entry point and no `age` argument: the length of the list IS her age, and
+ *  `childhoodWalk` matches its median anchor to it. The clamp below is unchanged and still right at
+ *  ten – pool.ts's own header is why: the eight children she meets are on the game's own attribute
+ *  scale too, and their AGE is what says they are ten.
  *
  *  ⚠⚠ AND THE CLAMP IS THE ACCEPTANCE CRITERION MADE STRUCTURAL. She is held inside
  *  `STARTING_SKILL_BAND`, which is the exact range `startingSkills` draws from, so the set of girls

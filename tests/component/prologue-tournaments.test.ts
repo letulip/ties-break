@@ -42,11 +42,25 @@ import {
   TOURNAMENT_ANSWER,
   TWELFTH_WANTS_MORE,
   localOpenCard,
+  type PrologueCard,
+  type PrologueOption,
 } from '../../src/prologue/cards'
-import { EMPTY_RUN, chosenYears, enteredAges, moodAt, withEntry, withOrigin, withPick } from '../../src/prologue/run'
+import {
+  EMPTY_RUN,
+  cardFor,
+  chosenYears,
+  enteredAges,
+  moodAt,
+  withEntry,
+  withOrigin,
+  withPick,
+  yearsLivedBy,
+  type PrologueRun,
+} from '../../src/prologue/run'
 import { OPENING_IDENTITY } from '../../src/prologue/identity'
 import { prologueArtStem } from '../../src/art/prologue'
 import {
+  LOCAL_POOL,
   herMatches,
   localOpensAt,
   outcomeOf,
@@ -54,7 +68,14 @@ import {
   prologueEntrant,
   prologueSchedule,
 } from '../../src/prologue/pool'
-import { DEFAULT_PROFILE, type PlayerProfile, type PrologueHandover } from '../../src/shared/protocol'
+import { SKILL_KEYS } from '../../src/engine/development'
+import type { MatchPlayer } from '../../src/engine/match/types'
+import {
+  DEFAULT_PROFILE,
+  type FamilyBackground,
+  type PlayerProfile,
+  type PrologueHandover,
+} from '../../src/shared/protocol'
 
 /** The road that enters her and then buys her everything – the busiest childhood the table holds. */
 const CARRIED: Record<number, string> = {
@@ -441,5 +462,126 @@ describe('⚠ the weekend is the bracket`s, not the watcher`s', () => {
     const entered = enteredAges(run)
     expect(entered).toEqual([])
     for (const age of CARD_AGES) expect(localOpensAt(years, age, entered), `age ${age}`).toBe(0)
+  })
+})
+
+// =================================================================================================
+// ⭐⭐ PHASE 12 – THE WIRE FROM THE CARDS TO THE COURT, MOUNTED
+// =================================================================================================
+//
+// THE DEFECT, in the owner's own words: at a Local Open she was drawn as «a ninth child out of
+// STARTING_SKILL_BAND, with no connection to the childhood», so «a player who paid for the club,
+// one-to-one hours and the sports school watches her play exactly like a neglected girl».
+//
+// ⚠⚠ IT IS MOUNTED BECAUSE THE DEFECT WAS IN THE WIRING, NOT IN THE ARITHMETIC. `prologueEntrant`
+// takes the years now and `tests/prologue-pool.test.ts` pins what it does with them – but the thing
+// the owner met was a SCREEN that never handed them over. So this walks the real component, catches
+// the girl it puts on the court, and compares her against the two candidates: the childhood's girl
+// and the bare band draw. Mutation-verified: dropping `yearsLivedBy(...)` from `kidAt`'s call turns
+// the second assertion of the first case red, naming the age.
+
+describe('⭐⭐ the girl the walk puts on the court is the childhood the player bought', () => {
+  /** ⚠ THE PROLOGUE'S SEED IS `Math.random`'s, BY DESIGN (it is UI-side – see `freshSeed`), so the
+   *  only way to know which girl to expect is to hold the die still. The expression below is the
+   *  component's own, so a change to `freshSeed` reddens this rather than being absorbed by it. */
+  const ROLL = 0.4242424242
+  const SEED = `prologue-${(ROLL.toString(36).slice(2) + '0000').slice(0, 8)}`
+
+  beforeEach(() => {
+    setActivePinia(createPinia())
+    document.body.innerHTML = ''
+    setViewport(PHONE)
+  })
+
+  /** ⭐ THE TWO ROADS, CHOSEN BY PRICE RATHER THAN BY A TABLE OF IDS – the dearest answer on every
+   *  card against the cheapest one, which is «the parent who paid» against «the parent who did not»
+   *  without this file needing to know which face of the twelfth the run reached.
+   *
+   *  ⚠ THE TENTH IS THE SAME ON BOTH, and that is what makes the comparison about the CHILDHOOD.
+   *  Entering her is what buys the weekend, so a road that declined at ten would differ from the
+   *  other in how many tournaments it played – which is phase 11's connection, not phase 12's. */
+  function chooseOn(row: PrologueCard, age: number, rich: boolean): PrologueOption {
+    const options = row.options!
+    if (age === LOCAL_POOL.fromAge) return options.find((o) => o.focus === 'matchplay')!
+    const byCost = [...options].sort((a, b) => (a.costCents ?? 0) - (b.costCents ?? 0))
+    return rich ? byCost[byCost.length - 1] : byCost[0]
+  }
+
+  /** The walk, answering every card and every ask, and keeping a run in step with the component's
+   *  own so the expected girl can be computed from the same years. */
+  async function walkWatching(rich: boolean): Promise<{ age: number; kid: MatchPlayer; run: PrologueRun }[]> {
+    const spy = vi.spyOn(Math, 'random').mockReturnValue(ROLL)
+    try {
+      stubStore()
+      const wrapper = mount(ChildhoodPrologue, { attachTo: document.body })
+      let run = EMPTY_RUN
+      const seen: { age: number; kid: MatchPlayer; run: PrologueRun }[] = []
+      for (const age of CARD_AGES) {
+        const card = PROLOGUE_CARDS.find((c) => c.age === age)!
+        if (card.origins) {
+          const origin = card.origins[1]
+          await click(wrapper, '.prologue-answer', origin.label)
+          run = withOrigin(run, origin.id as FamilyBackground)
+        } else if (cardFor(age, run).options) {
+          const option = chooseOn(cardFor(age, run), age, rich)
+          await click(wrapper, '.prologue-answer', option.label)
+          run = withPick(run, age, option.id)
+        } else {
+          await click(wrapper, '.prologue-answer', card.continueLabel)
+        }
+        if (wrapper.findAll('.prologue-answer-label').some((b) => b.text() === 'Put her name down')) {
+          await click(wrapper, '.prologue-answer', 'Put her name down')
+          run = withEntry(run, age, TOURNAMENT_ANSWER.enter)
+        }
+        for (let guard = 0; guard < 10; guard++) {
+          if (wrapper.find('.plo-skip').exists()) {
+            seen.push({ age, kid: wrapper.findComponent(PrologueLocalOpen).props('kid') as MatchPlayer, run })
+            await click(wrapper, '.plo-skip')
+            continue
+          }
+          if (wrapper.text().includes(LOCAL_OPEN_COPY.kicker)) {
+            await click(wrapper, '.prologue-answer', LOCAL_OPEN_COPY.result.won.continueLabel)
+            continue
+          }
+          break
+        }
+      }
+      wrapper.unmount()
+      return seen
+    } finally {
+      spy.mockRestore()
+    }
+  }
+
+  it('⭐⭐ every weekend is played by `childhoodArrival` over the years lived – not by the band draw', async () => {
+    for (const rich of [true, false]) {
+      const seen = await walkWatching(rich)
+      // Entering her every year buys a weekend at 10, 11, 12 and 13 – the rhythm phase 11 settled.
+      expect(seen.map((s) => s.age), rich ? 'the dear road' : 'the cheap road').toEqual([10, 11, 12, 13])
+      for (const { age, kid, run } of seen) {
+        const born = prologueEntrant(SEED, KID_ID, kid.name, age)
+        const raised = prologueEntrant(SEED, KID_ID, kid.name, age, yearsLivedBy(run, age))
+        // ⭐ SHE IS THE RAISED GIRL...
+        for (const k of SKILL_KEYS) expect(kid[k], `${k} at ${age}`).toBe(raised[k])
+        // ...AND NOT THE BORN ONE, which is the assertion that reddens if the wire is cut.
+        expect(SKILL_KEYS.some((k) => kid[k] !== born[k]), `age ${age} is still the band draw`).toBe(true)
+      }
+    }
+  })
+
+  it('⭐⭐ and the two roads put DIFFERENT girls on the same court, from the same die', async () => {
+    // The owner's sentence, made mechanical: one seed, one born build, two childhoods, two players.
+    // ⚠ AND THE GAP GROWS – small at ten, visible at thirteen. Both halves are asserted, because a
+    // fix that moved her by a constant would satisfy the first and miss the point of the phase.
+    const meanOf = (p: MatchPlayer) => SKILL_KEYS.reduce((s, k) => s + p[k], 0) / SKILL_KEYS.length
+    const rich = await walkWatching(true)
+    const poor = await walkWatching(false)
+    const gaps = rich.map((r, i) => meanOf(r.kid) - meanOf(poor[i].kid))
+    // eslint-disable-next-line no-console
+    console.log(`\n  THE SAME GIRL, TWO CHILDHOODS – her mean attribute, dear road minus cheap road\n  ${
+      rich.map((r, i) => `age ${r.age}: ${meanOf(r.kid).toFixed(2)} vs ${meanOf(poor[i].kid).toFixed(2)}  (+${gaps[i].toFixed(2)})`).join('\n  ')
+    }\n`)
+    for (const g of gaps) expect(g).toBeGreaterThan(0)
+    expect(gaps[gaps.length - 1]).toBeGreaterThan(gaps[0])
   })
 })

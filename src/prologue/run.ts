@@ -191,6 +191,23 @@ export function yearsSoFar(run: PrologueRun): PrologueYear[] {
   return out
 }
 
+/** ⭐⭐ THE YEARS SHE HAS LIVED BY THE WEEKEND AT `age` – phase 12, and it is `yearsSoFar` with one
+ *  clause, for a reason that cost a measurement to find.
+ *
+ *  ⚠⚠ `yearsSoFar` IS NOT THAT LIST, AND THE OFF-BY-A-YEAR IS THE THIRTEENTH. The thirteenth year is
+ *  `sameAsLastYear` – it is the twelfth again (see `yearAt`) – so the moment the player answers the
+ *  twelfth card, `yearAt(13)` starts returning a year and `yearsSoFar` reports NINE. A weekend played
+ *  at twelve would then be played by a girl who has already lived the year after it, and the
+ *  gradient the phase exists for («small at ten, visible at thirteen») would jump from seven years
+ *  to nine and then stand still.
+ *
+ *  ⭐ SO THE WEEKEND'S OWN AGE IS THE CUT, and nothing else about it is. `<=` rather than `<`,
+ *  because the year on screen is the year that bought the entry: at ten the card's own decision is
+ *  what makes the year a matchplay year, and it is in the run before the queue is filled. */
+export function yearsLivedBy(run: PrologueRun, age: number): PrologueYear[] {
+  return yearsSoFar(run).filter((y) => y.age <= age)
+}
+
 /** ⚠ AND EVERY YEAR'S TOURNAMENT QUESTION IS ANSWERED TOO. A childhood is not finished while a card
  *  still has an open ask on it – `askAt` returns null once the year holds an answer either way, so
  *  «not this year» finishes the card exactly as «put her name down» does. */

@@ -69,6 +69,7 @@ import {
   withOpen,
   withOrigin,
   withPick,
+  yearsLivedBy,
   yearsSoFar,
   type PrologueRun,
 } from '../prologue/run'
@@ -129,10 +130,25 @@ const resultNow = ref<{ age: number; outcome: ReturnType<typeof outcomeOf> } | n
 
 /** ⭐ HER, AS THE DRAW MEETS HER – the ninth child, drawn on the game's own band by `prologueEntrant`
  *  and named by whatever the age-5 card was told. `KID_ID` is what makes the viewer point at the
- *  right girl (`matchReadout`'s `kidSide`), and pool.ts guarantees no child can collide with it. */
+ *  right girl (`matchReadout`'s `kidSide`), and pool.ts guarantees no child can collide with it.
+ *
+ *  ⭐⭐ AND THE YEARS SHE HAS LIVED GO WITH HER – phase 12, the owner's defect: a girl whose parent
+ *  paid for the club, the one-to-one hours and the sports school used to play a Local Open exactly
+ *  like a neglected one, because the ninth child was a bare band draw. `yearsLivedBy` is the run's
+ *  own list cut at this weekend's age, so this hands the arithmetic the childhood that has actually
+ *  happened by now and no year that has not.
+ *
+ *  ⚠ THIS COMPONENT COMPUTES NO STRENGTH OF ITS OWN, and that is the point of the shape: it passes a
+ *  list of years, and `prologueEntrant` spends them through the SHIPPED `childhoodArrival` – the
+ *  same function the handover uses at fourteen. There is no second model here to drift.
+ *
+ *  ⚠ AND THE YEAR ON SCREEN IS ALREADY IN THE LIST. `answer()` writes this year's pick into the run
+ *  BEFORE it fills the queue, so a weekend at ten is played by a girl who has lived ages 5..10 – six
+ *  years, not five. That is the honest reading: the tenth year's tennis is what bought the entry. */
 function kidAt(age: number): MatchPlayer {
   const named = settleIdentity(identity.value)
-  return prologueEntrant(seed.value, KID_ID, `${named.kidName} ${named.kidLastName}`, age)
+  const fullName = `${named.kidName} ${named.kidLastName}`
+  return prologueEntrant(seed.value, KID_ID, fullName, age, yearsLivedBy(run.value, age))
 }
 
 /** ⭐⭐ THE NEXT WEEKEND, PLAYED. The bracket is resolved HERE, before the screen opens, and the run
