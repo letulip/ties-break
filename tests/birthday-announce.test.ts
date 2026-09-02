@@ -2,6 +2,17 @@
 // THE ANNOUNCED AGE – round-16 #100, found by the season-anchor slice and left for this one.
 // =================================================================================================
 //
+// ⭐⭐⭐ READ THIS FIRST: ROUND 34 #3 MOVED WHAT "HER BIRTHDAY WEEK" MEANS, and several arms below
+// were re-aimed rather than rewritten. Everything under this header is the history of getting the
+// ANNOUNCED AGE right while the announcement fired in the week CONTAINING her date. The owner then
+// met the last consequence of that choice on screen – «Увидел попап про 15 летите … а затем на home
+// перешёл, а там написано 14 лет» – because Home prints the age at the week's MONDAY and a Tuesday
+// birthday is not there yet. The announcement now fires in the week the one clock ticks
+// (engine/world/age.ts `birthdayYearIn`), so the popup, the feed line, the confetti and the age
+// line all read one number. Each re-aimed arm carries its own ⚠ note saying what it used to claim
+// and why the claim moved; the history below is kept because the defects it records are the reason
+// the arms are shaped the way they are.
+//
 // `docs/specs/season-anchor.md` §7, "Found in passing, NOT fixed here":
 //
 //   «`birthdayTurning` announces the wrong age when her birthday falls in the tail of a week whose
@@ -78,62 +89,123 @@ describe('the age she is told she is turning', () => {
     for (let i = 1; i < ages.length; i++) {
       expect(ages[i], `${ages[i - 1]} then ${ages[i]}`).toBe(ages[i - 1] + 1)
     }
-    // ...and each one is the age she actually turns – the calendar year of the birthday minus her
-    // birth year, which is the only definition that does not consult a Monday.
+    // ⚠⚠ RE-AIMED BY ROUND 34 #3, NOT LOOSENED. This loop used to derive the age from the calendar
+    // year of the week CONTAINING her date – «the only definition that does not consult a Monday» –
+    // because the announcement fired in that week. It fires in the week her AGE CHANGES now (the
+    // owner met the one-week gap on screen: the popup said fifteen and Home said fourteen), so the
+    // definition that does not consult the announcement is the CLOCK, and this asks for both halves
+    // instead of one: the age announced is the age printed, and the week before it was one lower.
+    // Strictly more than the line it replaces, which pinned the number and not the week.
     for (const [w, age] of fired) {
-      const year = weekOfDate(MONTH, DAY, weekYear(w)) === w ? weekYear(w) : weekYear(w) + 1
-      expect(age, `w${w}`).toBe(year - kidBirthYear())
+      expect(age, `w${w}: announced ${age}, printed ${kidAgeYears(w, MONTH, DAY)}`).toBe(kidAgeYears(w, MONTH, DAY))
+      expect(kidAgeYears(w - 1, MONTH, DAY), `w${w - 1}: she was still a year younger`).toBe(age - 1)
     }
-    // The defect made itself visible exactly here: on at least one of these weeks the Monday is
-    // still in the month BEFORE her birth month, which is what the old code read.
-    expect(fired.some(([w]) => weekMonth(w) !== MONTH), 'the geometry is present').toBe(true)
+    // ⚠ AND THE GEOMETRY IS STILL PRESENT, pointing the other way. The old line asked for a mark week
+    // whose Monday is in the month BEFORE her birth month – that was the defect's own shape and it
+    // cannot occur now, because the mark is the first Monday ON OR AFTER a 4 September (measured: 0
+    // of 14). What has to be present for this fixture to prove anything is the mid-week birthday
+    // itself: her DATE sitting in the week before the one that marks it (measured: 13 of 14).
+    expect(
+      fired.some(([w]) => weekOfDate(MONTH, DAY, weekYear(w)) === w - 1),
+      'the geometry is present – a birth date that falls mid-week, in the week before the mark',
+    ).toBe(true)
   })
 
   // ===============================================================================================
   // 2. THE PROPERTY, over every birth date there is.
   // ===============================================================================================
+  // ⚠⚠ RE-AIMED BY ROUND 34 #3. Arm (a) used to walk the CALENDAR – "every year whose date has a
+  // career week must be announced in that week" – and that anchor is exactly what the owner's
+  // complaint retired: the week containing her date is not the week her printed age changes, so a
+  // test anchored on it demands the disagreement. It walks the CLOCK now, which is a strictly
+  // stronger claim in both directions: every week her age steps must announce, no other week may,
+  // and the number announced must be the number printed. Nothing is loosened – the old "never
+  // announced" and "announced twice" columns are still here, and a third ("said, and the clock had
+  // not ticked") is new, because the anchor can now be read both ways round.
   it('⚠ every one of the 365 birth dates: each birthday announces the age she turns, once', () => {
     const wrong: string[] = []
     const missing: string[] = []
+    const unasked: string[] = []
     const doubled: string[] = []
+    const skipped: string[] = []
     for (let m = 1; m <= 12; m++) {
       for (let d = 1; d <= daysInBirthMonth(m); d++) {
         const fired = announcements(m, d)
-        const weeks = fired.map(([w]) => w)
-        // (a) EVERY calendar year whose birthday HAS a career week must announce it, in that week.
-        for (let y = 2031; y < 2031 + SEASONS; y++) {
-          const w = weekOfDate(m, d, y)
-          // null = the date falls in the real week that belongs to no career week. An honest
-          // absence, documented on `weekOfDate`, and the one thing this test must not demand.
-          if (w === null || w < 0 || w >= LAST_WEEK) continue
-          if (!weeks.includes(w)) { missing.push(`${m}/${d}/${y} (week ${w})`); continue }
-          const age = fired.find(([wk]) => wk === w)![1]
-          if (age !== y - kidBirthYear()) wrong.push(`${m}/${d}/${y}: said ${age}, turns ${y - kidBirthYear()}`)
+        const byWeek = new Map(fired)
+        // (a) EVERY week the one clock ticks over announces, in that week, the age it ticked to –
+        //     and no other week says anything at all. Week 0 is excluded because it has no previous
+        //     week to have ticked from: a girl whose birthday is the career's own first week opens
+        //     the game already that age (`birthdayYearIn`'s `week > 0`, and the six dates 1-6
+        //     January are the whole of that class).
+        for (let w = 1; w < LAST_WEEK; w++) {
+          const printed = kidAgeYears(w, m, d)
+          const ticked = printed > kidAgeYears(w - 1, m, d)
+          const said = byWeek.get(w)
+          if (ticked && said === undefined) { missing.push(`${m}/${d} w${w}: turned ${printed}, nothing said`); continue }
+          if (!ticked && said !== undefined) { unasked.push(`${m}/${d} w${w}: said ${said}, still ${printed}`); continue }
+          if (ticked && said !== printed) wrong.push(`${m}/${d} w${w}: said ${said}, printed ${printed}`)
         }
-        // (b) ...and nothing else fires, so no age is ever announced twice.
+        // (b) ...so no age is announced twice, and none is skipped between the first and the last.
         const ages = fired.map(([, a]) => a)
         if (new Set(ages).size !== ages.length) doubled.push(`${m}/${d}: ${ages.join(',')}`)
+        for (let i = 1; i < ages.length; i++) {
+          if (ages[i] !== ages[i - 1] + 1) skipped.push(`${m}/${d}: ${ages[i - 1]} then ${ages[i]}`)
+        }
       }
     }
     expect(wrong.slice(0, 8), `${wrong.length} wrong ages`).toEqual([])
     expect(missing.slice(0, 8), `${missing.length} birthdays never announced`).toEqual([])
+    expect(unasked.slice(0, 8), `${unasked.length} announcements in a week the clock did not tick`).toEqual([])
     expect(doubled.slice(0, 8), `${doubled.length} dates announce an age twice`).toEqual([])
+    expect(skipped.slice(0, 8), `${skipped.length} dates skip an age`).toEqual([])
+  })
+
+  // ===============================================================================================
+  // 2b. ⭐⭐⭐ ROUND 34 #3 – THE POPUP AND THE AGE LINE, FOR EVERY BIRTH WEEK THERE IS
+  // ===============================================================================================
+  it('⭐⭐⭐ the popup and the Home age line can never disagree – all 365 dates, fourteen seasons', () => {
+    // The owner, playing: «Увидел попап про 15 летите … а затем на home перешёл, а там написано 14
+    // лет.» `pendingBirthday` announces `birthdayTurning`; Home prints `Snapshot.ageYears`, which is
+    // `kidAgeYears` at the week's Monday. THIS IS THE WHOLE ITEM, as one property.
+    //
+    // ⚠ IT IS THE STRONGER FORM OF THE ARM BELOW, WHICH IT REPLACES RATHER THAN DUPLICATES. Arm 4
+    // bounded the disagreement at one week and called both readings true; the owner met it on screen
+    // and it is not allowed at all now.
+    //
+    // MEASURED BEFORE THE FIX (`npx vite-node` over both functions): **4365 of 5106 announcements
+    // disagreed, on all 365 of the 365 dates** – the clock ticked in a week nothing was said 4359
+    // times, and something was said in a week the clock had not ticked 4359 times. After: 0, 0, 0.
+    const disagreed: string[] = []
+    for (let m = 1; m <= 12; m++) {
+      for (let d = 1; d <= daysInBirthMonth(m); d++) {
+        for (const [w, age] of announcements(m, d)) {
+          if (age !== kidAgeYears(w, m, d)) disagreed.push(`${m}/${d} w${w}: popup ${age}, home ${kidAgeYears(w, m, d)}`)
+        }
+      }
+    }
+    expect(disagreed.slice(0, 8), `${disagreed.length} weeks where the popup and Home disagree`).toEqual([])
   })
 
   // ===============================================================================================
   // 3. THE SIBLING – the New Year straddle.
   // ===============================================================================================
   it('⚠ a girl born 1-5 January keeps every birthday the calendar can give her', () => {
-    // Before the fix she lost most of them: her birthday fell in a season's LAST week (Monday 30
-    // Dec), `weekYear` named December's year, and the lookup went to the January a year earlier.
+    // Before the 18.08 fix she lost most of them: her birthday fell in a season's LAST week (Monday
+    // 30 Dec), `weekYear` named December's year, and the lookup went to the January a year earlier.
+    //
+    // ⚠ RE-AIMED BY ROUND 34 #3 – SAME CLAIM, ANCHORED ON THE CLOCK. "Keeps every birthday" is the
+    // property this arm exists for and it is untouched; what moves is where the birthday is KEPT.
+    // Her date sits in the old season's straddling week and the Monday that reaches it is the next
+    // season's own first week, so the mark is there. Asserted per calendar year, as before, so a
+    // year going missing still fails.
     for (const day of [1, 2, 3, 4, 5]) {
-      const fired = announcements(1, day)
-      const weeks = fired.map(([w]) => w)
+      const byAge = new Map(announcements(1, day).map(([w, age]) => [age, w]))
       for (let y = 2032; y < 2031 + SEASONS; y++) {
-        const w = weekOfDate(1, day, y)
-        if (w === null || w < 0 || w >= LAST_WEEK) continue
-        expect(weeks, `born 1 Jan+${day - 1}, birthday ${y} is career week ${w}`).toContain(w)
-        expect(fired.find(([wk]) => wk === w)![1], `1/${day}/${y}`).toBe(y - kidBirthYear())
+        const age = y - kidBirthYear()
+        const w = byAge.get(age)
+        expect(w, `born 1 Jan+${day - 1}: her ${age}th is never marked at all`).toBeDefined()
+        expect(kidAgeYears(w!, 1, day), `1/${day}/${y}: marked in w${w}, where Home prints`).toBe(age)
+        expect(kidAgeYears(w! - 1, 1, day), `1/${day}/${y}: w${w! - 1} was still a year younger`).toBe(age - 1)
       }
     }
   })
@@ -144,30 +216,37 @@ describe('the age she is told she is turning', () => {
     expect(weekMonth(w), 'Monday is in December').toBe(12)
     expect(weekYear(w)).toBe(2031)
     expect(weekOfDate(1, 2, 2032), '...and 2 Jan 2032 is inside it').toBe(w)
-    // ⚠ THE MUTATION GUARD: this is the exact week the old code could not see. A birthday there must
-    // announce the age of the year the DATE is in (2032), not the year the Monday is in (2031).
-    expect(birthdayTurning(w, 1, 2)).toBe(2032 - kidBirthYear())
-    expect(birthdayWeek(w, 1, 2), 'and the week query agrees with the predicate').toBe(w)
+    // ⚠⚠ RE-AIMED BY ROUND 34 #3, AND IT IS THE ITEM'S OWN MUTATION GUARD NOW. This used to assert
+    // that a birthday inside the straddling week is ANNOUNCED there – the week the old code could
+    // not see. That week is exactly the owner's complaint: on its Monday (29 Dec 2031) she is still
+    // fourteen and Home says so, so an announcement of fifteen there is the popup running ahead of
+    // the age line. The mark is the next week, whose Monday (5 Jan 2032) has passed her date.
+    expect(kidAgeYears(w, 1, 2), 'on the straddling week Home still prints fourteen').toBe(14)
+    expect(birthdayTurning(w, 1, 2), 'so nothing is announced there').toBeNull()
+    expect(birthdayTurning(w + 1, 1, 2), 'and the mark is the week her age changes').toBe(2032 - kidBirthYear())
+    expect(kidAgeYears(w + 1, 1, 2), 'where Home prints the same number').toBe(2032 - kidBirthYear())
+    expect(birthdayWeek(w + 1, 1, 2), 'and the week query agrees with the predicate').toBe(w + 1)
   })
 
   // ===============================================================================================
   // 4. WHAT THE FIX DELIBERATELY DID NOT DO – the month clock is untouched.
   // ===============================================================================================
-  it('⚠ the announcement may lead the printed age by ONE WEEK, and never by more', () => {
-    // She turns 19 on the Sunday; `kidAgeYears` answers for the MONDAY, when she was still 18. Both
-    // are true and the gap closes the following Monday. Pinned so a reader who meets the one-week
-    // disagreement on screen finds it measured here rather than filing it twice.
+  it('⚠ the announcement never leads the printed age at all', () => {
+    // ⚠⚠ RE-AIMED AND TIGHTENED BY ROUND 34 #3 – FROM "by one week, and never more" TO "never".
+    // This arm shipped as the licence for a one-week gap: «She turns 19 on the Sunday; `kidAgeYears`
+    // answers for the MONDAY, when she was still 18. Both are true and the gap closes the following
+    // Monday. Pinned so a reader who meets the one-week disagreement on screen finds it measured
+    // here rather than filing it twice.» The owner met it on screen and filed it anyway – «попап
+    // про 15 летите … а на home написано 14 лет» – which is the answer to whether a reader finds a
+    // measured gap reassuring. The gap is gone, so the bound is 0 rather than 1.
     //
-    // This is NOT the fifty-week disagreement the one-clock ruling killed (world/age.ts): that was
-    // two different clocks, this is one clock read on two different days of the same week.
+    // This was never the fifty-week disagreement the one-clock ruling killed (world/age.ts): that
+    // was two different clocks, this was one clock read on two different days of one week. It is
+    // read on one day now, and the day is the Monday the age changes on.
     for (let m = 1; m <= 12; m++) {
       for (let d = 1; d <= daysInBirthMonth(m); d++) {
         for (const [w, age] of announcements(m, d)) {
-          const lead = age - kidAgeYears(w, m, d)
-          expect(lead, `${m}/${d} w${w}: announced ${age}, printed ${kidAgeYears(w, m, d)}`).toBeLessThanOrEqual(1)
-          expect(lead).toBeGreaterThanOrEqual(0)
-          // ...and it is closed by the next Monday, every time.
-          if (lead === 1) expect(kidAgeYears(w + 1, m, d), `w${w + 1} catches up`).toBe(age)
+          expect(age - kidAgeYears(w, m, d), `${m}/${d} w${w}: announced ${age}, printed ${kidAgeYears(w, m, d)}`).toBe(0)
         }
       }
     }
@@ -269,9 +348,12 @@ describe('the age she is told she is turning', () => {
 
   it('the feed says the right number, end to end', () => {
     // The whole point, through the engine rather than the arithmetic: born 2 January, so her
-    // birthday lands in the straddling week the old code dropped.
+    // birthday falls in the straddling week the old code dropped.
+    // ⚠ RE-AIMED BY ROUND 34 #3 – ONE WEEK LATER, AND FOR THE SAME REASON THE MARK MOVED. Her date
+    // is inside week 51 (Mon 29 Dec 2031 – Sun 4 Jan 2032) and on that week's Monday she is still
+    // fourteen, so the line is written where her age changes: week 52, Monday 5 Jan 2032.
     const world = createWorld('bday-feed', { ...DEFAULT_PROFILE, birthMonth: 1, birthDay: 2, coachTier: 'self' })
-    const target = WEEKS_IN_SEASON - 1 // Mon 29 Dec 2031 – Sun 4 Jan 2032
+    const target = WEEKS_IN_SEASON // Mon 5 Jan 2032, the first Monday past her date
     world.week = target
     markBirthday(world)
     const said = world.events.filter((e) => e.week === target).map((e) => e.text)
@@ -290,7 +372,8 @@ describe('the age she is told she is turning', () => {
   // row is `chooseGift`'s alone.
   describe('the four college birthdays', () => {
     it('writes the SAME line every other year gets – the special college sentence is gone with its ruling', () => {
-      const target = WEEKS_IN_SEASON - 1
+      // ⚠ WEEK 52 SINCE ROUND 34 #3, the Monday her age changes on – see the arm above.
+      const target = WEEKS_IN_SEASON
       const world = createWorld('bday-college', { ...DEFAULT_PROFILE, birthMonth: 1, birthDay: 2, coachTier: 'self' })
       world.week = target
       markBirthday(world)
@@ -305,10 +388,10 @@ describe('the age she is told she is turning', () => {
     it('⚠ each college-age birthday still writes an entry, with the age she actually turns', () => {
       for (const age of [18, 19, 20, 21]) {
         const world = createWorld(`bday-college-${age}`, { ...DEFAULT_PROFILE, birthMonth: 1, birthDay: 2, coachTier: 'self' })
-        // ⚠ THE WEEK IS FOUND, NOT COMPUTED. Since the date-clock fix a birthday lands on the week
-        // that CONTAINS it, and real dates do not repeat on the same week index every year - which
-        // is the drift the fix exists to model. A `52 * n` formula silently missed age 18 entirely
-        // and the arm read as "wrote no entry" rather than as "asked the wrong week".
+        // ⚠ THE WEEK IS FOUND, NOT COMPUTED. Since the date-clock fix a birthday is marked on the
+        // week her age changes in, and real dates do not repeat on the same week index every year -
+        // which is the drift the fix exists to model. A `52 * n` formula silently missed age 18
+        // entirely and the arm read as "wrote no entry" rather than as "asked the wrong week".
         let target = -1
         for (let w = 0; w < 12 * WEEKS_IN_SEASON; w++) {
           if (birthdayTurning(w, world.profile.birthMonth, world.profile.birthDay) === age) {
@@ -330,7 +413,10 @@ describe('the age she is told she is turning', () => {
       // in tests/college-birthday.test.ts). What must stay true of `markBirthday` itself is that a
       // feed line is not a parent's act – `world.birthdays` moves only when he answers.
       const world = createWorld('bday-college-nostop', { ...DEFAULT_PROFILE, birthMonth: 1, birthDay: 2, coachTier: 'self' })
-      world.week = WEEKS_IN_SEASON - 1
+      // ⚠ WEEK 52 SINCE ROUND 34 #3 – the week her birthday is marked in. On 51 nothing fires at all
+      // and the arm would pass without ever exercising `markBirthday`.
+      world.week = WEEKS_IN_SEASON
+      expect(birthdayTurning(world.week, 1, 2), 'the fixture really is on her birthday week').not.toBeNull()
       const before = world.birthdays.length
       markBirthday(world)
       expect(world.birthdays.length, 'a feed line recorded a parent decision that nobody made').toBe(before)

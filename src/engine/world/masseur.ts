@@ -221,6 +221,64 @@ export function masseurWorksInWeek(hired: boolean, frozen: boolean, bookedOff: b
   return hired && !frozen && !bookedOff
 }
 
+/** ⭐⭐⭐ ROUND 34 #21 – THE WEEKS HIS HANDS WILL TAKE OFF THE LAYOFF SHE IS IN, counted NOW.
+ *
+ *  The owner: «С массажистом она выздоровела быстрее после травмы, а с турнира была снята тем не
+ *  менее и теперь на турнир не зайти, надо учитывать наличие массажиста при автоматической отмене
+ *  событий.»
+ *
+ *  ⚠⚠ THE DEFECT WAS AN ORDERING, AND THIS FUNCTION EXISTS TO CORRECT IT RATHER THAN TO EXEMPT HIM.
+ *  `onsetInjury` applies the PHYSIO's shortening to `weeksOut` before it writes `world.injury`, and
+ *  then sweeps the entries the layoff swallows – so the physio is inside the withdrawal decision. The
+ *  masseur's shortening is paid out week by week in `rollInjury`, i.e. AFTER that sweep has already
+ *  run, so the desk cancelled her tournaments against a return date only a girl with no masseur would
+ *  ever have had. MEASURED at onset, the date the sweep read against the date she actually keeps:
+ *  twice a week 1-3 weeks late, every other day 1-4, daily 1-6 (a 12-week layoff read as twelve and
+ *  ran six). Every week of that gap is an entry pulled for a week she is fit.
+ *
+ *  ⚠ IT IS THE SAME CADENCE `rollInjury` RUNS, REPLAYED FORWARD, and it has to stay that way: the
+ *  guard (`totalWeeks > 2` – nobody massages a one-week soreness away), the rung's N, the
+ *  `weeksRemaining > 0` check that refuses to buy a week off a layoff already ending, and the two
+ *  stand-downs. The loop below is that loop with the ledger writes removed.
+ *
+ *  ⚠ AND IT WALKS THE FUTURE'S OWN STAND-DOWNS rather than assuming this week's answer holds. A
+ *  family holiday booked inside the layoff buys nothing that week and the college freeze suspends him
+ *  outright, so `masseurWorksInWeek` is asked per week – the college half inlined exactly as
+ *  `adShootHolds` inlines it (world/medical.ts), because `inCollege` can only answer about today.
+ *
+ *  ⚠ A FORECAST, AND ONLY EVER USED WHERE A FORECAST IS THE RIGHT INSTRUMENT. It can be wrong – the
+ *  parent may fire him, or drop him to a cheaper rung, mid-layoff – which is exactly why the visible
+ *  countdown is NOT rewritten from it: `weeksRemaining` stays the clinic's number and his weeks keep
+ *  arriving one receipt at a time, because that is the product («recovery you can watch»). What it
+ *  governs is the one decision that cannot be taken back later: cancelling an entry whose list then
+ *  closes. Erring by keeping an entry is recoverable (`cancelEntry` is still there); erring by
+ *  cancelling one is what the owner is reporting.
+ *
+ *  Pure arithmetic over persisted state, ZERO draws on any stream. 0 for every career without a
+ *  masseur, without an injury, or with a layoff too short for the cadence to touch. */
+export function masseurRehabWeeksAhead(world: WorldState): number {
+  const injury = world.injury
+  if (injury === null || !(world.masseurHired ?? false) || injury.totalWeeks <= 2) return 0
+  const everyN = masseurRungOf(world).rehabExtraEveryNWeeks
+  let remaining = injury.weeksRemaining
+  let saved = 0
+  for (let week = world.week + 1; remaining > 0; week++) {
+    remaining -= 1
+    const rehabWeek = week - injury.sinceWeek
+    const frozen = world.college !== null && week < world.college.untilWeek
+    if (
+      remaining > 0 &&
+      rehabWeek > 0 &&
+      rehabWeek % everyN === 0 &&
+      masseurWorksInWeek(true, frozen, vacationForWeek(world, week) !== undefined)
+    ) {
+      remaining -= 1
+      saved += 1
+    }
+  }
+  return saved
+}
+
 /** ⭐ WHAT A TOUR WEEK COSTS (owner 22.08: «на неделе выезда по-матчевая цена заменяет
  *  недельную») – matches played × the professional session rate, the same $75 every rung's home
  *  week is built from. The draw table prices itself: a Slam title week is 7 matches = $525 –
