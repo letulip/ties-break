@@ -28,9 +28,53 @@ for and would otherwise have no line.
   летней девочке Close to her ceiling … звучит как приговор … не рановато ли? … давай подумаем в
   какой конкретно момент должно это появляться»** — three asks in one, split:
   - **2a** the read moved to Home and he wants it back on the coach card — **build**
+    — `[x]` **SHIPPED.** `HomeScreen.vue` no longer renders it: the `roomBand` computed, its
+    `<p class="coach-room">` and the CSS rule that dressed it are gone. Nothing was invented to fill
+    the gap – his coach's round-7 quote and the signature are untouched, the card keeps its
+    `card-short` box and is simply one line shorter, which is the shape it had before round 24. The
+    read still renders exactly once, unchanged, above the coach list on the Coach Market
+    (`.cm-room-band`). Evidence: `tests/component/round24-coach-card.test.ts` – the mounted file that
+    used to pin the line ON Home – re-aimed to assert both halves in one test: absent on Home at six
+    headrooms and under each of the four labels, present on the market card with its argument under
+    it. ⚠ Mutation-verified: putting the line back on Home reddens two arms, and the non-vacuity arm
+    reddens if the read is deleted rather than moved. ⚠ One collateral catch, recorded because it
+    nearly shipped silently: naming the pin's filename in a comment above the card put a second
+    `coach-card` string in the file and moved `tests/coach-market.test.ts`'s region marker up 900
+    lines. `tests/helpers/source.ts` caught it; the note is worded around the marker now.
   - **2b** «Close to her ceiling» at 14 reads as a verdict — **measure**: what does the band
     actually say at 14, and on his save?
+    — `[x]` **SHIPPED to §A1.** `realisedShare` (new in `world/coachMarket.ts`, one definition read
+    by both `coachRoomNote` and `coachRoomBandOf`) divides `(skills − born)` by `(potential − born)`
+    with `born = startingSkills(seed, profile)`, and `coachRoomBandIndex`'s edges are the approved
+    **0.40 / 0.75 / 0.90**. `ROOM_BANDS` is untouched – four labels, same words, invariant 4 – and
+    the round-23 measurement table over that function is kept with a ⚠ note saying the MEASURE moved
+    under it and that the table describes the superseded quantity. Evidence:
+    `tests/round34-ceiling-read.test.ts` – the inversion in two real careers (born-high-and-stalled
+    reads a LOWER band than born-low-and-grown, where the old ratio ordered them the other way), a
+    girl at her birth build reads «Huge potential» however well she was born (the old measure had her
+    over 0.90 before her first session), the three edges pinned from both sides, monotone over the
+    whole range, and the four labels asserted byte-identical. ⚠ Mutation-verified: reverting to
+    `level / (level + room)` reddens 6 tests across 3 files; moving one edge by 0.05 reddens the edge
+    pin; renaming one label reddens the invariant-4 pin.
+    ⚠ **§A1 names `handoverRoomBand` as the model "in the same file" and it is not on this branch** –
+    it lives on `prologue/wave` (`git show prologue/wave:src/engine/world/coachMarket.ts`). Its
+    approach was copied from there rather than reinvented, and the note over `realisedShare` says so.
+    ⚠⚠ **MEASURED CONSEQUENCE HE SHOULD SEE, and it contradicts nothing in §A1 but was not in it.**
+    On the new scale the TOP band is a late, elite reading. Walked through the real engine to 29 (780
+    weeks, the whole growth arc before `declineFactor`): «At her ceiling» is reached on 6 of 8 elite
+    careers, at weeks 745–776, and on NONE of eight budget / middle / high ones, which peak at 0.855
+    / 0.879 / 0.895 realised. A middle-rung career now reads «Huge potential» → «Still room to grow»
+    (week 81) → «Close to her ceiling» (week 296) and never hears the fourth line. That is 0.90 doing
+    exactly what he approved it to do; it is filed here because the fourth band is now about as rare
+    as the first one was dead before round 23, and if he wants it audible on an ordinary career the
+    **edge** is the knob, not the measure.
   - **2c** when should it appear at all — **ask**
+    — `[~]` **ANSWERED BY THE THRESHOLDS; nothing built.** On the approved ladder the verdict arrives
+    after twenty instead of at fourteen. Measured on the career `tests/round23-coach-copy.test.ts`
+    walks: under the OLD measure it heard «Close to her ceiling» at week 78 (age 15.5) and «At her
+    ceiling» at week 158 (age 17.0) – his complaint reproduced to the week – and on the new one it
+    reads «Still room to grow» at 16 and «Close to her ceiling» at 24, the same pair §A1 predicted for
+    Vera. The share it reads at each birthday is written into that test.
   ⚠ He then withdrew part of it himself: «А вот и At her ceiling в 16 лет случилось – видимо моя
   претензия снимается». ⭐ But he still asked for the save to be read: «Но сейв всё-таки посмотри».
 
