@@ -38,6 +38,8 @@ import { WALK_COPY, HANDOVER_COPY } from '../../src/prologue/handover'
 import { EMPTY_RUN, chosenYears, spentCents, withOrigin, withPick } from '../../src/prologue/run'
 import { OPENING_IDENTITY } from '../../src/prologue/identity'
 import { IDENTITY_COPY } from '../../src/composables/identityCopy'
+import { AUDIO_COPY } from '../../src/composables/audioCopy'
+import { isMusicMuted, setMusicMuted } from '../../src/audio/music'
 import { COUNTRY_NAMES } from '../../src/composables/countries'
 import { kidAgeYears } from '../../src/engine/world'
 import { DEFAULT_PROFILE, type PlayerProfile, type PrologueHandover } from '../../src/shared/protocol'
@@ -341,6 +343,106 @@ describe('⭐⭐ the prologue asks who she is, and the answer reaches the world'
     await wrapper.findAll('.handover-answer')[1].trigger('click')
     await wrapper.vm.$nextTick()
     expect((wrapper.find('#prologue-first').element as HTMLInputElement).value).toBe(OPENING_IDENTITY.kidName)
+    wrapper.unmount()
+  })
+})
+
+
+// =================================================================================================
+describe('⭐⭐ the way to shut the music up, from the first screen of the game', () => {
+  // THE OWNER, 02.09: «вынести выключение звука (или музыки) отдельной пиктограммой в правый верхний
+  // угол». The prologue is a full-screen takeover with no tab bar, so More – and with it every
+  // audio switch the game has – is unreachable from the first ten screens a new player ever sees,
+  // which is exactly where the theme loop starts (SplashScreen calls `music.start()` on the tap that
+  // gets you in).
+  //
+  // ⚠ MUTATION-VERIFIED. Watched failing before it was believed:
+  //   * the button rendered inside `PrologueCard` instead of the container -> the handover arm goes
+  //     red, because the icon vanishes on the tenth scene.
+  //   * `MuteButton` given its own `ref(false)` instead of `isMusicMuted()` -> the persistence arm
+  //     goes red.
+  //   * a hand-written label («Mute») instead of `AUDIO_COPY.music` -> the one-wording arm goes red.
+  beforeEach(() => {
+    setActivePinia(createPinia())
+    document.body.innerHTML = ''
+    setViewport(PHONE)
+    // ⚠ THE MODULE'S OWN STATE, NOT `localStorage.clear()`. `audio/music.ts` reads its key ONCE at
+    // import and holds the answer in a module variable; this runner has no web storage at all, so
+    // clearing a store nothing wrote would reset nothing. Calling the shipped setter is what puts
+    // both halves back, and it is also the thing under test.
+    setMusicMuted(false)
+  })
+
+  it('⭐ it is in the top-right corner, on every card and on the handover', async () => {
+    stubStore()
+    const wrapper = mount(ChildhoodPrologue, { attachTo: document.body })
+    for (const age of CARD_AGES) {
+      const icon = document.querySelector('.mute-button')
+      expect(icon, `age ${age} has no way to turn the music off`).toBeTruthy()
+      const cs = getComputedStyle(icon!)
+      expect(cs.position, 'it can scroll away from under the thumb').toBe('fixed')
+      // top-right: it sets `top` and `right`, and neither is `auto`.
+      expect(cs.right).not.toBe('auto')
+      expect(cs.top).not.toBe('auto')
+      expect(cs.bottom === 'auto' || cs.bottom === '', 'it is pinned to the bottom, not the top').toBe(true)
+      expect(cs.left === 'auto' || cs.left === '', 'it is pinned to the left, not the right').toBe(true)
+      await answerCurrent(wrapper, age)
+    }
+    // ...and it is still there on the tenth scene, which is why it is declared on the container.
+    expect(document.querySelector('.handover-answer'), 'the handover is up').toBeTruthy()
+    expect(document.querySelector('.mute-button'), 'the icon went out on the handover').toBeTruthy()
+    wrapper.unmount()
+  })
+
+  // ⚠⚠ IT IS MORE'S OWN SWITCH, NOT A SECOND SETTING. The flag it writes is `tb-music-muted`, which
+  // is the key `audio/music.ts` persists and the key More's `Music` row reads – so muting here is
+  // muted there, and it survives the reload.
+  it('⭐⭐ pressing it writes the flag More`s own Music row reads', async () => {
+    expect(isMusicMuted(), 'the fixture starts unmuted').toBe(false)
+    stubStore()
+    const wrapper = mount(ChildhoodPrologue, { attachTo: document.body })
+    const icon = wrapper.find('.mute-button')
+    expect(icon.attributes('aria-checked'), 'it opens reporting the state it read').toBe('true')
+
+    await icon.trigger('click')
+    expect(isMusicMuted(), 'the press did not reach the shipped flag').toBe(true)
+    expect(wrapper.find('.mute-button').attributes('aria-checked')).toBe('false')
+    // ⚠ AND A CARD MOUNTED AFTER IT READS THE SAME FLAG BACK – there is no per-screen copy of the
+    // state for the two surfaces to disagree over. (What `audio/music.ts` then does with
+    // `tb-music-muted` is its own shipped contract; this runner has no web storage to watch it in.)
+    const fresh = mount(ChildhoodPrologue, { attachTo: document.body })
+    expect(fresh.find('.mute-button').attributes('aria-checked')).toBe('false')
+    fresh.unmount()
+
+    await icon.trigger('click')
+    expect(isMusicMuted()).toBe(false)
+    wrapper.unmount()
+  })
+
+  // ⚠ ONE WORDING, TWO SURFACES. CLAUDE.md invariant 4: a label is the owner's, and a label declared
+  // twice can drift in one copy. Both this icon and More's row name themselves out of `AUDIO_COPY`,
+  // and `tests/component/a11y-sweep.test.ts` is the mounted proof that the string on the Sound
+  // screen did not change when it moved.
+  it('⚠ it borrows More`s own name for the control and invents none', () => {
+    stubStore()
+    const wrapper = mount(ChildhoodPrologue, { attachTo: document.body })
+    const icon = wrapper.find('.mute-button')
+    expect(icon.attributes('aria-label')).toBe(AUDIO_COPY.music)
+    expect(AUDIO_COPY.music, 'the label is not the one More has shipped since round 6').toBe('Music')
+    // and it is a switch, exactly as More's row is – same role, same honest `aria-checked`.
+    expect(icon.attributes('role')).toBe('switch')
+    wrapper.unmount()
+  })
+
+  // ⚠ AND IT COSTS THE CARD NOTHING. `.prologue-answers` has to stay the card's last element or the
+  // round-20 #3 fit measurement reads the way out off the wrong edge; a control inside the card
+  // would either break that or add a row to the tallest screen in the game.
+  it('⚠ it is a sibling of the card, so the card`s own fit measurement is unmoved', () => {
+    stubStore()
+    const wrapper = mount(ChildhoodPrologue, { attachTo: document.body })
+    const card = document.querySelector('.prologue-card')!
+    expect(card.querySelector('.mute-button'), 'the icon is inside the card').toBeNull()
+    expect(card.lastElementChild!.className).toContain('prologue-answers')
     wrapper.unmount()
   })
 })

@@ -190,9 +190,48 @@ export const HANDOVER_COPY = {
   coachLabel: 'The coach who has watched her',
   /** DRAFT */
   goOn: 'Go on with her',
-  /** DRAFT – see the ⚠ above */
-  startAgain: 'Raise another child',
+  /** ⭐⭐ DRAFT, AND THE OWNER HAS ASKED FOR OPTIONS ON THIS ONE LINE (02.09): «по вордингу вроде
+   *  всё ок, кроме "Raise another child" – давай подумаем как еще можно написать.»
+   *
+   *  WHAT WAS WRONG WITH IT, as far as it can be read off his note: «another child» is the phrase a
+   *  family uses for a SECOND child, so on a screen that has just introduced the girl you raised it
+   *  reads as being offered a sibling rather than a different girl. `START_AGAIN_DRAFTS` below is
+   *  the shortlist; this line is the one of them recommended, and switching to another is deleting
+   *  one word and typing another.
+   *
+   *  ⚠ EVERY CANDIDATE OBEYS §2.3 AND THE SWEEP ENFORCES IT. «Про рестарт с перебросом мы ничего не
+   *  говорим»: no candidate may mention a reroll, odds, a seed, a floor or a chance, and each one
+   *  has to stay a choice about HER rather than about a mechanism. `tests/prologue-handover.test.ts`
+   *  sweeps this whole table, drafts included. */
+  startAgain: 'Raise a different girl',
 } as const
+
+/** ⭐ THE THREE THE OWNER HAS TO PICK FROM, and the recommended one is `HANDOVER_COPY.startAgain`
+ *  above so the screen always renders a real answer rather than a menu.
+ *
+ *  Each says the same thing about a different part of it, which is what makes them a choice and not
+ *  three phrasings of one sentence:
+ *
+ *    `Raise a different girl`         – the smallest change from what he already has, and it fixes
+ *                                       the only thing that was wrong: `different` cannot be read
+ *                                       as `additional` the way `another child` can.
+ *    `Start again with another girl`  – says out loud that this is the beginning over again, which
+ *                                       the current wording leaves the player to infer from where
+ *                                       the button is.
+ *    `Give the nine years to another girl`
+ *                                     – the only one that answers the screen it is ON: the card
+ *                                       above it is the account of nine years, and this offers the
+ *                                       same nine to somebody else. Longest of the three.
+ *
+ *  ⚠ NONE OF THE THREE NAMES A MECHANISM, EACH IS STILL ABOUT HER, and none of them says «again»
+ *  about the girl herself – she is not being re-rolled, a different girl is being raised. A fourth
+ *  candidate, «Someone else's nine years», was drafted and dropped for exactly that: it is about the
+ *  YEARS and mentions no child at all, which is the half of his ruling that is easiest to lose. */
+export const START_AGAIN_DRAFTS: readonly string[] = [
+  'Raise a different girl',
+  'Start again with another girl',
+  'Give the nine years to another girl',
+]
 
 /** ⭐ THE WALK'S OWN ONE CONTROL – the way out of the prologue and into the wizard (§6), offered on
  *  the FIRST card only: a skip that follows the player to the eighth year is a screen asking whether

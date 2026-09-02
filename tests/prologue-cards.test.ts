@@ -22,6 +22,7 @@ import {
   CARD_AGES,
   DECISION_AGES,
   PROLOGUE_CARDS,
+  TWELFTH_REASONS,
   TWELFTH_WANTS_MORE,
   type PrologueCard,
   type PrologueOption,
@@ -62,10 +63,21 @@ function everySentence(): { where: string; text: string }[] {
     out.push({ where: `${face}.coach.cool`, text: c.coach.cool })
     out.push({ where: `${face}.coach.warm`, text: c.coach.warm })
     out.push({ where: `${face}.continueLabel`, text: c.continueLabel })
+    // ⚠ THE QUESTION IS SWEPT LIKE EVERY OTHER SENTENCE (owner, 02.09). A copy field that the sweep
+    // does not enumerate is a copy field outside the three rules, which is exactly what moving the
+    // words out of the markup was not allowed to cost.
+    if (c.question) out.push({ where: `${face}.question`, text: c.question })
     for (const o of [...(c.origins ?? []), ...(c.options ?? [])]) {
       out.push({ where: `${face}.${o.id}.label`, text: o.label })
       out.push({ where: `${face}.${o.id}.note`, text: o.note })
     }
+  }
+  // ⚠ AND SO IS THE FORK'S FOLDED SENTENCE, which is not on a card row and would otherwise be the
+  // one player-facing string in this module nothing checked.
+  out.push({ where: '12.reason.sentence', text: TWELFTH_REASONS.sentence })
+  for (const [group, clauses] of Object.entries(TWELFTH_REASONS)) {
+    if (typeof clauses === 'string') continue
+    for (const [key, text] of Object.entries(clauses)) out.push({ where: `12.reason.${group}.${key}`, text })
   }
   return out
 }
@@ -127,6 +139,70 @@ describe('the table is nine rows, and four of them are quiet', () => {
     expect(five.options).toBeUndefined()
     expect(five.origins?.map((o) => o.id)).toEqual(['working', 'middle', 'wealthy'])
     expect(DECISION_AGES).not.toContain(5)
+  })
+
+  // =============================================================================================
+  // ⭐⭐⭐ THE OWNER'S 02.09 READING PASS – «давай будем более фактичными и менее интерпретативны
+  // для игрока». He walked the ten scenes and, five times, could not tell what a sentence was
+  // pointing at. Each of the five is pinned by name below, so the vague form cannot come back as
+  // somebody's tidy-up. They are pins on THE DRAFT and they move with his copy when he replaces it;
+  // what they are here to stop is a sentence going back to naming nothing.
+  // =============================================================================================
+
+  // ⚠ «у нас есть 3 выбора перед игроком, и вообще непонятно к чему они, потому что вопроса нет».
+  // MUTATION: delete `question` from card 5 -> red.
+  it('⭐ a card that offers answers asks a question – the five does, and it is the only one that has to', () => {
+    const five = PROLOGUE_CARDS[0]
+    expect(five.question, 'the three origins arrive with nothing asking for them').toBeTruthy()
+    expect(five.question).toContain('?')
+    // ...and the eight through twelve do not need one, because their title IS the question. What
+    // this asserts is that nobody has quietly added a second voice to every card.
+    for (const c of ALL_SCENES.filter((x) => x.age !== 5)) {
+      expect(c.question, `age ${c.age} grew a question of its own`).toBeUndefined()
+    }
+  })
+
+  // ⚠⚠ «She is a year older than most of them – это мы из даты рождения берем или как?» THE ANSWER
+  // IS NO, AND THAT IS WHY THE CLAIM IS GONE. The prologue's nine ages are the fixed list 5..13 for
+  // every career (`CARD_AGES` above), the birthday collected on the five reaches only the profile,
+  // and no card, run or engine call anywhere models the ages of the other children in her group.
+  // The sentence was a FIXED string dressed as a derived one – so it either had to become derived
+  // or stop being said, and there is nothing to derive it from.
+  // MUTATION: put the sentence back on card 9 -> red, naming it.
+  it('⭐⭐ no card claims her age RELATIVE to anyone – there is no birthday arithmetic behind it', () => {
+    const offenders = everySentence()
+      .filter((x) => /\b(a year|years?) (older|younger)\b/i.test(x.text) || /older than (most|any|the)/i.test(x.text))
+      .map((x) => `${x.where}: ${x.text.slice(0, 70)}`)
+    expect(offenders, 'a card is claiming a relative age the game does not compute').toEqual([])
+  })
+
+  // ⚠ THE THREE SENTENCES HE COULD NOT PARSE, each pinned as «the thing is named».
+  // MUTATION: revert any one of the three -> red on that line.
+  it('⭐ the sentences he asked «what?» and «where?» of now name the thing', () => {
+    const five = PROLOGUE_CARDS[0]
+    const six = PROLOGUE_CARDS[1]
+    const seven = PROLOGUE_CARDS[2]
+    // «хочется спросить "что она еле держит"… если здесь речь о ракетке, то так и напишем»
+    expect(five.title).toContain('racket')
+    // «She asks to go back – куда обратно?… Я бы интерпретировал из заголовка, что она хочет домой»
+    expect(six.title).toContain('court')
+    expect(six.title).not.toBe('She asks to go back.')
+    // «she has not noticed – чего она не заметила?»
+    expect(seven.lede).toContain('has not noticed that she is not')
+  })
+
+  // ⚠ «как будто и запроса не было, она не просила год» – the wants-more face offers «the year she
+  // is asking for» and nothing above it used to say she had asked for anything.
+  // MUTATION: drop the ask from the lede -> red.
+  it('⭐ the twelfth only offers her «the year she is asking for» on a card where she asks for it', () => {
+    const asks = /\bask(s|ed)?\b/
+    const offers = TWELFTH_WANTS_MORE.options?.filter((o) => /asking for/.test(o.label)) ?? []
+    expect(offers.length, 'the answer that names her ask').toBeGreaterThan(0)
+    expect(
+      asks.test(TWELFTH_WANTS_MORE.title) || asks.test(TWELFTH_WANTS_MORE.lede),
+      'an answer names an ask the card never reports',
+    ).toBe(true)
+    expect(TWELFTH_WANTS_MORE.lede).toContain('asked you')
   })
 
   // ⭐ THE FORK IS A SECOND FACE OF ONE ROW, not a tenth card: nine cards, ten scenes.
@@ -404,7 +480,7 @@ describe('⭐⭐ the age-12 fork is DERIVED, and there are no dice in a derived 
 
     // ...and it is the CARD that changes, not a label on one card
     expect(cardFor(12, withoutTheOpen).title).toBe('She does not want to go on Thursday.')
-    expect(cardFor(12, withTheOpen).title).toBe('She wants to know what happens if she is good.')
+    expect(cardFor(12, withTheOpen).title).toBe('She has asked you for more than she is getting.')
     expect(cardFor(12, withoutTheOpen).options?.map((o) => o.id)).toEqual(['let-her-stop', 'finish-the-year'])
     expect(cardFor(12, withTheOpen).options?.map((o) => o.id)).toEqual(['keep-the-size', 'give-her-the-year'])
   })
@@ -418,19 +494,19 @@ describe('⭐⭐ the age-12 fork is DERIVED, and there are no dice in a derived 
   // MUTATION: count `focus === 'general'` as a tournament -> the counts go wrong and this reddens.
   it('the counts are the three the ruling names, and they are read off what was chosen', () => {
     const light = readTwelfth(runOf(LIGHT_ROAD))
-    expect({ ...light, reasons: undefined, reading: undefined }).toEqual({
+    expect({ ...light, reason: undefined, reading: undefined }).toEqual({
       oneToOne: 0,
       tournaments: 0,
       light: 4,
-      reasons: undefined,
+      reason: undefined,
       reading: undefined,
     })
     const carried = readTwelfth(runOf(CARRIED_ROAD))
-    expect({ ...carried, reasons: undefined, reading: undefined }).toEqual({
+    expect({ ...carried, reason: undefined, reading: undefined }).toEqual({
       oneToOne: 3,
       tournaments: 1,
       light: 0,
-      reasons: undefined,
+      reason: undefined,
       reading: undefined,
     })
   })
@@ -449,17 +525,28 @@ describe('⭐⭐ the age-12 fork is DERIVED, and there are no dice in a derived 
   })
 
   // ⭐ THE CARD SAYS WHAT IT READ, so the fork cannot be mistaken for a die.
-  it('the fork names its reasons, and they change with the years behind it', () => {
-    expect(readTwelfth(runOf(LIGHT_ROAD)).reasons).toEqual([
-      'She has never had a coach to herself.',
-      'She has never entered anything.',
-      'More than one year you kept light.',
-    ])
-    expect(readTwelfth(runOf(CARRIED_ROAD)).reasons).toEqual([
-      'Most of those years she has had somebody to herself.',
-      'One draw sheet with her name on it.',
-      'No year of it was left to look after itself.',
-    ])
+  //
+  // ⚠⚠ ONE SENTENCE SINCE 02.09, NOT THREE LINES – the owner met the list and said «мне кажется вот
+  // это лишнее». THE FUNCTION IS WHAT THIS TEST PROTECTS AND IT DID NOT GO WITH THE LIST: the fold
+  // still names all three of the ruling's facts and it still MOVES with the years behind it, which
+  // is the whole of why §2.5's «no dice» is visible to a player rather than only true in the code.
+  // MUTATION-VERIFIED: returning `TWELFTH_REASONS.sentence` unsubstituted reddens both arms;
+  // returning a constant string reddens the second.
+  it('the fork names what it read in one sentence, and it changes with the years behind it', () => {
+    expect(readTwelfth(runOf(LIGHT_ROAD)).reason).toBe(
+      'The years behind it: never a coach to herself, nothing entered, and more than one year you kept light.',
+    )
+    expect(readTwelfth(runOf(CARRIED_ROAD)).reason).toBe(
+      'The years behind it: most of it with somebody to herself, one draw sheet with her name on it, ' +
+        'and no year left to look after itself.',
+    )
+    // ⚠ AND IT IS PROSE RATHER THAN A LIST WHEREVER IT IS DRAWN: no clause is left carrying its own
+    // full stop, which is what made three of them stack up as bullet lines on the card.
+    for (const road of [LIGHT_ROAD, CARRIED_ROAD, MIDDLE_ROAD]) {
+      const reason = readTwelfth(runOf(road)).reason
+      expect(reason.match(/\./g)?.length, `age-12 reason on ${JSON.stringify(road)} is more than one sentence`).toBe(1)
+      expect(reason).not.toContain('{')
+    }
   })
 
   // ⚠⚠ NO DICE, AND IT IS PINNED IN THE CODE AS WELL AS IN THE BEHAVIOUR. The trap he named – «на

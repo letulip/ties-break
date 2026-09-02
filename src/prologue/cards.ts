@@ -133,6 +133,18 @@ export interface PrologueCard {
   readonly coach: PrologueRead
   /** DRAFT – the control on a card with nothing to decide */
   readonly continueLabel: string
+  /** ⭐⭐ DRAFT – THE QUESTION THE ANSWERS ANSWER, printed directly above them.
+   *
+   *  THE OWNER, 02.09, on the age-5 card: «у нас есть 3 выбора перед игроком, и вообще непонятно к
+   *  чему они, потому что вопроса нет». Three buttons arrived under a scene with nothing asking for
+   *  them, so the player had to infer what he was being asked – which is the interpretive reading he
+   *  ruled against in the same pass («давай будем более фактичными и менее интерпретативны для
+   *  игрока»). A card that offers answers says what the question is.
+   *
+   *  ⚠ OPTIONAL, AND ONLY THE FIVE CARRIES ONE TODAY. On 8..12 the title IS the question and a
+   *  second line restating it would be the screen talking twice; the five is the card where the
+   *  title is about HER and the answers are about the family, and that gap is what he fell into. */
+  readonly question?: string
   /** the year this card runs when it carries no decision. Absent on 8..12, where the chosen option
    *  supplies it, and on 13, which follows the twelfth (`sameAsLastYear`). */
   readonly share?: number
@@ -175,9 +187,12 @@ export const PROLOGUE_CARDS: readonly PrologueCard[] = [
   {
     age: 5,
     kicker: 'She is five',
-    title: 'She can barely hold it.',
+    // ⚠ THE OWNER, 02.09: «хочется спросить "что она еле держит"… если здесь речь о ракетке, то так
+    // и напишем.» It was «She can barely hold it.» and the it was never named – the racket is in the
+    // NEXT sentence, one paragraph down, which is a sentence too late for a title.
+    title: 'She can barely hold the racket.',
     lede:
-      'The racket is too big for her and she swings it like a shovel. She misses, and then she ' +
+      'It is too big for her and she swings it like a shovel. She misses, and then she ' +
       'does it again, and she is still doing it twenty minutes later. Nobody has decided anything.',
     her: {
       cool: 'She thinks the game is to hit the ball into the fence.',
@@ -188,6 +203,11 @@ export const PROLOGUE_CARDS: readonly PrologueCard[] = [
       warm: 'Nobody is teaching her. She is five.',
     },
     continueLabel: 'Go on',
+    // ⭐ DRAFT – THE QUESTION THAT WAS MISSING (owner, 02.09; see `question` on `PrologueCard`). It
+    // names the thing the three buttons are about and what answering decides, and it does so
+    // FACTUALLY: not «choose your difficulty» – §7 keeps a difficulty menu out of v1 – but the plain
+    // statement of what the answer sets.
+    question: 'Where does she grow up? It decides what the family can spend on tennis for the next nine years.',
     share: 0.35,
     teaching: 0.1,
     focus: 'general',
@@ -226,7 +246,12 @@ export const PROLOGUE_CARDS: readonly PrologueCard[] = [
   {
     age: 6,
     kicker: 'She is six',
-    title: 'She asks to go back.',
+    // ⚠ THE OWNER, 02.09: «She asks to go back – куда обратно?… Я бы интерпретировал из заголовка,
+    // что она хочет домой.» Read cold, under a kicker that says her age and above a scene about a
+    // summer session, «go back» took its destination from the reader – and the reading he got was
+    // that she wanted to go HOME, which is the opposite of what the card is about. The place is
+    // named in the title now instead of two sentences later.
+    title: 'She asks to go back to the court.',
     lede:
       'Somebody handed her a racket at a summer session and she has asked about it every week ' +
       'since. There is a group at the municipal court on Tuesdays. It costs almost nothing and it ' +
@@ -247,9 +272,13 @@ export const PROLOGUE_CARDS: readonly PrologueCard[] = [
     age: 7,
     kicker: 'She is seven',
     title: 'The group works.',
+    // ⚠ THE OWNER, 02.09: «she has not noticed – чего она не заметила?» The sentence left the object
+    // of «noticed» to the reader, and the object is the clause immediately before it, which is
+    // exactly the shape that stops reading as a sentence and starts reading as a riddle. Named.
     lede:
-      'Twice a week, eight children, one court. She is not the best of them and she has not ' +
-      'noticed. A year goes by like this and none of it costs you anything you have to think about.',
+      'Twice a week, eight children, one court. She is not the best of the eight, and she has not ' +
+      'noticed that she is not. A year goes by like this and none of it costs you anything you ' +
+      'have to think about.',
     her: { cool: 'She still asks to go.', warm: 'She still asks to go.' },
     coach: {
       cool: 'The coach says she listens – at seven that is a compliment.',
@@ -302,27 +331,44 @@ export const PROLOGUE_CARDS: readonly PrologueCard[] = [
     ],
   },
 
+  // ⚠⚠ REWRITTEN WHOLE, 02.09, AND THE OWNER'S VERDICT ON THE OLD ONE WAS TOTAL: «Вот этот весь
+  // блок мне смыслово непонятен ни в ответах, ни в формулировках.» Two separate faults, and the
+  // rewrite answers both rather than editing a sentence:
+  //
+  //   * NOTHING ON THE CARD SAID WHAT WAS ON OFFER. The old lede described a feeling («an hour on
+  //     her own is not a different amount of tennis, it is a different price») and left the player
+  //     to work out that the club was SELLING something. The card names the offer now, in the lede,
+  //     before either answer.
+  //   * AND IT OPENED ON A CLAIM THE GAME DOES NOT MAKE. «She is a year older than most of them» –
+  //     his question was «это мы из даты рождения берем или как?», and the honest answer is NO: the
+  //     prologue's nine ages are fixed 5..13 for every career, the birthday she is given on the
+  //     five decides only whether she opens the game at thirteen or fourteen (`kidAgeYears`), and
+  //     nothing anywhere models the other children's ages. It was a fixed sentence wearing the
+  //     clothes of a derived one, which is the worst of both: it cannot be true of every career and
+  //     it invites the player to look for the arithmetic behind it. There is none, so the claim is
+  //     gone. What is left – eight children and one court – is the group card 7 already described.
   {
     age: 9,
     kicker: 'She is nine',
-    title: 'The group is full of eight-year-olds.',
+    title: 'Eight children are waiting for one court.',
     lede:
-      'She is a year older than most of them and she spends a lot of it waiting her turn. An hour ' +
-      'on her own with a coach is not a different amount of tennis. It is a different price.',
+      'Two sessions a week, and much of each one she spends in the queue for a turn. The club also ' +
+      'sells an hour a week with a coach to herself: the same hour of her week, with nobody else ' +
+      'on the court.',
     her: {
       cool: 'She is doing what the group does and no more.',
       warm: 'She is one of the ones who stays behind afterwards.',
     },
     coach: {
-      cool: 'The coach says she is fine, and says it about all of them.',
-      warm: 'The coach wants her twice a week instead of once.',
+      cool: 'The coach says she is fine, and says it about all eight of them.',
+      warm: 'The coach is the one who offered you the hour.',
     },
     continueLabel: 'Go on',
     options: [
       {
         id: 'group',
         label: 'Keep her in the group',
-        note: 'The same money as this year. She waits her turn.',
+        note: 'The same money as this year. She keeps her place in the queue.',
         costCents: 1_800_00,
         share: 0.6,
         teaching: 0.45,
@@ -330,9 +376,9 @@ export const PROLOGUE_CARDS: readonly PrologueCard[] = [
       },
       {
         id: 'one-to-one',
-        label: 'An hour a week, one to one',
+        label: 'Buy the hour, one to one',
         // 7_200_00 / 1_800_00 = 4.
-        note: 'About four times the group, for the same hour of her week.',
+        note: 'About four times the group, and it buys one hour a week with nobody else on the court.',
         costCents: 7_200_00,
         share: 0.85,
         teaching: 1,
@@ -434,8 +480,11 @@ export const PROLOGUE_CARDS: readonly PrologueCard[] = [
     kicker: 'She is twelve',
     title: 'She does not want to go on Thursday.',
     lede:
+      // ⚠ THE «not a mystery» CLAUSE IS GONE FROM BOTH FACES OF THE FORK. It existed to introduce
+      // the three-line list under it; the list is one folded sentence now (`TWELFTH_REASONS`), and
+      // that sentence introduces itself.
       'Three weeks of this now. There was no scene and she has not said anything. She simply ' +
-      'finds something else to be doing at six o\'clock. The years behind it are not a mystery.',
+      'finds something else to be doing at six o\'clock.',
     her: {
       cool: 'She has stopped talking about it at dinner.',
       warm: 'She is not tired of tennis. She is tired of this week.',
@@ -493,13 +542,19 @@ export const PROLOGUE_CARDS: readonly PrologueCard[] = [
 export const TWELFTH_WANTS_MORE: PrologueCard = {
   age: 12,
   kicker: 'She is twelve',
-  title: 'She wants to know what happens if she is good.',
+  // ⚠⚠ THE ASK IS ON THE CARD NOW (owner, 02.09): «как будто и запроса не было, она не просила
+  // год». The second answer is worded «the year she is asking for» and nothing above it said she
+  // had asked for anything – she asked a QUESTION about other girls, which is not the same act. Two
+  // ways to fix that, and this is the one that keeps his own answer labels: say what she asked for.
+  title: 'She has asked you for more than she is getting.',
   lede:
     'She has started asking about the girls whose names are on the board at the club – where they ' +
-    'went, and at what age. She is asking whether she could be one of them. The years behind it ' +
-    'are not a mystery either.',
+    'went, and at what age. Then she asked you for the same thing they had: more hours, a better ' +
+    'coach, a year built around it.',
   her: {
-    cool: 'She is asking for more than she has been given.',
+    // ⚠ NOT «She is asking for more than she has been given» any more: the title says she asked, so
+    // this line would have been the card saying it twice. It says how big the ask is instead.
+    cool: 'She is asking for a year bigger than any she has had.',
     warm: 'She has worked out what the next step is and she wants it.',
   },
   coach: {
@@ -535,22 +590,37 @@ export const TWELFTH_WANTS_MORE: PrologueCard = {
  *  facts it read – and they are the three the ruling itself names: «years of one-to-one against
  *  group, tournaments entered, whether any year was left light».
  *
+ *  ⚠⚠ AND SINCE 02.09 IT IS ONE SENTENCE, NOT THREE LINES. The owner met the list and said «мне
+ *  кажется вот это лишнее» – three short declaratives stacked under the scene («Most of those years
+ *  she has had somebody to herself.» and its two neighbours) read as noise on a card that is
+ *  otherwise prose. ⚠ THE FUNCTION IS NOT DROPPED WITH THE LIST, because the function is the whole
+ *  reason the fork is not a die: the card still has to show what it read, or a derived fork is
+ *  indistinguishable from a roll and §2.5's ruling is only true inside the code. So the same three
+ *  clauses are FOLDED INTO ONE SENTENCE and rendered as a line of prose.
+ *
+ *  ⚠ THE CLAUSES ARE FRAGMENTS NOW, not sentences, and `sentence` below carries every character of
+ *  punctuation that joins them – so replacing his copy, including the shape of the fold, is still a
+ *  table edit and `run.ts` contributes no words of its own.
+ *
  *  ⚠ DRAFT COPY, PICKED BY THE COUNTS AND NOT BY A DIE. `readTwelfth` supplies the counts; this
- *  table supplies the clause. Replacing a sentence is still a table edit. */
+ *  table supplies the clause. */
 export const TWELFTH_REASONS = {
+  /** DRAFT – the fold. `{a}`, `{b}` and `{c}` are the three clauses below, in this order, and they
+   *  are the ONLY things `run.ts` substitutes: every other character here is copy. */
+  sentence: 'The years behind it: {a}, {b}, {c}.',
   oneToOne: {
-    none: 'She has never had a coach to herself.',
-    some: 'Some of it, one to one.',
-    most: 'Most of those years she has had somebody to herself.',
+    none: 'never a coach to herself',
+    some: 'some of it one to one',
+    most: 'most of it with somebody to herself',
   },
   tournaments: {
-    none: 'She has never entered anything.',
-    some: 'One draw sheet with her name on it.',
+    none: 'nothing entered',
+    some: 'one draw sheet with her name on it',
   },
   light: {
-    none: 'No year of it was left to look after itself.',
-    some: 'One year you kept light.',
-    many: 'More than one year you kept light.',
+    none: 'and no year left to look after itself',
+    some: 'and one year you kept light',
+    many: 'and more than one year you kept light',
   },
 } as const
 

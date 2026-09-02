@@ -37,7 +37,16 @@ import { childhoodArrival, weightAt } from '../src/engine/childhood'
 import { physicalMean } from '../src/engine/development'
 import { styleOf } from '../src/engine/season/rival'
 import { PROLOGUE_CARDS } from '../src/prologue/cards'
-import { COACH_BASE_READS, COACH_READS, HANDOVER_COPY, WALK_COPY, coachBaseReadFor, coachReadFor, spentLine } from '../src/prologue/handover'
+import {
+  COACH_BASE_READS,
+  COACH_READS,
+  HANDOVER_COPY,
+  START_AGAIN_DRAFTS,
+  WALK_COPY,
+  coachBaseReadFor,
+  coachReadFor,
+  spentLine,
+} from '../src/prologue/handover'
 import {
   EMPTY_RUN,
   cardFor,
@@ -683,6 +692,10 @@ describe('⚠ the copy obeys the house rules, and says nothing the ruling forbid
     ...Object.values(COACH_BASE_READS).flat(),
     ...Object.values(HANDOVER_COPY),
     ...Object.values(WALK_COPY),
+    // ⚠ THE ALTERNATIVES ARE SWEPT TOO. The owner asked for options on one line (02.09) and every
+    // one of them is a candidate for the screen, so a draft that broke a house rule or §2.3 would
+    // be a landmine sitting in the table waiting for him to pick it.
+    ...START_AGAIN_DRAFTS,
     spentLine(1_234_00),
   ]
 
@@ -696,8 +709,28 @@ describe('⚠ the copy obeys the house rules, and says nothing the ruling forbid
 
   it('⚠⚠ THE GAME SAYS NOTHING ABOUT REROLLING, ODDS OR A FLOOR – his ruling, §2.3', () => {
     const forbidden = /reroll|re-roll|roll|odds|chance|random|potential|ceiling|seed|luck|restart|retry/i
-    for (const line of [...Object.values(HANDOVER_COPY), ...Object.values(WALK_COPY)]) {
+    for (const line of [...Object.values(HANDOVER_COPY), ...Object.values(WALK_COPY), ...START_AGAIN_DRAFTS]) {
       expect(forbidden.test(line), line).toBe(false)
+    }
+  })
+
+  // ⭐⭐ THE ONE LINE HE ASKED TO BE RE-THOUGHT (02.09): «по вордингу вроде всё ок, кроме "Raise
+  // another child" – давай подумаем как еще можно написать». «another child» is the phrase a family
+  // uses for a SECOND child, so on a screen that has just introduced the girl you raised it reads as
+  // being offered a sibling rather than a different girl.
+  //
+  // ⚠ THE SHORTLIST IS DATA SO PICKING ONE IS A TABLE EDIT, and the shipped label has to BE one of
+  // them – a shortlist the screen does not draw from is three sentences nobody is choosing between.
+  // MUTATION-VERIFIED: setting `startAgain` to a fourth wording reddens the first arm; putting
+  // «another child» back reddens the second.
+  it('⭐⭐ «Raise another child» is gone, and what replaced it is one of the drafts on offer', () => {
+    expect(START_AGAIN_DRAFTS).toContain(HANDOVER_COPY.startAgain)
+    expect(START_AGAIN_DRAFTS.length, 'two or three, so it is a choice and not a rewrite').toBeGreaterThanOrEqual(2)
+    for (const draft of [...START_AGAIN_DRAFTS, HANDOVER_COPY.startAgain]) {
+      expect(/another child/i.test(draft), draft).toBe(false)
+      // ⚠ AND EVERY ONE OF THEM IS STILL ABOUT HER – §2.3 says the second control is «честный выбор
+      // игрока», a choice about a child and never about a mechanism.
+      expect(/\b(girl|daughter|child|her|she)\b/i.test(draft), `${draft} is not about her`).toBe(true)
     }
   })
 

@@ -472,6 +472,9 @@ picture fell from 1115 to 804 – **−28%**. The identity block alone went from
 
 ### What the picture is, per card
 
+⚠ **SUPERSEDED BY §8d.** The table below is phase 7's, kept because §8d is written against it; the
+frames the prologue actually draws today are the ones he picked on 02.09.
+
 | card | painting | how the face is chosen |
 | --- | --- | --- |
 | age 5 | `welcome-1.webp` | none – ⭐ the owner's own instruction: «у нас есть картинка где она первый раз на корт приходит вообще» |
@@ -491,3 +494,136 @@ coming, so the boundary is deliberately set where the prologue will need it»).
 see a photograph, so a title moved onto the art would leave `assertLegible` measuring a background
 that is not behind it. Round-17 #3 is why that gate exists. The fade into `--panel` is what buys the
 same look without blinding it.
+
+## 8d. Phase 8 – the owner's reading pass, 02.09
+
+He clicked through all ten scenes and sent a list, card by card. **The principle behind every item on
+it, and it decides each of them:** «давай будем более фактичными и менее интерпретативны для
+игрока» – be factual, not interpretive. Five times he could not tell what a sentence was pointing
+at, and in each case the fix is to name the thing.
+
+### The five sentences that named nothing
+
+| card | before | after | his note |
+| --- | --- | --- | --- |
+| age 5 title | `She can barely hold it.` | `She can barely hold the racket.` | «хочется спросить "что она еле держит"» |
+| age 6 title | `She asks to go back.` | `She asks to go back to the court.` | «куда обратно?… Я бы интерпретировал, что она хочет домой» |
+| age 7 lede | `She is not the best of them and she has not noticed.` | `She is not the best of the eight, and she has not noticed that she is not.` | «чего она не заметила?» |
+| age 9 | the whole card | rewritten – see below | «весь блок мне смыслово непонятен ни в ответах, ни в формулировках» |
+| age 12 (wants-more) | `She wants to know what happens if she is good.` + a lede with no ask in it | `She has asked you for more than she is getting.` + a lede that says what she asked for | «как будто и запроса не было, она не просила год» |
+
+Two more went with them: **the three origins on the age-5 card gained the question they were missing**
+(«вообще непонятно к чему они, потому что вопроса нет»), and **the twelfth's three derived reason
+lines became one sentence of prose** («мне кажется вот это лишнее» – the FUNCTION stayed, because a
+derived fork that shows nothing reads as a die, which is what §2.5 forbids).
+
+### ⚠⚠ «She is a year older than most of them – это мы из даты рождения берем или как?»
+
+**No.** It was a fixed sentence wearing the clothes of a derived one, which is the worst of both:
+
+* the prologue's nine ages are the fixed list 5–13 for **every** career (`CARD_AGES`);
+* the birthday collected on the age-5 card reaches the profile and is read by `kidAgeYears`, i.e. it
+  decides only whether she **opens the game** at thirteen or fourteen;
+* nothing anywhere models the ages of the other children in her group, so there is no arithmetic to
+  derive it from.
+
+So it either had to become derived or stop being said, and there is nothing to derive it from. **The
+claim is gone.** `tests/prologue-cards.test.ts` sweeps every sentence in the table for a relative-age
+claim, so it cannot come back.
+
+### The frames he picked
+
+| card | painting | why |
+| --- | --- | --- |
+| age 5 | `welcome-1` | ⭐ his own instruction, unchanged |
+| age 6 | `jun-norm` (derived) | not raised |
+| age 7 | `jun-serious` | «где она с ракеткой стоит», for variety as much as fit |
+| age 8 | `welcome-1` | «вполне можно снова использовать первый арт, там как раз про теннисный клуб» |
+| age 9 | `jun-serious` | **not** the delighted frame – nothing has been won yet |
+| age 10 | `jun-norm` | a different one again; the Local Open is six weeks away on this card |
+| age 11 | `young-norm` | ⚠ **a stand-in.** «тоже нужен свой арт, предложи вариант, а я сделаю» – see below |
+| age 12 | the fork's own two faces (derived) | «keep the current art» |
+| age 13 | `young-norm` | his pick |
+
+⚠ **THE PICKS ARE ART DIRECTION AND THEY DO NOT LIVE IN `cards.ts`.** `PROLOGUE_FRAMES` is in
+`src/art/prologue.ts`, beside the URL builder, so the phase-7 invariant that **no card row declares a
+face** is untouched and still asserted. An age that is absent from the table is still derived by
+`moodAt`; six are pinned, two are not.
+
+⚠ **THE HOOK FOR THE TOURNAMENT, AND HOW TO USE IT.** `prologueArtUrl` / `prologueArtStem` /
+`prologueFacePoint` all take an optional `outcome` (`'won' | 'lost'`) which **outranks both the pick
+and the derivation**. Nothing passes one today. When the Local Open is wired, the whole change is one
+argument at one call site – `ChildhoodPrologue.vue` learns the result and passes it down beside
+`mood`. No card row gains a column and no table moves.
+
+### The proposed painting for the age-11 card
+
+He asked for a suggestion he can hand to an artist. **The sports school at first light: a row of
+children her age already on court in the half-dark of a winter morning, school bags stacked against
+the fence behind them, and her among them and indistinguishable from them.** It is the one card whose
+subject is not her but the shape of a life – mornings on court, lessons after, everybody there doing
+this – and a portrait of one girl cannot say «every child here is doing this», which is the sentence
+the card turns on.
+
+### The square format, as one rule
+
+«я просил арты делать в квадратном формате по аналогии с home экраном», raised against the age-6 card
+and applying to all nine – and «Заглавная картинка на экране обрезана (отец без головы)» on the
+age-5 one. **These are the same complaint arriving twice:** every painting is a 512x512 master and a
+16:9 window over a square master throws away 44% of it. `.prologue-hero` is `aspect-ratio: 1 / 1`
+now, which is literally the declaration `.diary-hero` carries on Home and `.nt-hero` carries on the
+tournament card, for the same stated reason. One declaration, ten scenes, no per-card override.
+
+⚠ **AND THE INSTRUMENT WAS TAUGHT THE PROPERTY RATHER THAN THE DESIGN BENT TO SUIT IT.** Phase 7 had
+declared the hero's height in pixels because `tests/component/fits.ts` could not see an
+`aspect-ratio` – happy-dom does no layout – so a ratio-sized hero measured as zero and every fit
+number would have been optimistic by a quarter of a screen while staying green. `boxOf` now folds
+`aspect-ratio` against the width it was handed. It can only ADD height, never remove it, and it
+under-counts (the card's 311px content width against the full-bleed box's real 343px), which is the
+direction that file documents itself as erring in.
+
+### The height, re-measured
+
+|  | model (`fits.ts`) | Chromium at 375x667 |
+| --- | --- | --- |
+| phase 6 (the form) | 2301 | 1115 |
+| phase 7 | 1940 | 997 |
+| phase 8 | 2058 | see `e2e/prologue.spec.ts` |
+
+The phase-8 delta is three of his own corrections: **+118** the square hero, **+48** the question
+above the three origins, **−48** the country slot and `Browse all countries` sharing a line. The
+ceiling in `tests/component/prologue-walk.test.ts` moved 2100 → 2200 to keep the same ~140px of
+headroom it was set with. ⚠ In the browser the e2e now asserts the CONTENT height with the painting
+taken back out of it, because that is the number round-20 #4 is actually about – prose growing one
+honest sentence at a time – and the total moved for a reason he asked for.
+
+### The mute icon
+
+«вынести выключение звука (или музыки) отдельной пиктограммой в правый верхний угол.» The prologue is
+a full-screen takeover with no tab bar, so More – and with it every audio switch the game has – is
+unreachable from the first ten screens a new player ever sees, which is exactly where the theme loop
+starts (SplashScreen calls `music.start()` on the tap that gets you in).
+
+`MuteButton.vue` is that icon, declared **once** in `ChildhoodPrologue.vue` so it is in the same place
+on all ten scenes, and `position: fixed` so it costs the card no height. It is **More's own control**:
+the state is `tb-music-muted` through the shipped `isMusicMuted()` / `setMusicMuted()`, the name is
+More's own `Music` label (moved into `src/composables/audioCopy.ts` so the two surfaces cannot drift),
+and the semantics are More's `role="switch"` with an honest `aria-checked`. ⚠ It is the **music**
+switch and not the sfx one, which is a choice: one icon can honestly report one flag, and More can
+still set the two independently.
+
+### «Raise another child» – the alternatives he asked for
+
+«по вордингу вроде всё ок, кроме "Raise another child" – давай подумаем как еще можно написать.»
+«another child» is what a family calls a SECOND child, so on a screen that has just introduced the
+girl you raised it offers a sibling rather than a different girl. Three drafts, in
+`START_AGAIN_DRAFTS`; the shipped label is the first of them and switching is a one-word table edit:
+
+1. **`Raise a different girl`** – the smallest change, and it fixes the only thing that was wrong.
+2. **`Start again with another girl`** – says out loud that this is the beginning over again.
+3. **`Give the nine years to another girl`** – the only one that answers the screen it is on.
+
+⚠ Every candidate obeys §2.3 – no reroll, no odds, no seed, no floor – and every one stays a choice
+about HER. A fourth, «Someone else's nine years», was drafted and dropped for failing exactly that:
+it is about the years and mentions no child at all. The sweep in `tests/prologue-handover.test.ts`
+covers the drafts as well as the shipped line.

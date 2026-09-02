@@ -13,7 +13,6 @@
 //   * `moodAt`'s fork arm reading `'wants-more' -> 'tired'` (the two swapped) -> the fork test goes
 //     red naming the road.
 //   * `moodAt` reading warmth on the twelfth (i.e. the fork ignored) -> the fork test goes red.
-//   * `WELCOME_AGE` set to 6 -> the first-card test goes red at both ends.
 //   * `prologueArtStem` interpolating the STAGE instead of `portraitAssetStem` -> nothing goes red
 //     TODAY, which is why `shared/avatarEmotion.ts` keeps the seam and why the file-existence sweep
 //     below goes through the same builder the component does rather than spelling names itself.
@@ -22,8 +21,17 @@ import { describe, expect, it } from 'vitest'
 import { existsSync } from 'node:fs'
 import { PROLOGUE_CARDS, TWELFTH_WANTS_MORE, type PrologueCard } from '../src/prologue/cards'
 import { EMPTY_RUN, cardFor, moodAt, readTwelfth, warmthAt, withOrigin, withPick, type PrologueRun } from '../src/prologue/run'
-import { WELCOME_AGE, prologueArtStem, prologueArtUrl } from '../src/art/prologue'
+import {
+  PROLOGUE_FRAMES,
+  WELCOME_AGES,
+  WELCOME_POINT,
+  prologueArtStem,
+  prologueArtUrl,
+  prologueFace,
+  prologueFacePoint,
+} from '../src/art/prologue'
 import { PORTRAIT_EMOTIONS, portraitStage } from '../src/shared/avatarEmotion'
+import { facePoint } from '../src/art/faceRects'
 
 /** The two roads through the table, named by what the player did – the same pair the mounted walk
  *  uses, so the two files cannot be talking about different childhoods. */
@@ -104,11 +112,14 @@ describe('⭐⭐ the face the year wears is DERIVED, off the facts the card alre
 
 describe('⭐⭐ every frame the walk can ask for is a file that ships', () => {
   // ⭐ THE OWNER'S OWN INSTRUCTION FOR THE FIRST CARD, pinned against the table rather than against
-  // the number 5: «для этого у нас есть картинка где она первый раз на корт приходит вообще».
-  it('⭐ the welcome painting is the FIRST card`s and no other`s', () => {
-    expect(WELCOME_AGE).toBe(PROLOGUE_CARDS[0].age)
-    expect(prologueArtStem(WELCOME_AGE, 'norm')).toBe('welcome-1')
-    for (const card of PROLOGUE_CARDS.slice(1)) {
+  // the number 5: «для этого у нас есть картинка где она первый раз на корт приходит вообще» – and,
+  // 02.09, for the EIGHTH as well: «вполне можно снова использовать первый арт, там как раз про
+  // теннисный клуб». Two scenes, seven portraits, and the list is derived from the frame table.
+  it('⭐ the welcome painting opens the walk and comes back at the club, and nowhere else', () => {
+    expect(WELCOME_AGES).toEqual([5, 8])
+    expect(WELCOME_AGES[0]).toBe(PROLOGUE_CARDS[0].age)
+    for (const age of WELCOME_AGES) expect(prologueArtStem(age, 'norm')).toBe('welcome-1')
+    for (const card of PROLOGUE_CARDS.filter((c) => !WELCOME_AGES.includes(c.age))) {
       expect(prologueArtStem(card.age, 'norm'), `age ${card.age}`).not.toBe('welcome-1')
     }
   })
@@ -117,9 +128,11 @@ describe('⭐⭐ every frame the walk can ask for is a file that ships', () => {
   // «young starts at 11 – the childhood prologue is coming, so the boundary is deliberately set
   // where the prologue will need it». So the nine cards use exactly two bands and no third.
   it('⚠ the nine years use `jun` below eleven and `young` from eleven, and nothing else', () => {
-    const bands = PROLOGUE_CARDS.filter((c) => c.age !== WELCOME_AGE).map((c) => portraitStage(c.age))
+    const bands = PROLOGUE_CARDS.filter((c) => !WELCOME_AGES.includes(c.age)).map((c) => portraitStage(c.age))
     expect(new Set(bands)).toEqual(new Set(['jun', 'young']))
-    expect(PROLOGUE_CARDS.filter((c) => c.age < 11 && c.age !== WELCOME_AGE).every((c) => portraitStage(c.age) === 'jun')).toBe(true)
+    expect(
+      PROLOGUE_CARDS.filter((c) => c.age < 11 && !WELCOME_AGES.includes(c.age)).every((c) => portraitStage(c.age) === 'jun'),
+    ).toBe(true)
     expect(PROLOGUE_CARDS.filter((c) => c.age >= 11).every((c) => portraitStage(c.age) === 'young')).toBe(true)
   })
 
@@ -147,11 +160,138 @@ describe('⭐⭐ every frame the walk can ask for is a file that ships', () => {
   // this is what says so before a new arm ships a 404.
   it('⚠ both bands are complete, so a new arm of the mapping cannot 404', () => {
     for (const card of PROLOGUE_CARDS) {
-      if (card.age === WELCOME_AGE) continue
+      if (WELCOME_AGES.includes(card.age)) continue
       for (const mood of PORTRAIT_EMOTIONS) {
         const path = `public/${prologueArtUrl(card.age, mood).replace(/^\/+/, '')}`
         expect(existsSync(path), `age ${card.age} face ${mood} -> ${path}`).toBe(true)
       }
     }
+  })
+})
+
+// =================================================================================================
+describe('⭐⭐⭐ the frames the owner picked, 02.09 – card by card, in his own order', () => {
+  // ⚠ THE PICKS ARE ART DIRECTION AND THEY LIVE IN `art/prologue.ts`, NOT IN THE COPY TABLE. The
+  // "no card carries a face" pin above is unchanged and still passes, which is the point: a `mood`
+  // column beside the copy would be a second statement about the year kept in step by hand, while a
+  // frame table beside the URL builder is the same kind of thing as «welcome-1 is the opening one».
+  // MUTATION-VERIFIED: delete a row from `PROLOGUE_FRAMES` -> this goes red naming the age.
+  it('⭐ every card he named draws the painting he named', () => {
+    // ⚠ ASSERTED THROUGH THE STEM RATHER THAN OFF THE TABLE, so this proves the picks REACH the
+    // screen. Reading `PROLOGUE_FRAMES` back to itself would pass with the ranking wired wrong.
+    // `warmth`/`mood` is set to the value the derivation would otherwise have produced on a carried
+    // road – `happy` – so a pick that failed to override would be visible here.
+    expect(prologueArtStem(7, 'happy')).toBe('jun-serious')
+    expect(prologueArtStem(8, 'happy')).toBe('welcome-1')
+    expect(prologueArtStem(9, 'happy')).toBe('jun-serious')
+    expect(prologueArtStem(10, 'happy')).toBe('jun-norm')
+    expect(prologueArtStem(11, 'happy')).toBe('young-norm')
+    expect(prologueArtStem(13, 'happy')).toBe('young-norm')
+  })
+
+  // ⚠ AND THE TWO HE DID NOT NAME ARE STILL DERIVED – «keep the current art» on the twelfth, whose
+  // two faces ARE the fork. MUTATION: pin a frame at 12 -> red.
+  it('⚠ the ages he left alone still read `moodAt`, the twelfth above all', () => {
+    expect(PROLOGUE_FRAMES[6]).toBeUndefined()
+    expect(PROLOGUE_FRAMES[12]).toBeUndefined()
+    expect(prologueFace(12, 'tired')).toBe('tired')
+    expect(prologueFace(12, 'serious')).toBe('serious')
+    expect(prologueFace(6, 'norm')).toBe('norm')
+    // ...and the twelfth's two faces still follow the fork all the way to the file on disk.
+    for (const [road, want] of [
+      [LIGHT_ROAD, 'young-tired'],
+      [CARRIED_ROAD, 'young-serious'],
+    ] as const) {
+      const twelfth = walk(road).find((s) => s.card.age === 12)!
+      expect(prologueArtStem(12, moodAt(12, twelfth.run))).toBe(want)
+    }
+  })
+
+  // ⚠ NOTHING HE FLAGGED IS DRAWN ANY MORE. He met the delighted frame at nine («ничего ещё не
+  // выиграно») and again at ten, before the Local Open has been played. On the carried road the
+  // derivation reaches `happy` from the eighth year onwards, so this is a live road, not a
+  // hypothetical. MUTATION: drop the 9 or the 10 row -> red naming the age.
+  it('⭐⭐ she is not shown delighted before anything has been won', () => {
+    for (const road of [LIGHT_ROAD, CARRIED_ROAD]) {
+      for (const { card, run } of walk(road)) {
+        if (card.age > 10) continue
+        expect(prologueArtStem(card.age, moodAt(card.age, run)), `age ${card.age}`).not.toContain('happy')
+      }
+    }
+    // ...and the derivation really would have: this is what the card was showing when he saw it.
+    const nine = walk(CARRIED_ROAD).find((s) => s.card.age === 9)!
+    expect(moodAt(9, nine.run), 'the arm the pick is overriding').toBe('happy')
+  })
+
+  // ⭐⭐ THE HOOK A RESULT WILL ARRIVE THROUGH, exercised so it is live rather than decorative. A
+  // separate slice is wiring the Local Open; this proves the picture can answer it with one
+  // argument at one call site and no change to any table.
+  // MUTATION: rank the pinned frame above the outcome in `prologueFace` -> red.
+  it('⭐ a result outranks both the pick and the derivation, and takes a scene back to a portrait', () => {
+    expect(prologueArtStem(10, 'norm', 'won')).toBe('jun-happy')
+    expect(prologueArtStem(10, 'norm', 'lost')).toBe('jun-sad')
+    // the eighth is a SCENE; a result has to put her face back on the card, because two people
+    // arriving at a court cannot report a draw sheet.
+    expect(prologueArtStem(8, 'norm', 'won')).toBe('jun-happy')
+    // and nothing passes one today, so every frame on the walk is the one he picked.
+    expect(prologueArtStem(10, 'norm')).toBe('jun-norm')
+    // ⚠ both faces the hook can reach ship, in both bands the walk uses.
+    for (const age of [10, 11]) {
+      for (const outcome of ['won', 'lost'] as const) {
+        const path = `public/${prologueArtUrl(age, 'norm', outcome).replace(/^\/+/, '')}`
+        expect(existsSync(path), `age ${age} ${outcome} -> ${path}`).toBe(true)
+      }
+    }
+  })
+})
+
+// =================================================================================================
+describe('⭐⭐⭐ «Заглавная картинка на экране обрезана (отец без головы)»', () => {
+  // The painting is a 512x512 master with two people in it; the card's hero used to be 16:9, and
+  // `facePoint` returns 50/50 for a stem it does not know, so `cover` kept the middle 288px of the
+  // painting and threw the parent's head away above it.
+  //
+  // ⚠ THE SHIPPED FIX IS THE SQUARE HERO, and a square window over a square master crops nothing at
+  // all – asserted on the rendered card in tests/component/prologue-walk.test.ts. THIS test is the
+  // other half: that the recorded framing point survives a window that is NOT square, so the defect
+  // cannot come back through a stylesheet edit alone. It is measured against the exact geometry
+  // that produced it.
+  const MASTER = 512
+  /** Both heads, in painting pixels – the read recorded in `art/prologue.ts`. */
+  const HEADS = { top: 20, bottom: 270, left: 185, right: 390 }
+
+  it('⚠⚠ neither head is cut, even in the 16:9 window that cut one', () => {
+    const point = prologueFacePoint(5, 'norm')
+    expect(prologueFacePoint(8, 'norm'), 'both welcome cards frame it the same way').toEqual(point)
+
+    // `object-fit: cover` into a 343x193 box: the master scales by 343/512 and 288px of its height
+    // survive. `object-position: Q%` aligns Q% of the IMAGE with Q% of the BOX, so the visible band
+    // opens at Q% of the overflow.
+    const visibleH = MASTER * (193 / 343)
+    const top = (point.y / 100) * (MASTER - visibleH)
+    expect(top, 'the top of the parent`s head is above the window').toBeLessThanOrEqual(HEADS.top)
+    expect(top + visibleH, 'her chin is below the window').toBeGreaterThanOrEqual(HEADS.bottom)
+
+    // ...and the recorded point is the one the module exports, so the comment and the number agree.
+    expect(point).toEqual({ x: WELCOME_POINT.x, y: WELCOME_POINT.y })
+  })
+
+  // ⚠ THE CENTRED FRAME REALLY DID CUT IT – without this the test above could pass against any
+  // point at all and would be proving nothing about the defect.
+  it('⚠ and 50/50 – what an unknown stem gets – is what took his head off', () => {
+    const visibleH = MASTER * (193 / 343)
+    const top = 0.5 * (MASTER - visibleH)
+    expect(top, 'the centred window would have started above the parent`s head after all').toBeGreaterThan(HEADS.top)
+  })
+
+  // ⚠ AND IT IS NOT IN `art/faceRects.ts`. That table is keyed on `{stage}-{emotion}` portraits and
+  // feeds `croppableStems()`, which drives the 256px AVATAR cutter – an entry there would ship a
+  // crop of somebody's shoulder as a player avatar. MUTATION: add `welcome-1` to CROPS -> red.
+  it('⚠ the scene`s framing is the prologue`s, not an entry in the avatar crop table', async () => {
+    const { CROPS, croppableStems } = await import('../src/art/faceRects')
+    expect(Object.keys(CROPS)).not.toContain('welcome-1')
+    expect(croppableStems()).not.toContain('welcome-1')
+    // a portrait still reads the ONE table, so this did not fork the framing for everything else
+    expect(prologueFacePoint(9, 'norm')).toEqual(facePoint('jun-serious'))
   })
 })

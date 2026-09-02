@@ -29,6 +29,7 @@
 // handover, the wiring and the two paths. The card at ten still charges for the weekend and still
 // counts as a matchplay year, so the childhood the engine is handed is unchanged either way.
 import { computed, ref } from 'vue'
+import MuteButton from './MuteButton.vue'
 import PrologueCard from './PrologueCard.vue'
 import PrologueHandover from './PrologueHandover.vue'
 import { useGameStore } from '../stores/game'
@@ -74,7 +75,7 @@ const warmth = computed(() => warmthAt(card.value.age, run.value))
  *  (`moodAt`). Computed here for the same reason `warmth` is: the card draws a row it is handed and
  *  reads no run of its own. There is no `mood` column in the table for anybody to keep in sync. */
 const mood = computed(() => moodAt(card.value.age, run.value))
-const reasons = computed(() => (card.value.age === 12 ? readTwelfth(run.value).reasons : undefined))
+const reason = computed(() => (card.value.age === 12 ? readTwelfth(run.value).reason : undefined))
 /** ⚠ THE FIRST CARD ONLY – see `WALK_COPY.skip`. */
 const skipLabel = computed(() => (at.value === 0 ? WALK_COPY.skip : undefined))
 
@@ -157,6 +158,14 @@ async function startAgain(): Promise<void> {
 </script>
 
 <template>
+  <!-- ⭐⭐ THE ONE CONTROL THAT IS NOT A YEAR OF HER CHILDHOOD - the owner's 02.09 ask for a mute
+       icon in the top-right corner, and his words for it are quoted in MuteButton.vue's script,
+       because Cyrillic may not appear in a template even in a comment (house law). Declared ONCE,
+       here, rather than on each of the two surfaces below: the prologue is one takeover as far as
+       the player is concerned, and an icon that moved or vanished between the ninth card and the
+       handover would be two controls wearing one glyph. It is `position: fixed`, so it adds nothing
+       to either card's height - see MuteButton.vue for why that matters on this screen. -->
+  <MuteButton />
   <PrologueHandover
     v-if="handoverOpen && game.snapshot"
     :axes="game.snapshot.radar"
@@ -172,7 +181,7 @@ async function startAgain(): Promise<void> {
     :card="card"
     :warmth="warmth"
     :mood="mood"
-    :reasons="reasons"
+    :reason="reason"
     :identity="identity"
     :skip-label="skipLabel"
     :busy="game.busy"

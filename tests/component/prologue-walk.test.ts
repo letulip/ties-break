@@ -28,9 +28,9 @@ import { createPinia, setActivePinia } from 'pinia'
 // every measurement below is vacuous – the same reason tour-briefing.test.ts imports it.
 import '../../src/style.css'
 import { assertLegible } from './contrast'
-import { assertDismissReachable, boxOf, measureDialog, setViewport, PHONE, NARROW_PHONE } from './fits'
+import { assertDismissReachable, boxOf, lengthPx, measureDialog, setViewport, PHONE, NARROW_PHONE } from './fits'
 import PrologueCardView from '../../src/components/PrologueCard.vue'
-import { prologueArtUrl } from '../../src/art/prologue'
+import { WELCOME_AGES, prologueArtUrl } from '../../src/art/prologue'
 import { PROLOGUE_CARDS, TWELFTH_WANTS_MORE, type PrologueCard } from '../../src/prologue/cards'
 import { OPENING_IDENTITY } from '../../src/prologue/identity'
 import {
@@ -62,7 +62,7 @@ function mountCard(card: PrologueCard, run: PrologueRun, vp: { width: number; he
       // required on the component precisely so a mount that forgot it cannot compile: a card with no
       // painting is a quarter of a screen of height this file would otherwise never measure.
       mood: moodAt(card.age, run),
-      reasons: card.age === 12 ? readTwelfth(run).reasons : undefined,
+      reason: card.age === 12 ? readTwelfth(run).reason : undefined,
       // ⚠⚠ THE IDENTITY IS PASSED EXACTLY WHERE THE CONTAINER PASSES IT, and leaving it out was the
       // easy way to make this whole file lie. `ChildhoodPrologue.vue` hands the prop to every card
       // and the age-5 row is the only one that draws it (`card.identity`), so a mount without it
@@ -209,22 +209,35 @@ describe('⭐⭐ nine cards on a 375x667 phone, and the way on is on every one o
   // e2e/prologue.spec.ts where a real layout exists to measure.
   //
   // ⚠ THE CEILING IS MEASURED, NOT GUESSED – the same rule e2e/responsive.spec.ts states for its
-  // own. This build measures 1940px; 2100 leaves ~160px of headroom, which is a sentence or two of
-  // the owner's own copy, and is still 200px under what the card cost before phase 7.
+  // own – AND IT WAS RE-MEASURED IN PHASE 8, upward, which is a decision and not a slip.
+  //
+  //   phase 7 shipped     1940px   16:9 hero, closed country picker
+  //   phase 8 measures    2058px   and the delta is three of the owner's own 02.09 corrections:
+  //                                +118  the hero is SQUARE now («я просил арты делать в квадратном
+  //                                      формате по аналогии с home экраном»), which on this
+  //                                      instrument is the card's 311px content width against the
+  //                                      193px the 16:9 box declared;
+  //                                 +48  the question above the three origins («вообще непонятно к
+  //                                      чему они, потому что вопроса нет»);
+  //                                 -48  the country slot and `Browse all countries` share a line.
+  //
+  // 2200 leaves ~140px of headroom, which is a sentence or two of his own copy at this width – the
+  // same margin the 2100 ceiling was set with, and still 240px under the 2301px form phase 6 left.
   // MUTATION-VERIFIED: reopening the country picker (`tiles` returning POPULAR_COUNTRIES when
   // closed) reddens this and the tile count above.
   // ⚠ AND ONE THING THIS INSTRUMENT CANNOT SEE, SAID PLAINLY RATHER THAN CLAIMED: putting the two
   // name fields back in a column (`.prologue-names` set to `display: block`) does NOT redden it.
   // The model has no grid – it stacks a grid's cells in one column – so a row and a column measure
-  // identically here, even though the browser saves 69px. That half is asserted where a layout
-  // exists to see it, in e2e/prologue.spec.ts.
+  // identically here, even though the browser saves 69px. The same blindness now covers the country
+  // row, which is a flex row of two: the model reads a row as its tallest item, so it DOES see that
+  // one. Both halves are asserted where a layout exists in e2e/prologue.spec.ts.
   it('⭐ and the age-5 card is SHORTER than the form phase 6 left, painting included', () => {
     const { wrapper, el, answers } = mountCard(PROLOGUE_CARDS[0], EMPTY_RUN, PHONE)
     const fit = measureDialog(el, answers, PHONE)
     expect(
       fit.contentFloor,
       'the age-5 card has grown back past the form it was cut down from',
-    ).toBeLessThanOrEqual(2100)
+    ).toBeLessThanOrEqual(2200)
     // ⚠ AND THE COUNTRY FIELD IS THE PART THAT MOVED, asserted on its own so a future card that
     // grew somewhere ELSE cannot hide under the total. It was 631px on this instrument with the
     // nine tiles open; closed it is one tile and the way in.
@@ -234,12 +247,73 @@ describe('⭐⭐ nine cards on a 375x667 phone, and the way on is on every one o
     wrapper.unmount()
   })
 
-  // ⭐⭐⭐ EVERY CARD CARRIES ITS PAINTING (phase 7), and the height is DECLARED so this instrument
-  // can see it. `fits.ts` reads an explicit `height` off a box and falls back to stacking the
-  // children when there is none; an `<img>` has no children, so a hero sized by `aspect-ratio` would
+  // ⭐⭐ THE QUESTION IS ON SCREEN, AND IT IS THE LAST THING SAID BEFORE THE ANSWERS (owner, 02.09:
+  // «у нас есть 3 выбора перед игроком, и вообще непонятно к чему они, потому что вопроса нет»).
+  // Asserted by POSITION as well as by presence, because a question that renders above the picture
+  // answers nothing – it has to be the line the player's eye leaves before it reaches the buttons.
+  // MUTATION-VERIFIED: moving the `p` above `.prologue-lede` reddens the ordering arm; deleting the
+  // `v-if` block reddens the first.
+  it('⭐⭐ the three origins are asked for – the question sits immediately above them', () => {
+    const { wrapper, el } = mountCard(PROLOGUE_CARDS[0], EMPTY_RUN, PHONE)
+    const q = document.querySelector('.prologue-question')
+    expect(q, 'the five offers three answers to no question').toBeTruthy()
+    expect(q!.textContent).toBe(PROLOGUE_CARDS[0].question)
+    const kids = [...el.children]
+    expect(kids.indexOf(q!), 'the question is not a child of the card').toBeGreaterThan(-1)
+    expect(kids.indexOf(q!) + 1, 'something got between the question and the answers').toBe(
+      kids.indexOf(document.querySelector('.prologue-answers')!),
+    )
+    wrapper.unmount()
+    // ...and the eight, whose title IS its question, does not grow a second voice.
+    const eight = walk(CARRIED_ROAD, 'middle').find((x) => x.card.age === 8)!
+    const w = mountCard(eight.card, eight.run, PHONE)
+    expect(document.querySelector('.prologue-question')).toBeNull()
+    w.wrapper.unmount()
+  })
+
+  // ⭐ THE COUNTRY AND THE WAY INTO THE LIST SHARE A LINE (owner, 02.09: «Browse all countries и сам
+  // слот выбранной страны давай сделаем на одной строчке тоже»).
+  //
+  // ⚠ ASSERTED THROUGH THE REAL CASCADE, not on a class name: `getComputedStyle` is live in this
+  // project, so this reads the flex row the browser would build. Two controls, one row, and the
+  // measurement agrees – `boxOf` reads a flex ROW as its tallest child, so a row that had silently
+  // gone back to a column would measure taller and redden the ceiling above as well.
+  // MUTATION-VERIFIED: dropping `.prologue-country.is-closed { display: flex }` reddens this.
+  it('⭐ closed, the chosen country and `Browse all countries` are one line', () => {
+    const { wrapper } = mountCard(PROLOGUE_CARDS[0], EMPTY_RUN, PHONE)
+    const row = document.querySelector('.prologue-country')!
+    const cs = getComputedStyle(row)
+    expect(cs.display, 'the country slot and the way in are stacked again').toBe('flex')
+    expect(cs.flexDirection === 'row' || cs.flexDirection === '', 'the row became a column').toBe(true)
+    expect(row.querySelectorAll('.prologue-tile').length, 'closed, it is one country').toBe(1)
+    expect(row.querySelector('.prologue-browse'), 'and the way in is inside the row').toBeTruthy()
+    // the browse control gave up its full width to make room for the tile beside it
+    expect(getComputedStyle(row.querySelector('.prologue-browse')!).width).not.toBe('100%')
+    wrapper.unmount()
+  })
+
+  // ⚠ AND OPENING THE PICKER PUTS IT BACK EXACTLY AS IT WAS – the wizard's own three views are
+  // untouched, which is the other half of «do not redesign the picker».
+  it('⚠ open, the picker is the wizard`s three-column grid again', async () => {
+    const { wrapper } = mountCard(PROLOGUE_CARDS[0], EMPTY_RUN, PHONE)
+    await wrapper.find('.prologue-browse').trigger('click')
+    const row = document.querySelector('.prologue-country')!
+    expect(getComputedStyle(row).display, 'the open picker is still being squeezed into a row').not.toBe('flex')
+    expect(getComputedStyle(document.querySelector('.prologue-tiles')!).gridTemplateColumns).toBe('repeat(3, 1fr)')
+    expect(document.querySelectorAll('.prologue-tile').length, 'every country is reachable').toBeGreaterThan(9)
+    wrapper.unmount()
+  })
+
+  // ⭐⭐⭐ EVERY CARD CARRIES ITS PAINTING (phase 7), AND THE MEASUREMENT CAN SEE IT.
+  //
+  // ⚠ HOW THAT IS TRUE CHANGED IN PHASE 8 AND THE OLD ACCOUNT WOULD NOW BE A LIE. It used to be a
+  // pixel `height`, because «an `<img>` has no children, so a hero sized by `aspect-ratio` would
   // measure as ZERO and every fit number in this file would be optimistic by a quarter of a screen
-  // while staying green. `PrologueHandover.vue`'s rose carries the same argument for the same
-  // reason. MUTATION-VERIFIED: dropping `height` from `.prologue-hero` reddens this.
+  // while staying green» – which was a true statement about the INSTRUMENT, and the instrument is
+  // what changed: `boxOf` in fits.ts folds `aspect-ratio` against the width it was handed. That is
+  // the right way round, because the owner's «square, like the home screen» is a property of the
+  // design and the pixel height was a concession to a measurement.
+  // MUTATION-VERIFIED: removing the `aspect-ratio` branch from `boxOf` reddens this at every age.
   it('⭐ every card is drawn on a painting, and the painting has a height the measurement can see', () => {
     for (const { card, run } of walk(CARRIED_ROAD, 'middle')) {
       const { wrapper } = mountCard(card, run, PHONE)
@@ -256,20 +330,38 @@ describe('⭐⭐ nine cards on a 375x667 phone, and the way on is on every one o
 
   // ⭐ THE OWNER'S OWN INSTRUCTION FOR THE FIRST CARD: «для этого у нас есть картинка где она первый
   // раз на корт приходит вообще» – `welcome-1`, the parent and the daughter arriving on a floodlit
-  // court, and it is the one card in the walk that is not a portrait of her alone.
-  it('⭐ the age-5 card is the one she first walks onto a court on', () => {
-    const { wrapper } = mountCard(PROLOGUE_CARDS[0], EMPTY_RUN, PHONE)
-    const src = document.querySelector('.prologue-hero img')!.getAttribute('src')!
-    expect(src, 'the five is not the welcome painting').toContain('welcome-1')
-    // ...and no other card is.
-    wrapper.unmount()
-    for (const { card, run } of walk(CARRIED_ROAD, 'middle').slice(1)) {
-      const w = mountCard(card, run, PHONE)
-      expect(
-        document.querySelector('.prologue-hero img')!.getAttribute('src'),
-        `age ${card.age} borrowed the welcome painting`,
-      ).not.toContain('welcome-1')
-      w.wrapper.unmount()
+  // court – and, 02.09, for the eighth as well: «вполне можно снова использовать первый арт, там как
+  // раз про теннисный клуб», which is the card about the club across town.
+  // MUTATION-VERIFIED: dropping either age from `WELCOME_AGES` reddens this at both ends.
+  it('⭐ she walks onto a court on the five, and again at the club on the eight', () => {
+    for (const { card, run } of walk(CARRIED_ROAD, 'middle')) {
+      const { wrapper } = mountCard(card, run, PHONE)
+      const src = document.querySelector('.prologue-hero img')!.getAttribute('src')!
+      const scene = WELCOME_AGES.includes(card.age)
+      expect(src.includes('welcome-1'), `age ${card.age} draws the wrong kind of painting`).toBe(scene)
+      wrapper.unmount()
+    }
+    expect(WELCOME_AGES, 'and it is those two cards only').toEqual([5, 8])
+  })
+
+  // ⭐⭐⭐ «Заглавная картинка на экране обрезана (отец без головы)» – THE SHIPPED FIX, ON THE
+  // RENDERED CARD. A 512x512 master inside a 16:9 window loses 44% of itself; a SQUARE window loses
+  // nothing at all, at any width, which is the whole of «я просил арты делать в квадратном формате
+  // по аналогии с home экраном». So the assertion is the geometry rather than a pixel count.
+  //
+  // ⚠ IT IS ONE RULE FOR ALL TEN SCENES AND THE LOOP IS WHAT SAYS SO. `.diary-hero` on Home and
+  // `.nt-hero` on the tournament card declare exactly this, for exactly this reason, after he asked
+  // the same thing of those screens.
+  // MUTATION-VERIFIED: `aspect-ratio: 16 / 9` on `.prologue-hero` reddens every age.
+  it('⭐⭐ every painting is shown SQUARE, so nothing is cropped through a face', () => {
+    for (const { card, run } of walk(CARRIED_ROAD, 'middle')) {
+      const { wrapper } = mountCard(card, run, PHONE)
+      const hero = document.querySelector('.prologue-hero')!
+      expect(getComputedStyle(hero).aspectRatio, `age ${card.age} is not square`).toBe('1 / 1')
+      // ...and no per-card override sneaked in beside it: a declared height would win over the ratio
+      // in a real browser and take the crop back.
+      expect(lengthPx(getComputedStyle(hero).height, 0), `age ${card.age} declares a height`).toBeNaN()
+      wrapper.unmount()
     }
   })
 
@@ -336,10 +428,24 @@ describe('⭐ what the walk shows about her – and it is nothing numeric', () =
   })
 
   // ⭐ THE FORK SAYS WHAT IT READ, so a derived reading cannot be mistaken for a die.
-  it('the twelfth prints the three facts it read off the years before it', () => {
-    const scene = walk(LIGHT_ROAD, 'middle').find((s) => s.card.age === 12)!
-    const { wrapper } = mountCard(scene.card, scene.run, PHONE)
-    for (const reason of readTwelfth(scene.run).reasons) expect(wrapper.text()).toContain(reason)
+  //
+  // ⚠ AS ONE SENTENCE OF PROSE SINCE 02.09, AND BOTH HALVES OF THAT ARE ASSERTED. The owner met
+  // three stacked declaratives and said «мне кажется вот это лишнее»; the FUNCTION had to survive
+  // the list, so the card still prints what it read – and it prints it in a `p`, with no `li`
+  // anywhere on the scene. MUTATION-VERIFIED: putting the `ul` back reddens the second half.
+  it('the twelfth prints the facts it read, in one line of prose and not a list', () => {
+    for (const road of [LIGHT_ROAD, CARRIED_ROAD]) {
+      const scene = walk(road, 'middle').find((s) => s.card.age === 12)!
+      const { wrapper } = mountCard(scene.card, scene.run, PHONE)
+      expect(wrapper.text()).toContain(readTwelfth(scene.run).reason)
+      expect(document.querySelectorAll('.prologue-card li').length, 'the card is stacking bullets again').toBe(0)
+      expect(document.querySelector('.prologue-reason')!.tagName).toBe('P')
+      wrapper.unmount()
+    }
+    // ...and no other card prints one, so the fork's account stays the fork's.
+    const seven = walk(LIGHT_ROAD, 'middle').find((s) => s.card.age === 7)!
+    const { wrapper } = mountCard(seven.card, seven.run, PHONE)
+    expect(document.querySelector('.prologue-reason')).toBeNull()
     wrapper.unmount()
   })
 
@@ -398,7 +504,8 @@ const QUIET_SECONDS = 3
 
 function wordsOn(card: PrologueCard, run: PrologueRun): number {
   const parts = [card.kicker, card.title, card.lede, card.her[warmthAt(card.age, run)], card.coach[warmthAt(card.age, run)]]
-  if (card.age === 12) parts.push(...readTwelfth(run).reasons)
+  if (card.question) parts.push(card.question)
+  if (card.age === 12) parts.push(readTwelfth(run).reason)
   for (const o of card.origins ?? card.options ?? []) parts.push(o.label, o.note)
   if (!card.origins && !card.options) parts.push(card.continueLabel)
   return parts.join(' ').split(/\s+/).filter(Boolean).length

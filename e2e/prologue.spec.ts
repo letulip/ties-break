@@ -223,9 +223,16 @@ test('the nine cards run, the handover draws her, and going on starts the career
 // to judge should be the one a browser produces. This is that number.
 //
 // MEASURED, NOT GUESSED (the rule e2e/responsive.spec.ts states for its own ceiling). At 375x667 in
-// this Chromium: 1115px before phase 7, 997px after – and the 997 includes a 193px painting the
-// 1115 did not have, so the non-picture content fell from 1115 to 804. The ceiling below leaves
-// ~100px of headroom, which is two or three lines of the owner's own copy.
+// this Chromium: 1115px before phase 7, 997px after – and the 997 included a 193px painting the
+// 1115 did not have, so the non-picture content fell from 1115 to 804.
+//
+// ⚠⚠ PHASE 8 PUT SOME OF IT BACK, DELIBERATELY, AND THE OWNER IS THE ONE WHO ASKED. The painting is
+// SQUARE now – «я просил арты делать в квадратном формате по аналогии с home экраном» – which at
+// this width is 343px instead of 193px, because a 16:9 window over a 512x512 master was throwing 44%
+// of every painting away and cutting the age-5 scene through the parent's head. Set against that,
+// the country slot and `Browse all countries` moved onto one line at his ask, and the three origins
+// gained the question they were missing. The non-picture content is what to watch, and it did not
+// grow: see the numbers asserted below, both of which are printed in the failure message.
 //
 // ⚠ 375x667 AND NOT THE SUITE'S 576x1280, for the reason responsive.spec.ts drops to 375 too: the
 // round-20 #3 rule is written against the shortest screen the app supports, and a card measured on a
@@ -259,6 +266,12 @@ test('⭐ the first card of the game is a picture and a scene, not a form', asyn
   })
   expect(spans.heroWidth, 'the painting does not span the card`s padding box').toBe(spans.cardWidth)
   expect(spans.heroHeight, 'the painting is a strip, not a hero').toBeGreaterThan(150)
+  // ⭐⭐ AND IT IS SQUARE, WHICH IS THE WHOLE OF «отец без головы» AND OF «в квадратном формате».
+  //    The masters are 512x512, so a square window shows the entire painting and crops nothing – the
+  //    same declaration `.diary-hero` carries on Home for the same reason. Only a real layout engine
+  //    can confirm an `aspect-ratio` resolved against a `calc()` width, which is why it is asserted
+  //    here as a measured pair rather than as a CSS string.
+  expect(spans.heroHeight, 'the painting is not square, so it is cropping the master').toBe(spans.heroWidth)
 
   // 2. ⭐ THE TWO NAMES SHARE A ROW – asserted HERE and nowhere else, because the mounted
   //    instrument cannot see it: `fits.ts` has no grid and stacks a grid's cells in one column, so a
@@ -270,11 +283,29 @@ test('⭐ the first card of the game is a picture and a scene, not a form', asyn
   expect(names.length, 'both name fields are on the card').toBe(2)
   expect(names[0], 'the two names are stacked, not side by side').toBe(names[1])
 
-  // 3. AND THE CARD IS NOT A FORM ANY MORE.
-  const height = await card.evaluate((el) => el.scrollHeight)
-  expect(height, `the age-5 card is ${height}px of content on a 375x667 phone`).toBeLessThanOrEqual(1100)
+  // 3. ⭐ THE CHOSEN COUNTRY AND `Browse all countries` SHARE A LINE – his ask, and the second thing
+  //    on this card only a browser can see: the mounted model reads a flex row as its tallest child,
+  //    which is close, but the row's real claim is that the two controls have the same top edge.
+  const country = await card.locator('.prologue-country .prologue-tile, .prologue-browse').evaluateAll((els) =>
+    els.map((e) => Math.round(e.getBoundingClientRect().top)),
+  )
+  expect(country.length, 'the country slot and the way into the list are both on the card').toBe(2)
+  expect(country[0], 'the country and the way in are stacked, not side by side').toBe(country[1])
 
-  // 4. ⚠ THE ROUND-20 #3 RULE, IN A REAL LAYOUT. The card is taller than the screen and always will
+  // 4. AND THE CARD IS NOT A FORM ANY MORE.
+  //
+  // ⚠ TWO NUMBERS, AND THE SECOND ONE IS THE ONE THAT MATTERS. The total moved because the painting
+  //    got bigger at the owner's ask; what round-20 #4 is actually about is prose growing one honest
+  //    sentence at a time, so the content ceiling is asserted with the hero taken back out of it.
+  const height = await card.evaluate((el) => el.scrollHeight)
+  const withoutArt = height - spans.heroHeight
+  expect(
+    withoutArt,
+    `the age-5 card is ${withoutArt}px of CONTENT (plus a ${spans.heroHeight}px painting, ${height}px in all)`,
+  ).toBeLessThanOrEqual(900)
+  expect(height, `the age-5 card is ${height}px on a 375x667 phone`).toBeLessThanOrEqual(1250)
+
+  // 5. ⚠ THE ROUND-20 #3 RULE, IN A REAL LAYOUT. The card is taller than the screen and always will
   //    be; what must hold is that the player can reach the answers, which means the card scrolls and
   //    the last control lands inside the viewport once it has.
   const answers = card.locator('.prologue-answers')

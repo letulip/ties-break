@@ -58,8 +58,7 @@
 // the two read lines read, so the picture cannot disagree with the sentence under it, and there is
 // no `mood` column in the card table for anybody to keep in sync by hand.
 import { computed, ref, useTemplateRef } from 'vue'
-import { facePoint } from '../art/faceRects'
-import { prologueArtStem, prologueArtUrl } from '../art/prologue'
+import { prologueArtUrl, prologueFacePoint } from '../art/prologue'
 import { useDialogFocus } from '../composables/dialogFocus'
 import { COUNTRIES, COUNTRY_NAMES, POPULAR_COUNTRIES, flagEmoji } from '../composables/countries'
 // ⚠⚠ THE THREE FIELDS ARE THE WIZARD'S AND SO ARE THEIR WORDS. Not one label, placeholder or
@@ -82,8 +81,10 @@ const props = defineProps<{
    *  writes copy. It is not optional, because a card with no picture is the thing phase 7 exists to
    *  stop shipping. */
   mood: PortraitEmotion
-  /** the twelfth's derived reasons, empty on every other card */
-  reasons?: readonly string[]
+  /** the twelfth's derived reason, ONE folded sentence and absent on every other card. It was a
+   *  three-item list until the owner met it (02.09, «мне кажется вот это лишнее»); see
+   *  `TWELFTH_REASONS` in cards.ts for why the function survived the list. */
+  reason?: string
   /** ⭐ WHO SHE IS – present only while the card that asks is up (`card.identity`), and owned by the
    *  container so that walking off the card and back does not forget what was typed. */
   identity?: PrologueIdentity
@@ -193,11 +194,17 @@ const her = computed(() => props.card.her[props.warmth])
 const coach = computed(() => props.card.coach[props.warmth])
 
 // --- the picture ----------------------------------------------------------------------------------
+//
+// ⚠ WHICH FRAME A CARD SHOWS IS `src/art/prologue.ts`'S, NOT THIS COMPONENT'S. The owner named a
+// painting for six of the nine on 02.09; those picks live in `PROLOGUE_FRAMES` beside the URL
+// builder, the other three stay derived off `mood`, and this file asks one function and draws what
+// it is handed. Same reason the copy is a table: art direction is his, and a component that chose
+// its own frame would be a second place to change it.
 const artUrl = computed(() => prologueArtUrl(props.card.age, props.mood))
-/** Framed off the ONE face table, exactly as the Home hero and the injury popup are – so the crop
- *  window and the 256px avatar crops can never disagree about where she is in the frame. */
+/** Framed off the ONE face table for a portrait, and off the welcome scene's own recorded point for
+ *  `welcome-1` – see `prologueFacePoint`, which carries the account of «отец без головы». */
 const artStyle = computed(() => {
-  const p = facePoint(prologueArtStem(props.card.age, props.mood))
+  const p = prologueFacePoint(props.card.age, props.mood)
   return { objectPosition: `${p.x}% ${p.y}%` }
 })
 
@@ -243,10 +250,14 @@ useDialogFocus(cardEl)
       </div>
 
       <!-- WHY THE TWELFTH SAYS WHAT IT READ. Present only on the fork, where a card that simply
-           arrived would read as a dice roll - and there are no dice in it. -->
-      <ul v-if="reasons && reasons.length" class="prologue-reasons">
-        <li v-for="reason in reasons" :key="reason">{{ reason }}</li>
-      </ul>
+           arrived would read as a dice roll - and there are no dice in it.
+
+           ⚠ ONE SENTENCE OF PROSE, NOT A LIST, and the owner's own words on that are quoted in
+           `TWELFTH_REASONS` (cards.ts) because Cyrillic may not appear in a template even in a
+           comment. The three clauses are folded in `run.ts` off the table's own sentence; what
+           changed here is that the card no longer stacks three declaratives on a screen that is
+           otherwise paragraphs. cards.ts also carries why the FUNCTION outlived the list. -->
+      <p v-if="reason" class="prologue-reason">{{ reason }}</p>
 
       <!-- WHO SHE IS. The wizard's three fields, in the wizard's own words, on the one card that
            asks (owner, 02.09). BEFORE the answers and never after them: `.prologue-answers` has to
@@ -335,31 +346,47 @@ useDialogFocus(cardEl)
             autocomplete="off"
           />
           <p v-if="pickingCountry" class="prologue-tiles-label">{{ tilesLabel }}</p>
-          <div class="prologue-tiles" :class="{ 'is-one': !pickingCountry }">
+          <!-- ⭐ PHASE 8 - CLOSED, THE COUNTRY AND THE WAY IN SHARE A LINE. The owner asked for the
+               chosen-country slot and `Browse all countries` on one row (02.09; his words are quoted
+               in the style block below, where Cyrillic is allowed). They are one question - which
+               country - asked as a state and a door, and stacking them spent a whole row of the
+               tallest card in the walk on two controls that are each one line of text. OPEN, the
+               wrapper is inert: the grid goes back to three columns and the browse control is not
+               rendered at all, so the picker itself is untouched. -->
+          <div class="prologue-country" :class="{ 'is-closed': !pickingCountry }">
+            <div class="prologue-tiles" :class="{ 'is-one': !pickingCountry }">
+              <button
+                v-for="code in tiles"
+                :key="code"
+                class="prologue-tile"
+                :class="{ 'is-on': identity.country === code }"
+                type="button"
+                :aria-pressed="identity.country === code"
+                @click="chooseCountry(code)"
+              >
+                <span class="prologue-flag">{{ flagEmoji(code) }}</span>
+                <span class="prologue-tile-name">{{ COUNTRY_NAMES[code] }}</span>
+              </button>
+            </div>
             <button
-              v-for="code in tiles"
-              :key="code"
-              class="prologue-tile"
-              :class="{ 'is-on': identity.country === code }"
+              v-if="!searching && !browsingAll"
+              class="prologue-browse"
               type="button"
-              :aria-pressed="identity.country === code"
-              @click="chooseCountry(code)"
+              @click="browsingAll = true"
             >
-              <span class="prologue-flag">{{ flagEmoji(code) }}</span>
-              <span class="prologue-tile-name">{{ COUNTRY_NAMES[code] }}</span>
+              {{ IDENTITY_COPY.browseAll }}
             </button>
           </div>
           <p v-if="searching && !matches.length" class="prologue-empty">{{ IDENTITY_COPY.noMatches }}</p>
-          <button
-            v-if="!searching && !browsingAll"
-            class="prologue-browse"
-            type="button"
-            @click="browsingAll = true"
-          >
-            {{ IDENTITY_COPY.browseAll }}
-          </button>
         </div>
       </div>
+
+      <!-- ⭐⭐ THE QUESTION THE ANSWERS ANSWER - the owner met three buttons on the age-5 card with
+           nothing asking for them (02.09; his words are quoted on `question` in cards.ts, which is
+           where Cyrillic is allowed to live). Immediately above the column and inside nothing, so it
+           reads as the last thing said before the choice rather than as a heading over a section.
+           Only the five carries one. -->
+      <p v-if="card.question" class="prologue-question">{{ card.question }}</p>
 
       <!-- THE ANSWERS, LAST IN THE FLOW. One rule for every row: nothing here marks one of them as
            the one to take, on a card whose whole subject is that the choice is yours. -->
@@ -418,23 +445,34 @@ useDialogFocus(cardEl)
    alongside `overflow-y` clips nothing)». `calc(100% + 32px)` is the shared card's 16px padding
    cancelled on both sides, and the negative margins put it back over that padding.
 
-   ⚠⚠ THE HEIGHT IS DECLARED IN PIXELS AND THAT IS NOT COSMETIC – it is what makes the round-20 #3
-   measurement honest, and `PrologueHandover.vue`'s rose carries the same argument at length.
-   `tests/component/fits.ts` reads an explicit `height` off a box and falls back to STACKING THE
-   CHILDREN when there is none; an `aspect-ratio` is invisible to it, because happy-dom does no
-   layout. So a hero declared by ratio would measure as ZERO and every fit number on the walk would
-   be optimistic by a quarter of a screen. `.injury-stop-art` declares `height: 168px` for the same
-   reason and this follows it.
+   ⭐⭐⭐ PHASE 8 – IT IS SQUARE, AND THAT IS THE OWNER'S OWN RULE FOR THE WHOLE PROLOGUE.
+   «я просил арты делать в квадратном формате по аналогии с home экраном» (02.09, raised against the
+   age-6 card and applying to all nine), and separately «Заглавная картинка на экране обрезана (отец
+   без головы)» on the age-5 one. Those are the SAME complaint arriving twice: every painting in
+   this set is a 512x512 master, and a 16:9 window over a square master throws away 44% of it.
 
-   ⚠ 193px IS 16:9 OF THE CARD'S OWN WIDTH AT THE REFERENCE PHONE. At 375x667 the overlay leaves
-   343px, and 343 / (16/9) = 193 – the same ratio `.finance-art` already draws at, and the closest
-   thing this app has to «большой арт на всю ширину экрана» that still leaves a 375px screen showing
-   the scene and the first answer. Fixed rather than fluid so the measurement can see it; `cover`
-   plus the face steering handles the 288px card a 320px phone gets. */
+   ⚠ SO THE FORMAT IS ONE RULE AND NOT NINE. There is one declaration here and no per-card
+   override anywhere: `aspect-ratio: 1 / 1`, which is literally what `.diary-hero` declares on Home
+   («the hero is SQUARE, because the paintings are square (512x512) – so at the full width of the
+   phone the whole frame is on screen and nothing is cut») and what `.nt-hero` declares for the
+   same reason, in the same words, after he asked the same thing of the tournament card in round 30.
+   A third spelling of «square like the main screen» would be a third thing to keep in step.
+
+   ⚠⚠ AND THE MEASUREMENT CAN SEE IT NOW – it could not before, and the note that stood here said
+   so: «an `aspect-ratio` is invisible to it, because happy-dom does no layout … a hero declared by
+   ratio would measure as ZERO and every fit number on the walk would be optimistic». That was
+   true of `tests/component/fits.ts` as it was, and rather than keep a 16:9 pixel height to suit the
+   instrument, the INSTRUMENT was taught the property: `boxOf` folds `aspect-ratio` against the
+   width it was handed when there is no explicit height. It under-counts here (it uses the card's
+   content width, 311px, where the full-bleed box is really 343px), which is the direction fits.ts
+   documents itself as erring in. MUTATION-VERIFIED both ways in tests/component/prologue-walk.ts.
+
+   `calc(100% + 32px)` is the shared card's 16px padding cancelled on both sides, and the negative
+   margins put it back over that padding. */
 .prologue-hero {
   position: relative;
   width: calc(100% + 32px);
-  height: 193px;
+  aspect-ratio: 1 / 1;
   margin: -16px -16px 12px;
   overflow: hidden;
   border-radius: var(--radius-panel) var(--radius-panel) 0 0;
@@ -503,9 +541,12 @@ useDialogFocus(cardEl)
   color: var(--ink-soft);
 }
 
-.prologue-reasons {
+/* ⚠ A PARAGRAPH, NOT A LIST – and that is the whole of the owner's 02.09 note on it. It was a `ul`
+   with `padding-left: 18px` and three `li`s; three declaratives with bullets in front of them, on a
+   card whose every other block is prose, read as a debug print rather than as the card talking.
+   Same colour and same size as before; what changed is that it is one sentence in one box. */
+.prologue-reason {
   margin: 0 0 14px;
-  padding-left: 18px;
   font-size: 13px;
   line-height: 1.45;
   color: var(--ink-soft);
@@ -675,6 +716,45 @@ useDialogFocus(cardEl)
   font-weight: 600;
   color: var(--ink-2);
   cursor: pointer;
+}
+
+/* ⭐ CLOSED, THE CHOSEN COUNTRY AND `Browse all countries` ARE ONE ROW – owner, 02.09: «Browse all
+   countries и сам слот выбранной страны давай сделаем на одной строчке тоже». The tile
+   takes the room that is left (`min-width: 0` so a long country name wraps inside its own box
+   instead of pushing the row wider than the card) and the door takes what its label needs. Neither
+   control's tokens, padding or label changed – only the axis, which is the same one-line move the
+   two name fields got in phase 7.
+
+   ⚠ OPEN, THIS SELECTOR IS NOT ON: `.prologue-country` alone declares nothing, so the three-column
+   grid and the full-width browse control are exactly what they were. */
+.prologue-country.is-closed {
+  display: flex;
+  align-items: stretch;
+  gap: 8px;
+}
+
+.prologue-country.is-closed .prologue-tiles {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.prologue-country.is-closed .prologue-browse {
+  flex: 0 1 auto;
+  width: auto;
+  margin-top: 0;
+  text-align: center;
+}
+
+/* ⭐ THE QUESTION ABOVE THE ANSWERS (owner, 02.09). The lede's own size and colour, because it is
+   the same voice saying the same kind of thing; what marks it is that it is the last line before
+   the column and it is the only line on the card with a question mark in it. Not a `label` and not
+   a heading: the three answers are buttons, not a fieldset, and a heading over two of the nine
+   cards would be a section that exists on some screens and not others. */
+.prologue-question {
+  margin: 0 0 10px;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--ink-soft);
 }
 
 .prologue-answers {

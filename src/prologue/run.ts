@@ -171,8 +171,10 @@ export interface TwelfthRead {
   readonly oneToOne: number
   readonly tournaments: number
   readonly light: number
-  /** DRAFT clauses from `TWELFTH_REASONS`, in the order the card says them */
-  readonly reasons: readonly string[]
+  /** ⭐ DRAFT – ONE SENTENCE, folded from `TWELFTH_REASONS`. It was a list of three until 02.09,
+   *  when the owner met it and said «мне кажется вот это лишнее»; the LIST went and the FUNCTION
+   *  stayed, because what it does is stop a derived fork reading as a die (§2.5). See that table. */
+  readonly reason: string
 }
 
 /** The decision cards strictly before `age`. The fork reads 5..11, so it reads the four at 8..11. */
@@ -216,21 +218,29 @@ export function readTwelfth(run: PrologueRun): TwelfthRead {
     if (isSoleLowestShare(card, taken)) light++
   }
   const pull = oneToOne + tournaments - light
-  const reasons = [
-    oneToOne === 0
-      ? TWELFTH_REASONS.oneToOne.none
-      : oneToOne >= before.length - 1 && before.length > 0
-        ? TWELFTH_REASONS.oneToOne.most
-        : TWELFTH_REASONS.oneToOne.some,
-    tournaments === 0 ? TWELFTH_REASONS.tournaments.none : TWELFTH_REASONS.tournaments.some,
-    light === 0 ? TWELFTH_REASONS.light.none : light === 1 ? TWELFTH_REASONS.light.some : TWELFTH_REASONS.light.many,
-  ]
+  // ⚠ THE THREE CLAUSES ARE FRAGMENTS AND THE SENTENCE THAT HOLDS THEM IS THE TABLE'S. Not one
+  // comma, colon or full stop is written here – `TWELFTH_REASONS.sentence` carries the punctuation
+  // as well as the words, so replacing the fold is the same table edit as replacing a clause.
+  const reason = TWELFTH_REASONS.sentence
+    .replace(
+      '{a}',
+      oneToOne === 0
+        ? TWELFTH_REASONS.oneToOne.none
+        : oneToOne >= before.length - 1 && before.length > 0
+          ? TWELFTH_REASONS.oneToOne.most
+          : TWELFTH_REASONS.oneToOne.some,
+    )
+    .replace('{b}', tournaments === 0 ? TWELFTH_REASONS.tournaments.none : TWELFTH_REASONS.tournaments.some)
+    .replace(
+      '{c}',
+      light === 0 ? TWELFTH_REASONS.light.none : light === 1 ? TWELFTH_REASONS.light.some : TWELFTH_REASONS.light.many,
+    )
   return {
     reading: pull >= WANTS_MORE_AT ? 'wants-more' : 'tired',
     oneToOne,
     tournaments,
     light,
-    reasons,
+    reason,
   }
 }
 
@@ -292,7 +302,7 @@ export function warmthAt(age: number, run: PrologueRun): Warmth {
 /** The face for one year of the childhood. Pure, no art and no URL – see `src/art/prologue.ts`. */
 export function moodAt(age: number, run: PrologueRun): PortraitEmotion {
   // The fork and the year that follows it. `readTwelfth` recomputes from the picks, so this is the
-  // same reading the twelfth's own card and its reasons list are drawn from.
+  // same reading the twelfth's own card and its folded reason are drawn from.
   if (age >= 12) return readTwelfth(run).reading === 'tired' ? 'tired' : 'serious'
   return warmthAt(age, run) === 'warm' ? 'happy' : 'norm'
 }
