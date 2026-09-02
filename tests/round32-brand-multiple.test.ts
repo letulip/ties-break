@@ -120,8 +120,10 @@ const pre32 = (s: BrandSignals): number => brandMultipleX({ ...s, fame: CAP }, B
 // the brand a second, slower stock and `brandMultipleX` still reads `fame`, so every arm below is
 // unaffected by it – but a value object built by hand has to say what it means, and what these arms
 // mean is «a career whose stock is exactly its fame», i.e. one sitting at its own peak.
+// ⚠ `contractFame: 0` since round 34 #17: these arms are about the fame ramp, so the career they
+// describe holds no live shelf and the contract term is held out of every one of them.
 const at = (fame: number, over: Partial<BrandSignals> = {}): number =>
-  brandMultipleX({ fame, strength: fame, proSeasons: 0, topSeasons: 0, finalsLost: 0, roomSize: 0, winRate: 0, ...over }, BASE_X)
+  brandMultipleX({ fame, strength: fame, proSeasons: 0, topSeasons: 0, finalsLost: 0, roomSize: 0, winRate: 0, contractFame: 0, ...over }, BASE_X)
 
 describe('round 32 #3 §1 – the base is a ramp and these are its two ends', () => {
   it('⭐⭐ a brand nobody has heard of is `unknownX`, and one the whole world knows is the rung own base', () => {
@@ -166,7 +168,9 @@ describe('round 32 #3 §2 – ⭐⭐⭐ THE TOP DOES NOT MOVE', () => {
       ['past every cap', { proSeasons: 40, topSeasons: 30, finalsLost: 60, winRate: 1 }],
     ]
     for (const [label, over] of careers) {
-      const s: BrandSignals = { fame: CAP, strength: CAP, proSeasons: 0, topSeasons: 0, finalsLost: 0, roomSize: 0, winRate: 0, ...over }
+      // ⚠ `contractFame: 0` since round 34 #17 – a hypothetical career with no live shelf, which is
+      // what every one of these rows always meant and now has to say.
+      const s: BrandSignals = { fame: CAP, strength: CAP, proSeasons: 0, topSeasons: 0, finalsLost: 0, roomSize: 0, winRate: 0, contractFame: 0, ...over }
       const ladder =
         V.seasonX * Math.min(s.proSeasons, V.seasonCapN) +
         V.topSeasonX * Math.min(s.topSeasons, V.topSeasonCapN) +
@@ -182,7 +186,7 @@ describe('round 32 #3 §2 – ⭐⭐⭐ THE TOP DOES NOT MOVE', () => {
     // touch a character of it. So «the multiple is unchanged at the cap» IS «the worth is unchanged
     // at the cap», and the arm that keeps the income out of this wave is the one below: the weekly
     // gross does not read the career ladder at all.
-    const quiet: BrandSignals = { fame: 40, strength: 40, proSeasons: 0, topSeasons: 0, finalsLost: 0, roomSize: 0, winRate: 0 }
+    const quiet: BrandSignals = { fame: 40, strength: 40, proSeasons: 0, topSeasons: 0, finalsLost: 0, roomSize: 0, winRate: 0, contractFame: 0 }
     const decorated: BrandSignals = { ...quiet, proSeasons: 14, topSeasons: 8, finalsLost: 19, winRate: 0.9 }
     expect(brandWeeklyGrossCents(decorated), 'the ladder reaches the WORTH and never the income')
       .toBe(brandWeeklyGrossCents(quiet))
@@ -290,7 +294,7 @@ describe('round 32 #3 §5 – ⚠⚠ the multiple can now FALL, and that note in
     // «A career that happened cannot un-happen» is still true of the ladder, which is the half of the
     // old note this wave did NOT overturn. Read at a held fame, a career that banks a season can only
     // go up.
-    const s: BrandSignals = { fame: 30, strength: 30, proSeasons: 4, topSeasons: 1, finalsLost: 3, roomSize: 0, winRate: 0.7 }
+    const s: BrandSignals = { fame: 30, strength: 30, proSeasons: 4, topSeasons: 1, finalsLost: 3, roomSize: 0, winRate: 0.7, contractFame: 0 }
     expect(brandMultipleX({ ...s, proSeasons: 5 }, BASE_X)).toBeGreaterThan(brandMultipleX(s, BASE_X))
     expect(brandMultipleX({ ...s, topSeasons: 2 }, BASE_X)).toBeGreaterThan(brandMultipleX(s, BASE_X))
     expect(brandMultipleX({ ...s, finalsLost: 4 }, BASE_X)).toBeGreaterThan(brandMultipleX(s, BASE_X))
@@ -351,8 +355,17 @@ describe('round 32 #3 §7 – his own row, MIRRORED and not imported', () => {
     // mirror below therefore reads the reach, which is what the shipped curve reads; what this arm
     // is claiming about round 32 #3 – that #3 moved the price and not what the business takes in –
     // is untouched by that, because #3 lives entirely in `brandMultipleX`.
-    expect(brandReachOf(s), 'the fixture is past its peak, so the floor is live on it')
-      .toBeGreaterThan(s.fame)
+    // ⚠⚠ RE-AIMED BY ROUND 34 #17 (03.09) AND THE MECHANISM IS STILL PROVEN LIVE, one line down.
+    // This arm read «the fixture is past its peak, so the floor is live on it». Round 34 made a lost
+    // final pay fame at every professional tier, and this fixture's nineteen wta250 finals run to
+    // eight weeks before `W` – so the career now sits AT its own running peak at `W` and the reach
+    // IS fame, by `brandStrengthAt`'s property (1). That is the new truth about the FIXTURE and not
+    // a weakening of the claim: the floor is asserted live below, three years on, where it is what
+    // the mechanism exists for.
+    expect(brandReachOf(s), 'at her own peak the reach IS fame – `retention < 1`').toBe(s.fame)
+    const later = W + 3 * WEEKS_PER_YEAR
+    expect(brandReachOf(brandSignalsOf(w, later)), '...and three years on the stock is what she sells into')
+      .toBeGreaterThan(brandSignalsOf(w, later).fame)
     expect(brandWeeklyGrossCents(s)).toBe(
       Math.round(
         ((ECONOMY.business.merch.perFamePointCents * brandReachOf(s) * brandReachOf(s)) / ECONOMY.business.merch.famePivot) *

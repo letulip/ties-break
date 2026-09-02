@@ -1651,8 +1651,28 @@ export const ECONOMY = {
      *  two at the two upper – so a full ≤10 shelf of six deals asks 12 weeks a year against a
      *  6-week winter, and the spill into the season is Zheng's own complaint made mechanical:
      *  «слишком много съёмок и никакого отпуска». The overflow meets the round-29 #3 four-way
-     *  clash exactly as an in-season shoot always did. */
+     *  clash exactly as an in-season shoot always did.
+     *
+     *  ⭐⭐⭐ ROUND 34 #7/#11/#12/#13 (03.09) – A FIFTH BAND IS PREPENDED AT ≤400, AND THE FOOT OF THE
+     *  LADDER IS THE ITEM. The owner, playing his own save at world #113: «в 18 лет предлагают
+     *  подписать копеечные контракты на 2 и 3 года … в фильме Финальный сет показывали, что игроку
+     *  на 240 месте в мире предлагают контракты за 5к за каждый сыгранный матч с нашивкой спонсора.
+     *  У нас сейчас 5000-12000 в год да ещё и на расцвет карьеры» – and, twice more, «129 место в
+     *  мире, тот же контракт на 12к в год на 3 года. Не верю» and «99 место в мире, тот же контракт
+     *  на 20к в год на 2 года».
+     *
+     *  ⚠⚠ ABOVE THE TOP 100 NOTHING MOVED, ON HIS OWN EXPLICIT RULING: «Про 50–100 отвечаю прямо:
+     *  пересматривать не надо». The ≤100 / ≤50 / ≤10 cells below are the round-29 catalogue to the
+     *  cent; only the two rungs BELOW the top 100 are round 34's, and the two cliffs they remove are
+     *  «nothing at all below 200» and a 24x jump on a single ranking place from #101 to #100.
+     *
+     *  ⚠ 400 IS A NEW GATE AND IS NOT A KIT CUT – the three above it still are. It is the owner's own
+     *  film anchor read onto the table: ~$5,000 a match under a sponsor's patch at ~40 matches a year
+     *  is $200,000 a year for the world #240, and the band that has to hold him has to reach past
+     *  #240. ⭐ Checked against the engine rather than assumed: a career in this band plays 22 events
+     *  ≈ 44 matches a year, so the film's arithmetic and ours agree. */
     bands: [
+      { maxWtaRank: 400, shootWeeksPerYear: 1 },
       { maxWtaRank: 200, shootWeeksPerYear: 1 },
       { maxWtaRank: 100, shootWeeksPerYear: 1 },
       { maxWtaRank: 50, shootWeeksPerYear: 2 },
@@ -1661,21 +1681,53 @@ export const ECONOMY = {
     /** ⭐⭐⭐ THE PORTFOLIO'S CATEGORIES (P7, his own list mapped onto ours) – the shelf the player
      *  sees, one live deal per category, the cheque per band in each row.
      *
-     *  THE FEES ARE §8'S TABLE, CELL BY CELL, and land inside his ranges by construction (the
+     *  THE FEES WERE §8'S TABLE, CELL BY CELL, and landed inside his ranges by construction (the
      *  in-band test pins every cell): ≤200 $5k–20k · ≤100 $100k–500k · ≤50 $300k–1M · ≤10
      *  $1M–2.5M. Portfolio-per-year at each band, all categories filled: $45k · $1.1M · $2.6M ·
      *  $9.2M – against his own column «$30k–80k · ~$1–2M (Bublik) · ~$2.5–4M · ~$6–10M with kit».
+     *  ⚠ ROUND 34 REWROTE THE TWO ROWS BELOW THE TOP 100 and left the three above it alone, so the
+     *  ranges now read ≤400 $80k–120k · ≤200 $50k–200k · ≤100 $100k–500k · ≤50 $300k–1M · ≤10
+     *  $1M–2.5M, and the portfolio-per-year column is $200k · $450k · $1.1M · $2.6M · $9.2M.
      *
-     *  ⭐ THE ANCHOR SURVIVES A SECOND RESIZE UNMOVED: watches at ≤200 is the shipped $20,000 to
-     *  the cent – the one cell the 23.1%-share rule still governs, and the cell every earlier
+     *  ⭐ THE ANCHOR SURVIVED A SECOND RESIZE UNMOVED: watches at ≤200 was the shipped $20,000 to
+     *  the cent – the one cell the 23.1%-share rule still governed, and the cell every earlier
      *  number in this file's history was derived from.
      *
-     *  ⚠ A `null` CELL IS THE GATE: the category has not opened at that band. Watches, cars,
-     *  drinks and the kit brand's poster campaign open with the first professional cash (≤200 – «A
-     *  #180 holds a watch deal, a drinks deal, a local car dealer: small money, same shelf», §8);
-     *  the airline waits for the top 100; fragrance is the icon-band category (§7: «watches early,
-     *  cars at top-100, fragrance at top-10»). Derived, never a second constant, so the gate and
-     *  the price cannot disagree.
+     *  ⚠⚠ AND ROUND 34 #7/#11/#12/#13 (03.09) IS WHERE THAT ANCHOR FINALLY MOVES, WHICH IS SAID OUT
+     *  LOUD RATHER THAN LEFT FOR A READER TO NOTICE. The owner played eleven seasons in and around
+     *  the top 100 and read the letters: «в 18 лет предлагают подписать копеечные контракты на 2 и 3
+     *  года», «129 место в мире, тот же контракт на 12к в год на 3 года. Не верю», «99 место в мире,
+     *  тот же контракт на 20к в год на 2 года». Two rungs BELOW the top 100 were rewritten and the
+     *  cells above it were not touched at all («Про 50–100 отвечаю прямо: пересматривать не надо»):
+     *
+     *    band        was        now      what changed
+     *    ≤400        –          $200,000 a new band: a kit patch and a drink, nothing else
+     *    ≤200        $45,000    $450,000 the four open cells x10, their SHAPE preserved exactly
+     *    ≤100        $1,100,000 unchanged
+     *    ≤50         $2,600,000 unchanged
+     *    ≤10         $9,200,000 unchanged
+     *
+     *  ⭐ HIS OWN HEDGE WAS RIGHT AND IS RECORDED AS SUCH: «может быть для нашего масштаба наша
+     *  система нормальная, цифры только на первом тире и условия не очень». The ladder's SHAPE –
+     *  the 2.4x / 2.4x / 3.5x it steps above the top 100, one deal per category, the cheque the only
+     *  axis that scales – is the round-29 design untouched. It was the FOOT that was broken.
+     *
+     *  ⚠ A `null` CELL IS THE GATE: the category has not opened at that band. Drinks and the kit
+     *  brand's poster campaign open at ≤400 (round 34's new rung – a patch on the shirt and a
+     *  drink); watches and cars join them with the first real professional cash (≤200 – «A #180
+     *  holds a watch deal, a drinks deal, a local car dealer: small money, same shelf», §8); the
+     *  airline waits for the top 100; fragrance is the icon-band category (§7: «watches early, cars
+     *  at top-100, fragrance at top-10»). Derived, never a second constant, so the gate and the
+     *  price cannot disagree.
+     *
+     *  ⚠⚠ THE PER-CATEGORY LADDER IS NO LONGER MONOTONE AND THAT IS THE APPROVED TABLE, NOT A SLIP.
+     *  Three cells sit level or fall as the band rises – clothing $120,000 at ≤400 against $50,000
+     *  at ≤200, drinks $80,000 at both, watches $200,000 at both ≤200 and ≤100 – because what the
+     *  owner approved is the BAND TOTAL ($200,000 / $450,000) and the shelf's SHAPE at each band,
+     *  not a rule about one category's own climb. A #380 who is dressed and hydrated by two houses
+     *  out-earns a #180 in clothing alone, and is out-earned four times over on the shelf as a whole.
+     *  ⚠ It cost `adBandOfTerms` its old premise («the ladders are strictly increasing wherever they
+     *  are not null»); see that function for what replaced the walk and what is still ambiguous.
      *
      *  ⚠ 2–4 HOUSES PER CATEGORY IS P6'S CHURN MADE VISIBLE – terms run 1–3 years and a house may
      *  not write twice running at the top band (`pickAdHouse`), so the shelf shows different names
@@ -1687,41 +1739,46 @@ export const ECONOMY = {
      *  is two deals, one brand, separate letters, separate money. No kit deal, no clothing
      *  campaign; the kit paper stays entirely the kit ladder's. */
     categories: {
+      // ⚠⚠ FIVE CELLS PER ROW SINCE ROUND 34, AND THE FIRST IS THE NEW ≤400 BAND. Read the columns
+      // as ≤400 · ≤200 · ≤100 · ≤50 · ≤10; the last three are the round-29 catalogue untouched.
       watches: {
         label: 'Watches',
         trade: 'We make watches',
         houses: ['Quiet Hour', 'Halfpast', 'Silver Alder'],
-        feeCentsByBand: [20_000_00, 200_000_00, 500_000_00, 1_200_000_00],
+        feeCentsByBand: [null, 200_000_00, 200_000_00, 500_000_00, 1_200_000_00],
       },
       cars: {
         label: 'Cars',
         trade: 'We make cars',
         houses: ['Northgate Motors', 'Caldera Auto', 'Faro Automobiles'],
-        feeCentsByBand: [12_000_00, 400_000_00, 800_000_00, 2_000_000_00],
+        feeCentsByBand: [null, 120_000_00, 400_000_00, 800_000_00, 2_000_000_00],
       },
       drinks: {
         label: 'Drinks',
         trade: 'We make drinks',
         houses: ['Cold Current', 'Verdel Springs', 'Ninefold'],
-        feeCentsByBand: [8_000_00, 150_000_00, 400_000_00, 1_000_000_00],
+        feeCentsByBand: [80_000_00, 80_000_00, 150_000_00, 400_000_00, 1_000_000_00],
       },
+      // ⭐ THE ≤400 SHELF IS A KIT PATCH AND A DRINK AND NOTHING ELSE, which is exactly the film's
+      // picture the owner brought: a patch on the shirt. Watches, cars, the airline and the
+      // fragrance all stay shut down there.
       clothing: {
         label: 'Clothing',
         trade: 'We make her kit',
         houses: [],
-        feeCentsByBand: [5_000_00, 100_000_00, 300_000_00, 1_000_000_00],
+        feeCentsByBand: [120_000_00, 50_000_00, 100_000_00, 300_000_00, 1_000_000_00],
       },
       airline: {
         label: 'Airline',
         trade: 'We fly people across the world',
         houses: ['Northmere Air', 'Corvess Airways', 'Palewing Atlantic'],
-        feeCentsByBand: [null, 250_000_00, 600_000_00, 1_500_000_00],
+        feeCentsByBand: [null, null, 250_000_00, 600_000_00, 1_500_000_00],
       },
       fragrance: {
         label: 'Fragrance',
         trade: 'We make perfume',
         houses: ['Rivelle', 'Maison Ondelle', 'Blanche & Noir'],
-        feeCentsByBand: [null, null, null, 2_500_000_00],
+        feeCentsByBand: [null, null, null, null, 2_500_000_00],
       },
     } as Record<Exclude<AdCategory, 'capstone'>, AdCategoryDef>,
     /** ⭐⭐⭐ THE CAPSTONE (P6, approved twice – §6 «D … очень хорошо» and §8's own last row): the
@@ -1839,8 +1896,33 @@ export const ECONOMY = {
       wta250: 4, wta500: 8, wta1000: 14, slam: 25,
     } as Partial<Record<TierId, number>>,
     /** a LOST Slam final – the one runner-up plate the world remembers (spec §3's own example).
-     *  Lost finals at every other tier buy nothing: the world remembers who won. */
+     *  ⚠ ITS OWN NUMBER AND NOT A SHARE, and it stays that way: 12 is 48% of the Slam title's 25,
+     *  which is not `finalFloorShare` below, and the difference is the argument the constant was
+     *  written on. A Slam final is a global broadcast in its own right. */
     slamFinalFloor: 12,
+    /** ⭐⭐⭐ ROUND 34 #17 (03.09) – WHAT A LOST FINAL AT EVERY OTHER PROFESSIONAL TIER IS WORTH, as a
+     *  SHARE of that tier's own title step. Approved by the owner at 0.4.
+     *
+     *  ⚠⚠ THE DEFECT IT ENDS: `trophiesByTier[tier].finals` has recorded a dated, per-tier, never
+     *  pruned runner-up plate since schema v31 and NOTHING IN THE GAME EVER READ IT except at
+     *  'slam'. On the owner's own week-569 save that is SIXTEEN finals worth exactly zero to her
+     *  fame – 5 local, 2 regional, 1 national, 1 w15, 4 w50, 2 w100, 1 wta125 – for a girl who has
+     *  spent a decade in and around the world top 100 and whose complaint («доход опустился с 200 до
+     *  65 долларов в неделю с бизнеса… Она доходит в Шлеме до QF и вообще стабильно в 100 держится»)
+     *  is precisely that the model cannot see the career she is having.
+     *
+     *  ⚠ A SHARE AND NOT A LADDER, so it cannot drift away from `titleFloor`. One number, and the
+     *  per-tier shape is the title ladder's own – a w15 runner-up plate is worth 0.1 and a WTA 1000
+     *  one 5.6, in the same proportion the titles are.
+     *
+     *  ⚠⚠ AND IT DOES NOT REACH 'slam', WHICH IS THE ONE PLACE IT WOULD DOUBLE-COUNT.
+     *  `slamFinalFloor` above already pays that plate and pays it more (12 against 0.4 x 25 = 10),
+     *  so `fameFloorOf` excludes the tier by name rather than by arithmetic.
+     *
+     *  ⚠ IT IS FAME AND NOT THE VALUATION MULTIPLE. `business.merch.value.finalX` prices the SAME
+     *  finals into the multiple, deliberately and since round 30 #24 – see that constant for why
+     *  both survive and what the multiple measured after this shipped. */
+    finalFloorShare: 0.4,
     /** ⭐⭐ WHAT A FINISHED SEASON'S END-RANK IS WORTH, best matching band only, counted once per
      *  season from its wrap week. The spec's floor list says «a first top-10 season»; this is that
      *  entry as a LADDER, in the shape `academy.reputationBands` already uses two blocks up.
@@ -1927,8 +2009,23 @@ export const ECONOMY = {
      *  shop row at his fame», and this wave may not undo it by pushing that fame back up. This is the
      *  largest gradient of its shape under which his w933 row still reads 9 years – fame 22.33 -> 23.69
      *  (+6.1%), the floor 12.85 -> 13.63. docs/specs/collaborations-as-early-fame-2026-08.md §7
-     *  records predicted vs measured and the frontier either way. */
-    shootFloorByBand: [0.04, 0.06, 0.08, 0.11] as readonly number[],
+     *  records predicted vs measured and the frontier either way.
+     *
+     *  ⚠⚠ ROUND 34 (03.09) – A FIFTH RUNG WAS PREPENDED BECAUSE `advertising.bands` GAINED A FIFTH
+     *  BAND, AND THIS IS NOT A RETUNE: the four shipped rungs are unchanged to the digit and have
+     *  simply moved one index to the right, so ≤200 is still 0.04, ≤100 still 0.06, ≤50 still 0.08
+     *  and ≤10 still 0.11. Leaving the array at four entries would have been the silent defect –
+     *  `shootFloorByBand[band] ?? 0` reads the TOP band's index, so the global house's shoots would
+     *  quietly have started buying ZERO fame.
+     *  ⚠ THE NEW ≤400 RUNG IS NOT A FIGURE THE OWNER SIZED – he approved the band and its cheques,
+     *  and this is the arithmetic the prepend forced – SO THE SHIPPED GUARD PICKED IT rather than a
+     *  preference. The ladder is 0.01 x [4, 6, 8, 11] and its own unit continued downward gives 0.03;
+     *  0.02, the first DIFFERENCE continued downward, would stretch the whole ladder's span from
+     *  2.75x to 5.5x and break round 32 #5's «a global house, not a hundred of them» bound (< 4x),
+     *  which was measured rather than chosen. 0.03 keeps that bound at 3.67x and leaves the span
+     *  ABOVE the round-32 anchor – the ≤200 rung upward – identical at 2.75x. The criterion sets the
+     *  constant, exactly as `merch.crowd.refRoom` was solved backwards from its own anchor. */
+    shootFloorByBand: [0.03, 0.04, 0.06, 0.08, 0.11] as readonly number[],
     /** ⭐⭐ ...AND IT IS FORGOTTEN FASTER THAN A TITLE, WHICH IS THE OTHER HALF OF HIS RULING. He put
      *  the decay question back with both halves of the tension named: «наверное истлевает (мало кто
      *  смотрит журналы 2 годичной давности) … с другой стороны "что попало в интернет осталось
@@ -1970,8 +2067,14 @@ export const ECONOMY = {
      *  widened that to ~44x, because band 0 has faded through six half-lives and band 3 through two.
      *  ⚠ Band 2 is left at the shipped 52 on purpose – the anchor round 32 #5 was sized on does not
      *  move, so what this extension changes is the SPREAD and not the level.
-     *  docs/specs/collaborations-as-early-fame-2026-08.md §11 records the frontier either way. */
-    shootFloorHalfLifeByBand: [26, 39, 52, 78] as readonly number[],
+     *  docs/specs/collaborations-as-early-fame-2026-08.md §11 records the frontier either way.
+     *
+     *  ⚠⚠ ROUND 34 (03.09) – A FIFTH RUNG, FOR THE SAME REASON AND ON THE SAME TERMS AS
+     *  `shootFloorByBand` ABOVE. The four shipped half-lives are unchanged and have moved one index
+     *  right (≤200 still 26, ≤100 still 39, ≤50 still 52, ≤10 still 78); the new ≤400 rung is this
+     *  ladder's own 13-week step continued downward, a quarter of a year, and is the arithmetic the
+     *  prepend forced rather than a figure the owner sized. */
+    shootFloorHalfLifeByBand: [13, 26, 39, 52, 78] as readonly number[],
     /** fame is bounded 0–100 – the spec's own scale; the cap is «the whole world knows her». */
     cap: 100,
   },
@@ -2095,7 +2198,14 @@ export const ECONOMY = {
          *  does not stop a FINAL counting, and the fame floor reads `finals` only at 'slam', so every
          *  lost final from w15 to wta1000 is a dated professional result nothing in this game has
          *  ever read. Titles are deliberately NOT here – they are already fully priced into the
-         *  income through fame, and pricing them twice is the one-dial defect wearing a new hat. */
+         *  income through fame, and pricing them twice is the one-dial defect wearing a new hat.
+         *
+         *  ⚠⚠ ROUND 34 #17 (03.09) – AND NOW THE FINALS ARE IN THE INCOME TOO (`fame.finalFloorShare`),
+         *  so the sentence above no longer separates them. THE TERM STAYS, deliberately, on the
+         *  measurement: with both live the owner's week-569 multiple reads 6.20x – inside the 6–9x
+         *  corridor round 32 repaired the free float to – and holding this term out drops the brand's
+         *  worth to $90,614 against the $104,044 he approved. The approved figure was measured with
+         *  this term live, so the approved figure is the ruling. */
         finalX: 0.1,
         finalCapN: 12,
         /** «сколько выигрывает» – her WTA-track career win rate, as a share of the window below. A
@@ -2223,6 +2333,38 @@ export const ECONOMY = {
          *  business survives its founder's silence rather than a correction. */
         retention: 0.78,
       },
+      /** ⭐⭐⭐ ROUND 34 #17 (03.09) – THE BRAND FOLLOWS THE CONTRACTS. Approved by the owner:
+       *  **+1 point of reach per $50,000 of LIVE annual contract value, the contribution capped at
+       *  +30.**
+       *
+       *  ⚠⚠ THE INCOHERENCE IT ENDS, MEASURED ON HIS OWN WEEK-569 SAVE. The sponsor market prices
+       *  her at $550,000 a year of live deals (and priced her at $1,000,000 a year through weeks
+       *  404–452, her fullest shelf), while the brand model said her whole brand was worth $76,822
+       *  and paid $244 a week: her brand was worth less than one of her own contracts for one year.
+       *  His words: «плюс есть мощные рекламные контракты… мне кажется нам надо улучшить формулу
+       *  рассчета доходности и стоимости ее бренда».
+       *
+       *  ⚠⚠ A SIGNAL INTO REACH, NEVER A CASH TRANSFER, and that distinction is the whole safety of
+       *  it. The sponsor money already arrives through the deals themselves (`bankSponsorCheque` at
+       *  signature, `payAdAnniversaries` each year); adding it to the brand's INCOME as well would
+       *  pay her twice for one contract. What it says instead is that a house paying her seven
+       *  figures has decided she is worth being seen with – which is a fact about how many people
+       *  know her name, i.e. about reach, and the existing curve does the rest.
+       *
+       *  ⭐⭐ THE CAP IS THE POINT AND IS NOT DROPPABLE. Contracts lift the floor under an unglamorous
+       *  professional – the whole complaint – but an icon is still made by titles and not by her
+       *  agent. A top-10 shelf is worth $9.2M a year, saturates this term nearly twenty times over
+       *  and has to win the rest.
+       *
+       *  ⚠ AND THE TOTAL IS STILL CLAMPED AT `ECONOMY.fame.cap` where it is spent (`brandReachOf`),
+       *  so the top of the shelf that round 32 #3 fixed by construction cannot move. This lifts the
+       *  middle and the bottom, which is where he was standing. */
+      contracts: {
+        /** cents of live annual contract value per point of reach */
+        famePerCents: 50_000_00,
+        /** ...and the most the whole term may ever add */
+        fameCap: 30,
+      },
     },
     academy: {
       /** ⭐⭐ WHAT EACH DELIVERED STAGE BRINGS IN AT REPUTATION 1.0, in cents a week, keyed by the
@@ -2253,13 +2395,41 @@ export const ECONOMY = {
        *  the BEST band of each finished season, counted once per season, capped below. A season
        *  with no recorded WTA end-rank (pre-v46 rows, null ranks) counts nothing – «not recorded»
        *  is not «top-100». */
+      /** ⭐⭐⭐ ROUND 34 #17 (03.09) – THE LADDER REACHES BELOW THE TOP 100. Approved by the owner:
+       *  top-150 +0.05, top-250 +0.025.
+       *
+       *  ⚠⚠ WHAT IT ENDS, measured on his own save: eleven seasons, eight of them carrying a WTA
+       *  end-rank – #349, #177, #95, #92, #89, #93, #97, #113 – and the only rung that paid anything
+       *  was top-100, five times, for 0.50 in total. Six consecutive seasons inside the world top 115
+       *  and three of them recorded NOTHING, because #113 and #177 were below the lowest rung there
+       *  was. ⭐ That is the case for the two new rungs in one line: a career can hold the top 150
+       *  for a decade and the model can barely see it. */
       reputationBands: [
         { maxEndRank: 10, add: 0.6 },
         { maxEndRank: 25, add: 0.35 },
         { maxEndRank: 50, add: 0.2 },
         { maxEndRank: 100, add: 0.1 },
+        { maxEndRank: 150, add: 0.05 },
+        { maxEndRank: 250, add: 0.025 },
       ] as readonly { maxEndRank: number; add: number }[],
-      reputationCap: 4,
+      /** ⭐⭐⭐ ROUND 34 #17 (03.09) – THE CAP GROWS WITH THE CAREER instead of the flat 4-for-ever it
+       *  was: `reputationCapBase + reputationCapPerSeason x professional seasons played`. Approved
+       *  by the owner at 4 + 0.5 – «so a long professional career is worth something and a short one
+       *  is not».
+       *
+       *  ⚠⚠ AND THE MEASURED CONSEQUENCE IS THAT IT STOPS BINDING AT EVERY REALISTIC CAREER LENGTH,
+       *  which is reported rather than adjusted (the figures are his). The bands can add at most 0.6
+       *  a season, so the ceiling only catches the ladder when 1 + 0.6n > 4 + 0.5n, i.e. past THIRTY
+       *  professional seasons. A twenty-season career spent entirely in the world top 10 – already
+       *  far beyond anything the engine produces – reaches 13.0 against a cap of 14.0 and never
+       *  touches it. What holds the academy's reputation now is the band ladder itself.
+       *
+       *  ⚠ AND IT MOVES THE P7 PAYBACK WINDOW. `academy.stageIncomeCents` was sized so the $12M
+       *  academy repays in 5–10 seasons AT THE CAP; that window is the reputation band 3.18–6.37, and
+       *  a long elite career can now stand above it (rep 6.4 needs nine top-10 seasons). Recorded in
+       *  docs/rounds/round-34.md under item 17 for his eye – not compensated for here. */
+      reputationCapBase: 4,
+      reputationCapPerSeason: 0.5,
     },
   },
 

@@ -150,7 +150,8 @@ function clashWorld(seed: string): WorldState {
     untilWeek: AT - 10 + 51,
     terms: {
       brand: BRAND,
-      cashCents: ECONOMY.advertising.categories.watches.feeCentsByBand[0]!,
+      // ⚠ index 1 since round 34: a band was prepended at ≤400 and this is still the ≤200 cell
+      cashCents: ECONOMY.advertising.categories.watches.feeCentsByBand[1]!,
       termWeeks: 52,
       shootCount: 2,
       shootWeeks: [CLASH],

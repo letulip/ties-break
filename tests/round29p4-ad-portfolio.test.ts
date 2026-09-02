@@ -195,7 +195,8 @@ describe('the double programme – «Можно даже текущих испо
     expect(activeAdDealIn(world.offers, 'clothing', world.week)).not.toBeNull()
     expect(world.offers.filter((o) => o.kind === 'kit' && o.state === 'signed')).toHaveLength(1)
     // ...and SEPARATE money: the ad fee is its own cheque at the clothing cell, not kit arithmetic.
-    expect(t.cashCents).toBe(AD.categories.clothing.feeCentsByBand[0])
+    // ⚠ index 1 since round 34 prepended a ≤400 band; this career stands at #150, i.e. ≤200.
+    expect(t.cashCents).toBe(AD.categories.clothing.feeCentsByBand[1])
   })
 
   it('⚠ and with NO kit deal there is nobody to write it – the same week, the same dice, no letter', () => {

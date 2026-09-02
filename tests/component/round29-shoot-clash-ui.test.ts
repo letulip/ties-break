@@ -68,10 +68,13 @@ const AD = ECONOMY.advertising
  *  it are persisted in real saves – so `WATCH` freezes that LEGACY paper: the fee off the watches
  *  category's ≤200 cell (the anchor, unchanged to the cent), the brand its first house, the
  *  52-week term and two-shoot ask the old letters carry. */
+// ⚠ INDEX 1 SINCE ROUND 34 #7/#11/#12/#13 (03.09), AND IT IS THE SAME ≤200 CELL. A fifth band was
+// prepended to `advertising.bands` at ≤400, so every band index moved one to the right; the cheque
+// itself was lifted tenfold at that rung by the owner's approved table.
 const WATCH = {
   brand: ECONOMY.advertising.categories.watches.houses[0],
-  maxWtaRank: ECONOMY.advertising.bands[0].maxWtaRank,
-  cashCents: ECONOMY.advertising.categories.watches.feeCentsByBand[0]!,
+  maxWtaRank: ECONOMY.advertising.bands[1].maxWtaRank,
+  cashCents: ECONOMY.advertising.categories.watches.feeCentsByBand[1]!,
   termWeeks: 52,
   shootWeeksPerTerm: 2,
 }
@@ -174,7 +177,9 @@ describe('round 29 #3 – the collision raises a card the parent has to answer',
     // The condition price, spelled on the card, rebuilt from the catalogue rather than read back.
     expect(text).toContain(String(AD.clashConditionPerDay * PLAN_DAYS))
     // ...and the cancellation's share of the fee, formatted from CENTS.
-    expect(text).toContain('$10,000')
+    // ⚠ $100,000 since round 34 #7/#11/#12/#13 (03.09): the ≤200 watches cell went $20,000 ->
+    // $200,000 and the card still shows one of the letter's two shoots' share of it.
+    expect(text).toContain('$100,000')
     w.unmount()
   })
 

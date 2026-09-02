@@ -726,7 +726,8 @@ describe('R2-13 D – the shell offers the span in exactly the states the engine
         // The LEGACY watch paper's own shape (real saves hold letters exactly like it): the fee is
         // the watches category's anchor cell, the term the old 52-week one.
         brand: ECONOMY.advertising.categories.watches.houses[0],
-        cashCents: ECONOMY.advertising.categories.watches.feeCentsByBand[0]!,
+        // ⚠ index 1 since round 34: a band was prepended at ≤400 and this is still the ≤200 cell
+        cashCents: ECONOMY.advertising.categories.watches.feeCentsByBand[1]!,
         termWeeks: 52,
         shootCount: 2,
         shootWeeks: [clash.world.week + 1],

@@ -534,9 +534,18 @@ describe('round 30 #23 §7 – income and worth are two functions, not one dial'
     winTitles(flash, 'wta1000', [W - 2, W - 5])
     winTitles(durable, 'wta1000', [W - 2, W - 5])
     // ...and the durable one has a CAREER behind the same noise: ten professional seasons at #60
-    // (below every fame band, so the stock cannot move), a winning record, and ten lost finals.
+    // (below every fame band, so the stock cannot move) and a winning record.
     proSeasons(durable, 10, 60, 20, 8)
-    loseFinals(durable, 'wta500', [W - 3, W - 4, W - 6, W - 7, W - 8, W - 9, W - 11, W - 12, W - 13, W - 14])
+    // ⚠⚠ THE TEN LOST FINALS ARE NOW GIVEN TO BOTH CAREERS, RE-AIMED BY ROUND 34 #17 (03.09). They
+    // used to be `durable`'s alone, because a lost final below a Slam bought no fame and could
+    // therefore differentiate the MULTIPLE while leaving fame untouched. Round 34 made a lost final
+    // pay 40% of its tier's title into the fame floor, so a fixture that holds fame equal has to
+    // hold the finals equal too. ⚠ THE EXPERIMENT IS UNCHANGED: what still differs is the ten banked
+    // seasons and the winning record, and the arms below still read a multiple that only `durable`
+    // has earned. Giving them to both is what keeps «fame is held EQUAL by construction» true.
+    const finals = [W - 3, W - 4, W - 6, W - 7, W - 8, W - 9, W - 11, W - 12, W - 13, W - 14]
+    loseFinals(durable, 'wta500', finals)
+    loseFinals(flash, 'wta500', finals)
 
     expect(fameAt(durable), 'fame is held EQUAL by construction – that is the experiment')
       .toBe(fameAt(flash))
@@ -584,11 +593,17 @@ describe('round 30 #23 §7 – income and worth are two functions, not one dial'
     expect(mult(high)).toBeCloseTo(V.unknownX + 3 * V.seasonX + 3 * V.topSeasonX, 5)
     expect(mult(high), 'a top-20 season is worth more than an unnoticed one').toBeGreaterThan(mult(played))
 
-    // «как глубоко проходит» – professional finals reached and LOST, which nothing else in the game
-    // has ever read below a Slam
+    // «как глубоко проходит» – professional finals reached and LOST
+    // ⚠⚠ RE-AIMED BY ROUND 34 #17 (03.09). The block's premise above – «these fixtures carry no fame
+    // at all» – stopped being true of THIS one and only this one: a lost final now pays 40% of its
+    // tier's title into the fame floor, so `deep` is no longer fameless and the ramp under its
+    // multiple is no longer at `unknownX`. The rung is therefore isolated by asking the pricing
+    // function about the same career AT FAME ZERO, which is exactly what the arm always meant.
     const deep = shopper('r30-23-deep')
     loseFinals(deep, 'wta250', [2, 3, 4])
-    expect(mult(deep)).toBeCloseTo(V.unknownX + 3 * V.finalX, 5)
+    expect(fameAt(deep), 'round 34: the finals themselves now buy fame').toBeGreaterThan(0)
+    const deepAtZero = { ...brandSignalsOf(deep), fame: 0, strength: 0 }
+    expect(brandMultipleX(deepAtZero, base)).toBeCloseTo(V.unknownX + 3 * V.finalX, 5)
 
     // «сколько выигрывает» – the win rate, as a share of its own window
     const winner = shopper('r30-23-winner')
@@ -723,21 +738,33 @@ describe('round 30 #23 §7 – income and worth are two functions, not one dial'
 describe('round 30 #23 §8 – ⭐⭐⭐ THE CROWD, and it is the corridor and never the draw', () => {
   it('⭐⭐⭐ two careers with the SAME fame and the SAME multiple earn differently by the ROOM', () => {
     // ⚠⚠ THE ARM THE OWNER'S OVERRULE TURNS ON. «У нас есть понимание коридора зрителей на каждом
-    // турнире, мне кажется этого достаточно вполне.» Both careers hold the same title in the same
-    // week, so the fame stock is identical to the last decimal; both lost four professional finals,
-    // so `finalsLost` and therefore the MULTIPLE are identical. The only difference is WHERE those
-    // finals were played – a W15 draws 20-70 people and a WTA-1000 draws 15,000-35,000.
+    // турнире, мне кажется этого достаточно вполне.» Both careers hold the same professional record
+    // in the same weeks, so the fame stock is identical to the last decimal and `finalsLost` and
+    // therefore the MULTIPLE are identical. The only difference is the SIZE OF THE ROOMS they played
+    // in besides.
+    //
+    // ⚠⚠ RE-AIMED BY ROUND 34 #17 (03.09) AND THE CLAIM IS UNCHANGED. The fixture used to make the
+    // rooms differ with a w15 shelf against a wta1000 one, which worked because a lost final below a
+    // Slam bought no fame. Round 34 pays every professional lost final into the fame floor, so those
+    // two shelves are no longer the same fame – and the room difference has moved to the JUNIOR
+    // rungs, which buy no fame at all and are not in `finalsLost` either, but which the crowd ledger
+    // reads deliberately («the CROWD does not care what the world reads»). ⭐ It is a better fixture
+    // for the claim than the old one: a J30 draws 30-90 and a J300 draws 900-2,600, which is the
+    // table's own point that the room is NOT ordered by prestige.
     const W = 6 * WEEKS_PER_YEAR
     const small = parkAt(shopper('r30-23-room-small'), W)
     const big = parkAt(shopper('r30-23-room-big'), W)
-    winTitles(small, 'wta250', [W - 2])
-    winTitles(big, 'wta250', [W - 2])
-    loseFinals(small, 'w15', [W - 3, W - 4, W - 5, W - 6])
-    loseFinals(big, 'wta1000', [W - 3, W - 4, W - 5, W - 6])
+    const pro = [W - 3, W - 4, W - 5, W - 6]
+    loseFinals(small, 'w50', pro)
+    loseFinals(big, 'w50', pro)
+    const junior = [W - 8, W - 10, W - 12, W - 14, W - 16, W - 18, W - 20, W - 22]
+    winTitles(small, 'j30', junior)
+    winTitles(big, 'j300', junior)
 
     const base = shopItem(MERCH)!.earningsMultipleX!
-    expect(fameAt(big), 'fame is EQUAL by construction – a final below a Slam buys none')
+    expect(fameAt(big), 'fame is EQUAL by construction – the world does not read junior draws')
       .toBeCloseTo(fameAt(small), 10)
+    expect(fameAt(small), '...and it is a real stock, not two zeros compared').toBeGreaterThan(0)
     expect(brandMultipleX(brandSignalsOf(big), base), '...and so is the multiple: four finals each')
       .toBeCloseTo(brandMultipleX(brandSignalsOf(small), base), 10)
 

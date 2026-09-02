@@ -93,6 +93,11 @@ import { WEEKS_PER_YEAR } from '../season/calendar'
 import { decayAt, fameAt } from './fame'
 import { brandStrengthAt } from './brandStrength'
 import { tierCrowdMid } from '../season/preview'
+// ⭐ ROUND 34 #17 – the live shelf, read for the reach term. `offers.ts` does not import this file
+// (it reaches `world/ledger` and stops), so the edge is a straight one and not a cycle – the same
+// argument `world/fame.ts` states for its own import of `adBandOfTerms`.
+import { activeAdDeals } from '../offers'
+import type { AdOfferTerms } from '../../shared/protocol'
 import type { TierId } from '../season/types'
 import type { WorldState } from '../world'
 
@@ -136,7 +141,19 @@ export interface BrandSignals {
    *  being counted, and the fame floor reads `finals` only at 'slam' – so every lost final from w15
    *  to wta1000 is a dated professional result that nothing in the game has ever read. It is read
    *  here, and only into the multiple: what she WON is already priced into the income through fame,
-   *  and pricing it twice would be one dial wearing two hats again. */
+   *  and pricing it twice would be one dial wearing two hats again.
+   *
+   *  ⚠⚠ ROUND 34 #17 (03.09) – «ONLY INTO THE MULTIPLE» IS NO LONGER TRUE AND THE TERM STAYS ANYWAY,
+   *  WHICH IS A DECISION AND NOT AN OVERSIGHT. `ECONOMY.fame.finalFloorShare` now pays the same
+   *  finals into the FAME FLOOR at 40% of their tier's title, so a lost final moves the income as
+   *  well as the multiple, exactly as a title does since round 32 #3.
+   *
+   *  ⭐⭐ THE TEST FOR A DOUBLE-COUNT IS THE MULTIPLE'S OWN CORRIDOR, and it was measured on the
+   *  owner's week-569 save before this was left alone: with BOTH terms live the multiple reads
+   *  6.20x, inside the 6–9x band round 32 repaired the free float to; holding `finalX` out drops it
+   *  to 5.40x and the worth to $90,614. ⚠ The owner's APPROVED figure for this item is $104,044 –
+   *  which is the reading WITH `finalX` live, to the cent. So the approved number is itself the
+   *  ruling: both terms stay. */
   finalsLost: number
   /** ⭐⭐⭐ «ДАЖЕ ТО, СКОЛЬКО ЗРИТЕЛЕЙ НА ТРИБУНЫ ПРИХОДИТ» – THE SIZE OF THE ROOM SHE PLAYS FINALS
    *  IN, in people, decayed on the same half-life as everything else. 0 when the career has no
@@ -172,6 +189,21 @@ export interface BrandSignals {
    *  record and is the only one a brand should be able to see – the same rule that keeps junior
    *  draws out of the fame floor. 0 when she has played no professional match at all. */
   winRate: number
+  /** ⭐⭐⭐ ROUND 34 #17 – WHAT THE SPONSOR MARKET SAYS SHE IS WORTH, converted into REACH: one point
+   *  per `merch.contracts.famePerCents` of LIVE annual contract value, the whole term capped at
+   *  `merch.contracts.fameCap`. The owner's own incoherence, in one line: «плюс есть мощные
+   *  рекламные контракты… мне кажется нам надо улучшить формулу рассчета доходности и стоимости ее
+   *  бренда» – her brand was worth less than one of her contracts for one year.
+   *
+   *  ⚠⚠ A SIGNAL AND NOT A CASH LINE. The money itself already arrives through the deals; this says
+   *  only that a house paying her seven figures has decided she is worth being seen with, which is a
+   *  fact about how many people know her name. It is spent in `brandReachOf` and nowhere else.
+   *
+   *  ⚠ LIVE, NOT LIFETIME – `activeAdDeals` at the week asked about, so it FALLS when a term runs
+   *  out, exactly as this file's other current-form terms do. A shelf that has emptied is not a
+   *  shelf, and a valuation that remembered dead paper for ever would be the free-float defect round
+   *  32 #4 was stopped for, arriving through a different door. */
+  contractFame: number
 }
 
 /** ⭐⭐ THE CAREER, READ. Pure: reads the world, writes nothing, draws nothing.
@@ -217,6 +249,14 @@ export function brandSignalsOf(world: WorldState, week = world.week): BrandSigna
       appearances += d
     }
   }
+  // ⭐⭐⭐ ROUND 34 #17 – THE LIVE SHELF, in cents a contract year. `activeAdDeals` is the portfolio's
+  // own predicate (signed, and inside `fromWeek`..`untilWeek`), asked at the week being priced – so
+  // a deal that has run out stops counting the week it runs out and this term falls with the shelf.
+  const C = ECONOMY.business.merch.contracts
+  let liveAnnualCents = 0
+  for (const deal of activeAdDeals(world.offers ?? [], week)) {
+    liveAnnualCents += (deal.terms as AdOfferTerms).cashCents ?? 0
+  }
   const played = wins + losses
   return {
     fame: fameAt(world, week),
@@ -224,6 +264,7 @@ export function brandSignalsOf(world: WorldState, week = world.week): BrandSigna
     proSeasons,
     topSeasons,
     finalsLost,
+    contractFame: Math.min(C.fameCap, liveAnnualCents / C.famePerCents),
     // ⚠ THE DECAY CANCELS IN THE RATIO and that is the point – see the field's own note. A career
     // with no recorded appearance answers 0, which `brandCrowdMult` reads as «no evidence».
     roomSize: appearances > 0 ? audience / appearances : 0,
@@ -432,7 +473,24 @@ export function brandGrossWorthCents(signals: BrandSignals, baseX: number): numb
  *  and the revenue term have to be asked about the same audience or the worth would price a
  *  different brand from the one the ledger pays.
  *
- *  Pure arithmetic on a value object: no world, no clock, no draw. */
+ *  ⭐⭐⭐ ROUND 34 #17 (03.09) – AND THE LIVE CONTRACTS ARE ADDED TO IT:
+ *
+ *      effectiveReach = min(cap, max(fame, retention x strength) + contractFame)
+ *
+ *  ⚠⚠ ADDED TO THE REACH AND NOT TO THE INCOME, which is the safety of the whole item. Her sponsor
+ *  money already arrives through the deals themselves; a second line in the brand's revenue would
+ *  pay one contract twice. What a $1M shelf buys here is the thing money cannot be swapped for –
+ *  people knowing her name – and the shipped curve prices that exactly as it prices any other reach.
+ *
+ *  ⚠ OUTSIDE THE `max`, DELIBERATELY. `strength` is the brand's slow STOCK, «the best she has ever
+ *  been»; a contract is CURRENT FORM and has no business raising a career's high-water mark. Adding
+ *  it after the max means the term arrives with the shelf and leaves with it.
+ *
+ *  ⚠⚠ AND CLAMPED AT `ECONOMY.fame.cap`, WHICH IS WHAT KEEPS ROUND 32 #3'S CEILING WHERE IT IS. The
+ *  base of the multiple ramps to `baseX` exactly at the cap and the income goes as reach², so an
+ *  unclamped +30 would lift the top of the shelf 69% – a change to the one end this item is
+ *  forbidden to touch. Below the cap the clamp cannot bite, so nothing the owner measured moves. */
 export function brandReachOf(signals: BrandSignals): number {
-  return Math.max(signals.fame, ECONOMY.business.merch.strength.retention * signals.strength)
+  const built = Math.max(signals.fame, ECONOMY.business.merch.strength.retention * signals.strength)
+  return Math.min(ECONOMY.fame.cap, built + signals.contractFame)
 }
