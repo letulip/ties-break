@@ -17,7 +17,7 @@ for and would otherwise have no line.
 
 ---
 
-- [ ] **1. «в начале 2го сезона все очки в региональном уровне у меня обнулились, мне снова
+- [x] **1. «в начале 2го сезона все очки в региональном уровне у меня обнулились, мне снова
   закрылся регионарный и национальный чемпионаты, хотя мы до них добрались. И кажется, что оно
   обнуляется каждой год. Или это так надо? … совершенно непонятно как выйти в j уровень»**
   – **measure first, then answer or build.** The ranking window is a rolling 52 weeks, so a season
@@ -81,7 +81,7 @@ for and would otherwise have no line.
   2 mounted arms; hardcoding it instead of deriving reddens the derivation arm; deleting the
   tooltip's half reddens its own.
 
-- [ ] **2. «Тренер на главном экране (почему-то, давай на карточку тренера вернём лучше) написал 14
+- [x] **2. «Тренер на главном экране (почему-то, давай на карточку тренера вернём лучше) написал 14
   летней девочке Close to her ceiling … звучит как приговор … не рановато ли? … давай подумаем в
   какой конкретно момент должно это появляться»** – three asks in one, split:
   - **2a** the read moved to Home and he wants it back on the coach card – **build**
@@ -135,7 +135,7 @@ for and would otherwise have no line.
   ⚠ He then withdrew part of it himself: «А вот и At her ceiling в 16 лет случилось – видимо моя
   претензия снимается». ⭐ But he still asked for the save to be read: «Но сейв всё-таки посмотри».
 
-- [ ] **3. «Увидел попап про 15 летите … а затем на home перешёл, а там написано 14 лет.
+- [x] **3. «Увидел попап про 15 летите … а затем на home перешёл, а там написано 14 лет.
   Подозреваю, что это из-за дат: ДР 15го, а начало недели 14го, но раз мы показали попап – то уже
   можно и возраст менять, либо сам попап в таких случаях в конце недели показать»** – **build**.
   The birthday popup and the age line disagree within one week. ⭐ He named both fixes; pick one and
@@ -227,7 +227,7 @@ for and would otherwise have no line.
   The birthday, the popup and the gift all happen exactly as before; what she cannot do that week is
   enter a tournament – which was already true of the exam block whatever week her cake was in.
 
-- [ ] **3b. «1 день вместе» – should the ask carry more of a request?** – **ask, not built.**
+- [?] **3b. «1 день вместе» – should the ask carry more of a request?** – **ask, not built.**
   ⚠ **OPEN FOR HIM, deliberately undesigned.** `DAY_TOGETHER` is the one option offered at every
   birthday and never marked, and its whole ruling (spec §0.3) is that «nothing» must be a real
   answer: «she does not want a thing, she wants you». Its ask already names the unit three times
@@ -238,7 +238,7 @@ for and would otherwise have no line.
   is that no option may be marked as the right one, so «make it more of a request» is a design
   decision about where that line sits. Nothing built, nothing reworded.
 
-- [ ] **4. «На плашке next tournament, family budget для названия турнира и денег используй
+- [x] **4. «На плашке next tournament, family budget для названия турнира и денег используй
   пожалуйста шрифт Sora»** – **build**, copy/type only.
   – `[x]` **SHIPPED – AND ONE OF THE TWO WAS ALREADY DONE, WHICH IS WHY A THIRD ELEMENT MOVED.**
 
@@ -274,14 +274,14 @@ for and would otherwise have no line.
   rule at a time: taking Sora off `.note-title` reddens 3 arms, off `.note-figure` 2, off
   `.budget-total` 2.
 
-- [ ] **5. «с нашим текущим "процент прохода 1го круга" на карточках турниров планировать всё равно
+- [?] **5. «с нашим текущим "процент прохода 1го круга" на карточках турниров планировать всё равно
   не получается, потому что за неделю нельзя сняться с турнира бесплатно – это бессмысленная фича…
   Какие у нас ещё здесь варианты? … надо хотя бы что-то примерное писать до жеребьевки»** – **ask**,
   and it reopens round 31 #4. ⚠ The band was supposed to be the pre-draw information; he is saying it
   is not enough to plan on. Round 31 #3 already measured the band as degenerate on junior and domestic
   cards – that finding and this complaint are the same defect.
 
-- [ ] **6. «W35 · 🔒 163 / 0 international pts вот это вот что значит? И на следующих тирах такое
+- [x] **6. «W35 · 🔒 163 / 0 international pts вот это вот что значит? И на следующих тирах такое
   же»** – **measure**, then build or answer. A lock showing `163 / 0` is either a swapped pair or a
   zero that should be the requirement.
   – `[x]` **SHIPPED.** Neither guess: it is a **requirement that failed to resolve**, and «на
@@ -327,7 +327,7 @@ for and would otherwise have no line.
   genuine points refusal still prints `112 / 150 national pts`; a lock with NO distance is still
   «Outgrown», round 28 #12's arm). ⚠ Mutation-verified: reverting the one boolean reddens 3 arms.
 
-- [ ] **7. «в 18 лет предлагают подписать копеечные контракты на 2 и 3 года … в фильме Финальный
+- [x] **7. «в 18 лет предлагают подписать копеечные контракты на 2 и 3 года … в фильме Финальный
   сет показывали, что игроку на 240 месте в мире предлагают контракты за 5к за каждый сыгранный матч
   с нашивкой спонсора. У нас сейчас 5000-12000 в год да ещё и на расцвет карьеры. Давай
   пересмотрим»** – **measure, then balance**. With **11**, **12** and **13** this is one subject.
@@ -388,12 +388,12 @@ for and would otherwise have no line.
   them» bound of 4x; 0.03 holds it at 3.67x and leaves the span above the round-32 anchor identical.
   The criterion set the constant. **Both are his to overrule.**
 
-- [ ] **8. «на 18 она просит свой счёт в банке, а что будет если отказать? … Можно как-то обыграть,
+- [~] **8. «на 18 она просит свой счёт в банке, а что будет если отказать? … Можно как-то обыграть,
   например если отказали – она сама пошла и открыла и на морали/отношениях отразится (это в
   бэклог)»** – **answer** what refusal does today; the moral/relationship version is **his own
   backlog instruction**.
 
-- [ ] **9. «Если отпуск назначен, то на карточке турнира в сезоне надо убрать Exhausted … Или
+- [x] **9. «Если отпуск назначен, то на карточке турнира в сезоне надо убрать Exhausted … Или
   считать из отпуска восстановится ли и тогда убирать Exhausted»** – **build**. ⭐ He named the
   better of the two himself: compute the recovery, do not just hide the word.
   – `[x]` **SHIPPED – COMPUTED, NOT HIDDEN.**
@@ -433,7 +433,7 @@ for and would otherwise have no line.
   changed: «Exhausted – racing risks injury.» is untouched, and a family that books nothing takes a
   path that is character-for-character what it was.
 
-- [ ] **10. «Мне не нравятся жирные буквы на главной жёлтой кнопке, сделай обычные пожалуйста. А
+- [x] **10. «Мне не нравятся жирные буквы на главной жёлтой кнопке, сделай обычные пожалуйста. А
   может быть мне кажется и там две кнопки или надписи рисуется вообще? Проверь пожалуйста»** –
   **build** plus a **reproduce**: he suspects a doubled label.
   – `[x]` **SHIPPED. THE ANSWER TO HIS QUESTION IS ONE BUTTON AND ONE LABEL – ⭐ BUT HE WAS SEEING
@@ -480,14 +480,14 @@ for and would otherwise have no line.
   `.next-week-btn` reddens 3 arms; the count arms clone the button and inject a bare second label
   into the live document and watch both counts move, so a real double could not hide from them.
 
-- [ ] **11. «129 место в мире, тот же контракт на 12к в год на 3 года. Не верю»** – with 7/12/13.
+- [x] **11. «129 место в мире, тот же контракт на 12к в год на 3 года. Не верю»** – with 7/12/13.
   – `[x]` **ANSWERED BY THE ≤200 LIFT (item 7).** A #129 stood in the ≤200 band and the whole shelf
   there was worth $45,000 a year – watches $20,000, cars $12,000, drinks $8,000, clothing $5,000. The
   same shelf now writes **$450,000**: $200,000 / $120,000 / $80,000 / $50,000, the shipped row times
   ten with its shape preserved to the cent. The «12к в год» letter he did not believe was the cars
   cell; it is $120,000 now.
 
-- [ ] **12. «99 место в мире, тот же контракт на 20к в год на 2 года»** – with 7/11/13.
+- [x] **12. «99 место в мире, тот же контракт на 20к в год на 2 года»** – with 7/11/13.
   – `[x]` **ANSWERED BY THE SAME LIFT (item 7).** A #99 is already in the ≤100 band, where he ruled
   nothing was to be touched – «Про 50–100 отвечаю прямо: пересматривать не надо» – so the $20,000 he
   was reading at #99 was **not** that band's cheque. It was the ≤200 watches cell arriving at a
@@ -497,7 +497,7 @@ for and would otherwise have no line.
   today is ten times the cheque; and the ≤100 shelf it graduates into is unchanged at $1,100,000 a
   year. ⭐ Nothing above the top 100 moved, which is his ruling honoured to the cent.
 
-- [ ] **13. «А 100 позиции и выше это как раз Бублик с его кучей спонсоров. Хотя может быть для
+- [~] **13. «А 100 позиции и выше это как раз Бублик с его кучей спонсоров. Хотя может быть для
   нашего масштаба наша система нормальная, цифры только на первом тире и условия не очень, надо
   разумно сделать»** – ⭐ his own hedge: the ladder may be right in shape and wrong at its foot.
   – `[~]` **HIS HEDGE WAS RIGHT, AND IT IS WORTH SAYING SO PLAINLY: the shape is sound, the foot was
@@ -509,7 +509,7 @@ for and would otherwise have no line.
   single ranking place from #101 to #100. Both are fixed under item 7; everything he suspected might be
   «нормальная» is, and stayed.
 
-- [ ] **14. «Календарь сезона надо ещё раз переделать … на 105 месте доступны 50, 250, 500 и шлемы,
+- [?] **14. «Календарь сезона надо ещё раз переделать … на 105 месте доступны 50, 250, 500 и шлемы,
   при этом нет 75, 100 и 125. Мне кажется, они прячутся на тех же неделях… Предлагаю с повышением
   ранга заменять более низкие турниры в сетке более высокими… они не конфликтуют в сетке, а
   заменяются динамично один другим видом»** – **measure, then design**. ⚠ The largest item in the
@@ -595,7 +595,7 @@ for and would otherwise have no line.
   through the season) and a rank-aware fix cannot be at generation time – which is why (A) and (B)
   are genuinely different games rather than two spellings of one.
 
-- [ ] **15. «Сумма дохода на savings меняется вниз если деньги вывести. Мне кажется она не должна
+- [x] **15. «Сумма дохода на savings меняется вниз если деньги вывести. Мне кажется она не должна
   меняться, просто новое поступление будет меньше»** – **reproduce**, then build.
   – `[x]` **REPRODUCED, THEN SHIPPED. IT IS AN AMOUNT, NOT A RATE, AND HE IS EXACTLY RIGHT.**
 
@@ -642,7 +642,7 @@ for and would otherwise have no line.
   **re-aimed, not loosened** – it read «the unrealised half and nothing else», which is the defect –
   and gained a non-vacuity arm so it cannot pass by both sides being zero.
 
-- [ ] **16. «Business пододвинуть к Invest в магазине»** – **build**, ordering only.
+- [x] **16. «Business пододвинуть к Invest в магазине»** – **build**, ordering only.
   – `[x]` **SHIPPED.** `SHELF_TAB_OPTIONS` in `MoneyScreen.vue` now reads Invest / **Business** /
   Cars / Property / Water / Air. Only the ORDER moved: every label, title and the tab-to-family map
   are untouched (invariant 4 – he asked for a position, not a word), and `SHOP_FAMILIES` is
@@ -654,7 +654,7 @@ for and would otherwise have no line.
   `tests/component/shelf.ts`'s `SHELF_TAB_LABELS` re-aimed with a ⚠ note; `round30-subtabs.test.ts`
   reads that constant and still fails the moment the screen and it disagree.
 
-- [ ] **17. «89 место доход опустился с 200 до 65 долларов в неделю с бизнеса… Она доходит в Шлеме
+- [x] **17. «89 место доход опустился с 200 до 65 долларов в неделю с бизнеса… Она доходит в Шлеме
   до QF и вообще стабильно в 100 держится, плюс есть мощные рекламные контракты… мне кажется нам
   надо улучшить формулу рассчета доходности и стоимости ее бренда»** – **measure**. ⚠ Round 32
   reworked exactly this; a fall from $200 to $65 while she is top-100 is either the fame decay
@@ -774,7 +774,7 @@ for and would otherwise have no line.
   live paper: fame signal **8.9 -> 21.3**, weekly **$244 -> $1,386**, worth **$76,822 -> $538,030**,
   multiple **6.04x -> 7.46x**.
 
-- [ ] **18. «В магазине те пункты, которые во владении находятся давай цветом выделять рамку жёлтую,
+- [x] **18. «В магазине те пункты, которые во владении находятся давай цветом выделять рамку жёлтую,
   как с тренером делали»** – **build**.
   – `[x]` **SHIPPED, AND IT IS LITERALLY THE COACH'S FRAME.** «как с тренером делали» is the half
   that decided the implementation: he is naming round-21 #11, so `.shop-row.is-owned` carries
@@ -795,7 +795,7 @@ for and would otherwise have no line.
   `true` reddens all three for three different reasons – a frame that means nothing is caught as
   loudly as a frame that is missing.
 
-- [ ] **19. «для индексного фонда давай график нарисуем с точками его стоимости за пай с
+- [x] **19. «для индексного фонда давай график нарисуем с точками его стоимости за пай с
   возможностью выбрать промежуток… 6 месяцев, 1 год, 2 года, 5 лет. Мы же сможем хранить по одной
   цифре за месяц средней»** – **build**, and ⚠ storing a monthly figure is a schema move.
   – `[x]` **SHIPPED – AND ⚠⚠ IT IS NOT A SCHEMA MOVE AFTER ALL. NOTHING IS STORED, AND THE TRIAGE
@@ -865,7 +865,7 @@ for and would otherwise have no line.
   ⚠ `npm run e2e:fixtures` re-run: byte-identical, no diff – this item stores nothing, so no fixture
   could move. ⚠ `SAVE_SCHEMA_VERSION` is untouched at 69, and no other bundle moved it either.
 
-- [ ] **20. «Кнопки put more in, sell it в разделе invest давай в одну строку с инпутами»** – **build**.
+- [x] **20. «Кнопки put more in, sell it в разделе invest давай в одну строку с инпутами»** – **build**.
   – `[x]` **SHIPPED, AND MEASURED AGAINST A PHONE.** A `.shop-stake-row` wrapper puts each control
   beside the field it acts on – «Add more, from $X» with **Put more in**, and «Take out how much…»
   with **Sell it for $X**. Nothing else moved: both keep their sentence, their `disabled` predicate,
@@ -884,7 +884,7 @@ for and would otherwise have no line.
   375x667 arm and nothing else in the file – which is what says the row was measured against a phone
   and not against a desktop.
 
-- [ ] **21. «С массажистом она выздоровела быстрее после травмы, а с турнира была снята тем не менее
+- [x] **21. «С массажистом она выздоровела быстрее после травмы, а с турнира была снята тем не менее
   и теперь на турнир не зайти, надо учитывать наличие массажиста при автоматической отмене
   событий»** – **build**. ⚠ The withdrawal is decided before the masseur's recovery is applied.
   – `[x]` **SHIPPED – AND THE ORDERING WAS THE BUG, MEASURED.**
@@ -929,7 +929,7 @@ for and would otherwise have no line.
   and the countdown is walked to prove she really is laid up on the day. Mutation-verified: forcing
   the forecast to 0 – the old order – reddens the "entry survives" arm alone.
 
-- [ ] **22. His save, read in full** – «посмотри пожалуйста полностью историю её перформанса, мне
+- [~] **22. His save, read in full** – «посмотри пожалуйста полностью историю её перформанса, мне
   очень интересно как она себя показывает вообще относительно наших бенчмарков. Мне кажется если мы
   разберемся с доходностью бренда и прочими мелочами может вполне сносно быть играть даже с
   настолько средней по скиллам девочкой.» – **measure**. ⭐ His hypothesis is the interesting part:
