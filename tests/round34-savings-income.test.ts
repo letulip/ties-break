@@ -52,9 +52,13 @@ import {
   revalueAssets,
   sellAsset,
   shopView,
-  type ShopRowView,
   type WorldState,
 } from '../src/engine/world'
+// ⚠ `ShopRowView` is a PROTOCOL type and lives in `src/shared/protocol`, not in the engine barrel –
+// `engine/world` re-exports `shopView` (the function) but not the shape it returns. Round 34 wrote
+// this import against the engine barrel and only the wave gate caught it, because the bundles are
+// told not to run vue-tsc (its tsBuildInfoFile writes into the shared symlinked node_modules).
+import type { ShopRowView } from '../src/shared/protocol'
 import { WEEKS_PER_YEAR } from '../src/engine/season/calendar'
 
 /** A family holding one open rung, opened through the real command. */
