@@ -53,10 +53,14 @@ export interface PlayerProfile {
 export const DEFAULT_PROFILE: PlayerProfile = {
   /** ⚠ THE OWNER'S NAME, ASKED FOR TWICE (02.09): «я просил сделать дефолт на Alice Martin». It was
    *  'Vera' from the first onboarding and every prologue career inherited it, which is what made the
-   *  ask visible – see docs/specs/childhood-prologue.md §2.4. Changing it moves the three frozen
-   *  career hashes in tests/coachTravelEdgeFixtures.ts, because her name is printed into `events`
-   *  text; `PRE_NAME_VERA` there holds the old values and reproduces them by substituting the name
-   *  back, which is the byte-level proof that the name and NOTHING ELSE moved. */
+   *  ask visible – docs/specs/childhood-prologue-build-2026-09.md §2.8.
+   *
+   *  ⚠⚠ CHANGING IT MOVES THE THREE FROZEN CAREER HASHES in tests/coachTravelEdgeFixtures.ts, because
+   *  `econ-bench`'s `openCareer` spreads this object and her name is PRINTED into `events` text. The
+   *  measured per-key diff (two keys of 72: `profile` and `events`, everything else byte-identical,
+   *  `rngMain` included) is over `FROZEN` there, and `PRE_NAME_VERA` + `careerHashUnderTheOldName`
+   *  are the byte-level proof: the same career RE-WALKED under the old name reproduces all three old
+   *  constants exactly, so the name and nothing else is in the difference. */
   kidName: 'Alice',
   kidLastName: 'Martin',
   gender: 'girl',

@@ -45,10 +45,23 @@ import { test, expect, type Page } from '@playwright/test'
  *  machinery, and one key name is a cheaper duplicate than that whole dependency. */
 const TOUR_SEEN_KEY = 'tb:onboardingTourSeen'
 
+/** A name no screen in this app contains until this spec types it – so finding it downstream can
+ *  only mean it travelled. It is deliberately NOT one of the wizard's own draw pool. */
+const TYPED_NAME = 'Zenobia'
+
 /** ⚠ THE NINE CARDS, AS A SHAPE. Four of them carry no decision (ages 5, 6, 7 and 13 – the count is
  *  the owner's, §3) and five do, and card 5 also carries the family's origin and the way out. So the
  *  control count per card is the sequence below, and it is asserted rather than assumed: it is the
- *  only thing standing between «clicked the second answer» and «clicked whatever was second». */
+ *  only thing standing between «clicked the second answer» and «clicked whatever was second».
+ *
+ *  ⚠⚠ AND THE COUNT IS TAKEN INSIDE `.prologue-answers`, NOT OVER THE WHOLE DIALOG – re-aimed
+ *  02.09 and NARROWED, not loosened. The owner's correction of that day put her name, her birthday
+ *  and her country on the age-5 card («часть нашего текущего онбординга … должны остаться», «страну
+ *  тоже добавь, да»), and the country picker is a grid of nine tiles plus a way to open the rest.
+ *  Over the dialog, card 1 counts fourteen controls and «the second button» is the second COUNTRY,
+ *  not the second family origin – so this walk would have gone on clicking something real and
+ *  meaning something else. The answers column is the structural fact this file was always relying on
+ *  («the way out sits LAST, after the answers»); it is now named instead of assumed. */
 const CONTROLS_PER_CARD = [4, 1, 1, 2, 2, 2, 2, 2, 1]
 
 /** Walk the nine cards, taking the second answer wherever there is one. */
@@ -56,7 +69,7 @@ async function walkTheChildhood(page: Page): Promise<void> {
   for (const [index, expected] of CONTROLS_PER_CARD.entries()) {
     const card = page.getByRole('dialog')
     const heading = await card.getByRole('heading').textContent()
-    const buttons = card.getByRole('button')
+    const buttons = card.locator('.prologue-answers').getByRole('button')
     await expect(buttons, `card ${index + 1} does not have the controls it should`).toHaveCount(expected)
 
     // The second control on a card that has one; the only control on a quiet year. On card 1 that is
@@ -88,6 +101,21 @@ test('the nine cards run, the handover draws her, and going on starts the career
     page.getByRole('heading', { name: 'Raise a Champion. Together.' }),
     'the wizard is the OTHER branch and must not be what a new player lands on',
   ).toHaveCount(0)
+
+  // --- ⭐⭐ WHO SHE IS (owner, 02.09) -----------------------------------------------------------
+  //
+  // «каждая прологовая карьера сейчас Вера Мартин … часть нашего текущего онбординга с датой
+  // рождения и именем должны остаться», and the same day «страну тоже добавь, да». The age-5 card
+  // asks; this types an answer into it, and the assertion that it ARRIVED is at the bottom of this
+  // test, on the far side of a real worker.
+  //
+  // ⚠ ADDRESSED BY THE FIELD'S id AND NOT BY ITS LABEL, which is this file's standing rule read the
+  // other way round: the label is the WIZARD's shipped copy and the owner may still move it, so
+  // naming it here would be a second copy of a string he owns. `TYPED_NAME` is not the prologue's
+  // copy either – it is input, invented by this spec, and no screen contains it until it is typed.
+  const identityCard = page.getByRole('dialog')
+  await expect(identityCard.locator('#prologue-first'), 'the five asks who she is').toBeVisible()
+  await identityCard.locator('#prologue-first').fill(TYPED_NAME)
 
   await walkTheChildhood(page)
 
@@ -127,7 +155,13 @@ test('the nine cards run, the handover draws her, and going on starts the career
   // Week 1, painted off a Snapshot the worker built from a world the prologue's nine years were
   // spent on. This is the assertion the whole file exists for: the round trip happened.
   await expect(page.getByRole('heading', { name: /^W1 \d{4} · /, level: 1 })).toBeVisible()
-  await expect(page.getByText(/career started \(seed "/)).toBeVisible()
+  // ⭐⭐ AND THE CAREER IS THE GIRL THE PLAYER NAMED. The store builds an empty seed out of her own
+  // name (`${kidName.toLowerCase()}-xxxx`, game.ts `newCareer`), so the seed the WORKER echoed back
+  // in this line is the one piece of evidence that a name typed on the first card survived the
+  // whole flow: nine cards, a `postMessage`, `createWorld`, a Snapshot and the render. Before
+  // 02.09 every prologue career opened on the default and this line read `alice-…` whatever was
+  // typed – because nothing was asked.
+  await expect(page.getByText(new RegExp(`career started \\(seed "${TYPED_NAME.toLowerCase()}-`))).toBeVisible()
   await expect(page.getByRole('navigation', { name: 'Main' })).toBeVisible()
 
   // --- ⭐⭐ §6 C: ...AND NO TOUR (phase 5) -------------------------------------------------------

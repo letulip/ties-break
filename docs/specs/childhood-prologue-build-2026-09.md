@@ -86,6 +86,25 @@ her at 13-or-14 depending on her birth date (`kidAgeYears(week, birthMonth, birt
    branch: «это создание персонажа будет как альтернативная ветка у нас при скипе пролога».
 7. **Ten minutes**, inside a free first fragment of 30–60 minutes (prologue + the first season),
    «после чего окно "понравилось? 10 долларов пожалуйста"». About a minute a card.
+8. **⭐⭐ WHO SHE IS STAYS – 02.09, and it is a correction of what shipped.** He played it and found
+   every prologue career was the same girl: «каждая прологовая карьера сейчас Вера Мартин – я просил
+   сделать дефолт на **Alice Martin**». Two things follow, and both are his:
+   - **The default player is Alice Martin.** `DEFAULT_PROFILE.kidName` is `'Alice'`
+     (`kidLastName` already was `'Martin'`). ⚠ That moved all three frozen career hashes, because
+     `econ-bench`'s `openCareer` spreads `DEFAULT_PROFILE` and her name is printed into event text –
+     the measured per-key diff, the re-stamp and the byte-level proof are in
+     `tests/coachTravelEdgeFixtures.ts`. **No schema moved.**
+   - **The prologue asks her name, her birthday and her country.** «И отсюда же следует, что часть
+     нашего текущего онбординга с датой рождения и именем должны остаться», and, the same day,
+     «страну тоже добавь, да». ⭐ THE THREE ARE THE WIZARD'S OWN FIELDS, in the wizard's own words:
+     the labels, the month names and the country lists now live in `composables/identityCopy.ts` and
+     `composables/countries.ts` and BOTH surfaces read them, so «the prologue asks it differently»
+     is not expressible. Not one new sentence reaches a screen (invariant 4).
+   - **The hero image may stay** – «Заглавная картинка где папа с девочкой первый раз на корте тоже
+     может остаться, кстати». It is the wizard's step N and it was not touched: permission, not an
+     instruction to move it. If he wants it INSIDE the prologue that is a separate ask.
+   ⚠ AND `playStyle` / `coachTier` ARE STILL NOT ASKED, which is the line between the two kinds of
+   field: §4 says both are EARNED from the nine years, and the nine years cannot derive a name.
 
 ---
 
@@ -96,7 +115,7 @@ parent actually faces – which are not about tournaments.
 
 | age | the scene | the decision |
 | --- | --- | --- |
-| 5 | she can barely hold it | **none** – the hook, and the family's origin (§2.4) |
+| 5 | she can barely hold it | **none** – the hook, the family's origin (§2.4), and who she is (§2.8) |
 | 6 | she can hold it, and she likes it | **none** – she starts. That choice was made by starting the game |
 | 7 | the group works | **none** – a year passes |
 | 8 | the club across town, or the municipal court | ⭐ the first real money: a club is ~3x, and it is where the coaches are |
@@ -115,6 +134,22 @@ five years of real decisions from 8 to 12, then a quiet thirteenth as the run-up
 **The money starts when the club does, at eight** – which is what actually happens to families.
 
 ⚠ THE AGE-10 TOURNAMENT SHOWS THE MATCH VIEWER (his ruling: «да»). §8's open question is closed.
+
+⭐⭐ **THE FIVE ALSO ASKS WHO SHE IS (§2.8, shipped 02.09), AND IT IS NOT A TENTH SCREEN.** Her name,
+her family name, her birthday and her country sit above the origins on the first card – the natural
+home, because the five is already the quiet card that carries the family-origin question and because
+a naming step of its own would be the tenth scene §3 exists to avoid. ⚠ It is not a DECISION either:
+`DECISION_AGES` reads `options` alone, so the count he set («может тогда больше без решений, 3 или
+4?») is unchanged and the five still carries none.
+
+⚠⚠ **AND IT MADE THE FIVE THE LONGEST CARD IN THE WALK, WHICH IS HIS TO RULE ON.** Measured, not
+estimated (`tests/component/prologue-walk.test.ts` prints it): at 375x667 the card's content floor is
+**2301px against 635px of room – about 3.6 screens of scroll** before the three origins. The way out
+is still reachable and always will be, because `.dialog-card` is capped at the viewport and scrolls
+(round-20 #3), so this is a READING-LENGTH question rather than a defect: the first thing a new
+player meets is now a form with a story on top of it. The country picker is most of the height – a
+search field, nine tiles and a way to open the other fifteen. If he wants it shorter the options are
+his: a second scene for the identity, or a quieter country control. **Nothing was cut to make it fit.**
 
 ---
 
@@ -220,6 +255,16 @@ B (the screen-change exit) ships with phase 4 or before it; C is phases 2–4 do
 four presses of Next that have nothing to press) and a browser test that makes the tap for real;
 `e2e/prologue.spec.ts` asserts the prologue reaches week 1 with the tour absent, the device flag
 written and still absent after a reload. Every claim was mutation-verified – see §6.
+
+**Phase 6 – who she is (§2.8). SHIPPED 02.09.** The owner's own correction after playing phase 4:
+the default player is Alice Martin, and the age-5 card asks for her name, her birthday and her
+country in the wizard's controls and the wizard's words. The three frozen careers were re-stamped
+under the file's own protocol – per-key diff first, `PRE_NAME_VERA` as the byte-level identity, no
+guard deleted. *Acceptance, and all of it is measured*: a prologue career carries what the player
+typed, asserted end to end from the card to `world.profile` and again in a real browser through a
+real worker (`e2e/prologue.spec.ts` types a name and reads it back out of the seed the worker
+echoed); the wizard path unchanged; the age-5 card's way out inside a 375x667 viewport; every claim
+mutation-verified.
 
 ⚠ **NOT IN v1, and named so nobody smuggles them in:** the motivation system (his, later); a
 difficulty menu (§2.4 replaces it); any change to `potential`; any change to the main cohort;
