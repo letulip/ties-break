@@ -342,6 +342,21 @@ export function weekLabel(week: number): string {
   return `W${inSeason} '${String(((year % 100) + 100) % 100).padStart(2, '0')}`
 }
 
+/** "Jan '31" – the CALENDAR MONTH a career week falls in, with the season year two digits wide.
+ *
+ *  ⭐ ROUND 34 #19 – the fund chart's time axis. Its shape is `weekLabel`'s deliberately («W14 '31»):
+ *  the two sit on the same screen, and an axis that spelled the year out in full beside a week label
+ *  that does not would read as two different clocks.
+ *
+ *  ⚠ HERE RATHER THAN ON THE CHART, for the reason every other formatter in this file is: the moment
+ *  a component spells a date itself, two components spell it two ways. ⚠ AND IT NAMES THE MONTH THE
+ *  WEEK'S MONDAY FALLS IN – the same `weekMonth`/`weekYear` pair the chart's own buckets are cut on,
+ *  so a point and its label can never name different months. */
+export function monthLabel(week: number): string {
+  const d = weekStart(week)
+  return `${MONTHS[d.month]} '${String(((d.year % 100) + 100) % 100).padStart(2, '0')}`
+}
+
 /** "Jun 3 – Jun 9" – the week's Monday..Sunday span, both months always named, NO year.
  *
  *  A second shape of `weekRange`, not a rival to it: the two share `weekStart`/`weekEnd`, so they

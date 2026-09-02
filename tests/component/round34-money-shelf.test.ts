@@ -1,8 +1,9 @@
 // =================================================================================================
-// ⭐⭐ ROUND 34 – THE SHELF, AS HE SEES IT: #16 (the order), #18 (the frame) and #20 (the row)
+// ⭐⭐ ROUND 34 – THE SHELF, AS HE SEES IT: #15 the sum, #16 the order, #18 the frame, #19 the
+// chart, #20 the row
 // =================================================================================================
 //
-// Three items from the same evening, all three about the shop, and all three are claims about what
+// Five items from the same evening, all five about the shop, and all five are claims about what
 // the SCREEN does. That is why every one of them is mounted here rather than pinned in source: a
 // grep proving `is-owned` appears in an SFC says nothing about whether the card the player is
 // looking at is painted, and CLAUDE.md's own gotcha is the house rule – «prefer a mounted test to a
@@ -11,9 +12,14 @@
 // His words, kept here because a .vue file carries no Cyrillic even in a comment
 // (tests/template-copy-rules.test.ts) and because a test that quotes the ask cannot drift from it:
 //
+//   #15  «Сумма дохода на savings меняется вниз если деньги вывести…» – the engine half, and the
+//        reproduction that identified which figure he meant, are tests/round34-savings-income.test.ts
 //   #16  «Business пододвинуть к Invest в магазине»
 //   #18  «В магазине те пункты, которые во владении находятся давай цветом выделять рамку жёлтую,
 //        как с тренером делали»
+//   #19  «для индексного фонда давай график нарисуем с точками его стоимости за пай с возможностью
+//        выбрать промежуток… 6 месяцев, 1 год, 2 года, 5 лет» – where the points come from, and why
+//        nothing is stored, is tests/round34-fund-chart.test.ts
 //   #20  «Кнопки put more in, sell it в разделе invest давай в одну строку с инпутами»
 //
 // ⚠⚠ MUTATION-VERIFIED, EACH ARM AGAINST ITS OWN CHANGE. The ledger, run one at a time against the
@@ -37,9 +43,21 @@
 //   * `.shop-stake-input`'s width 8.5em -> 30em, STRUCTURE UNTOUCHED -> the 375x667 `fits` arm RED
 //     and NOTHING else in the file. That is the one that says the row was measured against a phone:
 //     the controls are still in one row element, they simply no longer fit on his screen.
+//   * `changeCents` put back to `valueCents - paidCents` in `shopView` -> the #15 arm RED alone, and
+//     with it the engine file's own arms. The sentence on screen is the sentence the engine wrote.
+//   * the range picker's `@click` made a no-op, labels untouched -> «each of his four windows draws
+//     its own number of months» RED **and** «the axis names the window it is showing» RED. A picker
+//     that changes the label and not the picture is exactly what those two exist to catch.
+//   * `chartPoints`' `slice(-chartMonths)` -> `slice()` (always the whole series) -> all three #19
+//     picture arms RED, including «one dot a month», which is the one that pins the DEFAULT window.
+//   * `.fund-chart-range`'s `padding` 4px 9px -> 40px 90px, nothing else -> the 375x667 range-picker
+//     arm RED alone: four controls that no longer stand on one line of a phone.
+//   ⚠ The engine-side mutations for #19 – the month walk, the mean, the `volBps` predicate, the
+//     series length – are in tests/round34-fund-chart.test.ts's own ledger.
 import { describe, it, expect, beforeEach } from 'vitest'
 import { mount } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
+import { nextTick } from 'vue'
 import type { VueWrapper } from '@vue/test-utils'
 // ⚠ THE APP'S OWN SHEET. `.cm-row.current` – the frame #18 points at – lives in src/style.css, and
 // the shelf's own rules live in MoneyScreen's scoped block. Both are needed: this file compares one
@@ -47,7 +65,7 @@ import type { VueWrapper } from '@vue/test-utils'
 import '../../src/style.css'
 import MoneyScreen from '../../src/components/screens/MoneyScreen.vue'
 import { useGameStore } from '../../src/stores/game'
-import { buyAsset, createWorld, toSnapshot, type WorldState } from '../../src/engine/world'
+import { buyAsset, createWorld, revalueAssets, sellAsset, toSnapshot, type WorldState } from '../../src/engine/world'
 import type { Snapshot } from '../../src/shared/protocol'
 import { PHONE, assertInlineRowFits, setViewport } from './fits'
 import { SHELF_TAB_LABELS, openShelfTab, shelfRow } from './shelf'
@@ -168,6 +186,115 @@ describe('⭐ #18 – what they own is in the coach’s frame', () => {
       }
     }
     expect(framed, 'framed on screen == owned in the engine').toEqual([...held])
+  })
+})
+
+describe('⭐ #15 – the sentence on the savings card does not fall when money is taken out', () => {
+  // ⚠ THE ENGINE HALF IS tests/round34-savings-income.test.ts, with the reproduction that identified
+  // WHICH of the card's three numbers he was reading. This is the other half and it is a different
+  // claim: the string a person sees is the string the engine wrote, before and after the withdrawal.
+  // A screen that formatted the figure itself, or held a stale copy, would pass there and fail here.
+  it('the printed gain and percentage survive a part sale', async () => {
+    const world = owning('deposit', 100_000_00)
+    world.week += 52 * 10
+    revalueAssets(world)
+    const wrapper = await mountShop(toSnapshot(world))
+    const before = (await shelfRow(wrapper, 'A savings deposit')).find('.shop-row-change').text()
+    expect(before, 'ten years of interest, on screen').toMatch(/^\+\$[\d,]+ since they bought it \(\d+%\)$/)
+
+    // Take half out through the engine's own command, then re-render from the new snapshot.
+    sellAsset(world, 'deposit', Math.round(world.assets[0].valueCents / 2))
+    useGameStore().snapshot = toSnapshot(world)
+    await nextTick()
+
+    const after = (await shelfRow(wrapper, 'A savings deposit')).find('.shop-row-change').text()
+    expect(after, 'the same sentence, word for word').toBe(before)
+    // ...and the card really did change around it, so this is not a screen that failed to re-render.
+    const worth = (await shelfRow(wrapper, 'A savings deposit')).find('.money-row').text()
+    expect(worth, 'the holding on screen is half of what it was').not.toContain('$136,626')
+  })
+})
+
+describe('⭐ #19 – the fund’s chart, and its four windows', () => {
+  // ⚠ THE ENGINE HALF – where the points come from, that nothing is stored, and that a career which
+  // predates the item has its whole chart – is tests/round34-fund-chart.test.ts. This file asks the
+  // only question that one cannot: does pressing a range button change the picture on the card.
+  async function fundCard(week: number) {
+    const world = createWorld('r34-19-ui')
+    world.week = week
+    const wrapper = await mountShop(toSnapshot(world))
+    return { wrapper, row: await shelfRow(wrapper, 'An index fund') }
+  }
+
+  it('the card draws a chart with one dot a month', async () => {
+    const { row } = await fundCard(52 * 11)
+    expect(row.find('.fund-chart').exists(), 'the chart is on the fund’s card').toBe(true)
+    expect(row.find('.fund-chart-plot').exists(), 'and it is drawn').toBe(true)
+    // ⚠ «с точками его стоимости за пай» – the dots ARE the item, so they are counted rather than
+    // assumed from the presence of a line.
+    expect(row.findAll('.fund-chart-dot').length).toBe(12)
+    expect(row.find('.fund-chart-line').attributes('points')!.split(' ')).toHaveLength(12)
+  })
+
+  it('⭐⭐ each of his four windows draws its own number of months', async () => {
+    // ⚠ ONE ARM PER BUTTON, and the counts are the windows themselves: 6 / 12 / 24 / 60. A picker
+    // that changed the label and not the picture would pass a «the buttons exist» test.
+    const { row } = await fundCard(52 * 11)
+    const buttons = row.findAll('.fund-chart-range')
+    expect(buttons.map((b) => b.text()), 'his four, spelled in English').toEqual([
+      '6 months',
+      '1 year',
+      '2 years',
+      '5 years',
+    ])
+    for (const [i, months] of [6, 12, 24, 60].entries()) {
+      await buttons[i].trigger('click')
+      await nextTick()
+      expect(row.findAll('.fund-chart-dot').length, `the ${buttons[i].text()} window`).toBe(months)
+      expect(buttons[i].classes(), 'and the pressed one says so').toContain('is-on')
+      expect(buttons[i].attributes('aria-pressed')).toBe('true')
+    }
+  })
+
+  it('the axis names the window it is showing, at both ends', async () => {
+    const { row } = await fundCard(52 * 11)
+    await row.findAll('.fund-chart-range')[0].trigger('click')
+    await nextTick()
+    const six = row.find('.fund-chart-axis').text()
+    await row.findAll('.fund-chart-range')[3].trigger('click')
+    await nextTick()
+    const five = row.find('.fund-chart-axis').text()
+    // Five years reaches further back than six months, so the left-hand label has to differ.
+    expect(five, 'a wider window starts earlier').not.toBe(six)
+    expect(five).toMatch(/^[A-Z][a-z]{2} '\d\d/)
+  })
+
+  it('⚠ a career too young for a line says so, and invents nothing', async () => {
+    const { row } = await fundCard(2)
+    expect(row.find('.fund-chart').exists(), 'the block is still there').toBe(true)
+    expect(row.find('.fund-chart-plot').exists(), 'but there is no line to draw').toBe(false)
+    expect(row.find('.fund-chart-empty').text()).toContain('One month of prices so far')
+    expect(row.findAll('.fund-chart-dot')).toHaveLength(0)
+  })
+
+  it('⚠ no chart on the rungs that do not ride the market', async () => {
+    const { wrapper } = await fundCard(400)
+    const deposit = await shelfRow(wrapper, 'A savings deposit')
+    expect(deposit.find('.fund-chart').exists(), 'the deposit’s price is a flat curve').toBe(false)
+    const car = await shelfRow(wrapper, 'The sensible estate')
+    expect(car.find('.fund-chart').exists()).toBe(false)
+  })
+
+  it('⚠ round-20 #3 – the four range controls fit inside a 375x667 phone', async () => {
+    setViewport(PHONE)
+    const { row } = await fundCard(52 * 11)
+    const ranges = row.find('.fund-chart-ranges')
+    assertInlineRowFits(
+      ranges.element,
+      row.findAll('.fund-chart-range').map((b) => b.element),
+      PHONE,
+      'the chart’s range picker',
+    )
   })
 })
 

@@ -167,6 +167,7 @@ export type {
   KitState,
   KitLineView,
   KitDealView,
+  ShopPricePoint,
   ShopRowView,
   ShopView,
   KitOfferTerms,
@@ -186,6 +187,9 @@ export type {
   CoachMarketRow,
   SnapshotAcademy,
 } from './protocol/offers'
+// ⭐ ROUND 34 #19 – a VALUE export, not a type: the four windows on the fund's chart are read by the
+// engine (for how long a series to send) and by the screen (to draw the picker).
+export { SHOP_PRICE_RANGE_MONTHS } from './protocol/offers'
 
 // --- career --------------------------------------------------------------------------------------
 export type {

@@ -61,11 +61,15 @@ import type {
   KitGrade,
   KitLine,
   KitLineView,
+  ShopPricePoint,
   ShopRowView,
   WorldEvent,
   WorldEventCategory,
 } from '../../shared/protocol'
-import { seasonYear, weekLabel } from '../../shared/dates'
+// ⭐ ROUND 34 #19 – the chart's four windows are a VALUE from the protocol, so the picker here and
+// the series length in `shopView` read one table.
+import { SHOP_PRICE_RANGE_MONTHS } from '../../shared/protocol'
+import { monthLabel, seasonYear, weekLabel } from '../../shared/dates'
 import { formatCents, formatCentsSigned } from '../../shared/money'
 import { venueArtUrl } from '../../art/venues'
 import { vacationArtUrl } from '../../art/weeks'
@@ -1125,6 +1129,84 @@ function rateLine(row: ShopRowView): string {
 // ⚠ THE UNOWNED LINE EXISTS FOR «зашёл на пике при цене 7-8к»: the entry price is a fact about the
 // WEEK, so a family looking at the row before it buys is looking at the price it would pay.
 
+// ⭐⭐⭐ ROUND 34 #19 – `shopChartNote`, HIS WORDS, PARKED HERE FOR THE SAME REASON AS THE OTHERS:
+// Cyrillic may not appear in a template, in a string OR in a comment
+// (tests/template-copy-rules.test.ts).
+//
+// «для индексного фонда давай график нарисуем с точками его стоимости за пай с возможностью выбрать
+// промежуток… 6 месяцев, 1 год, 2 года, 5 лет. Мы же сможем хранить по одной цифре за месяц средней»
+//
+// ⚠⚠ HIS LAST SENTENCE WAS ANSWERED, AND THE ANSWER IS «WE DO NOT HAVE TO». `unitPriceCents` is a
+// pure function of the career seed and the week, so a monthly series is DERIVED on every read and
+// nothing is written to the save. The full argument – and the one thing storage would have bought –
+// is in `unitPriceHistory`'s header in engine/world/assets.ts. What it means for HIM is the part
+// worth saying twice: his live career opens the chart with every month it has already played, where
+// a stored series would have started empty and filled up over the next five years.
+//
+// ⚠ THE FOUR WINDOWS ARE HIS FOUR, and the numbers live in `SHOP_PRICE_RANGE_MONTHS` (the protocol)
+// so the engine's series length and this picker cannot disagree. Only the WORDS are here.
+//
+// ⚠ THIS SCREEN DOES NOT PRICE ANYTHING, which is the shelf's own standing rule: every point is
+// whole cents the engine already rounded, and the geometry below maps cents onto a viewBox and does
+// no money arithmetic at all.
+
+/** The plot's own coordinate space. A viewBox rather than pixels, so the chart is whatever width the
+ *  card gives it – the phone is the narrow case and it must not need its own layout. */
+const CHART_W = 300
+const CHART_H = 90
+/** Air above and below the line, so the highest and lowest dots are not clipped by the box. */
+const CHART_PAD = 6
+
+/** Which window the picker is on. ⚠ ONE REF FOR THE SCREEN rather than one per row: the range is a
+ *  viewing preference, and today exactly one rung on the shelf has a chart at all. */
+const chartMonths = ref<number>(12)
+
+/** «6 months» / «1 year» / «2 years» / «5 years» – his four spellings, in English, and the ONLY
+ *  place they are written. Derived from the month count so the picker and the slice can never name
+ *  different windows. */
+function rangeLabel(months: number): string {
+  if (months < 12) return `${months} months`
+  const years = months / 12
+  return years === 1 ? '1 year' : `${years} years`
+}
+
+/** The points inside the open window – the tail of the engine's series. ⚠ A SLICE AND NEVER A
+ *  RESAMPLE: the engine sent one averaged figure a month and this shows the last N of them. */
+function chartPoints(row: ShopRowView): ShopPricePoint[] {
+  return (row.priceHistory ?? []).slice(-chartMonths.value)
+}
+
+/** The geometry of one row's chart, or null when there is not enough of a career to draw a line.
+ *
+ *  ⚠ THE VERTICAL SCALE IS THE WINDOW'S OWN low..high, which is what makes a six-month view readable
+ *  at all: on a five-year scale a quiet half-year is a flat line. ⚠ AND A DEAD-FLAT WINDOW IS A REAL
+ *  STATE – every point equal – so the span is floored at 1 cent rather than dividing by zero, and
+ *  the line lands mid-box. */
+function chartPlot(row: ShopRowView): { line: string; dots: { x: number; y: number }[]; low: number; high: number } | null {
+  const points = chartPoints(row)
+  if (points.length < 2) return null
+  const low = Math.min(...points.map((p) => p.cents))
+  const high = Math.max(...points.map((p) => p.cents))
+  const span = Math.max(1, high - low)
+  const dots = points.map((p, i) => ({
+    x: (i / (points.length - 1)) * CHART_W,
+    y: CHART_H - CHART_PAD - ((p.cents - low) / span) * (CHART_H - 2 * CHART_PAD),
+  }))
+  return { line: dots.map((d) => `${d.x.toFixed(1)},${d.y.toFixed(1)}`).join(' '), dots, low, high }
+}
+
+/** What the chart says, for somebody who cannot see it. ⚠ IT IS THE SAME THREE FACTS the axis under
+ *  the plot prints, so the picture and its description cannot drift. */
+function chartSummary(row: ShopRowView): string {
+  const points = chartPoints(row)
+  const plot = chartPlot(row)
+  if (!plot || points.length === 0) return 'Not enough months to draw yet'
+  return (
+    `One unit, monthly, from ${monthLabel(points[0].week)} to ${monthLabel(points[points.length - 1].week)}: ` +
+    `${formatCents(plot.low)} to ${formatCents(plot.high)}`
+  )
+}
+
 /** ⭐ HOW MANY UNITS, AS A PERSON READS THEM. ⚠ THE ONE FRACTIONAL FIGURE ON THIS SCREEN, and the
  *  owner's rule of 26.08 («у пользователя целые в интерфейсе») is about MONEY: $5,000 into a $4,000
  *  unit is 1.25 units, and rounding that to 1 would print a quarter of the holding out of existence.
@@ -2016,6 +2098,55 @@ const shelfFamilies = computed(() =>
                 </span>
               </div>
               <p class="shop-row-blurb">{{ row.blurb }}</p>
+              <!-- ⭐⭐⭐ ROUND 34 #19 – THE FUND'S OWN CHART. His words, the four windows and the
+                   decision NOT to store a series are in `shopChartNote` in the script block and on
+                   `ShopRowView.priceHistory` (no Cyrillic in a template).
+                   ⚠ THE PREDICATE IS THE ENGINE'S: a row carries `priceHistory` when it rides the
+                   market, so this screen never decides which rung has a chart. It is drawn whether
+                   or not the family owns one, exactly like the unit price it plots. -->
+              <div v-if="row.priceHistory" class="fund-chart">
+                <div class="fund-chart-ranges" role="group" aria-label="How far back the chart goes">
+                  <button
+                    v-for="months in SHOP_PRICE_RANGE_MONTHS"
+                    :key="months"
+                    type="button"
+                    class="fund-chart-range"
+                    :class="{ 'is-on': chartMonths === months }"
+                    :aria-pressed="chartMonths === months"
+                    @click="chartMonths = months"
+                  >
+                    {{ rangeLabel(months) }}
+                  </button>
+                </div>
+                <!-- ⚠ TWO POINTS ARE THE FLOOR FOR A LINE, and a first-season career has fewer –
+                     the series is as long as the months that have actually happened. The honest
+                     sentence is drawn instead of an empty box, and nothing is back-filled. -->
+                <svg
+                  v-if="chartPlot(row)"
+                  class="fund-chart-plot"
+                  :viewBox="`0 0 ${CHART_W} ${CHART_H}`"
+                  role="img"
+                  :aria-label="chartSummary(row)"
+                >
+                  <polyline class="fund-chart-line" :points="chartPlot(row)!.line" />
+                  <circle
+                    v-for="(dot, i) in chartPlot(row)!.dots"
+                    :key="i"
+                    class="fund-chart-dot"
+                    :cx="dot.x"
+                    :cy="dot.y"
+                    r="2"
+                  />
+                </svg>
+                <p v-else class="fund-chart-empty">One month of prices so far &ndash; the chart starts next month.</p>
+                <div v-if="chartPlot(row)" class="fund-chart-axis">
+                  <span>{{ monthLabel(chartPoints(row)[0].week) }}</span>
+                  <span class="fund-chart-span">
+                    {{ formatCents(chartPlot(row)!.low) }} &ndash; {{ formatCents(chartPlot(row)!.high) }}
+                  </span>
+                  <span>{{ monthLabel(chartPoints(row)[chartPoints(row).length - 1].week) }}</span>
+                </div>
+              </div>
               <!-- ⭐⭐ ROUND 29 #5 – THE THIRD NUMBER (spec §3f): what it cost, what it loses, and
                    what it takes every week to keep. It is on the row whether the family owns one or
                    not, because it is the half of the price a shop window normally hides – «the
@@ -3129,6 +3260,93 @@ const shelfFamilies = computed(() =>
   font-size: 13px;
   font-weight: 700;
   color: var(--ink);
+}
+
+/* ⭐⭐⭐ ROUND 34 #19 – THE FUND'S CHART (owner, 02.09: the quote is at `shopChartNote` in the script
+   block, because a .vue file carries no Cyrillic in a comment either).
+
+   ⚠ THE PLOT IS A viewBox AND NOT A PIXEL SIZE, so the picture is whatever width the card gives it
+   and the 375px phone needs no layout of its own – `height: auto` keeps the aspect, so the chart
+   cannot squash. `vector-effect: non-scaling-stroke` is what stops the line thickening with it: an
+   SVG scaled from 300 units to 351px would otherwise draw a 1.17px hairline, and a chart whose
+   stroke width depends on the phone is a chart that looks different on every phone.
+
+   ⚠ THE RANGE CHIPS ARE `.shop-naming-chip`'s SHAPE, deliberately: the naming picker on this very
+   card already answers «choose one of these» in the capsule, and a second in-card picker inventing
+   its own look would be two idioms on one surface. They wrap, for round-20 #3's reason – four of
+   them plus their gaps have to live inside a 351px card body, and the measurement is in
+   tests/component/round34-money-shelf.test.ts rather than in this comment. */
+.fund-chart {
+  margin-top: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.fund-chart-ranges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.fund-chart-range {
+  padding: 4px 9px;
+  border: 1px solid var(--line);
+  /* the capsule token, never a bare 999px – the owner's ruling of 26.07, pinned in
+     tests/round10.test.ts and already obeyed by `.shop-naming-chip` two rules down. */
+  border-radius: var(--radius-pill);
+  background: transparent;
+  color: var(--ink-soft);
+  font-size: 11.5px;
+  font-weight: 700;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.fund-chart-range.is-on {
+  border-color: var(--ink);
+  color: var(--ink);
+}
+
+.fund-chart-plot {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.fund-chart-line {
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 1.5;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+  vector-effect: non-scaling-stroke;
+}
+
+/* ⚠ THE DOTS ARE THE ITEM AND NOT A DECORATION – «график … с точками его стоимости за пай». One per
+   month, which is the resolution he named. */
+.fund-chart-dot {
+  fill: var(--accent);
+}
+
+.fund-chart-axis {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 11px;
+  color: var(--ink-soft);
+}
+
+.fund-chart-span {
+  font-weight: 700;
+}
+
+.fund-chart-empty {
+  margin: 0;
+  font-size: 11.5px;
+  line-height: 1.35;
+  color: var(--ink-soft);
+  text-wrap: pretty;
 }
 
 .shop-stake {

@@ -195,10 +195,48 @@ export interface OwnedAsset {
    *  second job: divided by `units` it is the AVERAGE PRICE the family entered at
    *  (`avgUnitPriceCents`), which is the number «усредниться или зафиксировать убыток» is decided
    *  against. That is also why the part sale scales it PROPORTIONALLY rather than realising the
-   *  oldest units first: the average must not move when a family takes money out. */
+   *  oldest units first: the average must not move when a family takes money out.
+   *
+   *  ⚠⚠ ROUND 34 #15 DID NOT TOUCH THIS FIELD EITHER, and that is the point of the two below: what
+   *  a part sale takes out of `paidCents` is now REMEMBERED beside it rather than forgotten, so the
+   *  lifetime gain can be stated without this field having to mean two things at once. */
   paidCents: number
   /** what it is worth THIS week, in cents, whole. Written by `revalueAssets` on every tick. */
   valueCents: number
+  /** ⭐⭐⭐ ROUND 34 #15 – WHAT THE FAMILY HAS ALREADY EARNED AND TAKEN OUT OF THIS HOLDING, in
+   *  cents. Accumulated by `sellAsset` on a PART sale: `proceeds - costOfUnitsSold`, the same
+   *  `deltaCents` the ledger sentence already names («$4,800 more than it cost»).
+   *
+   *  THE OWNER, 02.09: «Сумма дохода на savings меняется вниз если деньги вывести. Мне кажется она
+   *  не должна меняться, просто новое поступление будет меньше»
+   *
+   *  ⚠⚠ HE IS DESCRIBING A REAL DEFECT AND IT WAS MEASURED BEFORE ANYTHING MOVED
+   *  (`tools/r34-savings-income.ts`): $100,000 held for ten years reads «+$36,626 since they bought
+   *  it», and taking half out re-reads it as «+$18,313» the same week. The family is not poorer –
+   *  the money is in the wallet – but the card was answering «what is the gain on what is STILL
+   *  HELD» to a sentence that asks «what has this earned». `changeCents` adds this term, so the
+   *  answer stops depending on how much of the holding is left. His own second clause is what the
+   *  engine already did and still does: the next week's accrual on a halved balance really is half.
+   *
+   *  ⚠ OPTIONAL, AND NOT A SCHEMA MOVE – `gearRestWeeks?`'s own rule, and `shootClashAccepted?`'s
+   *  before it. Absent means exactly what every save written before this means: no realised gain is
+   *  RECORDED, so `changeCents` falls back to `valueCents - paidCents` and an in-flight career reads
+   *  the figure it read yesterday, to the cent. It starts remembering from the next withdrawal on.
+   *  ⚠ A WHOLE sale deletes the row, so nothing accumulates there and nothing needs to: there is no
+   *  card left to put a number on. */
+  realisedGainCents?: number
+  /** ⭐⭐⭐ ROUND 34 #15 – ...AND WHAT THAT REALISED GAIN COST, in cents: the `costSoldCents` the
+   *  same part sale took out of `paidCents`.
+   *
+   *  ⚠⚠ IT IS THE PERCENTAGE'S HALF OF THE ITEM, and without it the fix would move the number he did
+   *  NOT complain about. `changePct` divides the gain by what the family put in; leave the
+   *  denominator as `paidCents` alone and the ten-year deposit above jumps from 37% to 73% on the
+   *  withdrawal – the same defect, one column to the right. Lifetime gain over lifetime cost holds
+   *  at 37% across the sale, which is what «она не должна меняться» asks of the whole sentence.
+   *
+   *  ⚠ SAME OPTIONALITY, SAME REASON: absent is a save that never recorded one, and the fallback is
+   *  the shipped arithmetic. */
+  realisedCostCents?: number
   /** ⭐⭐⭐ ROUND 30 #8 AND #10 – WHAT THE FAMILY CALLED IT. Present on the FIRST row of a nameable
    *  family the household bought (the merch brand; the academy's land) and absent on every other row
    *  – including the academy's three later stages, which read the land's name rather than carrying
