@@ -141,6 +141,102 @@ for and would otherwise have no line.
   The birthday popup and the age line disagree within one week. ⭐ He named both fixes; pick one and
   say why. ⚠ He also noted the popup says «1 день вместе» and wondered whether that age should carry
   more of a request — filed as **3b**, an **ask**.
+  — `[x]` **SHIPPED – I TOOK HIS SECOND FIX («попап в конце недели»). HIS DIAGNOSIS WAS EXACT.**
+
+  A career week is Monday..Sunday. Home prints `Snapshot.ageYears`, which is `kidAgeYears` read at
+  the week's **Monday** – the right instant for a clock that governs a whole week, and the 09.08
+  ruling's own consequence. The popup announced `birthdayTurning`, which fired in the week
+  **containing her date**. Birthday on the 15th, week opening on the 14th: the popup is one week
+  ahead of the age line, exactly as he says.
+
+  **WHY NOT FIX 1 («раз мы показали попап – то уже можно и возраст менять»).** It means bumping
+  `Snapshot.ageYears` inside the birthday week – and that field is not a caption. `composables/tierState.ts`
+  gates the ladder cards on it, `weekGrid` picks her age band from it, `kidPrizeShareBps` prices her
+  share off it and `portraitStage` chooses the art. Bumping it opens a rung on screen a week before
+  `kidAgeAt` opens it in the engine (a dead click, then a refusal), and giving Home a *display* age
+  of its own is a second clock on the wire in so many words. ⚠ **The ONE-CLOCK RULING allows exactly
+  one, so the fix had to move the announcement rather than the age.** It does: `kidAgeExact` is
+  untouched and **no age-keyed gate moves at all**.
+
+  **THE CHANGE IS ONE PREDICATE** (`birthdayYearIn`, `engine/world/age.ts`). The carry clause that
+  was already there for the dates the calendar cannot place – "the first career week whose Monday is
+  on or after her date" – is now the **whole** rule instead of the exception. That makes the
+  predicate literally «`kidAgeYears(w) > kidAgeYears(w-1)`»: the clock's own tick. The popup, the
+  feed line, the Home confetti and `diary.facts.birthdayAge` all move together, because all four
+  read this one function.
+
+  **MEASURED**, all 365 birth dates × 14 seasons:
+
+  | | before | after |
+  | --- | --- | --- |
+  | announcements printing an age Home did not agree with | **4365 of 5106** | **0 of 5099** |
+  | birth dates on which that can happen | **365 of 365** | **0** |
+  | weeks the clock ticked and nothing was said | 4359 | **0** |
+  | weeks something was said and the clock had not ticked | 4359 | **0** |
+
+  **WHAT HE WILL SEE MOVE.** For a birthday on any day but a Monday (6 dates in 7) the popup, the
+  «She is fifteen this week» line, the confetti and the gift week all land **one week later** than
+  before – the week Home's number changes. ⚠ **No copy changed:** the sentences are byte-identical
+  and the week they are true of is now the week they are shown in.
+
+  ⭐ **TWO THINGS FELL OUT, BOTH GOOD.** (a) The dates **7–12 January** used to announce «turning 14»
+  at **week 0** while Home printed **13** – his own complaint, in the first week of the game – and are
+  marked in week 1 now, where the two agree. (b) The whole LOST-BIRTHDAY class is retired rather than
+  patched a fourth time: a clock cannot lose a tick, so 31 December and 1–6 January are ordinary
+  dates here. Swept over 20 seasons × 365 dates: **no age doubled, none skipped.** ⚠ The one cost is
+  one date: a girl born **6 January** has her fourteenth inside week 0, which has no previous week to
+  have ticked from, so she opens the game at 14 (`kidAgeYears(0) = 14`, honest) and her first marked
+  birthday is her fifteenth. That puts her alongside 1–5 January, which have always been that way.
+
+  **EVIDENCE.** `tests/birthday-announce.test.ts` gains the property the item is about – *the popup
+  and the Home age line can never disagree, all 365 dates, fourteen seasons* – **mutation-verified**:
+  restoring the old date-week rule reddens it with all 4359 disagreements. ⚠ **Five arms in that file
+  were RE-AIMED, none deleted or loosened**, each with a ⚠ note at the change site saying round 34
+  moved it and why. The one worth naming: *«the announcement may lead the printed age by ONE WEEK,
+  and never by more»* shipped as the LICENCE for this gap – «pinned so a reader who meets the
+  one-week disagreement on screen finds it measured here rather than filing it twice». He met it and
+  filed it. That arm is now **tightened to zero**, not relaxed.
+
+  **THE BLAST RADIUS, MEASURED RATHER THAN GUESSED.** The full suite named 33 red assertions in six
+  files, all of them mine (the control – my own change reverted in this tree – is green). None was a
+  behaviour regression; every one was a FIXTURE built on a birthday landing in a particular week:
+
+  | file | what it holds | re-aim |
+  | --- | --- | --- |
+  | `blocking-overlay` | the fork and the cake in one week | the collision date 5 Sep -> **1 Sep**, measured as the only date left whose nineteenth is marked in its own `schoolEndWeek` |
+  | `college-birthday` | the championship + the cake; the boundary birthday | 2 Apr -> **25 Mar** (10 of 10 seasons), 3 Sep -> **27 Aug** (12 of 12) |
+  | `r2-13-advance-span` | the birthday refusal, and birthday + reveal | week 21 -> **22**; the collision case gets its own birth date, because the default profile's birthday now lands in the school-exam fortnight where `enterEvent` refuses |
+  | `round26-span-gate` | the offer rule is not a refusal | the exception is NAMED now (`engineCanMove === (birthdayPrompt === null)`) rather than asserted as `true` |
+  | `coach-travel-edge` x2 | the frozen careers | **re-freeze #14** – see below |
+
+  ⭐⭐ **RE-FREEZE #14, AND THE PER-KEY DIFF IS THE NARROWEST THIS FILE HAS RECORDED.**
+  `tools/frozen-key-diff.ts` on all three frozen careers, control = my own change reverted in this
+  same tree: **5/0 moved 0 keys of 72; 8/0 and 0/1 moved 1 of 72, and the key is `events`.** Read
+  rather than trusted – dumping every event of all three careers as JSON and diffing the arms gives
+  **24 lines**, all of them one fact: «She is sixteen this week.» moves from week 127 to week 128,
+  and the monotone event `id` counter renumbers by one behind it (the 120k career's whole diff is one
+  match row, `"id":215` -> `"id":214`, every character of the score, opponent, surface, skills and
+  condition identical). `rngMain` is byte-identical on all three, `birthdays` too, and the frozen
+  MAIN capture (41550 / e6b0c709) is untouched. Only `eliteGrinder` and `selfTravelling` are re-cut;
+  every `middleGrinder` constant still reproduces. ⚠ **This is the wave's ONE re-freeze** – the other
+  bundles were green on these hashes when the control was taken. A later bundle that moves a frozen
+  career must re-cut once with a fresh diff rather than stack a second one on top of this.
+
+  ⚠ **ONE CONSEQUENCE HE MAY MEET, AND IT IS NOT A DEFECT.** The default profile is born 15 June, and
+  the Monday that marks her birthday now falls inside the school-exam fortnight (season weeks 23-24).
+  The birthday, the popup and the gift all happen exactly as before; what she cannot do that week is
+  enter a tournament – which was already true of the exam block whatever week her cake was in.
+
+- [ ] **3b. «1 день вместе» – should the ask carry more of a request?** — **ask, not built.**
+  ⚠ **OPEN FOR HIM, deliberately undesigned.** `DAY_TOGETHER` is the one option offered at every
+  birthday and never marked, and its whole ruling (spec §0.3) is that «nothing» must be a real
+  answer: «she does not want a thing, she wants you». Its ask already names the unit three times
+  over («One day – not a week, not a trip») because round-18 #10b found the day and the week at home
+  reading as the same row. So the question is genuinely his: **should the day, at some ages, read as
+  something she is ASKING for rather than as the absence of a present – and if so at which ages?**
+  Anything I wrote here would be new copy he did not ask for (invariant 4), and the row's own rule
+  is that no option may be marked as the right one, so «make it more of a request» is a design
+  decision about where that line sits. Nothing built, nothing reworded.
 
 - [ ] **4. «На плашке next tournament, family budget для названия турнира и денег используй
   пожалуйста шрифт Sora»** — **build**, copy/type only.
@@ -244,6 +340,42 @@ for and would otherwise have no line.
 - [ ] **9. «Если отпуск назначен, то на карточке турнира в сезоне надо убрать Exhausted … Или
   считать из отпуска восстановится ли и тогда убирать Exhausted»** — **build**. ⭐ He named the
   better of the two himself: compute the recovery, do not just hide the word.
+  — `[x]` **SHIPPED – COMPUTED, NOT HIDDEN.**
+
+  **WHAT WAS WRONG.** `availabilityStatus` reads the INJURY window at the **event's** week (R10-17
+  fixed that in July) and read her CONDITION at **today's**, with a note saying why: a future
+  condition is unknowable. That is true of an ordinary week and false of a booked holiday – a
+  holiday week is a HARD BLACKOUT, so it cannot turn into a match week, and `resolveVacation` pays
+  its package gain unconditionally. So the one number in the future that IS knowable was the one
+  being ignored, and a card three weeks out said «Exhausted» over a week away the family had already
+  paid for.
+
+  **THE FIX.** `bookedRestGainBetween(world, week)` sums the `conditionGain` of the holidays booked
+  **strictly between** now and the event, and the fatigue caution is decided on `condition + that`.
+  ⚠ **It deliberately UNDER-counts**: a holiday week also earns the ordinary free-week recovery, and
+  so does every quiet week in between, and none of that is added – those weeks are the unknowable
+  kind, and a forecast that over-claims takes the warning off a card she really does arrive tired to.
+  Under-counting fails the safe way (the word stays). ⚠ The DOCTOR'S VETO is **not** given the
+  forecast: it is a refusal about a body that is not cleared today, he asked about the Exhausted
+  caution, and a medical floor lifted by a holiday that has not happened would be the game promising
+  clearance it cannot give.
+
+  **EVIDENCE – BOTH ARMS** (`tests/round34-exhausted-holiday.test.ts`), at `national` (floor 40) with
+  her at 25, tired but cleared (the doctor's floor is 15):
+
+  | booked | arrives at | card |
+  | --- | --- | --- |
+  | nothing | 25 | **Exhausted** – unchanged, byte for byte |
+  | `staycation` (+10) | 35 | **Exhausted stays** |
+  | `grandma` (+18) | 43 | **word gone**, level `ok` |
+  | two staycations (+20) | 45 | **word gone** – it is the arithmetic, not a flag |
+  | `grandma` booked AFTER the event | 25 | **Exhausted** |
+
+  **MUTATION-VERIFIED IN BOTH DIRECTIONS, which is the point of two arms.** Zeroing the gain reddens
+  the «does restore» arm only; implementing his FIRST phrasing instead – hide the word whenever a
+  holiday exists – reddens the «does not restore» arm only. A one-armed test passes both. ⚠ No copy
+  changed: «Exhausted – racing risks injury.» is untouched, and a family that books nothing takes a
+  path that is character-for-character what it was.
 
 - [ ] **10. «Мне не нравятся жирные буквы на главной жёлтой кнопке, сделай обычные пожалуйста. А
   может быть мне кажется и там две кнопки или надписи рисуется вообще? Проверь пожалуйста»** —
@@ -564,6 +696,47 @@ for and would otherwise have no line.
 - [ ] **21. «С массажистом она выздоровела быстрее после травмы, а с турнира была снята тем не менее
   и теперь на турнир не зайти, надо учитывать наличие массажиста при автоматической отмене
   событий»** — **build**. ⚠ The withdrawal is decided before the masseur's recovery is applied.
+  — `[x]` **SHIPPED – AND THE ORDERING WAS THE BUG, MEASURED.**
+
+  **THE TWO CALL SITES.** `onsetInjury` (`engine/world/injury.ts`) shortens `weeksOut` by the
+  **physio's** factor, writes `world.injury`, and then sweeps the entries the layoff swallows. The
+  **masseur's** shortening is paid out one week at a time by `rollInjury`, which does not run until
+  the following tick. So of the two people the family pays to shorten a layoff, one was **inside**
+  the withdrawal decision and the other was **after** it – the desk cancelled her tournaments against
+  a return date only a girl with no masseur would ever have had.
+
+  **THE MEASURED ORDERING, before:** at onset the sweep read `sinceWeek + totalWeeks`, i.e. the
+  clinic's dealt number with zero masseur weeks taken off it, while the countdown she actually keeps
+  is shorter by his cadence:
+
+  | rung | dealt | sweep read | she is back | weeks she was pulled out for nothing |
+  | --- | --- | --- | --- | --- |
+  | Twice a week | 4–12 | w4 … w12 | w3 … w9 | **1–3** |
+  | Every other day | 3–12 | w3 … w12 | w2 … w8 | **1–4** |
+  | Daily | 3–12 | w3 … w12 | w2 … w6 | **1–6** |
+
+  **After:** the sweep reads `weeksOut − masseurRehabWeeksAhead(world)`, which is `rollInjury`'s own
+  cadence replayed forward, so the two dates are the same date and the table's last column is 0.
+
+  ⚠ **IT IS THE RECOVERY DATE THAT MOVED, NOT THE WITHDRAWAL RULE.** The question at the release
+  line is still the same R10-17 question asked of the same shared window arithmetic – there is no
+  `if (masseurHired)` deciding whether an entry survives, and an event that is inside the layoff on
+  BOTH readings is still cancelled (its own arm). ⚠ And the **countdown on screen is deliberately not
+  rewritten**: `weeksRemaining` stays the clinic's number and his weeks keep arriving one receipt at
+  a time («Rehab ahead of schedule – the masseur bought a week back»), because that is the whole
+  legible difference between him and the physio. The forecast governs only the decision that cannot
+  be undone later – lists close two weeks out, which is his «теперь на турнир не зайти».
+
+  ⚠ **THE PRACTICE SWEEP BESIDE IT KEEPS THE CLINIC'S WINDOW, on purpose.** A cancelled ENTRY cannot
+  be re-made once the list closes; a practice is re-bookable any week and its rental comes back in
+  full. He asked about «автоматической отмене **событий**», nothing measured says a forecast belongs
+  on the friendly, and the asymmetry is written down at the site.
+
+  **EVIDENCE** (`tests/round34-masseur-withdrawal.test.ts`): scripted dice deal an 8-week layoff in
+  week 10, entry for week 15 (list closes week 13). With the daily rung she is measured back in
+  **week 14** and the entry **survives**; the identical injury with no masseur **still cancels it**,
+  and the countdown is walked to prove she really is laid up on the day. Mutation-verified: forcing
+  the forecast to 0 – the old order – reddens the "entry survives" arm alone.
 
 - [ ] **22. His save, read in full** — «посмотри пожалуйста полностью историю её перформанса, мне
   очень интересно как она себя показывает вообще относительно наших бенчмарков. Мне кажется если мы
