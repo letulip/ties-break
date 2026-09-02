@@ -2069,9 +2069,18 @@ button.note-card:active:not(:disabled) {
   }
 }
 
+/* ⚠ ROUND 34 #4 – THE TOURNAMENT'S NAME IS SET IN SORA, and that is the whole change here.
+   The owner: «На плашке next tournament, family budget для названия турнира и денег используй
+   пожалуйста шрифт Sora». `--font-heading` IS Sora and is the app's one way of asking for it
+   (declared once in src/style.css beside the @font-face) – no second @font-face, no new token.
+   ⚠ NOTHING ELSE ON THIS CAPTION MOVED: the size, the weight, the leading, the 118px cap and
+   `text-wrap: pretty` are all as they shipped, and `tests/component/round34-home-type.test.ts`
+   pins each of them beside the family, because a font swap that quietly re-sizes a caption is a
+   restyle he did not ask for. */
 .note-title {
   position: relative;
   margin: 11px 0 0;
+  font-family: var(--font-heading);
   font-size: 15.5px;
   font-weight: 700;
   line-height: 1.25;
@@ -2107,7 +2116,17 @@ button.note-card:active:not(:disabled) {
   margin: 0;
 }
 
+/* ⚠⚠ ROUND 34 #4, AND THIS IS THE HALF THAT NEEDED A MEASUREMENT BEFORE IT COULD BE BUILT.
+   He asked for Sora «для названия турнира и денег» on the two plates he named – and `.budget-total`,
+   the money on Family budget, HAS BEEN SET IN SORA SINCE 29.07 (it carries `--font-heading` below).
+   Measured through the real cascade on a 375x667 mount, the three read: `.note-title` Manrope,
+   `.budget-total` Sora, `.note-figure` Manrope. So the only money on either of those plates that
+   was not already Sora is THIS one – the travel budget under the tournament – and reading his
+   sentence any other way makes half of it a no-op. It is money, it is on a plate he named, and the
+   change is the face and nothing else.
+   ⚠ IF HE MEANT ONLY THE FAMILY-BUDGET TOTAL, deleting the one line below puts it back. */
 .note-figure {
+  font-family: var(--font-heading);
   font-size: 19px;
   font-weight: 800;
   letter-spacing: -0.01em;
@@ -2164,6 +2183,10 @@ button.note-card:active:not(:disabled) {
 
 /* --- FAMILY BUDGET ------------------------------------------------------------------------------ */
 
+/* ⚠ ROUND 34 #4 – THE MONEY HERE WAS ALREADY SORA and this round changed nothing about it. The
+   `--font-heading` line below has stood since 29.07 (U0, the port off the sheet); what round 34
+   added is a mounted pin on the COMPUTED family, so the next reader does not have to take a
+   declaration's word for it – see `tests/component/round34-home-type.test.ts`. */
 .budget-total {
   position: relative;
   font-family: var(--font-heading);
