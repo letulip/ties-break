@@ -976,6 +976,43 @@ function stakeCentsFor(row: ShopRowView): number {
 // same property that decides whether money can go IN in parts – and it is left BLANK by default, so
 // the control still says «Sell it for $X» and still means all of it unless a figure is typed.
 
+// ⭐⭐ ROUND 34 #18 – `shopOwnedFrameNote`, HIS WORDS, PARKED HERE FOR THE SAME REASON AS THE
+// others: Cyrillic may not appear in a template, in a string OR in a comment
+// (tests/template-copy-rules.test.ts).
+//
+// «В магазине те пункты, которые во владении находятся давай цветом выделять рамку жёлтую, как с
+// тренером делали»
+//
+// ⚠⚠ «КАК С ТРЕНЕРОМ ДЕЛАЛИ» IS THE HALF THAT DECIDES THE IMPLEMENTATION. He is naming round-21
+// #11, where the coach the family employs was put in an accent frame, and he is asking for THAT
+// frame rather than for a yellow border in general. So `.shop-row.is-owned` in the style block below
+// carries `.cm-row.current`'s own three declarations and reads the same `--accent`; there is no
+// second convention to keep in step with the first.
+//
+// ⚠ NO WORD, PRICE OR CONTROL MOVED WITH IT. The card already says what it says on an owned rung
+// («Worth now», the units, the change since they bought it); this item adds a frame around the card
+// and nothing else, which is CLAUDE.md invariant 4 read literally.
+
+// ⭐⭐ ROUND 34 #20 – `shopInlineActionNote`, HIS WORDS, PARKED HERE FOR THE SAME REASON AS THE
+// others: Cyrillic may not appear in a template, in a string OR in a comment
+// (tests/template-copy-rules.test.ts).
+//
+// «Кнопки put more in, sell it в разделе invest давай в одну строку с инпутами»
+//
+// ⚠ IT IS A LAYOUT ITEM AND NOTHING ELSE MOVED. Both controls kept their sentence, their `disabled`
+// predicate, their command and their `v-if` – what changed is that each now sits in a
+// `.shop-stake-row` beside the field it acts on instead of under it. The two rungs this is visible
+// on are the deposit and the index fund, which is «в разделе invest» exactly: `isTopUp` is the
+// property that draws an amount field at all.
+//
+// ⚠⚠ AND IT IS MEASURED AGAINST A PHONE, which is round-20 #3 read on a row instead of a dialog. A
+// row that fits at desktop width and pushes its button off a 375px screen is a worse defect than the
+// stack it replaced, so `.shop-stake-row` wraps rather than overflows and
+// tests/component/round34-money-shelf.test.ts asserts the whole row inside 375x667 with the
+// `fits.ts` instrument. The label column carries `min-width: 0` for that reason: a flex item's
+// default `min-width: auto` refuses to shrink below its content and is the usual way a row like this
+// leaves the screen.
+
 // ⭐⭐ ROUND 29 PART TWO #6 – `shopAlwaysOpenNote`, HIS RULING, PARKED HERE FOR THE SAME REASON AS
 // the three above: Cyrillic may not appear in a template, in a string OR in a comment
 // (tests/template-copy-rules.test.ts).
@@ -1315,11 +1352,25 @@ const adFromAgeYears = ECONOMY.advertising.fromAgeYears
 
 type ShelfTab = 'invest' | 'cars' | 'property' | 'business' | 'water' | 'air'
 const shelfTab = ref<ShelfTab>('invest')
+// ⭐⭐ ROUND 34 #16 – BUSINESS SITS NEXT TO INVEST NOW, AND THE ORDER IS THE WHOLE ITEM.
+//
+// THE OWNER, 02.09: «Business пододвинуть к Invest в магазине»
+//
+// ⚠ ONLY THE ORDER MOVED. Round 30 #5 shipped these six in the order he first spelled them
+// («Invest / Cars / Property / Business (Academy is subdivision inside) / Water / Air») and every
+// LABEL, title and family map below is untouched – CLAUDE.md invariant 4, and this item asked for a
+// position rather than a word. What he is grouping is real: Invest and Business are the two rungs of
+// the shelf that are about money COMING BACK, and Cars / Property / Water / Air are the four that
+// are about spending it. Reading them apart put two pages between the only pair a player compares.
+//
+// ⚠ AND `SHOP_FAMILIES` IS NOT REORDERED WITH IT, deliberately. That array is the order INSIDE a
+// tab – it is what puts the brand above the academy under Business – and nothing on screen reads it
+// across tabs. Moving it too would have been a second change nobody asked for.
 const SHELF_TAB_OPTIONS = [
   { value: 'invest', label: 'Invest', title: 'Money that stays money' },
+  { value: 'business', label: 'Business', title: 'What the family owns that earns – the academy included' },
   { value: 'cars', label: 'Cars', title: 'The garage' },
   { value: 'property', label: 'Property', title: 'Somewhere to live' },
-  { value: 'business', label: 'Business', title: 'What the family owns that earns – the academy included' },
   { value: 'water', label: 'Water', title: 'Boats, ordered rather than bought' },
   { value: 'air', label: 'Air', title: 'The family aeroplane' },
 ]
@@ -1936,11 +1987,19 @@ const shelfFamilies = computed(() =>
         <div v-for="family in shelfFamilies" :key="family.key" class="shop-family">
           <div class="shop-family-head">{{ family.title }}</div>
           <p class="shop-family-note">{{ family.note }}</p>
+          <!-- ⭐⭐ ROUND 34 #18 – WHAT THE FAMILY ALREADY OWNS IS IN A FRAME, AND IT IS THE COACH'S
+               FRAME. His words are in `shopOwnedFrameNote` in the script block (no Cyrillic in a
+               template). `is-owned` is the whole of it; the three declarations it paints are lifted
+               from `.cm-row.current` in style.css, which is the frame he is pointing AT.
+               ⚠ THE PREDICATE IS THE CARD'S OWN, not a second one: `row.valueCents !== null` is
+               exactly what already decides whether this card draws its owned half or its shop
+               window, so a rung can never be framed and priced at the same time. -->
           <Card
             v-for="row in shopRowsOf(family.key)"
             :key="row.id"
             variant="photo"
             class="shop-row"
+            :class="{ 'is-owned': row.valueCents !== null }"
           >
             <!-- ⭐ ROUND 30 #5 – "each card gets its own art". Null until his painting lands, and
                  until then the card simply has no band: `shelfArtUrl`'s header carries the contract,
@@ -2030,50 +2089,63 @@ const shelfFamilies = computed(() =>
                      script block (no Cyrillic in a template). The control is drawn for an 'open'
                      rung and never for a car; same input, same minimum and same engine command as
                      the opening stake, and `buyAsset` re-validates every one of them. -->
-                <label v-if="isTopUp(row)" class="shop-stake">
-                  <span class="shop-stake-label">
-                    Add more, from {{ formatCents(row.entryCents) }}
-                  </span>
-                  <input
-                    v-model="stakeDollars[row.id]"
-                    class="shop-stake-input"
-                    type="number"
-                    inputmode="numeric"
-                    :min="Math.round(row.entryCents / 100)"
-                    step="100"
-                    :placeholder="String(Math.round(row.entryCents / 100))"
-                  />
-                </label>
-                <button v-if="isTopUp(row)" class="shop-action" :disabled="!canBuy(row)" @click="askBuy(row)">
-                  Put more in
-                </button>
+                <!-- ⭐⭐ ROUND 34 #20 – THE CONTROL STANDS BESIDE ITS OWN INPUT. His words and the
+                     reasoning are in `shopInlineActionNote` in the script block (no Cyrillic in a
+                     template). The `.shop-stake-row` wrapper is the ENTIRE change: the label, the
+                     input inside it and the button that acts on it were three stacked blocks and are
+                     now one baseline-aligned row. Not one word, minimum, command or `v-if` moved. -->
+                <div v-if="isTopUp(row)" class="shop-stake-row">
+                  <label class="shop-stake">
+                    <span class="shop-stake-label">
+                      Add more, from {{ formatCents(row.entryCents) }}
+                    </span>
+                    <input
+                      v-model="stakeDollars[row.id]"
+                      class="shop-stake-input"
+                      type="number"
+                      inputmode="numeric"
+                      :min="Math.round(row.entryCents / 100)"
+                      step="100"
+                      :placeholder="String(Math.round(row.entryCents / 100))"
+                    />
+                  </label>
+                  <button class="shop-action" :disabled="!canBuy(row)" @click="askBuy(row)">
+                    Put more in
+                  </button>
+                </div>
                 <!-- ⭐⭐⭐ ROUND 29 PART TWO #4 – HOW MUCH OF IT TO SELL. His words are in
                      `shopPartSaleNote` in the script block (no Cyrillic in a template). Drawn on an
                      'open' rung only, because that is the property that says a holding takes money in
                      and out in parts; a car has one price and one sale. BLANK BY DEFAULT, so the
-                     control below keeps the sentence it has always had and keeps meaning all of it. -->
-                <label v-if="isTopUp(row)" class="shop-stake">
-                  <span class="shop-stake-label">
-                    Take out how much, or leave it blank for all {{ formatCents(row.valueCents) }}
-                  </span>
-                  <input
-                    v-model="sellDollars[row.id]"
-                    class="shop-stake-input shop-sell-input"
-                    type="number"
-                    inputmode="numeric"
-                    min="1"
-                    step="100"
-                    :max="Math.round(row.valueCents / 100)"
-                    placeholder="all of it"
-                  />
-                </label>
-                <button class="shop-action" :disabled="!canSell(row)" @click="askSell(row)">
-                  {{
-                    isTopUp(row) && sellCentsFor(row) !== null && (sellCentsFor(row) ?? 0) < row.valueCents
-                      ? `Take out ${formatCents(sellCentsFor(row) ?? 0)}`
-                      : `Sell it for ${formatCents(row.valueCents)}`
-                  }}
-                </button>
+                     control below keeps the sentence it has always had and keeps meaning all of it.
+                     ⚠ ROUND 34 #20 – THE ROW WRAPPER IS DRAWN UNCONDITIONALLY, and that is what keeps
+                     the Sell control a SINGLE element rather than two copies behind opposite `v-if`s.
+                     A car has no amount to type, so on a fixed rung the row holds the button alone
+                     and lays out exactly as the bare button did. -->
+                <div class="shop-stake-row">
+                  <label v-if="isTopUp(row)" class="shop-stake">
+                    <span class="shop-stake-label">
+                      Take out how much, or leave it blank for all {{ formatCents(row.valueCents) }}
+                    </span>
+                    <input
+                      v-model="sellDollars[row.id]"
+                      class="shop-stake-input shop-sell-input"
+                      type="number"
+                      inputmode="numeric"
+                      min="1"
+                      step="100"
+                      :max="Math.round(row.valueCents / 100)"
+                      placeholder="all of it"
+                    />
+                  </label>
+                  <button class="shop-action" :disabled="!canSell(row)" @click="askSell(row)">
+                    {{
+                      isTopUp(row) && sellCentsFor(row) !== null && (sellCentsFor(row) ?? 0) < row.valueCents
+                        ? `Take out ${formatCents(sellCentsFor(row) ?? 0)}`
+                        : `Sell it for ${formatCents(row.valueCents)}`
+                    }}
+                  </button>
+                </div>
               </div>
               <!-- NOT OWNED: the price, and a control that is pressable or is not. -->
               <div v-else class="shop-row-buy">
@@ -2836,6 +2908,29 @@ const shelfFamilies = computed(() =>
   text-wrap: pretty;
 }
 
+/* ⭐⭐ ROUND 34 #18 – THE THINGS THEY ALREADY OWN ARE IN THE ACCENT FRAME (owner, 02.09: the quote
+   is at `shopOwnedFrameNote` in the script block, because a .vue file carries no Cyrillic in a
+   comment either - tests/template-copy-rules.test.ts).
+
+   ⚠⚠ THESE THREE DECLARATIONS ARE `.cm-row.current`'s, COPIED DELIBERATELY AND NOT REINVENTED. He
+   asked for the frame «как с тренером делали», so the answer is the frame the coach row already
+   draws: an accent border, a 7% accent wash behind it, and an outer 1px ring that makes it read as
+   a FRAME rather than as a hairline. Round-21 #11's own note in style.css says why the ring is a
+   `box-shadow` and not a second pixel of border - an outer shadow paints outside the border box and
+   moves NO layout, so a framed card and an unframed one still line up in the feed.
+
+   ⚠ `background` HAS TO WIN AGAINST `Card`'s OWN `.tb-card--photo { background: var(--card-bottom) }`
+   and it does, on specificity rather than on source order: Vue scopes this to
+   `.shop-row.is-owned[data-v-x]` (0,3,0) against the card's `.tb-card--photo[data-v-y]` (0,2,0).
+
+   ⚠ AND IT IS ONE COLOUR IN ONE PLACE. If the accent ever moves, both the coach she has and the
+   things they own move with it, because both read `--accent`. */
+.shop-row.is-owned {
+  background: rgba(var(--accent-rgb), 0.07);
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px var(--accent);
+}
+
 /* ⚠ THE ROW IS A CARD NOW, so the hand-rolled border and the 11px radius are gone: `Card`'s own
    hairline and the radius ladder's card rung do that job, and a second set of both inside them was
    the "plate behind a plate" this item is undoing. `variant="photo"` pads to zero on purpose - the
@@ -3041,6 +3136,44 @@ const shelfFamilies = computed(() =>
   flex-direction: column;
   gap: 3px;
   min-width: 0;
+}
+
+/* ⭐⭐ ROUND 34 #20 – THE FIELD AND THE CONTROL THAT ACTS ON IT, IN ONE ROW (owner, 02.09: the
+   quote is at `shopInlineActionNote` in the script block, because a .vue file carries no Cyrillic
+   in a comment either - tests/template-copy-rules.test.ts).
+
+   `align-items: end` rather than `center` is the whole of the alignment: `.shop-stake` is a COLUMN
+   of a caption and a field, so centring it would hang the button halfway up the caption instead of
+   level with the box it presses against. Ending both puts the button's bottom edge on the input's.
+
+   ⚠ `flex-wrap: wrap` IS THE PHONE, NOT A FLOURISH. Round-20 #3's rule is that every control stays
+   inside 375x667; the sell control's label is the longest sentence on this card («Take out how much,
+   or leave it blank for all $1,234,567») and a family that has run the fund for twenty years puts a
+   long figure inside the button as well. Wrapping spends a line rather than the right-hand edge of
+   the screen, which is the failure mode the fits.ts assertion in
+   tests/component/round34-money-shelf.test.ts exists to make impossible.
+
+   ⚠ AND `.shop-action`'s OWN `margin-top` IS CLEARED HERE. It was the gap under the stacked layout;
+   inside the row it would push the button below the input's baseline, so the row owns its spacing
+   and the bare button outside a row keeps the margin it always had. */
+.shop-stake-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+/* ⚠ `nowrap` IS THE MEASUREMENT'S HALF OF THE ITEM, not a flourish. A button that may break its own
+   label gives ground VERTICALLY, so it can be squeezed to its padding and still «fit» - which is
+   exactly the reading `fits.ts` refuses to credit («a control cut down to Trai… is not a control the
+   measurement should score as fitting»). Held to one line, the control demands its real width, the
+   fits assertion in tests/component/round34-money-shelf.test.ts measures the row a person actually
+   sees, and `flex-wrap` above is what that demand spends when a holding grows a long figure: the
+   button takes its own line INSIDE the card instead of leaving the phone. */
+.shop-stake-row .shop-action {
+  margin-top: 0;
+  white-space: nowrap;
 }
 
 .shop-stake-label {
