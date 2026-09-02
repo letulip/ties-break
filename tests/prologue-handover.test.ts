@@ -31,13 +31,13 @@ import {
 } from '../src/engine/world'
 import { resumeMain } from '../src/engine/rng'
 import { withHeadStart } from '../src/engine/world/player'
-import { coachRoomBand, coachRoomNote, handoverRoomBand } from '../src/engine/world/coachMarket'
+import { HANDOVER_BASE_CUTS, coachRoomBand, coachRoomNote, handoverBaseBand, handoverRoomBand } from '../src/engine/world/coachMarket'
 import { ECONOMY, prologueFundsCents } from '../src/engine/economy'
 import { childhoodArrival, weightAt } from '../src/engine/childhood'
 import { physicalMean } from '../src/engine/development'
 import { styleOf } from '../src/engine/season/rival'
 import { PROLOGUE_CARDS } from '../src/prologue/cards'
-import { COACH_READS, HANDOVER_COPY, WALK_COPY, coachReadFor, spentLine } from '../src/prologue/handover'
+import { COACH_BASE_READS, COACH_READS, HANDOVER_COPY, WALK_COPY, coachBaseReadFor, coachReadFor, spentLine } from '../src/prologue/handover'
 import {
   EMPTY_RUN,
   cardFor,
@@ -494,9 +494,193 @@ describe('⭐ the coach speaks in the vocabulary he already has', () => {
   })
 })
 
+// =================================================================================================
+// ⭐⭐⭐ PHASE 7 – THE SECOND DIMENSION: THE BASE
+// =================================================================================================
+//
+// THE OWNER, 02.09: «оставляем туман, у нас есть слова тренера – вот ими надо добавить понимание про
+// базу и перспективы как раз в дополнение к туману».
+//
+//     the BASE = what you BUILT        the ROOM = what she was BORN with
+//
+// ⚠⚠ MUTATION-VERIFIED. Every claim below was watched failing before it was believed:
+//   * `handoverBaseBand` reading the BIRTH build instead of `world.skills` -> «the base answers the
+//     childhood» goes red on 90% of seeds. That is the mutation of this block: it is the exact way a
+//     future reader would "unify" the two bands and silently delete the player's nine years.
+//   * `handoverBaseBand` returning `'level'` always -> the distribution test names the missing bands.
+//   * the two cuts widened to p05/p95 -> the distribution test goes red on the shares.
+//   * `coachBaseReadFor` drawing on `:prologue:read` (the room band's key) -> the independence test
+//     goes red.
+//   * a digit put into a base line -> the fog sweep goes red naming the band.
+describe('⭐⭐ where she stands TODAY – the base band, and it is the half the childhood moves', () => {
+  const AGE_GROUP = { p05: 44.3, p20: 46.3, p50: 48.5, p80: 50.7, p95: 52.7 }
+
+  function meanAttribute(w: WorldState): number {
+    const keys = ['serve', 'ret', 'composure', 'stamina', 'groundstrokes'] as const
+    return keys.reduce((a, k) => a + w.skills[k], 0) / keys.length
+  }
+
+  // ⚠⚠ THOUSANDS OF SEEDS, ONE WORLD – AND THE SUBSTITUTION IS PROVED, NOT ASSUMED. `createWorld`
+  // builds a cohort and a season of pre-history, which is ~8ms a call: the distributions below need
+  // 4,000 samples and would spend two minutes buying nothing, and the first draft of this block
+  // timed the unit project out at 20s doing exactly that. `handoverBaseBand` reads `world.skills`
+  // and nothing else, and on the WIZARD path `createWorld` sets `skills` to
+  // `withHeadStart(startingSkills(seed, profile), profile.birthMonth)` – so a world with that field
+  // swapped is the same input. The test below pins that identity against real worlds, and every
+  // sampled test uses `arrivalOf` on top of it.
+  const TEMPLATE = createWorld('base-template', DEFAULT_PROFILE, 'w')
+  const freshWorld = (seed: string): WorldState => ({
+    ...TEMPLATE,
+    seed,
+    skills: withHeadStart(startingSkills(seed, DEFAULT_PROFILE), DEFAULT_PROFILE.birthMonth),
+  })
+
+  it('⚠ the cheap fresh world IS the world `createWorld` builds – the substitution below rests on it', () => {
+    for (let i = 0; i < 40; i++) {
+      const seed = `sub-${i}`
+      const real = createWorld(seed, DEFAULT_PROFILE, 'w')
+      expect(freshWorld(seed).skills, seed).toEqual(real.skills)
+      expect(handoverBaseBand(freshWorld(seed)), seed).toBe(handoverBaseBand(real))
+    }
+  })
+
+  // ⭐ THE REFERENCE IS RE-MEASURED HERE RATHER THAN QUOTED. docs/specs/childhood-growth-2026-09.md
+  // §4a printed this distribution once, on a bench nobody runs on a commit; the two cuts in
+  // `HANDOVER_BASE_CUTS` are two of its quantiles, so if the fourteen-year-old a `createWorld` makes
+  // ever moves, the cuts stop meaning what their comment says and this is what notices.
+  // ⚠ 4,000 seeds and a tolerance of a tenth: the mean of five integers lives on a 0.2 lattice, and
+  // the growth spec's own note records a measurement bug caused by ignoring exactly that.
+  it('⚠ the fresh fourteen-year-old is still the distribution the cuts were measured against', () => {
+    const xs: number[] = []
+    for (let i = 0; i < 4000; i++) xs.push(meanAttribute(freshWorld(`ref-${i}`)))
+    xs.sort((a, b) => a - b)
+    const at = (q: number) => xs[Math.round(q * (xs.length - 1))]
+    for (const [name, want] of Object.entries(AGE_GROUP)) {
+      const q = Number(name.slice(1)) / 100
+      // ⚠ ±0.3 AND NOT TIGHTER, and the reason is the growth spec's own recorded measurement bug: a
+      // mean of five integers lives on a 0.2 LATTICE, so a tail quantile at 4,000 seeds legitimately
+      // lands one step off the 400,000-seed answer. Tightening this asserts the sample size, not the
+      // distribution. The CUTS themselves are at p20/p80, where the density is high and the same
+      // 4,000 seeds reproduce them exactly.
+      expect(Math.abs(at(q) - want), `${name} of today's fourteen-year-olds is ${at(q)}`).toBeLessThanOrEqual(0.3)
+    }
+    // ...and the cuts really are two of its quantiles.
+    expect(HANDOVER_BASE_CUTS.below).toBe(AGE_GROUP.p20)
+    expect(HANDOVER_BASE_CUTS.ahead).toBe(AGE_GROUP.p80)
+  })
+
+  // ⭐ THE SHARES: 19 / 62 / 19 over careers the prologue never touched. Measured at 20k, 100k and
+  // 400k seeds while the cuts were being chosen and stable to the hundredth at all three.
+  it('⭐ over wizard careers the three bands hold about a fifth, three fifths and a fifth', () => {
+    const n: Record<string, number> = { behind: 0, level: 0, ahead: 0 }
+    const N = 4000
+    for (let i = 0; i < N; i++) n[handoverBaseBand(freshWorld(`dist-${i}`))]++
+    expect(n.behind / N, 'behind').toBeCloseTo(0.19, 1)
+    expect(n.level / N, 'level').toBeCloseTo(0.62, 1)
+    expect(n.ahead / N, 'ahead').toBeCloseTo(0.19, 1)
+    // ⚠⚠ AND THE MIDDLE BAND HOLDS MORE THAN HALF, which is not a taste – it is what makes «She is
+    // where most girls her age are» a TRUE sentence. The tertiles were measured at 37.6% and
+    // rejected on exactly this: the copy would have been a lie about the population.
+    expect(n.level / N, 'the middle sentence says «most», so it has to be most').toBeGreaterThan(0.5)
+  })
+
+  // ⭐⭐⭐ THE ACCEPTANCE CRITERION, AND IT IS THE WHOLE POINT OF PHASE 7. Two childhoods, one seed:
+  // different BASE sentences, the SAME room sentence. The second half is the potential rule (§4)
+  // being kept, not a bug in the first.
+  it('⭐⭐ the same girl, raised two ways: the base answers the childhood and the room cannot', () => {
+    let baseMoved = 0
+    // ⚠ 150 REAL WORLDS, and they have to be real: this is the one claim that is ABOUT what a
+    // childhood does to `createWorld`, so the cheap substitution above is not available here.
+    const N = 150
+    for (let i = 0; i < N; i++) {
+      const seed = `two-ways-${i}`
+      const poor = createWorld(seed, profileFor('middle'), 'p', CHEAPEST)
+      const rich = createWorld(seed, profileFor('middle'), 'p', DEAREST)
+      // THE ROOM IS THE SAME SENTENCE, every seed, no exceptions.
+      expect(handoverRoomBand(poor), seed).toBe(handoverRoomBand(rich))
+      expect(coachReadFor(toSnapshot(poor).handoverBand, seed), seed).toBe(
+        coachReadFor(toSnapshot(rich).handoverBand, seed),
+      )
+      // THE BASE IS NOT, on most of them – and it is never the WRONG way round.
+      expect(meanAttribute(rich), seed).toBeGreaterThan(meanAttribute(poor))
+      if (handoverBaseBand(poor) !== handoverBaseBand(rich)) baseMoved++
+    }
+    // ⚠⚠ 40.9%, MEASURED – AND THE NUMBER THE OWNER SHOULD BE TOLD IS THIS ONE, not the 89.9% the
+    // cuts were chosen against. That figure is the MODEL's extremes (`neglectedChildhood()` versus
+    // `devotedChildhood()`, a 4.28-point span); CHEAPEST and DEAREST here are the extremes of the
+    // SHIPPED CARD TABLE, and enumerating all 32 runs through it shows a span of only 1.87 points
+    // (47.48 -> 49.35 mean arrival). The cards do not reach the model's edges – recorded in
+    // docs/specs/childhood-prologue-build-2026-09.md §8c as a finding, not fixed here, because
+    // widening what a card buys is a balance change and §8 is not the place for one.
+    // The floor is set under the measurement and is still far out of reach of a base band that reads
+    // her birth build, which is what this test is protecting.
+    expect(baseMoved / N, 'the nine years reach the base sentence').toBeGreaterThan(0.25)
+  })
+
+  it('⚠ and the cheap childhood is never told she is ahead of a girl the dear one leaves behind', () => {
+    // Monotone in the only quantity it reads: a richer childhood cannot produce a LOWER band.
+    const order = { behind: 0, level: 1, ahead: 2 }
+    for (let i = 0; i < 150; i++) {
+      const seed = `monotone-${i}`
+      const poor = handoverBaseBand(createWorld(seed, profileFor('middle'), 'p', CHEAPEST))
+      const rich = handoverBaseBand(createWorld(seed, profileFor('middle'), 'p', DEAREST))
+      expect(order[rich], `${seed}: ${poor} -> ${rich}`).toBeGreaterThanOrEqual(order[poor])
+    }
+  })
+
+  it('⚠ the band reaches the snapshot at week 0 and is GONE by week 1 – like the room band', () => {
+    const w = createWorld('base-snap', profileFor('middle'), 'p', CHEAPEST)
+    expect(toSnapshot(w).handoverBaseBand).toBe(handoverBaseBand(w))
+    const rng = resumeMain(w.rngMain)
+    tickWeek(w, rng)
+    expect(w.week).toBe(1)
+    expect(toSnapshot(w).handoverBaseBand).toBe('')
+    // ...and the copy answers the empty field with silence rather than with a band's worth of lines.
+    expect(coachBaseReadFor('', 'base-snap')).toBe('')
+  })
+
+  it('⭐ every band has lines, the table is TOTAL, and the same career always hears the same one', () => {
+    for (const band of ['behind', 'level', 'ahead'] as const) {
+      expect(COACH_BASE_READS[band].length, band).toBeGreaterThan(1)
+      expect(coachBaseReadFor(band, 'seed').length, band).toBeGreaterThan(0)
+    }
+    expect(coachBaseReadFor('ahead', 'a')).toBe(coachBaseReadFor('ahead', 'a'))
+    const heard = new Set<string>()
+    for (let i = 0; i < 200; i++) heard.add(coachBaseReadFor('ahead', `seed-${i}`))
+    expect(heard.size, 'no line in the band is dead copy').toBe(COACH_BASE_READS.ahead.length)
+  })
+
+  // ⚠ THE TWO SENTENCES MUST NOT MOVE TOGETHER. One key for both draws would mean a career that
+  // hears the first room line always hears the first base line too – a pattern a player can see, and
+  // half the copy never read.
+  it('⚠ the two draws are independent – the base line does not follow the room line', () => {
+    let differ = 0
+    for (let i = 0; i < 300; i++) {
+      const seed = `draws-${i}`
+      const room = COACH_READS['Huge potential'].indexOf(coachReadFor('Huge potential', seed))
+      const base = COACH_BASE_READS.ahead.indexOf(coachBaseReadFor('ahead', seed))
+      if (room !== base) differ++
+    }
+    expect(differ, 'the two draws are the same draw wearing two names').toBeGreaterThan(60)
+  })
+
+  it('⚠ NOT ONE BASE LINE CARRIES A NUMBER, AND NONE OF THEM NAMES A CEILING', () => {
+    for (const [band, lines] of Object.entries(COACH_BASE_READS)) {
+      for (const line of lines) {
+        expect(/\d/.test(line), `${band}: ${line}`).toBe(false)
+        expect(/%|\$/.test(line), `${band}: ${line}`).toBe(false)
+        // §5: «If he ever names a ceiling, the fog stops meaning anything.» The base band is a
+        // statement about TODAY and may not smuggle one in.
+        expect(/ceiling|potential|limit|as far as|as good as/i.test(line), `${band}: ${line}`).toBe(false)
+      }
+    }
+  })
+})
+
 describe('⚠ the copy obeys the house rules, and says nothing the ruling forbids', () => {
   const every = [
     ...Object.values(COACH_READS).flat(),
+    ...Object.values(COACH_BASE_READS).flat(),
     ...Object.values(HANDOVER_COPY),
     ...Object.values(WALK_COPY),
     spentLine(1_234_00),

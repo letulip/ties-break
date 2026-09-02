@@ -14,6 +14,7 @@
 // assembles are what `childhoodWalk` consumes, and `tests/prologue-cards.test.ts` is where the two
 // are joined, because phase 1's importer-set pin is empty until phase 4 moves it.
 import { ECONOMY } from '../engine/economy'
+import type { PortraitEmotion } from '../shared/avatarEmotion'
 import type { FamilyBackground } from '../shared/protocol'
 import {
   APPETITE_AT,
@@ -256,4 +257,42 @@ export function warmthAt(age: number, run: PrologueRun): Warmth {
     else carried++
   }
   return carried > light ? 'warm' : 'cool'
+}
+
+// =================================================================================================
+// ⭐⭐ WHICH FACE THE YEAR WEARS – phase 7, and it is DERIVED for the same reason everything else on
+// a card is
+// =================================================================================================
+//
+// THE OWNER, 02.09, on making the prologue look like the game: «надо сделать пролог красивым … по
+// типу нашего home screen где большой арт на всю ширину экрана» – and the picture on each card is
+// HER, in the age band the art set already has for her (`src/art/prologue.ts` spells the file).
+//
+// ⚠⚠ THERE IS NO `mood` COLUMN IN `cards.ts` AND THERE MUST NOT BE. A face typed into the table is a
+// second statement about the year, kept in step with the first by hand – and the first statement is
+// `her` / `coach`, which the run already chooses an arm of. So the picture reads the SAME counts the
+// two sentences read, and a card cannot show a girl who is delighted above a line saying she has had
+// enough. One mechanism, three consumers.
+//
+// THE MAPPING, and every arm of it is one of the three the owner named – «she asks to go back
+// (happy), she is tired of it (tired), she wants more (serious)»:
+//
+//   ages 12 and 13   the twelfth's own reading: `tired` -> tired, `wants-more` -> serious. The
+//                    thirteenth follows the twelfth because the YEAR does (`sameAsLastYear`), so the
+//                    picture follows the fork exactly as the numbers do.
+//   ages 6..11       `warmthAt`: a childhood that has carried her more often than it left her alone
+//                    shows her enjoying it, and one that has not shows her ordinary.
+//
+// ⚠ AND IT IS UNOBSERVABLE ON THE EARLY CARDS BY CONSTRUCTION, exactly as `warmthAt` is. No decision
+// has been taken before the cards at 5, 6, 7 and 8, so `warmthAt` is `cool` there whatever the
+// player does and those cards always draw `norm`. That is the honest handling of «nothing has
+// happened yet»: a picture may not report a year the player has not lived, which is the same rule
+// the two arms of `PrologueRead` are written under.
+
+/** The face for one year of the childhood. Pure, no art and no URL – see `src/art/prologue.ts`. */
+export function moodAt(age: number, run: PrologueRun): PortraitEmotion {
+  // The fork and the year that follows it. `readTwelfth` recomputes from the picks, so this is the
+  // same reading the twelfth's own card and its reasons list are drawn from.
+  if (age >= 12) return readTwelfth(run).reading === 'tired' ? 'tired' : 'serious'
+  return warmthAt(age, run) === 'warm' ? 'happy' : 'norm'
 }

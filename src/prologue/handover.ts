@@ -33,8 +33,42 @@
 // ⚠ NO NUMBER APPEARS IN A COACH LINE, and `tests/prologue-handover.test.ts` sweeps every string in
 // this table for a digit. The money is the one figure on the screen (§2.4 – the total, once), and it
 // is not in his mouth.
+//
+// =================================================================================================
+// ⭐⭐⭐ HE SAYS TWO THINGS, AND THEY ARE NOT THE SAME THING (phase 7)
+// =================================================================================================
+//
+// THE OWNER, 02.09: «оставляем туман, у нас есть слова тренера – вот ими надо добавить понимание
+// про базу и перспективы как раз в дополнение к туману» – his own answer to his own ask, that a
+// player must come off this screen understanding «на сколько мощно сейчас (на момент 13-14) и какой
+// запас впереди».
+//
+//     the BASE = WHAT YOU BUILT          where she stands against fourteen-year-olds TODAY
+//     the ROOM = WHAT SHE WAS BORN WITH  how much was in her before anybody did anything
+//
+// ⚠⚠ AND THAT IS WHY ONE OF THEM ANSWERS THE CHILDHOOD AND THE OTHER CANNOT. Read the next
+// paragraph before "fixing" the room band to respond to the player, because the asymmetry is the
+// design and the owner has accepted it:
+//
+//   * `handoverRoomBand` reads her BIRTH build. Nine years of the best decisions a parent can make
+//     do not add a point of potential – §4 – so the room sentence is identical for the neglected
+//     childhood and the devoted one from the same seed. That is the potential rule being kept.
+//   * `handoverBaseBand` reads her ARRIVAL. Phase 1 measured the nine years at ±2.3 points on the
+//     mean attribute, and the cuts sit at 48.50 ± 2.20 of the fourteen-year-old distribution, so the
+//     base sentence MOVES with what the player did – on 40.9% of seeds between the cheapest and the
+//     dearest walk through the shipped card table, and on 89.9% between the model's own extremes.
+//
+// So the same seed, walked two ways, comes off this screen with two different base sentences and one
+// room sentence. `tests/prologue-handover.test.ts` asserts exactly that pair, because it is the one
+// property a reader is most likely to mistake for a bug.
+//
+// ⚠ NO CEILING CONTOUR ANYWHERE NEAR EITHER OF THEM. §5's rule is untouched: the potential is never
+// DRAWN, the rose shows where she IS, and neither sentence names a number or a ceiling. The base
+// band is a statement about today against girls the same age – it says nothing about how far she can
+// go, which is what leaves the fog doing its job.
 import { rngFromSeed } from '../engine/rng'
 import { formatCents } from '../shared/money'
+import type { HandoverBaseBand } from '../shared/protocol'
 
 /** ⭐ THE COACH'S READ, PER BAND – §8a, verbatim, keyed by the label `coachRoomBand` returns.
  *
@@ -83,6 +117,54 @@ const FALLBACK_BAND = 'Close to her ceiling'
 export function coachReadFor(band: string, seed: string): string {
   const lines = COACH_READS[band] ?? COACH_READS[FALLBACK_BAND]
   const rng = rngFromSeed(`${seed}:prologue:read`)
+  return lines[Math.min(lines.length - 1, Math.floor(rng() * lines.length))]
+}
+
+/** ⭐⭐ THE BASE, IN THE SAME VOICE – DRAFTS, EVERY ONE, and the owner has not read them.
+ *
+ *  ⚠ §8a's three room bands above are transcribed VERBATIM from the spec and are the only copy in
+ *  the whole prologue he has approved. NOTHING BELOW IS. These six sentences are new, they are
+ *  written in the register of the approved ones – short, declarative, no adjective stacks, no
+ *  number, no ceiling – and they are marked as drafts in §8a beside the lines they now stand next
+ *  to. ⚠ The approved room lines were NOT rewritten to accommodate them: the base sentence goes
+ *  FIRST and his sentence follows unchanged, which is why none of these ends in a clause that
+ *  expects a particular continuation.
+ *
+ *  ⚠ TOTAL BY CONSTRUCTION. The key is the `HandoverBaseBand` union, so there is no fallback arm
+ *  here and none is needed – the compiler will not let a fourth band exist without a fourth set of
+ *  lines, which is the failure `FALLBACK_BAND` above exists to catch for the stringly-typed room
+ *  band. */
+export const COACH_BASE_READS: Readonly<Record<HandoverBaseBand, readonly string[]>> = {
+  ahead: [
+    'She is ahead of most girls her age. Somebody did the work.',
+    'She is further along than the girls she will be playing.',
+  ],
+  level: [
+    'She is where most girls her age are.',
+    'She is level with the girls she will be playing.',
+  ],
+  behind: [
+    'She is behind most girls her age. That is the ground she starts from.',
+    'There is ground to make up on the girls her age.',
+  ],
+}
+
+/** WHICH BASE LINE HE SAYS – the same shape as `coachReadFor`, on its OWN purpose-scoped key.
+ *
+ *  ⚠ `:prologue:base`, NOT `:prologue:read`. Two draws off one key would make the two sentences move
+ *  together – always the first of each band, or always the second – which is a pattern a player can
+ *  see and which would halve the copy that is ever read. Both are re-derived at the call site, both
+ *  persist nothing, and neither touches MAIN, so the frozen capture (41550 / e6b0c709) and every
+ *  career hash are unmoved (CLAUDE.md invariant 2).
+ *
+ *  ⚠ AND, AS ABOVE, THE READING IS THE BAND AND THE BAND IS DERIVED. Only WHICH SENTENCE SAYS IT is
+ *  drawn, so nothing a player can see changes meaning with the draw. */
+export function coachBaseReadFor(band: HandoverBaseBand | '', seed: string): string {
+  // '' is the week-1-onwards value of the snapshot field, and this screen only exists at week 0 –
+  // so it is not a band with no lines, it is "there is nothing to say yet", and it says nothing.
+  if (band === '') return ''
+  const lines = COACH_BASE_READS[band]
+  const rng = rngFromSeed(`${seed}:prologue:base`)
   return lines[Math.min(lines.length - 1, Math.floor(rng() * lines.length))]
 }
 

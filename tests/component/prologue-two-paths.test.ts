@@ -38,6 +38,7 @@ import { WALK_COPY, HANDOVER_COPY } from '../../src/prologue/handover'
 import { EMPTY_RUN, chosenYears, spentCents, withOrigin, withPick } from '../../src/prologue/run'
 import { OPENING_IDENTITY } from '../../src/prologue/identity'
 import { IDENTITY_COPY } from '../../src/composables/identityCopy'
+import { COUNTRY_NAMES } from '../../src/composables/countries'
 import { kidAgeYears } from '../../src/engine/world'
 import { DEFAULT_PROFILE, type PlayerProfile, type PrologueHandover } from '../../src/shared/protocol'
 
@@ -157,7 +158,16 @@ describe('⭐⭐ the nine cards reach the handover, carrying what they came to',
     for (const age of CARD_AGES) await answerCurrent(wrapper, age)
     expect(wrapper.find('.handover-card').exists()).toBe(true)
     expect(wrapper.find('.radar-svg').exists(), 'the rose').toBe(true)
-    expect(wrapper.find('.handover-read-line').text().length, 'his sentence').toBeGreaterThan(10)
+    // ⭐⭐ PHASE 7 – TWO SENTENCES, THROUGH THE CONTAINER'S OWN BINDINGS. This is the seam the
+    // mounted handover test cannot cover: `PrologueHandover.vue` renders whatever it is handed, and
+    // what makes the second sentence appear in the real game is `ChildhoodPrologue.vue` reading
+    // `snapshot.handoverBaseBand`. Dropping `:base` from the template reddens exactly here.
+    const lines = wrapper.findAll('.handover-read-line')
+    expect(lines.length, 'the base and the room').toBe(2)
+    expect(lines[0].classes(), 'the base is first').toContain('handover-read-base')
+    for (const line of lines) expect(line.text().length, 'a sentence').toBeGreaterThan(10)
+    // ...and the two say different things, which is the whole of phase 7.
+    expect(lines[0].text()).not.toBe(lines[1].text())
     expect(wrapper.findAll('.handover-answer').map((b) => b.text())).toEqual([
       HANDOVER_COPY.goOn,
       HANDOVER_COPY.startAgain,
@@ -229,8 +239,12 @@ describe('⭐⭐ the prologue asks who she is, and the answer reaches the world'
     for (const label of [IDENTITY_COPY.firstName, IDENTITY_COPY.lastName, IDENTITY_COPY.birthday]) {
       expect(text, `the five does not ask for «${label}»`).toContain(label)
     }
-    // The country picker is the wizard's, three views of one list – the popular nine are the shortcut.
-    expect(wrapper.findAll('.prologue-tile').length, 'the nine popular tiles').toBe(9)
+    // ⭐ THE COUNTRY PICKER OPENS CLOSED SINCE PHASE 7, and closed is ONE tile – the country the
+    // career will actually be started with. The picker's parts are unchanged and none of them is a
+    // new string: the way in is the wizard's own `Browse all countries`, and opening it puts the
+    // search field and all twenty-four back on the card.
+    expect(wrapper.findAll('.prologue-tile').length, 'closed, it is her country and nothing else').toBe(1)
+    expect(wrapper.find('.prologue-tile').text()).toContain(COUNTRY_NAMES[OPENING_IDENTITY.country])
     expect(wrapper.find('.prologue-browse').text()).toBe(IDENTITY_COPY.browseAll)
     // ...and the fields open on the default profile rather than on nothing.
     expect((wrapper.find('#prologue-first').element as HTMLInputElement).value).toBe(OPENING_IDENTITY.kidName)
@@ -257,8 +271,13 @@ describe('⭐⭐ the prologue asks who she is, and the answer reaches the world'
     await type(wrapper, 'prologue-last', 'Okonkwo')
     await wrapper.find('#prologue-month').setValue('11')
     await wrapper.find('#prologue-day').setValue('3')
+    // ⭐ THE PICKER HAS TO BE OPENED FIRST (phase 7) – and this walks the player's own route in
+    // rather than reaching past it: the browse control, then the tile, which is what a hand does.
+    await wrapper.find('.prologue-browse').trigger('click')
     const spain = wrapper.findAll('.prologue-tile').find((t) => t.text().includes('Spain'))!
     await spain.trigger('click')
+    // ...and taking one closes the picker again, so the card does not stay a list of countries.
+    expect(wrapper.findAll('.prologue-tile').length, 'the picker closed on the answer').toBe(1)
 
     for (const age of CARD_AGES) await answerCurrent(wrapper, age)
 

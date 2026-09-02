@@ -242,9 +242,15 @@ describe('⚠⚠ the pool may never enter world.cohort or any table', () => {
       const src = readFileSync(join(SRC, 'prologue', name), 'utf8')
       imports[name] = [...new Set([...src.matchAll(/from\s*'(\.[^']*)'/g)].map((m) => m[1]))].sort()
     }
+    // ⚠ PHASE 7 ADDED TWO SPECIFIERS AND NEITHER IS AN ENGINE MODULE. `handover.ts` names
+    // `../shared/protocol` for the `HandoverBaseBand` key union (the band is decided engine-side and
+    // arrives on the snapshot; the copy table is keyed on the wire type so it is TOTAL), and `run.ts`
+    // names `../shared/avatarEmotion` for `PortraitEmotion`, the face `moodAt` returns. Both are
+    // type-only, both are `shared/`, and the claim under this list – that the prologue never names
+    // the world or the childhood – is unchanged and re-asserted below.
     expect(imports).toEqual({
       'cards.ts': ['../shared/protocol'],
-      'handover.ts': ['../engine/rng', '../shared/money'],
+      'handover.ts': ['../engine/rng', '../shared/money', '../shared/protocol'],
       'pool.ts': [
         '../engine/development',
         '../engine/match/types',
@@ -255,7 +261,7 @@ describe('⚠⚠ the pool may never enter world.cohort or any table', () => {
         '../engine/season/types',
         './cards',
       ],
-      'run.ts': ['../engine/economy', '../shared/protocol', './cards'],
+      'run.ts': ['../engine/economy', '../shared/avatarEmotion', '../shared/protocol', './cards'],
     })
     // Named as its own claim so the reason survives a future re-pin of the list above.
     for (const name of files) {

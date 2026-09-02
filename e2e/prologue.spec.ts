@@ -123,9 +123,14 @@ test('the nine cards run, the handover draws her, and going on starts the career
   const handover = page.getByRole('dialog')
   await expect(handover).toBeVisible()
 
-  // 1. THE FORMED ROSE, drawn by the shipped radar off a snapshot a real worker built – and it is
-  //    what tells this walk it has arrived: no card in the flow carries a picture.
-  await expect(handover.getByRole('img')).toBeVisible()
+  // 1. THE FORMED ROSE, drawn by the shipped radar off a snapshot a real worker built.
+  //    ⚠ IT IS NAMED, NOT COUNTED, SINCE PHASE 7 – and the reason is that the old note here («it is
+  //    what tells this walk it has arrived: no card in the flow carries a picture») stopped being
+  //    true the day every card grew a painting. The rose is a `role="img"` with an accessible name;
+  //    a card's hero is an `alt=""` decoration and carries no role at all, so this still addresses
+  //    exactly one thing – but it now says WHICH, instead of relying on there being only one image
+  //    in the whole flow.
+  await expect(handover.locator('svg.radar-svg')).toBeVisible()
 
   // 2. THE COACH'S READ. ⚠ THE BAND IS THE CAREER'S, so the spec cannot know which of his sentences
   //    it will be. What it can say is the thing §5 actually asks for: he speaks, and NO NUMBER
@@ -197,4 +202,83 @@ test('the nine cards run, the handover draws her, and going on starts the career
   ).toHaveCount(0)
 
   expect(crashes, 'the app threw while the prologue ran').toEqual([])
+})
+
+// =================================================================================================
+// ⭐⭐⭐ PHASE 7 – HOW TALL THE FIRST SCREEN OF THE GAME ACTUALLY IS
+// =================================================================================================
+//
+// THE OWNER, 02.09: «Это первое прикосновение к игре, оно должно быть "вау! интересно!"» – and what
+// the p6 identity slice left him was a form: her name, her family name, her birthday and a
+// twenty-four-country picker stacked above the three origin buttons.
+//
+// ⚠⚠ WHY THIS MEASUREMENT LIVES HERE AND NOT ONLY IN `tests/component/prologue-walk.test.ts`.
+// That file's instrument (`tests/component/fits.ts`) is a CSS-cascade model, because happy-dom does
+// no layout – and on this one card it over-counts by more than double, in two named ways: a
+// `<select>` is modelled by STACKING ITS OPTIONS (962px against a real 47px for the month/day pair)
+// and a `grid` is modelled as one column (523px against a real 190px for the nine-tile picker). Its
+// own header calls itself a floor that «UNDER-COUNTS AND NEVER OVER-COUNTS», and on those two
+// controls that is false. The model's number is still worth a ceiling – it is what runs on every
+// commit, and an over-count can only produce a false RED – but the number the owner is being asked
+// to judge should be the one a browser produces. This is that number.
+//
+// MEASURED, NOT GUESSED (the rule e2e/responsive.spec.ts states for its own ceiling). At 375x667 in
+// this Chromium: 1115px before phase 7, 997px after – and the 997 includes a 193px painting the
+// 1115 did not have, so the non-picture content fell from 1115 to 804. The ceiling below leaves
+// ~100px of headroom, which is two or three lines of the owner's own copy.
+//
+// ⚠ 375x667 AND NOT THE SUITE'S 576x1280, for the reason responsive.spec.ts drops to 375 too: the
+// round-20 #3 rule is written against the shortest screen the app supports, and a card measured on a
+// 1280px-tall viewport is not measured at all.
+test('⭐ the first card of the game is a picture and a scene, not a form', async ({ page }) => {
+  await page.setViewportSize({ width: 375, height: 667 })
+  await page.goto('/')
+  await page.getByRole('button', { name: 'Tap to start' }).click()
+
+  const card = page.locator('.prologue-card')
+  await expect(card).toBeVisible()
+
+  // 1. THE PAINTING IS THERE AND IT SPANS THE CARD. Full-bleed is the whole ask – «большой арт на
+  //    всю ширину экрана» – and it is the one thing a layout engine can confirm and a model cannot.
+  const hero = card.locator('.prologue-hero')
+  await expect(hero).toBeVisible()
+  const spans = await hero.evaluate((el) => {
+    const card = el.closest('.prologue-card') as HTMLElement
+    return {
+      heroWidth: Math.round(el.getBoundingClientRect().width),
+      // ⚠ THE PADDING BOX, NOT THE BORDER BOX – `clientWidth` – and the difference is the point of
+      // the note in style.css beside `.injury-stop-art`: «its art still spans exactly the padding
+      // box (scrollWidth === clientWidth, so `overflow-x` computing to `auto` alongside `overflow-y`
+      // clips nothing)». On this card `overflow-y: auto` is engaged, so a DESKTOP Chromium lays out
+      // a 15px classic scrollbar inside the border box; a phone's overlay scrollbar takes no width
+      // and the painting reaches glass to glass. Comparing against the border box would be asserting
+      // the test runner's scrollbar, which is the one thing on this screen no player has.
+      cardWidth: card.clientWidth,
+      heroHeight: Math.round(el.getBoundingClientRect().height),
+    }
+  })
+  expect(spans.heroWidth, 'the painting does not span the card`s padding box').toBe(spans.cardWidth)
+  expect(spans.heroHeight, 'the painting is a strip, not a hero').toBeGreaterThan(150)
+
+  // 2. ⭐ THE TWO NAMES SHARE A ROW – asserted HERE and nowhere else, because the mounted
+  //    instrument cannot see it: `fits.ts` has no grid and stacks a grid's cells in one column, so a
+  //    row and a column measure identically there. In a browser the row is worth 69px of the 118 this
+  //    card lost. Same top edge is the whole claim.
+  const names = await card.locator('#prologue-first, #prologue-last').evaluateAll((els) =>
+    els.map((e) => Math.round(e.getBoundingClientRect().top)),
+  )
+  expect(names.length, 'both name fields are on the card').toBe(2)
+  expect(names[0], 'the two names are stacked, not side by side').toBe(names[1])
+
+  // 3. AND THE CARD IS NOT A FORM ANY MORE.
+  const height = await card.evaluate((el) => el.scrollHeight)
+  expect(height, `the age-5 card is ${height}px of content on a 375x667 phone`).toBeLessThanOrEqual(1100)
+
+  // 4. ⚠ THE ROUND-20 #3 RULE, IN A REAL LAYOUT. The card is taller than the screen and always will
+  //    be; what must hold is that the player can reach the answers, which means the card scrolls and
+  //    the last control lands inside the viewport once it has.
+  const answers = card.locator('.prologue-answers')
+  await answers.scrollIntoViewIfNeeded()
+  const last = answers.getByRole('button').last()
+  await expect(last).toBeInViewport()
 })

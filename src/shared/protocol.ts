@@ -216,6 +216,7 @@ export type {
 
 // --- snapshot ------------------------------------------------------------------------------------
 export type {
+  HandoverBaseBand,
   HouseholdWeekly,
   Snapshot,
 } from './protocol/snapshot'

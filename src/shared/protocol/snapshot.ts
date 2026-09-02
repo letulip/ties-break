@@ -34,6 +34,18 @@ import type { CoachEdgePlacement, PlayerProfile, PracticeBooking, RecoveryBuff, 
  *  question the Money screen and the week recap already answer off `financeWeeks`.
  *
  *  ⚠ Derived at snapshot time; persists nothing, bumps no schema. */
+/** ⭐ WHERE SHE STANDS AGAINST HER OWN AGE GROUP AT THE HANDOVER, as one of three keys – the second
+ *  dimension of the coach's read (childhood prologue, phase 7). See `Snapshot.handoverBaseBand`.
+ *
+ *  ⚠ IT IS DECLARED HERE AND NOT BESIDE ITS DERIVATION, and the direction is invariant 1's: the
+ *  engine imports the protocol and never the other way round, so a wire type belongs to the protocol
+ *  even when only one engine function produces it – the same move `PrologueYear` made in phase 4.
+ *
+ *  ⚠ AND THEY ARE KEYS, NOT LABELS. Nothing renders these three strings; `src/prologue/handover.ts`
+ *  looks the coach's sentence up by them. A lowercase key cannot be mistaken for a sentence, which
+ *  is what keeps invariant 4 out of a snapshot field, and the union makes that copy table TOTAL. */
+export type HandoverBaseBand = 'behind' | 'level' | 'ahead'
+
 export interface HouseholdWeekly {
   /** everything that arrives in a week, in cents: `weeklyIncomeCents` (the parents' contribution,
    *  the savings interest, a kit retainer pro-rated and net of her cut) plus the shelf's weekly GAIN
@@ -418,6 +430,26 @@ export interface Snapshot {
    *  ⚠ DERIVED AT SNAPSHOT TIME, exactly like `coachRoomNote` and `radar`: it persists nothing, owes
    *  no migration and does not move `SAVE_SCHEMA_VERSION`. */
   handoverBand: string
+  /** ⭐⭐ THE HANDOVER'S OTHER READ – WHERE SHE STANDS TODAY, and it is empty on every week but the
+   *  first for exactly the reasons `handoverBand` above is (childhood prologue, phase 7).
+   *
+   *  ⚠⚠ THE TWO FIELDS SAY DIFFERENT THINGS AND ONLY ONE OF THEM MOVES WITH THE CHILDHOOD:
+   *
+   *      this one       = what you BUILT       her arrival, against today's fourteen-year-olds
+   *      `handoverBand` = what she was BORN with   the potential roll, which nine years cannot touch
+   *
+   *  So a neglected childhood and a devoted one from the SAME seed get different sentences here and
+   *  the same sentence there, which is the potential rule (§4) working rather than a bug in it.
+   *  `engine/world/coachMarket.ts`'s `handoverBaseBand` carries the reference distribution and the
+   *  measurement that fixed its two cuts.
+   *
+   *  ⚠ `''` FROM WEEK 1 ONWARDS. The reference is «a freshly created fourteen-year-old», so the
+   *  reading stops meaning anything the moment she starts training – and `world.skills`, which this
+   *  reads, is her arrival build only at week 0.
+   *
+   *  ⚠ DERIVED AT SNAPSHOT TIME: persists nothing, owes no migration, does not move
+   *  `SAVE_SCHEMA_VERSION`. */
+  handoverBaseBand: HandoverBaseBand | ''
   /** WHAT THE COACH'S EDGE IS WORTH HERE (docs/specs/coach-match-edge.md §4 and §7): the corridor of
    *  the rung she is on, and WHERE IN IT the man she actually has turned out to sit, once she has
    *  had him for a full season.

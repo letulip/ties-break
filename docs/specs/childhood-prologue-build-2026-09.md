@@ -266,6 +266,18 @@ real worker (`e2e/prologue.spec.ts` types a name and reads it back out of the se
 echoed); the wizard path unchanged; the age-5 card's way out inside a 375x667 viewport; every claim
 mutation-verified.
 
+**Phase 7 – the coach's read gains a second dimension, and the prologue gets its art. SHIPPED 02.09.**
+Two owner asks answered together. The read: «оставляем туман … вот ими надо добавить понимание про
+базу и перспективы» – a BASE band beside the room band, drawn deterministically, words only, no
+ceiling contour. The look: «по типу нашего home screen где большой арт на всю ширину экрана» – every
+card carries a painting that already ships, the face derived from the reads the card already
+computes, and the age-5 card's content measured down from 1115px to 997px in a real browser *with*
+the painting on it. *Acceptance, all measured*: a neglected childhood and a devoted one from the SAME
+seed get different base sentences and the same room sentence; every card renders its art and the
+age-5 card uses `welcome-1`; the mood is derived, not typed; every control reachable at 375x667. The
+cuts, the distribution, the height before and after and two findings recorded rather than fixed are
+in §8c.
+
 ⚠ **NOT IN v1, and named so nobody smuggles them in:** the motivation system (his, later); a
 difficulty menu (§2.4 replaces it); any change to `potential`; any change to the main cohort;
 the second and third «lекarstva» for a weak draw (a rising floor, and a capped career's own way to be
@@ -281,6 +293,53 @@ worth playing) – both are real, both are his to rule on, and neither is a prol
   («покажешь текст … исходя из нашего пула и тон-оф-войс общего»). It ships only with his word.
 
 ### 8a. The coach's read at the handover – drafted
+
+⭐⭐ **AND SINCE PHASE 7 HE SAYS TWO THINGS.** The owner, 02.09, answering his own ask that a player
+must come off this screen knowing «на сколько мощно сейчас (на момент 13-14) и какой запас впереди»:
+
+> «оставляем туман, у нас есть слова тренера – вот ими надо добавить понимание про **базу и
+> перспективы** как раз в дополнение к туману»
+
+    the BASE = WHAT YOU BUILT          where she stands against fourteen-year-olds TODAY
+    the ROOM = WHAT SHE WAS BORN WITH  how much was in her before anybody did anything
+
+⚠⚠ **AND THAT IS WHY ONE OF THEM ANSWERS THE CHILDHOOD AND THE OTHER CANNOT.** `handoverRoomBand`
+reads her BIRTH build on purpose (§4: the childhood may not move `potential`), so the room sentence
+is IDENTICAL for a neglected childhood and a devoted one from the same seed – measured, 100% of
+seeds. `handoverBaseBand` reads her ARRIVAL, so the base sentence moves with what the player did –
+40.9% of seeds between the cheapest and the dearest walk through the shipped card table. **Do not
+"fix" the room band to respond to the player.** The base band is where the nine years are answered.
+
+⚠ **NO CEILING CONTOUR ON THE ROSE. The fog stays** (§5, and the owner's own ruling). The potential
+is never drawn; this is words only, and neither sentence names a number or a ceiling.
+
+**The base, DRAFTED – none of it has been read by him**, and the three room bands below are
+untouched: the base goes FIRST and his approved sentence follows it, unchanged.
+
+**Ahead of her age group** (above p80 of today's fourteen-year-olds)
+- «She is ahead of most girls her age. Somebody did the work.»
+- «She is further along than the girls she will be playing.»
+
+**Among them** (p20 to p80 – 62% of them)
+- «She is where most girls her age are.»
+- «She is level with the girls she will be playing.»
+
+**Behind them** (below p20)
+- «She is behind most girls her age. That is the ground she starts from.»
+- «There is ground to make up on the girls her age.»
+
+**The two together, on one screen, from the same seed raised two ways:**
+
+    NEGLECTED   «She is behind most girls her age. That is the ground she starts from.»
+                «There is more in there. How much, I could not tell you yet.»
+
+    DEVOTED     «She is where most girls her age are.»
+                «There is more in there. How much, I could not tell you yet.»
+
+---
+
+### 8a-i. The room bands – §8a as it stood, and it is unchanged
+
 
 ⭐ IT USES THE VOCABULARY THE COACH ALREADY HAS. `coachMarket.ts:1120` already grades her remaining
 room in WORDS, not numbers: `Huge potential` / `Still room to grow` / `Close to her ceiling`. The
@@ -316,3 +375,119 @@ It reads «Your kid has real talent. With the right support, anything is possibl
 ⚠ TWO MORE LINES CARRY THE SAME FAULT and must move with it or the wizard contradicts itself:
 «Let's get to know your future champion.» and «Here's your champion in the making.» Both promise a
 champion.
+
+---
+
+## 8c. Phase 7, measured – the base band's cuts, and the height of the first screen
+
+Everything in this section is a measurement taken on this branch, not a prediction (invariant 5).
+
+### The reference: what a freshly created fourteen-year-old IS
+
+Re-measured at 20,000, 100,000 and 400,000 seeds; every quantile below is stable to the hundredth at
+all three sample sizes, so the cuts are not an artefact of a sample.
+
+    MEAN ATTRIBUTE OF A FRESH FOURTEEN-YEAR-OLD (400,000 seeds)
+      min 40.10   p05 44.30   p20 46.30   p50 48.50   p80 50.70   p95 52.70   max 57.30
+
+### The cuts: p20 and p80, i.e. 46.30 and 50.70
+
+**Why those and not another pair, in two steps that are both measurable.**
+
+1. **The middle band has to hold more than half of the population, because the copy says so.** «She
+   is where most girls her age are» is false if the middle third holds 37.6% – which is what the
+   tertiles measure – so the tertiles were rejected on the sentence, not on taste.
+2. **Inside the pairs that survive that test, take the one that moves the band most with the
+   childhood.** Same seed, `neglectedChildhood()` versus `devotedChildhood()`:
+
+   | cuts | middle band holds | the model's extremes move it | the CARD TABLE moves it |
+   | --- | --- | --- | --- |
+   | p05/p95 | 91.9% | 40.9% | 15.4% |
+   | p10/p90 | 81.6% | 60.0% | 25.7% |
+   | p15/p85 | 72.4% | 76.0% | 33.7% |
+   | **p20/p80** | **62.7%** | **89.9%** | **40.9%** |
+   | p25/p75 | 52.0% | 89.0% | 46.9% |
+   | tertiles | 34.9% | 82.5% | 53.9% – ⚠ and «most» is a lie |
+
+⭐ **AND THE PAIR LANDS AT 48.50 ± 2.20, WHICH IS ONE DEVOTED CHILDHOOD FROM THE MEDIAN.** Phase 1
+measured a devoted childhood at +2.188 and a neglected one at −2.093. That is not how the cuts were
+chosen – they are the reference's own quantiles – but it is *why* the band moves: doing the work
+carries the median girl across a cut and doing nothing leaves her where she was born.
+
+### The resulting distribution
+
+    over careers the prologue never touched:   behind 18.9%   level 61.8%   ahead 19.3%
+
+    per childhood, at these cuts (20,000 seeds each):
+                        below   among   ahead
+      the reference     19.3%   61.5%   19.2%
+      neglected         49.7%   46.1%    4.2%
+      median            19.4%   61.4%   19.2%
+      grinder           30.5%   57.5%   11.9%
+      mixed             12.1%   58.1%   29.8%
+      devoted            3.5%   47.5%   49.0%
+
+### ⚠⚠ Two findings recorded rather than fixed
+
+**1. THE SHIPPED CARD TABLE REACHES 44% OF THE MODEL'S SPAN.** Enumerating all 32 runs through
+`PROLOGUE_CARDS`: mean arrival 47.48 at the cheapest and 49.35 at the dearest – **1.87 points**,
+against the model's neglected↔devoted **4.28**. The cheapest run is also the lowest-arrival one, so
+money and build are perfectly aligned in the table today. That is why the base band moves on 40.9%
+of seeds for a real player and 89.9% between the model's extremes. **Widening what a card buys is a
+balance change and the owner's**; it is named here, not made.
+
+**2. THE FIT MODEL OVER-COUNTS THIS CARD BY MORE THAN DOUBLE, in two named ways.**
+`tests/component/fits.ts` calls itself a floor that «UNDER-COUNTS AND NEVER OVER-COUNTS». On the
+age-5 card that is false, because happy-dom does no layout:
+
+| control | the model | a real Chromium at 375x667 |
+| --- | --- | --- |
+| the month/day pair (`<select>` × 2) | 962px – it stacks the 42 `<option>`s | 47px |
+| the nine-tile picker (`display: grid`) | 523px – it stacks the cells in one column | 190px |
+| **the whole age-5 card** | **2301px** | **1115px** |
+
+An over-count can only produce a false RED, so the model is still safe to gate on and the ceiling in
+`prologue-walk.test.ts` is set against it. But the number the owner is asked to judge is the
+browser's, and `e2e/prologue.spec.ts` now asserts it. **Teaching `fits.ts` about `grid` and `<select>`
+was NOT done here** – it would move the numbers in every other dialog's test in the same commit as a
+height fix, which is exactly the confound this section exists to avoid.
+
+### The height, before and after
+
+| | model (`fits.ts`) | real Chromium at 375x667 |
+| --- | --- | --- |
+| before phase 7 | 2301px – 3.6 screens | 1115px – 1.76 screens |
+| after phase 7 | **1940px – 3.1 screens** | **997px – 1.57 screens** |
+
+⭐ **And the 997 includes a 193px painting the 1115 did not have**, so the content that is *not* the
+picture fell from 1115 to 804 – **−28%**. The identity block alone went from **561px to 253px**
+(−55%). What paid for it, in order of size:
+
+* **the country picker opens closed** (315px → 89px) – one tile, her own country, and the wizard's
+  own `Browse all countries` as the way in. Not one new string, and the picker's parts, views and
+  headings are untouched;
+* **the two names share a row** (138px → 69px);
+* nothing else was cut. The scene, the two read lines, the three origins and the way out are
+  unchanged, and so is every word on the card.
+
+### What the picture is, per card
+
+| card | painting | how the face is chosen |
+| --- | --- | --- |
+| age 5 | `welcome-1.webp` | none – ⭐ the owner's own instruction: «у нас есть картинка где она первый раз на корт приходит вообще» |
+| ages 6–10 | `fem-euro-brunnet-jun-*.webp` | `moodAt`: warm → `happy`, otherwise `norm` |
+| ages 11 | `fem-euro-brunnet-young-*.webp` | the same |
+| ages 12–13 | `fem-euro-brunnet-young-*.webp` | the twelfth's fork: `tired` → `tired`, `wants-more` → `serious` |
+
+⚠ **THE FACE IS DERIVED, NEVER TYPED.** `moodAt` (src/prologue/run.ts) reads the same counts
+`warmthAt` and `readTwelfth` read, so the picture cannot disagree with the sentence under it, and
+there is no `mood` column in `cards.ts` for anybody to keep in sync by hand –
+`tests/prologue-art.test.ts` asserts the table declares no face at all. The band boundary the art
+uses was set for this months ago (owner, 25.07: «young starts at 11 – the childhood prologue is
+coming, so the boundary is deliberately set where the prologue will need it»).
+
+⚠ **AND THE TEXT STAYS UNDER THE PICTURE.** The owner allowed either – «а текст под ним или частично
+на нем» – and `tests/component/contrast.ts` composites colours through the real cascade and cannot
+see a photograph, so a title moved onto the art would leave `assertLegible` measuring a background
+that is not behind it. Round-17 #3 is why that gate exists. The fade into `--panel` is what buys the
+same look without blinding it.

@@ -33,18 +33,41 @@ import '../../src/style.css'
 import { assertLegible } from './contrast'
 import { assertDismissReachable, measureDialog, setViewport, PHONE, NARROW_PHONE } from './fits'
 import PrologueHandover from '../../src/components/PrologueHandover.vue'
-import { COACH_READS, HANDOVER_COPY, coachReadFor, spentLine } from '../../src/prologue/handover'
+import { COACH_BASE_READS, COACH_READS, HANDOVER_COPY, coachBaseReadFor, coachReadFor, spentLine } from '../../src/prologue/handover'
 import { createWorld, toSnapshot } from '../../src/engine/world'
-import { handoverRoomBand } from '../../src/engine/world/coachMarket'
+import { handoverBaseBand, handoverRoomBand } from '../../src/engine/world/coachMarket'
 import { PROLOGUE_CARDS, TWELFTH_WANTS_MORE } from '../../src/prologue/cards'
-import { DEFAULT_PROFILE, type RadarAxis } from '../../src/shared/protocol'
+import { DEFAULT_PROFILE, type HandoverBaseBand, type RadarAxis } from '../../src/shared/protocol'
 
 /** A REAL career's rose, not a hand-built one: the axes the handover draws are exactly what the
  *  worker hands the screen after `newCareer`, fog and all. */
-function realCareer(seed: string): { axes: RadarAxis[]; band: string; read: string } {
+function realCareer(seed: string): {
+  axes: RadarAxis[]
+  band: string
+  read: string
+  baseBand: HandoverBaseBand | ''
+  base: string
+} {
   const world = createWorld(seed, DEFAULT_PROFILE, 'c')
   const snap = toSnapshot(world)
-  return { axes: snap.radar, band: snap.handoverBand, read: coachReadFor(snap.handoverBand, snap.seed) }
+  return {
+    axes: snap.radar,
+    band: snap.handoverBand,
+    read: coachReadFor(snap.handoverBand, snap.seed),
+    // ⭐ PHASE 7 – the OTHER half of the read, taken off the snapshot exactly as the container takes
+    // it. Leaving it out here would be the easy way to make this whole file lie: the screen the
+    // player meets carries two sentences and every height number below is only about that screen
+    // because this line is here.
+    baseBand: snap.handoverBaseBand,
+    base: coachBaseReadFor(snap.handoverBaseBand, snap.seed),
+  }
+}
+
+/** The ROOM sentence on the rendered card – the one WITHOUT the base's own class. Spelled once,
+ *  because `.handover-read-line` alone now matches two paragraphs and the first of them is the base:
+ *  a selector that used to mean «his read» would silently start meaning the other statement. */
+function roomLine(): string {
+  return document.querySelector('.handover-read-line:not(.handover-read-base)')!.textContent!.trim()
 }
 
 /** The seed whose fresh career draws the band this screen exists for (§5: «where a weak draw stops
@@ -63,7 +86,7 @@ function mountHandover(seed: string, spentCents: number, vp: { width: number; he
   const career = realCareer(seed)
   const wrapper = mount(PrologueHandover, {
     attachTo: document.body,
-    props: { axes: career.axes, read: career.read, spentCents },
+    props: { axes: career.axes, base: career.base, read: career.read, spentCents },
   })
   const el = document.querySelector('.handover-card')!
   const answers = document.querySelector('.handover-answers')!
@@ -134,7 +157,7 @@ describe('⭐⭐ the handover fits a 375x667 phone, with both controls on the sc
   it('every line clears AA against what is actually behind it', () => {
     const { wrapper } = mountHandover('hand-1', 18_175_00, PHONE)
     assertLegible(document.querySelector('.handover-title')!, 'the title')
-    assertLegible(document.querySelector('.handover-read-line')!, 'the coach')
+    for (const el of document.querySelectorAll('.handover-read-line')) assertLegible(el, 'the coach')
     assertLegible(document.querySelector('.handover-spent')!, 'the money')
     for (const el of document.querySelectorAll('.handover-answer')) assertLegible(el, 'a control')
     wrapper.unmount()
@@ -170,7 +193,7 @@ describe('⭐⭐ the three things on the screen (§5)', () => {
       const seed = seedForBand(band)
       const { wrapper, career } = mountHandover(seed, 18_175_00, PHONE)
       expect(career.band, seed).toBe(band)
-      const line = document.querySelector('.handover-read-line')!.textContent!.trim()
+      const line = roomLine()
       expect(COACH_READS[band], `${band}: ${line}`).toContain(line)
       expect(/\d|\$|%/.test(line), line).toBe(false)
       wrapper.unmount()
@@ -181,10 +204,56 @@ describe('⭐⭐ the three things on the screen (§5)', () => {
     // The whole reason §5 says this screen exists. The weak draw is told, in his voice, and the way
     // out is on the same screen.
     const { wrapper } = mountHandover(seedForBand('Close to her ceiling'), 28_150_00, PHONE)
-    const line = document.querySelector('.handover-read-line')!.textContent!.trim()
+    const line = roomLine()
     expect(COACH_READS['Close to her ceiling']).toContain(line)
     const controls = [...document.querySelectorAll('.handover-answer')].map((b) => b.textContent!.trim())
     expect(controls).toEqual([HANDOVER_COPY.goOn, HANDOVER_COPY.startAgain])
+    wrapper.unmount()
+  })
+
+  // =================================================================================================
+  // ⭐⭐⭐ PHASE 7 – AND HE SAYS TWO THINGS, IN THIS ORDER
+  // =================================================================================================
+  //
+  // ⚠⚠ MUTATION-VERIFIED: swapping the two paragraphs in the template reddens the order test;
+  // deleting the `v-if="base"` paragraph reddens both of the tests below; dropping `:base` from
+  // `ChildhoodPrologue.vue` reddens the container test in prologue-two-paths.test.ts.
+  it('⭐⭐ the BASE comes first and the ROOM follows – what you built, then what she was born with', () => {
+    const { wrapper, career } = mountHandover('hand-1', 18_175_00, PHONE)
+    const lines = [...document.querySelectorAll('.handover-read-line')].map((e) => e.textContent!.trim())
+    expect(lines.length, 'the coach says two things now').toBe(2)
+    expect(lines[0], 'the base is first').toBe(career.base)
+    expect(lines[1], 'his own approved line follows it').toBe(career.read)
+    expect(COACH_BASE_READS[career.baseBand as 'behind' | 'level' | 'ahead']).toContain(lines[0])
+    expect(COACH_READS[career.band]).toContain(lines[1])
+    // ⚠ ONE LABEL FOR BOTH. A second label would be a new sentence on a screen whose every word is a
+    // draft the owner has not approved.
+    expect(document.querySelectorAll('.handover-read-label').length).toBe(1)
+    wrapper.unmount()
+  })
+
+  it('⭐ all three base bands reach the screen, and none of them carries a number', () => {
+    const seen = new Set<string>()
+    for (let i = 0; i < 60 && seen.size < 3; i++) {
+      const seed = `base-screen-${i}`
+      const band = handoverBaseBand(createWorld(seed, DEFAULT_PROFILE, 'c'))
+      if (seen.has(band)) continue
+      seen.add(band)
+      const { wrapper } = mountHandover(seed, 18_175_00, PHONE)
+      const line = document.querySelector('.handover-read-base')!.textContent!.trim()
+      expect(COACH_BASE_READS[band], `${band}: ${line}`).toContain(line)
+      expect(/\d|\$|%/.test(line), line).toBe(false)
+      wrapper.unmount()
+    }
+    expect(seen, 'all three bands are reachable on a fresh career').toEqual(new Set(['behind', 'level', 'ahead']))
+  })
+
+  it('⚠ two sentences still leave both controls on a 375x667 phone', () => {
+    // The round-20 #3 rule, re-run against the card as it is NOW: adding an honest sentence is
+    // exactly how a dialog grows past a phone, and this screen is the one with nothing behind it.
+    const { wrapper, el, answers } = mountHandover('hand-1', 28_150_00, PHONE)
+    expect(document.querySelectorAll('.handover-read-line').length).toBe(2)
+    assertDismissReachable(el, answers, PHONE, 'the handover with both sentences')
     wrapper.unmount()
   })
 

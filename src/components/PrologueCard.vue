@@ -22,10 +22,44 @@
 // when nothing follows it.
 //
 // THE ORDER ON THE CARD, and it is the argument of §"what a card shows about her" in cards.ts: the
-// scene, then what you can SEE of her (whether she is enjoying it, and what the person teaching her
-// makes of it), then the answers. No number about her appears anywhere on this screen at any age.
-// The formed rose is the HANDOVER's payload (§5) and phase 4's to spend.
+// picture, the scene, then what you can SEE of her (whether she is enjoying it, and what the person
+// teaching her makes of it), then the answers. No number about her appears anywhere on this screen
+// at any age. The formed rose is the HANDOVER's payload (§5) and phase 4's to spend.
+//
+// =================================================================================================
+// ⭐⭐⭐ THE PICTURE (phase 7) – «по типу нашего home screen где большой арт на всю ширину экрана»
+// =================================================================================================
+//
+// WHAT WAS REUSED, because the owner asked for the pattern the game already has rather than a second
+// one, and both halves of it were already shipped:
+//
+//   * ⭐ THE FULL-BLEED MECHANICS ARE `.injury-stop-art`'s, VERBATIM – `width: calc(100% + 32px)`
+//     against the shared card's own 16px padding, `margin: -16px -16px …`, `object-fit: cover`, and
+//     the top corners rounded to the card's. That is the ONE surface in this app that already puts a
+//     painting across the full width of a `.dialog-card`, and style.css's round-20 #3 note cites it
+//     by name as the proof the height cap costs a full-bleed child nothing («its art still spans
+//     exactly the padding box, scrollWidth === clientWidth, so `overflow-x` computing to `auto`
+//     alongside `overflow-y` clips nothing»). Reusing it is why this needs no overflow trick.
+//   * ⭐ THE FADE INTO THE PAGE IS `.diary-hero-fade`'s IDEA – Home's own words for it: it «takes
+//     the photograph into --panel by 100%, which is what makes the picture read as the page itself
+//     rather than as a banner sitting on top of it». Here it ends in `--panel` because the card is
+//     `--panel`, so the picture has no bottom edge and the kicker reads as if it were on the frame.
+//
+// ⚠ WHAT WAS NOT REUSED, AND WHY. Home lays its HEADER on the painting (`.diary-head`, the date and
+// two icons over `.diary-hero-top`). The owner allowed either – «а текст под ним или частично на
+// нем» – and the text stays UNDER the picture here, deliberately: `tests/component/contrast.ts`
+// composites colours through the real cascade and cannot see a photograph, so a title moved onto the
+// art would leave `assertLegible` measuring a background that is not behind it. Round-17 #3 is why
+// that gate exists (four buttons at a measured 1.09:1 on a dialog the player could not dismiss), and
+// «text over an image» is precisely the shape it goes blind to. The fade is what buys the same look
+// without blinding it.
+//
+// ⚠ THE MOOD IS DERIVED AND ARRIVES AS A PROP. `moodAt` (src/prologue/run.ts) reads the SAME counts
+// the two read lines read, so the picture cannot disagree with the sentence under it, and there is
+// no `mood` column in the card table for anybody to keep in sync by hand.
 import { computed, ref, useTemplateRef } from 'vue'
+import { facePoint } from '../art/faceRects'
+import { prologueArtStem, prologueArtUrl } from '../art/prologue'
 import { useDialogFocus } from '../composables/dialogFocus'
 import { COUNTRIES, COUNTRY_NAMES, POPULAR_COUNTRIES, flagEmoji } from '../composables/countries'
 // ⚠⚠ THE THREE FIELDS ARE THE WIZARD'S AND SO ARE THEIR WORDS. Not one label, placeholder or
@@ -34,6 +68,7 @@ import { COUNTRIES, COUNTRY_NAMES, POPULAR_COUNTRIES, flagEmoji } from '../compo
 // declared twice is a string that can drift in one copy. See that module's header.
 import { IDENTITY_COPY, MONTHS } from '../composables/identityCopy'
 import { daysInBirthMonth } from '../shared/dates'
+import type { PortraitEmotion } from '../shared/avatarEmotion'
 import type { PrologueCard, PrologueOption } from '../prologue/cards'
 import type { PrologueIdentity } from '../prologue/identity'
 import type { Warmth } from '../prologue/run'
@@ -42,6 +77,11 @@ const props = defineProps<{
   card: PrologueCard
   /** which arm of `her` / `coach` this run has earned – see `warmthAt` */
   warmth: Warmth
+  /** ⭐ WHICH FACE THE YEAR WEARS – DERIVED by `moodAt` off the same counts `warmth` is, and passed
+   *  in by the container for the same reason `warmth` is: this component reads a run no more than it
+   *  writes copy. It is not optional, because a card with no picture is the thing phase 7 exists to
+   *  stop shipping. */
+  mood: PortraitEmotion
   /** the twelfth's derived reasons, empty on every other card */
   reasons?: readonly string[]
   /** ⭐ WHO SHE IS – present only while the card that asks is up (`card.identity`), and owned by the
@@ -98,17 +138,46 @@ function setMonth(month: number): void {
 }
 
 // --- the country picker, the wizard's own three views of one list --------------------------------
+//
+// ⭐⭐ PHASE 7 ADDS A FOURTH STATE AND IT IS THE CLOSED ONE. The three views are the wizard's and are
+// untouched – Popular / Results / All countries, over the same list, with the same headings and the
+// same `Browse all countries` control. What is new is that none of them is on screen until the
+// player asks, because the age-5 card is the first screen of the game and the field arrives already
+// filled in (`OPENING_IDENTITY`). Closed, it is one tile: the country she is from.
+//
+// ⚠ NOT ONE NEW STRING. The discloser is `IDENTITY_COPY.browseAll`, which already existed and
+// already meant this; the closed tile's name is `COUNTRY_NAMES[code]`, which the picker already
+// renders. Inventing a «Change country» label would be inventing copy the owner has not seen, on a
+// surface whose every word is the wizard's (invariant 4).
 const query = ref('')
 const browsingAll = ref(false)
 const searching = computed(() => query.value.trim().length > 0)
+/** Is the picker OPEN? Either way in counts – typing, or the browse control. */
+const pickingCountry = computed(() => searching.value || browsingAll.value)
 const matches = computed(() => {
   const q = query.value.trim().toLowerCase()
   return COUNTRIES.filter((c) => (COUNTRY_NAMES[c] ?? c).toLowerCase().includes(q) || c.toLowerCase() === q)
 })
-const tiles = computed(() => (searching.value ? matches.value : browsingAll.value ? COUNTRIES : POPULAR_COUNTRIES))
+const tiles = computed(() => {
+  if (searching.value) return matches.value
+  if (browsingAll.value) return COUNTRIES
+  // ⚠ THE CLOSED VIEW SHOWS THE CHOSEN COUNTRY AND NOT `POPULAR_COUNTRIES[0]`: it has to be what the
+  // career will actually be started with, or the card would be showing one flag and building
+  // another. `identity` is only absent on the eight cards that do not ask.
+  return props.identity ? [props.identity.country] : POPULAR_COUNTRIES
+})
 const tilesLabel = computed(() =>
   searching.value ? IDENTITY_COPY.results : browsingAll.value ? IDENTITY_COPY.allCountries : IDENTITY_COPY.popular,
 )
+
+/** Taking a country ANSWERS the question, so it also closes the picker – the same shape the wizard's
+ *  step 3 has, where choosing a tile is what makes Next available. A player who wants a different one
+ *  opens it again; a player who wanted this one is not left looking at twenty-four more. */
+function chooseCountry(code: string): void {
+  setField('country', code)
+  query.value = ''
+  browsingAll.value = false
+}
 
 /** ⭐ ONE LIST, THREE KINDS OF CARD. An origin card, a decision card and a quiet card all render the
  *  same column of controls, so nothing below branches on which card it is drawing and a card that
@@ -122,6 +191,15 @@ const controls = computed<{ id: string | null; label: string; note: string }[]>(
 
 const her = computed(() => props.card.her[props.warmth])
 const coach = computed(() => props.card.coach[props.warmth])
+
+// --- the picture ----------------------------------------------------------------------------------
+const artUrl = computed(() => prologueArtUrl(props.card.age, props.mood))
+/** Framed off the ONE face table, exactly as the Home hero and the injury popup are – so the crop
+ *  window and the 256px avatar crops can never disagree about where she is in the frame. */
+const artStyle = computed(() => {
+  const p = facePoint(prologueArtStem(props.card.age, props.mood))
+  return { objectPosition: `${p.x}% ${p.y}%` }
+})
 
 // ⚠ NAMED `cardEl` AND NOT `card`: `<script setup>` exposes both the props and the locals to the
 // template, and a local called `card` SHADOWS the `card` prop – the whole screen renders off `null`
@@ -142,6 +220,17 @@ useDialogFocus(cardEl)
       aria-labelledby="prologue-kicker prologue-title"
       tabindex="-1"
     >
+      <!-- ⭐⭐ THE PICTURE, FULL WIDTH, FIRST. `alt=""` because it is decorative in the strict
+           sense: it shows what the kicker, the title and the two read lines under it already say,
+           and a screen reader that announced the painting would say the year twice. The card names
+           itself off those two headings (`aria-labelledby`), which is unchanged. -->
+      <div class="prologue-hero">
+        <img class="prologue-hero-img" :src="artUrl" :style="artStyle" alt="" />
+        <!-- The scrim that takes the picture into the card, so it has no bottom edge – Home's own
+             `.diary-hero-fade`, ending in this surface's colour instead of the page's. -->
+        <div class="prologue-hero-fade"></div>
+      </div>
+
       <p id="prologue-kicker" class="prologue-kicker">{{ card.kicker }}</p>
       <h2 id="prologue-title" class="prologue-title">{{ card.title }}</h2>
       <p class="prologue-lede">{{ card.lede }}</p>
@@ -164,30 +253,36 @@ useDialogFocus(cardEl)
            stay the card's last element or the fit measurement reads the way out off the wrong
            edge - the same rule the skip control's own note states below. -->
       <div v-if="card.identity && identity" class="prologue-identity">
-        <div class="prologue-field">
-          <label class="prologue-label" for="prologue-first">{{ IDENTITY_COPY.firstName }}</label>
-          <input
-            id="prologue-first"
-            class="prologue-input"
-            type="text"
-            :value="identity.kidName"
-            :placeholder="IDENTITY_COPY.firstName"
-            autocomplete="off"
-            @input="setField('kidName', ($event.target as HTMLInputElement).value)"
-          />
-        </div>
+        <!-- ⭐ PHASE 7 – THE TWO NAMES SHARE A ROW. They are one question asked twice («what is she
+             called»), each field holds one short word, and stacking them cost a whole row of a card
+             that was 3.6 model-screens tall. The labels, the placeholders and the ids are unchanged;
+             this is the row they sit in, nothing else. -->
+        <div class="prologue-names">
+          <div class="prologue-field">
+            <label class="prologue-label" for="prologue-first">{{ IDENTITY_COPY.firstName }}</label>
+            <input
+              id="prologue-first"
+              class="prologue-input"
+              type="text"
+              :value="identity.kidName"
+              :placeholder="IDENTITY_COPY.firstName"
+              autocomplete="off"
+              @input="setField('kidName', ($event.target as HTMLInputElement).value)"
+            />
+          </div>
 
-        <div class="prologue-field">
-          <label class="prologue-label" for="prologue-last">{{ IDENTITY_COPY.lastName }}</label>
-          <input
-            id="prologue-last"
-            class="prologue-input"
-            type="text"
-            :value="identity.kidLastName"
-            :placeholder="IDENTITY_COPY.lastName"
-            autocomplete="off"
-            @input="setField('kidLastName', ($event.target as HTMLInputElement).value)"
-          />
+          <div class="prologue-field">
+            <label class="prologue-label" for="prologue-last">{{ IDENTITY_COPY.lastName }}</label>
+            <input
+              id="prologue-last"
+              class="prologue-input"
+              type="text"
+              :value="identity.kidLastName"
+              :placeholder="IDENTITY_COPY.lastName"
+              autocomplete="off"
+              @input="setField('kidLastName', ($event.target as HTMLInputElement).value)"
+            />
+          </div>
         </div>
 
         <!-- ONE LABEL FOR THE PAIR, which is the owner's own call on this field (30.07): it is a
@@ -216,10 +311,22 @@ useDialogFocus(cardEl)
           </div>
         </div>
 
-        <!-- HER COUNTRY - the wizard's picker, not a second one: a search over all 24, nine popular
-             tiles as the shortcut into that same list, and a way to open the rest. -->
+        <!-- HER COUNTRY - the wizard's picker, not a second one: a search over all 24, tiles as the
+             shortcut into that same list, and a way to open the rest.
+
+             ⭐⭐ PHASE 7 – IT OPENS CLOSED, AND THAT IS THE ONE CHANGE. The picker's PARTS are
+             untouched: the same search field, the same tiles, the same three view headings, the same
+             `Browse all countries` control, and not one new string. What changed is which of them is
+             on screen before the player asks. Measured in a real Chromium at 375x667, the expanded
+             picker was 315px of a 1115px card - nine tiles the player scrolls past to reach the
+             three origins, on the FIRST screen of the game, to re-pick a value that is already
+             filled in. Closed it is her country and the way in.
+
+             ⚠ THE SEARCH IS WHAT OPENS IT TOO, so a player who types never meets the shortcut: the
+             wizard's own affordance is the primary one there and stays the primary one here. -->
         <div class="prologue-field">
           <input
+            v-if="pickingCountry"
             v-model="query"
             class="prologue-input"
             type="text"
@@ -227,8 +334,8 @@ useDialogFocus(cardEl)
             :aria-label="IDENTITY_COPY.searchLabel"
             autocomplete="off"
           />
-          <p class="prologue-tiles-label">{{ tilesLabel }}</p>
-          <div class="prologue-tiles">
+          <p v-if="pickingCountry" class="prologue-tiles-label">{{ tilesLabel }}</p>
+          <div class="prologue-tiles" :class="{ 'is-one': !pickingCountry }">
             <button
               v-for="code in tiles"
               :key="code"
@@ -236,7 +343,7 @@ useDialogFocus(cardEl)
               :class="{ 'is-on': identity.country === code }"
               type="button"
               :aria-pressed="identity.country === code"
-              @click="setField('country', code)"
+              @click="chooseCountry(code)"
             >
               <span class="prologue-flag">{{ flagEmoji(code) }}</span>
               <span class="prologue-tile-name">{{ COUNTRY_NAMES[code] }}</span>
@@ -304,6 +411,53 @@ useDialogFocus(cardEl)
   text-align: left;
 }
 
+/* ══ THE PICTURE (phase 7) ══
+   ⭐ FULL-BLEED THE WAY `.injury-stop-art` ALREADY IS – the one shipped painting on a `.dialog-card`,
+   and style.css's own round-20 #3 note names it as the proof this costs nothing: «its art still
+   spans exactly the padding box (scrollWidth === clientWidth, so `overflow-x` computing to `auto`
+   alongside `overflow-y` clips nothing)». `calc(100% + 32px)` is the shared card's 16px padding
+   cancelled on both sides, and the negative margins put it back over that padding.
+
+   ⚠⚠ THE HEIGHT IS DECLARED IN PIXELS AND THAT IS NOT COSMETIC – it is what makes the round-20 #3
+   measurement honest, and `PrologueHandover.vue`'s rose carries the same argument at length.
+   `tests/component/fits.ts` reads an explicit `height` off a box and falls back to STACKING THE
+   CHILDREN when there is none; an `aspect-ratio` is invisible to it, because happy-dom does no
+   layout. So a hero declared by ratio would measure as ZERO and every fit number on the walk would
+   be optimistic by a quarter of a screen. `.injury-stop-art` declares `height: 168px` for the same
+   reason and this follows it.
+
+   ⚠ 193px IS 16:9 OF THE CARD'S OWN WIDTH AT THE REFERENCE PHONE. At 375x667 the overlay leaves
+   343px, and 343 / (16/9) = 193 – the same ratio `.finance-art` already draws at, and the closest
+   thing this app has to «большой арт на всю ширину экрана» that still leaves a 375px screen showing
+   the scene and the first answer. Fixed rather than fluid so the measurement can see it; `cover`
+   plus the face steering handles the 288px card a 320px phone gets. */
+.prologue-hero {
+  position: relative;
+  width: calc(100% + 32px);
+  height: 193px;
+  margin: -16px -16px 12px;
+  overflow: hidden;
+  border-radius: var(--radius-panel) var(--radius-panel) 0 0;
+}
+
+.prologue-hero-img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Home's `.diary-hero-fade`, ending in THIS surface's colour rather than the page's: «it takes the
+   photograph into --panel by 100%, which is what makes the picture read as the page itself rather
+   than as a banner sitting on top of it». `--panel` is what `.dialog-card` is painted, so the
+   picture has no bottom edge and the kicker under it reads as part of the frame. */
+.prologue-hero-fade {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(180deg, rgba(9, 14, 19, 0) 52%, rgba(11, 17, 23, 0.55) 82%, var(--panel) 100%);
+}
+
 .prologue-kicker {
   margin: 0 0 4px;
   font-size: 11px;
@@ -369,6 +523,20 @@ useDialogFocus(cardEl)
   margin: 0 0 14px;
 }
 
+/* ⭐ THE TWO NAMES IN ONE ROW (phase 7). Even columns, unlike `.prologue-birthday`'s 1.5fr/1fr: a
+   first name and a surname are the same KIND of thing and neither is systematically longer, so
+   there is no longest-label to size off. `min-width: 0` on the fields is what stops a long
+   placeholder from pushing the row wider than the card. */
+.prologue-names {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.prologue-names .prologue-field {
+  min-width: 0;
+}
+
 .prologue-label {
   display: block;
   margin-bottom: 6px;
@@ -431,6 +599,25 @@ useDialogFocus(cardEl)
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 8px;
+}
+
+/* ⭐ THE CLOSED VIEW – one tile, laid along the row rather than as a third of a grid. It is the same
+   control with the same tokens; only the axis changes, so a country that is chosen looks like a
+   chosen country and not like a lone cell of a table with two holes in it. */
+.prologue-tiles.is-one {
+  grid-template-columns: 1fr;
+}
+
+.prologue-tiles.is-one .prologue-tile {
+  flex-direction: row;
+  justify-content: flex-start;
+  gap: 10px;
+  padding: 11px 13px;
+}
+
+.prologue-tiles.is-one .prologue-tile-name {
+  font-size: 15px;
+  text-align: left;
 }
 
 .prologue-tile {

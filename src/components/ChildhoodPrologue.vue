@@ -33,12 +33,13 @@ import PrologueCard from './PrologueCard.vue'
 import PrologueHandover from './PrologueHandover.vue'
 import { useGameStore } from '../stores/game'
 import { CARD_AGES } from '../prologue/cards'
-import { coachReadFor, WALK_COPY } from '../prologue/handover'
+import { coachBaseReadFor, coachReadFor, WALK_COPY } from '../prologue/handover'
 import {
   EMPTY_RUN,
   cardFor,
   chosenYears,
   isComplete,
+  moodAt,
   readTwelfth,
   spentCents,
   warmthAt,
@@ -69,6 +70,10 @@ const handoverOpen = ref(false)
 
 const card = computed(() => cardFor(CARD_AGES[at.value], run.value))
 const warmth = computed(() => warmthAt(card.value.age, run.value))
+/** ⭐ WHICH FACE THE YEAR WEARS – phase 7, and it is DERIVED off the same counts `warmth` is
+ *  (`moodAt`). Computed here for the same reason `warmth` is: the card draws a row it is handed and
+ *  reads no run of its own. There is no `mood` column in the table for anybody to keep in sync. */
+const mood = computed(() => moodAt(card.value.age, run.value))
 const reasons = computed(() => (card.value.age === 12 ? readTwelfth(run.value).reasons : undefined))
 /** ⚠ THE FIRST CARD ONLY – see `WALK_COPY.skip`. */
 const skipLabel = computed(() => (at.value === 0 ? WALK_COPY.skip : undefined))
@@ -80,6 +85,17 @@ const skipLabel = computed(() => (at.value === 0 ? WALK_COPY.skip : undefined))
  *  could start drawing. */
 const coachRead = computed(() =>
   game.snapshot ? coachReadFor(game.snapshot.handoverBand, game.snapshot.seed) : '',
+)
+
+/** ⭐⭐ AND WHERE SHE STANDS TODAY – the second half of the read (phase 7), looked up exactly as the
+ *  first is: the ENGINE decided the band at snapshot time (`handoverBaseBand`) and this screen looks
+ *  a sentence up by the key it returned. No share, no percentile and no comparison is computed here.
+ *
+ *  ⚠ THE TWO BANDS ARE NOT THE SAME READING AND MUST NOT BE COLLAPSED INTO ONE. `handoverBand` reads
+ *  what she was BORN with, which the childhood cannot move; this one reads what the nine years
+ *  BUILT, which is the only place the player's own choices are answered. See handover.ts's header. */
+const coachBase = computed(() =>
+  game.snapshot ? coachBaseReadFor(game.snapshot.handoverBaseBand, game.snapshot.seed) : '',
 )
 
 /** ⭐ ONE ANSWER, WHATEVER KIND OF CARD IT WAS. An origin, a decision and a quiet year all arrive
@@ -144,6 +160,7 @@ async function startAgain(): Promise<void> {
   <PrologueHandover
     v-if="handoverOpen && game.snapshot"
     :axes="game.snapshot.radar"
+    :base="coachBase"
     :read="coachRead"
     :spent-cents="spentCents(run)"
     :busy="game.busy"
@@ -154,6 +171,7 @@ async function startAgain(): Promise<void> {
     v-else
     :card="card"
     :warmth="warmth"
+    :mood="mood"
     :reasons="reasons"
     :identity="identity"
     :skip-label="skipLabel"

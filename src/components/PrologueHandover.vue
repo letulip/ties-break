@@ -37,6 +37,12 @@ import type { RadarAxis } from '../shared/protocol'
 const props = defineProps<{
   /** the rose she arrives with – the snapshot's own axes, drawn by the shipped component */
   axes: readonly RadarAxis[]
+  /** ⭐ WHERE SHE STANDS TODAY, already chosen for her band – see `coachBaseReadFor`. It is the
+   *  BASE and it is what the nine years BUILT; `read` below is the ROOM and it is what she was born
+   *  with. Two props rather than one joined string, so the screen can space them as two sentences
+   *  and a test can name which of the two moved. Empty renders nothing – the same total-by-omission
+   *  handling the money line has. */
+  base?: string
   /** his sentence, already chosen for her band – see `coachReadFor` */
   read: string
   /** what the nine years cost, in cents (house law: money is in cents everywhere) */
@@ -81,10 +87,22 @@ useDialogFocus(cardEl)
         <SkillsRadar :axes="axes" :title="copy.roseTitle" />
       </div>
 
-      <!-- 2. THE COACH'S READ. No name and no pronoun on the label - R15-7: every professional is
-           unnamed, and the person who taught her for nine years was never given a gender. -->
+      <!-- 2. THE COACH'S READ, AND SINCE PHASE 7 IT IS TWO SENTENCES UNDER ONE LABEL. No name and no
+           pronoun on the label - R15-7: every professional is unnamed, and the person who taught her
+           for nine years was never given a gender.
+
+           ⭐⭐ THE ORDER IS THE ARGUMENT AND IT IS NOT INTERCHANGEABLE. The BASE goes first - where
+           she stands today, which is what the player just spent nine cards building - and the ROOM
+           follows, which is what she was born with and what no childhood can move. Read the other
+           way round the screen would open on a verdict about her ceiling and then footnote the
+           player's own nine years; read this way it says what you made, and then what she came
+           with. `src/prologue/handover.ts` carries the whole of that distinction.
+
+           ⚠ ONE LABEL FOR BOTH, because both are his and a second label would be a new sentence on
+           a screen whose every word is a draft the owner has not approved. -->
       <div class="handover-read">
         <p class="handover-read-label">{{ copy.coachLabel }}</p>
+        <p v-if="base" class="handover-read-line handover-read-base">{{ base }}</p>
         <p class="handover-read-line">{{ read }}</p>
       </div>
 
@@ -178,6 +196,15 @@ useDialogFocus(cardEl)
   font-size: 15px;
   line-height: 1.45;
   color: var(--ink-2);
+}
+
+/* ⭐ THE BASE SENTENCE SITS ABOVE THE ROOM SENTENCE AND READS AS THE SAME VOICE, so it takes the
+   same rule and adds only the gap. Not one step quieter and not one step louder: they are two
+   statements the coach makes about the same girl, and marking one of them as the important one
+   would be the screen deciding which the parent should care about. Same reasoning, and the same
+   absence of a positional selector, as `.handover-answer`. */
+.handover-read-base {
+  margin-bottom: 6px;
 }
 
 .handover-spent {

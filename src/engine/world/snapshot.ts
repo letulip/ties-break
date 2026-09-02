@@ -100,7 +100,7 @@ import { arrivalStatus, entryStatus, layoffCovering, tierVerdict } from './medic
 import { eventById, vacationForWeek } from './bookings'
 import { kidMatchPlayerFor } from './player'
 import type { MatchPlayer } from '../match/types'
-import { coachBilling, coachEdgeView, coachEntryLine, coachLadderNote, coachMarket, coachRoomNote, coachTravelsWithHer, handoverRoomBand } from './coachMarket'
+import { coachBilling, coachEdgeView, coachEntryLine, coachLadderNote, coachMarket, coachRoomNote, coachTravelsWithHer, handoverBaseBand, handoverRoomBand } from './coachMarket'
 import { masseurRoomNote, masseurRungOf, masseurUnlocked, masseurWeeklyCents } from './masseur'
 import { kitDealView, kitLineViews } from './kit'
 import { shopView } from './shop'
@@ -1613,6 +1613,11 @@ export function toSnapshot(world: WorldState, stopReasons?: StopReason[]): Snaps
     // ⚠ WEEK 0 ONLY – see the field's own note. The handover is the one screen that reads it and it
     // exists for one week; a career past its first tick must not carry a reading of her true ceiling.
     handoverBand: world.week === 0 ? handoverRoomBand(world) : '',
+    // ⚠ WEEK 0 ONLY, AND FOR A SECOND REASON ON TOP OF THE FIRST. `handoverBaseBand` reads
+    // `world.skills` against the distribution a FRESHLY CREATED fourteen-year-old is drawn from, and
+    // `world.skills` is that arrival build only until the first tick moves it – so past week 0 the
+    // field would be comparing a seventeen-year-old with a reference that stopped applying.
+    handoverBaseBand: world.week === 0 ? handoverBaseBand(world) : '',
     coachEdge: coachEdgeView(world),
     kidRank: world.kidRank,
     prevKidRank: world.prevKidRank,

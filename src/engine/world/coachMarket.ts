@@ -16,7 +16,7 @@ import { ECONOMY } from '../economy'
 import type { LadderTrack, SeasonEvent, TierId } from '../season/types'
 import { ageFactor, SKILL_KEYS, trainFactor } from '../development'
 import { LADDER_LABEL, LADDER_TRACKS } from '../../shared/protocol'
-import type { CoachEdgePlacement, CoachMarketRow, CoachTier, HouseholdWeekly, KitOfferTerms, PlayerProfile } from '../../shared/protocol'
+import type { CoachEdgePlacement, CoachMarketRow, CoachTier, HandoverBaseBand, HouseholdWeekly, KitOfferTerms, PlayerProfile } from '../../shared/protocol'
 import { managerCommissionCents, parentIncomeForWeekCents } from '../economy'
 import { activeKitDeal, kitTravelShare } from '../offers'
 // ⭐ ROUND-21 #2: the ONE fare definition, read rather than re-derived - see `coachTravelFareFor`,
@@ -1157,6 +1157,120 @@ export function handoverRoomBand(world: WorldState): string {
   // Index 2 is the most room and index 0 the least, which is `ROOM_BANDS` read from the bottom –
   // the ladder there is ordered most-room-first and this is the same three strings, not a copy.
   return ROOM_BANDS[2 - Math.min(2, Math.floor(t * 3))].label
+}
+
+// =================================================================================================
+// ⭐⭐⭐ THE HANDOVER'S SECOND DIMENSION – WHERE SHE STANDS TODAY (childhood prologue, phase 7)
+// =================================================================================================
+//
+// THE OWNER, 02.09: «оставляем туман, у нас есть слова тренера – вот ими надо добавить понимание про
+// базу и перспективы как раз в дополнение к туману», answering his own ask that a player must
+// understand «на сколько мощно сейчас (на момент 13-14) и какой запас впереди».
+//
+// ⭐⭐ SO THERE ARE TWO BANDS AND THEY ANSWER DIFFERENT QUESTIONS, AND THE DIFFERENCE IS THE POINT:
+//
+//     the BASE = what you BUILT        `handoverBaseBand` – her arrival, against her age group
+//     the ROOM = what she was BORN with `handoverRoomBand` – the potential roll, above
+//
+// ⚠⚠ WHICH IS WHY THE ROOM BAND DOES NOT RESPOND TO THE CHILDHOOD AND THIS ONE DOES. That asymmetry
+// reads like a bug to every new reader and it is the design: `handoverRoomBand` re-derives her BIRTH
+// build on purpose (its own note records the measurement – reading her arrival moves the band on
+// 23.9% of seeds and moves it DOWNWARD for the girl whose parents did everything), so nine good
+// years cannot buy potential. They buy a fourteen-year-old who is further along, which is exactly
+// what this band reads. ⚠ Do not "fix" the room band to respond to the player; the second sentence
+// is where the player's nine years are answered.
+//
+// ⚠ NO CEILING CONTOUR AND NO SECOND NUMBER. §5's rule is unchanged – the potential is never drawn
+// and the coach never names a ceiling – and this band names no ceiling either: it is a statement
+// about TODAY, against girls the same age, and it is spoken in the same three-band vocabulary with
+// no digit in it (`src/prologue/handover.ts` holds the sentences and the test sweeps them).
+//
+// ⭐ THE REFERENCE IS MEASURED, NOT PICKED (invariant 5). `docs/specs/childhood-growth-2026-09.md`
+// §4a measured what a freshly created fourteen-year-old is TODAY on the mean attribute, and phase 7
+// re-measured the same distribution at 20k, 100k and 400k seeds to fix these two cuts. Every figure
+// below is that measurement:
+//
+//     THE FRESH-FOURTEEN DISTRIBUTION (mean of the five attributes, 400,000 seeds)
+//       min 40.10   p05 44.30   p20 46.30   p50 48.50   p80 50.70   p95 52.70   max 57.30
+//
+//   * THE CUTS ARE p20 AND p80, and they are stable to the hundredth at all three sample sizes:
+//     19.00% of fourteen-year-olds are below 46.30 and 19.00% are above 50.70, so the three bands
+//     hold 19 / 62 / 19 of the reference population.
+//   * ⭐ WHY THOSE TWO QUANTILES AND NOT ANOTHER PAIR, and the answer is a MEASUREMENT plus a
+//     sentence. The sentences this band licenses (see `COACH_BASE_READS`) say «where most girls her
+//     age are» and «ahead of most girls her age», so the middle band has to hold MORE THAN HALF of
+//     the reference or the copy is simply false – which is what killed the tertiles (measured: the
+//     middle third holds 37.6%, and «most» would have been a lie). Inside the pairs that survive
+//     that test, p20/p80 is the one that moves the band MOST with the childhood: same seed,
+//     neglected childhood versus devoted, the band changes on 89.9% of seeds (p25/p75: 89.0%,
+//     p15/p85: 76.0%, p10/p90: 60.0%, p05/p95: 40.9%).
+//   * ⚠⚠ AND THE NUMBER A PLAYER ACTUALLY GETS IS 40.9%, NOT 89.9%. `neglectedChildhood()` and
+//     `devotedChildhood()` are the MODEL's extremes and span 4.28 points; enumerating all 32 runs
+//     through the SHIPPED CARD TABLE gives a span of 1.87 (mean arrival 47.48 at the cheapest,
+//     49.35 at the dearest – and the cheapest run is also the lowest-arrival one, so money and build
+//     are perfectly aligned in the table today). Over that reachable span the band moves on 40.9% of
+//     seeds at these cuts, against 46.9% at p25/p75 and 53.9% at the tertiles – and both of those buy
+//     the extra movement by making «where most girls her age are» false or nearly so. Two careers in
+//     five hearing a different sentence for what the player did is the trade this pair takes.
+//     ⚠ That the cards reach only 44% of the model's span is a BALANCE question about what a card
+//     buys, and it is the owner's; it is recorded in the build spec's §8c, not fixed here.
+//   * ⚠ AND THE PAIR LANDS AT 48.50 ± 2.20, WHICH IS ONE DEVOTED CHILDHOOD FROM THE MEDIAN. Phase 1
+//     measured a devoted childhood at +2.188 and a neglected one at −2.093 (growth spec §4), so the
+//     distance from the middle of her age group to either cut is almost exactly what the nine years
+//     are worth. That is not how the cuts were chosen – they are the reference's own quantiles – but
+//     it is WHY the band moves: doing the work carries the median girl across a cut, and doing
+//     nothing leaves her where she was born.
+//
+// THE MEASURED SHARES, per childhood, at these cuts (20,000 seeds each):
+//
+//                     below   among   ahead
+//     the reference   19.3%   61.5%   19.2%
+//     neglected       49.7%   46.1%    4.2%
+//     median          19.4%   61.4%   19.2%
+//     grinder         30.5%   57.5%   11.9%
+//     mixed           12.1%   58.1%   29.8%
+//     devoted          3.5%   47.5%   49.0%
+//
+// ⚠ THE BIRTH MONTH IS IN THIS NUMBER TOO, AND IT IS NOT NOISE. `withHeadStart` is applied before
+// the childhood, so a January girl arrives about 2.2 points above a December girl of the same seed
+// and the band moves on 43.4% of seeds between them. That is the relative-age effect the game
+// already models, and it belongs in a reading of where she stands against her age group TODAY –
+// which is precisely the quantity that washes out later, while the potential never does. It is
+// recorded here so nobody reads a moved band as proof the childhood moved it.
+//
+// Pure, zero draws, derived at snapshot time – exactly like `handoverRoomBand` above.
+
+/** ⭐ THE FRESH-FOURTEEN CUTS, in mean-attribute points. See the measurement above. */
+export const HANDOVER_BASE_CUTS = { below: 46.3, ahead: 50.7 } as const
+
+// ⚠ THE THREE KEYS LIVE IN `shared/protocol/snapshot.ts` (`HandoverBaseBand`) rather than here,
+// which is the one place this deliberately differs from `handoverRoomBand`. That function returns
+// `ROOM_BANDS[i].label` because those three strings are the COACH MARKET's own player-facing
+// vocabulary and predate the handover by months – reusing them invents nothing. There is no shipped
+// vocabulary for «where she stands against her age group», so this returns KEYS, not labels: a
+// lowercase key cannot be mistaken for a sentence, which keeps invariant 4 out of a snapshot field,
+// and the union makes the copy table in `src/prologue/handover.ts` TOTAL – there is no fallback band
+// to get wrong. It is declared in the protocol because it crosses the wire and the engine imports
+// the protocol, never the reverse.
+
+/** Her arrival build against today's fourteen-year-olds.
+ *
+ *  ⚠ IT READS `world.skills`, WHICH AT WEEK 0 IS THE ARRIVAL – the head-started birth build with the
+ *  childhood's nine years folded in (`createWorld`, phase 4), or exactly the head-started birth build
+ *  when there was no prologue. That is the whole difference from `handoverRoomBand`, which re-derives
+ *  the birth build so the childhood cannot reach it. ⚠ The snapshot only carries this at week 0
+ *  (`world/snapshot.ts`), because from week 1 `world.skills` is her CURRENT build and a "fresh
+ *  fourteen-year-old" reference stops meaning anything.
+ *
+ *  ⚠ A TIE READS AS `level`. A mean landing exactly on a cut is the boring answer, and the boring
+ *  answer is the right one to give about a child. */
+export function handoverBaseBand(world: WorldState): HandoverBaseBand {
+  let level = 0
+  for (const k of SKILL_KEYS) level += world.skills[k]
+  level /= SKILL_KEYS.length
+  if (level < HANDOVER_BASE_CUTS.below) return 'behind'
+  if (level > HANDOVER_BASE_CUTS.ahead) return 'ahead'
+  return 'level'
 }
 
 /** THE FOUR BANDS, cheapest headroom last, in the owner's own vocabulary.

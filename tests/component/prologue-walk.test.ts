@@ -28,13 +28,15 @@ import { createPinia, setActivePinia } from 'pinia'
 // every measurement below is vacuous – the same reason tour-briefing.test.ts imports it.
 import '../../src/style.css'
 import { assertLegible } from './contrast'
-import { assertDismissReachable, measureDialog, setViewport, PHONE, NARROW_PHONE } from './fits'
+import { assertDismissReachable, boxOf, measureDialog, setViewport, PHONE, NARROW_PHONE } from './fits'
 import PrologueCardView from '../../src/components/PrologueCard.vue'
+import { prologueArtUrl } from '../../src/art/prologue'
 import { PROLOGUE_CARDS, TWELFTH_WANTS_MORE, type PrologueCard } from '../../src/prologue/cards'
 import { OPENING_IDENTITY } from '../../src/prologue/identity'
 import {
   EMPTY_RUN,
   cardFor,
+  moodAt,
   readTwelfth,
   warmthAt,
   withOrigin,
@@ -56,6 +58,10 @@ function mountCard(card: PrologueCard, run: PrologueRun, vp: { width: number; he
     props: {
       card,
       warmth: warmthAt(card.age, run),
+      // ⭐ PHASE 7 – THE PICTURE, and it is passed exactly where the container passes it. `mood` is
+      // required on the component precisely so a mount that forgot it cannot compile: a card with no
+      // painting is a quarter of a screen of height this file would otherwise never measure.
+      mood: moodAt(card.age, run),
       reasons: card.age === 12 ? readTwelfth(run).reasons : undefined,
       // ⚠⚠ THE IDENTITY IS PASSED EXACTLY WHERE THE CONTAINER PASSES IT, and leaving it out was the
       // easy way to make this whole file lie. `ChildhoodPrologue.vue` hands the prop to every card
@@ -173,7 +179,9 @@ describe('⭐⭐ nine cards on a 375x667 phone, and the way on is on every one o
   it('⚠ the age-5 card still hands the player its answers, with the identity on it', () => {
     const { wrapper, el, answers } = mountCard(PROLOGUE_CARDS[0], EMPTY_RUN, PHONE)
     expect(document.querySelector('.prologue-identity'), 'the identity is on the five').toBeTruthy()
-    expect(document.querySelectorAll('.prologue-tile').length, 'the nine popular tiles').toBe(9)
+    // ⭐ PHASE 7 – THE PICKER OPENS CLOSED, so what is on the card is her country and the way in.
+    expect(document.querySelectorAll('.prologue-tile').length, 'closed, it is one country').toBe(1)
+    expect(document.querySelector('.prologue-browse'), 'and the wizard\'s own way into the list').toBeTruthy()
     const fit = assertDismissReachable(el, answers, PHONE, 'age 5 with the identity')
     // eslint-disable-next-line no-console
     console.log(
@@ -182,6 +190,87 @@ describe('⭐⭐ nine cards on a 375x667 phone, and the way on is on every one o
         `${(fit.contentFloor / fit.available.height).toFixed(1)} screens of scroll\n`,
     )
     wrapper.unmount()
+  })
+
+  // ⭐⭐⭐ AND IT CAME DOWN, WHICH IS A CEILING AND NOT A PRINTOUT (phase 7).
+  //
+  // THE OWNER, 02.09: «Это первое прикосновение к игре, оно должно быть "вау! интересно!"» – and
+  // what he met instead was a form. The card the p6 identity slice left behind measured 2301px of
+  // content against 635px of room on this instrument, 3.6 screens of scroll before the three origins.
+  //
+  // ⚠⚠ THE INSTRUMENT OVER-COUNTS THIS PARTICULAR CARD AND THE NUMBER IS STILL THE ONE TO ASSERT ON.
+  // `fits.ts` documents itself as a FLOOR that «UNDER-COUNTS AND NEVER OVER-COUNTS», and on two of
+  // this card's controls that is false, because happy-dom does no layout: a `<select>` stacks its
+  // OPTIONS (the month/day pair modelled at 962px against a real 47px) and a `grid` stacks its cells
+  // in one column (the nine-tile picker at 523px against a real 190px). Measured against a real
+  // headless Chromium at 375x667 the same card was 1115px, not 2301. Both numbers are recorded in
+  // docs/specs/childhood-prologue-build-2026-09.md §8c; the ceiling here is on the MODEL because it
+  // is the model that runs on every commit, and the browser's own number is asserted in
+  // e2e/prologue.spec.ts where a real layout exists to measure.
+  //
+  // ⚠ THE CEILING IS MEASURED, NOT GUESSED – the same rule e2e/responsive.spec.ts states for its
+  // own. This build measures 1940px; 2100 leaves ~160px of headroom, which is a sentence or two of
+  // the owner's own copy, and is still 200px under what the card cost before phase 7.
+  // MUTATION-VERIFIED: reopening the country picker (`tiles` returning POPULAR_COUNTRIES when
+  // closed) reddens this and the tile count above.
+  // ⚠ AND ONE THING THIS INSTRUMENT CANNOT SEE, SAID PLAINLY RATHER THAN CLAIMED: putting the two
+  // name fields back in a column (`.prologue-names` set to `display: block`) does NOT redden it.
+  // The model has no grid – it stacks a grid's cells in one column – so a row and a column measure
+  // identically here, even though the browser saves 69px. That half is asserted where a layout
+  // exists to see it, in e2e/prologue.spec.ts.
+  it('⭐ and the age-5 card is SHORTER than the form phase 6 left, painting included', () => {
+    const { wrapper, el, answers } = mountCard(PROLOGUE_CARDS[0], EMPTY_RUN, PHONE)
+    const fit = measureDialog(el, answers, PHONE)
+    expect(
+      fit.contentFloor,
+      'the age-5 card has grown back past the form it was cut down from',
+    ).toBeLessThanOrEqual(2100)
+    // ⚠ AND THE COUNTRY FIELD IS THE PART THAT MOVED, asserted on its own so a future card that
+    // grew somewhere ELSE cannot hide under the total. It was 631px on this instrument with the
+    // nine tiles open; closed it is one tile and the way in.
+    const country = [...document.querySelectorAll('.prologue-identity .prologue-field')].at(-1)!
+    expect(country.querySelector('.prologue-tiles'), 'the last identity field is the country').toBeTruthy()
+    expect(boxOf(country, 307).h, 'the country picker is open on the card again').toBeLessThanOrEqual(150)
+    wrapper.unmount()
+  })
+
+  // ⭐⭐⭐ EVERY CARD CARRIES ITS PAINTING (phase 7), and the height is DECLARED so this instrument
+  // can see it. `fits.ts` reads an explicit `height` off a box and falls back to stacking the
+  // children when there is none; an `<img>` has no children, so a hero sized by `aspect-ratio` would
+  // measure as ZERO and every fit number in this file would be optimistic by a quarter of a screen
+  // while staying green. `PrologueHandover.vue`'s rose carries the same argument for the same
+  // reason. MUTATION-VERIFIED: dropping `height` from `.prologue-hero` reddens this.
+  it('⭐ every card is drawn on a painting, and the painting has a height the measurement can see', () => {
+    for (const { card, run } of walk(CARRIED_ROAD, 'middle')) {
+      const { wrapper } = mountCard(card, run, PHONE)
+      const hero = document.querySelector('.prologue-hero')!
+      expect(hero, `age ${card.age} has no picture`).toBeTruthy()
+      const img = hero.querySelector('img')!
+      expect(img.getAttribute('src'), `age ${card.age} draws the wrong frame`).toBe(
+        prologueArtUrl(card.age, moodAt(card.age, run)),
+      )
+      expect(boxOf(hero, 343).h, `age ${card.age}'s picture measures as nothing`).toBeGreaterThan(150)
+      wrapper.unmount()
+    }
+  })
+
+  // ⭐ THE OWNER'S OWN INSTRUCTION FOR THE FIRST CARD: «для этого у нас есть картинка где она первый
+  // раз на корт приходит вообще» – `welcome-1`, the parent and the daughter arriving on a floodlit
+  // court, and it is the one card in the walk that is not a portrait of her alone.
+  it('⭐ the age-5 card is the one she first walks onto a court on', () => {
+    const { wrapper } = mountCard(PROLOGUE_CARDS[0], EMPTY_RUN, PHONE)
+    const src = document.querySelector('.prologue-hero img')!.getAttribute('src')!
+    expect(src, 'the five is not the welcome painting').toContain('welcome-1')
+    // ...and no other card is.
+    wrapper.unmount()
+    for (const { card, run } of walk(CARRIED_ROAD, 'middle').slice(1)) {
+      const w = mountCard(card, run, PHONE)
+      expect(
+        document.querySelector('.prologue-hero img')!.getAttribute('src'),
+        `age ${card.age} borrowed the welcome painting`,
+      ).not.toContain('welcome-1')
+      w.wrapper.unmount()
+    }
   })
 
   // ⚠ THE CONTENT-INDEPENDENT HALF, STATED ONCE ON ITS OWN. Everything above is true of TODAY'S
