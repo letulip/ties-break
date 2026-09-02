@@ -149,8 +149,13 @@ test('the nine cards run, the handover draws her, and going on starts the career
   expect(figures.length, `a number on this screen is not the money: ${figures.join(' | ')}`).toBe(2)
   // ...and the second IS the first divided by the nine years, to the dollar – so the pair cannot
   // drift into being two unrelated numbers on the one screen §2.4 allows a figure on at all.
-  const total = Number(figures[0].replace(/,/g, ''))
-  const weekly = Number(figures[1].replace(/,/g, ''))
+  // ⚠ `figures` is asserted to hold exactly two entries one line up, but TypeScript cannot carry that
+  // across an index – `noUncheckedIndexedAccess` types both as `string | undefined`. The assertion
+  // above is the guard; these two lines only have to survive the compiler, so they name the same
+  // fact again rather than reaching for `!`.
+  const [totalText = '', weeklyText = ''] = figures
+  const total = Number(totalText.replace(/,/g, ''))
+  const weekly = Number(weeklyText.replace(/,/g, ''))
   expect(weekly, `${total} a childhood is not ${weekly} a week`).toBe(Math.round(Math.round((total * 100) / (9 * 52)) / 100))
 
   // 3. THE HONEST CHOICE – two controls, and the game says NOTHING about rerolling, odds or a floor
