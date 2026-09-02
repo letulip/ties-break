@@ -312,8 +312,62 @@ for and would otherwise have no line.
 
 - [ ] **15. «Сумма дохода на savings меняется вниз если деньги вывести. Мне кажется она не должна
   меняться, просто новое поступление будет меньше»** — **reproduce**, then build.
+  — `[x]` **REPRODUCED, THEN SHIPPED. IT IS AN AMOUNT, NOT A RATE, AND HE IS EXACTLY RIGHT.**
+
+  **THE REPRODUCTION** (`tools/r34-savings-income.ts` – $100,000 opened, held ten years through the
+  real engine, then half taken out with the real `sellAsset`). The card carries three numbers that
+  could be read as «доход», and the walk prints all three so the numbers say which one he saw:
+
+  | what the card says | before the withdrawal | after |
+  | --- | --- | --- |
+  | «Gains about 3% a season» (`annualRatePct`) | 3% | 3% – a RATE, and it did not move |
+  | «Brings in $N a week right now» (`incomeCents`) | $0 | $0 – zero on a deposit by design |
+  | **«+$36,626 since they bought it (37%)»** (`changeCents`) | **$36,626** | **$18,313** |
+
+  So it is the lifetime-gain AMOUNT, and it was being recomputed from the balance that REMAINS:
+  `changeCents = valueCents − paidCents`, and a part sale scales both by the same fraction. The
+  family was not poorer – the $68,313 was in the wallet – but the card answered «what is the gain on
+  what is still held» to a sentence that asks «what has this earned».
+
+  **THE FIX.** `sellAsset` already computes both halves of the part that leaves for its own ledger
+  sentence (`deltaCents` = the realised gain, `costSoldCents` = what it cost). They are now kept on
+  the row (`realisedGainCents`, `realisedCostCents`), and the card reads
+  `valueCents − paidCents + realised`. The same walk now prints **$36,626 → $36,626, moved by $0**.
+  ⚠ The PERCENTAGE needed the second field or the fix would have moved the number he did not
+  complain about: `paidCents` is the cost of what is still held, so a lifetime gain over it alone
+  would have jumped 37% → 73% on the same withdrawal. Over lifetime cost it holds at 37%.
+
+  ⭐ **HIS SECOND CLAUSE NEEDED NOTHING** – «просто новое поступление будет меньше» is what the
+  engine already does. The tool prints the halved balance accruing **$41** in the week after the
+  withdrawal, and it is now PINNED rather than left as an observation: an arm asserts the week's
+  accrual falls after a part sale, and that doubling it returns the full-balance week's figure.
+
+  ⚠ **NOT A SCHEMA MOVE, ON THIS REPO'S OWN RULE** (`gearRestWeeks?`, `shootClashAccepted?`,
+  `WorldEvent.entryRef`): both fields are optional and ABSENT means exactly what every save written
+  before today means – no realised gain recorded – so an in-flight career reads the figure it read
+  yesterday, to the cent, and starts remembering from its next withdrawal. Asserted rather than
+  assumed, in its own arm.
+
+  Evidence: `tests/round34-savings-income.test.ts` (6 arms: the reproduction as an assertion, the
+  percentage, the realised+unrealised identity, a realised LOSS staying realised, backwards
+  compatibility, and his second clause) + a mounted arm in
+  `tests/component/round34-money-shelf.test.ts` that the SENTENCE on the card does not move.
+  ⚠ Four-mutation ledger in the test header; the four verdicts differ from one another, which is
+  what says the arms measure different things. `tests/round29p2-part-sale.test.ts`'s identity was
+  **re-aimed, not loosened** – it read «the unrealised half and nothing else», which is the defect –
+  and gained a non-vacuity arm so it cannot pass by both sides being zero.
 
 - [ ] **16. «Business пододвинуть к Invest в магазине»** — **build**, ordering only.
+  — `[x]` **SHIPPED.** `SHELF_TAB_OPTIONS` in `MoneyScreen.vue` now reads Invest / **Business** /
+  Cars / Property / Water / Air. Only the ORDER moved: every label, title and the tab-to-family map
+  are untouched (invariant 4 – he asked for a position, not a word), and `SHOP_FAMILIES` is
+  deliberately NOT reordered with it, because that array is the order INSIDE a tab (it is what puts
+  the brand above the academy under Business) and nothing on screen reads it across tabs.
+  Evidence: two mounted arms in `tests/component/round34-money-shelf.test.ts` – the rendered pills
+  put Business at `indexOf('Invest') + 1`, and pressing the moved segment still opens
+  `The business` + `Her academy`, so an order change that quietly repointed a tab is caught too.
+  `tests/component/shelf.ts`'s `SHELF_TAB_LABELS` re-aimed with a ⚠ note; `round30-subtabs.test.ts`
+  reads that constant and still fails the moment the screen and it disagree.
 
 - [ ] **17. «89 место доход опустился с 200 до 65 долларов в неделю с бизнеса… Она доходит в Шлеме
   до QF и вообще стабильно в 100 держится, плюс есть мощные рекламные контракты… мне кажется нам
@@ -323,12 +377,113 @@ for and would otherwise have no line.
 
 - [ ] **18. «В магазине те пункты, которые во владении находятся давай цветом выделять рамку жёлтую,
   как с тренером делали»** — **build**.
+  — `[x]` **SHIPPED, AND IT IS LITERALLY THE COACH'S FRAME.** «как с тренером делали» is the half
+  that decided the implementation: he is naming round-21 #11, so `.shop-row.is-owned` carries
+  `.cm-row.current`'s own three declarations – `rgba(var(--accent-rgb), .07)` behind it,
+  `border-color: var(--accent)`, and the `box-shadow: 0 0 0 1px var(--accent)` ring that makes it
+  read as a FRAME rather than a hairline. One `--accent`, not a second convention: move the token
+  and the coach she has and the things they own move together. ⚠ An outer shadow paints outside the
+  border box, so a framed card and an unframed one still line up in the feed – round-21 #11's own
+  reasoning, reused rather than rediscovered.
+  ⚠ The predicate is the CARD'S OWN (`row.valueCents !== null`), which is already what decides
+  whether the card draws its owned half or its shop window – so a rung can never be framed and
+  priced at the same time, and there is no second definition of «owned» to keep in step.
+  ⚠ No word, price or control moved with it.
+  Evidence: three mounted arms in `tests/component/round34-money-shelf.test.ts`, one of which reads
+  the shipped `.cm-row.current` through the real cascade and compares all three values, and one of
+  which walks all six segments to assert **framed on screen == owned in the engine**. Mutation
+  ledger in the header: deleting the CSS reddens the paint arm alone, and widening the predicate to
+  `true` reddens all three for three different reasons – a frame that means nothing is caught as
+  loudly as a frame that is missing.
 
 - [ ] **19. «для индексного фонда давай график нарисуем с точками его стоимости за пай с
   возможностью выбрать промежуток… 6 месяцев, 1 год, 2 года, 5 лет. Мы же сможем хранить по одной
   цифре за месяц средней»** — **build**, and ⚠ storing a monthly figure is a schema move.
+  — `[x]` **SHIPPED – AND ⚠⚠ IT IS NOT A SCHEMA MOVE AFTER ALL. NOTHING IS STORED, AND THE TRIAGE
+  LINE ABOVE IS WRONG. THIS NEEDS THE OWNER'S EYE.**
+
+  **WHY.** `unitPriceCents(seed, week, item)` is a PURE function – its own header says «Pure: no
+  world, no MAIN draw, no clock» – because `world/market.ts` was built on one load-bearing idea:
+  «**THE MARKET EXISTS WHETHER OR NOT SHE BUYS** … a path drawn from the career's seed alone, READ
+  at the weeks a holding spans rather than DRAWN when one is opened». So **every past week's price
+  is computable from the seed**, and the monthly series he offered to store is derivable. His
+  sentence «мы же сможем хранить» was answering an objection about COST; on this engine the chart is
+  cheaper than that.
+
+  **WHAT DERIVING IT BUYS, and the first one is what decided it:**
+  * ⭐ **HIS OWN LIVE CAREER OPENS ON A FULL CHART.** Vera is at week 569. A stored series starts
+    EMPTY, so he would have opened the new screen on an empty box and waited five years for the
+    feature he asked for. Derived, all sixty months are there the moment he loads. Pinned in a test
+    at his own week.
+  * The chart cannot disagree with the card above it – both ask `unitPriceCents`. A recorded series
+    is a second source of truth for a number the engine already computes, which `world/shop.ts`
+    itself calls «a screen and a valuation disagreeing, this repo's most-repeated defect».
+  * No migration is spent. Migrations are append-only FOREVER (CLAUDE.md item 3), so a schema
+    version added for data nothing reads is a permanent cost for no benefit.
+
+  ⚠ **THE ONE THING STORAGE WOULD HAVE BOUGHT** is a record of what the player SAW if the market
+  model is ever re-tuned. `world/market.ts` has already ruled on that – «Nothing persists any of it,
+  so this is a debugging convenience rather than a compatibility promise» – and a re-tune already
+  rewrites what a holding is worth today (`revalueAssets` re-prices `units × price(week)` every
+  tick), so a frozen chart beside a re-priced holding would BE the disagreement, not the protection.
+  ⭐ **If he wants the series recorded anyway, that is one field and a migration and I will build
+  it – but it should be his call, not a default.**
+
+  **WHAT SHIPPED.** `unitPriceHistory(seed, week, item, months)` in `engine/world/assets.ts`: one
+  averaged figure per **real calendar month** (`shared/dates.ts`'s own months, so the chart's axis
+  and every other date on screen read one calendar), oldest first, rounded once at the engine
+  boundary. Twelve months a season, so five years is **60 points** – the number his own sentence
+  arrives at. On the card: the polyline, one dot a month («с точками»), a low–high span and the two
+  end months, and his four windows as a picker – `6 months / 1 year / 2 years / 5 years`, the
+  numbers in `SHOP_PRICE_RANGE_MONTHS` so the picker and the engine's series length cannot disagree.
+  ⚠ The predicate is `ShopItem.volBps` – does this rung ride the market – so the fund he named has a
+  chart, the deposit's dead-flat exponential does not (a line with nothing to read, on a card he did
+  not mention), and a wilder fund added tomorrow gets one because of what it IS.
+
+  ⚠ **A CAREER TOO YOUNG FOR A LINE GETS AN HONEST SENTENCE, NEVER A BACK-FILL.** `marketWave` is
+  happily defined for negative weeks, so the real failure mode of a derived series is inventing
+  history the family did not live; the walk stops at week 0. A career in its first month has one
+  point and the card says «One month of prices so far – the chart starts next month.»
+
+  ⚠ **COST, MEASURED RATHER THAN ASSUMED**, because `shopView` runs on every `toSnapshot`: the
+  60-month series is **0.28 ms** and is the whole of `shopView`'s move from 0.03 ms to 0.30 ms. The
+  walk is bounded by the ANSWER's size (~4.34 weeks a month, ~260 iterations) and not by the
+  career's length, so a thirty-season career costs what a two-season one does. Suite A/B on the same
+  machine, same shard: `bulk` **110s before, 112s after** – inside the run-to-run noise.
+
+  Evidence: `tests/round34-fund-chart.test.ts` (10 arms – the four windows, real calendar months,
+  the month's mean, determinism, retroactivity at his own week 569, nothing behind week 0, the short
+  young series, and the `volBps` predicate) + six mounted arms in
+  `tests/component/round34-money-shelf.test.ts`, **one per range button** (6/12/24/60 dots), the
+  honest short-career line, no chart on the rungs that do not ride the market, and a `fits.ts`
+  assertion that the four range controls fit a 375x667 phone. Mutation ledgers in both headers, and
+  one entry is recorded because it changed NOTHING: the `Math.max(0, …)` clamp in `unitPriceHistory`
+  is belt and braces, since the walk's own `w >= 0` conditions are the real floor.
+  ⚠ `tests/week-numbering.test.ts`'s R11-6 guard – «no surface prints a raw absolute week» – caught
+  the chart's time axis and was **re-aimed, not loosened**: `monthLabel(` joins the five shared
+  formatters already on its allow-list, for the reason the list exists (it prints «Jan '31», never an
+  integer), and every other spelling is still refused.
+  ⚠ `npm run e2e:fixtures` re-run: byte-identical, no diff – this item stores nothing, so no fixture
+  could move. ⚠ `SAVE_SCHEMA_VERSION` is untouched at 69, and no other bundle moved it either.
 
 - [ ] **20. «Кнопки put more in, sell it в разделе invest давай в одну строку с инпутами»** — **build**.
+  — `[x]` **SHIPPED, AND MEASURED AGAINST A PHONE.** A `.shop-stake-row` wrapper puts each control
+  beside the field it acts on – «Add more, from $X» with **Put more in**, and «Take out how much…»
+  with **Sell it for $X**. Nothing else moved: both keep their sentence, their `disabled` predicate,
+  their command and their `v-if`. ⚠ The sell wrapper is drawn UNCONDITIONALLY so the control stays a
+  single element rather than two copies behind opposite `v-if`s – a car has no amount to type and
+  comes out of the row exactly as the bare button did, which is its own arm.
+  ⚠ **ROUND-20 #3 IS THE HALF THAT NEEDED WORK.** `fits.ts` could only measure a `position: fixed`
+  bar, so it gained `availableWidth` / `rowItemWidth` / `assertInlineRowFits` – the same arithmetic
+  read against a room WALKED down the real ancestor chain, and reading a control's declared `width`
+  (a form field carries no text, so the old `demandedWidth` scored `.shop-stake-input` as its
+  padding). Measured at 375x667: the sell row on a $1,000,000 holding demands **285px of a 349px
+  line**, so it really is one row on his phone. `flex-wrap` plus `white-space: nowrap` is what a
+  bigger figure spends – a line inside the card, never the edge of the screen.
+  Evidence: three mounted arms in `tests/component/round34-money-shelf.test.ts`. ⚠ The mutation that
+  matters: widening `.shop-stake-input` from 8.5em to 30em with the STRUCTURE untouched reddens the
+  375x667 arm and nothing else in the file – which is what says the row was measured against a phone
+  and not against a desktop.
 
 - [ ] **21. «С массажистом она выздоровела быстрее после травмы, а с турнира была снята тем не менее
   и теперь на турнир не зайти, надо учитывать наличие массажиста при автоматической отмене
