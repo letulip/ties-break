@@ -144,6 +144,39 @@ for and would otherwise have no line.
 
 - [ ] **4. «На плашке next tournament, family budget для названия турнира и денег используй
   пожалуйста шрифт Sora»** — **build**, copy/type only.
+  — `[x]` **SHIPPED – AND ONE OF THE TWO WAS ALREADY DONE, WHICH IS WHY A THIRD ELEMENT MOVED.**
+
+  **MEASURED FIRST**, through the real cascade on a mounted 375x667 Home (`getComputedStyle`, never
+  a grep for the string «Sora» in a stylesheet – the two disagree, see below):
+
+  | what he sees | before | after |
+  | --- | --- | --- |
+  | `.note-title` – the tournament NAME on the next-tournament plate | Manrope | **Sora** |
+  | `.note-figure` – `Travel budget / $117`, same plate | Manrope | **Sora** |
+  | `.budget-total` – the balance on Family budget | **already Sora** (since 29.07) | Sora, now pinned |
+
+  ⭐ **THE FINDING, AND IT DECIDED THE BUILD.** The money on Family budget has carried
+  `--font-heading` since the U0 port on 29.07, so under the narrow reading of his sentence half of
+  this item was a no-op on the day it was filed. The only money on either of the two plates he named
+  that was NOT Sora is the travel figure under the tournament – so that is the one that moved, and
+  his sentence stops being half a no-op. ⚠ **If he meant only the family-budget total, deleting one
+  line at `.note-figure` in `HomeScreen.vue` puts it back** – the note sits on the rule.
+
+  ⚠ REUSED, NOT REINVENTED. All three ask for `var(--font-heading)` – the token declared once in
+  `src/style.css` beside the single `@font-face`. No second loader and no open-coded stack, and that
+  is asserted as an EQUALITY against the token's own computed value, so an element carrying its own
+  copy of the family would fail the arm.
+
+  ⚠ TYPE ONLY (invariant 4). No size, weight, leading, column or word moved: the shipped numbers –
+  15.5px/700/118px/1.25, 23px/800, 19px/800 – are pinned beside the families, because a font swap
+  that quietly re-sizes a caption is exactly the restyle he did not ask for. ⚠ And nothing here
+  claims a caption overflows: happy-dom has no layout engine, a per-character width is a model and
+  not a measurement, and he has twice said nothing overflows on those captions.
+
+  Evidence: `tests/component/round34-home-type.test.ts` – 7 mounted arms, plus a round-20 #3 arm
+  that walks each caption's room from the viewport through its ancestors. ⚠ Mutation-verified one
+  rule at a time: taking Sora off `.note-title` reddens 3 arms, off `.note-figure` 2, off
+  `.budget-total` 2.
 
 - [ ] **5. «с нашим текущим "процент прохода 1го круга" на карточках турниров планировать всё равно
   не получается, потому что за неделю нельзя сняться с турнира бесплатно – это бессмысленная фича…
@@ -215,6 +248,49 @@ for and would otherwise have no line.
 - [ ] **10. «Мне не нравятся жирные буквы на главной жёлтой кнопке, сделай обычные пожалуйста. А
   может быть мне кажется и там две кнопки или надписи рисуется вообще? Проверь пожалуйста»** —
   **build** plus a **reproduce**: he suspects a doubled label.
+  — `[x]` **SHIPPED. THE ANSWER TO HIS QUESTION IS ONE BUTTON AND ONE LABEL – ⭐ BUT HE WAS SEEING
+  SOMETHING REAL, AND IT HAS A NAME.**
+
+  **THE COUNT – the reproduction he asked for.** The whole `App` shell mounted on Home at 375x667,
+  counted over the entire document, not over one component's subtree:
+
+  | counted | on screen |
+  | --- | --- |
+  | `.next-week-bar` – the floating bar | **1** |
+  | `.next-week-btn` – the yellow button | **1** |
+  | controls wearing the app's lime `.primary` | **1** of 15 buttons on screen |
+  | leaf elements anywhere printing that exact label | **1** – the button itself |
+  | the button's own child nodes | **1**, a text node; no `::before`/`::after`, no `text-shadow` |
+
+  ⭐⭐ **WHAT HE ACTUALLY SAW.** Manrope is self-hosted at 400 and 500 ONLY (`public/fonts/`). The
+  button was computing **600**, which has no real face, so the renderer emboldens the 500 one – and
+  synthetic bold thickens a stroke by drawing it AGAIN, offset. One label, drawn twice by the
+  rasteriser. «Мне кажется» was not imagination and it was not a second button; the regular weight
+  ends it, because 400 is a face that actually ships.
+
+  ⚠⚠ **AND THE `font-weight: 800` IN THE SHEET HAD NEVER APPLIED.** The element is
+  `<button class="primary next-week-btn">`: `button.primary` is specificity 0-1-1, `.next-week-btn`
+  is 0-1-0, so the weight the player has been reading all along is `button.primary`'s **600**, not
+  the 800 the stylesheet appeared to promise. Measured on a mount, not deduced. The dead declaration
+  is DELETED rather than edited – a rule that loses its own cascade tells the next reader a number
+  the screen never used – and the new weight is declared at `button.next-week-btn`, the smallest
+  selector that can win without touching `button.primary` itself: twelve files of affirmative
+  buttons hang off that rule and he named exactly one button.
+
+  **THE BUILD:** `font-weight: 400`, which is CSS `normal` and the literal «обычные». ⚠ 500 is one
+  step away if he wants a touch more body in it – one number, say the word.
+  ⚠ `PrimaryPill`'s `.tb-pill--cta` keeps its 800 on purpose: a different button, on TournamentFlow,
+  EndingScreen and the wizard, and it never renders on Home.
+
+  ⚠ **THE ONE STATE WHERE THAT BAR HOLDS TWO CONTROLS IS HIS OWN.** On a long injury layoff the span
+  pill stands to the LEFT of the CTA – round 26 #1, «давай сделаем ее во-первых слева от основной».
+  Two controls, still one yellow button: the pill is the outline variant deliberately (one CTA per
+  screen). Asserted in that state too, so the answer holds in both.
+
+  Evidence: `tests/component/round34-home-type.test.ts` – 7 mounted arms, including `assertRowFits`
+  at 375x667 in BOTH bar states (round-20 #3). ⚠ Mutation-verified: demoting the new rule back to
+  `.next-week-btn` reddens 3 arms; the count arms clone the button and inject a bare second label
+  into the live document and watch both counts move, so a real double could not hide from them.
 
 - [ ] **11. «129 место в мире, тот же контракт на 12к в год на 3 года. Не верю»** — with 7/12/13.
 
