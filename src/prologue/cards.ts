@@ -152,6 +152,19 @@ export interface PrologueCard {
    *  the question the wizard used to ask, asked in the fiction instead. `DECISION_AGES` reads
    *  `options` alone, so this cannot creep into the count. */
   readonly origins?: readonly PrologueOption[]
+  /** ⭐ WHO SHE IS – her name, her birthday and her country, on the ONE card that carries them
+   *  (owner, 02.09: «часть нашего текущего онбординга с датой рождения и именем должны остаться»,
+   *  and «страну тоже добавь, да»).
+   *
+   *  ⚠ A FLAG AND NOT COPY, which is why it is a `true` rather than a table of labels: the fields
+   *  are the WIZARD's, in the wizard's own words, and those words live in
+   *  `composables/identityCopy.ts` where both surfaces read them. This table says WHICH card asks;
+   *  it does not say what the asking sounds like, because that sentence already exists.
+   *
+   *  ⚠ AND IT IS NOT A DECISION EITHER. Like `origins` it is invisible to `DECISION_AGES`, which
+   *  reads `options` alone – the five-year-old's card still carries none, and the shape the owner
+   *  counted («может тогда больше без решений, 3 или 4?») is unchanged. */
+  readonly identity?: true
 }
 
 // =================================================================================================
@@ -179,6 +192,12 @@ export const PROLOGUE_CARDS: readonly PrologueCard[] = [
     teaching: 0.1,
     focus: 'general',
     costCents: 0,
+    // ⭐ WHO SHE IS, AND THIS IS THE CARD THAT ASKS. Her name, her birthday and her country – the
+    // wizard's own three fields, in the wizard's own words – sit above the origins on the FIRST
+    // card, because a name is the one thing a parent has before anything else has happened and
+    // because a tenth screen for it would be the quiz §3 exists to avoid. See `identity` on
+    // `PrologueCard` and src/prologue/identity.ts.
+    identity: true,
     // ⚠ THE ORIGIN, NOT A DIFFICULTY MENU (§7: a difficulty menu is NOT IN v1 and §2.4 replaces it).
     // The three ids are the game's own `FamilyBackground` values, so phase 4 hands `createWorld` a
     // string it already understands and no new type is invented for a choice that already exists.

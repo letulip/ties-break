@@ -31,6 +31,7 @@ import { assertLegible } from './contrast'
 import { assertDismissReachable, measureDialog, setViewport, PHONE, NARROW_PHONE } from './fits'
 import PrologueCardView from '../../src/components/PrologueCard.vue'
 import { PROLOGUE_CARDS, TWELFTH_WANTS_MORE, type PrologueCard } from '../../src/prologue/cards'
+import { OPENING_IDENTITY } from '../../src/prologue/identity'
 import {
   EMPTY_RUN,
   cardFor,
@@ -56,6 +57,13 @@ function mountCard(card: PrologueCard, run: PrologueRun, vp: { width: number; he
       card,
       warmth: warmthAt(card.age, run),
       reasons: card.age === 12 ? readTwelfth(run).reasons : undefined,
+      // ⚠⚠ THE IDENTITY IS PASSED EXACTLY WHERE THE CONTAINER PASSES IT, and leaving it out was the
+      // easy way to make this whole file lie. `ChildhoodPrologue.vue` hands the prop to every card
+      // and the age-5 row is the only one that draws it (`card.identity`), so a mount without it
+      // measures a five-year-old's card that has no name field, no birthday and no country picker on
+      // it – the tallest card in the walk, measured short. The fit numbers below are only about the
+      // card the player meets because this line is here.
+      identity: { ...OPENING_IDENTITY },
     },
   })
   const el = document.querySelector('.prologue-card')!
@@ -155,6 +163,27 @@ describe('⭐⭐ nine cards on a 375x667 phone, and the way on is on every one o
     }
   })
 
+  // ⭐⭐ THE CARD THE OWNER'S 02.09 CORRECTION MADE THE TALLEST IN THE WALK, MEASURED BY NAME rather
+  // than left to the loop above to happen to cover. The five now carries her name, her family name,
+  // her birthday and the country picker's three views on top of a scene, two read lines, three
+  // origins and the way out – and CLAUDE.md's round-20 #3 rule is about exactly this shape: «a
+  // dialog grows by one honest sentence at a time and nothing objects until it is taller than a
+  // phone». The number is printed rather than only asserted, because how MUCH taller it got is a
+  // product question for the owner and an assertion cannot ask it.
+  it('⚠ the age-5 card still hands the player its answers, with the identity on it', () => {
+    const { wrapper, el, answers } = mountCard(PROLOGUE_CARDS[0], EMPTY_RUN, PHONE)
+    expect(document.querySelector('.prologue-identity'), 'the identity is on the five').toBeTruthy()
+    expect(document.querySelectorAll('.prologue-tile').length, 'the nine popular tiles').toBe(9)
+    const fit = assertDismissReachable(el, answers, PHONE, 'age 5 with the identity')
+    // eslint-disable-next-line no-console
+    console.log(
+      `\n  THE AGE-5 CARD AT 375x667: content floor ${fit.contentFloor.toFixed(0)}px, ` +
+        `card ${fit.cardWidth.toFixed(0)}x${fit.cardHeight.toFixed(0)}, ${fit.available.height.toFixed(0)}px of room, ` +
+        `${(fit.contentFloor / fit.available.height).toFixed(1)} screens of scroll\n`,
+    )
+    wrapper.unmount()
+  })
+
   // ⚠ THE CONTENT-INDEPENDENT HALF, STATED ONCE ON ITS OWN. Everything above is true of TODAY'S
   // draft copy; this is what still holds after the owner replaces a card with three sentences of his
   // own, and it is the actual fix round-20 #3 asked for.
@@ -177,12 +206,27 @@ describe('⭐ what the walk shows about her – and it is nothing numeric', () =
   // carries the argument; this is the claim a player could check. No skill number, no rating, no
   // percentage, no money, no running balance – at any age, on either road. The formed rose is the
   // HANDOVER's payload (§5) and phase 4's to spend.
+  // ⚠⚠ RE-AIMED 02.09, NOT WEAKENED, AND THE NARROWING IS NAMED. The age-5 card now carries her
+  // birthday (owner: «часть нашего текущего онбординга с датой рождения и именем должны остаться»),
+  // and a day select is thirty-one digits by construction. The protected fact was never «no digit
+  // exists on the card»: cards.ts states it as «No number ABOUT HER appears anywhere on this screen
+  // at any age» – no skill, no rating, no percentage, no money, no running balance. A date the
+  // PLAYER typed is not a reading of her, so the sweep now reads the card with the identity block
+  // taken out and is otherwise unchanged. ⚠ The block is removed by its own container element and
+  // the removal is CHECKED to have happened (below), so a renamed class cannot silently exempt the
+  // whole card the way an absent marker silently widens a source region.
   it('not one digit appears on any of the ten scenes, on either road', () => {
     const offenders: string[] = []
     for (const road of [LIGHT_ROAD, CARRIED_ROAD]) {
       for (const { card, run } of walk(road, 'wealthy')) {
         const { wrapper } = mountCard(card, run, PHONE)
-        const text = wrapper.text()
+        const identityBlock = document.querySelector('.prologue-identity')
+        expect(
+          Boolean(identityBlock),
+          `age ${card.age} – the identity block is drawn on exactly the card the table says asks`,
+        ).toBe(Boolean(card.identity))
+        identityBlock?.remove()
+        const text = document.querySelector('.prologue-card')!.textContent ?? ''
         if (/\d/.test(text) || text.includes('$') || text.includes('%')) {
           offenders.push(`age ${card.age}: ${(text.match(/.{0,40}[\d$%].{0,40}/) ?? [''])[0]}`)
         }

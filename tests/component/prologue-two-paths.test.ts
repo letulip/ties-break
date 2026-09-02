@@ -36,6 +36,9 @@ import { createWorld, toSnapshot } from '../../src/engine/world'
 import { CARD_AGES, PROLOGUE_CARDS } from '../../src/prologue/cards'
 import { WALK_COPY, HANDOVER_COPY } from '../../src/prologue/handover'
 import { EMPTY_RUN, chosenYears, spentCents, withOrigin, withPick } from '../../src/prologue/run'
+import { OPENING_IDENTITY } from '../../src/prologue/identity'
+import { IDENTITY_COPY } from '../../src/composables/identityCopy'
+import { kidAgeYears } from '../../src/engine/world'
 import { DEFAULT_PROFILE, type PlayerProfile, type PrologueHandover } from '../../src/shared/protocol'
 
 /** The road that buys her everything on every card – so the payload the engine is handed is the
@@ -186,6 +189,139 @@ describe('⭐⭐ the nine cards reach the handover, carrying what they came to',
     expect(wrapper.find('.handover-card').exists()).toBe(false)
     expect(wrapper.find('.prologue-kicker').text()).toBe(PROLOGUE_CARDS[0].kicker)
     expect(wrapper.findAll('.prologue-answer').length, 'the three origins and the skip').toBe(4)
+    wrapper.unmount()
+  })
+})
+
+// =================================================================================================
+// ⭐⭐ WHO SHE IS – the owner's correction of 02.09, end to end
+// =================================================================================================
+//
+// «каждая прологовая карьера сейчас Вера Мартин … часть нашего текущего онбординга с датой рождения
+// и именем должны остаться», and the same day «страну тоже добавь, да». Until this shipped, EVERY
+// prologue career was the same girl. What is asserted here is the SEAM, in the same spirit as the
+// payload test above: what the player typed on the age-5 card is what `createWorld` was handed and
+// what the world came back holding – not what a component's local state says it holds.
+//
+// ⚠ MUTATION-VERIFIED. Watched failing before it was believed:
+//   * `settleIdentity(identity.value)` dropped from `begin()`'s profile -> every field goes red.
+//   * the spread put BEFORE `...DEFAULT_PROFILE` instead of after -> same, and it names the field.
+//   * `identity` left in place by «start again» -> the restart test below goes red on the name.
+//   * `birthDay`/`birthMonth` dropped from `PrologueIdentity` -> the world's age reading goes red.
+describe('⭐⭐ the prologue asks who she is, and the answer reaches the world', () => {
+  beforeEach(() => {
+    setActivePinia(createPinia())
+    document.body.innerHTML = ''
+    setViewport(PHONE)
+  })
+
+  /** Type a name into one of the two text fields on the card that is up. */
+  async function type(wrapper: ReturnType<typeof mount>, id: string, value: string): Promise<void> {
+    const field = wrapper.find(`#${id}`)
+    expect(field.exists(), `no field #${id} on this card`).toBe(true)
+    await field.setValue(value)
+  }
+
+  it('the five asks in the WIZARD\'s words – nothing on this card is a second wording', () => {
+    stubStore()
+    const wrapper = mount(ChildhoodPrologue, { attachTo: document.body })
+    const text = wrapper.text()
+    for (const label of [IDENTITY_COPY.firstName, IDENTITY_COPY.lastName, IDENTITY_COPY.birthday]) {
+      expect(text, `the five does not ask for «${label}»`).toContain(label)
+    }
+    // The country picker is the wizard's, three views of one list – the popular nine are the shortcut.
+    expect(wrapper.findAll('.prologue-tile').length, 'the nine popular tiles').toBe(9)
+    expect(wrapper.find('.prologue-browse').text()).toBe(IDENTITY_COPY.browseAll)
+    // ...and the fields open on the default profile rather than on nothing.
+    expect((wrapper.find('#prologue-first').element as HTMLInputElement).value).toBe(OPENING_IDENTITY.kidName)
+    expect((wrapper.find('#prologue-last').element as HTMLInputElement).value).toBe(OPENING_IDENTITY.kidLastName)
+    wrapper.unmount()
+  })
+
+  it('⚠ and it asks on the FIVE and on no other card – it is a scene, not a tenth screen', async () => {
+    stubStore()
+    const wrapper = mount(ChildhoodPrologue, { attachTo: document.body })
+    expect(wrapper.find('.prologue-identity').exists(), 'the five asks').toBe(true)
+    for (const age of CARD_AGES.slice(0, -1)) {
+      await answerCurrent(wrapper, age)
+      expect(wrapper.find('.prologue-identity').exists(), `age ${age + 1} asks again`).toBe(false)
+    }
+    wrapper.unmount()
+  })
+
+  it('⭐⭐ what the player typed is what the WORLD holds – name, birthday and country', async () => {
+    const { calls, game } = stubStore()
+    const wrapper = mount(ChildhoodPrologue, { attachTo: document.body })
+
+    await type(wrapper, 'prologue-first', 'Nadia')
+    await type(wrapper, 'prologue-last', 'Okonkwo')
+    await wrapper.find('#prologue-month').setValue('11')
+    await wrapper.find('#prologue-day').setValue('3')
+    const spain = wrapper.findAll('.prologue-tile').find((t) => t.text().includes('Spain'))!
+    await spain.trigger('click')
+
+    for (const age of CARD_AGES) await answerCurrent(wrapper, age)
+
+    // 1. what `createWorld` was handed.
+    expect(calls.length).toBe(1)
+    expect(calls[0].profile.kidName).toBe('Nadia')
+    expect(calls[0].profile.kidLastName).toBe('Okonkwo')
+    expect(calls[0].profile.birthMonth).toBe(11)
+    expect(calls[0].profile.birthDay).toBe(3)
+    expect(calls[0].profile.country).toBe('ES')
+    // ...and the origin is still the origin, so the identity did not overwrite the card's own answer.
+    expect(calls[0].profile.background).toBe('middle')
+
+    // 2. what the REAL world came back holding – the stub builds one with `createWorld`.
+    const snapshot = game.snapshot!
+    expect(snapshot.profile.kidName, 'the world is hers').toBe('Nadia')
+    expect(snapshot.profile.kidLastName).toBe('Okonkwo')
+    expect(snapshot.profile.birthMonth).toBe(11)
+    expect(snapshot.profile.birthDay).toBe(3)
+    expect(snapshot.profile.country).toBe('ES')
+    wrapper.unmount()
+  })
+
+  it('⚠⚠ and the birthday is not cosmetic – the world opens her at the age it decides', async () => {
+    // §2.1: the prologue starts at five «decided by her birthday, on exactly the machinery that
+    // already decides 13-or-14», and `kidAgeYears` is that machinery. A November girl and a January
+    // girl are NOT the same age in week 0, and a `birthDay`/`birthMonth` that never reached
+    // `createWorld` would make both of them the default's June date – which is what this measures.
+    const seen: number[] = []
+    for (const [month, day] of [[1, 4], [11, 3]] as const) {
+      setActivePinia(createPinia())
+      document.body.innerHTML = ''
+      const { game } = stubStore()
+      const wrapper = mount(ChildhoodPrologue, { attachTo: document.body })
+      await wrapper.find('#prologue-month').setValue(String(month))
+      await wrapper.find('#prologue-day').setValue(String(day))
+      for (const age of CARD_AGES) await answerCurrent(wrapper, age)
+      const p = game.snapshot!.profile
+      seen.push(kidAgeYears(0, p.birthMonth, p.birthDay))
+      wrapper.unmount()
+    }
+    expect(seen[0], 'the two birthdays reach the engine and are read there').not.toBe(seen[1])
+  })
+
+  it('⚠ an emptied name is not a nameless career – it falls back the way the wizard does', async () => {
+    const { calls } = stubStore()
+    const wrapper = mount(ChildhoodPrologue, { attachTo: document.body })
+    await type(wrapper, 'prologue-first', '   ')
+    await type(wrapper, 'prologue-last', '')
+    for (const age of CARD_AGES) await answerCurrent(wrapper, age)
+    expect(calls[0].profile.kidName).toBe(DEFAULT_PROFILE.kidName)
+    expect(calls[0].profile.kidLastName).toBe(DEFAULT_PROFILE.kidLastName)
+    wrapper.unmount()
+  })
+
+  it('⚠ «start again» forgets her too – a new childhood is a different girl', async () => {
+    stubStore()
+    const wrapper = mount(ChildhoodPrologue, { attachTo: document.body })
+    await type(wrapper, 'prologue-first', 'Nadia')
+    for (const age of CARD_AGES) await answerCurrent(wrapper, age)
+    await wrapper.findAll('.handover-answer')[1].trigger('click')
+    await wrapper.vm.$nextTick()
+    expect((wrapper.find('#prologue-first').element as HTMLInputElement).value).toBe(OPENING_IDENTITY.kidName)
     wrapper.unmount()
   })
 })

@@ -11,13 +11,17 @@
 // `src/prologue/handover.ts` through a binding, exactly as `PrologueCard.vue` holds none - the
 // owner has not read a word of the nine cards and §8's rule is that they ship only with his word.
 //
-// ⚠⚠ WHAT THE PROLOGUE DOES NOT ASK, AND IT IS NOT AN OVERSIGHT TO BE PATCHED QUIETLY. The card
-// table asks ONE question about the family - where they are from (§2.4) - and the build spec's §3
-// lists the other eight cards' decisions in full. Her name, her family name, her country and her
-// birthday are questions only the WIZARD asks today, so a career started here takes them from
-// `DEFAULT_PROFILE`. That is a real gap and it is the owner's to close: a naming step is a tenth
-// scene, and §7 names the things nobody may smuggle in. `coachTier` and `playStyle` are deliberately
-// NOT passed - §4 says both are earned, and `createWorld` derives them from the nine years.
+// ⭐⭐ WHO SHE IS – CLOSED 02.09.2026, AND THE OWNER CLOSED IT. This header used to record the gap:
+// «Her name, her family name, her country and her birthday are questions only the WIZARD asks today,
+// so a career started here takes them from `DEFAULT_PROFILE` … it is the owner's to close.» He did:
+// «часть нашего текущего онбординга с датой рождения и именем должны остаться», and the same day
+// «страну тоже добавь, да». The age-5 card asks all three now (`card.identity`, see
+// src/prologue/cards.ts and src/prologue/identity.ts), in the WIZARD's own controls and the wizard's
+// own words – there is no tenth scene, and no new sentence reaches the screen.
+//
+// ⚠ `coachTier` and `playStyle` are still deliberately NOT passed - §4 says both are EARNED, and
+// `createWorld` derives them from the nine years. The identity is the opposite kind of field: the
+// nine years cannot derive a girl's name.
 //
 // ⚠ THE AGE-10 LOCAL OPEN IS NOT PLAYED HERE. Phase 3 built the field (`src/prologue/pool.ts`) and
 // proved the shipped viewer will show one (tests/component/prologue-local-open.test.ts); putting it
@@ -42,6 +46,7 @@ import {
   withPick,
   type PrologueRun,
 } from '../prologue/run'
+import { OPENING_IDENTITY, settleIdentity, type PrologueIdentity } from '../prologue/identity'
 import { DEFAULT_PROFILE, type FamilyBackground } from '../shared/protocol'
 
 const emit = defineEmits<{
@@ -54,6 +59,9 @@ const emit = defineEmits<{
 const game = useGameStore()
 
 const run = ref<PrologueRun>(EMPTY_RUN)
+/** ⭐ WHO SHE IS, held HERE and not on the card, so walking off the five and back does not forget
+ *  what was typed – and so `begin()` reads one source rather than asking a component for it. */
+const identity = ref<PrologueIdentity>({ ...OPENING_IDENTITY })
 const at = ref(0)
 /** set once the career exists and the handover is up. It is NOT `game.snapshot !== null`: the
  *  snapshot arrives the instant the career is created, and this screen has to outlive that. */
@@ -99,7 +107,16 @@ async function begin(): Promise<void> {
   if (!isComplete(run.value)) return
   await game.newCareer(
     '',
-    { ...DEFAULT_PROFILE, background: run.value.origin ?? DEFAULT_PROFILE.background },
+    {
+      ...DEFAULT_PROFILE,
+      // ⚠ HER NAME, HER BIRTHDAY AND HER COUNTRY REACH `createWorld` HERE, on exactly the path the
+      // wizard's own profile takes – the `new` command has always carried a whole `PlayerProfile`,
+      // so nothing about the wire, the schema or the save moved to let this through. `birthMonth`
+      // and `birthDay` are what `kidAgeYears` reads for the 13-or-14 opening, so this is also what
+      // makes the build spec's §2.1 true of a prologue career.
+      ...settleIdentity(identity.value),
+      background: run.value.origin ?? DEFAULT_PROFILE.background,
+    },
     { years: chosenYears(run.value), spentCents: spentCents(run.value) },
   )
   if (game.snapshot) handoverOpen.value = true
@@ -114,6 +131,11 @@ async function startAgain(): Promise<void> {
   if (careerId) await game.deleteCareer(careerId)
   handoverOpen.value = false
   run.value = EMPTY_RUN
+  // ⚠ AND THE IDENTITY GOES BACK TOO. «Start again» drops the career and starts the childhood over
+  // with NOTHING carried (§2.3) – a different childhood and, because the seed is generated fresh, a
+  // different girl. Keeping the typed name would make her the same girl with a new childhood, which
+  // is the one thing this control does not mean.
+  identity.value = { ...OPENING_IDENTITY }
   at.value = 0
 }
 </script>
@@ -133,9 +155,11 @@ async function startAgain(): Promise<void> {
     :card="card"
     :warmth="warmth"
     :reasons="reasons"
+    :identity="identity"
     :skip-label="skipLabel"
     :busy="game.busy"
     @answer="answer"
+    @identity="identity = $event"
     @skip="emit('skip')"
   />
 </template>

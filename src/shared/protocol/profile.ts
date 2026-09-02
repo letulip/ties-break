@@ -51,7 +51,13 @@ export interface PlayerProfile {
 }
 
 export const DEFAULT_PROFILE: PlayerProfile = {
-  kidName: 'Vera',
+  /** ⚠ THE OWNER'S NAME, ASKED FOR TWICE (02.09): «я просил сделать дефолт на Alice Martin». It was
+   *  'Vera' from the first onboarding and every prologue career inherited it, which is what made the
+   *  ask visible – see docs/specs/childhood-prologue.md §2.4. Changing it moves the three frozen
+   *  career hashes in tests/coachTravelEdgeFixtures.ts, because her name is printed into `events`
+   *  text; `PRE_NAME_VERA` there holds the old values and reproduces them by substituting the name
+   *  back, which is the byte-level proof that the name and NOTHING ELSE moved. */
+  kidName: 'Alice',
   kidLastName: 'Martin',
   gender: 'girl',
   country: 'US',
