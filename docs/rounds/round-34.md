@@ -272,3 +272,35 @@ Per-match sponsor pay, and contract terms of six months / a season / a named gro
 (his: «контракты могут быть на 6 месяцев или год или только на какую-то группу турниров»). It is
 the better mechanic – money follows playing, a lost season genuinely costs her – but it rewrites the
 letter copy and the moment money arrives, which is a save-schema move. Not to be started here.
+
+---
+
+## ⚠ OPEN FOR THE OWNER, raised by the measurement in bundle A – the top band went elite-only
+
+The approved edge of **0.90** does exactly what he asked, and bundle A shipped it. But walking the
+real engine to age 29 (780 weeks, the whole growth arc) measured what it costs:
+
+| rung | peak true realisation | ever hears «At her ceiling»? |
+| --- | --- | --- |
+| budget | 0.855 | **no** |
+| middle | 0.879 | **no** |
+| high | 0.895 | **no** |
+| elite | – | yes, 6 of 8 careers, weeks 745–776 |
+
+A middle-rung career reads Huge potential → Still room to grow (w81) → Close to her ceiling (w296)
+and **never hears the fourth line at all**.
+
+⭐ The original complaint is fully cured: on his own save the old measure said «Close to her
+ceiling» at week 78 (age 15.5) and «At her ceiling» at week 158 (age 17.0) – his «приговор» to the
+week. The new ladder says «Still room to grow» at 16 and «Close to her ceiling» at 24.
+
+⚠⚠ **But the fourth band also carries advice, not just a verdict**: its note reads «no coach can add
+much more now, whatever the price». If an ordinary career never reaches it, a parent whose girl has
+stopped growing is never told to stop paying for a coach who can no longer buy anything. That is a
+function lost, not only a sentence unheard.
+
+⭐ **My recommendation: move the top edge to 0.85.** It restores the advice on budget/middle/high
+careers (all three peak above it), and it is still far from his complaint – on his save the girl is
+at 0.416 realised at 14 and 0.876 at 24, so 0.85 fires near her peak and nowhere near her teens.
+
+⚙ **NOT CHANGED. 0.90 is what he approved and 0.90 is what shipped.** This is a decision for him.
