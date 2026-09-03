@@ -127,7 +127,7 @@ describe('⭐ #16 – Business is next to Invest', () => {
   })
 })
 
-describe('⭐ #18 – what they own is in the coach’s frame', () => {
+describe('⭐ #18 – what you own is in the coach’s frame', () => {
   /** The three declarations `.cm-row.current` paints, read off a bare element through the real
    *  sheet. ⚠ THIS IS THE POINT OF THE ITEM: he asked for the frame «как с тренером делали», so the
    *  expected value is not a colour typed into this test – it is whatever the coach row draws today.
@@ -200,7 +200,13 @@ describe('⭐ #15 – the sentence on the savings card does not fall when money 
     revalueAssets(world)
     const wrapper = await mountShop(toSnapshot(world))
     const before = (await shelfRow(wrapper, 'A savings deposit')).find('.shop-row-change').text()
-    expect(before, 'ten years of interest, on screen').toMatch(/^\+\$[\d,]+ since they bought it \(\d+%\)$/)
+    // ⚠ RE-AIMED AT THE ROUND-34 / PROLOGUE MERGE (03.09): this was written as «since they bought
+    // it» against the pre-merge copy, and `prologue/wave` shipped the owner's second-person pass
+    // («в Shop - They own nothing yet. Кто "they"?», round 33) in the same window. The shipped guard
+    // `tests/template-copy-rules.test.ts` now FORBIDS `they bought`, so the old expectation asserted
+    // a string the app is no longer allowed to render. Second person is the truth; the assertion is
+    // as strict as it was.
+    expect(before, 'ten years of interest, on screen').toMatch(/^\+\$[\d,]+ since you bought it \(\d+%\)$/)
 
     // Take half out through the engine's own command, then re-render from the new snapshot.
     sellAsset(world, 'deposit', Math.round(world.assets[0].valueCents / 2))
