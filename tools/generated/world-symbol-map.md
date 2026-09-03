@@ -8,7 +8,7 @@ Regenerate with `node scripts/world-map.mjs`; `node scripts/world-map.mjs --chec
 
 **Do not read this file to answer one question** – that is the habit it exists to replace. `node scripts/world-map.mjs <symbol>` prints the owner and the line, and a plain `grep <symbol> tools/generated/world-symbol-map.md` does the same for a partial name.
 
-387 exported names across 46 owning modules.
+390 exported names across 46 owning modules.
 
 ## Areas
 
@@ -32,6 +32,7 @@ Regenerate with `node scripts/world-map.mjs`; `node scripts/world-map.mjs --chec
 | `src/engine/world/knock.ts` | THE KNOCK: she comes off court sore, and the parent rests it or sends her back out | 8 |
 | `src/engine/world/market.ts` | ⭐⭐⭐ THE MARKET – round 29 part three #16, and it is the answer to one sentence of his | 8 |
 | `src/engine/world/brand.ts` | ⭐⭐⭐ THE BRAND – round 30 #23 and #24, and it is TWO functions of ONE signal set | 7 |
+| `src/engine/world/business.ts` | ⭐⭐ THE PARENT'S BUSINESSES – round 29 part four P7, parts two and three of his order: «нам нужен мерч, растущий от частоты и обилия рекламных контрактов, съемок, выступлений, титулов и прочего» and «нам нужна академия, которая зарабатывает» | 7 |
 | `src/engine/world/fame.ts` | ⭐⭐ FAME – round 29 part four P7/P8, the first implementation of docs/specs/fame-and-the-shoots-2026-08.md | 7 |
 | `src/engine/world/injury.ts` | INJURIES AND PHYSIO: the weekly roll, the hazard shape behind it, and the recovery the family pays for – plus the sweep that cleans up everything an injury invalidates | 7 |
 | `src/engine/world/planner.ts` | THE SEASON PLANNER: the two things a parent can put on an empty week – a family holiday and a practice match – and what the engine does with them when the week arrives | 7 |
@@ -43,7 +44,6 @@ Regenerate with `node scripts/world-map.mjs`; `node scripts/world-map.mjs --chec
 | `src/engine/world/means.ts` | WHAT THE FAMILY CAN AFFORD, AS ONE FACT – the licence a line of copy asks for before it may assume a wallet | 5 |
 | `src/engine/condition.ts` | THE condition math – one rule, everybody | 4 |
 | `src/engine/season/calendar.ts` | Package L – tournament calendar | 4 |
-| `src/engine/world/business.ts` | ⭐⭐ THE PARENT'S BUSINESSES – round 29 part four P7, parts two and three of his order: «нам нужен мерч, растущий от частоты и обилия рекламных контрактов, съемок, выступлений, титулов и прочего» and «нам нужна академия, которая зарабатывает» | 4 |
 | `src/engine/world/ledger.ts` | THE LEDGER: the two write primitives every world mutation goes through, and the pure folds that read the finance ledger back out | 4 |
 | `src/engine/world/state.ts` | ⭐ R2-10 STEP 1 – THE PERSISTED SCHEMA, MOVED WITHOUT TOUCHING SERIALISATION | 4 |
 | `src/engine/kidLife.ts` | HER LIFE OFF THE COURT - the three tiles of screen C's attribute grid that are not about results | 3 |
@@ -435,6 +435,18 @@ THE KNOCK: she comes off court sore, and the parent rests it or sends her back o
 - `brandSignalsOf` – `src/engine/world/brand.ts`
 - `brandWeeklyGrossCents` – `src/engine/world/brand.ts`
 
+### `src/engine/world/business.ts`
+
+⭐⭐ THE PARENT'S BUSINESSES – round 29 part four P7, parts two and three of his order: «нам нужен мерч, растущий от частоты и обилия рекламных контрактов, съемок, выступлений, титулов и прочего» and «нам нужна академия, которая зарабатывает».
+
+- `academyReputationOf` – `src/engine/world/business.ts`
+- `academyWeeklyIncomeCents` – `src/engine/world/business.ts`
+- `assetKidShareCents` – `src/engine/world/business.ts`
+- `assetWeeklyFamilyIncomeCents` – `src/engine/world/business.ts`
+- `assetWeeklyIncomeCents` – `src/engine/world/business.ts`
+- `merchFamilyWeeklyIncomeCents` – `src/engine/world/business.ts`
+- `merchWeeklyIncomeCents` – `src/engine/world/business.ts`
+
 ### `src/engine/world/fame.ts`
 
 ⭐⭐ FAME – round 29 part four P7/P8, the first implementation of docs/specs/fame-and-the-shoots-2026-08.md.
@@ -553,15 +565,6 @@ Package L – tournament calendar.
 - `isExamWeek` – `src/engine/season/calendar.ts`
 - `isTierAgeOpen` – `src/engine/season/calendar.ts`
 - `tierAgeBlock` – `src/engine/season/calendar.ts`
-
-### `src/engine/world/business.ts`
-
-⭐⭐ THE PARENT'S BUSINESSES – round 29 part four P7, parts two and three of his order: «нам нужен мерч, растущий от частоты и обилия рекламных контрактов, съемок, выступлений, титулов и прочего» and «нам нужна академия, которая зарабатывает».
-
-- `academyReputationOf` – `src/engine/world/business.ts`
-- `academyWeeklyIncomeCents` – `src/engine/world/business.ts`
-- `assetWeeklyIncomeCents` – `src/engine/world/business.ts`
-- `merchWeeklyIncomeCents` – `src/engine/world/business.ts`
 
 ### `src/engine/world/ledger.ts`
 
