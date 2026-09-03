@@ -38,7 +38,7 @@
 import { guardNotEndedForGood } from './endings'
 import { addEvent } from './ledger'
 // Round 29 part four P7 – the businesses' one arithmetic; the till banks the same functions.
-import { assetWeeklyIncomeCents } from './business'
+import { assetWeeklyFamilyIncomeCents } from './business'
 // ⭐⭐⭐ ROUND 30 #23 – the shelf quotes the multiple the CAREER has earned, so it reads the same
 // function the valuation does rather than the catalogue's base. One arithmetic, many readers.
 import { brandMultipleX, brandSignalsOf } from './brand'
@@ -731,7 +731,12 @@ export function shopView(world: WorldState): ShopView {
       // ⭐⭐ ROUND 29 PART FOUR P7 – ...AND WHAT IT BRINGS IN RIGHT NOW (the merch brand, a
       // delivered academy stage), asked of the businesses' one arithmetic so this card and the
       // till's weekly row cannot quote two figures. Zero everywhere the family owns no earner.
-      incomeCents: assetWeeklyIncomeCents(world, item.id),
+      // ⭐⭐ ROUND 35 #9 – ...AND SINCE 03.09 IT IS THE FAMILY'S HALF OF IT. Her ramp comes off the
+      // brand's week before the till banks it, so a card quoting the GROSS would be exactly the
+      // disagreement the note above forbids – the shop window promising a weekly figure the ledger
+      // never delivers. Zero everywhere the family owns no earner, and unchanged on the academy's
+      // stages, which are not split.
+      incomeCents: assetWeeklyFamilyIncomeCents(world, item.id),
       buildWeeks: item.buildWeeks ?? 0,
       // ⚠ NON-NULL ONLY WHILE THEY ARE WAITING. The screen draws no Sell against a contract and says
       // the date instead – `sellableAsset` refuses the same week, so a stale tab cannot sell a boat

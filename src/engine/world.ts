@@ -364,8 +364,8 @@ export { brandStrengthAt, strengthDecayAt }
 import { brandCrowdMult, brandGrossWorthCents, brandMultipleX, brandReachOf, brandSignalsOf, brandWeeklyGrossCents } from './world/brand'
 export { brandCrowdMult, brandGrossWorthCents, brandMultipleX, brandReachOf, brandSignalsOf, brandWeeklyGrossCents }
 export type { BrandSignals } from './world/brand'
-import { academyReputationOf, academyWeeklyIncomeCents, assetWeeklyIncomeCents, merchWeeklyIncomeCents } from './world/business'
-export { academyReputationOf, academyWeeklyIncomeCents, assetWeeklyIncomeCents, merchWeeklyIncomeCents }
+import { academyReputationOf, academyWeeklyIncomeCents, assetKidShareCents, assetWeeklyFamilyIncomeCents, assetWeeklyIncomeCents, merchFamilyWeeklyIncomeCents, merchWeeklyIncomeCents } from './world/business'
+export { academyReputationOf, academyWeeklyIncomeCents, assetKidShareCents, assetWeeklyFamilyIncomeCents, assetWeeklyIncomeCents, merchFamilyWeeklyIncomeCents, merchWeeklyIncomeCents }
 export type { MarketCrash } from './world/market'
 export type { ShopItem } from './world/shop'
 export type { FamilyMeans } from './world/means'

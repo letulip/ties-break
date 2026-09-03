@@ -110,6 +110,7 @@ function view(week: number, over: Partial<KidLifeWorldView> = {}): KidLifeWorldV
     weeksSinceTitle: null,
     college: null,
     kidFundsCents: 0,
+    ownsBrand: false,
     ...over,
   }
 }

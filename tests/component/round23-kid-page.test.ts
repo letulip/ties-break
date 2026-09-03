@@ -129,6 +129,7 @@ describe('⭐⭐ ROUND-23 #6/#18 – her page, mounted', () => {
       weeksSinceTitle: null,
       college: { studying: true, yearsDone: 1, totalYears: ENDINGS.collegeYears, tier: 'national' },
       kidFundsCents: 512_835_00,
+      ownsBrand: false,
     })
     const w = mountKid({ ...base, life })
     const cell = tileWithLabel(w, STAGE_LABEL.college)
@@ -161,6 +162,7 @@ describe('⭐⭐ ROUND-23 #6/#18 – her page, mounted', () => {
       weeksSinceTitle: null,
       college: { studying: true, yearsDone: 3, totalYears: ENDINGS.collegeYears, tier: 'private' },
       kidFundsCents: 8_909_415_00,
+      ownsBrand: false,
     })
     const w = mountKid({ ...base, life })
     const notes = w.findAll('.kid-grid-note')

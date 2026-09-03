@@ -136,7 +136,7 @@ export function accrueKidShare(
   cents: number,
   bps: number,
   baseCents: number,
-  source: 'prize' | 'sponsor',
+  source: 'prize' | 'sponsor' | 'brand',
 ): void {
   if (cents <= 0) return
   const entry = financeWeekEntry(world, week)
@@ -322,9 +322,9 @@ export function financeSeries(
             // above. Each part's rate is rounded once here, `kidSharePct`'s own rule; the order is
             // fixed (prize, then sponsor) so the card cannot print two orderings on two weeks.
             // Omitted entirely on a week that recorded no part – the fallback the recap reads.
-            ...(kidShare.prize || kidShare.sponsor
+            ...(kidShare.prize || kidShare.sponsor || kidShare.brand
               ? {
-                  kidShareParts: (['prize', 'sponsor'] as const).flatMap((source) => {
+                  kidShareParts: (['prize', 'sponsor', 'brand'] as const).flatMap((source) => {
                     const part = kidShare[source]
                     return part ? [{ source, pct: Math.round(part.bps / 100), cents: part.cents }] : []
                   }),

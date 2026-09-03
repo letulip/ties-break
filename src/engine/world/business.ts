@@ -25,7 +25,11 @@
 // (`resolveBusinessIncome`) charges them, the household meter (`householdWeekly`) quotes them, the
 // shop card (`shopView`) prints them: three surfaces, one function each, so they cannot disagree –
 // the repo's most-repeated defect, refused the way `weeklyAssetUpkeepCents` refuses it.
-import { ECONOMY } from '../economy'
+import { ECONOMY, kidPrizeShareCents } from '../economy'
+// ⭐ ROUND 35 #9 – HER AGE, off her own birth date, because the ramp is read at her REAL age and
+// never the ITF band's (the one-clock ruling of 09.08, which `finalizeTournament` follows to the
+// line). `world/age.ts` is a leaf and imports nothing from this package.
+import { kidAgeYears } from './age'
 // ⭐⭐ ROUND 30 #9 MOVED THE MERCH RATE ONE FILE DOWN, and «one arithmetic» is exactly why. The
 // brand now carries a VALUE as well as an income (`assetWorthCents`), and that valuation lives in
 // `world/assets.ts` – which this file imports, so the rate had to be reachable from there or there
@@ -56,9 +60,80 @@ export function assetWeeklyIncomeCents(world: WorldState, id: string): number {
 
 /** ⭐ WHAT THE MERCH BRAND BRINGS IN THIS WEEK – fame times the dial, zero when the family never
  *  started one (and zero at fame zero, which is the mechanic: a brand with nobody's name on it
- *  sells nothing). */
+ *  sells nothing).
+ *
+ *  ⚠⚠ THIS IS THE GROSS AND SINCE ROUND 35 #9 THAT WORD IS LOAD-BEARING. It is what a WHOLE brand
+ *  takes in, before her cut – the same figure `brandGrossWorthCents` multiplies – and it is NOT
+ *  what the family banks. Every surface that describes the FAMILY's money asks
+ *  `merchFamilyWeeklyIncomeCents` below. */
 export function merchWeeklyIncomeCents(world: WorldState): number {
   return assetWeeklyIncomeCents(world, 'merch-brand')
+}
+
+// =================================================================================================
+// ⭐⭐⭐ ROUND 35 #9 – HER CUT OF THE BRAND, ON THE PRIZE RAMP
+// =================================================================================================
+//
+// THE OWNER: «доход от ее бренда давай тоже как проценты с призовых будем делить: т.е. в интерфейсе
+// напишем про ее долю, в недельном доходе будет семье на руки сумма меньше»
+//
+// ⚠⚠ «КАК С ПРИЗОВЫХ» IS THE RULE AND NOT AN ANALOGY, so this reads `kidPrizeShareBps` – the very
+// function `finalizeTournament` divides a cheque by – rather than a second ramp of its own. There is
+// one age ladder in this game (10% at 18, +5 a birthday, half from 26) and a brand that copied it
+// would be free to drift from it on the first retune.
+//
+// ⚠⚠⚠ AND THE SPLIT IS AT THE BANKING SITE, NEVER IN THE RATE. `assetEarningsRateCents` is the ONE
+// place a career becomes a weekly cheque – and it is also what `brandGrossWorthCents` MULTIPLIES to
+// price the brand. A `× (1 − ramp)` inside it would have looked exactly like this change on the
+// weekly line while quietly HALVING what the brand is worth on the shelf card beside it. So the rate
+// is untouched, the worth is untouched, and what changes is who the money is paid to.
+// ⭐ Measured before and after rather than argued: `tools/r35-brand-share.ts` prints the weekly
+// gross, the worth and the multiple over the bench careers, and the three columns are identical
+// across the change – the reading is in docs/rounds/round-35.md item 9.
+//
+// ⚠ ONE ROUNDING, AND THE FAMILY GETS THE REMAINDER – `kidPrizeShareCents`' own discipline, and the
+// same shape `bankSponsorCheque` uses with the sides swapped. A pair of independent `Math.round`s
+// loses or invents a cent on half the weeks, and this money lands in two balances a player can add
+// up on screen.
+//
+// ⚠ NO NEW WAY FOR THE PARENT TO GO NEGATIVE, the standing «мы ни за что не наказываем» check: this
+// is an INCOME line, `herShare <= gross` for every rate the ramp can produce (`capBps` is 5000), so
+// the week can only ever add LESS. It can never subtract.
+//
+// ⚠ ZERO DRAWS, and nothing here is persisted. Integer arithmetic on a figure the fame fold has
+// already decided, so the frozen MAIN capture (41550 / e6b0c709) cannot see it – and a career before
+// her eighteenth is byte-identical, because the ramp answers zero there and `gross − 0` is `gross`.
+
+/** ⭐⭐ ROUND 35 #9 – HER CUT OF ONE OWNED RUNG'S WEEK, in whole cents, rounded ONCE.
+ *
+ *  ⚠ ZERO FOR EVERY RUNG THAT IS NOT HER BRAND, and the academy is the rung that makes the guard
+ *  matter rather than a hypothetical: it earns on the same line, in the same tick, out of the same
+ *  function – and it is the PARENT's business, built with the parent's money, which is the whole
+ *  reason §3g put it in a different family from the merch. Only «доход от ЕЁ бренда» is split. */
+export function assetKidShareCents(world: WorldState, id: string): number {
+  const item = shopItem(id)
+  if (!item || item.family !== 'business') return 0
+  return kidPrizeShareCents(
+    assetWeeklyIncomeCents(world, id),
+    kidAgeYears(world.week, world.profile.birthMonth, world.profile.birthDay),
+  )
+}
+
+/** ⭐⭐ ROUND 35 #9 – WHAT THE FAMILY ACTUALLY BANKS out of one owned rung's week: the gross less her
+ *  cut, BY SUBTRACTION so the two halves re-add to the cheque exactly.
+ *
+ *  ⚠⚠ THIS IS THE FIGURE EVERY «WEEKLY INCOME» SURFACE READS – «в недельном доходе будет семье на
+ *  руки сумма меньше». The till (`resolveBusinessIncome`), the coach market's cap
+ *  (`familyWeeklyIncomeCents`), the household strip and the shop card all ask this one function, so
+ *  they cannot quote four different takings for one brand – this file's own «ONE DEFINITION, MANY
+ *  READERS» rule, extended to the side of the split the family gets. */
+export function assetWeeklyFamilyIncomeCents(world: WorldState, id: string): number {
+  return assetWeeklyIncomeCents(world, id) - assetKidShareCents(world, id)
+}
+
+/** ⭐ THE BRAND'S WEEK AS THE FAMILY BANKS IT – `merchWeeklyIncomeCents` less her ramp. */
+export function merchFamilyWeeklyIncomeCents(world: WorldState): number {
+  return assetWeeklyFamilyIncomeCents(world, 'merch-brand')
 }
 
 /** ⭐ REPUTATION – 1.0 base plus the BEST band of every finished season, counted once per season,

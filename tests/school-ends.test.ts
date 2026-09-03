@@ -117,6 +117,7 @@ describe('W4-SCHOOL – school ends at the end of the school year, and never at 
           weeksSinceTitle: null,
           college: null,
           kidFundsCents: 0,
+          ownsBrand: false,
         })
         // ⭐ ROUND-23 #6: "School finished" is gone – past the last grade the tile hands over to the
         // after-school ladder, so "is she out" is "the tile is no longer printing a grade".
@@ -516,6 +517,7 @@ describe('round-21 #6 – the school clock reads her birth month, and the shift 
             weeksSinceTitle: null,
             college: null,
             kidFundsCents: 0,
+            ownsBrand: false,
           })
           // Past her leaving week the tile has left the classroom (round 23 #6 – no grade, and the
           // after-school ladder instead) and no exam line may survive on it.

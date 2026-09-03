@@ -104,6 +104,9 @@ import { coachBilling, coachEdgeView, coachEntryLine, coachLadderNote, coachMark
 import { masseurRoomNote, masseurRungOf, masseurUnlocked, masseurWeeklyCents } from './masseur'
 import { kitDealView, kitLineViews } from './kit'
 import { shopView } from './shop'
+// ⭐ ROUND 35 #9 – the till's own «does the brand pay this week» predicate, so her page and the
+// ledger cannot disagree about whether the split is running.
+import { merchWeeklyIncomeCents } from './business'
 import { copyByTrack, copyTrophyLedger, emptySeasonRecord, seasonWrapDue } from './milestones'
 import { computeLossStreak, fallbackPlayer, flipScore, kidMatchesOf, kidMatchEvent } from './matchNews'
 import { coachLoadViewOf, pendingKnock, radarViewOf } from './knock'
@@ -1717,6 +1720,13 @@ export function toSnapshot(world: WorldState, stopReasons?: StopReason[]): Snaps
       // ⭐ ROUND-23 #18 – what her own account holds. `?? 0` for the hand-built probe worlds that
       // predate v54, the discipline every optional world field on this view already keeps.
       kidFundsCents: world.kidFundsCents ?? 0,
+      // ⭐⭐ ROUND 35 #9 – DOES THE BRAND RULE APPLY TO THIS FAMILY AT ALL. Asked of the till's own
+      // arithmetic rather than of `world.assets` directly, so the page cannot say «the same share
+      // comes off her brand» about a rung that is still on order and paying nothing:
+      // `merchWeeklyIncomeCents` is zero until it is owned AND delivered, which is exactly the week
+      // the split starts. ⚠ `> 0` and not `>= 0` – a delivered brand at fame zero earns nothing and
+      // has nothing to split, and a sentence about a share of zero is the noise this guard refuses.
+      ownsBrand: merchWeeklyIncomeCents(world) > 0,
     }),
     // THE SKILLS RADAR. Derived here and nowhere else, off `seed:read:*` / `seed:ceil:*` sub-streams
     // at SNAPSHOT time - zero MAIN draws, so the frozen capture (41550 / e6b0c709) is untouched by
