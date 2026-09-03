@@ -387,6 +387,63 @@ for and would otherwise have no line.
   * `tests/component/round29-next-tournament.test.ts` – same repair on the panel: no VS row, nobody
     named, the ring's label is `fieldChanceLabel`'s and contains no «against».
 
+  – `[x]` **#5b – AND THE PRE-DRAW CARD NOW SAYS THE FIGURE WILL SHARPEN. NEW COPY, ONE LINE, AND HE
+  ASKED FOR IT.** He read the step measured above – the ring changes question at the draw and the
+  number moves **9.1 points on average, 36 at worst** – and ruled: «хорошо, можно на карточке ДО
+  жеребьевки писать, что-то на эту тему.»
+
+  ⚠⚠ **THE EXACT STRING, WHICH IS THE ONE THING INVARIANT 4 ASKS BE NAMED:**
+
+  > **`A typical figure for this level – it sharpens when the draw is made.`**
+
+  It says the two things the ruling asks for and nothing else: the figure is a typical one for the
+  LEVEL (which is why it holds still – 0.48 points of drift over five pre-draw weeks), and it
+  SHARPENS at the draw (which is why the step is news rather than the instability round 31 #4 was
+  reported for). Short dash, no Cyrillic, second person nowhere needed.
+
+  **WHERE IT LIVES.** `FIELD_FIGURE_NOTE` in `src/composables/eventCard.ts`, beside
+  `DRAW_NOT_MADE_NOTE` and for the same reason that constant exists: one owner, so the sentence
+  cannot come to be worded two ways. The Season card renders it as `<p class="field-note">` inside
+  the plaque's own column, directly under the read and beside the ring it is about.
+
+  ⚠ **VISIBLE, NOT AN ACCESSIBLE NAME – which is the half that separates this from item 5's own
+  build.** Round 34 #5 put the pre-draw state into the ring's `label` and `title` plus the plaque's
+  «The draw has not been made yet.»; the JUMP is visible, so the warning about it had to be. The two
+  strings shipped by #5 are unchanged, and this line does not restate the STATE they carry – the
+  plaque says where the card is, this says what will happen to the number.
+
+  ⚠⚠ **THE CONDITION IS THE RING CHAIN'S ELSE-BRANCH, NEGATION INCLUDED, AND THAT IS THE TRAP THIS
+  LINE WALKS PAST.** The caption's obvious `v-if` is the branch's own text,
+  `ev.preview.fieldChance !== null` – and that is **TRUE on a drawn card too**: the field figure does
+  not stop existing at the draw, it stops being the number on the ring. A caption written that way
+  would tell a player whose draw is already out that his figure is about to sharpen. So it asks
+  `fieldRingShown(ev)` = «the opponent ring is not the one drawn, AND there is a field figure», which
+  is that chain read back in one place. ⚠ The two rings keep their own inline conditions rather than
+  calling it: a `v-if` written as a null comparison is what NARROWS the three bindings inside each
+  ring to `number`, and routing them through a predicate would trade that compiler-checked narrowing
+  for a `!` on every one of them – tried, and `vue-tsc` answered with four errors. The trap is closed
+  by the test instead: that exact mutation is one of the three it is verified against, and it reddens.
+
+  ⚠ **THE SEASON CARD ONLY, AND THAT IS A SCOPE DECISION HE CAN OVERRULE IN ONE LINE.** The Calendar
+  marker takeover and the Home NextTournament panel draw the same pre-draw ring and carry no such
+  line. His words are «на карточке» and this item's whole complaint is about planning off the season
+  cards («на карточках турниров планировать всё равно не получается»), so that is the surface built;
+  the other two are a takeover and a panel with their own height budgets (round-20 #3) and giving
+  them the line is a separate, cheap change if he wants it.
+
+  **Evidence.** MOUNTED, `tests/component/round31-draw-reveal.test.ts` – a new arm on the file that
+  already owns «what a card says in each of the two draw states», over the same real career whose
+  feed carries BOTH: `.field-note` is present and reads exactly `FIELD_FIGURE_NOTE` on every pre-draw
+  card, and is absent from every drawn one, with both counts asserted non-zero so neither half can be
+  vacuous. The text is read off `card.text()` as well as off the node, which is what says it is
+  RENDERED rather than sitting in an attribute. ⚠ Mutation-verified, three mutations with two
+  distinct verdicts: dropping the `v-if` reddens the absent half, deleting the line reddens the
+  present half, and pointing the caption at its own `ev.preview.fieldChance !== null` reddens the
+  absent half – the drift the shared condition exists to prevent.
+
+  **Guard tests re-aimed: NONE.** Nothing went red. The five arms of `round31-draw-reveal` and the
+  whole 115-file component project are green with the line in place.
+
 - [x] **6. «W35 · 🔒 163 / 0 international pts вот это вот что значит? И на следующих тирах такое
   же»** – **measure**, then build or answer. A lock showing `163 / 0` is either a swapped pair or a
   zero that should be the requirement.
@@ -822,6 +879,152 @@ for and would otherwise have no line.
     the same row. The button is the only week-level ACTION on a card.
   * ⭐ Nothing else moved: 110 component files and the whole unit suite are green with those five –
     which is the measurement that says «add the list beside the pick» was the right shape.
+
+  – `[x]` **#14b – HE READ THE MEASUREMENT AND FOUND A CONTRADICTION IN IT. HE IS RIGHT, AND THE
+  STACK NOW ASKS «CAN SHE ENTER» INSTEAD OF «HAS SHE OUTGROWN».** His words: «игра считает их ниже её
+  достоинства – но при этом я в сетке вижу w50 турниры, я тебе об этом писал. Значит у нас где-то
+  противоречие есть – надо разобраться.» And his ruling: «ну сильно перерощенные да, а на какие-то
+  можно и съездить, когда череда поражений идет очень хочется что-то выиграть, знаешь ли.»
+
+  **THE CONTRADICTION, NAMED – AND IT WAS MINE, NOT THE ENGINE'S.** `hasOutgrown`
+  (`src/engine/world/ladder.ts`) is an OR of THREE facts answered as ONE, and that is deliberate –
+  its own note records `world.ts`'s rule that «the ceilings must have one consequence». Only ONE of
+  the three is a BAN:
+
+  | limb | what it says | is it a ban? |
+  | --- | --- | --- |
+  | `playDownBars` | the sport itself: a WTA top-50 may not enter a W event; a professional may not play the domestic ladder | **YES** – `tierFloorOpen` shuts the rung and `entryVerdict` refuses it |
+  | `tierOutgrown` | the sliding window: the rung three above is open to her | no – arithmetic |
+  | `outgrewTier` | her points are past the domestic band's ceiling | no – arithmetic |
+
+  ⭐⭐ **THE MEASUREMENT SAYS IT IN THE ENGINE'S OWN WORDS**, on the `engine window` line the tool
+  prints per career. At WTA #111 the rungs it calls SHUT are Local/Regional/National («pays national
+  points – she is on the world tour now»), J30/J60/J300 (aged out at 22), W15/W35 («closed to the
+  world's top 150» – the Play Down cut) and WT1000 (which is the opposite kind of shut: «takes the
+  top 65», a FLOOR she has not reached). W50, W75, W100, WT125, WT250, WT500 and the Slams are
+  **OPEN**. So the rungs he SEES are open and merely outgrown by the arithmetic, exactly as he said –
+  and the reason his W75 still drew no second card was the clause my brief to bundle J asked for.
+  «Can she go» and «will it move her ranking» are two questions and I collapsed them into one.
+
+  **WHAT CHANGED: ONE CLAUSE, AT THE STACK'S OWN CALL SITE.** `weekEventStack`
+  (`src/composables/tierState.ts`) filtered on `eventActionable(e, week) && !e.outgrown`; it now
+  filters on **`eventActionable(e, week)` alone**. ⭐ **That predicate IS «can she enter»**: it is
+  «she is in it, or its list is still open to her», and the `eligible` inside it is `entryStatus`'
+  own verdict – the same gate `enterEvent` throws on. A rung the Play Down rule bars is refused by
+  it, and never even reaches it: `tierFloorOpen` shuts the rung, so `feedShows` drops the card one
+  storey up. «Сильно перерощенные» stay out on the SPORT's rule rather than on a display rule.
+  `StackableEvent.outgrown` is removed with it – a field nobody reads is how a retired rule walks
+  back in.
+
+  ⚠ **`hasOutgrown` IS UNTOUCHED, AND SO IS EVERY OTHER SURFACE THAT READS IT.** The card's pill,
+  `entryStatus.outgrown`, `coachLadderNote`'s gate, `entryCouldNotMove` and the season mirror all
+  still ask the one three-limbed question. Nothing about the LADDER moved; what moved is what the
+  calendar asks it.
+
+  **THE PRICE, MEASURED – `tools/r34-calendar-tiers.ts`, THREE display rules folded from ONE walk**
+  (7 seasons, presets 8/7/6/5 x seeds 0–3, the same arm structure bundle J used, so the columns
+  cannot be a story about three different worlds). `OUTGROWN-` is bundle J's shipped-until-today
+  rule, `STACK` is what ships now, and it **reproduces bundle J's priced column to the decimal**:
+
+  | rung | gen/season | ONE-ROW | OUTGROWN- (bundle J) | **STACK (now)** | delta |
+  | --- | --- | --- | --- | --- | --- |
+  | WT500 | 10.0 | 9.3 | 9.4 | 9.4 | +0.0 |
+  | **W50** | 12.0 | 4.7 | 4.7 | **9.4** | **+4.7** |
+  | WT250 | 8.0 | 5.3 | 8.0 | 8.0 | +0.0 |
+  | **W75** | 8.0 | 2.4 | 2.4 | **6.4** | **+4.0** |
+  | WT125 | 4.0 | 2.9 | 3.4 | 4.0 | +0.6 |
+  | Slam | 4.0 | 3.9 | 3.9 | 3.9 | +0.0 |
+  | J30 | 24.0 | 1.0 | 3.6 | 3.6 | +0.0 |
+  | **W100** | 4.0 | 1.6 | 1.6 | **3.1** | **+1.6** |
+  | WT1000 | 8.0 | 2.4 | 2.6 | 2.6 | +0.0 |
+  | J60 | 15.7 | 1.4 | 2.3 | 2.3 | +0.0 |
+  | W15 | 24.9 | 0.3 | 0.3 | 1.1 | +0.9 |
+  | W35 | 15.9 | 0.7 | 0.7 | 0.9 | +0.1 |
+  | J300 | 4.0 | 0.1 | 0.1 | 0.3 | +0.1 |
+  | Local / Regional / National | 24.0 / 11.7 / 6.0 | 0.0 | 0.0 | **0.0** | +0.0 |
+
+  ⭐⭐ **THE THREE RUNGS OF HIS SENTENCE ARE THE THREE BIGGEST MOVES, AND THE BARRED ONES DID NOT
+  MOVE AT ALL.** W50 4.7 → 9.4, W75 2.4 → 6.4, W100 1.6 → 3.1 – bundle J's prediction, measured on
+  the shipped code. The domestic three stay at **0.0 rows a season** at these ranks, which is the
+  half of the ruling that had to hold: they are barred, not outgrown. A season now draws **54.9 cards
+  against 34.3 eventful weeks** (41.4 before), and **14.0 weeks carry more than one card** (6.4
+  before). ⚠ The 12-of-48 EMPTY weeks are still untouched – `weekEventStack` only ever reads a list
+  `feedShows` has already filtered, so it still cannot put a card on a week that had none.
+
+  ⚠ **WHY W15/W35 MOVE AT ALL WHEN EVERY CAREER STARTS WITH THEM BARRED** – and the answer is the
+  Play Down rule doing exactly what the owner asked of it in 15.08: «когда она вывалится из топ-50 и
+  топ-150 оно само откроется обратно». It is a live rank READ that persists nothing, and all seven
+  seasons are shut at W15/W35 on their opening week – but one of them runs **#77..#152**, so the week
+  she falls out of the top 150 those rungs are hers again and are then ordinary enterable tennis. The
+  bar and the arithmetic ceiling are told apart per career per WEEK, which is the whole of the fix.
+
+  ⭐ **AND THE LOSER CENSUS IS THE CLEANEST CONFIRMATION** (`--why`). Before, every stacked-week
+  candidate that drew no card was `outgrown x188 / x163 / x64 / x28…`; **that bucket is now empty on
+  every rung.** What is left is only `entries closed` and `not eligible: unavailable / injured /
+  locked` – i.e. every card refused today is refused because she cannot ENTER it. That is the ruling
+  restated as a measurement.
+
+  ⚠⚠ **THE «THIS CANNOT MOVE HER BOOK» FACT IS NOT LOST, AND IT IS ON MORE CARDS THAN BEFORE, NOT
+  FEWER.** It surfaces in two places, both of which read `hasOutgrown` – the function this item
+  deliberately did not touch: the card's own pill («Outgrown – she is past this level») and the
+  coach's line (`coachLadderNote` → `.coach-note` on the card, whose clause 2 is `bookClosedTo`'s own
+  sentence «Your coach says even a title here would not move her ranking»). Since the change only
+  ever ADDS cards, a rung that used to be silent because it had no card now carries both. Confirmed
+  on the fixture rather than argued: the J30 card that now earns a slot at w159/w160/w162 renders the
+  Outgrown pill and the engine's own sentence «Your coach says the World Tour 15 is the week – this
+  pays international points, not the table she is climbing.» (clause 1a, because on that career
+  `bookClosedTo('j30')` is false and the coach says the truer thing rather than the stronger one).
+
+  **Evidence.** MOUNTED, `tests/component/round34-week-stack.test.ts` – two new arms over the same
+  `v46.json` career, on ONE week that carries both halves (w160): the barred rung (`local`, shut by
+  `playDownBars`) draws NO card while the week draws four, and the arithmetically-outgrown rung
+  (`j30`) DOES. ⚠ The barred half is asked TWICE and the second ask is the one that bites: on the
+  screen a barred rung is stopped by `feedShows` AND by the stack, so «the screen drew none» survives
+  a mutation of either layer – the second assertion hands `weekEventStack` the week's RAW list and
+  demands the STACK RULE itself still refuse it. The second new arm asserts the pill and the coach's
+  line on the card that now exists. ⚠ Mutation-verified, six mutations with different verdicts:
+  putting the outgrown clause back reddens the two #14b arms and leaves the other five green;
+  dropping `eventActionable` reddens 2 (the barred half and «only what she can play»); `[lead]` only
+  reddens 6 of 7; inverting `coachLadderNote`'s `hasOutgrown` gate reddens exactly the coach arm;
+  `overflow-x: visible` and a 130% card width redden the phone arm's two halves.
+
+  ⚠⚠ **ONE MUTATION WENT GREEN WHEN IT SHOULD NOT HAVE, AND IT IS RECORDED BECAUSE IT NEARLY
+  SHIPPED.** #14b's first finder chose its week by asking `weekEventStack` itself, so restoring the
+  outgrown clause simply moved the search to a week that rule was happy with and all seven arms
+  stayed green. **A finder that consults the rule under test cannot fail on it.** It now reads the
+  ENGINE (`playDownBars`, `hasOutgrown`) and the two predicates the item did not change
+  (`preferredWeekEvent`, `eventActionable`), so the week is chosen by the SITUATION and the screen is
+  then asked what it did with it.
+
+  **Guard tests re-aimed – TWO, none deleted, none loosened, each with a ⚠ note in place:**
+  * `tests/component/round34-week-stack.test.ts`'s «every card past the lead» pair – its second line
+    was `expect(e.outgrown ?? false).toBe(false)`, which is precisely the assertion the owner
+    overruled. The half worth keeping is «only what she could actually play earns a second card», and
+    that half is untouched: the enterability test became the WHOLE test rather than half of it. The
+    new claim lives in its own describe block, so no single mutation can satisfy both.
+  * ...and its **375x667 phone arm, WIDENED rather than moved**. It measured the FIRST swipeable
+    strip in the DOM; #14b took the fixture's widest week from two cards to four, so «the first
+    strip» and «the worst case» stopped being the same week. It now measures **every** swipeable
+    strip on the feed and asserts the widest one equals the rule's own answer for the widest week –
+    which is what says the measurement really reached it. Still red under `overflow-x: visible` and
+    under a 130% card width, verified again after the widening.
+
+  ⚠ **TWO KNOCK-ONS THROUGH THE PER-CONSUMER TABLE ABOVE, BOTH INTENDED, BOTH REPORTED RATHER THAN
+  DISCOVERED LATER.** Of the three consumers that read the LIST, `calendarRows` is the item itself;
+  the other two inherit the longer list and each changes by one honest step:
+  * `supplyOnScreen` – «N of them on the cards below» counts CARDS by its own definition, so the
+    number it reconciles with rises with them. That is the property it was given the list for.
+  * `plannable` (`!stack.some(actionable)`) – it is the same narrow case bundle J's own note already
+    describes («it can only differ where the LEAD's entry window has closed while a card under it is
+    still open»), widened to outgrown rungs: such a week USED to offer «+ Plan week» and no longer
+    does. That is the rule working, not a side effect – the week holds a real entry decision, and the
+    planner must not be offered over one. Nothing else about booking moved, and the whole component
+    project is green.
+
+  **What did NOT change:** `hasOutgrown` and its three limbs, `preferredWeekEvent`, `feedShows`,
+  `feedContext`, the per-consumer table above (the six surfaces that want the ONE event still get
+  it), the empty-week behaviour, and every string on the screen. **This item adds no new word to the
+  app** – the only new copy in bundle K is item 5b's one line, on a different card state entirely.
 
 - [x] **15. «Сумма дохода на savings меняется вниз если деньги вывести. Мне кажется она не должна
   меняться, просто новое поступление будет меньше»** – **reproduce**, then build.

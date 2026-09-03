@@ -22,7 +22,7 @@ import { useGameStore } from '../../src/stores/game'
 import { createWorld, tickWeek, toSnapshot } from '../../src/engine/world'
 import { rngFromSeed } from '../../src/engine/rng'
 import { DRAW_LEAD_WEEKS } from '../../src/engine/season/preview'
-import { DRAW_NOT_MADE_NOTE } from '../../src/composables/eventCard'
+import { DRAW_NOT_MADE_NOTE, FIELD_FIGURE_NOTE } from '../../src/composables/eventCard'
 import { mountSeason } from '../helpers/mountSeason'
 import type { Snapshot, UpcomingEvent } from '../../src/shared/protocol'
 
@@ -110,6 +110,49 @@ describe('round 31 #4 – the Season card, before and after the draw', () => {
     )
     expect(matched, `plaque said "${drawnLine}"`).toBeTruthy()
     expect(matched!.preview.opponentName).not.toBe('')
+    w.unmount()
+  })
+
+  // ⭐⭐⭐ ROUND 34 #5b – AND THE PRE-DRAW CARD SAYS THE FIGURE WILL SHARPEN.
+  //
+  // Round 34 #5 measured the step the owner is being warned about: the field figure holds still
+  // before the draw (0.48 points on average) and then the ring changes question and the number jumps
+  // 9.1 points on average, 36 at worst. His ruling: «хорошо, можно на карточке ДО жеребьевки писать,
+  // что-то на эту тему.»
+  //
+  // ⚠ THE PAIR IS THE GUARD, exactly as in the arm above: present on every pre-draw card and absent
+  // from every drawn one, asserted on ONE screen that carries both. A card that always shows it
+  // fails the second half; one that never shows it fails the first. Mutation-verified – dropping the
+  // `v-if` reddens the absent half, deleting the line reddens the present half, and pointing the
+  // caption at its own copy of the condition (`ev.preview.fieldChance !== null`, which is true on a
+  // DRAWN card too) reddens the absent half as well, which is why the screen asks `fieldRingShown`.
+  it('a card before its draw carries the figure\'s own line, and a drawn card does not', () => {
+    const snap = feedWithBothStates()
+    const w = mountSeason(snap)
+    const cards = w.findAll('.event-card')
+    expect(cards.length, 'the feed must hold cards at all').toBeGreaterThan(1)
+
+    let pending = 0
+    let drawn = 0
+    for (const card of cards) {
+      const note = card.find('.field-note')
+      // Which state this card is in is read the same way the arm above reads it – off the plaque's
+      // own last sentence, which is the owner's copy and the card's visible statement of its state.
+      if (card.find('.event-coach-line').text().endsWith(DRAW_NOT_MADE_NOTE)) {
+        pending++
+        expect(note.exists(), 'a pre-draw card must carry the line').toBe(true)
+        // ⚠ VISIBLE, NOT AN ACCESSIBLE NAME. `.text()` reads what is rendered; the ring's `label`
+        // and `title` are asserted one test up and are a different route to a different sentence.
+        expect(note.text()).toBe(FIELD_FIGURE_NOTE)
+        expect(card.text(), 'and it is on the card, not only in an attribute').toContain(FIELD_FIGURE_NOTE)
+      } else {
+        drawn++
+        expect(note.exists(), 'a card whose draw is made must NOT carry it – the figure has sharpened').toBe(false)
+        expect(card.text()).not.toContain(FIELD_FIGURE_NOTE)
+      }
+    }
+    expect(pending, 'no pre-draw card on screen').toBeGreaterThan(0)
+    expect(drawn, 'no drawn card on screen').toBeGreaterThan(0)
     w.unmount()
   })
 

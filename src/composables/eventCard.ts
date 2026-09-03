@@ -100,6 +100,29 @@ export function fieldChanceTitle(p: FieldOdds): string {
   return 'A typical first round at this level'
 }
 
+/** ⭐⭐⭐ ROUND 34 #5b – WHAT THE PRE-DRAW FIGURE PROMISES, SAID OUT LOUD ON THE CARD.
+ *
+ *  The measurement is what earned this line. The field figure holds still before the draw (0.48
+ *  points of movement on average against the opponent figure's 18.43 – round 34 #5), and then at the
+ *  draw the ring changes question and the NUMBER JUMPS: **9.1 points on average, 36 at worst**. The
+ *  owner read that and ruled: «хорошо, можно на карточке ДО жеребьевки писать, что-то на эту тему.»
+ *
+ *  ⚠ NEW COPY, AND HE ASKED FOR IT – which is the one thing invariant 4 requires be named. It is
+ *  ONE line and it says exactly the two things the ruling asks for and nothing else: the figure is a
+ *  typical one for the LEVEL (which is why it holds still), and it SHARPENS at the draw (which is
+ *  why the step is news rather than instability).
+ *
+ *  ⚠⚠ IT IS VISIBLE, NOT AN ACCESSIBLE NAME. `fieldChanceLabel` and `fieldChanceTitle` above are a
+ *  screen reader's and a mouse's only route to the ring, and round 34 #5 shipped the state into
+ *  those plus the plaque's own «The draw has not been made yet.» The JUMP he is being warned about
+ *  is visible, so the warning has to be too – a caption a sighted planner never sees would be the
+ *  same silence the item was reported for.
+ *
+ *  ⚠ IT DOES NOT RESTATE THE STATE. The plaque already ends on `DRAW_NOT_MADE_NOTE`, which is the
+ *  owner's own sentence and says WHERE the card is; this says what will happen to the number. Two
+ *  facts, one each, neither spelled twice. */
+export const FIELD_FIGURE_NOTE = 'A typical figure for this level – it sharpens when the draw is made.'
+
 /** The store-backed half: the three facts that need the live snapshot to answer. */
 export function useEventCard(): {
   venueUrl: (e: PaintableEvent) => string

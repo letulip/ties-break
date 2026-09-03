@@ -328,14 +328,18 @@ export function preferredWeekEvent<E extends { tier: TierId; entered: boolean; e
 }
 
 /** Just enough of an event to stand in a week's stack: the pick's three fields, an identity, and the
- *  two facts that decide whether a card is worth OFFERING rather than merely worth leading with. */
+ *  deadline that decides whether a card is worth OFFERING rather than merely worth leading with.
+ *
+ *  ⚠ `outgrown` WAS HERE AND LEFT ON THE OWNER'S RULING OF 03.09 (round 34 #14b, see
+ *  `weekEventStack`). It is removed rather than left unread on purpose: a field nobody consumes is
+ *  how a retired rule walks back in, and «has she outgrown this» is no longer a question this
+ *  module asks. The FLAG itself is untouched on `UpcomingEvent` – the card still wears its pill. */
 export interface StackableEvent {
   id: string
   tier: TierId
   entered: boolean
   eligible: boolean
   deadlineWeek: number
-  outgrown?: boolean
 }
 
 /** CAN SHE ACT ON THIS CARD THIS WEEK – she is in it, or its list is still open to her. One
@@ -366,23 +370,35 @@ export function eventActionable(e: StackableEvent, week: number): boolean {
  * deleted and not wrapped – the single representative is still the right answer for a feed line, a
  * marker, a name and a rest-cost quote.
  *
- * ⚠⚠ AND ONLY WHAT SHE COULD ACTUALLY PLAY EARNS A SECOND CARD. Two exclusions, both the owner's –
- * his word is «доступных», the AVAILABLE ones:
- *   * NOT ACTIONABLE. A rung she cannot enter is aspiration, and aspiration is worth exactly ONE
- *     card at the head of a week (the 06.08 ruling, `preferredWeekEvent`'s own note: «the feed is
- *     also how she learns what is out there»). A swipe through four locked cards is the sterilised
- *     calendar that ruling exists to prevent.
- *   * OUTGROWN. She is past it. It has stayed ENTERABLE since 06.08 and it still leads a week that
- *     holds nothing else, so nothing is hidden that was not hidden before – but it is not something
- *     to offer her a second card for.
+ * ⚠⚠ AND ONLY WHAT SHE COULD ACTUALLY ENTER EARNS A SECOND CARD – ONE exclusion, and it is the
+ * ENGINE'S OWN ENTRY VERDICT rather than a second rule written here. `eventActionable` is «she is in
+ * it, or its list is still open to her», and `eligible` inside it is `entryStatus`' answer, so the
+ * question this function asks is exactly «может ли она сюда поехать». A rung she cannot enter is
+ * aspiration, and aspiration is worth exactly ONE card at the head of a week (the 06.08 ruling,
+ * `preferredWeekEvent`'s own note: «the feed is also how she learns what is out there»). A swipe
+ * through four locked cards is the sterilised calendar that ruling exists to prevent.
  *
- * ⚠⚠ AND THE OUTGROWN CLAUSE IS WHY THIS DOES NOT REACH THE THREE RUNGS HIS ITEM NAMES, WHICH IS
- * MEASURED AND REPORTED RATHER THAN QUIETLY ACCEPTED. At WTA #111 `hasOutgrown` is true of W50, W75
- * and W100, so they lose a week to a taller rung AND are refused a second card: the stacked-week
- * loser census (`tools/r34-calendar-tiers.ts --why`) reads W50 outgrown x188, W75 x163, W100 x64.
- * Dropping this one clause takes W75 from 2.4 rows a season to 6.4 and W100 from 1.6 to 3.1; the
- * clause stays because the 06.08 ruling gives an outgrown rung exactly one card at the head of a
- * week, and the number is in the round-34 ledger so the owner can overrule it in one line.
+ * ⚠⚠⚠ IT ASKED «HAS SHE OUTGROWN THIS» UNTIL 03.09 AND THAT WAS A CONTRADICTION THE OWNER CAUGHT
+ * (round 34 #14b): «игра считает их ниже её достоинства – но при этом я в сетке вижу w50 турниры,
+ * я тебе об этом писал. Значит у нас где-то противоречие есть – надо разобраться.» He is right, and
+ * the cause is that `hasOutgrown` is an OR of THREE facts with one answer, deliberately (see its own
+ * note: world.ts's rule that the ceilings must have one consequence). Only ONE of the three is a
+ * BAN:
+ *   * `playDownBars` – the sport itself refusing her for being too GOOD. It shuts `tierFloorOpen`,
+ *     so a barred rung is not in `feedContext.rungs` and `entryVerdict` refuses it as well: the card
+ *     never reaches this function, and if it ever did `eventActionable` would drop it. That is
+ *     «сильно перерощенные», and it stays out for free.
+ *   * `outgrewTier` / `tierOutgrown` – ARITHMETIC. «Even a title here cannot move her book.» She may
+ *     still enter, the sport has no objection, and the ruling of 03.09 is that this is HER decision:
+ *     «ну сильно перерощенные да, а на какие-то можно и съездить, когда череда поражений идет очень
+ *     хочется что-то выиграть, знаешь ли.» Dropping down to win something after a losing run is a
+ *     real reason to travel, so the rung gets its card.
+ * Asking `hasOutgrown` collapsed «can she go» into «will it move her ranking», which are two
+ * questions – and the second one is not this function's to answer, because the card answers it
+ * itself: the `outgrown` pill («Outgrown – she is past this level») and the coach's line
+ * (`coachLadderNote`, whose book clause is `bookClosedTo`'s own sentence) both ride on the SAME
+ * `hasOutgrown` and are untouched, so a rung that now earns a card still says what it is worth.
+ * MEASURED: W75 2.4 → 6.4 rows a season, W50 4.7 → 9.4, W100 1.6 → 3.1 (`tools/r34-calendar-tiers.ts`).
  *
  * ⚠ IT CANNOT PUT A CARD ON AN EMPTY WEEK, WHICH IS THE HALF THE MEASUREMENT CARED ABOUT. The 12 of
  * 48 weeks that showed her NOTHING at WTA #111 are filtered one storey up by `feedShows`, and this
@@ -398,7 +414,7 @@ export function weekEventStack<E extends StackableEvent>(events: readonly E[], w
   const lead = preferredWeekEvent(events)
   if (!lead) return []
   const rest = events
-    .filter((e) => e.id !== lead.id && eventActionable(e, week) && !e.outgrown)
+    .filter((e) => e.id !== lead.id && eventActionable(e, week))
     .sort((a, b) => TIER_LADDER.indexOf(b.tier) - TIER_LADDER.indexOf(a.tier))
   return [lead, ...rest]
 }

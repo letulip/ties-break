@@ -76,7 +76,7 @@ import { UPCOMING_WEEKS } from '../../engine/world/constants'
 // THE UPCOMING-EVENT CARD'S OWN PARTS, shared with the Calendar's marker card: the photograph, the
 // court's verdict for her build, the scholarship's share, and how an odds ring is NAMED. Its colour
 // is no longer one of them – that ramp is drawn on five surfaces, not two, so it lives a line below.
-import { DRAW_NOT_MADE_NOTE, fieldChanceLabel, fieldChanceTitle, firstMatchLabel, firstMatchTitle, useEventCard } from '../../composables/eventCard'
+import { DRAW_NOT_MADE_NOTE, FIELD_FIGURE_NOTE, fieldChanceLabel, fieldChanceTitle, firstMatchLabel, firstMatchTitle, useEventCard } from '../../composables/eventCard'
 // The app's one red-to-green ramp, shared with the three condition rings. `{ fraction }` names the
 // scale IN the call: this number is a 0..1 chance, not a 0..100 percentage, and the signature will
 // not let the two be confused.
@@ -453,6 +453,31 @@ function coachSays(e: UpcomingEvent): string {
   // either way: the state of the draw, or the person it produced with her rank beside her.
   parts.push(e.preview.drawMade ? drawnLine(e) : DRAW_NOT_MADE_NOTE)
   return parts.join(' ')
+}
+
+/** ⭐⭐⭐ ROUND 34 #5b – IS THIS CARD DRAWING THE **FIELD** RING? The condition the pre-draw line
+ *  under the plaque rides on, and it is the ring chain's `v-else-if` branch stated in full: the
+ *  opponent ring is not the one being drawn, AND there is a field figure to draw.
+ *
+ *  ⚠⚠ THE NEGATION IS THE WHOLE POINT AND IT IS EASY TO LOSE. The obvious spelling for the caption
+ *  is the branch's own text, `ev.preview.fieldChance !== null` – and that is TRUE on a DRAWN card
+ *  too, because the field figure does not stop existing when the draw is made; it simply stops being
+ *  the number on the ring. A caption written that way survives one state longer than the ring it
+ *  captions, and would tell a player whose draw is out that his figure is about to sharpen. That
+ *  exact mutation is one of the three `tests/component/round31-draw-reveal.test.ts` is verified
+ *  against, and it reddens.
+ *
+ *  ⚠ THE TWO RINGS KEEP THEIR OWN INLINE CONDITIONS rather than calling these, deliberately: a
+ *  `v-if` written as a null comparison is what NARROWS `preview.firstMatchChance` / `preview.
+ *  fieldChance` to `number` for the three bindings inside each ring, and routing it through a
+ *  predicate would trade that compiler-checked narrowing for a `!` on every one of them – tried,
+ *  and `vue-tsc` answered with four errors. The chain is the authority on which ring is drawn; this
+ *  pair is that chain read back, in one place, for the surface outside it that needs the answer. */
+function opponentRingShown(e: UpcomingEvent): boolean {
+  return e.preview.drawMade && e.preview.firstMatchChance !== null
+}
+function fieldRingShown(e: UpcomingEvent): boolean {
+  return !opponentRingShown(e) && e.preview.fieldChance !== null
 }
 
 /** ⭐ THE OPPONENT, NAMED, once the draw exists – «имя и ранг соперницы на 1й круг». The rank is
@@ -1631,6 +1656,16 @@ function closeExhibition(): void {
               <div class="event-coach-said">
                 <p class="event-coach-label">{{ readLabel }}</p>
                 <p class="event-coach-line">{{ coachSays(ev) }}</p>
+                <!-- ⭐⭐⭐ ROUND 34 #5b – WHAT THE PRE-DRAW FIGURE PROMISES, IN ONE LINE THE PLAYER
+                     CAN SEE. The owner's ruling and the measurement behind it (the number steps 9.1
+                     points on average at the draw, 36 at worst) are quoted on `FIELD_FIGURE_NOTE` in
+                     composables/eventCard.ts, where Cyrillic is allowed and in a template it is not.
+                     ⚠ VISIBLE, not an accessible name: the jump he is being warned about is visible,
+                     so the warning has to be. It sits under the plaque and beside the ring it is
+                     about, and it appears and disappears with that ring – `fieldRingShown` is the
+                     ring chain's own else-branch read back, negation included. Writing the branch's
+                     bare text here instead would leave the line on a card whose draw is out. -->
+                <p v-if="fieldRingShown(ev)" class="field-note">{{ FIELD_FIGURE_NOTE }}</p>
               </div>
               <!-- ⭐⭐ ROUND 31 #4 – NO OPPONENT RING UNTIL THE DRAW IS MADE. A percentage here is her
                    chance against ONE named girl, so before there is a girl there is no number to draw
@@ -2638,6 +2673,18 @@ section.bare .event-cards {
   font-weight: 500;
   line-height: 1.35;
   color: #eef3f6;
+  text-wrap: pretty;
+}
+
+/* ⭐⭐⭐ ROUND 34 #5b – the pre-draw figure's own caption. Quieter than the plaque above it, because
+   it is a note ABOUT the ring rather than another thing the coach said: same column, one step down
+   in size and weight, the label's own ink. It wraps like the plaque and adds no fixed height, so the
+   card grows by one line and only while the draw is pending. */
+.field-note {
+  margin: 5px 0 0;
+  font-size: 12px;
+  line-height: 1.35;
+  color: var(--ink-soft);
   text-wrap: pretty;
 }
 
