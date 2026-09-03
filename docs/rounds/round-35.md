@@ -905,3 +905,30 @@ instrument and memory is not.
 
 ⚙ **The fix is not more care, it is the tally.** Count `[ ]` + `[>]` against the bundles dispatched
 BEFORE gating, not after – a wave is not ready to gate while any item has no owner.
+
+- [x] **15. The CI failure on `round31-age-curve.test.ts`** – **fixed, and it was never contention.**
+
+  ⚠⚠ **I called this one wrong in round 34 and shipped it.** It timed out on a local gate with zero
+  assertion failures; I measured the FILE – solo 8.5 s, in-pool 14.7 s, mid-pack against ten files
+  that run 25–32 s and pass – and concluded «the heavy-shard remedy is not indicated». The
+  measurement was right and **aimed at the wrong unit: vitest's 20 s timeout is PER TEST.**
+
+  ⭐⭐ **One `it` was migrating all 71 golden fixtures**, and `migrateSave` walks the whole chain on
+  each. So it grew TWICE every wave – one more fixture, and one more step in every other fixture's
+  chain. Round 35 added `v70.json` and it crossed the line on CI's two-core runner.
+
+  **Fixed with `it.each`, one test per fixture:** 22 tests became **92, and the file runs in 7.08 s**
+  with no single test near the budget. ⭐ Not a loosening – the same assertions over the same corpus,
+  each on its own budget, and a failure now names the fixture instead of the sweep.
+
+  ⚠ **The same shape survives one file over, measured not guessed.** `tests/goldenSaves.test.ts`
+  already gives each `vN.json` its own test, but two sweeps inside it still walk all 71:
+
+      v62: every migrated save carries a peak physical   5,889 ms
+      v61: no migrated save carries a college `open` flag 5,899 ms
+
+  At the branch's measured x1.73 in-pool factor that is ~10 s each, and both grow every wave. **They
+  are the next to cross.** ⚙ NOT split here: it is a future failure rather than today's, the v61 arm
+  carries a cross-file vacuity count that a naive split silently voids, and my first attempt at the
+  transform broke the file. It is a small item for its own wave, and this is the measurement it
+  starts from.
