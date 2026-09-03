@@ -61,6 +61,10 @@ his words win**, and every such difference is recorded below rather than resolve
     strip already sat outside every tab guard, so «на каждой странице магазина» needed no move: it is
     under the grid on the home and under the last rung on a category page. Round 26 #5b's two
     sentences are untouched; the element went `p` to `div` because a polaroid is a `div`.
+  - **The way back is pinned as behaviour, not as markup.** A two-level shop is the first place in
+    this app where a player could enter a level and not leave it – round-20 #3's own family of
+    defect – so an arm presses the back control and requires the home to come back WHOLE, the plate
+    and the six cards both, with the rungs gone. Mutating the handler to a no-op reddens it.
   - ⚠ The mockup's big hero image is NOT built, and there is an arm asserting its absence.
 
 - [~] **4. «invest особо не меняется, там оптимизация инпутов и кнопок в основном, на фонде рисуем
@@ -349,10 +353,10 @@ is green, so nothing in this bundle is blocked on it.
 
 ## ⚙ EVIDENCE
 
-`tests/component/round35-shop.test.ts` – **17 mounted arms**, all against a real snapshot from the
+`tests/component/round35-shop.test.ts` – **18 mounted arms**, all against a real snapshot from the
 real engine, none of them a source pin.
 
-**Thirteen mutations, thirteen reds** – every claim was watched failing before it was believed:
+**Fourteen mutations, fourteen reds** – every claim was watched failing before it was believed:
 
 | # | mutation | the arm that went red |
 | --- | --- | --- |
@@ -369,6 +373,7 @@ real engine, none of them a source pin.
 | 11 | `order: -1` put back on the pill | «share ONE LINE» – the two are reordered against each other |
 | 12 | the price given `flex: 1 0 100%` again | «share ONE LINE» – the price claims the line and pushes the control down |
 | 13 | the framed head back to `display: flex` | «painting on the LEFT» – the name shares a flex line with the rate |
+| 14 | the back control made a no-op | «the way back out is real» – the six cards do not come back |
 
 ⚠ **AND ONE PIN THAT WAS WRITTEN, FOUND VACUOUS AND REPLACED – recorded because it looks exactly
 like a real assertion.** The obvious way to hold «the card is short» is a ceiling on

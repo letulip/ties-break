@@ -243,6 +243,27 @@ describe('#3 – the shop has a front door', () => {
     wrapper.unmount()
   })
 
+  it('⭐⭐ the way back out of a category is real, and a category page is not a trap', async () => {
+    // ⚠⚠ THE FAILURE THIS ARM EXISTS FOR IS ROUND-20 #3's FAMILY: a level you can enter and not
+    // leave. A two-level shop is the first place in this app where that is even possible, and
+    // «press the chapter tab again» is not a way out a player can find. So the control is pressed
+    // here the way a player presses it, and the home has to come back whole - the plate AND the six
+    // cards, not one of the two.
+    const wrapper = await mountShop(toSnapshot(rich('r35-3-back')))
+    await openShelfTab(wrapper, 'Water')
+    expect(wrapper.find('.shelf-feed').exists(), 'a category really is open').toBe(true)
+    const back = wrapper.find('.shelf-back')
+    expect(back.exists(), 'there is a way back on a category page').toBe(true)
+    expect(back.attributes('aria-label'), 'and it says where it goes').toBeTruthy()
+    await back.trigger('click')
+    expect(wrapper.find('.shelf-cats').exists(), 'the six cards are back').toBe(true)
+    expect(wrapper.find('.money-shop').exists(), 'and so is the plate').toBe(true)
+    expect(wrapper.find('.shelf-feed').exists(), 'and the rungs are gone again').toBe(false)
+    // ⚠ AND THE HOME ITSELF CARRIES NO BACK CONTROL - it is not a level, it is the shop.
+    expect(wrapper.find('.shelf-back').exists(), 'nothing to go back from on the home').toBe(false)
+    wrapper.unmount()
+  })
+
   it('⚠ the mockup\'s big hero image is NOT built', async () => {
     // «большой картинки делать не будем пока что» – an explicit NOT, and the only way to hold a
     // «we did not build that» is to assert its absence. Frame V's hub art is a full-width plate
