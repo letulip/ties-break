@@ -121,6 +121,12 @@ test('at 375 px the app does not scroll sideways, and the season strip stays sho
   expect(await sideScroll(page), 'the Bills sub-tabs overflow sideways at 375 px').toBeLessThanOrEqual(0)
 
   await chapters.getByRole('button', { name: 'Shop' }).click()
+  // ⚠ RE-AIMED BY ROUND 35 #3, AND ONLY THE WAY IN MOVED. The shop is TWO levels now: pressing Shop
+  // lands on its home – six category cards – and the segments this arm measures live one press
+  // deeper. Reading the group straight after the Shop click found nothing at all, which is a test
+  // that has lost sight of its subject rather than one that disagrees with it. The overflow claim
+  // below is untouched.
+  await page.getByRole('button', { name: 'Invest' }).first().click()
   const shelf = page.getByRole('group', { name: 'Which part of the shelf' })
   await expect(shelf).toBeVisible()
   expect(await sideScroll(page), 'the shelf sub-tabs overflow sideways at 375 px').toBeLessThanOrEqual(0)
