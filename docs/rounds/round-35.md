@@ -398,7 +398,7 @@ praise, and it is the standard the rest are measured against.
   and those are screens he called «нормально», so it was left alone rather than swept in. If
   «на всех экранах» is meant to include it, that is one number.
 
-- [ ] **9. «доход от ее бренда давай тоже как проценты с призовых будем делить: т.е. в интерфейсе
+- [x] **9. «доход от ее бренда давай тоже как проценты с призовых будем делить: т.е. в интерфейсе
   напишем про ее долю, в недельном доходе будет семье на руки сумма меньше»** – **build.**
 
   ⭐ The mechanism he is pointing at already exists and has one owner. `kidPrizeShareBps(ageYears)`
@@ -428,6 +428,80 @@ praise, and it is the standard the rest are measured against.
 
   ⚠ Queued behind the shop bundle: it touches `business.ts` and the money surfaces, where that agent
   is working.
+
+  – `[x]` **SHIPPED. HER RAMP NOW SPLITS THE BRAND'S WEEK, THE FAMILY BANKS THE REMAINDER, AND THE
+  BRAND'S WORTH DID NOT MOVE – measured before and after, with the trap priced.**
+
+  **WHERE THE SPLIT WENT, and it is the one place it could go.** `resolveBusinessIncome`
+  (`world/phaseFinance.ts`) is the banking site: the merch line is split there, her share rounded
+  ONCE (`assetKidShareCents` -> `kidPrizeShareCents`, the very function `finalizeTournament` divides
+  a prize by) and the family taking the **remainder by subtraction**, so the two balances re-add to
+  the brand's gross to the cent. ⚠ THE ACADEMY IS NOT SPLIT and the guard is in the arithmetic rather
+  than at the call site: «её бренд» is the merch, the academy is the parent's business bought with
+  the parent's money. `bankSponsorCheque`'s shape is followed to the line, including the `info`
+  transfer row with no `amountCents` (booking her share as a family expense would count the same
+  cents twice against `careerTotals.spentCents`).
+
+  **⚠⚠ THE TRAP, MEASURED RATHER THAN AVOIDED BY ASSERTION.** `assetEarningsRateCents` and
+  `brandGrossWorthCents` both read `brandWeeklyGrossCents`, so a split placed anywhere upstream of
+  the worth would have looked exactly like this change on the weekly line and quietly repriced the
+  brand. `tools/r35-brand-share.ts` is the instrument. Before/after on the bench walk (9 presets x 4
+  seeds x 780 weeks, **2,779 earning weeks**):
+
+  | | before | after |
+  |---|---|---|
+  | multiple, min / p50 / max | 2.5251x / 4.6550x / 7.1214x | **byte-identical** |
+  | peak brand worth | $35,626 | **byte-identical** |
+
+  ⚠⚠ **AND THAT NULL IS WEAK ON ITS OWN, so it is not what the claim rests on** – the bench policy
+  buys no shop rung, so the split never fires in it (CLAUDE.md: «prove the arm contains both the
+  change and its reader»). The file therefore carries a second section on a hand-planted career that
+  **actually owns the brand**, at week 500, her age 23, ramp 35%:
+
+  * brand weekly **gross $1,898** – her cut **$664**, the family banks **$1,234**, re-adding exactly;
+  * `split is LIVE: YES` – the arm runs the new code;
+  * brand **worth $740,096**, multiple **7.4976x** – ⭐ **inside the 6–9x corridor**, and within
+    0.05x of round 34's 7.46x reading on his own save;
+  * ⭐⭐ the **counterfactual**, printed so the measurement can be seen to be sensitive: the same
+    split placed upstream would read **$481,060**, a **$259,035** hole. The instrument moves when the
+    defect is present, which is what makes the null above worth anything.
+
+  ⚠ Structural confirmation beside the numbers: `src/engine/world/brand.ts` and
+  `src/engine/world/assets.ts` are **not in the diff at all** – `assetEarningsRateCents` is untouched
+  to the character.
+
+  **THE SURFACES THAT NOW READ THE FAMILY'S HALF**, all through one function
+  (`assetWeeklyFamilyIncomeCents`), so they cannot disagree: the till, `familyWeeklyIncomeCents`
+  (the coach-market cap), `householdWeekly.merchCents` (the strip) and the shop card's `incomeCents`.
+  ⭐ The precedent is inside `familyWeeklyIncomeCents` itself, where the retainer has been netted
+  since round 29 P3 on the rule «the meter must read what the till actually banks».
+
+  **ON SCREEN**, on her own page, in the register the frame's «Her own account» card uses and
+  appended to the shipped sentence rather than replacing it:
+
+  > Her own account – $X. She keeps 30% of every prize cheque now, 5 points more every birthday up
+  > to 50%. Sponsor cheques are hers, less the manager's 15%. **The same share comes off her brand's
+  > weekly income.**
+
+  ⚠ «the same share», not a second percentage – two spellings of one number on one line is how a
+  stale one survives. ⚠ And the clause is drawn **only when a brand is actually paying**
+  (`ownsBrand`, off the till's own predicate): a family with no brand is not told the terms of a
+  business it does not own.
+
+  ⚠ **THE MEMO IS TAGGED `brand`, NOT `prize`, and round 31 #2 is why.** The week recap prints ONE
+  line and picks the `prize` part by name, after he refused a second weekly row about money he had
+  not asked to see weekly («что там снова за цифры странные появились?»). Folding brand cents into
+  the prize part would put a bigger number under a label that says prize. **No schema move**:
+  `FinanceWeekKidShare.brand` is optional and forward-only on `prize`/`sponsor`'s own recorded
+  precedent (commit 2763caa); absent is already meaningful on every save.
+
+  **EVIDENCE** – `tests/round29p5-business.test.ts` (the halves re-add on **60 lived weeks**, one
+  rounding at her age, income never negative; the brand books its own `kidShare` part at her ramp
+  and never a prize part; the strip and the shop card both quote the family's half; the academy
+  stays whole) and `tests/round23-kid-share.test.ts` (the clause on screen, both directions).
+  ⚠ **Mutation-verified**: `assetKidShareCents` forced to 0 reddens exactly four arms – the re-add,
+  the brand part, the strip total and the shop card – and nothing else. Deleting the brand clause
+  reddens the screen arm alone.
 
 - [x] **10. «когда мы на неделе с множеством турниров уже подали заявку на какой-то, давай на других
   на этой же неделе кнопки подачи задазаблим? Тогда не будет текущее кривое … вообще не надо будет
@@ -543,7 +617,7 @@ praise, and it is the standard the rest are measured against.
   the computed cascade (a negative margin here *is* the overlap) rather than through a real
   `getBoundingClientRect`.
 
-- [ ] **12. «Инвест тоже докинь пожалуйста в эту же ветку, вроде не сложная правка»** – **build.**
+- [x] **12. «Инвест тоже докинь пожалуйста в эту же ветку, вроде не сложная правка»** – **build.**
   ⚠ The shop bundle deliberately skipped Invest because round 34's #19/#20 were not in this tree –
   `round/34` merged to main as PR #121 AFTER `round/35` was branched. **`origin/main` is now merged
   in, so the inline stake row and the fund chart with its four ranges are present** (verified:
@@ -551,7 +625,57 @@ praise, and it is the standard the rest are measured against.
   left is whatever frame **W-shop-investments.png** asks for beyond them – measure that before
   building, and if the answer is «nothing», say so.
 
-- [ ] **13. Catalogue corrections he gave on 03.09** – **build.**
+  – `[x]` **SHIPPED, AND «NOTHING LEFT» WAS THE WRONG ANSWER – HE CHECKED THE FRAME HIMSELF.**
+
+  > «инвесту разрешил ответить "делать нечего" - нет, не так, сверься с макетами пожалуйста, там две
+  > кнопки о поле инпута одно, всё в ряд стоит»
+
+  **THE MEASURED DELTA, and it is one thing.** Round 34 #20 put each control beside its OWN input,
+  which satisfied «в одну строку с инпутами» **twice** and left a holding carrying **two** number
+  fields. The frame has **one**, with both buttons after it. So: one shared field, `Add more` and
+  `Sell` beside it, one row. `stakeDollars` is now the single value and `stakeCentsFor` /
+  `sellCentsFor` are its two readers – no predicate, command or minimum moved, and the dedicated
+  `sellDollars` ref is gone (a second value nothing on screen can show is worse than the two fields
+  it replaced).
+
+  ⚙ **The words are his, ruled 03.09** – quoted here so a later reader can see they were asked for
+  and not tidied up by a builder (CLAUDE.md invariant 4):
+
+  > «"Add more" и "Sell" - хорошо, меньше места занимают»
+
+  So `Put more in` -> **Add more** and `Sell it for $X` / `Take out $X` -> **Sell**.
+
+  **⚠ ROUND-20 #3, RE-MEASURED WITH HIS WORDS IN PLACE** (which is the point – the shorter labels are
+  what buys the width the third control needs). At **375x667**, on the widest holding this row can
+  produce (a $1,000,000 deposit), the field plus both buttons demand their room and leave
+  **85.82px of slack**. ⚠ Mutation-verified: `.shop-stake-input` widened 8.5em -> 30em reddens that
+  arm **alone**.
+
+  ⭐ **BEHAVIOUR, and the one subtlety a shared field creates, written down rather than discovered
+  later.** An empty box is not ambiguous – each verb keeps the default it already had: `Add more`
+  adds the **minimum** (`stakeCentsFor` floors an unusable figure at `entryCents`, which is exactly
+  what the placeholder in the box promises) and `Sell` sells **all of it** (`sellCentsFor` returns
+  null, the engine's `amountCents === undefined`). Both are pressable and they do different things.
+  More than they hold is still refused.
+
+  **EVIDENCE** – `tests/component/round34-money-shelf.test.ts`, re-aimed from two rows to one and
+  never loosened: one field on the whole card, both controls in the same row element (structure, not
+  class names), the two labels, the 375x667 fit, a fixed rung still coming out with a single control
+  and no field, and both verbs reading the one box. Re-aimed with ⚠ notes in
+  `round29p2-part-sale.test.ts`, `round29-shop-topup.test.ts` and `shop-tab.test.ts`.
+
+  **[?] TWO THINGS FOR HIM, both deliberate rather than forgotten:**
+  1. **The two captions are gone.** «Add more, from $5,000» and «Take out how much, or leave it
+     blank for all $X» labelled two fields; there is one now, and the frame draws it bare with the
+     minimum as its placeholder. The sentence a screen reader needs is kept as an `aria-label` built
+     from the engine's own figures, so nothing is lost to accessibility – but the visible captions
+     are two shipped sentences that went, and that is his call to confirm.
+  2. **The frame paints `Add more` filled lime and `Sell` outlined.** Both ship outlined today
+     (`.shop-action` is already the outline style). He ruled the words, not the fill, and his
+     standing note is «есть нюансы, делаем не точно так» – so the treatment is unchanged and this is
+     one line from him either way.
+
+- [x] **13. Catalogue corrections he gave on 03.09** – **build.**
   * `house-garden` moves to **$590,000** (it ships at $520,000; his art is `property-590`). ⚙ «Дом
     пусть будет за 590к - ок».
   * the seat counts: **the big plane carries 8 passengers, the new small one 6.** ⚠ Its shipped
@@ -563,6 +687,49 @@ praise, and it is the standard the rest are measured against.
     ⭐ His own research (`docs/research/private-jets-in-tennis.md`) prices Nadal's real Cessna
     Citation CJ2+ at $5–7M for up to 8 passengers, so the $7M rung sits on a real aircraft – the
     number was chosen before the research and survived it.
+
+  – `[x]` **SHIPPED, ALL THREE, AND NO PRICE MOVED BUT THE ONE HE MOVED.**
+
+  * **`house-garden` $520,000 -> $590,000** («Дом пусть будет за 590к - ок»). ⭐ The painting was
+    right all along: his art for this rung has been named `property-590` since round 35 #1, and
+    round 35 #7 deliberately left the price alone because he had asked to ADD two tiers and nothing
+    else. The note it left in `economy.ts` recording that disagreement is now the record of it being
+    settled, and `src/art/shelf.ts`'s «two of his stems do not match» block reads the other way
+    round: both stems agree with their prices again.
+  * **The big plane keeps $18,000,000 and its blurb says «Ten seats»** («самолет 18м стоит (верно)
+    мест пусть будет 10»).
+  * **The small plane keeps $7,000,000 and now says «Seven seats»** («У маленького 7. всё.»).
+    ⭐ Round 35 #9 shipped that row deliberately SILENT on the cabin – its own catalogue note says
+    why, and that «one word from him closes it». He gave two, and the pair is consistent for the
+    first time: seven below, ten above.
+
+  ⚠ This is the one kind of wording change invariant 4 allows: he asked for these numbers by name.
+  Nothing else on either row changed a syllable, and the prices are cross-checked in the same test
+  so a seat edit cannot travel with a price edit.
+
+  **⚙ THE SCHEMA ANSWER: `SAVE_SCHEMA_VERSION` STAYS AT 69, and he closed the question himself** –
+  «Дом за 520к кто-то мог купить - никто не купил, нет игроков». ⚠ But the mechanical half was
+  checked rather than assumed, because «no players» is not the same claim as «no save moves»:
+
+  * `entryCents` is read **live** at exactly two sites – `buyAsset` (what leaves the wallet) and
+    `shopView` (what the card quotes). Neither writes it anywhere.
+  * an **owned** row is valued off its own `paidCents`, never off the catalogue:
+    `assetWorthCents` -> `assetValueCents(item, owned.paidCents, ...)`. Ongoing upkeep is
+    `assetUpkeepCents(item, owned.paidCents, ...)` – also `paidCents`, and a house carries no
+    `upkeepBps` anyway.
+  * **no golden fixture holds a `house-garden`** (`grep` over `tests/fixtures/saves/` – zero hits),
+    so no frozen serialisation can move.
+
+  So an existing holding is arithmetically untouched by the edit; nothing is added, renamed or
+  removed; no migration is owed. A price edit is strictly smaller than the shop bundle's three
+  catalogue ADDITIONS, which already owed nothing.
+
+  **EVIDENCE** – `tests/component/round35-shop.test.ts`: the property ladder re-aimed to
+  240k / **590k** / 1.4M / 3M read out of `ECONOMY` (⚠ the old note *predicted this exact line*:
+  «If he wants the rung repriced it is one number here and this line goes red first, which is the
+  point» – it did), the stem cross-checked against the price, and a new arm pinning both cabins with
+  the negative that catches a revert («Eight seats» must not come back). ⚠ **Mutation-verified**:
+  restoring $520,000 reddens the ladder pin; restoring the two old blurbs reddens the seat pin.
 
 ---
 
