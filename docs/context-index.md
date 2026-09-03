@@ -48,8 +48,8 @@ A lower source can justify changing a higher one; it never silently overrides it
 | Money, progression, fatigue, injury | [Economy and progression](context/economy-and-progression.md) | `src/engine/economy.ts`, development/condition/injury/coach modules | economy, condition, injury, coach and bench tests |
 | Screens, components, accessibility, PWA | [UI and design](context/ui-and-design.md) | `src/App.vue`, `src/components`, `src/composables`, `src/style.css`, `vite.config.ts` | screen, design-token, UI-control and PWA tests |
 | Pitch, daughter agency, story, endings | [Product and narrative](context/product-and-narrative.md) | `src/engine/world/endings.ts`, `EndingScreen.vue`, protocol/world state, diary, milestones | `ending`, `college-*`, diary, event and week-story tests; psyche has none – it has no runtime |
-| Where an engine symbol lives | [Engine symbol map](context/engine-symbol-map.md) | The owner it names, not the `engine/world` barrel | Its owner's tests |
-| Which bench or probe answers a question | [Tools registry](../tools/README.md) – 24 live, 114 archival | `tools/`, its live half typechecked by the build | `npm run check:tools` sweeps the whole directory |
+| Where an engine symbol lives | [Engine symbol map](context/engine-symbol-map.md) – a route to `node scripts/world-map.mjs`, not a table | The owner that command names, not the `engine/world` barrel | `npm run map:world:check` |
+| Which bench or probe answers a question | [Tools registry](../tools/README.md) – 26 live, 151 archival | `tools/`, its live half typechecked by the build | `npm run check:tools` sweeps the whole directory, in the gate since round 34 |
 | Delivery sequence | [Now / next / later](now-next-later.md) | The wave named there | That wave's gate plus `npm run check` |
 | Funding and commercial scenarios | [Funding routes and cost model](funding-and-roadmap.md) | Not runtime code | Recheck assumptions and source dates before external use |
 | Architecture or quality audit | Relevant context packs, then dated reviews | Verify every claim against current code | Reproduce findings; do not inherit old severity blindly |

@@ -1242,3 +1242,180 @@ branches rewrote the same comment above the `startingSkills` import to name thei
 
 ⚠ Not applied to `round/34` – that would put prologue's text on a branch without prologue's code.
 Either merge order works.
+
+---
+
+# Bundle G – the review's two gate findings (QA-34, ARCH-36)
+
+Not one of his 22 items. He asked for this bundle directly after reading tonight's gate report –
+«да, запускай в эту же волну агента по фиксам ревью пожалуйста» – so it carries the top two findings
+of the principles review of 02.09.2026 (`review/principles-2026-09-02`,
+`docs/review-principles-2026-09-02/README.md`) and **nothing else from it**. That review has many
+other findings; they are not in this wave.
+
+## QA-34 `[x]` – the archival tools sweep was red, and nothing ran it. Both halves fixed.
+
+**BEFORE and AFTER, both read out of a FILE** rather than off a pipe or a background notice
+(`npm run check:tools > log 2>&1; echo "TOOLS_EXIT=$?" >> log`):
+
+| | |
+| --- | --- |
+| before | `TOOLS_EXIT=2` – nine TypeScript errors across six tools, exactly the nine the review lists |
+| after | **`TOOLS_EXIT=0`** |
+
+### ⚠ FIRST, THE THING THE WAVE HAD TO CONFIRM: not one of the nine is round 34's
+
+If a round-34 tool had been among them, tonight's report to him was wrong. It is not. The last commit
+to touch each failing file:
+
+| tool | last touched by | wave |
+| --- | --- | --- |
+| `tools/birthday-pool.ts` | `0af7eaa6` | round 27 #7 |
+| `tools/his-careers-brackets.ts` | `8ada9d3a` | round 29 #20 |
+| `tools/market-probe.ts` | `a13e5226` | round 30 #14 |
+| `tools/r29-item14-anger.ts` | `9201e534` | round 29 #14 |
+| `tools/r29-item14-read.ts` | `9201e534` | round 29 #14 |
+| `tools/r31-surface-kings.ts` | `531b7b12` | round 31 #5-6 |
+
+No round-34 commit touches any of them, and the wave's own five probes – `r34-brand-foot`,
+`r34-calendar-tiers`, `r34-domestic-reset`, `r34-savings-income`, `r34-zero-lock` – are **inside** the
+swept set (`tsconfig.tools.json` includes `tools/**/*.ts`) and typecheck clean.
+
+⭐ **And the two hard errors are not this wave's ENGINE changes either**, which is the second way a
+round-34 fingerprint could have got in. `kidAgeExact` already took `(week, birthMonth, birthDay)` at
+the merge base `c6114b71`; round 34's own birthday commit `dc82d791` states in its message that
+`kidAgeExact` is untouched, and the tree agrees. `WorldEvent` carried no `kind` field at `c6114b71`
+either.
+
+⚠⚠ **The finding under the finding: both r29 errors were wrong the day they were written.** At
+`9201e534` – the 29.08 commit that ADDED both files – `kidAgeExact` already took three arguments and
+`WorldEvent` already named its discriminator `type`. So these probes never compiled, and because a
+TypeScript error does not stop `vite-node`, they RAN: one printed `age NaN` and the other printed
+`kind=undefined` into the evidence they exist to produce. Nothing objected for five days, because
+nothing ran the only check that could see them – the 02.09 review found them by running the sweep by
+hand, which is the only reason they reach this ledger at all.
+
+### The per-tool decision: SIX REPAIRED, NONE FROZEN
+
+| tool | error | verdict | why |
+| --- | --- | --- | --- |
+| `birthday-pool.ts` | TS6133 `Rng` declared, never read | **repaired** | a type-only import left behind by an edit; deleting it removes nothing the file uses |
+| `his-careers-brackets.ts` | TS6133 `conditionMatchFactor` declared, never read | **repaired** | the name survives twice in the file's own comments, which is where it belongs – the value import was dead |
+| `market-probe.ts` | TS6133 `maxRatioSeen`, `minRatioSeen` | **repaired** | born dead in `cab690a6`, the one commit that wrote them, and never read since: the printed worst ratios come from `worstCrashFreeRatio` / `worstMarketRatio` instead |
+| `r29-item14-anger.ts` | TS2339 `kind` not on `WorldEvent` (x3) | **repaired** | the field it wants exists under its real name, `type`; the repair is that rename and nothing else |
+| `r29-item14-read.ts` | TS2554 expected 3 arguments, got 1 | **repaired** | `kidAgeExact(world)` -> `kidAgeExact(world.week, world.profile.birthMonth, world.profile.birthDay)`. The repo has 77 calls of this function across 41 files and this was the ONLY one-argument one; the other 76 compile, which is how we know the convention rather than guessing it |
+| `r31-surface-kings.ts` | TS2459 `Surface` declared locally but not exported | **repaired** | imported from `src/engine/match/types`, the module that DECLARES it |
+
+⭐ **Nothing was classified frozen, and that is a decision rather than an omission.** The review's bar
+is «clearly classify frozen evidence that CANNOT BE MAINTAINED», and none of the six clears it: every
+repair is a rename, a deleted dead symbol or a call convention, and not one of them required guessing
+what a moved API now means. A repair that has to guess would be fabricating evidence and would earn
+the frozen label instead – so the test applied was «does fixing this change what the probe MEASURES?»
+and six times the answer was no. The two `r29-item14-*` probes are the closest call, because their
+question (round 29 #14) is closed and they need his personal save to run at all; they were repaired
+anyway, because their errors were never engine drift – they were typos that the absent gate let
+through – and a probe that prints `NaN` for her age is not a record of anything. Freezing them would
+have taken two files out of the swept set to preserve two defects.
+
+⚠ Nothing was silenced. There is no new `@ts-ignore`, no new `exclude`, and `tsconfig.tools.json`
+still sweeps `tools/**/*.ts` whole.
+
+⚠ `r31-surface-kings.ts` took the **import fix, not the export**, as the brief asked. `Surface` is
+already public from `src/engine/match/types`; `src/shared/protocol/competition` merely imports it for
+two of its own field types and never re-exported it. Adding an export there would have widened a
+module's public surface to satisfy one archival probe, and `his-careers-brackets.ts` was already
+importing `Surface` from `match/types` two files away.
+
+### ⭐⭐ The half that matters most: it is in the gate now
+
+Nine errors sat unread for months precisely because `npm run check` did not run `check:tools`, and two
+earlier waves recorded the redness as «baseline» and moved on. ⚠ That is not a rhetorical flourish –
+both entries are still in the tree: `docs/rounds/round-29.md:2364` («`check:tools` (6 errors) and
+`tools:registry:check` are red at baseline») and `docs/specs/the-drought-2026-08.md:630` («2 errors,
+both baseline … This wave adds **0**»). Both waves were honest and both were measuring the wrong
+thing: «adds none» is the only claim a person can make about a number nobody is allowed to fail on.
+⭐ And the number moved while it was being filed as a constant – **2 errors in the drought spec, 6 in
+round 29, 9 at the review**. A baseline that grows is a debt, not a floor.
+Both scripts the review names are now gate steps, in `npm run check` and in CI's `test-build` job:
+
+* `npm run tools:registry:check` – with the other cheap document checks, before the typecheck
+* `npm run check:tools` – immediately after `vue-tsc -b --force`, because the tools cannot be right
+  while the engine they import is wrong, and a reader should see the app's own errors first
+
+### The cost, measured BEFORE it was wired in
+
+The review offered an escape hatch – a scheduled or post-wave integrity job – if the per-PR cost were
+unreasonable. It is not, so the escape hatch was **not** taken:
+
+| step | run 1 | run 2 | run 3 |
+| --- | ---: | ---: | ---: |
+| `npm run check:tools` | 2.53 s | 2.49 s | 2.56 s |
+| `npm run tools:registry:check` | 0.17 s | 0.14 s | 0.14 s |
+| for scale: `vue-tsc -b --force`, already in the gate | 6.81 s | | |
+
+**~2.7 s added to a gate whose unit suite alone runs for minutes.** Choice taken: **every run, local
+and CI** – the option the review preferred – rather than the scheduled job, which would have kept the
+«somebody will remember» failure mode that produced the finding.
+
+### The wiring proved by a deliberate break
+
+A `const deliberateBreak: number = "not a number"` was added to `tools/r31-surface-kings.ts`. That
+file is ARCHIVAL – it is not listed in `tsconfig.app.json` – so it is invisible to the typecheck the
+gate already had, which makes it the honest test of the new step and its own control:
+
+| run, on the identical broken file | exit code, read from a file |
+| --- | --- |
+| `npx vue-tsc -b --force` – the gate's pre-round-34 typecheck | **`VUETSC_EXIT=0`** – blind, as it was to all nine |
+| `npm run check:tools` – the new step | `TOOLS_EXIT=2` – `TS2322` on line 57 |
+| `npm run check` – the whole gate | **`CHECK_EXIT=2`**, failing at `check:tools` after passing every step before it |
+
+The break was then removed; the file's remaining diff is the import line and its comment.
+
+## ARCH-36 `[x]` – the second symbol map is gone, not corrected
+
+`tools/generated/world-symbol-map.md` said `WorldState` and `SAVE_SCHEMA_VERSION` live in
+`src/engine/world/state.ts`; `docs/context/engine-symbol-map.md` still pointed both at the barrel. The
+generated map was right – `node scripts/world-map.mjs WorldState` prints `state.ts:320`, and
+`scripts/doc-facts.mjs` has read the schema constant out of `state.ts` since the move.
+
+⭐ **The correction was NOT to repair the hand-written row.** That would have left two maps of one
+thing, one of them checked and one of them not, and the checked one would have been right again in a
+month. `docs/context/engine-symbol-map.md` is now a short route: it keeps the routing question, states
+the barrel problem, and hands the answer to `node scripts/world-map.mjs <symbol>` and the generated
+table – including what the command says when a symbol is NOT on the barrel's surface, so a reader gets
+`no export named '…' reaches src/engine/world.ts` instead of a wrong answer.
+
+Evidence that the page no longer owns a symbol:
+
+* `grep -c "^| " docs/context/engine-symbol-map.md` -> **0** table lines (it had 32)
+* `grep -c "engine/world/" docs/context/engine-symbol-map.md` -> **0** – the owner spelling the old
+  table used appears nowhere; the only module path left is `src/engine/world.ts` itself, twice, as the
+  barrel the page is about
+* `npm run map:world:check` -> `world map: … is current (384 symbols)`, and `npm run context:audit`,
+  `node scripts/doc-facts.mjs`, `npm run decisions:check`, `npm run pins:check` all exit 0
+
+⚠ The stale row in the second table also went: the page announced «three areas» over four rows, one of
+which named rule modules the barrel does not re-export at all.
+
+## The judgement calls, named
+
+1. **Six repaired, none frozen** – reasoning above. If a later wave moves an API under one of these
+   probes in a way that cannot be mechanically followed, THAT is the moment for the frozen label, and
+   the gate will now be the thing that raises it.
+2. **Import over export** for `Surface`, so no module's public surface widened for a probe.
+3. **`docs/context-index.md`'s tools row was stale and was corrected in passing** – it advertised «24
+   live, 114 archival» against a measured 26 and 151. It is the same defect QA-34 names («the registry
+   says archival probes remain reproducible»), one line from the map row this bundle rewrote, so it was
+   fixed rather than left; it is the only line touched outside the two findings.
+4. **`CLAUDE.md` was deliberately NOT edited.** Its one-line summary of `check` («vue-tsc -b --force +
+   unit tests + build») was already a summary rather than a list – it never named `context:audit` or
+   `pins:check` either – so it does not become false, and the file is the project's own instruction
+   sheet.
+5. **`tools/README.md` is generated and was regenerated**, because `scripts/tools-registry.mjs` used to
+   render the words «typechecked on demand» and that stopped being true tonight.
+
+**Gate:** `npm run check` green end to end on this branch with both new steps in it – **`CHECK_EXIT=0`**
+read from the log file, 412 s wall clock, every step in the chain including `node scripts/units.mjs`
+(= `test:quiet`; `unit: green in 356s`) and `npm run test:component` (109 files, 1158 tests passed).
+`npm run check:tools` alone: `TOOLS_EXIT=0`. No guard test went red, so none was re-aimed, and none
+was deleted or loosened.
