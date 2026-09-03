@@ -254,13 +254,17 @@ describe('§4 – the weekly bill is on the household strip (round 28 #8)', () =
     }
     useGameStore().snapshot = toSnapshot(w)
     const wrapper = mount(CoachMarketScreen, { global: { stubs: { teleport: true } } })
-    expect(wrapper.text()).toContain('Keeping what they own is $1,038 a week of that')
+    // ⚠ RE-AIMED 01.09, NOT WEAKENED: the sentence read «Keeping what THEY own» until the owner
+    // asked who "they" was («Кто "they"? You здесь вроде»). The strip addresses the player, so the
+    // pronoun moved and this pin moved with it. What it asserts is unchanged - the strip names the
+    // upkeep, in cents, from the engine.
+    expect(wrapper.text()).toContain('Keeping what you own is $1,038 a week of that')
     wrapper.unmount()
 
     setActivePinia(createPinia())
     useGameStore().snapshot = toSnapshot(rich('r29-5-ui-strip-bare'))
     const bare = mount(CoachMarketScreen, { global: { stubs: { teleport: true } } })
-    expect(bare.text()).not.toContain('Keeping what they own')
+    expect(bare.text()).not.toContain('Keeping what you own')
     bare.unmount()
   })
 })

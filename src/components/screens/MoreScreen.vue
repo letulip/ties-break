@@ -14,6 +14,7 @@ import ConfirmDialog from '../ConfirmDialog.vue'
 import IconButton from '../ui/IconButton.vue'
 import SegmentedRow from '../ui/SegmentedRow.vue'
 import { isMuted, setMuted } from '../../audio/sfx'
+import { AUDIO_COPY } from '../../composables/audioCopy'
 import { isMusicMuted, setMusicMuted } from '../../audio/music'
 import { isHapticsOff, setHapticsOff, supportsHaptics } from '../../audio/haptics'
 import { isWeekStoryAutoOpenOff, setWeekStoryAutoOpenOff } from '../../composables/weekRecap'
@@ -653,7 +654,7 @@ const TAB_OPTIONS = [
   <section v-if="screenTab === 'play'">
     <h2>Sound</h2>
     <div class="career-row">
-      <div id="more-sfx-label">Sound effects</div>
+      <div id="more-sfx-label">{{ AUDIO_COPY.sfx }}</div>
       <button
         class="sound-switch"
         :class="{ on: !soundMuted }"
@@ -667,7 +668,7 @@ const TAB_OPTIONS = [
       </button>
     </div>
     <div class="career-row">
-      <div id="more-music-label">Music</div>
+      <div id="more-music-label">{{ AUDIO_COPY.music }}</div>
       <button
         class="sound-switch"
         :class="{ on: !musicMuted }"

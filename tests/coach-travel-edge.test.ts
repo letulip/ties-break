@@ -29,8 +29,10 @@ import { describe, it, expect } from 'vitest'
 import {
   careerHash,
   careerHashAtSchema,
+  careerHashUnderTheOldName,
   careerHashUnderTheWindowRule,
   FROZEN,
+  PRE_NAME_VERA,
   PRE_R28B,
   PRE_V62,
   PRE_V63,
@@ -62,6 +64,21 @@ describe('the byte-identity of a career that does not travel', () => {
 
   it('...and for a self-coached family with the switch ON, which has nobody to send', () => {
     expect(careerHash(0, 1), '8k · self-coached · player').toBe(FROZEN.selfTravelling)
+  })
+
+  it('⭐⭐ 02.09 – the `Vera -> Alice` default moved HER NAME: put it back and the old hashes return', () => {
+    // The measured diff behind the re-stamp, as an identity rather than as a claim about it. The
+    // per-key diff said `profile` and `events` moved and nothing else; this says the same thing at
+    // byte level, which is the stronger half – walk the same career with `kidName: 'Vera'` restored
+    // BEFORE birth and all three pre-02.09 constants come back exactly. If the owner's default had
+    // reached one number in a career – a draw, a cent, a ranking place – this would be red beside a
+    // green freeze, which is the one signal a whole-world hash cannot otherwise give.
+    // ⚠ AND THE OVERRIDE GOES IN BEFORE `createWorld`, NOT AFTER IT. Patching `world.profile` on the
+    // opened career reproduces every key except `events`, because the career's opening events are
+    // written at birth and already carry the old name. See `careerHashUnderTheOldName`.
+    expect(careerHashUnderTheOldName(5, 0), '25k · middle coach · grinder').toBe(PRE_NAME_VERA.middleGrinder)
+    expect(careerHashUnderTheOldName(8, 0), '120k · elite coach · grinder').toBe(PRE_NAME_VERA.eliteGrinder)
+    expect(careerHashUnderTheOldName(0, 1), '8k · self-coached · player').toBe(PRE_NAME_VERA.selfTravelling)
   })
 
   it('⭐⭐ v62: rolling the schema back to 61 – and dropping the key v62 added – reproduces the previous hashes byte for byte', () => {

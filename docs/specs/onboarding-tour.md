@@ -114,3 +114,98 @@ on scroll as well as on resize.
 | More can ask for it again | `e2e/onboarding-tour.spec.ts` |
 | every anchor resolves in a template that renders it | `tests/round13-nav.test.ts` |
 | the tour waits behind blocking questions and reveals | `tests/blocking-overlay.test.ts` |
+
+---
+
+# The tour stops when the screen changes – and a prologue player never meets it
+
+*02.09 – phase 5 of `childhood-prologue-build-2026-09.md` §6, both halves.*
+
+## His ruling
+
+> про тур нам нужен В и С вместе, В будет когда пролог скипают, а С будет в прологе … после него В
+> уже не будет.
+
+Two paths into a career, and each gets its own answer:
+
+```
+new game -+- the prologue (default) -- 9 cards -- the handover -- the game, and NO tour   (C)
+          +- skip ------------------- the existing wizard ------- the game, WITH the tour (B)
+```
+
+**C is not a feature.** It is phases 2–4 doing their job: the nine cards teach the interface as they
+go, so a player who walks the childhood arrives already onboarded and must never be shown eleven
+coach marks explaining the same screen. **B is the repaired tour**, and it now exists only for the
+player who takes the way out on the first card – the wizard is the skip branch («это создание
+персонажа будет как альтернативная ветка у нас при скипе пролога»).
+
+## B – what was wrong, measured on `main` on 01.09
+
+`.coach-tour` is `position: fixed`, full-screen, `z-index: 65`, `pointer-events: none` –
+**deliberately**, so the page beneath can still scroll; the note beside the scroll listener says so.
+The cost is that taps pass through too, and the shell swaps the screen underneath the marks.
+
+Reproduced: with the tour up, tapping **Stats** and pressing **Next** four times walked all four of
+*You are the parent*, *Her page*, *News and letters* and *The money is yours* – while the player
+stood on Stats the whole time, **with no highlight cut into the overlay at all**. Every anchor those
+four name lives on Home, so `document.querySelector` returned nothing and the spotlight hid itself.
+The tour could never break *visibly*; it just became untrue.
+
+## The repair, and the one that was refused
+
+⭐ **If the screen changes, the tour ends.** `OnboardingTour.vue` takes the shell's `tab` as a
+`screen` prop, records the screen it opened over, and ends the moment that moves: it emits `done` –
+the same exit **Skip tour** takes, so the device flag is written – and renders nothing further. A
+wrong tour becomes no tour, which is strictly better.
+
+⚠ **The click-capturing overlay was NOT built**, and the `pointer-events: none` stays. An overlay
+that ate the tap would make the tour compulsory, which is the overloaded version the owner refused
+(«он не должен стать перегруженным и выбешивать») – and it would have been built inside the component
+the prologue already replaces for most players.
+
+⚠ **Not one step's words moved** (CLAUDE.md invariant 4). What changed is *when* the tour stops,
+never what it says. The eleven marks are the strings that shipped in August.
+
+**The comparison is against the screen it OPENED on, not against the previous value.** The shell
+writes `tab` on paths that move nobody – the snapshot watcher sets `'home'` when a career arrives,
+and `reopenTour` sets it again on its way in – so an exit that fired on a *write* rather than on a
+*move* would make the tour unopenable from More.
+
+## C – the prologue marks the device onboarded
+
+`App.vue`'s `finishPrologue` calls `markTourSeen()` on the handover's «go on» and on nothing else:
+
+* the **skip** on the first card emits `skip`, routes to the wizard and leaves the flag alone – that
+  player gets the tour, which is exactly B;
+* «raise another child» on the handover emits neither, so a childhood started over is not an
+  onboarding.
+
+It writes the **same device flag** the dismiss writes, deliberately. "Has this device been
+onboarded" is one durable fact – see the gate above for why it is state and not an event – and
+finishing the prologue is one of the ways of acquiring it. Anything career-scoped would contradict
+the owner's «once, ever, per device» ruling and would re-offer the tour on the player's second
+career.
+
+## The way back is unchanged, and it is the reason the early exit is acceptable
+
+More's **Show the tour** (16.08, `screenTab === 'play'`) outranks both the seen mark and the week
+bound, and it re-arms after the new exit exactly as it does after **Skip tour**. It is existing copy
+and none of it was touched: no new sentence reaches the screen in this phase.
+
+## Where it is tested
+
+| claim | layer |
+|---|---|
+| **the 01.09 reproduction, walked step for step** – tapping Stats ends it, and the four marks cannot be walked from another screen | `tests/component/onboarding-tour.test.ts` |
+| it ends from any step and for any screen the shell can move to | `tests/component/onboarding-tour.test.ts` |
+| ...and NOT on a write to `tab` that leaves the player where they were | `tests/component/onboarding-tour.test.ts` |
+| the same reproduction through a **real tap on a real tab**, with Stats really opening below | `e2e/onboarding-tour.spec.ts` |
+| More brings it back after the screen change took it away | `e2e/onboarding-tour.spec.ts` |
+| **a prologue player never meets the tour** – absent with the shell up, the flag written, and still absent after a reload | `e2e/prologue.spec.ts` |
+| the skip path still gets the tour, and it still works | `e2e/smoke.spec.ts`, `e2e/onboarding-tour.spec.ts` |
+
+Mutation-verified, each watched failing: the `watch` on `props.screen` deleted (the reproduction
+returns); `over` left unset (the marks keep drawing); the guard dropped and the watcher made
+`immediate` (ten of twelve mounted tests red – a tour that ends on a *write* cannot be reopened);
+`markTourSeen()` removed from `finishPrologue` (the prologue spec goes red naming the player);
+`:screen` frozen to a constant in `App.vue` (both browser tests go red).

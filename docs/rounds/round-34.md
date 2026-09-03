@@ -1361,14 +1361,13 @@ his save as it actually stands today** the term is +11 and the result is:
    budget/middle/high careers peak at 0.855 / 0.879 / 0.895 and never hear it. ⚠ The band also
    carries ADVICE – «no coach can add much more now, whatever the price» – so an ordinary career is
    never told to stop paying. **My recommendation: 0.85.** See "OPEN FOR THE OWNER" above.
-2. **Item 14, the calendar.** Measured in full, not built: his diagnosis is confirmed to the tier and
-   his remedy is already shipped and is the cause. **My recommendation: design (A), the supply-side
-   fix, as its own wave** – it is what his words describe, and it is the only one of the two that
-   touches the 12 of 48 weeks that show her nothing.
-3. **Item 5, the tournament card before the draw.** ⭐ His complaint has two halves and only one is
-   about the number: a forecast he cannot act on is trivia at any accuracy, because withdrawal is
-   not free. **My recommendation: make withdrawal free until the draw** (and, if he wants both,
-   replace the first-round percentage with an expected finish range).
+2. **Item 14, the calendar.** ⚙ RULED AND BUILT – he chose design (B), several cards on a stacked
+   week: «чисто интерфейсная правка на свайп карточек. И никакого конфликта тогда нет – потому что
+   есть выбор». ⚠ But the measurement says it does NOT restore the three rungs he named – see
+   bundle J's line on item 14. That is a live question, not a closed one.
+3. **Item 5, the tournament card.** ⚙ RULED AND BUILT – «давай сделаем, посмотрим на результат».
+   The pre-draw figure now reads the field's class, and it moves 0.48 points on average against the
+   opponent figure's 18.43. See bundle J.
 4. **Item 19, the fund chart.** Built derived rather than stored, which is why his own week-569
    career opens on a full chart instead of an empty box. Storage would only buy a record of what the
    player SAW if the market model is re-tuned. **Cheap either way, his call.**
@@ -2108,3 +2107,36 @@ bundle I's note written underneath rather than over them.
 * no save schema, no migration, no RNG draw: `realisedShare` is derived at snapshot time and persists
   nothing, and the normaliser is a pure function of shipped constants
 * item lines 1–22 and every other section of this ledger
+
+---
+
+# ⚠⚠ CORRECTION – bundle G's QA-34 was work that was already done and merged
+
+While round 34 was building, the owner merged `prologue/wave` (PR #120) into `main`. It carries:
+
+    ecf93744  merge the review's P-01 – the gates that nobody ran, and the routes that were false
+    7f7b9406  P-01: repair the six red tools, run the sweep that found them, correct the false routes
+
+⚙ **That IS QA-34**, and I had commissioned it myself earlier in the same session, then forgot and
+put it to the owner again as new work. Bundle G re-did it independently, and the merge of the new
+`main` conflicted on five files for exactly that reason.
+
+**Verified against `origin/main` before resolving, so this is measured rather than assumed:**
+
+| | already in main | bundle G |
+| --- | --- | --- |
+| the nine tool errors repaired | yes, all six files | yes, independently |
+| `check:tools` inside `npm run check` | **yes** | yes |
+| `tools:registry:check` inside `npm run check` | **yes** | yes |
+| both inside CI (`ci.yml`) | **yes**, lines 98 and 108 | yes |
+| **ARCH-36 – the second symbol map retired** | **NO** – it still carries its own 33-line table | **yes, 0 lines** |
+
+⭐ So **one of the two findings survived**: `docs/context/engine-symbol-map.md` is a route to the
+machine-checked generated map on this branch and a second hand-maintained table on main. That file
+is the only part of bundle G that reaches the owner. Everything else in the merge took main's
+version, because main's is the shipped one.
+
+⚠ The process failure is mine and it is worth naming precisely, because it is cheap to repeat:
+**I proposed folding a review finding into a wave without checking whether the fix already existed
+on another branch.** The check is one command – `git log --all --grep=` on the finding's id – and it
+was not run.

@@ -102,9 +102,12 @@ relationship with the parent, a school she is failing to attend, and the right t
 
 Her name is *rolled*, not fixed: onboarding draws a first name and a surname at random from the
 game's own pools (44 given names × 210 surnames) and the player can re-roll or type over either. The
-hard-coded fallback profile is Vera Martin, which is why "V. Martin" shows up in code comments and
-placeholder art – but no career actually opens on it unless the dice land there. **Do not letter any
-one name into a painting as though it were hers.** If a scoreboard needs a name, invent initials.
+hard-coded fallback profile is **Alice Martin** (`DEFAULT_PROFILE`, owner's ruling 02.09.2026 – it
+read Vera Martin before that, which is why "V. Martin" still shows up in older code comments and
+placeholder art). The PROLOGUE path prefills her name, her birthday and her country from that
+fallback on its first card and lets the player type over them, so a prologue career opens on Alice
+Martin only when the player leaves the field as it was found. **Do not letter any one name into a
+painting as though it were hers.** If a scoreboard needs a name, invent initials.
 
 **The parent.** The player. Almost never depicted, and when present, at the edge of the frame: on the
 far side of the fence, in the car, holding the bag. The design principle is *parent as observer* –

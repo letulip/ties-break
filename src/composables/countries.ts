@@ -22,6 +22,28 @@ export const COUNTRY_NAMES: Record<string, string> = {
   IN: 'India', BR: 'Brazil', AR: 'Argentina', CA: 'Canada', NL: 'Netherlands', SE: 'Sweden',
 }
 
+/** The playable codes, in the order onboarding offers them.
+ *
+ *  ⚠ MOVED OUT OF `OnboardingWizard.vue` (02.09.2026), where it was `const COUNTRIES` – for exactly
+ *  the reason at the top of this file. The prologue's age-5 card now asks for her country too
+ *  (owner: «страну тоже добавь, да»), so the twenty-four codes were about to be a second copy in a
+ *  second component, which is the shape this module exists to prevent.
+ *
+ *  ⚠ `tests/season/wildCard.test.ts` PINNED THAT DECLARATION BY NAME and said in its own words «if
+ *  this throws, the COUNTRIES array moved – re-aim this pin, do not delete it». It was re-aimed, and
+ *  it got stronger on the way: the pin read the wizard's SOURCE because the array was locked inside
+ *  a `<script setup>` where no runtime import could reach it, and this module can simply be
+ *  imported. A source pin became the real value. */
+export const COUNTRIES: readonly string[] = [
+  'US', 'GB', 'FR', 'ES', 'IT', 'DE', 'RU', 'RS', 'CH', 'CZ', 'PL', 'UA',
+  'KZ', 'BY', 'AU', 'JP', 'CN', 'KR', 'IN', 'BR', 'AR', 'CA', 'NL', 'SE',
+]
+
+/** The nine POPULAR tiles, in the design's own order
+ *  (docs/design/screenshots/P-onboarding-country). A shortcut into the same 24, never a different
+ *  list: whatever is chosen through it is one of `COUNTRIES`. */
+export const POPULAR_COUNTRIES: readonly string[] = ['US', 'GB', 'AU', 'CA', 'DE', 'FR', 'ES', 'IT', 'JP']
+
 /**
  * The flag for a two-letter country code, built from the regional-indicator block (U+1F1E6 is 'A',
  * so each letter maps to its own indicator and the pair renders as one flag).

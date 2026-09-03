@@ -2028,13 +2028,13 @@ const shelfFamilies = computed(() =>
         </p>
         <!-- ⭐ THE EMPTY SHELF'S OWN SENTENCE: a real thing at a real price. -->
         <p v-if="shopCheapest" class="money-panel-note is-empty-shelf">
-          They own nothing yet. The cheapest thing here is
+          You own nothing yet. The cheapest thing here is
           {{ shopCheapest.label }}, from {{ formatCents(shopCheapest.entryCents) }}.
         </p>
         <StatRow
           v-else
           class="money-row"
-          label="What they own"
+          label="What you own"
           :meta="`${shop.ownedCount} ${shop.ownedCount === 1 ? 'thing' : 'things'}`"
           :value="formatCents(shop.ownedValueCents)"
           tone="positive"
@@ -2213,8 +2213,8 @@ const shelfFamilies = computed(() =>
                 <p v-if="row.name" class="shop-row-given-name">Trading as {{ row.name }}</p>
                 <p class="shop-row-change" :class="{ 'is-down': (row.changeCents ?? 0) < 0 }">
                   {{ formatCentsSigned(row.changeCents ?? 0) }}
-                  <span v-if="row.changePct !== null">since they bought it ({{ row.changePct }}%)</span>
-                  <span v-else>since they bought it</span>
+                  <span v-if="row.changePct !== null">since you bought it ({{ row.changePct }}%)</span>
+                  <span v-else>since you bought it</span>
                 </p>
                 <!-- ⭐⭐ ROUND 29 #11 – PUT MORE IN. His words are in `shopTopUpNote` in the
                      script block (no Cyrillic in a template). The control is drawn for an 'open'

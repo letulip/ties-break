@@ -1,28 +1,22 @@
 {
-  // THE TOOLS SWEEP – R2-12 / TOK-09. `npm run check:tools`.
+  // THE ARCHIVAL TOOLS SWEEP – R2-12 / TOK-09. `npm run check:tools`.
   //
   // ⚠ NOT REFERENCED FROM `tsconfig.json`, AND THAT IS THE POINT. `vue-tsc -b` builds the projects
-  // the root config references; this one is deliberately outside that graph, so the 151 archival
-  // probes in `tools/` stop being typechecked on every `npm run build`. The 26 live instruments are
-  // listed in `tsconfig.app.json` and still are.
+  // the root config references; this one is deliberately outside that graph, so the archival probes
+  // in `tools/` stop being typechecked on every `npm run build`. The live instruments are listed in
+  // `tsconfig.app.json` and still are. `npm run tools:registry:check` prints the current split and
+  // owns the two numbers, so no count is written here.
   //
   // WHAT IT IS FOR. An archival probe is evidence – the reproduction that settled an argument – and
   // evidence that no longer compiles is evidence you cannot re-run.
   //
-  // ⭐⭐ AND SINCE ROUND 34 IT IS NOT "ON DEMAND" ANY MORE: `npm run check` runs it, and so does CI
-  // (QA-34 of the 02.09 principles review). «On demand» meant «by whoever remembers», and the
-  // measurement of what that was worth is nine TypeScript errors across six tools sitting unread
-  // for months – two of them, both `r29-item14-*`, wrong on the day they were written, so those
-  // probes printed `undefined` and `NaN` into their own evidence and no run ever objected. Two
-  // earlier waves saw the redness, wrote it down as «baseline», and moved on, which is what a check
-  // nobody runs is actually for.
-  //
-  // ⚠ THE COST WAS MEASURED BEFORE IT WAS WIRED IN, because the review offered a scheduled job as
-  // the escape hatch if it were expensive: 2.49 / 2.49 / 2.56 s over three runs on this Mac, beside
-  // 6.81 s for the `vue-tsc -b --force` already in the gate and minutes for the unit suite after
-  // it. At ~2.5 s it does not need an escape hatch, so it takes the every-PR slot the review
-  // preferred. It is placed AFTER `vue-tsc -b --force`: the app's own errors should be the first
-  // thing a reader sees, and the tools cannot be right while the engine they import is wrong.
+  // ⚠⚠ IT IS NO LONGER ON DEMAND, AND THAT WORD WAS THE DEFECT (P-01, 02.09). This sweep was
+  // referenced from `package.json` and from NOWHERE ELSE – not from `check`, not from CI – and the
+  // 02.09 review found it RED with nine TypeScript errors across six tools. One of the six had been
+  // written the previous day: a tool that does not typecheck shipped because nothing looked. The
+  // sweep now runs inside `npm run check` and as its own CI step. Measured cost: 4.2 s cold against
+  // a gate of about four minutes, which is well under the "unreasonable per-PR cost" the review
+  // offered as the reason to schedule it instead.
   //
   // ⚠ `composite: false` on purpose. A composite project would want emit and a build-info file, and
   // this project never emits anything; it exists to be typechecked and thrown away.

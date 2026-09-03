@@ -168,6 +168,34 @@ function stackChildren(parent: Element, width: number): number {
   return total
 }
 
+/** ⭐⭐ `aspect-ratio: <w> / <h>` AS A CONTENT HEIGHT, and it closes a real blind spot rather than
+ *  adding a nicety. A box sized by ratio has no `height` and – when it is a bare `<img>` or a
+ *  painting under an absolute scrim – no children to stack either, so it used to measure as ZERO:
+ *  `PrologueCard.vue` carried a note saying exactly that, and paid for it by declaring its hero's
+ *  height in pixels so this instrument could see the box. That is the tail wagging the dog, and it
+ *  blocked the owner's own «square, like the home screen» rule, which is `aspect-ratio: 1 / 1` in
+ *  three components already.
+ *
+ *  ⚠ IT CAN ONLY ADD HEIGHT, NEVER REMOVE IT – an explicit `height` still wins, and a box with
+ *  neither still stacks its children. So every existing verdict either stands or gets stricter.
+ *
+ *  ⚠ AND IT UNDER-COUNTS, which is the direction this file's header commits to: the width handed in
+ *  is the PARENT's content width, so a full-bleed child that cancels its parent's padding measures
+ *  as its parent's content box rather than as its true wider self.
+ *
+ *  Returns NaN when there is no usable ratio, which callers read as "no bound" exactly as they read
+ *  an unresolvable `height`. */
+export function aspectHeightPx(value: string, width: number): number {
+  const v = value.trim()
+  if (v === '' || v === 'auto') return NaN
+  const m = /^(\d*\.?\d+)\s*(?:\/\s*(\d*\.?\d+))?$/.exec(v)
+  if (!m) return NaN
+  const w = Number(m[1])
+  const h = m[2] === undefined ? 1 : Number(m[2])
+  if (!(w > 0) || !(h > 0)) return NaN
+  return (width * h) / w
+}
+
 /** One element's border box, given the content width available to it. */
 export function boxOf(el: Element, availableWidth: number): Box {
   const cs = getComputedStyle(el)
@@ -181,7 +209,13 @@ export function boxOf(el: Element, availableWidth: number): Box {
   const pr = num(cs.paddingRight)
   const explicit = lengthPx(cs.height, 0)
   const contentWidth = Math.max(0, availableWidth - pl - pr - bl - br)
-  const inner = Number.isFinite(explicit) ? explicit : stackChildren(el, contentWidth)
+  // The ratio is a FLOOR alongside the stacked children, not a replacement for them: `aspect-ratio`
+  // yields to taller content in a real browser (`.nt-hero` in NextTournamentPanel.vue says so in as
+  // many words), so the honest model is whichever of the two is larger.
+  const ratio = aspectHeightPx(cs.aspectRatio ?? '', contentWidth)
+  const inner = Number.isFinite(explicit)
+    ? explicit
+    : Math.max(stackChildren(el, contentWidth), Number.isFinite(ratio) ? ratio : 0)
   return {
     h: bt + pt + inner + pb + bb,
     marginTop: num(cs.marginTop),

@@ -111,7 +111,11 @@ function db(): Promise<IDBDatabase> {
 }
 
 // v1 -> v2, in place inside the versionchange transaction (IDB requests only, no awaits):
-//   * every record gains careerId = 'legacy-' + seed, plus kidName/country = DEFAULT_PROFILE ('Vera'/'US')
+//   * every record gains careerId = 'legacy-' + seed, plus kidName/country = 'Vera'/'US'
+//     ⚠⚠ 'Vera' IS A HISTORICAL FACT AND MUST NOT FOLLOW `DEFAULT_PROFILE`. It was that profile's
+//     name when v1 saves were written; the owner moved the default to `Alice` on 02.09.2026, and a
+//     v1 career really was opened on Vera – re-labelling it would rename careers that exist on a
+//     player's device. This is an append-only migration: the literal stays.
 //   * old slot keys are rewritten to the career-scoped naming (delete + re-put)
 //     - the two newest autosaves become generations b (newest) and a; any older autosave is dropped
 //       (the new model keeps exactly two generations)

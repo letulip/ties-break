@@ -110,7 +110,13 @@ describe('the wizard still writes a whole PlayerProfile', () => {
   })
 
   it('offers the three family backgrounds, in the design\'s order', () => {
-    const backgrounds = wizardRegion('const BACKGROUNDS', 'const MONTHS')
+    // ⚠ RE-AIMED 02.09, NOT WEAKENED. The end marker was `const MONTHS`, and the month names moved
+    // out of this component into `composables/identityCopy.ts` so the prologue's age-5 card can ask
+    // for her birthday in the wizard's own words. `region` THROWS on an absent marker, so this went
+    // red rather than silently widening to the end of the file – which is the whole reason the
+    // shared helper exists. The new end marker is the comment that has always followed BACKGROUNDS,
+    // and the region is NARROWER than before, not wider: it stops before the interim chooser.
+    const backgrounds = wizardRegion('const BACKGROUNDS', '// THE INTERIM CHOOSER')
     expect([...backgrounds.matchAll(/id: '([^']+)'/g)].map((m) => m[1])).toEqual([
       'wealthy', 'middle', 'working',
     ])

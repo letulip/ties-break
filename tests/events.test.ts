@@ -198,8 +198,14 @@ describe('weekly parent income', () => {
 })
 
 describe('news match texts use short names for everyone', () => {
-  it('renders the kid as "V. Last" and the opponent as "X. Last"', () => {
-    const world = createWorld('short-names') // default profile: Vera Martin
+  // ⚠ RE-AIMED 02.09, NOT WEAKENED, AND THE INITIAL IS NOW DERIVED. The name and the assertion were
+  // both written out as «V. Martin» when `DEFAULT_PROFILE` was Vera Martin; the owner moved the
+  // default to Alice (02.09), and a test that spells a default's value is a second copy of that
+  // value. The claim was never about the letter V – it is that the kid is short-formed in news text
+  // exactly as everyone else is – so the expectation is built from the profile the world was
+  // actually created with, and the test says the same thing about whatever he names her next.
+  it('renders the kid as "<initial>. Last" and the opponent as "X. Last"', () => {
+    const world = createWorld('short-names') // the default profile, whoever she is
     const rng = rngFromSeed(world.seed)
     const event = world.season.find(
       (e) => e.week >= 5 && e.deadlineWeek >= world.week && TIERS[e.tier].track !== 'wta',
@@ -210,7 +216,9 @@ describe('news match texts use short names for everyone', () => {
     expect(world.pendingTournament).toBeTruthy()
     skipTournament(world)
     const matchEv = world.events.find((e) => e.type === 'match' && e.week === event.week)!
-    expect(matchEv.text).toContain('V. Martin')
+    const short = `${DEFAULT_PROFILE.kidName[0]}. ${DEFAULT_PROFILE.kidLastName}`
+    expect(short, 'the fixture built no name to look for').toMatch(/^[A-Z]\. \w+$/)
+    expect(matchEv.text).toContain(short)
     // opponent side also short-formed: an initial, a dot, a space, then a surname
     expect(matchEv.text).toMatch(/[A-Z]\. [A-Z][a-z]+/)
   })

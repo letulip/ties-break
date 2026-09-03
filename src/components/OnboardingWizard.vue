@@ -27,7 +27,12 @@ import PrimaryPill from './ui/PrimaryPill.vue'
 // HER COUNTRY IN WORDS AND AS A FLAG, from `composables/countries.ts`. `flagEmoji` was
 // byte-identical in five components and the name map was written out in two; a twenty-fifth
 // country would have had to be added in two files with nothing to say so.
-import { COUNTRY_NAMES, flagEmoji } from '../composables/countries'
+import { COUNTRIES, COUNTRY_NAMES, POPULAR_COUNTRIES, flagEmoji } from '../composables/countries'
+// ⚠ THE FIELD LABELS AND THE MONTH NAMES ARE NOT THIS FILE'S ANY MORE – see the header of
+// composables/identityCopy.ts. The prologue's age-5 card asks the same three things (her name,
+// her birthday, her country) and invariant 4 says it must ask them in the same words, so there
+// is now ONE declaration and both surfaces read it. Not a string on this screen changed.
+import { IDENTITY_COPY, MONTHS } from '../composables/identityCopy'
 
 const game = useGameStore()
 
@@ -49,26 +54,10 @@ const NAMES = [
   'Milena', 'Dana', 'Lucia', 'Amelie',
 ]
 
-const COUNTRIES = [
-  'US', 'GB', 'FR', 'ES', 'IT', 'DE', 'RU', 'RS', 'CH', 'CZ', 'PL', 'UA',
-  'KZ', 'BY', 'AU', 'JP', 'CN', 'KR', 'IN', 'BR', 'AR', 'CA', 'NL', 'SE',
-]
-
-// P's nine POPULAR tiles, in the design's own order (docs/design/screenshots/P-onboarding-country).
-// A shortcut into the same 24, never a different list: whatever is chosen here is one of COUNTRIES.
-const POPULAR_COUNTRIES = ['US', 'GB', 'AU', 'CA', 'DE', 'FR', 'ES', 'IT', 'JP']
-
 const BACKGROUNDS: { id: FamilyBackground; label: string; budget: string; blurb: string }[] = [
   { id: 'wealthy', label: 'Wealthy', budget: '$120,000', blurb: 'Top academies are within reach.' },
   { id: 'middle', label: 'Middle class', budget: '$25,000', blurb: 'Smart choices, steady progress.' },
   { id: 'working', label: 'Working class', budget: '$8,000', blurb: 'Big dreams, hard mode.' },
-]
-
-// Round-6: birth month (relative-age-effect groundwork, round-3 QA item 16). Purely
-// cosmetic today – Phase 4 is what actually reads it for junior age-group dynamics.
-const MONTHS = [
-  'January', 'February', 'March', 'April', 'May', 'June',
-  'July', 'August', 'September', 'October', 'November', 'December',
 ]
 
 // THE INTERIM CHOOSER. Onboarding still offers the two options it always did, mapped onto the two
@@ -172,13 +161,34 @@ const RADAR_INNER = '28,17 38.5,24.6 34.5,36.9 21.6,36.9 17.6,24.6'
  *  Coach Market): every word capitalised EXCEPT articles and short prepositions – hence "Raise a
  *  Champion". The SUBTITLES stay sentence case; they are sentences, and every other screen's
  *  sub-line is one too. */
+/** ⭐⭐ THE OPENING PROMISE, AND IT IS A POOL BECAUSE HE ASKED FOR ONE (01.09): «можно все 3
+ *  рандомно использовать, как и предыдущие реплики тренера, все хороши».
+ *
+ *  ⚠ IT REPLACED A PROMISE THE ENGINE DOES NOT KEEP. The line read «Your kid has real talent. With
+ *  the right support, anything is possible.» - and `ECONOMY.development.potentialBand` is [4, 26],
+ *  whose own comment says a career at the bottom of that band «is a girl who was never going to make
+ *  it, and that has to be a career the game can tell». The wizard was promising the player something
+ *  the world may simply not contain, to the very player who would then spend a hundred hours finding
+ *  out. The promise belongs to the PARENT; the uncertainty stays hers.
+ *
+ *  ⚠ PICKED ONCE, ON MOUNT, AND NEVER AGAIN. A line re-drawn on every render is the defect round 31
+ *  #4 spent a wave removing from the tournament card - the player reads a sentence as a statement,
+ *  not as a roll. There is no seed here (no world exists yet), so the pick is a `ref` set at setup
+ *  and read for the life of the wizard. */
+const OPENING_PROMISE: readonly string[] = [
+  'The talent is hers. The bills, the drives and the decisions are yours.',
+  'Your kid can play. What happens next is mostly about you, and it will cost more than you think, sooner than you think.',
+  'She has something. Whether it becomes anything is a question about your time, your money and your nerve.',
+]
+const openingPromise = ref(OPENING_PROMISE[Math.floor(Math.random() * OPENING_PROMISE.length)])
+
 const STEP_HEADS: { title: string; sub: string }[] = [
   { title: 'Raise a Champion', sub: '' },
-  { title: 'Who Is Your Player?', sub: "Let's get to know your future champion." },
+  { title: 'Who Is Your Player?', sub: "Let's start with who she is." },
   { title: 'Where Are You Starting?', sub: 'Select your country.' },
   { title: 'Family Setup', sub: 'Your resources and support shape the path.' },
   { title: 'Choose Play Style', sub: 'This shapes strengths and training focus.' },
-  { title: 'All Set!', sub: "Here's your champion in the making." },
+  { title: 'All Set!', sub: 'Here she is. The rest is the two of you.' },
 ]
 
 /** The pose art for a style, addressed BY ITS ID – see the ⚠ on PLAY_STYLES for why that is safe. */
@@ -257,7 +267,9 @@ const matches = computed(() => {
 })
 /** What P's grid shows right now, and what its eyebrow calls it. */
 const tiles = computed(() => (searching.value ? matches.value : browsingAll.value ? COUNTRIES : POPULAR_COUNTRIES))
-const tilesLabel = computed(() => (searching.value ? 'Results' : browsingAll.value ? 'All countries' : 'Popular'))
+const tilesLabel = computed(() =>
+  searching.value ? IDENTITY_COPY.results : browsingAll.value ? IDENTITY_COPY.allCountries : IDENTITY_COPY.popular,
+)
 
 function back(): void {
   if (step.value > 1) step.value--
@@ -328,7 +340,7 @@ function start(): void {
       <section v-if="step === 1" class="ob-pane bare ob-welcome" aria-labelledby="ob-hero-title">
         <div class="ob-copy">
           <p>You're the parent now – every choice, every dollar, every away tournament is yours to carry.</p>
-          <p>Your kid has real talent. With the right support, anything is possible.</p>
+          <p>{{ openingPromise }}</p>
           <p>Rackets, coaches, flights, hotels – the costs are honest, and they don't wait for a breakthrough.</p>
         </div>
         <div class="ob-art ob-art--hero">
@@ -340,12 +352,12 @@ function start(): void {
       <!-- ══ O. Identity ══ -->
       <section v-else-if="step === 2" class="ob-pane bare ob-fields">
         <div class="ob-field">
-          <label class="ob-label" for="ob-first">First name</label>
+          <label class="ob-label" for="ob-first">{{ IDENTITY_COPY.firstName }}</label>
           <div class="ob-field-row">
             <!-- The mock's fields are never empty, so its placeholder is invisible; ours can be
                  cleared, and then the placeholder is the only thing saying what Next is waiting
                  for. It costs nothing when the field is filled. -->
-            <input id="ob-first" v-model="profile.kidName" class="ob-input" type="text" placeholder="First name" autocomplete="off" />
+            <input id="ob-first" v-model="profile.kidName" class="ob-input" type="text" :placeholder="IDENTITY_COPY.firstName" autocomplete="off" />
             <button class="ob-dice" type="button" aria-label="Random first name" @click="reroll">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                 <rect x="4" y="4" width="16" height="16" rx="4" />
@@ -359,9 +371,9 @@ function start(): void {
         </div>
 
         <div class="ob-field">
-          <label class="ob-label" for="ob-last">Last name</label>
+          <label class="ob-label" for="ob-last">{{ IDENTITY_COPY.lastName }}</label>
           <div class="ob-field-row">
-            <input id="ob-last" v-model="profile.kidLastName" class="ob-input" type="text" placeholder="Last name" autocomplete="off" />
+            <input id="ob-last" v-model="profile.kidLastName" class="ob-input" type="text" :placeholder="IDENTITY_COPY.lastName" autocomplete="off" />
             <button class="ob-dice" type="button" aria-label="Random last name" @click="rerollLast">
               <!-- A different face on the second die, on purpose (the design draws three pips here). -->
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -410,13 +422,13 @@ function start(): void {
                  pair - which is what a date field looks like anyway.
              Measured in the browser at 375px: no truncation, and both taps stay full-height. -->
         <div class="ob-field">
-          <label class="ob-label" for="ob-month">Birthday</label>
+          <label class="ob-label" for="ob-month">{{ IDENTITY_COPY.birthday }}</label>
           <div class="ob-birthday">
             <div class="ob-select-wrap">
               <svg class="ob-select-icon" width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                 <rect x="3.5" y="5" width="17" height="15.5" rx="3" /><path d="M3.5 9.5h17M8 3.5v3M16 3.5v3" />
               </svg>
-              <select id="ob-month" v-model.number="profile.birthMonth" class="ob-select" aria-label="Birth month">
+              <select id="ob-month" v-model.number="profile.birthMonth" class="ob-select" :aria-label="IDENTITY_COPY.birthMonth">
                 <option v-for="(m, i) in MONTHS" :key="m" :value="i + 1">{{ m }}</option>
               </select>
               <svg class="ob-select-chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -424,7 +436,7 @@ function start(): void {
               </svg>
             </div>
             <div class="ob-select-wrap">
-              <select id="ob-day" v-model.number="profile.birthDay" class="ob-select" aria-label="Birth day">
+              <select id="ob-day" v-model.number="profile.birthDay" class="ob-select" :aria-label="IDENTITY_COPY.birthDay">
                 <option v-for="d in birthDays" :key="d" :value="d">{{ d }}</option>
               </select>
               <svg class="ob-select-chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -458,8 +470,8 @@ function start(): void {
             v-model="query"
             class="ob-input ob-search-input"
             type="text"
-            placeholder="Search countries..."
-            aria-label="Search countries"
+            :placeholder="IDENTITY_COPY.searchPlaceholder"
+            :aria-label="IDENTITY_COPY.searchLabel"
             autocomplete="off"
           />
           <svg class="ob-search-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -486,12 +498,12 @@ function start(): void {
             <span class="ob-tile-name">{{ COUNTRY_NAMES[code] }}</span>
           </Card>
         </div>
-        <p v-if="searching && !matches.length" class="ob-empty">No country matches that.</p>
+        <p v-if="searching && !matches.length" class="ob-empty">{{ IDENTITY_COPY.noMatches }}</p>
 
         <template v-if="!searching && !browsingAll">
-          <Eyebrow as="h2" class="ob-eyebrow is-muted">All countries</Eyebrow>
+          <Eyebrow as="h2" class="ob-eyebrow is-muted">{{ IDENTITY_COPY.allCountries }}</Eyebrow>
           <Card as="button" class="ob-browse" pad="15px 16px" @click="browsingAll = true">
-            <span>Browse all countries</span>
+            <span>{{ IDENTITY_COPY.browseAll }}</span>
             <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
               <path d="M9.5 6l6 6-6 6" />
             </svg>

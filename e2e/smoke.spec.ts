@@ -50,8 +50,23 @@ test('the app boots, a new career starts, and week 1 renders', async ({ page }) 
   await page.getByRole('button', { name: 'Tap to start' }).click()
 
   // --- a new career starts --------------------------------------------------------------------
-  // With no save in this browser profile, the app hands over to the six-step wizard. Walking it is
-  // the real "a new career starts" path, and every control on it is addressed by name.
+  // ⚠ THE WIZARD IS THE SKIP BRANCH NOW (docs/specs/childhood-prologue-build-2026-09.md §6, phase
+  // 4). With no save in this browser profile the app hands over to the CHILDHOOD PROLOGUE, and the
+  // six-step wizard is what the first card's way out leads to - the owner's own framing: the
+  // character creator becomes the alternative branch, taken when the prologue is skipped. So the
+  // walk below is unchanged and one click longer, and that click is this spec's half of §6. The
+  // OTHER path is covered end to end by e2e/prologue.spec.ts.
+  //
+  // ⚠ THE CONTROL IS TAKEN BY POSITION AND NOT BY NAME, WHICH IS THE OPPOSITE OF THIS FILE'S RULE
+  // AND IS DELIBERATE HERE. Every sentence in the prologue is a DRAFT the owner has not read (§8),
+  // so a spec that named the skip would carry a second copy of a string he is expected to rewrite -
+  // and would go red on a table edit that broke nothing. What IS structural is where it sits: the
+  // way out is the last control on the card, after the answers, because the round-20 #3 measurement
+  // reads the way out off the card's bottom edge. The assertion above it is what keeps this honest -
+  // if the click lands on an origin instead, the wizard never appears and the next line fails.
+  const firstCard = page.getByRole('dialog')
+  await expect(firstCard.getByRole('heading')).toBeVisible()
+  await firstCard.getByRole('button').last().click()
   await expect(page.getByRole('heading', { name: 'Raise a Champion. Together.' })).toBeVisible()
   await page.getByRole('button', { name: 'Begin' }).click()
 
@@ -70,6 +85,16 @@ test('the app boots, a new career starts, and week 1 renders', async ({ page }) 
 
   // The first-run tour lands on top of Home. Dismissed by name, so what follows is asserted against
   // the screen a player is actually looking at rather than one behind a scrim.
+  //
+  // ⭐⭐ AND THIS IS ALSO THE OTHER HALF OF §6, ASSERTED RATHER THAN INCIDENTAL (phase 5). His ruling
+  // is B and C together: C takes the tour away from a player who WALKED the childhood, and B keeps
+  // it for the player who skipped it – which is the player this walk has been since the click above.
+  // The dismiss below would already time out if the marks were gone, but a claim that only fails as
+  // a timeout on the next line names the wrong thing when it breaks.
+  await expect(
+    page.getByRole('button', { name: 'Skip tour' }),
+    'the player who skipped the prologue was not offered the tour either',
+  ).toBeVisible()
   await page.getByRole('button', { name: 'Skip tour' }).click()
 
   // --- week 1 renders -------------------------------------------------------------------------

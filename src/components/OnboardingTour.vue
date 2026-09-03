@@ -8,10 +8,58 @@
 // clamp the horizontal axis only, which is docs/review/05-ux-ui-pwa.md's [MEDIUM] "Coach-mark tour
 // can point off-screen": a card hung off an anchor below the fold took Skip and Next off the bottom
 // of a 667px phone with it, and the tour has no other exit.
-import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { TOOLTIP_FALLBACK_HEIGHT, tooltipBox, type Placement } from '../composables/coachTour'
 
 const emit = defineEmits<{ done: [] }>()
+
+// =================================================================================================
+// ⭐⭐ THE SCREEN THE MARKS DESCRIBE - docs/specs/childhood-prologue-build-2026-09.md §6 (option B)
+// =================================================================================================
+//
+// ⚠ THE DEFECT, MEASURED ON `main` ON 01.09 AND NOT RE-DERIVED HERE. `.coach-tour` is
+// `position: fixed`, full-screen, `z-index: 65` and `pointer-events: none` - deliberately, so the
+// page beneath can still scroll (the note on the scroll listener below is the other half of that
+// choice). The cost is that TAPS pass through too. With the tour up, tapping Stats and pressing Next
+// four times walked all four of "You are the parent", "Her page", "News and letters" and "The money
+// is yours" WHILE THE PLAYER STOOD ON STATS, with no highlight cut into the overlay at all: every
+// anchor those marks name lives on Home, so `document.querySelector` returned nothing, the spotlight
+// hid itself, and the card went on describing a screen that was no longer there.
+//
+// ⭐ SO THE REPAIR IS TO STOP, NOT TO TRAP. The overlay stays click-through: an overlay that ate the
+// tap would make the tour compulsory, and the owner refused that version in as many words - his
+// sentence is quoted in docs/specs/onboarding-tour.md rather than here, to keep this file's own
+// convention of holding no Russian at all. A tour that ends is not a tour that lies, and the way
+// back is a button in More.
+//
+// ⚠ NOT ONE STEP'S WORDS MOVE. CLAUDE.md invariant 4: what changed is WHEN the tour stops, never
+// what it says. The eleven marks below are exactly the strings that shipped.
+const props = defineProps<{
+  /** Which screen the shell has up - App.vue's `tab`. It is the app's own identity for "where the
+   *  player is", and every screen change in the shell goes through it, so nothing else has to be
+   *  enumerated here: a tab, a sub-screen reached from Home, the week screen after an advance. */
+  screen: string
+}>()
+
+/** The screen the marks opened over, taken ONCE.
+ *
+ *  ⚠ THE COMPARISON EXISTS FOR THE FIRST FRAME, NOT FOR THE SECOND SCREEN CHANGE - there is never a
+ *  second one, because the first ends the tour. The shell writes `tab` on paths that move nobody:
+ *  the snapshot watcher sets 'home' when a career arrives, and `reopenTour` sets it again on its way
+ *  in. An exit that fired on a write rather than on a move would make the tour unopenable from More. */
+const openedOn = props.screen
+/** The tour is finished. It renders nothing from here - the shell also drops it (`dismissTour`
+ *  writes the device flag and `tourWanted` goes false), and neither half relies on the other. */
+const over = ref(false)
+
+watch(
+  () => props.screen,
+  (now) => {
+    if (over.value || now === openedOn) return
+    over.value = true
+    emit('done')
+  },
+)
 
 interface Step {
   selector: string
@@ -203,7 +251,9 @@ const tooltipStyle = computed(() => {
 </script>
 
 <template>
-  <div class="coach-tour">
+  <!-- ⚠ `!over`: once the player has left the screen these marks describe, there is nothing here to
+       press. See the block at the top of the script for what that repairs. -->
+  <div v-if="!over" class="coach-tour">
     <div class="coach-highlight" :style="highlightStyle"></div>
     <div ref="tooltipEl" class="coach-tooltip" :style="tooltipStyle">
       <p class="coach-tooltip-title">{{ step.title }}</p>

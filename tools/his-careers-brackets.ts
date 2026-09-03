@@ -526,6 +526,10 @@ console.log(
 //      ⚠ PROVENANCE FIRST: every match is re-run at its STORED seed and the winner and scoreline are
 //      checked against the persisted row before a single reseed is trusted. A tool that cannot
 //      reproduce the match it is about to resample is measuring something else.
+// ⚠ `conditionMatchFactor` is deliberately NOT imported: this tool runs the curve BACKWARDS. It
+// recovers condition from the observed `raw×f` through `condOf`, the exact algebraic inverse built
+// from the same `ECONOMY.condition` knee/floor constants the shipped function reads. The forward
+// function has no call site here, and an unused import of it read as one for a wave.
 import { applySurfaceStyle } from '../src/engine/match/style'
 import { applyKit, kitWearAt } from '../src/engine/equipment'
 import { kitFreshCap } from '../src/engine/offers'

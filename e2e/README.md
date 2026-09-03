@@ -8,7 +8,7 @@ Playwright over a **real production build** in **real Chromium**. S0–S2 of
 `coverage-map.spec.ts` in this directory keeps it honest against the repo.
 
 ```bash
-npm run test:e2e            # the suite: builds twice, serves both, runs. 25 tests, ~21 s cold.
+npm run test:e2e            # the suite: builds twice, serves both, runs. It prints its own total.
 npm run test:e2e:report     # the same run with a trace for EVERY test, then opens the HTML report
 npm run test:e2e:ui         # the time-travel UI – pick a spec, watch it, step back through it
 npm run test:e2e -- --headed        # watch the browser do it
@@ -23,8 +23,10 @@ npx playwright install chromium     # ~273 MiB, once per machine per Playwright 
 ```
 
 ⚠ **`npm run test:e2e` is not part of `npm run check`, and must not become part of it.** The
-pre-push gate is already about four minutes and this is a browser suite. The PR gate runs it as its
-own parallel job (`.github/workflows/ci.yml`, `e2e-smoke`).
+pre-push gate is already about seven minutes (429 s, measured quiet 02.09) and this is a browser
+suite. The PR gate runs it as its
+own parallel job (`.github/workflows/ci.yml`, `e2e`) – the WHOLE suite, which is what that job has
+always run despite having been called `e2e-smoke` until 02.09.
 
 ## What this layer owns – and what it must not duplicate
 

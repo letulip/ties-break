@@ -151,6 +151,62 @@ export const ECONOMY = {
     working: 8_000_00,
   } as Record<FamilyBackground, number>,
 
+  /** ⭐⭐ WHAT THE NINE YEARS DID TO THAT NUMBER – the childhood prologue's only money model
+   *  (docs/specs/childhood-prologue-balance-2026-09.md §3, which supersedes
+   *  childhood-prologue-money-2026-09.md §2; build spec §4, «the prologue makes it yours»).
+   *
+   *  ⚠⚠ TWO OF THE THREE FIGURES ARE FACTS ABOUT THE CARD TABLE AND THE THIRD IS A NAMED DIAL. The
+   *  reference and the swing are the cheapest and dearest childhoods `src/prologue/cards.ts` can
+   *  produce, recomputed by the test rather than trusted; `reserveSwingShare` is a decision, and the
+   *  reason it is now written down is that it always existed – the shipped model divided by
+   *  `startingFundsCents.middle` and thereby chose 0.399 without saying so. Every background moves
+   *  by the same PROPORTION of its own reserve either way, which is §2.4's ruling in one line –
+   *  «the player chooses where the family is FROM, not a sum, and the nine years move the number
+   *  from there».
+   *
+   *  ⚠ WHY A PROPORTION AND NOT THE SAME CENTS FOR EVERYONE. The reachable childhoods span
+   *  $8,200 - $28,150, which is more than a working family's entire reserve: subtracting cents would
+   *  open a career in debt, and «you went bankrupt before she was fourteen» is a mechanic this game
+   *  does not have and §7 forbids inventing here.
+   *
+   *  ⚠ PINNED AGAINST THE TABLE, NEVER RE-TYPED FROM IT. `tests/prologue-handover.test.ts` recomputes
+   *  both numbers by walking every reachable run and fails if a card's price moves without these
+   *  moving with it – the same discipline `APPETITE_AT` is held to one directory over. */
+  prologue: {
+    /** the childhood today's flat reserve already represents: the midpoint of what the nine cards
+     *  can cost, `(cheapest + dearest) / 2` */
+    referenceSpendCents: 18_175_00,
+    /** ...and half the spread, `(dearest - cheapest) / 2`, which is the furthest either way a run
+     *  can move the reference. */
+    spendSwingCents: 9_975_00,
+
+    /** ⭐⭐ HOW FAR THE NINE YEARS MAY MOVE A FAMILY'S OWN RESERVE, AND IT IS THE ONE DIAL IN THE
+     *  PROLOGUE'S MONEY. The two figures above are facts about the card table; this is a decision,
+     *  it is named as one, and it is his to move (docs/specs/childhood-prologue-balance-2026-09.md
+     *  §3).
+     *
+     *  ⚠ IT REPLACES A DIVISOR THAT WAS A CATEGORY ERROR. The shipped model divided the childhood's
+     *  spend by `startingFundsCents.middle` – nine years of FLOW over one family's BALANCE – which
+     *  came out at 0.399 and nobody had ever written down. His complaint is what that number does at
+     *  the bottom: «По суммам минимальным как-то совсем грустно, особенно у рабочих и средних» – a
+     *  working family opening on $4,808 against the $8,000 the whole economy was tuned around – and
+     *  his aim is «прийти как можно ближе к нашему коридору изначальному, который поигран и померян».
+     *  So the swing keeps its SHAPE (the same clamp, the same proportion for all three backgrounds,
+     *  §2.4's ruling untouched) and only this number moves: 0.399 -> 0.20.
+     *
+     *  ⚠ THE CEILING ON IT IS THE GAME'S OWN. `WEALTH_CORRIDOR` puts one background step at 0.25 of
+     *  the middle centre (0.75 / 1.00 / 1.25), so a childhood allowed to move the reserve by a
+     *  quarter or more could carry a family across a class boundary – and §2.4 is explicit that the
+     *  player picks where the family is FROM. A fifth sits inside that bound with room to spare.
+     *
+     *  ⚠ AND IT IS NOT THE ACCEPTANCE. The acceptance – the poorest arrival surviving its first
+     *  season with the coach it arrives with – is met by the coach LADDER, not by this: measured, a
+     *  working family's dearest childhood goes under water at week 26 with the old rung and week 94
+     *  with the ruled one, and moving this dial across its whole range shifts that by one week. The
+     *  rung is the runway; the reserve is not. */
+    reserveSwingShare: 0.2,
+  },
+
   // Weekly parent contribution to the war chest, by family background. Emitted as an
   // `income` event BEFORE costs each week; NO rng draw. TUNED (round-7 economy pass) so
   // that an UNSPONSORED kid (rank > 30 all year, no tournaments) lands the owner's target
@@ -4823,6 +4879,39 @@ export function parentIncomeForWeekCents(seedStr: string, background: FamilyBack
     income *= 1 + lo + rng() * (hi - lo)
   }
   return Math.round(income)
+}
+
+/** ⭐⭐ WHAT THE FAMILY HAS LEFT ON WEEK 0, AFTER NINE YEARS OF HER CHILDHOOD – the prologue's whole
+ *  money model, and the only new arithmetic phase 4 adds (build spec §4).
+ *
+ *  Every family moves by the same SHARE of its OWN reserve, which is §2.4's ruling in one line – the
+ *  player chooses where the family is FROM, not a sum, and the nine years move the number from
+ *  there. `moved` is a pure position in the card table's range, -1 (the dearest childhood) to +1
+ *  (the cheapest), and `reserveSwingShare` says how much of the reserve that position is worth:
+ *
+ *      middle, cheapest childhood ($8,200)   ->  25,000 x 1.20  = $30,000
+ *      middle, the reference ($18,175)       ->  25,000         = $25,000  (the flat number)
+ *      middle, dearest childhood ($28,150)   ->  25,000 x 0.80  = $20,000
+ *
+ *  ...and the other two the same way: working $6,400 - $9,600, wealthy $96,000 - $144,000. Measured
+ *  over all 32 reachable runs in docs/specs/childhood-prologue-balance-2026-09.md §3.
+ *
+ *  ⚠ THE SHAPE IS EXACTLY THE SHIPPED ONE AND ONLY THE SHARE MOVED. The model this replaces divided
+ *  the clamped spend by `startingFundsCents.middle`, which is the same arithmetic with the share
+ *  written as `spendSwingCents / 25,000` = 0.399 – a number that was never chosen and never written
+ *  down. See `ECONOMY.prologue.reserveSwingShare` for what moved it and why.
+ *
+ *  ⚠ THE CLAMP IS A GUARD AND NOT A DIAL. `spentCents` arrives over the wire, and invariant 1 says
+ *  every command is re-validated engine-side – so a payload claiming a childhood that costs nothing,
+ *  or one that costs a million, moves the reserve by exactly the swing the real table can produce and
+ *  no further. A run through the shipped cards can never reach the clamp.
+ *
+ *  ⚠ NO DRAW, NO STATE, NO SCHEMA. Integer cents out, rounded once. */
+export function prologueFundsCents(background: FamilyBackground, spentCents: number): number {
+  const base = ECONOMY.startingFundsCents[background]
+  const { referenceSpendCents, spendSwingCents, reserveSwingShare } = ECONOMY.prologue
+  const moved = Math.max(-1, Math.min(1, (referenceSpendCents - spentCents) / spendSwingCents))
+  return Math.round(base * (1 + reserveSwingShare * moved))
 }
 
 /** ⭐⭐ ROUND-23 #18 – WHAT SHARE OF A CHEQUE IS HERS, in basis points, at a given age.

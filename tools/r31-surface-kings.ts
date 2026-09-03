@@ -6,10 +6,6 @@ import { ratingOf } from '../src/engine/match/rating'
 import { rivalMatchPlayer } from '../src/engine/season/rival'
 import { kidMatchPlayerFor } from '../src/engine/world/player'
 import { ECONOMY } from '../src/engine/economy'
-// ⚠ ROUND 34 (QA-34): imported from the module that DECLARES it. `shared/protocol/competition`
-// only imports `Surface` for its own field types and never re-exports it, so this line read
-// `declares locally, but it is not exported` – repaired by importing the owner rather than by
-// widening the protocol module's public surface.
 import type { Surface } from '../src/engine/match/types'
 
 const argv = process.argv.slice(2)

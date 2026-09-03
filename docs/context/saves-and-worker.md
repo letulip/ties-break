@@ -12,10 +12,15 @@ last-reviewed: 2026-08-03
 
 - The worker owns the mutable `WorldState`; UI code talks through the typed protocol and
   consumes snapshots.
-- `SAVE_SCHEMA_VERSION` is v69 (`src/engine/world.ts`); the persisted main RNG position arrived at
+- `SAVE_SCHEMA_VERSION` is v69, DECLARED in `src/engine/world/state.ts` and re-exported through the
+  `src/engine/world.ts` barrel; the persisted main RNG position arrived at
   v35, so loads resume `{s, n}` rather than replaying the career.
+  ⚠ This line named the barrel until 02.09 – nine days after commit `1e1f5fea` (24.08) moved the
+  declaration – so it routed a reader to a file that does not contain the literal.
+  `scripts/doc-facts.mjs` was re-aimed at the declaring module in that same commit and stayed green
+  throughout, because it checks the NUMBER and not the PATH written beside it.
 - ⭐ THAT NUMBER NO LONGER ROTS SILENTLY – `scripts/doc-facts.mjs` reads the constant out of
-  `src/engine/world.ts` and fails the gate when this line disagrees (in `npm run check` and in CI
+  `src/engine/world/state.ts` and fails the gate when this line disagrees (in `npm run check` and in CI
   since 23.08). It had been wrong FOUR times before that – v36, v45, v52, and again at v53 while
   the code ran to v59, which is what the second full-project review caught. The lesson the fix
   encodes: a fact a machine can source must BE sourced; repair without ownership rots again in
@@ -35,7 +40,10 @@ last-reviewed: 2026-08-03
 2. `src/shared/protocol.ts` for the wire contract and snapshots.
 3. `src/db/saves.ts` and `src/db/idb.ts` for slot persistence.
 4. `src/engine/saveCodec.ts`, `saveGuard.ts`, and `migrations.ts` for import and compatibility.
-5. `src/engine/world.ts` and `rng.ts` only for state/version/RNG questions.
+5. `src/engine/world/state.ts` for the persisted shape and the schema version, `src/engine/world.ts`
+   for the weekly lifecycle it still owns, and `rng.ts` for stream questions. ⭐ Which module
+   declares any other barrel name is generated rather than written down – run
+   `node scripts/world-map.mjs <symbol>`, or read `tools/generated/world-symbol-map.md`.
 
 ## Invariants
 
