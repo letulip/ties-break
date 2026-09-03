@@ -364,10 +364,12 @@ praise, and it is the standard the rest are measured against.
   * the seat counts: **the big plane carries 8 passengers, the new small one 6.** ⚠ Its shipped
     blurb already says «Eight seats», so the big one needs no words changed; the small one gains its
     own count.
-  * ⚠ **[?] OPEN – one price needs his word.** He wrote «самолет за 12м - 8 пассажиров», but the
-    shipped `plane.entryCents` is **$18,000,000** and his own previous message said «большой на 12
-    мест остается как был за 18м». Twelve was the SEAT count and appears to have slid into the
-    price. Do NOT move that price until he answers.
+  * ⚙ **CLOSED, 03.09:** «самолет 18м стоит (верно) мест пусть будет 10. У маленького 7. всё.»
+    So the big plane keeps **$18,000,000** and its blurb changes from «Eight seats» to **ten**; the
+    new small plane at **$7,000,000** carries **seven**. No price moves.
+    ⭐ His own research (`docs/research/private-jets-in-tennis.md`) prices Nadal's real Cessna
+    Citation CJ2+ at $5–7M for up to 8 passengers, so the $7M rung sits on a real aircraft – the
+    number was chosen before the research and survived it.
 
 ---
 
