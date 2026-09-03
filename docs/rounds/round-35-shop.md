@@ -292,6 +292,16 @@ RIGHT.** It is one map – `SHELF_ART_SIDE` in `MoneyScreen.vue` – and flippin
 word in it. A mounted arm pins the current arrangement, so a flip goes red and is re-aimed rather
 than done silently.
 
+⚠⚠ **THE BRIEF REPEATED «cars on the RIGHT» THREE TIMES, so this is flagged rather than buried.**
+None of the three carried an owner quote about SIDES – the quotes they carried were about the
+picture's WIDTH and about where the buy control sits. The two sources that do speak to sides are
+his message and his handoff, and both say the same thing; the handoff says it in plain words:
+
+> **README §X. Cars:** «строки с фото 74×52 radius 10px **слева** и кнопкой «Buy» справа»
+
+⭐ **If he wants it the other way, it is `car: 'left'` -> `'right'` in that one map, plus re-aiming
+the arm that pins it. Nothing else in the bundle moves.**
+
 ## ⚙ THE SCHEMA QUESTION, PROVED RATHER THAN ASSUMED
 
 `SAVE_SCHEMA_VERSION` **stays at 69** and no migration is owed. The proof is that no stored save can
