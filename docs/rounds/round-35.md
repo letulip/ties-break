@@ -121,8 +121,16 @@ built. `round/34` does not touch the prologue and merges independently of this.
   Mutation-verified: restoring `.prologue-overlay`'s padding reddens 2 arms; restoring the card's
   padding reddens the ceiling.
 
-- [ ] **3. «кажется, что в режиме ключевых моментов у нас время матча идет как обычно, а не по
+- [~] **3. «кажется, что в режиме ключевых моментов у нас время матча идет как обычно, а не по
   ключевым моментам»** – **measure first**, then build or answer.
+  – `[~]` **ANSWERED, AND IT IS DELIBERATE. The clock is the MATCH's time, not the playback's.**
+  `src/viz/matchClock.ts` says so in its own words: «IT IS BUILT PER TIMELINE, NOT PER MATCH, AND
+  THAT IS WHAT MAKES 'key' MODE HONEST … A per-point clock would instead report a 'key' match as
+  twenty minutes long, **which is the lie**.» ⭐ The match really did take an hour and twenty; showing
+  twenty because he skipped points would be the game lying about what happened. What 'key' buys is
+  fewer points to sit through, not a shorter match.
+  ⚠ If he wants the ELAPSED-PLAYBACK time on screen instead, that is a different number and a new
+  item – say so rather than moving this one.
 
 - [x] **4. «мне кажется какие-то экраны у нас повторяются, я увидел "she asks more", "juniour tour
   opens at fourteen" дважды… Похоже, что это как-то связано с последующими турнирами, но если так -
@@ -191,9 +199,20 @@ built. `round/34` does not touch the prologue and merges independently of this.
   because it carries the wizard's four identity controls. It came down 41px and no further; the
   honest fix is his call about what the first screen must ask.
 
-- [ ] **6. «Тай брейки в режиме ключевых моментов по-моему идут полноценно, видно каждое очко, но
+- [~] **6. «Тай брейки в режиме ключевых моментов по-моему идут полноценно, видно каждое очко, но
   может это и нормально»** – **measure**, then answer. ⚠ He is unsure himself, so the answer may be
   «it is deliberate, here is why» rather than a change.
+  – `[~]` **ANSWERED, AND HE SAW IT EXACTLY RIGHT – it is in the rule, by name.** `isKeyPoint`
+  (`src/viz/timeline.ts:62`) keeps a point when it is a break point, a set point, a match point,
+  a game end, a set end – **or `e.tiebreak`**. So every point of a tiebreak is a key point,
+  unconditionally, and a tiebreak plays out in full in 'key' mode.
+  ⭐ And it is deliberate twice over: `commentary.ts`'s KEY CUT lists `tiebreak` among the four
+  STRUCTURE beats that are always in – «the anchor, the two ways a set changes hands, and the
+  ending – a highlights package without them is a list of incidents with no shape.»
+  ⭐⭐ **His own hunch was the right one: «но может это и нормально».** A tiebreak is not an incident
+  inside a set, it IS the set being decided, and a highlights package that cuts it is not highlights.
+  ⚠ Left as it ships. If a 12-point tiebreak feels long inside a cut he chose to shorten, that is a
+  taste ruling and his to make – the mechanism is doing what it says.
 
 - [x] **7. «На последнем кадре пролога после турнира случилось странное: мне показали сначала арт с
   кубком, потом еще какой-то экран (я не успел прочесть что там), который сразу сменился на She is
@@ -268,7 +287,7 @@ praise, and it is the standard the rest are measured against.
 
 ---
 
-- [>] **8. «после последнего мержа основная кнопка Proceed на главной стала с очень худым шрифтом, а
+- [x] **8. «после последнего мержа основная кнопка Proceed на главной стала с очень худым шрифтом, а
   на других экранах нормально, я думал, что это один общий компонент - проверь пожалуйста и сделай
   на всех экранах одинаково с нормальным весом шрифта пожалуйста»** – **build, and it is my own
   regression from round 34 that exposed a far bigger one.**
@@ -869,3 +888,20 @@ onto the SAME side, which my version could not satisfy. **Nothing to change.**
   `round35-ui` font-face arms (round 35 #8) reproduce identically on the branch head with this change
   absent. Everything else is green – unit 4107 + the heavy shards, component 1301, `vite build`,
   `npm run test:sim` 12/12.
+
+---
+
+# ⚠⚠ A PROCESS FAILURE IN THIS ROUND, RECORDED SO THE NEXT ONE CANNOT REPEAT IT
+
+**Items 3 and 6 were filed in this ledger and handed to nobody.** Four bundles went out – A (1/2/4/5/7),
+B (8/10/11), C (9/12/13) and item 14 – and the two `measure` items about the key-moments match mode
+were in none of them. They were only found at the final tally, when the ledger showed `[ ] 2`.
+
+⭐ **That is exactly the failure the round skill exists to prevent**, and it names the mechanism:
+«The classes that get dropped in practice are **answer** and **measure** – they look like
+conversation, not work.» Both were `measure`. Both were dropped. The ledger caught them because it
+is read at the end and it disagreed with my memory – which is the whole reason the ledger is the
+instrument and memory is not.
+
+⚙ **The fix is not more care, it is the tally.** Count `[ ]` + `[>]` against the bundles dispatched
+BEFORE gating, not after – a wave is not ready to gate while any item has no owner.
