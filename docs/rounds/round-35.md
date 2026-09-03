@@ -306,3 +306,34 @@ praise, and it is the standard the rest are measured against.
   little narrower. Not a regression; the first time the type renders as drawn.
 
   ⚠ Blocked on the shop bundle: the faces live in `src/style.css`, where that agent is working.
+
+- [ ] **9. «доход от ее бренда давай тоже как проценты с призовых будем делить: т.е. в интерфейсе
+  напишем про ее долю, в недельном доходе будет семье на руки сумма меньше»** – **build.**
+
+  ⭐ The mechanism he is pointing at already exists and has one owner. `kidPrizeShareBps(ageYears)`
+  is the ramp – 0 before 18, then 10 / 15 / 20 / 25 / 30 / 35 / 40 / 45 / 50 % at 18…26+ – and
+  `world.ts` around lines 649-665 shows the shipped discipline for spending it: **her share is
+  rounded ONCE and the family gets the remainder by SUBTRACTION**, so the two halves add up to the
+  cheque exactly. A pair of independent `Math.round`s loses or invents a cent on half the finishes,
+  and this money lands in two balances a player can add up on screen.
+
+  ⭐⭐ **There is exactly one place to change**, and its own comment says so:
+  `assetEarningsRateCents` (`src/engine/world/assets.ts:358`) is «the ONE place a career becomes a
+  weekly cheque», routed through `businessIncome` at `src/engine/world/business.ts:51`. The split
+  belongs at the banking site, not in the rate – the rate is also what the VALUATION multiplies
+  (`brandGrossWorthCents`), and splitting it there would quietly halve what the brand is worth.
+
+  ⚠ **That is the trap to avoid and it must be measured, not assumed:** after the change the brand's
+  WORTH must not move. Round 32 fixed the multiple into a 6–9x corridor and round 34 checked it
+  again at 7.46x on his save; the same corridor must hold afterwards.
+
+  ⚠ Precedent to follow rather than re-invent: round-28 #15 already did this to the ADVERTISING
+  cheque – «ребёнку тоже нужно % перечислять, как и с призовых» – and `bankSponsorCheque` is where
+  it lives. Read it first; the brand's split should read the same way.
+
+  **On screen:** the weekly figure becomes what the family actually banks, and her share is stated –
+  «в интерфейсе напишем про её долю». ⭐ `KidScreen`'s `life.ownAccount` note already spells the
+  ramp for the prize split and is the register to match.
+
+  ⚠ Queued behind the shop bundle: it touches `business.ts` and the money surfaces, where that agent
+  is working.
