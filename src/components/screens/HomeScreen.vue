@@ -1126,12 +1126,21 @@ async function leaveCollege(): Promise<void> {
 
 <template>
   <template v-if="game.snapshot">
-    <p v-if="game.error" class="error">{{ game.error }}</p>
-
     <!-- U0: the page's vertical stack is ScreenShell now. Home used a hand-rolled `.diary` wrapper
          that did exactly what the shell's body does (a flex column), so the class is gone rather
          than kept as a synonym. The shell does NOT take the side gutter here – see ScreenShell. -->
     <ScreenShell>
+      <!-- ⭐⭐⭐ ROUND 35 #11 – THE ENGINE'S REFUSAL, INSIDE THE SHELL, SO THE HERO CANNOT PAINT
+           OVER IT. The owner reported a red message hanging at the top of Home that sits UNDER the
+           photograph and cannot be read; his words and the whole reading are in the <style> block
+           at `.diary-hero:not(:first-child)`, where Cyrillic is allowed and in a template it is
+           not. The cause was PAINT ORDER, not a z-index: the hero's negative top margin climbed
+           over this line and `position: relative` put it in a later paint step. Moving the line in
+           here stops the hero being `:first-child`, which is what switches that margin off.
+           ⚠ NO NEW WORDING (invariant 4): the element, its class and its text are the engine's own,
+           moved and not rewritten. -->
+      <p v-if="game.error" class="error">{{ game.error }}</p>
+
       <!-- 1 + 2. THE HERO. Full-bleed, and it carries the header: the photograph IS the top of the
            page, not a picture placed on it. Two scrims do the work – one darkens the top so the
            date and the icons read over any of the 35 paintings, one takes the picture down into the
@@ -1666,6 +1675,33 @@ async function leaveCollege(): Promise<void> {
   aspect-ratio: 1 / 1;
   max-height: 60vh;
   overflow: hidden;
+}
+
+/* ⭐⭐⭐ ROUND 35 #11 – ...AND IT ONLY CANCELS THE INSET WHILE IT IS THE TOP OF THE PAGE. The owner:
+
+     «на домашнем экране сверху висит оверлей с красными буквами, но он находится ПОД hero
+      картинкой и его не видно, тоже проверь»
+
+   He is exactly right, and the red letters are `<p class="error">` – `game.error`, the sentence the
+   worker threw. On his week it was `enterEvent`'s «She is already entered in a tournament that
+   week», which is round 35 #10's whole subject: he found this while reasoning about that item.
+
+   ⚠⚠ THE CAUSE WAS PAINT ORDER AND THERE IS NO `z-index` ANYWHERE IN IT – nor a transform or a
+   filter making a stacking context. Two facts combined. (1) The margin above is written as "cancel
+   the shell's gutter EXACTLY", which is true of an EMPTY inset and a lie about an occupied one: the
+   paragraph stood outside `<ScreenShell>`, so the hero was still the shell body's first child and
+   the -24px ate the SENTENCE instead of the padding – about 8px of a 19px line left showing.
+   (2) `.diary-hero` is `position: relative` and the paragraph is static, so CSS 2.1 Appendix E
+   paints the hero in step 8 over the paragraph's step 4 whatever the source order says. DOM order
+   could never have saved it, and a bigger z-index would have been treating the symptom.
+
+   ⚠ SO THE FIX IS THE OVERLAP. The paragraph moved INSIDE the shell (see the template), the hero
+   stopped being `:first-child`, and this rule drops the cancellation – because the app's top inset
+   is no longer empty space, it is holding a sentence. `:first-child` is the condition that margin
+   always meant, said out loud. With no error the hero is first again and the screen is
+   byte-identical, which is the A3 full-bleed ruling of 28.07 kept whole. */
+.diary-hero:not(:first-child) {
+  margin-top: 0;
 }
 
 /* v48: the birthday burst. Above the three scrims (z 0) and below `.diary-head`, so the paper falls

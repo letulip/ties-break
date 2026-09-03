@@ -263,28 +263,44 @@ describe('round 34 #4 – the tournament name and the money are set in Sora', ()
 // =================================================================================================
 
 describe('round 34 #10 – the main yellow button is set in regular', () => {
-  it('⭐⭐ the label computes to 400, mounted, on a 375x667 phone', async () => {
+  it('⭐⭐ the label is NOT the synthesised weight, mounted, on a 375x667 phone', async () => {
     const w = await openShell(enteredCareer())
     const cta = w.find('.next-week-btn')
     expect(cta.exists(), 'the CTA is on Home').toBe(true)
     // ⚠ 400 IS `normal` – the literal answer to «сделай обычные». Before this round this read 600,
     // and NOT the 800 the sheet appeared to declare: `button.primary` outranked `.next-week-btn`.
-    expect(getComputedStyle(cta.element).fontWeight, 'the label is regular weight').toBe('400')
+    //
+    // ⚠⚠ RE-AIMED BY ROUND 35 #8 – NOT DELETED, NOT LOOSENED, AND THE OWNER MOVED IT HIMSELF.
+    // He read this 400 in play and filed it: «основная кнопка Proceed на главной стала с очень
+    // худым шрифтом … сделай на всех экранах одинаково с нормальным весом шрифта». So the number
+    // this arm guards is now 500 – still a REAL Manrope face (400 and 500 are all that ship), which
+    // is the whole of what #10 was about, and one step of body over `normal`, which round 34's own
+    // note offered in advance: «500 is one step away if he wants a touch more body in it». What
+    // MUST not come back is 600: it has no face and the renderer fakes it.
+    expect(getComputedStyle(cta.element).fontWeight, 'the label is the app\'s one button weight').toBe('500')
     w.unmount()
   })
 
-  it('⚠⚠ MUTATION PROOF – it is the new rule that moved it, and the old cascade still reads 600', async () => {
-    // The arm that makes the one above non-vacuous, and it also records the cascade finding as a
-    // fact rather than as prose: a button carrying ONLY `.primary` – every other affirmative button
-    // in the app – is untouched at 600, and a button carrying `.primary` plus `.next-week-btn` is
-    // the one that moved. Reverting `button.next-week-btn` to `.next-week-btn` in the sheet makes
-    // these two read the same and reddens this case.
+  it('⚠⚠ RE-AIMED BY ROUND 35 #8 – the two buttons are now ONE weight, which is what he asked for', async () => {
+    // ⚠⚠ THIS ARM'S CLAIM WAS RETIRED BY THE OWNER, NOT BY AN AGENT, AND IT IS RE-AIMED RATHER THAN
+    // DELETED. It asserted the SPLIT: a button carrying only `.primary` at 600, a button carrying
+    // `.primary` plus `.next-week-btn` at 400, and «only the home CTA moved» as the finding. Round
+    // 35 #8 is him reading that split off his own screen and rejecting it – «я думал, что это один
+    // общий компонент … сделай на всех экранах одинаково». So the split is gone: `button.primary`
+    // carries 500 for every affirmative button in the app and `button.next-week-btn`'s own rule is
+    // deleted, which is why the two now have to be asserted EQUAL rather than different.
+    //
+    // ⚠ THE CASCADE FINDING THIS ARM RECORDED IS UNTOUCHED AND STILL TESTED, one file over:
+    // `button.primary` (0-1-1) outranking a bare `.next-week-btn` (0-1-0) is exactly why deleting
+    // the CTA's own rule leaves it reading the shared one. round35-ui.test.ts owns that now, along
+    // with the real-face measurement behind the number.
     const w = await openShell(enteredCareer())
     const plain = document.createElement('button')
     plain.className = 'primary'
     document.body.appendChild(plain)
-    expect(getComputedStyle(plain).fontWeight, 'the app\'s other affirmative buttons did not move').toBe('600')
-    expect(getComputedStyle(w.find('.next-week-btn').element).fontWeight, 'only the home CTA did').toBe('400')
+    const shared = getComputedStyle(plain).fontWeight
+    expect(shared, 'the app\'s affirmative buttons carry one weight').toBe('500')
+    expect(getComputedStyle(w.find('.next-week-btn').element).fontWeight, 'and the home CTA is that button').toBe(shared)
     plain.remove()
     w.unmount()
   })
@@ -314,6 +330,10 @@ describe('round 34 #10 – the main yellow button is set in regular', () => {
 // renderer emboldened the 500 one. Synthetic bold thickens a stroke by drawing it again, offset.
 // One label, drawn twice by the rasteriser – which is exactly what he saw, and the regular weight
 // above ends it because 400 is a face that actually ships.
+//
+// ⚠ ROUND 35 #8 CARRIED THAT FINDING TO THE WHOLE APP, and the number above is 500 now: he read
+// round 34's honest 400 against a screenful of synthesised 600s and filed it as thin. Every
+// affirmative button is 500 – still a real face – and `round35-ui.test.ts` owns the measurement.
 describe('round 34 #10 – how many buttons and labels are really drawn', () => {
   it('⭐⭐ ONE bar, ONE button, ONE label – counted in the whole document', async () => {
     const w = await openShell(enteredCareer())
@@ -399,7 +419,8 @@ describe('round 34 #10 – how many buttons and labels are really drawn', () => 
     const pill = w.find('.span-weeks-btn')
     expect(pill.exists(), 'the second control is the span pill').toBe(true)
     expect(pill.classes(), 'which deliberately does not wear the lime').not.toContain('primary')
-    expect(getComputedStyle(w.find('.next-week-btn').element).fontWeight, 'the CTA is regular here too').toBe('400')
+    // ⚠ RE-AIMED BY ROUND 35 #8 with the two arms above – 400 -> 500, the app's one button weight.
+    expect(getComputedStyle(w.find('.next-week-btn').element).fontWeight, 'the CTA is the shared weight here too').toBe('500')
     assertRowFits(bar.element, [pill.element, w.find('.next-week-btn').element], PHONE, 'the two-control bar')
     w.unmount()
   })

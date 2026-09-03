@@ -268,7 +268,7 @@ praise, and it is the standard the rest are measured against.
 
 ---
 
-- [ ] **8. «после последнего мержа основная кнопка Proceed на главной стала с очень худым шрифтом, а
+- [>] **8. «после последнего мержа основная кнопка Proceed на главной стала с очень худым шрифтом, а
   на других экранах нормально, я думал, что это один общий компонент - проверь пожалуйста и сделай
   на всех экранах одинаково с нормальным весом шрифта пожалуйста»** – **build, and it is my own
   regression from round 34 that exposed a far bigger one.**
@@ -306,6 +306,97 @@ praise, and it is the standard the rest are measured against.
   little narrower. Not a regression; the first time the type renders as drawn.
 
   ⚠ Blocked on the shop bundle: the faces live in `src/style.css`, where that agent is working.
+  – `[>]` **HALF SHIPPED, AND THE OTHER HALF IS STOPPED AT THE ONE THING I WILL NOT INVENT.**
+
+  **1. WHAT HE ASKED FOR IS DONE: EVERY AFFIRMATIVE BUTTON IN THE APP IS ONE WEIGHT.**
+  `button.primary` is **500** and `button.next-week-btn`'s own rule is **DELETED** rather than moved
+  to the same number – a second declaration of one value is how a stale weight outlives the rule
+  that matters, which is the argument round 34 #10's own note makes about the dead `800`. So
+  «одинаково» is true by construction now, not by two rules agreeing.
+
+  ⚙ **WHY 500 AND NOT 600, WHICH IS THE NUMBER THE OTHER SCREENS WERE READING.** It is the only
+  weight BOTH of his rulings allow. Round 34 #10 was «мне не нравятся жирные буквы … сделай
+  обычные»; this round is «стала с очень худым шрифтом … нормальный вес». 500 is the heaviest
+  Manrope face that actually ships, so it is a step of body over 400 without being the synthesised
+  bold he rejected – and round 34's own note offered it in advance: «500 is one step away if he
+  wants a touch more body in it – one number, say the word». He has now said the word. Putting the
+  CTA back to 600 would have reversed his own ruling of eight days ago AND drawn it fake-bold again.
+
+  ⭐ **AND IT COSTS HIM ALMOST NOTHING ON THE OTHER SCREENS.** Today's 600 has no face, so those
+  buttons already render the 500 face – with the renderer drawing the stroke a second time, offset.
+  What they lose at 500 is only the fake second stroke; the CTA gains real body. The gap he was
+  looking at closes from both ends and every primary button in the app now renders a face that
+  exists.
+
+  **2. THE FONT FILES COULD NOT BE FETCHED, AND NOTHING WAS INVENTED IN THEIR PLACE.**
+  `public/fonts/README.md` records the provenance – "Google Fonts (gstatic), latin subset only",
+  curl'd by hand – and this environment **refused the network call**. Everything else was checked
+  first: no variable font is shipped (all four woff2 are single-weight statics), no `@fontsource`
+  package is in `node_modules`, the design export embeds no base64 faces, git history has never held
+  another weight, and the four other Ties Break checkouts on this machine carry the same four files.
+  There is no honest local source, so per the brief this **stopped rather than substituting a
+  different family or a re-weighted fake**. ⚠ It needs one command from a machine with network
+  access; the five files are Manrope 600/700/800 and Sora 700/800, latin subset, ~72 KB, and their
+  OFL texts are already in `public/fonts/` and stay valid as is.
+
+  **3. «ЛИШНЕЕ ДОЛОЙ» HAS NO TARGET – VERIFIED, NOT REPEATED.** Census over all of `src/`
+  (`tests/component/round35-ui.test.ts` runs it as a standing arm now, so a face that ever does go
+  unasked shows up):
+
+  | shipped face | rules that ask for it |
+  | --- | --- |
+  | Manrope 400 | `body`'s own shorthand + 14 rules |
+  | Manrope 500 | 74 |
+  | Sora 600 | 4 |
+  | Caveat 600 | 2 |
+
+  Nothing self-hosted is dead weight, so nothing was removed. ⚠ **The `font-weight: 400` grep is the
+  trap here**: the app's default face is set by `body { font: 15px/1.45 var(--font-body) }` and by
+  nothing else, so a naive scan calls Manrope 400 unused and deletes the face every screen's prose
+  is read in.
+
+  **4. THE MEASUREMENT HE ASKED FOR, AND THE HALF OF IT THAT DOES NOT EXIST YET.**
+
+  | family | heaviest shipped | rules asking above it |
+  | --- | --- | --- |
+  | Sora (`--font-heading`) | 600 | **700 x3, 800 x21** |
+  | Manrope (`--font-body`), family named | 500 | 600 x7, 700 x2, 800 x2 |
+  | Manrope, family inherited off `body` | 500 | **600 x76, 700 x88, 800 x36** |
+  | Caveat (`--font-hand`) | 600 | **none** – it falls back cleanly, as I said |
+
+  **235 rules in the app ask for a face that does not ship.** On a mounted Home at 375x667 that is
+  **111 elements** rendering a synthesised face right now, which is the before-number and is pinned
+  as a one-way ratchet.
+
+  ⚠⚠ **THE BEFORE/AFTER ON ONE HEADING CANNOT BE MEASURED UNTIL THE FILES LAND, AND SAYING SO IS
+  THE HONEST ANSWER.** The heading is **`.diary-name` – her name on Home, `--font-heading` at 42px /
+  800 / -0.025em, the largest type in the app by 16px** (the next are `.ob-hero-title` 26px,
+  `.tf-hero-title` 22px, `.kid-name` and `.season-title` 20px). BEFORE is measurable and is measured:
+  it computes to 800 against a Sora that ships 600 only, so what he is looking at today is the 600
+  face emboldened by the rasteriser. AFTER is a claim about glyph outlines, and neither happy-dom
+  (no layout engine, no `document.fonts`) nor this branch (no 800 file) can produce it. **What is
+  certain and what he should be told: those 21 places – her name most of all – WILL change the day
+  the file lands.** Real 800 is cleaner and usually slightly narrower than a faked one; it is not a
+  regression, it is the type rendering as drawn for the first time.
+
+  **EVIDENCE**: `tests/component/round35-ui.test.ts` – the CTA and a bare `button.primary` measured
+  through the real cascade on a mounted `App` shell and asserted EQUAL at 500; 500 asserted to be a
+  face the sheet declares and 600 asserted **not** to be, which is the finding itself rather than a
+  number pin; the src-wide census; and the 111-element ratchet. ⚠ **What could not be asserted, said
+  plainly in the file's header**: happy-dom ships no `document.fonts`/`FontFace`, so the brief's
+  `document.fonts.check()` is unavailable – the substitute reads the `@font-face` rules back off
+  `document.styleSheets`, which is the same set a browser builds its face table from. The
+  RASTERISATION – that a faked 600 is one stroke drawn twice – is Chromium's to show and no test here
+  claims it. ⚠ Mutation-verified: putting `button.primary` back to 600 reddens 3 arms.
+  ⚠ `tests/component/round34-home-type.test.ts` was **RE-AIMED** at each of its three 400s with ⚠
+  notes, and its «only the home CTA moved» arm – whose whole claim was the SPLIT he has now rejected
+  – re-aimed to assert the two are EQUAL. Nothing deleted, nothing loosened; it runs 14/14.
+
+  ⚠ **ONE OUTLIER LEFT AND IT IS HIS CALL, NOT MINE TO TAKE QUIETLY.** `PrimaryPill`'s
+  `.tb-pill--cta` is still **800** – the big affirmative on TournamentFlow, EndingScreen and the
+  onboarding wizard. Round 34 explicitly reserved it («a different button … he named the home CTA»),
+  and those are screens he called «нормально», so it was left alone rather than swept in. If
+  «на всех экранах» is meant to include it, that is one number.
 
 - [ ] **9. «доход от ее бренда давай тоже как проценты с призовых будем делить: т.е. в интерфейсе
   напишем про ее долю, в недельном доходе будет семье на руки сумма меньше»** – **build.**
@@ -338,17 +429,113 @@ praise, and it is the standard the rest are measured against.
   ⚠ Queued behind the shop bundle: it touches `business.ts` and the money surfaces, where that agent
   is working.
 
-- [ ] **10. «когда мы на неделе с множеством турниров уже подали заявку на какой-то, давай на других
+- [x] **10. «когда мы на неделе с множеством турниров уже подали заявку на какой-то, давай на других
   на этой же неделе кнопки подачи задазаблим? Тогда не будет текущее кривое … вообще не надо будет
   рисовать»** – **build**, and ⭐ it is the better fix by his own argument: a control that cannot be
   used should be visibly unusable, and then the warning it needed has nothing to warn about.
   ⚠ It lands directly on round 34 item 14's week stack – a week now offers a card per enterable
   rung, so «the others on this week» is a set that only just started existing.
+  – `[x]` **SHIPPED, AND IT TURNS OUT TO BE THE ENGINE'S OWN RULE FINALLY REACHING THE SCREEN.**
 
-- [ ] **11. «на домашнем экране сверху висит оверлей с красными буквами, но он находится ПОД hero
+  ⭐⭐ **`enterEvent` HAS REFUSED A SECOND ENTRY ON A WEEK SINCE THE LADDER-UP WAVE** – «She is
+  already entered in a tournament that week», engine/world/entries.ts, with its own note beside it:
+  «She has one body and one week – the abundance is a CHOICE between events, not a licence to play
+  two.» The screen was drawing a live Enter over that refusal. Round 34 #14 then put a card on the
+  week for every rung she can enter, which is what made the refusal reachable by swiping: press,
+  answer a confirm, and be told no. That is «текущее кривое», and his own argument for the fix is
+  the right one – a control that cannot be used is drawn unusable now, and the warning has nothing
+  left to warn about.
+
+  **THE BUILD:** one predicate, `weekEntryTaken` (composables/tierState.ts, beside `weekEventStack`
+  where his ruling on the stack lives), read once per ROW by SeasonScreen and added to the Enter's
+  existing `:disabled`. ⚠ It is deliberately **not** folded into `eventActionable`: that question is
+  «may she act on this card at all» and it must keep saying yes, because the entered card's own
+  Withdraw / Cancel entry is the way back out. Folding it there would have deleted the second card
+  instead of greying its button – «не надо рисовать» applied to the wrong element. The week keeps
+  every card round 34 #14 earned it.
+
+  ⚠ **NO COPY WAS ADDED, AND THE APP'S OWN CONVENTION IS WHY.** I looked for one first, as asked.
+  This screen already handles a refusal that covers several cards at once, and it states the reason
+  **ONCE at the head of the feed, never per card** – `COLLEGE_FREEZE_REFUSAL`, whose own note says
+  «eight cards carry a disabled Enter and eight copies of one sentence would be the noisiest thing
+  on the screen». This refusal is per WEEK, so a note would be per card by construction. The week
+  already says it: the committed card wears **`Entered`** and stands FIRST in the same swipe strip
+  (`preferredWeekEvent`'s first tiebreak). ⚠ If he wants a sentence anyway, the honest source is the
+  engine's own – the college note's exact pattern – and it is his call.
+
+  ⭐ **THE CALENDAR NEEDED NOTHING, AND THAT IS BY CONSTRUCTION RATHER THAN LUCK.** The other Enter
+  in the app is CalendarScreen's marker card, and its markers pick through `preferredWeekEvent`
+  (weekDays.ts) – ONE event per week, entered first – so on a committed week the marker IS the
+  entered event and the card draws «She is in. Withdrawing lives on the Season tab.» rather than an
+  Enter. There is no second door to close.
+
+  **EVIDENCE**: `tests/component/round35-ui.test.ts` – **both arms on the same week of the same
+  golden save (`v46.json`), one fact different**: with an entry made through the engine, every OTHER
+  card on that week draws a DISABLED Enter while the committed one draws no Enter at all and still
+  offers Withdraw/Cancel entry; with nothing entered, at least two live Enters stand on one week.
+  ⚠ The disabled arm asserts the THREE PRE-EXISTING reasons away – the purse covers every fee,
+  `game.busy` is false, no college freeze – so the attribute can only come from the new rule.
+  ⚠⚠ The finder is deliberately BLIND to the rule under test (round 34 #14b's finder made exactly
+  the opposite mistake and its note says so), and every arm rebuilds its own world: the walk is
+  cached, the world is not, because three arms mutate it with `enterEvent` and a shared fixture
+  would have let the first arm's entry decide the second arm's verdict.
+  ⚠ Mutation-verified in BOTH directions: dropping `entryTaken(row)` from the binding reddens the
+  entered arm; making the predicate true on every non-empty week reddens the live arm.
+
+- [x] **11. «на домашнем экране сверху висит оверлей с красными буквами, но он находится ПОД hero
   картинкой и его не видно, тоже проверь»** – **reproduce, then build.** A stacking defect: the
   overlay paints under the hero art. ⭐ He found it while reasoning about item 10 and it is the
   reason that item is worth doing – the message the game tries to show is invisible today.
+  – `[x]` **REPRODUCED AND SHIPPED. ⭐ THE CAUSE IS NOT A `z-index` – THERE ISN'T ONE – AND NOT A
+  STACKING CONTEXT EITHER. IT IS PAINT ORDER, CAUSED BY A NEGATIVE MARGIN.**
+
+  **WHAT THE RED LETTERS ARE.** `<p v-if="game.error" class="error">` at the top of
+  `HomeScreen.vue` – `.error` is `color: var(--danger)` (#ef4b3a), and `game.error` carries the
+  sentence the worker threw. On his week that sentence was `enterEvent`'s «She is already entered in
+  a tournament that week», which is item 10 exactly. The two items are one story and he found them
+  in the right order.
+
+  **THE CAUSE, TWO FACTS THAT ONLY BITE TOGETHER.**
+  1. `.diary-hero` carries `margin-top: calc(-1 * var(--app-pad-top))` – **-24px** – written to
+     cancel `#app`'s top inset so the photograph reaches the top of the phone (the A3 full-bleed
+     ruling of 28.07). That comment says "cancel the shell's gutter EXACTLY", which is true of an
+     EMPTY inset and a lie about an occupied one. The `<p>` stood OUTSIDE `<ScreenShell>`, so the
+     hero was still the shell body's `:first-child` and the -24px ate **the sentence** instead of
+     the padding.
+  2. `.diary-hero` is `position: relative` (it has to be – three scrims and the confetti are
+     absolutely positioned inside it) and the `<p>` is static. **CSS 2.1 Appendix E paints
+     positioned descendants in step 8 and in-flow block content in steps 4/7**, so the picture wins
+     whatever the source order says. Putting the paragraph first in the DOM – which it already was –
+     could never have saved it.
+
+  ⭐ Arithmetic: `#app` opens at 24px, the line sits at y≈32 and is ≈19px tall (13px/1.45), the hero
+  starts at ≈40 – so roughly **8px of a 19px line** showed and the rest was under the painting.
+  «Висит … и его не видно» is precise.
+
+  **THE FIX IS THE OVERLAP, NOT THE PAINT ORDER, which is what the brief asked for.** The paragraph
+  moved INSIDE `<ScreenShell>`, so the hero stops being `:first-child`, and one new rule –
+  `.diary-hero:not(:first-child) { margin-top: 0 }` – drops the cancellation, because the app's top
+  inset is no longer empty space, it is holding a sentence. **`:first-child` is the condition that
+  margin always meant, said out loud.** No `z-index` was added anywhere, nothing is stacked on
+  anything, and it generalises: anything ever inserted above the hero is safe for free.
+
+  ⚠ **THE FULL-BLEED HERO IS UNTOUCHED WHEN THERE IS NO ERROR** – hero is `:first-child`, margin is
+  -24px, screen byte-identical. That is asserted, because it is the thing this fix could have cost.
+  ⚠ **NO WORDING MOVED** (invariant 4): the element, its class and its text are the engine's own,
+  moved and not rewritten.
+
+  **EVIDENCE**: `tests/component/round35-ui.test.ts` – with the refusal on screen, the hero's climb
+  over the line above it asserted to be **0px**, computed off the real cascade; the structural half
+  (the paragraph is inside the shell and is the hero's immediate preceding sibling, so
+  `:first-child` has something to be false about); the no-error arm asserting the -24px is still
+  exactly `--app-pad-top` read as a token rather than a literal; and a fourth arm that takes the
+  refusal string OUT OF THE ENGINE, puts it on the store and asserts Home renders it – the two items
+  joined in one measurement.
+  ⚠⚠ Mutation-verified against **the shipped defect itself**: putting the paragraph back outside the
+  shell reddens 3 arms; keeping the move but dropping `:not(:first-child)` reddens 2. ⚠ One honest
+  limit, recorded in the file: happy-dom has no layout engine, so this measures the OVERLAP through
+  the computed cascade (a negative margin here *is* the overlap) rather than through a real
+  `getBoundingClientRect`.
 
 - [ ] **12. «Инвест тоже докинь пожалуйста в эту же ветку, вроде не сложная правка»** – **build.**
   ⚠ The shop bundle deliberately skipped Invest because round 34's #19/#20 were not in this tree –

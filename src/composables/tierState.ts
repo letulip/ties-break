@@ -420,6 +420,43 @@ export function weekEventStack<E extends StackableEvent>(events: readonly E[], w
 }
 
 /**
+ * ⭐⭐⭐ ROUND 35 #10 – HAS THIS WEEK ALREADY BEEN SPENT? The owner, straight after round 34 #14 put
+ * several cards on one week:
+ *
+ *   «когда мы на неделе с множеством турниров уже подали заявку на какой-то, давай на других на
+ *   этой же неделе кнопки подачи задазаблим? Тогда не будет текущее кривое … вообще не надо будет
+ *   рисовать»
+ *
+ * ⚠⚠ IT IS NOT A NEW RULE – IT IS THE ENGINE'S, MADE VISIBLE. `enterEvent`
+ * (engine/world/entries.ts) has refused a second entry on a week since the ladder-up wave:
+ * «She is already entered in a tournament that week». Until this item the screen drew a live Enter
+ * over that refusal, so the press was spent, a confirm was answered, and the answer was an error
+ * message – which is the «текущее кривое» he is pointing at, and round 35 #11 is why he could not
+ * even READ it on Home. A control that cannot be used is drawn unusable now, and then there is
+ * nothing left for a warning to warn about, which is his own argument for the fix.
+ *
+ * ⚠ IT READS THE STACK, WHICH IS THE SAME SET THE ENGINE COUNTS. `feedShows` opens with
+ * `e.entered`, so an entered event is ALWAYS visible, and `preferredWeekEvent`'s first tiebreak
+ * makes it the LEAD – so a week she is committed to always carries its own commitment at
+ * `stack[0]`, and this predicate cannot miss one that the screen is hiding.
+ *
+ * ⚠ AND IT IS DELIBERATELY NOT `eventActionable`'s business. That question is «may she act on this
+ * card at all», and it must keep saying yes here: the entered card's own Withdraw / Cancel entry is
+ * the way back out, and folding this in there would delete the second card instead of greying its
+ * button – which is «не надо рисовать» applied to the wrong element. The week keeps every card it
+ * earned in round 34 #14; one of them stops offering an entry the engine would refuse.
+ *
+ * ⚠ NO NEW COPY, and the app's own convention is why. A whole-surface refusal states its reason
+ * ONCE and never per card (`COLLEGE_FREEZE_REFUSAL` at the head of the feed, SeasonScreen.vue:
+ * «eight copies of one sentence would be the noisiest thing on the screen»), and this refusal is
+ * per WEEK – so a note would be per card by construction. The week already says it: the committed
+ * card wears `Entered` and stands first in the same swipe strip.
+ */
+export function weekEntryTaken<E extends Pick<StackableEvent, 'entered'>>(onWeek: readonly E[]): boolean {
+  return onWeek.some((e) => e.entered)
+}
+
+/**
  * THE TABLE A RUNG'S ENTRY THRESHOLD IS COUNTED IN – the UI's copy of `entryStatus`'s own on-ramp
  * rule (world.ts): the bottom rung of a table is opened by the table BELOW it, because a player
  * cannot hold a ranking in a table she has never played in. So j30 (itf's on-ramp) reads her

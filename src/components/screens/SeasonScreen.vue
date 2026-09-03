@@ -65,7 +65,7 @@ import { ECONOMY, recommendVacationPackage, vacationPackage } from '../../engine
 // screen asks for the whole week rather than for its representative; the stack's FIRST member is
 // `preferredWeekEvent`'s answer, unchanged, and the Calendar's markers still ask the pick directly
 // because a marker is one week's identity. Same module, same rule, two questions.
-import { entryBandTrack, eventActionable, feedContext, feedShows, pointsLockNote, useTierStates, weekEventStack, type TierState } from '../../composables/tierState'
+import { entryBandTrack, eventActionable, feedContext, feedShows, pointsLockNote, useTierStates, weekEntryTaken, weekEventStack, type TierState } from '../../composables/tierState'
 // ⚠ THE CALENDAR HORIZON, FROM ITS OWNER. This screen used to hold TWO independent eights: it
 // imported `tierState.HORIZON_WEEKS` for the open-tier note's copy and kept a private
 // `CALENDAR_HORIZON = 8` for the row loop, so one file could have printed one horizon and drawn
@@ -687,6 +687,12 @@ const layoffNote = computed(() => {
 const stackFor = (onWeek: readonly UpcomingEvent[]): UpcomingEvent[] => weekEventStack(onWeek, week.value)
 /** ...and the one enterability test, shared with the header's counter and the planner's gate. */
 const actionable = (e: UpcomingEvent): boolean => eventActionable(e, week.value)
+/** ⭐⭐⭐ ROUND 35 #10 – THE WEEK IS ALREADY SPENT, so the OTHER cards on it stop offering an entry
+ *  the engine would refuse. His words and the whole reading are on `weekEntryTaken` in
+ *  composables/tierState.ts, where Cyrillic is allowed and in a template it is not.
+ *  ⚠ THE ROW, NOT THE CARD. Every card on a committed week reads the same answer, and the committed
+ *  card itself never reaches this branch – it is drawing Withdraw or Cancel entry. */
+const entryTaken = (row: CalendarRow): boolean => weekEntryTaken(row.events)
 
 const calendarRows = computed<CalendarRow[]>(() => {
   // ⚠ R15-9: ONE ROW PER WEEK, AND THE PICK IS NOW A RULE RATHER THAN AN ACCIDENT. This used to be
@@ -1752,9 +1758,20 @@ function closeExhibition(): void {
                 <!-- ⭐⭐⭐ ROUND 27 #5 – ...AND IT STANDS DOWN FOR THE FOUR COLLEGE YEARS. `enterEvent`
                      opens with `guardNotEnded`, so every press inside the freeze was refused; the
                      freeze note at the head of the calendar carries the engine's own reason. -->
+                <!-- ⭐⭐⭐ ROUND 35 #10 – AND IT STANDS DOWN ON A WEEK SHE HAS ALREADY ENTERED. His
+                     words are quoted on `weekEntryTaken` (composables/tierState.ts), where Cyrillic
+                     is allowed and in a template it is not. `enterEvent` has refused a second entry
+                     on one week since the ladder-up wave; round 34 #14 then put several cards on a
+                     week, so the refusal became something the player could reach by swiping. The
+                     button is the engine's verdict now instead of a press that spends a confirm and
+                     answers with an error.
+                     ⚠ NO NOTE BESIDE IT, WHICH IS THIS SCREEN'S OWN CONVENTION: a refusal that
+                     covers several cards at once is stated once, not per card – see the college
+                     freeze note at the head of the feed and its ⚠ about eight copies of one
+                     sentence. The committed card is one swipe away wearing `Entered`. -->
                 <PrimaryPill
                   :risky="ev.cautionReason === 'fatigued'"
-                  :disabled="fundsShort(ev) || game.busy || frozenForCollege"
+                  :disabled="fundsShort(ev) || game.busy || frozenForCollege || entryTaken(row)"
                   :aria-label="enterActionName(ev)"
                   @click="askEnter(ev)"
                 >
