@@ -265,3 +265,44 @@ built. `round/34` does not touch the prologue and merges independently of this.
 
 He played the merged prologue end to end and reported in one message. Item 5 is the only one that is
 praise, and it is the standard the rest are measured against.
+
+---
+
+- [ ] **8. «после последнего мержа основная кнопка Proceed на главной стала с очень худым шрифтом, а
+  на других экранах нормально, я думал, что это один общий компонент - проверь пожалуйста и сделай
+  на всех экранах одинаково с нормальным весом шрифта пожалуйста»** – **build, and it is my own
+  regression from round 34 that exposed a far bigger one.**
+
+  ⭐ It is not one shared component: `button.primary` sets 600 and round 34 #10 gave
+  `.next-week-btn` its own rule at 400. But the reason it LOOKS thin is the finding:
+
+  ```
+  Manrope ships 400 and 500 only.  button.primary asks for 600.
+  ```
+
+  ⭐⭐ **So Proceed is the only button in the app rendering a REAL face, and every other one is
+  synthetically bolded** – the renderer draws the stroke twice, offset. He read the honest one as
+  thin against a screenful of fakes.
+
+  **Measured across the whole app** – explicit weight requests in rules that also set the family:
+
+  | family | heaviest shipped | asked above it |
+  | --- | --- | --- |
+  | `--font-heading` (Sora) | 600 | **700 (2 rules), 800 (20 rules)** |
+  | `--font-body` (Manrope) | 500 | **600 (7), 700 (2), 800 (2)** |
+  | `--font-hand` (Caveat) | 600 | none |
+
+  Plus the bulk of the component tree, which inherits Manrope from `body` and asks it for 600/700/800.
+
+  ⚙ **His ruling: ship the missing faces** («B, и Sora проверь тоже, лишнее долой»). Manrope 600/700/800
+  (~42 KB) and Sora 700/800 (~30 KB); Caveat needs nothing. **~72 KB total**, against the 9.6 MB of
+  art already precached.
+
+  ⚠ **«Лишнее долой» has no target: nothing shipped is unused.** All three families' shipped faces are
+  asked for. The defect was only ever the missing end.
+
+  ⚠ **He should be told before it lands, not after:** real Sora 800 will look visibly different from
+  today's synthesised version in twenty places – the largest type in the app. Cleaner and usually a
+  little narrower. Not a regression; the first time the type renders as drawn.
+
+  ⚠ Blocked on the shop bundle: the faces live in `src/style.css`, where that agent is working.
