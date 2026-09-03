@@ -35,11 +35,12 @@ import {
   toSnapshot,
   type WorldState,
 } from '../../src/engine/world'
+import type { ShopItem } from '../../src/engine/world/assets'
 import { ECONOMY } from '../../src/engine/economy'
 import { SHELF_CATEGORY_KEYS, shelfArtUrl } from '../../src/art/shelf'
 import { rngFromSeed } from '../../src/engine/rng'
 import type { Snapshot } from '../../src/shared/protocol'
-import { aspectHeightPx, boxOf, lengthPx, setViewport, PHONE } from './fits'
+import { aspectHeightPx, lengthPx, setViewport, PHONE } from './fits'
 import { SHELF_TAB_LABELS, openShelfTab, shelfRow } from './shelf'
 
 /** A real career, walked by the real engine – `shop-tab.test.ts`'s own recipe. */
@@ -391,10 +392,16 @@ describe('#5-#9 – the framed rows', () => {
 // =================================================================================================
 describe('the ladders, pinned so a later edit cannot move a price quietly', () => {
 // =================================================================================================
-  const priceOf = (id: string) => ECONOMY.shop.catalogue.find((i) => i.id === id)?.entryCents
-  const labelOf = (id: string) => ECONOMY.shop.catalogue.find((i) => i.id === id)?.label
+  // ⚠ WIDENED TO `ShopItem` ONCE, HERE. `ECONOMY` is a deep `as const`, so `catalogue` is a union of
+  // twenty-nine object literals and an optional field like `retired` exists on only some members of
+  // it – reading it off the literal type is a compile error rather than a false negative, which is
+  // the right failure but not one worth repeating at every call site. This is the SAME array the
+  // engine serves through `shopCatalogue()`; nothing is re-declared and nothing is copied.
+  const CATALOGUE: readonly ShopItem[] = ECONOMY.shop.catalogue
+  const priceOf = (id: string) => CATALOGUE.find((i) => i.id === id)?.entryCents
+  const labelOf = (id: string) => CATALOGUE.find((i) => i.id === id)?.label
   const ladder = (family: string) =>
-    ECONOMY.shop.catalogue.filter((i) => i.family === family).map((i) => [i.id, i.entryCents] as const)
+    CATALOGUE.filter((i) => i.family === family).map((i) => [i.id, i.entryCents] as const)
 
   it('⭐⭐ #7 – property is a four-rung ladder now: 240k / 520k / 1.4M / 3M', () => {
     // «Добавится 2 тира домов еще: за 1.4м и за 3м» – his two prices to the digit.
@@ -418,9 +425,9 @@ describe('the ladders, pinned so a later edit cannot move a price quietly', () =
       ['plane', 18_000_000_00],
       ['plane-long', 38_000_000_00],
     ])
-    const live = ECONOMY.shop.catalogue.filter((i) => i.family === 'plane' && !i.retired)
+    const live = CATALOGUE.filter((i) => i.family === 'plane' && !i.retired)
     expect(live.map((i) => i.id)).toEqual(['plane-small', 'plane'])
-    expect(ECONOMY.shop.catalogue.find((i) => i.id === 'plane-long')!.retired).toBe(true)
+    expect(CATALOGUE.find((i) => i.id === 'plane-long')!.retired).toBe(true)
   })
 
   it('⭐⭐ #8 – the water ladder swapped two identities and not one of its four prices', () => {
@@ -451,10 +458,9 @@ describe('the ladders, pinned so a later edit cannot move a price quietly', () =
       ['car-unreasonable', 300_000_00],
     ])
     expect(labelOf('car-good'), 'a four-by-four, not a saloon').toBe('The luxury four-by-four')
-    const catalogue = ECONOMY.shop.catalogue
-    const nineteen = catalogue.find((i) => i.id === 'car-nineteen')!
+    const nineteen = CATALOGUE.find((i) => i.id === 'car-nineteen')!
     expect(nineteen.blurb, 'the sports car is not twenty-five years old').not.toContain('twenty-five years late')
-    const unreasonable = catalogue.find((i) => i.id === 'car-unreasonable')!
+    const unreasonable = CATALOGUE.find((i) => i.id === 'car-unreasonable')!
     expect(unreasonable.blurb, 'the convertible has four seats').not.toContain('no back seats')
     expect(unreasonable.blurb).toContain('Four seats')
   })
