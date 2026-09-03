@@ -743,3 +743,25 @@ better than mine and is worth keeping: «градиент справа (как �
 LEFT, because `.cm-art` sits at `left: 0` under a right-fading mask; his own handoff §X says «строки
 с фото … слева и кнопкой Buy справа»; and «water – карточки как на домах» forces property and water
 onto the SAME side, which my version could not satisfy. **Nothing to change.**
+
+- [ ] **14. «на неделе перед турниром случилась жеребьевка, мне сказали "играем против №118 шанс
+  71%", пошел турнир - соперник в первом раунде №76»** – **build. The diagnosis is complete and it
+  undermines round 34 #5.**
+
+  ⭐⭐⭐ **The draw is never stored. It is recomputed from live inputs every time it is asked for.**
+  `preview.ts` builds `alive = drawnField(event, cohort, ranking, rivalConditions(results, week),
+  kid, seed, excluded, standing)` and `firstRoundOpponent` is «a pure index lookup into the finished
+  draw». The RNG is stable – `seed:kidtour:<eventId>`, and the file says so – **but `ranking`,
+  `rivalConditions(..., world.week)` and the standing table all move every week.** So at week −1 the
+  field was built one way and the jury drew #118 out of it; a week later the field rebuilt itself and
+  **the very same draw** produced #76.
+
+  ⚠ Round 31 #4 taught us to stop NAMING the opponent early (`DRAW_LEAD_WEEKS`). It never made the
+  draw a fact. We learned not to say the name too soon and went on inventing it fresh every week.
+
+  ⭐ **The fix: when the draw is shown, it has happened, so it is written down.** Her first-round
+  opponent is persisted the week `drawMade` first turns true and read from there afterwards.
+  ⚠ Not the whole field: `season/types.ts` warns that «a stored field shifts every subsequent
+  attribute for all 199» – that is about the COHORT, and one opponent id is not it.
+  ⚙ Cheap by his own ruling of 03.09: no players exist, so the schema move is the four-part ritual
+  and no compatibility at all.
