@@ -18,6 +18,7 @@ never invented by a builder.
 | `trophies` | 18 | trophy pieces per tournament tier, gold and silver | owner-supplied | AI-assisted – generated with ChatGPT image generation, post-processed by the owner (masters arrived pngquant-optimized, re-encoded to webp by `scripts/optimize-art.mjs`) | owner (Igor Vladimirskiy) | 2026-08-01 |
 | `coaches` | 16 | coach portraits per tier (budget / middle / high / elite) | owner-supplied | AI-assisted – generated with ChatGPT image generation, post-processed by the owner in Figma | owner (Igor Vladimirskiy) | 2026-08-01 |
 | `sponsors` | 3 | sponsor tier art (local / national / global) | owner-supplied | AI-assisted – generated with ChatGPT image generation, post-processed by the owner in Figma | owner (Igor Vladimirskiy) | 2026-08-01 |
+| `shop` | 24 | the Shelf's paintings – six category tiles (invest, business, property, cars, water, air) and eighteen item tiles (four cars, four houses, four boats, two aircraft, four academy parts) | owner-supplied | **attestation pending** – delivered by the owner on 03.09.2026 for round 35; the method is his to state and a builder may not invent it | owner (Igor Vladimirskiy) | pending |
 
 **Fully attested 01.08.2026.** The owner, asked directly: «все сеты AI-генерация ChatGPT +
 обработка в Figma». Every row above now carries that method first-hand – no builder
