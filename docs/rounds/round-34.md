@@ -1419,3 +1419,183 @@ read from the log file, 412 s wall clock, every step in the chain including `nod
 (= `test:quiet`; `unit: green in 356s`) and `npm run test:component` (109 files, 1158 tests passed).
 `npm run check:tools` alone: `TOOLS_EXIT=0`. No guard test went red, so none was re-aimed, and none
 was deleted or loosened.
+
+---
+
+# Bundle H – the ceiling read is normalised against what is reachable
+
+Owner, 02.09, on the finding filed under "⚠ OPEN FOR THE OWNER" above: **«да, перенормируй показ
+сразу»**. This is that, and it changes a denominator and nothing else. The four labels, the four
+notes and the approved edges 0.40 / 0.75 / 0.90 are all byte-identical to what bundle A shipped.
+
+## The defect, in one paragraph
+
+`growWeek` gains `rate × headroom × luck` – a SHARE of the distance still to run – so the distance to
+`potential` shrinks geometrically and never closes, and `ageFactor` returns exactly 0 from
+`declineStart`, so whatever is unfilled at that age is unfilled for ever. **`potential` is an
+asymptote, not a destination.** Round 34 #2b therefore put every player's build over a number nobody
+can reach, and bundle A measured what that cost: budget / middle / high careers peak at 0.855 / 0.879
+/ 0.895 and NONE of them ever reached the approved 0.90.
+
+⭐ The edge was never the defect. 0.90 of a scale whose top is 0.867 is 104% of what the game can
+actually deliver, so «At her ceiling» was arithmetically elite-only. Re-normalising is what makes the
+owner's approved numbers mean what he was told they meant.
+
+## The derived normaliser
+
+`reachableHeadroomShare()` (new, `src/engine/development.ts`, beside `ageAtPhysicalShare`, which is
+the same kind of curve walk) returns `1 − Π(1 − ageFactor(age))` over every week from `growthStart`
+to `declineStart`, every other term in `growWeek`'s rate left at 1:
+
+| the shipped curve | |
+| --- | --- |
+| growthStart 13 · growthEnd 18 · plateauStart 23 · declineStart 29 | |
+| peakRate 0.0062 · growthEase 0.5 · plateauRate 0.0009 | |
+| **`reachableHeadroomShare()` = 0.866824** | 86.7% of her headroom |
+
+⚠⚠ **IT IS DERIVED AND NEVER WRITTEN DOWN, AND THAT IS THE POINT.** The backlog already carries an
+approved wave that raises `plateauRate` and pushes `declineStart` later; a literal `0.867` would
+survive that wave in silence and start understating every career the day it landed. Measured proof
+that it moves with the curve, from `tools/r34-reachable-ceiling.ts`:
+
+| what moved | normaliser | delta |
+| --- | --- | --- |
+| shipped, nothing moved | 0.866824 | – |
+| `plateauRate` 0.0009 → 0.0018 | 0.910547 | +4.37pp |
+| `plateauRate` 0.0009 → 0.0005 | 0.841074 | −2.57pp |
+| `declineStart` 29 → 32 | 0.884276 | +1.75pp |
+| `declineStart` 29 → 26 | 0.846740 | −2.01pp |
+| both (0.0018 and 32) | 0.932464 | +6.56pp |
+| `peakRate` 0.0062 → 0.0080 | 0.916862 | +5.00pp |
+
+⚠ It is memoised on the curve's own VALUES rather than on "have I run yet" – ~830 iterations is not
+free at snapshot time, but a cache keyed on first-call would be a hardcode wearing a lazy initialiser
+and would pass every other test in the file. One slot, so it cannot grow.
+
+## The decision: curve-only, not best-coached – measured at both ends
+
+The choice was made against numbers, not taste. Same walk, a constant multiplier on the rate (which
+is what everything other than age contributes in `growWeek`), luck at its mean of 1.0:
+
+| arm | multiplier | reachable |
+| --- | --- | --- |
+| **curve only – no coach, no plan, nothing but age** | 1.0000 | **0.8668** |
+| self-coached, badly matched (0.82 × 0.94) | 0.7708 | 0.7885 |
+| self-coached, the parent's own fit | 0.8200 | 0.8085 |
+| budget coach, well matched | 0.9975 | 0.8661 |
+| middle coach, well matched | 1.0920 | 0.8894 |
+| high coach, well matched | 1.1655 | 0.9047 |
+| elite coach, well matched (1.15 × 1.05) | 1.2075 | 0.9124 |
+| elite + great + a grinding plan every week | 1.5456 | 0.9558 |
+| elite + great + grind + three matches a week | 2.3802 | 0.9919 |
+
+⭐ **THE CURVE-ONLY ARM, and the argument is that the read is about HER.** Normalising by the
+best-coached maximum (0.9124) would put the parent's chequebook inside his daughter's ceiling: two
+identical girls would read differently because one family could afford an elite coach, and the
+well-coached one would be told she has LESS left than she really has – which is the same shape of
+inversion #2b was written to remove. The curve is the one part of the denominator that belongs to the
+player rather than to the wallet.
+
+⚠ The cost of the choice, stated rather than hidden: a career that beats the curve reads 1.0 and is
+clamped there, and a career that never hires anybody cannot reach 1.0 at all. Both are correct – she
+did not realise what she could have – and the clamp was already in `realisedShare`.
+
+## Which band each rung now reaches – 8 careers per rung, 780 weeks, real engine
+
+| rung | peak RAW share | peak SHOWN share | reaches «At her ceiling» | when |
+| --- | --- | --- | --- | --- |
+| budget | 0.855 | 0.987 | **8 of 8** | weeks 383–396 |
+| middle | 0.877 | 1.000 | **8 of 8** | weeks 326–343 |
+| high | 0.894 | 1.000 | **8 of 8** | weeks 287–307 |
+| elite | 0.901 | 1.000 | **8 of 8** | weeks 273–292 |
+
+⭐ The RAW column reproduces bundle A's 0.855 / 0.879 / 0.895 to the third decimal on the same
+horizon, which is the provenance check that says the two measurements are the same measurement. The
+function that was lost is back: the fourth band's note is ADVICE – «no coach can add much more now,
+whatever the price» – and it now reaches the parent of an ordinary girl, not only the parent who
+could afford an elite coach.
+
+When each band first arrives, one career per rung:
+
+| rung | Huge potential | Still room to grow | Close to her ceiling | At her ceiling |
+| --- | --- | --- | --- | --- |
+| budget | 14.0 | 15.4 | 18.1 | 21.5 |
+| middle | 14.0 | 15.2 | 17.7 | 20.3 |
+| high | 14.0 | 15.2 | 17.3 | 19.6 |
+| elite | 14.0 | 15.2 | 17.3 | 19.6 |
+
+## ⚠⚠ ONE CONSEQUENCE HE SHOULD SEE – reported, not adjusted
+
+**§A1 says «On this scale Vera reads "Still room to grow" at 16 and "Close to her ceiling" at 24 –
+the verdict arrives after twenty, not at fourteen». That sentence was written about the RAW scale and
+re-normalising moves it.** On the career the guard test walks (`r23-walk`, middle rung), «Close to her
+ceiling» now arrives at **age 17.7** rather than at 24, and «At her ceiling» at 20.6. Year by year:
+
+```
+age     14     15     16     17     18     19     20     21     22     23
+raw    0.009  0.295  0.471  0.591  0.670  0.722  0.762  0.792  0.813  0.827
+shown  0.010  0.340  0.544  0.682  0.772  0.833  0.879  0.914  0.938  0.954
+```
+
+⭐ **His actual complaint is still fully cured** – «написал 14 летней девочке Close to her ceiling …
+звучит как приговор … не рановато ли?» – because on the old measure that career heard it at week 78,
+age 15.5, and at fourteen it now reads «Huge potential». But 17.7 is not «after twenty», and that was
+a number he was given. ⚙ **NOT CHANGED. The edges are his and re-normalising is what he asked for; if
+he wants the verdict later, the EDGE is the knob, not the measure** – exactly the shape of the note
+bundle A left at the other end.
+
+⚠ A second measured finding, for the record: the per-route curves reach different amounts – direct
+(plateau 22, decline 27) reaches 0.8451 against college's 0.8668. The normaliser is the SHIPPED pair
+for every career, so a direct-route girl peaks about 2.5% lower on the shown scale. She still clears
+0.90 comfortably. Using her OWN pair was considered and rejected: `ageCurveOf` pulls `declineStart`
+in as she loses weeks to injury, so a per-career normaliser would make the read jump UP the week she
+got hurt, and two identical builds would read differently because one had a bad season.
+
+## Evidence
+
+* **`tests/round34-reachable-ceiling.test.ts`** (new, 12 tests): the shipped normaliser measured; the
+  anti-hardcode test (moves `plateauRate`, `declineStart` up and down, and `peakRate`, restores in a
+  `finally`, and then asserts the value COMES BACK – the arm that catches a frozen memo); the two
+  route curves differing; a career at its birth build reading «Huge potential» on three seeds; a
+  career that took everything the curve offers reading the top band; the three edges checked from
+  both sides at their derived raw positions; monotone and no-flicker swept at 0.005; the four labels
+  byte-identical with no digit anywhere; and all four rungs walked 780 weeks reaching `[0, 1, 2, 3]`.
+* **`tools/r34-reachable-ceiling.ts`** (new, archival, registered, typechecks under `check:tools`) –
+  every table above.
+
+⚠ **Mutation-verified, four ways, each watched going red before it was believed:**
+
+| mutation | reddens |
+| --- | --- |
+| `reachableHeadroomShare` returns a literal `0.866824` | 2 tests – the anti-hardcode arm and the route arm |
+| the memo keyed on `'computed'` instead of on the curve's values | the same 2 – which is the point of that arm |
+| `realisedShare` back to `gained / room` | **9 tests across 3 files**, incl. budget / middle / high failing to reach the top band |
+| `'At her ceiling'` renamed to `'At her limit'` | 2 – the invariant-4 pin and the top-band read |
+
+⚠ The third mutation is the defect reproduced: with the asymptote back as the denominator, budget,
+middle and high all fail and **elite still passes** – which is bundle A's finding, mechanically.
+
+## Guard tests re-aimed – none deleted, none loosened
+
+| file | what moved | why |
+| --- | --- | --- |
+| `tests/round23-coach-copy.test.ts` | the middle-rung walk pin `[0, 1, 2]` → `[0, 1, 2, 3]` | the item itself: an ordinary career now reaches the fourth band. `toEqual` on the whole walk still forbids a skipped band, a repeat and any step backwards, so this is a STRONGER statement, not a weaker one |
+| `tests/round23-coach-copy.test.ts` | `worldAt(realised)` → `worldAt(shown)` | its four sample points stopped naming four bands |
+| `tests/coachTiers.test.ts` | `at(realised)` → `at(shown)` | same, and it was red: 0.8 and 0.95 both read «At her ceiling» |
+| `tests/component/round23-coach-card.test.ts` | `snapshotAt(realised)` → `snapshotAt(shown)` | ⚠ this one was GREEN and was re-aimed anyway – its comments («two inside band 0, two inside band 1», «a point either side of each of 0.40 / 0.75 / 0.90») had silently stopped describing its own sample points, which is the kind of pin that gets trusted wrongly later |
+| `tests/component/round24-coach-card.test.ts` | `snapshotAt(realised)` → `snapshotAt(shown)` | consistency with the file above; also green either way |
+| `tests/round34-ceiling-read.test.ts` | `theShippedMeasure` divides by the normaliser | it exists to mirror `realisedShare`. ⭐ Nothing in that file's assertions depends on it – every claim is an ordering or a zero – so the file stayed green throughout |
+
+⭐ Every re-aimed helper multiplies by `reachableHeadroomShare()` rather than by a literal, so the
+approved curve wave carries them with it instead of reddening five files. Bundle A's ⚠ notes and the
+round-23 measurement block over `coachRoomBandIndex` are kept verbatim, with bundle H's note written
+underneath rather than over them.
+
+## What did NOT change
+
+* the four labels and their four notes – **invariant 4**, asserted byte-identical
+* the band edges 0.40 / 0.75 / 0.90 – the owner's, approved 02.09
+* `handoverRoomBand` – it measures how BIG her room is, not how much of it is filled
+* `coachSeasonUplift` and every price on the market card – they never read this quantity
+* no save schema, no migration, no RNG draw: `realisedShare` is derived at snapshot time and persists
+  nothing, and the normaliser is a pure function of a shipped constant
