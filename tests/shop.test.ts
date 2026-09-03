@@ -86,6 +86,12 @@ describe('the shelf itself', () => {
       'car-unreasonable',
       'house-first',
       'house-garden',
+      // ⚠ RE-AIMED AT ROUND 35 #7, NEVER LOOSENED – the ladder grew two rungs at the top because he
+      // asked for them by price: «Добавится 2 тира домов еще: за 1.4м и за 3м». The roster's whole
+      // job is that a rung cannot arrive without a line here saying it did, so the two lines are
+      // here and the negative claim below still refuses everything it always refused.
+      'house-villa',
+      'house-headland',
       // ⚠ RE-AIMED AT ROUND 29 PART FOUR P7, same discipline as the #5 re-aim above: the merch
       // brand is the parent's FIRST business («дешевле академии»), family 'business', and this
       // line is the roster's record that it arrived on purpose. The negative claim moves with it:
@@ -99,6 +105,10 @@ describe('the shelf itself', () => {
       'boat-sail',
       'yacht',
       'yacht-big',
+      // ⚠ RE-AIMED AT ROUND 35 #9, NEVER LOOSENED – a SECOND LIVE aeroplane, under the one there
+      // was: «я прошу добавить второй за 7м с картинкой». The retired $38M tombstone below is
+      // untouched and the tombstone count assertion further down still holds it to exactly one.
+      'plane-small',
       'plane',
       // ⚠ ROUND 29 PART FOUR P10: «значит убрать этот самолет за 38М и всех делов =)» – RETIRED,
       // not deleted. The id stays in the CATALOGUE as a tombstone (an owning save must still
@@ -382,7 +392,7 @@ describe('buying and selling', () => {
     // old predicate can never be false again – it would have gone green on the wrong fact forever.
     // The claim it was making is unchanged and is now made against the row itself: what must be gone
     // is the row that says «Bought».
-    expect(world.events.some((e) => e.text.startsWith('Bought: The good saloon')), 'the purchase row is pruned by then').toBe(false)
+    expect(world.events.some((e) => e.text.startsWith('Bought: The luxury four-by-four')), 'the purchase row is pruned by then').toBe(false)
     // ...and the ledger week is the sale, NET of the upkeep this window happened to carry – which is
     // `financeWindow`'s own contract («SIGNED per-category totals»), the same netting the sale of a
     // car has always been shown through. The upkeep is read off the engine's one arithmetic rather
@@ -396,9 +406,13 @@ describe('buying and selling', () => {
     // reading that survives the sixty-week window, because the sentence travels with the row rather
     // than with the arithmetic between two rows. `sellAsset` takes the figure off `paidCents`, which
     // is stored on the asset and never re-written for exactly this.
+    // ⚠ RE-AIMED AT ROUND 35 #5, NEVER LOOSENED – `car-good` is «The luxury four-by-four» since
+    // 03.09, because his painting for the $110,000 rung is a four-by-four and «The good saloon» was
+    // describing a car he did not draw («надо и описания поправить немного с названиями»). The rung,
+    // the price, the rate and every cent below are the same; only the noun in the sentence moved.
     const sale = world.events.filter((e) => e.category === 'shop').at(-1)!
     expect(sale.amountCents).toBe(91_091_00)
-    expect(sale.text).toBe('Sold: The good saloon – $18,909 less than it cost')
+    expect(sale.text).toBe('Sold: The luxury four-by-four – $18,909 less than it cost')
 
     // ...and inside the window the netting works too, which is what the breakdown shows a player who
     // sells sooner: one line whose size IS the loss.

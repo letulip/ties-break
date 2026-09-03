@@ -242,7 +242,12 @@ describe.each(['deposit', 'index-fund'] as const)('round 29 #11 – %s takes top
     expect(row.paidCents, 'the view carries the accumulated cost').toBe(OPEN + TOP_1 + TOP_2)
 
     const wrapper = await mountShop(snap)
-    const node = wrapper.findAll('.shop-row').find((r) => r.text().includes(row.label))!
+    // ⚠ RE-AIMED AT ROUND 35 #3, NEVER LOOSENED – the shop opens on its HOME now («главная магазина
+    // становится главной с текущей the shelf, выбором категорий из 6 карточек»), so there are no
+    // rungs in the document until a category is chosen. `shelfRow` is the helper that presses the
+    // card a player presses and then the segment under it; the claim below is the one this arm
+    // always made, about the same row.
+    const node = await shelfRow(wrapper, row.label)
     expect(node.text(), 'what they have put in, on screen').toContain('paid $37,000')
     const actions = node.findAll('.shop-action').map((b) => b.text())
     expect(actions, 'the control he asked for').toContain('Put more in')

@@ -4046,12 +4046,27 @@ export const ECONOMY = {
         upkeepBps: 500,
         upkeepGrowthBps: 600,
       },
+      // ⭐⭐ ROUND 35 #5 – THE FOUR CARS NOW HAVE PAINTINGS, AND THREE OF THEM DESCRIBED A DIFFERENT
+      // CAR. The owner asked for exactly this and named all four: «cars - есть арты для каждой
+      // машины (универсал 60к, люкс внедорожник 110к, спорткар 190к, 4местный люкс кабриолет 300к)
+      // надо и описания поправить немного с названиями».
+      //
+      // ⚠ SO THIS IS THE ONE FAMILY WHERE CLAUDE.md INVARIANT 4 IS SATISFIED BY THE ITEM ITSELF:
+      // he asked for the names and the descriptions to be corrected, and each correction is the
+      // painting he drew read back in words. Nothing else on the shelf changed a syllable.
+      //
+      //   60k  универсал                `The sensible estate`   – already an estate, UNTOUCHED.
+      //   110k люкс внедорожник         was `The good saloon`, and a saloon is not a four-by-four.
+      //   190k спорткар                 the label survives; the blurb said «twenty-five years late»
+      //                                 and the painting is a new car, so that half goes.
+      //   300k 4местный люкс кабриолет  the blurb said «no back seats» and the painting has four
+      //                                 of them under an open roof.
       {
         id: 'car-good',
         family: 'car',
         stake: 'fixed',
-        label: 'The good saloon',
-        blurb: 'Quiet, quick, and quietly expensive the day it stops being new.',
+        label: 'The luxury four-by-four',
+        blurb: 'Tall, quiet, and it will never once see a field.',
         entryCents: 110_000_00,
         annualRateBps: -900,
         upkeepBps: 550,
@@ -4068,7 +4083,7 @@ export const ECONOMY = {
         // engine deciding something the onboarding deliberately does not ask. The picture survives
         // the edit; only the assumption goes.
         label: 'The one from the poster',
-        blurb: 'Two seats, no boot, and twenty-five years late.',
+        blurb: 'Two seats, no boot, and the one that was on the bedroom wall.',
         entryCents: 190_000_00,
         annualRateBps: -1200,
         upkeepBps: 700,
@@ -4079,7 +4094,7 @@ export const ECONOMY = {
         family: 'car',
         stake: 'fixed',
         label: 'The unreasonable one',
-        blurb: 'No boot, no back seats, no defence for any of it.',
+        blurb: 'Four seats, no roof, and no defence for any of it.',
         entryCents: 300_000_00,
         annualRateBps: -1500,
         upkeepBps: 900,
@@ -4117,6 +4132,39 @@ export const ECONOMY = {
         label: 'The house with the garden',
         blurb: 'Room for all of them, and a garden nobody has to share.',
         entryCents: 520_000_00,
+        annualRateBps: 300,
+      },
+      // ⭐⭐ ROUND 35 #7 – THE LADDER GETS ITS TOP TWO RUNGS, and the ask is one clause: «Добавится
+      // 2 тира домов еще: за 1.4м и за 3м». Both prices are HIS, to the digit, which is the whole
+      // difference between these two rows and the two above them – §12b had to measure $240,000 and
+      // $520,000 because the spec gave tiers and no numbers, and here the numbers came with the ask.
+      //
+      // ⚠ THE RATE IS THE FAMILY'S OWN +3% AND IS NOT A THIRD DECISION. §3c's word is «slow» and
+      // both shipped houses carry 300 bps; a top rung that out-earned the ones below it would make
+      // the expensive house the correct answer to a question §0 says assets must never win («assets
+      // never beat a career, they only survive one»). No build wait and no upkeep, exactly as the
+      // two rungs above – a house is bought and lived in, and §3f's «годовое обслуживание» is said
+      // of the boats and the planes, never of these.
+      //
+      // ⚠ AND NOTHING BELOW THEM MOVED. `house-garden` is still $520,000 even though his painting
+      // for it is named `property-590`; he asked to ADD two tiers and to change nothing else, so the
+      // price stands and `src/art/shelf.ts` carries the note about the stem.
+      {
+        id: 'house-villa',
+        family: 'house',
+        stake: 'fixed',
+        label: 'The villa with the pool',
+        blurb: 'Glass, warm stone, and water that belongs to the family.',
+        entryCents: 1_400_000_00,
+        annualRateBps: 300,
+      },
+      {
+        id: 'house-headland',
+        family: 'house',
+        stake: 'fixed',
+        label: 'The house on the headland',
+        blurb: 'Above the sea, with a pool that looks as though it falls into it.',
+        entryCents: 3_000_000_00,
         annualRateBps: 300,
       },
       // ⭐⭐ ROUND 29 #5 – THE ELITE (§3f), AND THEY ARE NOT BOUGHT, THEY ARE COMMISSIONED.
@@ -4208,12 +4256,31 @@ export const ECONOMY = {
         // `ECONOMY.shop.businessValueFloorShare`.
         earningsMultipleX: 14,
       },
+      // ⭐⭐⭐ ROUND 35 #8 – THE TWO BOTTOM RUNGS SWAPPED IDENTITIES, AND ONLY THEIR IDENTITIES.
+      //
+      // THE OWNER: «water - карточки как на домах, все арты яхт в наличии, меням местами только: за
+      // 900к это парусник, за 2.4м уже небольшая яхта, дальше как было.» His two paintings say the
+      // same thing without a word: `water-900` is a sloop under full sail, `water-2400` is a small
+      // motor yacht on the plane.
+      //
+      // ⚠⚠ THE IDS DID **NOT** MOVE WITH THE IDENTITY THIS TIME, AND THAT IS A DELIBERATE DEPARTURE
+      // FROM THE PRECEDENT DIRECTLY BELOW (part three P1 renamed `boat-motor` to `boat-sail` and
+      // paid for it with migration v66). The reason is that this is a SWAP rather than a rename:
+      // moving both ids would collide mid-flight, so it needs two renames, a schema bump and a
+      // golden fixture to express what the player sees as two cards trading places. The ids are
+      // internal – nothing on screen reads them but `src/art/shelf.ts`, which is keyed by id and
+      // was written for exactly this – so the cost buys nothing a player can see. ⭐ `boat-launch`
+      // is the SAILING BOAT now and `boat-sail` is the SMALL YACHT; the names are stale and the
+      // rows are right, and one sentence from him turns that into a v70 migration.
+      //
+      // ⚠ PRICE, BUILD TIME, RATE AND UPKEEP ARE UNTOUCHED ON BOTH ROWS – «дальше как было», and
+      // his swap is about what the thing IS at each price, never about what it costs.
       {
         id: 'boat-launch',
         family: 'boat',
         stake: 'fixed',
-        label: 'The launch',
-        blurb: 'Eight metres of teak and one good afternoon a week.',
+        label: 'The sailing boat',
+        blurb: 'Two cabins, a mast, and weekends that answer to the wind.',
         entryCents: 900_000_00,
         annualRateBps: -700,
         buildWeeks: 52,
@@ -4225,12 +4292,16 @@ export const ECONOMY = {
       // untouched. The id moved with the identity – the art hook is the id everywhere on this
       // shelf – and v66's migration renames owned rows in the same wave, so no save is stranded
       // on a rung the catalogue no longer carries.
+      // ⚠ ROUND 35 #8 READ THIS PARAGRAPH AND DID NOT DELETE A WORD OF IT: it records a real ruling
+      // he made in round 29, and the ruling stands – the 2.4M rung is still not a motor boat named
+      // by a spec, it is whatever he last said it is. What moved on 03.09 is which rung is the
+      // SAILING one, and the id is now stale rather than wrong. See the note on `boat-launch` above.
       {
         id: 'boat-sail',
         family: 'boat',
         stake: 'fixed',
-        label: 'The sailing yacht',
-        blurb: 'Two cabins, a mast, and weekends that answer to the wind.',
+        label: 'The small yacht',
+        blurb: 'A flybridge, four berths, and a bay to be at anchor in.',
         entryCents: 2_400_000_00,
         annualRateBps: -700,
         buildWeeks: 78,
@@ -4249,6 +4320,12 @@ export const ECONOMY = {
       // nothing – the grant reads what the upkeep pays for, never the word in the label. §11's own
       // acceptance – «a career orders a yacht, WAITS THREE YEARS» – is still this rung's build
       // time and not theirs.
+      //
+      // ⚠ ROUND 35 #8 MOVED THE WORD «SAILING» ONE RUNG DOWN AND NOT ONE PENNY OF THIS. The two
+      // rungs the paragraph above calls «the launch and the sailing yacht» are the 900k and 2.4M
+      // rows, which is what they still are; only their labels traded places. The rule it states is
+      // the reason nothing had to move: the grant reads the 10% upkeep, never the label, so a rung
+      // that is CALLED a yacht at 2.4M still grants no week because it still keeps no crew.
       {
         id: 'yacht',
         family: 'boat',
@@ -4282,6 +4359,37 @@ export const ECONOMY = {
       // more and keeps for more, and it flies the same people to the same tournaments. The spec
       // gives the two aircraft three different numbers and one identical purpose, so inventing a
       // second, better cut for the dearer one would be a rule this file does not have.
+      // ⭐⭐ ROUND 35 #9 – A SECOND LIVE AEROPLANE, UNDER THE ONE THERE IS. The owner: «air -
+      // карточки как на домах, добавляется небольшой самолет 8 мест за 7м, большой на 12 мест
+      // остается как был за 18м», and, when asked, in as many words: «у нас сейчас один активный за
+      // 18м, раньше был еще за 28м, а я прошу добавить второй за 7м с картинкой».
+      //
+      // ⚠ THE PRICE IS HIS AND THE OTHER THREE NUMBERS ARE THE FAMILY'S OWN. Both shipped aircraft
+      // carry the same rate (−600) and the same upkeep (800 bps), so those two are not a choice at
+      // all – they are what a plane costs on this shelf. The BUILD TIME is the one figure the two
+      // rungs do not share (104 at $18M, 156 at the retired $38M, rising with the price), so the
+      // rung below them gets the shortest wait on the shelf, 52 weeks – the same year `boat-launch`
+      // waits, and about what a light aircraft really takes. ⭐ It is MINE and not his: one number,
+      // and moving it moves nothing else.
+      //
+      // ⚠⚠ AND ITS BLURB DELIBERATELY DOES NOT COUNT THE SEATS. His message calls this one «8 мест»
+      // and the $18M one «большой на 12 мест» – but the $18M row has said «Eight seats» since round
+      // 29 #5, and CLAUDE.md invariant 4 forbids an agent editing a shipped sentence it was not
+      // asked to edit. Writing «Eight seats» here as well would put two cards on one screen claiming
+      // the same cabin, so this row says what is true of it and says nothing about the count. One
+      // word from him – «Eight» to «Twelve» on the row below – closes it; see docs/rounds/
+      // round-35-shop.md item 9.
+      {
+        id: 'plane-small',
+        family: 'plane',
+        stake: 'fixed',
+        label: 'The small plane',
+        blurb: 'Short runways, small airfields, and home the same night.',
+        entryCents: 7_000_000_00,
+        annualRateBps: -600,
+        buildWeeks: 52,
+        upkeepBps: 800,
+      },
       {
         id: 'plane',
         family: 'plane',

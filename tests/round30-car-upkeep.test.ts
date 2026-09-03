@@ -140,7 +140,10 @@ describe('round 30 #15 §2 – the bill really rises, on a ticked world', () => 
     // tick has just moved TO, which is the same week `shopView` is answering about – that identity
     // is the whole of §5 below, and getting it wrong here is how a test would read a stale row.
     const chargeThisWeek = (world: WorldState): number => {
-      const row = world.events.find((e) => e.week === world.week && e.text === 'Upkeep: The good saloon')
+      // ⚠ RE-AIMED AT ROUND 35 #5 – `car-good`'s LABEL is «The luxury four-by-four» since 03.09 (his
+      // painting for the $110,000 rung is a four-by-four, not a saloon). The bill this row asserts
+      // is unchanged to the cent; the string it is filed under is the rung's new name.
+      const row = world.events.find((e) => e.week === world.week && e.text === 'Upkeep: The luxury four-by-four')
       return row ? -(row.amountCents ?? 0) : 0
     }
     walk(w, 1, true)

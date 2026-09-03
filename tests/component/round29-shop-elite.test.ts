@@ -99,9 +99,14 @@ describe('§1 – every new rung is on the screen, at its real price', () => {
     // ⚠ RE-AIMED at part three P1 (the motor boat is the sailing yacht – same price) and part four
     // P10 (the long-range plane is RETIRED: no row for a family that does not own one, asserted
     // as an absence right after the loop).
+    // ⚠⚠ RE-AIMED AGAIN AT ROUND 35 #8 AND #9, AND EVERY PRICE IN THE TABLE IS UNMOVED. #8 traded
+    // the two bottom rungs' identities – «за 900к это парусник, за 2.4м уже небольшая яхта» – so the
+    // two labels swapped and the two figures beside them did not, which is the whole of «дальше как
+    // было». #9 added a LIVE aeroplane under this one; it gets its own row in the table below rather
+    // than being folded in here, so this loop keeps asserting exactly what it always asserted.
     for (const [label, price] of [
-      ['The launch', '$900,000'],
-      ['The sailing yacht', '$2,400,000'],
+      ['The sailing boat', '$900,000'],
+      ['The small yacht', '$2,400,000'],
       ['The yacht', '$12,000,000'],
       ['The big yacht', '$28,000,000'],
       ['The plane', '$18,000,000'],
@@ -126,7 +131,10 @@ describe('§1 – every new rung is on the screen, at its real price', () => {
   it('⭐⭐ ...and each one carries the THIRD number: what it costs a week to keep', async () => {
     const wrapper = await mountShop(toSnapshot(rich('r29-5-ui-upkeep')))
     // §3f's own weekly figures, rounded to the dollar by `formatCents`.
-    expect((await rowFor(wrapper, 'The launch')).text()).toContain('$1,038 a week to keep')
+    // ⚠ RE-AIMED AT ROUND 35 #5 AND #8 – three labels moved on 03.09 (`boat-launch` is «The sailing
+    // boat», `boat-sail` is «The small yacht», `car-good` is «The luxury four-by-four») and not one
+    // of the weekly figures did. That is exactly what a label-only re-aim should look like.
+    expect((await rowFor(wrapper, 'The sailing boat')).text()).toContain('$1,038 a week to keep')
     expect((await rowFor(wrapper, 'The yacht')).text()).toContain('$23,077 a week to keep')
     expect((await rowFor(wrapper, 'The plane')).text()).toContain('$27,692 a week to keep')
     // ⚠ AND NOTHING THAT COSTS NOTHING SAYS IT DOES – a «$0.00 a week to keep» on every rung would be
@@ -139,7 +147,7 @@ describe('§1 – every new rung is on the screen, at its real price', () => {
     // stage, and the car is now asserted from the OTHER side, which fails in both directions: if a
     // free rung starts charging, or if the car stops.
     expect((await rowFor(wrapper, 'The land')).text()).not.toContain('a week to keep')
-    expect((await rowFor(wrapper, 'The good saloon')).text(), 'round 30 #15 – and a car now does').toContain(
+    expect((await rowFor(wrapper, 'The luxury four-by-four')).text(), 'round 30 #15 – and a car now does').toContain(
       '$116 a week to keep',
     )
     wrapper.unmount()
@@ -153,12 +161,14 @@ describe('§1 – every new rung is on the screen, at its real price', () => {
     // for the two below it, and the screen says the same. ⚠ WHOLE NUMBERS: an eighteen-month build
     // must never render as «1.5 years» (the owner's display ruling of 26.08).
     expect(yacht.text()).toContain('about 3 years')
-    expect((await rowFor(wrapper, 'The launch')).text()).toContain('about 12 months')
-    expect((await rowFor(wrapper, 'The sailing yacht')).text()).toContain('about 18 months')
+    // ⚠ RE-AIMED AT ROUND 35 #8 – the labels traded places, the two build times did not («дальше
+    // как было»). 12 months is still the 900k rung's and 18 months still the 2.4M rung's.
+    expect((await rowFor(wrapper, 'The sailing boat')).text()).toContain('about 12 months')
+    expect((await rowFor(wrapper, 'The small yacht')).text()).toContain('about 18 months')
     expect(wrapper.text(), 'no fractional wait anywhere on the shelf').not.toMatch(/\d+\.\d+ years/)
     expect(yacht.find('.shop-action').text()).toBe('Order it')
     // ...and a car is still bought.
-    expect((await rowFor(wrapper, 'The good saloon')).find('.shop-action').text()).toBe('Buy it')
+    expect((await rowFor(wrapper, 'The luxury four-by-four')).find('.shop-action').text()).toBe('Buy it')
     wrapper.unmount()
   })
 

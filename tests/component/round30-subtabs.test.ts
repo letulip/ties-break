@@ -140,16 +140,27 @@ describe('round 30 #5 – Bills gets his two segments', () => {
 // =================================================================================================
 describe('round 30 #5 – the shelf gets his six, with the academy inside Business', () => {
   it('⭐ «сверху плашкой The shelf, а ниже под ней вкладки в ряд»', async () => {
+    // ⚠⚠ RE-AIMED AT ROUND 35 #3, NEVER DELETED AND NEVER LOOSENED. Round 30 #5 asked for «the
+    // shelf as a plate on top, and under it the tabs in a row», and that is still the shape of the
+    // shop – but round 35 put a HOME in front of the categories («главная магазина становится
+    // главной с текущей the shelf, выбором категорий из 6 карточек»), so the thing directly under
+    // the plate is now the six category cards and the tabs are one press further in. BOTH halves
+    // are asserted, in the same document-order form, so «под ней» is still a position and still
+    // measured: the plate is above its picker on the home, and his six segments in his six words
+    // and his order are still what a category page carries.
     const wrapper = await openChapter(grown(), 'Shop')
     const plate = wrapper.find('.money-shop')
-    const tabs = wrapper.find('.shelf-tabs')
     expect(plate.exists(), 'the plate is still there').toBe(true)
-    expect(tabs.exists(), 'and the tabs are under it').toBe(true)
     expect(plate.text(), 'and it is still the shelf').toContain('The shelf')
-    // BELOW it, in document order – "сверху ... ниже под ней" is a position and this is it.
+    const cats = wrapper.find('.shelf-cats')
+    expect(cats.exists(), 'and the six category cards are under it').toBe(true)
     expect(
-      plate.element.compareDocumentPosition(tabs.element) & Node.DOCUMENT_POSITION_FOLLOWING,
+      plate.element.compareDocumentPosition(cats.element) & Node.DOCUMENT_POSITION_FOLLOWING,
     ).toBeTruthy()
+    // ...and on a category page the row of tabs is exactly what it was.
+    await openShelfTab(wrapper, 'Invest')
+    const tabs = wrapper.find('.shelf-tabs')
+    expect(tabs.exists(), 'the tabs are on the page they switch').toBe(true)
     // HIS SIX, HIS SPELLINGS, HIS ORDER.
     expect(tabs.findAll('.tab-pill').map((p) => p.text())).toEqual([...SHELF_TAB_LABELS])
   })
@@ -230,17 +241,27 @@ describe('round 30 #5 – «карточки лежат без общей под
     expect(feed.element.closest('.tb-card'), 'and nothing behind the feed either').toBeNull()
   })
 
-  it('⚠ artless today, and it costs the row nothing', async () => {
-    // `shelfArtUrl` returns null for every key until his paintings land, and a card with no picture
-    // is a designed state rather than a hole: same words, same price, same control, one band
-    // shorter. The other branch – a card that HAS a painting – is
-    // tests/component/round30-shelf-art.test.ts.
+  it('⚠ artless still costs the row nothing', async () => {
+    // `shelfArtUrl` returns null for a key we have no painting for, and a card with no picture is a
+    // designed state rather than a hole: same words, same price, same control, one band shorter.
+    // The other branch – a card that HAS a painting – is tests/component/round30-shelf-art.test.ts.
+    //
+    // ⚠⚠ RE-AIMED AT ROUND 35 #1, NEVER DELETED, AND THE CLAIM IS UNTOUCHED. This arm was pointed at
+    // CARS because on 30.08 nothing on the shelf had a frame yet; his twenty-four paintings landed
+    // on 03.09 and the cars are the family he drew first, so aimed there it would now be asserting
+    // that his art is missing. The artless branch is INVEST, which he did not paint – two rungs,
+    // both of them still a full card – and pointing it there is what keeps «a missing picture must
+    // never cost the row» a live guard instead of a dead one.
     const wrapper = await openChapter(grown(), 'Shop')
-    await openShelfTab(wrapper, 'Cars')
+    await openShelfTab(wrapper, 'Invest')
     expect(wrapper.findAll('.card-art'), 'no band, and no broken box either').toHaveLength(0)
     expect(wrapper.findAll('.shop-row img'), 'and nothing is pointing at a missing file').toHaveLength(0)
     const first = wrapper.findAll('.shop-row')[0]
     expect(first.find('.shop-row-name').text().length).toBeGreaterThan(0)
     expect(first.find('.shop-action').exists(), 'the control is still there').toBe(true)
+    // ⭐ AND THE OTHER HALF OF THE RE-AIM, HELD HERE SO THE MOVE CANNOT HIDE A REGRESSION: the
+    // family this arm used to watch really does have its paintings now.
+    await openShelfTab(wrapper, 'Cars')
+    expect(wrapper.findAll('.shop-row .card-art'), 'four cars, four frames').toHaveLength(4)
   })
 })

@@ -226,8 +226,10 @@ describe('§3 – delivered: it arrives, it starts falling, and the bill starts'
     const w = delivered('r29-5-deliver')
     const owned = ownedOf(w, 'boat-launch')!
     expect(owned.readyWeek, 'absent means delivered').toBeUndefined()
+    // ⚠ RE-AIMED AT ROUND 35 #8 – `boat-launch` is «The sailing boat» since 03.09 (his swap; the id
+    // stayed put, the identity moved). The delivery, the wait and the ledger row are unchanged.
     expect(
-      w.events.some((e) => e.type === 'entry' && e.text.startsWith('Delivered: The launch')),
+      w.events.some((e) => e.type === 'entry' && e.text.startsWith('Delivered: The sailing boat')),
       'a three-year wait that ended in silence would be a defect',
     ).toBe(true)
     expect(sellableAsset(w, owned), 'and now it can be sold').toBe(true)
@@ -269,7 +271,8 @@ describe('§3 – delivered: it arrives, it starts falling, and the bill starts'
     // ...and it is in the ledger under the shelf's own category, one row per thing, by name.
     const rows = w.events.filter((e) => e.category === 'shop' && e.text.startsWith('Upkeep:'))
     expect(rows.length).toBeGreaterThanOrEqual(4)
-    expect(rows[rows.length - 1].text).toBe('Upkeep: The launch')
+    // ⚠ RE-AIMED AT ROUND 35 #8 – the label only; the weekly figure beside it is asserted unchanged.
+    expect(rows[rows.length - 1].text).toBe('Upkeep: The sailing boat')
     expect(rows[rows.length - 1].amountCents).toBe(-weekly)
   })
 
@@ -542,6 +545,13 @@ describe('§6 – ⭐⭐ a week on the yacht is a seventh vacation package (§3f
     expect(w.condition, 'the week away landed its gain').toBeGreaterThan(40)
   })
 
+  // ⚠⚠ RE-AIMED AT ROUND 35 #8, AND THE CLAIM GOT STRONGER RATHER THAN WEAKER. He swapped the two
+  // bottom rungs' identities – «за 900к это парусник, за 2.4м уже небольшая яхта» – so `boat-sail`
+  // is labelled «The small yacht» now and `boat-launch` is «The sailing boat». The ids did not move
+  // (the catalogue comment says why), which means this arm is no longer testing a rung that merely
+  // has the word «yacht» in a noun phrase: it is a rung CALLED a yacht, on 6% upkeep, and the whole
+  // point of the rule is that it still grants no crewed week. Nothing was loosened – the label in
+  // the assertion moved with the catalogue and the two post-conditions are untouched.
   it('⚠ P1 – the SAILING yacht grants nothing: the week is crewed and its upkeep has no crew in it', () => {
     // ⭐ ROUND 29 PART THREE P1's one design question, answered NO on purpose: the package's own
     // copy is a crew of six, and the crew is what `yacht`/`yacht-big`'s 10% upkeep pays for. The
@@ -551,7 +561,7 @@ describe('§6 – ⭐⭐ a week on the yacht is a seventh vacation package (§3f
     // future «it says yacht, wire the week» edit honest.
     const w = shopper('r29-p1-sail-grants-nothing')
     w.assets = [{ id: 'boat-sail', boughtWeek: 0, paidCents: 2_400_000_00, valueCents: 2_400_000_00 }]
-    expect(shopItem('boat-sail')!.label, 'the rung really is the sailing yacht').toBe('The sailing yacht')
+    expect(shopItem('boat-sail')!.label, 'the rung really is called a yacht').toBe('The small yacht')
     expect(shopItem('boat-sail')!.grantsVacationId, 'and it grants no package').toBeUndefined()
     expect(shopView(w).vacationIds, 'a delivered sailing yacht unlocks nothing').toEqual([])
     // ...so the sailing family books the crewed week the way every family does since #8: as a

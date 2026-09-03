@@ -71,7 +71,12 @@ import { venueArtUrl } from '../../art/venues'
 import { vacationArtUrl } from '../../art/weeks'
 // ⭐ ROUND 30 #5 – one picture per card on the two chapters below. Its header carries the whole
 // contract: a key with no painting yet returns null and the card simply draws without a band.
-import { BILLS_ART_KEYS, shelfArtUrl } from '../../art/shelf'
+import { BILLS_ART_KEYS, SHELF_CATEGORY_KEYS, shelfArtUrl } from '../../art/shelf'
+// ⭐ ROUND 35 #3 – the photograph on «her account», the one block his design puts on every shop
+// page. Her face is the app's own crop set, read at her age exactly as Season and the three
+// dialogs read it, so this strip cannot show a teenager on a woman of thirty.
+import { cropUrl } from '../../art/preload'
+import { portraitStage } from '../../shared/avatarEmotion'
 // The scholarship's share, from the module the two event cards read it out of. Same rate, same
 // rounding – this page reports it as a season total and they print it per trip.
 import { useAcademyCoverPct } from '../../composables/eventCard'
@@ -1340,6 +1345,97 @@ const SHELF_TAB_FAMILIES: Record<ShelfTab, ShopRowView['family'][]> = {
 const shelfFamilies = computed(() =>
   SHOP_FAMILIES.filter((f) => SHELF_TAB_FAMILIES[shelfTab.value].includes(f.key)),
 )
+
+// =================================================================================================
+// ⭐⭐ ROUND 35 #3 – THE SHOP HAS A FRONT DOOR NOW
+// =================================================================================================
+//
+// THE OWNER: «главная магазина становится главной с текущей the shelf, выбором категорий из 6
+// карточек (название категории встает на карточку внизу шрифтом Sora, первый ряд invest, business,
+// property, остальное 2й ряд), ниже her account с фоточкой как в макете (а также на каждой странице
+// магазина), большой картинки делать не будем пока что».
+//
+// ⚠⚠ AND ITEM 10 IS WHY THIS IS A FLAG AND NOT A SEVENTH SEGMENT: «переключалка между категориями
+// магазина на самих страницах магазина остается текущей и не меняется.» `shelfTab` and
+// `SHELF_TAB_OPTIONS` above are untouched – not a label, not an order, not a value. The home is a
+// state BEFORE any of them, so the switcher never has to represent it and cannot be widened by it.
+//
+// ⚠ HIS ROW ORDER, NOT THE MOCKUP'S. Frame V draws Invest / Cars / Property on the first row; he
+// asked for «первый ряд invest, business, property, остальное 2й ряд» – the three that earn, then
+// the three that spend. The order lives in `SHELF_CATEGORY_KEYS` (src/art/shelf.ts), beside the
+// paintings it is the order of, and `tests/component/round35-shop.test.ts` holds the grid to it.
+//
+// ⚠ THE WORDS ARE THE SWITCHER'S OWN AND ARE NOT RE-TYPED. A category card's name is the tab's
+// `label` and its title is the tab's `title`, read out of `SHELF_TAB_OPTIONS` above. So the six
+// cards and the six segments cannot drift, and CLAUDE.md invariant 4 has nothing to catch here:
+// this slice adds no user-facing string at all except the back control's accessible name.
+//
+// ⚠ THE MOCKUP'S BIG HERO IMAGE IS NOT BUILT – «большой картинки делать не будем пока что».
+const shopHome = ref(true)
+function openShelfCategory(key: ShelfTab): void {
+  shelfTab.value = key
+  shopHome.value = false
+}
+function backToShelfHome(): void {
+  shopHome.value = true
+}
+/** ⭐ ROUND 35 #3 – «ниже her account с фоточкой как в макете (а также на каждой странице
+ *  магазина)». The block itself already sits at the foot of EVERY chapter, which on the shop is
+ *  below the grid on the home and below the cards on a category page – exactly the two places he
+ *  named – so this slice adds the PHOTOGRAPH and moves nothing and re-words nothing.
+ *  ⚠ `norm` at her own stage, the way `SeasonScreen` and the three dialogs pick a face. */
+const herPhoto = computed(() => cropUrl(portraitStage(game.snapshot?.ageYears ?? 14), 'norm'))
+
+/** The six cards, in HIS order, with the switcher's own words on them. */
+const SHELF_CATEGORY_CARDS = SHELF_CATEGORY_KEYS.map((key) => {
+  const tab = SHELF_TAB_OPTIONS.find((o) => o.value === key)
+  if (!tab) throw new Error(`no shelf segment for the category tile ${key}`)
+  return { key, label: tab.label, title: tab.title }
+})
+
+// =================================================================================================
+// ⭐⭐ ROUND 35 #5, #6, #7, #8, #9 – WHICH SIDE A RUNG'S PAINTING STANDS ON
+// =================================================================================================
+//
+// ⚠⚠ ONE MAP, BECAUSE IT IS ONE DECISION AND HE MAY WANT IT THE OTHER WAY ROUND. Two of his
+// sentences set it, and they set it in opposite directions on purpose:
+//
+//   cars     «картинки будут квадратными на всю высоту карточки с небольшим градиентом СПРАВА (как
+//            на тренерах)» – the coach cards are `.cm-art` at `left: 0` under a 90deg mask that
+//            fades out at its RIGHT edge, so «gradient on the right» is a painting on the LEFT.
+//   property «но картинка с ДРУГОЙ стороны … и градиент СЛЕВА» – the other side from the cars, with
+//            the fade on its left, so the painting is on the RIGHT.
+//   water    «карточки как на домах» – so water follows property, and so does air («как на домах»).
+//   academy  «как на экране машин, такой же принцип, можно переиспользовать» – so it follows cars.
+//
+// ⭐ His own mockup agrees on both: frame X puts the car photo on the left, frames Z and AA put the
+// house and the boats on the right under a `linear-gradient(90deg, transparent 0%, #000 40%)`.
+// ⚠ THE BRIEF THIS WAVE ARRIVED WITH SAID THE OPPOSITE («cars and water on the RIGHT, property on
+// the LEFT»), which cannot be reconciled with «water – карточки как на домах»: that clause makes
+// water and property the SAME side, whichever side that is. His words and his frames win, the
+// disagreement is recorded in docs/rounds/round-35-shop.md, and flipping it is this one map.
+const SHELF_ART_SIDE: Partial<Record<ShopRowView['family'], 'left' | 'right'>> = {
+  car: 'left',
+  academy: 'left',
+  house: 'right',
+  boat: 'right',
+  plane: 'right',
+}
+/** ⚠ THE `right` FAMILIES ARE ALSO THE ONES WHOSE CONTROL STANDS ON THE PAINTING – «Кнопка
+ *  покупка/продажа может стоять на картинке (как на яхтах)», said of property and inherited by
+ *  water and air through «как на домах». The cars go the other way by his own separate sentence:
+ *  «кнопку покупки можно поставить под цену – тогда больше горизонтального места для надписей». */
+function shopRowArtSide(row: ShopRowView): 'left' | 'right' | null {
+  return shelfArtUrl(row.id) ? (SHELF_ART_SIDE[row.family] ?? null) : null
+}
+/** ⚙ ROUND 35 #7, HIS RULING, 03.09: «в строке "worth now" показывать текущую цену, а цену покупки
+ *  убрать совсем, раз прибавка и так видна. – верно.» The `Worth now` row's VALUE has always been
+ *  the current price; what goes is the `paid $N` beside it. ⚠ PROPERTY ONLY – he said it of the
+ *  house cards and CLAUDE.md invariant 4 does not let it spread to the other five families on its
+ *  own; the `+$N since you bought it` line under it is the gain he means by «прибавка». */
+function shopRowPaidMeta(row: ShopRowView): string | undefined {
+  return row.family === 'house' ? undefined : `paid ${formatCents(row.paidCents ?? 0)}`
+}
 </script>
 
 <template>
@@ -1887,7 +1983,7 @@ const shelfFamilies = computed(() =>
            teaser" - so there is no per-row lock anywhere below, and every price is on screen
            whether the family can reach it or not. A shop window is a thing you look into before you
            can afford it. -->
-      <Card v-if="screenTab === 'shop' && shop" class="money-panel money-shop">
+      <Card v-if="screenTab === 'shop' && shop && shopHome" class="money-panel money-shop">
         <Eyebrow as="h2">The shelf</Eyebrow>
         <p class="money-panel-note">
           This is the family's own money, and none of it is hers. Nothing here makes her better,
@@ -1914,8 +2010,51 @@ const shelfFamilies = computed(() =>
            seventh thing on the shelf - the academy - is deliberately NOT one of them: it is a
            subdivision of Business and rides inside that tab. The map and his words in full are at
            `SHELF_TAB_OPTIONS` in the script, where Cyrillic is allowed and a template's is not. -->
+      <!-- ============= 8a-bis. THE SIX CATEGORY CARDS, ON THE HOME ONLY (round 35 #3) =============
+           His words - the six cards, the name at the foot in Sora, and his own row order - are in
+           the script block beside `SHELF_CATEGORY_CARDS`, because Cyrillic may not appear in a
+           template, strings AND comments (tests/template-copy-rules.test.ts).
+           ⭐ TALL, NOT SQUARE, AND THE PAINTINGS DECIDED IT: his six category tiles are 332x512, so
+           the card takes their ratio and the name sits at the foot of it in the heading face. -->
+      <div v-if="screenTab === 'shop' && shop && shopHome" class="shelf-cats">
+        <button
+          v-for="cat in SHELF_CATEGORY_CARDS"
+          :key="cat.key"
+          type="button"
+          class="shelf-cat"
+          :title="cat.title"
+          @click="openShelfCategory(cat.key)"
+        >
+          <img
+            v-if="shelfArtUrl(cat.key)"
+            class="shelf-cat-art"
+            :src="shelfArtUrl(cat.key) ?? undefined"
+            alt=""
+            loading="lazy"
+          />
+          <span class="shelf-cat-scrim" aria-hidden="true"></span>
+          <span class="shelf-cat-name">{{ cat.label }}</span>
+        </button>
+      </div>
+
+      <!-- ============= 8a-ter. THE WAY BACK, ON A CATEGORY PAGE (round 35 #3) =============
+           The only control this slice invents, and it is the one a two-level shop cannot do
+           without. `IconButton` with the app's own `back` glyph, `variant="bare"` - the R3 ruling
+           that took the Coach Market's arrow off its plate, which asked for ONE back component used
+           consistently everywhere (his words are quoted in IconButton.vue's own header, where
+           Cyrillic is allowed), so nothing new is drawn for it either. -->
+      <div v-if="screenTab === 'shop' && shop && !shopHome" class="shelf-nav">
+        <IconButton
+          class="shelf-back"
+          variant="bare"
+          icon="back"
+          label="Back to the shelf"
+          @click="backToShelfHome"
+        />
+      </div>
+
       <SegmentedRow
-        v-if="screenTab === 'shop' && shop"
+        v-if="screenTab === 'shop' && shop && !shopHome"
         v-model="shelfTab"
         class="money-window money-subtabs shelf-tabs"
         :options="SHELF_TAB_OPTIONS"
@@ -1932,15 +2071,20 @@ const shelfFamilies = computed(() =>
            ⚠ THE FAMILY HEADING AND ITS NOTE STAY, WORD FOR WORD, and they are OUTSIDE the cards:
            they are the sentence that says what a family is FOR (the spec's §3), and under Business
            they are also what separates the brand from the academy under it. -->
-      <div v-if="screenTab === 'shop' && shop" class="shelf-feed">
+      <div v-if="screenTab === 'shop' && shop && !shopHome" class="shelf-feed">
         <div v-for="family in shelfFamilies" :key="family.key" class="shop-family">
           <div class="shop-family-head">{{ family.title }}</div>
           <p class="shop-family-note">{{ family.note }}</p>
+          <!-- ⭐⭐ ROUND 35 #5-#9 – THE FRAMED ROW. `shopRowArtSide` is the whole of it: it returns
+               the side this family's painting stands on, or null for a rung with no painting, and
+               the class it puts on the card is what turns the band above the words into a band
+               beside them. A rung with no art is untouched and draws exactly as it did. -->
           <Card
             v-for="row in shopRowsOf(family.key)"
             :key="row.id"
             variant="photo"
             class="shop-row"
+            :class="shopRowArtSide(row) ? `shop-row--art-${shopRowArtSide(row)}` : undefined"
           >
             <!-- ⭐ ROUND 30 #5 – "each card gets its own art". Null until his painting lands, and
                  until then the card simply has no band: `shelfArtUrl`'s header carries the contract,
@@ -2009,7 +2153,12 @@ const shelfFamilies = computed(() =>
                      because Cyrillic inside a template is forbidden - strings AND comments
                      (tests/template-copy-rules.test.ts). In short: `negative` means MONEY OUT, this
                      figure is a BALANCE, and `plain` is StatRow's own word for a balance. -->
-                <StatRow class="money-row" label="Worth now" :meta="`paid ${formatCents(row.paidCents ?? 0)}`" :value="formatCents(row.valueCents)" tone="plain" />
+                <!-- ⚙ ROUND 35 #7 – ON A HOUSE THE `paid $N` IS GONE AND THE ROW CARRIES THE
+                     CURRENT PRICE ALONE. It is his own second spelling, ruled on 03.09; the
+                     reasoning and the quote are on `shopRowPaidMeta` in the script block, where
+                     Cyrillic is allowed. Nothing about the VALUE changed - it was always the
+                     current worth - and the gain still has its own line under this one. -->
+                <StatRow class="money-row" label="Worth now" :meta="shopRowPaidMeta(row)" :value="formatCents(row.valueCents)" tone="plain" />
                 <!-- ⭐⭐⭐ ROUND 30 #14 – THE THREE FIGURES THE DECISION NEEDS. His words and the
                      reasoning are in `shopUnitsNote` in the script block (no Cyrillic in a template).
                      Every number is the engine's: `shopView` counted the units, divided the cost by
@@ -2165,12 +2314,25 @@ const shelfFamilies = computed(() =>
            the other one now. It is a direction, not a claim: the message, the tone and every clause
            the mounted test asserts are untouched. A demotion that leaves a sentence pointing the
            wrong way is not a demotion, it is a small lie with a good excuse. -->
-      <p v-if="kidShareNote" class="money-share" role="note">
-        <strong>{{ kidShareNote }}</strong>
-        Every prize cheque is split before it reaches this account: her part goes to her, the family
-        banks the rest. The prize rows above are what the family kept, and each one names the share
-        that left.
-      </p>
+      <!-- ⭐ ROUND 35 #3 – AND NOW IT CARRIES HER PHOTOGRAPH. He asked for her account with the
+           photo below the category cards and on every shop page; his words are in the script block
+           on `herPhoto`. THE ELEMENT WENT FROM `p` TO `div` and nothing else about it moved: a
+           polaroid is a `div` and a `div` inside a `p` is not markup a browser will keep. The
+           class, the `role`, the green frame, the two sentences and the DOM position at the foot
+           of the screen are all exactly what round 26 #5b shipped and 27.08 demoted, which is why
+           `week-recap-kid-share.test.ts`'s document-order arm reads unchanged.
+           ⚠ AND IT IS STILL OUTSIDE EVERY TAB GUARD, so «on every shop page» is satisfied by where
+           it already was: on the shop home it lands under the six category cards, on a category
+           page under the last rung. -->
+      <div v-if="kidShareNote" class="money-share" role="note">
+        <p class="money-share-text">
+          <strong>{{ kidShareNote }}</strong>
+          Every prize cheque is split before it reaches this account: her part goes to her, the family
+          banks the rest. The prize rows above are what the family kept, and each one names the share
+          that left.
+        </p>
+        <Polaroid class="money-share-photo" :src="herPhoto" alt="" tilt="-3deg" :photo-height="52" />
+      </div>
 
       <ConfirmDialog
         v-if="pendingKit"
@@ -2228,6 +2390,26 @@ const shelfFamilies = computed(() =>
   font-size: 13px;
   line-height: 1.45;
   color: var(--ink-2);
+  /* ⭐ ROUND 35 #3 – the photograph beside the words, which is the only thing this item added to
+     the strip. A row, so the paper sits at the top edge where the balance sentence is, the way the
+     mockup's own «Her own account» card drops it. `flex: none` on the polaroid and `min-width: 0`
+     on the text: at 375px the words must give ground, never the picture. */
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.money-share-text {
+  margin: 0;
+  flex: 1;
+  min-width: 0;
+}
+
+/* 66px of paper around a 52px window – the mockup's own figures for this card, and the same object
+   Home's memory card and the trip photo above are made of. */
+.money-share-photo {
+  flex: none;
+  width: 66px;
 }
 
 .money-share strong {
@@ -2803,6 +2985,89 @@ const shelfFamilies = computed(() =>
   margin-top: 14px;
 }
 
+/* =================================================================================================
+   ⭐⭐ ROUND 35 #3 – THE SIX CATEGORY CARDS ON THE SHOP'S FRONT DOOR
+   =================================================================================================
+   «выбором категорий из 6 карточек (название категории встает на карточку внизу шрифтом Sora,
+   первый ряд invest, business, property, остальное 2й ряд)». Three across and two down, which is
+   the mockup's own grid; the ORDER is his and not the mockup's, and it is set in the markup.
+
+   ⭐⭐ TALL, AND THE PAINTINGS ARE THE SPECIFICATION: «давай на главной магазина вот эти 6 основых
+   карточек сделаем не квадратными, как в макете, а высокими (смотри соотношение сторон картинок),
+   на них как раз вниз хорошо надписи встанут.» His six category tiles are 332x512 - ratio 0.6484 -
+   against the item tiles' 512x512, and `aspect-ratio` below is those two numbers rather than a
+   rounding of them, so the card is the shape of the picture in it and the crop is nil.
+   MEASURED at 375px: the shell leaves 343px of content, three columns and two 8px gaps put a card
+   at 109px x 168.1px, and the two rows stand 344.2px tall. `tests/component/round35-shop.test.ts`
+   re-measures that off the real cascade rather than trusting this arithmetic.
+
+   ⚠ IT IS A `button`, WHICH IS WHY THE RESET IS EXPLICIT. A tile is a control - it opens a page -
+   and a `div` with a click handler is not reachable from a keyboard. The UA's own border, padding,
+   background and font would otherwise arrive with it. */
+.shelf-cats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.shelf-cat {
+  position: relative;
+  display: block;
+  width: 100%;
+  aspect-ratio: 332 / 512;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  border: var(--stroke-hair) solid var(--card-edge);
+  border-radius: var(--radius-card);
+  background: var(--card-bottom);
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+}
+
+.shelf-cat-art {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* The name has to be readable on whatever the bottom of the painting happens to be, so the foot of
+   the tile darkens under it. Same idea and the same direction as `.card-art-scrim` above, carried
+   further because this text sits ON the picture rather than under it. */
+.shelf-cat-scrim {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgb(0 0 0 / 0%) 42%, rgb(0 0 0 / 78%) 100%);
+}
+
+/* ⭐ «название категории встает на карточку внизу шрифтом Sora» – at the foot, in the heading face,
+   which is what `--font-heading` is (src/style.css: «Sora on every heading»). */
+.shelf-cat-name {
+  position: absolute;
+  right: 6px;
+  bottom: 7px;
+  left: 6px;
+  font-family: var(--font-heading);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: -0.015em;
+  line-height: 1.15;
+  text-align: center;
+  color: var(--ink);
+}
+
+/* The way back out of a category, on its own line above the switcher item 10 forbids touching. */
+.shelf-nav {
+  display: flex;
+  align-items: center;
+  margin-top: 10px;
+}
+
 /* ⚠ THE HAIRLINE ABOVE A FAMILY IS GONE WITH THE PLATE IT DIVIDED. It was a rule INSIDE one card,
    separating a family from the one above it; on a page of free-standing cards there is nothing on
    either side of it to divide, and a line drawn across the page between two cards reads as a
@@ -2873,6 +3138,111 @@ const shelfFamilies = computed(() =>
 .money-panel > .card-art:first-child {
   margin: -14px -14px 12px;
   border-radius: var(--radius-card) var(--radius-card) 0 0;
+}
+
+/* =================================================================================================
+   ⭐⭐ ROUND 35 #5-#9 – THE PAINTING MOVES FROM ABOVE THE WORDS TO BESIDE THEM
+   =================================================================================================
+   «картинки будут квадратными на всю высоту карточки с небольшим градиентом справа (как на
+   тренерах)», and, when the width was asked about: «плитки товаров квадратные, во всю высоту
+   карточки - нет, они не во всю ширину будут … Текст и темный фон займут 60% (примерно), остальное
+   картинка», «Карточки остаются узкие».
+
+   FOUR PROPERTIES, AND EVERY ONE OF THEM IS A SENTENCE OF HIS:
+     1. THE CARD IS STILL SHORT. The band is `position: absolute` between the card's own top and
+        bottom, so it is sized BY the words and can never size them - «Карточки остаются узкие».
+        This is `.cm-art`'s trick and it is here for the reason round-18 #2 wrote it: a picture whose
+        height comes from the text cannot start a feedback loop with the text.
+     2. IT TAKES 40% OF THE WIDTH, not the whole of it. His «остальное картинка» after 60% of text
+        and dark ground; his own frame AA gives the yacht cards 37%, so «почти как в макете» is
+        literal. `tests/component/round35-shop.test.ts` pins the 40 and the 60 off the real cascade.
+     3. IT FADES INTO THE CARD rather than ending on an edge - «с небольшим градиентом». The mask is
+        `.cm-art`'s, mirrored per side, and its stops are percentages of THIS box, so the fade
+        reaches transparent exactly where the band stops however wide the card is.
+     4. THE SOURCE IS SQUARE AND THE SLOT IS NOT, so there is horizontal cropping, and he accepted
+        it in advance: «видимо будет некоторая обрезка по ширине … пока так посмотрим». `object-fit:
+        cover` on a height-driven box crops sideways and never vertically, which is the A2c/d ruling
+        the coach strip inherits too.
+
+   ⚠ THE `min-height` IS THE ONE NUMBER THAT IS MINE. Without it the shortest card on the shelf - an
+   unowned academy stage, four short lines - would give the painting about 90px of height to stand
+   in and the thing in it would be unreadable. 132px is the height of the tallest of those short
+   cards, so it changes NO row that already has something to say and rescues the ones that do not. */
+.shop-row--art-left,
+.shop-row--art-right {
+  min-height: 132px;
+}
+
+.shop-row--art-left > .shop-row-art,
+.shop-row--art-right > .shop-row-art {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 40%;
+  aspect-ratio: auto;
+}
+
+.shop-row--art-left > .shop-row-art {
+  left: 0;
+  -webkit-mask-image: linear-gradient(90deg, #000 0%, #000 62%, transparent 100%);
+  mask-image: linear-gradient(90deg, #000 0%, #000 62%, transparent 100%);
+}
+
+.shop-row--art-right > .shop-row-art {
+  right: 0;
+  -webkit-mask-image: linear-gradient(270deg, #000 0%, #000 62%, transparent 100%);
+  mask-image: linear-gradient(270deg, #000 0%, #000 62%, transparent 100%);
+}
+
+/* THE OTHER 60%: the words keep the card's own 12px inset and gain the band's width on their side,
+   so no sentence can start on top of a painting. One number, `40%`, said twice - and the test reads
+   BOTH off the cascade, so they cannot drift apart. */
+.shop-row--art-left > .shop-row-body {
+  padding-left: calc(40% + 12px);
+}
+
+.shop-row--art-right > .shop-row-body {
+  padding-right: calc(40% + 12px);
+}
+
+/* ⭐ THE PRICE IS THE HEADLINE ON THESE ROWS – «а текущая цена отдельной строчкой белым шрифтом
+   Sora (как на яхтах)», his own description of the water frame, where the figure is a large white
+   number at the foot of the words. */
+.shop-row--art-left .shop-row-price,
+.shop-row--art-right .shop-row-price {
+  font-family: var(--font-heading);
+  font-size: 19px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+}
+
+/* ⭐ AND ON THE `right` FAMILIES THE CONTROL STANDS ON THE PAINTING – «Кнопка покупка/продажа может
+   стоять на картинке (как на яхтах, тогда картинка будет более квадратная, как мне кажется)». The
+   card is the containing block (`.tb-card--photo` is `position: relative`), so this is the card's
+   bottom corner and not the text column's.
+   ⚠ IT IS BOUNDED BY THE BAND IT SITS ON. «Sell it for $12,000,000» is a long label, and a pill
+   that grew past 40% would put its own left edge back over the sentences. `max-width` plus a
+   wrapping label is what makes that impossible rather than unlikely.
+   ⚠ AND THE CARS GO THE OTHER WAY BY HIS OWN SEPARATE SENTENCE: «кнопку покупки можно поставить под
+   цену - тогда больше горизонтального места для надписей», so `--art-left` leaves the control in
+   the flow, under the price, where `.shop-row-buy`'s wrap already puts it. */
+.shop-row--art-right .shop-action {
+  position: absolute;
+  right: 10px;
+  bottom: 10px;
+  max-width: calc(40% - 20px);
+  margin-top: 0;
+  white-space: normal;
+  background: color-mix(in srgb, var(--card-bottom) 78%, transparent);
+  backdrop-filter: blur(6px);
+}
+
+/* «кнопку покупки можно поставить под цену» – the price on its own line and the control under it,
+   which is what a full-width flex item does in a wrapping row. It buys the words the horizontal
+   room he asked for on the same breath. */
+.shop-row--art-left .shop-row-buy > .shop-row-price {
+  flex: 1 0 100%;
 }
 
 .shop-row-head {

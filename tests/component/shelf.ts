@@ -28,8 +28,25 @@ export const SHELF_TAB_LABELS = ['Invest', 'Cars', 'Property', 'Business', 'Wate
 /** The two segments inside Bills. */
 export const BILLS_TAB_LABELS = ['Her Kit', 'Advs Portfolio'] as const
 
-/** Press one of the shelf's segments and leave it open. */
+/** ⭐⭐ ROUND 35 #3 – THE SHOP OPENS ON A HOME NOW, AND THE SWITCHER IS NOT ON IT.
+ *
+ *  The owner asked for a front door – «главная магазина становится главной с текущей the shelf,
+ *  выбором категорий из 6 карточек» – so pressing `Shop` lands on the shelf plate, the six category
+ *  cards and her account, with no segments in the document at all. Item 10 is the reason it works
+ *  this way round: «переключалка между категориями магазина на самих страницах магазина остается
+ *  текущей и не меняется», so the switcher could not grow a seventh segment for the home.
+ *
+ *  ⚠ SO EVERY CALLER OF THIS HELPER IS RE-AIMED IN ONE PLACE RATHER THAN SEVEN. The six category
+ *  cards carry the SAME six words as the six segments (`MoneyScreen.vue` reads the card's name out
+ *  of `SHELF_TAB_OPTIONS`, so they cannot drift), which is what lets one lookup serve both: from the
+ *  home the tile is pressed, and the segment is then pressed as well so the tab is genuinely open
+ *  and a later `openShelfTab` on the same wrapper behaves exactly as it did before. */
 export async function openShelfTab(wrapper: VueWrapper, label: string): Promise<void> {
+  if (!wrapper.find('.shelf-tabs').exists()) {
+    const tile = wrapper.findAll('.shelf-cat').find((n) => n.text().trim() === label)
+    expect(tile, `the ${label} category card on the shop home`).toBeTruthy()
+    await tile!.trigger('click')
+  }
   const pill = wrapper.findAll('.shelf-tabs button.tab-pill').find((n) => n.text().trim() === label)
   expect(pill, `the ${label} segment of the shelf`).toBeTruthy()
   await pill!.trigger('click')
