@@ -2333,6 +2333,35 @@ export function migrateSave(raw: unknown): WorldState {
     v = 69
   }
 
+  // ⭐⭐⭐ v69 -> v70 – ROUND 35 #14: THE DRAW BECOMES A FACT, AND THIS STEP DELIBERATELY WRITES NO
+  // DRAW.
+  //
+  // The owner, 03.09: «на неделе перед турниром случилась жеребьевка, мне сказали "играем против
+  // №118 шанс 71%", пошел турнир - соперник в первом раунде №76». `world.drawnFirstRounds` is where
+  // the answer now lives; see that field for the diagnosis and the 59.9% measurement.
+  //
+  // ⚠⚠ WHY THE TABLE ARRIVES EMPTY, WHICH IS THE ONE DECISION IN THIS STEP. v68 and v69 both PINNED a
+  // number onto every existing save, because in both cases the thing being stored was derivable from
+  // history and the only unknown was «what was this career reading yesterday». Here it is the exact
+  // opposite: the value is NOT derivable any more – it was a reading of a world state that has
+  // already moved – so back-filling one would mean re-deriving the very quantity this item exists to
+  // stop re-deriving, and calling the guess a fact. An existing save therefore carries no draw, its
+  // first tick records one for the event a week out, and every event after that is a fact from the
+  // week it was shown.
+  //
+  // ⚠ WHAT THAT COSTS A LIVE CAREER: at most ONE tournament – the one whose card is on screen at the
+  // moment of the update, which still redraws at its own week exactly as it did yesterday. Cheap by
+  // the owner's own ruling of 03.09 («никто не купил, нет игроков»); what is NOT negotiable is the
+  // other half of his sentence, and it holds: the step is append-only, every older schema still
+  // loads, and tests/fixtures/saves/v70.json is the fixture that says so.
+  //
+  // ⚠ IDEMPOTENT and DRAW-FREE. `??=` on a key nothing else writes during the chain, no stream
+  // touched on any path, so the frozen MAIN capture (41550 / e6b0c709) cannot move.
+  if (v === 69) {
+    save.drawnFirstRounds ??= {}
+    v = 70
+  }
+
   if (v !== SAVE_SCHEMA_VERSION) {
     throw new Error(`Save schema ${v} is newer than supported ${SAVE_SCHEMA_VERSION}`)
   }

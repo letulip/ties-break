@@ -212,8 +212,18 @@ describe('round 23 #3b – a rival retirement in HER match reaches her week feed
   it('lands in world.events, in her week, directly under the match row', () => {
     // A REAL career: created, entered, ticked, revealed. The seeds are pre-found so the test is
     // cheap; the loop is what makes it robust – any one of them showing the row is the claim.
+    //
+    // ⚠⚠ THE SEED LIST WAS RE-AIMED, NOT THE CLAIM (03.09, round 35 #14). A mid-match rival
+    // retirement is RARE – swept over 60 fresh careers x 40 weeks, exactly 2 produce one – so this
+    // test has always depended on pre-found seeds, and round 35 #14 made the published draw binding
+    // on the bracket, which changes WHO she plays and therefore which of her matches somebody retires
+    // out of. All three original seeds stopped producing the row; `ret-news-30` and `ret-news-48` now
+    // do. ⚠ THE OLD THREE ARE KEPT BEHIND THE NEW TWO RATHER THAN REPLACED, and the loop breaks on
+    // the first hit, so the list only ever gets longer: a later wave that moves these careers again
+    // finds five chances instead of three, and the fix is to append rather than to swap. The rarity
+    // is the reason – a single pinned seed is a coin this test cannot afford to keep flipping.
     let hit: { seed: string; week: number; world: WorldState } | null = null
-    for (const seed of ['ret-news-33', 'ret-news-31', 'ret-news-16']) {
+    for (const seed of ['ret-news-30', 'ret-news-48', 'ret-news-33', 'ret-news-31', 'ret-news-16']) {
       const world = createWorld(seed)
       const rng = rngFromSeed(world.seed)
       for (let i = 0; i < 40 && !hit; i++) {

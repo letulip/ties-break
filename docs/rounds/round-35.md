@@ -744,7 +744,7 @@ LEFT, because `.cm-art` sits at `left: 0` under a right-fading mask; his own han
 с фото … слева и кнопкой Buy справа»; and «water – карточки как на домах» forces property and water
 onto the SAME side, which my version could not satisfy. **Nothing to change.**
 
-- [ ] **14. «на неделе перед турниром случилась жеребьевка, мне сказали "играем против №118 шанс
+- [x] **14. «на неделе перед турниром случилась жеребьевка, мне сказали "играем против №118 шанс
   71%", пошел турнир - соперник в первом раунде №76»** – **build. The diagnosis is complete and it
   undermines round 34 #5.**
 
@@ -765,3 +765,107 @@ onto the SAME side, which my version could not satisfy. **Nothing to change.**
   attribute for all 199» – that is about the COHORT, and one opponent id is not it.
   ⚙ Cheap by his own ruling of 03.09: no players exist, so the schema move is the four-part ritual
   and no compatibility at all.
+
+  – `[x]` **SHIPPED. THE CARD AND THE BRACKET NAMED DIFFERENT GIRLS ON 59.9% OF DRAW WEEKS; THEY NOW
+  DISAGREE ON 0.2%, AND THAT ONE GIRL HAD RETIRED BETWEEN THE DRAW AND THE MATCH.**
+
+  **THE REPRODUCTION, FIRST AND AS THE CONTROL** (`tools/r35-draw-fact.ts`, six careers x 180 weeks,
+  walked with a real entry policy and read through the engine's own snapshot path). Before: **293 of
+  489 draw weeks (59.9%)** – the card at week − 1 named one girl and `pendingTournament` played
+  another. After: **1 of 462 (0.2%)**, and the tool says which kind of break it is – the promised
+  girl was gone from the cohort entirely (the conveyor retires ~18 of 199 in the rollover week), so
+  there was nobody to put on court. **Zero breaks where the pin could have held and did not.**
+
+  **WHAT IS PERSISTED, AND WHERE.** `WorldState.drawnFirstRounds?: Record<eventId, opponentId>` –
+  one id per event, never the field. Written by `world/draw.ts`'s `recordDrawnFirstRounds`, twice
+  inside `tickWeek` (top and bottom, write-once so the second is free) and by nothing else. Read in
+  the two places that disagreed: the card (`previewEvent`'s `pinnedOpponentId`) and the bracket she
+  plays (`runTournament`'s `pinnedFirstOpponent`, applied by `withPinnedFirstRound`).
+
+  ⭐⭐ **THE PIN IS BINDING, NOT BEST-EFFORT, AND THAT COST A SECOND MEASUREMENT.** The first cut only
+  EXCHANGED her promised opponent into the slot when the rebuild still contained her – and it kept
+  the promise 83.8% of the time, because `selectEntrants` keys candidates on a standings table that
+  has moved and simply lands on other people. A promise broken one tournament in six is not a
+  promise. She is now put into the slot even when this week's re-selection left her out, which is
+  **his own standing ruling of 05.08 applied to the other side of the net** – «acceptance into a draw
+  is not revoked» (world.ts, R8-7a). ⚠ **The price, measured rather than argued: 29 of 462 (6.3%)
+  first-round opponents would not have passed the rung's own fitness floor that day.** The
+  availability gate is an ENTRY rule and the draw was published a week earlier.
+
+  ⭐ **THE PERCENTAGE HOLDS TOO – and the residue is hers, by design.** Of 328 moved percentages
+  before the fix, **327 were HER rating moving and 3 the opponent's**; after, **318 hers and 0 the
+  opponent's**. Freezing the girl froze the opponent side of the ring completely, because the field
+  rates her rested. What still moves is `kidRating`, and that is `firstMatchChance`'s documented
+  contract – «her chance in a match she would play in the state she is in» (season/preview.ts, and
+  the owner's own round-21 ruling that the ring quotes her as she is). **Not fixed, and it should not
+  be**: it moves when she trains, buys a racket or finishes a tournament, which is her own doing.
+
+  ⚠ **ONE NARROWING, NAMED SO IT IS NOT DISCOVERED LATER.** Only events she has ENTERED are recorded.
+  A card for an event she did not enter shows a HYPOTHETICAL opponent (entries closed at week − 2, so
+  she will never stand in that draw), and recording all of them measured a **2.16x weekly tick**
+  (1.58 s -> 3.40 s for 3 x 156 walks) – it blew `tests/condition.test.ts`'s B1 20 s timeout. What it
+  gives up: an un-entered card's name can still move within its one week on screen if a reveal is
+  finalised between two looks – 1 of 443 pairs. For a tournament she is playing that number is 0.
+
+  **THE SCHEMA MOVE, all four parts.** `SAVE_SCHEMA_VERSION` 69 -> **70**; an append-only v69 -> v70
+  step in `engine/migrations.ts`; `tests/fixtures/saves/v70.json`; `npm run e2e:fixtures` re-run.
+  ⚠ The migration writes an **empty table on purpose** – unlike v68's and v69's pins, this value is
+  no longer derivable (the world it was a reading of has already moved), so back-filling would be a
+  guess dressed as a fact. An existing save records its first draw on its next tick and costs at most
+  the ONE tournament whose card is on screen at the update.
+
+  **THE FROZEN CAREERS MOVED, AND THE PER-KEY DIFF WAS TAKEN FIRST.** Control = **this branch's head
+  with my change absent** (detached worktree at `a1c1109c`), not `origin/main` – 33 commits of this
+  wave sit between them. Null-arm check run in the negative direction first: `git grep
+  drawnFirstRounds -- src` returns 0 files on the control and 7 on the branch. `tools/frozen-key-diff.ts`
+  on five preset/policy pairs: **22 / 33 / 31 / 28 / 34 keys of ~73**. Wide, and a narrow diff would
+  have been the alarming outcome – the change decides who she plays, so results, points, rank, wallet,
+  trophies, milestones and body all move behind it. ⭐⭐ **`rngMain` is byte-identical on all five
+  arms**: the dice did not move, the pairings did. All 63 constants in
+  `tests/coachTravelEdgeFixtures.ts` re-cut in ONE mechanical pass, every `PRE_*` set re-anchored (the
+  second kind of move that file distinguishes), and `careerHashAtSchema` gained the
+  `drawnFirstRounds` peel and a `< 70` rung.
+
+  **THE FROZEN MAIN CAPTURE DID NOT MOVE: 41550 / `e6b0c709`, not re-pinned.** A new persisted field
+  should not draw on MAIN, and this one does not – the recorder is a pure read and
+  `withPinnedFirstRound` exchanges two finished slots without touching a stream.
+
+  ⭐ **AND THE BALANCE WAS MEASURED, BECAUSE MOVING A BRACKET IS A BALANCE CHANGE UNTIL IT IS SHOWN
+  NOT TO BE.** One test broke by going to zero international events on its single seed, which is
+  exactly what a systematic suppression looks like from inside one career – the plausible mechanism
+  being that the week − 1 field is fitter than the week − E one, so pinning would hand her a stronger
+  opponent every time. **It is a wash.** A/B over 8 careers x 160 weeks, control = the same tree with
+  the change reverted:
+
+  | | control | branch |
+  | --- | --- | --- |
+  | round-one win rate | 48.1% (341/709) | 49.6% (343/692) |
+  | international events reached | 75 | 98 |
+  | titles | 80 | 72 |
+  | mean rank at 160w | 62.6 | 66.1 |
+
+  All inside seed noise, and the direction is if anything hers. ⭐ `npm run test:sim` – the twelve
+  Monte-Carlo files, the balance gate – is **green, 12/12**, with the brackets moved.
+
+  ⚠ **Mutation-verified, five mutations, five different verdicts** (`tests/round35-draw-fact.test.ts`
+  carries the list). One mutation is recorded as UNCATCHABLE rather than hidden: making the recorder
+  overwrite instead of fill leaves everything green, because the recorder reads the draw and the draw
+  reads the record.
+
+  ⚠ **FOUR GUARDS WERE RE-AIMED, none deleted and none loosened**, each with its own note:
+  * the write-once arm here – it could not fail, and now asserts «a published draw is not re-derived
+    from a world that has moved», with the instrument proved first;
+  * `round21-coach-travel`'s «no call site decides the trip for itself» – it COUNTED inline
+    `coachTravelFareFor(` on the call line, and hoisting the fare into one shared local obeys the rule
+    more tightly while dropping the count. It now asserts the claim over every call site, and it still
+    reddens when a call site reads a stance directly;
+  * `season/domestic-nation`'s flag sweep – one seed became four, walked until the counters are
+    satisfied, so the arm can no longer be made vacuous by a career that never climbs;
+  * `round23-retirement-news`'s seed list – a mid-match rival retirement occurs in 2 of 60 fresh
+    careers, so the two that produce one now were APPENDED in front of the old three rather than
+    swapping them.
+
+  ⚠ Three component tests are red on this branch and **they are not this item's**: the
+  `round35-ui` font-face arms (round 35 #8) reproduce identically on the branch head with this change
+  absent. Everything else is green – unit 4107 + the heavy shards, component 1301, `vite build`,
+  `npm run test:sim` 12/12.

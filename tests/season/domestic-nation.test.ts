@@ -142,11 +142,22 @@ describe('round 23 #10 — and the VS card is where he actually reads it', () =>
     // ⚠ THE MUTATION THAT MUST FAIL THIS: revert `oppNation` in world/snapshot.ts to
     // `world.cohort.find(...)?.nation` and the domestic arm below goes red on the first reveal whose
     // opponent is not a compatriot – which the discriminator guarantees there is one of.
-    const world = createWorld('dom-flag-vs')
-    world.fundsCents = 9_999_999_00 // affordability is not what this test is about
-    const rng = rngFromSeed(world.seed)
-    const home = world.profile.country
-    const nationOf = new Map(world.cohort.map((p) => [p.id, p.nation]))
+    // ⚠⚠ RE-AIMED FROM ONE SEED TO A SWEEP (03.09, round 35 #14), AND IT IS STRICTLY STRONGER RATHER
+    // THAN A SEED SWAP. This walked `dom-flag-vs` alone, and round 35 #14 – which makes the published
+    // draw binding on the bracket – changed WHO she plays and therefore what her results open: that
+    // one career now spends all 160 weeks on the domestic rungs and never reaches the J tour, so
+    // `internationalSeen` fell to 0 and the international arm became unreachable. ⚠ MEASURED BEFORE
+    // IT WAS RE-AIMED, because one seed moving is exactly what a systematic balance shift looks like
+    // from inside one test: over 8 careers x 160 weeks the change is a WASH and if anything runs the
+    // other way – round-one win rate 48.1% -> 49.6%, international events 75 -> 98, mean rank 62.6 ->
+    // 66.1. So this is one career's luck, and a test whose claim depends on one career's luck is the
+    // thing to fix.
+    //
+    // The sweep walks seeds until all three counters are satisfied and then stops. Every per-reveal
+    // assertion below still runs on every reveal of every career it walks, so nothing is weakened –
+    // what changes is that the arm can no longer be made vacuous by a career that never climbs.
+    const SEEDS = ['dom-flag-vs', 'dom-flag-vs-2', 'dom-flag-vs-3', 'dom-flag-vs-4']
+    const home = createWorld(SEEDS[0]).profile.country
 
     let domesticSeen = 0
     let internationalSeen = 0
@@ -166,38 +177,47 @@ describe('round 23 #10 — and the VS card is where he actually reads it', () =>
       }
     }
 
-    enterWhatSheCan(world)
-    for (let i = 0; i < 160; i++) {
-      tickWeek(world, rng)
-      if (world.pendingTournament) {
-        const pending = toSnapshot(world).pending!
-        // The opponent the card is showing: nothing is revealed yet, so it is her FIRST match –
-        // the same row `pendingView` reads at `revealedRounds === 0`.
-        const first = world.pendingTournament.result.matches
-          .filter((m) => m.aId === KID_ID || m.bId === KID_ID)
-          .sort((a, b) => a.round - b.round)[0]
-        const oppId = first ? (first.aId === KID_ID ? first.bId : first.aId) : undefined
-        const ownNation = oppId ? nationOf.get(oppId) : undefined
-
-        // ⚠ ROUND 26 #6 RE-AIM: `PendingView.tier` is nullable now (the College League walks the same
-        // view with no rung). This arm is `world.pendingTournament`, a TOUR reveal by construction,
-        // so the rung is asserted present rather than defaulted – see the note in
-        // tests/ladder-separation.test.ts for why a null here would be a real regression.
-        expect(pending.tier, 'a tour reveal always names its rung').not.toBeNull()
-        if (TIERS[pending.tier!].track === 'domestic') {
-          domesticSeen++
-          expect(pending.opponent.nation).toBe(home)
-          if (ownNation !== undefined && ownNation !== home) domesticReflagged++
-        } else if (ownNation !== undefined) {
-          internationalSeen++
-          // Untouched: the international rungs are the international ones.
-          expect(pending.opponent.nation).toBe(ownNation)
-        }
-
-        skipTournament(world)
-        closeTournament(world)
-      }
+    for (const seed of SEEDS) {
+      if (domesticSeen > 3 && domesticReflagged > 0 && internationalSeen > 0) break
+      const world = createWorld(seed)
+      world.fundsCents = 9_999_999_00 // affordability is not what this test is about
+      const rng = rngFromSeed(world.seed)
+      const nationOf = new Map(world.cohort.map((p) => [p.id, p.nation]))
+      expect(world.profile.country, 'every career in the sweep shares her home flag').toBe(home)
       enterWhatSheCan(world)
+      for (let i = 0; i < 160; i++) {
+        world.fundsCents = Math.max(world.fundsCents, 9_999_999_00)
+        tickWeek(world, rng)
+        if (world.pendingTournament) {
+          const pending = toSnapshot(world).pending!
+          // The opponent the card is showing: nothing is revealed yet, so it is her FIRST match –
+          // the same row `pendingView` reads at `revealedRounds === 0`.
+          const first = world.pendingTournament.result.matches
+            .filter((m) => m.aId === KID_ID || m.bId === KID_ID)
+            .sort((a, b) => a.round - b.round)[0]
+          const oppId = first ? (first.aId === KID_ID ? first.bId : first.aId) : undefined
+          const ownNation = oppId ? nationOf.get(oppId) : undefined
+
+          // ⚠ ROUND 26 #6 RE-AIM: `PendingView.tier` is nullable now (the College League walks the
+          // same view with no rung). This arm is `world.pendingTournament`, a TOUR reveal by
+          // construction, so the rung is asserted present rather than defaulted – see the note in
+          // tests/ladder-separation.test.ts for why a null here would be a real regression.
+          expect(pending.tier, 'a tour reveal always names its rung').not.toBeNull()
+          if (TIERS[pending.tier!].track === 'domestic') {
+            domesticSeen++
+            expect(pending.opponent.nation).toBe(home)
+            if (ownNation !== undefined && ownNation !== home) domesticReflagged++
+          } else if (ownNation !== undefined) {
+            internationalSeen++
+            // Untouched: the international rungs are the international ones.
+            expect(pending.opponent.nation).toBe(ownNation)
+          }
+
+          skipTournament(world)
+          closeTournament(world)
+        }
+        enterWhatSheCan(world)
+      }
     }
 
     expect(domesticSeen, 'the sweep never reached a domestic tournament').toBeGreaterThan(3)

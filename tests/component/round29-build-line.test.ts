@@ -92,7 +92,11 @@ describe('the build line renders at the foot of Settings, with the values the bu
     // ⚠ AND AGAIN AT v69 (01.09, round 32 #4 – the brand's slow stock pinned at the week it arrived),
     // NOT WEAKENED, for the fourth time and for the reason verbatim: 69 was moved by that wave with
     // its full four-part move, never by this line's item.
-    expect(SAVE_SCHEMA_VERSION).toBe(69)
+    // ⚠ AND AGAIN AT v70 (03.09, round 35 #14 – the published draw becomes a fact), NOT WEAKENED,
+    // for the fifth time and for the reason verbatim: 70 was moved by that wave with its full
+    // four-part move (bump, append-only migration, golden fixture, e2e fixtures regenerated), never
+    // by this line's item. The claim above – «the BUILD-LINE wave moved no schema» – is untouched.
+    expect(SAVE_SCHEMA_VERSION).toBe(70)
   })
 
   it('is one line at the FOOT of the screen, and it is there whichever tab is open', async () => {

@@ -411,6 +411,8 @@ import { growAndLive } from './world/phaseGrowth'
 // `finalizeTournament`'s deferred step 5-6 and `skipEvent`.
 import { closeTheWeek } from './world/phaseAiWeek'
 import { ensureSeason, housekeep, recomputeRankAndMilestones } from './world/bookkeeping'
+// ⭐ ROUND 35 #14 – the two ends of the published draw. `tickWeek` calls both; nothing else does.
+import { recordDrawnFirstRounds, pruneDrawnFirstRounds } from './world/draw'
 export { ensureSeason }
 import type { BrandStrengthSeed, PendingTournament, WorldState } from './world/state'
 export type { BrandStrengthSeed, PendingTournament, WorldState }
@@ -1617,6 +1619,18 @@ export function seedWorldForV6(save: Partial<WorldState> & { seed: string; week:
 // the reveal/finalize flow (revealTournamentRound / skipTournament). The main-stream work (base
 // costs, drift) and the AI brackets still run, so the per-week draw count is unchanged.
 export function tickWeek(world: WorldState, rng: Rng): void {
+  // 0. ⭐⭐⭐ ROUND 35 #14 – THE DRAW THAT IS ON SCREEN RIGHT NOW BECOMES A FACT BEFORE THE WEEK MOVES.
+  //    The world here is EXACTLY the one the card the player is looking at was rendered from, and
+  //    the events one week out are the ones it has already named – so recording them here writes
+  //    down what he was told rather than a re-derivation of it.
+  //
+  //    ⚠ THIS CALL IS THE NET AND THE ONE AT THE BOTTOM IS THE PRIMARY. On a continuously played
+  //    career the bottom call has already recorded these events at the end of last week's tick and
+  //    this one is a no-op (the writer only fills absent keys). It earns its place on the two paths
+  //    where no previous tick can have run under this build: a save written before v70, and a save
+  //    resumed at week − 1 of an event. Without it his live career would lose the very first draw it
+  //    is holding – which is the one on screen.
+  recordDrawnFirstRounds(world)
   world.week += 1
 
   // 1. THE SEASON BOUNDARY AND THE RECURRING OBLIGATIONS (R2-10 step 2, phase 1) – steps 0a00 to
@@ -1658,6 +1672,25 @@ export function tickWeek(world: WorldState, rng: Rng): void {
   //    the MAIN stream ended one phase ago carrying base costs + the cohort drift, which is exactly
   //    what the frozen capture (41550 / e6b0c709) measures.
   closeTheWeek(world, field)
+
+  // 8. ⭐⭐⭐ ROUND 35 #14 – AND THE WEEK CLOSES BY WRITING DOWN THE DRAW IT HAS JUST MADE. The events
+  //    one week out are the ones whose cards now carry a NAME (`DRAW_LEAD_WEEKS`), and the world
+  //    they are read from here is the same world the next snapshot will render them from – so what
+  //    is stored is what he will be shown, to the letter.
+  //
+  //    ⚠ LAST, AND AFTER `closeTheWeek`, FOR TWO REASONS THAT BOTH BITE. The AI brackets and the
+  //    housekeeping inside it move the standings and roll the calendar forward, so a record taken
+  //    any earlier would describe a world that no longer exists by the time a card is drawn. And on
+  //    a REVEAL week the flow can be pushed aside (`tournamentHidden` in App.vue) and the Season
+  //    screen read before the run is finalised – recording here, ahead of the finalize, is what
+  //    stops the name moving under him between two looks at the same card. Measured before the fix:
+  //    the name moved on 3 of 466 pre/post-finalize card pairs (tools/r35-draw-fact.ts).
+  //
+  //    ⚠ ZERO MAIN DRAWS – the writer is a pure read of the snapshot path, so the tick's draw count
+  //    and the frozen capture are untouched. And the prune runs beside it, because a table of
+  //    published draws is only worth the ones that have not been played yet.
+  recordDrawnFirstRounds(world)
+  pruneDrawnFirstRounds(world)
 }
 
 // entries: moved to world/entries.ts (P4 extraction). Imported back below and re-exported under

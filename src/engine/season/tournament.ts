@@ -1158,6 +1158,68 @@ export function firstRoundOpponent(alive: readonly MatchPlayer[], kid: MatchPlay
   return alive[i % 2 === 0 ? i + 1 : i - 1] ?? null
 }
 
+/** ⭐⭐⭐ ROUND 35 #14 – THE PUBLISHED DRAW, HONOURED. The girl the card named a week ago is put into
+ *  the slot across the net from her, by exchanging her with whoever this week's rebuild landed there.
+ *
+ *  ⚠ WHY A SWAP AND NOT A REBUILD. The defect is that the FIELD is reassembled from inputs that move
+ *  every week (`WorldState.drawnFirstRounds` carries the diagnosis); the honest repair for a
+ *  published draw is therefore the smallest edit that keeps the promise – two slots exchanged, the
+ *  draw's size unchanged, every entrant still in it, nobody added and nobody removed.
+ *
+ *  ⚠⚠ ZERO RNG, BY CONSTRUCTION. It runs AFTER `buildDraw` has spent the stream and takes no `rng`
+ *  argument at all, so `seed:kidtour:<eventId>` is read in the same order and to the same depth it
+ *  always was. The MAIN weekly stream was never in this file.
+ *
+ *  ⚠⚠ AND WHEN SHE IS NOT IN THIS WEEK'S FIELD AT ALL SHE IS PUT INTO THE SLOT ANYWAY, WHICH IS THE
+ *  HALF THAT COST A SECOND MEASUREMENT TO GET RIGHT. Exchanging only works while the promised girl
+ *  is still somewhere in the rebuild, and measured on six synthetic careers she is NOT, on 82 of 506
+ *  draw weeks – so a swap-only pin kept the promise 83.8% of the time and broke it one tournament in
+ *  six, which is not a promise. Every one of those 82 was the girl missing from the field rather
+ *  than the pin failing (tools/r35-draw-fact.ts counts the two apart), and the reason she is missing
+ *  is almost never that she is unfit: `selectEntrants` keys candidates on `position + rng × drawSize`
+ *  over a STANDINGS TABLE THAT MOVED, so a re-selection a week later simply lands on other people.
+ *
+ *  ⭐⭐ AND THE SPORT AGREES WITH THE OWNER'S OWN STANDING RULING HERE. The availability gate is an
+ *  ENTRY rule – «a tired rival sits the week out» is about who ENTERS – and the draw was published a
+ *  week ago. His ruling of 05.08 on the kid's own entry is the same sentence from the other side:
+ *  «IN THE SPORT, ACCEPTANCE INTO A DRAW IS NOT REVOKED» (world.ts, R8-7a). What is true of her
+ *  entry is true of the girl printed opposite her: once the draw is out, she is in it.
+ *
+ *  ⚠ THE DISPLACED PLAYER LEAVES THIS BRACKET AND NOTHING ELSE HAPPENS TO HER. This is the KID's
+ *  SHADOW run – it awards no points and writes no results for anybody but her (`computeShadowTournament`
+ *  says so, and `finalizeTournament` only ever banks HER row) – so the world's record of who won this
+ *  event comes from the canonical AI bracket and cannot see this exchange. The draw's SIZE, and
+ *  therefore its round count and its RNG appetite, are identical either way.
+ *
+ *  ⚠⚠ AND THE EXCEPTION HAS A PRICE, MEASURED RATHER THAN WAVED THROUGH: 29 of 462 first-round
+ *  opponents (6.3%) would not have passed the rung's own fitness floor on the day. That is what
+ *  «acceptance is not revoked» COSTS, it is the same shape as the kid playing a rung she has
+ *  outgrown because her entry was already taken, and it is visible in one number instead of hiding
+ *  inside a rule. The promise itself now holds on 461 of 462 draw weeks (0.2% broken, against 59.9%
+ *  before) and the ONE break is a girl the conveyor retired between the draw and the match – gone
+ *  from the cohort, so there is nothing to put on court and the bracket rightly stands. */
+export function withPinnedFirstRound(
+  alive: readonly MatchPlayer[],
+  kid: MatchPlayer,
+  opponent: MatchPlayer,
+): MatchPlayer[] {
+  const out = alive.slice()
+  const i = out.findIndex((p) => p.id === kid.id)
+  if (i < 0) return out
+  const j = i % 2 === 0 ? i + 1 : i - 1
+  if (j < 0 || j >= out.length) return out
+  // Already across the net, or somehow herself – nothing to do.
+  if (out[j].id === opponent.id || opponent.id === kid.id) return out
+  const k = out.findIndex((p) => p.id === opponent.id)
+  if (k < 0) {
+    // She is not in the rebuild. The published draw wins: she takes the slot.
+    out[j] = opponent
+    return out
+  }
+  ;[out[j], out[k]] = [out[k], out[j]]
+  return out
+}
+
 export function runTournament(
   event: SeasonEvent,
   entrants: MatchPlayer[],
@@ -1167,8 +1229,18 @@ export function runTournament(
   /** her place among the entrants by standing (see `kidSeedIndexIn`). Omitted ⇒ she goes in last,
    *  which is what an unranked newcomer deserves and what the tests that do not care want. */
   kidSeedIndex?: number,
+  /** ⭐ ROUND 35 #14 – THE OPPONENT THE PUBLISHED DRAW ALREADY PROMISED HER, composed by the caller
+   *  exactly as it composes every other entrant (`WorldState.drawnFirstRounds` holds the id; the
+   *  CALLER turns it into a player, because only the caller knows this week's universe and this
+   *  week's fatigue). Omitted ⇒ the bracket is the one `buildDraw` produced, byte for byte, which is
+   *  what every caller with no published draw wants and what this function did before the parameter
+   *  existed. See `withPinnedFirstRound`. */
+  pinnedFirstOpponent?: MatchPlayer,
 ): TournamentResult {
   let alive: MatchPlayer[] = buildDraw(event, entrants, kid, kidSeedIndex ?? null, rng)
+  // ⚠ AFTER the draw and BEFORE a ball is struck: zero draws on any stream, so the event's
+  // sub-stream is spent exactly as it was and the MAIN capture cannot see this.
+  if (kid && pinnedFirstOpponent) alive = withPinnedFirstRound(alive, kid, pinnedFirstOpponent)
   const rounds0 = alive.length
 
   const matches: MatchRecord[] = []
