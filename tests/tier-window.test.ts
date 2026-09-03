@@ -273,17 +273,29 @@ describe('visibility is not access: the engine never reads the feed rule', () =>
     }
   })
 
+  // ⚠⚠ RE-AIMED BY ROUND 34 #14 – NOT DELETED, NOT LOOSENED, AND THE CHAIN IS PINNED WHERE ONE LINK
+  // USED TO BE. The Season screen no longer names `preferredWeekEvent` itself: at the owner's ruling
+  // a week may now offer a card for every rung she can enter, so the screen asks `weekEventStack`
+  // for the whole week and the stack asks the pick for its LEAD. The property this test is about is
+  // untouched – both surfaces resolve a stacked week through ONE rule – so the assertion follows it
+  // one storey down and pins the link as well as its ends. Dropping the middle assertion instead
+  // would have left "the season screen goes through the shared module" unguarded, which is the half
+  // that matters.
   it('both consumers pick through the ONE rule', () => {
     // The Season rows and the Calendar look-ahead read the same two functions, which is what makes
     // "the two lists cannot disagree" a property rather than a hope. The last-write-wins map is
     // gone from the season screen for good.
     const season = codeOf(read('../src/components/screens/SeasonScreen.vue'))
     expect(season).toContain('feedShows(e, feed.value)')
-    expect(season).toContain('preferredWeekEvent(')
+    expect(season).toContain('weekEventStack(')
     expect(season).not.toContain('for (const e of visibleUpcoming.value) byWeek.set(e.week, e)')
     const days = codeOf(read('../src/composables/weekDays.ts'))
     expect(days).toContain('preferredWeekEvent(')
     expect(days).toContain('feedShows(e, feed)')
+    // ...and the LEAD of a stack is still the pick's own answer, which is what makes the two
+    // surfaces agree about which tournament a week IS even though one of them now draws several.
+    const rule = codeOf(read('../src/composables/tierState.ts'))
+    expect(rule).toContain('const lead = preferredWeekEvent(events)')
   })
 })
 

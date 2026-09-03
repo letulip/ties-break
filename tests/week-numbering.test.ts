@@ -204,7 +204,9 @@ const NOT_A_WEEK_LABEL = [
   '14 + Math.floor(c.week / 52)',
   // SeasonScreen entry pill: the weeks are COMPARED, the output is the word "Closed"/"closes"
   // (the deadline week itself is printed right after it, formatted).
-  "week > row.event.deadlineWeek ? 'Closed' : 'closes'",
+  // ⚠ RE-AIMED BY ROUND 34 #14: the card's markup is a `v-for` over `row.events` now, so the event
+  // is the loop's `ev`. The exemption is the same one for the same reason – nothing is PRINTED here.
+  "week > ev.deadlineWeek ? 'Closed' : 'closes'",
 ]
 
 describe('R11-6 guard – no surface prints a raw absolute week', () => {

@@ -129,7 +129,7 @@
 // on the first-round plate.
 import { computed } from 'vue'
 import { useGameStore } from '../stores/game'
-import { DRAW_NOT_MADE_NOTE, firstMatchLabel, firstMatchTitle, useEventCard } from '../composables/eventCard'
+import { DRAW_NOT_MADE_NOTE, fieldChanceLabel, fieldChanceTitle, firstMatchLabel, firstMatchTitle, useEventCard } from '../composables/eventCard'
 import { readingColor } from '../composables/readingColor'
 import { flagEmoji } from '../composables/countries'
 import { TIERS } from '../engine/season/calendar'
@@ -251,6 +251,20 @@ const courtRead = computed(() => {
             :title="firstMatchTitle(event.preview)"
           >
             <b>{{ Math.round(event.preview.firstMatchChance * 100) }}</b><i>%</i>
+          </ProgressRing>
+          <!-- ⭐⭐ ROUND 34 #5 – ...AND THE FIELD'S FIGURE UNTIL THEN. `The read` beside it is the
+               same quantity in words, so the panel now shows the band and its number rather than
+               the band alone – one reading, two spellings, which is the rule the preview is built
+               on. His words are at `fieldChanceLabel` in composables/eventCard.ts. -->
+          <ProgressRing
+            v-else-if="event.preview.fieldChance !== null"
+            class="nt-ring field-ring"
+            :value="event.preview.fieldChance"
+            :color="readingColor({ fraction: event.preview.fieldChance })"
+            :label="fieldChanceLabel(event.preview)"
+            :title="fieldChanceTitle(event.preview)"
+          >
+            <b>{{ Math.round(event.preview.fieldChance * 100) }}</b><i>%</i>
           </ProgressRing>
         </div>
       </div>

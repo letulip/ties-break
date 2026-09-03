@@ -41,6 +41,13 @@ export interface FirstMatchOdds {
   opponentName: string
 }
 
+/** ...and just enough of one to name the PRE-DRAW ring (round 34 #5). Separate from the interface
+ *  above rather than folded into it, because the whole point of the item is that these are two
+ *  different quantities and the surface must not be able to hand one to the other's namer. */
+export interface FieldOdds {
+  fieldChance: number | null
+}
+
 /** ⭐⭐ ROUND 31 #4 – WHAT A CARD SAYS WHILE ITS DRAW DOES NOT EXIST, and it is said in ONE place for
  *  the same reason `firstMatchLabel` is: three surfaces draw this card (the season feed, the
  *  calendar marker and the next-tournament panel) and three literals is how one fact comes to be
@@ -64,6 +71,33 @@ export function firstMatchLabel(p: FirstMatchOdds): string {
 export function firstMatchTitle(p: FirstMatchOdds): string {
   if (p.firstMatchChance === null) return DRAW_NOT_MADE_NOTE
   return `First round vs ${p.opponentName}`
+}
+
+/** ⭐⭐ ROUND 34 #5 – THE PRE-DRAW RING'S ACCESSIBLE NAME, and it is a DIFFERENT SENTENCE on purpose.
+ *
+ *  The owner's ask is «может общую цифру шанса на проход первого тура делать, но чтобы она всё-таки
+ *  реальность отражала и не скакала от недели к неделе» – a general first-round figure he can plan
+ *  on two weeks out, when withdrawal is still free. `EventPreview.fieldChance` is that figure (see
+ *  its own note, and `fieldChance` in engine/season/preview.ts for why it holds still).
+ *
+ *  ⚠⚠ THE WHOLE REASON THIS FUNCTION EXISTS RATHER THAN A SECOND ARM OF `firstMatchLabel`: two
+ *  different numbers may not be shown under one name. Before the draw the ring answers «a typical
+ *  opponent at this level»; from week − 1 it answers «THIS girl», and it jumps when it changes over
+ *  – because the draw is news. A card that called both of them «her chance to win the first match»
+ *  would make that jump look like the instability round 31 #4 was reported for.
+ *
+ *  ⚠ IT ENDS ON THE OWNER'S OWN SENTENCE rather than a second wording of the same fact:
+ *  `DRAW_NOT_MADE_NOTE` is already on the plaque beside the ring, which is what makes the state
+ *  VISIBLE (this label and the title below are a screen reader's and a mouse's only route to it). */
+export function fieldChanceLabel(p: FieldOdds): string {
+  if (p.fieldChance === null) return DRAW_NOT_MADE_NOTE
+  return `Her chance to win a first match at this level: ${Math.round(p.fieldChance * 100)} percent. ${DRAW_NOT_MADE_NOTE}`
+}
+
+/** ...and its hover title, the short form, exactly as `firstMatchTitle` is of `firstMatchLabel`. */
+export function fieldChanceTitle(p: FieldOdds): string {
+  if (p.fieldChance === null) return DRAW_NOT_MADE_NOTE
+  return 'A typical first round at this level'
 }
 
 /** The store-backed half: the three facts that need the live snapshot to answer. */

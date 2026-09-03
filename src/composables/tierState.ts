@@ -327,6 +327,82 @@ export function preferredWeekEvent<E extends { tier: TierId; entered: boolean; e
   return best
 }
 
+/** Just enough of an event to stand in a week's stack: the pick's three fields, an identity, and the
+ *  two facts that decide whether a card is worth OFFERING rather than merely worth leading with. */
+export interface StackableEvent {
+  id: string
+  tier: TierId
+  entered: boolean
+  eligible: boolean
+  deadlineWeek: number
+  outgrown?: boolean
+}
+
+/** CAN SHE ACT ON THIS CARD THIS WEEK – she is in it, or its list is still open to her. One
+ *  definition, because `weekEventStack` below, the Season header's «N of them on the cards below»
+ *  counter and «is this week still hers to plan» must not come to mean three different things. */
+export function eventActionable(e: StackableEvent, week: number): boolean {
+  return e.entered || (e.eligible && week <= e.deadlineWeek)
+}
+
+/**
+ * ⭐⭐⭐ ROUND 34 #14 – EVERY CARD A WEEK OFFERS, LEAD FIRST. The owner's ruling on the calendar item,
+ * and it retires R15-9's one-row-per-week rule that rounds 31, 32 and 33 all built on:
+ *
+ *   «я как раз в одном из раундов и спрашивал про несколько карточек из доступных на одной неделе,
+ *   я бы на это посмотрел, тем более, что это не меняет игровую механику никак, чисто интерфейсная
+ *   правка на свайп карточек. И никакого конфликта тогда нет – потому что есть выбор.»
+ *
+ * WHAT IT IS FOR. Bundle B measured the cause: Slam, WT500 and WT1000 anchor 22 of the 49 playable
+ * week-offsets, the same offsets in every world for ever, and `buildSeason` then places the cadence
+ * rungs blind to those anchors – so at WTA #111 her W75 lands on a week a taller rung already owns
+ * and `preferredWeekEvent` shows the taller one. Measured over six seasons outside the top 50, the
+ * rungs he could not find are exactly the ones losing that contest (docs/rounds/round-34.md #14).
+ * The owner chose the DISPLAY fix over the supply fix: the week keeps every card, and he swipes.
+ *
+ * ⚠ THE LEAD IS `preferredWeekEvent`, UNCHANGED. Everything rounds 31/32/33 pinned about "the card
+ * this week shows" is still true of `stack[0]`: entered first, then enterable, then the tallest
+ * rung. This function only adds what was standing behind it, which is why that function is not
+ * deleted and not wrapped – the single representative is still the right answer for a feed line, a
+ * marker, a name and a rest-cost quote.
+ *
+ * ⚠⚠ AND ONLY WHAT SHE COULD ACTUALLY PLAY EARNS A SECOND CARD. Two exclusions, both the owner's –
+ * his word is «доступных», the AVAILABLE ones:
+ *   * NOT ACTIONABLE. A rung she cannot enter is aspiration, and aspiration is worth exactly ONE
+ *     card at the head of a week (the 06.08 ruling, `preferredWeekEvent`'s own note: «the feed is
+ *     also how she learns what is out there»). A swipe through four locked cards is the sterilised
+ *     calendar that ruling exists to prevent.
+ *   * OUTGROWN. She is past it. It has stayed ENTERABLE since 06.08 and it still leads a week that
+ *     holds nothing else, so nothing is hidden that was not hidden before – but it is not something
+ *     to offer her a second card for.
+ *
+ * ⚠⚠ AND THE OUTGROWN CLAUSE IS WHY THIS DOES NOT REACH THE THREE RUNGS HIS ITEM NAMES, WHICH IS
+ * MEASURED AND REPORTED RATHER THAN QUIETLY ACCEPTED. At WTA #111 `hasOutgrown` is true of W50, W75
+ * and W100, so they lose a week to a taller rung AND are refused a second card: the stacked-week
+ * loser census (`tools/r34-calendar-tiers.ts --why`) reads W50 outgrown x188, W75 x163, W100 x64.
+ * Dropping this one clause takes W75 from 2.4 rows a season to 6.4 and W100 from 1.6 to 3.1; the
+ * clause stays because the 06.08 ruling gives an outgrown rung exactly one card at the head of a
+ * week, and the number is in the round-34 ledger so the owner can overrule it in one line.
+ *
+ * ⚠ IT CANNOT PUT A CARD ON AN EMPTY WEEK, WHICH IS THE HALF THE MEASUREMENT CARED ABOUT. The 12 of
+ * 48 weeks that showed her NOTHING at WTA #111 are filtered one storey up by `feedShows`, and this
+ * function only ever reads a list that has already passed it: a week with no visible event returns
+ * an empty stack, exactly as it drew no row before.
+ *
+ * ⚠ THE TAIL IS SORTED TALLEST-FIRST – `preferredWeekEvent`'s third tiebreak applied to the rest of
+ * the stack rather than a second ordering rule of its own. `buildSeason` already emits a week
+ * strongest-first, so this is usually a no-op; it is written down because "usually" is how an order
+ * comes to depend on the order a list arrived in.
+ */
+export function weekEventStack<E extends StackableEvent>(events: readonly E[], week: number): E[] {
+  const lead = preferredWeekEvent(events)
+  if (!lead) return []
+  const rest = events
+    .filter((e) => e.id !== lead.id && eventActionable(e, week) && !e.outgrown)
+    .sort((a, b) => TIER_LADDER.indexOf(b.tier) - TIER_LADDER.indexOf(a.tier))
+  return [lead, ...rest]
+}
+
 /**
  * THE TABLE A RUNG'S ENTRY THRESHOLD IS COUNTED IN – the UI's copy of `entryStatus`'s own on-ramp
  * rule (world.ts): the bottom rung of a table is opened by the table BELOW it, because a player

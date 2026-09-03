@@ -274,12 +274,118 @@ for and would otherwise have no line.
   rule at a time: taking Sora off `.note-title` reddens 3 arms, off `.note-figure` 2, off
   `.budget-total` 2.
 
-- [?] **5. «с нашим текущим "процент прохода 1го круга" на карточках турниров планировать всё равно
+- [x] **5. «с нашим текущим "процент прохода 1го круга" на карточках турниров планировать всё равно
   не получается, потому что за неделю нельзя сняться с турнира бесплатно – это бессмысленная фича…
   Какие у нас ещё здесь варианты? … надо хотя бы что-то примерное писать до жеребьевки»** – **ask**,
   and it reopens round 31 #4. ⚠ The band was supposed to be the pre-draw information; he is saying it
   is not enough to plan on. Round 31 #3 already measured the band as degenerate on junior and domestic
   cards – that finding and this complaint are the same defect.
+  – `[x]` **BUILT, AND IT IS A NEW READ OFF A NUMBER THE ENGINE WAS ALREADY COMPUTING AND THROWING
+  AWAY.** His ruling: «за 2 недели до турнира можно сняться бесплатно, но ты не знаешь шансов, а за
+  неделю ты знаешь шансы, но сняться бесплатно нельзя. В итоге у тебя нет планирования… может общую
+  цифру шанса на проход первого тура делать, но чтобы она всё-таки реальность отражала и не скакала
+  от недели к неделе?»
+
+  **WHAT SHIPPED.** `strengthOf` has folded her MEAN CHANCE against the rung's expected field since
+  round 31 #3 and then discarded the number to keep three words. `fieldChance(field, mine)` is that
+  fold, exported and named; `strengthOf` bands its answer; `EventPreview.fieldChance` carries it. The
+  three surfaces that already draw an odds ring – the Season card, the Calendar marker and the
+  NextTournament panel – draw it BEFORE the draw, from the one composable that owns ring copy. **No
+  model, no constant, no new draw**: `tierExpectedField` and `ratingOf` were already being called on
+  every card, and are now read once into two locals so the band and the number are provably the same
+  reading.
+
+  ⚠⚠ **BOTH FIGURES SHIP, AND THEY ARE NOT UNDER ONE LABEL.** Once the draw exists the ring goes back
+  to the sharper opponent-based `firstMatchChance` – removing it would reverse his own round-31 #4
+  ruling («прямо на карточке турнира писать имя и ранг соперницы… возле этого круга с шансом»). What
+  keeps that honest is that the two rings answer DIFFERENT questions in their own words:
+  `fieldChanceLabel` says «Her chance to win a first match at this level: N percent» and ends on his
+  own existing sentence «The draw has not been made yet.»; `firstMatchLabel` says «Her chance to win
+  the first match: N percent, against <name>». The pre-draw ring also wears its own class
+  (`.field-ring`). ⭐ And nothing new is said ON SCREEN: the plaque beside the ring already prints
+  «The draw has not been made yet.» before and «First round: <name>, #<rank>.» after, which is the
+  owner's own copy telling the player which state the card is in. The two new strings are the ring's
+  ACCESSIBLE NAME and its hover title – the only route a screen reader or a mouse has to a graphic –
+  and they are the one thing here invariant 4 asks be named, so: **the exact new strings are
+  `Her chance to win a first match at this level: N percent. The draw has not been made yet.` and
+  `A typical first round at this level`.**
+
+  **THE PROPERTY, MEASURED** (`tools/r34-field-chance.ts` – 575 tournaments across nine careers, each
+  followed FIVE weeks while still pre-draw; both arms out of ONE `upcomingEvents` pass per week, the
+  control recovered by moving the tracked event's week past `DRAW_LEAD_WEEKS` in a copy of
+  `world.season`, which flips `drawMade` and provably nothing else):
+
+  | | moved at all | mean span | worst | girls named |
+  | --- | --- | --- | --- | --- |
+  | **the new FIELD figure** | 267 of 575 | **0.48 pts** | **3 pts** | – |
+  | the OPPONENT figure it replaces | **574 of 575** | **18.43 pts** | **65 pts** | 2041 for 575 tournaments |
+
+  One card, verbatim from the tool (`--weeks 6`, so seven readings rather than the table's five):
+  `W35 w48  FIELD 72% 72% 72% 73% 73% 73% 73%  (span 1)   OPPONENT 75% 81% 67% 62% 75% 81% 67%
+  (span 19, 6 names)`. That is his «80% → 54%» reproduced in kind on our own careers, beside the
+  number that replaces it – same card, same weeks, one line apart.
+
+  ⚠ **THE ONE STEP HE WILL MEET, MEASURED SO IT IS NOT A SURPRISE.** At week − 1 the ring stops
+  answering «a typical opponent at this level» and starts answering «this girl», and the number on
+  the card moves **9.1 points on average, 36 at worst**. That is news – the draw happening is the
+  most informative event in the card's life – and it is why the two are not shown under one label:
+  the plaque under the ring says «The draw has not been made yet.» right up to the week the step
+  happens, and «First round: <name>, #<rank>.» from the step onwards.
+
+  ⚠ **IT IS NOT FROZEN, AND THAT IS THE HONEST NUMBER RATHER THAN THE FLATTERING ONE.** Two things
+  still move it by a point and both are news: the world's own slow drift (the conveyor retiring and
+  replacing professionals) and HER OWN GROWTH – at thirteen she genuinely outgrows a rung by about 5
+  rating points over the weeks a card sits on screen. A figure that walks one point in the direction
+  she is walking is not «скачет от недели к неделе».
+
+  ⚠⚠ **ROUND 31 #3'S DEGENERACY WAS RE-CHECKED BEFORE ANYTHING WAS BUILT ON THE BAND, AND IT DOES NOT
+  STILL HOLD.** That round fixed it – the band stopped reading a standings table whose Spearman
+  against actual rating is 0.11 – and this is the confirmation, per rung, over every observation
+  (min / mean / max, and how many DISTINCT integer percents the rung printed):
+
+  | rung | reads | distinct values |
+  | --- | --- | --- |
+  | Local | 61 / **70.2** / 81% | 19 |
+  | Regional | 58 / **68.1** / 78% | 18 |
+  | National | 51 / **61.4** / 72% | 11 |
+  | J30 | 48 / **59.6** / 72% | 24 |
+  | J60 | 43 / **55.2** / 68% | 23 |
+  | J300 | 36 / **47.6** / 58% | 14 |
+  | W15 / W35 / W50 | 82.0 / 77.4 / 70.9% | 14 / 16 / 18 |
+  | W75 / W100 / WT125 | 64.6 / 55.4 / 49.9% | 23 / 15 / 14 |
+  | WT250 / WT500 / WT1000 | 41.5 / 36.2 / 40.9% | 22 / 23 / 20 |
+  | Slam | 39 / **48.1** / 59% | 15 |
+
+  The junior and domestic rungs separate cleanly (J300 47.6 < J60 55.2 < J30 59.6 < National 61.4 <
+  Regional 68.1 < Local 70.2) and none of them is a constant. ⚠ **One reading he should see anyway**,
+  because it is a number where before there was only a word: **W15 reads 82% – HIGHER than a Local
+  Open's 70%.** That is the shipped band's own ordering surfaced, not something this item introduced
+  (`tierExpectedField` filters by `isTierAgeOpen`, so W15's universe is the sixteen-and-overs while a
+  Local's is everybody, and the W15 card has said «She is among the strongest entered» all along).
+  Nothing was tuned to hide it.
+
+  **Evidence.** `tests/round34-field-chance.test.ts` (5 arms): the same tournament read week after
+  week before its draw prints the same number (bound 3 pts, the measured worst); the CONTROL – the
+  opponent figure on those same cards in those same weeks swings, at least one by 20+ points while
+  its field figure holds, and the mean swing is 5x larger card for card; it DOES move when the
+  field's class changes (a 300-point stronger field moves it 0.3, monotone in her level too, and an
+  empty rung reads null rather than an invented 50%); the figure and the WORD beside it are one
+  reading at the shipped cuts; and the degeneracy sweep above. ⚠ Mutation-verified with three
+  mutations and three different verdicts – the figure folded over `drawnField`'s entrants (i.e. asked
+  about this week's REDRAW) reddens 2, the BAND folded over a different population from the figure
+  reddens 1, `tierExpectedField`'s window widened to the whole of-age universe reddens 1. ⚠ That
+  middle one was GREEN against the first draft, which read the rounded percent with a tolerance: the
+  two populations landed in the same bucket on every card. It bites against `preview.fieldChance`
+  itself with no slack, and the test says so in place.
+
+  **Guard tests re-aimed – none deleted, none loosened, both with a ⚠ note in place:**
+  * `tests/component/round31-draw-reveal.test.ts` – its pre-draw arm forbade THREE things (a name, a
+    ring, a percentage) and two of those were the same claim twice, since the opponent ring was the
+    only percentage a card could draw. Re-aimed to the property that actually matters now: a pre-draw
+    card names nobody, and the ring it DOES draw is provably the field one (`.field-ring`, and its
+    title read back). Harder to satisfy by accident than «no percentage» was.
+  * `tests/component/round29-next-tournament.test.ts` – same repair on the panel: no VS row, nobody
+    named, the ring's label is `fieldChanceLabel`'s and contains no «against».
 
 - [x] **6. «W35 · 🔒 163 / 0 international pts вот это вот что значит? И на следующих тирах такое
   же»** – **measure**, then build or answer. A lock showing `163 / 0` is either a swapped pair or a
@@ -509,7 +615,7 @@ for and would otherwise have no line.
   single ranking place from #101 to #100. Both are fixed under item 7; everything he suspected might be
   «нормальная» is, and stayed.
 
-- [?] **14. «Календарь сезона надо ещё раз переделать … на 105 месте доступны 50, 250, 500 и шлемы,
+- [x] **14. «Календарь сезона надо ещё раз переделать … на 105 месте доступны 50, 250, 500 и шлемы,
   при этом нет 75, 100 и 125. Мне кажется, они прячутся на тех же неделях… Предлагаю с повышением
   ранга заменять более низкие турниры в сетке более высокими… они не конфликтуют в сетке, а
   заменяются динамично один другим видом»** – **measure, then design**. ⚠ The largest item in the
@@ -594,6 +700,128 @@ for and would otherwise have no line.
   ⚠ A generation-time fix cannot be rank-aware (a year block is dealt once, and her rank moves
   through the season) and a rank-aware fix cannot be at generation time – which is why (A) and (B)
   are genuinely different games rather than two spellings of one.
+
+  – `[x]` **HE RULED FOR (B) AND (B) IS BUILT.** His words: «я как раз в одном из раундов и спрашивал
+  про несколько карточек из доступных на одной неделе, я бы на это посмотрел, тем более, что это не
+  меняет игровую механику никак, чисто интерфейсная правка на свайп карточек. И никакого конфликта
+  тогда нет – потому что есть выбор.»
+
+  **WHAT SHIPPED.** `weekEventStack` (`src/composables/tierState.ts`, beside `preferredWeekEvent`)
+  answers a week with a LIST instead of a representative: the pick's own answer LEADS it, and behind
+  it comes every other visible event on that week she may actually enter and has not outgrown,
+  tallest first. `SeasonScreen`'s `calendarRows` carries `events` beside `event`, and a week whose
+  list is longer than one draws a `.week-stack.swipeable` – a scroll-snapping strip, cards at 88% of
+  the feed's width so the next one's edge shows past the first. **No new word enters the app**: the
+  affordance is that visible edge, which is what invariant 4 requires and what his own «чисто
+  интерфейсная правка на свайп карточек» describes.
+
+  ⚠ **`preferredWeekEvent` IS NOT DELETED AND NOT WRAPPED.** It is `weekEventStack`'s first line;
+  two surfaces still call it directly and the rest read its answer as `events[0]`, so every consumer
+  that wants ONE event gets exactly the event it always got. The per-consumer decision, which is the
+  half of this item that could have gone wrong quietly:
+
+  | consumer | wants | why |
+  | --- | --- | --- |
+  | `SeasonScreen.calendarRows` | **the LIST** | it is the surface the item is about |
+  | `SeasonScreen.supplyOnScreen` | **the LIST** | it exists to name «N of them on the cards below», so it must count CARDS; counting rows would under-report the very surface it reconciles with – round 21 #2b's own defect pointing the other way |
+  | `SeasonScreen.plannable` | **the LIST** | «+ Plan week» must not be offered on a week that still holds a real entry decision. `!stack.some(actionable)` is exactly what the old expression said about the lead, widened |
+  | `composables/weekDays.lookAheadFor` | the ONE | a Calendar marker is a week's IDENTITY, one line in a grid; a swipe strip inside a marker row is a different screen and he did not ask for one |
+  | `art/feedArt.feedArtUrls` | the ONE | ⚠ a BUDGET decision, named because it is a real gap: the module's rule is «the picture warmed is the picture drawn», and now only the LEAD card's court is warmed. The stack's other courts fetch on swipe. Warming the whole stack would take the ~560 KiB-a-career figure that paragraph quotes up by the card ratio (41.4 cards against 34.3 rows, +21%). Reversible in one line if he wants it |
+  | `SeasonScreen`'s booked-week rows («Skipping X», «instead of X») | the ONE | a booking replaces the week; naming one tournament is the honest single representative |
+  | `composables/restCost`, `composables/eventName` | – | they only CITE the pick in a comment; neither consumes it |
+
+  **BEFORE AND AFTER, ONE WALK, BOTH COLUMNS** (`tools/r34-calendar-tiers.ts`, extended: the shipped
+  one-row collapse and the new stack are folded from the SAME snapshots at the same weeks, so the
+  comparison cannot be a story about two different worlds – the strongest control available for a
+  display-only change). Seven measured seasons, presets 8/7/6/5 x seeds 0–3, `rows a season`:
+
+  | rung | gen/season | ONE-ROW (before) | STACK (after) | ...if the OUTGROWN clause were dropped |
+  | --- | --- | --- | --- | --- |
+  | WT500 | 10.0 | 9.3 | 9.4 | 9.4 |
+  | WT250 | 8.0 | 5.3 | **8.0** | 8.0 |
+  | W50 | 12.0 | 4.7 | 4.7 | **9.4** |
+  | Slam | 4.0 | 3.9 | 3.9 | 3.9 |
+  | J30 | 24.0 | 1.0 | **3.6** | 3.6 |
+  | WT125 | 4.0 | 2.9 | **3.4** | 4.0 |
+  | W75 | 8.0 | 2.4 | 2.4 | **6.4** |
+  | WT1000 | 8.0 | 2.4 | 2.6 | 2.6 |
+  | J60 | 15.7 | 1.4 | **2.3** | 2.3 |
+  | W100 | 4.0 | 1.6 | 1.6 | **3.1** |
+  | W35 | 15.9 | 0.7 | 0.7 | 0.9 |
+  | W15 | 24.9 | 0.3 | 0.3 | 1.1 |
+  | J300 | 4.0 | 0.1 | 0.1 | 0.3 |
+  | Local / Regional / National | 24.0 / 11.7 / 6.0 | 0.0 | 0.0 | 0.0 |
+
+  A season now draws **41.4 cards against 34.3 eventful weeks**, and **6.4 of those weeks carry more
+  than one card**. The 12-of-48 empty weeks are untouched: `weekEventStack` only ever reads a list
+  `feedShows` has already filtered, so it can lengthen a week that had a card and can never put one
+  on a week that had none.
+
+  ⚠ **AGAINST BUNDLE B'S TABLE, AND THE DIFFERENCE IS THE BRANCH, NOT THE INSTRUMENT.** Folding the
+  same six seasons it used (dropping the career that climbed to #15) the ONE-ROW column reads
+  WT500 9.2 / W50 5.5 / WT250 5.5 / Slam 3.8 / WT125 3.0 / W75 2.8 / W100 1.8 against its
+  10.0 / 5.2 / 5.0 / 4.0 / 3.3 / 3.0 / 2.0. Same tool, same seeds, same code path – what moved is the
+  WORLD: bundles A, E and F changed the ceiling bands and the endorsement/prize ladders since B
+  measured, and a career that earns differently ranks differently and meets a different calendar.
+  This is why the before/after above is one walk with two display rules rather than two runs.
+
+  ⚠⚠ **THE THING THE MEASUREMENT CONTRADICTED, AND IT IS HIS TO RULE ON.** The fix does NOT restore
+  the three rungs he named. W75 stays at 2.4 rows and W100 at 1.6, because at WTA #111 those events
+  are `outgrown` – `hasOutgrown` is true of them – and the rule as ruled refuses a SECOND card to a
+  rung she has passed. The loser census (`--why`, every stacked-week candidate that drew no card of
+  its own) says so in one line: **W50 outgrown x188, W75 outgrown x163, W100 outgrown x64,
+  WT125 outgrown x28**, against WT250 `entries closed` x19 and Slam `not eligible: locked` x9. So the
+  display fix reaches the weeks where she has a genuine choice – WT250 5.3 → 8.0, J30 1.0 → 3.6 – and
+  the rungs of his sentence are hidden by a different rule than the one this item changed.
+  **Dropping the outgrown clause is a one-line change** (`weekEventStack`'s filter) and its price is
+  the fourth column above: W75 2.4 → 6.4, W50 4.7 → 9.4, W100 1.6 → 3.1. It is NOT shipped, because
+  the 06.08 ruling gives a rung she has passed exactly one card at the head of a week and nothing
+  said today overrides that; but he asked about 75 and 100 by name, so the number is here rather
+  than in a comment. ⭐ An outgrown card already labels itself («Outgrown – she is past this level»), so the
+  change would add no wording either.
+
+  **Evidence.** MOUNTED, `tests/component/round34-week-stack.test.ts` – 5 arms over the shipped
+  `v46.json` career: a stacked week renders a card per rung (asserted on the TIERS, not on a count,
+  so a screen drawing one card twice is red), the lead is still `preferredWeekEvent`'s answer, a week
+  carrying only tennis she cannot play renders NONE, the whole feed's card count equals the rule's,
+  and the 375x667 arm – the strip must be `overflow-x: auto|scroll` (or the cards past the first are
+  unreachable) and each card's USED width must be inside the phone. ⚠ Mutation-verified, four
+  mutations with four different verdicts: `weekEventStack` returning `[lead]` reddens 4 of 5 and
+  leaves the empty-week arm green (which is what says the two claims are independent); dropping the
+  `eventActionable` filter reddens 1; `overflow-x: visible` reddens the phone arm; the card's width
+  raised to 130% reddens the phone arm – ⚠ and that last one was GREEN on the first draft, because
+  `availableWidth` stops at an element's PARENT by its own contract and I was measuring the room
+  rather than the card. The assertion reads the card's own used width now.
+
+  ⚠ **A fresh `createWorld(seed)` career is USELESS as a fixture here and the test says so**: probed
+  over 340 weeks x 3 seeds, a career nobody plays never opens a second rung, so it never stacks a
+  week and every assertion would have been thrown rather than asserted. The fixture is the golden
+  save `round16-surfaces.test.ts` already mounts this screen against.
+
+  **Guard tests re-aimed – FIVE, none deleted, none loosened, each with a ⚠ note in place:**
+  * `tests/tier-window.test.ts` «both consumers pick through the ONE rule» – the Season screen no
+    longer names `preferredWeekEvent` itself, so the assertion follows the chain one storey down
+    (`weekEventStack(` on the screen) **and pins the link as well as its ends**
+    (`const lead = preferredWeekEvent(events)` in `tierState.ts`). Strictly more than it asserted.
+  * ⚠ **Four SOURCE PINS moved by the RENAME, not by a rule change** – the card's markup is a
+    `v-for` over `row.events` now, so the event a card is about is the loop's `ev` and no longer the
+    row's `row.event`. `tests/academy.test.ts` (the travel figure is the engine's NET price),
+    `tests/round11-view.test.ts` (the SurfaceMark is asked for the card's own surface; `coachSays`
+    is called exactly once) and `tests/week-numbering.test.ts` (the Closed/closes pill COMPARES
+    weeks and prints none) all keep their protected fact to the character after the dot.
+  * ⭐ `tests/round12-view.test.ts`'s exam-week pin is the one worth reading, because the guarded
+    slice earned its keep: its `from` marker `<button v-if="row.plannable"` was **never unique** –
+    the muted training row carries the same button, AFTER the marker the slice ends on – and it had
+    been matching the event card's copy only because that one came first. Adding `&& i === 0` to the
+    card's button (a week's planner is an ACTION and two of them would be one control drawn twice)
+    moved the match to the second copy and the slice went red instead of silently widening, which is
+    exactly the failure `tests/helpers/source.ts` exists to make impossible. The marker is now the
+    unique string.
+    ⚠ And the exam PILL beside it deliberately kept no `i === 0` guard: «school owns this week» is a
+    FACT about the week and is true of every card on it, exactly like the injury and shoot chips in
+    the same row. The button is the only week-level ACTION on a card.
+  * ⭐ Nothing else moved: 110 component files and the whole unit suite are green with those five –
+    which is the measurement that says «add the list beside the pick» was the right shape.
 
 - [x] **15. «Сумма дохода на savings меняется вниз если деньги вывести. Мне кажется она не должна
   меняться, просто новое поступление будет меньше»** – **reproduce**, then build.
@@ -1215,7 +1443,13 @@ balance is nearly flat however well she does. ⚠ Not routing: endorsement money
 rate (round-28 #15). It is spending – eleven seasons of coaching, travel, court and academy cost
 $4.83M of the $4.97M that came in.
 
-## Item 5 `[?]` – the ask, sharpened. See ruling 3 in the section above.
+## Item 5 `[x]` – the ask, sharpened. See ruling 3 in the section above.
+
+⭐ **He ruled and it is built** – the pre-draw figure is `EventPreview.fieldChance`, the full result
+is on item 5's own line above, and the half of his complaint this section is about (a forecast he
+cannot act on is trivia at any accuracy) is answered by the figure existing while withdrawal is
+still free rather than by making withdrawal free. ⚠ Ruling 3's alternative – free withdrawal until
+the draw – was NOT built and is still his to call; nothing here forecloses it.
 
 ---
 

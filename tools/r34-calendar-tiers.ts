@@ -15,11 +15,20 @@
 //   SHOWN       ...that any calendar row actually rendered
 //   HIDDEN BY   which rung took the slot from it, when it lost one
 //
+// ⭐⭐⭐ ROUND 34 #14 SHIPPED THE DISPLAY FIX, SO THIS TOOL NOW PRINTS BOTH COLUMNS AT ONCE.
+// `ONE-ROW` is the shipped-until-today collapse (`preferredWeekEvent`, one card per week) and
+// `STACK` is what the screen draws now (`weekEventStack`, a card for every rung she may enter).
+// ⚠ THE TWO ARMS ARE THE SAME WALK, NOT TWO RUNS. Both columns are folded from ONE career at the
+// same weeks off the same snapshots, so the before/after cannot be a story about two different
+// worlds – the only thing that differs between the columns is the display rule, which is the whole
+// of what the item changed. That is the strongest control available for a display-only change, and
+// it is why the tool was extended rather than re-run at two commits.
+//
 // Zero engine changes, zero draws of its own: it reads the world the bench built.
 import { openCareer, stepCareerWeek, PRESETS, POLICIES } from './econ-bench'
 import { answerFork, answerRetirement, toSnapshot, type WorldState } from '../src/engine/world'
 import { rankIn } from '../src/engine/world/ladder'
-import { feedContext, feedShows, preferredWeekEvent } from '../src/composables/tierState'
+import { eventActionable, feedContext, feedShows, preferredWeekEvent, weekEventStack } from '../src/composables/tierState'
 import { TIER_LADDER, TIER_SHORT, WEEKS_PER_YEAR } from '../src/engine/season/calendar'
 import type { TierId } from '../src/engine/season/types'
 
@@ -32,6 +41,8 @@ const TARGET = argOf('target', 105)
 const BAND = argOf('band', 25)
 const SEEDS = argOf('seeds', 4)
 const MAX_WEEKS = argOf('max', 20 * WEEKS_PER_YEAR)
+const WHY = args.includes('--why')
+const WHY_BY_TIER = new Map<TierId, Map<string, number>>(TIER_LADDER.map((t) => [t, new Map<string, number>()]))
 
 function answerWhateverIsOpen(world: WorldState): void {
   if (world.fork !== null && world.fork.answer === null) answerFork(world, 'continue')
@@ -45,11 +56,15 @@ interface Row {
   inWindow: number
   offered: number
   shown: number
+  /** ROUND 34 #14: ...and how many of them the STACKED calendar shows */
+  stacked: number
+  /** ...and how many it would show if the OUTGROWN clause were dropped – priced, not shipped */
+  stackedPlus: number
   hiddenBy: Map<TierId, number>
 }
 
 function emptyRow(): Row {
-  return { generated: 0, inWindow: 0, offered: 0, shown: 0, hiddenBy: new Map() }
+  return { generated: 0, inWindow: 0, offered: 0, shown: 0, stacked: 0, stackedPlus: 0, hiddenBy: new Map() }
 }
 
 function measureOne(presetIndex: number, seedIndex: number): void {
@@ -87,6 +102,9 @@ function measureOne(presetIndex: number, seedIndex: number): void {
   }
   const everInWindow = new Set<string>()
   const everShown = new Set<string>()
+  const everStacked = new Set<string>()
+  const everStackedPlus = new Set<string>()
+  const cardsOnWeek = new Map<number, number>()
   const lostTo = new Map<string, TierId>()
   const everOffered = new Set<string>()
   const shownOnWeek = new Map<number, TierId>()
@@ -124,6 +142,36 @@ function measureOne(presetIndex: number, seedIndex: number): void {
       if (wk > startWeek + WEEKS_PER_YEAR) continue
       const candidates = snap.upcoming.filter((e) => e.week === wk && feedShows(e, feed))
       for (const c of candidates) everOffered.add(c.id)
+      // ...and the SHIPPED collapse beside it, over the same candidates.
+      const stack = weekEventStack(candidates, snap.week)
+      for (const c of stack) everStacked.add(c.id)
+      // ⚠ THE PRICE OF THE ONE CLAUSE THE RULING EXCLUDED, MEASURED RATHER THAN ARGUED. `weekEventStack`
+      // refuses a second card to a rung she has OUTGROWN; this arm is the same rule without that
+      // refusal. It is NOT what ships – it is here so the owner can see what the clause costs him on
+      // exactly the rungs his item names, because `hasOutgrown` is true of W75/W100 at WTA #111 and
+      // that is the single biggest reason the STACK column does not move them.
+      for (const c of candidates) if (eventActionable(c, snap.week)) everStackedPlus.add(c.id)
+      for (const c of stack) everStackedPlus.add(c.id)
+      cardsOnWeek.set(wk, Math.max(cardsOnWeek.get(wk) ?? 0, stack.length))
+      // ⚠ WHY A CANDIDATE DID NOT EARN ITS OWN CARD, which is the question the STACK column raises
+      // the moment it fails to move a rung the owner named. A rung can lose a week to a taller one
+      // AND be un-enterable on it; the display fix reaches the first and cannot reach the second.
+      if (WHY && candidates.length > 1) {
+        for (const c of candidates) {
+          if (stack.some((x) => x.id === c.id)) continue
+          const key = c.entered
+            ? 'entered'
+            : !c.eligible
+              ? `not eligible: ${c.ineligibleReason ?? '?'}`
+              : snap.week > c.deadlineWeek
+                ? 'entries closed'
+                : c.outgrown
+                  ? 'outgrown'
+                  : 'unknown'
+          const bucket = WHY_BY_TIER.get(c.tier)!
+          bucket.set(key, (bucket.get(key) ?? 0) + 1)
+        }
+      }
       const picked = preferredWeekEvent(candidates)
       if (!picked) continue
       everShown.add(picked.id)
@@ -142,6 +190,8 @@ function measureOne(presetIndex: number, seedIndex: number): void {
     const row = byTier.get(tier)!
     if (everInWindow.has(id)) row.inWindow++
     if (everOffered.has(id)) row.offered++
+    if (everStacked.has(id)) row.stacked++
+    if (everStackedPlus.has(id)) row.stackedPlus++
     if (everShown.has(id)) row.shown++
     else {
       const thief = lostTo.get(id)
@@ -169,7 +219,7 @@ function measureOne(presetIndex: number, seedIndex: number): void {
   console.log(
     `    SUMMARY – ${seasonWeeks.size} eventful weeks of ${WEEKS_PER_YEAR}, WTA #${rankLo}..#${rankHi} across the season`,
   )
-  console.log('    rung      generated   offered    shown   hidden by')
+  console.log('    rung      generated   offered   ONE-ROW    STACK   hidden by (one-row)')
   for (const t of TIER_LADDER) {
     const r = byTier.get(t)!
     if (r.generated === 0) continue
@@ -179,10 +229,31 @@ function measureOne(presetIndex: number, seedIndex: number): void {
       .join(', ')
     console.log(
       `    ${TIER_SHORT[t].padEnd(9)} ${String(r.generated).padStart(9)} ${String(r.offered).padStart(9)} ` +
-        `${String(r.shown).padStart(8)}   ${thieves}`,
+        `${String(r.shown).padStart(9)} ${String(r.stacked).padStart(8)}   ${thieves}`,
     )
+    const g = GLOBAL.get(t) ?? { generated: 0, shown: 0, stacked: 0, stackedPlus: 0, seasons: 0 }
+    GLOBAL.set(t, {
+      generated: g.generated + r.generated,
+      shown: g.shown + r.shown,
+      stacked: g.stacked + r.stacked,
+      stackedPlus: g.stackedPlus + r.stackedPlus,
+      seasons: g.seasons + 1,
+    })
   }
+  const weeksWithCards = [...cardsOnWeek.values()].filter((n) => n > 0).length
+  const stackedWeeks = [...cardsOnWeek.values()].filter((n) => n > 1).length
+  const totalCards = [...cardsOnWeek.values()].reduce((a, b) => a + b, 0)
+  console.log(
+    `    WEEKS – ${weeksWithCards} of ${WEEKS_PER_YEAR} drew a card, ${stackedWeeks} of them drew MORE THAN ONE; ` +
+      `${totalCards} cards against ${weeksWithCards} rows`,
+  )
+  SEASONS.push({ weeksWithCards, stackedWeeks, totalCards })
 }
+
+/** The per-rung fold across every season walked – "rows a season", which is the column bundle B's
+ *  table is ordered by and the one that reproduced his «доступны / нет» split. */
+const GLOBAL = new Map<TierId, { generated: number; shown: number; stacked: number; stackedPlus: number; seasons: number }>()
+const SEASONS: { weeksWithCards: number; stackedWeeks: number; totalCards: number }[] = []
 
 console.log(`ROUND 34 #14 – the calendar at WTA #${TARGET} (+-${BAND}), one full season per career`)
 const PRESET_ARG = (() => {
@@ -190,3 +261,37 @@ const PRESET_ARG = (() => {
   return i >= 0 && args[i + 1] ? args[i + 1].split(',').map(Number) : [8, 7, 6, 5]
 })()
 for (const p of PRESET_ARG) for (let s = 0; s < SEEDS; s++) measureOne(p, s)
+
+// =================================================================================================
+// ⭐ THE COLUMN BUNDLE B'S TABLE IS ORDERED BY – rows a season, per rung, before and after.
+// =================================================================================================
+if (SEASONS.length) {
+  console.log('\n==================================================================================')
+  console.log(`ROWS A SEASON, over ${SEASONS.length} measured seasons`)
+  console.log('  rung      gen/season   ONE-ROW   STACK   delta    (+outgrown, priced not shipped)')
+  for (const t of TIER_LADDER) {
+    const g = GLOBAL.get(t)
+    if (!g || g.seasons === 0 || g.generated === 0) continue
+    const per = (n: number) => (n / g.seasons).toFixed(1)
+    console.log(
+      `  ${TIER_SHORT[t].padEnd(9)} ${per(g.generated).padStart(10)} ${per(g.shown).padStart(9)} ` +
+        `${per(g.stacked).padStart(7)}   +${((g.stacked - g.shown) / g.seasons).toFixed(1)}` +
+        `        ${per(g.stackedPlus)}`,
+    )
+  }
+  const sum = (k: 'weeksWithCards' | 'stackedWeeks' | 'totalCards') =>
+    SEASONS.reduce((a, s2) => a + s2[k], 0) / SEASONS.length
+  console.log(
+    `\n  a season draws ${sum('weeksWithCards').toFixed(1)} eventful weeks; ${sum('stackedWeeks').toFixed(1)} of them ` +
+      `now carry more than one card, ${sum('totalCards').toFixed(1)} cards in all`,
+  )
+}
+
+if (WHY) {
+  console.log('\nWHY A CANDIDATE DREW NO CARD OF ITS OWN – every stacked-week loser, by rung')
+  for (const t of TIER_LADDER) {
+    const b = WHY_BY_TIER.get(t)!
+    if (!b.size) continue
+    console.log(`  ${TIER_SHORT[t].padEnd(9)} ${[...b.entries()].sort((a, c) => c[1] - a[1]).map(([k, n]) => `${k} x${n}`).join(', ')}`)
+  }
+}

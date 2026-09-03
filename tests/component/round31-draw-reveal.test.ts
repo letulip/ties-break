@@ -44,6 +44,16 @@ function feedWithBothStates(seed = 'r31-draw-reveal'): Snapshot {
 describe('round 31 #4 – the Season card, before and after the draw', () => {
   beforeEach(() => setActivePinia(createPinia()))
 
+  // ⚠⚠ RE-AIMED BY ROUND 34 #5 – NOT DELETED, NOT LOOSENED, AND ONE CLAUSE NARROWED BY EXACTLY ONE
+  // FACT. The pre-draw arm used to forbid THREE things: naming somebody, drawing a ring, and
+  // printing a percentage. Two of those were the same claim twice over – the opponent ring was the
+  // only percentage a card could draw – and the owner has since ruled that a pre-draw card must
+  // carry a figure («надо хотя бы что-то примерное писать до жеребьевки», round 34 #5). So a
+  // pre-draw card now DOES ring a number, and what this test guards instead is that the two numbers
+  // are told apart: the pre-draw ring wears `.field-ring` and the field label, the drawn one wears
+  // neither, and NOBODY is named before the draw. Told apart is the whole property – «do not
+  // silently show two different numbers under one label» – and it is strictly harder to satisfy by
+  // accident than «no percentage» was.
   it('every card is in exactly one of the two states, and each says so in the plaque', () => {
     const snap = feedWithBothStates()
     const w = mountSeason(snap)
@@ -54,18 +64,23 @@ describe('round 31 #4 – the Season card, before and after the draw', () => {
     let drawn = 0
     for (const card of cards) {
       const line = card.find('.event-coach-line').text()
-      const hasRing = card.find('.chance-ring').exists()
+      const ring = card.find('.chance-ring')
       if (line.endsWith(DRAW_NOT_MADE_NOTE)) {
         pending++
-        // ⚠ THE THREE THINGS A PRE-DRAW CARD MUST NOT DO: name somebody, ring a number, or print a
-        // percentage anywhere on itself.
-        expect(hasRing, 'a ring on a card whose draw has not been made').toBe(false)
-        expect(card.text(), 'a percentage before the draw').not.toMatch(/\d+\s*%/)
+        // ⚠ WHAT A PRE-DRAW CARD MUST NOT DO: name somebody, or ring the OPPONENT's number.
         expect(line).not.toContain('First round:')
+        expect(ring.exists(), 'the pre-draw card carries the field figure').toBe(true)
+        expect(ring.classes(), 'and it is the FIELD ring, not the opponent one').toContain('field-ring')
+        expect(ring.attributes('title'), 'the pre-draw ring names a level, never a girl').toBe(
+          'A typical first round at this level',
+        )
       } else {
         drawn++
         expect(line, 'a drawn card must name the opponent in the plaque').toContain('First round:')
-        expect(hasRing, 'no ring on a card whose draw HAS been made').toBe(true)
+        expect(ring.exists(), 'no ring on a card whose draw HAS been made').toBe(true)
+        expect(ring.classes(), 'the drawn card rings the OPPONENT, so it is not the field ring').not.toContain(
+          'field-ring',
+        )
         expect(card.text()).toMatch(/\d+\s*%/)
       }
     }

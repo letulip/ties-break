@@ -101,7 +101,7 @@ test('a tournament is entered on Season, and Home and the Calendar both say so',
   // is in the name; the same fixture change broke the Calendar step, which had no week in its
   // locator. One fixture, both halves of the lesson.
   //
-  // ⚠ MUTATION-VERIFIED: `:aria-label="enterActionName(row.event)"` taken off the pill in
+  // ⚠ MUTATION-VERIFIED: `:aria-label="enterActionName(ev)"` taken off the pill in
   // SeasonScreen.vue -> `Received: 0`, because with the name back to the bare visible word there is
   // no `Enter the …` control on the page at all. That zero is what this journey used to be.
   const names = await enters.evaluateAll((els) => els.map((el) => el.getAttribute('aria-label') ?? ''))
