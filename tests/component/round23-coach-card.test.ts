@@ -42,7 +42,7 @@ import { createWorld, toSnapshot } from '../../src/engine/world'
 // ⭐ ROUND 34 #2b – the birth build the band now measures FROM; see `snapshotAt`.
 import { startingSkills } from '../../src/engine/world/player'
 import { coachBlurb } from '../../src/engine/world/coachMarket'
-import { SKILL_KEYS } from '../../src/engine/development'
+import { reachableHeadroomShare, SKILL_KEYS } from '../../src/engine/development'
 import { DEFAULT_PROFILE, type CoachTier, type Snapshot } from '../../src/shared/protocol'
 
 const TIERS: CoachTier[] = ['budget', 'middle', 'high', 'elite']
@@ -68,13 +68,23 @@ async function mountCoaches(snapshot: Snapshot) {
  *  was BORN with she has taken (`realisedShare`, world/coachMarket.ts), so both ends are placed
  *  against her birth build - 20 points of headroom per attribute, `realised` of it taken. ⚠ Not a
  *  flat 60: `STARTING_SKILL_BAND.stamina` reaches 60, and a girl born at her ceiling would divide by
- *  zero. */
-function snapshotAt(realised: number): Snapshot {
-  const world = createWorld(`r23-card-${realised}`, { ...DEFAULT_PROFILE, coachTier: 'middle' })
+ *  zero.
+ *
+ *  ⚠⚠ RE-AIMED AGAIN BY ROUND 34 BUNDLE H, AND THE ARGUMENT NOW MEANS THE SHARE SHE IS SHOWN. The
+ *  read is normalised against what the age curve can REACH (`reachableHeadroomShare`, 0.867 of her
+ *  headroom on the shipped curve) rather than against `potential`, which `growWeek` approaches
+ *  geometrically and never arrives at. ⭐ WITHOUT THE MULTIPLY THE TESTS BELOW STILL PASS BUT THEIR
+ *  COMMENTS STOP BEING TRUE - "two inside band 0, two inside band 1" and "a point either side of
+ *  each of 0.40 / 0.75 / 0.90" would both be describing a scale the screen no longer reads. A pin
+ *  whose prose has quietly drifted off its own sample points is the one that gets trusted wrongly
+ *  later, so the helper moved rather than the comments. Derived, not written down, so the approved
+ *  curve wave carries it too. */
+function snapshotAt(shown: number): Snapshot {
+  const world = createWorld(`r23-card-${shown}`, { ...DEFAULT_PROFILE, coachTier: 'middle' })
   const born = startingSkills(world.seed, world.profile)
   for (const k of SKILL_KEYS) {
     world.potential[k] = born[k] + 20
-    world.skills[k] = born[k] + 20 * realised
+    world.skills[k] = born[k] + 20 * shown * reachableHeadroomShare()
   }
   return toSnapshot(world)
 }

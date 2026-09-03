@@ -408,6 +408,75 @@ export function ageAtPhysicalShare(share: number, bounds: AgeCurveBounds = ECONO
   return age
 }
 
+/** ⭐⭐⭐ ROUND 34 BUNDLE H – HOW MUCH OF HER HEADROOM THE CURVE CAN EVER ACTUALLY HAND OVER. The
+ *  honest denominator for "how much of what she could become has she become", and the reason the
+ *  owner's approved band edges mean what they say.
+ *
+ *  ⚠⚠ `potential` IS AN ASYMPTOTE AND NOBODY REACHES IT. `growWeek` gains `rate * headroom * luck` –
+ *  a SHARE of what is left – so the distance to the ceiling shrinks geometrically and never closes,
+ *  and `ageFactor` returns 0 from `declineStart`, so whatever is still unfilled at that age is
+ *  unfilled for ever. Measured on the shipped curve: the curve alone stops at 0.866 of her headroom,
+ *  a career trained perfectly with an elite well-matched coach every week of its life stops near
+ *  0.91, and a self-coached badly-matched one near 0.79. Dividing by `potential - born` therefore
+ *  showed every player a fraction of something unreachable: «At her ceiling» at 0.90 was a band only
+ *  an elite-coached career could enter, and it was not the edge that was wrong – it was the scale.
+ *
+ *  What this returns is that scale's real top: `1 - Π(1 - ageFactor(age))` over every week from
+ *  `growthStart` to `declineStart`, with every other factor in `growWeek`'s rate left at 1.
+ *
+ *  ⚠⚠ IT IS DERIVED FROM THE CURVE AND NEVER WRITTEN DOWN, AND THAT IS THE WHOLE POINT. A future
+ *  wave is already approved to raise `plateauRate` and push `declineStart` later. A literal `0.867`
+ *  here would survive that wave in silence and start understating every career the day it landed –
+ *  the same rot the shipped-constant rule in `ageAtPhysicalShare` above exists to prevent. Every
+ *  number this walk reads comes out of `ECONOMY.development.ageCurve` and out of `ageFactor` itself,
+ *  so the normaliser moves with the curve by construction. `tests/round34-reachable-ceiling.test.ts`
+ *  moves the curve in a fixture and fails if this number stands still.
+ *
+ *  ⚠ THE COACH IS DELIBERATELY NOT IN IT – curve-only, not best-coached, and the argument is that the
+ *  read is about HER. Normalising by the best-coached maximum (~0.91) would tell a well-coached girl
+ *  she has LESS left than she really has, because it would price her parent's spending into her own
+ *  ceiling; a career would read differently for two families with identical daughters. The curve is
+ *  the one part of the denominator that belongs to the player rather than to the chequebook. The
+ *  cost is the other end: a career that never hires anybody cannot reach 1.0, which is correct – she
+ *  did not realise what she could have.
+ *
+ *  ⚠ A LOOP AND NOT A FORMULA, for exactly the reason `ageAtPhysicalShare` above is one: the rate
+ *  changes every week, so a closed form would have to integrate a piecewise-linear factor and would
+ *  drift from what the engine does. The constant-rate sibling is `headroomShareTaken` in
+ *  engine/coach.ts (`1 - (1 - rate*luck)^weeks`) – the same arithmetic where the rate holds still.
+ *
+ *  ⚠ MEMOISED ON THE CURVE'S OWN VALUES, NOT ON FIRST CALL. A cache that ignored them would be a
+ *  hardcode wearing a lazy initialiser and would defeat the very test that guards this. One slot, so
+ *  it cannot grow: ~830 iterations on a miss, a string compare on a hit. Pure, zero draws.
+ *
+ *  ⚠ THE PRECEDENT IS `runsIndexCache` IN season/rival.ts, AND THE KEY IS DELIBERATELY DIFFERENT.
+ *  That one watches the knob array's IDENTITY, which is right there because its note records the
+ *  house rule it relies on: "a knob object is replaced, never scribbled on in place". The fixtures
+ *  that move THIS curve scribble on it in place and restore it – there is no whole-object swap to
+ *  watch – so identity would never miss a hit and the guard would be blind. Values it is. */
+let reachableKey = ''
+let reachableShare = 0
+export function reachableHeadroomShare(
+  bounds: AgeCurveBounds = ECONOMY.development.ageCurve,
+): number {
+  const c = ECONOMY.development.ageCurve
+  // Every value the walk below can read, so any curve change is a cache miss by construction.
+  const key = `${c.growthStart}|${c.growthEnd}|${c.peakRate}|${c.growthEase}|${c.plateauRate}|${bounds.plateauStart}|${bounds.declineStart}`
+  if (key === reachableKey) return reachableShare
+  let left = 1
+  // ⚠ THE AGE IS COMPUTED FROM THE INDEX RATHER THAN ACCUMULATED. Eight hundred `+= 1/52` steps
+  // drift; `declineStart` is also a fractional number on a career that drew its own spread, so the
+  // stop has to be compared against a clean age rather than against a running sum of remainders.
+  for (let w = 0; ; w++) {
+    const age = c.growthStart + w / WEEKS_IN_SEASON
+    if (age >= bounds.declineStart) break
+    left *= 1 - ageFactor(age, bounds)
+  }
+  reachableKey = key
+  reachableShare = 1 - left
+  return reachableShare
+}
+
 /** The training split, as a multiplier. `plan.train` runs 60 (light) to 85 (grind).
  *
  *  ⚠ SINCE v47 `plan.train` IS A PROJECTION OF THE TICKED WEEK (4/5/6 sessions -> 60/75/85), so this

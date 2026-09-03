@@ -43,7 +43,7 @@ import { migrateSave } from '../src/engine/migrations'
 import { rngFromSeed } from '../src/engine/rng'
 import { WEEKS_PER_YEAR } from '../src/engine/season/calendar'
 import { DEFAULT_PROFILE, WEEK_PLAN_PRESETS, type CoachTier, type PlayStyle } from '../src/shared/protocol'
-import { ageFactor, SKILL_KEYS, trainFactor } from '../src/engine/development'
+import { ageFactor, reachableHeadroomShare, SKILL_KEYS, trainFactor } from '../src/engine/development'
 import { region } from './helpers/source'
 
 // THE COACH LADDER (docs/specs/coach-tiers.md). Five rungs replacing a boolean, priced per hour by
@@ -762,13 +762,24 @@ describe('the room note says why the numbers are what they are', () => {
    *  `mean(skills)` by `mean(potential)` - the skill she was BORN with stopped counting as
    *  achievement - so the share is placed against her birth build here too. 20 points of headroom on
    *  every attribute, `realised` of it taken. A flat ceiling of 60 (what this used to set) would give
-   *  a born-at-60 stamina no headroom at all and divide by zero. */
-  function at(realised: number): string {
+   *  a born-at-60 stamina no headroom at all and divide by zero.
+   *
+   *  ⚠⚠ RE-AIMED AGAIN BY ROUND 34 BUNDLE H, AND THE ARGUMENT NOW MEANS THE SHARE SHE IS SHOWN. The
+   *  read is normalised against what the age curve can REACH (`reachableHeadroomShare`, 0.867 of her
+   *  headroom on the shipped curve) rather than against the asymptote `potential` is - so a career
+   *  holding 0.867 of her headroom has taken EVERYTHING available and is shown 1.0. Without this the
+   *  four sample points below collapsed into three bands (0.8 and 0.95 both read «At her ceiling»)
+   *  and this test went red on a change it is not about.
+   *
+   *  ⭐ THE MULTIPLY IS DERIVED, NOT A CONSTANT, on purpose: the approved wave that raises
+   *  `plateauRate` and pushes `declineStart` moves the normaliser, and this helper follows it instead
+   *  of having to be re-cut a third time. */
+  function at(shown: number): string {
     const world = createWorld('room', DEFAULT_PROFILE)
     const born = startingSkills(world.seed, world.profile)
     for (const k of SKILL_KEYS) {
       world.potential[k] = born[k] + 20
-      world.skills[k] = born[k] + 20 * realised
+      world.skills[k] = born[k] + 20 * shown * reachableHeadroomShare()
     }
     return coachRoomNote(world)
   }

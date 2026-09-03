@@ -14,7 +14,7 @@ import { bestFitCoachAt, buildCoachRoster, coachById, coachEdgeCorridorPp, coach
 import { OFF_SEASON_WEEKS, TIERS, TIER_LADDER, WEEKS_PER_YEAR } from '../season/calendar'
 import { ECONOMY } from '../economy'
 import type { LadderTrack, SeasonEvent, TierId } from '../season/types'
-import { ageFactor, SKILL_KEYS, trainFactor } from '../development'
+import { ageFactor, reachableHeadroomShare, SKILL_KEYS, trainFactor } from '../development'
 import { LADDER_LABEL, LADDER_TRACKS } from '../../shared/protocol'
 import type { CoachEdgePlacement, CoachMarketRow, CoachTier, HouseholdWeekly, KitOfferTerms, PlayerProfile } from '../../shared/protocol'
 import { managerCommissionCents, parentIncomeForWeekCents } from '../economy'
@@ -1075,7 +1075,8 @@ const TRAVEL_EDGE_LINE = 'Twice that on the trips the coach travels to.'
  *
  * ⚠ MONOTONE IN HEADROOM AND UNABLE TO FLICKER. `realisedShare` divides a numerator that only rises
  * by a denominator that is a career CONSTANT - her birth build and her ceiling are both fixed the
- * week she is created - and `growSkills` adds `rate * headroom * luck` with `weekLuck` positive at
+ * week she is created, and round 34 bundle H's normaliser is a pure function of the shipped age
+ * curve, so it is as still as they are - and `growSkills` adds `rate * headroom * luck` with `weekLuck` positive at
  * both ends, so skills only rise until `declineFactor` opens at 29. The band index is therefore
  * non-decreasing week over week on a career that is merely progressing, with no hysteresis needed
  * and nothing persisted to give it any. `tests/coachTiers.test.ts` ticks a real career and asserts
@@ -1110,10 +1111,33 @@ export function coachRoomNote(world: WorldState): string {
  *  `ECONOMY.development.potentialBand`. This is the same denominator with her CURRENT build over it
  *  instead of her ceiling.
  *
+ *  ⚠⚠⚠ ROUND 34 BUNDLE H – AND IT IS DIVIDED BY WHAT IS REACHABLE, NOT BY THE ASYMPTOTE (owner,
+ *  02.09: «да, перенормируй показ сразу»). `potential` is a limit `growWeek` approaches and never
+ *  arrives at: the gain is `rate * headroom * luck`, a SHARE of what is left, and `ageFactor` returns
+ *  0 from `declineStart`. So `gained / room` is a fraction of something nobody can have. Measured on
+ *  the shipped curve, the raw ratio peaked at 0.855 / 0.879 / 0.895 on the budget / middle / high
+ *  rungs – every one of them short of the approved 0.90 – so «At her ceiling» was a band only an
+ *  elite-coached career ever entered, and a parent whose girl had genuinely stopped growing was never
+ *  told to stop paying for a coach who could no longer buy anything. ⭐ The EDGES were never the
+ *  defect and they are untouched: 0.40 / 0.75 / 0.90 are the owner's approved numbers, and dividing
+ *  by `reachableHeadroomShare()` is what makes them mean what he approved them to mean.
+ *
+ *  ⚠ THE NORMALISER IS DERIVED FROM THE AGE CURVE AND IS NOT WRITTEN DOWN ANYWHERE – see
+ *  `reachableHeadroomShare` in engine/development.ts for why a literal would rot the day the approved
+ *  `plateauRate` / `declineStart` wave lands. It is CURVE-ONLY rather than best-coached: normalising
+ *  by what the dearest coach could have bought would tell a well-coached girl she has less left than
+ *  she has, and would put her parent's chequebook inside her own ceiling.
+ *
+ *  ⚠ IT IS STILL A CAREER CONSTANT, which is what keeps the no-flicker claim above mechanical. It is
+ *  a pure function of the shipped curve – nothing about this world, this week or this career enters
+ *  it – so the denominator is as fixed as her birth build and her ceiling are.
+ *
  *  Returns null when there is no room to speak of, which both callers already treat as "say
  *  nothing"; clamped to [0, 1] so the relative-age head start (which lands her a fraction above her
  *  birth build in week one) and a fully-filled ceiling both read as the ends of the scale rather
- *  than as a band that does not exist. */
+ *  than as a band that does not exist. ⭐ The clamp is what the top end costs: a career that beats
+ *  the curve – an elite coach, a grinding plan – reads 1.0 rather than something above it, which is
+ *  the correct thing to say about a girl who has taken everything she was ever going to take. */
 function realisedShare(world: WorldState): number | null {
   const born = startingSkills(world.seed, world.profile)
   let gained = 0
@@ -1123,7 +1147,9 @@ function realisedShare(world: WorldState): number | null {
     room += world.potential[k] - born[k]
   }
   if (room <= 0) return null
-  return Math.max(0, Math.min(1, gained / room))
+  const reachable = reachableHeadroomShare()
+  if (reachable <= 0) return null
+  return Math.max(0, Math.min(1, gained / (room * reachable)))
 }
 
 /** What separates the named band from its argument. One definition, two readers - this module writes
@@ -1180,7 +1206,11 @@ const ROOM_BANDS: { label: string; note: string }[] = [
  * ⚠⚠⚠ ROUND 34 #2b CHANGED THE MEASURE ITSELF, NOT ONLY THE EDGES, SO READ THE TABLE BELOW AS
  * HISTORY. `realisedShare` no longer divides `mean(skills)` by `mean(potential)`: the skill she was
  * BORN with stopped counting as achievement, and the quantity thresholded here is now the share of
- * her own headroom she has actually taken. THE ROUND-23 MEASUREMENT BELOW THEREFORE DESCRIBES A
+ * her own headroom she has actually taken. ⚠⚠ AND BUNDLE H OF THE SAME ROUND RE-NORMALISED IT AGAIN,
+ * against what the age curve can REACH (`reachableHeadroomShare`, ~0.866 of her headroom on the
+ * shipped curve) rather than against the asymptote nobody arrives at. The edges below did not move
+ * for either change - they are the owner's, approved 02.09 - and bundle H is what makes them land
+ * where he was told they would. THE ROUND-23 MEASUREMENT BELOW THEREFORE DESCRIBES A
  * SUPERSEDED QUANTITY - it is kept, unedited, because it is the evidence for how the four bands came
  * to be four bands and because the reason 0.92 was earned is still worth reading, but no figure in
  * it can be compared with a number this function sees today. Both are here on purpose.

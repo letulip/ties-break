@@ -34,7 +34,7 @@ import {
   coachRoomBandOf,
   coachRoomNote,
 } from '../src/engine/world/coachMarket'
-import { SKILL_KEYS } from '../src/engine/development'
+import { reachableHeadroomShare, SKILL_KEYS } from '../src/engine/development'
 import { createWorld, startingSkills } from '../src/engine/world'
 import { DEFAULT_PROFILE } from '../src/shared/protocol'
 
@@ -67,7 +67,14 @@ function theOldMeasure(world: ReturnType<typeof careerWith>): number {
 }
 
 /** The share the SHIPPED band is a function of, re-derived here so the ordering can be read as a
- *  number and not only as a band index. Mirrors `realisedShare` in world/coachMarket.ts. */
+ *  number and not only as a band index. Mirrors `realisedShare` in world/coachMarket.ts.
+ *
+ *  ⚠ ROUND 34 BUNDLE H ADDED THE DIVISION, and this mirror moved with it or it would have stopped
+ *  being a mirror. `potential` is an asymptote `growWeek` never arrives at, so the read is normalised
+ *  against what the age curve can actually REACH (`reachableHeadroomShare`). ⭐ NOTHING THIS FILE
+ *  ASSERTS DEPENDS ON IT: every claim below is an ORDERING or a zero, and dividing both sides by one
+ *  positive constant changes neither. It is here so a reader comparing this function with the engine
+ *  finds the same arithmetic, which is the only job it has. */
 function theShippedMeasure(world: ReturnType<typeof careerWith>): number {
   const born = startingSkills(world.seed, world.profile)
   let gained = 0
@@ -76,7 +83,7 @@ function theShippedMeasure(world: ReturnType<typeof careerWith>): number {
     gained += world.skills[k] - born[k]
     room += world.potential[k] - born[k]
   }
-  return gained / room
+  return gained / (room * reachableHeadroomShare())
 }
 
 describe('#2b the band reads TRUE realisation, so the verdict follows the work', () => {

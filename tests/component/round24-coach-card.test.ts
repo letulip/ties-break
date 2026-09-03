@@ -44,7 +44,7 @@ import CoachMarketScreen from '../../src/components/screens/CoachMarketScreen.vu
 import { useGameStore } from '../../src/stores/game'
 import { createWorld, toSnapshot } from '../../src/engine/world'
 import { startingSkills } from '../../src/engine/world/player'
-import { SKILL_KEYS } from '../../src/engine/development'
+import { reachableHeadroomShare, SKILL_KEYS } from '../../src/engine/development'
 import { DEFAULT_PROFILE, type Snapshot } from '../../src/shared/protocol'
 
 // ⚠ THIS RUNNER HAS NO localStorage AND `HomeScreen` READS IT. The same shim `home-strip-and-mail`
@@ -73,13 +73,20 @@ Object.defineProperty(globalThis, 'localStorage', {
  *  which was the share the OLD measure read (`mean(skills) / mean(potential)`). The band now reads
  *  the share of the room she was BORN with that she has actually taken, so the level is placed
  *  against her birth build: `born + realised * (potential - born)` makes `realised` exactly what the
- *  engine will compute, on any seed, with no arithmetic left in the reader's head. */
-function snapshotAt(realised: number): Snapshot {
-  const world = createWorld(`r24-card-${realised}`, { ...DEFAULT_PROFILE, coachTier: 'middle' })
+ *  engine will compute, on any seed, with no arithmetic left in the reader's head.
+ *
+ *  ⚠⚠ RE-AIMED AGAIN BY ROUND 34 BUNDLE H, AND THE ARGUMENT NOW MEANS THE SHARE SHE IS SHOWN – the
+ *  same move `round23-coach-card` made, for the same reason. The read is normalised against what the
+ *  age curve can REACH (`reachableHeadroomShare`) rather than against `potential`, which `growWeek`
+ *  approaches geometrically and never arrives at, so an argument of 0.95 has to keep meaning "nearly
+ *  everything she was ever going to have" and not "a number the screen reads as 0.82". Derived, so
+ *  the approved curve wave moves it with the code. */
+function snapshotAt(shown: number): Snapshot {
+  const world = createWorld(`r24-card-${shown}`, { ...DEFAULT_PROFILE, coachTier: 'middle' })
   const born = startingSkills(world.seed, world.profile)
   for (const k of SKILL_KEYS) {
     world.potential[k] = born[k] + 20
-    world.skills[k] = born[k] + 20 * realised
+    world.skills[k] = born[k] + 20 * shown * reachableHeadroomShare()
   }
   return toSnapshot(world)
 }
