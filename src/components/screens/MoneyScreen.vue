@@ -3209,6 +3209,32 @@ function shopRowPaidMeta(row: ShopRowView): string | undefined {
   padding-right: calc(40% + 12px);
 }
 
+/* ⭐⭐ THE NAME GETS ITS OWN LINE ON A FRAMED ROW, AND HIS OWN HANDOFF ASKS FOR IT IN AS MANY WORDS.
+   README §X: «Название – НА СВОЕЙ СТРОКЕ, С ПЕРЕНОСОМ (не в одном флекс-ряду с доходностью, иначе
+   обрезается)».
+
+   ⚠⚠ AND IT IS A REAL DEFECT AND NOT A PREFERENCE, WHICH IS WHY IT WAS FOUND BY LOOKING. `.shop-row-
+   head` is `justify-content: space-between` with a `nowrap` rate beside the name; on a full-width
+   card that is comfortable, but a framed row hands the words 40% less horizontal room and the rate
+   («Loses 15% a season», ~92px, unbreakable) takes its share off the top. Rendered at 375px in a
+   real browser, «The luxury four-by-four» broke into THREE lines against a column that had room for
+   one and a half. The card is short by construction – its height IS the words – so a name wrapping
+   three ways is the one thing that can make it tall again.
+
+   `display: block` is the whole fix: the name takes the line, the rate falls under it and keeps its
+   own colour and meaning. ⚠ NOT `flex-wrap`, which would leave the rate hard right on a line of its
+   own and read as a column heading. */
+.shop-row--art-left .shop-row-head,
+.shop-row--art-right .shop-row-head {
+  display: block;
+}
+
+.shop-row--art-left .shop-row-rate,
+.shop-row--art-right .shop-row-rate {
+  display: block;
+  margin-top: 2px;
+}
+
 /* ⭐ THE PRICE IS THE HEADLINE ON THESE ROWS – «а текущая цена отдельной строчкой белым шрифтом
    Sora (как на яхтах)», his own description of the water frame, where the figure is a large white
    number at the foot of the words. */
@@ -3245,8 +3271,32 @@ function shopRowPaidMeta(row: ShopRowView): string | undefined {
 /* «кнопку покупки можно поставить под цену» – the price on its own line and the control under it,
    which is what a full-width flex item does in a wrapping row. It buys the words the horizontal
    room he asked for on the same breath. */
-.shop-row--art-left .shop-row-buy > .shop-row-price {
-  flex: 1 0 100%;
+/* ⭐⭐⭐ THE PRICE AND THE CONTROL SHARE ONE LINE, AND HE SETTLED IT IN THREE MESSAGES ON ONE DAY.
+   All three are his, they are kept in order because the REASON is what survives all three, and the
+   third one stands:
+
+     1. item 5, «кнопку покупки можно поставить под цену – тогда больше горизонтального места для
+        надписей» – the control on its own line under the price;
+     2. «на машинах на карточках кнопку buy всё-таки поставь СЛЕВА от цены пожалуйста, ИНАЧЕ
+        КАРТОЧКА ОЧЕНЬ ВЫСОКАЯ ПОЛУЧАЕТСЯ» – he built (1), looked at it, and named the cost;
+     3. «и я ошибся: на машинах на карточках кнопку buy поставь СПРАВА от цены пожалуйста» – which
+        is also what his own frame X draws, and it is what this rule is.
+
+   ⭐⭐ THE CONSTANT ACROSS ALL THREE IS NOT THE POSITION, IT IS THE PROPERTY: **the card must not
+   grow taller.** That is the rule this whole family is built under from here – where a choice adds
+   height, take the shorter one – and it is why `.shop-row-head` above puts the name on its own line
+   as well. Measured in a real browser at 375px: stacked, the four cars stood 200.3–216.5px; sharing
+   the line they are 164.7–180.9px, about 36px each.
+
+   ⚠ THE RULE IS ONE DECLARATION BECAUSE THE ROW ALREADY DOES THE REST. `.shop-row-buy` is
+   `display: flex; align-items: center; gap: 8px` in DOM order price-then-control, which IS «price
+   on the left, button on its right»; all that has to go is the top margin the pill only ever
+   carried to space itself from the thing it used to sit under. ⚠ NO `order` ANYWHERE: reading order
+   and visual order agree, which is the arrangement that needs no override to be correct for a
+   screen reader. `tests/component/round35-shop.test.ts` holds the pair to ONE LINE by width, which
+   is the honest form of the height claim – see its own note on why a card-height ceiling is not. */
+.shop-row--art-left .shop-row-buy > .shop-action {
+  margin-top: 0;
 }
 
 .shop-row-head {

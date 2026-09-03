@@ -107,8 +107,30 @@ his words win**, and every such difference is recorded below rather than resolve
   ⚙ MEASURED off the real cascade at 375x667: **art 40.0% of the card, text column 56.8%** (the
   remainder is the card's own 12px gutter between them). His frame AA gives the yacht cards 37%, so
   «почти как в макете» lands within three points of the frame he sent.
-  **The buy control is under the price** – «кнопку покупки можно поставить под цену» – which is the
-  price claiming the whole line of a wrapping row.
+  ### ⭐⭐⭐ HE MOVED THIS CONTROL TWICE IN ONE DAY, AND THE REASON OUTLIVED BOTH MOVES
+
+  1. **item 5** – «кнопку покупки можно поставить под цену – тогда больше горизонтального места для
+     надписей»: the control on its own line, under the price.
+  2. **he built it, looked at it, and named the cost** – «на машинах на карточках кнопку buy
+     всё-таки поставь СЛЕВА от цены пожалуйста, **иначе карточка очень высокая получается**».
+  3. **and then corrected the side** – «и я ошибся: на машинах на карточках кнопку buy поставь
+     **справа** от цены пожалуйста», which is also what his own frame X draws. ⭐ **THIS IS WHAT
+     SHIPPED:** the price and the control on ONE line, price first, control to its right.
+
+  ⚙ **MEASURED in a real browser at 375px** – stacked, the four car cards stood **200.3–216.5 px**;
+  sharing the line they are **164.7–180.9 px**, about 36px off each.
+
+  ⭐⭐ **THE CONSTANT ACROSS ALL THREE IS NOT THE POSITION, IT IS THE PROPERTY: the card must not grow
+  taller.** That is the rule this family is built under from here – where a choice adds height, take
+  the shorter one – and the mounted arm is aimed at the HEIGHT rather than at the arrangement, so a
+  later edit that re-stacks the controls reddens.
+
+  ⚠ **AND ONE MORE HEIGHT FIX HIS OWN HANDOFF ASKED FOR, FOUND BY LOOKING AT IT IN A BROWSER.**
+  README §X: «Название – на своей строке, с переносом (не в одном флекс-ряду с доходностью, иначе
+  обрезается)». `.shop-row-head` is `space-between` with an unbreakable rate beside the name; a
+  framed row hands the words 40% less room, and «The luxury four-by-four» broke into THREE lines
+  against a column with space for one and a half. On a card whose height IS its words, that is the
+  one thing that can make it tall again. The name takes the line now and the rate falls under it.
 
 - [x] **6. «business - мерч без изменений (разве что надо посмотреть там расположение кнопок), а для
   академии делаем для каждой части свою карточку (как на экране машин, такой же принцип, можно
@@ -288,12 +310,29 @@ why item 8's swap kept its ids: a rename is the one shape of catalogue change th
 four-part move, which is what round 29 part three paid for with v66. `tests/goldenSaves.test.ts`
 (74 tests) is green, which is the mechanical confirmation that no version was skipped.
 
+## ⚙ HOW THE TWO HEIGHT DEFECTS WERE FOUND – it was not the tests
+
+Both the three-line name and the tall car card passed all seventeen mounted arms. They were found by
+rendering the real cascade in a real browser at 375px and reading the geometry back:
+`src/style.css` + `MoneyScreen.vue`'s own scoped block + `Card.vue`'s, over a static harness of shop
+markup, served on localhost. ⭐ The measurements in this document (art 39.8% of the card, band full
+height on every row, text column 182.6px, no control overlapping any text, card heights per row) are
+that page's own `getBoundingClientRect`, not the floor model's estimate. ⚠ The harness is a scratch
+file and is NOT committed – it is one script away from being rebuilt, and a stale copy of three
+stylesheets is worse than none.
+
+## ⚙ THE ART'S PROVENANCE
+
+Filed and attested by the owner while this wave ran (`public/images/README.md`): the shop set is
+ChatGPT image generation, post-processed in Figma, owner, 2026-09-03. `tests/legal-assets.test.ts`
+is green, so nothing in this bundle is blocked on it.
+
 ## ⚙ EVIDENCE
 
 `tests/component/round35-shop.test.ts` – **17 mounted arms**, all against a real snapshot from the
 real engine, none of them a source pin.
 
-**Nine mutations, nine reds** – every claim was watched failing before it was believed:
+**Thirteen mutations, thirteen reds** – every claim was watched failing before it was believed:
 
 | # | mutation | the arm that went red |
 | --- | --- | --- |
@@ -306,6 +345,19 @@ real engine, none of them a source pin.
 | 7 | `house-villa` repriced 1.4M → 1.5M | «property is a four-rung ladder now» |
 | 8 | `plane-small`'s painting unwired | «every rung he painted has its painting wired» |
 | 9 | a seventh segment on the switcher | item 10's «six, never seven» |
+| 10 | the buy pill given a 150px minimum | «share ONE LINE» – 229px demanded of a 200px column |
+| 11 | `order: -1` put back on the pill | «share ONE LINE» – the two are reordered against each other |
+| 12 | the price given `flex: 1 0 100%` again | «share ONE LINE» – the price claims the line and pushes the control down |
+| 13 | the framed head back to `display: flex` | «painting on the LEFT» – the name shares a flex line with the rate |
+
+⚠ **AND ONE PIN THAT WAS WRITTEN, FOUND VACUOUS AND REPLACED – recorded because it looks exactly
+like a real assertion.** The obvious way to hold «the card is short» is a ceiling on
+`boxOf(card).h`. It cannot fail: `fits.ts` models a non-column flex container as its TALLEST CHILD,
+which is right for a row and blind to a WRAP, so the buy row measures one control tall whether the
+price and the pill sit side by side or one under the other – 149px in both worlds. The claim is
+made as a WIDTH instead, which is what it really is: the pill and the price fit on one line of the
+text column, so they cannot wrap, so the card cannot grow the row he complained about. That one
+fails on mutation 10 above.
 
 **Re-aimed guards, none deleted, none loosened** – each carries a ⚠ note naming round 35 and why:
 

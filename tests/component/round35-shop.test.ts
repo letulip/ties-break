@@ -40,7 +40,7 @@ import { ECONOMY } from '../../src/engine/economy'
 import { SHELF_CATEGORY_KEYS, shelfArtUrl } from '../../src/art/shelf'
 import { rngFromSeed } from '../../src/engine/rng'
 import type { Snapshot } from '../../src/shared/protocol'
-import { aspectHeightPx, lengthPx, setViewport, PHONE } from './fits'
+import { aspectHeightPx, demandedWidth, lengthPx, setViewport, PHONE } from './fits'
 import { SHELF_TAB_LABELS, openShelfTab, shelfRow } from './shelf'
 
 /** A real career, walked by the real engine – `shop-tab.test.ts`'s own recipe. */
@@ -298,6 +298,16 @@ describe('#5-#9 – the framed rows', () => {
     expect(textShare, 'and the text keeps about the other 60%').toBeGreaterThan(0.5)
     expect(textShare).toBeLessThanOrEqual((100 - ART_SHARE) / 100)
 
+    // ⭐⭐ AND THE NAME HAS THE LINE TO ITSELF, WHICH IS A HEIGHT GUARD AND HIS HANDOFF'S OWN WORDS.
+    // README §X: «Название - на своей строке, с переносом (не в одном флекс-ряду с доходностью,
+    // иначе обрезается)». `.shop-row-head` is `space-between` with an unbreakable rate beside the
+    // name; a framed row hands the words 40% less room, and rendered at 375px in a real browser
+    // «The luxury four-by-four» broke into THREE lines against a column with space for one and a
+    // half. On a card whose height IS its words that is the one thing that can make it tall again -
+    // the same property the buy row below is protecting, in a different place.
+    const head = getComputedStyle(row.find('.shop-row-head').element)
+    expect(head.display, 'the name is not sharing a flex line with the rate').toBe('block')
+
     // ⚠ AND THE SOURCE IS SQUARE, so the crop is horizontal and never vertical – the A2c/d ruling
     // the coach strip is written under.
     const imgCs = getComputedStyle(art.find('img').element)
@@ -306,19 +316,68 @@ describe('#5-#9 – the framed rows', () => {
     wrapper.unmount()
   })
 
-  it('⭐ #5 – the buy control sits UNDER the price on a car, not beside it', async () => {
-    // «кнопку покупки можно поставить под цену - тогда больше горизонтального места для надписей».
-    // The row is a wrapping flex, so «under» is the price claiming the whole line: `flex: 1 0 100%`.
+  it('⭐⭐ #5 – the price and the buy control share ONE LINE, price first', async () => {
+    // ⚠⚠ HE SETTLED THIS IN THREE MESSAGES ON ONE DAY AND THE REASON SURVIVED ALL THREE. Item 5
+    // asked for «кнопку покупки можно поставить под цену»; he built it and named the cost – «иначе
+    // карточка очень высокая получается»; then «и я ошибся: на машинах на карточках кнопку buy
+    // поставь СПРАВА от цены пожалуйста», which is also what his frame X draws. MoneyScreen.vue's
+    // own rule carries the three quotes, where Cyrillic is allowed.
+    //
+    // ⭐⭐ SO THE PROPERTY UNDER TEST IS THE CARD'S HEIGHT AND NOT THE CONTROL'S POSITION – the
+    // position moved twice and the height argument never did. Measured in a real browser at 375px:
+    // stacked, the four cars were 200.3-216.5px; sharing the line they are 164.7-180.9px.
     setViewport(PHONE)
     const wrapper = await mountShop(toSnapshot(rich('r35-5-buy')), true)
     const { row } = await framed(wrapper, 'The unreasonable one')
     const price = row.find('.shop-row-price')
     expect(price.exists(), 'the price is on the card whether it can be reached or not').toBe(true)
-    expect(getComputedStyle(price.element).flexBasis, 'the price takes the whole line').toBe('100%')
+    const action = row.find('.shop-action')
+    // PRICE FIRST, CONTROL AFTER IT, in the document and on the screen – and no `order` override
+    // reversing one against the other, which is the arrangement a screen reader also gets right.
+    expect(
+      price.element.compareDocumentPosition(action.element) & Node.DOCUMENT_POSITION_FOLLOWING,
+      'the control follows the price',
+    ).toBeTruthy()
+    for (const el of [price.element, action.element]) {
+      expect(['', '0', 'normal'], 'neither is reordered against the other').toContain(getComputedStyle(el).order)
+    }
+    expect(
+      getComputedStyle(price.element).flexBasis,
+      'and the price does not claim the whole line, which is what pushed the control down',
+    ).not.toBe('100%')
     // ⚠ AND THE CONTROL STAYS IN THE FLOW ON A CAR – it is the property/water rows that put it on
     // the painting, by his own separate sentence. A car whose button floated would be that sentence
     // leaking one family sideways.
-    expect(getComputedStyle(row.find('.shop-action').element).position).not.toBe('absolute')
+    expect(getComputedStyle(action.element).position).not.toBe('absolute')
+
+    // ⭐⭐ AND THE HEIGHT ITSELF, MEASURED THE ONLY WAY IT HONESTLY CAN BE HERE.
+    //
+    // ⚠⚠ A CEILING ON `boxOf(card)` WAS TRIED FIRST AND IT IS VACUOUS – recorded rather than
+    // quietly dropped, because it looks exactly like a real assertion. `fits.ts`'s `stackChildren`
+    // models a non-column flex container as its TALLEST CHILD, which is right for a row and blind
+    // to a WRAP: the buy row measures one control tall whether the two items sit side by side or
+    // one under the other, so a card ceiling reads 149px in both worlds. It reddened on the
+    // structural assertions above and never on its own number, which is a pin that cannot fail.
+    //
+    // ⭐ SO THE HEIGHT CLAIM IS MADE AS A WIDTH ONE, which is what it really is: the price and the
+    // control FIT ON ONE LINE of the text column, so they cannot wrap, so the card cannot grow the
+    // row he complained about. `demandedWidth` is `assertRowFits`'s own instrument and it credits no
+    // ellipsis; the price is measured at `ADVANCE`, the constant `fits.ts` fitted against real
+    // renders. Content-independent in the direction that matters: a longer label or a dearer rung
+    // makes this tighter, never looser.
+    const cardRoom = roomInside(row.element)
+    const bodyCs = getComputedStyle(row.find('.shop-row-body').element)
+    const column = cardRoom - calcPx(bodyCs.paddingLeft, cardRoom) - calcPx(bodyCs.paddingRight, cardRoom)
+    const buyCs = getComputedStyle(row.find('.shop-row-buy').element)
+    const gap = lengthPx(buyCs.columnGap || buyCs.gap, column) || 0
+    const priceCs = getComputedStyle(price.element)
+    const priceWidth = price.text().length * lengthPx(priceCs.fontSize, 0) * 0.47
+    const needed = demandedWidth(action.element, column) + gap + priceWidth
+    expect(
+      needed,
+      `the control and ${price.text()} demand ${needed.toFixed(0)}px of a ${column.toFixed(0)}px column, ` +
+        'so they wrap and the card grows the row he asked to be rid of',
+    ).toBeLessThanOrEqual(column)
     wrapper.unmount()
   })
 
