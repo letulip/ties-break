@@ -82,3 +82,38 @@ his words win**, and every such difference is recorded below rather than resolve
 
 - [ ] **10. «переключалка между категориями магазина на самих страницах магазина остается текущей и
   не меняется»** – ⭐ an explicit DO-NOT-TOUCH. The in-page category switcher stays exactly as it is.
+
+---
+
+## ⚙ HIS ANSWERS, 03.09 – the three questions closed and one new instruction
+
+**The first car is 60k.** «60к правильная - это наш дефолт, в нейминге я ошибся - поправь
+пожалуйста». The art is renamed `cars-90.webp` → **`cars-60.webp`** (master renamed with it), and
+neither his message nor the mockup's $45,364 is the number: **the shipped default is.**
+
+**The planes: one live, one retired, and he wants a second live one.** «у нас сейчас один активный
+за 18м, раньше был еще за 28м, а я прошу добавить второй за 7м с картинкой». Confirmed in
+`economy.ts`: `plane-long` carries `retired`, whose own comment says it «is only what keeps it off
+the shelf and out of `buyAsset`» – it is still valued, still billed and still sells for anyone who
+owns one. ⭐ So the ladder becomes **two live planes, 7M and 18M**, and the retired 28M stays
+retired. `air-7` and `air-18` are exactly the two arts needed.
+
+**Property's price line: his second spelling.** «в строке "worth now" показывать текущую цену, а
+цену покупки убрать совсем, раз прибавка и так видна. - верно.»
+
+## ⭐ NEW – the six category cards are TALL, not square
+
+> «Давай на главной магазина вот эти 6 основых карточек сделаем не квадратными, как в макете, а
+> высокими (смотри соотношение сторон картинок), на них как раз вниз хорошо надписи встанут.»
+
+⭐⭐ **The arts specify the layout themselves, and they were measured rather than guessed:**
+
+| | pixels | ratio |
+| --- | --- | --- |
+| the six category tiles (`invest`, `business`, `property`, `cars`, `water`, `air`) | **332 x 512** | **0.65** – tall |
+| every item tile (`cars-60`, `property-240`, `water-900`, `air-7`, …) | **512 x 512** | **1.00** – square |
+
+So the category grid is portrait cards with the name at the foot, and the item rows are square
+paintings at full card height – which is exactly the two shapes he described, in the two shapes the
+paintings already are. At 375px, three columns with the shipped gaps puts a category card near
+**105 x 162 px**; measure it rather than trusting that arithmetic.
