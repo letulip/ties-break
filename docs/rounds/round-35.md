@@ -337,3 +337,47 @@ praise, and it is the standard the rest are measured against.
 
   ⚠ Queued behind the shop bundle: it touches `business.ts` and the money surfaces, where that agent
   is working.
+
+- [ ] **10. «когда мы на неделе с множеством турниров уже подали заявку на какой-то, давай на других
+  на этой же неделе кнопки подачи задазаблим? Тогда не будет текущее кривое … вообще не надо будет
+  рисовать»** – **build**, and ⭐ it is the better fix by his own argument: a control that cannot be
+  used should be visibly unusable, and then the warning it needed has nothing to warn about.
+  ⚠ It lands directly on round 34 item 14's week stack – a week now offers a card per enterable
+  rung, so «the others on this week» is a set that only just started existing.
+
+- [ ] **11. «на домашнем экране сверху висит оверлей с красными буквами, но он находится ПОД hero
+  картинкой и его не видно, тоже проверь»** – **reproduce, then build.** A stacking defect: the
+  overlay paints under the hero art. ⭐ He found it while reasoning about item 10 and it is the
+  reason that item is worth doing – the message the game tries to show is invisible today.
+
+- [ ] **12. «Инвест тоже докинь пожалуйста в эту же ветку, вроде не сложная правка»** – **build.**
+  ⚠ The shop bundle deliberately skipped Invest because round 34's #19/#20 were not in this tree –
+  `round/34` merged to main as PR #121 AFTER `round/35` was branched. **`origin/main` is now merged
+  in, so the inline stake row and the fund chart with its four ranges are present** (verified:
+  `.shop-stake-row` x7 in `MoneyScreen.vue`, its CSS at line 3803, the chart's readers x20). What is
+  left is whatever frame **W-shop-investments.png** asks for beyond them – measure that before
+  building, and if the answer is «nothing», say so.
+
+- [ ] **13. Catalogue corrections he gave on 03.09** – **build.**
+  * `house-garden` moves to **$590,000** (it ships at $520,000; his art is `property-590`). ⚙ «Дом
+    пусть будет за 590к - ок».
+  * the seat counts: **the big plane carries 8 passengers, the new small one 6.** ⚠ Its shipped
+    blurb already says «Eight seats», so the big one needs no words changed; the small one gains its
+    own count.
+  * ⚠ **[?] OPEN – one price needs his word.** He wrote «самолет за 12м - 8 пассажиров», but the
+    shipped `plane.entryCents` is **$18,000,000** and his own previous message said «большой на 12
+    мест остается как был за 18м». Twelve was the SEAT count and appears to have slid into the
+    price. Do NOT move that price until he answers.
+
+---
+
+## ⭐ The art side: he ruled, and the builder was right against my brief
+
+> «у машин картинки слева; у домов, яхт и самолетов справа»
+
+That is exactly what the shop bundle shipped – `cars` + `academy` left, `property` + `water` + `air`
+right – and it built that AGAINST my brief, which said cars and water right. ⭐⭐ Its reasoning was
+better than mine and is worth keeping: «градиент справа (как на тренерах)» describes a picture on the
+LEFT, because `.cm-art` sits at `left: 0` under a right-fading mask; his own handoff §X says «строки
+с фото … слева и кнопкой Buy справа»; and «water – карточки как на домах» forces property and water
+onto the SAME side, which my version could not satisfy. **Nothing to change.**
