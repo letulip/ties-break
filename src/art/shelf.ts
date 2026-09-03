@@ -17,15 +17,15 @@
 // names by what the family buys (`car-nineteen`, `boat-sail`, `academy-courts`). Every line below is
 // one of those two vocabularies translated into the other, and the translation is the whole file.
 //
-// ⚠ TWO OF HIS STEMS DO NOT MATCH THE PRICE THEY ARE MAPPED TO, and both are recorded rather than
-// silently renamed:
+// ⚠ TWO OF HIS STEMS ONCE DISAGREED WITH THE PRICE THEY ARE MAPPED TO, and BOTH were recorded
+// rather than silently renamed – which is why both were his to settle and both now agree:
 //   `cars-60`      – was `cars-90` when it arrived; HE renamed it («60к правильная – это наш дефолт,
 //                    в нейминге я ошибся – поправь пожалуйста»), so this line and the file agree.
-//   `property-590` – the rung it belongs to is priced at $520,000 and has been since round 29. He
-//                    did NOT ask for that price to move (round 35 #7 adds two tiers and touches
-//                    nothing else), so the PRICE stands and the stem is simply his own shorthand for
-//                    "the second house". One sentence from him renames the file; nothing here has to
-//                    change for that but this line.
+//   `property-590` – the rung it belongs to was priced at $520,000 from round 29 through round 35
+//                    #7, which added two tiers and touched nothing else. ⭐ ROUND 35 #13 SETTLED IT
+//                    IN THE STEM'S FAVOUR – «Дом пусть будет за 590к - ок» – so the price moved to
+//                    $590,000 and the filename is now the price again. Nothing in this file changed
+//                    for it; the discrepancy was always the catalogue's to resolve, and it did.
 //
 // ⚠ ONE NAMESPACE, THREE KINDS OF CARD, AND THE KEYS CANNOT COLLIDE. Shop rows are keyed by their
 // engine id (`economy.ts`'s catalogue, 22 of them since round 35, all unique); the six CATEGORY

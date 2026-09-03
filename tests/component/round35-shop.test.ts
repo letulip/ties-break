@@ -483,17 +483,25 @@ describe('the ladders, pinned so a later edit cannot move a price quietly', () =
   const ladder = (family: string) =>
     CATALOGUE.filter((i) => i.family === family).map((i) => [i.id, i.entryCents] as const)
 
-  it('⭐⭐ #7 – property is a four-rung ladder now: 240k / 520k / 1.4M / 3M', () => {
+  it('⭐⭐ #7/#13 – property is a four-rung ladder now: 240k / 590k / 1.4M / 3M', () => {
     // «Добавится 2 тира домов еще: за 1.4м и за 3м» – his two prices to the digit.
-    // ⚠ $520,000 IS NOT $590,000. His painting for the second rung is named `property-590`, and he
-    // asked to ADD two tiers and to change nothing else, so the shipped price stands. If he wants
-    // the rung repriced it is one number here and this line goes red first, which is the point.
+    //
+    // ⚠⚠ RE-AIMED AT ROUND 35 #13, NEVER LOOSENED, AND THE OLD NOTE PREDICTED THIS EXACT LINE. It
+    // read «$520,000 IS NOT $590,000 … If he wants the rung repriced it is one number here and this
+    // line goes red first, which is the point» – and on 03.09 he repriced it: «Дом пусть будет за
+    // 590к - ок». So the number moved, the assertion moved with it, and the claim is the SAME
+    // claim: four rungs, in this order, at exactly these four prices, read out of `ECONOMY` rather
+    // than retyped. The pin's job was to make the change deliberate, and it did that job.
     expect(ladder('house')).toEqual([
       ['house-first', 240_000_00],
-      ['house-garden', 520_000_00],
+      ['house-garden', 590_000_00],
       ['house-villa', 1_400_000_00],
       ['house-headland', 3_000_000_00],
     ])
+    // ⚠ AND THE STEM AGREES WITH THE PRICE AGAIN, which is the whole reason he moved it: the
+    // painting he drew for this rung is `property-590`. A future edit that moves the price without
+    // moving the art (or the reverse) is the thing this pair refuses.
+    expect(shelfArtUrl('house-garden'), 'his painting for the 590k rung').toContain('property-590')
   })
 
   it('⭐⭐ #9 – two LIVE aeroplanes, 7M and 18M, and the 38M stays retired', () => {
@@ -508,6 +516,25 @@ describe('the ladders, pinned so a later edit cannot move a price quietly', () =
     const live = CATALOGUE.filter((i) => i.family === 'plane' && !i.retired)
     expect(live.map((i) => i.id)).toEqual(['plane-small', 'plane'])
     expect(CATALOGUE.find((i) => i.id === 'plane-long')!.retired).toBe(true)
+  })
+
+  it('⭐⭐ #13 – the two live aeroplanes count their cabins, seven below and ten above', () => {
+    // ⚙ HIS RULING, 03.09, AND BOTH NUMBERS ARE HIS: «самолет 18м стоит (верно) мест пусть будет 10.
+    // У маленького 7. всё.» Round 35 #9 shipped the small plane deliberately SILENT on the count
+    // (its catalogue note says why: the $18M row said «Eight seats» and two cards claiming one cabin
+    // would have been worse than saying nothing), and this is the word that closed it.
+    const blurbOf = (id: string) => CATALOGUE.find((i) => i.id === id)!.blurb
+    expect(blurbOf('plane-small'), 'the 7M carries seven').toContain('Seven seats')
+    expect(blurbOf('plane'), 'the 18M carries ten').toContain('Ten seats')
+    // ⚠ THE NEGATIVE IS THE HALF THAT CATCHES A REVERT. «Eight seats» is the string that shipped on
+    // the $18M row from round 29 #5 until this ruling, so a merge that restores it goes red here
+    // rather than quietly putting the old cabin back on his screen.
+    expect(blurbOf('plane'), 'and not the round-29 count').not.toContain('Eight seats')
+    // ⚠ AND NEITHER COUNT MOVED A PRICE – he confirmed $18M in the same sentence («стоит (верно)»)
+    // and the $7M rung was never in question. The ladder pin above is the price claim; this is the
+    // cross-check that the two edits did not travel together.
+    expect(CATALOGUE.find((i) => i.id === 'plane-small')!.entryCents).toBe(7_000_000_00)
+    expect(CATALOGUE.find((i) => i.id === 'plane')!.entryCents).toBe(18_000_000_00)
   })
 
   it('⭐⭐ #8 – the water ladder swapped two identities and not one of its four prices', () => {

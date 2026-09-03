@@ -4301,7 +4301,20 @@ export const ECONOMY = {
         stake: 'fixed',
         label: 'The house with the garden',
         blurb: 'Room for all of them, and a garden nobody has to share.',
-        entryCents: 520_000_00,
+        // ⭐⭐ ROUND 35 #13 (03.09) – $520,000 -> $590,000, AND THE PAINTING WAS RIGHT ALL ALONG.
+        // The owner: «Дом пусть будет за 590к - ок». His art for this rung has been named
+        // `property-590` since round 35 #1, and round 35 #7 deliberately left the price alone
+        // because he had asked to ADD two tiers and nothing else – see the note below, which was
+        // this rung's own record that the stem and the price disagreed. He has now ruled, so they
+        // agree: the number here IS the number in the filename.
+        //
+        // ⚠ NO SCHEMA MOVE, AND HE CLOSED THAT QUESTION HIMSELF: «Дом за 520к кто-то мог купить -
+        // никто не купил, нет игроков». A price is read live off this row at the two sites that
+        // ask – `buyAsset` (what leaves the wallet) and `shopView` (what the card quotes) – while
+        // an OWNED row is valued off its own `paidCents` (`assetWorthCents`), so an existing
+        // holding is arithmetically untouched by this line. Nothing is persisted, nothing is
+        // renamed, `SAVE_SCHEMA_VERSION` stays at 69.
+        entryCents: 590_000_00,
         annualRateBps: 300,
       },
       // ⭐⭐ ROUND 35 #7 – THE LADDER GETS ITS TOP TWO RUNGS, and the ask is one clause: «Добавится
@@ -4316,9 +4329,12 @@ export const ECONOMY = {
       // two rungs above – a house is bought and lived in, and §3f's «годовое обслуживание» is said
       // of the boats and the planes, never of these.
       //
-      // ⚠ AND NOTHING BELOW THEM MOVED. `house-garden` is still $520,000 even though his painting
-      // for it is named `property-590`; he asked to ADD two tiers and to change nothing else, so the
-      // price stands and `src/art/shelf.ts` carries the note about the stem.
+      // ⚠ AND NOTHING BELOW THEM MOVED **AT THE TIME**. `house-garden` stayed at $520,000 through
+      // this slice even though his painting for it is named `property-590`, because he had asked to
+      // ADD two tiers and to change nothing else. ⭐ ROUND 35 #13 CLOSED IT the other way – «Дом
+      // пусть будет за 590к - ок» – so the rung above now reads $590,000 and the stem is no longer
+      // a discrepancy anybody has to carry a note about. The two prices HERE are still his own and
+      // still untouched.
       {
         id: 'house-villa',
         family: 'house',
@@ -4542,19 +4558,29 @@ export const ECONOMY = {
       // waits, and about what a light aircraft really takes. ⭐ It is MINE and not his: one number,
       // and moving it moves nothing else.
       //
-      // ⚠⚠ AND ITS BLURB DELIBERATELY DOES NOT COUNT THE SEATS. His message calls this one «8 мест»
-      // and the $18M one «большой на 12 мест» – but the $18M row has said «Eight seats» since round
-      // 29 #5, and CLAUDE.md invariant 4 forbids an agent editing a shipped sentence it was not
-      // asked to edit. Writing «Eight seats» here as well would put two cards on one screen claiming
-      // the same cabin, so this row says what is true of it and says nothing about the count. One
-      // word from him – «Eight» to «Twelve» on the row below – closes it; see docs/rounds/
-      // round-35-shop.md item 9.
+      // ⚠⚠ ITS BLURB DELIBERATELY DID NOT COUNT THE SEATS, AND ROUND 35 #13 IS THE WORD THAT
+      // CLOSED IT. The row shipped silent on the cabin because his first message called this one
+      // «8 мест» and the $18M one «большой на 12 мест» while the $18M row had said «Eight seats»
+      // since round 29 #5 – two cards on one screen would have claimed the same cabin, and
+      // CLAUDE.md invariant 4 forbids an agent editing a shipped sentence it was not asked to edit.
+      // The note said one word from him closes it. On 03.09 he gave two: «самолет 18м стоит
+      // (верно) мест пусть будет 10. У маленького 7. всё.»
+      //
+      // ⭐ SO BOTH COUNTS ARE HIS, THE PRICES ARE UNTOUCHED, and the pair is consistent for the
+      // first time: seven below, ten above. ⚠ THIS IS THE ONE KIND OF WORDING CHANGE INVARIANT 4
+      // ALLOWS – he asked for these numbers by name, so the sentence moves because he moved it and
+      // not because an agent thought it read better. Nothing else on either row changed a syllable.
+      //
+      // ⭐ AND SEVEN IS A REAL AEROPLANE. His own research (docs/research/private-jets-in-tennis.md)
+      // prices Nadal's Cessna Citation CJ2+ at $5–7M for up to 8 passengers, so the $7M rung sits on
+      // an aircraft that exists at that money – the price was chosen before the research and
+      // survived it.
       {
         id: 'plane-small',
         family: 'plane',
         stake: 'fixed',
         label: 'The small plane',
-        blurb: 'Short runways, small airfields, and home the same night.',
+        blurb: 'Seven seats, short runways, and home the same night.',
         entryCents: 7_000_000_00,
         annualRateBps: -600,
         buildWeeks: 52,
@@ -4565,7 +4591,9 @@ export const ECONOMY = {
         family: 'plane',
         stake: 'fixed',
         label: 'The plane',
-        blurb: 'Eight seats and no airport that keeps them waiting.',
+        // ⭐ ROUND 35 #13 – «Eight seats» -> «Ten seats», his own count («мест пусть будет 10»).
+        // The PRICE he confirmed unchanged in the same breath: «самолет 18м стоит (верно)».
+        blurb: 'Ten seats and no airport that keeps them waiting.',
         entryCents: 18_000_000_00,
         annualRateBps: -600,
         buildWeeks: 104,
