@@ -84,7 +84,13 @@ describe('font licenses', () => {
 
   it('...and the scan is real – the four known files are actually there to be checked', () => {
     // Vacuous-truth insurance: an emptied fonts dir would pass every loop above by looping zero times.
-    expect(woff2.length).toBeGreaterThanOrEqual(4)
+    // ⚠ RE-AIMED 4 -> 3 BY ROUND 35 #8, AND IT IS NOT A LOOSENING. The number was the file COUNT
+    // when this guard was written, and its job is the sentence above it: an emptied fonts dir must
+    // not pass vacuously. Sora and Manrope went VARIABLE that day – one file each, carrying
+    // wght 400-800 and 200-800 – so two files replaced three and the honest count is three.
+    // ⭐ The families assertion below is the stronger half and did NOT move: it still names all
+    // three, so a deleted family reddens this whether the count is 3 or 4.
+    expect(woff2.length).toBeGreaterThanOrEqual(3)
     expect(families.sort()).toEqual(['caveat', 'manrope', 'sora'])
   })
 })

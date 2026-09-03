@@ -6,28 +6,42 @@
    Files under public/fonts/ (curl'd from Google Fonts/gstatic, latin subset only);
    precached automatically – the workbox glob already covers woff2. font-display:
    swap + system fallbacks so text never blocks on the download. */
+/* ⭐⭐⭐ ROUND 35 #8 – SORA AND MANROPE ARE NOW VARIABLE, AND THAT IS WHY THIS COSTS ALMOST NOTHING.
+   The app asked these two families for SEVEN faces they did not ship: Sora 700/800 (24 rules,
+   including `.diary-name` at 42px – the largest type in the app) and Manrope 600/700/800 (11 named
+   rules plus ~200 inheriting off `body`). 235 rules in all, and 111 elements on a mounted Home were
+   being SYNTHETICALLY bolded – the renderer drawing each stroke a second time, offset. The owner
+   found it as «кнопка Proceed стала с очень худым шрифтом»: round 34 #10 had set that one control
+   to 400, a REAL face, and it read thin beside a screenful of fakes.
+
+   ⚠ FIVE STATIC FILES WERE THE PLAN AND WOULD HAVE COST ~72 KB. Google serves both families as
+   VARIABLE fonts now – one file answered 600, 700 and 800 with a single sha256 – so two files
+   replace three and carry every weight between them instead:
+
+       was  manrope-400 14,108 + manrope-500 14,044 + sora-600 15,000  =  43,152 bytes
+       is   manrope-var 24,576 + sora-var    25,240                    =  49,816 bytes   (+6.5 KB)
+
+   ⚠ THE RANGES ARE READ OFF THE FILES' OWN `fvar` TABLE, not off a reference page: Manrope
+   wght 200..800, Sora wght 400..800. Both cover everything the stylesheet asks for. A weight
+   outside a range still falls back cleanly; only a weight ABOVE the heaviest face synthesises,
+   which is the defect this replaces.
+
+   ⚠ Caveat stays a single static face – it is asked for at 600 and nowhere else, and its 51 KB is
+   the handwriting, not a UI weight. */
 @font-face {
   font-family: 'Sora';
   font-style: normal;
-  font-weight: 600;
+  font-weight: 400 800;
   font-display: swap;
-  src: url('/fonts/sora-600.woff2') format('woff2');
+  src: url('/fonts/sora-var.woff2') format('woff2');
 }
 
 @font-face {
   font-family: 'Manrope';
   font-style: normal;
-  font-weight: 400;
+  font-weight: 200 800;
   font-display: swap;
-  src: url('/fonts/manrope-400.woff2') format('woff2');
-}
-
-@font-face {
-  font-family: 'Manrope';
-  font-style: normal;
-  font-weight: 500;
-  font-display: swap;
-  src: url('/fonts/manrope-500.woff2') format('woff2');
+  src: url('/fonts/manrope-var.woff2') format('woff2');
 }
 
 @font-face {

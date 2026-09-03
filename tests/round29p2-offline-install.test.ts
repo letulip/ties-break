@@ -91,7 +91,11 @@ describe('round 29 part two #7 – the art is in the PWA install', () => {
 
   it('fonts are already in, and always were – nothing to decide there', () => {
     const fonts = PUBLIC.filter((f) => f.rel.startsWith('fonts/') && f.rel.endsWith('.woff2'))
-    expect(fonts.length).toBe(4)
+    // ⚠ RE-AIMED 4 -> 3 BY ROUND 35 #8. Sora and Manrope went VARIABLE – one file each, carrying
+    // wght 400-800 and 200-800 – so two files replaced three. ⭐ The count was never this test's
+    // claim: the line below is, and it did not move. Every font file, however many there are, must
+    // be in the install.
+    expect(fonts.length).toBe(3)
     expect(fonts.every((f) => f.precached)).toBe(true)
   })
 
