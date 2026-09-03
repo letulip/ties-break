@@ -221,8 +221,17 @@ describe('⭐⭐ nine cards on a 375x667 phone, and the way on is on every one o
   //                                      чему они, потому что вопроса нет»);
   //                                 -48  the country slot and `Browse all countries` share a line.
   //
-  // 2200 leaves ~140px of headroom, which is a sentence or two of his own copy at this width – the
-  // same margin the 2100 ceiling was set with, and still 240px under the 2301px form phase 6 left.
+  // ⚠⚠ RE-AIMED DOWN BY ROUND 35 #2, 2200 -> 2100, AND IT IS A TIGHTENING RATHER THAN A MOVE. The
+  // owner asked for the flow to be drawn without the framed backing plate («без подложек с рамкой …
+  // просто квадратный арт во всю ширину (как на home)»), which took `.dialog-overlay`'s 16px inset
+  // and `.dialog-card`'s panel off this surface: the room went 635 -> 667 and the text column 311 ->
+  // 343, so the card measures 2049 where it measured 2058. Leaving 2200 standing would have left
+  // 150px of new copy able to arrive with nothing objecting, which is the exact failure mode this
+  // ceiling exists for. The numbers are printed and argued in round35-prologue.test.ts.
+  //
+  // 2100 leaves ~50px of headroom on this instrument – tighter than the 140 the old number had, and
+  // deliberately so: the age-5 card is the one screen in the walk the owner has already called a
+  // form, and it should have to argue for every line it grows.
   // MUTATION-VERIFIED: reopening the country picker (`tiles` returning POPULAR_COUNTRIES when
   // closed) reddens this and the tile count above.
   // ⚠ AND ONE THING THIS INSTRUMENT CANNOT SEE, SAID PLAINLY RATHER THAN CLAIMED: putting the two
@@ -237,7 +246,7 @@ describe('⭐⭐ nine cards on a 375x667 phone, and the way on is on every one o
     expect(
       fit.contentFloor,
       'the age-5 card has grown back past the form it was cut down from',
-    ).toBeLessThanOrEqual(2200)
+    ).toBeLessThanOrEqual(2100)
     // ⚠ AND THE COUNTRY FIELD IS THE PART THAT MOVED, asserted on its own so a future card that
     // grew somewhere ELSE cannot hide under the total. It was 631px on this instrument with the
     // nine tiles open; closed it is one tile and the way in.

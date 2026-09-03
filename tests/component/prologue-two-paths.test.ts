@@ -88,14 +88,12 @@ async function answer(wrapper: ReturnType<typeof mount>, label: string): Promise
 async function clearWeekends(wrapper: ReturnType<typeof mount>): Promise<number> {
   let weekends = 0
   for (let guard = 0; guard < 12; guard++) {
-    // ⭐ THIS YEAR'S TOURNAMENT QUESTION, if the card asked one – the SECOND BEAT on the same card
-    // (the owner's «дальше тоже можно спрашивать»). This walk always says yes, so the road it takes
-    // is the busiest one the table can produce.
-    const enter = wrapper.findAll('.prologue-answer-label').find((b) => b.text() === 'Put her name down')
-    if (enter) {
-      await answer(wrapper, 'Put her name down')
-      continue
-    }
+    // ⚠⚠ ROUND 35 #4 MOVED THE TOURNAMENT QUESTION OUT OF THIS LOOP, and that is a fix rather than a
+    // trim. It used to be a SECOND BEAT on the same painting, which is what this loop was pressing;
+    // the owner met that as a repeated screen, so the question is part of the CARD now and is
+    // answered in `answerCurrent` beside the year's own decision. Left here it would answer the NEXT
+    // card's question too - the thirteenth's is on screen the moment the twelfth is finished - and
+    // this walk would run away past the end of the childhood.
     const skip = wrapper.find('.plo-skip')
     if (skip.exists()) {
       weekends += 1
@@ -127,9 +125,19 @@ async function answerCurrent(wrapper: ReturnType<typeof mount>, age: number): Pr
   } else if (card.options) {
     const wanted = card.options.find((o) => o.id === CARRIED[age])!
     await answer(wrapper, wanted.label)
-  } else {
+  } else if (!card.tournament) {
+    // ⚠ RE-AIMED BY ROUND 35 #4, NOT LOOSENED. A card that carries a tournament question no longer
+    // synthesises a `continueLabel` control: the question and the year's own decision are ONE screen
+    // now (the owner met the two-beat version as a repeated screen), so on the thirteenth - which
+    // has no decision of its own - the ask's two answers ARE the way on.
     await answer(wrapper, card.continueLabel)
   }
+  // ⭐ ...AND THIS YEAR'S TOURNAMENT QUESTION, ON THE SAME SCREEN (the owner's «дальше тоже можно
+  // спрашивать»). This walk always says yes, so the road it takes is the busiest one the table can
+  // produce. It is answered HERE, as part of the card, rather than in `clearWeekends` - see the note
+  // there for what happens when it is not.
+  const enter = wrapper.findAll('.prologue-answer-label').some((b) => b.text() === 'Put her name down')
+  if (enter) await answer(wrapper, 'Put her name down')
   await clearWeekends(wrapper)
 }
 

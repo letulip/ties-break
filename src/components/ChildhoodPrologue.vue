@@ -49,17 +49,24 @@ import PrologueCard from './PrologueCard.vue'
 import PrologueHandover from './PrologueHandover.vue'
 import PrologueLocalOpen from './PrologueLocalOpen.vue'
 import { useGameStore } from '../stores/game'
-import { CARD_AGES, localOpenCard } from '../prologue/cards'
+import { CARD_AGES, TOURNAMENT_ANSWER, localOpenCard } from '../prologue/cards'
 import { coachBaseReadFor, coachReadFor, playedLine, WALK_COPY } from '../prologue/handover'
 import { KID_ID } from '../engine/world'
+// ⭐ ROUND 35 #7 – THE GAME'S OWN SPELLER FOR AN AGE, called HERE and not in `src/prologue`: that
+// directory's importer set is pinned to name no engine world module (tests/prologue-pool.test.ts),
+// and the handover's two age lines still have to be spelled the one way the rest of the game spells
+// an age. So the container reads the clock, the speller turns it into a word, and the copy table
+// puts the word in its own sentence.
+import { ageInWords } from '../engine/world/age'
 import { localOpensAt, outcomeOf, playLocalOpen, prologueEntrant, type LocalOpen } from '../prologue/pool'
 import type { MatchPlayer } from '../engine/match/types'
 import {
   EMPTY_RUN,
+  cardAnswered,
   cardFor,
   chosenYears,
   isComplete,
-  askAt,
+  askOn,
   enteredAges,
   moodAt,
   readTwelfth,
@@ -93,6 +100,11 @@ const at = ref(0)
 /** set once the career exists and the handover is up. It is NOT `game.snapshot !== null`: the
  *  snapshot arrives the instant the career is created, and this screen has to outlive that. */
 const handoverOpen = ref(false)
+/** ⚠⚠ ROUND 35 #7 – THE GAP BETWEEN THE LAST CARD AND THE HANDOVER, and it is a state because it
+ *  was a HOLE. See `begin()` for what the owner saw fall through it. It is not `game.busy`: that
+ *  flag is true for every command the store runs, including the `deleteCareer` inside `startAgain`,
+ *  and blanking the walk on any of them would be a much larger claim than this one. */
+const creating = ref(false)
 
 // =================================================================================================
 // ⭐⭐ THE WEEKENDS – phase 11
@@ -203,23 +215,35 @@ const reason = computed(() =>
 /** ⭐ THE RESULT'S FACE, and it is the ONE argument phase 7 left the hook for. Undefined on all nine
  *  cards, so every frame there is still exactly the one the owner picked. */
 const outcome = computed(() => resultNow.value?.outcome)
-/** ⭐⭐ THIS YEAR'S TOURNAMENT QUESTION, WHILE IT IS OPEN – the SECOND BEAT on the same card. Null on
- *  the card's own beat, on a card that carries no ask, and once the year has been answered either
- *  way. `askAt` is the whole of the decision; this component only asks whether there is one.
+/** ⭐⭐⭐ THIS YEAR'S TOURNAMENT QUESTION – ON THE CARD, FROM THE MOMENT THE CARD ARRIVES.
+ *
+ *  ⚠⚠ ROUND 35 #4 – THIS USED TO BE A `beat` REF AND THE REF IS WHAT THE OWNER SAW. It held
+ *  `'card' | 'ask'` and `answer()` flipped it, so a card that carried a question was drawn TWICE on
+ *  one painting: same kicker, same title, same picture, one paragraph and two buttons different. He
+ *  reported both of the cards that do it («she asks more», «juniour tour opens at fourteen») as
+ *  screens he had already seen. There is one beat now, so there is no ref: the ask is a part of the
+ *  card, and the card is finished when both of its questions are (`cardAnswered`).
+ *
+ *  ⚠ `askOn` AND NOT `askAt`, deliberately, and it is the same distinction `cardAnswered` records.
+ *  `askAt` answers «is it still OPEN», which is null for a year that has not been settled yet – so a
+ *  screen keyed on it would hide the question until the year was answered and then pop it in, which
+ *  is the two-beat defect wearing a smaller costume. `askOn` answers «does this card carry one»,
+ *  which is the question a LAYOUT is asking. The old ref's own bug is answered by the same change:
+ *  the thirteenth's year is settled by the twelfth (`sameAsLastYear`), and its question is simply on
+ *  its card from the start now, beside a scene that is drawn once.
  *
  *  ⚠ AND NEVER OVER A WEEKEND'S RESULT SCENE. That scene is a synthesised row and carries no ask of
- *  its own, but `askAt` is keyed on the AGE – so without the guard the eleventh's question would be
+ *  its own, but the ask is keyed on the AGE – so without the guard the eleventh's question would be
  *  drawn again on top of the result of the weekend it just bought. */
-/** ⚠⚠ WHICH BEAT OF THE YEAR IS ON SCREEN, and it is a ref rather than a derivation because the
- *  derivation LIED on the thirteenth. `askAt` is open the moment the year is settled – and the
- *  thirteenth's year is settled by the TWELFTH (`sameAsLastYear`), so a computed keyed on it alone
- *  showed the ask the instant the card arrived and the thirteenth's own scene was never drawn.
- *  Caught by the mounted walk, which could not find the card's way on. */
-const beat = ref<'card' | 'ask'>('card')
 const ask = computed(() => {
-  if (resultNow.value || beat.value !== 'ask') return undefined
-  return askAt(CARD_AGES[at.value], run.value) ?? undefined
+  if (resultNow.value) return undefined
+  return askOn(CARD_AGES[at.value], run.value) ?? undefined
 })
+/** ⭐ WHAT THIS YEAR HAS ALREADY ANSWERED, so a card carrying two questions can show which of them is
+ *  settled. Read off the run here rather than held on the card, for the same reason `warmth` and
+ *  `mood` are: `PrologueCard` reads no run. */
+const picked = computed(() => (resultNow.value ? undefined : run.value.picks[CARD_AGES[at.value]]))
+const entry = computed(() => (resultNow.value ? undefined : run.value.entries[CARD_AGES[at.value]]))
 /** ⚠ THE FIRST CARD ONLY – see `WALK_COPY.skip`. */
 const skipLabel = computed(() => (at.value === 0 ? WALK_COPY.skip : undefined))
 
@@ -261,40 +285,40 @@ async function answer(id: string | null): Promise<void> {
     return
   }
   const age = CARD_AGES[at.value]
-
-  // ⭐⭐ THE ASK BEAT. While the year's tournament question is open, THIS is what the card's answers
-  // are – so one control moves the player on, exactly as on every other beat, and «not this year»
-  // finishes the card as completely as «put her name down» does. The owner's correction is the whole
-  // of this branch: the answer closes THIS year and nothing else.
-  if (ask.value) {
-    if (id === null) return
-    run.value = withEntry(run.value, age, id)
-    beat.value = 'card'
-    queue.value = opensForYear(age)
-    if (playNext()) return
-    await step()
-    return
-  }
-
   const row = card.value
-  if (row.origins) {
+
+  // ⭐⭐⭐ ROUND 35 #4 – ONE SCREEN, TWO QUESTIONS, AND THE ANSWER SAYS WHICH ONE IT IS.
+  //
+  // The year's own answers are `PrologueOption` ids off the table; the tournament question's two are
+  // `TOURNAMENT_ANSWER`'s, which are spelled once in cards.ts and collide with no option id (the
+  // tenth's own «Enter her» is `enter`, not `enter-open`). So one control column can carry both
+  // questions and this branch is the whole of telling them apart.
+  //
+  // ⚠ THE ORDER THEY ARE ANSWERED IN IS THE PLAYER'S. Neither answer moves the screen on by itself,
+  // so the tournament question may be answered before the year or after it - the card is finished
+  // when both are, which is what `cardAnswered` says and what the guard at the foot of this function
+  // reads. That is the difference from the two-beat version, where the year had to be settled first
+  // because the ask was not on screen until it was.
+  if (id === TOURNAMENT_ANSWER.enter || id === TOURNAMENT_ANSWER.decline) {
+    // ⚠ AND ONLY ON A CARD THAT ASKS. `withEntry` writes an age-keyed answer; letting one through on
+    // a card with no `tournament` row would put an entry in the run that `enteredIn` would then read
+    // back as a real one, and the rhythm is computed off exactly that.
+    if (!askOn(age, run.value)) return
+    run.value = withEntry(run.value, age, id)
+  } else if (row.origins) {
     if (id === null) return
     run.value = withOrigin(run.value, id as FamilyBackground)
   } else if (row.options) {
     if (id === null) return
     run.value = withPick(run.value, row.age, id)
   }
-  // ⭐ AND NOW THIS YEAR'S TOURNAMENT QUESTION, IF THE CARD CARRIES ONE – the second beat, on the
-  // same painting. `ask` recomputes off the run the line above just moved, so nothing here has to
-  // decide which cards ask: the table does.
-  if (askAt(age, run.value)) {
-    beat.value = 'ask'
-    return
-  }
-  // ⭐⭐ OR, ON THE TENTH, THE WEEKEND THE CARD'S OWN DECISION JUST BOUGHT – asked of `localOpensAt`,
-  // which answers with a count off the childhood the player has actually chosen. The tournament
-  // plays WHERE THE CARD SITS: this year's answer is in the run by the lines above.
-  queue.value = opensForYear(row.age)
+  // ⭐ THE CARD STAYS UNTIL IT IS FINISHED – both of its questions, on the four cards that ask two.
+  // Nothing here decides which those are: the table does, and `cardAnswered` is the one reader.
+  if (!cardAnswered(age, run.value)) return
+  // ⭐⭐ AND THEN THE WEEKEND THE YEAR JUST BOUGHT – asked of `localOpensAt`, which answers with a
+  // count off the childhood the player has actually chosen. The tournament plays WHERE THE CARD
+  // SITS: this year's answers are all in the run by the lines above.
+  queue.value = opensForYear(age)
   if (playNext()) return
   await step()
 }
@@ -307,7 +331,6 @@ function opensForYear(age: number): { age: number; index: number }[] {
 
 /** On to the next card, or – after the ninth – into the career. */
 async function step(): Promise<void> {
-  beat.value = 'card'
   if (at.value < CARD_AGES.length - 1) {
     at.value += 1
     return
@@ -320,20 +343,38 @@ async function step(): Promise<void> {
  *  the rung she arrives on – and `potential` is not among them. */
 async function begin(): Promise<void> {
   if (!isComplete(run.value)) return
-  await game.newCareer(
-    '',
-    {
-      ...DEFAULT_PROFILE,
-      // ⚠ HER NAME, HER BIRTHDAY AND HER COUNTRY REACH `createWorld` HERE, on exactly the path the
-      // wizard's own profile takes – the `new` command has always carried a whole `PlayerProfile`,
-      // so nothing about the wire, the schema or the save moved to let this through. `birthMonth`
-      // and `birthDay` are what `kidAgeYears` reads for the 13-or-14 opening, so this is also what
-      // makes the build spec's §2.1 true of a prologue career.
-      ...settleIdentity(identity.value),
-      background: run.value.origin ?? DEFAULT_PROFILE.background,
-    },
-    { years: chosenYears(run.value), spentCents: spentCents(run.value) },
-  )
+  // ⚠⚠ ROUND 35 #7 – THE NINTH CARD MAY NOT BE DRAWN AGAIN WHILE THE CAREER IS BEING MADE, AND IT
+  // WAS. The owner: «потом еще какой-то экран (я не успел прочесть что там), который сразу сменился
+  // на She is fourteen» - a screen between the trophy and the handover that flashed past unread. It
+  // was THIS card. `newCareer` is a worker round-trip, and for the whole of the await `at` still
+  // pointed at the thirteenth and nothing else claimed the screen, so the template fell through to
+  // `<PrologueCard>` and re-drew the card the player had just finished - the third sighting of «The
+  // junior tour opens at fourteen» in one childhood, which is also half of what he filed as item 4.
+  //
+  // ⚠ IT HOLDS THE GROUND RATHER THAN A SCENE. There is nothing left to say between the last card
+  // and the handover, so the gap draws the prologue's own background and no copy at all: a screen
+  // that cannot be read in the time it is up should not have anything on it to read.
+  creating.value = true
+  try {
+    await game.newCareer(
+      '',
+      {
+        ...DEFAULT_PROFILE,
+        // ⚠ HER NAME, HER BIRTHDAY AND HER COUNTRY REACH `createWorld` HERE, on exactly the path the
+        // wizard's own profile takes – the `new` command has always carried a whole `PlayerProfile`,
+        // so nothing about the wire, the schema or the save moved to let this through. `birthMonth`
+        // and `birthDay` are what `kidAgeYears` reads for the 13-or-14 opening, so this is also what
+        // makes the build spec's §2.1 true of a prologue career.
+        ...settleIdentity(identity.value),
+        background: run.value.origin ?? DEFAULT_PROFILE.background,
+      },
+      { years: chosenYears(run.value), spentCents: spentCents(run.value) },
+    )
+  } finally {
+    // ⚠ IN A `finally`, so a refused career does not strand the player on an empty ground with no
+    // card and no handover. A failure puts the ninth card back, which is the honest place to be.
+    creating.value = false
+  }
   if (game.snapshot) handoverOpen.value = true
 }
 
@@ -358,7 +399,7 @@ async function startAgain(): Promise<void> {
   queue.value = []
   openNow.value = null
   resultNow.value = null
-  beat.value = 'card'
+  creating.value = false
   seed.value = freshSeed()
 }
 </script>
@@ -375,6 +416,7 @@ async function startAgain(): Promise<void> {
   <PrologueHandover
     v-if="handoverOpen && game.snapshot"
     :axes="game.snapshot.radar"
+    :age-word="ageInWords(game.snapshot.ageYears)"
     :base="coachBase"
     :read="coachRead"
     :spent-cents="spentCents(run)"
@@ -391,8 +433,15 @@ async function startAgain(): Promise<void> {
     v-else-if="openNow"
     :open="openNow.open"
     :kid="openNow.kid"
+    :seed="seed"
     @done="closeOpen()"
   />
+  <!-- ⚠⚠ ROUND 35 #7 - THE GAP, AND IT CARRIES NOTHING. The career is a worker round-trip and this
+       branch is what the walk shows while it runs; before it existed the template fell through to
+       the card below and re-drew the ninth one, which is the screen the owner could not read before
+       it changed. The ground only, and it is the prologue's own (`.prologue-overlay`, src/style.css)
+       so the picture does not flash to a different colour on the way to the handover. -->
+  <div v-else-if="creating" class="dialog-overlay prologue-overlay" aria-busy="true"></div>
   <PrologueCard
     v-else
     :card="card"
@@ -401,6 +450,8 @@ async function startAgain(): Promise<void> {
     :reason="reason"
     :outcome="outcome"
     :ask="ask"
+    :picked="picked"
+    :entry="entry"
     :identity="identity"
     :skip-label="skipLabel"
     :busy="game.busy"

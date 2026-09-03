@@ -1593,6 +1593,34 @@ button.primary.risky {
   z-index: 60;
 }
 
+/* ⭐⭐⭐ ROUND 35 #2 – THE PROLOGUE'S GROUND. The owner, playing the merged prologue end to end:
+   he asked for the flow to be drawn without the framed backing plate - a square painting across the
+   full width, the way the Home screen does it, with all the text and the choices beneath it - and
+   said in the same breath what he expected to get for it, which was vertical room. His words are
+   quoted in tests/component/round35-prologue.test.ts, where Cyrillic is allowed to live.
+
+   ⚠ IT IS A MODIFIER ON `.dialog-overlay` AND NOT A SECOND SCRIM, which is what keeps round-20 #3
+   in force on the surface it matters most on. Everything the prologue's cards inherit from the
+   shared box stays inherited: `position: fixed; inset: 0` (so `tests/component/fits.ts` still knows
+   what «the room there is» means) and, on the card itself, `max-height: 100%; overflow-y: auto` -
+   the height bound whose absence stopped the owner's career on `TourBriefingDialog`. What changes is
+   the two things that made the prologue read as a popup rather than as the game: the 16px inset, and
+   the dim over a page there is nothing behind.
+
+   ⚠ THE PADDING IS WHAT BUYS THE ROOM. `measureDialog` reads the overlay's own padding out of the
+   viewport before anything else - 375x667 minus 16 either side was 343x635, and it is 375x667 now.
+   Thirty-two of those pixels go straight back into the painting (a square hero is as tall as the
+   screen is wide) and the other thirty-two are room the text did not have.
+
+   ⚠ AND THE SCRIM GOES BECAUSE THERE IS NOTHING BEHIND IT. `rgba(6, 10, 20, 0.6)` dims the page a
+   dialog is covering; the prologue covers no page - it is the FIRST thing a new player sees, before
+   a career exists - so the dim was 60% of a colour over nothing. `--bg` is what the app paints its
+   own screens, which is the point: this is a screen. */
+.prologue-overlay {
+  padding: 0;
+  background: var(--bg);
+}
+
 /* THE PANEL SHELL. Everything that opens over the page - the confirm dialog, the match replay,
    the tournament flow's cards, the tier guide - is the same box: the --panel tone, a hairline,
    12px corners, 16px of padding. Five rules had written those four declarations out independently,

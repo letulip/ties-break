@@ -29,10 +29,18 @@ last-reviewed: 2026-08-31
 
 ## Now
 
-⚙ THE LIVE WAVE IS ROUND 33 – this line is machine-checked against the newest ledger in
+⚙ THE LIVE WAVE IS ROUND 35 – this line is machine-checked against the newest ledger in
 `docs/rounds/` by `scripts/doc-facts.mjs`; edit the number only by shipping a ledger.
 
-**Round 33 is the open wave** ([round-33.md](rounds/round-33.md), 01.09) – a tidy-up of three August
+**Round 35 is the open wave** ([round-35.md](rounds/round-35.md), 03.09) – the prologue, played end
+to end for the first time since it merged, seven items in one message. ⚠ It is against `main`: the
+prologue landed there with PR #120 while round 34 was being built, and `round/34` does not touch it.
+⭐ Its item #1 is this repo's named recurring disease read back at us – the prologue built a SECOND,
+smaller tournament flow instead of using the game's own – and the ledger records why the one flow
+could not simply be mounted over a weekend that awards no points, no cheque and no ranking, plus the
+smallest seam that would let it. **Read the ledger for state; do not count boxes here.**
+
+**Round 33 was the wave before it** ([round-33.md](rounds/round-33.md), 01.09) – a tidy-up of three August
 measurements that never reached main, and one item off his play. ⭐⭐ Its item #1 is the FIFTH report
 of the same complaint and the first with the structural answer: **there is no tournament screen.**
 Home's `Next tournament` plate opens `ThisWeekScreen` with an `entry` prop, so four rounds in a row
@@ -42,7 +50,7 @@ the week's own furniture. ⚙ **One thread is his to rule on and is not ours to 
 tournament becomes a real `TournamentScreen.vue`. The cost of both answers is written out in the
 ledger. **Read the ledger for state; do not count boxes here.**
 
-**Round 32 was the previous wave** ([round-32.md](rounds/round-32.md), 31.08) – two items read off his
+**Round 32 came before that** ([round-32.md](rounds/round-32.md), 31.08) – two items read off his
 play on the merged round-31 build, both diagnosed before they were filed. A shoot booked in an
 off-season week was drawn as an empty week: the winter IS the shoot season by construction
 (`WINTER_SHOOT_WEEKS`), and the calendar's off-season branch returned before the shoot's days were

@@ -93,16 +93,30 @@ const props = defineProps<{
    *  `norm` over a won draw sheet would be the picture disagreeing with the screen the player just
    *  came off. See `prologueFace` in src/art/prologue.ts for the ranking. */
   outcome?: PrologueOutcome
-  /** ⭐⭐ PHASE 11 – THIS YEAR'S TOURNAMENT QUESTION, AS A SECOND BEAT ON THE SAME CARD. Present only
-   *  while the ask is open (`askAt`), and while it is, it takes over the bottom half of the card: the
-   *  ask's own line replaces the lede and its two answers replace the card's.
+  /** ⭐⭐⭐ THIS YEAR'S TOURNAMENT QUESTION, ON THE SAME SCREEN AS THE YEAR'S OWN DECISION.
    *
-   *  ⚠ THE TWO READ LINES ARE NOT DRAWN ON THIS BEAT, deliberately. `her` and `coach` are the card's
-   *  reading of a YEAR and this beat is a question about one weekend – the same rule cards 5..8 are
-   *  written under, that a scene may not claim to have read something it cannot have seen. It also
-   *  makes the ask beat strictly SHORTER than the card's own, so the round-20 #3 fit measured on the
-   *  card covers it. */
+   *  ⚠⚠ ROUND 35 #4 – IT WAS A SECOND BEAT ON THE SAME PAINTING AND THE OWNER MET IT AS A REPEAT.
+   *  He reported seeing «she asks more» and «juniour tour opens at fourteen» twice, and he was
+   *  reading the screen correctly: nothing is duplicated in the data, but `answer()` used to run a
+   *  card as TWO beats on ONE painting - the card's own choice, and then the ask - with the same
+   *  kicker, the same title and the same picture above a different pair of buttons. A screen that
+   *  changes only below the fold is a screen the player has already read.
+   *
+   *  ⭐ SO THE TWO BEATS ARE ONE. The card's own answers and the ask's two sit in one column, in that
+   *  order, with the ask's own line between them; neither commits on its own, and the container
+   *  moves on when BOTH are answered (`cardAnswered` in run.ts). That is the fix the owner's own
+   *  layout note bought - see the style block for what the frameless column freed to pay for it.
+   *
+   *  ⚠ AND THE TWO READ LINES ARE DRAWN AGAIN. They used to be suppressed on the ask beat, because
+   *  `her` and `coach` are the card's reading of a YEAR and the beat was a question about one
+   *  weekend. There is one beat now and it is the year's, so the year's reading belongs on it. */
   ask?: TournamentAsk
+  /** ⭐ WHICH OF THE CARD'S OWN ANSWERS THIS RUN HAS TAKEN, so a screen carrying two questions can
+   *  show which of them is already settled. Owned by the container off the run, exactly as `warmth`
+   *  and `mood` are: this component reads no run. Absent on every card that cannot be half-answered. */
+  picked?: string
+  /** ...and the same for the tournament question's own answer. */
+  entry?: string
   /** ⭐ WHO SHE IS – present only while the card that asks is up (`card.identity`), and owned by the
    *  container so that walking off the card and back does not forget what was typed. */
   identity?: PrologueIdentity
@@ -203,25 +217,43 @@ function chooseCountry(code: string): void {
 /** ⭐ ONE LIST, THREE KINDS OF CARD. An origin card, a decision card and a quiet card all render the
  *  same column of controls, so nothing below branches on which card it is drawing and a card that
  *  changes kind changes no markup. The quiet card's single control is synthesised from
- *  `continueLabel`, which is why it has no note. */
-const controls = computed<{ id: string | null; label: string; note: string }[]>(() => {
-  // ⭐ PHASE 11 – THE ASK BEAT IS A FOURTH KIND OF CARD AND STILL ONE COLUMN. Two answers, same
-  // shape, same markup; it comes first because while the ask is open it IS the card's question.
-  const ask = props.ask
-  if (ask) {
-    return [
-      { id: TOURNAMENT_ANSWER.enter, label: ask.enterLabel, note: ask.enterNote },
-      { id: TOURNAMENT_ANSWER.decline, label: ask.declineLabel, note: ask.declineNote },
-    ]
-  }
+ *  `continueLabel`, which is why it has no note.
+ *
+ *  ⚠⚠ ROUND 35 #4 – AND A CARD THAT ALSO CARRIES A TOURNAMENT QUESTION SYNTHESISES NONE. The
+ *  thirteenth has no decision of its own (`sameAsLastYear`) and would otherwise draw «Wait for the
+ *  coach» directly above «Put her name down» / «Not this year» - a third answer to a question that
+ *  has two, on the one screen the whole item is about. The ask's own pair IS the way on there. */
+const choices = computed<{ id: string | null; label: string; note: string }[]>(() => {
   const list: readonly PrologueOption[] | undefined = props.card.origins ?? props.card.options
   if (list) return list.map((o) => ({ id: o.id, label: o.label, note: o.note }))
-  return [{ id: null, label: props.card.continueLabel, note: '' }]
+  return props.ask ? [] : [{ id: null, label: props.card.continueLabel, note: '' }]
 })
 
-/** ⭐ THE LINE UNDER THE TITLE. On the ask beat it is the ask's own – who is asking this year, and
- *  how hard – so the scene stays the same painting and the same year while the question changes. */
-const lede = computed(() => props.ask?.lede ?? props.card.lede)
+/** ⭐ THE TOURNAMENT QUESTION'S OWN TWO ANSWERS, in the same shape and the same markup as the card's,
+ *  because they are answers on the same screen and a second treatment would say they were a
+ *  different KIND of decision. Empty on the six cards that carry no ask. */
+const askChoices = computed<{ id: string; label: string; note: string }[]>(() => {
+  const ask = props.ask
+  if (!ask) return []
+  return [
+    { id: TOURNAMENT_ANSWER.enter, label: ask.enterLabel, note: ask.enterNote },
+    { id: TOURNAMENT_ANSWER.decline, label: ask.declineLabel, note: ask.declineNote },
+  ]
+})
+
+/** ⭐ WHICH ANSWER IS ALREADY TAKEN. ⚠ NOT A RECOMMENDATION, WHICH IS THE ONE THING THIS CARD MAY
+ *  NEVER DRAW - see the `.prologue-answer` note in the style block. It marks what the PLAYER did, on
+ *  the only screen where a card can be half-answered, and it is gone one tap later. */
+function taken(id: string | null): boolean {
+  if (id === null) return false
+  return id === props.picked || id === props.entry
+}
+
+/** ⭐ THE LINE UNDER THE TITLE, AND IT IS THE CARD'S OWN AGAIN (round 35 #4). It used to be replaced
+ *  by the ask's line on the second beat, which is exactly what made two screens out of one: the
+ *  picture and the title stayed, one paragraph changed, and the player read the same scene twice. The
+ *  ask's line is drawn where the ask is, immediately above its own two answers. */
+const lede = computed(() => props.card.lede)
 
 const her = computed(() => props.card.her[props.warmth])
 const coach = computed(() => props.card.coach[props.warmth])
@@ -251,7 +283,11 @@ useDialogFocus(cardEl)
 </script>
 
 <template>
-  <div class="dialog-overlay">
+  <!-- ⭐⭐⭐ ROUND 35 #2 – A SCREEN, NOT A POPUP. `.prologue-overlay` is the modifier declared in
+       src/style.css (his words are quoted there, and in tests/component/round35-prologue.test.ts):
+       it drops the 16px inset and the dim, and changes nothing else about the shared box - the fixed
+       full-screen scrim and the card's own height cap are what round-20 #3 put there. -->
+  <div class="dialog-overlay prologue-overlay">
     <div
       ref="cardEl"
       class="dialog-card prologue-card"
@@ -278,11 +314,10 @@ useDialogFocus(cardEl)
       <!-- WHAT YOU CAN SEE OF HER, AND IT IS NEVER A NUMBER. Two sentences: whether she is enjoying
            it, and what the person teaching her makes of it. The full argument is in cards.ts.
 
-           ⚠ NOT ON THE ASK BEAT. These two lines are the card's reading of a YEAR and the ask is a
-           question about one weekend, so a beat that kept them would be the scene reporting the year
-           twice - see the `ask` prop. It also keeps the ask beat strictly shorter than the card's
-           own, which is what makes the round-20 #3 fit measured on the card cover it. -->
-      <div v-if="!ask" class="prologue-read">
+           ⚠ ROUND 35 #4 – DRAWN ON EVERY CARD AGAIN. They used to stand down while the tournament
+           question was up, because that was a separate beat about one weekend; there is one beat now
+           and it is the year's, so the year's reading belongs on it. See the `ask` prop. -->
+      <div class="prologue-read">
         <p class="prologue-read-line">{{ her }}</p>
         <p class="prologue-read-line prologue-read-coach">{{ coach }}</p>
       </div>
@@ -430,10 +465,36 @@ useDialogFocus(cardEl)
            the one to take, on a card whose whole subject is that the choice is yours. -->
       <div class="prologue-answers">
         <button
-          v-for="control in controls"
+          v-for="control in choices"
           :key="control.id ?? 'go-on'"
           class="prologue-answer"
+          :class="{ 'is-taken': taken(control.id) }"
           type="button"
+          :aria-pressed="ask && control.id !== null ? taken(control.id) : undefined"
+          :disabled="busy"
+          @click="emit('answer', control.id)"
+        >
+          <span class="prologue-answer-label">{{ control.label }}</span>
+          <span v-if="control.note" class="prologue-answer-note">{{ control.note }}</span>
+        </button>
+
+        <!-- ⭐⭐⭐ ROUND 35 #4 - THIS YEAR'S TOURNAMENT QUESTION, ON THE SAME SCREEN AND NOT ON A
+             SECOND ONE. Its own line first, so the answers under it are answering something the
+             player has just read, and then its two answers in the card's own shape.
+
+             ⚠ INSIDE `.prologue-answers`, WHICH IS THE ONE STRUCTURAL RULE THIS SCREEN HAS. The fit
+             measurement reads the way out off the CARD'S bottom edge and needs the answers to be the
+             card's last element (`measureDialog`'s own docstring, and the walk's own precondition
+             test); a question parked between the column and the card's foot would make every fit
+             number on the walk quietly wrong while every one of them stayed green. -->
+        <p v-if="ask" class="prologue-ask">{{ ask.lede }}</p>
+        <button
+          v-for="control in askChoices"
+          :key="control.id"
+          class="prologue-answer"
+          :class="{ 'is-taken': taken(control.id) }"
+          type="button"
+          :aria-pressed="taken(control.id)"
           :disabled="busy"
           @click="emit('answer', control.id)"
         >
@@ -471,8 +532,31 @@ useDialogFocus(cardEl)
    four buttons of near-white text on white, at a measured 1.09:1, on a dialog the player could not
    dismiss. A fallback is honest only where the token is optional; for a colour that has to be
    readable it is a second design nobody reviews. */
+/* ⭐⭐⭐ ROUND 35 #2 – NO BACKING PLATE AND NO FRAME. The owner asked for the prologue to be drawn
+   as a screen: a square painting across the full width, the way Home does it, and all the text and
+   the choices under it. His words are in tests/component/round35-prologue.test.ts.
+
+   WHAT GOES: the panel tone, the hairline, the 12px corners and the TOP padding, all four of which
+   are `.dialog-card`'s and all four of which say «this is a box sitting on a page». The ground is
+   `--bg` – what the app paints its own screens – so the painting has nothing to sit on and reads as
+   the top of the screen rather than as a banner inside a card.
+
+   ⚠ WHAT STAYS, AND IT IS THE HALF THE ROUND-20 #3 FIX LIVES IN: `max-height: 100%; overflow-y:
+   auto` on `.dialog-card`, untouched and still inherited. This surface is the exact shape that rule
+   exists for – a blocking screen with prose above the way out, first thing a new player ever sees –
+   and losing the cap while making the card taller is the one way this change could have stopped a
+   career. `tests/component/prologue-walk.test.ts` measures the cap; `round35-prologue.test.ts`
+   measures what came off.
+
+   ⚠ THE SIDE PADDING IS KEPT AND IS NOT AN INCONSISTENCY. «Арт во всю ширину» is about the PICTURE,
+   and the picture already cancels this padding (`calc(100% + 32px)` and the negative margins below,
+   which is `.injury-stop-art`'s own trick). Text run to the bezel is not what Home does either. */
 .prologue-card {
   max-width: 420px;
+  padding: 0 16px 16px;
+  border: 0;
+  border-radius: 0;
+  background: var(--bg);
   text-align: left;
 }
 
@@ -507,13 +591,17 @@ useDialogFocus(cardEl)
 
    `calc(100% + 32px)` is the shared card's 16px padding cancelled on both sides, and the negative
    margins put it back over that padding. */
+/* ⚠ ROUND 35 #2 MOVED TWO OF THESE FOUR LINES. The card has no top padding to cancel any more, so
+   the negative TOP margin is gone (a -16 against a 0 would have pulled the painting off the top of
+   the screen); and the rounded top corners are gone with the frame that made them mean something -
+   a picture that is the top of the screen has no corner to round. The full-bleed trick itself is
+   unchanged: `calc(100% + 32px)` is the card's remaining 16px side padding cancelled both sides. */
 .prologue-hero {
   position: relative;
   width: calc(100% + 32px);
   aspect-ratio: 1 / 1;
-  margin: -16px -16px 12px;
+  margin: 0 -16px 12px;
   overflow: hidden;
-  border-radius: var(--radius-panel) var(--radius-panel) 0 0;
 }
 
 .prologue-hero-img {
@@ -525,13 +613,16 @@ useDialogFocus(cardEl)
 
 /* Home's `.diary-hero-fade`, ending in THIS surface's colour rather than the page's: «it takes the
    photograph into --panel by 100%, which is what makes the picture read as the page itself rather
-   than as a banner sitting on top of it». `--panel` is what `.dialog-card` is painted, so the
-   picture has no bottom edge and the kicker under it reads as part of the frame. */
+   than as a banner sitting on top of it».
+   ⚠ ROUND 35 #2 – AND THIS SURFACE'S COLOUR IS `--bg` NOW, which is nearer Home's own words than
+   `--panel` ever was: the card is painted the page, so the fade ends in the page and the picture
+   genuinely has no bottom edge. Leaving `--panel` here would have drawn a one-pixel band of the
+   frame that was just taken off, along the bottom of every painting in the walk. */
 .prologue-hero-fade {
   position: absolute;
   inset: 0;
   pointer-events: none;
-  background: linear-gradient(180deg, rgba(9, 14, 19, 0) 52%, rgba(11, 17, 23, 0.55) 82%, var(--panel) 100%);
+  background: linear-gradient(180deg, rgba(9, 14, 19, 0) 52%, rgba(11, 17, 23, 0.55) 82%, var(--bg) 100%);
 }
 
 .prologue-kicker {
@@ -827,6 +918,18 @@ useDialogFocus(cardEl)
   gap: 8px;
 }
 
+/* ⭐⭐⭐ ROUND 35 #4 – THE TOURNAMENT QUESTION'S OWN LINE, and it is what stops the two questions on
+   this screen reading as one list of four buttons. The lede's size and colour, because it is the
+   same voice saying the same kind of thing; what marks it is the gap above it and that it is the
+   last line before its own pair. Same reasoning as `.prologue-question`, which does this job for the
+   three origins on the five. */
+.prologue-ask {
+  margin: 6px 0 2px;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--ink-soft);
+}
+
 /* ⚠ ONE RULE FOR EVERY ROW, AND NO POSITIONAL SELECTOR ANYWHERE. `:first-child` or `:nth-child`
    here would be a mark by another name - the screen pointing at the answer it prefers on a card
    whose entire subject is that the decision is the parent's. Same reasoning, and the same tokens, as
@@ -847,6 +950,20 @@ useDialogFocus(cardEl)
 
 .prologue-answer:hover:not(:disabled) {
   background: var(--accent-fill);
+}
+
+/* ⭐ ROUND 35 #4 – THE ANSWER THE PLAYER HAS ALREADY TAKEN, on the one screen that can be
+   half-answered: the year's own decision and this year's tournament question sit in one column, and
+   until both are answered the card stays. Without this the first tap looks like it did nothing.
+
+   ⚠ IT IS NOT THE MARK THE RULE ABOVE FORBIDS, and the distinction is the whole of it. That rule
+   bans the screen pointing at the answer IT prefers; this points at the answer the PARENT took, it
+   can only ever be on after a press, and it is gone one tap later. It borrows `.prologue-tile.is-on`'s
+   own pair of tokens rather than inventing a third treatment, because a chosen thing looks the same
+   way everywhere on this card. */
+.prologue-answer.is-taken {
+  background: var(--accent-fill);
+  border-color: var(--accent);
 }
 
 .prologue-answer:disabled {

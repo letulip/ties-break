@@ -35,8 +35,9 @@ import '../../src/style.css'
 import { assertLegible } from './contrast'
 import { assertDismissReachable, measureDialog, setViewport, PHONE, NARROW_PHONE } from './fits'
 import PrologueHandover from '../../src/components/PrologueHandover.vue'
-import { COACH_BASE_READS, COACH_READS, HANDOVER_COPY, coachBaseReadFor, coachReadFor, spentLine, weeklySpentLine } from '../../src/prologue/handover'
+import { COACH_BASE_READS, COACH_READS, HANDOVER_COPY, coachBaseReadFor, coachReadFor, handoverRoseTitle, spentLine, weeklySpentLine } from '../../src/prologue/handover'
 import { createWorld, toSnapshot } from '../../src/engine/world'
+import { ageInWords } from '../../src/engine/world/age'
 import { handoverBaseBand, handoverRoomBand } from '../../src/engine/world/coachMarket'
 import { CARD_AGES, PROLOGUE_CARDS, TWELFTH_WANTS_MORE } from '../../src/prologue/cards'
 import { WEEKS_IN_SEASON } from '../../src/shared/dates'
@@ -46,6 +47,8 @@ import { DEFAULT_PROFILE, type HandoverBaseBand, type RadarAxis } from '../../sr
  *  worker hands the screen after `newCareer`, fog and all. */
 function realCareer(seed: string): {
   axes: RadarAxis[]
+  /** ⭐ ROUND 35 #7 – the world's own age for her, in the game's own words. */
+  ageWord: string
   band: string
   read: string
   baseBand: HandoverBaseBand | ''
@@ -55,6 +58,10 @@ function realCareer(seed: string): {
   const snap = toSnapshot(world)
   return {
     axes: snap.radar,
+    // ⭐ ROUND 35 #7 – HER AGE, off the world rather than off a caption. `Snapshot.ageYears` is
+    // `kidAgeAt(world, world.week)`, the ONE clock; `ageInWords` is the game's own speller, called
+    // by the container because `src/prologue` may name no engine world module.
+    ageWord: ageInWords(snap.ageYears),
     band: snap.handoverBand,
     read: coachReadFor(snap.handoverBand, snap.seed),
     // ⭐ PHASE 7 – the OTHER half of the read, taken off the snapshot exactly as the container takes
@@ -84,12 +91,18 @@ function seedForBand(want: string): string {
   throw new Error(`no seed in 2000 draws the band ${want} – the arm is empty and every test on it is vacuous`)
 }
 
+/** ⚠ RE-AIMED BY ROUND 35 #7, NOT LOOSENED: the handover takes `ageYears` now, and it takes it
+ *  REQUIRED, so a mount that forgot it cannot compile. The owner met this screen asserting «She is
+ *  fourteen» over a girl whose birthday is in June - who is THIRTEEN when the handover is drawn -
+ *  and the fix is the 09.08 one-clock ruling applied one screen earlier: the caption is spelled off
+ *  `Snapshot.ageYears` rather than written down. This helper passes the career's OWN number, off the
+ *  same world every assertion below reads, so nothing here is measuring an age this file invented. */
 function mountHandover(seed: string, spentCents: number, vp: { width: number; height: number }) {
   setViewport(vp)
   const career = realCareer(seed)
   const wrapper = mount(PrologueHandover, {
     attachTo: document.body,
-    props: { axes: career.axes, base: career.base, read: career.read, spentCents },
+    props: { axes: career.axes, ageWord: career.ageWord, base: career.base, read: career.read, spentCents },
   })
   const el = document.querySelector('.handover-card')!
   const answers = document.querySelector('.handover-answers')!
@@ -177,7 +190,12 @@ describe('⭐⭐ the three things on the screen (§5)', () => {
     const { wrapper, career } = mountHandover('hand-1', 18_175_00, PHONE)
     const svg = document.querySelector('.radar-svg')!
     expect(svg, 'the rose is on the screen').toBeTruthy()
-    expect(svg.getAttribute('aria-label')).toBe(HANDOVER_COPY.roseTitle)
+    // ⚠⚠ RE-AIMED BY ROUND 35 #7, AND THE RE-AIM IS THE DEFECT. This read `HANDOVER_COPY.roseTitle`,
+    // which is the literal «Where she is at fourteen»; the screen spells the age off the world now.
+    // `DEFAULT_PROFILE`'s birthday is 15 JUNE – the owner's own «ДР у нее в июне» – so the career
+    // this file mounts opens with her at THIRTEEN, and the old constant was the wrong sentence for
+    // the girl on the screen. MUTATION-VERIFIED: putting the literal back reddens this.
+    expect(svg.getAttribute('aria-label')).toBe(handoverRoseTitle(career.ageWord))
     // Five spokes for five attributes, and the contour is a real polygon rather than a stub.
     expect(document.querySelectorAll('.radar-grid line').length).toBe(career.axes.length)
     expect(document.querySelector('.radar-core')?.getAttribute('d')?.length).toBeGreaterThan(20)

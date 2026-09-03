@@ -31,12 +31,24 @@
 import { computed, useTemplateRef } from 'vue'
 import SkillsRadar from './SkillsRadar.vue'
 import { useDialogFocus } from '../composables/dialogFocus'
-import { HANDOVER_COPY, spentLine, weeklySpentLine } from '../prologue/handover'
+import { HANDOVER_COPY, handoverKicker, handoverRoseTitle, spentLine, weeklySpentLine } from '../prologue/handover'
 import type { RadarAxis } from '../shared/protocol'
 
 const props = defineProps<{
   /** the rose she arrives with – the snapshot's own axes, drawn by the shipped component */
   axes: readonly RadarAxis[]
+  /** ⭐⭐⭐ ROUND 35 #7 – HOW OLD SHE ACTUALLY IS, off the world. `Snapshot.ageYears` is
+   *  `kidAgeAt(world, world.week)` – the ONE clock (the 09.08 ruling), the same number Home prints
+   *  and every age-keyed gate reads. The two lines that name an age on this screen are spelled from
+   *  it and from nothing else.
+   *
+   *  ⚠ IT ARRIVES ALREADY SPELLED, by the game's own speller (`ageInWords`), and `src/prologue`'s
+   *  own importer pin is why – see the note over `handoverKicker`. The container calls it.
+   *
+   *  ⚠ REQUIRED, so a mount that forgets it cannot compile. The owner met this screen asserting
+   *  «She is fourteen» over a girl born in June, who is thirteen; an optional prop with a default of
+   *  fourteen would be the same caption with a longer route to it. */
+  ageWord: string
   /** ⭐ WHERE SHE STANDS TODAY, already chosen for her band – see `coachBaseReadFor`. It is the
    *  BASE and it is what the nine years BUILT; `read` below is the ROOM and it is what she was born
    *  with. Two props rather than one joined string, so the screen can space them as two sentences
@@ -62,6 +74,11 @@ const emit = defineEmits<{
 }>()
 
 const copy = HANDOVER_COPY
+/** ⭐⭐ ROUND 35 #7 – THE TWO LINES THAT NAME AN AGE, SPELLED OFF THE CLOCK. Everything else on this
+ *  screen is still a bound table entry; these two are the same table's sentence with the world's own
+ *  number in it, and `src/prologue/handover.ts` carries the account of why they had to move. */
+const kicker = computed(() => handoverKicker(props.ageWord))
+const roseTitle = computed(() => handoverRoseTitle(props.ageWord))
 const spent = computed(() => spentLine(props.spentCents))
 // ⭐ THE SAME TOTAL, SAID PER WEEK – his idea, and the one figure on this screen that is about the
 // game rather than about the childhood: a coach is billed by the week, and the player meets that
@@ -77,7 +94,12 @@ useDialogFocus(cardEl)
 </script>
 
 <template>
-  <div class="dialog-overlay">
+  <!-- ⭐⭐ ROUND 35 #2/#5 - THE SAME GROUND THE NINE CARDS ARE ON. The owner asked for the prologue
+       to be drawn without the framed backing plate, and for the rest of its screens to be brought up
+       to the manner of the one he liked; the handover is one of the rest. `.prologue-overlay` is the
+       shared modifier in src/style.css and it changes nothing structural - the fixed full-screen
+       scrim and this card's inherited `max-height: 100%; overflow-y: auto` are untouched. -->
+  <div class="dialog-overlay prologue-overlay">
     <div
       ref="cardEl"
       class="dialog-card handover-card"
@@ -86,7 +108,7 @@ useDialogFocus(cardEl)
       aria-labelledby="handover-kicker handover-title"
       tabindex="-1"
     >
-      <p id="handover-kicker" class="handover-kicker">{{ copy.kicker }}</p>
+      <p id="handover-kicker" class="handover-kicker">{{ kicker }}</p>
       <h2 id="handover-title" class="handover-title">{{ copy.title }}</h2>
 
       <!-- 1. THE FORMED ROSE, drawn by the shipped component off the snapshot's own axes. The
@@ -94,7 +116,7 @@ useDialogFocus(cardEl)
            see the rule there for why a measurement that cannot see the tallest thing on the card is
            a measurement that always passes. -->
       <div class="handover-rose">
-        <SkillsRadar :axes="axes" :title="copy.roseTitle" />
+        <SkillsRadar :axes="axes" :title="roseTitle" />
       </div>
 
       <!-- 2. THE COACH'S READ, AND SINCE PHASE 7 IT IS TWO SENTENCES UNDER ONE LABEL. No name and no
@@ -147,8 +169,19 @@ useDialogFocus(cardEl)
    ⚠ EVERY COLOUR IS A DECLARED APP TOKEN WITH NO FALLBACK, for the reason round-17 #3 wrote down and
    `.prologue-answer` repeats: `var(--card, #fff)` shipped four buttons at a measured 1.09:1 on a
    dialog the player could not dismiss. A fallback is honest only where the token is optional. */
+/* ⭐⭐ ROUND 35 #2/#5 - NO BACKING PLATE, exactly as `.prologue-card`. The panel tone, the hairline
+   and the corners come off; the ground is `--bg`, which is what the app paints its own screens, and
+   the side padding stays because text run to the bezel is not what any screen in this app does.
+   ⚠ THE HEIGHT CAP AND THE SCROLLER ARE `.dialog-card`'S AND ARE NOT TOUCHED. This card is the worst
+   case round-20 #3 exists for - a blocking screen with a picture, a paragraph, a figure and two
+   controls, at the one moment a career can still be refused - and `tests/component/
+   prologue-handover.test.ts` measures it. */
 .handover-card {
   max-width: 420px;
+  padding: 16px;
+  border: 0;
+  border-radius: 0;
+  background: var(--bg);
   text-align: left;
 }
 

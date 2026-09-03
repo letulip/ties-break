@@ -208,12 +208,35 @@ export function yearsLivedBy(run: PrologueRun, age: number): PrologueYear[] {
   return yearsSoFar(run).filter((y) => y.age <= age)
 }
 
+/** ⭐⭐⭐ ROUND 35 #4 – IS THE CARD AT `age` FINISHED? BOTH OF ITS QUESTIONS, OR NEITHER.
+ *
+ *  The owner met the tournament question as a repeated screen – «какие-то экраны у нас
+ *  повторяются» – because it was drawn as a SECOND BEAT on the same painting, after the year's own
+ *  decision had already been taken. The two are one screen now, so «the card is answered» stopped
+ *  being «the year is settled» and became this: the year AND, where the card carries one, its
+ *  tournament question.
+ *
+ *  ⚠ IT ASKS `askOn` AND NOT `askAt`, AND THE TWO ARE NOT INTERCHANGEABLE HERE. `askAt` answers «is
+ *  the question still OPEN», and it answers null for a year that is not settled yet – which is
+ *  exactly the state this function has to be able to call unfinished. `askOn` answers «does this card
+ *  carry one at all», which is the question a completeness check is actually asking.
+ *
+ *  ⚠ AND IT DOES NOT KNOW ABOUT THE ORIGIN. The five's decision is its `origins` and not its year
+ *  (see `isComplete`, which asks that separately); the five carries no ask, so nothing here needs to. */
+export function cardAnswered(age: number, run: PrologueRun): boolean {
+  if (yearAt(age, run) === null) return false
+  return askOn(age, run) === null || run.entries[age] !== undefined
+}
+
 /** ⚠ AND EVERY YEAR'S TOURNAMENT QUESTION IS ANSWERED TOO. A childhood is not finished while a card
- *  still has an open ask on it – `askAt` returns null once the year holds an answer either way, so
- *  «not this year» finishes the card exactly as «put her name down» does. */
+ *  still has an open ask on it – «not this year» finishes the card exactly as «put her name down»
+ *  does. ⭐ ROUND 35 #4 – IT IS `cardAnswered` PER CARD NOW, which is the same claim it always made
+ *  (`yearAt !== null && askAt === null` is that predicate, spelled out) and is now spelled ONCE: the
+ *  container asks the same function per card before it moves on, so «this card is done» and «the
+ *  childhood is done» cannot answer the same question two ways. */
 export function isComplete(run: PrologueRun): boolean {
   if (run.origin === null) return false
-  return PROLOGUE_CARDS.every((c) => yearAt(c.age, run) !== null && askAt(c.age, run) === null)
+  return PROLOGUE_CARDS.every((c) => cardAnswered(c.age, run))
 }
 
 /** ⭐ THE NINE YEARS, IN ORDER – and this array is exactly what `engine/childhood.ts`'s

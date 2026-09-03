@@ -842,6 +842,20 @@ export const LOCAL_OPEN_COPY = {
    *  pressed (`proceedLabel`), which is what stops a finished match ejecting the player. */
   proceed: 'Go on',
 
+  /** ⭐⭐⭐ ROUND 35 #1 – THE TWO CONTROLS THE WEEKEND GREW WHEN IT BECAME A FLOW.
+   *
+   *  THE OWNER, having played the prologue end to end: «у нас на прологе турнир как-то сразу в матчи
+   *  идет, давай сделаем наш нормальный полноценный флоу пожалуйста, чтобы был первый экран с артом
+   *  турнира, потом матчи и переходы между ними как обычно.»
+   *
+   *  ⚠ NEITHER WORD IS NEW TO THE GAME, WHICH IS THE POINT OF PUTTING THEM HERE RATHER THAN IN THE
+   *  TEMPLATE. They are `TournamentFlow.vue`'s own two, character for character – the lime CTA that
+   *  starts a tournament and the affirmative on its pre-match card – so the weekend the prologue
+   *  plays is worded like the weekends the rest of the game plays, and swapping either of them is a
+   *  table edit exactly as every other line here is. DRAFT like everything else on this screen. */
+  begin: 'Begin',
+  watchMatch: 'Watch match',
+
   /** ⭐ DRAFT – THE WAY PAST THE REST OF THE WEEKEND, and it is the ten-minute budget's own control.
    *  The viewer already ships a per-match escape («Skip to the result», MatchControls.vue) and that
    *  one is untouched; this is the one that leaves the whole draw at once, because a player who is
@@ -890,6 +904,18 @@ export const LOCAL_OPEN_COPY = {
     },
   } as Readonly<Record<LocalOpenOutcome, LocalOpenResultCopy>>,
 } as const
+
+/** ⭐⭐ ROUND 35 #1 – HOW BIG THE DRAW IS, IN THE TOURNAMENT FLOW'S OWN WORDS. A function beside the
+ *  table rather than a string in it, for the same reason `localOpenCard` is one: it takes a number
+ *  the screen already holds and there is no way to write it as a line the owner could edit whole.
+ *
+ *  ⚠ IT IS `TournamentFlow.vue`'S SENTENCE, character for character («`{{ drawSize }}-player draw`»),
+ *  and the size handed in is read off the BRACKET THAT WAS PLAYED rather than off `LOCAL_POOL.size`
+ *  – the same argument `playLocalOpen` makes about `rounds`, and for the same reason: a pool too
+ *  small to fill the draw would otherwise be described by a constant that never noticed. */
+export function localDrawLine(drawSize: number): string {
+  return `${drawSize}-player draw`
+}
 
 /** ⭐ THE RESULT SCENE AS A CARD ROW, so the shipped card component draws it with no branch of its
  *  own. `her` and `coach` are the same sentence in both arms deliberately, and it is the rule cards
