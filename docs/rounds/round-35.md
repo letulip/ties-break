@@ -463,6 +463,12 @@ praise, and it is the standard the rest are measured against.
   (`preferredWeekEvent`'s first tiebreak). ⚠ If he wants a sentence anyway, the honest source is the
   engine's own – the college note's exact pattern – and it is his call.
 
+  ⚠ **ONE RESIDUE I LEFT ALONE AND HE SHOULD KNOW ABOUT.** The two lines that can sit under an Enter
+  – the engine's «Exhausted – race anyway? Rest would be wiser.» and the hired coach's own caution –
+  still draw on a card whose Enter is now greyed, so a spent week can show advice about a press that
+  is no longer offered. Removing them is a copy decision on his surface, not a bug fix, and he asked
+  for the buttons; say the word and it is a `v-if`.
+
   ⭐ **THE CALENDAR NEEDED NOTHING, AND THAT IS BY CONSTRUCTION RATHER THAN LUCK.** The other Enter
   in the app is CalendarScreen's marker card, and its markers pick through `preferredWeekEvent`
   (weekDays.ts) – ONE event per week, entered first – so on a committed week the marker IS the
