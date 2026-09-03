@@ -204,10 +204,18 @@ describe('what the shelf says about a thing the family owns', () => {
     const car = await shelfRow(wrapper, 'The luxury four-by-four')
     expect(car, 'the owned car is on the shelf').toBeTruthy()
     const actions = wrapper.findAll('.shop-action').map((b) => b.text())
-    expect(actions.some((t) => t === 'Sell it for $91,091')).toBe(true)
+    // ⚠ RE-AIMED AT ROUND 35 #12 – the control is «Sell» and the figure lives in the field beside
+    // it now (his frame, his ruling on the word). The claim – an owned rung offers a sale – stands.
+    expect(actions.some((t) => t === 'Sell')).toBe(true)
     // One row per rung, and the owned one cannot be bought again – the engine refuses a second copy,
     // and the screen must not offer what the engine refuses.
-    expect(actions.filter((t) => t.includes('$91,091'))).toHaveLength(1)
+    // ⚠⚠ RE-AIMED AT ROUND 35 #12, NEVER LOOSENED, AND THE CLAIM IS SHARPER THAN IT WAS. It used to
+    // count the value inside the sell control's own label, which is a string that no longer exists;
+    // what it was really asserting is that an OWNED rung offers no Buy. That is now said directly,
+    // and the stored value is asserted where it actually lives – on the card, once.
+    expect(actions, 'no second Buy on a rung they already own').not.toContain('Buy')
+    expect(car.text(), 'the stored value is on the card').toContain('$91,091')
+    expect(actions.filter((t) => t === 'Sell'), 'exactly one sale control').toHaveLength(1)
     wrapper.unmount()
   })
 

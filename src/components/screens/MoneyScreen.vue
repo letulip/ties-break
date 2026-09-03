@@ -983,7 +983,9 @@ function stakeCentsFor(row: ShopRowView): number {
 // ⭐ His reasoning, in his own message: a holding money can come back OUT of in parts is a real cash
 // management decision instead of a one-way door. The input is drawn on an 'open' rung only – the
 // same property that decides whether money can go IN in parts – and it is left BLANK by default, so
-// the control still says «Sell it for $X» and still means all of it unless a figure is typed.
+// the control still means all of it unless a figure is typed. ⭐ ROUND 35 #12 merged that box with
+// the top-up's, on his own frame, and took the figure out of the button's label: the control says
+// «Sell» and the amount is in the field beside it. What blank MEANS is untouched.
 
 // ⭐⭐ ROUND 34 #18 – `shopOwnedFrameNote`, HIS WORDS, PARKED HERE FOR THE SAME REASON AS THE
 // others: Cyrillic may not appear in a template, in a string OR in a comment
@@ -1289,19 +1291,60 @@ function askBuy(row: ShopRowView): void {
 // ⭐⭐⭐ ROUND 29 PART TWO #4 – HOW MUCH OF IT TO SELL. His words are in `shopPartSaleNote` below
 // (no Cyrillic in a template, and none in a comment a template reads).
 //
-// ⚠ THE SAME SHAPE AS THE STAKE INPUT ABOVE, deliberately: DOLLARS as typed, kept as a STRING so a
-// half-typed figure is not coerced, and `sellCentsFor` is the one place it becomes cents. Blank
+// ⚠ IT HAD THE SAME SHAPE AS THE STAKE INPUT ABOVE, deliberately: DOLLARS as typed, kept as a STRING
+// so a half-typed figure is not coerced, and `sellCentsFor` is the one place it becomes cents. Blank
 // means «all of it», which is what the control said before this item and still says.
-const sellDollars = ref<Record<string, string>>({})
+// ⭐⭐ ROUND 35 #12 TOOK «the same shape» TO ITS CONCLUSION: two fields of identical shape on one
+// card are one field, and he had already drawn it that way. The ref is gone; the reader below is
+// unchanged bar the value it reads.
+// ⭐⭐⭐ ROUND 35 #12 – `shopOneFieldNote`, THE OWNER'S OWN WORDS, PARKED HERE AND NOT IN THE
+// TEMPLATE (no Cyrillic in a template, in a string OR in a comment – tests/template-copy-rules.test.ts).
+//
+// «инвесту разрешил ответить "делать нечего" - нет, не так, сверься с макетами пожалуйста, там две
+// кнопки о поле инпута одно, всё в ряд стоит»
+//
+// ...and, on the two labels, closing the question this item opened:
+// «"Add more" и "Sell" - хорошо, меньше места занимают»
+//
+// ⚠⚠ SO ROUND 34 #20 WAS HALF THE ITEM AND THIS IS THE OTHER HALF. #20 put each control beside its
+// own input, which is «в одну строку с инпутами» satisfied twice – and left a holding carrying TWO
+// number fields. The frame he drew (W-shop-investments.png) has ONE, with both buttons after it, and
+// he checked it against the build himself. The controls, their `disabled` predicates, their commands
+// and the engine's minimum are all unchanged; what changed is that they now read ONE value.
+//
+// ⭐ THE SHORTER WORDS ARE HIS AND THE REASON IS HIS TOO – «меньше места занимают». That is not a
+// preference, it is the measurement: three controls have to share one line at 375px, and
+// «Sell it for $12,000,000» is the longest string this card can produce. `tests/component/
+// round35-money-invest.test.ts` measures the row with the shorter words in place, which is the only
+// reading worth having.
+//
+// ⚠ BLANK STILL MEANS «ALL OF IT» on the Sell side – `sellCentsFor` returns null and `askSell`
+// sells the whole holding, exactly as it did when the field was its own. And blank cannot buy: the
+// engine's minimum is the floor and `canBuy` refuses a zero, so one field driving two verbs has one
+// unambiguous reading of an empty box per verb.
+
+/** ⭐ ROUND 35 #12 – THE ACCESSIBLE NAME FOR THE SHARED FIELD, which is what the two visible labels
+ *  became. The frame draws the input with a placeholder and no caption, so the sentence a screen
+ *  reader needs has nowhere visible to live – and an unlabelled number box driving two verbs is the
+ *  one thing this layout could genuinely lose. ⚠ IT IS BUILT FROM THE ENGINE'S OWN FIGURES
+ *  (`entryCents`, `valueCents`), never typed, so a retune moves it with the money. */
+function stakeFieldLabel(row: ShopRowView): string {
+  const from = `Amount, from ${formatCents(row.entryCents)}`
+  return row.valueCents === null ? from : `${from} – leave it blank to sell all ${formatCents(row.valueCents)}`
+}
 /** Null when the box is empty or unusable – the caller then sells the whole holding, which is the
  *  engine's own `amountCents === undefined`. ⚠ CLAMPED NOWHERE: `sellAsset` re-derives the floor and
  *  the ceiling and returns its own sentence, and a screen that silently corrected the number would
- *  be the R10-16 defect (a control and a refusal telling two stories). */
+ *  be the R10-16 defect (a control and a refusal telling two stories).
+ *
+ *  ⚠⚠ ROUND 35 #12 POINTED IT AT `stakeDollars` AND DELETED `sellDollars`. There is one field on the
+ *  card now, so there is one value; a second ref would be a value nothing on screen can show, which
+ *  is worse than the two fields it replaced. */
 function sellCentsFor(row: ShopRowView): number | null {
   // ⚠ `String(...)` AND NOT A CAST: Vue 3's `v-model` on `type="number"` coerces the bound value to a
   // NUMBER at runtime, whatever the ref is typed as, so «is the box empty» has to survive both. The
-  // stake input above only ever reaches this through `Number()`, which is why it never noticed.
-  const raw = String(sellDollars.value[row.id] ?? '').trim()
+  // stake reader above only ever reaches this through `Number()`, which is why it never noticed.
+  const raw = String(stakeDollars.value[row.id] ?? '').trim()
   const typed = Number(raw)
   if (!raw || !Number.isFinite(typed) || typed <= 0) return null
   return Math.round(typed * 100)
@@ -2380,56 +2423,32 @@ function shopRowPaidMeta(row: ShopRowView): string | undefined {
                      template). The `.shop-stake-row` wrapper is the ENTIRE change: the label, the
                      input inside it and the button that acts on it were three stacked blocks and are
                      now one baseline-aligned row. Not one word, minimum, command or `v-if` moved. -->
-                <div v-if="isTopUp(row)" class="shop-stake-row">
-                  <label class="shop-stake">
-                    <span class="shop-stake-label">
-                      Add more, from {{ formatCents(row.entryCents) }}
-                    </span>
-                    <input
-                      v-model="stakeDollars[row.id]"
-                      class="shop-stake-input"
-                      type="number"
-                      inputmode="numeric"
-                      :min="Math.round(row.entryCents / 100)"
-                      step="100"
-                      :placeholder="String(Math.round(row.entryCents / 100))"
-                    />
-                  </label>
-                  <button class="shop-action" :disabled="!canBuy(row)" @click="askBuy(row)">
-                    Put more in
-                  </button>
-                </div>
-                <!-- ⭐⭐⭐ ROUND 29 PART TWO #4 – HOW MUCH OF IT TO SELL. His words are in
-                     `shopPartSaleNote` in the script block (no Cyrillic in a template). Drawn on an
-                     'open' rung only, because that is the property that says a holding takes money in
-                     and out in parts; a car has one price and one sale. BLANK BY DEFAULT, so the
-                     control below keeps the sentence it has always had and keeps meaning all of it.
-                     ⚠ ROUND 34 #20 – THE ROW WRAPPER IS DRAWN UNCONDITIONALLY, and that is what keeps
-                     the Sell control a SINGLE element rather than two copies behind opposite `v-if`s.
-                     A car has no amount to type, so on a fixed rung the row holds the button alone
-                     and lays out exactly as the bare button did. -->
+                <!-- ⭐⭐⭐ ROUND 35 #12 – ONE FIELD, TWO CONTROLS, ONE LINE. His words and the whole
+                     reasoning are in `shopOneFieldNote` in the script block (no Cyrillic in a
+                     template). Round 34 #20 put each control beside its OWN input and left two fields
+                     on a holding; the frame he drew (W-shop-investments.png) has one, with both
+                     buttons after it. `stakeDollars` is now the single value and `stakeCentsFor` /
+                     `sellCentsFor` are its two readers – neither predicate, command or minimum
+                     moved. ⚠ THE ROW IS DRAWN UNCONDITIONALLY, round 34 #20's own reason: a fixed
+                     rung has no amount to type, so it holds the Sell button alone and lays out
+                     exactly as the bare button did. -->
                 <div class="shop-stake-row">
-                  <label v-if="isTopUp(row)" class="shop-stake">
-                    <span class="shop-stake-label">
-                      Take out how much, or leave it blank for all {{ formatCents(row.valueCents) }}
-                    </span>
-                    <input
-                      v-model="sellDollars[row.id]"
-                      class="shop-stake-input shop-sell-input"
-                      type="number"
-                      inputmode="numeric"
-                      min="1"
-                      step="100"
-                      :max="Math.round(row.valueCents / 100)"
-                      placeholder="all of it"
-                    />
-                  </label>
+                  <input
+                    v-if="isTopUp(row)"
+                    v-model="stakeDollars[row.id]"
+                    class="shop-stake-input"
+                    type="number"
+                    inputmode="numeric"
+                    :min="Math.round(row.entryCents / 100)"
+                    step="100"
+                    :placeholder="String(Math.round(row.entryCents / 100))"
+                    :aria-label="stakeFieldLabel(row)"
+                  />
+                  <button v-if="isTopUp(row)" class="shop-action" :disabled="!canBuy(row)" @click="askBuy(row)">
+                    Add more
+                  </button>
                   <button class="shop-action" :disabled="!canSell(row)" @click="askSell(row)">
-                    {{
-                      isTopUp(row) && sellCentsFor(row) !== null && (sellCentsFor(row) ?? 0) < row.valueCents
-                        ? `Take out ${formatCents(sellCentsFor(row) ?? 0)}`
-                        : `Sell it for ${formatCents(row.valueCents)}`
-                    }}
+                    Sell
                   </button>
                 </div>
               </div>
@@ -3786,16 +3805,20 @@ function shopRowPaidMeta(row: ShopRowView): string | undefined {
    quote is at `shopInlineActionNote` in the script block, because a .vue file carries no Cyrillic
    in a comment either - tests/template-copy-rules.test.ts).
 
-   `align-items: end` rather than `center` is the whole of the alignment: `.shop-stake` is a COLUMN
-   of a caption and a field, so centring it would hang the button halfway up the caption instead of
-   level with the box it presses against. Ending both puts the button's bottom edge on the input's.
+   `align-items: end` rather than `center` is the whole of the alignment: it was written when
+   `.shop-stake` was a COLUMN of a caption and a field, so centring would have hung the button
+   halfway up the caption. ⭐ ROUND 35 #12 took the captions off this row – the frame draws the field
+   bare – so the items are now of a height and `end` and `center` agree; it is left as it is because
+   the not-owned branch still stacks a caption over a field and this row may grow one back.
 
    ⚠ `flex-wrap: wrap` IS THE PHONE, NOT A FLOURISH. Round-20 #3's rule is that every control stays
-   inside 375x667; the sell control's label is the longest sentence on this card («Take out how much,
-   or leave it blank for all $1,234,567») and a family that has run the fund for twenty years puts a
-   long figure inside the button as well. Wrapping spends a line rather than the right-hand edge of
-   the screen, which is the failure mode the fits.ts assertion in
-   tests/component/round34-money-shelf.test.ts exists to make impossible.
+   inside 375x667, and this row now carries THREE items rather than two – a field, «Add more» and
+   «Sell». ⭐ The shorter labels are what pays for the third: the owner chose them for exactly that
+   («меньше места занимают» is at `shopOneFieldNote`), and the widest string this row could produce
+   before them was «Sell it for $12,000,000». Wrapping spends a line rather than the right-hand edge
+   of the screen, which is the failure mode the fits.ts assertion in
+   tests/component/round34-money-shelf.test.ts exists to make impossible – re-measured with his
+   words in place.
 
    ⚠ AND `.shop-action`'s OWN `margin-top` IS CLEARED HERE. It was the gap under the stacked layout;
    inside the row it would push the button below the input's baseline, so the row owns its spacing

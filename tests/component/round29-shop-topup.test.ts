@@ -250,9 +250,12 @@ describe.each(['deposit', 'index-fund'] as const)('round 29 #11 – %s takes top
     const node = await shelfRow(wrapper, row.label)
     expect(node.text(), 'what they have put in, on screen').toContain('paid $37,000')
     const actions = node.findAll('.shop-action').map((b) => b.text())
-    expect(actions, 'the control he asked for').toContain('Put more in')
+    // ⚠ RE-AIMED AT ROUND 35 #12, NEVER LOOSENED – the control is called «Add more» since his
+    // ruling of 03.09 («"Add more" и "Sell" - хорошо, меньше места занимают»). The claim is the one
+    // this arm always made: an owned open rung offers a top-up control at all.
+    expect(actions, 'the control he asked for').toContain('Add more')
     // The sale is still offered beside it – a top-up adds a control, it does not replace one.
-    expect(actions.some((a) => a.startsWith('Sell it for'))).toBe(true)
+    expect(actions).toContain('Sell')
     wrapper.unmount()
   })
 })
@@ -296,7 +299,8 @@ describe('round 29 #11 – a car is still a car', () => {
     // ⚠ RE-AIMED, ROUND 30 #5 – a car lives on the `Cars` segment of the shelf now, so the row is
     // reached by pressing that tab. The claim is untouched. See tests/component/shelf.ts.
     const node = await shelfRow(wrapper, 'The sensible estate')
-    expect(node.findAll('.shop-action').map((b) => b.text())).not.toContain('Put more in')
+    // ⚠ RE-AIMED AT ROUND 35 #12 on the word only – a car still refuses a second helping.
+    expect(node.findAll('.shop-action').map((b) => b.text())).not.toContain('Add more')
     wrapper.unmount()
   })
 })

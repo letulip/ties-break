@@ -304,46 +304,73 @@ describe('⭐ #19 – the fund’s chart, and its four windows', () => {
   })
 })
 
-describe('⭐ #20 – put more in / sell it stand beside their inputs', () => {
-  it('each control is in one row with the field it acts on', async () => {
+// =================================================================================================
+// ⚠⚠ RE-AIMED AT ROUND 35 #12, NEVER LOOSENED – AND #20's CLAIM IS THE ONE THAT SURVIVES.
+// =================================================================================================
+//
+// #20 asked for «в одну строку с инпутами» and this file measured it: each control beside the field
+// it acts on, and the row really on one line at 375x667. That produced TWO rows and TWO number
+// fields on a holding, and on 03.09 the owner checked the build against his own frame and said so:
+// «сверься с макетами пожалуйста, там две кнопки о поле инпута одно, всё в ряд стоит».
+//
+// ⭐ SO THE ROW COUNT MOVES FROM TWO TO ONE AND EVERY OTHER CLAIM IS RESTATED, NOT DROPPED: the
+// field and the controls still share ONE row element (structure, not class names), a fixed rung
+// still comes out with a single control and no field, and the whole thing is still measured against
+// a phone with `fits.ts`. The one genuinely NEW assertion is that the card carries exactly one
+// number input, which is the defect the item names.
+//
+// ⚠ THE LABELS ARE HIS, RULED ON 03.09: «"Add more" и "Sell" - хорошо, меньше места занимают». They
+// are asserted here rather than left to drift, because a shorter word is what buys the width the
+// measurement below spends – and CLAUDE.md invariant 4 means a builder may not tidy them back.
+describe('⭐ #20/#12 – one field, two controls, one line', () => {
+  it('the field and both controls share a single row', async () => {
     const wrapper = await mountShop(toSnapshot(owning('index-fund', 200_000_00)))
     const row = await shelfRow(wrapper, 'An index fund')
     const lines = row.findAll('.shop-stake-row')
-    expect(lines, 'the top-up line and the sell line').toHaveLength(2)
-    for (const line of lines) {
-      const field = line.find('input')
-      const control = line.find('button')
-      expect(field.exists(), 'the amount field is on this line').toBe(true)
-      expect(control.exists(), 'and so is the control').toBe(true)
-      // ⚠ STRUCTURE, NOT CLASS NAMES: the field and the button share ONE row element. A stacked
-      // layout that happened to grow a `.shop-stake-row` class around each half separately would
-      // fail here, which is the defect this assertion is shaped to catch.
-      expect(field.element.closest('.shop-stake-row')).toBe(line.element)
-      expect(control.element.parentElement).toBe(line.element)
-    }
-    // ...and they are the two he named, still saying what they always said.
-    expect(lines[0].find('button').text()).toBe('Put more in')
-    expect(lines[1].find('button').text()).toMatch(/^Sell it for \$/)
+    expect(lines, 'one row now, not two').toHaveLength(1)
+    const line = lines[0]
+    // ⭐⭐ THE ITEM ITSELF: one input on the card, never two. This is the assertion that would have
+    // been red before round 35 #12 and green after it, and it is the whole measured delta.
+    expect(row.findAll('input[type="number"]'), 'one amount field on the whole card').toHaveLength(1)
+    const field = line.find('input')
+    const controls = line.findAll('button')
+    expect(field.exists(), 'the amount field is on this line').toBe(true)
+    expect(controls, 'and both controls are beside it').toHaveLength(2)
+    // ⚠ STRUCTURE, NOT CLASS NAMES: the field and the buttons share ONE row element. A stacked
+    // layout that happened to grow a `.shop-stake-row` class around each half separately would
+    // fail here, which is the defect this assertion is shaped to catch.
+    expect(field.element.closest('.shop-stake-row')).toBe(line.element)
+    for (const control of controls) expect(control.element.parentElement).toBe(line.element)
+    // ...and they say the two words he chose.
+    expect(controls[0].text()).toBe('Add more')
+    expect(controls[1].text()).toBe('Sell')
+    // ⚠ THE FIELD KEEPS AN ACCESSIBLE NAME. The frame draws no caption, so the two visible labels
+    // are gone – and an unlabelled number box driving two verbs is the one thing this layout could
+    // genuinely lose. The name carries the engine's own figures, so it cannot go stale.
+    const name = field.attributes('aria-label') ?? ''
+    expect(name, 'the minimum is still stated').toContain('$5,000')
+    expect(name, 'and so is what an empty box means').toContain('blank')
+    wrapper.unmount()
   })
 
-  it('⚠ round-20 #3 – both rows really fit on one line at 375x667', async () => {
-    // ⚠ A LARGE HOLDING ON PURPOSE. The sell control interpolates the whole value, so a family that
-    // has run the fund for years is the widest this row ever gets – measuring the $5,000 case would
-    // be measuring the easy one.
+  it('⚠ round-20 #3 – all three controls really fit on one line at 375x667', async () => {
+    // ⚠ A LARGE HOLDING ON PURPOSE. This used to be the widest case because the sell control
+    // interpolated the whole value; the shorter word he chose is exactly what took that width away,
+    // so the measurement is re-run WITH his words in place rather than before them.
     setViewport(PHONE)
     const wrapper = await mountShop(toSnapshot(owning('deposit', 1_000_000_00)))
     const row = await shelfRow(wrapper, 'A savings deposit')
     const lines = row.findAll('.shop-stake-row')
-    expect(lines).toHaveLength(2)
-    expect(lines[1].find('button').text(), 'the widest the control gets').toContain('$1,000,000')
-    for (const line of lines) {
-      assertInlineRowFits(
-        line.element,
-        [line.find('input').element, line.find('button').element],
-        PHONE,
-        `the ${line.find('button').text()} row`,
-      )
-    }
+    expect(lines).toHaveLength(1)
+    const line = lines[0]
+    const items = [line.find('input').element, ...line.findAll('button').map((b) => b.element)]
+    expect(items, 'the field and both controls').toHaveLength(3)
+    const slack = assertInlineRowFits(line.element, items, PHONE, 'the invest stake row')
+    // ⚠ THE SLACK IS REPORTED, NOT ASSERTED AT A NUMBER. A pin on the exact pixels would break on
+    // any honest padding change; what matters is that it is not negative, which the helper above
+    // already refuses. This line exists so the figure reaches the ledger.
+    expect(slack, 'the row fits with room to spare, at the widest holding').toBeGreaterThanOrEqual(0)
+    wrapper.unmount()
   })
 
   it('a rung with nothing to type keeps a single, full control', async () => {
@@ -356,6 +383,37 @@ describe('⭐ #20 – put more in / sell it stand beside their inputs', () => {
     expect(lines, 'one line, and it is the sale').toHaveLength(1)
     expect(lines[0].findAll('input'), 'a car has no amount to type').toHaveLength(0)
     expect(lines[0].findAll('button'), 'exactly one control, never two copies').toHaveLength(1)
-    expect(lines[0].find('button').text()).toMatch(/^Sell it for \$/)
+    expect(lines[0].find('button').text()).toBe('Sell')
+    wrapper.unmount()
+  })
+
+  // ⭐⭐⭐ ROUND 35 #12 – AND ONE FIELD REALLY DRIVES BOTH VERBS. The behaviour half: this is what a
+  // shared value has to mean, and neither reading was invented for it – `stakeCentsFor` floors at
+  // the engine's minimum and `sellCentsFor` reads blank as «all of it», exactly as they did when the
+  // field was two.
+  it('⭐ the one field feeds both controls, and blank still means «sell all»', async () => {
+    const wrapper = await mountShop(toSnapshot(owning('index-fund', 200_000_00)))
+    const row = await shelfRow(wrapper, 'An index fund')
+    const field = row.find('input[type="number"]')
+    const [addMore, sell] = row.findAll('.shop-stake-row button')
+    // ⭐⭐ BLANK IS THE CASE WORTH WRITING DOWN, because one box now answers two questions and it
+    // answers each with the default that control ALREADY had – neither invented for this item:
+    //   * «Add more» adds the MINIMUM (`stakeCentsFor` floors an unusable figure at `entryCents`),
+    //     which is exactly what the placeholder in the box promises;
+    //   * «Sell» sells ALL of it (`sellCentsFor` returns null, the engine's `amountCents === undefined`).
+    // Both are pressable on an empty box and they do different things, which is the honest reading
+    // of a shared field and not an ambiguity.
+    expect(field.element.getAttribute('placeholder'), 'the box shows the minimum').toBe('5000')
+    expect(addMore.attributes('disabled'), 'an empty box adds the minimum the placeholder names').toBeUndefined()
+    expect(sell.attributes('disabled'), 'an empty box still sells all of it').toBeUndefined()
+    // A REAL FIGURE: both verbs read the SAME value out of the SAME box.
+    await field.setValue('10000')
+    expect(addMore.attributes('disabled'), 'a typed figure over the minimum can buy').toBeUndefined()
+    expect(sell.attributes('disabled'), 'and the same figure is a part sale').toBeUndefined()
+    // ⚠ AND THE ONE FIGURE THAT MUST STILL BE REFUSED: more than they hold is not a sale. This is
+    // the arm that catches a shared field quietly widening what `canSell` will accept.
+    await field.setValue('9999999')
+    expect(sell.attributes('disabled'), 'more than they hold is not pressable').toBeDefined()
+    wrapper.unmount()
   })
 })
