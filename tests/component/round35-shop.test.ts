@@ -610,16 +610,23 @@ describe('#10 – the in-page switcher is untouched', () => {
   it('⛔ six segments, his six words, his order – nothing about it moved', async () => {
     // «переключалка между категориями магазина на самих страницах магазина остается текущей и не
     // меняется.» An explicit DO-NOT-TOUCH, so this arm is the record that it was not touched: the
-    // segments, their labels and their order are the ones round 30 #5 shipped, and the home added
-    // in #3 is a state BEFORE them rather than a seventh segment inside them.
+    // segments, their labels and their order are the SHIPPED ones, and the home added in #3 is a
+    // state BEFORE them rather than a seventh segment inside them.
+    //
+    // ⚠ RE-AIMED AT THE ROUND-34 MERGE (03.09). This was written as round 30 #5's order –
+    // Invest / Cars / Property / Business / Water / Air – and that was the truth in the tree it was
+    // written in: `round/35` was branched from main BEFORE `round/34` merged as PR #121. Round 34
+    // #16 is the owner's own «Business пододвинуть к Invest в магазине», so Business is second now.
+    // ⭐ THE CLAIM DID NOT WEAKEN. This arm says «round 35 did not touch the switcher», and it still
+    // says exactly that – against what the switcher actually is rather than against a stale copy.
     const wrapper = await mountShop(toSnapshot(rich('r35-10-switcher')))
     await openShelfTab(wrapper, 'Invest')
     const pills = wrapper.findAll('.shelf-tabs button.tab-pill')
     expect(pills.map((p) => p.text().trim())).toEqual([
       'Invest',
+      'Business',
       'Cars',
       'Property',
-      'Business',
       'Water',
       'Air',
     ])

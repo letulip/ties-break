@@ -101,6 +101,13 @@ beforeEach(() => {
 describe('⭐ #16 – Business is next to Invest', () => {
   it('the shelf draws Business as the segment immediately after Invest', async () => {
     const wrapper = await mountShop(toSnapshot(createWorld('r34-order')))
+    // ⚠ RE-AIMED BY ROUND 35 #3, AND ONLY THE WAY IN MOVED – the claim below is untouched. The shop
+    // is TWO levels now: mounting lands on its home (six category cards) and the segments live one
+    // press deeper, so reading `.shelf-tabs` straight off the mount found nothing at all. This is
+    // the shared helper every round-35 arm uses, and it opens the home's card when the pills are
+    // not on screen yet. ⭐ A test that stopped being able to SEE its subject is not a test that
+    // disagrees with it.
+    await openShelfTab(wrapper, 'Invest')
     const labels = wrapper.findAll('.shelf-tabs .tab-pill').map((p) => p.text().trim())
     // ⚠ THE POSITION IS THE ITEM, so it is asserted as a position and not as a whole list: «next to
     // Invest» is true of exactly one index, and reading it off the rendered pills is what makes this
