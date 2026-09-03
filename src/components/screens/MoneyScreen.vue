@@ -2004,12 +2004,6 @@ function shopRowPaidMeta(row: ShopRowView): string | undefined {
         />
       </Card>
 
-      <!-- ===================== 8a. THE SHELF'S OWN TABS =====================
-           ⭐⭐ ROUND 30 #5 – his second clause: "The shelf as a plate on top, and under it the tabs
-           in a row". The card above is that plate; this is the row under it. Six segments, and the
-           seventh thing on the shelf - the academy - is deliberately NOT one of them: it is a
-           subdivision of Business and rides inside that tab. The map and his words in full are at
-           `SHELF_TAB_OPTIONS` in the script, where Cyrillic is allowed and a template's is not. -->
       <!-- ============= 8a-bis. THE SIX CATEGORY CARDS, ON THE HOME ONLY (round 35 #3) =============
            His words - the six cards, the name at the foot in Sora, and his own row order - are in
            the script block beside `SHELF_CATEGORY_CARDS`, because Cyrillic may not appear in a
@@ -2053,6 +2047,16 @@ function shopRowPaidMeta(row: ShopRowView): string | undefined {
         />
       </div>
 
+      <!-- ===================== 8a. THE SHELF'S OWN TABS =====================
+           ⭐⭐ ROUND 30 #5 – his second clause: "The shelf as a plate on top, and under it the tabs
+           in a row". Six segments, and the seventh thing on the shelf - the academy - is
+           deliberately NOT one of them: it is a subdivision of Business and rides inside that tab.
+           The map and his words in full are at `SHELF_TAB_OPTIONS` in the script, where Cyrillic is
+           allowed and a template's is not.
+           ⚠ ROUND 35 #10 IS AN EXPLICIT DO-NOT-TOUCH ON THIS ROW, so not a label, an order or a
+           value below moved. What moved is only WHERE it is in the column: round 35 #3 put a home
+           in front of the categories, so «the plate on top and the tabs under it» is now the plate,
+           the six category cards, and then this row on the page a card opens. -->
       <SegmentedRow
         v-if="screenTab === 'shop' && shop && !shopHome"
         v-model="shelfTab"
