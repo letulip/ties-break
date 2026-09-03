@@ -76,11 +76,14 @@ Object.defineProperty(globalThis, 'localStorage', {
  *  engine will compute, on any seed, with no arithmetic left in the reader's head.
  *
  *  ⚠⚠ RE-AIMED AGAIN BY ROUND 34 BUNDLE H, AND THE ARGUMENT NOW MEANS THE SHARE SHE IS SHOWN – the
- *  same move `round23-coach-card` made, for the same reason. The read is normalised against what the
- *  age curve can REACH (`reachableHeadroomShare`) rather than against `potential`, which `growWeek`
- *  approaches geometrically and never arrives at, so an argument of 0.95 has to keep meaning "nearly
- *  everything she was ever going to have" and not "a number the screen reads as 0.82". Derived, so
- *  the approved curve wave moves it with the code. */
+ *  same move `round23-coach-card` made, for the same reason. The read is normalised against what is
+ *  REACHABLE (`reachableHeadroomShare`) rather than against `potential`, which `growWeek` approaches
+ *  geometrically and never arrives at, so an argument of 0.95 has to keep meaning "nearly everything
+ *  she was ever going to have" and not "a number the screen reads as 0.82".
+ *
+ *  ⚠ BUNDLE I THEN CORRECTED WHAT «REACHABLE» MEANS – the best coaching money can buy (0.9766), not
+ *  the bare `ageFactor` curve H walked (0.8668). ⭐ THIS HELPER DID NOT HAVE TO MOVE FOR IT: derived,
+ *  so the approved curve wave and a coach-ladder retune both move it with the code. */
 function snapshotAt(shown: number): Snapshot {
   const world = createWorld(`r24-card-${shown}`, { ...DEFAULT_PROFILE, coachTier: 'middle' })
   const born = startingSkills(world.seed, world.profile)

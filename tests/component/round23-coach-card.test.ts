@@ -71,14 +71,17 @@ async function mountCoaches(snapshot: Snapshot) {
  *  zero.
  *
  *  ⚠⚠ RE-AIMED AGAIN BY ROUND 34 BUNDLE H, AND THE ARGUMENT NOW MEANS THE SHARE SHE IS SHOWN. The
- *  read is normalised against what the age curve can REACH (`reachableHeadroomShare`, 0.867 of her
- *  headroom on the shipped curve) rather than against `potential`, which `growWeek` approaches
- *  geometrically and never arrives at. ⭐ WITHOUT THE MULTIPLY THE TESTS BELOW STILL PASS BUT THEIR
- *  COMMENTS STOP BEING TRUE - "two inside band 0, two inside band 1" and "a point either side of
- *  each of 0.40 / 0.75 / 0.90" would both be describing a scale the screen no longer reads. A pin
- *  whose prose has quietly drifted off its own sample points is the one that gets trusted wrongly
- *  later, so the helper moved rather than the comments. Derived, not written down, so the approved
- *  curve wave carries it too. */
+ *  read is normalised against what is REACHABLE (`reachableHeadroomShare`) rather than against
+ *  `potential`, which `growWeek` approaches geometrically and never arrives at. ⭐ WITHOUT THE
+ *  MULTIPLY THE TESTS BELOW STILL PASS BUT THEIR COMMENTS STOP BEING TRUE - "two inside band 0, two
+ *  inside band 1" and "a point either side of each of 0.40 / 0.75 / 0.90" would both be describing a
+ *  scale the screen no longer reads. A pin whose prose has quietly drifted off its own sample points
+ *  is the one that gets trusted wrongly later, so the helper moved rather than the comments.
+ *
+ *  ⚠ BUNDLE I THEN CORRECTED WHAT «REACHABLE» MEANS - the best coaching money can buy (0.9766 on the
+ *  shipped curve and ladder), not the bare `ageFactor` curve H walked (0.8668). ⭐ THIS HELPER DID
+ *  NOT HAVE TO MOVE FOR IT, which is exactly what writing the multiply as a call bought: derived and
+ *  not written down, so the approved curve wave and a coach-ladder retune both carry it. */
 function snapshotAt(shown: number): Snapshot {
   const world = createWorld(`r23-card-${shown}`, { ...DEFAULT_PROFILE, coachTier: 'middle' })
   const born = startingSkills(world.seed, world.profile)

@@ -765,15 +765,21 @@ describe('the room note says why the numbers are what they are', () => {
    *  a born-at-60 stamina no headroom at all and divide by zero.
    *
    *  ⚠⚠ RE-AIMED AGAIN BY ROUND 34 BUNDLE H, AND THE ARGUMENT NOW MEANS THE SHARE SHE IS SHOWN. The
-   *  read is normalised against what the age curve can REACH (`reachableHeadroomShare`, 0.867 of her
-   *  headroom on the shipped curve) rather than against the asymptote `potential` is - so a career
-   *  holding 0.867 of her headroom has taken EVERYTHING available and is shown 1.0. Without this the
-   *  four sample points below collapsed into three bands (0.8 and 0.95 both read «At her ceiling»)
-   *  and this test went red on a change it is not about.
+   *  read is normalised against what is REACHABLE (`reachableHeadroomShare`) rather than against the
+   *  asymptote `potential` is - so a career holding all of it has taken EVERYTHING available and is
+   *  shown 1.0. Without this the four sample points below collapsed into three bands (0.8 and 0.95
+   *  both read «At her ceiling») and this test went red on a change it is not about.
    *
-   *  ⭐ THE MULTIPLY IS DERIVED, NOT A CONSTANT, on purpose: the approved wave that raises
-   *  `plateauRate` and pushes `declineStart` moves the normaliser, and this helper follows it instead
-   *  of having to be re-cut a third time. */
+   *  ⚠ BUNDLE I THEN CORRECTED WHAT «REACHABLE» MEANS - the best coaching money can buy (0.9766 on
+   *  the shipped curve and ladder), not the bare `ageFactor` curve H walked (0.8668), which was the
+   *  growth of a girl with no coach at all and which every coached career therefore ran past. ⭐ THIS
+   *  HELPER DID NOT HAVE TO MOVE FOR IT, which is the point of writing the multiply as a call: its
+   *  argument still means "the share the player is shown" and the four points below still name four
+   *  bands. See tests/round34-reachable-ceiling.test.ts for the change itself.
+   *
+   *  ⭐ THE MULTIPLY IS DERIVED, NOT A CONSTANT, on purpose: the approved wave that moves
+   *  `plateauStart` and `declineStart` moves the normaliser, and so does a coach-ladder retune, and
+   *  this helper follows both instead of having to be re-cut again. */
   function at(shown: number): string {
     const world = createWorld('room', DEFAULT_PROFILE)
     const born = startingSkills(world.seed, world.profile)

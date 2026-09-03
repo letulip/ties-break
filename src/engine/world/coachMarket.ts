@@ -1075,8 +1075,8 @@ const TRAVEL_EDGE_LINE = 'Twice that on the trips the coach travels to.'
  *
  * ⚠ MONOTONE IN HEADROOM AND UNABLE TO FLICKER. `realisedShare` divides a numerator that only rises
  * by a denominator that is a career CONSTANT - her birth build and her ceiling are both fixed the
- * week she is created, and round 34 bundle H's normaliser is a pure function of the shipped age
- * curve, so it is as still as they are - and `growSkills` adds `rate * headroom * luck` with `weekLuck` positive at
+ * week she is created, and round 34 bundle I's normaliser is a pure function of the shipped age
+ * curve and the shipped coach ladder, so it is as still as they are - and `growSkills` adds `rate * headroom * luck` with `weekLuck` positive at
  * both ends, so skills only rise until `declineFactor` opens at 29. The band index is therefore
  * non-decreasing week over week on a career that is merely progressing, with no hysteresis needed
  * and nothing persisted to give it any. `tests/coachTiers.test.ts` ticks a real career and asserts
@@ -1122,22 +1122,41 @@ export function coachRoomNote(world: WorldState): string {
  *  defect and they are untouched: 0.40 / 0.75 / 0.90 are the owner's approved numbers, and dividing
  *  by `reachableHeadroomShare()` is what makes them mean what he approved them to mean.
  *
- *  ⚠ THE NORMALISER IS DERIVED FROM THE AGE CURVE AND IS NOT WRITTEN DOWN ANYWHERE – see
- *  `reachableHeadroomShare` in engine/development.ts for why a literal would rot the day the approved
- *  `plateauRate` / `declineStart` wave lands. It is CURVE-ONLY rather than best-coached: normalising
- *  by what the dearest coach could have bought would tell a well-coached girl she has less left than
- *  she has, and would put her parent's chequebook inside her own ceiling.
+ *  ⚠ THE NORMALISER IS DERIVED FROM THE AGE CURVE AND THE COACH LADDER AND IS NOT WRITTEN DOWN
+ *  ANYWHERE – see `reachableHeadroomShare` in engine/development.ts for why a literal would rot the
+ *  day the approved `plateauStart` / `declineStart` wave lands.
  *
- *  ⚠ IT IS STILL A CAREER CONSTANT, which is what keeps the no-flicker claim above mechanical. It is
- *  a pure function of the shipped curve – nothing about this world, this week or this career enters
- *  it – so the denominator is as fixed as her birth build and her ceiling are.
+ *  ⚠⚠⚠ BUNDLE I – AND IT IS THE BEST COACHING AVAILABLE, NOT THE BARE CURVE. Bundle H normalised by
+ *  `ageFactor` alone, i.e. by the growth of a girl with NO COACH AT ALL and no matches, and a girl
+ *  who has a coach grows FASTER than that: she exceeded the denominator and hit the clamp below. A
+ *  middle-coached career read «At her ceiling» from about NINETEEN and for ever after, while an elite
+ *  coach demonstrably still added to her – the owner's own «звучит как приговор» moved from fourteen
+ *  to nineteen, with the fourth band's advice false where it was being shown. The band's job is to
+ *  answer «is there still room worth BUYING», so the yardstick is what the best available coaching
+ *  could reach.
+ *
+ *  ⚠ IT IS STILL A CAREER CONSTANT, which is what keeps the no-flicker claim above mechanical, and
+ *  that is also the answer to bundle H's objection that a best-coached denominator would «put the
+ *  parent's chequebook inside his daughter's ceiling». It is ONE CONSTANT FOR EVERY CAREER – a pure
+ *  function of the shipped curve and the shipped ladder, with nothing about this world, this family
+ *  or this week in it – so two identical girls read identically whatever their parents can afford.
+ *  What differs is the NUMERATOR, how much she actually gained, and that difference is real. The
+ *  denominator is as fixed as her birth build and her ceiling are.
  *
  *  Returns null when there is no room to speak of, which both callers already treat as "say
  *  nothing"; clamped to [0, 1] so the relative-age head start (which lands her a fraction above her
  *  birth build in week one) and a fully-filled ceiling both read as the ends of the scale rather
- *  than as a band that does not exist. ⭐ The clamp is what the top end costs: a career that beats
- *  the curve – an elite coach, a grinding plan – reads 1.0 rather than something above it, which is
- *  the correct thing to say about a girl who has taken everything she was ever going to take. */
+ *  than as a band that does not exist.
+ *
+ *  ⚠⚠ AND SINCE BUNDLE I THE UPPER CLAMP IS A GUARD RATHER THAN A WORKING PART, which is the clearest
+ *  single symptom of what H had wrong. Under the bare-curve denominator every coached career ran past
+ *  1.0 and was PINNED there – a middle rung from about nineteen – so the clamp was doing the reading
+ *  and the scale above it did not exist. Normalised against the best coaching available, an ordinary
+ *  well-coached career peaks near 0.94 and the clamp never fires; only a maximally optimised one (an
+ *  elite coach AND a grinding plan every week AND the match bonus at its cap, 0.9919 raw against the
+ *  0.9766 denominator) can still reach it, and 1.0 is the right thing to say about her.
+ *  `tests/round34-reachable-ceiling.test.ts` walks a real career and asserts the raw ratio stays
+ *  under 1, so a denominator that goes back to doing the reading through the clamp reddens. */
 function realisedShare(world: WorldState): number | null {
   const born = startingSkills(world.seed, world.profile)
   let gained = 0
@@ -1207,9 +1226,12 @@ const ROOM_BANDS: { label: string; note: string }[] = [
  * HISTORY. `realisedShare` no longer divides `mean(skills)` by `mean(potential)`: the skill she was
  * BORN with stopped counting as achievement, and the quantity thresholded here is now the share of
  * her own headroom she has actually taken. ⚠⚠ AND BUNDLE H OF THE SAME ROUND RE-NORMALISED IT AGAIN,
- * against what the age curve can REACH (`reachableHeadroomShare`, ~0.866 of her headroom on the
- * shipped curve) rather than against the asymptote nobody arrives at. The edges below did not move
- * for either change - they are the owner's, approved 02.09 - and bundle H is what makes them land
+ * against what is REACHABLE rather than against the asymptote nobody arrives at - then BUNDLE I
+ * corrected WHAT is reachable: `reachableHeadroomShare` walks the curve at the best coaching money
+ * can buy (0.9766 of her headroom on the shipped curve and ladder), not at the bare `ageFactor`
+ * (0.8668) that H shipped, which was the growth of a girl with no coach at all and which every
+ * coached career therefore ran past and was clamped at. The edges below did not move for any of the
+ * three changes - they are the owner's, approved 02.09 - and bundle I is what makes them land
  * where he was told they would. THE ROUND-23 MEASUREMENT BELOW THEREFORE DESCRIBES A
  * SUPERSEDED QUANTITY - it is kept, unedited, because it is the evidence for how the four bands came
  * to be four bands and because the reason 0.92 was earned is still worth reading, but no figure in

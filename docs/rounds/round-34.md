@@ -1599,3 +1599,278 @@ underneath rather than over them.
 * `coachSeasonUplift` and every price on the market card – they never read this quantity
 * no save schema, no migration, no RNG draw: `realisedShare` is derived at snapshot time and persists
   nothing, and the normaliser is a pure function of a shipped constant
+
+# Bundle I – the yardstick is the best coaching available, not no coaching at all
+
+Owner, 02.09, approving this fix directly: **«да, запускай»**. It changes the same denominator bundle
+H changed, one step further, and nothing else. The four labels, the four notes and the approved edges
+0.40 / 0.75 / 0.90 are byte-identical to what bundle A shipped.
+
+## The defect, in one paragraph
+
+Bundle H normalised by `reachableHeadroomShare()` = **0.8668**, which walks `ageFactor` **alone** –
+the growth of a girl with **no coach at all and no matches**. A girl who HAS a coach grows faster
+than that bare curve, so she exceeds the denominator and hits the `Math.min(1, …)` clamp in
+`realisedShare`. Measured, the shown share by age (~2 matches an event) under bundle H:
+
+| age | self / off | middle | elite / great |
+| --- | --- | --- | --- |
+| 18 | 75.9% | 90.2% | 93.9% |
+| 20 | 84.6% | 97.6% | **100.8%** |
+| 22 | 89.3% | **101.4%** | **104.2%** |
+| 28 | 95.3% | **105.7%** | **107.9%** |
+
+⚠⚠ **So a middle-coached career read «At her ceiling» from about 19 and for the rest of her life** –
+while an elite coach demonstrably still added. That is the same complaint the owner opened round 34
+with («звучит как приговор»), moved from 14 to 19, and the band's own note – «no coach can add much
+more now, whatever the price» – is simply false there.
+
+⭐ Measured on the same walks, this is what it looked like in the arithmetic: **a middle career spent
+12.5% of its weeks pinned at 1.000 by the clamp, high 26.6%, elite 34.2%.** The clamp was doing the
+reading, not guarding it, so the top of the scale did not exist as a scale.
+
+## The fix: normalise by the BEST POSSIBLE growth
+
+The same walk, at the best week a parent can buy – `coachFactor('elite','great')` and the match bonus
+at its cap. `bestCoachedRate()` (new, private, `src/engine/development.ts`) is that multiplier:
+
+| the shipped curve and ladder | |
+| --- | --- |
+| growthStart 13 · growthEnd 18 · plateauStart 23 · declineStart 29 | |
+| peakRate 0.0062 · growthEase 0.5 · plateauRate 0.0009 | |
+| `coachFactor('elite','great')` = 1.15 × 1.05 | **1.2075** |
+| matchBonus 0.18, capped at 3 | **× 1.54** |
+| **`bestCoachedRate()`** | **1.859550** |
+| **`reachableHeadroomShare()`** | **0.976596** |
+
+⚠ `trainFactor` IS DELIBERATELY LEFT AT 1, and it is the one judgement in the number. The plan dial
+is a week-by-week choice the condition model charges for – nobody holds Grind for fifteen years – so
+a denominator that assumed it would be a maximum nobody could hold. The coach and the match load are
+the STANDING setup of a well-run career, which is what the band's question is actually about. For
+scale: the grind arm reaches 0.9558 and grind-plus-three-matches 0.9919.
+
+## ⭐ Why the denominator is the BEST-COACHED maximum – and why bundle H's objection does not apply
+
+**The band's job is to answer «is there still room worth BUYING».** So the yardstick has to be what
+the best available coaching could reach; measuring against a girl who was never coached answers a
+different question, and answers it in a way that tells every coached girl she is finished.
+
+Bundle H rejected this denominator in its own ledger, on the grounds that it «puts the parent's
+chequebook inside his daughter's ceiling»: two identical girls would read differently because one
+family could afford an elite coach. **Reconsidered, and the objection does not apply**, for a
+mechanical reason:
+
+* the denominator is **ONE CONSTANT FOR EVERY CAREER** – a pure function of the shipped curve and the
+  shipped ladder, with nothing about this world, this family or this week in it. Two identical girls
+  read **identically**, whatever their parents can afford.
+* what differs between two careers is the **NUMERATOR** – how much she actually gained – **and that
+  difference is real.** The well-coached girl HAS realised more of herself, and saying so is the true
+  statement, not a judgement about her family.
+
+⚠ The cost of the choice, stated rather than hidden: a self-coached career tops out at ~0.85 of this
+scale and **never** reads «At her ceiling». That is the correct advice and not a gap – a coach would
+still buy her something, which is exactly what the band exists to say.
+
+## What each arm reads, under both denominators
+
+| arm | multiplier | reachable | H shows | I shows |
+| --- | --- | --- | --- | --- |
+| bare curve – no coach, no matches, nothing but age | 1.0000 | 0.8668 | **1.000 ⚠** | 0.888 |
+| self-coached, badly matched (0.82 × 0.94) | 0.7708 | 0.7885 | 0.910 | 0.807 |
+| self-coached, the parent's own fit (0.82 × 1.00) | 0.8200 | 0.8085 | 0.933 | 0.828 |
+| budget coach, well matched | 0.9975 | 0.8661 | 0.999 | 0.887 |
+| middle coach, well matched | 1.0920 | 0.8894 | **1.000 ⚠** | 0.911 |
+| high coach, well matched | 1.1655 | 0.9047 | **1.000 ⚠** | 0.926 |
+| elite coach, well matched | 1.2075 | 0.9124 | **1.000 ⚠** | 0.934 |
+| ⭐ **elite + great + the match bonus at its cap = THE YARDSTICK** | **1.8596** | **0.9766** | 1.000 ⚠ | 1.000 |
+| elite + great + a grinding plan every week | 1.5456 | 0.9558 | 1.000 ⚠ | 0.979 |
+| elite + great + grind + three matches a week | 2.3802 | 0.9919 | 1.000 ⚠ | 1.000 |
+
+The «H shows» column is the defect: every rung from middle upward is pinned at the clamp.
+
+## ⚠⚠ IT IS STILL DERIVED AND NEVER WRITTEN DOWN – now from three inputs, not one
+
+The backlog carries an approved wave that moves `plateauStart` 23 → 28 and `declineStart` 29 → 33. A
+literal `0.9766` would survive it in silence. Bundle H's memoisation and its key-on-the-values
+discipline are kept and **extended to the coach ladder and the match bonus**, so a retune of THOSE
+moves it too. Measured, from `tools/r34-reachable-ceiling.ts`:
+
+| what moved | normaliser | delta |
+| --- | --- | --- |
+| shipped, nothing moved | 0.976596 | – |
+| `plateauRate` 0.0009 → 0.0018 | 0.988845 | +1.22pp |
+| `plateauRate` 0.0009 → 0.0005 | 0.967479 | −0.91pp |
+| `declineStart` 29 → 33 (the approved wave) | 0.983481 | +0.69pp |
+| `declineStart` 29 → 26 | 0.969607 | −0.70pp |
+| both (0.0018 and 33) | 0.994446 | +1.78pp |
+| `peakRate` 0.0062 → 0.0080 | 0.990291 | +1.37pp |
+| **coach `developmentFactor.elite` 1.15 → 1.30** | 0.985685 | +0.91pp |
+| **coach `developmentFactor.elite` 1.15 → 1.05** | 0.967527 | −0.91pp |
+| **`fitFactor.great` 1.05 → 1.15** | 0.983654 | +0.71pp |
+| **`matchBonus` 0.18 → 0.30** | 0.990306 | +1.37pp |
+| **`matchBonus` 0.18 → 0.08** | 0.951267 | −2.53pp |
+| **`matchBonusCap` 3 → 5** | 0.990306 | +1.37pp |
+
+⭐ **The coach half of the memo key is the MULTIPLIER ITSELF, not a list of the fields behind it.**
+Keying on `bestCoachedRate()`'s value means a term added to `coachFactor` later is in the key the day
+it is added, with nobody having to remember to widen a template string – which is the failure mode a
+field list invites. The curve half stays a list because `ageFactor` is walked, not called once.
+
+## Which band each rung now reaches – 8 careers per rung, 780 weeks, real engine
+
+| rung | peak RAW share | peak SHOWN share | band reached | reaches «At her ceiling» |
+| --- | --- | --- | --- | --- |
+| self | 0.795 | 0.814 | Close to her ceiling | **0 of 8 – never** |
+| budget | 0.855 | 0.876 | Close to her ceiling | **0 of 8 – never** |
+| middle | 0.877 | 0.898 | At her ceiling | 3 of 8 |
+| high | 0.894 | 0.916 | At her ceiling | 8 of 8 |
+| elite | 0.901 | 0.923 | At her ceiling | 8 of 8 |
+
+⭐ The RAW column reproduces bundle A's and bundle H's 0.855 / 0.877 / 0.894 to the third decimal on
+the same horizon, which is the provenance check that says the two measurements are the same
+measurement. Only the denominator moved.
+
+When each band first arrives – median, and the range across the eight:
+
+| rung | Huge potential | Still room to grow | Close to her ceiling | At her ceiling |
+| --- | --- | --- | --- | --- |
+| self | 14.0 | 16.1 (16.0–16.2) | 22.7 (22.1–23.3) | **never** |
+| budget | 14.0 | 15.6 (15.6–15.7) | 19.8 (19.7–20.0) | **never** |
+| middle | 14.0 | 15.5 (15.4–15.5) | 19.1 (18.9–19.3) | 28.9 (28.5–28.9), 3/8 |
+| high | 14.0 | 15.4 (15.4–15.5) | 18.7 (18.6–18.9) | 27.1 (26.5–27.8) |
+| elite | 14.0 | 15.4 (15.3–15.4) | 18.4 (18.2–18.5) | 25.5 (24.8–25.8) |
+
+## ⭐ The clamp is no longer load-bearing – which is the defect measured as one number
+
+Peak raw ratio, and the share of a career's weeks spent pinned at 1.000 by `realisedShare`'s clamp:
+
+| rung | peak ratio (I) | weeks pinned (I) | peak ratio (H) | weeks pinned (H) |
+| --- | --- | --- | --- | --- |
+| self | 0.819 | **0.0%** | 0.923 | 0.0% |
+| budget | 0.879 | **0.0%** | 0.990 | 0.0% |
+| middle | 0.903 | **0.0%** | 1.018 | **12.5%** |
+| high | 0.918 | **0.0%** | 1.035 | **26.6%** |
+| elite | 0.926 | **0.0%** | 1.043 | **34.2%** |
+
+Nobody exceeds 1.0 in normal play. The clamp survives as a guard for the maximally optimised case
+(elite AND grind AND the match cap, 0.9919 raw against a 0.9766 denominator), which is the one career
+for which 1.0 is the right thing to say.
+
+## ⚠⚠ TWO CONSEQUENCES HE SHOULD SEE – reported, not adjusted
+
+**1. THE PREDICTED AGES IN THE APPROVAL DO NOT REPRODUCE ON THE ENGINE'S OWN CAREERS.** The approval
+predicted «a middle career reaches «At her ceiling» around **22**; an elite one around **20.5**», and
+that budget / middle / high / elite would all reach it. Measured on the real engine, 8 seeds a rung:
+elite **25.5**, high **27.1**, middle **28.9 on 3 of 8**, budget **never**, self **never**.
+
+The prediction was not wrong about the arithmetic – it is bundle H's own measured table scaled by
+0.8668/0.9766, and that scaling is exact. It is wrong about the CAREER: its reference girl reaches a
+raw share of ~0.916 by 28, while the engine's real middle-rung careers peak at **0.877** (bundle A,
+bundle H and this bundle all measure the same 0.877). Real careers lose weeks to injury, school and
+layoffs, average well under the match cap, and do not sit on Grind. **The idealised walk is an upper
+bound, not a forecast**, and the per-rung ages have to come from the engine.
+
+**2. AND THAT RE-OPENS BUNDLE H'S OWN COMPLAINT AT THE BOTTOM OF THE HIRED LADDER.** Bundle H existed
+because «a parent whose girl had genuinely stopped growing was never told to stop paying for a coach
+who could no longer buy anything». Under bundle I that is true again for **budget (0/8)** and mostly
+for **middle (3/8, at 28.9)**. The self rung reading «never» is the intended, correct behaviour; the
+budget rung reading «never» is a question.
+
+⚙ **NOT CHANGED, because both knobs are his.** The band edges are the owner's, approved 02.09 and
+explicitly out of scope here; the denominator is the thing he just approved. The two ways to close it
+if he wants it closed:
+
+* **move the top edge** 0.90 → ~0.87, which puts budget (peak 0.876) and middle (0.898) inside it
+  while leaving self (0.814) outside – the shape bundle H's ledger already named, «if he wants the
+  verdict later, the EDGE is the knob, not the measure», asked at the other end; or
+* **take the match bonus out of the yardstick** (coach factor alone, 0.9124), which reads between the
+  two bundles: self would still stop at 0.886, budget would reach 0.937.
+
+⚠ A third measured finding, for the record: the per-route curves still reach different amounts –
+direct (plateau 22, decline 27) reaches 0.9690 against college's 0.9766, so a direct-route girl peaks
+about 0.8% lower on the shown scale, down from bundle H's 2.5%. The normaliser is the SHIPPED pair for
+every career; using her own was considered and rejected in bundle H, and that argument is unchanged
+(`ageCurveOf` pulls `declineStart` in as she loses weeks to injury, so a per-career normaliser would
+make the read jump UP the week she got hurt).
+
+## `r23-walk` year by year – the career the guard test walks
+
+```
+age     14     15     16     17     18     19     20     21     22     23     24     25     26     27     28     29
+raw    0.009  0.295  0.471  0.591  0.670  0.722  0.762  0.792  0.813  0.827  0.836  0.845  0.853  0.860  0.868  0.875
+shown  0.009  0.302  0.482  0.605  0.686  0.740  0.780  0.811  0.832  0.847  0.856  0.865  0.873  0.881  0.889  0.896
+```
+
+⭐ **His original complaint is still fully cured**, and by more margin than under bundle H: «написал 14
+летней девочке Close to her ceiling … звучит как приговор … не рановато ли?» – at fourteen this career
+reads «Huge potential», and «Close to her ceiling» now arrives at **19.3** rather than at bundle H's
+17.7 or the pre-round-34 measure's 15.5.
+
+## Evidence
+
+* **`tests/round34-reachable-ceiling.test.ts`** (bundle H's file, re-aimed – 15 tests): the shipped
+  normaliser pinned at 0.9766; the arm that catches a revert to the bare curve; the anti-hardcode
+  test, now moving `plateauRate`, `declineStart`, `peakRate`, **`developmentFactor.elite`**,
+  **`fitFactor.great`**, **`matchBonus` and `matchBonusCap`**, restoring in a `finally` and then
+  asserting the value COMES BACK (the arm that catches a frozen memo); the two route curves differing;
+  a career at its birth build reading «Huge potential» on three seeds; the three edges checked from
+  both sides at their derived raw positions; monotone and no-flicker swept at 0.005; the four labels
+  byte-identical with no digit anywhere; five real careers walked 780 weeks – **self never reaching the
+  top band**, high and elite reaching it, budget measured as not reaching it, the peak share a strict
+  ladder across all five rungs, and **the clamp firing on none of them**.
+* **`tools/r34-reachable-ceiling.ts`** (re-aimed, archival, registered, typechecks under
+  `check:tools`) – every table above.
+
+⚠ **Mutation-verified, eight ways, each watched going red before it was believed:**
+
+| mutation | reddens |
+| --- | --- |
+| `reachableHeadroomShare` returns a literal `0.976596` | 2 tests – the anti-hardcode arm and the route arm |
+| the memo keyed on `'computed'` instead of on its inputs' values | the same 2 – which is the point of that arm |
+| the memo key drops its coach half (curve fields only) | 1 – the ladder and match arms of the sensitivity test |
+| **the walk reverts to bundle H's bare `ageFactor`** | **8 tests across 2 files**, incl. self reaching the top band and the clamp firing |
+| `bestCoachedRate` reads the `middle` rung instead of `elite` | 2 – the pinned constant and the sensitivity arm |
+| the match-bonus term removed from `bestCoachedRate` | 5 – incl. budget and high/elite changing which band they reach |
+| `realisedShare` back to `gained / room` | 2 – the derived edges and the high/elite reach |
+| `'At her ceiling'` renamed to `'At her limit'` | 3 across 2 files – the invariant-4 pin and two band reads |
+
+⚠ The fourth mutation is bundle H's defect reproduced: with the bare curve back as the denominator, a
+**self-coached** career reaches «At her ceiling» and the clamp starts firing on middle, high and elite
+– which is this bundle's finding, mechanically.
+
+⚠ **One guard was written and then deleted for failing its own mutation.** A `Math.max(0, …)` floor
+was added to the walk against a runaway `ageFactor * best > 1`. The mutation that was supposed to
+prove it – delete the floor, walk an absurd `peakRate` – came back **green**: the sign flips cancel
+and the product collapses to ~0 either way, so the guarded value never moved. A guard whose removal no
+test can see is untested defensive code claiming a protection it does not demonstrate, so the line
+came out and the reasoning is recorded in the source. (`growWeek` does not floor this product either,
+and the walk exists to mirror `growWeek`.)
+
+## Guard tests re-aimed – none deleted, none loosened
+
+| file | what moved | why |
+| --- | --- | --- |
+| `tests/round34-reachable-ceiling.test.ts` | the pinned constant 0.8668 → **0.9766** | the bundle itself. Same assertion, same job; what moved is the multiplier the walk runs at |
+| `tests/round34-reachable-ceiling.test.ts` | `expect(reachable).toBeLessThan(0.9)` → a career one hair under the maximum must not read the top band | H's arm worked only because its 0.8668 happened to fall below the top edge; bundle I's 0.9766 is above it, so that arm is arithmetically gone. The CLAIM it was making – «the top band is earned, not automatic» – is made directly instead, and no longer depends on where the denominator falls |
+| `tests/round34-reachable-ceiling.test.ts` | the four per-rung `[0,1,2,3]` walks → one shared walk over **five** rungs (self added) with the reach asserted per rung | the four-rung version asserted something no longer true, and the rung that matters most – `self` – was not in it |
+| `tests/round23-coach-copy.test.ts` | the middle-rung walk pin `[0, 1, 2, 3]` → **`[0, 1, 2]`** | ⚠ a REVERSION of bundle H's re-aim, and both notes are kept. H's fourth band on this career was the clamp firing, not her ceiling filling – 12.5% of a middle career's weeks were pinned at 1.000. `toEqual` on the whole walk still forbids a skipped band, a repeat and any step backwards |
+| `tests/round23-coach-copy.test.ts` | the elite walk's `[0,1,2,3]` – **unchanged**, its comment re-aimed | the round-23 claim (the fourth band is not dead copy) holds under either denominator; H's «8/8 at every rung» figures beneath it are marked superseded rather than deleted |
+| `tests/coachTiers.test.ts`, `tests/component/round23-coach-card.test.ts`, `tests/component/round24-coach-card.test.ts` | comments only | ⭐ their `shown × reachableHeadroomShare()` helpers followed the change on their own, which is exactly what bundle H bought by writing the multiply as a call rather than a literal |
+| `tests/round34-ceiling-read.test.ts` | nothing | `theShippedMeasure` already divides by the normaliser; every claim in the file is an ordering or a zero |
+
+⭐ Every re-aimed helper still multiplies by `reachableHeadroomShare()` rather than by a literal, so
+the approved curve wave – and now a coach-ladder retune – carries them with it. Bundle A's and bundle
+H's ⚠ notes and the round-23 measurement block over `coachRoomBandIndex` are kept verbatim, with
+bundle I's note written underneath rather than over them.
+
+## What did NOT change
+
+* the four labels and their four notes – **invariant 4**, asserted byte-identical
+* the band edges 0.40 / 0.75 / 0.90 – the owner's, approved 02.09
+* `handoverRoomBand` – it measures how BIG her room is, not how much of it is filled
+* `coachSeasonUplift` and every price on the market card – they never read this quantity
+* `growWeek`, `ageFactor`, `coachFactor` and every knob they read – the walk MIRRORS them and writes
+  nothing back
+* no save schema, no migration, no RNG draw: `realisedShare` is derived at snapshot time and persists
+  nothing, and the normaliser is a pure function of shipped constants
+* item lines 1–22 and every other section of this ledger
