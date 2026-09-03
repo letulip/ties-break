@@ -107,6 +107,19 @@ async function click(el: ReturnType<typeof mount>, selector: string, label?: str
   await el.vm.$nextTick()
 }
 
+/** ⭐⭐ ROUND 35 #1 – FROM WHEREVER THE WEEKEND IS TO THE COURT. The weekend is a flow now: the
+ *  tournament's own screen (once), then a transition before each match, then the viewer. This
+ *  presses whichever of the two is up and leaves the caller on the court. */
+async function toCourt(wrapper: ReturnType<typeof mount>): Promise<void> {
+  for (const label of [LOCAL_OPEN_COPY.begin, LOCAL_OPEN_COPY.watchMatch]) {
+    const button = wrapper.findAll('button').find((b) => b.text() === label)
+    if (button) {
+      await button.trigger('click')
+      await wrapper.vm.$nextTick()
+    }
+  }
+}
+
 /** ⭐ ONE WHOLE CHILDHOOD, WALKED THROUGH THE REAL COMPONENT, counting the weekends it put on the
  *  screen. The player here SKIPS every match – that is the arm the ten-minute budget rests on – but
  *  the weekend is real either way: the bracket is resolved before the screen opens. */
@@ -126,16 +139,23 @@ async function walkCounting(
       await click(wrapper, '.prologue-answer', labels[1])
     } else if (card.options) {
       await click(wrapper, '.prologue-answer', card.options.find((o) => o.id === road[age])!.label)
-    } else {
+    } else if (!card.tournament) {
+      // ⚠ RE-AIMED BY ROUND 35 #4, NOT LOOSENED: a card that also asks a tournament question
+      // synthesises no `continueLabel` control any more - the ask's own pair is the way on. See the
+      // note in PrologueCard.vue's `choices`.
       await click(wrapper, '.prologue-answer', card.continueLabel)
     }
-    // ⭐ THIS YEAR'S TOURNAMENT QUESTION, IF THE CARD ASKED ONE – the second beat on the same card.
-    const lede = wrapper.find('.prologue-lede')
+    // ⭐ THIS YEAR'S TOURNAMENT QUESTION, IF THE CARD ASKED ONE.
+    // ⚠⚠ RE-AIMED BY ROUND 35 #4: it is on the SAME screen as the year's own decision now, not a
+    // second beat on the same painting, and its line is `.prologue-ask` rather than the card's own
+    // lede. The owner reported the two-beat version as a repeated screen - «she asks more» and
+    // «juniour tour opens at fourteen», both seen twice - and he was reading it correctly.
+    const askLine = wrapper.find('.prologue-ask')
     const enterLabel = wrapper
       .findAll('.prologue-answer-label')
       .find((b) => b.text() === 'Put her name down')
     if (enterLabel) {
-      asks.push(`${age}: ${lede.exists() ? lede.text() : ''}`)
+      asks.push(`${age}: ${askLine.exists() ? askLine.text() : ''}`)
       await click(wrapper, '.prologue-answer', enter ? 'Put her name down' : 'Not this year')
     }
     // ...and then whatever tennis the year held.
@@ -178,8 +198,14 @@ describe('⭐⭐⭐ entering her at ten puts a real draw on the screen', () => {
 
     await click(wrapper, '.prologue-answer', 'Enter her')
 
-    // ...and now it is a real match, in the real viewer, against a child the prologue invented.
+    // ...and now it is the weekend. ⚠⚠ RE-AIMED BY ROUND 35 #1, AND THE RE-AIM IS THE FEATURE: the
+    // owner asked for the game's own flow rather than a jump to a court («турнир как-то сразу в
+    // матчи идет»), so what «Enter her» opens is the TOURNAMENT'S OWN SCREEN, and the court is two
+    // controls in. Both new beats are asserted by name in round35-prologue.test.ts; here the claim
+    // is unchanged - entering her produces a real weekend in the real viewer.
     expect(wrapper.find('.plo').exists(), 'entering her did not produce a weekend').toBe(true)
+    expect(wrapper.find('.plo-splash').exists(), 'the weekend skipped its own first screen').toBe(true)
+    await toCourt(wrapper)
     expect(wrapper.find('canvas').exists(), 'no court – this is not the real viewer').toBe(true)
     expect(wrapper.text()).toContain('Not started')
     expect(wrapper.findAll('.mv-skip').length, 'the viewer`s own per-match escape').toBe(1)
@@ -337,7 +363,7 @@ describe('⚠⚠ round-20 #3 – the way out of a weekend is on a 375x667 phone'
   it('⭐⭐ the weekend`s own escape is above the court, not below it', () => {
     const kid = prologueEntrant('fit', KID_ID, 'Vera Novak', 10)
     const open = playLocalOpen('fit', kid, 10)
-    const wrapper = mount(PrologueLocalOpen, { attachTo: document.body, props: { open, kid } })
+    const wrapper = mount(PrologueLocalOpen, { attachTo: document.body, props: { open, kid, seed: 'fit' } })
     const shell = document.querySelector('.plo')!
     const skip = document.querySelector('.plo-skip')!
     expect(shell && skip).toBeTruthy()
@@ -390,22 +416,36 @@ describe('⚠⚠ round-20 #3 – the way out of a weekend is on a 375x667 phone'
       })
       const card = document.querySelector('.prologue-card')!
       const answers = document.querySelector('.prologue-answers')!
-      // Two answers, and they are the ask's – not the card's own.
-      expect(answers.querySelectorAll('button')).toHaveLength(2)
+      // ⚠⚠ RE-AIMED BY ROUND 35 #4, AND EVERY CLAUSE IS STRICTER RATHER THAN LOOSER. This used to
+      // assert TWO answers and no read lines, because the ask was a beat of its own that replaced
+      // the card's bottom half. The owner met that as a repeated screen, so the two beats are one:
+      // the card's own answers, the ask's line, and the ask's two answers, in one column - and the
+      // read lines are back, because there is one beat and it is the year's.
+      const askAnswers = row.tournament ? 2 : 0
+      const own = (row.options ?? row.origins ?? []).length || (askAnswers ? 0 : 1)
+      expect(answers.querySelectorAll('button')).toHaveLength(own + askAnswers)
       expect(wrapper.text()).toContain(row.tournament!.lede)
       expect(wrapper.text()).toContain(row.tournament!.enterLabel)
-      // ⚠ AND THE TWO READ LINES ARE NOT ON THIS BEAT, which is what keeps it shorter than the card.
-      expect(document.querySelector('.prologue-read')).toBeNull()
+      // ...and the card's OWN scene is still on it, which is the half that was missing.
+      expect(wrapper.text()).toContain(row.lede)
+      expect(document.querySelector('.prologue-read')).toBeTruthy()
       assertDismissReachable(card, answers, PHONE, `the ask at ${name}`)
       wrapper.unmount()
       document.body.innerHTML = ''
     }
   })
 
-  it('⚠ the viewer`s own per-match escape is on the screen too, and it is the shipped one', () => {
+  // ⚠ RE-AIMED BY ROUND 35 #1, NOT LOOSENED. The weekend no longer opens straight onto a court:
+  // the owner asked for the game's own flow («первый экран с артом турнира, потом матчи и переходы
+  // между ними как обычно»), so the viewer is two controls in - the tournament's own screen, then
+  // the round's transition. The CLAIM is unchanged and is still about the viewer's own escape; what
+  // moved is that the test has to walk to the court the way a player does. The two beats are
+  // asserted on their own in tests/component/round35-prologue.test.ts.
+  it('⚠ the viewer`s own per-match escape is on the screen too, and it is the shipped one', async () => {
     const kid = prologueEntrant('fit2', KID_ID, 'Vera Novak', 10)
     const open = playLocalOpen('fit2', kid, 10)
-    const wrapper = mount(PrologueLocalOpen, { attachTo: document.body, props: { open, kid } })
+    const wrapper = mount(PrologueLocalOpen, { attachTo: document.body, props: { open, kid, seed: 'fit2' } })
+    await toCourt(wrapper)
     const skip = wrapper.findAll('button').find((b) => b.text() === 'Skip to the result')
     expect(skip, 'the viewer`s own «Skip to the result» is gone').toBeTruthy()
     wrapper.unmount()
@@ -426,13 +466,18 @@ describe('⚠⚠ round-20 #3 – the way out of a weekend is on a 375x667 phone'
     const mine = herMatches(open, KID_ID)
     expect(mine.length).toBeGreaterThan(1)
 
-    const wrapper = mount(PrologueLocalOpen, { attachTo: document.body, props: { open, kid } })
+    const wrapper = mount(PrologueLocalOpen, { attachTo: document.body, props: { open, kid, seed: picked!.seed } })
+    // ⚠ RE-AIMED BY ROUND 35 #1: the tournament's own screen comes first now, once, and then a
+    // transition before EVERY match - which is the shape the owner asked for and the shape the main
+    // flow has. The claim below is exactly what it was (every one of her matches, in order, and the
+    // last one ends the weekend); `toCourt` is what a player presses to reach each of them.
     for (let i = 0; i < mine.length; i++) {
       // Her opponent for THIS round is named on the screen, which is how we know it is that match.
       const oppId = mine[i].aId === KID_ID ? mine[i].bId : mine[i].aId
       const opponent = open.field.find((p) => p.id === oppId)!
       expect(wrapper.text(), `round ${i}`).toContain(opponent.name)
       expect(wrapper.emitted('done'), `the weekend ended at round ${i}`).toBeUndefined()
+      await toCourt(wrapper)
       await click(wrapper, '.mv-skip')
       // The viewer holds the press (`proceedLabel`), so the way on is a control and not an eject.
       await click(wrapper, 'button', LOCAL_OPEN_COPY.proceed)
@@ -526,7 +571,11 @@ describe('⭐⭐ the girl the walk puts on the court is the childhood the player
           const option = chooseOn(cardFor(age, run), age, rich)
           await click(wrapper, '.prologue-answer', option.label)
           run = withPick(run, age, option.id)
-        } else {
+        } else if (!card.tournament) {
+          // ⚠ RE-AIMED BY ROUND 35 #4: a card that carries a tournament question synthesises no
+          // «Go on» of its own any more - the question and the year are one screen, and the ask's
+          // pair is the way on. The thirteenth is the only card in the table with no decision AND an
+          // ask, so it is the only one this branch stopped covering.
           await click(wrapper, '.prologue-answer', card.continueLabel)
         }
         if (wrapper.findAll('.prologue-answer-label').some((b) => b.text() === 'Put her name down')) {

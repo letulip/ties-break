@@ -6,28 +6,42 @@
    Files under public/fonts/ (curl'd from Google Fonts/gstatic, latin subset only);
    precached automatically – the workbox glob already covers woff2. font-display:
    swap + system fallbacks so text never blocks on the download. */
+/* ⭐⭐⭐ ROUND 35 #8 – SORA AND MANROPE ARE NOW VARIABLE, AND THAT IS WHY THIS COSTS ALMOST NOTHING.
+   The app asked these two families for SEVEN faces they did not ship: Sora 700/800 (24 rules,
+   including `.diary-name` at 42px – the largest type in the app) and Manrope 600/700/800 (11 named
+   rules plus ~200 inheriting off `body`). 235 rules in all, and 111 elements on a mounted Home were
+   being SYNTHETICALLY bolded – the renderer drawing each stroke a second time, offset. The owner
+   found it as «кнопка Proceed стала с очень худым шрифтом»: round 34 #10 had set that one control
+   to 400, a REAL face, and it read thin beside a screenful of fakes.
+
+   ⚠ FIVE STATIC FILES WERE THE PLAN AND WOULD HAVE COST ~72 KB. Google serves both families as
+   VARIABLE fonts now – one file answered 600, 700 and 800 with a single sha256 – so two files
+   replace three and carry every weight between them instead:
+
+       was  manrope-400 14,108 + manrope-500 14,044 + sora-600 15,000  =  43,152 bytes
+       is   manrope-var 24,576 + sora-var    25,240                    =  49,816 bytes   (+6.5 KB)
+
+   ⚠ THE RANGES ARE READ OFF THE FILES' OWN `fvar` TABLE, not off a reference page: Manrope
+   wght 200..800, Sora wght 400..800. Both cover everything the stylesheet asks for. A weight
+   outside a range still falls back cleanly; only a weight ABOVE the heaviest face synthesises,
+   which is the defect this replaces.
+
+   ⚠ Caveat stays a single static face – it is asked for at 600 and nowhere else, and its 51 KB is
+   the handwriting, not a UI weight. */
 @font-face {
   font-family: 'Sora';
   font-style: normal;
-  font-weight: 600;
+  font-weight: 400 800;
   font-display: swap;
-  src: url('/fonts/sora-600.woff2') format('woff2');
+  src: url('/fonts/sora-var.woff2') format('woff2');
 }
 
 @font-face {
   font-family: 'Manrope';
   font-style: normal;
-  font-weight: 400;
+  font-weight: 200 800;
   font-display: swap;
-  src: url('/fonts/manrope-400.woff2') format('woff2');
-}
-
-@font-face {
-  font-family: 'Manrope';
-  font-style: normal;
-  font-weight: 500;
-  font-display: swap;
-  src: url('/fonts/manrope-500.woff2') format('woff2');
+  src: url('/fonts/manrope-var.woff2') format('woff2');
 }
 
 @font-face {
@@ -674,11 +688,41 @@ button:disabled {
   cursor: default;
 }
 
+/* ⭐⭐⭐ ROUND 35 #8 – ONE WEIGHT FOR EVERY AFFIRMATIVE BUTTON IN THE APP, AND IT IS A FACE THAT
+   SHIPS. The owner: «после последнего мержа основная кнопка Proceed на главной стала с очень худым
+   шрифтом, а на других экранах нормально, я думал, что это один общий компонент – проверь
+   пожалуйста и сделай на всех экранах одинаково с нормальным весом шрифта пожалуйста».
+
+   ⚠⚠ IT IS NOT ONE COMPONENT AND IT NEVER WAS – that half of his message is answered by the sheet:
+   `button.primary` is the app's affirmative button in twelve files and round 34 #10 gave the home
+   CTA a rule of its own at 400. So the two were 600 and 400 and «одинаково» was false.
+
+   ⭐ WHY THE HONEST ONE LOOKED THIN. Manrope is self-hosted at 400 and 500 ONLY (public/fonts/), so
+   600 has NO REAL FACE and the renderer emboldens the 500 one – it draws the stroke again, offset.
+   Round 34's 400 was the only primary button in the app rendering a face that actually exists, and
+   he read it as thin against a screenful of synthesised ones. MEASURED across src/ (rules asking a
+   weight heavier than the family ships): Sora 700 x3 + 800 x21, Manrope 600 x7 / 700 x2 / 800 x2
+   with the family named, plus 200 more rules that inherit Manrope off `body` and ask 600/700/800.
+   235 rules in all, every one of them synthetically bolded.
+
+   ⚙ 500, WHICH IS THE ONE NUMBER BOTH OF HIS RULINGS ALLOW. Round 34 #10 was «мне не нравятся
+   жирные буквы … сделай обычные» and this round is «очень худой … нормальный вес»; 500 is the
+   heaviest Manrope face this repo actually ships, so it is a step of body over 400 without being
+   the fake bold he rejected – and round 34's own note offered it in advance («500 is one step away
+   if he wants a touch more body in it – one number, say the word»). He has now said the word.
+   ⚠ 600 IS NOT AVAILABLE AS AN HONEST ANSWER YET. His ruling for this item was to SHIP the missing
+   faces (Manrope 600/700/800, Sora 700/800, ~72 KB); they could not be fetched in the wave that
+   wrote this line, so nothing was invented – see docs/rounds/round-35.md item 8. When those five
+   woff2 land, 600 becomes a real face and this is one number.
+
+   ⚠ «ЛИШНЕЕ ДОЛОЙ» HAS NO TARGET: all four shipped faces are asked for – Sora 600 by 4 rules,
+   Caveat 600 by 2, Manrope 500 by 74, Manrope 400 by `body`'s own shorthand and 14 rules more.
+   Nothing self-hosted here is dead weight. */
 button.primary {
   background: var(--accent);
   border-color: var(--accent);
   color: var(--on-lime);
-  font-weight: 600;
+  font-weight: 500;
 }
 
 button.primary:hover:not(:disabled) {
@@ -1441,10 +1485,20 @@ button.primary.risky {
    ⚠ `PrimaryPill`'s `.tb-pill--cta` KEEPS ITS 800 on purpose. Its note calls itself "verbatim from
    `.next-week-btn`", and after this round that is true of everything except the weight: it is a
    different button on TournamentFlow, EndingScreen and the wizard, it never renders on Home, and
-   the owner named the home CTA. */
-button.next-week-btn {
-  font-weight: 400;
-}
+   the owner named the home CTA.
+
+   ⭐⭐⭐ ROUND 35 #8 RETIRED THE RULE THIS NOTE DESCRIBES, AND KEPT EVERY WORD OF WHY IT EXISTED.
+   `button.next-week-btn { font-weight: 400 }` is GONE – not edited to 500, deleted – because
+   `button.primary` now carries 500 for every affirmative button in the app and a second declaration
+   of the same number is the disease this note's own second paragraph names: a rule nobody needs is
+   how a stale weight survives a change to the one that matters. «Сделай на всех экранах одинаково»
+   is now true by construction rather than by two rules agreeing.
+
+   ⚠ THE CASCADE FINDING ABOVE STILL HOLDS AND IS WHY THE DELETION IS SAFE, not a regression to the
+   pre-round-34 state: `button.primary` (0-1-1) still outranks a bare `.next-week-btn` (0-1-0), so
+   the CTA reads `button.primary`'s weight and there is exactly one place to change it. What round
+   34 could not do was move that rule – twelve files hang off it and he had named one button. This
+   round he named all of them. */
 
 .next-week-btn:hover:not(:disabled) {
   background: #dcec6a;
@@ -1620,6 +1674,34 @@ button.next-week-btn {
   padding: 16px;
   background: rgba(6, 10, 20, 0.6);
   z-index: 60;
+}
+
+/* ⭐⭐⭐ ROUND 35 #2 – THE PROLOGUE'S GROUND. The owner, playing the merged prologue end to end:
+   he asked for the flow to be drawn without the framed backing plate - a square painting across the
+   full width, the way the Home screen does it, with all the text and the choices beneath it - and
+   said in the same breath what he expected to get for it, which was vertical room. His words are
+   quoted in tests/component/round35-prologue.test.ts, where Cyrillic is allowed to live.
+
+   ⚠ IT IS A MODIFIER ON `.dialog-overlay` AND NOT A SECOND SCRIM, which is what keeps round-20 #3
+   in force on the surface it matters most on. Everything the prologue's cards inherit from the
+   shared box stays inherited: `position: fixed; inset: 0` (so `tests/component/fits.ts` still knows
+   what «the room there is» means) and, on the card itself, `max-height: 100%; overflow-y: auto` -
+   the height bound whose absence stopped the owner's career on `TourBriefingDialog`. What changes is
+   the two things that made the prologue read as a popup rather than as the game: the 16px inset, and
+   the dim over a page there is nothing behind.
+
+   ⚠ THE PADDING IS WHAT BUYS THE ROOM. `measureDialog` reads the overlay's own padding out of the
+   viewport before anything else - 375x667 minus 16 either side was 343x635, and it is 375x667 now.
+   Thirty-two of those pixels go straight back into the painting (a square hero is as tall as the
+   screen is wide) and the other thirty-two are room the text did not have.
+
+   ⚠ AND THE SCRIM GOES BECAUSE THERE IS NOTHING BEHIND IT. `rgba(6, 10, 20, 0.6)` dims the page a
+   dialog is covering; the prologue covers no page - it is the FIRST thing a new player sees, before
+   a career exists - so the dim was 60% of a colour over nothing. `--bg` is what the app paints its
+   own screens, which is the point: this is a screen. */
+.prologue-overlay {
+  padding: 0;
+  background: var(--bg);
 }
 
 /* THE PANEL SHELL. Everything that opens over the page - the confirm dialog, the match replay,

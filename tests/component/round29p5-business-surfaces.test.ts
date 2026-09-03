@@ -30,6 +30,7 @@ import {
   academyWeeklyIncomeCents,
   buyAsset,
   createWorld,
+  merchFamilyWeeklyIncomeCents,
   merchWeeklyIncomeCents,
   toSnapshot,
   KID_ID,
@@ -130,8 +131,17 @@ describe('§2 the shop shelf carries the business family and quotes what it earn
     const world = businessWorld('p5a-shop')
     const snap = toSnapshot(world)
     const merchRow = snap.shop.rows.find((r) => r.id === 'merch-brand')!
-    expect(merchRow.incomeCents).toBe(merchWeeklyIncomeCents(world))
+    // ⚠⚠ RE-AIMED AT ROUND 35 #9, NEVER LOOSENED, AND THE CLAIM IS THIS ARM'S OWN TITLE: the row
+    // «says what it brings in right now». What it brings the FAMILY changed on 03.09 – her ramp
+    // comes off the brand's week at the banking site («в недельном доходе будет семье на руки сумма
+    // меньше») – so the card follows the till, which is the equality this line has always asserted.
+    // Only the function on the right-hand side moved with the money.
+    expect(merchRow.incomeCents).toBe(merchFamilyWeeklyIncomeCents(world))
     expect(merchRow.incomeCents).toBeGreaterThan(0)
+    // ⚠ AND THE GROSS IS STILL THE GROSS – the figure `brandGrossWorthCents` multiplies. The two
+    // must not have collapsed into one number, which is exactly what a split placed in the rate
+    // would have done.
+    expect(merchRow.incomeCents, 'her cut really came off').toBeLessThan(merchWeeklyIncomeCents(world))
     const wrapper = await mountMoneyTab(snap, 'Shop')
     // ⚠ RE-AIMED, ROUND 30 #5 – «Business (Academy is subdivision inside)»: the brand and the
     // academy share ONE segment, so this presses it. The family heading is unchanged word for word

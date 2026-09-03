@@ -62,7 +62,31 @@ const TYPED_NAME = 'Zenobia'
  *  not the second family origin – so this walk would have gone on clicking something real and
  *  meaning something else. The answers column is the structural fact this file was always relying on
  *  («the way out sits LAST, after the answers»); it is now named instead of assumed. */
-const CONTROLS_PER_CARD = [4, 1, 1, 2, 2, 2, 2, 2, 1]
+/** ⚠⚠ RE-AIMED BY ROUND 35 #4, NOT LOOSENED – AND IT GAINED A SECOND COLUMN. The tournament
+ *  question used to be a SECOND BEAT on the same painting; the owner met that as a repeated screen
+ *  («какие-то экраны у нас повторяются») and it is on the CARD now, under its own line, beside the
+ *  year's own answers. So four of the nine cards carry more controls than they did, and one of them
+ *  carries fewer of its own:
+ *
+ *    age 11, 12   two options + the question's two            2 -> 4
+ *    age 13       no decision of its own; its question IS      1 -> 2
+ *                 the way on, so the synthesised «Wait for
+ *                 the coach» is gone (PrologueCard's `choices`)
+ *
+ *  `take` is which control this walk presses, and it exists because «the second one» stopped being a
+ *  single rule: on a card with options it is the second OPTION, and on the thirteenth - which has
+ *  none - the question is the only thing to answer and `clearWeekends` answers it. */
+const CARDS: readonly { controls: number; take: number | null; asks: boolean }[] = [
+  { controls: 4, take: 1, asks: false }, // 5  – three origins plus the way out; the second is the middle-class house
+  { controls: 1, take: 0, asks: false }, // 6
+  { controls: 1, take: 0, asks: false }, // 7
+  { controls: 2, take: 1, asks: false }, // 8
+  { controls: 2, take: 1, asks: false }, // 9
+  { controls: 2, take: 1, asks: false }, // 10 – «Enter her», and it is the card's OWN decision
+  { controls: 4, take: 1, asks: true }, // 11 – two options AND this year's question
+  { controls: 4, take: 1, asks: true }, // 12
+  { controls: 2, take: null, asks: true }, // 13 – the question is the card's only pair; see `take`
+]
 
 /** ⭐⭐ PHASE 11 – WHATEVER TENNIS THE YEAR HELD, CLEARED IN A REAL BROWSER. The walk takes the
  *  SECOND answer on every card, and on the tenth that is «Enter her»; 11, 12 and 13 ask again as a
@@ -79,17 +103,22 @@ const CONTROLS_PER_CARD = [4, 1, 1, 2, 2, 2, 2, 2, 1]
 async function clearWeekends(page: Page): Promise<number> {
   let weekends = 0
   for (let guard = 0; guard < 14; guard++) {
-    // ⭐⭐ THIS YEAR'S TOURNAMENT QUESTION, if the card asked one – the SECOND BEAT on the same card.
-    // The owner: «Сказали "не в этом году" – значит не в этом году, дальше тоже можно спрашивать.»
-    // This walk always says yes, so it takes the busiest road the table can produce.
-    const enter = page.getByRole('button').filter({ hasText: 'Put her name down' })
-    if (await enter.count()) {
-      await enter.first().click()
-      continue
-    }
+    // ⚠⚠ ROUND 35 #4 MOVED THIS YEAR'S TOURNAMENT QUESTION OUT OF THIS LOOP, and that is a fix
+    // rather than a trim. It used to be a SECOND BEAT on the same painting, which is what this loop
+    // pressed; the owner met that as a repeated screen, so the question is part of the CARD now and
+    // is answered in `walkTheChildhood` beside the year's own decision. Left here it would answer
+    // the NEXT card's question too – the thirteenth's is on screen the moment the twelfth is
+    // finished – and this walk runs away past the end of the childhood. Watched failing exactly
+    // that way («the prologue never ran out of weekends») before it was moved.
+    // ⭐⭐⭐ ROUND 35 #1 – THE WEEKEND IS A FLOW NOW: the tournament's own screen, then a transition
+    // before every match, then the viewer. The owner: «чтобы был первый экран с артом турнира, потом
+    // матчи и переходы между ними как обычно». The header's own escape is on all three beats, which
+    // is the round-20 #3 property this loop rests on, so the skipping player still leaves in one
+    // press – and the two new beats are asserted by name in tests/component/round35-prologue.test.ts.
     const skip = page.locator('.plo-skip')
     if (await skip.count()) {
       weekends += 1
+      await expect(page.locator('.plo-splash'), 'the weekend went straight to a match').toBeVisible()
       await skip.click()
       continue
     }
@@ -108,23 +137,33 @@ async function clearWeekends(page: Page): Promise<number> {
  *  tennis each year held. Returns how many weekends the walk actually saw. */
 async function walkTheChildhood(page: Page): Promise<number> {
   let weekends = 0
-  for (const [index, expected] of CONTROLS_PER_CARD.entries()) {
+  for (const [index, { controls, take, asks }] of CARDS.entries()) {
     const card = page.getByRole('dialog')
     const heading = await card.getByRole('heading').textContent()
     const buttons = card.locator('.prologue-answers').getByRole('button')
-    await expect(buttons, `card ${index + 1} does not have the controls it should`).toHaveCount(expected)
+    await expect(buttons, `card ${index + 1} does not have the controls it should`).toHaveCount(controls)
 
-    // The second control on a card that has one; the only control on a quiet year. On card 1 that is
-    // the second family origin, which is the middle-class house – the background every other layer
-    // measures this prologue against.
-    await buttons.nth(expected > 1 ? 1 : 0).click()
+    // The card's own answer, where it has one. On card 1 that is the second family origin, which is
+    // the middle-class house – the background every other layer measures this prologue against.
+    // ⚠ `take === null` IS THE THIRTEENTH and is not a skip: that card carries no decision of its
+    // own, so its tournament question is the way on and `clearWeekends` is what presses it.
+    if (take !== null) await buttons.nth(take).click()
 
-    // ⭐ PHASE 11 – and then the year's tennis, if it had any.
+    // ⭐⭐ ...AND THIS YEAR'S TOURNAMENT QUESTION, ON THE SAME SCREEN (round 35 #4). The owner:
+    // «Сказали "не в этом году" – значит не в этом году, дальше тоже можно спрашивать.» This walk
+    // always says yes, so it takes the busiest road the table can produce.
+    if (asks) {
+      const enter = page.getByRole('dialog').getByRole('button').filter({ hasText: 'Put her name down' })
+      await expect(enter, `card ${index + 1} asks no tournament question`).toHaveCount(1)
+      await enter.click()
+    }
+
+    // ⭐ PHASE 11 – and then whatever tennis the year bought.
     weekends += await clearWeekends(page)
 
     // ⚠ AND THE CARD REALLY CHANGED. Without this a click that landed on nothing would be invisible
     // until the walk ran out of cards, and the failure would name the wrong step.
-    if (index < CONTROLS_PER_CARD.length - 1) {
+    if (index < CARDS.length - 1) {
       await expect(page.getByRole('dialog').getByRole('heading')).not.toHaveText(heading ?? '')
     }
   }

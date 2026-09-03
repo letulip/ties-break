@@ -12,7 +12,7 @@ last-reviewed: 2026-08-03
 
 - The worker owns the mutable `WorldState`; UI code talks through the typed protocol and
   consumes snapshots.
-- `SAVE_SCHEMA_VERSION` is v69, DECLARED in `src/engine/world/state.ts` and re-exported through the
+- `SAVE_SCHEMA_VERSION` is v70, DECLARED in `src/engine/world/state.ts` and re-exported through the
   `src/engine/world.ts` barrel; the persisted main RNG position arrived at
   v35, so loads resume `{s, n}` rather than replaying the career.
   ⚠ This line named the barrel until 02.09 – nine days after commit `1e1f5fea` (24.08) moved the

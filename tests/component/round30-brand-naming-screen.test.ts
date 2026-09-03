@@ -138,7 +138,9 @@ describe('round 30 #8/#10 – the picker is on the screen', () => {
     const store = useGameStore()
     const spy = vi.spyOn(store, 'buyAsset').mockResolvedValue(undefined as unknown as void)
     const wrapper = await mountShop(toSnapshot(world))
-    const row = await shelfRow(wrapper, 'The good saloon')
+    // ⚠ RE-AIMED AT ROUND 35 #5 – `car-good`'s label is «The luxury four-by-four» since 03.09 (his
+    // painting for the $110,000 rung is a four-by-four). Label only; the claim is the one it made.
+    const row = await shelfRow(wrapper, 'The luxury four-by-four')
     expect(row.find('.shop-naming').exists(), 'a saloon is not named').toBe(false)
     await row.find('button.shop-action').trigger('click')
     await wrapper.findAll('.dialog-actions button').find((b) => b.text().trim() === 'Buy it')!.trigger('click')
@@ -276,7 +278,7 @@ describe('round 30 #11 and #9 – what the rate line says now', () => {
     expect(land.find('.shop-row-rate').text()).toBe('Neither gains nor loses')
 
     // ⚠ AND THE TWO SENTENCES THE ITEM DID **NOT** TOUCH ARE UNCHANGED, to the byte – invariant 4.
-    const car = await shelfRow(wrapper, 'The good saloon')
+    const car = await shelfRow(wrapper, 'The luxury four-by-four')
     expect(car.find('.shop-row-rate').text()).toBe('Loses 9% a season')
     const fund = await shelfRow(wrapper, 'An index fund')
     expect(fund.find('.shop-row-rate').text()).toBe('Gains about 7% a season')

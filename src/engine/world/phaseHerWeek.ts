@@ -147,12 +147,47 @@ function computeShadowTournament(
   // does not move when her slot does, so this consumes the same number of draws on the same
   // event-scoped sub-stream. Her bracket changes because her position changes - which is the fix.
   const seedRanking = rankingFor(world, TIERS[event.tier].track)
-  const result = runTournament(event, field, kid, world.seed, kidRng, kidSeedIndexIn(field, seedRanking, KID_ID))
+  // ⭐⭐⭐ ROUND 35 #14 – AND THE DRAW SHE WAS SHOWN A WEEK AGO IS HONOURED HERE. The card at week − 1
+  // is the moment the draw HAPPENS (`DRAW_LEAD_WEEKS`), `recordDrawnFirstRounds` writes the girl it
+  // named onto the world, and this is the one line that makes the promise binding on the bracket
+  // rather than on the readout alone. Without it the field below is reassembled from a week-later
+  // ranking, a week-later condition map and a week-later standing, and the same stable stream draws
+  // somebody else out of it – measured at 59.9% of draw weeks (tools/r35-draw-fact.ts).
+  //
+  // ⚠ ZERO RNG. `withPinnedFirstRound` exchanges two finished slots and takes no stream; `kidRng` is
+  // read in the same order and to the same depth. See `runTournament`'s parameter and the note on
+  // `WorldState.drawnFirstRounds`.
+  //
+  // ⚠ THE ID BECOMES A PLAYER HERE, AND ONLY HERE, because only this function knows what this week's
+  // field is made of: `rivalField` is the SAME composition every other entrant in `field` gets
+  // (surface style, this week's fatigue), applied to the same `universe` row, so a promised girl who
+  // has to be put back into the draw is not a second model of an opponent – she is one more entrant
+  // built by the one builder. Undefined when nothing was published, when the id names nobody the
+  // world still holds, or when she is already in the field (the swap path needs no composition).
+  const promisedId = world.drawnFirstRounds?.[event.id]
+  const promisedRow = promisedId ? universe.find((p) => p.id === promisedId) : undefined
+  const promised = promisedId
+    ? (field.find((p) => p.id === promisedId) ??
+      (promisedRow ? rivalField([promisedRow], event, fatigue)[0] : undefined))
+    : undefined
+  const result = runTournament(
+    event,
+    field,
+    kid,
+    world.seed,
+    kidRng,
+    kidSeedIndexIn(field, seedRanking, KID_ID),
+    promised,
+  )
+  // ⚠ THE ROSTER, NOT THE FIELD, and the difference is one player: a promised girl put back into the
+  // draw is not in `field`, and `field.find` would hand her to `fallbackPlayer` – a placeholder name
+  // and placeholder skills on the very opponent this item exists to name correctly.
+  const roster = promised && !field.some((p) => p.id === promised.id) ? [...field, promised] : field
   const players: Record<string, MatchPlayer> = { [KID_ID]: { ...kid } }
   for (const m of result.matches) {
     if (m.aId !== KID_ID && m.bId !== KID_ID) continue
     const oppId = m.aId === KID_ID ? m.bId : m.aId
-    const ai = field.find((p) => p.id === oppId)
+    const ai = roster.find((p) => p.id === oppId)
     players[oppId] = ai ? { ...ai } : fallbackPlayer(oppId)
   }
   return { eventId: event.id, result, revealedRounds: 0, finished: false, players }

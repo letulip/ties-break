@@ -22,7 +22,7 @@ import { assertDismissReachable, setViewport, PHONE } from './fits'
 // tab a player would press. Every claim in this file is the one it always made; what changed is the
 // route to the row. The helpers' own header carries the argument, including why «every rung is on
 // the shelf» is now walked rather than counted in one document.
-import { allShelfRows, shelfRow, shelfText } from './shelf'
+import { allShelfRows, openShelfTab, shelfRow, shelfText } from './shelf'
 
 /** A real career, walked by the real engine – `tests/helpers/career.ts`'s own recipe, kept local
  *  because these fixtures need the world afterwards (the professional mark, the purchase) and that
@@ -87,6 +87,19 @@ describe('the shelf is a fourth chapter of the Budget tab, and nothing else', ()
     // chapter and the rungs are free-standing cards in `.shelf-feed` beneath it – «карточки лежат
     // без общей подложки». Both are asserted, because "the shelf is one chapter" is the claim and
     // it is now made by two elements.
+    // ⚠⚠ RE-AIMED AT ROUND 35 #3, NEVER LOOSENED – THE SHOP OPENS ON ITS HOME. He asked for a front
+    // door («главная магазина становится главной с текущей the shelf, выбором категорий из 6
+    // карточек»), so pressing `Shop` now lands on the plate and the six category cards, and the
+    // rungs and their switcher arrive one press later. Both halves are still asserted here and the
+    // claim is the same claim – «the shelf is ONE chapter of this screen, not a fourth screen bolted
+    // under the third» – which the two-level shop makes MORE pointed rather than less: the home is
+    // still inside the `screenTab === 'shop'` block, the chapter picker above is untouched, and
+    // nothing was navigated to.
+    expect(wrapper.find('.shelf-cats').exists(), 'the home offers the six categories').toBe(true)
+    expect(wrapper.find('.shelf-feed').exists(), 'and no rungs until one is chosen').toBe(false)
+    expect(wrapper.find('.shelf-tabs').exists(), 'and no switcher on the home').toBe(false)
+    await openShelfTab(wrapper, 'Cars')
+    expect(wrapper.findAll('.money-tabs .tab-pill'), 'the chapter picker is untouched').toHaveLength(4)
     expect(wrapper.find('.shelf-feed').exists(), 'the rungs are laid on the page').toBe(true)
     expect(wrapper.find('.shelf-tabs').exists(), 'and the shelf has its own tabs').toBe(true)
     wrapper.unmount()
@@ -186,13 +199,23 @@ describe('what the shelf says about a thing the family owns', () => {
   it('⭐ a rung that is owned offers a SALE at the stored value and no second Buy', async () => {
     const wrapper = await mountShop(ownedSnapshot('shop-ui-sell'))
     // ⚠ RE-AIMED, ROUND 30 #5 – the car's own segment, opened the way a player opens it.
-    const car = await shelfRow(wrapper, 'The good saloon')
+    // ⚠ RE-AIMED AT ROUND 35 #5 – `car-good`'s label is «The luxury four-by-four» since 03.09 (his
+    // painting for the $110,000 rung is a four-by-four). Label only; the claim is the one it made.
+    const car = await shelfRow(wrapper, 'The luxury four-by-four')
     expect(car, 'the owned car is on the shelf').toBeTruthy()
     const actions = wrapper.findAll('.shop-action').map((b) => b.text())
-    expect(actions.some((t) => t === 'Sell it for $91,091')).toBe(true)
+    // ⚠ RE-AIMED AT ROUND 35 #12 – the control is «Sell» and the figure lives in the field beside
+    // it now (his frame, his ruling on the word). The claim – an owned rung offers a sale – stands.
+    expect(actions.some((t) => t === 'Sell')).toBe(true)
     // One row per rung, and the owned one cannot be bought again – the engine refuses a second copy,
     // and the screen must not offer what the engine refuses.
-    expect(actions.filter((t) => t.includes('$91,091'))).toHaveLength(1)
+    // ⚠⚠ RE-AIMED AT ROUND 35 #12, NEVER LOOSENED, AND THE CLAIM IS SHARPER THAN IT WAS. It used to
+    // count the value inside the sell control's own label, which is a string that no longer exists;
+    // what it was really asserting is that an OWNED rung offers no Buy. That is now said directly,
+    // and the stored value is asserted where it actually lives – on the card, once.
+    expect(actions, 'no second Buy on a rung they already own').not.toContain('Buy')
+    expect(car.text(), 'the stored value is on the card').toContain('$91,091')
+    expect(actions.filter((t) => t === 'Sell'), 'exactly one sale control').toHaveLength(1)
     wrapper.unmount()
   })
 

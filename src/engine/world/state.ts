@@ -292,7 +292,26 @@ import type { AcademySupport } from '../academy'
 // and two literals; no stream is touched on any key, so the frozen capture (41550 / e6b0c709) cannot
 // move. Full move: this constant, the v68 -> v69 step in migrations.ts, tests/fixtures/saves/v69.json,
 // docs/specs/brand-inertia-2026-08.md and docs/specs/collaborations-as-early-fame-2026-08.md.
-export const SAVE_SCHEMA_VERSION = 69
+//
+// ⭐⭐⭐ v70 (round 35 #14 – THE DRAW BECOMES A FACT). World `+drawnFirstRounds`, optional:
+// `Record<eventId, opponentId>`.
+//
+// HIS COMPLAINT, 03.09: «на неделе перед турниром случилась жеребьевка, мне сказали "играем против
+// №118 шанс 71%", пошел турнир - соперник в первом раунде №76». The draw was stored NOWHERE and was
+// re-derived from live inputs on every read – see `WorldState.drawnFirstRounds` for the whole
+// diagnosis and for why one opponent id is the entire payload.
+//
+// ⚠ THE MIGRATION WRITES AN EMPTY TABLE AND NOT A DRAW, which is a deliberate refusal. Back-filling
+// would mean re-deriving the very thing this item exists to stop re-deriving, on a world whose
+// inputs have already moved; an existing save simply has no draw recorded, its next tick records
+// one, and everything from there on is a fact. Cheap by his own ruling of 03.09 («никто не купил,
+// нет игроков»); what still binds is that every older schema loads, which
+// tests/fixtures/saves/v70.json is the proof of.
+//
+// ⚠ IDEMPOTENT and DRAW-FREE: `save.drawnFirstRounds ??= {}` touches no stream, so the frozen MAIN
+// capture (41550 / e6b0c709) cannot move. Full move: this constant, the v69 -> v70 step in
+// migrations.ts, tests/fixtures/saves/v70.json and tests/round35-draw-fact.test.ts.
+export const SAVE_SCHEMA_VERSION = 70
 
 
 
@@ -923,6 +942,43 @@ export interface WorldState {
    *      nothing else, the narrowest re-freeze that file recognises (`ageCurve`'s own v68 argument,
    *      by a different road). */
   brandStrengthSeed?: BrandStrengthSeed
+  /** ⭐⭐⭐ WHO SHE DREW IN ROUND ONE, WRITTEN DOWN THE WEEK THE DRAW WAS SHOWN (v70, round 35 #14).
+   *  Event id -> the opponent's player id, and that is the whole payload.
+   *
+   *  HIS COMPLAINT, 03.09: «на неделе перед турниром случилась жеребьевка, мне сказали "играем
+   *  против №118 шанс 71%", пошел турнир - соперник в первом раунде №76».
+   *
+   *  ⚠⚠ THE DEFECT WAS THAT THE DRAW WAS NEVER STORED AT ALL. `previewEvent` rebuilds the field on
+   *  every read – `drawnField(event, cohort, ranking, rivalConditions(results, week), …)` – and
+   *  `firstRoundOpponent` is a pure index lookup into it. The RNG was never the problem and is not
+   *  touched here: `seed:kidtour:<eventId>` is created fresh, read in the same order and spent to the
+   *  same depth it always was. What moves is everything ELSE that goes in – the selection table, the
+   *  rivals' conditions, and her own place in the standing – and all three move every week. So at
+   *  week − 1 the field was assembled one way and the draw picked #118 out of it, and a week later
+   *  the field reassembled and the SAME draw picked #76. Measured with tools/r35-draw-fact.ts on six
+   *  synthetic careers: the card and the bracket named different girls on **293 of 489 draw weeks
+   *  (59.9%)** before this field existed.
+   *
+   *  ⚠ ROUND 31 #4 DECIDED WHEN TO *NAME* THE OPPONENT (`DRAW_LEAD_WEEKS`), AND NOTHING EVER DECIDED
+   *  THAT THE DRAW HAD *HAPPENED*. Its own note says so in as many words – «NOTHING IS PERSISTED,
+   *  WHICH IS DELIBERATE» – and that was right about the BAND, which is a reading of a rung. It was
+   *  not right about a NAME: we learned not to say the name too soon and went on inventing it fresh
+   *  every week.
+   *
+   *  ⚠⚠ ONE OPPONENT ID, NEVER THE FIELD, and `season/types.ts` is the reason: a stored field «shifts
+   *  every subsequent attribute for all 199». That warning is about the COHORT's own generation and
+   *  one id is not it – nothing here is drawn, nothing is generated, and the row it points at is the
+   *  cohort's own.
+   *
+   *  ⭐ WRITTEN BY `recordDrawnFirstRounds` (world/draw.ts) AND BY NOTHING ELSE, from the card's own
+   *  computation, once per event, never overwritten. Read in two places and they are the two that
+   *  disagreed: the Season card (`upcomingEvents` -> `previewEvent`) and the bracket she actually
+   *  plays (`computeShadowTournament` -> `runTournament`).
+   *
+   *  ⚠ OPTIONAL, AND ABSENT MEANS «no draw was ever shown for this event», which is the honest state
+   *  of every save written before v70 and of an event whose week arrives before a card could exist.
+   *  Every reader normalises, and an unrecorded event draws live exactly as it always did. */
+  drawnFirstRounds?: Record<string, string>
 }
 
 /** ⭐⭐ THE v69 PIN'S SHAPE – see `WorldState.brandStrengthSeed`. Two numbers and no history: the

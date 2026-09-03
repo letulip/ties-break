@@ -682,10 +682,39 @@ describe('v49 – the junior fare is opt-in, and the helping follows it', () => 
       )
     }
     // (b) ...and the real trip call sites DO pass it - the tournament week and the season preview.
-    expect(
-      calls.filter((c) => c.includes('coachTravelFareFor(')).length,
-      'the fare reaches the helping from the places a trip is actually played or previewed',
-    ).toBeGreaterThanOrEqual(2)
+    //
+    // ⚠⚠ RE-AIMED (03.09, round 35 #14), AND IT IS THE SAME PROXY EXPIRY tests/preview.test.ts
+    // RECORDS ONE FILE OVER. This was a COUNT of call LINES carrying `coachTravelFareFor(` inline,
+    // and the count was a proxy for the claim rather than the claim. Round 35 #14 lifted the Season
+    // card's preview assembly into `makeEventPreviewer` and hoisted the fare out of two identical
+    // branches into ONE local – `const help = coachTravelFareFor(world, e) > 0` – which obeys this
+    // rule more tightly than before (the two branches can no longer answer differently) and dropped
+    // the inline count from 2 to 1. A guard that reddens on a change that STRENGTHENS the property
+    // it guards is measuring the spelling.
+    //
+    // So the claim is asserted directly instead: every helping argument in the engine is the fare,
+    // spelled inline or bound to a local that is the fare and nothing else. A call site that started
+    // deciding for itself still fails, which is the hazard the paragraph above names.
+    const fareLocals = worldSource()
+      .split('\n')
+      .map((l) => l.trim())
+      .filter((l) => /^const (\w+) = coachTravelFareFor\([^;]*\) > 0$/.test(l))
+      .map((l) => l.match(/^const (\w+) =/)![1])
+    expect(fareLocals.length + calls.filter((c) => c.includes('coachTravelFareFor(')).length).toBeGreaterThanOrEqual(2)
+    // Every third argument that exists is the fare or a name bound to it. `kidMatchPlayerFor(world,
+    // surface)` – the planner's home preview and the college fixtures – has no third argument at all
+    // and is not a trip, which is the second legitimate shape (a) already names.
+    const helpingArgs = calls
+      .map((c) => c.match(/kidMatchPlayerFor\(([^;]*)\)/)?.[1] ?? '')
+      .map((args) => args.split(',').map((a) => a.trim()))
+      .filter((parts) => parts.length >= 3)
+      .map((parts) => parts.slice(2).join(', '))
+    for (const arg of helpingArgs) {
+      expect(
+        arg.includes('coachTravelFareFor(') || fareLocals.includes(arg),
+        `this call site decides the trip for itself instead of reading the fare: ${arg}`,
+      ).toBe(true)
+    }
   })
 
   it('the till follows the fare too - the money leaves at a junior rung only once it is bought', () => {

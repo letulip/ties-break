@@ -72,6 +72,7 @@ function view(over: Partial<KidLifeWorldView> = {}): KidLifeWorldView {
     // the defaults every pre-#6/#18 case in this file was written against.
     college: null,
     kidFundsCents: 0,
+    ownsBrand: false,
     ...over,
   }
 }

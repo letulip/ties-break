@@ -45,14 +45,15 @@ import { rngFromSeed } from '../rng'
 import { COLLEGE_LEAGUE, COLLEGE_LEAGUE_ROUNDS, wonTheLeague } from '../collegeLeague'
 import { NATIONAL_TEAM, NATIONS_CUP_AWARDS_NOTHING, callUpOpponent, nationFinishLabel } from '../nationalTeam'
 import { axisReadings, buildRadar, buildTrainingRead } from '../radar'
-import { previewEvent, eventCrowd, eventTemperature, ratedField } from '../season/preview'
+import { previewEvent, eventCrowd, eventTemperature, firstRoundDraw, ratedField } from '../season/preview'
 import { FRESH_KIT } from '../equipment'
-import type { RatedEntrant } from '../season/preview'
+import type { EventPreview, RatedEntrant } from '../season/preview'
 import { BEST_N_BY_TRACK, WINDOW_BY_TRACK, isCountingResult, windowFromWeek, windowSlots, windowedBestSum } from '../season/ranking'
 import { isFieldProId, universeForTier } from '../season/fieldPros'
 import { entrantNationAt, weekFieldExclusion } from '../season/tournament'
 import { rivalConditions } from '../season/rival'
 import type { AiPlayer, LadderTrack, RankingRow, SeasonEvent, TierId } from '../season/types'
+import type { SeasonResult } from '../season/ranking'
 import {
   type AdOfferTerms,
   type AdPortfolioRow,
@@ -104,6 +105,9 @@ import { coachBilling, coachEdgeView, coachEntryLine, coachLadderNote, coachMark
 import { masseurRoomNote, masseurRungOf, masseurUnlocked, masseurWeeklyCents } from './masseur'
 import { kitDealView, kitLineViews } from './kit'
 import { shopView } from './shop'
+// ⭐ ROUND 35 #9 – the till's own «does the brand pay this week» predicate, so her page and the
+// ledger cannot disagree about whether the split is running.
+import { merchWeeklyIncomeCents } from './business'
 import { copyByTrack, copyTrophyLedger, emptySeasonRecord, seasonWrapDue } from './milestones'
 import { computeLossStreak, fallbackPlayer, flipScore, kidMatchesOf, kidMatchEvent } from './matchNews'
 import { coachLoadViewOf, pendingKnock, radarViewOf } from './knock'
@@ -245,8 +249,40 @@ export function buildInjuryReport(world: WorldState): InjuryReport | null {
   }
 }
 
-export function upcomingEvents(world: WorldState): UpcomingEvent[] {
-  const entered = new Set(world.entries)
+/** ⭐⭐⭐ THE CARD'S PREVIEW, BUILT ONCE FOR A WORLD AND CALLABLE PER EVENT (round 35 #14 lifted this
+ *  out of `upcomingEvents`; every line inside it is that function's own, comment for comment).
+ *
+ *  ⚠⚠ WHY IT IS A FUNCTION NOW. The recorder that writes a published draw down
+ *  (`world/draw.ts`) must store WHAT THE CARD SAYS, not a second answer that happens to agree – the
+ *  repository's named recurring disease is two surfaces answering one question, and a card and the
+ *  fact behind it parting company is exactly that disease with teeth. Sharing the assembly is the
+ *  structural cure: there is one table, one rested build, one rated cohort and one W context, and
+ *  both readers spend them.
+ *
+ *  ⚠ AND IT IS ALSO WHAT MAKES THE RECORDER AFFORDABLE, which is not a footnote. `upcomingEvents`
+ *  previews the whole eight-week window – measured at 14.8 ms against 0.15 ms for the ranking folds
+ *  inside it, so the cost is per EVENT and there are ~20 of them – and calling it from the tick made
+ *  `tests/condition.test.ts` go from 9.2 s to 40.4 s and blow B1's 20 s timeout. The recorder needs
+ *  the one week whose draw is being shown, which is a handful of events, so it takes this factory
+ *  and spends it on those.
+ *
+ *  ⚠ THE CACHES ARE PER CALL, deliberately: they are folds over a world that the next tick moves, and
+ *  a factory held across weeks would be a stale table wearing a memo's clothes. */
+/** The slice of a world a preview reads – `previewEvent`'s own first parameter, named here because
+ *  the W branch hands it a DIFFERENT cohort (LIVE ∪ field pros) and the two arms must unify. */
+type PreviewWorld = { seed: string; week: number; cohort: AiPlayer[]; results: SeasonResult[] }
+
+export interface EventPreviewer {
+  /** the whole card */
+  preview(e: SeasonEvent): EventPreview
+  /** ⭐ JUST THE DRAW – the one reading the weekly recorder needs, off the same arguments the card
+   *  is built from. A card also folds the rung's expected field, her rested rating, the ring, the
+   *  weather and the crowd; a recorder that asked for a whole card paid for all of it and threw it
+   *  away, which measured 54% of a weekly tick. */
+  firstRound(e: SeasonEvent): MatchPlayer | null
+}
+
+export function makeEventPreviewer(world: WorldState): EventPreviewer {
   // The Season card's preview needs the standings and her match build ONCE for the whole list, not
   // once per card: both are the same for every event in the window, and rebuilding them per event
   // would be the expensive half of this function. Surface-specific scaling still happens per event
@@ -343,6 +379,57 @@ export function upcomingEvents(world: WorldState): UpcomingEvent[] {
   // inputs. Lazy per card and only on the W track — a J or domestic card never asks.
   const wtaExclusionFor = (e: SeasonEvent) =>
     weekFieldExclusion(e, world.season, wtaCtx!.universe, wtaCtx!.ranking, world.seed, wtaCtx!.conditions)
+  // ⭐⭐ THE ARGUMENTS, ASSEMBLED ONCE PER EVENT AND SPENT TWICE. Both readings below – the whole card
+  // and the draw alone – are handed the SAME six values, so «the card and the fact behind it agree»
+  // cannot decay into «two assemblies that happen to agree». The W branch and the junior/domestic
+  // branch differ in four of the six, which is exactly the split `upcomingEvents` has always made.
+  const argsFor = (e: SeasonEvent) => {
+    const help = coachTravelFareFor(world, e) > 0
+    // ⭐ THE PREVIEW MUST PROMISE WHAT THE WEEK WILL DELIVER (owner, 15.08). The card is
+    // read BEFORE she enters, and the helping now follows the fare, so a preview built
+    // on the standing stance would show a junior card an edge the week never applies.
+    const kid = kidMatchPlayerFor(world, e.surface, help)
+    // ⭐ ROUND 35 #14 – the draw, if it has already happened. Undefined on every card further out
+    // than `DRAW_LEAD_WEEKS` (nothing has been shown, so nothing is a fact) and on every save
+    // written before v70.
+    const pinned = world.drawnFirstRounds?.[e.id]
+    return TIERS[e.tier].track === 'wta'
+      ? {
+          pWorld: wtaWorldFor(e) as PreviewWorld,
+          ranking: wtaCtx!.ranking,
+          kid,
+          excluded: wtaExclusionFor(e),
+          standing: standingFor(e.tier),
+          kidAtRest: kidAtRestFor(e.surface, help),
+          rated: ratedFor('wta', e.surface),
+          pinned,
+        }
+      : {
+          pWorld: world as PreviewWorld,
+          ranking,
+          kid,
+          excluded: undefined,
+          standing: standingFor(e.tier),
+          kidAtRest: kidAtRestFor(e.surface, help),
+          rated: ratedFor('junior', e.surface),
+          pinned,
+        }
+  }
+  return {
+    preview: (e: SeasonEvent): EventPreview => {
+      const a = argsFor(e)
+      return previewEvent(a.pWorld, e, a.ranking, a.kid, a.excluded, a.standing, a.kidAtRest, a.rated, a.pinned)
+    },
+    firstRound: (e: SeasonEvent): MatchPlayer | null => {
+      const a = argsFor(e)
+      return firstRoundDraw(a.pWorld, e, a.ranking, a.kid, a.excluded, a.standing, a.pinned)
+    },
+  }
+}
+
+export function upcomingEvents(world: WorldState): UpcomingEvent[] {
+  const entered = new Set(world.entries)
+  const previewFor = makeEventPreviewer(world).preview
   // ...and the same argument for the COACH'S READ OF HER: it is one girl in one week, identical for
   // every card, and `coachLoadViewOf` walks the retained match window to get there. Once per snapshot,
   // null on a self-coached career because there is nobody to have an opinion.
@@ -432,31 +519,9 @@ export function upcomingEvents(world: WorldState): UpcomingEvent[] {
         // What the Season card can honestly say before she plays: her odds in round one against
         // the field as it stands TODAY, how strong that field is, and the (decorative) weather.
         // See season/preview.ts for what this estimate does and does not claim.
-        preview:
-          TIERS[e.tier].track === 'wta'
-            ? previewEvent(
-                wtaWorldFor(e),
-                e,
-                wtaCtx!.ranking,
-                // ⭐ THE PREVIEW MUST PROMISE WHAT THE WEEK WILL DELIVER (owner, 15.08). The card is
-                // read BEFORE she enters, and the helping now follows the fare, so a preview built
-                // on the standing stance would show a junior card an edge the week never applies.
-                kidMatchPlayerFor(world, e.surface, coachTravelFareFor(world, e) > 0),
-                wtaExclusionFor(e),
-                standingFor(e.tier),
-                kidAtRestFor(e.surface, coachTravelFareFor(world, e) > 0),
-                ratedFor('wta', e.surface),
-              )
-            : previewEvent(
-                world,
-                e,
-                ranking,
-                kidMatchPlayerFor(world, e.surface, coachTravelFareFor(world, e) > 0),
-                undefined,
-                standingFor(e.tier),
-                kidAtRestFor(e.surface, coachTravelFareFor(world, e) > 0),
-                ratedFor('junior', e.surface),
-              ),
+        // ⭐ ROUND 35 #14 – built by `makeEventPreviewer` above, which the weekly draw RECORDER also
+        // spends, so the card and the fact written down behind it cannot be two answers.
+        preview: previewFor(e),
         // v21: the price the FAMILY pays, scholarship included – the planner has to quote what
         // entering will actually cost, and it is the same number chargeTravel will take.
         travelCostCents: travelCostFor(world, e),
@@ -1717,6 +1782,13 @@ export function toSnapshot(world: WorldState, stopReasons?: StopReason[]): Snaps
       // ⭐ ROUND-23 #18 – what her own account holds. `?? 0` for the hand-built probe worlds that
       // predate v54, the discipline every optional world field on this view already keeps.
       kidFundsCents: world.kidFundsCents ?? 0,
+      // ⭐⭐ ROUND 35 #9 – DOES THE BRAND RULE APPLY TO THIS FAMILY AT ALL. Asked of the till's own
+      // arithmetic rather than of `world.assets` directly, so the page cannot say «the same share
+      // comes off her brand» about a rung that is still on order and paying nothing:
+      // `merchWeeklyIncomeCents` is zero until it is owned AND delivered, which is exactly the week
+      // the split starts. ⚠ `> 0` and not `>= 0` – a delivered brand at fame zero earns nothing and
+      // has nothing to split, and a sentence about a share of zero is the noise this guard refuses.
+      ownsBrand: merchWeeklyIncomeCents(world) > 0,
     }),
     // THE SKILLS RADAR. Derived here and nowhere else, off `seed:read:*` / `seed:ceil:*` sub-streams
     // at SNAPSHOT time - zero MAIN draws, so the frozen capture (41550 / e6b0c709) is untouched by

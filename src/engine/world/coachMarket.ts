@@ -32,7 +32,7 @@ import { masseurWeeklyCents } from './masseur'
 // symbols and not a change: this file only ever asked the shelf questions.
 import { assetWorthCents, ownedAssets, shopItem, weeklyAssetUpkeepCents } from './assets'
 // Round 29 part four P7 – the businesses' one arithmetic; the till banks the same two functions.
-import { academyWeeklyIncomeCents, merchWeeklyIncomeCents } from './business'
+import { academyWeeklyIncomeCents, merchFamilyWeeklyIncomeCents } from './business'
 import { addEvent, seasonIndexOf, seasonStartWeek } from './ledger'
 import { ageAtWeek, START_AGE_YEARS } from './age'
 // ⭐ HER BIRTH BUILD, RE-DERIVED, and two readers need it: `handoverRoomBand` measures how big her
@@ -582,7 +582,7 @@ export function familyWeeklyIncomeCents(world: WorldState): number {
   return (
     parents +
     Math.round((familyRetainerCents * RETAINERS_A_YEAR) / WEEKS_PER_YEAR) +
-    merchWeeklyIncomeCents(world) +
+    merchFamilyWeeklyIncomeCents(world) +
     academyWeeklyIncomeCents(world)
   )
 }
@@ -660,7 +660,11 @@ export function householdWeekly(world: WorldState, trainingCents: number): House
   // are ALREADY INSIDE the income figure below through `familyWeeklyIncomeCents` – `upkeepCents`'
   // own memo discipline, mirrored to the income side – and they are read off the same two
   // functions the till banks through, so the strip and the ledger cannot describe two businesses.
-  const merchCents = merchWeeklyIncomeCents(world)
+  // ⭐⭐ ROUND 35 #9 – AND THE MERCH LINE IS WHAT THE FAMILY BANKS, not what the brand takes in.
+  // «в недельном доходе будет семье на руки сумма меньше», and the retainer three blocks up already
+  // set the precedent in this very function: «the meter must read what `bankSponsorCheque` actually
+  // banks». Her cut comes off before the strip sees it, for the same reason and by the same rule.
+  const merchCents = merchFamilyWeeklyIncomeCents(world)
   const academyIncomeCents = academyWeeklyIncomeCents(world)
   const incomeCents = familyWeeklyIncomeCents(world) + Math.max(0, shelfCents)
   const outgoingCents = trainingCents + staffCents + Math.max(0, -shelfCents) + upkeepCents

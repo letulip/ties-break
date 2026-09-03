@@ -446,10 +446,21 @@ export function ownAccountNote(view: KidLifeWorldView): string {
   // ...and the other half of the account, in one clause. `managerCommissionBps` is the function
   // `bankSponsorCheque` itself calls, so this line and the till cannot quote two different fees.
   const sponsor = ` Sponsor cheques are hers, less the manager's ${managerCommissionBps() / 100}%.`
-  if (bps >= ECONOMY.kidShare.capBps) return `${held} She keeps ${share} now, and the share goes no higher.${sponsor}`
+  // ⭐⭐⭐ ROUND 35 #9 – AND THE BRAND, WHICH IS THE HALF HE ASKED TO SEE: «в интерфейсе напишем про
+  // ее долю». The rule is the SAME ramp, so the sentence says «the same share» rather than repeating
+  // the percentage – two spellings of one number on one line is how a stale one survives, and the
+  // clause has to hold whether `bps` is 10 or 50.
+  //
+  // ⚠ ONLY WHEN THERE IS A BRAND. A family that never started one would be told the terms of a
+  // business it does not own, which is noise on the page that is about HER, and the note would then
+  // outlive its own truth the moment the rung is sold. `ownsBrand` is the delivered-and-owned
+  // predicate the till itself pays on (`assetWeeklyIncomeCents`' own guard), read once into the view.
+  const brand = view.ownsBrand ? ` The same share comes off her brand's weekly income.` : ''
+  if (bps >= ECONOMY.kidShare.capBps)
+    return `${held} She keeps ${share} now, and the share goes no higher.${sponsor}${brand}`
   return (
     `${held} She keeps ${share} now, ${ECONOMY.kidShare.stepBps / 100} points more every birthday ` +
-    `up to ${ECONOMY.kidShare.capBps / 100}%.${sponsor}`
+    `up to ${ECONOMY.kidShare.capBps / 100}%.${sponsor}${brand}`
   )
 }
 
@@ -733,6 +744,11 @@ export interface KidLifeWorldView {
   /** ⭐ ROUND-23 #18 – what her own account holds, in cents. Zero until the first cheque after her
    *  eighteenth: `ECONOMY.kidShare` is what fills it and `finalizeTournament` is what moves it. */
   kidFundsCents: number
+  /** ⭐⭐ ROUND 35 #9 – does the family hold a DELIVERED merch brand, the one rung whose weekly income
+   *  is split on her ramp. A predicate and not a figure: this page states the RULE and never the
+   *  money, so what it needs to know is whether the rule applies at all. Composed at snapshot time
+   *  off the till's own ownership guard, never re-derived here. */
+  ownsBrand: boolean
 }
 
 /** Her four years, as the personal page is allowed to see them (round 23 #6b). */

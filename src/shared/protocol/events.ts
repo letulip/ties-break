@@ -373,6 +373,21 @@ export interface FinanceWeekKidShare {
    *  is a different rule from the ramp above and is why one percentage could not describe both.
    *  Optional and forward-only on `prize`'s reasoning. */
   sponsor?: FinanceWeekKidSharePart
+  /** ⭐⭐⭐ ROUND 35 #9 – HER CUT OF THE WEEK'S **BRAND** MONEY, at the SAME age ramp the prize uses.
+   *
+   *  THE OWNER: «доход от ее бренда давай тоже как проценты с призовых будем делить».
+   *
+   *  ⚠⚠ IT IS ITS OWN PART EVEN THOUGH IT SHARES THE PRIZE'S RATE, AND THAT IS THE POINT. A part
+   *  answers «which money», not only «which rate»: round 31 #2 left the week recap printing ONE line
+   *  and picking `prize` by name, after the owner refused a second weekly row about money he had not
+   *  asked to see weekly. Folding brand cents into `prize` would put a larger number under a label
+   *  that says prize – round 29 #10's own defect, one door along – so the brand carries its own key
+   *  and the recap stays silent about it. Her page states the rule instead.
+   *
+   *  ⚠ OPTIONAL AND FORWARD-ONLY, ON `prize`'s REASONING ABOVE, VERBATIM IN ITS SITUATION: absent is
+   *  already meaningful on every historical save, no migration is owed, no golden fixture is added
+   *  and `SAVE_SCHEMA_VERSION` does not move. */
+  brand?: FinanceWeekKidSharePart
 }
 
 /** A category-accurate rollup of `FinanceWeek[]` over a trailing window (pure fold; the bench and
@@ -450,7 +465,7 @@ export interface FinanceWeekPoint {
    *  a part to the total has counted the same cents twice, which is `kidShareCents`' own warning
    *  one field up. ⚠ ABSENT TOGETHER on every week banked before round 30 #21, where the blend is
    *  all there is. */
-  kidShareParts?: { source: 'prize' | 'sponsor'; pct: number; cents: number }[]
+  kidShareParts?: { source: 'prize' | 'sponsor' | 'brand'; pct: number; cents: number }[]
   /** ⭐⭐ ROUND 29 PART TWO #13 – THE COACH'S CUT OF THE WEEK'S TITLE CHEQUE (`FinanceWeek.coachCut`,
    *  straight through). ⚠ ALREADY INSIDE `expenseCents` and deliberately so – see the field's own
    *  header on `FinanceWeek`: it is a real coaching expense, and this pair exists so a screen can

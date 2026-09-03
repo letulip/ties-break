@@ -299,22 +299,30 @@ describe('⭐⭐⭐ v68 – the pin, which is what the version move is FOR', () 
   const DIR = fileURLToPath(new URL('./fixtures/saves', import.meta.url))
   const FILES = readdirSync(DIR).filter((f) => /^v\d+\.json$/.test(f))
 
-  it('every save that already exists wakes up on the curve it went to sleep on', () => {
+  // ⚠⚠ ONE TEST PER FIXTURE, AND THE SPLIT IS THE FIX FOR A REAL CI FAILURE (round 35, 03.09).
+  // This was a single `it` walking every golden save – 71 of them by v70 – and `migrateSave` runs the
+  // WHOLE chain on each. So it grew TWICE with every wave: one more fixture, and one more step in
+  // every other fixture's chain. It crossed vitest's 20 s PER-TEST timeout on CI's two-core runner
+  // and had already timed out once on a local gate, where I called it contention and shipped it.
+  // ⭐ The measurement that misled me was right about the FILE and aimed at the wrong unit: solo
+  // 8.5 s, in-pool 14.7 s, mid-pack among files that run 25-32 s and pass. The limit is per TEST.
+  // ⭐⭐ `it.each` is not a loosening – the same assertions run over the same fixtures. Each one now
+  // gets its own budget, a failure names the fixture instead of the sweep, and the arm cannot cross
+  // the line again however many schema versions accumulate.
+  it.each(FILES)('%s wakes up on the curve it went to sleep on', (file) => {
     // ⚠⚠ THE OWNER IS PLAYING A CAREER. Alice is at week 933, 31.7, standing at 93.1% of her peak –
     // a decline he has been reading for a season. A curve re-derived from her seed on the next load
     // would hand her some other decline age and re-shape her remaining seasons under her. So the
     // migration writes the shipped pair onto every existing save and nothing re-derives a stored one.
-    for (const file of FILES) {
-      const migrated = migrateSave(JSON.parse(readFileSync(`${DIR}/${file}`, 'utf8')))
-      expect(migrated.schemaVersion, file).toBe(SAVE_SCHEMA_VERSION)
-      expect(migrated.ageCurve, `${file}: the pin is present`).toBeDefined()
-      expect(migrated.ageCurve!.plateauStart, file).toBe(23)
-      expect(migrated.ageCurve!.declineStart, file).toBe(29)
-      // ...and the resolved reading is 29 EXACTLY, however many weeks that career has already lost –
-      // which is the other half of "today's behaviour" and the reason `injuryFrom` exists.
-      expect(ageCurveOf(migrated.ageCurve, weeksLostSoFar(migrated)).declineStart, `${file}: reads 29 today`).toBe(29)
-      expect(migrated.ageCurve!.injuryFrom, file).toBe(weeksLostSoFar(migrated))
-    }
+    const migrated = migrateSave(JSON.parse(readFileSync(`${DIR}/${file}`, 'utf8')))
+    expect(migrated.schemaVersion, file).toBe(SAVE_SCHEMA_VERSION)
+    expect(migrated.ageCurve, `${file}: the pin is present`).toBeDefined()
+    expect(migrated.ageCurve!.plateauStart, file).toBe(23)
+    expect(migrated.ageCurve!.declineStart, file).toBe(29)
+    // ...and the resolved reading is 29 EXACTLY, however many weeks that career has already lost –
+    // which is the other half of "today's behaviour" and the reason `injuryFrom` exists.
+    expect(ageCurveOf(migrated.ageCurve, weeksLostSoFar(migrated)).declineStart, `${file}: reads 29 today`).toBe(29)
+    expect(migrated.ageCurve!.injuryFrom, file).toBe(weeksLostSoFar(migrated))
   })
 
   it('...and only the weeks it loses AFTER the update pull it earlier', () => {

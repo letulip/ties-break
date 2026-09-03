@@ -172,6 +172,58 @@ export function coachBaseReadFor(band: HandoverBaseBand | '', seed: string): str
   return lines[Math.min(lines.length - 1, Math.floor(rng() * lines.length))]
 }
 
+// =================================================================================================
+// ⭐⭐⭐ ROUND 35 #7 – HER AGE ON THIS SCREEN IS READ OFF THE ONE CLOCK, NOT ASSERTED BY A CAPTION
+// =================================================================================================
+//
+// THE OWNER, on the last frame of the prologue: «который сразу сменился на She is fourteen (в чем я
+// не уверен, честно говоря, потому что ДР у нее в июне)».
+//
+// HE IS RIGHT, AND HE IS RIGHT FOR THE REASON HE GIVES. `kicker` was the literal string «She is
+// fourteen» and `roseTitle` said «at fourteen»; neither was computed from anything. Career week 0
+// opens on Monday 6 January, and every girl in the band was born fourteen years before that
+// January - so only a girl born on the 1st to the 6th of January has HAD her fourteenth birthday
+// when the handover is drawn. `kidAgeYears(0, 6, 15)`, which is `DEFAULT_PROFILE` and the girl he
+// played, is THIRTEEN. Measured over all 365 birth dates in
+// tests/component/round35-prologue.test.ts: the old caption was the wrong sentence for 359 of them.
+//
+// ⚠⚠ THIS IS ROUND 34 #3's DEFECT, ONE SCREEN EARLIER, AND IT TAKES ROUND 34's FIX. That item was
+// the birthday popup announcing an age Home's own line did not print, and the ruling it landed on is
+// the 09.08 one-clock ruling: `kidAgeExact` / `kidAgeYears` IS her age, everywhere a surface prints
+// one, and the fix moves the CAPTION rather than giving the caption a clock of its own. Round 34
+// explicitly refused to bump a displayed age to match a sentence («giving Home a *display* age of
+// its own is a second clock on the wire in so many words»). So nothing here computes an age: the
+// screen is handed `Snapshot.ageYears` - which is `kidAgeAt(world, world.week)`, the same number
+// Home prints and every age-keyed gate reads - and spells it.
+//
+// ⚠ NO WORDING MOVED (invariant 4). The sentence is the shape it always was and only the number in
+// it is computed.
+//
+// ⚠⚠ AND THE WORD ARRIVES ALREADY SPELLED, WHICH IS NOT A DETOUR – IT IS A GUARD. The game's speller
+// is `ageInWords` (engine/world/age.ts: «HOW THIS GAME SPELLS AN AGE, in one place»), which the
+// birthday feed line and the birthday dialog already read - and `tests/prologue-pool.test.ts` pins
+// that NO FILE IN `src/prologue` NAMES `engine/world` OR ANYTHING UNDER IT. Both things are true at
+// once only if somebody else does the spelling: `ChildhoodPrologue.vue` calls the game's speller and
+// hands the WORD down, so this module names no engine module, the handover cannot spell fourteen a
+// second way, and the sentence still lives in the copy table. Caught by that pin on its first run.
+
+/** ⚠ THE WORD THE DRAFTS BELOW WERE WRITTEN AT, and it is the ONLY place an age is spelled in this
+ *  file. It is not what the screen prints - the screen prints the world's own, through the two
+ *  builders under it - and it is here so `HANDOVER_COPY` stays a table of strings for the sweep. */
+const DRAFT_AGE_WORD = 'fourteen'
+
+/** ⭐ THE KICKER, AT THE AGE THE WORLD SAYS SHE IS. The cards' own kicker shape, one year on.
+ *  `ageWord` is `ageInWords(Snapshot.ageYears)` – see the note above for why it arrives spelled. */
+export function handoverKicker(ageWord: string): string {
+  return `She is ${ageWord}`
+}
+
+/** ⭐ ...AND THE ROSE'S SCREEN-READER NAME. It says where she IS, never how far she could go: §1d,
+ *  and the picture itself carries no number. */
+export function handoverRoseTitle(ageWord: string): string {
+  return `Where she is at ${ageWord}`
+}
+
 /** ⭐ THE REST OF THE SCREEN'S WORDS – DRAFTS, EVERY ONE, and none of them has been seen by him.
  *
  *  ⚠ THE TWO CONTROLS SAY NOTHING ABOUT A REROLL, AN ODDS OR A FLOOR. That is his explicit ruling
@@ -182,13 +234,15 @@ export function coachBaseReadFor(band: HandoverBaseBand | '', seed: string): str
  *  `tests/prologue-handover.test.ts` sweeps this table and the rendered screen for the vocabulary
  *  the ruling forbids. */
 export const HANDOVER_COPY = {
-  /** DRAFT – the cards' own kicker shape, one year on */
-  kicker: 'She is fourteen',
+  /** DRAFT – the cards' own kicker shape, one year on. ⚠ ROUND 35 #7 – THE SCREEN DOES NOT BIND THIS
+   *  ANY MORE; it binds `handoverKicker(snapshot.ageYears)`, and this is the same sentence at the
+   *  handover age, kept so the sweep above it still has a string to read. */
+  kicker: handoverKicker(DRAFT_AGE_WORD),
   /** DRAFT */
   title: 'This is the girl you raised.',
-  /** DRAFT – the screen-reader name for the rose. It says where she IS, never how far she could go:
-   *  §1d, and the picture itself carries no number. */
-  roseTitle: 'Where she is at fourteen',
+  /** DRAFT – the screen-reader name for the rose. ⚠ ROUND 35 #7 – as `kicker`: the screen binds
+   *  `handoverRoseTitle(snapshot.ageYears)` and this is that sentence at the handover age. */
+  roseTitle: handoverRoseTitle(DRAFT_AGE_WORD),
   /** DRAFT – the label above his sentence. No name and no pronoun: R15-7, «every professional is
    *  UNNAMED», and the person who taught her for nine years was never given a gender. */
   coachLabel: 'The coach who has watched her',

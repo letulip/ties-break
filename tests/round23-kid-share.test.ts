@@ -266,6 +266,9 @@ describe('#18 – the line on her own page', () => {
     weeksSinceTitle: null,
     college: null,
     kidFundsCents: 0,
+    // ⭐ ROUND 35 #9 – the DEFAULT is no brand, so every arm above keeps reading the sentence it
+    // read before this item; the brand clause is asked for explicitly by the arm that is about it.
+    ownsBrand: false,
     ...over,
   })
 
@@ -296,6 +299,35 @@ describe('#18 – the line on her own page', () => {
       expect(s).not.toContain('—')
       expect(s).toMatch(/^[\x20-\x7e–]+$/)
     }
+  })
+
+  // ⭐⭐⭐ ROUND 35 #9 – AND THE BRAND'S SHARE IS STATED ON THE SAME LINE, which is the half of the
+  // item that is about the screen: «в интерфейсе напишем про ее долю».
+  //
+  // ⚠ THE NEGATIVE IS THE ARM THAT MATTERS, and it is why `ownsBrand` exists at all: a family that
+  // never started a brand must not be told the terms of a business it does not own. Both directions
+  // are asserted off ONE view differing in ONE field, so the clause cannot pass by accident.
+  it('⭐ #9 – the brand clause appears only for a family whose brand is actually paying', () => {
+    const without = ownAccountNote(view({ ageYears: 22, kidFundsCents: 100_00, ownsBrand: false }))
+    const withBrand = ownAccountNote(view({ ageYears: 22, kidFundsCents: 100_00, ownsBrand: true }))
+    expect(without, 'no brand, no sentence about one').not.toContain('brand')
+    expect(withBrand, 'and it is stated when there is one').toContain(
+      "The same share comes off her brand's weekly income.",
+    )
+    // ⚠ THE REST OF THE LINE IS UNTOUCHED, so this is an ADDED clause and not a rewritten sentence –
+    // invariant 4's own test, applied to the one string this item was allowed to move.
+    expect(withBrand.startsWith(without.replace(/\s*$/, '')), 'the shipped sentence is intact ahead of it').toBe(true)
+    // ⚠ AND IT SAYS «the same share» RATHER THAN A SECOND PERCENTAGE. Two spellings of one number on
+    // one line is how a stale one survives; the ramp is already named earlier in the sentence.
+    // ⚠ THE RATE IS READ OFF THE ENGINE AND NEVER TYPED – `kidPrizeShareBps` is the function the
+    // till itself divides by, so a retune moves this assertion with the money rather than leaving a
+    // stale number in a test. At 22 the shipped ramp is 30%, and that is a reading, not a promise.
+    const rampPct = kidPrizeShareBps(22) / 100
+    expect(withBrand.match(new RegExp(`${rampPct}%`, 'g')) ?? [], 'the ramp is quoted once, not twice')
+      .toHaveLength(1)
+    // Player copy: short dash only, and no Cyrillic (the shipped arm's own rule).
+    expect(withBrand).not.toContain('—')
+    expect(withBrand).toMatch(/^[\x20-\x7e–]+$/)
   })
 
   it('⭐ THE COMMISSION IS THE ENGINE\'S OWN TOO – P3, and it moves with the constant', () => {

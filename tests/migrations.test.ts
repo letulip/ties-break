@@ -548,7 +548,11 @@ describe('save migrations', () => {
     // ⚠ AND AT v69 (01.09, round 32 #4 – the brand's slow stock pinned at the week it arrived), for
     // the fourth time and with the claim unchanged again: the chain must run PAST the colliding 64,
     // and it now has three more rungs to cross before it arrives.
-    expect(SAVE_SCHEMA_VERSION, 'and the current schema is 69 – past the colliding 64, through 65').toBe(69)
+    // ⚠ AND AT v70 (03.09, round 35 #14 – the published draw becomes a fact), for the FIFTH time and
+    // with the claim unchanged once more: the chain must run PAST the colliding 64, and it now has
+    // four more rungs to cross before it arrives. The pin follows the ladder's head; it is the head
+    // that moved, not the claim.
+    expect(SAVE_SCHEMA_VERSION, 'and the current schema is 70 – past the colliding 64, through 65').toBe(70)
 
     // v64's step ran: the reveal back-fills NULL, which is the TRUE value and not a placeholder – no
     // save written before it can be holding a question in front of the player.

@@ -28,6 +28,7 @@ vi.setConfig({ testTimeout: 300_000 })
 import {
   academyReputationOf,
   academyWeeklyIncomeCents,
+  assetKidShareCents,
   assetWeeklyIncomeCents,
   brandSignalsOf,
   brandWeeklyGrossCents,
@@ -37,6 +38,7 @@ import {
   fameFloorOf,
   fameShootMultOf,
   kidAgeYears,
+  merchFamilyWeeklyIncomeCents,
   merchWeeklyIncomeCents,
   shopView,
   tickWeek,
@@ -45,7 +47,7 @@ import {
 } from '../src/engine/world'
 import { resumeMain } from '../src/engine/rng'
 import { householdWeekly } from '../src/engine/world/coachMarket'
-import { ECONOMY } from '../src/engine/economy'
+import { ECONOMY, kidPrizeShareBps } from '../src/engine/economy'
 import { WEEKS_PER_YEAR } from '../src/engine/season/calendar'
 import { DEFAULT_PROFILE, type AdOfferTerms, type Offer, type SeasonHistoryEntry } from '../src/shared/protocol'
 
@@ -312,7 +314,19 @@ describe('§2 the merch brand – income follows fame', () => {
     // pass on a second copy of it, which is the defect this file's §4 exists to refuse.
     const paid = merchWeeklyIncomeCents(world)
     expect(paid).toBeGreaterThan(0)
-    expect(shopView(world).rows.find((r) => r.id === 'merch-brand')!.incomeCents).toBe(paid)
+    // ⚠⚠ RE-AIMED AT ROUND 35 #9, NEVER LOOSENED, AND THE CLAIM IS WORD FOR WORD THE ONE IN THIS
+    // ARM'S OWN TITLE: «the shop card quotes the till's OWN figure». What the till banks changed –
+    // her ramp now comes off the brand's week before the family sees it – so the card follows it,
+    // because a card quoting the gross while the ledger books less is precisely the disagreement
+    // this assertion was written to refuse. The equality is still an equality between the card and
+    // the till; only the function on the right-hand side moved with the money.
+    const banked = merchFamilyWeeklyIncomeCents(world)
+    expect(shopView(world).rows.find((r) => r.id === 'merch-brand')!.incomeCents).toBe(banked)
+    // ⚠ AND THE GROSS IS STILL THE GROSS. `paid` is what the WHOLE brand takes in and is the figure
+    // `brandGrossWorthCents` multiplies; the two must not have collapsed into one number, which is
+    // exactly what a split placed in the rate would have done.
+    expect(banked, 'her cut really came off').toBeLessThan(paid)
+    expect(banked + assetKidShareCents(world, 'merch-brand'), 'and the halves re-add').toBe(paid)
     // ⭐ THE ANCHOR: at exactly `famePivot` the curve is IDENTICAL to the old linear dial, by
     // construction, which is what keeps the day-one 6%-a-year reading the rung was sized against.
     // Read through the earnings rate rather than the till, so no purchase is needed to ask it.
@@ -485,16 +499,95 @@ describe('§4 the ledger rows and the strip total – round 28 #8\'s law', () =>
     tickWeek(world, rng)
     // ⚠ the tick advances the clock FIRST, so the lived week's rows carry the post-tick number –
     // and the two functions, asked at the same post-tick week, are the rows' own arithmetic.
-    const merch = merchWeeklyIncomeCents(world)
+    //
+    // ⚠⚠ RE-AIMED AT ROUND 35 #9, NEVER LOOSENED, AND THE CLAIM IS THE SAME CLAIM: one row per
+    // business, carrying THE FUNCTION'S OWN CENTS. What moved is WHICH function the merch row
+    // answers to – «в недельном доходе будет семье на руки сумма меньше», so the row is what the
+    // FAMILY banked and `merchFamilyWeeklyIncomeCents` is the arithmetic that says so. The academy
+    // row is untouched in both figure and function, which is the other half of the ruling.
+    const merch = merchFamilyWeeklyIncomeCents(world)
     const academy = academyWeeklyIncomeCents(world)
     const rows = world.events.filter((e) => e.week === world.week && e.category === 'business')
     expect(rows).toHaveLength(2)
     expect(rows.find((r) => r.text.startsWith('Merch'))!.amountCents).toBe(merch)
     expect(rows.find((r) => r.text.startsWith('The academy'))!.amountCents).toBe(academy)
     expect(rows.every((r) => (r.amountCents ?? 0) > 0), 'income lines can never go negative').toBe(true)
+    // ⚠ AND THE ACADEMY IS STILL WHOLE – the negative that keeps the split off the parent's own
+    // business. If `assetKidShareCents` ever stopped guarding on the family this line goes red.
+    expect(academy).toBe(assetWeeklyIncomeCents(world, 'academy-land') + assetWeeklyIncomeCents(world, 'academy-courts') + assetWeeklyIncomeCents(world, 'academy-building') + assetWeeklyIncomeCents(world, 'academy-staff'))
     // ...and the persisted per-category ledger carries the same week under the same key
     const fw = world.financeWeeks.find((w) => w.week === world.week)
     expect(fw?.byCategory.business).toBe(merch + academy)
+  })
+
+  // ⭐⭐⭐ ROUND 35 #9 – THE TWO HALVES RE-ADD TO THE CHEQUE, ON A LIVED WEEK.
+  //
+  // THE OWNER: «доход от ее бренда давай тоже как проценты с призовых будем делить».
+  //
+  // ⚠⚠ THIS IS THE ARM THE ITEM ASKS FOR BY NAME, and it is about ROUNDING and not about the rate:
+  // `finalizeTournament`'s discipline is that her share is rounded ONCE and the family takes the
+  // REMAINDER, so the two balances add up to the gross to the cent. A pair of independent
+  // `Math.round`s loses or invents a cent on half the weeks, and a player can put these two numbers
+  // side by side on screen. Walked over many weeks rather than asserted once, because a penny bug
+  // shows up on some cheques and not others.
+  it('⭐⭐⭐ #9 – her cut and the family\'s re-add to the brand\'s gross, every week, to the cent', () => {
+    const { world, rng } = grown('p5a-split', true)
+    let weeksWithBrandMoney = 0
+    let herTotal = 0
+    for (let i = 0; i < 60; i++) {
+      const before = world.kidFundsCents ?? 0
+      const gross = merchWeeklyIncomeCents(world)
+      tickWeek(world, rng)
+      if (gross <= 0) continue
+      // The row the till actually wrote, and the cents that actually reached her account this week.
+      const row = world.events.find(
+        (e) => e.week === world.week && e.category === 'business' && e.text.startsWith('Merch'),
+      )
+      if (!row) continue
+      weeksWithBrandMoney++
+      const paidGross = merchWeeklyIncomeCents(world)
+      const hers = (world.kidFundsCents ?? 0) - before
+      herTotal += hers
+      expect(row.amountCents! + hers, `w${world.week}: the two halves ARE the cheque`).toBe(paidGross)
+      // ⚠ HER SHARE IS THE RAMP'S OWN, ROUNDED ONCE – never re-derived by dividing the cents back
+      // out, which is the arithmetic `accrueKidShare`'s header forbids.
+      expect(hers, `w${world.week}: one rounding, at her age`).toBe(
+        Math.round((paidGross * kidPrizeShareBps(ageOf(world))) / 10_000),
+      )
+      // ⚠ AND THE FAMILY IS NEVER PUSHED THROUGH ZERO BY THIS – «мы ни за что не наказываем». It is
+      // an income line and can only ever add LESS.
+      expect(row.amountCents!, `w${world.week}: still income`).toBeGreaterThanOrEqual(0)
+    }
+    expect(weeksWithBrandMoney, 'the walk really exercised the split').toBeGreaterThan(10)
+    expect(herTotal, 'and she was really paid something out of it').toBeGreaterThan(0)
+  })
+
+  // ⭐⭐ ROUND 35 #9 – THE MEMO BESIDE THE MONEY, TAGGED `brand` AND NOT `prize`.
+  //
+  // ⚠ ROUND 31 #2 IS THE REASON AND IT IS A STANDING RULING: the week recap prints ONE line and
+  // picks the `prize` part by name, after he refused a second weekly row about money he had not
+  // asked to see weekly. If the brand ever started arriving as a `prize` part, the recap's «Her cut
+  // N%» line would silently grow by the brand's cents under a label that says prize.
+  it('⭐⭐ #9 – the brand books its OWN kidShare part, and never lands in the prize one', () => {
+    const { world, rng } = grown('p5a-part', true)
+    let checked = 0
+    for (let i = 0; i < 40 && checked === 0; i++) {
+      tickWeek(world, rng)
+      const fw = world.financeWeeks.find((w) => w.week === world.week)
+      const brand = fw?.kidShare?.brand
+      if (!brand) continue
+      checked++
+      expect(brand.cents, 'her cents, under the brand rule').toBeGreaterThan(0)
+      expect(brand.bps, 'at her ramp – the SAME rate a prize splits at').toBe(kidPrizeShareBps(ageOf(world)))
+      expect(brand.baseCents, 'and the gross it is a share of').toBe(merchWeeklyIncomeCents(world))
+      // ⚠ THE NEGATIVE: this week paid no prize, so the prize part must be absent entirely. A brand
+      // week that wrote a prize part would be exactly the mislabelling round 31 #2 forbids.
+      const row = world.events.find(
+        (e) => e.week === world.week && e.category === 'prize' && (e.amountCents ?? 0) > 0,
+      )
+      if (!row) expect(fw?.kidShare?.prize, 'no prize this week, so no prize part').toBeUndefined()
+    }
+    expect(checked, 'the walk really reached a week the brand paid her').toBe(1)
   })
 
   it('⭐⭐ the household strip TOTALS them: the IN figure moves by exactly the two lines, and names them', () => {
@@ -502,9 +595,18 @@ describe('§4 the ledger rows and the strip total – round 28 #8\'s law', () =>
     const b = grown('p5a-house', true)
     const ha = householdWeekly(a.world, 0)
     const hb = householdWeekly(b.world, 0)
-    const merch = merchWeeklyIncomeCents(b.world)
+    // ⚠⚠ RE-AIMED AT ROUND 35 #9, NEVER LOOSENED. Round 28 #8's law is unchanged – the strip must
+    // total every weekly line – and what changed is what the merch LINE is: the family's half, not
+    // the brand's gross. The precedent is three blocks up in `familyWeeklyIncomeCents` itself, where
+    // the retainer has been netted since round 29 P3 on the rule «the meter must read what the till
+    // actually banks». A strip quoting the gross while the ledger books less is round 21 #12's
+    // defect in mirror, which is the whole reason this arm exists.
+    const merch = merchFamilyWeeklyIncomeCents(b.world)
     const academy = academyWeeklyIncomeCents(b.world)
     expect(merch + academy).toBeGreaterThan(0)
+    expect(merch, 'and it really is the SMALLER figure – her cut has come off').toBeLessThan(
+      merchWeeklyIncomeCents(b.world),
+    )
     expect(hb.incomeCents - ha.incomeCents, 'round 28 #8: the strip must total every weekly line').toBe(
       merch + academy,
     )

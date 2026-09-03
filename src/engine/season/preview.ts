@@ -27,8 +27,16 @@
 // ⭐⭐ AND SINCE ROUND 31 #4 IT NO LONGER PRINTS ONE. The paragraph above was true and the card did
 // not read as though it were: an estimate about a field can be quoted as a percentage, but the same
 // estimate quoted as a NAME is a promise, and the name changed every week. So the opponent and the
-// percentage now wait for the draw - see `DRAW_LEAD_WEEKS` below for the owner's ruling, the
-// measurement, and why nothing needed to be persisted to keep them still.
+// percentage now wait for the draw - see `DRAW_LEAD_WEEKS` below for the owner's ruling and the
+// measurement.
+//
+// ⭐⭐⭐ AND SINCE ROUND 35 #14 THE NAME IS ALSO WRITTEN DOWN. Waiting for the draw stopped the name
+// being INVENTED six weeks early; it did not make the draw a fact, and the owner found the half that
+// was left: «мне сказали "играем против №118 шанс 71%", пошел турнир - соперник в первом раунде
+// №76». A card shown at week − 1 and the bracket played at week E were two derivations of one
+// question from two different worlds, and they disagreed 59.9% of the time. `previewEvent`'s
+// `pinnedOpponentId` and `runTournament`'s are the two ends of the one answer now stored on
+// `WorldState.drawnFirstRounds`.
 //
 // WHO TURNS UP AND HOW STRONG THEY ARE ARE TWO QUESTIONS, and the preview answers them from two
 // different places. The bracket now gates entry on condition exactly as the kid is gated (a wrecked
@@ -107,6 +115,17 @@ export type FieldStrength = 'favourite' | 'even' | 'strong'
  *  events moved over six weeks on the owner's w933 save, with all three bands present – so the
  *  honest fix touches no stored byte, no bracket and no stream.
  *
+ *  ⚠⚠⚠ THE PARAGRAPH ABOVE IS KEPT VERBATIM AND IT WAS OVERTURNED ON 03.09 BY THE OWNER PLAYING IT
+ *  (round 35 #14). It is left standing because it names the price honestly and the price was then
+ *  PAID rather than avoided: the schema did move (v70), the brackets did move, and the frozen career
+ *  hashes were re-cut behind a per-key diff. What the paragraph got wrong is the word «nothing» – it
+ *  is true of the BAND and it was never true of the NAME. Round 31 #4 decided when to SAY the name;
+ *  it never decided that the draw had HAPPENED, so the game went on inventing a fresh one every week
+ *  and printing it as a commitment. The gap this note itself flags four lines below – *"the week − 1
+ *  name still disagrees with the bracket's on 59.2% of draw-week cards… That is a decision for him,
+ *  and closing it moves brackets"* – is exactly the defect he found, and he decided it.
+ *  See `WorldState.drawnFirstRounds`.
+ *
  *  ⭐ THIS IS NOT A NEW IDEA, IT IS A THIRTEEN-MONTH-OLD RECOMMENDATION FINALLY SHIPPED.
  *  docs/specs/preview-odds-honesty.md §4.2 (31.07): "Keep the named opponent for the event's OWN week
  *  only… Before that week, naming an opponent is naming someone she has a 72% chance of never
@@ -130,6 +149,12 @@ export interface EventPreview {
   firstMatchChance: number | null
   /** the opponent that chance is against, so the card can name her rather than assert a number */
   opponentName: string
+  /** ⭐ ROUND 35 #14 – THE SAME GIRL'S ID, and it is carried so the draw can be WRITTEN DOWN. Names
+   *  are not identities (two rivals may share one) and `recordDrawnFirstRounds` (world/draw.ts)
+   *  stores what the card computed rather than a second computation of its own – which is the whole
+   *  guarantee that the fact and the card agree. No screen reads it; it is the recorder's half of
+   *  «one source, two readings». Null exactly when `opponentName` is empty. */
+  opponentId: string | null
   opponentRank: number | null
   /** ⚠ THE TWO NUMBERS THE CHANCE IS MADE OF (round 21, the owner's D&D ruling: «шансы выиграть
    *  должны быть у всех, но не у всех одинаковые», and «чтобы игрокам не биться головой в бетон»).
@@ -573,6 +598,76 @@ export function eventCrowd(seed: string, event: SeasonEvent): number {
   return Math.round((lo + rng() * (hi - lo)) / step) * step
 }
 
+/** ⭐⭐ ROUND 35 #14 – THE RECORDED GIRL, RATED THE WAY THIS FILE RATES EVERY OTHER RIVAL.
+ *
+ *  The usual case is the first line: she is in the field this read built, so she is the very object
+ *  the draw would have handed back and nothing is reconstructed.
+ *
+ *  ⚠ THE SECOND LINE IS THE ONE WORTH READING, and it is why the promise survives a moved field. The
+ *  cohort is rebuilt on every read and the availability gate is TODAY's, so a girl who was in the
+ *  field the week the draw was shown can be missing from the field a moment later – and a card that
+ *  answered «we drew you against somebody, but we cannot find her» would be the same broken promise
+ *  wearing an honest face. The fallback below composes her with the SAME rested call `drawnField`
+ *  applies to every entrant it selects, so it is not a second model of an opponent: it is the same
+ *  one line of code, applied to the same cohort row.
+ *
+ *  ⚠ AND THE CALL IS NOT QUOTED IN THIS PARAGRAPH, deliberately. `tests/preview.test.ts` asserts over
+ *  EVERY `rivalMatchPlayer(` in this file that its condition argument is `ECONOMY.condition.max`, by
+ *  regex, and a regex reads prose as readily as code – a paraphrased call in a comment fails that
+ *  guard while the code obeys it. The guard is right and the comment was wrong to spell it out.
+ *
+ *  ⚠ NULL only when the id names nobody the world still holds – a retired rival, a pruned row. The
+ *  caller then falls back to the live draw, which is the pre-v70 behaviour and the only honest
+ *  answer left. */
+function pinnedOpponent(
+  world: { cohort: AiPlayer[] },
+  event: SeasonEvent,
+  alive: readonly MatchPlayer[],
+  opponentId: string,
+): MatchPlayer | null {
+  const drawn = alive.find((p) => p.id === opponentId)
+  if (drawn) return drawn
+  const row = world.cohort.find((p) => p.id === opponentId)
+  return row ? rivalMatchPlayer(row, event.surface, ECONOMY.condition.max) : null
+}
+
+/** ⭐⭐⭐ ROUND 35 #14 – WHO SHE MEETS IN ROUND ONE, as ONE function, because two callers must agree
+ *  on it to the girl: the card (`previewEvent` below, which calls this and nothing else for its
+ *  opponent) and the weekly recorder that writes the published draw down (`world/draw.ts`).
+ *
+ *  ⚠ IT IS THE CHEAP HALF OF A CARD ON PURPOSE. A preview also builds the rung's expected field, her
+ *  rested rating, the ring, the weather and the crowd; a recorder needs none of that and pays for it
+ *  anyway if it asks for a whole card. Measured: previewing the draw week through `upcomingEvents`
+ *  cost 54% of a weekly tick, which is a real regression on every bench and on
+ *  `tests/condition.test.ts`'s B1.
+ *
+ *  ⚠ NULL BEFORE THE DRAW IS MADE, which is `drawMade`'s own rule and not a second copy of it: a
+ *  caller inside `DRAW_LEAD_WEEKS` gets a girl, a caller outside it gets nothing. */
+export function firstRoundDraw(
+  world: { seed: string; week: number; cohort: AiPlayer[]; results: SeasonResult[] },
+  event: SeasonEvent,
+  ranking: RankingRow[],
+  kid: MatchPlayer,
+  excluded: ReadonlySet<string> | undefined,
+  standing: RankingRow[],
+  pinnedOpponentId: string | undefined,
+): MatchPlayer | null {
+  if (event.week - world.week > DRAW_LEAD_WEEKS) return null
+  const alive = drawnField(
+    event,
+    world.cohort,
+    ranking,
+    rivalConditions(world.results, world.week),
+    kid,
+    world.seed,
+    excluded,
+    standing,
+  )
+  const drawnNow = firstRoundOpponent(alive, kid)
+  if (!pinnedOpponentId) return drawnNow
+  return pinnedOpponent(world, event, alive, pinnedOpponentId) ?? drawnNow
+}
+
 /** The whole card's worth of preview for one event. Pure; no MAIN-stream draws; nothing persisted. */
 export function previewEvent(
   world: {
@@ -620,29 +715,45 @@ export function previewEvent(
    *  ⚠ Unlike `standing` and `kidAtRest` this default is not a compatibility shim – there is one
    *  right answer and both paths compute it. See `tierExpectedField`. */
   rated?: readonly RatedEntrant[],
+  /** ⭐⭐⭐ ROUND 35 #14 – THE DRAW THAT ALREADY HAPPENED. When the week − 1 card has been shown, the
+   *  opponent it named is a FACT and is stored on the world (`WorldState.drawnFirstRounds`); this is
+   *  that id handed back in. Absent ⇒ the field is drawn and read exactly as it always was, which is
+   *  what a bench, an older test and an event whose draw was never shown all want. See
+   *  `pinnedOpponent` below for the one case where the recorded girl is no longer in today's field. */
+  pinnedOpponentId?: string,
 ): EventPreview {
   const standingTable = standing ?? ranking
-  const alive = drawnField(
-    event,
-    world.cohort,
-    ranking,
-    rivalConditions(world.results, world.week),
-    kid,
-    world.seed,
-    excluded,
-    standingTable,
-  )
-  // ⭐ ROUND 31 #4 – THE DRAW, OR THE ABSENCE OF ONE. The field above is still built, because the
-  // BAND is what a far-out card is for and the band is a reading of the whole field; what waits for
-  // week − 1 is naming one player out of it. See DRAW_LEAD_WEEKS for the owner's ruling and the
+  // ⭐ ROUND 31 #4 – THE DRAW, OR THE ABSENCE OF ONE. What waits for week − 1 is naming one player;
+  // a far-out card shows only the BAND. See DRAW_LEAD_WEEKS for the owner's ruling and the
   // measurement behind it.
+  //
+  // ⚠ THIS COMMENT USED TO SAY «the field above is still built, because the BAND is a reading of the
+  // whole field». That stopped being true at round 31 #3, when the band moved off the drawn field
+  // and onto the RUNG's expected one (`tierExpectedField`), and nothing but the opponent has read
+  // `drawnField` since. So a far-out card no longer builds a draw at all – the OUTPUT is identical
+  // (there was no opponent to name out there) and every card outside `DRAW_LEAD_WEEKS` stops paying
+  // for a 199-candidate selection it threw away. Zero streams are involved either way: `drawnField`
+  // creates `seed:kidtour:<eventId>` fresh, spends it and drops it, so not creating it persists
+  // nothing and moves nothing.
   //
   // ⚠ ZERO RNG CONSEQUENCE, BY CONSTRUCTION. `drawnField` is untouched and runs on every card, so
   // `seed:kidtour:<eventId>` is spent in the same order and to the same depth it always was;
   // `firstRoundOpponent` is a pure index lookup into the finished draw. The MAIN weekly stream was
   // never in this file at all.
+  //
+  // ⭐⭐⭐ ROUND 35 #14 – AND ONCE THE DRAW HAS BEEN SHOWN THE ANSWER IS READ, NOT RE-ASKED. Round 31
+  // #4's note above says «NOTHING IS PERSISTED, WHICH IS DELIBERATE AND WAS CHECKED BEFORE IT WAS
+  // CHOSEN», and that held for the BAND – a reading of a rung, which is stable by construction. It
+  // did not hold for the NAME: `drawnField` is rebuilt on every read and its ranking, its conditions
+  // and her own standing all move week to week, so the same stable stream drew a different girl out
+  // of a different field. Measured before the fix on six synthetic careers with tools/r35-draw-fact.ts:
+  // the card and the bracket named different girls on 293 of 489 draw weeks (59.9%).
+  //
+  // ⚠ THE DRAW IS `firstRoundDraw`'s, NOT A SECOND COPY OF IT. The recorder that stores the fact
+  // calls the same function with the same arguments, which is what makes «the card and the fact
+  // agree» structural rather than hoped for.
   const drawMade = event.week - world.week <= DRAW_LEAD_WEEKS
-  const opp = drawMade ? firstRoundOpponent(alive, kid) : null
+  const opp = firstRoundDraw(world, event, ranking, kid, excluded, standingTable, pinnedOpponentId)
   // THE RUNG'S OWN FIELD AND HER RESTED RATING – built once, read twice (band + figure).
   const expected = tierExpectedField(event.tier, rated ?? ratedField(world.cohort, event.surface))
   const mineAtRest = ratingOf(kidAtRest ?? kid, event.surface, JUNIOR_TOUR)
@@ -658,6 +769,7 @@ export function previewEvent(
     kidRating: ratingOf(kid, event.surface, JUNIOR_TOUR),
     opponentRating: opp ? ratingOf(opp, event.surface, JUNIOR_TOUR) : null,
     opponentName: opp?.name ?? '',
+    opponentId: opp?.id ?? null,
     // ⚠ HER RANK COMES OFF THE SAME TABLE THE TOURNAMENT OVERLAY PRINTS IT FROM (round 31 #3).
     // `standingTable` is the tier's own track's, which is exactly what `overlayRanks` in
     // world/snapshot.ts reads – so the rank beside her name on the card and the rank beside it in

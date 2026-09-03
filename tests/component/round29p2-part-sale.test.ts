@@ -61,17 +61,22 @@ describe('part two #4 – the sale takes a number', () => {
     const sell = vi.spyOn(store, 'sellAsset').mockResolvedValue(undefined as never)
 
     const row = (await rowFor(wrapper, 'A savings deposit'))
-    const box = row.findAll('input.shop-sell-input')
+    // ⚠⚠ RE-AIMED AT ROUND 35 #12, NEVER LOOSENED. The dedicated `.shop-sell-input` is gone because
+    // the card carries ONE field now – his own frame, checked against the build: «там две кнопки о
+    // поле инпута одно». The claim is untouched: a typed figure reaches the command as a PART SALE
+    // in cents. Only the box it is typed into is shared.
+    const box = row.findAll('input.shop-stake-input')
     expect(box, 'the numeric input he asked for').toHaveLength(1)
     expect(box[0].attributes('type'), 'numeric, so a phone shows the right keypad').toBe('number')
     await box[0].setValue('30000')
 
-    // ⚠ THE CONTROL SAYS WHAT PRESSING IT WILL DO – it stops saying «Sell it for $100,000» the moment
-    // a smaller figure is in the box, which is the R10-16 pairing: the control and the outcome tell
-    // one story.
-    const button = row.findAll('button.shop-action').find((b) => b.text().includes('Take out'))
-    expect(button, 'the control names the part').toBeTruthy()
-    expect(button!.text()).toContain('Take out $30,000')
+    // ⚠⚠ RE-AIMED: THE CONTROL NO LONGER INTERPOLATES THE FIGURE, AND THE FIGURE DID NOT GO AWAY –
+    // it is in the field beside it, which is what one shared box buys. The owner ruled the label on
+    // 03.09 («"Add more" и "Sell" - хорошо, меньше места занимают»), so the R10-16 pairing this arm
+    // protects is now carried by the confirm dialog below, which still names the exact amount and
+    // is asserted three lines down exactly as before.
+    const button = row.findAll('button.shop-action').find((b) => b.text() === 'Sell')
+    expect(button, 'the sell control').toBeTruthy()
     await button!.trigger('click')
 
     // The confirm dialog is the last gate, and it says what stays behind.
@@ -95,8 +100,11 @@ describe('part two #4 – the sale takes a number', () => {
     const sell = vi.spyOn(store, 'sellAsset').mockResolvedValue(undefined as never)
 
     const row = (await rowFor(wrapper, 'A savings deposit'))
-    const button = row.findAll('button.shop-action').find((b) => b.text().includes('Sell it for'))
-    expect(button!.text()).toContain('Sell it for $100,000')
+    // ⚠ RE-AIMED AT ROUND 35 #12 – the control says «Sell» now (his ruling, 03.09) and the claim is
+    // the one that matters and is unchanged: an untouched box sends NO amount, which is the engine's
+    // «sell the lot».
+    const button = row.findAll('button.shop-action').find((b) => b.text() === 'Sell')
+    expect(button, 'the sell control').toBeTruthy()
     await button!.trigger('click')
     const confirm = wrapper.findAll('button').find((b) => /confirm|yes|sell/i.test(b.text()) && b.text() !== button!.text())
     await confirm!.trigger('click')
@@ -108,11 +116,13 @@ describe('part two #4 – the sale takes a number', () => {
     const world = owning('p2ui-car', 'car-sensible')
     const wrapper = await mountShop(toSnapshot(world))
     const row = (await rowFor(wrapper, 'The sensible estate'))
-    expect(row.findAll('input.shop-sell-input'), 'no part sale on a car').toHaveLength(0)
+    // ⚠ RE-AIMED AT ROUND 35 #12 on the selector and the label; the CLAIM is word for word the one
+    // it always made – a car has no amount to type and is sold whole.
+    expect(row.findAll('input.shop-stake-input'), 'no part sale on a car').toHaveLength(0)
     expect(
       row.findAll('button.shop-action').map((b) => b.text()),
       'and the whole sale is still offered',
-    ).toContainEqual(expect.stringContaining('Sell it for'))
+    ).toContain('Sell')
     wrapper.unmount()
   })
 
@@ -123,8 +133,9 @@ describe('part two #4 – the sale takes a number', () => {
     const world = owning('p2ui-over', 'deposit', 100_000_00)
     const wrapper = await mountShop(toSnapshot(world))
     const row = (await rowFor(wrapper, 'A savings deposit'))
-    await row.findAll('input.shop-sell-input')[0].setValue('250000')
-    const button = row.findAll('button.shop-action').find((b) => /Take out|Sell it for/.test(b.text()))!
+    // ⚠ RE-AIMED AT ROUND 35 #12 – one shared field, one control name. The claim is unchanged.
+    await row.findAll('input.shop-stake-input')[0].setValue('250000')
+    const button = row.findAll('button.shop-action').find((b) => b.text() === 'Sell')!
     expect(button.attributes('disabled'), 'more than they hold is not pressable').toBeDefined()
     wrapper.unmount()
   })

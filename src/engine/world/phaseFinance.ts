@@ -25,6 +25,9 @@
 // and the tests all still read the ONE predicate. Moving it was forced rather than chosen: a leaf
 // may not import the barrel, so the bill could not have come here without it.
 import type { CoachTier, FamilyBackground, KitOfferTerms } from '../../shared/protocol'
+// ⭐ ROUND 35 #9 – the same formatter the prize and sponsor transfer rows use, so her three receipts
+// read as one sentence in three places rather than three spellings of one number.
+import { formatCents } from '../../shared/money'
 import type { Rng } from '../rng'
 import type { WorldState } from './state'
 import { pickInt, rngFromSeed } from '../rng'
@@ -33,6 +36,7 @@ import {
   GEAR_CATEGORIES,
   gearHitForWeek,
   gearVoice,
+  kidPrizeShareBps,
   parentIncomeForWeekCents,
 } from '../economy'
 import {
@@ -46,8 +50,10 @@ import {
 import { activeKitDeal } from '../offers'
 import { GEAR_CATEGORY_LINE } from '../equipment'
 import { schoolIsOver } from '../kidLife'
-import { addEvent } from './ledger'
-import { ageAtWeek } from './age'
+// ⭐ ROUND 35 #9 – `accrueKidShare` is the memo beside her cut, the same writer the prize and the
+// sponsor paths use; the brand is its third source.
+import { accrueKidShare, addEvent } from './ledger'
+import { ageAtWeek, kidAgeYears } from './age'
 import { vacationForWeek } from './bookings'
 import { inCollege, resolveCollegeBill } from './college'
 import { sponsorNeedMet } from './sponsors'
@@ -56,7 +62,7 @@ import { sponsorNeedMet } from './sponsors'
 import { assetHeldWeeks, assetUpkeepCents, deliveredAssets } from './assets'
 // The businesses' one arithmetic (round 29 part four P7) – the till charges what these quote, and
 // the household meter quotes the same two functions, so the strip and the ledger cannot disagree.
-import { academyWeeklyIncomeCents, merchWeeklyIncomeCents } from './business'
+import { academyWeeklyIncomeCents, assetKidShareCents, merchWeeklyIncomeCents } from './business'
 
 // Flavor lists are background-aware but a flavor is always chosen with ONE `pickInt`
 // (a single rng() call regardless of list length), so the per-tick draw count is
@@ -331,16 +337,66 @@ export function coachWorksThisWeek(world: WorldState): boolean {
  *  never bought them, the frozen three included – and the frozen capture (41550 / e6b0c709)
  *  cannot see it. Nothing here is a die, so the input-independence law is not engaged. */
 function resolveBusinessIncome(world: WorldState): void {
-  const merch = merchWeeklyIncomeCents(world)
-  if (merch > 0) {
+  // ⭐⭐⭐ ROUND 35 #9 – AND THE BRAND'S WEEK IS SPLIT BEFORE IT REACHES THE FAMILY, exactly as a
+  // prize cheque is. The owner: «доход от ее бренда давай тоже как проценты с призовых будем делить
+  // … в недельном доходе будет семье на руки сумма меньше».
+  //
+  // ⚠ THE SHAPE IS `finalizeTournament`'S, TO THE LINE, AND THAT IS DELIBERATE: her share is
+  // rounded ONCE (`assetKidShareCents`) and the family's is the REMAINDER, so `world.fundsCents` and
+  // `world.kidFundsCents` re-add to the brand's gross to the cent. The arithmetic lives in
+  // `world/business.ts`; this is the site that pays.
+  //
+  // ⚠⚠ THE ACADEMY BELOW IS NOT SPLIT AND MUST NOT BE. «Её бренд» is the merch – her name on the
+  // shirts – while the academy is the parent's business, bought with the parent's money and earning
+  // off her reputation. Two families, two rules, and the guard is in `assetKidShareCents` rather
+  // than here so a third earner added tomorrow reaches the ruling by construction.
+  const merchGross = merchWeeklyIncomeCents(world)
+  if (merchGross > 0) {
+    // ⚠ HER REAL AGE (`kidAgeYears`), never the band's – the one-clock ruling of 09.08, and the same
+    // call `finalizeTournament` makes before it splits a prize.
+    const herBps = kidPrizeShareBps(kidAgeYears(world.week, world.profile.birthMonth, world.profile.birthDay))
+    const herCents = assetKidShareCents(world, 'merch-brand')
+    const merch = merchGross - herCents
     world.fundsCents += merch
-    addEvent(world, {
-      week: world.week,
-      type: 'income',
-      category: 'business',
-      text: 'Merch – her name on the shelves',
-      amountCents: merch,
-    })
+    // ⚠ THE `> 0` GUARD IS THIS FUNCTION'S OWN «no $0 noise» RULE, KEPT THROUGH THE SPLIT AND NOT
+    // INHERITED BY ACCIDENT. Before round 35 #9 the whole block was gated on the income being
+    // positive, and the split moved that gate one level out – so the row needs the clause back, for
+    // a case that is now REACHABLE: at the 50% cap a one-cent gross rounds her share to the whole
+    // cent (`Math.round(0.5)` is 1) and leaves the family nothing, which would book a $0.00 income
+    // line on a career whose fame has decayed almost to zero. Her transfer below is guarded
+    // separately, so the cent still reaches her.
+    if (merch > 0) {
+      addEvent(world, {
+        week: world.week,
+        type: 'income',
+        category: 'business',
+        // ⚠ THE ROW IS WHAT THE FAMILY ACTUALLY BANKED, and it NAMES the share when there is one –
+        // the prize row's own rule («a prize row that quietly shrank by half would read as a bug in
+        // the till»), and silent before her eighteenth where nothing is deducted.
+        text:
+          herCents > 0
+            ? `Merch – her name on the shelves, less her ${herBps / 100}% share`
+            : 'Merch – her name on the shelves',
+        amountCents: merch,
+      })
+    }
+    if (herCents > 0) {
+      world.kidFundsCents = (world.kidFundsCents ?? 0) + herCents
+      // ⚠ AN `info` ROW WITH NO `amountCents`, `bankSponsorCheque`'s own reason: booking her share
+      // as a family expense would count the same cents twice against `careerTotals.spentCents`.
+      addEvent(world, {
+        week: world.week,
+        type: 'info',
+        text: `${world.profile.kidName}'s share of the brand – ${formatCents(herCents)} into her own account`,
+      })
+      // ⭐ TAGGED `brand`, NOT `prize`, AND ROUND 31 #2 IS WHY. The week recap prints ONE line and it
+      // picks the `prize` part by name – «Her cut N% – $X into her own account» – after he refused a
+      // second weekly row about money he had not asked to see weekly («что там снова за цифры
+      // странные появились?»). Folding brand cents into the prize part would put a bigger number
+      // under a label that says prize, which is round 29 #10's own defect class. Her page states
+      // this rule instead, which is «в интерфейсе напишем про её долю».
+      accrueKidShare(world, world.week, herCents, herBps, merchGross, 'brand')
+    }
   }
   const academy = academyWeeklyIncomeCents(world)
   if (academy > 0) {
