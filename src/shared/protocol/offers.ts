@@ -411,6 +411,25 @@ export interface KitDealView {
 // The parent's own money, on the Budget tab beside Spend / Bills / Ledger. `KitLineView`'s shape and
 // `KitLineView`'s rule: the screen never prices a rung and never derives a loss.
 
+/** ⭐⭐⭐ ROUND 34 #19 – THE FOUR WINDOWS ON THE FUND'S CHART, IN MONTHS, and they are HIS four:
+ *  «с возможностью выбрать промежуток… 6 месяцев, 1 год, 2 года, 5 лет».
+ *
+ *  ⚠ THE NUMBERS LIVE HERE AND THE WORDS LIVE ON THE SCREEN, which is this protocol's usual split.
+ *  The engine reads the LARGEST of them to know how long a series to send (`shopView`), the screen
+ *  reads all four to draw the picker, and a fifth window added tomorrow is one entry rather than two
+ *  edits that could disagree about what «2 years» means.
+ *
+ *  ⚠ WHOLE CALENDAR MONTHS, so the five-year window is exactly the 60 points his own sentence
+ *  arrives at – see `unitPriceHistory`, which is where a month is defined. */
+export const SHOP_PRICE_RANGE_MONTHS = [6, 12, 24, 60] as const
+
+/** One point of a rung's price chart: the career week the month opened on, and that month's AVERAGE
+ *  unit price in WHOLE cents. Rounded once, in the engine – no screen divides a price. */
+export interface ShopPricePoint {
+  week: number
+  cents: number
+}
+
 /** One rung of the shelf, as the Money screen reads it. */
 export interface ShopRowView {
   id: string
@@ -497,6 +516,28 @@ export interface ShopRowView {
    *  when they BUY – a part sale takes the same fraction of the cash and of the units, so realising
    *  a loss leaves the average where it was. */
   avgUnitPriceCents: number | null
+  /** ⭐⭐⭐ ROUND 34 #19 – WHAT ONE UNIT HAS COST, ONE AVERAGED FIGURE A MONTH, oldest first – or null
+   *  on every rung that has no chart to draw.
+   *
+   *  THE OWNER, 02.09: «для индексного фонда давай график нарисуем с точками его стоимости за пай с
+   *  возможностью выбрать промежуток… 6 месяцев, 1 год, 2 года, 5 лет. Мы же сможем хранить по одной
+   *  цифре за месяц средней»
+   *
+   *  ⚠⚠ NON-NULL IS THE PREDICATE THE SCREEN DRAWS THE CHART ON, and the engine decides it: a rung
+   *  that RIDES THE MARKET (`ShopItem.volBps`), which is the index fund he named and any wilder fund
+   *  added to the catalogue tomorrow. The deposit is deliberately not one – its price is a dead-flat
+   *  exponential, so a chart of it would be a line with nothing to read, and he did not ask for one.
+   *  ⚠ AND IT IS ON THE ROW WHETHER OR NOT THEY OWN ONE, like `unitPriceCents` above and for the same
+   *  reason: «зашёл на пике при цене 7-8к» is a decision made BEFORE buying.
+   *
+   *  ⚠ NOTHING IS STORED IN THE SAVE. The series is derived from the career seed on every read –
+   *  `unitPriceHistory`'s header carries the argument and the one thing storage would have bought.
+   *  A career of any age therefore has its whole chart, including one that predates this item.
+   *
+   *  ⚠ SHORT ON A YOUNG CAREER, and that is the honest answer rather than a padded one: a family in
+   *  its first season has three points because three months have happened. Never longer than the
+   *  largest of `SHOP_PRICE_RANGE_MONTHS`. */
+  priceHistory: ShopPricePoint[] | null
   /** can the family afford to open this rung THIS WEEK? False never hides the row and never draws a
    *  progress bar (§2: «never a locked row, a progress bar or a teaser») – the price stays on screen
    *  and the control is simply not pressable. */

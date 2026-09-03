@@ -26,7 +26,6 @@
 // The advance button is NOT here – it is App.vue's sticky bar, global on every tab (R13-12).
 import { computed, ref } from 'vue'
 import { useGameStore } from '../../stores/game'
-import { coachRoomBand } from '../../engine/world/coachMarket'
 import { LADDER_LABEL, rankChipTrack, type PlayStyle, type WorldEvent, type WorldMatch } from '../../shared/protocol'
 import type { LadderTrack, TierId } from '../../engine/season/types'
 import { weekDateLine, weekLabel, weekRange } from '../../shared/dates'
@@ -529,15 +528,27 @@ const coachQuote = computed(() =>
   game.snapshot ? COACH_QUOTES[game.snapshot.profile.playStyle][Math.floor(week.value / 4) % 5] : '',
 )
 
-/** ⭐ ROUND 24 #1 – the plain-language band, read off the engine's own note through the ONE splitter
- *  (`coachRoomBand`), never a second `indexOf` here. Empty before there is anything to say.
- *
- *  The owner asked for it twice. Round 23: «Давай как-то по-другому оформим подсказки про уровень
- *  девушки на карточке тренера. Может что-то вроде "она близка к своему потолку"…». It was built on
- *  the Coach Market screen, and round 24 came back with «Слова для тренеров о потолке девочки ты
- *  предложил, но в интерфейсе не поменял» – because THIS is the card he actually reads, every week,
- *  and its line was five canned quotes per play style that know nothing about her. */
-const roomBand = computed(() => coachRoomBand(game.snapshot?.coachRoomNote ?? ''))
+// ⚠⚠ ROUND 34 #2a – THE CEILING READ IS NO LONGER ON THIS SCREEN, and the `roomBand` computed that
+// fed it is gone with it. It lived here from round 24 to round 34: round 23 asked for «подсказки про
+// уровень девушки на карточке тренера», round 24 said the words had been written but «в интерфейсе
+// не поменял», and this card was the answer. Round 34 is the owner reading the shipped result on a
+// fourteen-year-old and sending it back: «Тренер на главном экране (почему-то, давай на карточку
+// тренера вернём лучше) написал 14 летней девочке Close to her ceiling … звучит как приговор».
+//
+// ⚠ THE READ IS NOT DELETED, IT MOVED BACK. `CoachMarketScreen` renders it above the coach list
+// (`.cm-room-band`), which is the card he asked for, and it is still the engine's own sentence
+// through the ONE splitter (`coachRoomBand`) – so there is exactly one of them again, and this
+// screen keeps the coach's VOICE (`coachQuote`, owner-approved copy from round 7 #5d) and nothing
+// else. The round-24 mounted pin in `tests/component/` carries both halves now: absent here, present
+// there.
+// ⚠ Round 34 #2b re-cut the bands themselves so the verdict cannot arrive at fourteen again – see
+// `coachRoomBandIndex`. The two fixes are independent and both were asked for.
+//
+// ⚠⚠ AND DO NOT WRITE THAT PIN'S FILENAME OUT IN FULL ANYWHERE ABOVE THE CARD. It contains the
+// string `coach` + `-card`, and `tests/coach-market.test.ts` cuts the card's region with that as its
+// START marker – so the first draft of this note moved the region up here and swept the whole screen
+// into a "no money on this card" assertion, which promptly went red on a `$` five hundred lines away.
+// The helper caught it (tests/helpers/source.ts); a raw `indexOf` would have widened in silence.
 
 
 // --- Season strip: REAL tier progress. Reads the kid's best finish per tier off the snapshot: a
@@ -1420,18 +1431,14 @@ async function leaveCollege(): Promise<void> {
           <div class="coach-body">
             <Eyebrow>Coach note</Eyebrow>
             <p class="coach-line">{{ coachQuote }}</p>
-            <!-- ⭐⭐ ROUND 24 #1 – WHERE SHE ACTUALLY STANDS, ON THE CARD HE SEES EVERY WEEK. Round 23
-                 #1 asked for a plain reading of her level on the coach card; it landed on the Coach
-                 MARKET screen instead - a page he opens rarely - so his verdict was exact. THIS is
-                 the coach card. His words are quoted beside `roomBand` in the script, because
-                 Cyrillic inside a <template> is forbidden (tests/round13-nav.test.ts).
-                 ⚠ THE QUOTE ABOVE IS NOT REPLACED. It is owner-approved copy from round 7 #5d, five
-                 lines per play style settling every four weeks, and it is his COACH's voice. This is
-                 a second, shorter line under it: the voice keeps saying what it says, and the card
-                 now also says the one thing the player was asking it for.
-                 ⚠ The band and nothing else - no digit, ever. `KidScreen` keeps her ceiling behind a
-                 fog of war and the market screen's own note (:757 there) is written to that rule. -->
-            <p v-if="roomBand" class="coach-room">{{ roomBand }}</p>
+            <!-- ⚠⚠ ROUND 34 #2a – THE CEILING BAND USED TO SIT HERE, under the quote and above his
+                 name, from round 24 until 02.09. The owner sent it back to the coach card on the
+                 Coach Market screen; his words are quoted beside the removed computed in the script,
+                 because Cyrillic inside a <template> is forbidden (tests/round13-nav.test.ts).
+                 ⚠ WHAT STAYS IS HIS COACH'S VOICE. The quote above is owner-approved copy from round
+                 7 #5d - five lines per play style, settling every four weeks - and it was never part
+                 of the complaint. Nothing replaced the band: an invented filler line here would be
+                 exactly the wording change invariant 4 forbids. -->
             <!-- The export's handwritten sign-off, Caveat in lime at 0.72. It is his NAME, so it
                  appears only when there is a him. -->
             <p v-if="coachSignature" class="coach-sign">{{ coachSignature }}</p>
@@ -2062,9 +2069,18 @@ button.note-card:active:not(:disabled) {
   }
 }
 
+/* ⚠ ROUND 34 #4 – THE TOURNAMENT'S NAME IS SET IN SORA, and that is the whole change here.
+   The owner: «На плашке next tournament, family budget для названия турнира и денег используй
+   пожалуйста шрифт Sora». `--font-heading` IS Sora and is the app's one way of asking for it
+   (declared once in src/style.css beside the @font-face) – no second @font-face, no new token.
+   ⚠ NOTHING ELSE ON THIS CAPTION MOVED: the size, the weight, the leading, the 118px cap and
+   `text-wrap: pretty` are all as they shipped, and `tests/component/round34-home-type.test.ts`
+   pins each of them beside the family, because a font swap that quietly re-sizes a caption is a
+   restyle he did not ask for. */
 .note-title {
   position: relative;
   margin: 11px 0 0;
+  font-family: var(--font-heading);
   font-size: 15.5px;
   font-weight: 700;
   line-height: 1.25;
@@ -2100,7 +2116,17 @@ button.note-card:active:not(:disabled) {
   margin: 0;
 }
 
+/* ⚠⚠ ROUND 34 #4, AND THIS IS THE HALF THAT NEEDED A MEASUREMENT BEFORE IT COULD BE BUILT.
+   He asked for Sora «для названия турнира и денег» on the two plates he named – and `.budget-total`,
+   the money on Family budget, HAS BEEN SET IN SORA SINCE 29.07 (it carries `--font-heading` below).
+   Measured through the real cascade on a 375x667 mount, the three read: `.note-title` Manrope,
+   `.budget-total` Sora, `.note-figure` Manrope. So the only money on either of those plates that
+   was not already Sora is THIS one – the travel budget under the tournament – and reading his
+   sentence any other way makes half of it a no-op. It is money, it is on a plate he named, and the
+   change is the face and nothing else.
+   ⚠ IF HE MEANT ONLY THE FAMILY-BUDGET TOTAL, deleting the one line below puts it back. */
 .note-figure {
+  font-family: var(--font-heading);
   font-size: 19px;
   font-weight: 800;
   letter-spacing: -0.01em;
@@ -2157,6 +2183,10 @@ button.note-card:active:not(:disabled) {
 
 /* --- FAMILY BUDGET ------------------------------------------------------------------------------ */
 
+/* ⚠ ROUND 34 #4 – THE MONEY HERE WAS ALREADY SORA and this round changed nothing about it. The
+   `--font-heading` line below has stood since 29.07 (U0, the port off the sheet); what round 34
+   added is a mounted pin on the COMPUTED family, so the next reader does not have to take a
+   declaration's word for it – see `tests/component/round34-home-type.test.ts`. */
 .budget-total {
   position: relative;
   font-family: var(--font-heading);
@@ -2328,20 +2358,11 @@ button.note-card:active:not(:disabled) {
   text-wrap: pretty;
 }
 
-/* ⭐ ROUND 24 #1 – the band, under his line and above his name. Smaller and quieter than the quote:
-   the quote is his VOICE and this is a READING, so it must not shout over him. Accent-toned because
-   it is the one thing on this card the player came looking for.
-   ⚠ NO WIDTH OR HEIGHT OF ITS OWN. `.coach-card` is `card-short` and the note has to keep fitting a
-   375px phone with the portrait beside it - a fixed size here is how that stops being true one
-   sentence later. `tests/component/round24-coach-card.test.ts` measures the box instead. */
-.coach-room {
-  margin: 6px 0 0;
-  font-size: 11px;
-  line-height: 1.36;
-  font-weight: 600;
-  color: var(--accent);
-  text-wrap: pretty;
-}
+/* ⚠ ROUND 34 #2a – `.coach-room` WENT WITH THE LINE IT DRESSED. It styled the ceiling band under his
+   quote from round 24 until 02.09, when the owner moved the read back to the Coach Market's coach
+   card; the rule is removed rather than orphaned, because a selector with nothing to match is a
+   thing the next reader has to prove is dead. The card is `card-short` and one line shorter for it,
+   so nothing here needs a height. The read's own styling is `.cm-room-band` on the market screen. */
 
 /* His words need the room, so the text column starts past the opaque part of the portrait and the
    note is free to run to the bottom of the card. */

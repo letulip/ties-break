@@ -32,10 +32,13 @@ const AD = ECONOMY.advertising
  *  it are persisted in real saves – so `WATCH` freezes that LEGACY paper: the fee off the watches
  *  category's ≤200 cell (the anchor, unchanged to the cent), the brand its first house, the
  *  52-week term and two-shoot ask the old letters carry. */
+// ⚠ INDEX 1 SINCE ROUND 34 #7/#11/#12/#13 (03.09), AND IT IS THE SAME ≤200 CELL. A fifth band was
+// prepended to `advertising.bands` at ≤400, so every band index moved one to the right; the cheque
+// itself was lifted tenfold at that rung by the owner's approved table.
 const WATCH = {
   brand: ECONOMY.advertising.categories.watches.houses[0],
-  maxWtaRank: ECONOMY.advertising.bands[0].maxWtaRank,
-  cashCents: ECONOMY.advertising.categories.watches.feeCentsByBand[0]!,
+  maxWtaRank: ECONOMY.advertising.bands[1].maxWtaRank,
+  cashCents: ECONOMY.advertising.categories.watches.feeCentsByBand[1]!,
   termWeeks: 52,
   shootWeeksPerTerm: 2,
 }
@@ -83,7 +86,8 @@ describe('OfferLetter – the advertising house has its own sheet', () => {
     expect(text).toContain('We make watches')
     expect(text).toContain(WATCH.brand)
     // The fee, in real money, formatted once at the edge (cents in, dollars out).
-    expect(text).toContain('$20,000')
+    // ⚠ $200,000 since round 34 #7/#11/#12/#13 (03.09) – the owner lifted the ≤200 band tenfold.
+    expect(text).toContain('$200,000')
     expect(text).toContain('paid the day this is signed')
     // The term, in a house's words rather than a numeral.
     expect(text).toContain('Twelve months')
@@ -182,7 +186,8 @@ describe('InboxSheet – the letter is in the list, the row says what it is, the
     const rows = wrapper.findAll('.inbox-row')
     const row = rows.map((r) => r.text()).find((t) => t.includes(WATCH.brand))
     expect(row).toBeTruthy()
-    expect(row).toContain('Her face in a campaign – $20,000')
+    // ⚠ $200,000 since round 34: the ≤200 band was lifted tenfold, the subject line is unchanged.
+    expect(row).toContain('Her face in a campaign – $200,000')
     // An open advertising letter is a DECISION, so – unlike the academy's notices – it must wear
     // the waiting pill the accent dot points at.
     expect(row).toContain('Needs an answer')
@@ -246,8 +251,14 @@ describe('⭐⭐ OfferLetter – the PORTFOLIO on the paper (round 29 part four 
   // false about its own author. The clause comes off the PAPER (`AdOfferTerms.trade`), and since P6
   // the paper also states its per-year money, its 1–3 year term and its CATEGORY-scoped
   // exclusivity clause.
-  it.each([['airline', 1], ['fragrance', 3]] as const)('the %s category`s letter says what THAT house makes and asks', (category, band) => {
+  // ⚠ THE BAND IS DERIVED SINCE ROUND 34 (03.09), NOT TYPED. A fifth band was prepended at ≤400, so
+  // a literal index here points at a `null` cell and `adTermsForCategory` returns null – the letter
+  // then falls back to the watches default and the arm silently tests nothing. Each category's own
+  // FIRST OPEN cell is what these two letters were always about.
+  it.each(['airline', 'fragrance'] as const)('the %s category`s letter says what THAT house makes and asks', (category) => {
     const def = ECONOMY.advertising.categories[category]
+    const band = def.feeCentsByBand.findIndex((c) => c !== null)
+    expect(band, `${category} opens at no band at all`).toBeGreaterThanOrEqual(0)
     const t = adTermsForCategory(category, band, 2, def.houses[0])!
     const open = letter({}, t)
     const w = mount(OfferLetter, { props: { offer: open, week: open.week } as never })

@@ -14,7 +14,9 @@
 //
 // ⚠ RNG: nothing here draws. These are pure reads over persisted state plus the ECONOMY knobs, so
 // the frozen MAIN capture cannot notice this file.
-import { ECONOMY } from '../economy'
+// ⭐ ROUND 34 #9: `vacationPackage` beside `ECONOMY`, out of the same leaf – the booked holiday's own
+// condition gain, read where the fatigue caution is decided (see `bookedRestGainBetween`).
+import { ECONOMY, vacationPackage } from '../economy'
 import { clamp } from '../condition'
 import { TIERS, isBlackoutWeek, isJuniorAge, isOffSeasonWeek, tierAgeBlock } from '../season/calendar'
 import { schoolIsOver } from '../kidLife'
@@ -462,6 +464,41 @@ export function layoffBlock(input: {
   return { level: 'blocked', reason: 'injured', detail: injuredDetail(weeksRemaining!) }
 }
 
+/** ⭐⭐⭐ ROUND 34 #9 – WHAT THE BOOKED HOLIDAYS BETWEEN NOW AND `week` WILL PUT BACK.
+ *
+ *  The owner: «Если отпуск назначен, то на карточке турнира в сезоне надо убрать Exhausted … Или
+ *  считать из отпуска восстановится ли и тогда убирать Exhausted» – and he named the better of his
+ *  own two answers. Simply hiding the word whenever a holiday exists would print "she is fine" over
+ *  exactly the cases that matter: a girl at 9 with one staycation between her and a W25 is still
+ *  going to arrive exhausted, and the card would have stopped saying so.
+ *
+ *  ⚠ THE PACKAGE'S OWN GAIN AND NOTHING ELSE, WHICH IS WHY THIS IS A FORECAST A GATE MAY READ. The
+ *  comment on the layoff read above says her condition in a future week is unknowable, and that
+ *  stays true of an ORDINARY week – whether she plays, how deep she runs and what it drains are all
+ *  undecided. A BOOKED HOLIDAY is not that: it is a hard blackout (nothing is enterable that week,
+ *  see the vacation branch below), so it cannot become a match week, and `resolveVacation` pays
+ *  `pkg.conditionGain` on it unconditionally. That number is knowable today and it is the only
+ *  number counted here.
+ *
+ *  ⚠ AND IT DELIBERATELY UNDER-COUNTS. A holiday week also earns the ordinary free-week recovery on
+ *  top (`accrueCondition`'s base plus the rest slider), and so does every quiet week in between –
+ *  none of that is added, because the weeks in between are the unknowable ones and a forecast that
+ *  over-claims would take the warning off a card she really does arrive tired to. Under-counting
+ *  fails the safe way: the word stays.
+ *
+ *  ⚠ STRICTLY BETWEEN THE TWO WEEKS. This week's holiday, if there is one, has already been paid
+ *  into `world.condition` by the time anybody reads a card (`resolveVacation` runs at tick step 1c);
+ *  a holiday ON the event's week makes the event unenterable outright, one branch up. Pure read,
+ *  zero draws, and identically 0 for a family that has booked nothing. */
+export function bookedRestGainBetween(world: WorldState, week: number): number {
+  let gain = 0
+  for (const booking of world.vacations) {
+    if (booking.week <= world.week || booking.week >= week) continue
+    gain += vacationPackage(booking.packageId)?.conditionGain ?? 0
+  }
+  return gain
+}
+
 export function availabilityStatus(
   world: WorldState,
   // ⚠ WIDENED TO WHAT IT READS (PR-09): this function touches `event.tier` and `event.week` and
@@ -624,8 +661,29 @@ export function availabilityStatus(
   // The verdict itself comes from `medicalBlock`, shared with the practice gate.
   const medical = medicalBlock(world.condition)
   if (medical) return medical
-  if (world.condition < ECONOMY.availability.minConditionToEnter[event.tier]) {
-    return { level: 'caution', reason: 'fatigued', detail: 'Exhausted – racing risks injury.' }
+  // ⭐⭐⭐ ROUND 34 #9 – AND THE FATIGUE CAUTION IS READ AT THE EVENT'S WEEK, not at today's, once the
+  // family has booked a holiday in between. The owner, on the season card: «Если отпуск назначен, то
+  // на карточке турнира в сезоне надо убрать Exhausted … Или считать из отпуска восстановится ли и
+  // тогда убирать Exhausted» – the second of his two answers, which is the one that cannot lie.
+  //
+  // ⚠ THE SAME MOVE R10-17 MADE ON THE INJURY WINDOW, one gate down: the layoff read was scoped to
+  // the EVENT's week years ago and the condition read was left on today's, with the note above
+  // saying why (a future condition is unknowable). A booked holiday is the one piece of it that is
+  // knowable – see `bookedRestGainBetween` for what is counted and what is deliberately not.
+  //
+  // ⚠ THE WORD IS UNCHANGED AND SO IS EVERY CAREER THAT BOOKS NOTHING: with no holiday in between
+  // the gain is 0 and this is `world.condition < floor`, character for character what it was.
+  // ⚠ AND THE DOCTOR'S VETO ABOVE IS NOT GIVEN THE SAME FORECAST, on purpose. It is a hard refusal
+  // about a body that is not cleared TODAY, the owner asked about the Exhausted caution, and a
+  // medical floor lifted by a holiday that has not happened yet would be the game promising
+  // clearance it cannot give.
+  const conditionFloor = ECONOMY.availability.minConditionToEnter[event.tier]
+  if (world.condition < conditionFloor) {
+    const c = ECONOMY.condition
+    const restored = clamp(world.condition + bookedRestGainBetween(world, event.week), c.min, c.max)
+    if (restored < conditionFloor) {
+      return { level: 'caution', reason: 'fatigued', detail: 'Exhausted – racing risks injury.' }
+    }
   }
   return { level: 'ok' }
 }

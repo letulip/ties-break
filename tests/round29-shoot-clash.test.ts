@@ -48,10 +48,13 @@ const AD = ECONOMY.advertising
  *  ≤200 cell (the anchor, unchanged to the cent), the brand its first house, the term and the
  *  two-shoot ask as the old letters carry them. `AD` still carries the mechanics every house
  *  shares (the age bar, the weekly chance, the decide weeks, the lead, the clash price). */
+// ⚠ INDEX 1 SINCE ROUND 34 #7/#11/#12/#13 (03.09), AND IT IS THE SAME ≤200 CELL. A fifth band was
+// prepended to `advertising.bands` at ≤400, so every band index moved one to the right; the cheque
+// itself was lifted tenfold at that rung by the owner's approved table.
 const WATCH = {
   brand: ECONOMY.advertising.categories.watches.houses[0],
-  maxWtaRank: ECONOMY.advertising.bands[0].maxWtaRank,
-  cashCents: ECONOMY.advertising.categories.watches.feeCentsByBand[0]!,
+  maxWtaRank: ECONOMY.advertising.bands[1].maxWtaRank,
+  cashCents: ECONOMY.advertising.categories.watches.feeCentsByBand[1]!,
   termWeeks: 52,
   shootWeeksPerTerm: 2,
 }

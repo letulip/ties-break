@@ -1811,6 +1811,26 @@ export function adBandFor(standing: SponsorStanding): number | null {
  *  unrecognised or under-scale cheque is band 0: the weakest rung, never a refusal, and never more
  *  than the paper proves.
  *
+ *  ⚠⚠ ROUND 34 (03.09) BROKE THE PARENTHESIS ABOVE AND THE REPAIR IS THE `find` BELOW. The owner's
+ *  approved foot of the ladder is not monotone per category – clothing pays $120,000 at ≤400 and
+ *  $50,000 at ≤200, drinks pays $80,000 at both, watches pays $200,000 at both ≤200 and ≤100 –
+ *  because what he approved is the BAND TOTAL and the shelf's shape, not one category's own climb.
+ *  A pure walk from the top then reads a $120,000 clothing letter, written at ≤400, as a ≤100
+ *  letter: it is the first cell from the top the cheque clears. So the cheque is matched EXACTLY
+ *  first, and the historical walk survives only as the fallback for a legacy fee that belongs to no
+ *  cell at all.
+ *
+ *  ⚠ AMONG EXACT MATCHES THE STRONGEST WINS, which is the shipped rule unchanged and is what keeps
+ *  every letter already in a save reading as it always did: a $200,000 watches letter is the ≤100
+ *  band's cell, exactly as it was before the prepend.
+ *
+ *  ⚠⚠ AND ONE AMBIGUITY IS LEFT STANDING RATHER THAN PAPERED OVER: a NEW ≤400 drinks letter states
+ *  $80,000, which is also the ≤200 cell, so it reads back one rung high. Nothing on the paper can
+ *  tell the two apart – the cheque IS the only record of the band (round 32 #5's design: «no letter
+ *  needs a new field») – and the cost is bounded to one rung of `fame.shootFloorByBand`, i.e. 0.01
+ *  of a fame point per delivered shoot. Closing it means storing the band on `AdOfferTerms`, which
+ *  is a save-schema move and is the owner's to call.
+ *
  *  ⚠ THE CAPSTONE IS THE TOP BAND AND IS NOT A CATEGORY ROW. Its money is its own constant
  *  ($10M/yr, the icon-of-icons letter) and `adFeeFor` deliberately cannot price it, so it is named
  *  here rather than falling through to 0 – which is what «глобальный дом» means if it means
@@ -1822,6 +1842,12 @@ export function adBandOfTerms(terms: AdOfferTerms): number {
   const category = adCategoryOf(terms)
   if (category === 'capstone') return bands.length - 1
   const ladder = ECONOMY.advertising.categories[category].feeCentsByBand
+  // the cell this cheque IS, strongest first – the letter landing on its own rung
+  for (let i = bands.length - 1; i >= 0; i--) {
+    if (ladder[i] === terms.cashCents) return i
+  }
+  // ...and the historical fallback for a cheque that is nobody's cell: the strongest rung the paper
+  // can actually pay for, never more than it proves.
   for (let i = bands.length - 1; i >= 0; i--) {
     const cell = ladder[i]
     if (cell != null && terms.cashCents >= cell) return i

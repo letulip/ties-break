@@ -34,6 +34,10 @@ import { useGameStore } from '../stores/game'
 import { TIERS, TIER_LADDER, hasAcceptanceList } from '../engine/season/calendar'
 import { isCappedProTier, isCappedTier, tierAgeBlock } from '../engine/world'
 import { UPCOMING_WEEKS } from '../engine/world/constants'
+// ⚠ ROUND 34 #1 – THE WINDOW A THRESHOLD IS COUNTED OVER is part of the condition, not a detail of
+// the fold: the domestic table is a season race and the other two roll 52 weeks. Read, never
+// restated – see `tierOpensWhen`'s points clause.
+import { WINDOW_BY_TRACK } from '../engine/season/ranking'
 import { weekRange } from '../shared/dates'
 import { LADDER_POINTS_LABEL, LADDER_TRACKS, type EntryCapUsage, type TierRefusal } from '../shared/protocol'
 import type { LadderTrack, TierId } from '../engine/season/types'
@@ -323,6 +327,98 @@ export function preferredWeekEvent<E extends { tier: TierId; entered: boolean; e
   return best
 }
 
+/** Just enough of an event to stand in a week's stack: the pick's three fields, an identity, and the
+ *  deadline that decides whether a card is worth OFFERING rather than merely worth leading with.
+ *
+ *  ⚠ `outgrown` WAS HERE AND LEFT ON THE OWNER'S RULING OF 03.09 (round 34 #14b, see
+ *  `weekEventStack`). It is removed rather than left unread on purpose: a field nobody consumes is
+ *  how a retired rule walks back in, and «has she outgrown this» is no longer a question this
+ *  module asks. The FLAG itself is untouched on `UpcomingEvent` – the card still wears its pill. */
+export interface StackableEvent {
+  id: string
+  tier: TierId
+  entered: boolean
+  eligible: boolean
+  deadlineWeek: number
+}
+
+/** CAN SHE ACT ON THIS CARD THIS WEEK – she is in it, or its list is still open to her. One
+ *  definition, because `weekEventStack` below, the Season header's «N of them on the cards below»
+ *  counter and «is this week still hers to plan» must not come to mean three different things. */
+export function eventActionable(e: StackableEvent, week: number): boolean {
+  return e.entered || (e.eligible && week <= e.deadlineWeek)
+}
+
+/**
+ * ⭐⭐⭐ ROUND 34 #14 – EVERY CARD A WEEK OFFERS, LEAD FIRST. The owner's ruling on the calendar item,
+ * and it retires R15-9's one-row-per-week rule that rounds 31, 32 and 33 all built on:
+ *
+ *   «я как раз в одном из раундов и спрашивал про несколько карточек из доступных на одной неделе,
+ *   я бы на это посмотрел, тем более, что это не меняет игровую механику никак, чисто интерфейсная
+ *   правка на свайп карточек. И никакого конфликта тогда нет – потому что есть выбор.»
+ *
+ * WHAT IT IS FOR. Bundle B measured the cause: Slam, WT500 and WT1000 anchor 22 of the 49 playable
+ * week-offsets, the same offsets in every world for ever, and `buildSeason` then places the cadence
+ * rungs blind to those anchors – so at WTA #111 her W75 lands on a week a taller rung already owns
+ * and `preferredWeekEvent` shows the taller one. Measured over six seasons outside the top 50, the
+ * rungs he could not find are exactly the ones losing that contest (docs/rounds/round-34.md #14).
+ * The owner chose the DISPLAY fix over the supply fix: the week keeps every card, and he swipes.
+ *
+ * ⚠ THE LEAD IS `preferredWeekEvent`, UNCHANGED. Everything rounds 31/32/33 pinned about "the card
+ * this week shows" is still true of `stack[0]`: entered first, then enterable, then the tallest
+ * rung. This function only adds what was standing behind it, which is why that function is not
+ * deleted and not wrapped – the single representative is still the right answer for a feed line, a
+ * marker, a name and a rest-cost quote.
+ *
+ * ⚠⚠ AND ONLY WHAT SHE COULD ACTUALLY ENTER EARNS A SECOND CARD – ONE exclusion, and it is the
+ * ENGINE'S OWN ENTRY VERDICT rather than a second rule written here. `eventActionable` is «she is in
+ * it, or its list is still open to her», and `eligible` inside it is `entryStatus`' answer, so the
+ * question this function asks is exactly «может ли она сюда поехать». A rung she cannot enter is
+ * aspiration, and aspiration is worth exactly ONE card at the head of a week (the 06.08 ruling,
+ * `preferredWeekEvent`'s own note: «the feed is also how she learns what is out there»). A swipe
+ * through four locked cards is the sterilised calendar that ruling exists to prevent.
+ *
+ * ⚠⚠⚠ IT ASKED «HAS SHE OUTGROWN THIS» UNTIL 03.09 AND THAT WAS A CONTRADICTION THE OWNER CAUGHT
+ * (round 34 #14b): «игра считает их ниже её достоинства – но при этом я в сетке вижу w50 турниры,
+ * я тебе об этом писал. Значит у нас где-то противоречие есть – надо разобраться.» He is right, and
+ * the cause is that `hasOutgrown` is an OR of THREE facts with one answer, deliberately (see its own
+ * note: world.ts's rule that the ceilings must have one consequence). Only ONE of the three is a
+ * BAN:
+ *   * `playDownBars` – the sport itself refusing her for being too GOOD. It shuts `tierFloorOpen`,
+ *     so a barred rung is not in `feedContext.rungs` and `entryVerdict` refuses it as well: the card
+ *     never reaches this function, and if it ever did `eventActionable` would drop it. That is
+ *     «сильно перерощенные», and it stays out for free.
+ *   * `outgrewTier` / `tierOutgrown` – ARITHMETIC. «Even a title here cannot move her book.» She may
+ *     still enter, the sport has no objection, and the ruling of 03.09 is that this is HER decision:
+ *     «ну сильно перерощенные да, а на какие-то можно и съездить, когда череда поражений идет очень
+ *     хочется что-то выиграть, знаешь ли.» Dropping down to win something after a losing run is a
+ *     real reason to travel, so the rung gets its card.
+ * Asking `hasOutgrown` collapsed «can she go» into «will it move her ranking», which are two
+ * questions – and the second one is not this function's to answer, because the card answers it
+ * itself: the `outgrown` pill («Outgrown – she is past this level») and the coach's line
+ * (`coachLadderNote`, whose book clause is `bookClosedTo`'s own sentence) both ride on the SAME
+ * `hasOutgrown` and are untouched, so a rung that now earns a card still says what it is worth.
+ * MEASURED: W75 2.4 → 6.4 rows a season, W50 4.7 → 9.4, W100 1.6 → 3.1 (`tools/r34-calendar-tiers.ts`).
+ *
+ * ⚠ IT CANNOT PUT A CARD ON AN EMPTY WEEK, WHICH IS THE HALF THE MEASUREMENT CARED ABOUT. The 12 of
+ * 48 weeks that showed her NOTHING at WTA #111 are filtered one storey up by `feedShows`, and this
+ * function only ever reads a list that has already passed it: a week with no visible event returns
+ * an empty stack, exactly as it drew no row before.
+ *
+ * ⚠ THE TAIL IS SORTED TALLEST-FIRST – `preferredWeekEvent`'s third tiebreak applied to the rest of
+ * the stack rather than a second ordering rule of its own. `buildSeason` already emits a week
+ * strongest-first, so this is usually a no-op; it is written down because "usually" is how an order
+ * comes to depend on the order a list arrived in.
+ */
+export function weekEventStack<E extends StackableEvent>(events: readonly E[], week: number): E[] {
+  const lead = preferredWeekEvent(events)
+  if (!lead) return []
+  const rest = events
+    .filter((e) => e.id !== lead.id && eventActionable(e, week))
+    .sort((a, b) => TIER_LADDER.indexOf(b.tier) - TIER_LADDER.indexOf(a.tier))
+  return [lead, ...rest]
+}
+
 /**
  * THE TABLE A RUNG'S ENTRY THRESHOLD IS COUNTED IN – the UI's copy of `entryStatus`'s own on-ramp
  * rule (world.ts): the bottom rung of a table is opened by the table BELOW it, because a player
@@ -426,7 +522,25 @@ export function tierOpensWhen(id: TierId, acceptsRank?: number): string {
     // The band's OWN currency (01.08): this clause fires for the domestic rungs and both on-ramps,
     // and w15's band is ITF junior points – "age 16 and 120 national pts" was the same wrong-label
     // bug pointsLockNote had, one sentence over.
-    clauses.push(`${minPoints} ${LADDER_POINTS_LABEL[entryBandTrack(id)]}`)
+    //
+    // ⚠⚠ ROUND 34 #1 – ...AND THE WINDOW THE THRESHOLD IS COUNTED OVER, which is the half nobody
+    // said. The owner: «совершенно непонятно как выйти в j уровень». The route to the Junior Tour is
+    // J30's floor, and since round 23 #12/#13 the domestic table is a SEASON RACE
+    // (`WINDOW_BY_TRACK.domestic === 'seasonToDate'`, his own ruling: «да, это мелочь, а будет
+    // хорошо»), so the 250 has to be earned inside ONE season and starts again every January. The
+    // number alone is only half a condition: measured on a real career (tools/r34-domestic-reset.ts)
+    // she reached 106 by week 51, read 0 on week 52, and did not cross 250 until week 77 of the
+    // NEXT season. A parent adding this season's points to last season's is planning against a
+    // total that does not exist.
+    //
+    // ⚠ DERIVED FROM `WINDOW_BY_TRACK`, NEVER WRITTEN DOWN. That constant is a plain object exactly
+    // so `tools/domestic-season-to-date.ts` can patch it back to `'rolling52'` for an A/B arm, and a
+    // hardcoded "in one season" here would go on lying through such a run – and through a future
+    // re-ruling. Same discipline as the acceptance cut two clauses up: read the gate, do not restate
+    // it. The ITF/WTA tracks are `'rolling52'`, so W15's clause is untouched.
+    const track = entryBandTrack(id)
+    const window = WINDOW_BY_TRACK[track] === 'seasonToDate' ? ' in one season' : ''
+    clauses.push(`${minPoints} ${LADDER_POINTS_LABEL[track]}${window}`)
   }
   // Local: no age gate, no floor. "Open from the start" rather than "0 pts" – a threshold of zero is
   // not a threshold, and printing one invites the player to look for progress against it.
@@ -717,15 +831,56 @@ export function tierState(id: TierId, input: TierStateInput): TierState {
   // note lists - including the W15 that read "68 / 120 international pts" on a rung the engine held
   // open, which is the very line this arm prints.
   const bandLocked = input.engineOpen !== true && bandPoints < minPoints
-  const locked = input.refusal !== undefined ? input.refusal.reason === 'locked' : bandLocked
+  // ⚠⚠ ROUND 34 #6 – A RANK REFUSAL IS NOT A POINTS LOCK, AND THIS IS THE FIFTH TIME THAT
+  // CONFUSION HAS REACHED A SCREEN. The owner: «W35 · 🔒 163 / 0 international pts вот это вот что
+  // значит? И на следующих тирах такое же».
+  //
+  // WHAT PRODUCED IT, exactly. Since PR-09 / TB-05 the ENGINE's refusal decides `locked`, and an
+  // acceptance-list rung is refused on a RANK - `rankToEnter`, never `pointsToEnter`. The arm below
+  // then fell back to `minPoints`, and every acceptance rung's `enterPointBand` is `[0, MAX]`, so
+  // the threshold printed was ZERO: her junior book over a requirement that does not exist. The
+  // tooltip was worse than the chip, because the arithmetic goes NEGATIVE - «locked: -163 more
+  // international pts (she has 163 of 0)».
+  //
+  // ⚠ IT IS A REGRESSION THE PROJECTION INTRODUCED, and naming that is the useful part. Before the
+  // refusal existed, `bandLocked` was `bandPoints < minPoints` = `x < 0` = FALSE on these rungs, so
+  // they fell through to the acceptance arm below and read «Opens in the top 700». The projection
+  // made `locked` true for them without giving this arm a number to print.
+  //
+  // MEASURED on the shipped predicates (tools/r34-zero-lock.ts, nine careers walked from 13 to 21):
+  // EVERY acceptance rung prints it - j60/j300 read «0 / 0 national pts» in career week 0, and
+  // w35/w50/w75/w100/wta125/wta250/wta500/wta1000/slam read «<her ITF book> / 0 international pts»
+  // from the week she first has one.
+  //
+  // ⭐ AND IT CLOSES THE W15 CASE THE TWO NOTES ABOVE DESCRIBE, from the other side. Their fix was
+  // `engineOpen === true` short-circuiting the band; what stayed live was the engine holding W15
+  // SHUT on the junior RESERVED PLACE - `rankToEnter`, no `pointsToEnter` - where this arm printed
+  // her book against W15's own 120 and never mentioned the place at all.
+  //
+  // The rung is still LOCKED (`isTierOpen` is false either way); what changes is which sentence
+  // explains it - and the sentence is the ENGINE's own `detail`, never one rebuilt here, which is
+  // the whole discipline `refusal` was added for.
+  const refusedOnRank =
+    input.refusal?.reason === 'locked' &&
+    input.refusal.pointsToEnter === undefined &&
+    input.refusal.rankToEnter !== undefined
+  const locked = input.refusal !== undefined ? input.refusal.reason === 'locked' && !refusedOnRank : bandLocked
   if (locked) {
     // WHERE THE MISSING POINTS ARE EARNED, by table. The domestic sentence is the one this arm has
     // always said; the international one is its exact mirror for the w15 on-ramp - the J rungs are
     // the only events that pay the currency that band is counted in. Prose in a table rather than
     // derived from TIERS: "Local, Regional and National" are the player's short names, not the
     // catalogue's labels, and LADDER_LABEL supplies the currency word either way.
+    //
+    // ⚠⚠ ROUND 34 #1 – AND THE DOMESTIC SENTENCE NOW SAYS WHEN THE TABLE STARTS AGAIN. Same find as
+    // `tierOpensWhen`'s clause: the domestic total is season-to-date, so «112 / 250» is progress
+    // inside THIS season and reads as progress inside a career. Derived from `WINDOW_BY_TRACK` for
+    // the reason written out there; the ITF sentence is untouched because that table rolls 52 weeks
+    // and genuinely does carry over.
     const earnedAt: Record<'domestic' | 'itf', string> = {
-      domestic: 'National points come from Local, Regional and National events.',
+      domestic:
+        'National points come from Local, Regional and National events' +
+        (WINDOW_BY_TRACK.domestic === 'seasonToDate' ? ', and the table starts again each season.' : '.'),
       itf: 'International points come from Junior Tour events.',
     }
     return {
@@ -783,16 +938,34 @@ export function tierState(id: TierId, input: TierStateInput): TierState {
   // was answering a different question - which is precisely why the ladder stopped being legible when
   // the top two rungs moved onto an acceptance list. `acceptsRank` is the engine's own cut, so the
   // number here can never quote a list the gate does not use.
-  if (input.engineOpen === false) {
+  //
+  // ⚠⚠ ROUND 34 #6 – `refusedOnRank` REACHES THIS ARM TOO, and that is the whole of the fix. The
+  // engine refusing a rung on a POSITION is precisely "an acceptance list she is not high enough
+  // in", which is what this arm has always been about; before the projection those rungs arrived
+  // here by falling through the band. The condition below is the union of the two routes, so a
+  // rung that is shut on a list reads the same plaque whether the verdict came from the engine or
+  // from the band – see `refusedOnRank` above for the number that used to be printed instead.
+  //
+  // ⚠ THE CUT PREFERS `acceptsRank`, so every string this arm already prints is byte-identical for
+  // a live caller (both come from `acceptanceRank`); `rankToEnter` is the fallback, and it is the
+  // ONLY number for W15's junior reserved place, which `acceptanceRank` does not answer for.
+  if (input.engineOpen === false || refusedOnRank) {
     const standing =
       input.itfRank != null ? ` – she is #${input.itfRank}` : ' – she has no international ranking yet'
+    const cut = input.acceptsRank ?? input.refusal?.rankToEnter
     return {
       id,
       kind: 'locked',
-      note: input.acceptsRank !== undefined ? `Opens in the top ${input.acceptsRank}` : 'Not on the list yet',
+      note: cut !== undefined ? `Opens in the top ${cut}` : 'Not on the list yet',
+      // ⭐ THE ENGINE'S OWN SENTENCE WHEN IT HAS ONE. `detail` names the table the cut is actually
+      // read off – «World Tour 35 takes the top 700 – she has no professional ranking yet» – where
+      // the sentence below says "international ranking" for every rung, which is true of the J
+      // rungs it was written for and false of the W ones. Same discipline as the `outgrown` arm
+      // twelve lines up: the UI decorates, the engine speaks.
       title:
+        input.refusal?.detail ??
         `${tier.label} – opens at ${tierOpensWhen(id, input.acceptsRank)}. Entry here is an ` +
-        `acceptance list read off her international ranking${standing}.`,
+          `acceptance list read off her international ranking${standing}.`,
     }
   }
   // The tier is hers on points. Has she any of the year's international allowance left?

@@ -54,7 +54,8 @@ const AD = ECONOMY.advertising
  *  cent – the anchor); the two-shoots-per-year ask and the one-year term are the shipped letter's
  *  own and are pinned here as literals exactly because the new bands ask differently. */
 const WATCH = {
-  cashCents: ECONOMY.advertising.categories.watches.feeCentsByBand[0]!,
+  // ⚠ index 1 since round 34: a band was prepended at ≤400 and this is still the ≤200 cell
+  cashCents: ECONOMY.advertising.categories.watches.feeCentsByBand[1]!,
   termWeeks: 52,
   shootWeeksPerTerm: 2,
 }

@@ -164,7 +164,18 @@ describe('round 26 #1 – arm 1: an empty five-week window (DELETED by round 30 
       // ⚠ AND THE ADVANCE ITSELF IS UNTOUCHED. This is an OFFER rule: the week button still spends
       // the week, and `advanceWeeks` would still run a span if something called it. Withholding the
       // pill is not a refusal, and the day these two lines disagree the gate has become one.
-      expect(row.engineCanMove, `w${row.week}: the engine could still have moved time`).toBe(true)
+      //
+      // ⚠⚠ RE-AIMED BY ROUND 34 #3, AND THE EXCEPTION IS NAMED RATHER THAN ALLOWED FOR. The walk
+      // above answers knocks, forks, reveals and retirement offers on the way and deliberately never
+      // answers a BIRTHDAY, so on her birthday week the engine refuses for a reason that is a
+      // standing QUESTION and not the calendar. Round 34 moved which week that is (the mark is the
+      // week her age changes now), and it landed on one of this arm's rows. Written as an exact
+      // equality per week rather than as `true` softened to "usually true": a refusal from anything
+      // but a pending birthday still fails here.
+      expect(
+        row.engineCanMove,
+        `w${row.week}: the engine could still have moved time, unless her birthday is standing`,
+      ).toBe(row.snap.birthdayPrompt === null)
     }
   })
 

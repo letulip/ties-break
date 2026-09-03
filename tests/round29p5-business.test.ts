@@ -105,7 +105,10 @@ function seasonAt(index: number, endRank: number | undefined): SeasonHistoryEntr
 }
 
 /** The owner's own save as a reputation ladder: #411→#198→#155→#106→#97→…→#42→#23 – two seasons
- *  inside #100, one inside #50, one inside #25, reputation 1.75 (the ledger's own worked example). */
+ *  inside #100, one inside #50, one inside #25, reputation 1.75 (the ledger's own worked example).
+ *  ⚠ ROUND 34 #17 (03.09) ADDED A top-150 AND A top-250 RUNG, so the same eleven seasons now read
+ *  1.925: #106, #106 and #155 were below every rung there was and are not any more. The rows are
+ *  unchanged – only what the ladder can see about them. */
 const OWNERS_SEASONS = [411, 198, 155, 106, 97, 385, 173, 98, 106, 42, 23]
 
 // =================================================================================================
@@ -128,12 +131,30 @@ describe('§1 fame – an accounted stock, 0–100, zero draws', () => {
     expect(fameAt(world)).toBeCloseTo(FAME.titleFloor.wta1000! + FAME.titleFloor.slam!, 5)
   })
 
-  it('⭐ a LOST Slam final counts its own step – and only the Slam one does', () => {
+  it('⭐ a LOST Slam final counts its own step – and every other lost final counts a SHARE of its tier', () => {
+    // ⚠⚠ RE-AIMED BY ROUND 34 #17 (03.09) AND HALF OF IT IS REVERSED. This arm read «and only the
+    // Slam one does»: a lost final below a Slam bought exactly nothing, which is why the owner's own
+    // week-569 save carried SIXTEEN dated runner-up plates worth zero. He approved 40% of the tier's
+    // own title step, so the second half of this arm now asserts the opposite of what it did – and
+    // the FIRST half is unchanged, because the one thing that must not happen is a Slam final being
+    // paid twice.
     const world = still('p5a-final')
     world.trophiesByTier.slam.finals.push(world.week)
-    expect(fameAt(world)).toBeCloseTo(FAME.slamFinalFloor, 5)
+    expect(fameAt(world), 'the Slam plate keeps its own constant, NOT the share').toBeCloseTo(FAME.slamFinalFloor, 5)
     world.trophiesByTier.wta1000.finals.push(world.week)
-    expect(fameAt(world), 'the world remembers who won everywhere below a Slam').toBeCloseTo(FAME.slamFinalFloor, 5)
+    expect(fameAt(world), 'a WTA 1000 final is worth 40% of a WTA 1000 title')
+      .toBeCloseTo(FAME.slamFinalFloor + FAME.titleFloor.wta1000! * FAME.finalFloorShare, 5)
+    // ⚠⚠ THE ANTI-DOUBLE-COUNT ARM, AND IT IS THE ONE THAT FAILS IF 'slam' EVER FALLS THROUGH INTO
+    // THE SHARE RULE. A second Slam final adds `slamFinalFloor` and NOT `slamFinalFloor + 0.4 x 25`.
+    const before = fameAt(world)
+    world.trophiesByTier.slam.finals.push(world.week)
+    expect(fameAt(world), 'a Slam final is paid once, by `slamFinalFloor`, and never also by the share')
+      .toBeCloseTo(before + FAME.slamFinalFloor, 5)
+    // ...and a final at a tier the world does not read still buys nothing – the junior rungs are not
+    // in `titleFloor`, so the share cannot reach them either.
+    world.trophiesByTier.j300.finals.push(world.week)
+    expect(fameAt(world), 'the world does not read junior draws, finals included')
+      .toBeCloseTo(before + FAME.slamFinalFloor, 5)
   })
 
   it('⭐⭐⭐ the season-end LADDER – top 10, then top 20, then top 50, and best band only', () => {
@@ -334,34 +355,65 @@ describe('§3 the academy – «нам нужна академия, котора
     return world
   }
 
-  it('⭐ reputation is the ledger\'s own fold: the owner\'s save reads exactly 1.75, base 1.0 with no seasons', () => {
+  it('⭐ reputation is the ledger\'s own fold: the owner\'s save reads exactly 1.925, base 1.0 with no seasons', () => {
+    // ⚠ ROUND 34 #17 MOVED THIS NUMBER, 1.75 -> 1.925, and the two new rungs are exactly why: three
+    // of his eleven seasons (#106, #155, #106) were below the lowest rung the ladder had.
     const world = still('p5a-rep')
     expect(academyReputationOf(world)).toBe(1)
     world.seasonHistory = OWNERS_SEASONS.map((r, i) => seasonAt(i, r))
-    expect(academyReputationOf(world)).toBeCloseTo(1.75, 10)
+    expect(academyReputationOf(world)).toBeCloseTo(1.925, 10)
     // a not-recorded season counts nothing – «not recorded» is not «top-100»
     world.seasonHistory.push(seasonAt(11, undefined))
-    expect(academyReputationOf(world)).toBeCloseTo(1.75, 10)
+    expect(academyReputationOf(world)).toBeCloseTo(1.925, 10)
   })
 
-  it('⭐ ...and it is capped: a reign cannot push the multiplier past 4.0', () => {
+  it('⭐ ...and it is still capped – but round 34 made the cap the CAREER`s and it now binds very late', () => {
+    // ⚠⚠ RE-AIMED BY ROUND 34 #17 (03.09), AND THE MEASUREMENT IS THE POINT OF THE RE-AIM. The cap
+    // was a flat 4.0 for ever; the owner approved `4 + 0.5 per professional season played`. The
+    // bands add at most 0.6 a season, so the ceiling only overtakes the ladder past THIRTY seasons –
+    // twelve top-3 seasons, which used to sit ON the cap, now read 8.2 and never touch it.
     const world = still('p5a-rep-cap')
     world.seasonHistory = Array.from({ length: 12 }, (_, i) => seasonAt(i, 3))
-    expect(academyReputationOf(world)).toBe(BIZ.academy.reputationCap)
+    const capAt = (n: number): number => BIZ.academy.reputationCapBase + BIZ.academy.reputationCapPerSeason * n
+    expect(academyReputationOf(world), 'twelve top-10 seasons no longer reach the ceiling').toBeCloseTo(8.2, 10)
+    expect(academyReputationOf(world)).toBeLessThan(capAt(12))
+    // ...and the cap is STILL a cap: a career long enough for the ladder to overtake it is held.
+    const long = still('p5a-rep-cap-long')
+    long.seasonHistory = Array.from({ length: 40 }, (_, i) => seasonAt(i, 3))
+    expect(academyReputationOf(long), 'forty top-10 seasons are held at the career`s own ceiling').toBe(capAt(40))
+    expect(1 + 40 * BIZ.academy.reputationBands[0].add, 'and the ladder really did want to go higher')
+      .toBeGreaterThan(capAt(40))
+    // ⚠ AND A SHORT CAREER IS HELD SHORT, which is the half of his ruling the growth is for: «so a
+    // long professional career is worth something and a short one is not». The ceiling a two-season
+    // career may ever reach is 5.0 against a forty-season career's 24.0.
+    expect(capAt(2)).toBe(5)
+    expect(capAt(2)).toBeLessThan(capAt(40))
+    // ⚠⚠ AND THE MEASUREMENT THIS ARM EXISTS TO RECORD: at 4 + 0.5 the ceiling stops binding for
+    // every career the engine can produce. `1 + 0.6n > 4 + 0.5n` needs n > 30, so nothing below
+    // thirty professional seasons is held by it at all – the band ladder is what holds reputation
+    // now. Reported to the owner in docs/rounds/round-34.md rather than adjusted here.
+    const bindsFrom = (() => {
+      for (let n = 1; n <= 60; n++) if (1 + n * BIZ.academy.reputationBands[0].add > capAt(n)) return n
+      return null
+    })()
+    expect(bindsFrom, 'the cap first binds past thirty professional seasons').toBe(31)
   })
 
   it('⭐⭐ the land is a field and earns nothing; each built stage earns its own line, times reputation', () => {
+    // ⚠ 1.75 -> 1.925 BY ROUND 34 #17: the ladder gained a top-150 and a top-250 rung and his eleven
+    // seasons read higher on it. Nothing about the per-stage arithmetic moved.
+    const REP = 1.925
     const land = withStages('p5a-land', ['academy-land'], OWNERS_SEASONS)
     expect(academyWeeklyIncomeCents(land)).toBe(0)
     const half = withStages('p5a-half', ['academy-land', 'academy-courts'], OWNERS_SEASONS)
-    expect(academyWeeklyIncomeCents(half)).toBe(Math.round(BIZ.academy.stageIncomeCents['academy-courts'] * 1.75))
+    expect(academyWeeklyIncomeCents(half)).toBe(Math.round(BIZ.academy.stageIncomeCents['academy-courts'] * REP))
     const whole = withStages(
       'p5a-whole',
       ['academy-land', 'academy-courts', 'academy-building', 'academy-staff'],
       OWNERS_SEASONS,
     )
     const stages = ['academy-courts', 'academy-building', 'academy-staff']
-    const expected = stages.reduce((s, id) => s + Math.round(BIZ.academy.stageIncomeCents[id] * 1.75), 0)
+    const expected = stages.reduce((s, id) => s + Math.round(BIZ.academy.stageIncomeCents[id] * REP), 0)
     expect(academyWeeklyIncomeCents(whole)).toBe(expected)
     // the card quotes the same arithmetic per stage, so the rows SUM to the ledger's line
     const rows = shopView(whole).rows.filter((r) => r.family === 'academy')
@@ -376,17 +428,33 @@ describe('§3 the academy – «нам нужна академия, котора
   })
 
   it('the whole academy at the anchor: $12M pays back inside a reign only at a real reputation', () => {
-    // the P7 bench criterion stated as arithmetic the test can hold still: at the cap the four
+    // the P7 bench criterion stated as arithmetic the test can hold still: at reputation 4.0 the four
     // stages repay $12,000,000 in roughly 5–10 seasons; at reputation 1.0 they must NOT beat the
     // index fund's 7% – «assets never beat a career, they only survive one». Both read the
     // ECONOMY table itself, so a retune that breaks the design window reddens here by name.
+    //
+    // ⚠⚠ RE-AIMED BY ROUND 34 #17 (03.09) FROM «AT THE CAP» TO «AT 4.0», WHICH IS THE SAME NUMBER
+    // THE WINDOW WAS SIZED ON. The cap is no longer one number – it is `4 + 0.5 x professional
+    // seasons` – so «the cap» cannot name a reputation without naming a career too. 4.0 is the flat
+    // cap the P7 bench measured against and is now `reputationCapBase`, read from the catalogue.
     const baseCents = Object.values(BIZ.academy.stageIncomeCents).reduce((s, c) => s + c, 0)
-    const yearAtCap = Math.round(baseCents * BIZ.academy.reputationCap) * WEEKS_PER_YEAR
+    const yearAtCap = Math.round(baseCents * BIZ.academy.reputationCapBase) * WEEKS_PER_YEAR
     const paybackYearsAtCap = 12_000_000_00 / yearAtCap
     expect(paybackYearsAtCap).toBeGreaterThanOrEqual(5)
     expect(paybackYearsAtCap).toBeLessThanOrEqual(10)
     const yearAtOne = baseCents * WEEKS_PER_YEAR
     expect(yearAtOne / 12_000_000_00).toBeLessThan(0.07)
+    // ⚠⚠ AND THE NEW CEILING IS RECORDED RATHER THAN LEFT UNSAID – it is the one thing the career
+    // cap changed that the P7 window did not ask for, and it is in docs/rounds/round-34.md for the
+    // owner's eye. The window holds for reputations 3.18–6.37; a long elite career can now stand
+    // above it, and this arm names the reputation at which it stops holding rather than pretending
+    // it cannot be reached.
+    const windowTop = 12_000_000_00 / (baseCents * WEEKS_PER_YEAR * 5)
+    expect(windowTop, 'above this reputation the academy repays in under five seasons').toBeCloseTo(6.366, 3)
+    const nineTop10 = 1 + 9 * BIZ.academy.reputationBands[0].add
+    expect(nineTop10, 'nine top-10 seasons already stand above it').toBeGreaterThan(windowTop)
+    expect(nineTop10, '...and the career cap does not hold them back from it')
+      .toBeLessThan(BIZ.academy.reputationCapBase + BIZ.academy.reputationCapPerSeason * 9)
   })
 })
 

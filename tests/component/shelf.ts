@@ -22,8 +22,14 @@ import type { VueWrapper } from '@vue/test-utils'
 
 /** The six segments, in the order they are drawn. His spellings, and `MoneyScreen.vue` is the
  *  source of truth for them – if a label here stops matching, the tab was renamed and that is
- *  exactly what CLAUDE.md invariant 4 wants somebody to notice. */
-export const SHELF_TAB_LABELS = ['Invest', 'Cars', 'Property', 'Business', 'Water', 'Air'] as const
+ *  exactly what CLAUDE.md invariant 4 wants somebody to notice.
+ *
+ *  ⚠⚠ RE-AIMED BY ROUND 34 #16, AND NOTHING HERE WAS LOOSENED. The owner asked for «Business
+ *  пододвинуть к Invest в магазине», so `Business` moved from fourth to second and the four spending
+ *  families shuffled down behind it. `round30-subtabs.test.ts` asserts the RENDERED pills equal this
+ *  list, so the pair still fails the moment the screen and this constant disagree – which is the
+ *  only property it ever had. The LABELS are untouched: the item moved a position, not a word. */
+export const SHELF_TAB_LABELS = ['Invest', 'Business', 'Cars', 'Property', 'Water', 'Air'] as const
 
 /** The two segments inside Bills. */
 export const BILLS_TAB_LABELS = ['Her Kit', 'Advs Portfolio'] as const

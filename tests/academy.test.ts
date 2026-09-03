@@ -407,7 +407,11 @@ describe('the scholarship is visible where the money is', () => {
     // The figure it explains is the engine's net price, not the calendar's sticker.
     // ⚠ RE-AIMED 01.08 (chore/w1-quick-wins): formatDollars → the shared formatCents; the protected
     // fact — the figure is the engine's NET price — is unchanged.
-    expect(src).toContain('formatCents(row.event.travelCostCents)')
+    // ⚠ RE-AIMED AGAIN BY ROUND 34 #14, and by a RENAME rather than by a rule change: a week may now
+    // draw a card per rung she can enter, so the card's markup is a `v-for` over `row.events` and its
+    // event is the loop's `ev` instead of the row's single `row.event`. The protected fact is
+    // untouched, to the character after the dot.
+    expect(src).toContain('formatCents(ev.travelCostCents)')
   })
 
   it('reports the season total in the wrap-up, and hides the row when nobody backed her', () => {

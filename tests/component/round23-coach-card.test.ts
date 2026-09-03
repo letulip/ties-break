@@ -39,8 +39,10 @@ import '../../src/style.css'
 import CoachMarketScreen from '../../src/components/screens/CoachMarketScreen.vue'
 import { useGameStore } from '../../src/stores/game'
 import { createWorld, toSnapshot } from '../../src/engine/world'
+// ⭐ ROUND 34 #2b – the birth build the band now measures FROM; see `snapshotAt`.
+import { startingSkills } from '../../src/engine/world/player'
 import { coachBlurb } from '../../src/engine/world/coachMarket'
-import { SKILL_KEYS } from '../../src/engine/development'
+import { reachableHeadroomShare, SKILL_KEYS } from '../../src/engine/development'
 import { DEFAULT_PROFILE, type CoachTier, type Snapshot } from '../../src/shared/protocol'
 
 const TIERS: CoachTier[] = ['budget', 'middle', 'high', 'elite']
@@ -59,12 +61,33 @@ async function mountCoaches(snapshot: Snapshot) {
 
 /** A career pinned to one realisation share. The ONLY hand-set fields are her level and her ceiling,
  *  which is the pair the band is a function of; price, fit, the market and the note itself are the
- *  engine's, through `toSnapshot`. */
-function snapshotAt(realised: number): Snapshot {
-  const world = createWorld(`r23-card-${realised}`, { ...DEFAULT_PROFILE, coachTier: 'middle' })
+ *  engine's, through `toSnapshot`.
+ *
+ *  ⚠ RE-CUT BY ROUND 34 #2b. The share used to be `mean(skills) / mean(potential)`, so a flat 60
+ *  ceiling with `60 * realised` under it said it exactly. The band now reads how much of the room she
+ *  was BORN with she has taken (`realisedShare`, world/coachMarket.ts), so both ends are placed
+ *  against her birth build - 20 points of headroom per attribute, `realised` of it taken. ⚠ Not a
+ *  flat 60: `STARTING_SKILL_BAND.stamina` reaches 60, and a girl born at her ceiling would divide by
+ *  zero.
+ *
+ *  ⚠⚠ RE-AIMED AGAIN BY ROUND 34 BUNDLE H, AND THE ARGUMENT NOW MEANS THE SHARE SHE IS SHOWN. The
+ *  read is normalised against what is REACHABLE (`reachableHeadroomShare`) rather than against
+ *  `potential`, which `growWeek` approaches geometrically and never arrives at. ⭐ WITHOUT THE
+ *  MULTIPLY THE TESTS BELOW STILL PASS BUT THEIR COMMENTS STOP BEING TRUE - "two inside band 0, two
+ *  inside band 1" and "a point either side of each of 0.40 / 0.75 / 0.90" would both be describing a
+ *  scale the screen no longer reads. A pin whose prose has quietly drifted off its own sample points
+ *  is the one that gets trusted wrongly later, so the helper moved rather than the comments.
+ *
+ *  ⚠ BUNDLE I THEN CORRECTED WHAT «REACHABLE» MEANS - the best coaching money can buy (0.9766 on the
+ *  shipped curve and ladder), not the bare `ageFactor` curve H walked (0.8668). ⭐ THIS HELPER DID
+ *  NOT HAVE TO MOVE FOR IT, which is exactly what writing the multiply as a call bought: derived and
+ *  not written down, so the approved curve wave and a coach-ladder retune both carry it. */
+function snapshotAt(shown: number): Snapshot {
+  const world = createWorld(`r23-card-${shown}`, { ...DEFAULT_PROFILE, coachTier: 'middle' })
+  const born = startingSkills(world.seed, world.profile)
   for (const k of SKILL_KEYS) {
-    world.potential[k] = 60
-    world.skills[k] = 60 * realised
+    world.potential[k] = born[k] + 20
+    world.skills[k] = born[k] + 20 * shown * reachableHeadroomShare()
   }
   return toSnapshot(world)
 }
@@ -92,7 +115,10 @@ describe('#1 the coach market says where she stands, in plain words', () => {
       wrapper.unmount()
       return out
     }
-    const young = await read(0.4)
+    // ⚠ THE TWO POINTS MOVED WITH THE EDGES (round 34 #2b, 0.40 / 0.75 / 0.90 on true realisation).
+    // 0.4 is now the bottom of the SECOND band, so the low arm reads 0.2 to stay the girl with most
+    // of her game ahead of her. What is asserted about them did not change.
+    const young = await read(0.2)
     const late = await read(0.97)
 
     expect(young.band).not.toBe(late.band)
@@ -106,7 +132,10 @@ describe('#1 the coach market says where she stands, in plain words', () => {
 
   it('walks the whole ladder as the room in her closes, and never doubles back', async () => {
     const bands: string[] = []
-    for (const realised of [0.6, 0.8, 0.85, 0.9, 0.95, 0.99]) {
+    // ⚠ SIX POINTS UP THE NEW LADDER (round 34 #2b): two inside band 0, two inside band 1, one in
+    // each of the top two. The claim is unchanged - four readings, in order, no repeats - and the
+    // doubled-up points are what makes "in order" mean something rather than four lucky samples.
+    for (const realised of [0.1, 0.3, 0.5, 0.7, 0.8, 0.95]) {
       const wrapper = await mountCoaches(snapshotAt(realised))
       const band = wrapper.find('.cm-room-band').text()
       if (bands[bands.length - 1] !== band) bands.push(band)
@@ -120,7 +149,8 @@ describe('#1 the coach market says where she stands, in plain words', () => {
     // ⚠ THE RULING THAT STANDS. `KidScreen` keeps her ceiling behind a fog of war, so this screen
     // may name the band and may never quote it. Asserted on the RENDERED paragraph – label, dash and
     // sentence together – so a percentage cannot arrive in whichever half is not being looked at.
-    for (const realised of [0.2, 0.45, 0.81, 0.86, 0.9, 0.93, 1.0]) {
+    // ⚠ SWEPT ACROSS THE NEW EDGES (round 34 #2b), a point either side of each of 0.40 / 0.75 / 0.90.
+    for (const realised of [0.1, 0.39, 0.41, 0.74, 0.76, 0.89, 0.91, 1.0]) {
       const wrapper = await mountCoaches(snapshotAt(realised))
       const line = wrapper.find('.cm-room-note').text()
       expect(line, `realised ${realised}`).not.toMatch(/\d/)

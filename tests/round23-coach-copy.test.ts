@@ -48,6 +48,23 @@
 //     the two-seeds identity test green, correctly: a tier lookup is still stable across seeds, so
 //     "not a draw" and "not the rung" are two different claims and two different tests.
 //   * the `<span class="cm-blurb">` deleted from the row -> |c| all three of #5, |u| nothing.
+//
+// ⚠⚠ ROUND 34 #2b MOVED THE THRESHOLDS THIS FILE PINS, AND IT MOVED THE MEASURE UNDER THEM. The
+// ledger above still names 0.6 / 0.8 / 0.92 as the shipped ladder and 0.82 / 0.88 / 0.92 as the
+// re-cut one; both were read off `mean(skills) / mean(potential)`, which counts the skill she was
+// BORN with as achievement. `coachRoomBandOf` now divides `(skills - born)` by `(potential - born)`
+// and the edges are 0.40 / 0.75 / 0.90 (owner-approved 02.09, docs/rounds/round-34.md §A1). Why:
+// measured on his save, Vera heard «Close to her ceiling» with 41.6% of her headroom realised and a
+// high-ceiling girl heard it at 72.3% – ⭐ the verdict arrived EARLIER for the girl with LESS talent,
+// which is the inversion the wave fixes. His words: «написал 14 летней девочке Close to her ceiling …
+// звучит как приговор … не рановато ли?»
+//
+// ⚠ NOTHING BELOW WAS DELETED OR LOOSENED FOR IT. What changed is arithmetic in `worldAt` (a share
+// is now placed against her birth build, so the number in the test is the number the engine reads)
+// and the SAMPLE POINTS that name each band. The claims – four bands, monotone, entered in order,
+// never a digit – are the same claims, and the career walk got STRONGER: it now pins the shape of a
+// normal career exactly (`[0, 1, 2]` to 23, no ceiling verdict) and a second walk carries the
+// reachability of the top band, which is what the round-23 mutation ledger used one walk to do.
 import { describe, it, expect } from 'vitest'
 import {
   coachBlurb,
@@ -59,8 +76,11 @@ import {
 } from '../src/engine/world/coachMarket'
 import { buildCoachRoster } from '../src/engine/coach'
 import { ECONOMY } from '../src/engine/economy'
-import { SKILL_KEYS } from '../src/engine/development'
+import { reachableHeadroomShare, SKILL_KEYS } from '../src/engine/development'
 import { createWorld, tickWeek } from '../src/engine/world'
+// ⭐ ROUND 34 #2b – the birth build, which is what the band now measures FROM. Same re-derivation the
+// engine does (`realisedShare` in world/coachMarket.ts): pure, seed-only, stored nowhere.
+import { startingSkills } from '../src/engine/world/player'
 import { rngFromSeed } from '../src/engine/rng'
 import { DEFAULT_PROFILE, type CoachTier } from '../src/shared/protocol'
 
@@ -69,13 +89,37 @@ import { DEFAULT_PROFILE, type CoachTier } from '../src/shared/protocol'
 // =================================================================================================
 
 /** A world pinned to one realisation share, the same construction the room-note pin in
- *  coachTiers.test.ts uses: a flat ceiling and a flat level, so `realised` is exactly what is asked
- *  for and nothing else in the engine has to be persuaded of it. */
-function worldAt(realised: number) {
+ *  coachTiers.test.ts uses: a flat headroom and a level placed inside it, so `realised` is exactly
+ *  what is asked for and nothing else in the engine has to be persuaded of it.
+ *
+ *  ⚠ RE-CUT BY ROUND 34 #2b. It used to be `potential = 60, skills = 60 * realised`, which was the
+ *  share the OLD measure read. The band now reads how much of the room she was BORN with she has
+ *  taken, so both ends are placed against her birth build: 20 points of headroom on every attribute
+ *  and `realised` of it taken. ⚠ The 20 is not decoration – a flat ceiling of 60 would give a
+ *  born-at-60 stamina NO headroom at all (`STARTING_SKILL_BAND.stamina` tops out there), and a
+ *  denominator that can be zero is how a pin starts reading NaN and passing.
+ *
+ *  ⚠⚠ RE-AIMED AGAIN BY ROUND 34 BUNDLE H, AND THE ARGUMENT NOW MEANS THE SHARE SHE IS SHOWN. The
+ *  read is normalised against what is REACHABLE (`reachableHeadroomShare`) rather than against
+ *  `potential`, which `growWeek` approaches geometrically and never arrives at. So a career holding
+ *  all of it has taken everything available to her and is shown 1.0. Without the multiply, the four
+ *  sample points below stopped naming four distinct bands and this test went red on a change it is
+ *  not about.
+ *
+ *  ⚠ BUNDLE I THEN CORRECTED WHAT «REACHABLE» MEANS - the best coaching money can buy (0.9766 on the
+ *  shipped curve and ladder), not the bare `ageFactor` curve H walked (0.8668), which was the growth
+ *  of a girl with no coach at all. ⭐ THIS HELPER DID NOT HAVE TO MOVE FOR IT, which is what writing
+ *  the multiply as a call bought.
+ *
+ *  ⭐ THE MULTIPLY IS DERIVED, NOT WRITTEN DOWN, and that is deliberate: the approved wave that moves
+ *  `plateauStart` and `declineStart` moves the normaliser, and so does a coach-ladder retune, and
+ *  this helper follows both rather than needing another re-cut. */
+function worldAt(shown: number) {
   const world = createWorld('r23-room', DEFAULT_PROFILE)
+  const born = startingSkills(world.seed, world.profile)
   for (const k of SKILL_KEYS) {
-    world.potential[k] = 60
-    world.skills[k] = 60 * realised
+    world.potential[k] = born[k] + 20
+    world.skills[k] = born[k] + 20 * shown * reachableHeadroomShare()
   }
   return world
 }
@@ -84,8 +128,10 @@ describe('#1 the room note leads with a named band', () => {
   it('opens with a label and separates it from the argument the way the screen expects', () => {
     // The label is the FIRST clause and `ROOM_NOTE_SEP` is what ends it. Screen T splits on that
     // separator to bold the label, so this is the contract between the two files and not decoration.
+    // ⚠ THE SAMPLE POINTS MOVED WITH THE EDGES (round 34 #2b): one inside each of 0-0.40 / 0.40-0.75
+    // / 0.75-0.90 / 0.90-1, on TRUE realisation. They are the only thing about this test that moved.
     for (let band = 0; band < 4; band++) {
-      const note = coachRoomNote(worldAt([0.7, 0.85, 0.9, 0.97][band]))
+      const note = coachRoomNote(worldAt([0.2, 0.6, 0.8, 0.95][band]))
       const at = note.indexOf(ROOM_NOTE_SEP)
       expect(at, `band ${band} carries a separator`).toBeGreaterThan(0)
       expect(note.slice(0, at)).toBe(coachRoomBandLabel(band))
@@ -155,12 +201,121 @@ describe('#1 the room note leads with a named band', () => {
       last = band
       if (seen[seen.length - 1] !== band) seen.push(band)
     }
-    // ⚠⚠ AND ALL FOUR ARE REACHED, WHICH IS THE HALF THAT WOULD HAVE CAUGHT THE SHIPPED DEFECT. The
-    // 08.08 thresholds (0.6 / 0.8 / 0.92) were written before anybody measured `realised`, and she is
-    // never below 68% at any age in any career - so the first band was a string no player could be
-    // shown and the second expired inside the first season. Monotonicity alone passes happily on dead
-    // copy; "every band is entered, in order, exactly once" does not. The measurement that re-cut
-    // them is written out over `coachRoomBandIndex`.
+    // ⚠⚠ AND THE SHAPE IS PINNED EXACTLY, WHICH IS THE HALF THAT CATCHES DEAD COPY. The 08.08
+    // thresholds (0.6 / 0.8 / 0.92) were written before anybody measured `realised`, and on the old
+    // measure she was never below 68% at any age in any career - so the first band was a string no
+    // player could be shown and the second expired inside the first season. Monotonicity alone passes
+    // happily on dead copy; an exact list does not.
+    //
+    // ⚠⚠ ROUND 34 #2b MADE THIS LIST `[0, 1, 2]`, AND BUNDLE H OF THE SAME ROUND MADE IT
+    // `[0, 1, 2, 3]` – both notes are kept, because the second only makes sense on top of the first.
+    // #2b's argument, unedited: the assertion is stricter than it was, not looser - `toEqual` on the
+    // whole walk still forbids a skipped band, a repeated one and any step backwards. Measured on
+    // this very walk (age at the 52-week marks, share of the room she was born with):
+    //
+    //     age    14     15     16     17     18     19     20     21     22     23
+    //     new   0.000  0.295  0.471  0.591  0.670  0.722  0.762  0.792  0.813  0.827
+    //     old   0.805  0.862  0.896  0.920  0.935  0.945  0.953  0.959  0.963  0.966
+    //
+    // ⚠ READ THE TWO ROWS TOGETHER: the old one opens at 0.805 in WEEK ZERO, before a session has
+    // been coached, because four fifths of it is the build she was born with.
+    //
+    // ⭐ WHICH IS THE OWNER'S OWN ASK, MECHANICALLY. «написал 14 летней девочке Close to her ceiling …
+    // не рановато ли?» - and on the OLD measure this very career heard «Close to her ceiling» at week
+    // 78 (age 15.5) and «At her ceiling» at week 158 (age 17.0), which is his complaint reproduced to
+    // the week.
+    //
+    // ⚠⚠ RE-AIMED BY ROUND 34 BUNDLE H: THE LIST IS `[0, 1, 2, 3]` NOW, AND THE REASON IS A CHANGED
+    // DENOMINATOR, NOT A LOOSENED ASSERTION. The owner asked for it in one line - «да, перенормируй
+    // показ сразу». `potential` is an asymptote `growWeek` approaches and never reaches, so the `new`
+    // row above is a fraction of something unavailable: this career's raw share is still climbing at
+    // 29 and tops out at 0.875, and the whole budget/middle/high field peaked at 0.855 / 0.879 / 0.895
+    // (bundle A) - every one of them short of the approved 0.90. So the fourth band, which carries the
+    // ADVICE «no coach can add much more now, whatever the price», was unreachable on an ordinary
+    // career and a parent whose girl had stopped growing was never told to stop paying.
+    //
+    // `realisedShare` now divides by `reachableHeadroomShare()` (0.8668 on the shipped curve), so the
+    // third row is what she is actually shown - and the top band is reached at week 342, age 20.6:
+    //
+    //     shown 0.010  0.340  0.544  0.682  0.772  0.833  0.879  0.914  0.938  0.954
+    //
+    // ⚠⚠⚠ AND ROUND 34 BUNDLE I PUT THIS LIST BACK TO `[0, 1, 2]`. Read the two notes together: H's
+    // reasoning was right about the DEFECT and wrong about the YARDSTICK. Its normaliser walked
+    // `ageFactor` alone - the growth of a girl with NO COACH AT ALL and no matches - and this career
+    // has a middle coach, so she grew FASTER than the denominator, ran past 1.0 and was pinned there
+    // by the clamp in `realisedShare`. That is where H's «age 20.6» came from: not from her filling
+    // her ceiling, but from the scale running out under her. Measured on this very walk, 12.5% of a
+    // middle career's weeks were spent clamped at 1.000.
+    //
+    // Bundle I normalises by the BEST COACHING AVAILABLE instead (0.9766), so the shown row becomes:
+    //
+    //     shown 0.009  0.302  0.482  0.605  0.686  0.740  0.780  0.811  0.832  0.847
+    //
+    // ...and this nine-season walk ends inside «Close to her ceiling» at age 23, which is what a
+    // middle-coached girl who is still improving should hear. ⚠ THE ASSERTION IS NOT WEAKER FOR THE
+    // CHANGE: `toEqual` on the whole walk still forbids a skipped band, a repeated one and any step
+    // backwards. ⚠ AND THE EDGES DID NOT MOVE FOR ANY OF THE THREE BUNDLES - 0.40 / 0.75 / 0.90 are
+    // the owner's, approved 02.09.
+    //
+    // ⚠⚠ WHAT A READER SHOULD NOTICE, AND IT IS FILED FOR HIM: this career now reaches «At her
+    // ceiling» NEVER inside the growth arc, and across eight middle-rung seeds only 3 of 8 do, at
+    // 28.9. That re-opens at the bottom of the hired ladder the same gap bundle H closed - reported,
+    // not adjusted, in docs/rounds/round-34.md under bundle I, because the edges are his.
+    //
+    // ⚠ «Close to her ceiling» arrives at age 19.3 on this career rather than at 24. That is well
+    // past the fourteen he complained about, and it is a measured consequence of the re-normalisation
+    // he asked for - §A1's «the verdict arrives after twenty» was written about the raw scale.
+    expect(seen, 'the bands a middle-rung career passes through, in order').toEqual([0, 1, 2])
+    expect(steps, 'every change is a step it never takes back').toBe(seen.length - 1)
+  })
+
+  it('⭐ and the FOURTH band is not dead copy – an elite career reaches it, late, on its own', () => {
+    // ⚠⚠ THIS IS THE ROUND-23 CLAIM, RE-AIMED RATHER THAN DROPPED. That item found the bottom band
+    // unreachable and re-cut the ladder rather than shipping a string no player could see; round 34
+    // moved the measure, so the same question has to be asked again at the OTHER end - and asked on a
+    // real career through the real engine, because an index-level check passes happily on copy no
+    // career can reach.
+    //
+    // ⚠ IT WAS A LATE, ELITE READING UNDER #2b, AND THAT IS WHAT BUNDLE H FIXED. Bundle A's
+    // measurement, kept because it is the evidence the bundle was built on: walked to 29 - the whole
+    // growth arc, `declineFactor` opens after it - the top band was entered at week 720 here (age
+    // ~27.8), across eight elite seeds six reached it (weeks 745-776) and two did not, and on the
+    // budget, middle and high rungs NONE of eight did, peaking at 0.855 / 0.879 / 0.895 against an
+    // approved edge of 0.90.
+    //
+    // ⚠⚠ THE DENOMINATOR WAS THE DEFECT, NOT THE EDGE. `potential` is an asymptote `growWeek` never
+    // arrives at, so those peaks were fractions of something unreachable. `realisedShare` now divides
+    // by `reachableHeadroomShare()`.
+    //
+    // ⚠⚠⚠ BUNDLE H THEN DIVIDED BY THE WRONG MAXIMUM AND BUNDLE I CORRECTED IT, so H's figures here
+    // («8/8 at every rung – budget 383-396, middle 326-343, high 287-307, elite 273-292») are
+    // SUPERSEDED and kept only as the record of what a bare-curve denominator produced. H walked
+    // `ageFactor` ALONE – a girl with no coach at all – so every coached career ran past 1.0 and was
+    // pinned there by the clamp; those early weeks are the clamp firing, not her ceiling filling.
+    // Bundle I's yardstick is the best coaching available (0.9766), and the same eight-seed walk now
+    // reads: elite 8/8 at age 25.5, high 8/8 at 27.1, middle 3/8 at 28.9, budget 0/8, self 0/8
+    // (`npx vite-node tools/r34-reachable-ceiling.ts`).
+    //
+    // ⭐ SO THIS TEST STILL ASSERTS EXACTLY WHAT IT ALWAYS DID – the fourth band is not dead copy,
+    // proved on a real elite career through the real engine – which is the round-23 claim and is
+    // unaffected by which denominator is used. ⚠ What bundle I changed is the OTHER half: the band is
+    // no longer reached by an ordinary career, and that consequence is filed for the owner in
+    // docs/rounds/round-34.md under bundle I rather than tuned away here, because the edges are his.
+    const world = createWorld('r34-walk', { ...DEFAULT_PROFILE, coachTier: 'elite' })
+    const rng = rngFromSeed(world.seed)
+    const seen: number[] = []
+    let last = coachRoomBandOf(world)!
+    seen.push(last)
+    let steps = 0
+    for (let w = 0; w < 780; w++) {
+      // 15 seasons: 14 -> 29, the whole growth arc and none of the decline past it
+      tickWeek(world, rng)
+      const band = coachRoomBandOf(world)!
+      expect(band, `week ${world.week} went backwards, ${last} -> ${band}`).toBeGreaterThanOrEqual(last)
+      if (band !== last) steps++
+      last = band
+      if (seen[seen.length - 1] !== band) seen.push(band)
+    }
     expect(seen, 'every band is reachable on a real career, in order').toEqual([0, 1, 2, 3])
     expect(steps, 'every change is a step it never takes back').toBe(seen.length - 1)
   })

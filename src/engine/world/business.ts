@@ -63,20 +63,29 @@ export function merchWeeklyIncomeCents(world: WorldState): number {
 
 /** ⭐ REPUTATION – 1.0 base plus the BEST band of every finished season, counted once per season,
  *  capped. The fold the round-29 ledger proposed off `seasonHistory[].byTrack.wta.endRank` (his
- *  own save reads 1.75: two seasons inside #100, one inside #50, one inside #25). A season with
+ *  own save reads 1.925 since round 34's two new rungs, 1.75 before them). A season with
  *  no recorded WTA end-rank – a pre-v46 row, a null rank – counts nothing: «not recorded» is not
- *  «top-100», the season mirror's own distinction. */
+ *  «top-100», the season mirror's own distinction.
+ *
+ *  ⭐⭐ ROUND 34 #17 (03.09) – AND THE CAP IS THE CAREER'S OWN, `capBase + capPerSeason x the
+ *  PROFESSIONAL seasons played`. The owner: a long professional career should be worth something
+ *  and a short one should not. ⚠ «PROFESSIONAL SEASONS» IS THE SAME COUNT THE LADDER ITSELF WALKS –
+ *  the rows carrying a WTA end-rank, `BrandSignals.proSeasons`' own definition – so the cap and the
+ *  ladder can never disagree about what a season is. ⚠ Measured: at 4 + 0.5 the cap no longer binds
+ *  below THIRTY professional seasons; see the constants' own header. */
 export function academyReputationOf(world: WorldState): number {
   const A = ECONOMY.business.academy
   let rep = 1
+  let proSeasons = 0
   for (const row of world.seasonHistory ?? []) {
     const endRank = row.byTrack?.wta?.endRank
     if (endRank == null) continue
+    proSeasons++
     // bands are strongest-first; the FIRST that holds is the season's best and the only one counted
     const band = A.reputationBands.find((b) => endRank <= b.maxEndRank)
     if (band) rep += band.add
   }
-  return Math.min(A.reputationCap, rep)
+  return Math.min(A.reputationCapBase + A.reputationCapPerSeason * proSeasons, rep)
 }
 
 /** ⭐⭐ WHAT THE ACADEMY BRINGS IN THIS WEEK, in whole cents – the DELIVERED stages' own figures,

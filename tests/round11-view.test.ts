@@ -75,16 +75,21 @@ describe('the surface mark on the Season card (R11-15, reversed by the owner in 
   // got wrong was flinging the name away from the mark, and what R11-15 was defending was the name
   // being printed once, next to its colour. Both of those still hold, and both are pinned here.
   // ⚠ RE-AIMED 30.07. This used to read `class="surface-mark"` / `class="surface-ring"` /
-  // `{{ row.event.surface }}` straight out of SeasonScreen's `.event-place`. Those three strings are
+  // `{{ ev.surface }}` straight out of SeasonScreen's `.event-place`. Those three strings are
   // now in SurfaceMark.vue, because the mark is a component - so the assertion is in two halves and
   // the PROTECTED FACT IS WORD FOR WORD THE SAME: the card carries the export's RING mark (never
   // R10-11's bare dot), and the surface NAME sits with the ring rather than being flung away from it.
   // The screen half additionally pins that the card asks for the mark by rendering the component,
   // which is the thing that stops a fourth hand-written copy appearing.
+  // ⚠ RE-AIMED BY ROUND 34 #14, AND ONLY BY A RENAME. The card's markup is now a `v-for` over
+  // `row.events` – a week she may play twice offers a card for each – so the event a card is about
+  // is the loop's `ev` rather than the row's single `row.event`. Every protected fact below is
+  // unchanged: the card asks the COMPONENT for the mark, hands it the card's OWN surface, R10-11's
+  // bare dot stays gone, and the name is printed exactly once.
   it('the card carries the export\'s ring mark, with the name beside it', () => {
     const place = region(seasonScreen, '<div class="event-place">', '</div>')
     // the card asks the component for the mark, and hands it the row's OWN surface
-    expect(place).toContain('<SurfaceMark :surface="row.event.surface"')
+    expect(place).toContain('<SurfaceMark :surface="ev.surface"')
     expect(place).not.toContain('surface-dot') // R10-11's bare dot is still gone
     expect(cssBodies('.surface-dot')).toEqual([])
     // ...and the component is still the export's ring with the name beside it
@@ -103,7 +108,7 @@ describe('the surface mark on the Season card (R11-15, reversed by the owner in 
     expect(card.split('<SurfaceMark').length - 1).toBe(1)
     expect(surfaceMark.split('{{ surface }}').length - 1).toBe(1)
     // and the screen prints the raw name nowhere else on the card
-    expect(card).not.toContain('{{ row.event.surface }}')
+    expect(card).not.toContain('{{ ev.surface }}')
   })
 
   // ⚠ ADDED 30.07 – the reason the component exists, pinned so it cannot come back. One of the three
@@ -123,8 +128,8 @@ describe('the surface mark on the Season card (R11-15, reversed by the owner in 
     // and his sentence is the natural home for "the court suits her game". Still consumed from the
     // engine, still said once.
     expect(seasonScreen).toContain('const fit = surfaceFit(e.surface)')
-    expect(seasonScreen).toContain('coachSays(row.event)')
-    expect(seasonScreen.split('coachSays(row.event)').length - 1).toBe(1)
+    expect(seasonScreen).toContain('coachSays(ev)')
+    expect(seasonScreen.split('coachSays(ev)').length - 1).toBe(1)
     expect(seasonScreen).not.toContain('surface-caption')
   })
 

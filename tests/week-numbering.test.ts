@@ -204,7 +204,9 @@ const NOT_A_WEEK_LABEL = [
   '14 + Math.floor(c.week / 52)',
   // SeasonScreen entry pill: the weeks are COMPARED, the output is the word "Closed"/"closes"
   // (the deadline week itself is printed right after it, formatted).
-  "week > row.event.deadlineWeek ? 'Closed' : 'closes'",
+  // ⚠ RE-AIMED BY ROUND 34 #14: the card's markup is a `v-for` over `row.events` now, so the event
+  // is the loop's `ev`. The exemption is the same one for the same reason – nothing is PRINTED here.
+  "week > ev.deadlineWeek ? 'Closed' : 'closes'",
 ]
 
 describe('R11-6 guard – no surface prints a raw absolute week', () => {
@@ -234,11 +236,21 @@ describe('R11-6 guard – no surface prints a raw absolute week', () => {
         // `weekOnly()` and `seasonWeekRange()` are BUILT on weekLabel / on the shared formatter and
         // live in the same place; they exist because a card that already prints the year must not
         // print it twice. They are the formatter, sliced - not a second spelling of it.
+        //
+        // ⚠⚠ ROUND 34 #19 ADDED `monthLabel(` TO THIS LIST, AND IT IS THE SAME ARGUMENT, NOT A
+        // LOOSENING. The owner asked for a chart of the fund's unit price «с возможностью выбрать
+        // промежуток», and its time axis names the MONTH a point falls in. `monthLabel` is declared
+        // in shared/dates.ts beside `weekLabel`, reads the same `weekStart`, and prints «Jan '31» –
+        // a formatted date, never an absolute week. What this guard exists to stop is a surface
+        // printing the raw integer (the owner met «back wk 70» in a playtest); a sixth entry in a
+        // list of shared formatters is exactly what the list is for, and the guard is unchanged for
+        // every OTHER spelling – a `{{ row.week }}` on the same line would still be caught.
         if (
           expr.includes('weekLabel(') ||
           expr.includes('weekDates') ||
           expr.includes('weekRange(') ||
           expr.includes('weekOnly(') ||
+          expr.includes('monthLabel(') ||
           expr.includes('seasonWeekRange(')
         ) {
           continue

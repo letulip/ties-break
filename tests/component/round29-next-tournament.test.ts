@@ -28,7 +28,7 @@ import { TIERS } from '../../src/engine/season/calendar'
 import { formatCents } from '../../src/shared/money'
 import { regionToLast } from '../helpers/source'
 import { venueArtUrl } from '../../src/art/venues'
-import { DRAW_NOT_MADE_NOTE } from '../../src/composables/eventCard'
+import { DRAW_NOT_MADE_NOTE, fieldChanceLabel } from '../../src/composables/eventCard'
 import { DEFAULT_PROFILE, type Snapshot, type UpcomingEvent } from '../../src/shared/protocol'
 
 /** A ticked career and one of its tournaments – both the engine's.
@@ -200,7 +200,17 @@ describe('round 31 #4 – before the draw the panel names nobody', () => {
     document.body.innerHTML = ''
   })
 
-  it('a card ahead of its draw week: no name, no percentage, and it says why', () => {
+  // ⚠⚠ RE-AIMED BY ROUND 34 #5 – NOT DELETED, NOT LOOSENED, AND THE CLAIM IT GUARDS IS NARROWER BY
+  // EXACTLY ONE THING. It used to read «no name, no percentage, and it says why», and the middle
+  // clause was a proxy for the first: the ring was the only percentage the panel could draw, so
+  // «no percentage» and «no opponent» were the same assertion written twice. The owner has since
+  // ruled that a pre-draw card must carry a figure («надо хотя бы что-то примерное писать до
+  // жеребьевки»), so the panel now rings the FIELD's chance there – a number about a LEVEL, not
+  // about a girl. What must still be true, and is asserted below, is everything the item was
+  // actually about: nobody is named, no VS row is drawn, the note says the draw has not been made,
+  // and the ring that IS drawn is provably the field one rather than the opponent one. The
+  // opponent-ring arm is unchanged and still the other half of the pair.
+  it('a card ahead of its draw week: no name, no VS row, and it says why', () => {
     // «можно писать, что жеребьевки еще не было». The engine refuses to name anybody; this is the
     // assertion that the panel refuses to print a hole where the name was.
     const { snap, event } = careerAndEvent(() => true, false)
@@ -208,11 +218,21 @@ describe('round 31 #4 – before the draw the panel names nobody', () => {
     useGameStore().snapshot = snap
     const w = mount(NextTournamentPanel, { props: { event } })
     expect(w.findAll('.nt-first-side').length, 'no VS row before there is anybody to face').toBe(0)
-    expect(w.findComponent({ name: 'ProgressRing' }).exists(), 'no ring without a chance').toBe(false)
     expect(w.find('.nt-first-note').text()).toBe(DRAW_NOT_MADE_NOTE)
-    // ⚠ NO STRAY PERCENTAGE ANYWHERE ON THE PANEL. The ring is the only one it ever drew, and a
-    // `0%` left behind would be the exact lie this item is about.
-    expect(w.text()).not.toMatch(/\d+%/)
+    // ⭐ ROUND 34 #5 – THE RING IS THE FIELD'S, AND ITS OWN NAME SAYS SO. A ring here carrying the
+    // OPPONENT's label would be the round-31 defect returning under a new class name, so the label
+    // is read back rather than the ring merely counted.
+    const ring = w.findComponent({ name: 'ProgressRing' })
+    expect(ring.exists(), 'the pre-draw card carries the field figure').toBe(true)
+    expect(ring.classes(), 'and it is the FIELD ring').toContain('field-ring')
+    expect(ring.props('label')).toBe(fieldChanceLabel(event.preview))
+    expect(ring.props('label')).toContain(DRAW_NOT_MADE_NOTE)
+    expect(ring.props('label'), 'the pre-draw ring must not claim a first-match opponent').not.toContain('against ')
+    // ⚠ AND STILL NOBODY NAMED, which is what the deleted percentage clause was standing in for.
+    // Read off the ENGINE and off the panel, so neither a preview that started naming somebody nor
+    // a panel that started drawing the row a name goes in can pass.
+    expect(event.preview.opponentName, 'the engine names nobody before the draw').toBe('')
+    expect(w.text(), 'and the panel does not draw the VS row').not.toContain('VS')
     w.unmount()
   })
 

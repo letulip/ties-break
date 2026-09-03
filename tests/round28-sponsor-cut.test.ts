@@ -99,10 +99,13 @@ const AD = ECONOMY.advertising
  *  ≤200 cell (the anchor, unchanged to the cent), the brand its first house, the term and the
  *  two-shoot ask as the old letters carry them. `AD` still carries the mechanics every house
  *  shares (the age bar, the weekly chance, the decide weeks, the lead, the clash price). */
+// ⚠ INDEX 1 SINCE ROUND 34 #7/#11/#12/#13 (03.09), AND IT IS THE SAME ≤200 CELL. A fifth band was
+// prepended to `advertising.bands` at ≤400, so every band index moved one to the right; the cheque
+// itself was lifted tenfold at that rung by the owner's approved table.
 const WATCH = {
   brand: ECONOMY.advertising.categories.watches.houses[0],
-  maxWtaRank: ECONOMY.advertising.bands[0].maxWtaRank,
-  cashCents: ECONOMY.advertising.categories.watches.feeCentsByBand[0]!,
+  maxWtaRank: ECONOMY.advertising.bands[1].maxWtaRank,
+  cashCents: ECONOMY.advertising.categories.watches.feeCentsByBand[1]!,
   termWeeks: 52,
   shootWeeksPerTerm: 2,
 }
@@ -224,14 +227,19 @@ describe('§1 a cash sponsor deal', () => {
     // retune – the game moves and the test moves with it – but it also means NO other test in this
     // file can see the RATE change. A rule whose rate can be moved without a single red test is not
     // covered. ⚠ RE-AIMED BY P3 AND STILL THE ONLY LITERAL ARM: the manager's commission is 15%
-    // (`ECONOMY.managerCommission.bps`, provisional inside his «10-20% например»), the campaign fee
-    // is $20,000, and that is $3,000 to the family and $17,000 to her. Move the rate and this
-    // reddens, which is exactly what it is for – re-aim it deliberately, the way the ramp's own
-    // ladder pin in tests/round23-kid-share.test.ts is re-aimed.
+    // (`ECONOMY.managerCommission.bps`, provisional inside his «10-20% например»), and the split is
+    // 15/85 of whatever the campaign fee is. Move the rate and this reddens, which is exactly what it
+    // is for – re-aim it deliberately, the way the ramp's own ladder pin in
+    // tests/round23-kid-share.test.ts is re-aimed.
+    //
+    // ⚠⚠ RE-AIMED A SECOND TIME BY ROUND 34 #7/#11/#12/#13 (03.09), AND ONLY THE FEE MOVED. The
+    // owner ruled the foot of the endorsement ladder broken and lifted the ≤200 band tenfold, so the
+    // ≤200 watches cell is $200,000 – $30,000 to the family and $170,000 to her at the same 15%. The
+    // commission is untouched and the arm still fails on any move of it.
     const world = structuredClone(life.world)
     expect(ageOf(world), 'the fixture is eighteen – the age the OLD rule turned on').toBe(18)
     expect(managerCommissionBps(), 'and the shipped commission is fifteen percent').toBe(1500)
-    expect(WATCH.cashCents, 'the campaign fee is twenty thousand dollars').toBe(20_000_00)
+    expect(WATCH.cashCents, 'the campaign fee is two hundred thousand dollars').toBe(200_000_00)
 
     const offer = world.offers.find(
       (o) => o.kind === 'ad' && adCategoryOf(o.terms as AdOfferTerms) === 'watches' && o.state === 'open',
@@ -239,14 +247,14 @@ describe('§1 a cash sponsor deal', () => {
     const kidBefore = world.kidFundsCents ?? 0
     const fundsBefore = world.fundsCents
     acceptOffer(world, offer.id)
-    expect((world.kidFundsCents ?? 0) - kidBefore, 'seventeen thousand dollars, hers').toBe(17_000_00)
-    expect(world.fundsCents - fundsBefore, 'three thousand, the manager\'s').toBe(3_000_00)
+    expect((world.kidFundsCents ?? 0) - kidBefore, 'one hundred and seventy thousand dollars, hers').toBe(170_000_00)
+    expect(world.fundsCents - fundsBefore, 'thirty thousand, the manager\'s').toBe(30_000_00)
     // ...and the row says so in words, at the rate a player can read against the figure beside it.
     const row = world.events.find((e) => e.week === world.week && e.category === 'sponsor')
     // ⚠ THE ROW NAMES THE FEE AND THE GROSS, not a deduction: the figure ON the row IS the parent's
     // cut now, so the old «less her N% share» wording would have described the wrong arithmetic.
     // `formatCents` drops a zero cents part, exactly as the prize row's own share clause does.
-    expect(row?.text).toContain("the manager's 15% of $20,000")
+    expect(row?.text).toContain("the manager's 15% of $200,000")
     expect(row?.text, 'and it no longer reads as a subtraction from the family').not.toContain('less her')
   })
 

@@ -157,9 +157,16 @@ describe('⭐⭐ the kit ladder is monotone in what it PAYS – round 29 part tw
 describe('⭐ the ADVERTISING gradient is monotone – round 29 part four P6/§8', () => {
   const BANDS = ECONOMY.advertising.bands
   const CATS = Object.keys(ECONOMY.advertising.categories) as (keyof typeof ECONOMY.advertising.categories)[]
-  /** §8's table, verbatim – his ranges, the in-band pin every cell must land inside. */
+  /** §8's table, verbatim – his ranges, the in-band pin every cell must land inside.
+   *
+   *  ⚠⚠ RE-AIMED BY ROUND 34 #7/#11/#12/#13 (03.09) AND ONLY THE TWO ROWS BELOW THE TOP 100 MOVED.
+   *  The owner ruled the foot of the ladder broken («129 место в мире, тот же контракт на 12к в год
+   *  на 3 года. Не верю») and approved a new ≤400 band worth $200,000 a year across the shelf plus a
+   *  tenfold lift of the ≤200 band to $450,000. The three rows above them are §8's, untouched, on
+   *  his explicit ruling «Про 50–100 отвечаю прямо: пересматривать не надо». */
   const RANGE_BY_BAND: [number, number][] = [
-    [5_000_00, 20_000_00],
+    [80_000_00, 120_000_00],
+    [50_000_00, 200_000_00],
     [100_000_00, 500_000_00],
     [300_000_00, 1_000_000_00],
     [1_000_000_00, 2_500_000_00],
@@ -170,8 +177,14 @@ describe('⭐ the ADVERTISING gradient is monotone – round 29 part four P6/§8
       expect(BANDS[i].maxWtaRank, `band ${i} is not a harder gate`).toBeLessThan(BANDS[i - 1].maxWtaRank)
       expect(BANDS[i].shootWeeksPerYear).toBeGreaterThanOrEqual(BANDS[i - 1].shootWeeksPerYear)
     }
-    // ...and the four gates are the kit ladder's own cuts plus his Bublik line, in order.
-    expect(BANDS.map((b) => b.maxWtaRank)).toEqual([200, 100, 50, 10])
+    // ...and the gates are the kit ladder's own cuts, his Bublik line and round 34's film anchor.
+    // ⚠ 200 / 50 / 10 are STILL `tour` / `premium` / `icon`'s own `maxWtaRank`, read and not
+    // imported; 100 is his «Это доход у топ-100»; 400 is round 34's, and is the one gate here that
+    // is not a kit cut – it reaches past the world #240 his film anchor is about.
+    expect(BANDS.map((b) => b.maxWtaRank)).toEqual([400, 200, 100, 50, 10])
+    const S = ECONOMY.sponsorship
+    expect([S.tour.maxWtaRank, S.premium.maxWtaRank, S.icon.maxWtaRank], 'the kit cuts are unmoved')
+      .toEqual([200, 50, 10])
   })
 
   it('⭐⭐ every cheque lands inside §8`s own range for its band, and rises up the bands', () => {
@@ -190,12 +203,62 @@ describe('⭐ the ADVERTISING gradient is monotone – round 29 part four P6/§8
         }
         opened = true
         const [lo, hi] = RANGE_BY_BAND[i]
-        expect(fee, `${c}@band${i} under §8's floor`).toBeGreaterThanOrEqual(lo)
-        expect(fee, `${c}@band${i} over §8's ceiling`).toBeLessThanOrEqual(hi)
-        if (last !== null) expect(fee, `${c}: the cheque fell up the ladder`).toBeGreaterThan(last)
+        expect(fee, `${c}@band${i} under his floor`).toBeGreaterThanOrEqual(lo)
+        expect(fee, `${c}@band${i} over his ceiling`).toBeLessThanOrEqual(hi)
+        // ⚠⚠ THE PER-CATEGORY CLIMB IS ASSERTED FROM THE ≤100 BAND UP, AND ROUND 34 IS WHY. It used
+        // to run from band 0, because every category's own cheque rose with every rung. The owner's
+        // approved foot does not: clothing pays $120,000 at ≤400 against $50,000 at ≤200, drinks pays
+        // $80,000 at both, and the tenfold lift put watches at $200,000 at ≤200 as well as at ≤100.
+        // What he approved is the BAND TOTAL and the shape of the shelf, not one category's own
+        // climb – the totals are pinned whole in the arm below this one, and every cell that sits
+        // level or lower than the band beneath it is pinned BY NAME in the arm after that, so a
+        // third one cannot appear without reddening something. Above ≤200, where he ruled nothing
+        // was to be touched, the old claim holds exactly as it did.
+        if (last !== null && i > 2) expect(fee, `${c}: the cheque fell up the ladder`).toBeGreaterThan(last)
         last = fee
       }
       expect(opened, `${c}: a category no band ever opens`).toBe(true)
+    }
+  })
+
+  it('⚠⚠ ROUND 34 – exactly these cells do not climb, and no others', () => {
+    // The three places the owner's approved foot leaves a category level or lower than the band
+    // below it. Listed rather than described, so a fourth is a red test and not a discovery.
+    const flat: string[] = []
+    for (const c of CATS) {
+      const fees = ECONOMY.advertising.categories[c].feeCentsByBand
+      for (let i = 1; i < fees.length; i++) {
+        const here = fees[i]
+        const below = fees[i - 1]
+        if (here === null || below === null) continue
+        if (here <= below) flat.push(`${c}@${i}`)
+      }
+    }
+    expect(flat.sort()).toEqual(['clothing@1', 'drinks@1', 'watches@2'])
+  })
+
+  it('⭐⭐⭐ ROUND 34 – THE BAND TOTALS ARE THE OWNER`S OWN TABLE, generated from ECONOMY', () => {
+    // ⚠⚠ THIS ARM IS THE ONE THE APPROVED FIGURES LIVE IN, and it is generated rather than typed:
+    // the shelf's total per contract year at each band, all categories signed. His table, verbatim
+    // (docs/rounds/round-34.md, «APPROVED BY THE OWNER, 02.09.2026»), with the three rows above the
+    // top 100 unchanged from round 29 part four §8.
+    const totals = BANDS.map((_, band) =>
+      CATS.reduce((sum, c) => sum + (ECONOMY.advertising.categories[c].feeCentsByBand[band] ?? 0), 0),
+    )
+    expect(totals, 'the five band totals, in cents a contract year').toEqual([
+      200_000_00, // ≤400 – his film anchor: ~$5,000 a match under a patch at ~40 matches a year
+      450_000_00, // ≤200 – the shipped $45,000 lifted tenfold
+      1_100_000_00, // ≤100 – unchanged
+      2_600_000_00, // ≤50 – unchanged
+      9_200_000_00, // ≤10 – unchanged
+    ])
+    // ⚠ AND THE TWO CLIFFS THE CHANGE REMOVES, stated as arithmetic so they cannot come back: there
+    // is money below #200 at all, and the step from the ≤200 shelf to the ≤100 one is no longer the
+    // 24x jump on one ranking place he was reading.
+    expect(totals[0], 'there is a shelf below #200 now').toBeGreaterThan(0)
+    expect(totals[2] / totals[1], 'the #101 -> #100 step was 24x and is now under 3x').toBeLessThan(3)
+    for (let i = 1; i < totals.length; i++) {
+      expect(totals[i], `the shelf as a whole still climbs at band ${i}`).toBeGreaterThan(totals[i - 1])
     }
   })
 
@@ -233,13 +296,30 @@ describe('⭐ the ADVERTISING gradient is monotone – round 29 part four P6/§8
     }
   })
 
-  it('⭐ and $20,000 did not move – the gradient was built on top of the shipped rung, not over it', () => {
-    // Round 29 part two #20's whole answer, held through a second resize: the research does not
-    // contradict the shipped fee at the band it was written for. The anchor cell is the watches
-    // category at the ≤200 band, and Quiet Hour still writes there.
-    expect(ECONOMY.advertising.categories.watches.feeCentsByBand[0]).toBe(20_000_00)
-    expect(ECONOMY.advertising.bands[0].maxWtaRank).toBe(200)
+  it('⚠⚠ ROUND 34 MOVED THE $20,000 ANCHOR, and this arm is where that is recorded', () => {
+    // ⚠⚠ RE-AIMED, NOT DELETED. This arm read «$20,000 did not move – the gradient was built on top
+    // of the shipped rung, not over it», and it was true through two resizes: round 29 part two #20
+    // sized the watches cell at the ≤200 band and the research never contradicted it there.
+    //
+    // ROUND 34 #7/#11/#12/#13 (03.09) IS WHERE IT MOVES, and the owner moved it himself after
+    // playing eleven seasons around the top 100: «в 18 лет предлагают подписать копеечные контракты
+    // на 2 и 3 года», «129 место в мире, тот же контракт на 12к в год на 3 года. Не верю», «99 место
+    // в мире, тот же контракт на 20к в год на 2 года». The cell is now $200,000 – the shipped figure
+    // times ten, the whole ≤200 row lifted by the same factor so its SHAPE is preserved exactly.
+    // ⚠ The band it sits at is unchanged: still ≤200, now at index 1 behind the new ≤400 rung.
+    expect(ECONOMY.advertising.bands[1].maxWtaRank).toBe(200)
+    expect(ECONOMY.advertising.categories.watches.feeCentsByBand[1]).toBe(200_000_00)
     expect(ECONOMY.advertising.categories.watches.houses).toContain('Quiet Hour')
+    // ⭐ THE SHAPE OF THE ≤200 SHELF IS THE SHIPPED ONE, EXACTLY x10 – which is what makes this a
+    // lift and not a re-derivation. Watches 20k, cars 12k, drinks 8k, clothing 5k, in that order.
+    const row = (['watches', 'cars', 'drinks', 'clothing'] as const).map(
+      (c) => ECONOMY.advertising.categories[c].feeCentsByBand[1]!,
+    )
+    expect(row).toEqual([200_000_00, 120_000_00, 80_000_00, 50_000_00])
+    expect(row.map((c) => c / 10), 'the shipped row, to the cent').toEqual([20_000_00, 12_000_00, 8_000_00, 5_000_00])
+    // ...and the new ≤400 rung is a kit patch and a drink, which is what the film he quoted shows.
+    const open400 = CATS.filter((c) => ECONOMY.advertising.categories[c].feeCentsByBand[0] !== null)
+    expect(open400.sort()).toEqual(['clothing', 'drinks'])
   })
 
   it('⭐⭐ the capstone is the roof: dearer than every cell, longer than every term, gated on tenure', () => {
@@ -270,18 +350,18 @@ describe('⭐⭐ ...and the GATE picks the strongest band she clears, at every b
   })
 
   it('⚠⚠ THE DEFECT #20 REPORTED, AS AN ASSERTION: a top-10 standing gets the top band`s cheques', () => {
+    // ⚠ WALKED RATHER THAN LISTED SINCE ROUND 34 (03.09), because the ladder gained a fifth rung and
+    // a hand-listed pair of literals per boundary is a list that has to be rewritten every time one
+    // is added. Same claim, every boundary, whatever the ladder's length: the gate at a band's own
+    // cut is that band, and one place outside it is the band below – or nothing at all, at the foot.
     const B = ECONOMY.advertising.bands
-    expect(at(B[3].maxWtaRank)).toBe(3)
-    expect(at(B[3].maxWtaRank + 1)).toBe(2)
-    expect(at(B[2].maxWtaRank)).toBe(2)
-    expect(at(B[2].maxWtaRank + 1)).toBe(1)
-    expect(at(B[1].maxWtaRank)).toBe(1)
-    expect(at(B[1].maxWtaRank + 1)).toBe(0)
-    expect(at(B[0].maxWtaRank)).toBe(0)
-    expect(at(B[0].maxWtaRank + 1)).toBeNull()
+    for (let i = B.length - 1; i >= 0; i--) {
+      expect(at(B[i].maxWtaRank), `#${B[i].maxWtaRank} stands in band ${i}`).toBe(i)
+      expect(at(B[i].maxWtaRank + 1), `#${B[i].maxWtaRank + 1} does not`).toBe(i === 0 ? null : i - 1)
+    }
     // ...and the fee that arrives with it, which is the number he was reading off the screen: the
     // world #21's watches cheque is written from the ≤50 band's cell, not the ≤200's.
     expect(adTermsForCategory('watches', at(21)!, 1)!.cashCents)
-      .toBeGreaterThan(ECONOMY.advertising.categories.watches.feeCentsByBand[0]!)
+      .toBeGreaterThan(ECONOMY.advertising.categories.watches.feeCentsByBand[1]!)
   })
 })

@@ -148,7 +148,7 @@ const CALL_UP = letter({
 })
 const AD = letter({
   id: 'ad-1', kind: 'ad', state: 'open',
-  terms: { brand: ECONOMY.advertising.categories.watches.houses[0], cashCents: ECONOMY.advertising.categories.watches.feeCentsByBand[0]!, termWeeks: 52, shootCount: 2 },
+  terms: { brand: ECONOMY.advertising.categories.watches.houses[0], cashCents: ECONOMY.advertising.categories.watches.feeCentsByBand[1]!, termWeeks: 52, shootCount: 2 },
 })
 const KIT_NEW = letter({
   id: 'kit-1', kind: 'kit', state: 'open',
@@ -263,8 +263,13 @@ describe('Round 29 #16 – and every OTHER subject line in the inbox is pinned t
     const line = subjects([AD]).find((s) => s.startsWith('Her face in a campaign'))
     expect(line).toBeTruthy()
     // ⚠ FORMATTED FROM CENTS, so this is the number the letter is worth and not a re-typing of it.
-    expect(line).toContain('$20,000')
-    expect(ECONOMY.advertising.categories.watches.feeCentsByBand[0]).toBe(20_000_00)
+    // ⚠⚠ RE-AIMED BY ROUND 34 #7/#11/#12/#13 (03.09): the owner ruled the foot of the endorsement
+    // ladder broken («129 место в мире, тот же контракт на 12к в год на 3 года. Не верю») and lifted
+    // the ≤200 band tenfold, so the watches cell there is $200,000 and it now sits at index 1 behind
+    // the new ≤400 band. What this arm guards – that the subject line carries the LETTER's own cents
+    // rather than a re-typed figure – is unchanged.
+    expect(line).toContain('$200,000')
+    expect(ECONOMY.advertising.categories.watches.feeCentsByBand[1]).toBe(200_000_00)
   })
 
   it('⚠ THE WHOLE POST AT ONCE – thirteen letters, thirteen distinct subjects, none of them borrowed', () => {

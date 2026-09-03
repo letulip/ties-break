@@ -52,7 +52,9 @@ const adPost = (world: WorldState): Offer[] => world.offers.filter((o) => o.kind
  *  lookup – and a fixture that pinned a literal would test the wrong band the moment a seed or the
  *  points curve moved. `adultAt` walks a ladder of totals until `adBandFor` names the band the arm
  *  is about, and the arms assert that fact again before using it. */
-const POINT_STEPS = [300, 400, 600, 800, 1_200, 2_000, 3_000, 4_000, 6_000, 10_000, 100_000]
+// ⚠ THE LADDER GAINED A RUNG BELOW ITS OLD FOOT IN ROUND 34 (a ≤400 band), so the book has to be
+// able to reach a standing OUTSIDE the top 200 as well – hence the three small totals at the front.
+const POINT_STEPS = [40, 80, 150, 300, 400, 600, 800, 1_200, 2_000, 3_000, 4_000, 6_000, 10_000, 100_000]
 
 /** A real career ticked to eighteen, then given a professional standing at a chosen depth – the
  *  `proWorld` idiom `tests/ad-offer.test.ts` documents. Self-coached and entering nothing, so the
@@ -84,16 +86,21 @@ function walkToLetter(world: WorldState, rng: ReturnType<typeof resumeMain>, cat
   return -1
 }
 
-/** One walked career per band, built once and cloned per arm. The tracked category is watches –
- *  open at every band, so the same slot can be watched climb the whole gradient. */
-const LIVES = [0, 1, 2, 3].map((band) => {
+/** One walked career per band, built once and cloned per arm. The tracked category is DRINKS.
+ *
+ *  ⚠⚠ RE-AIMED FROM WATCHES BY ROUND 34 #7/#11/#12/#13 (03.09), AND FOR THE PROPERTY THE COMMENT
+ *  ALWAYS NAMED: the tracked category has to be open at EVERY band so one slot can be watched climb
+ *  the whole gradient. The owner's approved foot closes watches at the new ≤400 rung (`null` – the
+ *  bottom shelf is a kit patch and a drink), so watches no longer has that property and drinks does. */
+const TRACKED = 'drinks'
+const LIVES = [0, 1, 2, 3, 4].map((band) => {
   const { world, rng } = adultAt(`ad-gradient-${band}`, band)
   const eligibleWeek = world.week
-  const hit = walkToLetter(world, rng, 'watches')
+  const hit = walkToLetter(world, rng, TRACKED)
   return { band, world, hit, eligibleWeek }
 })
 
-describe('the four fixtures stand where they claim to stand', () => {
+describe('the five fixtures stand where they claim to stand', () => {
   it.each(LIVES)('band $band: eighteen-plus, a real W standing, and dice that say yes', ({ band, world, hit }) => {
     const standing = sponsorStandingOf(world)
     expect(ageOf(world)).toBeGreaterThanOrEqual(AD.fromAgeYears)
@@ -105,14 +112,14 @@ describe('the four fixtures stand where they claim to stand', () => {
 })
 
 describe('⭐⭐ each band ARRIVES at its own gate – the half a constants test cannot say', () => {
-  it.each(LIVES)('band $band: the watches letter that lands carries that band`s cheque, through the tick', ({ band, world, hit }) => {
-    const letters = adPost(world).filter((o) => adCategoryOf(o.terms as AdOfferTerms) === 'watches')
+  it.each(LIVES)('band $band: the drinks letter that lands carries that band`s cheque, through the tick', ({ band, world, hit }) => {
+    const letters = adPost(world).filter((o) => adCategoryOf(o.terms as AdOfferTerms) === TRACKED)
     expect(letters.length).toBeGreaterThanOrEqual(1)
     const t = letters[letters.length - 1].terms as AdOfferTerms
     // The cheque is the BAND's cell – §8's whole design: same shelf, different money.
-    expect(t.cashCents).toBe(AD.categories.watches.feeCentsByBand[band])
-    expect(AD.categories.watches.houses).toContain(t.brand)
-    expect(t.trade).toBe(AD.categories.watches.trade)
+    expect(t.cashCents).toBe(AD.categories[TRACKED].feeCentsByBand[band])
+    expect(AD.categories[TRACKED].houses).toContain(t.brand)
+    expect(t.trade).toBe(AD.categories[TRACKED].trade)
     expect(t.shootCount).toBe(BANDS[band].shootWeeksPerYear)
     // Terms churn (P6): one to three years, drawn on the letter's own stream.
     expect(t.termYears).toBeGreaterThanOrEqual(1)
@@ -123,15 +130,18 @@ describe('⭐⭐ each band ARRIVES at its own gate – the half a constants test
     expect(letters[letters.length - 1].deadlineWeek).toBe(hit + AD.decideWeeks - 1)
   })
 
-  it('⚠⚠ THE DEFECT #20 REPORTED, AS AN ASSERTION: a top-10 standing no longer gets the top-200 cheque', () => {
+  it('⚠⚠ THE DEFECT #20 REPORTED, AS AN ASSERTION: a top-10 standing no longer gets the bottom cheque', () => {
     // This is #20, whole, restated for the gradient. Before the ladder every one of these standings
     // received Quiet Hour's $20,000, because the gate had a floor and no ceiling.
-    const top = LIVES.find((l) => l.band === 3)!
+    // ⚠ The top band is index 4 since round 34 prepended a ≤400 rung; read off the ladder's length
+    // rather than typed, so a sixth rung does not silently point this arm at the wrong career.
+    const TOP = AD.bands.length - 1
+    const top = LIVES.find((l) => l.band === TOP)!
     const t = adPost(top.world)
-      .filter((o) => adCategoryOf(o.terms as AdOfferTerms) === 'watches')
+      .filter((o) => adCategoryOf(o.terms as AdOfferTerms) === TRACKED)
       .map((o) => o.terms as AdOfferTerms)[0]
-    expect(t.cashCents).toBeGreaterThan(AD.categories.watches.feeCentsByBand[0]!)
-    expect(t.cashCents).toBe(AD.categories.watches.feeCentsByBand[3])
+    expect(t.cashCents).toBeGreaterThan(AD.categories[TRACKED].feeCentsByBand[0]!)
+    expect(t.cashCents).toBe(AD.categories[TRACKED].feeCentsByBand[TOP])
   })
 
   it('⭐ §8`s shelf widens up the gradient: the higher fixtures hear from categories the lower never do', () => {
@@ -145,9 +155,9 @@ describe('⭐⭐ each band ARRIVES at its own gate – the half a constants test
     // ...and the fixture standing inside the top 10 can be written to by both; the walk is long
     // enough that at least one of the two icon-band categories has rolled yes (asserted as a
     // fixture fact through the same dice the engine reads).
-    const top = LIVES.find((l) => l.band === 3)!
+    const top = LIVES.find((l) => l.band === AD.bands.length - 1)!
     // ...the window is the weeks the fixture was actually ELIGIBLE and ticking – rolls before the
-    // band-3 book existed wrote nothing and prove nothing.
+    // top book existed wrote nothing and prove nothing.
     const anyIconRoll = ['airline', 'fragrance'].some((c) => {
       for (let w = top.eligibleWeek + 1; w <= top.world.week; w++) {
         if (adWritesAt(top.world.seed, w, AD.offerChance, c as AdCategory)) return true

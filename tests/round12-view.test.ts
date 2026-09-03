@@ -130,7 +130,14 @@ describe('R12-1/14 — exam weeks say "Exams", in green, and the event card says
 
   it('the event card fills the silent "+ Plan week" hole with the reason', () => {
     // The pill sits exactly where the button would have been: a v-else-if on the same slot.
-    const controls = slice(seasonScreen, '<button v-if="row.plannable"', '<!-- A PLANNED week')
+    // ⚠ RE-AIMED BY ROUND 34 #14, AND THE NEW MARKER IS STRICTLY SHARPER THAN THE OLD ONE. A week
+    // may now draw a card per enterable rung, so the planner button is drawn on the FIRST card of a
+    // stack only (`&& i === 0`) – two "+ Plan week" buttons on one week would be the same control
+    // twice. `<button v-if="row.plannable"` was never unique in this file (the muted training row
+    // carries one too, AFTER the marker this slice ends on) and was matching the event card's copy
+    // only because it came first; the guarded slice caught the move rather than silently widening,
+    // which is exactly what it exists for.
+    const controls = slice(seasonScreen, '<button v-if="row.plannable && i === 0"', '<!-- A PLANNED week')
     expect(controls).toContain('v-else-if="examReasonShows(row)"')
     expect(controls).toContain('Exams this week')
   })

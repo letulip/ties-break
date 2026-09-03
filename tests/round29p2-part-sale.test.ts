@@ -113,11 +113,23 @@ describe('part two #4 – a part sale takes money out and leaves the rest workin
     expect(held.paidCents).toBe(paidBefore2 - costSold2)
     // ...and the identity holds a second time, against the gain that was still on the holding.
     expect(20_000_00 - costSold2 + (held.valueCents - held.paidCents)).toBe(valueBefore2 - paidBefore2)
-    // ⚠ AND THE SCREEN AGREES WITH THE WORLD: `changeCents` is the unrealised half and nothing else.
+    // ⚠ AND THE SCREEN AGREES WITH THE WORLD.
+    //
+    // ⚠⚠ RE-AIMED BY ROUND 34 #15, AND NOTHING WAS LOOSENED – THE IDENTITY GAINED ITS OTHER TERM.
+    // This line read `row.changeCents === held.valueCents - held.paidCents`, i.e. «the unrealised
+    // half and nothing else», and that is exactly what the owner reported as a defect on 02.09:
+    // «Сумма дохода на savings меняется вниз если деньги вывести… она не должна меняться». The card's
+    // sentence asks what the holding has EARNED, so `changeCents` is now the unrealised half PLUS
+    // what previous sales realised – and this file has just made two sales, so the fixture is the
+    // one that can tell the difference. The claim is the same claim: the screen states the world's
+    // own arithmetic and derives nothing of its own.
     const row = shopView(world).rows.find((r) => r.id === 'deposit')!
     expect(row.valueCents).toBe(held.valueCents)
     expect(row.paidCents).toBe(held.paidCents)
-    expect(row.changeCents).toBe(held.valueCents - held.paidCents)
+    expect(row.changeCents).toBe(held.valueCents - held.paidCents + (held.realisedGainCents ?? 0))
+    // ⭐ AND THE REALISED TERM IS REAL ON THIS FIXTURE, so the assertion above cannot pass by both
+    // sides being zero – which is the way a re-aimed identity quietly stops testing anything.
+    expect(held.realisedGainCents, 'two sales have been realised on this holding').toBeGreaterThan(0)
   })
 
   it('⚠⚠ a sold part STAYS sold – the next tick may not grow it back', () => {
