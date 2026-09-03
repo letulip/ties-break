@@ -148,28 +148,27 @@ function mountHome(snapshot: Snapshot, error = '') {
  *  `document.fonts.check()` in a runner that has no FontFaceSet: it is the SAME set a browser would
  *  build its face table from. */
 function shippedFaces(): Map<string, Set<number>> {
+  // ⚠⚠ RE-AIMED BY ROUND 35 #8's SECOND HALF, AND THE SOURCE HAD TO MOVE WITH IT. This read the
+  // PARSED sheet, which was the honest stand-in while every face was a single weight. It stopped
+  // being one the day Sora and Manrope went VARIABLE: `font-weight: 200 800` is a RANGE, this
+  // runner's CSS parser drops the declaration it cannot model, and the arms above went red saying
+  // the app ships no Manrope at all. ⭐ A stand-in that cannot see what shipped is not a stand-in.
+  // The file's own text is what the browser is handed, so that is what is read now.
+  const css = readFileSync(resolve(__dirname, '../../src/style.css'), 'utf8')
   const out = new Map<string, Set<number>>()
-  for (const sheet of [...document.styleSheets]) {
-    let rules: CSSRuleList
-    try {
-      rules = sheet.cssRules
-    } catch {
-      continue
-    }
-    for (const rule of [...rules]) {
-      // ⚠ BY `cssText`, NOT BY `instanceof CSSFontFaceRule`: the class the runner exports and the
-      // class this document's rules were built from are not guaranteed to be the same object across
-      // vitest's module graph, and an `instanceof` that quietly matches nothing would make every
-      // arm below vacuous rather than red.
-      const text = rule.cssText ?? ''
-      if (!/^@font-face/.test(text)) continue
-      const family = /font-family:\s*['"]?([^'";}]+)['"]?/.exec(text)?.[1]?.trim()
-      const weight = /font-weight:\s*(\d+)/.exec(text)?.[1]
-      if (!family || !weight) continue
-      const set = out.get(family) ?? new Set<number>()
-      set.add(Number(weight))
-      out.set(family, set)
-    }
+  for (const m of css.matchAll(/@font-face\s*\{([^}]*)\}/g)) {
+    const block = m[1]
+    const family = /font-family:\s*['"]?([^'";}]+)['"]?/.exec(block)?.[1]?.trim()
+    // ⭐ ONE number is a static face; TWO are a variable font's [min, max] and every hundred between
+    // them is real. `font-weight: 200 800` therefore contributes 200..800, which is exactly what a
+    // browser's face table would answer for that file.
+    const w = /font-weight:\s*(\d+)(?:\s+(\d+))?/.exec(block)
+    if (!family || !w) continue
+    const set = out.get(family) ?? new Set<number>()
+    const lo = Number(w[1])
+    const hi = w[2] ? Number(w[2]) : lo
+    for (let v = lo; v <= hi; v += 100) set.add(v)
+    out.set(family, set)
   }
   return out
 }
@@ -222,7 +221,21 @@ function weightRequests() {
 /** The first family in a computed stack, unquoted – "Manrope, system-ui, …" -> "Manrope". */
 const firstFamily = (el: Element): string =>
   (getComputedStyle(el).fontFamily.split(',')[0] ?? '').trim().replace(/^['"]|['"]$/g, '')
-const weightOf = (el: Element): number => Number(getComputedStyle(el).fontWeight)
+/** ⚠⚠ RE-AIMED BY ROUND 35 #8's SECOND HALF, AND IT CORRECTS THE ARM'S OWN MEASUREMENT. This was
+ *  `Number(getComputedStyle(el).fontWeight)`, and on 97 of the elements it walked that value is not
+ *  a number at all – this runner answers the CSS keyword (`normal`), or nothing, wherever no rule
+ *  sets a weight. `Number('normal')` is NaN, NaN is in no shipped set, and every one of them was
+ *  counted as a SYNTHESISED face. ⭐ So the «111 elements» this file was written around was never
+ *  111 fakes: an unknown share of it was the instrument failing to read its own subject. The
+ *  keywords are mapped and an unreadable value falls back to the inherited default, which is what
+ *  `body`'s shorthand actually sets. */
+const weightOf = (el: Element): number => {
+  const raw = (getComputedStyle(el).fontWeight ?? '').trim()
+  if (raw === 'bold') return 700
+  if (raw === 'normal' || raw === '') return 400
+  const n = Number(raw)
+  return Number.isFinite(n) ? n : 400
+}
 
 /** Does this element render from a face the app actually ships, or is the renderer faking it? */
 function rendersARealFace(el: Element, faces: Map<string, Set<number>>): boolean {
@@ -265,7 +278,11 @@ describe('round 35 #8 – every primary button in the app is one weight, and it 
     const faces = shippedFaces()
     const manrope = faces.get('Manrope')
     expect(manrope, 'the sheet declares Manrope faces at all').toBeTruthy()
-    expect([...manrope!].sort((a, b) => a - b), 'Manrope ships 400 and 500 only').toEqual([400, 500])
+    // ⚠ RE-AIMED: Manrope went VARIABLE in the second half of this same item, so it answers a RANGE.
+    // ⭐ The arm's claim is unchanged and is now provable rather than aspirational: the weight this
+    // button asks for is one the repo actually ships.
+    expect([...manrope!].sort((a, b) => a - b), 'Manrope covers 200..800')
+      .toEqual([200, 300, 400, 500, 600, 700, 800])
 
     const w = await openShell(enteredCareer())
     const cta = w.find('.next-week-btn').element
@@ -277,7 +294,9 @@ describe('round 35 #8 – every primary button in the app is one weight, and it 
     // ⚠ THE INVERSE, so this arm cannot pass by accident: the weight the button carried before this
     // round has no face, and asserting that is what makes the line above a claim rather than a
     // tautology about whatever number happens to be in the sheet.
-    expect(manrope!.has(600), 'the 600 both buttons used to ask for still has no face').toBe(false)
+    // ⚠ RE-AIMED AND REVERSED, WHICH IS THE ITEM. This asserted that 600 had no face – true when
+    // written, and the whole reason the CTA looked wrong. Manrope is variable now and 600 is real.
+    expect(manrope!.has(600), 'the 600 both buttons used to ask for is a real face now').toBe(true)
     w.unmount()
   })
 
@@ -289,7 +308,12 @@ describe('round 35 #8 – every primary button in the app is one weight, and it 
     const faces = shippedFaces()
     expect([...faces.keys()].sort(), 'three self-hosted families and no more')
       .toEqual(['Caveat', 'Manrope', 'Sora'])
-    expect([...faces.get('Sora')!], 'Sora ships 600 only').toEqual([600])
+    // ⚠ RE-AIMED: Sora and Manrope are VARIABLE now (round 35 #8), so a family answers a RANGE
+    // rather than one number. Caveat is still the single static face it always was.
+    expect([...faces.get('Sora')!].sort((a, b) => a - b), 'Sora covers 400..800')
+      .toEqual([400, 500, 600, 700, 800])
+    expect([...faces.get('Manrope')!].sort((a, b) => a - b), 'Manrope covers 200..800')
+      .toEqual([200, 300, 400, 500, 600, 700, 800])
     expect([...faces.get('Caveat')!], 'Caveat ships 600 only').toEqual([600])
 
     const asks = weightRequests()
@@ -325,16 +349,23 @@ describe('round 35 #8 – every primary button in the app is one weight, and it 
     const faces = shippedFaces()
     const w = await openShell(enteredCareer())
     const synthetic: string[] = []
+    let scanned = 0
     for (const el of [...document.querySelectorAll('*')]) {
       if ((el.textContent ?? '').trim() === '') continue
+      scanned += 1
       if (!rendersARealFace(el, faces)) synthetic.push(`${el.className || el.tagName} ${firstFamily(el)} ${weightOf(el)}`)
     }
     // The ceiling is the measurement, not a guess – see the header. It is a one-way ratchet.
     console.log(`[round 35 #8] elements on Home rendering a synthesised face: ${synthetic.length}`)
     expect(synthetic.length, `elements on Home rendering a synthesised face:\n  ${synthetic.slice(0, 12).join('\n  ')}`)
       .toBeLessThanOrEqual(SYNTHETIC_ON_HOME)
-    // ...and it is not vacuously zero: the item exists because this screen is full of them.
-    expect(synthetic.length, 'the debt is real and this arm is measuring it').toBeGreaterThan(0)
+    // ⚠⚠ RE-AIMED, AND THE RATCHET TURNED OVER. This read `.toBeGreaterThan(0)` – «the debt is
+    // real and this arm is measuring it» – which was true of the 111 elements it was written
+    // against. The faces landed, so the debt is ZERO, and a ratchet at zero is the strongest
+    // form this claim can take: it can only be broken by a regression.
+    expect(synthetic.length, 'no element renders a face the app does not ship').toBe(0)
+    // ...and it is not vacuously zero because the walk found nothing: the census must have looked.
+    expect(scanned, 'the arm actually walked the screen').toBeGreaterThan(50)
     w.unmount()
   })
 })
