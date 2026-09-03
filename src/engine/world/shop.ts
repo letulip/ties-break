@@ -49,6 +49,9 @@ import { WEEKS_PER_YEAR } from '../season/calendar'
 import { formatCents } from '../../shared/money'
 import { weekLabel } from '../../shared/dates'
 import type { OwnedAsset, ShopRowView, ShopView } from '../../shared/protocol'
+// ⭐ ROUND 34 #19 – a VALUE import: the four chart windows, whose largest decides how long a series
+// `shopView` sends. Declared in the protocol so the engine and the screen read one table.
+import { SHOP_PRICE_RANGE_MONTHS } from '../../shared/protocol'
 import type { WorldState } from '../world'
 // ⚠⚠ THE PURE READS LEFT THIS FILE AT ROUND 29 #5 AND COME STRAIGHT BACK OUT OF IT. `world/assets.ts`
 // is a LEAF – catalogue and a type, nothing else – and it exists because two files that may NOT
@@ -79,6 +82,7 @@ import {
   shopCatalogue,
   shopItem,
   unitPriceCents,
+  unitPriceHistory,
   weeklyAssetUpkeepCents,
   type ShopItem,
 } from './assets'
@@ -104,6 +108,7 @@ export {
   shopCatalogue,
   shopItem,
   unitPriceCents,
+  unitPriceHistory,
   weeklyAssetUpkeepCents,
 }
 export type { ShopItem }
@@ -552,6 +557,16 @@ export function sellAsset(world: WorldState, itemId: string, amountCents?: numbe
     if (owned.units !== undefined) owned.units -= (owned.units * proceedsCents) / owned.valueCents
     owned.paidCents -= costSoldCents
     owned.valueCents -= proceedsCents
+    // ⭐⭐⭐ ROUND 34 #15 – AND WHAT LEFT IS REMEMBERED, WHICH IS THE WHOLE ITEM. His words and the
+    // measured reproduction are on `OwnedAsset.realisedGainCents`. Both halves of the part that went
+    // are kept – the gain it had made and what it had cost – so the card can say what the holding
+    // has EARNED instead of what is left on it. ⚠ These are the two figures this function ALREADY
+    // computed for the ledger sentence three lines down; nothing new is derived and nothing is
+    // rounded a second time, so the realised and unrealised halves still re-add to the cent.
+    // ⚠ `??= 0` RATHER THAN A MIGRATION: a save from before this field means «none recorded», and
+    // the first withdrawal after the update is where the record starts.
+    owned.realisedGainCents = (owned.realisedGainCents ?? 0) + deltaCents
+    owned.realisedCostCents = (owned.realisedCostCents ?? 0) + costSoldCents
   }
   world.fundsCents += proceedsCents
 
@@ -607,7 +622,21 @@ export function shopView(world: WorldState): ShopView {
     .filter((item) => !item.retired || owned.some((a) => a.id === item.id))
     .map((item) => {
     const mine = owned.find((a) => a.id === item.id)
-    const changeCents = mine ? mine.valueCents - mine.paidCents : null
+    // ⭐⭐⭐ ROUND 34 #15 – THE GAIN IS WHAT THE HOLDING HAS EARNED, NOT WHAT IS LEFT ON IT. His words
+    // and the measured reproduction are on `OwnedAsset.realisedGainCents`; `tools/r34-savings-income.ts`
+    // is the walk. The unrealised half is `valueCents - paidCents`, exactly as it always was; the
+    // realised half is what previous withdrawals took out with them, and adding the two is what makes
+    // «+$36,626 since they bought it» stop falling to «+$18,313» the week half the money is taken out.
+    // ⚠ ZERO WHEN NOTHING WAS EVER SOLD, which is every holding in the game until somebody sells part
+    // of one, and every save written before this field existed – so the figure is unchanged to the
+    // cent for a family that has not taken money out.
+    const realisedGainCents = mine?.realisedGainCents ?? 0
+    const changeCents = mine ? mine.valueCents - mine.paidCents + realisedGainCents : null
+    // ⚠⚠ AND THE DENOMINATOR CARRIES THE SAME HISTORY, or the fix would move the percentage instead
+    // of the sum. `paidCents` is the cost of what is STILL HELD (its own note says so), so a lifetime
+    // gain divided by it would read against half a cost and double on a half sale. The lifetime cost
+    // is what is still in plus what previous sales took out.
+    const lifetimeCostCents = mine ? mine.paidCents + (mine.realisedCostCents ?? 0) : 0
     // §3g – the stage under it, hoisted because `nameOptions` below has to read it too: a naming
     // control on a stage that cannot be bought yet is a control the player cannot use.
     const requirementMet = !item.requiresId || owned.some((a) => a.id === item.requiresId)
@@ -655,7 +684,7 @@ export function shopView(world: WorldState): ShopView {
       valueCents: mine ? mine.valueCents : null,
       changeCents,
       changePct:
-        mine && mine.paidCents > 0 && changeCents !== null ? Math.round((changeCents / mine.paidCents) * 100) : null,
+        mine && lifetimeCostCents > 0 && changeCents !== null ? Math.round((changeCents / lifetimeCostCents) * 100) : null,
       boughtWeek: mine ? mine.boughtWeek : null,
       // ⭐⭐⭐ ROUND 30 #14 – THE THREE NUMBERS A DECISION NEEDS, and the reason the item is not
       // finished at the engine's edge. «Зашёл, когда доля стоила 4к… или зашёл на пике при цене 7-8к
@@ -672,6 +701,14 @@ export function shopView(world: WorldState): ShopView {
       // crosses fractional, and it must: a count of shares is not money, and rounding 1.25 units to
       // 1 would hide a quarter of the family's holding. The screen shows it to two places.
       unitPriceCents: item.unitBaseCents === undefined ? null : Math.round(unitPriceCents(world.seed, world.week, item)),
+      // ⭐⭐⭐ ROUND 34 #19 – THE CHART'S POINTS. His words and the storage decision are on
+      // `ShopRowView.priceHistory` and in `unitPriceHistory`'s own header. The predicate is `volBps`
+      // – does this rung ride the market at all – so the index fund he named has a chart, the
+      // deposit's dead-flat exponential does not, and a wilder fund added tomorrow gets one because
+      // of what it IS. The longest window decides the length; the picker slices it on screen.
+      priceHistory: item.volBps
+        ? unitPriceHistory(world.seed, world.week, item, Math.max(...SHOP_PRICE_RANGE_MONTHS))
+        : null,
       unitsHeld: mine?.units ?? null,
       avgUnitPriceCents: mine ? roundOrNull(avgUnitPriceCents(mine)) : null,
       // ⚠ THE PRICE IS ON SCREEN EITHER WAY. This says whether the control is pressable, never

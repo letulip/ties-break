@@ -320,12 +320,19 @@ describe('a walked career through four college years gets four birthdays', () =>
 describe('the collision year: birthday + championship + call-up all deliver', () => {
   // ⚠ THE DATE IS CONSTRUCTED, NOT LUCKY. `COLLEGE_LEAGUE.seasonWeek` is 12 and the league fires on
   // `world.week % 52 === 12` – a CAREER-calendar week, so it collides with a birthday exactly when
-  // her date falls in that season week. Measured over ten seasons (tools run, 22.08): born 2 April
-  // her birthday's season week is 12 in eight seasons of ten – the championship's own week.
+  // her birthday is MARKED in that season week. Measured over ten seasons (tools run, 22.08): born
+  // 2 April her birthday's season week was 12 in eight seasons of ten – the championship's own week.
+  //
+  // ⚠⚠ 2 APRIL -> 25 MARCH, ROUND 34 #3. The mark moved to the week her age changes (the first
+  // Monday past her date) rather than the week the date falls in, so 2 April now marks in season
+  // week 13 and the collision this case is built on stopped existing. Re-measured the same way over
+  // ten seasons: 25 and 26 March both mark in season week 12 in TEN of ten, which is a tighter
+  // fixture than the one it replaces. Nothing about the case moved – it is the same collision, on
+  // the date that now produces it.
   it('⭐⭐⭐ the championship and the cake in ONE week: both reported, in precedence order, year intact', () => {
     expect(COLLEGE_LEAGUE.seasonWeek, 'the constructed date below assumes the league at 12').toBe(12)
     expect(NATIONAL_TEAM.seasonWeek, 'and the call-up at 14').toBe(14)
-    const { world, rng } = openedAtCollege('probe-collide', 4, 2)
+    const { world, rng } = openedAtCollege('probe-collide', 3, 25)
 
     // Press 1: the year pauses on her birthday week, which IS the championship week.
     const first = resumeFromCollege(world, rng)
@@ -380,11 +387,15 @@ describe('the collision year: birthday + championship + call-up all deliver', ()
 
   it('⭐ a boundary birthday: the year banks first, the question waits at the rest state, nothing is lost', () => {
     // ⚠ RE-AIMED BY ROUND 24 #5: the enrolment week is the academic September now (the departure,
-    // season offset 34), so a BOUNDARY birthday is a birth date beside 1 September – born 3
-    // September her birthday week IS the year's closing week for this career's first press. The
-    // pause and the bank coincide: the year is genuinely over, so it banks – and the prompt stays
-    // pending where the player is standing.
-    const { world, rng } = openedAtCollege('probe-boundary', 9, 3)
+    // season offset 34), so a BOUNDARY birthday is a birth date whose birthday week IS the year's
+    // closing week for this career's first press. The pause and the bank coincide: the year is
+    // genuinely over, so it banks – and the prompt stays pending where the player is standing.
+    //
+    // ⚠⚠ 3 SEPTEMBER -> 27 AUGUST, ROUND 34 #3, and it is the same one-week move as the collision
+    // case above: the mark is the week her age changes now, so 3 September lands at season offset 35
+    // and no longer sits on the boundary. Re-measured over twelve seasons, 27 August marks at offset
+    // 34 in TWELVE of twelve – the tightest date available, where 3 September used to give eight.
+    const { world, rng } = openedAtCollege('probe-boundary', 8, 27)
     const stops = pressToBirthday(world, rng)
     expect(stops).toContain('birthday')
     expect(world.college!.years, 'the completed year banked – a boundary birthday is not a pause').toHaveLength(1)

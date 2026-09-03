@@ -60,8 +60,12 @@ import { coachDeclineLine } from '../../composables/declineVoice'
 import type { FieldStrength } from '../../engine/season/preview'
 import { ECONOMY, recommendVacationPackage, vacationPackage } from '../../engine/economy'
 // R11-5a: the ONE tier-state rule, shared with the Home season ladder. R15-9 adds the sliding
-// feed rule (`feedContext`/`feedShows`) and the stacked-week pick (`preferredWeekEvent`) from the same module.
-import { entryBandTrack, feedContext, feedShows, pointsLockNote, preferredWeekEvent, useTierStates, type TierState } from '../../composables/tierState'
+// feed rule (`feedContext`/`feedShows`) and the stacked-week pick from the same module.
+// ⚠ ROUND 34 #14 – AND THE PICK IS NOW REACHED THROUGH `weekEventStack`, one storey down. This
+// screen asks for the whole week rather than for its representative; the stack's FIRST member is
+// `preferredWeekEvent`'s answer, unchanged, and the Calendar's markers still ask the pick directly
+// because a marker is one week's identity. Same module, same rule, two questions.
+import { entryBandTrack, eventActionable, feedContext, feedShows, pointsLockNote, useTierStates, weekEventStack, type TierState } from '../../composables/tierState'
 // ⚠ THE CALENDAR HORIZON, FROM ITS OWNER. This screen used to hold TWO independent eights: it
 // imported `tierState.HORIZON_WEEKS` for the open-tier note's copy and kept a private
 // `CALENDAR_HORIZON = 8` for the row loop, so one file could have printed one horizon and drawn
@@ -72,7 +76,7 @@ import { UPCOMING_WEEKS } from '../../engine/world/constants'
 // THE UPCOMING-EVENT CARD'S OWN PARTS, shared with the Calendar's marker card: the photograph, the
 // court's verdict for her build, the scholarship's share, and how an odds ring is NAMED. Its colour
 // is no longer one of them – that ramp is drawn on five surfaces, not two, so it lives a line below.
-import { DRAW_NOT_MADE_NOTE, firstMatchLabel, firstMatchTitle, useEventCard } from '../../composables/eventCard'
+import { DRAW_NOT_MADE_NOTE, FIELD_FIGURE_NOTE, fieldChanceLabel, fieldChanceTitle, firstMatchLabel, firstMatchTitle, useEventCard } from '../../composables/eventCard'
 // The app's one red-to-green ramp, shared with the three condition rings. `{ fraction }` names the
 // scale IN the call: this number is a 0..1 chance, not a 0..100 percentage, and the signature will
 // not let the two be confused.
@@ -451,6 +455,31 @@ function coachSays(e: UpcomingEvent): string {
   return parts.join(' ')
 }
 
+/** ⭐⭐⭐ ROUND 34 #5b – IS THIS CARD DRAWING THE **FIELD** RING? The condition the pre-draw line
+ *  under the plaque rides on, and it is the ring chain's `v-else-if` branch stated in full: the
+ *  opponent ring is not the one being drawn, AND there is a field figure to draw.
+ *
+ *  ⚠⚠ THE NEGATION IS THE WHOLE POINT AND IT IS EASY TO LOSE. The obvious spelling for the caption
+ *  is the branch's own text, `ev.preview.fieldChance !== null` – and that is TRUE on a DRAWN card
+ *  too, because the field figure does not stop existing when the draw is made; it simply stops being
+ *  the number on the ring. A caption written that way survives one state longer than the ring it
+ *  captions, and would tell a player whose draw is out that his figure is about to sharpen. That
+ *  exact mutation is one of the three `tests/component/round31-draw-reveal.test.ts` is verified
+ *  against, and it reddens.
+ *
+ *  ⚠ THE TWO RINGS KEEP THEIR OWN INLINE CONDITIONS rather than calling these, deliberately: a
+ *  `v-if` written as a null comparison is what NARROWS `preview.firstMatchChance` / `preview.
+ *  fieldChance` to `number` for the three bindings inside each ring, and routing it through a
+ *  predicate would trade that compiler-checked narrowing for a `!` on every one of them – tried,
+ *  and `vue-tsc` answered with four errors. The chain is the authority on which ring is drawn; this
+ *  pair is that chain read back, in one place, for the surface outside it that needs the answer. */
+function opponentRingShown(e: UpcomingEvent): boolean {
+  return e.preview.drawMade && e.preview.firstMatchChance !== null
+}
+function fieldRingShown(e: UpcomingEvent): boolean {
+  return !opponentRingShown(e) && e.preview.fieldChance !== null
+}
+
 /** ⭐ THE OPPONENT, NAMED, once the draw exists – «имя и ранг соперницы на 1й круг». The rank is
  *  rendered the way every other surface renders an opponent's: `#212`, or `Unranked` for a girl with
  *  no counted results, which is `rankLabel`'s own pair and not a second spelling of it. */
@@ -600,7 +629,14 @@ interface CalendarRow {
   week: number
   dates: string
   kind: 'event' | 'training' | 'off-season' | 'exam' | 'vacation' | 'practice'
+  /** THE WEEK'S LEAD CARD – `preferredWeekEvent`'s pick, unchanged since R15-9. Every row-level
+   *  question that needs ONE representative still asks this one (see `events` below). */
   event?: UpcomingEvent
+  /** ⭐⭐⭐ ROUND 34 #14 – EVERY CARD THIS WEEK OFFERS, LEAD FIRST, and it is the row's own retirement
+   *  of R15-9's one-row-per-week rule at the owner's ruling. Length 0 or 1 on all but the stacked
+   *  weeks, so most of the calendar is byte-identical; where it is longer the cards swipe. See
+   *  `weekEventStack` (composables/tierState.ts) for what earns a second card and what does not. */
+  events: UpcomingEvent[]
   vacation?: VacationBooking
   practice?: PracticeBooking
   /** an empty future week the parent may plan (vacation always, practice outside the off-season) */
@@ -640,6 +676,18 @@ const layoffNote = computed(() => {
   const s = game.snapshot
   return s?.injury ? `Injured – back ${weekLabel(s.week + s.injury.weeksRemaining)}` : ''
 })
+/** ⭐⭐⭐ ROUND 34 #14 – WHAT A WEEK OFFERS, AS A LIST, and the rule is in `composables/tierState.ts`
+ *  beside `preferredWeekEvent` rather than in this file, and his ruling is quoted verbatim on
+ *  `weekEventStack` there. It lives there for the reason the PICK does: the measurement tool that
+ *  reports what the calendar shows him reads the same function the screen draws through, so the
+ *  table and the screen cannot disagree by construction.
+ *
+ *  ⚠ THE LEAD IS STILL `preferredWeekEvent`'s. `row.event` is `stack[0]` and every row-level
+ *  question below still asks it. */
+const stackFor = (onWeek: readonly UpcomingEvent[]): UpcomingEvent[] => weekEventStack(onWeek, week.value)
+/** ...and the one enterability test, shared with the header's counter and the planner's gate. */
+const actionable = (e: UpcomingEvent): boolean => eventActionable(e, week.value)
+
 const calendarRows = computed<CalendarRow[]>(() => {
   // ⚠ R15-9: ONE ROW PER WEEK, AND THE PICK IS NOW A RULE RATHER THAN AN ACCIDENT. This used to be
   // `for (e of visibleUpcoming) byWeek.set(e.week, e)` - a Map whose LAST write wins. The season
@@ -649,14 +697,21 @@ const calendarRows = computed<CalendarRow[]>(() => {
   // the shared pick - entered first, then the highest visible rung - and the Calendar screen's
   // markers pick through the same function, so the two surfaces cannot disagree about which
   // tournament a week IS.
-  const byWeek = new Map<number, UpcomingEvent>()
+  //
+  // ⚠⚠ ROUND 34 #14 RETIRED THE "ONE ROW" HALF OF THAT SENTENCE AND KEPT ALL OF THE REST. The pick
+  // still decides which card LEADS a week and is still the only thing every row-level question
+  // asks; what changed is that a week she may play twice now offers both cards rather than one.
+  // The measurement is in docs/rounds/round-34.md item 14; the rule is `weekEventStack` in tierState.
+  const byWeek = new Map<number, UpcomingEvent[]>()
   for (const e of visibleUpcoming.value) {
     const held = byWeek.get(e.week)
-    byWeek.set(e.week, preferredWeekEvent(held ? [held, e] : [e])!)
+    if (held) held.push(e)
+    else byWeek.set(e.week, [e])
   }
   const rows: CalendarRow[] = []
   for (let w = week.value + 1; w <= week.value + UPCOMING_WEEKS; w++) {
-    const e = byWeek.get(w)
+    const stack = stackFor(byWeek.get(w) ?? [])
+    const e = stack[0]
     const vacation = vacations.value.find((v) => v.week === w)
     const practice = practices.value.find((p) => p.week === w)
     // W4-SCHOOL: the ROW's own week, so the September she leaves in draws correctly either side.
@@ -678,6 +733,7 @@ const calendarRows = computed<CalendarRow[]>(() => {
       dates: weekRange(w),
       kind,
       event: e,
+      events: stack,
       vacation,
       practice,
       // ⭐ ROUND 28 #4 – off `snapshot.adShoots`, each deal's own frozen terms as `toSnapshot` reads
@@ -690,11 +746,13 @@ const calendarRows = computed<CalendarRow[]>(() => {
       // sterilise most of the calendar and the planner has nowhere to go. An ENTERED week is
       // committed, an enterable one is a real decision she should make first, exam weeks belong
       // to school, and an already-planned week is done.
-      plannable:
-        !vacation &&
-        !practice &&
-        !exam &&
-        (!e || (!e.entered && (!e.eligible || week.value > e.deadlineWeek))),
+      // ⚠ ROUND 34 #14 – IT ASKS THE WHOLE STACK NOW, and that is a re-statement rather than a new
+      // rule: `!stack.some(actionable)` is exactly what `!e || (!e.entered && (!e.eligible ||
+      // week > e.deadlineWeek))` said about the lead, widened to the cards beside it. It can only
+      // differ where the LEAD's entry window has closed while a card under it is still open - and
+      // offering "+ Plan week" on a week that still holds a real entry decision is precisely what
+      // the paragraph above forbids.
+      plannable: !vacation && !practice && !exam && !stack.some(actionable),
       exam,
       injured: layoffCovers(w),
     })
@@ -777,15 +835,21 @@ const supplyLine = computed<{ total: number; weeks: number; parts: string[] } | 
  *  number; saying "9" and never saying "four of them are below" is.
  *
  *  ⚠ IT COUNTS THROUGH `calendarRows`, NOT THROUGH `visibleUpcoming`. Those are different sets: a
- *  stacked week collapses to one row and a booked week draws its booking instead, so the rows are
- *  what the parent can actually see and the upcoming list is what survived the rung filter. The
- *  whole point of this line is to name the second number, so it must be read off the first surface.
- *  The enterability test is `seasonSupply`'s own, so the two numbers count the same KIND of thing. */
+ *  booked week draws its booking instead of its tennis, so the rows are what the parent can
+ *  actually see and the upcoming list is what survived the rung filter. The whole point of this
+ *  line is to name the second number, so it must be read off the first surface. The enterability
+ *  test is `seasonSupply`'s own, so the two numbers count the same KIND of thing.
+ *
+ *  ⚠⚠ ROUND 34 #14 – AND IT COUNTS CARDS, NOT ROWS, which is a re-aim of that same rule rather than
+ *  a widening of it. "A stacked week collapses to one row" used to be part of the sentence above
+ *  and stopped being true: a week may now draw several cards, and a counter that still counted rows
+ *  would under-report the very surface it exists to reconcile with – the defect this line was
+ *  written to fix, pointing the other way. `r.events` is what the feed drew. */
 const supplyOnScreen = computed<number>(() => {
   let n = 0
   for (const r of calendarRows.value) {
-    if (r.kind !== 'event' || !r.event) continue
-    if (r.event.entered || (r.event.eligible && week.value <= r.event.deadlineWeek)) n++
+    if (r.kind !== 'event') continue
+    for (const e of r.events) if (actionable(e)) n++
   }
   return n
 })
@@ -1452,8 +1516,21 @@ function closeExhibition(): void {
           <!-- U0: `<Card variant="photo">` – the same hairline and corners as Home's notecards over
                a FLAT dark tone, clipped, laid out as a column so the painting can bleed in behind
                the words. The 16/16/12 inset is this card's own, so it arrives as `pad`. -->
+          <!-- ⭐⭐⭐ ROUND 34 #14 – THE WEEK'S CARDS, PLURAL. `row.events` is `weekEventStack`'s answer:
+               the lead card R15-9 always drew, and behind it every OTHER rung on this week she may
+               actually enter. Most weeks hold exactly one and this is the shipped markup wearing a
+               wrapper; a week that stacks two she can play now offers both, and `.swipeable` turns
+               the wrapper into a scroll-snapping strip so the second one is a thumb away.
+               ⚠ NO NEW WORDS, WHICH INVARIANT 4 REQUIRES AND THE OWNER DID NOT ASK TO LIFT: the
+               affordance is the next card's own edge showing past the first, not a caption. -->
+          <div
+            v-if="row.kind === 'event' && row.events.length"
+            class="week-stack"
+            :class="{ swipeable: row.events.length > 1 }"
+          >
           <Card
-            v-if="row.kind === 'event' && row.event"
+            v-for="(ev, i) in row.events"
+            :key="ev.id"
             variant="photo"
             pad="16px 16px 12px"
             class="event-card"
@@ -1462,19 +1539,19 @@ function closeExhibition(): void {
                  a vertical scrim over it so the words keep their contrast whatever the picture is
                  doing. Same picker Home uses: one tournament, one photograph. -->
             <div class="event-art">
-              <img :src="venueUrl(row.event)" alt="" />
+              <img :src="venueUrl(ev)" alt="" />
               <span class="event-art-scrim"></span>
             </div>
 
             <div class="event-card-top">
-              <h3 class="event-tier">{{ row.event.label }}</h3>
+              <h3 class="event-tier">{{ ev.label }}</h3>
               <!-- Decorative weather (owner's ruling): deterministic per event, read by nothing. -->
               <span class="event-weather">
                 <svg class="event-sun" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
                   <circle cx="12" cy="12" r="4.2"></circle>
                   <path d="M12 2.6v2.2M12 19.2v2.2M2.6 12h2.2M19.2 12h2.2M5.4 5.4l1.6 1.6M17 17l1.6 1.6M18.6 5.4L17 7M7 17l-1.6 1.6"></path>
                 </svg>
-                {{ row.event.preview.temperatureC }}&deg;
+                {{ ev.preview.temperatureC }}&deg;
               </span>
             </div>
 
@@ -1487,16 +1564,16 @@ function closeExhibition(): void {
                    out by hand in three places and all three had drifted apart; SurfaceMark is the
                    one door. Nothing about what this site renders has changed - same classes, same
                    ring, same engine title. -->
-              <SurfaceMark :surface="row.event.surface" :title="surfaceTitle(row.event.surface)" />
+              <SurfaceMark :surface="ev.surface" :title="surfaceTitle(ev.surface)" />
               <span class="event-place-sep"></span>
               <!-- Owner, 28.07: the week number belongs UP here with the dates, and without its
                    season suffix - "W8 · Feb 20-26, 2034" already says which year twice otherwise. -->
-              <span class="event-dates">{{ weekOnly(row.event.week) }} &middot; {{ row.dates }}</span>
+              <span class="event-dates">{{ weekOnly(ev.week) }} &middot; {{ row.dates }}</span>
             </div>
 
             <div class="event-money">
               <p class="event-money-label">Travel budget</p>
-              <p class="event-money-figure">{{ formatCents(row.event.travelCostCents) }}</p>
+              <p class="event-money-figure">{{ formatCents(ev.travelCostCents) }}</p>
               <!-- v21: the figure above is already NET of the scholarship, so without this line the
                    player just sees a smaller number and no reason for it. -->
               <p v-if="academyCoverPct > 0" class="event-money-sub">academy covers {{ academyCoverPct }}%</p>
@@ -1508,7 +1585,7 @@ function closeExhibition(): void {
               <!-- ⭐ #28: a slam levies no entry fee at all, and "no entry fee" is a fact where "$0" reads
                    as a number nobody filled in. `entryFeeLabel` carries the word "entry" itself, so the
                    chip prints the label bare rather than prefixing a second one. -->
-              <span class="entry-fee">{{ entryFeeLabel(row.event.entryFeeCents) }}</span>
+              <span class="entry-fee">{{ entryFeeLabel(ev.entryFeeCents) }}</span>
               <!-- R12-8b: the layoff covers this WEEK, whatever the event's own lock says – a
                    points-locked card names the band first (lock precedence), so without the chip
                    the injury never appeared on it at all. -->
@@ -1523,10 +1600,10 @@ function closeExhibition(): void {
                    reason: both are facts ABOUT the week rather than what the week IS. -->
               <span v-if="row.shoot" class="pill shoot-chip" :title="`${row.shoot.brand} shoot week – she keeps her sessions and gives up the rest`">shoot</span>
               <!-- Round-7 item 21: past tense once the window has shut. -->
-              <span class="pill" :class="{ negative: week > row.event.deadlineWeek && !row.event.entered }">
-                {{ week > row.event.deadlineWeek ? 'Closed' : 'closes' }} {{ weekLabel(row.event.deadlineWeek) }}
+              <span class="pill" :class="{ negative: week > ev.deadlineWeek && !ev.entered }">
+                {{ week > ev.deadlineWeek ? 'Closed' : 'closes' }} {{ weekLabel(ev.deadlineWeek) }}
               </span>
-              <span v-if="row.event.entered" class="pill ok">Entered</span>
+              <span v-if="ev.entered" class="pill ok">Entered</span>
               <!-- ⭐⭐ THE WILD CARD (round 21 #2b) – the half of the item the owner asked for by
                    name: the event row says the place was a wild card. The flag is the ENGINE's
                    (`UpcomingEvent.wildCard`), set only when the acceptance list would have refused
@@ -1535,7 +1612,7 @@ function closeExhibition(): void {
                    `WILD_CARD.slots` rather than a literal eight so a swept constant cannot leave a
                    sentence behind saying the old number. -->
               <span
-                v-if="row.event.wildCard"
+                v-if="ev.wildCard"
                 class="pill wildcard-chip"
                 :title="`One of the ${wildCardSlots} places this tournament holds for players of the host nation – she is outside the acceptance list.`"
               >
@@ -1548,11 +1625,11 @@ function closeExhibition(): void {
                    leave. The number is the counted result's own; the rule is the engine's 52-week
                    window, restated nowhere. -->
               <span
-                v-if="defendingPts(row.event) !== null"
+                v-if="defendingPts(ev) !== null"
                 class="pill defend-chip"
-                :title="`Her counted result from this week last year (${defendingPts(row.event)} pts) leaves the 52-week professional window as this week arrives.`"
+                :title="`Her counted result from this week last year (${defendingPts(ev)} pts) leaves the 52-week professional window as this week arrives.`"
               >
-                defending {{ defendingPts(row.event) }} pts
+                defending {{ defendingPts(ev) }} pts
               </span>
               <!-- R10-5: an entry that survived the band crossing is COMMITTED, not illegal – but it
                    must SAY so. The owner played a Local at 122 points with nothing on screen to
@@ -1562,7 +1639,7 @@ function closeExhibition(): void {
                    so the pill's job changed from explaining a stranded commitment to labelling a
                    choice she may still make – which is what «lead with the more relevant tournament»
                    needs the weaker card to look like. -->
-              <span v-if="row.event.outgrown" class="pill muted">
+              <span v-if="ev.outgrown" class="pill muted">
                 Outgrown – she is past this level
               </span>
             </div>
@@ -1578,21 +1655,51 @@ function closeExhibition(): void {
             <div class="event-coach">
               <div class="event-coach-said">
                 <p class="event-coach-label">{{ readLabel }}</p>
-                <p class="event-coach-line">{{ coachSays(row.event) }}</p>
+                <p class="event-coach-line">{{ coachSays(ev) }}</p>
+                <!-- ⭐⭐⭐ ROUND 34 #5b – WHAT THE PRE-DRAW FIGURE PROMISES, IN ONE LINE THE PLAYER
+                     CAN SEE. The owner's ruling and the measurement behind it (the number steps 9.1
+                     points on average at the draw, 36 at worst) are quoted on `FIELD_FIGURE_NOTE` in
+                     composables/eventCard.ts, where Cyrillic is allowed and in a template it is not.
+                     ⚠ VISIBLE, not an accessible name: the jump he is being warned about is visible,
+                     so the warning has to be. It sits under the plaque and beside the ring it is
+                     about, and it appears and disappears with that ring – `fieldRingShown` is the
+                     ring chain's own else-branch read back, negation included. Writing the branch's
+                     bare text here instead would leave the line on a card whose draw is out. -->
+                <p v-if="fieldRingShown(ev)" class="field-note">{{ FIELD_FIGURE_NOTE }}</p>
               </div>
-              <!-- ⭐⭐ ROUND 31 #4 – NO RING UNTIL THE DRAW IS MADE. A percentage here is her chance
-                   against ONE named girl, so before there is a girl there is no number to draw and
-                   an empty ring would be a reading of nothing. The plaque beside it says which state
-                   this card is in, in the field the owner chose for it. -->
+              <!-- ⭐⭐ ROUND 31 #4 – NO OPPONENT RING UNTIL THE DRAW IS MADE. A percentage here is her
+                   chance against ONE named girl, so before there is a girl there is no number to draw
+                   and an empty ring would be a reading of nothing. The plaque beside it says which
+                   state this card is in, in the field the owner chose for it.
+                   ⚠ RE-AIMED, NOT RETIRED, BY ROUND 34 #5: what waits for the draw is this RING's
+                   number, not the ring. See the field ring below it. -->
               <ProgressRing
-                v-if="row.event.preview.drawMade && row.event.preview.firstMatchChance !== null"
+                v-if="ev.preview.drawMade && ev.preview.firstMatchChance !== null"
                 class="chance-ring"
-                :value="row.event.preview.firstMatchChance"
-                :color="readingColor({ fraction: row.event.preview.firstMatchChance })"
-                :label="firstMatchLabel(row.event.preview)"
-                :title="firstMatchTitle(row.event.preview)"
+                :value="ev.preview.firstMatchChance"
+                :color="readingColor({ fraction: ev.preview.firstMatchChance })"
+                :label="firstMatchLabel(ev.preview)"
+                :title="firstMatchTitle(ev.preview)"
               >
-                <b>{{ Math.round(row.event.preview.firstMatchChance * 100) }}</b><i>%</i>
+                <b>{{ Math.round(ev.preview.firstMatchChance * 100) }}</b><i>%</i>
+              </ProgressRing>
+              <!-- ⭐⭐⭐ ROUND 34 #5 – AND BEFORE THE DRAW, THE FIELD'S OWN FIGURE. His words are in
+                   the script, at `fieldChanceLabel`'s own note in composables/eventCard.ts, where
+                   Cyrillic is allowed and in a template it is not: the pre-draw card carried a word
+                   and no number, and a plan is made in the two weeks when withdrawal is still free.
+                   ⚠ ITS OWN CLASS AND ITS OWN SENTENCE. Same ring, same ramp, different question -
+                   «a typical opponent at this level» rather than «this girl» - so the two numbers
+                   are never shown under one name. The plaque under it still says the draw has not
+                   been made, which is what makes the difference VISIBLE rather than only spoken. -->
+              <ProgressRing
+                v-else-if="ev.preview.fieldChance !== null"
+                class="chance-ring field-ring"
+                :value="ev.preview.fieldChance"
+                :color="readingColor({ fraction: ev.preview.fieldChance })"
+                :label="fieldChanceLabel(ev.preview)"
+                :title="fieldChanceTitle(ev.preview)"
+              >
+                <b>{{ Math.round(ev.preview.fieldChance * 100) }}</b><i>%</i>
               </ProgressRing>
             </div>
             <!-- ⚠⚠ THE "Rating 1642 vs 1801" LINE WAS HERE AND IS REMOVED BY OWNER RULING (round 21):
@@ -1608,9 +1715,9 @@ function closeExhibition(): void {
                    button should not be drawn there at all - the gate is what makes that a rule
                    rather than a hope. -->
               <button
-                v-if="row.event.entered && !row.event.cancellable"
+                v-if="ev.entered && !ev.cancellable"
                 :disabled="game.busy || frozenForCollege"
-                @click="askWithdraw(row.event)"
+                @click="askWithdraw(ev)"
               >
                 Withdraw
               </button>
@@ -1619,18 +1726,18 @@ function closeExhibition(): void {
                    the planner's own Cancel controls; the confirm carries the warning.
                    ⭐ ROUND 27 #5: `cancelEntry` is `guardNotEnded` too - it is a TOUR command about
                    an entry, not one of E2's two family-week cancels. -->
-              <button v-else-if="row.event.entered" :disabled="game.busy || frozenForCollege" @click="askCancelEntry(row.event)">
+              <button v-else-if="ev.entered" :disabled="game.busy || frozenForCollege" @click="askCancelEntry(ev)">
                 Cancel entry
               </button>
               <!-- Round-8 6b: `lock` brightens the label to soft amber (pill stays disabled). -->
-              <span v-else-if="entriesClosed(row.event)" class="pill muted lock">
-                Entries closed {{ weekLabel(row.event.deadlineWeek) }}
+              <span v-else-if="entriesClosed(ev)" class="pill muted lock">
+                Entries closed {{ weekLabel(ev.deadlineWeek) }}
               </span>
               <!-- HARD locks: ranking gate ('locked') OR a hard availability block (injured /
                    school exams / a booked family vacation / the doctor's veto under the medical
                    floor). ORDINARY fatigue is NOT here – it stays enterable (see below). -->
-              <span v-else-if="!row.event.eligible" class="pill muted lock">
-                🔒 {{ lockLabel(row.event) }}
+              <span v-else-if="!ev.eligible" class="pill muted lock">
+                🔒 {{ lockLabel(ev) }}
               </span>
               <template v-else>
                 <!-- Fatigued is a soft, warned CHOICE: the Enter stays ACTIVE and amber, with a
@@ -1646,22 +1753,22 @@ function closeExhibition(): void {
                      opens with `guardNotEnded`, so every press inside the freeze was refused; the
                      freeze note at the head of the calendar carries the engine's own reason. -->
                 <PrimaryPill
-                  :risky="row.event.cautionReason === 'fatigued'"
-                  :disabled="fundsShort(row.event) || game.busy || frozenForCollege"
-                  :aria-label="enterActionName(row.event)"
-                  @click="askEnter(row.event)"
+                  :risky="ev.cautionReason === 'fatigued'"
+                  :disabled="fundsShort(ev) || game.busy || frozenForCollege"
+                  :aria-label="enterActionName(ev)"
+                  @click="askEnter(ev)"
                 >
                   Enter
                 </PrimaryPill>
-                <span v-if="fundsShort(row.event)" class="hint" style="margin: 0">Not enough funds</span>
-                <p v-else-if="row.event.cautionReason === 'fatigued'" class="caution-note">
+                <span v-if="fundsShort(ev)" class="hint" style="margin: 0">Not enough funds</span>
+                <p v-else-if="ev.cautionReason === 'fatigued'" class="caution-note">
                   Exhausted – race anyway? Rest would be wiser.
                 </p>
                 <!-- THE HIRED COACH'S OPINION (load slice). Its own line, below the engine's caution and
                      never instead of it: `cautionReason` is the RULE (she is under the tier's floor) and
                      this is a PERSON's read, so a card can carry one, both or neither. Quiet styling on
                      purpose - it is advice, the Enter stays active, and the card must not look locked. -->
-                <p v-if="row.event.coachCaution" class="coach-note">{{ row.event.coachCaution }}</p>
+                <p v-if="ev.coachCaution" class="coach-note">{{ ev.coachCaution }}</p>
               </template>
               <!-- She cannot enter this one (locked ahead, or the list has closed), so the week is
                    still hers to plan: a friendly or a family week. The aspirational card stays –
@@ -1671,9 +1778,13 @@ function closeExhibition(): void {
                    is allowed and in a template it is not).
                    The sheet behind it books a practice or a family week, and `bookPractice` /
                    `bookVacation` are both `guardNotEnded`: refused for the whole freeze. -->
-              <button v-if="row.plannable" :disabled="game.busy || frozenForCollege" @click="openPlanner(row)">+ Plan week</button>
+              <button v-if="row.plannable && i === 0" :disabled="game.busy || frozenForCollege" @click="openPlanner(row)">+ Plan week</button>
               <!-- R12-1/14: on an exam week the button does not vanish SILENTLY – the card says why
-                   SHE cannot go (the tournament still runs; school owns her week). -->
+                   SHE cannot go (the tournament still runs; school owns her week).
+                   ⚠ ROUND 34 #14 – THIS ONE KEEPS NO `i === 0` GUARD AND THE BUTTON ABOVE DOES, which
+                   is the same split the injury and shoot chips already make: «school owns this week»
+                   is a FACT about the week and is true of every card on it, while «+ Plan week» is an
+                   ACTION and two of them would be one control drawn twice. -->
               <span v-else-if="examReasonShows(row)" class="pill muted lock">Exams this week</span>
               <!-- ⚠ THE ALLOWANCE, BOTTOM RIGHT, ON EVERY W CARD (round-16 #7, the owner). LAST in
                    the row and pushed over by `margin-left: auto`, so it is the last thing read on the
@@ -1682,23 +1793,24 @@ function closeExhibition(): void {
                    ("Entries closed" + "Exams this week" + the counter). Quiet, and deliberately not a
                    lock: it is a budget, and the card it sits on is usually one she may still enter. -->
               <span
-                v-if="showsProEntries(row.event)"
+                v-if="showsProEntries(ev)"
                 class="pill muted pro-entries"
                 :title="`The tour's age rule caps how many professional tournaments she may enter in the year she is this age – counted from birthday to birthday. This is where she stands against it.`"
               >
-                {{ proEntriesFor(row.event) }}
+                {{ proEntriesFor(ev) }}
               </span>
               <!-- ...and the junior budget, in the same slot on the junior cards (P2). Disjoint
                    families, so exactly one of the two can ever be on a card. -->
               <span
-                v-else-if="showsJuniorEntries(row.event)"
+                v-else-if="showsJuniorEntries(ev)"
                 class="pill muted junior-entries"
                 :title="`The junior tour caps how many international tournaments she may enter in the year she is this age – counted from birthday to birthday. This is where she stands against it.`"
               >
-                {{ juniorEntriesFor(row.event) }}
+                {{ juniorEntriesFor(ev) }}
               </span>
             </div>
           </Card>
+          </div>
 
           <!-- A PLANNED week: the booking reads back with its package/match name + a Cancel. When
                the week also carried a (locked) tournament, the row NAMES it, so a planned week
@@ -2026,6 +2138,44 @@ function closeExhibition(): void {
   display: flex;
   flex-direction: column;
   gap: 12px;
+}
+
+/* ⭐⭐⭐ ROUND 34 #14 – ONE WEEK'S CARDS. A plain wrapper while the week holds one, which is most of
+   the calendar: no display, no width, no gap, so a single-card week is byte-identical to the shipped
+   layout and every measurement taken of it still holds. */
+.week-stack {
+  min-width: 0;
+}
+
+/* ...and a scroll-snapping strip the moment a week offers her a choice. The owner asked for exactly
+   this - «чисто интерфейсная правка на свайп карточек» - and the affordance is DELIBERATELY not a
+   word: the second card's own edge shows past the first (88% + a 12px gap leaves ~30px of it on a
+   375px phone), which is what tells a thumb there is something to the right. Invariant 4 does not
+   allow this screen to invent a caption, and it does not need one. */
+.week-stack.swipeable {
+  display: flex;
+  flex-direction: row;
+  gap: 12px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+  /* The strip is the affordance; a scrollbar over a photograph is not. */
+  scrollbar-width: none;
+}
+
+.week-stack.swipeable::-webkit-scrollbar {
+  display: none;
+}
+
+/* ⚠ THE WIDTH IS DECLARED RATHER THAN LEFT TO `flex-basis`, and that is a testability decision as
+   much as a layout one: `tests/component/fits.ts` reads the room a control has by walking
+   `getComputedStyle` up the ancestors, and a basis it cannot read is a card it would score as
+   full-width - which is exactly the "measured by what it says, not by what the screen can hold"
+   failure round-20 #3 is about. 88% keeps every card narrower than the phone by construction. */
+.week-stack.swipeable > .event-card {
+  flex: 0 0 auto;
+  width: 88%;
+  scroll-snap-align: start;
 }
 
 /* The export's list gutter is 14px of the screen; ours already has 16px from #app, so the cards
@@ -2523,6 +2673,18 @@ section.bare .event-cards {
   font-weight: 500;
   line-height: 1.35;
   color: #eef3f6;
+  text-wrap: pretty;
+}
+
+/* ⭐⭐⭐ ROUND 34 #5b – the pre-draw figure's own caption. Quieter than the plaque above it, because
+   it is a note ABOUT the ring rather than another thing the coach said: same column, one step down
+   in size and weight, the label's own ink. It wraps like the plaque and adds no fixed height, so the
+   card grows by one line and only while the draw is pending. */
+.field-note {
+  margin: 5px 0 0;
+  font-size: 12px;
+  line-height: 1.35;
+  color: var(--ink-soft);
   text-wrap: pretty;
 }
 

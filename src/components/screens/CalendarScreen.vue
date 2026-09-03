@@ -86,7 +86,7 @@ import { formatCents, entryFeeLabel } from '../../shared/money'
 // D4 (docs/specs/e2e-coverage.md §12): the ONE accessible name for an Enter, shared with Season.
 import { enterActionName } from '../../composables/eventName'
 // The upcoming-event card's shared parts, owned once and drawn by the Season feed too.
-import { DRAW_NOT_MADE_NOTE, firstMatchLabel, firstMatchTitle, useEventCard } from '../../composables/eventCard'
+import { DRAW_NOT_MADE_NOTE, fieldChanceLabel, fieldChanceTitle, firstMatchLabel, firstMatchTitle, useEventCard } from '../../composables/eventCard'
 // The app's one red-to-green ramp, shared with the three condition rings. `{ fraction }` names the
 // scale IN the call: this number is a 0..1 chance, not a 0..100 percentage, and the signature will
 // not let the two be confused.
@@ -575,6 +575,21 @@ const showGo = computed(() => !game.snapshot?.pending)
             :title="firstMatchTitle(marker.preview)"
           >
             <b>{{ Math.round(marker.preview.firstMatchChance * 100) }}</b><i>%</i>
+          </ProgressRing>
+          <!-- ⭐⭐ ROUND 34 #5 – ...AND THE FIELD'S FIGURE BEFORE IT, for the same reason the three
+               states above are shared: this marker IS the season card again, and a card that
+               carried a pre-draw number on one surface and not on the other would be the
+               two-surfaces-one-fact drift this block was written to stop. Same composable, same
+               sentence, same ramp. -->
+          <ProgressRing
+            v-else-if="marker.preview.fieldChance !== null"
+            class="cal-card-ring field-ring"
+            :value="marker.preview.fieldChance"
+            :color="readingColor({ fraction: marker.preview.fieldChance })"
+            :label="fieldChanceLabel(marker.preview)"
+            :title="fieldChanceTitle(marker.preview)"
+          >
+            <b>{{ Math.round(marker.preview.fieldChance * 100) }}</b><i>%</i>
           </ProgressRing>
           <p v-if="marker.preview.drawMade" class="cal-card-odds-note">First round vs {{ marker.preview.opponentName }}</p>
           <p v-else class="cal-card-odds-note">{{ DRAW_NOT_MADE_NOTE }}</p>

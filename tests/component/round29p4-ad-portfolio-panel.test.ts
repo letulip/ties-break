@@ -101,7 +101,8 @@ describe('the portfolio shelf on the Bills page – categories filled/empty, the
     const drinks = rows.find((r) => r.text().includes('Drinks'))!
     expect(drinks.classes()).toContain('is-open')
     expect(drinks.text()).toContain('Open – nobody signed')
-    expect(drinks.text()).toContain(formatCents(AD.categories.drinks.feeCentsByBand[0]!))
+    // ⚠ index 1 since round 34: a band was prepended at ≤400, and a career at #150 stands at ≤200
+    expect(drinks.text()).toContain(formatCents(AD.categories.drinks.feeCentsByBand[1]!))
 
     // ...and a CLOSED slot names its gate instead of a cheque: fragrance is the icon-band category
     // and this career stands at #150.

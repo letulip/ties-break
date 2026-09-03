@@ -26,10 +26,10 @@ import { addEvent } from './ledger'
 import { ageAtWeek, kidAgeYears } from './age'
 import { KID_ID } from './constants'
 import { captureMilestone } from './milestones'
-import { layoffCovering } from './medical'
+import { layoffCovering, layoffCoversWeek } from './medical'
 import { eventById, refundPractice, vacationForWeek } from './bookings'
 import { gearRestWeeksOf } from './kit'
-import { masseurRungOf, masseurWorksThisWeek } from './masseur'
+import { masseurRehabWeeksAhead, masseurRungOf, masseurWorksThisWeek } from './masseur'
 import { releaseEntry } from './entries'
 import { retireKnock } from './knockHistory'
 import type { WorldState } from '../world'
@@ -581,8 +581,9 @@ export function onsetInjury(
   // layoff is a RANGE of weeks, so the question is "will she still be out IN e.week?".
   //
   // TWO conditions, both required:
-  //   inside the layoff – `layoffCovering`, the shared R10-17 window (exclusive of the return
-  //                       week). At or after her return she is FIT, so the entry stays booked.
+  //   inside the layoff – the shared R10-17 window (exclusive of the return week). At or after her
+  //                       return she is FIT, so the entry stays booked. ⚠ ROUND 34 #21 moved which
+  //                       return week that is – see below.
   //   list still open   – `world.week <= e.deadlineWeek`. Past the deadline the fee is committed
   //                       and `withdrawEvent` refuses anyway, so an in-layoff entry with a closed
   //                       list keeps today's behaviour: still entered, fee forfeited, and the
@@ -591,9 +592,35 @@ export function onsetInjury(
   // Consequence worth naming: lists close two weeks out, so a still-refundable entry always sits at
   // `world.week + 2` or later – which means a 1- or 2-week layoff now cancels NOTHING, and only a
   // 3+ week absence can reach an open list at all.
+  // ⭐⭐⭐ ROUND 34 #21 – AND THE MASSEUR'S WEEKS COME OFF BEFORE THE DESK DECIDES, NOT AFTER. The
+  // owner: «С массажистом она выздоровела быстрее после травмы, а с турнира была снята тем не менее
+  // и теперь на турнир не зайти, надо учитывать наличие массажиста при автоматической отмене
+  // событий.»
+  //
+  // ⚠⚠ THE BUG WAS THE ORDER AND NOT THE RULE. `weeksOut` above has already been shortened by the
+  // PHYSIO (`physioRecoveryFactor`), so one of the two people the family pays to shorten a layoff was
+  // inside this decision and the other was not: the masseur's cadence is paid out week by week in
+  // `rollInjury`, which does not run until the tick AFTER this sweep. So the desk cancelled her
+  // tournaments against a return date only a girl with no masseur would ever have had. Measured at
+  // onset – the date this loop read against the date she actually keeps – the gap runs 1-3 weeks at
+  // twice a week, 1-4 at every other day and 1-6 at daily (a 12-week layoff read as twelve and ran
+  // six), and every week of it is an entry pulled for a week she is fit to play.
+  //
+  // ⚠ SO THE FIX IS THE RECOVERY DATE, NOT AN EXEMPTION AT THIS LINE. The question below is the same
+  // R10-17 question it has always been – "will she still be out IN e.week?" – asked of the same
+  // shared window arithmetic (`layoffCoversWeek`, which `layoffCovering` is the world-shaped form
+  // of). What changed is the number handed to it: `masseurRehabWeeksAhead` replays `rollInjury`'s own
+  // cadence forward, so there is no second spelling of the rehab rule and no `if (hired)` branch
+  // deciding whether an entry survives.
+  //
+  // ⚠ AND THE COUNTDOWN ON SCREEN IS DELIBERATELY NOT REWRITTEN. `world.injury.weeksRemaining` stays
+  // the clinic's dealt number and his weeks keep arriving one receipt at a time – that is the whole
+  // legible difference between him and the physio (world/masseur.ts), and folding the forecast into
+  // the field would delete it. The forecast governs the one decision that cannot be undone later.
+  const rehabAhead = masseurRehabWeeksAhead(world)
   for (const id of [...world.entries]) {
     const e = eventById(world, id)
-    if (e && layoffCovering(world, e.week) !== null && world.week <= e.deadlineWeek) {
+    if (e && layoffCoversWeek(world.week, weeksOut - rehabAhead, e.week) && world.week <= e.deadlineWeek) {
       // ⚠ AND IT SAYS SO ON THE PAPER (fix/outgrown-entry, 05.08). This is the DESK acting, not the
       // parent - so the letter it raises must not come back reading "Your withdrawal is confirmed".
       // See the note on `releaseEntry`: the reason is the difference between a record and a lie.
@@ -603,8 +630,15 @@ export function onsetInjury(
 
   // Season planner (spec §4): an injury cancels the practice weeks it swallows – the court
   // rental comes back in full ("no fee forfeit beyond the court rental"). Vacations are left
-  // alone: a family week away is still rest, injured or not. Same window as the entries above,
-  // and now literally the same predicate instead of a hand-rolled `backAtWeek` copy of it.
+  // alone: a family week away is still rest, injured or not.
+  //
+  // ⚠ AND THIS ONE KEEPS THE CLINIC'S WINDOW, WHICH ROUND 34 #21 LEFT ALONE ON PURPOSE. It is the
+  // same window the entries used until this round and the asymmetry is the STAKES, not an oversight:
+  // the owner's complaint is «на турнир не зайти» – an entry the desk pulled cannot be re-made once
+  // the list closes two weeks out, so an over-cautious sweep costs him the tournament. A practice is
+  // re-bookable any week at the same price and its rental comes back in full, so the conservative
+  // read costs a click. Nothing was measured that says a forecast belongs here, and he did not ask
+  // for one: «надо учитывать наличие массажиста при автоматической отмене СОБЫТИЙ».
   for (const p of [...world.practices]) {
     if (p.week >= world.week && layoffCovering(world, p.week) !== null) refundPractice(world, p, 'Injured')
   }

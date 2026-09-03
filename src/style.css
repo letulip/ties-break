@@ -1409,12 +1409,41 @@ button.primary.risky {
   background: var(--accent);
   color: var(--on-lime);
   font-size: 14.5px;
-  font-weight: 800;
   letter-spacing: -0.01em;
   box-shadow: 0 8px 24px var(--accent-glow);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+/* ⭐⭐ ROUND 34 #10 – THE LABEL GOES TO REGULAR, AND IT NEEDS ITS OWN SELECTOR TO GET THERE.
+   The owner: «Мне не нравятся жирные буквы на главной жёлтой кнопке, сделай обычные пожалуйста».
+
+   ⚠⚠ THE `font-weight: 800` THAT STOOD IN THE RULE ABOVE HAD NEVER APPLIED, and that is why it is
+   gone rather than edited. The element is `<button class="primary next-week-btn">`, and
+   `button.primary` (a type + a class, specificity 0-1-1) outranks `.next-week-btn` (0-1-0) – so the
+   weight the player has actually been reading is `button.primary`'s 600, measured through the real
+   cascade on a mounted shell, not the 800 the sheet appeared to promise. A declaration that loses
+   its own cascade is worse than no declaration: it tells the next reader a number the screen never
+   used. Leaving it in place and adding a second one would have kept that lie in the file.
+
+   ⚠ SO THE NEW WEIGHT IS DECLARED AT 0-1-1 AND LATER IN THE SHEET, which is the smallest selector
+   that can win without touching `button.primary` itself – twelve files' worth of affirmative
+   buttons hang off that rule and he named exactly one button.
+
+   400 IS `normal`, the literal answer to «обычные», and it is also the only weight on this pill
+   that the browser does not have to fake: Manrope is self-hosted at 400 and 500 only
+   (public/fonts/), so 600 and 800 both resolve to the 500 face with the renderer emboldening it –
+   which is the mechanism behind the second half of his message, the letters looking doubled. There
+   is one button and one label (`tests/component/round34-home-type.test.ts` counts them); what was
+   drawn twice was the STROKE, by the synthetic bold, and a real face ends it.
+
+   ⚠ `PrimaryPill`'s `.tb-pill--cta` KEEPS ITS 800 on purpose. Its note calls itself "verbatim from
+   `.next-week-btn`", and after this round that is true of everything except the weight: it is a
+   different button on TournamentFlow, EndingScreen and the wizard, it never renders on Home, and
+   the owner named the home CTA. */
+button.next-week-btn {
+  font-weight: 400;
 }
 
 .next-week-btn:hover:not(:disabled) {

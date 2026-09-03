@@ -73,7 +73,7 @@ import { ECONOMY } from '../src/engine/economy'
 import { rngFromSeed } from '../src/engine/rng'
 import { WEEKS_PER_YEAR } from '../src/engine/season/calendar'
 import type { TierId } from '../src/engine/season/types'
-import type { AdOfferTerms } from '../src/shared/protocol'
+import type { AdCategory, AdOfferTerms } from '../src/shared/protocol'
 
 const MERCH = 'merch-brand'
 const BASE_X = shopItem(MERCH)!.earningsMultipleX!
@@ -133,7 +133,14 @@ function loseFinals(world: WorldState, tier: TierId, weeks: number[]): void {
 }
 
 /** a SIGNED advertising letter at one band of the gradient, with its shoot weeks already lived. The
- *  cheque is the catalogue's own cell, which is what `adBandOfTerms` reads the band back off. */
+ *  cheque is the catalogue's own cell, which is what `adBandOfTerms` reads the band back off.
+ *
+ *  ⚠⚠ RE-AIMED FROM WATCHES TO CLOTHING BY ROUND 34 #7/#11/#12/#13 (03.09), AND NOT WEAKENED. The
+ *  owner's approved foot of the ladder closed WATCHES at the new ≤400 band (`null`) and set its
+ *  ≤200 and ≤100 cells to the same $200,000, so watches can no longer stand for «one category
+ *  across every band» and its cheque no longer identifies its band. CLOTHING is open at all five
+ *  bands and its five cells are all distinct, which is exactly the property this fixture needs; the
+ *  arms below are unchanged in what they claim. */
 function signDeal(world: WorldState, id: string, band: number, shootWeeks: number[]): void {
   world.offers ??= []
   world.offers.push({
@@ -144,8 +151,8 @@ function signDeal(world: WorldState, id: string, band: number, shootWeeks: numbe
     state: 'signed',
     terms: {
       brand: `House ${id}`,
-      category: 'watches',
-      cashCents: ECONOMY.advertising.categories.watches.feeCentsByBand[band]!,
+      category: 'clothing',
+      cashCents: ECONOMY.advertising.categories.clothing.feeCentsByBand[band]!,
       termWeeks: world.week,
       shootCount: 2,
       shootWeeks,
@@ -209,6 +216,9 @@ describe('round 32 #4 §2 – ⭐⭐⭐ THE TOP OF THE SHELF DOES NOT MOVE', () 
         finalsLost: 0,
         roomSize: 0,
         winRate: 0,
+        // ⚠ ROUND 34 #17 ADDED THIS SIGNAL. These are hypothetical careers holding no live shelf, so
+        // the contract term is 0 and every pre-wave claim below still reads the pre-wave arithmetic.
+        contractFame: 0,
         ...over,
       }
       expect(brandGrossWorthCents(s, BASE_X), `${label}: the pre-wave worth, to the cent`).toBe(flatWorth(s))
@@ -251,6 +261,7 @@ describe('round 32 #4 §2 – ⭐⭐⭐ THE TOP OF THE SHELF DOES NOT MOVE', () 
     expect(ECONOMY.business.merch.strength.retention, '...and a real share of the stock').toBeGreaterThan(0)
     const atCap: BrandSignals = {
       fame: CAP, strength: CAP, proSeasons: 14, topSeasons: 8, finalsLost: 19, roomSize: 4_743, winRate: 0.7,
+      contractFame: 0, // ⚠ round 34 #17: no live shelf, so the reach at the cap is the pre-wave one
     }
     expect(brandReachOf(atCap), 'at the cap the reach IS the cap').toBe(CAP)
     expect(brandWeeklyGrossCents(atCap), '...so the INCOME at the top is the pre-wave one, to the cent')
@@ -357,8 +368,8 @@ describe('round 32 #4 §3 – ⭐⭐ THE ASSET HOLDS WHILE THE INCOME BREATHES',
     // different halves – one at her peak, one living off the stock – price identically.
     const R = ECONOMY.business.merch.strength.retention
     const record = { proSeasons: 8, topSeasons: 3, finalsLost: 9, roomSize: 4_000, winRate: 0.7 }
-    const loud: BrandSignals = { fame: 10, strength: 10, ...record }
-    const remembered: BrandSignals = { fame: 5, strength: 10 / R, ...record }
+    const loud: BrandSignals = { fame: 10, strength: 10, contractFame: 0, ...record }
+    const remembered: BrandSignals = { fame: 5, strength: 10 / R, contractFame: 0, ...record }
     expect(brandReachOf(loud), 'the two reaches are the same number').toBeCloseTo(brandReachOf(remembered), 9)
     expect(brandWeeklyGrossCents(remembered), 'so the income is the same').toBe(brandWeeklyGrossCents(loud))
     expect(brandMultipleX(remembered, BASE_X), '...and so is the multiple').toBeCloseTo(brandMultipleX(loud, BASE_X), 9)
@@ -516,13 +527,43 @@ describe('round 32 #5 §6 – ⭐⭐ a delivered shoot ADDS to the floor, by the
   })
 
   it('⭐⭐ the band is read off the CHEQUE the letter states, so no save needs a new field', () => {
-    const cells = ECONOMY.advertising.categories.watches.feeCentsByBand
+    // ⚠⚠ RE-AIMED FROM WATCHES TO CLOTHING BY ROUND 34 (03.09) AND THE CLAIM IS UNCHANGED: every
+    // cell of a category whose cheques are distinct still round-trips to its own band, exactly.
+    // Watches cannot carry this arm any more – the owner's approved table pays $200,000 at BOTH the
+    // ≤200 and the ≤100 band – and clothing can, because its five cells are five different numbers.
+    const cells = ECONOMY.advertising.categories.clothing.feeCentsByBand
     for (let b = 0; b < ECONOMY.advertising.bands.length; b++) {
       const cell = cells[b]
       if (cell == null) continue
-      expect(adBandOfTerms({ brand: 'x', category: 'watches', cashCents: cell, termWeeks: 52, shootCount: 1 }))
+      expect(adBandOfTerms({ brand: 'x', category: 'clothing', cashCents: cell, termWeeks: 52, shootCount: 1 }))
         .toBe(b)
     }
+    // ⚠⚠ ...AND THE PLACES WHERE THE CHEQUE NO LONGER IDENTIFIES THE BAND ARE PINNED BY NAME RATHER
+    // THAN LEFT TO BE DISCOVERED. Round 34's approved cells repeat a figure twice in two categories,
+    // so those two letters read back one rung ABOVE the band they were written at – the strongest
+    // band whose cell they exactly are, which is `adBandOfTerms`' shipped rule unchanged. Listing
+    // them here means a later edit that creates a THIRD collision reddens this arm.
+    const collisions: [Exclude<AdCategory, 'capstone'>, number, number][] = [
+      ['watches', 1, 2], // $200,000 at ≤200 and at ≤100
+      ['drinks', 0, 1], //  $80,000 at ≤400 and at ≤200
+    ]
+    for (const [category, writtenAt, readsAs] of collisions) {
+      const cell = ECONOMY.advertising.categories[category].feeCentsByBand[writtenAt]!
+      expect(adBandOfTerms({ brand: 'x', category, cashCents: cell, termWeeks: 52, shootCount: 1 }), `${category}@${writtenAt}`)
+        .toBe(readsAs)
+    }
+    const seen = new Set<string>()
+    for (const category of Object.keys(ECONOMY.advertising.categories) as Exclude<AdCategory, 'capstone'>[]) {
+      const ladder = ECONOMY.advertising.categories[category].feeCentsByBand
+      for (let b = 0; b < ladder.length; b++) {
+        const cell = ladder[b]
+        if (cell == null) continue
+        const read = adBandOfTerms({ brand: 'x', category, cashCents: cell, termWeeks: 52, shootCount: 1 })
+        if (read !== b) seen.add(`${category}@${b}`)
+      }
+    }
+    expect([...seen].sort(), 'exactly these cells are ambiguous, and no others')
+      .toEqual(['drinks@0', 'watches@1'])
     // ⚠ A LEGACY LETTER – no category at all, which `adCategoryOf` reads as the watch rung – lands on
     // the strongest band its cheque can actually pay for, and never throws.
     expect(adBandOfTerms({ brand: 'x', cashCents: 1_00, termWeeks: 52, shootCount: 1 }), 'under every cell is band 0')
@@ -719,6 +760,172 @@ describe('round 32 §9 – ⭐⭐⭐ NOTHING WRITES THE PIN BUT THE MIGRATION', 
   })
 })
 
+// =================================================================================================
+// ROUND 34 #17 (03.09) – ⭐⭐⭐ THE BRAND FOLLOWS THE CONTRACTS
+// =================================================================================================
+//
+// THE OWNER, on his own week-569 career: «89 место доход опустился с 200 до 65 долларов в неделю с
+// бизнеса… Она доходит в Шлеме до QF и вообще стабильно в 100 держится, плюс есть мощные рекламные
+// контракты… мне кажется нам надо улучшить формулу рассчета доходности и стоимости ее бренда».
+//
+// The incoherence, measured on that save: the sponsor market priced her at $550,000 a year of live
+// paper while the brand model said her whole brand was worth $76,822 and paid $244 a week. Approved:
+// +1 point of REACH per $50,000 of live annual contract value, the whole term capped at +30.
+
+/** a SIGNED advertising letter that is LIVE at `week` – `activeAdDeals`' own predicate needs the
+ *  window, which `signDeal` above deliberately does not set (its letters are read for their SHOOTS,
+ *  not for their term). */
+function liveDeal(world: WorldState, id: string, cashCents: number, fromWeek: number, untilWeek: number): void {
+  world.offers ??= []
+  world.offers.push({
+    id,
+    kind: 'ad',
+    week: fromWeek,
+    deadlineWeek: fromWeek + 4,
+    state: 'signed',
+    decidedWeek: fromWeek,
+    fromWeek,
+    untilWeek,
+    terms: { brand: `House ${id}`, category: 'cars', cashCents, termWeeks: untilWeek - fromWeek + 1, shootCount: 1 } as AdOfferTerms,
+  })
+}
+
+describe('round 34 #17 – ⭐⭐⭐ the brand follows the contracts', () => {
+  const C = ECONOMY.business.merch.contracts
+
+  it('⭐⭐ +1 of reach per $50,000 of LIVE annual contract value, and the cap is the point', () => {
+    const W = 6 * WEEKS_PER_YEAR
+    const bare = parkAt(shopper('r34-17-bare'), W)
+    expect(brandSignalsOf(bare, W).contractFame, 'no paper, no term').toBe(0)
+
+    const modest = parkAt(shopper('r34-17-modest'), W)
+    liveDeal(modest, 'a', 600_000_00, W - 20, W + 20)
+    expect(brandSignalsOf(modest, W).contractFame, '$600,000 is twelve points').toBeCloseTo(12, 10)
+    expect(C.famePerCents, 'and the rate is the owner`s own $50,000').toBe(50_000_00)
+
+    // ⭐⭐ THE CAP IS NOT DROPPABLE AND IS ASSERTED AS ITSELF: contracts lift the floor under an
+    // unglamorous professional, but an icon is still made by titles and not by her agent. A full
+    // top-10 shelf is $9.2M a year and saturates this term nearly twenty times over.
+    const icon = parkAt(shopper('r34-17-icon'), W)
+    liveDeal(icon, 'b', 9_200_000_00, W - 20, W + 20)
+    expect(brandSignalsOf(icon, W).contractFame, 'a whole top-10 shelf is held at the cap').toBe(C.fameCap)
+    expect(C.fameCap).toBe(30)
+
+    // ⚠ LIVE, NOT LIFETIME – a term that has run out stops counting the week it runs out, so the
+    // signal FALLS with the shelf exactly as the file's other current-form terms do.
+    const lapsed = parkAt(shopper('r34-17-lapsed'), W)
+    liveDeal(lapsed, 'c', 600_000_00, W - 60, W - 1)
+    expect(brandSignalsOf(lapsed, W).contractFame, 'dead paper is not a shelf').toBe(0)
+    expect(brandSignalsOf(lapsed, W - 2).contractFame, '...and it counted while it ran').toBeCloseTo(12, 10)
+  })
+
+  it('⚠⚠ it is a SIGNAL and never a cash line – one contract is not paid twice', () => {
+    // Her sponsor money already arrives through the deals themselves (`bankSponsorCheque` at the
+    // signature, `payAdAnniversaries` each year). The claim here is that the brand gains NOTHING
+    // except reach from them: two careers standing at the same reach, one through fame and one
+    // through paper, earn the same to the cent and are worth the same to the cent.
+    const W = 6 * WEEKS_PER_YEAR
+    const paper = parkAt(shopper('r34-17-paper'), W)
+    liveDeal(paper, 'a', 500_000_00, W - 20, W + 20)
+    const s = brandSignalsOf(paper, W)
+    expect(s.contractFame, 'ten points of it are paper').toBeCloseTo(10, 10)
+    const famous: BrandSignals = { ...s, fame: s.fame + 10, strength: s.strength + 10, contractFame: 0 }
+    expect(brandReachOf(famous), 'the two reaches are the same number').toBeCloseTo(brandReachOf(s), 9)
+    expect(brandWeeklyGrossCents(famous), 'so the income is the same, to the cent').toBe(brandWeeklyGrossCents(s))
+    expect(brandGrossWorthCents(famous, BASE_X), '...and so is the worth').toBe(brandGrossWorthCents(s, BASE_X))
+  })
+
+  it('⚠ the contracts lift the REACH and never the brand`s own stock, and the top cannot move', () => {
+    const W = 6 * WEEKS_PER_YEAR
+    const w = parkAt(shopper('r34-17-stock'), W)
+    winTitles(w, 'wta500', [W - 10])
+    const before = brandSignalsOf(w, W)
+    liveDeal(w, 'a', 1_000_000_00, W - 20, W + 20)
+    const after = brandSignalsOf(w, W)
+    // ⚠ OUTSIDE THE `max`, DELIBERATELY: `strength` is «the best she has ever been» and a contract is
+    // current form. A shelf must not be able to raise a career's high-water mark.
+    expect(after.strength, 'the slow stock does not hear about the paper').toBe(before.strength)
+    expect(after.fame, '...and neither does fame itself').toBe(before.fame)
+    expect(brandReachOf(after) - brandReachOf(before), 'only the reach moves').toBeCloseTo(20, 9)
+
+    // ⚠⚠ AND THE TOP OF THE SHELF ROUND 32 #3 FIXED BY CONSTRUCTION CANNOT MOVE, which is what the
+    // clamp is for: at the fame cap the income and the multiple are the pre-wave ones whatever the
+    // shelf says. Without the clamp an unclamped +30 would lift the peak income 69%.
+    const atCap: BrandSignals = {
+      fame: CAP, strength: CAP, proSeasons: 14, topSeasons: 8, finalsLost: 19, roomSize: 4_743, winRate: 0.7,
+      contractFame: 0,
+    }
+    const loaded: BrandSignals = { ...atCap, contractFame: C.fameCap }
+    expect(brandReachOf(loaded), 'the reach is still the cap').toBe(CAP)
+    expect(brandWeeklyGrossCents(loaded), 'the income at the top is untouched').toBe(brandWeeklyGrossCents(atCap))
+    expect(brandMultipleX(loaded, BASE_X), '...and so is the multiple').toBe(brandMultipleX(atCap, BASE_X))
+  })
+
+  it('⭐⭐⭐ his approved acceptance rows, reproduced – and the multiple stays inside 6-9x', () => {
+    // ⚠⚠ NOT HIS SAVE. His `~/Downloads` exports are read-only and nothing derived from one enters
+    // the repo; these are the SHAPES of the two rows he approved, built out of this file's own
+    // fixtures. The save itself was read once on the command line (`tools/r34-brand-foot.ts`) and the
+    // figures are recorded in docs/rounds/round-34.md under item 17.
+    const at = (ownFame: number, dealCents: number): BrandSignals => ({
+      fame: ownFame,
+      strength: ownFame,
+      proSeasons: 8,
+      topSeasons: 0,
+      finalsLost: 8,
+      roomSize: 1_176,
+      winRate: 0.63,
+      contractFame: Math.min(C.fameCap, dealCents / C.famePerCents),
+    })
+
+    // ROW 1 – «top-100, $600k of deals, own fame 6»: approved fame 6 -> 18.
+    const row1 = at(6, 600_000_00)
+    expect(brandReachOf(row1), 'fame 6 and $600,000 of paper is a reach of 18').toBe(18)
+
+    // ⚠⚠ AND THE MONEY COLUMN OF THAT ROW IS RECORDED AS UNREACHABLE RATHER THAN QUIETLY MISSED. The
+    // approved row says $1,350 a week; the shipped income curve at reach 18 is
+    // `perFamePointCents x 18² / famePivot` = $972, times a crowd tilt CLAMPED to [0.9, 1.15]. So the
+    // most any career can earn at that reach is $1,118 – 17% under the approved figure, and no
+    // signal can close it because every other term reaches the income through that clamp. Reported
+    // to the owner in docs/rounds/round-34.md item 17; NOT adjusted here.
+    const M = ECONOMY.business.merch
+    const ceilingAt18 = Math.round(((M.perFamePointCents * 18 * 18) / M.famePivot) * M.crowd.maxMult)
+    expect(ceilingAt18, 'the most the curve can pay at reach 18 – $1,117.80 in cents').toBe(111_780)
+    expect(ceilingAt18, '...which is under the approved $1,350').toBeLessThan(1_350_00)
+
+    // ROW 2 – «his shape, $1M of deals, own fame 8.9»: approved 8.9 -> 28.9, ~$2,600 a week,
+    // ~$135,000 a year, ~$1,130,000 of worth, 8.4x. Measured against the shipped curve to within 1.5%.
+    const row2 = at(8.925, 1_000_000_00)
+    expect(brandReachOf(row2), 'fame 8.9 and $1M of paper is a reach of 28.9').toBeCloseTo(28.925, 6)
+    const weekly = brandWeeklyGrossCents(row2)
+    const worth = brandGrossWorthCents(row2, BASE_X)
+    const mult = brandMultipleX(row2, BASE_X)
+    expect(weekly / 2_600_00, 'the weekly lands within 2% of his approved $2,600').toBeCloseTo(1, 1)
+    expect(worth / 1_130_000_00, 'and the worth within 2% of his approved $1,130,000').toBeCloseTo(1, 1)
+    expect(Math.abs(mult / 8.4 - 1), 'the multiple lands within 1% of his approved 8.4x').toBeLessThan(0.01)
+    // ⚠⚠ THE CORRIDOR ROUND 32 REPAIRED THE FREE FLOAT TO, asserted rather than assumed: a change
+    // that puts the worth outside 6-9x of a year's earnings has reintroduced the 123x defect.
+    const ratio = worth / (weekly * WEEKS_PER_YEAR)
+    expect(ratio, 'worth over a year of income is the multiple, to the cent').toBeCloseTo(mult, 2)
+    expect(ratio).toBeGreaterThanOrEqual(6)
+    expect(ratio).toBeLessThanOrEqual(9)
+  })
+})
+
+// ⚠⚠ ROUND 34 #17 MUTATIONS – each applied ALONE to the shipped source and reverted. Measured, not
+// predicted.
+//  R34-1 `fame.finalFloorShare` 0.4 -> 0 (finals stop paying)
+//        -> 3 RED across round29p5-business, round30-brand-value and round32-brand-multiple.
+//  R34-2 the `if (tier === 'slam') continue` guard deleted from `fameFloorOf` (a Slam final paid twice)
+//        -> 1 RED, ALONE: «a LOST Slam final counts its own step – and every other lost final counts
+//           a SHARE of its tier». That arm is the only thing standing between the two rules.
+//  R34-3 `brandReachOf` reverted to `Math.min(cap, built)` (the contract term dropped)
+//        -> 3 RED, all three round-34 arms in this file. ⚠ Before those arms existed it ran GREEN,
+//           which is why they were written: F4 shipped with no guard until the mutation said so.
+//  R34-4 `academy.reputationCapPerSeason` 0.5 -> 0 (the career cap flattened)
+//        -> 2 RED in round29p5-business, including the payback-window arm.
+//  R34-5 the drinks ≤400 cell $80,000 -> $8,000 (one approved cell moved back)
+//        -> 3 RED in round29p2-ladder-monotone, the band-totals arm among them.
+//
 // ⚠⚠ MUTATION LOG – each applied ALONE to the shipped source and reverted, on this branch.
 //
 // ⭐ THE REVISION'S OWN FOUR ARE 13-16; 1-12 are the first pass's and were re-run against the revised

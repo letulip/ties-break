@@ -12,6 +12,9 @@
 //
 //   * TITLES, dated – `trophiesByTier[tier].titles` (weeks, append-only, schema v31);
 //   * LOST SLAM FINALS, dated – the same ledger's `finals` at 'slam';
+//   * LOST FINALS AT EVERY OTHER PROFESSIONAL TIER, dated – the same ledger's `finals`, worth
+//     `ECONOMY.fame.finalFloorShare` of the tier's own title step (round 34 #17, 03.09: sixteen
+//     dated runner-up plates on the owner's save had been read by nothing at all);
 //   * TOP-10 SEASONS – `seasonHistory[].byTrack.wta.endRank` ≤ 10, per finished season;
 //   * SHOOT WEEKS ALREADY LIVED – `AdOfferTerms.shootWeeks` on SIGNED letters (absolute career
 //     weeks, frozen at signature – the spec's §2: «a fold over world.offers, no new bookkeeping»).
@@ -82,6 +85,13 @@ export function fameFloorOf(world: WorldState, week: number): number {
     const shelf = world.trophiesByTier?.[tier]
     if (!shelf) continue
     for (const w of shelf.titles) floor += step * decayAt(week - w)
+    // ⭐⭐⭐ ROUND 34 #17 (03.09) – AND THE PLATE SHE LOST, AT EVERY PROFESSIONAL TIER, worth
+    // `finalFloorShare` of the tier's own title step and decayed on the SAME title clock. The owner
+    // approved 0.4; the constant's header carries what it ends. ⚠ 'slam' IS EXCLUDED BY NAME, not
+    // by arithmetic: `slamFinalFloor` already pays that plate three lines down, and counting it here
+    // as well is the one double-count this rule can commit.
+    if (tier === 'slam') continue
+    for (const w of shelf.finals) floor += step * F.finalFloorShare * decayAt(week - w)
   }
   // the one runner-up plate the world remembers – `finals` means she LOST the final (the trophy
   // ledger's own contract), so a Slam title never counts twice.
@@ -205,6 +215,10 @@ export function fameEventWeeks(world: WorldState): number[] {
   const seen = new Set<number>()
   for (const tier of Object.keys(ECONOMY.fame.titleFloor) as TierId[]) {
     for (const w of world.trophiesByTier?.[tier]?.titles ?? []) seen.add(w)
+    // ⚠ ROUND 34 #17 – THE LOST FINALS ARE FAME DATES NOW TOO, and this is the coupling the header
+    // above names: a source of fame added to `fameFloorOf` has to be added here, or `brandStrengthAt`
+    // walks a list that no longer contains every week fame can rise on and under-reads the peak.
+    for (const w of world.trophiesByTier?.[tier]?.finals ?? []) seen.add(w)
   }
   for (const w of world.trophiesByTier?.slam?.finals ?? []) seen.add(w)
   for (const row of world.seasonHistory ?? []) {

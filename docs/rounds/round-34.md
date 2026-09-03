@@ -1,0 +1,2345 @@
+---
+type: round
+status: current
+area: rounds
+canonical: false
+last-reviewed: 2026-09-02
+---
+
+# Round 34 – a full career on the round-33 build, 21 items (02.09.2026)
+
+Status: `[x]` shipped · `[~]` answered, nothing to build · `[>]` in flight · `[ ]` open ·
+`[?]` waiting on him · `[!]` REOPENED
+
+⚠ His save came with it: `tennis-sim_vera-8oem_w569.tsave` (Vera, week 569). He asked for a full
+read of her performance against our benchmarks – filed as item 22 below, since it is work he asked
+for and would otherwise have no line.
+
+---
+
+- [x] **1. «в начале 2го сезона все очки в региональном уровне у меня обнулились, мне снова
+  закрылся регионарный и национальный чемпионаты, хотя мы до них добрались. И кажется, что оно
+  обнуляется каждой год. Или это так надо? … совершенно непонятно как выйти в j уровень»**
+  – **measure first, then answer or build.** The ranking window is a rolling 52 weeks, so a season
+  boundary CAN look like a reset; whether the tier gates re-close is the actual question. ⚠ His last
+  sentence is the real complaint: the route to the J tour is unreadable.
+  – `[x]` **MEASURED, ANSWERED, AND THE LAST SENTENCE SHIPPED.** Three questions, three different
+  answers, and the premise in the triage line above is wrong: the domestic table is **not** a rolling
+  52 weeks.
+
+  **THE MEASUREMENT** (`tools/r34-domestic-reset.ts`, 25k middle career, seed 0, four seasons walked
+  through the real engine; only the boundary weeks and the weeks a gate MOVED are printed):
+
+  | week | season week | national pts | Regional | National | J30 | J30 chip |
+  | --- | --- | --- | --- | --- | --- | --- |
+  | 25 | 25 | 68 | open | shut | shut | `68 / 250 national pts` |
+  | **51** | **51** | **106** | **open** | shut | shut | `106 / 250 national pts` |
+  | **52** | **0** | **0** | **SHUT** | shut | shut | `0 / 250 national pts` |
+  | 66 | 14 | 150 | open | open | shut | `150 / 250 national pts` |
+  | 77 | 25 | 251 | open | open | **open** | `Open – on the calendar` |
+  | **103** | **51** | **251** | **open** | **open** | open | – |
+  | **104** | **0** | **0** | **SHUT** | **SHUT** | **open** | – |
+  | 155 | 51 | 0 | shut | shut | open | – |
+  | 207 | 51 | 0 | shut | shut | open | – |
+
+  1. **DO THE POINTS ZERO AT A SEASON BOUNDARY? YES – and it is HIS OWN RULING, not a bug.**
+     `WINDOW_BY_TRACK.domestic` is `'seasonToDate'` (round 23 #12/#13: shown leave-it /
+     season-to-date / widen-the-window, he chose season-to-date – «да, это мелочь, а будет хорошо,
+     мне кажется. Тем более, что первый сезон у нас показательный»). The two hypotheses are told
+     apart by folding the same ledger twice at week 52: a rolling-52 window still carries **all** of
+     season one there, the shipped rule carries only what season TWO has paid. So it is a RESET, not
+     an ageing-out, and «оно обнуляется каждый год» is exactly right. ⚠ Only the domestic table: the
+     ITF and WTA tables are `'rolling52'` and genuinely do carry over.
+  2. **DO THE GATES RE-CLOSE? YES, MEASURED – w52 Regional, w104 Regional AND National.**
+     `tierFloorOpen` reads that season-to-date total LIVE, so a rung she cleared in September is shut
+     again in January. ⚠⚠ **This is the consequence nobody priced when the race was approved, and it
+     is the half of his report that is NOT covered by the round-23 ruling.** ⭐ The engine already
+     owns the mechanism that would fix it: the two on-ramps LATCH (`onRampCleared`), which is why in
+     the table above J30 is still open at w207 on a book of 0 while Regional – cleared at w25 – is
+     shut. **Not changed here: latching a cleared domestic floor is a balance decision and his to
+     make.** It is a ~1-line change (`tierFloorOpen`'s domestic arm ORed with a never-pruned
+     `bestFinishByTier` read – no schema bump), and it is pinned as a red-on-change guard so it
+     cannot move in silence.
+  3. **«СОВЕРШЕННО НЕПОНЯТНО КАК ВЫЙТИ В J УРОВЕНЬ» – SHIPPED, and it is presentational.** The route
+     is J30's floor of 250 national points, and the screen never said those 250 have to be earned
+     **inside one season**. The table above is the cost of that silence: 106 at week 51 is not 106 of
+     the way to 250, and she did not cross until week 77 of the NEXT season. `tierOpensWhen`'s points
+     clause now names the window it is counted over – «age 13 and 250 national pts **in one
+     season**» – and the lock's long form ends «…, and the table starts again each season.»
+     ⚠ **DERIVED FROM `WINDOW_BY_TRACK`, never written down**: that constant is a plain object
+     precisely so `tools/domestic-season-to-date.ts` can patch it for an A/B arm, and a hardcoded
+     clause would lie through such a run and through a re-ruling. W15's 120 ITF points are untouched.
+     ⚠ **NEW COPY, and he should see the exact strings** – it is the one thing invariant 4 asks be
+     named. Two clauses, both additive, on the surface whose own header says it exists so a player
+     can read «what do I need to earn to get there» off one screen.
+
+  Evidence: `tests/round34-ladder-plaques.test.ts` (the fold-it-twice arm that separates reset from
+  ageing-out, the two measured gate closures, the J-latch asymmetry, the derivation) and the MOUNTED
+  `tests/component/round34-j-route.test.ts` – the real Tour guide rendered over a real career, the
+  `Opens at` cell read back for J30/Regional/National, and the two arms that fail if the clause
+  spreads to a table that does not reset. ⚠ Mutation-verified: dropping the clause reddens 2 unit +
+  2 mounted arms; hardcoding it instead of deriving reddens the derivation arm; deleting the
+  tooltip's half reddens its own.
+
+- [x] **2. «Тренер на главном экране (почему-то, давай на карточку тренера вернём лучше) написал 14
+  летней девочке Close to her ceiling … звучит как приговор … не рановато ли? … давай подумаем в
+  какой конкретно момент должно это появляться»** – three asks in one, split:
+  - **2a** the read moved to Home and he wants it back on the coach card – **build**
+    – `[x]` **SHIPPED.** `HomeScreen.vue` no longer renders it: the `roomBand` computed, its
+    `<p class="coach-room">` and the CSS rule that dressed it are gone. Nothing was invented to fill
+    the gap – his coach's round-7 quote and the signature are untouched, the card keeps its
+    `card-short` box and is simply one line shorter, which is the shape it had before round 24. The
+    read still renders exactly once, unchanged, above the coach list on the Coach Market
+    (`.cm-room-band`). Evidence: `tests/component/round24-coach-card.test.ts` – the mounted file that
+    used to pin the line ON Home – re-aimed to assert both halves in one test: absent on Home at six
+    headrooms and under each of the four labels, present on the market card with its argument under
+    it. ⚠ Mutation-verified: putting the line back on Home reddens two arms, and the non-vacuity arm
+    reddens if the read is deleted rather than moved. ⚠ One collateral catch, recorded because it
+    nearly shipped silently: naming the pin's filename in a comment above the card put a second
+    `coach-card` string in the file and moved `tests/coach-market.test.ts`'s region marker up 900
+    lines. `tests/helpers/source.ts` caught it; the note is worded around the marker now.
+  - **2b** «Close to her ceiling» at 14 reads as a verdict – **measure**: what does the band
+    actually say at 14, and on his save?
+    – `[x]` **SHIPPED to §A1.** `realisedShare` (new in `world/coachMarket.ts`, one definition read
+    by both `coachRoomNote` and `coachRoomBandOf`) divides `(skills − born)` by `(potential − born)`
+    with `born = startingSkills(seed, profile)`, and `coachRoomBandIndex`'s edges are the approved
+    **0.40 / 0.75 / 0.90**. `ROOM_BANDS` is untouched – four labels, same words, invariant 4 – and
+    the round-23 measurement table over that function is kept with a ⚠ note saying the MEASURE moved
+    under it and that the table describes the superseded quantity. Evidence:
+    `tests/round34-ceiling-read.test.ts` – the inversion in two real careers (born-high-and-stalled
+    reads a LOWER band than born-low-and-grown, where the old ratio ordered them the other way), a
+    girl at her birth build reads «Huge potential» however well she was born (the old measure had her
+    over 0.90 before her first session), the three edges pinned from both sides, monotone over the
+    whole range, and the four labels asserted byte-identical. ⚠ Mutation-verified: reverting to
+    `level / (level + room)` reddens 6 tests across 3 files; moving one edge by 0.05 reddens the edge
+    pin; renaming one label reddens the invariant-4 pin.
+    ⚠ **§A1 names `handoverRoomBand` as the model "in the same file" and it is not on this branch** –
+    it lives on `prologue/wave` (`git show prologue/wave:src/engine/world/coachMarket.ts`). Its
+    approach was copied from there rather than reinvented, and the note over `realisedShare` says so.
+    ⚠⚠ **MEASURED CONSEQUENCE HE SHOULD SEE, and it contradicts nothing in §A1 but was not in it.**
+    On the new scale the TOP band is a late, elite reading. Walked through the real engine to 29 (780
+    weeks, the whole growth arc before `declineFactor`): «At her ceiling» is reached on 6 of 8 elite
+    careers, at weeks 745–776, and on NONE of eight budget / middle / high ones, which peak at 0.855
+    / 0.879 / 0.895 realised. A middle-rung career now reads «Huge potential» → «Still room to grow»
+    (week 81) → «Close to her ceiling» (week 296) and never hears the fourth line. That is 0.90 doing
+    exactly what he approved it to do; it is filed here because the fourth band is now about as rare
+    as the first one was dead before round 23, and if he wants it audible on an ordinary career the
+    **edge** is the knob, not the measure.
+  - **2c** when should it appear at all – **ask**
+    – `[~]` **ANSWERED BY THE THRESHOLDS; nothing built.** On the approved ladder the verdict arrives
+    after twenty instead of at fourteen. Measured on the career `tests/round23-coach-copy.test.ts`
+    walks: under the OLD measure it heard «Close to her ceiling» at week 78 (age 15.5) and «At her
+    ceiling» at week 158 (age 17.0) – his complaint reproduced to the week – and on the new one it
+    reads «Still room to grow» at 16 and «Close to her ceiling» at 24, the same pair §A1 predicted for
+    Vera. The share it reads at each birthday is written into that test.
+  ⚠ He then withdrew part of it himself: «А вот и At her ceiling в 16 лет случилось – видимо моя
+  претензия снимается». ⭐ But he still asked for the save to be read: «Но сейв всё-таки посмотри».
+
+- [x] **3. «Увидел попап про 15 летите … а затем на home перешёл, а там написано 14 лет.
+  Подозреваю, что это из-за дат: ДР 15го, а начало недели 14го, но раз мы показали попап – то уже
+  можно и возраст менять, либо сам попап в таких случаях в конце недели показать»** – **build**.
+  The birthday popup and the age line disagree within one week. ⭐ He named both fixes; pick one and
+  say why. ⚠ He also noted the popup says «1 день вместе» and wondered whether that age should carry
+  more of a request – filed as **3b**, an **ask**.
+  – `[x]` **SHIPPED – I TOOK HIS SECOND FIX («попап в конце недели»). HIS DIAGNOSIS WAS EXACT.**
+
+  A career week is Monday..Sunday. Home prints `Snapshot.ageYears`, which is `kidAgeYears` read at
+  the week's **Monday** – the right instant for a clock that governs a whole week, and the 09.08
+  ruling's own consequence. The popup announced `birthdayTurning`, which fired in the week
+  **containing her date**. Birthday on the 15th, week opening on the 14th: the popup is one week
+  ahead of the age line, exactly as he says.
+
+  **WHY NOT FIX 1 («раз мы показали попап – то уже можно и возраст менять»).** It means bumping
+  `Snapshot.ageYears` inside the birthday week – and that field is not a caption. `composables/tierState.ts`
+  gates the ladder cards on it, `weekGrid` picks her age band from it, `kidPrizeShareBps` prices her
+  share off it and `portraitStage` chooses the art. Bumping it opens a rung on screen a week before
+  `kidAgeAt` opens it in the engine (a dead click, then a refusal), and giving Home a *display* age
+  of its own is a second clock on the wire in so many words. ⚠ **The ONE-CLOCK RULING allows exactly
+  one, so the fix had to move the announcement rather than the age.** It does: `kidAgeExact` is
+  untouched and **no age-keyed gate moves at all**.
+
+  **THE CHANGE IS ONE PREDICATE** (`birthdayYearIn`, `engine/world/age.ts`). The carry clause that
+  was already there for the dates the calendar cannot place – "the first career week whose Monday is
+  on or after her date" – is now the **whole** rule instead of the exception. That makes the
+  predicate literally «`kidAgeYears(w) > kidAgeYears(w-1)`»: the clock's own tick. The popup, the
+  feed line, the Home confetti and `diary.facts.birthdayAge` all move together, because all four
+  read this one function.
+
+  **MEASURED**, all 365 birth dates × 14 seasons:
+
+  | | before | after |
+  | --- | --- | --- |
+  | announcements printing an age Home did not agree with | **4365 of 5106** | **0 of 5099** |
+  | birth dates on which that can happen | **365 of 365** | **0** |
+  | weeks the clock ticked and nothing was said | 4359 | **0** |
+  | weeks something was said and the clock had not ticked | 4359 | **0** |
+
+  **WHAT HE WILL SEE MOVE.** For a birthday on any day but a Monday (6 dates in 7) the popup, the
+  «She is fifteen this week» line, the confetti and the gift week all land **one week later** than
+  before – the week Home's number changes. ⚠ **No copy changed:** the sentences are byte-identical
+  and the week they are true of is now the week they are shown in.
+
+  ⭐ **TWO THINGS FELL OUT, BOTH GOOD.** (a) The dates **7–12 January** used to announce «turning 14»
+  at **week 0** while Home printed **13** – his own complaint, in the first week of the game – and are
+  marked in week 1 now, where the two agree. (b) The whole LOST-BIRTHDAY class is retired rather than
+  patched a fourth time: a clock cannot lose a tick, so 31 December and 1–6 January are ordinary
+  dates here. Swept over 20 seasons × 365 dates: **no age doubled, none skipped.** ⚠ The one cost is
+  one date: a girl born **6 January** has her fourteenth inside week 0, which has no previous week to
+  have ticked from, so she opens the game at 14 (`kidAgeYears(0) = 14`, honest) and her first marked
+  birthday is her fifteenth. That puts her alongside 1–5 January, which have always been that way.
+
+  **EVIDENCE.** `tests/birthday-announce.test.ts` gains the property the item is about – *the popup
+  and the Home age line can never disagree, all 365 dates, fourteen seasons* – **mutation-verified**:
+  restoring the old date-week rule reddens it with all 4359 disagreements. ⚠ **Five arms in that file
+  were RE-AIMED, none deleted or loosened**, each with a ⚠ note at the change site saying round 34
+  moved it and why. The one worth naming: *«the announcement may lead the printed age by ONE WEEK,
+  and never by more»* shipped as the LICENCE for this gap – «pinned so a reader who meets the
+  one-week disagreement on screen finds it measured here rather than filing it twice». He met it and
+  filed it. That arm is now **tightened to zero**, not relaxed.
+
+  **THE BLAST RADIUS, MEASURED RATHER THAN GUESSED.** The full suite named 33 red assertions in six
+  files, all of them mine (the control – my own change reverted in this tree – is green). None was a
+  behaviour regression; every one was a FIXTURE built on a birthday landing in a particular week:
+
+  | file | what it holds | re-aim |
+  | --- | --- | --- |
+  | `blocking-overlay` | the fork and the cake in one week | the collision date 5 Sep -> **1 Sep**, measured as the only date left whose nineteenth is marked in its own `schoolEndWeek` |
+  | `college-birthday` | the championship + the cake; the boundary birthday | 2 Apr -> **25 Mar** (10 of 10 seasons), 3 Sep -> **27 Aug** (12 of 12) |
+  | `r2-13-advance-span` | the birthday refusal, and birthday + reveal | week 21 -> **22**; the collision case gets its own birth date, because the default profile's birthday now lands in the school-exam fortnight where `enterEvent` refuses |
+  | `round26-span-gate` | the offer rule is not a refusal | the exception is NAMED now (`engineCanMove === (birthdayPrompt === null)`) rather than asserted as `true` |
+  | `coach-travel-edge` x2 | the frozen careers | **re-freeze #14** – see below |
+
+  ⭐⭐ **RE-FREEZE #14, AND THE PER-KEY DIFF IS THE NARROWEST THIS FILE HAS RECORDED.**
+  `tools/frozen-key-diff.ts` on all three frozen careers, control = my own change reverted in this
+  same tree: **5/0 moved 0 keys of 72; 8/0 and 0/1 moved 1 of 72, and the key is `events`.** Read
+  rather than trusted – dumping every event of all three careers as JSON and diffing the arms gives
+  **24 lines**, all of them one fact: «She is sixteen this week.» moves from week 127 to week 128,
+  and the monotone event `id` counter renumbers by one behind it (the 120k career's whole diff is one
+  match row, `"id":215` -> `"id":214`, every character of the score, opponent, surface, skills and
+  condition identical). `rngMain` is byte-identical on all three, `birthdays` too, and the frozen
+  MAIN capture (41550 / e6b0c709) is untouched. Only `eliteGrinder` and `selfTravelling` are re-cut;
+  every `middleGrinder` constant still reproduces. ⚠ **This is the wave's ONE re-freeze** – the other
+  bundles were green on these hashes when the control was taken. A later bundle that moves a frozen
+  career must re-cut once with a fresh diff rather than stack a second one on top of this.
+
+  ⚠ **ONE CONSEQUENCE HE MAY MEET, AND IT IS NOT A DEFECT.** The default profile is born 15 June, and
+  the Monday that marks her birthday now falls inside the school-exam fortnight (season weeks 23-24).
+  The birthday, the popup and the gift all happen exactly as before; what she cannot do that week is
+  enter a tournament – which was already true of the exam block whatever week her cake was in.
+
+- [?] **3b. «1 день вместе» – should the ask carry more of a request?** – **ask, not built.**
+  ⚠ **OPEN FOR HIM, deliberately undesigned.** `DAY_TOGETHER` is the one option offered at every
+  birthday and never marked, and its whole ruling (spec §0.3) is that «nothing» must be a real
+  answer: «she does not want a thing, she wants you». Its ask already names the unit three times
+  over («One day – not a week, not a trip») because round-18 #10b found the day and the week at home
+  reading as the same row. So the question is genuinely his: **should the day, at some ages, read as
+  something she is ASKING for rather than as the absence of a present – and if so at which ages?**
+  Anything I wrote here would be new copy he did not ask for (invariant 4), and the row's own rule
+  is that no option may be marked as the right one, so «make it more of a request» is a design
+  decision about where that line sits. Nothing built, nothing reworded.
+
+- [x] **4. «На плашке next tournament, family budget для названия турнира и денег используй
+  пожалуйста шрифт Sora»** – **build**, copy/type only.
+  – `[x]` **SHIPPED – AND ONE OF THE TWO WAS ALREADY DONE, WHICH IS WHY A THIRD ELEMENT MOVED.**
+
+  **MEASURED FIRST**, through the real cascade on a mounted 375x667 Home (`getComputedStyle`, never
+  a grep for the string «Sora» in a stylesheet – the two disagree, see below):
+
+  | what he sees | before | after |
+  | --- | --- | --- |
+  | `.note-title` – the tournament NAME on the next-tournament plate | Manrope | **Sora** |
+  | `.note-figure` – `Travel budget / $117`, same plate | Manrope | **Sora** |
+  | `.budget-total` – the balance on Family budget | **already Sora** (since 29.07) | Sora, now pinned |
+
+  ⭐ **THE FINDING, AND IT DECIDED THE BUILD.** The money on Family budget has carried
+  `--font-heading` since the U0 port on 29.07, so under the narrow reading of his sentence half of
+  this item was a no-op on the day it was filed. The only money on either of the two plates he named
+  that was NOT Sora is the travel figure under the tournament – so that is the one that moved, and
+  his sentence stops being half a no-op. ⚠ **If he meant only the family-budget total, deleting one
+  line at `.note-figure` in `HomeScreen.vue` puts it back** – the note sits on the rule.
+
+  ⚠ REUSED, NOT REINVENTED. All three ask for `var(--font-heading)` – the token declared once in
+  `src/style.css` beside the single `@font-face`. No second loader and no open-coded stack, and that
+  is asserted as an EQUALITY against the token's own computed value, so an element carrying its own
+  copy of the family would fail the arm.
+
+  ⚠ TYPE ONLY (invariant 4). No size, weight, leading, column or word moved: the shipped numbers –
+  15.5px/700/118px/1.25, 23px/800, 19px/800 – are pinned beside the families, because a font swap
+  that quietly re-sizes a caption is exactly the restyle he did not ask for. ⚠ And nothing here
+  claims a caption overflows: happy-dom has no layout engine, a per-character width is a model and
+  not a measurement, and he has twice said nothing overflows on those captions.
+
+  Evidence: `tests/component/round34-home-type.test.ts` – 7 mounted arms, plus a round-20 #3 arm
+  that walks each caption's room from the viewport through its ancestors. ⚠ Mutation-verified one
+  rule at a time: taking Sora off `.note-title` reddens 3 arms, off `.note-figure` 2, off
+  `.budget-total` 2.
+
+- [x] **5. «с нашим текущим "процент прохода 1го круга" на карточках турниров планировать всё равно
+  не получается, потому что за неделю нельзя сняться с турнира бесплатно – это бессмысленная фича…
+  Какие у нас ещё здесь варианты? … надо хотя бы что-то примерное писать до жеребьевки»** – **ask**,
+  and it reopens round 31 #4. ⚠ The band was supposed to be the pre-draw information; he is saying it
+  is not enough to plan on. Round 31 #3 already measured the band as degenerate on junior and domestic
+  cards – that finding and this complaint are the same defect.
+  – `[x]` **BUILT, AND IT IS A NEW READ OFF A NUMBER THE ENGINE WAS ALREADY COMPUTING AND THROWING
+  AWAY.** His ruling: «за 2 недели до турнира можно сняться бесплатно, но ты не знаешь шансов, а за
+  неделю ты знаешь шансы, но сняться бесплатно нельзя. В итоге у тебя нет планирования… может общую
+  цифру шанса на проход первого тура делать, но чтобы она всё-таки реальность отражала и не скакала
+  от недели к неделе?»
+
+  **WHAT SHIPPED.** `strengthOf` has folded her MEAN CHANCE against the rung's expected field since
+  round 31 #3 and then discarded the number to keep three words. `fieldChance(field, mine)` is that
+  fold, exported and named; `strengthOf` bands its answer; `EventPreview.fieldChance` carries it. The
+  three surfaces that already draw an odds ring – the Season card, the Calendar marker and the
+  NextTournament panel – draw it BEFORE the draw, from the one composable that owns ring copy. **No
+  model, no constant, no new draw**: `tierExpectedField` and `ratingOf` were already being called on
+  every card, and are now read once into two locals so the band and the number are provably the same
+  reading.
+
+  ⚠⚠ **BOTH FIGURES SHIP, AND THEY ARE NOT UNDER ONE LABEL.** Once the draw exists the ring goes back
+  to the sharper opponent-based `firstMatchChance` – removing it would reverse his own round-31 #4
+  ruling («прямо на карточке турнира писать имя и ранг соперницы… возле этого круга с шансом»). What
+  keeps that honest is that the two rings answer DIFFERENT questions in their own words:
+  `fieldChanceLabel` says «Her chance to win a first match at this level: N percent» and ends on his
+  own existing sentence «The draw has not been made yet.»; `firstMatchLabel` says «Her chance to win
+  the first match: N percent, against <name>». The pre-draw ring also wears its own class
+  (`.field-ring`). ⭐ And nothing new is said ON SCREEN: the plaque beside the ring already prints
+  «The draw has not been made yet.» before and «First round: <name>, #<rank>.» after, which is the
+  owner's own copy telling the player which state the card is in. The two new strings are the ring's
+  ACCESSIBLE NAME and its hover title – the only route a screen reader or a mouse has to a graphic –
+  and they are the one thing here invariant 4 asks be named, so: **the exact new strings are
+  `Her chance to win a first match at this level: N percent. The draw has not been made yet.` and
+  `A typical first round at this level`.**
+
+  **THE PROPERTY, MEASURED** (`tools/r34-field-chance.ts` – 575 tournaments across nine careers, each
+  followed FIVE weeks while still pre-draw; both arms out of ONE `upcomingEvents` pass per week, the
+  control recovered by moving the tracked event's week past `DRAW_LEAD_WEEKS` in a copy of
+  `world.season`, which flips `drawMade` and provably nothing else):
+
+  | | moved at all | mean span | worst | girls named |
+  | --- | --- | --- | --- | --- |
+  | **the new FIELD figure** | 267 of 575 | **0.48 pts** | **3 pts** | – |
+  | the OPPONENT figure it replaces | **574 of 575** | **18.43 pts** | **65 pts** | 2041 for 575 tournaments |
+
+  One card, verbatim from the tool (`--weeks 6`, so seven readings rather than the table's five):
+  `W35 w48  FIELD 72% 72% 72% 73% 73% 73% 73%  (span 1)   OPPONENT 75% 81% 67% 62% 75% 81% 67%
+  (span 19, 6 names)`. That is his «80% → 54%» reproduced in kind on our own careers, beside the
+  number that replaces it – same card, same weeks, one line apart.
+
+  ⚠ **THE ONE STEP HE WILL MEET, MEASURED SO IT IS NOT A SURPRISE.** At week − 1 the ring stops
+  answering «a typical opponent at this level» and starts answering «this girl», and the number on
+  the card moves **9.1 points on average, 36 at worst**. That is news – the draw happening is the
+  most informative event in the card's life – and it is why the two are not shown under one label:
+  the plaque under the ring says «The draw has not been made yet.» right up to the week the step
+  happens, and «First round: <name>, #<rank>.» from the step onwards.
+
+  ⚠ **IT IS NOT FROZEN, AND THAT IS THE HONEST NUMBER RATHER THAN THE FLATTERING ONE.** Two things
+  still move it by a point and both are news: the world's own slow drift (the conveyor retiring and
+  replacing professionals) and HER OWN GROWTH – at thirteen she genuinely outgrows a rung by about 5
+  rating points over the weeks a card sits on screen. A figure that walks one point in the direction
+  she is walking is not «скачет от недели к неделе».
+
+  ⚠⚠ **ROUND 31 #3'S DEGENERACY WAS RE-CHECKED BEFORE ANYTHING WAS BUILT ON THE BAND, AND IT DOES NOT
+  STILL HOLD.** That round fixed it – the band stopped reading a standings table whose Spearman
+  against actual rating is 0.11 – and this is the confirmation, per rung, over every observation
+  (min / mean / max, and how many DISTINCT integer percents the rung printed):
+
+  | rung | reads | distinct values |
+  | --- | --- | --- |
+  | Local | 61 / **70.2** / 81% | 19 |
+  | Regional | 58 / **68.1** / 78% | 18 |
+  | National | 51 / **61.4** / 72% | 11 |
+  | J30 | 48 / **59.6** / 72% | 24 |
+  | J60 | 43 / **55.2** / 68% | 23 |
+  | J300 | 36 / **47.6** / 58% | 14 |
+  | W15 / W35 / W50 | 82.0 / 77.4 / 70.9% | 14 / 16 / 18 |
+  | W75 / W100 / WT125 | 64.6 / 55.4 / 49.9% | 23 / 15 / 14 |
+  | WT250 / WT500 / WT1000 | 41.5 / 36.2 / 40.9% | 22 / 23 / 20 |
+  | Slam | 39 / **48.1** / 59% | 15 |
+
+  The junior and domestic rungs separate cleanly (J300 47.6 < J60 55.2 < J30 59.6 < National 61.4 <
+  Regional 68.1 < Local 70.2) and none of them is a constant. ⚠ **One reading he should see anyway**,
+  because it is a number where before there was only a word: **W15 reads 82% – HIGHER than a Local
+  Open's 70%.** That is the shipped band's own ordering surfaced, not something this item introduced
+  (`tierExpectedField` filters by `isTierAgeOpen`, so W15's universe is the sixteen-and-overs while a
+  Local's is everybody, and the W15 card has said «She is among the strongest entered» all along).
+  Nothing was tuned to hide it.
+
+  **Evidence.** `tests/round34-field-chance.test.ts` (5 arms): the same tournament read week after
+  week before its draw prints the same number (bound 3 pts, the measured worst); the CONTROL – the
+  opponent figure on those same cards in those same weeks swings, at least one by 20+ points while
+  its field figure holds, and the mean swing is 5x larger card for card; it DOES move when the
+  field's class changes (a 300-point stronger field moves it 0.3, monotone in her level too, and an
+  empty rung reads null rather than an invented 50%); the figure and the WORD beside it are one
+  reading at the shipped cuts; and the degeneracy sweep above. ⚠ Mutation-verified with three
+  mutations and three different verdicts – the figure folded over `drawnField`'s entrants (i.e. asked
+  about this week's REDRAW) reddens 2, the BAND folded over a different population from the figure
+  reddens 1, `tierExpectedField`'s window widened to the whole of-age universe reddens 1. ⚠ That
+  middle one was GREEN against the first draft, which read the rounded percent with a tolerance: the
+  two populations landed in the same bucket on every card. It bites against `preview.fieldChance`
+  itself with no slack, and the test says so in place.
+
+  **Guard tests re-aimed – none deleted, none loosened, both with a ⚠ note in place:**
+  * `tests/component/round31-draw-reveal.test.ts` – its pre-draw arm forbade THREE things (a name, a
+    ring, a percentage) and two of those were the same claim twice, since the opponent ring was the
+    only percentage a card could draw. Re-aimed to the property that actually matters now: a pre-draw
+    card names nobody, and the ring it DOES draw is provably the field one (`.field-ring`, and its
+    title read back). Harder to satisfy by accident than «no percentage» was.
+  * `tests/component/round29-next-tournament.test.ts` – same repair on the panel: no VS row, nobody
+    named, the ring's label is `fieldChanceLabel`'s and contains no «against».
+
+  – `[x]` **#5b – AND THE PRE-DRAW CARD NOW SAYS THE FIGURE WILL SHARPEN. NEW COPY, ONE LINE, AND HE
+  ASKED FOR IT.** He read the step measured above – the ring changes question at the draw and the
+  number moves **9.1 points on average, 36 at worst** – and ruled: «хорошо, можно на карточке ДО
+  жеребьевки писать, что-то на эту тему.»
+
+  ⚠⚠ **THE EXACT STRING, WHICH IS THE ONE THING INVARIANT 4 ASKS BE NAMED:**
+
+  > **`A typical figure for this level – it sharpens when the draw is made.`**
+
+  It says the two things the ruling asks for and nothing else: the figure is a typical one for the
+  LEVEL (which is why it holds still – 0.48 points of drift over five pre-draw weeks), and it
+  SHARPENS at the draw (which is why the step is news rather than the instability round 31 #4 was
+  reported for). Short dash, no Cyrillic, second person nowhere needed.
+
+  **WHERE IT LIVES.** `FIELD_FIGURE_NOTE` in `src/composables/eventCard.ts`, beside
+  `DRAW_NOT_MADE_NOTE` and for the same reason that constant exists: one owner, so the sentence
+  cannot come to be worded two ways. The Season card renders it as `<p class="field-note">` inside
+  the plaque's own column, directly under the read and beside the ring it is about.
+
+  ⚠ **VISIBLE, NOT AN ACCESSIBLE NAME – which is the half that separates this from item 5's own
+  build.** Round 34 #5 put the pre-draw state into the ring's `label` and `title` plus the plaque's
+  «The draw has not been made yet.»; the JUMP is visible, so the warning about it had to be. The two
+  strings shipped by #5 are unchanged, and this line does not restate the STATE they carry – the
+  plaque says where the card is, this says what will happen to the number.
+
+  ⚠⚠ **THE CONDITION IS THE RING CHAIN'S ELSE-BRANCH, NEGATION INCLUDED, AND THAT IS THE TRAP THIS
+  LINE WALKS PAST.** The caption's obvious `v-if` is the branch's own text,
+  `ev.preview.fieldChance !== null` – and that is **TRUE on a drawn card too**: the field figure does
+  not stop existing at the draw, it stops being the number on the ring. A caption written that way
+  would tell a player whose draw is already out that his figure is about to sharpen. So it asks
+  `fieldRingShown(ev)` = «the opponent ring is not the one drawn, AND there is a field figure», which
+  is that chain read back in one place. ⚠ The two rings keep their own inline conditions rather than
+  calling it: a `v-if` written as a null comparison is what NARROWS the three bindings inside each
+  ring to `number`, and routing them through a predicate would trade that compiler-checked narrowing
+  for a `!` on every one of them – tried, and `vue-tsc` answered with four errors. The trap is closed
+  by the test instead: that exact mutation is one of the three it is verified against, and it reddens.
+
+  ⚠ **THE SEASON CARD ONLY, AND THAT IS A SCOPE DECISION HE CAN OVERRULE IN ONE LINE.** The Calendar
+  marker takeover and the Home NextTournament panel draw the same pre-draw ring and carry no such
+  line. His words are «на карточке» and this item's whole complaint is about planning off the season
+  cards («на карточках турниров планировать всё равно не получается»), so that is the surface built;
+  the other two are a takeover and a panel with their own height budgets (round-20 #3) and giving
+  them the line is a separate, cheap change if he wants it.
+
+  **Evidence.** MOUNTED, `tests/component/round31-draw-reveal.test.ts` – a new arm on the file that
+  already owns «what a card says in each of the two draw states», over the same real career whose
+  feed carries BOTH: `.field-note` is present and reads exactly `FIELD_FIGURE_NOTE` on every pre-draw
+  card, and is absent from every drawn one, with both counts asserted non-zero so neither half can be
+  vacuous. The text is read off `card.text()` as well as off the node, which is what says it is
+  RENDERED rather than sitting in an attribute. ⚠ Mutation-verified, three mutations with two
+  distinct verdicts: dropping the `v-if` reddens the absent half, deleting the line reddens the
+  present half, and pointing the caption at its own `ev.preview.fieldChance !== null` reddens the
+  absent half – the drift the shared condition exists to prevent.
+
+  **Guard tests re-aimed: NONE.** Nothing went red. The five arms of `round31-draw-reveal` and the
+  whole 115-file component project are green with the line in place.
+
+- [x] **6. «W35 · 🔒 163 / 0 international pts вот это вот что значит? И на следующих тирах такое
+  же»** – **measure**, then build or answer. A lock showing `163 / 0` is either a swapped pair or a
+  zero that should be the requirement.
+  – `[x]` **SHIPPED.** Neither guess: it is a **requirement that failed to resolve**, and «на
+  следующих тирах такое же» is literally true – EVERY acceptance rung printed it.
+
+  **THE REPRODUCTION** (`tools/r34-zero-lock.ts` – nine presets x two seeds, walked 13→21 through the
+  real `toSnapshot` and the shipped `tierState`, so a hit is the string the strip renders):
+
+  | rung | first week it printed a requirement of 0 | chip | tooltip |
+  | --- | --- | --- | --- |
+  | J60 / J300 | career **week 0**, age 13 | `0 / 0 national pts` | `locked: 0 more national pts (she has 0 of 0)` |
+  | W35 / W50 / W75 / W100 / Slam | week 23, age 14 | `0 / 0 international pts` | same shape |
+  | WT125 / WT250 / WT500 / WT1000 | week 76, age 15 | `64 / 0 international pts` | `locked: **-64** more international pts (she has 64 of 0)` |
+
+  ⭐ **HIS 163 IS THE SAME ROW AT A BIGGER JUNIOR BOOK.** The tooltip is worse than the chip: the
+  arithmetic goes NEGATIVE.
+
+  **THE CAUSE.** Since PR-09 / TB-05 the ENGINE's refusal decides whether `tierState` calls a rung
+  locked, and an acceptance-list rung is refused on a **rank** (`rankToEnter`), never on points. The
+  points arm then fell back to the tier's own `enterPointBand[0]`, which is `0` on every acceptance
+  rung – so it printed her book over a threshold that does not exist. ⚠ **It is a regression the
+  projection introduced**: before the refusal existed, `bandLocked` was `bandPoints < 0` = false on
+  those rungs, so they fell through to the acceptance arm and read «Opens in the top 700».
+
+  **THE FIX.** `refusedOnRank` (a `locked` refusal carrying `rankToEnter` and no `pointsToEnter`)
+  routes to the acceptance arm instead of the points arm. The rung is still LOCKED – `isTierOpen` is
+  false either way, no rung opened – and the chip is the string that arm **already** printed for this
+  state, so no new wording enters the app: `Opens in the top 700`. The tooltip becomes the ENGINE's
+  own `detail` («World Tour 35 takes the top 700 – she has no professional ranking yet»), which also
+  names the right table: the arm's fallback sentence says "her international ranking" for every rung,
+  true of the J rungs it was written for and false of the W ones.
+
+  ⭐ **IT CLOSES THE W15 CASE `tierState.ts`'s OWN NOTES DESCRIBE, from the far side.** Their fix was
+  `engineOpen === true` short-circuiting the band; what stayed live was the engine holding W15 SHUT
+  on the junior RESERVED PLACE – `rankToEnter`, no `pointsToEnter` – where the plaque priced her book
+  against W15's 120 and never mentioned the place. Same arm, same repair. This is the **fifth**
+  occurrence of that family and the notes now name it.
+
+  After: `tools/r34-zero-lock.ts` reports **0** distinct (preset, rung) pairs printing a requirement
+  of zero, against 11 rungs before. Evidence: `tests/round34-ladder-plaques.test.ts` – the
+  reproduction at his own numbers, a sweep over every rung x six books that fails on `/ 0 `, on
+  `of 0)` and on any negative distance, the W15 reserved-place arm, and two non-regression arms (a
+  genuine points refusal still prints `112 / 150 national pts`; a lock with NO distance is still
+  «Outgrown», round 28 #12's arm). ⚠ Mutation-verified: reverting the one boolean reddens 3 arms.
+
+- [x] **7. «в 18 лет предлагают подписать копеечные контракты на 2 и 3 года … в фильме Финальный
+  сет показывали, что игроку на 240 месте в мире предлагают контракты за 5к за каждый сыгранный матч
+  с нашивкой спонсора. У нас сейчас 5000-12000 в год да ещё и на расцвет карьеры. Давай
+  пересмотрим»** – **measure, then balance**. With **11**, **12** and **13** this is one subject.
+  – `[x]` **SHIPPED – A FIFTH BAND AT ≤400, AND THE ≤200 ROW LIFTED TENFOLD.** His approved table,
+  built cell by cell and generated back out of `ECONOMY` by a test so a later edit cannot move it
+  quietly (`tests/round29p2-ladder-monotone.test.ts`, «ROUND 34 – THE BAND TOTALS ARE THE OWNER'S OWN
+  TABLE»):
+
+  | band | per deal-year, all categories | what changed |
+  | --- | --- | --- |
+  | 201–400 | **$200,000** | new: clothing $120,000 + drinks $80,000, everything else shut |
+  | 101–200 | **$450,000** | the four open cells x10, their shape preserved to the cent |
+  | 51–100 | $1,100,000 | untouched |
+  | 11–50 | $2,600,000 | untouched |
+  | top 10 | $9,200,000 | untouched |
+
+  ⭐ The two cliffs are gone and both are asserted: there is a shelf below #200 at all, and the step
+  from #101 to #100 fell from **24x to 2.4x**. A rank-300 career now receives a drinks letter at the
+  ≤400 cell and a rank-401 receives nothing (`tests/ad-offer.test.ts`, «THE SHELF NOW REACHES #400»).
+
+  **THE TWO HAZARDS, BOTH RE-VERIFIED RATHER THAN ASSUMED.**
+
+  * **The index shift is safe for saves – confirmed.** `AdOfferTerms` carries nine fields and none of
+    them is a band index (`tier`, `category`, `termYears`, `brand`, `trade`, `cashCents`, `termWeeks`,
+    `shootCount`, `shootWeeks`); `adTermsForCategory` spends the index at construction and freezes
+    `cashCents` and `bands[band].shootWeeksPerYear` as VALUES. Nothing persisted moves.
+  * **The kit ladder is NOT disturbed – confirmed by grep and now by a test.** `tour` / `premium` /
+    `icon`'s `maxWtaRank` are literals in `ECONOMY.sponsorship`; no code path reads `advertising.bands`
+    into the kit ladder or the reverse (`git grep advertising -- offers.ts equipment.ts world/sponsors.ts
+    world/kit.ts` finds only advertising's own call sites). The monotone test now pins
+    `[tour, premium, icon].maxWtaRank === [200, 50, 10]` beside the band list, so a future prepend that
+    DID disturb them reddens.
+
+  **⚠⚠ WHAT THE APPROVED CELLS BROKE, AND WHAT IT COST TO REPAIR.** The per-category ladders are no
+  longer monotone – clothing pays **$120,000 at ≤400 against $50,000 at ≤200**, drinks pays **$80,000
+  at both**, and the tenfold lift put watches at **$200,000 at ≤200 as well as at ≤100**. That is the
+  approved table and nothing about it was changed. But it falsifies the premise `adBandOfTerms` was
+  written on – «the ladders are strictly increasing wherever they are not null» – and that function is
+  how a delivered shoot finds its band in the fame floor. A plain walk from the top read a $120,000
+  clothing letter written at ≤400 as a **≤100** letter. Repaired by matching the cheque EXACTLY first
+  (strongest match wins, which is the shipped rule unchanged) and keeping the old walk only as the
+  fallback for a legacy fee that is nobody's cell.
+
+  ⚠ **One ambiguity is left standing and is his to close.** A new ≤400 **drinks** letter states
+  $80,000, which is also the ≤200 cell, so it reads back one rung high. Nothing on the paper can tell
+  them apart – round 32 #5's design is that the cheque IS the record of the band – and the cost is
+  bounded to one rung of `fame.shootFloorByBand`, i.e. 0.01 of a fame point per delivered shoot.
+  Closing it means storing the band on `AdOfferTerms`, which is a save-schema move. Pinned by name in
+  `tests/round32-brand-inertia.test.ts` so a third collision cannot appear silently.
+
+  **⚠ TWO FIGURES THE PREPEND FORCED THAT HE NEVER SAW.** `ECONOMY.fame.shootFloorByBand` and
+  `shootFloorHalfLifeByBand` are indexed BY the advertising band, and both had four entries. Left at
+  four, the new top index would have read `undefined` – `?? 0` – and **the global house's shoots would
+  have started buying zero fame**. Both gained a fifth rung; the four shipped values are unchanged to
+  the digit and simply moved one index right. The new ≤400 rungs are **0.03** and **13 weeks**. The
+  0.03 is not free choice: 0.02 (the ladder's own first difference continued down) stretches the whole
+  ladder's span from 2.75x to 5.5x and breaks round 32 #5's measured «a global house, not a hundred of
+  them» bound of 4x; 0.03 holds it at 3.67x and leaves the span above the round-32 anchor identical.
+  The criterion set the constant. **Both are his to overrule.**
+
+- [~] **8. «на 18 она просит свой счёт в банке, а что будет если отказать? … Можно как-то обыграть,
+  например если отказали – она сама пошла и открыла и на морали/отношениях отразится (это в
+  бэклог)»** – **answer** what refusal does today; the moral/relationship version is **his own
+  backlog instruction**.
+
+- [x] **9. «Если отпуск назначен, то на карточке турнира в сезоне надо убрать Exhausted … Или
+  считать из отпуска восстановится ли и тогда убирать Exhausted»** – **build**. ⭐ He named the
+  better of the two himself: compute the recovery, do not just hide the word.
+  – `[x]` **SHIPPED – COMPUTED, NOT HIDDEN.**
+
+  **WHAT WAS WRONG.** `availabilityStatus` reads the INJURY window at the **event's** week (R10-17
+  fixed that in July) and read her CONDITION at **today's**, with a note saying why: a future
+  condition is unknowable. That is true of an ordinary week and false of a booked holiday – a
+  holiday week is a HARD BLACKOUT, so it cannot turn into a match week, and `resolveVacation` pays
+  its package gain unconditionally. So the one number in the future that IS knowable was the one
+  being ignored, and a card three weeks out said «Exhausted» over a week away the family had already
+  paid for.
+
+  **THE FIX.** `bookedRestGainBetween(world, week)` sums the `conditionGain` of the holidays booked
+  **strictly between** now and the event, and the fatigue caution is decided on `condition + that`.
+  ⚠ **It deliberately UNDER-counts**: a holiday week also earns the ordinary free-week recovery, and
+  so does every quiet week in between, and none of that is added – those weeks are the unknowable
+  kind, and a forecast that over-claims takes the warning off a card she really does arrive tired to.
+  Under-counting fails the safe way (the word stays). ⚠ The DOCTOR'S VETO is **not** given the
+  forecast: it is a refusal about a body that is not cleared today, he asked about the Exhausted
+  caution, and a medical floor lifted by a holiday that has not happened would be the game promising
+  clearance it cannot give.
+
+  **EVIDENCE – BOTH ARMS** (`tests/round34-exhausted-holiday.test.ts`), at `national` (floor 40) with
+  her at 25, tired but cleared (the doctor's floor is 15):
+
+  | booked | arrives at | card |
+  | --- | --- | --- |
+  | nothing | 25 | **Exhausted** – unchanged, byte for byte |
+  | `staycation` (+10) | 35 | **Exhausted stays** |
+  | `grandma` (+18) | 43 | **word gone**, level `ok` |
+  | two staycations (+20) | 45 | **word gone** – it is the arithmetic, not a flag |
+  | `grandma` booked AFTER the event | 25 | **Exhausted** |
+
+  **MUTATION-VERIFIED IN BOTH DIRECTIONS, which is the point of two arms.** Zeroing the gain reddens
+  the «does restore» arm only; implementing his FIRST phrasing instead – hide the word whenever a
+  holiday exists – reddens the «does not restore» arm only. A one-armed test passes both. ⚠ No copy
+  changed: «Exhausted – racing risks injury.» is untouched, and a family that books nothing takes a
+  path that is character-for-character what it was.
+
+- [x] **10. «Мне не нравятся жирные буквы на главной жёлтой кнопке, сделай обычные пожалуйста. А
+  может быть мне кажется и там две кнопки или надписи рисуется вообще? Проверь пожалуйста»** –
+  **build** plus a **reproduce**: he suspects a doubled label.
+  – `[x]` **SHIPPED. THE ANSWER TO HIS QUESTION IS ONE BUTTON AND ONE LABEL – ⭐ BUT HE WAS SEEING
+  SOMETHING REAL, AND IT HAS A NAME.**
+
+  **THE COUNT – the reproduction he asked for.** The whole `App` shell mounted on Home at 375x667,
+  counted over the entire document, not over one component's subtree:
+
+  | counted | on screen |
+  | --- | --- |
+  | `.next-week-bar` – the floating bar | **1** |
+  | `.next-week-btn` – the yellow button | **1** |
+  | controls wearing the app's lime `.primary` | **1** of 15 buttons on screen |
+  | leaf elements anywhere printing that exact label | **1** – the button itself |
+  | the button's own child nodes | **1**, a text node; no `::before`/`::after`, no `text-shadow` |
+
+  ⭐⭐ **WHAT HE ACTUALLY SAW.** Manrope is self-hosted at 400 and 500 ONLY (`public/fonts/`). The
+  button was computing **600**, which has no real face, so the renderer emboldens the 500 one – and
+  synthetic bold thickens a stroke by drawing it AGAIN, offset. One label, drawn twice by the
+  rasteriser. «Мне кажется» was not imagination and it was not a second button; the regular weight
+  ends it, because 400 is a face that actually ships.
+
+  ⚠⚠ **AND THE `font-weight: 800` IN THE SHEET HAD NEVER APPLIED.** The element is
+  `<button class="primary next-week-btn">`: `button.primary` is specificity 0-1-1, `.next-week-btn`
+  is 0-1-0, so the weight the player has been reading all along is `button.primary`'s **600**, not
+  the 800 the stylesheet appeared to promise. Measured on a mount, not deduced. The dead declaration
+  is DELETED rather than edited – a rule that loses its own cascade tells the next reader a number
+  the screen never used – and the new weight is declared at `button.next-week-btn`, the smallest
+  selector that can win without touching `button.primary` itself: twelve files of affirmative
+  buttons hang off that rule and he named exactly one button.
+
+  **THE BUILD:** `font-weight: 400`, which is CSS `normal` and the literal «обычные». ⚠ 500 is one
+  step away if he wants a touch more body in it – one number, say the word.
+  ⚠ `PrimaryPill`'s `.tb-pill--cta` keeps its 800 on purpose: a different button, on TournamentFlow,
+  EndingScreen and the wizard, and it never renders on Home.
+
+  ⚠ **THE ONE STATE WHERE THAT BAR HOLDS TWO CONTROLS IS HIS OWN.** On a long injury layoff the span
+  pill stands to the LEFT of the CTA – round 26 #1, «давай сделаем ее во-первых слева от основной».
+  Two controls, still one yellow button: the pill is the outline variant deliberately (one CTA per
+  screen). Asserted in that state too, so the answer holds in both.
+
+  Evidence: `tests/component/round34-home-type.test.ts` – 7 mounted arms, including `assertRowFits`
+  at 375x667 in BOTH bar states (round-20 #3). ⚠ Mutation-verified: demoting the new rule back to
+  `.next-week-btn` reddens 3 arms; the count arms clone the button and inject a bare second label
+  into the live document and watch both counts move, so a real double could not hide from them.
+
+- [x] **11. «129 место в мире, тот же контракт на 12к в год на 3 года. Не верю»** – with 7/12/13.
+  – `[x]` **ANSWERED BY THE ≤200 LIFT (item 7).** A #129 stood in the ≤200 band and the whole shelf
+  there was worth $45,000 a year – watches $20,000, cars $12,000, drinks $8,000, clothing $5,000. The
+  same shelf now writes **$450,000**: $200,000 / $120,000 / $80,000 / $50,000, the shipped row times
+  ten with its shape preserved to the cent. The «12к в год» letter he did not believe was the cars
+  cell; it is $120,000 now.
+
+- [x] **12. «99 место в мире, тот же контракт на 20к в год на 2 года»** – with 7/11/13.
+  – `[x]` **ANSWERED BY THE SAME LIFT (item 7).** A #99 is already in the ≤100 band, where he ruled
+  nothing was to be touched – «Про 50–100 отвечаю прямо: пересматривать не надо» – so the $20,000 he
+  was reading at #99 was **not** that band's cheque. It was the ≤200 watches cell arriving at a
+  standing that had since climbed past it, and the letter's terms are frozen at arrival by design (the
+  snapshot rule): a paper written at #150 states $20,000 for its whole term however high she goes. Two
+  things follow, and both are now true: the ≤200 watches cell is $200,000, so the same letter written
+  today is ten times the cheque; and the ≤100 shelf it graduates into is unchanged at $1,100,000 a
+  year. ⭐ Nothing above the top 100 moved, which is his ruling honoured to the cent.
+
+- [~] **13. «А 100 позиции и выше это как раз Бублик с его кучей спонсоров. Хотя может быть для
+  нашего масштаба наша система нормальная, цифры только на первом тире и условия не очень, надо
+  разумно сделать»** – ⭐ his own hedge: the ladder may be right in shape and wrong at its foot.
+  – `[~]` **HIS HEDGE WAS RIGHT, AND IT IS WORTH SAYING SO PLAINLY: the shape is sound, the foot was
+  broken.** «Может быть для нашего масштаба наша система нормальная, цифры только на первом тире и
+  условия не очень» – that is exactly what the measurement found. The ladder's DESIGN – one live deal
+  per category, the shelf's shape constant at every band, the cheque the only axis that scales, 2.4x /
+  2.4x / 3.5x steps above the top 100 – is the round-29 part four design and not one line of it was
+  touched. What was wrong was two rungs at the bottom: nothing at all below #200, and a 24x jump on a
+  single ranking place from #101 to #100. Both are fixed under item 7; everything he suspected might be
+  «нормальная» is, and stayed.
+
+- [x] **14. «Календарь сезона надо ещё раз переделать … на 105 месте доступны 50, 250, 500 и шлемы,
+  при этом нет 75, 100 и 125. Мне кажется, они прячутся на тех же неделях… Предлагаю с повышением
+  ранга заменять более низкие турниры в сетке более высокими… они не конфликтуют в сетке, а
+  заменяются динамично один другим видом»** – **measure, then design**. ⚠ The largest item in the
+  round and it touches the calendar the last three rounds worked on.
+  – `[?]` **MEASURED IN FULL. HIS DIAGNOSIS IS CONFIRMED TO THE TIER. HIS REMEDY IS ALREADY SHIPPED
+  AND IS THE MECHANISM PRODUCING THE SYMPTOM – so nothing was built, and the two candidate designs
+  are below for him to rule on.**
+
+  **THE MEASUREMENT** (`tools/r34-calendar-tiers.ts`): careers walked to WTA #95–#117 at a season
+  start, then ONE FULL SEASON recorded week by week through the shipped predicates the two calendar
+  surfaces use – `toSnapshot` for the cards, `feedContext` / `feedShows` / `preferredWeekEvent` for
+  the row – so the table cannot disagree with the screen. Six seasons that stayed outside the top 50
+  (a seventh climbed to #15 and is excluded: play-down then shuts W50–W100 and it measures a
+  different player).
+
+  | rung | generated / season | SHOWN by the calendar | share | rows a season |
+  | --- | --- | --- | --- | --- |
+  | WT500 | 10 | 60 of 60 | **100%** | 10.0 |
+  | W50 | 12 | 31 of 72 | 43% | **5.2** |
+  | WT250 | 8 | 30 of 48 | 63% | **5.0** |
+  | Slam | 4 | 24 of 24 | **100%** | 4.0 |
+  | WT125 | 4 | 20 of 24 | 83% | 3.3 |
+  | W75 | 8 | 18 of 48 | 38% | 3.0 |
+  | W100 | 4 | 12 of 24 | 50% | 2.0 |
+
+  ⭐⭐ **THE CUT FALLS EXACTLY WHERE HE PUT IT.** Ordered by rows a season, his «доступны» set
+  {50, 250, 500, шлемы} is the top four and his «нет» set {75, 100, 125} is the bottom three, in
+  order. ⚠ Note it is ROWS and not share that reproduces his reading: W50 is the second least
+  visible rung by percentage and he still sees it, because 43% of twelve is more cards than 83% of
+  four.
+
+  ⭐ **AND «ОНИ ПРЯЧУТСЯ НА ТЕХ ЖЕ НЕДЕЛЯХ» IS EXACTLY THE MECHANISM.** Every missing row is a
+  same-week loss, recorded by the thief. One season, week by week (elite seed 0, w468, age 22,
+  WTA #111 – `gen` is every event the engine put on the week, strongest first):
+
+  ```
+  w470  gen [Slam W75 J30 Regional Local]              shown Slam
+  w476  gen [WT1000 WT125 W75 W35 W15 J30 Local]       shown WT125
+  w483  gen [WT500 W75 J60]                            shown WT500
+  w489  gen [Slam WT250 W75 Regional Local]            shown Slam
+  w494  gen [Slam W75 W50 W15 J300 J60 J30 Local]      shown Slam
+  w502  gen [Slam W75 W35 W15 J60 J30]                 shown Slam
+  w506  gen [W75 W50 W35 J30 National]                 shown W75   <- the only one
+  w512  gen [WT125 W75 J300 J60]                       shown WT125
+  ```
+
+  ⚠⚠ **AND THE HALF HE DID NOT NAME, WHICH IS THE BIGGER NUMBER: 12 of the 48 eventful weeks show
+  her NOTHING** (w474, 477, 480, 481, 488, 491, 493, 499, 504, 505, 509, 516). Every event on those
+  weeks is a rung she has outgrown (W15/W35 play-down-barred at #111, the J rungs age-shut at 22, the
+  domestic three shut on the pro table) or one she cannot reach (WT1000 takes the top 65). So the
+  season is not short of tennis – it carries ~50 events she may enter across 48 weeks – it is
+  **badly distributed for her rank**: a quarter of her weeks are empty while a quarter stack two to
+  four rungs she could play and only one survives.
+
+  **⚠⚠ WHY NOTHING WAS BUILT.** «Заменять более низкие турниры в сетке более высокими с повышением
+  ранга» is `preferredWeekEvent`'s third tiebreak, shipped 05.08/06.08 and measured in
+  `docs/specs/ladder-floor-2026-08.md` §2: on a stacked week the row shows the ENTERED event, else
+  the one she may actually ENTER, else the **highest rung** – so as her rank rises the taller rung
+  takes the slot and the lower one is replaced. That rule IS the thing hiding his W75. Building it
+  would be building the cause, and the brief's own instruction is to stop and report rather than
+  invent a third design.
+
+  **THE REAL CAUSE, for whichever design he picks.** The three anchored rungs – Slam `[2,21,26,34]`,
+  WT500 `[4,10,15,19,24,28,33,39,43,47]`, WT1000 `[5,8,12,18,31,37,41,45]` – claim **22 of the 49
+  playable week-offsets, the same offsets in every world for ever**, before a single cadence rung is
+  placed. `buildSeason` then places the cadence rungs by `tierPhase` + jitter with no knowledge of
+  the anchors, so a rung with 4–8 events a season loses roughly half of them to a taller rung on the
+  same week – and the sparser the rung, the fewer survive. That is the same fixed-grid failure
+  `tierPhase`'s own note records and fixes for the cadence rungs; the anchors reintroduced it.
+
+  **THE TWO DESIGNS, AND WHAT EACH COSTS – his call:**
+  - **(A) SUPPLY.** Place a cadence rung away from weeks already claimed by a taller one («они не
+    конфликтуют в сетке»). ~6 lines in `buildSeason`. ⚠ It changes `world.season`, so the AI field
+    and the season RNG stream move → invariant 5 wants a bench and a spec, and it partly reverses his
+    own ruling recorded in `calendar.ts`: «ONE EVENT PER TIER PER WEEK, NOT ONE EVENT PER WEEK … with
+    J-tiers, empty weeks stop being boredom and become CHOICE». Existing saves keep their dealt
+    blocks (`ensureSeason` never re-deals), so only future seasons change.
+  - **(B) DISPLAY.** Let a week that stacks several rungs she may enter offer more than one card.
+    ⚠ It is NOT what he proposed – he asked for them not to conflict – and it retires R15-9's
+    one-row-per-week rule that rounds 31/32/33 all built on.
+
+  ⚠ A generation-time fix cannot be rank-aware (a year block is dealt once, and her rank moves
+  through the season) and a rank-aware fix cannot be at generation time – which is why (A) and (B)
+  are genuinely different games rather than two spellings of one.
+
+  – `[x]` **HE RULED FOR (B) AND (B) IS BUILT.** His words: «я как раз в одном из раундов и спрашивал
+  про несколько карточек из доступных на одной неделе, я бы на это посмотрел, тем более, что это не
+  меняет игровую механику никак, чисто интерфейсная правка на свайп карточек. И никакого конфликта
+  тогда нет – потому что есть выбор.»
+
+  **WHAT SHIPPED.** `weekEventStack` (`src/composables/tierState.ts`, beside `preferredWeekEvent`)
+  answers a week with a LIST instead of a representative: the pick's own answer LEADS it, and behind
+  it comes every other visible event on that week she may actually enter and has not outgrown,
+  tallest first. `SeasonScreen`'s `calendarRows` carries `events` beside `event`, and a week whose
+  list is longer than one draws a `.week-stack.swipeable` – a scroll-snapping strip, cards at 88% of
+  the feed's width so the next one's edge shows past the first. **No new word enters the app**: the
+  affordance is that visible edge, which is what invariant 4 requires and what his own «чисто
+  интерфейсная правка на свайп карточек» describes.
+
+  ⚠ **`preferredWeekEvent` IS NOT DELETED AND NOT WRAPPED.** It is `weekEventStack`'s first line;
+  two surfaces still call it directly and the rest read its answer as `events[0]`, so every consumer
+  that wants ONE event gets exactly the event it always got. The per-consumer decision, which is the
+  half of this item that could have gone wrong quietly:
+
+  | consumer | wants | why |
+  | --- | --- | --- |
+  | `SeasonScreen.calendarRows` | **the LIST** | it is the surface the item is about |
+  | `SeasonScreen.supplyOnScreen` | **the LIST** | it exists to name «N of them on the cards below», so it must count CARDS; counting rows would under-report the very surface it reconciles with – round 21 #2b's own defect pointing the other way |
+  | `SeasonScreen.plannable` | **the LIST** | «+ Plan week» must not be offered on a week that still holds a real entry decision. `!stack.some(actionable)` is exactly what the old expression said about the lead, widened |
+  | `composables/weekDays.lookAheadFor` | the ONE | a Calendar marker is a week's IDENTITY, one line in a grid; a swipe strip inside a marker row is a different screen and he did not ask for one |
+  | `art/feedArt.feedArtUrls` | the ONE | ⚠ a BUDGET decision, named because it is a real gap: the module's rule is «the picture warmed is the picture drawn», and now only the LEAD card's court is warmed. The stack's other courts fetch on swipe. Warming the whole stack would take the ~560 KiB-a-career figure that paragraph quotes up by the card ratio (41.4 cards against 34.3 rows, +21%). Reversible in one line if he wants it |
+  | `SeasonScreen`'s booked-week rows («Skipping X», «instead of X») | the ONE | a booking replaces the week; naming one tournament is the honest single representative |
+  | `composables/restCost`, `composables/eventName` | – | they only CITE the pick in a comment; neither consumes it |
+
+  **BEFORE AND AFTER, ONE WALK, BOTH COLUMNS** (`tools/r34-calendar-tiers.ts`, extended: the shipped
+  one-row collapse and the new stack are folded from the SAME snapshots at the same weeks, so the
+  comparison cannot be a story about two different worlds – the strongest control available for a
+  display-only change). Seven measured seasons, presets 8/7/6/5 x seeds 0–3, `rows a season`:
+
+  | rung | gen/season | ONE-ROW (before) | STACK (after) | ...if the OUTGROWN clause were dropped |
+  | --- | --- | --- | --- | --- |
+  | WT500 | 10.0 | 9.3 | 9.4 | 9.4 |
+  | WT250 | 8.0 | 5.3 | **8.0** | 8.0 |
+  | W50 | 12.0 | 4.7 | 4.7 | **9.4** |
+  | Slam | 4.0 | 3.9 | 3.9 | 3.9 |
+  | J30 | 24.0 | 1.0 | **3.6** | 3.6 |
+  | WT125 | 4.0 | 2.9 | **3.4** | 4.0 |
+  | W75 | 8.0 | 2.4 | 2.4 | **6.4** |
+  | WT1000 | 8.0 | 2.4 | 2.6 | 2.6 |
+  | J60 | 15.7 | 1.4 | **2.3** | 2.3 |
+  | W100 | 4.0 | 1.6 | 1.6 | **3.1** |
+  | W35 | 15.9 | 0.7 | 0.7 | 0.9 |
+  | W15 | 24.9 | 0.3 | 0.3 | 1.1 |
+  | J300 | 4.0 | 0.1 | 0.1 | 0.3 |
+  | Local / Regional / National | 24.0 / 11.7 / 6.0 | 0.0 | 0.0 | 0.0 |
+
+  A season now draws **41.4 cards against 34.3 eventful weeks**, and **6.4 of those weeks carry more
+  than one card**. The 12-of-48 empty weeks are untouched: `weekEventStack` only ever reads a list
+  `feedShows` has already filtered, so it can lengthen a week that had a card and can never put one
+  on a week that had none.
+
+  ⚠ **AGAINST BUNDLE B'S TABLE, AND THE DIFFERENCE IS THE BRANCH, NOT THE INSTRUMENT.** Folding the
+  same six seasons it used (dropping the career that climbed to #15) the ONE-ROW column reads
+  WT500 9.2 / W50 5.5 / WT250 5.5 / Slam 3.8 / WT125 3.0 / W75 2.8 / W100 1.8 against its
+  10.0 / 5.2 / 5.0 / 4.0 / 3.3 / 3.0 / 2.0. Same tool, same seeds, same code path – what moved is the
+  WORLD: bundles A, E and F changed the ceiling bands and the endorsement/prize ladders since B
+  measured, and a career that earns differently ranks differently and meets a different calendar.
+  This is why the before/after above is one walk with two display rules rather than two runs.
+
+  ⚠⚠ **THE THING THE MEASUREMENT CONTRADICTED, AND IT IS HIS TO RULE ON.** The fix does NOT restore
+  the three rungs he named. W75 stays at 2.4 rows and W100 at 1.6, because at WTA #111 those events
+  are `outgrown` – `hasOutgrown` is true of them – and the rule as ruled refuses a SECOND card to a
+  rung she has passed. The loser census (`--why`, every stacked-week candidate that drew no card of
+  its own) says so in one line: **W50 outgrown x188, W75 outgrown x163, W100 outgrown x64,
+  WT125 outgrown x28**, against WT250 `entries closed` x19 and Slam `not eligible: locked` x9. So the
+  display fix reaches the weeks where she has a genuine choice – WT250 5.3 → 8.0, J30 1.0 → 3.6 – and
+  the rungs of his sentence are hidden by a different rule than the one this item changed.
+  **Dropping the outgrown clause is a one-line change** (`weekEventStack`'s filter) and its price is
+  the fourth column above: W75 2.4 → 6.4, W50 4.7 → 9.4, W100 1.6 → 3.1. It is NOT shipped, because
+  the 06.08 ruling gives a rung she has passed exactly one card at the head of a week and nothing
+  said today overrides that; but he asked about 75 and 100 by name, so the number is here rather
+  than in a comment. ⭐ An outgrown card already labels itself («Outgrown – she is past this level»), so the
+  change would add no wording either.
+
+  **Evidence.** MOUNTED, `tests/component/round34-week-stack.test.ts` – 5 arms over the shipped
+  `v46.json` career: a stacked week renders a card per rung (asserted on the TIERS, not on a count,
+  so a screen drawing one card twice is red), the lead is still `preferredWeekEvent`'s answer, a week
+  carrying only tennis she cannot play renders NONE, the whole feed's card count equals the rule's,
+  and the 375x667 arm – the strip must be `overflow-x: auto|scroll` (or the cards past the first are
+  unreachable) and each card's USED width must be inside the phone. ⚠ Mutation-verified, four
+  mutations with four different verdicts: `weekEventStack` returning `[lead]` reddens 4 of 5 and
+  leaves the empty-week arm green (which is what says the two claims are independent); dropping the
+  `eventActionable` filter reddens 1; `overflow-x: visible` reddens the phone arm; the card's width
+  raised to 130% reddens the phone arm – ⚠ and that last one was GREEN on the first draft, because
+  `availableWidth` stops at an element's PARENT by its own contract and I was measuring the room
+  rather than the card. The assertion reads the card's own used width now.
+
+  ⚠ **A fresh `createWorld(seed)` career is USELESS as a fixture here and the test says so**: probed
+  over 340 weeks x 3 seeds, a career nobody plays never opens a second rung, so it never stacks a
+  week and every assertion would have been thrown rather than asserted. The fixture is the golden
+  save `round16-surfaces.test.ts` already mounts this screen against.
+
+  **Guard tests re-aimed – FIVE, none deleted, none loosened, each with a ⚠ note in place:**
+  * `tests/tier-window.test.ts` «both consumers pick through the ONE rule» – the Season screen no
+    longer names `preferredWeekEvent` itself, so the assertion follows the chain one storey down
+    (`weekEventStack(` on the screen) **and pins the link as well as its ends**
+    (`const lead = preferredWeekEvent(events)` in `tierState.ts`). Strictly more than it asserted.
+  * ⚠ **Four SOURCE PINS moved by the RENAME, not by a rule change** – the card's markup is a
+    `v-for` over `row.events` now, so the event a card is about is the loop's `ev` and no longer the
+    row's `row.event`. `tests/academy.test.ts` (the travel figure is the engine's NET price),
+    `tests/round11-view.test.ts` (the SurfaceMark is asked for the card's own surface; `coachSays`
+    is called exactly once) and `tests/week-numbering.test.ts` (the Closed/closes pill COMPARES
+    weeks and prints none) all keep their protected fact to the character after the dot.
+  * ⭐ `tests/round12-view.test.ts`'s exam-week pin is the one worth reading, because the guarded
+    slice earned its keep: its `from` marker `<button v-if="row.plannable"` was **never unique** –
+    the muted training row carries the same button, AFTER the marker the slice ends on – and it had
+    been matching the event card's copy only because that one came first. Adding `&& i === 0` to the
+    card's button (a week's planner is an ACTION and two of them would be one control drawn twice)
+    moved the match to the second copy and the slice went red instead of silently widening, which is
+    exactly the failure `tests/helpers/source.ts` exists to make impossible. The marker is now the
+    unique string.
+    ⚠ And the exam PILL beside it deliberately kept no `i === 0` guard: «school owns this week» is a
+    FACT about the week and is true of every card on it, exactly like the injury and shoot chips in
+    the same row. The button is the only week-level ACTION on a card.
+  * ⭐ Nothing else moved: 110 component files and the whole unit suite are green with those five –
+    which is the measurement that says «add the list beside the pick» was the right shape.
+
+  – `[x]` **#14b – HE READ THE MEASUREMENT AND FOUND A CONTRADICTION IN IT. HE IS RIGHT, AND THE
+  STACK NOW ASKS «CAN SHE ENTER» INSTEAD OF «HAS SHE OUTGROWN».** His words: «игра считает их ниже её
+  достоинства – но при этом я в сетке вижу w50 турниры, я тебе об этом писал. Значит у нас где-то
+  противоречие есть – надо разобраться.» And his ruling: «ну сильно перерощенные да, а на какие-то
+  можно и съездить, когда череда поражений идет очень хочется что-то выиграть, знаешь ли.»
+
+  **THE CONTRADICTION, NAMED – AND IT WAS MINE, NOT THE ENGINE'S.** `hasOutgrown`
+  (`src/engine/world/ladder.ts`) is an OR of THREE facts answered as ONE, and that is deliberate –
+  its own note records `world.ts`'s rule that «the ceilings must have one consequence». Only ONE of
+  the three is a BAN:
+
+  | limb | what it says | is it a ban? |
+  | --- | --- | --- |
+  | `playDownBars` | the sport itself: a WTA top-50 may not enter a W event; a professional may not play the domestic ladder | **YES** – `tierFloorOpen` shuts the rung and `entryVerdict` refuses it |
+  | `tierOutgrown` | the sliding window: the rung three above is open to her | no – arithmetic |
+  | `outgrewTier` | her points are past the domestic band's ceiling | no – arithmetic |
+
+  ⭐⭐ **THE MEASUREMENT SAYS IT IN THE ENGINE'S OWN WORDS**, on the `engine window` line the tool
+  prints per career. At WTA #111 the rungs it calls SHUT are Local/Regional/National («pays national
+  points – she is on the world tour now»), J30/J60/J300 (aged out at 22), W15/W35 («closed to the
+  world's top 150» – the Play Down cut) and WT1000 (which is the opposite kind of shut: «takes the
+  top 65», a FLOOR she has not reached). W50, W75, W100, WT125, WT250, WT500 and the Slams are
+  **OPEN**. So the rungs he SEES are open and merely outgrown by the arithmetic, exactly as he said –
+  and the reason his W75 still drew no second card was the clause my brief to bundle J asked for.
+  «Can she go» and «will it move her ranking» are two questions and I collapsed them into one.
+
+  **WHAT CHANGED: ONE CLAUSE, AT THE STACK'S OWN CALL SITE.** `weekEventStack`
+  (`src/composables/tierState.ts`) filtered on `eventActionable(e, week) && !e.outgrown`; it now
+  filters on **`eventActionable(e, week)` alone**. ⭐ **That predicate IS «can she enter»**: it is
+  «she is in it, or its list is still open to her», and the `eligible` inside it is `entryStatus`'
+  own verdict – the same gate `enterEvent` throws on. A rung the Play Down rule bars is refused by
+  it, and never even reaches it: `tierFloorOpen` shuts the rung, so `feedShows` drops the card one
+  storey up. «Сильно перерощенные» stay out on the SPORT's rule rather than on a display rule.
+  `StackableEvent.outgrown` is removed with it – a field nobody reads is how a retired rule walks
+  back in.
+
+  ⚠ **`hasOutgrown` IS UNTOUCHED, AND SO IS EVERY OTHER SURFACE THAT READS IT.** The card's pill,
+  `entryStatus.outgrown`, `coachLadderNote`'s gate, `entryCouldNotMove` and the season mirror all
+  still ask the one three-limbed question. Nothing about the LADDER moved; what moved is what the
+  calendar asks it.
+
+  **THE PRICE, MEASURED – `tools/r34-calendar-tiers.ts`, THREE display rules folded from ONE walk**
+  (7 seasons, presets 8/7/6/5 x seeds 0–3, the same arm structure bundle J used, so the columns
+  cannot be a story about three different worlds). `OUTGROWN-` is bundle J's shipped-until-today
+  rule, `STACK` is what ships now, and it **reproduces bundle J's priced column to the decimal**:
+
+  | rung | gen/season | ONE-ROW | OUTGROWN- (bundle J) | **STACK (now)** | delta |
+  | --- | --- | --- | --- | --- | --- |
+  | WT500 | 10.0 | 9.3 | 9.4 | 9.4 | +0.0 |
+  | **W50** | 12.0 | 4.7 | 4.7 | **9.4** | **+4.7** |
+  | WT250 | 8.0 | 5.3 | 8.0 | 8.0 | +0.0 |
+  | **W75** | 8.0 | 2.4 | 2.4 | **6.4** | **+4.0** |
+  | WT125 | 4.0 | 2.9 | 3.4 | 4.0 | +0.6 |
+  | Slam | 4.0 | 3.9 | 3.9 | 3.9 | +0.0 |
+  | J30 | 24.0 | 1.0 | 3.6 | 3.6 | +0.0 |
+  | **W100** | 4.0 | 1.6 | 1.6 | **3.1** | **+1.6** |
+  | WT1000 | 8.0 | 2.4 | 2.6 | 2.6 | +0.0 |
+  | J60 | 15.7 | 1.4 | 2.3 | 2.3 | +0.0 |
+  | W15 | 24.9 | 0.3 | 0.3 | 1.1 | +0.9 |
+  | W35 | 15.9 | 0.7 | 0.7 | 0.9 | +0.1 |
+  | J300 | 4.0 | 0.1 | 0.1 | 0.3 | +0.1 |
+  | Local / Regional / National | 24.0 / 11.7 / 6.0 | 0.0 | 0.0 | **0.0** | +0.0 |
+
+  ⭐⭐ **THE THREE RUNGS OF HIS SENTENCE ARE THE THREE BIGGEST MOVES, AND THE BARRED ONES DID NOT
+  MOVE AT ALL.** W50 4.7 → 9.4, W75 2.4 → 6.4, W100 1.6 → 3.1 – bundle J's prediction, measured on
+  the shipped code. The domestic three stay at **0.0 rows a season** at these ranks, which is the
+  half of the ruling that had to hold: they are barred, not outgrown. A season now draws **54.9 cards
+  against 34.3 eventful weeks** (41.4 before), and **14.0 weeks carry more than one card** (6.4
+  before). ⚠ The 12-of-48 EMPTY weeks are still untouched – `weekEventStack` only ever reads a list
+  `feedShows` has already filtered, so it still cannot put a card on a week that had none.
+
+  ⚠ **WHY W15/W35 MOVE AT ALL WHEN EVERY CAREER STARTS WITH THEM BARRED** – and the answer is the
+  Play Down rule doing exactly what the owner asked of it in 15.08: «когда она вывалится из топ-50 и
+  топ-150 оно само откроется обратно». It is a live rank READ that persists nothing, and all seven
+  seasons are shut at W15/W35 on their opening week – but one of them runs **#77..#152**, so the week
+  she falls out of the top 150 those rungs are hers again and are then ordinary enterable tennis. The
+  bar and the arithmetic ceiling are told apart per career per WEEK, which is the whole of the fix.
+
+  ⭐ **AND THE LOSER CENSUS IS THE CLEANEST CONFIRMATION** (`--why`). Before, every stacked-week
+  candidate that drew no card was `outgrown x188 / x163 / x64 / x28…`; **that bucket is now empty on
+  every rung.** What is left is only `entries closed` and `not eligible: unavailable / injured /
+  locked` – i.e. every card refused today is refused because she cannot ENTER it. That is the ruling
+  restated as a measurement.
+
+  ⚠⚠ **THE «THIS CANNOT MOVE HER BOOK» FACT IS NOT LOST, AND IT IS ON MORE CARDS THAN BEFORE, NOT
+  FEWER.** It surfaces in two places, both of which read `hasOutgrown` – the function this item
+  deliberately did not touch: the card's own pill («Outgrown – she is past this level») and the
+  coach's line (`coachLadderNote` → `.coach-note` on the card, whose clause 2 is `bookClosedTo`'s own
+  sentence «Your coach says even a title here would not move her ranking»). Since the change only
+  ever ADDS cards, a rung that used to be silent because it had no card now carries both. Confirmed
+  on the fixture rather than argued: the J30 card that now earns a slot at w159/w160/w162 renders the
+  Outgrown pill and the engine's own sentence «Your coach says the World Tour 15 is the week – this
+  pays international points, not the table she is climbing.» (clause 1a, because on that career
+  `bookClosedTo('j30')` is false and the coach says the truer thing rather than the stronger one).
+
+  **Evidence.** MOUNTED, `tests/component/round34-week-stack.test.ts` – two new arms over the same
+  `v46.json` career, on ONE week that carries both halves (w160): the barred rung (`local`, shut by
+  `playDownBars`) draws NO card while the week draws four, and the arithmetically-outgrown rung
+  (`j30`) DOES. ⚠ The barred half is asked TWICE and the second ask is the one that bites: on the
+  screen a barred rung is stopped by `feedShows` AND by the stack, so «the screen drew none» survives
+  a mutation of either layer – the second assertion hands `weekEventStack` the week's RAW list and
+  demands the STACK RULE itself still refuse it. The second new arm asserts the pill and the coach's
+  line on the card that now exists. ⚠ Mutation-verified, six mutations with different verdicts:
+  putting the outgrown clause back reddens the two #14b arms and leaves the other five green;
+  dropping `eventActionable` reddens 2 (the barred half and «only what she can play»); `[lead]` only
+  reddens 6 of 7; inverting `coachLadderNote`'s `hasOutgrown` gate reddens exactly the coach arm;
+  `overflow-x: visible` and a 130% card width redden the phone arm's two halves.
+
+  ⚠⚠ **ONE MUTATION WENT GREEN WHEN IT SHOULD NOT HAVE, AND IT IS RECORDED BECAUSE IT NEARLY
+  SHIPPED.** #14b's first finder chose its week by asking `weekEventStack` itself, so restoring the
+  outgrown clause simply moved the search to a week that rule was happy with and all seven arms
+  stayed green. **A finder that consults the rule under test cannot fail on it.** It now reads the
+  ENGINE (`playDownBars`, `hasOutgrown`) and the two predicates the item did not change
+  (`preferredWeekEvent`, `eventActionable`), so the week is chosen by the SITUATION and the screen is
+  then asked what it did with it.
+
+  **Guard tests re-aimed – TWO, none deleted, none loosened, each with a ⚠ note in place:**
+  * `tests/component/round34-week-stack.test.ts`'s «every card past the lead» pair – its second line
+    was `expect(e.outgrown ?? false).toBe(false)`, which is precisely the assertion the owner
+    overruled. The half worth keeping is «only what she could actually play earns a second card», and
+    that half is untouched: the enterability test became the WHOLE test rather than half of it. The
+    new claim lives in its own describe block, so no single mutation can satisfy both.
+  * ...and its **375x667 phone arm, WIDENED rather than moved**. It measured the FIRST swipeable
+    strip in the DOM; #14b took the fixture's widest week from two cards to four, so «the first
+    strip» and «the worst case» stopped being the same week. It now measures **every** swipeable
+    strip on the feed and asserts the widest one equals the rule's own answer for the widest week –
+    which is what says the measurement really reached it. Still red under `overflow-x: visible` and
+    under a 130% card width, verified again after the widening.
+
+  ⚠ **TWO KNOCK-ONS THROUGH THE PER-CONSUMER TABLE ABOVE, BOTH INTENDED, BOTH REPORTED RATHER THAN
+  DISCOVERED LATER.** Of the three consumers that read the LIST, `calendarRows` is the item itself;
+  the other two inherit the longer list and each changes by one honest step:
+  * `supplyOnScreen` – «N of them on the cards below» counts CARDS by its own definition, so the
+    number it reconciles with rises with them. That is the property it was given the list for.
+  * `plannable` (`!stack.some(actionable)`) – it is the same narrow case bundle J's own note already
+    describes («it can only differ where the LEAD's entry window has closed while a card under it is
+    still open»), widened to outgrown rungs: such a week USED to offer «+ Plan week» and no longer
+    does. That is the rule working, not a side effect – the week holds a real entry decision, and the
+    planner must not be offered over one. Nothing else about booking moved, and the whole component
+    project is green.
+
+  **What did NOT change:** `hasOutgrown` and its three limbs, `preferredWeekEvent`, `feedShows`,
+  `feedContext`, the per-consumer table above (the six surfaces that want the ONE event still get
+  it), the empty-week behaviour, and every string on the screen. **This item adds no new word to the
+  app** – the only new copy in bundle K is item 5b's one line, on a different card state entirely.
+
+- [x] **15. «Сумма дохода на savings меняется вниз если деньги вывести. Мне кажется она не должна
+  меняться, просто новое поступление будет меньше»** – **reproduce**, then build.
+  – `[x]` **REPRODUCED, THEN SHIPPED. IT IS AN AMOUNT, NOT A RATE, AND HE IS EXACTLY RIGHT.**
+
+  **THE REPRODUCTION** (`tools/r34-savings-income.ts` – $100,000 opened, held ten years through the
+  real engine, then half taken out with the real `sellAsset`). The card carries three numbers that
+  could be read as «доход», and the walk prints all three so the numbers say which one he saw:
+
+  | what the card says | before the withdrawal | after |
+  | --- | --- | --- |
+  | «Gains about 3% a season» (`annualRatePct`) | 3% | 3% – a RATE, and it did not move |
+  | «Brings in $N a week right now» (`incomeCents`) | $0 | $0 – zero on a deposit by design |
+  | **«+$36,626 since they bought it (37%)»** (`changeCents`) | **$36,626** | **$18,313** |
+
+  So it is the lifetime-gain AMOUNT, and it was being recomputed from the balance that REMAINS:
+  `changeCents = valueCents − paidCents`, and a part sale scales both by the same fraction. The
+  family was not poorer – the $68,313 was in the wallet – but the card answered «what is the gain on
+  what is still held» to a sentence that asks «what has this earned».
+
+  **THE FIX.** `sellAsset` already computes both halves of the part that leaves for its own ledger
+  sentence (`deltaCents` = the realised gain, `costSoldCents` = what it cost). They are now kept on
+  the row (`realisedGainCents`, `realisedCostCents`), and the card reads
+  `valueCents − paidCents + realised`. The same walk now prints **$36,626 → $36,626, moved by $0**.
+  ⚠ The PERCENTAGE needed the second field or the fix would have moved the number he did not
+  complain about: `paidCents` is the cost of what is still held, so a lifetime gain over it alone
+  would have jumped 37% → 73% on the same withdrawal. Over lifetime cost it holds at 37%.
+
+  ⭐ **HIS SECOND CLAUSE NEEDED NOTHING** – «просто новое поступление будет меньше» is what the
+  engine already does. The tool prints the halved balance accruing **$41** in the week after the
+  withdrawal, and it is now PINNED rather than left as an observation: an arm asserts the week's
+  accrual falls after a part sale, and that doubling it returns the full-balance week's figure.
+
+  ⚠ **NOT A SCHEMA MOVE, ON THIS REPO'S OWN RULE** (`gearRestWeeks?`, `shootClashAccepted?`,
+  `WorldEvent.entryRef`): both fields are optional and ABSENT means exactly what every save written
+  before today means – no realised gain recorded – so an in-flight career reads the figure it read
+  yesterday, to the cent, and starts remembering from its next withdrawal. Asserted rather than
+  assumed, in its own arm.
+
+  Evidence: `tests/round34-savings-income.test.ts` (6 arms: the reproduction as an assertion, the
+  percentage, the realised+unrealised identity, a realised LOSS staying realised, backwards
+  compatibility, and his second clause) + a mounted arm in
+  `tests/component/round34-money-shelf.test.ts` that the SENTENCE on the card does not move.
+  ⚠ Four-mutation ledger in the test header; the four verdicts differ from one another, which is
+  what says the arms measure different things. `tests/round29p2-part-sale.test.ts`'s identity was
+  **re-aimed, not loosened** – it read «the unrealised half and nothing else», which is the defect –
+  and gained a non-vacuity arm so it cannot pass by both sides being zero.
+
+- [x] **16. «Business пододвинуть к Invest в магазине»** – **build**, ordering only.
+  – `[x]` **SHIPPED.** `SHELF_TAB_OPTIONS` in `MoneyScreen.vue` now reads Invest / **Business** /
+  Cars / Property / Water / Air. Only the ORDER moved: every label, title and the tab-to-family map
+  are untouched (invariant 4 – he asked for a position, not a word), and `SHOP_FAMILIES` is
+  deliberately NOT reordered with it, because that array is the order INSIDE a tab (it is what puts
+  the brand above the academy under Business) and nothing on screen reads it across tabs.
+  Evidence: two mounted arms in `tests/component/round34-money-shelf.test.ts` – the rendered pills
+  put Business at `indexOf('Invest') + 1`, and pressing the moved segment still opens
+  `The business` + `Her academy`, so an order change that quietly repointed a tab is caught too.
+  `tests/component/shelf.ts`'s `SHELF_TAB_LABELS` re-aimed with a ⚠ note; `round30-subtabs.test.ts`
+  reads that constant and still fails the moment the screen and it disagree.
+
+- [x] **17. «89 место доход опустился с 200 до 65 долларов в неделю с бизнеса… Она доходит в Шлеме
+  до QF и вообще стабильно в 100 держится, плюс есть мощные рекламные контракты… мне кажется нам
+  надо улучшить формулу рассчета доходности и стоимости ее бренда»** – **measure**. ⚠ Round 32
+  reworked exactly this; a fall from $200 to $65 while she is top-100 is either the fame decay
+  working as designed or a defect the rework introduced. Must be read off HIS save.
+  – `[x]` **SHIPPED IN THREE PARTS – F1 finals pay fame, F2 the season ladder reaches below the top
+  100, F4 the brand follows the contracts. Read off his own save through the game's own import door
+  (`tools/r34-brand-foot.ts`, read-only, never copied into the repo).**
+
+  **WHERE SHE ACTUALLY STANDS**, week 569: WTA **#113**, eleven seasons banked, eight of them carrying
+  a WTA end-rank – **#349, #177, #95, #92, #89, #93, #97, #113**. Fame **8.925**, the brand taking
+  **$244** a week and priced at **$76,822** on a multiple of **6.04x**. Live sponsor deals worth
+  **$550,000** a year.
+
+  **F1 – A LOST FINAL PAYS 40% OF ITS TIER'S TITLE, on the title clock.** `trophiesByTier[tier]
+  .finals` has been a dated, per-tier, never-pruned ledger since schema v31 and NOTHING read it except
+  at 'slam'. His save carries **16** runner-up plates worth exactly zero – 5 local, 2 regional, 1
+  national, 1 w15, 4 w50, 2 w100, 1 wta125. Eight of them are at tiers `fame.titleFloor` names and
+  therefore pay; the domestic eight stay at zero, because the world does not read those draws, and his
+  approved target reproduces on exactly that reading:
+
+  | | before | after | approved |
+  | --- | --- | --- | --- |
+  | fame | 8.925 | **10.258** | 10.3 |
+  | weekly | $244 | **$323** | $323 |
+  | worth | $76,822 | **$104,044** | $104,044 |
+
+  ⭐ To the cent on two of the three. `fameEventWeeks` gained the finals as well, or `brandStrengthAt`
+  would have walked a list that no longer holds every week fame can rise on.
+
+  **⚠⚠ THE `finalX` DECISION, WITH THE MEASUREMENT, because the brief asked for it explicitly. IT
+  STAYS.** `business.merch.value.finalX` prices the same finals into the valuation MULTIPLE and has
+  since round 30 #24, so after F1 a lost final moves the income AND the multiple – exactly as a title
+  has since round 32 #3. The test for a double-count is the corridor round 32 repaired the free float
+  to, and it passes: **with both terms live the multiple reads 6.20x**, inside 6–9x. Held out, it
+  drops to 5.40x and the worth to **$90,614** – against the **$104,044 he approved**. His own approved
+  figure was therefore measured with `finalX` live, so the approved figure is the ruling. Nothing was
+  removed and nothing shrank.
+
+  ⚠ Slam finals are excluded BY NAME, not by arithmetic: `slamFinalFloor` (12) already pays that plate
+  and pays more than the share would (0.4 x 25 = 10). Two arms in `tests/round29p5-business.test.ts`
+  fail if either half breaks – one if finals stop paying, one if a second Slam final ever adds
+  `slamFinalFloor + the share` instead of `slamFinalFloor`.
+
+  **F2 – THE SEASON-END LADDER REACHES BELOW THE TOP 100.** `academy.reputationBands` gained
+  **top-150 +0.05** and **top-250 +0.025**, and the flat career cap of 4 became **4 + 0.5 per
+  professional season played**. On his save the ladder picks up two seasons it could not see – #113
+  (top-150) and #177 (top-250) – so his reputation goes **1.500 -> 1.575**.
+
+  ⚠⚠ **THE CAP MEASUREMENT HE ASKED FOR, AND IT SAYS THE CAP STOPS BEING A CAP.** The bands add at
+  most 0.6 a season, so the ceiling only overtakes the ladder when `1 + 0.6n > 4 + 0.5n`, i.e. past
+  **thirty** professional seasons:
+
+  | professional seasons | cap (4 + 0.5n) | most the ladder can reach (1 + 0.6n) | does the cap bind? |
+  | --- | --- | --- | --- |
+  | 5 | 6.5 | 4.0 | no |
+  | 10 | 9.0 | 7.0 | no |
+  | 12 | 10.0 | 8.2 | no – it used to sit ON the old flat 4 |
+  | 20 | 14.0 | 13.0 | **no** |
+  | 31 | 19.5 | 19.6 | yes, first |
+
+  ⭐ So it does not run away – the ladder holds it well under the ceiling at every career length the
+  engine can produce – but the ceiling is no longer what holds reputation. The band ladder is.
+  ⚠ **AND IT MOVES A WINDOW HE DID NOT ASK ABOUT.** `academy.stageIncomeCents` was sized so the $12M
+  academy repays in 5–10 seasons at the cap; that window is reputation **3.18–6.37**, and nine top-10
+  seasons now reach 6.4. A long elite career repays the academy in under five seasons. Not compensated
+  for here – the figure is his – and pinned by name in `tests/round29p5-business.test.ts`.
+
+  **F4 – THE BRAND FOLLOWS THE CONTRACTS: +1 reach per $50,000 of LIVE annual contract value, capped
+  at +30.** Fed into `brandReachOf` as a signal and into nothing else: her sponsor money already
+  arrives through the deals themselves, and a second line in the brand's income would pay one contract
+  twice. It is added OUTSIDE the `max(fame, retention x strength)` – a contract is current form and
+  has no business raising a career's high-water mark – and the total is clamped at `ECONOMY.fame.cap`,
+  so round 32 #3's ceiling cannot move. `baseX` and the fame³ slope were not touched.
+
+  His approved row reproduces:
+
+  | | fame | weekly | a year | worth | multiple |
+  | --- | --- | --- | --- | --- | --- |
+  | approved: his shape, $1M of deals, own fame 8.9 | 8.9 -> 28.9 | $2,600 | $135,000 | $1,130,000 | 8.4x |
+  | measured | 8.9 -> **28.9** | **$2,567** | **$133,479** | **$1,113,823** | **8.34x** |
+
+  ⭐ Inside 1.5% on every money column and inside the 6–9x corridor, so the free-float defect does not
+  return.
+
+  ---
+
+  **⚠⚠ FOUR FIGURES OF HIS THAT MY MEASUREMENT CONTRADICTS. Reported, not adjusted.**
+
+  1. **«Vera #144» is wrong; she is #113.** `kidRankWta` reads 113 at week 569 and her last banked
+     season ended #113. Nothing was built on the 144, so nothing moved – but the approved section says
+     it twice and it should be corrected before it is quoted again.
+  2. **«a decade of top-150 tennis has earned her 0.27 in total» is wrong; it is 0.500.** Five of her
+     seasons ended inside #100 and each paid the ladder's lowest rung, **+0.1**. The two new rungs
+     take that to **0.575**, not from 0.27. The case for the change is unaffected and is if anything
+     sharper: three of her eleven seasons ended below every rung the ladder had.
+  3. **F4's first row cannot be produced by the shipped income curve.** «top-100, $600k of deals, own
+     fame 6» gives fame **18 exactly**, which reproduces – but the weekly at reach 18 is
+     `perFamePointCents x 18² / famePivot x crowdMult` = **$972 x crowdMult**, and `crowdMult` is
+     clamped to [0.9, 1.15]. **The most the curve can pay at reach 18 is $1,118 a week**, against the
+     approved **$1,350** – 17% short, and no career shape can close it because every other signal
+     reaches the income only through the crowd tilt. $1,350 corresponds to a reach of ~21.2, i.e.
+     $750,000 of deals rather than $600,000. ⚠ The mechanic is built as approved; it is the money
+     column of that one row that the arithmetic will not produce.
+  4. **«his save, $1M of deals» is not his save's present state.** At week 569 his LIVE annual
+     contract value is **$550,000** – drinks $150,000 (to w572) and cars $400,000 (to w658). The
+     $1,000,000 was his shelf through weeks **404–452**, when the airline, drinks, cars and watches
+     ran together. The approved row reproduces as a SCENARIO at $1M (table above); applied to the save
+     as it stands today the term is +11, and his brand reads fame-signal **19.9**, **$1,218** a week,
+     **$462,972** and **7.31x** – still a sixfold repair of the $244 he complained about, and still
+     inside the corridor.
+
+  **AND THE COMPLAINT ITSELF, ANSWERED.** «доход опустился с 200 до 65 долларов в неделю» is the fame
+  half-life doing exactly what round 29 designed it to do on a career whose fame the model could
+  barely see: eight professional seasons, five of them inside the top 100, sixteen finals and a
+  million dollars of sponsor paper, adding up to a fame stock of 8.9. All three parts of this item
+  attack that one number rather than the payout curve. Together on his save, at his real $550,000 of
+  live paper: fame signal **8.9 -> 21.3**, weekly **$244 -> $1,386**, worth **$76,822 -> $538,030**,
+  multiple **6.04x -> 7.46x**.
+
+- [x] **18. «В магазине те пункты, которые во владении находятся давай цветом выделять рамку жёлтую,
+  как с тренером делали»** – **build**.
+  – `[x]` **SHIPPED, AND IT IS LITERALLY THE COACH'S FRAME.** «как с тренером делали» is the half
+  that decided the implementation: he is naming round-21 #11, so `.shop-row.is-owned` carries
+  `.cm-row.current`'s own three declarations – `rgba(var(--accent-rgb), .07)` behind it,
+  `border-color: var(--accent)`, and the `box-shadow: 0 0 0 1px var(--accent)` ring that makes it
+  read as a FRAME rather than a hairline. One `--accent`, not a second convention: move the token
+  and the coach she has and the things they own move together. ⚠ An outer shadow paints outside the
+  border box, so a framed card and an unframed one still line up in the feed – round-21 #11's own
+  reasoning, reused rather than rediscovered.
+  ⚠ The predicate is the CARD'S OWN (`row.valueCents !== null`), which is already what decides
+  whether the card draws its owned half or its shop window – so a rung can never be framed and
+  priced at the same time, and there is no second definition of «owned» to keep in step.
+  ⚠ No word, price or control moved with it.
+  Evidence: three mounted arms in `tests/component/round34-money-shelf.test.ts`, one of which reads
+  the shipped `.cm-row.current` through the real cascade and compares all three values, and one of
+  which walks all six segments to assert **framed on screen == owned in the engine**. Mutation
+  ledger in the header: deleting the CSS reddens the paint arm alone, and widening the predicate to
+  `true` reddens all three for three different reasons – a frame that means nothing is caught as
+  loudly as a frame that is missing.
+
+- [x] **19. «для индексного фонда давай график нарисуем с точками его стоимости за пай с
+  возможностью выбрать промежуток… 6 месяцев, 1 год, 2 года, 5 лет. Мы же сможем хранить по одной
+  цифре за месяц средней»** – **build**, and ⚠ storing a monthly figure is a schema move.
+  – `[x]` **SHIPPED – AND ⚠⚠ IT IS NOT A SCHEMA MOVE AFTER ALL. NOTHING IS STORED, AND THE TRIAGE
+  LINE ABOVE IS WRONG. THIS NEEDS THE OWNER'S EYE.**
+
+  **WHY.** `unitPriceCents(seed, week, item)` is a PURE function – its own header says «Pure: no
+  world, no MAIN draw, no clock» – because `world/market.ts` was built on one load-bearing idea:
+  «**THE MARKET EXISTS WHETHER OR NOT SHE BUYS** … a path drawn from the career's seed alone, READ
+  at the weeks a holding spans rather than DRAWN when one is opened». So **every past week's price
+  is computable from the seed**, and the monthly series he offered to store is derivable. His
+  sentence «мы же сможем хранить» was answering an objection about COST; on this engine the chart is
+  cheaper than that.
+
+  **WHAT DERIVING IT BUYS, and the first one is what decided it:**
+  * ⭐ **HIS OWN LIVE CAREER OPENS ON A FULL CHART.** Vera is at week 569. A stored series starts
+    EMPTY, so he would have opened the new screen on an empty box and waited five years for the
+    feature he asked for. Derived, all sixty months are there the moment he loads. Pinned in a test
+    at his own week.
+  * The chart cannot disagree with the card above it – both ask `unitPriceCents`. A recorded series
+    is a second source of truth for a number the engine already computes, which `world/shop.ts`
+    itself calls «a screen and a valuation disagreeing, this repo's most-repeated defect».
+  * No migration is spent. Migrations are append-only FOREVER (CLAUDE.md item 3), so a schema
+    version added for data nothing reads is a permanent cost for no benefit.
+
+  ⚠ **THE ONE THING STORAGE WOULD HAVE BOUGHT** is a record of what the player SAW if the market
+  model is ever re-tuned. `world/market.ts` has already ruled on that – «Nothing persists any of it,
+  so this is a debugging convenience rather than a compatibility promise» – and a re-tune already
+  rewrites what a holding is worth today (`revalueAssets` re-prices `units × price(week)` every
+  tick), so a frozen chart beside a re-priced holding would BE the disagreement, not the protection.
+  ⭐ **If he wants the series recorded anyway, that is one field and a migration and I will build
+  it – but it should be his call, not a default.**
+
+  **WHAT SHIPPED.** `unitPriceHistory(seed, week, item, months)` in `engine/world/assets.ts`: one
+  averaged figure per **real calendar month** (`shared/dates.ts`'s own months, so the chart's axis
+  and every other date on screen read one calendar), oldest first, rounded once at the engine
+  boundary. Twelve months a season, so five years is **60 points** – the number his own sentence
+  arrives at. On the card: the polyline, one dot a month («с точками»), a low–high span and the two
+  end months, and his four windows as a picker – `6 months / 1 year / 2 years / 5 years`, the
+  numbers in `SHOP_PRICE_RANGE_MONTHS` so the picker and the engine's series length cannot disagree.
+  ⚠ The predicate is `ShopItem.volBps` – does this rung ride the market – so the fund he named has a
+  chart, the deposit's dead-flat exponential does not (a line with nothing to read, on a card he did
+  not mention), and a wilder fund added tomorrow gets one because of what it IS.
+
+  ⚠ **A CAREER TOO YOUNG FOR A LINE GETS AN HONEST SENTENCE, NEVER A BACK-FILL.** `marketWave` is
+  happily defined for negative weeks, so the real failure mode of a derived series is inventing
+  history the family did not live; the walk stops at week 0. A career in its first month has one
+  point and the card says «One month of prices so far – the chart starts next month.»
+
+  ⚠ **COST, MEASURED RATHER THAN ASSUMED**, because `shopView` runs on every `toSnapshot`: the
+  60-month series is **0.28 ms** and is the whole of `shopView`'s move from 0.03 ms to 0.30 ms. The
+  walk is bounded by the ANSWER's size (~4.34 weeks a month, ~260 iterations) and not by the
+  career's length, so a thirty-season career costs what a two-season one does. Suite A/B on the same
+  machine, same shard: `bulk` **110s before, 112s after** – inside the run-to-run noise.
+
+  Evidence: `tests/round34-fund-chart.test.ts` (10 arms – the four windows, real calendar months,
+  the month's mean, determinism, retroactivity at his own week 569, nothing behind week 0, the short
+  young series, and the `volBps` predicate) + six mounted arms in
+  `tests/component/round34-money-shelf.test.ts`, **one per range button** (6/12/24/60 dots), the
+  honest short-career line, no chart on the rungs that do not ride the market, and a `fits.ts`
+  assertion that the four range controls fit a 375x667 phone. Mutation ledgers in both headers, and
+  one entry is recorded because it changed NOTHING: the `Math.max(0, …)` clamp in `unitPriceHistory`
+  is belt and braces, since the walk's own `w >= 0` conditions are the real floor.
+  ⚠ `tests/week-numbering.test.ts`'s R11-6 guard – «no surface prints a raw absolute week» – caught
+  the chart's time axis and was **re-aimed, not loosened**: `monthLabel(` joins the five shared
+  formatters already on its allow-list, for the reason the list exists (it prints «Jan '31», never an
+  integer), and every other spelling is still refused.
+  ⚠ `npm run e2e:fixtures` re-run: byte-identical, no diff – this item stores nothing, so no fixture
+  could move. ⚠ `SAVE_SCHEMA_VERSION` is untouched at 69, and no other bundle moved it either.
+
+- [x] **20. «Кнопки put more in, sell it в разделе invest давай в одну строку с инпутами»** – **build**.
+  – `[x]` **SHIPPED, AND MEASURED AGAINST A PHONE.** A `.shop-stake-row` wrapper puts each control
+  beside the field it acts on – «Add more, from $X» with **Put more in**, and «Take out how much…»
+  with **Sell it for $X**. Nothing else moved: both keep their sentence, their `disabled` predicate,
+  their command and their `v-if`. ⚠ The sell wrapper is drawn UNCONDITIONALLY so the control stays a
+  single element rather than two copies behind opposite `v-if`s – a car has no amount to type and
+  comes out of the row exactly as the bare button did, which is its own arm.
+  ⚠ **ROUND-20 #3 IS THE HALF THAT NEEDED WORK.** `fits.ts` could only measure a `position: fixed`
+  bar, so it gained `availableWidth` / `rowItemWidth` / `assertInlineRowFits` – the same arithmetic
+  read against a room WALKED down the real ancestor chain, and reading a control's declared `width`
+  (a form field carries no text, so the old `demandedWidth` scored `.shop-stake-input` as its
+  padding). Measured at 375x667: the sell row on a $1,000,000 holding demands **285px of a 349px
+  line**, so it really is one row on his phone. `flex-wrap` plus `white-space: nowrap` is what a
+  bigger figure spends – a line inside the card, never the edge of the screen.
+  Evidence: three mounted arms in `tests/component/round34-money-shelf.test.ts`. ⚠ The mutation that
+  matters: widening `.shop-stake-input` from 8.5em to 30em with the STRUCTURE untouched reddens the
+  375x667 arm and nothing else in the file – which is what says the row was measured against a phone
+  and not against a desktop.
+
+- [x] **21. «С массажистом она выздоровела быстрее после травмы, а с турнира была снята тем не менее
+  и теперь на турнир не зайти, надо учитывать наличие массажиста при автоматической отмене
+  событий»** – **build**. ⚠ The withdrawal is decided before the masseur's recovery is applied.
+  – `[x]` **SHIPPED – AND THE ORDERING WAS THE BUG, MEASURED.**
+
+  **THE TWO CALL SITES.** `onsetInjury` (`engine/world/injury.ts`) shortens `weeksOut` by the
+  **physio's** factor, writes `world.injury`, and then sweeps the entries the layoff swallows. The
+  **masseur's** shortening is paid out one week at a time by `rollInjury`, which does not run until
+  the following tick. So of the two people the family pays to shorten a layoff, one was **inside**
+  the withdrawal decision and the other was **after** it – the desk cancelled her tournaments against
+  a return date only a girl with no masseur would ever have had.
+
+  **THE MEASURED ORDERING, before:** at onset the sweep read `sinceWeek + totalWeeks`, i.e. the
+  clinic's dealt number with zero masseur weeks taken off it, while the countdown she actually keeps
+  is shorter by his cadence:
+
+  | rung | dealt | sweep read | she is back | weeks she was pulled out for nothing |
+  | --- | --- | --- | --- | --- |
+  | Twice a week | 4–12 | w4 … w12 | w3 … w9 | **1–3** |
+  | Every other day | 3–12 | w3 … w12 | w2 … w8 | **1–4** |
+  | Daily | 3–12 | w3 … w12 | w2 … w6 | **1–6** |
+
+  **After:** the sweep reads `weeksOut − masseurRehabWeeksAhead(world)`, which is `rollInjury`'s own
+  cadence replayed forward, so the two dates are the same date and the table's last column is 0.
+
+  ⚠ **IT IS THE RECOVERY DATE THAT MOVED, NOT THE WITHDRAWAL RULE.** The question at the release
+  line is still the same R10-17 question asked of the same shared window arithmetic – there is no
+  `if (masseurHired)` deciding whether an entry survives, and an event that is inside the layoff on
+  BOTH readings is still cancelled (its own arm). ⚠ And the **countdown on screen is deliberately not
+  rewritten**: `weeksRemaining` stays the clinic's number and his weeks keep arriving one receipt at
+  a time («Rehab ahead of schedule – the masseur bought a week back»), because that is the whole
+  legible difference between him and the physio. The forecast governs only the decision that cannot
+  be undone later – lists close two weeks out, which is his «теперь на турнир не зайти».
+
+  ⚠ **THE PRACTICE SWEEP BESIDE IT KEEPS THE CLINIC'S WINDOW, on purpose.** A cancelled ENTRY cannot
+  be re-made once the list closes; a practice is re-bookable any week and its rental comes back in
+  full. He asked about «автоматической отмене **событий**», nothing measured says a forecast belongs
+  on the friendly, and the asymmetry is written down at the site.
+
+  **EVIDENCE** (`tests/round34-masseur-withdrawal.test.ts`): scripted dice deal an 8-week layoff in
+  week 10, entry for week 15 (list closes week 13). With the daily rung she is measured back in
+  **week 14** and the entry **survives**; the identical injury with no masseur **still cancels it**,
+  and the countdown is walked to prove she really is laid up on the day. Mutation-verified: forcing
+  the forecast to 0 – the old order – reddens the "entry survives" arm alone.
+
+- [~] **22. His save, read in full** – «посмотри пожалуйста полностью историю её перформанса, мне
+  очень интересно как она себя показывает вообще относительно наших бенчмарков. Мне кажется если мы
+  разберемся с доходностью бренда и прочими мелочами может вполне сносно быть играть даже с
+  настолько средней по скиллам девочкой.» – **measure**. ⭐ His hypothesis is the interesting part:
+  that an average girl is playable once the economy is right.
+
+---
+
+## APPROVED BY THE OWNER, 02.09.2026 – the numbers agents build to
+
+⚠ Everything below was proposed with measurements, discussed, and approved verbatim: «да, всё
+утверждаю, запускай волну 34». No agent may re-derive, round, or "improve" these figures. If a
+measurement contradicts one, STOP and report it – do not adjust it yourself.
+
+### A1 – the ceiling bands read TRUE realisation (items 2a/2b/2c)
+
+`coachRoomBandOf` divides `level / (level + room)`, which counts the skill she was BORN with as
+achievement. `handoverRoomBand` in the same file already does it correctly, against
+`potential − startingSkills(seed, profile)`, and is the model to copy.
+
+Measured on his save before the change: Vera hears «Close to her ceiling» at **41.6%** truly
+realised and «At her ceiling» at **76.3%**, while a high-ceiling girl hears the same two sentences
+at **72.3%** and **87.7%** – the verdict arrives EARLIER for the girl with less talent. That
+inversion is the defect.
+
+Approved band edges, on true realisation:
+
+| realised | line |
+| --- | --- |
+| 0–40% | Huge potential |
+| 40–75% | Still room to grow |
+| 75–90% | Close to her ceiling |
+| 90–100% | At her ceiling |
+
+Why these two numbers and not others – measured on his save:
+
+* her whole remaining headroom is worth **31 rating points** (mean 55.35 → 56.73, rating 1786 → 1817)
+* which is **54.4% instead of 50%** against an opponent she splits with today
+* compounding over a draw: 3/4/5/6 rounds → **+29% / +40% / +52% / +66%** relative title chance
+* saying «at her ceiling» at 75% writes off **8 rating points**; at 90% it writes off **3**
+
+⭐ On this scale Vera reads «Still room to grow» at 16 and «Close to her ceiling» at 24 – which is
+what he asked for: the verdict arrives after twenty, not at fourteen.
+
+### F1 – finals pay fame (item 17)
+
+`trophiesByTier` ALREADY records finals per tier; nothing reads them. Only Slam finals pay today
+(`slamFinalFloor`). Vera has **16 finals** – 5 local, 2 regional, 1 national, 1 w15, 4 w50, 2 w100,
+1 wta125 – worth exactly zero.
+
+Approved: **a final pays 40% of that tier's own title value**, decayed on the same clock as a title.
+Slam finals keep `slamFinalFloor` and are NOT double-counted.
+
+Measured effect on his save: fame 8.9 → 10.3, weekly $244 → $323, worth $76,822 → $104,044.
+
+### F2 – the ranking ladder reaches below the top 100 (item 17)
+
+Season bands stop at top-100 (+0.1). Vera is #144, i.e. BELOW the lowest rung, and a decade of
+top-150 tennis has earned her **0.27** in total.
+
+Approved: extend the ladder – **top-150 +0.05, top-250 +0.025** – and make the career cap on season
+bands GROW WITH SEASONS PLAYED instead of the flat 4-for-ever it is now, so a long professional
+career is worth something.
+
+### F3 – the endorsement ladder below the top 100 (items 7/11/12/13)
+
+Today, per deal-year, all categories signed:
+
+| rank | today | approved |
+| --- | --- | --- |
+| 201+ | **$0** (no band exists – `adBandFor` returns null) | **$200,000** |
+| 101–200 | $45,000 | **$450,000** |
+| 51–100 | $1,100,000 | unchanged |
+| 11–50 | $2,600,000 | unchanged |
+| top 10 | $9,200,000 | unchanged |
+
+⚠ The two cliffs this removes: nothing at all below 200, and a **24x jump on a single ranking
+place** from #101 to #100. Above the top 100 the ladder already steps 2.4x / 2.4x / 3.5x and is
+NOT to be touched – his ruling: «Про 50–100 отвечаю прямо: пересматривать не надо».
+
+The $200,000 anchor is his, from the film «Cinquième Set»: ~$5,000 a match under a sponsor at ~40
+matches a year. ⭐ It was checked against the engine and holds – Vera plays **22 events ≈ 44
+matches** a year. The figure is the BAND TOTAL across all categories, never one category's fee.
+
+⚠ The new band is PREPENDED, so every existing band index shifts by one. Verified safe for saves:
+the index is spent at signature (`cashCents`, `shootCount` are stored as values, never the index).
+⚠ BUT the kit ladder reads `tour`/`premium`/`icon`'s `maxWtaRank` off these bands "read and not
+imported" (see the comment in `economy.ts`) – that coupling MUST be checked, not assumed.
+
+### F4 – the brand follows the contracts (item 17)
+
+The incoherence: the sponsor market prices Vera at **$1,000,000 a year** of live deals, while the
+brand model says her whole brand is worth **$76,822** and pays **$244 a week**. Her brand is worth
+less than one of her contracts for one year.
+
+Approved: **+1 fame per $50,000 of live annual contract value, the contribution capped at +30.**
+
+⭐ The cap is the point: contracts lift the floor under an unglamorous professional, but an icon is
+still made by titles, not by her agent. A top-10 saturates the term and has to win the rest.
+
+Measured against his own acceptance test – «как только человек накопит 250к, чтобы его открыть – он
+уже будет что-то приносить, а не 200 в неделю как оскорбление»:
+
+| | fame | weekly | a year | brand worth |
+| --- | --- | --- | --- | --- |
+| top-100, $600k of deals, own fame 6 | 6 → 18 | $1,350 | $70,000 | $520,000 |
+| Vera #144, $1M of deals, own fame 8.9 | 8.9 → 28.9 | $2,600 | $135,000 | $1,130,000 |
+
+The $250,000 unlock pays itself back in **3.6 years** and climbs with her. Vera's multiple lands at
+**8.4x**, inside the 6–9x corridor round 32 fixed – the free-float defect does not return.
+
+### Backlog, NOT this wave – approved as its own future wave
+
+Per-match sponsor pay, and contract terms of six months / a season / a named group of tournaments
+(his: «контракты могут быть на 6 месяцев или год или только на какую-то группу турниров»). It is
+the better mechanic – money follows playing, a lost season genuinely costs her – but it rewrites the
+letter copy and the moment money arrives, which is a save-schema move. Not to be started here.
+
+---
+
+## ⚠ OPEN FOR THE OWNER, raised by the measurement in bundle A – the top band went elite-only
+
+The approved edge of **0.90** does exactly what he asked, and bundle A shipped it. But walking the
+real engine to age 29 (780 weeks, the whole growth arc) measured what it costs:
+
+| rung | peak true realisation | ever hears «At her ceiling»? |
+| --- | --- | --- |
+| budget | 0.855 | **no** |
+| middle | 0.879 | **no** |
+| high | 0.895 | **no** |
+| elite | – | yes, 6 of 8 careers, weeks 745–776 |
+
+A middle-rung career reads Huge potential → Still room to grow (w81) → Close to her ceiling (w296)
+and **never hears the fourth line at all**.
+
+⭐ The original complaint is fully cured: on his own save the old measure said «Close to her
+ceiling» at week 78 (age 15.5) and «At her ceiling» at week 158 (age 17.0) – his «приговор» to the
+week. The new ladder says «Still room to grow» at 16 and «Close to her ceiling» at 24.
+
+⚠⚠ **But the fourth band also carries advice, not just a verdict**: its note reads «no coach can add
+much more now, whatever the price». If an ordinary career never reaches it, a parent whose girl has
+stopped growing is never told to stop paying for a coach who can no longer buy anything. That is a
+function lost, not only a sentence unheard.
+
+⭐ **My recommendation: move the top edge to 0.85.** It restores the advice on budget/middle/high
+careers (all three peak above it), and it is still far from his complaint – on his save the girl is
+at 0.416 realised at 14 and 0.876 at 24, so 0.85 fires near her peak and nowhere near her teens.
+
+⚙ **NOT CHANGED. 0.90 is what he approved and 0.90 is what shipped.** This is a decision for him.
+
+---
+
+# ⚠⚠ CORRECTIONS TO MY OWN APPROVED FIGURES – found by bundle F, reported not adjusted
+
+The numbers in "APPROVED BY THE OWNER" are left as he approved them. Four of them were wrong when I
+put them to him, and the mechanism was built to the approved SHAPE in every case. Each is recorded
+here rather than quietly edited, because he approved what is written above and deserves to see
+exactly which parts of it my measurement got wrong.
+
+### 1. «Vera #144» – she is **#113**
+
+Caught by me mid-wave and corrected in bundle F's brief before it built. `brandSignalsOf` carries no
+rank at all; the save reads `kidRankWta: 113`. **Nothing was built on the 144.**
+
+### 2. «0.27 in total» – the season ladder had earned her **0.500**
+
+My probe derived it as a residual (`fame / shootMult − titles`) instead of summing the ladder, and
+came out low. The true figure is five top-100 seasons x 0.1 = 0.500, and the new rungs take it to
+**0.575**. ⭐ The argument is unchanged and if anything blunter: eleven seasons of professional
+tennis, six of them inside the world top 115, are worth **half a point**.
+
+### 3. ⚠⚠ «$1,350 a week at fame 18» is ARITHMETICALLY UNREACHABLE – the real ceiling is $1,118
+
+This is the one that matters. The weekly is `3000 × reach²/10 × crowdMult` with `crowdMult` clamped
+to [0.9, 1.15], so reach 18 tops out at **$1,118/week, 17% under the figure I gave him**. No career
+shape closes it; $1,350 needs reach ≈ 21.2, i.e. **$750,000** of live deals rather than $600,000.
+
+⚙ **My error, not the builder's.** I read $1,350 off my own transfer curve when the curve I had
+measured says $994 at fame 18. The row was illustrative and the mechanism is built as approved – but
+he was given a number the engine cannot produce, and that is the kind of thing this ledger exists to
+catch.
+
+### 4. «his save, $1M of deals» – his live value at week 569 is **$550,000**
+
+The four deals I added ($250k + $400k + $200k + $150k) were never all live at once. $1,000,000 was
+his shelf through weeks **404–452**. The approved row still reproduces as a scenario; **applied to
+his save as it actually stands today** the term is +11 and the result is:
+
+| | today | after round 34 |
+| --- | --- | --- |
+| weekly | **$244** | **$1,386** |
+| brand worth | $76,822 | $538,030 |
+| multiple | 6.04x | 7.46x – inside the 6–9x corridor |
+
+⭐ The headline he cared about survives every correction: **$244 a week becomes $1,386.**
+
+---
+
+# ⚠ FIVE THINGS THAT NEED HIS RULING – nothing was decided for him
+
+1. **The ceiling read's top edge.** 0.90 shipped as approved, and it made «At her ceiling» elite-only:
+   budget/middle/high careers peak at 0.855 / 0.879 / 0.895 and never hear it. ⚠ The band also
+   carries ADVICE – «no coach can add much more now, whatever the price» – so an ordinary career is
+   never told to stop paying. **My recommendation: 0.85.** See "OPEN FOR THE OWNER" above.
+2. **Item 14, the calendar.** ⚙ RULED AND BUILT – he chose design (B), several cards on a stacked
+   week: «чисто интерфейсная правка на свайп карточек. И никакого конфликта тогда нет – потому что
+   есть выбор». ⚠ But the measurement says it does NOT restore the three rungs he named – see
+   bundle J's line on item 14. That is a live question, not a closed one.
+3. **Item 5, the tournament card.** ⚙ RULED AND BUILT – «давай сделаем, посмотрим на результат».
+   The pre-draw figure now reads the field's class, and it moves 0.48 points on average against the
+   opponent figure's 18.43. See bundle J.
+4. **Item 19, the fund chart.** Built derived rather than stored, which is why his own week-569
+   career opens on a full chart instead of an empty box. Storage would only buy a record of what the
+   player SAW if the market model is re-tuned. **Cheap either way, his call.**
+5. **The F2 cap.** `4 + 0.5/season` only overtakes the band ladder past **31** seasons, so it no
+   longer binds at all – a 20-season all-top-10 career reaches 13.0 against a cap of 14.0. It does
+   not run away, but it also stopped being a cap, and it lifts the academy above the P7 payback
+   window. **His call whether that is what he wanted.**
+
+⚠ Two figures the band prepend FORCED, which he never saw and which are his to overrule:
+`fame.shootFloorByBand` and `shootFloorHalfLifeByBand` are indexed BY the advertising band and had
+four entries. Left at four, the new top band would read `undefined ?? 0` and **a global house's
+shoots would have bought zero fame**. Both gained a fifth rung – **0.03** and **13 weeks** – with
+the four shipped values unchanged and moved one index right. The 0.03 is round 32 #5's own measured
+bound: 0.02 stretches the ladder 2.75x → 5.5x and breaks its «a global house, not a hundred of them»
+guard.
+
+---
+
+# The three items I owned – no agent, no code
+
+## Item 8 `[~]` – «а что будет если отказать?» **Nothing, because there is nothing to refuse.**
+
+Traced end to end: `ECONOMY.kidShare.fromAgeYears: 18` («Her own bank account is the eighteenth's
+gift»), and `kidPrizeShareBps(ageYears)` reads **her age and nothing else** – 0 before 18, then
+10 / 15 / 20 / 25 / 30 / 35 / 40 / 45 / 50 % at 18…26+. **No consent flag, no decision, no offer and
+no refusal path exists anywhere in the engine.**
+
+What he saw is `life.ownAccount` (`narrative.ts`, rendered at `KidScreen.vue:499`) – a NOTE stating
+what the account holds and what she keeps this year. ⚠ It reads like a request and is an
+announcement. That mismatch is the only real defect in the item, and it is copy, not mechanics.
+
+⚙ His own instruction covers the rest and it is **backlog, not this wave**: «если отказали – она
+сама пошла и открыла и на морали/отношениях отразится (это в бэклог)».
+
+## Item 22 `[~]` – his save, read in full against our benchmarks
+
+**She is precisely average.** Against the 199 live professionals in her own save, on the four skills
+they share: hers **54.89**, field mean 53.74, median 53.73, best 71.77, worst 36.06 – above 107 of
+199, the **54th percentile**.
+
+**What that girl achieved in eleven seasons:**
+
+    domestic  s0-2:  #11  -> #6   -> #2
+    ITF       s2-4:  #69  -> #30  -> #27
+    WTA       s3-10: #349 -> #177 -> #95 -> #92 -> #89 -> #93 -> #97 -> #113
+
+* career high **#89**, today #113, never outside the top ~115 in six seasons
+* **Slam quarter-final**, WTA 500 semi-final, **2 x WTA 250 titles**, WTA 125 final
+* **14 titles and 16 finals** across every tier from local to WTA 250
+* 6 injuries, 18 weeks lost, one retirement question already asked and answered
+
+**Against `docs/specs/career-outcome-targets.md`:** lives from tennis ✅ (held eight seasons);
+top-100 ever ✅ at #89; top-100 by 18 ❌; Slam-level ❌. ⚠ Read the second honestly – the game makes
+a top-100 player **93.3%** of the time against a 35% target, a known open finding in that spec.
+
+**The money, which is the real answer:**
+
+| | |
+| --- | --- |
+| career prize | $3,076,136 |
+| earned / spent (family side) | $4,969,007 / $4,829,142 |
+| **family net over eleven seasons** | **+$139,865** |
+| **she holds** | **$5,449,406** |
+
+⭐⭐ **His hypothesis is right and stronger than he put it.** A 54th-percentile girl took a Slam
+quarter-final, two tour titles and five and a half million dollars. Nothing about her talent needed
+fixing; what was broken is that the game looked at that career and offered her **$244 a week**.
+
+⭐ The half worth his eye: the FAMILY cleared $139,865 across eleven seasons while the daughter
+banked $5.45M. Thematically right for a game where you play the parent – but the parent's own
+balance is nearly flat however well she does. ⚠ Not routing: endorsement money IS split at her age's
+rate (round-28 #15). It is spending – eleven seasons of coaching, travel, court and academy cost
+$4.83M of the $4.97M that came in.
+
+## Item 5 `[x]` – the ask, sharpened. See ruling 3 in the section above.
+
+⭐ **He ruled and it is built** – the pre-draw figure is `EventPreview.fieldChance`, the full result
+is on item 5's own line above, and the half of his complaint this section is about (a forecast he
+cannot act on is trivia at any accuracy) is answered by the figure existing while withdrawal is
+still free rather than by making withdrawal free. ⚠ Ruling 3's alternative – free withdrawal until
+the draw – was NOT built and is still his to call; nothing here forecloses it.
+
+---
+
+# ⚙ MERGE ORDER FOR HIM – measured, with the one conflict already resolved on paper
+
+Two branches wait on him and both touch `src/engine/world/coachMarket.ts`. Dry-run merge against
+their real merge base `c6114b71`:
+
+* `docs/now-next-later.md` – auto-merges
+* `src/engine/world/coachMarket.ts` – **exactly ONE conflict, and it is a comment**
+* `review/principles-2026-09-02` – **zero** overlap with round/34, merges cleanly in any order
+
+⭐ The two functions do NOT duplicate each other and both should live: `handoverRoomBand` (prologue)
+measures how BIG her room is, `realisedShare` (round 34) how much of it she has FILLED. Both
+branches rewrote the same comment above the `startingSkills` import to name their own consumer.
+**The resolution is one comment naming both:**
+
+    // ⭐ HER BIRTH BUILD, RE-DERIVED, and two readers need it: `handoverRoomBand` measures how big
+    // her room is (`potential − born`) and `realisedShare` – round 34 #2b – measures how much of it
+    // she has FILLED, because the skill she was born with is not an achievement. Pure and seed-only
+    // (`startingSkills` ignores its profile argument), and `engine/radar.ts` already re-derives it
+    // at snapshot time for exactly the same reason: it is cheaper than a stored field and it cannot
+    // go stale. `player.ts` imports nothing from this module, so this runs one way.
+
+⚠ Not applied to `round/34` – that would put prologue's text on a branch without prologue's code.
+Either merge order works.
+
+---
+
+# Bundle G – the review's two gate findings (QA-34, ARCH-36)
+
+Not one of his 22 items. He asked for this bundle directly after reading tonight's gate report –
+«да, запускай в эту же волну агента по фиксам ревью пожалуйста» – so it carries the top two findings
+of the principles review of 02.09.2026 (`review/principles-2026-09-02`,
+`docs/review-principles-2026-09-02/README.md`) and **nothing else from it**. That review has many
+other findings; they are not in this wave.
+
+## QA-34 `[x]` – the archival tools sweep was red, and nothing ran it. Both halves fixed.
+
+**BEFORE and AFTER, both read out of a FILE** rather than off a pipe or a background notice
+(`npm run check:tools > log 2>&1; echo "TOOLS_EXIT=$?" >> log`):
+
+| | |
+| --- | --- |
+| before | `TOOLS_EXIT=2` – nine TypeScript errors across six tools, exactly the nine the review lists |
+| after | **`TOOLS_EXIT=0`** |
+
+### ⚠ FIRST, THE THING THE WAVE HAD TO CONFIRM: not one of the nine is round 34's
+
+If a round-34 tool had been among them, tonight's report to him was wrong. It is not. The last commit
+to touch each failing file:
+
+| tool | last touched by | wave |
+| --- | --- | --- |
+| `tools/birthday-pool.ts` | `0af7eaa6` | round 27 #7 |
+| `tools/his-careers-brackets.ts` | `8ada9d3a` | round 29 #20 |
+| `tools/market-probe.ts` | `a13e5226` | round 30 #14 |
+| `tools/r29-item14-anger.ts` | `9201e534` | round 29 #14 |
+| `tools/r29-item14-read.ts` | `9201e534` | round 29 #14 |
+| `tools/r31-surface-kings.ts` | `531b7b12` | round 31 #5-6 |
+
+No round-34 commit touches any of them, and the wave's own five probes – `r34-brand-foot`,
+`r34-calendar-tiers`, `r34-domestic-reset`, `r34-savings-income`, `r34-zero-lock` – are **inside** the
+swept set (`tsconfig.tools.json` includes `tools/**/*.ts`) and typecheck clean.
+
+⭐ **And the two hard errors are not this wave's ENGINE changes either**, which is the second way a
+round-34 fingerprint could have got in. `kidAgeExact` already took `(week, birthMonth, birthDay)` at
+the merge base `c6114b71`; round 34's own birthday commit `dc82d791` states in its message that
+`kidAgeExact` is untouched, and the tree agrees. `WorldEvent` carried no `kind` field at `c6114b71`
+either.
+
+⚠⚠ **The finding under the finding: both r29 errors were wrong the day they were written.** At
+`9201e534` – the 29.08 commit that ADDED both files – `kidAgeExact` already took three arguments and
+`WorldEvent` already named its discriminator `type`. So these probes never compiled, and because a
+TypeScript error does not stop `vite-node`, they RAN: one printed `age NaN` and the other printed
+`kind=undefined` into the evidence they exist to produce. Nothing objected for five days, because
+nothing ran the only check that could see them – the 02.09 review found them by running the sweep by
+hand, which is the only reason they reach this ledger at all.
+
+### The per-tool decision: SIX REPAIRED, NONE FROZEN
+
+| tool | error | verdict | why |
+| --- | --- | --- | --- |
+| `birthday-pool.ts` | TS6133 `Rng` declared, never read | **repaired** | a type-only import left behind by an edit; deleting it removes nothing the file uses |
+| `his-careers-brackets.ts` | TS6133 `conditionMatchFactor` declared, never read | **repaired** | the name survives twice in the file's own comments, which is where it belongs – the value import was dead |
+| `market-probe.ts` | TS6133 `maxRatioSeen`, `minRatioSeen` | **repaired** | born dead in `cab690a6`, the one commit that wrote them, and never read since: the printed worst ratios come from `worstCrashFreeRatio` / `worstMarketRatio` instead |
+| `r29-item14-anger.ts` | TS2339 `kind` not on `WorldEvent` (x3) | **repaired** | the field it wants exists under its real name, `type`; the repair is that rename and nothing else |
+| `r29-item14-read.ts` | TS2554 expected 3 arguments, got 1 | **repaired** | `kidAgeExact(world)` -> `kidAgeExact(world.week, world.profile.birthMonth, world.profile.birthDay)`. The repo has 77 calls of this function across 41 files and this was the ONLY one-argument one; the other 76 compile, which is how we know the convention rather than guessing it |
+| `r31-surface-kings.ts` | TS2459 `Surface` declared locally but not exported | **repaired** | imported from `src/engine/match/types`, the module that DECLARES it |
+
+⭐ **Nothing was classified frozen, and that is a decision rather than an omission.** The review's bar
+is «clearly classify frozen evidence that CANNOT BE MAINTAINED», and none of the six clears it: every
+repair is a rename, a deleted dead symbol or a call convention, and not one of them required guessing
+what a moved API now means. A repair that has to guess would be fabricating evidence and would earn
+the frozen label instead – so the test applied was «does fixing this change what the probe MEASURES?»
+and six times the answer was no. The two `r29-item14-*` probes are the closest call, because their
+question (round 29 #14) is closed and they need his personal save to run at all; they were repaired
+anyway, because their errors were never engine drift – they were typos that the absent gate let
+through – and a probe that prints `NaN` for her age is not a record of anything. Freezing them would
+have taken two files out of the swept set to preserve two defects.
+
+⚠ Nothing was silenced. There is no new `@ts-ignore`, no new `exclude`, and `tsconfig.tools.json`
+still sweeps `tools/**/*.ts` whole.
+
+⚠ `r31-surface-kings.ts` took the **import fix, not the export**, as the brief asked. `Surface` is
+already public from `src/engine/match/types`; `src/shared/protocol/competition` merely imports it for
+two of its own field types and never re-exported it. Adding an export there would have widened a
+module's public surface to satisfy one archival probe, and `his-careers-brackets.ts` was already
+importing `Surface` from `match/types` two files away.
+
+### ⭐⭐ The half that matters most: it is in the gate now
+
+Nine errors sat unread for months precisely because `npm run check` did not run `check:tools`, and two
+earlier waves recorded the redness as «baseline» and moved on. ⚠ That is not a rhetorical flourish –
+both entries are still in the tree: `docs/rounds/round-29.md:2364` («`check:tools` (6 errors) and
+`tools:registry:check` are red at baseline») and `docs/specs/the-drought-2026-08.md:630` («2 errors,
+both baseline … This wave adds **0**»). Both waves were honest and both were measuring the wrong
+thing: «adds none» is the only claim a person can make about a number nobody is allowed to fail on.
+⭐ And the number moved while it was being filed as a constant – **2 errors in the drought spec, 6 in
+round 29, 9 at the review**. A baseline that grows is a debt, not a floor.
+Both scripts the review names are now gate steps, in `npm run check` and in CI's `test-build` job:
+
+* `npm run tools:registry:check` – with the other cheap document checks, before the typecheck
+* `npm run check:tools` – immediately after `vue-tsc -b --force`, because the tools cannot be right
+  while the engine they import is wrong, and a reader should see the app's own errors first
+
+### The cost, measured BEFORE it was wired in
+
+The review offered an escape hatch – a scheduled or post-wave integrity job – if the per-PR cost were
+unreasonable. It is not, so the escape hatch was **not** taken:
+
+| step | run 1 | run 2 | run 3 |
+| --- | ---: | ---: | ---: |
+| `npm run check:tools` | 2.53 s | 2.49 s | 2.56 s |
+| `npm run tools:registry:check` | 0.17 s | 0.14 s | 0.14 s |
+| for scale: `vue-tsc -b --force`, already in the gate | 6.81 s | | |
+
+**~2.7 s added to a gate whose unit suite alone runs for minutes.** Choice taken: **every run, local
+and CI** – the option the review preferred – rather than the scheduled job, which would have kept the
+«somebody will remember» failure mode that produced the finding.
+
+### The wiring proved by a deliberate break
+
+A `const deliberateBreak: number = "not a number"` was added to `tools/r31-surface-kings.ts`. That
+file is ARCHIVAL – it is not listed in `tsconfig.app.json` – so it is invisible to the typecheck the
+gate already had, which makes it the honest test of the new step and its own control:
+
+| run, on the identical broken file | exit code, read from a file |
+| --- | --- |
+| `npx vue-tsc -b --force` – the gate's pre-round-34 typecheck | **`VUETSC_EXIT=0`** – blind, as it was to all nine |
+| `npm run check:tools` – the new step | `TOOLS_EXIT=2` – `TS2322` on line 57 |
+| `npm run check` – the whole gate | **`CHECK_EXIT=2`**, failing at `check:tools` after passing every step before it |
+
+The break was then removed; the file's remaining diff is the import line and its comment.
+
+## ARCH-36 `[x]` – the second symbol map is gone, not corrected
+
+`tools/generated/world-symbol-map.md` said `WorldState` and `SAVE_SCHEMA_VERSION` live in
+`src/engine/world/state.ts`; `docs/context/engine-symbol-map.md` still pointed both at the barrel. The
+generated map was right – `node scripts/world-map.mjs WorldState` prints `state.ts:320`, and
+`scripts/doc-facts.mjs` has read the schema constant out of `state.ts` since the move.
+
+⭐ **The correction was NOT to repair the hand-written row.** That would have left two maps of one
+thing, one of them checked and one of them not, and the checked one would have been right again in a
+month. `docs/context/engine-symbol-map.md` is now a short route: it keeps the routing question, states
+the barrel problem, and hands the answer to `node scripts/world-map.mjs <symbol>` and the generated
+table – including what the command says when a symbol is NOT on the barrel's surface, so a reader gets
+`no export named '…' reaches src/engine/world.ts` instead of a wrong answer.
+
+Evidence that the page no longer owns a symbol:
+
+* `grep -c "^| " docs/context/engine-symbol-map.md` -> **0** table lines (it had 32)
+* `grep -c "engine/world/" docs/context/engine-symbol-map.md` -> **0** – the owner spelling the old
+  table used appears nowhere; the only module path left is `src/engine/world.ts` itself, twice, as the
+  barrel the page is about
+* `npm run map:world:check` -> `world map: … is current (384 symbols)`, and `npm run context:audit`,
+  `node scripts/doc-facts.mjs`, `npm run decisions:check`, `npm run pins:check` all exit 0
+
+⚠ The stale row in the second table also went: the page announced «three areas» over four rows, one of
+which named rule modules the barrel does not re-export at all.
+
+## The judgement calls, named
+
+1. **Six repaired, none frozen** – reasoning above. If a later wave moves an API under one of these
+   probes in a way that cannot be mechanically followed, THAT is the moment for the frozen label, and
+   the gate will now be the thing that raises it.
+2. **Import over export** for `Surface`, so no module's public surface widened for a probe.
+3. **`docs/context-index.md`'s tools row was stale and was corrected in passing** – it advertised «24
+   live, 114 archival» against a measured 26 and 151. It is the same defect QA-34 names («the registry
+   says archival probes remain reproducible»), one line from the map row this bundle rewrote, so it was
+   fixed rather than left; it is the only line touched outside the two findings.
+4. **`CLAUDE.md` was deliberately NOT edited.** Its one-line summary of `check` («vue-tsc -b --force +
+   unit tests + build») was already a summary rather than a list – it never named `context:audit` or
+   `pins:check` either – so it does not become false, and the file is the project's own instruction
+   sheet.
+5. **`tools/README.md` is generated and was regenerated**, because `scripts/tools-registry.mjs` used to
+   render the words «typechecked on demand» and that stopped being true tonight.
+
+**Gate:** `npm run check` green end to end on this branch with both new steps in it – **`CHECK_EXIT=0`**
+read from the log file, 412 s wall clock, every step in the chain including `node scripts/units.mjs`
+(= `test:quiet`; `unit: green in 356s`) and `npm run test:component` (109 files, 1158 tests passed).
+`npm run check:tools` alone: `TOOLS_EXIT=0`. No guard test went red, so none was re-aimed, and none
+was deleted or loosened.
+
+---
+
+# Bundle H – the ceiling read is normalised against what is reachable
+
+Owner, 02.09, on the finding filed under "⚠ OPEN FOR THE OWNER" above: **«да, перенормируй показ
+сразу»**. This is that, and it changes a denominator and nothing else. The four labels, the four
+notes and the approved edges 0.40 / 0.75 / 0.90 are all byte-identical to what bundle A shipped.
+
+## The defect, in one paragraph
+
+`growWeek` gains `rate × headroom × luck` – a SHARE of the distance still to run – so the distance to
+`potential` shrinks geometrically and never closes, and `ageFactor` returns exactly 0 from
+`declineStart`, so whatever is unfilled at that age is unfilled for ever. **`potential` is an
+asymptote, not a destination.** Round 34 #2b therefore put every player's build over a number nobody
+can reach, and bundle A measured what that cost: budget / middle / high careers peak at 0.855 / 0.879
+/ 0.895 and NONE of them ever reached the approved 0.90.
+
+⭐ The edge was never the defect. 0.90 of a scale whose top is 0.867 is 104% of what the game can
+actually deliver, so «At her ceiling» was arithmetically elite-only. Re-normalising is what makes the
+owner's approved numbers mean what he was told they meant.
+
+## The derived normaliser
+
+`reachableHeadroomShare()` (new, `src/engine/development.ts`, beside `ageAtPhysicalShare`, which is
+the same kind of curve walk) returns `1 − Π(1 − ageFactor(age))` over every week from `growthStart`
+to `declineStart`, every other term in `growWeek`'s rate left at 1:
+
+| the shipped curve | |
+| --- | --- |
+| growthStart 13 · growthEnd 18 · plateauStart 23 · declineStart 29 | |
+| peakRate 0.0062 · growthEase 0.5 · plateauRate 0.0009 | |
+| **`reachableHeadroomShare()` = 0.866824** | 86.7% of her headroom |
+
+⚠⚠ **IT IS DERIVED AND NEVER WRITTEN DOWN, AND THAT IS THE POINT.** The backlog already carries an
+approved wave that raises `plateauRate` and pushes `declineStart` later; a literal `0.867` would
+survive that wave in silence and start understating every career the day it landed. Measured proof
+that it moves with the curve, from `tools/r34-reachable-ceiling.ts`:
+
+| what moved | normaliser | delta |
+| --- | --- | --- |
+| shipped, nothing moved | 0.866824 | – |
+| `plateauRate` 0.0009 → 0.0018 | 0.910547 | +4.37pp |
+| `plateauRate` 0.0009 → 0.0005 | 0.841074 | −2.57pp |
+| `declineStart` 29 → 32 | 0.884276 | +1.75pp |
+| `declineStart` 29 → 26 | 0.846740 | −2.01pp |
+| both (0.0018 and 32) | 0.932464 | +6.56pp |
+| `peakRate` 0.0062 → 0.0080 | 0.916862 | +5.00pp |
+
+⚠ It is memoised on the curve's own VALUES rather than on "have I run yet" – ~830 iterations is not
+free at snapshot time, but a cache keyed on first-call would be a hardcode wearing a lazy initialiser
+and would pass every other test in the file. One slot, so it cannot grow.
+
+## The decision: curve-only, not best-coached – measured at both ends
+
+The choice was made against numbers, not taste. Same walk, a constant multiplier on the rate (which
+is what everything other than age contributes in `growWeek`), luck at its mean of 1.0:
+
+| arm | multiplier | reachable |
+| --- | --- | --- |
+| **curve only – no coach, no plan, nothing but age** | 1.0000 | **0.8668** |
+| self-coached, badly matched (0.82 × 0.94) | 0.7708 | 0.7885 |
+| self-coached, the parent's own fit | 0.8200 | 0.8085 |
+| budget coach, well matched | 0.9975 | 0.8661 |
+| middle coach, well matched | 1.0920 | 0.8894 |
+| high coach, well matched | 1.1655 | 0.9047 |
+| elite coach, well matched (1.15 × 1.05) | 1.2075 | 0.9124 |
+| elite + great + a grinding plan every week | 1.5456 | 0.9558 |
+| elite + great + grind + three matches a week | 2.3802 | 0.9919 |
+
+⭐ **THE CURVE-ONLY ARM, and the argument is that the read is about HER.** Normalising by the
+best-coached maximum (0.9124) would put the parent's chequebook inside his daughter's ceiling: two
+identical girls would read differently because one family could afford an elite coach, and the
+well-coached one would be told she has LESS left than she really has – which is the same shape of
+inversion #2b was written to remove. The curve is the one part of the denominator that belongs to the
+player rather than to the wallet.
+
+⚠ The cost of the choice, stated rather than hidden: a career that beats the curve reads 1.0 and is
+clamped there, and a career that never hires anybody cannot reach 1.0 at all. Both are correct – she
+did not realise what she could have – and the clamp was already in `realisedShare`.
+
+## Which band each rung now reaches – 8 careers per rung, 780 weeks, real engine
+
+| rung | peak RAW share | peak SHOWN share | reaches «At her ceiling» | when |
+| --- | --- | --- | --- | --- |
+| budget | 0.855 | 0.987 | **8 of 8** | weeks 383–396 |
+| middle | 0.877 | 1.000 | **8 of 8** | weeks 326–343 |
+| high | 0.894 | 1.000 | **8 of 8** | weeks 287–307 |
+| elite | 0.901 | 1.000 | **8 of 8** | weeks 273–292 |
+
+⭐ The RAW column reproduces bundle A's 0.855 / 0.879 / 0.895 to the third decimal on the same
+horizon, which is the provenance check that says the two measurements are the same measurement. The
+function that was lost is back: the fourth band's note is ADVICE – «no coach can add much more now,
+whatever the price» – and it now reaches the parent of an ordinary girl, not only the parent who
+could afford an elite coach.
+
+When each band first arrives, one career per rung:
+
+| rung | Huge potential | Still room to grow | Close to her ceiling | At her ceiling |
+| --- | --- | --- | --- | --- |
+| budget | 14.0 | 15.4 | 18.1 | 21.5 |
+| middle | 14.0 | 15.2 | 17.7 | 20.3 |
+| high | 14.0 | 15.2 | 17.3 | 19.6 |
+| elite | 14.0 | 15.2 | 17.3 | 19.6 |
+
+## ⚠⚠ ONE CONSEQUENCE HE SHOULD SEE – reported, not adjusted
+
+**§A1 says «On this scale Vera reads "Still room to grow" at 16 and "Close to her ceiling" at 24 –
+the verdict arrives after twenty, not at fourteen». That sentence was written about the RAW scale and
+re-normalising moves it.** On the career the guard test walks (`r23-walk`, middle rung), «Close to her
+ceiling» now arrives at **age 17.7** rather than at 24, and «At her ceiling» at 20.6. Year by year:
+
+```
+age     14     15     16     17     18     19     20     21     22     23
+raw    0.009  0.295  0.471  0.591  0.670  0.722  0.762  0.792  0.813  0.827
+shown  0.010  0.340  0.544  0.682  0.772  0.833  0.879  0.914  0.938  0.954
+```
+
+⭐ **His actual complaint is still fully cured** – «написал 14 летней девочке Close to her ceiling …
+звучит как приговор … не рановато ли?» – because on the old measure that career heard it at week 78,
+age 15.5, and at fourteen it now reads «Huge potential». But 17.7 is not «after twenty», and that was
+a number he was given. ⚙ **NOT CHANGED. The edges are his and re-normalising is what he asked for; if
+he wants the verdict later, the EDGE is the knob, not the measure** – exactly the shape of the note
+bundle A left at the other end.
+
+⚠ A second measured finding, for the record: the per-route curves reach different amounts – direct
+(plateau 22, decline 27) reaches 0.8451 against college's 0.8668. The normaliser is the SHIPPED pair
+for every career, so a direct-route girl peaks about 2.5% lower on the shown scale. She still clears
+0.90 comfortably. Using her OWN pair was considered and rejected: `ageCurveOf` pulls `declineStart`
+in as she loses weeks to injury, so a per-career normaliser would make the read jump UP the week she
+got hurt, and two identical builds would read differently because one had a bad season.
+
+## Evidence
+
+* **`tests/round34-reachable-ceiling.test.ts`** (new, 12 tests): the shipped normaliser measured; the
+  anti-hardcode test (moves `plateauRate`, `declineStart` up and down, and `peakRate`, restores in a
+  `finally`, and then asserts the value COMES BACK – the arm that catches a frozen memo); the two
+  route curves differing; a career at its birth build reading «Huge potential» on three seeds; a
+  career that took everything the curve offers reading the top band; the three edges checked from
+  both sides at their derived raw positions; monotone and no-flicker swept at 0.005; the four labels
+  byte-identical with no digit anywhere; and all four rungs walked 780 weeks reaching `[0, 1, 2, 3]`.
+* **`tools/r34-reachable-ceiling.ts`** (new, archival, registered, typechecks under `check:tools`) –
+  every table above.
+
+⚠ **Mutation-verified, four ways, each watched going red before it was believed:**
+
+| mutation | reddens |
+| --- | --- |
+| `reachableHeadroomShare` returns a literal `0.866824` | 2 tests – the anti-hardcode arm and the route arm |
+| the memo keyed on `'computed'` instead of on the curve's values | the same 2 – which is the point of that arm |
+| `realisedShare` back to `gained / room` | **9 tests across 3 files**, incl. budget / middle / high failing to reach the top band |
+| `'At her ceiling'` renamed to `'At her limit'` | 2 – the invariant-4 pin and the top-band read |
+
+⚠ The third mutation is the defect reproduced: with the asymptote back as the denominator, budget,
+middle and high all fail and **elite still passes** – which is bundle A's finding, mechanically.
+
+## Guard tests re-aimed – none deleted, none loosened
+
+| file | what moved | why |
+| --- | --- | --- |
+| `tests/round23-coach-copy.test.ts` | the middle-rung walk pin `[0, 1, 2]` → `[0, 1, 2, 3]` | the item itself: an ordinary career now reaches the fourth band. `toEqual` on the whole walk still forbids a skipped band, a repeat and any step backwards, so this is a STRONGER statement, not a weaker one |
+| `tests/round23-coach-copy.test.ts` | `worldAt(realised)` → `worldAt(shown)` | its four sample points stopped naming four bands |
+| `tests/coachTiers.test.ts` | `at(realised)` → `at(shown)` | same, and it was red: 0.8 and 0.95 both read «At her ceiling» |
+| `tests/component/round23-coach-card.test.ts` | `snapshotAt(realised)` → `snapshotAt(shown)` | ⚠ this one was GREEN and was re-aimed anyway – its comments («two inside band 0, two inside band 1», «a point either side of each of 0.40 / 0.75 / 0.90») had silently stopped describing its own sample points, which is the kind of pin that gets trusted wrongly later |
+| `tests/component/round24-coach-card.test.ts` | `snapshotAt(realised)` → `snapshotAt(shown)` | consistency with the file above; also green either way |
+| `tests/round34-ceiling-read.test.ts` | `theShippedMeasure` divides by the normaliser | it exists to mirror `realisedShare`. ⭐ Nothing in that file's assertions depends on it – every claim is an ordering or a zero – so the file stayed green throughout |
+
+⭐ Every re-aimed helper multiplies by `reachableHeadroomShare()` rather than by a literal, so the
+approved curve wave carries them with it instead of reddening five files. Bundle A's ⚠ notes and the
+round-23 measurement block over `coachRoomBandIndex` are kept verbatim, with bundle H's note written
+underneath rather than over them.
+
+## What did NOT change
+
+* the four labels and their four notes – **invariant 4**, asserted byte-identical
+* the band edges 0.40 / 0.75 / 0.90 – the owner's, approved 02.09
+* `handoverRoomBand` – it measures how BIG her room is, not how much of it is filled
+* `coachSeasonUplift` and every price on the market card – they never read this quantity
+* no save schema, no migration, no RNG draw: `realisedShare` is derived at snapshot time and persists
+  nothing, and the normaliser is a pure function of a shipped constant
+
+# Bundle I – the yardstick is the best coaching available, not no coaching at all
+
+Owner, 02.09, approving this fix directly: **«да, запускай»**. It changes the same denominator bundle
+H changed, one step further, and nothing else. The four labels, the four notes and the approved edges
+0.40 / 0.75 / 0.90 are byte-identical to what bundle A shipped.
+
+## The defect, in one paragraph
+
+Bundle H normalised by `reachableHeadroomShare()` = **0.8668**, which walks `ageFactor` **alone** –
+the growth of a girl with **no coach at all and no matches**. A girl who HAS a coach grows faster
+than that bare curve, so she exceeds the denominator and hits the `Math.min(1, …)` clamp in
+`realisedShare`. Measured, the shown share by age (~2 matches an event) under bundle H:
+
+| age | self / off | middle | elite / great |
+| --- | --- | --- | --- |
+| 18 | 75.9% | 90.2% | 93.9% |
+| 20 | 84.6% | 97.6% | **100.8%** |
+| 22 | 89.3% | **101.4%** | **104.2%** |
+| 28 | 95.3% | **105.7%** | **107.9%** |
+
+⚠⚠ **So a middle-coached career read «At her ceiling» from about 19 and for the rest of her life** –
+while an elite coach demonstrably still added. That is the same complaint the owner opened round 34
+with («звучит как приговор»), moved from 14 to 19, and the band's own note – «no coach can add much
+more now, whatever the price» – is simply false there.
+
+⭐ Measured on the same walks, this is what it looked like in the arithmetic: **a middle career spent
+12.5% of its weeks pinned at 1.000 by the clamp, high 26.6%, elite 34.2%.** The clamp was doing the
+reading, not guarding it, so the top of the scale did not exist as a scale.
+
+## The fix: normalise by the BEST POSSIBLE growth
+
+The same walk, at the best week a parent can buy – `coachFactor('elite','great')` and the match bonus
+at its cap. `bestCoachedRate()` (new, private, `src/engine/development.ts`) is that multiplier:
+
+| the shipped curve and ladder | |
+| --- | --- |
+| growthStart 13 · growthEnd 18 · plateauStart 23 · declineStart 29 | |
+| peakRate 0.0062 · growthEase 0.5 · plateauRate 0.0009 | |
+| `coachFactor('elite','great')` = 1.15 × 1.05 | **1.2075** |
+| matchBonus 0.18, capped at 3 | **× 1.54** |
+| **`bestCoachedRate()`** | **1.859550** |
+| **`reachableHeadroomShare()`** | **0.976596** |
+
+⚠ `trainFactor` IS DELIBERATELY LEFT AT 1, and it is the one judgement in the number. The plan dial
+is a week-by-week choice the condition model charges for – nobody holds Grind for fifteen years – so
+a denominator that assumed it would be a maximum nobody could hold. The coach and the match load are
+the STANDING setup of a well-run career, which is what the band's question is actually about. For
+scale: the grind arm reaches 0.9558 and grind-plus-three-matches 0.9919.
+
+## ⭐ Why the denominator is the BEST-COACHED maximum – and why bundle H's objection does not apply
+
+**The band's job is to answer «is there still room worth BUYING».** So the yardstick has to be what
+the best available coaching could reach; measuring against a girl who was never coached answers a
+different question, and answers it in a way that tells every coached girl she is finished.
+
+Bundle H rejected this denominator in its own ledger, on the grounds that it «puts the parent's
+chequebook inside his daughter's ceiling»: two identical girls would read differently because one
+family could afford an elite coach. **Reconsidered, and the objection does not apply**, for a
+mechanical reason:
+
+* the denominator is **ONE CONSTANT FOR EVERY CAREER** – a pure function of the shipped curve and the
+  shipped ladder, with nothing about this world, this family or this week in it. Two identical girls
+  read **identically**, whatever their parents can afford.
+* what differs between two careers is the **NUMERATOR** – how much she actually gained – **and that
+  difference is real.** The well-coached girl HAS realised more of herself, and saying so is the true
+  statement, not a judgement about her family.
+
+⚠ The cost of the choice, stated rather than hidden: a self-coached career tops out at ~0.85 of this
+scale and **never** reads «At her ceiling». That is the correct advice and not a gap – a coach would
+still buy her something, which is exactly what the band exists to say.
+
+## What each arm reads, under both denominators
+
+| arm | multiplier | reachable | H shows | I shows |
+| --- | --- | --- | --- | --- |
+| bare curve – no coach, no matches, nothing but age | 1.0000 | 0.8668 | **1.000 ⚠** | 0.888 |
+| self-coached, badly matched (0.82 × 0.94) | 0.7708 | 0.7885 | 0.910 | 0.807 |
+| self-coached, the parent's own fit (0.82 × 1.00) | 0.8200 | 0.8085 | 0.933 | 0.828 |
+| budget coach, well matched | 0.9975 | 0.8661 | 0.999 | 0.887 |
+| middle coach, well matched | 1.0920 | 0.8894 | **1.000 ⚠** | 0.911 |
+| high coach, well matched | 1.1655 | 0.9047 | **1.000 ⚠** | 0.926 |
+| elite coach, well matched | 1.2075 | 0.9124 | **1.000 ⚠** | 0.934 |
+| ⭐ **elite + great + the match bonus at its cap = THE YARDSTICK** | **1.8596** | **0.9766** | 1.000 ⚠ | 1.000 |
+| elite + great + a grinding plan every week | 1.5456 | 0.9558 | 1.000 ⚠ | 0.979 |
+| elite + great + grind + three matches a week | 2.3802 | 0.9919 | 1.000 ⚠ | 1.000 |
+
+The «H shows» column is the defect: every rung from middle upward is pinned at the clamp.
+
+## ⚠⚠ IT IS STILL DERIVED AND NEVER WRITTEN DOWN – now from three inputs, not one
+
+The backlog carries an approved wave that moves `plateauStart` 23 → 28 and `declineStart` 29 → 33. A
+literal `0.9766` would survive it in silence. Bundle H's memoisation and its key-on-the-values
+discipline are kept and **extended to the coach ladder and the match bonus**, so a retune of THOSE
+moves it too. Measured, from `tools/r34-reachable-ceiling.ts`:
+
+| what moved | normaliser | delta |
+| --- | --- | --- |
+| shipped, nothing moved | 0.976596 | – |
+| `plateauRate` 0.0009 → 0.0018 | 0.988845 | +1.22pp |
+| `plateauRate` 0.0009 → 0.0005 | 0.967479 | −0.91pp |
+| `declineStart` 29 → 33 (the approved wave) | 0.983481 | +0.69pp |
+| `declineStart` 29 → 26 | 0.969607 | −0.70pp |
+| both (0.0018 and 33) | 0.994446 | +1.78pp |
+| `peakRate` 0.0062 → 0.0080 | 0.990291 | +1.37pp |
+| **coach `developmentFactor.elite` 1.15 → 1.30** | 0.985685 | +0.91pp |
+| **coach `developmentFactor.elite` 1.15 → 1.05** | 0.967527 | −0.91pp |
+| **`fitFactor.great` 1.05 → 1.15** | 0.983654 | +0.71pp |
+| **`matchBonus` 0.18 → 0.30** | 0.990306 | +1.37pp |
+| **`matchBonus` 0.18 → 0.08** | 0.951267 | −2.53pp |
+| **`matchBonusCap` 3 → 5** | 0.990306 | +1.37pp |
+
+⭐ **The coach half of the memo key is the MULTIPLIER ITSELF, not a list of the fields behind it.**
+Keying on `bestCoachedRate()`'s value means a term added to `coachFactor` later is in the key the day
+it is added, with nobody having to remember to widen a template string – which is the failure mode a
+field list invites. The curve half stays a list because `ageFactor` is walked, not called once.
+
+## Which band each rung now reaches – 8 careers per rung, 780 weeks, real engine
+
+| rung | peak RAW share | peak SHOWN share | band reached | reaches «At her ceiling» |
+| --- | --- | --- | --- | --- |
+| self | 0.795 | 0.814 | Close to her ceiling | **0 of 8 – never** |
+| budget | 0.855 | 0.876 | Close to her ceiling | **0 of 8 – never** |
+| middle | 0.877 | 0.898 | At her ceiling | 3 of 8 |
+| high | 0.894 | 0.916 | At her ceiling | 8 of 8 |
+| elite | 0.901 | 0.923 | At her ceiling | 8 of 8 |
+
+⭐ The RAW column reproduces bundle A's and bundle H's 0.855 / 0.877 / 0.894 to the third decimal on
+the same horizon, which is the provenance check that says the two measurements are the same
+measurement. Only the denominator moved.
+
+When each band first arrives – median, and the range across the eight:
+
+| rung | Huge potential | Still room to grow | Close to her ceiling | At her ceiling |
+| --- | --- | --- | --- | --- |
+| self | 14.0 | 16.1 (16.0–16.2) | 22.7 (22.1–23.3) | **never** |
+| budget | 14.0 | 15.6 (15.6–15.7) | 19.8 (19.7–20.0) | **never** |
+| middle | 14.0 | 15.5 (15.4–15.5) | 19.1 (18.9–19.3) | 28.9 (28.5–28.9), 3/8 |
+| high | 14.0 | 15.4 (15.4–15.5) | 18.7 (18.6–18.9) | 27.1 (26.5–27.8) |
+| elite | 14.0 | 15.4 (15.3–15.4) | 18.4 (18.2–18.5) | 25.5 (24.8–25.8) |
+
+## ⭐ The clamp is no longer load-bearing – which is the defect measured as one number
+
+Peak raw ratio, and the share of a career's weeks spent pinned at 1.000 by `realisedShare`'s clamp:
+
+| rung | peak ratio (I) | weeks pinned (I) | peak ratio (H) | weeks pinned (H) |
+| --- | --- | --- | --- | --- |
+| self | 0.819 | **0.0%** | 0.923 | 0.0% |
+| budget | 0.879 | **0.0%** | 0.990 | 0.0% |
+| middle | 0.903 | **0.0%** | 1.018 | **12.5%** |
+| high | 0.918 | **0.0%** | 1.035 | **26.6%** |
+| elite | 0.926 | **0.0%** | 1.043 | **34.2%** |
+
+Nobody exceeds 1.0 in normal play. The clamp survives as a guard for the maximally optimised case
+(elite AND grind AND the match cap, 0.9919 raw against a 0.9766 denominator), which is the one career
+for which 1.0 is the right thing to say.
+
+## ⚠⚠ TWO CONSEQUENCES HE SHOULD SEE – reported, not adjusted
+
+**1. THE PREDICTED AGES IN THE APPROVAL DO NOT REPRODUCE ON THE ENGINE'S OWN CAREERS.** The approval
+predicted «a middle career reaches «At her ceiling» around **22**; an elite one around **20.5**», and
+that budget / middle / high / elite would all reach it. Measured on the real engine, 8 seeds a rung:
+elite **25.5**, high **27.1**, middle **28.9 on 3 of 8**, budget **never**, self **never**.
+
+The prediction was not wrong about the arithmetic – it is bundle H's own measured table scaled by
+0.8668/0.9766, and that scaling is exact. It is wrong about the CAREER: its reference girl reaches a
+raw share of ~0.916 by 28, while the engine's real middle-rung careers peak at **0.877** (bundle A,
+bundle H and this bundle all measure the same 0.877). Real careers lose weeks to injury, school and
+layoffs, average well under the match cap, and do not sit on Grind. **The idealised walk is an upper
+bound, not a forecast**, and the per-rung ages have to come from the engine.
+
+**2. AND THAT RE-OPENS BUNDLE H'S OWN COMPLAINT AT THE BOTTOM OF THE HIRED LADDER.** Bundle H existed
+because «a parent whose girl had genuinely stopped growing was never told to stop paying for a coach
+who could no longer buy anything». Under bundle I that is true again for **budget (0/8)** and mostly
+for **middle (3/8, at 28.9)**. The self rung reading «never» is the intended, correct behaviour; the
+budget rung reading «never» is a question.
+
+⚙ **NOT CHANGED, because both knobs are his.** The band edges are the owner's, approved 02.09 and
+explicitly out of scope here; the denominator is the thing he just approved. The two ways to close it
+if he wants it closed:
+
+* **move the top edge** 0.90 → ~0.87, which puts budget (peak 0.876) and middle (0.898) inside it
+  while leaving self (0.814) outside – the shape bundle H's ledger already named, «if he wants the
+  verdict later, the EDGE is the knob, not the measure», asked at the other end; or
+* **take the match bonus out of the yardstick** (coach factor alone, 0.9124), which reads between the
+  two bundles: self would still stop at 0.886, budget would reach 0.937.
+
+⚠ A third measured finding, for the record: the per-route curves still reach different amounts –
+direct (plateau 22, decline 27) reaches 0.9690 against college's 0.9766, so a direct-route girl peaks
+about 0.8% lower on the shown scale, down from bundle H's 2.5%. The normaliser is the SHIPPED pair for
+every career; using her own was considered and rejected in bundle H, and that argument is unchanged
+(`ageCurveOf` pulls `declineStart` in as she loses weeks to injury, so a per-career normaliser would
+make the read jump UP the week she got hurt).
+
+## `r23-walk` year by year – the career the guard test walks
+
+```
+age     14     15     16     17     18     19     20     21     22     23     24     25     26     27     28     29
+raw    0.009  0.295  0.471  0.591  0.670  0.722  0.762  0.792  0.813  0.827  0.836  0.845  0.853  0.860  0.868  0.875
+shown  0.009  0.302  0.482  0.605  0.686  0.740  0.780  0.811  0.832  0.847  0.856  0.865  0.873  0.881  0.889  0.896
+```
+
+⭐ **His original complaint is still fully cured**, and by more margin than under bundle H: «написал 14
+летней девочке Close to her ceiling … звучит как приговор … не рановато ли?» – at fourteen this career
+reads «Huge potential», and «Close to her ceiling» now arrives at **19.3** rather than at bundle H's
+17.7 or the pre-round-34 measure's 15.5.
+
+## Evidence
+
+* **`tests/round34-reachable-ceiling.test.ts`** (bundle H's file, re-aimed – 15 tests): the shipped
+  normaliser pinned at 0.9766; the arm that catches a revert to the bare curve; the anti-hardcode
+  test, now moving `plateauRate`, `declineStart`, `peakRate`, **`developmentFactor.elite`**,
+  **`fitFactor.great`**, **`matchBonus` and `matchBonusCap`**, restoring in a `finally` and then
+  asserting the value COMES BACK (the arm that catches a frozen memo); the two route curves differing;
+  a career at its birth build reading «Huge potential» on three seeds; the three edges checked from
+  both sides at their derived raw positions; monotone and no-flicker swept at 0.005; the four labels
+  byte-identical with no digit anywhere; five real careers walked 780 weeks – **self never reaching the
+  top band**, high and elite reaching it, budget measured as not reaching it, the peak share a strict
+  ladder across all five rungs, and **the clamp firing on none of them**.
+* **`tools/r34-reachable-ceiling.ts`** (re-aimed, archival, registered, typechecks under
+  `check:tools`) – every table above.
+
+⚠ **Mutation-verified, eight ways, each watched going red before it was believed:**
+
+| mutation | reddens |
+| --- | --- |
+| `reachableHeadroomShare` returns a literal `0.976596` | 2 tests – the anti-hardcode arm and the route arm |
+| the memo keyed on `'computed'` instead of on its inputs' values | the same 2 – which is the point of that arm |
+| the memo key drops its coach half (curve fields only) | 1 – the ladder and match arms of the sensitivity test |
+| **the walk reverts to bundle H's bare `ageFactor`** | **8 tests across 2 files**, incl. self reaching the top band and the clamp firing |
+| `bestCoachedRate` reads the `middle` rung instead of `elite` | 2 – the pinned constant and the sensitivity arm |
+| the match-bonus term removed from `bestCoachedRate` | 5 – incl. budget and high/elite changing which band they reach |
+| `realisedShare` back to `gained / room` | 2 – the derived edges and the high/elite reach |
+| `'At her ceiling'` renamed to `'At her limit'` | 3 across 2 files – the invariant-4 pin and two band reads |
+
+⚠ The fourth mutation is bundle H's defect reproduced: with the bare curve back as the denominator, a
+**self-coached** career reaches «At her ceiling» and the clamp starts firing on middle, high and elite
+– which is this bundle's finding, mechanically.
+
+⚠ **One guard was written and then deleted for failing its own mutation.** A `Math.max(0, …)` floor
+was added to the walk against a runaway `ageFactor * best > 1`. The mutation that was supposed to
+prove it – delete the floor, walk an absurd `peakRate` – came back **green**: the sign flips cancel
+and the product collapses to ~0 either way, so the guarded value never moved. A guard whose removal no
+test can see is untested defensive code claiming a protection it does not demonstrate, so the line
+came out and the reasoning is recorded in the source. (`growWeek` does not floor this product either,
+and the walk exists to mirror `growWeek`.)
+
+## Guard tests re-aimed – none deleted, none loosened
+
+| file | what moved | why |
+| --- | --- | --- |
+| `tests/round34-reachable-ceiling.test.ts` | the pinned constant 0.8668 → **0.9766** | the bundle itself. Same assertion, same job; what moved is the multiplier the walk runs at |
+| `tests/round34-reachable-ceiling.test.ts` | `expect(reachable).toBeLessThan(0.9)` → a career one hair under the maximum must not read the top band | H's arm worked only because its 0.8668 happened to fall below the top edge; bundle I's 0.9766 is above it, so that arm is arithmetically gone. The CLAIM it was making – «the top band is earned, not automatic» – is made directly instead, and no longer depends on where the denominator falls |
+| `tests/round34-reachable-ceiling.test.ts` | the four per-rung `[0,1,2,3]` walks → one shared walk over **five** rungs (self added) with the reach asserted per rung | the four-rung version asserted something no longer true, and the rung that matters most – `self` – was not in it |
+| `tests/round23-coach-copy.test.ts` | the middle-rung walk pin `[0, 1, 2, 3]` → **`[0, 1, 2]`** | ⚠ a REVERSION of bundle H's re-aim, and both notes are kept. H's fourth band on this career was the clamp firing, not her ceiling filling – 12.5% of a middle career's weeks were pinned at 1.000. `toEqual` on the whole walk still forbids a skipped band, a repeat and any step backwards |
+| `tests/round23-coach-copy.test.ts` | the elite walk's `[0,1,2,3]` – **unchanged**, its comment re-aimed | the round-23 claim (the fourth band is not dead copy) holds under either denominator; H's «8/8 at every rung» figures beneath it are marked superseded rather than deleted |
+| `tests/coachTiers.test.ts`, `tests/component/round23-coach-card.test.ts`, `tests/component/round24-coach-card.test.ts` | comments only | ⭐ their `shown × reachableHeadroomShare()` helpers followed the change on their own, which is exactly what bundle H bought by writing the multiply as a call rather than a literal |
+| `tests/round34-ceiling-read.test.ts` | nothing | `theShippedMeasure` already divides by the normaliser; every claim in the file is an ordering or a zero |
+
+⭐ Every re-aimed helper still multiplies by `reachableHeadroomShare()` rather than by a literal, so
+the approved curve wave – and now a coach-ladder retune – carries them with it. Bundle A's and bundle
+H's ⚠ notes and the round-23 measurement block over `coachRoomBandIndex` are kept verbatim, with
+bundle I's note written underneath rather than over them.
+
+## What did NOT change
+
+* the four labels and their four notes – **invariant 4**, asserted byte-identical
+* the band edges 0.40 / 0.75 / 0.90 – the owner's, approved 02.09
+* `handoverRoomBand` – it measures how BIG her room is, not how much of it is filled
+* `coachSeasonUplift` and every price on the market card – they never read this quantity
+* `growWeek`, `ageFactor`, `coachFactor` and every knob they read – the walk MIRRORS them and writes
+  nothing back
+* no save schema, no migration, no RNG draw: `realisedShare` is derived at snapshot time and persists
+  nothing, and the normaliser is a pure function of shipped constants
+* item lines 1–22 and every other section of this ledger
+
+---
+
+# ⚠⚠ CORRECTION – bundle G's QA-34 was work that was already done and merged
+
+While round 34 was building, the owner merged `prologue/wave` (PR #120) into `main`. It carries:
+
+    ecf93744  merge the review's P-01 – the gates that nobody ran, and the routes that were false
+    7f7b9406  P-01: repair the six red tools, run the sweep that found them, correct the false routes
+
+⚙ **That IS QA-34**, and I had commissioned it myself earlier in the same session, then forgot and
+put it to the owner again as new work. Bundle G re-did it independently, and the merge of the new
+`main` conflicted on five files for exactly that reason.
+
+**Verified against `origin/main` before resolving, so this is measured rather than assumed:**
+
+| | already in main | bundle G |
+| --- | --- | --- |
+| the nine tool errors repaired | yes, all six files | yes, independently |
+| `check:tools` inside `npm run check` | **yes** | yes |
+| `tools:registry:check` inside `npm run check` | **yes** | yes |
+| both inside CI (`ci.yml`) | **yes**, lines 98 and 108 | yes |
+| **ARCH-36 – the second symbol map retired** | **NO** – it still carries its own 33-line table | **yes, 0 lines** |
+
+⭐ So **one of the two findings survived**: `docs/context/engine-symbol-map.md` is a route to the
+machine-checked generated map on this branch and a second hand-maintained table on main. That file
+is the only part of bundle G that reaches the owner. Everything else in the merge took main's
+version, because main's is the shipped one.
+
+⚠ The process failure is mine and it is worth naming precisely, because it is cheap to repeat:
+**I proposed folding a review finding into a wave without checking whether the fix already existed
+on another branch.** The check is one command – `git log --all --grep=` on the finding's id – and it
+was not run.

@@ -14,7 +14,7 @@ import { bestFitCoachAt, buildCoachRoster, coachById, coachEdgeCorridorPp, coach
 import { OFF_SEASON_WEEKS, TIERS, TIER_LADDER, WEEKS_PER_YEAR } from '../season/calendar'
 import { ECONOMY } from '../economy'
 import type { LadderTrack, SeasonEvent, TierId } from '../season/types'
-import { ageFactor, SKILL_KEYS, trainFactor } from '../development'
+import { ageFactor, reachableHeadroomShare, SKILL_KEYS, trainFactor } from '../development'
 import { LADDER_LABEL, LADDER_TRACKS } from '../../shared/protocol'
 import type { CoachEdgePlacement, CoachMarketRow, CoachTier, HandoverBaseBand, HouseholdWeekly, KitOfferTerms, PlayerProfile } from '../../shared/protocol'
 import { managerCommissionCents, parentIncomeForWeekCents } from '../economy'
@@ -35,9 +35,12 @@ import { assetWorthCents, ownedAssets, shopItem, weeklyAssetUpkeepCents } from '
 import { academyWeeklyIncomeCents, merchWeeklyIncomeCents } from './business'
 import { addEvent, seasonIndexOf, seasonStartWeek } from './ledger'
 import { ageAtWeek, START_AGE_YEARS } from './age'
-// ⭐ HER BIRTH BUILD, RE-DERIVED – see `handoverRoomBand`. Pure and seed-only (`startingSkills`
-// ignores its profile argument), and `engine/radar.ts` already re-derives it at snapshot time for
-// exactly the same reason: it is cheaper than a stored field and it cannot go stale.
+// ⭐ HER BIRTH BUILD, RE-DERIVED, and two readers need it: `handoverRoomBand` measures how big her
+// room is (`potential - born`) and `realisedShare` - round 34 #2b - measures how much of it she has
+// FILLED, because the skill she was born with is not an achievement. Pure and seed-only
+// (`startingSkills` ignores its profile argument), and `engine/radar.ts` already re-derives it at
+// snapshot time for exactly the same reason: it is cheaper than a stored field and it cannot go
+// stale. `player.ts` imports nothing from this module, so this runs one way.
 import { startingSkills } from './player'
 import { activeLadderOf, bookClosedTo, hasOutgrown, kidPoints, tierOpenFor } from './ladder'
 import type { WorldState } from '../world'
@@ -1071,23 +1074,102 @@ const TRAVEL_EDGE_LINE = 'Twice that on the trips the coach travels to.'
  * FIRST separator to set the label in bold; a note with no separator degrades to a plain sentence
  * there, so the split can never be the thing that empties the line.
  *
- * ⚠ MONOTONE IN HEADROOM AND UNABLE TO FLICKER. `level + room` is `mean(potential)` for every skill at
- * or under its ceiling, so `realised` is `mean(skills) / mean(potential)` - and `growSkills` adds
- * `rate * headroom * luck` with `weekLuck` positive at both ends, so skills only rise until
- * `declineFactor` opens at 29. The band index is therefore non-decreasing week over week on a career
- * that is merely progressing, with no hysteresis needed and nothing persisted to give it any.
- * `tests/coachTiers.test.ts` ticks a real career and asserts exactly that.
+ * ⚠ MONOTONE IN HEADROOM AND UNABLE TO FLICKER. `realisedShare` divides a numerator that only rises
+ * by a denominator that is a career CONSTANT - her birth build and her ceiling are both fixed the
+ * week she is created, and round 34 bundle I's normaliser is a pure function of the shipped age
+ * curve and the shipped coach ladder, so it is as still as they are - and `growSkills` adds `rate * headroom * luck` with `weekLuck` positive at
+ * both ends, so skills only rise until `declineFactor` opens at 29. The band index is therefore
+ * non-decreasing week over week on a career that is merely progressing, with no hysteresis needed
+ * and nothing persisted to give it any. `tests/coachTiers.test.ts` ticks a real career and asserts
+ * exactly that.
  *
  * Pure, zero draws, derived at snapshot time.
  */
 export function coachRoomNote(world: WorldState): string {
-  const skills = SKILL_KEYS.map((k) => world.skills[k])
-  const headroom = SKILL_KEYS.map((k) => Math.max(0, world.potential[k] - world.skills[k]))
-  const level = skills.reduce((a, b) => a + b, 0) / skills.length
-  const room = headroom.reduce((a, b) => a + b, 0) / headroom.length
-  if (level + room <= 0) return ''
-  const band = ROOM_BANDS[coachRoomBandIndex(level / (level + room))]
+  const realised = realisedShare(world)
+  if (realised === null) return ''
+  const band = ROOM_BANDS[coachRoomBandIndex(realised)]
   return `${band.label}${ROOM_NOTE_SEP}${band.note}`
+}
+
+/** ⭐⭐ ROUND 34 #2b – HOW MUCH OF WHAT SHE COULD BECOME SHE HAS ACTUALLY BECOME. One definition,
+ *  read by `coachRoomNote` and by `coachRoomBandOf`, so the sentence and the index can never be
+ *  computed two different ways.
+ *
+ *  ⚠⚠ IT IS `(skills - born) / (potential - born)`, AND THE SUBTRACTION IS THE WHOLE ITEM. Until
+ *  round 34 this was `level / (level + room)` - i.e. `mean(skills) / mean(potential)` - which counts
+ *  the skill she was BORN with as achievement. A career is born around 45-49 on the mean attribute
+ *  with a ceiling around 56-61, so that ratio opens at ~0.80 (measured, week 0) before anybody has
+ *  coached her for a week - and worse, it opens HIGHER the SMALLER her ceiling is, because the birth
+ *  build it is counting is most of the number. Measured on the owner's own save: Vera heard «Close
+ *  to her ceiling» with 41.6% of her headroom actually realised and «At her ceiling» at 76.3%, while
+ *  a high-ceiling girl heard the same two sentences at 72.3% and 87.7%. ⭐ The verdict arrived
+ *  EARLIER for the girl with LESS talent, which is the inversion this fixes.
+ *
+ *  ⚠ THE MODEL IS `handoverRoomBand`, NOT A NEW IDEA. That function (childhood prologue, on
+ *  `prologue/wave`) already measures against `potential - startingSkills(seed, profile)` and says
+ *  why: it is the potential ROLL itself, pure talent, uniform by construction in
+ *  `ECONOMY.development.potentialBand`. This is the same denominator with her CURRENT build over it
+ *  instead of her ceiling.
+ *
+ *  ⚠⚠⚠ ROUND 34 BUNDLE H – AND IT IS DIVIDED BY WHAT IS REACHABLE, NOT BY THE ASYMPTOTE (owner,
+ *  02.09: «да, перенормируй показ сразу»). `potential` is a limit `growWeek` approaches and never
+ *  arrives at: the gain is `rate * headroom * luck`, a SHARE of what is left, and `ageFactor` returns
+ *  0 from `declineStart`. So `gained / room` is a fraction of something nobody can have. Measured on
+ *  the shipped curve, the raw ratio peaked at 0.855 / 0.879 / 0.895 on the budget / middle / high
+ *  rungs – every one of them short of the approved 0.90 – so «At her ceiling» was a band only an
+ *  elite-coached career ever entered, and a parent whose girl had genuinely stopped growing was never
+ *  told to stop paying for a coach who could no longer buy anything. ⭐ The EDGES were never the
+ *  defect and they are untouched: 0.40 / 0.75 / 0.90 are the owner's approved numbers, and dividing
+ *  by `reachableHeadroomShare()` is what makes them mean what he approved them to mean.
+ *
+ *  ⚠ THE NORMALISER IS DERIVED FROM THE AGE CURVE AND THE COACH LADDER AND IS NOT WRITTEN DOWN
+ *  ANYWHERE – see `reachableHeadroomShare` in engine/development.ts for why a literal would rot the
+ *  day the approved `plateauStart` / `declineStart` wave lands.
+ *
+ *  ⚠⚠⚠ BUNDLE I – AND IT IS THE BEST COACHING AVAILABLE, NOT THE BARE CURVE. Bundle H normalised by
+ *  `ageFactor` alone, i.e. by the growth of a girl with NO COACH AT ALL and no matches, and a girl
+ *  who has a coach grows FASTER than that: she exceeded the denominator and hit the clamp below. A
+ *  middle-coached career read «At her ceiling» from about NINETEEN and for ever after, while an elite
+ *  coach demonstrably still added to her – the owner's own «звучит как приговор» moved from fourteen
+ *  to nineteen, with the fourth band's advice false where it was being shown. The band's job is to
+ *  answer «is there still room worth BUYING», so the yardstick is what the best available coaching
+ *  could reach.
+ *
+ *  ⚠ IT IS STILL A CAREER CONSTANT, which is what keeps the no-flicker claim above mechanical, and
+ *  that is also the answer to bundle H's objection that a best-coached denominator would «put the
+ *  parent's chequebook inside his daughter's ceiling». It is ONE CONSTANT FOR EVERY CAREER – a pure
+ *  function of the shipped curve and the shipped ladder, with nothing about this world, this family
+ *  or this week in it – so two identical girls read identically whatever their parents can afford.
+ *  What differs is the NUMERATOR, how much she actually gained, and that difference is real. The
+ *  denominator is as fixed as her birth build and her ceiling are.
+ *
+ *  Returns null when there is no room to speak of, which both callers already treat as "say
+ *  nothing"; clamped to [0, 1] so the relative-age head start (which lands her a fraction above her
+ *  birth build in week one) and a fully-filled ceiling both read as the ends of the scale rather
+ *  than as a band that does not exist.
+ *
+ *  ⚠⚠ AND SINCE BUNDLE I THE UPPER CLAMP IS A GUARD RATHER THAN A WORKING PART, which is the clearest
+ *  single symptom of what H had wrong. Under the bare-curve denominator every coached career ran past
+ *  1.0 and was PINNED there – a middle rung from about nineteen – so the clamp was doing the reading
+ *  and the scale above it did not exist. Normalised against the best coaching available, an ordinary
+ *  well-coached career peaks near 0.94 and the clamp never fires; only a maximally optimised one (an
+ *  elite coach AND a grinding plan every week AND the match bonus at its cap, 0.9919 raw against the
+ *  0.9766 denominator) can still reach it, and 1.0 is the right thing to say about her.
+ *  `tests/round34-reachable-ceiling.test.ts` walks a real career and asserts the raw ratio stays
+ *  under 1, so a denominator that goes back to doing the reading through the clamp reddens. */
+function realisedShare(world: WorldState): number | null {
+  const born = startingSkills(world.seed, world.profile)
+  let gained = 0
+  let room = 0
+  for (const k of SKILL_KEYS) {
+    gained += world.skills[k] - born[k]
+    room += world.potential[k] - born[k]
+  }
+  if (room <= 0) return null
+  const reachable = reachableHeadroomShare()
+  if (reachable <= 0) return null
+  return Math.max(0, Math.min(1, gained / (room * reachable)))
 }
 
 /** What separates the named band from its argument. One definition, two readers - this module writes
@@ -1304,6 +1386,36 @@ const ROOM_BANDS: { label: string; note: string }[] = [
 /** Which band a realisation share falls in, as an INDEX rather than a string - the form the
  *  monotonicity and no-flicker checks need, and the form that keeps the thresholds in one place.
  *
+ * ⚠⚠⚠ ROUND 34 #2b CHANGED THE MEASURE ITSELF, NOT ONLY THE EDGES, SO READ THE TABLE BELOW AS
+ * HISTORY. `realisedShare` no longer divides `mean(skills)` by `mean(potential)`: the skill she was
+ * BORN with stopped counting as achievement, and the quantity thresholded here is now the share of
+ * her own headroom she has actually taken. ⚠⚠ AND BUNDLE H OF THE SAME ROUND RE-NORMALISED IT AGAIN,
+ * against what is REACHABLE rather than against the asymptote nobody arrives at - then BUNDLE I
+ * corrected WHAT is reachable: `reachableHeadroomShare` walks the curve at the best coaching money
+ * can buy (0.9766 of her headroom on the shipped curve and ladder), not at the bare `ageFactor`
+ * (0.8668) that H shipped, which was the growth of a girl with no coach at all and which every
+ * coached career therefore ran past and was clamped at. The edges below did not move for any of the
+ * three changes - they are the owner's, approved 02.09 - and bundle I is what makes them land
+ * where he was told they would. THE ROUND-23 MEASUREMENT BELOW THEREFORE DESCRIBES A
+ * SUPERSEDED QUANTITY - it is kept, unedited, because it is the evidence for how the four bands came
+ * to be four bands and because the reason 0.92 was earned is still worth reading, but no figure in
+ * it can be compared with a number this function sees today. Both are here on purpose.
+ *
+ * THE EDGES ARE NOW 0.40 / 0.75 / 0.90, on TRUE realisation, approved by the owner 02.09 with the
+ * measurement behind them in docs/rounds/round-34.md §A1. His ask: «At her ceiling будет звучать на
+ * 90% реальной реализации … а Close to her ceiling с 75 до 90». What the two numbers buy, measured
+ * on his own save: her whole remaining headroom is worth 31 rating points, which is 54.4% instead of
+ * 50% against an opponent she splits with today and compounds to +29%/+40%/+52%/+66% of a title over
+ * a 3/4/5/6-round draw - so saying «at her ceiling» at 75% writes off 8 rating points and at 90% it
+ * writes off 3. ⭐ On this scale his Vera reads «Still room to grow» at 16 and «Close to her ceiling»
+ * at 24: the verdict arrives after twenty rather than at fourteen, which was the complaint («звучит
+ * как приговор … не рановато ли?»). ⚠ NO ENGINE BEHAVIOUR MOVES WITH THEM, and that is still true -
+ * this function is read by one sentence of copy and by nothing else.
+ *
+ * ------------------------------------------------------------------------------------------------
+ * ⚠ SUPERSEDED BY THE PARAGRAPH ABOVE - the round-23 measurement, against `mean(skills) /
+ * mean(potential)`, kept because it is why there are four bands at all:
+ *
  * ⚠⚠ THE BOTTOM TWO THRESHOLDS MOVED, AND THEY MOVED BECAUSE THEY WERE MEASURED (round-23 #1). The
  * 08.08 ladder was 0.6 / 0.8 / 0.92, written before anybody had looked at what `realised` actually
  * does over a career - and the first thing this item did was look. Twelve careers, budget and middle
@@ -1340,21 +1452,17 @@ const ROOM_BANDS: { label: string; note: string }[] = [
  * 78-159, band 3 from ages 17-19. Four readings a player actually passes through, which is what the
  * owner asked for when he asked to be told «более явно». */
 export function coachRoomBandIndex(realised: number): number {
-  if (realised < 0.82) return 0
-  if (realised < 0.88) return 1
-  if (realised < 0.92) return 2
+  if (realised < 0.4) return 0
+  if (realised < 0.75) return 1
+  if (realised < 0.9) return 2
   return 3
 }
 
 /** The band a WORLD is in, or null when there is nothing to say (a career with no ceiling at all).
  *  Exported for the tests that walk a real career week by week; the screen never sees a world. */
 export function coachRoomBandOf(world: WorldState): number | null {
-  const skills = SKILL_KEYS.map((k) => world.skills[k])
-  const headroom = SKILL_KEYS.map((k) => Math.max(0, world.potential[k] - world.skills[k]))
-  const level = skills.reduce((a, b) => a + b, 0) / skills.length
-  const room = headroom.reduce((a, b) => a + b, 0) / headroom.length
-  if (level + room <= 0) return null
-  return coachRoomBandIndex(level / (level + room))
+  const realised = realisedShare(world)
+  return realised === null ? null : coachRoomBandIndex(realised)
 }
 
 /** The label of one band, for a test that wants the words without re-deriving them from a sentence. */

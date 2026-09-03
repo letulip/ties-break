@@ -86,7 +86,8 @@ function shootWorld(seed: string, at: number, shootWeeks: number[]): WorldState 
     untilWeek: at - 10 + 51,
     terms: {
       brand: BRAND,
-      cashCents: ECONOMY.advertising.categories.cars.feeCentsByBand[0]!,
+      // ⚠ index 1 since round 34: a band was prepended at ≤400 and this is still the ≤200 cell
+      cashCents: ECONOMY.advertising.categories.cars.feeCentsByBand[1]!,
       termWeeks: 52,
       shootCount: shootWeeks.length,
       shootWeeks: [...shootWeeks],

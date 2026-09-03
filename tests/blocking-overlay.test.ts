@@ -58,15 +58,23 @@ function answerBirthday(world: ReturnType<typeof createWorld>): void {
  *  now – `forkDue` reads `schoolIsOver`, so the ask lands on `schoolEndWeek(birthMonth)` (age
  *  18.0–18.9), deliberately BEFORE her nineteenth for every birth date. The birthday+fork collision
  *  this file's ordering cases stand on is therefore no longer the general case; it survives for
- *  exactly the dates whose birthday falls INSIDE the school-end September week – the default
- *  fixture date, 5 September, is one (schoolEndWeek(9) = 294 is the week 1–7 Sep '36 falls in, and
- *  her nineteenth is 5 Sep '36). The ordering rule itself is date-agnostic UI logic and the sweep at
- *  the bottom now pins the new clock per date.
+ *  exactly the dates whose birthday is MARKED in the school-end September week. The ordering rule
+ *  itself is date-agnostic UI logic and the sweep at the bottom now pins the new clock per date.
+ *
+ *  ⚠⚠ AND THE FIXTURE DATE MOVED WITH ROUND 34 #3 – 5 September became 1 September, which is a
+ *  RE-AIM of the fixture and not of the claim. The owner met the popup and the Home age line
+ *  disagreeing by a week, and the birthday is now marked in the week her age CHANGES rather than in
+ *  the week her date falls in (engine/world/age.ts `birthdayYearIn`). `schoolEndWeek(9)` is week
+ *  294, the week that opens on Monday 1 Sep '36 – so 5 September is now marked a week LATER than
+ *  the fork and no longer collides with it, and the single date that does is the one whose birthday
+ *  IS that Monday. Measured over all 12 months × 28 days: **1 September is the only date left whose
+ *  nineteenth is marked in its own `schoolEndWeek`**, which is why the fixture takes it rather than
+ *  a neighbour.
  *
  *  ⚠ AND THE FORK CHECK IS AT THE TOP OF THE LOOP ON PURPOSE. Both can be raised inside the same
  *  `tickWeek`, so answering the birthday before re-testing the fork would walk straight past the
  *  collision this file is about and leave every case below testing an empty queue. */
-function atTheFork(birthMonth = 9, birthDay = 5) {
+function atTheFork(birthMonth = 9, birthDay = 1) {
   const world = createWorld('fork-and-cake', { ...DEFAULT_PROFILE, birthMonth, birthDay, coachTier: 'self' })
   const rng = rngFromSeed(world.seed)
   for (let i = 0; i < 52 * 8 && world.fork === null; i++) {
@@ -97,8 +105,9 @@ function atTheFork(birthMonth = 9, birthDay = 5) {
 
 describe('the birthday speaks before the fork', () => {
   it('they really do collide – for a girl born in the school-end week, the fork opens on her birthday', () => {
-    // ⚠ ROUND 24 #5: the general fork week is school's end, not the birthday – this collision now
-    // exists for the 1–7 September birth dates only, and 5 September is the fixture's date. The
+    // ⚠ ROUND 24 #5: the general fork week is school's end, not the birthday – and since ROUND 34 #3
+    // moved the mark to the week her age changes, the collision exists for 1 September alone, which
+    // is the fixture's date (see the note on `atTheFork` for the measurement). The
     // collision is the premise of the ordering cases below. If these ever stop landing together the
     // ordering is still correct but this file is no longer testing what it claims to.
     const { world } = atTheFork()
@@ -197,13 +206,16 @@ describe('⭐⭐ the two clocks became one – round-17 #7 is closed', () => {
     // `schoolIsOver`, the ask lands on `schoolEndWeek(birthMonth)` at age eighteen, the college
     // answer reserves, and enrolment happens at the September departure. So the guard this sweep
     // holds is the NEW clock, exact to the week, per date – and the one date whose birthday shares
-    // the school-end week (5 September) still gets the cake before the fork, which is the ordering
-    // the file is named for.
+    // the school-end week (1 September since round 34 #3) still gets the cake before the fork, which
+    // is the ordering the file is named for.
     for (const [bm, bd] of [
       [6, 15],
       [12, 20],
       [1, 10],
-      [9, 5], // born in the school-end September week: the one date the old collision survives on
+      // ⚠ 5 -> 1 SEPTEMBER, ROUND 34 #3: the mark moved to the week her age changes, so this is the
+      // one date whose nineteenth still shares the school-end week – and it is the date the ordering
+      // cases above are built on, kept in the sweep so both halves walk the same career.
+      [9, 1],
       [3, 1],
       [11, 30], // the 30th of a short-followed month - the case that broke the fraction twice
       [2, 28],
@@ -212,11 +224,18 @@ describe('⭐⭐ the two clocks became one – round-17 #7 is closed', () => {
       const { world } = atTheFork(bm, bd)
       expect(world.fork, `${bd}/${bm}: the career reached the fork`).not.toBeNull()
       expect(world.fork!.askedWeek, `${bd}/${bm}: asked the week school ends`).toBe(schoolEndWeek(bm))
+      // ⚠⚠ RE-AIMED BY ROUND 34 #3, AND THE EXCEPTION IS THE COLLISION THIS FILE IS NAMED FOR. Until
+      // this round the ask preceded her nineteenth for EVERY date: the birthday was marked in the
+      // week its DATE fell in, and school ends on a Monday. The mark is the week her age CHANGES
+      // now, so for the one date whose birthday IS that Monday the two are the same week and she
+      // turns nineteen ON the card. Written as the rule plus its named exception rather than
+      // relaxed to "18 or 19" – every other date in the sweep must still read exactly 18.
+      const cakeThisWeek = pendingBirthday(world) !== null
       expect(
         kidAgeYears(world.fork!.askedWeek, bm, bd),
-        `${bd}/${bm}: she is eighteen on the card – the ask precedes the nineteenth now`,
-      ).toBe(18)
-      if (pendingBirthday(world) !== null) {
+        `${bd}/${bm}: she is eighteen on the card unless her birthday is marked in it`,
+      ).toBe(cakeThisWeek ? 19 : 18)
+      if (cakeThisWeek) {
         // ...and where a birthday DOES share the week, the ordering rule still puts the cake first.
         expect(blockingOverlay(toSnapshot(world)), `${bd}/${bm}: the birthday speaks first`).toBe('birthday')
       }

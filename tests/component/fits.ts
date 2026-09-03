@@ -254,6 +254,96 @@ export function demandedWidth(el: Element, room: number): number {
   return Math.max(floor, chrome + text.length * num(cs.fontSize) * ADVANCE)
 }
 
+// =================================================================================================
+// ⭐ AND THE THIRD SHAPE: A ROW INSIDE THE PAGE, WHICH IS NOT PINNED TO ANYTHING (round 34 #20)
+// =================================================================================================
+//
+// `assertRowFits` above measures a bar that is `position: fixed`, so its room is the viewport minus
+// its own padding and the arithmetic stops there. A row of controls sitting in a CARD, in a feed, in
+// a screen shell has its room decided by everything above it – and that chain is exactly what a
+// width regression hides in: a card that grows 8px of padding takes those px off every row inside
+// it. So the room is WALKED rather than assumed, and the two functions below are the same
+// measurement `assertRowFits` makes, read against a walked room instead of a viewport.
+
+/** The content width `el` is left by its own ancestors on `vp` – the viewport, narrowed by every
+ *  padding, border, margin and `max-width` between the document and `el`'s parent.
+ *
+ *  ⚠ IT STOPS AT `el`'s PARENT, so the caller can subtract `el`'s own box or not, as the question
+ *  needs. `assertInlineRowFits` subtracts it. */
+export function availableWidth(el: Element, vp: Viewport): number {
+  const chain: Element[] = []
+  for (let node = el.parentElement; node; node = node.parentElement) chain.unshift(node)
+  let room = vp.width
+  for (const node of chain) {
+    const cs = getComputedStyle(node)
+    const cap = lengthPx(cs.maxWidth, room)
+    if (Number.isFinite(cap)) room = Math.min(room, cap)
+    const declared = lengthPx(cs.width, room)
+    if (Number.isFinite(declared)) room = Math.min(room, declared)
+    room -=
+      num(cs.marginLeft, room) +
+      num(cs.marginRight, room) +
+      num(cs.borderLeftWidth) +
+      num(cs.borderRightWidth) +
+      num(cs.paddingLeft, room) +
+      num(cs.paddingRight, room)
+  }
+  return room
+}
+
+/** What a control in a row takes across: `demandedWidth`, and at least its own DECLARED width.
+ *
+ *  ⚠ THE DECLARED HALF IS WHY THIS EXISTS. `demandedWidth` answers for a pill – a box that is as
+ *  wide as its label – and reads `min-width` only. A form field is the other kind of control: it
+ *  declares a `width` (`.shop-stake-input` is `8.5em`) and carries no text of its own, so
+ *  `demandedWidth` alone scores it as its padding and a field three times too wide measures as free. */
+export function rowItemWidth(el: Element, room: number): number {
+  const declared = lengthPx(getComputedStyle(el).width, room)
+  return Math.max(demandedWidth(el, room), Number.isFinite(declared) ? declared : 0)
+}
+
+/**
+ * `items` really do sit on ONE line inside `row` on `vp` – the in-page counterpart of
+ * `assertRowFits`.
+ *
+ * ⚠ WHAT A RED VERDICT MEANS HERE, because it is not the same failure as the fixed bar's. A row
+ * that declares `flex-wrap: wrap` cannot push a control off the side of the phone – it spends a
+ * LINE instead. So this assertion is not «the control is unreachable», it is «the controls do not
+ * fit beside each other, so the row the owner asked for is two rows on his screen». That is the
+ * claim round 34 #20 is about, and a wrapping row is what stops the same measurement from being an
+ * unreachable-control bug in the first place.
+ */
+export function assertInlineRowFits(row: Element, items: Element[], vp: Viewport, label: string): number {
+  if (!document.head.querySelector('style')) {
+    throw new Error('no stylesheet in the document – without it this measurement is vacuous')
+  }
+  const cs = getComputedStyle(row)
+  if (!cs.display.includes('flex')) {
+    throw new Error(`${label}: the row is \`display: ${cs.display}\`, so its children are not on a line at all`)
+  }
+  const outer = availableWidth(row, vp)
+  const room =
+    outer -
+    num(cs.paddingLeft, outer) -
+    num(cs.paddingRight, outer) -
+    num(cs.borderLeftWidth) -
+    num(cs.borderRightWidth)
+  const gap = num(cs.columnGap || cs.gap, room)
+
+  let needed = gap * Math.max(0, items.length - 1)
+  for (const item of items) {
+    const box = boxOf(item, room)
+    expect(box.h, `${label} at ${vp.width}x${vp.height} – a control has no box, so there is nothing to press`).toBeGreaterThan(0)
+    needed += rowItemWidth(item, room)
+  }
+  expect(
+    needed,
+    `${label} at ${vp.width}x${vp.height} – the controls demand ${needed.toFixed(0)}px of a ${room.toFixed(0)}px row, ` +
+      'so they cannot stand beside each other and the row wraps',
+  ).toBeLessThanOrEqual(room)
+  return room - needed
+}
+
 /**
  * A fixed bar of side-by-side controls fits `vp`, and every control in it is pressable.
  *

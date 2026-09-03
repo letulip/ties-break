@@ -29,18 +29,15 @@ last-reviewed: 2026-08-31
 
 ## Now
 
-⚙ THE LIVE WAVE IS ROUND 33 – this line is machine-checked against the newest ledger in
+⚙ THE LIVE WAVE IS ROUND 34 – this line is machine-checked against the newest ledger in
 `docs/rounds/` by `scripts/doc-facts.mjs`; edit the number only by shipping a ledger.
 
-**Round 33 is the open wave** ([round-33.md](rounds/round-33.md), 01.09) – a tidy-up of three August
-measurements that never reached main, and one item off his play. ⭐⭐ Its item #1 is the FIFTH report
-of the same complaint and the first with the structural answer: **there is no tournament screen.**
-Home's `Next tournament` plate opens `ThisWeekScreen` with an `entry` prop, so four rounds in a row
-rearranged blocks inside one screen while he was describing two. The prop now decides what the screen
-IS – on that arrival the page is the date line, the way back to Home and the tournament, and none of
-the week's own furniture. ⚙ **One thread is his to rule on and is not ours to build**: whether the
-tournament becomes a real `TournamentScreen.vue`. The cost of both answers is written out in the
-ledger. **Read the ledger for state; do not count boxes here.**
+**Round 34 is the open wave** ([round-34.md](rounds/round-34.md), 02.09) – twenty-one items off a
+full career played on the round-33 build, plus a full read of his save. ⭐ Its centre of gravity is
+the economy: the coach's ceiling read counts her birth level as achievement, the endorsement ladder
+pays nothing below world #200 and jumps 24x on one ranking place at #100, and her brand is valued at
+less than one year of one of her own sponsorship contracts. Every figure in it was measured, put to
+the owner and approved before a line was written.
 
 **Round 32 was the previous wave** ([round-32.md](rounds/round-32.md), 31.08) – two items read off his
 play on the merged round-31 build, both diagnosed before they were filed. A shoot booked in an

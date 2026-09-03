@@ -23,7 +23,11 @@ import { ECONOMY } from '../economy'
 import { WEEKS_PER_YEAR } from '../season/calendar'
 import { brandGrossWorthCents, brandSignalsOf, brandWeeklyGrossCents } from './brand'
 import { marketIndex } from './market'
-import type { OwnedAsset } from '../../shared/protocol'
+// ⭐ ROUND 34 #19 – the ONE calendar. `shared/dates.ts` imports nothing, so this closes no cycle;
+// `world/market.ts`'s own note about not spelling a date twice is the reason it is asked rather than
+// re-derived here.
+import { weekMonth, weekYear } from '../../shared/dates'
+import type { OwnedAsset, ShopPricePoint } from '../../shared/protocol'
 import type { WorldState } from '../world'
 
 /** One rung of `ECONOMY.shop.catalogue`, with the constant's literal types widened back to the
@@ -272,6 +276,88 @@ export function unitPriceCents(seed: string, week: number, item: ShopItem): numb
     Math.pow(1 + item.annualRateBps / 10_000, years) *
     marketIndex(seed, week, item.volBps ?? 0)
   )
+}
+
+// =================================================================================================
+// ⭐⭐⭐ ROUND 34 #19 – WHAT THE UNIT HAS COST, MONTH BY MONTH. THE CHART'S OWN DATA.
+// =================================================================================================
+//
+// THE OWNER, 02.09: «для индексного фонда давай график нарисуем с точками его стоимости за пай с
+// возможностью выбрать промежуток… 6 месяцев, 1 год, 2 года, 5 лет. Мы же сможем хранить по одной
+// цифре за месяц средней»
+//
+// ⚠⚠ AND NOTHING IS STORED, WHICH IS A DEPARTURE FROM HIS OWN SENTENCE AND IS WHY IT IS ARGUED HERE
+// RATHER THAN DECIDED QUIETLY. He offered the monthly average as the CHEAP way to afford the chart –
+// «мы же сможем хранить» is an answer to an objection about cost. On this engine the chart is
+// cheaper than that: `unitPriceCents` is a pure function of the career SEED, the week and the rung
+// («Pure: no world, no MAIN draw, no clock», six lines up), because `world/market.ts` was built on
+// one load-bearing idea – «THE MARKET EXISTS WHETHER OR NOT SHE BUYS … a path drawn from the
+// career's seed alone, READ at the weeks a holding spans rather than DRAWN when one is opened».
+// So every past week's price is COMPUTABLE and always was. What he asked to store is derivable.
+//
+// ⭐⭐ THREE THINGS FALL OUT OF DERIVING IT, AND THE FIRST IS THE ONE THAT DECIDED IT:
+//
+//   * HIS OWN LIVE CAREER GETS THE FULL CHART THE MOMENT HE LOADS IT. A stored series starts empty,
+//     so Vera at week 569 would have opened the new screen on an empty box and waited five years for
+//     the feature. Derived, her whole eleven years are there.
+//   * THE CHART CANNOT DISAGREE WITH THE CARD ABOVE IT. Both ask `unitPriceCents`; a recorded series
+//     is a second source of truth for a number the engine already computes, which `world/shop.ts`
+//     calls «a screen and a valuation disagreeing, this repo's most-repeated defect».
+//   * NO MIGRATION IS OWED AND NONE IS SPENT. Migrations are append-only forever (CLAUDE.md item 3),
+//     so a schema version added for data nothing needs is a permanent cost for no benefit.
+//
+// ⚠ THE ONE THING STORAGE WOULD BUY is a record of what the player SAW if the market model is ever
+// re-tuned. `world/market.ts` has already ruled on that: «Nothing persists any of it, so this is a
+// debugging convenience rather than a compatibility promise.» A re-tune already rewrites what a
+// holding is worth today (`revalueAssets` re-prices `units × price(week)` every tick), so a frozen
+// chart beside a re-priced holding would be the disagreement, not the protection.
+
+// ⚠ THE POINT'S SHAPE IS THE PROTOCOL'S (`ShopPricePoint`) and not a second declaration here: it
+// crosses to the screen unchanged, and a private twin is how two structures start to drift. It is
+// the month's AVERAGE unit price in WHOLE cents, rounded ONCE at this boundary – the owner's rule of
+// 26.08, «у пользователя целые в интерфейсе» – so no screen rounds a price a second time.
+
+/** ⭐⭐ THE LAST `months` CALENDAR MONTHS OF A RUNG'S UNIT PRICE, oldest first, one averaged figure
+ *  each – «по одной цифре за месяц средней», his own resolution.
+ *
+ *  ⚠ A MONTH IS A REAL CALENDAR MONTH (`shared/dates.ts`), not a block of four weeks. The app has one
+ *  calendar and every other date on screen is drawn from it; a private «month» of 4.33 weeks would
+ *  drift against every label beside it, which is the exact defect the season re-anchor was written to
+ *  end. A season is 52 weeks anchored to the first Monday of its own year, so twelve months make a
+ *  season and five years make **60 points** – the number his own sentence arrives at.
+ *
+ *  ⚠ IT NEVER REACHES BEHIND WEEK 0. `marketWave` is defined for negative weeks, so a naive walk
+ *  would happily draw a market from before the career began – history the player did not live. A
+ *  young career gets a SHORT series and the chart says so; it does not get an invented one.
+ *
+ *  ⚠ THE MONTH IN PROGRESS IS THE LAST POINT, averaged over the weeks of it that have happened, so
+ *  the right-hand end of the chart is now rather than last month.
+ *
+ *  Pure: seed, week, rung, length. No world, no MAIN draw, no clock, nothing stored. */
+export function unitPriceHistory(seed: string, week: number, item: ShopItem, months: number): ShopPricePoint[] {
+  if (item.unitBaseCents === undefined || months <= 0) return []
+  const now = Math.max(0, Math.floor(week))
+  // Walk BACKWARDS a week at a time, closing a bucket whenever the calendar month changes, and stop
+  // as soon as `months` of them are complete. ⚠ The walk is bounded by the answer's own size (about
+  // 4.34 weeks a month, so ~260 iterations for the five-year range) rather than by the career's
+  // length, which is what keeps a thirty-season career the same cost as a two-season one.
+  const out: ShopPricePoint[] = []
+  let w = now
+  while (w >= 0 && out.length < months) {
+    const month = weekMonth(w)
+    const year = weekYear(w)
+    let sum = 0
+    let count = 0
+    let first = w
+    while (w >= 0 && weekMonth(w) === month && weekYear(w) === year) {
+      sum += unitPriceCents(seed, w, item)
+      count++
+      first = w
+      w--
+    }
+    out.push({ week: first, cents: Math.round(sum / count) })
+  }
+  return out.reverse()
 }
 
 /** ⭐⭐⭐ WHAT A HOLDING IS WORTH, ASKED OF THE WORLD. THE one entry point: `revalueAssets` (which

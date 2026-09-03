@@ -408,6 +408,131 @@ export function ageAtPhysicalShare(share: number, bounds: AgeCurveBounds = ECONO
   return age
 }
 
+/** ⭐⭐⭐ THE BEST WEEK ANYBODY CAN BUY, as a multiplier on `ageFactor` – everything in `growWeek`'s
+ *  rate that a PARENT decides, turned all the way up. The dearest rung of the ladder teaching the
+ *  game she actually plays, and a week with the match bonus at its cap.
+ *
+ *  ⚠ IT READS THE LADDER RATHER THAN QUOTING IT, which is the whole reason it is a function. A
+ *  retune of `developmentFactor.elite`, of `fitFactor.great`, of `matchBonus` or of `matchBonusCap`
+ *  has to move `reachableHeadroomShare` with it, and it does so here by construction.
+ *
+ *  ⚠ `trainFactor` IS DELIBERATELY LEFT AT 1 AND THAT IS THE ONE JUDGEMENT IN THE NUMBER. The plan
+ *  dial is a WEEK-BY-WEEK choice with a cost the condition model charges for – a career cannot sit on
+ *  Grind for fifteen years and stay healthy – so a denominator that assumed it would be a maximum
+ *  nobody could hold. The coach and the match load are the STANDING setup of a well-run career, which
+ *  is the thing the band's question is actually about. Measured: the grind arm reaches 0.9558 and
+ *  three-matches-plus-grind 0.9919, against this arm's 0.9766. */
+function bestCoachedRate(): number {
+  const d = ECONOMY.development
+  return coachFactor('elite', 'great') * (1 + d.matchBonusCap * d.matchBonus)
+}
+
+/** ⭐⭐⭐ ROUND 34 BUNDLE I – HOW MUCH OF HER HEADROOM THE BEST COACHING AVAILABLE CAN EVER ACTUALLY
+ *  HAND OVER. The honest denominator for "how much of what she could become has she become", and the
+ *  reason the owner's approved band edges mean what they say.
+ *
+ *  ⚠⚠ `potential` IS AN ASYMPTOTE AND NOBODY REACHES IT. `growWeek` gains `rate * headroom * luck` –
+ *  a SHARE of what is left – so the distance to the ceiling shrinks geometrically and never closes,
+ *  and `ageFactor` returns 0 from `declineStart`, so whatever is still unfilled at that age is
+ *  unfilled for ever. Measured on the shipped curve: the curve alone stops at 0.8668 of her headroom,
+ *  the best coaching money can buy at 0.9766, and a self-coached badly-matched career at 0.7885.
+ *  Dividing by `potential - born` therefore showed every player a fraction of something unreachable:
+ *  «At her ceiling» at 0.90 was a band only an elite-coached career could enter, and it was not the
+ *  edge that was wrong – it was the scale.
+ *
+ *  What this returns is that scale's real top: `1 - Π(1 - ageFactor(age) * bestCoachedRate())` over
+ *  every week from `growthStart` to `declineStart`.
+ *
+ *  ⚠⚠⚠ WHY THE DENOMINATOR IS THE BEST-COACHED MAXIMUM AND NOT THE BARE CURVE – bundle I, and it is
+ *  a CORRECTION OF BUNDLE H, which shipped the curve-only walk. THE BAND'S JOB IS TO ANSWER «IS
+ *  THERE STILL ROOM WORTH BUYING», so the yardstick has to be what the best available coaching could
+ *  reach. Against the bare curve – the growth of a girl with no coach at all and no matches – a girl
+ *  who HAS a coach grows faster than the denominator and runs into the `Math.min(1, …)` clamp: a
+ *  middle-coached career read «At her ceiling» from about NINETEEN and for the rest of her life,
+ *  while an elite coach demonstrably still added to her. That is the owner's own round-34 complaint
+ *  («звучит как приговор») moved from fourteen to nineteen, and the fourth band's note – «no coach
+ *  can add much more now, whatever the price» – was simply FALSE where it was being shown.
+ *
+ *  ⚠⚠ BUNDLE H'S OBJECTION WAS RECONSIDERED AND DOES NOT APPLY. Its ledger rejected this denominator
+ *  on the grounds that it «puts the parent's chequebook inside his daughter's ceiling». It does not,
+ *  and the reason is mechanical: THIS IS ONE CONSTANT FOR EVERY CAREER. It is a pure function of the
+ *  shipped curve and the shipped ladder – nothing about this world, this family or this week enters
+ *  it – so two identical girls read IDENTICALLY whatever their parents can afford. What differs
+ *  between them is the NUMERATOR: how much she actually gained. And that difference is real – the
+ *  well-coached girl HAS realised more of herself, and saying so is the true statement, not a
+ *  judgement about her family.
+ *
+ *  ⚠ THE COST OF THE CHOICE, STATED RATHER THAN HIDDEN: a self-coached career tops out at ~0.85 of
+ *  this scale and NEVER reads «At her ceiling». That is the correct advice and not a gap – a coach
+ *  would still buy her something, which is exactly what the band exists to say.
+ *
+ *  ⚠⚠ IT IS DERIVED AND NEVER WRITTEN DOWN, AND THAT IS THE WHOLE POINT. A future wave is already
+ *  approved to move `plateauStart` 23 -> 28 and `declineStart` 29 -> 33. A literal `0.9766` here
+ *  would survive that wave in silence and start understating every career the day it landed – the
+ *  same rot the shipped-constant rule in `ageAtPhysicalShare` above exists to prevent. Every number
+ *  this walk reads comes out of `ECONOMY.development.ageCurve`, out of `ageFactor` itself and out of
+ *  `bestCoachedRate` above, so the normaliser moves with the curve AND with the coach ladder AND
+ *  with the match bonus by construction. `tests/round34-reachable-ceiling.test.ts` moves all three
+ *  in a fixture and fails if this number stands still.
+ *
+ *  ⚠ A LOOP AND NOT A FORMULA, for exactly the reason `ageAtPhysicalShare` above is one: the rate
+ *  changes every week, so a closed form would have to integrate a piecewise-linear factor and would
+ *  drift from what the engine does. The constant-rate sibling is `headroomShareTaken` in
+ *  engine/coach.ts (`1 - (1 - rate*luck)^weeks`) – the same arithmetic where the rate holds still.
+ *
+ *  ⚠ LUCK IS AT ITS MEAN OF 1.0 and not at the top of `weekLuck`, because a normaliser that moved
+ *  with the dice would not be a scale. `weekLuck` is symmetric [0.55, 1.45], so 1.0 is the honest
+ *  centre and the arithmetic below is the expected walk rather than a lucky one.
+ *
+ *  ⚠ MEMOISED ON ITS INPUTS' OWN VALUES, NOT ON FIRST CALL. A cache that ignored them would be a
+ *  hardcode wearing a lazy initialiser and would defeat the very test that guards this. One slot, so
+ *  it cannot grow: ~830 iterations on a miss, a string compare on a hit. Pure, zero draws.
+ *
+ *  ⭐ THE COACH HALF OF THE KEY IS THE MULTIPLIER ITSELF, NOT A LIST OF THE FIELDS BEHIND IT. Keying
+ *  on `bestCoachedRate()`'s VALUE means a term added to `coachFactor` later is in the key the day it
+ *  is added, with nobody having to remember to widen a template string – which is the failure mode a
+ *  field list invites. The curve half has to stay a list because `ageFactor` is walked, not called
+ *  once.
+ *
+ *  ⚠ THE PRECEDENT IS `runsIndexCache` IN season/rival.ts, AND THE KEY IS DELIBERATELY DIFFERENT.
+ *  That one watches the knob array's IDENTITY, which is right there because its note records the
+ *  house rule it relies on: "a knob object is replaced, never scribbled on in place". The fixtures
+ *  that move THIS curve scribble on it in place and restore it – there is no whole-object swap to
+ *  watch – so identity would never miss a hit and the guard would be blind. Values it is. */
+let reachableKey = ''
+let reachableShare = 0
+export function reachableHeadroomShare(
+  bounds: AgeCurveBounds = ECONOMY.development.ageCurve,
+): number {
+  const c = ECONOMY.development.ageCurve
+  const best = bestCoachedRate()
+  // Every value the walk below can read, so any curve OR ladder change is a cache miss by
+  // construction – see the ⭐ note above on why the coach half is one number and the curve half a list.
+  const key = `${c.growthStart}|${c.growthEnd}|${c.peakRate}|${c.growthEase}|${c.plateauRate}|${bounds.plateauStart}|${bounds.declineStart}|${best}`
+  if (key === reachableKey) return reachableShare
+  let left = 1
+  // ⚠ THE AGE IS COMPUTED FROM THE INDEX RATHER THAN ACCUMULATED. Eight hundred `+= 1/52` steps
+  // drift; `declineStart` is also a fractional number on a career that drew its own spread, so the
+  // stop has to be compared against a clean age rather than against a running sum of remainders.
+  for (let w = 0; ; w++) {
+    const age = c.growthStart + w / WEEKS_IN_SEASON
+    if (age >= bounds.declineStart) break
+    // ⚠ NO `Math.max(0, …)` FLOOR HERE, AND IT WAS CONSIDERED AND REJECTED RATHER THAN OVERLOOKED.
+    // `bestCoachedRate()` is 1.86 against bundle H's bare 1.0, so this product is nearly twice what
+    // it was and a runaway `> 1` week is proportionally nearer – but it is still ~87x the shipped
+    // `peakRate` away, which is a typo and not a retune. A floor was written, and then the mutation
+    // it was supposed to survive (delete the floor, walk an absurd `peakRate`) came back GREEN: the
+    // sign flips cancel and the product collapses to ~0 either way, so the guarded value never
+    // actually moved. A guard whose removal no test can see is untested defensive code claiming a
+    // protection it does not demonstrate, so the line came out. `growWeek` itself does not floor
+    // this product either, and this walk exists to mirror `growWeek`.
+    left *= 1 - ageFactor(age, bounds) * best
+  }
+  reachableKey = key
+  reachableShare = 1 - left
+  return reachableShare
+}
+
 /** The training split, as a multiplier. `plan.train` runs 60 (light) to 85 (grind).
  *
  *  ⚠ SINCE v47 `plan.train` IS A PROJECTION OF THE TICKED WEEK (4/5/6 sessions -> 60/75/85), so this

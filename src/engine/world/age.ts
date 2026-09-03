@@ -163,53 +163,69 @@ function birthDate(birthMonth: number, birthDay: number): { month: number; day: 
   return { month, day: Math.max(1, Math.min(daysInBirthMonth(month), Math.round(birthDay))) }
 }
 
-/** THE CALENDAR YEAR of the birthday that falls INSIDE `week`, or null when none does. The primitive
- *  both public functions below are written on, so they cannot answer differently.
+/** THE CALENDAR YEAR of the birthday this week MARKS, or null when it marks none. The primitive both
+ *  public functions below are written on, so they cannot answer differently.
  *
- *  ⚠ TWO CANDIDATE YEARS, AND THE SECOND ONE IS NOT DEFENSIVE - it is a whole class of lost birthdays.
- *  A career week is Monday..Sunday, and since the season re-anchor a season's LAST week can straddle New
- *  Year (Monday 30 Dec, Sunday 5 Jan). `weekYear` names the MONDAY's year, so asking only that year for
- *  a girl born 1-5 January looked up the January TWELVE MONTHS EARLIER and found a different week - and
- *  the week after is the next season's offset 0, which looks up the same date one week too late. Her
- *  birthday was not off by one. It was GONE for that year, in silence: measured before the fix over
- *  fourteen seasons, 29 lost birthdays across the five dates 1-5 January, and none after
- *  (`npx vite-node tools/birthday-age-read.ts`).
+ *  ⭐⭐⭐ ROUND 34 #3 – A BIRTHDAY IS MARKED IN THE WEEK THE ONE CLOCK TICKS, NOT IN THE WEEK THE DATE
+ *  FALLS IN. The owner, playing: «Увидел попап про 15 летите … а затем на home перешёл, а там написано
+ *  14 лет. Подозреваю, что это из-за дат: ДР 15го, а начало недели 14го, но раз мы показали попап – то
+ *  уже можно и возраст менять, либо сам попап в таких случаях в конце недели показать» – and his
+ *  diagnosis was exact. A career week is Monday..Sunday; `kidAgeExact` answers for the MONDAY (the
+ *  right question for a rule that governs a whole week, see the ruling above); a birthday on the
+ *  Tuesday therefore sat one week ahead of the age the Home line printed. He named both fixes and
+ *  this is the second of them, «показать в конце недели»: the note, the popup, the confetti and the
+ *  diary fact all move to the week her age actually changes.
  *
- *  What this does NOT invent is a birthday the calendar does not contain: in a year the real calendar
- *  needs 53 weeks for, one week belongs to no career week at all, and a date inside it still has none
- *  (see `weekOfDate` - 31 December loses season 9 that way, and honestly). */
+ *  ⚠ THE FIRST FIX WAS NOT TAKEN, AND THE ONE-CLOCK RULING IS THE REASON. Bumping the printed age
+ *  inside the birthday week means bumping `Snapshot.ageYears` – and that field is not a caption. The
+ *  ladder's card, the week grid's band, the prize share and the portrait stage all read it, so it
+ *  would open a tier in the UI a week before `kidAgeAt` opens it in the engine; giving Home a display
+ *  age of its own would be a second clock on the wire in so many words. Moving the announcement moves
+ *  nothing but the announcement.
+ *
+ *  ⭐⭐ SO THE OLD CARRY CLAUSE IS NOW THE WHOLE RULE, and that is the shape of the fix. It already
+ *  read "the first career week whose Monday is on or after her date"; it was reached only when
+ *  `weekOfDate` could not place the date at all. Promoting it makes the predicate exactly
+ *  «`kidAgeYears(week) > kidAgeYears(week - 1)`» – the clock's own tick – so the announcement cannot
+ *  disagree with the printed age by construction rather than by a pin. Measured before the change
+ *  over all 365 birth dates and fourteen seasons: **4365 of 5106 announcements (85%) printed an age
+ *  Home did not yet agree with**, on every one of the 365 dates; the clock ticked in a week nothing
+ *  was said 4359 times, and something was said in a week the clock had not ticked 4359 times. After:
+ *  0, 0 and 0.
+ *
+ *  ⚠ AND IT RETIRES THE WHOLE LOST-BIRTHDAY CLASS instead of patching it a fourth time. The three
+ *  previous fixes here (round-16 #100's date read, the 1-5 January straddle, 18.08's carry for the
+ *  dates the calendar has no week for) were all the same defect: a date can fail to land in a career
+ *  week, and a predicate written on the DATE then loses the birthday in silence. The clock cannot
+ *  lose one – it steps by exactly one year exactly once per calendar year, whatever the calendar does
+ *  around New Year – so 31 December and 1-6 January are ordinary dates here now.
+ *
+ *  ⚠ THREE CANDIDATE YEARS, AND ALL THREE ARE STILL NEEDED. The Monday that ticks the clock can be in
+ *  the year before her date (never – it is on or after it), in its own year, or in the NEXT one: a 31
+ *  December birthday is marked by a Monday in January, so `weekYear(week)` is already the following
+ *  year and her own year would never be a candidate without `monday - 1`. `monday + 1` is its mirror,
+ *  for a girl born 1-5 January whose marking Monday can still sit in the old year's last career week.
+ *
+ *  ⚠ AND IT CANNOT DOUBLE-FIRE. Two candidate years are twelve months apart and the transition window
+ *  is one week wide, so at most one year in the loop can answer for any week.
+ *
+ *  ⚠ `week > 0` IS NOT DEFENSIVE, IT IS THE CAREER'S OWN START, and the note it carried before this
+ *  change still holds: without it the clause fires at week 0 for a date a whole YEAR before the game
+ *  opens – a girl born 1 January would be announced turning THIRTEEN in her first week, because week 0
+ *  is the first Monday past 1 January 2030 as surely as it is past 1 January 2031. Anything before
+ *  week 0 is prologue and has no week to be announced in. ⚠ ROUND 34 WIDENED WHAT THAT COSTS BY ONE
+ *  DATE: week 0's Monday is 6 January 2031, so a girl born exactly on the 6th has her fourteenth in
+ *  the career's first week, where there is no previous week for the clock to have ticked from – she
+ *  opens the game at fourteen (`kidAgeYears(0) === 14`, which is the honest number) and her first
+ *  marked birthday is her fifteenth. The six dates 7-12 January used to be announced AT week 0 as
+ *  «turning 14» while Home printed 13 – the owner's own complaint, in the first week of the game –
+ *  and are marked in week 1 now, where the two agree. */
 function birthdayYearIn(week: number, birthMonth: number, birthDay: number): number | null {
   const { month, day } = birthDate(birthMonth, birthDay)
   const monday = weekYear(week)
-  // ⚠ THREE CANDIDATE YEARS, AND THE FIRST ONE IS FOR 31 DECEMBER (18.08). The `monday + 1` arm has
-  // always been here for a girl born 1-5 January, whose birthday can sit in a week whose Monday is
-  // still in the old year. `monday - 1` is its mirror and it was missing: a 31 December birthday the
-  // calendar cannot place is carried by the first week PAST it, which is in JANUARY of the next year -
-  // so `weekYear(week)` is already the following year and that girl's own year was never a candidate.
-  // Measured: it was the last two of the fourteen lost birthdays, both hers (skips 17->19, 22->24).
+  if (week <= 0) return null
   for (const year of [monday - 1, monday, monday + 1]) {
-    const at = weekOfDate(month, day, year)
-    if (at === week) return year
-    // ⭐⭐ AND A BIRTHDAY THE CALENDAR CANNOT PLACE IS GIVEN THE FIRST WEEK PAST IT (18.08). Measured
-    // before the fix: **14 birthdays a career simply never fired**, across seven dates - 1-6 January
-    // and 31 December, twice each over fourteen seasons. The seasons re-anchor to the first Monday of
-    // each year, so those dates fall in the gap between the last career week of one season and the
-    // first of the next: `weekOfDate` returns null and the girl silently got no note and no gift.
-    //
-    // ⚠ IT WAS REPORTED AS "none lost" AND IT WAS NOT. `tools/birthday-age-read.ts` skips a year the
-    // moment `weekOfDate` is null - `continue` - and then counts how many of the REMAINING birthdays
-    // are wrong. The metric filtered out the very failure it is named for. Fixed in that tool too.
-    //
-    // ⚠ AND IT CANNOT DOUBLE-FIRE. The clause asks for the FIRST career week past the date - this
-    // Monday is on or after it and the previous Monday is not - so exactly one week in the year can
-    // answer, and only in a year the calendar genuinely has no week for. Every ordinary date takes
-    // the `at === week` branch above and never reaches here.
-    // ⚠ `week > 0` IS NOT DEFENSIVE, IT IS THE CAREER'S OWN START. Without it the clause fires at week
-    // 0 for a date a whole YEAR before the game opens - a girl born 1 January was announced turning
-    // THIRTEEN in her first week, because week 0 is the first Monday past 1 January 2030 as surely as
-    // it is past 1 January 2031. Anything before week 0 is prologue and has no week to be announced in;
-    // her 14th genuinely predates the career, which is what `birthdayWeek`'s note has always said.
-    if (week > 0 && at === null && mondayOnOrAfter(week, month, day, year) && !mondayOnOrAfter(week - 1, month, day, year)) {
+    if (mondayOnOrAfter(week, month, day, year) && !mondayOnOrAfter(week - 1, month, day, year)) {
       return year
     }
   }
@@ -226,24 +242,34 @@ function mondayOnOrAfter(week: number, month: number, day: number, year: number)
   return wm > month || (wm === month && weekStartDay(week) >= day)
 }
 
-/** The career week her birthday falls in for the calendar year containing `week`, or null if that date is
- *  off the calendar.
+/** The career week that MARKS her birthday for the calendar year containing `week`, or null if the
+ *  calendar cannot place that date at all.
  *
- *  ⚠ THE WEEK CONTAINING HER ACTUAL DATE, not the first week of her month - which is what this did before
- *  the day existed. The owner asked for the day precisely so this lands right: «мы же будем ее с ДР на
- *  неделе поздравлять (и подарки дарить, кстати), чтобы точно знать на какой нам нужен день».
+ *  ⚠ THE WEEK HER DAY IS KEPT IN, and the day is still what decides it. The owner asked for the day
+ *  precisely so this lands right: «мы же будем ее с ДР на неделе поздравлять (и подарки дарить,
+ *  кстати), чтобы точно знать на какой нам нужен день».
  *
- *  CAN BE NEGATIVE, and the caller must not assume every season has one: a girl born 1-5 January had her
- *  birthday before week 0 began, so her first in-game one is the following year. `birthdayTurning`
- *  compares against the current week, so that resolves itself.
+ *  ⭐⭐ ROUND 34 #3 MOVED IT ONE WEEK FOR A MID-WEEK DATE, and it had to move WITH the predicate or the
+ *  two would answer differently about the same birthday – which is this function's whole reason for
+ *  being written on `birthdayYearIn`. The marked week is the first career week whose MONDAY has
+ *  reached her date, i.e. the week `kidAgeYears` says she is a year older in; for a birthday that
+ *  falls on a Monday that is the week containing it, and for every other day it is the week after.
+ *  See `birthdayYearIn` for the owner's complaint and the measurement.
  *
- *  ⚠ IF THE BIRTHDAY IS IN `week`, THE ANSWER IS `week` - which is what keeps `week === birthdayWeek(week,
- *  ...)` an honest predicate across the New Year straddle (see `birthdayYearIn`). Only when it is NOT
- *  this week does the Monday's year decide which of the season's weeks to name. */
+ *  CAN BE NEGATIVE, and the caller must not assume every season has one: a girl born 1-5 January had
+ *  her birthday before week 0 began, so her first in-game one is the following year. `birthdayTurning`
+ *  compares against the current week, so that resolves itself. */
 export function birthdayWeek(week: number, birthMonth: number, birthDay: number): number | null {
   if (birthdayYearIn(week, birthMonth, birthDay) !== null) return week
   const { month, day } = birthDate(birthMonth, birthDay)
-  return weekOfDate(month, day, weekYear(week))
+  const year = weekYear(week)
+  const at = weekOfDate(month, day, year)
+  // A date the calendar has no career week for has no week CONTAINING it either, and that is the one
+  // honest absence here (see `weekOfDate`). Otherwise the mark is that week when its Monday has already
+  // reached the date, and the next one when it has not – the Monday after `at` is always past a date
+  // inside `at`, whatever the season re-anchor does to the gap between them.
+  if (at === null) return null
+  return mondayOnOrAfter(at, month, day, year) ? at : at + 1
 }
 
 /** Is `week` her birthday week, and if so what age does she turn? Null on every other week.
@@ -261,11 +287,15 @@ export function birthdayWeek(week: number, birthMonth: number, birthDay: number)
  *
  *  ⚠ AND `kidAgeExact` IS NOT THE BUG, WHICH IS WHY IT IS UNTOUCHED. It takes a birth MONTH and no day,
  *  by signature and on purpose: it is the development / injury / tier-gate clock, and it answers "how old
- *  is she at the START of this week" - the right question for a rule that governs a whole week. An
- *  ANNOUNCEMENT is about a DATE. So this reads the date, that reads the month, and the two are allowed to
- *  differ for the ONE week a year between her birthday and the Monday after it (pinned, bounded at one
- *  week, in tests/birthday-announce.test.ts). No age-keyed gate moved: measured on all seven of the
- *  owner's saves, every tier rung opens in exactly the week it opened in before. */
+ *  is she at the START of this week" - the right question for a rule that governs a whole week.
+ *
+ *  ⭐⭐ ROUND 34 #3 CLOSED THE ONE WEEK THEY WERE ALLOWED TO DIFFER BY, AND THE NOTE HERE USED TO LICENSE
+ *  IT. It read: «An ANNOUNCEMENT is about a DATE. So this reads the date, that reads the month, and the
+ *  two are allowed to differ for the ONE week a year between her birthday and the Monday after it
+ *  (pinned, bounded at one week).» The owner met that week on screen – the popup said fifteen and Home
+ *  said fourteen – and the licence is withdrawn: this fires in the week her age CHANGES, so the two
+ *  agree everywhere. See `birthdayYearIn` for his words, the fix he chose and the measurement. Still no
+ *  age-keyed gate moves – `kidAgeExact` is untouched, which is the whole point of moving this instead. */
 export function birthdayTurning(week: number, birthMonth: number, birthDay: number): number | null {
   const year = birthdayYearIn(week, birthMonth, birthDay)
   return year === null ? null : year - kidBirthYear()
@@ -273,23 +303,24 @@ export function birthdayTurning(week: number, birthMonth: number, birthDay: numb
 
 /** ⭐⭐ THE AGE SHE REACHES BY THE END OF `week` – her age, plus a birthday that lands INSIDE it.
  *
- *  ⚠ IT EXISTS BECAUSE THE DATE CLOCK SPLIT TWO THINGS THAT USED TO COINCIDE (18.08). `kidAgeAt`
- *  answers for the week's MONDAY, which is the right question for a rule that governs a whole week;
- *  `birthdayTurning` fires in the week CONTAINING her date. For a birthday that falls on any day but
- *  a Monday those are different weeks, so a rule meant to be raised ON HER BIRTHDAY - the fork at
- *  nineteen is the one - would fire the Monday AFTER the cake.
+ *  ⚠ IT EXISTED BECAUSE THE DATE CLOCK SPLIT TWO THINGS THAT USED TO COINCIDE (18.08): `kidAgeAt`
+ *  answered for the week's MONDAY, `birthdayTurning` fired in the week CONTAINING her date, and for a
+ *  birthday on any day but a Monday those were different weeks – so a rule meant to be raised ON HER
+ *  BIRTHDAY (the fork at nineteen was the one) would have fired the Monday AFTER the cake.
  *
- *  ⚠ THIS IS NOT A SECOND CLOCK. It is `kidAgeAt` with a one-week look-ahead that only ever applies
- *  in the birthday's own week, and it is for events that are ABOUT the birthday. Every gate stays on
- *  `kidAgeAt`: an eligibility rule governs the whole week and must not open mid-week. If you are
- *  gating, use `kidAgeAt`; if you are CELEBRATING or asking her a question the birthday prompts, use
- *  this one.
+ *  ⭐⭐⭐ ROUND 34 #3 CLOSED THAT SPLIT AND THIS IS AN IDENTITY NOW – the honest note, kept in place of
+ *  a quiet deletion. The announcement moved to the week the clock ticks, so `birthdayTurning(week)` is
+ *  non-null only where `kidAgeAt(world, week)` already equals it and the `Math.max` can no longer
+ *  choose the second argument. It is left standing because CALLER-LESS AND HARMLESS beats a fifth
+ *  reader of `kidAgeAt` growing its own look-ahead later: if a future question really does need "the
+ *  age she reaches by the end of this week" to differ from the Monday's, this is where that argument
+ *  belongs, and it will need a reason of its own rather than the one round 34 spent.
  *
- *  ⚠ CALLER-LESS SINCE ROUND 24 #5, AND KEPT ON PURPOSE. The fork was the one caller until the
- *  owner moved its ask off her birthday to school's end («пункт 5 запускай как обсудили» – `forkDue`
- *  reads `schoolIsOver` now, docs/specs/college-departure-2026-08.md), so no question in the game is
- *  currently birthday-prompted. The device is the documented answer for the NEXT one that is –
- *  deleting it would delete the record of why a birthday question must not read the Monday's age. */
+ *  ⚠ AND THE HALF THAT IS STILL LIVE: every GATE stays on `kidAgeAt`. An eligibility rule governs the
+ *  whole week and must not open mid-week – that is the 09.08 ruling's own consequence and nothing here
+ *  softens it. ⚠ CALLER-LESS SINCE ROUND 24 #5: the fork was the one caller until the owner moved its
+ *  ask off her birthday to school's end («пункт 5 запускай как обсудили» – `forkDue` reads
+ *  `schoolIsOver` now, docs/specs/college-departure-2026-08.md). */
 export function kidAgeThroughWeek(world: WorldState, week: number): number {
   const turning = birthdayTurning(week, world.profile.birthMonth, world.profile.birthDay)
   return Math.max(kidAgeAt(world, week), turning ?? -1)

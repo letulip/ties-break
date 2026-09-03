@@ -300,8 +300,12 @@ describe('R2-13 A – a four-week press taps the identical MAIN sequence as four
 describe('R2-13 B – the span stops before every blocking event, one reason at a time', () => {
   it('BIRTHDAY – refuses outright while it is unanswered, and halts on the week it lands', () => {
     // REFUSAL. Walked to her birthday week, `advanceWeeks` will not tick at all.
+    // ⚠ 21 -> 22 BY ROUND 34 #3: the default profile is born 15 June and her birthday is MARKED in
+    // the week her age changes now (the first Monday past her date) rather than in the week the date
+    // falls in, so the fixture's first birthday moved from week 22 to week 23. The claim is
+    // unchanged – walk to the week before it and the span may not start.
     const { world, rng } = quietCareer('r2-13-bday')
-    walkTo(world, rng, 21)
+    walkTo(world, rng, 22)
     const before = world.week
     const halted = span(world, rng)
     expect(halted.stops, 'the halt: the tick reached her birthday and stopped there').toEqual(['birthday'])
@@ -586,10 +590,17 @@ describe('R2-13 C – a week that is two things reports both, in the documented 
     // it CAN co-occur with 'tournament' and with 'season-end' – a birthday lands wherever the date
     // lands, including a playing week and the off-season – which is exactly the ordering this line
     // decides." So the assertion is `['birthday', 'tournament']` and not the other way round.
-    const { world, rng } = career('r2-13-collide')
+    // ⚠⚠ A BIRTH DATE OF ITS OWN SINCE ROUND 34 #3, and the reason is worth writing down. The mark
+    // moved to the week her age changes, and for the DEFAULT profile (15 June) that week is now
+    // inside the school-exam fortnight (season weeks 23-24) – where `enterEvent` refuses outright
+    // («School exams this week – no tournaments»), so the collision this case is about cannot be
+    // built there at all. 15 March marks in week 10, which is an ordinary playing week. The case is
+    // unchanged: a birthday and a reveal in ONE week, both from the engine's own predicates.
+    const BORN = { birthMonth: 3, birthDay: 15 }
+    const { world, rng } = career('r2-13-collide', BORN)
     // Find her birthday week on a throwaway copy, then put a tournament she is entered in on exactly
     // that week. Nothing about the collision is faked – both facts are the engine's own predicates.
-    const scout = quietCareer('r2-13-collide')
+    const scout = quietCareer('r2-13-collide', BORN)
     let birthdayWeek = -1
     for (let i = 0; i < 60 && birthdayWeek < 0; i++) {
       tickWeek(scout.world, scout.rng)
@@ -685,7 +696,8 @@ describe('R2-13 D – the shell offers the span in exactly the states the engine
     for (let i = 0; i < 40 && !pendingKnock(knock.world); i++) tickWeek(knock.world, knock.rng)
 
     const birthday = quietCareer('gate-bday')
-    walkTo(birthday.world, birthday.rng, 21)
+    // ⚠ 21 -> 22 BY ROUND 34 #3 – the same one-week move as the case above; see its note.
+    walkTo(birthday.world, birthday.rng, 22)
     advanceWeeks(birthday.world, birthday.rng, 1)
 
     const fork = quietCareer('gate-fork')
@@ -714,7 +726,8 @@ describe('R2-13 D – the shell offers the span in exactly the states the engine
         // The LEGACY watch paper's own shape (real saves hold letters exactly like it): the fee is
         // the watches category's anchor cell, the term the old 52-week one.
         brand: ECONOMY.advertising.categories.watches.houses[0],
-        cashCents: ECONOMY.advertising.categories.watches.feeCentsByBand[0]!,
+        // ⚠ index 1 since round 34: a band was prepended at ≤400 and this is still the ≤200 cell
+        cashCents: ECONOMY.advertising.categories.watches.feeCentsByBand[1]!,
         termWeeks: 52,
         shootCount: 2,
         shootWeeks: [clash.world.week + 1],

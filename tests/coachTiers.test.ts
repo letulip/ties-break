@@ -34,13 +34,16 @@ import {
   isCompetitionWeek,
   setCoachOnEventWeeks,
   skipTournament,
+  // ⭐ ROUND 34 #2b – the birth build the room note now measures FROM, off the barrel it is already
+  // re-exported from. Same re-derivation the engine does in `realisedShare`: pure and seed-only.
+  startingSkills,
   tickWeek,
 } from '../src/engine/world'
 import { migrateSave } from '../src/engine/migrations'
 import { rngFromSeed } from '../src/engine/rng'
 import { WEEKS_PER_YEAR } from '../src/engine/season/calendar'
 import { DEFAULT_PROFILE, WEEK_PLAN_PRESETS, type CoachTier, type PlayStyle } from '../src/shared/protocol'
-import { ageFactor, SKILL_KEYS, trainFactor } from '../src/engine/development'
+import { ageFactor, reachableHeadroomShare, SKILL_KEYS, trainFactor } from '../src/engine/development'
 import { region } from './helpers/source'
 
 // THE COACH LADDER (docs/specs/coach-tiers.md). Five rungs replacing a boolean, priced per hour by
@@ -751,22 +754,51 @@ describe('the uplift quotes the weeks she actually buys (08.08)', () => {
 // ⚠ AND THE SENTENCE THAT EXPLAINS THE FALL, which is the half the owner could not read anywhere.
 // At 93.4% realised the whole ladder collapses into four tenths of a point (his save: budget
 // +0.1-0.2%, elite +0.2-0.5%), so the market stops discriminating and the screen said nothing.
+// ⚠ THAT 93.4% IS THE OLD MEASURE, `mean(skills) / mean(potential)` – the quantity `coachSeasonUplift`
+// still works in, and the one round 34 #2b took OUT of the band note underneath. The uplift's own
+// arithmetic did not move; only the sentence's thresholds did.
 describe('the room note says why the numbers are what they are', () => {
-  function at(realised: number): string {
+  /** ⚠ RE-CUT BY ROUND 34 #2b, and the argument is in `realisedShare`: the band no longer divides
+   *  `mean(skills)` by `mean(potential)` - the skill she was BORN with stopped counting as
+   *  achievement - so the share is placed against her birth build here too. 20 points of headroom on
+   *  every attribute, `realised` of it taken. A flat ceiling of 60 (what this used to set) would give
+   *  a born-at-60 stamina no headroom at all and divide by zero.
+   *
+   *  ⚠⚠ RE-AIMED AGAIN BY ROUND 34 BUNDLE H, AND THE ARGUMENT NOW MEANS THE SHARE SHE IS SHOWN. The
+   *  read is normalised against what is REACHABLE (`reachableHeadroomShare`) rather than against the
+   *  asymptote `potential` is - so a career holding all of it has taken EVERYTHING available and is
+   *  shown 1.0. Without this the four sample points below collapsed into three bands (0.8 and 0.95
+   *  both read «At her ceiling») and this test went red on a change it is not about.
+   *
+   *  ⚠ BUNDLE I THEN CORRECTED WHAT «REACHABLE» MEANS - the best coaching money can buy (0.9766 on
+   *  the shipped curve and ladder), not the bare `ageFactor` curve H walked (0.8668), which was the
+   *  growth of a girl with no coach at all and which every coached career therefore ran past. ⭐ THIS
+   *  HELPER DID NOT HAVE TO MOVE FOR IT, which is the point of writing the multiply as a call: its
+   *  argument still means "the share the player is shown" and the four points below still name four
+   *  bands. See tests/round34-reachable-ceiling.test.ts for the change itself.
+   *
+   *  ⭐ THE MULTIPLY IS DERIVED, NOT A CONSTANT, on purpose: the approved wave that moves
+   *  `plateauStart` and `declineStart` moves the normaliser, and so does a coach-ladder retune, and
+   *  this helper follows both instead of having to be re-cut again. */
+  function at(shown: number): string {
     const world = createWorld('room', DEFAULT_PROFILE)
+    const born = startingSkills(world.seed, world.profile)
     for (const k of SKILL_KEYS) {
-      world.potential[k] = 60
-      world.skills[k] = 60 * realised
+      world.potential[k] = born[k] + 20
+      world.skills[k] = born[k] + 20 * shown * reachableHeadroomShare()
     }
     return coachRoomNote(world)
   }
 
   it('moves through four bands as she fills her ceiling, and never quotes the ceiling', () => {
-    // ⚠ THE SAMPLE POINTS MOVED WITH THE THRESHOLDS (round-23 #1). 0.4 and 0.7 now name the SAME
-    // band, because `coachRoomBandIndex`'s bottom two arms were re-cut onto the range a career
-    // actually occupies - measured at 68-97% realised across twelve careers, so the old 0.6 arm was
-    // a string no player could ever see. The measurement is written out over that function.
-    const notes = [at(0.7), at(0.85), at(0.9), at(0.97)]
+    // ⚠ THE SAMPLE POINTS MOVED WITH THE THRESHOLDS - TWICE. Round-23 #1 re-cut the bottom two arms
+    // onto the range a career actually occupied on the OLD measure (68-97% realised across twelve
+    // careers), which is why 0.4 and 0.7 named the same band. ⚠⚠ ROUND 34 #2b then changed the
+    // MEASURE: the edges are 0.40 / 0.75 / 0.90 on the share of her BORN headroom she has taken
+    // (owner-approved 02.09, docs/rounds/round-34.md §A1), so these four points are one inside each
+    // new band. Both measurements are written out over `coachRoomBandIndex`; only the second one
+    // describes the quantity this test hands it.
+    const notes = [at(0.2), at(0.6), at(0.8), at(0.95)]
     expect(new Set(notes).size).toBe(4) // four distinct readings, not one string
     // ⚠ IT MUST NEVER PRINT A FIGURE. KidScreen keeps her ceiling behind a fog of war, and a
     //   percentage here would be the back door through it.

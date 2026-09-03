@@ -5,6 +5,14 @@
  * ⚠ READ-ONLY. Decodes a save, folds it, prints. Advances nothing, writes nothing.
  *
  *   npx vite-node tools/r29-item14-anger.ts -- --save ~/Downloads/x.tsave
+ *
+ * ⚠ REPAIRED IN ROUND 34 (QA-34), AND THE DEFECT WAS ORIGINAL RATHER THAN DRIFT. This file read
+ * `event.kind` on three lines; `WorldEvent` carried no `kind` field on the day this file was written
+ * (29.08, commit 9201e534) and carries none now – it names its discriminator `type` – so the reads
+ * were `undefined` from the beginning and printed `undefined` into the evidence. It is NOT frozen:
+ * the field it wanted exists under its real name, the repair is that rename and nothing else, and
+ * the probe still answers its question against a save. Only `npm run check:tools` could see this,
+ * and until round 34 nothing ran it.
  */
 import { readFileSync } from 'node:fs'
 import { decodeExportFile } from '../src/engine/saveCodec'

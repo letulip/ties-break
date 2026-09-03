@@ -55,10 +55,13 @@ import { DEFAULT_PROFILE, type Snapshot } from '../../src/shared/protocol'
  *  it are persisted in real saves – so `WATCH` freezes that LEGACY paper: the fee off the watches
  *  category's ≤200 cell (the anchor, unchanged to the cent), the brand its first house, the
  *  52-week term and two-shoot ask the old letters carry. */
+// ⚠ INDEX 1 SINCE ROUND 34 #7/#11/#12/#13 (03.09), AND IT IS THE SAME ≤200 CELL. A fifth band was
+// prepended to `advertising.bands` at ≤400, so every band index moved one to the right; the cheque
+// itself was lifted tenfold at that rung by the owner's approved table.
 const WATCH = {
   brand: ECONOMY.advertising.categories.watches.houses[0],
-  maxWtaRank: ECONOMY.advertising.bands[0].maxWtaRank,
-  cashCents: ECONOMY.advertising.categories.watches.feeCentsByBand[0]!,
+  maxWtaRank: ECONOMY.advertising.bands[1].maxWtaRank,
+  cashCents: ECONOMY.advertising.categories.watches.feeCentsByBand[1]!,
   termWeeks: 52,
   shootWeeksPerTerm: 2,
 }

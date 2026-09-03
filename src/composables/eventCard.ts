@@ -41,6 +41,13 @@ export interface FirstMatchOdds {
   opponentName: string
 }
 
+/** ...and just enough of one to name the PRE-DRAW ring (round 34 #5). Separate from the interface
+ *  above rather than folded into it, because the whole point of the item is that these are two
+ *  different quantities and the surface must not be able to hand one to the other's namer. */
+export interface FieldOdds {
+  fieldChance: number | null
+}
+
 /** ⭐⭐ ROUND 31 #4 – WHAT A CARD SAYS WHILE ITS DRAW DOES NOT EXIST, and it is said in ONE place for
  *  the same reason `firstMatchLabel` is: three surfaces draw this card (the season feed, the
  *  calendar marker and the next-tournament panel) and three literals is how one fact comes to be
@@ -65,6 +72,56 @@ export function firstMatchTitle(p: FirstMatchOdds): string {
   if (p.firstMatchChance === null) return DRAW_NOT_MADE_NOTE
   return `First round vs ${p.opponentName}`
 }
+
+/** ⭐⭐ ROUND 34 #5 – THE PRE-DRAW RING'S ACCESSIBLE NAME, and it is a DIFFERENT SENTENCE on purpose.
+ *
+ *  The owner's ask is «может общую цифру шанса на проход первого тура делать, но чтобы она всё-таки
+ *  реальность отражала и не скакала от недели к неделе» – a general first-round figure he can plan
+ *  on two weeks out, when withdrawal is still free. `EventPreview.fieldChance` is that figure (see
+ *  its own note, and `fieldChance` in engine/season/preview.ts for why it holds still).
+ *
+ *  ⚠⚠ THE WHOLE REASON THIS FUNCTION EXISTS RATHER THAN A SECOND ARM OF `firstMatchLabel`: two
+ *  different numbers may not be shown under one name. Before the draw the ring answers «a typical
+ *  opponent at this level»; from week − 1 it answers «THIS girl», and it jumps when it changes over
+ *  – because the draw is news. A card that called both of them «her chance to win the first match»
+ *  would make that jump look like the instability round 31 #4 was reported for.
+ *
+ *  ⚠ IT ENDS ON THE OWNER'S OWN SENTENCE rather than a second wording of the same fact:
+ *  `DRAW_NOT_MADE_NOTE` is already on the plaque beside the ring, which is what makes the state
+ *  VISIBLE (this label and the title below are a screen reader's and a mouse's only route to it). */
+export function fieldChanceLabel(p: FieldOdds): string {
+  if (p.fieldChance === null) return DRAW_NOT_MADE_NOTE
+  return `Her chance to win a first match at this level: ${Math.round(p.fieldChance * 100)} percent. ${DRAW_NOT_MADE_NOTE}`
+}
+
+/** ...and its hover title, the short form, exactly as `firstMatchTitle` is of `firstMatchLabel`. */
+export function fieldChanceTitle(p: FieldOdds): string {
+  if (p.fieldChance === null) return DRAW_NOT_MADE_NOTE
+  return 'A typical first round at this level'
+}
+
+/** ⭐⭐⭐ ROUND 34 #5b – WHAT THE PRE-DRAW FIGURE PROMISES, SAID OUT LOUD ON THE CARD.
+ *
+ *  The measurement is what earned this line. The field figure holds still before the draw (0.48
+ *  points of movement on average against the opponent figure's 18.43 – round 34 #5), and then at the
+ *  draw the ring changes question and the NUMBER JUMPS: **9.1 points on average, 36 at worst**. The
+ *  owner read that and ruled: «хорошо, можно на карточке ДО жеребьевки писать, что-то на эту тему.»
+ *
+ *  ⚠ NEW COPY, AND HE ASKED FOR IT – which is the one thing invariant 4 requires be named. It is
+ *  ONE line and it says exactly the two things the ruling asks for and nothing else: the figure is a
+ *  typical one for the LEVEL (which is why it holds still), and it SHARPENS at the draw (which is
+ *  why the step is news rather than instability).
+ *
+ *  ⚠⚠ IT IS VISIBLE, NOT AN ACCESSIBLE NAME. `fieldChanceLabel` and `fieldChanceTitle` above are a
+ *  screen reader's and a mouse's only route to the ring, and round 34 #5 shipped the state into
+ *  those plus the plaque's own «The draw has not been made yet.» The JUMP he is being warned about
+ *  is visible, so the warning has to be too – a caption a sighted planner never sees would be the
+ *  same silence the item was reported for.
+ *
+ *  ⚠ IT DOES NOT RESTATE THE STATE. The plaque already ends on `DRAW_NOT_MADE_NOTE`, which is the
+ *  owner's own sentence and says WHERE the card is; this says what will happen to the number. Two
+ *  facts, one each, neither spelled twice. */
+export const FIELD_FIGURE_NOTE = 'A typical figure for this level – it sharpens when the draw is made.'
 
 /** The store-backed half: the three facts that need the live snapshot to answer. */
 export function useEventCard(): {

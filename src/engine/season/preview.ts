@@ -155,6 +155,19 @@ export interface EventPreview {
   kidRating: number
   opponentRating: number | null
   fieldStrength: FieldStrength
+  /** ⭐⭐ ROUND 34 #5 – HER CHANCE AGAINST THIS RUNG'S FIELD, 0..1, and the ONE number a card can
+   *  honestly print before its draw exists. It is `fieldStrength`'s own quantity un-banded (see
+   *  `fieldChance`), so the percentage and the sentence beside it are one reading, not two.
+   *
+   *  ⚠ IT IS ABOUT A LEVEL, NOT ABOUT A GIRL, AND THE TWO MUST NOT BE PRINTED UNDER ONE LABEL.
+   *  `firstMatchChance` above answers «will she beat THIS opponent»; this answers «how does she
+   *  match up against who plays at this rung». They are different questions with different
+   *  volatility, which is exactly why the second one survives being planned against – so a surface
+   *  drawing both has to say which it is showing (`fieldChanceLabel` in composables/eventCard.ts).
+   *
+   *  ⚠ NULL when the rung fields nobody this preview can rate – the same absence-of-a-reading
+   *  `firstMatchChance` uses, never a 0 and never a 0.5. */
+  fieldChance: number | null
   /** decorative, deterministic per event; degrees C */
   temperatureC: number
   /** decorative, deterministic per event; how many people are there to watch – see eventCrowd */
@@ -393,9 +406,38 @@ export function tierExpectedField(tier: TierId, rated: readonly RatedEntrant[]):
  *  ask for it (CLAUDE.md invariant 4). */
 const BAND_FAVOURITE_AT = 0.625
 const BAND_STRONG_AT = 0.375
+
+/** ⭐⭐⭐ ROUND 34 #5 – THE NUMBER THE BAND WAS ALREADY MADE OF, GIVEN A NAME AND A SURFACE.
+ *
+ *  HIS COMPLAINT, and it is a PLANNING complaint before it is a numbers one: «за 2 недели до
+ *  турнира можно сняться бесплатно, но ты не знаешь шансов, а за неделю ты знаешь шансы, но сняться
+ *  бесплатно нельзя. В итоге у тебя нет планирования… может общую цифру шанса на проход первого
+ *  тура делать, но чтобы она всё-таки реальность отражала и не скакала от недели к неделе?»
+ *
+ *  ⭐ NOTHING IS MODELLED HERE THAT WAS NOT ALREADY BEING COMPUTED. `strengthOf` below has folded
+ *  exactly this mean since round 31 #3 and then thrown the number away to keep three words; the
+ *  whole of this change is that the mean is returned as well as banded. So the figure and the word
+ *  beside it are ONE quantity read twice – they cannot come to disagree, which is the property the
+ *  rest of this file is built on («one source, two readings»).
+ *
+ *  ⚠ WHY IT DOES NOT JUMP, which is the half he actually asked for. Read `tierExpectedField`'s note
+ *  above: no standings table, no fatigue gate, no per-event die and no draw enters this. What is
+ *  left that can move it is the world's own slow drift and her own growth – measured in round 31 #3
+ *  at 0.03 of chance for the conveyor's whole annual turnover, against the 0.80 → 0.54 the drawn
+ *  opponent legitimately swings by over the same two weeks (round 31 #4, and reproduced as this
+ *  round's control in tools/r34-field-chance.ts).
+ *
+ *  ⚠ NULL, NOT 0.5, ON AN EMPTY FIELD. `strengthOf` answers `even` there because a word must be
+ *  chosen; a percentage must not be invented, and `EventPreview.firstMatchChance` already
+ *  establishes that null is this file's word for «we do not know yet». */
+export function fieldChance(field: readonly number[], mine: number): number | null {
+  if (!field.length) return null
+  return field.reduce((a, r) => a + chanceFromRatings(mine, r), 0) / field.length
+}
+
 function strengthOf(field: readonly number[], mine: number): FieldStrength {
-  if (!field.length) return 'even'
-  const chance = field.reduce((a, r) => a + chanceFromRatings(mine, r), 0) / field.length
+  const chance = fieldChance(field, mine)
+  if (chance === null) return 'even'
   if (chance <= BAND_STRONG_AT) return 'strong'
   if (chance >= BAND_FAVOURITE_AT) return 'favourite'
   return 'even'
@@ -601,6 +643,9 @@ export function previewEvent(
   // never in this file at all.
   const drawMade = event.week - world.week <= DRAW_LEAD_WEEKS
   const opp = drawMade ? firstRoundOpponent(alive, kid) : null
+  // THE RUNG'S OWN FIELD AND HER RESTED RATING – built once, read twice (band + figure).
+  const expected = tierExpectedField(event.tier, rated ?? ratedField(world.cohort, event.surface))
+  const mineAtRest = ratingOf(kidAtRest ?? kid, event.surface, JUNIOR_TOUR)
   const posOf = new Map<string, number>()
   ranking.forEach((r, i) => posOf.set(r.playerId, i))
   return {
@@ -622,10 +667,12 @@ export function previewEvent(
     // ⚠ THE BAND IS NOT READ OFF `alive`. It is a statement about the RUNG, counted over the field
     // this tier is expected to field rather than over the one this week's redraw happened to
     // produce – see `tierExpectedField` for the measurement that moved it there.
-    fieldStrength: strengthOf(
-      tierExpectedField(event.tier, rated ?? ratedField(world.cohort, event.surface)),
-      ratingOf(kidAtRest ?? kid, event.surface, JUNIOR_TOUR),
-    ),
+    // ⭐ ROUND 34 #5 – AND THE FIGURE BESIDE IT IS THE SAME TWO ARGUMENTS FOLDED ONCE. Hoisted into
+    // `expected` / `mineAtRest` so the word and the number are provably the same reading: a band
+    // computed from one field and a percentage from another is precisely the drift this file's
+    // «one source, two readings» rule exists to make impossible.
+    fieldStrength: strengthOf(expected, mineAtRest),
+    fieldChance: fieldChance(expected, mineAtRest),
     temperatureC: eventTemperature(world.seed, event),
     crowd: eventCrowd(world.seed, event),
   }

@@ -29,10 +29,13 @@ import { shelfRow } from './shelf'
 import { PHONE, lengthPx, setViewport } from './fits'
 import {
   ASSET_NAME_MAX_CHARS,
+  brandReachOf,
+  brandSignalsOf,
   buyAsset,
   closeTournament,
   createWorld,
   ownedAssets,
+  shopItem,
   skipTournament,
   tickWeek,
   toSnapshot,
@@ -255,8 +258,18 @@ describe('round 30 #11 and #9 – what the rate line says now', () => {
     earned.trophiesByTier.wta500.finals.push(1, 2, 3, 4, 5, 6, 7, 8, 9, 10)
     const richer = await mountShop(toSnapshot(earned))
     const merchRicher = await shelfRow(richer, 'The merch brand')
+    // ⚠⚠ THE EXPECTATION GAINED THE RAMP IN ROUND 34 #17 (03.09), AND THE CLAIM IS UNCHANGED. It read
+    // `unknownX + 10 x finalX`, which was right while ten lost finals bought no fame at all – so the
+    // ramp under the ladder stayed at its floor. Round 34 pays a lost final into the fame floor, so
+    // this fixture is no longer fameless and the base it stands on is part-way up the ramp. Still
+    // built from the CATALOGUE plus one engine reading (the reach), never from `brandMultipleX` –
+    // a restatement of the shipped function would prove nothing about the screen.
+    const BASE_X = shopItem('merch-brand')!.earningsMultipleX!
+    const ramp = V.unknownX + (BASE_X - V.unknownX) * (brandReachOf(brandSignalsOf(earned)) / ECONOMY.fame.cap)
     expect(merchRicher.find('.shop-row-rate').text())
-      .toBe(`Worth ${Math.round(V.unknownX + 10 * V.finalX)} years of what it sells`)
+      .toBe(`Worth ${Math.round(ramp + 10 * V.finalX)} years of what it sells`)
+    // ...and it really is a bigger number than the bare row's, which is the anti-constant half.
+    expect(Math.round(ramp + 10 * V.finalX)).toBeGreaterThan(Math.round(V.unknownX))
     richer.unmount()
 
     const land = await shelfRow(wrapper, 'The land')

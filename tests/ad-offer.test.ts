@@ -72,11 +72,15 @@ const AD = ECONOMY.advertising
  *  the same dice, never a constant; and the hand-built probe papers below keep the LEGACY shape
  *  (no `category`, 52-week term, 2 shoots) because letters exactly like them are persisted in real
  *  saves and `adCategoryOf` must keep reading them as watches. */
+// ⚠ INDEX 1 SINCE ROUND 34 #7/#11/#12/#13 (03.09), AND IT IS THE SAME ≤200 CELL. A fifth band was
+// prepended to `advertising.bands` at ≤400, so every band index moved one to the right; the cheque
+// itself was lifted tenfold at that rung by the owner's approved table.
 const WATCHES = ECONOMY.advertising.categories.watches
+const BAND = 1
 const WATCH = {
   brand: WATCHES.houses[0],
-  maxWtaRank: ECONOMY.advertising.bands[0].maxWtaRank,
-  cashCents: WATCHES.feeCentsByBand[0]!,
+  maxWtaRank: ECONOMY.advertising.bands[BAND].maxWtaRank,
+  cashCents: WATCHES.feeCentsByBand[BAND]!,
   termWeeks: 52,
   shootWeeksPerTerm: 2,
 }
@@ -157,8 +161,10 @@ describe('the fixture is what it claims to be', () => {
     // the cheque by band, so «inside the bar» is no longer enough to say WHICH fee this file is
     // about. She must be outside the ≤100 band for every anchor-fee assertion below to mean what it
     // was written to mean, and `adBandFor` is asked directly rather than inferred.
-    expect(standing.wtaRank).toBeGreaterThan(ECONOMY.advertising.bands[1].maxWtaRank)
-    expect(adBandFor(standing)).toBe(0)
+    // ⚠ INDICES MOVED ONE RIGHT IN ROUND 34 (a ≤400 band was prepended); the CAREER stands exactly
+    // where it always did – inside the ≤200 bar and outside the ≤100 one.
+    expect(standing.wtaRank).toBeGreaterThan(ECONOMY.advertising.bands[BAND + 1].maxWtaRank)
+    expect(adBandFor(standing)).toBe(BAND)
     // The dice hit inside 40 weeks of eligibility – inside the book's own 52-week window, so her
     // standing still holds on the arrival week. A retuned `offerChance` that breaks this fails HERE,
     // not silently in an arm that then proves nothing.
@@ -188,10 +194,10 @@ describe('step 1.1 – it arrives', () => {
     const drawn = expectedWatchLetter(life.world.seed, life.hit)
     expect(t.brand).toBe(drawn.brand)
     expect(WATCHES.houses).toContain(t.brand)
-    expect(t.cashCents).toBe(WATCH.cashCents) // ⭐ the anchor cell – $20,000 to the cent
+    expect(t.cashCents).toBe(WATCH.cashCents) // ⭐ the ≤200 cell – $200,000 since round 34
     expect(t.termYears).toBe(drawn.years)
     expect(t.termWeeks).toBe(drawn.years * 52)
-    expect(t.shootCount).toBe(ECONOMY.advertising.bands[0].shootWeeksPerYear)
+    expect(t.shootCount).toBe(ECONOMY.advertising.bands[BAND].shootWeeksPerYear)
     // ...and the WEEKS are not on the arrival paper: they are the signature's to name, so an open
     // letter that already carried them would be a choice made before the player made it.
     expect(t.shootWeeks).toBeUndefined()
@@ -451,7 +457,11 @@ describe('the gate: results only, from eighteen, and the dice', () => {
     expect(adPost(adult)).toHaveLength(1)
   })
 
-  it('no letter below the bar – #200 is written to, #201 is not', () => {
+  it('no WATCHES letter below its own bar – #200 is written to, #201 is not', () => {
+    // ⚠ RE-AIMED BY ROUND 34 #7/#11/#12/#13 (03.09) AND NARROWED TO THE CATEGORY THIS FILE IS ABOUT.
+    // The bar this arm names is the WATCHES category's own – its cell is `null` at the new ≤400 band
+    // – and `adPost` has always filtered to watches, so the arm's subject never changed. What DID
+    // change is that «below the bar» is no longer «below the whole shelf»: see the arm below it.
     const inside = probeWorld(SEED, adultTrue, WATCH.maxWtaRank, true)
     reviewAdOffer(inside)
     expect(adPost(inside)).toHaveLength(1)
@@ -459,6 +469,36 @@ describe('the gate: results only, from eighteen, and the dice', () => {
     const outside = probeWorld(SEED, adultTrue, WATCH.maxWtaRank + 1, true)
     reviewAdOffer(outside)
     expect(adPost(outside)).toEqual([])
+  })
+
+  it('⭐⭐⭐ ROUND 34 – THE SHELF NOW REACHES #400, and #401 is still written to by nobody', () => {
+    // HIS COMPLAINT, and it is the whole of item 7: «в фильме Финальный сет показывали, что игроку
+    // на 240 месте в мире предлагают контракты за 5к за каждый сыгранный матч с нашивкой спонсора».
+    // Before this wave `adBandFor` returned null for every standing outside #200, so the world #240
+    // and the world #500 were offered exactly the same thing: nothing at all.
+    const BOTTOM = ECONOMY.advertising.bands[0].maxWtaRank
+    expect(BOTTOM, 'the new bottom band reaches past his #240').toBe(400)
+
+    // ⚠ THE DRINKS CATEGORY HAS ITS OWN DICE STREAM, so the week is searched on ITS roll and not on
+    // the watches one this file's other probes use – the same `adWritesAt` idiom, asked per category.
+    let drinksTrue = -1
+    for (let w = 260; w < 400; w++) if (adWritesAt(SEED, w, AD.offerChance, 'drinks')) { drinksTrue = w; break }
+    expect(drinksTrue, 'the drinks dice say yes somewhere in the window').toBeGreaterThan(0)
+    const three = probeWorld(SEED, drinksTrue, 300, true)
+    expect(adBandFor(sponsorStandingOf(three)), 'a world #300 stands in the new bottom band').toBe(0)
+    reviewAdOffer(three)
+    // ⚠ WHAT ARRIVES IS THE ≤400 SHELF AND NOT THE WHOLE ONE: drinks, and clothing when a kit deal
+    // is live to write it. Watches, cars, the airline and the fragrance are all still shut.
+    const written = anyAdPost(three).map((o) => adCategoryOf(o.terms as AdOfferTerms)).sort()
+    expect(written, 'a patch on the shirt and a drink, which is what the film shows').toEqual(['drinks'])
+    expect((anyAdPost(three)[0].terms as AdOfferTerms).cashCents, '...at the ≤400 cell and no other')
+      .toBe(ECONOMY.advertising.categories.drinks.feeCentsByBand[0])
+
+    // ...and the floor is still a floor: one place further out and the shelf is empty again.
+    const beyond = probeWorld(SEED, drinksTrue, BOTTOM + 1, true)
+    expect(adBandFor(sponsorStandingOf(beyond)), 'a world #401 stands in no band at all').toBeNull()
+    reviewAdOffer(beyond)
+    expect(anyAdPost(beyond)).toEqual([])
   })
 
   it('a floor tie is not a standing – a rank with no counting W result buys nothing', () => {
