@@ -331,6 +331,16 @@ that page's own `getBoundingClientRect`, not the floor model's estimate. ⚠ The
 file and is NOT committed – it is one script away from being rebuilt, and a stale copy of three
 stylesheets is worse than none.
 
+## ⚙ ONE THING THIS BUNDLE INHERITS FROM THE OTHER HALF OF THE ROUND
+
+The category name is Sora 800 («шрифтом Sora», at the foot of the tile). ⚠ The prologue half of
+round 35 measured, on the same day, that the app asks Sora for 700 and 800 in twenty-two rules and
+ships neither – so every one of them, this one included, is currently a SYNTHESISED bold rather than
+the real face (`docs/rounds/round-35.md` item 8, and he has ruled that the missing faces ship).
+⭐ Nothing here has to change for that: this rule joins the twenty that already exist, and when the
+face lands the tile's name gets sharper along with every heading in the app. It is recorded so that
+«the category names look different now» is not read later as a shop regression.
+
 ## ⚙ THE ART'S PROVENANCE
 
 Filed and attested by the owner while this wave ran (`public/images/README.md`): the shop set is
