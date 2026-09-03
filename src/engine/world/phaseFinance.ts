@@ -358,19 +358,28 @@ function resolveBusinessIncome(world: WorldState): void {
     const herCents = assetKidShareCents(world, 'merch-brand')
     const merch = merchGross - herCents
     world.fundsCents += merch
-    addEvent(world, {
-      week: world.week,
-      type: 'income',
-      category: 'business',
-      // ⚠ THE ROW IS WHAT THE FAMILY ACTUALLY BANKED, and it NAMES the share when there is one –
-      // the prize row's own rule («a prize row that quietly shrank by half would read as a bug in
-      // the till»), and silent before her eighteenth where nothing is deducted.
-      text:
-        herCents > 0
-          ? `Merch – her name on the shelves, less her ${herBps / 100}% share`
-          : 'Merch – her name on the shelves',
-      amountCents: merch,
-    })
+    // ⚠ THE `> 0` GUARD IS THIS FUNCTION'S OWN «no $0 noise» RULE, KEPT THROUGH THE SPLIT AND NOT
+    // INHERITED BY ACCIDENT. Before round 35 #9 the whole block was gated on the income being
+    // positive, and the split moved that gate one level out – so the row needs the clause back, for
+    // a case that is now REACHABLE: at the 50% cap a one-cent gross rounds her share to the whole
+    // cent (`Math.round(0.5)` is 1) and leaves the family nothing, which would book a $0.00 income
+    // line on a career whose fame has decayed almost to zero. Her transfer below is guarded
+    // separately, so the cent still reaches her.
+    if (merch > 0) {
+      addEvent(world, {
+        week: world.week,
+        type: 'income',
+        category: 'business',
+        // ⚠ THE ROW IS WHAT THE FAMILY ACTUALLY BANKED, and it NAMES the share when there is one –
+        // the prize row's own rule («a prize row that quietly shrank by half would read as a bug in
+        // the till»), and silent before her eighteenth where nothing is deducted.
+        text:
+          herCents > 0
+            ? `Merch – her name on the shelves, less her ${herBps / 100}% share`
+            : 'Merch – her name on the shelves',
+        amountCents: merch,
+      })
+    }
     if (herCents > 0) {
       world.kidFundsCents = (world.kidFundsCents ?? 0) + herCents
       // ⚠ AN `info` ROW WITH NO `amountCents`, `bankSponsorCheque`'s own reason: booking her share
