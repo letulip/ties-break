@@ -2433,6 +2433,15 @@ function shopRowPaidMeta(row: ShopRowView): string | undefined {
                      rung has no amount to type, so it holds the Sell button alone and lays out
                      exactly as the bare button did. -->
                 <div class="shop-stake-row">
+                  <!-- ⚠ `min` IS THE BUY FLOOR AND THERE IS DELIBERATELY NO `max`, which is the one
+                       asymmetry a shared field creates and is left rather than "fixed". Both
+                       attributes were always ADVISORY – `canBuy` / `canSell` decide what is
+                       pressable and the engine re-validates every amount with its own sentence – and
+                       a field driving two verbs has no single valid range: the buy has a floor, the
+                       sale has a ceiling. `min` is kept because it is what the placeholder promises;
+                       a `max` is NOT added back, because it would mark a legitimate part sale below
+                       the entry minimum as invalid. Nothing styles `:invalid`, so neither attribute
+                       can paint a wrong answer on screen. -->
                   <input
                     v-if="isTopUp(row)"
                     v-model="stakeDollars[row.id]"
