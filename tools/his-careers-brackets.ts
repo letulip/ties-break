@@ -526,7 +526,6 @@ console.log(
 //      ⚠ PROVENANCE FIRST: every match is re-run at its STORED seed and the winner and scoreline are
 //      checked against the persisted row before a single reseed is trusted. A tool that cannot
 //      reproduce the match it is about to resample is measuring something else.
-import { conditionMatchFactor } from '../src/engine/condition'
 import { applySurfaceStyle } from '../src/engine/match/style'
 import { applyKit, kitWearAt } from '../src/engine/equipment'
 import { kitFreshCap } from '../src/engine/offers'

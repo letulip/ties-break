@@ -50,7 +50,14 @@ async function main(): Promise<void> {
   const target = wantSeason ?? seasonNow - 1
 
   section(`SAVE: week ${world.week} · season index ${seasonNow} (${seasonYear(seasonNow)}) · schema v${world.schemaVersion}`)
-  console.log(`kid: ${world.profile.kidName} ${world.profile.kidLastName}, age ${kidAgeExact(world).toFixed(2)}`)
+  // ⚠ REPAIRED IN ROUND 34 (QA-34), AND AGAIN THE DEFECT WAS ORIGINAL. `kidAgeExact` already took
+  // (week, birthMonth, birthDay) at 9201e534, the commit that ADDED this file on 29.08, so the
+  // one-argument call never compiled and printed `NaN` for her age at runtime. Every other call site
+  // in the repo already spells it this way, so the repair is the call convention and nothing else.
+  console.log(
+    `kid: ${world.profile.kidName} ${world.profile.kidLastName}, ` +
+      `age ${kidAgeExact(world.week, world.profile.birthMonth, world.profile.birthDay).toFixed(2)}`,
+  )
   console.log(`rank ITF ${world.kidRank} · WTA ${world.kidRankWta ?? '-'} · domestic ${world.kidRankDomestic ?? '-'}`)
   console.log(`events in save: ${world.events.length} · results rows: ${world.results.length}`)
   console.log(`TARGET SEASON: index ${target} = year ${seasonYear(target)}, weeks ${target * 52}..${target * 52 + 51}`)

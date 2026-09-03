@@ -91,9 +91,21 @@ jobs:
       # that goes stale, so this fails the PR that moves a symbol without regenerating. It reads
       # source text and runs in about a second; the fix is one command, named in the failure.
       - run: node scripts/world-map.mjs --check
+      # ⚠ THE TOOLS REGISTRY (QA-34, 02.09 review). `tools/README.md` is generated, and its second
+      # assertion is the one that matters: `tsconfig.app.json` must list exactly the live set, or the
+      # two lists drift and the build quietly grows back to typechecking 177 files. 0.14 s.
+      - run: npm run tools:registry:check
       # --force: vue-tsc -b trusts its incremental cache, which has hidden real type errors
       # (a duplicate-import TS2300 shipped past a cached build on 25.07). Full check, always.
       - run: npx vue-tsc -b --force
+      # ⭐⭐ THE ARCHIVAL SWEEP, AND ITS ABSENCE HERE WAS THE FINDING (QA-34). `tsconfig.tools.json`
+      # is deliberately outside the root project graph so `vite build` stops typechecking 151
+      # one-shot probes – but nothing ran it either, so nine TypeScript errors across six tools sat
+      # unread for months and two waves filed the redness as «baseline». An archival probe is
+      # EVIDENCE, and evidence that no longer compiles is evidence you cannot re-run.
+      # ⚠ MEASURED BEFORE IT WAS ADDED, because the review offered a scheduled job instead if the
+      # per-PR cost were unreasonable: 2.5 s, against 6.8 s for the typecheck on the line above.
+      - run: npm run check:tools
       # ⚠ THE GATE RUNS THE `unit` PROJECT. The Monte-Carlo files are NOT in it and that is a
       # decision, not an omission - see .github/workflows/simulation.yml and the note in
       # vite.config.ts. They are deterministic statistical calibration, they cost 143s of CPU, and

@@ -5,6 +5,14 @@
  * ⚠ READ-ONLY. Decodes a save, folds it, prints. Advances nothing, writes nothing.
  *
  *   npx vite-node tools/r29-item14-anger.ts -- --save ~/Downloads/x.tsave
+ *
+ * ⚠ REPAIRED IN ROUND 34 (QA-34), AND THE DEFECT WAS ORIGINAL RATHER THAN DRIFT. This file read
+ * `event.kind` on three lines; `WorldEvent` carried no `kind` field on the day this file was written
+ * (29.08, commit 9201e534) and carries none now – it names its discriminator `type` – so the reads
+ * were `undefined` from the beginning and printed `undefined` into the evidence. It is NOT frozen:
+ * the field it wanted exists under its real name, the repair is that rename and nothing else, and
+ * the probe still answers its question against a save. Only `npm run check:tools` could see this,
+ * and until round 34 nothing ran it.
  */
 import { readFileSync } from 'node:fs'
 import { decodeExportFile } from '../src/engine/saveCodec'
@@ -36,7 +44,7 @@ async function main(): Promise<void> {
   console.log(`...of which the kid is NOT a participant: ${notHers.length}`)
   if (notHers.length > 0) {
     for (const e of notHers.slice(0, 12)) {
-      console.log(`   w${e.week} id=${e.id} kind=${e.kind} a=${e.match!.aId} b=${e.match!.bId} winner=${e.match!.winnerId} :: ${e.text?.slice(0, 70)}`)
+      console.log(`   w${e.week} id=${e.id} type=${e.type} a=${e.match!.aId} b=${e.match!.bId} winner=${e.match!.winnerId} :: ${e.text?.slice(0, 70)}`)
     }
   }
   const friendlies = world.events.filter((e) => !!e.match && e.friendly).length
@@ -102,7 +110,7 @@ async function main(): Promise<void> {
   section('FEED: every NON-match row in 2045 (looking for a second anger surface)')
   const others = world.events.filter((e) => !e.match && seasonIndexOf(e.week) === target)
   const kinds = new Map<string, number>()
-  for (const e of others) kinds.set(e.kind, (kinds.get(e.kind) ?? 0) + 1)
+  for (const e of others) kinds.set(e.type, (kinds.get(e.type) ?? 0) + 1)
   console.log([...kinds.entries()].map(([k, n]) => `${k}:${n}`).join('  '))
 }
 
