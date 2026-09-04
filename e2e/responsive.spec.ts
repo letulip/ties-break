@@ -371,12 +371,21 @@ test('the last card of a stacked week is reachable by keyboard and by an arrow',
   await expect(row.getByRole('button', { name: 'Back', exact: true })).toBeEnabled()
 })
 
-// ⚠ THE COMPLEMENT, AND IT IS WHAT STOPS THE TEST ABOVE BEING HALF AN ARGUMENT. The arrows appear at
-// EVERY width – that is the whole reason phase 3's D16 refusal does not apply to them – so at a
-// width where the same week needs no paging they must still be there, and quiet. A pager that hid
-// itself when everything fitted would be a control present at 375 and absent at 1280, which
-// `e2e/parity.spec.ts` fails by name.
-test('at 1280 the same week needs no paging, and the arrows are there and disabled', async ({
+// ⭐⭐⭐ ROUND 36 PHASE 7 – THE COMPLEMENT, AND HIS RULING TURNED IT ROUND.
+//
+// It used to assert that at 1280 the same week's arrows «are there and disabled», which was phase
+// 5's answer and which `weekPager.ts` argued for. He looked at it in the shipped build and ruled the
+// other way: «на десктопе неделя из двух карточек показывает две серые стрелки, которые ей никогда
+// не понадобятся. Спрятать – да, показываем только если есть что листать.» So this now measures the
+// ruling – nothing past the edge, no pager – and the price is a stated exemption in
+// `e2e/parity.spec.ts`, whose honest half holds the other direction.
+//
+// ⚠⚠ AND IT ANSWERS THE KEYBOARD QUESTION RATHER THAN ASSUMING IT. Left/Right are handled on the
+// ROW, never on the arrows, so hiding the arrows cannot take the keyboard route away – but «cannot»
+// is a claim, and this is where it is checked. What the check finds is the honest answer: the strip
+// is still a tab stop at 1280 and Left/Right still reach the pager, and they move NOTHING, because a
+// strip with nothing past its edge has nowhere to go. The route survives; there is simply no journey.
+test('at 1280 the same week needs no paging, so it has no arrows – and the keyboard route survives', async ({
   page,
   careerAt,
 }) => {
@@ -397,6 +406,43 @@ test('at 1280 the same week needs no paging, and the arrows are there and disabl
   // nothing hanging past the edge.
   expect(state.cards).toBeGreaterThan(1)
   expect(state.overflow, 'a two-card week fits whole at 1280').toBe(0)
-  await expect(row.getByRole('button', { name: 'Back', exact: true })).toBeDisabled()
-  await expect(row.getByRole('button', { name: 'Next', exact: true })).toBeDisabled()
+  await expect(row.locator('.week-arrow'), 'a week that fits whole draws no pager').toHaveCount(0)
+  await expect(
+    row.locator('.week-pager'),
+    'and the container the parity exemption names goes with them',
+  ).toHaveCount(0)
+
+  // --- THE KEYBOARD, WITHOUT ARROWS TO PRESS -------------------------------------------------
+  //
+  // ⚠ TABBED TO, NEVER `.focus()`ed – the same rule the test above gives its reason for: a route a
+  // player cannot walk is not a route.
+  await page.evaluate(() => (document.activeElement as HTMLElement | null)?.blur())
+  let onStrip = false
+  for (let press = 0; press < 200 && !onStrip; press++) {
+    await page.keyboard.press('Tab')
+    onStrip = await strip.evaluate((el) => el === document.activeElement)
+  }
+  expect(
+    onStrip,
+    'the strip stopped being a tab stop when its arrows went – the two are separate and must stay so',
+  ).toBe(true)
+
+  await page.keyboard.press('ArrowRight')
+  await page.waitForTimeout(400)
+  expect(
+    await strip.evaluate((el) => el.scrollLeft),
+    'ArrowRight on a strip that fits whole moved it – there is nowhere to move to',
+  ).toBe(0)
+  // ⭐ AND THE SAME KEY DOES REACH THE PAGER, which is the difference between «the route survives»
+  // and «the route was quietly removed». `pager.key` calls `preventDefault` on every Left/Right
+  // inside a week's row, arrows or no arrows, so a swallowed key is the proof the handler ran.
+  const reached = await row.evaluate(
+    // `dispatchEvent` returns false exactly when a handler called `preventDefault`, which is the
+    // one observable trace `pager.key` leaves on a strip it cannot scroll.
+    (el) =>
+      !el.dispatchEvent(
+        new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true, cancelable: true }),
+      ),
+  )
+  expect(reached, 'Left/Right no longer reach the pager on a week with no arrows').toBe(true)
 })

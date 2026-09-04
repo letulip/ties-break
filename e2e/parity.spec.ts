@@ -65,20 +65,38 @@
 // entire point.
 //
 // -------------------------------------------------------------------------------------------------
-// ⭐⭐⭐ ROUND 36 PHASE 6 – THE CLAIM NOW CARRIES AN EXCEPTION, AND IT IS STATED HERE IN WORDS
+// ⭐⭐⭐ ROUND 36 PHASES 6 AND 7 – THE CLAIM CARRIES TWO EXCEPTIONS, AND BOTH ARE STATED HERE IN WORDS
 // -------------------------------------------------------------------------------------------------
-// What this file asserts, from this phase on, is:
+// What this file asserts, from phase 7 on, is:
 //
-//     THE SAME THINGS ARE REACHABLE AT EVERY WIDTH, **OUTSIDE THE DESKTOP RAIL'S DASHBOARD**.
+//     THE SAME THINGS ARE REACHABLE AT EVERY WIDTH, **OUTSIDE THE DESKTOP RAIL'S DASHBOARD AND THE
+//     WEEK PAGER'S ARROWS**.
 //
-// The exception is the owner's own, on his rail's three information cards: «можно вынести эту часть
-// поля навигации из этой проверки? у меня вообще планы небольшие на этот дашборд есть дальше и это
-// исключительно десктопная фича.» A claim with an exception has to state the exception, which is why
-// that sentence is here and in docs/rounds/round-36.md rather than only in a decisions row.
+// ⚠⚠ A CLAIM WITH TWO EXCEPTIONS HAS TO STATE BOTH, which is why the sentence above names them and
+// why neither is only a decisions row. Both are the owner's own, both after playing a shipped build:
 //
-// ⚠⚠ AND THE EXEMPTION IS BUILT SO IT CANNOT GROW. Four parts, and the last three are what stop it
-// becoming a hole – each one is a test below, and each one has been SEEN to redden:
+//   1. THE RAIL'S DASHBOARD (phase 6): «можно вынести эту часть поля навигации из этой проверки? у
+//      меня вообще планы небольшие на этот дашборд есть дальше и это исключительно десктопная фича.»
+//   2. THE WEEK PAGER'S ARROWS (phase 7): «на десктопе неделя из двух карточек показывает две серые
+//      стрелки, которые ей никогда не понадобятся. Спрятать – да, показываем только если есть что
+//      листать.»
 //
+// ⚠⚠ AND THE SECOND ONE COSTS SOMETHING THIS FILE ARGUED AGAINST, SAID PLAINLY RATHER THAN BURIED.
+// Which weeks overflow DEPENDS ON THE WIDTH – a two-card week overflows by 273px at 375 and fits
+// whole from 768 up (measured, phase 7) – so arrows drawn only on an overflowing strip really are a
+// control present at 375 and absent at 1280. That is exactly what «ничего нового … как и старого
+// уйти ничего не должно» forbids, `src/composables/weekPager.ts` said so in its own header, and D35
+// put the price to him in those words before he ruled. He ruled. The exemption is the price, and the
+// guards below are what stop it being a hole – in particular the HONEST HALF: at a width where a
+// strip DOES overflow, the arrows must be there. «Hidden when idle» is the ruling; «hidden whenever»
+// is what `the honest half` reddens on.
+//
+// ⚠⚠ AND EACH EXEMPTION IS BUILT SO IT CANNOT GROW. FOUR PARTS EACH – the same shape twice, because
+// phase 6's shape is this round's standard – and the last three are what stop one becoming a hole.
+// Each part is a test below, and each has been SEEN to redden; the mutations and what they printed
+// are in docs/rounds/round-36.md.
+//
+// EXEMPTION 1 – THE RAIL'S DASHBOARD:
 //   1. ONLY THE DASHBOARD REGION IS EXEMPT. The rail's NAVIGATION is not: the five tabs exist at
 //      every width and still fail by name if one goes. `the rail's navigation is NOT exempt` holds
 //      exactly that, by asserting the five tab buttons are still IN the fingerprint at 1280.
@@ -92,10 +110,26 @@
 //      desktop and reddens.
 //   4. …and the claim is restated in words, above.
 //
-// ⚠ THE EXEMPTION IS LOAD-BEARING TODAY AND NOT A GUARD FITTED TO NOTHING – which is the objection
-// phase 4 refused to ship past. The three card titles are `heading` nodes, so without the subtraction
-// below the 1280 fingerprint carries three tokens the 375 one does not, and every screen goes red.
-// `the exemption is doing real work` asserts exactly that, so the day the dashboard stops
+// EXEMPTION 2 – THE WEEK PAGER'S ARROWS (phase 7), built to that same four-part shape:
+//   1. ONLY THE ARROWS ARE EXEMPT. The strip, the cards and every control ON a card stay in the
+//      check: `only the ARROWS are exempt` asserts the week's own `Enter`/`Withdraw` controls and the
+//      card headings survive the subtraction at 1280, and that nothing but `Back`/`Next` is taken.
+//   2. THE BOUNDARY IS A CONTAINER. `WEEK_PAGER` below is `#app .week-row > .week-pager` – a PLACE,
+//      not a list of names – and because a container is a place, what may live in it is fixed:
+//      `the boundary is a container…` asserts every pager holds exactly the two arrows and nothing
+//      else, so a later phase cannot park a control in there and out of the check.
+//   3. ⭐⭐ THE HONEST HALF: WHERE A STRIP DOES OVERFLOW, THE ARROWS ARE THERE. Without this the
+//      exemption would read «arrows may be missing whenever», which is not what he ruled.
+//      `the honest half…` measures `scrollWidth - clientWidth` per week per width in the real browser
+//      and asserts the biconditional – overflow ⟺ arrows – at all four widths.
+//   4. …and the claim is restated in words, above.
+//
+// ⚠ BOTH EXEMPTIONS ARE LOAD-BEARING TODAY AND NEITHER IS A GUARD FITTED TO NOTHING – which is the
+// objection phase 4 refused to ship past. The three rail card titles are `heading` nodes, so without
+// the subtraction the 1280 fingerprint carries three tokens the 375 one does not and every screen
+// goes red; the arrows are `button` nodes present at 375 and gone by 768, so without the subtraction
+// the stacked-week room goes red from the other side. `the exemption is doing real work` and
+// `the arrows' exemption is doing real work` assert exactly those, so the day either region stops
 // contributing anything, this file says so instead of quietly guarding an empty set.
 
 import { readdirSync } from 'node:fs'
@@ -331,6 +365,29 @@ const FINGERPRINTED_ROLES = new Set([
  */
 const RAIL_DASHBOARD = '#app > nav.tab-bar > .rail-dash'
 
+/**
+ * ⭐⭐⭐ ROUND 36 PHASE 7 – THE SECOND EXEMPT REGION, AND IT IS A CONTAINER FOR THE SAME REASON.
+ *
+ * The week pager's two arrows (`src/components/screens/SeasonScreen.vue`), which his 04.09 ruling
+ * takes off a strip with nothing to page. They live in a `div.week-pager` that exists ONLY to be this
+ * boundary – it is `display: contents`, so it draws no box and costs the identity census nothing.
+ *
+ * ⚠⚠ THE SAME ARGUMENT AS `RAIL_DASHBOARD`, AND IT MATTERS MORE HERE. An exemption written as
+ * «ignore `Back` and `Next`» would ignore those two words ANYWHERE in the app – `EndingScreen`'s
+ * album pager uses exactly them – and would be one edit away from ignoring a third control somebody
+ * decided to call `Back`. A container cannot be widened that way: a later phase would have to move an
+ * element INTO a week's pager, and `the boundary is a container` fails the moment anything but the
+ * two arrows is in there.
+ *
+ * ⚠ `#app` AND THE CHILD COMBINATOR ARE BOTH LOAD-BEARING: the region is a direct child of a week's
+ * own row inside the app frame, so a `.week-pager` drawn anywhere else is not exempt and is named by
+ * the ordinary walk instead.
+ */
+const WEEK_PAGER = '#app .week-row > .week-pager'
+
+/** Both exempt regions, as one selector list – the form `Element.closest` takes. */
+const EXEMPT_REGIONS = `${RAIL_DASHBOARD}, ${WEEK_PAGER}`
+
 /** `a` minus `b` as MULTISETS, raw – the same counting `missingFrom` does, without its rendering.
  *  Removing exactly as many copies as `b` holds is what makes the subtraction exact rather than
  *  approximate: a token the dashboard shows twice takes two copies out of the page's list and no
@@ -365,12 +422,16 @@ async function ariaTokensOf(target: Locator): Promise<string[]> {
   return tokens
 }
 
-/** The page, MINUS the rail's dashboard – part 2 of the exemption, applied. At 375 / 768 / 900 the
- *  region is `display: none`, so it is absent from the accessibility tree and this subtracts nothing;
- *  at 1280 it takes out exactly what the three cards contribute and leaves the screen's own set. */
+/** The page, MINUS the two exempt regions – part 2 of each exemption, applied.
+ *
+ *  The rail's dashboard is `display: none` at 375 / 768 / 900, so it is absent from the accessibility
+ *  tree and subtracts nothing there; at 1280 it takes out exactly what the three cards contribute.
+ *  The pager's arrows run the other way round – present at 375, where a two-card week overflows by
+ *  273px, and gone from 768 up where it fits whole – so between them the two subtractions leave the
+ *  screen's own set, which is what the walk compares. */
 async function ariaFingerprint(page: Page): Promise<string[]> {
   const whole = await ariaTokensOf(page.locator('body'))
-  const exempt = await railDashboardTokens(page)
+  const exempt = [...(await railDashboardTokens(page)), ...(await weekPagerTokens(page))]
   return exempt.length === 0 ? whole : subtractOnce(whole, exempt)
 }
 
@@ -381,6 +442,26 @@ async function railDashboardTokens(page: Page): Promise<string[]> {
   // all, and an absent region exempts nothing.
   if ((await region.count()) === 0) return []
   return ariaTokensOf(region)
+}
+
+/**
+ * Everything inside every week pager on the screen.
+ *
+ * ⚠ THERE ARE SEVERAL OF THEM AND THAT IS THE DIFFERENCE FROM THE RAIL. The dashboard is the shell's
+ * and there is exactly one; a pager belongs to a WEEK, and a Season feed can draw one per stacked
+ * week – four arrows on `sinking` at 375. So this walks them all rather than asserting one.
+ *
+ * ⚠ IT SNAPSHOTS THE CONTAINER'S CHILDREN, NOT THE CONTAINER. `.week-pager` is `display: contents`
+ * (it must be, or it would be a box the identity census counts), and a box-less element is not a
+ * thing an accessibility snapshot can be rooted at. Reading the children is the same claim – whatever
+ * is IN the region, whatever that turns out to be – and `the boundary is a container` is what fixes
+ * what may be in there.
+ */
+async function weekPagerTokens(page: Page): Promise<string[]> {
+  const inside = await page.locator(`${WEEK_PAGER} > *`).all()
+  const tokens: string[] = []
+  for (const el of inside) tokens.push(...(await ariaTokensOf(el)))
+  return tokens
 }
 
 /**
@@ -410,10 +491,13 @@ async function paintFingerprint(page: Page): Promise<string[]> {
 
     const tokens: string[] = []
     for (const el of Array.from(document.querySelectorAll('*'))) {
-      // ⭐ PART 2 OF THE EXEMPTION, ON THE PAINT HALF. `closest` is matched against the WHOLE
-      // structural selector, so this skips a node only when its ancestor really is the rail's own
-      // dashboard – an element that merely carries the class somewhere else is not exempt and is
-      // named by `the boundary is one container` instead.
+      // ⭐ PART 2 OF BOTH EXEMPTIONS, ON THE PAINT HALF. `closest` is matched against the WHOLE
+      // structural selector list, so this skips a node only when its ancestor really is the rail's
+      // own dashboard or a week's own pager – an element that merely carries the class somewhere else
+      // is not exempt and is named by the boundary tests instead.
+      // ⚠ AND THE PAGER HALF IS NOT DECORATION: an arrow's glyph is a MASK, so without this line the
+      // 375 fingerprint would carry `icon back.svg ×2` that 1280 has not, and the aria subtraction
+      // alone would not have caught it. Phase 5's deliberate break named exactly that token.
       if (el.closest(exemptSelector)) continue
       if (el.getClientRects().length === 0) continue
       const box = el.getBoundingClientRect()
@@ -438,7 +522,7 @@ async function paintFingerprint(page: Page): Promise<string[]> {
       if (background) tokens.push(`art ${background}`)
     }
     return tokens
-  }, RAIL_DASHBOARD)
+  }, EXEMPT_REGIONS)
 }
 
 /**
@@ -638,9 +722,16 @@ const ROOMS: Record<string, Station> = {
   'SeasonScreen.vue – a week that stacks several rungs': {
     career: 'sinking',
     visit: (page) => navTab(page, 'Season'),
-    // The pager's own control, by role and name – so a week that stopped stacking, or a pager that
-    // stopped drawing, fails HERE rather than in a fingerprint diff nobody expected.
-    arrived: (page) => page.getByRole('button', { name: 'Next', exact: true }).first(),
+    // ⚠⚠ PHASE 7 MOVED THIS ANCHOR OFF THE ARROW, AND HAD TO. It was the `Next` button – «so a pager
+    // that stopped drawing fails HERE» – and after his ruling a pager that does not draw is the
+    // CORRECT behaviour at 768, 900 and 1280, where a two-card week fits whole (measured: overflow
+    // 273px at 375, 0 from 768 up). Anchoring on it would have failed the room at three of its four
+    // widths for doing the right thing.
+    // ⭐ So the anchor is the STACK itself – `.swipeable` is on a week's strip exactly when the week
+    // offers more than one card – which is the property this room exists to walk. A week that stopped
+    // stacking still fails here before any fingerprint is taken; a pager that stops drawing where it
+    // SHOULD draw is caught by `the honest half…` below, which is a stronger check than an anchor.
+    arrived: (page) => page.locator('.week-row > .week-stack.swipeable').first(),
   },
 
   'MoneyScreen.vue – a shelf inside the shop': {
@@ -1035,6 +1126,307 @@ test.describe("the desktop rail's dashboard is exempt – and the exemption is b
       expect(text, `the rail dashboard differs on ${screen} - it is the shell's, and the same set ` +
         'lives in the strip on every page').toBe(first[1])
     }
+  })
+})
+
+// =================================================================================================
+// ⭐⭐⭐ ROUND 36 PHASE 7 – THE ARROWS' EXEMPTION, AND ITS OWN FOUR GUARDS
+// =================================================================================================
+//
+// His ruling, 04.09, after playing the phase-5 build: «на десктопе неделя из двух карточек показывает
+// две серые стрелки, которые ей никогда не понадобятся. Спрятать – да, показываем только если есть
+// что листать.»
+//
+// ⚠⚠ AND `weekPager.ts` ARGUED THE OPPOSITE IN ITS OWN HEADER, CORRECTLY. Which weeks overflow
+// depends on the WIDTH, so hiding an idle pager makes it a control present at 375 and absent at 1280
+// – which is what this file fails by name. D35 put that price to him as «a stated parity exemption»
+// and he took it. These four are the shape phase 6 used for the rail, applied to the arrows.
+//
+// ⚠ THEY WALK `sinking` AND NOT `pro`, for D36's reason: `pro`'s Season feed is three rows of ONE
+// card, so it draws no pager at all and four fingerprints with no arrow in any of them are equal.
+// `sinking` draws two stacked weeks – four arrows at 375, none from 768 up.
+
+/** Every week row on the Season screen as the browser actually measures it – the overflow the ruling
+ *  turns on, and the arrows it turns on and off. Read from the live boxes, never from the stylesheet:
+ *  a card width of `88%` / `50%` / `calc(33.333% - 8px)` is exactly the thing that must not be
+ *  re-derived here, or this arm would be asserting the rule against a copy of itself. */
+async function weekRowsAt(page: Page): Promise<
+  { cards: number; overflow: number; arrows: string[]; pagers: number }[]
+> {
+  return page.evaluate(() =>
+    Array.from(document.querySelectorAll('.week-row')).map((row) => {
+      const strip = row.querySelector('.week-stack')
+      return {
+        cards: row.querySelectorAll('.event-card').length,
+        overflow: strip ? strip.scrollWidth - strip.clientWidth : 0,
+        // ⚠⚠ ON THE SCREEN, NOT IN THE DOM, AND THAT IS A CORRECTION A MUTATION FORCED. The first
+        // draft counted `querySelectorAll('.week-arrow')` and would have passed a break that hid the
+        // arrows with `display: none` – which is the shape phase 5's own deliberate break took, and
+        // the shape a later media query would take. The rest of this file measures visibility rather
+        // than declaring it (`paintFingerprint`, and the aria snapshot's own filter); so does this.
+        arrows: Array.from(row.querySelectorAll('.week-arrow'))
+          .filter((a) => a.getClientRects().length > 0)
+          .map((a) => a.getAttribute('aria-label') ?? '<unnamed>'),
+        pagers: row.querySelectorAll('.week-pager').length,
+      }
+    }),
+  )
+}
+
+/** `sinking`'s Season feed at one width, settled – the state every arm below measures from. */
+async function seasonAt(page: Page, width: number): Promise<void> {
+  await page.setViewportSize({ width, height: VIEWPORT_HEIGHT })
+  await park(page)
+  await navTab(page, 'Season')
+  await expect(
+    page.getByRole('heading', { name: 'Season Planner' }),
+    `the walk did not arrive on Season at ${width}px`,
+  ).toBeVisible()
+  await settleScreen(page)
+  // ⚠ THE PAGER IS DRAWN FROM A MEASUREMENT, NOT FROM A PROP, so the render that shows or hides an
+  // arrow is one ResizeObserver callback behind the resize. This waits for the reading to STOP
+  // MOVING – the same answer twice in a row – rather than for a fixed sleep, which is what makes
+  // these arms deterministic on a slow machine.
+  //
+  // ⚠⚠ AND IT DELIBERATELY DOES NOT WAIT FOR THE RULE TO HOLD, which the first draft did. Polling
+  // until «overflow ⟺ arrows» is true makes the helper assert the very thing the arms below are
+  // there to measure: a break then fails HERE, as a timeout, with a message about settling instead
+  // of a message naming the week that lost its arrows. Measured – mutation B printed exactly that.
+  let previous = ''
+  await expect
+    .poll(
+      async () => {
+        const now = JSON.stringify(await weekRowsAt(page))
+        const stable = now === previous
+        previous = now
+        return stable
+      },
+      { message: `the Season feed at ${width}px never stopped re-measuring itself` },
+    )
+    .toBe(true)
+}
+
+test.describe("the week pager's arrows are exempt – and the exemption is bounded", () => {
+  test('the boundary is a CONTAINER, and it holds NOTHING but the two arrows', async ({
+    page,
+    careerAt,
+  }) => {
+    await page.setViewportSize({ width: BASE_WIDTH, height: VIEWPORT_HEIGHT })
+    await careerAt('sinking')
+    await answerOpeningKnock(page)
+    await dismissTourBriefing(page)
+    await seasonAt(page, BASE_WIDTH)
+
+    // ⚠ ANTI-VACUITY FIRST. Every assertion below is over the set of pagers on the screen, and an
+    // empty set satisfies all of them for ever. 375 is the width the fixture's two-card weeks
+    // overflow at, so this is where the region is guaranteed to exist.
+    const pagers = await page.locator(WEEK_PAGER).count()
+    expect(pagers, 'no week pager is on the screen at 375, so this arm guards an empty set').toBeGreaterThan(
+      0,
+    )
+
+    // ⭐⭐ GUARD ONE, AND IT IS THE ONE THAT STOPS THE EXEMPTION GROWING. A later phase that parks a
+    // control inside a pager would be moving it OUT of the parity check – which is precisely what a
+    // boundary-by-container is for. The region may hold the two arrows and NOTHING else: not a third
+    // button, not a wrapper, not a text node.
+    const contents = await page.evaluate((selector) => {
+      // ⚠ TAG AND ACCESSIBLE NAME, NOT THE CLASS LIST. `ui/IconButton.vue` puts its own
+      // `tb-iconbtn tb-iconbtn--plate` on the element, and pinning those here would make this arm a
+      // hostage to that component's internals rather than a statement about what is in the region.
+      // The `week-arrow` marker is asserted separately, below, which is the part that is ours.
+      const describe = (el: Element): string =>
+        `${el.tagName.toLowerCase()} "${el.getAttribute('aria-label') ?? ''}"`
+      return Array.from(document.querySelectorAll(selector)).map((region) => ({
+        children: Array.from(region.children).map(describe),
+        strays: Array.from(region.children)
+          .filter((el) => !el.classList.contains('week-arrow'))
+          .map(describe),
+        // ⚠ TEXT AS WELL AS ELEMENTS. A bare text node has no tag to enumerate and would slip past a
+        // children-only check, and a word drawn in the exempt region is a word the parity walk stops
+        // comparing – the same dodge the rail's «no undeclared text» arm exists to stop.
+        text: (region.textContent ?? '').replace(/\s+/g, ' ').trim(),
+        parent: region.parentElement?.className ?? '<detached>',
+      }))
+    }, WEEK_PAGER)
+
+    for (const region of contents) {
+      expect(
+        region.children,
+        'a week pager holds something that is not its two arrows. This region is the ONE place on ' +
+          'the Season screen parity does not check, by his ruling that an idle pager is hidden - so ' +
+          'anything parked in here is a control that has left the check.',
+      ).toEqual(['button "Back"', 'button "Next"'])
+      expect(
+        region.strays,
+        'something in a week pager is not one of the pager’s own arrows',
+      ).toEqual([])
+      expect(region.text, 'a week pager carries text of its own, which the parity walk would stop comparing').toBe(
+        '',
+      )
+      // ⭐ AND THE PLACE IS THE PLACE. `#app .week-row > .week-pager` is the selector; asserting the
+      // parent here is what stops a `.week-pager` appearing somewhere else in the app and being
+      // exempt by accident.
+      expect(region.parent, 'a week pager is not a child of a week row').toContain('week-row')
+    }
+
+    // ⭐ NOTHING ELSE IN THE APP CARRIES THE CLASS. A second kind of `.week-pager` – in another
+    // screen, or nested – would be a second hole, so the two counts are asserted equal rather than
+    // the presence of one.
+    expect(
+      await page.locator('.week-pager').count(),
+      'a `.week-pager` exists outside a week row, which is a second exempt region nobody declared',
+    ).toBe(pagers)
+  })
+
+  test('only the ARROWS are exempt – the strip, the cards and their controls stay in the check', async ({
+    page,
+    careerAt,
+  }) => {
+    await page.setViewportSize({ width: BASE_WIDTH, height: VIEWPORT_HEIGHT })
+    await careerAt('sinking')
+    await answerOpeningKnock(page)
+    await dismissTourBriefing(page)
+    await seasonAt(page, BASE_WIDTH)
+
+    const exempt = await weekPagerTokens(page)
+    // ⭐ PART 1 – THE EXEMPTION TAKES THE TWO ARROWS AND NOTHING ELSE. Asserted as a set equality
+    // over the distinct tokens, so a third kind of token appearing in the region fails by name
+    // rather than being absorbed.
+    expect(exempt.length, 'the arrows contribute nothing, so the exemption guards an empty set').toBeGreaterThan(
+      0,
+    )
+    expect(
+      [...new Set(exempt)].sort(),
+      'the exemption is taking something that is not a pager arrow out of the parity check',
+    ).toEqual(['button "Back"', 'button "Next"'])
+
+    // ⭐ …AND THE WEEK'S OWN CONTROLS ARE STILL IN THE CHECK. The cards, their headings and the
+    // `Enter` on each of them are OUTSIDE the pager, so they still fail by name if one goes. This is
+    // the arrows' version of «the rail's NAVIGATION is not exempt».
+    const kept = await ariaFingerprint(page)
+    const cardControls = (await ariaTokensOf(page.locator('body'))).filter(
+      (t) => /^button "Enter the /.test(t) || /^heading3 /.test(t),
+    )
+    expect(
+      cardControls.length,
+      'the feed drew no card control at all, so «they stay in the check» is a claim about nothing',
+    ).toBeGreaterThan(0)
+    for (const token of new Set(cardControls)) {
+      expect(kept, `${token} is on a season card and the exemption swallowed it`).toContain(token)
+    }
+    expect(
+      exempt.some((t) => !/^button "(Back|Next)"$/.test(t)),
+      'the exemption took a token that is not one of the two arrows',
+    ).toBe(false)
+  })
+
+  test('⭐⭐ the HONEST HALF – a strip that DOES overflow has its arrows, at every width', async ({
+    page,
+    careerAt,
+  }) => {
+    // ⭐⭐⭐ THIS IS THE ARM THAT STOPS THE EXEMPTION MEANING «ARROWS MAY BE MISSING WHENEVER».
+    // His ruling is «показываем только если есть что листать» – a biconditional, not a licence. So
+    // the overflow is measured in the real browser, week by week and width by width, and the arrows
+    // must follow it in BOTH directions: absent where the week fits, PRESENT where it does not.
+    await page.setViewportSize({ width: BASE_WIDTH, height: VIEWPORT_HEIGHT })
+    await careerAt('sinking')
+    await answerOpeningKnock(page)
+    await dismissTourBriefing(page)
+
+    let overflowing = 0
+    let fitting = 0
+    for (const width of WIDTHS) {
+      await seasonAt(page, width)
+      const rows = (await weekRowsAt(page)).filter((r) => r.cards > 1)
+      expect(rows.length, `no week stacks at ${width}px, so this width measured nothing`).toBeGreaterThan(
+        0,
+      )
+      for (const row of rows) {
+        // The 1px band is `pagerEnds`' own fractional-pixel slack, read back here rather than
+        // re-derived: a strip whose scroll is a sub-pixel has nothing a player could page to.
+        if (row.overflow > 1) {
+          overflowing++
+          expect(
+            row.arrows,
+            `at ${width}px a week of ${row.cards} cards overflows by ${Math.round(row.overflow)}px ` +
+              'and has NO pager. The exemption is for an idle pager, not a missing one: «показываем ' +
+              'только если есть что листать» is a biconditional and this is the half of it that ' +
+              'keeps the exemption honest.',
+          ).toEqual(['Back', 'Next'])
+          expect(row.pagers, `and its arrows are inside the one exempt container at ${width}px`).toBe(1)
+        } else {
+          fitting++
+          expect(
+            row.arrows,
+            `at ${width}px a week of ${row.cards} cards fits whole and still draws a pager - which ` +
+              'is the pair of grey arrows his ruling took off the screen',
+          ).toEqual([])
+          expect(row.pagers, `and no exempt container is drawn at ${width}px either`).toBe(0)
+        }
+      }
+    }
+
+    // ⚠⚠ ANTI-VACUITY, BOTH WAYS. A run in which nothing overflowed would pass the whole loop while
+    // proving only that absent arrows stay absent - and a run in which everything overflowed would
+    // never exercise the ruling at all. The fixture must show this walk both states or the arm says
+    // so instead of going quietly green.
+    expect(
+      overflowing,
+      'no week overflowed at any of the four widths, so the honest half was never tested',
+    ).toBeGreaterThan(0)
+    expect(
+      fitting,
+      'no week fitted whole at any of the four widths, so his ruling was never tested',
+    ).toBeGreaterThan(0)
+  })
+
+  test("the arrows' exemption is doing real work, and it is the ONLY difference the pager makes", async ({
+    page,
+    careerAt,
+  }) => {
+    // ⭐⭐ THE ANTI-VACUITY ARM PHASE 4 ASKED FOR, AS AN EQUALITY – the same shape as the rail's, from
+    // the opposite direction. The rail adds tokens at 1280 that 375 has not; the pager adds tokens at
+    // 375 that 1280 has not. This one assertion says three things at once: the exemption is
+    // load-bearing TODAY (the day it stops being, this line reddens), it hides nothing else, and the
+    // rest of the Season feed really is 1:1 on its own.
+    await page.setViewportSize({ width: BASE_WIDTH, height: VIEWPORT_HEIGHT })
+    await careerAt('sinking')
+    await answerOpeningKnock(page)
+    await dismissTourBriefing(page)
+
+    // ⚠ THE RAIL IS SUBTRACTED FROM BOTH SIDES FIRST, AND THAT IS NOT A CONVENIENCE. At 1280 the
+    // Season screen also carries the OTHER exemption – the rail's dashboard – so a raw 375-vs-1280
+    // diff would name its three cards too and this arm would be measuring both regions at once. The
+    // claim here is about the pager alone, so the rail is taken out on each side by its own
+    // subtraction, exactly as the walk does.
+    await seasonAt(page, BASE_WIDTH)
+    const phoneRaw = subtractOnce(
+      await ariaTokensOf(page.locator('body')),
+      await railDashboardTokens(page),
+    )
+    const exempt = await weekPagerTokens(page)
+
+    await seasonAt(page, 1280)
+    const deskRaw = subtractOnce(
+      await ariaTokensOf(page.locator('body')),
+      await railDashboardTokens(page),
+    )
+    const deskExempt = await weekPagerTokens(page)
+
+    expect(exempt.length, 'the pager contributes nothing at 375, so the exemption guards an empty set').toBeGreaterThan(
+      0,
+    )
+    expect(deskExempt, 'a week that fits whole at 1280 still draws a pager').toEqual([])
+    // Without the subtraction the two widths DISAGREE, and what they disagree about is exactly the
+    // arrows – nothing more and nothing less.
+    expect(
+      missingFrom(phoneRaw, deskRaw),
+      'the ONLY thing on the phone that is not at 1280 must be the pager arrows themselves',
+    ).toEqual(missingFrom(exempt, []))
+    expect(
+      missingFrom(deskRaw, phoneRaw),
+      'and with the rail taken off both sides, nothing at 1280 is missing on the phone',
+    ).toEqual([])
   })
 })
 

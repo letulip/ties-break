@@ -57,25 +57,70 @@ function fullyVisible(g: ReturnType<typeof strip>, card: number, scrollLeft: num
 }
 
 describe('round 36 phase 5 – which arrows are live', () => {
-  it('a strip that does not overflow is at BOTH ends, so both arrows go quiet', () => {
-    // ⚠ THIS IS THE PARITY-CRITICAL ONE. Which weeks overflow depends on the WIDTH, so a pager that
-    // vanished when everything fitted would be a control present at 375 and absent at 1280 – which
-    // `e2e/parity.spec.ts` fails by name. Disabled, never hidden.
-    expect(pagerEnds(0, 900, 948)).toEqual({ atStart: true, atEnd: true })
-    expect(pagerEnds(0, 948, 948)).toEqual({ atStart: true, atEnd: true })
+  it('a strip that does not overflow is at BOTH ends', () => {
+    // ⚠ THE ARITHMETIC HERE IS PHASE 5'S AND DID NOT MOVE. What phase 7 changed is what the SCREEN
+    // does with it: a strip in this state used to draw two grey arrows and now draws none. `atStart`
+    // and `atEnd` still describe it exactly as they did, which is why they were left alone.
+    expect(pagerEnds(0, 900, 948)).toEqual({ atStart: true, atEnd: true, overflows: false })
+    expect(pagerEnds(0, 948, 948)).toEqual({ atStart: true, atEnd: true, overflows: false })
   })
 
   it('...and one that does reports the end it is actually at', () => {
     const max = PHONE.maxScroll
-    expect(pagerEnds(0, max + 343, 343)).toEqual({ atStart: true, atEnd: false })
-    expect(pagerEnds(max, max + 343, 343)).toEqual({ atStart: false, atEnd: true })
-    expect(pagerEnds(max / 2, max + 343, 343)).toEqual({ atStart: false, atEnd: false })
+    expect(pagerEnds(0, max + 343, 343)).toEqual({ atStart: true, atEnd: false, overflows: true })
+    expect(pagerEnds(max, max + 343, 343)).toEqual({ atStart: false, atEnd: true, overflows: true })
+    expect(pagerEnds(max / 2, max + 343, 343)).toEqual({
+      atStart: false,
+      atEnd: false,
+      overflows: true,
+    })
   })
 
   it('a fractional last pixel is still the end – the card widths are calc()s', () => {
     // `calc(33.333% - 8px)` does not land on an integer, so `scrollLeft >= max` is false for ever at
     // the right-hand end and the Next arrow would stay live with nothing left to show.
     expect(pagerEnds(319.6, 1268, 948).atEnd).toBe(true)
+  })
+})
+
+// ⭐⭐⭐ ROUND 36 PHASE 7 – IS THERE ANYTHING TO PAGE AT ALL, which is now what decides whether the
+// arrows are DRAWN. His ruling, 04.09: «на десктопе неделя из двух карточек показывает две серые
+// стрелки, которые ей никогда не понадобятся. Спрятать – да, показываем только если есть что
+// листать.»
+//
+// ⚠ THE APP'S OWN MEASURED GEOMETRIES, NOT ROUND NUMBERS – the same discipline as the block above.
+// Phase 7 measured `sinking`'s two-card weeks in Chromium at seven widths: they overflow by 273 /
+// 383 / 407px at 375 / 520 / 576 and by EXACTLY 0 from 768 up, where two cards at 50% of the row
+// plus the 12px gutter come to the strip's own width. That is the whole of what the ruling turns on.
+describe('round 36 phase 7 – whether there is anything to page', () => {
+  it('⭐ the phone overflows and the desktop does not – the measured two-card week', () => {
+    // 375: strip 343, two cards of 88% + a 12px gutter -> 616 (measured 616/343, overflow 273).
+    expect(pagerEnds(0, 616, 343)).toMatchObject({ overflows: true })
+    // 768: strip 736, two cards of 362 + 12 -> 736 exactly. Nothing hangs past the edge.
+    expect(pagerEnds(0, 736, 736)).toMatchObject({ overflows: false })
+    // 1280: strip 948, two cards of 308 + 12 -> 628, well inside a row built for three.
+    expect(pagerEnds(0, 628, 948)).toMatchObject({ overflows: false })
+  })
+
+  it('⚠ a sub-pixel of scroll is NOT something to page – the same 1px slack `atEnd` uses', () => {
+    // ⚠ THIS IS THE ARM THAT STOPS THE RULING BEING DEFEATED BY ROUNDING. Three cards of
+    // `calc(33.333% - 8px)` in a 948px row do not sum to an integer, and a pager drawn because the
+    // strip scrolls by half a pixel is exactly «стрелки, которые ей никогда не понадобятся» – the
+    // control he asked to be rid of, returned by arithmetic.
+    expect(pagerEnds(0, 948.5, 948).overflows).toBe(false)
+    expect(pagerEnds(0, 949, 948).overflows).toBe(false)
+    expect(pagerEnds(0, 950, 948).overflows).toBe(true)
+  })
+
+  it('⚠ and it is not a restatement of `atStart && atEnd` – the two disagree', () => {
+    // A strip scrolled to the middle of a real overflow is at NEITHER end and overflows; a strip
+    // that fits is at BOTH ends and does not. Those two agree. The arm that matters is the third
+    // state: a strip whose content is SHORTER than its window – which happens for a frame while the
+    // cards are still being laid out – is at both ends AND has a negative `scrollWidth - clientWidth`.
+    // `overflows` must be false there, and `Math.max(0, …)` is what makes it so.
+    const short = pagerEnds(0, 200, 948)
+    expect(short.atStart && short.atEnd, 'a strip shorter than its window is at both ends').toBe(true)
+    expect(short.overflows, 'and there is still nothing to page').toBe(false)
   })
 })
 

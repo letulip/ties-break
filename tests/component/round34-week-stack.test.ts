@@ -698,15 +698,35 @@ describe('round 36 phase 2 – a week is two cards wide on a tablet, and the thi
 // What belongs HERE is the claim those two cannot make: that the controls are on the screen, on the
 // same weeks, at every one of his widths.
 //
+// ⭐⭐⭐ ROUND 36 PHASE 7 – AND THE PAGER IS NO LONGER «ON EVERY WIDTH». The owner, after playing the
+// phase-5 build: «на десктопе неделя из двух карточек показывает две серые стрелки, которые ей
+// никогда не понадобятся. Спрятать – да, показываем только если есть что листать.» The arrows are
+// now drawn only where `scrollWidth - clientWidth` says there is something past the strip's edge.
+//
+// ⚠⚠ THAT TURNS A MOUNTED PRESENCE CHECK INTO A MEASUREMENT CHECK, AND happy-dom CANNOT MEASURE.
+// Every `scrollWidth` and `clientWidth` here is 0, so a strip in this runner never overflows and the
+// three arms below would ask for arrows the rule correctly refuses to draw – which is what they did
+// on the first run of this phase, all three red for the right reason.
+//
+// ⭐ SO THE OVERFLOW IS SUPPLIED RATHER THAN SIMULATED. `overflowing()` defines the two numbers the
+// composable reads on the strip element itself and fires the `scroll` event it already listens for;
+// the pager then measures the strip exactly as it does in a browser and the render follows. What is
+// asserted is the claim this runner CAN make – given a strip with something past its edge, the two
+// arrows are there, at each of his three widths – and its complement, which is the phase-7 half:
+// given a strip with nothing past its edge, they are not. Where the real overflow actually falls at
+// each width is a browser question and is measured in `e2e/parity.spec.ts`'s honest-half arm.
+//
 // ⚠ MUTATION-VERIFIED – each applied alone, and the verdicts differ:
-//   * the arrows' `v-if="row.events.length > 1"` -> `v-if="false"` reddens the three width arms and
-//     leaves the one-card arm GREEN, which is the pair described above;
-//   * ...-> `v-if="true"` reddens the one-card arm ALONE, from the other side;
+//   * the arrows' `v-if` -> `v-if="false"` reddens the three width arms and leaves the one-card and
+//     the fits-whole arms GREEN, which is the pair described above;
+//   * dropping `&& pager.ends(row.week).overflows` from the `v-if` reddens the FITS-WHOLE arm alone –
+//     the arm this phase exists for – and leaves the three width arms green;
+//   * `overflows: max > 1` -> `overflows: true` in composables/weekPager.ts: the same fits-whole arm;
 //   * `touch-action: pan-y` -> `pan-x` reddens the axis arm ALONE – the mutation that names the
 //     freeze `main`'s own hotfix walked into;
 //   * putting `scroll-snap-type: x mandatory` back reddens the «the CSS swipe is gone» arm ALONE;
 //   * dropping `:tabindex` from the strip reddens the keyboard arm ALONE.
-describe('round 36 phase 5 – a week that stacks is paged, and the pager is on every width', () => {
+describe('round 36 phase 5 – a week that stacks is paged; phase 7 – only where there is something to page', () => {
   beforeEach(() => {
     setActivePinia(createPinia())
     document.body.innerHTML = ''
@@ -740,18 +760,47 @@ describe('round 36 phase 5 – a week that stacks is paged, and the pager is on 
     return region(seasonSource(), '.week-stack.swipeable {', '}')
   }
 
+  /**
+   * GIVE A STRIP SOMETHING PAST ITS EDGE, IN A RUNNER THAT HAS NO LAYOUT.
+   *
+   * ⚠ THE TWO NUMBERS ARE DEFINED ON THE ELEMENT AND THE PAGER'S OWN LISTENER IS FIRED – nothing
+   * here reaches into the composable. `useWeekPager` binds a `scroll` listener to every strip and
+   * re-measures on it, so this is the same code path a real scroll takes; what is faked is the
+   * BROWSER's missing layout engine, not the rule under test. Firing `scroll` also means an arm that
+   * stopped listening (a `bind` that lost its listener) fails here rather than passing.
+   *
+   * @param overflow how much hangs past the edge; 0 is a strip that fits whole.
+   */
+  async function measureStrips(w: ReturnType<typeof mount>, overflow: number): Promise<void> {
+    const strips = w.findAll('.week-stack.swipeable')
+    expect(strips.length, 'no strip to measure – the fixture drew no stacked week').toBeGreaterThan(0)
+    for (const strip of strips) {
+      const el = strip.element as HTMLElement
+      Object.defineProperty(el, 'clientWidth', { value: 300, configurable: true })
+      Object.defineProperty(el, 'scrollWidth', { value: 300 + overflow, configurable: true })
+      el.dispatchEvent(new Event('scroll'))
+    }
+    await w.vm.$nextTick()
+  }
+
   for (const [name, vp] of [
     ['the phone', PHONE],
     ['the tablet', TABLET],
     ['the desktop', DESKTOP],
   ] as const) {
-    it(`⭐ ${name} draws Back and Next on every stacked week`, () => {
+    it(`⭐ ${name} draws Back and Next on a stacked week that OVERFLOWS`, async () => {
       const w = mountAt(vp)
+      await measureStrips(w, 273) // the real overflow of a two-card week at 375, measured in Chromium
       const rows = w.findAll('.week-row').filter((r) => r.find('.week-stack.swipeable').exists())
       expect(rows.length, 'the fixture must draw a stacked week, or this measures nothing').toBeGreaterThan(0)
       for (const row of rows) {
         const arrows = row.findAll('.week-arrow')
-        expect(arrows.length, 'a stacked week carries exactly two arrows').toBe(2)
+        expect(arrows.length, 'a stacked week with something past its edge carries exactly two arrows').toBe(2)
+        // ⭐ AND THEY ARE IN THE EXEMPT CONTAINER, WHICH IS WHAT `e2e/parity.spec.ts` SUBTRACTS.
+        // The boundary of the parity exemption is a PLACE (`#app .week-row > .week-pager`), so an
+        // arrow drawn outside it would be one the harness never subtracts and every walk would go
+        // red at 375 – a failure two suites away from the edit that caused it. Held here instead.
+        expect(row.findAll('.week-pager > .week-arrow').length, 'both arrows are inside the pager').toBe(2)
         // ⚠ BY ACCESSIBLE NAME, which is what `e2e/parity.spec.ts` compares across the four widths –
         // and they are the album pager's own two words, not new copy.
         expect(arrows.map((a) => a.attributes('aria-label'))).toEqual(['Back', 'Next'])
@@ -766,8 +815,42 @@ describe('round 36 phase 5 – a week that stacks is paged, and the pager is on 
     })
   }
 
-  it('⚠ ...and a week with ONE card carries none – the pair that stops «always» passing', () => {
+  it('⭐⭐⭐ PHASE 7 – …and a stacked week that FITS WHOLE carries none, which is his ruling', async () => {
+    // «на десктопе неделя из двух карточек показывает две серые стрелки, которые ей никогда не
+    // понадобятся. Спрятать – да, показываем только если есть что листать.»
+    //
+    // ⚠ THIS IS THE PAIR THAT STOPS THE THREE ARMS ABOVE PASSING ON «ALWAYS», and it is a different
+    // pair from the one-card arm below: the week here DOES stack – two cards, a `swipeable` strip, a
+    // tab stop – and still has nothing past its edge, which is exactly the state the owner was
+    // looking at on a desktop. Same mount, same widths, one number changed.
+    for (const vp of [PHONE, TABLET, DESKTOP] as const) {
+      const w = mountAt(vp)
+      await measureStrips(w, 0)
+      const rows = w.findAll('.week-row').filter((r) => r.find('.week-stack.swipeable').exists())
+      expect(rows.length, 'the fixture must draw a stacked week, or this measures nothing').toBeGreaterThan(0)
+      for (const row of rows) {
+        expect(
+          row.findAll('.week-arrow').length,
+          'a week that fits whole still draws the two grey arrows his ruling took off the screen',
+        ).toBe(0)
+        // ⚠ AND THE EXEMPT CONTAINER GOES WITH THEM. An empty `.week-pager` left in the document
+        // would be a region `e2e/parity.spec.ts` exempts and nothing lives in – a hole kept open for
+        // no reason – so the container is drawn by the same condition the arrows are.
+        expect(row.findAll('.week-pager').length, 'an empty exempt container was left behind').toBe(0)
+        // ⭐ THE STRIP IS UNTOUCHED, which is the half of the ruling that must NOT have moved: the
+        // week still stacks, still scrolls and is still a tab stop, so the keyboard route survives
+        // the arrows going. `pager.key` is on the ROW and never on the arrows.
+        expect(row.find('.week-stack.swipeable').attributes('tabindex'), 'the strip is still a tab stop').toBe(
+          '0',
+        )
+      }
+      w.unmount()
+    }
+  })
+
+  it('⚠ ...and a week with ONE card carries none – the pair that stops «always» passing', async () => {
     const w = mountAt(PHONE)
+    await measureStrips(w, 273)
     const flat = w.findAll('.week-row').filter((r) => !r.find('.week-stack.swipeable').exists())
     expect(flat.length, 'the feed must hold a one-card week too').toBeGreaterThan(0)
     for (const row of flat) {
@@ -822,7 +905,12 @@ describe('round 36 phase 5 – a week that stacks is paged, and the pager is on 
     // asset (30.07) and a second file for a right-pointing chevron is exactly the thing this round
     // may not add; `AppIcon`'s mask contract is what makes one file serve both directions.
     const src = seasonSource()
-    const arrows = region(src, '<template v-if="row.events.length > 1">', '</template>')
+    // ⚠ THE MARKER MOVED WITH THE MARKUP AND THE HELPER IS WHY THAT IS SAFE. Phase 7 wrapped the
+    // arrows in the exempt container, so the region opens on that `div` rather than on phase 5's
+    // `<template>`; `region()` THROWS on an absent marker, so this arm failed loudly on the rename
+    // instead of silently widening to the rest of the file, which is the whole reason `pins:check`
+    // forbids a raw `indexOf` here.
+    const arrows = region(src, 'class="week-pager">', '</div>')
     expect(arrows.match(/icon="back"/g) ?? [], 'both arrows, one asset').toHaveLength(2)
     expect(/icon="(?!back")/.test(arrows), 'and no other icon name reaches the pager').toBe(false)
     const style = regionToLast(src, '<style scoped>', '</style>')
