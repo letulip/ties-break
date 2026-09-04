@@ -600,3 +600,113 @@ width. **Two came back over 700px**, and after phase 4's own caps they are the o
   same shape as a ledger row, a kit rung or a shelf row, and a list row is the width of its list
   everywhere in this app. A row that is as wide as its column is not a stretched control; a pill that
   is as wide as its page is.
+
+---
+
+## Phase 5 – the horizontal pager, and one line that moved
+
+⚙ **Two owner rulings on 04.09, both after playing the shipped build**, and phase 5 is only those
+two. Everything below is a call this phase had to make in carrying them out.
+
+### D33 `[x]` The week's swipe leaves CSS and becomes JavaScript – **HIS RULING**
+
+| | |
+| --- | --- |
+| **his words** | «Давай уберем свайп css и сделаем js функционал для листания горизонтального, тогда будет полный паритет на всех устройствах и ничего не надо изобретать.» |
+| **our mobile** | Round 34 #14 built the week as a scroll-snapping strip; the hotfix on `main` then added `touch-action` / `overscroll-behavior` / `user-select` because he felt all three missing. |
+| **shipped** | `scroll-snap-type` and `scroll-snap-align` are **gone**. `touch-action: pan-y` hands the horizontal axis to `composables/weekPager.ts`, which drives `scrollLeft` from a pointer drag, from two arrow buttons and from Left/Right on the keyboard. `overflow-x: auto` **stays**. |
+| **why** | «Полный паритет на всех устройствах» is the whole point: a finger, a mouse and a keyboard now reach the same rule through one code path instead of three different browser behaviours. `overflow-x` is not the swipe – `touch-action` is what took the gesture off the browser – and keeping it is what keeps `scrollLeft` a real number, so a focused control is still scrolled into view by the browser itself and round 34's reachability pin still measures the property it always did. |
+
+⚠⚠ **AND THE AXIS IS `pan-y`, NEVER `pan-x`, WHICH IS THE ONE MISTAKE THIS ROW EXISTS TO STOP BEING
+REPEATED.** The hotfix on `main` reached for `pan-x` first – «this box handles ONLY horizontal
+panning» – and a near-vertical gesture that began on a card then stopped reaching the page at all: on
+a run of multi-card weeks **the page froze**. `pan-y` is the safe half by construction: the browser
+keeps the axis the PAGE scrolls on, and gives up the one the pager drives. Held by a mounted arm that
+names the value, mutation-verified against `pan-x`.
+
+⚠ **`user-select: none` stays on the strip.** The drag-to-select autoscroll it takes away was an
+accident of the browser, not a design, and the press-and-hold fix – a hold that became a text
+selection and swallowed the tap – depends on it. It is also what lets a MOUSE drag the strip at all.
+
+### D34 `[x]⚠⚠` The arrows are on EVERY width – which **reverses D16**, at his own later ruling
+
+| | |
+| --- | --- |
+| **his words** | «у нас на всех устройствах могут появиться стрелки для листания в дополнение к JS свайпу.» |
+| **phase 3 said** | **D16: no arrow pager.** «Arrows would be two new controls per week row, on the desktop and on no other format, which fails «ничего нового по идее не должно появиться» in `e2e/parity.spec.ts` by name.» |
+| **shipped** | Two arrows on **every week that stacks more than one card, at every width and on every device**. |
+| **why** | D16's refusal was never about arrows – it was about **desktop-only** arrows, and it says so in its own sentence. A control that appears at 375 and at 1280 alike carries the same token in both fingerprints, so the criterion it would have broken is the criterion it now satisfies. His ruling is what settles the design question; the parity harness is what settles that it is legal. |
+
+⭐⭐ **AND THE MEASUREMENT THAT MADE IT NECESSARY, WHICH NEITHER D16 NOR THE HARNESS COULD SEE.** On an
+`overflow-x` strip a mouse has **no swipe**. What it has is shift+wheel, a trackpad's two-finger
+gesture – neither of which a player guesses – and drag-to-select autoscroll, which was accidental and
+which `user-select: none` has removed. There was no `tabindex` on the strip either, so **a keyboard
+could not reach the third card of a week by any route at all.** The parity harness compares controls
+across widths; it does not compare INPUT DEVICES, and this is the hole that let a card be «present at
+every width» and unreachable for half the players.
+
+⚠ **AND IT IS PROVED, NOT ASSERTED.** `e2e/parity.spec.ts` gained a walk on a career that HAS a
+stacked week – see D36 – and `e2e/responsive.spec.ts` drives the last card of one by Tab-and-arrow-key
+and by clicking the arrow, in a real browser.
+
+### D35 `[x]` The arrows are DISABLED when nothing overflows – never hidden
+
+| | |
+| --- | --- |
+| **the alternative** | Draw the pager only on a strip that actually overflows. |
+| **shipped** | Always on a stacked week; `Back` and `Next` grey out at the ends and are both grey when the whole week fits. |
+| **why** | **Which weeks overflow depends on the WIDTH.** A two-card week overflows by 273px at 375 and fits exactly at 768 and above (measured on `sinking`); three cards fit at 1280 and do not at 900. So a pager that hid itself when everything fitted would be a control present at one width and absent at another – exactly the failure «ничего нового … как и старого уйти ничего не должно» names, and `e2e/parity.spec.ts` would go red on it. Disabled is also the app's own answer to the same question: `EndingScreen`'s album greys its `Back` on page one. |
+
+⚠ **The cost, stated for him rather than buried:** on a desktop a two-card week shows two greyed
+circles it will never need. They are 32px, at 40% opacity, on the row's own edges. **If he would
+rather not see them there, the one-line answer is to hide the pair when a strip does not overflow –
+and the price is that `e2e/parity.spec.ts` then needs a stated exemption for them, because the sets
+at 375 and 1280 stop matching.** That is his trade, not ours to make quietly.
+
+### D36 `[x]` The parity harness gained a station on a DIFFERENT CAREER, because `pro` has no stacked week
+
+| | |
+| --- | --- |
+| **the problem** | The harness walks every screen on the `pro` fixture – «the heaviest career, on purpose». Measured: `pro`'s Season feed is **three rows of ONE card**, so it draws no pager at all. Four fingerprints with no arrow in any of them are equal, and the harness would have reported perfect parity about a control it had never seen. |
+| **shipped** | `Station` gained an optional `career`, defaulting to `pro`, and a hand-written room walks Season on **`sinking`** (two stacked weeks, four arrows) at all four widths. |
+| **why** | Identical to phase 4's finding about the shop: a map that cannot REACH a state proves nothing about it, and the honest fix is to reach it rather than to exempt it. The room's arrival anchor is the `Next` arrow itself, so a pager that stopped drawing fails there before any fingerprint is taken. |
+
+⭐ **The deliberate break was aimed at this phase's own control and it named it.** Hiding only the
+`Back` arrow at ≥1024 – so the room's anchor still lands and the FINGERPRINT has to do the work –
+reddens with `button "Back" ×2` and `icon back.svg ×2`. That is also the proof the fingerprint really
+contains the arrows, by role-and-name and by asset.
+
+### D37 `[x]` The glyph is `back.svg` MIRRORED, and the «a back control is bare» rule gains its second argued exception
+
+| | |
+| --- | --- |
+| **the rule** | `tests/ui-control-system.test.ts`: every control whose name is `Back` must be `IconButton variant="bare" icon="back"` (owner, 30.07: «просто иконка с белым fill»). |
+| **shipped** | `IconButton icon="back"` – **but `plate`**, and the forward arrow is the same file under `transform: scaleX(-1)`. One asset, two directions. The allowlist gained one named entry with the argument in it. |
+| **why** | The owner's sentence is about the top-left «leave this screen» affordance, and this is a **pager** – it moves within a row, exactly as `OnboardingWizard`'s footer pair (the rule's first exception) moves within a form, and `EndingScreen`'s album is the app's own precedent for the pair of words. `plate` is what `IconButton`'s own header exists for – «it sits ON something (a photo, a dialog's corner, a header row)» – and it is measured rather than preferred: a bare glyph on the painted card was unreadable in the first build and the plate's own fill had to be raised from 72% to 88% before the circle read as a control at all. |
+
+⚠ **NO NEW ICON AND NO NEW WORDS.** `back.svg` is the owner's own asset (30.07). `Back` and `Next`
+are `EndingScreen`'s album pager's own two words, taken verbatim rather than invented – which is what
+keeps this phase inside «no new strings» while still giving the arrows accessible names.
+
+### D38 `[x]` The figure's line moves off the season cards to the tournament screen – **HIS RULING**
+
+| | |
+| --- | --- |
+| **his words** | «на каждой карточке с турниром появились серые буквы "A typical figure for this level..." – откуда они взялись? Не надо перегружать сезонные карточки, на них и так много информации, а это вообще шум, потому что везде. У нас есть отдельный экран для турнира (доступен с home) – вот там всей доп. информации самое место.» |
+| **where it came from** | ⚙ **He asked for it himself**, round 35 item 5b: «хорошо, можно на карточке ДО жеребьевки писать, что-то на эту тему.» It exists because the pre-draw figure JUMPS when the draw is made – 9.1 points on average, 36 at worst (round 34 #5) – and an unexplained jump is the instability round 31 #4 was reported for. |
+| **shipped** | Removed from every card in the Season feed. **Added to `NextTournamentPanel`** – the tournament screen reached from Home's «Next tournament» plate – under the same field ring, on the same condition (`fieldRingShown`). |
+| **why** | A MOVE, not a delete. Deleting it would give back the unexplained jump he was being warned about; his own sentence says where the extra reading belongs. |
+
+⚠ **THE PANEL DID NOT ALREADY CARRY IT** – checked before assuming. It carries the field RING (round
+34 #5) and `DRAW_NOT_MADE_NOTE` on the first-round plate, and neither says what will happen to the
+number. So this is a real move and the pair is held both ways: gone from every card in the feed,
+present on the panel before the draw, absent from it after.
+
+⚠ **The ink changed and the sentence did not.** `--ink-soft` was legible on the feed's flat card; the
+panel's read block stands ON the photograph, so the line takes `.nt-read-label`'s white-on-art pair –
+the same shift `.nt-hero .coach-note` already makes beside it. **Not one character of the string
+moved.**
+
+⚙ **And `opponentRingShown` / `fieldRingShown` moved with it**, out of `SeasonScreen.vue` and into
+`composables/eventCard.ts`, unchanged: the season card no longer asks the question and the panel now
+does, and two surfaces drawing one ring chain is exactly what that module owns.

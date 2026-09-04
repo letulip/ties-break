@@ -21,7 +21,8 @@ Status: `[x]` shipped · `[~]` answered, nothing to build · `[>]` in flight · 
 | 2 | tablet, 768–900 | `[x]` **shipped, this document** |
 | 3 | desktop, 1024–1200 – the rail, the new shell | `[x]` **shipped, this document** |
 | 4 | the screens the design does not cover | `[x]` **shipped, this document** |
-| 5 | `responsive-decisions-2026-09.md`, the contentious calls | `[>]` opened by phase 2, **thirty-two rows** after phase 4 – it is written AS the work happens |
+| 5 – the build | ⚙ **his two rulings of 04.09: the week's listing becomes a JS pager with arrows on EVERY width, and the pre-draw figure's line moves off the season cards** | `[x]` **shipped, this document** |
+| 5 – the document | `responsive-decisions-2026-09.md`, the contentious calls | `[>]` opened by phase 2, **thirty-eight rows** after phase 5 – it is written AS the work happens |
 | 6 | ⚙ **the rail's mini-dashboard, at his 04.09 ruling** – three desktop-only cards on every page, and the harness exemption that has to ship with them | `[ ]` **new, and it is a phase** – see the note under phase 4 |
 
 ---
@@ -1207,3 +1208,337 @@ a PR assembly, and this phase touches no engine code. It belongs to whoever asse
 - `[ ]` **D31 and D11** – three pre-existing defects below 768 that this round's identity contract
   forbids touching. They need a word from him, or a wave that is allowed to move a phone.
 - `[ ]` turning the takeovers into parity stations (D30's remaining limit) – each needs a journey.
+
+---
+
+## `[x]` PHASE 5 – THE HORIZONTAL PAGER, AND ONE LINE THAT MOVED
+
+⚙ **Two owner rulings, both made on 04.09 after playing the shipped build, and this phase is only
+those two.** Neither is in the spec's five phases; both are his, and both are quoted in full where
+Cyrillic is allowed – `src/composables/weekPager.ts` for the first, `FIELD_FIGURE_NOTE` in
+`src/composables/eventCard.ts` for the second.
+
+> «Давай уберем свайп css и сделаем js функционал для листания горизонтального, тогда будет полный
+> паритет на всех устройствах и ничего не надо изобретать.»
+> «у нас на всех устройствах могут появиться стрелки для листания в дополнение к JS свайпу.»
+
+---
+
+### ⭐⭐⭐ THE MEASUREMENT THAT MAKES THIS A DEFECT AND NOT A PREFERENCE: A MOUSE HAS NO SWIPE
+
+Round 34 #14 made a week with several enterable rungs a scroll-snapping strip. That is a swipe on a
+finger. On a pointer, what an `overflow-x` strip actually offers is **shift+wheel**, a trackpad's
+**two-finger gesture** – neither of which a player guesses – and **drag-to-select autoscroll**, which
+was accidental and which the hotfix's `user-select: none` has since removed. And there was **no
+`tabindex` on the strip at all**, so from a keyboard there was no route to the second card of a week
+by any number of presses.
+
+⚠⚠ **THE PARITY HARNESS CANNOT SEE THIS, AND SAYING SO IS PART OF THE FINDING.** `e2e/parity.spec.ts`
+compares the same controls across four WIDTHS. It does not compare INPUT DEVICES. A card that is
+present in every fingerprint and unreachable for everybody without a touchscreen passes it four times
+over. That is the exact shape of hole the round's own criterion is blind to, and it is why this phase
+adds a browser test that drives a keyboard.
+
+---
+
+### WHAT REPLACED WHAT, IN `.week-stack.swipeable`
+
+| | before | after |
+| --- | --- | --- |
+| `scroll-snap-type: x mandatory` | the CSS swipe | **gone** – `snapTarget()` on the drag's release |
+| `scroll-snap-align: start` (card) | the CSS snap point | **gone** – the same function |
+| `touch-action` | *(absent on this branch)* | **`pan-y`** – the page keeps the vertical axis |
+| `overscroll-behavior-x` | *(absent)* | `contain` |
+| `user-select` | *(absent)* | `none` (+ `-webkit-`) |
+| `overflow-x: auto` | the scroll container | **kept, deliberately** |
+| `tabindex` | *(none)* | `0` on a stacked strip |
+
+⚠⚠ **`pan-y`, NEVER `pan-x`.** The hotfix on `main` reached for `pan-x` first – «this box handles
+ONLY horizontal panning» – and a near-vertical gesture that began on a card then stopped reaching the
+page: on a run of multi-card weeks **the page froze**. `pan-y` cannot fail that way by construction –
+the browser keeps the axis the PAGE scrolls on and gives up the one the pager drives, and a vertical
+gesture here simply cancels the drag (`pointercancel`) and scrolls the page. There is a mounted arm
+that names the value and reddens on `pan-x`.
+
+⭐ **`overflow-x` STAYS, and that is the decision that kept this phase small.** It is not the swipe –
+`touch-action` is what took the gesture off the browser – and keeping the element a real scroll
+container means `scrollLeft` is the pager's single piece of state, the browser still scrolls a focused
+control into view by itself, and round 34's reachability pin measures the same property it always
+measured. **D33** in `docs/specs/responsive-decisions-2026-09.md`.
+
+⚠ **`user-select: none` is kept on purpose.** The drag-to-select autoscroll it removes was an accident
+of the browser, not a design; the press-and-hold fix depends on it; and it is what lets a MOUSE drag
+the strip at all.
+
+---
+
+### THE PAGER ITSELF – `src/composables/weekPager.ts`
+
+One instance per screen; each strip registers itself by its own week through a template `:ref`.
+
+* **the swipe**, on every device through ONE code path – `pointerdown` on the strip, `pointermove` /
+  `pointerup` / `pointercancel` on `window`, a 6px threshold before anything moves, and a
+  capture-phase click blocker so a drag cannot open the tournament a tap was aiming at.
+  ⚠ **No `setPointerCapture`**: capturing on `pointerdown` retargets the `click` that follows to the
+  capturing element, which would break every button on every card.
+* **two arrows**, `Back` and `Next`, on every stacked week at every width.
+* **the keyboard**: the strip is a tab stop, and Left/Right are handled on the ROW – so they work
+  from the strip itself AND from any control inside a card, and the route does not depend on which of
+  them happens to hold focus.
+* **the arithmetic is pure and exported** (`pagerEnds` / `pageTarget` / `snapTarget`), which is a
+  testability decision: happy-dom has no layout engine, so `tests/component/` can prove the arrows
+  exist and can prove NOTHING about where a press sends the strip.
+
+---
+
+### `[x]` THE REACHABILITY CLAIM, MEASURED IN A BROWSER RATHER THAN ASSERTED
+
+`e2e/responsive.spec.ts`, on the `sinking` career, whose Season feed draws two stacked weeks.
+
+**At 375 – the strip genuinely overflows, and both routes arrive:**
+
+| | |
+| --- | --- |
+| the strip | 2 cards, **overflow 273px**, `Back` disabled, `Next` enabled |
+| before any press | the last card is **not** wholly inside the window, and neither is the control on it |
+| **by keyboard alone** | Tab from a blurred document reaches the strip (asserted: no `.focus()`, no click – a route a player cannot walk is not a route); one `ArrowRight` and the last card is **wholly inside**, its `Enter` pressable |
+| **by the arrow** | from a fresh mount: `Back` disabled / `Next` enabled → one click → last card wholly inside, and `Next` now disabled with `Back` enabled |
+
+**At 1280 – the complement, which is what stops the test above being half an argument:** the same
+week's `overflow` is **0** (three cards fit at this width – phase 3's D16, read back in a browser),
+and both arrows are **present and disabled**. A pager that hid itself there would be a control at 375
+and not at 1280.
+
+⚠⚠ **THE HONEST LIMIT, AND IT IS THE ONE THE TASK ASKED ABOUT.** «The THIRD card at 1280» cannot be
+driven in a browser from the fixtures this repo has: **no e2e career draws a week with three or more
+enterable rungs.** Measured, all six: `fresh` [1,1,1,1] · `broke` [1,1,1,1] · `pro` [1,1,1] ·
+`junior` [1,1,1,2,1] · `sinking` [1,1,2,2] (`ending` has no Season). Twenty weeks of advancing
+`sinking` and `broke` moved neither. So the depth claim is held where it CAN be held, on the app's
+own measured geometry, in `tests/weekPager.test.ts`:
+
+* **375** – `.app-content` 343px, cards `88%` = 301.84: the **third card of a four-card week is two
+  presses away** and arrives whole.
+* **1280** – the row is 948px (the rail takes 220 of the 1168 column – D21) and cards are
+  `calc(33.333% - 8px)` = 308: **three fit, so the press that matters reaches the FOURTH**, in one.
+  It lands on `maxScroll` rather than on the card's own edge, because the last card starts past the
+  end of the scroll.
+
+...and the arrows' **presence** at all four widths on a real stacked week is held by the parity
+harness, below. Three layers, and each says what the layer under it cannot.
+
+---
+
+### `[x]` PARITY – GREEN AT 375 / 768 / 900 / 1280 WITH THE ARROWS PRESENT
+
+**`PARITY_EXIT=0`, fourteen walks** (twelve after phase 4). ⭐ **And the arrows are at 375 too – that
+is the whole reason they are legal**, and it is a machine check rather than a sentence: the
+fingerprint at 375 and the fingerprint at 1280 carry the same `button "Back"`, `button "Next"` and
+`icon back.svg` tokens, or the walk goes red naming the difference.
+
+⚠⚠ **THE HARNESS COULD NOT HAVE SEEN THEM WITHOUT A CHANGE, AND THAT IS THE PHASE'S SECOND FINDING.**
+Every station walks `pro` – «the heaviest career, on purpose». Measured: **`pro`'s Season feed is
+three rows of ONE card**, so it draws no pager at all, and four fingerprints with no arrow in any of
+them are equal. The harness would have reported perfect parity about a control it had never met –
+the same hole phase 4 found behind Money's chapter row, one screen further on.
+
+So `Station` gained an optional `career` (default `pro`, unchanged for every existing station) and a
+room walks Season on **`sinking`**, which draws two stacked weeks and four arrows. Its arrival anchor
+is the `Next` arrow itself, so a pager that stopped drawing fails there before a fingerprint is taken.
+**D36.**
+
+#### ⭐⭐ THE DELIBERATE BREAK – AIMED AT THIS PHASE'S OWN CONTROL, AND RUN TWICE
+
+A harness whose failure has never been seen is not a harness.
+
+**Break 1 – both arrows hidden at ≥1024**, inside `SeasonScreen.vue`'s scoped block (phase 1's lesson:
+a rule appended to `src/style.css` loses to the scoped one and mutates nothing):
+
+```
+Error: SeasonScreen.vue – a week that stacks several rungs at 1280px – the walk did not arrive
+Locator: getByRole('button', { name: 'Next', exact: true })
+```
+
+**Break 2 – only the `Back` arrow**, so the room's own anchor still lands and the FINGERPRINT has to
+be what names the loss:
+
+```
+SeasonScreen.vue – a week that stacks several rungs: these are on the phone at 375px and NOT at 1280px.
+  + "button \"Back\" ×2"
+  + "icon back.svg ×2"
+```
+
+⭐ That second run is also the proof the fingerprint really **contains** the arrows – by role-and-name
+AND by the asset they load – so the green run above is a measurement rather than a coincidence.
+`SeasonScreen.vue` was restored from a copy taken before the break and verified byte-identical
+(`shasum` b2c57fe6…, both sides). ⚠ Never with `git checkout -- <file>`.
+
+---
+
+### `[x]` THE IDENTITY PROOF, RE-RUN – NINE OF THE TEN TAB SCREENS ARE UNTOUCHED AT SEVEN WIDTHS
+
+Arm A is phase 4's shipped head (`cbfa4113`, the four files swapped back in this same tree), arm B is
+this phase. Both driven through the same walk of all ten tab screens at 375 / 520 / 576 / 768 / 900 /
+1024 / 1280, every element censused as tag + class + document-order index + box to 2dp. **Two
+careers**, because `pro` never draws a pager and would have measured the copy move alone.
+
+| screen | boxes (all widths) | moved | new | gone |
+| --- | --- | --- | --- | --- |
+| Home · Calendar · Stats · Trophies · Money · More · Kid · CoachMarket · ThisWeek | 13,551 (`pro`) / 12,609 (`sinking`) | **0** | **0** | **0** |
+| **Season** (`pro`) | 1,666 | 807 | 21 | 21 |
+| **Season** (`sinking`) | 2,520 | 1,673 | 84 | 35 |
+
+⚠ **SEASON MOVES BELOW 768 AND THAT IS THIS PHASE DELIBERATELY CHANGING IT**, which is the one thing
+the round's rule 4 permits. The three numbers decompose exactly:
+
+* **gone** – the `.field-note` line, one per pre-draw card (3 per width on `pro`, 5 on `sinking`).
+  That is item 2.
+* **new** – `div.week-row`, one per event week, plus on `sinking` the four arrow buttons and the four
+  `span.tb-icon` inside them. That is item 1.
+* **moved** – the reflow under a card that is one line shorter. Every card in the feed sits lower or
+  higher by the height of the line that left.
+
+⭐ **AND THE NINE ZEROS ARE A MEASUREMENT, NOT A BLIND INSTRUMENT.** The same census, in the same run,
+on the same careers, moves **239 boxes and 20,907px on Season at 375** – so the instrument is
+demonstrably sensitive at the width where the other nine screens report nothing.
+
+Per width, `sinking`, so the shape is visible rather than summed:
+
+| viewport | element boxes | boxes that moved | pixels moved | new | gone |
+| --- | --- | --- | --- | --- | --- |
+| **375** | 2151 | 239 | 20,907 | 12 | 5 |
+| **520** | 2149 | 239 | 13,437 | 12 | 5 |
+| **576** | 2149 | 239 | 13,436 | 12 | 5 |
+| 768 | 2170 | 239 | 17,249 | 12 | 5 |
+| 900 | 2170 | 239 | 17,249 | 12 | 5 |
+| 1024 | 2170 | 239 | 24,719 | 12 | 5 |
+| 1280 | 2170 | 239 | 17,249 | 12 | 5 |
+
+– the same 239 at every width, which is what «this is one change, not a responsive one» looks like:
+nothing here is behind a media query.
+
+---
+
+### `[x]` ITEM 2 – THE LINE MOVED, AND IT IS A MOVE
+
+`FIELD_FIGURE_NOTE` is off every card in the Season feed and on **`NextTournamentPanel`** – the
+tournament screen reached from Home's «Next tournament» plate – under the same field ring, on the same
+condition. **Not one character of the string changed**, which is the round's one sanctioned copy
+change spent on placement and nothing else.
+
+⚠ **THE PANEL DID NOT ALREADY CARRY IT.** Checked before assuming: it draws the field RING (round 34
+#5) and `DRAW_NOT_MADE_NOTE` on the first-round plate, and neither says what will happen to the
+number. Deleting the line would have given back the unexplained 9.1-point step at the draw that round
+34 #5 measured and round 31 #4 was reported for.
+
+**Proved in the app, not only in a mount.** On the `pro` career, entering the furthest-out tournament
+in the feed and opening the tournament screen:
+
+```
+MOVED_LINE {"panel":true,"fieldRing":true,
+            "note":"A typical figure for this level – it sharpens when the draw is made.",
+            "inText":true}
+```
+
+⚠ **The ink changed and the sentence did not.** `--ink-soft` was legible on the feed's flat card; this
+block stands ON the photograph, so the line takes `.nt-read-label`'s white-on-art pair – the same
+shift `.nt-hero .coach-note` already makes beside it. **D38.**
+
+⚙ `opponentRingShown` / `fieldRingShown` moved with it into `composables/eventCard.ts`, unchanged and
+with their comment carried verbatim: the season card no longer asks the question and the panel now
+does.
+
+---
+
+### The new and re-aimed test arms
+
+| where | what it holds |
+| --- | --- |
+| `tests/weekPager.test.ts` (new, 12 arms) | the paging rule as arithmetic, on the app's own measured 375 and 1280 geometries – which arrows are live, where one press lands, where a released drag settles |
+| `tests/component/round34-week-stack.test.ts` (+7) | the arrows on every stacked week at PHONE / TABLET / DESKTOP; none on a one-card week; the strip is a tab stop; no snapping is declared anywhere; `pan-y` and not `pan-x`; both arrows load `back.svg` and the forward one is that file mirrored |
+| `tests/component/round31-draw-reveal.test.ts` (re-aimed) | the pair BOTH ways – the line is gone from every card in the feed AND present on the panel before the draw, absent after |
+| `e2e/parity.spec.ts` (+1 room, +`Station.career`) | the arrows are 1:1 at 375 / 768 / 900 / 1280 on a career that actually has a stacked week |
+| `e2e/responsive.spec.ts` (+2) | the reachability table above |
+| `tests/ui-control-system.test.ts` (allowlist +1) | the «a back control is bare» rule gains its second **argued** exception – D37 |
+
+#### ⚠⚠ FOURTEEN MUTATIONS, AND THREE OF THEM DID NOT BITE
+
+Each applied alone, and the verdicts differ – which is what says these are separate claims rather
+than one claim written six times.
+
+| mutation | what reddened |
+| --- | --- |
+| the arrows' `v-if` → `false` | the three width arms; **and the one-card arm stayed GREEN** – the pair |
+| ...→ `true` | the one-card arm ALONE, from the other side |
+| `touch-action: pan-y` → `pan-x` | the axis arm ALONE – the freeze `main`'s hotfix walked into |
+| `scroll-snap-type: x mandatory` put back | the «the CSS swipe is gone» arm ALONE |
+| `:tabindex` dropped | the mounted tab-stop arm ALONE |
+| `pageTarget`'s clamp → `return target` | two unit arms (the two-card phone case and the range guard) |
+| `pagerEnds`'s `>= max - 1` → `>= max` | the fractional-end arm ALONE |
+| `PAGER_DRAG_PX` → 0 | the threshold arm ALONE |
+| the arrows never render (browser) | **three** e2e tests – the parity room and both reachability tests |
+| `pageTarget` → `return scrollLeft` (browser) | the reachability test ALONE |
+| `pagerEnds` → always both ends (browser) | the reachability test ALONE |
+
+**...and the three that went green, recorded rather than dropped:**
+
+1. **`pageTarget`'s `ahead ?? (direction === 1 ? maxScroll : 0)` fallback gutted → nothing reddened.**
+   Its own comment claimed it was what runs the strip to its end. It is not: with every card NARROWER
+   than the strip (which `round34-week-stack.test.ts` pins) there is always a card ahead until the
+   strip is already at its end, and **the CLAMP is what does that work**. The fallback is the guard
+   for a strip with no cards at all. It stays; **the source comment was rewritten to say what the
+   mutation proved**, which is the point of running it.
+2. **`snapTarget`'s right-hand-end guard removed → nothing reddened.** Same invariant from the other
+   side: `maxScroll` can only exceed the last card's own offset when that card is WIDER than the
+   strip, and the same pin forbids it. Kept as the guard for the day that pin moves, and labelled as
+   unreachable in the source.
+3. **`:tabindex` dropped, measured IN THE BROWSER → the e2e keyboard route stayed green.** Chromium
+   now gives an overflowing scroll container a tab stop of its own, so the browser cannot tell the
+   two apart. Firefox and Safari do not, so the declaration is what makes the route real for the
+   other half of the players – and the **mounted** arm, which reads the attribute, is what holds it.
+   ⭐ A gap between two layers found by mutating rather than by reasoning, which is why both layers
+   exist.
+
+⚠ One footnote on the first two arrow mutations: they also redden the «no new icon» arm, and that is
+the marker helper doing its job rather than a fourth claim – the region is cut on the `v-if` those
+mutations rewrite, and `region()` THROWS on an absent marker instead of silently widening.
+
+---
+
+### Gates – phase 5
+
+Run one at a time on a quiet machine, and **every exit code read out of the log file** – never from a
+pipe, never from a background task's completion notice.
+
+| gate | result |
+| --- | --- |
+| `npm run test:e2e` | **`E2E_EXIT=0`** |
+| `npm run test:component` | **`COMPONENT_EXIT=0`** |
+| `npm run test:quiet` | **`QUIET_EXIT=0`** |
+| `npm run check` | **`CHECK_EXIT=0`** |
+
+⚠⚠ **AND `test:quiet` WAS RED FIRST, WITH FIVE REAL FAILURES, ALL OF THEM THIS PHASE'S.** Recorded
+because each one is a rule this repo wrote down and this phase walked into:
+
+* **three files, Cyrillic in a TEMPLATE** – the owner's two rulings were quoted in the markup
+  comments. `tests/template-copy-rules.test.ts` and `tests/ladder.test.ts` forbid it, comments
+  included. Both quotes moved to `composables/weekPager.ts`, where Cyrillic is allowed, and the
+  template points at them.
+* **a second focus ring.** `.week-stack.swipeable:focus-visible` declared `outline: 2px` –
+  `tests/ui-control-system.test.ts` holds that the app declares exactly ONE ring and `src/style.css`
+  owns it, and that nothing is outlined thicker than a hairline. The rule was deleted; the app's own
+  ring applies to the strip for free.
+* **the back control's shape.** `IconButton label="Back"` must be `variant="bare"`; the pager's is
+  `plate`, because it stands on a photograph. Added to the rule's allowlist **with the argument
+  written in**, beside `OnboardingWizard`'s – the only other entry, and the same reason: a pager is
+  not the top-left «leave this screen» affordance. **D37.**
+
+⚠ **`npm run test:sim` was NOT run** – the standing regime (owner's ruling, 22.08) puts it in front of
+a PR assembly, and this phase touches no engine code.
+
+### Open at the end of phase 5
+
+- `[?]` **D35** – on a desktop a two-card week shows two greyed arrows it will never need. Hiding
+  them there is one line, and the price is a stated exemption in `e2e/parity.spec.ts`. His trade.
+- `[?]` **the depth claim at 1280 has no browser arm**, because no e2e fixture draws a week with
+  three or more enterable rungs. A fixture that does would close it; it is not phase 5's to add.
+- `[ ]` phase 6 – the rail's mini-dashboard, untouched by this phase
