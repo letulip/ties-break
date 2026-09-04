@@ -710,3 +710,93 @@ moved.**
 ⚙ **And `opponentRingShown` / `fieldRingShown` moved with it**, out of `SeasonScreen.vue` and into
 `composables/eventCard.ts`, unchanged: the season card no longer asks the question and the panel now
 does, and two surfaces drawing one ring chain is exactly what that module owns.
+
+---
+
+## Phase 6 – the rail's mini-dashboard
+
+⚙ **The suspension is his and it is narrow.** «Надо создать новые компоненты и показывать их только
+на десктоп», «карточки сквозные, одинаковые, как мини-дашборд живут всегда в вертикальной полоске,
+т.е. на всех страницах», «никаких контролов новых они не поставят, это просто шорт-кат с информацией
+из внутренних разделов». `AC-home-desktop-1024.png` is the reference for the set. Everything else in
+the round still binds: no new icon, no engine change, no copy change anywhere else. **D13 above is
+the settled row; these are the calls made building it.**
+
+### D39 `[?]` ONE component with three cards, not three components
+
+| | |
+| --- | --- |
+| **his words** | «Надо создать новые **компоненты**» – plural. |
+| **shipped** | One file, `src/components/RailDashboard.vue`, drawing three cards. |
+| **why** | The plural is about the three BLOCKS not existing, and one file is what the exemption needs: the parity boundary is **a container**, and one container is one place for it to live. Three files would each have to sit inside that same container anyway, and would give three places for the `.rail-dash` boundary and the «no control» rule to drift out of. Each card is three lines of template; the chrome of three SFCs would be longer than the thing. |
+
+⚠ **If he wants them separate the cost is small and the boundary does not move** – three components inside the same `.rail-dash` div. The reason to ask is that «components» is his word and this is his feature.
+
+### D40 `[x]` The dashboard is a CHILD of the rail, not a sibling of it
+
+| | |
+| --- | --- |
+| **the alternative** | Wrap `<nav>` and the cards in a rail `<div>`, the shape a designer would draw. |
+| **shipped** | `<RailDashboard />` is the last child of the one `nav.tab-bar` the app has. |
+| **why** | **Measured, twice over.** (1) Past 1024 the bar IS the rail's whole box – `position: sticky`, `height: 100vh`, `overflow-y: auto`, spanning every row of the frame's grid (phase 3) – so a sibling in the same grid column sits UNDER it rather than in it. (2) A wrapper adds an element to the document at **every** width, a phone included, and this round's identity contract is that nothing below 1024 moves at all. A child costs no box below 1024 because the block is `display: none` there. |
+
+⚠ **The honest cost is a landmark question:** three information cards now live inside the `navigation` landmark. It is legal HTML and the cards carry no control, no link and no tab stop, so the landmark still contains exactly the five things a keyboard can reach. **If he would rather they were a `complementary` region of their own, that is the wrapper above and its price is the identity contract.**
+
+### D41 `[x]` The entries are LINES, not the Season strip's lime pills
+
+| | |
+| --- | --- |
+| **the surface** | Season draws each entry as `<span class="pill ok">` – a bordered lime chip. |
+| **shipped** | The same `label · week` text, as the app's own reading line (`--ink-soft`, 12.5px) – `.budget-window`'s pair, which is what sits under money on Home. |
+| **why** | **Our proportions beat the design, and the rail is 196px.** A pill per entry down a 156px column is a stack of bordered boxes two lines tall each, and the lime border is the app's «this is live» accent doing a job nothing here is asking for. The STRING is identical to the strip's, which is what the shortcut has to preserve, and `e2e/parity.spec.ts` compares the two lists character for character. |
+
+### D42 `[x]` «My entries» is SILENT with nothing entered
+
+| | |
+| --- | --- |
+| **the alternative** | Always three cards, with an empty state on the third. |
+| **shipped** | The card renders only when she is entered for something – `v-if="entries.length"`, which is the exact condition `SeasonScreen`'s own strip carries. |
+| **why** | It mirrors the surface it shortcuts to, and an empty card is a worse answer than no card. ⚠ «Одинаковые на всех страницах» is untouched by this: the set does not vary by SCREEN, which is the property he asked for – it varies by career state, exactly as the strip does. Measured on `pro`, which boots with nothing entered: two cards, and the third appears the moment an entry is taken. |
+
+### D43 `[x]` Desktop-only is `display: none`, never a `v-if` on a media query
+
+| | |
+| --- | --- |
+| **the alternative** | `v-if="matchMedia('(min-width: 1024px)').matches"`, read once at setup – the app has that pattern already (D9, Home's ladder). |
+| **shipped** | The block is in the DOM at every width and `display: none` below 1024, beside the rail's own rules in `src/style.css`. |
+| **why** | Two reasons, and the second is measured. (1) A `v-if` is a **second place the number 1024 is written**, and this round has paid for a duplicated number twice already (`--app-pad-x`, `--app-bar-left`). (2) `display: none` is live: a window dragged from 1200 to 400 loses the dashboard and gets it back on the way up. A matchMedia read at setup does not. |
+| **the cost, named** | **7 inert DOM nodes per screen at every width below 1024** – one `div`, two `article`s, two `h2`s, two `p`s. They have no box, no paint and no accessibility node, so the census below reports **0 moved / 0 new / 0 gone** boxes at 375–900, and the raw element count rises 2321 → 2391 on the ten-screen `pro` walk. That is the whole price. |
+
+### D44 `[x]` The three titles were TAKEN off the surfaces, not off the frame
+
+| | |
+| --- | --- |
+| **the rule** | «No new strings beyond the three card titles – and take those from the surfaces the data already lives on rather than from the frame if the two differ.» |
+| **shipped** | `In the account` (the Family Budget screen's own «… in the account»), `Coaching budget` (`CoachMarketScreen`'s `.budget-label`, verbatim), `My entries` (`SeasonScreen`'s own `<h2>`). |
+| **why** | All three already exist in this app, so the suspension of «no new strings» costs the app **no new vocabulary at all** – only three new PLACES for three phrases it already says. `tests/component/round36-rail-dashboard.test.ts` §4 pins that both ways. ⭐ And the frame's CAPITALS are not a fourth spelling: `Eyebrow` uppercases in CSS, so the case is the app's own rule. |
+
+### D45 `[x]` «Coaching budget» shows what is FREE, not what is committed
+
+| | |
+| --- | --- |
+| **the choice** | The meter has three figures – committed, the weekly cap, and the gap. |
+| **shipped** | The gap (`freeCents`), because that is the figure the Coach Market prints **beside those exact words**: `<strong>{{ formatCents(freeCents) }}</strong> /week free`. |
+| **why** | A shortcut quotes the number its label already names. ⚠ And it is the SAME computed, not a copy: the three figures moved into `src/composables/coachingBudget.ts` and the market's own meter reads them from there. This screen has already shipped the two-copies defect once (`HouseholdStrip.vue`'s header: the meter read the roster row instead of `coachBilling` and told a self-coached family it committed $0.00 a week), and on a desktop the rail and the meter are on screen **at the same moment**. |
+
+### D46 `[x]` AC draws FOUR rail cards; three are built and `CONDITION` is not
+
+| | |
+| --- | --- |
+| **the design** | `AC`'s rail holds `CONDITION`, `IN THE ACCOUNT`, `COACHING BUDGET` and `MY ENTRIES`. |
+| **shipped** | The three he named. |
+| **why** | **His words beat his frames** (D13), and his ruling names three blocks: «`IN THE ACCOUNT`, `COACHING BUDGET`, `MY ENTRIES`». The fourth is not a missing card but a different KIND of thing – the condition ring is an overlay on Home's photograph, not a block, so building it as a card would be a new component he did not ask for in the one place the round's «nothing new» rule is suspended. ⚠ It is the smallest of the four to add if he wants it, and it costs a fourth title. |
+
+### D47 `[x]` The exemption's boundary is `#app > nav.tab-bar > .rail-dash`, and nothing else
+
+| | |
+| --- | --- |
+| **the alternative** | Exempt the cards by NAME – «ignore `In the account`, `Coaching budget`, `My entries`». |
+| **shipped** | A structural selector naming the PLACE, plus an assertion that the place holds no control and that the document holds exactly one of them. |
+| **why** | A name list is one edit away from ignoring a control: whoever adds the control adds the name. A container cannot be extended that way – a later phase would have to move an element INTO the rail's dashboard, and the boundary test fails the moment anything interactive lands there. **Both halves have been seen to bite**; the mutations and what they printed are in `docs/rounds/round-36.md`. |
+
+⚠ **And the claim the harness makes has changed, so it is written out in words** – in the file's own header and in the ledger: **«the same things are reachable at every width, outside the desktop rail's dashboard»**. A claim with an exception has to state the exception.

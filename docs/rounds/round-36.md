@@ -22,8 +22,8 @@ Status: `[x]` shipped · `[~]` answered, nothing to build · `[>]` in flight · 
 | 3 | desktop, 1024–1200 – the rail, the new shell | `[x]` **shipped, this document** |
 | 4 | the screens the design does not cover | `[x]` **shipped, this document** |
 | 5 – the build | ⚙ **his two rulings of 04.09: the week's listing becomes a JS pager with arrows on EVERY width, and the pre-draw figure's line moves off the season cards** | `[x]` **shipped, this document** |
-| 5 – the document | `responsive-decisions-2026-09.md`, the contentious calls | `[>]` opened by phase 2, **thirty-eight rows** after phase 5 – it is written AS the work happens |
-| 6 | ⚙ **the rail's mini-dashboard, at his 04.09 ruling** – three desktop-only cards on every page, and the harness exemption that has to ship with them | `[ ]` **new, and it is a phase** – see the note under phase 4 |
+| 5 – the document | `responsive-decisions-2026-09.md`, the contentious calls | `[>]` opened by phase 2, **forty-seven rows** after phase 6 – it is written AS the work happens |
+| 6 | ⚙ **the rail's mini-dashboard, at his 04.09 ruling** – three desktop-only cards on every page, and the harness exemption that has to ship with them | `[x]` **shipped, this document** – both halves together, and both guards seen to bite |
 
 ---
 
@@ -1542,3 +1542,260 @@ a PR assembly, and this phase touches no engine code.
 - `[?]` **the depth claim at 1280 has no browser arm**, because no e2e fixture draws a week with
   three or more enterable rungs. A fixture that does would close it; it is not phase 5's to add.
 - `[ ]` phase 6 – the rail's mini-dashboard, untouched by this phase
+
+---
+
+## `[x]` PHASE 6 – THE RAIL'S MINI-DASHBOARD, AND THE EXEMPTION THAT SHIPS WITH IT
+
+His ruling of 04.09, in full: «надо создать новые компоненты и показывать их только на десктоп»,
+«карточки сквозные, одинаковые, как мини-дашборд живут всегда в вертикальной полоске, т.е. на всех
+страницах», «никаких контролов новых они не поставят, это просто шорт-кат с информацией из
+внутренних разделов», and on the objection that sent it to him: «можно вынести эту часть поля
+навигации из этой проверки? у меня вообще планы небольшие на этот дашборд есть дальше и это
+исключительно десктопная фича.» `AC-home-desktop-1024.png` is the reference for the set.
+
+**Three files of app, two of composable, one of test, one of harness, three of documents.**
+`src/components/RailDashboard.vue` (new); `src/App.vue` (it is mounted in the one `nav.tab-bar` the
+app has); `src/style.css` (`display: none`, and the 1024 rung that turns it on);
+`src/composables/coachingBudget.ts` and `src/composables/seasonEntries.ts` (new – the two derivations
+the cards had to NOT copy, with `CoachMarketScreen.vue` and `SeasonScreen.vue` re-pointed at them);
+`e2e/parity.spec.ts` (the exemption and its four guards); `tests/component/round36-rail-dashboard.test.ts`
+(new, eleven arms); and this ledger, `docs/specs/responsive-decisions-2026-09.md` (nine rows, D39–D47)
+and `docs/specs/e2e-coverage.md`.
+
+⭐ **No new icon, no engine change, no copy change anywhere else, and no new string.** The three card
+titles already existed in this app – see D44.
+
+---
+
+### ⭐⭐⭐ WHAT EACH CARD READS, AND FROM WHERE – NOT ONE FIGURE IS DERIVED IN THE COMPONENT
+
+| card | the figure | where it already lived | how the card gets it |
+| --- | --- | --- | --- |
+| **In the account** | `$1,953,147` on `pro` | Home's Family-budget card (`.budget-total`) and the Family Budget screen's own «… in the account» line | `formatCents(snapshot.fundsCents)` – the app's ONE money formatter, no arithmetic at all |
+| **Coaching budget** | `$474` on `pro` | the Coach Market's meter, printed **beside those exact words**: `<strong>{{ formatCents(freeCents) }}</strong> /week free` | `useCoachingBudget().freeCents` – **the same computed the meter reads** |
+| **My entries** | `Regional Championship · W18 '33` and its siblings | Season's «My entries» strip, as `label · week` | `enteredEvents(snapshot.upcoming)` – **the same predicate the strip filters on** |
+
+⚠⚠ **THE TWO COMPOSABLES ARE THE POINT OF THIS PHASE, NOT PLUMBING.** A rail card is a SHORTCUT, and
+a shortcut that recomputes its own number is this repo's named recurring disease – `HouseholdStrip.vue`'s
+header records the version that actually shipped, where «the coaching meter read the current ROSTER
+ROW's price instead of `coachBilling.weeklyCents` and therefore told a self-coached family it was
+committing $0.00 a week while it paid court rent». **On a desktop the rail and the screen it shortcuts
+to are on screen at the same moment**, which makes a drift strictly worse than the round-28 case where
+the two surfaces were at least on different tabs. So the arithmetic moved:
+
+* `src/composables/coachingBudget.ts` – `committedCents` / `capCents` / `freeCents` / `meterPct`, the
+  four lines that stood in `CoachMarketScreen.vue`, carried **verbatim with their comments**. The
+  market's own meter now reads them from there.
+* `src/composables/seasonEntries.ts` – `enteredEvents(upcoming)`, one line, which was already written
+  out three times (`SeasonScreen`'s strip, `HomeScreen`/`ThisWeekScreen`'s `nearestEntered`,
+  `art/autoPreload.ts`'s key). `SeasonScreen`'s `myEntries` now calls it.
+
+⭐ **And that is measured rather than asserted.** Mutating `freeCents` reddens the market's own
+`round21-coach.test.ts` AND the rail's arm, together; mutating `enteredEvents` reddens both of the
+rail's entries arms. The table of mutations is below.
+
+---
+
+### ⭐⭐⭐ THE EXEMPTION, IN FOUR PARTS – AND EVERY GUARD HAS BEEN SEEN TO BITE
+
+**The harness's claim, restated in words** (its own header, and here):
+
+> **THE SAME THINGS ARE REACHABLE AT EVERY WIDTH, OUTSIDE THE DESKTOP RAIL'S DASHBOARD.**
+
+| part | how it is built | the test |
+| --- | --- | --- |
+| **1. Only the DASHBOARD is exempt; the navigation is not** | the five tabs are outside the region, so they stay in the fingerprint at 1280 | `the rail's NAVIGATION is not exempt…` asserts all five `button "…"` tokens survive the subtraction |
+| **2. The boundary is a CONTAINER, never a list of names** | `RAIL_DASHBOARD = '#app > nav.tab-bar > .rail-dash'`, plus «exactly one in the document» and «this region holds no interactive role and no focus stop» | `the boundary is ONE container…` and `the exempt region holds no control…` |
+| **3. Every FIGURE the rail shows exists somewhere at 375** | the region's figures are read at 1280, then all ten screens are walked at 375 and their text searched | `every figure the rail shows exists somewhere at 375` |
+| **4. The claim states its exception** | in the file header, in this ledger, and in D47 | – |
+
+…and two more the region earned on its own: **nothing in the dashboard may be text that is not a
+declared title or figure** (otherwise a card could hide a number from part 3), and **the same set is
+in the strip on every page** – his «карточки сквозные, одинаковые», walked across all ten stations at
+1280 and compared string for string.
+
+#### ⭐⭐ THE MUTATIONS – WHAT EACH ONE ACTUALLY PRINTED
+
+Each applied alone, run, and reverted by copying the pristine file back (never `git checkout --`).
+
+| # | the mutation | what reddened |
+| --- | --- | --- |
+| **1** | a `<button>More</button>` parked inside the exempt region | **THREE arms, independently.** `holds no control`: `+ "button \"More\""`. `NAVIGATION is not exempt`: «no tab was swallowed by the exemption». `every figure…`: «a line in the rail dashboard is neither a declared title nor a declared figure» → `+ "button: More"` |
+| **1b** | `tabindex="0"` on a figure – a focus stop with **no role**, inside a declared figure, so the accessibility net alone cannot see it | `holds no control`, on its second net: `+ "p.rail-dash-figure"` |
+| **2** | the coaching card re-derived so it names a number no screen prints (`freeCents * 3 + 1234567`) | `every figure the rail shows exists somewhere at 375`: `+ "$13,767"` |
+| **3** | ⭐⭐⭐ **the exemption itself switched off** (the subtraction removed) | **ALL THIRTEEN parity walks go red**, naming `heading2 "In the account"` and `heading2 "Coaching budget"` as «at 1280px and NOT on the phone at 375px». That is the proof phase 4 asked for: the exemption is load-bearing TODAY and is not a guard fitted to nothing |
+| **4** | the ordinary parity path, deliberately broken – `.week-arrow.back { display: none }` past 1024 (phase 5's own break, re-run) | the stacked-week room alone: `button "Back" ×2`, `icon back.svg ×2` – **and the other twelve walks stayed green**, so the exemption has not blinded the harness to a real loss |
+
+---
+
+### `[x]` THE IDENTITY PROOF, RE-RUN – 0 MOVED, 0 NEW, 0 GONE BELOW 1024
+
+Arm A is phase 5's shipped head (`dc838ccd`, its four files restored in this same tree with
+`git show HEAD:<path>` – read-only, no checkout); arm B is this phase. Both walked through the same
+ten tab screens at 375 / 520 / 576 / 768 / 900 / 1024 / 1280, **one fresh career per width** (the
+`careerAt` fixture is one-shot per test by design), every element that RENDERS censused as
+tag + class + occurrence + box to 2dp.
+
+| career | width | boxes | moved | new | gone | pixels |
+| --- | --- | --- | --- | --- | --- | --- |
+| `pro` (ten screens) | **375 / 520 / 576** | 2212 | **0** | **0** | **0** | **0** |
+| `pro` (ten screens) | **768 / 900** | 2235 | **0** | **0** | **0** | **0** |
+| `pro` (ten screens) | 1024 / 1280 | 2234 | **0** | 70 | **0** | **0** |
+| `sinking` (Season) | **375 → 900** | 357 | **0** | **0** | **0** | **0** |
+| `sinking` (Season) | 1024 / 1280 | 357 | **0** | 7 | **0** | **0** |
+
+⭐ **Nothing MOVED at any width, including the two the dashboard is drawn at.** The 70 new boxes are
+seven per screen across ten screens – `div.rail-dash`, two `article.rail-dash-card`, two
+`h2.rail-dash-title`, two `p.rail-dash-figure` – and every one of them is the dashboard itself. It
+takes the rail's empty column and pushes nothing: `margin-top: auto` puts it under the five tabs,
+which is where `AC` draws it.
+
+⚠ **THE ONE HONEST COST, NAMED RATHER THAN BURIED.** The block is in the DOM at every width and
+`display: none` below 1024 (D43), so the RAW element count rises by **7 per screen** – 2321 → 2391 on
+the ten-screen `pro` walk, 367 → 374 on `sinking`'s Season. Those nodes have no box, no paint and no
+accessibility node: they are invisible to the census above, to `e2e/parity.spec.ts` and to a player.
+The alternative – a `v-if` on `matchMedia` – costs zero nodes and a second copy of the number 1024,
+and stops responding to a resized window. D43 is that trade.
+
+#### ⭐⭐ AND THE NINE ZEROS ARE A MEASUREMENT, NOT A BLIND INSTRUMENT
+
+The same census, in the same run, on the same careers, with **only** `.rail-dash { display: none }`
+commented out:
+
+| width | boxes moved | new | pixels moved |
+| --- | --- | --- | --- |
+| **375** | **160** | 70 | **42,462** |
+| **768** | **160** | 70 | **42,417** |
+
+– so the instrument is demonstrably sensitive at exactly the widths where it reports nothing.
+
+---
+
+### ⚠ AND IT WAS LOOKED AT, NOT ONLY MEASURED – TWO THINGS FOR HIS MORNING
+
+The rail was screenshotted in Chromium at 1280 (`pro`, before and after an entry) and at 1024
+(`sinking`). It draws the way `AC` does: five tabs at the top, the card set at the FOOT of the strip,
+each card the app's own notecard – the lime eyebrow, the Sora figure, the card gradient and hairline.
+A negative balance takes `.negative`'s danger tint, which is Home's own rule on the same figure
+(`sinking` reads **-$1,326**). Two things are worth his eye rather than a test:
+
+* ⚠ **ON HOME, THE BALANCE IS NOW ON SCREEN TWICE** – the Family-budget card in the column and
+  «In the account» in the rail, four inches apart. That is the direct consequence of «карточки
+  сквозные … на всех страницах», and `AC` itself draws both, so it shipped as he described it. **If
+  he would rather the set stood down on the pages that already carry a figure, that is a rule about
+  WHICH page rather than about the cards, and it is one condition per card.**
+* The set sits at the bottom of a mostly empty column – `margin-top: auto`, which is where `AC` puts
+  it. On a career with several entries the third card grows upwards and the rail scrolls itself,
+  which is «скроллится при переполнении» doing its job.
+
+---
+
+### `[x]` PARITY – GREEN AT 375 / 768 / 900 / 1280, WITH THE EXEMPTION IN PLACE
+
+`E2E_EXIT=0`, **57 tests** (51 before this phase), the six new dashboard guards among them. Every
+exit code read out of a log file, never from a pipe and never from a background task's completion
+notice.
+
+---
+
+### ⚠⚠ TWO FINDINGS THIS PHASE MADE ABOUT ITS OWN INSTRUMENTS
+
+**1. `pro` HAS NOTHING ENTERED, so the third card is invisible to a plain walk on it.** Measured:
+the dashboard draws TWO cards on `pro` – «Nothing entered yet» is the first thing
+`tournament-entry.spec.ts` asserts about that fixture. Ten fingerprints that never contained the
+«My entries» card are equal, which is this round's own «four empty sets are equal» one level up, and
+the same hole phase 5 found behind `pro`'s un-stacked weeks and phase 4 found behind Money's chapter
+row. ⭐ **The honest fix is to reach the state**: the entries arm presses `Enter` on the soonest event
+the feed offers and then compares the rail's list with the Season strip's.
+
+⚠ **And folding that entry into every guard was tried and reverted, because it breaks a station.**
+An entry changes what Home's Next-tournament plate OPENS (round 31 #1: with something entered,
+`ThisWeekScreen` draws the tournament instead of its own «This week» heading), so
+`STATIONS['ThisWeekScreen.vue']`'s arrival anchor stops holding – which is exactly what a walk on the
+`junior` fixture does, for exactly the same reason. **The station map is calibrated for a `pro` with
+nothing entered.** That is a property of the map, not of this phase, and it is written down here
+because the next person to widen the walk will meet it.
+
+**2. ⚠⚠ THE FIRST DRAFT OF THE «one world, two surfaces» ARMS COULD NOT BITE, AND THE MUTATION IS
+WHAT SHOWED IT.** They compared the RAIL's render with the SCREEN's render. That is a SHARING claim
+only: mutate the shared computed and both move together. Measured – `freeCents` reduced to the cap
+alone reddened `round21-coach.test.ts` and left the rail's arm **green**. It is the «comparing a thing
+with itself yields a byte-identical diff» failure CLAUDE.md records, in a new costume. Both arms now
+rebuild the expected value from the snapshot's OWN fields (`weeklyIncomeCents` minus the current
+row's `weeklyCents`; `upcoming.filter(entered)` mapped to `label · week`) and keep the render-to-render
+comparison as the second assertion – which is `round28-household-shared.test.ts`'s own discipline,
+followed properly the second time.
+
+⚠ **A third instrument was too weak and was fixed the same way:** the entries fixture had ONE event on
+the calendar, so «the entered ones» and «all of them» were the same list, and replacing
+`enteredEvents`' filter with `slice()` reddened only the negative arm. With two events and one entry
+it reddens both.
+
+---
+
+### The eleven new test arms, and every one is mutation-verified
+
+| where | what it holds |
+| --- | --- |
+| `tests/component/round36-rail-dashboard.test.ts` §1 (4 arms) | the block is a DIRECT child of the one `nav.tab-bar`; `display: flex` at 1280; `display: none` at 375 and at 768 – and the element is in the DOM at all three, which is what makes «desktop-only» a stylesheet fact rather than a `v-if` |
+| §2 (4 arms) | each card prints what the screen it shortcuts to prints, expected value rebuilt from the snapshot; and the entries card is SILENT with nothing entered |
+| §3 (2 arms) | the rendered dashboard has no button, link, input, focus stop or explicit role **with the entries card up**; and the FILE declares no `@click` / `v-on` / `<button` / `IconButton` / `tabindex` / `role=` – the one net that catches a Vue listener, which attaches no DOM attribute |
+| §4 (1 arm) | all three titles are already phrases on the surfaces the figures live on |
+| `e2e/parity.spec.ts` (+6 tests) | the four parts of the exemption, plus «no undeclared text in the region» and «the same set on every page» |
+
+**Component mutations, each applied alone against the whole `component` project:**
+
+| mutation | what reddened |
+| --- | --- |
+| `freeCents` forgets what is committed | `round21-coach.test.ts` **and** the rail's coaching arm – the pair that proves they share a source |
+| `committedCents` back to the round-28 defect (a self-coached family commits nothing) | `round21-coach`, `round28-household-block` **and** the rail's coaching arm |
+| `enteredEvents` stops filtering | **both** of the rail's entries arms (after the fixture was strengthened – see above) |
+| the account card a dollar out | the rail's account arm alone |
+| `.rail-dash { display: none }` deleted | the phone arm and the tablet arm, together; the desktop arm green |
+| the 1024 rung never turns it on | the desktop arm alone; the phone and tablet arms green |
+| ⭐ `@click` on a figure – a Vue listener, which attaches **no DOM attribute and no aria role** | the FILE pin alone, by name («RailDashboard.vue's template carries `@click`»), with the rendered arm green beside it. That asymmetry is what makes the source pin worth its place: it is the only net in either suite that can see this |
+
+#### ⚠ THE MUTATIONS THAT DID NOT BITE, RECORDED AS PHASES 4 AND 5 DID
+
+| mutation | what it should have reddened | why it did not |
+| --- | --- | --- |
+| `freeCents` forgets what is committed (**first draft of the arms**) | the rail's coaching arm | it compared two RENDERS of one computed. Fixed – the expected value is now rebuilt from the snapshot; see finding 2 above |
+| `enteredEvents` stops filtering (**with the one-event fixture**) | the positive «My entries» arm | with a single event on the calendar, «entered» and «all» are the same list. Fixed – the fixture now carries two events and one entry |
+| a `<button>` parked in the region | the DOM focus-stop net in `holds no control` | the accessibility net asserts first and threw before it ran. It is not blind – mutation **1b** (a `tabindex` with no role) reaches it and reddens it by name |
+
+⚠ **One unrelated red appeared once and did not reproduce:** `prologue-handover.test.ts`'s
+«he never names a ceiling» went red in the `committedCents` run and was green in every other run of
+the same suite, including the clean one after it. Nothing in this phase reaches that surface; it is
+recorded rather than explained, and the clean full-suite run below is the control.
+
+---
+
+### Gates – phase 6
+
+Run one at a time, and **every exit code read out of the log file**, never from a pipe and never from
+a background task's completion notice.
+
+| gate | result |
+| --- | --- |
+| `npm run test:e2e` | **`E2E_EXIT=0`** – 57 tests, the thirteen parity walks and the six exemption guards among them |
+| `npm run test:quiet` | **`QUIET_EXIT=0`** |
+| `npm run test:component` | **1375 passed across 121 files** (1364 before this phase; eleven new arms, one new file) |
+| `npm run check` | **`CHECK_EXIT=0`** – the doc audit, the pin ratchet, the decision index, `vue-tsc`, `check:tools`, the component suite and the build |
+
+⚠ **`npm run test:sim` was NOT run** – the standing regime (owner's ruling, 22.08) puts it in front of
+a PR assembly, and this phase touches no engine code.
+
+### Open at the end of phase 6
+
+- `[?]` **D39** – one component with three cards, where his word was «компоненты». Splitting them is
+  cheap and does not move the exemption's boundary; it is his feature, so it is his call.
+- `[?]` **D40** – three information cards now sit inside the `navigation` landmark. They hold no
+  control, so nothing a keyboard can reach moved; a `complementary` region of their own costs a
+  wrapper element at every width, which is the identity contract.
+- `[?]` **D46** – `AC` draws a fourth rail card, `CONDITION`. He named three, so three shipped. It is
+  the smallest of the four to add and it costs a fourth title.
+- `[?]` **the balance is on Home twice** – the card and the rail, on the one page that already
+  carries the figure. His ruling and his frame both say the set is on every page; standing a card
+  down where its own screen is open is one condition per card if he wants it.
+- `[ ]` everything still open from phases 1–5, unchanged by this phase.

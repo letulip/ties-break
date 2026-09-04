@@ -210,6 +210,7 @@ produced a *defect list* instead of a workaround list.
 | `parity.spec.ts` | every screen makes the same controls, headings, figures and icons REACHABLE at 375, 768, 900 and 1280 – every disclosure on the screen is opened before the fingerprint is taken, so «1 к 1 по доступности» is what is measured rather than what is painted on arrival (round 36 phase 3) | 4 |
 | `parity.spec.ts` | every screen in `src/components/screens/` has a station in that walk – the list is derived, never written out | 4 |
 | `parity.spec.ts` | two rooms behind Money's chapter row and one week that STACKS several rungs are walked too – a screen file is the derivation's unit, so a state it never reaches is a state it cannot answer for (round 36 phases 4 and 5) | 4 |
+| `parity.spec.ts` | the desktop rail's DASHBOARD is the one region exempt from that comparison (owner's ruling, round 36 phase 6) – and the exemption is bounded: it is asserted by CONTAINER, that container must hold no control, every figure it shows must exist somewhere at 375, and the same set must be in the strip on every page | 4 |
 | `offline.spec.ts` | after one visit the app boots with the network cut | 3 |
 | `coverage-map.spec.ts` | this document has not rotted (§11) | – |
 <!-- /COVERAGE-MAP:JOURNEYS -->
