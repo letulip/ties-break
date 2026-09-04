@@ -1148,7 +1148,18 @@ const showGo = computed(() => !game.snapshot?.pending)
   transform: translateX(-50%);
   bottom: 58px;
   width: 100%;
-  max-width: 520px;
+  /* ⚠ ROUND 36 PHASE 2 – THE THIRD OF THE THREE FLOATING CTA BOXES, ONTO THE TOKEN. The shell's own
+     week button in src/style.css is the same object with the same six declarations, and phase 1 put
+     it on `--app-bar-max` with an argument that applies here word for word: the button inside is
+     centred, so the only thing this width decides is where the CTA sits, and it must be the middle
+     of the column rather than the middle of a 520px box left behind under a wider one. Below 768 the
+     token IS 520, and the button is centred at every width, so today this moves nothing at all - it
+     stops the box from being wrong. `.week-proceed` in ThisWeekScreen.vue is the other one.
+     ⚠ THE SHELL'S RULE IS DELIBERATELY NOT NAMED BY ITS CLASS HERE. tests/round13-nav.test.ts reads
+     this file as TEXT and refuses that class name in a tab screen - the pin that keeps the advance
+     act in the App shell - and it does not distinguish a comment from markup. It is right to be
+     that blunt; the sentence is what moves. */
+  max-width: var(--app-bar-max);
   display: flex;
   flex-direction: column;
   align-items: center;

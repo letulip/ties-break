@@ -2195,6 +2195,77 @@ function closeExhibition(): void {
   scroll-snap-align: start;
 }
 
+/* ⭐⭐⭐ ROUND 36 PHASE 2 – THE TABLET WEEK, AND IT IS THE ONE SCREEN THE OWNER SPECIFIED IN FULL:
+   «1 неделя = 1 ряд, максимум 2 карточки видно, свайп для 3+. Формат карточки, оформление и кнопки -
+   мобильные, без изменений.» Frame AD-season-tablet-768.png is the reference he named.
+
+   ⭐ NOTHING NEW IS BUILT HERE. Round 34 #14 already made a week a ROW and already made it swipe -
+   «чисто интерфейсная правка на свайп карточек» - so his tablet is this mechanism with one number
+   changed: the card that was 88% of the phone is half the column of the tablet. The scroll-snap
+   strip, the gap, the hidden scrollbar and the "the next card's own edge is the affordance" rule
+   above are all untouched, which is «формат карточки … без изменений» taken literally.
+
+   ⚠⚠ A ONE-CARD WEEK IS ALSO HALF A ROW, AND THAT IS THE FRAME'S OWN ANSWER RATHER THAN A GUESS.
+   AD draws W3 and W5 with a single card each, both stopping at the middle of the screen, and the
+   alternative reads worse than it sounds: a calendar whose rows are full-width when a week offers
+   one choice and half-width when it offers two would rock left and right down the page, and «1
+   неделя = 1 ряд» would be the only thing holding it together. One column width for every week is
+   what makes the row legible AS a week. It is a contentious call and it has a row in
+   docs/specs/responsive-decisions-2026-09.md.
+
+   ⚠ AND THE DESIGN'S OWN ANSWER WAS A GRID, WHICH HE OVERRODE. The handoff's «Правила раскладки» §6
+   is explicit - «Сетки вместо каруселей … Свайп-ряды и стрелки ‹ › были пробой и отвергнуты» - and
+   he asked for the swipe anyway, on the screen he called his hardest case. His ruling wins; the
+   divergence is the first row in the decisions document. */
+@media (min-width: 768px) {
+  /* The plain wrapper becomes a row too, so the single-card week and the two-card week are the same
+     box with the same arithmetic. `.swipeable` still adds the overflow and the snapping. */
+  .week-stack {
+    display: flex;
+    gap: 12px;
+  }
+  /* ⚠⚠ THE SELECTOR IS DELIBERATELY HEAVIER THAN IT LOOKS AND IT MUST STAY THAT WAY. Two separate
+     things would drop this rule on the floor if it were written as the obvious `.week-stack >
+     .event-card`, and both were measured rather than reasoned about:
+       1. A MEDIA QUERY ADDS NO SPECIFICITY, so on a week that swipes it would lose outright to
+          `.week-stack.swipeable > .event-card` above – the strip kept the phone's 88% at 768 while
+          `display: flex` from this same block applied, which is the quietest way a rule can be
+          present and have no effect at all.
+       2. NAMING `.swipeable` TOO ONLY MAKES THEM EQUAL, and happy-dom then keeps the FIRST rule
+          rather than the last (measured 04.09; a real browser takes the later one). `tests/component`
+          is where this is pinned, so a tie is a rule the gate cannot see.
+     `.event-cards` is the list these cards live in, so prefixing it is true as well as heavier: it
+     wins on specificity in every engine, in either source order. */
+  .event-cards .week-stack > .event-card,
+  .event-cards .week-stack.swipeable > .event-card {
+    flex: 0 0 auto;
+    /* ⚠ HALF THE ROW LESS HALF THE GUTTER, AND IT IS WRITTEN THIS WAY ON PURPOSE. The obvious
+       spelling is `calc((100% - 12px) / 2)` and it is the same number – but happy-dom drops a `calc`
+       that divides a parenthesised subexpression (measured: `width` comes back as the empty string,
+       so the declaration simply vanishes and the phone's 88% wins), and `tests/component/` is where
+       this rule is pinned. A form the mounted gate cannot read is a rule with no test. */
+    width: calc(50% - 6px);
+  }
+  /* ⭐ THREE OR MORE, WHICH IS THE HALF OF HIS SENTENCE THE WIDTH ABOVE WOULD SILENTLY DROP. At
+     exactly half the column a pair FILLS the row, so a third card sits entirely off-screen with
+     nothing showing past the second - and the phone's affordance is precisely that something shows.
+     So a stack of three or more shrinks by the same 12% the phone gives up: two cards and a sliver
+     of the third, «свайп для 3+» with an edge to swipe at.
+     ⚠ `:has()` rather than a class from the template, because this is a fact about the CSS box and
+     not about the week - the template already says how many cards there are by rendering them.
+     `.ob-select-wrap:has(...)` in OnboardingWizard.vue is the same idiom, already shipped. */
+  .event-cards .week-stack.swipeable:has(> .event-card:nth-child(3)) > .event-card {
+    /* 88% of the row across two cards and their gutter – `calc((88% - 12px) / 2)` in the spelling
+       happy-dom can read; see the note on the width above. */
+    width: calc(44% - 6px);
+  }
+  /* The weeks that are not tournaments - training, off-season, exams, a booked vacation - are cards
+     on the same calendar and take the same column. AD draws its «Training week» at half width. */
+  .event-cards .week-card {
+    width: calc(50% - 6px);
+  }
+}
+
 /* The export's list gutter is 14px of the screen; ours already has 16px from #app, so the cards
    simply stop being inset a second time by a panel. */
 section.bare .event-cards {

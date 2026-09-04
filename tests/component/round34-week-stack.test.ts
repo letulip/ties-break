@@ -40,7 +40,7 @@
 // the outgrown clause simply moved the search to a week that rule was happy with and all seven arms
 // stayed green. A finder that consults the rule under test cannot fail on it. It reads the ENGINE
 // (`playDownBars`, `hasOutgrown`) and the two predicates the item did not change instead.
-import { describe, it, expect, beforeEach } from 'vitest'
+import { describe, it, expect, beforeEach, afterEach } from 'vitest'
 import { mount } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
 import '../../src/style.css'
@@ -60,7 +60,7 @@ import { tickWeek, toSnapshot, type WorldState } from '../../src/engine/world'
 import { hasOutgrown, playDownBars } from '../../src/engine/world/ladder'
 import { rngFromSeed } from '../../src/engine/rng'
 import { mountSeason } from '../helpers/mountSeason'
-import { PHONE, availableWidth, boxOf, lengthPx, rowItemWidth, setViewport } from './fits'
+import { PHONE, TABLET, availableWidth, boxOf, lengthPx, rowItemWidth, setViewport } from './fits'
 
 /** The feed's filter, asked with exactly the four keys SeasonScreen passes – so this file cannot
  *  disagree with the screen about which events are even candidates. */
@@ -439,5 +439,146 @@ describe('round 34 #14 – and it fits a 375x667 phone (round-20 #3)', () => {
     }
     w.unmount()
     document.body.innerHTML = ''
+  })
+})
+
+// ⭐⭐⭐ ROUND 36 PHASE 2 – AND ON A TABLET THE SAME STRIP SHOWS TWO. The owner, on frame
+// AD-season-tablet-768.png: «1 неделя = 1 ряд, максимум 2 карточки видно, свайп для 3+. Формат
+// карточки, оформление и кнопки - мобильные, без изменений.»
+//
+// ⚠ IT LIVES IN THIS FILE BECAUSE IT IS THIS FILE'S MECHANISM. Round 34 #14 built the row and the
+// swipe; phase 2 changed ONE number in it. A separate round-36 file would measure the same strip
+// from a second place and the two would drift the first time a card's width moves.
+//
+// ⚠ THE WIDTH MUST BE SET BEFORE THE MOUNT. happy-dom evaluates a media query on an element's first
+// computed-style read and then caches it (measured 04.09; the note is beside `TABLET` in fits.ts),
+// so `setViewport` after mounting reads the phone's answer and looks exactly like a missing rule.
+// MUTATION-VERIFIED, four, each applied alone:
+//   * the tablet card width put back to 88% -> the two-card arm, ALONE;
+//   * the `:has(> :nth-child(3))` width raised to the two-up half -> the three-or-more arm, ALONE,
+//     which is what says «максимум 2» and «свайп для 3+» are two claims and not one;
+//   * `.event-cards .week-card`'s width dropped -> the non-tournament arm, ALONE;
+//   * the whole `@media` block moved to `min-width: 100000px` -> all THREE tablet arms, while the
+//     phone arm stays green. That last asymmetry is rule 4 of this phase: nothing below 768 moved.
+// ⚠ AND ONE MUTATION WENT GREEN WHEN IT SHOULD NOT HAVE, recorded because it was mine: `width: 88%`
+// inserted ABOVE the tablet width in the SAME rule changes nothing, because the later declaration
+// wins. A mutation has to be a replacement here, not an addition.
+describe('round 36 phase 2 – a week is two cards wide on a tablet, and the third is a swipe away', () => {
+  beforeEach(() => {
+    setActivePinia(createPinia())
+    document.body.innerHTML = ''
+  })
+
+  afterEach(() => {
+    setViewport(PHONE)
+    document.body.innerHTML = ''
+  })
+
+  /** A declared width as a FRACTION OF THE ROW it sits in, so the assertions below are about
+   *  geometry rather than about a spelling.
+   *
+   *  ⚠ `lengthPx` is deliberately not widened for this. It folds `calc(<a>px ± <b>px)` and reads a
+   *  `calc` mixing `%` with `px` as NaN, which its callers take as "no bound" – and six shipped
+   *  rules are written in exactly that form (`calc(100% + 32px)` on the prologue heroes among them),
+   *  so teaching the shared helper to read them would hand real bounds to tests that have been
+   *  scoring them as unbounded since they were written. That is a change with its own measurement,
+   *  not a thing to do in passing on the way to a layout claim. */
+  function fracOfRow(width: string, room: number): number {
+    const mix = /^calc\(\s*([\d.]+)%\s*([+-])\s*([\d.]+)px\s*\)$/.exec(width.trim())
+    if (mix) {
+      const px = (Number(mix[1]) / 100) * room + (mix[2] === '+' ? 1 : -1) * Number(mix[3])
+      return px / room
+    }
+    return lengthPx(width, room) / room
+  }
+
+  /** Every swipeable strip on the feed, and the card widths inside it, as fractions of the row. */
+  function stripWidths(vp: { width: number; height: number }): { cards: number; frac: number }[] {
+    setViewport(vp)
+    const { snap } = careerWithAStackedWeek()
+    useGameStore().snapshot = snap
+    const w = mount(SeasonScreen, { global: { stubs: { teleport: true } }, attachTo: document.body })
+    expect(document.head.querySelector('style'), 'no stylesheet – this measurement would be vacuous').toBeTruthy()
+    const out: { cards: number; frac: number }[] = []
+    for (const strip of w.findAll('.week-stack').filter((s) => s.classes().includes('swipeable'))) {
+      const cards = strip.findAll('.event-card')
+      const room = availableWidth(cards[0].element, vp)
+      const declared = getComputedStyle(cards[0].element).width
+      expect(declared, 'the card declares no width – the measurement below would be about nothing').not.toBe('')
+      out.push({ cards: cards.length, frac: fracOfRow(declared, room) })
+    }
+    w.unmount()
+    return out
+  }
+
+  it('⭐ two cards fill the row – «максимум 2 карточки видно»', () => {
+    const strips = stripWidths(TABLET)
+    const pairs = strips.filter((s) => s.cards === 2)
+    expect(pairs.length, 'the fixture must draw a two-card week, or this measures nothing').toBeGreaterThan(0)
+    for (const strip of pairs) {
+      // Half the row less half the 12px gutter: the pair and its gutter come to the whole row, so
+      // both cards are on screen and there is nothing hanging past them.
+      expect(strip.frac, 'a two-card week gives each card half the row').toBeCloseTo(0.5 - 6 / 736, 2)
+      expect(2 * strip.frac + 12 / 736, 'and the pair fills the row exactly').toBeCloseTo(1, 2)
+    }
+  })
+
+  it('⭐ …and a stack of three or more leaves an edge to swipe at – «свайп для 3+»', () => {
+    const strips = stripWidths(TABLET)
+    expect(strips.length, 'the fixture must draw a swipeable strip, or this measures nothing').toBeGreaterThan(0)
+    const deep = strips.filter((s) => s.cards >= 3)
+    expect(deep.length, 'and one of them must hold three or more, which is the case under test').toBeGreaterThan(0)
+    for (const strip of deep) {
+      // 88% of the row across TWO cards and one 12px gutter – the phone's own 12% of slack, spent on
+      // the same affordance: the next card's edge showing past the second.
+      expect(
+        strip.frac,
+        `a ${strip.cards}-card week gives each card ${(strip.frac * 100).toFixed(1)}% of the row – ` +
+          'two of these plus a gutter must leave a sliver, or «свайп для 3+» has nothing to swipe at',
+      ).toBeLessThan(0.47)
+      expect(strip.frac, 'and it is still nearly half the row, not a third of it').toBeGreaterThan(0.4)
+      // TWO CARDS VISIBLE, NOT THREE: the pair plus its gutter must still take most of the row.
+      expect(2 * strip.frac, 'two cards fill the row').toBeGreaterThan(0.8)
+    }
+  })
+
+  // ⭐⭐ D2 IN docs/specs/responsive-decisions-2026-09.md, AND IT IS THE CONTENTIOUS ONE. A week that
+  // is not a tournament – training, off-season, exams, a booked vacation – is a card on the same
+  // calendar, and `AD-season-tablet-768.png` draws it at half width like every other week. The
+  // alternative (a lone card stretching) is a one-line change to the rule this pins, which is why
+  // the decision document can offer it as a one-line answer.
+  it('⭐ a week that is not a tournament takes the same half-row, as AD draws it', () => {
+    setViewport(TABLET)
+    const { snap } = careerWithAStackedWeek()
+    useGameStore().snapshot = snap
+    const w = mount(SeasonScreen, { global: { stubs: { teleport: true } }, attachTo: document.body })
+    const cards = w.findAll('.week-card')
+    expect(cards.length, 'the fixture must draw a non-tournament week, or this measures nothing').toBeGreaterThan(0)
+    for (const card of cards) {
+      const room = availableWidth(card.element, TABLET)
+      const declared = getComputedStyle(card.element).width
+      expect(declared, 'the card declares no width at 768').not.toBe('')
+      expect(fracOfRow(declared, room), 'a training or off-season week is half a row too').toBeCloseTo(
+        0.5 - 6 / room,
+        2,
+      )
+    }
+    w.unmount()
+  })
+
+  it('⚠ and the phone is untouched – the same strip is still 88% of ONE card there', () => {
+    // The other half of «формат карточки … без изменений», and the guard on rule 4 of this phase:
+    // nothing below 768 may move. 0.88 is round 34's own number, read back through the cascade.
+    for (const strip of stripWidths(PHONE)) {
+      expect(strip.frac, 'a phone still shows one card and the edge of the next').toBeCloseTo(0.88, 2)
+    }
+    // ...and a non-tournament week is still the full width of the phone, which is the other half of
+    // «nothing below 768 may move» on this screen.
+    const w = mount(SeasonScreen, { global: { stubs: { teleport: true } }, attachTo: document.body })
+    for (const card of w.findAll('.week-card')) {
+      const declared = getComputedStyle(card.element).width
+      expect(declared === '' || declared === 'auto', 'a phone week card declares no width of its own').toBe(true)
+    }
+    w.unmount()
   })
 })

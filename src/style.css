@@ -535,6 +535,17 @@ body {
      `100%` and mean the column: a fixed box's percentage resolves against the viewport, so past 768
      the ladder below spells the column out as "the frame, minus the frame's own gutters". */
   --app-bar-max: 520px;
+  /* ⭐⭐ ROUND 36 PHASE 2 – THE HERO'S SHAPE, AND IT IS A TOKEN BECAUSE HE TIED TWO SURFACES TO IT.
+     «hero image на home будет НЕ квадратной, но все оверлеи с текстом остаются как у нас», and one
+     line later, about the tournament preview: «картинка занимает ту же пропорцию, что и hero на
+     главной». That second sentence is a JOIN, not a coincidence – so the two heroes read one number
+     instead of each carrying its own copy of it, which is the `--app-pad-x` lesson (a pair of
+     numbers spelled twice drifts) applied to a shape.
+     ⚠ THE MOBILE VALUE IS SPELLED OUT, and it is A3's square (owner, 28.07: the paintings are
+     512x512, so at the full width of the phone the whole frame is on screen and nothing is cut).
+     Below 768 this token IS `1 / 1`, so not one phone pixel moves.
+     Consumers: `.diary-hero` (HomeScreen.vue) and `.nt-hero` (NextTournamentPanel.vue). */
+  --hero-aspect: 1 / 1;
 }
 
 /* ⭐⭐⭐ HIS BREAKPOINT LADDER (docs/specs/responsive-2026-09.md, owner 03.09):
@@ -559,6 +570,16 @@ body {
     --app-shell-max: 100%;
     --app-col-max: 100%;
     --app-bar-max: calc(min(var(--app-shell-max), 100%) - 2 * var(--app-pad-x));
+    /* PHASE 2. The design's own tablet hero is 400px tall on a 768px frame (design handoff,
+       «Responsive» §3: «герой перестаёт быть портретом на всю ширину. 768 — 400px»), and that is
+       the one place this round takes the design's number over ours – because OUR number is the
+       square he asked us to stop drawing. Written as a RATIO rather than his flat 400px so it stays
+       fluid across the band he defined: 400 at 768, 469 at 900, and the plateau then holds it.
+       ⚠ HER FACE SURVIVES THE CROP BY CONSTRUCTION, not by luck. `object-position` is steered per
+       painting off `facePoint` (src/art/faceRects.ts), and percentage semantics under `cover` align
+       the same relative point of the image with the same relative point of the window – so a wider
+       window shows a band THROUGH her face rather than a band above or below it. */
+    --hero-aspect: 768 / 400;
   }
 }
 
@@ -4339,6 +4360,47 @@ tr.kid-row td {
   font-size: 11px;
   font-weight: 600;
   color: var(--muted);
+}
+
+/* ⭐⭐⭐ ROUND 36 PHASE 2 – THE MARKET, TWO TO A ROW ON A TABLET. The owner, on screen AJ:
+   «4 карточки; картинка может быть шире, чем на мобиле, если влезает, тот же стиль, во всю высоту».
+
+   ⚠ «4 CARDS» IS FOUR CARDS ON SCREEN AT ONCE, NOT FOUR PER ROW, and the frame settles it: AJ draws
+   its coaches TWO to a row, which puts the first tier's four inside the first screenful. Four to a
+   row would be 184px per card at 768 – narrower than the phone's 343, for a card carrying a name, a
+   fit pill, a style, a description, two bands and a load note. It is also the only reading that
+   climbs: phase 3 gives the desktop «2–3 per row», and a tablet cannot show more per row than a
+   desktop does.
+
+   ⚠ THE PORTRAIT STAYS AT 62px, AND THAT IS A REFUSAL WITH A REASON. His «if it fits» is the
+   condition, and it is not met: a two-up card at 768 is 362px, nineteen pixels wider than the phone
+   – there is no room to spend. Two rules would also have to be broken to spend it: round-18 #2 ties
+   62px to the mask geometry (the fade must reach transparent exactly at the clip line), and
+   docs/specs/coach-match-edge.md §4's anti-shopping rule reserves the wider 78px strip for the coach
+   she ALREADY HAS. A row in docs/specs/responsive-decisions-2026-09.md carries this.
+
+   ⭐ WHAT HE DOES GET FROM «во всю высоту»: grid's default `stretch`. A short row beside a tall one
+   is no longer a short row – both fill their line, and `.cm-art` is already `top: 0; bottom: 0`, so
+   the portrait fills the taller of the pair rather than leaving a band of card under it.
+
+   The gutter is 8px because that is the `margin-bottom` these rows already stack with; the margin
+   goes, because a grid gap and a margin would be 16px between rows and 8 between columns. */
+@media (min-width: 768px) {
+  .tier-block {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+  /* The tier's heading is the row above the pair, never a cell beside it. Its own 8px bottom margin
+     goes with the rows' – the grid's gap is that number now, and keeping both would open 16px under
+     the heading and 8 between the cards. */
+  .tier-block .tier-head {
+    grid-column: 1 / -1;
+    margin-bottom: 0;
+  }
+  .tier-block .cm-row {
+    margin-bottom: 0;
+  }
 }
 
 .self-coach-row {

@@ -41,7 +41,7 @@
 //   * `const chosen = ref('week')`, i.e. the landing back to a constant -> the coach-hired landing
 //     AND the does-not-fight-the-player test, while the SELF-COACHED landing stays green. That
 //     asymmetry is the whole of #3: the old behaviour was never wrong for a self-coached career.
-import { describe, it, expect, beforeEach } from 'vitest'
+import { describe, it, expect, beforeEach, afterEach } from 'vitest'
 import { mount } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
 import { nextTick } from 'vue'
@@ -55,6 +55,7 @@ import { useGameStore } from '../../src/stores/game'
 import { createWorld, tickWeek, toSnapshot } from '../../src/engine/world'
 import { rngFromSeed } from '../../src/engine/rng'
 import { DEFAULT_PROFILE, type CoachTier, type Snapshot } from '../../src/shared/protocol'
+import { PHONE, TABLET, setViewport } from './fits'
 
 // ⚠ THIS RUNNER HAS NO localStorage AND HomeScreen READS IT AT SETUP (`tb:kidAvatarHintSeen`), so a
 // mount throws before anything can be measured. The same shim tests/component/home-strip-and-mail.ts
@@ -327,6 +328,101 @@ describe('round-18 #3 – the coach market opens on the tab the career asks for'
     await nextTick()
     expect(store.snapshot!.coachId).not.toBeNull()
     expect(activeTab(wrapper), 'and the screen left them there').toBe('Her week')
+    wrapper.unmount()
+  })
+})
+
+// ⭐⭐⭐ ROUND 36 PHASE 2 – THE MARKET IS TWO CARDS TO A ROW ON A TABLET, AND THE PORTRAIT IS NOT
+// WIDER. The owner, on frame AJ: «4 карточки; картинка может быть шире, чем на мобиле, если
+// влезает, тот же стиль, во всю высоту.»
+//
+// ⚠ BOTH HALVES ARE IN ONE PLACE ON PURPOSE. The layout claim (two to a row) and the refusal (the
+// picture stays at 62px, because «если влезает» is a condition and it is not met at 362px) are one
+// decision, recorded as D3 and D4 in docs/specs/responsive-decisions-2026-09.md. Splitting them
+// across two files is how the refusal gets quietly reversed later by somebody reading only the
+// layout half.
+//
+// ⚠ THE WIDTH IS SET BEFORE THE MOUNT – happy-dom evaluates a media query on an element's first
+// computed-style read and caches it (see the note beside `TABLET` in fits.ts).
+//
+// MUTATION-VERIFIED, each applied alone:
+//   * `.tier-block`'s `grid-template-columns` set to `1fr` -> the two-up arm, ALONE;
+//   * `.tier-block .cm-row`'s `margin-bottom: 0` removed -> the gutter arm, ALONE;
+//   * `.cm-art` widened to 78px inside the tablet block -> the portrait arm AND round-18 #2's own
+//     two strip tests. ⭐ That third verdict is worth reading: those two tests take no viewport of
+//     their own, so they measure at happy-dom's DEFAULT 1024 – which is inside this band. The
+//     round-18 measurements have therefore been guarding the tablet since the day this ladder
+//     landed, and a widening here could never have been quiet.
+describe('round 36 phase 2 – the market is two to a row on a tablet, and the portrait is not wider', () => {
+  beforeEach(() => setActivePinia(createPinia()))
+  afterEach(() => setViewport(PHONE))
+
+  function marketAt(vp: typeof PHONE) {
+    setViewport(vp)
+    useGameStore().snapshot = careerSnapshot('middle')
+    return mount(CoachMarketScreen, { global: { stubs: { teleport: true } }, attachTo: document.body })
+  }
+
+  async function coachesAt(vp: typeof PHONE) {
+    const wrapper = marketAt(vp)
+    const pill = wrapper.findAll('.tb-seg .tab-pill').find((b) => b.text() === 'Coaches')
+    await pill!.trigger('click')
+    await nextTick()
+    return wrapper
+  }
+
+  it('⭐ a tier lays its coaches in two columns, and the heading spans them both', async () => {
+    assertSheetPresent()
+    const wrapper = await coachesAt(TABLET)
+    const tier = wrapper.find('.tier-block')
+    expect(tier.exists(), 'the market drew a tier, or this measures nothing').toBe(true)
+    const block = getComputedStyle(tier.element)
+    expect(block.display, 'a tier is a grid on a tablet').toBe('grid')
+    expect(block.gridTemplateColumns.replace(/\s+/g, ' '), 'two equal columns').toBe(
+      'repeat(2, minmax(0, 1fr))',
+    )
+    // The tier's own heading is the row above the pair, never a cell beside a coach.
+    expect(
+      getComputedStyle(tier.find('.tier-head').element).gridColumn.replace(/\s+/g, ''),
+      'the tier heading spans the row',
+    ).toBe('1/-1')
+    // ⚠ AND THE ROWS GIVE UP THEIR OWN MARGIN, or the grid's 8px gap and an 8px margin come to 16
+    // between the lines and 8 between the columns – a grid that is visibly not a grid.
+    const row = tier.find('.cm-row')
+    expect(row.exists(), 'the tier drew a coach').toBe(true)
+    expect(px(getComputedStyle(row.element).marginBottom, 'the row keeps a margin under the grid')).toBe(0)
+    wrapper.unmount()
+  })
+
+  it('⚠ …and the portrait strip is the phone\'s 62px, because «если влезает» is not met', async () => {
+    assertSheetPresent()
+    const wrapper = await coachesAt(TABLET)
+    // The ordinary card. `.cm-row.current` is the ONE row allowed a wider strip (78px) and that is
+    // `coach-match-edge.md` §4's anti-shopping rule, not a width decision – so it is excluded here
+    // and the rule that reserves it is left exactly as it was.
+    const ordinary = wrapper.findAll('.cm-row').filter((r) => !r.classes().includes('current'))
+    expect(ordinary.length, 'the fixture has hireable cards').toBeGreaterThan(0)
+    for (const row of ordinary) {
+      const art = row.find('.cm-art')
+      expect(art.exists(), 'every card draws a portrait').toBe(true)
+      expect(px(getComputedStyle(art.element).width, 'the strip at 768'), 'the tablet strip is the phone strip').toBe(62)
+      // ...and the 12px of air past it, which is the pair round-18 #2 tied together: move one, move
+      // the other. This is that pair, asked again at a width it had never been asked at.
+      const gap = px(getComputedStyle(row.find('.cm-body').element).marginLeft, 'the text inset at 768') - 62
+      expect(gap, 'the text still clears the portrait by 10-15px').toBeGreaterThanOrEqual(10)
+      expect(gap, 'and not by more').toBeLessThanOrEqual(15)
+    }
+    wrapper.unmount()
+  })
+
+  it('⚠ and the phone is untouched – one card per row, same strip', async () => {
+    assertSheetPresent()
+    const wrapper = await coachesAt(PHONE)
+    const tier = wrapper.find('.tier-block')
+    const block = getComputedStyle(tier.element)
+    expect(block.display === '' || block.display === 'block', 'a phone tier is not a grid').toBe(true)
+    const row = tier.find('.cm-row')
+    expect(px(getComputedStyle(row.element).marginBottom, 'the phone row stacks on its margin')).toBe(8)
     wrapper.unmount()
   })
 })

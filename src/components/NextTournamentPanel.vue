@@ -387,11 +387,21 @@ const courtRead = computed(() => {
    one, which is the frame he asked to lose coming back in miniature. Home's hero and Kid's carry no
    radius either. And the padding is `--app-pad-x` rather than 14px, so the title, the read and the
    three readings laid ON the photograph line up with the icon row and the plate BELOW it instead of
-   sitting 2px inside them. */
+   sitting 2px inside them.
+
+   ⭐⭐ ROUND 36 PHASE 2 – AND IT FOLLOWS HOME ONTO THE TABLET, BY THE TOKEN RATHER THAN BY A SECOND
+   COPY OF THE NUMBER. The owner, on frame AF: the tournament image takes the same proportion as the
+   home hero. Round 30 #6 already said «по примеру главной» about the square, so the two shapes have
+   agreed since this panel shipped – they simply agreed by both spelling `1 / 1`. `--hero-aspect`
+   (src/style.css) is that agreement made mechanical: one ladder, two consumers, and the day one of
+   them should stop following the other, that is a rule someone writes ON PURPOSE.
+   ⚠ THE SQUARE-AS-A-FLOOR ARGUMENT BELOW IS UNCHANGED and matters more on a tablet, not less: a
+   wider box is a SHORTER box, so the three-line read plus a coach's caution has less room before it
+   pushes the picture down. It still pushes rather than clips, which is the whole of that ruling. */
 .nt-hero {
   position: relative;
   margin: 0 calc(-1 * var(--app-pad-x));
-  aspect-ratio: 1 / 1;
+  aspect-ratio: var(--hero-aspect);
   display: flex;
   flex-direction: column;
   justify-content: space-between;

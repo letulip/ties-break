@@ -1016,6 +1016,26 @@ const practiceWeekLabel = computed(() => weekLabel(week.value))
   overflow: hidden;
 }
 
+/* ⚠⚠ ROUND 36 PHASE 2 – AND THE `max-height` ABOVE WAS TAKING THE WIDTH DOWN WITH IT. Measured on
+   the shipped build, this box is 343x251 at 375 and then 390x286 at EVERY width above it: 520, 576,
+   768, 900, 1280. The cap was written for exactly the case it broke - «capped at D's number so a
+   tablet does not turn the story into a poster» - but a block with `aspect-ratio` and a violated
+   `max-height` has its width transferred back down the ratio, so the picture stopped growing at
+   390px while the paper note that RIDES it kept spanning the column. At 768 that is a 390px
+   photograph under a 736px note, which is not a proportion anyone chose.
+   ⭐ `width: 100%` is the author's own intent said in the axis that was missing: the column decides
+   the width, `max-height` still decides the height, and the story is a 736x286 band instead of a
+   poster - the shape that paragraph is describing.
+   ⚠ IT IS INSIDE THE TABLET BLOCK AND THE 520/576 CASE IS DELIBERATELY LEFT ALONE. Phase 2's
+   contract (docs/specs/responsive-2026-09.md) is that nothing below 768 may move, and those two
+   widths are below it. The same collapse is there and is a phase-4 or an owner call, recorded in
+   docs/rounds/round-36.md rather than quietly fixed on the way past. */
+@media (min-width: 768px) {
+  .recap-art {
+    width: 100%;
+  }
+}
+
 /* ⭐ ROUND-17 #26 – the vacation weeks, and only those. Scoped, so it beats the shared
    `.week-art img` rule in style.css without either of them having to know about the other. */
 .recap-art-vacation img {

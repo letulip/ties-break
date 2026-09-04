@@ -453,7 +453,13 @@ const spendRange = computed<[number, number]>(() => {
   transform: translateX(-50%);
   bottom: 58px;
   width: 100%;
-  max-width: 520px;
+  /* ⚠ ROUND 36 PHASE 2 – see `.cal-go` in CalendarScreen.vue and the shell's own week button in
+     src/style.css: three copies of one floating-CTA box, and phase 1 moved only the one that lives
+     in the sheet. The button is centred, so the token changes nothing on screen at any width; it
+     stops this box from being a 520px island under a 736px column.
+     ⚠ The shell's rule is not named by its class here on purpose - tests/round13-nav.test.ts reads
+     this file as text and refuses that name in a tab screen, comments included. See CalendarScreen. */
+  max-width: var(--app-bar-max);
   display: flex;
   justify-content: center;
   padding: 0 16px;

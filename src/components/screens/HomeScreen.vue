@@ -1671,8 +1671,18 @@ async function leaveCollege(): Promise<void> {
      min(52vh, 420px), which cropped a slice off every painting for no reason anyone asked for. The
      export's own hero is 398px on a 390px device, i.e. square to within a rounding error.
      `max-height` keeps a tablet from turning it into a poster; `cover` + the face steering below
-     are still there for the one master that is 458x512 rather than square. */
-  aspect-ratio: 1 / 1;
+     are still there for the one master that is 458x512 rather than square.
+
+     ⭐⭐ ROUND 36 PHASE 2 – AND ON A TABLET IT IS NOT SQUARE ANY MORE, at the owner's own ruling:
+     «планшеты - это по сути широкий телефон, hero image на home будет НЕ квадратной, но все оверлеи
+     с текстом остаются как у нас.» A3's square is still what this token spells below 768; the ladder
+     beside `--hero-aspect` in src/style.css carries the tablet shape, and the tournament preview's
+     `.nt-hero` reads the SAME token because he asked for the same proportion there.
+     ⚠ AND THE SECOND HALF OF HIS SENTENCE IS FREE HERE, WHICH IS WHY THIS IS ONE LINE. Every text
+     overlay on this photograph is `position: absolute` against this box – `.diary-head` and
+     `.diary-id` off its top, `.diary-state` off its bottom – so a shorter hero moves none of them
+     relative to the picture they are laid on. Nothing below is touched. */
+  aspect-ratio: var(--hero-aspect);
   max-height: 60vh;
   overflow: hidden;
 }
