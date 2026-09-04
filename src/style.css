@@ -673,6 +673,52 @@ body {
   padding: var(--app-pad-top) var(--app-pad-x) var(--app-pad-bottom);
 }
 
+/* ⭐⭐⭐ ROUND 36 REVIEW #18 – «кнопок в 700 пикселей не должно быть, максимум 500 пожалуйста с
+   выравниванием по центру». HIS ANSWER TO D20 AND D32, WHICH BOTH PARKED THIS FOR HIM.
+
+   ⚠⚠ IT IS A RULE ABOUT THE APP'S CTA PILL AND NOT ABOUT EVERY `button`, and that distinction is the
+   whole of D32's census. Two things were over 700px at 1280 and only ONE of them is a button in the
+   sense he means:
+
+     `.money-cta` – «View all transactions»   738px, a `PrimaryPill variant="cta"` – CAPPED HERE
+     `.cal-marker` – a week's note              948px, three of them – LEFT, and see below
+
+   The marker is a LIST ROW. A week's note with a `$` at its end is the same shape as a ledger row, a
+   kit rung or a shelf row, and a list row is the width of its list everywhere in this app; a row as
+   wide as its column is not a stretched control, while a pill as wide as its page is. That was D32's
+   argument for leaving it and he has not contradicted it – he said «кнопок». Named rather than
+   quietly swept in, so the next census does not re-open it.
+
+   ⚠ THE CAP IS THE CLASS AND NOT THE SCREEN, which is what makes it hold everywhere he asked. Every
+   affirmative CTA in the app is `PrimaryPill variant="cta"`, so this reaches the Family Budget's
+   pill without editing MoneyScreen.vue, and reaches the next one before it is written.
+
+   ⚠ AND IT STARTS AT 768, WHICH IS «EVERYWHERE» IN PRACTICE AND KEEPS THE PHONE BYTE-IDENTICAL.
+   Below 768 the reading column is `--app-col-max` (520) less two 16px gutters = 488px, so no control
+   inside the app can reach 500 anyway; the only boxes that could are full-screen takeovers on a
+   560–767px window, and this round's contract is that not one box moves below 768. Censused at 375
+   and 576 before the rule was written: zero controls over 500 at either.
+
+   ⚠ `display: block` IS WHAT MAKES «ПО ЦЕНТРУ» WORK. A `<button>` is inline-level, so auto inline
+   margins do not centre one; the UA's own `text-align: center` on a button keeps the label where it
+   is. Scoped to `#app` because that is where a CTA is a full-width block – inside a takeover a CTA
+   sits in a row its own screen laid out, and blockifying it there would move something he has not
+   asked to move. The cap itself is unscoped, so a takeover's CTA is bounded either way. */
+@media (min-width: 768px) {
+  .tb-pill--cta {
+    max-width: 500px;
+  }
+
+  #app .tb-pill--cta {
+    display: block;
+    /* ⚠ THE TWO LONGHANDS AND NOT `margin-inline`, so the centring is READABLE by the mounted layer
+       as well as by a browser: happy-dom does not expand the logical shorthand, and a rule no test
+       can see is a rule the next wave can delete. The app has no RTL. */
+    margin-left: auto;
+    margin-right: auto;
+  }
+}
+
 /* ⭐⭐⭐ ROUND 36 PHASE 3 – THE DESKTOP SHELL. The owner, on his frames AC–AQ:
    «Рельса слева, на всю высоту, скроллится при переполнении, одинаковая на каждой странице.»
 
@@ -771,6 +817,24 @@ body {
     border-radius: var(--radius-frame);
   }
 
+  /* ⭐⭐⭐ ROUND 36 REVIEW #8 – «Home в боковом меню на первом месте сверху поставь пожалуйста».
+     ONE DECLARATION, AND IT IS `order` RATHER THAN A DIFFERENT ARRAY, for a reason that is the whole
+     of the round's identity contract. `TABS` (App.vue) is the BOTTOM BAR's order and Home's centring
+     is EMERGENT from it – «five slots, Home third», pinned by `ids[floor(len / 2)] === 'home'` in
+     tests/round13-nav.test.ts – so re-cutting the array to satisfy a desktop rail would move the
+     phone's own navigation, which nothing in this round may do. The rail is a flex column; `order`
+     moves the box and touches no other width.
+     ⚠ THE SELECTOR IS AN ATTRIBUTE THE BUTTON ALREADY CARRIES. `data-tour="tab-home"` has been on
+     this button since the coach-mark tour; a `:nth-child(3)` would say «the third one» and go
+     silently wrong the day the array is re-cut for some other reason, which is exactly the failure
+     an emergent centring already had once.
+     ⚠ AND THE COST IS NAMED: the rail's VISUAL order now leads with Home while its FOCUS order is
+     still the document's, so Tab reaches Season first. Recorded as a decision row rather than
+     hidden – the alternative moves the phone. */
+  #app:has(> nav.tab-bar) > nav.tab-bar .tab-btn[data-tour='tab-home'] {
+    order: -1;
+  }
+
   /* The active tab is a tinted panel rather than only a colour, which is what tells a rail's reader
      where they are without the bottom bar's underline of five equal cells. `--accent-wash` is the
      app's own «this one is selected» fill; no new token, no new colour. */
@@ -812,15 +876,62 @@ body {
   display: none;
 }
 
+/* ⭐⭐⭐ ROUND 36 REVIEW #3 – THE RAIL'S IDENTITY BLOCK: her face and her rank, above every menu item.
+   «Аватар и ранг тоже уезжают с картинки, но в левый верхний угол в меню над всеми пунктами».
+   The slot is App.vue's and is empty; HomeScreen teleports the two controls into it (see both files
+   for why the arithmetic stays on Home). Desktop-only by the same one declaration the dashboard uses
+   – `display: none`, never a `v-if` on a media query – so a phone is byte-for-box unchanged and the
+   bottom bar never grows a face. */
+.rail-id {
+  display: none;
+}
+
 @media (min-width: 1024px) {
+  /* ⭐⭐ REVIEW #3 – ABOVE ALL THE MENU ITEMS, and `order: -2` is what says «над всеми пунктами» once
+     rather than depending on where the slot happens to sit in the markup. It has to beat the Home
+     tab's own `order: -1` (review #8), which is why it is -2 and not -1. */
+  #app:has(> nav.tab-bar) > nav.tab-bar > .rail-id {
+    display: flex;
+    order: -2;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 9px;
+    padding: 2px 12px 18px;
+  }
+
+  /* Her face is chrome on a 375px photograph and a portrait at the head of a 196px rail, so it takes
+     the room the rail has. Same button, same lime ring, same halo, same door – only the size. */
+  #app:has(> nav.tab-bar) > nav.tab-bar > .rail-id .diary-avatar-btn,
+  #app:has(> nav.tab-bar) > nav.tab-bar > .rail-id .diary-avatar {
+    width: 46px;
+    height: 46px;
+  }
+
+  /* The callout hangs under the face on the phone (`position: absolute` against the hero) and hangs
+     under it here too – as a block in the rail's own column, because there is no hero to hang off.
+     Same tokens, same arrow suppressed: an arrow drawn against a photograph has nothing to point at
+     in a strip that is already directly under the thing it explains. */
+  #app:has(> nav.tab-bar) > nav.tab-bar > .rail-id .diary-kid-hint {
+    position: static;
+    text-align: left;
+    line-height: 1.3;
+  }
+
+  #app:has(> nav.tab-bar) > nav.tab-bar > .rail-id .diary-kid-hint::before {
+    display: none;
+  }
+
   #app:has(> nav.tab-bar) > nav.tab-bar > .rail-dash {
     display: flex;
     flex-direction: column;
     gap: 8px;
-    /* The tabs keep the top of the strip; the cards take the room underneath. `auto` and not a fixed
-       inset, because the rail scrolls itself when the two together outgrow the window – which is
-       exactly what «скроллится при переполнении» already asked of it. */
-    margin-top: auto;
+    /* ⭐⭐⭐ ROUND 36 REVIEW #9 – «Плитки дашборда живут прибитые к меню выше». They were pushed to
+       the FOOT of the rail by `margin-top: auto`, which is what phase 6 read AC as drawing; he has
+       looked at it and wants them under the last tab instead. The `auto` is gone and the 20px
+       breathing space stays, so the set now hangs off the navigation rather than off the window's
+       bottom edge – and the rail's own `overflow-y: auto` still carries the overflow case
+       («скроллится при переполнении»), which is why nothing else here changes. */
+    margin-top: 0;
     padding-top: 20px;
   }
 
@@ -842,6 +953,13 @@ body {
     letter-spacing: -0.02em;
     color: var(--ink);
     font-variant-numeric: tabular-nums;
+  }
+
+  /* ⚠ REVIEW #9 – the cap's dot leads its own LINE here, where on the market it follows the
+     committed figure on one. Its 10px separator is what puts them apart in a row; in a column it is
+     an indent. One declaration, and the market's rule is untouched. */
+  #app:has(> nav.tab-bar) > nav.tab-bar > .rail-dash .legend-dot.cap {
+    margin-left: 0;
   }
 
   /* An entry is a line of reading rather than a figure, so it takes the app's reading size and its
