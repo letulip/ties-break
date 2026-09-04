@@ -117,12 +117,26 @@ describe('press-and-hold on a control is a tap, not a selection', () => {
 
 
   it('⚠⚠ ...and PROSE STAYS SELECTABLE – the blanket version of this rule is the wrong one', () => {
-    const css = read('src/style.css')
-    // A `user-select: none` whose block is `body`, `html` or `*` would take the whole app with it,
-    // and a player who wants to copy a figure out of his own game should be able to.
-    for (const block of blocksWith(css, /(^|[\s;{])user-select:\s*none/)) {
-      const before = css.slice(0, css.indexOf(block)).split('\n').slice(-20).join('\n')
-      expect(before, 'a blanket selector claims the whole document').not.toMatch(/(^|\n)\s*(body|html|\*)\s*,?\s*$/)
+    // ⚠ REWRITTEN AFTER `pins:check` REFUSED THE FIRST DRAFT, AND THE RATCHET WAS RIGHT. It read
+    // `css.slice(0, css.indexOf(block))` to look at the selectors above a rule – a raw `indexOf`,
+    // which returns -1 when its needle rots and silently WIDENS the slice to most of the file
+    // instead of failing. ⭐ CLAUDE.md has forbidden that shape since 176 of them were migrated on
+    // 24.08, two of which had been lying for months. The rule caught its author.
+    //
+    // The selectors now come out of the SAME match that finds the block, so there is no offset
+    // arithmetic to rot: a `user-select: none` whose selector list is `body`, `html` or `*` would
+    // take the whole app with it, and a player who wants to copy a figure out of his own game
+    // should be able to.
+    const css = withoutComments(read('src/style.css'))
+    const rules = /(?<selectors>[^{}]+)\{(?<body>[^{}]*)\}/g
+    let checked = 0
+    for (const m of css.matchAll(rules)) {
+      if (!/(^|[\s;{])user-select:\s*none/.test(m.groups!.body)) continue
+      checked += 1
+      expect(m.groups!.selectors.trim(), 'a blanket selector claims the whole document')
+        .not.toMatch(/(^|,)\s*(body|html|\*)\s*(,|$)/)
     }
+    // ⚠ ...and the sweep looked at something: an empty loop asserts nothing.
+    expect(checked, 'rules that disable selection').toBeGreaterThan(0)
   })
 })
