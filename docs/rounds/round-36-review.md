@@ -22,7 +22,7 @@ answered «does the column grow», and his answer is «neither: change the shape
 
 ## The prologue
 
-- [ ] **1. «D28 — пролог - так не пойдет, давай делать примерно как у нас home сделан, надо чтобы
+- [x] **1. «D28 — пролог - так не пойдет, давай делать примерно как у нас home сделан, надо чтобы
   картинку было видно хорошо, скролла не будет, а текст будет либо ниже и шире (планшет), либо
   сбоку, ниже и шире (десктоп)»** – **build, and it overrules D28.**
   ⭐ The round's measurement stands and is not contradicted: a wider column IS a taller picture, and
@@ -30,26 +30,128 @@ answered «does the column grow», and his answer is «neither: change the shape
   column's width.** Home's own hero is the model: a picture with a shape of its own, text beneath it.
   ⚠ «скролла не будет» is the acceptance test: the card must fit the viewport at 768 and at 1280.
 
+  ⭐⭐⭐ **BUILT, AND IT OVERRULES D28 – `D73`.** The picture stops being the column's width, which is
+  Home's own model and the one he named. **768–1023:** a centred square at `min(336px, 33vh)`, the
+  text under it in a 640px column, the answers two to a row. **From 1024:** a two-column grid over
+  the card's own children – the painting in column 1, the reading beside it, the question and the
+  answers under both at the full width. Nothing below 768 moves; the phone card is byte-for-box what
+  it was.
+
+  ⚠ **«СКРОЛЛА НЕ БУДЕТ» IS THE ACCEPTANCE TEST AND HERE IS THE NUMBER.** Card `scrollHeight` against
+  the window, in a real Chromium, all nine cards, before and after:
+
+  | window | before | after |
+  | --- | --- | --- |
+  | **768 x 1024** | age-5 over by **132** | **0 over, on every card walked** |
+  | **768 x 900** | age-5 **256**, age-11 **111** | **0 over, on every card walked** |
+  | 900 x 900 | age-5 256, age-11 111 | 0 over, on every card walked |
+  | **1280 x 900** | age-5 **256**, age-11 **111** | **0 over, on every card walked** |
+  | 1280 x 800 | age-5 356, ages 8, 9 and 11 over | 0 over, on every card walked |
+  | 375 x 812 | (his phone – unchanged) | unchanged, to the pixel |
+
+  ⚠ **«Every card walked» is ages 5 to 11**, and the walk stops in the same place in BOTH arms – the
+  eleventh carries two questions and this harness cannot answer past it, so ages 12 and 13 are
+  covered by the mounted walk at the phone only. The two it misses are not the risky ones: the walk
+  includes the **tallest** card in the set (age 5, the identity form) and the one with the **most
+  controls** (age 11 – four answers plus the way on, 716px of a 900px window after this).
+
+  ⭐ **The tallest card is the one that carries the identity form**, and it is the honest answer to
+  «which card cannot fit»: it was **1156px in a 420 column**; it is **935px at 768x1024** and
+  **634px at 1280x900**. Nothing was shrunk to get there – the type, the fields and the answers are
+  the ones that shipped.
+  ⚠ **One number is a compromise and is named in D73:** the picture is capped by the window's height
+  as well as by 336px (`33vh`), so it is **336 square on an iPad and 297 on a 900px window**. A
+  bigger picture with a short scroll on one card at one window height is one number.
+
 ## Home, desktop and tablet
 
-- [ ] **2. «колокольчик, письмо и шестеренка настроек живут на десктоп в правом верхнем углу вне
+- [x] **2. «колокольчик, письмо и шестеренка настроек живут на десктоп в правом верхнем углу вне
   картинки и доступно на всех экранах, кроме тех, что займут всё пространство (как матч,
   например)»** – ⚠ this reverses phase 3's **D14**, which left them on the photograph because moving
   them means re-parenting out of an `overflow:hidden` hero. That is the work, and it is now asked for.
-- [ ] **3. «Аватар и ранг тоже уезжают с картинки, но в левый верхний угол в меню над всеми
+
+  ⭐⭐ **BUILT ON HOME – `D74`.** The three icons are off the photograph and in the container's
+  top-right corner from 1024, in a 34px band the desktop grid opens above its two columns. It is a
+  SECOND COPY rather than a move, and that is measured rather than stylistic: `.diary-tools` is the
+  last child of `.diary-head` and the date beside it is `flex: 1`, so taking the icons out of that
+  row widens the date's box by 108px **at 375**. Two copies with one visible costs no box on the side
+  that is off – the identity census reports **0 moved / 0 new / 0 gone at 375, 520 and 576**.
+
+  ⚠ **THE SECOND HALF OF YOUR SENTENCE IS NOT BUILT, AND `D76` IS THE REASON.** «Доступно на всех
+  экранах» is not a layout job: the bell scrolls to `#diary-news`, an element that exists on Home and
+  nowhere else; the envelope opens a sheet Home mounts; and three controls appearing on nine screens
+  at 1280 and on none of them at 375 fail the parity harness **by name**. D76 says exactly what it
+  would take, so it is one word from you rather than a re-scope.
+
+- [x] **3. «Аватар и ранг тоже уезжают с картинки, но в левый верхний угол в меню над всеми
   пунктами»** – into the rail, above the navigation.
-- [ ] **4. «Next tournament — эта карточка менее высокая, чем family budget, т.к. на последней еще
+
+  ⭐⭐ **BUILT – `D75`.** Her face, her rank chip and the one-time callout that explains the face are
+  in the rail, above every menu item (`order: -2`, which has to beat item 8's `-1`). They are
+  `<Teleport>`ed out of Home rather than rebuilt in the shell: the rank chip is five derived facts
+  deep, and a shortcut that recomputes its own number is this repo's named recurring disease.
+  ⚠ **They are drawn while HOME is the screen**, because the block is Home's. Making them permanent
+  chrome on all ten screens is one line and it costs a **third parity exemption** that would take her
+  face and her rank out of the harness's reach everywhere – **your call, and D75 states the price.**
+
+- [x] **4. «Next tournament — эта карточка менее высокая, чем family budget, т.к. на последней еще
   график должен поместиться и ширина этих карточек в макете около 310 пикселей. картинку на Next
   tournament можно смело делать больше, чтобы пропорционально она была похожа на карточку на мобиле
   и занимала больше места (и на планшете)»**
-- [ ] **5. «Нижний блок карточек имеет свою сетку, они равны по ширине»**
-- [ ] **6. «На Recent memory фотокарточку больше размером сделай пожалуйста и сдвинь ее ближе к
+
+  ⭐⭐ **BUILT – `D77`, `D78`, `D79`.** The two desktop tracks are your own numbers now: **451 / 310 at
+  1024** and **512 / 425 at 1280**, against phase 3's 415 / 346. Next tournament takes the short
+  card's floor, so it is **171 against Family budget's 219 at 1024** and **198 against 246 at 1280** –
+  and the difference is structural, not a typed-in height: the hero spans both rows, so the gap
+  between them IS the gap between their floors. The venue painting is sized by the card's height at
+  the mobile card's own ratio: **112x136 on a phone, 171x208 at 768, 128x156 at 1024, 147x179 at
+  1280.**
+  ⚠ **The two halves of this item pull against each other on the desktop and D79 says so plainly:**
+  the picture grows with the card, and your own «менее высокая» makes this the shorter card. The
+  tablet lays the two side by side and can simply be taller, so that is where the painting grows
+  most.
+
+- [x] **5. «Нижний блок карточек имеет свою сетку, они равны по ширине»**
+
+  ⭐ **BUILT – `D80`.** A `display: contents` wrapper around the two, which is a grid of two equal
+  tracks spanning the page from 1024 and **no box at all** below it. Measured: **380.5 / 380.5 at
+  1024** and **468.5 / 468.5 at 1280**, against 415 / 346 and 511 / 426 before.
+
+- [x] **6. «На Recent memory фотокарточку больше размером сделай пожалуйста и сдвинь ее ближе к
   тексту и чуть дальше от края (и на планшете)»**
-- [ ] **7. «Сам шрифт на Recent memory и Coach note можно сделать крупнее (и на планшете)»**
-- [ ] **8. «Home в боковом меню на первом месте сверху поставь пожалуйста»**
-- [ ] **9. «Плитки дашборда живут прибитые к меню выше, Coaching budget несёт больше информации»**
+
+  ⭐ **BUILT – `D81`.** The photograph is **68 → 104px** wide and moves from **-4px (hanging off the
+  card) to 14px inside it**, which is both of your directions at once: further from the edge, and 36px
+  of extra width reaching back toward the words. Its tack moves with it. Measured at 768: the box
+  goes **75.78 → 111.51** wide.
+
+- [x] **7. «Сам шрифт на Recent memory и Coach note можно сделать крупнее (и на планшете)»**
+
+  ⭐ **BUILT – `D81`.** Four sizes, one rung up each, in the families they were already set in:
+  `.coach-line` **12 → 14**, `.coach-sign` **17 → 19**, `.memory-line` **17 → 20**, `.memory-when`
+  **12.5 → 14**. Nothing changed family – Caveat is still Caveat and Manrope still Manrope – and the
+  phone keeps all four.
+
+- [x] **8. «Home в боковом меню на первом месте сверху поставь пожалуйста»**
+
+  ⭐ **BUILT – `D82`.** One declaration, `order: -1` on the Home tab inside the rail's own block. The
+  `TABS` array is untouched, because the phone's bar centres Home by having five slots with Home
+  third and re-cutting it would move the phone.
+  ⚠ **The cost is named rather than hidden:** the rail's visual order leads with Home while Tab still
+  reaches Season first.
+
+- [x] **9. «Плитки дашборда живут прибитые к меню выше, Coaching budget несёт больше информации»**
   ⚠ «больше информации» is not specified – the coach-market meter has four figures and the card shows
   one. **Ask which, or show the meter's own set and let him cut it.**
+
+  ⭐⭐ **BUILT – `D83`.** The tiles hang off the navigation now (`margin-top: auto` → `0`).
+
+  ⭐⭐⭐ **AND «БОЛЬШЕ ИНФОРМАЦИИ» WAS READ AS THE METER'S OWN SET – CUT WHAT YOU DO NOT WANT.**
+  `useCoachingBudget()` holds four things and this card printed one; the Coach Market's meter prints
+  all four, so the rail card now prints all four in the meter's own order: **the fill bar, the free
+  figure (unchanged), «$x committed» and «$y weekly cap»**. Not one number is derived here – same
+  composable, same call – and **not one word is new**: both legend words are the market's own, and the
+  bar reuses the market's own rules. Each of the three additions is one line to remove.
 
 ## The shop
 
@@ -568,6 +670,128 @@ the last control now and names it in the assertion, and **M8b reddens**.
 
 ## Everything
 
-- [ ] **18. «кнопок в 700 пикселей не должно быть, максимум 500 пожалуйста с выравниванием по
+- [x] **18. «кнопок в 700 пикселей не должно быть, максимум 500 пожалуйста с выравниванием по
   центру»** – ⚙ **this answers D20 and D32**, which parked the two controls over 700px for him.
   The census found exactly two at 1280: `View all transactions` at 793 and `.cal-marker` at 948.
+
+  ⭐⭐ **BUILT – `D84`.** `.tb-pill--cta` – which is every affirmative CTA in the app – stops at
+  **500px** from 768 and centres itself inside the frame. Measured on the Family Budget: «View all
+  transactions» **526 → 500 and centred at 768**, **738 → 500 at 1280**.
+
+  ⚠⚠ **AND THE CENSUS WAS RE-RUN AT FOUR WIDTHS RATHER THAN ONE, WHICH FOUND A CONTROL D32 COULD NOT
+  SEE.** Every button, input and select on the twelve walked surfaces, after the cap:
+
+  | width | over 500px | what it is |
+  | --- | --- | --- |
+  | **375** | – | **nothing at all**, which is why the rule starts at 768 and the phone cannot move |
+  | 576 | `.cal-marker` 520 ×3, `.cm-row` 520 ×14 | list rows, below 768 |
+  | **768** | `.cal-marker` 736 ×3, **`.news-match-btn` 706 ×9** | list rows |
+  | **900** | `.cal-marker` 868 ×3, **`.news-match-btn` 838 ×9** | list rows |
+  | 1280 | `.cal-marker` 948 ×3 | list rows |
+
+  ⭐ **`.news-match-btn` is new information:** D32's census was taken at 1280 only, and this control is
+  only wide in the tablet band (on the desktop Home the news feed is a 425px column). It is a
+  `<button>` inside a `<td>` of the news table. **All three families are LEFT, on D32's own argument
+  that you did not contradict** – a row as wide as its list is not a stretched control, and you said
+  «кнопок». If you mean these too, it is one more rule and it is a restyle of three list families.
+
+
+---
+
+## The evidence for items 1–9 and 18
+
+### `[x]` THE IDENTITY PROOF, RE-RUN – 0 MOVED AND 0 NEW BELOW 768, AND EVERY DIFFERENCE ABOVE IT DECOMPOSED
+
+Arm A is **these ten files' own HEAD** – the five source files this wave touched, restored in this
+same tree with `git show HEAD:<path>` and put back afterwards with a verified `shasum`, so the other
+agents' in-flight work sits in BOTH arms and cancels (CLAUDE.md: the control is your change reverted,
+never the previous commit). Both arms walked the ten tab screens at 375 / 520 / 576 / 768 / 900 /
+1024 / 1280, one fresh career per width, every element that renders censused as tag + class +
+occurrence + box to 2dp.
+
+| width | boxes A→B | **moved** | **new** | **gone** | pixels |
+| --- | --- | --- | --- | --- | --- |
+| **375** | 2182 → 2182 | **0** | **0** | **0** | **0** |
+| **520** | 2182 → 2182 | **0** | **0** | **0** | **0** |
+| **576** | 2182 → 2182 | **0** | **0** | **0** | **0** |
+| 768 | 2205 → 2205 | 197 | 0 | 0 | 11,384 |
+| 900 | 2205 → 2205 | 197 | 0 | 0 | 11,655 |
+| 1024 | 2274 → 2345 | 465 | 75 | 4 | 69,313 |
+| 1280 | 2274 → 2345 | 465 | 75 | 4 | 58,635 |
+
+⭐ **NOTHING MOVES BELOW 768, WHICH IS THE ROUND'S CONTRACT.** Above it, every difference is an item:
+
+* **768 / 900 – Home only, 196 boxes, and one box on Money.** Home's is items 4, 6 and 7 (the two top
+  cards take a 250px floor so the venue painting can grow, and four type sizes go up a rung). Money's
+  single box is item 18: «View all transactions» **526 → 500 and centred**. **No other screen moves at
+  all.**
+* **1024 / 1280 – Home 266 moved, 12 new, 4 gone.** The four GONE are `button.diary-avatar-btn`,
+  `div.diary-tools`, `button.diary-kid-hint` and `button.diary-rank` – the hero's copies standing
+  down – and each is matched one-for-one by its replacement in the twelve NEW
+  (`div.diary-tools diary-tools-page`, `div.rail-id`, and the three teleported controls), plus
+  `div.card-pair` and the six nodes of item 9's fuller card. **A move, not a loss** – the census keys
+  on the class string, so a control that changes parent reads as one of each.
+* **1024 / 1280 – every other screen: 22 moved, 7 new, 0 gone**, and it is the same seven everywhere:
+  `div.rail-id` (item 3) and the Coaching-budget card's bar and two legend lines (item 9). The 22 are
+  the five tabs and their glyphs shifting down 66px, because the identity block took the top of the
+  rail.
+
+#### ⭐⭐ AND THE ZEROS ARE A MEASUREMENT, NOT A BLIND INSTRUMENT
+
+The same census, same career, same run, with **only** `.memory-polaroid { right: -4px }` – a PHONE
+rule – changed to `-14px`:
+
+| width | boxes moved | pixels |
+| --- | --- | --- |
+| **375** | **2** | **20** |
+| **520** | **2** | **20** |
+| **576** | **2** | **20** |
+
+– so the instrument is demonstrably sensitive at exactly the three widths where it reports nothing.
+
+### `[x]` PARITY – GREEN AT 375 / 768 / 900 / 1280, AND THE HARNESS STILL CATCHES A LOST CONTROL
+
+`e2e/parity.spec.ts`: **15 passed**, exit code read out of the log file and not out of a pipe.
+No exemption was added: items 2 and 3 draw two copies of each control with exactly one visible, so
+the fingerprint at 1280 is the fingerprint at 375, name for name.
+
+⭐⭐ **THE DELIBERATE BREAK, AND IT IS AIMED AT THE MOVE ITSELF.** With the page copy's last icon
+hidden at 1024 – i.e. the gear lost in the re-parenting D74 performs – the walk reddens **by name**:
+
+    HomeScreen.vue: these are on the phone at 375px and NOT at 1280px.
+    +   "button \"Settings\""
+
+**That is the proof the move did not cost the harness its grip on the three controls it moved.**
+
+### `[x]` THE MOUNTED GUARDS, AND EVERY ONE OF THEM SEEN TO BITE
+
+`tests/component/round36-review-home.test.ts` – 23 arms over items 1–9 and 18. Ten mutations, each
+applied alone, run, and reverted by copying the pristine file back and re-checking its `shasum`
+(never `git checkout -- <file>`):
+
+| # | the mutation | what reddened |
+| --- | --- | --- |
+| **A** | `.card-pair` generates a box on a phone | #5's phone arm: «the wrapper generates a box on a phone: expected 'block' to be 'contents'» |
+| **B** | Next tournament's floor goes back to 186 | #4: «the tournament card did not come down: expected '186px' to be '138px'» |
+| **C** | the `<Teleport>` is disabled | #3: «her face did not travel: expected null to be truthy» |
+| **D** | the hero keeps its icon row past 1024 | #2: «the icons are still on the photograph: expected 'flex' to be 'none'» |
+| **E** | his cap becomes the 700 he rejected | #18: «his cap is not on: expected '700px' to be '500px'» |
+| **F** | the dashboard slides back to the rail's foot | #9: «the cards are still pushed to the foot: expected 'auto' to be '0px'» |
+| **G** | the memory photograph stops growing | #6: «the photograph did not grow: expected 68 to be greater than 68» |
+| **H** | Coaching budget loses one new figure | #9: «the card gained no legend at all: expected 1 to be 2» |
+| **I** | Home stops leading the rail | #8: «Home is not first on the rail: expected '' to be '-1'» |
+| **J** | the prologue's column stops widening | #1: «the column did not widen for the words: expected '420px' to be '640px'» |
+
+⚠⚠ **AND ONE GUARD THAT DOES NOT BITE, NAMED RATHER THAN LEFT LOOKING GREEN.** The prologue picture's
+own SIZE is `min(var(--plo-art), 33vh)`, and **happy-dom drops a declaration whose value it cannot
+parse** – measured: `width` computes to the phone's `calc(100% + 32px)` while every other declaration
+in the same rule lands. So the mounted arm proves the FULL-BLEED IS GONE (centred, with the card's
+own corner) and the size itself is measured in a real Chromium instead, in item 1's table above. A
+test that cannot see a rule is not a test of that rule, and saying so is cheaper than a green tick
+that means nothing.
+
+⚠ **A second happy-dom trap this wave paid for and wrote down:** at EQUAL specificity happy-dom keeps
+the FIRST matching rule where a browser keeps the last, so every media-query override in
+`PrologueCard.vue` is parented or doubled. Without that the tablet and desktop blocks work in
+Chromium and are invisible to every mounted test – which is exactly how a rule ships with a guard
+that could never have failed.
