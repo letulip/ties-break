@@ -974,6 +974,33 @@ td.num {
    What this costs: --radius-control now has no button tenant. It stays on the ladder because two
    non-button consumers still sit on it (an input, a news item's left cap) and 8px is a real rung.
    ============================================================================================= */
+/* PRESS-AND-HOLD IS A TAP, NOT A TEXT SELECTION (owner, 04.09).
+
+   WHAT HE WAS SEEING, because the symptom did not look like this: some taps on a control or a menu
+   item did nothing and then turned into a text selection. A press-and-hold starts a selection
+   gesture; the browser resolves the whole interaction AS a selection and the click never fires. So
+   this is not cosmetic - it is the reason a tap was being lost.
+
+   AND IT IS DELIBERATELY NARROW. Only things a finger PRESSES are listed. Prose is untouched -
+   every figure, sentence, name and price on every screen stays selectable, because a player who
+   wants to copy a number out of his own game should be able to. A blanket rule on `body` is the
+   easy version of this and it is the wrong one. */
+button,
+[role='button'],
+[role='tab'],
+[role='radio'],
+[role='switch'],
+summary,
+label,
+.tab-pill,
+.nav-item {
+  user-select: none;
+  -webkit-user-select: none;
+  /* ...and the 300 ms tap delay with it: `manipulation` keeps panning and pinch-zoom and drops
+     double-tap-to-zoom, the gesture that makes a first tap feel like it did nothing. */
+  touch-action: manipulation;
+}
+
 button {
   background: transparent;
   border: var(--stroke-hair) solid var(--line);
@@ -3171,6 +3198,9 @@ tr.kid-row td {
 
 .guide-table-wrap {
   overflow-x: auto;
+  /* ⚠ THE SCROLL CHAIN, added 04.09 – see `.week-stack.swipeable` in SeasonScreen for the story.
+     Reaching this table's end used to drag the page behind it. */
+  overscroll-behavior-x: contain;
 }
 
 /* Owner, 29.07: "вертикальные отступы великоваты, можно в 2 раза меньше". Halved here and here

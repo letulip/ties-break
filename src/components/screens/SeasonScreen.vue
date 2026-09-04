@@ -2251,6 +2251,22 @@ function closeExhibition(): void {
   gap: 12px;
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
+  /* ⚠⚠ `pan-y`, AND THE ROUTE TO IT IS WORTH KEEPING – TWO WRONG ANSWERS CAME FIRST.
+     Round 34 shipped this strip with NO `touch-action` at all, and `scroll-snap-type: x mandatory`
+     made the browser commit hard to the horizontal axis: the owner felt a scroll that stuck and
+     taps that turned into text selections within a day of the merge.
+     The hotfix reached for `pan-x`, and that was wrong in the other direction – it does not mean
+     «takes horizontal, passes vertical through», it means this box handles ONLY horizontal panning,
+     so a vertical gesture beginning here stopped reaching the page and a run of multi-card weeks
+     froze it entirely. `pan-x pan-y` corrected that on main.
+     ⭐ And phase 5 makes even that obsolete: the CSS swipe is GONE and `composables/weekPager.ts`
+     drives `scrollLeft` itself, so the horizontal axis is ours and only the vertical one is the
+     browser's. `pan-y` is what that spells. Giving the browser back `pan-x` here would hand it an
+     axis our own code is already driving.
+     ⚠ The other two lines are the hotfix's and they STAY: `overscroll-behavior-x: contain` stops the
+     strip's end dragging the page (SeasonHistoryTable has carried it since it shipped), and
+     `user-select: none` stops a press-and-hold resolving as a selection instead of a tap – which is
+     what swallowed the click, and which the pager's own mouse drag now depends on. */
   touch-action: pan-y;
   overscroll-behavior-x: contain;
   user-select: none;
