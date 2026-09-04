@@ -206,7 +206,7 @@ produced a *defect list* instead of a workaround list.
 | `onboarding-tour.spec.ts` | ...and More still brings it back after the screen change took it away | 2, 5 |
 | `onboarding-tour.spec.ts` | More can ask for the tour again, and asking moves the player to Home | 2, 5 |
 | `responsive.spec.ts` | at 375 px nothing scrolls sideways and the season strip stays short | 4 |
-| `parity.spec.ts` | every screen carries the same controls, headings, figures and icons at 375, 768, 900 and 1280 | 4 |
+| `parity.spec.ts` | every screen makes the same controls, headings, figures and icons REACHABLE at 375, 768, 900 and 1280 – every disclosure on the screen is opened before the fingerprint is taken, so «1 к 1 по доступности» is what is measured rather than what is painted on arrival (round 36 phase 3) | 4 |
 | `parity.spec.ts` | every screen in `src/components/screens/` has a station in that walk – the list is derived, never written out | 4 |
 | `offline.spec.ts` | after one visit the app boots with the network cut | 3 |
 | `coverage-map.spec.ts` | this document has not rotted (§11) | – |

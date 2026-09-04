@@ -23,7 +23,25 @@ The standing rule every row is decided under is his:
 
 **How to read a row.** *What the design shows* · *what our mobile does* · *what shipped* · *why*.
 A row marked `[?]` is one where a look at the running app could reasonably change the answer, and
-those are the ones worth his morning.
+those are the ones worth his morning. `[x]` is a row he has now ruled on; his words are in it.
+
+---
+
+## ⚠⚠ A CORRECTION TO A LIMIT PHASE 2 STATED, AND IT WAS NEVER THERE
+
+**`e2e/parity.spec.ts` compares SETS OF ACCESSIBLE NAMES. It does not look at positions.** Phase 2's
+D8 and D12 both leaned on a caution that re-flowing a grid might trouble the harness; it cannot. Four
+rungs laid 2x2 and the same four laid 1x4 carry the same four names, so the fingerprint is identical
+and the assertion never sees the difference. **Only ADDING a control or REMOVING one is forbidden** –
+which is exactly what the owner's «ничего нового не должно появиться, как и старого уйти ничего не
+должно» says, and nothing more.
+
+⭐ **And phase 3 widened it in the direction he actually asked for.** The harness now opens every
+disclosure at every width before it measures, so what it compares is what is REACHABLE rather than
+what is painted on arrival – «должно быть 1 к 1 **по доступности**», his own word. A control behind
+an ellipsis on a phone and drawn openly on a tablet is the same control, one press cheaper; a control
+that is genuinely absent still fails by name, and the break in `docs/rounds/round-36.md` shows it
+doing so. The rows below are decided under the corrected rule.
 
 ---
 
@@ -42,7 +60,7 @@ those are the ones worth his morning.
 are the same picture; the divergence is what a week with **three or more** entries does – ours keeps
 the third a thumb away instead of dropping it to a second line.
 
-### D2 `[?]` Season: a week with ONE card is still half a row
+### D2 `[x]` Season: a week with ONE card is still half a row – PUT TO HIM AGAIN, AND KEPT
 
 | | |
 | --- | --- |
@@ -57,6 +75,24 @@ single choice – so the right half of the calendar is empty from the first row 
 Measured: Season is 3,746px tall at 768 before this change and 2,784px after, so the page is a third
 shorter and half of it is unused. If he wants the empty half back, **the one-line answer is to let a
 lone card stretch** – and D1's swipe is untouched by that choice.
+
+⭐⭐ **RULED, 04.09, WITH THE COST IN FRONT OF HIM: «тянется на всю колонку – не надо, будет плохо,
+пусть пока 1 карточка остается.»** The stretch was built (one card fills the row, two split it,
+three or more shrink and swipe), measured, and reverted; the rule this row describes is the shipped
+one, unchanged from phase 2. His reason is the card itself – it was drawn for 343px, and a lone
+tournament card 736px wide at 768 or 948px wide at 1280 is a different object.
+
+⚠ **AND PHASE 3 CARRIES THE SAME RULE UP A RUNG, which is where it lands on the desktop.** «One
+column width for every week» is half a row at 768 and a THIRD at 1024, because three cards fit
+there – so a one-card week is a third of the row at 1280, which is what `AE-season-desktop-1024.png`
+draws for its own W3 and W5. Measured on the shipped build at 1280: the card is 307.98px, against
+343 on the phone and 362 at 768.
+
+⚠ An idea of his that could NOT be built is recorded here rather than lost: a `Training week` card
+beside a tournament on wide screens. `SeasonScreen`'s row `kind` is exactly one of
+`event | training | off-season | exam | vacation | practice` – **a week is one kind** – so an entered
+week is never also a training week. A second card there would be a control the phone never renders
+(the harness would name it) and it would offer to plan a week she has already entered.
 
 ### D3 Coach market: «4 карточки» is four on screen, two to a row
 
@@ -109,23 +145,58 @@ of them relative to the picture they are laid on.
 | **shipped** | **Ours, and not one declaration was touched.** |
 | **why** | His own instruction – «Her own account» is our current card with the photograph. The row is here because a frame in the pack shows something else, and a later reader comparing the two should find the answer rather than the discrepancy. |
 
-### D8 `[?]` Home: the news feed stays ONE column
+### D8 `[x]` Home: the news feed stays ONE column – and the DESKTOP takes AC's two-column page
 
 | | |
 | --- | --- |
 | **the design** | `AB-home-tablet-768.png` runs the news in **two columns by week**, and the handoff's §1 names it: «News идут двумя колонками по неделям». |
 | **our mobile** | One list, newest first, grouped by week. |
 | **shipped** | **One column, unchanged.** |
-| **why** | He named four screens for phase 2 and Home's entry was the hero alone; everything he did not name is «расширить колонку, больше ничего не менять». Splitting the feed is a restyle of something that is not moving, which is rule 2 of every phase. It is a small, contained change if he wants it – hence the `[?]`. |
+| **why** | He named four screens for phase 2 and Home's entry was the hero alone; everything he did not name is «расширить колонку, больше ничего не менять». Splitting the feed is a restyle of something that is not moving, which is rule 2 of every phase. |
 
-### D9 Home: the season strip keeps its «…», and the criterion is why
+⭐⭐ **RULED, 04.09: «давай тогда приведем к виду AC: одна колонка Season, вторая News со скроллом
+внутри.»** Built in phase 3, and it is what the desktop draws: the season ladder is the left cell of
+the last row and the news feed is the right one, with its own internal scroll. ⭐ **The scroll cost
+nothing** – `.log` has been `max-height: 300px; overflow-y: auto` since the feed was written, so the
+column he asked for was already a scroller looking for a column.
+
+⚠ **THE 768–900 BAND IS UNCHANGED and that is deliberate**: his ruling names AC, which is the desktop
+frame, and the tablet's own «News идут двумя колонками по неделям» is a different arrangement (two
+columns OF NEWS, by week) that he has not asked for. The feed is one column at 768 and one column,
+beside the ladder, at 1024.
+
+⚠ And the caution phase 2 attached to this row was wrong: see the correction at the top of this
+document. Re-flowing costs nothing against the harness.
+
+### D9 `[x]` Home: the season strip OPENS ITSELF from 768 – reversed twice on 04.09
 
 | | |
 | --- | --- |
 | **the design** | «Season раскрывается в 17 чипов без обрезки» – the whole ladder, unelided, at 768. |
 | **our mobile** | A fixed set of rungs plus a `…` control that opens the rest. |
 | **shipped** | **Unchanged.** |
-| **why** | ⚠ **His two instructions collide here and the acceptance criterion wins.** Measured on the shipped build, the strip renders the same seven boxes at 375 and at 768 – so drawing seventeen rungs at 768 would put controls on the tablet that are not on the phone, and «ничего нового по идее не должно появиться» fails by name in `e2e/parity.spec.ts`. Opening the strip needs the rungs to exist at BOTH widths, which is a change to the strip, not to the breakpoint. |
+| **why** | ⚠ **Phase 2 read his two instructions as colliding and let the criterion win.** Measured on that build, the strip rendered the same seven boxes at 375 and at 768, so drawing seventeen rungs at 768 alone would have put controls on the tablet that are not on the phone. |
+
+⭐⭐ **RULED TWICE ON 04.09, AND THE SECOND ONE STANDS.** First «не надо раскрывать, он будет вести
+себя как на мобиле в точности», then, on being shown that the rungs are already reachable: «мы же
+можем использовать detectdevicewidth и если у нас 768+, то можно этот список сразу раскрытым
+рисовать, это ничему не противоречит». **He is right, and phase 2's objection was answerable rather
+than fatal:** every rung is ALREADY on the phone, one tap behind the ellipsis – so a wide screen
+drawing them is the same information one press cheaper, not a control the phone has not got.
+
+⭐⭐⭐ **SO THE HARNESS CHANGED, AND IT GOT STRONGER.** `e2e/parity.spec.ts` now opens every
+disclosure at every width before it measures. Its claim is «the same things are REACHABLE at every
+width» rather than «the same things are drawn on arrival» – which is his own sentence, «должно быть
+1 к 1 **по доступности**». A control that is genuinely absent at one width still fails by name; the
+deliberate break in `docs/rounds/round-36.md` proves it on a control that at 375 exists only AFTER
+the disclosure is opened.
+
+⚠ **ONE CORRECTION TO HIS WORDING, AND THE CORRECTION IS THE POINT RATHER THAN THE WORD.** He wrote
+`detectdevicewidth`; what shipped is the breakpoint ladder – `window.matchMedia('(min-width: 768px)')`
+– because a 768px browser window on a 27-inch monitor is not a tablet and the rule is about the width
+of the COLUMN. ⚠ It is read ONCE, at setup: a window dragged from 1200 to 400 keeps an open strip,
+with its own `−` on screen to close it, and re-collapsing a row under someone's cursor because they
+resized is the worse direction.
 
 ### D10 The week recap's picture grows to the column – on a screen he did not name
 
@@ -141,7 +212,7 @@ Phase 2's contract is that nothing below 768 may move. Those two widths carry th
 collapse and are **not touched** – it is his call whether phase 4 goes back for them, and it is
 recorded in `docs/rounds/round-36.md` rather than quietly fixed on the way past.
 
-### D12 `[?]` Her Kit keeps its 2×2 ladder; the design puts it four in a row
+### D12 `[x]` Her Kit's rungs go ONE ROW from 768 – ruled 04.09
 
 | | |
 | --- | --- |
@@ -150,18 +221,134 @@ recorded in `docs/rounds/round-36.md` rather than quietly fixed on the way past.
 | **shipped** | **Unchanged**, so at 768 the four rungs are 2×2 at ~365px each. |
 | **why** | Same answer as D8, and for the same rule: his phase-2 instruction for Family Budget was «Her own account» alone, and everything he did not name is «расширить колонку, больше ничего не менять». Re-flowing a grid is changing something else. |
 
-⚠ **It is a one-line change** (`repeat(4, 1fr)` inside the tablet block) and it adds and removes
-nothing, so it cannot break his «1 к 1» criterion. D8 and D12 are the same question asked about two
-blocks: **does «widen the column» include re-flowing a grid that the extra width has made too
-loose?** One answer would settle both.
+⭐⭐ **RULED, 04.09: «а в чем проблема сделать для планшетов и десктопов в одну строчку?»** – none,
+and phase 2 was wrong to imply there was one. It shipped as `repeat(4, minmax(0, 1fr))` inside a
+`@media (min-width: 768px)` block: one line, three ladders (racket, shoes, strings), nothing added
+and nothing removed. Measured on the shipped build, per ladder:
+
+    375   313 x 126 px, two rows, each rung 153.5 wide
+    768   706 x  60 px, ONE row,  each rung 172 wide
+    1280  918 x  60 px, ONE row,  each rung 225 wide
+
+– so each of the three kit lines gives back 66px of height, and the rungs are WIDER than the phone's
+in the bargain. ⚠ `repeat(4, …)` and not `auto-fit`: the rungs are a LADDER, and a fourth grade
+wrapping under the first would be the one arrangement worse than the 2x2 it replaces.
+
+⚠⚠ **THIS IS THE ONE THING IN PHASE 3 THAT MOVES A TABLET BOX PHASE 2 SETTLED**, deliberately and at
+his ruling. It is called out beside the identity census in `docs/rounds/round-36.md` so that
+«nothing below 1024 moved» is not quietly untrue.
 
 ---
 
 ## Phase 3 – desktop, 1024–1200
 
-*(nothing yet – phase 3 has not run)*
+### D13 `[?]⚠⚠` The rail carries the NAVIGATION. It does not carry the card set.
 
-⭐ One row is already owed to it, from phase 1: **should the onboarding wizard and the tour briefing
-follow the frame out to 1200 on a desktop, or keep the 880 they have today?** Phase 1 left them at
-880 deliberately and put the decision on one token (`--app-max-width`), so it is made once, wherever
-he makes it.
+| | |
+| --- | --- |
+| **his words** | «Рельса слева, на всю высоту, скроллится при переполнении, одинаковая на каждой странице. Несёт навигацию И набор карточек – `AC-home-desktop-1024.png` эталон для всего набора, и набор просвечивает на каждой странице.» |
+| **shipped** | The rail is `nav.tab-bar` turned on its side: full height, sticky, scrolls itself, **identical on every page** – and nothing else in it. |
+| **why** | Three separate reasons, and the third is a machine check. |
+
+**1. THREE OF AC'S FOUR RAIL CARDS DO NOT EXIST IN THIS APP.** AC's rail holds `CONDITION`,
+`IN THE ACCOUNT`, `COACHING BUDGET` and `MY ENTRIES`. We have none of them as blocks. The nearest
+things we own are Home's `Family budget` notecard (a different card, with a sparkline), the condition
+ring (an overlay on the hero, not a card) and the coaching budget bar (inside the Coach Market
+screen). Building the four would be **four new components and every string on them**, which is rule
+2 of every phase («ничего нового по идее не должно появиться») and CLAUDE.md invariant 4.
+
+**2. HIS OWN FRAMES DO NOT AGREE THAT THE SET IS ON EVERY PAGE.** Counted off the pack: `AC` has four
+rail cards, `AE` has one (`MY ENTRIES`), `AK` has one (`COACHING BUDGET`), `AG` has none and `AM` has
+none. «Одинаковая на каждой странице» and «набор просвечивает на каждой странице» are true of the
+NAVIGATION in every frame and of the cards in none of them.
+
+**3. AND CARRYING HOME'S CARDS ONTO EVERY PAGE FAILS HIS OWN CRITERION BY NAME.** Home's cards are
+not on Season, Calendar or Stats at 375. Putting them in a rail that shows on every page puts
+controls on the desktop that the phone has not got, and `e2e/parity.spec.ts` names each one.
+
+⚠⚠ **THIS IS THE ROW MOST WORTH HIS MORNING IN PHASE 3.** What the rail looks like is five tabs and
+a lot of empty column – honest, but emptier than AC. **The lever, if he wants the cards:** decide
+which of the four he wants BUILT (they are new blocks with new copy, so they are his to word), and
+whether they may be Home-only – because a set that shows on every page cannot pass the harness.
+
+### D14 The bell, the mail and the gear stay on the photograph
+
+| | |
+| --- | --- |
+| **his words** | «Колокольчик, почта и настройки остаются справа сверху, внутри контейнера 1024–1200 – им там должно быть хорошо, никому не должны мешать.» |
+| **the design** | `AC` puts them in a band above everything, at the container's far right; `AE` puts them at the BOTTOM-LEFT of the rail, which is the placement he is overruling. |
+| **shipped** | Top-right of Home's **hero**, which on the desktop is the left column – so top-right of the page's first block rather than of the whole container. |
+| **why** | They are `position: absolute` inside `.diary-hero`, which is `overflow: hidden`. Moving them to the container's own corner means re-parenting them out of the hero – a template change to a block he asked us not to restyle – and it would land them over the Next-tournament card. On the phone they are the hero's chrome; the desktop keeps them there, and «никому не должны мешать» is satisfied where they are. |
+
+### D15 The yellow CTA is the mobile one, and the words the design puts beside it are NOT added
+
+| | |
+| --- | --- |
+| **his words** | «Не как в дизайне: жёлтая кнопка прижата к низу с отступом от края, дополнительных слов возле кнопки нет.» His explicit correction of his own mockup. |
+| **the design** | `AC` prints «No tournament entered for W25 — the week goes to training» beside the CTA and `AE` prints «Friendly: Alice vs Top seed — clay, no points, no money.» beside its own. |
+| **shipped** | The floating pill, alone, exactly as on the phone – and **centred on the reading COLUMN, not on the window**, because the rail takes 220px off the left of the page. `--app-bar-left` and `--app-bar-bottom` are the two tokens that say so once for all three copies of that box. |
+| **why** | His instruction, and a sentence beside a button would be new copy either way (invariant 4). ⚠ The bottom offset changes meaning rather than value: 58px was «clear of the 52px tab bar»; past 1024 there is no bar under it, so it becomes the margin off the page edge he asked for, spelled as the frame's own inset. |
+
+### D16 Season: three fit, so there is no arrow pager
+
+| | |
+| --- | --- |
+| **his words** | «Как на планшете, но могут влезть три карточки; если не влезают – стрелочная листалка.» |
+| **shipped** | Three fit (307.98px each at 1280), and from four the strip keeps round 34's swipe with the fourth card's edge showing – 114px of it at 1280. **No arrows.** |
+| **why** | His own sentence makes the pager the fallback for «if they do not fit», and they do. Arrows would also be **two new controls per week row, on the desktop and on no other format**, which fails «ничего нового по идее не должно появиться» in `e2e/parity.spec.ts` by name – the same collision D9 records, and this time the criterion is not in conflict with anything he asked for. |
+
+### D17 Coach market: as many to a row as fit at the PHONE's own card width
+
+| | |
+| --- | --- |
+| **his words** | «2–3 в ряд, с переносом, как на планшете.» |
+| **the design** | `AK-coach-market-desktop-1024.png` draws **two**, at about 385px each. |
+| **shipped** | `repeat(auto-fill, minmax(343px, 1fr))` – two at 1024 (382px each) and two at 1280 (470px), and three the moment there is room for three at no less than the phone's width. |
+| **why** | ⚠ **Three per row was built first and measured worse.** The rail leaves 772px of column at 1024 and 948 at 1280, so three cards are 252px and 310px – both NARROWER than the phone's 343 – and the market got TALLER for it: the page went 2,162 → 3,041px at 1024 and 2,012 → 2,521px at 1280, because a card carrying a name, a fit pill, a style, a description, two bands and a load note wraps its way back down the screen. That is D3's own objection to «four per row» arriving one breakpoint later. So «2–3» is expressed as the RULE that produces it rather than as a number typed in, and the floor is the card he already has. |
+
+### D18 Family budget: the photo is already square, and «Her own account» stops at a reading width
+
+| | |
+| --- | --- |
+| **his words** | «Фото квадратное – там ошибка в дизайне. "Её собственный счёт" – наша с фотографией, во всю ширину растягивать не обязательно, посмотрите, чтобы красиво было.» |
+| **the design** | `AM` draws the trip polaroid as a landscape window and runs «Her own account» edge to edge. |
+| **shipped** | **The photo needed nothing** – `.money-polaroid` has been a square window since it was written («a 124px-tall window in a 124px-wide one», in the rule's own comment), so his «ошибка в дизайне» is answered by changing nothing. «Her own account» is capped at 640px past 1024. |
+| **why** | 948px of column holding two sentences is a line of type nobody can track back to the start of. 640 is the app's own paragraph measure carried out to a desktop. ⚠ D7 stands untouched: the card is still ours, with the photograph the design's frame drops. |
+
+### D19 `[?]` The desktop hero takes the DESIGN's shape, and both heroes take one CAP
+
+| | |
+| --- | --- |
+| **the design** | `AC` draws the photograph 450 wide by 400 tall, beside the two notecards rather than above them. |
+| **our tablet** | `768 / 400` – nearly twice as wide as it is tall (D6). |
+| **shipped** | `--hero-aspect: 450 / 400` past 1024, plus a new `--hero-max: 512px` that BOTH heroes read. |
+| **why** | This is the second time the round takes a number of the design's, and for the same reason as D6: the two-column Home of frame AC is not possible with a hero twice as wide as it is tall. Measured at 1280: at `768/400` the hero is 511x266 against a 433px pair of cards beside it; at `450/400` it is 511x454 and the row closes. ⭐ **The cap is the half a ratio alone does not give**: Home's photograph is a COLUMN and the tournament's is a full-width block, so the shared ratio drew a 511px picture on one screen and a 980px one on the other – «ту же пропорцию» read literally and visibly wrong. One cap, both heroes, and at 1280 they are the same photograph to within a pixel. |
+
+### D20 `[?]` The screens his phase-3 list does not name get the wider column and the rail, and nothing else
+
+| | |
+| --- | --- |
+| **the design** | `AI` (calendar), `AO` (bills/advances) and `AQ` (kit) all draw two-column desktop pages. |
+| **shipped** | One column, in the narrower box the rail leaves. |
+| **why** | He named the rail, the three top-right icons, the CTA, Season, Tournament, Coach market and Family budget. Everything else is phase 2's «расширить колонку, больше ничего не менять», inherited. ⚠ **And now that the false limit at the top of this document is corrected, the only question left is scope, not permission** – re-flowing any of them adds and removes nothing. It is a phase-4 candidate or a word from him. |
+
+⚠ One thing he will see on those screens: **a full-width `View all transactions` pill is 793px on the
+desktop Family Budget.** It is `PrimaryPill variant="cta"` at the column's width and has been since
+phase 2 widened the column; capping it is a restyle of something that is not moving, and it would
+move a 768–900 box he has already accepted. Named here rather than fixed on the way past.
+
+### D21 The rail costs 220px of reading width on every screen, and two pages got longer for it
+
+Not a choice so much as a consequence, recorded because it is visible. `--app-rail-w: 196px` (AC's
+own measurement) plus a 24px gap comes off every screen: the reading column is **772px at 1024 and
+948px at 1280**, against 992 and 1168 without a rail. Measured: the Coach Market's page went
+2,162 → 2,375px at 1024, and Kid and Family Budget each grew about 18px where a line now wraps. Home
+and Season are far shorter anyway (1,547 → 1,140 and 3,064 → 2,706 at 1024). If the rail should be
+narrower, `--app-rail-w` is the one place that is decided.
+
+### Still open from phase 1, and phase 3 did not touch it
+
+⭐ **Should the onboarding wizard and the tour briefing follow the frame out to 1200 on a desktop, or
+keep the 880 they have today?** Phase 1 left them at 880 deliberately and put the decision on one
+token (`--app-max-width`), so it is made once, wherever he makes it. The rail does not change the
+question: both are full-screen takeovers outside `#app` and neither has a rail beside it.

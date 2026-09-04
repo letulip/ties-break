@@ -19,9 +19,9 @@ Status: `[x]` shipped · `[~]` answered, nothing to build · `[>]` in flight · 
 | --- | --- | --- |
 | 1 | the parity harness + the container follows his ladder | `[x]` **shipped, this document** |
 | 2 | tablet, 768–900 | `[x]` **shipped, this document** |
-| 3 | desktop, 1024–1200 – the rail, the new shell | `[ ]` |
+| 3 | desktop, 1024–1200 – the rail, the new shell | `[x]` **shipped, this document** |
 | 4 | the screens the design does not cover | `[ ]` |
-| 5 | `responsive-decisions-2026-09.md`, the contentious calls | `[>]` opened by phase 2, twelve rows – it is written AS the work happens, so it closes with phase 4 |
+| 5 | `responsive-decisions-2026-09.md`, the contentious calls | `[>]` opened by phase 2, **twenty-one rows** after phase 3 – it is written AS the work happens, so it closes with phase 4 |
 
 ---
 
@@ -552,3 +552,301 @@ the later declaration wins. A mutation has to be a replacement, not an addition.
 - `[?]` the onboarding wizard and the tour briefing at 880 vs 1200 (phase 1's decision 1)
 - `[ ]` `.recap-art`'s 390px collapse at 520 and 576 (D11) – a phase-4 or an owner call
 - `[ ]` phases 3, 4 and 5
+
+---
+
+## `[x]` PHASE 3 – THE DESKTOP SHELL, 1024–1200
+
+His design for it, in his own words: «Рельса слева, на всю высоту, скроллится при переполнении,
+одинаковая на каждой странице… Колокольчик, почта и настройки остаются справа сверху, внутри
+контейнера… Жёлтая кнопка **не как в дизайне** – прижата к низу с отступом от края, дополнительных
+слов возле кнопки нет.»
+
+**Seven files of app, one of the harness, nine of tests, four of documents.** `src/style.css` (the
+frame's grid, the rail, four new tokens and the market's desktop row); `HomeScreen.vue` (frame AC's
+two columns, and the ladder that opens itself); `SeasonScreen.vue` (three cards to a row);
+`NextTournamentPanel.vue` (the hero's cap); `MoneyScreen.vue` (the kit ladder, and «Her own
+account»); `CalendarScreen.vue` and `ThisWeekScreen.vue` (the two floating CTA copies, onto the two
+new tokens). The harness is `e2e/parity.spec.ts`, which now measures what is REACHABLE. Tests: one
+new file (`tests/component/round36-desktop-shell.test.ts`) and eight re-aimed or extended. Documents:
+nine new rows and four rewritten in `docs/specs/responsive-decisions-2026-09.md`, this ledger, the
+coverage map's `parity` line and the rounds README.
+
+⭐ **No new component, no new icon, no new string.** The rail is the bottom bar; Home's desktop is
+Home's own DOM re-flowed; every control on every screen is the one the phone has.
+
+---
+
+### ⭐⭐⭐ THE RAIL IS THE BOTTOM BAR STANDING UP, AND THAT IS THE ONLY READING HIS CRITERION ALLOWS
+
+A rail that DUPLICATED the five tabs would put five buttons on a desktop that are not on a phone, and
+`e2e/parity.spec.ts` fails «ничего нового по идее не должно появиться» by name. So there is one
+`nav.tab-bar` at every width and the media query only re-lays it: `position: sticky`, full height,
+`overflow-y: auto`, the tabs running down instead of across, and the active one on the app's own
+`--accent-wash` instead of only a colour.
+
+**The frame carries it.** `#app` becomes `display: grid` past 1024 with the rail as column 1 and
+everything else as column 2 – so the rail is a COLUMN of the centred 1200px frame rather than a box
+positioned against the window, and there is no viewport arithmetic anywhere in the shell. Three
+things about that rule are load-bearing and each cost a wrong answer first:
+
+* ⚠ **`:has(> nav.tab-bar)` is not a flourish.** `#app` is also the parent of the storage-recovery
+  screen and the «Loading…» line, which render INSTEAD of the tab shell; a grid whose first column is
+  196px of rail would indent both behind a rail that is not there.
+* ⚠ **The rows are declared.** `grid-row: 1 / -1` counts `-1` from the end of the EXPLICIT grid, so
+  with no `grid-template-rows` it degenerates to one row and the rail's sticky range collapses to the
+  height of whatever shares it. Four `auto` rows cost nothing empty and cover the shell's real worst
+  case (two top notices, the main column, one spare).
+* ⚠⚠ **AND THE COLUMN HAD TO BE TOLD TO FILL ITS TRACK – a defect that shipped for one build of this
+  phase and was caught by measuring rather than by looking.** `.app-content` is
+  `max-width: var(--app-col-max); margin: 0 auto`, and **a grid item with AUTO INLINE MARGINS does
+  not stretch**: auto margins beat `justify-self: stretch`, so the box falls back to max-content and
+  the margins centre what is left. Measured in Chromium before the fix: Home filled its 948px track
+  (its cards are wider than that) and **Season came out 698.89px wide, centred, with 124px of page
+  down each side** – the same screen at the same width, two different column widths, out of one
+  declaration written for a block layout. `width: 100%` makes the auto margins resolve to zero.
+
+⚠ **What the rail does NOT carry is the card set, and that is D13 – the row most worth his morning.**
+Three of AC's four rail cards do not exist in this app as blocks; his own frames disagree about
+whether the set is on every page (AC four, AE one, AK one, AG none, AM none); and Home's cards on
+every page would put controls on Season and Calendar at 1280 that the phone has not got. The
+navigation IS identical on every page, which is the half that can be.
+
+---
+
+### WHAT MOVED, PER SCREEN, MEASURED
+
+Boxes are `x,y,w,h` in Chromium at a 900px-tall viewport, off the same walk of all ten screens the
+identity census below uses. `before` is phase 2 as shipped (`6a2bb372`).
+
+| | 375 | 1024 before → after | 1280 before → after |
+| --- | --- | --- | --- |
+| the frame (`#app`) | 375 | 1024 | 1200, centred |
+| the rail (`nav.tab-bar`) | 375×52, along the bottom | 992×52, bottom → **212×900, down the left** | 1168×52, bottom → **212×900, down the left** |
+| the reading column (`.app-content`) | 343 | 992 → **772** | 1168 → **948** |
+| **Home** hero | 375×375 | 1024×533.33 → **415.08×368.95** | 1200×540 → **511.08×454.28** |
+| **Home** next-tournament / budget cards | 166, side by side | 490.50, side by side → **345.92, stacked beside the hero** | 578.50 → **425.92, stacked beside the hero** |
+| **Home** coach note / memory cards | 166 | 490.50 → **415.08** | 578.50 → **511.08** |
+| **Season** week card | 343 | 490 → **249.33** | 578 → **307.98** |
+| **Coach market** row | 343 | 492 → **382** | 580 → **470** |
+| **Family budget** «Her own account» | 343 | 992 → **640** | 1168 → **640** |
+| **Her kit** rung (behind the Bills tab) | 153.5, 2×2 | 2×2 → **one row, 172 wide at 768** | 2×2 → **one row, 225 wide** |
+| the floating CTA box | 375 | 992, centred on the window → **772, centred on the COLUMN** | 1168 → **948, centred on the COLUMN** |
+
+…and the two screens he looks at most got a third shorter:
+
+| page height | 1024 before → after | 1280 before → after |
+| --- | --- | --- |
+| Home | 1547 → **1140** | 1553 → **1207** |
+| Season | 3064 → **2706** | 3296 → **2703** |
+| Coach market | 2162 → **2375** | 2012 → **2162** |
+
+⚠ **The market is the one page that got LONGER, and the rail is why** – it takes 220px off every
+screen, so two coaches to a row are 382px at 1024 where they had 492. That is D21, and
+`--app-rail-w` is the single place it is decided if he wants the strip narrower.
+
+#### Home is frame AC, and it is Home's own DOM re-flowed
+
+`AC-home-desktop-1024.png` lays the page as two columns: the photograph down the left with the
+next-tournament and family-budget cards stacked beside it, then the coach note and the recent memory
+side by side, then the season ladder and the news feed side by side. **That is exactly the six blocks
+this screen already renders, in exactly the order it already renders them.**
+
+⭐ The mechanism is `display: contents` on `.card-grid`. A box cannot be a cell of its parent's grid
+AND spread its children across it; `display: contents` removes only the WRAPPER's box, so the four
+notecards become items of the shell's grid directly. **No wrapper is deleted, no card moves in the
+DOM, and the parity harness sees the same elements it sees at 375.** It is safe for the fingerprint's
+paint half too, because `.card-grid` carries no background, border or icon of its own – a wrapper
+with a picture on it could not be dissolved this way.
+
+⭐ The hero spans both card rows, and a spanning item sizes the tracks it crosses – so when the
+photograph is the taller of the pair the two cards grow to meet it and the row closes exactly.
+`align-self: start` stops the reverse case from silently overriding `--hero-aspect` (a stretched box
+takes its height from the row and its width from the column, and the ratio is simply not applied),
+which matters because that token is the join `.nt-hero` reads.
+
+#### The two heroes now share a SIZE as well as a shape
+
+Phase 2 joined them on `--hero-aspect`. On a desktop that was not enough: Home's photograph is a
+column of a two-column page and the tournament's is a block in a full-width one, so the shared ratio
+drew **a 511px picture on one screen and a 980px one on the other** – «ту же пропорцию» read
+literally and visibly wrong. `--hero-max: 512px` is the other half of the join, and at 1280 the two
+are the same photograph to within a pixel. The shape itself is AC's own `450 / 400` (D19), the second
+time this round takes a number of the design's, and for D6's reason: at `768/400` the desktop hero is
+511×266 against a 433px pair of cards beside it, and the row does not close.
+
+---
+
+### ⭐⭐ FOUR OWNER RULINGS LANDED MID-PHASE, AND ONE OF THEM CORRECTED A LIMIT THIS ROUND INVENTED
+
+⚠⚠ **`e2e/parity.spec.ts` compares SETS OF ACCESSIBLE NAMES. It does not look at positions.** Phase
+2's D8 and D12 both leaned on a caution that re-flowing a grid might trouble the harness. It cannot:
+four rungs laid 2×2 and the same four laid 1×4 carry the same four names. Only ADDING a control or
+REMOVING one is forbidden, which is exactly what he asked for and nothing more. The correction is at
+the top of the decisions document so the next reader does not inherit it.
+
+| ruled 04.09 | what it changed |
+| --- | --- |
+| **D12** «а в чем проблема сделать для планшетов и десктопов в одну строчку?» | Her kit's four rungs go one row from 768. One line, three ladders, 66px of height back on each. |
+| **D8** «давай тогда приведем к виду AC: одна колонка Season, вторая News со скроллом внутри» | Built – and the internal scroll cost nothing: `.log` has been `max-height: 300px; overflow-y: auto` since the feed was written. |
+| **D9** «можно этот список сразу раскрытым рисовать, это ничему не противоречит» | Home's season ladder opens itself from 768. See below – it is what changed the harness. |
+| **D2** «тянется на всю колонку – не надо, будет плохо, пусть пока 1 карточка остается» | The stretch was BUILT, measured and reverted. A one-card week stays half a row at 768 and is a third of one at 1024, which is what AE draws. |
+
+⚠ **D12 is the one thing in this phase that moves a tablet box phase 2 settled**, deliberately and at
+his ruling – see the census below, where it is separated from everything else.
+
+#### ⭐⭐⭐ THE HARNESS'S CLAIM CHANGED, AND IT IS STRONGER FOR IT
+
+D9 asked for a strip drawn already open at 768+. Phase 2 had refused it on the grounds that the
+harness would name the extra chips – and it would have, because it fingerprinted what a screen
+PAINTS on arrival. That was one reading too narrow for his own sentence, which is about ACCESS:
+
+> «всё, что есть на мобиле, должно быть 1 к 1 **по доступности** быть и на других форматах»
+
+Every rung is ALREADY on the phone, one tap behind the ellipsis. So `openEveryDisclosure` now presses
+every `[aria-expanded="false"]` on the screen, at every width, until none remain, and the fingerprint
+is taken after that. **The claim is now «the same things are REACHABLE at every width».** A control
+that is genuinely absent still fails by name; a control that exists only at 1280 still fails from the
+other side. What it stops failing on is a screen that shows the same things behind one fewer press.
+
+⚠ It is a LOOP with a cap rather than one pass, because opening one disclosure can reveal another –
+and the cap is a guard against a control that toggles rather than opens, which would otherwise spin
+for ever instead of failing.
+
+⚠ **And his word was corrected rather than followed.** He wrote `detectdevicewidth`; what shipped is
+`window.matchMedia('(min-width: 768px)')`, because a 768px browser window on a 27-inch monitor is not
+a tablet and the rule is about the width of the COLUMN. It is read once, at setup: a window dragged
+from 1200 to 400 keeps an open strip, with its own `−` on screen to close it.
+
+---
+
+### `[x]` THE IDENTITY CENSUS – 0 BELOW 768, AND ONE DELIBERATE SCREEN ABOVE IT
+
+Every element in the document at all ten screens, censused as tag + class + document-order index +
+box to 2dp, at seven widths, one fresh career per width. Arm A is phase 2's shipped head
+(`6a2bb372`), arm B is this phase.
+
+| viewport | element boxes | boxes that moved | pixels moved | new boxes |
+| --- | --- | --- | --- | --- |
+| **375** | 2321 | **0** | **0** | 0 |
+| **520** | 2321 | **0** | **0** | 0 |
+| **576** | 2321 | **0** | **0** | 0 |
+| **768** | 2321 → 2344 | **141, all on Home** | 9,024 | 23 |
+| **900** | 2321 → 2344 | **141, all on Home** | 10,070 | 23 |
+| 1024 | 2321 → 2344 | 2,095 | **973,055** | 23 |
+| 1280 | 2321 → 2344 | 2,100 | **1,023,303** | 23 |
+
+**6,963 boxes across the three mobile widths, and not one of them moved.**
+
+⚠ **AND THE 768–900 ROWS ARE NOT ZERO, WHICH IS THE HONEST VERSION OF THIS TABLE.** Every one of
+those 141 boxes is on **Home**, and every one is the season ladder opening itself (D9, his ruling) or
+something it pushes down the page: the other nine screens are byte-identical at both widths, and the
+23 new boxes are the rungs the open ladder draws plus the `−` that closes it. Home's page grew
+1413 → 1472 at 768. ⚠ **D12's kit ladder does not appear in this table at all** – it lives behind the
+Bills tab, which this walk does not open. It was measured separately: per kit line, 313×126px in two
+rows at 375, and 706×60 and 918×60 in ONE row at 768 and 1280.
+
+### ⚠ THE ANTI-VACUITY NUMBER, AND PHASE 2'S CAVEAT APPLIES
+
+Phase 2 recorded that the box COUNT saturates: phase 1's ladder already moved 93.5% of every box on
+the app, and a box that has already moved cannot move again in a count. So the number this phase is
+read by is **total displacement** – the sum of |Δx| + |Δy| + |Δw| + |Δh| over every box:
+
+| | boxes | pixels moved |
+| --- | --- | --- |
+| `origin/main` → phase 1, at 768 (the container ladder) | 2,170 | 497,232 |
+| phase 1 → phase 2, at 768 | 709 | 448,651 |
+| **phase 2 → phase 3, at 1024** | 2,095 | **973,055** |
+| **phase 2 → phase 3, at 1280** | 2,100 | **1,023,303** |
+
+**Phase 3 moves more than twice the geometry either earlier phase did**, which is what a phase that
+invents a shell should look like beside two that widened a column. The three zeros and the
+nine-screens-of-ten at 768–900 are what make it a measurement rather than a blind instrument: the
+same census, the same screens, the same run.
+
+---
+
+### `[x]` PARITY – green at 375 / 768 / 900 / 1280, on every screen
+
+`e2e/parity.spec.ts` was run against every change as it was made, not once at the end – four full
+green sweeps across the phase, plus the deliberate break below. The final run is in the gates.
+
+#### ⭐⭐ THE DELIBERATE BREAK – RE-RUN, BECAUSE THE HARNESS'S SEMANTICS CHANGED
+
+A harness whose failure has never been seen is not a harness, and one whose CLAIM changed and whose
+failure has not been re-seen is not one either. The break was chosen to bite the new semantics
+specifically: Home's ladder-collapse control was hidden at desktop only.
+
+```css
+@media (min-width: 1024px) { .season-strip .strip-more { display: none } }   /* HomeScreen.vue, scoped */
+```
+
+→ `BREAK_EXIT=1`, and it names it:
+
+```
+HomeScreen.vue: these are on the phone at 375px and NOT at 1280px.
+«всё, что есть на мобиле, должно быть 1 к 1 на других форматах»
+  + "button \"Show only her current levels\""
+```
+
+⭐ **That control does not exist at 375 on arrival.** It appears only after the harness presses the
+ellipsis – so the run proves the new reachable-state pass is what is doing the measuring, and that it
+still names a genuinely absent control. Reverted immediately; `HomeScreen.vue` verified byte-identical
+afterwards by checksum (`f2eb2f0c…` before and after).
+
+---
+
+### The new and re-aimed test arms, and every one is mutation-verified
+
+| file | arms | what a mutation reddened |
+| --- | --- | --- |
+| `round36-desktop-shell.test.ts` (new) | 12 | the `#app` grid rule deleted → the frame and column arms; `sticky` back to `fixed` → the standing-up arm alone; the `width: 100%` fill rule deleted → the auto-margin arm alone; either CTA token's 1024 rung deleted → that token's arm alone; `display: contents` back to `grid` → the dissolve arm alone; the hero's `grid-row` dropped → the span arm alone |
+| `round34-week-stack.test.ts` | 3 | the desktop base width back to the tablet's half → the third-of-a-row arm; the desktop `:has(3)` rule deleted → the grown-strip arm, because the tablet's 44% rule is heavier and wins again; the fourth `.event-cards` dropped from the four-or-more rule → the sliver arm, because the two `:has()` rules then tie and happy-dom keeps the first |
+| `round18-coach.test.ts` | 1 | `repeat(3, …)` in the 1024 block → the desktop row arm alone; the doubled `.tier-block.tier-block` reduced to one class → the same arm, because the 768 rule then wins the tie |
+| `round30-next-tournament-layout.test.ts` | 1 (+1 re-aimed) | `max-width: var(--hero-max)` dropped from `.nt-hero` → the cap arm; the 1024 rung removed from `--hero-aspect` → the shape arm |
+| `round21-bills.test.ts` | 2 | the 768 block deleted → the one-row arm alone; its media query removed → that arm AND the phone arm |
+| `week-recap-kid-share.test.ts` | 2 | the `max-width` deleted → the desktop arm alone; its media query removed → that arm AND the phone arm |
+| `home-strip-and-mail.test.ts` | 1 (+4 re-aimed) | `stripExpanded = ref(false)` → the tablet/desktop arm, phone green; `ref(true)` → the phone arm alone |
+| `round13-nav.test.ts`, `round20-ui.test.ts` | 4 re-aimed | – |
+
+⚠⚠ **FOUR SHIPPED TESTS WERE MEASURING AT HAPPY-DOM'S DEFAULT 1024 AND HAD TO BE AIMED**, which is
+phase 2's own finding arriving again with more force: happy-dom's default viewport is **1024×768**,
+i.e. inside this phase's band, and only 40 of 118 files under `tests/component/` set a viewport at
+all. `round20-ui.test.ts`'s three season-strip arms and
+`round30-next-tournament-layout.test.ts`'s full-bleed arm all made phone claims at a width that had
+no rule until this phase. Each is `setViewport(PHONE)` now, and that is a fix to the test rather than
+a loosening of it: the width a claim is measured at is part of the claim.
+
+⚠ **And one existing pin went red on a number moving into a token**, which is the shape phase 2 met
+too: `round13-nav.test.ts` asserted `.week-proceed` carries `bottom: 58px`. It reads
+`bottom: var(--app-bar-bottom)` on the rule and `--app-bar-bottom: 58px` out of the sheet now, so the
+number is still pinned – one file further out, where the desktop's own answer is decided.
+
+---
+
+### Gates – phase 3
+
+Run one at a time, and **every exit code read out of the log file**, never from a pipe and never from
+a background task's completion notice.
+
+| gate | result |
+| --- | --- |
+| `npm run test:e2e` | **`E2E_EXIT=0`** – 46 tests, the eleven parity walks among them |
+| `npm run check` | **`CHECK_EXIT=0`** – the whole pre-push gate: the doc audit, the pin ratchet, the decision index, `vue-tsc`, 1337 component tests and the build |
+| `npm run test:component` | **1337 passed across 119 files**, inside `check` (1314 before this phase; twenty-three new arms) |
+| `npm run test:quiet` | **`QUIET_EXIT=0`** |
+
+⚠ **`npm run test:sim` was NOT run** – the standing regime (owner's ruling, 22.08) puts it in front of
+a PR assembly, and this phase touches no engine code. It belongs to whoever assembles the round's PR.
+
+### Open at the end of phase 3
+
+- `[?]` **D13 – the rail's card set.** The one that needs him: three of AC's four rail cards are
+  blocks this app does not have, and a set that shows on every page cannot pass his own criterion.
+- `[?]` **D19, D20** – the desktop hero's shape, and the screens (`AI`, `AO`, `AQ`) whose two-column
+  desktop layouts his phase-3 list does not name.
+- `[?]` **D1** – Season swipes where the handoff's §6 asked for a grid (phase 2, still his)
+- `[?]` the onboarding wizard and the tour briefing at 880 vs 1200 (phase 1's decision 1) – the rail
+  does not change the question; both are takeovers outside `#app`
+- `[ ]` `.recap-art`'s 390px collapse at 520 and 576 (D11) – a phase-4 or an owner call
+- `[ ]` phases 4 and 5
