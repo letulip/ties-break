@@ -2179,16 +2179,22 @@ function closeExhibition(): void {
   /* ⚠⚠ THE THREE LINES THIS STRIP SHIPPED WITHOUT, AND THE OWNER FELT ALL THREE (04.09: «скролл
      заедает либо в одну, либо в другую сторону, а некоторые клики … сначала не срабатывают, а потом
      становятся выделением текста»).
-     · `touch-action: pan-x` – WITHOUT IT THE BROWSER MUST GUESS THE GESTURE'S AXIS, and
-       `scroll-snap-type: x mandatory` makes it commit hard to the horizontal one. A near-vertical
-       swipe that begins on a card was being captured and snapped sideways instead of scrolling the
-       page. `pan-x` says this box takes horizontal gestures and passes vertical ones through.
+     · `touch-action: pan-x pan-y` – ⚠⚠ AND `pan-x` ALONE WAS WRONG, WHICH THE OWNER FELT WITHIN
+       HOURS OF THE FIX (04.09: «если игрок вертикально долистал до мультикарточки, то потом
+       вертикально можно листать только если палец будет находиться на поле с 1 карточкой на неделе
+       … может быть несколько недель подряд с мульти-карточками и тогда страница перестает
+       вертикально листаться вообще»).
+       `pan-x` does not mean «takes horizontal, passes vertical through» – it means this box handles
+       ONLY horizontal panning, so the browser stops routing a vertical gesture that begins here to
+       the page behind it. On a run of multi-card weeks the page stopped scrolling at all.
+       ⭐ Naming BOTH axes is what «horizontal here, vertical to the page» actually spells: the
+       browser keeps the disambiguation it is good at, and only double-tap zoom is given up.
      · `overscroll-behavior-x: contain` – without it the strip's end CHAINS to the page.
        ⭐ `SeasonHistoryTable.vue` has carried exactly this line since it shipped; the strip is the
        one horizontal scroller in the app that was written without it.
      · `user-select: none` – a press-and-hold on a card started a TEXT SELECTION, so the browser
        resolved the gesture as a selection rather than a tap and swallowed the click. */
-  touch-action: pan-x;
+  touch-action: pan-x pan-y;
   overscroll-behavior-x: contain;
   user-select: none;
   -webkit-user-select: none;

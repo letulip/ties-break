@@ -71,7 +71,11 @@ describe('a horizontal scroller carries the three declarations a finger needs', 
     const offenders: string[] = []
     for (const { rel, css } of sheets()) {
       for (const block of blocksWith(css, /scroll-snap-type:\s*x/)) {
-        if (!/touch-action:\s*pan-x/.test(block)) offenders.push(rel)
+        // ⚠ BOTH AXES, and the `\bpan-y` is the half a fix on 04.09 got wrong: `pan-x` alone stops
+        // the browser routing a VERTICAL gesture that begins on the strip to the page behind it, so
+        // a run of multi-card weeks froze the page. A strip must name the axis it takes AND the one
+        // it passes on.
+        if (!/touch-action:[^;]*\bpan-x\b/.test(block) || !/touch-action:[^;]*\bpan-y\b/.test(block)) offenders.push(rel)
       }
     }
     expect(offenders, 'x-snapping strips that leave the gesture axis to a guess').toEqual([])
