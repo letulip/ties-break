@@ -47,6 +47,10 @@
 // ⚠ DESKTOP-ONLY IS A STYLESHEET FACT, NOT A `v-if`. The block is in the DOM at every width and
 // `display: none` below 1024 (src/style.css, beside the rail's own rules). A `v-if` on a media query
 // would be a second source of truth about the breakpoint, and the round already has one ladder.
+// ⭐⭐⭐ ROUND 36, HIS REVIEW OF THE BUILT WAVE, ITEM #9 – «Плитки дашборда живут прибитые к меню
+// выше, Coaching budget несёт больше информации». The first half is one declaration in src/style.css
+// (`margin-top: auto` -> 0); the second is read as THE METER'S OWN SET, and D83 in
+// docs/specs/responsive-decisions-2026-09.md puts that reading to him with the offer to cut it.
 import { computed } from 'vue'
 import { useGameStore } from '../stores/game'
 import { formatCents } from '../shared/money'
@@ -61,8 +65,14 @@ const game = useGameStore()
 const fundsCents = computed(() => game.snapshot?.fundsCents ?? 0)
 const funds = computed(() => formatCents(fundsCents.value))
 
-const { freeCents } = useCoachingBudget()
+// ⭐ REVIEW #9 – THE OTHER THREE OF THE METER'S FOUR, and every one of them comes out of the SAME
+// composable the free figure does. There is no arithmetic in this file, which is the property the
+// header above is about: mutate `composables/coachingBudget.ts` and the market's meter and this card
+// move together, because there is one body of it.
+const { committedCents, capCents, freeCents, meterPct } = useCoachingBudget()
 const coachingFree = computed(() => formatCents(freeCents.value))
+const coachingCommitted = computed(() => formatCents(committedCents.value))
+const coachingCap = computed(() => formatCents(capCents.value))
 
 const entries = computed(() => enteredEvents(game.snapshot?.upcoming ?? []))
 </script>
@@ -79,9 +89,28 @@ const entries = computed(() => enteredEvents(game.snapshot?.upcoming ?? []))
       <p class="rail-dash-figure" :class="{ negative: fundsCents < 0 }">{{ funds }}</p>
     </Card>
 
+    <!-- ⭐⭐⭐ ROUND 36 REVIEW #9 – he asked this card to carry more information (his sentence is in
+         the script block above and in docs/rounds/round-36-review.md; a template may carry no
+         Cyrillic at all), and what «more» was read as is THE METER'S OWN SET, whole.
+         `useCoachingBudget` exposes four things and this card printed one of them; the Coach
+         Market's meter prints all four, in this order, and now so
+         does the rail. Nothing below is derived here, nothing below is new vocabulary: `committed`
+         and `weekly cap` are `.budget-legend`'s own two words on CoachMarketScreen, and the bar is
+         `meterPct`, the same computed the meter fills itself from.
+         ⚠ THE FREE FIGURE IS UNTOUCHED – same class, same computed, same position – because D45 is
+         his ruling about what this card's headline number IS, and #9 asked for more beside it, not
+         for a different one. -->
     <Card as="article" class="rail-dash-card">
       <Eyebrow as="h2" class="rail-dash-title">Coaching budget</Eyebrow>
       <p class="rail-dash-figure">{{ coachingFree }}</p>
+      <!-- ⚠ THE CLASSES ARE THE METER'S OWN, NOT A SECOND SET. `.budget-bar`, `.budget-legend` and
+           `.legend-dot` are declared once in src/style.css and the Coach Market's meter is their
+           other consumer, so this card costs the stylesheet nothing and cannot drift from the
+           surface it shortcuts to. The only difference is that a 196px strip takes the legend as two
+           lines where an 880px screen takes it as one. -->
+      <div class="budget-bar"><i :style="{ width: meterPct + '%' }"></i></div>
+      <p class="budget-legend"><span class="legend-dot committed"></span>{{ coachingCommitted }} committed</p>
+      <p class="budget-legend"><span class="legend-dot cap"></span>{{ coachingCap }} weekly cap</p>
     </Card>
 
     <!-- Silent with nothing entered – the same condition the Season strip carries. -->

@@ -1734,6 +1734,28 @@ function reopenTour(): void {
          buttons swap the whole screen and there is no `tabpanel` behind them to point at, so a
          tablist would be a costume. -->
     <nav class="tab-bar" aria-label="Main">
+      <!-- ⭐⭐⭐ ROUND 36 REVIEW #3 – her face and her rank leave the photograph for the top-left
+           corner of the menu, above every item in it. His own sentence is in
+           docs/rounds/round-36-review.md and beside `.rail-id` in src/style.css, where Cyrillic is
+           allowed; a template may carry none of it (tests/template-copy-rules.test.ts).
+           THIS IS AN EMPTY SLOT AND THAT IS THE WHOLE DESIGN: the two
+           controls stay HomeScreen's, with HomeScreen's computeds and HomeScreen's handlers, and are
+           `<Teleport>`ed in here from there. The shell holds the place; it does not learn her rank.
+           ⚠⚠ WHY NOT RENDER THEM HERE. The rank chip is five derived facts deep (`rankChipTrack`,
+           the active ladder, her rank on THAT table, whether she is ranked at all, and the movement
+           since last week) and the avatar is a crop. Rebuilding any of that in the shell is the
+           «a shortcut that recomputes its own number» disease this repo has already shipped once –
+           see HouseholdStrip.vue's header. A teleport moves the elements and leaves the arithmetic
+           where it is, so there is nothing to keep in step.
+           ⚠ AND IT IS WHY THEY ARE ON HOME AND NOT ON EVERY PAGE. The block is HomeScreen's, so it
+           is on screen exactly while Home is – which is also what keeps `e2e/parity.spec.ts` true
+           without a third exemption: two controls that appeared on the other nine screens at 1280
+           and on none of them at 375 would fail his «nothing new should appear» criterion by name.
+           Making
+           them permanent chrome is his call and it costs that exemption; see the decisions doc.
+           ⚠ `defer` (Vue 3.5) IS LOAD-BEARING: this slot is rendered AFTER `<main>` in the shell, so
+           a teleport resolved during Home's own render would find no target. -->
+      <div id="rail-id-slot" class="rail-id"></div>
       <button
         v-for="t in TABS"
         :key="t.id"

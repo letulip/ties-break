@@ -995,4 +995,164 @@ useDialogFocus(cardEl)
   line-height: 1.35;
   color: var(--muted);
 }
+
+/* ═════════════════════════════════════════════════════════════════════════════════════════════════
+   ⭐⭐⭐ ROUND 36, HIS REVIEW OF THE BUILT WAVE, ITEM #1 – AND IT OVERRULES D28
+   ═════════════════════════════════════════════════════════════════════════════════════════════════
+   «D28 – пролог - так не пойдет, давай делать примерно как у нас home сделан, надо чтобы картинку
+    было видно хорошо, скролла не будет, а текст будет либо ниже и шире (планшет), либо сбоку, ниже
+    и шире (десктоп)»
+
+   ⚠⚠ D28's MEASUREMENT IS NOT CONTRADICTED BY THIS, AND UNDERSTANDING THAT IS WHY THIS BUILDS THE
+   WAY IT DOES. D28 measured that on this screen a wider column IS a taller picture – the painting is
+   square and ran the full width of the card, so every 60px of column was 60px more scroll before the
+   decision (cap 420 → the first answer at y=894; cap 640 → y=1093). That is still true of the
+   layout it measured. His answer sidesteps it: **the picture stops being the column's width.**
+   Home's own hero is the model he named – a photograph with a shape and a CAP of its own, and the
+   text under it – so the column can grow for the WORDS while the picture stays the size it should
+   be. The two halves of his sentence are the two bands:
+
+       768 – 1023   the picture on top at its own size, centred; the text below it and WIDER
+       >= 1024      the picture down the left; the text beside it, and the decision below and wider
+
+   ⚠ «СКРОЛЛА НЕ БУДЕТ» IS THE ACCEPTANCE TEST AND IT IS MEASURED, not asserted – every card at
+   768x900 and at 1280x900, in a real browser. The numbers are in docs/rounds/round-36-review.md.
+
+   ⚠ THE PAINTING IS STILL SQUARE AT EVERY WIDTH. That is his own standing rule for this set («я
+   просил арты делать в квадратном формате по аналогии с home экраном», 02.09) and the two mounted
+   pins that assert it are untouched: what changes here is the picture's WIDTH, never its ratio.
+
+   ⚠ AND NOTHING BELOW 768 MOVES. Every rule in this block is behind a media query the phone never
+   matches, and the mobile declarations above are left exactly as they were. */
+/* ⚠⚠ EVERY SELECTOR IN THE TWO BLOCKS BELOW IS DOUBLED OR PARENTED, AND THAT IS NOT DECORATION.
+   At EQUAL specificity happy-dom keeps the FIRST matching rule where a browser keeps the last
+   (measured in phase 2 and written down beside the rail's own `:has()` in src/style.css), so a
+   media-query override written at the same weight as the rule it overrides works in Chromium and
+   silently does nothing in every mounted test. Naming the parent makes it win in both engines, in
+   either source order – which is what lets `tests/component/round36-review-home.test.ts` measure
+   this band at all. */
+@media (min-width: 768px) {
+  .prologue-card.prologue-card {
+    /* ⭐ THE PICTURE'S OWN SIZE, and it is a token because the two bands want two of them – the same
+       shape `--hero-max` has on Home, for the same reason: a ratio alone does not say how big. */
+    --plo-art: 336px;
+    /* The column grows for the TEXT. 640 is the app's own reading measure – the cap D18 puts on
+       «Her own account» and D24 on the wizard – so the prologue joins a number the round already
+       decided rather than inventing a third one. */
+    max-width: 640px;
+  }
+
+  /* ⭐⭐ THE PICTURE STOPS BEING THE COLUMN. The full-bleed trick above is a PHONE rule – it exists
+     so the painting reaches both edges of a 375px screen – and `.diary-hero` drops its own for
+     exactly this reason past 1024 («in a column beside a column there are no edges to reach»). Here
+     it is centred over the text at its own width, with the card's corner. */
+  .prologue-card > .prologue-hero {
+    /* ⚠⚠ AND ITS SIZE IS BOUNDED BY THE WINDOW'S HEIGHT, WHICH IS THE HALF «СКРОЛЛА НЕ БУДЕТ»
+       ACTUALLY NEEDS. On this band the picture is stacked ABOVE the words, so every pixel of it is a
+       pixel of the card – D28's own law, and the reason a flat number cannot answer him: 336 fits an
+       iPad's 1024 with 89px to spare and misses a 900px window by 35 on the age-5 card, the one that
+       carries the whole identity form. `33vh` is that measurement written as a rule: it binds only
+       when the window is short, it applies to all nine cards rather than to the one that overflowed,
+       and it leaves the picture at its full 336 on the device this band was drawn for.
+       Measured: 336 at 768x1024, 297 at 768x900 – and every card fits at both. */
+    width: min(var(--plo-art), 33vh);
+    height: min(var(--plo-art), 33vh);
+    margin: 0 auto 14px;
+    border-radius: var(--radius-frame);
+  }
+
+  /* ⚠ THE FADE STANDS DOWN WITH THE BLEED IT BELONGED TO. Its job was to take a full-width painting
+     into the page so it had no bottom edge; on a centred, rounded picture it is a dark band across
+     the bottom third of a frame that HAS edges. The element and its rule above are untouched. */
+  .prologue-hero > .prologue-hero-fade {
+    display: none;
+  }
+
+  /* ⭐ THE ANSWERS GO TWO TO A ROW, and that is his item #18 arriving on this screen rather than a
+     taste: «кнопок в 700 пикселей не должно быть, максимум 500». One column of a 640px card is a
+     608px button; two are 300 each. The line that introduces the tournament question and the way out
+     of the prologue both span, because neither is an answer in the pair.
+     ⭐ It also buys back most of what the wider column costs in height, which is what makes «скролла
+     не будет» reachable on the tallest card in the walk. */
+  .prologue-card > .prologue-answers {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 8px;
+  }
+
+  .prologue-answers > .prologue-ask,
+  .prologue-answers > .prologue-skip {
+    grid-column: 1 / -1;
+  }
+
+  /* …and the age-5 card's three field rows pair up for the same reason: two of them are half-width
+     questions (two names, a month and a day) on a column that is now 608px wide. The country picker
+     spans, because its open state is a grid of twenty-four tiles. */
+  .prologue-card > .prologue-identity {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 12px;
+  }
+
+  .prologue-identity > .prologue-field:last-child {
+    grid-column: 1 / -1;
+  }
+}
+
+/* ⭐⭐⭐ AND THE DESKTOP IS «СБОКУ, НИЖЕ И ШИРЕ»: the painting down the left, the reading beside it,
+   and the decision under both at the full width of the card.
+
+   ⚠⚠ THE MECHANISM IS ONE GRID OVER THE CARD'S OWN CHILDREN – no wrapper is added, because every
+   block on this card is already a direct child of it. The picture takes column 1 and spans; the six
+   text blocks are named into column 2; the question and the answers take `1 / -1`, which auto-places
+   them at the first row where BOTH columns are free – i.e. under the span. `row-gap: 0` because the
+   rhythm is each block's own `margin-bottom` and always has been.
+   ⚠ `span 20` AND NOT `1 / -1` ON THE HERO: `-1` counts from the end of the EXPLICIT grid, and the
+   card's child set VARIES (the reason line is on one card of nine, the identity block on another,
+   the ask on four), so there is no fixed row to name. Twenty is more rows than this card can ever
+   draw; the empty ones have no height and no gap, and the picture's own height spreads across them
+   only when it is taller than the words – which is exactly when the answers should sit below it. */
+@media (min-width: 1024px) {
+  .prologue-card.prologue-card.prologue-card {
+    --plo-art: 392px;
+    max-width: 880px;
+    display: grid;
+    grid-template-columns: var(--plo-art) minmax(0, 1fr);
+    column-gap: 26px;
+    row-gap: 0;
+    align-content: start;
+  }
+
+  /* ⚠ AND THE HEIGHT CAP OF THE BAND BELOW IS LIFTED, because the reason for it is gone: beside the
+     words the picture costs the card no height at all unless it is taller than they are. */
+  .prologue-card > .prologue-hero.prologue-hero {
+    grid-column: 1;
+    grid-row: 1 / span 20;
+    align-self: start;
+    width: 100%;
+    height: auto;
+    margin: 0;
+  }
+
+  .prologue-card > .prologue-kicker,
+  .prologue-card > .prologue-title,
+  .prologue-card > .prologue-lede,
+  .prologue-card > .prologue-read,
+  .prologue-card > .prologue-reason,
+  .prologue-card > .prologue-identity {
+    grid-column: 2;
+  }
+
+  .prologue-card > .prologue-question,
+  .prologue-card > .prologue-answers {
+    grid-column: 1 / -1;
+  }
+
+  /* The reading column is 436px wide here, so the identity's rows stop pairing and stack again –
+     two 200px fields holding «September» and a surname is the cramped version of the same block. */
+  .prologue-card > .prologue-identity.prologue-identity {
+    display: flex;
+    flex-direction: column;
+  }
+}
 </style>
