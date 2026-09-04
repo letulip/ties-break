@@ -137,7 +137,7 @@ import { fileURLToPath } from 'node:url'
 import type { Locator, Page } from '@playwright/test'
 import { test, expect, type CareerAt } from './careerAt'
 import type { FixtureName } from '../tools/e2e-fixtures-read'
-import { answerOpeningKnock, dismissTourBriefing, enterConfirmButton } from './journey'
+import { answerOpeningKnock, dismissTourBriefing, enterConfirmButton, weekButton } from './journey'
 
 // =================================================================================================
 // HIS LADDER, AS THE FOUR WIDTHS THAT ARE ACTUALLY WALKED
@@ -195,6 +195,23 @@ interface Station {
    * real user of it, and this is the assertion the whole file's honesty rests on.
    */
   arrived: (page: Page) => Locator
+  /**
+   * ⭐⭐ ROUND 36 ITEM 17 – HOW THIS STATION GETS BACK TO ITS STARTING POINT BETWEEN WIDTHS, for the
+   * one room where `park()` below cannot be walked.
+   *
+   * ⚠⚠ IT EXISTS BECAUSE A TAKEOVER COVERS THE APP'S ONLY NAVIGATION. `park()` is Trophies-then-Home
+   * through the tab bar, and the live match is drawn inside `ui/TakeoverShell.vue`, which is a
+   * page-coloured layer pinned OVER the tab bar – so every tab button is in the accessibility tree,
+   * has a box, and cannot receive a click. The default park would time out on the second width.
+   *
+   * ⭐ AND THE PROPERTY `park` EXISTS FOR IS KEPT RATHER THAN WAIVED: the point of returning home is
+   * that each screen is MOUNTED FRESH at each width, so a `v-if` reading the viewport cannot hide
+   * behind a component that was merely re-laid-out. A reload is the strongest possible version of
+   * that – a new document, a new app, a new viewer – and `careerAt`'s seed is a one-shot latch that
+   * deliberately does NOT re-fire on a navigation (see its own header, written for the persistence
+   * specs), so the career the walk comes back to is the one the walk left.
+   */
+  park?: (page: Page) => Promise<void>
 }
 
 /**
@@ -732,6 +749,65 @@ const ROOMS: Record<string, Station> = {
     // stacking still fails here before any fingerprint is taken; a pager that stops drawing where it
     // SHOULD draw is caught by `the honest half…` below, which is a stronger check than an anchor.
     arrived: (page) => page.locator('.week-row > .week-stack.swipeable').first(),
+  },
+
+  // ⭐⭐⭐ ROUND 36 ITEM 17 – THE LIVE MATCH, AND IT HAD NEVER BEEN FINGERPRINTED AT ALL.
+  //
+  // ⚠⚠ THE HOLE, FOUND THE SAME HONEST WAY AS THE OTHER TWO IN THIS MAP. The station map above is
+  // derived from `src/components/screens/`, and `MatchViewer.vue` is not in that directory – it is
+  // mounted by FOUR callers (TournamentFlow, PracticeFlow, MatchReplay and Season's sandbox), none of
+  // which is a screen file. So the busiest surface in the app – the one the owner watches a match on
+  // – was outside the harness while the round's own rule was «всё, что есть на мобиле, должно быть
+  // 1 к 1». It matters most on exactly this screen: his item 17 rebuilds it for tablet and desktop
+  // and his own warning with it – «ВАЖНО: наши контролы скорости и моментов остаются с нами, дизайн
+  // их забыл» – and a speed plate dropped at 1280 was not a thing this file could have said.
+  //
+  // ⭐ WHAT IT CARRIES, and it is the whole of his warning as a machine check: the VIEW plate
+  // (`Every point` / `Key points only`), the SPEED plate (`Normal speed` / `Double speed` /
+  // `Quadruple speed`), the shout picker and its button, and `Skip to the result`. Nine controls the
+  // frames do not draw, held at 375, 768, 900 and 1280 by name.
+  //
+  // ⚠ `junior` RATHER THAN THE DEFAULT `pro`, for the same reason phase 5's stacked week is walked on
+  // `sinking`: this room needs a career one week from a tournament it can enter, which is what the
+  // junior fixture boots holding. `pro` boots with nothing entered.
+  'MatchViewer.vue – the live match, on the court': {
+    career: 'junior',
+    // See `Station.park`. A takeover covers the tab bar, so the way back is a new document.
+    //
+    // ⚠ THE WORDMARK IS PART OF THE ROUTE AND NOT A NUISANCE. «The splash shows on EVERY launch and
+    // waits for `game.init()` to settle» (careerAt.ts, at its own click on it), so pressing it is
+    // both the way in and the wait for the store to have finished asking the worker for its careers –
+    // which is exactly why this is a web-first click and not a poll.
+    park: async (page) => {
+      await page.reload()
+      await page.getByRole('button', { name: 'Tap to start' }).click()
+      await answerOpeningKnock(page)
+    },
+    visit: async (page) => {
+      // ⚠⚠ THE SCREEN BEHIND IS OPENED BEFORE IT IS COVERED, AND THAT IS NOT A CONVENIENCE. The
+      // takeover is a layer over Home, not a replacement for it: Home stays mounted, visible to the
+      // accessibility tree and therefore inside the fingerprint. `settleScreen` opens every
+      // disclosure before measuring, and Home's season ladder is a disclosure – one that is drawn
+      // already open from 768 up (D9) and shut at 375. Left to `settleScreen` it would be pressed
+      // THROUGH a blocking overlay, which cannot be done: the click is intercepted, the chip stays
+      // shut, and `openEveryDisclosure` throws after twelve passes. Pressing it while it is still
+      // reachable is both the honest reading and the only one that works.
+      await openEveryDisclosure(page)
+      // The week button ticks the world into the tournament reveal, and only the FIRST width does
+      // it: the pending tournament is world state, so every later reload lands straight on the
+      // splash with the same bracket and the same first-round pairing.
+      const begin = page.getByRole('button', { name: 'Begin', exact: true })
+      if (!(await begin.isVisible().catch(() => false))) await weekButton(page).click()
+      await expect(begin).toBeVisible()
+      await begin.click()
+      // The pre-match card's two doors. `Watch match` is the one that opens the court; `Skip` would
+      // resolve it and land on a box score.
+      await page.getByRole('button', { name: 'Watch match' }).click()
+    },
+    // ⚠ THE ANCHOR IS A CONTROL OF THE VIEWER'S OWN, and deliberately not the court: `.mv-court` is a
+    // CSS class, and this file's one rule is that arrival is proved by role and accessible name. It
+    // is also the one control on the screen that no other surface in the app draws.
+    arrived: (page) => page.getByRole('button', { name: 'Skip to the result' }),
   },
 
   'MoneyScreen.vue – a shelf inside the shop': {
@@ -1460,7 +1536,7 @@ async function walkOneScreen(
   const seen = new Map<number, string[]>()
   for (const width of WIDTHS) {
     await page.setViewportSize({ width, height: VIEWPORT_HEIGHT })
-    await park(page)
+    await (station.park ?? park)(page)
     await station.visit(page)
     // ⚠ ARRIVAL BEFORE MEASUREMENT, ALWAYS. This is mechanism 2 of the three in the header: a
     // walk that landed on the wrong screen would otherwise fingerprint that one four times and
