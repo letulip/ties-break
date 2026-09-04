@@ -3282,6 +3282,44 @@ function shopRowPaidMeta(row: ShopRowView): string | undefined {
   margin-top: 14px;
 }
 
+/* ⭐⭐⭐ ROUND 36 PHASE 4 – THE FRONT DOOR STOPS GROWING, AND THIS IS THE ONE BLOCK IN THE APP THAT
+   GOT BIGGER AND TALLER AS THE WINDOW DID. A `1fr` column and a fixed `aspect-ratio` is a card whose
+   HEIGHT is its width times 1.542, so widening the reading column raised the whole grid off the
+   bottom of the screen. Measured on the shipped build, one card and then the page:
+
+     375   109 x 168 px   grid  344px   page 1057px
+     768   240 x 370 px   grid  748px   page 1297px
+     900   284 x 438 px   grid  884px   page 1433px
+    1280   311 x 479 px   grid  966px   page 1534px
+
+   – so the shop's front door is 477px TALLER on a 1280px monitor than on a 375px phone, which is
+   the opposite of what a wider screen is for. Every other screen in this round got shorter.
+
+   ⚠ THE CAP AND NOT A FOURTH COLUMN, on purpose. His layout for these six is explicit and it is a
+   3x2: «первый ряд invest, business, property, остальное 2й ряд» (round 35 #3), and the tall shape
+   is his too – «сделаем не квадратными, как в макете, а высокими (смотри соотношение сторон
+   картинок)». Re-flowing six tiles into one row of six would change the arrangement he specified;
+   capping the grid keeps his 3x2 and his ratio exactly and only stops the tiles becoming posters.
+   640 is the width this round already caps a reading block at (D18's «Her own account», his own
+   «посмотрите, чтобы красиво было»), and it puts the tile at 208px – nearly twice the phone's, and
+   the whole door back inside one screenful. ⭐ IF HE WANTS THE SIX IN ONE ROW ON A DESKTOP that is
+   `grid-template-columns` here and nothing else; it is D25 and it is his call, not ours.
+
+   ⚠⚠ AND `width: 100%` IS LOAD-BEARING, NOT BELT-AND-BRACES – phase 3's own defect, met again on a
+   second screen. This grid is an item of a flex column, and A GRID OR FLEX ITEM WITH AUTO INLINE
+   MARGINS DOES NOT STRETCH: the auto margins beat the container's stretch, the box falls back to
+   max-content, and the six tiles – which are `width: 100%` of an indefinite width – collapse.
+   Measured on the first build of this rule: `.shelf-cats` came out **22px wide with 2 x 3px tiles**
+   at 768 and at every width above it. `src/style.css`'s `#app:has(> nav.tab-bar) > .app-content`
+   carries the same sentence about the same mistake. */
+@media (min-width: 768px) {
+  .shelf-cats {
+    width: 100%;
+    max-width: 640px;
+    margin-inline: auto;
+  }
+}
+
 .shelf-cat {
   position: relative;
   display: block;
@@ -3348,6 +3386,60 @@ function shopRowPaidMeta(row: ShopRowView): string | undefined {
   display: flex;
   flex-direction: column;
   gap: 12px;
+}
+
+/* ⭐⭐ ROUND 36 PHASE 4 – THE SHELF'S ROWS GO TWO TO A ROW, AND IT IS THE COACH MARKET'S OWN RULE
+   RATHER THAN A SECOND ANSWER. A shop row is a photo Card with the painting on one side at 40% and
+   the words on the other, `min-height: 132px`; the coach row is a photo card with a portrait strip
+   on one side and the words on the other. They are the same object and they were already the same
+   width on a phone (343px), so they get the same treatment D3 and D17 argued for the market:
+
+     768–900   two to a row  (364px each at 768, exactly the market's card)
+     1024+     `auto-fill, minmax(343px, 1fr)` – as many as fit at no less than the phone's own card
+
+   Measured before: one row per card, 736px wide at 768 and **948px at 1280**, with a 378px painting
+   at one end and two short sentences at the other. Measured after: 4 cars in two rows instead of
+   four, and the category is a shelf rather than a list.
+
+   ⚠ THE FLOOR IS THE PHONE'S CARD AND NOT A COUNT, which is D17's finding arriving on a second
+   screen: three of these in a 948px column would be 310px each – narrower than the phone's – and a
+   card whose words wrap more is a card that gets taller, so the page would grow to save width.
+
+   ⚠ THE HEADING AND ITS NOTE SPAN, they are not cells beside a card: a family is a heading with a
+   shelf under it. Their own `-8px` pairing margin is untouched and works the same in a grid.
+
+   ⚠⚠ THE SELECTORS ARE DOUBLED AND TRIPLED, AND THE MUTATIONS SAY WHICH HALF OF THAT IS REAL.
+   A media query adds no specificity, so both rungs would otherwise tie – with the flex rule above
+   and with each other – and `.tier-block.tier-block` in src/style.css records a case where a
+   browser and happy-dom settled such a tie in OPPOSITE directions. Measured here, on this file's
+   own arms:
+
+     `.shop-family.shop-family` -> `.shop-family` (the 768 rung)      NOTHING WENT RED
+     `.shop-family.shop-family.shop-family` -> two classes (1024)     NOTHING WENT RED
+     `.shop-family.shop-family.shop-family` -> ONE class (1024)       RED, and by name
+
+   – so what is genuinely load-bearing is that the DESKTOP rung outweighs the TABLET rung; against
+   the base rule outside the query, source order is enough in both engines. The doubling stays
+   anyway, and the honest reason is that it costs nothing while a rule which wins only on source
+   order is one re-order away from silently losing – but this comment says which of the two claims
+   the tests actually hold. */
+@media (min-width: 768px) {
+  .shop-family.shop-family {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: start;
+  }
+
+  .shop-family .shop-family-head,
+  .shop-family .shop-family-note {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (min-width: 1024px) {
+  .shop-family.shop-family.shop-family {
+    grid-template-columns: repeat(auto-fill, minmax(343px, 1fr));
+  }
 }
 
 /* The heading and its note are one object with the cards under them, so they keep the tighter

@@ -558,6 +558,24 @@ body {
      subtract it, and a token that only exists inside one query is a token those rules cannot read. */
   --app-rail-w: 196px;
   --app-rail-gap: 24px;
+  /* ⭐⭐⭐ ROUND 36 PHASE 4 – THE TAKEOVER'S READING COLUMN, which is NOT `--app-col-max` and never
+     was. A takeover covers the tab shell instead of living inside it, so it inherits nothing from
+     `#app`: the tournament flow, the match viewer, the draw, the finale poster, the match replay,
+     the inbox sheet and the planner all read the 480 spelled below, and on a 1280px screen that is
+     a 448px column with 400px of empty page down each side. Phase 4 measured it: the live court was
+     446px wide at 768, at 900, at 1024 and at 1280 alike – the same picture at four screen sizes.
+
+     ⚠ IT IS A TOKEN BECAUSE THE NUMBER WAS ALREADY SPELLED TWICE – `.onboarding-body, .tf-body` and
+     `.tf-top` – and the header and the body of one screen drifting apart is the `--app-pad-x`
+     lesson with a header on it. Both read this now.
+
+     ⭐ AND THE CAP PAST 768 IS `--app-max-width`, WHICH IS THE OTHER TAKEOVERS' OWN CAP. The wizard
+     (R14-9) and the tour briefing already sit on that token; the tournament flow is the third
+     takeover in the app and it now sits on it too. That is worth more than a fourth number: phase
+     1's open question for the owner – «do the takeovers follow the frame out to 1200 on a desktop,
+     or keep their 880?» – is still decided in exactly one place, and now it decides three surfaces
+     instead of two. ⚠ Below 768 this is 480, unchanged, so nothing on a phone or at 520/576 moves. */
+  --takeover-col-max: 480px;
   /* ⭐⭐ ROUND 36 PHASE 2 – THE HERO'S SHAPE, AND IT IS A TOKEN BECAUSE HE TIED TWO SURFACES TO IT.
      «hero image на home будет НЕ квадратной, но все оверлеи с текстом остаются как у нас», and one
      line later, about the tournament preview: «картинка занимает ту же пропорцию, что и hero на
@@ -603,6 +621,9 @@ body {
        the same relative point of the image with the same relative point of the window – so a wider
        window shows a band THROUGH her face rather than a band above or below it. */
     --hero-aspect: 768 / 400;
+    /* PHASE 4. The takeover's column joins the other two takeovers on their own cap – see the token
+       for the argument, and `docs/specs/responsive-decisions-2026-09.md` D22 for what it moves. */
+    --takeover-col-max: var(--app-max-width);
   }
 }
 
@@ -1323,7 +1344,9 @@ select {
   flex: 1;
   overflow-y: auto;
   width: 100%;
-  max-width: 480px;
+  /* ROUND 36 PHASE 4: the 480 that stood here is the token's own mobile value, so this computes to
+     exactly what it always did below 768 and grows on his ladder above it. */
+  max-width: var(--takeover-col-max);
   margin: 0 auto;
   padding: 8px 24px 24px;
 }
@@ -2515,7 +2538,11 @@ tr.kid-row td {
   justify-content: space-between;
   gap: 12px;
   width: 100%;
-  max-width: 480px;
+  /* ⚠ ROUND 36 PHASE 4: THE SAME TOKEN THE BODY READS, and this rule is half the reason it is a
+     token. The header and the body of one screen are one column to the eye – the note under
+     `.tf-body`'s gutter already says so about the INSET – and laddering the body alone would have
+     left the title and the exit control on a 480px rail above an 848px screen. */
+  max-width: var(--takeover-col-max);
   margin: 0 auto;
   /* R17 #8: the side gutter is `--app-pad-x`, matching the body under it - see `.tf-body`. */
   padding: 16px var(--app-pad-x) 8px;

@@ -304,6 +304,36 @@ async function resumeCollege(): Promise<void> {
     calc(var(--app-pad-bottom) + env(safe-area-inset-bottom));
 }
 
+/* ⭐⭐⭐ ROUND 36 PHASE 4 – THE EPILOGUE GETS A COLUMN, AND IT NEVER HAD ONE.
+   `.ending` is a `position: fixed` takeover, so like the wizard (R14-9) it hangs OUTSIDE the frame
+   every tabbed screen inherits – and unlike the wizard nothing inside it was ever capped. Measured
+   on the shipped build at 1280x900, before this rule existed:
+
+     .ending-head   1214px wide – the eyebrow at x=33 and «1 / 7» at x=1220
+     .album-nav     1214px wide – **Back at x=33 and Next at x=1208**, 1175px apart,
+                    around a photograph 285px wide sitting in the middle of them
+
+   An album is a page you TURN: the two arrows frame the picture, which is what they do on a phone
+   at 309px apart. Sent to opposite ends of a monitor they stop being a pager and become two
+   unrelated buttons – and this is the last screen of a career, so it is the one place the game
+   should not look like a phone app stretched sideways.
+
+   ⚠ THE CAP IS ON THE SECTIONS AND NOT ON `.ending`, for `.ob-shell`'s own reason: this element
+   paints the celebration ground over the whole app, and capping the painted box would letterbox the
+   epilogue in the page colour instead of centring its column on it.
+
+   480 IS THE NUMBER THE CONTENT ALREADY ASKED FOR, not a taste: `.ending-totals` below caps itself
+   at 460, `.ending-fork` at 360, `.album-photo` at `min(280px, 78vw)` and the three prose blocks at
+   34–36ch. Nothing on this screen wants to be wider than 460, so the column is that plus the room
+   the arrows sit in. ⚠ Below 768 there is no rule at all, so the phone is untouched. */
+@media (min-width: 768px) {
+  .ending > section {
+    width: 100%;
+    max-width: 480px;
+    margin-inline: auto;
+  }
+}
+
 .ending-head {
   display: flex;
   align-items: baseline;

@@ -1079,7 +1079,17 @@ watch(finished, (isFinished) => {
          I's header (tournament, round, "Skip match") and its CTA belong to whichever flow mounts
          this viewer, not here. -->
     <Card variant="photo" class="mv-panel">
-      <div class="mv-court">
+      <!-- ⭐⭐ ROUND 36 PHASE 4 – THE COURT STOPS AT ITS OWN DRAWING SURFACE, and the cap is bound
+           off `CSS_W` for the same reason the ratio below is: the element and the bitmap must not
+           drift apart. The canvas is a FIXED internal resolution (see the constants) scaled by
+           `devicePixelRatio`, so every CSS pixel past 680 is a 680px bitmap being enlarged. Until
+           this phase the takeover column was 480 at every width and the court could never reach
+           680; the column now grows to 848, and without this the court would be upscaled 1.25x on
+           the desktop and 1.85x inside the prologue's weekend, which has no column at all.
+           `margin-inline: auto` centres what is left, and it is the COURT that is capped rather
+           than the canvas because `.mv-chrome` – the Live badge, the clock and the weather – is
+           positioned against this box. -->
+      <div class="mv-court" :style="{ maxWidth: `${CSS_W}px` }">
         <canvas ref="canvasRef" class="mv-canvas" :style="{ aspectRatio: `${CSS_W} / ${CSS_H}` }"></canvas>
         <!-- BOTH OF THESE SIT IN THE TOP RUN-OFF BAND, NEVER ON THE PLAYING SURFACE (owner,
              29.07). They are furniture: the court is what the player is watching. The badge is
@@ -1437,6 +1447,10 @@ watch(finished, (isFinished) => {
 .mv-court {
   position: relative;
   line-height: 0; /* no descender gap under the canvas */
+  /* ⚠ THE CAP ITSELF IS BOUND INLINE off `CSS_W` – see the template. This is only the centring half,
+     and it is inert until the cap bites: below 680 of column the box is narrower than its max and
+     an auto margin resolves to zero. */
+  margin-inline: auto;
 }
 
 /* `aspect-ratio` is bound inline from CSS_W/CSS_H so the element and the drawing surface cannot
