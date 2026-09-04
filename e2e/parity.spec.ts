@@ -67,7 +67,7 @@
 import { readdirSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import type { Locator, Page } from '@playwright/test'
-import { test, expect } from './careerAt'
+import { test, expect, type CareerAt } from './careerAt'
 import { answerOpeningKnock, dismissTourBriefing } from './journey'
 
 // =================================================================================================
@@ -476,62 +476,130 @@ test.describe('every screen is 1 to 1 at 375, 768, 900 and 1280', () => {
 
   for (const [screen, station] of Object.entries(STATIONS)) {
     test(`${screen} carries the same controls at every width`, async ({ page, careerAt }) => {
-      const crashes: string[] = []
-      page.on('pageerror', (error) => crashes.push(error.message))
-
-      // ⚠ THE HEAVIEST CAREER, on purpose. `pro` is "eight seasons in, inside the sponsor window,
-      // ledgers full – the heavy-state screens" (e2e/fixtures/manifest.json), so every screen here
-      // is drawn with something on it. A fingerprint taken against an empty career would be a
-      // smaller claim wearing the same green tick.
-      await page.setViewportSize({ width: BASE_WIDTH, height: VIEWPORT_HEIGHT })
-      await careerAt('pro')
-      // Both are doorways rather than assertions – journey.ts argues each at length. The knock is a
-      // blocking decision every seeded career wakes up holding; the briefing fires on the boot of
-      // any career already inside the top 50, which `pro` is.
-      await answerOpeningKnock(page)
-      await dismissTourBriefing(page)
-
-      const seen = new Map<number, string[]>()
-      for (const width of WIDTHS) {
-        await page.setViewportSize({ width, height: VIEWPORT_HEIGHT })
-        await park(page)
-        await station.visit(page)
-        // ⚠ ARRIVAL BEFORE MEASUREMENT, ALWAYS. This is mechanism 2 of the three in the header: a
-        // walk that landed on the wrong screen would otherwise fingerprint that one four times and
-        // report perfect parity about a screen it never visited.
-        await expect(
-          station.arrived(page),
-          `${screen} at ${width}px – the walk did not arrive, so there is nothing to compare`,
-        ).toBeVisible()
-        seen.set(width, await fingerprint(page))
-      }
-
-      const base = seen.get(BASE_WIDTH)!
-      expect(
-        base.length,
-        `${screen} fingerprints only ${base.length} things at ${BASE_WIDTH}px. Either the screen ` +
-          'draws almost nothing or the walk did not really arrive - and four near-empty sets are ' +
-          'equal, which is this harness passing while proving nothing.',
-      ).toBeGreaterThanOrEqual(FINGERPRINT_FLOOR)
-
-      for (const width of WIDER_WIDTHS) {
-        const wide = seen.get(width)!
-        // ⭐ THE OWNER'S CRITERION, BOTH WAYS ROUND. First half: «старого уйти ничего не должно».
-        expect(
-          missingFrom(base, wide),
-          `${screen}: these are on the phone at ${BASE_WIDTH}px and NOT at ${width}px. ` +
-            '«всё, что есть на мобиле, должно быть 1 к 1 на других форматах»',
-        ).toEqual([])
-        // ⭐ Second half: «ничего нового не должно появиться». A control that exists only on the
-        // wide format is as much a break of «1 к 1» as one that vanished.
-        expect(
-          missingFrom(wide, base),
-          `${screen}: these are at ${width}px and NOT on the phone at ${BASE_WIDTH}px. ` +
-            '«Все иконки наши, ничего нового по идее не должно появиться»',
-        ).toEqual([])
-      }
-
-      expect(crashes, `${screen} threw while being walked at four widths`).toEqual([])
+      await walkOneScreen(page, careerAt, screen, station)
     })
   }
 })
+
+// =================================================================================================
+// ⭐⭐ ROUND 36 PHASE 4 – THE ROOMS BEHIND A CHAPTER, AND WHY THEY NEED A SECOND MAP
+// =================================================================================================
+//
+// The map above is DERIVED from `src/components/screens/`, which is what stops it becoming «the
+// screens somebody remembered». Its cost is that a screen file is the unit: `MoneyScreen.vue` has
+// ONE station, and that station lands on the Spending chapter. Everything behind the other three
+// chapter buttons – History, Bills and, since round 35, a two-level SHOP – is in the same file and
+// therefore already «covered» as far as the derivation is concerned, while no fingerprint has ever
+// been taken of it.
+//
+// ⚠⚠ AND PHASE 4 FOUND THAT OUT THE HONEST WAY: its own deliberate break had to be aimed at the
+// chapter ROW, because a control hidden inside the shop would not have been seen at all. Phase 4
+// rebuilt the shop's front door and its shelf rows for wide screens, so «1 к 1» on those two rooms
+// is exactly the claim this round is about, and it was unmeasured.
+//
+// ⚠ SO THIS MAP IS HAND-WRITTEN AND SAYS SO. It cannot be derived – there is no directory of
+// chapters – which is the property the map above has and this one has not. What keeps it honest is
+// the same three mechanisms: an arrival anchor before anything is measured, the fingerprint floor,
+// and one fresh career per station. A room that stops being reachable fails at its anchor.
+const ROOMS: Record<string, Station> = {
+  'MoneyScreen.vue – the shop’s front door': {
+    visit: async (page) => {
+      await page.getByRole('button', { name: /^Family budget/ }).click()
+      await page
+        .getByRole('group', { name: 'Which part of the budget' })
+        .getByRole('button', { name: 'Shop' })
+        .click()
+    },
+    // Round 35 #3's six category cards. `Invest` is the first of them and is a card, not a segment:
+    // the shelf's own switcher is one press deeper, which is what makes this the FRONT DOOR.
+    arrived: (page) => page.getByRole('button', { name: 'Invest' }).first(),
+  },
+
+  'MoneyScreen.vue – a shelf inside the shop': {
+    visit: async (page) => {
+      await page.getByRole('button', { name: /^Family budget/ }).click()
+      await page
+        .getByRole('group', { name: 'Which part of the budget' })
+        .getByRole('button', { name: 'Shop' })
+        .click()
+      await page.getByRole('button', { name: 'Cars' }).first().click()
+    },
+    arrived: (page) => page.getByRole('group', { name: 'Which part of the shelf' }),
+  },
+}
+
+test.describe('the rooms behind a chapter are 1 to 1 too', () => {
+  for (const [room, station] of Object.entries(ROOMS)) {
+    test(`${room} carries the same controls at every width`, async ({ page, careerAt }) => {
+      await walkOneScreen(page, careerAt, room, station)
+    })
+  }
+})
+
+/**
+ * ONE WALK, USED BY BOTH MAPS – extracted in phase 4 rather than copied, because a second copy of
+ * this body is a second place for the arrival check, the floor and the two-way diff to drift out of.
+ */
+async function walkOneScreen(
+  page: Page,
+  careerAt: CareerAt,
+  screen: string,
+  station: Station,
+): Promise<void> {
+  const crashes: string[] = []
+  page.on('pageerror', (error) => crashes.push(error.message))
+
+  // ⚠ THE HEAVIEST CAREER, on purpose. `pro` is "eight seasons in, inside the sponsor window,
+  // ledgers full – the heavy-state screens" (e2e/fixtures/manifest.json), so every screen here
+  // is drawn with something on it. A fingerprint taken against an empty career would be a
+  // smaller claim wearing the same green tick.
+  await page.setViewportSize({ width: BASE_WIDTH, height: VIEWPORT_HEIGHT })
+  await careerAt('pro')
+  // Both are doorways rather than assertions – journey.ts argues each at length. The knock is a
+  // blocking decision every seeded career wakes up holding; the briefing fires on the boot of
+  // any career already inside the top 50, which `pro` is.
+  await answerOpeningKnock(page)
+  await dismissTourBriefing(page)
+
+  const seen = new Map<number, string[]>()
+  for (const width of WIDTHS) {
+    await page.setViewportSize({ width, height: VIEWPORT_HEIGHT })
+    await park(page)
+    await station.visit(page)
+    // ⚠ ARRIVAL BEFORE MEASUREMENT, ALWAYS. This is mechanism 2 of the three in the header: a
+    // walk that landed on the wrong screen would otherwise fingerprint that one four times and
+    // report perfect parity about a screen it never visited.
+    await expect(
+      station.arrived(page),
+      `${screen} at ${width}px – the walk did not arrive, so there is nothing to compare`,
+    ).toBeVisible()
+    seen.set(width, await fingerprint(page))
+  }
+
+  const base = seen.get(BASE_WIDTH)!
+  expect(
+    base.length,
+    `${screen} fingerprints only ${base.length} things at ${BASE_WIDTH}px. Either the screen ` +
+      'draws almost nothing or the walk did not really arrive - and four near-empty sets are ' +
+      'equal, which is this harness passing while proving nothing.',
+  ).toBeGreaterThanOrEqual(FINGERPRINT_FLOOR)
+
+  for (const width of WIDER_WIDTHS) {
+    const wide = seen.get(width)!
+    // ⭐ THE OWNER'S CRITERION, BOTH WAYS ROUND. First half: «старого уйти ничего не должно».
+    expect(
+      missingFrom(base, wide),
+      `${screen}: these are on the phone at ${BASE_WIDTH}px and NOT at ${width}px. ` +
+        '«всё, что есть на мобиле, должно быть 1 к 1 на других форматах»',
+    ).toEqual([])
+    // ⭐ Second half: «ничего нового не должно появиться». A control that exists only on the
+    // wide format is as much a break of «1 к 1» as one that vanished.
+    expect(
+      missingFrom(wide, base),
+      `${screen}: these are at ${width}px and NOT on the phone at ${BASE_WIDTH}px. ` +
+        '«Все иконки наши, ничего нового по идее не должно появиться»',
+    ).toEqual([])
+  }
+
+  expect(crashes, `${screen} threw while being walked at four widths`).toEqual([])
+}
