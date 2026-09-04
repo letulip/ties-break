@@ -2366,6 +2366,17 @@ function shopRowCornerAction(row: ShopRowView): boolean {
                the side this family's painting stands on, or null for a rung with no painting, and
                the class it puts on the card is what turns the band above the words into a band
                beside them. A rung with no art is untouched and draws exactly as it did. -->
+          <!-- ⭐⭐ ROUND 36 REVIEW #11, #12 AND #13 – TWO MORE CLASSES AND NOT ONE MORE ELEMENT.
+               `shop-row--art-wide` carries the owner's own `width: 50%` / `calc(45% + 12px)` on the
+               four families the item names; `shop-row--corner-action` sends the buy/sell control to
+               the card's bottom-right corner on the two families items 12 and 13 name. Both
+               predicates, both quotes and the reasoning are on `shopRowArtWide` and
+               `shopRowCornerAction` in the script block, which is where Cyrillic is allowed.
+               ⚠⚠ AND THE NOTE IS AN HTML COMMENT RATHER THAN A `//` ONE INSIDE THE BINDING, WHICH
+               IS A RULE AND NOT A STYLE. `tests/coach-voice.test.ts` (R15-7, «no surface guesses a
+               professional's gender») strips `<!-- -->` from a template before it scans and cannot
+               see a `//` line inside an expression - so the first draft of this slice put a prose
+               note in the class array, wrote the word it forbids, and reddened that file by name. -->
           <Card
             v-for="row in shopRowsOf(family.key)"
             :key="row.id"
@@ -2375,10 +2386,7 @@ function shopRowCornerAction(row: ShopRowView): boolean {
               shopRowArtSide(row) ? `shop-row--art-${shopRowArtSide(row)}` : undefined,
               {
                 'is-owned': row.valueCents !== null,
-                // ⭐ ROUND 36 REVIEW #11 – his own `width: 50%` / `calc(45% + 12px)` on the four
-                //   families he named. See `shopRowArtWide` in the script block.
                 'shop-row--art-wide': shopRowArtWide(row),
-                // ⭐ ROUND 36 REVIEW #12 AND #13 – see `shopRowCornerAction` in the script block.
                 'shop-row--corner-action': shopRowCornerAction(row),
               },
             ]"

@@ -18,7 +18,14 @@
 //
 // ⚠ MUTATION-VERIFIED – what each mutation reddened is written above each block, and the ones that
 // did NOT bite are recorded in docs/rounds/round-36-review.md rather than quietly dropped.
-import { describe, it, expect, beforeEach, afterEach } from 'vitest'
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
+// ⚠ A RUNNER-SIZED CEILING, and it is the same arithmetic `week-recap-kid-share.test.ts` writes out
+// in full: the cases below mount real screens over careers walked by the real engine, and GitHub's
+// 2-core runner is measured at 4-5x this machine on this suite. The five-season walk is hoisted out
+// of its case (see `grown` below), so what is left inside one is a mount; 30s is far above that and
+// can only fire on a genuine wedge. Measured here first: the un-hoisted version passed in 9.6s alone
+// and timed out at the 5s default in a full run.
+vi.setConfig({ testTimeout: 30_000 })
 import { mount } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
 import '../../src/style.css'
@@ -205,17 +212,28 @@ describe('round 36 review #14 – her account’s photograph grows', () => {
   })
   afterEach(() => setViewport(PHONE))
 
-  /** ⚠ THE RAMP HAS TO BE RUNNING for the strip to be on the screen at all – her eighteenth. The
-   *  fixture is walked to it rather than faked, which is round35-shop.test.ts's own recipe. */
-  function grown(seed: string): Snapshot {
-    const snap = toSnapshot(rich(seed, 52 * 5))
-    expect(snap.ageYears, 'the fixture is past the threshold birthday').toBeGreaterThanOrEqual(18)
-    return snap
+  /**
+   * ⚠ THE RAMP HAS TO BE RUNNING for the strip to be on the screen at all – her eighteenth. The
+   * fixture is walked to it rather than faked, which is round35-shop.test.ts's own recipe.
+   *
+   * ⚠⚠ AND IT IS WALKED **ONCE**, OUTSIDE THE CASES, WHICH IS `week-recap-kid-share.test.ts`'s own
+   * lesson met again. Five seasons of real ticks is seconds of engine, and the first draft paid for
+   * two of them INSIDE one case: it passed alone and TIMED OUT AT 5s in a full suite run under
+   * contention – a red that is neither a defect nor a flake but a fixture in the wrong place. The
+   * snapshot is read-only data, so one career serves every viewport.
+   */
+  let grownSnap: Snapshot | null = null
+  function grown(): Snapshot {
+    if (!grownSnap) {
+      grownSnap = toSnapshot(rich('r36r-14-account', 52 * 5))
+      expect(grownSnap.ageYears, 'the fixture is past the threshold birthday').toBeGreaterThanOrEqual(18)
+    }
+    return grownSnap
   }
 
-  async function photoBox(vp: { width: number; height: number }, seed: string) {
+  async function photoBox(vp: { width: number; height: number }) {
     setViewport(vp)
-    const wrapper = await mountMoney(grown(seed))
+    const wrapper = await mountMoney(grown())
     const paper = document.querySelector('.money-share-photo')
     expect(paper, 'her account is on the screen').toBeTruthy()
     const img = paper!.querySelector('img')
@@ -234,8 +252,8 @@ describe('round 36 review #14 – her account’s photograph grows', () => {
 
   it('⭐⭐ the paper and the window both grow past 768, at the card’s own ratio', async () => {
     assertSheetPresent()
-    const phone = await photoBox(PHONE, 'r36r-14-phone')
-    const tablet = await photoBox(TABLET, 'r36r-14-tablet')
+    const phone = await photoBox(PHONE)
+    const tablet = await photoBox(TABLET)
     expect(phone, 'the phone keeps round 35’s figures').toEqual({ paper: 66, window: 52 })
     expect(tablet.paper, 'the paper is bigger on a tablet').toBeGreaterThan(phone.paper)
     // ⚠⚠ THE WINDOW IS THE ARM THAT MATTERS. `Polaroid` writes the photo's height as an INLINE
@@ -251,7 +269,7 @@ describe('round 36 review #14 – her account’s photograph grows', () => {
   it('⭐ …and the card itself does not grow with it – D18’s cap is untouched', async () => {
     assertSheetPresent()
     setViewport(DESKTOP)
-    const wrapper = await mountMoney(grown('r36r-14-desktop'))
+    const wrapper = await mountMoney(grown())
     expect(
       getComputedStyle(document.querySelector('.money-share')!).maxWidth,
       'phase 3’s reading width, unmoved',
