@@ -1,8 +1,8 @@
 ---
 type: spec
-status: approved
+status: current
 area: ui
-canonical: true
+canonical: false
 last-reviewed: 2026-09-03
 ---
 

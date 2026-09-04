@@ -498,12 +498,84 @@ body {
      `#app`, which caps every TAB screen - and the onboarding wizard is a `position: fixed` takeover,
      so it is outside `#app` and inherited nothing. Naming the number is what lets the wizard reuse
      this cap instead of growing a second one; the same argument as `--app-pad-x` two lines up, which
-     exists because one pair of numbers was spelled in two places and drifted. */
+     exists because one pair of numbers was spelled in two places and drifted.
+     ⚠ ROUND 36 PHASE 1: `#app` NO LONGER READS THIS. The paragraph above is kept as written because
+     it is the reasoning R14-9 recorded, but the frame moved to `--app-shell-max` below and this is
+     now the TAKEOVER cap – the wizard's and the tour briefing's, still one token for the two of
+     them. The note under `--app-shell-max` is why. */
   --app-max-width: 880px;
+  /* ⭐⭐ ROUND 36 PHASE 1 – THE FRAME IS A LADDER NOW, AND IT IS A SECOND TOKEN RATHER THAN THIS ONE.
+     `--app-max-width` above has two consumers besides `#app`, and both are full-screen takeovers:
+     the onboarding wizard (R14-9) and the tour briefing. Laddering it in place would have taken both
+     of them to 1200px on a desktop – a visible change to two surfaces, in the one phase that
+     promised «nothing moves yet», and a design decision (how wide should an onboarding column be on
+     a 1440 monitor?) that belongs to phase 3's shell and phase 5's review document, not to a
+     container change.
+     ⚠ THE ANTI-DRIFT RULE R14-9 WROTE IS UNTOUCHED, and it is worth stating exactly, because the
+     first attempt at this round got it backwards. What that pin forbids is a HARD-CODED 880 in a
+     component – "a second cap that drifts the first time the app frame moves". It is satisfied by
+     the two takeovers sharing ONE NAMED TOKEN, which they still do; it was never a claim that the
+     frame and the takeovers must be the same number forever. The frame moved, they did not, and the
+     day they should follow it, this token is where that decision gets made once.
+     `tests/component/tour-briefing.test.ts` measures the 880 and is the reason this is not a guess:
+     laddering this token turned it red at 1280 with «expected 1200 to be 880». */
+  --app-shell-max: 880px;
+  /* ⭐⭐ AND THE COLUMN, WHICH IS NOT THE FRAME EITHER – THE OTHER THING THAT SURPRISED THIS ROUND.
+     `--app-shell-max` caps `#app`, the padded FRAME. What a player actually reads is
+     `main.app-content` inside it, and that has always been capped at 520px – so on a 1280px screen
+     the app is a 520px column, not the 880 the frame suggests. Widening only the frame would have
+     changed nothing at all on screen, which is the quietest way a responsive pass can be vacuous.
+     Named here for the same reason `--app-max-width` was: three rules read this number (the column
+     itself, and the two fixed bars that hug it), and a literal in each is three numbers that drift.
+     ⚠ 520 IS UNCHANGED BELOW 768 and every ladder rule below starts at 768, so at 375 / 520 / 576
+     the computed value of every token on this page is the one it had before this round. */
+  --app-col-max: 520px;
+  /* The same column, for the two boxes that are `position: fixed` and centred on the VIEWPORT
+     rather than laid inside `#app` – the tab bar and the floating week button. They cannot say
+     `100%` and mean the column: a fixed box's percentage resolves against the viewport, so past 768
+     the ladder below spells the column out as "the frame, minus the frame's own gutters". */
+  --app-bar-max: 520px;
+}
+
+/* ⭐⭐⭐ HIS BREAKPOINT LADDER (docs/specs/responsive-2026-09.md, owner 03.09):
+   «768 как раз тоже можно до 900 тянуть вполне, потом фиксировать посередине, а дальше десктоп от
+   1024.»
+
+       < 768        mobile – untouched, and there is deliberately no rule for it
+       768 – 900    fluid: the column grows with the window
+       901 – 1023   FIXED at 900 and centred
+       >= 1024      fluid to 1200, then capped and centred
+
+   ⚠ THE 901–1023 PLATEAU IS THE POINT, not an oversight: the tablet layout stops growing and sits
+   centred until the desktop shell (phase 3) takes over. Anything that stretches through it is wrong.
+
+   ⚠ THREE TOKENS AND NOT ONE, because the app has three boxes that are not the same box: the FRAME
+   (`#app`), the COLUMN inside it (`main.app-content`, which is what a player reads) and the fixed
+   BARS centred on the viewport. Below 768 they hold 880 / 520 / 520 – the numbers they have today,
+   spelled out – and every rule here starts at 768, so on a phone not one computed value moves.
+   `--app-max-width` is deliberately absent from this ladder; see its note above. */
+@media (min-width: 768px) {
+  :root {
+    --app-shell-max: 100%;
+    --app-col-max: 100%;
+    --app-bar-max: calc(min(var(--app-shell-max), 100%) - 2 * var(--app-pad-x));
+  }
+}
+
+@media (min-width: 901px) {
+  :root {
+    --app-shell-max: 900px;
+  }
+}
+
+@media (min-width: 1024px) {
+  :root {
+    --app-shell-max: 1200px;
+  }
 }
 
 #app {
-  max-width: var(--app-max-width);
+  max-width: var(--app-shell-max);
   margin: 0 auto;
   padding: var(--app-pad-top) var(--app-pad-x) var(--app-pad-bottom);
 }
@@ -861,8 +933,10 @@ select {
    photograph now (.diary-avatar-btn / .diary-kid-hint), her name is the 42px hero headline, and
    the W/$ pill's wallet door became the Family budget card. Nothing here had another consumer. */
 
+/* ⭐ THE COLUMN. Round 36 phase 1 replaced the literal 520 with the token; below 768 the token IS
+   520, so nothing about a phone moved. See the ladder beside `--app-max-width`. */
 .app-content {
-  max-width: 520px;
+  max-width: var(--app-col-max);
   margin: 0 auto;
   padding-bottom: 88px;
 }
@@ -873,7 +947,10 @@ select {
   transform: translateX(-50%);
   bottom: 0;
   width: 100%;
-  max-width: 520px;
+  /* ⚠ THE BAR FOLLOWS THE COLUMN, and it has to: the rule below already says it "hugs the content
+     column", so a 520px bar under a 1168px column would be the container change half-applied. It is
+     `--app-bar-max` and not `--app-col-max` because this box is `position: fixed` – see the token. */
+  max-width: var(--app-bar-max);
   display: flex;
   background: var(--panel);
   border-top: 1px solid var(--line);
@@ -1430,7 +1507,10 @@ button.primary.risky {
   transform: translateX(-50%);
   bottom: 58px;
   width: 100%;
-  max-width: 520px;
+  /* Follows the column with the tab bar it stands above (round 36 phase 1). The button inside is
+     centred, so the only thing this width decides is where the CTA sits – and it must be the middle
+     of the column, not the middle of a 520px box left behind under a wider one. */
+  max-width: var(--app-bar-max);
   display: flex;
   justify-content: center;
   padding: 0 16px;
