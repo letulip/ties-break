@@ -20,8 +20,9 @@ Status: `[x]` shipped · `[~]` answered, nothing to build · `[>]` in flight · 
 | 1 | the parity harness + the container follows his ladder | `[x]` **shipped, this document** |
 | 2 | tablet, 768–900 | `[x]` **shipped, this document** |
 | 3 | desktop, 1024–1200 – the rail, the new shell | `[x]` **shipped, this document** |
-| 4 | the screens the design does not cover | `[ ]` |
-| 5 | `responsive-decisions-2026-09.md`, the contentious calls | `[>]` opened by phase 2, **twenty-one rows** after phase 3 – it is written AS the work happens, so it closes with phase 4 |
+| 4 | the screens the design does not cover | `[x]` **shipped, this document** |
+| 5 | `responsive-decisions-2026-09.md`, the contentious calls | `[>]` opened by phase 2, **thirty-two rows** after phase 4 – it is written AS the work happens |
+| 6 | ⚙ **the rail's mini-dashboard, at his 04.09 ruling** – three desktop-only cards on every page, and the harness exemption that has to ship with them | `[ ]` **new, and it is a phase** – see the note under phase 4 |
 
 ---
 
@@ -850,3 +851,359 @@ a PR assembly, and this phase touches no engine code. It belongs to whoever asse
   does not change the question; both are takeovers outside `#app`
 - `[ ]` `.recap-art`'s 390px collapse at 520 and 576 (D11) – a phase-4 or an owner call
 - `[ ]` phases 4 and 5
+
+---
+
+## `[x]` PHASE 4 – THE SCREENS THE DESIGN PACK DOES NOT DRAW
+
+His design is sixteen frames over ten screens. This phase is everything else: the onboarding wizard,
+the match viewer and the live court, the draw, the finale poster, the epilogue, the shop and the
+prologue – adapted on the same principles, and the prologue at his own ruling, «пусть агент сделает,
+а я посмотрю результат и решим».
+
+**Seven files of app, one of the harness, one of tests, three of documents.** `src/style.css` (one
+new token and two rules onto it); `MatchViewer.vue` (the court's cap); `OnboardingWizard.vue` (a
+reading column); `EndingScreen.vue` (a column); `PrologueLocalOpen.vue` (a column); `TournamentFlow.vue`
+(the venue plate's shape); `MoneyScreen.vue` (the shop's front door and its shelf). The harness is
+`e2e/parity.spec.ts`, which gained a second, hand-written map of the two ROOMS behind a chapter.
+Tests: `tests/component/round36-phase4.test.ts` (new, eighteen arms). Documents: **eleven new rows
+(D22–D32) and a rewritten D13** in `docs/specs/responsive-decisions-2026-09.md`, this ledger, and
+the coverage map's `MoneyScreen` row.
+
+⭐ **No new component, no new icon, no new string.** One template line changed in the whole phase –
+`.mv-court` gained a `:style` binding – and it adds no element and no text.
+
+---
+
+### ⭐⭐⭐ THE FINDING: THE TAKEOVER'S COLUMN IS 480px, AND IT NEVER GREW
+
+Phase 1's own headline finding was that `--app-max-width` is the FRAME and the column is 520. Phase 4
+met its sibling one layer out. **A takeover covers the tab shell rather than living inside it, so it
+inherits nothing from `#app`** – and `.tf-body` and `.tf-top` each spelled out `max-width: 480px`.
+
+Measured in Chromium on phase 3's head, walking a real tournament at five widths:
+
+| | 375 | 768 | 900 | 1024 | 1280 |
+| --- | --- | --- | --- | --- | --- |
+| the takeover body | 375 | **480** | **480** | **480** | **480** |
+| the live court | 341 | **446** | **446** | **446** | **446** |
+| the brief's venue plate | 343×300 | 448×300 | 448×300 | 448×300 | 448×300 |
+| the draw's cell | 297 | 402 | 402 | 402 | 402 |
+
+**The match screen was the same picture at four screen sizes.** So the whole tournament experience –
+the brief, the pre-match scene, the court, the draw, the poster – plus the match replay, the inbox
+sheet and the week planner sat in a 448px column with 400px of empty page down each side at 1280.
+
+⭐ **The fix is one token and no fourth number.** `--takeover-col-max` is 480 below 768 and
+`--app-max-width` above it – the cap the wizard (R14-9) and the tour briefing already share, named
+in `src/style.css` as «the TAKEOVER cap … one token for the two of them». It is three of them now,
+which is worth more than a new number: phase 1's open question for the owner is still decided in
+exactly one place. **D22.**
+
+---
+
+### WHAT MOVED, PER SCREEN, MEASURED
+
+Boxes are `w × h` in Chromium at a 900px-tall viewport, off a census of twenty-five surfaces walked
+at seven widths. `before` is phase 3 as shipped (`2a5f49ee`).
+
+| | 375 | 768 before → after | 1280 before → after |
+| --- | --- | --- | --- |
+| the takeover column (`.tf-body`) | 375 | 480 → **768** | 480 → **880** |
+| **the live court** (`.mv-court`) | 341×211 | 446×275 → **680×420** | 446×275 → **680×420** |
+| the commentary log | 317 | 422 → **710** | 422 → **822** |
+| the brief's venue plate | 343×300 | 448×300 → **736×329** | 448×300 → **848×329** |
+| the draw's cell | 297 | 402 → **690** | 402 → **802** |
+| the finale poster | 343 | 448 → **736** | 448 → **848** |
+| **the wizard's name field** | 275 | 668 → **584** | 780 → **584** |
+| the wizard's country tile | 103 | 234 → **206** | 271 → **206** |
+| **the epilogue's album pager** | 309 | 702 → **446** | **1214** → **446** |
+| **the shop's category tile** | 109×168 | 240×370 → **208×321** | 311×479 → **208×321** |
+| **the shop's shelf row** | 343 | 736 → **362** | 948 → **468** |
+| the prologue's card | 375 | 420 → 420 | 420 → 420 |
+| the prologue weekend's painting | 341×341 | **734×734** → **410×410** | **1246×1246** → **410×410** |
+
+…and the two shop pages got markedly shorter, which is «больше видно одновременно» on a screen his
+list never named:
+
+| page height | 768 before → after | 1280 before → after |
+| --- | --- | --- |
+| the shop's front door | 1297 → **1198** | 1534 → **1217** |
+| the shop's Cars shelf | 1195 → **922** | 1214 → **948** |
+
+⚠ **The other surfaces are the same height and that is the honest half of the table.** The tournament
+brief is 1526 at 768 and 1202 at 1280 in BOTH arms, and the epilogue fits a 900px window either way:
+this phase widened columns and capped runaway blocks, and neither of those changes how much a page
+holds. Only the shop had a block that grew with the window.
+
+⚠ **AND RULE 4 WAS SWEPT RATHER THAN EYEBALLED.** «A wide viewport makes a full-width control look
+wrong long before it breaks» is a claim about EVERY control, so every `button`, `input` and `select`
+on all twelve walked surfaces was measured at 1280 and sorted by width. After this phase's caps,
+**exactly two are over 700px**: `View all transactions` on the Family Budget at 794 (D20's own parked
+pill – not this phase's screen, and left to him, with the lever named in **D32**) and Calendar's
+`.cal-marker` at 948, which is a list ROW and is full width by the same rule every ledger row is.
+Nothing else in the app stretches.
+
+⚠ **The epilogue's number is the pager, not the page.** `.album-nav` was 1214px wide at 1280 with
+**Back at x=33 and Next at x=1208** – 1175px apart, around a photograph 285px wide sitting between
+them. That is the single most concrete defect this phase found and D27 is its row.
+
+#### The court, and the one cap in this round with a mechanical reason
+
+The canvas is a **fixed 680×420 bitmap** scaled by `devicePixelRatio`. While the column was 480 it
+could never reach that; at 848 it would be upscaled 1.25×, and inside the prologue's weekend – which
+had no column at all – the takeover itself measured **1,256px at 1280** and `.mv` inherits its width,
+so the court was taking an 1.85× enlargement of a 680px bitmap. So `.mv-court`
+stops at `CSS_W` and centres, **and the cap is bound inline off the same constant the aspect ratio is
+written from**, because a literal 680 in the stylesheet is exactly the drift that file's own comment
+says the ratio is bound to avoid. Measured after: 680×420 at 768, 900, 1024 and 1280 alike, with the
+commentary log taking the leftover width. R17 #8 asked for a bigger court and this is 52% more of it.
+
+#### The prologue, and the answer is «it does not grow» WITH A TABLE BEHIND IT
+
+His ruling was to build it and look. The measurement is the argument, and it is in **D28** in full:
+the painting is square and full-bleed, so **the column's width IS the picture's height**, and a
+desktop window is not taller than a tablet's. Forcing the cap and reading the card back at 1280:
+
+    cap 420 -> first answer at y=894    cap 512 -> y=986    cap 640 -> y=1093
+
+Every 60px of column is 60px more scroll before the decision. **So the nine cards keep their 420 at
+every width**, and phase 4's work on the prologue is the one surface that had no column at all – the
+Local Open weekend, whose venue painting measured **734×734 at 768 and 1246×1246 at 1280**. It takes the
+cards' own 420 now; the match inside it takes the takeover column, because 420 would have made the
+prologue's court narrower than the 744px it has on a tablet today.
+
+---
+
+### `[x]` NOTHING BELOW 768 MOVED – and the eight boxes that did are the INSTRUMENT
+
+Every element in the document at twenty-five surfaces – the ten tab screens, the shop's two rooms,
+the six wizard steps, the prologue's first card, the epilogue and five beats of a tournament –
+censused as tag + class + document-order index + box to 2dp, at seven widths. Arm A is phase 3's
+shipped head (`2a5f49ee`), arm B is this phase.
+
+| viewport | element boxes | boxes that moved | pixels moved | new | gone |
+| --- | --- | --- | --- | --- | --- |
+| **375** | 4983 | **8** | 303 | 0 | 0 |
+| **520** | 4983 | **8** | 235 | 0 | 0 |
+| **576** | 4983 | **2** | 33 | 0 | 0 |
+| 768 | 5131 | 944 | 187,868 | 0 | 0 |
+| 900 | 5131 | 948 | 275,449 | 0 | 0 |
+| 1024 | 5131 | 948 | 269,639 | 0 | 0 |
+| 1280 | 5131 | 948 | 284,410 | 0 | 0 |
+
+⚠⚠ **THE THREE MOBILE ROWS ARE NOT ZERO, AND THE CONTROL IS WHAT MAKES THEM A ZERO ANYWAY.** All
+eight boxes are on two wizard steps, and every one is a TEXT box whose width changed while its x and
+y did not – `<dt>` 180.53 → 173.34 on the summary, a paragraph 65.25 → 43.5 tall on the welcome. The
+wizard is reached from a fresh boot, so it rolls a random name and a random opening line every run.
+
+**So the same build was censused against ITSELF**, second run against first, at the three mobile
+widths:
+
+| viewport | boxes | moved, arm B vs arm B again |
+| --- | --- | --- |
+| 375 | 538 | **8** |
+| 520 | 538 | **8** |
+| 576 | 538 | **2** |
+
+– the same eight, the same eight, the same two. **The movement is the walk, not the change**, and
+that is a measurement rather than an argument. Every one of the other twenty-three surfaces is
+byte-identical at 375, 520 and 576.
+
+⚠ And every rule this phase shipped is inside a `min-width` query or is an inline cap that cannot
+bite below 680px of column, so the three zeros are structural as well as measured.
+
+### ⚠ THE ANTI-VACUITY NUMBER
+
+Phase 2 recorded that the box COUNT saturates and phase 3 inherited the caveat, so the number this
+phase is read by is **total displacement** – the sum of |Δx| + |Δy| + |Δw| + |Δh| over every box:
+
+| | boxes | pixels moved |
+| --- | --- | --- |
+| `origin/main` → phase 1, at 768 (the container ladder) | 2,170 | 497,232 |
+| phase 1 → phase 2, at 768 | 709 | 448,651 |
+| phase 2 → phase 3, at 1024 | 2,095 | **973,055** |
+| phase 2 → phase 3, at 1280 | 2,100 | **1,023,303** |
+| **phase 3 → phase 4, at 1024** | 948 | **269,639** |
+| **phase 3 → phase 4, at 1280** | 948 | **284,410** |
+
+⚠ **The comparison is not like for like and saying so is part of the measurement.** Phases 1–3 moved
+the ten TAB screens, which is what the earlier censuses walked; this phase does not touch one of them
+– **all ten are byte-identical at every one of the seven widths** – and every box it moves is on a
+surface the earlier numbers never included: the two rooms behind Money's chapter row, six wizard
+steps, the epilogue and five beats of a tournament. Read per surface rather than per phase: the
+tournament draw alone moves 207 boxes at 1280, the finale poster 111, the live match 99, the six
+wizard steps 330 between them, the shop's two rooms 101 and the epilogue 8.
+
+---
+
+### `[x]` PARITY – green at 375 / 768 / 900 / 1280, and TWO NEW ROOMS
+
+`e2e/parity.spec.ts` was run against every change as it was made. The final run is in the gates:
+**`PARITY_EXIT=0`, twelve walks** – and two of those are new.
+
+#### ⭐⭐ THE HARNESS GREW, BECAUSE THE DELIBERATE BREAK SHOWED WHERE IT COULD NOT SEE
+
+The station map is DERIVED from `src/components/screens/`, which is what stops it becoming «the
+screens somebody remembered». Its cost is that a FILE is the unit: `MoneyScreen.vue` has one station
+and it lands on the Spending chapter, so **the shop – rebuilt by round 35 and re-laid by this phase –
+had never been fingerprinted at all.** That was found honestly rather than reasoned about: phase 4's
+own deliberate break had to be aimed at the chapter ROW, because a control hidden inside the shop
+would not have been seen.
+
+So a second map, hand-written and saying so in its own header, walks two ROOMS behind that chapter:
+the shop's front door and one shelf. Both are 1:1 at all four widths. **D30**, with the limit that
+remains stated in the same row.
+
+#### ⭐⭐ THE DELIBERATE BREAK – RE-RUN ON THIS PHASE'S OWN SCREEN
+
+A harness whose failure has never been seen is not a harness. The Family Budget's chapter row was
+hidden at desktop only:
+
+```css
+@media (min-width: 1024px) { .money-tabs { display: none } }   /* MoneyScreen.vue, scoped */
+```
+
+→ `BREAK_EXIT=1`, and it names all four:
+
+```
+MoneyScreen.vue: these are on the phone at 375px and NOT at 1280px.
+«всё, что есть на мобиле, должно быть 1 к 1 на других форматах»
+  + "button \"Bills\""
+  + "button \"History\""
+  + "button \"Shop\""
+  + "button \"Spending\""
+```
+
+Reverted immediately; `MoneyScreen.vue` verified byte-identical afterwards by checksum
+(`9955ddd0…` before and after).
+
+#### ⭐ AND «1 К 1» FOR THE FIFTEEN SURFACES THE HARNESS DOES NOT WALK
+
+Most of phase 4's screens are takeovers reached by PLAYING – a tournament, a weekend, a career's end,
+a new career's first six steps – so the walk cannot reach them without a journey each. They are
+answered by the census instead, compared across widths rather than across arms: every element of each
+surface at 375 against the same surface at 768, 900, 1024 and 1280, keyed by tag and class so a
+re-flow is invisible.
+
+**Nineteen of twenty-five surfaces are element-for-element identical at every width.** The six that
+differ are Home and the five tournament beats, and the difference is the same one on all six: Home's
+season ladder drawing itself open from 768 (**D9, his own ruling**) – `strip-more` gone, twelve
+`strip-arrow` and fourteen chips in its place – which shows through behind the tournament takeovers
+because they are `position: fixed` layers over Home. ⭐ That is also what makes this instrument a
+measurement rather than a blind one: it found the one legitimate difference in the app.
+
+---
+
+### The eighteen new test arms, and fourteen mutations were run against them
+
+`tests/component/round36-phase4.test.ts`, mounted, at `PHONE` / `TABLET` / `DESKTOP`.
+
+| what it holds | arms | what a mutation reddened |
+| --- | --- | --- |
+| the takeover's column | 2 | the 768 rung deleted from the token → the wide arm AND the prologue's match arm; `.tf-top` back to a literal 480 → the wide arm alone |
+| the court's cap | 2 | the `:style` binding removed → both arms; `margin-inline: auto` deleted → the cap arm alone |
+| the wizard's column | 2 | the media block deleted → the wide arm, phone green |
+| the epilogue's column | 2 | the media block deleted → the desktop arm, phone green |
+| the prologue's weekend | 3 | `.plo > *` deleted → the column arm; `.plo > .mv` deleted → the match arm alone |
+| the shop | 5 | `width: 100%` dropped from `.shelf-cats` → the stretch arm; the 1024 block deleted → the desktop row arm |
+| the venue plate's shape | 2 | the media block deleted → the wide arm, phone green |
+
+⚠⚠ **TWO MUTATIONS DID NOT BITE, AND THAT IS RECORDED RATHER THAN QUIETLY DROPPED.** Phase 3's note
+on `.tier-block.tier-block` says a media query adds no specificity and that a browser and happy-dom
+settle the resulting tie in OPPOSITE directions. Measured here on this file's own arms, the doubled
+selector is NOT what is doing the work:
+
+    `.shop-family.shop-family` -> one class (the 768 rung)        NOTHING WENT RED
+    `.shop-family.shop-family.shop-family` -> two classes (1024)  NOTHING WENT RED
+    `.shop-family.shop-family.shop-family` -> ONE class (1024)    RED, and by name
+
+– so what is genuinely load-bearing is that the DESKTOP rung outweighs the TABLET rung; against the
+base rule outside the query, source order is enough in both engines. The extra classes stay (they
+cost nothing, and a rule that wins only on source order is one re-order away from losing) but the
+comment in `MoneyScreen.vue` now says which of the two claims the tests actually hold.
+
+⚠ **And two happy-dom facts are written down beside the helpers that work around them**, each of
+which cost a wrong red first: an unset `max-width` computes to the EMPTY STRING rather than to
+`none`, and `margin-inline: auto` is not expanded into `marginLeft`/`marginRight`. A third is worth
+more: **`getPropertyValue('--takeover-col-max')` on the root returns the BASE declaration at every
+viewport**, so the ladder is read through the rules that consume it – `max-width: var(…)` resolves
+correctly – rather than off the custom property, which would have said 480 everywhere and been wrong
+about a rule that works.
+
+---
+
+### ⚠⚠ THREE THINGS THIS PHASE FOUND ALREADY BROKEN AND DID NOT FIX
+
+All three are below 768, and the contract this round has held for four phases is that **not one box
+moves at 375, 520 or 576**. Each is **D31** (or D11) rather than a quiet fix on the way past.
+
+1. **The pre-match scene overhangs its own column by 8px.** `.tf-scene.tf-scene` cancels `24px` of
+   gutter; `.tf-body`'s gutter has been `--app-pad-x` (16px) since R17 #8. Measured: 391px wide at
+   x=-8 on a 375px screen, and the same 8px each side at every width. It is contained – the body
+   clips it and the page does not scroll sideways – which is why it has survived.
+2. **The prologue weekend's painting does not span the phone**, though its own comment says it does:
+   `.plo-hero` cancels `.plo`'s 12px, but its parent `.plo-splash` is a bare `<section>` carrying the
+   app's own 16px inset. Measured 341px on a 375px screen, and 410 in the 420 column this phase gives
+   it against the nine cards' 420.
+3. **D11 is still open** – `.recap-art`'s 390px collapse at 520 and 576, inherited from phase 2.
+
+---
+
+### ⚙ HIS 04.09 RULING ON THE RAIL, AND WHY IT IS PHASE 6 RATHER THAN THE TAIL OF THIS ONE
+
+**D13 is settled and it is a BUILD.** «Надо создать новые компоненты и показывать их только на
+десктоп», «карточки сквозные, одинаковые, как мини-дашборд живут всегда в вертикальной полоске, т.е.
+на всех страницах» – so `IN THE ACCOUNT`, `COACHING BUDGET` and `MY ENTRIES` are built as
+desktop-only components on every page. ⚠ His FRAMES disagree about that (AC four, AE one, AK one, AG
+none, AM none); **his words win over his frames.**
+
+And he ruled on the objection that sent it to him: «можно вынести эту часть поля навигации из этой
+проверки? … это исключительно десктопная фича.» So the rail's DASHBOARD is exempt from the
+per-screen parity check – the rail is chrome rather than screen content, and a balance beside Season
+is a shortcut to a figure that lives on Home and on Money.
+
+**THE EXEMPTION IS SPECIFIED IN D13 AND SHIPS WITH THE CARDS. It is deliberately not built here**,
+and the reason is this round's own lesson: an exemption built before the thing it exempts is a guard
+fitted to nothing – its boundary test would pin a container no template renders, and its «every
+figure the rail shows exists at 375» arm would pass over an empty set. **Four empty sets are equal**
+is the sentence `e2e/parity.spec.ts` is built around, and round 35 shipped three tests that went
+BLIND rather than red for exactly that reason. The two halves land together or the guard is theatre.
+
+⚠ It is also **the one place in this round where «no new components, no new strings» is suspended**,
+by him, for three cards. That wants its own phase, its own measurement and its own morning – not the
+tail of a six-surface layout pass. It is phase 6 in the table at the top.
+
+---
+
+### Gates – phase 4
+
+Run one at a time, and **every exit code read out of the log file**, never from a pipe and never from
+a background task's completion notice.
+
+| gate | result |
+| --- | --- |
+| `npm run test:e2e` | **`E2E_EXIT=0`** – 48 tests, the thirteen parity walks among them |
+| `npm run check` | **`CHECK_EXIT=0`** – the whole pre-push gate: the doc audit, the pin ratchet, the decision index, `vue-tsc`, the component suite and the build |
+| `npm run test:component` | **1355 passed across 120 files**, inside `check` (1337 before this phase; eighteen new arms, one new file) |
+| `npm run test:quiet` | **`QUIET_EXIT=0`** |
+
+⚠ **`npm run test:sim` was NOT run** – the standing regime (owner's ruling, 22.08) puts it in front of
+a PR assembly, and this phase touches no engine code. It belongs to whoever assembles the round's PR.
+
+### Open at the end of phase 4
+
+- `[?]` **D28 – the prologue.** He asked to see the result and decide: the answer is «the column does
+  not grow», with the table that says what growing it costs, and the two alternatives that were
+  rejected named with their reasons.
+- `[?]` **D22, D24** – the takeover cap now decides THREE surfaces, and the wizard's 640 column
+  re-frames phase 1's open question rather than answering it.
+- `[?]` **D25** – six category cards in one row on a desktop is one declaration, and it is his call.
+- `[?]` **D32** – `View all transactions` is 794px on the desktop Family Budget. D20 parked it
+  because capping it would have moved a tablet box; a rung at 1024 no longer does. His screen, his
+  parking, one rule.
+- `[?]` **D1, D19, D20** – still open from phases 2 and 3.
+- `[ ]` **phase 6, the rail's mini-dashboard** – his ruling, specified in D13, unbuilt.
+- `[ ]` **D31 and D11** – three pre-existing defects below 768 that this round's identity contract
+  forbids touching. They need a word from him, or a wave that is allowed to move a phone.
+- `[ ]` turning the takeovers into parity stations (D30's remaining limit) – each needs a journey.
