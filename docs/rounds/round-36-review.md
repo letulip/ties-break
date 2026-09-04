@@ -287,10 +287,24 @@ answered «does the column grow», and his answer is «neither: change the shape
 
 ### `[x]` THE GATES – every exit code read out of a FILE, never through a pipe
 
+⚠⚠ **AND THE TREE IS SHARED WITH TWO OTHER AGENTS WHILE THESE RAN, so both numbers are given.**
+CLAUDE.md's own rule: a red with a shifting failing set is contention, and it is re-run before it is
+believed.
+
 | | |
 | --- | --- |
 | `npm run test:e2e` | **62 passed, `E2E_EXIT=0`** – parity green at 375 / 768 / 900 / 1280 on every screen and on all four rooms, including **`MoneyScreen.vue – a shelf inside the shop`**, which is the room item 10 removes a control from |
-| `npm run test:quiet` · `npm run test:component` · `npm run check` | run after the browser suite, exit codes in the wave's own logs |
+| `npm run test:component` | **124 files, 1423 tests, `COMP3_EXIT=0`.** The two runs before it were red with a **shifting** set (10 then 11 failures, `round35-shop` in one and not the other) at load 20–42 with 68 vitest processes alive – contention, and it cleared on the re-run. **One of those reds was real and mine:** the item-14 arm walked five seasons TWICE inside one case, passed alone in 9.6s and timed out at the 5s default in a full run. Fixed by hoisting the walk; the file now carries a 30s ceiling with its reason. |
+| `npm run test:quiet` | red in the shared tree, and **not one of its assertion failures is this wave's** after the fix above. Of 24 named failures: **16 are timeouts** (`Test timed out` / `[vitest-worker]: Timeout calling "onTaskUpdate"`) at load 30+, and the **9 assertion failures are all copy-rule sweeps naming `App.vue`, `HomeScreen.vue` and `RailDashboard.vue`** – another agent's uncommitted work on items 1–9. Re-run alone the same 9 reproduce exactly, so they are real and they are theirs. |
+| `npm run check` | `CHECK_EXIT=2` on the same tree, and the `vue-tsc` half names one file: **`tests/component/round36-review-home.test.ts` – TS6133 ×2**, another agent's new file. `npx vue-tsc -b --force` over this tree reports **those two errors and nothing else**; the doc gates it runs first (`context:audit`, `doc-facts`, `decisions:check`) are green with everything this wave appended. |
+
+⚠⚠ **AND ONE OF THE UNIT REDS WAS MINE AND IS WORTH THE PARAGRAPH.** `tests/coach-voice.test.ts`
+(R15-7, «no surface guesses a professional's gender») reddened by name on two lines of this wave: a
+`//` comment inside the shop row's `:class` binding that wrote «the four families **he** named».
+**The sweep strips `<!-- -->` before it scans and cannot see a `//` line inside an expression**, so a
+prose note in a binding is rendered text as far as that harness is concerned. The note is an HTML
+comment above the card now. It is written into the file beside the fix, because the next person to
+annotate a binding will make the same mistake.
 
 ⚠ **Item 10 removes a control at EVERY width, which parity permits** – it compares the four
 fingerprints to each other, so a control that goes everywhere is invisible to it and one that went at
@@ -374,6 +388,16 @@ corner rule to every family left the whole file green: the «an investment holdi
 read `find('.shop-action')` – the FIRST control in the row, «Add more» – and the rule under test is
 `:last-child`, i.e. «Sell». The arm was measuring a button the rule can never touch. The helper takes
 the last control now and names it in the assertion, and **M8b reddens**.
+
+### `[x]` WHAT IS **NOT** BUILT, AND IS HIS TO ASK FOR
+
+| | |
+| --- | --- |
+| **the words reaching into the band (D67)** | His `50%` / `calc(45% + 12px)` do not meet, so a sentence begins on the last 5% of the painting's fade – 7.8–13.3% alpha, invisible in practice. Making the inset match the band again is one number. |
+| **item 11 on the phone (D68)** | Applied at every width because he wrote a bare CSS rule. It costs one wrapped blurb line on property at 375 and on the first car at 1024. A `@media (min-width: 768px)` around four rules undoes it. |
+| **Her Academy's proportion (D69)** | Left at round 35's 40 / 40 because he named four families and this is not one. One name in `SHELF_WIDE_ART` moves it. |
+| **`paid $N` on water and air (D70)** | Left, for the same reason. Two names in `SHELF_NO_PAID_META`. |
+| **`.recap-art`'s 390px collapse at 520 and 576 (D11)** | **Still open, and untouched by item 16** – phase 2's `width: 100%` remains a ≥768 rule and this wave did not widen it. It is still the phase-4-or-owner call it has been since phase 2. |
 
 ## The match
 
