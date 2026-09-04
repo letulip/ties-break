@@ -1799,3 +1799,292 @@ a PR assembly, and this phase touches no engine code.
   carries the figure. His ruling and his frame both say the set is on every page; standing a card
   down where its own screen is open is one condition per card if he wants it.
 - `[ ]` everything still open from phases 1–5, unchanged by this phase.
+
+---
+
+## `[x]` PHASE 7 – THE PAGER'S ARROWS ARE HIDDEN WHEN THERE IS NOTHING TO PAGE
+
+His ruling of 04.09, in full, after playing the phase-5 build: «на десктопе неделя из двух карточек
+показывает две серые стрелки, которые ей никогда не понадобятся. **Спрятать - да, показываем только
+если есть что листать.**»
+
+**Two files of app, four of test, three of documents.** `src/composables/weekPager.ts` (`PagerEnds`
+gains `overflows`, and the `ResizeObserver` gains the cards); `src/components/screens/SeasonScreen.vue`
+(the `v-if`, the `.week-pager` container, the CSS); `e2e/parity.spec.ts` (the second exemption and its
+four guards); `e2e/responsive.spec.ts` (the 1280 complement, turned round, plus the keyboard check);
+`tests/component/round34-week-stack.test.ts`; `tests/weekPager.test.ts`; and this ledger,
+`docs/specs/responsive-decisions-2026-09.md` (D35 rewritten, D48–D51 new) and
+`docs/specs/e2e-coverage.md`.
+
+⭐ **No new string, no new icon, no engine change, and not one character of copy moved.**
+
+---
+
+### ⚠⚠ PHASE 5 ARGUED THE OTHER WAY IN WRITING, AND IT WAS RIGHT – SO BOTH HALVES ARE KEPT
+
+`pagerEnds`' own header carried the refusal:
+
+> «A STRIP THAT DOES NOT OVERFLOW IS AT BOTH ENDS AT ONCE, and the arrows are then disabled rather
+> than absent. That is not tidiness: **which weeks overflow DEPENDS ON THE WIDTH** – three cards fit
+> at 1280 and two do not at 375 – so a pager that hid itself when everything fitted would be a
+> control present at one width and missing at another, which `e2e/parity.spec.ts` fails by name.»
+
+**Every clause of that is still true, and phase 7 re-measured it rather than taking phase 5's word.**
+D35 put the price to him in its own previous wording – «the price is that `e2e/parity.spec.ts` then
+needs a stated exemption for them» – and he answered **«да»**. This is a trade he made knowingly, it
+is written into D35 that way, and the exemption below is what pays for it.
+
+---
+
+### ⭐⭐⭐ THE MEASUREMENT: AT WHICH WIDTHS A TWO-CARD WEEK OVERFLOWS
+
+Chromium, the production build, on `sinking` (two stacked weeks) and `junior` (one) – nine viewports,
+the strip's own `scrollWidth - clientWidth`, read off the live boxes:
+
+| viewport | strip | card | scrollWidth | **overflow** | pager |
+| --- | --- | --- | --- | --- | --- |
+| **375** | 343 | 302 (`88%`) | 616 | **273** | drawn |
+| **520** | 488 | 429 | 871 | **383** | drawn |
+| **576** | 520 | 458 | 927 | **407** | drawn |
+| 768 | 736 | 362 (`50%`) | 736 | **0** | – |
+| 900 | 868 | 428 | 868 | **0** | – |
+| 1024 | 772 | 249 (`33.3%`) | 772 | **0** | – |
+| 1200 / 1280 / 1440 | 948 | 308 | 948 | **0** | – |
+
+⭐ **THE BOUNDARY IS HIS OWN 768 RUNG, AND IT IS EXACT.** Two cards at half a row plus the 12px gutter
+come to **736 = the strip's own width** – not «roughly fits», but zero. Both careers agree at every
+width. So on a real career the pair he was looking at is idle on **every format above a phone**, and
+live on the phone band alone.
+
+⚠ **AND NO FIXTURE CAN SHOW THE OTHER CORNER.** No e2e career draws a week of three or more enterable
+rungs – phase 5 measured all six and twenty weeks of advancing two of them moved nothing – so **no
+career this suite has ever overflows above 576**. The honest-half guard therefore bites at 375 and
+proves the biconditional only at the widths the fixtures reach. That is a limit of the corpus, not of
+the guard, and it is written here rather than left to be discovered.
+
+---
+
+### ⭐⭐ HOW THE OVERFLOW IS OBSERVED – WATCHED, NEVER COMPUTED ONCE
+
+`pagerEnds` gained a third fact about the same three numbers – `overflows: scrollWidth - clientWidth > 1`,
+on the 1px fractional-pixel slack `atEnd` already uses – and the composable's existing `ResizeObserver`,
+which until now only kept `atStart`/`atEnd` honest, is what drives whether the arrows are RENDERED.
+
+**Three things were changed to make that a real observation rather than a mount-time read:**
+
+1. **The cards are observed as well as the strip.** Overflow is `scrollWidth - clientWidth`: the strip
+   gives the second term and the CARDS give the first, and a card is `88%` / `50%` / `calc(33.333% - 8px)`
+   on his three bands. A media query can move `scrollWidth` without the strip's own box moving.
+2. **`overflows` joined `measure`'s comparison.** The reactive record is only written back when
+   something differs, so a field left out of that line is a field that never updates after the first
+   measurement – the one way this could have shipped half-working.
+3. **The unmeasured default is `overflows: false`.** «We do not know there is anything to page» must
+   not draw a pager for a frame; `bind` measures synchronously when Vue hands over the element.
+
+⭐ **PROVED BY DRAGGING A WINDOW, NOT BY READING THE CODE.** One page, no navigation, no remount –
+375 → 768 → 1280 → 900 → 375 → 1280 → 375 – and the arrow count follows:
+
+```
+P7_RESIZE_TRACE 375:4 768:0 1280:0 900:0 375:4 1280:0 375:4
+```
+
+⚠ **AND IT CANNOT LOOP**, which is the standing hazard when a `ResizeObserver` callback changes the
+DOM: the arrows are `position: absolute` against `.week-row` and sit in a `display: contents`
+container, so adding or removing them changes neither the strip's box nor any card's. **The identity
+census below reports 0 boxes moved at every width, which is that claim as a number.**
+
+---
+
+### ⭐⭐⭐ THE SECOND EXEMPTION, IN FOUR PARTS – AND BOTH ITS GUARDS HAVE BEEN SEEN TO BITE
+
+**The harness's claim, restated in words** (its own header, D35, and here). It had one exception; it
+now has two, and **a claim with two exceptions has to state both**:
+
+> **THE SAME THINGS ARE REACHABLE AT EVERY WIDTH, OUTSIDE THE DESKTOP RAIL'S DASHBOARD AND THE WEEK
+> PAGER'S ARROWS.**
+
+| part | how it is built | the test |
+| --- | --- | --- |
+| **1. Only the ARROWS are exempt** | the strip, the cards and every control ON a card are outside the region, so they stay in the check; and the exempt set is asserted to be exactly `button "Back"` / `button "Next"` | `only the ARROWS are exempt…` |
+| **2. The boundary is a CONTAINER** | `WEEK_PAGER = '#app .week-row > .week-pager'` – a place, not a list of names – plus «every pager holds exactly the two arrows, no other element, no text of its own, and is a child of a week row» | `the boundary is a CONTAINER…` |
+| **3. ⭐⭐ The HONEST HALF** | `scrollWidth - clientWidth` measured per week per width in the real browser, and the biconditional asserted: overflow ⟺ arrows, in BOTH directions, with an anti-vacuity count on each side | `the HONEST HALF…` |
+| **4. The claim states its exception** | in the file header, in this ledger, and in D35 | – |
+
+⚠ **A NAME LIST WOULD HAVE BEEN WORSE HERE THAN AT THE RAIL.** «Ignore `Back` and `Next`» ignores
+those two words **anywhere in the app** – `EndingScreen`'s album pager uses exactly them – and is one
+edit away from ignoring a third control somebody calls `Back`.
+
+#### ⭐⭐ THE MUTATIONS – WHAT EACH ONE ACTUALLY PRINTED
+
+Each applied alone, run, and reverted by copying the pristine file back and re-checking its `shasum`.
+⚠ Never with `git checkout -- <file>`.
+
+| # | the mutation | what reddened |
+| --- | --- | --- |
+| **A** | ⭐⭐ **a `<button>More</button>` parked inside the arrows' container** | **TWO arms, independently.** `the boundary is a CONTAINER`, by DOM: `+ "button \"\""` beside the two arrows. `only the ARROWS are exempt`, by the aria subtraction: `+ "button \"More\""`. ⚠ **And the parity WALK stayed green** – the parked control was subtracted at every width, which is exactly the hole a boundary-by-container exists to close and exactly why the walk alone is not enough |
+| **B** | ⭐⭐ **an overflowing strip loses its arrows** – `@media (max-width: 767px) { .week-arrow { display: none } }`, so the pager vanishes at the one band it is needed | **THREE arms.** `the HONEST HALF`, by name: «at 375px a week of 2 cards overflows by 273px and has NO pager. The exemption is for an idle pager, not a missing one». Plus both anti-vacuity arms: «the arrows contribute nothing, so the exemption guards an empty set» |
+| **C** | **the pager exemption itself switched off** (the subtraction removed) | the stacked-week room: «these are on the phone at 375px and NOT at 768px» → `+ "button \"Back\" ×2"`, `+ "button \"Next\" ×2"`, `+ "icon back.svg ×4"`. **That is the proof it is load-bearing TODAY** and not a guard fitted to nothing – and that the fingerprint really contains the arrows, by role-and-name AND by the asset they load |
+
+#### ⚠⚠ AND MUTATION B CORRECTED THE GUARD BEFORE IT PASSED IT
+
+**The first draft of the honest half counted `querySelectorAll('.week-arrow')` – DOM nodes – and would
+have passed mutation B.** A `display: none` arrow is still in the DOM, and `display: none` is exactly
+the shape phase 5's own deliberate break took and the shape a stray media query would take. The
+measurement now filters on `getClientRects().length > 0`, which is what the rest of the file already
+does (`paintFingerprint`, and the aria snapshot's own visibility filter). **A guard that cannot fail
+on the break it is aimed at is not that guard**, and this one only became it because the mutation was
+run.
+
+⚠ **A second correction the same mutation forced.** The settle helper polled until «overflow ⟺
+arrows» held – which makes the helper assert the very thing the arms measure, so a break failed as a
+10-second timeout with a message about settling instead of naming the week that lost its arrows. It
+now polls for the reading to STOP MOVING (the same answer twice), which presupposes nothing.
+
+---
+
+### `[x]` THE IDENTITY PROOF, RE-RUN – 0 MOVED AND 0 NEW AT EVERY WIDTH
+
+Arm A is phase 6's shipped head (`269c5b4c`, its two source files restored in this same tree with
+`git show HEAD:<path>` – read-only, no checkout); arm B is this phase. Both walked through the same
+ten tab screens at 375 / 520 / 576 / 768 / 900 / 1024 / 1280, **one fresh career per width**, every
+element that renders censused as tag + class + occurrence + box to 2dp.
+
+| career | width | boxes | **moved** | **new** | gone | pixels | raw A→B |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| `pro` (ten screens) | 375 / 520 / 576 | 2212 | **0** | **0** | **0** | **0** | 2391→2391 |
+| `pro` (ten screens) | 768 / 900 | 2235 | **0** | **0** | **0** | **0** | 2414→2414 |
+| `pro` (ten screens) | 1024 / 1280 | 2304 | **0** | **0** | **0** | **0** | 2414→2414 |
+| `sinking` (Season) | **375 / 520 / 576** | 357 | **0** | **0** | **0** | **0** | 374→**376** |
+| `sinking` (Season) | **768 / 900 / 1024 / 1280** | 357 / 364 | **0** | **0** | **8** | **0** | 374→**366** |
+
+⭐ **NOTHING MOVED AND NOTHING APPEARED, AT ANY WIDTH ON EITHER CAREER.** The only difference the
+whole phase makes to a rendered box is **8 boxes GONE on `sinking` at 768 and above** – four
+`button.week-arrow` and their four `span.tb-icon` – which is precisely «the arrows disappearing where
+they were idle», and it is the change he asked for. **Below 768, where the strips really overflow,
+the count is 0 / 0 / 0.** `pro` is untouched at all seven widths because it draws no stacked week.
+
+⚠ **THE ONE HONEST COST, NAMED RATHER THAN BURIED.** The raw element count on `sinking`'s Season rises
+by **2** at 375 / 520 / 576 – the two `div.week-pager` containers, one per week that still pages.
+They are `display: contents`, so they have no box, no paint and no accessibility node: invisible to
+the census above, to `e2e/parity.spec.ts` and to a player. **D50** is that trade, and it is the
+cheapest form of it – a wrapper with a box would have been a new box at every width a week still
+pages at.
+
+#### ⭐⭐ AND THE ZEROS ARE A MEASUREMENT, NOT A BLIND INSTRUMENT
+
+The same census, in the same run, on the same career, with **only** `.week-arrow.back { left: 6px }`
+changed to `left: 40px`:
+
+| width | boxes moved | pixels moved |
+| --- | --- | --- |
+| **375** | **4** | **136** |
+| **520** | **4** | **136** |
+| **576** | **4** | **136** |
+| 768 | 0 | 0 |
+
+– so the instrument is demonstrably sensitive at exactly the three widths where it reports nothing,
+and correctly blind at 768, where there is no longer an arrow to move.
+
+---
+
+### `[x]` THE KEYBOARD REACH – CHECKED, NOT ASSUMED, AND THE ANSWER HAS TWO HALVES
+
+Left/Right are handled on `.week-row` and were never on the arrows, and the strip's `:tabindex` is
+unchanged – so hiding two buttons *should* not touch the keyboard. **«Should» is a claim, so it was
+driven in a real browser at 1280, with no arrow on the screen:**
+
+| | |
+| --- | --- |
+| **the strip is still a tab stop** | reached by pressing Tab from a blurred document – no `.focus()`, no click, the same rule phase 5's route-1 test gives its reason for |
+| **the key still reaches the pager** | `pager.key` calls `preventDefault` on every Left/Right in the row, and `dispatchEvent` returns false – the one observable trace it leaves on a strip it cannot scroll |
+| **and the strip moves nothing** | `scrollLeft` stays 0 after `ArrowRight`, because a week that fits whole has nowhere to go |
+
+⭐ **So: the route survives; there is simply no journey.** ⚠ **And the thing that check surfaced,
+which is not this phase's to fix:** a stacked week that does not overflow is a **tab stop that does
+nothing** – true since phase 5, unchanged here, and named in **D51** because the condition is
+`row.events.length > 1` and pointing it at `overflows` is one word if the empty stop bothers him.
+
+---
+
+### The new and re-aimed test arms
+
+| where | what it holds |
+| --- | --- |
+| `tests/weekPager.test.ts` (+3, 15 total) | `overflows` on the app's own measured geometries – the phone overflows and 768/1280 do not; a sub-pixel of scroll is not something to page; and it is not a restatement of `atStart && atEnd` (a strip shorter than its window is at both ends and still has nothing to page) |
+| `tests/component/round34-week-stack.test.ts` (+1, re-aimed ×5, 24 total) | the three width arms now SUPPLY the overflow happy-dom cannot produce – the two numbers are defined on the strip and the pager's own `scroll` listener is fired – and assert the arrows are there and INSIDE `.week-pager`; a new arm holds the complement at all three widths, that a stacked week which fits whole draws no arrows, no container, and keeps its tab stop |
+| `e2e/parity.spec.ts` (+4 tests, 24 total) | the four parts of the arrows' exemption |
+| `e2e/responsive.spec.ts` (re-aimed) | the 1280 complement, turned round by his ruling – no pager where nothing overflows – plus the keyboard table above |
+
+⚠ **The component arms could not simply be kept.** happy-dom has no layout engine, so every
+`scrollWidth` there is 0, a strip never overflows, and the three «draws Back and Next» arms went red
+on the first run **for the right reason**. What is asserted now is the claim that runner CAN make –
+given a strip with something past its edge the arrows are there, and given one without they are not –
+and where the real overflow falls at each width is a browser question, held in the honest-half arm.
+
+⚠ **One source-region marker moved with the markup** (`<template v-if="row.events.length > 1">` →
+`class="week-pager">`), and `region()` **threw** on the stale marker rather than silently widening to
+the rest of the file. That is `pins:check`'s whole argument, working.
+
+---
+
+### Gates – phase 7
+
+Run one at a time, and **every exit code read out of the log file**, never from a pipe and never from
+a background task's completion notice.
+
+| gate | result |
+| --- | --- |
+| `npm run test:e2e` | **`E2E_EXIT=0`** – **61 tests** (57 before this phase), the four new exemption guards among them, at 375 / 768 / 900 / 1280 with **both** exemptions in place |
+| `npm run test:quiet` | **`QUIET_EXIT=0`** |
+| `npm run test:component` | **`COMP_EXIT=0`** – **1376 passed across 121 files** (1375 before this phase) |
+| `npm run check` | **`CHECK_EXIT=0`** – the doc audit, the pin ratchet, the decision index, `vue-tsc`, `check:tools`, the component suite and the build |
+
+⚠ **`npm run test:sim` was NOT run** – the standing regime (owner's ruling, 22.08) puts it in front of
+a PR assembly, and this phase touches no engine code.
+
+#### ⚠⚠ TWO GATE RUNS WENT RED ON THE WAY, AND THE TWO HAVE OPPOSITE VERDICTS
+
+**1. A REAL RED, CAUGHT BY A RULE THIS REPO ALREADY HAD.** The first `test:quiet` failed two files –
+`template-copy-rules.test.ts` («no Cyrillic anywhere in a template – strings OR comments») and
+`ladder.test.ts` – both naming `SeasonScreen.vue`, because his ruling had been quoted **in Cyrillic
+in a template comment**. `composables/weekPager.ts`'s own header states the split – Cyrillic is
+allowed there and not in a template – and phase 5 had obeyed it. The quote moved to the composable
+and the template points at it. ⭐ **Two suites named the same edit from two directions**, which is
+the gate working rather than a nuisance.
+
+**2. TWO REDS THAT WERE THE MACHINE, AND THE TELL IS THE ONE CLAUDE.md NAMES.** `npm run check` went
+red twice with **zero assertion failures** and **a different failing set each time**:
+
+| run | red files | kind |
+| --- | --- | --- |
+| check #1 | `round26-world-speaks`, `round27-call-up-flow`, `season/domestic-nation` (unit) | 20 s timeouts, plus 5 `[vitest-worker]: Timeout calling "onTaskUpdate"` |
+| check #2 | `prologue-handover`, `round21-school-cutoff`, `round23-kid-page` ×2 (component) | 5 s timeouts – and a neighbouring arm in the same file passed at **4443 ms** |
+
+**None of the seven files is one this phase touches**, and each set passed in the run that followed:
+`test:quiet` alone → `QUIET_EXIT=0`, `test:component` alone → 1376/1376, and check #2's own UNIT half
+was **green in 421s** while its component half timed out. **A real defect fails the same test twice.**
+⭐ The cause was found rather than assumed: four foreign `python@3.11` processes at **62 % / 47 % /
+36 % / 9 %** CPU, load average 12–13, none of them this repo's. The third `check` – run when they had
+eased – is the one recorded above, `CHECK_EXIT=0`, unit green in 422s.
+
+⚠ **And phase 6 recorded `prologue-handover.test.ts`'s «he never names a ceiling» going red once and
+not reproducing, on the same machine.** That is now twice. It is a 5-second arm on a heavy mount, so
+it is the first thing to time out when the box is busy – worth knowing before somebody spends an
+evening on it as a defect.
+
+### Open at the end of phase 7
+
+- `[?]` **the arrows are now the first control in this app whose PRESENCE depends on the viewport**,
+  which is the thing phase 5's argument was right about and which his ruling does not undo – it
+  accepts it. The parity harness can no longer answer for them; only the honest-half arm can, and it
+  can only reach the widths a fixture actually overflows at.
+- `[?]` **no fixture overflows above 576**, so «a week that overflows at 1280 keeps its arrows» is
+  held by the arithmetic (`tests/weekPager.test.ts`) and by the biconditional's shape, never by a
+  career walked in a browser. A fixture with a week of three or more enterable rungs would close
+  that, and it is a generator question rather than a UI one.
+- `[?]` **D51** – a stacked week that does not overflow is still a tab stop that does nothing. True
+  since phase 5, not introduced here; pointing the `:tabindex` at `overflows` is one word.
+- `[?]` **D50** – 2 inert DOM nodes on `sinking`'s Season, the `.week-pager` containers. They have no
+  box and no accessibility node; they exist so the parity exemption has a PLACE rather than a list of
+  names.
+- `[ ]` everything still open from phases 1–6, unchanged by this phase.

@@ -628,14 +628,24 @@ names the value, mutation-verified against `pan-x`.
 accident of the browser, not a design, and the press-and-hold fix – a hold that became a text
 selection and swallowed the tap – depends on it. It is also what lets a MOUSE drag the strip at all.
 
-### D34 `[x]⚠⚠` The arrows are on EVERY width – which **reverses D16**, at his own later ruling
+### D34 `[x]⚠⚠` The arrows are on EVERY device – which **reverses D16**, at his own later ruling
+<!-- ⚠ THIS ROW READ «on EVERY width» until phase 7. His ruling of the same evening narrowed that to
+     «only where there is something to page» – see the ⚙ note below and D35. The row is left standing
+     because its argument (arrows are not a DESKTOP-only control) is what makes them legal at all. -->
 
 | | |
 | --- | --- |
 | **his words** | «у нас на всех устройствах могут появиться стрелки для листания в дополнение к JS свайпу.» |
 | **phase 3 said** | **D16: no arrow pager.** «Arrows would be two new controls per week row, on the desktop and on no other format, which fails «ничего нового по идее не должно появиться» in `e2e/parity.spec.ts` by name.» |
-| **shipped** | Two arrows on **every week that stacks more than one card, at every width and on every device**. |
+| **shipped** | Two arrows on **every week that stacks more than one card, at every width and on every device**. ⚙ **Phase 7 narrowed «at every width» to «where the strip overflows» – D35.** «On every device» is untouched. |
 | **why** | D16's refusal was never about arrows – it was about **desktop-only** arrows, and it says so in its own sentence. A control that appears at 375 and at 1280 alike carries the same token in both fingerprints, so the criterion it would have broken is the criterion it now satisfies. His ruling is what settles the design question; the parity harness is what settles that it is legal. |
+
+⚙ **PARTLY SUPERSEDED BY D35, at his later ruling of the same day.** «На всех устройствах» stands –
+the arrows are on every DEVICE and reachable by finger, mouse and keyboard alike. «At every width»
+does not: phase 7 draws them only where the strip has something past its edge. The half of this row
+that made them legal – that they are not a desktop-only control – is unchanged; what changed is that
+they are now a control whose presence depends on the viewport, and that is what D35's exemption pays
+for.
 
 ⭐⭐ **AND THE MEASUREMENT THAT MADE IT NECESSARY, WHICH NEITHER D16 NOR THE HARNESS COULD SEE.** On an
 `overflow-x` strip a mouse has **no swipe**. What it has is shift+wheel, a trackpad's two-finger
@@ -649,19 +659,67 @@ every width» and unreachable for half the players.
 stacked week – see D36 – and `e2e/responsive.spec.ts` drives the last card of one by Tab-and-arrow-key
 and by clicking the arrow, in a real browser.
 
-### D35 `[x]` The arrows are DISABLED when nothing overflows – never hidden
+### D35 `[x]⚠⚠` The arrows are HIDDEN when nothing overflows – **RULED 04.09, and it reverses what phase 5 shipped**
 
 | | |
 | --- | --- |
-| **the alternative** | Draw the pager only on a strip that actually overflows. |
-| **shipped** | Always on a stacked week; `Back` and `Next` grey out at the ends and are both grey when the whole week fits. |
-| **why** | **Which weeks overflow depends on the WIDTH.** A two-card week overflows by 273px at 375 and fits exactly at 768 and above (measured on `sinking`); three cards fit at 1280 and do not at 900. So a pager that hid itself when everything fitted would be a control present at one width and absent at another – exactly the failure «ничего нового … как и старого уйти ничего не должно» names, and `e2e/parity.spec.ts` would go red on it. Disabled is also the app's own answer to the same question: `EndingScreen`'s album greys its `Back` on page one. |
+| **his words** | «на десктопе неделя из двух карточек показывает две серые стрелки, которые ей никогда не понадобятся. Спрятать – да, показываем только если есть что листать.» |
+| **phase 5 shipped** | Always on a stacked week; `Back` and `Next` grey out at the ends and were both grey when the whole week fitted. |
+| **shipped now** | The pager is drawn on a stacked week **whose strip has something past its edge**, and on no other. The greying stays for the arrow at the end a real strip is actually at. |
+| **why** | His ruling. Nothing else – see below, because the argument ran the other way and he was told so. |
 
-⚠ **The cost, stated for him rather than buried:** on a desktop a two-card week shows two greyed
-circles it will never need. They are 32px, at 40% opacity, on the row's own edges. **If he would
-rather not see them there, the one-line answer is to hide the pair when a strip does not overflow –
-and the price is that `e2e/parity.spec.ts` then needs a stated exemption for them, because the sets
-at 375 and 1280 stop matching.** That is his trade, not ours to make quietly.
+#### ⚠⚠ PHASE 5 ARGUED AGAINST THIS IN WRITING, AND IT WAS RIGHT
+
+The reasoning stood in `src/composables/weekPager.ts`, in this row, and in `SeasonScreen.vue`'s
+template, and it is kept in all three rather than deleted:
+
+> **Which weeks overflow depends on the WIDTH.** A two-card week overflows by 273px at 375 and fits
+> exactly from 768 up (measured on `sinking`); three cards fit at 1280 and do not at 900. So a pager
+> that hid itself when everything fitted would be a control present at one width and absent at
+> another – exactly the failure «ничего нового … как и старого уйти ничего не должно» names, and
+> `e2e/parity.spec.ts` would go red on it.
+
+**Every clause of that is still true.** Phase 7 re-measured it in Chromium on `sinking` and `junior`,
+and the boundary is his own 768 rung:
+
+| viewport | strip | card | overflow | pager |
+| --- | --- | --- | --- | --- |
+| **375** | 343 | 302 (88%) | **273** | drawn |
+| **520** | 488 | 429 | **383** | drawn |
+| **576** | 520 | 458 | **407** | drawn |
+| 768 | 736 | 362 | **0** | – |
+| 900 | 868 | 428 | **0** | – |
+| 1024 | 772 | 249 | **0** | – |
+| 1200 / 1280 / 1440 | 948 | 308 | **0** | – |
+
+– two cards at half a row plus the 12px gutter come to the strip's width **exactly** at 768, which is
+why the pair he was looking at is idle on every format above a phone.
+
+#### ⭐ SO THIS IS A TRADE HE MADE, NOT A MISTAKE BEING CORRECTED
+
+The price was put to him in this row's own previous wording – «the price is that `e2e/parity.spec.ts`
+then needs a stated exemption for them, because the sets at 375 and 1280 stop matching» – and he
+answered **«да»**. **What it costs, stated plainly:** the harness's claim is no longer «the same
+things are reachable at every width». It is
+
+> **the same things are reachable at every width, outside the desktop rail's dashboard AND the week
+> pager's arrows.**
+
+That sentence is in `e2e/parity.spec.ts`'s own header and in this round's ledger, because a claim
+with two exceptions has to state both.
+
+⚠ **AND THE EXEMPTION IS NOT «ARROWS MAY BE MISSING WHENEVER».** His sentence is a biconditional –
+«показываем только если есть что листать» – so the harness holds both halves: the arrows are
+subtracted from the fingerprint, AND a strip that DOES overflow at a width must have them.
+`the HONEST HALF` measures `scrollWidth - clientWidth` per week per width in a real browser and
+reddens on a week that overflows by 273px with no pager. **D48** is the boundary; **D49** is how the
+overflow is watched.
+
+⭐ **The one thing phase 5's argument was right about that the ruling does not cover** is recorded in
+the ledger rather than hidden here: the arrows are now the FIRST control in this app whose presence
+depends on the viewport, and the parity harness can no longer answer for them – only the honest-half
+arm can, and it can only reach the widths a fixture actually overflows at. No fixture draws a week of
+three or more enterable rungs, so **no career this suite has ever overflows above 576.**
 
 ### D36 `[x]` The parity harness gained a station on a DIFFERENT CAREER, because `pro` has no stacked week
 
@@ -800,3 +858,74 @@ the settled row; these are the calls made building it.**
 | **why** | A name list is one edit away from ignoring a control: whoever adds the control adds the name. A container cannot be extended that way – a later phase would have to move an element INTO the rail's dashboard, and the boundary test fails the moment anything interactive lands there. **Both halves have been seen to bite**; the mutations and what they printed are in `docs/rounds/round-36.md`. |
 
 ⚠ **And the claim the harness makes has changed, so it is written out in words** – in the file's own header and in the ledger: **«the same things are reachable at every width, outside the desktop rail's dashboard»**. A claim with an exception has to state the exception.
+
+⚙ **AND PHASE 7 GAVE THAT SENTENCE A SECOND EXCEPTION** – the week pager's arrows (D35). The claim is
+now **«the same things are reachable at every width, outside the desktop rail's dashboard AND the
+week pager's arrows»**, and it is written out in the harness's header, in the ledger and in D35. **A
+claim with two exceptions has to state both.**
+
+---
+
+## Phase 7 – the pager's arrows are hidden when there is nothing to page
+
+⚙ **ONE owner ruling, and phase 7 is only that one.** «На десктопе неделя из двух карточек показывает
+две серые стрелки, которые ей никогда не понадобятся. Спрятать – да, показываем только если есть что
+листать.» **D35 above is the settled row and it carries the trade;** these four are the calls made in
+carrying it out.
+
+### D48 `[x]` The exemption's boundary is `#app .week-row > .week-pager`, and it holds nothing but the two arrows
+
+| | |
+| --- | --- |
+| **the alternative** | Exempt the arrows by NAME – «ignore `Back` and `Next`». |
+| **shipped** | A `div.week-pager` that exists only to be this boundary, plus an assertion that every one of them holds **exactly** the two arrows, no other element, and no text of its own. |
+| **why** | D47's argument, and it bites harder here. A name list would ignore `Back` and `Next` **anywhere in the app** – `EndingScreen`'s album pager uses exactly those two words – and it is one edit away from ignoring a third control somebody decides to call `Back`. A container cannot be widened that way: a later phase would have to move an element INTO a week's pager, and the boundary test fails on it. ⭐ **Seen to bite:** a `<button>More</button>` parked inside reddens two arms independently, one by DOM and one by the aria subtraction. |
+
+⚠ **The arrows' own accessible names are NOT the boundary, and that matters for a second reason:**
+the exempt set is asserted to be exactly `button "Back"` / `button "Next"` **after** the subtraction,
+so a control that entered the region would be named by that arm too. Two nets, and they catch
+different things – the same pairing D47 used.
+
+### D49 `[x]` Overflow is WATCHED, not computed once – and the cards are observed as well as the strip
+
+| | |
+| --- | --- |
+| **the problem** | Which weeks overflow depends on the width, so «is there anything to page» is not a property of the career – it is a property of the current viewport, and it changes while the window is being dragged. |
+| **shipped** | `useWeekPager`'s `ResizeObserver` – which already existed for `atStart`/`atEnd` – now also drives whether the arrows are RENDERED, and it observes the strip **and every card in it**. |
+| **why** | Overflow is `scrollWidth - clientWidth`: the strip's box gives the second term and the CARDS give the first, and a card is `88%` of a phone, half a tablet row and `calc(33.333% - 8px)` on a desktop. A media query can therefore move `scrollWidth` without the strip's own box being what moved, and observing only the strip would leave that transition unmeasured. |
+
+⭐ **Measured in a browser rather than argued:** a window dragged 375 → 768 → 1280 → 900 → 375 → 1280
+→ 375 with **no navigation and no remount** gives an arrow count of `4 0 0 0 4 0 4`. ⚠ **And it
+cannot loop**, which is the usual hazard when a resize observer changes the DOM: the arrows are
+`position: absolute` against `.week-row` and live in a `display: contents` container, so adding or
+removing them changes neither the strip's box nor any card's. The identity census reports **0 boxes
+moved** at every width, which is that claim as a number.
+
+### D50 `[x]` The container is `display: contents`, so the identity contract pays nothing
+
+| | |
+| --- | --- |
+| **the alternative** | A wrapper with a box – the shape a designer would draw – or an `inset: 0` overlay with `pointer-events: none`. |
+| **shipped** | `.week-pager { display: contents }`. |
+| **why** | The boundary has to be an element (D48), and an element that generates a box is a **new box at every width a week still pages at** – which is the identity contract this round is measured by (D43's own trade, from the other side). `display: contents` generates none: it changes no geometry, adds nothing to the census, and leaves the arrows' containing block exactly where it was, `.week-row`, which is what their `left`/`right` resolve against. |
+
+⚠ **The honest cost, named:** **2 inert DOM nodes** on `sinking`'s Season feed – one per stacked week
+that still pages – with no box, no paint and no accessibility node. The raw element count on that
+screen goes 374 → 376 at 375/520/576, and 374 → **366** from 768 up, where the eight arrow nodes go.
+
+⚠ **And it is why the parity harness reads the container's CHILDREN rather than the container.** A
+box-less element is not a thing `ariaSnapshot` can be rooted at; enumerating what is inside it is the
+same claim, and D48 is what fixes what may be inside.
+
+### D51 `[x]` The keyboard route is on the ROW, survives the arrows going, and was CHECKED rather than assumed
+
+| | |
+| --- | --- |
+| **the worry** | Hiding two controls is the classic way to remove a keyboard route by accident. |
+| **shipped** | Nothing changed: `@keydown.left` / `@keydown.right` are on `.week-row` and were never on the arrows, and `:tabindex="row.events.length > 1 ? 0 : undefined"` is still on the strip. |
+| **why** | It is a claim, so it is measured. `e2e/responsive.spec.ts` now tabs to the strip at **1280 with no arrows on the screen**, presses Left/Right, and finds the route intact: the strip is still a tab stop, the key still reaches `pager.key` (it calls `preventDefault`, which is the observable trace), and the strip **moves nothing** – because a week that fits whole has nowhere to go. |
+
+⭐ **The honest answer, in one line: the route survives; there is simply no journey.** ⚠ And it means
+a strip that does not overflow is still a **tab stop that does nothing** – true since phase 5, not
+introduced here, and worth his eye if the empty stop ever bothers him: the condition is
+`row.events.length > 1`, and pointing it at `overflows` instead is one word.

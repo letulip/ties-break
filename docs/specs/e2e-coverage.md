@@ -206,11 +206,12 @@ produced a *defect list* instead of a workaround list.
 | `onboarding-tour.spec.ts` | ...and More still brings it back after the screen change took it away | 2, 5 |
 | `onboarding-tour.spec.ts` | More can ask for the tour again, and asking moves the player to Home | 2, 5 |
 | `responsive.spec.ts` | at 375 px nothing scrolls sideways and the season strip stays short | 4 |
-| `responsive.spec.ts` | the last card of a week that stacks several rungs is reached by KEYBOARD alone and by pressing an arrow, and at 1280 – where three cards fit – the same arrows are present and quiet (round 36 phase 5) | 4 |
+| `responsive.spec.ts` | the last card of a week that stacks several rungs is reached by KEYBOARD alone and by pressing an arrow; and at 1280 – where three cards fit, so a two-card week has nothing past its edge – the week draws NO pager (owner's ruling, round 36 phase 7) while the strip stays a tab stop and Left/Right still reach it | 4 |
 | `parity.spec.ts` | every screen makes the same controls, headings, figures and icons REACHABLE at 375, 768, 900 and 1280 – every disclosure on the screen is opened before the fingerprint is taken, so «1 к 1 по доступности» is what is measured rather than what is painted on arrival (round 36 phase 3) | 4 |
 | `parity.spec.ts` | every screen in `src/components/screens/` has a station in that walk – the list is derived, never written out | 4 |
 | `parity.spec.ts` | two rooms behind Money's chapter row and one week that STACKS several rungs are walked too – a screen file is the derivation's unit, so a state it never reaches is a state it cannot answer for (round 36 phases 4 and 5) | 4 |
 | `parity.spec.ts` | the desktop rail's DASHBOARD is the one region exempt from that comparison (owner's ruling, round 36 phase 6) – and the exemption is bounded: it is asserted by CONTAINER, that container must hold no control, every figure it shows must exist somewhere at 375, and the same set must be in the strip on every page | 4 |
+| `parity.spec.ts` | the week pager's ARROWS are the second and last exempt region (owner's ruling, round 36 phase 7 – they are drawn only where a strip overflows, which depends on the width) – bounded the same four ways: asserted by CONTAINER, that container may hold nothing but the two arrows, only the arrows are taken (the strip, the cards and their controls stay in the check), and the HONEST HALF – a strip that DOES overflow at a width must have them | 4 |
 | `offline.spec.ts` | after one visit the app boots with the network cut | 3 |
 | `coverage-map.spec.ts` | this document has not rotted (§11) | – |
 <!-- /COVERAGE-MAP:JOURNEYS -->
