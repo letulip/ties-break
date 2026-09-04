@@ -335,6 +335,10 @@ watch(
    SegmentedRow's elements, not this component's. */
 .bt-tabs {
   overflow-x: auto;
+  /* ⚠ THE SCROLL CHAIN, added 04.09 with the season strip's. Reaching this row's end used to drag
+     the page behind it. `SeasonHistoryTable` has always had this line; the other three horizontal
+     scrollers in the app did not, and that asymmetry is what the owner felt. */
+  overscroll-behavior-x: contain;
   scrollbar-width: none;
 }
 

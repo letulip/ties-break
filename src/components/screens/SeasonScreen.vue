@@ -2176,6 +2176,22 @@ function closeExhibition(): void {
   overflow-x: auto;
   scroll-snap-type: x mandatory;
   -webkit-overflow-scrolling: touch;
+  /* ⚠⚠ THE THREE LINES THIS STRIP SHIPPED WITHOUT, AND THE OWNER FELT ALL THREE (04.09: «скролл
+     заедает либо в одну, либо в другую сторону, а некоторые клики … сначала не срабатывают, а потом
+     становятся выделением текста»).
+     · `touch-action: pan-x` – WITHOUT IT THE BROWSER MUST GUESS THE GESTURE'S AXIS, and
+       `scroll-snap-type: x mandatory` makes it commit hard to the horizontal one. A near-vertical
+       swipe that begins on a card was being captured and snapped sideways instead of scrolling the
+       page. `pan-x` says this box takes horizontal gestures and passes vertical ones through.
+     · `overscroll-behavior-x: contain` – without it the strip's end CHAINS to the page.
+       ⭐ `SeasonHistoryTable.vue` has carried exactly this line since it shipped; the strip is the
+       one horizontal scroller in the app that was written without it.
+     · `user-select: none` – a press-and-hold on a card started a TEXT SELECTION, so the browser
+       resolved the gesture as a selection rather than a tap and swallowed the click. */
+  touch-action: pan-x;
+  overscroll-behavior-x: contain;
+  user-select: none;
+  -webkit-user-select: none;
   /* The strip is the affordance; a scrollbar over a photograph is not. */
   scrollbar-width: none;
 }
