@@ -569,7 +569,14 @@ describe('the diary page: the structure the redesign decided', () => {
     // never have. `indexOf` returned -1, `slice(start, -1)` ran to the end of the file, and "the
     // hero" was 59,944 of the file's 126,815 characters: every assertion below was satisfied by
     // markup somewhere else on the page. `class="card-grid"` is the hero's real next sibling.
-    const hero = region(home, 'class="diary-hero"', 'class="card-grid"')
+    // ⚠⚠ RE-AIMED BY ROUND 36's REVIEW #2, AND NARROWED RATHER THAN LOOSENED. The end marker was
+    // `class="card-grid"` – «the hero's real next sibling» – and it no longer is: the three icons
+    // now have a SECOND copy between the two, drawn off the photograph in the container's top-right
+    // corner from 1024 (his own instruction, and the reason it is a copy rather than a move is that
+    // taking them out of `.diary-head` widens the date's box by 108px at 375). Cutting to the page
+    // copy's own class keeps this region what its name and every assertion under it mean: the
+    // PHOTOGRAPH and what is laid on it.
+    const hero = region(home, 'class="diary-hero"', 'class="diary-tools diary-tools-page"')
     for (const part of ['diary-date', 'diary-greeting', 'diary-name', 'diary-age', 'diary-rank', 'diary-caption']) {
       expect(hero, `the hero must carry ${part}`).toContain(part)
     }
@@ -582,7 +589,14 @@ describe('the diary page: the structure the redesign decided', () => {
     // at the export's 22px / 1.7 stroke with no icon file behind it, and that the gear goes to the tab
     // that already owns settings rather than inventing a screen. All three of those still hold, and
     // the envelope is drawn to the same rule as the bell beside it.
-    expect(home.match(/class="diary-tool"/g) ?? []).toHaveLength(3)
+    // ⚠ COUNTED IN THE HERO AND THEN IN THE PAGE COPY, which is STRONGER than the one count it
+    // replaces: three on the photograph below 1024, three off it above, and six in the file – so a
+    // copy that quietly gained or lost an icon reddens on the side it happened, and the two cannot
+    // drift into being different rows.
+    expect(hero.match(/class="diary-tool"/g) ?? [], 'the hero row').toHaveLength(3)
+    const pageTools = region(home, 'class="diary-tools diary-tools-page"', '<Teleport')
+    expect(pageTools.match(/class="diary-tool"/g) ?? [], 'the page row').toHaveLength(3)
+    expect(home.match(/class="diary-tool"/g) ?? [], 'and no third copy anywhere').toHaveLength(6)
     expect(home).toContain('stroke-width="1.7"')
     expect(existsSync(new URL('../public/icons/bell.svg', import.meta.url))).toBe(false)
     // ...and the gear goes to the tab that already owns settings, rather than inventing a screen.
