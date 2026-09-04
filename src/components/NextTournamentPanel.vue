@@ -129,7 +129,7 @@
 // on the first-round plate.
 import { computed } from 'vue'
 import { useGameStore } from '../stores/game'
-import { DRAW_NOT_MADE_NOTE, fieldChanceLabel, fieldChanceTitle, firstMatchLabel, firstMatchTitle, useEventCard } from '../composables/eventCard'
+import { DRAW_NOT_MADE_NOTE, FIELD_FIGURE_NOTE, fieldChanceLabel, fieldChanceTitle, fieldRingShown, firstMatchLabel, firstMatchTitle, useEventCard } from '../composables/eventCard'
 import { readingColor } from '../composables/readingColor'
 import { flagEmoji } from '../composables/countries'
 import { TIERS } from '../engine/season/calendar'
@@ -238,6 +238,24 @@ const courtRead = computed(() => {
             <p class="nt-read-line">{{ fieldRead }}</p>
             <p v-if="courtRead" class="nt-read-line">{{ courtRead }}</p>
             <p v-if="event.coachCaution" class="coach-note">{{ event.coachCaution }}</p>
+            <!-- ⭐⭐⭐ ROUND 36 PHASE 5 – WHAT THE PRE-DRAW FIGURE PROMISES, MOVED HERE OFF THE SEASON
+                 CARDS. Round 34 #5b put this line on every card in the season feed, at the owner's
+                 own ask; he met it in play and ruled it off them on 04.09 – it is on every card, so
+                 it reads as noise on a surface that already carries a great deal, and the app has a
+                 screen FOR a tournament, reachable from Home, which is this one. His words in full
+                 are on `FIELD_FIGURE_NOTE` in composables/eventCard.ts, where Cyrillic is allowed
+                 and in a template it is not.
+                 ⚠ A MOVE, NOT A DELETE, AND THE WARNING IS THE REASON. The figure STEPS at the draw
+                 – 9.1 points on average, 36 at worst (round 34 #5) – and a step nobody was warned
+                 about is the instability round 31 #4 was reported for. Deleting the line would give
+                 that back.
+                 ⚠ IT RIDES THE SAME CONDITION IT ALWAYS DID: `fieldRingShown` is the ring chain's
+                 `v-else-if` branch read back, negation included, so the line appears and disappears
+                 with the ring it is about. The bare `fieldChance !== null` is TRUE on a drawn card
+                 too – that mutation is in tests/component/round31-draw-reveal.test.ts.
+                 ⚠ VISIBLE, not an accessible name: the jump he is being warned about is visible, so
+                 the warning has to be. -->
+            <p v-if="fieldRingShown(event.preview)" class="field-note">{{ FIELD_FIGURE_NOTE }}</p>
           </div>
           <!-- ⭐⭐ ROUND 31 #4 – the ring is her odds against ONE named girl, so it waits for the
                draw exactly as the feed's does. `The read` above it is the FIELD's reading and needs
@@ -634,6 +652,22 @@ const courtRead = computed(() => {
 .nt-hero .coach-note {
   color: rgb(255 255 255 / 82%);
   text-shadow: 0 1px 3px rgb(0 0 0 / 60%);
+}
+
+/* ⭐⭐⭐ ROUND 34 #5b's caption, ARRIVED HERE IN ROUND 36 PHASE 5 – the pre-draw figure's own line.
+   Quieter than the read above it, because it is a note ABOUT the ring rather than another thing the
+   coach said: same column, one step down in size, the label's own ink. It wraps and adds no fixed
+   height, so the panel grows by one line and only while the draw is pending.
+   ⚠ THE INK IS THIS PANEL'S, NOT THE SEASON CARD'S. `--ink-soft` was legible on the feed's flat
+   card and this block stands ON THE PHOTOGRAPH, so it takes `.nt-read-label`'s white-on-art pair –
+   the same shift `.nt-hero .coach-note` above makes for the same reason. */
+.field-note {
+  margin: 5px 0 0;
+  font-size: 12px;
+  line-height: 1.35;
+  color: rgb(255 255 255 / 72%);
+  text-shadow: 0 1px 3px rgb(0 0 0 / 60%);
+  text-wrap: pretty;
 }
 
 .nt-ring {
