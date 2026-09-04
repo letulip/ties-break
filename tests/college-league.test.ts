@@ -25,7 +25,7 @@
 //   THE PRICE    it awards nothing. She is an amateur while she is there; a student fixture paying
 //                ranking points would make four years of college a ranking route and the fork would
 //                stop being a real choice.
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, beforeAll } from 'vitest'
 import { readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import {
@@ -147,10 +147,26 @@ function spendYears(world: WorldState, rng: Rng, years: number): void {
  *  shared, because the guarantee is the same question asked of every one of them. */
 const SEEDS = ['r24-league-a', 'r24-league-b', 'r24-league-c', 'r24-league-d', 'r24-league-e', 'r24-league-f']
 let walkedCache: WorldState[] | null = null
+/** ⚠⚠ PAID IN A HOOK, NOT BY WHICHEVER TEST ASKS FIRST. This walk is six four-year careers, and
+ *  lazily it was billed to the first test that reached it – measured 04.09 at **4,706 ms** on a
+ *  quiet machine, in a 13.4 s file. vitest's 20 s budget is per TEST, so on CI's two-core runner at
+ *  the ~x1.73 contention this repo measures that arm was carrying about sixteen seconds of a twenty
+ *  second allowance for work that is not its own.
+ *
+ *  ⭐ Its sibling `round27-call-up-flow.test.ts` crossed that line on CI the same day and was fixed
+ *  this way; this file was the next one and was moved BEFORE it failed rather than after. **A test
+ *  may assert; it may not be the place a shared fixture is paid for.** */
 function walked(): WorldState[] {
-  if (!walkedCache) walkedCache = SEEDS.map((s) => walkFourYears(s))
+  if (!walkedCache) throw new Error('the walk is built in beforeAll – see the note above')
   return walkedCache
 }
+
+// ⭐ THE WALK, PAID ONCE, BY THE SUITE. 30 s and not the default, for the reason stated above: the
+// measurement is 4.7 s quiet, and a busy runner roughly doubles it. If this hook ever approaches
+// thirty, the walk has grown and that is a finding rather than a number to raise again.
+beforeAll(() => {
+  walkedCache = SEEDS.map((s) => walkFourYears(s))
+}, 30_000)
 
 function yearsOf(world: WorldState): CollegeYear[] {
   return world.college?.years ?? []

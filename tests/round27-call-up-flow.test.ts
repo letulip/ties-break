@@ -27,7 +27,7 @@
 //   3. THE FLOW TELLS THE TRUTH ABOUT IT – no table, no rung, no draw, and the amateur sentence is
 //      the SQUAD's rather than the student field's.
 //   4. THE TOAST IS GONE, and `friendly` is not.
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, beforeAll } from 'vitest'
 import {
   answerFork,
   callUpFor,
@@ -129,16 +129,39 @@ let walkedCache: WorldState[] | null = null
 /** ⚠ A RANGE OF CAREERS AND NOT ONE LUCKY SEED. The letter is a roll, so a single walk can be a year
  *  in which nobody wrote; the claims below are about the RELATIONSHIP between letters and ties, and
  *  a career with neither satisfies them vacuously. `letters` asserts the corpus is not vacuous. */
+/** ⚠⚠ BUILT IN A HOOK, NOT LAZILY IN WHICHEVER TEST ASKS FIRST – AND THAT DISTINCTION IS A CI
+ *  FAILURE, not a style. The lazy version billed the WHOLE six-career walk to whatever test happened
+ *  to reach it first, and vitest's 20 s budget is per TEST. Measured solo on 04.09: the walk is
+ *  **5,714 ms** and the file is 13.19 s, so the first-arriving test carried 43% of the file on its
+ *  own. On CI's two-core runner, at the ~x1.73 in-pool contention this repo has measured, that
+ *  crosses 20 s and `#6 … every tie that was played was announced the week before it` failed with
+ *  ZERO assertion failures — the signature of a budget, never of a defect.
+ *
+ *  ⭐ The cost belongs to the FIXTURE and now sits where fixtures sit. `beforeAll` carries its own
+ *  timeout, stated explicitly below rather than inherited, because a hook that walks six careers
+ *  legitimately takes seconds and should say so out loud.
+ *
+ *  ⚠ This is the SECOND time this shape has reached CI in two waves. Round 35 fixed
+ *  `round31-age-curve.test.ts`, where one `it` migrated 71 golden fixtures; the remedy there was
+ *  `it.each`, because the work was per-fixture. Here it is not — six careers feed nineteen tests —
+ *  so the honest fix is a hook. **The rule that generalises: a test may assert, it may not be the
+ *  place a shared fixture is paid for.** */
 function walked(): WorldState[] {
-  if (!walkedCache) {
-    walkedCache = SEEDS.map((s) => {
-      const { world, rng } = atCollege(s)
-      walkTheFreeze(world, rng)
-      return world
-    })
-  }
+  if (!walkedCache) throw new Error('the walk is built in beforeAll – see the note above')
   return walkedCache
 }
+
+// ⭐ THE WALK, PAID ONCE, BY THE SUITE. 30 s and not the default: the measurement above is 5.7 s on
+// a quiet machine, and the ~x1.73 contention this repo measures in-pool puts a busy CI runner near
+// 10 s. Thirty leaves room without hiding a real regression — if this hook ever approaches it, the
+// walk itself has grown and that is a finding rather than a number to raise again.
+beforeAll(() => {
+  walkedCache = SEEDS.map((s) => {
+    const { world, rng } = atCollege(s)
+    walkTheFreeze(world, rng)
+    return world
+  })
+}, 30_000)
 
 const callUpLetters = (world: WorldState): Offer[] => world.offers.filter((o) => o.kind === 'call-up')
 const termsOf = (o: Offer): CallUpLetterTerms => o.terms as CallUpLetterTerms
