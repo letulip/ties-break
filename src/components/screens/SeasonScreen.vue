@@ -1837,19 +1837,27 @@ function closeExhibition(): void {
             </div>
           </Card>
           </div>
-          <!-- ⭐⭐⭐ ROUND 36 PHASE 5 – THE ARROWS, AND THEY ARE ON EVERY DEVICE AT EVERY WIDTH, which is
-               the owner's own wording for them (quoted at the head of composables/weekPager.ts).
-               Phase 3's D16 refused a pager because arrows on the desktop and on no other format are
-               two controls `e2e/parity.spec.ts` fails BY NAME; these appear on the same weeks at 375
-               as at 1280, so the fingerprints match and the refusal does not apply.
+          <!-- ⭐⭐⭐ ROUND 36 PHASE 5 – THE ARROWS, on the owner's own wording for them (quoted at the
+               head of composables/weekPager.ts). Phase 3's D16 refused a pager because arrows on the
+               desktop and on no other format are two controls `e2e/parity.spec.ts` fails BY NAME.
                ⚠ NO NEW ICON AND NO NEW WORDS. `back.svg` is the owner's own asset (30.07) and the
                `next` arrow is that glyph mirrored, not a second file; `Back` and `Next` are the two
                words `EndingScreen`'s album pager already uses for exactly this pair of controls.
-               ⚠ DISABLED, NEVER HIDDEN. Which weeks overflow depends on the WIDTH – three cards fit
-               at 1280 and two do not at 375 – so a pager that hid itself when everything fitted
-               would be present at one width and absent at another, which is the criterion this
-               round is measured by. Greying it is also the album's own answer on its first page. -->
-          <template v-if="row.events.length > 1">
+
+               ⭐⭐⭐ ROUND 36 PHASE 7 – AND THEY ARE HIDDEN WHEN THERE IS NOTHING TO PAGE, AT HIS
+               RULING of 04.09, quoted in full at the head of composables/weekPager.ts (Cyrillic is
+               allowed there and in a template it is not – the same split phase 5 made). In short: an
+               idle pair of grey arrows on a desktop is a control she will never need, so show them
+               only when there is something to page.
+               ⚠⚠ THIS REVERSES WHAT PHASE 5 WROTE HERE, AND PHASE 5'S ARGUMENT WAS RIGHT: which
+               weeks overflow depends on the WIDTH, so a pager that hides itself IS a control present
+               at 375 and absent at 1280. He was told that in D35 – «the price is a stated exemption
+               in `e2e/parity.spec.ts`» – and ruled anyway. The exemption is what pays for it, and it
+               is bounded: only `.week-pager` is subtracted, and a strip that DOES overflow at a width
+               must have its arrows there or the harness reddens. See D35 and `e2e/parity.spec.ts`.
+               ⚠ `overflows` IS WATCHED, NOT READ ONCE: `weekPager`'s ResizeObserver sits on the strip
+               AND on its cards, so dragging a window across a breakpoint takes the arrows with it. -->
+          <div v-if="row.events.length > 1 && pager.ends(row.week).overflows" class="week-pager">
             <IconButton
               class="week-arrow back"
               icon="back"
@@ -1866,7 +1874,7 @@ function closeExhibition(): void {
               :disabled="pager.ends(row.week).atEnd"
               @click="pager.page(row.week, 1)"
             />
-          </template>
+          </div>
           </div>
 
           <!-- A PLANNED week: the booking reads back with its package/match name + a Cancel. When
@@ -2299,8 +2307,10 @@ function closeExhibition(): void {
   width: 88%;
 }
 
-/* ⭐⭐⭐ ROUND 36 PHASE 5 – THE TWO ARROWS, ON EVERY WIDTH AND EVERY DEVICE. His ruling: «у нас на
-   всех устройствах могут появиться стрелки для листания в дополнение к JS свайпу.»
+/* ⭐⭐⭐ ROUND 36 PHASE 5 – THE TWO ARROWS, ON EVERY DEVICE. His ruling: «у нас на всех устройствах
+   могут появиться стрелки для листания в дополнение к JS свайпу.»
+   ⚠ PHASE 7 – «on every WIDTH» is no longer part of that sentence: they are drawn on every width at
+   which the strip has something past its edge, and on no other. His second ruling, and D35.
 
    ⭐ NOTHING IS DRAWN THAT DID NOT EXIST. `ui/IconButton.vue`'s `plate` variant is the app's own
    32px circle on a `--panel` plate, and its own header says what it is for: «it sits ON something (a
@@ -2315,6 +2325,22 @@ function closeExhibition(): void {
    ⚠ THE SAME SIZE AT EVERY WIDTH, on purpose. A control that grew on a desktop would be one more
    thing for the eye to re-learn per format, and the round's whole criterion is that the formats
    carry the same set. */
+/* ⭐⭐⭐ ROUND 36 PHASE 7 – THE ARROWS' OWN CONTAINER, AND IT EXISTS FOR THE PARITY EXEMPTION.
+   His ruling hides the pair on a strip with nothing past its edge, which makes them a control present
+   at 375 and absent at 1280 – so `e2e/parity.spec.ts` needs a stated exemption for them, and D47's
+   rule for an exemption is that its boundary is A CONTAINER and never a list of names. This div is
+   that container: `#app .week-row > .week-pager`, and the harness asserts it holds NOTHING but these
+   two arrows, so a later phase cannot park a control inside it and out of the check.
+
+   ⚠ `display: contents` IS WHAT MAKES IT FREE. The div generates no box of its own, so it changes
+   no geometry, adds nothing to the identity census, and leaves the arrows' containing block exactly
+   where it was – `.week-row`, the nearest positioned ancestor, which is what `left`/`right` below
+   resolve against. A wrapper with a box would have been a new element at every width a stacked week
+   still pages at, which is the identity contract this round is measured by. */
+.week-pager {
+  display: contents;
+}
+
 .week-arrow {
   position: absolute;
   top: 50%;
@@ -2347,11 +2373,14 @@ function closeExhibition(): void {
   transform: scaleX(-1);
 }
 
-/* Disabled is the honest state for a strip with nothing past its end, and it is NOT hidden: which
-   weeks overflow depends on the width, so a pager that hid itself would be a control present at 375
-   and absent at 1280 - which `e2e/parity.spec.ts` fails by name. `EndingScreen`'s album greys its
-   own Back on page one for the same reason. `IconButton` already carries the 0.4 opacity; this only
-   stops the plate reading as pressable. */
+/* Disabled is the honest state for an arrow at ONE end of a strip that has something past the other:
+   at the head of a strip `Back` is grey and `Next` is live, and `EndingScreen`'s album greys its own
+   Back on page one in the same way. `IconButton` already carries the 0.4 opacity; this only stops the
+   plate reading as pressable.
+   ⚠ PHASE 7 NARROWED WHEN THIS IS EVER SEEN. Both arrows grey at once used to be the state of a
+   strip that fits whole; the owner ruled that pair off the screen («две серые стрелки, которые ей
+   никогда не понадобятся»), so a rendered pager now always has at least one live arrow. This rule
+   still earns its place – it is what the single grey arrow at either end of a real strip reads as. */
 .week-arrow:disabled {
   background: rgb(9 14 24 / 55%);
   box-shadow: none;

@@ -17,9 +17,18 @@
 //
 // ⭐ THAT IS ALSO WHY THE ARROWS ARE LEGAL. Phase 3's D16 refused an arrow pager because it would
 // have been two controls on the DESKTOP and on no other format, which `e2e/parity.spec.ts` fails by
-// name. These are on EVERY multi-card week at EVERY width, so the 375 fingerprint and the 1280
-// fingerprint carry exactly the same set – which is the owner's «ничего нового по идее не должно
-// появиться, как и старого уйти ничего не должно» read as it is written.
+// name. These are on every DEVICE – a finger, a mouse and a keyboard reach the same rule – which is
+// the half of the owner's «ничего нового по идее не должно появиться, как и старого уйти ничего не
+// должно» that D16's refusal was actually about.
+//
+// ⚠⚠ PHASE 7 NARROWED THE OTHER HALF, AT HIS LATER RULING, AND IT COST A STATED EXEMPTION. The
+// arrows are no longer on every WIDTH: «показываем только если есть что листать», so they are drawn
+// where the strip overflows and nowhere else. Measured, on a two-card week: overflow 273 / 383 /
+// 407px at 375 / 520 / 576 and EXACTLY 0 from 768 up. The 375 and 1280 fingerprints therefore stop
+// matching, `e2e/parity.spec.ts` exempts this pager's own container to say so out loud, and the
+// exemption's honest half asserts the converse – a strip that DOES overflow has its arrows. The full
+// argument, including the one phase 5 made against this and which was right, is on `pagerEnds` below
+// and in D35.
 //
 // -------------------------------------------------------------------------------------------------
 // WHAT REPLACES WHAT
@@ -60,23 +69,50 @@ export interface PagerEnds {
   /** the strip is at its left end – or does not overflow at all, which is the same for a pager */
   atStart: boolean
   atEnd: boolean
+  /** ⭐ PHASE 7: there is something past the strip's edge – and this is now what decides whether the
+   *  arrows are DRAWN at all, not merely whether they are live. See the header below. */
+  overflows: boolean
 }
 
 /**
- * WHICH ARROWS ARE LIVE, from the three numbers a scroll container reports.
+ * WHICH ARROWS ARE LIVE, AND – SINCE PHASE 7 – WHETHER THERE ARE ANY, from the three numbers a
+ * scroll container reports.
  *
- * ⚠ A STRIP THAT DOES NOT OVERFLOW IS AT BOTH ENDS AT ONCE, and the arrows are then disabled rather
- * than absent. That is not tidiness: which weeks overflow DEPENDS ON THE WIDTH – three cards fit at
- * 1280 and two do not at 375 – so a pager that hid itself when everything fitted would be a control
- * present at one width and missing at another, which `e2e/parity.spec.ts` fails by name. Disabled is
- * also the app's own answer to the same question: `EndingScreen`'s album greys its Back on page one.
+ * -------------------------------------------------------------------------------------------------
+ * ⭐⭐⭐ THE OWNER OVERRULED THIS FUNCTION'S OWN ARGUMENT, KNOWINGLY, AND BOTH HALVES ARE KEPT HERE
+ * -------------------------------------------------------------------------------------------------
+ * His ruling, 04.09, after playing the phase-5 build: «на десктопе неделя из двух карточек показывает
+ * две серые стрелки, которые ей никогда не понадобятся. Спрятать – да, показываем только если есть
+ * что листать.»
+ *
+ * ⚠ AND PHASE 5 ARGUED THE OTHER WAY, IN THIS EXACT PLACE. Its sentence stood here and it is right:
+ *
+ *     «A STRIP THAT DOES NOT OVERFLOW IS AT BOTH ENDS AT ONCE, and the arrows are then disabled
+ *      rather than absent. That is not tidiness: which weeks overflow DEPENDS ON THE WIDTH – three
+ *      cards fit at 1280 and two do not at 375 – so a pager that hid itself when everything fitted
+ *      would be a control present at one width and missing at another, which `e2e/parity.spec.ts`
+ *      fails by name.»
+ *
+ * Every clause of that is still TRUE. D35 put the price to him in those words – «the price is that
+ * `e2e/parity.spec.ts` then needs a stated exemption for them, because the sets at 375 and 1280 stop
+ * matching» – and he answered «да». So this is a trade he has made and not a mistake to correct, and
+ * the exemption is the thing that pays for it: `e2e/parity.spec.ts` exempts the arrows' own container
+ * and NOTHING else, and asserts the honest half – that a strip which DOES overflow at a width has its
+ * arrows there. «Hidden when idle» is the ruling; «hidden whenever» is what the guards forbid.
+ *
+ * ⚠ `atStart` / `atEnd` ARE UNCHANGED, and that is deliberate: they still describe a non-overflowing
+ * strip as at both ends at once, which is what they mean. Nothing about the paging arithmetic moved –
+ * the only new thing is a third fact about the same three numbers.
  *
  * The 1px tolerance is fractional-pixel slack, not a fudge: a card width of `calc(33.333% - 8px)`
- * lands `scrollLeft` on a fraction, and `>= max` would be false forever at the right-hand end.
+ * lands `scrollLeft` on a fraction, and `>= max` would be false forever at the right-hand end. It
+ * does the same job for `overflows`: three cards of `calc(33.333% - 8px)` in a 948px row can leave a
+ * sub-pixel of scroll that is not a card hanging past the edge, and a pager drawn for half a pixel
+ * would be exactly the control «которая ей никогда не понадобится».
  */
 export function pagerEnds(scrollLeft: number, scrollWidth: number, clientWidth: number): PagerEnds {
   const max = Math.max(0, scrollWidth - clientWidth)
-  return { atStart: scrollLeft <= 1, atEnd: scrollLeft >= max - 1 }
+  return { atStart: scrollLeft <= 1, atEnd: scrollLeft >= max - 1, overflows: max > 1 }
 }
 
 /**
@@ -150,7 +186,14 @@ export interface WeekPager {
   key: (week: number, direction: -1 | 1, event: KeyboardEvent) => void
 }
 
-const AT_BOTH_ENDS: PagerEnds = { atStart: true, atEnd: true }
+/** The answer for a week whose strip has not been measured yet – between the render that creates the
+ *  element and the `bind` that reads it.
+ *
+ *  ⚠ `overflows: false` IS THE SAFE DEFAULT AND NOT AN ARBITRARY ONE. Unmeasured means «we do not
+ *  know that there is anything to page», and drawing a pager on that guess would flash two controls
+ *  onto every stacked week for a frame. `bind` measures synchronously the moment Vue hands over the
+ *  element, so the real answer lands in the same tick. */
+const AT_BOTH_ENDS: PagerEnds = { atStart: true, atEnd: true, overflows: false }
 
 export function useWeekPager(): WeekPager {
   const strips = new Map<number, HTMLElement>()
@@ -186,7 +229,17 @@ export function useWeekPager(): WeekPager {
     if (!strip) return
     const next = pagerEnds(strip.scrollLeft, strip.scrollWidth, strip.clientWidth)
     const now = ends[week]
-    if (!now || now.atStart !== next.atStart || now.atEnd !== next.atEnd) ends[week] = next
+    // ⚠ `overflows` JOINS THE COMPARISON, and forgetting it here is the one way this change could
+    // have shipped half-working: the record is only written back when something differs, so a field
+    // left out of this line is a field that never updates after the first measurement.
+    if (
+      !now ||
+      now.atStart !== next.atStart ||
+      now.atEnd !== next.atEnd ||
+      now.overflows !== next.overflows
+    ) {
+      ends[week] = next
+    }
   }
 
   function scrollTo(strip: HTMLElement, left: number, behavior: ScrollBehavior): void {
@@ -219,9 +272,28 @@ export function useWeekPager(): WeekPager {
     el.addEventListener('click', onClickCapture, true)
 
     // A week's row is as wide as the column, and the column moves on his whole breakpoint ladder.
+    //
+    // ⭐⭐ PHASE 7 MADE THIS LOAD-BEARING. Until the ruling this observer only kept `atStart`/`atEnd`
+    // honest across a resize; now it is what makes the arrows APPEAR AND DISAPPEAR as the window is
+    // dragged across a breakpoint, which is the difference between «overflow is observed» and
+    // «overflow was computed once on mount». A two-card week overflows at 375 and fits at 768: the
+    // arrows have to go with it, in both directions, without a remount.
+    //
+    // ⚠ THE CARDS ARE OBSERVED TOO, NOT ONLY THE STRIP, and that is not belt-and-braces. Overflow is
+    // `scrollWidth - clientWidth`: the strip's own box gives the second term, and the CARDS give the
+    // first. Their width is a percentage that CHANGES ON HIS LADDER – 88% of a phone, 50% of a
+    // tablet row, `calc(33.333% - 8px)` on a desktop – so a media query can move `scrollWidth`
+    // without the strip's own box being the thing that moved. Observing only the strip would leave
+    // that transition unmeasured.
+    //
+    // ⚠ AND IT CANNOT LOOP, WHICH IS THE USUAL HAZARD WITH A RESIZE OBSERVER THAT CHANGES THE DOM.
+    // The arrows are `position: absolute` against `.week-row` and live in their own container, so
+    // adding or removing them changes neither the strip's box nor any card's. Measured as part of
+    // the identity census: 0 boxes moved.
     const observer =
       typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(() => measure(week))
     observer?.observe(el)
+    for (const card of Array.from(el.children)) observer?.observe(card)
 
     detach.set(week, () => {
       el.removeEventListener('scroll', onScroll)
