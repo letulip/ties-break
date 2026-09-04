@@ -206,8 +206,10 @@ produced a *defect list* instead of a workaround list.
 | `onboarding-tour.spec.ts` | ...and More still brings it back after the screen change took it away | 2, 5 |
 | `onboarding-tour.spec.ts` | More can ask for the tour again, and asking moves the player to Home | 2, 5 |
 | `responsive.spec.ts` | at 375 px nothing scrolls sideways and the season strip stays short | 4 |
+| `responsive.spec.ts` | the last card of a week that stacks several rungs is reached by KEYBOARD alone and by pressing an arrow, and at 1280 – where three cards fit – the same arrows are present and quiet (round 36 phase 5) | 4 |
 | `parity.spec.ts` | every screen makes the same controls, headings, figures and icons REACHABLE at 375, 768, 900 and 1280 – every disclosure on the screen is opened before the fingerprint is taken, so «1 к 1 по доступности» is what is measured rather than what is painted on arrival (round 36 phase 3) | 4 |
 | `parity.spec.ts` | every screen in `src/components/screens/` has a station in that walk – the list is derived, never written out | 4 |
+| `parity.spec.ts` | two rooms behind Money's chapter row and one week that STACKS several rungs are walked too – a screen file is the derivation's unit, so a state it never reaches is a state it cannot answer for (round 36 phases 4 and 5) | 4 |
 | `offline.spec.ts` | after one visit the app boots with the network cut | 3 |
 | `coverage-map.spec.ts` | this document has not rotted (§11) | – |
 <!-- /COVERAGE-MAP:JOURNEYS -->

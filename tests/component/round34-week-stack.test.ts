@@ -52,6 +52,7 @@ import { eventActionable, feedContext, feedShows, preferredWeekEvent, weekEventS
 import { UPCOMING_WEEKS } from '../../src/engine/world/constants'
 import { weekRange } from '../../src/shared/dates'
 import { readFileSync } from 'node:fs'
+import { region, regionToLast } from '../helpers/source'
 import { resolve } from 'node:path'
 import { migrateSave } from '../../src/engine/migrations'
 import { tickWeek, toSnapshot, type WorldState } from '../../src/engine/world'
@@ -677,5 +678,154 @@ describe('round 36 phase 2 – a week is two cards wide on a tablet, and the thi
       expect(declared === '' || declared === 'auto', 'a phone week card declares no width of its own').toBe(true)
     }
     w.unmount()
+  })
+})
+
+// ⭐⭐⭐ ROUND 36 PHASE 5 – THE SWIPE IS JAVASCRIPT NOW, AND IT COMES WITH ARROWS ON EVERY WIDTH.
+//
+// The owner, 04.09: «Давай уберем свайп css и сделаем js функционал для листания горизонтального,
+// тогда будет полный паритет на всех устройствах и ничего не надо изобретать.» And: «у нас на всех
+// устройствах могут появиться стрелки для листания в дополнение к JS свайпу.»
+//
+// ⚠ IT LIVES IN THIS FILE FOR THE REASON PHASE 2'S BLOCK ABOVE GIVES: round 34 #14 built the strip,
+// and phase 5 changed what drives it. A second file measuring the same strip is a second place for
+// the card width, the gutter and the stack search to drift out of.
+//
+// ⚠⚠ WHAT A MOUNTED TEST CAN AND CANNOT SAY HERE. happy-dom has no layout engine, so every
+// `scrollWidth` and `clientWidth` is zero and NO assertion about where a press sends the strip is
+// possible in this project. The paging arithmetic is therefore held in `tests/weekPager.test.ts`,
+// which takes numbers, and the reach is measured in a real browser in `e2e/responsive.spec.ts`.
+// What belongs HERE is the claim those two cannot make: that the controls are on the screen, on the
+// same weeks, at every one of his widths.
+//
+// ⚠ MUTATION-VERIFIED – each applied alone, and the verdicts differ:
+//   * the arrows' `v-if="row.events.length > 1"` -> `v-if="false"` reddens the three width arms and
+//     leaves the one-card arm GREEN, which is the pair described above;
+//   * ...-> `v-if="true"` reddens the one-card arm ALONE, from the other side;
+//   * `touch-action: pan-y` -> `pan-x` reddens the axis arm ALONE – the mutation that names the
+//     freeze `main`'s own hotfix walked into;
+//   * putting `scroll-snap-type: x mandatory` back reddens the «the CSS swipe is gone» arm ALONE;
+//   * dropping `:tabindex` from the strip reddens the keyboard arm ALONE.
+describe('round 36 phase 5 – a week that stacks is paged, and the pager is on every width', () => {
+  beforeEach(() => {
+    setActivePinia(createPinia())
+    document.body.innerHTML = ''
+  })
+
+  afterEach(() => {
+    setViewport(PHONE)
+    document.body.innerHTML = ''
+  })
+
+  function mountAt(vp: { width: number; height: number }) {
+    setViewport(vp)
+    const { snap } = careerWithAStackedWeek()
+    useGameStore().snapshot = snap
+    const w = mount(SeasonScreen, { global: { stubs: { teleport: true } }, attachTo: document.body })
+    expect(document.head.querySelector('style'), 'no stylesheet – this measurement would be vacuous').toBeTruthy()
+    return w
+  }
+
+  /** ⚠ THE PATH IS A PLAIN VARIABLE AND NEVER AN INLINE LITERAL, which round30-next-tournament-layout
+   *  records the reason for: Vite rewrites an inline `new URL('…', import.meta.url)` into its own
+   *  asset resolver, and under this runner the result is not a `file:` URL – the read then throws
+   *  «The URL must be of scheme file» on a path nobody wrote. Measured here again on 04.09. */
+  const SEASON_SFC = '../../src/components/screens/SeasonScreen.vue'
+  function seasonSource(): string {
+    return readFileSync(new URL(SEASON_SFC, import.meta.url), 'utf8')
+  }
+
+  /** The strip's own CSS rule, cut with the marker helpers (never a raw `indexOf` – `pins:check`). */
+  function stripRule(): string {
+    return region(seasonSource(), '.week-stack.swipeable {', '}')
+  }
+
+  for (const [name, vp] of [
+    ['the phone', PHONE],
+    ['the tablet', TABLET],
+    ['the desktop', DESKTOP],
+  ] as const) {
+    it(`⭐ ${name} draws Back and Next on every stacked week`, () => {
+      const w = mountAt(vp)
+      const rows = w.findAll('.week-row').filter((r) => r.find('.week-stack.swipeable').exists())
+      expect(rows.length, 'the fixture must draw a stacked week, or this measures nothing').toBeGreaterThan(0)
+      for (const row of rows) {
+        const arrows = row.findAll('.week-arrow')
+        expect(arrows.length, 'a stacked week carries exactly two arrows').toBe(2)
+        // ⚠ BY ACCESSIBLE NAME, which is what `e2e/parity.spec.ts` compares across the four widths –
+        // and they are the album pager's own two words, not new copy.
+        expect(arrows.map((a) => a.attributes('aria-label'))).toEqual(['Back', 'Next'])
+        // ⚠ THE GLYPH IS `ui/AppIcon.vue`'s, NOT MARKUP OF ITS OWN. happy-dom drops `maskImage` from
+        // an inline style, so the FILE is asserted off the template instead (the arm below); what is
+        // measured here is that the arrow renders the app's one icon component at all.
+        for (const arrow of arrows) {
+          expect(arrow.find('.tb-icon').exists(), 'the arrow draws the app\'s own icon component').toBe(true)
+        }
+      }
+      w.unmount()
+    })
+  }
+
+  it('⚠ ...and a week with ONE card carries none – the pair that stops «always» passing', () => {
+    const w = mountAt(PHONE)
+    const flat = w.findAll('.week-row').filter((r) => !r.find('.week-stack.swipeable').exists())
+    expect(flat.length, 'the feed must hold a one-card week too').toBeGreaterThan(0)
+    for (const row of flat) {
+      expect(row.findAll('.week-arrow').length, 'a lone card has nothing to page').toBe(0)
+      expect(row.find('.week-stack').attributes('tabindex'), 'and it is not a tab stop').toBeUndefined()
+    }
+    w.unmount()
+  })
+
+  it('⭐ the strip itself is a tab stop, which is the route a keyboard had none of', () => {
+    // Before this there was no `tabindex` anywhere on the strip and no arrows, so the second card of
+    // a week was unreachable from a keyboard by ANY route – the hole the parity harness cannot see,
+    // because it compares controls and not input devices.
+    const w = mountAt(PHONE)
+    const strips = w.findAll('.week-stack.swipeable')
+    expect(strips.length).toBeGreaterThan(0)
+    for (const strip of strips) expect(strip.attributes('tabindex')).toBe('0')
+    w.unmount()
+  })
+
+  it('⭐⭐ the CSS swipe is GONE – no scroll snapping is declared anywhere on the strip', () => {
+    // «Давай уберем свайп css». `snapTarget` in composables/weekPager.ts is what replaces it, and it
+    // runs on a drag's release and on an arrow press – one rule reached by three input devices.
+    // ⚠ COMMENTS STRIPPED FIRST, and that is not tidiness: the block above the rule EXPLAINS what
+    // was removed and names both properties, so an assertion over the raw text would read the
+    // explanation and call it a declaration. Caught by exactly that on the first run.
+    const style = regionToLast(seasonSource(), '<style scoped>', '</style>').replace(
+      /\/\*[\s\S]*?\*\//g,
+      '',
+    )
+    expect(style, 'the strip no longer snaps').not.toContain('scroll-snap-type')
+    expect(style, 'and neither do its cards').not.toContain('scroll-snap-align')
+  })
+
+  it('⚠⚠ the strip gives up the HORIZONTAL axis and keeps the vertical one – `pan-y`, never `pan-x`', () => {
+    // The hotfix on `main` reached for `pan-x` first – «this box handles ONLY horizontal panning» –
+    // and a near-vertical gesture that began on a card then stopped reaching the page at all: on a
+    // run of multi-card weeks the page froze. This is that mutation, held.
+    const rule = stripRule()
+    expect(rule).toContain('touch-action: pan-y')
+    expect(rule, 'pan-x is the value that froze the page').not.toContain('touch-action: pan-x')
+    // ...and the two lines the same hotfix found, which a JS drag needs as much as a CSS one did.
+    expect(rule, 'the strip\'s end must not chain to the page').toContain('overscroll-behavior-x: contain')
+    expect(rule, 'a press-and-hold must not become a text selection').toContain('user-select: none')
+    // ⚠ AND `overflow-x` STAYS. It is not the swipe – `touch-action` took the gesture off the
+    // browser – and it is what keeps `scrollLeft` a real number, which is the pager's whole state.
+    expect(rule).toContain('overflow-x: auto')
+  })
+
+  it('⚠ NO NEW ICON: both arrows load `back.svg` and the forward one is that file MIRRORED', () => {
+    // «Все иконки наши, ничего нового по идее не должно появиться.» `back.svg` is the owner's own
+    // asset (30.07) and a second file for a right-pointing chevron is exactly the thing this round
+    // may not add; `AppIcon`'s mask contract is what makes one file serve both directions.
+    const src = seasonSource()
+    const arrows = region(src, '<template v-if="row.events.length > 1">', '</template>')
+    expect(arrows.match(/icon="back"/g) ?? [], 'both arrows, one asset').toHaveLength(2)
+    expect(/icon="(?!back")/.test(arrows), 'and no other icon name reaches the pager').toBe(false)
+    const style = regionToLast(src, '<style scoped>', '</style>')
+    expect(style, 'the forward arrow is the same glyph flipped').toContain('transform: scaleX(-1)')
   })
 })

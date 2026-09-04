@@ -252,3 +252,151 @@ test('at 375 px the Next-tournament screen fits, square picture and all', async 
 
   expect(crashes, 'the app threw at 375 px').toEqual([])
 })
+
+// ⭐⭐⭐ ROUND 36 PHASE 5 – THE THIRD CARD OF A WEEK IS REACHABLE WITHOUT A FINGER.
+//
+// The owner: «Давай уберем свайп css и сделаем js функционал для листания горизонтального, тогда
+// будет полный паритет на всех устройствах и ничего не надо изобретать» – and «у нас на всех
+// устройствах могут появиться стрелки для листания в дополнение к JS свайпу».
+//
+// ⚠⚠ WHY THIS IS A BROWSER TEST AND CANNOT BE ANYTHING ELSE. The claim is about a card that is off
+// the side of a scroll container and about the two routes to it. `tests/component/` runs in
+// happy-dom, where `scrollWidth`, `clientWidth` and every rect are ZERO, so "the card is off screen"
+// and "the press brought it back" are both unaskable there. The arithmetic is held in
+// `tests/weekPager.test.ts`; the arrows' presence at four widths is held by `e2e/parity.spec.ts`;
+// what is held HERE is the thing neither can say – that a real Chromium, driven by a real keyboard
+// and a real click, arrives at the card.
+//
+// ⚠ AND IT IS THE HOLE ROUND 34 SHIPPED WITH. `.week-stack.swipeable` had `overflow-x: auto` and no
+// `tabindex`, so on a MOUSE the only routes to the second card were shift+wheel, a trackpad's
+// two-finger gesture and drag-to-select autoscroll – none of which a player guesses, and the last of
+// which `user-select: none` has since removed. From a keyboard there was no route at all. The parity
+// harness cannot see that: it compares controls across widths, not input devices.
+test('the last card of a stacked week is reachable by keyboard and by an arrow', async ({
+  page,
+  careerAt,
+}) => {
+  // ⚠ `sinking`, NOT `pro`. A pager only exists on a week that stacks several rungs she may enter,
+  // and `pro` – eight seasons in, on the WTA rung alone – has none: its Season feed is three rows of
+  // one card. `sinking` draws two stacked weeks. Measured, not assumed: the overflow is asserted
+  // below before anything is pressed.
+  await careerAt('sinking')
+  await answerOpeningKnock(page)
+  await dismissTourBriefing(page)
+
+  const seasonTab = page.getByRole('navigation').getByRole('button', { name: 'Season', exact: true })
+  await seasonTab.click()
+  await expect(page.getByRole('heading', { name: 'Season Planner' })).toBeVisible()
+
+  const row = page.locator('.week-row:has(.week-stack.swipeable)').first()
+  const strip = row.locator('.week-stack.swipeable')
+  await expect(strip).toBeVisible()
+
+  /** Is the strip's LAST card wholly inside its window, and is the control on it pressable? */
+  const lastCardState = () =>
+    strip.evaluate((el) => {
+      const cards = Array.from(el.querySelectorAll('.event-card'))
+      const last = cards[cards.length - 1]
+      const window = el.getBoundingClientRect()
+      const box = last.getBoundingClientRect()
+      const control = last.querySelector('.controls button, .controls .pill')
+      const cbox = control?.getBoundingClientRect() ?? null
+      return {
+        cards: cards.length,
+        overflow: el.scrollWidth - el.clientWidth,
+        scrollLeft: el.scrollLeft,
+        whollyInside: box.left >= window.left - 1 && box.right <= window.right + 1,
+        controlInside:
+          !!cbox && cbox.width > 0 && cbox.left >= window.left - 1 && cbox.right <= window.right + 1,
+      }
+    })
+
+  const start = await lastCardState()
+  // THE PRECONDITION, ASSERTED RATHER THAN ASSUMED: if the week did not stack, or the strip did not
+  // overflow, everything below would pass about nothing.
+  expect(start.cards, 'the fixture must stack more than one card on a week').toBeGreaterThan(1)
+  expect(start.overflow, 'and the strip must actually overflow at 375, or there is nothing to reach').toBeGreaterThan(0)
+  expect(start.whollyInside, 'the last card starts off the side of the strip').toBe(false)
+  expect(start.controlInside, 'and so does the control on it').toBe(false)
+
+  // --- ROUTE 1: THE KEYBOARD, AND NOTHING BUT THE KEYBOARD -----------------------------------
+  //
+  // ⚠ FOCUS IS TAKEN BY TABBING, NEVER BY `.focus()` OR A CLICK. Calling `focus()` would prove a
+  // route a player has no way to walk, which is precisely the gap this test exists for: before the
+  // strip became a tab stop there was NO number of Tab presses that reached it.
+  await page.evaluate(() => (document.activeElement as HTMLElement | null)?.blur())
+  let onStrip = false
+  for (let press = 0; press < 200 && !onStrip; press++) {
+    await page.keyboard.press('Tab')
+    onStrip = await strip.evaluate((el) => el === document.activeElement)
+  }
+  expect(onStrip, 'no number of Tab presses reached the strip – it is not a tab stop').toBe(true)
+
+  await page.keyboard.press('ArrowRight')
+  await expect
+    .poll(() => strip.evaluate((el) => el.scrollLeft), {
+      message: 'ArrowRight on the focused strip moved nothing',
+    })
+    .toBeGreaterThan(start.scrollLeft)
+  // ⚠ THE POLL IS ON THE STRICTER HALF, AND THAT IS NOT A DETAIL. The scroll is animated, and the
+  // card's CONTROL (bottom left) crosses into the window several frames before the card's own right
+  // edge does – polling on the control passed mid-animation and then the assertion under it read a
+  // strip that was still moving. Measured on the first run.
+  await expect
+    .poll(async () => (await lastCardState()).whollyInside, {
+      message: 'the keyboard never brought the last card fully into the strip',
+    })
+    .toBe(true)
+  expect((await lastCardState()).controlInside, 'and the control on it is pressable').toBe(true)
+
+  // --- ROUTE 2: THE ARROW, from a fresh mount so the first route cannot be doing the work -------
+  await page.getByRole('navigation').getByRole('button', { name: 'Trophies', exact: true }).click()
+  await seasonTab.click()
+  await expect(page.getByRole('heading', { name: 'Season Planner' })).toBeVisible()
+  expect((await lastCardState()).whollyInside, 'the remount starts at the head of the strip again').toBe(false)
+
+  const next = row.getByRole('button', { name: 'Next', exact: true })
+  // ⭐ THE ARROWS ARE STATEFUL AND THAT IS PART OF THE CLAIM: Back is dead at the head of the strip,
+  // Next is live because there is something past the edge.
+  await expect(row.getByRole('button', { name: 'Back', exact: true })).toBeDisabled()
+  await expect(next).toBeEnabled()
+  await next.click()
+  await expect
+    .poll(async () => (await lastCardState()).whollyInside, {
+      message: 'pressing Next never brought the last card fully into the strip',
+    })
+    .toBe(true)
+  expect((await lastCardState()).controlInside, 'and the control on it is pressable').toBe(true)
+  await expect(next, 'and at the end of the strip the arrow goes quiet').toBeDisabled()
+  await expect(row.getByRole('button', { name: 'Back', exact: true })).toBeEnabled()
+})
+
+// ⚠ THE COMPLEMENT, AND IT IS WHAT STOPS THE TEST ABOVE BEING HALF AN ARGUMENT. The arrows appear at
+// EVERY width – that is the whole reason phase 3's D16 refusal does not apply to them – so at a
+// width where the same week needs no paging they must still be there, and quiet. A pager that hid
+// itself when everything fitted would be a control present at 375 and absent at 1280, which
+// `e2e/parity.spec.ts` fails by name.
+test('at 1280 the same week needs no paging, and the arrows are there and disabled', async ({
+  page,
+  careerAt,
+}) => {
+  await careerAt('sinking')
+  await answerOpeningKnock(page)
+  await dismissTourBriefing(page)
+  await page.setViewportSize({ width: 1280, height: 900 })
+  await page.getByRole('navigation').getByRole('button', { name: 'Season', exact: true }).click()
+  await expect(page.getByRole('heading', { name: 'Season Planner' })).toBeVisible()
+
+  const row = page.locator('.week-row:has(.week-stack.swipeable)').first()
+  const strip = row.locator('.week-stack.swipeable')
+  const state = await strip.evaluate((el) => ({
+    cards: el.querySelectorAll('.event-card').length,
+    overflow: el.scrollWidth - el.clientWidth,
+  }))
+  // D16's finding, read back in a browser: three cards fit at this width, so a two-card week has
+  // nothing hanging past the edge.
+  expect(state.cards).toBeGreaterThan(1)
+  expect(state.overflow, 'a two-card week fits whole at 1280').toBe(0)
+  await expect(row.getByRole('button', { name: 'Back', exact: true })).toBeDisabled()
+  await expect(row.getByRole('button', { name: 'Next', exact: true })).toBeDisabled()
+})

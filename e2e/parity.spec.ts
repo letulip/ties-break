@@ -68,6 +68,7 @@ import { readdirSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import type { Locator, Page } from '@playwright/test'
 import { test, expect, type CareerAt } from './careerAt'
+import type { FixtureName } from '../tools/e2e-fixtures-read'
 import { answerOpeningKnock, dismissTourBriefing } from './journey'
 
 // =================================================================================================
@@ -102,6 +103,20 @@ const SCREENS_ON_DISK = readdirSync(SCREEN_DIR)
   .sort()
 
 interface Station {
+  /**
+   * ⭐⭐ ROUND 36 PHASE 5 – WHICH CAREER THIS STATION IS WALKED ON. `pro` for every station that does
+   * not say otherwise, which is what the whole map used before and why the default is here rather
+   * than at each call site: it is the heaviest career the fixtures offer.
+   *
+   * ⚠⚠ IT EXISTS BECAUSE A CONTROL THIS ROUND ADDED IS INVISIBLE ON `pro`. Phase 5's week pager
+   * draws its two arrows only on a week that stacks SEVERAL rungs she may enter, and `pro` – eight
+   * seasons in, on the WTA rung alone – has no such week: measured, its Season feed is three rows of
+   * ONE card. So the harness would have compared four fingerprints that never contained an arrow and
+   * reported perfect parity about a control it had not seen. `sinking` has two stacked weeks and is
+   * where the room below walks. Same lesson as phase 4's shop rooms: a map that cannot reach a state
+   * proves nothing about it, and the honest fix is to reach it.
+   */
+  career?: FixtureName
   /** Walk from HOME to this screen, the way a player reaches it. */
   visit: (page: Page) => Promise<void>
   /**
@@ -515,6 +530,27 @@ const ROOMS: Record<string, Station> = {
     arrived: (page) => page.getByRole('button', { name: 'Invest' }).first(),
   },
 
+  // ⭐⭐⭐ ROUND 36 PHASE 5 – A WEEK THAT STACKS, WHICH IS WHERE THE PAGER'S ARROWS LIVE.
+  //
+  // The owner ruled the week's horizontal listing into JavaScript and asked for arrows with it: «у
+  // нас на всех устройствах могут появиться стрелки для листания в дополнение к JS свайпу.» Two new
+  // controls is exactly what phase 3's D16 refused – on a desktop and on no other format they fail
+  // «ничего нового по идее не должно появиться» BY NAME – so «на всех устройствах» is the whole of
+  // what makes them legal, and this room is the machine check for it.
+  //
+  // ⚠⚠ THE STATION ABOVE COULD NOT SEE THEM. `SeasonScreen.vue`'s own station walks `pro`, whose
+  // feed is three rows of ONE card (measured), and a week with one card has nothing to page. Four
+  // fingerprints with no arrow in any of them are equal, and that is this harness passing while
+  // proving nothing about the thing the phase added – the same hole phase 4 found behind Money's
+  // chapter row. `sinking` draws two stacked weeks, so this walk carries four arrows at every width.
+  'SeasonScreen.vue – a week that stacks several rungs': {
+    career: 'sinking',
+    visit: (page) => navTab(page, 'Season'),
+    // The pager's own control, by role and name – so a week that stopped stacking, or a pager that
+    // stopped drawing, fails HERE rather than in a fingerprint diff nobody expected.
+    arrived: (page) => page.getByRole('button', { name: 'Next', exact: true }).first(),
+  },
+
   'MoneyScreen.vue – a shelf inside the shop': {
     visit: async (page) => {
       await page.getByRole('button', { name: /^Family budget/ }).click()
@@ -552,9 +588,11 @@ async function walkOneScreen(
   // ⚠ THE HEAVIEST CAREER, on purpose. `pro` is "eight seasons in, inside the sponsor window,
   // ledgers full – the heavy-state screens" (e2e/fixtures/manifest.json), so every screen here
   // is drawn with something on it. A fingerprint taken against an empty career would be a
-  // smaller claim wearing the same green tick.
+  // smaller claim wearing the same green tick. ⭐ Phase 5 made it the DEFAULT rather than the only
+  // choice – see `Station.career`: heaviest is not the same as "reaches every state", and a control
+  // that only exists on a week `pro` never has is one this walk could not have seen.
   await page.setViewportSize({ width: BASE_WIDTH, height: VIEWPORT_HEIGHT })
-  await careerAt('pro')
+  await careerAt(station.career ?? 'pro')
   // Both are doorways rather than assertions – journey.ts argues each at length. The knock is a
   // blocking decision every seeded career wakes up holding; the briefing fires on the boot of
   // any career already inside the top 50, which `pro` is.
