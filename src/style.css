@@ -535,6 +535,29 @@ body {
      `100%` and mean the column: a fixed box's percentage resolves against the viewport, so past 768
      the ladder below spells the column out as "the frame, minus the frame's own gutters". */
   --app-bar-max: 520px;
+  /* ⭐⭐⭐ ROUND 36 PHASE 3 – WHERE THE TWO FIXED BARS ARE CENTRED, AND IT IS A TOKEN BECAUSE THE
+     DESKTOP MOVES IT. Below 1024 this is the middle of the viewport, exactly as the three rules that
+     read it have said since they were written; from 1024 the left rail takes a strip off the left of
+     the page, so the middle of what a player is READING is no longer the middle of the window. The
+     CTA is centred on the COLUMN or it is not centred on anything.
+     Consumers: `.next-week-bar` below, `.cal-go` (CalendarScreen.vue) and `.week-proceed`
+     (ThisWeekScreen.vue) – the same three boxes `--app-bar-max` already joins. */
+  --app-bar-left: 50%;
+  /* ⭐⭐ ROUND 36 PHASE 3 – AND HOW FAR OFF THE BOTTOM THEY FLOAT. 58px is «clear of the tab bar»
+     (52px of bar plus 6), which is what it has always meant; from 1024 there is no bar at the bottom
+     of the page, so the number stops being a clearance and becomes what the owner asked for in its
+     place – «прижата к низу с отступом от края». `--app-pad-top` is that margin: the frame's own
+     inset, so the CTA is as far off the bottom edge as the page's first pixel is off the top. */
+  --app-bar-bottom: 58px;
+  /* ⭐⭐⭐ ROUND 36 PHASE 3 – THE RAIL. «Rail слева на всю высоту, скроллится при переполнении,
+     одинаковый на каждой странице.» Two numbers rather than one because the gap between the rail and
+     the column is read by three different rules (the frame's grid, the bar cap above and the CTA's
+     offset), and a gap spelled three times is the `--app-pad-x` lesson waiting to happen.
+     196px is frame AC-home-desktop-1024.png's own rail width, measured off the export. It is spelled
+     here rather than inside the media block because `--app-bar-max` and `--app-bar-left` below both
+     subtract it, and a token that only exists inside one query is a token those rules cannot read. */
+  --app-rail-w: 196px;
+  --app-rail-gap: 24px;
   /* ⭐⭐ ROUND 36 PHASE 2 – THE HERO'S SHAPE, AND IT IS A TOKEN BECAUSE HE TIED TWO SURFACES TO IT.
      «hero image на home будет НЕ квадратной, но все оверлеи с текстом остаются как у нас», and one
      line later, about the tournament preview: «картинка занимает ту же пропорцию, что и hero на
@@ -592,6 +615,34 @@ body {
 @media (min-width: 1024px) {
   :root {
     --app-shell-max: 1200px;
+    /* ⭐⭐⭐ ROUND 36 PHASE 3 – THE RAIL TAKES ITS STRIP OFF EVERY OTHER MEASUREMENT ON THE PAGE, and
+       these two lines are that fact said once instead of in every rule that needs it. «A left rail
+       changes what THE PAGE is» is rule 4 of the round; the two fixed bars are centred on the COLUMN
+       from here, not on the window, and their cap is the column's width and not the frame's. */
+    --app-bar-max: calc(
+      min(var(--app-shell-max), 100%) - 2 * var(--app-pad-x) - var(--app-rail-w) - var(--app-rail-gap)
+    );
+    --app-bar-left: calc(50% + (var(--app-rail-w) + var(--app-rail-gap)) / 2);
+    --app-bar-bottom: var(--app-pad-top);
+    /* ⭐⭐ THE HERO ON A DESKTOP, AND IT IS THE DESIGN'S OWN NUMBER FOR THE SECOND TIME – the same
+       move phase 2 made with «768 – 400px», for the same reason and with the same honesty cost.
+       `AC-home-desktop-1024.png` draws the photograph 450 wide and 400 tall BESIDE the two notecards
+       rather than above them, and that shape is what makes the two-column Home of frame AC possible:
+       our tablet 768/400 is nearly twice as wide as it is tall, and a hero that flat beside a column
+       of cards leaves a third of the row empty. Measured on this build at 1280: at 768/400 the hero
+       is 511x266 against a 433px pair of cards beside it; at 450/400 it is 511x454.
+       ⚠ AND THE JOIN PHASE 2 BUILT IS WHAT MAKES THIS ONE LINE. `.diary-hero` and `.nt-hero` read
+       this token, so «Tournament (AG): the image takes the same proportion as the home hero» costs
+       nothing here – it is already true, mechanically, and cannot drift. */
+    --hero-aspect: 450 / 400;
+    /* ⭐ …AND THE SAME PROPORTION AT THE SAME SIZE, which is the half a ratio alone does not give.
+       Home's hero is a column of a two-column grid and the tournament's is a block in a full-width
+       one, so the shared ratio would have drawn a 511px picture on Home and a 980px one on This
+       Week – the same shape at twice the size, which is not what «ту же пропорцию» describes to
+       anyone looking at the two screens. One cap, both heroes, and 512 is where Home's own column
+       lands at the top of the band (511px at 1280), so on the widest screen the two are the same
+       photograph to within a pixel. */
+    --hero-max: 512px;
   }
 }
 
@@ -599,6 +650,125 @@ body {
   max-width: var(--app-shell-max);
   margin: 0 auto;
   padding: var(--app-pad-top) var(--app-pad-x) var(--app-pad-bottom);
+}
+
+/* ⭐⭐⭐ ROUND 36 PHASE 3 – THE DESKTOP SHELL. The owner, on his frames AC–AQ:
+   «Рельса слева, на всю высоту, скроллится при переполнении, одинаковая на каждой странице.»
+
+   THE FRAME BECOMES TWO COLUMNS AND THE BOTTOM BAR BECOMES THE LEFT ONE. Not a new element and not
+   a second navigation: `nav.tab-bar` is the app's whole navigation at every width, and on a desktop
+   it stands up. That is the only reading his acceptance criterion allows – a rail that DUPLICATED
+   the five tabs would put five buttons on the desktop that are not on the phone, and
+   `e2e/parity.spec.ts` fails «ничего нового по идее не должно появиться» by name.
+
+   ⚠ `:has(> nav.tab-bar)` IS LOAD-BEARING, NOT A FLOURISH. `#app` is also the parent of the storage
+   recovery screen and the «Loading…» line, which render INSTEAD of the tab shell; a grid whose first
+   column is 196px of rail would indent those two behind a rail that is not there. The selector says
+   what the grid actually depends on: there is a bar to put in the first column.
+
+   ⚠ AND THE ROWS ARE DECLARED. `grid-row: 1 / -1` counts `-1` from the end of the EXPLICIT grid, so
+   with no `grid-template-rows` it degenerates to a single row and the rail's sticky range collapses
+   to the height of whatever shares its row. Four explicit `auto` rows cost nothing when they are
+   empty and cover the shell's real worst case: two top notices, the main column, and one spare. */
+@media (min-width: 1024px) {
+  #app:has(> nav.tab-bar) {
+    display: grid;
+    grid-template-columns: var(--app-rail-w) minmax(0, 1fr);
+    grid-template-rows: repeat(4, auto);
+    column-gap: var(--app-rail-gap);
+  }
+
+  /* Everything that is not the rail lives in the second column. The two top notices are in-flow
+     children of `#app` as well, so this is a rule about the shell rather than about `main`. */
+  #app:has(> nav.tab-bar) > * {
+    grid-column: 2;
+  }
+
+  /* ⚠⚠ AND THE COLUMN HAS TO BE TOLD TO FILL ITS TRACK, WHICH IS THE ONE THING A BLOCK LAYOUT DID
+     FOR FREE. `.app-content` is `max-width: var(--app-col-max); margin: 0 auto`, and a grid item
+     with AUTO INLINE MARGINS does not stretch – auto margins beat `justify-self: stretch`, so the
+     box falls back to max-content and the margins centre whatever is left. Measured before this
+     line existed: Home filled its 948px track (its cards are wider than that) and Season came out
+     698.89px wide, centred, with 124px of page down each side – the same screen, two different
+     column widths, from one declaration written for a block. A definite width makes the auto
+     margins resolve to zero, and 100% of the track is what `--app-col-max: 100%` already means. */
+  #app:has(> nav.tab-bar) > .app-content {
+    width: 100%;
+  }
+
+  /* ⚠ THE SELECTOR IS HEAVIER THAN THE ONE ABOVE ON PURPOSE, and phase 2 paid for this lesson: at
+     EQUAL specificity happy-dom keeps the FIRST rule where a browser keeps the last, so a tie here
+     would be a rail that works in Chromium and is a bottom bar in every mounted test. Repeating the
+     `:has()` and naming the element makes it win in both engines, in either source order. */
+  #app:has(> nav.tab-bar) > nav.tab-bar {
+    grid-column: 1;
+    grid-row: 1 / -1;
+    /* Out of `position: fixed` and into the grid, which is what lets the rail be a COLUMN of the
+       centred frame instead of a box positioned against the window. Every offset the fixed version
+       set has to be unwound explicitly: a sticky box honours `left`, and `translateX(-50%)` would
+       both slide it and make it a containing block. */
+    position: sticky;
+    top: 0;
+    left: auto;
+    right: auto;
+    bottom: auto;
+    transform: none;
+    align-self: start;
+    /* «На всю высоту», and it scrolls itself when the five tabs plus a safe area outgrow the
+       window. `align-self: start` + `top: 0` is the standard full-height sticky column: it starts at
+       the top of the page and stays there for the whole scroll of the grid area it spans. */
+    height: 100vh;
+    overflow-y: auto;
+    width: auto;
+    max-width: none;
+    /* Flush to the frame's own edge rather than inset by the frame's gutter, which is where AC puts
+       it – the gutter is re-spent as the rail's own padding so the labels keep their inset. */
+    margin: calc(-1 * var(--app-pad-top)) 0 0 calc(-1 * var(--app-pad-x));
+    padding: 20px 12px calc(20px + env(safe-area-inset-bottom, 0)) calc(12px + var(--app-pad-x));
+    flex-direction: column;
+    justify-content: flex-start;
+    gap: 2px;
+    /* The 560px rule above gives the bottom bar a card's border and top corners. Standing up, it is
+       a wall of the page and not a card on it: one hairline down its right edge, no corners. */
+    border: none;
+    border-right: 1px solid var(--line);
+    border-radius: 0;
+  }
+
+  /* A tab becomes a row – icon, then label – because that is what a 196px column can hold and what
+     AC draws. Nothing is added and nothing is dropped: the same button, the same icon, the same
+     label, the same dot. */
+  #app:has(> nav.tab-bar) > nav.tab-bar .tab-btn {
+    flex: none;
+    flex-direction: row;
+    justify-content: flex-start;
+    gap: 12px;
+    padding: 11px 12px;
+    /* --radius-frame and not --radius-control: `tests/ui-control-system.test.ts` reserves the
+       control radius for the app's pills, and this is a panel-shaped press, the same shape rule
+       `.knock-choice` is decided by. */
+    border-radius: var(--radius-frame);
+  }
+
+  /* The active tab is a tinted panel rather than only a colour, which is what tells a rail's reader
+     where they are without the bottom bar's underline of five equal cells. `--accent-wash` is the
+     app's own «this one is selected» fill; no new token, no new colour. */
+  #app:has(> nav.tab-bar) > nav.tab-bar .tab-btn.active {
+    background: var(--accent-wash);
+  }
+
+  /* 10px was a caption under an icon; beside one it is a label on a 196px rail. */
+  #app:has(> nav.tab-bar) > nav.tab-bar .tab-label {
+    font-size: 13px;
+  }
+
+  /* The dot rides the icon's shoulder. Its phone position is `right: calc(50% - 18px)`, which means
+     «just off the icon» only while the icon is centred in a fifth of the screen. */
+  #app:has(> nav.tab-bar) > nav.tab-bar .tab-dot {
+    top: 8px;
+    right: auto;
+    left: 26px;
+  }
 }
 
 h1 {
@@ -1524,9 +1694,11 @@ button.primary.risky {
    centred, above the tab bar) and still catches nothing, so the page scrolls under it. */
 .next-week-bar {
   position: fixed;
-  left: 50%;
+  /* ⭐ ROUND 36 PHASE 3 – the middle of the COLUMN, which below 1024 is the middle of the window and
+     computes to the 50% this line has always said. See `--app-bar-left`. */
+  left: var(--app-bar-left);
   transform: translateX(-50%);
-  bottom: 58px;
+  bottom: var(--app-bar-bottom);
   width: 100%;
   /* Follows the column with the tab bar it stands above (round 36 phase 1). The button inside is
      centred, so the only thing this width decides is where the CTA sits – and it must be the middle
@@ -4400,6 +4572,34 @@ tr.kid-row td {
   }
   .tier-block .cm-row {
     margin-bottom: 0;
+  }
+}
+
+/* ⭐⭐ ROUND 36 PHASE 3 – «2–3 В РЯД, С ПЕРЕНОСОМ» AS A RULE RATHER THAN AS A COUNT. The owner, on
+   frame AK-coach-market-desktop-1024.png: «2–3 в ряд, с переносом, как на планшете.»
+
+   ⚠⚠ THREE PER ROW WAS BUILT FIRST AND MEASURED WORSE, WHICH IS WHY THIS IS AN `auto-fill`. The
+   rail takes 220px off the page, so the desktop column is 772px at 1024 and 948px at 1280 – WIDER
+   than the tablet's but not by as much as the frame suggests. Three cards in it are 252px and 310px,
+   both NARROWER than the phone's own 343px card, and the market got TALLER for it: the page went
+   from 2162px to 3041px at 1024 and from 2012px to 2521px at 1280, because a card carrying a name,
+   a fit pill, a style, a description, two bands and a load note wraps its way back down the screen.
+   That is D3's own objection to «four per row» arriving one breakpoint later.
+
+   ⭐ SO THE FLOOR IS THE PHONE'S CARD, AND THE COUNT FOLLOWS FROM IT. `minmax(343px, 1fr)` is «as
+   many coaches to a row as fit without any of them being narrower than they are on a phone»: two at
+   1024 (382px each, which is exactly what AK draws) and two at 1280 (470px), and three the moment
+   there is room for three at that width. His «2–3» is the range the rule produces, not a number
+   typed into it – and «с переносом» is what `auto-fill` means.
+   ⚠ THE PORTRAIT STILL DOES NOT GROW: D4's «если влезает» is met even less here than at 768, and the
+   two rules behind the 62px (round-18 #2's mask geometry, coach-match-edge.md §4's anti-shopping
+   reservation of the 78px strip) are unchanged.
+   ⚠ THE SELECTOR IS DOUBLED TO BEAT THE 768 RULE. A media query adds no specificity, so this would
+   otherwise tie with the two-column rule above and be settled by source order - which a browser and
+   happy-dom resolve in OPPOSITE directions (phase 2 measured it). One class heavier wins in both. */
+@media (min-width: 1024px) {
+  .tier-block.tier-block {
+    grid-template-columns: repeat(auto-fill, minmax(343px, 1fr));
   }
 }
 

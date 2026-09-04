@@ -32,7 +32,7 @@ import { createPinia, setActivePinia } from 'pinia'
 import '../../src/style.css'
 import { readFileSync } from 'node:fs'
 import { region } from '../helpers/source'
-import { PHONE, TABLET, setViewport, type Viewport } from './fits'
+import { DESKTOP, PHONE, TABLET, setViewport, type Viewport } from './fits'
 import NextTournamentPanel from '../../src/components/NextTournamentPanel.vue'
 import ThisWeekScreen from '../../src/components/screens/ThisWeekScreen.vue'
 import { useGameStore } from '../../src/stores/game'
@@ -149,6 +149,46 @@ describe('round 30 #6 – the picture is square, and it is not a card', () => {
     )
   })
 
+  // ⭐⭐⭐ ROUND 36 PHASE 3 – AND ONTO THE DESKTOP, WHERE «THE SAME PROPORTION» NEEDED A SECOND
+  // TOKEN TO STAY TRUE. The owner, on frame AG: the tournament image takes the same proportion as
+  // the home hero. At 768 that was one number and one ladder; at 1024 Home's photograph became a
+  // COLUMN of a two-column page while this one is still a block in a full-width one, so the ratio
+  // alone would have drawn a 511px picture there and a 980px one here – the same shape at twice the
+  // size, which is not what anyone looking at the two screens would call the same proportion.
+  // `--hero-max` caps both, so the join is now shape AND size.
+  // MUTATION-VERIFIED: dropping `max-width: var(--hero-max)` from `.nt-hero` reddens the cap arm;
+  // putting a literal ratio back on either hero reddens the token arm; removing the 1024 rung from
+  // `--hero-aspect` reddens the shape arm.
+  it('⭐⭐ …and onto the desktop, where the join is the SIZE as well as the shape', () => {
+    setViewport(DESKTOP)
+    const token = getComputedStyle(document.documentElement)
+      .getPropertyValue('--hero-aspect')
+      .replace(/\s+/g, '')
+    expect(token, 'the ladder gives the desktop band its own hero shape').toBe('450/400')
+    expect(ratioOfHero(DESKTOP), 'and the tournament picture IS that shape').toBe(token)
+
+    setViewport(DESKTOP)
+    const cap = getComputedStyle(document.documentElement).getPropertyValue('--hero-max').trim()
+    expect(cap, 'and the desktop declares one width for both heroes').toBe('512px')
+    const w = mountPanel()
+    const hero = getComputedStyle(w.find('.nt-hero').element)
+    expect(hero.maxWidth, 'the tournament picture reads that cap').toBe(cap)
+    // ⚠ AND THE BLEED GOES WITH THE CAP. A capped picture that still cancels the gutter is a box
+    // hanging 16px off the left of its own column – 8px from the rail at 1280.
+    expect(hero.marginLeft, 'no full bleed once the picture is capped').toBe('0px')
+    expect(hero.marginRight, 'and none on the right either').toBe('0px')
+    w.unmount()
+
+    // Home's half is a source claim for the reason the tablet arm above gives: `.diary-hero`'s rule
+    // is scoped to HomeScreen.vue, and `region` throws if either marker ever rots.
+    const homeDesktop = region(
+      sfc('../../src/components/screens/HomeScreen.vue'),
+      '@media (min-width: 1024px) {',
+      '.diary-strip {',
+    )
+    expect(homeDesktop, 'Home caps its hero at the same token').toContain('max-width: var(--hero-max)')
+  })
+
   it('⭐ NO FRAME – the hero stopped being a <Card>, so its hairline went with it', () => {
     const w = mountPanel()
     // `Card.vue` stamps `tb-card` on its root and that is where the border lives. The hero must not
@@ -223,6 +263,14 @@ describe('round 30 #6 – what is ON the picture, and what is under it', () => {
 
 describe('round 30 #18 – the picture goes to the edge, and only the picture does', () => {
   it('⭐ FULL-BLEED: the shell gutter, cancelled by the token that sets it', () => {
+    // ⚠⚠ AT A STATED WIDTH SINCE ROUND 36 PHASE 3, and this is a fix to the test rather than a
+    // loosening of it – the same move phase 2 made twice in this file. This arm took no viewport of
+    // its own, so it measured at whatever the file had last set (or at happy-dom's default 1024),
+    // which was a width the app had no rule for. It has one now: past 1024 the picture is CAPPED
+    // (see the desktop arm below) and a capped box that still bleeds 16px to the left hangs off the
+    // side of its own column. «В край, как hero на главной» is a claim about a phone, and the width
+    // it is measured at is part of it.
+    setViewport(PHONE)
     const w = mountPanel()
     const hero = getComputedStyle(w.find('.nt-hero').element)
     // ⚠ THE TOKEN IS READ OFF `:root`, NEVER TYPED HERE AS A NUMBER. `--app-pad-x` is what `#app`

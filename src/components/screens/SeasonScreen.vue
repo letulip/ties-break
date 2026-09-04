@@ -2236,6 +2236,10 @@ function closeExhibition(): void {
           is where this is pinned, so a tie is a rule the gate cannot see.
      `.event-cards` is the list these cards live in, so prefixing it is true as well as heavier: it
      wins on specificity in every engine, in either source order. */
+  /* ⚠⚠ D2 WAS PUT TO THE OWNER AGAIN ON 04.09 WITH THE COST MEASURED, AND HE KEPT PHASE 2'S ANSWER:
+     «тянется на всю колонку – не надо, будет плохо, пусть пока 1 карточка остается.» A lone card
+     stays half a row. So this rule is UNCHANGED from phase 2 and the paragraph above still stands;
+     the ruling and his reason are recorded in docs/specs/responsive-decisions-2026-09.md. */
   .event-cards .week-stack > .event-card,
   .event-cards .week-stack.swipeable > .event-card {
     flex: 0 0 auto;
@@ -2263,6 +2267,54 @@ function closeExhibition(): void {
      on the same calendar and take the same column. AD draws its «Training week» at half width. */
   .event-cards .week-card {
     width: calc(50% - 6px);
+  }
+}
+
+/* ⭐⭐⭐ ROUND 36 PHASE 3 – THE DESKTOP WEEK: THREE FIT, SO THREE ARE SHOWN. The owner, on frame
+   AE-season-desktop-1024.png: «как на планшете, но могут влезть три карточки; если не влезают -
+   стрелочная листалка. Формат карточки, оформление и кнопки - мобильные.» AE draws exactly that:
+   W1's three tournaments stand across the row, and W3 and W5 - one card each - take one third of it
+   and stop, which is the same «1 неделя = 1 ряд» answer phase 2 shipped at 768.
+
+   ⚠⚠ AND THERE IS NO ARROW PAGER, WHICH IS A REFUSAL WITH A REASON RATHER THAN AN OVERSIGHT. His
+   sentence makes it the fallback for «if they do not fit», and past three they still do: the strip
+   shrinks by the same 12% the phone and the tablet give up, so a fourth card's own edge is showing
+   and the row swipes. Arrows would also be TWO NEW CONTROLS PER WEEK on a desktop and on no other
+   format, which fails «ничего нового по идее не должно появиться» in e2e/parity.spec.ts by name -
+   the same collision phase 2's D9 records about the season strip. It is a row in
+   docs/specs/responsive-decisions-2026-09.md.
+
+   ⚠ THE SELECTORS REPEAT `.event-cards` TO WIN ON SPECIFICITY, and that is phase 2's own lesson
+   applied forwards rather than a tic. A media query adds NO specificity, so «later block, wider
+   screen» is not a rule that wins anything - and at equal specificity happy-dom keeps the FIRST
+   declaration where a browser keeps the last, so a tie is a layout that works in Chromium and does
+   not exist in the mounted gate. Each rule here is written exactly one class heavier than the 768
+   rule it has to beat, and the four-or-more rule one heavier again than the three-or-more one, so
+   nothing on this screen depends on source order in either engine. */
+@media (min-width: 1024px) {
+  /* A third of the row, less two thirds of the one gutter each card carries - the same arithmetic
+     as the tablet's half, and spelled the same way for the same reason (happy-dom drops a `calc`
+     that divides a parenthesised subexpression, so `calc((100% - 24px) / 3)` is a rule with no
+     test). ONE COLUMN WIDTH FOR EVERY WEEK is D2's rule carried up a rung: at 768 a column is half
+     the row, at 1024 it is a third, and AE draws its single-card weeks W3 and W5 at exactly that. */
+  .event-cards.event-cards .week-stack > .event-card,
+  .event-cards.event-cards .week-stack.swipeable > .event-card {
+    width: calc(33.333% - 8px);
+  }
+  /* THREE FIT. The tablet's «shrink so the third shows» rule is aimed at three-or-more and would
+     otherwise still be the winning rule here, at a width where three no longer need the swipe. */
+  .event-cards.event-cards .week-stack.swipeable:has(> .event-card:nth-child(3)) > .event-card {
+    width: calc(33.333% - 8px);
+  }
+  /* FOUR OR MORE, and now the sliver is the affordance again: 88% of the row across three cards and
+     their two gutters, which leaves 114px of the fourth showing at 1280. */
+  .event-cards.event-cards.event-cards
+    .week-stack.swipeable:has(> .event-card:nth-child(4))
+    > .event-card {
+    width: calc(29.333% - 8px);
+  }
+  .event-cards.event-cards .week-card {
+    width: calc(33.333% - 8px);
   }
 }
 

@@ -21,6 +21,11 @@
 // 375 and absent at 1280 fails by name; a control that exists only at 1280 fails the same assertion
 // from the other side, which is «ничего нового не должно появиться» as a machine check.
 //
+// ⭐⭐ ROUND 36 PHASE 3 WIDENED WHAT «IS ON THE SCREEN» MEANS, AND THE OWNER'S OWN WORDING IS WHY:
+// every disclosure is opened, at every width, before the fingerprint is taken – so the claim is
+// «the same things are REACHABLE at every width», not «the same things are drawn on arrival». See
+// `openEveryDisclosure` below for the argument and for what it does not give up.
+//
 // -------------------------------------------------------------------------------------------------
 // ⚠ WHAT IT CANNOT PROVE, SAID PLAINLY, BECAUSE A HARNESS THAT OVERSTATES ITSELF IS WORSE THAN NONE
 // -------------------------------------------------------------------------------------------------
@@ -348,7 +353,53 @@ async function paintFingerprint(page: Page): Promise<string[]> {
  * ⚠ AND IT CHANGES NOTHING ELSE ABOUT THE MEASUREMENT: `paintFingerprint` records sizes, never
  * positions, and a scroll moves boxes without resizing them.
  */
+/**
+ * ⭐⭐⭐ ROUND 36 PHASE 3 – OPEN EVERY DISCLOSURE, AT EVERY WIDTH, BEFORE MEASURING ANYTHING.
+ *
+ * THIS CHANGES WHAT THE HARNESS CLAIMS, AND IT IS A STRENGTHENING RATHER THAN A LOOSENING. Phase 1
+ * fingerprinted what a screen PAINTS on arrival. That was already one reading of «1 к 1» too narrow
+ * for the owner's own sentence, which is about ACCESS:
+ *
+ *     «всё, что есть на мобиле, должно быть 1 к 1 ПО ДОСТУПНОСТИ быть и на других форматах»
+ *
+ * A control behind a disclosure is on the phone, and a wide screen that draws the same control
+ * without the disclosure has neither added nor removed anything – it has spent a tap. Measuring the
+ * first paint would call that a difference and be wrong; measuring the REACHABLE set calls it what
+ * it is. It came up on Home's season ladder – the owner, 04.09: at 768 and up the ladder may be
+ * drawn already open, «это ничему не противоречит» – and it is D9 in
+ * docs/specs/responsive-decisions-2026-09.md.
+ *
+ * ⚠ IT DOES NOT WEAKEN THE CRITERION. A control that is genuinely absent at one width is still
+ * absent after every disclosure is open, and still fails by name; a control that exists ONLY at
+ * 1280 still fails from the other side. What it stops failing on is a screen that shows the same
+ * things behind one fewer press.
+ *
+ * ⚠ AND IT IS A LOOP RATHER THAN ONE PASS, because opening one disclosure can reveal another (and
+ * on Home the ellipsis chips come in pairs – above the window and below it – where pressing either
+ * closes both). The cap is a guard against a control that toggles rather than opens: without it a
+ * pair of buttons that re-collapse each other would spin here for ever instead of failing.
+ */
+async function openEveryDisclosure(page: Page): Promise<void> {
+  for (let pass = 0; pass < 12; pass++) {
+    const shut = page.locator('[aria-expanded="false"]:visible')
+    const count = await shut.count()
+    if (count === 0) return
+    for (let i = count - 1; i >= 0; i--) {
+      const control = shut.nth(i)
+      // Re-checked rather than assumed: the press before this one may have re-rendered the row.
+      if (await control.isVisible().catch(() => false)) {
+        await control.click({ timeout: 2_000 }).catch(() => undefined)
+      }
+    }
+  }
+  throw new Error(
+    'a disclosure on this screen never stayed open after 12 passes - it toggles rather than ' +
+      'opens, and the fingerprint below would depend on how many times it was pressed',
+  )
+}
+
 async function settleScreen(page: Page): Promise<void> {
+  await openEveryDisclosure(page)
   await page.evaluate(async () => {
     const frame = (): Promise<void> => new Promise((done) => requestAnimationFrame(() => done()))
     for (let y = 0; y <= document.documentElement.scrollHeight; y += window.innerHeight) {

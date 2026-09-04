@@ -402,6 +402,13 @@ const courtRead = computed(() => {
   position: relative;
   margin: 0 calc(-1 * var(--app-pad-x));
   aspect-ratio: var(--hero-aspect);
+  /* ⭐⭐ ROUND 36 PHASE 3 – AND ON A DESKTOP IT IS THE SAME PICTURE, NOT ONLY THE SAME SHAPE. Below
+     1024 this token is unset and the declaration is inert, so nothing about a phone or a tablet
+     moves. From 1024 Home's photograph is a COLUMN of a two-column page and this one is a block in a
+     full-width one, so a shared ratio alone would have drawn a 511px hero on Home and a 980px one
+     here: «ту же пропорцию» read literally, and visibly the wrong answer. The cap is the join's
+     other half - see `--hero-max` in src/style.css. */
+  max-width: var(--hero-max);
   display: flex;
   flex-direction: column;
   justify-content: space-between;
@@ -409,6 +416,19 @@ const courtRead = computed(() => {
   padding: 12px var(--app-pad-x) 14px;
   overflow: hidden;
   background: var(--card-bottom);
+}
+
+/* ⚠ AND THE FULL-BLEED GOES WITH THE CAP, for the reason HomeScreen's hero gives at the same
+   breakpoint: the negative gutter exists so the photograph reaches both edges of a phone, and a
+   capped picture that still bleeds 16px to the left is a box hanging off the side of its own column
+   – 8px from the rail at 1280. Left only, because the right edge is decided by the cap. */
+@media (min-width: 1024px) {
+  .nt-hero {
+    /* Longhands, not `margin-inline`: `tests/component/` runs in happy-dom and the mounted arm that
+       reads these back is the only gate this rule has. */
+    margin-left: 0;
+    margin-right: 0;
+  }
 }
 
 .nt-hero-art {

@@ -769,7 +769,15 @@ describe('W4 — the story has a way out, and its painting is the week it is abo
     const bar = region(weekScreen, '.week-proceed {', '.week-proceed-btn')
     expect(bar).toContain('position: fixed')
     expect(bar).toContain('justify-content: center')
-    expect(bar).toContain('bottom: 58px')
+    // ⚠ RE-AIMED BY ROUND 36 PHASE 3, AND THE NUMBER IS STILL PINNED – one file further out. The
+    // claim here is «one thumb off the bottom, the same distance as Home's own button», and until
+    // this round the only way to say that was to write 58 in three places (the sheet, this screen
+    // and the calendar's). The desktop moves it: past 1024 the tab bar is a rail down the left, so
+    // there is no bar to clear and the owner asked for a margin off the page's edge instead. So the
+    // three copies read ONE token and this pin reads the token's own value out of the sheet – the
+    // same shape phase 2 gave the width, and it still goes red on a box that stops floating.
+    expect(bar).toContain('bottom: var(--app-bar-bottom)')
+    expect(read('../src/style.css')).toContain('--app-bar-bottom: 58px')
     // ...and it exists only while there is a story to leave.
     // ⚠ RE-AIMED BY ROUND 33 #1: the flag is `showStory` now, which is `showRecap` minus the
     // tournament arrival. The pin's claim is unchanged and is if anything stricter - the footer is

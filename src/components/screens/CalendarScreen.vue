@@ -1144,9 +1144,14 @@ const showGo = computed(() => !game.snapshot?.pending)
    scrolls under it and only the pill takes a press. */
 .cal-go {
   position: fixed;
-  left: 50%;
+  /* ⭐ ROUND 36 PHASE 3 – the same two tokens the sheet's own floating CTA reads, for the same
+     reason phase 2 gave the width one: from 1024 a rail takes a strip off the left of the page, so
+     the middle of the window is no longer the middle of what a player is reading, and the bottom
+     clearance stops being «above the bar» and becomes the margin off the page's edge the owner asked
+     for. Below 1024 both tokens compute to the 50% and the 58px this rule already said. */
+  left: var(--app-bar-left);
   transform: translateX(-50%);
-  bottom: 58px;
+  bottom: var(--app-bar-bottom);
   width: 100%;
   /* ⚠ ROUND 36 PHASE 2 – THE THIRD OF THE THREE FLOATING CTA BOXES, ONTO THE TOKEN. The shell's own
      week button in src/style.css is the same object with the same six declarations, and phase 1 put

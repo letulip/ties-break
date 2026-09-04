@@ -60,7 +60,7 @@ import { tickWeek, toSnapshot, type WorldState } from '../../src/engine/world'
 import { hasOutgrown, playDownBars } from '../../src/engine/world/ladder'
 import { rngFromSeed } from '../../src/engine/rng'
 import { mountSeason } from '../helpers/mountSeason'
-import { PHONE, TABLET, availableWidth, boxOf, lengthPx, rowItemWidth, setViewport } from './fits'
+import { DESKTOP, PHONE, TABLET, availableWidth, boxOf, lengthPx, rowItemWidth, setViewport } from './fits'
 
 /** The feed's filter, asked with exactly the four keys SeasonScreen passes – so this file cannot
  *  disagree with the screen about which events are even candidates. */
@@ -493,19 +493,19 @@ describe('round 36 phase 2 – a week is two cards wide on a tablet, and the thi
   }
 
   /** Every swipeable strip on the feed, and the card widths inside it, as fractions of the row. */
-  function stripWidths(vp: { width: number; height: number }): { cards: number; frac: number }[] {
+  function stripWidths(vp: { width: number; height: number }): { cards: number; frac: number; room: number }[] {
     setViewport(vp)
     const { snap } = careerWithAStackedWeek()
     useGameStore().snapshot = snap
     const w = mount(SeasonScreen, { global: { stubs: { teleport: true } }, attachTo: document.body })
     expect(document.head.querySelector('style'), 'no stylesheet – this measurement would be vacuous').toBeTruthy()
-    const out: { cards: number; frac: number }[] = []
+    const out: { cards: number; frac: number; room: number }[] = []
     for (const strip of w.findAll('.week-stack').filter((s) => s.classes().includes('swipeable'))) {
       const cards = strip.findAll('.event-card')
       const room = availableWidth(cards[0].element, vp)
       const declared = getComputedStyle(cards[0].element).width
       expect(declared, 'the card declares no width – the measurement below would be about nothing').not.toBe('')
-      out.push({ cards: cards.length, frac: fracOfRow(declared, room) })
+      out.push({ cards: cards.length, frac: fracOfRow(declared, room), room })
     }
     w.unmount()
     return out
@@ -544,9 +544,12 @@ describe('round 36 phase 2 – a week is two cards wide on a tablet, and the thi
 
   // ⭐⭐ D2 IN docs/specs/responsive-decisions-2026-09.md, AND IT IS THE CONTENTIOUS ONE. A week that
   // is not a tournament – training, off-season, exams, a booked vacation – is a card on the same
-  // calendar, and `AD-season-tablet-768.png` draws it at half width like every other week. The
-  // alternative (a lone card stretching) is a one-line change to the rule this pins, which is why
-  // the decision document can offer it as a one-line answer.
+  // calendar, and `AD-season-tablet-768.png` draws it at half width like every other week.
+  //
+  // ⚠⚠ PUT TO THE OWNER AGAIN ON 04.09 WITH THE COST MEASURED, AND HE KEPT IT: «тянется на всю
+  // колонку – не надо, будет плохо, пусть пока 1 карточка остается.» The stretch was built, measured
+  // and reverted; this arm is phase 2's, unchanged, and the desktop arm below is the same rule one
+  // rung up – one COLUMN width for every week, which is half a row at 768 and a third at 1024.
   it('⭐ a week that is not a tournament takes the same half-row, as AD draws it', () => {
     setViewport(TABLET)
     const { snap } = careerWithAStackedWeek()
@@ -565,6 +568,100 @@ describe('round 36 phase 2 – a week is two cards wide on a tablet, and the thi
     }
     w.unmount()
   })
+
+
+  it('⭐ a desktop column is a THIRD of the row, and every week takes one', () => {
+    const strips = stripWidths(DESKTOP).filter((s) => s.cards <= 3)
+    expect(strips.length, 'the fixture must draw a week of three or fewer, or this measures nothing')
+      .toBeGreaterThan(0)
+    for (const strip of strips) {
+      // D2's rule one rung up: one COLUMN width for every week, so a week of one, two or three all
+      // give each card a third of the row and three of them fill it exactly. AE draws its own
+      // single-card weeks W3 and W5 at exactly that.
+      expect(strip.frac, 'each card takes a third of the row').toBeCloseTo(1 / 3 - 8 / strip.room, 2)
+      expect(3 * strip.frac + 24 / strip.room, 'and three fill the row exactly').toBeCloseTo(1, 2)
+    }
+  })
+
+  it('⭐ …and a non-tournament week takes that same third, as AE draws it', () => {
+    setViewport(DESKTOP)
+    const { snap } = careerWithAStackedWeek()
+    useGameStore().snapshot = snap
+    const w = mount(SeasonScreen, { global: { stubs: { teleport: true } }, attachTo: document.body })
+    const cards = w.findAll('.week-card')
+    expect(cards.length, 'the fixture must draw a non-tournament week, or this measures nothing').toBeGreaterThan(0)
+    for (const card of cards) {
+      const room = availableWidth(card.element, DESKTOP)
+      const declared = getComputedStyle(card.element).width
+      expect(declared, 'the card declares no width at 1280').not.toBe('')
+      expect(fracOfRow(declared, room), 'a training or off-season week is a third of the row').toBeCloseTo(
+        1 / 3 - 8 / room,
+        2,
+      )
+    }
+    w.unmount()
+  })
+
+  // ⚠⚠ THE THREE-CARD WEEK IS GROWN RATHER THAN SEARCHED FOR, AND THE REASON IS THE FIXTURE. The
+  // golden save's stacks are 2, 4 and 2 cards deep – probed – so «three fit» has no week to be
+  // measured on, and a `.filter(s => s.cards === 3)` arm would silently assert nothing forever
+  // (which is the failure mode this file's own header is about). A card is CLONED into a real strip
+  // instead: `:has(> .event-card:nth-child(3))` is a live selector over the real cascade, so the
+  // element the rule is read back off is the app's own card in the app's own strip, one sibling
+  // deeper. This is the exact case the specificity ladder exists for – at three cards the TABLET's
+  // «shrink so the third shows» rule is still matching, and the desktop's must outrank it.
+  it('⭐ three fit on a desktop – and the tablet\'s shrink rule does not win at three', () => {
+    setViewport(DESKTOP)
+    const { snap } = careerWithAStackedWeek()
+    useGameStore().snapshot = snap
+    const w = mount(SeasonScreen, { global: { stubs: { teleport: true } }, attachTo: document.body })
+    const strip = w
+      .findAll('.week-stack')
+      .filter((s) => s.classes().includes('swipeable'))
+      .find((s) => s.findAll('.event-card').length === 2)
+    expect(strip, 'the fixture must draw a two-card strip to grow').toBeTruthy()
+    const cards = strip!.findAll('.event-card')
+    const room = availableWidth(cards[0].element, DESKTOP)
+    expect(fracOfRow(getComputedStyle(cards[0].element).width, room), 'two take two thirds').toBeCloseTo(
+      1 / 3 - 8 / room,
+      2,
+    )
+
+    // GROW IT TO THREE.
+    strip!.element.appendChild(cards[0].element.cloneNode(true))
+    expect(
+      fracOfRow(getComputedStyle(cards[0].element).width, room),
+      'three fit, so each still takes a third of the row',
+    ).toBeCloseTo(1 / 3 - 8 / room, 2)
+    expect(
+      3 * fracOfRow(getComputedStyle(cards[0].element).width, room) + 24 / room,
+      'and three fill the row exactly',
+    ).toBeCloseTo(1, 2)
+
+    // AND TO FOUR, where the sliver is the affordance again.
+    strip!.element.appendChild(cards[0].element.cloneNode(true))
+    const four = fracOfRow(getComputedStyle(cards[0].element).width, room)
+    expect(3 * four + 24 / room, 'a fourth card leaves an edge showing past the third').toBeLessThan(0.95)
+    expect(3 * four, 'and three still fill most of the row').toBeGreaterThan(0.85)
+    w.unmount()
+  })
+
+  it('⭐ …and four or more still leaves an edge to swipe at, so no pager is needed', () => {
+    const strips = stripWidths(DESKTOP)
+    const deep = strips.filter((s) => s.cards >= 4)
+    expect(deep.length, 'the fixture must draw a week of four, which is the case under test')
+      .toBeGreaterThan(0)
+    for (const strip of deep) {
+      expect(
+        3 * strip.frac + 24 / strip.room,
+        `a ${strip.cards}-card week gives each card ${(strip.frac * 100).toFixed(1)}% of the row – ` +
+          'three of these plus two gutters must leave a sliver, or there is nothing to swipe at',
+      ).toBeLessThan(0.95)
+      // THREE CARDS VISIBLE, NOT FOUR: the trio plus its gutters still takes most of the row.
+      expect(3 * strip.frac, 'three cards still fill the row').toBeGreaterThan(0.85)
+    }
+  })
+
 
   it('⚠ and the phone is untouched – the same strip is still 88% of ONE card there', () => {
     // The other half of «формат карточки … без изменений», and the guard on rule 4 of this phase:

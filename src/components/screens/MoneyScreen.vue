@@ -2636,6 +2636,20 @@ function shopRowPaidMeta(row: ShopRowView): string | undefined {
   gap: 12px;
 }
 
+/* ⭐⭐ ROUND 36 PHASE 3 – «HER OWN ACCOUNT» STOPS AT A READING WIDTH ON A DESKTOP. The owner, on
+   frame AM-family-budget-desktop-1024.png: «"Её собственный счёт" - наша с фотографией, во всю
+   ширину растягивать не обязательно, посмотрите, чтобы красиво было.» AM draws it edge to edge; at
+   1280 that is a 948px box holding two sentences, which is a line of type nobody can track back to
+   the start of. 640px is the app's own paragraph measure on a phone (343px at 15px type) taken out
+   to a desktop's 13px, and it keeps the polaroid beside the words rather than adrift from them.
+   ⚠ NOT ONE DECLARATION OF ROUND 35 #3's CARD IS TOUCHED - the photograph, the green frame, the two
+   sentences and the DOM position at the foot of the screen are exactly what D7 recorded at 768. */
+@media (min-width: 1024px) {
+  .money-share {
+    max-width: 640px;
+  }
+}
+
 .money-share-text {
   margin: 0;
   flex: 1;
@@ -3079,6 +3093,26 @@ function shopRowPaidMeta(row: ShopRowView): string | undefined {
   grid-template-columns: 1fr 1fr;
   gap: 6px;
   margin-top: 10px;
+}
+
+/* ⭐⭐ D12, RULED BY THE OWNER ON 04.09: «а в чем проблема сделать для планшетов и десктопов в одну
+   строчку?» – none, and phase 2 was wrong to think there was one. It left the 2x2 alone under
+   «widen the column, change nothing else», and passed on a caution that re-flowing a grid might
+   trouble the parity harness. It cannot: `e2e/parity.spec.ts` compares SETS OF ACCESSIBLE NAMES,
+   not positions, so a 2x2 laid out as 1x4 carries the same four rungs under the same four names and
+   the harness does not look at the arrangement. Only ADDING or REMOVING a control is forbidden.
+   The handoff's own §1 says the same thing about why: «ступени кита встают 4-в-ряд вместо 2x2
+   (лестница читается как лестница)» – a ladder read across is a ladder.
+   ⚠ `repeat(4, …)` AND NOT `auto-fit`: the rungs are a LADDER, so the fourth standing under the
+   first would be the one arrangement worse than the 2x2 it replaces. Four is the engine's own count
+   (`view.rungs` is the kit grade ladder), and a fifth grade would want a decision, not a reflow.
+   ⚠ FROM 768, WHICH MOVES A TABLET BOX PHASE 2 SETTLED – deliberately, at his ruling, and the only
+   such move in this phase. It is called out in docs/rounds/round-36.md beside the identity census
+   so that «nothing below 1024 moved» is not quietly untrue. */
+@media (min-width: 768px) {
+  .kit-rungs {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
 }
 
 .kit-rung {

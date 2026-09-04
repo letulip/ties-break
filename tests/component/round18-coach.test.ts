@@ -55,7 +55,7 @@ import { useGameStore } from '../../src/stores/game'
 import { createWorld, tickWeek, toSnapshot } from '../../src/engine/world'
 import { rngFromSeed } from '../../src/engine/rng'
 import { DEFAULT_PROFILE, type CoachTier, type Snapshot } from '../../src/shared/protocol'
-import { PHONE, TABLET, setViewport } from './fits'
+import { DESKTOP, PHONE, TABLET, setViewport } from './fits'
 
 // ⚠ THIS RUNNER HAS NO localStorage AND HomeScreen READS IT AT SETUP (`tb:kidAvatarHintSeen`), so a
 // mount throws before anything can be measured. The same shim tests/component/home-strip-and-mail.ts
@@ -423,6 +423,42 @@ describe('round 36 phase 2 – the market is two to a row on a tablet, and the p
     expect(block.display === '' || block.display === 'block', 'a phone tier is not a grid').toBe(true)
     const row = tier.find('.cm-row')
     expect(px(getComputedStyle(row.element).marginBottom, 'the phone row stacks on its margin')).toBe(8)
+    wrapper.unmount()
+  })
+
+  // ⭐⭐ ROUND 36 PHASE 3 – «2–3 В РЯД, С ПЕРЕНОСОМ», AND THE COUNT IS A CONSEQUENCE RATHER THAN A
+  // NUMBER. Three per row was built first and measured worse: the rail leaves 772px of column at
+  // 1024 and 948px at 1280, so three cards are 252px and 310px – both NARROWER than the phone's
+  // 343px card – and the market's page grew from 2162px to 3041px at 1024 for it. That is D3's own
+  // objection to «four per row» arriving one breakpoint later, so the rule states the FLOOR (the
+  // phone's own card) and lets the row take as many as fit above it: two at 1024 (382px, which is
+  // what AK draws) and two at 1280 (470px).
+  // MUTATION-VERIFIED: `repeat(3, minmax(0, 1fr))` in the 1024 block reddens this arm alone; the
+  // doubled `.tier-block.tier-block` selector reduced to one class reddens it too, because the 768
+  // rule then wins the tie in happy-dom.
+  it('⭐ a desktop tier fits as many coaches as fit at the phone\'s own width', async () => {
+    assertSheetPresent()
+    const wrapper = await coachesAt(DESKTOP)
+    const tier = wrapper.find('.tier-block')
+    expect(tier.exists(), 'the market drew a tier, or this measures nothing').toBe(true)
+    const block = getComputedStyle(tier.element)
+    expect(block.display, 'a tier is still a grid on a desktop').toBe('grid')
+    expect(
+      block.gridTemplateColumns.replace(/\s+/g, ' '),
+      'as many to a row as fit at no less than the phone card',
+    ).toBe('repeat(auto-fill, minmax(343px, 1fr))')
+    // ⚠ AND THE PORTRAIT IS STILL THE PHONE'S. D4's «если влезает» is met even less here than at
+    // 768: a two-up desktop card is 470px, which is wider than 343 – but the strip is tied to the
+    // mask geometry (round-18 #2) and the 78px is reserved for the coach she already has
+    // (coach-match-edge.md §4), and neither of those is a width decision this breakpoint may take.
+    const ordinary = wrapper.findAll('.cm-row').filter((r) => !r.classes().includes('current'))
+    expect(ordinary.length, 'the fixture has hireable cards').toBeGreaterThan(0)
+    for (const row of ordinary) {
+      expect(
+        px(getComputedStyle(row.find('.cm-art').element).width, 'the strip at 1280'),
+        'the desktop strip is the phone strip',
+      ).toBe(62)
+    }
     wrapper.unmount()
   })
 })

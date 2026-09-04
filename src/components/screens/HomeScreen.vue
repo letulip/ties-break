@@ -772,7 +772,31 @@ function chipName(chip: TierChip): string {
 // WHAT IS ON SCREEN, then: the window, plus ONE rung above it (the aspiration - «плюс один верхний
 // недоступный уровень»). Everything else - the rungs she has outgrown below, and the far top of the
 // ladder above - sits behind an ellipsis chip that expands the row in place.
-const stripExpanded = ref(false)
+// ⭐⭐⭐ ROUND 36 PHASE 3 – AND FROM 768 IT OPENS ITSELF. D9 in
+// docs/specs/responsive-decisions-2026-09.md recorded this as a collision between two of his
+// instructions and left the strip alone; he has ruled on 04.09 that it is not one:
+//
+//     «мы же можем использовать detectdevicewidth и если у нас 768+, то можно этот список сразу
+//      раскрытым рисовать, это ничему не противоречит»
+//
+// ⚠⚠ NOTHING IS ADDED AND NOTHING IS REMOVED, WHICH IS WHY IT IS ALLOWED. Every rung is ALREADY
+// reachable on a phone – one tap on the ellipsis – so a wide screen drawing them открытыми is the
+// same information with one fewer tap, not a control the phone has not got. That is the same shape
+// as D12's kit ladder, and it is why `e2e/parity.spec.ts` now opens every disclosure at every width
+// before it measures: his criterion is «1 к 1 по доступности», and reachability is what the harness
+// asks for since this phase.
+//
+// ⚠ A MEDIA QUERY, NOT A DEVICE. His word was `detectdevicewidth`; the thing itself is the
+// breakpoint ladder phase 1 built, because a 768px browser window on a 27-inch monitor is not a
+// tablet and the rule is about the WIDTH of the column. `window.matchMedia?.()` is the shipped
+// idiom in this codebase (ConfettiBurst.vue, trophyArrival.ts) and it is optional-chained for the
+// same reason they give: `matchMedia` is a browser API and this module is imported by a test runner.
+//
+// ⚠ READ ONCE, AT SETUP, and that is a deliberate limit rather than an oversight: the initial state
+// of a disclosure a player can work is a starting point, not a binding. A window dragged from 1200
+// to 400 keeps an open strip – with its own `−` still on screen to close it – which is the graceful
+// direction, and re-collapsing a row under someone's cursor because they resized is not.
+const stripExpanded = ref(window.matchMedia?.('(min-width: 768px)').matches ?? false)
 // ⚠ `.working`, NOT `.rungs`, SINCE 06.08 – and the strip is the reason the two exist. The lower
 // bound stopped refusing (docs/specs/ladder-floor-2026-08.md), so `tierOpen` is now true for every
 // rung she has ever reached and `.rungs` would put the whole climb back on screen: exactly the
@@ -2063,6 +2087,69 @@ async function leaveCollege(): Promise<void> {
   grid-template-columns: 1fr 1fr;
   gap: 11px;
   padding: 2px 0 14px;
+}
+
+/* ⭐⭐⭐ ROUND 36 PHASE 3 – HOME ON A DESKTOP, AND IT IS FRAME AC WITH NOTHING ADDED TO IT.
+   `AC-home-desktop-1024.png` lays this page out as two columns: the photograph down the left with
+   the next-tournament and family-budget cards stacked beside it, then the coach note and the recent
+   memory side by side, then the season ladder and the news feed side by side. That is EXACTLY the
+   six blocks this screen already renders, in exactly the order it already renders them – so the
+   desktop is a re-flow of Home's own DOM and not a second Home.
+
+   ⚠⚠ `display: contents` IS THE WHOLE MECHANISM AND IT IS WORTH NAMING. The four notecards live
+   inside `.card-grid`, which is a grid of its own; a box cannot be a cell of its parent's grid and
+   spread its children across it at the same time. `display: contents` removes only the WRAPPER's
+   box, so the four cards become items of the shell's grid directly – no wrapper is deleted, no card
+   moves in the DOM, and `e2e/parity.spec.ts` sees the same elements it saw at 375.
+   ⚠ It is safe for the criterion for a second reason worth stating: `.card-grid` carries no
+   background, no border and no icon, so it contributes nothing to the parity fingerprint's paint
+   half – a wrapper with a picture on it could not be dissolved this way.
+
+   ⚠ AND THE HERO SPANS TWO ROWS RATHER THAN BEING SIZED TO THEM. A spanning item still sizes the
+   tracks it crosses, so when the photograph is the taller of the pair the two cards beside it grow
+   to meet it and the row closes exactly; `align-self: start` is what stops the reverse case from
+   silently overriding `--hero-aspect` (a stretched box takes its height from the row and its width
+   from the column, and the ratio is simply not applied). The token has to stay honest here: it is
+   the join `.nt-hero` reads. */
+@media (min-width: 1024px) {
+  :deep(.tb-screen-body) {
+    display: grid;
+    grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+    gap: 11px;
+  }
+
+  .card-grid {
+    display: contents;
+  }
+
+  .diary-hero {
+    grid-row: span 2;
+    align-self: start;
+    /* One cap for both heroes – see `--hero-max` in src/style.css. */
+    max-width: var(--hero-max);
+    /* The full-bleed cancellation is a phone rule: it exists so the photograph reaches both edges of
+       a 375px screen. In a column beside a column there are no edges to reach, and the picture takes
+       the same corner every other block on this page has. */
+    margin: 0;
+    border-radius: var(--radius-frame);
+  }
+
+  /* The two strips below the cards are cells now, so the gap between them is the grid's. And they
+     do NOT stretch to each other: the ladder is four chips tall and the feed is a page of news, so
+     a stretched pair draws a 350px box with 70px of content in it. The notecards above still
+     stretch, which is what keeps the coach note and the memory the same height as each other. */
+  .diary-strip {
+    margin-bottom: 0;
+    align-self: start;
+  }
+
+  /* The two blocks that are a whole row when they are there at all: the engine's refusal (round 35
+     #11) and the college year. Neither is a card in the grid – one is a sentence about the page and
+     the other replaces the week. */
+  .error,
+  .college-card {
+    grid-column: 1 / -1;
+  }
 }
 
 /* The gradient, the --card-edge hairline and the 17px corners are THE NOTECARD SURFACE, shared
