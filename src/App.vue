@@ -84,6 +84,13 @@ import StatsScreen from './components/screens/StatsScreen.vue'
 import MoneyScreen from './components/screens/MoneyScreen.vue'
 import MoreScreen from './components/screens/MoreScreen.vue'
 import TrophiesScreen from './components/screens/TrophiesScreen.vue'
+// ⭐⭐⭐ ROUND 36 PHASE 6 – THE RAIL'S MINI-DASHBOARD, and it is the owner's ruling of 04.09: «надо
+// создать новые компоненты и показывать их только на десктоп», «карточки сквозные, одинаковые, как
+// мини-дашборд живут всегда в вертикальной полоске, т.е. на всех страницах». It is mounted HERE,
+// inside the one `nav.tab-bar` the whole app has, because that element IS the rail past 1024 – so
+// «на всех страницах» is satisfied by the shell owning it and not by ten screens remembering to draw
+// it. Below 1024 it is `display: none` (src/style.css), so it costs a phone nothing and moves no box.
+import RailDashboard from './components/RailDashboard.vue'
 
 // Round 5 item 23: a small accent dot on the Season tab until the player has visited it
 // since the last "New events on the calendar" marker. UI-only state (localStorage), no
@@ -1754,6 +1761,22 @@ function reopenTour(): void {
           :aria-label="TAB_DOT_LABEL[t.id]"
         ></span>
       </button>
+      <!-- ⭐⭐ THE MINI-DASHBOARD, AND IT IS INSIDE THE STRIP RATHER THAN BESIDE IT. His words are in
+           the script block, where Cyrillic is allowed; in English: three cards, the same set on every
+           page, living always in the vertical strip, and desktop-only.
+           ⚠ IT IS A CHILD OF THE BAR AND NOT A SIBLING, for a measured reason. The bar is the rail's
+           whole box past 1024 (`position: sticky; height: 100vh; overflow-y: auto`, spanning every
+           row of the frame's grid), so a sibling in the same grid column would sit UNDER it rather
+           than in it. The alternative – wrapping the two in a rail div – adds an element to the
+           document at EVERY width, including a phone, and this round's identity contract is that
+           nothing below 1024 moves at all. A child costs no box below 1024, because the block is
+           `display: none` there.
+           ⚠ AND IT HOLDS NO CONTROL, EVER – his own constraint, quoted in the original in
+           RailDashboard.vue's script block: the cards put no new controls up, they are purely a
+           shortcut to information from the inner sections. That is what keeps the navigation
+           landmark honest with a dashboard in it, and `e2e/parity.spec.ts` asserts it by
+           container. -->
+      <RailDashboard />
     </nav>
 
     <!-- THE TROPHY ON ITS WAY TO THE CABINET. The owner asked for the trophy being ADDED to the

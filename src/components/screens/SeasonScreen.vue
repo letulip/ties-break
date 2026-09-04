@@ -78,6 +78,9 @@ import { UPCOMING_WEEKS } from '../../engine/world/constants'
 // is no longer one of them – that ramp is drawn on five surfaces, not two, so it lives a line below.
 import { DRAW_NOT_MADE_NOTE, fieldChanceLabel, fieldChanceTitle, firstMatchLabel, firstMatchTitle, useEventCard } from '../../composables/eventCard'
 import { useWeekPager } from '../../composables/weekPager'
+// ⭐ ROUND 36 PHASE 6 – the «she is entered» predicate, shared with the rail dashboard's card. See
+// the note at `myEntries` below.
+import { enteredEvents } from '../../composables/seasonEntries'
 // The app's one red-to-green ramp, shared with the three condition rings. `{ fraction }` names the
 // scale IN the call: this number is a 0..1 chance, not a 0..100 percentage, and the signature will
 // not let the two be confused.
@@ -581,7 +584,12 @@ const feed = computed(() =>
   }),
 )
 const visibleUpcoming = computed(() => upcoming.value.filter((e) => feedShows(e, feed.value)))
-const myEntries = computed(() => upcoming.value.filter((e) => e.entered))
+// ⭐ ROUND 36 PHASE 6 – the predicate moved into `composables/seasonEntries.ts` and the strip below
+// reads it. It moved because the owner's rail dashboard now carries a «My entries» card on every
+// desktop page («карточки сквозные, одинаковые, как мини-дашборд живут всегда в вертикальной
+// полоске»), and the two are on screen TOGETHER at 1024+: a shortcut that filtered the list its own
+// way could show a different set from the strip beside it. One predicate, both surfaces.
+const myEntries = computed(() => enteredEvents(upcoming.value))
 const vacations = computed<VacationBooking[]>(() => game.snapshot?.vacations ?? [])
 const practices = computed<PracticeBooking[]>(() => game.snapshot?.practices ?? [])
 /** ⭐ ROUND 28 #4 – every running endorsement's named shoot weeks, or none. Read once here so the

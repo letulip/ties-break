@@ -792,6 +792,72 @@ body {
   }
 }
 
+/* ⭐⭐⭐ ROUND 36 PHASE 6 – THE RAIL'S MINI-DASHBOARD, AND IT IS DESKTOP-ONLY BY THIS ONE DECLARATION.
+   The owner, 04.09: «надо создать новые компоненты и показывать их только на десктоп», «карточки
+   сквозные, одинаковые, как мини-дашборд живут всегда в вертикальной полоске, т.е. на всех
+   страницах». `AC-home-desktop-1024.png` is the reference for the set.
+
+   ⚠⚠ `display: none` IS THE WHOLE OF «ONLY ON DESKTOP», AND IT IS DELIBERATELY NOT A `v-if`. A
+   component that mounted itself off `matchMedia` would be a SECOND source of truth about the
+   breakpoint beside the ladder at the top of this file, and this round already learned what two
+   copies of one number cost (`--app-pad-x`, and phase 3's `--app-bar-left`). It also matters for the
+   measurement: `display: none` removes the box AND the accessibility node, so a phone is byte-for-box
+   identical to the build before this phase, which is what the round's identity contract asserts.
+
+   ⚠ THE STRIP IS 196px WIDE AND THE CARDS LIVE INSIDE ITS OWN PADDING, so nothing here sets a width:
+   the rail's `padding` already insets them, the bar is `flex-direction: column`, and a card is simply
+   the next block down the column. `margin-top: auto` is what puts the set at the FOOT of the rail –
+   the tabs stay at the top where AC draws them, and the dashboard takes the empty column below. */
+.rail-dash {
+  display: none;
+}
+
+@media (min-width: 1024px) {
+  #app:has(> nav.tab-bar) > nav.tab-bar > .rail-dash {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    /* The tabs keep the top of the strip; the cards take the room underneath. `auto` and not a fixed
+       inset, because the rail scrolls itself when the two together outgrow the window – which is
+       exactly what «скроллится при переполнении» already asked of it. */
+    margin-top: auto;
+    padding-top: 20px;
+  }
+
+  /* The app's own notecard, at rail width. `Card` supplies the gradient, the hairline and the
+     corners; the only thing this rule decides is that a 196px column wants less padding than a
+     420px one. No new colour, no new radius, no new shadow. */
+  .rail-dash-card {
+    --tb-card-pad: 10px 12px;
+  }
+
+  /* The figure is Home's `.budget-total` one rung down – same family, same weight, same tabular
+     digits, so the money on the rail and the money on the card it shortcuts to are the same object
+     at two sizes. 18px is what a 196px strip holds without wrapping «-$1,234,567». */
+  .rail-dash-figure {
+    margin: 6px 0 0;
+    font-family: var(--font-heading);
+    font-size: 18px;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    color: var(--ink);
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* An entry is a line of reading rather than a figure, so it takes the app's reading size and its
+     soft ink – the same pair `.budget-window` uses under the money on Home. It is NOT the Season
+     strip's lime pill: a pill per entry down a 196px column is a stack of bordered boxes, and the
+     round's rule is that our proportions win. See D41. */
+  .rail-dash-entry {
+    font-family: var(--font-body);
+    font-size: 12.5px;
+    font-weight: 500;
+    letter-spacing: 0;
+    color: var(--ink-soft);
+    margin: 6px 0 0;
+  }
+}
+
 h1 {
   font-family: var(--font-heading);
   font-size: 20px;
