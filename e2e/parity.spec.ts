@@ -63,13 +63,47 @@
 // property: nothing has moved yet, the app is one column at every width, so a red run today would
 // mean the harness is wrong. Green today and red the first time phase 2 drops a control is the
 // entire point.
+//
+// -------------------------------------------------------------------------------------------------
+// ⭐⭐⭐ ROUND 36 PHASE 6 – THE CLAIM NOW CARRIES AN EXCEPTION, AND IT IS STATED HERE IN WORDS
+// -------------------------------------------------------------------------------------------------
+// What this file asserts, from this phase on, is:
+//
+//     THE SAME THINGS ARE REACHABLE AT EVERY WIDTH, **OUTSIDE THE DESKTOP RAIL'S DASHBOARD**.
+//
+// The exception is the owner's own, on his rail's three information cards: «можно вынести эту часть
+// поля навигации из этой проверки? у меня вообще планы небольшие на этот дашборд есть дальше и это
+// исключительно десктопная фича.» A claim with an exception has to state the exception, which is why
+// that sentence is here and in docs/rounds/round-36.md rather than only in a decisions row.
+//
+// ⚠⚠ AND THE EXEMPTION IS BUILT SO IT CANNOT GROW. Four parts, and the last three are what stop it
+// becoming a hole – each one is a test below, and each one has been SEEN to redden:
+//
+//   1. ONLY THE DASHBOARD REGION IS EXEMPT. The rail's NAVIGATION is not: the five tabs exist at
+//      every width and still fail by name if one goes. `the rail's navigation is NOT exempt` holds
+//      exactly that, by asserting the five tab buttons are still IN the fingerprint at 1280.
+//   2. THE BOUNDARY IS A CONTAINER, NEVER A LIST OF NAMES. `RAIL_DASHBOARD` below is a structural
+//      selector – the region inside the rail, and nothing else in the app – so a later phase cannot
+//      dodge the check by naming a control it wants ignored. And because a container is a place
+//      rather than a list, the region has to be forbidden to HOLD a control: it is, by
+//      `the exempt region holds no control`.
+//   3. EVERY FIGURE THE RAIL SHOWS MUST EXIST SOMEWHERE AT 375. That keeps the honest half of his
+//      criterion. A card is a SHORTCUT; a number the phone cannot reach at all is a new fact on a
+//      desktop and reddens.
+//   4. …and the claim is restated in words, above.
+//
+// ⚠ THE EXEMPTION IS LOAD-BEARING TODAY AND NOT A GUARD FITTED TO NOTHING – which is the objection
+// phase 4 refused to ship past. The three card titles are `heading` nodes, so without the subtraction
+// below the 1280 fingerprint carries three tokens the 375 one does not, and every screen goes red.
+// `the exemption is doing real work` asserts exactly that, so the day the dashboard stops
+// contributing anything, this file says so instead of quietly guarding an empty set.
 
 import { readdirSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import type { Locator, Page } from '@playwright/test'
 import { test, expect, type CareerAt } from './careerAt'
 import type { FixtureName } from '../tools/e2e-fixtures-read'
-import { answerOpeningKnock, dismissTourBriefing } from './journey'
+import { answerOpeningKnock, dismissTourBriefing, enterConfirmButton } from './journey'
 
 // =================================================================================================
 // HIS LADDER, AS THE FOUR WIDTHS THAT ARE ACTUALLY WALKED
@@ -279,8 +313,43 @@ const FINGERPRINTED_ROLES = new Set([
  * `aria-hidden` are all absent from the a11y tree, so a control hidden at 1280 by any of the three
  * disappears from this list and is named by the diff.
  */
-async function ariaFingerprint(page: Page): Promise<string[]> {
-  const yaml = await page.locator('body').ariaSnapshot()
+/**
+ * ⭐⭐⭐ ROUND 36 PHASE 6 – THE ONE EXEMPT REGION IN THE WHOLE APP, AS A CONTAINER.
+ *
+ * The owner's rail dashboard (`src/components/RailDashboard.vue`), and the selector is STRUCTURAL on
+ * purpose: it names the place – the block inside the app's one rail – and not the things inside it.
+ *
+ * ⚠⚠ THAT IS THE PART THAT KEEPS THE EXEMPTION SMALL. An exemption written as a list of accessible
+ * names («ignore `In the account`…») is one edit away from ignoring a control: whoever adds the
+ * control also adds the name. A container cannot be extended that way – a later phase would have to
+ * move an element INTO the rail's dashboard, and `the exempt region holds no control` fails the
+ * moment anything interactive lands there.
+ *
+ * ⚠ `#app >` IS LOAD-BEARING TOO: it pins the region to the app frame's own navigation rather than
+ * to any `.rail-dash` that might be drawn elsewhere, and `the boundary is one container` asserts the
+ * document holds exactly one of them.
+ */
+const RAIL_DASHBOARD = '#app > nav.tab-bar > .rail-dash'
+
+/** `a` minus `b` as MULTISETS, raw – the same counting `missingFrom` does, without its rendering.
+ *  Removing exactly as many copies as `b` holds is what makes the subtraction exact rather than
+ *  approximate: a token the dashboard shows twice takes two copies out of the page's list and no
+ *  more, so an identical token belonging to the SCREEN survives. */
+function subtractOnce(a: string[], b: string[]): string[] {
+  const left = new Map<string, number>()
+  for (const token of b) left.set(token, (left.get(token) ?? 0) + 1)
+  const out: string[] = []
+  for (const token of a) {
+    const owed = left.get(token) ?? 0
+    if (owed > 0) left.set(token, owed - 1)
+    else out.push(token)
+  }
+  return out
+}
+
+/** The aria tokens of ONE box – the body for the page, the dashboard for the region it exempts. */
+async function ariaTokensOf(target: Locator): Promise<string[]> {
+  const yaml = await target.ariaSnapshot()
   const tokens: string[] = []
   for (const line of yaml.split('\n')) {
     // `- button "Home"`, `- heading "Season" [level=2]`, `- img "Season ladder rung"`, and the
@@ -294,6 +363,24 @@ async function ariaFingerprint(page: Page): Promise<string[]> {
     tokens.push(`${role}${level} "${name}"`)
   }
   return tokens
+}
+
+/** The page, MINUS the rail's dashboard – part 2 of the exemption, applied. At 375 / 768 / 900 the
+ *  region is `display: none`, so it is absent from the accessibility tree and this subtracts nothing;
+ *  at 1280 it takes out exactly what the three cards contribute and leaves the screen's own set. */
+async function ariaFingerprint(page: Page): Promise<string[]> {
+  const whole = await ariaTokensOf(page.locator('body'))
+  const exempt = await railDashboardTokens(page)
+  return exempt.length === 0 ? whole : subtractOnce(whole, exempt)
+}
+
+async function railDashboardTokens(page: Page): Promise<string[]> {
+  const region = page.locator(RAIL_DASHBOARD)
+  // The block is in the DOM at every width (`display: none` is what makes it desktop-only), so this
+  // is a real count and not a proxy for "is it a desktop". An empty career draws no dashboard at
+  // all, and an absent region exempts nothing.
+  if ((await region.count()) === 0) return []
+  return ariaTokensOf(region)
 }
 
 /**
@@ -311,7 +398,7 @@ async function ariaFingerprint(page: Page): Promise<string[]> {
  * happy-dom cannot make – it has no layout engine, so every rect there is zero.
  */
 async function paintFingerprint(page: Page): Promise<string[]> {
-  return page.evaluate(() => {
+  return page.evaluate((exemptSelector) => {
     const assetOf = (value: string): string | null => {
       const url = /url\(\s*["']?([^"')]+)["']?\s*\)/.exec(value)
       if (!url) return null
@@ -323,6 +410,11 @@ async function paintFingerprint(page: Page): Promise<string[]> {
 
     const tokens: string[] = []
     for (const el of Array.from(document.querySelectorAll('*'))) {
+      // ⭐ PART 2 OF THE EXEMPTION, ON THE PAINT HALF. `closest` is matched against the WHOLE
+      // structural selector, so this skips a node only when its ancestor really is the rail's own
+      // dashboard – an element that merely carries the class somewhere else is not exempt and is
+      // named by `the boundary is one container` instead.
+      if (el.closest(exemptSelector)) continue
       if (el.getClientRects().length === 0) continue
       const box = el.getBoundingClientRect()
       if (box.width <= 0 || box.height <= 0) continue
@@ -346,7 +438,7 @@ async function paintFingerprint(page: Page): Promise<string[]> {
       if (background) tokens.push(`art ${background}`)
     }
     return tokens
-  })
+  }, RAIL_DASHBOARD)
 }
 
 /**
@@ -570,6 +662,380 @@ test.describe('the rooms behind a chapter are 1 to 1 too', () => {
       await walkOneScreen(page, careerAt, room, station)
     })
   }
+})
+
+// =================================================================================================
+// ⭐⭐⭐ ROUND 36 PHASE 6 – THE EXEMPTION'S OWN GUARDS
+// =================================================================================================
+//
+// Four tests, and they are the reason phase 4 refused to ship the exemption on its own: a guard
+// fitted to nothing passes over an empty set forever, which is this file's «four empty sets are
+// equal» warning wearing a green tick. Each of these has been SEEN to redden – the mutations and
+// what they printed are in docs/rounds/round-36.md under phase 6.
+//
+// ⚠ THEY WALK ONE SCREEN AND THAT IS ENOUGH, because the dashboard is the SHELL's: `App.vue` mounts
+// it inside the single `nav.tab-bar` the whole app has, so «одинаковые на всех страницах» is a
+// property of where it lives rather than of ten screens agreeing. The fourth test measures that
+// claim across every station rather than trusting it.
+
+/** The roles a dashboard card may never carry. His constraint, in his own words: «никаких контролов
+ *  новых они не поставят, это просто шорт-кат с информацией из внутренних разделов.» */
+const INTERACTIVE_ROLES = new Set([
+  'button',
+  'link',
+  'checkbox',
+  'radio',
+  'switch',
+  'textbox',
+  'searchbox',
+  'combobox',
+  'listbox',
+  'option',
+  'slider',
+  'spinbutton',
+  'tab',
+  'tablist',
+  'menu',
+  'menubar',
+  'menuitem',
+  'menuitemcheckbox',
+  'menuitemradio',
+  'treeitem',
+])
+
+/** Every role the region's accessibility tree carries, unfiltered – a wider net than the
+ *  fingerprint's, because this arm is asking «is there a CONTROL here» and not «what is compared». */
+async function rolesInside(page: Page): Promise<string[]> {
+  const yaml = await page.locator(RAIL_DASHBOARD).ariaSnapshot()
+  const roles: string[] = []
+  for (const line of yaml.split('\n')) {
+    const match = /^\s*-\s+([a-z][a-z-]*)(?:\s+"((?:[^"\\]|\\.)*)")?/.exec(line)
+    if (match) roles.push(match[2] === undefined ? match[1] : `${match[1]} "${match[2]}"`)
+  }
+  return roles
+}
+
+/** Boot `pro` and clear the two doorways every seeded save wakes up holding. */
+async function boot(page: Page, careerAt: CareerAt): Promise<void> {
+  await page.setViewportSize({ width: BASE_WIDTH, height: VIEWPORT_HEIGHT })
+  await careerAt('pro')
+  await answerOpeningKnock(page)
+  await dismissTourBriefing(page)
+}
+
+/**
+ * ENTER THE SOONEST TOURNAMENT SHE CAN, WHICH IS WHAT MAKES THE THIRD CARD EXIST.
+ *
+ * ⚠⚠ MEASURED, AND IT IS WHY ONE ARM BELOW IS SEPARATE FROM THE OTHERS. `pro` boots with NOTHING
+ * entered – «Nothing entered yet» is the first thing `tournament-entry.spec.ts` asserts about it – so
+ * the dashboard draws TWO cards and the «My entries» card, the one whose figures are a LIST rather
+ * than a single number, is never seen by a walk on this fixture. Ten fingerprints that never
+ * contained it are equal, which is this file's own «four empty sets are equal» failure one level up.
+ *
+ * ⚠⚠ AND ENTERING CANNOT SIMPLY BE FOLDED INTO `boot`, WHICH WAS TRIED AND MEASURED. An entry
+ * changes what Home's Next-tournament plate OPENS (round 31 #1: the plate carries
+ * `entry: 'tournament'`, and with something entered `ThisWeekScreen` draws the tournament instead of
+ * its own «This week» heading), so `STATIONS['ThisWeekScreen.vue']`'s arrival anchor stops holding –
+ * exactly the failure a walk on the `junior` fixture produces, for exactly the same reason. **The
+ * station map is calibrated for a `pro` with nothing entered**, which is worth writing down: it is a
+ * real property of the map and not of this phase.
+ *
+ * So the ten-station corpus walk stays on the career the map is built for, and the third card gets
+ * its own arm, which needs no station map at all – it compares the rail's list against the strip it
+ * is a shortcut TO, on the one screen that owns it.
+ */
+async function enterOneTournament(page: Page): Promise<void> {
+  // The soonest event she can enter – the top card of a feed ordered by week, which is the one a
+  // player presses. Positional for `tournament-entry.spec.ts`'s reason: WHICH event a fixture offers
+  // is the generator's business, and pinning one by name makes the test a hostage to the calendar.
+  await navTab(page, 'Season')
+  const enter = page.getByRole('button', { name: /^Enter the / }).first()
+  await expect(enter, '`pro` boots with no enterable event, so nothing here can be entered').toBeVisible()
+  await enter.click()
+  await enterConfirmButton(page).click()
+  // The engine took it, so the strip the rail card shortcuts to is now on the screen. Asserted here
+  // rather than assumed: a refused entry would leave the arm below measuring an absent card and
+  // passing over an empty set.
+  await expect(
+    page.getByRole('heading', { name: 'My entries' }).first(),
+    'the entry was not taken, so the third rail card has nothing to shortcut to',
+  ).toBeVisible()
+}
+
+/** Home at one width, settled – the state every arm below measures from. */
+async function homeAt(page: Page, width: number): Promise<void> {
+  await page.setViewportSize({ width, height: VIEWPORT_HEIGHT })
+  await park(page)
+  await settleScreen(page)
+}
+
+test.describe("the desktop rail's dashboard is exempt – and the exemption is bounded", () => {
+  test('the boundary is ONE container, inside the rail, and it is desktop-only', async ({
+    page,
+    careerAt,
+  }) => {
+    await boot(page, careerAt)
+
+    // ⚠ THE REGION IS IN THE DOM AT EVERY WIDTH – `display: none` is what makes it desktop-only, not
+    // a `v-if` – so «desktop-only» is measured as «has no box», which is the question a player asks.
+    for (const width of [BASE_WIDTH, 768, 900]) {
+      await homeAt(page, width)
+      await expect(
+        page.locator(RAIL_DASHBOARD),
+        `the dashboard has a box at ${width}px, and it is his desktop-only feature`,
+      ).toBeHidden()
+    }
+
+    await homeAt(page, 1280)
+    const region = page.locator(RAIL_DASHBOARD)
+    await expect(region, 'the dashboard is on screen at 1280').toBeVisible()
+
+    // ⭐ EXACTLY ONE, AND NOTHING ELSE IN THE APP IS EXEMPT. A second block carrying the class – in
+    // the rail or anywhere else – would be a second hole, so the count is asserted rather than the
+    // presence. `#app > nav.tab-bar >` is what ties the one region to the app's own navigation.
+    expect(await page.locator('.rail-dash').count(), 'one dashboard in the document').toBe(1)
+    expect(await region.count(), 'and it is the one inside the rail').toBe(1)
+
+    // ⚠ ANTI-VACUITY, AND IT IS THE WHOLE REASON THIS PHASE SHIPS THE CARDS AND THE EXEMPTION
+    // TOGETHER: an exemption over an empty region is a guard fitted to nothing, and it would pass
+    // for ever. So the region is asserted to hold HIS THREE CARDS, by their titles - the set he
+    // named, «IN THE ACCOUNT, COACHING BUDGET, MY ENTRIES».
+    // ⚠ TWO AND NOT THREE, AND IT IS MEASURED RATHER THAN LOOSENED. `pro` boots with nothing
+    // entered, and «My entries» is silent then – exactly as the Season strip it shortcuts to is
+    // (`v-if="myEntries.length"`). The third card is asserted in its own arm below, on a career that
+    // has just entered something; asserting `>= 2` here instead would be the loose version of this
+    // line and would stop naming the set.
+    expect(
+      await page.locator(`${RAIL_DASHBOARD} .rail-dash-title`).allInnerTexts(),
+      'the exempt region does not hold the cards this career draws',
+    ).toEqual(['IN THE ACCOUNT', 'COACHING BUDGET'])
+  })
+
+  test('the exempt region holds no control – it is information, and that is his constraint', async ({
+    page,
+    careerAt,
+  }) => {
+    await boot(page, careerAt)
+    await homeAt(page, 1280)
+    await expect(page.locator(RAIL_DASHBOARD)).toBeVisible()
+
+    // ⭐⭐ GUARD ONE, AND IT IS THE ONE THAT STOPS THE EXEMPTION GROWING. A later phase that parks a
+    // control inside this region would be moving it OUT of the parity check, which is precisely what
+    // the boundary-by-container is for. Two nets, because they catch different things: the
+    // accessibility tree sees `role="button"` on a div and an `<a href>`, and the DOM query sees a
+    // focus stop that carries no role at all.
+    const roles = await rolesInside(page)
+    expect(
+      roles.filter((r) => INTERACTIVE_ROLES.has(r.split(' ')[0])),
+      'a control is inside the rail dashboard, which is the ONE region parity does not check. It ' +
+        'is a shortcut to information, by his own ruling - so either it is not a control, or it ' +
+        'does not belong here.',
+    ).toEqual([])
+
+    const focusable = await page.evaluate((selector) => {
+      const root = document.querySelector(selector)
+      if (!root) return ['<the dashboard is not on the page>']
+      const query =
+        'a[href],area[href],button,input,select,textarea,summary,iframe,object,embed,' +
+        '[tabindex],[contenteditable],[onclick],[role]'
+      return Array.from(root.querySelectorAll(query)).map(
+        (el) => `${el.tagName.toLowerCase()}${el.className ? `.${String(el.className).trim().split(/\s+/).join('.')}` : ''}`,
+      )
+    }, RAIL_DASHBOARD)
+    expect(focusable, 'nothing in the rail dashboard is a focus stop or carries an explicit role').toEqual(
+      [],
+    )
+
+    // ⭐ AND AGAIN WITH THE THIRD CARD UP, because «My entries» is the one card whose body is a LIST
+    // and a list is where a control usually creeps in (a chip that opens the event, a withdraw
+    // affordance). Two cards proving nothing about the third is the same hole as a walk that never
+    // reaches a state.
+    await homeAt(page, BASE_WIDTH)
+    await enterOneTournament(page)
+    await homeAt(page, 1280)
+    expect(
+      await page.locator(`${RAIL_DASHBOARD} .rail-dash-title`).allInnerTexts(),
+      'the third card did not appear, so this second pass measured the first two again',
+    ).toEqual(['IN THE ACCOUNT', 'COACHING BUDGET', 'MY ENTRIES'])
+    expect(
+      (await rolesInside(page)).filter((r) => INTERACTIVE_ROLES.has(r.split(' ')[0])),
+      'a control is inside the rail dashboard once an entry is on the card',
+    ).toEqual([])
+  })
+
+  test("the rail's NAVIGATION is not exempt, and the exemption is doing real work", async ({
+    page,
+    careerAt,
+  }) => {
+    await boot(page, careerAt)
+
+    await homeAt(page, BASE_WIDTH)
+    const phone = await ariaTokensOf(page.locator('body'))
+
+    await homeAt(page, 1280)
+    const desktopRaw = await ariaTokensOf(page.locator('body'))
+    const exempt = await railDashboardTokens(page)
+
+    // ⭐ PART 1 – ONLY THE DASHBOARD IS EXEMPT. The five tabs are OUTSIDE the region, so they are
+    // still in the fingerprint at 1280 and still fail by name if one goes. Asserted against the
+    // SUBTRACTED list, which is what the walk above really compares.
+    const desktop = subtractOnce(desktopRaw, exempt)
+    for (const tab of ['Season', 'Calendar', 'Home', 'Stats', 'Trophies']) {
+      expect(desktop, `the rail's ${tab} tab is still inside the parity check`).toContain(
+        `button "${tab}"`,
+      )
+    }
+    expect(exempt.some((t) => /^button /.test(t)), 'no tab was swallowed by the exemption').toBe(false)
+
+    // ⭐⭐ AND THE ANTI-VACUITY ARM PHASE 4 ASKED FOR, STATED AS AN EQUALITY. Without the
+    // subtraction the two widths DISAGREE, and what they disagree about is exactly the dashboard –
+    // nothing more and nothing less. So this one assertion says three things at once: the exemption
+    // is load-bearing (the day it stops being, this line reddens), it is not hiding anything else,
+    // and the rest of Home really is 1:1 on its own.
+    expect(exempt.length, 'the dashboard contributes nothing, so the exemption guards an empty set').toBeGreaterThan(0)
+    expect(
+      missingFrom(desktopRaw, phone),
+      'the ONLY thing at 1280 that is not on the phone must be the rail dashboard itself',
+    ).toEqual(missingFrom(exempt, []))
+    expect(missingFrom(phone, desktopRaw), 'and nothing on the phone is missing at 1280').toEqual([])
+  })
+
+  test('every figure the rail shows exists somewhere at 375', async ({ page, careerAt }) => {
+    await boot(page, careerAt)
+    await homeAt(page, 1280)
+    await expect(page.locator(RAIL_DASHBOARD)).toBeVisible()
+
+    // ⭐⭐⭐ GUARD TWO – THE HONEST HALF OF HIS CRITERION, KEPT. «Ничего нового не должно появиться»
+    // is relaxed for the rail because a card is a SHORTCUT: a balance beside Season is a figure that
+    // lives on Home and on Money. That argument only holds while the figure really does live
+    // somewhere the phone can reach. A number the phone cannot reach AT ALL is a new fact on a
+    // desktop, and it reddens here.
+    const shown = await page.evaluate((selector) => {
+      const root = document.querySelector(selector)
+      if (!root) return null
+      const text = (el: Element): string => (el.textContent ?? '').replace(/\s+/g, ' ').trim()
+      const titles = Array.from(root.querySelectorAll('.rail-dash-title')).map(text)
+      const figures = Array.from(root.querySelectorAll('.rail-dash-figure')).map(text)
+      // ⚠ AND NOTHING MAY HIDE FROM THIS LIST. Every leaf in the region that carries text must be a
+      // declared title or a declared figure - otherwise a card could print a number in an
+      // undeclared span and skip the check below, which is the same dodge the container boundary
+      // exists to stop one level up.
+      const strays = Array.from(root.querySelectorAll('*'))
+        .filter((el) => el.children.length === 0 && text(el) !== '')
+        .filter((el) => !el.closest('.rail-dash-title, .rail-dash-figure'))
+        .map((el) => `${el.tagName.toLowerCase()}: ${text(el)}`)
+      return { titles, figures, strays }
+    }, RAIL_DASHBOARD)
+
+    expect(shown, 'the dashboard was not on the page, so this measured nothing').not.toBeNull()
+    expect(
+      shown!.strays,
+      'a line in the rail dashboard is neither a declared title nor a declared figure, so it ' +
+        'would slip past the «every figure exists at 375» check below',
+    ).toEqual([])
+    // Anti-vacuity, in the same shape as FINGERPRINT_FLOOR: an empty list of figures passes every
+    // membership test ever written.
+    expect(shown!.figures.length, 'the dashboard shows no figure at all').toBeGreaterThanOrEqual(2)
+    expect(
+      shown!.titles.length,
+      'a card in the dashboard carries no title, so the region is not the set it claims to be',
+    ).toBe(await page.locator(`${RAIL_DASHBOARD} .rail-dash-card`).count())
+
+    // Now the phone, screen by screen, through the doors a player uses. Every disclosure is opened
+    // on the way (`settleScreen`), so «reachable» here means the same thing it means in the walk.
+    const corpus = new Map<string, string>()
+    for (const [screen, station] of Object.entries(STATIONS)) {
+      await page.setViewportSize({ width: BASE_WIDTH, height: VIEWPORT_HEIGHT })
+      await park(page)
+      await station.visit(page)
+      await expect(
+        station.arrived(page),
+        `${screen} at ${BASE_WIDTH}px - the walk did not arrive, so its text proves nothing`,
+      ).toBeVisible()
+      await settleScreen(page)
+      corpus.set(
+        screen,
+        (await page.locator('body').innerText()).replace(/\s+/g, ' ').trim(),
+      )
+    }
+    const total = [...corpus.values()].join(' ')
+    expect(total.length, 'the phone walk collected almost no text, so it can prove nothing').toBeGreaterThan(
+      2_000,
+    )
+
+    const unreachable = shown!.figures.filter((figure) => !total.includes(figure))
+    expect(
+      unreachable,
+      'the rail shows these figures on a desktop and the phone cannot reach them on any screen. ' +
+        'A rail card is a SHORTCUT to something that already exists; a number that exists nowhere ' +
+        'else is a new fact on the desktop, which is the half of «1 к 1» the exemption does NOT relax.',
+    ).toEqual([])
+  })
+
+  test("«My entries» shows the Season strip's own entries, and the phone has every one", async ({
+    page,
+    careerAt,
+  }) => {
+    // ⭐⭐ THE THIRD CARD'S OWN ARM, and it makes a STRONGER claim than «the figure exists somewhere»:
+    // the rail's list is the Season strip's list, string for string. That is what a SHORTCUT means,
+    // and it is the claim that would have caught the defect this phase's composable exists to
+    // prevent - two surfaces filtering «she is entered» their own way and disagreeing on a desktop,
+    // side by side, at the same moment.
+    await boot(page, careerAt)
+    await enterOneTournament(page)
+
+    // The strip, on the phone, on the screen that owns it.
+    await page.setViewportSize({ width: BASE_WIDTH, height: VIEWPORT_HEIGHT })
+    await park(page)
+    await navTab(page, 'Season')
+    await expect(page.getByRole('heading', { name: 'Season Planner' })).toBeVisible()
+    await settleScreen(page)
+    const strip = (await page.locator('.entries-strip .pill').allInnerTexts()).map((t) =>
+      t.replace(/\s+/g, ' ').trim(),
+    )
+    expect(strip.length, 'the Season strip drew no entry, so there is nothing to compare').toBeGreaterThan(
+      0,
+    )
+    // ⚠ AND THE STRIP IS INVISIBLE TO THE RAIL AT THIS WIDTH – the dashboard is `display: none` below
+    // 1024 – so this really is the screen's own rendering and not the card's, read twice.
+    await expect(page.locator(RAIL_DASHBOARD)).toBeHidden()
+
+    // The card, on the desktop, on a page that is not Season at all – which is the whole of «карточки
+    // сквозные … на всех страницах».
+    await homeAt(page, 1280)
+    const card = (
+      await page.locator(`${RAIL_DASHBOARD} .rail-dash-entry`).allInnerTexts()
+    ).map((t) => t.replace(/\s+/g, ' ').trim())
+    expect(
+      card,
+      'the rail card and the Season strip disagree about what she is entered for. They read one ' +
+        'predicate (`composables/seasonEntries.ts`) precisely so they cannot.',
+    ).toEqual(strip)
+  })
+
+  test('the same set of cards is on every page – «карточки сквозные, одинаковые»', async ({
+    page,
+    careerAt,
+  }) => {
+    await boot(page, careerAt)
+    const seen = new Map<string, string>()
+    for (const [screen, station] of Object.entries(STATIONS)) {
+      await page.setViewportSize({ width: 1280, height: VIEWPORT_HEIGHT })
+      await park(page)
+      await station.visit(page)
+      await expect(station.arrived(page), `${screen} at 1280px - the walk did not arrive`).toBeVisible()
+      await expect(page.locator(RAIL_DASHBOARD)).toBeVisible()
+      seen.set(screen, (await page.locator(RAIL_DASHBOARD).innerText()).replace(/\s+/g, ' ').trim())
+    }
+    const [first, ...rest] = [...seen.entries()]
+    expect(first[1].length, 'the dashboard is empty, so ten empty strings would be equal').toBeGreaterThan(
+      10,
+    )
+    for (const [screen, text] of rest) {
+      expect(text, `the rail dashboard differs on ${screen} - it is the shell's, and the same set ` +
+        'lives in the strip on every page').toBe(first[1])
+    }
+  })
 })
 
 /**
