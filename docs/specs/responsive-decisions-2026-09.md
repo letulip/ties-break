@@ -929,3 +929,241 @@ same claim, and D48 is what fixes what may be inside.
 a strip that does not overflow is still a **tab stop that does nothing** – true since phase 5, not
 introduced here, and worth his eye if the empty stop ever bothers him: the condition is
 `row.events.length > 1`, and pointing it at `overflows` instead is one word.
+
+---
+
+## Item 17 – the match screen on a tablet and on a desktop (04.09)
+
+⚠ **THIS BLOCK TAKES D60–D65 AND LEAVES D52–D59 FREE ON PURPOSE.** Another agent is writing this
+round's other seventeen items into this same file at the same time, in the same worktree; a reserved
+band cannot collide with theirs, and a gap in the numbering is cheaper than two D52s.
+
+### D60 `[x]` The wide match screen is PLACEMENT, not markup – `.mv-below` becomes `display: contents`
+
+| | |
+| --- | --- |
+| **the design** | `AU` puts the court on top with the instruments in two columns; `AV` puts the court top-left and the commentary in a full-height right column. |
+| **what our mobile does** | One flex column: the panel (court + score + stats), then `.mv-below`, which holds the commentary log, the pinned control bar and the replay's "Watch again". |
+| **shipped** | Two media queries in `MatchViewer.vue` and **not one line of template**. `.mv` becomes a two-column grid at 768; `.mv-below` becomes `display: contents`, so the log and the bar become grid items of `.mv` and can be placed in different columns. |
+| **why** | The wrapper exists for exactly one reason – it is the sticky bar's containing block, so the bar can never travel up onto the playing surface – and this layout needs the two things inside it in different columns. Reparenting the markup would have moved boxes on a phone; **a grid item's containing block is its grid area**, so placing the bar in row 2 of column 1 keeps the guarantee by the same kind of construction, and the phone keeps the wrapper it has always had. |
+
+⭐ **The identity price is zero and it is measured, not argued.** Every element that renders on the
+live match, censused at seven widths, arm A = the shipped head with `MatchViewer.vue` restored from
+`HEAD`:
+
+| width | boxes | moved | new | gone | pixels | raw A→B |
+| --- | --- | --- | --- | --- | --- | --- |
+| **375 / 520 / 576** | 335 | **0** | **0** | **0** | **0** | 369→369 |
+| 768 / 900 | 360 | 30 | 0 | 1 | 15,161 / 18,297 | 394→394 |
+| 1024 / 1280 | 373 | 90 | 0 | 1 | 49,715 | 394→394 |
+
+The one box **gone** above 768 is `.mv-below` itself, which has no box when it has no display. **The
+raw element count is identical at every width** – nothing was added to the DOM and nothing removed,
+which is «ничего нового … как и старого уйти ничего не должно» as an element count. The ten tab
+screens are **0 moved at all seven widths**, which a scoped stylesheet cannot help being.
+
+### D61 `[x]⭐⭐` The DESKTOP court is narrower than the TABLET court, and that is his own frame
+
+| | |
+| --- | --- |
+| **the design** | `AU` draws the court **716px** wide on a 768 shell; `AV` draws it **612px** on a 1024 one. His README: «**Корт — 60% ширины шелла**», and «Ширину на десктопе получает только она [трансляция]: это единственный элемент, который умеет ею пользоваться.» |
+| **what our mobile does** | The court is the column, capped at the canvas's own 680px since phase 4 (D23) – so it was **680×420 at 768, 900, 1024 and 1280 alike**. |
+| **shipped** | Tablet: unchanged, 680×420 on top, centred. Desktop: the court takes his 60% of our column – **506.8×313** – and the commentary takes the rest. |
+| **why** | It is his trade and not ours: he spends desktop width on the commentary, not on the tennis, and his own two frames shrink the court by 15% between them for it. Our shell is the takeover column (848px at 1024 and at 1280 alike), so 60% is 508.8 and the feed gets 329.2 – within 15px of the 344 `AV` gives it. |
+
+⚠ **The 680 cap is untouched and simply stops biting.** It is the canvas's own drawing width, and
+a court drawn WIDER than it is an upscaled bitmap (D23's mechanical reason); a court drawn NARROWER
+is only a smaller picture of the same drawing, which costs nothing.
+
+⭐ **What the desktop buys with it, measured at 1280×900:** the commentary goes from **848×92** – its
+own `min-height` FLOOR, about four rows – to **329×819**, about nineteen. `AV` draws fifteen.
+
+### D62 `[?]` The tablet's commentary is 179px tall, not `AU`'s ~600 – and the reason is our own card
+
+| | |
+| --- | --- |
+| **the design** | `AU`'s right-hand column runs the full height of the instruments block: eight rows of commentary against the phone's four. |
+| **what our mobile does** | The court, the ends row, both score rows and the three statistics are **one card** with hairline dividers – design I's own panel. `AU` splits them: the court is one card and the score another, and the score card sits in the LEFT column beside the feed. |
+| **shipped** | The whole panel stays one card and takes row 1 across both columns; the feed takes row 2 of the right-hand column. Measured at 768×900: the panel is 629.5 tall, so the feed gets **344×179.5** – up from 736×92, and short of his ~600. |
+| **why** | Splitting the card is a change to the PHONE (two cards where one is drawn, a second border, a second background), and rule 4 of this round is that nothing below 768 may move. The alternative that keeps one card – the court in the left column beside a full-height feed – makes the court **380px wide at 768**, barely more than the phone's 341, which is the opposite of what R17 #8 asked for. |
+
+⚠⚠ **AND THE HONEST HALF IS THAT IT IS STILL SHORTER THAN THE PHONE'S.** The log is **343×253 at
+375**, so a tablet showing 179px of commentary shows LESS of it than a phone does. The cause is the
+court, not the layout: it is 211px tall on a phone and 420 at 768, and those 209px come out of the
+feed. This item improves the tablet by 95% on what it had and does not reach the phone.
+
+⚠ **So the honest reading is: `AU`'s shape, our card, and the feed gets what the card leaves.** It is
+the one place in this item where his frame is visibly better than what we can draw without touching
+the phone, and it is his call whether the panel should split at 768 – that is a separate item, with
+the phone in it. **The desktop has no such problem: 329×819, 3.2× the phone.**
+
+### D63 `[x]` Five controls his frames draw were NOT built, because the app has no counterpart
+
+Rule 2 of the round: «Все иконки наши, ничего нового по идее не должно появиться», and the round's
+own corollary – **if a control in the frame has no counterpart in the app, it is not built.**
+
+| in the frame | what we did | why |
+| --- | --- | --- |
+| **`Coach advice 2`** | **not built** | The app has no coach-advice control on a match screen, and no such string exists anywhere in `src/`. Building one is a feature, not a layout. |
+| **`Match stats`** | **not built** | There is no such control either. The three statistics the button would open are already **on** the screen (`Momentum` / `1st serve %` / `Break points`), and the full box score is the flow's own next screen. |
+| **`Show more ⌄`** at the foot of the feed | **not built** | It existed and the owner had it **removed** on 06.08 – «давай вообще этот блок … закрепим просто, а текстовая трансляция будет до него разворачиваться». The log is a scroller now; `MatchViewer.vue` carries that ruling in full. Re-adding it here would reverse him by way of a mockup. |
+| **`Serving: B. Tran`** in the score card | **not built** | Removed at his own 31.07 ruling as the third saying of one fact – «who's serving is already indicated by colour … remove the duplicate indicator at the bottom». The two survivors (the ends row's outlined capsule and the lime dot on the serving player's row) are unchanged. |
+| **flags, ages and `Match time` inside the score card** | **not built** | We draw no flags and no ages in the viewer, and the match clock has lived in the court's own top run-off band since R17 #24. Moving it into a score row would be a copy and layout change nobody asked for. |
+
+⭐ **And one that looks missing and is not: `Skip match →`.** The frame's top-right exit is the FLOW's,
+not the viewer's: `TournamentFlow` draws `To result` while a match is being watched and
+`Skip all rounds` otherwise, and both are in the fingerprint at every width.
+
+### D64 `[x]` Two numbers came from the design; everything else is ours
+
+| taken from him | ours |
+| --- | --- |
+| **344px** – `AU`'s right-hand commentary column, used as the tablet's second track | the 10px gutter between the two columns (`.mv`'s own column gap), every colour, every radius, the card backings, the hairlines, the type scale |
+| **60%** – `AV`'s «корт — 60% ширины шелла», used as the desktop's first track | the shell it is 60% OF (our 880 takeover column, not his 1024 frame), the 680 court cap, the 2:1.62 canvas ratio – his frames draw 2.25:1 and phase 4's cap is mechanical |
+
+⚠ **His court ratio was NOT taken and the reason is not taste.** `AU`/`AV` scale the court at a fixed
+`2.25 : 1` with the markings scaled by `k = W / 360`. Ours is a **fixed 680×420 bitmap** scaled by
+`devicePixelRatio` (`CSS_W` / `CSS_H`), so its ratio is a property of the drawing surface and not a
+layout choice – changing it is an engine change, which rule 3 of the round forbids.
+
+### D65 `[x]` The parity harness had never seen the match screen at all, and now it has a room
+
+| | |
+| --- | --- |
+| **the hole** | `e2e/parity.spec.ts`'s station map is DERIVED from `src/components/screens/`, and `MatchViewer.vue` is not in that directory – it is mounted by four callers, none of which is a screen file. So the surface his item 17 rebuilds, and the surface his own warning is about, was outside the instrument the whole round is measured by. |
+| **shipped** | A third room, `MatchViewer.vue – the live match, on the court`, walked on `junior` at 375 / 768 / 900 / 1280 – plus one small addition to the map's shape, an optional `Station.park`. |
+| **why the park** | A takeover covers the app's only navigation, so the default park (Trophies, then Home) cannot be clicked from inside a match. The room reloads instead, which is the STRONGEST version of what park is for: a new document, a new app and a new viewer at every width, and `careerAt`'s seed is a one-shot that deliberately does not re-fire on a navigation. |
+
+⭐ **It is not a guard fitted to nothing, and that was measured.** With the two segmented plates hidden
+from 768 up – the design's own omission, as a layout bug – the room fails by name:
+
+```
+these are on the phone at 375px and NOT at 768px:
+  button "Double speed", button "Every point", button "Key points only",
+  button "Normal speed", button "Quadruple speed"
+```
+
+⚠ **Its remaining limit, stated in the same row.** The fingerprint is taken over the whole `body`, and
+a takeover is a layer OVER the tab screen rather than a replacement for it – so Home is inside this
+room's fingerprint too. That is harmless (Home is 1:1 already, by its own station) but it means the
+room's failure message names more than the match. It also means the room has to open Home's own
+disclosures BEFORE covering them, because a chip under a blocking overlay cannot be pressed.
+
+---
+
+## His review, items 10–16 – the shop's rows and the two money rooms
+
+⚙ **Seven items, seven rows, and the numbering starts at D66 on purpose.** The match agent's item 17
+took D60–D65 while these were being built and items 1–9 are being built in the same tree; the block
+below is claimed clear of both so two agents cannot mint the same identifier in one afternoon.
+
+⭐ **Every figure in these rows was measured in Chromium at six widths (375 / 520 / 768 / 900 / 1024 /
+1280), arm A against arm B**, where arm A is this commit with `MoneyScreen.vue` and
+`WeekRecapCard.vue` restored to `HEAD` in the same tree – CLAUDE.md's shared-checkout rule, so the
+other two agents' live edits are in BOTH arms and cancel.
+
+### D66 `[x]` The way out of a shop category is the `Shop` chapter button – and the obvious wiring for it is DEAD
+
+| | |
+| --- | --- |
+| **his words** | «Внутри магазина на внутренних страницах нижнюю стрелку "назад" надо убрать – **точка входа в магазин всегда общая страница категорий, по клику на Shop мы на нее же попадаем**.» |
+| **the pin it moves** | Round 35 #3 built the two-level shop and its own test says why the arrow existed: «a level you can enter and not leave» is round-20 #3's family, and it rejected «press the chapter tab again» as a way out **because it was not one** – `screenTab` never left `shop`, so the press did nothing at all. |
+| **shipped** | The arrow and its `.shelf-nav` row are gone at **every** width; `openChapter` in `MoneyScreen.vue` resets `shopHome` on a press of the chapter row. `round35-shop.test.ts`'s trap arm is re-aimed at the control he named and a second arm walks the other door (leave for Bills, come back to Shop). |
+| **why it is a click and not a model event** | ⚠⚠ **Both obvious hooks are silent on the press he is describing, and the second was BUILT before it was measured.** A `watch` on `screenTab` never fires (the value is already `shop`). And Vue 3.5's `useModel` **returns early from its setter when the value has not changed** (`runtime-core`, `set()`), so `SegmentedRow` emits **no** `update:modelValue` at all on a re-press: a listener there passes every test that enters the shop from another chapter and does nothing for the one he complained about. **Seen: mutation M3 replaces the press with `@update:model-value` and reddens exactly the trap arm.** |
+
+⚠ **It removes a control at every width, which is legal, and the measurement says so:** `.shelf-back`
+is a 32×32 box in arm A at 375 / 520 / 768 / 900 / 1024 / 1280 and **absent at all six** in arm B.
+`e2e/parity.spec.ts` compares the four fingerprints to each other, so a control that goes everywhere
+is invisible to it – one that went at some widths only would fail by name.
+
+### D67 `[x]⚠` His two declarations are used **verbatim**, and the property name is mirrored on the cars
+
+| | |
+| --- | --- |
+| **his words** | «На Air, Water, Property, Cars давай для всех картинок еще чуть больше горизонтального места дадим, самим картинкам `width: 50%`, а `shop-row-body padding-right: calc(45% + 12px)`» |
+| **shipped** | `50%` and `calc(45% + 12px)`, both exactly as he wrote them, on `car` / `house` / `boat` / `plane`. The **only** thing not copied literally is the property NAME on the second one: three of his four families carry the painting on the RIGHT, and the CARS carry it on the LEFT (`SHELF_ART_SIDE`, his own «как на тренерах»), so on a car the inset is `padding-left`. |
+| **why** | ⚠ **Copied blind it breaks the card, and that is measured rather than argued.** A car body already carries the left inset; adding his `padding-right` gives it `calc(45% + 12px)` on BOTH sides – about 10% of the card left for the words. **Mutation M5 does exactly that and reddens two arms**, one of them round 35 #5's «the price and the buy control share ONE LINE», which is the card growing the extra row he asked to be rid of. |
+
+⚠⚠ **AND HIS PAIR NO LONGER MEETS, WHICH IS REPORTED RATHER THAN ADJUSTED.** Round 35's pair was
+40 / 40 – the inset matched the band, so the words began exactly where the picture stopped. His is
+50 / 45, so **the words begin `5% of the card − 12px` before the band ends** and run under its own
+fade. Measured, arm B:
+
+| width | card | band | words start at | overlap | mask alpha there |
+| --- | --- | --- | --- | --- | --- |
+| **375** | 343 | 170.5 | 165.4 | **5.1px** | 7.8% |
+| **520** | 488 | 243.0 | 230.7 | **12.3px** | 13.3% |
+| **768** | 362 | 180.0 | 174.0 | **6.0px** | 8.8% |
+| **900** | 428 | 213.0 | 203.7 | **9.3px** | 11.5% |
+| **1024** | 380 | 189.0 | 182.1 | **6.9px** | 9.6% |
+| **1280** | 468 | 233.0 | 221.7 | **11.3px** | 12.8% |
+
+– the mask holds full opacity to 62% of the band and fades to nothing at 100%, so every one of those
+overlaps lands in the last 5% of the fade, at **13.3% alpha at worst**. It is invisible rather than
+absent, and no control sits in that strip: items 12 and 13 move the cars' own button to the other end
+of the row, and the `--art-right` families' pill is bounded by `calc(40% − 20px)` of a 50% band, so
+its left edge (60% + 10px at the widest) stays clear of the words' new edge (55% − 12px).
+⭐ **Both arms of that are pinned** – `round35-shop.test.ts` asserts his `calc` exactly AND that the
+words never start before 62% of the band, which is the line between «under the fade» and «on paint».
+
+### D68 `[x]⚠⚠` Item 11 applies at **every** width – and the bill is one wrapped line, twice
+
+| | |
+| --- | --- |
+| **the rule it bends** | Nothing below 768 moves unless his wording says so. |
+| **the reading taken** | **He wrote the declarations himself and put no media query on either.** A CSS rule without one applies everywhere, and this is a card's own geometry rather than a wide-screen composition: scoping it to 768 would give the same object two proportions 21px of card width apart (343 on a phone, 362 at 768). |
+| **the price, measured** | Twelve cells – the first car and the first property rung at six widths – and the card height moves in **two** of them, by **+16.2px each, one wrapped blurb line**: property at **375** (139.6 → 155.8) and the first car at **1024** (164.7 → 180.9). The other ten are byte-identical between the arms. The Cars page as a whole is 779.8 → 831.5px at 375. |
+| **⭐ if he does not want it** | The four rules are one `@media (min-width: 768px)` away from being tablet-and-up, and this row is where that gets decided. |
+
+### D69 `[x]` Her Academy is **not** in his four, although it is built on the cars
+
+| | |
+| --- | --- |
+| **the temptation** | The academy rows are `--art-left`, exactly like the cars, by his own round 35 «как на экране машин, такой же принцип». A rule keyed on the SIDE sweeps them up for free. |
+| **shipped** | `SHELF_WIDE_ART` is a list of FAMILIES – `car`, `house`, `boat`, `plane` – and the academy keeps round 35's 40 / 40, where the words still begin exactly where the picture stops. |
+| **why** | He named four families and this is not one of them: CLAUDE.md invariant 4's argument applied to a proportion instead of to a word. **Seen: mutation M6 adds `academy` to the array and reddens the arm that holds it at 40.** ⭐ One name moves it if he wants the pair to match. |
+
+### D70 `[x]⚠⚠` Items 12 and 13 take a FIGURE off two card families – checked before it went
+
+| | |
+| --- | --- |
+| **his words** | «С купленной машины убираем paid серые буквы…» and, word for word again, «В разделе Her Academy убираем paid серые буквы…» |
+| **the precedent** | Round 35 #7 removed the same line from the HOUSES on his own reason – «раз прибавка и так видна» – and the round's rule is to check that the reason still holds before repeating the removal. |
+| **it holds** | `.shop-row-change` is drawn **unconditionally** inside `.shop-row-owned` (it carries no `v-if`) and the engine fills it for every owned rung – `changeCents = valueCents − paidCents + realisedGain`, `src/engine/world/shop.ts`. So a car and an academy stage each print «Worth now $X» and «−$Y since you bought it (−Z%)», and what was paid is X − Y. **Nothing is unrecoverable and nothing is re-worded** – the meta simply stops being passed. |
+| **the second clause** | «кнопка buy/sell встает слева ближе к нижнему правому углу карточки» – the control was at the LEFT of its own row on exactly these two families; it goes to the card's bottom-right corner with `margin-left: auto` on the LAST control in the row. |
+| **⚠ in the flow, not `position: absolute`** | The `--art-right` families' pill sits in that corner already, but it sits **on the painting**. On a car the corner is inside the WORDS, and a pill lifted out of the flow there shortens the card and prints itself over the last sentence. Round 35's constant through three of his own messages was «the card must not grow taller»; its mirror is that it must not lose the height its words need. |
+| **water and air keep theirs** | He named two families. `paid $N` stays on `investment`, `business`, `boat` and `plane`. **Seen: mutation M10 strips it from all seven and reddens the arm that holds the untouched ones.** |
+
+⚠ **AND THESE TWO APPLY AT EVERY WIDTH, deliberately.** Neither names one, and unlike a composition
+both are about WHAT THE CARD SAYS: a figure printed on a phone and absent on a desktop is not a
+responsive decision, it is two different cards.
+
+### D71 `[x]` Item 14 grows the photograph from 768 up, with `min-height`, and the card's cap is untouched
+
+| | |
+| --- | --- |
+| **his words** | «Фоточку на Her own account можно сделать крупнее» |
+| **shipped** | 66×52 of paper and window becomes **104×82** – the mockup's own 1.269 ratio – from 768 up. Phase 3's D18 cap of 640 on the card is not touched: measured 640.0 in both arms at 1024 and 1280. |
+| **the width, and why** | ⚠ **From 768, and the phone is deliberately untouched.** He names no width, and the complaint is a wide-screen one by construction: at 375 this polaroid is 66 of 319px of content – a fifth of the strip – and at 1024 the same 66px sits in a 616px card. The tablet is the first width where the card is wider than the phone's. |
+| **⚠⚠ why `min-height` and not `height`** | `Polaroid` writes the window's height as an **inline style** off its `photoHeight` prop, and an inline declaration beats every rule in the screen's sheet – so a media query that widened the paper alone leaves a 52px photograph floating in a 104px frame, **which looks exactly like the item working**. `min-height` is a different property: the used height is the larger of the two, so the cascade raises it with no `!important` anywhere. |
+| **two routes tried first, recorded** | A `var()` handed through the component's own `photoStyle` slot – a real browser resolves it and **happy-dom's CSSOM rejects `var()` as a height** (probed: the whole `style` attribute comes back `null`), so the mounted guard could not read the thing it guards. And moving the prop to 82 for every width, which is item 14 applied to a phone he was not looking at. |
+| **the price** | The strip is **18.6px taller at 768 and 18.9px at 1280**, because the picture in it is. Its width does not move. |
+
+### D72 `[x]` Items 15 and 16 are wide-screen compositions, and item 16 is three moves
+
+| | |
+| --- | --- |
+| **item 15** | «всему правому сектору с запиской, фото и пайчартом дать больше воздуха слева и справа – **там есть достаточно места**». The air is `calc(2 * var(--app-pad-x))` – two of the app's own gutter – on **both** sides, because he named both in one breath. Measured: the figures column goes 582 → 526 at 768 and 794 → 738 at 1280, `.money-body` is 546.7px tall in BOTH arms at both widths (no reflow), and the artefacts keep their 146px. |
+| **item 16, move 1** | The taped note takes **55%** – the middle of his «на 50-60% ширины». Measured 405.2 of 736 (55.1%) at 768 and 521.8 of 948 (55.0%) at 1280. ⚠ A SHARE and not `.cal-note`'s fixed 280px: the calendar's scrap is the surface he compared it to, not the rule to copy, and a fixed 280 would be a quarter of a scrap at 1280. |
+| **item 16, move 2** | «Блок картинок … более квадратным, справа темный фон». The BLOCK keeps phase 2's `width: 100%` and D's 286px height; the photograph inside it becomes **286×286** (from 736×286 at 768 and 948×286 at 1280) and the rest of the band is `--card-bottom`. ⭐ The square is not a second number: the grid's first column IS `--recap-art-h`, which is the same custom property the height cap reads. |
+| **item 16, move 3** | «верхнюю записку … ставим тоже квадратиком неправильной формы как раз на это место справа». Measured, the note goes from 740.5px wide at x=13.8 to **422.7 at x=317.6** at 768, and from 952.5 at x=273.8 to **634.5 at x=577.8** at 1280 – in both cases 16px past the picture's right edge. Its paper is untouched: the torn cut, the ruling, the tilt and the doodle are `PaperNote`'s. |
+| **⚠ the one declaration the note gives up** | `margin: -34px` lifted it over the painting's bottom edge; beside the painting that lift hangs it out of the top of the card, so it is `align-self: center` in the freed space instead. |
+| **the height** | The story card is **25.5px SHORTER** at 768 and at 1280 (773.0 → 747.5, 741.8 → 716.3), because the note no longer takes a row of its own. |
+| **the width both are scoped at** | 768. Neither sentence names one and both are wide-screen by construction: 55% of a 343px phone is 189px for «Next goal» plus a sentence at 21px, and there is no space to the right of a phone's picture to put a note in. |
+
+⚠⚠ **AND THE GRID HAD A REAL DEFECT THAT ONLY THE MOUNTED ARM CAUGHT.** Vue's scoping turns
+`.recap-card > *` into `.recap-card[data-v] > *[data-v]`, which is **(0,3,0)** against a bare
+`.recap-note[data-v]`'s (0,2,0) – so the span won and **the note sat under the picture at full width,
+which is the shipped layout wearing a grid**. It was built that way first and the arm read `1 / -1`
+back. Both placed items are addressed as children now. **Seen: mutation M15 restores the bare class
+and reddens that arm alone.**
