@@ -443,6 +443,13 @@ export default defineConfig({
           name: 'component',
           include: ['tests/component/**/*.test.ts'],
           environment: 'happy-dom',
+          // ⚠ ONE SETUP FILE, AND IT REFUSES THE NETWORK (P-17, 05.09). happy-dom gives the document
+          // a base URL of `http://localhost:3000/`, so `src/audio/sfx.ts`'s existence probe – the
+          // only `fetch(` in the whole of `src/` – resolved to an absolute http URL and opened a real
+          // TCP connection from a mounted test: 18 `AggregateError` blocks across 17 files, 474 of
+          // the gate's 1,296 output lines. The file says why the stub is on `fetch` rather than on
+          // the module, and why it rejects rather than answering 404.
+          setupFiles: ['./tests/component/setup.ts'],
           // ⚠ `css: true` SO A COLOUR CAN BE A TESTABLE FACT. Vitest drops stylesheets by default,
           // so until now a mounted test could see the DOM but never what it LOOKED like - and the
           // round-17 #3 regression is precisely what that blind spot lets through: BirthdayDialog
