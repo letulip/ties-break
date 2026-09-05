@@ -214,10 +214,13 @@ jobs:
   # the file onto `unit-bulk`. Corrected by moving the LABEL to the work, not the work to the label,
   # and the reason is a measurement plus a standing owner priority:
   #   THE COST IS THE BROWSER, NOT THE SUITE. The step below it fetches ~273 MiB of Chromium and
-  #     spends ~2 minutes doing it. The suite itself measured 31 tests in 13 files, 17 s of test time
-  #     (02.09), against this job's 20-minute ceiling. Filtering to one spec would save seconds off a
-  #     job whose cost is dominated by a download that both arms pay in full.
-  #   NARROWING WOULD DELETE LIVE COVERAGE. Those 31 tests are green on every PR today. «Restore an
+  #     spends ~2 minutes doing it. The suite itself is 69 tests in 15 files - 67 `chromium` and 2
+  #     `chromium-sw` - measured here on 05.09 with `npx playwright test --list`, against this job's
+  #     20-minute ceiling. It read «31 tests in 13 files, 17 s of test time» on 02.09; the count is
+  #     re-taken rather than carried, because it keeps growing and a stale one is how «narrow the
+  #     job» gets argued. Filtering to one spec would save seconds off a job whose cost is dominated
+  #     by a download that both arms pay in full.
+  #   NARROWING WOULD DELETE LIVE COVERAGE. All 69 are green on every PR today. «Restore an
   #     intentional smoke selection» reads as a cleanup and lands as a coverage cut.
   #   ⭐ AND IT WOULD CONTRADICT A STANDING CALL. «Grow the e2e suite, and keep growing it» is the
   #     owner's own of 29.08 (docs/now-next-later.md, Next). A gate pinned to one spec while the
