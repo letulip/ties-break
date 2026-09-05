@@ -45,6 +45,7 @@ import NextTournamentPanel from '../NextTournamentPanel.vue'
 import IconButton from '../ui/IconButton.vue'
 import PrimaryPill from '../ui/PrimaryPill.vue'
 import ScreenShell from '../ui/ScreenShell.vue'
+import StoreError from '../ui/StoreError.vue'
 
 // W1: THE × IS A CLOSE NOW. The story opens itself when a week resolves (App.vue's `week` watcher –
 // the design's «Конец недели (игровой тик) → D. Weekly Story ... × возвращает на Home»), so the
@@ -281,6 +282,12 @@ const spendRange = computed<[number, number]>(() => {
         ></span>
       </div>
     </template>
+
+    <!-- ⚠⚠ U-02 – THE STORE'S REFUSAL, WHICH THIS SCREEN USED TO SWALLOW. This is the week's own
+         page and every control on it commits: entering, withdrawing, planning, playing. A refusal
+         had no home here, so the tap did nothing and said nothing, and the next tap cleared the
+         sentence. Below the header, above the story; no new wording, the sentence is the store's. -->
+    <StoreError />
 
     <!-- ⭐⭐ ROUND 33 #1 – THE STORY IS ON THE WEEK'S OWN ARRIVAL, AND THERE IS ONE OF IT AGAIN.
          Round 31 #1 answered his tap by MOVING this card below the tournament, which kept the two

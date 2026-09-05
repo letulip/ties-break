@@ -56,6 +56,7 @@
 // is the only way to know the test is testing it.
 
 import { onBeforeUnmount, reactive } from 'vue'
+import { prefersReducedMotion } from './reducedMotion'
 
 /** How far a pointer must travel before this is a DRAG and not a press.
  *
@@ -207,8 +208,9 @@ export function useWeekPager(): WeekPager {
   /** Cleared by the next `pointerdown`, so it can never block a press that had no drag before it. */
   let blockClick = false
 
-  const smooth = (): ScrollBehavior =>
-    (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false) ? 'auto' : 'smooth'
+  // ⭐ U-05 – one predicate, asked here at the moment of the scroll (`composables/reducedMotion.ts`).
+  // It was this expression written out inline, and it was the least guarded of the five copies.
+  const smooth = (): ScrollBehavior => (prefersReducedMotion() ? 'auto' : 'smooth')
 
   /** Each card's left edge in the strip's scroll coordinates. Read from the boxes rather than from
    *  a declared width, so a card whose width is a `calc` nobody parsed still lands in the right

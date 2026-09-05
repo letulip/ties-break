@@ -587,6 +587,26 @@ body {
      Below 768 this token IS `1 / 1`, so not one phone pixel moves.
      Consumers: `.diary-hero` (HomeScreen.vue) and `.nt-hero` (NextTournamentPanel.vue). */
   --hero-aspect: 1 / 1;
+  /* ⭐⭐ U-09 (review of 05.09) – THE READING MEASURE, and it is a token on this page's own stated
+     criterion: the number was already spelled FOUR times and every one of those four says in words
+     that it is the same number. `PrologueCard.vue`: «640 is the app's own reading measure – the cap
+     D18 puts on «Her own account» and D24 on the wizard – so the prologue joins a number the round
+     already decided rather than inventing a third one.» `MoneyScreen.vue`: «640px is the app's own
+     paragraph measure on a phone (343px at 15px type) taken out to a desktop's 13px.» Four files
+     agreeing in prose is exactly the state `--app-pad-x` was in before it drifted.
+     Consumers: `.ob-shell`'s three parts (OnboardingWizard.vue), `.prologue-card` (PrologueCard.vue),
+     `.money-share` and `.shelf-cats` (MoneyScreen.vue). All four are inside `min-width` queries, so
+     not one phone pixel moves. */
+  --read-max: 640px;
+  /* ⭐⭐ U-09 – THE PHONE'S OWN CARD, WHICH IS THE FLOOR EVERY DESKTOP GRID COUNTS UP FROM. Spelled
+     twice as `minmax(343px, 1fr)`, and both sites argue it identically: `.tier-block` here («the
+     floor is the phone's card, and the count follows from it») and `.shop-family`
+     (MoneyScreen.vue: «as many as fit at no less than the phone's own card width»). 343 is
+     375 − 2 × `--app-pad-x`, i.e. the content width of the narrowest phone the app is drawn for.
+     ⚠ NOT DERIVED FROM `--app-pad-x` IN THE CALC, deliberately: that would make it a function of a
+     375px viewport that is nowhere in the expression, and the grids want the measured card, not an
+     arithmetic identity. Both consumers are inside `min-width: 1024px`, so nothing below moves. */
+  --card-min: 343px;
 }
 
 /* ⭐⭐⭐ HIS BREAKPOINT LADDER (docs/specs/responsive-2026-09.md, owner 03.09):
@@ -1558,6 +1578,23 @@ select {
   font-size: 13px;
   letter-spacing: 0.04em;
   animation: splash-pulse 1.8s ease-in-out infinite;
+}
+
+/* ⚠⚠ U-05 (review of 05.09) – AND IT IS THE ONE ANIMATION IN THE APP THAT NEVER STOPS, so it is the
+   one that most needs this. The policy is otherwise complete: the trophy flight refuses to arm
+   (`composables/trophyArrival.ts`), the day-cross sweep refuses to schedule (`dayCross.ts`), the
+   pager scrolls rather than glides, and every component that animates carries its own reduce block.
+   This pulse had neither half – so the FIRST thing a player who has asked their system for less
+   motion saw was the only element on screen that moves for ever.
+
+   ⚠ THE FADE STAYS. `.splash-logo` and `.splash-hint-wrap` are one-shot 0.4s fades that end and stay
+   ended, which is not what this switch is about; killing them would leave a player who asked for
+   less motion looking at a hint that never arrives. Only the infinite pulse stands down, and the
+   hint is then simply legible at full opacity. */
+@media (prefers-reduced-motion: reduce) {
+  .splash-hint {
+    animation: none;
+  }
 }
 
 /* --- Onboarding wizard -------------------------------------------------------- */
@@ -5064,7 +5101,7 @@ tr.kid-row td {
    happy-dom resolve in OPPOSITE directions (phase 2 measured it). One class heavier wins in both. */
 @media (min-width: 1024px) {
   .tier-block.tier-block {
-    grid-template-columns: repeat(auto-fill, minmax(343px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(var(--card-min), 1fr));
   }
 }
 

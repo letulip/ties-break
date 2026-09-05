@@ -871,6 +871,48 @@ describe('round 36 phase 5 – a week that stacks is paged; phase 7 – only whe
     w.unmount()
   })
 
+  // ⚠⚠ U-10 (review of 05.09, docs/review-principles-2026-09-05/03-ui.md) – ...AND NOW SOMETHING
+  // PRESSES THE KEY. The arithmetic has fifteen unit cases (tests/weekPager.test.ts), the arrows'
+  // presence and their two names are asserted above, and `e2e/parity.spec.ts` proves the controls
+  // exist at four widths – but nothing anywhere sent a keydown, so `@keydown.left` / `@keydown.right`
+  // could have been deleted from SeasonScreen.vue and the whole net stayed green. The keyboard is the
+  // half of «полный паритет» that has no other route: the case above proves the strip is a tab stop,
+  // and this one proves that arriving there with the keyboard can actually move it.
+  it('⭐⭐ U-10 – Left and Right on the week row page the strip, and swallow the key', async () => {
+    const w = mountAt(PHONE)
+    await measureStrips(w, 273) // the same measured overflow the arrow cases use
+    const row = w.findAll('.week-row').find((r) => r.find('.week-stack.swipeable').exists())
+    expect(row, 'the fixture must draw a stacked week, or this measures nothing').toBeTruthy()
+    const strip = row!.find('.week-stack.swipeable').element as HTMLElement
+
+    // ⚠⚠ THE SPY IS ON `scrollTo` AND NOT ON `scrollLeft`, AND THAT WAS MEASURED RATHER THAN
+    // ASSUMED. `weekPager.ts`'s `scrollTo` helper falls back to writing `scrollLeft` "because
+    // happy-dom implements neither" – but happy-dom 20 DOES define `scrollTo`, as a no-op that
+    // moves nothing, so the fallback is never taken here and `scrollLeft` stays 0 however many keys
+    // are pressed. A test written against `scrollLeft` is green on a screen with no keyboard route
+    // at all; this one records what the pager ASKED the strip to do.
+    const asked: number[] = []
+    strip.scrollTo = ((arg: ScrollToOptions) => void asked.push(arg.left ?? -1)) as HTMLElement['scrollTo']
+
+    // ⚠ THE EVENT IS DISPATCHED ON THE ROW, not on the strip, because the row is where the binding
+    // lives – a handler moved onto the strip would still pass a test that pressed the strip.
+    const right = new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true, cancelable: true })
+    row!.element.dispatchEvent(right)
+    await w.vm.$nextTick()
+    // With every card rect zero under this runner `offsetsOf` returns [] and `pageTarget` runs the
+    // strip to its end, which is the clamp its own header describes. What is asserted is that the
+    // press reached the pager and moved it by the pager's own rule, not by a number of this test's.
+    expect(asked, 'Right did nothing – the keyboard route is not wired').toEqual([273])
+    expect(right.defaultPrevented, 'the page scrolls sideways underneath the row as well').toBe(true)
+
+    const left = new KeyboardEvent('keydown', { key: 'ArrowLeft', bubbles: true, cancelable: true })
+    row!.element.dispatchEvent(left)
+    await w.vm.$nextTick()
+    expect(asked, 'Left is not the other direction').toEqual([273, 0])
+    expect(left.defaultPrevented).toBe(true)
+    w.unmount()
+  })
+
   it('⭐⭐ the CSS swipe is GONE – no scroll snapping is declared anywhere on the strip', () => {
     // «Давай уберем свайп css». `snapTarget` in composables/weekPager.ts is what replaces it, and it
     // runs on a drag's release and on an arrow press – one rule reached by three input devices.

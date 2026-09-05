@@ -92,6 +92,7 @@ import { DRAW_NOT_MADE_NOTE, fieldChanceLabel, fieldChanceTitle, firstMatchLabel
 // not let the two be confused.
 import { readingColor } from '../../composables/readingColor'
 import ScreenShell from '../ui/ScreenShell.vue'
+import StoreError from '../ui/StoreError.vue'
 import PaperNote from '../ui/PaperNote.vue'
 import TakeoverShell from '../ui/TakeoverShell.vue'
 import Card from '../ui/Card.vue'
@@ -260,18 +261,17 @@ function enterMarker(e: UpcomingEvent): void {
   marker.value = null
 }
 
-const fundsCents = computed(() => game.snapshot?.fundsCents ?? 0)
-function fundsShort(e: UpcomingEvent): boolean {
-  return fundsCents.value < e.entryFeeCents
-}
-// ⚠ THE MARKER CARD'S FOUR SHARED FACTS ARE `composables/eventCard.ts` NOW – the scholarship's
+// ⚠ THE MARKER CARD'S SHARED FACTS ARE `composables/eventCard.ts` NOW – the scholarship's
 // share, the court's verdict for her build, the photograph, and the odds ring's colour. All four
 // were written out here AND on the Season screen, and one of them under a different name: this file
 // called it `surfaceVerdict` and Season called it `surfaceNote`, the same call to
 // `surfaceStyleHint`, so a grep for either name found one copy and reported no duplication.
 // The names the two screens read best under are kept – `surfaceVerdict` is this file's word for it
 // and the shared module took that word – but there is one definition behind them.
-const { academyCoverPct, surfaceVerdict, venueUrl } = useEventCard()
+// ⭐ U-12 – AND `fundsShort` IS THE FIFTH, joined 05.09. It was two byte-identical lines here and on
+// the Season screen, listed as still open by two reviews running; the name this file used is the
+// name the module took, so nothing at the call sites below reads differently.
+const { academyCoverPct, fundsShort, surfaceVerdict, venueUrl } = useEventCard()
 
 // --- (b) THE DAYS CROSS THEMSELVES OUT ----------------------------------------------------------
 //
@@ -348,6 +348,13 @@ const showGo = computed(() => !game.snapshot?.pending)
           </div>
         </div>
       </template>
+
+      <!-- ⚠⚠ U-02 – THE STORE'S REFUSAL, WHICH THIS SCREEN USED TO SWALLOW. The calendar enters
+           events and plays the week, and both can be refused – by the engine, by another tab that
+           committed first, or by the stale-revision guard. Nothing here rendered `game.error`, so
+           the tap did nothing and said nothing. Below the header so the week's title stays the top
+           of the page; no new wording, the sentence is the store's own. -->
+      <StoreError />
 
       <!-- ============================================================================
            THE WEEK, ONCE, ON EVERY WEEK OF A CAREER.

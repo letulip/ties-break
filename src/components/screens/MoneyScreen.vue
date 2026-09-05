@@ -48,6 +48,7 @@
 //     the export is written on (docs/design/README.md §3, "цвет = смысл").
 import { computed, nextTick, ref, useTemplateRef } from 'vue'
 import { useGameStore } from '../../stores/game'
+import { prefersReducedMotion } from '../../composables/reducedMotion'
 import { ECONOMY, kidPrizeShareBps, managerCommissionBps } from '../../engine/economy'
 // STARTING_FUNDS_CENTS: the ENGINE's own number, not a hand copy – see `startingBudget` below.
 // world.ts is already in the UI chunk (PracticeFlow/BracketTabs import from it), so this costs
@@ -90,6 +91,7 @@ import { useAcademyCoverPct } from '../../composables/eventCard'
 // a category, the income line and a ledger entry - are what gave it its shape.
 import ConfirmDialog from '../ConfirmDialog.vue'
 import ScreenShell from '../ui/ScreenShell.vue'
+import StoreError from '../ui/StoreError.vue'
 import Card from '../ui/Card.vue'
 import Eyebrow from '../ui/Eyebrow.vue'
 import PaperNote from '../ui/PaperNote.vue'
@@ -820,7 +822,8 @@ function showAllTransactions(): void {
   // assumed: a player who has asked their system for less motion gets taken there at once. Found
   // by driving it - the verification browser does not animate `behavior: 'smooth'` at all, and a
   // button whose only mode is an animation nobody runs is a button that does nothing.
-  const reduced = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false
+  // ⭐ U-05 – the app's one reduced-motion predicate (`composables/reducedMotion.ts`).
+  const reduced = prefersReducedMotion()
   void nextTick(() => {
     ledgerEl.value?.scrollIntoView({ behavior: reduced ? 'auto' : 'smooth', block: 'start' })
   })
@@ -1726,6 +1729,14 @@ function shopRowCornerAction(row: ShopRowView): boolean {
 <template>
   <template v-if="game.snapshot">
     <ScreenShell>
+      <!-- ⚠⚠ U-02 – THE STORE'S REFUSAL, WHICH THIS SCREEN USED TO SWALLOW. Money is where a
+           purchase is refused (`confirmShop` -> `buyAsset` -> the engine's "Not enough funds for
+           that"), and the integrity lines – another tab committed, the worker restarted, the screen
+           was stale – can arrive here from any tap. Nothing on this template rendered `game.error`
+           and its script never mentioned it, so a refusal was a silent nothing and the next tap
+           cleared it. No new wording: the sentence and the element are the store's own. -->
+      <StoreError />
+
       <!-- ============================= 1. THE HEADER =============================
            The export's three-dot menu is NOT here: it opens nothing in this build, and a control
            that goes nowhere is worse than no control. The subtitle carries what the player actually
@@ -2776,7 +2787,7 @@ function shopRowCornerAction(row: ShopRowView): boolean {
    sentences and the DOM position at the foot of the screen are exactly what D7 recorded at 768. */
 @media (min-width: 1024px) {
   .money-share {
-    max-width: 640px;
+    max-width: var(--read-max);
   }
 }
 
@@ -3510,7 +3521,7 @@ function shopRowCornerAction(row: ShopRowView): boolean {
 @media (min-width: 768px) {
   .shelf-cats {
     width: 100%;
-    max-width: 640px;
+    max-width: var(--read-max);
     margin-inline: auto;
   }
 }
@@ -3630,7 +3641,7 @@ function shopRowCornerAction(row: ShopRowView): boolean {
 
 @media (min-width: 1024px) {
   .shop-family.shop-family.shop-family {
-    grid-template-columns: repeat(auto-fill, minmax(343px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(var(--card-min), 1fr));
   }
 }
 

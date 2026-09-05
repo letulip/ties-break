@@ -1039,7 +1039,7 @@ useDialogFocus(cardEl)
     /* The column grows for the TEXT. 640 is the app's own reading measure – the cap D18 puts on
        «Her own account» and D24 on the wizard – so the prologue joins a number the round already
        decided rather than inventing a third one. */
-    max-width: 640px;
+    max-width: var(--read-max);
   }
 
   /* ⭐⭐ THE PICTURE STOPS BEING THE COLUMN. The full-bleed trick above is a PHONE rule – it exists

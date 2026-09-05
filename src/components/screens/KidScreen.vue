@@ -65,6 +65,7 @@ import { COACH_TIER_LABEL } from '../../engine/coach'
 // U0 - the shared components (docs/specs/ui-components.md). StatRow is the ninth, and it is not
 // used here: it belongs to the Money screen, which is where it earned its shape.
 import ScreenShell from '../ui/ScreenShell.vue'
+import StoreError from '../ui/StoreError.vue'
 import Card from '../ui/Card.vue'
 import Eyebrow from '../ui/Eyebrow.vue'
 import IconButton from '../ui/IconButton.vue'
@@ -325,6 +326,13 @@ const radarAxes = computed<RadarAxis[]>(() => game.snapshot?.radar ?? [])
 <template>
   <template v-if="game.snapshot">
     <ScreenShell>
+      <!-- ⚠⚠ U-02 – THE STORE'S REFUSAL. It goes INSIDE the shell and ABOVE the hero, which is
+           round 35 #11's lesson applied to the screen built the same way: `.kid-hero` cancels the
+           shell's top inset with a negative margin exactly as `.diary-hero` does, so a sentence
+           placed above an uncancelled hero is eaten by it. The `:not(:first-child)` rule in this
+           file's style block is the other half – see it for the reading. No new wording. -->
+      <StoreError />
+
       <!-- ============================ 1. THE HERO ============================
            392px of her, the export's two-ended scrim over it, and the chrome laid ON the painting
            rather than above it. Full-bleed: the margins cancel `--app-pad-x` / `--app-pad-top` by
@@ -619,6 +627,20 @@ const radarAxes = computed<RadarAxis[]>(() => game.snapshot?.radar ?? [])
   height: 392px;
   max-height: 62vh;
   overflow: hidden;
+}
+
+/* ⚠⚠ U-02 – THE SAME CANCELLATION, WITHDRAWN THE SAME WAY AS HOME'S. HomeScreen carries the whole
+   reading at `.diary-hero:not(:first-child)`, in the owner's own words; the short version is that
+   "cancel the shell's gutter EXACTLY" is true of an EMPTY inset and a lie about an occupied one.
+   The negative top margin climbs over whatever stands above the photograph, and `.kid-hero` is
+   `position: relative` while a paragraph is static, so CSS 2.1 Appendix E paints the hero over it
+   whatever the source order says – round 35 #11 on Home was about eight visible pixels of a
+   nineteen-pixel line, and it took the owner playing the build to find it.
+   This screen had no sentence above the hero until U-02 put one there, so the rule arrives with its
+   cause rather than after it. `:first-child` is the condition that margin always meant: with no
+   error the hero is first again and the screen is byte-identical. */
+.kid-hero:not(:first-child) {
+  margin-top: 0;
 }
 
 .kid-hero-img {
