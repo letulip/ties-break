@@ -154,7 +154,33 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
-      - run: node scripts/units.mjs --only=bulk --verbose
+      # ⚠ `--verbose` DROPPED HERE AND ON `unit-heavy` (P-18, 05.09), AND NOTHING DIAGNOSTIC GOES
+      # WITH IT. The flag selects vitest's `default` reporter instead of `dot`; `once()` in
+      # scripts/units.mjs runs every shard with `stdio: ['ignore','pipe','pipe']` and BUFFERS it,
+      # printing one verdict line per shard and echoing the buffer only on a failure or a stall.
+      #
+      # MEASURED BOTH WAYS AT 919105e7 RATHER THAN DERIVED, and the derivation it replaces was
+      # wrong in the interesting direction:
+      #   GREEN: `--only=heavy` with and without the flag produced 15 lines / 653 bytes each, the
+      #     same shard verdicts in a different completion order. Byte for byte, the flag is free.
+      #   RED:   the bulk shard's whole buffer, `TB_UNIT_SKIP_HEAVY=1 npx vitest run --project unit`,
+      #     218 files / 4,217 tests, output redirected to a file (which is what a runner is):
+      #         --reporter default   106,281 bytes / 940 lines
+      #         --reporter dot        18,053 bytes / 157 lines      -> the flag costs ~86 KiB
+      #     ⚠ The 05.09 review predicted ~571 KiB by pricing 4,217 test NAMES at the default
+      #     reporter's line shape. It does not print them: with no TTY it prints one line per FILE
+      #     plus one per test over vitest's 300 ms slow threshold, which is 940 lines, not 4,200.
+      #     The conclusion survives at a seventh of the size; the number is corrected here so the
+      #     next reader does not inherit it.
+      # WHAT IS LOST is the roll-call of the slow-but-passing tests ahead of the failure; the failing
+      # test, its diff and its stack are printed by `dot` too, and a re-run with the flag is one
+      # click away when somebody wants the roll-call.
+      # ⭐ AND `dot` IS THE SAFER REPORTER HERE, NOT MERELY THE QUIETER ONE. The per-test tree
+      # re-render keeps far more `onTaskUpdate` acks in flight, which is the second variable in the
+      # race against birpc's unraisable 60 s window - vite.config.ts and tests/sim-serialisation
+      # both record it, and the sim gate has run `dot` for that reason since 02.08. Running the unit
+      # shards verbose was betting against the wall this whole sharding scheme exists to dodge.
+      - run: node scripts/units.mjs --only=bulk
 
   # ⭐ THE THIRTEEN THAT USED TO WAIT THEIR TURN (eleven when this job was carved out on 30.08; the
   # list has grown twice since). Still one process each, still serial WITHIN the job, and no longer
@@ -177,7 +203,8 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
-      - run: node scripts/units.mjs --only=heavy --verbose
+      # `--verbose` dropped for the reasons spelled out on `unit-bulk` above.
+      - run: node scripts/units.mjs --only=heavy
 
   # THE E2E SUITE – ALL OF IT, IN ONE BROWSER (S0–S2 of docs/plans/playwright.md).
   #
