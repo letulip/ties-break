@@ -231,7 +231,12 @@ async function main() {
   try {
     await fs.access(path.join(root, TOOLS_TSCONFIG))
   } catch {
-    errors.push(`${TOOLS_TSCONFIG} is missing – the on-demand sweep has nowhere to run`)
+    // ⚠ «the on-demand sweep» until 05.09, and it had stopped being on demand on 02.09 (T-10 of
+    // the 05.09 review). `check:tools` is a step of `npm run check` and a step of ci.yml, so a
+    // missing tsconfig now breaks the gate rather than a sweep somebody might run – which is a
+    // louder failure than the sentence was promising. The README this script writes says the same
+    // thing twenty lines up; only the error text had rotted.
+    errors.push(`${TOOLS_TSCONFIG} is missing – \`npm run check:tools\` has nowhere to run, and it is a step of \`npm run check\` and of ci.yml`)
   }
 
   if (errors.length) {

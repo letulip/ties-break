@@ -105,6 +105,14 @@ jobs:
       # found it red with nine errors across six tools, one of them written the day before. An
       # archival probe is evidence, and evidence that no longer compiles cannot be re-run.
       # Measured at 4.2 s locally; it is a typecheck, so it sits beside the one above.
+      # ⚠ AND IT TYPECHECKS `src` A SECOND TIME. RECORDED, NOT FIXED (P-19, 05.09).
+      # `tsconfig.app.json` includes `src/**`, `tests/**` and 33 named `tools/*.ts`;
+      # `tsconfig.tools.json` includes all 185 of `tools/`, of which 181 import `../src/`, so the
+      # second program re-reads the engine and 33 files sit in both. The whole repeat costs 2.7 s of
+      # a 422 s gate. Trimming the 33 names would save a fraction of a second; making
+      # `tsconfig.tools.json` a project reference would save more and is a build-graph change.
+      # NEITHER IS WORTH DOING - this note exists so the next reader who spots the overlap does not
+      # spend an afternoon re-deriving its price.
       - run: npm run check:tools
       # ⚠ THE GATE RUNS THE `unit` PROJECT. The Monte-Carlo files are NOT in it and that is a
       # decision, not an omission - see .github/workflows/simulation.yml and the note in
@@ -122,7 +130,27 @@ jobs:
       # The mounted-component project (P9). Seconds of runtime, and it is the ONLY gate that
       # catches a UI regression: every other component test in this repo reads source text.
       - run: npm run test:component
-      - run: npm run build
+      # ⚠ `npx vite build`, NOT `npm run build`, AND THE DIFFERENCE IS A SECOND TYPECHECK
+      # (T-06 / P-19 of the 05.09 review; QA-40 of the 02.09 one, open since). `npm run build` is
+      # `vue-tsc -b && vite build`, so this step used to re-run the typecheck `:101` above has
+      # already run - and re-run it in the INCREMENTAL mode the comment at :99-100 says has hidden
+      # real type errors. Priced on a quiet machine: the forced check is 7.7 s, the repeat 0.4 s on
+      # a warm `.tsbuildinfo`. So the reason to drop it is that the repeat was the LESS trustworthy
+      # of the two, not that it was dear - the saving is a second of runner time.
+      # ⚠ THE GATE DOES NOT MOVE. `npx vue-tsc -b --force` at :101 still fails this job on a type
+      # error, before anything is built, and `vite build` still fails it on a build error.
+      # `npm run check` has always had exactly this shape locally (package.json's `check` ends
+      # `… && vite build`); CI now matches the gate the owner runs before a push.
+      - run: npx vite build
+      # ⚠ THE INSTALL CEILING, AND IT HAS TO BE HERE BECAUSE THIS IS THE ONLY JOB THAT BUILDS
+      # (P-04, 05.09). The owner's 16,384 KiB ruling of 29.08 was being checked against `public/`
+      # inside the unit suite - 14,596 KiB of a 15,755 KiB install, because the hashed bundles, the
+      # stylesheet and index.html exist only after the step above. The unit shards run in jobs that
+      # never build, so the measurement cannot live there. `npm run check` runs the same script in
+      # the same position, one line after `vite build`.
+      # NOT MIRRORED INTO deploy.yml on purpose: it is the same artefact, and a ceiling that has
+      # already refused the pull request has nothing left to say on the push that merges it.
+      - run: node scripts/install-size.mjs
 
   # ⭐ THE LONG POLE, ALONE. 501 s of pooled files - the one block worth its own runner.
   unit-bulk:
@@ -135,10 +163,47 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
-      - run: node scripts/units.mjs --only=bulk --verbose
+      # ⚠ `--verbose` DROPPED HERE AND ON `unit-heavy` (P-18, 05.09), AND NOTHING DIAGNOSTIC GOES
+      # WITH IT. The flag selects vitest's `default` reporter instead of `dot`; `once()` in
+      # scripts/units.mjs runs every shard with `stdio: ['ignore','pipe','pipe']` and BUFFERS it,
+      # printing one verdict line per shard and echoing the buffer only on a failure or a stall.
+      #
+      # MEASURED BOTH WAYS AT 919105e7 RATHER THAN DERIVED, and the derivation it replaces was
+      # wrong in the interesting direction:
+      #   GREEN: `--only=heavy` with and without the flag produced 15 lines / 653 bytes each, the
+      #     same shard verdicts in a different completion order. Byte for byte, the flag is free.
+      #   RED:   the bulk shard's whole buffer, `TB_UNIT_SKIP_HEAVY=1 npx vitest run --project unit`,
+      #     218 files / 4,217 tests, output redirected to a file (which is what a runner is):
+      #         --reporter default   106,281 bytes / 940 lines
+      #         --reporter dot        18,053 bytes / 157 lines      -> the flag costs ~86 KiB
+      #     ⚠ The 05.09 review predicted ~571 KiB by pricing 4,217 test NAMES at the default
+      #     reporter's line shape. It does not print them: with no TTY it prints one line per FILE
+      #     plus one per test over vitest's 300 ms slow threshold, which is 940 lines, not 4,200.
+      #     The conclusion survives at a seventh of the size; the number is corrected here so the
+      #     next reader does not inherit it.
+      # WHAT IS LOST is the roll-call of the slow-but-passing tests ahead of the failure; the failing
+      # test, its diff and its stack are printed by `dot` too, and a re-run with the flag is one
+      # click away when somebody wants the roll-call.
+      # ⭐ AND `dot` IS THE SAFER REPORTER HERE, NOT MERELY THE QUIETER ONE. The per-test tree
+      # re-render keeps far more `onTaskUpdate` acks in flight, which is the second variable in the
+      # race against birpc's unraisable 60 s window - vite.config.ts and tests/sim-serialisation
+      # both record it, and the sim gate has run `dot` for that reason since 02.08. Running the unit
+      # shards verbose was betting against the wall this whole sharding scheme exists to dodge.
+      - run: node scripts/units.mjs --only=bulk
 
-  # ⭐ THE ELEVEN THAT USED TO WAIT THEIR TURN. Still one process each, still serial WITHIN the job -
-  # that is the birpc rule and it does not bend - but no longer queued behind `bulk` on one runner.
+  # ⭐ THE THIRTEEN THAT USED TO WAIT THEIR TURN (eleven when this job was carved out on 30.08; the
+  # list has grown twice since). Still one process each, still serial WITHIN the job, and no longer
+  # queued behind `bulk` on one runner.
+  # ⚠ SERIAL HERE IS NOW DERIVED RATHER THAN HARD-CODED (P-13, 05.09), AND ON THIS RUNNER IT COMES
+  # OUT THE SAME. `scripts/units.mjs` runs `Math.max(1, Math.floor(availableParallelism() / 4))`
+  # shards at a time: a GitHub runner reports 2 cores (4 on a public repo), so the divisor gives 1
+  # and this job behaves exactly as it did - which is the point, because every birpc stall in that
+  # script's header happened HERE, on two cores. The ten-core Mac gets 2, and the local heavy tail
+  # went 214 s -> 119 s while its worst shard moved 25 s -> 26 s. THE DIVISOR IS 4 RATHER THAN 3
+  # BECAUSE 3 WAS MEASURED AND REFUSED: it saved a further 23 s and put the two biggest shards at
+  # 30 and 31 s on a machine with an agent on it. The per-shard seconds the step below prints are
+  # the check: if one of them ever climbs toward 60 s, that is birpc's window and the file needs
+  # cutting, exactly as radar's and coach-travel-edge's did.
   unit-heavy:
     runs-on: ubuntu-latest
     timeout-minutes: 25
@@ -149,7 +214,8 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
-      - run: node scripts/units.mjs --only=heavy --verbose
+      # `--verbose` dropped for the reasons spelled out on `unit-bulk` above.
+      - run: node scripts/units.mjs --only=heavy
 
   # THE E2E SUITE – ALL OF IT, IN ONE BROWSER (S0–S2 of docs/plans/playwright.md).
   #
@@ -159,10 +225,13 @@ jobs:
   # the file onto `unit-bulk`. Corrected by moving the LABEL to the work, not the work to the label,
   # and the reason is a measurement plus a standing owner priority:
   #   THE COST IS THE BROWSER, NOT THE SUITE. The step below it fetches ~273 MiB of Chromium and
-  #     spends ~2 minutes doing it. The suite itself measured 31 tests in 13 files, 17 s of test time
-  #     (02.09), against this job's 20-minute ceiling. Filtering to one spec would save seconds off a
-  #     job whose cost is dominated by a download that both arms pay in full.
-  #   NARROWING WOULD DELETE LIVE COVERAGE. Those 31 tests are green on every PR today. «Restore an
+  #     spends ~2 minutes doing it. The suite itself is 69 tests in 15 files - 67 `chromium` and 2
+  #     `chromium-sw` - measured here on 05.09 with `npx playwright test --list`, against this job's
+  #     20-minute ceiling. It read «31 tests in 13 files, 17 s of test time» on 02.09; the count is
+  #     re-taken rather than carried, because it keeps growing and a stale one is how «narrow the
+  #     job» gets argued. Filtering to one spec would save seconds off a job whose cost is dominated
+  #     by a download that both arms pay in full.
+  #   NARROWING WOULD DELETE LIVE COVERAGE. All 69 are green on every PR today. «Restore an
   #     intentional smoke selection» reads as a cleanup and lands as a coverage cut.
   #   ⭐ AND IT WOULD CONTRADICT A STANDING CALL. «Grow the e2e suite, and keep growing it» is the
   #     owner's own of 29.08 (docs/now-next-later.md, Next). A gate pinned to one spec while the

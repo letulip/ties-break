@@ -1,10 +1,29 @@
-# GitLab CI — mirrors the GitHub workflows (ci.yml + deploy.yml) so both remotes stay honest.
+# GitLab CI – a PARTIAL mirror of the GitHub workflows (ci.yml + deploy.yml). «Partial» is the
+# correction: this header said «mirrors … same gates as GitHub» while the `test` job below ran four
+# commands against ci.yml's ten gate steps plus three jobs of its own (T-10 of the 05.09 review).
+# What it skips is now listed rather than implied.
 # Why GitLab: GitHub Pages needs a paid plan to publish from a PRIVATE repo; GitLab Pages does it
 # on the free tier, and its Pages access control can keep the code private while the site is public.
 #
-# Two jobs, same gates as GitHub:
-#   test  — every branch / MR: forced typecheck + tests + build
-#   pages — main only: the same gates, then publish
+# Two jobs:
+#   test  – every branch / MR: forced typecheck + unit suite + component suite + build
+#   pages – main only: the same four, then publish
+#
+# ⚠ WHAT THIS FILE DOES NOT RUN. Against .github/workflows/ci.yml, both jobs below are missing:
+#   * five of the doc gates ci.yml runs first – context:audit, doc-facts, engine-purity,
+#     map:world:check, tools:registry:check;
+#   * `npm run check:tools`, the archival half of tools/ (ci.yml's own note calls it evidence that
+#     has to keep compiling), and `node scripts/install-size.mjs`, the PWA install ceiling;
+#   * `scripts/schema-ladder.mjs --require`, which needs a fetched origin/main and so is CI-only
+#     by design;
+#   * the PR-checklist job, which has no GitLab equivalent;
+#   * the `e2e` job and the weekly Monte-Carlo calibration – those two are DECISIONS, argued below.
+# (`pins:check` and `decisions:check` are in neither CI file; they run in `npm run check` only.)
+# Everything but the last bullet is drift, not a decision. The one-line repair, if GitLab ever
+# becomes a remote anyone gates on, is to run `npm run check` here instead of four hand-copied
+# commands – it is the gate the owner runs before a push and it cannot drift from itself. Not done
+# today because the working rule is «push to origin (GitHub) only» and the two `main`s have
+# diverged, so a fuller gate here would burn metered minutes on a branch nobody merges from.
 #
 # --force on vue-tsc: `-b` trusts its incremental cache, which has hidden real type errors before
 # (a duplicate-import TS2300 shipped past a cached build on 25.07). Always a full check.
@@ -44,6 +63,11 @@ stages:
 
 test:
   stage: test
+  # These four are the whole gate on this remote – the header lists what that leaves out. ⚠ And
+  # `npm run build` is `vue-tsc -b && vite build`, so the typecheck above runs twice here; ci.yml
+  # and deploy.yml dropped the repeat on 05.09 (T-06) and this file deliberately was not touched in
+  # the same pass, because nothing is pushed to GitLab and an untested edit to a gate nobody runs is
+  # worth less than the second it saves.
   script:
     - npx vue-tsc -b --force
     - npm test

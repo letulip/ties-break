@@ -1,4 +1,6 @@
-// THE UNIT SUITE: the light 109 in parallel, the heavy three one per process.
+// THE UNIT SUITE: the light 218 in one pool, the heavy 13 a process each – strictly one at a time
+// on a small runner, a few at a time on a big machine. (It read «the light 109 … the heavy three»
+// until 05.09; both halves have roughly doubled since, and the counts are derived, not declared.)
 //
 // ⚠ THIS IS THE SAME 60 s BIRPC WALL THAT ALREADY PUSHED THE MONTE-CARLO FILES OUT OF THE GATE
 // (.github/workflows/simulation.yml's header tells that story). It came back on the UNIT project
@@ -101,7 +103,8 @@
 // to move out of it: the next cut splits that describe, putting those two sweeps in different
 // files. Do that before trimming a seed from either of them.
 
-import { spawnSync } from 'node:child_process'
+import { spawn } from 'node:child_process'
+import { availableParallelism } from 'node:os'
 import { classify, recoveredNote } from './lib/stall.mjs'
 // ⚠ IMPORTED, NOT A SECOND COPY (round-22 review). This file used to carry its own hand-maintained
 // duplicate of the list vite.config.ts declared – measured, commented and correct, and with nothing
@@ -118,15 +121,38 @@ const failed = []
 const stalled = []
 const recovered = []
 
+// ⚠ `spawn` AND A PROMISE, WHERE THIS WAS `spawnSync` (P-13, 05.09). Nothing about one shard
+// changed – same argv, same buffered stdio, same `classify` on the same exit code – but the caller
+// can now hold more than one at a time, which is what the heavy loop below does. A shard that
+// cannot be awaited is a shard that cannot be scheduled.
+// ⚠ `error` IS SETTLED AS A FAILURE, NOT SWALLOWED. A spawn that never starts (a missing `npx`)
+// produces no vitest summary, and `classify(1, '')` reads a summary-less run as a real failure –
+// the safe direction, and the same one stall.mjs's header argues for: silence must never read as
+// green.
 function once(args, env) {
   const at = Date.now()
-  const r = spawnSync('npx', ['vitest', 'run', '--project', 'unit', '--reporter', reporter, ...args], {
-    stdio: ['ignore', 'pipe', 'pipe'],
-    encoding: 'utf8',
-    env: { ...process.env, ...env },
+  return new Promise((resolve) => {
+    const child = spawn('npx', ['vitest', 'run', '--project', 'unit', '--reporter', reporter, ...args], {
+      stdio: ['ignore', 'pipe', 'pipe'],
+      env: { ...process.env, ...env },
+    })
+    let out = ''
+    let settled = false
+    const finish = (status) => {
+      if (settled) return
+      settled = true
+      resolve({ secs: ((Date.now() - at) / 1000).toFixed(0), out, ...classify(status, out) })
+    }
+    child.stdout.setEncoding('utf8')
+    child.stderr.setEncoding('utf8')
+    child.stdout.on('data', (chunk) => (out += chunk))
+    child.stderr.on('data', (chunk) => (out += chunk))
+    child.on('error', (e) => {
+      out += `\n${e.stack ?? e.message}\n`
+      finish(1)
+    })
+    child.on('close', finish)
   })
-  const out = (r.stdout || '') + (r.stderr || '')
-  return { secs: ((Date.now() - at) / 1000).toFixed(0), out, ...classify(r.status, out) }
 }
 
 // ⚠ ONE RETRY, AND ONLY FOR THE ALL-GREEN-NON-ZERO SHAPE (10.08). CI went red with
@@ -134,32 +160,38 @@ function once(args, env) {
 // same birpc wall this file's header already describes, arriving on a slower runner rather than on
 // a bigger suite. A failing ASSERTION is never retried: see scripts/lib/stall.mjs for why the
 // distinction is mechanical rather than a judgement here.
-function run(label, args, env = {}) {
-  process.stdout.write(`  unit  ${label} … `)
-  let r = once(args, env)
+// ⚠ EACH LINE IS NOW PRINTED WHOLE, AT COMPLETION, rather than opened with `  unit  x … ` and
+// closed a minute later. The words are byte-identical; only the timing moved. With more than one
+// shard in flight the old two-part write braided two shards' halves into one unreadable line, and
+// the line is the only thing a CI log carries – so the shard's name and its verdict have to leave
+// this function together. The order is completion order rather than list order, which is why every
+// line names its shard.
+async function run(label, args, env = {}) {
+  let line = `  unit  ${label} … `
+  let r = await once(args, env)
 
   if (r.stalled) {
-    process.stdout.write(`stalled (${r.secs}s, every test green) – retrying once … `)
+    line += `stalled (${r.secs}s, every test green) – retrying once … `
     const first = r
-    r = once(args, env)
+    r = await once(args, env)
     if (!r.stalled && !r.failed) {
       recovered.push({ label, firstSecs: first.secs })
-      console.log(`ok (${r.secs}s, recovered)`)
+      console.log(line + `ok (${r.secs}s, recovered)`)
       return
     }
     if (r.stalled) {
       stalled.push({ label, out: r.out })
-      console.log(`STALLED TWICE (${r.secs}s) – runner, not tests`)
+      console.log(line + `STALLED TWICE (${r.secs}s) – runner, not tests`)
       return
     }
   }
 
   if (r.failed) {
-    console.log(`FAILED (${r.secs}s)`)
+    console.log(line + `FAILED (${r.secs}s)`)
     failed.push({ label, out: r.out })
   } else {
     const m = r.out.match(/Tests\s+(\d+) passed/)
-    console.log(`ok (${r.secs}s${m ? `, ${m[1]} tests` : ''})`)
+    console.log(line + `ok (${r.secs}s${m ? `, ${m[1]} tests` : ''})`)
   }
 }
 
@@ -183,12 +215,94 @@ if (only && only !== 'bulk' && only !== 'heavy') {
   console.error(`units: --only takes 'bulk' or 'heavy', got '${only}'`)
   process.exit(2)
 }
-if (only !== 'heavy') run('bulk', [], { TB_UNIT_SKIP_HEAVY: '1' })
-if (only !== 'bulk') {
-  for (const file of HEAVY_UNIT_FILES) {
-    run(file.replace(/^tests\//, '').replace(/\.test\.ts$/, ''), [file])
+// ⚠⚠ THE HEAVY TAIL IS NO LONGER STRICTLY SERIAL ON A MACHINE WITH CORES TO SPARE – AND ON CI IT
+// STILL IS, WHICH IS THE WHOLE DESIGN (P-13 of the 05.09 review). Every incident in this file's
+// header was a shard crossing birpc's unraisable 60 s wall, and every one of them was CI's two
+// cores. The serialisation is the fix for THAT machine. On the ten-core Mac the same rule was
+// costing 219 s of every gate with nine cores idle by construction, which is not the same trade.
+//
+// So the bound is DERIVED FROM THE MACHINE and nothing has to be remembered:
+//
+//     availableParallelism()   2  (GitHub runner, private repo)  ->  1   today's behaviour exactly
+//                              4  (GitHub runner, public repo)   ->  1   today's behaviour exactly
+//                              10 (this Mac)                     ->  2
+//
+// ⚠⚠ THE DIVISOR IS 4 AND IT WAS 3 FOR AN HOUR, AND THE HOUR IS THE POINT. Three lanes is faster
+// and it puts the two biggest shards ON the line. Measured by alternating the arms back to back on
+// one machine at one ambient load (5.9-8.6), so the comparison is between the arms and not between
+// two moments:
+//
+//     lanes   heavy tail wall            worst shard
+//     1       217 / 243 s                25 s   (and one ambient spike to 44 s, at ONE lane)
+//     2       118 / 119 s                26 s   (identical in both runs)
+//     3        94 /  97 /  98 s          28 / 29 / 31 s
+//
+// Three lanes buys 23 s more and spends 4-5 s of every big shard's headroom to get it. On a QUIET
+// machine three lanes reads 26 s and looks free; on a machine with an agent on it, which is the
+// machine this gate actually runs on, it reads 30 and 31. Two lanes read 26 s in both conditions.
+// The gate is not allowed to become 23 s faster and one busy afternoon closer to the wall, so the
+// divisor is 4. It also keeps strict serialisation all the way to seven cores, which covers every
+// runner shape this project has ever used.
+//
+// THE NUMBER IT WAS COSTING, measured at 919105e7 on this ten-core Mac. Three runs per arm of
+// `node scripts/units.mjs --only=heavy`, machine checked quiet before each (`uptime` recorded,
+// `pgrep -lf "vitest|vite-node|playwright|vite build"` empty at every start), every exit code
+// echoed into a file and read back from the FILE, never through a pipe:
+//
+//     one at a time (before)    211 / 214 / 214 s    median 214    worst shard 25 s
+//     two at a time (after)     132 / 127 / 118 /    median 119    worst shard 26 s
+//                               119 / 118 s
+//
+// ~95 s off the median for one second on the biggest shard: economy 25 -> 26, college-birthday
+// 25 -> 26, and every other file within 2 s of where it stood. `node scripts/units.mjs` in full,
+// exit 0 and the same 4,574 tests either way (bulk 4,217 + 357 across the thirteen).
+// ⚠ The five «after» readings span two ambient loads on purpose – 118 s is a quiet machine and
+// 132 s is one with another agent's suite on it. The worst shard is 26 s in both, which is the
+// number that matters.
+//
+// ⚠ AND THE OTHER CEILING WAS CHECKED, BECAUSE A FASTER GATE THAT FLAKES IS WORSE THAN A SLOW ONE.
+// The unit project's per-test ceiling is 20 s (vite.config.ts), and contention is what has fired it
+// before, so it is the ceiling that matters more than birpc's. The three largest shards,
+// `--reporter=json`, run one at a time and then ALL THREE at once – a deliberate over-estimate,
+// since the divisor now runs two. Slowest single test in each:
+//
+//     economy             6.8 s -> 7.1 s      college-birthday   3.6 s -> 3.7 s
+//     coach-travel-edge   1.7 s -> 1.9 s      (wall for the three: 67 s -> 25 s)
+//
+// Even at three lanes the slowest test in the heavy tail moves by 0.3 s and sits at a third of its
+// ceiling, so the per-test wall is not what the divisor is protecting – the per-SHARD wall is.
+//
+// ⚠ THE BAR IS THE SHARD, NOT THE TOTAL, and it is the bar every entry in scripts/heavy-tests.mjs
+// is already measured against: birpc's window is 60 s of ONE shard's wall clock, CI runs ~1.9x
+// local, so a shard printing much over ~30 s here is one unlucky runner away from the
+// all-green-non-zero exit this whole scheme exists to dodge. If a shard ever crosses it, the
+// divisor is wrong, and the honest answer is the one heavy-tests.mjs gives: fewer workers per core,
+// measured – never fewer tests.
+//
+// ⚠ NOT SORTED LONGEST-FIRST, though that would shave a few more seconds off the makespan. The
+// order stays HEAVY_UNIT_FILES' order so one log can be diffed against another and against the
+// list; a schedule that ranks files by duration is a second, invisible copy of a measurement only
+// scripts/heavy-tests.mjs is allowed to hold, and this file's own history is a catalogue of what a
+// second copy of that list costs.
+//
+// ⚠ AND THE BULK PASS IS UNTOUCHED, still first and still alone. It already saturates the pool, so
+// starting a heavy shard beside it would be exactly the contention the tail was carved out of.
+const HEAVY_LANES = Math.max(1, Math.floor(availableParallelism() / 4))
+
+async function runHeavy(files) {
+  const lanes = Math.min(HEAVY_LANES, files.length)
+  console.log(`  unit  heavy: ${files.length} files, ${lanes} at a time (${availableParallelism()} cores)`)
+  const queue = [...files]
+  const lane = async () => {
+    for (let file = queue.shift(); file !== undefined; file = queue.shift()) {
+      await run(file.replace(/^tests\//, '').replace(/\.test\.ts$/, ''), [file])
+    }
   }
+  await Promise.all(Array.from({ length: lanes }, lane))
 }
+
+if (only !== 'heavy') await run('bulk', [], { TB_UNIT_SKIP_HEAVY: '1' })
+if (only !== 'bulk') await runHeavy(HEAVY_UNIT_FILES)
 
 const total = ((Date.now() - started) / 1000).toFixed(0)
 for (const r of recovered) console.error(recoveredNote(r.label, r.firstSecs))

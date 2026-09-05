@@ -58,7 +58,12 @@
 
 import { execFileSync } from 'node:child_process'
 import { createServer } from 'node:http'
-import { chromium } from 'playwright'
+// ⚠ `@playwright/test`, NOT `playwright` (T-11 of the 05.09 review). This line used to import the
+// bare `playwright` package, which is NOT in package.json – it resolved only because
+// `@playwright/test` hoists it into node_modules, so the tool worked by accident and would break
+// the day npm flattened the tree differently. `@playwright/test` re-exports the same `chromium`
+// and IS declared, so the fix is the import rather than a new dependency.
+import { chromium } from '@playwright/test'
 import {
   cpSync,
   copyFileSync,
