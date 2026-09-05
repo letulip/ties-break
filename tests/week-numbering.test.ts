@@ -304,3 +304,25 @@ describe('R11-6 guard – no surface prints a raw absolute week', () => {
     expect(read('components/CountingResultsTable.vue')).toMatch(/\{\{ weekLabel\(c\.week\) \}\}/)
   })
 })
+
+// =================================================================================================
+// ⭐ E-08 (05.09 ENGINE REVIEW) – THE RATCHET ON ONE DELETED EXPORT.
+//
+// `firstWeekOfMonth` was exported from `shared/dates.ts` with ZERO references anywhere in `src`,
+// `tests`, `tools`, `scripts` or `e2e` – not even inside its own file – and had been reported as
+// such by two previous reviews without ever being reprieved. It is deleted; this is the one-way
+// ratchet that stops it coming back the way `tests/money-format.test.ts` stops a local formatter
+// coming back.
+//
+// ⚠ IT IS A RATCHET AND NOT A BAN. A future wave that has a CALLER for this arithmetic should write
+// the function and delete this arm in the same commit – the guard is against an export drifting
+// back in with no consumer, which is the state it spent three reviews in.
+// =================================================================================================
+describe('E-08 – dates.ts exports nothing nobody calls', () => {
+  it('`firstWeekOfMonth` is gone, and nothing has re-added it unconsumed', () => {
+    expect(read(FORMATTER)).not.toContain('export function firstWeekOfMonth')
+    // ...and the module is still the one that owns week arithmetic, so this arm cannot be passing
+    // because the file moved out from under it.
+    expect(read(FORMATTER)).toContain('export function weekLabel')
+  })
+})

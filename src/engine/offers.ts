@@ -87,7 +87,9 @@ import { seasonIndexOf } from './world/ledger'
 import type { KitFreshCap } from './equipment'
 import type { TierId } from './season/types'
 import type {
-  AcademyLetterTerms, AdCategory, AdOfferTerms, AdTier, CallUpLetterTerms, EntryLetterTerms, EntryReleaseReason, KitEndReason,
+  // ⚠ `AdTier` left this list with `AD_TIERS` (E-08) – the type is still live and still exported by
+  // shared/protocol; this module simply has nothing left that names it.
+  AcademyLetterTerms, AdCategory, AdOfferTerms, CallUpLetterTerms, EntryLetterTerms, EntryReleaseReason, KitEndReason,
   KitLine, KitOfferTerms, Offer, PenaltyReason, SponsorTier, TourLetterTerms,
 } from '../shared/protocol'
 
@@ -1748,13 +1750,15 @@ export function isWinterShootWeek(week: number): boolean {
   return offset >= WEEKS_PER_YEAR - WINTER_SHOOT_WEEKS
 }
 
-/** ⚠ THE HISTORICAL THREE-RUNG LADDER (round 29 part two #19/#20), kept because letters written
- *  under it are persisted in real saves and every reader of an old paper still needs its names.
- *  Round 29 part four P6/§8 replaced the ladder with the CATEGORY portfolio below – the axis moved
- *  from «which single house writes» to «which categories of a shelf are open». Nothing composes new
- *  terms from these three values any more; `adCategoryOf` maps each onto the category its house
- *  always was. */
-export const AD_TIERS: readonly AdTier[] = ['watch', 'campaign', 'house']
+/** ⚠ `AD_TIERS` STOOD HERE AND IS GONE (E-08, 05.09 engine review), AND THE THING IT WAS KEPT FOR IS
+ *  NOT. Its note said it held the historical three-rung ladder (round 29 part two #19/#20) "because
+ *  letters written under it are persisted in real saves and every reader of an old paper still needs
+ *  its names" – and that job belongs to the TYPE, which is where it already lives: `AdTier` in
+ *  `shared/protocol/offers.ts:227` carries the same three names, its own note says in capitals that
+ *  it must not be deleted, `AdOfferTerms.tier` is typed with it, and `adCategoryOf` below maps each
+ *  old tier onto the category its house always was. The ARRAY had no reference anywhere in `src`,
+ *  `tests`, `tools`, `scripts` or `e2e` – it was a second spelling of a live union, not a second
+ *  reader of it. */
 
 /** ⭐⭐⭐ THE PORTFOLIO'S CATEGORIES, IN SHELF ORDER (round 29 part four P6/P7/§8) – the order the
  *  portfolio surface lists them and the order `reviewAdOffer` walks them, weakest gate first so the

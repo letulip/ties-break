@@ -46,6 +46,7 @@ import {
 } from '../src/engine/world'
 import {
   activeKitDeal,
+  adCategoryOf,
   expireOffers,
   hasLiveOffer,
   isOfferLive,
@@ -79,7 +80,7 @@ import {
   TIER_COVERS,
   type SponsorStanding,
 } from '../src/engine/offers'
-import type { Offer } from '../src/shared/protocol'
+import type { AdOfferTerms, Offer } from '../src/shared/protocol'
 import { migrateSave } from '../src/engine/migrations'
 import { kitWearAt } from '../src/engine/equipment'
 import { ECONOMY } from '../src/engine/economy'
@@ -3148,5 +3149,35 @@ describe('the tournament desk writes on W-rung registration, and only then', () 
           covers: ['strings'], travelShare: 0, seasons: 1 } },
     ] as Offer[]
     expect(pruneEntryLetters(kits, WEEKS_PER_YEAR * 4).some((o) => o.id === 'kit-refused')).toBe(true)
+  })
+})
+
+// =================================================================================================
+// ⭐ E-08 (05.09 ENGINE REVIEW) – THE RATCHET ON ONE DELETED EXPORT.
+//
+// `AD_TIERS` was a `readonly AdTier[]` of the three historical ad rungs with ZERO references
+// anywhere in `src`, `tests`, `tools`, `scripts` or `e2e`. Its own note said it was kept "because
+// letters written under it are persisted in real saves and every reader of an old paper still needs
+// its names" – and that job is the TYPE's, not an array's: `AdTier` in `shared/protocol/offers.ts`
+// carries the same three names, its own note says in capitals that it must not be deleted, and
+// `adCategoryOf` maps each old tier onto its category. The array was a second spelling of a live
+// union rather than a second reader of it, so it is gone and this stops it returning.
+//
+// ⚠ THE OTHER HALF OF THE ARM IS THE PART THAT MATTERS: the historical names must still be
+// REACHABLE, or this deletion really would have cost the old letters their reader.
+// =================================================================================================
+describe('E-08 – the historical ad ladder lives in the type, not in a second array', () => {
+  it('`AD_TIERS` is gone from the engine module', () => {
+    expect(codeOf(read('../src/engine/offers.ts'))).not.toContain('export const AD_TIERS')
+  })
+
+  it('...and the three names it held are still declared, still typed onto a letter, still mapped', () => {
+    const protocol = read('../src/shared/protocol/offers.ts')
+    expect(protocol).toContain("export type AdTier = 'watch' | 'campaign' | 'house'")
+    expect(protocol).toContain('tier?: AdTier')
+    // The mapping an old paper's reader actually needs, exercised rather than grepped.
+    for (const tier of ['watch', 'campaign', 'house'] as const) {
+      expect(adCategoryOf({ tier } as AdOfferTerms), tier).toBeTruthy()
+    }
   })
 })
