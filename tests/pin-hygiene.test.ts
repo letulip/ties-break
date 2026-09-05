@@ -1,4 +1,4 @@
-// PIN HYGIENE — the source-pin helpers cannot be used the wrong way round.
+// PIN HYGIENE – the source-pin helpers cannot be used the wrong way round.
 //
 // WHY THIS FILE EXISTS. `componentLogic()` returns an SFC PLUS every composable it imports, so a pin
 // keeps covering the whole component however far it is decomposed. That widening is correct for a
@@ -12,13 +12,13 @@
 // lives. The pin was right; the source was wrong.
 //
 // ⚠ A DOC COMMENT WAS NOT ENOUGH, which is the whole argument for this file. This repo's recurring
-// failure is a search that quietly answers a different question than the one asked — the `indexOf`
+// failure is a search that quietly answers a different question than the one asked – the `indexOf`
 // slice returning −1, a grep scoped to `src/` that skipped `tests/`, a `sed` range that collapsed on
 // its start line. Every one of those was documented somewhere too. The lesson each time was the same:
 // make the wrong thing FAIL, not merely discouraged.
 //
 // So: any variable assigned from `componentLogic(...)` may never appear in a negative assertion.
-// Use `componentFile()` — the .vue alone — when the claim is about that file itself.
+// Use `componentFile()` – the .vue alone – when the claim is about that file itself.
 import { describe, it, expect } from 'vitest'
 import { readdirSync, readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
@@ -103,7 +103,7 @@ describe('source-pin helpers cannot be used the wrong way round', () => {
     }
     expect(
       offenders,
-      'use componentFile() (the .vue alone) for a negative claim — componentLogic() widens the text and will trip on a composable definition, and a region CUT from it is just as wide',
+      'use componentFile() (the .vue alone) for a negative claim – componentLogic() widens the text and will trip on a composable definition, and a region CUT from it is just as wide',
     ).toEqual([])
   })
 

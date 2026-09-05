@@ -67,7 +67,7 @@ export function diarySource(): string {
 // ⚠ AND THE SAME PROBLEM ARRIVED FOR COMPONENTS. Splitting a 2,300-line SFC means moving logic into
 // `src/composables/*.ts`, and a pin that reads only the `.vue` then asserts against half a component.
 // `componentSource` follows the SFC's own composable imports, so a pin keeps covering the whole
-// thing however far the component is decomposed — the property `engineModuleSource` already has.
+// thing however far the component is decomposed – the property `engineModuleSource` already has.
 // -------------------------------------------------------------------------------------------------
 
 const SRC = new URL('../src/', import.meta.url)
@@ -77,7 +77,7 @@ const SRC = new URL('../src/', import.meta.url)
 // The two questions a component pin can ask are NOT interchangeable, and the ambiguous name invited
 // the wrong one. It cost a real failure the first time it was used: `screen-i-live-match`'s pin
 // "MatchViewer imports no setter" started failing because the widened text now included
-// matchDefaults.ts, where `setMatchSpeedDefault` is DEFINED — the assertion tripped on a definition
+// matchDefaults.ts, where `setMatchSpeedDefault` is DEFINED – the assertion tripped on a definition
 // it was never talking about. Documenting that was not enough; the name is the fix.
 //
 //   componentLogic()  – the SFC PLUS every composable it imports. Answers "this logic exists
@@ -88,7 +88,7 @@ const SRC = new URL('../src/', import.meta.url)
 //   componentFile()   – the .vue ALONE. Answers "this FILE itself does / does not ...", which is the
 //                       only honest source for a negative claim about the component's own imports.
 
-/** The SFC plus every `composables/*` module it imports. POSITIVE assertions only — see above. */
+/** The SFC plus every `composables/*` module it imports. POSITIVE assertions only – see above. */
 export function componentLogic(relFromSrc: string): string {
   const sfc = componentFile(relFromSrc)
   const parts: string[] = []
@@ -102,13 +102,13 @@ export function componentLogic(relFromSrc: string): string {
   return sfc + parts.join('')
 }
 
-/** The `.vue` file alone — the only honest source for a NEGATIVE claim about that file. */
+/** The `.vue` file alone – the only honest source for a NEGATIVE claim about that file. */
 export function componentFile(relFromSrc: string): string {
   return readFileSync(new URL(relFromSrc, SRC), 'utf8')
 }
 
 // =================================================================================================
-// ⚠⚠ AN ABSENT FUNCTION IS AN ERROR, NOT AN EMPTY STRING — T-01, 05.09 review.
+// ⚠⚠ AN ABSENT FUNCTION IS AN ERROR, NOT AN EMPTY STRING – T-01, 05.09 review.
 // =================================================================================================
 //
 // THE FAILURE MODE, AND IT IS THE `-1` FAMILY ONE DOOR OVER. This used to `return ''` when the
@@ -119,13 +119,13 @@ export function componentFile(relFromSrc: string): string {
 // randomness" goes on passing while the writer it was aimed at no longer exists.
 //
 // It was live: tests/round23-retirement-news.test.ts's «draws nothing» pin had no `not.toBe('')`
-// guard at all, and seven other sites carried one by hand — a guard the caller should never have had
+// guard at all, and seven other sites carried one by hand – a guard the caller should never have had
 // to write. So this throws, on the marker helpers' own precedent, and those seven guards are now
 // harmless redundancy rather than the only thing standing between a rename and a green vacuum.
 //
 // ⚠ AND IT MATCHES ON THE PARENTHESIS AND WALKS THE BRACES, which is tests/relative-age.test.ts's
 // lesson folded back in (its local copy carried both and this one did not). Without the paren
-// `mandatoryBinds` resolved to `mandatoryBindsRank` — a PREFIX COLLISION — and the pin passed green
+// `mandatoryBinds` resolved to `mandatoryBindsRank` – a PREFIX COLLISION – and the pin passed green
 // against a function that had never read the band. Measured over all 17 pinned functions when this
 // landed: 16 extractions byte-identical to the old shape, and the 17th is `mandatoryBinds` finally
 // resolving to itself (337 chars of the wrong function → 1,301 of the right one).
