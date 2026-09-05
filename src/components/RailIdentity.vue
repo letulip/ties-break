@@ -26,7 +26,10 @@
 // wrong one – D74's rule, and it holds for this copy too.
 //
 // ⚠ NOT ONE NEW STRING. The two labels, the title and the callout are `HomeScreen.vue`'s own,
-// verbatim. Nothing here is a sentence somebody wrote for a rail.
+// verbatim; the two date lines are `shared/dates.ts`'s `weekYearLabel` and `weekSpan`, which are the
+// two halves `weekDateLine` joins for the heading on the photograph – NOT `weekLabel`/`weekRange`,
+// which are a different shape for other surfaces («W27 '33», «Jun 3–9, 2033») and printing those
+// here would have changed what he reads. Nothing here is a sentence somebody wrote for a rail.
 //
 // ⚠ DESKTOP-ONLY IS A STYLESHEET FACT, NOT A `v-if` – `.rail-id` is `display: none` below 1024 in
 // src/style.css. Same rule, same reason, as `RailDashboard.vue`: a `v-if` on a media query would be
@@ -38,6 +41,8 @@ const emit = defineEmits<{ 'open-kid': []; 'rank-help': [] }>()
 
 const {
   headerAvatarUrl,
+  weekLabelLine,
+  weekRangeLine,
   chipTrack,
   ladderLabel,
   rankText,
@@ -56,9 +61,26 @@ function openKid(): void {
 
 <template>
   <div class="rail-id">
-    <button class="diary-avatar-btn rail-id-avatar" aria-label="Open her profile" @click="openKid">
-      <img class="diary-avatar" :src="headerAvatarUrl" alt="" />
-    </button>
+    <!-- Her face and the week, side by side – the row P2-3 asks for. The rail's own column stacks
+         its children, so «beside the round avatar» needs a row of its own and this is it. His
+         sentence itself is in the script block above, where Cyrillic is allowed. -->
+    <div class="rail-id-head">
+      <button class="diary-avatar-btn rail-id-avatar" aria-label="Open her profile" @click="openKid">
+        <img class="diary-avatar" :src="headerAvatarUrl" alt="" />
+      </button>
+      <!-- ⚠ TWO ELEMENTS, NOT A WRAP: two lines must be two lines for a short week label as well as
+           for a long one, and a wrap depends on the label's length. No separator is invented here,
+           because a line break is not a character – these are the same two pieces of text the
+           photograph's own heading is made of, unjoined.
+           ⚠ AND IT IS NOT A HEADING. Home's `.diary-date` keeps `role="heading" aria-level="1"`
+           (D10) on the photograph; this block is drawn on all ten screens, nine of which have a
+           heading of their own, so a second level-1 in the navigation would be a claim about the
+           page that is not true. -->
+      <p class="rail-id-date">
+        <span class="rail-id-week">{{ weekLabelLine }}</span>
+        <span class="rail-id-range">{{ weekRangeLine }}</span>
+      </p>
+    </div>
     <!-- The one-time callout travels with the face it explains – its rule on Home is «moved with
          the avatar it explains», and a callout left on a photograph that no longer has a face to
          tap points at nothing. Same text, same dismissal, one shared ref. -->

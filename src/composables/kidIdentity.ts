@@ -30,7 +30,7 @@ import { useGameStore } from '../stores/game'
 import { LADDER_LABEL, rankChipTrack } from '../shared/protocol'
 import type { LadderTrack } from '../engine/season/types'
 import { rankLabel } from '../shared/format'
-import { weekDateLine } from '../shared/dates'
+import { weekDateLine, weekSpan, weekYearLabel } from '../shared/dates'
 import { useHeaderAvatar } from './headerAvatar'
 
 /** The long form, where a chip has no room: which table, and the one fact about it that matters.
@@ -61,6 +61,12 @@ export interface KidIdentity {
   headerAvatarUrl: ComputedRef<string>
   /** «W49 2038 · Dec 6 – Dec 12» – Home's own level-1 heading, whole. */
   dateLine: ComputedRef<string>
+  /** …and its two halves, which is what the rail draws on two lines. ⚠ THE LINE'S OWN TWO HALVES,
+   *  `weekYearLabel` and `weekSpan` – not `weekLabel`/`weekRange`, which are a different shape for
+   *  a different surface. `weekDateLine` joins exactly these two, so the rail prints the heading's
+   *  own characters and nothing was written for it. */
+  weekLabelLine: ComputedRef<string>
+  weekRangeLine: ComputedRef<string>
   /** null before her first counting result in ANY table – and then the chip is not drawn at all. */
   chipTrack: ComputedRef<LadderTrack | null>
   ladderLabel: ComputedRef<string>
@@ -133,6 +139,8 @@ export function useKidIdentity(): KidIdentity {
     // OWNER'S RULING over the export, which prints a plain calendar date: our week label with the
     // year in full, then the week's real days. `shared/dates.ts` owns both halves and the join.
     dateLine: computed(() => weekDateLine(week.value)),
+    weekLabelLine: computed(() => weekYearLabel(week.value)),
+    weekRangeLine: computed(() => weekSpan(week.value)),
     chipTrack,
     ladderLabel,
     rankText,

@@ -29,6 +29,7 @@ import { useGameStore } from '../../src/stores/game'
 import { careerSnapshot } from '../helpers/career'
 import { LADDER_LABEL } from '../../src/shared/protocol'
 import { rankLabel } from '../../src/shared/format'
+import { weekDateLine, weekSpan, weekYearLabel } from '../../src/shared/dates'
 import { resetKidHintForTests } from '../../src/composables/kidIdentity'
 import type { Snapshot } from '../../src/shared/protocol'
 import { DESKTOP, PHONE, TABLET, setViewport } from './fits'
@@ -311,3 +312,64 @@ describe('round 36 second pass, P2-6 – the identity block lives on every page'
     expect(owner, 'the composable does not own the movement since last week').toContain('prevRank')
   })
 })
+// =================================================================================================
+// P2-3 – THE WHOLE DATE, TWO LINES, BESIDE THE ROUND AVATAR
+// =================================================================================================
+//
+// ⚠ MUTATION-VERIFIED: dropping `.rail-id-date` from RailIdentity.vue reddens the first arm with
+// «nothing matches»; removing the clip from `.diary-head > .diary-date` reddens the third.
+
+describe('round 36 second pass, P2-3 – the week moves to the rail, on two lines', () => {
+  it('⭐⭐⭐ the two lines are shared/dates.ts’s own two halves, and no separator is invented', async () => {
+    const snap = await homeAt(DESKTOP)
+    expect(text('.rail-id-week'), 'the first line is not the week label').toBe(weekYearLabel(snap.week))
+    expect(text('.rail-id-range'), 'the second line is not the week’s days').toBe(weekSpan(snap.week))
+    // ⭐ AND THE TWO ARE THE PHOTOGRAPH'S OWN HEADING, TAKEN APART. `weekDateLine` joins exactly
+    // these two with « · », so the rail prints no string this app did not already print – which is
+    // the one constraint this item had (invariant 4: no new player-facing copy).
+    expect(
+      weekDateLine(snap.week),
+      'the rail’s two lines are not the heading’s two halves, so a string was invented',
+    ).toBe(`${text('.rail-id-week')} · ${text('.rail-id-range')}`)
+    // Two ELEMENTS, not a wrap: «в 2 строки» has to hold for a short week label as well as a long one.
+    expect(
+      document.querySelectorAll('.rail-id-date > span').length,
+      'the date is not two lines',
+    ).toBe(2)
+  })
+
+  it('⭐⭐ …and it stands to the RIGHT of the round avatar, in a row of its own', async () => {
+    await homeAt(DESKTOP)
+    expect(css('.rail-id-head').display, 'her face and the week are still stacked').toBe('flex')
+    const head = document.querySelector('.rail-id-head')!
+    const kids = [...head.children].map((el) => el.className.split(/\s+/)[0])
+    expect(kids, 'the week is not beside her face, in that order').toEqual([
+      'diary-avatar-btn',
+      'rail-id-date',
+    ])
+  })
+
+  it('⚠ the photograph keeps the page’s HEADING – it is clipped past 1024, never removed', async () => {
+    await homeAt(DESKTOP)
+    const date = document.querySelector('.diary-head > .diary-date')
+    expect(date, 'Home lost its level-1 heading on the desktop').toBeTruthy()
+    expect(date!.getAttribute('role'), 'the heading stopped being a heading').toBe('heading')
+    expect(date!.getAttribute('aria-level'), 'the heading changed level').toBe('1')
+    const cs = css('.diary-head > .diary-date')
+    expect(cs.display, 'the heading was removed instead of clipped – D10’s node would go with it').not.toBe(
+      'none',
+    )
+    expect(cs.clipPath, 'the date’s ink is still on the photograph').toBe('inset(50%)')
+  })
+
+  it('⚠ …and on a phone and a tablet the date has not moved at all', async () => {
+    const snap = await homeAt(PHONE)
+    expect(text('.diary-head > .diary-date'), 'the phone’s date line changed').toBe(weekDateLine(snap.week))
+    expect(css('.diary-head > .diary-date').clipPath, 'the phone’s date is clipped').not.toBe('inset(50%)')
+    expect(css('#app > nav.tab-bar > .rail-id').display, 'the bottom bar grew a date').toBe('none')
+    await homeAt(TABLET)
+    expect(css('.diary-head > .diary-date').clipPath, 'the tablet’s date is clipped').not.toBe('inset(50%)')
+    expect(css('#app > nav.tab-bar > .rail-id').display, 'the tablet grew a rail').toBe('none')
+  })
+})
+

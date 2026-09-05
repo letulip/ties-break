@@ -581,3 +581,58 @@ test('P2-4: the bell, the letter and the gear are in the photograph’s top-righ
     expect(placed!.fromTop, `the row is not at the top of the picture at ${width}`).toBeLessThan(40)
   }
 })
+
+/**
+ * ⭐⭐⭐ P2-3 and P2-6 – «давай на главной десктопе текущую дату всю вынесем в 2 строки и поставим
+ * справа от аватарки круглой, тогда она будет всегда видна и будет удобно», and «и аватар с текущей
+ * позицией и рангом (так же, как и все остальные плашки) на десктоп в боковом меню живут на всех
+ * страницах неизменно».
+ *
+ * The presence-on-every-screen half is `e2e/parity.spec.ts`'s, beside the exemption it costs. What
+ * is measured here is the one thing only a browser can see: the two lines really are two lines, and
+ * they really are to the RIGHT of her face rather than under it.
+ */
+test('P2-3: the week stands beside her face in the rail, on two lines, at 1280', async ({
+  page,
+  careerAt,
+}) => {
+  await careerAt('pro')
+  await answerOpeningKnock(page)
+  await dismissTourBriefing(page)
+  await page.setViewportSize({ width: 1280, height: 900 })
+  await page.getByRole('navigation').getByRole('button', { name: 'Stats', exact: true }).click()
+  await expect(page.getByRole('heading', { name: 'Stats', level: 2 })).toBeVisible()
+
+  const seen = await page.evaluate(() => {
+    const avatar = document.querySelector('#app > nav.tab-bar > .rail-id .diary-avatar-btn')
+    const date = document.querySelector('#app > nav.tab-bar > .rail-id .rail-id-date')
+    const week = document.querySelector('#app > nav.tab-bar > .rail-id .rail-id-week')
+    const range = document.querySelector('#app > nav.tab-bar > .rail-id .rail-id-range')
+    if (!avatar || !date || !week || !range) return null
+    const a = avatar.getBoundingClientRect()
+    const d = date.getBoundingClientRect()
+    const w = week.getBoundingClientRect()
+    const r = range.getBoundingClientRect()
+    return {
+      // «справа от аватарки»: the date's left edge is past the avatar's right edge, and the two
+      // share a horizontal band rather than being stacked.
+      toTheRight: d.left >= a.right,
+      overlapsVertically: d.top < a.bottom && d.bottom > a.top,
+      // «в 2 строки»: the second line starts below the first, and the two do not share a baseline.
+      twoLines: r.top >= w.bottom - 1,
+      lines: [week.textContent?.trim() ?? '', range.textContent?.trim() ?? ''],
+      widthUsed: +d.width.toFixed(2),
+      railWidth: +(document.querySelector('#app > nav.tab-bar')?.getBoundingClientRect().width ?? 0).toFixed(2),
+    }
+  })
+  expect(seen, 'the rail draws no date beside her face at 1280').not.toBeNull()
+  expect(seen!.toTheRight, 'the week is not to the right of the round avatar').toBe(true)
+  expect(seen!.overlapsVertically, 'the week is under her face rather than beside it').toBe(true)
+  expect(seen!.twoLines, 'the week is one line, not two').toBe(true)
+  // The two lines put back together with the heading's own separator ARE the heading on the
+  // photograph – the machine version of «всю». `tests/dates.test.ts` pins the join itself.
+  expect(seen!.lines[0], 'the first line is not our week label').toMatch(/^W\d+ \d{4}$/)
+  expect(seen!.lines[1], 'the second line is not the week’s days').toMatch(/^[A-Z][a-z]{2} \d+ – [A-Z][a-z]{2} \d+$/)
+  // …and it fits the strip it lives in, which is the fit half a mounted test cannot answer.
+  expect(seen!.widthUsed, 'the date is wider than the rail it sits in').toBeLessThan(seen!.railWidth)
+})

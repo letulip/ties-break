@@ -2105,6 +2105,25 @@ async function leaveCollege(): Promise<void> {
     display: none;
   }
 
+  /* ⭐⭐⭐ SECOND PASS, P2-3 – «давай на главной десктопе текущую дату всю вынесем в 2 строки и
+     поставим справа от аватарки круглой, тогда она будет всегда видна и будет удобно». The ink goes;
+     the HEADING stays.
+
+     ⚠⚠ CLIPPED, NOT `display: none`, AND THE REASON IS D10. This `<p>` is Home's `role="heading"`
+     `aria-level="1"` – the page's own level-1 heading, and the only one it has – so removing its box
+     would leave the desktop's Home with no heading at all. The rail's copy cannot take that role
+     instead: past P2-6 the rail is drawn on all ten screens, and nine of them have a level-1 or
+     level-2 heading of their own. So the photograph keeps the heading and shows none of it, which is
+     the standard screen-reader-only shape and costs no paint: `clip-path` removes every pixel and
+     leaves the accessibility node exactly where it was.
+     ⚠ AND IT KEEPS `flex: 1`, deliberately: it is the slack that pins P2-4's three icons to the
+     RIGHT of the header row. A date taken out of flow would send them to the left edge. */
+  .diary-head > .diary-date {
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+  }
+
   .card-grid {
     display: contents;
   }

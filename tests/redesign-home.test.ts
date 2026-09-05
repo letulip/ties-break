@@ -120,6 +120,20 @@ describe('weekDateLine – the header date line, in one place', () => {
     expect(homeLogic).toContain('weekDateLine(week.value)')
     expect(home).not.toMatch(/`W\$\{/)
   })
+
+  // ⭐⭐ P2-3 – AND THE RAIL DRAWS THE LINE'S OWN TWO HALVES, not two lookalikes. `weekYearLabel` and
+  // `weekSpan` are what `weekDateLine` joins; `weekLabel` and `weekRange` are a DIFFERENT pair for
+  // different surfaces, and printing those on the desktop would have changed what he reads.
+  // The join itself is pinned across 40 seasons in tests/dates.test.ts.
+  it('the rail’s two lines are the line’s own two halves, and no third shape was spelled', () => {
+    const rail = read('../src/components/RailIdentity.vue')
+    expect(rail, 'the rail spells a week itself').not.toMatch(/`W\$\{/)
+    expect(rail).toContain('{{ weekLabelLine }}')
+    expect(rail).toContain('{{ weekRangeLine }}')
+    const owner = read('../src/composables/kidIdentity.ts')
+    expect(owner).toContain('weekLabelLine: computed(() => weekYearLabel(week.value))')
+    expect(owner).toContain('weekRangeLine: computed(() => weekSpan(week.value))')
+  })
 })
 
 // ===========================================================================

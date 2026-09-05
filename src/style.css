@@ -911,6 +911,41 @@ body {
     height: 46px;
   }
 
+  /* ⭐⭐⭐ ROUND 36 SECOND PASS, P2-3 – THE WEEK, BESIDE HER FACE, ON TWO LINES. His words:
+     «давай на главной десктопе текущую дату всю вынесем в 2 строки и поставим справа от аватарки
+     круглой, тогда она будет всегда видна и будет удобно»
+
+     The rail's own column is `flex-direction: column`, so the face and the date need a row of their
+     own to be side by side; this is that row and it holds nothing else. */
+  #app:has(> nav.tab-bar) > nav.tab-bar > .rail-id .rail-id-head {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    align-self: stretch;
+  }
+
+  /* ⚠ TWO LINES ARE TWO ELEMENTS AND NOT A WRAP. A wrap depends on the label's length – «W9 2031»
+     and «W49 2038» wrap differently – so «в 2 строки» would be true for some weeks and not others.
+     A column of two spans is two lines for every week of every career.
+     ⚠ AND THE TYPE IS THE PHOTOGRAPH'S OWN, one rung down for a 196px strip: same weight, same
+     tabular digits, so the week reads as the same object in both places. */
+  #app:has(> nav.tab-bar) > nav.tab-bar > .rail-id .rail-id-date {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    margin: 0;
+    font-size: 12.5px;
+    font-weight: 600;
+    line-height: 1.25;
+    letter-spacing: 0.01em;
+    color: var(--ink);
+    font-variant-numeric: tabular-nums;
+  }
+
+  #app:has(> nav.tab-bar) > nav.tab-bar > .rail-id .rail-id-range {
+    color: var(--ink-soft);
+  }
+
   /* The callout hangs under the face on the phone (`position: absolute` against the hero) and hangs
      under it here too – as a block in the rail's own column, because there is no hero to hang off.
      Same tokens, same arrow suppressed: an arrow drawn against a photograph has nothing to point at
