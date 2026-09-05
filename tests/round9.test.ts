@@ -725,13 +725,19 @@ describe('pt4 — UI wiring', () => {
   // show an emotion all take it from ONE composable – still holds for the two that remain; the
   // header is now age-only by owner decision (tests/round11-followups.test.ts).
   it('R9-13/15: both emotional portrait surfaces run through the shared emotion composable', () => {
-    for (const p of ['../src/components/screens/HomeScreen.vue', '../src/components/screens/KidScreen.vue']) {
-      expect(read(p)).toContain('useKidEmotion')
+    for (const p of ['components/screens/HomeScreen.vue', 'components/screens/KidScreen.vue']) {
+      expect(componentLogic(p)).toContain('useKidEmotion')
     }
     // ⚠ RE-AIMED by A2 (28.07): the static age-only crop moved off the deleted app header onto
     // Home, beside the date. Home is now the one screen carrying BOTH faces – the big emotional
     // painting and the small chrome avatar – and they still answer to different composables.
-    expect(read('../src/components/screens/HomeScreen.vue')).toContain('useHeaderAvatar')
+    // ⚠ RE-AIMED AGAIN BY P2-6 (05.09): `useHeaderAvatar` moved into src/composables/kidIdentity.ts
+    // when the identity block became chrome on every screen. A positive claim reads `componentLogic`
+    // – the SFC plus its composables – which is what makes it survive an extraction it was never
+    // about. The NEGATIVE claim below still reads App.vue's own text: the shell mounts
+    // `<RailIdentity>` but derives nothing itself, which is the thing this line has always guarded
+    // and which tests/component/round36-pass2-home.test.ts now also proves from the other side.
+    expect(componentLogic('components/screens/HomeScreen.vue')).toContain('useHeaderAvatar')
     expect(read('../src/App.vue')).not.toContain('useHeaderAvatar')
   })
 

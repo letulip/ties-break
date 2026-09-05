@@ -12,7 +12,7 @@
 // F45-1 is a source-reading test on purpose: it is a fact about WIRING, and wiring is exactly what
 // silently rots (same discipline as round10.test.ts / round11-view.test.ts).
 import { describe, it, expect } from 'vitest'
-import { worldSource } from './worldSource'
+import { componentFile, componentLogic, worldSource } from './worldSource'
 import { readFileSync } from 'node:fs'
 import { headerCropUrl } from '../src/composables/headerAvatar'
 import { portraitAssetStem, portraitStage, type PortraitEmotion } from '../src/shared/avatarEmotion'
@@ -130,14 +130,21 @@ describe('F45-1 — the header avatar is age-only, never emotional', () => {
     // faces now sit on one screen. What the guard protects is unchanged and the pin is sharper for
     // it: the big painting is the emotion composable's, the small crop is the age-only one's, and
     // no element takes both.
-    const home = read('../src/components/screens/HomeScreen.vue')
+    // ⚠ RE-AIMED BY P2-6 (05.09), not weakened: the identity block became permanent chrome, so
+    // `useHeaderAvatar` now runs inside src/composables/kidIdentity.ts, which HomeScreen imports.
+    // The claim is unchanged - it is a POSITIVE one ("this logic exists on this surface") and
+    // `componentLogic` is the helper for exactly that: the SFC plus every composable it imports,
+    // so it survives an extraction. The two NEGATIVE claims still read the .vue ALONE, because
+    // "this file does not wire one face to the other's element" is a statement about this file.
+    const home = componentLogic('components/screens/HomeScreen.vue')
+    const homeFile = componentFile('components/screens/HomeScreen.vue')
     expect(home).toContain('useKidEmotion')
     expect(home).toContain('useHeaderAvatar')
     expect(home).toContain('class="diary-hero-img" :src="portraitUrl"')
     expect(home).toContain(':src="headerAvatarUrl"')
     // Neither source is wired to the other's element.
-    expect(home).not.toContain('class="diary-avatar" :src="portraitUrl"')
-    expect(home).not.toContain('class="diary-hero-img" :src="headerAvatarUrl"')
+    expect(homeFile).not.toContain('class="diary-avatar" :src="portraitUrl"')
+    expect(homeFile).not.toContain('class="diary-hero-img" :src="headerAvatarUrl"')
     // And the age-only composable is still emotion-blind at the source (checked above too).
     expect(read('../src/composables/headerAvatar.ts')).not.toContain('useKidEmotion')
   })

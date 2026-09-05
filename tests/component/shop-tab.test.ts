@@ -182,7 +182,13 @@ describe('what the shelf says about a thing the family owns', () => {
     // ⚠ RE-AIMED, ROUND 30 #5: a car lives on the `Cars` segment, so the text this arm reads is the
     // shelf's across its six tabs rather than the one page that happens to be open first.
     const text = await shelfText(wrapper)
-    expect(text).toContain('$110,000') // paid
+    // ⚙ ROUND 36 REVIEW #12 – «С купленной машины убираем paid серые буквы», so the $110,000 this
+    // line used to look for is no longer printed on a car. ⚠ THE ARM IS NOT WEAKENED BY DROPPING
+    // IT: what it is really about is that the SCREEN subtracts nothing, and the two figures below
+    // are the engine's own. What it costs is a figure on the card, and the check that it is not
+    // LOST is where the removal is argued – round35-shop.test.ts's «Worth now» arm, which asserts
+    // the worth and the gain are both still there and that paid is their difference.
+    expect(text, 'and the purchase price is gone from the car with it').not.toContain('paid $110,000')
     expect(text).toContain('$91,091') // worth now
     expect(text).toContain('-$18,909') // the loss, signed
     expect(text).toContain('(-17%)') // ...and as a whole percentage

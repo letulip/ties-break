@@ -1448,6 +1448,38 @@ const matchMeta = computed(() => (stats.value ? matchStatMeta(stats.value) : nul
   justify-content: flex-end;
 }
 
+/* ⭐⭐ ROUND 36 PHASE 4 – THE VENUE PLATE TAKES A SHAPE, BECAUSE THE COLUMN UNDER IT NOW GROWS.
+   `min-height: 300px` on a 343px column is a plate that is nearly square, which is what this brief
+   has always drawn. The takeover column is 848px past 1024 now, and 848 x 300 is **2.83 : 1** over a
+   512x512 master (`public/images/fields/*`, measured) – i.e. two thirds of the painting thrown away,
+   which is D6's own objection to a flat height arriving on a third hero.
+
+   ⚠ IT DOES NOT READ `--hero-aspect`, AND THAT IS THE POINT RATHER THAN AN OVERSIGHT. That token's
+   desktop rung is `450 / 400` – AC's shape for Home's photograph, which is a COLUMN of a two-column
+   page and is capped by `--hero-max`. This plate is a full-width block with a title laid on its foot
+   and no cap; at `450 / 400` it would be **754px tall**, a venue photograph taller than the brief it
+   introduces. What it takes is the token's TABLET rung, which is the shape the owner accepted for a
+   wide hero (D6, «768 – 400px»), held all the way up.
+
+   ⚠⚠ AND IT IS AN ASK RATHER THAN A GUARANTEE, WHICH IS WORTH KNOWING BEFORE READING THE NUMBERS.
+   `.tf-body` is a column flex container and this plate is a `flex: 0 1 auto` item in it, so when the
+   brief is taller than the screen every block on it shrinks – the ratio sets what the plate ASKS for
+   and the shrink decides what it gets. Measured in Chromium on the shipped build:
+
+     1280 x  900   848 x 329.05   (it asked 441.66; the brief overflows a 900px window)
+     1280 x 1200   848 x 441.66   (the whole shape, because the page fits)
+      768 x  900   736 x 329.05   (it asked 383.33)
+
+   – so the plate takes the shape when there is room for it and gives way when there is not, which is
+   this column's own behaviour and not a second mechanism. Even shrunk it is a real move: 2.58 : 1 at
+   1280 against the 2.83 : 1 a flat 300px was giving.
+   ⚠ Below 768 there is no rule, so the phone's plate is the 343 x 300 it has always been. */
+@media (min-width: 768px) {
+  .tf-hero {
+    aspect-ratio: 768 / 400;
+  }
+}
+
 .tf-hero-art {
   position: absolute;
   inset: 0;

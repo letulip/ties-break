@@ -449,11 +449,21 @@ const spendRange = computed<[number, number]>(() => {
    under it, and only the pill takes the press. */
 .week-proceed {
   position: fixed;
-  left: 50%;
+  /* ⭐ ROUND 36 PHASE 3 – see `.cal-go` in CalendarScreen.vue: from 1024 the rail moves the middle of
+     the reading column off the middle of the window, and the bottom clearance becomes a margin off
+     the page's edge because there is no bar under it any more. Both tokens compute to this rule's
+     own 50% and 58px below 1024. */
+  left: var(--app-bar-left);
   transform: translateX(-50%);
-  bottom: 58px;
+  bottom: var(--app-bar-bottom);
   width: 100%;
-  max-width: 520px;
+  /* ⚠ ROUND 36 PHASE 2 – see `.cal-go` in CalendarScreen.vue and the shell's own week button in
+     src/style.css: three copies of one floating-CTA box, and phase 1 moved only the one that lives
+     in the sheet. The button is centred, so the token changes nothing on screen at any width; it
+     stops this box from being a 520px island under a 736px column.
+     ⚠ The shell's rule is not named by its class here on purpose - tests/round13-nav.test.ts reads
+     this file as text and refuses that name in a tab screen, comments included. See CalendarScreen. */
+  max-width: var(--app-bar-max);
   display: flex;
   justify-content: center;
   padding: 0 16px;

@@ -55,7 +55,7 @@
 //     `round26-money-share.test.ts`'s three cases stay green through it, which is the proof that
 //     the move did not touch the copy.
 //   * the plaque deleted from MoneyScreen                 -> the "kept, not deleted" arm.
-import { describe, it, expect, beforeEach, vi } from 'vitest'
+import { describe, it, expect, afterEach, beforeEach, vi } from 'vitest'
 // ⚠ A RUNNER-SIZED CEILING, the arithmetic `round26-money-share.test.ts` writes out in full: these
 // cases mount real screens over a career walked ~600 weeks, and GitHub's 2-core runner is measured
 // at 4-5x this machine on this suite. The walk itself is hoisted out of the cases (see `paid()`),
@@ -64,6 +64,7 @@ vi.setConfig({ testTimeout: 30_000 })
 import { mount } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
 import '../../src/style.css'
+import { DESKTOP, PHONE, setViewport } from './fits'
 import WeekRecapCard from '../../src/components/WeekRecapCard.vue'
 import MoneyScreen from '../../src/components/screens/MoneyScreen.vue'
 import { useGameStore } from '../../src/stores/game'
@@ -663,5 +664,43 @@ describe('the Budget plaque is demoted, not deleted', () => {
     // ⚠ AND IT IS STILL OUTSIDE EVERY TAB GUARD, which was the half of its old placement that was
     // never about height: the ledger tab is where the prize rows it is about live.
     expect(wrapper.find('.money-share').exists()).toBe(true)
+  })
+})
+
+// ⭐⭐ ROUND 36 PHASE 3 – «HER OWN ACCOUNT» DOES NOT STRETCH TO A DESKTOP. The owner, on frame
+// AM-family-budget-desktop-1024.png: «"Её собственный счёт" – наша с фотографией, во всю ширину
+// растягивать не обязательно, посмотрите, чтобы красиво было.» AM draws it edge to edge; with the
+// rail taking its strip that is a 948px box holding two sentences at 1280, which is a line of type
+// nobody can track back to the start of.
+//
+// ⚠ AND ROUND 35 #3's CARD IS OTHERWISE UNTOUCHED – D7 in docs/specs/responsive-decisions-2026-09.md
+// is his instruction that this strip stays OURS, with the photograph the design's own frame drops.
+// A cap is the only declaration this phase adds to it.
+//
+// MUTATION-VERIFIED: the `max-width` deleted -> the desktop arm alone; the media query removed from
+// around it -> the desktop arm AND the phone arm.
+describe('round 36 phase 3 – the plaque stops at a reading width on a desktop', () => {
+  beforeEach(() => setActivePinia(createPinia()))
+  afterEach(() => setViewport(PHONE))
+
+  it('⭐ capped at 640px, and it keeps the photograph', () => {
+    expect(document.head.querySelector('style'), 'no stylesheet – this measurement is vacuous').toBeTruthy()
+    setViewport(DESKTOP)
+    useGameStore().snapshot = paid()
+    const wrapper = mount(MoneyScreen, { global: { stubs: { teleport: true } }, attachTo: document.body })
+    const strip = wrapper.find('.money-share')
+    expect(strip.exists(), 'the plaque is on screen, or this measures nothing').toBe(true)
+    expect(getComputedStyle(strip.element).maxWidth, 'two sentences do not run to 948px').toBe('640px')
+    expect(wrapper.find('.money-share-photo').exists(), 'and the polaroid is still beside them').toBe(true)
+    wrapper.unmount()
+  })
+
+  it('⚠ and on a phone it is the full width it has always been', () => {
+    setViewport(PHONE)
+    useGameStore().snapshot = paid()
+    const wrapper = mount(MoneyScreen, { global: { stubs: { teleport: true } }, attachTo: document.body })
+    const box = getComputedStyle(wrapper.find('.money-share').element)
+    expect(box.maxWidth === '' || box.maxWidth === 'none', 'no cap on a phone').toBe(true)
+    wrapper.unmount()
   })
 })

@@ -1009,11 +1009,155 @@ const practiceWeekLabel = computed(() => weekLabel(week.value))
    the package picker draw the same six paintings and were missed. The crop is steered below, off
    `--crop-vacation-x`, so all three now read one number. The paragraph above is kept because its
    argument - one slot, one silhouette - is still the right call; only its verification was partial. */
+/* ⭐ ROUND 36 REVIEW #16 – D's 286 IS A TOKEN. It was made one because the cap below and the width
+   of the square window past 768 were the SAME number by construction: a square photograph in a band
+   is «as wide as the band is tall», so spelling 286 twice would have been a pair one edit away from
+   a rectangle. Nothing about the base rule moved – the value is D's own.
+   ⚠ RE-AIMED BY P2-5: the second reader is gone and the photograph is a RECTANGLE on purpose now
+   (see the block past 768), so this token is once again the band's HEIGHT and nothing else. It is
+   kept as a token rather than folded back into a literal because it is what caps row 1 of the grid,
+   and «the card may not grow» is a claim about exactly that number – the mounted arm in
+   `tests/component/round36-pass2-shop-recap.test.ts` reads it. */
+.recap-card {
+  --recap-art-h: 286px;
+}
+
 .recap-art {
   aspect-ratio: 390 / 286;
-  max-height: 286px;
+  max-height: var(--recap-art-h);
   border-radius: var(--radius-card);
   overflow: hidden;
+}
+
+/* ⚠⚠ ROUND 36 PHASE 2 – AND THE `max-height` ABOVE WAS TAKING THE WIDTH DOWN WITH IT. Measured on
+   the shipped build, this box is 343x251 at 375 and then 390x286 at EVERY width above it: 520, 576,
+   768, 900, 1280. The cap was written for exactly the case it broke - «capped at D's number so a
+   tablet does not turn the story into a poster» - but a block with `aspect-ratio` and a violated
+   `max-height` has its width transferred back down the ratio, so the picture stopped growing at
+   390px while the paper note that RIDES it kept spanning the column. At 768 that is a 390px
+   photograph under a 736px note, which is not a proportion anyone chose.
+   ⭐ `width: 100%` is the author's own intent said in the axis that was missing: the column decides
+   the width, `max-height` still decides the height, and the story is a 736x286 band instead of a
+   poster - the shape that paragraph is describing.
+   ⚠ IT IS INSIDE THE TABLET BLOCK AND THE 520/576 CASE IS DELIBERATELY LEFT ALONE. Phase 2's
+   contract (docs/specs/responsive-2026-09.md) is that nothing below 768 may move, and those two
+   widths are below it. The same collapse is there and is a phase-4 or an owner call, recorded in
+   docs/rounds/round-36.md rather than quietly fixed on the way past. */
+/* =================================================================================================
+   ⭐⭐⭐ ROUND 36 REVIEW #16 – THE STORY BECOMES A BAND WITH A SQUARE PHOTOGRAPH AND A NOTE BESIDE IT
+   =================================================================================================
+   The owner, 04.09, and it is three moves in one sentence: «нижняя записка на скотче давай сделаем
+   ее на 50-60% ширины, как на календаре примерно. Блок картинок предлагаю сделать более квадратным,
+   справа темный фон, а вот эту верхнюю записку (на всю длину скрина) ставим тоже квадратиком
+   неправильной формы как раз на это место справа пустое освободившееся.» (quoted here rather than
+   in the template: `tests/template-copy-rules.test.ts` bans Cyrillic inside a `<template>`, strings
+   AND comments, and welcomes it in a `<script>` or `<style>` one – «that is where the design record
+   lives», in its own words).
+
+     1. THE PICTURE BECOMES SQUARE and the rest of the band is dark ground – «более квадратным,
+        справа темный фон». The BLOCK keeps phase 2's `width: 100%` and D's 286px height, so the
+        card is not one pixel taller; what changed is that the photograph is now 286x286 at the left
+        of it instead of a 736x286 letterbox.
+        ⚠ SUPERSEDED IN PART BY P2-5 (05.09), and only in part: he asked for the photograph at half
+        the card, so it is a rectangle again – 384x286 at 768 – and «кропаем немного» is his answer
+        to what that costs. The dark ground, the block's own box and the note beside it are his from
+        this item and are untouched. The P2-5 block below carries the whole of it.
+     2. THE TOP NOTE MOVES INTO THE SPACE THAT FREES – «ставим квадратиком неправильной формы как
+        раз на это место справа пустое освободившееся». Its paper is untouched: the tilt, the torn
+        cut, the ruling, the margin rule and the doodle are `PaperNote`'s and none of them is
+        touched here, which is «квадратиком неправильной формы» – the shape is the object's.
+     3. THE TAPED NOTE AT THE FOOT NARROWS to the band he gave – see `.recap-goal` below.
+
+   ⭐ IT IS A GRID AND NOT AN OVERLAY, and that is the whole reason the card does not move under it.
+   Both items sit in ROW 1: the painting spans the row and the note takes the second column on top
+   of it (`z-index: 1`, which the note already had for riding the picture). Everything else in the
+   card keeps its own place in the flow with its own margins, and `row-gap: 0` is explicit so the
+   rhythm below row 1 is byte for byte the block layout's.
+
+   ⚠ THE FIRST COLUMN WAS THE BAND'S HEIGHT, so the photograph was square at 768, at 900 and at 1280
+   without a second number: `--recap-art-h` is D's 286 and both readers took it. The gap after it is
+   dark ground the note is laid ON rather than aligned to.
+
+   ⚠ AND THE NOTE STOPS RIDING THE PICTURE, which is the one declaration of its own it gives up:
+   `margin: -34px -2px 0` lifted it 34px over the painting's bottom edge, and beside the painting
+   that lift would hang it out of the top of the card. `align-self: center` puts it where the free
+   space is instead. Below 768 not one of these rules exists and the note rides the picture exactly
+   as it always has. */
+/* =================================================================================================
+   ⭐⭐⭐ ROUND 36 SECOND PASS, P2-5 – THE COLUMN IS HALF THE CARD AND THE PHOTOGRAPH IS NO LONGER
+   SQUARE
+   =================================================================================================
+   The owner off the stand, 05.09: «на week results картинку крупнее на 50% ширины контейнера с ней
+   и кропаем немного, записка следовательно, станет чуть уже.» (quoted here rather than in the
+   template for the reason the block above gives.)
+
+   ⭐ IT IS ONE NUMBER MOVING, and the shape of item 16 is untouched. The first track and the
+   photograph inside it read ONE token exactly as they read `--recap-art-h` before – `--recap-art-w`
+   is 50% and both take it, so «half the card» cannot drift into a picture that no longer fills its
+   own column. The BLOCK still spans both tracks at `width: 100%` with `--card-bottom` behind it, so
+   item 16's «справа темный фон» is still what is beside the picture; the note is still laid ON that
+   ground in column 2.
+
+   ⭐ SO THE PICTURE IS A RECTANGLE NOW AND THAT IS THE POINT. 286x286 becomes 384x286 at 768,
+   450x286 at 900 and 640x286 at 1280 – bigger at every width, and no longer the band's own height,
+   so `object-fit: cover` crops into the sides of it. He said so himself: «кропаем немного». The
+   vacation steer (`--crop-vacation-x`, below) still decides WHERE, which is why her face survives a
+   wider window for the same reason it survived a narrower one.
+
+   ⚠ «ЗАПИСКА СЛЕДОВАТЕЛЬНО, СТАНЕТ ЧУТЬ УЖЕ» IS A CONSEQUENCE AND NOT A SECOND INSTRUCTION, so no
+   rule of the note's own moves: column 2 is the card less the gap and the half, and the scrap goes
+   from 59.1% of the card to 46.4% at 768, 65.1% to 46.9% at 900 and 75.5% to 47.8% at 1280. The
+   TAPED note at the foot is a different object on a row of its own and keeps D72's 55%.
+
+   ⚠ AND THE CARD IS NOT ONE PIXEL TALLER: row 1 is still capped by the band, because `.recap-art`
+   keeps its 286px cap and the scrap – modelled at its new narrower width – comes to 94.7px at 768
+   and 900 and 64.4px at 1280, nowhere near it. The card models 984.85px at all three widths before
+   and after. That is an arm of its own in the mounted file rather than a hope.
+
+   ⚠ FROM 768 UP, and below it nothing here exists at all: the token, the track and the image width
+   are all declared inside this block. */
+@media (min-width: 768px) {
+  .recap-card {
+    --recap-art-w: 50%;
+    display: grid;
+    grid-template-columns: var(--recap-art-w) minmax(0, 1fr);
+    column-gap: 16px;
+    row-gap: 0;
+    align-items: start;
+  }
+
+  /* ⚠⚠ AND THE TWO PLACED ITEMS ARE ADDRESSED AS CHILDREN, NOT BY CLASS ALONE – measured, not
+     assumed. Vue's scoping makes `.recap-card > *` into `.recap-card[data-v] > *[data-v]`, which is
+     (0,3,0), and a bare `.recap-note[data-v]` is (0,2,0): the span would have won and the note
+     would have sat UNDER the picture at full width, which is the shipped layout wearing a grid.
+     It was built that way first and the mounted arm read `1 / -1` back. */
+  .recap-card > * {
+    grid-column: 1 / -1;
+  }
+
+  .recap-card > .recap-art {
+    grid-row: 1;
+    width: 100%;
+    background: var(--card-bottom);
+  }
+
+  /* `.week-art img`'s own `width: 100%` is what made this a letterbox; the height stays 100% of the
+     band, so the window is exactly the first track and the picture fills it. Item 16 set this to
+     `--recap-art-h` and got a square; ⚠ RE-AIMED BY P2-5 to `--recap-art-w`, which is half the card
+     and is the same token the track takes. `object-fit: cover` crops sideways, which is the A2c/d
+     ruling every other slot on this screen already obeys and is «кропаем немного» said in CSS – and
+     the vacation crop above still steers WHERE, so her face survives this window for the same
+     reason it survived the two before it. */
+  .recap-card > .recap-art img {
+    width: var(--recap-art-w);
+  }
+
+  .recap-card > .recap-note {
+    grid-row: 1;
+    grid-column: 2;
+    align-self: center;
+    margin: 0 12px 0 0;
+  }
 }
 
 /* ⭐ ROUND-17 #26 – the vacation weeks, and only those. Scoped, so it beats the shared
@@ -1359,6 +1503,23 @@ const practiceWeekLabel = computed(() => weekLabel(week.value))
    beside the note instead of across its top edge. */
 .recap-goal {
   margin-top: 16px;
+}
+
+/* ⭐⭐ ROUND 36 REVIEW #16, THE THIRD MOVE – «нижняя записка на скотче давай сделаем ее на 50-60%
+   ширины, как на календаре примерно». 55% is the middle of the band he gave, which puts the scrap
+   at 405px of a 736px column and 522px of the desktop's 948 (measured) – wider than the calendar's own 280px
+   fridge note in pixels, and the same THING as it in the only sense he can have meant: a piece of
+   paper visibly narrower than the page it is laid on rather than another full-width card.
+   ⚠ A SHARE AND NOT A `max-width` IN PIXELS, which is where this differs from `.cal-note`: a fixed
+   280 would read as half a scrap at 768 and a quarter of one at 1280, and his instruction is a
+   PROPORTION. The calendar's own note is the surface he compared it to, not the rule to copy.
+   ⚠ FROM 768 UP. His sentence names no width and the round's contract is that nothing below 768
+   moves without one – and here the phone is the case the number cannot survive: 55% of 343px is
+   189px, and «Next goal» plus a goal at 21px inside it is four lines of scrap where there are two. */
+@media (min-width: 768px) {
+  .recap-goal {
+    width: 55%;
+  }
 }
 
 .recap-goal :deep(.tb-paper) {

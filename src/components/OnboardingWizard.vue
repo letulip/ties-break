@@ -747,6 +747,45 @@ function start(): void {
   margin-inline: auto;
 }
 
+/* ⭐⭐⭐ ROUND 36 PHASE 4 – THE READING COLUMN INSIDE THE SHELL, AND IT IS A DIFFERENT QUESTION FROM
+   THE SHELL'S OWN WIDTH.
+
+   MEASURED ON THE SHIPPED BUILD before a line of this was written, at 1280x900: the shell is 880,
+   the pane 842, and «First name» is a text input **780px wide**. The three-up country grid is fine
+   at that width and the family rows are readable, but a name field the width of a laptop screen is
+   the thing rule 4 of this round is about – «a wide viewport makes a full-width control look wrong
+   long before it breaks», and the owner asked for exactly this judgement on `Her own account`:
+   «можно его НЕ тянуть на всю ширину, посмотрите, чтобы красиво было».
+
+   640 is the number phase 3 capped that card at, and this is the same claim about the same kind of
+   thing: it is the app's own paragraph-and-form measure carried out to a desktop. Measured after:
+   the input is 584px at every width from 768 up.
+
+   ⚠⚠ THIS DOES NOT ANSWER PHASE 1'S OPEN QUESTION AND MUST NOT BE READ AS ANSWERING IT. That
+   question is «do the wizard and the tour briefing follow the frame out to 1200 on a desktop, or
+   keep the 880 they have today?», it is the owner's, and `--app-max-width` above is still where it
+   gets made. What this changes is what the answer BUYS: with the reading column capped, 880 and
+   1200 differ only in how much page is either side of the same column – so if he wants the wizard
+   to feel wider on a monitor, the lever is this cap and not that token. Said in as many words in
+   `docs/specs/responsive-decisions-2026-09.md` D24, because a change that makes an open question
+   cheaper is one press away from a change that quietly closes it.
+
+   ⚠ THE CAP IS ON `ScreenShell`'s THREE SLOTS AND NOT ON `.ob-pane`, which is where it looks like it
+   belongs. The pane is a scrollport carrying `margin: -3px -3px 0; padding: 3px` – the focus-ring
+   clip fix of 30.07 – and an `auto` inline margin there would have fought that -3px for the centring.
+   The head, the body and the foot are the column; capping all three is what keeps the step rail, the
+   heading, the fields and the Back/Next pair on one axis. `:deep` because they are ScreenShell's
+   elements and carry its scope id, not this file's. */
+@media (min-width: 768px) {
+  .ob-shell :deep(.tb-screen-head),
+  .ob-shell :deep(.tb-screen-body),
+  .ob-shell :deep(.tb-screen-foot) {
+    width: 100%;
+    max-width: 640px;
+    margin-inline: auto;
+  }
+}
+
 /* --- the step rail --------------------------------------------------------- */
 .ob-steps {
   display: flex;
