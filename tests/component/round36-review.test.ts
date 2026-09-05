@@ -346,6 +346,14 @@ describe('round 36 review #15 – the artefact column gets air', () => {
 // `grid-column: 2` -> `1` on the note -> the «beside, not under» arm alone; `width: var(--recap-art-h)`
 // dropped from the image -> the square arm alone; `width: 55%` -> `100%` on the goal -> the taped
 // note's arm alone.
+//
+// ⚠⚠ AND TWO OF THESE ARMS WERE RE-AIMED BY P2-5 (05.09), which is item 16's second move revisited:
+// «картинку крупнее на 50% ширины контейнера с ней и кропаем немного». The picture is no longer
+// square – the first track is half the card and the window fills it – so the two assertions that
+// pinned 286 now pin 384 at 768 and `50% minmax(0, 1fr)`. Nothing was deleted or weakened, and the
+// item's OTHER claims (the band's box, D's cap, the dark ground, the note in column 2, the taped
+// note at 55%) are exactly as item 16 left them. Each re-aimed line carries its own note, and the
+// new behaviour is measured at 768, 900 and 1280 in `round36-pass2-shop-recap.test.ts`.
 describe('round 36 review #16 – the week’s story past 768', () => {
   beforeEach(() => {
     setActivePinia(createPinia())
@@ -370,7 +378,13 @@ describe('round 36 review #16 – the week’s story past 768', () => {
     return wrapper
   }
 
-  it('⭐⭐ the picture is square and the rest of the band is dark ground', async () => {
+  // ⚠⚠ RE-AIMED BY P2-5 (05.09) – NOTHING HERE IS DELETED OR LOOSENED, TWO NUMBERS MOVED. He asked
+  // for the photograph at «50% ширины контейнера с ней», so the first track is half the card and the
+  // window is a RECTANGLE on purpose: 384x286 at 768 instead of 286x286. This arm's other four
+  // claims are item 16's and are untouched – the block still spans the card, still stops at D's 286,
+  // still stands on `--card-bottom`, and the picture is still cropped rather than letterboxed. The
+  // «one token, two readers» property is untouched too; the token it names is `--recap-art-w` now.
+  it('⭐⭐ the picture takes half the card and the rest of the band is dark ground', async () => {
     assertSheetPresent()
     const wrapper = await mountRecap(TABLET, 'r36r-16-square')
     const art = document.querySelector('.recap-art')!
@@ -381,11 +395,11 @@ describe('round 36 review #16 – the week’s story past 768', () => {
     // ⚠ THE TOKEN'S OWN VALUE, not a colour typed here: `--card-bottom` is the ground every photo
     // card in the app already stands on, so «справа темный фон» borrows a dark rather than adding one.
     expect(cs.background.toLowerCase(), 'dark ground behind the picture').toContain('#121a22')
-    // ⚠ THE PICTURE IS AS WIDE AS THE BAND IS TALL, which is «square» said in one declaration and
-    // read off the SAME custom property the cap above reads.
+    // ⚠ THE PICTURE IS HALF THE CARD, read off the SAME custom property the first track reads – the
+    // shape item 16 gave this pair, with P2-5's number in it.
     const img = getComputedStyle(art.querySelector('img')!)
-    expect(px(img.width, TABLET.width), 'the window is 286 wide against a 286 band').toBe(286)
-    expect(img.height, 'and full height of it, so it is square by arithmetic').toBe('100%')
+    expect(px(img.width, TABLET.width), 'the window is 384 wide against a 286 band').toBe(384)
+    expect(img.height, 'and full height of it, so it is a rectangle by arithmetic').toBe('100%')
     expect(img.objectFit, 'cropped sideways on the narrower window, never top or bottom').toBe('cover')
     wrapper.unmount()
   })
@@ -397,10 +411,13 @@ describe('round 36 review #16 – the week’s story past 768', () => {
     expect(note, 'the week’s handwritten scrap is on this card').toBeTruthy()
     const card = getComputedStyle(document.querySelector('.recap-card')!)
     expect(card.display, 'the card lays the two out itself').toBe('grid')
+    // ⚠ RE-AIMED BY P2-5: the first track was the band's own height (`286px`, a square window) and
+    // is half the card now. The claim this arm makes – the note stands in the SECOND column of the
+    // picture's row – is item 16's and is unchanged; only the track it stands beside moved.
     expect(
       card.gridTemplateColumns.replace(/\s+/g, ' '),
-      'the first column is the band’s own height, so the picture is square in it',
-    ).toBe('286px minmax(0, 1fr)')
+      'the first column is half the card, and the note takes what is left of it',
+    ).toBe('50% minmax(0, 1fr)')
     const cs = getComputedStyle(note!)
     expect(cs.gridColumn, 'the note takes the second column').toBe('2')
     expect(cs.gridRow, 'in the picture’s own row').toBe('1')
