@@ -46,10 +46,20 @@ is half a question. His numbering, his words, then the reading.
   taller at some width. What is left to establish is how much of that 6px is affordable now.
 
 - [>] **6. «Плитку тренера напротив выбранного текущего сделать обычной высоты (как на экранах
-  магазина реализовано), сейчас она тоже высокая»** – build. The hired coach's row carries its own
-  taller floor (132px against the ordinary 118). ⚠ **It also carries a wider 78px window, and
-  `coach-match-edge.md` §4's anti-shopping rule is the reason.** A shorter row supplies less
-  picture, and round-18 #2's geometry is exactly the constraint: the fade must reach transparent
-  before the clip, or the portrait gets a hard edge down his side. Whether the floor can drop to 118
-  with a 78px strip is arithmetic, not taste – and if it cannot, the honest answer is the strip
-  narrows with it or the row stays.
+  магазина реализовано), сейчас она тоже высокая»**, clarified by him the same hour: «выбранный
+  тренер, с ним всё ок, а вот напротив него есть НЕ выбранный тренер (как НЕ купленная машина) -
+  эту карточку прошу сделать обычного размера, не высокую»** – build, and it reverses half of `D4`.
+
+  ⚠ **I read this wrong the first time** and had briefed it as "the hired coach's row is too tall".
+  It is not: **the hired card is fine**. The card he means is the one BESIDE it in the two-up row –
+  an ordinary, un-hired coach that is being stretched to the hired card's height because the row
+  makes them equal. His own model is the shop, where a car nobody bought keeps its natural height
+  next to one that was.
+
+  ⭐ `D4` (round 36) says this in its own words: «What he does get is "во всю высоту": the two cards
+  in a row are the same height now, and the portrait fills the taller of the pair.» That equalising
+  is what he is now asking to undo for the un-hired side.
+
+  ⚠ **The hired card's own geometry does NOT move**: `.cm-row.current` keeps its 132px floor and its
+  78px window, which is `coach-match-edge.md` §4's anti-shopping rule – the wider portrait belongs to
+  the coach she already has. Only the sibling stops matching it.
