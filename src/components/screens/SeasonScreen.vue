@@ -2435,7 +2435,7 @@ function closeExhibition(): void {
    THE COMMON WEEK BETTER OR WORSE. Of the weeks that draw a card at all, three or more is 11.6% on
    the golden save's season (24 weeks of one card, 14 of two, 4 of three, 1 of four), 3.2% on `pro`,
    20% on `sinking`, 23.1% on `ending` – the two busiest careers in the fixture set – and 0% on every
-   career still below the ITF rung. He is right: the common week is one card or two.
+   career still below the international rung. He is right: the common week is one card or two.
 
    ⚠ AND THE NUMBER THAT SAYS THIS IS NOT TASTE: the desktop column is NARROWER than the tablet's
    (772px at 1024 against 868px at 900 – the rail takes its width there), so the old third was 249px
