@@ -36,6 +36,7 @@ import { describe, expect, it } from 'vitest'
 import { readdirSync, readFileSync, statSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { join, relative } from 'node:path'
+import { regionToLast } from './helpers/source'
 
 const SRC = fileURLToPath(new URL('../src', import.meta.url))
 
@@ -57,12 +58,31 @@ function stripComments(src: string): string {
   return src.replace(/\/\*[\s\S]*?\*\//g, ' ').replace(/(^|[^:'"`\\])\/\/[^\n]*/g, '$1')
 }
 
-/** The rendered surface of a component: its template block minus the template comments. */
-function renderedTemplate(src: string): string {
-  const from = src.indexOf('<template>')
-  if (from === -1) return ''
-  const to = src.lastIndexOf('</template>')
-  return (to > from ? src.slice(from, to) : src.slice(from)).replace(/<!--[\s\S]*?-->/g, ' ')
+/** The rendered surface of a component: its template block minus the template comments.
+ *
+ * ⚠ RE-AIMED BY T-01 (05.09 review). This was a local copy of the shape that lies: `indexOf` →
+ * `-1` → `return ''`, and a corpus sweep that reads '' for a file reports no offenders in it. A
+ * `.vue` that lost its `<template>` marker – renamed, wrapped, moved into a `<template lang=…>` –
+ * would have dropped out of the sweep silently, which is the one failure a NEGATIVE corpus claim
+ * cannot survive. It now cuts through `regionToLast`, which throws on either absent marker and on
+ * an inverted pair, and a `.vue` with no template at all is an error naming the file.
+ *
+ * ⚠ AND NO TEMPLATE IS STILL AN ANSWER FOR A `.ts` FILE – `tests/helpers/source.ts`'s own ruling
+ * for `regions`, that zero occurrences is a result and not a fault. Two `.ts` files (buildInfo.ts,
+ * world/mandatory.ts) merely NAME `<template>` inside a comment and, under the old shape, had their
+ * comment tails swept as though they were rendered markup. That was against this file's own header
+ * («COMMENTS ARE EXEMPT AND DELIBERATELY SO»); those two tails are still swept as `code`, where the
+ * comment stripper deals with them, so nothing stops being read that this file ever meant to read.
+ */
+function renderedTemplate(src: string, name: string): string {
+  if (!name.endsWith('.vue')) return ''
+  try {
+    return regionToLast(src, '<template>', '</template>').replace(/<!--[\s\S]*?-->/g, ' ')
+  } catch (error) {
+    // The helper cannot know which of 69 components it was handed; a sweep whose red does not name
+    // the file is a red somebody has to go looking for.
+    throw new Error(`${name}: its rendered template could not be cut, so the sweep would read none of it.\n${String(error)}`)
+  }
 }
 
 /** Every string literal in a file's CODE - the engine's copy lives in these. The 8-character floor
@@ -78,10 +98,14 @@ function literals(code: string): string[] {
 
 const files = sourceFiles(SRC).map((path) => {
   const src = readFileSync(path, 'utf8')
+  const name = relative(SRC, path)
+  // ⚠ The `code` half keeps its `-1`, and here that is the SAFE direction: a missing `<template>`
+  // makes it sweep the WHOLE file rather than the script block, so the negative claim gets wider,
+  // never narrower. `renderedTemplate` is the half where -1 read nothing – see its header.
   const scriptEnd = src.indexOf('<template>')
   return {
-    name: relative(SRC, path),
-    template: renderedTemplate(src),
+    name,
+    template: renderedTemplate(src, name),
     code: stripComments(scriptEnd === -1 ? src : src.slice(0, scriptEnd)),
   }
 })

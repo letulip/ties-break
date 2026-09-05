@@ -23,10 +23,10 @@ export function worldSource(): string {
   return main + parts.join('')
 }
 
-/** The source of one top-level function, wherever in the world module set it now lives. Returns ''
- *  when absent, so a caller asserting `toContain` fails loudly rather than passing on a bad slice. */
+/** The source of one top-level function, wherever in the world module set it now lives.
+ *  ⚠ THROWS when the function is absent – see `moduleFunction` at the foot of this file. */
 export function worldFunction(name: string): string {
-  return moduleFunction(worldSource(), name)
+  return moduleFunction(worldSource(), name, 'the world module set (world.ts + world/*.ts)')
 }
 
 // -------------------------------------------------------------------------------------------------
@@ -52,9 +52,10 @@ export function engineModuleSource(name: string): string {
   return main + parts.join('')
 }
 
-/** The source of one top-level function anywhere in a named engine module set. '' when absent. */
+/** The source of one top-level function anywhere in a named engine module set.
+ *  ⚠ THROWS when the function is absent – see `moduleFunction` at the foot of this file. */
 export function engineModuleFunction(module: string, name: string): string {
-  return moduleFunction(engineModuleSource(module), name)
+  return moduleFunction(engineModuleSource(module), name, `src/engine/${module}.ts + ${module}/*.ts`)
 }
 
 /** diary.ts + every diary/*.ts part. */
@@ -106,9 +107,46 @@ export function componentFile(relFromSrc: string): string {
   return readFileSync(new URL(relFromSrc, SRC), 'utf8')
 }
 
-function moduleFunction(src: string, name: string): string {
-  const at = src.indexOf(`function ${name}`)
-  if (at < 0) return ''
-  const end = src.indexOf('\n}', at)
-  return end < 0 ? src.slice(at) : src.slice(at, end + 2)
+// =================================================================================================
+// ⚠⚠ AN ABSENT FUNCTION IS AN ERROR, NOT AN EMPTY STRING — T-01, 05.09 review.
+// =================================================================================================
+//
+// THE FAILURE MODE, AND IT IS THE `-1` FAMILY ONE DOOR OVER. This used to `return ''` when the
+// function was not found. `tests/helpers/source.ts` exists because a rotted marker must never
+// SILENTLY WIDEN a region; here the region silently EMPTIED instead, which is worse in the one
+// direction that matters: every NEGATIVE assertion becomes a tautology. `expect('').not.toMatch(...)`
+// passes for every pattern there is. Rename the function and a pin that says "this writer draws no
+// randomness" goes on passing while the writer it was aimed at no longer exists.
+//
+// It was live: tests/round23-retirement-news.test.ts's «draws nothing» pin had no `not.toBe('')`
+// guard at all, and seven other sites carried one by hand — a guard the caller should never have had
+// to write. So this throws, on the marker helpers' own precedent, and those seven guards are now
+// harmless redundancy rather than the only thing standing between a rename and a green vacuum.
+//
+// ⚠ AND IT MATCHES ON THE PARENTHESIS AND WALKS THE BRACES, which is tests/relative-age.test.ts's
+// lesson folded back in (its local copy carried both and this one did not). Without the paren
+// `mandatoryBinds` resolved to `mandatoryBindsRank` — a PREFIX COLLISION — and the pin passed green
+// against a function that had never read the band. Measured over all 17 pinned functions when this
+// landed: 16 extractions byte-identical to the old shape, and the 17th is `mandatoryBinds` finally
+// resolving to itself (337 chars of the wrong function → 1,301 of the right one).
+function moduleFunction(src: string, name: string, where: string): string {
+  const from = src.indexOf(`function ${name}(`)
+  if (from < 0) throw absentFunction(name, where, src, 'no `function ' + name + '(` anywhere in it')
+  const open = src.indexOf('{', from)
+  if (open < 0) throw absentFunction(name, where, src, 'its declaration has no body brace')
+  let depth = 0
+  for (let j = open; j < src.length; j++) {
+    if (src[j] === '{') depth++
+    else if (src[j] === '}' && --depth === 0) return src.slice(from, j + 1)
+  }
+  throw absentFunction(name, where, src, 'its body brace is never closed')
+}
+
+function absentFunction(name: string, where: string, src: string, why: string): Error {
+  return new Error(
+    `source function: '${name}' not found in ${where} (${src.length} characters) – ${why}.\n` +
+      '  ⚠ This is the empty-string half of the -1 slice tests/helpers/source.ts exists to stop: this\n' +
+      "    helper used to return '' here, and every `.not.` assertion on '' passes. The function has\n" +
+      '    moved, been renamed, or changed its declaration shape – re-aim the pin at what is there.',
+  )
 }
