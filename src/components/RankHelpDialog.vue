@@ -10,15 +10,35 @@
 // Home chip and found an empty table and three rules about points she could not see. The screen that
 // exists to end the owner's confusion was causing it. Both ladders are listed, each headed with its own
 // rank, and the no-exchange-rate rule is stated because nothing else on the screen can imply it.
-import { computed } from 'vue'
+import { computed, useTemplateRef } from 'vue'
 import { useGameStore } from '../stores/game'
+import { useDialogFocus } from '../composables/dialogFocus'
 import { LADDER_LABEL } from '../shared/protocol'
 import { rankLabel } from '../shared/format'
 import type { LadderTrack } from '../engine/season/types'
 import CountingResultsTable from './CountingResultsTable.vue'
 import IconButton from './ui/IconButton.vue'
 
-defineEmits<{ close: [] }>()
+const emit = defineEmits<{ close: [] }>()
+
+// ⚠⚠ U-06 (review of 05.09) – THE ONE POPUP OUTSIDE THE FOCUS-MANAGED SET, and it was the whole
+// set's own argument that made it a defect. `composables/dialogFocus.ts` says it plainly: announcing
+// modality without containing the keyboard is WORSE than doing neither, because `aria-modal` tells
+// assistive technology to ignore everything outside the card while Tab is still free to walk into
+// it. This card had NEITHER half - no `role`, no trap, no Escape - so Tab left it for the tab bar
+// behind the scrim and a screen reader was never told a card had opened at all. Thirteen dialogs
+// call this composable; this is the fourteenth, on exactly the same terms.
+//
+// ⚠ ESCAPE IS PASSED because this card already closes on a backdrop click, and Escape is the
+// keyboard's spelling of that same gesture (the composable's own rule for which dialogs get one -
+// the blocking questions, which have no way out that is not an answer, pass nothing).
+//
+// ⚠ AND IT IS MOUNTED TWICE SINCE P2-6: Home owns the flag for the chip on the photograph and the
+// shell owns the rail's. Exactly one of the two chips is reachable at any width (App.vue says so
+// where it mounts the second), so the two `v-if`s can never both be up and the id below is never
+// duplicated in the document - and because both flags render THIS component, both behave.
+const card = useTemplateRef<HTMLElement>('card')
+useDialogFocus(card, () => emit('close'))
 
 const game = useGameStore()
 
@@ -41,10 +61,20 @@ const blocks = computed(() =>
 </script>
 
 <template>
-  <div class="dialog-overlay" @click.self="$emit('close')">
-    <div class="guide-card">
-      <IconButton class="replay-close" icon="close" label="Close" title="Close" @click="$emit('close')" />
-      <p class="guide-title">How ranking points work</p>
+  <div class="dialog-overlay" @click.self="emit('close')">
+    <!-- ⚠ U-06: role/aria-modal on the CARD and not on the scrim, `tabindex="-1"` so the trap has a
+         landing place, and the title element names it - the same four lines every other dialog in
+         the app carries (R2-07). Not one word of the card's copy moved. -->
+    <div
+      ref="card"
+      class="guide-card"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="rank-help-title"
+      tabindex="-1"
+    >
+      <IconButton class="replay-close" icon="close" label="Close" title="Close" @click="emit('close')" />
+      <p id="rank-help-title" class="guide-title">How ranking points work</p>
       <p class="hint">
         She has two rankings and they are counted separately – national results and Junior Tour results
         never add up together.
