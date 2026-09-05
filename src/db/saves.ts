@@ -520,7 +520,12 @@ export async function readLatestAutosave(
 
   const gens = [recA, recB]
     .filter((r): r is SaveRecord => r !== undefined)
-    .sort((a, b) => (recNewer(a, b) ? -1 : 1)) // newest first
+    // ⚠ E-12: A TOTAL ORDER, not a two-valued one. `(a, b) => recNewer(a, b) ? -1 : 1` never returns
+    // 0 and answers 1 for BOTH orders of a tied pair, which is not a comparator – it is a predicate
+    // wearing one. Harmless on this two-element array (there are exactly two generations, and a tie
+    // means the same revision AND the same savedAt, so either order is the same record), and that is
+    // precisely why it would have survived being copied somewhere it is not harmless.
+    .sort((a, b) => (recNewer(a, b) ? -1 : recNewer(b, a) ? 1 : 0)) // newest first
 
   if (gens.length === 0) throw new Error(`No autosave for career "${careerId}"`)
   const revision = Math.max(meta?.revision ?? 0, ...gens.map((g) => g.revision ?? 0))

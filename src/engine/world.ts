@@ -805,7 +805,11 @@ function finalizeTournament(world: WorldState): void {
     fireMilestone(
       world,
       'first-prize',
-      `💰 First prize money – $${Math.round(prize / 100).toLocaleString('en-US')} at the ${tier.label}!`,
+      // ⚠ E-12: `formatCents`, not a fifth hand-rolled copy of it. Byte-identical here – the
+      // hand-roll WAS `Math.round(cents / 100).toLocaleString('en-US')` behind a `$`, and a prize is
+      // never negative, so the sign arm the helper adds cannot fire. Pinned both ways in
+      // tests/engine-money-strings.test.ts.
+      `💰 First prize money – ${formatCents(prize)} at the ${tier.label}!`,
     )
   }
 
