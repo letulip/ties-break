@@ -129,7 +129,7 @@
 // on the first-round plate.
 import { computed } from 'vue'
 import { useGameStore } from '../stores/game'
-import { DRAW_NOT_MADE_NOTE, fieldChanceLabel, fieldChanceTitle, firstMatchLabel, firstMatchTitle, useEventCard } from '../composables/eventCard'
+import { DRAW_NOT_MADE_NOTE, FIELD_FIGURE_NOTE, fieldChanceLabel, fieldChanceTitle, fieldRingShown, firstMatchLabel, firstMatchTitle, useEventCard } from '../composables/eventCard'
 import { readingColor } from '../composables/readingColor'
 import { flagEmoji } from '../composables/countries'
 import { TIERS } from '../engine/season/calendar'
@@ -238,6 +238,24 @@ const courtRead = computed(() => {
             <p class="nt-read-line">{{ fieldRead }}</p>
             <p v-if="courtRead" class="nt-read-line">{{ courtRead }}</p>
             <p v-if="event.coachCaution" class="coach-note">{{ event.coachCaution }}</p>
+            <!-- ⭐⭐⭐ ROUND 36 PHASE 5 – WHAT THE PRE-DRAW FIGURE PROMISES, MOVED HERE OFF THE SEASON
+                 CARDS. Round 34 #5b put this line on every card in the season feed, at the owner's
+                 own ask; he met it in play and ruled it off them on 04.09 – it is on every card, so
+                 it reads as noise on a surface that already carries a great deal, and the app has a
+                 screen FOR a tournament, reachable from Home, which is this one. His words in full
+                 are on `FIELD_FIGURE_NOTE` in composables/eventCard.ts, where Cyrillic is allowed
+                 and in a template it is not.
+                 ⚠ A MOVE, NOT A DELETE, AND THE WARNING IS THE REASON. The figure STEPS at the draw
+                 – 9.1 points on average, 36 at worst (round 34 #5) – and a step nobody was warned
+                 about is the instability round 31 #4 was reported for. Deleting the line would give
+                 that back.
+                 ⚠ IT RIDES THE SAME CONDITION IT ALWAYS DID: `fieldRingShown` is the ring chain's
+                 `v-else-if` branch read back, negation included, so the line appears and disappears
+                 with the ring it is about. The bare `fieldChance !== null` is TRUE on a drawn card
+                 too – that mutation is in tests/component/round31-draw-reveal.test.ts.
+                 ⚠ VISIBLE, not an accessible name: the jump he is being warned about is visible, so
+                 the warning has to be. -->
+            <p v-if="fieldRingShown(event.preview)" class="field-note">{{ FIELD_FIGURE_NOTE }}</p>
           </div>
           <!-- ⭐⭐ ROUND 31 #4 – the ring is her odds against ONE named girl, so it waits for the
                draw exactly as the feed's does. `The read` above it is the FIELD's reading and needs
@@ -387,11 +405,28 @@ const courtRead = computed(() => {
    one, which is the frame he asked to lose coming back in miniature. Home's hero and Kid's carry no
    radius either. And the padding is `--app-pad-x` rather than 14px, so the title, the read and the
    three readings laid ON the photograph line up with the icon row and the plate BELOW it instead of
-   sitting 2px inside them. */
+   sitting 2px inside them.
+
+   ⭐⭐ ROUND 36 PHASE 2 – AND IT FOLLOWS HOME ONTO THE TABLET, BY THE TOKEN RATHER THAN BY A SECOND
+   COPY OF THE NUMBER. The owner, on frame AF: the tournament image takes the same proportion as the
+   home hero. Round 30 #6 already said «по примеру главной» about the square, so the two shapes have
+   agreed since this panel shipped – they simply agreed by both spelling `1 / 1`. `--hero-aspect`
+   (src/style.css) is that agreement made mechanical: one ladder, two consumers, and the day one of
+   them should stop following the other, that is a rule someone writes ON PURPOSE.
+   ⚠ THE SQUARE-AS-A-FLOOR ARGUMENT BELOW IS UNCHANGED and matters more on a tablet, not less: a
+   wider box is a SHORTER box, so the three-line read plus a coach's caution has less room before it
+   pushes the picture down. It still pushes rather than clips, which is the whole of that ruling. */
 .nt-hero {
   position: relative;
   margin: 0 calc(-1 * var(--app-pad-x));
-  aspect-ratio: 1 / 1;
+  aspect-ratio: var(--hero-aspect);
+  /* ⭐⭐ ROUND 36 PHASE 3 – AND ON A DESKTOP IT IS THE SAME PICTURE, NOT ONLY THE SAME SHAPE. Below
+     1024 this token is unset and the declaration is inert, so nothing about a phone or a tablet
+     moves. From 1024 Home's photograph is a COLUMN of a two-column page and this one is a block in a
+     full-width one, so a shared ratio alone would have drawn a 511px hero on Home and a 980px one
+     here: «ту же пропорцию» read literally, and visibly the wrong answer. The cap is the join's
+     other half - see `--hero-max` in src/style.css. */
+  max-width: var(--hero-max);
   display: flex;
   flex-direction: column;
   justify-content: space-between;
@@ -399,6 +434,19 @@ const courtRead = computed(() => {
   padding: 12px var(--app-pad-x) 14px;
   overflow: hidden;
   background: var(--card-bottom);
+}
+
+/* ⚠ AND THE FULL-BLEED GOES WITH THE CAP, for the reason HomeScreen's hero gives at the same
+   breakpoint: the negative gutter exists so the photograph reaches both edges of a phone, and a
+   capped picture that still bleeds 16px to the left is a box hanging off the side of its own column
+   – 8px from the rail at 1280. Left only, because the right edge is decided by the cap. */
+@media (min-width: 1024px) {
+  .nt-hero {
+    /* Longhands, not `margin-inline`: `tests/component/` runs in happy-dom and the mounted arm that
+       reads these back is the only gate this rule has. */
+    margin-left: 0;
+    margin-right: 0;
+  }
 }
 
 .nt-hero-art {
@@ -604,6 +652,22 @@ const courtRead = computed(() => {
 .nt-hero .coach-note {
   color: rgb(255 255 255 / 82%);
   text-shadow: 0 1px 3px rgb(0 0 0 / 60%);
+}
+
+/* ⭐⭐⭐ ROUND 34 #5b's caption, ARRIVED HERE IN ROUND 36 PHASE 5 – the pre-draw figure's own line.
+   Quieter than the read above it, because it is a note ABOUT the ring rather than another thing the
+   coach said: same column, one step down in size, the label's own ink. It wraps and adds no fixed
+   height, so the panel grows by one line and only while the draw is pending.
+   ⚠ THE INK IS THIS PANEL'S, NOT THE SEASON CARD'S. `--ink-soft` was legible on the feed's flat
+   card and this block stands ON THE PHOTOGRAPH, so it takes `.nt-read-label`'s white-on-art pair –
+   the same shift `.nt-hero .coach-note` above makes for the same reason. */
+.field-note {
+  margin: 5px 0 0;
+  font-size: 12px;
+  line-height: 1.35;
+  color: rgb(255 255 255 / 72%);
+  text-shadow: 0 1px 3px rgb(0 0 0 / 60%);
+  text-wrap: pretty;
 }
 
 .nt-ring {

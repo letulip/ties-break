@@ -102,7 +102,14 @@ describe('a horizontal scroller carries the three declarations a finger needs', 
       snappers += blocksWith(css, /scroll-snap-type:\s*x/).length
     }
     expect(scrollers, 'horizontal scrollers found').toBeGreaterThanOrEqual(4)
-    expect(snappers, 'x-snapping strips found').toBeGreaterThanOrEqual(1)
+    // ⚠⚠ RE-AIMED BY ROUND 36 PHASE 5, AND THE SUBJECT LEFT THE APP RATHER THAN THE RULE BEING
+    // RELAXED. This read `>= 1`, because when it was written the season strip was a CSS
+    // `scroll-snap-type: x mandatory` box. The pager replaced that: `composables/weekPager.ts`
+    // drives `scrollLeft` itself, so there is no CSS snap left anywhere and the two arms above have
+    // nothing to sweep. ⭐ THEY ARE KEPT, NOT DELETED – the day someone adds a snapping strip back,
+    // they bite from the first line, which is the whole point of a rule that outlives its example.
+    expect(snappers, 'x-snapping strips found – zero is correct since the pager replaced the CSS one')
+      .toBeGreaterThanOrEqual(0)
   })
 })
 

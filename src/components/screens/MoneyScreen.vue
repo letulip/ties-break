@@ -1552,8 +1552,48 @@ function openShelfCategory(key: ShelfTab): void {
   shelfTab.value = key
   shopHome.value = false
 }
-function backToShelfHome(): void {
-  shopHome.value = true
+
+// =================================================================================================
+// ⭐⭐ ROUND 36 REVIEW #10 – THE ARROW GOES, AND THE CHAPTER BUTTON BECOMES THE WAY OUT
+// =================================================================================================
+//
+// THE OWNER, 04.09: «Внутри магазина на внутренних страницах нижнюю стрелку "назад" надо убрать -
+// точка входа в магазин всегда общая страница категорий, по клику на Shop мы на нее же попадаем.»
+//
+// ⚠⚠ TWO CLAUSES, AND THE SECOND ONE IS WHAT MAKES THE FIRST SAFE. Round 35 #3 built the two-level
+// shop and its own test spelled out why the arrow was there: «a level you can enter and not leave»
+// is round-20 #3's family, and «press the chapter tab again» was rejected as a way out because it
+// WAS NOT ONE – `screenTab` never left `shop`, so pressing Shop from inside Cars did nothing at all.
+// His second clause is exactly that missing behaviour, so the guard is not deleted with the arrow;
+// it is RE-AIMED at the control he named, and `tests/component/round35-shop.test.ts` presses Shop
+// where it used to press the arrow.
+//
+// ⚠⚠ WHY THIS IS A CLICK ON THE ROW AND NOT A `watch`, AND NOT `@update:model-value` EITHER. Both
+// of the obvious hooks are silent in exactly the case he is complaining about – standing inside
+// Cars and pressing Shop:
+//   * a `watch` on `screenTab` never fires, because the value is already `shop` and an unchanged
+//     ref triggers nothing;
+//   * `@update:model-value` never fires either, and that one was BUILT AND MEASURED before it was
+//     replaced. Vue 3.5's `useModel` (runtime-core, `set()`) RETURNS EARLY when the new value has
+//     not changed, so `SegmentedRow` emits nothing at all on a press that re-selects the open
+//     chapter. A listener there would have passed every test that pressed Shop from another
+//     chapter and done nothing for the press he actually named.
+// The press itself is the only signal that exists for «I asked for this chapter again», so that is
+// what is read: a click that came from a BUTTON inside the chapter row. It reads no label and no
+// value – any chapter press returns the shop to its front door, which is his sentence generalised
+// rather than narrowed («точка входа в магазин ВСЕГДА общая страница категорий»), and on the three
+// chapters that are not the shop it changes nothing anybody can see.
+//
+// ⚠ `closest('button')` AND NOT THE ROW ITSELF, so a click landing on the row's own background is
+// not a navigation. Keyboard activation of a pill dispatches a real `click`, so the route is not
+// mouse-only.
+//
+// ⚠ AND THE DOOR AGREES WITH THE BUTTON. Nothing else in the app sets `screenTab` to `shop` (the
+// ledger's own `showAllTransactions` sets `history`), and the screen mounts on `spend` with
+// `shopHome` true – so a player arriving at Family Budget for the first time also lands on the six
+// cards.
+function openChapter(event: MouseEvent): void {
+  if ((event.target as HTMLElement | null)?.closest('button')) shopHome.value = true
 }
 /** ⭐ ROUND 35 #3 – «ниже her account с фоточкой как в макете (а также на каждой странице
  *  магазина)». The block itself already sits at the foot of EVERY chapter, which on the shop is
@@ -1604,13 +1644,82 @@ const SHELF_ART_SIDE: Partial<Record<ShopRowView['family'], 'left' | 'right'>> =
 function shopRowArtSide(row: ShopRowView): 'left' | 'right' | null {
   return shelfArtUrl(row.id) ? (SHELF_ART_SIDE[row.family] ?? null) : null
 }
+
+// =================================================================================================
+// ⭐⭐ ROUND 36 REVIEW #11 – THE PAINTING TAKES HALF THE CARD ON FOUR OF THE FAMILIES
+// =================================================================================================
+//
+// THE OWNER, 04.09: «На Air, Water, Property, Cars давай для всех картинок еще чуть больше
+// горизонтального места дадим, самим картинкам `width: 50%`, а `shop-row-body padding-right:
+// calc(45% + 12px)`»
+//
+// ⭐⭐ THE TWO DECLARATIONS ARE HIS AND ARE USED VERBATIM – `50%` and `calc(45% + 12px)`, not a
+// number of ours near them. What is NOT verbatim is the property NAME on the second one, and that
+// is the one place his sentence could not be copied blind: three of the four families he lists
+// (Property, Water, Air) carry the painting on the RIGHT, so `padding-right` is the inset that
+// clears it; CARS carry it on the LEFT (`SHELF_ART_SIDE` above, his own «как на тренерах»), and
+// `padding-right` there would have pushed the words AWAY from the painting and, with the existing
+// left inset still in place, left the sentences about 10% of the card to live in. So the rule is
+// «his number, on the side the picture is on», which is what the round-35 pair already said twice.
+// It is a decisions row (docs/specs/responsive-decisions-2026-09.md), not a silent adjustment.
+//
+// ⚠ HER ACADEMY IS NOT IN THIS SET, and it is the family this most looks like it should be. The
+// academy rows are `--art-left` exactly like the cars (his «как на экране машин»), so a rule keyed
+// on the SIDE would have swept them up; he named four families and the academy is not one of them,
+// which is CLAUDE.md invariant 4's rule applied to a proportion instead of a word. It keeps round
+// 35's 40 / 60. ⭐ One name in the array below moves it, if he wants the pair to match.
+//
+// ⚠ AND `investment` / `business` HAVE NO PAINTING AT ALL, so they are untouched by construction:
+// `shopRowArtSide` returns null for a rung with no art and the class never lands.
+const SHELF_WIDE_ART: ShopRowView['family'][] = ['car', 'house', 'boat', 'plane']
+function shopRowArtWide(row: ShopRowView): boolean {
+  return shopRowArtSide(row) !== null && SHELF_WIDE_ART.includes(row.family)
+}
+// =================================================================================================
+// ⭐⭐ ROUND 36 REVIEW #12 AND #13 – THE SAME CHANGE ON TWO FAMILIES, MADE ONCE
+// =================================================================================================
+//
+// THE OWNER, 04.09, twice in the same words:
+//   #12 «С купленной машины убираем paid серые буквы, кнопка buy/sell встает слева ближе к нижнему
+//        правому углу карточки»
+//   #13 «В разделе Her Academy убираем paid серые буквы, кнопка buy/sell встает слева ближе к
+//        нижнему правому углу карточки»
+//
+// Two items, one change, so there is one array and one rule rather than a copy of each. Cars and the
+// academy are also the two families whose control was still standing at the LEFT of its own row –
+// «кнопка … слева» is where it IS, and «ближе к нижнему правому углу карточки» is where it goes.
+// The four families that carry their painting on the right have had their control in that corner
+// since round 35 #6, so this is the shelf agreeing with itself, not a second arrangement.
+//
+// ⚠⚠ AND THE `paid` LINE REALLY IS A FIGURE LEAVING THE SCREEN, WHICH WAS CHECKED BEFORE IT WENT.
+// Round 35 #7 removed it from the houses on his own reason – «раз прибавка и так видна» – and the
+// same has to be TRUE here or the number is simply lost. It is: `.shop-row-change` is drawn
+// unconditionally inside `.shop-row-owned` (it has no `v-if`), and the engine fills it for every
+// owned rung – `changeCents = valueCents - paidCents + realisedGain`, src/engine/world/shop.ts. So
+// a car and an academy stage both print «Worth now $X» and «-$Y since you bought it (-Z%)», and
+// what was paid is X - Y, exactly as on a house. ⭐ Nothing is re-worded: the meta simply stops
+// being passed, which is the round 35 mechanism on two more families.
+//
+// ⚠ WATER AND AIR KEEP THEIRS. He named cars and the academy; boats and aeroplanes are not in
+// either sentence, and invariant 4 does not let a proportion spread on its own any more than a word
+// does. That leaves `paid $N` on `investment`, `business`, `boat` and `plane`.
+const SHELF_NO_PAID_META: ShopRowView['family'][] = ['house', 'car', 'academy']
 /** ⚙ ROUND 35 #7, HIS RULING, 03.09: «в строке "worth now" показывать текущую цену, а цену покупки
  *  убрать совсем, раз прибавка и так видна. – верно.» The `Worth now` row's VALUE has always been
- *  the current price; what goes is the `paid $N` beside it. ⚠ PROPERTY ONLY – he said it of the
- *  house cards and CLAUDE.md invariant 4 does not let it spread to the other five families on its
- *  own; the `+$N since you bought it` line under it is the gain he means by «прибавка». */
+ *  the current price; what goes is the `paid $N` beside it. Round 36 review #12 and #13 add the
+ *  cars and the academy to the house he said it of – see the note above. */
 function shopRowPaidMeta(row: ShopRowView): string | undefined {
-  return row.family === 'house' ? undefined : `paid ${formatCents(row.paidCents ?? 0)}`
+  return SHELF_NO_PAID_META.includes(row.family) ? undefined : `paid ${formatCents(row.paidCents ?? 0)}`
+}
+/** #12 and #13's second clause: the control leaves the left of its row for the card's bottom-right
+ *  corner. ⚠ IT STAYS IN THE FLOW rather than becoming `position: absolute` like the `--art-right`
+ *  families' pill, and that is the whole of the difference between the two corners: on those the
+ *  pill sits over the PAINTING, on these the corner is inside the words, and a pill lifted out of
+ *  the flow there would shorten the card and print itself over the last sentence. Round 35's
+ *  constant across three of his own messages was «the card must not grow taller»; the mirror of it
+ *  is that the card must not lose the height its own words need. */
+function shopRowCornerAction(row: ShopRowView): boolean {
+  return row.family === 'car' || row.family === 'academy'
 }
 </script>
 
@@ -1660,6 +1769,7 @@ function shopRowPaidMeta(row: ShopRowView): string | undefined {
         class="money-tabs"
         :options="TAB_OPTIONS"
         group-label="Which part of the budget"
+        @click="openChapter"
       />
 
       <!-- ============================= 2. THE SUMMARY ============================= -->
@@ -2207,21 +2317,11 @@ function shopRowPaidMeta(row: ShopRowView): string | undefined {
         </button>
       </div>
 
-      <!-- ============= 8a-ter. THE WAY BACK, ON A CATEGORY PAGE (round 35 #3) =============
-           The only control this slice invents, and it is the one a two-level shop cannot do
-           without. `IconButton` with the app's own `back` glyph, `variant="bare"` - the R3 ruling
-           that took the Coach Market's arrow off its plate, which asked for ONE back component used
-           consistently everywhere (his words are quoted in IconButton.vue's own header, where
-           Cyrillic is allowed), so nothing new is drawn for it either. -->
-      <div v-if="screenTab === 'shop' && shop && !shopHome" class="shelf-nav">
-        <IconButton
-          class="shelf-back"
-          variant="bare"
-          icon="back"
-          label="Back to the shelf"
-          @click="backToShelfHome"
-        />
-      </div>
+      <!-- ============= 8a-ter. THE WAY BACK IS THE CHAPTER BUTTON (round 36 review #10) =========
+           Round 35 #3's own arrow stood here. It is GONE, at every width, and what replaced it is
+           not nothing: his words and the whole argument are on `openChapter` in the script block,
+           where Cyrillic is allowed. In short - the door is the way out, so a second control beside
+           it was a second answer to one question. -->
 
       <!-- ===================== 8a. THE SHELF'S OWN TABS =====================
            ⭐⭐ ROUND 30 #5 – his second clause: "The shelf as a plate on top, and under it the tabs
@@ -2266,6 +2366,28 @@ function shopRowPaidMeta(row: ShopRowView): string | undefined {
                the side this family's painting stands on, or null for a rung with no painting, and
                the class it puts on the card is what turns the band above the words into a band
                beside them. A rung with no art is untouched and draws exactly as it did. -->
+          <!-- ⭐⭐ ROUND 36 REVIEW #11, #12 AND #13 – TWO MORE CLASSES AND NOT ONE MORE ELEMENT.
+               `shop-row--art-wide` carries the owner's own `width: 50%` / `calc(45% + 12px)` on the
+               four families the item names; `shop-row--corner-action` sends the buy/sell control to
+               the card's bottom-right corner on the two families items 12 and 13 name. Both
+               predicates, both quotes and the reasoning are on `shopRowArtWide` and
+               `shopRowCornerAction` in the script block, which is where Cyrillic is allowed.
+               ⚠⚠ AND THE NOTE IS AN HTML COMMENT RATHER THAN A `//` ONE INSIDE THE BINDING, WHICH
+               IS A RULE AND NOT A STYLE. `tests/coach-voice.test.ts` (R15-7, «no surface guesses a
+               professional's gender») strips every HTML comment out of a template before it scans,
+               and cannot see a `//` line inside an expression - so the first draft of this slice put
+               a prose note in the class array, wrote the word it forbids, and reddened that file by
+               name.
+               ⚠⚠ AND NEITHER HTML COMMENT DELIMITER MAY BE SPELLED INSIDE ONE. Round 36 P2-1, and
+               it is this comment's own history rather than a precaution: the paragraph above used to
+               QUOTE the opening and closing delimiters in order to name the thing it is about. HTML
+               comments do not nest, so that quoted terminator closed this comment two and a half
+               lines early and what followed became a TEXT NODE - inside the `v-for` over families,
+               so the rest of that paragraph rendered under EVERY family heading on EVERY page of
+               the shop, which is where the owner found it. Name them in words, as here.
+               `tests/template-comment-terminators.test.ts` parses every component and forbids the
+               shape, and the mounted arm in `tests/component/round36-pass2-shop-recap.test.ts`
+               reads the six shop pages back. -->
           <Card
             v-for="row in shopRowsOf(family.key)"
             :key="row.id"
@@ -2273,7 +2395,11 @@ function shopRowPaidMeta(row: ShopRowView): string | undefined {
             class="shop-row"
             :class="[
               shopRowArtSide(row) ? `shop-row--art-${shopRowArtSide(row)}` : undefined,
-              { 'is-owned': row.valueCents !== null },
+              {
+                'is-owned': row.valueCents !== null,
+                'shop-row--art-wide': shopRowArtWide(row),
+                'shop-row--corner-action': shopRowCornerAction(row),
+              },
             ]"
           >
             <!-- ⭐ ROUND 30 #5 – "each card gets its own art". Null until his painting lands, and
@@ -2568,6 +2694,10 @@ function shopRowPaidMeta(row: ShopRowView): string | undefined {
           banks the rest. The prize rows above are what the family kept, and each one names the share
           that left.
         </p>
+        <!-- ⚙ ROUND 36 REVIEW #14 – he asked for a bigger photograph on this card, and NOT ONE
+             ATTRIBUTE HERE MOVED: the window grows from the style block, where a width can depend on
+             the viewport. His words and the reason it is `min-height` that does it are on
+             `.money-share-photo` there, which is where Cyrillic is allowed. -->
         <Polaroid class="money-share-photo" :src="herPhoto" alt="" tilt="-3deg" :photo-height="52" />
       </div>
 
@@ -2636,6 +2766,20 @@ function shopRowPaidMeta(row: ShopRowView): string | undefined {
   gap: 12px;
 }
 
+/* ⭐⭐ ROUND 36 PHASE 3 – «HER OWN ACCOUNT» STOPS AT A READING WIDTH ON A DESKTOP. The owner, on
+   frame AM-family-budget-desktop-1024.png: «"Её собственный счёт" - наша с фотографией, во всю
+   ширину растягивать не обязательно, посмотрите, чтобы красиво было.» AM draws it edge to edge; at
+   1280 that is a 948px box holding two sentences, which is a line of type nobody can track back to
+   the start of. 640px is the app's own paragraph measure on a phone (343px at 15px type) taken out
+   to a desktop's 13px, and it keeps the polaroid beside the words rather than adrift from them.
+   ⚠ NOT ONE DECLARATION OF ROUND 35 #3's CARD IS TOUCHED - the photograph, the green frame, the two
+   sentences and the DOM position at the foot of the screen are exactly what D7 recorded at 768. */
+@media (min-width: 1024px) {
+  .money-share {
+    max-width: 640px;
+  }
+}
+
 .money-share-text {
   margin: 0;
   flex: 1;
@@ -2647,6 +2791,40 @@ function shopRowPaidMeta(row: ShopRowView): string | undefined {
 .money-share-photo {
   flex: none;
   width: 66px;
+}
+
+/* ⭐⭐ ROUND 36 REVIEW #14 – THE OWNER, 04.09: «Фоточку на Her own account можно сделать крупнее»,
+   AND THE CARD DOES NOT GROW WITH IT. Phase 3 (D18) capped this card at 640 on a desktop for a
+   reading reason that still holds, so what grows is the photograph inside it: 66x52 of paper becomes
+   104x82, the same 1.269 ratio the mockup drew, and the strip keeps its width.
+
+   ⚠ FROM 768 UP, AND THE PHONE IS DELIBERATELY UNTOUCHED. His sentence names no width, and this
+   round's contract is that nothing below 768 moves unless it does. The complaint is a wide-screen
+   one by construction: at 375 this polaroid is 66 of 319px of content – a fifth of the strip – and
+   at 1024 the same 66px sits in a 616px card, where it reads as a thumbnail somebody forgot to
+   scale. The tablet is the first width where the card is wider than the phone's, so it is the first
+   width where the picture is too small. ⭐ Say the word and the two numbers below move to the base
+   rule, which is where they would live if the phone wanted them too.
+
+   ⚠⚠ AND THE SECOND DECLARATION IS `min-height`, WHICH IS THE WHOLE TRICK AND NOT A TYPO.
+   `Polaroid` writes the window's height as an INLINE style off its `photoHeight` prop, and an
+   inline declaration beats every rule in this sheet – so a media query that widened the paper alone
+   would leave a 52px photograph floating in a 104px frame, which is the item half-done and looks
+   like the item working. `min-height` is a DIFFERENT property: the used height is the larger of the
+   two, so the cascade raises the window to 82 without fighting the inline value and without an
+   `!important` anywhere. ⭐ Two routes were tried before it and both are recorded rather than
+   forgotten: a `var()` handed through the component's own `photoStyle` slot (a real browser
+   resolves it, and happy-dom's CSSOM REJECTS `var()` as a height, so the mounted guard could not
+   read the thing it was guarding), and moving the prop to 82 for every width (which is item 14
+   applied to a phone he was not looking at). */
+@media (min-width: 768px) {
+  .money-share-photo {
+    width: 104px;
+  }
+
+  .money-share-photo :deep(img) {
+    min-height: 82px;
+  }
 }
 
 .money-share strong {
@@ -2861,6 +3039,37 @@ function shopRowPaidMeta(row: ShopRowView): string | undefined {
   flex: none;
   width: 146px;
   padding-top: 10px;
+}
+
+/* ⭐⭐ ROUND 36 REVIEW #15 – THE RIGHT SECTOR GETS AIR ON BOTH SIDES. The owner, 04.09: «В разделе
+   Spending всему правому сектору с запиской, фото и пайчартом дать больше воздуха слева и справа -
+   там есть достаточно места» (quoted here and not in the template, which is where
+   `tests/template-copy-rules.test.ts` forbids Cyrillic – a style comment is where the record lives).
+
+   ⭐ THE AIR IS THE APP'S OWN GUTTER, TWICE, ON EACH SIDE – `--app-pad-x` is 16px, the inset the
+   whole column already stands in, so the sector is set off from the figures by exactly two of the
+   app's own steps rather than by a number invented here. Symmetric, because he named both sides in
+   one breath. The 8px flex gap was written for a 375px phone where the two columns are 189 and 146:
+   there is nothing to give there and everything to give at 768 and above, which is his «там есть
+   достаточно места».
+
+   ⚠ THE SECTOR DOES NOT GROW, only its margins. `width: 146px` is the receipt's, the polaroid's and
+   the donut's shared measure and he asked for air around them, not for a bigger paper – so the
+   figures pay 64px and the artefacts pay nothing. Measured at 768 the list column goes 582 -> 518px
+   and at 1280 (the rail's 948) 794 -> 730px; both are far above the 190px this screen's CTA metrics
+   were written for.
+
+   ⚠ FROM 768 UP. His sentence names no width and the round's contract is that nothing below 768
+   moves without one – and the phone is the one place his premise is false: 375 leaves the figures
+   189px beside the paper, so 64px of air would come straight out of the amounts. */
+@media (min-width: 768px) {
+  .money-body {
+    gap: calc(2 * var(--app-pad-x));
+  }
+
+  .money-artefacts {
+    margin-right: calc(2 * var(--app-pad-x));
+  }
 }
 
 /* The bottom padding is PaperNote's, not this screen's: `torn` owns it, because the cut it applies
@@ -3081,6 +3290,26 @@ function shopRowPaidMeta(row: ShopRowView): string | undefined {
   margin-top: 10px;
 }
 
+/* ⭐⭐ D12, RULED BY THE OWNER ON 04.09: «а в чем проблема сделать для планшетов и десктопов в одну
+   строчку?» – none, and phase 2 was wrong to think there was one. It left the 2x2 alone under
+   «widen the column, change nothing else», and passed on a caution that re-flowing a grid might
+   trouble the parity harness. It cannot: `e2e/parity.spec.ts` compares SETS OF ACCESSIBLE NAMES,
+   not positions, so a 2x2 laid out as 1x4 carries the same four rungs under the same four names and
+   the harness does not look at the arrangement. Only ADDING or REMOVING a control is forbidden.
+   The handoff's own §1 says the same thing about why: «ступени кита встают 4-в-ряд вместо 2x2
+   (лестница читается как лестница)» – a ladder read across is a ladder.
+   ⚠ `repeat(4, …)` AND NOT `auto-fit`: the rungs are a LADDER, so the fourth standing under the
+   first would be the one arrangement worse than the 2x2 it replaces. Four is the engine's own count
+   (`view.rungs` is the kit grade ladder), and a fifth grade would want a decision, not a reflow.
+   ⚠ FROM 768, WHICH MOVES A TABLET BOX PHASE 2 SETTLED – deliberately, at his ruling, and the only
+   such move in this phase. It is called out in docs/rounds/round-36.md beside the identity census
+   so that «nothing below 1024 moved» is not quietly untrue. */
+@media (min-width: 768px) {
+  .kit-rungs {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
 .kit-rung {
   display: flex;
   flex-direction: column;
@@ -3248,6 +3477,44 @@ function shopRowPaidMeta(row: ShopRowView): string | undefined {
   margin-top: 14px;
 }
 
+/* ⭐⭐⭐ ROUND 36 PHASE 4 – THE FRONT DOOR STOPS GROWING, AND THIS IS THE ONE BLOCK IN THE APP THAT
+   GOT BIGGER AND TALLER AS THE WINDOW DID. A `1fr` column and a fixed `aspect-ratio` is a card whose
+   HEIGHT is its width times 1.542, so widening the reading column raised the whole grid off the
+   bottom of the screen. Measured on the shipped build, one card and then the page:
+
+     375   109 x 168 px   grid  344px   page 1057px
+     768   240 x 370 px   grid  748px   page 1297px
+     900   284 x 438 px   grid  884px   page 1433px
+    1280   311 x 479 px   grid  966px   page 1534px
+
+   – so the shop's front door is 477px TALLER on a 1280px monitor than on a 375px phone, which is
+   the opposite of what a wider screen is for. Every other screen in this round got shorter.
+
+   ⚠ THE CAP AND NOT A FOURTH COLUMN, on purpose. His layout for these six is explicit and it is a
+   3x2: «первый ряд invest, business, property, остальное 2й ряд» (round 35 #3), and the tall shape
+   is his too – «сделаем не квадратными, как в макете, а высокими (смотри соотношение сторон
+   картинок)». Re-flowing six tiles into one row of six would change the arrangement he specified;
+   capping the grid keeps his 3x2 and his ratio exactly and only stops the tiles becoming posters.
+   640 is the width this round already caps a reading block at (D18's «Her own account», his own
+   «посмотрите, чтобы красиво было»), and it puts the tile at 208px – nearly twice the phone's, and
+   the whole door back inside one screenful. ⭐ IF HE WANTS THE SIX IN ONE ROW ON A DESKTOP that is
+   `grid-template-columns` here and nothing else; it is D25 and it is his call, not ours.
+
+   ⚠⚠ AND `width: 100%` IS LOAD-BEARING, NOT BELT-AND-BRACES – phase 3's own defect, met again on a
+   second screen. This grid is an item of a flex column, and A GRID OR FLEX ITEM WITH AUTO INLINE
+   MARGINS DOES NOT STRETCH: the auto margins beat the container's stretch, the box falls back to
+   max-content, and the six tiles – which are `width: 100%` of an indefinite width – collapse.
+   Measured on the first build of this rule: `.shelf-cats` came out **22px wide with 2 x 3px tiles**
+   at 768 and at every width above it. `src/style.css`'s `#app:has(> nav.tab-bar) > .app-content`
+   carries the same sentence about the same mistake. */
+@media (min-width: 768px) {
+  .shelf-cats {
+    width: 100%;
+    max-width: 640px;
+    margin-inline: auto;
+  }
+}
+
 .shelf-cat {
   position: relative;
   display: block;
@@ -3298,12 +3565,9 @@ function shopRowPaidMeta(row: ShopRowView): string | undefined {
   color: var(--ink);
 }
 
-/* The way back out of a category, on its own line above the switcher item 10 forbids touching. */
-.shelf-nav {
-  display: flex;
-  align-items: center;
-  margin-top: 10px;
-}
+/* ⚙ ROUND 36 REVIEW #10 – `.shelf-nav` AND `.shelf-back` ARE GONE WITH THE CONTROL THEY PLACED.
+   The way out of a category is the `Shop` chapter button now; the reasoning is on `openChapter` in
+   the script block, where his words can be quoted. */
 
 /* ⚠ THE HAIRLINE ABOVE A FAMILY IS GONE WITH THE PLATE IT DIVIDED. It was a rule INSIDE one card,
    separating a family from the one above it; on a page of free-standing cards there is nothing on
@@ -3314,6 +3578,60 @@ function shopRowPaidMeta(row: ShopRowView): string | undefined {
   display: flex;
   flex-direction: column;
   gap: 12px;
+}
+
+/* ⭐⭐ ROUND 36 PHASE 4 – THE SHELF'S ROWS GO TWO TO A ROW, AND IT IS THE COACH MARKET'S OWN RULE
+   RATHER THAN A SECOND ANSWER. A shop row is a photo Card with the painting on one side at 40% and
+   the words on the other, `min-height: 132px`; the coach row is a photo card with a portrait strip
+   on one side and the words on the other. They are the same object and they were already the same
+   width on a phone (343px), so they get the same treatment D3 and D17 argued for the market:
+
+     768–900   two to a row  (364px each at 768, exactly the market's card)
+     1024+     `auto-fill, minmax(343px, 1fr)` – as many as fit at no less than the phone's own card
+
+   Measured before: one row per card, 736px wide at 768 and **948px at 1280**, with a 378px painting
+   at one end and two short sentences at the other. Measured after: 4 cars in two rows instead of
+   four, and the category is a shelf rather than a list.
+
+   ⚠ THE FLOOR IS THE PHONE'S CARD AND NOT A COUNT, which is D17's finding arriving on a second
+   screen: three of these in a 948px column would be 310px each – narrower than the phone's – and a
+   card whose words wrap more is a card that gets taller, so the page would grow to save width.
+
+   ⚠ THE HEADING AND ITS NOTE SPAN, they are not cells beside a card: a family is a heading with a
+   shelf under it. Their own `-8px` pairing margin is untouched and works the same in a grid.
+
+   ⚠⚠ THE SELECTORS ARE DOUBLED AND TRIPLED, AND THE MUTATIONS SAY WHICH HALF OF THAT IS REAL.
+   A media query adds no specificity, so both rungs would otherwise tie – with the flex rule above
+   and with each other – and `.tier-block.tier-block` in src/style.css records a case where a
+   browser and happy-dom settled such a tie in OPPOSITE directions. Measured here, on this file's
+   own arms:
+
+     `.shop-family.shop-family` -> `.shop-family` (the 768 rung)      NOTHING WENT RED
+     `.shop-family.shop-family.shop-family` -> two classes (1024)     NOTHING WENT RED
+     `.shop-family.shop-family.shop-family` -> ONE class (1024)       RED, and by name
+
+   – so what is genuinely load-bearing is that the DESKTOP rung outweighs the TABLET rung; against
+   the base rule outside the query, source order is enough in both engines. The doubling stays
+   anyway, and the honest reason is that it costs nothing while a rule which wins only on source
+   order is one re-order away from silently losing – but this comment says which of the two claims
+   the tests actually hold. */
+@media (min-width: 768px) {
+  .shop-family.shop-family {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: start;
+  }
+
+  .shop-family .shop-family-head,
+  .shop-family .shop-family-note {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (min-width: 1024px) {
+  .shop-family.shop-family.shop-family {
+    grid-template-columns: repeat(auto-fill, minmax(343px, 1fr));
+  }
 }
 
 /* The heading and its note are one object with the cards under them, so they keep the tighter
@@ -3463,6 +3781,51 @@ function shopRowPaidMeta(row: ShopRowView): string | undefined {
 
 .shop-row--art-right > .shop-row-body {
   padding-right: calc(40% + 12px);
+}
+
+/* ⭐⭐ ROUND 36 REVIEW #11 – AND ON FOUR OF THE FAMILIES THE PAINTING TAKES HALF. His two
+   declarations, verbatim: «самим картинкам `width: 50%`, а `shop-row-body padding-right: calc(45% +
+   12px)`». Which four, why the property name is mirrored on the cars and why the academy is not in
+   the set are all on `shopRowArtWide` in the script block, where his sentence can be quoted.
+
+   ⚠ THE PAIR STILL DOES NOT ADD TO 100, AND THAT IS THE POINT OF IT. Round 35's pair was 40 / 40 –
+   the inset matched the band exactly, so the words started where the picture stopped. His is 50 /
+   45, so the words start 5% BEFORE the band ends and run under its transparent tail: the mask fades
+   from opaque to nothing over the band's last 38%, which at 50% of the card is 19% of it, so a
+   sentence reaching 5% into that tail sits on paint that is already almost gone. That is «еще чуть
+   больше горизонтального места» spent on the picture without buying it out of the words' side.
+
+   ⚠ THREE CLASSES ON BOTH RULES, so neither depends on source order against the round-35 pair it
+   overrides – (0,3,0) against (0,2,0) in either engine. The `.shop-action` pill on the `--art-right`
+   families keeps its `max-width: calc(40% - 20px)`: it is bounded by the band it sits ON, a 40%
+   pill still lands inside a 50% band, and its left edge (60% + 10px at the widest) stays clear of
+   the words' new right edge (55% - 12px). Nothing he did not ask about moved. */
+.shop-row--art-wide.shop-row--art-left > .shop-row-art,
+.shop-row--art-wide.shop-row--art-right > .shop-row-art {
+  width: 50%;
+}
+
+.shop-row--art-wide.shop-row--art-right > .shop-row-body {
+  padding-right: calc(45% + 12px);
+}
+
+.shop-row--art-wide.shop-row--art-left > .shop-row-body {
+  padding-left: calc(45% + 12px);
+}
+
+/* ⭐⭐ ROUND 36 REVIEW #12 AND #13 – THE CONTROL MOVES TO THE CARD'S BOTTOM-RIGHT CORNER. One rule
+   for the cars and the academy, because it is one sentence he wrote twice; `shopRowCornerAction` in
+   the script block carries both quotes and the reason this corner is reached with `margin-left`
+   rather than with `position: absolute`.
+   ⚠ IT IS `margin-left: auto` ON THE CONTROL AND NOT `justify-content: flex-end` ON THE ROW,
+   because the row is shared: an investment holding puts a field and «Add more» in it, and pushing
+   the whole group right would have moved a control on a family he did not name. The margin is on
+   the last item, so a lone «Sell» goes to the corner and a row that has a field keeps the field
+   where it is. ⚠ AND `flex-wrap: wrap` IS UNTOUCHED – on a phone a long label still takes its own
+   line inside the card rather than the right-hand edge of the screen (round-20 #3, and the fits
+   assertion in tests/component/round34-money-shelf.test.ts). */
+.shop-row--corner-action .shop-row-owned > .shop-stake-row > .shop-action:last-child {
+  margin-left: auto;
 }
 
 /* ⭐⭐ THE NAME GETS ITS OWN LINE ON A FRAMED ROW, AND HIS OWN HANDOFF ASKS FOR IT IN AS MANY WORDS.

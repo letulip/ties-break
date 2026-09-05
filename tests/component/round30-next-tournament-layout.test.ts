@@ -26,12 +26,13 @@
 // Home's does, the plate under it keeps its backing and its gutter, and the four facts still have
 // no plate at all. ⚠ AND THE COPY DID NOT MOVE FOR ANY OF IT – `round29-next-tournament.test.ts`
 // passes unedited across this change too, which is the same evidence #6 produced.
-import { describe, it, expect, beforeEach } from 'vitest'
+import { describe, it, expect, beforeEach, afterEach } from 'vitest'
 import { mount } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
 import '../../src/style.css'
 import { readFileSync } from 'node:fs'
 import { region } from '../helpers/source'
+import { DESKTOP, PHONE, TABLET, setViewport, type Viewport } from './fits'
 import NextTournamentPanel from '../../src/components/NextTournamentPanel.vue'
 import ThisWeekScreen from '../../src/components/screens/ThisWeekScreen.vue'
 import { useGameStore } from '../../src/stores/game'
@@ -79,21 +80,113 @@ function enteredCareer(): Snapshot {
   return toSnapshot(world)
 }
 
+/** ⚠ ROUND 36 PHASE 2 – THE WIDTH IS GLOBAL, SO IT IS PUT BACK. `setViewport` moves the whole
+ *  window, and every other test in this file reads the cascade at whatever it was left at. Captured
+ *  once, restored after each test, so a width-explicit measurement cannot leak into a neighbour. */
+const BOOT_VIEWPORT: Viewport = { width: window.innerWidth, height: window.innerHeight }
+
 beforeEach(() => {
   setActivePinia(createPinia())
   document.body.innerHTML = ''
 })
 
+afterEach(() => {
+  setViewport(BOOT_VIEWPORT)
+})
+
+/** ⚠ ROUND 36 PHASE 2 – THE ORDER IS THE POINT: SET THE WIDTH, THEN MOUNT, THEN READ.
+ *
+ *  happy-dom evaluates a media query on an element's FIRST computed-style read and caches the
+ *  answer; a `setViewport` afterwards does not move it, and a fresh element does re-evaluate
+ *  (measured 04.09, and written down beside `TABLET` in fits.ts). A helper rather than three loose
+ *  lines per test, because getting that order wrong reads the previous screen's answer and looks
+ *  exactly like a rule that is not there. */
+function ratioOfHero(vp: Viewport): string {
+  setViewport(vp)
+  const w = mountPanel()
+  const ratio = getComputedStyle(w.find('.nt-hero').element).aspectRatio.replace(/\s+/g, '')
+  w.unmount()
+  return ratio
+}
+
 describe('round 30 #6 – the picture is square, and it is not a card', () => {
   it('⭐ SQUARE, «по примеру главной» – the same declaration Home\'s hero carries', () => {
-    const w = mountPanel()
-    const hero = w.find('.nt-hero').element
     // ⚠ READ THROUGH THE REAL CASCADE, not off the source text. A source pin would go green on a
     // rule that never reaches the element (a scoped selector that stopped matching, a rule shadowed
     // by a later one); this is what the browser would compute.
-    const ratio = getComputedStyle(hero).aspectRatio.replace(/\s+/g, '')
-    expect(ratio, 'the tournament picture is square').toBe('1/1')
+    //
+    // ⚠⚠ AND AT A STATED WIDTH SINCE ROUND 36 PHASE 2, WHICH IS A FIX TO THIS TEST AND NOT A
+    // LOOSENING OF IT. #6's claim is about a PHONE, and until this round it was being measured at
+    // happy-dom's default 1024 – a width the app had no rule for, so the answer happened to be the
+    // same. It is not any more: `--hero-aspect` (src/style.css) ladders past 768, so the width the
+    // measurement is taken at is now part of what is being claimed. Read at 375, said out loud.
+    expect(ratioOfHero(PHONE), 'the tournament picture is square on a phone').toBe('1/1')
+  })
+
+  // ⭐⭐ ROUND 36 PHASE 2 – AND THE OTHER HALF OF «ПО ПРИМЕРУ ГЛАВНОЙ», WHICH IS NEW HERE.
+  // The owner on frame AF: the tournament image takes the same proportion as the home hero. #6's
+  // «по примеру главной» has been true since this panel shipped, but only because two files
+  // independently spelled `1 / 1`. This holds the JOIN instead of the number: both heroes read
+  // `--hero-aspect`, so they are the same shape at every width by construction rather than by two
+  // people remembering.
+  // MUTATION-VERIFIED: putting a literal `1 / 1` back on `.nt-hero` reddens the tablet arm; putting
+  // one on `.diary-hero` reddens the equality.
+  it('⭐ …and it follows Home onto the tablet, because they read ONE token', () => {
+    // THE PANEL, through the cascade: whatever the ladder says at 768 is what this hero computes.
+    setViewport(TABLET)
+    const token = getComputedStyle(document.documentElement)
+      .getPropertyValue('--hero-aspect')
+      .replace(/\s+/g, '')
+    expect(token, 'the ladder gives the tablet band its own hero shape').toBe('768/400')
+    expect(ratioOfHero(TABLET), 'and the tournament picture IS that shape').toBe(token)
+    // ⚠ HOME'S HALF IS A SOURCE CLAIM AND SAYS SO. `.diary-hero`'s rule is SCOPED to HomeScreen.vue,
+    // so a bare div wearing the class matches nothing and mounting the screen for one declaration is
+    // a whole career's worth of fixture. What has to be true is that Home spells the same token –
+    // and `region` throws if the marker ever rots, which a raw `indexOf` would not (CLAUDE.md).
+    const homeHero = region(sfc('../../src/components/screens/HomeScreen.vue'), '.diary-hero {', '}')
+    expect(homeHero, 'Home reads the same token, so the two shapes cannot drift').toContain(
+      'aspect-ratio: var(--hero-aspect)',
+    )
+  })
+
+  // ⭐⭐⭐ ROUND 36 PHASE 3 – AND ONTO THE DESKTOP, WHERE «THE SAME PROPORTION» NEEDED A SECOND
+  // TOKEN TO STAY TRUE. The owner, on frame AG: the tournament image takes the same proportion as
+  // the home hero. At 768 that was one number and one ladder; at 1024 Home's photograph became a
+  // COLUMN of a two-column page while this one is still a block in a full-width one, so the ratio
+  // alone would have drawn a 511px picture there and a 980px one here – the same shape at twice the
+  // size, which is not what anyone looking at the two screens would call the same proportion.
+  // `--hero-max` caps both, so the join is now shape AND size.
+  // MUTATION-VERIFIED: dropping `max-width: var(--hero-max)` from `.nt-hero` reddens the cap arm;
+  // putting a literal ratio back on either hero reddens the token arm; removing the 1024 rung from
+  // `--hero-aspect` reddens the shape arm.
+  it('⭐⭐ …and onto the desktop, where the join is the SIZE as well as the shape', () => {
+    setViewport(DESKTOP)
+    const token = getComputedStyle(document.documentElement)
+      .getPropertyValue('--hero-aspect')
+      .replace(/\s+/g, '')
+    expect(token, 'the ladder gives the desktop band its own hero shape').toBe('450/400')
+    expect(ratioOfHero(DESKTOP), 'and the tournament picture IS that shape').toBe(token)
+
+    setViewport(DESKTOP)
+    const cap = getComputedStyle(document.documentElement).getPropertyValue('--hero-max').trim()
+    expect(cap, 'and the desktop declares one width for both heroes').toBe('512px')
+    const w = mountPanel()
+    const hero = getComputedStyle(w.find('.nt-hero').element)
+    expect(hero.maxWidth, 'the tournament picture reads that cap').toBe(cap)
+    // ⚠ AND THE BLEED GOES WITH THE CAP. A capped picture that still cancels the gutter is a box
+    // hanging 16px off the left of its own column – 8px from the rail at 1280.
+    expect(hero.marginLeft, 'no full bleed once the picture is capped').toBe('0px')
+    expect(hero.marginRight, 'and none on the right either').toBe('0px')
     w.unmount()
+
+    // Home's half is a source claim for the reason the tablet arm above gives: `.diary-hero`'s rule
+    // is scoped to HomeScreen.vue, and `region` throws if either marker ever rots.
+    const homeDesktop = region(
+      sfc('../../src/components/screens/HomeScreen.vue'),
+      '@media (min-width: 1024px) {',
+      '.diary-strip {',
+    )
+    expect(homeDesktop, 'Home caps its hero at the same token').toContain('max-width: var(--hero-max)')
   })
 
   it('⭐ NO FRAME – the hero stopped being a <Card>, so its hairline went with it', () => {
@@ -170,6 +263,14 @@ describe('round 30 #6 – what is ON the picture, and what is under it', () => {
 
 describe('round 30 #18 – the picture goes to the edge, and only the picture does', () => {
   it('⭐ FULL-BLEED: the shell gutter, cancelled by the token that sets it', () => {
+    // ⚠⚠ AT A STATED WIDTH SINCE ROUND 36 PHASE 3, and this is a fix to the test rather than a
+    // loosening of it – the same move phase 2 made twice in this file. This arm took no viewport of
+    // its own, so it measured at whatever the file had last set (or at happy-dom's default 1024),
+    // which was a width the app had no rule for. It has one now: past 1024 the picture is CAPPED
+    // (see the desktop arm below) and a capped box that still bleeds 16px to the left hangs off the
+    // side of its own column. «В край, как hero на главной» is a claim about a phone, and the width
+    // it is measured at is part of it.
+    setViewport(PHONE)
     const w = mountPanel()
     const hero = getComputedStyle(w.find('.nt-hero').element)
     // ⚠ THE TOKEN IS READ OFF `:root`, NEVER TYPED HERE AS A NUMBER. `--app-pad-x` is what `#app`
@@ -241,12 +342,24 @@ describe('round 30 #18 – the picture goes to the edge, and only the picture do
     // push it TALLER still rather than lose a sentence off the bottom.
     // ⚠ HOME'S HERO CLAMPS AT `max-height: 60vh` because a painting may be cropped without loss.
     // Copying that rule across with the margin is the mutation this test exists to redden on.
+    // ⚠ AT THE PHONE, STATED – see the note on #6's square above. The ceiling claim holds at every
+    // width; the SHAPE claim is a phone's, and since round 36 phase 2 the width has to be named.
+    setViewport(PHONE)
     const w = mountPanel()
     const hero = getComputedStyle(w.find('.nt-hero').element)
     expect(hero.maxHeight === '' || hero.maxHeight === 'none', 'no ceiling on the picture').toBe(true)
     expect(hero.height === '' || hero.height === 'auto', 'and no fixed height either').toBe(true)
     expect(hero.aspectRatio.replace(/\s+/g, ''), 'square, as a floor').toBe('1/1')
     w.unmount()
+    // ⭐ AND THE FLOOR IS STILL A FLOOR ON A TABLET, which is what a wider hero puts at risk: a
+    // shorter box has less room before the read pushes it down, and the whole of #6's ruling is that
+    // it PUSHES rather than clips. No ceiling, no fixed height, at 768 either.
+    setViewport(TABLET)
+    const t = mountPanel()
+    const wide = getComputedStyle(t.find('.nt-hero').element)
+    expect(wide.maxHeight === '' || wide.maxHeight === 'none', 'no ceiling at 768 either').toBe(true)
+    expect(wide.height === '' || wide.height === 'auto', 'and no fixed height at 768').toBe(true)
+    t.unmount()
   })
 })
 

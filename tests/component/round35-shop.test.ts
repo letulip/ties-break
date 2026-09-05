@@ -8,8 +8,9 @@
 // WHAT THIS FILE HOLDS, by his own numbering (docs/rounds/round-35-shop.md):
 //   #3  the shop has a HOME: the shelf plate, six category cards IN HIS ORDER, her account with a
 //       photograph – and the cards are TALL, which is the one shape he specified twice;
-//   #5  the cars carry a painting on the LEFT at 40% of the card, and the buy control sits under
-//       the price rather than beside it;
+//   #5  the cars carry a painting on the LEFT, and the buy control sits under the price rather than
+//       beside it;  ⚙ round 36 review #11 took that band from 40% of the card to 50%, and #12 moved
+//       the owned car's control to the card's bottom-right corner – both re-aimed in place below;
 //   #6  the academy's four stages are four cards on the cars' principle;
 //   #7  property takes the painting on the RIGHT with the control ON it, and an owned house's
 //       «Worth now» row carries the current price with the purchase price gone;
@@ -245,22 +246,51 @@ describe('#3 – the shop has a front door', () => {
 
   it('⭐⭐ the way back out of a category is real, and a category page is not a trap', async () => {
     // ⚠⚠ THE FAILURE THIS ARM EXISTS FOR IS ROUND-20 #3's FAMILY: a level you can enter and not
-    // leave. A two-level shop is the first place in this app where that is even possible, and
-    // «press the chapter tab again» is not a way out a player can find. So the control is pressed
-    // here the way a player presses it, and the home has to come back whole - the plate AND the six
-    // cards, not one of the two.
+    // leave. A two-level shop is the first place in this app where that is even possible, so the
+    // way out is pressed here the way a player presses it and the home has to come back whole - the
+    // plate AND the six cards, not one of the two.
+    //
+    // ⚙ ROUND 36 REVIEW #10 RE-AIMED THIS ARM AND DID NOT WEAKEN IT. The owner, 04.09: «Внутри
+    // магазина на внутренних страницах нижнюю стрелку "назад" надо убрать - точка входа в магазин
+    // всегда общая страница категорий, по клику на Shop мы на нее же попадаем.» Round 35 rejected
+    // «press the chapter tab again» as a way out BECAUSE IT WAS NOT ONE - `screenTab` never left
+    // `shop`, so the press did nothing. His second clause is that missing behaviour, so the control
+    // this arm presses is now the `Shop` chapter button, and the claim it makes is word for word the
+    // one it always made. See `openChapter` in MoneyScreen.vue.
     const wrapper = await mountShop(toSnapshot(rich('r35-3-back')))
     await openShelfTab(wrapper, 'Water')
     expect(wrapper.find('.shelf-feed').exists(), 'a category really is open').toBe(true)
-    const back = wrapper.find('.shelf-back')
-    expect(back.exists(), 'there is a way back on a category page').toBe(true)
-    expect(back.attributes('aria-label'), 'and it says where it goes').toBeTruthy()
-    await back.trigger('click')
+    // ⚠ AND THE ARROW IS GONE FROM THE INNER PAGE, WHICH IS THE FIRST HALF OF HIS SENTENCE.
+    expect(wrapper.find('.shelf-back').exists(), 'no arrow on an inner page any more').toBe(false)
+    const shop = wrapper.findAll('.money-tabs button.tab-pill').find((n) => n.text().trim() === 'Shop')
+    expect(shop, 'the Shop chapter button is the way out').toBeTruthy()
+    await shop!.trigger('click')
     expect(wrapper.find('.shelf-cats').exists(), 'the six cards are back').toBe(true)
     expect(wrapper.find('.money-shop').exists(), 'and so is the plate').toBe(true)
     expect(wrapper.find('.shelf-feed').exists(), 'and the rungs are gone again').toBe(false)
     // ⚠ AND THE HOME ITSELF CARRIES NO BACK CONTROL - it is not a level, it is the shop.
     expect(wrapper.find('.shelf-back').exists(), 'nothing to go back from on the home').toBe(false)
+    wrapper.unmount()
+  })
+
+  it('⭐⭐ #10 – the shop is re-entered on its front door, whichever chapter you came from', async () => {
+    // ⚠ HIS FIRST CLAUSE IS A CLAIM ABOUT THE DOOR AND NOT ONLY ABOUT THE BUTTON: «точка входа в
+    // магазин ВСЕГДА общая страница категорий». Leaving the shop for another chapter and coming
+    // back is the second way in, and a `shopHome` that survived the trip would land the player back
+    // inside Water without having asked for it.
+    const wrapper = await mountShop(toSnapshot(rich('r35-10-door')))
+    await openShelfTab(wrapper, 'Water')
+    expect(wrapper.find('.shelf-feed').exists(), 'a category is open').toBe(true)
+    const press = async (label: string): Promise<void> => {
+      const pill = wrapper.findAll('.money-tabs button.tab-pill').find((n) => n.text().trim() === label)
+      expect(pill, `the ${label} chapter button`).toBeTruthy()
+      await pill!.trigger('click')
+    }
+    await press('Bills')
+    expect(wrapper.find('.shelf-feed').exists(), 'the shelf is off screen entirely').toBe(false)
+    await press('Shop')
+    expect(wrapper.find('.shelf-cats').exists(), 'and the shop opens on the six cards').toBe(true)
+    expect(wrapper.find('.shelf-feed').exists(), 'not on the category it was left in').toBe(false)
     wrapper.unmount()
   })
 
@@ -283,6 +313,13 @@ describe('#5-#9 – the framed rows', () => {
    *  в макете» with the text on the round number he named. */
   const ART_SHARE = 40
 
+  /** ⚙ ROUND 36 REVIEW #11 – HIS OWN TWO DECLARATIONS, ON THE FOUR FAMILIES HE NAMED. «На Air,
+   *  Water, Property, Cars давай для всех картинок еще чуть больше горизонтального места дадим,
+   *  самим картинкам `width: 50%`, а `shop-row-body padding-right: calc(45% + 12px)`.» They are used
+   *  verbatim; the academy keeps round 35's 40 / 40, because he did not name it. */
+  const WIDE_ART_SHARE = 50
+  const WIDE_TEXT_INSET = 45
+
   async function framed(wrapper: Awaited<ReturnType<typeof mountShop>>, label: string) {
     const row = await shelfRow(wrapper, label)
     const art = row.find('.shop-row-art')
@@ -290,7 +327,7 @@ describe('#5-#9 – the framed rows', () => {
     return { row, art }
   }
 
-  it('⭐⭐ #5 – a car takes the painting on the LEFT, at 40% of the card, full height', async () => {
+  it('⭐⭐ #5 – a car takes the painting on the LEFT, at half the card, full height', async () => {
     // ⚠⚠ THE SIDE IS HIS AND IT IS THE COACH CARDS' SIDE. «картинки будут квадратными на всю высоту
     // карточки с небольшим градиентом справа (как на тренерах)» – `.cm-art` is at `left: 0` under a
     // 90deg mask that fades out at its RIGHT edge, so «gradient on the right» is a painting on the
@@ -307,17 +344,37 @@ describe('#5-#9 – the framed rows', () => {
     expect(cs.top).toBe('0px')
     expect(cs.bottom, 'full height of the card').toBe('0px')
 
-    // ⭐ 40% OF THE WIDTH, AND 60% FOR THE WORDS – the two halves of his sentence, both read off the
-    // cascade so they cannot drift apart.
+    // ⭐ HIS TWO NUMBERS, BOTH READ OFF THE CASCADE so they cannot drift apart.
+    //
+    // ⚙ ROUND 36 REVIEW #11 MOVED BOTH OF THEM AND BROKE THE RELATION BETWEEN THEM, WHICH IS WHY
+    // THIS ARM IS RE-AIMED RATHER THAN RE-NUMBERED. Round 35's pair was 40 / 40: the inset MATCHED
+    // the band, so the words started exactly where the picture stopped and «the words start past the
+    // painting» was a true and cheap claim. His new pair is 50 / 45 – so the words now start 5% of
+    // the card BEFORE the band ends, on the tail of its own fade. Measured at 375: a 171.5px band
+    // and a 166.4px inset, an overlap of 5.1px, and the mask (`#000` to 62%, transparent at 100%)
+    // is at about 8% alpha there. It is his instruction and it is used verbatim; the overlap is
+    // named here, and in docs/specs/responsive-decisions-2026-09.md, rather than adjusted away.
     const cardRoom = roomInside(row.element)
     const artWidth = lengthPx(cs.width, cardRoom)
-    expect(artWidth / cardRoom, 'the painting takes 40% of the card').toBeCloseTo(ART_SHARE / 100, 2)
+    expect(artWidth / cardRoom, 'the painting takes half the card').toBeCloseTo(WIDE_ART_SHARE / 100, 2)
     const bodyCs = getComputedStyle(row.find('.shop-row-body').element)
     const inset = calcPx(bodyCs.paddingLeft, cardRoom)
-    expect(inset, 'the words start past the painting').toBeGreaterThanOrEqual(artWidth)
+    expect(inset, 'the inset is his own calc(45% + 12px)').toBeCloseTo(
+      (WIDE_TEXT_INSET / 100) * cardRoom + 12,
+      1,
+    )
+    // ⚠ AND THE OVERLAP IS BOUNDED. Five per cent of the card is the whole of it, and it has to stay
+    // inside the band's transparent tail – the mask holds full opacity to 62%, so an inset landing
+    // before that would put a sentence on solid paint.
+    const overlap = artWidth - inset
+    expect(overlap, 'the words reach into the band, which is what his pair asks for').toBeGreaterThan(0)
+    expect(
+      (inset / artWidth) * 100,
+      `the words start at ${((inset / artWidth) * 100).toFixed(1)}% of the band, which must be inside its fade`,
+    ).toBeGreaterThan(62)
     const textShare = (cardRoom - inset) / cardRoom
-    expect(textShare, 'and the text keeps about the other 60%').toBeGreaterThan(0.5)
-    expect(textShare).toBeLessThanOrEqual((100 - ART_SHARE) / 100)
+    expect(textShare, 'and the text keeps a little over half').toBeGreaterThan(0.5)
+    expect(textShare).toBeLessThanOrEqual((100 - WIDE_TEXT_INSET) / 100)
 
     // ⭐⭐ AND THE NAME HAS THE LINE TO ITSELF, WHICH IS A HEIGHT GUARD AND HIS HANDOFF'S OWN WORDS.
     // README §X: «Название - на своей строке, с переносом (не в одном флекс-ряду с доходностью,
@@ -413,12 +470,20 @@ describe('#5-#9 – the framed rows', () => {
     const cs = getComputedStyle(art.element)
     expect(cs.right, 'the band stands on the right edge').toBe('0px')
     expect(cs.left, 'and not on the left').not.toBe('0px')
+    // ⚙ ROUND 36 REVIEW #11 – property is one of his four families, so the band is 50% and the
+    // inset is his own `calc(45% + 12px)`. The two no longer match, deliberately; the car arm above
+    // carries the measurement of the 5% the words reach into the band's fade.
     const cardRoom = roomInside(row.element)
-    expect(lengthPx(cs.width, cardRoom) / cardRoom).toBeCloseTo(ART_SHARE / 100, 2)
+    expect(lengthPx(cs.width, cardRoom) / cardRoom).toBeCloseTo(WIDE_ART_SHARE / 100, 2)
+    const inset = calcPx(getComputedStyle(row.find('.shop-row-body').element).paddingRight, cardRoom)
+    expect(inset, 'the inset is his own calc(45% + 12px)').toBeCloseTo(
+      (WIDE_TEXT_INSET / 100) * cardRoom + 12,
+      1,
+    )
     expect(
-      calcPx(getComputedStyle(row.find('.shop-row-body').element).paddingRight, cardRoom),
-      'the words stop before the painting',
-    ).toBeGreaterThanOrEqual(lengthPx(cs.width, cardRoom))
+      (inset / lengthPx(cs.width, cardRoom)) * 100,
+      'the words stop inside the band’s fade, never on solid paint',
+    ).toBeGreaterThan(62)
 
     // ⭐ THE CONTROL IS ON THE PAINTING, AND IT IS BOUNDED BY IT. A pill that grew past the band
     // would put its own left edge back over the sentences, which is the failure this pair catches.
@@ -432,11 +497,20 @@ describe('#5-#9 – the framed rows', () => {
     // ⚙ HIS RULING, 03.09: «в строке "worth now" показывать текущую цену, а цену покупки убрать
     // совсем, раз прибавка и так видна. - верно.» The gain keeps its own line under it, which is
     // the «прибавка» the ruling leans on – so this arm asserts BOTH: the paid figure gone, the
-    // gain still there. ⚠ PROPERTY ONLY: the same row on a car still names what was paid, which is
-    // what keeps CLAUDE.md invariant 4 from spreading one item across six families.
+    // gain still there.
+    //
+    // ⚙ ROUND 36 REVIEW #12 AND #13 EXTENDED IT TO THE CARS AND THE ACADEMY, in his own words –
+    // «С купленной машины убираем paid серые буквы» / «В разделе Her Academy убираем paid серые
+    // буквы» – so the car's half of this arm is re-aimed rather than kept as it was. ⚠ AND THE
+    // OTHER HALF OF IT SURVIVES, because it is what stops one item spreading across six families:
+    // WATER AND AIR still name what was paid, and a boat is the witness.
     const world = rich('r35-7-owned')
     buyAsset(world, 'house-first')
     buyAsset(world, 'car-sensible')
+    // ⚠ THE WITNESS IS A BRAND AND NOT A BOAT, and the difference matters: water and air are BUILT
+    // TO ORDER, so a freshly bought one draws the `On order` row, whose own `paid $N` this item
+    // never touched. A witness that passed on that row would be proving nothing about the owned one.
+    buyAsset(world, 'merch-brand')
     const wrapper = await mountShop(toSnapshot(world))
 
     const house = await shelfRow(wrapper, 'A place of their own')
@@ -445,7 +519,14 @@ describe('#5-#9 – the framed rows', () => {
     expect(house.text(), 'the gain is still its own line').toContain('since you bought it')
 
     const car = await shelfRow(wrapper, 'The sensible estate')
-    expect(car.text(), 'and a car still names what was paid').toContain('paid $60,000')
+    expect(car.text(), 'a car no longer names what was paid either').not.toContain('paid $')
+    // ⚠⚠ AND THE FIGURE IS NOT LOST WITH THE LINE, which is the check that had to pass before the
+    // line could go: what was paid is «Worth now» minus the gain, and both are on the card.
+    expect(car.text(), 'the current worth is still the figure on the row').toContain('Worth now')
+    expect(car.text(), 'and the gain is still its own line').toContain('since you bought it')
+
+    const brand = await shelfRow(wrapper, 'The merch brand')
+    expect(brand.text(), 'and a family he did not name still says what was paid').toContain('paid $')
     wrapper.unmount()
   })
 
@@ -465,6 +546,30 @@ describe('#5-#9 – the framed rows', () => {
     const merch = await shelfRow(wrapper, 'The merch brand')
     expect(merch.classes()).not.toContain('shop-row--art-left')
     expect(merch.classes()).not.toContain('shop-row--art-right')
+    wrapper.unmount()
+  })
+
+  it('⚙ #6 – …and the academy keeps round 35’s 40%, because review #11 did not name it', async () => {
+    // ⚠⚠ THE ACADEMY IS THE FAMILY THIS MOST LOOKS LIKE IT SHOULD SWEEP UP. Review #11 widened the
+    // band to half the card «На Air, Water, Property, Cars»; the academy rows are `--art-left`
+    // exactly like the cars (his own «как на экране машин»), so a rule keyed on the SIDE rather than
+    // on the FAMILY would have taken them too. He named four families and this is not one of them –
+    // CLAUDE.md invariant 4's argument applied to a proportion instead of to a word. One name in
+    // `SHELF_WIDE_ART` (MoneyScreen.vue) moves it, and this arm is what makes that a decision.
+    setViewport(PHONE)
+    const wrapper = await mountShop(toSnapshot(rich('r35-6-academy-share')), true)
+    const row = await shelfRow(wrapper, 'The land')
+    expect(row.classes(), 'not one of his four').not.toContain('shop-row--art-wide')
+    const cardRoom = roomInside(row.element)
+    const art = getComputedStyle(row.find('.shop-row-art').element)
+    expect(lengthPx(art.width, cardRoom) / cardRoom, 'still round 35’s 40%').toBeCloseTo(
+      ART_SHARE / 100,
+      2,
+    )
+    expect(
+      calcPx(getComputedStyle(row.find('.shop-row-body').element).paddingLeft, cardRoom),
+      'and the words still start exactly where the picture stops',
+    ).toBeGreaterThanOrEqual(lengthPx(art.width, cardRoom))
     wrapper.unmount()
   })
 })

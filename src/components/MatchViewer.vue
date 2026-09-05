@@ -1079,7 +1079,17 @@ watch(finished, (isFinished) => {
          I's header (tournament, round, "Skip match") and its CTA belong to whichever flow mounts
          this viewer, not here. -->
     <Card variant="photo" class="mv-panel">
-      <div class="mv-court">
+      <!-- ⭐⭐ ROUND 36 PHASE 4 – THE COURT STOPS AT ITS OWN DRAWING SURFACE, and the cap is bound
+           off `CSS_W` for the same reason the ratio below is: the element and the bitmap must not
+           drift apart. The canvas is a FIXED internal resolution (see the constants) scaled by
+           `devicePixelRatio`, so every CSS pixel past 680 is a 680px bitmap being enlarged. Until
+           this phase the takeover column was 480 at every width and the court could never reach
+           680; the column now grows to 848, and without this the court would be upscaled 1.25x on
+           the desktop and 1.85x inside the prologue's weekend, which has no column at all.
+           `margin-inline: auto` centres what is left, and it is the COURT that is capped rather
+           than the canvas because `.mv-chrome` – the Live badge, the clock and the weather – is
+           positioned against this box. -->
+      <div class="mv-court" :style="{ maxWidth: `${CSS_W}px` }">
         <canvas ref="canvasRef" class="mv-canvas" :style="{ aspectRatio: `${CSS_W} / ${CSS_H}` }"></canvas>
         <!-- BOTH OF THESE SIT IN THE TOP RUN-OFF BAND, NEVER ON THE PLAYING SURFACE (owner,
              29.07). They are furniture: the court is what the player is watching. The badge is
@@ -1437,6 +1447,10 @@ watch(finished, (isFinished) => {
 .mv-court {
   position: relative;
   line-height: 0; /* no descender gap under the canvas */
+  /* ⚠ THE CAP ITSELF IS BOUND INLINE off `CSS_W` – see the template. This is only the centring half,
+     and it is inert until the cap bites: below 680 of column the box is narrower than its max and
+     an auto margin resolves to zero. */
+  margin-inline: auto;
 }
 
 /* `aspect-ratio` is bound inline from CSS_W/CSS_H so the element and the drawing surface cannot
@@ -2147,5 +2161,139 @@ watch(finished, (isFinished) => {
 
 .mv-hurt .num {
   color: var(--text);
+}
+
+/* =================================================================================================
+   ⭐⭐⭐ ROUND 36 ITEM 17 – THE MATCH SCREEN ON A TABLET AND ON A DESKTOP
+   =================================================================================================
+   His two frames: `AU-live-match-tablet-768.png` («court on top, instruments in two columns») and
+   `AV-live-match-desktop-1024.png` (the court top-left, the commentary a full-height RIGHT column).
+   Both are rebuilt here as ONE grid with two placements, and the whole item is CSS: not an element,
+   not a string and not an icon is added or removed, at any width.
+
+   ⚠⚠ AND THE ONE THING HE FLAGGED HIMSELF IS WHY THE MARKUP DID NOT MOVE: «наши контролы скорости и
+   моментов остаются с нами, дизайн их забыл.» The frames draw a single «Speed up» pill where the app
+   has a three-value SPEED plate and a two-value VIEW plate (`MatchControls.vue`), plus the shout row
+   and the skip link. A layout written by moving markup around is exactly the change that loses one
+   of them silently; a layout written as placement cannot, because every child is still rendered by
+   the same `v-if` it was before. `e2e/parity.spec.ts` walks this screen now (the room this item
+   added) and would name the loss at 768, 900 or 1280 if it ever happened anyway.
+
+   -----------------------------------------------------------------------------------------------
+   WHY `.mv-below` BECOMES `display: contents` AND NOT A COLUMN OF THE GRID
+   -----------------------------------------------------------------------------------------------
+   The wrapper exists for ONE reason – it is the pinned control bar's containing block, so the bar
+   cannot travel up onto the playing surface at any viewport height (see `.mv-below` above and
+   tests/screen-i-live-match.test.ts). It holds the log AND the bar, and this layout needs those two
+   in DIFFERENT columns, so the wrapper cannot stay a box that contains both.
+
+   ⭐ A GRID ITEM'S CONTAINING BLOCK IS ITS GRID AREA, which is what makes the swap safe rather than
+   a loss. With the wrapper boxless the bar becomes a grid item of `.mv` placed in row 2 of column 1
+   – an area whose top edge is the bottom of the panel's row – so «the bar cannot reach the court»
+   is still true BY CONSTRUCTION, and by the same kind of construction. It is stated as a rule here
+   and asserted at `tests/component/round36-item17.test.ts`.
+
+   ⚠ AND IT IS `display: contents` RATHER THAN A REPARENTED `<div>` FOR THE IDENTITY CONTRACT: below
+   768 not one declaration in this block applies, so the wrapper is the same flex column it has
+   always been and the phone census is 0 moved / 0 new. Same trade D50 recorded for the week pager's
+   container, one level up.
+   ================================================================================================= */
+@media (min-width: 768px) {
+  /* ⭐ AU – «court on top, instruments in two columns». The panel (court + score + stats) takes the
+     whole column on row 1, and what was under it stands in two: the transport on the left, the
+     commentary on the right. `344px` is HIS OWN right-hand column from the AU frame – the one number
+     in this block taken from the design rather than from us, because the app has no width of its own
+     for a thing it has never drawn beside anything. The left track is what is left (382px at 768,
+     494px at 900), comfortably past the ~275px the two segmented plates need at this bar's trimmed
+     pill padding – see `.mv-controls :deep(.tab-pill)` in MatchControls.vue for that measurement.
+     ⚠ `minmax(0, …)` ON BOTH TRACKS, for `.mv-runoff`'s own reason one screen up: a bare `1fr` floors
+     at min-content, so a long log row or a wide plate would push the grid wider than the column
+     instead of shrinking its own track. */
+  .mv {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 344px);
+    /* Row 1 is the panel's own height; row 2 takes everything left, which is what hands the
+       commentary the height it has never had here (measured: 92px – its FLOOR – at every width from
+       768 up before this item, because the panel and the bar between them left it nothing). */
+    grid-template-rows: auto minmax(0, 1fr);
+  }
+
+  /* The wrapper stops being a box – see the block comment. Everything it declares (the column, the
+     gap, `flex: 1`, `min-height: 0`) is the grid's job at these widths. */
+  .mv-below {
+    display: contents;
+  }
+
+  .mv-panel {
+    grid-column: 1 / -1;
+    grid-row: 1;
+  }
+
+  /* THE COMMENTARY, AS A COLUMN. `min-height: 0` is the grid spelling of the flex rule above it: a
+     grid item's automatic minimum size is its content, so without this a long log stretches its own
+     row instead of scrolling inside itself, and the page grows a scrollbar the moment the match gets
+     going. The base rule's `min-height: 92px` is a FLOOR for a short window and would do exactly
+     that here, so this overrides it – the track is what holds the log open now. */
+  .mv-log {
+    grid-column: 2;
+    grid-row: 2;
+    min-height: 0;
+  }
+
+  /* THE TRANSPORT, AT THE FOOT OF ITS COLUMN – which is where his frames put the CTA, and where the
+     bar already was on a phone. `align-self: end` rather than a stretch, because the bar is a row of
+     controls and not a panel; the space above it in the column is the frame's own.
+     ⚠ `margin-top: 0` UNDOES A FLEX-ONLY TRICK. The bar carries `margin-top: -10px` to eat
+     `.mv-below`'s 10px column gap so it sits flush against the log; there is no gap to eat when it is
+     not under the log, and left in place it would pull the bar 10px into the row above it.
+     ⚠ AND THIS RULE REACHES A CHILD COMPONENT'S ROOT ON PURPOSE, the same way `.mv-panel, .mv-actions`
+     above it deliberately does not – a parent's scoped selector matches the child's root element and
+     nothing under it, and `.mv-controls` IS `MatchControls.vue`'s root. Placement is the parent's
+     business; everything the bar is made of stays in its own file. */
+  .mv-controls {
+    grid-column: 1;
+    grid-row: 2;
+    align-self: end;
+    margin-top: 0;
+  }
+
+  /* "Watch again" on a finished replay – MatchReplay's one caller, the only surface with nothing to
+     proceed to. It is placed on an IMPLICIT third row, so when the button is not rendered no track
+     is created and no gap is paid for it; when it is, it is a full-width row under both columns. */
+  .mv-actions {
+    grid-column: 1 / -1;
+    grid-row: 3;
+  }
+}
+
+/* ⭐⭐ AV – THE DESKTOP, AND THE ONLY THING THAT CHANGES IS WHERE TWO BOXES SIT.
+   «Справа от корта – текстовая трансляция на всю высоту левой колонки», and his README says why in
+   one sentence: «Ширину на десктопе получает только она: это единственный элемент, который умеет ею
+   пользоваться.» So the panel gives up the second track and the log takes the full height of both
+   rows beside it.
+
+   ⚠⚠ THE COURT IS NARROWER HERE THAN ON A TABLET, AND THAT IS HIS DESIGN RATHER THAN A REGRESSION.
+   AU draws the court 716px wide and AV draws it 612 – he spends desktop width on the commentary, not
+   on the tennis. `60%` is his own AV ratio («Корт — 60% ширины шелла»), applied to OUR shell: the
+   takeover column is 848px at 1024 and at 1280 alike, so the court column is 508.8 and the
+   commentary takes the remaining 329.2 – within 15px of the 344 his frame gives it.
+   ⚠ The 680px cap on `.mv-court` is untouched and simply stops biting here: it is the canvas's own
+   drawing width (phase 4, D23) and a court drawn WIDER than it would be an upscaled bitmap. A court
+   drawn narrower is only a smaller picture of the same drawing, which costs nothing. */
+@media (min-width: 1024px) {
+  .mv {
+    grid-template-columns: minmax(0, 60%) minmax(0, 1fr);
+  }
+
+  .mv-panel {
+    grid-column: 1;
+  }
+
+  /* `1 / -1` is the two EXPLICIT rows – the panel's and the transport's – and deliberately not the
+     implicit third: a finished replay's "Watch again" belongs under the whole screen, not beside a
+     log that has stopped growing. */
+  .mv-log {
+    grid-row: 1 / -1;
+  }
 }
 </style>

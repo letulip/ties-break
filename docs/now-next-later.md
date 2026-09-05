@@ -29,8 +29,17 @@ last-reviewed: 2026-08-31
 
 ## Now
 
-⚙ THE LIVE WAVE IS ROUND 35 – this line is machine-checked against the newest ledger in
+⚙ THE LIVE WAVE IS ROUND 36 – this line is machine-checked against the newest ledger in
 `docs/rounds/` by `scripts/doc-facts.mjs`; edit the number only by shipping a ledger.
+
+**Round 36 is the responsive wave** ([round-36.md](rounds/round-36.md), 04.09) – the interfaces on
+tablet and desktop, five phases against [`specs/responsive-2026-09.md`](specs/responsive-2026-09.md)
+and the owner's own breakpoint ladder. **Phase 1 is shipped**: a Playwright parity harness that walks
+every screen at 375 / 768 / 900 / 1280 and fails BY NAME on anything the phone has and a wider format
+does not (or the reverse), and the container on his ladder – fluid 768–900, fixed at 900 through the
+1023 plateau, fluid to 1200 and capped. ⭐ Its finding corrects the premise the plan was written on:
+`--app-max-width: 880px` is the FRAME, while the column a player reads (`main.app-content`) has
+always been capped at **520**, so phases 2–4 are filling 520 → 1168, not 880 → 1168.
 
 **Round 34 is the open wave** ([round-34.md](rounds/round-34.md), 02.09) – twenty-one items off a
 full career played on the round-33 build, plus a full read of his save. ⭐ Its centre of gravity is

@@ -26,10 +26,10 @@
 // The advance button is NOT here – it is App.vue's sticky bar, global on every tab (R13-12).
 import { computed, ref } from 'vue'
 import { useGameStore } from '../../stores/game'
-import { LADDER_LABEL, rankChipTrack, type PlayStyle, type WorldEvent, type WorldMatch } from '../../shared/protocol'
-import type { LadderTrack, TierId } from '../../engine/season/types'
-import { weekDateLine, weekLabel, weekRange } from '../../shared/dates'
-import { formatShortName, rankLabel } from '../../shared/format'
+import type { PlayStyle, WorldEvent, WorldMatch } from '../../shared/protocol'
+import type { TierId } from '../../engine/season/types'
+import { weekLabel, weekRange } from '../../shared/dates'
+import { formatShortName } from '../../shared/format'
 import { formatCents } from '../../shared/money'
 import { KID_ID, flipScore, practiceCaution } from '../../engine/world'
 // ⭐ ROUND 27 #2 – the fixture's own name for the bottom control's fifth label. One place spells it
@@ -38,7 +38,11 @@ import { NATIONAL_TEAM } from '../../engine/nationalTeam'
 import { COLLEGE_LEAGUE } from '../../engine/collegeLeague'
 import { ECONOMY } from '../../engine/economy'
 import { useKidEmotion } from '../../composables/kidEmotion'
-import { useHeaderAvatar } from '../../composables/headerAvatar'
+// ⭐⭐⭐ ROUND 36 SECOND PASS, P2-6 – THE ONE OWNER OF HER IDENTITY. Her face, the week's three
+// strings, the rank chip's five derived facts and the one-time callout's ref all come from here now,
+// because `RailIdentity.vue` in the shell draws the same block on every page and two computations of
+// one rank is this repo's named recurring disease. Nothing about them changed – the code moved.
+import { useKidIdentity } from '../../composables/kidIdentity'
 // The app's one red-to-green ramp, shared with the Season and Calendar odds rings. `{ pct }` names
 // the scale IN the call: this number is a 0..100 percentage, not a 0..1 share, and the signature
 // will not let the two be confused.
@@ -110,16 +114,29 @@ const base = import.meta.env.BASE_URL
 // emotional (useKidEmotion, below). This 256px crop in the corner is F45-1's age-only `norm`: it is
 // chrome, and chrome that flickers with each week's result is noise. Keeping them on separate
 // composables is what makes that guarantee checkable.
-const { cropUrl: headerAvatarUrl } = useHeaderAvatar()
-// R13-12's discoverability callout: shown once ever per device, dismissed by the first tap on
-// either the avatar or the callout itself. localStorage, never the save.
-const KID_HINT_KEY = 'tb:kidAvatarHintSeen'
-const showKidHint = ref(!localStorage.getItem(KID_HINT_KEY))
+//
+// ⭐⭐⭐ P2-6 – AND THE WHOLE BLOCK IS ONE COMPOSABLE NOW. The crop, the week's three strings, the
+// rank chip's five derived facts and the one-time callout's ref were all declared in this file and
+// teleported into the rail; the rail draws them on every page from here on, so the ARITHMETIC moved
+// to `composables/kidIdentity.ts` and this screen is one of its two renders. Every line of it is the
+// line that stood here, moved verbatim – see that file's header for why the teleport could not
+// survive «на всех страницах» and why a second copy of the sums was never an option.
+// ⚠ `showKidHint` IS DELIBERATELY THE SAME REF THE RAIL READS, so a dismissal on one width is a
+// dismissal on the other. It was one ref before too – the teleported callout was this component's.
+const {
+  headerAvatarUrl,
+  dateLine,
+  chipTrack,
+  ladderLabel,
+  rankText,
+  ranked,
+  rankChipTitle,
+  rankMovement,
+  showKidHint,
+  dismissKidHint,
+} = useKidIdentity()
 function openKid(): void {
-  if (showKidHint.value) {
-    showKidHint.value = false
-    localStorage.setItem(KID_HINT_KEY, '1')
-  }
+  dismissKidHint()
   emit('navigate', 'kid')
 }
 // Diary-1 (D2): the top of Home is the BIG painting – the same emotion-correct 512px art the Kid
@@ -199,7 +216,9 @@ const week = computed(() => game.snapshot?.week ?? 0)
 // "W27 2033 · Jun 3 – Jun 9" – OUR week number, the year written out in full (the header has the
 // room the 30px status pill does not) and the week's real calendar days. Composed by
 // shared/dates.ts and nowhere else, so no surface can invent a second shape for it.
-const dateLine = computed(() => weekDateLine(week.value))
+// ⭐ P2-3/P2-6: `dateLine` is `useKidIdentity()`'s above, along with the two halves the rail draws
+// on separate lines – the whole point being that the heading on the photograph and the two lines in
+// the rail are the same three strings from one place.
 
 // ⚠ THE BELL'S DOT NOW CLEARS (owner, 04.08: «Красная точка на колокольчике на домашнем экране не
 // сбрасывается»), and the fix is a watermark rather than a new rule.
@@ -271,53 +290,13 @@ function openInbox(): void {
 // the one number that is a story beat rather than a readout, and because it carries the best-6
 // explainer the owner needed twice (round-6). Season points went to Stats with the rest.
 //
-// ⚠ AND IT SAYS WHICH TABLE IT IS (30.07, fix/ranking-truth). There are two - the national one and
-// the international one, two currencies with no exchange rate (docs/specs/two-ladders.md) - and this
-// chip showed a bare "#4" read off `kidRank`, which was a rank folded over BOTH ladders at the time
-// and is the international one now. Either way Stats showed a different number for the same week,
-// which is the owner's «Rank #4 on the home tab and end of season popup seems strange since in stats
-// I can clearly see #128».
-//
-// So the chip reads the ladder the ENGINE says she is competing in (`activeLadder`: professional
-// once any W result has ever counted - permanently from that moment; international while she holds
-// a counting result there; national before that) and NAMES it. Same source as the Stats screen's
-// default tab, so the two cannot disagree again.
-//
-// ⚠ AND IT IS NOT ALWAYS DRAWN (owner, 02.08: «нужна ли она там вообще?» - architect's ruling).
-// `rankChipTrack` returns null before her first counting result in ANY table, and the chip goes
-// with it: "National · Unranked" over a brand-new career was a readout with nothing to read. The
-// moment anything counts anywhere the chip is back for good - the professional arm survives even a
-// window that empties (Professional + Unranked), which is the one-way door the engine's
-// `activeLadderOf` owns. The selection rule is pinned in tests/ladder-separation.test.ts S7.
-const chipTrack = computed(() => rankChipTrack(game.snapshot))
-const activeLadder = computed(() => game.snapshot?.activeLadder ?? 'domestic')
-const ladder = computed(() => game.snapshot?.ladders[activeLadder.value])
-const ladderLabel = computed(() => LADDER_LABEL[activeLadder.value])
-const kidRank = computed(() => ladder.value?.rank ?? null)
-// 'Unranked' until she's earned a counting result (see rankLabel): a point-less kid isn't really
-// ranked, so we don't flash a misleading '#1' on a brand-new career. `rank: null` is now the engine's
-// own way of saying exactly that, so this stops counting results to find out for itself.
-const ranked = computed(() => kidRank.value !== null)
-// The long form, where a chip has no room: which table, and the one fact about it that matters.
-// A TOTAL Record over LadderTrack (the LADDER_TIP discipline from Stats): a fourth table cannot
-// ship until somebody writes this chip's sentence for it.
-const RANK_CHIP_TITLE: Record<LadderTrack, string> = {
-  domestic:
-    'Her national ranking – Local, Regional and National results. These are the points that open her next tier. Tap to see how they add up.',
-  itf: 'Her international ranking – Junior Tour results only. National results do not count towards it. Tap to see how it adds up.',
-  wta: 'Her professional ranking – W15 and up, the paid tour. Junior points never cross over. Tap to see how it adds up.',
-}
-const rankChipTitle = computed(() => RANK_CHIP_TITLE[activeLadder.value])
-// FROM THE SAME TABLE as `kidRank` above. Reading `snapshot.prevKidRank` here would diff her national
-// place against last week's international one; `ladders[t].prevRank` is per-ladder for that reason.
-const prevKidRank = computed(() => ladder.value?.prevRank ?? null)
-// Rank goes UP when the number goes DOWN. null prev (or no change) shows a neutral dash.
-const rankMovement = computed<{ dir: 'up' | 'down' | 'flat'; by: number }>(() => {
-  const now = kidRank.value
-  const prev = prevKidRank.value
-  if (now === null || prev === null || now === prev) return { dir: 'flat', by: 0 }
-  return now < prev ? { dir: 'up', by: prev - now } : { dir: 'down', by: now - prev }
-})
+// ⭐⭐⭐ P2-6 – AND THE FIVE DERIVED FACTS BEHIND IT LEFT THIS FILE, WHOLE. `chipTrack`,
+// `activeLadder`, `kidRank`, `ranked`, `rankMovement` and the chip's three long-form titles are in
+// `composables/kidIdentity.ts` now, with every one of their notes – the ranking-truth ruling of
+// 30.07, the «нужна ли она там вообще?» ruling of 02.08 and the per-ladder `prevRank` reason. They
+// moved because the shell's `RailIdentity.vue` draws this same chip on all ten screens from 1024,
+// and a second computation of her rank in the shell is the disease D75 refused to ship. Nothing was
+// re-derived, re-worded or re-tuned on the way: it is the same code, one import away.
 
 // --- THE CONDITION RING (A2b, the owner's ruling 28.07) ------------------------------------------
 // Slice B's ten squares became the export's ProgressRing, and it moved ONTO the photograph, into the
@@ -772,7 +751,31 @@ function chipName(chip: TierChip): string {
 // WHAT IS ON SCREEN, then: the window, plus ONE rung above it (the aspiration - «плюс один верхний
 // недоступный уровень»). Everything else - the rungs she has outgrown below, and the far top of the
 // ladder above - sits behind an ellipsis chip that expands the row in place.
-const stripExpanded = ref(false)
+// ⭐⭐⭐ ROUND 36 PHASE 3 – AND FROM 768 IT OPENS ITSELF. D9 in
+// docs/specs/responsive-decisions-2026-09.md recorded this as a collision between two of his
+// instructions and left the strip alone; he has ruled on 04.09 that it is not one:
+//
+//     «мы же можем использовать detectdevicewidth и если у нас 768+, то можно этот список сразу
+//      раскрытым рисовать, это ничему не противоречит»
+//
+// ⚠⚠ NOTHING IS ADDED AND NOTHING IS REMOVED, WHICH IS WHY IT IS ALLOWED. Every rung is ALREADY
+// reachable on a phone – one tap on the ellipsis – so a wide screen drawing them открытыми is the
+// same information with one fewer tap, not a control the phone has not got. That is the same shape
+// as D12's kit ladder, and it is why `e2e/parity.spec.ts` now opens every disclosure at every width
+// before it measures: his criterion is «1 к 1 по доступности», and reachability is what the harness
+// asks for since this phase.
+//
+// ⚠ A MEDIA QUERY, NOT A DEVICE. His word was `detectdevicewidth`; the thing itself is the
+// breakpoint ladder phase 1 built, because a 768px browser window on a 27-inch monitor is not a
+// tablet and the rule is about the WIDTH of the column. `window.matchMedia?.()` is the shipped
+// idiom in this codebase (ConfettiBurst.vue, trophyArrival.ts) and it is optional-chained for the
+// same reason they give: `matchMedia` is a browser API and this module is imported by a test runner.
+//
+// ⚠ READ ONCE, AT SETUP, and that is a deliberate limit rather than an oversight: the initial state
+// of a disclosure a player can work is a starting point, not a binding. A window dragged from 1200
+// to 400 keeps an open strip – with its own `−` still on screen to close it – which is the graceful
+// direction, and re-collapsing a row under someone's cursor because they resized is not.
+const stripExpanded = ref(window.matchMedia?.('(min-width: 768px)').matches ?? false)
 // ⚠ `.working`, NOT `.rungs`, SINCE 06.08 – and the strip is the reason the two exist. The lower
 // bound stopped refusing (docs/specs/ladder-floor-2026-08.md), so `tierOpen` is now true for every
 // rung she has ever reached and `.rungs` would put the whole climb back on screen: exactly the
@@ -1277,7 +1280,7 @@ async function leaveCollege(): Promise<void> {
             @click="openRankHelp"
           >
             <span class="rank-ladder">{{ ladderLabel }}</span>
-            <span>{{ rankLabel(kidRank ?? 0, ranked) }}</span>
+            <span>{{ rankText }}</span>
             <template v-if="ranked">
               <span v-if="rankMovement.dir === 'up'" class="rank-move up">&#8593;{{ rankMovement.by }}</span>
               <span v-else-if="rankMovement.dir === 'down'" class="rank-move down">&#8595;{{ rankMovement.by }}</span>
@@ -1323,6 +1326,24 @@ async function leaveCollege(): Promise<void> {
           </div>
         </div>
       </div>
+
+      <!-- ═══════════════════════════════════════════════════════════════════════════════════════
+           ⭐⭐⭐ ROUND 36 SECOND PASS, P2-6 – HER FACE, THE WEEK AND HER RANK ARE THE SHELL'S NOW.
+           ═══════════════════════════════════════════════════════════════════════════════════════
+           Review #3 put them in the rail with a `<Teleport>`, which kept the arithmetic here and
+           moved only the elements – and that is exactly why they were on screen while HOME was and
+           on none of the other nine pages. He has looked at that and ruled: the block lives on every
+           page, the same way the dashboard tiles beside it do. His sentence is quoted in the style
+           block, in docs/rounds/round-36-review.md and in src/composables/kidIdentity.ts; a template
+           may carry no Cyrillic at all (tests/template-copy-rules.test.ts).
+
+           ⭐ SO THE ARITHMETIC MOVED INSTEAD OF THE ELEMENTS. `composables/kidIdentity.ts` is the one
+           owner of the rank chip's five derived facts, of the week's three strings and of the
+           one-time callout's ref; `components/RailIdentity.vue` renders the rail's copy from it and
+           the header above renders Home's from the same call. There is nothing left to keep in step,
+           which is the property the teleport was protecting and the reason D75 refused a shell copy.
+           ⚠ THE HERO'S OWN COPIES STAY, and they are still the phone's: the avatar in `.diary-head`,
+           the callout under it and the chip in `.diary-id`, all three standing down from 1024. -->
 
       <!-- ⭐⭐ 2b. THE COLLEGE YEAR – the week's content, on the weeks she is at a university. It sits
            immediately under her photograph, where the next-tournament card is the first thing read in
@@ -1422,6 +1443,16 @@ async function leaveCollege(): Promise<void> {
           <p v-else class="note-empty">Nothing has moved yet.</p>
         </Card>
 
+        <!-- ⭐⭐⭐ ROUND 36 REVIEW #5 – THE BOTTOM PAIR IS A BLOCK OF ITS OWN, and this wrapper is
+             the whole of it. His words are in the style block below, where Cyrillic is allowed; in
+             English: the lower block of cards has its own grid and they are equal in width.
+             ⚠⚠ IT IS `display: contents` BELOW 1024 AND THEREFORE COSTS NOTHING THERE. That is D50's
+             own trick, applied a second time and for the same reason: this round's identity contract
+             is that not one box moves below 768, and a wrapper with a box would be a new box at
+             every width. `display: contents` removes only the WRAPPER's box, so on a phone the two
+             cards stay items of `.card-grid` exactly as they were - no paint, no accessibility node,
+             invisible to the identity census and to `e2e/parity.spec.ts` alike. -->
+        <div class="card-pair">
         <!-- COACH NOTE. The export's own layout: his portrait down the left edge, his read on her
              beside it.
              R3: and it is a DOOR into the Coach Market. `button.note-card` is the app's own "this is
@@ -1475,11 +1506,25 @@ async function leaveCollege(): Promise<void> {
           </template>
           <p v-else class="note-empty">Too early for memories.</p>
         </Card>
+        </div>
       </div>
 
       <!-- 4. BELOW THE GRID: the ladder and the feed. Same substance, diary chrome – and literally
            the same chrome, which is why they are Cards: the gradient, the hairline and the corners
            were already one shared rule with the notecards above, and now they are one component. -->
+
+      <!-- ⭐⭐⭐ ROUND 36 SECOND PASS, P2-2 – THE SECOND ROW JOINS THE SAME GRID AS THE FIRST.
+           His words are in the style block below, where Cyrillic is allowed; in English: the desktop
+           grid on Home was not fixed, and his earlier note about the lower block of cards meant
+           EVERY row below the photograph, not only the coach note and the recent memory.
+
+           ⚠ SAME WRAPPER, SAME RULE, SAME DECLARATION as `.card-pair` – the two share one block in
+           the stylesheet on purpose. One grid, one gap and one pair of tracks means the gutter of
+           this row lands on the gutter of the row above it, which is the thing he is looking at.
+           ⚠⚠ AND IT IS `display: contents` BELOW 1024, so it costs no box, no paint and no
+           accessibility node on a phone or a tablet – D50's trick for the third time, and the
+           reason the round's identity contract survives a new wrapper. -->
+      <div class="strip-pair">
       <Card as="section" class="diary-strip">
         <Eyebrow as="h2">Season</Eyebrow>
         <!-- THE ROW IS THE ENGINE'S OPEN WINDOW PLUS ONE RUNG ABOVE IT; the rungs she has outgrown
@@ -1558,6 +1603,7 @@ async function leaveCollege(): Promise<void> {
           </div>
         </div>
       </Card>
+      </div>
     </ScreenShell>
 
     <!-- ⭐⭐ THE BOTTOM CONTROL ON A COLLEGE WEEK – the two answers, and nothing else.
@@ -1671,8 +1717,18 @@ async function leaveCollege(): Promise<void> {
      min(52vh, 420px), which cropped a slice off every painting for no reason anyone asked for. The
      export's own hero is 398px on a 390px device, i.e. square to within a rounding error.
      `max-height` keeps a tablet from turning it into a poster; `cover` + the face steering below
-     are still there for the one master that is 458x512 rather than square. */
-  aspect-ratio: 1 / 1;
+     are still there for the one master that is 458x512 rather than square.
+
+     ⭐⭐ ROUND 36 PHASE 2 – AND ON A TABLET IT IS NOT SQUARE ANY MORE, at the owner's own ruling:
+     «планшеты - это по сути широкий телефон, hero image на home будет НЕ квадратной, но все оверлеи
+     с текстом остаются как у нас.» A3's square is still what this token spells below 768; the ladder
+     beside `--hero-aspect` in src/style.css carries the tablet shape, and the tournament preview's
+     `.nt-hero` reads the SAME token because he asked for the same proportion there.
+     ⚠ AND THE SECOND HALF OF HIS SENTENCE IS FREE HERE, WHICH IS WHY THIS IS ONE LINE. Every text
+     overlay on this photograph is `position: absolute` against this box – `.diary-head` and
+     `.diary-id` off its top, `.diary-state` off its bottom – so a shorter hero moves none of them
+     relative to the picture they are laid on. Nothing below is touched. */
+  aspect-ratio: var(--hero-aspect);
   max-height: 60vh;
   overflow: hidden;
 }
@@ -1767,69 +1823,6 @@ async function leaveCollege(): Promise<void> {
   flex: 1;
 }
 
-/* The small round avatar with the lime ring, moved here from the deleted header – same object, same
-   job (the door to her profile), now sitting on the photograph beside the date. */
-.diary-avatar-btn {
-  flex: none;
-  width: 30px;
-  height: 30px;
-  padding: 0;
-  border: none;
-  border-radius: 50%;
-  background: transparent;
-}
-
-.diary-avatar-btn:hover:not(:disabled) {
-  background: transparent;
-}
-
-.diary-avatar {
-  display: block;
-  width: 30px;
-  height: 30px;
-  border-radius: 50%;
-  object-fit: cover;
-  border: 1.5px solid var(--accent);
-  /* The ring needs to hold against a bright court too, so it carries its own dark halo. */
-  box-shadow: 0 0 0 1px rgba(6, 10, 14, 0.55), 0 2px 10px rgba(0, 0, 0, 0.45);
-}
-
-.diary-avatar-btn:hover:not(:disabled) .diary-avatar {
-  border-color: #ffffff;
-}
-
-/* The one-time callout, moved with the avatar it explains. It hangs under the avatar rather than
-   beside it – at 30px there is no room on a 390px screen, and the arrow makes the target obvious. */
-.diary-kid-hint {
-  position: absolute;
-  left: 16px;
-  top: 58px;
-  z-index: 2;
-  padding: 6px 11px;
-  border-radius: var(--radius-pill);
-  border: 1px solid var(--accent);
-  background: rgba(10, 15, 20, 0.82);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  color: var(--ink);
-  font-size: 12px;
-  font-weight: 500;
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.45);
-}
-
-.diary-kid-hint::before {
-  content: '';
-  position: absolute;
-  left: 12px;
-  top: -5px;
-  width: 8px;
-  height: 8px;
-  transform: rotate(45deg);
-  background: rgba(10, 15, 20, 0.82);
-  border-left: 1px solid var(--accent);
-  border-top: 1px solid var(--accent);
-}
-
 /* "W27 2033 · Jun 3 – Jun 9" – OUR week label, the year in full, and the week's real days. Built by
    shared/dates.ts weekDateLine and by nothing else. (The export prints a plain calendar date here;
    the owner's ruling replaces it, because our whole game speaks in week numbers.) */
@@ -1850,6 +1843,22 @@ async function leaveCollege(): Promise<void> {
   flex-shrink: 0;
 }
 
+/* ⭐⭐⭐ ROUND 36 SECOND PASS, P2-4 – THE THREE ICONS ARE BACK ON THE PHOTOGRAPH, AT EVERY WIDTH.
+   His words, after playing the built wave:
+
+     «если колокольчик, письмо и шестеренка только на главной работают - давай их вернем на картинку
+      в угол правый верхний»
+
+   ⚠ THIS REVERSES `D74`, WHICH REVERSED `D14`, AND HIS PREMISE IS THE WHOLE REASON. D74 took the row
+   off the picture because his review #2 asked for it AND for «доступно на всех экранах»; D76 then
+   said plainly that the second half is not a layout job (the bell scrolls to `#diary-news`, which
+   exists on Home alone, and the envelope opens a sheet Home mounts). He has read that and drawn the
+   consequence himself: three controls that only work on Home belong on Home's photograph.
+
+   ⭐ SO THE SECOND COPY IS GONE RATHER THAN HIDDEN – the row on `.diary-head` is the one row again,
+   and the desktop's 34px band above the two columns goes with it. Nothing below 1024 is touched:
+   the page copy was `display: none` there, so a phone renders exactly what it rendered before –
+   0 moved, 0 new, 0 gone at 375, 520 and 576, which is the round's identity contract. */
 .diary-tool {
   position: relative;
   width: 22px;
@@ -1919,40 +1928,6 @@ async function leaveCollege(): Promise<void> {
   text-shadow: var(--shadow-text-on-art);
 }
 
-/* The rank chip – the page's ONE table-number, and the door to the best-6 explainer (round-6: the
-   owner was confused by the windowed ranking twice). It is a button, which is why the old separate
-   "?" is gone: one affordance where there used to be two. */
-.diary-rank {
-  pointer-events: auto;
-  margin-top: 10px;
-  display: inline-flex;
-  align-items: baseline;
-  gap: 5px;
-  padding: 3px 10px;
-  border-radius: var(--radius-pill);
-  border: 1px solid rgba(255, 255, 255, 0.22);
-  background: rgba(10, 15, 20, 0.55);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  color: rgba(255, 255, 255, 0.92);
-  font-size: 12px;
-  font-variant-numeric: tabular-nums;
-}
-
-/* WHICH TABLE the number belongs to. Quieter than the rank itself – it is the unit, not the figure –
-   and uppercase/tracked so it reads as a label rather than as a word in a sentence. */
-.rank-ladder {
-  font-size: 9px;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  opacity: 0.72;
-}
-
-.diary-rank:hover:not(:disabled) {
-  border-color: var(--accent);
-  background: rgba(10, 15, 20, 0.55);
-  color: #ffffff;
-}
 
 /* --- A2b: THE STATE ROW, along the bottom of the photograph ------------------------------------
    The owner's layout (28.07): the caption chip on the left, the condition ring on its right, and
@@ -2053,6 +2028,166 @@ async function leaveCollege(): Promise<void> {
   grid-template-columns: 1fr 1fr;
   gap: 11px;
   padding: 2px 0 14px;
+}
+
+/* ⭐⭐⭐ ROUND 36 REVIEW #5 – «Нижний блок карточек имеет свою сетку, они равны по ширине». Below
+   1024 these wrappers HAVE NO BOX: the coach note and the recent memory stay items of `.card-grid`,
+   exactly where they have always been, and the identity census counts nothing new. See the template
+   for the whole of why it is `display: contents` and not a div with a grid on it.
+
+   ⭐⭐⭐ ROUND 36 SECOND PASS, P2-2 – «сетка на главной на десктоп не исправлена (см. мои правки
+   предыдущие, мне нужно продублировать или нашел?)». Found. Review #5 was read as ONE row and he
+   meant every row below the photograph, so the season ladder and the news feed take the same
+   wrapper – ONE class list, ONE rule, in both places below, because two rules that must agree about
+   a gutter are two rules that can disagree about a gutter. Measured before, at 1024: the pair above
+   sat at 236 / 627.5 and this row at 236 / 698, following the hero's asymmetric tracks. */
+.card-pair,
+.strip-pair {
+  display: contents;
+}
+
+/* ⭐⭐⭐ ROUND 36 PHASE 3 – HOME ON A DESKTOP, AND IT IS FRAME AC WITH NOTHING ADDED TO IT.
+   `AC-home-desktop-1024.png` lays this page out as two columns: the photograph down the left with
+   the next-tournament and family-budget cards stacked beside it, then the coach note and the recent
+   memory side by side, then the season ladder and the news feed side by side. That is EXACTLY the
+   six blocks this screen already renders, in exactly the order it already renders them – so the
+   desktop is a re-flow of Home's own DOM and not a second Home.
+
+   ⚠⚠ `display: contents` IS THE WHOLE MECHANISM AND IT IS WORTH NAMING. The four notecards live
+   inside `.card-grid`, which is a grid of its own; a box cannot be a cell of its parent's grid and
+   spread its children across it at the same time. `display: contents` removes only the WRAPPER's
+   box, so the four cards become items of the shell's grid directly – no wrapper is deleted, no card
+   moves in the DOM, and `e2e/parity.spec.ts` sees the same elements it saw at 375.
+   ⚠ It is safe for the criterion for a second reason worth stating: `.card-grid` carries no
+   background, no border and no icon, so it contributes nothing to the parity fingerprint's paint
+   half – a wrapper with a picture on it could not be dissolved this way.
+
+   ⚠ AND THE HERO SPANS TWO ROWS RATHER THAN BEING SIZED TO THEM. A spanning item still sizes the
+   tracks it crosses, so when the photograph is the taller of the pair the two cards beside it grow
+   to meet it and the row closes exactly; `align-self: start` is what stops the reverse case from
+   silently overriding `--hero-aspect` (a stretched box takes its height from the row and its width
+   from the column, and the ratio is simply not applied). The token has to stay honest here: it is
+   the join `.nt-hero` reads. */
+/* ⭐⭐⭐ ROUND 36 REVIEW #4 – THE TWO TRACKS ARE AC'S OWN NUMBERS NOW, AND THAT IS THE WHOLE CHANGE.
+   He measured his own frame for us: «ширина этих карточек в макете около 310 пикселей», and `AC`
+   draws the photograph beside them at 450. Phase 3 had `1.2fr 1fr`, which is 415 / 346 at 1024 –
+   the cards a third wider than he drew them.
+
+   ⚠ WRITTEN AS A CAP AND A FLOOR RATHER THAN AS A RATIO, because a single ratio cannot hold both
+   ends of the band. His 310 is measured at 1024 and `--hero-max` (D19) is measured at 1280, and a
+   ratio that hits one misses the other: 450:310 puts the hero at 554 on the wide end, 42px past a
+   cap that exists so Home's photograph and This Week's are the same picture. So column 1 takes the
+   hero's own cap as its ceiling and column 2 takes his 310 as its floor, and the track algorithm
+   does the rest. Measured on this build:
+
+       1024   451 / 310    the hero under its cap, the cards at exactly his number
+       1280   512 / 425    the hero AT its cap, and the slack goes to the cards
+
+   – rather than into a 42px hole beside a photograph that has stopped growing. */
+@media (min-width: 1024px) {
+  :deep(.tb-screen-body) {
+    display: grid;
+    grid-template-columns: minmax(0, var(--hero-max)) minmax(310px, 1fr);
+    gap: 11px;
+    /* ⭐⭐⭐ SECOND PASS, P2-4 – THE 34px BAND IS GONE WITH THE ROW IT WAS OPENED FOR. Review #2's
+       page copy of the bell, the letter and the gear hung in it, absolutely positioned; he has sent
+       the three back onto the photograph, so the band above the two columns is 34px of nothing and
+       the positioning context has nothing to position. Both go, and the grid starts at the top of
+       the page again exactly as it did before D74. */
+  }
+
+  /* ⭐⭐ REVIEW #3 – and the same for her face, her rank and the callout that explains the face, all
+     three of which are in the rail from here. His words:
+     «Аватар и ранг тоже уезжают с картинки, но в левый верхний угол в меню над всеми пунктами» */
+  .diary-head > .diary-avatar-btn,
+  .diary-id > .diary-rank,
+  .diary-hero > .diary-kid-hint {
+    display: none;
+  }
+
+  /* ⭐⭐⭐ SECOND PASS, P2-3 – «давай на главной десктопе текущую дату всю вынесем в 2 строки и
+     поставим справа от аватарки круглой, тогда она будет всегда видна и будет удобно». The ink goes;
+     the HEADING stays.
+
+     ⚠⚠ CLIPPED, NOT `display: none`, AND THE REASON IS D10. This `<p>` is Home's `role="heading"`
+     `aria-level="1"` – the page's own level-1 heading, and the only one it has – so removing its box
+     would leave the desktop's Home with no heading at all. The rail's copy cannot take that role
+     instead: past P2-6 the rail is drawn on all ten screens, and nine of them have a level-1 or
+     level-2 heading of their own. So the photograph keeps the heading and shows none of it, which is
+     the standard screen-reader-only shape and costs no paint: `clip-path` removes every pixel and
+     leaves the accessibility node exactly where it was.
+     ⚠ AND IT KEEPS `flex: 1`, deliberately: it is the slack that pins P2-4's three icons to the
+     RIGHT of the header row. A date taken out of flow would send them to the left edge. */
+  .diary-head > .diary-date {
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+  }
+
+  .card-grid {
+    display: contents;
+  }
+
+  /* ⭐ REVIEW #5 – …AND HERE IT BECOMES A GRID. It spans both tracks and splits them evenly, so the
+     coach note and the recent memory are the same width as each other rather than inheriting the
+     hero's column and the cards' column. Its own gap, because it is its own grid.
+
+     ⭐⭐⭐ P2-2 – AND THE SEASON LADDER AND THE NEWS FEED ARE IN THE SAME DECLARATION. Everything
+     below the photograph is now ONE grid: same two tracks, same gap, both spanning `1 / -1`, so the
+     gutter of the lower row lands on the gutter of the upper one to the pixel. The hero's row keeps
+     its own asymmetric tracks (D77 is his own 310), which is the row he did not complain about.
+     ⚠ EQUAL AND NOT THE MOCK'S 397 / 362, and that is deliberate: «они равны по ширине» is his own
+     word for this block, the row above already reads that way, and two rows that are equal in
+     different proportions would be the defect he is reporting wearing a different number. */
+  .card-pair,
+  .strip-pair {
+    display: grid;
+    grid-column: 1 / -1;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 11px;
+  }
+
+  /* ⭐⭐ REVIEW #4 – «Next tournament – эта карточка менее высокая, чем family budget, т.к. на
+     последней еще график должен поместиться». ONE declaration does it, and the grid does the rest:
+     the hero spans both rows, so whatever height it has beyond the two cards' floors is split
+     equally between them – which means the DIFFERENCE between the two rows is exactly the
+     difference between the two floors. Dropping the tournament to `.card-short`'s own 138 (the
+     floor the coach note and the memory already use) leaves Family budget 48px taller at every
+     width in the band, and every one of those 48px is under the chart. Measured: 171 / 219 at 1024
+     and 198 / 246 at 1280.
+     ⚠ NOT A NEW NUMBER: 138px is `.note-card.card-short`'s, declared once above and read here. */
+  [data-tour='next-tournament'].note-card {
+    min-height: 138px;
+  }
+
+  .diary-hero {
+    grid-row: span 2;
+    align-self: start;
+    /* One cap for both heroes – see `--hero-max` in src/style.css. */
+    max-width: var(--hero-max);
+    /* The full-bleed cancellation is a phone rule: it exists so the photograph reaches both edges of
+       a 375px screen. In a column beside a column there are no edges to reach, and the picture takes
+       the same corner every other block on this page has. */
+    margin: 0;
+    border-radius: var(--radius-frame);
+  }
+
+  /* The two strips below the cards are cells now, so the gap between them is the grid's. And they
+     do NOT stretch to each other: the ladder is four chips tall and the feed is a page of news, so
+     a stretched pair draws a 350px box with 70px of content in it. The notecards above still
+     stretch, which is what keeps the coach note and the memory the same height as each other. */
+  .diary-strip {
+    margin-bottom: 0;
+    align-self: start;
+  }
+
+  /* The two blocks that are a whole row when they are there at all: the engine's refusal (round 35
+     #11) and the college year. Neither is a card in the grid – one is a sentence about the page and
+     the other replaces the week. */
+  .error,
+  .college-card {
+    grid-column: 1 / -1;
+  }
 }
 
 /* The gradient, the --card-edge hairline and the 17px corners are THE NOTECARD SURFACE, shared
@@ -2494,6 +2629,102 @@ button.note-card:active:not(:disabled) {
   color: var(--ink-soft);
   max-width: 86px;
 }
+
+/* ═════════════════════════════════════════════════════════════════════════════════════════════════
+   ⭐⭐⭐ ROUND 36, HIS REVIEW OF THE BUILT WAVE – ITEMS 4, 6 AND 7, AND ALL THREE SAY «и на планшете»
+   ═════════════════════════════════════════════════════════════════════════════════════════════════
+   So the band starts at 768 and the desktop inherits it. Nothing below 768 is touched by anything in
+   this block – the round's identity contract – and the mobile values above are untouched, which is
+   what lets the phone stay byte-for-box identical.
+
+   #4 «картинку на Next tournament можно смело делать больше, чтобы пропорционально она была похожа
+       на карточку на мобиле и занимала больше места (и на планшете)»
+   #6 «На Recent memory фотокарточку больше размером сделай пожалуйста и сдвинь ее ближе к тексту и
+       чуть дальше от края (и на планшете)»
+   #7 «Сам шрифт на Recent memory и Coach note можно сделать крупнее (и на планшете)»
+   ═════════════════════════════════════════════════════════════════════════════════════════════════ */
+@media (min-width: 768px) {
+  /* ⭐ #4 – THE VENUE PAINTING IS SIZED BY THE CARD'S HEIGHT AND NOT BY A PIXEL COUNT, which is the
+     only way «пропорционально как на мобиле» can survive a card that doubles in width and keeps its
+     height. On a phone the art is 136 of a 190px card – 71% – and 112 wide at the master's own
+     112:136. Here it is 84% of whatever the card is, at the same ratio, so it grows with the card
+     and can never be taller than one. The mobile rule above is left exactly as it is.
+     ⚠ THE RADIUS GOES TO PERCENTAGES FOR THE SAME REASON. `56px` was half of 112 – a dome – and a
+     56px corner on a 170px-wide arch is a rounded rectangle. `50% / 41%` is that dome written as
+     what it always was, and it survives the box growing. */
+  .venue-art {
+    width: auto;
+    height: 84%;
+    aspect-ratio: 112 / 136;
+    border-radius: 50% 50% var(--radius-frame) var(--radius-frame) /
+      41% 41% var(--radius-frame) var(--radius-frame);
+  }
+
+  /* ⭐ #6 – BIGGER, AND BOTH OF HIS TWO DIRECTIONS AT ONCE. `right` goes from -4 (hanging off the
+     card) to 14 (inside it) – «чуть дальше от края» – and the extra 36px of width reaches back
+     toward the words, which is «ближе к тексту» from the other end. The tack moves with it: the two
+     are one object, and the mobile rule above says so. */
+  .memory-polaroid {
+    right: 14px;
+    top: 30px;
+    width: 104px;
+  }
+
+  .memory-tack {
+    right: 76px;
+    top: 26px;
+  }
+
+  /* The handwritten line stops short of the polaroid the way it does on a phone; on a card that is
+     twice as wide, 80px was a two-word ribbon. A share rather than a number, because the card's
+     width changes three times across the band (362 tablet, 380 and 468 in the desktop pair). */
+  .memory-line,
+  .memory-when {
+    max-width: 55%;
+  }
+
+  /* ⭐ #7 – LARGER TYPE ON THE TWO CARDS HE NAMED, and nothing else on the page moves. Each is one
+     rung up, in the family it was already set in: the coach's read and his signature stay Manrope
+     and Caveat, the memory's line stays Caveat and its date stays Manrope. No new token, no new
+     family, no new weight – only the size, which is what he asked for. */
+  .coach-line {
+    font-size: 14px;
+  }
+
+  .coach-sign {
+    font-size: 19px;
+  }
+
+  .memory-line {
+    font-size: 20px;
+  }
+
+  .memory-when {
+    font-size: 14px;
+  }
+}
+
+/* …AND THE CARD THE PAINTING GROWS INSIDE, ON THE TABLET BAND ONLY. A tablet lays the two top cards
+   side by side at 362px – more than twice the phone's 166 – while `.note-card`'s floor keeps them
+   190 tall, so the venue had a wider card and no more room to be bigger in. This is the room, and
+   the pair share a grid row so Family budget takes the same height and spends it on the chart.
+   ⚠ IT STOPS AT 1023 ON PURPOSE. Past 1024 the two stop being a row and become a column beside the
+   hero, where their heights are the hero's to give and where his own #4 says Next tournament is the
+   SHORTER of the two – a floor of 250 on both would make them equal again and take that away. */
+@media (min-width: 768px) and (max-width: 1023px) {
+  .card-grid > [data-tour='next-tournament'].note-card,
+  .card-grid > [data-tour='family-budget'].note-card {
+    min-height: 250px;
+  }
+}
+
+/* ⚠ THE COACH'S PORTRAIT IS DELIBERATELY LEFT ALONE, and that is a decision rather than an
+   oversight. `.coach-body`'s own note above names the fix a wider card would seem to want – «bound
+   the STRIP's width so the picture stops tracking the height» – and it is NOT taken: the portrait is
+   `height: 100%; width: auto` because the owner asked for the whole frame with no vertical crop
+   (A2c/d, 28.07), and a `max-width` on the strip is a crop by another name. The mask that fades him
+   into the card is what carries the overlap on a phone today, and it carries it here for the same
+   reason. Measured after #7 rather than assumed – see the ledger. */
 
 /* --- 4. what stays below the grid ---------------------------------------------------------------
    The tier ladder and the news feed keep their markup (and every rule that pins it) and only change

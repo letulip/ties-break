@@ -113,47 +113,71 @@ describe('round 31 #4 – the Season card, before and after the draw', () => {
     w.unmount()
   })
 
-  // ⭐⭐⭐ ROUND 34 #5b – AND THE PRE-DRAW CARD SAYS THE FIGURE WILL SHARPEN.
+  // ⭐⭐⭐ ROUND 34 #5b – AND THE PRE-DRAW FIGURE'S OWN LINE, WHICH ROUND 36 PHASE 5 MOVED.
   //
   // Round 34 #5 measured the step the owner is being warned about: the field figure holds still
   // before the draw (0.48 points on average) and then the ring changes question and the number jumps
-  // 9.1 points on average, 36 at worst. His ruling: «хорошо, можно на карточке ДО жеребьевки писать,
-  // что-то на эту тему.»
+  // 9.1 points on average, 36 at worst. His ruling then: «хорошо, можно на карточке ДО жеребьевки
+  // писать, что-то на эту тему.»
   //
-  // ⚠ THE PAIR IS THE GUARD, exactly as in the arm above: present on every pre-draw card and absent
-  // from every drawn one, asserted on ONE screen that carries both. A card that always shows it
-  // fails the second half; one that never shows it fails the first. Mutation-verified – dropping the
-  // `v-if` reddens the absent half, deleting the line reddens the present half, and pointing the
-  // caption at its own copy of the condition (`ev.preview.fieldChance !== null`, which is true on a
-  // DRAWN card too) reddens the absent half as well, which is why the screen asks `fieldRingShown`.
-  it('a card before its draw carries the figure\'s own line, and a drawn card does not', () => {
+  // ⚙ AND HIS RULING ON 04.09, AFTER MEETING IT IN PLAY: «на каждой карточке с турниром появились
+  // серые буквы … Не надо перегружать сезонные карточки, на них и так много информации, а это вообще
+  // шум, потому что везде. У нас есть отдельный экран для турнира (доступен с home) – вот там всей
+  // доп. информации самое место.» So the line came OFF the season feed and went ON to the
+  // tournament screen's panel.
+  //
+  // ⚠⚠ IT IS A MOVE AND THIS PAIR IS WHAT SAYS SO. A test that only checked the season card was
+  // clean would be equally green if the line had been DELETED – and deleting it gives back the
+  // unexplained jump round 31 #4 was reported for. So the two halves are asserted together: gone
+  // from every card in the feed, present on the panel before the draw, absent from it after.
+  //
+  // ⚠ THE PANEL'S OWN PAIR IS THE SECOND GUARD, exactly as it was on the feed: a panel that always
+  // shows it fails the drawn half, one that never shows it fails the pending half. Mutation-verified
+  // – dropping the `v-if` reddens the drawn half, deleting the line reddens the pending half, the
+  // season half reddens on putting the line back on the card, and pointing the caption at its own
+  // copy of the condition (`event.preview.fieldChance !== null`, which is true on a DRAWN card too)
+  // reddens the drawn half as well, which is why the panel asks `fieldRingShown`.
+  it('the season cards no longer carry the figure\'s line – it is off the feed entirely', () => {
     const snap = feedWithBothStates()
     const w = mountSeason(snap)
     const cards = w.findAll('.event-card')
     expect(cards.length, 'the feed must hold cards at all').toBeGreaterThan(1)
-
-    let pending = 0
-    let drawn = 0
+    // The pre-draw state must be ON SCREEN, or "no line here" is a claim about an empty set.
+    expect(
+      cards.filter((c) => c.find('.event-coach-line').text().endsWith(DRAW_NOT_MADE_NOTE)).length,
+      'no pre-draw card on screen, so this proves nothing',
+    ).toBeGreaterThan(0)
     for (const card of cards) {
-      const note = card.find('.field-note')
-      // Which state this card is in is read the same way the arm above reads it – off the plaque's
-      // own last sentence, which is the owner's copy and the card's visible statement of its state.
-      if (card.find('.event-coach-line').text().endsWith(DRAW_NOT_MADE_NOTE)) {
-        pending++
-        expect(note.exists(), 'a pre-draw card must carry the line').toBe(true)
-        // ⚠ VISIBLE, NOT AN ACCESSIBLE NAME. `.text()` reads what is rendered; the ring's `label`
-        // and `title` are asserted one test up and are a different route to a different sentence.
-        expect(note.text()).toBe(FIELD_FIGURE_NOTE)
-        expect(card.text(), 'and it is on the card, not only in an attribute').toContain(FIELD_FIGURE_NOTE)
-      } else {
-        drawn++
-        expect(note.exists(), 'a card whose draw is made must NOT carry it – the figure has sharpened').toBe(false)
-        expect(card.text()).not.toContain(FIELD_FIGURE_NOTE)
-      }
+      expect(card.find('.field-note').exists(), 'the season card carries no figure note now').toBe(false)
+      expect(card.text()).not.toContain(FIELD_FIGURE_NOTE)
     }
-    expect(pending, 'no pre-draw card on screen').toBeGreaterThan(0)
-    expect(drawn, 'no drawn card on screen').toBeGreaterThan(0)
     w.unmount()
+  })
+
+  it('...and the tournament screen carries it before the draw, and not after', () => {
+    const snap = feedWithBothStates()
+    useGameStore().snapshot = snap
+    const pending = snap.upcoming.find((e) => !e.preview.drawMade && e.preview.fieldChance !== null)
+    const drawn = snap.upcoming.find((e) => e.preview.drawMade && e.preview.firstMatchChance !== null)
+    expect(pending, 'the fixture must offer a pre-draw event').toBeTruthy()
+    expect(drawn, 'and a drawn one, or half of this test is vacuous').toBeTruthy()
+
+    const before = mount(NextTournamentPanel, { props: { event: pending! } })
+    const note = before.find('.field-note')
+    expect(note.exists(), 'the tournament screen must carry the line before the draw').toBe(true)
+    // ⚠ VISIBLE, NOT AN ACCESSIBLE NAME. `.text()` reads what is rendered; the ring's `label` and
+    // `title` are asserted elsewhere and are a different route to a different sentence.
+    expect(note.text()).toBe(FIELD_FIGURE_NOTE)
+    expect(before.text(), 'and it is on the panel, not only in an attribute').toContain(FIELD_FIGURE_NOTE)
+    before.unmount()
+
+    const after = mount(NextTournamentPanel, { props: { event: drawn! } })
+    expect(
+      after.find('.field-note').exists(),
+      'a tournament whose draw is made must NOT carry it – the figure has sharpened',
+    ).toBe(false)
+    expect(after.text()).not.toContain(FIELD_FIGURE_NOTE)
+    after.unmount()
   })
 
   it('the drawn card is the one a week away, and the pending ones are further out', () => {

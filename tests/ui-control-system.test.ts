@@ -453,7 +453,20 @@ describe('THE ICON IS A COMPONENT (owner 30.07)', () => {
     // screen" affordance the owner's sentence is about, its exact markup is pinned by
     // tests/redesign-onboarding.test.ts, and turning it into a bare glyph would leave `Next` alone in
     // the footer with an unlabelled twin. Listed rather than silently skipped.
-    const KNOWN = ['src/components/OnboardingWizard.vue: hand-written back control']
+    // ⚠ AND A SECOND NAME SINCE ROUND 36 PHASE 5, ON THE SAME ARGUMENT AS THE FIRST. Season's week
+    // pager is a pair of arrows – `Back` beside `Next` – that scrolls a row of tournament cards
+    // sideways. It is a PAGER, not the top-left "leave this screen" affordance the owner's sentence
+    // is about: it navigates within a row, exactly as `OnboardingWizard`'s footer pair navigates
+    // within a form, and the album pager in `EndingScreen` is the app's own precedent for the two
+    // words. It IS the component and it IS `icon="back"`; what it is not is `variant="bare"`, and
+    // that is deliberate and measured: the arrow stands ON a photograph, which is the case
+    // `IconButton`'s own header gives `plate` for – «it sits ON something (a photo, a dialog's
+    // corner, a header row)» – and a bare glyph on a painted card was unreadable in the first build
+    // (`/tmp/r36p5/row-375.png`). Listed rather than silently skipped, and only the ONE control.
+    const KNOWN = [
+      'src/components/OnboardingWizard.vue: hand-written back control',
+      'src/components/screens/SeasonScreen.vue: back control is not the bare back icon',
+    ]
     expect(offenders.filter((o) => !KNOWN.includes(o)).join('\n')).toBe('')
     // anti-vacuity: the sweep really did find the four real ones
     expect(

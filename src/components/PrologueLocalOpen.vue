@@ -311,6 +311,49 @@ function next(): void {
   background: var(--bg);
 }
 
+/* ⭐⭐⭐ ROUND 36 PHASE 4 – THE WEEKEND GETS THE PROLOGUE'S COLUMN, AND IT IS THE ONE PROLOGUE
+   SURFACE THAT HAD NONE. The nine cards and the handover are both `max-width: 420px`; this takeover
+   is `inset: 0` with 12px of padding and nothing else, so it simply became the window. `.plo-hero`
+   is `width: calc(100% + 24px); aspect-ratio: 1 / 1`, and MEASURED in Chromium on the build before
+   this rule: 341 x 341 on a 375px phone, **734 x 734 at 768** and **1246 x 1246 at 1280** – a
+   painting taller than the screen it is on, with the two facts, the VS line and «Begin» pushed off
+   the bottom of a surface whose whole design is one picture and one decision. The court on the third
+   beat had the same problem from the other side: the takeover measured 1,256px at 1280 and `.mv`
+   inherits its width, so the court was taking an 1.85x enlargement of a 680px bitmap.
+
+   ⚠ 420 IS NOT A NEW NUMBER, IT IS `.prologue-card`'s AND `.handover-card`'s. The prologue is one
+   surface to the player – nine cards, however many weekends, and a handover – and it now holds one
+   column from the first card to the last match instead of two of them and a window.
+
+   ⚠ THE MATCH IS THE EXCEPTION, deliberately, and the selector is one class heavier so it wins in
+   both engines. `MatchViewer` is the app's match screen wherever it is mounted, and shrinking it to
+   420 on a tablet would make the prologue's court NARROWER than the 744px it has there today –
+   fixing a desktop defect by walking backwards on a tablet. It takes the takeover column the
+   tournament flow takes, and the court's own cap (`CSS_W`, in MatchViewer.vue) is what decides how
+   big the tennis actually gets. Measured after, at 1280x900:
+
+     .plo-head    420px          .plo-splash  420px    .plo-hero  410 x 410
+     .mv          880px          .mv-court    680 x 420, centred
+
+   ⚠ THE PAINTING LANDS AT 410 AND NOT AT THE CARDS' 420, and the ten pixels are worth naming rather
+   than chasing: `.plo-splash` is a bare `<section>`, so it carries the app's own 16px section inset,
+   and the full-bleed trick above cancels `.plo`'s 12px rather than its parent's 16. That is a
+   pre-existing mismatch – on a 375px phone the same arithmetic makes the painting 341px wide where
+   its own comment says it «spans the phone» – and it is left alone here because correcting it would
+   move a box below 768, which this round may not do. It is recorded in `docs/rounds/round-36.md`
+   beside the other two findings phase 4 could not fix for the same reason. */
+@media (min-width: 768px) {
+  .plo > * {
+    width: 100%;
+    max-width: 420px;
+    margin-inline: auto;
+  }
+
+  .plo > .mv {
+    max-width: var(--takeover-col-max);
+  }
+}
+
 /* ⚠⚠ THE RIGHT-HAND PADDING IS THE MUTE ICON'S SEAT AND IS NOT DECORATION. `MuteButton` is
    `position: fixed` at `top: --app-pad-top; right: --app-pad-x`, 40x40, z-index 61 – i.e. above this
    takeover (60) and in the same place on every prologue surface, which is the whole point of it

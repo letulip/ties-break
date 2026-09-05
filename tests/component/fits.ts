@@ -54,6 +54,17 @@ export interface Viewport {
 export const PHONE: Viewport = { width: 375, height: 667 }
 export const NARROW_PHONE: Viewport = { width: 320, height: 568 }
 export const DESKTOP: Viewport = { width: 1280, height: 800 }
+/** ⭐ ROUND 36 PHASE 2 – the bottom of his tablet band (docs/specs/responsive-2026-09.md: «768 как
+ *  раз тоже можно до 900 тянуть вполне»), so a rule that only exists past 768 can be measured by a
+ *  mounted test instead of only by the browser suite. A tablet in portrait, because the height is
+ *  what `vh` reads and 768x1024 is the real device this band was drawn for.
+ *
+ *  ⚠⚠ AND A MEDIA QUERY IS EVALUATED ON AN ELEMENT'S FIRST COMPUTED-STYLE READ AND THEN CACHED –
+ *  measured on happy-dom 04.09, and it is a trap worth stating here rather than rediscovering.
+ *  `setViewport` AFTER a read does not change what that element computes; a FRESH element does
+ *  re-evaluate. So the order is always: `setViewport(...)`, then mount, then read. Setting the width
+ *  after mounting reads the previous screen's answer and looks exactly like a rule that is missing. */
+export const TABLET: Viewport = { width: 768, height: 1024 }
 
 interface HappyWindow {
   happyDOM?: { setViewport?: (size: { width: number; height: number }) => void }

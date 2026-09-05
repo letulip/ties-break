@@ -185,8 +185,13 @@ describe('R14-1 – the booked family week is cancellable through the planner', 
 //
 // It never was, and the reason is structural: the cap lives on `#app`, and the wizard is a
 // `position: fixed` takeover pinned to the viewport, so it is the ONE screen outside that frame.
-// The fix reuses `#app`'s own declaration through a token rather than inventing a second cap –
-// which is why the pin below reads BOTH call sites and asserts they are the same one.
+// The fix reuses a NAMED TOKEN rather than inventing a second cap – which is why the pin below reads
+// the call site and the declaration and asserts the component spells no number of its own.
+//
+// ⚠ RE-AIMED BY ROUND 36 PHASE 1, and only the half about `#app` moved. The app frame is now the
+// owner's breakpoint ladder (`--app-shell-max`: 880 / fluid / 900 / 1200) while the two takeovers
+// stay on `--app-max-width` at 880. So "the wizard wears the app frame" is now true of the
+// mechanism – one token, no literals – rather than of the number, and the pin says so in its body.
 // ===========================================================================
 describe('R14-9 – the onboarding wizard wears the app frame', () => {
   beforeEach(() => setActivePinia(createPinia()))
@@ -208,17 +213,34 @@ describe('R14-9 – the onboarding wizard wears the app frame', () => {
     wrapper.unmount()
   })
 
-  it('...and it is capped, centred, at the SAME width `#app` uses – one mechanism, not two', () => {
+  it('...and it is capped, centred, by a TOKEN – one mechanism for the takeovers, not two', () => {
     const scoped = after(wizardSrc, '<style scoped>')
     expect(scoped.length).toBeGreaterThan(500) // a real bound, never a silent empty slice
     const shellRule = region(scoped, '\n.ob-shell {', '/* --- the step rail')
     expect(shellRule).toContain('max-width: var(--app-max-width)')
     expect(shellRule).toContain('margin-inline: auto')
-    // THE TOKEN IS THE POINT. A hard-coded 880 here would be a second cap that drifts the first
-    // time the app frame moves; `#app` has to be reading the same declaration.
+    // THE TOKEN IS THE POINT, AND IT STILL IS – but the sentence under it was re-aimed by round 36,
+    // so it is worth writing out what this pin does and does not claim.
+    //
+    // WHAT IT FORBIDS, unchanged since R14-9: a HARD-CODED 880 in this component. That would be "a
+    // second cap that drifts the first time the app frame moves", and the last two lines are what
+    // stop it – the number lives in the sheet, and the wizard names it rather than spelling it.
+    // `TourBriefingDialog.vue` is the other takeover reading the same token, so the two full-screen
+    // surfaces outside `#app` still share ONE declaration.
+    //
+    // ⚠ WHAT IT NO LONGER CLAIMS: that the wizard and `#app` are the same NUMBER. Round 36 phase 1
+    // put the app frame on the owner's breakpoint ladder (880 / fluid / 900 / 1200) through its own
+    // `--app-shell-max`, and deliberately left the two takeovers at the 880 they have today –
+    // widening an onboarding column to 1200px on a desktop is a design decision for phase 3's shell,
+    // not a side effect of a container change. `tests/component/tour-briefing.test.ts` measures the
+    // 880 the briefing actually renders at, and is what caught the first attempt at doing it the
+    // other way round.
     expect(sheet).toContain('--app-max-width: 880px')
-    expect(sheet).toMatch(/#app \{\n\s+max-width: var\(--app-max-width\)/)
+    expect(sheet).toMatch(/#app \{\n\s+max-width: var\(--app-shell-max\)/)
     expect(scoped).not.toContain('880px')
+    // ...and the frame's ladder really is a ladder, so "the takeovers were left behind" is a
+    // measured statement about two different tokens rather than a story about one.
+    expect(sheet).toMatch(/@media \(min-width: 1024px\) \{\n\s+:root \{\n\s+--app-shell-max: 1200px/)
   })
 })
 

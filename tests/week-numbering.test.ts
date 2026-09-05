@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { readFileSync, readdirSync } from 'node:fs'
+import { componentLogic } from './worldSource'
 import { WEEKS_IN_SEASON, weekLabel, weekRange, weekYear } from '../src/shared/dates'
 // The OLD continuous calendar, frozen in migrations.ts because the shipped v16 back-fill inverts it.
 // Read here so the collision pin below can still state the defect it was written for – see its note.
@@ -276,7 +277,12 @@ describe('R11-6 guard – no surface prints a raw absolute week', () => {
     // that dated the career in chrome. Home's hero line took the job, and it says MORE than the
     // pill did – the week number, the year in full and the week's real days – all from
     // shared/dates.ts. The guard that matters is unchanged: no screen spells a week itself.
-    const home = read('components/screens/HomeScreen.vue')
+    // ⚠ RE-AIMED BY P2-3/P2-6 (05.09), not weakened: the date the player reads is drawn twice now –
+    // on the photograph and, from 1024, beside her face in the rail – so the call that formats it
+    // moved into src/composables/kidIdentity.ts, which HomeScreen imports. `componentLogic` is the
+    // SFC plus its composables, which is what a POSITIVE claim about a surface's logic must read if
+    // it is to survive an extraction. The guard is unchanged: nothing hand-rolls a week.
+    const home = componentLogic('components/screens/HomeScreen.vue')
     expect(home).toContain('weekDateLine(week.value)')
     expect(read('App.vue')).not.toContain('weekLabel(week)')
   })

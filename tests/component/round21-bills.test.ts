@@ -13,7 +13,7 @@
 // ⚠ AND IT IS MUTATION-VERIFIED. Rendering `rung.goodWeeks` inside the "(N left)" span instead of
 // `view.goodWeeksLeft` - the exact revert that would put the old bug back with the new words on top -
 // turns the strict-decrease claim below red. So does deleting the span.
-import { describe, it, expect, beforeEach } from 'vitest'
+import { describe, it, expect, afterEach, beforeEach } from 'vitest'
 import { mount } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
 import MoneyScreen from '../../src/components/screens/MoneyScreen.vue'
@@ -23,6 +23,8 @@ import { acceptOffer } from '../../src/engine/world'
 import { raiseKitOffers, sponsorWindowOpensAt } from '../../src/engine/offers'
 import { WEEKS_PER_YEAR } from '../../src/engine/season/calendar'
 import { DEFAULT_PROFILE, type KitOfferTerms, type Snapshot } from '../../src/shared/protocol'
+import '../../src/style.css'
+import { DESKTOP, PHONE, TABLET, setViewport } from './fits'
 
 /** ⚠ THE TAB HAS TO BE PRESSED AND AWAITED - the Bills blocks sit behind a `v-if` on the screen's own
  *  tab state, so nothing about kit is in the document until the segment is clicked. */
@@ -177,5 +179,59 @@ describe('Bills – round 21 #10: the chosen rung says how many good weeks are L
       expect(text, `an unchosen rung printed a countdown: "${text}"`).not.toContain('left)')
       expect(text).toContain('good weeks')
     }
+  })
+})
+
+// ⭐⭐ D12, RULED BY THE OWNER ON 04.09: «а в чем проблема сделать для планшетов и десктопов в одну
+// строчку?» – none. Phase 2 left the 2x2 alone under «widen the column, change nothing else» and
+// passed on a caution that re-flowing a grid might trouble the parity harness. It cannot:
+// `e2e/parity.spec.ts` compares SETS OF ACCESSIBLE NAMES, never positions, so the same four rungs
+// under the same four names are the same fingerprint however they are arranged. Only ADDING or
+// REMOVING a control is forbidden. The handoff's own §1 gives the reason to do it: «ступени кита
+// встают 4-в-ряд вместо 2x2 (лестница читается как лестница)».
+//
+// ⚠ THE STYLESHEET HAS TO BE IN THE DOCUMENT for this file to measure anything: `.kit-rungs` is
+// MoneyScreen's own scoped rule, so it arrives with the component, but the assertion refuses to run
+// blind either way.
+//
+// MUTATION-VERIFIED: the 768 block deleted -> the wide arm alone; the media query removed from
+// around it -> the wide arm AND the phone arm.
+describe('round 36 phase 3 – her kit reads as a ladder from 768 up', () => {
+  beforeEach(() => setActivePinia(createPinia()))
+  afterEach(() => setViewport(PHONE))
+
+  /** Every kit LINE has its own ladder (racket, shoes, strings), so all three are measured – a
+   *  reflow that reached one of them would be exactly the false-done this repo keeps meeting. */
+  async function rungsAt(vp: typeof PHONE) {
+    expect(document.head.querySelector('style'), 'no stylesheet – this measurement is vacuous').toBeTruthy()
+    setViewport(vp)
+    useGameStore().snapshot = toSnapshot(agedCareer(30))
+    // ⚠ ATTACHED, unlike `mountBills` above: happy-dom applies no rule at all to a detached tree, so
+    // every computed value here would come back as the empty string and the assertions below would
+    // be about nothing (round17-surfaces.test.ts's header records the same finding).
+    const wrapper = mount(MoneyScreen, { global: { stubs: { teleport: true } }, attachTo: document.body })
+    const bills = wrapper.findAll('button.tab-pill').find((n) => n.text().trim() === 'Bills')
+    expect(bills, 'the Bills tab control').toBeTruthy()
+    await bills!.trigger('click')
+    const ladders = wrapper.findAll('.kit-rungs')
+    expect(ladders.length, 'the kit ladders are on screen, or this measures nothing').toBeGreaterThan(0)
+    const columns = ladders.map((l) => getComputedStyle(l.element).gridTemplateColumns.replace(/\s+/g, ' '))
+    const counts = ladders.map((l) => l.findAll('.kit-rung').length)
+    wrapper.unmount()
+    return { columns, counts }
+  }
+
+  it('⭐ four rungs, one row, on a tablet and on a desktop', async () => {
+    for (const vp of [TABLET, DESKTOP]) {
+      const { columns, counts } = await rungsAt(vp)
+      for (const count of counts) expect(count, 'every ladder still has all four grades').toBe(4)
+      for (const c of columns) expect(c, `a ladder reads across at ${vp.width}`).toBe('repeat(4, minmax(0, 1fr))')
+    }
+  })
+
+  it('⚠ and the phone keeps its 2x2 – four rungs across a 375px screen is 85px each', async () => {
+    const { columns, counts } = await rungsAt(PHONE)
+    for (const count of counts) expect(count, 'the same four rungs').toBe(4)
+    for (const c of columns) expect(c, 'two up, as they have always been').toBe('1fr 1fr')
   })
 })

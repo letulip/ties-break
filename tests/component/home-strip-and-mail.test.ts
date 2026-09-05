@@ -29,6 +29,7 @@ import { SPONSOR_TIERS } from '../../src/engine/offers'
 import type { Snapshot, Offer, TierOpenMap } from '../../src/shared/protocol'
 import type { TierId } from '../../src/engine/season/types'
 import { careerSnapshot } from '../helpers/career'
+import { DESKTOP, PHONE, TABLET, setViewport } from './fits'
 
 // ⚠ THIS RUNNER HAS NO localStorage, AND THE MARKER IS ABOUT localStorage. Same finding and the
 // same shim as tests/component/round20-ui.test.ts, quoted there in full: happy-dom is configured
@@ -67,7 +68,18 @@ function withWindow(snapshot: Snapshot, open: TierId[]): Snapshot {
   return { ...snapshot, tierOpen }
 }
 
-function mountHome(snapshot: Snapshot) {
+/**
+ * ⚠⚠ AT A STATED WIDTH SINCE ROUND 36 PHASE 3, AND EVERY CLAIM IN THIS FILE IS A PHONE'S.
+ *
+ * The collapse is what this file is about, and from 04.09 the strip is drawn ALREADY OPEN from
+ * 768 up (the owner's ruling, quoted on `stripExpanded` in HomeScreen.vue). Until now these tests
+ * measured at happy-dom's default 1024 – a width the strip had no rule for, so the answer happened
+ * to be the phone's. It is not any more, and «the row is the engine window» is a claim about the
+ * screen he was looking at when he asked for it. Read at 375, said out loud; the wide behaviour is
+ * asserted on its own, below.
+ */
+function mountHome(snapshot: Snapshot, vp = PHONE) {
+  setViewport(vp)
   const store = useGameStore()
   store.snapshot = snapshot
   return mount(HomeScreen, {
@@ -247,6 +259,49 @@ describe('Home season strip – the row is the engine window, not the span acros
     expect(rungChips(wrapper).map((t) => t.split(' ·')[0])).toEqual(['WT1000', 'Slam'])
     expect(gapChips(wrapper)).toHaveLength(1) // the one below, nothing above
     wrapper.unmount()
+  })
+
+  // ⭐⭐⭐ ROUND 36 PHASE 3 – D9 REVERSED: FROM 768 THE LADDER IS DRAWN ALREADY OPEN.
+  //
+  // The owner, 04.09: «мы же можем использовать detectdevicewidth и если у нас 768+, то можно этот
+  // список сразу раскрытым рисовать, это ничему не противоречит.» He is right, and the reason is
+  // stronger than «we can»: every rung is ALREADY reachable on a phone, one tap behind the ellipsis.
+  // A wide screen showing them is the same information with one fewer press.
+  //
+  // ⚠⚠ THE ASSERTION IS THE EQUALITY, NOT THE COUNT, and that is what makes this a claim about
+  // «1 к 1 по доступности» rather than about a number nobody chose: the rungs a tablet draws on
+  // arrival are EXACTLY the rungs a phone reaches after pressing the ellipsis. Nothing new appears
+  // on the wider screen and nothing on the phone is out of reach.
+  //
+  // MUTATION-VERIFIED: `stripExpanded = ref(false)` (the shipped-until-04.09 value) reddens the
+  // tablet and desktop arms and leaves the phone arm green; `ref(true)` reddens the phone arm alone.
+  it('⭐ from 768 it opens itself, and it opens onto exactly what the phone can reach', async () => {
+    const snap = withWindow(snapshotAfter(6), ['regional', 'w35', 'w50', 'w75'])
+
+    // THE PHONE, AFTER ONE TAP – the reachable set, which is the thing being compared.
+    const phone = mountHome(snap, PHONE)
+    expect(gapChips(phone).length, 'a phone starts collapsed, with the ellipsis to open it').toBeGreaterThan(0)
+    await gapChips(phone)[0].trigger('click')
+    const reachable = rungChips(phone)
+    expect(reachable.length, 'the ellipsis really opened the row').toBeGreaterThan(4)
+    phone.unmount()
+
+    // THE TABLET AND THE DESKTOP, ON ARRIVAL.
+    for (const vp of [TABLET, DESKTOP]) {
+      const wide = mountHome(snap, vp)
+      // ⚠ `.strip-more` IS BOTH CONTROLS – the ellipses that open the row and the `−` that closes
+      // it again – so «no ellipsis is left» is asked by name, not by count.
+      const stillHidden = gapChips(wide).filter(
+        (c) => c.attributes('aria-label') !== 'Show only her current levels',
+      )
+      expect(stillHidden.length, `no ellipsis is left to press at ${vp.width}`).toBe(0)
+      expect(rungChips(wide), `${vp.width} draws exactly what the phone reaches`).toEqual(reachable)
+      // ...and the control that closes it again is on screen, because nothing was taken away either.
+      const collapse = wide.findAll('.season-strip .strip-more')
+      expect(collapse.length, 'the row can still be closed').toBe(1)
+      expect(collapse[0].attributes('aria-label')).toBe('Show only her current levels')
+      wide.unmount()
+    }
   })
 })
 

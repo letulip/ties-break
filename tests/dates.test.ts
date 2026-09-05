@@ -1,11 +1,14 @@
 import { describe, it, expect } from 'vitest'
 import {
   seasonYear,
+  weekDateLine,
   weekDayNumbers,
   weekMonth,
   weekOfDate,
   weekRange,
+  weekSpan,
   weekYear,
+  weekYearLabel,
   WEEKS_IN_SEASON,
 } from '../src/shared/dates'
 
@@ -148,5 +151,41 @@ describe('the season anchor – no drift, ever', () => {
     for (let w = 0; w < 40 * WEEKS_IN_SEASON; w++) {
       expect(weekOfDate(weekMonth(w), weekDayNumbers(w)[0], weekYear(w)), `week ${w}`).toBe(w)
     }
+  })
+})
+
+// =================================================================================================
+// ⭐⭐⭐ ROUND 36 SECOND PASS, P2-3 – THE DATE LINE'S TWO HALVES ARE THE DATE LINE
+// =================================================================================================
+//
+// «давай на главной десктопе текущую дату всю вынесем в 2 строки и поставим справа от аватарки
+// круглой» (05.09.2026). The rail prints the line on two lines, and it prints it by asking for the
+// two halves separately – so «всю» is a machine claim rather than a promise: whatever the join
+// produces, the two pieces put back together with the join's own separator ARE it.
+//
+// ⚠ THIS IS THE GUARD THAT MAKES THE SPLIT SAFE. `weekDateLine` is «the one place that shape is
+// spelled» and the rail is now a second reader of its parts; without this line the two could drift
+// the first time either half was touched, and the desktop would quietly print a different date from
+// the photograph. Mutation-verified: changing `weekYearLabel` to `weekLabel`'s two-digit year
+// reddens every week below.
+describe('weekDateLine and the two halves the rail draws on separate lines', () => {
+  it('the whole line is the first half, the separator, and the second half – for 40 seasons', () => {
+    for (let w = 0; w < 40 * WEEKS_IN_SEASON; w += 7) {
+      expect(weekDateLine(w), `week ${w}`).toBe(`${weekYearLabel(w)} \u00b7 ${weekSpan(w)}`)
+    }
+  })
+
+  it('…and neither half carries the separator, so the split is unambiguous', () => {
+    for (let w = 0; w < 4 * WEEKS_IN_SEASON; w++) {
+      expect(weekYearLabel(w), `week ${w}`).not.toContain('\u00b7')
+      expect(weekSpan(w), `week ${w}`).not.toContain('\u00b7')
+    }
+  })
+
+  it('the first half spells the year in full – it is NOT weekLabel, which is a different shape', () => {
+    // The header has room the 30px status pill does not, and "'33" beside a real date range reads as
+    // a typo – `weekDateLine`'s own note. The rail inherits that decision rather than re-taking it.
+    expect(weekYearLabel(0)).toBe('W1 2031')
+    expect(weekDateLine(0)).toBe('W1 2031 \u00b7 Jan 6 – Jan 12')
   })
 })

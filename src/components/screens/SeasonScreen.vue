@@ -76,7 +76,11 @@ import { UPCOMING_WEEKS } from '../../engine/world/constants'
 // THE UPCOMING-EVENT CARD'S OWN PARTS, shared with the Calendar's marker card: the photograph, the
 // court's verdict for her build, the scholarship's share, and how an odds ring is NAMED. Its colour
 // is no longer one of them – that ramp is drawn on five surfaces, not two, so it lives a line below.
-import { DRAW_NOT_MADE_NOTE, FIELD_FIGURE_NOTE, fieldChanceLabel, fieldChanceTitle, firstMatchLabel, firstMatchTitle, useEventCard } from '../../composables/eventCard'
+import { DRAW_NOT_MADE_NOTE, fieldChanceLabel, fieldChanceTitle, firstMatchLabel, firstMatchTitle, useEventCard } from '../../composables/eventCard'
+import { useWeekPager } from '../../composables/weekPager'
+// ⭐ ROUND 36 PHASE 6 – the «she is entered» predicate, shared with the rail dashboard's card. See
+// the note at `myEntries` below.
+import { enteredEvents } from '../../composables/seasonEntries'
 // The app's one red-to-green ramp, shared with the three condition rings. `{ fraction }` names the
 // scale IN the call: this number is a 0..1 chance, not a 0..100 percentage, and the signature will
 // not let the two be confused.
@@ -100,6 +104,10 @@ const game = useGameStore()
 // file used to call `surfaceNote`, one-for-one; the Calendar screen had the identical one-liner
 // under the second name, which is how one rule ends up with two of everything.
 const { academyCoverPct, surfaceVerdict, venueUrl } = useEventCard()
+// ⭐⭐⭐ ROUND 36 PHASE 5 – the week's horizontal listing, in JS. One instance for the whole feed;
+// each strip registers itself by its own week through `pager.bind`. His ruling and the measurement
+// behind it are at the head of composables/weekPager.ts, where Cyrillic is allowed.
+const pager = useWeekPager()
 const base = import.meta.env.BASE_URL
 // Round-7 item 18 / owner amendment: the this-week tournament row's watch control is now
 // ICON-ONLY – the word "Watch" dropped, just the play.svg glyph, accent-yellow and sized like
@@ -455,31 +463,6 @@ function coachSays(e: UpcomingEvent): string {
   return parts.join(' ')
 }
 
-/** ⭐⭐⭐ ROUND 34 #5b – IS THIS CARD DRAWING THE **FIELD** RING? The condition the pre-draw line
- *  under the plaque rides on, and it is the ring chain's `v-else-if` branch stated in full: the
- *  opponent ring is not the one being drawn, AND there is a field figure to draw.
- *
- *  ⚠⚠ THE NEGATION IS THE WHOLE POINT AND IT IS EASY TO LOSE. The obvious spelling for the caption
- *  is the branch's own text, `ev.preview.fieldChance !== null` – and that is TRUE on a DRAWN card
- *  too, because the field figure does not stop existing when the draw is made; it simply stops being
- *  the number on the ring. A caption written that way survives one state longer than the ring it
- *  captions, and would tell a player whose draw is out that his figure is about to sharpen. That
- *  exact mutation is one of the three `tests/component/round31-draw-reveal.test.ts` is verified
- *  against, and it reddens.
- *
- *  ⚠ THE TWO RINGS KEEP THEIR OWN INLINE CONDITIONS rather than calling these, deliberately: a
- *  `v-if` written as a null comparison is what NARROWS `preview.firstMatchChance` / `preview.
- *  fieldChance` to `number` for the three bindings inside each ring, and routing it through a
- *  predicate would trade that compiler-checked narrowing for a `!` on every one of them – tried,
- *  and `vue-tsc` answered with four errors. The chain is the authority on which ring is drawn; this
- *  pair is that chain read back, in one place, for the surface outside it that needs the answer. */
-function opponentRingShown(e: UpcomingEvent): boolean {
-  return e.preview.drawMade && e.preview.firstMatchChance !== null
-}
-function fieldRingShown(e: UpcomingEvent): boolean {
-  return !opponentRingShown(e) && e.preview.fieldChance !== null
-}
-
 /** ⭐ THE OPPONENT, NAMED, once the draw exists – «имя и ранг соперницы на 1й круг». The rank is
  *  rendered the way every other surface renders an opponent's: `#212`, or `Unranked` for a girl with
  *  no counted results, which is `rankLabel`'s own pair and not a second spelling of it. */
@@ -601,7 +584,12 @@ const feed = computed(() =>
   }),
 )
 const visibleUpcoming = computed(() => upcoming.value.filter((e) => feedShows(e, feed.value)))
-const myEntries = computed(() => upcoming.value.filter((e) => e.entered))
+// ⭐ ROUND 36 PHASE 6 – the predicate moved into `composables/seasonEntries.ts` and the strip below
+// reads it. It moved because the owner's rail dashboard now carries a «My entries» card on every
+// desktop page («карточки сквозные, одинаковые, как мини-дашборд живут всегда в вертикальной
+// полоске»), and the two are on screen TOGETHER at 1024+: a shortcut that filtered the list its own
+// way could show a different set from the strip beside it. One predicate, both surfaces.
+const myEntries = computed(() => enteredEvents(upcoming.value))
 const vacations = computed<VacationBooking[]>(() => game.snapshot?.vacations ?? [])
 const practices = computed<PracticeBooking[]>(() => game.snapshot?.practices ?? [])
 /** ⭐ ROUND 28 #4 – every running endorsement's named shoot weeks, or none. Read once here so the
@@ -1526,13 +1514,30 @@ function closeExhibition(): void {
                the lead card R15-9 always drew, and behind it every OTHER rung on this week she may
                actually enter. Most weeks hold exactly one and this is the shipped markup wearing a
                wrapper; a week that stacks two she can play now offers both, and `.swipeable` turns
-               the wrapper into a scroll-snapping strip so the second one is a thumb away.
+               the wrapper into a strip so the second one is a thumb away.
                ⚠ NO NEW WORDS, WHICH INVARIANT 4 REQUIRES AND THE OWNER DID NOT ASK TO LIFT: the
                affordance is the next card's own edge showing past the first, not a caption. -->
+          <!-- ⭐⭐⭐ ROUND 36 PHASE 5 – AND THE LISTING IS JAVASCRIPT NOW. His ruling is quoted in full at
+               the head of composables/weekPager.ts, where Cyrillic is allowed and in a template it is
+               not; so is the measurement that earned it (a mouse has no swipe, and a keyboard could
+               not reach the third card of a week at all) and the `touch-action` half.
+               ⚠ THE ROW IS THE POSITIONING CONTEXT AND THE KEY HANDLER, NOT THE STRIP. The arrows
+               are laid on the row's own edges, and the strip SCROLLS – an absolutely positioned
+               child of a scroll container scrolls away with the content. Left/Right on the row
+               reaches the pager from the strip itself AND from any control inside a card, so the
+               keyboard route does not depend on which of them happens to hold focus. -->
           <div
             v-if="row.kind === 'event' && row.events.length"
+            class="week-row"
+            @keydown.left="pager.key(row.week, -1, $event)"
+            @keydown.right="pager.key(row.week, 1, $event)"
+          >
+          <div
+            :ref="(el) => pager.bind(row.week, el)"
             class="week-stack"
             :class="{ swipeable: row.events.length > 1 }"
+            :tabindex="row.events.length > 1 ? 0 : undefined"
+            @pointerdown="pager.down(row.week, $event)"
           >
           <Card
             v-for="(ev, i) in row.events"
@@ -1662,16 +1667,20 @@ function closeExhibition(): void {
               <div class="event-coach-said">
                 <p class="event-coach-label">{{ readLabel }}</p>
                 <p class="event-coach-line">{{ coachSays(ev) }}</p>
-                <!-- ⭐⭐⭐ ROUND 34 #5b – WHAT THE PRE-DRAW FIGURE PROMISES, IN ONE LINE THE PLAYER
-                     CAN SEE. The owner's ruling and the measurement behind it (the number steps 9.1
-                     points on average at the draw, 36 at worst) are quoted on `FIELD_FIGURE_NOTE` in
-                     composables/eventCard.ts, where Cyrillic is allowed and in a template it is not.
-                     ⚠ VISIBLE, not an accessible name: the jump he is being warned about is visible,
-                     so the warning has to be. It sits under the plaque and beside the ring it is
-                     about, and it appears and disappears with that ring – `fieldRingShown` is the
-                     ring chain's own else-branch read back, negation included. Writing the branch's
-                     bare text here instead would leave the line on a card whose draw is out. -->
-                <p v-if="fieldRingShown(ev)" class="field-note">{{ FIELD_FIGURE_NOTE }}</p>
+                <!-- ⭐⭐⭐ ROUND 36 PHASE 5 – `FIELD_FIGURE_NOTE` WAS HERE AND IT HAS MOVED TO THE
+                     TOURNAMENT SCREEN. Round 34 #5b put it on this card at the owner's own ask; he
+                     then met it in play on every card of the season and ruled it off them on 04.09 –
+                     the season card already carries a great deal and a line that is on every one of
+                     them is noise, and the app has a screen for a tournament, reachable from Home,
+                     which is where the extra reading belongs. Both of his sentences are on
+                     `FIELD_FIGURE_NOTE` in composables/eventCard.ts, where Cyrillic is allowed and
+                     in a template it is not.
+                     ⚠ A MOVE, NOT A DELETE. The warning is about a NUMBER THAT JUMPS at the draw
+                     (9.1 points on average, 36 at worst – round 34 #5), so it now sits on
+                     `NextTournamentPanel`, under the same field ring it is about. Dropping it would
+                     leave the step he was being warned about unexplained again. `fieldRingShown`
+                     stays: the opponent-ring chain still reads it. -->
+
               </div>
               <!-- ⭐⭐ ROUND 31 #4 – NO OPPONENT RING UNTIL THE DRAW IS MADE. A percentage here is her
                    chance against ONE named girl, so before there is a girl there is no number to draw
@@ -1827,6 +1836,45 @@ function closeExhibition(): void {
               </span>
             </div>
           </Card>
+          </div>
+          <!-- ⭐⭐⭐ ROUND 36 PHASE 5 – THE ARROWS, on the owner's own wording for them (quoted at the
+               head of composables/weekPager.ts). Phase 3's D16 refused a pager because arrows on the
+               desktop and on no other format are two controls `e2e/parity.spec.ts` fails BY NAME.
+               ⚠ NO NEW ICON AND NO NEW WORDS. `back.svg` is the owner's own asset (30.07) and the
+               `next` arrow is that glyph mirrored, not a second file; `Back` and `Next` are the two
+               words `EndingScreen`'s album pager already uses for exactly this pair of controls.
+
+               ⭐⭐⭐ ROUND 36 PHASE 7 – AND THEY ARE HIDDEN WHEN THERE IS NOTHING TO PAGE, AT HIS
+               RULING of 04.09, quoted in full at the head of composables/weekPager.ts (Cyrillic is
+               allowed there and in a template it is not – the same split phase 5 made). In short: an
+               idle pair of grey arrows on a desktop is a control she will never need, so show them
+               only when there is something to page.
+               ⚠⚠ THIS REVERSES WHAT PHASE 5 WROTE HERE, AND PHASE 5'S ARGUMENT WAS RIGHT: which
+               weeks overflow depends on the WIDTH, so a pager that hides itself IS a control present
+               at 375 and absent at 1280. He was told that in D35 – «the price is a stated exemption
+               in `e2e/parity.spec.ts`» – and ruled anyway. The exemption is what pays for it, and it
+               is bounded: only `.week-pager` is subtracted, and a strip that DOES overflow at a width
+               must have its arrows there or the harness reddens. See D35 and `e2e/parity.spec.ts`.
+               ⚠ `overflows` IS WATCHED, NOT READ ONCE: `weekPager`'s ResizeObserver sits on the strip
+               AND on its cards, so dragging a window across a breakpoint takes the arrows with it. -->
+          <div v-if="row.events.length > 1 && pager.ends(row.week).overflows" class="week-pager">
+            <IconButton
+              class="week-arrow back"
+              icon="back"
+              label="Back"
+              :icon-size="15"
+              :disabled="pager.ends(row.week).atStart"
+              @click="pager.page(row.week, -1)"
+            />
+            <IconButton
+              class="week-arrow next"
+              icon="back"
+              label="Next"
+              :icon-size="15"
+              :disabled="pager.ends(row.week).atEnd"
+              @click="pager.page(row.week, 1)"
+            />
+          </div>
           </div>
 
           <!-- A PLANNED week: the booking reads back with its package/match name + a Cancel. When
@@ -2164,37 +2212,70 @@ function closeExhibition(): void {
   min-width: 0;
 }
 
-/* ...and a scroll-snapping strip the moment a week offers her a choice. The owner asked for exactly
-   this - «чисто интерфейсная правка на свайп карточек» - and the affordance is DELIBERATELY not a
-   word: the second card's own edge shows past the first (88% + a 12px gap leaves ~30px of it on a
-   375px phone), which is what tells a thumb there is something to the right. Invariant 4 does not
-   allow this screen to invent a caption, and it does not need one. */
+/* ⭐⭐⭐ ROUND 36 PHASE 5 – THE ROW, WHICH IS THE STRIP PLUS ITS TWO ARROWS. A plain block, so the
+   single-card week it also wraps is byte-identical to what it drew before; `position: relative` is
+   the only thing it adds, and it is what the arrows are laid against. They may NOT be laid against
+   the strip: the strip is a scroll container and an absolutely positioned child of one scrolls away
+   with the content. */
+.week-row {
+  position: relative;
+  min-width: 0;
+}
+
+/* ...and a strip the moment a week offers her a choice. The owner asked for exactly this - «чисто
+   интерфейсная правка на свайп карточек» - and the affordance is DELIBERATELY not a word: the second
+   card's own edge shows past the first (88% + a 12px gap leaves ~30px of it on a 375px phone), which
+   is what tells a thumb there is something to the right. Invariant 4 does not allow this screen to
+   invent a caption, and it does not need one.
+
+   ⭐⭐⭐ ROUND 36 PHASE 5 – AND THE SWIPE ITSELF IS JAVASCRIPT NOW, AT HIS RULING: «Давай уберем свайп
+   css и сделаем js функционал для листания горизонтального, тогда будет полный паритет на всех
+   устройствах и ничего не надо изобретать.» Three declarations carry that here and the whole
+   argument is at the head of composables/weekPager.ts:
+
+     · `scroll-snap-type` / `scroll-snap-align` are GONE. They were the CSS swipe. `snapTarget` in
+       the composable is `scroll-snap-align: start` written out, and it runs on the drag's release
+       and on an arrow press, which is the same rule reached by three input devices instead of one.
+     · `touch-action: pan-y` – the browser keeps the axis THE PAGE scrolls on and gives up the one
+       the pager drives. ⚠⚠ NEVER `pan-x`: the hotfix on `main` reached for that first, «this box
+       handles ONLY horizontal panning», and a near-vertical gesture beginning on a card then stopped
+       reaching the page – on a run of multi-card weeks it froze. `pan-y` cannot fail that way, and a
+       vertical gesture here simply cancels the drag and scrolls the page.
+     · `user-select: none` – a press-and-hold on a card started a TEXT SELECTION, so the browser
+       resolved the gesture as a selection and swallowed the click. It is also what lets a MOUSE drag
+       the strip at all. ⚠ The drag-to-select autoscroll it takes away was an accident, not the
+       design, and it is not a reason to put selection back.
+     · `overscroll-behavior-x: contain` – without it the strip's end CHAINS to the page.
+       ⭐ `SeasonHistoryTable.vue` has carried exactly this line since it shipped.
+
+   ⚠ `overflow-x` STAYS `auto` AND THAT IS DELIBERATE. It is not the swipe – `touch-action` above is
+   what took the gesture off the browser – and it is what keeps the strip a real scroll container:
+   `scrollLeft` is then the pager's single piece of state, the browser still scrolls a focused
+   control into view by itself, and `tests/component/round34-week-stack.test.ts`'s reachability arm
+   measures the same property it always did. */
 .week-stack.swipeable {
   display: flex;
   flex-direction: row;
   gap: 12px;
   overflow-x: auto;
-  scroll-snap-type: x mandatory;
   -webkit-overflow-scrolling: touch;
-  /* ⚠⚠ THE THREE LINES THIS STRIP SHIPPED WITHOUT, AND THE OWNER FELT ALL THREE (04.09: «скролл
-     заедает либо в одну, либо в другую сторону, а некоторые клики … сначала не срабатывают, а потом
-     становятся выделением текста»).
-     · `touch-action: pan-x pan-y` – ⚠⚠ AND `pan-x` ALONE WAS WRONG, WHICH THE OWNER FELT WITHIN
-       HOURS OF THE FIX (04.09: «если игрок вертикально долистал до мультикарточки, то потом
-       вертикально можно листать только если палец будет находиться на поле с 1 карточкой на неделе
-       … может быть несколько недель подряд с мульти-карточками и тогда страница перестает
-       вертикально листаться вообще»).
-       `pan-x` does not mean «takes horizontal, passes vertical through» – it means this box handles
-       ONLY horizontal panning, so the browser stops routing a vertical gesture that begins here to
-       the page behind it. On a run of multi-card weeks the page stopped scrolling at all.
-       ⭐ Naming BOTH axes is what «horizontal here, vertical to the page» actually spells: the
-       browser keeps the disambiguation it is good at, and only double-tap zoom is given up.
-     · `overscroll-behavior-x: contain` – without it the strip's end CHAINS to the page.
-       ⭐ `SeasonHistoryTable.vue` has carried exactly this line since it shipped; the strip is the
-       one horizontal scroller in the app that was written without it.
-     · `user-select: none` – a press-and-hold on a card started a TEXT SELECTION, so the browser
-       resolved the gesture as a selection rather than a tap and swallowed the click. */
-  touch-action: pan-x pan-y;
+  /* ⚠⚠ `pan-y`, AND THE ROUTE TO IT IS WORTH KEEPING – TWO WRONG ANSWERS CAME FIRST.
+     Round 34 shipped this strip with NO `touch-action` at all, and `scroll-snap-type: x mandatory`
+     made the browser commit hard to the horizontal axis: the owner felt a scroll that stuck and
+     taps that turned into text selections within a day of the merge.
+     The hotfix reached for `pan-x`, and that was wrong in the other direction – it does not mean
+     «takes horizontal, passes vertical through», it means this box handles ONLY horizontal panning,
+     so a vertical gesture beginning here stopped reaching the page and a run of multi-card weeks
+     froze it entirely. `pan-x pan-y` corrected that on main.
+     ⭐ And phase 5 makes even that obsolete: the CSS swipe is GONE and `composables/weekPager.ts`
+     drives `scrollLeft` itself, so the horizontal axis is ours and only the vertical one is the
+     browser's. `pan-y` is what that spells. Giving the browser back `pan-x` here would hand it an
+     axis our own code is already driving.
+     ⚠ The other two lines are the hotfix's and they STAY: `overscroll-behavior-x: contain` stops the
+     strip's end dragging the page (SeasonHistoryTable has carried it since it shipped), and
+     `user-select: none` stops a press-and-hold resolving as a selection instead of a tap – which is
+     what swallowed the click, and which the pager's own mouse drag now depends on. */
+  touch-action: pan-y;
   overscroll-behavior-x: contain;
   user-select: none;
   -webkit-user-select: none;
@@ -2206,6 +2287,16 @@ function closeExhibition(): void {
   display: none;
 }
 
+/* ⚠ THE STRIP IS ITS OWN TAB STOP – `:tabindex` in the template – and it brings NO focus ring of its
+   own. `src/style.css` declares the app's one ring on `:focus-visible` and
+   tests/ui-control-system.test.ts holds that there is exactly one; a second declaration here is the
+   drift that rule exists for. Caught by that gate on the first run, which is the gate working.
+   ⚠⚠ AND `tabindex="0"` IS NOT REDUNDANT EVEN THOUGH CHROMIUM HIDES THAT. Measured 04.09: removing
+   it leaves the browser test in e2e/responsive.spec.ts GREEN, because Chromium now gives an
+   overflowing scroll container a tab stop of its own. Firefox and Safari do not, so the declaration
+   is what makes the route real for the other half of the players – and the mounted arm in
+   tests/component/round34-week-stack.test.ts is what holds it, since the browser cannot. */
+
 /* ⚠ THE WIDTH IS DECLARED RATHER THAN LEFT TO `flex-basis`, and that is a testability decision as
    much as a layout one: `tests/component/fits.ts` reads the room a control has by walking
    `getComputedStyle` up the ancestors, and a basis it cannot read is a card it would score as
@@ -2214,7 +2305,210 @@ function closeExhibition(): void {
 .week-stack.swipeable > .event-card {
   flex: 0 0 auto;
   width: 88%;
-  scroll-snap-align: start;
+}
+
+/* ⭐⭐⭐ ROUND 36 PHASE 5 – THE TWO ARROWS, ON EVERY DEVICE. His ruling: «у нас на всех устройствах
+   могут появиться стрелки для листания в дополнение к JS свайпу.»
+   ⚠ PHASE 7 – «on every WIDTH» is no longer part of that sentence: they are drawn on every width at
+   which the strip has something past its edge, and on no other. His second ruling, and D35.
+
+   ⭐ NOTHING IS DRAWN THAT DID NOT EXIST. `ui/IconButton.vue`'s `plate` variant is the app's own
+   32px circle on a `--panel` plate, and its own header says what it is for: «it sits ON something (a
+   photo, a dialog's corner, a header row)», which is exactly this. The glyph is `back.svg`, the
+   owner's own asset (30.07), and `next` is that same file MIRRORED rather than a second one.
+
+   ⚠ LAID ON THE ROW'S EDGES, HALF OVER THE STRIP. Vertically centred, so they sit over the
+   photograph rather than over `.controls` at the foot of a card - the arrow must never be between a
+   thumb and the `Enter` it was aiming for. `pointer-events` stays on the button alone, so the rest
+   of the row is untouched.
+
+   ⚠ THE SAME SIZE AT EVERY WIDTH, on purpose. A control that grew on a desktop would be one more
+   thing for the eye to re-learn per format, and the round's whole criterion is that the formats
+   carry the same set. */
+/* ⭐⭐⭐ ROUND 36 PHASE 7 – THE ARROWS' OWN CONTAINER, AND IT EXISTS FOR THE PARITY EXEMPTION.
+   His ruling hides the pair on a strip with nothing past its edge, which makes them a control present
+   at 375 and absent at 1280 – so `e2e/parity.spec.ts` needs a stated exemption for them, and D47's
+   rule for an exemption is that its boundary is A CONTAINER and never a list of names. This div is
+   that container: `#app .week-row > .week-pager`, and the harness asserts it holds NOTHING but these
+   two arrows, so a later phase cannot park a control inside it and out of the check.
+
+   ⚠ `display: contents` IS WHAT MAKES IT FREE. The div generates no box of its own, so it changes
+   no geometry, adds nothing to the identity census, and leaves the arrows' containing block exactly
+   where it was – `.week-row`, the nearest positioned ancestor, which is what `left`/`right` below
+   resolve against. A wrapper with a box would have been a new element at every width a stacked week
+   still pages at, which is the identity contract this round is measured by. */
+.week-pager {
+  display: contents;
+}
+
+.week-arrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 2;
+  /* The plate is `--panel` at full strength on a flat page; over a painting it needs to read as a
+     control ON the picture rather than a hole in it, which is what the blur, the darker fill and the
+     lift do. Same idiom as `.replay-close`, which is the other `plate` caller that stands on art.
+     ⚠ MEASURED, NOT GUESSED: at 72% and with no shadow the circle vanished into the card's own dark
+     tone on the first build (`/tmp/r36p5/row-375.png`) and read as a bare chevron floating over the
+     plaque – a control has to look like one before a player will press it. */
+  background: rgb(9 14 24 / 88%);
+  border-color: rgb(255 255 255 / 26%);
+  box-shadow: 0 2px 10px rgb(0 0 0 / 45%);
+  backdrop-filter: blur(3px);
+  color: #fff;
+}
+
+.week-arrow.back {
+  left: 6px;
+}
+
+.week-arrow.next {
+  right: 6px;
+}
+
+/* `back.svg` points left. The forward arrow is the same file flipped - one asset, two directions,
+   which is `AppIcon`'s whole mask contract used as intended rather than a second drawing. */
+.week-arrow.next :deep(.tb-icon) {
+  transform: scaleX(-1);
+}
+
+/* Disabled is the honest state for an arrow at ONE end of a strip that has something past the other:
+   at the head of a strip `Back` is grey and `Next` is live, and `EndingScreen`'s album greys its own
+   Back on page one in the same way. `IconButton` already carries the 0.4 opacity; this only stops the
+   plate reading as pressable.
+   ⚠ PHASE 7 NARROWED WHEN THIS IS EVER SEEN. Both arrows grey at once used to be the state of a
+   strip that fits whole; the owner ruled that pair off the screen («две серые стрелки, которые ей
+   никогда не понадобятся»), so a rendered pager now always has at least one live arrow. This rule
+   still earns its place – it is what the single grey arrow at either end of a real strip reads as. */
+.week-arrow:disabled {
+  background: rgb(9 14 24 / 55%);
+  box-shadow: none;
+}
+
+/* ⭐⭐⭐ ROUND 36 PHASE 2 – THE TABLET WEEK, AND IT IS THE ONE SCREEN THE OWNER SPECIFIED IN FULL:
+   «1 неделя = 1 ряд, максимум 2 карточки видно, свайп для 3+. Формат карточки, оформление и кнопки -
+   мобильные, без изменений.» Frame AD-season-tablet-768.png is the reference he named.
+
+   ⭐ NOTHING NEW IS BUILT HERE. Round 34 #14 already made a week a ROW and already made it swipe -
+   «чисто интерфейсная правка на свайп карточек» - so his tablet is this mechanism with one number
+   changed: the card that was 88% of the phone is half the column of the tablet. The strip, the gap,
+   the hidden scrollbar and the "the next card's own edge is the affordance" rule above are all
+   untouched, which is «формат карточки … без изменений» taken literally.
+   ⚙ PHASE 5 REPLACED WHAT DRIVES THAT STRIP – the CSS snap became `useWeekPager` – and changed NONE
+   of the widths in this block; the arithmetic below is phase 2's, unedited.
+
+   ⚠⚠ A ONE-CARD WEEK IS ALSO HALF A ROW, AND THAT IS THE FRAME'S OWN ANSWER RATHER THAN A GUESS.
+   AD draws W3 and W5 with a single card each, both stopping at the middle of the screen, and the
+   alternative reads worse than it sounds: a calendar whose rows are full-width when a week offers
+   one choice and half-width when it offers two would rock left and right down the page, and «1
+   неделя = 1 ряд» would be the only thing holding it together. One column width for every week is
+   what makes the row legible AS a week. It is a contentious call and it has a row in
+   docs/specs/responsive-decisions-2026-09.md.
+
+   ⚠ AND THE DESIGN'S OWN ANSWER WAS A GRID, WHICH HE OVERRODE. The handoff's «Правила раскладки» §6
+   is explicit - «Сетки вместо каруселей … Свайп-ряды и стрелки ‹ › были пробой и отвергнуты» - and
+   he asked for the swipe anyway, on the screen he called his hardest case. His ruling wins; the
+   divergence is the first row in the decisions document. */
+@media (min-width: 768px) {
+  /* The plain wrapper becomes a row too, so the single-card week and the two-card week are the same
+     box with the same arithmetic. `.swipeable` still adds the overflow and the snapping. */
+  .week-stack {
+    display: flex;
+    gap: 12px;
+  }
+  /* ⚠⚠ THE SELECTOR IS DELIBERATELY HEAVIER THAN IT LOOKS AND IT MUST STAY THAT WAY. Two separate
+     things would drop this rule on the floor if it were written as the obvious `.week-stack >
+     .event-card`, and both were measured rather than reasoned about:
+       1. A MEDIA QUERY ADDS NO SPECIFICITY, so on a week that swipes it would lose outright to
+          `.week-stack.swipeable > .event-card` above – the strip kept the phone's 88% at 768 while
+          `display: flex` from this same block applied, which is the quietest way a rule can be
+          present and have no effect at all.
+       2. NAMING `.swipeable` TOO ONLY MAKES THEM EQUAL, and happy-dom then keeps the FIRST rule
+          rather than the last (measured 04.09; a real browser takes the later one). `tests/component`
+          is where this is pinned, so a tie is a rule the gate cannot see.
+     `.event-cards` is the list these cards live in, so prefixing it is true as well as heavier: it
+     wins on specificity in every engine, in either source order. */
+  /* ⚠⚠ D2 WAS PUT TO THE OWNER AGAIN ON 04.09 WITH THE COST MEASURED, AND HE KEPT PHASE 2'S ANSWER:
+     «тянется на всю колонку – не надо, будет плохо, пусть пока 1 карточка остается.» A lone card
+     stays half a row. So this rule is UNCHANGED from phase 2 and the paragraph above still stands;
+     the ruling and his reason are recorded in docs/specs/responsive-decisions-2026-09.md. */
+  .event-cards .week-stack > .event-card,
+  .event-cards .week-stack.swipeable > .event-card {
+    flex: 0 0 auto;
+    /* ⚠ HALF THE ROW LESS HALF THE GUTTER, AND IT IS WRITTEN THIS WAY ON PURPOSE. The obvious
+       spelling is `calc((100% - 12px) / 2)` and it is the same number – but happy-dom drops a `calc`
+       that divides a parenthesised subexpression (measured: `width` comes back as the empty string,
+       so the declaration simply vanishes and the phone's 88% wins), and `tests/component/` is where
+       this rule is pinned. A form the mounted gate cannot read is a rule with no test. */
+    width: calc(50% - 6px);
+  }
+  /* ⭐ THREE OR MORE, WHICH IS THE HALF OF HIS SENTENCE THE WIDTH ABOVE WOULD SILENTLY DROP. At
+     exactly half the column a pair FILLS the row, so a third card sits entirely off-screen with
+     nothing showing past the second - and the phone's affordance is precisely that something shows.
+     So a stack of three or more shrinks by the same 12% the phone gives up: two cards and a sliver
+     of the third, «свайп для 3+» with an edge to swipe at.
+     ⚠ `:has()` rather than a class from the template, because this is a fact about the CSS box and
+     not about the week - the template already says how many cards there are by rendering them.
+     `.ob-select-wrap:has(...)` in OnboardingWizard.vue is the same idiom, already shipped. */
+  .event-cards .week-stack.swipeable:has(> .event-card:nth-child(3)) > .event-card {
+    /* 88% of the row across two cards and their gutter – `calc((88% - 12px) / 2)` in the spelling
+       happy-dom can read; see the note on the width above. */
+    width: calc(44% - 6px);
+  }
+  /* The weeks that are not tournaments - training, off-season, exams, a booked vacation - are cards
+     on the same calendar and take the same column. AD draws its «Training week» at half width. */
+  .event-cards .week-card {
+    width: calc(50% - 6px);
+  }
+}
+
+/* ⭐⭐⭐ ROUND 36 PHASE 3 – THE DESKTOP WEEK: THREE FIT, SO THREE ARE SHOWN. The owner, on frame
+   AE-season-desktop-1024.png: «как на планшете, но могут влезть три карточки; если не влезают -
+   стрелочная листалка. Формат карточки, оформление и кнопки - мобильные.» AE draws exactly that:
+   W1's three tournaments stand across the row, and W3 and W5 - one card each - take one third of it
+   and stop, which is the same «1 неделя = 1 ряд» answer phase 2 shipped at 768.
+
+   ⚠⚠ AND THERE IS NO ARROW PAGER, WHICH IS A REFUSAL WITH A REASON RATHER THAN AN OVERSIGHT. His
+   sentence makes it the fallback for «if they do not fit», and past three they still do: the strip
+   shrinks by the same 12% the phone and the tablet give up, so a fourth card's own edge is showing
+   and the row swipes. Arrows would also be TWO NEW CONTROLS PER WEEK on a desktop and on no other
+   format, which fails «ничего нового по идее не должно появиться» in e2e/parity.spec.ts by name -
+   the same collision phase 2's D9 records about the season strip. It is a row in
+   docs/specs/responsive-decisions-2026-09.md.
+
+   ⚠ THE SELECTORS REPEAT `.event-cards` TO WIN ON SPECIFICITY, and that is phase 2's own lesson
+   applied forwards rather than a tic. A media query adds NO specificity, so «later block, wider
+   screen» is not a rule that wins anything - and at equal specificity happy-dom keeps the FIRST
+   declaration where a browser keeps the last, so a tie is a layout that works in Chromium and does
+   not exist in the mounted gate. Each rule here is written exactly one class heavier than the 768
+   rule it has to beat, and the four-or-more rule one heavier again than the three-or-more one, so
+   nothing on this screen depends on source order in either engine. */
+@media (min-width: 1024px) {
+  /* A third of the row, less two thirds of the one gutter each card carries - the same arithmetic
+     as the tablet's half, and spelled the same way for the same reason (happy-dom drops a `calc`
+     that divides a parenthesised subexpression, so `calc((100% - 24px) / 3)` is a rule with no
+     test). ONE COLUMN WIDTH FOR EVERY WEEK is D2's rule carried up a rung: at 768 a column is half
+     the row, at 1024 it is a third, and AE draws its single-card weeks W3 and W5 at exactly that. */
+  .event-cards.event-cards .week-stack > .event-card,
+  .event-cards.event-cards .week-stack.swipeable > .event-card {
+    width: calc(33.333% - 8px);
+  }
+  /* THREE FIT. The tablet's «shrink so the third shows» rule is aimed at three-or-more and would
+     otherwise still be the winning rule here, at a width where three no longer need the swipe. */
+  .event-cards.event-cards .week-stack.swipeable:has(> .event-card:nth-child(3)) > .event-card {
+    width: calc(33.333% - 8px);
+  }
+  /* FOUR OR MORE, and now the sliver is the affordance again: 88% of the row across three cards and
+     their two gutters, which leaves 114px of the fourth showing at 1280. */
+  .event-cards.event-cards.event-cards
+    .week-stack.swipeable:has(> .event-card:nth-child(4))
+    > .event-card {
+    width: calc(29.333% - 8px);
+  }
+  .event-cards.event-cards .week-card {
+    width: calc(33.333% - 8px);
+  }
 }
 
 /* The export's list gutter is 14px of the screen; ours already has 16px from #app, so the cards
@@ -2715,17 +3009,10 @@ section.bare .event-cards {
   text-wrap: pretty;
 }
 
-/* ⭐⭐⭐ ROUND 34 #5b – the pre-draw figure's own caption. Quieter than the plaque above it, because
-   it is a note ABOUT the ring rather than another thing the coach said: same column, one step down
-   in size and weight, the label's own ink. It wraps like the plaque and adds no fixed height, so the
-   card grows by one line and only while the draw is pending. */
-.field-note {
-  margin: 5px 0 0;
-  font-size: 12px;
-  line-height: 1.35;
-  color: var(--ink-soft);
-  text-wrap: pretty;
-}
+/* ⚙ ROUND 36 PHASE 5 – `.field-note` LEFT THIS FILE WITH THE LINE IT STYLED. The pre-draw caption
+   is on `NextTournamentPanel` now (his 04.09 ruling; the reasoning is on the markup there and on
+   `FIELD_FIGURE_NOTE` in composables/eventCard.ts), and a rule for an element this screen no longer
+   renders is exactly the dead CSS docs/specs/css-dry-audit.md is about. */
 
 /* Owner, 28.07: the card's secondary buttons ("+ Plan week", "Withdraw") were disappearing into the
    photograph behind them - a 7% outline is enough on a flat panel and not on a painting. */

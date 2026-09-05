@@ -498,14 +498,521 @@ body {
      `#app`, which caps every TAB screen - and the onboarding wizard is a `position: fixed` takeover,
      so it is outside `#app` and inherited nothing. Naming the number is what lets the wizard reuse
      this cap instead of growing a second one; the same argument as `--app-pad-x` two lines up, which
-     exists because one pair of numbers was spelled in two places and drifted. */
+     exists because one pair of numbers was spelled in two places and drifted.
+     ⚠ ROUND 36 PHASE 1: `#app` NO LONGER READS THIS. The paragraph above is kept as written because
+     it is the reasoning R14-9 recorded, but the frame moved to `--app-shell-max` below and this is
+     now the TAKEOVER cap – the wizard's and the tour briefing's, still one token for the two of
+     them. The note under `--app-shell-max` is why. */
   --app-max-width: 880px;
+  /* ⭐⭐ ROUND 36 PHASE 1 – THE FRAME IS A LADDER NOW, AND IT IS A SECOND TOKEN RATHER THAN THIS ONE.
+     `--app-max-width` above has two consumers besides `#app`, and both are full-screen takeovers:
+     the onboarding wizard (R14-9) and the tour briefing. Laddering it in place would have taken both
+     of them to 1200px on a desktop – a visible change to two surfaces, in the one phase that
+     promised «nothing moves yet», and a design decision (how wide should an onboarding column be on
+     a 1440 monitor?) that belongs to phase 3's shell and phase 5's review document, not to a
+     container change.
+     ⚠ THE ANTI-DRIFT RULE R14-9 WROTE IS UNTOUCHED, and it is worth stating exactly, because the
+     first attempt at this round got it backwards. What that pin forbids is a HARD-CODED 880 in a
+     component – "a second cap that drifts the first time the app frame moves". It is satisfied by
+     the two takeovers sharing ONE NAMED TOKEN, which they still do; it was never a claim that the
+     frame and the takeovers must be the same number forever. The frame moved, they did not, and the
+     day they should follow it, this token is where that decision gets made once.
+     `tests/component/tour-briefing.test.ts` measures the 880 and is the reason this is not a guess:
+     laddering this token turned it red at 1280 with «expected 1200 to be 880». */
+  --app-shell-max: 880px;
+  /* ⭐⭐ AND THE COLUMN, WHICH IS NOT THE FRAME EITHER – THE OTHER THING THAT SURPRISED THIS ROUND.
+     `--app-shell-max` caps `#app`, the padded FRAME. What a player actually reads is
+     `main.app-content` inside it, and that has always been capped at 520px – so on a 1280px screen
+     the app is a 520px column, not the 880 the frame suggests. Widening only the frame would have
+     changed nothing at all on screen, which is the quietest way a responsive pass can be vacuous.
+     Named here for the same reason `--app-max-width` was: three rules read this number (the column
+     itself, and the two fixed bars that hug it), and a literal in each is three numbers that drift.
+     ⚠ 520 IS UNCHANGED BELOW 768 and every ladder rule below starts at 768, so at 375 / 520 / 576
+     the computed value of every token on this page is the one it had before this round. */
+  --app-col-max: 520px;
+  /* The same column, for the two boxes that are `position: fixed` and centred on the VIEWPORT
+     rather than laid inside `#app` – the tab bar and the floating week button. They cannot say
+     `100%` and mean the column: a fixed box's percentage resolves against the viewport, so past 768
+     the ladder below spells the column out as "the frame, minus the frame's own gutters". */
+  --app-bar-max: 520px;
+  /* ⭐⭐⭐ ROUND 36 PHASE 3 – WHERE THE TWO FIXED BARS ARE CENTRED, AND IT IS A TOKEN BECAUSE THE
+     DESKTOP MOVES IT. Below 1024 this is the middle of the viewport, exactly as the three rules that
+     read it have said since they were written; from 1024 the left rail takes a strip off the left of
+     the page, so the middle of what a player is READING is no longer the middle of the window. The
+     CTA is centred on the COLUMN or it is not centred on anything.
+     Consumers: `.next-week-bar` below, `.cal-go` (CalendarScreen.vue) and `.week-proceed`
+     (ThisWeekScreen.vue) – the same three boxes `--app-bar-max` already joins. */
+  --app-bar-left: 50%;
+  /* ⭐⭐ ROUND 36 PHASE 3 – AND HOW FAR OFF THE BOTTOM THEY FLOAT. 58px is «clear of the tab bar»
+     (52px of bar plus 6), which is what it has always meant; from 1024 there is no bar at the bottom
+     of the page, so the number stops being a clearance and becomes what the owner asked for in its
+     place – «прижата к низу с отступом от края». `--app-pad-top` is that margin: the frame's own
+     inset, so the CTA is as far off the bottom edge as the page's first pixel is off the top. */
+  --app-bar-bottom: 58px;
+  /* ⭐⭐⭐ ROUND 36 PHASE 3 – THE RAIL. «Rail слева на всю высоту, скроллится при переполнении,
+     одинаковый на каждой странице.» Two numbers rather than one because the gap between the rail and
+     the column is read by three different rules (the frame's grid, the bar cap above and the CTA's
+     offset), and a gap spelled three times is the `--app-pad-x` lesson waiting to happen.
+     196px is frame AC-home-desktop-1024.png's own rail width, measured off the export. It is spelled
+     here rather than inside the media block because `--app-bar-max` and `--app-bar-left` below both
+     subtract it, and a token that only exists inside one query is a token those rules cannot read. */
+  --app-rail-w: 196px;
+  --app-rail-gap: 24px;
+  /* ⭐⭐⭐ ROUND 36 PHASE 4 – THE TAKEOVER'S READING COLUMN, which is NOT `--app-col-max` and never
+     was. A takeover covers the tab shell instead of living inside it, so it inherits nothing from
+     `#app`: the tournament flow, the match viewer, the draw, the finale poster, the match replay,
+     the inbox sheet and the planner all read the 480 spelled below, and on a 1280px screen that is
+     a 448px column with 400px of empty page down each side. Phase 4 measured it: the live court was
+     446px wide at 768, at 900, at 1024 and at 1280 alike – the same picture at four screen sizes.
+
+     ⚠ IT IS A TOKEN BECAUSE THE NUMBER WAS ALREADY SPELLED TWICE – `.onboarding-body, .tf-body` and
+     `.tf-top` – and the header and the body of one screen drifting apart is the `--app-pad-x`
+     lesson with a header on it. Both read this now.
+
+     ⭐ AND THE CAP PAST 768 IS `--app-max-width`, WHICH IS THE OTHER TAKEOVERS' OWN CAP. The wizard
+     (R14-9) and the tour briefing already sit on that token; the tournament flow is the third
+     takeover in the app and it now sits on it too. That is worth more than a fourth number: phase
+     1's open question for the owner – «do the takeovers follow the frame out to 1200 on a desktop,
+     or keep their 880?» – is still decided in exactly one place, and now it decides three surfaces
+     instead of two. ⚠ Below 768 this is 480, unchanged, so nothing on a phone or at 520/576 moves. */
+  --takeover-col-max: 480px;
+  /* ⭐⭐ ROUND 36 PHASE 2 – THE HERO'S SHAPE, AND IT IS A TOKEN BECAUSE HE TIED TWO SURFACES TO IT.
+     «hero image на home будет НЕ квадратной, но все оверлеи с текстом остаются как у нас», and one
+     line later, about the tournament preview: «картинка занимает ту же пропорцию, что и hero на
+     главной». That second sentence is a JOIN, not a coincidence – so the two heroes read one number
+     instead of each carrying its own copy of it, which is the `--app-pad-x` lesson (a pair of
+     numbers spelled twice drifts) applied to a shape.
+     ⚠ THE MOBILE VALUE IS SPELLED OUT, and it is A3's square (owner, 28.07: the paintings are
+     512x512, so at the full width of the phone the whole frame is on screen and nothing is cut).
+     Below 768 this token IS `1 / 1`, so not one phone pixel moves.
+     Consumers: `.diary-hero` (HomeScreen.vue) and `.nt-hero` (NextTournamentPanel.vue). */
+  --hero-aspect: 1 / 1;
+}
+
+/* ⭐⭐⭐ HIS BREAKPOINT LADDER (docs/specs/responsive-2026-09.md, owner 03.09):
+   «768 как раз тоже можно до 900 тянуть вполне, потом фиксировать посередине, а дальше десктоп от
+   1024.»
+
+       < 768        mobile – untouched, and there is deliberately no rule for it
+       768 – 900    fluid: the column grows with the window
+       901 – 1023   FIXED at 900 and centred
+       >= 1024      fluid to 1200, then capped and centred
+
+   ⚠ THE 901–1023 PLATEAU IS THE POINT, not an oversight: the tablet layout stops growing and sits
+   centred until the desktop shell (phase 3) takes over. Anything that stretches through it is wrong.
+
+   ⚠ THREE TOKENS AND NOT ONE, because the app has three boxes that are not the same box: the FRAME
+   (`#app`), the COLUMN inside it (`main.app-content`, which is what a player reads) and the fixed
+   BARS centred on the viewport. Below 768 they hold 880 / 520 / 520 – the numbers they have today,
+   spelled out – and every rule here starts at 768, so on a phone not one computed value moves.
+   `--app-max-width` is deliberately absent from this ladder; see its note above. */
+@media (min-width: 768px) {
+  :root {
+    --app-shell-max: 100%;
+    --app-col-max: 100%;
+    --app-bar-max: calc(min(var(--app-shell-max), 100%) - 2 * var(--app-pad-x));
+    /* PHASE 2. The design's own tablet hero is 400px tall on a 768px frame (design handoff,
+       «Responsive» §3: «герой перестаёт быть портретом на всю ширину. 768 — 400px»), and that is
+       the one place this round takes the design's number over ours – because OUR number is the
+       square he asked us to stop drawing. Written as a RATIO rather than his flat 400px so it stays
+       fluid across the band he defined: 400 at 768, 469 at 900, and the plateau then holds it.
+       ⚠ HER FACE SURVIVES THE CROP BY CONSTRUCTION, not by luck. `object-position` is steered per
+       painting off `facePoint` (src/art/faceRects.ts), and percentage semantics under `cover` align
+       the same relative point of the image with the same relative point of the window – so a wider
+       window shows a band THROUGH her face rather than a band above or below it. */
+    --hero-aspect: 768 / 400;
+    /* PHASE 4. The takeover's column joins the other two takeovers on their own cap – see the token
+       for the argument, and `docs/specs/responsive-decisions-2026-09.md` D22 for what it moves. */
+    --takeover-col-max: var(--app-max-width);
+  }
+}
+
+@media (min-width: 901px) {
+  :root {
+    --app-shell-max: 900px;
+  }
+}
+
+@media (min-width: 1024px) {
+  :root {
+    --app-shell-max: 1200px;
+    /* ⭐⭐⭐ ROUND 36 PHASE 3 – THE RAIL TAKES ITS STRIP OFF EVERY OTHER MEASUREMENT ON THE PAGE, and
+       these two lines are that fact said once instead of in every rule that needs it. «A left rail
+       changes what THE PAGE is» is rule 4 of the round; the two fixed bars are centred on the COLUMN
+       from here, not on the window, and their cap is the column's width and not the frame's. */
+    --app-bar-max: calc(
+      min(var(--app-shell-max), 100%) - 2 * var(--app-pad-x) - var(--app-rail-w) - var(--app-rail-gap)
+    );
+    --app-bar-left: calc(50% + (var(--app-rail-w) + var(--app-rail-gap)) / 2);
+    --app-bar-bottom: var(--app-pad-top);
+    /* ⭐⭐ THE HERO ON A DESKTOP, AND IT IS THE DESIGN'S OWN NUMBER FOR THE SECOND TIME – the same
+       move phase 2 made with «768 – 400px», for the same reason and with the same honesty cost.
+       `AC-home-desktop-1024.png` draws the photograph 450 wide and 400 tall BESIDE the two notecards
+       rather than above them, and that shape is what makes the two-column Home of frame AC possible:
+       our tablet 768/400 is nearly twice as wide as it is tall, and a hero that flat beside a column
+       of cards leaves a third of the row empty. Measured on this build at 1280: at 768/400 the hero
+       is 511x266 against a 433px pair of cards beside it; at 450/400 it is 511x454.
+       ⚠ AND THE JOIN PHASE 2 BUILT IS WHAT MAKES THIS ONE LINE. `.diary-hero` and `.nt-hero` read
+       this token, so «Tournament (AG): the image takes the same proportion as the home hero» costs
+       nothing here – it is already true, mechanically, and cannot drift. */
+    --hero-aspect: 450 / 400;
+    /* ⭐ …AND THE SAME PROPORTION AT THE SAME SIZE, which is the half a ratio alone does not give.
+       Home's hero is a column of a two-column grid and the tournament's is a block in a full-width
+       one, so the shared ratio would have drawn a 511px picture on Home and a 980px one on This
+       Week – the same shape at twice the size, which is not what «ту же пропорцию» describes to
+       anyone looking at the two screens. One cap, both heroes, and 512 is where Home's own column
+       lands at the top of the band (511px at 1280), so on the widest screen the two are the same
+       photograph to within a pixel. */
+    --hero-max: 512px;
+  }
 }
 
 #app {
-  max-width: var(--app-max-width);
+  max-width: var(--app-shell-max);
   margin: 0 auto;
   padding: var(--app-pad-top) var(--app-pad-x) var(--app-pad-bottom);
+}
+
+/* ⭐⭐⭐ ROUND 36 REVIEW #18 – «кнопок в 700 пикселей не должно быть, максимум 500 пожалуйста с
+   выравниванием по центру». HIS ANSWER TO D20 AND D32, WHICH BOTH PARKED THIS FOR HIM.
+
+   ⚠⚠ IT IS A RULE ABOUT THE APP'S CTA PILL AND NOT ABOUT EVERY `button`, and that distinction is the
+   whole of D32's census. Two things were over 700px at 1280 and only ONE of them is a button in the
+   sense he means:
+
+     `.money-cta` – «View all transactions»   738px, a `PrimaryPill variant="cta"` – CAPPED HERE
+     `.cal-marker` – a week's note              948px, three of them – LEFT, and see below
+
+   The marker is a LIST ROW. A week's note with a `$` at its end is the same shape as a ledger row, a
+   kit rung or a shelf row, and a list row is the width of its list everywhere in this app; a row as
+   wide as its column is not a stretched control, while a pill as wide as its page is. That was D32's
+   argument for leaving it and he has not contradicted it – he said «кнопок». Named rather than
+   quietly swept in, so the next census does not re-open it.
+
+   ⚠ THE CAP IS THE CLASS AND NOT THE SCREEN, which is what makes it hold everywhere he asked. Every
+   affirmative CTA in the app is `PrimaryPill variant="cta"`, so this reaches the Family Budget's
+   pill without editing MoneyScreen.vue, and reaches the next one before it is written.
+
+   ⚠ AND IT STARTS AT 768, WHICH IS «EVERYWHERE» IN PRACTICE AND KEEPS THE PHONE BYTE-IDENTICAL.
+   Below 768 the reading column is `--app-col-max` (520) less two 16px gutters = 488px, so no control
+   inside the app can reach 500 anyway; the only boxes that could are full-screen takeovers on a
+   560–767px window, and this round's contract is that not one box moves below 768. Censused at 375
+   and 576 before the rule was written: zero controls over 500 at either.
+
+   ⚠ `display: block` IS WHAT MAKES «ПО ЦЕНТРУ» WORK. A `<button>` is inline-level, so auto inline
+   margins do not centre one; the UA's own `text-align: center` on a button keeps the label where it
+   is. Scoped to `#app` because that is where a CTA is a full-width block – inside a takeover a CTA
+   sits in a row its own screen laid out, and blockifying it there would move something he has not
+   asked to move. The cap itself is unscoped, so a takeover's CTA is bounded either way. */
+@media (min-width: 768px) {
+  .tb-pill--cta {
+    max-width: 500px;
+  }
+
+  #app .tb-pill--cta {
+    display: block;
+    /* ⚠ THE TWO LONGHANDS AND NOT `margin-inline`, so the centring is READABLE by the mounted layer
+       as well as by a browser: happy-dom does not expand the logical shorthand, and a rule no test
+       can see is a rule the next wave can delete. The app has no RTL. */
+    margin-left: auto;
+    margin-right: auto;
+  }
+}
+
+/* ⭐⭐⭐ ROUND 36 PHASE 3 – THE DESKTOP SHELL. The owner, on his frames AC–AQ:
+   «Рельса слева, на всю высоту, скроллится при переполнении, одинаковая на каждой странице.»
+
+   THE FRAME BECOMES TWO COLUMNS AND THE BOTTOM BAR BECOMES THE LEFT ONE. Not a new element and not
+   a second navigation: `nav.tab-bar` is the app's whole navigation at every width, and on a desktop
+   it stands up. That is the only reading his acceptance criterion allows – a rail that DUPLICATED
+   the five tabs would put five buttons on the desktop that are not on the phone, and
+   `e2e/parity.spec.ts` fails «ничего нового по идее не должно появиться» by name.
+
+   ⚠ `:has(> nav.tab-bar)` IS LOAD-BEARING, NOT A FLOURISH. `#app` is also the parent of the storage
+   recovery screen and the «Loading…» line, which render INSTEAD of the tab shell; a grid whose first
+   column is 196px of rail would indent those two behind a rail that is not there. The selector says
+   what the grid actually depends on: there is a bar to put in the first column.
+
+   ⚠ AND THE ROWS ARE DECLARED. `grid-row: 1 / -1` counts `-1` from the end of the EXPLICIT grid, so
+   with no `grid-template-rows` it degenerates to a single row and the rail's sticky range collapses
+   to the height of whatever shares its row. Four explicit `auto` rows cost nothing when they are
+   empty and cover the shell's real worst case: two top notices, the main column, and one spare. */
+@media (min-width: 1024px) {
+  #app:has(> nav.tab-bar) {
+    display: grid;
+    grid-template-columns: var(--app-rail-w) minmax(0, 1fr);
+    grid-template-rows: repeat(4, auto);
+    column-gap: var(--app-rail-gap);
+  }
+
+  /* Everything that is not the rail lives in the second column. The two top notices are in-flow
+     children of `#app` as well, so this is a rule about the shell rather than about `main`. */
+  #app:has(> nav.tab-bar) > * {
+    grid-column: 2;
+  }
+
+  /* ⚠⚠ AND THE COLUMN HAS TO BE TOLD TO FILL ITS TRACK, WHICH IS THE ONE THING A BLOCK LAYOUT DID
+     FOR FREE. `.app-content` is `max-width: var(--app-col-max); margin: 0 auto`, and a grid item
+     with AUTO INLINE MARGINS does not stretch – auto margins beat `justify-self: stretch`, so the
+     box falls back to max-content and the margins centre whatever is left. Measured before this
+     line existed: Home filled its 948px track (its cards are wider than that) and Season came out
+     698.89px wide, centred, with 124px of page down each side – the same screen, two different
+     column widths, from one declaration written for a block. A definite width makes the auto
+     margins resolve to zero, and 100% of the track is what `--app-col-max: 100%` already means. */
+  #app:has(> nav.tab-bar) > .app-content {
+    width: 100%;
+  }
+
+  /* ⚠ THE SELECTOR IS HEAVIER THAN THE ONE ABOVE ON PURPOSE, and phase 2 paid for this lesson: at
+     EQUAL specificity happy-dom keeps the FIRST rule where a browser keeps the last, so a tie here
+     would be a rail that works in Chromium and is a bottom bar in every mounted test. Repeating the
+     `:has()` and naming the element makes it win in both engines, in either source order. */
+  #app:has(> nav.tab-bar) > nav.tab-bar {
+    grid-column: 1;
+    grid-row: 1 / -1;
+    /* Out of `position: fixed` and into the grid, which is what lets the rail be a COLUMN of the
+       centred frame instead of a box positioned against the window. Every offset the fixed version
+       set has to be unwound explicitly: a sticky box honours `left`, and `translateX(-50%)` would
+       both slide it and make it a containing block. */
+    position: sticky;
+    top: 0;
+    left: auto;
+    right: auto;
+    bottom: auto;
+    transform: none;
+    align-self: start;
+    /* «На всю высоту», and it scrolls itself when the five tabs plus a safe area outgrow the
+       window. `align-self: start` + `top: 0` is the standard full-height sticky column: it starts at
+       the top of the page and stays there for the whole scroll of the grid area it spans. */
+    height: 100vh;
+    overflow-y: auto;
+    width: auto;
+    max-width: none;
+    /* Flush to the frame's own edge rather than inset by the frame's gutter, which is where AC puts
+       it – the gutter is re-spent as the rail's own padding so the labels keep their inset. */
+    margin: calc(-1 * var(--app-pad-top)) 0 0 calc(-1 * var(--app-pad-x));
+    padding: 20px 12px calc(20px + env(safe-area-inset-bottom, 0)) calc(12px + var(--app-pad-x));
+    flex-direction: column;
+    justify-content: flex-start;
+    gap: 2px;
+    /* The 560px rule above gives the bottom bar a card's border and top corners. Standing up, it is
+       a wall of the page and not a card on it: one hairline down its right edge, no corners. */
+    border: none;
+    border-right: 1px solid var(--line);
+    border-radius: 0;
+  }
+
+  /* A tab becomes a row – icon, then label – because that is what a 196px column can hold and what
+     AC draws. Nothing is added and nothing is dropped: the same button, the same icon, the same
+     label, the same dot. */
+  #app:has(> nav.tab-bar) > nav.tab-bar .tab-btn {
+    flex: none;
+    flex-direction: row;
+    justify-content: flex-start;
+    gap: 12px;
+    padding: 11px 12px;
+    /* --radius-frame and not --radius-control: `tests/ui-control-system.test.ts` reserves the
+       control radius for the app's pills, and this is a panel-shaped press, the same shape rule
+       `.knock-choice` is decided by. */
+    border-radius: var(--radius-frame);
+  }
+
+  /* ⭐⭐⭐ ROUND 36 REVIEW #8 – «Home в боковом меню на первом месте сверху поставь пожалуйста».
+     ONE DECLARATION, AND IT IS `order` RATHER THAN A DIFFERENT ARRAY, for a reason that is the whole
+     of the round's identity contract. `TABS` (App.vue) is the BOTTOM BAR's order and Home's centring
+     is EMERGENT from it – «five slots, Home third», pinned by `ids[floor(len / 2)] === 'home'` in
+     tests/round13-nav.test.ts – so re-cutting the array to satisfy a desktop rail would move the
+     phone's own navigation, which nothing in this round may do. The rail is a flex column; `order`
+     moves the box and touches no other width.
+     ⚠ THE SELECTOR IS AN ATTRIBUTE THE BUTTON ALREADY CARRIES. `data-tour="tab-home"` has been on
+     this button since the coach-mark tour; a `:nth-child(3)` would say «the third one» and go
+     silently wrong the day the array is re-cut for some other reason, which is exactly the failure
+     an emergent centring already had once.
+     ⚠ AND THE COST IS NAMED: the rail's VISUAL order now leads with Home while its FOCUS order is
+     still the document's, so Tab reaches Season first. Recorded as a decision row rather than
+     hidden – the alternative moves the phone. */
+  #app:has(> nav.tab-bar) > nav.tab-bar .tab-btn[data-tour='tab-home'] {
+    order: -1;
+  }
+
+  /* The active tab is a tinted panel rather than only a colour, which is what tells a rail's reader
+     where they are without the bottom bar's underline of five equal cells. `--accent-wash` is the
+     app's own «this one is selected» fill; no new token, no new colour. */
+  #app:has(> nav.tab-bar) > nav.tab-bar .tab-btn.active {
+    background: var(--accent-wash);
+  }
+
+  /* 10px was a caption under an icon; beside one it is a label on a 196px rail. */
+  #app:has(> nav.tab-bar) > nav.tab-bar .tab-label {
+    font-size: 13px;
+  }
+
+  /* The dot rides the icon's shoulder. Its phone position is `right: calc(50% - 18px)`, which means
+     «just off the icon» only while the icon is centred in a fifth of the screen. */
+  #app:has(> nav.tab-bar) > nav.tab-bar .tab-dot {
+    top: 8px;
+    right: auto;
+    left: 26px;
+  }
+}
+
+/* ⭐⭐⭐ ROUND 36 PHASE 6 – THE RAIL'S MINI-DASHBOARD, AND IT IS DESKTOP-ONLY BY THIS ONE DECLARATION.
+   The owner, 04.09: «надо создать новые компоненты и показывать их только на десктоп», «карточки
+   сквозные, одинаковые, как мини-дашборд живут всегда в вертикальной полоске, т.е. на всех
+   страницах». `AC-home-desktop-1024.png` is the reference for the set.
+
+   ⚠⚠ `display: none` IS THE WHOLE OF «ONLY ON DESKTOP», AND IT IS DELIBERATELY NOT A `v-if`. A
+   component that mounted itself off `matchMedia` would be a SECOND source of truth about the
+   breakpoint beside the ladder at the top of this file, and this round already learned what two
+   copies of one number cost (`--app-pad-x`, and phase 3's `--app-bar-left`). It also matters for the
+   measurement: `display: none` removes the box AND the accessibility node, so a phone is byte-for-box
+   identical to the build before this phase, which is what the round's identity contract asserts.
+
+   ⚠ THE STRIP IS 196px WIDE AND THE CARDS LIVE INSIDE ITS OWN PADDING, so nothing here sets a width:
+   the rail's `padding` already insets them, the bar is `flex-direction: column`, and a card is simply
+   the next block down the column. `margin-top: auto` is what puts the set at the FOOT of the rail –
+   the tabs stay at the top where AC draws them, and the dashboard takes the empty column below. */
+.rail-dash {
+  display: none;
+}
+
+/* ⭐⭐⭐ ROUND 36 REVIEW #3 – THE RAIL'S IDENTITY BLOCK: her face and her rank, above every menu item.
+   «Аватар и ранг тоже уезжают с картинки, но в левый верхний угол в меню над всеми пунктами».
+
+   ⭐⭐⭐ AND THE SECOND PASS'S P2-6 MADE IT PERMANENT CHROME – his ruling on `D75`: «и аватар с
+   текущей позицией и рангом (так же, как и все остальные плашки) на десктоп в боковом меню живут на
+   всех страницах неизменно». It was an empty slot HomeScreen teleported into, so it was drawn on
+   Home and on none of the other nine pages; it is `RailIdentity.vue` now, mounted by the shell, and
+   the arithmetic it reads is `composables/kidIdentity.ts` – one owner, two renders.
+   Desktop-only by the same one declaration the dashboard uses – `display: none`, never a `v-if` on a
+   media query – so a phone is byte-for-box unchanged and the bottom bar never grows a face. */
+.rail-id {
+  display: none;
+}
+
+@media (min-width: 1024px) {
+  /* ⭐⭐ REVIEW #3 – ABOVE ALL THE MENU ITEMS, and `order: -2` is what says «над всеми пунктами» once
+     rather than depending on where the slot happens to sit in the markup. It has to beat the Home
+     tab's own `order: -1` (review #8), which is why it is -2 and not -1. */
+  #app:has(> nav.tab-bar) > nav.tab-bar > .rail-id {
+    display: flex;
+    order: -2;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 9px;
+    padding: 2px 12px 18px;
+  }
+
+  /* Her face is chrome on a 375px photograph and a portrait at the head of a 196px rail, so it takes
+     the room the rail has. Same button, same lime ring, same halo, same door – only the size. */
+  #app:has(> nav.tab-bar) > nav.tab-bar > .rail-id .diary-avatar-btn,
+  #app:has(> nav.tab-bar) > nav.tab-bar > .rail-id .diary-avatar {
+    width: 46px;
+    height: 46px;
+  }
+
+  /* ⭐⭐⭐ ROUND 36 SECOND PASS, P2-3 – THE WEEK, BESIDE HER FACE, ON TWO LINES. His words:
+     «давай на главной десктопе текущую дату всю вынесем в 2 строки и поставим справа от аватарки
+     круглой, тогда она будет всегда видна и будет удобно»
+
+     The rail's own column is `flex-direction: column`, so the face and the date need a row of their
+     own to be side by side; this is that row and it holds nothing else. */
+  #app:has(> nav.tab-bar) > nav.tab-bar > .rail-id .rail-id-head {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    align-self: stretch;
+  }
+
+  /* ⚠ TWO LINES ARE TWO ELEMENTS AND NOT A WRAP. A wrap depends on the label's length – «W9 2031»
+     and «W49 2038» wrap differently – so «в 2 строки» would be true for some weeks and not others.
+     A column of two spans is two lines for every week of every career.
+     ⚠ AND THE TYPE IS THE PHOTOGRAPH'S OWN, one rung down for a 196px strip: same weight, same
+     tabular digits, so the week reads as the same object in both places. */
+  #app:has(> nav.tab-bar) > nav.tab-bar > .rail-id .rail-id-date {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    margin: 0;
+    font-size: 12.5px;
+    font-weight: 600;
+    line-height: 1.25;
+    letter-spacing: 0.01em;
+    color: var(--ink);
+    font-variant-numeric: tabular-nums;
+  }
+
+  #app:has(> nav.tab-bar) > nav.tab-bar > .rail-id .rail-id-range {
+    color: var(--ink-soft);
+  }
+
+  /* The callout hangs under the face on the phone (`position: absolute` against the hero) and hangs
+     under it here too – as a block in the rail's own column, because there is no hero to hang off.
+     Same tokens, same arrow suppressed: an arrow drawn against a photograph has nothing to point at
+     in a strip that is already directly under the thing it explains. */
+  #app:has(> nav.tab-bar) > nav.tab-bar > .rail-id .diary-kid-hint {
+    position: static;
+    text-align: left;
+    line-height: 1.3;
+  }
+
+  #app:has(> nav.tab-bar) > nav.tab-bar > .rail-id .diary-kid-hint::before {
+    display: none;
+  }
+
+  #app:has(> nav.tab-bar) > nav.tab-bar > .rail-dash {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    /* ⭐⭐⭐ ROUND 36 REVIEW #9 – «Плитки дашборда живут прибитые к меню выше». They were pushed to
+       the FOOT of the rail by `margin-top: auto`, which is what phase 6 read AC as drawing; he has
+       looked at it and wants them under the last tab instead. The `auto` is gone and the 20px
+       breathing space stays, so the set now hangs off the navigation rather than off the window's
+       bottom edge – and the rail's own `overflow-y: auto` still carries the overflow case
+       («скроллится при переполнении»), which is why nothing else here changes. */
+    margin-top: 0;
+    padding-top: 20px;
+  }
+
+  /* The app's own notecard, at rail width. `Card` supplies the gradient, the hairline and the
+     corners; the only thing this rule decides is that a 196px column wants less padding than a
+     420px one. No new colour, no new radius, no new shadow. */
+  .rail-dash-card {
+    --tb-card-pad: 10px 12px;
+  }
+
+  /* The figure is Home's `.budget-total` one rung down – same family, same weight, same tabular
+     digits, so the money on the rail and the money on the card it shortcuts to are the same object
+     at two sizes. 18px is what a 196px strip holds without wrapping «-$1,234,567». */
+  .rail-dash-figure {
+    margin: 6px 0 0;
+    font-family: var(--font-heading);
+    font-size: 18px;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    color: var(--ink);
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* ⚠ REVIEW #9 – the cap's dot leads its own LINE here, where on the market it follows the
+     committed figure on one. Its 10px separator is what puts them apart in a row; in a column it is
+     an indent. One declaration, and the market's rule is untouched. */
+  #app:has(> nav.tab-bar) > nav.tab-bar > .rail-dash .legend-dot.cap {
+    margin-left: 0;
+  }
+
+  /* An entry is a line of reading rather than a figure, so it takes the app's reading size and its
+     soft ink – the same pair `.budget-window` uses under the money on Home. It is NOT the Season
+     strip's lime pill: a pill per entry down a 196px column is a stack of bordered boxes, and the
+     round's rule is that our proportions win. See D41. */
+  .rail-dash-entry {
+    font-family: var(--font-body);
+    font-size: 12.5px;
+    font-weight: 500;
+    letter-spacing: 0;
+    color: var(--ink-soft);
+    margin: 6px 0 0;
+  }
 }
 
 h1 {
@@ -888,8 +1395,10 @@ select {
    photograph now (.diary-avatar-btn / .diary-kid-hint), her name is the 42px hero headline, and
    the W/$ pill's wallet door became the Family budget card. Nothing here had another consumer. */
 
+/* ⭐ THE COLUMN. Round 36 phase 1 replaced the literal 520 with the token; below 768 the token IS
+   520, so nothing about a phone moved. See the ladder beside `--app-max-width`. */
 .app-content {
-  max-width: 520px;
+  max-width: var(--app-col-max);
   margin: 0 auto;
   padding-bottom: 88px;
 }
@@ -900,7 +1409,10 @@ select {
   transform: translateX(-50%);
   bottom: 0;
   width: 100%;
-  max-width: 520px;
+  /* ⚠ THE BAR FOLLOWS THE COLUMN, and it has to: the rule below already says it "hugs the content
+     column", so a 520px bar under a 1168px column would be the container change half-applied. It is
+     `--app-bar-max` and not `--app-col-max` because this box is `position: fixed` – see the token. */
+  max-width: var(--app-bar-max);
   display: flex;
   background: var(--panel);
   border-top: 1px solid var(--line);
@@ -1082,7 +1594,9 @@ select {
   flex: 1;
   overflow-y: auto;
   width: 100%;
-  max-width: 480px;
+  /* ROUND 36 PHASE 4: the 480 that stood here is the token's own mobile value, so this computes to
+     exactly what it always did below 768 and grows on his ladder above it. */
+  max-width: var(--takeover-col-max);
   margin: 0 auto;
   padding: 8px 24px 24px;
 }
@@ -1453,11 +1967,16 @@ button.primary.risky {
    centred, above the tab bar) and still catches nothing, so the page scrolls under it. */
 .next-week-bar {
   position: fixed;
-  left: 50%;
+  /* ⭐ ROUND 36 PHASE 3 – the middle of the COLUMN, which below 1024 is the middle of the window and
+     computes to the 50% this line has always said. See `--app-bar-left`. */
+  left: var(--app-bar-left);
   transform: translateX(-50%);
-  bottom: 58px;
+  bottom: var(--app-bar-bottom);
   width: 100%;
-  max-width: 520px;
+  /* Follows the column with the tab bar it stands above (round 36 phase 1). The button inside is
+     centred, so the only thing this width decides is where the CTA sits – and it must be the middle
+     of the column, not the middle of a 520px box left behind under a wider one. */
+  max-width: var(--app-bar-max);
   display: flex;
   justify-content: center;
   padding: 0 16px;
@@ -2201,6 +2720,119 @@ tr.kid-row td {
   color: var(--accent);
 }
 
+/* =================================================================================================
+   ⭐⭐⭐ HER IDENTITY BLOCK – SHARED BY TWO RENDERS SINCE ROUND 36's SECOND PASS (P2-6)
+   =================================================================================================
+   «и аватар с текущей позицией и рангом (так же, как и все остальные плашки) на десктоп в боковом
+   меню живут на всех страницах неизменно» (05.09.2026). Her face, the callout that explains it and
+   her rank chip are drawn twice now – on Home's photograph below 1024 (`HomeScreen.vue`) and in the
+   rail above it (`RailIdentity.vue`, the shell's, on all ten screens).
+
+   ⚠⚠ THESE RULES MOVED HERE FROM `HomeScreen.vue`'s SCOPED BLOCK, VALUE FOR VALUE. Not one number,
+   colour, radius or shadow changed – only the file. A scoped rule cannot reach a sibling component,
+   so leaving them on Home would have drawn the rail's copy as an unstyled button: the surface has
+   two consumers now, which is exactly what `src/style.css` is for (`.rank-move` below has been in
+   this file for the same reason since the chip was written). The rail's own overrides – 46px, a
+   static callout, no arrow – are up beside `.rail-id`.
+   ================================================================================================= */
+/* The small round avatar with the lime ring, moved here from the deleted header – same object, same
+   job (the door to her profile), now sitting on the photograph beside the date. */
+.diary-avatar-btn {
+  flex: none;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+}
+
+.diary-avatar-btn:hover:not(:disabled) {
+  background: transparent;
+}
+
+.diary-avatar {
+  display: block;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1.5px solid var(--accent);
+  /* The ring needs to hold against a bright court too, so it carries its own dark halo. */
+  box-shadow: 0 0 0 1px rgba(6, 10, 14, 0.55), 0 2px 10px rgba(0, 0, 0, 0.45);
+}
+
+.diary-avatar-btn:hover:not(:disabled) .diary-avatar {
+  border-color: #ffffff;
+}
+
+/* The one-time callout, moved with the avatar it explains. It hangs under the avatar rather than
+   beside it – at 30px there is no room on a 390px screen, and the arrow makes the target obvious. */
+.diary-kid-hint {
+  position: absolute;
+  left: 16px;
+  top: 58px;
+  z-index: 2;
+  padding: 6px 11px;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--accent);
+  background: rgba(10, 15, 20, 0.82);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  color: var(--ink);
+  font-size: 12px;
+  font-weight: 500;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.45);
+}
+
+.diary-kid-hint::before {
+  content: '';
+  position: absolute;
+  left: 12px;
+  top: -5px;
+  width: 8px;
+  height: 8px;
+  transform: rotate(45deg);
+  background: rgba(10, 15, 20, 0.82);
+  border-left: 1px solid var(--accent);
+  border-top: 1px solid var(--accent);
+}
+
+/* The rank chip – the page's ONE table-number, and the door to the best-6 explainer (round-6: the
+   owner was confused by the windowed ranking twice). It is a button, which is why the old separate
+   "?" is gone: one affordance where there used to be two. */
+.diary-rank {
+  pointer-events: auto;
+  margin-top: 10px;
+  display: inline-flex;
+  align-items: baseline;
+  gap: 5px;
+  padding: 3px 10px;
+  border-radius: var(--radius-pill);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  background: rgba(10, 15, 20, 0.55);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  color: rgba(255, 255, 255, 0.92);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+
+/* WHICH TABLE the number belongs to. Quieter than the rank itself – it is the unit, not the figure –
+   and uppercase/tracked so it reads as a label rather than as a word in a sentence. */
+.rank-ladder {
+  font-size: 9px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  opacity: 0.72;
+}
+
+.diary-rank:hover:not(:disabled) {
+  border-color: var(--accent);
+  background: rgba(10, 15, 20, 0.55);
+  color: #ffffff;
+}
+
 /* Player-card rank + week-over-week movement. */
 .rank-value {
   font-weight: 600;
@@ -2269,7 +2901,11 @@ tr.kid-row td {
   justify-content: space-between;
   gap: 12px;
   width: 100%;
-  max-width: 480px;
+  /* ⚠ ROUND 36 PHASE 4: THE SAME TOKEN THE BODY READS, and this rule is half the reason it is a
+     token. The header and the body of one screen are one column to the eye – the note under
+     `.tf-body`'s gutter already says so about the INSET – and laddering the body alone would have
+     left the title and the exit control on a 480px rail above an 848px screen. */
+  max-width: var(--takeover-col-max);
   margin: 0 auto;
   /* R17 #8: the side gutter is `--app-pad-x`, matching the body under it - see `.tf-body`. */
   padding: 16px var(--app-pad-x) 8px;
@@ -4289,6 +4925,147 @@ tr.kid-row td {
   font-size: 11px;
   font-weight: 600;
   color: var(--muted);
+}
+
+/* ⭐⭐⭐ ROUND 36 PHASE 2 – THE MARKET, TWO TO A ROW ON A TABLET. The owner, on screen AJ:
+   «4 карточки; картинка может быть шире, чем на мобиле, если влезает, тот же стиль, во всю высоту».
+
+   ⚠ «4 CARDS» IS FOUR CARDS ON SCREEN AT ONCE, NOT FOUR PER ROW, and the frame settles it: AJ draws
+   its coaches TWO to a row, which puts the first tier's four inside the first screenful. Four to a
+   row would be 184px per card at 768 – narrower than the phone's 343, for a card carrying a name, a
+   fit pill, a style, a description, two bands and a load note. It is also the only reading that
+   climbs: phase 3 gives the desktop «2–3 per row», and a tablet cannot show more per row than a
+   desktop does.
+
+   ⚠ THE PORTRAIT STAYS AT 62px, AND THAT IS A REFUSAL WITH A REASON. His «if it fits» is the
+   condition, and it is not met: a two-up card at 768 is 362px, nineteen pixels wider than the phone
+   – there is no room to spend. Two rules would also have to be broken to spend it: round-18 #2 ties
+   62px to the mask geometry (the fade must reach transparent exactly at the clip line), and
+   docs/specs/coach-match-edge.md §4's anti-shopping rule reserves the wider 78px strip for the coach
+   she ALREADY HAS. A row in docs/specs/responsive-decisions-2026-09.md carries this.
+
+   ⭐ WHAT HE DOES GET FROM «во всю высоту»: grid's default `stretch`. A short row beside a tall one
+   is no longer a short row – both fill their line, and `.cm-art` is already `top: 0; bottom: 0`, so
+   the portrait fills the taller of the pair rather than leaving a band of card under it.
+
+   The gutter is 8px because that is the `margin-bottom` these rows already stack with; the margin
+   goes, because a grid gap and a margin would be 16px between rows and 8 between columns. */
+@media (min-width: 768px) {
+  .tier-block {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+  /* The tier's heading is the row above the pair, never a cell beside it. Its own 8px bottom margin
+     goes with the rows' – the grid's gap is that number now, and keeping both would open 16px under
+     the heading and 8 between the cards. */
+  .tier-block .tier-head {
+    grid-column: 1 / -1;
+    margin-bottom: 0;
+  }
+  .tier-block .cm-row {
+    margin-bottom: 0;
+  }
+
+  /* ⭐⭐⭐ ROUND 36, SECOND PASS, P2-7 – THE SHOP CARD'S PORTHOLE OPENS TO 66px, AND D4's REFUSAL IS
+     THE OWNER'S TO LIFT. He looked at the shipped tablet and desktop and asked again: «а еще
+     микро-правка для аватаров тренеров в списке тренеров на планшете и десктопе: сделай картинку
+     шире пожалуйста на обоих сохраняя вертикальный размер, вписанный в карточку. Запас по ширине у
+     картинок вроде бы есть.» (05.09.)
+
+     ⚠ HE IS RIGHT ABOUT THE HEADROOM, AND D4 ABOVE WAS MEASURING THE WRONG BOX. That refusal read
+     the CARD (a two-up card at 768 is 364px against the phone's 343 – nineteen pixels, nothing to
+     spend). But this strip is a porthole onto a HEIGHT-DRIVEN portrait, so what it has to spend is
+     the PICTURE's own width – and there the surplus is large: measured in Chromium on a real career,
+     the 62px strip was throwing away 26.3-70.7px of the man at 768, 14.3-36.6 at 900, 26.3-62.7 at
+     1024 and 9.9-36.6 at 1280.
+
+     ⚠ ROUND-18 #2's MASK GEOMETRY SETS ONE CEILING, AND IT IS NOT THE BINDING ONE. The mask reaches
+     transparent exactly at the strip's right edge, so the clip is invisible only while the picture is
+     at least as wide as the strip. The shortest ordinary row anywhere at or above 768 is 126.34px
+     (measured at 900, 1000, 1023, 1100, 1200, 1280, 1440, 1600 and 1920 – the all-on-one-line card,
+     which is what a wide card produces), so a 124.34px padding box; and budget-2.webp is 162x280
+     rather than 162x264, which makes it the NARROWEST portrait for a given height, so the honest
+     supply at that row is 124.34 x 162/280 = 71.94px. That ceiling would allow 70.
+
+     ⚠⚠ 66 IS THE SECOND CEILING, AND IT IS THE TEXT COLUMN'S. `.cm-art` is `position: absolute` and
+     costs the layout nothing – but the corridor rule means `.cm-body` must move with it, and a
+     narrower text column wraps a line, which makes the CARD taller. Measured in Chromium, the largest
+     strip that leaves every card's height untouched, per viewport width:
+
+         768  →72     850  →71     1000 →67     1060 →66     1200 →67     1440 →67
+         800  →80+    900  →67     1023 →67     1100 →63     1280 →67     1920 →67
+
+     66 is free at fourteen of those fifteen widths. It costs height at ONE, 1100, where two budget
+     cards gain a line (+28.36px on a 2057px page). 63 is the only strip free at every width and it is
+     +1px, which is not a change he would see; 70 – the mask ceiling minus slack – would cost that
+     line across most of the desktop band. ⚠ AND THE WIDTHS HE NAMED ARE FREE: at 768 (frame AJ) and
+     1024 (frame AK) nothing moves at all, because those cards are narrow enough that the notes have
+     already wrapped.
+
+     ⚠ THE FLOOR MOVES WITH THE STRIP, exactly as round-21 #1 moved it for the hired card: 66px of
+     strip needs a 66 x 280/162 = 114.1px padding box, hence a 116.1px border box, and 118 is that
+     rounded up. It binds on nothing that ships – 126.34 is the shortest row measured, 8.34px above it
+     – so the floor changes no card's height either. The image keeps `height: 100%; width: auto`:
+     nothing is scaled, stretched or cropped («сохраняя вертикальный размер, вписанный в карточку»),
+     the window simply clips less.
+
+     ⚠ THE HIRED ROW STAYS AT 78. docs/specs/coach-match-edge.md §4's anti-shopping rule says an
+     unhired card may not be made more attractive than the one she has, and 66 < 78 keeps that true;
+     78 is also the owner's own round-21 number and he did not ask for it again.
+
+     ⚠⚠ ONE CLASS HEAVIER THAN THE BASE RULES, FOR THE REASON PHASE 3 RECORDS BELOW: a media query
+     adds NO specificity, so a bare `.cm-art` here would tie with `.cm-art` above and be settled by
+     source order – which a browser and happy-dom resolve in OPPOSITE directions. `.tier-block .cm-art`
+     wins in both, and still loses to `.cm-row.current .cm-art`, which is what reserves the hired
+     window. ⚠ The hired row's floor is RESTATED for the same reason and is not a duplicate:
+     `.cm-row.current` is (0,2,0) and so is `.tier-block .cm-row`, so without this line the 132 would
+     be a coin flip between the two engines.
+
+     tests/component/round18-coach.test.ts holds all four numbers at 375, 767, 768, 1024 and 1280 and
+     fails on any one of them alone. */
+  .tier-block .cm-row {
+    min-height: 118px;
+  }
+  .tier-block .cm-row.current {
+    min-height: 132px;
+  }
+  .tier-block .cm-art {
+    width: 66px;
+  }
+  .tier-block .cm-body {
+    /* 66 (the strip) + the same 12 of air every other width keeps. The pair is tied by a test, not
+       by this comment – see `.cm-body` above. Move one, move the other. */
+    margin-left: 78px;
+  }
+}
+
+/* ⭐⭐ ROUND 36 PHASE 3 – «2–3 В РЯД, С ПЕРЕНОСОМ» AS A RULE RATHER THAN AS A COUNT. The owner, on
+   frame AK-coach-market-desktop-1024.png: «2–3 в ряд, с переносом, как на планшете.»
+
+   ⚠⚠ THREE PER ROW WAS BUILT FIRST AND MEASURED WORSE, WHICH IS WHY THIS IS AN `auto-fill`. The
+   rail takes 220px off the page, so the desktop column is 772px at 1024 and 948px at 1280 – WIDER
+   than the tablet's but not by as much as the frame suggests. Three cards in it are 252px and 310px,
+   both NARROWER than the phone's own 343px card, and the market got TALLER for it: the page went
+   from 2162px to 3041px at 1024 and from 2012px to 2521px at 1280, because a card carrying a name,
+   a fit pill, a style, a description, two bands and a load note wraps its way back down the screen.
+   That is D3's own objection to «four per row» arriving one breakpoint later.
+
+   ⭐ SO THE FLOOR IS THE PHONE'S CARD, AND THE COUNT FOLLOWS FROM IT. `minmax(343px, 1fr)` is «as
+   many coaches to a row as fit without any of them being narrower than they are on a phone»: two at
+   1024 (382px each, which is exactly what AK draws) and two at 1280 (470px), and three the moment
+   there is room for three at that width. His «2–3» is the range the rule produces, not a number
+   typed into it – and «с переносом» is what `auto-fill` means.
+   ⚠ THE PORTRAIT STILL DOES NOT GROW: D4's «если влезает» is met even less here than at 768, and the
+   two rules behind the 62px (round-18 #2's mask geometry, coach-match-edge.md §4's anti-shopping
+   reservation of the 78px strip) are unchanged.
+   ⚠ THE SELECTOR IS DOUBLED TO BEAT THE 768 RULE. A media query adds no specificity, so this would
+   otherwise tie with the two-column rule above and be settled by source order - which a browser and
+   happy-dom resolve in OPPOSITE directions (phase 2 measured it). One class heavier wins in both. */
+@media (min-width: 1024px) {
+  .tier-block.tier-block {
+    grid-template-columns: repeat(auto-fill, minmax(343px, 1fr));
+  }
 }
 
 .self-coach-row {

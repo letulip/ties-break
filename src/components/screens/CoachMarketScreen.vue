@@ -66,6 +66,9 @@ import { staffResultShareBps } from '../../engine/economy'
 // the state it was in before v59.
 import { WEEK_PLAN_PRESETS, type CoachMarketRow, type CoachTier, type PlayStyle } from '../../shared/protocol'
 import { formatCents } from '../../shared/money'
+// ⭐ ROUND 36 PHASE 6 – the budget meter's own arithmetic, now shared with the rail's dashboard card.
+// See the note at its call site below for why it left this file.
+import { useCoachingBudget } from '../../composables/coachingBudget'
 
 const game = useGameStore()
 const emit = defineEmits<{ back: [] }>()
@@ -531,12 +534,15 @@ function rowLabel(r: Row): string {
 // bar beside it. `coachBilling.weeklyIncomeCents` is the same figure the engine cuts every
 // `overBudgetCents` from, so the meter and the rows cannot disagree.
 const current = computed<Row | null>(() => rows.value.find((r) => r.current) ?? null)
-const committedCents = computed(() => current.value?.weeklyCents ?? 0)
-const capCents = computed(() => billing.value?.weeklyIncomeCents ?? 0)
-const freeCents = computed(() => Math.max(0, capCents.value - committedCents.value))
-const meterPct = computed(() =>
-  capCents.value > 0 ? Math.min(100, Math.round((committedCents.value / capCents.value) * 100)) : 0,
-)
+// ⭐⭐ ROUND 36 PHASE 6 – THE METER'S THREE FIGURES MOVED INTO `composables/coachingBudget.ts`, and
+// nothing about them changed: the same three lines, the same fields, the same comments, carried
+// verbatim. They moved because the owner's rail dashboard now prints `freeCents` under the words
+// «Coaching budget» on every page («карточки сквозные, одинаковые, как мини-дашборд живут всегда в
+// вертикальной полоске»), and a rail that re-derived this arithmetic would be the SECOND copy of it.
+// This screen has already shipped that exact defect once – the note at `HouseholdStrip` below spells
+// it out – so the shortcut and the meter read one computed or they can disagree on screen, side by
+// side, on a desktop.
+const { committedCents, capCents, freeCents, meterPct } = useCoachingBudget()
 
 /** ⭐ ROUND 29 #13 – WHAT A FINISH PAYS HIM, as a percentage, straight off the engine's own rule.
  *

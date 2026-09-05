@@ -1144,11 +1144,27 @@ const showGo = computed(() => !game.snapshot?.pending)
    scrolls under it and only the pill takes a press. */
 .cal-go {
   position: fixed;
-  left: 50%;
+  /* ⭐ ROUND 36 PHASE 3 – the same two tokens the sheet's own floating CTA reads, for the same
+     reason phase 2 gave the width one: from 1024 a rail takes a strip off the left of the page, so
+     the middle of the window is no longer the middle of what a player is reading, and the bottom
+     clearance stops being «above the bar» and becomes the margin off the page's edge the owner asked
+     for. Below 1024 both tokens compute to the 50% and the 58px this rule already said. */
+  left: var(--app-bar-left);
   transform: translateX(-50%);
-  bottom: 58px;
+  bottom: var(--app-bar-bottom);
   width: 100%;
-  max-width: 520px;
+  /* ⚠ ROUND 36 PHASE 2 – THE THIRD OF THE THREE FLOATING CTA BOXES, ONTO THE TOKEN. The shell's own
+     week button in src/style.css is the same object with the same six declarations, and phase 1 put
+     it on `--app-bar-max` with an argument that applies here word for word: the button inside is
+     centred, so the only thing this width decides is where the CTA sits, and it must be the middle
+     of the column rather than the middle of a 520px box left behind under a wider one. Below 768 the
+     token IS 520, and the button is centred at every width, so today this moves nothing at all - it
+     stops the box from being wrong. `.week-proceed` in ThisWeekScreen.vue is the other one.
+     ⚠ THE SHELL'S RULE IS DELIBERATELY NOT NAMED BY ITS CLASS HERE. tests/round13-nav.test.ts reads
+     this file as TEXT and refuses that class name in a tab screen - the pin that keeps the advance
+     act in the App shell - and it does not distinguish a comment from markup. It is right to be
+     that blunt; the sentence is what moves. */
+  max-width: var(--app-bar-max);
   display: flex;
   flex-direction: column;
   align-items: center;

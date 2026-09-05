@@ -29,6 +29,7 @@ import { TIER_LADDER, TIER_SHORT } from '../../src/engine/season/calendar'
 import { latestNewsId, newestLetterId, useLetterWatermark } from '../../src/composables/inboxCue'
 import { DEFAULT_PROFILE, type Snapshot } from '../../src/shared/protocol'
 import { careerSnapshot } from '../helpers/career'
+import { PHONE, setViewport } from './fits'
 
 /** A real career, walked `weeks` weeks. */
 const snapshotAfter = (weeks: number, seed = 'component-round20'): Snapshot => careerSnapshot(weeks, seed)
@@ -344,7 +345,16 @@ describe('KidScreen - the age moved off her face (item 6)', () => {
 // =================================================================================================
 // ITEM 7 - THE HOME SEASON BLOCK SHOWS THE ENGINE'S WINDOW, PLUS ONE
 // =================================================================================================
+// ⚠⚠ AT A STATED WIDTH SINCE ROUND 36 PHASE 3, AND IT IS A FIX TO THESE TESTS RATHER THAN A
+// LOOSENING OF THEM. Item 7's claim is about a PHONE – «this row is her whole climb at a glance» was
+// reported on one – and until 04.09 these three measured at happy-dom's default 1024, a width the
+// strip had no rule for, so the answer happened to be the phone's. It is not any more: the owner has
+// ruled that from 768 the ladder is drawn ALREADY OPEN («это ничему не противоречит»), so the width
+// a collapse is measured at is now part of what is being claimed. The wide behaviour has its own arm
+// in tests/component/home-strip-and-mail.test.ts, and it asserts the equality that makes the two
+// halves one claim: what a tablet draws is exactly what a phone reaches.
 describe('HomeScreen - the season strip is the window plus one (item 7)', () => {
+  beforeEach(() => setViewport(PHONE))
   it('draws fewer than the whole ladder, and never more rungs than the engine holds open plus one', () => {
     const snapshot = snapshotAfter(30)
     withSnapshot(snapshot)

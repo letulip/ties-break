@@ -123,6 +123,43 @@ export function fieldChanceTitle(p: FieldOdds): string {
  *  facts, one each, neither spelled twice. */
 export const FIELD_FIGURE_NOTE = 'A typical figure for this level – it sharpens when the draw is made.'
 
+/** Just enough of a preview to say WHICH ring a card is drawing. Structural, like the two interfaces
+ *  above and for the same reason. */
+export interface RingState {
+  drawMade: boolean
+  firstMatchChance: number | null
+  fieldChance: number | null
+}
+
+/** ⭐⭐⭐ ROUND 34 #5b – IS THIS CARD DRAWING THE **FIELD** RING? The condition the pre-draw line
+ *  under the plaque rides on, and it is the ring chain's `v-else-if` branch stated in full: the
+ *  opponent ring is not the one being drawn, AND there is a field figure to draw.
+ *
+ *  ⚠⚠ THE NEGATION IS THE WHOLE POINT AND IT IS EASY TO LOSE. The obvious spelling for the caption
+ *  is the branch's own text, `ev.preview.fieldChance !== null` – and that is TRUE on a DRAWN card
+ *  too, because the field figure does not stop existing when the draw is made; it simply stops being
+ *  the number on the ring. A caption written that way survives one state longer than the ring it
+ *  captions, and would tell a player whose draw is out that his figure is about to sharpen. That
+ *  exact mutation is one of the three `tests/component/round31-draw-reveal.test.ts` is verified
+ *  against, and it reddens.
+ *
+ *  ⚠ THE TWO RINGS KEEP THEIR OWN INLINE CONDITIONS rather than calling these, deliberately: a
+ *  `v-if` written as a null comparison is what NARROWS `preview.firstMatchChance` / `preview.
+ *  fieldChance` to `number` for the three bindings inside each ring, and routing it through a
+ *  predicate would trade that compiler-checked narrowing for a `!` on every one of them – tried,
+ *  and `vue-tsc` answered with four errors. The chain is the authority on which ring is drawn; this
+ *  pair is that chain read back, in one place, for the surface outside it that needs the answer.
+ *
+ *  ⚙ ROUND 36 PHASE 5 MOVED THE PAIR HERE FROM `SeasonScreen.vue`, unchanged, because the line it
+ *  gates moved with it: the caption is on `NextTournamentPanel` now and the season card no longer
+ *  asks the question. Two surfaces drawing the same ring chain is exactly what this module owns. */
+export function opponentRingShown(p: RingState): boolean {
+  return p.drawMade && p.firstMatchChance !== null
+}
+export function fieldRingShown(p: RingState): boolean {
+  return !opponentRingShown(p) && p.fieldChance !== null
+}
+
 /** The store-backed half: the three facts that need the live snapshot to answer. */
 export function useEventCard(): {
   venueUrl: (e: PaintableEvent) => string

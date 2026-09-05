@@ -87,3 +87,7 @@ ms-playwright/
 
 # `tools/precache-delta.mjs` builds two dists here and deletes them again (`--keep` leaves them).
 .tmp/
+
+# The owner promo workspace – GameJolt hero art and its compose script. 8.6 MB, referenced by
+# nothing in src/, vite.config.ts or package.json, and not part of the shipped app.
+art/
