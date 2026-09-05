@@ -25,8 +25,9 @@
 //
 // The switch never says "track", "domestic" or "ITF": the words are National and International,
 // defined once in `LADDER_LABEL`.
-import { computed, ref, watch } from 'vue'
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useGameStore } from '../../stores/game'
+import { prefersReducedMotion } from '../../composables/reducedMotion'
 import { formatShortName, rankLabel } from '../../shared/format'
 import { LADDER_LABEL } from '../../shared/protocol'
 import { TIERS, TIER_SHORT, WEEKS_PER_YEAR } from '../../engine/season/calendar'
@@ -209,6 +210,102 @@ const EMPTY_NOTE: Record<LadderTrack, string> = {
 }
 const noExchange = computed(() => NO_EXCHANGE[shown.value])
 const emptyNote = computed(() => EMPTY_NOTE[shown.value])
+
+// --- THE SECTION STRIP (round 37 #4) -------------------------------------------------------------
+// The owner, 05.09.2026: «На экране stats для всех интерфейсов добавить под первой плашкой STATS
+// полосу с переключателем по разделам seasons/ranking/results для каждой категории турниров для
+// удобной навигации на странице».
+//
+// ⚠ IT IS NAVIGATION AND NOT A FOURTH PICKER, in his own words: «для удобной навигации на странице».
+// Every section it lists is already drawn, already below the fold and already answering to the
+// ladder row above. The strip selects nothing, filters nothing and hides nothing - it takes the
+// reader to a heading. That is also why the entries are not a `SegmentedRow`: that component is a
+// value switcher (`v-model` + `aria-pressed`), and pressing one of these changes no value.
+//
+// ⚠⚠ AND EVERY WORD ON IT IS A HEADING THAT IS ALREADY ON THIS SCREEN. His three words - seasons /
+// ranking / results - NAME the three sections; the strings below are those sections' own `<h2>`s,
+// character for character: `Season by season` is SeasonHistoryTable.vue's heading, `<track> ranking`
+// and `Counting results` are the two in the template under this block. So the screen gains a control
+// without gaining a second spelling of anything (CLAUDE.md invariant 4 - the copy is his). The
+// mounted test asserts each entry equals the `<h2>` of the section it reaches, so the label and the
+// heading cannot drift apart later.
+//
+// ⚠ «ДЛЯ КАЖДОЙ КАТЕГОРИИ ТУРНИРОВ» IS THE ROW ABOVE THIS ONE - the ladder picker, which is what he
+// himself called «переключатель уровня турниров в stats» on 02.08. Every figure, table and list on
+// this screen already follows it, so the strip is per-category BY CONSTRUCTION rather than by a
+// second copy of the taxonomy: it is derived from the sections that render for the track on screen,
+// which is why the ranking entry is renamed by the picker and why an entry leaves with its section.
+//
+// ⚠⚠ A CONTROL THAT SCROLLS TO AN ELEMENT MAY NEVER OFFER ONE THAT IS NOT THERE. Two of the three
+// sections are conditional and both conditions are real careers: a closed junior archive draws
+// NEITHER the ranking nor the counting list (`archiveShown`), and a table she has not scored in
+// draws no counting list (`countingResults.length`). The list below is built out of those same two
+// conditions rather than beside them, so a dead entry is not something that has to be remembered.
+
+/** The sections a reader can be taken to, in the order the page draws them. Each `id` is on the
+ *  element that owns that section's heading - the two `<section>`s below, and SeasonHistoryTable's
+ *  own root for the first. */
+const sections = computed(() => {
+  const list: { id: string; label: string }[] = [{ id: 'stats-seasons', label: 'Season by season' }]
+  if (!archiveShown.value) {
+    list.push({ id: 'stats-ranking', label: `${LADDER_LABEL[shown.value]} ranking` })
+    if (countingResults.value.length) list.push({ id: 'stats-results', label: 'Counting results' })
+  }
+  return list
+})
+
+// WHICH SECTION THE READER IS IN, ANNOUNCED. `aria-current` and not `role="tab"` - App.vue's own
+// choice for the tab bar, and its comment's reason holds here twice over: there is no `tabpanel`
+// behind these either, so a tablist would be a costume.
+//
+// ⚠ THE VALUE IS `location`, WHICH IS THE SAME CHOICE THE BAR MADE, NOT A DIFFERENT ONE. The app
+// already picks the token that fits what the control does - the bar swaps pages and says `page`,
+// OnboardingWizard's dots walk steps and say `step` - and these entries move the reader WITHIN one
+// page. Saying `page` here would also put two "current page" marks in one document, one of them on
+// the Stats tab that got us here.
+const reached = ref<string | null>(null)
+const currentSection = computed(() => {
+  const list = sections.value
+  const hit = list.find((s) => s.id === reached.value)
+  // Nothing pressed and nothing scrolled past yet. A screen always opens at its top
+  // (composables/scrollReset.ts), so the first section is where the reader actually is.
+  return hit?.id ?? list[0]?.id ?? null
+})
+
+/** The line a section's top must rise past before it is the one being read. A FRACTION of the
+ *  viewport rather than a constant, because the same 150px is a third of a phone and a seventh of a
+ *  desktop. */
+const CURRENT_LINE = 0.4
+
+/** Where the reader has got to, off the real geometry: the LAST section whose top has crossed the
+ *  line, or null while none has (the top of the page, where the fallback above answers). */
+function syncReached(): void {
+  if (typeof window === 'undefined') return
+  const line = window.innerHeight * CURRENT_LINE
+  let at: string | null = null
+  for (const s of sections.value) {
+    const top = document.getElementById(s.id)?.getBoundingClientRect().top
+    if (top !== undefined && top <= line) at = s.id
+  }
+  reached.value = at
+}
+
+// THE DOCUMENT IS THE SCROLLER for every tabbed screen, and this is one - composables/scrollReset.ts
+// names the app's only two scrollers and why. Passive, because this listener reads and never blocks.
+onMounted(() => window.addEventListener('scroll', syncReached, { passive: true }))
+onUnmounted(() => window.removeEventListener('scroll', syncReached))
+
+function goToSection(id: string): void {
+  // Marked before the glide rather than after it: the press is the answer to "where am I now", and
+  // the spy above refines it as the page moves.
+  reached.value = id
+  const el = document.getElementById(id)
+  if (!el || typeof el.scrollIntoView !== 'function') return
+  // The house's own shape for a scroll the player ASKED for (MoneyScreen's ledger CTA, the coach
+  // market's tier chips): smooth, unless the system has been asked for less motion - U-05's one
+  // predicate, because a browser that does not animate `smooth` leaves the press doing nothing.
+  el.scrollIntoView({ behavior: prefersReducedMotion() ? 'auto' : 'smooth', block: 'start' })
+}
 </script>
 
 <template>
@@ -262,12 +359,32 @@ const emptyNote = computed(() => EMPTY_NOTE[shown.value])
       <p v-if="!archiveShown" class="hint stats-no-exchange">{{ noExchange }}</p>
     </section>
 
+    <!-- ⭐ ROUND 37 #4 – THE SECTION STRIP, UNDER THE FIRST PLATE AND ABOVE WHAT IT POINTS AT. His
+         ask, the argument and the reason each label is a heading rather than a new word are all in
+         the script block beside `sections`, where the house convention allows his own words. Three
+         things it is not: it is not a picker (nothing is selected), it is not a `<nav>` (a second
+         navigation landmark makes `getByRole('navigation')` ambiguous on this screen and reddens the
+         suite's tab walk), and it never lists a section this category does not draw. -->
+    <div v-if="sections.length > 1" class="controls stats-jump" role="group" aria-label="Stats">
+      <button
+        v-for="s in sections"
+        :key="s.id"
+        class="stats-jump-link"
+        :aria-current="s.id === currentSection ? 'location' : undefined"
+        @click="goToSection(s.id)"
+      >
+        {{ s.label }}
+      </button>
+    </div>
+
     <!-- ⚠ IT TAKES THE TRACK NOW (v46). The owner reported twice that this table showed the same
          thing under every tab, and it did, because a `SeasonHistoryEntry` held one rank and three
-         folds - see SeasonHistoryTable.vue and the v45 -> v46 migration for what an old row may say. -->
-    <SeasonHistoryTable :track="shown" />
+         folds - see SeasonHistoryTable.vue and the v45 -> v46 migration for what an old row may say.
+         The `id` is the strip's landing point and falls through to this component's own `<section>`,
+         so the heading and the anchor are the same element. -->
+    <SeasonHistoryTable id="stats-seasons" :track="shown" />
 
-    <section v-if="!archiveShown">
+    <section v-if="!archiveShown" id="stats-ranking">
       <h2>{{ LADDER_LABEL[shown] }} ranking</h2>
       <!-- D8: the table answers to a name (docs/specs/e2e-coverage.md §12). It says WHICH table,
            because all three render through this one element and a reader arriving by role has no
@@ -308,7 +425,7 @@ const emptyNote = computed(() => EMPTY_NOTE[shown.value])
     <!-- WHERE THE POINTS CAME FROM. The best-N that add up to the total above, from the SAME table:
          a rank and the results that earned it have to come from one ladder or the explanation
          contradicts the number. This is the "points visualisation" the domestic rungs never had. -->
-    <section v-if="!archiveShown && countingResults.length">
+    <section v-if="!archiveShown && countingResults.length" id="stats-results">
       <h2>Counting results</h2>
       <!-- THE WINDOW, said out loud (W2-LADDER §3). One line for where the window stands, one for
            what it is about to let go - the points window of opportunity the owner asked to see
@@ -408,5 +525,32 @@ const emptyNote = computed(() => EMPTY_NOTE[shown.value])
    here, so the 10px is stated exactly once. */
 .stats-ladder-row {
   margin-bottom: 10px;
+}
+
+/* THE SECTION STRIP (round 37 #4). NOTHING NEW IS DRAWN HERE and that is deliberate: the row is the
+   sheet's shared `.controls` - a wrapping row of chips 8px apart, the app's most repeated layout -
+   and each entry is the app's default button, which is already the capsule the control system's one
+   affirmative shape ruling asks for. The coach market's tier chips are the same object doing the
+   same job one screen over (`scrollToTier`), so this borrows the house's own in-page jump rather
+   than inventing a shape for it. `src/style.css` is untouched: what is local is the rhythm under the
+   strip and the mark on the entry the reader is in, and both are this page's.
+
+   ⚠ THE 16px IS THE `section` MARGIN, not a number of this control's own. The strip stands BETWEEN
+   two sections and the sheet gives every section `margin-bottom: 16px`; any other value would make
+   this one gap the odd one out, which is the drift the note above about the switcher's 10px is
+   already about. */
+.stats-jump {
+  margin-bottom: 16px;
+}
+
+/* WHERE THE READER IS, IN THE ACCENT - the sighted half of the `aria-current` announcement rather
+   than decoration, so the two can never say different things. Same treatment the sheet gives a chip
+   that is the live one (`.tier-chip.unlocked`: accent text, accent border, the 12% accent fill),
+   because "this is the one you are on" is a state the app has already decided how to draw. */
+.stats-jump-link[aria-current] {
+  color: var(--accent);
+  border-color: var(--accent);
+  background: var(--accent-fill);
+  font-weight: 700;
 }
 </style>
