@@ -164,6 +164,31 @@ export const useGameStore = defineStore('game', {
         if (!this.snapshot && this.careers.length) {
           const mostRecent = [...this.careers].sort((a, b) => b.lastPlayedAt - a.lastPlayedAt)[0]
           await this.loadCareer(mostRecent.careerId)
+          // ⚠⚠ U-01 – THE SECOND EXIT THE PROBE ABOVE DOES NOT COVER, AND IT REOPENED THE VERY BUG
+          // THE COMMENT ABOVE DECLARES FIXED. `loadCareer` goes through `runOp` -> `run`, and `run`
+          // CATCHES every refusal: it writes `this.error` and returns `undefined`. So a save newer
+          // than this build (`engine/migrations.ts`: "Save schema N is newer than supported M"), a
+          // corrupted autosave or a failed guard used to fall straight through to `ready` with
+          // `snapshot === null` – which is exactly `App.vue`'s `showOnboarding`, so the childhood
+          // prologue opened over a career that was still on disk and still in `this.careers`, with
+          // the one sentence explaining it stranded in `error`/`saveOp` where only More renders it.
+          //
+          // A refused boot load is a recovery exit, on the same terms as the failed probe: the
+          // player is told what happened and keeps Retry / Import / "Start a new career" – which is
+          // the choice this used to make FOR them. `init` stays a total transition
+          // (loading -> ready | recovery, W1-INTEGRITY-B/TB-06): `ready` is not set on this path.
+          //
+          // ⚠ NO NEW SENTENCE IS WRITTEN HERE, and that is deliberate (CLAUDE.md invariant 4). The
+          // review proposed a fallback string for the case where nothing refused in words; this
+          // takes `error` verbatim and passes an empty one straight through, because the recovery
+          // screen's own `v-if="game.initError"` already draws nothing for it and the heading, the
+          // hint and the three ways forward are the owner's copy either way. Every refusal `run`
+          // can catch writes `error` before returning, so the empty case is the unreachable one.
+          if (!this.snapshot) {
+            this.initError = this.error
+            this.phase = 'recovery'
+            return
+          }
         }
         this.ready = true
         this.phase = 'ready'
