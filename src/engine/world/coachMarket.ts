@@ -10,7 +10,7 @@
 // is the market card's own copy, and it had two callers in two different concerns.
 //
 // ⚠ RNG: nothing here draws on MAIN. The market is a pure function of (seed, age).
-import { bestFitCoachAt, buildCoachRoster, coachById, coachEdgeCorridorPp, coachEdgePlacement, coachFitFor, coachIncludesPhysio, coachSeasonUplift, coachTierById, coachWeeklyCents, COACH_TIER_LABEL, eliteGateShortfall, practiceCoachRateCents, facilityRateCents, tierOf } from '../coach'
+import { bestFitCoachAt, buildCoachRoster, coachBillRangeCents, coachById, coachEdgeCorridorPp, coachEdgePlacement, coachFitFor, coachIncludesPhysio, coachSeasonUplift, coachTierById, coachWeeklyCents, COACH_TIER_LABEL, eliteGateShortfall, practiceCoachRateCents, facilityRateCents, tierOf, weeklyBillSplit } from '../coach'
 import { OFF_SEASON_WEEKS, TIERS, TIER_LADDER, WEEKS_PER_YEAR } from '../season/calendar'
 import { ECONOMY } from '../economy'
 import type { LadderTrack, SeasonEvent, TierId } from '../season/types'
@@ -276,6 +276,17 @@ export function coachTravelsWithHer(world: WorldState): boolean {
 export function coachBilling(world: WorldState): {
   onEventWeeks: boolean
   weeklyCents: number
+  /** ⭐⭐ U-03 (05.09 review) – WHAT A WEEK ACTUALLY LANDS AT, and what it is made of. Both were
+   *  computed by MoneyScreen and ThisWeekScreen for themselves, from `seed` through `coachById`,
+   *  `tierOf`, `facilityRateCents` and these two helpers - the third and fourth copies of an
+   *  arithmetic that already runs here, and the copies had ALREADY drifted once: the comment above
+   *  `ageAtWeek` in both screens records a December girl being quoted the development rate against
+   *  a bill charged at the professional one for 49 weeks. Projected rather than re-derived, the
+   *  screens cannot disagree with the till, because there is one arithmetic left.
+   *  ⚠ `split.totalCents` is `weeklyCents` by construction (same call, same defaults) and is kept
+   *  because a screen quoting the parts must quote the whole they add up to from the same object. */
+  weekRangeCents: [number, number]
+  split: { totalCents: number; coachCents: number; facilityCents: number }
   eventWeeks: number
   /** the weeks of the coming year the retainer is actually charged for */
   billedWeeks: number
@@ -441,6 +452,15 @@ export function coachBilling(world: WorldState): {
     // ⭐⭐ ROUND-28 #8 – and the same week, for the whole household. `weeklyCents` is handed over
     // rather than re-derived: one bill, quoted once, read by both figures in the block.
     household: householdWeekly(world, weeklyCents),
+    // U-03: the same `rate`, `age` and `tier` the line above billed at - no second read of the coach.
+    weekRangeCents: coachBillRangeCents(rate, world.plan, world.profile.background),
+    split: weeklyBillSplit({
+      rateCents: rate,
+      ageYears: age,
+      tier: tierOf(coach),
+      plan: world.plan,
+      background: world.profile.background,
+    }),
   }
 }
 

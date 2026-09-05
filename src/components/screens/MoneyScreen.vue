@@ -53,10 +53,11 @@ import { ECONOMY, kidPrizeShareBps, managerCommissionBps } from '../../engine/ec
 // STARTING_FUNDS_CENTS: the ENGINE's own number, not a hand copy – see `startingBudget` below.
 // world.ts is already in the UI chunk (PracticeFlow/BracketTabs import from it), so this costs
 // nothing at bundle time and removes a "must match" comment that was one retune away from a lie.
-import { ASSET_NAME_MAX_CHARS, STARTING_FUNDS_CENTS, ageAtWeek } from '../../engine/world'
-// The bill's own arithmetic, so the note under the breakdown quotes the number the engine charges
-// rather than a mirror of it - the same rule `startingBudget` above is written under.
-import { coachBillRangeCents, coachById, facilityRateCents, tierOf, weeklyBillSplit } from '../../engine/coach'
+import { ASSET_NAME_MAX_CHARS, STARTING_FUNDS_CENTS } from '../../engine/world'
+// ⭐⭐ U-03 (05.09 review): the bill's arithmetic USED to be imported here, so the note under the
+// breakdown could quote the number the engine charges rather than a mirror of it. It is now READ off
+// the snapshot instead - same rule, one fewer copy of the sum. See `coachBilling` in
+// engine/world/coachMarket.ts, and the note beside `trainingNote` below for the drift this ends.
 import type {
   FinanceWindow,
   KitGrade,
@@ -271,18 +272,14 @@ const trainingBillNote = computed<string | null>(() => {
   // 12-16 / 17-22 / 23+, so it bites whenever the two clocks straddle a row.
   //
   // `ageAtWeek(snap.week)` is the idiom `PlanWeekSheet.vue` already prices with.
-  const age = ageAtWeek(snap.week)
-  const coach = coachById(snap.seed, age, snap.coachId)
-  const tier = tierOf(coach)
-  const rate = coach ? coach.rateCents : facilityRateCents(age, tier)
-  const split = weeklyBillSplit({
-    rateCents: rate,
-    ageYears: age,
-    tier,
-    plan: snap.plan,
-    background: snap.profile.background,
-  })
-  const [lo, hi] = coachBillRangeCents(rate, snap.plan, snap.profile.background)
+  // ⭐⭐ U-03 (05.09 review) – AND NOW IT IS READ, NOT REBUILT. The block above is the history of a
+  // clock this screen used to pick for itself; the whole of that arithmetic - `ageAtWeek`,
+  // `coachById`, `tierOf`, `facilityRateCents`, `weeklyBillSplit`, `coachBillRangeCents` - now runs
+  // once, in `engine/world/coachMarket.ts`, against the same world the till bills. The screen cannot
+  // quote a rate the engine is not charging, because there is nothing left here to quote it from.
+  const coach = snap.coachId ? true : false
+  const split = snap.coachBilling.split
+  const [lo, hi] = snap.coachBilling.weekRangeCents
   const quote = coach
     ? `Training quotes at ${formatCents(split.totalCents)} a week – ${formatCents(split.coachCents)} coaching, ${formatCents(split.facilityCents)} courts.`
     : `Court time quotes at ${formatCents(split.facilityCents)} a week – you coach her, so there is no coaching line.`

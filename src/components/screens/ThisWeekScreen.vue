@@ -36,9 +36,8 @@ const dismissedRecapKey = moduleRef<string | null>(null)
 import { computed } from 'vue'
 import { useGameStore } from '../../stores/game'
 import { WEEK_PLAN_PRESETS, type WorldMatch } from '../../shared/protocol'
-import { coachBillRangeCents, coachById, facilityRateCents, tierOf } from '../../engine/coach'
 import { weekDateLine, weekLabel } from '../../shared/dates'
-import { KID_ID, ageAtWeek, flipScore } from '../../engine/world'
+import { KID_ID, flipScore } from '../../engine/world'
 import { recapExists } from '../../composables/weekRecap'
 import WeekRecapCard from '../WeekRecapCard.vue'
 import NextTournamentPanel from '../NextTournamentPanel.vue'
@@ -216,10 +215,11 @@ const spendRange = computed<[number, number]>(() => {
   // company for a whole season whenever they straddle a coach rate row (12-16 / 17-22 / 23+): a
   // December girl is 16 from week 156 to week 204 while the market has already restocked at 17, so
   // this estimate would have quoted the development rate against a bill charged at the pro one.
-  const marketAge = ageAtWeek(snap.week)
-  const coach = coachById(snap.seed, marketAge, snap.coachId)
-  const rate = coach ? coach.rateCents : facilityRateCents(marketAge, tierOf(coach))
-  const [lo, hi] = coachBillRangeCents(rate, snap.plan, snap.profile.background)
+  // ⭐⭐ U-03 (05.09 review): the block above is why this used to be computed here, and it is now
+  // read instead. The engine runs that arithmetic once, on the world the till bills - see
+  // `coachBilling` in engine/world/coachMarket.ts. This screen and Money quoted it separately, which
+  // is two chances to drift from one charge; the note above records the drift that already happened.
+  const [lo, hi] = snap.coachBilling.weekRangeCents
   return [Math.round(lo / 100), Math.round(hi / 100)]
 })
 </script>

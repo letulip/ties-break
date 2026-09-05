@@ -363,6 +363,12 @@ export interface Snapshot {
      *  is on, which is how screen T draws it: a second and more expensive choice, not a second row. */
     onJuniorEvents: boolean
     weeklyCents: number
+    /** ⭐⭐ U-03 (05.09 review): the week's real spread, and what the week is made of. Two screens
+     *  used to compute both for themselves out of `seed` - see the note on `coachBilling` in
+     *  `engine/world/coachMarket.ts` for the drift that cost, and why they are projected now.
+     *  `split.totalCents === weeklyCents` by construction. */
+    weekRangeCents: [number, number]
+    split: { totalCents: number; coachCents: number; facilityCents: number }
     /** weeks of the season she is entered for – the season she is in, or the one just finished */
     eventWeeks: number
     /** weeks of the coming year the retainer is actually charged for */
