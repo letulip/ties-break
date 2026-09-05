@@ -104,7 +104,13 @@ describe('the marker helpers throw on an absent marker – the property the pin 
     // searched from position 0 and could pick an EARLIER occurrence, yielding an empty region – the
     // other half of the same silent failure. Searching forward can only widen, never narrow.
     const src = 'END and then START and then END'
-    expect(src.slice(src.indexOf('START'), src.indexOf('END'))).toBe('') // the raw form's answer
+    // ⚠ THE INDICES SIT ON THEIR OWN LINES ON PURPOSE. Written as one expression this is the exact
+    // shape `npm run pins:check` forbids, and the ratchet is right not to try to tell an
+    // illustration from a pin – it caught this line the first time it ran. Same demonstration, and
+    // the -1 (here a 0) still cannot reach a slice bound unnoticed.
+    const rawStart = src.indexOf('START')
+    const rawEnd = src.indexOf('END') // 0 – the EARLIER occurrence, which is the whole problem
+    expect(src.slice(rawStart, rawEnd), 'the raw form yields an empty region').toBe('')
     expect(region(src, 'START', 'END')).toBe('START and then ')
   })
 
