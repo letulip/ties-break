@@ -91,6 +91,19 @@ import TrophiesScreen from './components/screens/TrophiesScreen.vue'
 // «на всех страницах» is satisfied by the shell owning it and not by ten screens remembering to draw
 // it. Below 1024 it is `display: none` (src/style.css), so it costs a phone nothing and moves no box.
 import RailDashboard from './components/RailDashboard.vue'
+// ⭐⭐⭐ ROUND 36 SECOND PASS, P2-6 – AND HER IDENTITY IS THE SHELL'S FOR EXACTLY THE SAME REASON.
+// The owner, 05.09.2026: «и аватар с текущей позицией и рангом (так же, как и все остальные плашки)
+// на десктоп в боковом меню живут на всех страницах неизменно» – his ruling on `D75`, whose price he
+// has accepted (a third bounded exemption in e2e/parity.spec.ts). Review #3 held the block in an
+// empty slot here and let `HomeScreen` teleport into it, which is why it was drawn on Home and on
+// none of the other nine pages. It is a component now, and the five derived facts behind the rank
+// chip live in `composables/kidIdentity.ts` – one owner, two renders, nothing for the shell to
+// recompute. Below 1024 it is `display: none` (src/style.css), so a phone is unchanged.
+import RailIdentity from './components/RailIdentity.vue'
+// The best-6 explainer the rail's rank chip opens. Home mounts its own for the copy on the
+// photograph; this one belongs to the copy in the rail, which is on screen on nine screens Home is
+// not. Same component, no props, reads the store – there is nothing to keep in step.
+import RankHelpDialog from './components/RankHelpDialog.vue'
 
 // Round 5 item 23: a small accent dot on the Season tab until the player has visited it
 // since the last "New events on the calendar" marker. UI-only state (localStorage), no
@@ -216,7 +229,9 @@ function openWeek(entry: WeekEntry): void {
 }
 
 /** Home's doors, all of them. Two of the five are not plain tab moves – they carry a reason the
- *  shell has to act on – so this is a function rather than the inline ternary it used to be. */
+ *  shell has to act on – so this is a function rather than the inline ternary it used to be.
+ *  ⚠ P2-6: the rail's own avatar uses the `'kid'` arm too, because past 1024 that button IS the door
+ *  Home's photograph carries below it – same destination, same function, no second writer. */
 function openFromHome(target: 'money' | 'week:tournament' | 'more' | 'kid' | 'market'): void {
   if (target === 'market') openMarket('home')
   else if (target === 'week:tournament') openWeek('tournament')
@@ -289,6 +304,10 @@ const TABS: { id: TabId; icon: string; label: string }[] = [
 function openNav(entry: (typeof TABS)[number]): void {
   tab.value = entry.id
 }
+
+/** P2-6: the best-6 explainer, opened by the RAIL's rank chip. Home owns the flag for its own chip;
+ *  this one is the shell's, because the rail is drawn on nine screens Home is not. */
+const showRailRankHelp = ref(false)
 function iconUrl(icon: string): string {
   return `${import.meta.env.BASE_URL}icons/${icon}.svg`
 }
@@ -1734,28 +1753,22 @@ function reopenTour(): void {
          buttons swap the whole screen and there is no `tabpanel` behind them to point at, so a
          tablist would be a costume. -->
     <nav class="tab-bar" aria-label="Main">
-      <!-- ⭐⭐⭐ ROUND 36 REVIEW #3 – her face and her rank leave the photograph for the top-left
-           corner of the menu, above every item in it. His own sentence is in
-           docs/rounds/round-36-review.md and beside `.rail-id` in src/style.css, where Cyrillic is
-           allowed; a template may carry none of it (tests/template-copy-rules.test.ts).
-           THIS IS AN EMPTY SLOT AND THAT IS THE WHOLE DESIGN: the two
-           controls stay HomeScreen's, with HomeScreen's computeds and HomeScreen's handlers, and are
-           `<Teleport>`ed in here from there. The shell holds the place; it does not learn her rank.
-           ⚠⚠ WHY NOT RENDER THEM HERE. The rank chip is five derived facts deep (`rankChipTrack`,
-           the active ladder, her rank on THAT table, whether she is ranked at all, and the movement
-           since last week) and the avatar is a crop. Rebuilding any of that in the shell is the
-           «a shortcut that recomputes its own number» disease this repo has already shipped once –
-           see HouseholdStrip.vue's header. A teleport moves the elements and leaves the arithmetic
-           where it is, so there is nothing to keep in step.
-           ⚠ AND IT IS WHY THEY ARE ON HOME AND NOT ON EVERY PAGE. The block is HomeScreen's, so it
-           is on screen exactly while Home is – which is also what keeps `e2e/parity.spec.ts` true
-           without a third exemption: two controls that appeared on the other nine screens at 1280
-           and on none of them at 375 would fail his «nothing new should appear» criterion by name.
-           Making
-           them permanent chrome is his call and it costs that exemption; see the decisions doc.
-           ⚠ `defer` (Vue 3.5) IS LOAD-BEARING: this slot is rendered AFTER `<main>` in the shell, so
-           a teleport resolved during Home's own render would find no target. -->
-      <div id="rail-id-slot" class="rail-id"></div>
+      <!-- ⭐⭐⭐ ROUND 36 REVIEW #3, RE-RULED BY THE SECOND PASS'S P2-6 – her face, the week and her
+           rank live in the top-left corner of the menu, above every item in it, ON EVERY PAGE. His
+           own sentences are in docs/rounds/round-36-review.md, beside `.rail-id` in src/style.css
+           and in src/composables/kidIdentity.ts, where Cyrillic is allowed; a template may carry
+           none of it (tests/template-copy-rules.test.ts).
+
+           IT WAS AN EMPTY SLOT UNTIL 05.09 and the two controls were `<Teleport>`ed in from
+           HomeScreen, so that the shell would not learn her rank – the chip is five derived facts
+           deep and «a shortcut that recomputes its own number» is this repo's named recurring
+           disease (see HouseholdStrip.vue's header). That reasoning stands; what changed is where
+           the arithmetic lives. `composables/kidIdentity.ts` owns it, this component and Home's
+           photograph are its two renders, and the shell still computes nothing.
+           ⚠ THE PRICE IS A THIRD PARITY EXEMPTION AND HE HAS ACCEPTED IT: three controls that are on
+           nine screens at 1280 and on none of them at 375 fail «nothing new should appear» by name.
+           `e2e/parity.spec.ts` names the region, the same shape as the rail dashboard's. -->
+      <RailIdentity @open-kid="openFromHome('kid')" @rank-help="showRailRankHelp = true" />
       <button
         v-for="t in TABS"
         :key="t.id"
@@ -1832,6 +1845,11 @@ function reopenTour(): void {
       :kid-rank="activeRank"
       @close="practiceLive = null"
     />
+
+    <!-- P2-6: the explainer the RAIL's rank chip opens. Home mounts its own for the chip on the
+         photograph, and exactly one of the two chips is reachable at any width – the hero's below
+         1024, the rail's above it – so the two flags can never both be up. -->
+    <RankHelpDialog v-if="showRailRankHelp" @close="showRailRankHelp = false" />
 
     <!-- ⭐ round-18 #8: the tour's commitment rules, explained the FIRST time her ranking binds her
          to them – the rule has been enforced since v38 and nothing ever announced it. Once per

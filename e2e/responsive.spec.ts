@@ -446,3 +446,193 @@ test('at 1280 the same week needs no paging, so it has no arrows – and the key
   )
   expect(reached, 'Left/Right no longer reach the pager on a week with no arrows').toBe(true)
 })
+
+// =================================================================================================
+// ⭐⭐⭐ ROUND 36, THE SECOND PASS FROM HIS STAND (05.09.2026) – HOME'S DESKTOP, IN A REAL BROWSER
+// =================================================================================================
+//
+// Three of the four items in this pass are claims about BOXES, and this is the only layer that can
+// answer them: `tests/component/` parses the cascade and does no layout, so it can prove a rule is
+// ON at a width and never that two cards are the same width. His own words are in
+// docs/rounds/round-36-review.md; the readings are in docs/specs/responsive-decisions-2026-09.md.
+
+/** Every box this pass is about, at one width, as the browser measures it. */
+async function homeBoxes(page: Page): Promise<Record<string, { x: number; w: number } | null>> {
+  return page.evaluate(() => {
+    const box = (sel: string): { x: number; w: number } | null => {
+      const el = document.querySelector(sel)
+      if (!el) return null
+      const b = el.getBoundingClientRect()
+      return { x: +b.x.toFixed(2), w: +b.width.toFixed(2) }
+    }
+    return {
+      hero: box('.diary-hero'),
+      coach: box('.card-pair .coach-card'),
+      memory: box('.card-pair > .note-card:not(.coach-card)'),
+      season: box('.strip-pair > *:not(#diary-news)'),
+      news: box('#diary-news'),
+    }
+  })
+}
+
+/**
+ * ⭐⭐⭐ P2-2 – «сетка на главной на десктоп не исправлена (см. мои правки предыдущие, мне нужно
+ * продублировать или нашел?)»
+ *
+ * Found. Review #5's «нижний блок карточек имеет свою сетку, они равны по ширине» was built for ONE
+ * row and he meant every row below the photograph. Measured on the build he played, at 1024:
+ *
+ *     coach note + recent memory   236 / 627.5, both 380.5 wide   – review #5's grid
+ *     season + news                236 / 698,   451 and 310 wide  – still the HERO's tracks
+ *
+ * ⚠ THE ASSERTIONS ARE RELATIONS, NOT LITERALS, and deliberately: the two tracks are `1fr 1fr` of
+ * whatever the frame is, so a pinned 380.5 would go red the day the app's padding changed and would
+ * say nothing about the thing he is looking at. What he is looking at is that the two rows line up –
+ * same widths, same left edges, one gutter – and that is what is asserted, at both ends of the band.
+ */
+test('P2-2: Home’s two rows below the photograph are ONE grid, at 1024 and at 1280', async ({
+  page,
+  careerAt,
+}) => {
+  await careerAt('pro')
+  await answerOpeningKnock(page)
+  await dismissTourBriefing(page)
+
+  for (const width of [1024, 1280]) {
+    await page.setViewportSize({ width, height: 900 })
+    await page.getByRole('navigation').getByRole('button', { name: 'Home', exact: true }).click()
+    await expect(page.getByRole('heading', { name: /^W\d+ \d{4} · /, level: 1 })).toBeVisible()
+    const b = await homeBoxes(page)
+    for (const [name, value] of Object.entries(b)) {
+      expect(value, `${name} is not on the page at ${width}, so this measures nothing`).not.toBeNull()
+    }
+    const { hero, coach, memory, season, news } = b as Record<string, { x: number; w: number }>
+
+    // ⭐ THE FOUR CARDS BELOW THE HERO ARE ONE WIDTH – «они равны по ширине», his own words, now for
+    // both rows rather than for the upper one alone.
+    expect(coach.w, `the coach note and the memory disagree at ${width}`).toBe(memory.w)
+    expect(season.w, `the season ladder is not the coach note's width at ${width}`).toBe(coach.w)
+    expect(news.w, `the news feed is not the memory's width at ${width}`).toBe(memory.w)
+
+    // ⭐⭐ AND ONE GUTTER: the left edges of both rows agree, so the channel between the two columns
+    // is a single straight line down the page. This is the defect as he sees it – before the fix the
+    // lower row's gutter sat 70px away from the one above it at 1024.
+    expect(season.x, `the lower row does not start where the upper one does at ${width}`).toBe(coach.x)
+    expect(news.x, `the two gutters are not the same gutter at ${width}`).toBe(memory.x)
+    expect(
+      +(memory.x - (coach.x + coach.w)).toFixed(2),
+      `the gutter is not the grid's own 11px gap at ${width}`,
+    ).toBe(11)
+
+    // ⚠ AND THE HERO'S ROW KEEPS ITS OWN ASYMMETRIC TRACKS – review #4 is his own measurement
+    // («ширина этих карточек в макете около 310 пикселей») and this item does not touch it.
+    expect(
+      hero.w,
+      `the photograph's row was flattened into the equal pair at ${width} – #4 asked for the opposite`,
+    ).not.toBe(season.w)
+    expect(hero.x, 'the photograph moved off the left edge of the grid').toBe(coach.x)
+  }
+})
+
+/**
+ * ⭐⭐⭐ P2-4 – «если колокольчик, письмо и шестеренка только на главной работают - давай их вернем на
+ * картинку в угол правый верхний». It reverses `D74`, on his own premise: the second half of review
+ * #2 («доступно на всех экранах») is not built and `D76` says why, so three controls that only work
+ * on Home belong on Home's photograph.
+ */
+test('P2-4: the bell, the letter and the gear are in the photograph’s top-right corner at 1280', async ({
+  page,
+  careerAt,
+}) => {
+  await careerAt('pro')
+  await answerOpeningKnock(page)
+  await dismissTourBriefing(page)
+
+  for (const width of [375, 1280]) {
+    await page.setViewportSize({ width, height: 900 })
+    await page.getByRole('navigation').getByRole('button', { name: 'Home', exact: true }).click()
+    await expect(page.getByRole('heading', { name: /^W\d+ \d{4} · /, level: 1 })).toBeVisible()
+
+    const placed = await page.evaluate(() => {
+      const hero = document.querySelector('.diary-hero')
+      const tools = document.querySelector('.diary-head > .diary-tools')
+      if (!hero || !tools) return null
+      const h = hero.getBoundingClientRect()
+      const t = tools.getBoundingClientRect()
+      return {
+        icons: tools.querySelectorAll('button.diary-tool').length,
+        onPage: document.querySelectorAll('button.diary-tool').length,
+        pageCopies: document.querySelectorAll('.diary-tools-page').length,
+        // Inside the picture, hard against its right edge and its top.
+        fromRight: +(h.right - t.right).toFixed(2),
+        fromTop: +(t.top - h.top).toFixed(2),
+        insideX: t.left >= h.left && t.right <= h.right,
+        insideY: t.top >= h.top && t.bottom <= h.bottom,
+      }
+    })
+    expect(placed, `the hero or its tool row is missing at ${width}`).not.toBeNull()
+    expect(placed!.icons, `there are not three icons on the photograph at ${width}`).toBe(3)
+    expect(placed!.onPage, `a second copy of the row is drawn at ${width}`).toBe(3)
+    expect(placed!.pageCopies, `D74's off-picture copy is still rendered at ${width}`).toBe(0)
+    expect(placed!.insideX && placed!.insideY, `the row is off the photograph at ${width}`).toBe(true)
+    // `.diary-head` insets the row 18px from the picture's right edge and 20px from its top, at
+    // every width – the same two numbers a phone has always used.
+    expect(placed!.fromRight, `the row is not against the right edge at ${width}`).toBe(18)
+    expect(placed!.fromTop, `the row is not at the top of the picture at ${width}`).toBeLessThan(40)
+  }
+})
+
+/**
+ * ⭐⭐⭐ P2-3 and P2-6 – «давай на главной десктопе текущую дату всю вынесем в 2 строки и поставим
+ * справа от аватарки круглой, тогда она будет всегда видна и будет удобно», and «и аватар с текущей
+ * позицией и рангом (так же, как и все остальные плашки) на десктоп в боковом меню живут на всех
+ * страницах неизменно».
+ *
+ * The presence-on-every-screen half is `e2e/parity.spec.ts`'s, beside the exemption it costs. What
+ * is measured here is the one thing only a browser can see: the two lines really are two lines, and
+ * they really are to the RIGHT of her face rather than under it.
+ */
+test('P2-3: the week stands beside her face in the rail, on two lines, at 1280', async ({
+  page,
+  careerAt,
+}) => {
+  await careerAt('pro')
+  await answerOpeningKnock(page)
+  await dismissTourBriefing(page)
+  await page.setViewportSize({ width: 1280, height: 900 })
+  await page.getByRole('navigation').getByRole('button', { name: 'Stats', exact: true }).click()
+  await expect(page.getByRole('heading', { name: 'Stats', level: 2 })).toBeVisible()
+
+  const seen = await page.evaluate(() => {
+    const avatar = document.querySelector('#app > nav.tab-bar > .rail-id .diary-avatar-btn')
+    const date = document.querySelector('#app > nav.tab-bar > .rail-id .rail-id-date')
+    const week = document.querySelector('#app > nav.tab-bar > .rail-id .rail-id-week')
+    const range = document.querySelector('#app > nav.tab-bar > .rail-id .rail-id-range')
+    if (!avatar || !date || !week || !range) return null
+    const a = avatar.getBoundingClientRect()
+    const d = date.getBoundingClientRect()
+    const w = week.getBoundingClientRect()
+    const r = range.getBoundingClientRect()
+    return {
+      // «справа от аватарки»: the date's left edge is past the avatar's right edge, and the two
+      // share a horizontal band rather than being stacked.
+      toTheRight: d.left >= a.right,
+      overlapsVertically: d.top < a.bottom && d.bottom > a.top,
+      // «в 2 строки»: the second line starts below the first, and the two do not share a baseline.
+      twoLines: r.top >= w.bottom - 1,
+      lines: [week.textContent?.trim() ?? '', range.textContent?.trim() ?? ''],
+      widthUsed: +d.width.toFixed(2),
+      railWidth: +(document.querySelector('#app > nav.tab-bar')?.getBoundingClientRect().width ?? 0).toFixed(2),
+    }
+  })
+  expect(seen, 'the rail draws no date beside her face at 1280').not.toBeNull()
+  expect(seen!.toTheRight, 'the week is not to the right of the round avatar').toBe(true)
+  expect(seen!.overlapsVertically, 'the week is under her face rather than beside it').toBe(true)
+  expect(seen!.twoLines, 'the week is one line, not two').toBe(true)
+  // The two lines put back together with the heading's own separator ARE the heading on the
+  // photograph – the machine version of «всю». `tests/dates.test.ts` pins the join itself.
+  expect(seen!.lines[0], 'the first line is not our week label').toMatch(/^W\d+ \d{4}$/)
+  expect(seen!.lines[1], 'the second line is not the week’s days').toMatch(/^[A-Z][a-z]{2} \d+ – [A-Z][a-z]{2} \d+$/)
+  // …and it fits the strip it lives in, which is the fit half a mounted test cannot answer.
+  expect(seen!.widthUsed, 'the date is wider than the rail it sits in').toBeLessThan(seen!.railWidth)
+})

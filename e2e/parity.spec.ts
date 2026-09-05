@@ -65,21 +65,26 @@
 // entire point.
 //
 // -------------------------------------------------------------------------------------------------
-// ⭐⭐⭐ ROUND 36 PHASES 6 AND 7 – THE CLAIM CARRIES TWO EXCEPTIONS, AND BOTH ARE STATED HERE IN WORDS
+// ⭐⭐⭐ ROUND 36 PHASES 6 AND 7 AND THE SECOND PASS – THE CLAIM CARRIES THREE EXCEPTIONS, IN WORDS
 // -------------------------------------------------------------------------------------------------
-// What this file asserts, from phase 7 on, is:
+// What this file asserts, from the second pass on, is:
 //
-//     THE SAME THINGS ARE REACHABLE AT EVERY WIDTH, **OUTSIDE THE DESKTOP RAIL'S DASHBOARD AND THE
-//     WEEK PAGER'S ARROWS**.
+//     THE SAME THINGS ARE REACHABLE AT EVERY WIDTH, **OUTSIDE THE DESKTOP RAIL'S DASHBOARD, THE
+//     WEEK PAGER'S ARROWS, AND HER IDENTITY BLOCK**.
 //
-// ⚠⚠ A CLAIM WITH TWO EXCEPTIONS HAS TO STATE BOTH, which is why the sentence above names them and
-// why neither is only a decisions row. Both are the owner's own, both after playing a shipped build:
+// ⚠⚠ A CLAIM WITH THREE EXCEPTIONS HAS TO STATE ALL THREE, which is why the sentence above names
+// them and why none is only a decisions row. All three are the owner's own, each after playing a
+// shipped build:
 //
 //   1. THE RAIL'S DASHBOARD (phase 6): «можно вынести эту часть поля навигации из этой проверки? у
 //      меня вообще планы небольшие на этот дашборд есть дальше и это исключительно десктопная фича.»
 //   2. THE WEEK PAGER'S ARROWS (phase 7): «на десктопе неделя из двух карточек показывает две серые
 //      стрелки, которые ей никогда не понадобятся. Спрятать – да, показываем только если есть что
 //      листать.»
+//   3. HER IDENTITY BLOCK (the second pass, P2-6, 05.09.2026): «и аватар с текущей позицией и рангом
+//      (так же, как и все остальные плашки) на десктоп в боковом меню живут на всех страницах
+//      неизменно.» – the ruling `D75` asked for, whose price was named as exactly this exemption
+//      before he took it.
 //
 // ⚠⚠ AND THE SECOND ONE COSTS SOMETHING THIS FILE ARGUED AGAINST, SAID PLAINLY RATHER THAN BURIED.
 // Which weeks overflow DEPENDS ON THE WIDTH – a two-card week overflows by 273px at 375 and fits
@@ -108,6 +113,18 @@
 //   3. EVERY FIGURE THE RAIL SHOWS MUST EXIST SOMEWHERE AT 375. That keeps the honest half of his
 //      criterion. A card is a SHORTCUT; a number the phone cannot reach at all is a new fact on a
 //      desktop and reddens.
+//   4. …and the claim is restated in words, above.
+//
+// EXEMPTION 3 – HER IDENTITY BLOCK (the second pass, P2-6), built to the same four-part shape:
+//   1. ONLY THE BLOCK IS EXEMPT. The rail's five tabs and its dashboard are outside it and stay in
+//      the check, and so is every other control on every screen: `the exempt region holds ONLY her
+//      identity block` names what may be in there – her face, the week, the callout and her rank.
+//   2. THE BOUNDARY IS A PLACE, IN BOTH PLACES. `IDENTITY_BLOCK` below is the rail's own container
+//      plus the three positions on Home's photograph the block occupies below 1024 – never a list of
+//      names, so a later phase cannot widen it by calling a control something.
+//   3. ⭐⭐ THE HONEST HALF: THE BLOCK MOVED AND NOTHING WAS LOST. `the block MOVED, nothing was lost`
+//      asserts that the controls exempt at 375 are the SAME controls exempt at 1280, name for name –
+//      so «her face is chrome now» can never quietly become «her rank chip is gone on a phone».
 //   4. …and the claim is restated in words, above.
 //
 // EXEMPTION 2 – THE WEEK PAGER'S ARROWS (phase 7), built to that same four-part shape:
@@ -402,8 +419,34 @@ const RAIL_DASHBOARD = '#app > nav.tab-bar > .rail-dash'
  */
 const WEEK_PAGER = '#app .week-row > .week-pager'
 
-/** Both exempt regions, as one selector list – the form `Element.closest` takes. */
-const EXEMPT_REGIONS = `${RAIL_DASHBOARD}, ${WEEK_PAGER}`
+/**
+ * ⭐⭐⭐ ROUND 36 SECOND PASS, P2-6 – THE THIRD EXEMPT REGION, AND HE PRICED IT BEFORE HE BOUGHT IT.
+ *
+ * The owner, 05.09.2026: «и аватар с текущей позицией и рангом (так же, как и все остальные плашки)
+ * на десктоп в боковом меню живут на всех страницах неизменно». That is his ruling on `D75`, which
+ * had named this exact cost and left it to him: three controls that are on nine screens at 1280 and
+ * on none of them at 375 fail «ничего нового по идее не должно появиться» BY NAME.
+ *
+ * ⚠⚠ AND IT IS TWO PLACES, NOT ONE, WHICH IS WHAT MAKES IT HONEST RATHER THAN CONVENIENT. The block
+ * is her face, the week beside it and her rank chip; past 1024 it is the rail's, and below 1024 it is
+ * on Home's photograph, where it has always been. Exempting only the rail would leave HOME failing
+ * from the other side – its own copies would be counted at 375 and subtracted at 1280 – so the
+ * exemption is «her identity block, wherever the app draws it», and `the block MOVED, nothing was
+ * lost` below asserts that the two places carry the SAME controls.
+ *
+ * ⚠ STILL STRUCTURAL, AND STILL AS NARROW AS THE OTHER TWO. Three positions on the photograph and
+ * one container in the rail – places, never accessible names – so a later phase cannot dodge the
+ * check by naming a control it wants ignored; it would have to move an element into her header row,
+ * under her hero, into her `.diary-id`, or into the rail's own block, and
+ * `the exempt region holds ONLY her identity block` fails the moment anything else lands there.
+ */
+const RAIL_IDENTITY = '#app > nav.tab-bar > .rail-id'
+const HOME_IDENTITY =
+  '#app .diary-head > .diary-avatar-btn, #app .diary-hero > .diary-kid-hint, #app .diary-id > .diary-rank'
+const IDENTITY_BLOCK = `${RAIL_IDENTITY}, ${HOME_IDENTITY}`
+
+/** All three exempt regions, as one selector list – the form `Element.closest` takes. */
+const EXEMPT_REGIONS = `${RAIL_DASHBOARD}, ${WEEK_PAGER}, ${IDENTITY_BLOCK}`
 
 /** `a` minus `b` as MULTISETS, raw – the same counting `missingFrom` does, without its rendering.
  *  Removing exactly as many copies as `b` holds is what makes the subtraction exact rather than
@@ -448,7 +491,11 @@ async function ariaTokensOf(target: Locator): Promise<string[]> {
  *  screen's own set, which is what the walk compares. */
 async function ariaFingerprint(page: Page): Promise<string[]> {
   const whole = await ariaTokensOf(page.locator('body'))
-  const exempt = [...(await railDashboardTokens(page)), ...(await weekPagerTokens(page))]
+  const exempt = [
+    ...(await railDashboardTokens(page)),
+    ...(await weekPagerTokens(page)),
+    ...(await identityTokens(page)),
+  ]
   return exempt.length === 0 ? whole : subtractOnce(whole, exempt)
 }
 
@@ -478,6 +525,25 @@ async function weekPagerTokens(page: Page): Promise<string[]> {
   const inside = await page.locator(`${WEEK_PAGER} > *`).all()
   const tokens: string[] = []
   for (const el of inside) tokens.push(...(await ariaTokensOf(el)))
+  return tokens
+}
+
+/**
+ * Her identity block, in BOTH of the two places the app draws it.
+ *
+ * ⚠ THE RAIL'S COPY IS `display: none` BELOW 1024 AND HOME'S ARE `display: none` FROM 1024, so at
+ * any one width exactly one set is in the accessibility tree and the other contributes nothing –
+ * which is what makes this a single subtraction rather than two competing ones. On the nine screens
+ * that are not Home there is nothing at 375 and the rail's block at 1280, which is the difference
+ * this exemption exists to allow.
+ *
+ * ⚠ EACH MATCH IS SNAPSHOTTED SEPARATELY, like the week pagers and unlike the dashboard: this is a
+ * selector LIST over four positions rather than one container, so a single locator would be
+ * strict-mode ambiguous.
+ */
+async function identityTokens(page: Page): Promise<string[]> {
+  const tokens: string[] = []
+  for (const el of await page.locator(IDENTITY_BLOCK).all()) tokens.push(...(await ariaTokensOf(el)))
   return tokens
 }
 
@@ -1206,6 +1272,185 @@ test.describe("the desktop rail's dashboard is exempt – and the exemption is b
 })
 
 // =================================================================================================
+// ⭐⭐⭐ ROUND 36 SECOND PASS, P2-6 – THE IDENTITY BLOCK'S EXEMPTION, AND ITS OWN FOUR GUARDS
+// =================================================================================================
+//
+// His ruling, 05.09.2026, after playing the review wave: «и аватар с текущей позицией и рангом (так
+// же, как и все остальные плашки) на десктоп в боковом меню живут на всех страницах неизменно».
+//
+// Same shape as the two above, because a bounded exemption is this round's standard: only the block
+// is exempt, the boundary is a place, the honest half is asserted, and the claim is in words at the
+// top of the file. The `⭐ ACCEPTED` mutations for these four are in the P2-b scratch log.
+
+/** The controls the block is allowed to hold, as accessible names. ⚠ THIS IS NOT THE BOUNDARY – the
+ *  boundary is the selector list, which is a PLACE. This is the anti-vacuity list the arms below
+ *  compare against, so «the exemption swallowed something» fails by name rather than by count. */
+const IDENTITY_CONTROLS = ['Open her profile', 'How ranking points work']
+
+async function identityNamesAt(page: Page, width: number): Promise<string[]> {
+  await homeAt(page, width)
+  return (await identityTokens(page)).sort()
+}
+
+test.describe('her identity block is exempt – and the exemption is bounded', () => {
+  test('the boundary is her block in the RAIL and her block on the PHOTOGRAPH, and nothing else', async ({
+    page,
+    careerAt,
+  }) => {
+    await boot(page, careerAt)
+
+    // ⚠ THE RAIL'S BLOCK IS IN THE DOM AT EVERY WIDTH – `display: none` is what makes it
+    // desktop-only, exactly as with the dashboard – so «desktop-only» is measured as «has no box».
+    for (const width of [BASE_WIDTH, 768, 900]) {
+      await homeAt(page, width)
+      await expect(
+        page.locator(RAIL_IDENTITY),
+        `the rail's identity block has a box at ${width}px, and it is a desktop block`,
+      ).toBeHidden()
+      await expect(
+        page.locator('#app .diary-head > .diary-avatar-btn'),
+        `her face left the photograph at ${width}px, which is where a player taps it`,
+      ).toBeVisible()
+    }
+
+    await homeAt(page, 1280)
+    await expect(page.locator(RAIL_IDENTITY), 'the block is on screen at 1280').toBeVisible()
+    await expect(
+      page.locator('#app .diary-head > .diary-avatar-btn'),
+      'the photograph kept a second face at 1280 – exactly one of the two is ever on screen',
+    ).toBeHidden()
+
+    // ⭐ EXACTLY ONE, AND IT IS THE ONE INSIDE THE RAIL. A second `.rail-id` anywhere would be a
+    // second hole, so the count is asserted rather than the presence.
+    expect(await page.locator('.rail-id').count(), 'one identity block in the document').toBe(1)
+    expect(await page.locator(RAIL_IDENTITY).count(), 'and it is the one inside the rail').toBe(1)
+  })
+
+  test('the exempt region holds ONLY her identity block – her face, the week and her rank', async ({
+    page,
+    careerAt,
+  }) => {
+    await boot(page, careerAt)
+    await homeAt(page, 1280)
+
+    // ⭐⭐ THE GUARD THAT STOPS THE EXEMPTION GROWING. A later phase parking a control in the rail's
+    // identity block would be moving it OUT of the parity check, which is what a boundary-by-place
+    // is for. Named rather than counted, so the failure says which control appeared.
+    const inside = await page.evaluate((selector) => {
+      const root = document.querySelector(selector)
+      if (!root) return ['<the block is not on the page>']
+      const query =
+        'a[href],area[href],button,input,select,textarea,summary,iframe,object,embed,' +
+        '[tabindex],[contenteditable],[onclick],[role]'
+      return Array.from(root.querySelectorAll(query)).map(
+        (el) => el.getAttribute('aria-label') ?? (el.textContent ?? '').replace(/\s+/g, ' ').trim(),
+      )
+    }, RAIL_IDENTITY)
+    // The callout is a one-time control and this career may or may not still be holding it, so it is
+    // allowed and not required; anything ELSE is a control that has been taken out of the check.
+    const stray = inside.filter(
+      (name) => !IDENTITY_CONTROLS.includes(name) && name !== 'Tap the photo – her page lives here',
+    )
+    expect(
+      stray,
+      'a control that is not part of her identity block is inside the ONE region P2-6 exempts. ' +
+        'The block is her face, the week beside it and her rank chip - so either it belongs ' +
+        'somewhere else, or the exemption has quietly grown.',
+    ).toEqual([])
+
+    // …and the two that MUST be there are, or this guards an empty set.
+    for (const name of IDENTITY_CONTROLS) {
+      expect(inside, `the rail's block does not hold «${name}», so the exemption guards nothing`).toContain(
+        name,
+      )
+    }
+  })
+
+  test('⭐⭐ THE HONEST HALF – the block MOVED, nothing was lost: the same controls at 375 and 1280', async ({
+    page,
+    careerAt,
+  }) => {
+    await boot(page, careerAt)
+
+    // ⚠⚠ WITHOUT THIS ARM THE EXEMPTION WOULD READ «her face and her rank may differ between a phone
+    // and a desktop», which is not what he ruled. What he ruled is that the block LIVES in the rail
+    // on the desktop – the same block, with the same controls, that the photograph carries on a
+    // phone. So the two exempt sets are compared to each other, name for name.
+    const phone = await identityNamesAt(page, BASE_WIDTH)
+    const desktop = await identityNamesAt(page, 1280)
+    expect(phone.length, 'nothing is exempt at 375, so this compares two empty sets').toBeGreaterThan(1)
+    expect(
+      desktop,
+      'her identity block is not the same set of controls in the rail as it is on the photograph. ' +
+        'The exemption is «the block moved»; a control on one side and not the other is a control ' +
+        'lost, and that is what «1 к 1» forbids.',
+    ).toEqual(phone)
+  })
+
+  test('the block is on EVERY screen at 1280 and on none of them at 375 – which is what it buys', async ({
+    page,
+    careerAt,
+  }) => {
+    await boot(page, careerAt)
+
+    // ⭐⭐⭐ THE PROPERTY HE ASKED FOR, MEASURED ON ALL TEN SCREENS RATHER THAN TRUSTED. Before this
+    // item the block was HomeScreen's and teleported, so on Season, Calendar and Stats at 1280
+    // `.rail-id` measured an EMPTY 171x20 slot while the dashboard tiles beside it were 171x218.
+    // Same walk as «the same set of cards is on every page», for the same reason: it is a claim
+    // about where the block LIVES, and ten screens agreeing is the only way to see it.
+    const seen = new Map<string, string>()
+    for (const [screen, station] of Object.entries(STATIONS)) {
+      await page.setViewportSize({ width: 1280, height: VIEWPORT_HEIGHT })
+      await park(page)
+      await station.visit(page)
+      await expect(station.arrived(page), `${screen} at 1280px – the walk did not arrive`).toBeVisible()
+      await expect(
+        page.locator(RAIL_IDENTITY),
+        `her identity block is not on ${screen} at 1280 – it is chrome now, on every page`,
+      ).toBeVisible()
+      for (const name of IDENTITY_CONTROLS) {
+        await expect(
+          page.locator(RAIL_IDENTITY).getByRole('button', { name, exact: true }),
+          `«${name}» is not in the rail on ${screen} at 1280`,
+        ).toBeVisible()
+      }
+      // ⚠ THE ONE-TIME CALLOUT IS SUBTRACTED FROM THE COMPARISON, AND IT IS THE ONLY THING THAT IS.
+      // It is dismissed by the first tap on her face – and the walk to `KidScreen` IS that tap – so
+      // a career that has opened her page once legitimately shows a shorter block afterwards.
+      // Comparing it would be asserting that a one-time hint is permanent, which is the opposite of
+      // what it is. Everything else in the block is compared verbatim.
+      seen.set(
+        screen,
+        (await page.locator(RAIL_IDENTITY).innerText())
+          .replace('Tap the photo – her page lives here', '')
+          .replace(/\s+/g, ' ')
+          .trim(),
+      )
+    }
+    const [first, ...rest] = [...seen.entries()]
+    expect(first[1].length, 'the block is empty, so ten empty strings would be equal').toBeGreaterThan(10)
+    for (const [screen, text] of rest) {
+      expect(
+        text,
+        `the identity block differs on ${screen} – «неизменно» is his own word, and it is the ` +
+          'shell that draws it, from one composable',
+      ).toBe(first[1])
+    }
+
+    // …and the other half of «desktop-only», on a screen that is not Home: at 375 the bottom bar
+    // never grows a face.
+    await page.setViewportSize({ width: BASE_WIDTH, height: VIEWPORT_HEIGHT })
+    await park(page)
+    await navTab(page, 'Stats')
+    await expect(page.getByRole('heading', { name: 'Stats', level: 2 })).toBeVisible()
+    await expect(
+      page.locator(RAIL_IDENTITY),
+      'the identity block has a box at 375 on Stats, so the phone gained a control',
+    ).toBeHidden()
+  })
+})
+
+// =================================================================================================
 // ⭐⭐⭐ ROUND 36 PHASE 7 – THE ARROWS' EXEMPTION, AND ITS OWN FOUR GUARDS
 // =================================================================================================
 //
@@ -1470,23 +1715,21 @@ test.describe("the week pager's arrows are exempt – and the exemption is bound
     await answerOpeningKnock(page)
     await dismissTourBriefing(page)
 
-    // ⚠ THE RAIL IS SUBTRACTED FROM BOTH SIDES FIRST, AND THAT IS NOT A CONVENIENCE. At 1280 the
-    // Season screen also carries the OTHER exemption – the rail's dashboard – so a raw 375-vs-1280
-    // diff would name its three cards too and this arm would be measuring both regions at once. The
-    // claim here is about the pager alone, so the rail is taken out on each side by its own
-    // subtraction, exactly as the walk does.
+    // ⚠ THE OTHER TWO REGIONS ARE SUBTRACTED FROM BOTH SIDES FIRST, AND THAT IS NOT A CONVENIENCE.
+    // At 1280 the Season screen also carries the rail's dashboard and (since P2-6) her identity
+    // block, so a raw 375-vs-1280 diff would name their controls too and this arm would be measuring
+    // three regions at once. The claim here is about the pager alone, so the other two are taken out
+    // on each side by their own subtractions, exactly as the walk does.
+    const others = async (): Promise<string[]> => [
+      ...(await railDashboardTokens(page)),
+      ...(await identityTokens(page)),
+    ]
     await seasonAt(page, BASE_WIDTH)
-    const phoneRaw = subtractOnce(
-      await ariaTokensOf(page.locator('body')),
-      await railDashboardTokens(page),
-    )
+    const phoneRaw = subtractOnce(await ariaTokensOf(page.locator('body')), await others())
     const exempt = await weekPagerTokens(page)
 
     await seasonAt(page, 1280)
-    const deskRaw = subtractOnce(
-      await ariaTokensOf(page.locator('body')),
-      await railDashboardTokens(page),
-    )
+    const deskRaw = subtractOnce(await ariaTokensOf(page.locator('body')), await others())
     const deskExempt = await weekPagerTokens(page)
 
     expect(exempt.length, 'the pager contributes nothing at 375, so the exemption guards an empty set').toBeGreaterThan(
@@ -1501,7 +1744,8 @@ test.describe("the week pager's arrows are exempt – and the exemption is bound
     ).toEqual(missingFrom(exempt, []))
     expect(
       missingFrom(deskRaw, phoneRaw),
-      'and with the rail taken off both sides, nothing at 1280 is missing on the phone',
+      'and with the rail and her identity block taken off both sides, nothing at 1280 is missing ' +
+        'on the phone',
     ).toEqual([])
   })
 })
