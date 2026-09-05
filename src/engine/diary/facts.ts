@@ -140,7 +140,27 @@ export interface DiaryWorldView {
    *  twenty-two-year-old's diary, which is the bug this wave is here to fix. */
   schoolOver: boolean
   kidId: string
-  startAgeYears: number
+  /** ⭐⭐⭐ HER AGE IN ANY WEEK, THE ONE CLOCK, HANDED IN RATHER THAN RE-DERIVED (D-01, 05.09 review).
+   *
+   *  ⚠⚠ IT REPLACES `startAgeYears`, AND THAT IS THE WHOLE FIX. The diary used to carry her age at
+   *  week 0 and rebuild every other age from it as `startAgeYears + Math.floor(week / 52)` – the
+   *  BAND clock, which `world/age.ts:65` says of in capitals: «IF YOU ARE ASKING HOW OLD SHE IS,
+   *  THIS IS THE WRONG FUNCTION». Every other surface reads `Snapshot.ageYears`, built from
+   *  `kidAgeAt` off her real birth date. Measured over ten seasons: a girl born 20 December had the
+   *  diary painting the NEXT portrait stage for 51 consecutive weeks at each `portraitStage`
+   *  boundary (weeks 156-206 and 468-518), so her Home header and her diary showed two different
+   *  faces of the same girl on one screen for a year at a time. Even a 15 January birthday drifts
+   *  for two weeks. The album's own header (`world/album.ts:68-73`) records the last time this class
+   *  of drift shipped: «header said «2031 – she was 13» while Home, about the same week, read 14».
+   *
+   *  ⚠ A FUNCTION AND NOT A BIRTH DATE, because the diary owns no calendar arithmetic – the same
+   *  rule `schoolOver` above is written to. `toSnapshot` closes over the world and passes
+   *  `kidAgeAt`, so the ruling keeps its one spelling and this module gains no import.
+   *
+   *  ⚠ AND THE WHOLE-CAREER DOMAIN IS LOAD-BEARING: the Memory card paints her as she was at a
+   *  milestone's week, which may be seasons back, so this is asked about arbitrary past weeks and
+   *  not only about `week`. */
+  kidAgeAt: (week: number) => number
   condition: number
   fundsCents: number
   injury: { kind: string; weeksRemaining: number; totalWeeks: number } | null

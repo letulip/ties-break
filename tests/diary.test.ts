@@ -47,6 +47,16 @@ import { TIER_SHORT as TIER_SHORT_VIA_UI } from '../src/composables/weekAhead'
 import { CROPS, facePoint } from '../src/art/faceRects'
 import { region, regionToLast } from './helpers/source'
 
+/** ⭐ D-01 (05.09 review) – THE AGE CLOCK A FIXTURE CARRIES WHEN ITS SUBJECT IS NOT HER AGE.
+ *
+ *  `DiaryWorldView.startAgeYears: 14` became `kidAgeAt: (week) => number` – the diary no longer
+ *  rebuilds an age from a starting number and a season count (the BAND clock, which parted from her
+ *  real age by up to a year for a girl born late in the calendar). Every fixture in this file was
+ *  written about the WORDS, so it wants the simplest total clock there is: she is fourteen in every
+ *  week, which is exactly what `startAgeYears: 14` meant here. An arm about the PORTRAIT passes its
+ *  own clock. */
+const FIXTURE_AGE_AT = (): number => 14
+
 const read = (rel: string) => readFileSync(new URL(rel, import.meta.url), 'utf8')
 
 // ---------------------------------------------------------------------------
@@ -140,7 +150,7 @@ describe('rankClimbed – the owner\'s "good loss" softener (earned climbs only,
       // W4-SCHOOL: a schoolgirl, which is what every fixture in this file was written about.
       schoolOver: false,
       kidId: KID_ID,
-      startAgeYears: 14,
+      kidAgeAt: FIXTURE_AGE_AT,
       condition: 80,
       fundsCents: 100_000_00,
       injury: null,
@@ -563,12 +573,12 @@ describe('Memory – selection', () => {
 
   it('the card is empty only at the very start of a career – two weeks, not eight', () => {
     for (let week = 0; week < MEMORY_DEBUT_WEEKS; week++) {
-      expect(selectMemory([{ type: 'title', week: 0, tier: 'local' }], week, 's', week)).toBeNull()
+      expect(selectMemory([{ type: 'title', week: 0, tier: 'local' }], week, 's', FIXTURE_AGE_AT)).toBeNull()
     }
     // ...and from then on it always answers, even with an empty ledger: the opening week IS the
     // first memory. This is the owner's "when would it not be too early" made concrete.
     for (let week = MEMORY_DEBUT_WEEKS; week < 40; week++) {
-      const card = selectMemory([], week, 's', 14)
+      const card = selectMemory([], week, 's', FIXTURE_AGE_AT)
       expect(card, `week ${week}`).not.toBeNull()
       expect(card!.kind).toBe('debut')
       expect(card!.milestone).toBeNull()
@@ -578,26 +588,26 @@ describe('Memory – selection', () => {
 
   it('a milestone younger than the floor is not yet a memory – the debut card holds the slot', () => {
     for (let week = 10; week < 10 + MEMORY_MIN_WEEKS; week++) {
-      const card = selectMemory([title], week, 's', 14)
+      const card = selectMemory([title], week, 's', FIXTURE_AGE_AT)
       // Not null any more (W3), but it may not be the fresh milestone either: a thing she did this
       // month is not something she remembers. The debut is what fills the card until it ages in.
       expect(card!.kind).toBe('debut')
     }
     // ...and the moment it HAS aged, the rotation can reach it.
-    const reached = Array.from({ length: 12 }, (_, i) => selectMemory([title], 10 + MEMORY_MIN_WEEKS + i, 's', 14)!)
+    const reached = Array.from({ length: 12 }, (_, i) => selectMemory([title], 10 + MEMORY_MIN_WEEKS + i, 's', FIXTURE_AGE_AT)!)
     expect(reached.some((c) => c.milestone !== null)).toBe(true)
   })
 
   it('the anniversary path: ~52 weeks later (±1) the memory always shows, as "one year ago"', () => {
     for (const week of [61, 62, 63]) {
-      const card = selectMemory([title], week, 'anniversary-seed', 14)
+      const card = selectMemory([title], week, 'anniversary-seed', FIXTURE_AGE_AT)
       expect(card, `week ${week}`).not.toBeNull()
       expect(card!.kind).toBe('anniversary')
       expect(card!.whenLabel).toBe('one year ago')
       expect(card!.milestone).toEqual(title)
     }
     // Outside the window it is the ordinary rotation again, whichever entry that lands on.
-    const outside = selectMemory([title], 65, 'anniversary-seed', 14)!
+    const outside = selectMemory([title], 65, 'anniversary-seed', FIXTURE_AGE_AT)!
     expect(outside.kind).not.toBe('anniversary')
   })
 
@@ -607,8 +617,8 @@ describe('Memory – selection', () => {
     const last: Milestone = { type: 'international', week: 100, tier: 'j30' }
     const seen = new Set<string>()
     for (let week = 200; week < 240; week++) {
-      const a = selectMemory([first, mid, last], week, 'rotation-seed', 14)
-      const b = selectMemory([first, mid, last], week, 'rotation-seed', 14)
+      const a = selectMemory([first, mid, last], week, 'rotation-seed', FIXTURE_AGE_AT)
+      const b = selectMemory([first, mid, last], week, 'rotation-seed', FIXTURE_AGE_AT)
       expect(a).toEqual(b) // still a pure function of (milestones, week, seed)
       expect(a, `week ${week} left the card empty`).not.toBeNull()
       seen.add(a!.milestone === null ? 'debut' : `${a!.milestone.type}:${a!.milestone.week}`)
@@ -617,7 +627,7 @@ describe('Memory – selection', () => {
     // "rotation of all previous". The old code could only ever have shown `last` plus a 1-in-5 echo.
     expect([...seen].sort()).toEqual(['debut', 'final:60', 'international:100', 'title:10'])
     // ...and only the newest of them is ever called `recent`, so the kinds still mean something.
-    const kinds = Array.from({ length: 40 }, (_, i) => selectMemory([first, mid, last], 200 + i, 'rotation-seed', 14)!)
+    const kinds = Array.from({ length: 40 }, (_, i) => selectMemory([first, mid, last], 200 + i, 'rotation-seed', FIXTURE_AGE_AT)!)
     for (const c of kinds) {
       if (c.kind === 'recent') expect(c.milestone).toEqual(last)
       if (c.kind === 'debut') expect(c.milestone).toBeNull()
@@ -628,17 +638,25 @@ describe('Memory – selection', () => {
     // ⚠ W3: "before the eight-week floor" became "before the two-week one", and an empty ledger is
     // no longer one of the cases – the opening week is itself a memory. This is still the pin that
     // keeps "Too early for memories." honest; it is just a far smaller window now.
-    expect(selectMemory([title], MEMORY_DEBUT_WEEKS - 1, 'seed', 14)).toBeNull()
-    expect(selectMemory([], 300, 'seed', 14)).not.toBeNull()
+    expect(selectMemory([title], MEMORY_DEBUT_WEEKS - 1, 'seed', FIXTURE_AGE_AT)).toBeNull()
+    expect(selectMemory([], 300, 'seed', FIXTURE_AGE_AT)).not.toBeNull()
     for (let week = 300; week < 340; week++) {
-      expect(selectMemory([title], week, 'seed', 14), `week ${week}`).not.toBeNull()
+      expect(selectMemory([title], week, 'seed', FIXTURE_AGE_AT), `week ${week}`).not.toBeNull()
     }
   })
 
-  it('the painting is from the band she was in THEN: a title at 17 shows the teen band at 22', () => {
-    const late: Milestone = { type: 'title', week: 160, tier: 'j30' } // age 14 + 3 = 17 -> teen
+  it('the painting is from the age she was THEN: a title at 17 shows the teen band at 23', () => {
+    // ⚠⚠ RE-AIMED BY D-01 (05.09 review), AND ONTO A CLAIM THE OLD ARM COULD NOT MAKE. It read
+    // `startAgeYears + Math.floor(pick.week / 52)` – one number and the calendar – so "her age then"
+    // and "her age now" were the same arithmetic and the arm could not tell them apart. The card
+    // now asks the world's own clock, and the clock this arm hands it ANSWERS DIFFERENTLY FOR THE
+    // TWO WEEKS: seventeen at the milestone, twenty-three by the week the rotation reads it. Only a
+    // card that asks about `pick.week` can come back 'teen'; one that asks about `week` says
+    // 'adult'. Same protected fact – the painting is the girl who won it – proved properly.
+    const ageAt = (w: number): number => (w <= 160 ? 17 : 23)
+    const late: Milestone = { type: 'title', week: 160, tier: 'j30' }
     for (let week = 168; week < 400; week++) {
-      const card = selectMemory([late], week, 'band-seed', 14)
+      const card = selectMemory([late], week, 'band-seed', ageAt)
       // ⚠ W3: the debut card is also reachable on these weeks and it is a picture of week 0, so the
       // band assertion belongs to the weeks the rotation lands on the MILESTONE. Same protected
       // fact: the painting is the band she was in when it happened, not the band she is in now.
@@ -678,7 +696,7 @@ describe('Memory – selection', () => {
     }
     // The debut card's own lines go through selectMemory, so they are measured as rendered.
     const debut = new Set<string>()
-    for (let week = 2; week < 200; week++) debut.add(selectMemory([], week, `s${week}`, 14)!.line)
+    for (let week = 2; week < 200; week++) debut.add(selectMemory([], week, `s${week}`, FIXTURE_AGE_AT)!.line)
     expect(debut.size, 'the opening week must not be one sentence forever').toBeGreaterThan(2)
     for (const line of debut) {
       expect(line.length, line).toBeLessThanOrEqual(MEMORY_LINE_MAX)
@@ -690,12 +708,12 @@ describe('Memory – selection', () => {
   it('the debut card is a picture of the girl who STARTED – her band at week 0, composed', () => {
     // The onboarding hero is `jun-norm`; the first page of the album is the same picture, so the
     // card reads as the beginning rather than as a missing entry.
-    const card = selectMemory([], 300, 'debut-seed', 14)!
+    const card = selectMemory([], 300, 'debut-seed', FIXTURE_AGE_AT)!
     expect(card.stage).toBe('young')
     expect(card.emotion).toBe('norm')
     expect(card.whenLabel).toBe("W1 '31")
     // ...and it is stable per week, like every other line in this module.
-    expect(selectMemory([], 300, 'debut-seed', 14)).toEqual(card)
+    expect(selectMemory([], 300, 'debut-seed', FIXTURE_AGE_AT)).toEqual(card)
   })
 
   it('memory emotions stay in the composed register except the title and the cheque', () => {

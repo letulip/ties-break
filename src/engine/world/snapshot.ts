@@ -82,7 +82,9 @@ import {
   UPCOMING_WEEKS,
 } from './constants'
 import { financeWindow, financeSeries, seasonIndexOf, seasonStartWeek } from './ledger'
-import { ageAtWeek, birthdayTurning, kidAgeAt, kidAgeYears, START_AGE_YEARS } from './age'
+// ⚠ `START_AGE_YEARS` left this list with D-01: the diary was its last reader here, and the
+// band clock it opened is exactly what the finding removed.
+import { ageAtWeek, birthdayTurning, kidAgeAt, kidAgeYears } from './age'
 // ⭐ v48: the birthday popup's copy, assembled in the engine like every other dialog's.
 import { birthdayHistory, buildBirthdayPrompt, giftNoun } from './birthday'
 import { buildShootClashPrompt } from './shootClash'
@@ -1290,7 +1292,13 @@ export function toSnapshot(world: WorldState, stopReasons?: StopReason[]): Snaps
     inCollege: world.college !== null && world.week < world.college.untilWeek,
     schoolOver: schoolIsOver(world.week, world.profile.birthMonth),
     kidId: KID_ID,
-    startAgeYears: START_AGE_YEARS,
+    // ⭐⭐ D-01 (05.09 review) – THE CLOCK ITSELF, NOT ITS STARTING NUMBER. This handed the diary
+    // `START_AGE_YEARS` and the diary rebuilt every age from it by adding completed seasons; that
+    // band clock parted from her real age by up to a year for a girl born late in the calendar, and
+    // the header beside the diary's own painting reads `ageYears` two lines up. Passing `kidAgeAt`
+    // keeps the 09.08 one-clock ruling's single spelling and lets the Memory card ask about the week
+    // a milestone happened in, which is what it paints.
+    kidAgeAt: (week: number) => kidAgeAt(world, week),
     condition: shownCondition,
     fundsCents: world.fundsCents,
     injury: world.injury
