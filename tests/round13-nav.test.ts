@@ -295,7 +295,13 @@ describe('R13-12 — the Kid screen opens from her photograph', () => {
   it('the hint shows until first tap, and the tap persists the dismissal OUTSIDE the save', () => {
     expect(homeLogic).toContain("const KID_HINT_KEY = 'tb:kidAvatarHintSeen'")
     // shown iff never dismissed on this device (the TOUR_SEEN_KEY idiom, localStorage)...
-    expect(homeLogic).toContain('ref(!localStorage.getItem(KID_HINT_KEY))')
+    // ⚠ RE-AIMED BY U-07 (05.09) – THE ACCESS IS GUARDED NOW AND THE CLAIM IS UNCHANGED. It read
+    // `ref(!localStorage.getItem(KID_HINT_KEY))`, and a browser with site data blocked throws
+    // `SecurityError` on the PROPERTY ACCESS – during setup, on the first screen of every career.
+    // `composables/localStore.ts`'s `readLocal` is that same read with the guard every other reader
+    // in the app writes out by hand; the default is identical (no mark read means the callout is
+    // shown), which is what `tests/component/round36-blocked-storage.test.ts` mounts and proves.
+    expect(homeLogic).toContain('ref(!readLocal(KID_HINT_KEY))')
     // ...and the first tap both opens the screen and persists the dismissal. ⚠ RE-AIMED BY P2-6 –
     // the dismissal is `dismissKidHint()` now, in the composable, because the callout is drawn twice
     // (Home's photograph below 1024, the rail above it) and one ref is what stops a tap on one
@@ -304,7 +310,8 @@ describe('R13-12 — the Kid screen opens from her photograph', () => {
     const openKid = region(home, 'function openKid', '</script>')
     expect(openKid).toContain('dismissKidHint()')
     const dismiss = region(homeLogic, 'function dismissKidHint', 'return {')
-    expect(dismiss).toContain("localStorage.setItem(KID_HINT_KEY, '1')")
+    // ⚠ RE-AIMED BY U-07, the write half of the same guard – see the read above.
+    expect(dismiss).toContain("writeLocal(KID_HINT_KEY, '1')")
     // The key left App.vue with the header – no second copy can drift out of step.
     expect(app).not.toContain('KID_HINT_KEY')
     // NOT in the save: no store/engine surface knows the key.
