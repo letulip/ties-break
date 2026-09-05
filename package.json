@@ -53,7 +53,6 @@
     "test:sim": "node scripts/sim.mjs",
     "test:all": "vitest run --no-file-parallelism --reporter=dot",
     "test:quiet": "node scripts/units.mjs",
-    "test:sim:quiet": "node scripts/sim.mjs",
     "test:component": "vitest run --project component",
     "test:e2e": "node scripts/e2e.mjs",
     "test:e2e:report": "node scripts/e2e.mjs --report",
@@ -61,6 +60,9 @@
     "prepare": "git config core.hooksPath .githooks || true",
     "graph": "node scripts/graph.mjs",
     "graph:check": "node scripts/graph.mjs --check"
+  },
+  "engines": {
+    "node": ">=22"
   },
   "dependencies": {
     "pinia": "^3.0.0",
