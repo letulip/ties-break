@@ -26,10 +26,10 @@
 // The advance button is NOT here – it is App.vue's sticky bar, global on every tab (R13-12).
 import { computed, ref } from 'vue'
 import { useGameStore } from '../../stores/game'
-import { LADDER_LABEL, rankChipTrack, type PlayStyle, type WorldEvent, type WorldMatch } from '../../shared/protocol'
-import type { LadderTrack, TierId } from '../../engine/season/types'
-import { weekDateLine, weekLabel, weekRange } from '../../shared/dates'
-import { formatShortName, rankLabel } from '../../shared/format'
+import type { PlayStyle, WorldEvent, WorldMatch } from '../../shared/protocol'
+import type { TierId } from '../../engine/season/types'
+import { weekLabel, weekRange } from '../../shared/dates'
+import { formatShortName } from '../../shared/format'
 import { formatCents } from '../../shared/money'
 import { KID_ID, flipScore, practiceCaution } from '../../engine/world'
 // ⭐ ROUND 27 #2 – the fixture's own name for the bottom control's fifth label. One place spells it
@@ -38,7 +38,11 @@ import { NATIONAL_TEAM } from '../../engine/nationalTeam'
 import { COLLEGE_LEAGUE } from '../../engine/collegeLeague'
 import { ECONOMY } from '../../engine/economy'
 import { useKidEmotion } from '../../composables/kidEmotion'
-import { useHeaderAvatar } from '../../composables/headerAvatar'
+// ⭐⭐⭐ ROUND 36 SECOND PASS, P2-6 – THE ONE OWNER OF HER IDENTITY. Her face, the week's three
+// strings, the rank chip's five derived facts and the one-time callout's ref all come from here now,
+// because `RailIdentity.vue` in the shell draws the same block on every page and two computations of
+// one rank is this repo's named recurring disease. Nothing about them changed – the code moved.
+import { useKidIdentity } from '../../composables/kidIdentity'
 // The app's one red-to-green ramp, shared with the Season and Calendar odds rings. `{ pct }` names
 // the scale IN the call: this number is a 0..100 percentage, not a 0..1 share, and the signature
 // will not let the two be confused.
@@ -110,16 +114,29 @@ const base = import.meta.env.BASE_URL
 // emotional (useKidEmotion, below). This 256px crop in the corner is F45-1's age-only `norm`: it is
 // chrome, and chrome that flickers with each week's result is noise. Keeping them on separate
 // composables is what makes that guarantee checkable.
-const { cropUrl: headerAvatarUrl } = useHeaderAvatar()
-// R13-12's discoverability callout: shown once ever per device, dismissed by the first tap on
-// either the avatar or the callout itself. localStorage, never the save.
-const KID_HINT_KEY = 'tb:kidAvatarHintSeen'
-const showKidHint = ref(!localStorage.getItem(KID_HINT_KEY))
+//
+// ⭐⭐⭐ P2-6 – AND THE WHOLE BLOCK IS ONE COMPOSABLE NOW. The crop, the week's three strings, the
+// rank chip's five derived facts and the one-time callout's ref were all declared in this file and
+// teleported into the rail; the rail draws them on every page from here on, so the ARITHMETIC moved
+// to `composables/kidIdentity.ts` and this screen is one of its two renders. Every line of it is the
+// line that stood here, moved verbatim – see that file's header for why the teleport could not
+// survive «на всех страницах» and why a second copy of the sums was never an option.
+// ⚠ `showKidHint` IS DELIBERATELY THE SAME REF THE RAIL READS, so a dismissal on one width is a
+// dismissal on the other. It was one ref before too – the teleported callout was this component's.
+const {
+  headerAvatarUrl,
+  dateLine,
+  chipTrack,
+  ladderLabel,
+  rankText,
+  ranked,
+  rankChipTitle,
+  rankMovement,
+  showKidHint,
+  dismissKidHint,
+} = useKidIdentity()
 function openKid(): void {
-  if (showKidHint.value) {
-    showKidHint.value = false
-    localStorage.setItem(KID_HINT_KEY, '1')
-  }
+  dismissKidHint()
   emit('navigate', 'kid')
 }
 // Diary-1 (D2): the top of Home is the BIG painting – the same emotion-correct 512px art the Kid
@@ -199,7 +216,9 @@ const week = computed(() => game.snapshot?.week ?? 0)
 // "W27 2033 · Jun 3 – Jun 9" – OUR week number, the year written out in full (the header has the
 // room the 30px status pill does not) and the week's real calendar days. Composed by
 // shared/dates.ts and nowhere else, so no surface can invent a second shape for it.
-const dateLine = computed(() => weekDateLine(week.value))
+// ⭐ P2-3/P2-6: `dateLine` is `useKidIdentity()`'s above, along with the two halves the rail draws
+// on separate lines – the whole point being that the heading on the photograph and the two lines in
+// the rail are the same three strings from one place.
 
 // ⚠ THE BELL'S DOT NOW CLEARS (owner, 04.08: «Красная точка на колокольчике на домашнем экране не
 // сбрасывается»), and the fix is a watermark rather than a new rule.
@@ -271,53 +290,13 @@ function openInbox(): void {
 // the one number that is a story beat rather than a readout, and because it carries the best-6
 // explainer the owner needed twice (round-6). Season points went to Stats with the rest.
 //
-// ⚠ AND IT SAYS WHICH TABLE IT IS (30.07, fix/ranking-truth). There are two - the national one and
-// the international one, two currencies with no exchange rate (docs/specs/two-ladders.md) - and this
-// chip showed a bare "#4" read off `kidRank`, which was a rank folded over BOTH ladders at the time
-// and is the international one now. Either way Stats showed a different number for the same week,
-// which is the owner's «Rank #4 on the home tab and end of season popup seems strange since in stats
-// I can clearly see #128».
-//
-// So the chip reads the ladder the ENGINE says she is competing in (`activeLadder`: professional
-// once any W result has ever counted - permanently from that moment; international while she holds
-// a counting result there; national before that) and NAMES it. Same source as the Stats screen's
-// default tab, so the two cannot disagree again.
-//
-// ⚠ AND IT IS NOT ALWAYS DRAWN (owner, 02.08: «нужна ли она там вообще?» - architect's ruling).
-// `rankChipTrack` returns null before her first counting result in ANY table, and the chip goes
-// with it: "National · Unranked" over a brand-new career was a readout with nothing to read. The
-// moment anything counts anywhere the chip is back for good - the professional arm survives even a
-// window that empties (Professional + Unranked), which is the one-way door the engine's
-// `activeLadderOf` owns. The selection rule is pinned in tests/ladder-separation.test.ts S7.
-const chipTrack = computed(() => rankChipTrack(game.snapshot))
-const activeLadder = computed(() => game.snapshot?.activeLadder ?? 'domestic')
-const ladder = computed(() => game.snapshot?.ladders[activeLadder.value])
-const ladderLabel = computed(() => LADDER_LABEL[activeLadder.value])
-const kidRank = computed(() => ladder.value?.rank ?? null)
-// 'Unranked' until she's earned a counting result (see rankLabel): a point-less kid isn't really
-// ranked, so we don't flash a misleading '#1' on a brand-new career. `rank: null` is now the engine's
-// own way of saying exactly that, so this stops counting results to find out for itself.
-const ranked = computed(() => kidRank.value !== null)
-// The long form, where a chip has no room: which table, and the one fact about it that matters.
-// A TOTAL Record over LadderTrack (the LADDER_TIP discipline from Stats): a fourth table cannot
-// ship until somebody writes this chip's sentence for it.
-const RANK_CHIP_TITLE: Record<LadderTrack, string> = {
-  domestic:
-    'Her national ranking – Local, Regional and National results. These are the points that open her next tier. Tap to see how they add up.',
-  itf: 'Her international ranking – Junior Tour results only. National results do not count towards it. Tap to see how it adds up.',
-  wta: 'Her professional ranking – W15 and up, the paid tour. Junior points never cross over. Tap to see how it adds up.',
-}
-const rankChipTitle = computed(() => RANK_CHIP_TITLE[activeLadder.value])
-// FROM THE SAME TABLE as `kidRank` above. Reading `snapshot.prevKidRank` here would diff her national
-// place against last week's international one; `ladders[t].prevRank` is per-ladder for that reason.
-const prevKidRank = computed(() => ladder.value?.prevRank ?? null)
-// Rank goes UP when the number goes DOWN. null prev (or no change) shows a neutral dash.
-const rankMovement = computed<{ dir: 'up' | 'down' | 'flat'; by: number }>(() => {
-  const now = kidRank.value
-  const prev = prevKidRank.value
-  if (now === null || prev === null || now === prev) return { dir: 'flat', by: 0 }
-  return now < prev ? { dir: 'up', by: prev - now } : { dir: 'down', by: now - prev }
-})
+// ⭐⭐⭐ P2-6 – AND THE FIVE DERIVED FACTS BEHIND IT LEFT THIS FILE, WHOLE. `chipTrack`,
+// `activeLadder`, `kidRank`, `ranked`, `rankMovement` and the chip's three long-form titles are in
+// `composables/kidIdentity.ts` now, with every one of their notes – the ranking-truth ruling of
+// 30.07, the «нужна ли она там вообще?» ruling of 02.08 and the per-ladder `prevRank` reason. They
+// moved because the shell's `RailIdentity.vue` draws this same chip on all ten screens from 1024,
+// and a second computation of her rank in the shell is the disease D75 refused to ship. Nothing was
+// re-derived, re-worded or re-tuned on the way: it is the same code, one import away.
 
 // --- THE CONDITION RING (A2b, the owner's ruling 28.07) ------------------------------------------
 // Slice B's ten squares became the export's ProgressRing, and it moved ONTO the photograph, into the
@@ -1301,7 +1280,7 @@ async function leaveCollege(): Promise<void> {
             @click="openRankHelp"
           >
             <span class="rank-ladder">{{ ladderLabel }}</span>
-            <span>{{ rankLabel(kidRank ?? 0, ranked) }}</span>
+            <span>{{ rankText }}</span>
             <template v-if="ranked">
               <span v-if="rankMovement.dir === 'up'" class="rank-move up">&#8593;{{ rankMovement.by }}</span>
               <span v-else-if="rankMovement.dir === 'down'" class="rank-move down">&#8595;{{ rankMovement.by }}</span>
@@ -1349,126 +1328,22 @@ async function leaveCollege(): Promise<void> {
       </div>
 
       <!-- ═══════════════════════════════════════════════════════════════════════════════════════
-           ⭐⭐⭐ ROUND 36 REVIEW #2 – THE THREE ICONS COME OFF THE PHOTOGRAPH. It reverses D14.
+           ⭐⭐⭐ ROUND 36 SECOND PASS, P2-6 – HER FACE, THE WEEK AND HER RANK ARE THE SHELL'S NOW.
            ═══════════════════════════════════════════════════════════════════════════════════════
-           The bell, the letter and the settings gear live on the desktop in the top-right corner,
-           OFF the picture. His own sentence is quoted in the style block below and in
-           docs/rounds/round-36-review.md; a template may carry no Cyrillic at all
-           (tests/template-copy-rules.test.ts).
+           Review #3 put them in the rail with a `<Teleport>`, which kept the arithmetic here and
+           moved only the elements – and that is exactly why they were on screen while HOME was and
+           on none of the other nine pages. He has looked at that and ruled: the block lives on every
+           page, the same way the dashboard tiles beside it do. His sentence is quoted in the style
+           block, in docs/rounds/round-36-review.md and in src/composables/kidIdentity.ts; a template
+           may carry no Cyrillic at all (tests/template-copy-rules.test.ts).
 
-           D14 left them on the painting because moving them means getting them out of a box that is
-           `overflow: hidden`, and nothing but a template change can do that. This is that change.
-
-           ⚠⚠ IT IS A SECOND COPY AND NOT A MOVE, AND THE REASON IS THE ROUND'S IDENTITY CONTRACT.
-           The copy above is inside `.diary-head`, which is `position: absolute` on the hero and
-           whose remaining children are sized by it – taking the tools OUT of that row widens
-           `.diary-date`'s box by 108px on a phone, and not one box below 768 may move. So the hero
-           keeps its own row untouched and this copy is drawn beside it, with exactly one of the two
-           on screen at any width (`display: none` does the switching, and it costs no box and no
-           accessibility node on the side that is off – which is why `e2e/parity.spec.ts` sees the
-           same three buttons at 375 and at 1280 and needs no exemption for them).
-
-           ⚠ IT IS AFTER THE PHOTOGRAPH IN THE DOM, NOT BEFORE IT, and that is round 35 #11's rule:
-           `.diary-hero:not(:first-child)` is what stops the hero's negative top margin eating the
-           engine's error line, and a sibling in front of it – even a hidden one – switches that off
-           at every width. It is laid ABOVE the page by CSS instead (`position: absolute` in a band
-           the desktop grid opens for it), which touches no DOM order at all.
-
-           ⚠ NO `data-tour` HERE. The coach-mark tour points at the hero's copy by that attribute and
-           two elements answering to one mark is a tour that points at the wrong one.
-
-           ⚠ NOT ONE NEW STRING: the three labels, the two titles and the two dot sentences are the
-           ones above, verbatim, and `tests/component/round36-review.test.ts` asserts the two copies
-           name the same three controls so they cannot drift. -->
-      <div class="diary-tools diary-tools-page">
-        <button
-          class="diary-tool"
-          aria-label="Go to the news feed"
-          title="News"
-          :aria-describedby="newsUnseen ? 'diary-page-dot-news' : undefined"
-          @click="jumpToNews"
-        >
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
-            <path d="M13.7 21a2 2 0 0 1-3.4 0"></path>
-          </svg>
-          <span
-            v-if="newsUnseen"
-            id="diary-page-dot-news"
-            class="diary-tool-dot"
-            role="img"
-            aria-label="Unread news"
-          ></span>
-        </button>
-        <button
-          class="diary-tool"
-          aria-label="Open the inbox"
-          title="Inbox"
-          :aria-describedby="inboxDot ? 'diary-page-dot-inbox' : undefined"
-          @click="openInbox"
-        >
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <rect x="2.5" y="5" width="19" height="14" rx="2"></rect>
-            <path d="M3 6.5 12 13l9-6.5"></path>
-          </svg>
-          <span
-            v-if="inboxDot"
-            id="diary-page-dot-inbox"
-            class="diary-tool-dot"
-            role="img"
-            aria-label="A letter waiting on an answer"
-          ></span>
-        </button>
-        <button class="diary-tool" aria-label="Settings" title="Settings" @click="emit('navigate', 'more')">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <circle cx="12" cy="12" r="3.2"></circle>
-            <path d="M19.4 15a1.6 1.6 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.6 1.6 0 0 0-1.8-.3 1.6 1.6 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.6 1.6 0 0 0-1-1.5 1.6 1.6 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.6 1.6 0 0 0 .3-1.8 1.6 1.6 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.6 1.6 0 0 0 1.5-1 1.6 1.6 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.6 1.6 0 0 0 1.8.3H9a1.6 1.6 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.6 1.6 0 0 0 1 1.5 1.6 1.6 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.6 1.6 0 0 0-.3 1.8V9a1.6 1.6 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.6 1.6 0 0 0-1.5 1z"></path>
-          </svg>
-        </button>
-      </div>
-
-      <!-- ═══════════════════════════════════════════════════════════════════════════════════════
-           ⭐⭐⭐ ROUND 36 REVIEW #3 – HER FACE AND HER RANK COME OFF THE PHOTOGRAPH TOO, INTO THE RAIL
-           ═══════════════════════════════════════════════════════════════════════════════════════
-           They go to the top-left corner of the menu, above every item in it – his words, again in
-           the style block and in the review document rather than here.
-
-           ⭐ THE ARITHMETIC STAYS HERE AND THE ELEMENTS TRAVEL. `<Teleport>` puts these two into the
-           empty slot App.vue holds at the top of the one navigation the app has, so the rank chip is
-           still `chipTrack` / `ladderLabel` / `rankLabel` / `rankMovement` off THIS component's
-           computeds and the avatar is still `useHeaderAvatar()`'s crop. Nothing about her is derived
-           twice, and the shell learns nothing.
-           ⚠ `defer` because the slot is rendered after `<main>` in App.vue's template.
-           ⚠ AGAIN A SECOND COPY, for the identity contract: `.diary-id` above keeps its avatar and
-           its chip below 1024, and exactly one of the two pairs is on screen at any width. -->
-      <Teleport to="#rail-id-slot" defer>
-        <button class="diary-avatar-btn rail-id-avatar" aria-label="Open her profile" @click="openKid">
-          <img class="diary-avatar" :src="headerAvatarUrl" alt="" />
-        </button>
-        <!-- ⚠ THE ONE-TIME CALLOUT TRAVELS WITH THE AVATAR IT EXPLAINS, which is the rule its own
-             comment on the hero copy states («moved with the avatar it explains»). Left behind it
-             would point at a photograph that no longer has a face to tap on this width – and hiding
-             it instead would be a control the phone has and the desktop has not, which the parity
-             harness fails by name. Same text, same handler, same dismissal. -->
-        <button v-if="showKidHint" class="diary-kid-hint rail-id-hint" @click="openKid">
-          Tap the photo – her page lives here
-        </button>
-        <button
-          v-if="chipTrack !== null"
-          class="diary-rank rail-id-rank"
-          aria-label="How ranking points work"
-          :title="rankChipTitle"
-          @click="openRankHelp"
-        >
-          <span class="rank-ladder">{{ ladderLabel }}</span>
-          <span>{{ rankLabel(kidRank ?? 0, ranked) }}</span>
-          <template v-if="ranked">
-            <span v-if="rankMovement.dir === 'up'" class="rank-move up">&#8593;{{ rankMovement.by }}</span>
-            <span v-else-if="rankMovement.dir === 'down'" class="rank-move down">&#8595;{{ rankMovement.by }}</span>
-            <span v-else class="rank-move flat">–</span>
-          </template>
-        </button>
-      </Teleport>
+           ⭐ SO THE ARITHMETIC MOVED INSTEAD OF THE ELEMENTS. `composables/kidIdentity.ts` is the one
+           owner of the rank chip's five derived facts, of the week's three strings and of the
+           one-time callout's ref; `components/RailIdentity.vue` renders the rail's copy from it and
+           the header above renders Home's from the same call. There is nothing left to keep in step,
+           which is the property the teleport was protecting and the reason D75 refused a shell copy.
+           ⚠ THE HERO'S OWN COPIES STAY, and they are still the phone's: the avatar in `.diary-head`,
+           the callout under it and the chip in `.diary-id`, all three standing down from 1024. -->
 
       <!-- ⭐⭐ 2b. THE COLLEGE YEAR – the week's content, on the weeks she is at a university. It sits
            immediately under her photograph, where the next-tournament card is the first thing read in
@@ -1637,6 +1512,19 @@ async function leaveCollege(): Promise<void> {
       <!-- 4. BELOW THE GRID: the ladder and the feed. Same substance, diary chrome – and literally
            the same chrome, which is why they are Cards: the gradient, the hairline and the corners
            were already one shared rule with the notecards above, and now they are one component. -->
+
+      <!-- ⭐⭐⭐ ROUND 36 SECOND PASS, P2-2 – THE SECOND ROW JOINS THE SAME GRID AS THE FIRST.
+           His words are in the style block below, where Cyrillic is allowed; in English: the desktop
+           grid on Home was not fixed, and his earlier note about the lower block of cards meant
+           EVERY row below the photograph, not only the coach note and the recent memory.
+
+           ⚠ SAME WRAPPER, SAME RULE, SAME DECLARATION as `.card-pair` – the two share one block in
+           the stylesheet on purpose. One grid, one gap and one pair of tracks means the gutter of
+           this row lands on the gutter of the row above it, which is the thing he is looking at.
+           ⚠⚠ AND IT IS `display: contents` BELOW 1024, so it costs no box, no paint and no
+           accessibility node on a phone or a tablet – D50's trick for the third time, and the
+           reason the round's identity contract survives a new wrapper. -->
+      <div class="strip-pair">
       <Card as="section" class="diary-strip">
         <Eyebrow as="h2">Season</Eyebrow>
         <!-- THE ROW IS THE ENGINE'S OPEN WINDOW PLUS ONE RUNG ABOVE IT; the rungs she has outgrown
@@ -1715,6 +1603,7 @@ async function leaveCollege(): Promise<void> {
           </div>
         </div>
       </Card>
+      </div>
     </ScreenShell>
 
     <!-- ⭐⭐ THE BOTTOM CONTROL ON A COLLEGE WEEK – the two answers, and nothing else.
@@ -1934,69 +1823,6 @@ async function leaveCollege(): Promise<void> {
   flex: 1;
 }
 
-/* The small round avatar with the lime ring, moved here from the deleted header – same object, same
-   job (the door to her profile), now sitting on the photograph beside the date. */
-.diary-avatar-btn {
-  flex: none;
-  width: 30px;
-  height: 30px;
-  padding: 0;
-  border: none;
-  border-radius: 50%;
-  background: transparent;
-}
-
-.diary-avatar-btn:hover:not(:disabled) {
-  background: transparent;
-}
-
-.diary-avatar {
-  display: block;
-  width: 30px;
-  height: 30px;
-  border-radius: 50%;
-  object-fit: cover;
-  border: 1.5px solid var(--accent);
-  /* The ring needs to hold against a bright court too, so it carries its own dark halo. */
-  box-shadow: 0 0 0 1px rgba(6, 10, 14, 0.55), 0 2px 10px rgba(0, 0, 0, 0.45);
-}
-
-.diary-avatar-btn:hover:not(:disabled) .diary-avatar {
-  border-color: #ffffff;
-}
-
-/* The one-time callout, moved with the avatar it explains. It hangs under the avatar rather than
-   beside it – at 30px there is no room on a 390px screen, and the arrow makes the target obvious. */
-.diary-kid-hint {
-  position: absolute;
-  left: 16px;
-  top: 58px;
-  z-index: 2;
-  padding: 6px 11px;
-  border-radius: var(--radius-pill);
-  border: 1px solid var(--accent);
-  background: rgba(10, 15, 20, 0.82);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  color: var(--ink);
-  font-size: 12px;
-  font-weight: 500;
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.45);
-}
-
-.diary-kid-hint::before {
-  content: '';
-  position: absolute;
-  left: 12px;
-  top: -5px;
-  width: 8px;
-  height: 8px;
-  transform: rotate(45deg);
-  background: rgba(10, 15, 20, 0.82);
-  border-left: 1px solid var(--accent);
-  border-top: 1px solid var(--accent);
-}
-
 /* "W27 2033 · Jun 3 – Jun 9" – OUR week label, the year in full, and the week's real days. Built by
    shared/dates.ts weekDateLine and by nothing else. (The export prints a plain calendar date here;
    the owner's ruling replaces it, because our whole game speaks in week numbers.) */
@@ -2017,20 +1843,22 @@ async function leaveCollege(): Promise<void> {
   flex-shrink: 0;
 }
 
-/* ⭐⭐⭐ REVIEW #2 – THE PAGE COPY OF THE THREE ICONS, off the photograph and in the container's top
-   right corner. HIS OWN SENTENCE, which the template may not carry:
+/* ⭐⭐⭐ ROUND 36 SECOND PASS, P2-4 – THE THREE ICONS ARE BACK ON THE PHOTOGRAPH, AT EVERY WIDTH.
+   His words, after playing the built wave:
 
-     «колокольчик, письмо и шестеренка настроек живут на десктоп в правом верхнем углу вне картинки
-      и доступно на всех экранах, кроме тех, что займут всё пространство (как матч, например)»
+     «если колокольчик, письмо и шестеренка только на главной работают - давай их вернем на картинку
+      в угол правый верхний»
 
-   ⚠ The second half of it – «на всех экранах» – is NOT built, and D76 in
-   docs/specs/responsive-decisions-2026-09.md is the reason and the price. It is `display: none` at every width the desktop does not reach, so below 1024 this
-   component renders byte-for-box what it rendered before – no box, no paint, no accessibility node,
-   and the hero's own row is the one on screen. The switch happens in the 1024 block below. */
-.diary-tools-page {
-  display: none;
-}
+   ⚠ THIS REVERSES `D74`, WHICH REVERSED `D14`, AND HIS PREMISE IS THE WHOLE REASON. D74 took the row
+   off the picture because his review #2 asked for it AND for «доступно на всех экранах»; D76 then
+   said plainly that the second half is not a layout job (the bell scrolls to `#diary-news`, which
+   exists on Home alone, and the envelope opens a sheet Home mounts). He has read that and drawn the
+   consequence himself: three controls that only work on Home belong on Home's photograph.
 
+   ⭐ SO THE SECOND COPY IS GONE RATHER THAN HIDDEN – the row on `.diary-head` is the one row again,
+   and the desktop's 34px band above the two columns goes with it. Nothing below 1024 is touched:
+   the page copy was `display: none` there, so a phone renders exactly what it rendered before –
+   0 moved, 0 new, 0 gone at 375, 520 and 576, which is the round's identity contract. */
 .diary-tool {
   position: relative;
   width: 22px;
@@ -2100,40 +1928,6 @@ async function leaveCollege(): Promise<void> {
   text-shadow: var(--shadow-text-on-art);
 }
 
-/* The rank chip – the page's ONE table-number, and the door to the best-6 explainer (round-6: the
-   owner was confused by the windowed ranking twice). It is a button, which is why the old separate
-   "?" is gone: one affordance where there used to be two. */
-.diary-rank {
-  pointer-events: auto;
-  margin-top: 10px;
-  display: inline-flex;
-  align-items: baseline;
-  gap: 5px;
-  padding: 3px 10px;
-  border-radius: var(--radius-pill);
-  border: 1px solid rgba(255, 255, 255, 0.22);
-  background: rgba(10, 15, 20, 0.55);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  color: rgba(255, 255, 255, 0.92);
-  font-size: 12px;
-  font-variant-numeric: tabular-nums;
-}
-
-/* WHICH TABLE the number belongs to. Quieter than the rank itself – it is the unit, not the figure –
-   and uppercase/tracked so it reads as a label rather than as a word in a sentence. */
-.rank-ladder {
-  font-size: 9px;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  opacity: 0.72;
-}
-
-.diary-rank:hover:not(:disabled) {
-  border-color: var(--accent);
-  background: rgba(10, 15, 20, 0.55);
-  color: #ffffff;
-}
 
 /* --- A2b: THE STATE ROW, along the bottom of the photograph ------------------------------------
    The owner's layout (28.07): the caption chip on the left, the condition ring on its right, and
@@ -2237,10 +2031,18 @@ async function leaveCollege(): Promise<void> {
 }
 
 /* ⭐⭐⭐ ROUND 36 REVIEW #5 – «Нижний блок карточек имеет свою сетку, они равны по ширине». Below
-   1024 this wrapper HAS NO BOX: the coach note and the recent memory stay items of `.card-grid`,
+   1024 these wrappers HAVE NO BOX: the coach note and the recent memory stay items of `.card-grid`,
    exactly where they have always been, and the identity census counts nothing new. See the template
-   for the whole of why it is `display: contents` and not a div with a grid on it. */
-.card-pair {
+   for the whole of why it is `display: contents` and not a div with a grid on it.
+
+   ⭐⭐⭐ ROUND 36 SECOND PASS, P2-2 – «сетка на главной на десктоп не исправлена (см. мои правки
+   предыдущие, мне нужно продублировать или нашел?)». Found. Review #5 was read as ONE row and he
+   meant every row below the photograph, so the season ladder and the news feed take the same
+   wrapper – ONE class list, ONE rule, in both places below, because two rules that must agree about
+   a gutter are two rules that can disagree about a gutter. Measured before, at 1024: the pair above
+   sat at 236 / 627.5 and this row at 236 / 698, following the hero's asymmetric tracks. */
+.card-pair,
+.strip-pair {
   display: contents;
 }
 
@@ -2287,32 +2089,11 @@ async function leaveCollege(): Promise<void> {
     display: grid;
     grid-template-columns: minmax(0, var(--hero-max)) minmax(310px, 1fr);
     gap: 11px;
-    /* ⭐ REVIEW #2 – A BAND ABOVE THE TWO COLUMNS FOR THE THREE ICONS, and the positioning context
-       they hang off. 34px is the icon row's own 22 plus the gap the page reads at; the tools sit at
-       its top right and the grid begins under them.
-       ⚠ ABSOLUTE, NOT A GRID ROW, on purpose. `.error` and `.college-card` are `grid-column: 1 / -1`
-       and `.error` must stay the FIRST thing read on the page (round 35 #11); an icon row placed in
-       the grid would take row 1 and push the engine's refusal below the photograph, or need an
-       explicit row of its own that costs 11px of gap on every week that has no error. Out of flow it
-       costs the layout nothing and cannot reorder anything. */
-    position: relative;
-    padding-top: 34px;
-  }
-
-  /* ⭐⭐ REVIEW #2 – «в правом верхнем углу вне картинки». Off the photograph, in the corner of the
-     reading column, on the page's own background. The icons keep every one of their own rules – the
-     22px box, the 16px gap, the dot on the shoulder – because nothing about them changed except
-     where they are. */
-  .diary-tools-page {
-    display: flex;
-    position: absolute;
-    top: 0;
-    right: 0;
-  }
-
-  /* …and the hero's own copy stands down, so exactly one of the two is ever on screen. */
-  .diary-head > .diary-tools {
-    display: none;
+    /* ⭐⭐⭐ SECOND PASS, P2-4 – THE 34px BAND IS GONE WITH THE ROW IT WAS OPENED FOR. Review #2's
+       page copy of the bell, the letter and the gear hung in it, absolutely positioned; he has sent
+       the three back onto the photograph, so the band above the two columns is 34px of nothing and
+       the positioning context has nothing to position. Both go, and the grid starts at the top of
+       the page again exactly as it did before D74. */
   }
 
   /* ⭐⭐ REVIEW #3 – and the same for her face, her rank and the callout that explains the face, all
@@ -2324,14 +2105,42 @@ async function leaveCollege(): Promise<void> {
     display: none;
   }
 
+  /* ⭐⭐⭐ SECOND PASS, P2-3 – «давай на главной десктопе текущую дату всю вынесем в 2 строки и
+     поставим справа от аватарки круглой, тогда она будет всегда видна и будет удобно». The ink goes;
+     the HEADING stays.
+
+     ⚠⚠ CLIPPED, NOT `display: none`, AND THE REASON IS D10. This `<p>` is Home's `role="heading"`
+     `aria-level="1"` – the page's own level-1 heading, and the only one it has – so removing its box
+     would leave the desktop's Home with no heading at all. The rail's copy cannot take that role
+     instead: past P2-6 the rail is drawn on all ten screens, and nine of them have a level-1 or
+     level-2 heading of their own. So the photograph keeps the heading and shows none of it, which is
+     the standard screen-reader-only shape and costs no paint: `clip-path` removes every pixel and
+     leaves the accessibility node exactly where it was.
+     ⚠ AND IT KEEPS `flex: 1`, deliberately: it is the slack that pins P2-4's three icons to the
+     RIGHT of the header row. A date taken out of flow would send them to the left edge. */
+  .diary-head > .diary-date {
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+  }
+
   .card-grid {
     display: contents;
   }
 
   /* ⭐ REVIEW #5 – …AND HERE IT BECOMES A GRID. It spans both tracks and splits them evenly, so the
      coach note and the recent memory are the same width as each other rather than inheriting the
-     hero's column and the cards' column. Its own gap, because it is its own grid. */
-  .card-pair {
+     hero's column and the cards' column. Its own gap, because it is its own grid.
+
+     ⭐⭐⭐ P2-2 – AND THE SEASON LADDER AND THE NEWS FEED ARE IN THE SAME DECLARATION. Everything
+     below the photograph is now ONE grid: same two tracks, same gap, both spanning `1 / -1`, so the
+     gutter of the lower row lands on the gutter of the upper one to the pixel. The hero's row keeps
+     its own asymmetric tracks (D77 is his own 310), which is the row he did not complain about.
+     ⚠ EQUAL AND NOT THE MOCK'S 397 / 362, and that is deliberate: «они равны по ширине» is his own
+     word for this block, the row above already reads that way, and two rows that are equal in
+     different proportions would be the defect he is reporting wearing a different number. */
+  .card-pair,
+  .strip-pair {
     display: grid;
     grid-column: 1 / -1;
     grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);

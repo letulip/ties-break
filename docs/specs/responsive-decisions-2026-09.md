@@ -1336,3 +1336,96 @@ only, and this control is only wide in the TABLET band** (on the desktop Home th
 is as wide as its list is not a stretched control, and he said «кнопок». Same for `.cal-marker` and
 `.cm-row`. ⚠ **If he means these too, it is one more rule – and it would be a restyle of three list
 families rather than a cap on a button.**
+
+---
+
+## Second pass, 05.09.2026 – what he changed after the stand
+
+Seven items came off his own build at 1280 (`docs/rounds/round-36-review.md`, section "Second pass").
+Four of them OVERRULE a decision above, and every one of those four is his to overrule. The rows
+below do not edit the originals – a shipped decision is never rewritten here – they say what
+superseded it and when.
+
+### D85 `[x]` D74 is REVERSED: the three tools go back onto the photograph
+
+| | |
+| --- | --- |
+| **his words** | «если колокольчик, письмо и шестеренка только на главной работают - давай их вернем на картинку в угол правый верхний» |
+| **supersedes** | `D74` (the second copy in a 34px band from 1024), and it closes `D76` by removing its premise |
+| **shipped** | The desktop band and its second copy are gone; the row that was always on the photograph is now the only one, at every width. Measured: the row moves from x910 (page background, above the columns) to x571 INSIDE the hero at 1024, and from x1126 to x672 at 1280 – the same 18px inset `.diary-head` has always used. Three `button.diary-tool` in the document, not six. `.tb-screen-body` padding-top 34px → 0. |
+| **why it is his call and not a regression** | D74 built «доступно на всех экранах» as far as a layout can: the bell scrolls to an element only Home has. He read that answer and chose the cheaper half – the icons where they work. |
+
+⚠ **The phone is untouched**: 0 moved / 0 new / 0 gone at 375, 520, 576 – and at 768.
+
+### D86 `[x]` D75 is ANSWERED: the identity block is permanent chrome, and it costs the third exemption
+
+| | |
+| --- | --- |
+| **his words** | «и аватар с текущей позицией и рангом (так же, как и все остальные плашки) на десктоп в боковом меню живут на всех страницах неизменно» |
+| **supersedes** | `D75` `[?]`, which priced exactly this and left it to him |
+| **shipped** | `src/composables/kidIdentity.ts` is the one owner of the arithmetic – the chip track, the active ladder, her rank, the movement, the crop and the callout's shared ref, moved verbatim out of `HomeScreen.vue`; `src/components/RailIdentity.vue` renders it in the shell. Measured at 1280: `.rail-id` was an EMPTY 171x20 slot on Season, Calendar and Stats and is now 171x161 with identical content on all ten screens; at 375 it has no box anywhere. |
+| **the price, paid** | `e2e/parity.spec.ts` gains `IDENTITY_BLOCK` – `#app > nav.tab-bar > .rail-id` plus the three positions the block holds on the photograph below 1024. It has to be both halves or Home fails from the other side. Four guards, the sharpest being that the controls exempt at 375 are the same controls, name for name, as those exempt at 1280 – the block MOVED, nothing was lost. **29 parity tests pass.** |
+| **why not rebuild it in the shell** | D75's reasoning stands and was not worked around: her rank is five derived facts deep. What changed is that the arithmetic moved out from under both renders instead of the elements moving into one of them. |
+
+### D87 `[x]` D80 was HALF the grid: every row below the hero joins it
+
+| | |
+| --- | --- |
+| **his words** | «сетка на главной на десктоп не исправлена (см. мои правки предыдущие, мне нужно продублировать или нашел?)» |
+| **supersedes** | `D80`, which read item 5's «нижний блок карточек» as ONE row |
+| **found, not asked again** | The mock's own pixels, scanned for card edges: at 1024 `AC-home-desktop-1024.png` puts Coach note + Recent memory on 220-617 / 637-999 and **Season + News on the same two tracks**, while the build had the bottom row on the hero's 451 / 310. Its gutter therefore sat 11px away from the one above it. |
+| **shipped** | One declaration set for both rows – `.card-pair, .strip-pair` – deliberately, because two rules that must agree about a gutter are two rules that can disagree about it. Season 451 → 380.5 and News 310 → 380.5 at 1024; 512 → 468.5 and 425 → 468.5 at 1280. One gutter for both rows. Tracks kept EQUAL, his word from item 5, not the mock's 397/362. The hero row keeps its own asymmetric tracks. |
+
+### D88 `[x]` The week's date is the rail's, on two lines, beside her face
+
+| | |
+| --- | --- |
+| **his words** | «давай на главной десктопе текущую дату всю вынесем в 2 строки и поставим справа от аватарки круглой, тогда она будет всегда видна и будет удобно» |
+| **shipped** | `weekDateLine` was already «W9 2032 · Mar 1 – Mar 7» in one piece; its first half is now the exported `weekYearLabel` and `weekDateLine` joins the two, so `shared/dates.ts` stays the one place a date is spelled and **not one character on screen changes**. The rail draws the two halves as two lines right of the 46px face (x95 at 1024, x135 at 1280). |
+| ⚠ **the correction I owe him** | My brief named `weekLabel` / `weekRange` as "the two halves". They are not – they are «W9 '32» and «Mar 1–7, 2032», a different pair for other surfaces, and using them would have put text on screen he never asked for. The agent refused the brief and split the real line instead. That was right. |
+| ⚠ **the heading** | Home's date is its only `role="heading" aria-level="1"` (D10) and parity uses it as Home's arrival anchor, so on the desktop it is CLIPPED, not removed (305x19.56 → 305x1). The rail's copy is deliberately not a heading: it is drawn on ten screens, nine of which have their own. |
+
+### D89 `[x]` D4 is REVERSED: the market portrait opens to 66px from 768
+
+| | |
+| --- | --- |
+| **his words** | «сделай картинку шире пожалуйста на обоих сохраняя вертикальный размер, вписанный в карточку. Запас по ширине у картинок вроде бы есть.» |
+| **supersedes** | `D4`, which refused this on the grounds that a 362px two-up card has nothing to spend |
+| **why D4 was answering a different question** | D4 measured the CARD's surplus. He was pointing at the PICTURE's – the portrait is height-driven, the rows past 768 are 124-216px tall, and at those heights the 62px window was hiding **26 to 71 pixels** of a man who was already there. |
+| **the ceiling is the TEXT COLUMN, not the mask** | Round-18 #2's mask ceiling is 71.94px (`budget-2.webp` is 162x280, the narrowest portrait per unit of height, at the 124.34px shortest row). But `.cm-body` must keep its 10-15px corridor, a narrower text column wraps a line, and the CARD grows. Largest strip that moves no card's height: 66 at fifteen of seventeen widths measured. |
+| **shipped** | 62 → **66px** from 768, `.cm-body` margin 74 → 78, row floor 104 → 118 (66 x 280/162 = 114.1 padding box, 8.34px under the shortest real row, so it binds on nothing). Hired rows untouched at 78/90/132 – `coach-match-edge.md` §4's anti-shopping rule is intact because 66 < 78. |
+| **what it costs, named** | At **1100px** two budget cards go 124.34 → 138.52. Sixteen of seventeen widths are byte-identical, and **both widths he named – 768 and 1024 – are free**. A strip free at every width is 63px, which is +1 and invisible. |
+
+⚠ **A latent hole this measurement found and did NOT fix**, because fixing it would move the phone:
+round-18 and round-21 both compute their floor from 162/264 and call it the worst case. It is the
+BEST case – `budget-2.webp` is 162x280 and is narrower for a given height. At the shipped phone floor
+of 104px the true worst case is **59.01px of picture inside a 62px strip**, and the hired row's 132px
+floor supplies 75.2px against a 78px strip. Real rows sit far above both floors, so nothing is
+visibly broken today – but the guarantees are not the unconditional ones the comments claim. **His
+call whether the phone's floors move.**
+
+### D90 `[x]` The shop's paragraph was a comment that quoted its own terminator
+
+| | |
+| --- | --- |
+| **his words** | «артефакты в верстке всех страниц магазина» |
+| **what it was** | The comment at `MoneyScreen.vue:2369-2378` named the HTML comment delimiters by spelling them. HTML comments do not nest, so the quoted terminator closed it two and a half lines early and the rest of the paragraph became a TEXT NODE inside the `v-for` over families – rendering under every family heading on every page of the shop. |
+| **shipped** | Reworded in words. The SFC-AST sweep over all 68 components found **1 hit before, 0 after** – it was the only one in the tree. `tests/template-comment-terminators.test.ts` forbids the shape, deriving its file list from the directory and its node kinds from a probe parse rather than a literal. |
+
+### D91 `[x]` D72's square photograph becomes half the card
+
+| | |
+| --- | --- |
+| **his words** | «на week results картинку крупнее на 50% ширины контейнера с ней и кропаем немного, записка следовательно, станет чуть уже» |
+| **supersedes** | the first move of `D72`, and only that move |
+| **shipped** | `--recap-art-w: 50%` – the first track and the photograph inside it read ONE token, as they read `--recap-art-h` before, so «half the card» cannot drift into a picture that no longer fills its column. 286x286 → 384x286 at 768, 450x286 at 900, 640x286 at 1280; `object-fit: cover` crops the sides, which is «кропаем немного». The card models 984.85px at all three widths before and after. |
+| ⚠ **the reading, which is a guess** | «записка следовательно, станет чуть уже» was taken as a CONSEQUENCE, not a second instruction: the note beside the picture went 59.1% → 46.4% of the card at 768 on its own, and the TAPED note at the foot keeps D72's 55%. **If he meant the taped one, it is one line and a number he has not given.** |
+
+### D92 `[x]` The five PWA icons lose 736 KB
+
+| | |
+| --- | --- |
+| **his words** | «Две PNG-иконки на 874 КБ. Иконка 512x512 весит столько, сколько весит неоптимизированный экспорт – вот это что и как так вышло, давай починим» |
+| **what it was** | Every builder in `scripts/gen-icons.mjs` ended in a bare `.png()` – sharp's default truecolour encoder – over a PHOTOGRAPH (a 330x330 face upscaled to 512), with an alpha plane measured constant 255 on all four square icons. |
+| **shipped** | 1,070,098 → **316,181 bytes**. Visible-pixel error against the truecolour original: mean 1.15/255, worst pixel 36, 8x-amplified difference image black. Dimensions unchanged; the favicon keeps its circular transparency through the palette's tRNS chunk. `tests/pwa-icon-weight.test.ts` is the ratchet, mutation-verified. |
+| ⚠ **and it cannot be regenerated** | `npm run icons` throws at `findLogoSource()`: `art-src/logo-lucia-app.png` is on no machine the repo can see. The committed PNGs were re-encoded from themselves, which is exact for the deliverable. **Restoring the master is his call.** |

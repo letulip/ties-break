@@ -17,12 +17,21 @@ import type { Snapshot, WorldEvent } from '../src/shared/protocol'
 // at length, INCLUDING documenting what it deliberately no longer does, so a `not.toContain` over
 // raw source fails on a note that merely names the thing it forbids.
 import { after, at, codeOf, region, regionToLast } from './helpers/source'
-import { engineModuleSource } from './worldSource'
+import { componentLogic, engineModuleSource } from './worldSource'
 
 const read = (rel: string) => readFileSync(new URL(rel, import.meta.url), 'utf8')
 
 const app = read('../src/App.vue')
 const home = read('../src/components/screens/HomeScreen.vue')
+// ⚠ RE-AIMED BY ROUND 36's SECOND PASS, P2-6 – THE SFC **PLUS THE COMPOSABLES IT IMPORTS**, which is
+// the helper CLAUDE.md names for a POSITIVE claim that must survive an extraction. Her face, the
+// week's strings, the rank chip's five derived facts and the one-time callout's ref moved out of
+// HomeScreen into `composables/kidIdentity.ts`, because the shell's `RailIdentity.vue` draws the
+// same block on every page from 1024 and two computations of one rank is this repo's named disease.
+// The FACTS the two arms below protect are unchanged – they are just one file further out.
+// ⚠ NEVER IN A NEGATIVE ASSERTION (tests/pin-hygiene.test.ts): `home` above is still the .vue alone
+// and is what every `not.toContain` in this file keeps using.
+const homeLogic = componentLogic('components/screens/HomeScreen.vue')
 const weekScreen = read('../src/components/screens/ThisWeekScreen.vue')
 const tour = read('../src/components/OnboardingTour.vue')
 
@@ -276,7 +285,7 @@ describe('R13-12 — the Kid screen opens from her photograph', () => {
   it('the avatar stays F45-1: neither the move nor the tap wrapper re-routed the crop', () => {
     // The button wraps the SAME age-only crop. Home is the one screen holding both faces now, so
     // this is the pin that keeps them apart: the small one is chrome, the big one is her.
-    expect(home).toContain('useHeaderAvatar')
+    expect(homeLogic).toContain('useHeaderAvatar')
     expect(home).toContain(':src="headerAvatarUrl"')
     expect(home).toContain('class="diary-avatar"')
     // The hero painting is the emotional one and takes a different source entirely.
@@ -284,12 +293,18 @@ describe('R13-12 — the Kid screen opens from her photograph', () => {
   })
 
   it('the hint shows until first tap, and the tap persists the dismissal OUTSIDE the save', () => {
-    expect(home).toContain("const KID_HINT_KEY = 'tb:kidAvatarHintSeen'")
+    expect(homeLogic).toContain("const KID_HINT_KEY = 'tb:kidAvatarHintSeen'")
     // shown iff never dismissed on this device (the TOUR_SEEN_KEY idiom, localStorage)...
-    expect(home).toContain('const showKidHint = ref(!localStorage.getItem(KID_HINT_KEY))')
-    // ...and the first tap both opens the screen and persists the dismissal.
+    expect(homeLogic).toContain('ref(!localStorage.getItem(KID_HINT_KEY))')
+    // ...and the first tap both opens the screen and persists the dismissal. ⚠ RE-AIMED BY P2-6 –
+    // the dismissal is `dismissKidHint()` now, in the composable, because the callout is drawn twice
+    // (Home's photograph below 1024, the rail above it) and one ref is what stops a tap on one
+    // leaving the other still showing. Both halves are still asserted: the tap calls it, and it is
+    // what writes the key.
     const openKid = region(home, 'function openKid', '</script>')
-    expect(openKid).toContain("localStorage.setItem(KID_HINT_KEY, '1')")
+    expect(openKid).toContain('dismissKidHint()')
+    const dismiss = region(homeLogic, 'function dismissKidHint', 'return {')
+    expect(dismiss).toContain("localStorage.setItem(KID_HINT_KEY, '1')")
     // The key left App.vue with the header – no second copy can drift out of step.
     expect(app).not.toContain('KID_HINT_KEY')
     // NOT in the save: no store/engine surface knows the key.

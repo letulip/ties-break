@@ -795,3 +795,54 @@ the FIRST matching rule where a browser keeps the last, so every media-query ove
 `PrologueCard.vue` is parented or doubled. Without that the tablet and desktop blocks work in
 Chromium and are invisible to every mounted test – which is exactly how a rule ships with a guard
 that could never have failed.
+
+---
+
+## Second pass – five items from the stand (05.09.2026)
+
+He looked at the built review wave on the local stand (`round/36` at `98e3560b`, 1280 wide) and
+came back with five more. Same numbering discipline: his words, then the reading. Prefixed `P2-`
+so they cannot be confused with the eighteen above.
+
+- [>] **P2-1. «артефакты в верстке всех страниц магазина»** – build. The screenshot shows a
+  paragraph of English prose under «On the water» that ends in `–›`. Reading: the HTML comment at
+  `src/components/screens/MoneyScreen.vue:2369-2378` quotes the literal `<!-- -->` inside itself,
+  and that inner `-->` closes the comment early – everything after it, down to the real `-->`,
+  is a text node under every family heading. A comment that names the thing it must not contain.
+
+- [>] **P2-2. «сетка на главной на десктоп не исправлена (см. мои правки предыдущие, мне нужно
+  продублировать или нашел?)»** – FOUND, no need to repeat it. Item 5's «нижний блок карточек» was
+  read as ONE row (Coach note + Recent memory) and he meant EVERY row below the hero. Measured
+  against `AC-home-desktop-1024.png` by scanning the mock's own pixels for card edges:
+
+  | row | mock at 1024 | built at 1024 | built at 1280 |
+  | --- | --- | --- | --- |
+  | hero row | 220-690 / 700-999 (470 / 299) | 236-687 / 698-1008 (451 / 310) | 512 / 425 |
+  | Coach note + Recent memory | 220-617 / 637-999 (397 / 362) | 381 / 381 | 469 / 469 |
+  | **Season + News** | **220-617 / 637-999 – the SAME two tracks** | **451 / 310 – the hero's tracks** | **512 / 425** |
+
+  So the bottom row never joined the grid item 5 asked for: it still follows the hero's asymmetric
+  columns, and its gutter sits 11px away from the one above it. The build is right about the middle
+  row and wrong about the bottom one.
+
+- [>] **P2-3. «давай на главной десктопе текущую дату всю вынесем в 2 строки и поставим справа от
+  аватарки круглой, тогда она будет всегда видна и будет удобно»** – build, and it is his answer
+  to `D75`: «всегда видна» makes the rail's identity block permanent chrome on the desktop, which
+  costs the third parity exemption D75 priced. The whole date, two lines, right of the round avatar.
+
+- [>] **P2-4. «если колокольчик, письмо и шестеренка только на главной работают - давай их вернем
+  на картинку в угол правый верхний»** – build, and it is his answer to `D76`: the three tools go
+  back onto the photograph, top-right corner, at the desktop too; the 34px band copy of `D74` goes.
+
+- [>] **P2-5. «на week results картинку крупнее на 50% ширины контейнера с ней и кропаем немного,
+  записка следовательно, станет чуть уже»** – build. From 768 the photograph's column is half the
+  card's width (it was the band's height, a square), the picture is cropped to fill it, and the
+  taped note takes what is left – narrower than item 16's 55%.
+
+- [>] **P2-6. «и аватар с текущей позицией и рангом (так же, как и все остальные плашки) на десктоп
+  в боковом меню живут на всех страницах неизменно»** – build, and it is the ruling `D75` asked for.
+  Measured on the stand at 1280: on Season, Calendar and Stats the rail's dashboard tiles are there
+  (171x218, both tiles) and `.rail-id` is an EMPTY 171x20 slot, because the block is Home's and is
+  teleported. His «так же, как и все остальные плашки» is exact – the tiles are permanent chrome and
+  the identity is not. **The price D75 named is now accepted: a third parity exemption**, the same
+  shape as `#app > nav.tab-bar > .rail-dash`.

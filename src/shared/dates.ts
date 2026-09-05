@@ -383,6 +383,25 @@ export function weekDayNumbers(week: number): number[] {
   return [0, 1, 2, 3, 4, 5, 6].map((d) => ymdAt(weekStartUtc(week) + d * MS_PER_DAY).day)
 }
 
+/** "W27 2033" – the FIRST half of the date line below, on its own.
+ *
+ *  ⭐⭐⭐ ROUND 36 SECOND PASS, P2-3 – «давай на главной десктопе текущую дату всю вынесем в 2 строки
+ *  и поставим справа от аватарки круглой». Two lines need the line's two halves as two strings, and
+ *  the second half was already one (`weekSpan`); this is the first, factored out of `weekDateLine`
+ *  rather than re-spelled beside it.
+ *
+ *  ⚠⚠ NOT ONE CHARACTER OF PLAYER-FACING TEXT CHANGES, AND THAT IS THE WHOLE POINT OF DOING IT HERE.
+ *  `weekDateLine` now joins this and `weekSpan` with its own « · », so its output is byte-identical
+ *  to what it has always returned and the rail prints exactly the two pieces the photograph's
+ *  heading is made of. ⚠ AND IT IS DELIBERATELY NOT `weekLabel`, which is a DIFFERENT shape for a
+ *  different place: "W27 '33", two digits, for rows where a full year beside a date range reads as a
+ *  typo. Using that one here would have changed what he reads, which invariant 4 forbids.
+ *  `tests/dates.test.ts` pins the join, so the two can never drift apart. */
+export function weekYearLabel(week: number): string {
+  const { inSeason, year } = weekParts(week)
+  return `W${inSeason} ${year}`
+}
+
 /** "W27 2033 · Jun 3 – Jun 9" – THE date line of the redesigned Home header (epic/redesign-home).
  *
  *  The owner's own format, and the one place it is spelled: OUR week label (the number the whole
@@ -390,8 +409,7 @@ export function weekDayNumbers(week: number): number[] {
  *  does not, and "'33" beside a real date range reads as a typo – then the week's actual calendar
  *  days. Every surface that wants this line calls this function; nothing re-composes it. */
 export function weekDateLine(week: number): string {
-  const { inSeason, year } = weekParts(week)
-  return `W${inSeason} ${year} · ${weekSpan(week)}`
+  return `${weekYearLabel(week)} · ${weekSpan(week)}`
 }
 
 /** "Jan 6–12, 2031" – a human date range for one career week (Monday..Sunday).

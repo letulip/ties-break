@@ -878,10 +878,14 @@ body {
 
 /* ⭐⭐⭐ ROUND 36 REVIEW #3 – THE RAIL'S IDENTITY BLOCK: her face and her rank, above every menu item.
    «Аватар и ранг тоже уезжают с картинки, но в левый верхний угол в меню над всеми пунктами».
-   The slot is App.vue's and is empty; HomeScreen teleports the two controls into it (see both files
-   for why the arithmetic stays on Home). Desktop-only by the same one declaration the dashboard uses
-   – `display: none`, never a `v-if` on a media query – so a phone is byte-for-box unchanged and the
-   bottom bar never grows a face. */
+
+   ⭐⭐⭐ AND THE SECOND PASS'S P2-6 MADE IT PERMANENT CHROME – his ruling on `D75`: «и аватар с
+   текущей позицией и рангом (так же, как и все остальные плашки) на десктоп в боковом меню живут на
+   всех страницах неизменно». It was an empty slot HomeScreen teleported into, so it was drawn on
+   Home and on none of the other nine pages; it is `RailIdentity.vue` now, mounted by the shell, and
+   the arithmetic it reads is `composables/kidIdentity.ts` – one owner, two renders.
+   Desktop-only by the same one declaration the dashboard uses – `display: none`, never a `v-if` on a
+   media query – so a phone is byte-for-box unchanged and the bottom bar never grows a face. */
 .rail-id {
   display: none;
 }
@@ -905,6 +909,41 @@ body {
   #app:has(> nav.tab-bar) > nav.tab-bar > .rail-id .diary-avatar {
     width: 46px;
     height: 46px;
+  }
+
+  /* ⭐⭐⭐ ROUND 36 SECOND PASS, P2-3 – THE WEEK, BESIDE HER FACE, ON TWO LINES. His words:
+     «давай на главной десктопе текущую дату всю вынесем в 2 строки и поставим справа от аватарки
+     круглой, тогда она будет всегда видна и будет удобно»
+
+     The rail's own column is `flex-direction: column`, so the face and the date need a row of their
+     own to be side by side; this is that row and it holds nothing else. */
+  #app:has(> nav.tab-bar) > nav.tab-bar > .rail-id .rail-id-head {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    align-self: stretch;
+  }
+
+  /* ⚠ TWO LINES ARE TWO ELEMENTS AND NOT A WRAP. A wrap depends on the label's length – «W9 2031»
+     and «W49 2038» wrap differently – so «в 2 строки» would be true for some weeks and not others.
+     A column of two spans is two lines for every week of every career.
+     ⚠ AND THE TYPE IS THE PHOTOGRAPH'S OWN, one rung down for a 196px strip: same weight, same
+     tabular digits, so the week reads as the same object in both places. */
+  #app:has(> nav.tab-bar) > nav.tab-bar > .rail-id .rail-id-date {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    margin: 0;
+    font-size: 12.5px;
+    font-weight: 600;
+    line-height: 1.25;
+    letter-spacing: 0.01em;
+    color: var(--ink);
+    font-variant-numeric: tabular-nums;
+  }
+
+  #app:has(> nav.tab-bar) > nav.tab-bar > .rail-id .rail-id-range {
+    color: var(--ink-soft);
   }
 
   /* The callout hangs under the face on the phone (`position: absolute` against the hero) and hangs
@@ -2679,6 +2718,119 @@ tr.kid-row td {
 /* Positive (income) ledger amounts read green, like the accent-positive .pill.ok. */
 .num.positive {
   color: var(--accent);
+}
+
+/* =================================================================================================
+   ⭐⭐⭐ HER IDENTITY BLOCK – SHARED BY TWO RENDERS SINCE ROUND 36's SECOND PASS (P2-6)
+   =================================================================================================
+   «и аватар с текущей позицией и рангом (так же, как и все остальные плашки) на десктоп в боковом
+   меню живут на всех страницах неизменно» (05.09.2026). Her face, the callout that explains it and
+   her rank chip are drawn twice now – on Home's photograph below 1024 (`HomeScreen.vue`) and in the
+   rail above it (`RailIdentity.vue`, the shell's, on all ten screens).
+
+   ⚠⚠ THESE RULES MOVED HERE FROM `HomeScreen.vue`'s SCOPED BLOCK, VALUE FOR VALUE. Not one number,
+   colour, radius or shadow changed – only the file. A scoped rule cannot reach a sibling component,
+   so leaving them on Home would have drawn the rail's copy as an unstyled button: the surface has
+   two consumers now, which is exactly what `src/style.css` is for (`.rank-move` below has been in
+   this file for the same reason since the chip was written). The rail's own overrides – 46px, a
+   static callout, no arrow – are up beside `.rail-id`.
+   ================================================================================================= */
+/* The small round avatar with the lime ring, moved here from the deleted header – same object, same
+   job (the door to her profile), now sitting on the photograph beside the date. */
+.diary-avatar-btn {
+  flex: none;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+}
+
+.diary-avatar-btn:hover:not(:disabled) {
+  background: transparent;
+}
+
+.diary-avatar {
+  display: block;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1.5px solid var(--accent);
+  /* The ring needs to hold against a bright court too, so it carries its own dark halo. */
+  box-shadow: 0 0 0 1px rgba(6, 10, 14, 0.55), 0 2px 10px rgba(0, 0, 0, 0.45);
+}
+
+.diary-avatar-btn:hover:not(:disabled) .diary-avatar {
+  border-color: #ffffff;
+}
+
+/* The one-time callout, moved with the avatar it explains. It hangs under the avatar rather than
+   beside it – at 30px there is no room on a 390px screen, and the arrow makes the target obvious. */
+.diary-kid-hint {
+  position: absolute;
+  left: 16px;
+  top: 58px;
+  z-index: 2;
+  padding: 6px 11px;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--accent);
+  background: rgba(10, 15, 20, 0.82);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  color: var(--ink);
+  font-size: 12px;
+  font-weight: 500;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.45);
+}
+
+.diary-kid-hint::before {
+  content: '';
+  position: absolute;
+  left: 12px;
+  top: -5px;
+  width: 8px;
+  height: 8px;
+  transform: rotate(45deg);
+  background: rgba(10, 15, 20, 0.82);
+  border-left: 1px solid var(--accent);
+  border-top: 1px solid var(--accent);
+}
+
+/* The rank chip – the page's ONE table-number, and the door to the best-6 explainer (round-6: the
+   owner was confused by the windowed ranking twice). It is a button, which is why the old separate
+   "?" is gone: one affordance where there used to be two. */
+.diary-rank {
+  pointer-events: auto;
+  margin-top: 10px;
+  display: inline-flex;
+  align-items: baseline;
+  gap: 5px;
+  padding: 3px 10px;
+  border-radius: var(--radius-pill);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  background: rgba(10, 15, 20, 0.55);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  color: rgba(255, 255, 255, 0.92);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+
+/* WHICH TABLE the number belongs to. Quieter than the rank itself – it is the unit, not the figure –
+   and uppercase/tracked so it reads as a label rather than as a word in a sentence. */
+.rank-ladder {
+  font-size: 9px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  opacity: 0.72;
+}
+
+.diary-rank:hover:not(:disabled) {
+  border-color: var(--accent);
+  background: rgba(10, 15, 20, 0.55);
+  color: #ffffff;
 }
 
 /* Player-card rank + week-over-week movement. */
@@ -4813,6 +4965,78 @@ tr.kid-row td {
   }
   .tier-block .cm-row {
     margin-bottom: 0;
+  }
+
+  /* ⭐⭐⭐ ROUND 36, SECOND PASS, P2-7 – THE SHOP CARD'S PORTHOLE OPENS TO 66px, AND D4's REFUSAL IS
+     THE OWNER'S TO LIFT. He looked at the shipped tablet and desktop and asked again: «а еще
+     микро-правка для аватаров тренеров в списке тренеров на планшете и десктопе: сделай картинку
+     шире пожалуйста на обоих сохраняя вертикальный размер, вписанный в карточку. Запас по ширине у
+     картинок вроде бы есть.» (05.09.)
+
+     ⚠ HE IS RIGHT ABOUT THE HEADROOM, AND D4 ABOVE WAS MEASURING THE WRONG BOX. That refusal read
+     the CARD (a two-up card at 768 is 364px against the phone's 343 – nineteen pixels, nothing to
+     spend). But this strip is a porthole onto a HEIGHT-DRIVEN portrait, so what it has to spend is
+     the PICTURE's own width – and there the surplus is large: measured in Chromium on a real career,
+     the 62px strip was throwing away 26.3-70.7px of the man at 768, 14.3-36.6 at 900, 26.3-62.7 at
+     1024 and 9.9-36.6 at 1280.
+
+     ⚠ ROUND-18 #2's MASK GEOMETRY SETS ONE CEILING, AND IT IS NOT THE BINDING ONE. The mask reaches
+     transparent exactly at the strip's right edge, so the clip is invisible only while the picture is
+     at least as wide as the strip. The shortest ordinary row anywhere at or above 768 is 126.34px
+     (measured at 900, 1000, 1023, 1100, 1200, 1280, 1440, 1600 and 1920 – the all-on-one-line card,
+     which is what a wide card produces), so a 124.34px padding box; and budget-2.webp is 162x280
+     rather than 162x264, which makes it the NARROWEST portrait for a given height, so the honest
+     supply at that row is 124.34 x 162/280 = 71.94px. That ceiling would allow 70.
+
+     ⚠⚠ 66 IS THE SECOND CEILING, AND IT IS THE TEXT COLUMN'S. `.cm-art` is `position: absolute` and
+     costs the layout nothing – but the corridor rule means `.cm-body` must move with it, and a
+     narrower text column wraps a line, which makes the CARD taller. Measured in Chromium, the largest
+     strip that leaves every card's height untouched, per viewport width:
+
+         768  →72     850  →71     1000 →67     1060 →66     1200 →67     1440 →67
+         800  →80+    900  →67     1023 →67     1100 →63     1280 →67     1920 →67
+
+     66 is free at fourteen of those fifteen widths. It costs height at ONE, 1100, where two budget
+     cards gain a line (+28.36px on a 2057px page). 63 is the only strip free at every width and it is
+     +1px, which is not a change he would see; 70 – the mask ceiling minus slack – would cost that
+     line across most of the desktop band. ⚠ AND THE WIDTHS HE NAMED ARE FREE: at 768 (frame AJ) and
+     1024 (frame AK) nothing moves at all, because those cards are narrow enough that the notes have
+     already wrapped.
+
+     ⚠ THE FLOOR MOVES WITH THE STRIP, exactly as round-21 #1 moved it for the hired card: 66px of
+     strip needs a 66 x 280/162 = 114.1px padding box, hence a 116.1px border box, and 118 is that
+     rounded up. It binds on nothing that ships – 126.34 is the shortest row measured, 8.34px above it
+     – so the floor changes no card's height either. The image keeps `height: 100%; width: auto`:
+     nothing is scaled, stretched or cropped («сохраняя вертикальный размер, вписанный в карточку»),
+     the window simply clips less.
+
+     ⚠ THE HIRED ROW STAYS AT 78. docs/specs/coach-match-edge.md §4's anti-shopping rule says an
+     unhired card may not be made more attractive than the one she has, and 66 < 78 keeps that true;
+     78 is also the owner's own round-21 number and he did not ask for it again.
+
+     ⚠⚠ ONE CLASS HEAVIER THAN THE BASE RULES, FOR THE REASON PHASE 3 RECORDS BELOW: a media query
+     adds NO specificity, so a bare `.cm-art` here would tie with `.cm-art` above and be settled by
+     source order – which a browser and happy-dom resolve in OPPOSITE directions. `.tier-block .cm-art`
+     wins in both, and still loses to `.cm-row.current .cm-art`, which is what reserves the hired
+     window. ⚠ The hired row's floor is RESTATED for the same reason and is not a duplicate:
+     `.cm-row.current` is (0,2,0) and so is `.tier-block .cm-row`, so without this line the 132 would
+     be a coin flip between the two engines.
+
+     tests/component/round18-coach.test.ts holds all four numbers at 375, 767, 768, 1024 and 1280 and
+     fails on any one of them alone. */
+  .tier-block .cm-row {
+    min-height: 118px;
+  }
+  .tier-block .cm-row.current {
+    min-height: 132px;
+  }
+  .tier-block .cm-art {
+    width: 66px;
+  }
+  .tier-block .cm-body {
+    /* 66 (the strip) + the same 12 of air every other width keeps. The pair is tied by a test, not
+       by this comment – see `.cm-body` above. Move one, move the other. */
+    margin-left: 78px;
   }
 }
 

@@ -55,6 +55,7 @@ import { DEFAULT_PROFILE, type CoachTier, type Snapshot } from '../../src/shared
 import { TIER_LADDER } from '../../src/engine/season/calendar'
 import { WEEKS_IN_SEASON } from '../../src/shared/dates'
 import { before } from '../helpers/source'
+import { PHONE, setViewport } from './fits'
 
 // happy-dom has no `localStorage` on the window the component project builds, and the market's
 // onboarding cue reads one at mount. Same shim as round18-coach.test.ts, and quoted there in full.
@@ -96,7 +97,18 @@ function careerSnapshot(coachTier: CoachTier, seed = `r21p-${coachTier}`): Snaps
   return toSnapshot(world)
 }
 
+/** ⚠ RE-AIMED BY P2-7 – THE WIDTH IS NAMED NOW, AND IT IS THE ONE #1 WAS MEASURED AT. This file took
+ *  no viewport of its own and therefore read happy-dom's DEFAULT 1024, which round 36's second pass
+ *  turned into a different band: the shop card's window is 70px past 768 and its floor 124 (the
+ *  owner asked for the wider picture on tablet and desktop – tests/component/round18-coach.test.ts
+ *  carries the ask, the ceiling and the arithmetic). Every number #1 asserts – 78/90/132 on the
+ *  hired row, 62/74/104 on the others, and the 26% ratio between the two windows – is the phone's,
+ *  is the owner's own from round 21, and is unchanged here. Only the width they are read at is now
+ *  written down instead of inherited. The ≥768 band's counterpart of every one of these claims,
+ *  including that the hired row still shows more of its man than the shop does, is the P2-7 block in
+ *  round18-coach.test.ts. */
 async function openCoaches(tier: CoachTier = 'middle') {
+  setViewport(PHONE)
   const store = useGameStore()
   store.snapshot = careerSnapshot(tier)
   const wrapper = mount(CoachMarketScreen, {
