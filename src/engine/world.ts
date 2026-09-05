@@ -1514,19 +1514,49 @@ export function replayMainState(seed: string, profile: PlayerProfile, weeks: num
   return st
 }
 
+/** The per-rival half of the weekly budget: `driftCohort` draws exactly 4 per rival, and that
+ *  number is the tick's own (see its header). It is the part of the bound that is ACCOUNTING. */
+const MAIN_DRAWS_PER_RIVAL = 4
+
+/** The flat head of the weekly budget – everything the tick spends that is not per-rival, plus the
+ *  slack that makes this a corruption detector rather than a ledger.
+ *
+ *  ⭐⭐ E-04 (05.09 engine review): WIDENED FROM 8, BECAUSE 8 WAS NOT SLACK. `resolveBaseCosts`
+ *  spends 3 (jitter, flavour, sponsor roll) plus a 4th when the roll hits, so the flat cost is at
+ *  most 4 and the comment called the remaining 4 "generous". Measured on the review's A/B probe –
+ *  `rngMain.n = 124,654` after 156 weeks – the real cost is **799.06 draws a week against a bound
+ *  of 804: a margin of five draws, 0.6 %.** A wave that legitimately adds one MAIN draw per rival,
+ *  or six flat ones, updates the frozen capture as CLAUDE.md prescribes and ships – and from that
+ *  day every career played more than a few weeks fails this bound on EVERY load, is replayed under
+ *  current code on every load (the O(career) path v35 retired), and shows the repair flag every
+ *  time. The bound would have turned from a corruption detector into a silent performance and
+ *  determinism regression, and nothing would have gone red.
+ *
+ *  `2 * COHORT_SIZE` is the widening: 406 + 4×199 = **1,202 a week against 799.06 measured**, room
+ *  for half again the tick's whole cost. It is still an order of magnitude below any corruption
+ *  pattern (the s/n redundancy check in `rng.ts` is the sharp half of the verifier and is
+ *  untouched), and widening can only ACCEPT more positions, never refuse a save that loads today. */
+const MAIN_DRAWS_FLAT_PER_WEEK = 8 + 2 * COHORT_SIZE
+
+/** ⭐ The weekly bound at the standard field size, named so a test can relate it to the live tick's
+ *  measured cost – which is the other half of E-04: `maxMainDraws` had no test that compared it to
+ *  what a week actually spends, only two that compared stored fixtures to it. See
+ *  `tests/sim-worker-rng.test.ts`, "the bound is slack the tick can grow into". */
+export const MAIN_DRAWS_PER_WEEK_MAX = MAIN_DRAWS_FLAT_PER_WEEK + MAIN_DRAWS_PER_RIVAL * COHORT_SIZE
+
 /** The MOST MAIN draws `weeks` of career can legitimately have spent — the plausibility half of
  *  the load-time verifier (the redundancy check `mainStateConsistent` is the other, sharper half).
  *
  *  Derived from what the weekly tick actually spends TODAY, not from a remembered cost table:
  *  `resolveBaseCosts` draws 3 (jitter, flavor, sponsor roll) plus 1 more when the roll hits, and
- *  `driftCohort` draws exactly 4 per rival (see the tick's own header) — so a week costs at most
- *  4 + 4×field. The 8 keeps the bound GENEROUS on purpose: it is corruption detection, not
- *  accounting, and a bound that has to be re-derived every time a draw is added would be the old
- *  frozen-capture tax wearing a new hat. Floored at COHORT_SIZE because the draws were made
+ *  `driftCohort` draws exactly 4 per rival (see the tick's own header). It is corruption detection,
+ *  not accounting, and a bound that has to be re-derived every time a draw is added would be the old
+ *  frozen-capture tax wearing a new hat — see `MAIN_DRAWS_FLAT_PER_WEEK` for how much slack that
+ *  argument actually needs and what it measured. Floored at COHORT_SIZE because the draws were made
  *  against the GENERATED field: a v6/v7-era fixture persists a trimmed shape-sample of its
  *  cohort, but the probe that computed its position drifted all 199. */
 export function maxMainDraws(weeks: number, cohortSize: number): number {
-  return weeks * (8 + 4 * Math.max(cohortSize, COHORT_SIZE))
+  return weeks * (MAIN_DRAWS_FLAT_PER_WEEK + MAIN_DRAWS_PER_RIVAL * Math.max(cohortSize, COHORT_SIZE))
 }
 
 /** Hydrate the Phase-3 systems onto a pre-v6 save. Idempotent for v6+. */
