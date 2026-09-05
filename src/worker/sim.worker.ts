@@ -44,6 +44,7 @@ import {
 import { mainStateConsistent, resumeMain, type MainRngState, type Rng } from '../engine/rng'
 import { planFromWeek, planShapeError, planWeek } from '../engine/plan'
 import { encodeExportFile, decodeExportFile } from '../engine/saveCodec'
+import { SaveFileError } from '../engine/saveGuard'
 import {
   commitAutosave,
   adoptAutosave,
@@ -680,6 +681,19 @@ function errorMsg(id: number, err: unknown): ErrorReply {
   }
   if (err instanceof SaveConflictError) {
     return { id, ok: false, error: err.message, code: 'SAVE_CONFLICT', revision: err.diskRevision }
+  }
+  // ⭐⭐ E-05 (05.09 engine review) – AND THE SAVE-FILE CODE CROSSES THE BOUNDARY TOO. `SaveFileError`
+  // has carried seven machine-readable kinds since the import gate was written, and that gate's own
+  // header states the reason: "the code exists so tests (and any future UI that wants to branch)
+  // never match on prose". This function dropped every one of them, so `future-schema` – whose whole
+  // point is that the answer is «update the app, then import it» rather than «this file is broken» –
+  // reached the store as an untyped sentence. The claim in the header was simply false.
+  //
+  // ⚠ NO `revision`: a refused file never measured itself against one. The field is for the two
+  // concurrency kinds above and stays absent here, which is what the arm in
+  // tests/worker-reply-correlation.test.ts asserts alongside the code.
+  if (err instanceof SaveFileError) {
+    return { id, ok: false, error: err.message, code: err.code }
   }
   return { id, ok: false, error: err instanceof Error ? err.message : String(err) }
 }

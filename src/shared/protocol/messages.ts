@@ -7,6 +7,7 @@
 // Part of the `shared/protocol` module set – see src/shared/protocol.ts, which re-exports every
 // name below under the historical public path. Nothing here imports that barrel back.
 
+import type { SaveFileErrorCode } from '../../engine/saveGuard'
 import type { CollegeTier, ForkAnswer } from './career'
 import type { KnockChoice } from './health'
 import type { KitGrade, KitLine, ShootClashChoice } from './offers'
@@ -83,8 +84,22 @@ export interface SavePeek {
  *   STALE_REVISION  the mutation's `baseRevision` is not the worker's committed revision; the
  *                   response's `revision` carries the current one so the caller can refresh.
  *   SAVE_CONFLICT   the on-disk career revision is ahead of the one being written (another tab
- *                   committed since we loaded) – the write was refused, nothing was clobbered. */
-export type WorkerErrorCode = 'STALE_REVISION' | 'SAVE_CONFLICT'
+ *                   committed since we loaded) – the write was refused, nothing was clobbered.
+ *
+ *  ⭐⭐ AND THE SEVEN SAVE-FILE KINDS (E-05, 05.09 engine review). `SaveFileError` has carried a
+ *  machine-readable `code` since the import gate was written, and that gate's header says why it
+ *  exists: "the code exists so tests (and any future UI that wants to branch) never match on
+ *  prose". It never crossed this boundary. `errorMsg` mapped two error classes and turned every
+ *  `SaveFileError` into a bare sentence, so a UI wanting to tell `future-schema` ("update the app,
+ *  then import it") from `corrupted` had nothing to branch on but English – the exact failure mode
+ *  the code was added to prevent, with the header claiming it was prevented.
+ *
+ *  ⚠ `import type`, WHICH IS THE ONLY EDGE THIS DIRECTION IS ALLOWED. `shared/protocol/*` already
+ *  reaches into `engine/*` for types this way (`competition.ts`, `events.ts`, `ladder.ts` and four
+ *  more); the import is erased at compile time, so the runtime graph is unchanged and invariant 1
+ *  holds – `saveGuard.ts` imports `SAVE_SCHEMA_VERSION` from the engine at RUNTIME, and a value
+ *  import here would put the whole engine behind every protocol consumer. */
+export type WorkerErrorCode = 'STALE_REVISION' | 'SAVE_CONFLICT' | SaveFileErrorCode
 
 export type ToWorker =
   // ⭐ `prologue` IS OPTIONAL AND ITS ABSENCE IS THE WIZARD (build spec §6: «new game -> the prologue
