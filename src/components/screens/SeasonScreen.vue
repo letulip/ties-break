@@ -103,7 +103,10 @@ const game = useGameStore()
 // The upcoming-event card's shared parts, in one read of the snapshot. `surfaceVerdict` is what this
 // file used to call `surfaceNote`, one-for-one; the Calendar screen had the identical one-liner
 // under the second name, which is how one rule ends up with two of everything.
-const { academyCoverPct, surfaceVerdict, venueUrl } = useEventCard()
+// ⭐ U-12 – `fundsShort` JOINED THEM 05.09. It was two byte-identical lines, here and on the
+// Calendar, listed as still open by two reviews running; the module took the name both files used,
+// so nothing at the call sites below reads differently.
+const { academyCoverPct, fundsShort, surfaceVerdict, venueUrl } = useEventCard()
 // ⭐⭐⭐ ROUND 36 PHASE 5 – the week's horizontal listing, in JS. One instance for the whole feed;
 // each strip registers itself by its own week through `pager.bind`. His ruling and the measurement
 // behind it are at the head of composables/weekPager.ts, where Cyrillic is allowed.
@@ -477,7 +480,9 @@ function drawnLine(e: UpcomingEvent): string {
 // Calendar's marker card drew the identical ring and the two could have worded it differently.
 
 const week = computed(() => game.snapshot?.week ?? 0)
-const fundsCents = computed(() => game.snapshot?.fundsCents ?? 0)
+// ⭐ U-12 – `fundsCents` STOOD HERE and went with `fundsShort`, its one reader. The balance is read
+// inside `useEventCard` now, off the same snapshot; `noUnusedLocals` is what would have caught it
+// had it been left behind, and a computed nothing reads is a second answer waiting for a caller.
 const condition = computed(() => game.snapshot?.condition ?? 0)
 // v21: the share of every trip the academy is paying – one number for the whole calendar, since the
 // scholarship is a rate and not a per-event deal. It is `academyCoverPct` off `useEventCard` now
@@ -852,9 +857,6 @@ const supplyOnScreen = computed<number>(() => {
 // item 2); an open event only ever disables Enter for insufficient funds.
 function entriesClosed(e: UpcomingEvent): boolean {
   return week.value > e.deadlineWeek
-}
-function fundsShort(e: UpcomingEvent): boolean {
-  return fundsCents.value < e.entryFeeCents
 }
 // The HARD-lock label (Season-Life slice B): point-band (locked) or a hard availability
 // block (injured / school exams / a booked family vacation). Fatigue is NOT here – it stays
