@@ -402,8 +402,15 @@ test('at 1280 the same week needs no paging, so it has no arrows – and the key
     cards: el.querySelectorAll('.event-card').length,
     overflow: el.scrollWidth - el.clientWidth,
   }))
-  // D16's finding, read back in a browser: three cards fit at this width, so a two-card week has
-  // nothing hanging past the edge.
+  // ⚠ RE-AIMED BY R37-3 (05.09) – THE ASSERTION IS UNTOUCHED AND ITS REASON IS NOT. It said «D16's
+  // finding, read back in a browser: three cards fit at this width», which was true while the desktop
+  // column was a third of the row. The owner then asked for the tablet's grid on the desktop –
+  // «сетку на 2 карточки desktop (как на tablet) по дефолту» – so three no longer fit, and a two-card
+  // week fits whole for the OTHER reason: the pair now fills the row exactly (measured in Chromium on
+  // this fixture, 468px + 12px + 468px = 948px of row at 1280). Either way there is nothing past the
+  // edge, which is what this test is about – but a comment that kept the old reason would be a lie
+  // the day somebody read it, and the three-card case is measured in
+  // tests/component/round34-week-stack.test.ts's `R37-3` arms instead.
   expect(state.cards).toBeGreaterThan(1)
   expect(state.overflow, 'a two-card week fits whole at 1280').toBe(0)
   await expect(row.locator('.week-arrow'), 'a week that fits whole draws no pager').toHaveCount(0)
