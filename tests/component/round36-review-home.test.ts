@@ -245,33 +245,47 @@ async function homeAt(vp: { width: number; height: number }, snapshot?: Snapshot
   await nextTick()
 }
 
-describe('round 36 review #2 – the bell, the mail and the gear leave the picture', () => {
-  it('⭐ the two copies name the SAME three controls, so neither can drift from the other', async () => {
+// ⚠⚠ RE-AIMED BY P2-4, NOT DELETED. His words on 05.09.2026, after playing the built wave: «если
+// колокольчик, письмо и шестеренка только на главной работают - давай их вернем на картинку в угол
+// правый верхний». D74's second copy is gone, so the three arms below stop asserting a copy that no
+// longer exists and assert the property he asked for instead – ONE row, on the photograph, at every
+// width. The protected fact is the one it always was: the three controls are where he can see them,
+// and nothing below 1024 moved.
+describe('round 36 review #2, re-aimed by P2-4 – the bell, the mail and the gear are back on the picture', () => {
+  it('⭐ there is exactly ONE row of them and it is the photograph’s own', async () => {
     await homeAt(PHONE)
-    const names = (root: Element): string[] =>
+    const names = (root: ParentNode): string[] =>
       [...root.querySelectorAll('button.diary-tool')].map((b) => b.getAttribute('aria-label') ?? '')
     const hero = document.querySelector('.diary-head > .diary-tools')
-    const page = document.querySelector('.diary-tools-page')
     expect(hero, 'the hero’s own row is gone').toBeTruthy()
-    expect(page, 'the page copy was never rendered').toBeTruthy()
-    expect(names(page!), 'the two copies offer different controls').toEqual(names(hero!))
-    expect(names(page!)).toEqual(['Go to the news feed', 'Open the inbox', 'Settings'])
+    expect(has('.diary-tools-page'), 'D74’s page copy is still being drawn').toBe(false)
+    expect(names(hero!), 'the row stopped naming his three controls').toEqual([
+      'Go to the news feed',
+      'Open the inbox',
+      'Settings',
+    ])
+    expect(names(document), 'a second copy of the row is on the page').toEqual(names(hero!))
   })
 
-  it('⭐⭐ …and exactly ONE of them is on screen at any width – the phone keeps the photograph’s', async () => {
+  it('⭐⭐ …on a phone, exactly as it shipped', async () => {
     await homeAt(PHONE)
     expect(css('.diary-head > .diary-tools').display, 'the hero’s row went out on a phone').toBe('flex')
-    expect(css('.diary-tools-page').display, 'the page copy is showing on a phone').toBe('none')
   })
 
-  it('⭐⭐ …and the desktop keeps the page’s, in the corner of the container', async () => {
+  it('⭐⭐ …and on the desktop too, in the top-right corner of the photograph', async () => {
     await homeAt(DESKTOP)
-    expect(css('.diary-head > .diary-tools').display, 'the icons are still on the photograph').toBe('none')
-    const page = css('.diary-tools-page')
-    expect(page.display, 'the page copy did not take over').toBe('flex')
-    expect(page.position, 'the row is in the grid rather than above it').toBe('absolute')
-    expect(page.top).toBe('0px')
-    expect(page.right, 'it is not in the RIGHT corner').toBe('0px')
+    expect(css('.diary-head > .diary-tools').display, 'the icons left the photograph again').toBe('flex')
+    // The row is the LAST child of an absolutely-placed flex header whose other two children are
+    // her face (out from 1024) and the date, which keeps its slack for exactly this reason – it is
+    // what holds the icons against the right edge. The pixel position is measured in a real browser
+    // in e2e/responsive.spec.ts; what is checked here is the shape that produces it.
+    expect(css('.diary-head').display, 'the header row stopped being a flex row').toBe('flex')
+    const head = document.querySelector('.diary-head')!
+    expect(
+      head.lastElementChild?.className,
+      'the icons are no longer the last thing in the header row',
+    ).toContain('diary-tools')
+    expect(css('.tb-screen-body').paddingTop, 'the 34px band D74 opened is still there').not.toBe('34px')
   })
 })
 

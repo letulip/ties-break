@@ -533,3 +533,51 @@ test('P2-2: Home’s two rows below the photograph are ONE grid, at 1024 and at 
     expect(hero.x, 'the photograph moved off the left edge of the grid').toBe(coach.x)
   }
 })
+
+/**
+ * ⭐⭐⭐ P2-4 – «если колокольчик, письмо и шестеренка только на главной работают - давай их вернем на
+ * картинку в угол правый верхний». It reverses `D74`, on his own premise: the second half of review
+ * #2 («доступно на всех экранах») is not built and `D76` says why, so three controls that only work
+ * on Home belong on Home's photograph.
+ */
+test('P2-4: the bell, the letter and the gear are in the photograph’s top-right corner at 1280', async ({
+  page,
+  careerAt,
+}) => {
+  await careerAt('pro')
+  await answerOpeningKnock(page)
+  await dismissTourBriefing(page)
+
+  for (const width of [375, 1280]) {
+    await page.setViewportSize({ width, height: 900 })
+    await page.getByRole('navigation').getByRole('button', { name: 'Home', exact: true }).click()
+    await expect(page.getByRole('heading', { name: /^W\d+ \d{4} · /, level: 1 })).toBeVisible()
+
+    const placed = await page.evaluate(() => {
+      const hero = document.querySelector('.diary-hero')
+      const tools = document.querySelector('.diary-head > .diary-tools')
+      if (!hero || !tools) return null
+      const h = hero.getBoundingClientRect()
+      const t = tools.getBoundingClientRect()
+      return {
+        icons: tools.querySelectorAll('button.diary-tool').length,
+        onPage: document.querySelectorAll('button.diary-tool').length,
+        pageCopies: document.querySelectorAll('.diary-tools-page').length,
+        // Inside the picture, hard against its right edge and its top.
+        fromRight: +(h.right - t.right).toFixed(2),
+        fromTop: +(t.top - h.top).toFixed(2),
+        insideX: t.left >= h.left && t.right <= h.right,
+        insideY: t.top >= h.top && t.bottom <= h.bottom,
+      }
+    })
+    expect(placed, `the hero or its tool row is missing at ${width}`).not.toBeNull()
+    expect(placed!.icons, `there are not three icons on the photograph at ${width}`).toBe(3)
+    expect(placed!.onPage, `a second copy of the row is drawn at ${width}`).toBe(3)
+    expect(placed!.pageCopies, `D74's off-picture copy is still rendered at ${width}`).toBe(0)
+    expect(placed!.insideX && placed!.insideY, `the row is off the photograph at ${width}`).toBe(true)
+    // `.diary-head` insets the row 18px from the picture's right edge and 20px from its top, at
+    // every width – the same two numbers a phone has always used.
+    expect(placed!.fromRight, `the row is not against the right edge at ${width}`).toBe(18)
+    expect(placed!.fromTop, `the row is not at the top of the picture at ${width}`).toBeLessThan(40)
+  }
+})

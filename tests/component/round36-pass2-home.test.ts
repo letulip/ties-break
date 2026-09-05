@@ -170,3 +170,36 @@ describe('round 36 second pass, P2-2 – Home’s two lower rows share one grid'
     ).not.toBe(css('.card-pair').gridTemplateColumns)
   })
 })
+
+// =================================================================================================
+// P2-4 – THE BELL, THE LETTER AND THE GEAR GO BACK ON THE PHOTOGRAPH
+// =================================================================================================
+//
+// ⚠ MUTATION-VERIFIED: restoring D74's `.diary-head > .diary-tools { display: none }` inside the
+// 1024 block reddens the desktop arm with `none`.
+
+describe('round 36 second pass, P2-4 – the three tools are on the picture at every width', () => {
+  it('⭐⭐ all three are inside the header row on the photograph, on a phone and on a desktop', async () => {
+    for (const vp of [PHONE, TABLET, DESKTOP]) {
+      await homeAt(vp)
+      const all = [...document.querySelectorAll('button.diary-tool')]
+      expect(all.length, `there are not three tools at ${vp.width}`).toBe(3)
+      expect(
+        all.every((b) => b.closest('.diary-head') !== null),
+        `a tool is drawn off the photograph at ${vp.width}`,
+      ).toBe(true)
+      expect(css('.diary-head > .diary-tools').display, `the row is hidden at ${vp.width}`).toBe('flex')
+      wrapper?.unmount()
+      wrapper = null
+      document.body.innerHTML = ''
+    }
+  })
+
+  it('⭐ D74’s second copy is GONE, and so is the 34px band it hung in', async () => {
+    await homeAt(DESKTOP)
+    expect(has('.diary-tools-page'), 'the page copy is still being drawn').toBe(false)
+    expect(css('.tb-screen-body').paddingTop, 'the band above the two columns is still open').not.toBe(
+      '34px',
+    )
+  })
+})

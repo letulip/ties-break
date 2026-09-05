@@ -1349,85 +1349,6 @@ async function leaveCollege(): Promise<void> {
       </div>
 
       <!-- ═══════════════════════════════════════════════════════════════════════════════════════
-           ⭐⭐⭐ ROUND 36 REVIEW #2 – THE THREE ICONS COME OFF THE PHOTOGRAPH. It reverses D14.
-           ═══════════════════════════════════════════════════════════════════════════════════════
-           The bell, the letter and the settings gear live on the desktop in the top-right corner,
-           OFF the picture. His own sentence is quoted in the style block below and in
-           docs/rounds/round-36-review.md; a template may carry no Cyrillic at all
-           (tests/template-copy-rules.test.ts).
-
-           D14 left them on the painting because moving them means getting them out of a box that is
-           `overflow: hidden`, and nothing but a template change can do that. This is that change.
-
-           ⚠⚠ IT IS A SECOND COPY AND NOT A MOVE, AND THE REASON IS THE ROUND'S IDENTITY CONTRACT.
-           The copy above is inside `.diary-head`, which is `position: absolute` on the hero and
-           whose remaining children are sized by it – taking the tools OUT of that row widens
-           `.diary-date`'s box by 108px on a phone, and not one box below 768 may move. So the hero
-           keeps its own row untouched and this copy is drawn beside it, with exactly one of the two
-           on screen at any width (`display: none` does the switching, and it costs no box and no
-           accessibility node on the side that is off – which is why `e2e/parity.spec.ts` sees the
-           same three buttons at 375 and at 1280 and needs no exemption for them).
-
-           ⚠ IT IS AFTER THE PHOTOGRAPH IN THE DOM, NOT BEFORE IT, and that is round 35 #11's rule:
-           `.diary-hero:not(:first-child)` is what stops the hero's negative top margin eating the
-           engine's error line, and a sibling in front of it – even a hidden one – switches that off
-           at every width. It is laid ABOVE the page by CSS instead (`position: absolute` in a band
-           the desktop grid opens for it), which touches no DOM order at all.
-
-           ⚠ NO `data-tour` HERE. The coach-mark tour points at the hero's copy by that attribute and
-           two elements answering to one mark is a tour that points at the wrong one.
-
-           ⚠ NOT ONE NEW STRING: the three labels, the two titles and the two dot sentences are the
-           ones above, verbatim, and `tests/component/round36-review.test.ts` asserts the two copies
-           name the same three controls so they cannot drift. -->
-      <div class="diary-tools diary-tools-page">
-        <button
-          class="diary-tool"
-          aria-label="Go to the news feed"
-          title="News"
-          :aria-describedby="newsUnseen ? 'diary-page-dot-news' : undefined"
-          @click="jumpToNews"
-        >
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
-            <path d="M13.7 21a2 2 0 0 1-3.4 0"></path>
-          </svg>
-          <span
-            v-if="newsUnseen"
-            id="diary-page-dot-news"
-            class="diary-tool-dot"
-            role="img"
-            aria-label="Unread news"
-          ></span>
-        </button>
-        <button
-          class="diary-tool"
-          aria-label="Open the inbox"
-          title="Inbox"
-          :aria-describedby="inboxDot ? 'diary-page-dot-inbox' : undefined"
-          @click="openInbox"
-        >
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <rect x="2.5" y="5" width="19" height="14" rx="2"></rect>
-            <path d="M3 6.5 12 13l9-6.5"></path>
-          </svg>
-          <span
-            v-if="inboxDot"
-            id="diary-page-dot-inbox"
-            class="diary-tool-dot"
-            role="img"
-            aria-label="A letter waiting on an answer"
-          ></span>
-        </button>
-        <button class="diary-tool" aria-label="Settings" title="Settings" @click="emit('navigate', 'more')">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <circle cx="12" cy="12" r="3.2"></circle>
-            <path d="M19.4 15a1.6 1.6 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.6 1.6 0 0 0-1.8-.3 1.6 1.6 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.6 1.6 0 0 0-1-1.5 1.6 1.6 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.6 1.6 0 0 0 .3-1.8 1.6 1.6 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.6 1.6 0 0 0 1.5-1 1.6 1.6 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.6 1.6 0 0 0 1.8.3H9a1.6 1.6 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.6 1.6 0 0 0 1 1.5 1.6 1.6 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.6 1.6 0 0 0-.3 1.8V9a1.6 1.6 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.6 1.6 0 0 0-1.5 1z"></path>
-          </svg>
-        </button>
-      </div>
-
-      <!-- ═══════════════════════════════════════════════════════════════════════════════════════
            ⭐⭐⭐ ROUND 36 REVIEW #3 – HER FACE AND HER RANK COME OFF THE PHOTOGRAPH TOO, INTO THE RAIL
            ═══════════════════════════════════════════════════════════════════════════════════════
            They go to the top-left corner of the menu, above every item in it – his words, again in
@@ -2031,20 +1952,22 @@ async function leaveCollege(): Promise<void> {
   flex-shrink: 0;
 }
 
-/* ⭐⭐⭐ REVIEW #2 – THE PAGE COPY OF THE THREE ICONS, off the photograph and in the container's top
-   right corner. HIS OWN SENTENCE, which the template may not carry:
+/* ⭐⭐⭐ ROUND 36 SECOND PASS, P2-4 – THE THREE ICONS ARE BACK ON THE PHOTOGRAPH, AT EVERY WIDTH.
+   His words, after playing the built wave:
 
-     «колокольчик, письмо и шестеренка настроек живут на десктоп в правом верхнем углу вне картинки
-      и доступно на всех экранах, кроме тех, что займут всё пространство (как матч, например)»
+     «если колокольчик, письмо и шестеренка только на главной работают - давай их вернем на картинку
+      в угол правый верхний»
 
-   ⚠ The second half of it – «на всех экранах» – is NOT built, and D76 in
-   docs/specs/responsive-decisions-2026-09.md is the reason and the price. It is `display: none` at every width the desktop does not reach, so below 1024 this
-   component renders byte-for-box what it rendered before – no box, no paint, no accessibility node,
-   and the hero's own row is the one on screen. The switch happens in the 1024 block below. */
-.diary-tools-page {
-  display: none;
-}
+   ⚠ THIS REVERSES `D74`, WHICH REVERSED `D14`, AND HIS PREMISE IS THE WHOLE REASON. D74 took the row
+   off the picture because his review #2 asked for it AND for «доступно на всех экранах»; D76 then
+   said plainly that the second half is not a layout job (the bell scrolls to `#diary-news`, which
+   exists on Home alone, and the envelope opens a sheet Home mounts). He has read that and drawn the
+   consequence himself: three controls that only work on Home belong on Home's photograph.
 
+   ⭐ SO THE SECOND COPY IS GONE RATHER THAN HIDDEN – the row on `.diary-head` is the one row again,
+   and the desktop's 34px band above the two columns goes with it. Nothing below 1024 is touched:
+   the page copy was `display: none` there, so a phone renders exactly what it rendered before –
+   0 moved, 0 new, 0 gone at 375, 520 and 576, which is the round's identity contract. */
 .diary-tool {
   position: relative;
   width: 22px;
@@ -2309,32 +2232,11 @@ async function leaveCollege(): Promise<void> {
     display: grid;
     grid-template-columns: minmax(0, var(--hero-max)) minmax(310px, 1fr);
     gap: 11px;
-    /* ⭐ REVIEW #2 – A BAND ABOVE THE TWO COLUMNS FOR THE THREE ICONS, and the positioning context
-       they hang off. 34px is the icon row's own 22 plus the gap the page reads at; the tools sit at
-       its top right and the grid begins under them.
-       ⚠ ABSOLUTE, NOT A GRID ROW, on purpose. `.error` and `.college-card` are `grid-column: 1 / -1`
-       and `.error` must stay the FIRST thing read on the page (round 35 #11); an icon row placed in
-       the grid would take row 1 and push the engine's refusal below the photograph, or need an
-       explicit row of its own that costs 11px of gap on every week that has no error. Out of flow it
-       costs the layout nothing and cannot reorder anything. */
-    position: relative;
-    padding-top: 34px;
-  }
-
-  /* ⭐⭐ REVIEW #2 – «в правом верхнем углу вне картинки». Off the photograph, in the corner of the
-     reading column, on the page's own background. The icons keep every one of their own rules – the
-     22px box, the 16px gap, the dot on the shoulder – because nothing about them changed except
-     where they are. */
-  .diary-tools-page {
-    display: flex;
-    position: absolute;
-    top: 0;
-    right: 0;
-  }
-
-  /* …and the hero's own copy stands down, so exactly one of the two is ever on screen. */
-  .diary-head > .diary-tools {
-    display: none;
+    /* ⭐⭐⭐ SECOND PASS, P2-4 – THE 34px BAND IS GONE WITH THE ROW IT WAS OPENED FOR. Review #2's
+       page copy of the bell, the letter and the gear hung in it, absolutely positioned; he has sent
+       the three back onto the photograph, so the band above the two columns is 34px of nothing and
+       the positioning context has nothing to position. Both go, and the grid starts at the top of
+       the page again exactly as it did before D74. */
   }
 
   /* ⭐⭐ REVIEW #3 – and the same for her face, her rank and the callout that explains the face, all

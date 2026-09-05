@@ -576,7 +576,13 @@ describe('the diary page: the structure the redesign decided', () => {
     // taking them out of `.diary-head` widens the date's box by 108px at 375). Cutting to the page
     // copy's own class keeps this region what its name and every assertion under it mean: the
     // PHOTOGRAPH and what is laid on it.
-    const hero = region(home, 'class="diary-hero"', 'class="diary-tools diary-tools-page"')
+// ⚠ RE-AIMED BY P2-4 – the second copy is GONE, because he sent the three icons back onto the
+    // photograph («давай их вернем на картинку в угол правый верхний», 05.09.2026), so the class this
+    // region cut to no longer exists and `region` throws on an absent marker. The end marker goes
+    // back to what it was before D74: `class="card-grid"`, the hero's real next block. ⚠ A MARKER IS
+    // AN ELEMENT, NEVER A WORD IN A COMMENT – the note that replaced the teleport still says the word
+    // «Teleport», and cutting there would have been a pin anchored on prose.
+    const hero = region(home, 'class="diary-hero"', 'class="card-grid"')
     for (const part of ['diary-date', 'diary-greeting', 'diary-name', 'diary-age', 'diary-rank', 'diary-caption']) {
       expect(hero, `the hero must carry ${part}`).toContain(part)
     }
@@ -594,9 +600,13 @@ describe('the diary page: the structure the redesign decided', () => {
     // copy that quietly gained or lost an icon reddens on the side it happened, and the two cannot
     // drift into being different rows.
     expect(hero.match(/class="diary-tool"/g) ?? [], 'the hero row').toHaveLength(3)
-    const pageTools = region(home, 'class="diary-tools diary-tools-page"', '<Teleport')
-    expect(pageTools.match(/class="diary-tool"/g) ?? [], 'the page row').toHaveLength(3)
-    expect(home.match(/class="diary-tool"/g) ?? [], 'and no third copy anywhere').toHaveLength(6)
+// ⚠ RE-AIMED BY P2-4 – BACK TO ONE ROW, AND THE «no second copy anywhere» HALF IS WHAT NOW DOES
+    // THE WORK. He sent the three back onto the photograph, so the page copy the line above counted
+    // is deleted rather than hidden; three in the hero and three in the whole file is the same claim
+    // the pre-D74 pin made, and it reddens if a second row is ever drawn again without being asked
+    // for.
+    expect(hero.match(/class="diary-tool"/g) ?? [], 'the hero row').toHaveLength(3)
+    expect(home.match(/class="diary-tool"/g) ?? [], 'and no second copy anywhere').toHaveLength(3)
     expect(home).toContain('stroke-width="1.7"')
     expect(existsSync(new URL('../public/icons/bell.svg', import.meta.url))).toBe(false)
     // ...and the gear goes to the tab that already owns settings, rather than inventing a screen.
