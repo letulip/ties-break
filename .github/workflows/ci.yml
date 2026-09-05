@@ -142,6 +142,15 @@ jobs:
       # `npm run check` has always had exactly this shape locally (package.json's `check` ends
       # `… && vite build`); CI now matches the gate the owner runs before a push.
       - run: npx vite build
+      # ⚠ THE INSTALL CEILING, AND IT HAS TO BE HERE BECAUSE THIS IS THE ONLY JOB THAT BUILDS
+      # (P-04, 05.09). The owner's 16,384 KiB ruling of 29.08 was being checked against `public/`
+      # inside the unit suite - 14,596 KiB of a 15,755 KiB install, because the hashed bundles, the
+      # stylesheet and index.html exist only after the step above. The unit shards run in jobs that
+      # never build, so the measurement cannot live there. `npm run check` runs the same script in
+      # the same position, one line after `vite build`.
+      # NOT MIRRORED INTO deploy.yml on purpose: it is the same artefact, and a ceiling that has
+      # already refused the pull request has nothing left to say on the push that merges it.
+      - run: node scripts/install-size.mjs
 
   # ⭐ THE LONG POLE, ALONE. 501 s of pooled files - the one block worth its own runner.
   unit-bulk:
