@@ -90,6 +90,7 @@ import { useAcademyCoverPct } from '../../composables/eventCard'
 // a category, the income line and a ledger entry - are what gave it its shape.
 import ConfirmDialog from '../ConfirmDialog.vue'
 import ScreenShell from '../ui/ScreenShell.vue'
+import StoreError from '../ui/StoreError.vue'
 import Card from '../ui/Card.vue'
 import Eyebrow from '../ui/Eyebrow.vue'
 import PaperNote from '../ui/PaperNote.vue'
@@ -1726,6 +1727,14 @@ function shopRowCornerAction(row: ShopRowView): boolean {
 <template>
   <template v-if="game.snapshot">
     <ScreenShell>
+      <!-- ⚠⚠ U-02 – THE STORE'S REFUSAL, WHICH THIS SCREEN USED TO SWALLOW. Money is where a
+           purchase is refused (`confirmShop` -> `buyAsset` -> the engine's "Not enough funds for
+           that"), and the integrity lines – another tab committed, the worker restarted, the screen
+           was stale – can arrive here from any tap. Nothing on this template rendered `game.error`
+           and its script never mentioned it, so a refusal was a silent nothing and the next tap
+           cleared it. No new wording: the sentence and the element are the store's own. -->
+      <StoreError />
+
       <!-- ============================= 1. THE HEADER =============================
            The export's three-dot menu is NOT here: it opens nothing in this build, and a control
            that goes nowhere is worse than no control. The subtitle carries what the player actually

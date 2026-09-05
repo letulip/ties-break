@@ -41,6 +41,7 @@ import IconButton from './ui/IconButton.vue'
 import PrimaryPill from './ui/PrimaryPill.vue'
 import ProgressRing from './ui/ProgressRing.vue'
 import TakeoverShell from './ui/TakeoverShell.vue'
+import StoreError from './ui/StoreError.vue'
 import { playSfx, primeSfx } from '../audio/sfx'
 import { simulateMatch } from '../engine/match/engine'
 import { annotateMatch } from '../engine/match/rally'
@@ -813,6 +814,13 @@ const matchMeta = computed(() => (stats.value ? matchStatMeta(stats.value) : nul
         Skip all rounds
       </button>
     </template>
+
+    <!-- ⚠⚠ U-02 – THE STORE'S REFUSAL, ON EVERY PHASE OF THE FLOW. Beginning, playing a round,
+         skipping the rest and retiring all commit, and this takeover paints over the app frame, so
+         a notice in the shell would sit behind it. It stands above the phase branches rather than
+         inside one, because a refusal can arrive on any of them. No new wording: the sentence and
+         the element are the store's own. -->
+    <StoreError />
 
     <!-- =====================================================================================
          E. TOURNAMENT (PREVIEW) – the brief, and the flow's very first screen (Round 5 item 6).

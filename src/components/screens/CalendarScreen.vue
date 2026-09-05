@@ -92,6 +92,7 @@ import { DRAW_NOT_MADE_NOTE, fieldChanceLabel, fieldChanceTitle, firstMatchLabel
 // not let the two be confused.
 import { readingColor } from '../../composables/readingColor'
 import ScreenShell from '../ui/ScreenShell.vue'
+import StoreError from '../ui/StoreError.vue'
 import PaperNote from '../ui/PaperNote.vue'
 import TakeoverShell from '../ui/TakeoverShell.vue'
 import Card from '../ui/Card.vue'
@@ -348,6 +349,13 @@ const showGo = computed(() => !game.snapshot?.pending)
           </div>
         </div>
       </template>
+
+      <!-- ⚠⚠ U-02 – THE STORE'S REFUSAL, WHICH THIS SCREEN USED TO SWALLOW. The calendar enters
+           events and plays the week, and both can be refused – by the engine, by another tab that
+           committed first, or by the stale-revision guard. Nothing here rendered `game.error`, so
+           the tap did nothing and said nothing. Below the header so the week's title stays the top
+           of the page; no new wording, the sentence is the store's own. -->
+      <StoreError />
 
       <!-- ============================================================================
            THE WEEK, ONCE, ON EVERY WEEK OF A CAREER.

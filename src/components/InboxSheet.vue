@@ -53,6 +53,7 @@ import ConfirmDialog from './ConfirmDialog.vue'
 import IconButton from './ui/IconButton.vue'
 // Round-16 #1: the inbox is a screen that covers the tabs, not a popup over the diary page.
 import TakeoverShell from './ui/TakeoverShell.vue'
+import StoreError from './ui/StoreError.vue'
 import { playSfx } from '../audio/sfx'
 
 defineEmits<{ close: [] }>()
@@ -357,6 +358,11 @@ async function doRefuse(id: string): Promise<void> {
          single object (a list, or one letter) rather than a stack of cards. Without it every
          paragraph and the list itself became a gap-separated band. -->
     <div class="inbox-body">
+      <!-- ⚠⚠ U-02 – THE STORE'S REFUSAL, for this sheet AND for the letter it opens: signing and
+           refusing a sponsor both commit, and `OfferLetter` is rendered inside this body rather
+           than beside it, so one line covers both surfaces. The takeover paints over the app
+           frame, so a notice in the shell would sit behind it. No new wording. -->
+      <StoreError />
       <!-- ══ ONE LETTER, OPEN ══ -->
       <!-- The paper is untouched: this is the same `OfferLetter` the sheet used to stack, with the
            same two controls under it. All that is new is that it is the only one on screen. -->

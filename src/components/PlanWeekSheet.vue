@@ -34,6 +34,7 @@ import { vacationArtUrl } from '../art/weeks'
 import { restCostFor, restCostLines } from '../composables/restCost'
 import IconButton from './ui/IconButton.vue'
 import TakeoverShell from './ui/TakeoverShell.vue'
+import StoreError from './ui/StoreError.vue'
 
 const props = defineProps<{
   week: number
@@ -287,6 +288,11 @@ function askVacation(row: PackageRow): void {
          gap, and without a wrapper every paragraph, hint and tab strip becomes a gap-separated band
          instead of a page. -->
     <div class="plan-body">
+      <!-- ⚠⚠ U-02 – THE STORE'S REFUSAL. Booking a practice week or a trip commits, and a
+           refusal reaching this sheet had nowhere to be said: the takeover paints over the app
+           frame, so a notice in the shell would sit behind it. No new wording – the sentence and
+           the element are the store's own. -->
+      <StoreError />
       <!-- ---------------- Already booked ---------------- -->
       <!-- R14-1: THE UNDO, WHERE THE BOOKING LIVES. The painted vacation card carries no control by
            the owner's 29.07 ruling and opens this sheet instead; this is the half of that routing
