@@ -229,3 +229,129 @@ describe('round 37 #1 – the coach note\'s words clear the portrait past 768', 
     })
   }
 })
+
+// =================================================================================================
+// #2 – THE MEMORY'S PHOTOGRAPH IS SQUARE, AT THE WIDTH IT ALREADY HAS
+// =================================================================================================
+//
+// ⚠ THE WIDTH IS READ, NOT ASSUMED, AND THAT IS THE WHOLE SHAPE OF THIS TEST. His sentence has two
+// halves – square, and at the current width – and they are one assertion here: the window's height
+// must equal the PAPER's own computed width less the frame `Polaroid` spends on each side. So a
+// future change that widens the paper and leaves the window at 96 fails as loudly as one that
+// forgets the height, and D81's 104 is asserted beside it as the number that may not move.
+
+/** `Polaroid`'s own frame, `padding: 4px 4px 12px` – the paper each side of the window. Read from
+ *  the component's cascade below rather than trusted from here; this is only the name. */
+const POLAROID_SIDE_LIP = 4
+
+/** The card's two hairlines. `overflow: hidden` clips at the padding box, so a footprint has the
+ *  floor less one border at each end to live in. */
+const CARD_HAIRLINE = 1
+
+describe('round 37 #2 – the Recent memory photograph is square past 768', () => {
+  for (const vp of [TABLET, DESKTOP]) {
+    it(`⭐ at ${vp.width}px the window is as tall as it is wide, and the paper is still D81's 104`, () => {
+      homeAt(vp)
+      const paper = styleOf('.memory-polaroid')
+      const window = styleOf('.memory-polaroid img')
+
+      // HIS HALF, UNMOVED. Round 36 review item 6 set this and this round does not spend it.
+      expect(px(paper.width, '.memory-polaroid width'), `the paper's width moved at ${vp.width}px`).toBe(104)
+
+      // ⚠ `min-height` AND NOT `height`: Polaroid writes the window's height as an INLINE style off
+      // its `photoHeight` prop, which beats every rule in the sheet. Reading `height` here would
+      // read the prop – 52 – and a test that reads the thing the fix deliberately does not touch
+      // cannot fail on the unfixed tree.
+      const lipLeft = px(paper.paddingLeft, 'Polaroid padding-left')
+      const lipRight = px(paper.paddingRight, 'Polaroid padding-right')
+      expect(lipLeft, 'the frame stopped being the 4px lip this arithmetic reads').toBe(POLAROID_SIDE_LIP)
+      expect(lipRight).toBe(POLAROID_SIDE_LIP)
+
+      const across = px(paper.width, 'paper width') - lipLeft - lipRight
+      const down = px(window.minHeight, '.memory-polaroid img min-height')
+      expect(down, `the window is ${across} across and ${down} down at ${vp.width}px – still a rectangle`).toBe(across)
+      expect(down, 'and 96 is 104 less the two 4px lips, not a typed number').toBe(96)
+      // The prop is untouched, which is what keeps the phone where it is.
+      expect(px(window.height, 'the inline photoHeight'), 'the prop was moved instead of the cascade').toBe(52)
+    })
+  }
+
+  it('⭐⭐ …and the taller paper still fits the card, tilt and all, so the lip is not cut off square', () => {
+    // THE ARITHMETIC A SCREENSHOT CANNOT DO. `.note-card` is `overflow: hidden`, so a footprint that
+    // runs past the card's padding box is CUT – and the cut would land on the corner of the cream
+    // lip, which reads as a rendering fault rather than as a photograph. A 104 x 112 rectangle
+    // tilted by --tilt-4 spans w·|sin| + h·|cos| down the card; at his round-36 `top: 30px` that is
+    // 11.92px through the bottom edge, which is why the offset moved and the card did not.
+    for (const vp of [TABLET, DESKTOP]) {
+      homeAt(vp)
+      const paper = styleOf('.memory-polaroid')
+      // ⚠ THE CARD IS FOUND FROM THE PHOTOGRAPH, not by a class of its own: the memory card carries
+      // `.note-card.card-short` and nothing else, and reading the floor off the coach card next to
+      // it would be a claim about a different box that happens to agree today.
+      const cardEl = document.querySelector('.memory-polaroid')?.closest('.note-card')
+      if (!cardEl) throw new Error('the polaroid is not inside a card – the measurement would be vacuous')
+      const card = getComputedStyle(cardEl)
+      const tilt = getComputedStyle(document.documentElement).getPropertyValue('--tilt-4').trim()
+      const deg = px(tilt, '--tilt-4')
+      expect(deg, 'the tilt token is gone, so this measurement would be vacuous').not.toBe(0)
+
+      const w = px(paper.width, 'paper width')
+      const h =
+        px(paper.paddingTop, 'Polaroid padding-top') +
+        px(styleOf('.memory-polaroid img').minHeight, 'window min-height') +
+        px(paper.paddingBottom, 'Polaroid padding-bottom')
+      const rad = (Math.abs(deg) * Math.PI) / 180
+      const footprint = w * Math.sin(rad) + h * Math.cos(rad)
+
+      const top = px(paper.top, '.memory-polaroid top')
+      const floor = px(card.minHeight, '.note-card.card-short min-height')
+      // The card's padding box: one hairline in at each end.
+      const room = floor - 2 * CARD_HAIRLINE
+      // The frame is placed by its UPRIGHT top edge and then rotated about its own centre, so the
+      // tilted footprint's bottom is the centre plus half of it.
+      const bottom = top + h / 2 + footprint / 2
+
+      expect(
+        bottom,
+        `at ${vp.width}px the ${w}x${h} paper tilted ${deg}deg reaches ${bottom.toFixed(2)}px into a ` +
+          `${room}px card, so \`overflow: hidden\` cuts the lip`,
+      ).toBeLessThanOrEqual(room)
+      expect(top + h / 2 - footprint / 2, 'and it does not run out of the top of the card either').toBeGreaterThanOrEqual(0)
+      wrapper?.unmount()
+      wrapper = null
+    }
+  })
+
+  it('⚠ the tack moved with the photograph, because the two are one object', () => {
+    // `.memory-tack`'s own note: «The tack that holds it down - moved with the polaroid it pins.»
+    // Round 36 left them 4px apart at 30/26; the same 4px, 18px higher.
+    homeAt(TABLET)
+    const top = px(styleOf('.memory-polaroid').top, '.memory-polaroid top')
+    const tack = px(styleOf('.memory-tack').top, '.memory-tack top')
+    expect(top, 'the photograph is not where the fix puts it').toBe(12)
+    expect(tack, 'the tack stayed behind at round 36\'s offset').toBe(8)
+    expect(top - tack, 'the pin drifted off the corner it pins').toBe(4)
+  })
+
+  for (const vp of [PHONE, WIDE_PHONE]) {
+    it(`⚠ at ${vp.width}px NOTHING moves: 68px of paper, a 52px window and the tack at 30`, () => {
+      homeAt(vp)
+      const paper = styleOf('.memory-polaroid')
+      const window = styleOf('.memory-polaroid img')
+      expect(px(paper.width, 'paper width'), `the phone's paper moved at ${vp.width}px`).toBe(68)
+      expect(px(paper.top, 'paper top'), `the phone's photograph moved at ${vp.width}px`).toBe(34)
+      expect(px(styleOf('.memory-tack').top, 'tack top'), `the phone's tack moved at ${vp.width}px`).toBe(30)
+      expect(px(window.height, 'the inline photoHeight'), 'the phone window stopped being 52').toBe(52)
+      // ⚠ THE ONE THAT SAYS THE BAND DID NOT LEAK. A `min-width` written as `max-width`, or the rule
+      // moved to the base block, lands here first – and 60 x 52 is the phone's window, still a
+      // rectangle, because he did not ask about it.
+      // (happy-dom returns `''` for a property no rule sets, where a browser reports `0px`; both are
+      // the same claim – nothing lifted this window – and neither is a number, so the string is read
+      // rather than parsed.)
+      const lifted = window.minHeight.trim()
+      expect(['', '0px', '0', 'auto'], `the desktop's square window reached ${vp.width}px as "${lifted}"`).toContain(
+        lifted,
+      )
+    })
+  }
+})

@@ -2779,6 +2779,71 @@ button.note-card:active:not(:disabled) {
   }
 }
 
+/* ═════════════════════════════════════════════════════════════════════════════════════════════════
+   ⭐⭐⭐ ROUND 37 #2 – THE MEMORY'S PHOTOGRAPH BECOMES SQUARE, AT THE WIDTH IT ALREADY HAS
+   ═════════════════════════════════════════════════════════════════════════════════════════════════
+   «Recent memory photo прямоугольное - сделать квадратное оставить текущую ширину desktop tablet»
+
+   THE WIDTH IS HIS AND DOES NOT MOVE. The `104px` in the round-36 block above is D81, his own review
+   item 6, and it is the PAPER. `Polaroid` spends 4px of it on each side (`padding: 4px 4px 12px`),
+   so the WINDOW – the photograph, which is the thing he is looking at – is 96 wide and 52 tall:
+   1.85:1, his «прямоугольное». Square is therefore 96 x 96, and the 96 is read off his own 104
+   rather than typed: 104 - 4 - 4.
+   ⚠ THE SAME ARITHMETIC MoneyScreen ALREADY DOES, in as many words: «A SQUARE PHOTO WINDOW: 124 of
+   paper width minus Polaroid's own 4px lips = a 124px-tall window in a 124px-wide one».
+
+   ⚠⚠ `min-height` AND NOT `height`, WHICH IS THE WHOLE TRICK AND NOT A TYPO. `.money-share-photo`'s
+   note argues it in full: `Polaroid` writes the window's height as an INLINE style off its
+   `photoHeight` prop, and an inline declaration beats every rule in this sheet, so a media query
+   that set `height` here would do nothing at all. `min-height` is a DIFFERENT property – the used
+   height is the larger of the two – so the cascade lifts the window to 96 without an `!important`
+   and without touching the prop, which is also the phone's.
+
+   ⚠ AND IT IS THE OFFSET THAT GIVES WAY, NOT THE CARD. A 96px window makes the paper
+   4 + 96 + 12 = 112px tall, and `--tilt-4` is -7deg, so a 104 x 112 rectangle spans
+   104·sin7 + 112·cos7 = 123.84px down the card. The card's floor is 138 and its padding box 136, so
+   the tilted footprint has 12.16px of slack – and left at his round-36 `top: 30px` it would hang
+   11.92px through the bottom edge, where `.note-card`'s `overflow: hidden` would cut the corner of
+   the cream lip off square. `top: 12px` divides the slack evenly: 6.08px of air above the tilted
+   footprint and 6.08px below, measured. The tack moves the same 18px with it, because the note at
+   `.memory-tack` says the two are one object.
+   ⭐ The alternative was to grow the card by 26px and leave the offset alone. It is not taken, and
+   the reason is item #1: this card's row-mate is the coach note, a grid row is as tall as its
+   tallest card, and a taller coach card enlarges the portrait he asked to have TIDIED rather than
+   changed. Say the word and the floor moves instead – it is one declaration either way.
+
+   ⚠ HIGHER SPECIFICITY, NOT SOURCE ORDER, and that is deliberate rather than ornamental. A bare
+   `.memory-polaroid` here would TIE with `.memory-polaroid` in the round-36 block above, and
+   src/style.css's own `.tier-block .cm-art` note records what a tie costs: a browser and happy-dom
+   settle one in OPPOSITE directions, so the rule would be live on his screen and invisible to the
+   test. `.note-card >` is (0,2,0) against (0,1,0) and wins in both.
+
+   MEASURED IN CHROMIUM, the photograph's own box, at 768 / 900 / 1024 / 1280 – the same at all four:
+
+       before   101.62 x 63.31 as the tilt draws it   =  96 x 52 upright, 1.85:1
+       after    106.98 x 106.98                       =  96 x 96 upright, square
+
+   (the drawn numbers are bigger than 96 because the polaroid is tilted, and a square stays square
+   through a rotation, which is the reading that matters here.) The paper measures 104px at every one
+   of the four, before and after, and the card stays at its 138px floor – so his width is where he
+   left it and nothing else on the row moved.
+
+   ⚠ NOTHING BELOW 768 MOVES: the phone keeps the 68px paper, its 60 x 52 window, `top: 34px` and its
+   tack at 30. Measured at 375 and 520 before and after: every box identical to the pixel. */
+@media (min-width: 768px) {
+  .memory-polaroid :deep(img) {
+    min-height: 96px;
+  }
+
+  .note-card > .memory-polaroid {
+    top: 12px;
+  }
+
+  .note-card > .memory-tack {
+    top: 8px;
+  }
+}
+
 /* --- 4. what stays below the grid ---------------------------------------------------------------
    The tier ladder and the news feed keep their markup (and every rule that pins it) and only change
    chrome, so the page below the fold reads as more of the same diary rather than the start of an
