@@ -4984,14 +4984,63 @@ tr.kid-row td {
    ⭐ WHAT HE DOES GET FROM «во всю высоту»: grid's default `stretch`. A short row beside a tall one
    is no longer a short row – both fill their line, and `.cm-art` is already `top: 0; bottom: 0`, so
    the portrait fills the taller of the pair rather than leaving a band of card under it.
+   ⚠⚠ THE SENTENCE ABOVE IS HALF SUPERSEDED BY ROUND 37 #6, WHICH IS THE OWNER'S OWN REVERSAL – he
+   looked at the shipped grid and asked for the card beside his hired coach to stop being tall. The
+   `stretch` is gone (see the round 37 #6 block on `.tier-block` below); what survives of this
+   paragraph is the half that was about the PICTURE, which still fills its card top to bottom.
 
    The gutter is 8px because that is the `margin-bottom` these rows already stack with; the margin
    goes, because a grid gap and a margin would be 16px between rows and 8 between columns. */
 @media (min-width: 768px) {
+  /* ⭐⭐⭐ ROUND 37 #6 – A CARD NOBODY HIRED KEEPS ITS OWN HEIGHT, AND THIS REVERSES THE OTHER HALF OF
+     D4. The owner, 05.09, and it took him two sentences because the first one pointed at the wrong
+     card: «Плитку тренера напротив выбранного текущего сделать обычной высоты (как на экранах
+     магазина реализовано), сейчас она тоже высокая» → «выбранный тренер, с ним всё ок, а вот
+     напротив него есть НЕ выбранный тренер (как НЕ купленная машина) - эту карточку прошу сделать
+     обычного размера, не высокую». (The quote lives here rather than in the SFC because a .vue file
+     carries no Cyrillic at all, comments included – tests/round13-nav.test.ts.)
+
+     ⚠ THE HIRED CARD IS NOT THE ONE THAT WAS WRONG, AND NOTHING ABOUT IT MOVES HERE. `.cm-row.current`
+     keeps 78/90/132: the wider window belongs to the coach she already has, which is
+     docs/specs/coach-match-edge.md §4's anti-shopping rule and his own round-21 #1 ask. What he is
+     looking at is its NEIGHBOUR. `align-items` defaults to `stretch` in a grid, so both cells of a
+     line take the height of the taller one – and the hired card is always the taller one, because it
+     alone carries a plaque, a travel line and the word Current. So the ordinary coach beside him was
+     being drawn at the hired card's height for no reason of his own. Measured in Chromium on a real
+     `pro` career, that card's padding box: 216.20 → 138.52 at 768, 203.20 → 138.52 at 1024,
+     189.03 → 124.34 at 1060, 160.69 → 124.34 at 1440.
+
+     ⭐ AND `align-items: start` IS LITERALLY «КАК НА ЭКРАНАХ МАГАЗИНА»: `.shop-family` in
+     MoneyScreen.vue is the same two-up grid on the same `auto-fill` ladder and already declares it,
+     which is why a car nobody bought does not stand as tall as one that was.
+
+     ⚠ WHAT D4 KEEPS. Its «во всю высоту» reading survives where it was actually about the PORTRAIT –
+     `.cm-art` is still `top: 0; bottom: 0`, so the picture still fills its whole card with no band of
+     background under it. What goes is the second half of that sentence, «the two cards in a row are
+     the same height now», which is the thing he is asking to undo. D3's «4 карточки» = two to a row
+     is untouched, and D89's 66px window is untouched.
+
+     ⚠ IT COSTS NO PAGE. A grid line is still as tall as its tallest cell, so nothing above or below
+     moves: the market's page is byte-identical at all twelve widths measured (768, 800, 850, 900,
+     1000, 1023, 1024, 1060, 1100, 1200, 1280, 1440), and 1 to 4 cards per width lose the stretch.
+     Below 768 there is no grid to un-stretch and this rule is not in the band anyway: 375, 520 and
+     767 are unchanged to the pixel.
+
+     ⚠ AND THE MASK GEOMETRY SURVIVES THE SHORTER CARD, which is the one thing a height change on this
+     surface has to prove. A card that stops being stretched has a shorter portrait, and round-18 #2's
+     fade must still reach transparent at or before the clip. The shortest ordinary card the market
+     draws is unchanged at 124.34px (the all-on-one-line card was never the stretched one), so the
+     supply at 162/280 is still 71.94px against a 66px strip; and the declared 118px floor supplies
+     67.11px, so the guarantee holds unconditionally rather than by measurement.
+
+     No extra class is needed to win here, unlike the strip below: nothing else in this sheet declares
+     `align-items` on `.tier-block`, so there is no tie for source order to settle.
+     tests/component/round18-coach.test.ts holds it at 375, 767, 768, 1024 and 1280. */
   .tier-block {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 8px;
+    align-items: start;
   }
   /* The tier's heading is the row above the pair, never a cell beside it. Its own 8px bottom margin
      goes with the rows' – the grid's gap is that number now, and keeping both would open 16px under
@@ -5039,6 +5088,30 @@ tr.kid-row td {
      line across most of the desktop band. ⚠ AND THE WIDTHS HE NAMED ARE FREE: at 768 (frame AJ) and
      1024 (frame AK) nothing moves at all, because those cards are narrow enough that the notes have
      already wrapped.
+
+     ⭐⭐ ROUND 37 #5 – HE ASKED WHETHER THERE IS STILL ROOM, AND THE ANSWER IS NO: 66 IS THE CEILING.
+     «Картинки тренеров в общем списке сделали шире? Есть ещё возможность немного расширить на desktop
+     tablet?» (05.09.) Yes to the first half – that is this block, 62 → 66 the same morning. The second
+     half was re-measured in Chromium on a real `pro` career ON THE ROUND 37 #6 TREE (his own item, and
+     it moves card heights, so measuring against the stretched grid would have priced a layout that no
+     longer exists). The largest strip that grows NO card past today's 66:
+
+         768  →72     850  →71     1000 →67     1060 →66     1200 →67     1440 →67
+         800  →67     900  →67     1023 →67     1024 →69     1100 →75
+
+     The band takes one rule, so it takes the MINIMUM of that column, and the minimum is 66 – at 1060,
+     where 67 already puts a line on four cards (+15px). Even a tablet-only rule would cap at 67, which
+     is a pixel nobody can see. ⚠ AND THE 5.94px UP TO THE MASK'S 71.94 ARE NOT THE ANSWER TO HIS
+     QUESTION: the mask was never the binding ceiling here and it still is not – #6 left the shortest
+     ordinary card at 124.34px, so the supply is still 71.94 – but a 70px strip, the mask ceiling minus
+     slack, grows a card at NINE of these twelve widths.
+
+     ⚠ #6 MOVED THREE OF THESE NUMBERS, WHICH IS WHY IT WAS MEASURED FIRST. Two tightened: 800 and 1024
+     both read «80+» while the grid stretched, because a card that grew a line was being hidden inside
+     its taller neighbour's height, and they are 67 and 69 now that each card is its own height. One
+     loosened: 1100 read 63 against the old 62px strip and reads 75 against today's 66, because the
+     line it was protecting is one this block already spent. Nothing changes here; the record is the
+     answer.
 
      ⚠ THE FLOOR MOVES WITH THE STRIP, exactly as round-21 #1 moved it for the hired card: 66px of
      strip needs a 66 x 280/162 = 114.1px padding box, hence a 116.1px border box, and 118 is that

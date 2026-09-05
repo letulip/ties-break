@@ -42,12 +42,15 @@
 //     AND the does-not-fight-the-player test, while the SELF-COACHED landing stays green. That
 //     asymmetry is the whole of #3: the old behaviour was never wrong for a self-coached career.
 //
-// ⚠ AND THE LIST CONTINUES AT THE FOOT OF THIS FILE. Round 36 phase 2, phase 3 and the second pass's
-// P2-7 each added a band to the same geometry, and each carries its own mutation table beside its
-// own describe – the phase-2 one above `describe('round 36 phase 2 …')` and the P2-7 one above
-// `describe('round 36 pass 2 – P2-7 …')`. P2-7 is the one that moved the numbers the two round-18 #2
-// tests above read: the shop card's strip is 62/74/104 on a phone and 66/78/118 past 768, so both of
-// those tests take an explicit width now instead of inheriting the runner's.
+// ⚠ AND THE LIST CONTINUES AT THE FOOT OF THIS FILE. Round 36 phase 2, phase 3, the second pass's
+// P2-7 and round 37 #6 each added a band to the same geometry, and each carries its own mutation
+// table beside its own describe – the phase-2 one above `describe('round 36 phase 2 …')`, the P2-7
+// one above `describe('round 36 pass 2 – P2-7 …')` and the #6 one above `describe('round 37 #6 …')`.
+// P2-7 is the one that moved the numbers the two round-18 #2 tests above read: the shop card's strip
+// is 62/74/104 on a phone and 66/78/118 past 768, so both of those tests take an explicit width now
+// instead of inheriting the runner's. Round 37 #6 is the one that moved the HEIGHTS the P2-7
+// guarantee test reasons about – a card beside the hired one is no longer stretched to his height –
+// and the shortest ordinary card was re-measured after it and is unchanged at 124.34px.
 import { describe, it, expect, beforeEach, afterEach } from 'vitest'
 import { mount } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
@@ -623,7 +626,13 @@ describe('round 36 pass 2 – P2-7: the market portrait opens past 768, and the 
    *  measured in Chromium on a real `pro` career at 768/800/900/1000/1023/1024/1100/1280/1440/1600/
    *  1920. It is the card whose every line fits without wrapping, which is what a wide card gives.
    *  Two different claims are read off it below: the strip may not exceed what that row can supply,
-   *  and the row floor may not exceed the row itself or a card would grow. */
+   *  and the row floor may not exceed the row itself or a card would grow.
+   *  ⚠ RE-MEASURED AFTER ROUND 37 #6 AND UNCHANGED, which is not a foregone conclusion: #6 stops the
+   *  tier grid stretching its cells, so several cards got shorter, and this number is a MINIMUM over
+   *  cards. It survives because the all-on-one-line card was never one of the stretched ones – the
+   *  cards that shrank landed on 138.52 and 124.34, i.e. on values the market already drew. The
+   *  shortest ordinary card after #6, at 768/800/850/900/1000/1023/1024/1060/1100/1200/1280/1440:
+   *  138.52 padding box at four of them and 124.34 at the other eight, so 126.34 border box stands. */
   const SHORTEST_ROW_768_PLUS = 126.34
   /** The portraits are 162 wide; fifteen are 264 tall and `budget-2.webp` is 280, which makes IT the
    *  narrowest picture for a given height. Round-18 #2 and round-21 #1 both did this arithmetic at
@@ -790,6 +799,146 @@ describe('round 36 pass 2 – P2-7: the market portrait opens past 768, and the 
     expect(
       px(getComputedStyle(wrapper.find('.cm-row.current .cm-art').element).width, 'current .cm-art width'),
     ).toBe(78)
+    wrapper.unmount()
+  })
+})
+
+// ⭐⭐⭐ ROUND 37 #6 – A CARD NOBODY HIRED KEEPS ITS OWN HEIGHT, AND IT REVERSES THE OTHER HALF OF D4.
+//
+// The owner, 05.09, in two sentences because the first pointed at the wrong card: «Плитку тренера
+// напротив выбранного текущего сделать обычной высоты (как на экранах магазина реализовано), сейчас
+// она тоже высокая» → «выбранный тренер, с ним всё ок, а вот напротив него есть НЕ выбранный тренер
+// (как НЕ купленная машина) - эту карточку прошу сделать обычного размера, не высокую». (The quote
+// lives here rather than in the SFC because a .vue file carries no Cyrillic at all, comments
+// included – tests/round13-nav.test.ts.)
+//
+// ⚠ THE HIRED CARD WAS NEVER THE DEFECT AND NOTHING ABOUT IT MOVES. `.cm-row.current` keeps
+// 78/90/132 – coach-match-edge.md §4's anti-shopping rule and his own round-21 #1 ask – and the ARMS
+// loop above asserts all three at every width. What he is looking at is its NEIGHBOUR: a grid's
+// default `align-items: stretch` gives both cells of a line the height of the taller one, and the
+// hired card is ALWAYS the taller one because it alone carries a plaque, a travel line and the word
+// Current. So an ordinary coach beside him was drawn at his height for no reason of his own.
+//
+// MEASURED IN CHROMIUM ON A REAL `pro` CAREER, the card beside the hired one, padding box:
+//
+//     width   before    after     the rest of the market
+//     768     216.20 -> 138.52    1 other card un-stretches;  page 2388 -> 2388
+//     800     203.20 -> 138.52    3 others;                   page 2375 -> 2375
+//     1024    203.20 -> 138.52    3 others;                   page 2375 -> 2375
+//     1060    189.03 -> 124.34    2 others;                   page 2261 -> 2261
+//     1100    174.86 -> 124.34    2 others;                   page 2233 -> 2233
+//     1440    160.69 -> 124.34    0 others;                   page 2162 -> 2162
+//
+// ⭐ THE PAGE IS BYTE-IDENTICAL AT EVERY WIDTH, because a grid line is still as tall as its tallest
+// cell: nothing above or below a shortened card moves. And at 375, 520 and 767 not one number
+// changes, because there is no grid below 768 and this rule is not in that band.
+//
+// ⚠ THE MASK GEOMETRY HAD TO SURVIVE THE SHORTER CARD, which is the one thing a height change on this
+// surface must prove: `.cm-art` is `top: 0; bottom: 0`, so a card that stops being stretched has a
+// shorter portrait, and round-18 #2's fade must still reach transparent at or before the clip. It
+// does, twice over – the shortest ordinary card the market draws is UNCHANGED at 124.34px (the
+// all-on-one-line card was never the stretched one, re-measured after this change), and the declared
+// 118px floor supplies 67.11px at 162/280 against a 66px strip on its own. The P2-7 guarantee test
+// above is what holds that, and it matters more after this item than before it: with `stretch` a
+// short card could borrow height from its neighbour, and now the floor is the only guarantee there is.
+//
+// ⚠ WHAT OF D4 SURVIVES: its «во всю высоту» reading, where that sentence was about the PICTURE. The
+// portrait still fills its whole card with no band of background under it. What goes is the second
+// half, «the two cards in a row are the same height now». D3 (two to a row) and D89 (the 66px window)
+// are untouched.
+//
+// MUTATION-VERIFIED – four mutations, each applied alone, and this is what each one actually
+// reddened. ⭐ Note that no two of them redden the same set, which is the point of having four:
+//   * `align-items: start` REMOVED from the `.tier-block` rule in the 768 block, i.e. the state
+//     before this item -> the three ≥768 arms, ALONE (`expected '' to be 'start'`). ⭐ THE 375 AND
+//     767 ARMS STAY GREEN, and that is the only mechanical statement that nothing below the
+//     breakpoint moved;
+//   * `align-items: stretch` written explicitly instead -> the same three, by the same names
+//     (`expected 'stretch' to be 'start'`) – a rule that says the old thing out loud is caught
+//     exactly like a rule that is missing;
+//   * the rule moved OUT of the media query onto the base `.tier-block` (the plausible over-reach:
+//     un-stretching the phone too) -> the two BELOW-768 arms ONLY, while all three ≥768 arms stay
+//     green. Nothing else in this file catches it;
+//   * `align-self: start` on `.tier-block .cm-row:not(.current)` INSTEAD of the container rule – the
+//     half-fix that answers his sentence and leaves the hired card stretching to a tall ordinary
+//     neighbour -> the three ≥768 arms AND the `align-self` arm by name (`no card overrides the
+//     line's alignment (cm-row got "start")`): four. That last one exists for this mutation.
+describe('round 37 #6 – the card beside the hired coach stops being stretched to his height', () => {
+  beforeEach(() => setActivePinia(createPinia()))
+  afterEach(() => setViewport(PHONE))
+
+  const LAPTOP = { width: 1024, height: 800 }
+  const WIDE_PHONE = { width: 767, height: 1024 }
+
+  async function coachesAt(vp: { width: number; height: number }) {
+    setViewport(vp)
+    useGameStore().snapshot = careerSnapshot('middle')
+    const wrapper = mount(CoachMarketScreen, {
+      global: { stubs: { teleport: true } },
+      attachTo: document.body,
+    })
+    const pill = wrapper.findAll('.tb-seg .tab-pill').find((b) => b.text() === 'Coaches')
+    await pill!.trigger('click')
+    await nextTick()
+    return wrapper
+  }
+
+  for (const vp of [TABLET, LAPTOP, DESKTOP]) {
+    it(`⭐ at ${vp.width}px a tier line does not stretch its cells – the shop's own rule`, async () => {
+      assertSheetPresent()
+      const wrapper = await coachesAt(vp)
+      const tier = wrapper.find('.tier-block')
+      expect(tier.exists(), 'the market drew a tier, or this measures nothing').toBe(true)
+      const block = getComputedStyle(tier.element)
+      expect(block.display, 'the tier is still a grid – this item does not undo phase 2').toBe('grid')
+      // `.shop-family` in MoneyScreen.vue declares exactly this on exactly this ladder, and the shop
+      // is the owner's own named model («как на экранах магазина реализовано»).
+      expect(block.alignItems, `a tier line is not stretched at ${vp.width}px`).toBe('start')
+      wrapper.unmount()
+    })
+  }
+
+  for (const vp of [PHONE, WIDE_PHONE]) {
+    it(`⚠ at ${vp.width}px nothing was un-stretched, because there is nothing to un-stretch`, async () => {
+      assertSheetPresent()
+      const wrapper = await coachesAt(vp)
+      const tier = wrapper.find('.tier-block')
+      const block = getComputedStyle(tier.element)
+      expect(block.display === '' || block.display === 'block', 'a phone tier is not a grid').toBe(true)
+      // ⚠ THE ARM THAT CATCHES THE OVER-REACH. Written on the base rule instead of inside the media
+      // query, this would compute `start` here too – a phone-visible change nobody asked for.
+      expect(
+        block.alignItems === '' || block.alignItems === 'normal',
+        `the phone tier declares no alignment at ${vp.width}px (got "${block.alignItems}")`,
+      ).toBe(true)
+      wrapper.unmount()
+    })
+  }
+
+  it('⚠ it is the LINE that stops stretching, not one card opting out of it', async () => {
+    // ⚠ THE HALF-FIX THIS RULES OUT. `align-self: start` on `.cm-row:not(.current)` would answer the
+    // sentence he wrote and leave the hired card stretching to a tall ordinary neighbour – the same
+    // defect, mirrored, on the one card whose geometry §4 reserves. Every cell here is on the
+    // container's terms, hired and unhired alike, which is what the shop does.
+    assertSheetPresent()
+    const wrapper = await coachesAt(TABLET)
+    const rows = wrapper.findAll('.cm-row')
+    expect(rows.length, 'the fixture has cards').toBeGreaterThan(3)
+    for (const row of rows) {
+      const self = getComputedStyle(row.element).alignSelf
+      expect(
+        self === '' || self === 'auto',
+        `no card overrides the line's alignment (${row.classes().join('.')} got "${self}")`,
+      ).toBe(true)
+    }
+    // ...and the coach she has still keeps every number that is his, which is the thing this item was
+    // explicitly told not to touch.
+    const hired = rows.find((r) => r.classes().includes('current'))!
+    expect(px(getComputedStyle(hired.element).minHeight, 'current .cm-row min-height')).toBe(132)
+    expect(px(getComputedStyle(hired.find('.cm-art').element).width, 'current .cm-art width')).toBe(78)
+    expect(
+      px(getComputedStyle(hired.find('.cm-body').element).marginLeft, 'current .cm-body margin-left'),
+    ).toBe(90)
     wrapper.unmount()
   })
 })
