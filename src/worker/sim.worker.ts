@@ -57,7 +57,7 @@ import {
   deleteCareer,
   touchCareer,
 } from '../db/saves'
-import type { ErrorReply, SnapshotReply, StopReason, ToWorker, ToUI } from '../shared/protocol'
+import type { ErrorReply, Snapshot, SnapshotReply, StopReason, ToWorker, ToUI } from '../shared/protocol'
 
 // The worker owns the authoritative world state (plain objects, non-reactive) for the ACTIVE career.
 // The RNG stream position is part of determinism, and since v35 IT LIVES ON THE WORLD
@@ -122,16 +122,31 @@ function makeCareerId(seed: string): string {
  *  assign to, its own arm does. The two `if`s are unchanged and the asymmetry between them is
  *  deliberate: `recovered` is only ever ADDED when true (never written as `false`), which is the
  *  shape tests/sim-worker-pipeline.test.ts asserts on a clean restore. */
+/*  ⭐⭐ AND `snapshot` IS E-02's HALF OF THE ORDERING (05.09 engine review). `toSnapshot` is the one
+ *  step of a lifecycle command that can THROW on a file the gate let through, and on `new`,
+ *  `restoreSlot` and `importSave` it used to run last – after `adoptAutosave`, after `world =
+ *  candidate`. So an import whose snapshot throws had already been adopted as the active career AND
+ *  written as the newest autosave when the throw became an error reply, and every later
+ *  `getSnapshot`/`advance` threw the same way: a persisted career that cannot render. Those three
+ *  cases now build the snapshot BEFORE they commit anything and hand it in here – the queue's own
+ *  rule, "the reply is DECIDED before it is posted", moved one step earlier so that the reply is
+ *  decided before the world is ADOPTED. `revision` is still read off `committedRevision` at reply
+ *  time, which is why this stays one function and not two. */
 function snapshotMsg(
   id: number,
   w: WorldState,
-  opts: { recovered?: boolean; restoredFrom?: string; stopReasons?: StopReason[] } = {},
+  opts: {
+    recovered?: boolean
+    restoredFrom?: string
+    stopReasons?: StopReason[]
+    snapshot?: Snapshot
+  } = {},
 ): SnapshotReply {
   const msg: SnapshotReply = {
     id,
     ok: true,
     type: 'snapshot',
-    snapshot: toSnapshot(w, opts.stopReasons),
+    snapshot: opts.snapshot ?? toSnapshot(w, opts.stopReasons),
     revision: committedRevision,
   }
   if (opts.recovered) msg.recovered = true
@@ -245,10 +260,15 @@ async function handle(msg: ToWorker): Promise<ToUI> {
       // Candidate-first like every other path: the fresh world only becomes the active one after
       // its first autosave is durable, so a storage failure cannot strand an unsaveable career.
       const candidate = createWorld(seed, msg.profile, makeCareerId(seed), msg.prologue)
+      // ⭐ E-02: the reply is BUILT before the career is adopted – see `snapshotMsg`. `createWorld`
+      // writes every required field itself, so this cannot throw today; it is here because the
+      // ordering is the property, and a lifecycle path that commits before it can render is the
+      // defect regardless of which of the three found it first.
+      const snapshot = toSnapshot(candidate)
       const { revision } = await adoptAutosave(candidate)
       world = candidate
       committedRevision = revision
-      return snapshotMsg(msg.id, candidate)
+      return snapshotMsg(msg.id, candidate, { snapshot })
     }
     // ------------------------------------------------------------------ mutations
     case 'tick': {
@@ -543,6 +563,9 @@ async function handle(msg: ToWorker): Promise<ToUI> {
     case 'restoreSlot': {
       const candidate = await readSlot(msg.slot)
       const rngRecovered = ensureMainState(candidate)
+      // ⭐ E-02: after every repair, before any commit – see `snapshotMsg`. A slot that cannot render
+      // must leave the world the player is playing exactly where it was.
+      const snapshot = toSnapshot(candidate)
       let revision: number
       if (world && candidate.careerId === world.careerId) {
         // The ordinary restore (MoreScreen: previous autosave / a named save of the active
@@ -556,7 +579,11 @@ async function handle(msg: ToWorker): Promise<ToUI> {
       }
       world = candidate
       committedRevision = revision
-      return snapshotMsg(msg.id, candidate, { recovered: rngRecovered, restoredFrom: msg.slot })
+      return snapshotMsg(msg.id, candidate, {
+        recovered: rngRecovered,
+        restoredFrom: msg.slot,
+        snapshot,
+      })
     }
     case 'importSave': {
       // Candidate-first: decode and repair BEFORE touching module state, adopt the disk lineage
@@ -564,10 +591,17 @@ async function handle(msg: ToWorker): Promise<ToUI> {
       // commit memory once the autosave is durable.
       const candidate = await decodeExportFile(new Uint8Array(msg.bytes))
       const rngRecovered = ensureMainState(candidate)
+      // ⭐⭐ E-02, AND THIS IS THE PATH THE REVIEW MEASURED IT ON. The spine above refuses eight more
+      // shapes than it did, but a gate can only refuse what it knows to look for, and the file door
+      // is the one input in the game that arrives from outside our own writers. So the last step
+      // that can throw runs BEFORE the file becomes the active career and before it is written as
+      // the newest autosave: a foreign file that cannot render is now a refused import rather than a
+      // persisted career that renders nothing. See `snapshotMsg`.
+      const snapshot = toSnapshot(candidate)
       const { revision } = await adoptAutosave(candidate)
       world = candidate
       committedRevision = revision
-      return snapshotMsg(msg.id, candidate, { recovered: rngRecovered })
+      return snapshotMsg(msg.id, candidate, { recovered: rngRecovered, snapshot })
     }
     // ⭐ ROUND-21 #1 – THE IMPORT'S CONFIRM NEEDS TO KNOW WHOSE CAREER IS IN THE FILE, and the only
     // place that can answer is here: `careerId` is inside the gzipped payload, so no filename and no

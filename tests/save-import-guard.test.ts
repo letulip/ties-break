@@ -61,7 +61,14 @@ async function craftJsonFile(declared: number, json: string): Promise<Uint8Array
   return craftFile(declared, await gz(enc.encode(json)))
 }
 
-/** A minimal payload that satisfies the v35 spine — the base the shape tests then break. */
+/** A minimal payload that satisfies the v35 spine — the base the shape tests then break.
+ *
+ *  ⚠ GREW BY SIX FIELDS UNDER E-02 (05.09), AND IT IS THE FIXTURE THAT MOVED, NOT THE GUARD. The
+ *  spine gained rows for eight required fields it had been silent about since v38; six of them
+ *  (`financeWeeks` v11 … `milestones` v18) were already required at v35, so this literal – which
+ *  claims in its own name to satisfy the v35 spine – had simply been an incomplete v35 file all
+ *  along. Every arm that reads it still asserts exactly what it asserted before, and the two rows
+ *  that arrived after v35 (`careerTotals` 39, `birthdays` 48) are correctly absent here. */
 function spineV35(overrides: Record<string, unknown> = {}): string {
   return JSON.stringify({
     schemaVersion: 35,
@@ -77,6 +84,12 @@ function spineV35(overrides: Record<string, unknown> = {}): string {
     entries: [],
     events: [],
     nextEventId: 1,
+    financeWeeks: [],
+    injuryHistory: [],
+    vacations: [],
+    practices: [],
+    internationalEntryWeeks: [],
+    milestones: [],
     seasonHistory: [],
     trophiesByTier: {},
     offers: [],
@@ -193,6 +206,73 @@ describe('layer 1 — hostile files die fast, typed, and named', () => {
   it('an implausibly long string dies at the string bound', async () => {
     const json = spineV35({ seed: 'x'.repeat(40_000) })
     await expectCode(await craftJsonFile(35, json), 'invalid-shape', /implausibly long|longer than/i)
+  })
+})
+
+// =================================================================================================
+// ⭐⭐ E-02 (05.09 ENGINE REVIEW) – THE SPINE STOPPED AT v38 WHILE THE SCHEMA WENT ON TO v70.
+//
+// The review took `tests/fixtures/saves/v70.json`, deleted one required field at a time and pushed
+// the result through the gate, the migration, `toSnapshot` and one tick. EIGHT fields passed the
+// gate and then threw – four of them again on the first tick – so the file was adopted as the
+// active career and written as the newest autosave before anything could render it. That is the
+// gate's own charter failing («a crash wearing a valid header», saveGuard.ts), and this describe is
+// the half of the fix that lives at the door. The other half – deciding the reply before the world
+// is adopted – is the last case of layer 3.
+//
+// ⚠ THE NEGATIVE ARM IS PART OF THE CLAIM AND NOT DECORATION. Five more fields the same probe
+// removed (`assets`, `knockHistory`, `kidFundsCents`, `peakPhysical`, `masseurSessionsPerWeek`)
+// came through the whole pipeline unharmed, because every reader of them guards with `??`. A spine
+// row for one of THOSE would refuse a file this build can read perfectly well, which is the
+// opposite of what the gate is for – so the eight are listed and the five are pinned as absent.
+// =================================================================================================
+const FIXTURES = fileURLToPath(new URL('./fixtures/saves', import.meta.url))
+
+/** The current-version fixture, as a plain object to break. */
+function v70Payload(overrides: Record<string, unknown> = {}): Record<string, unknown> {
+  return { ...(JSON.parse(readFileSync(`${FIXTURES}/v70.json`, 'utf8')) as Record<string, unknown>), ...overrides }
+}
+
+describe('layer 1b — the spine covers every required field a v70 file must carry', () => {
+  // field -> the version that introduced it as required, from migrations.ts's own steps.
+  const REQUIRED: [string, number][] = [
+    ['financeWeeks', 11],
+    ['injuryHistory', 12],
+    ['vacations', 13],
+    ['practices', 13],
+    ['internationalEntryWeeks', 15],
+    ['milestones', 18],
+    ['careerTotals', 39],
+    ['birthdays', 48],
+  ]
+
+  for (const [field, since] of REQUIRED) {
+    it(`a v70 file without "${field}" (required since v${since}) is refused by the gate, not by the renderer`, async () => {
+      const json = v70Payload()
+      delete json[field]
+      await expectCode(
+        await craftJsonFile(70, JSON.stringify(json)),
+        'invalid-shape',
+        new RegExp(`"${field}"`),
+      )
+    })
+  }
+
+  it('and a file that declares a version OLDER than the row skips it – the rows are versioned', () => {
+    // The mechanism, not an example of it: `since` is why an ancient save is still importable, and
+    // layer 2 below is the corpus-wide proof (every golden fixture v0..v70 through the full gate).
+    // Asserted here as an ordering so a row appended with the wrong `since` shows up as a red arm
+    // rather than as a refused historical save nobody has on disk any more.
+    for (const [, since] of REQUIRED) expect(since).toBeLessThanOrEqual(SAVE_SCHEMA_VERSION)
+  })
+
+  it('⚠ and the SELF-HEALING fields are deliberately NOT in it – removing them still imports', async () => {
+    for (const field of ['assets', 'knockHistory', 'kidFundsCents', 'peakPhysical', 'masseurSessionsPerWeek']) {
+      const json = v70Payload()
+      delete json[field]
+      const imported = await decodeExportFile(await craftJsonFile(70, JSON.stringify(json)))
+      expect(imported.schemaVersion, `${field} must not have become a refusal`).toBe(SAVE_SCHEMA_VERSION)
+    }
   })
 })
 
@@ -317,5 +397,43 @@ describe('layer 3 — a failed import changes NOTHING', () => {
     expect(await slotFingerprint()).toBe(slotsBefore)
     const careers = (await send({ type: 'listCareers' })).careers ?? []
     expect(careers.some((c) => c.careerId === 'c-healthy-but-homeless')).toBe(false)
+  })
+
+  it('⚠ E-02 – a file the gate CANNOT see through is refused before it is adopted', async () => {
+    // ⭐ THE ORDERING, AND IT NEEDS A FILE NO SPINE ROW COULD EVER CATCH. `cohort` is a list, so the
+    // spine passes it; a `null` inside a list is a legal JSON value, so the bounds walk passes it;
+    // and the migration ladder "upgrades versions, it does not audit" (migrations.ts), so it passes
+    // it too. `toSnapshot` is the first reader that dereferences a feed row, and before this fix it
+    // ran LAST – after `adoptAutosave`, after `world = candidate` – so the throw became an error
+    // reply on a file that had already replaced the player's career and been written to disk, and
+    // every later `getSnapshot` threw the same way.
+    //
+    // ⚠ THIS IS WHY THE SPINE ROWS ABOVE ARE NOT THE WHOLE FIX AND THIS ARM SITS HERE RATHER THAN
+    // BESIDE THEM. A gate can only refuse what it knows to look for; the ordering is what makes an
+    // unforeseen shape a refused import rather than a persisted career that renders nothing.
+    const anchor = await exportedWorld()
+    const slotsBefore = await slotFingerprint()
+    const careersBefore = JSON.stringify((await send({ type: 'listCareers' })).careers)
+
+    // ⚠⚠ AND THE HOSTILE FIELD IS `events` FOR A MEASURED REASON, NOT A TASTE. Two earlier drafts of
+    // this arm were VACUOUS – green with the reorder backed out – because they broke the file
+    // somewhere the worker already touches BEFORE it adopts anything: a renamed `seed` fails
+    // `verifyMainState`'s s/n algebra and goes down `recoverMainState` -> `replayMainState`, and a
+    // null in `cohort` throws inside `refreshDerivedRankCaches`, which `ensureMainState` calls one
+    // line above the adopt. Both are commit-or-nothing already, so neither can see this defect. The
+    // feed is read by `toSnapshot` and by nothing before it, which is what makes it the instrument.
+    const json = v70Payload({ events: [null], careerId: 'c-unrenderable' })
+    const bytes = await craftJsonFile(70, JSON.stringify(json))
+    const res = await send({ type: 'importSave', bytes: bytes.slice().buffer as ArrayBuffer })
+    expect(res.ok, 'a file that cannot be rendered must not be imported').toBe(false)
+    expect(res.error, 'and it must say something').toBeTruthy()
+
+    // ...and the career the player was playing is still the one the worker holds, on disk as well
+    // as in memory. These four are the whole claim: without the reorder, all four move.
+    const held = await exportedWorld()
+    expect(held.careerId).toBe(anchor.careerId)
+    expect(held.week).toBe(anchor.week)
+    expect(await slotFingerprint()).toBe(slotsBefore)
+    expect(JSON.stringify((await send({ type: 'listCareers' })).careers)).toBe(careersBefore)
   })
 })

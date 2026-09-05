@@ -203,6 +203,44 @@ const SPINE: SpineRule[] = [
   { field: 'events', since: 6, check: anArray },
   { field: 'nextEventId', since: 6, check: intInRange(0, Number.MAX_SAFE_INTEGER) },
   { field: 'seasonHistory', since: 14, check: anArray },
+  // ⭐⭐ E-02 (05.09 engine review) – THE EIGHT ROWS THE SPINE HAD STOPPED SHORT OF. The list below
+  // ended at v38 while the schema went on to v70, and the review pushed a v70 fixture through this
+  // gate with one required field deleted at a time: eight of them PASSED here and then threw inside
+  // `toSnapshot`, four of those throwing again on the first tick. That is precisely the failure this
+  // gate's charter names – "a crash wearing a valid header" – and it reached the player as a career
+  // that had already been adopted and autosaved before anything could render it.
+  //
+  // ⚠ THE ORDER IS THE ORDER OF THE LIST, NOT OF THE VERSIONS, because the list is read top to
+  // bottom and the first refusal wins: these sit here, after `seasonHistory`, so a file missing
+  // several fields still names the oldest one it is missing. `since` is the version that INTRODUCED
+  // the field as required, taken from `migrations.ts`'s own steps, so an older declared version
+  // still skips the row exactly as `proEntryWeeks` and `penalties` do below.
+  //
+  // ⚠ AND EVERY ONE OF THEM IS A DEREFERENCE, NOT A TASTE: `injuryHistory` and `financeWeeks` are
+  // iterated, `birthdays` and `milestones` are `.some`d, `internationalEntryWeeks` is `.filter`ed,
+  // `vacations` and `practices` are `.find`/`.map`ped, and `careerTotals.prizeCents` is read
+  // outright. The fields the same probe found SELF-HEALING (`assets`, `knockHistory`,
+  // `kidFundsCents`, `peakPhysical`, `masseurSessionsPerWeek` – every reader guards them with `??`)
+  // are deliberately NOT here: a spine row for a field the engine survives without would refuse a
+  // file this build can actually read, which is the opposite of what the gate is for.
+  { field: 'financeWeeks', since: 11, check: anArray },
+  { field: 'injuryHistory', since: 12, check: anArray },
+  { field: 'vacations', since: 13, check: anArray },
+  { field: 'practices', since: 13, check: anArray },
+  { field: 'internationalEntryWeeks', since: 15, check: anArray },
+  { field: 'milestones', since: 18, check: anArray },
+  {
+    field: 'careerTotals',
+    since: 39,
+    check: (v) =>
+      isObject(v) &&
+      typeof v.earnedCents === 'number' &&
+      typeof v.spentCents === 'number' &&
+      typeof v.prizeCents === 'number'
+        ? null
+        : 'must carry the career totals',
+  },
+  { field: 'birthdays', since: 48, check: anArray },
   { field: 'trophiesByTier', since: 31, check: (v) => (isObject(v) ? null : 'must be the trophies ledger') },
   { field: 'offers', since: 32, check: anArray },
   {
