@@ -446,3 +446,90 @@ test('at 1280 the same week needs no paging, so it has no arrows – and the key
   )
   expect(reached, 'Left/Right no longer reach the pager on a week with no arrows').toBe(true)
 })
+
+// =================================================================================================
+// ⭐⭐⭐ ROUND 36, THE SECOND PASS FROM HIS STAND (05.09.2026) – HOME'S DESKTOP, IN A REAL BROWSER
+// =================================================================================================
+//
+// Three of the four items in this pass are claims about BOXES, and this is the only layer that can
+// answer them: `tests/component/` parses the cascade and does no layout, so it can prove a rule is
+// ON at a width and never that two cards are the same width. His own words are in
+// docs/rounds/round-36-review.md; the readings are in docs/specs/responsive-decisions-2026-09.md.
+
+/** Every box this pass is about, at one width, as the browser measures it. */
+async function homeBoxes(page: Page): Promise<Record<string, { x: number; w: number } | null>> {
+  return page.evaluate(() => {
+    const box = (sel: string): { x: number; w: number } | null => {
+      const el = document.querySelector(sel)
+      if (!el) return null
+      const b = el.getBoundingClientRect()
+      return { x: +b.x.toFixed(2), w: +b.width.toFixed(2) }
+    }
+    return {
+      hero: box('.diary-hero'),
+      coach: box('.card-pair .coach-card'),
+      memory: box('.card-pair > .note-card:not(.coach-card)'),
+      season: box('.strip-pair > *:not(#diary-news)'),
+      news: box('#diary-news'),
+    }
+  })
+}
+
+/**
+ * ⭐⭐⭐ P2-2 – «сетка на главной на десктоп не исправлена (см. мои правки предыдущие, мне нужно
+ * продублировать или нашел?)»
+ *
+ * Found. Review #5's «нижний блок карточек имеет свою сетку, они равны по ширине» was built for ONE
+ * row and he meant every row below the photograph. Measured on the build he played, at 1024:
+ *
+ *     coach note + recent memory   236 / 627.5, both 380.5 wide   – review #5's grid
+ *     season + news                236 / 698,   451 and 310 wide  – still the HERO's tracks
+ *
+ * ⚠ THE ASSERTIONS ARE RELATIONS, NOT LITERALS, and deliberately: the two tracks are `1fr 1fr` of
+ * whatever the frame is, so a pinned 380.5 would go red the day the app's padding changed and would
+ * say nothing about the thing he is looking at. What he is looking at is that the two rows line up –
+ * same widths, same left edges, one gutter – and that is what is asserted, at both ends of the band.
+ */
+test('P2-2: Home’s two rows below the photograph are ONE grid, at 1024 and at 1280', async ({
+  page,
+  careerAt,
+}) => {
+  await careerAt('pro')
+  await answerOpeningKnock(page)
+  await dismissTourBriefing(page)
+
+  for (const width of [1024, 1280]) {
+    await page.setViewportSize({ width, height: 900 })
+    await page.getByRole('navigation').getByRole('button', { name: 'Home', exact: true }).click()
+    await expect(page.getByRole('heading', { name: /^W\d+ \d{4} · /, level: 1 })).toBeVisible()
+    const b = await homeBoxes(page)
+    for (const [name, value] of Object.entries(b)) {
+      expect(value, `${name} is not on the page at ${width}, so this measures nothing`).not.toBeNull()
+    }
+    const { hero, coach, memory, season, news } = b as Record<string, { x: number; w: number }>
+
+    // ⭐ THE FOUR CARDS BELOW THE HERO ARE ONE WIDTH – «они равны по ширине», his own words, now for
+    // both rows rather than for the upper one alone.
+    expect(coach.w, `the coach note and the memory disagree at ${width}`).toBe(memory.w)
+    expect(season.w, `the season ladder is not the coach note's width at ${width}`).toBe(coach.w)
+    expect(news.w, `the news feed is not the memory's width at ${width}`).toBe(memory.w)
+
+    // ⭐⭐ AND ONE GUTTER: the left edges of both rows agree, so the channel between the two columns
+    // is a single straight line down the page. This is the defect as he sees it – before the fix the
+    // lower row's gutter sat 70px away from the one above it at 1024.
+    expect(season.x, `the lower row does not start where the upper one does at ${width}`).toBe(coach.x)
+    expect(news.x, `the two gutters are not the same gutter at ${width}`).toBe(memory.x)
+    expect(
+      +(memory.x - (coach.x + coach.w)).toFixed(2),
+      `the gutter is not the grid's own 11px gap at ${width}`,
+    ).toBe(11)
+
+    // ⚠ AND THE HERO'S ROW KEEPS ITS OWN ASYMMETRIC TRACKS – review #4 is his own measurement
+    // («ширина этих карточек в макете около 310 пикселей») and this item does not touch it.
+    expect(
+      hero.w,
+      `the photograph's row was flattened into the equal pair at ${width} – #4 asked for the opposite`,
+    ).not.toBe(season.w)
+    expect(hero.x, 'the photograph moved off the left edge of the grid').toBe(coach.x)
+  }
+})

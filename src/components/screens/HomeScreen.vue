@@ -1637,6 +1637,19 @@ async function leaveCollege(): Promise<void> {
       <!-- 4. BELOW THE GRID: the ladder and the feed. Same substance, diary chrome – and literally
            the same chrome, which is why they are Cards: the gradient, the hairline and the corners
            were already one shared rule with the notecards above, and now they are one component. -->
+
+      <!-- ⭐⭐⭐ ROUND 36 SECOND PASS, P2-2 – THE SECOND ROW JOINS THE SAME GRID AS THE FIRST.
+           His words are in the style block below, where Cyrillic is allowed; in English: the desktop
+           grid on Home was not fixed, and his earlier note about the lower block of cards meant
+           EVERY row below the photograph, not only the coach note and the recent memory.
+
+           ⚠ SAME WRAPPER, SAME RULE, SAME DECLARATION as `.card-pair` – the two share one block in
+           the stylesheet on purpose. One grid, one gap and one pair of tracks means the gutter of
+           this row lands on the gutter of the row above it, which is the thing he is looking at.
+           ⚠⚠ AND IT IS `display: contents` BELOW 1024, so it costs no box, no paint and no
+           accessibility node on a phone or a tablet – D50's trick for the third time, and the
+           reason the round's identity contract survives a new wrapper. -->
+      <div class="strip-pair">
       <Card as="section" class="diary-strip">
         <Eyebrow as="h2">Season</Eyebrow>
         <!-- THE ROW IS THE ENGINE'S OPEN WINDOW PLUS ONE RUNG ABOVE IT; the rungs she has outgrown
@@ -1715,6 +1728,7 @@ async function leaveCollege(): Promise<void> {
           </div>
         </div>
       </Card>
+      </div>
     </ScreenShell>
 
     <!-- ⭐⭐ THE BOTTOM CONTROL ON A COLLEGE WEEK – the two answers, and nothing else.
@@ -2237,10 +2251,18 @@ async function leaveCollege(): Promise<void> {
 }
 
 /* ⭐⭐⭐ ROUND 36 REVIEW #5 – «Нижний блок карточек имеет свою сетку, они равны по ширине». Below
-   1024 this wrapper HAS NO BOX: the coach note and the recent memory stay items of `.card-grid`,
+   1024 these wrappers HAVE NO BOX: the coach note and the recent memory stay items of `.card-grid`,
    exactly where they have always been, and the identity census counts nothing new. See the template
-   for the whole of why it is `display: contents` and not a div with a grid on it. */
-.card-pair {
+   for the whole of why it is `display: contents` and not a div with a grid on it.
+
+   ⭐⭐⭐ ROUND 36 SECOND PASS, P2-2 – «сетка на главной на десктоп не исправлена (см. мои правки
+   предыдущие, мне нужно продублировать или нашел?)». Found. Review #5 was read as ONE row and he
+   meant every row below the photograph, so the season ladder and the news feed take the same
+   wrapper – ONE class list, ONE rule, in both places below, because two rules that must agree about
+   a gutter are two rules that can disagree about a gutter. Measured before, at 1024: the pair above
+   sat at 236 / 627.5 and this row at 236 / 698, following the hero's asymmetric tracks. */
+.card-pair,
+.strip-pair {
   display: contents;
 }
 
@@ -2330,8 +2352,17 @@ async function leaveCollege(): Promise<void> {
 
   /* ⭐ REVIEW #5 – …AND HERE IT BECOMES A GRID. It spans both tracks and splits them evenly, so the
      coach note and the recent memory are the same width as each other rather than inheriting the
-     hero's column and the cards' column. Its own gap, because it is its own grid. */
-  .card-pair {
+     hero's column and the cards' column. Its own gap, because it is its own grid.
+
+     ⭐⭐⭐ P2-2 – AND THE SEASON LADDER AND THE NEWS FEED ARE IN THE SAME DECLARATION. Everything
+     below the photograph is now ONE grid: same two tracks, same gap, both spanning `1 / -1`, so the
+     gutter of the lower row lands on the gutter of the upper one to the pixel. The hero's row keeps
+     its own asymmetric tracks (D77 is his own 310), which is the row he did not complain about.
+     ⚠ EQUAL AND NOT THE MOCK'S 397 / 362, and that is deliberate: «они равны по ширине» is his own
+     word for this block, the row above already reads that way, and two rows that are equal in
+     different proportions would be the defect he is reporting wearing a different number. */
+  .card-pair,
+  .strip-pair {
     display: grid;
     grid-column: 1 / -1;
     grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
