@@ -1604,7 +1604,13 @@ export function toSnapshot(world: WorldState, stopReasons?: StopReason[]): Snaps
     // functions the engine charges (economy.ts), so nothing else is needed on the wire.
     vacations: world.vacations.map((v) => ({ ...v })),
     practices: world.practices.map((p) => ({ ...p })),
-    recoveryBuff: world.recoveryBuff ? { ...world.recoveryBuff } : null,
+    // ⚠ `recoveryBuff` WAS BUILT HERE AND IS GONE (E-07, 05.09 engine review). It was surfaced with
+    // the note "so the UI can show that the expensive package is still working", and no screen,
+    // store, composable or viz module ever read it – so the note had become a description of an
+    // intention rather than of the code. `world.recoveryBuff` is untouched: the buff is persisted,
+    // it is applied by `world/injury.ts` and `world/planner.ts`, and putting it back on the wire is
+    // one line on the day a screen wants to show it. `tests/snapshot-contract.test.ts` is what
+    // stops the next unread member surviving as long as this one did.
     // W3-KIT (v37): her three lines, each rung priced, her condition on each. The Money screen is the
     // shop window - the owner's own suggestion («может быть в ledger?») - and it reads the engine's
     // prices rather than multiplying a band itself.
@@ -1666,11 +1672,13 @@ export function toSnapshot(world: WorldState, stopReasons?: StopReason[]): Snaps
         ]
       }).filter(([, r]) => r !== undefined),
     ) as Partial<Record<TierId, TierRefusal>>,
-    // R15-9: THE ON-RAMP LATCHES, read-only, for the SLIDING TIER WINDOW - the calendar hides the
-    // rungs a latch says she has definitively left behind (a copy, like every object on this
-    // message: the snapshot must never be a live view of engine state). Surfacing widens the
-    // snapshot only; the persisted v34 field and the entry gates are untouched.
-    onRampCleared: { ...world.onRampCleared },
+    // ⚠ `onRampCleared` WAS BUILT HERE AND IS GONE (E-07, 05.09 engine review), AND ITS OWN NOTE HAD
+    // ALREADY RECORDED HALF THE JOURNEY. R15-9 surfaced it "read-only, for the SLIDING TIER WINDOW";
+    // W2-LADDER §4 then derived the calendar's pair from `tierOpen` instead ("the on-ramp rungs'
+    // openness IS the latch", `composables/tierState.ts`), and what was left on the interface was the
+    // sentence "Still surfaced: the pure UI reads them for context" – which no longer described
+    // anything: no screen, store, composable or viz module named it. The persisted v34 field, the
+    // entry gates and `world/ladder.ts` are untouched; only the wire copy goes.
     coachId: world.coachId,
     coachMarket: coachMarket(world),
     coachBilling: coachBilling(world),

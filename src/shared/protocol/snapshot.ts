@@ -14,7 +14,10 @@ import type { InjuryReport, Knock, KnockPrompt, SnapshotInjury } from './health'
 import type { CountingResult, LadderViews, StandingRow } from './ladder'
 import type { BirthdayPrompt, DiarySnapshot, KidLife, Milestone, RadarAxis, TrainingRead } from './narrative'
 import type { AdPortfolioRow, CoachMarketRow, KitDealView, KitLineView, Offer, ShootClashPrompt, ShopView, SnapshotAcademy, TourBriefing } from './offers'
-import type { CoachEdgePlacement, PlayerProfile, PracticeBooking, RecoveryBuff, VacationBooking, WeekPlan } from './profile'
+// ⚠ `RecoveryBuff` is no longer imported here – E-07 removed the `recoveryBuff` member. The type
+// still lives in `./profile` and is still re-exported by `shared/protocol.ts`, because
+// `engine/world/state.ts` types the persisted field with it.
+import type { CoachEdgePlacement, PlayerProfile, PracticeBooking, VacationBooking, WeekPlan } from './profile'
 
 /** ⭐⭐ ROUND-28 #8 – THE WHOLE HOUSEHOLD'S WEEK, IN THREE NUMBERS.
  *
@@ -331,13 +334,16 @@ export interface Snapshot {
    *  junior place can only ever ADMIT, so a named event may be MORE permissive than this and never
    *  less. Derived at snapshot time, persists nothing. */
   tierRefusal: Partial<Record<TierId, TierRefusal>>
-  /** THE ON-RAMP LATCHES (v34 state, surfaced read-only in R15-9): has she EVER cleared the way
-   *  onto each upper table. The event feed no longer reads them directly - W2-LADDER §4's
-   *  two-type rule derives its pair from `tierOpen` below (see `feedContext` in
-   *  composables/tierState.ts), and the latches reach the feed THROUGH the oracle (the on-ramp
-   *  rungs' openness IS the latch). Still surfaced: the pure UI reads them for context, and the
-   *  R15-9 story they carry is the two-type rule's ancestor. */
-  onRampCleared: { itf: boolean; wta: boolean }
+  /** ⚠ `onRampCleared` STOOD HERE UNTIL E-07 (05.09 engine review) AND ITS OWN DOC RECORDED THE
+   *  DRIFT WITHOUT NOTICING IT. R15-9 surfaced the v34 latches read-only; W2-LADDER §4 then had the
+   *  calendar derive its pair from `tierOpen` instead ("the on-ramp rungs' openness IS the latch",
+   *  `composables/tierState.ts`), and the sentence left behind – "Still surfaced: the pure UI reads
+   *  them for context" – had stopped being true: no screen, store, composable or viz module named
+   *  it. A member of this interface is a promise to the UI, and an unread one is a promise nothing
+   *  collects, rebuilt into every snapshot after every command. The v34 WorldState field is
+   *  untouched and `world/ladder.ts` still reads it; only the wire copy is gone. Put it back in one
+   *  line if a screen wants it – and `tests/snapshot-contract.test.ts` now fails on the next member
+   *  that goes unread. */
   /** WHO SHE TRAINS WITH (v23): the roster coach's id, or null for the parent on the court. */
   coachId: string | null
   /** THE COACH MARKET (screen T): every coach, priced and read for her. Derived, never stored. */
@@ -498,9 +504,11 @@ export interface Snapshot {
   vacations: VacationBooking[]
   /** season planner (schema v13): booked practice-match weeks from the current week onward. */
   practices: PracticeBooking[]
-  /** an active resort/elite recovery buff, or null. Surfaced so the UI can show that the
-   *  expensive package is still working. */
-  recoveryBuff: RecoveryBuff | null
+  /** ⚠ `recoveryBuff` STOOD HERE UNTIL E-07 (05.09 engine review). Its doc said it was "surfaced so
+   *  the UI can show that the expensive package is still working" – an intention, not a description:
+   *  nothing outside the engine ever read it. The buff itself is unaffected (persisted on
+   *  `WorldState`, applied by `world/injury.ts` and `world/planner.ts`); restoring it to the wire is
+   *  one line here and one in `world/snapshot.ts` on the day a screen is ready to show it. */
   /** HER KIT, LINE BY LINE (schema v37): the rung she is on, what it costs to move, and how worn
    *  each line is right now. Derived at snapshot time from the persisted `KitState` - the SCREEN
    *  never prices a rung or reads a wear curve, for the reason every other derived block on this
