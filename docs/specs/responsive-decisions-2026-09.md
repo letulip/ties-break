@@ -1429,3 +1429,63 @@ call whether the phone's floors move.**
 | **what it was** | Every builder in `scripts/gen-icons.mjs` ended in a bare `.png()` – sharp's default truecolour encoder – over a PHOTOGRAPH (a 330x330 face upscaled to 512), with an alpha plane measured constant 255 on all four square icons. |
 | **shipped** | 1,070,098 → **316,181 bytes**. Visible-pixel error against the truecolour original: mean 1.15/255, worst pixel 36, 8x-amplified difference image black. Dimensions unchanged; the favicon keeps its circular transparency through the palette's tRNS chunk. `tests/pwa-icon-weight.test.ts` is the ratchet, mutation-verified. |
 | ⚠ **and it cannot be regenerated** | `npm run icons` throws at `findLogoSource()`: `art-src/logo-lucia-app.png` is on no machine the repo can see. The committed PNGs were re-encoded from themselves, which is exact for the deliverable. **Restoring the master is his call.** |
+
+---
+
+## Round 37, 05.09.2026 – six from the stand on the review wave
+
+### D93 `[x]` Home's coach note clears the portrait, by bounding the STRIP and not the margin
+
+| | |
+| --- | --- |
+| **his words** | «Coach Note на home desktop tablet все буквы убрать с картинки и сдвинуть направо с небольшим отступом от самой картинки (примерно как на карточках тренеров), место есть, станет аккуратнее» |
+| **why the margin alone could never do it** | The portrait is `height: 100%; width: auto` and the card's height is set by how many lines the quote wraps to – so a bigger margin narrows the column, wraps a line, grows the card and WIDENS the picture. 54 → 66 → 80 made the overlap worse each time, and `.coach-body`'s own note had already recorded that chase and named this fix as the one that needs the owner. He has now asked. |
+| **shipped** | `@media (min-width: 768px) { .coach-art { width: 84px; overflow: hidden } .coach-body { margin-left: 96px } }`. **84 is measured, not chosen**: 162x264 over this band's 138px card floor draws 83.45px at 768, 900, 1024 and 1280 alike, so 84 is today's picture at the next whole pixel. The mask reaches transparent at 80.64px, inside the clip – no hard edge. First inked glyph 66 → 108; gap −18.45 → **+23** (the coach market's own 12px corridor plus `.coach-body`'s 11px padding). |
+| **below 768** | every box byte-identical, glyph rects included. |
+
+### D94 `[x]` The Recent memory photograph is square, and the OFFSET moved rather than the card
+
+| | |
+| --- | --- |
+| **his words** | «Recent memory photo прямоугольное - сделать квадратное оставить текущую ширину desktop tablet» |
+| **shipped** | `D81`'s 104px is the PAPER; `Polaroid` spends 4px a side, so the window was 96x52 – his 1.85:1 rectangle – and is now **96x96**, with the 96 read off his own 104 rather than typed. `min-height` and not `height`, because `Polaroid` writes the window height as an inline style (MoneyScreen's `.money-share-photo` records the same trap). |
+| ⚠ **the call he can reverse** | A 96px window makes the paper 112 tall; tilted −7° it spans 123.84px and at round 36's `top: 30px` would hang through the card's bottom edge, where `overflow: hidden` cuts the lip square. The OFFSET moved (30 → 12, the slack divided evenly) rather than the card's floor, **because the Recent memory card shares a grid row with the coach note and a row is as tall as its tallest card** – a taller row would have enlarged the very portrait D93 was asked to tidy. One declaration either way. |
+
+### D95 `[x]` The desktop is the tablet: two cards, and three page
+
+| | |
+| --- | --- |
+| **his words** | «Season - давай сделаем сетку на 2 карточки desktop (как на tablet) по дефолту, а те недели, где 3 карточки будет и больше (их вроде не очень много) будут иметь листалки (мы же этот функционал реализовали уже?)» |
+| **his question, answered** | Yes. The pager shipped in round 36 phase 5 (`src/composables/weekPager.ts`) and already draws arrows only where the strip overflows – his own «показываем только если есть что листать». This was a grid change with nothing added to the pager. |
+| **his premise, measured** | «Их вроде не очень много» holds: of card-drawing weeks, 3+ is **0%** on `junior`/`broke`/`fresh`, **3.2%** on `pro`, **11.6%** on the v46 golden save, **20.0%** on `sinking`, **23.1%** on `ending`. The largest stack anywhere is four. |
+| ⚠ **and the number that makes it more than taste** | The desktop column is NARROWER than the tablet's – 772px at 1024 against 868px at 900, because the rail takes its width – so phase 3's third was **249.3px, smaller than the phone's own 301.8px card**. |
+| **shipped** | Phase 3's entire `@media (min-width: 1024px)` block deleted; the 768 widths carry up, so the desktop IS the tablet and phase 3's specificity ladder goes with it. Card 249.3 → **380** at 1024, 308 → **468** at 1280. A three-card week overflows by 253 / 309 and its arrows are drawn and live; a two-card week has none. 375/520/768/900 byte-identical. |
+
+### D96 `[x]` Stats gets a strip to its own sections, derived rather than declared
+
+| | |
+| --- | --- |
+| **his words** | «На экране stats для всех интерфейсов добавить под первой плашкой STATS полосу с переключателем по разделам seasons/ranking/results для каждой категории турниров для удобной навигации на странице» |
+| **shipped** | Three entries, every word taken from the heading of the section it reaches: `Season by season` (`SeasonHistoryTable.vue:139`), `<Category> ranking` (`StatsScreen.vue:388`, the same `LADDER_LABEL[shown]` interpolation) and `Counting results` (`:429`). A mounted test compares each entry to its section's own `<h2>`, so they cannot drift. His «seasons» is the heading `Season by season` – reused, not respelled. |
+| **«для каждой категории турниров»** | The screen already had the category control – National / International / Professional, which he himself calls «переключатель уровня турниров в stats». The strip is **derived from the sections the picked category actually draws**, which makes it per-category and dead-entry-proof by one mechanism instead of two. |
+| **the two shapes chosen, with reasons** | `role="group"` and not a second `<nav>`, because a second navigation landmark makes the parity harness's own navigation walk ambiguous; `aria-current="location"` and not `"page"`, because `page` would put two current-page marks in one document, one of them on the Stats tab that got the reader here. |
+
+### D97 `[x]` The card beside the hired coach stops stretching – and `D4`'s second half is reversed
+
+| | |
+| --- | --- |
+| **his words** | «Плитку тренера напротив выбранного текущего сделать обычной высоты (как на экранах магазина реализовано)», clarified: «выбранный тренер, с ним всё ок, а вот напротив него есть НЕ выбранный тренер (как НЕ купленная машина) - эту карточку прошу сделать обычного размера, не высокую» |
+| **supersedes** | the second half of `D4` – «the two cards in a row are the same height now». Its first half survives: `.cm-art` is still `top: 0; bottom: 0`, so a portrait still fills its whole card with no band of background under it. `D3` (two to a row) and `D89` (the 66px window) are untouched. |
+| **shipped** | One declaration, `align-items: start` on `.tier-block` inside the existing 768 block – **his own named model**: `.shop-family` (`MoneyScreen.vue:3628-3632`) is the same two-up grid and already declares it, which is why an unbought car does not stand as tall as a bought one. The card beside the hired coach goes **216.20 → 138.52 at 768**, 203.20 → 138.52 at 1024, 160.69 → 124.34 at 900/1280. **The page's own height is byte-identical at all twelve widths ≥768**, and below 768 nothing moves – at 520 that same coach already sat at 124.34, so the wide layouts now agree with what the phone always drew. |
+| **the hired card does not move** | 78 / 90 / 132 at every width – `coach-match-edge.md` §4's anti-shopping rule is not part of this item. |
+| **mask geometry after it** | The shortest ordinary card is unchanged at 124.34px – the all-on-one-line card was never one of the stretched ones – so supply is still 71.94px at 162/280 against the 66px strip. |
+
+### D98 `[~]` The coach strip is already at its ceiling, and the answer is the measurement
+
+| | |
+| --- | --- |
+| **his words** | «Картинки тренеров в общем списке сделали шире? Есть ещё возможность немного расширить на desktop tablet?» |
+| **the first half** | Yes – 62 → 66px this morning, `D89`. |
+| **the second half: no** | Re-measured on D97's tree, because D97 changes heights. The largest strip that grows no card past 66, per width: 768 → 72, 800 → 67, 850 → 71, 900 → 67, 1000 → 67, 1023 → 67, 1024 → 69, **1060 → 66**, 1100 → 75, 1200 → 67, 1280 → 67, 1440 → 67. One band takes the minimum, so the band is **66, bound at 1060**, where 67 already puts a line on four cards for a pixel nobody can see. A tablet-only rule caps at 67 for the same reason. |
+| ⚠ **the mask is still not the binding ceiling** | Its 71.94px stands, but a 70px strip grows a card at **nine of those twelve widths**. So no pixel changes and the record IS the answer. |
+| **why D97 had to be measured first** | It moved three of these numbers: 800 and 1024 read «80+» while the grid stretched, because a card that grew a line was hidden inside its taller neighbour, and are 67 and 69 now; 1100 loosened 63 → 75, since the line it was protecting is one P2-7 already spent. |
