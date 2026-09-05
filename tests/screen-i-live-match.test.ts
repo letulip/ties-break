@@ -46,6 +46,9 @@ const transportFile = componentFile('components/MatchControls.vue')
 
 describe('screen I – the commentary is actually on the screen', () => {
   const viewer = componentLogic('components/MatchViewer.vue')
+  // ⚠ RE-AIMED BY T-07 (05.09): a region CUT from `viewer` is as wide as `viewer`, so every
+  // negative claim below reads the `.vue` alone. tests/pin-hygiene.test.ts follows one level now.
+  const viewerFile = componentFile('components/MatchViewer.vue')
 
   // ⚠ ROUND 16 ITEM 14 (owner, 11.08: align the commentary bullets with the rail, nudge them left).
   // A SOURCE-SHAPED PIN, and deliberately so: this is pure layout arithmetic, happy-dom runs no layout
@@ -54,7 +57,7 @@ describe('screen I – the commentary is actually on the screen', () => {
   // to be placed by two unrelated mechanisms that happened to nearly agree (an absolute `left: 33px`
   // against a grid column's centre), and nearly is what the owner was looking at.
   it('the rail and the commentary dots are placed from ONE number, so they cannot drift apart', () => {
-    const styles = stylesOf(viewer)
+    const styles = stylesOf(viewerFile)
     // `region` makes BOTH halves loud. The hand-written `expect(at).toBeGreaterThan(-1)` this
     // replaces guarded the SELECTOR only; the closing `}` was unguarded, so a rule that lost its
     // brace would have run the block to the end of the stylesheet in silence. Same claim, both ends.
@@ -165,7 +168,7 @@ describe('screen I – the design and the rulings it has to keep', () => {
   // the trap, so there is no default - the compiler asks every caller instead.
   it('`mode` has no default, so no call site can claim to be live by forgetting to say', () => {
     expect(viewer).toMatch(/^\s*mode: 'live' \| 'replay'$/m)
-    const defaults = /withDefaults\([\s\S]*?\{([^}]*)\},\s*\)/.exec(viewer)?.[1] ?? ''
+    const defaults = /withDefaults\([\s\S]*?\{([^}]*)\},\s*\)/.exec(viewerFile)?.[1] ?? ''
     expect(defaults.length, 'the defaults object was not found').toBeGreaterThan(10)
     expect(defaults, 'mode is back in the defaults').not.toContain('mode')
     // ⚠ RE-AIMED, AND ON THE OWNER'S OWN DEFINITION OF THE WORD (30.07): «Для меня live это "watch
@@ -276,7 +279,7 @@ describe('screen I – the design and the rulings it has to keep', () => {
     // One accent, and it arrives as a token. No hex, no eyedropper, no second lime, and no
     // hand-mixed alpha either – the two white-alpha tokens the sheet declares cover what the
     // export spells out as rgba(255,255,255,.05)/.03.
-    const styles = stylesOf(viewer)
+    const styles = stylesOf(viewerFile)
     expect(styles).not.toMatch(/#[0-9a-fA-F]{3,8}\b/)
     expect(styles).not.toMatch(/rgba?\(\s*\d/)
   })
@@ -336,7 +339,7 @@ describe('screen I – the design and the rulings it has to keep', () => {
 
     // ...and the bottom band's tallest reading is still the score counter, which is what lets the
     // one measurement above stand for both bands (see the ⚠ note).
-    const styles = stylesOf(viewer)
+    const styles = stylesOf(viewerFile)
     const sizeIn = (rule: string): number => {
       const block = region(styles, rule, '}')
       return Number(/font-size: ([\d.]+)px/.exec(block)?.[1])
@@ -417,6 +420,9 @@ describe('screen I – the design and the rulings it has to keep', () => {
 // =====================================================================================================
 describe('the pinned control bar can never reach the playing surface', () => {
   const viewer = componentLogic('components/MatchViewer.vue')
+  // ⚠ RE-AIMED BY T-07 (05.09): a region CUT from `viewer` is as wide as `viewer`, so every
+  // negative claim below reads the `.vue` alone. tests/pin-hygiene.test.ts follows one level now.
+  const viewerFile = componentFile('components/MatchViewer.vue')
   it('is sticky rather than fixed, so it costs no height until it would otherwise be gone', () => {
     // Owner: «maybe we need to make lower buttons on match screen fixed so we could use them
     // anytime?». Measured at 375pt: the row starts on screen at y=636 and is pushed to y=806 – off
@@ -442,7 +448,7 @@ describe('the pinned control bar can never reach the playing surface', () => {
     // the court at ANY viewport height. Flatten the wrapper and the bar inherits `.mv`'s box, whose
     // top edge IS the top of the court; on a short enough viewport it would then pin over the
     // playing surface, which is the one rule this screen does not bend (owner, 29.07).
-    const markup = markupOf(viewer)
+    const markup = markupOf(viewerFile)
     const panelAt = markup.indexOf('class="mv-panel"')
     const belowAt = markup.indexOf('class="mv-below"')
     const logAt = markup.indexOf('class="mv-log"')
@@ -481,7 +487,7 @@ describe('the pinned control bar can never reach the playing surface', () => {
     // the viewer grows into the takeover's column, the wrapper takes what is left, the log is the one
     // flexible row, and `min-height: 0` is what lets a long log scroll inside itself instead of
     // pushing the block back off the bottom.
-    const styles = stylesOf(viewer)
+    const styles = stylesOf(viewerFile)
     // `region` makes BOTH halves loud. The hand-written `expect(at).toBeGreaterThan(-1)` this
     // replaces guarded the SELECTOR only; the closing `}` was unguarded, so a rule that lost its
     // brace would have run the block to the end of the stylesheet in silence. Same claim, both ends.
@@ -514,7 +520,7 @@ describe('the pinned control bar can never reach the playing surface', () => {
     // ⚠ RE-AIMED (R2-11): the option tables and the skip link are the transport's. The capability's
     // own line changed SHAPE and not meaning – the bar no longer holds the ref, it says what the
     // player chose – so the pin follows it to the emit. Every path that reads `viewMode` is untouched.
-    const options = region(transport, 'const VIEW_OPTIONS', 'const SPEED_OPTIONS')
+    const options = region(transportFile, 'const VIEW_OPTIONS', 'const SPEED_OPTIONS')
     expect(options).toContain("value: 'full'")
     expect(options).toContain("value: 'key'")
     expect(options, 'skip is back in the view switch').not.toContain("value: 'skip'")
@@ -967,8 +973,11 @@ describe('a hidden screen is a stopped match', () => {
 
 describe('who is serving is said twice, attached to something, and never in a spare row', () => {
   const viewer = componentLogic('components/MatchViewer.vue')
-  const markup = markupOf(viewer)
-  const styles = stylesOf(viewer)
+  // ⚠ RE-AIMED BY T-07 (05.09): a region CUT from `viewer` is as wide as `viewer`, so every
+  // negative claim below reads the `.vue` alone. tests/pin-hygiene.test.ts follows one level now.
+  const viewerFile = componentFile('components/MatchViewer.vue')
+  const markup = markupOf(viewerFile)
+  const styles = stylesOf(viewerFile)
 
   it('the serving end is outlined as well as coloured, and the row cannot move when it changes', () => {
     // Owner, 31.07: «who's serving is already indicated by colour - add an outline on top of that».
@@ -1158,7 +1167,7 @@ describe('the serve speed on the court is the same number the box score reports'
     // the fact was already on the props. The same is true of the ages and the serve skills, which
     // ride `MatchPlayer`. Nothing was added to the payload for this reading, and the pin says so in
     // the two places it could have been: the prop list, and the number of props the callers pass.
-    const propsBlock = region(viewer, 'defineProps<{', '}>(),')
+    const propsBlock = region(viewerFile, 'defineProps<{', '}>(),')
     for (const invented of ['seed', 'serveSpeed', 'speeds', 'kmh']) {
       expect(propsBlock, `a "${invented}" prop was added for a fact the viewerFile already had`).not.toContain(
         `${invented}?:`,
@@ -1170,8 +1179,11 @@ describe('the serve speed on the court is the same number the box score reports'
 
 describe('the run-off band reads speed · score · speed, and the speed is on the server\'s side', () => {
   const viewer = componentLogic('components/MatchViewer.vue')
-  const markup = markupOf(viewer)
-  const styles = stylesOf(viewer)
+  // ⚠ RE-AIMED BY T-07 (05.09): a region CUT from `viewer` is as wide as `viewer`, so every
+  // negative claim below reads the `.vue` alone. tests/pin-hygiene.test.ts follows one level now.
+  const viewerFile = componentFile('components/MatchViewer.vue')
+  const markup = markupOf(viewerFile)
+  const styles = stylesOf(viewerFile)
 
   it('the score is CENTRED on the court, not centred on what the speed left over', () => {
     // Owner: «этот счет сета ... поставим посередине». `1fr auto 1fr` is what makes that true of the
