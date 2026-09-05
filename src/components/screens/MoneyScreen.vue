@@ -2787,7 +2787,7 @@ function shopRowCornerAction(row: ShopRowView): boolean {
    sentences and the DOM position at the foot of the screen are exactly what D7 recorded at 768. */
 @media (min-width: 1024px) {
   .money-share {
-    max-width: 640px;
+    max-width: var(--read-max);
   }
 }
 
@@ -3521,7 +3521,7 @@ function shopRowCornerAction(row: ShopRowView): boolean {
 @media (min-width: 768px) {
   .shelf-cats {
     width: 100%;
-    max-width: 640px;
+    max-width: var(--read-max);
     margin-inline: auto;
   }
 }
@@ -3641,7 +3641,7 @@ function shopRowCornerAction(row: ShopRowView): boolean {
 
 @media (min-width: 1024px) {
   .shop-family.shop-family.shop-family {
-    grid-template-columns: repeat(auto-fill, minmax(343px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(var(--card-min), 1fr));
   }
 }
 

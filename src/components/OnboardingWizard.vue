@@ -781,7 +781,8 @@ function start(): void {
   .ob-shell :deep(.tb-screen-body),
   .ob-shell :deep(.tb-screen-foot) {
     width: 100%;
-    max-width: 640px;
+    /* ⭐ U-09: the app's reading measure, one token (src/style.css `--read-max`). */
+    max-width: var(--read-max);
     margin-inline: auto;
   }
 }
