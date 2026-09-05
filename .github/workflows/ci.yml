@@ -195,13 +195,15 @@ jobs:
   # list has grown twice since). Still one process each, still serial WITHIN the job, and no longer
   # queued behind `bulk` on one runner.
   # ⚠ SERIAL HERE IS NOW DERIVED RATHER THAN HARD-CODED (P-13, 05.09), AND ON THIS RUNNER IT COMES
-  # OUT THE SAME. `scripts/units.mjs` runs `Math.max(1, Math.floor(availableParallelism() / 3))`
+  # OUT THE SAME. `scripts/units.mjs` runs `Math.max(1, Math.floor(availableParallelism() / 4))`
   # shards at a time: a GitHub runner reports 2 cores (4 on a public repo), so the divisor gives 1
   # and this job behaves exactly as it did - which is the point, because every birpc stall in that
-  # script's header happened HERE, on two cores. The ten-core Mac gets 3, and the local gate got
-  # 130 s back for 1-2 s per shard. The per-shard seconds the step below prints are the check: if
-  # one of them ever climbs toward 60 s, that is birpc's window and the file needs cutting, exactly
-  # as radar's and coach-travel-edge's did.
+  # script's header happened HERE, on two cores. The ten-core Mac gets 2, and the local heavy tail
+  # went 214 s -> 119 s while its worst shard moved 25 s -> 26 s. THE DIVISOR IS 4 RATHER THAN 3
+  # BECAUSE 3 WAS MEASURED AND REFUSED: it saved a further 23 s and put the two biggest shards at
+  # 30 and 31 s on a machine with an agent on it. The per-shard seconds the step below prints are
+  # the check: if one of them ever climbs toward 60 s, that is birpc's window and the file needs
+  # cutting, exactly as radar's and coach-travel-edge's did.
   unit-heavy:
     runs-on: ubuntu-latest
     timeout-minutes: 25

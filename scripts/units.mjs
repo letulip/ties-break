@@ -225,12 +225,24 @@ if (only && only !== 'bulk' && only !== 'heavy') {
 //
 //     availableParallelism()   2  (GitHub runner, private repo)  ->  1   today's behaviour exactly
 //                              4  (GitHub runner, public repo)   ->  1   today's behaviour exactly
-//                              10 (this Mac)                     ->  3
+//                              10 (this Mac)                     ->  2
 //
-// The divisor is 3 because a shard is not one process: vitest's fork pool costs ~1.2 cores of real
-// work plus idle forks, so three shards sit at about 4 of 10 cores and leave the rest to the OS.
-// It also keeps strict serialisation all the way to five cores, which is every runner shape this
-// project has ever run on.
+// ⚠⚠ THE DIVISOR IS 4 AND IT WAS 3 FOR AN HOUR, AND THE HOUR IS THE POINT. Three lanes is faster
+// and it puts the two biggest shards ON the line. Measured by alternating the arms back to back on
+// one machine at one ambient load (5.9-8.6), so the comparison is between the arms and not between
+// two moments:
+//
+//     lanes   heavy tail wall            worst shard
+//     1       217 / 243 s                25 s   (and one ambient spike to 44 s, at ONE lane)
+//     2       118 / 119 s                26 s   (identical in both runs)
+//     3        94 /  97 /  98 s          28 / 29 / 31 s
+//
+// Three lanes buys 23 s more and spends 4-5 s of every big shard's headroom to get it. On a QUIET
+// machine three lanes reads 26 s and looks free; on a machine with an agent on it, which is the
+// machine this gate actually runs on, it reads 30 and 31. Two lanes read 26 s in both conditions.
+// The gate is not allowed to become 23 s faster and one busy afternoon closer to the wall, so the
+// divisor is 4. It also keeps strict serialisation all the way to seven cores, which covers every
+// runner shape this project has ever used.
 //
 // THE NUMBER IT WAS COSTING, measured at 919105e7 on this ten-core Mac. Three runs per arm of
 // `node scripts/units.mjs --only=heavy`, machine checked quiet before each (`uptime` recorded,
@@ -238,25 +250,27 @@ if (only && only !== 'bulk' && only !== 'heavy') {
 // echoed into a file and read back from the FILE, never through a pipe:
 //
 //     one at a time (before)    211 / 214 / 214 s    median 214    worst shard 25 s
-//     three at a time (after)    84 /  86 /  83 s    median  84    worst shard 26 s
+//     two at a time (after)     132 / 127 / 118 /    median 119    worst shard 26 s
+//                               119 / 118 s
 //
-// 130 s off the median, for one to two seconds per shard: economy 24 -> 26, college-birthday
+// ~95 s off the median for one second on the biggest shard: economy 25 -> 26, college-birthday
 // 25 -> 26, and every other file within 2 s of where it stood. `node scripts/units.mjs` in full,
-// same two trees, exit 0 and 4,574 tests either way (bulk 4,217 + 357 across the thirteen):
-// 331 s -> 199 s. ⚠ The before-full run had another agent's suite on the machine, so its BULK half
-// is contended and only the heavy halves compare cleanly: 204 s -> 88 s.
+// exit 0 and the same 4,574 tests either way (bulk 4,217 + 357 across the thirteen).
+// ⚠ The five «after» readings span two ambient loads on purpose – 118 s is a quiet machine and
+// 132 s is one with another agent's suite on it. The worst shard is 26 s in both, which is the
+// number that matters.
 //
 // ⚠ AND THE OTHER CEILING WAS CHECKED, BECAUSE A FASTER GATE THAT FLAKES IS WORSE THAN A SLOW ONE.
 // The unit project's per-test ceiling is 20 s (vite.config.ts), and contention is what has fired it
-// before. The three largest shards, `--reporter=json`, run one at a time and then all three at
-// once – slowest single test in each:
+// before, so it is the ceiling that matters more than birpc's. The three largest shards,
+// `--reporter=json`, run one at a time and then ALL THREE at once – a deliberate over-estimate,
+// since the divisor now runs two. Slowest single test in each:
 //
 //     economy             6.8 s -> 7.1 s      college-birthday   3.6 s -> 3.7 s
 //     coach-travel-edge   1.7 s -> 1.9 s      (wall for the three: 67 s -> 25 s)
 //
-// The slowest test in the heavy tail moves by 0.3 s and sits at a third of its ceiling. That is the
-// evidence that this buys wall clock without buying flake; if it ever stops being true, the divisor
-// is the dial.
+// Even at three lanes the slowest test in the heavy tail moves by 0.3 s and sits at a third of its
+// ceiling, so the per-test wall is not what the divisor is protecting – the per-SHARD wall is.
 //
 // ⚠ THE BAR IS THE SHARD, NOT THE TOTAL, and it is the bar every entry in scripts/heavy-tests.mjs
 // is already measured against: birpc's window is 60 s of ONE shard's wall clock, CI runs ~1.9x
@@ -273,7 +287,7 @@ if (only && only !== 'bulk' && only !== 'heavy') {
 //
 // ⚠ AND THE BULK PASS IS UNTOUCHED, still first and still alone. It already saturates the pool, so
 // starting a heavy shard beside it would be exactly the contention the tail was carved out of.
-const HEAVY_LANES = Math.max(1, Math.floor(availableParallelism() / 3))
+const HEAVY_LANES = Math.max(1, Math.floor(availableParallelism() / 4))
 
 async function runHeavy(files) {
   const lanes = Math.min(HEAVY_LANES, files.length)
