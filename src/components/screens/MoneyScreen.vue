@@ -48,6 +48,7 @@
 //     the export is written on (docs/design/README.md §3, "цвет = смысл").
 import { computed, nextTick, ref, useTemplateRef } from 'vue'
 import { useGameStore } from '../../stores/game'
+import { prefersReducedMotion } from '../../composables/reducedMotion'
 import { ECONOMY, kidPrizeShareBps, managerCommissionBps } from '../../engine/economy'
 // STARTING_FUNDS_CENTS: the ENGINE's own number, not a hand copy – see `startingBudget` below.
 // world.ts is already in the UI chunk (PracticeFlow/BracketTabs import from it), so this costs
@@ -821,7 +822,8 @@ function showAllTransactions(): void {
   // assumed: a player who has asked their system for less motion gets taken there at once. Found
   // by driving it - the verification browser does not animate `behavior: 'smooth'` at all, and a
   // button whose only mode is an animation nobody runs is a button that does nothing.
-  const reduced = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false
+  // ⭐ U-05 – the app's one reduced-motion predicate (`composables/reducedMotion.ts`).
+  const reduced = prefersReducedMotion()
   void nextTick(() => {
     ledgerEl.value?.scrollIntoView({ behavior: reduced ? 'auto' : 'smooth', block: 'start' })
   })

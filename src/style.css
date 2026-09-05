@@ -1560,6 +1560,23 @@ select {
   animation: splash-pulse 1.8s ease-in-out infinite;
 }
 
+/* ⚠⚠ U-05 (review of 05.09) – AND IT IS THE ONE ANIMATION IN THE APP THAT NEVER STOPS, so it is the
+   one that most needs this. The policy is otherwise complete: the trophy flight refuses to arm
+   (`composables/trophyArrival.ts`), the day-cross sweep refuses to schedule (`dayCross.ts`), the
+   pager scrolls rather than glides, and every component that animates carries its own reduce block.
+   This pulse had neither half – so the FIRST thing a player who has asked their system for less
+   motion saw was the only element on screen that moves for ever.
+
+   ⚠ THE FADE STAYS. `.splash-logo` and `.splash-hint-wrap` are one-shot 0.4s fades that end and stay
+   ended, which is not what this switch is about; killing them would leave a player who asked for
+   less motion looking at a hint that never arrives. Only the infinite pulse stands down, and the
+   hint is then simply legible at full opacity. */
+@media (prefers-reduced-motion: reduce) {
+  .splash-hint {
+    animation: none;
+  }
+}
+
 /* --- Onboarding wizard -------------------------------------------------------- */
 
 /* A full-screen takeover (see .splash) that sits under the splash. */

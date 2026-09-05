@@ -23,11 +23,13 @@ import {
   DAY_CROSS_PACE_LABEL,
   dayCrossPace,
   isDayCrossOff,
-  prefersReducedMotion,
   setDayCrossOff,
   setDayCrossPace,
   type DayCrossPaceId,
 } from '../../composables/dayCross'
+// ⭐ U-05 – it used to come through `dayCross`, which is where it happened to be defined; the app's
+// one reduced-motion predicate has its own module now and five callers instead of one.
+import { prefersReducedMotion } from '../../composables/reducedMotion'
 import {
   MATCH_SPEEDS,
   MATCH_SPEED_LABEL,

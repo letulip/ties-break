@@ -44,6 +44,8 @@
 //     This is the fifth, and copying their shape is what makes it obvious to the next reader.
 // DEFAULT ON, like the other four: the absence of the key means the days cross themselves out.
 
+import { prefersReducedMotion } from './reducedMotion'
+
 /** Which of the two paces. Both ship; the owner picks by eye (see the note above). */
 export type DayCrossPaceId = 'brisk' | 'gentle'
 
@@ -162,20 +164,15 @@ export function setDayCrossPace(value: DayCrossPaceId): void {
   }
 }
 
-/** ⚠ THE SYSTEM PREFERENCE OUTRANKS BOTH, and it is not a nicety: an animation is the one thing an OS
- *  accessibility switch is explicitly about. `prefers-reduced-motion: reduce` means the sweep does not
- *  run at all – the week advances the moment the button is pressed – and the CSS drops the transitions
- *  as well, so nothing can crawl in through a stale class. The app already honours this switch on the
- *  Coach Market's toggle; this is the second consumer.
- *
- *  Guarded, because `matchMedia` does not exist under a test runner or in a worker. */
-export function prefersReducedMotion(): boolean {
-  try {
-    return typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches
-  } catch {
-    return false
-  }
-}
+/* ⚠ THE SYSTEM PREFERENCE OUTRANKS BOTH, and it is not a nicety: an animation is the one thing an OS
+   accessibility switch is explicitly about. `prefers-reduced-motion: reduce` means the sweep does not
+   run at all – the week advances the moment the button is pressed – and the CSS drops the transitions
+   as well, so nothing can crawl in through a stale class. The app already honours this switch on the
+   Coach Market's toggle; this is the second consumer.
+
+   ⭐ U-05 – `prefersReducedMotion` WAS DEFINED HERE and is `composables/reducedMotion.ts`'s now. This
+   file's guarded spelling is the one that moved (see that module for why it is the survivor of the
+   five); what changed here is only where it is written. Its five callers were five spellings. */
 
 /** Should the days cross themselves out at all, for this press? Composed here, next to the two flags
  *  it reads, so the screen asks one question and the answer cannot be assembled two ways – the reason

@@ -54,6 +54,7 @@
 // replay from its seed) and this is a component that decorates one already-decided result. Same
 // licence the name roller and the SFX variant picker use.
 import { onBeforeUnmount, ref } from 'vue'
+import { prefersReducedMotion } from '../../composables/reducedMotion'
 
 const props = withDefaults(
   defineProps<{
@@ -92,7 +93,10 @@ interface Piece {
   style: Record<string, string>
 }
 
-const reduced = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false
+// ⭐ U-05 – the app's one reduced-motion predicate (`composables/reducedMotion.ts`), which was this
+// expression written out in five places. Read eagerly here for the same reason `shown` is built
+// eagerly below: the component is mounted by a `v-if` at the moment of the celebration.
+const reduced = prefersReducedMotion()
 
 /** Built ONCE, eagerly, rather than in `onMounted`: the component is mounted by a `v-if` at the
  *  moment of the celebration, so there is no frame in which it should be empty. */
