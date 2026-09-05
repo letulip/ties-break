@@ -1555,7 +1555,7 @@ export const MAIN_DRAWS_PER_WEEK_MAX = MAIN_DRAWS_FLAT_PER_WEEK + MAIN_DRAWS_PER
  *  `resolveBaseCosts` draws 3 (jitter, flavor, sponsor roll) plus 1 more when the roll hits, and
  *  `driftCohort` draws exactly 4 per rival (see the tick's own header). It is corruption detection,
  *  not accounting, and a bound that has to be re-derived every time a draw is added would be the old
- *  frozen-capture tax wearing a new hat — see `MAIN_DRAWS_FLAT_PER_WEEK` for how much slack that
+ *  frozen-capture tax wearing a new hat – see `MAIN_DRAWS_FLAT_PER_WEEK` for how much slack that
  *  argument actually needs and what it measured. Floored at COHORT_SIZE because the draws were made
  *  against the GENERATED field: a v6/v7-era fixture persists a trimmed shape-sample of its
  *  cohort, but the probe that computed its position drifted all 199. */

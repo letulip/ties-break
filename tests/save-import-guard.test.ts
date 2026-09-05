@@ -233,7 +233,7 @@ function v70Payload(overrides: Record<string, unknown> = {}): Record<string, unk
   return { ...(JSON.parse(readFileSync(`${FIXTURES}/v70.json`, 'utf8')) as Record<string, unknown>), ...overrides }
 }
 
-describe('layer 1b — the spine covers every required field a v70 file must carry', () => {
+describe('layer 1b – the spine covers every required field a v70 file must carry', () => {
   // field -> the version that introduced it as required, from migrations.ts's own steps.
   const REQUIRED: [string, number][] = [
     ['financeWeeks', 11],
