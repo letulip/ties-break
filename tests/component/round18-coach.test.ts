@@ -113,11 +113,24 @@ function px(value: string, what: string): number {
 // =================================================================================================
 // #1 – HOME PUTS ITS TEXT COLUMN BACK WHERE THE EXPORT HAD IT
 // =================================================================================================
+// ⚠⚠ RE-AIMED BY R37-1, AND THE WIDTH IS THE WHOLE OF THE RE-AIM. This describe took no viewport,
+// so it inherited the runner's own default – 1024 – while calling the answer "the export's geometry
+// on the card the owner was looking at". It was right by accident: one rule served every width, so
+// any width gave 54. Round 37 #1 gives the desktop and the tablet a rule of their own («все буквы
+// убрать с картинки», his words in HomeScreen.vue's own style block), so the width has to be stated
+// – exactly as P2-7 had to state it for the two #2 tests below, and for the same reason.
+// ⚠ NOTHING IS WEAKENED. 54 is still asserted, and the misread's two numbers are still refused; what
+// is added is the width it is asserted AT, and the band that moved asserted beside it.
 describe('round-18 #1 – Home\'s coach note is back on the export\'s geometry', () => {
   beforeEach(() => setActivePinia(createPinia()))
+  afterEach(() => setViewport(PHONE))
 
-  it('the text column starts 54px in, and 80 is a red test', () => {
+  /** ⚠ `setViewport` BEFORE the mount, never after: happy-dom evaluates a media query on an
+   *  element's first computed-style read and caches it, so a width set afterwards measures the
+   *  previous screen (the note beside `TABLET` in fits.ts). */
+  function homeBodyAt(vp: typeof PHONE): { left: number; unmount: () => void } {
     assertSheetPresent()
+    setViewport(vp)
     const store = useGameStore()
     store.snapshot = careerSnapshot('middle', 'r18-home')
     const wrapper = mount(HomeScreen, {
@@ -125,10 +138,16 @@ describe('round-18 #1 – Home\'s coach note is back on the export\'s geometry',
       global: { stubs: { teleport: true } },
       attachTo: document.body,
     })
-
     const body = wrapper.find('.coach-card .coach-body')
     expect(body.exists(), 'the coach note is on Home').toBe(true)
-    const left = px(getComputedStyle(body.element).marginLeft, '.coach-body margin-left')
+    return {
+      left: px(getComputedStyle(body.element).marginLeft, '.coach-body margin-left'),
+      unmount: () => wrapper.unmount(),
+    }
+  }
+
+  it('on the phone the text column starts 54px in, and 80 is a red test', () => {
+    const { left, unmount } = homeBodyAt(PHONE)
 
     // THE MEASURED CLAIM. 54 is the export's own strip width and the number the A2 ruling above the
     // rule describes; the card's padding is 0 (the strip has to reach all four edges), so this
@@ -138,7 +157,16 @@ describe('round-18 #1 – Home\'s coach note is back on the export\'s geometry',
     // rounds of the misread landed on one of these two numbers.
     expect([66, 80], 'neither round of the misread is back').not.toContain(left)
 
-    wrapper.unmount()
+    unmount()
+  })
+
+  it('⭐ …and past 768 it starts at 96, which is R37-1\'s 84px strip plus the picker\'s own 12', () => {
+    for (const vp of [TABLET, DESKTOP]) {
+      const { left, unmount } = homeBodyAt(vp)
+      expect(left, `the tidied column is not there at ${vp.width}px`).toBe(96)
+      expect(left, `the phone's 54 leaked into ${vp.width}px`).not.toBe(54)
+      unmount()
+    }
   })
 })
 

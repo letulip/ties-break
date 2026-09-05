@@ -2718,13 +2718,131 @@ button.note-card:active:not(:disabled) {
   }
 }
 
-/* ⚠ THE COACH'S PORTRAIT IS DELIBERATELY LEFT ALONE, and that is a decision rather than an
-   oversight. `.coach-body`'s own note above names the fix a wider card would seem to want – «bound
-   the STRIP's width so the picture stops tracking the height» – and it is NOT taken: the portrait is
-   `height: 100%; width: auto` because the owner asked for the whole frame with no vertical crop
-   (A2c/d, 28.07), and a `max-width` on the strip is a crop by another name. The mask that fades him
-   into the card is what carries the overlap on a phone today, and it carries it here for the same
-   reason. Measured after #7 rather than assumed – see the ledger. */
+/* ⚠ ROUND 36 LEFT THE COACH'S PORTRAIT ALONE, ON PURPOSE, AND ROUND 37 #1 BELOW REVERSES EXACTLY
+   THAT ONE CONCLUSION. The paragraph is kept because its reasoning is still the reasoning: the
+   portrait is `height: 100%; width: auto` because the owner asked for the whole frame with no
+   vertical crop (A2c/d, 28.07), so the fix a wider card seems to want – «bound the STRIP's width so
+   the picture stops tracking the height» – is a change to the export's geometry and was not an
+   agent's to take. What has changed is that he has now asked for it. Read the block below with this
+   one; on the phone, where nothing was asked and nothing moved, this note still stands as written:
+   the mask that fades him into the card is what carries the overlap there. */
+
+/* ═════════════════════════════════════════════════════════════════════════════════════════════════
+   ⭐⭐⭐ ROUND 37 #1 – THE LETTERS COME OFF THE PORTRAIT, AND THE STRIP IS GIVEN A WIDTH AT LAST
+   ═════════════════════════════════════════════════════════════════════════════════════════════════
+   «Coach Note на home desktop tablet все буквы убрать с картинки и сдвинуть направо с небольшим
+   отступом от самой картинки (примерно как на карточках тренеров), место есть, станет аккуратнее»
+
+   ⚠ THIS IS THE FIX THIS FILE HAS BEEN NAMING AND REFUSING TO TAKE. `.coach-body`'s own note above
+   ends «If Home is ever asked to clear its portrait for real, the fix is the one #2 used next door:
+   bound the STRIP's width so the picture stops tracking the height. That is a change to the export's
+   geometry and needs the owner, so it is not taken here.» He is the owner and this is the ask.
+
+   THE MODEL IS HIS OWN – «примерно как на карточках тренеров» – and it is `.cm-art` / `.cm-body` in
+   src/style.css, round-18 #2. There the strip is 62px full stop and the text column starts at 74:
+   62 plus the 12px corridor he asked for next door as «10-15 пикселей». Here the strip is 84 and the
+   column starts at 96 – the same 12, and the same guarantee rather than a hope, because a strip with
+   a width cannot grow into the corridor.
+
+   WHY 84 AND NOT A NUMBER OF ITS OWN. The portrait is height-driven over a 162x264 master, so at
+   this band's 138px card it measures 136 x 83.45 – MEASURED IN CHROMIUM at 768, 900, 1024 and 1280,
+   where it comes out 83.45px at all four. 84 is that number at the next whole pixel: the picture the
+   player has today, to half a pixel, and the first width at which it stops being a function of how
+   many lines the quote wraps to.
+
+   ⚠ NOTHING VISIBLE IS CUT, AND THE MASK IS WHY – the same argument round-18 #2 makes. The mask's
+   stops are percentages of THIS box, so it reaches transparent at 96% of 84 = 80.64px, and whatever
+   the clip takes past that is already fully transparent. A taller card enlarges the man and fades
+   him a touch earlier against his own width; it can never draw a hard edge down his side.
+
+   MEASURED IN CHROMIUM, card-relative, at 768 / 900 / 1024 / 1280 – the same four numbers at all
+   four, because the card's floor is what sizes the strip:
+
+       before   picture's right edge 84.45   first glyph 66.00   –18.45   the letters are ON him
+       after    picture's right edge 85.00   first glyph 108.00  +23.00   12 corridor + 11 padding
+
+   (85 rather than 84 because the strip starts past the card's 1px hairline; the body's own
+   `padding: 13px 11px 11px` is the other 11.)
+
+   ⚠ AND NOTHING BELOW 768 MOVES. The phone and the 520 column keep `margin-left: 54px` over an
+   unbounded strip, which is round-18 #1's restored export geometry – 54 -> 66 -> 80 -> 54, and the
+   ledger for that chase is at `.coach-body` above. Measured at 375 and 520 before and after: every
+   box identical to the pixel. */
+@media (min-width: 768px) {
+  .coach-art {
+    width: 84px;
+    overflow: hidden;
+  }
+
+  .coach-body {
+    margin-left: 96px;
+  }
+}
+
+/* ═════════════════════════════════════════════════════════════════════════════════════════════════
+   ⭐⭐⭐ ROUND 37 #2 – THE MEMORY'S PHOTOGRAPH BECOMES SQUARE, AT THE WIDTH IT ALREADY HAS
+   ═════════════════════════════════════════════════════════════════════════════════════════════════
+   «Recent memory photo прямоугольное - сделать квадратное оставить текущую ширину desktop tablet»
+
+   THE WIDTH IS HIS AND DOES NOT MOVE. The `104px` in the round-36 block above is D81, his own review
+   item 6, and it is the PAPER. `Polaroid` spends 4px of it on each side (`padding: 4px 4px 12px`),
+   so the WINDOW – the photograph, which is the thing he is looking at – is 96 wide and 52 tall:
+   1.85:1, his «прямоугольное». Square is therefore 96 x 96, and the 96 is read off his own 104
+   rather than typed: 104 - 4 - 4.
+   ⚠ THE SAME ARITHMETIC MoneyScreen ALREADY DOES, in as many words: «A SQUARE PHOTO WINDOW: 124 of
+   paper width minus Polaroid's own 4px lips = a 124px-tall window in a 124px-wide one».
+
+   ⚠⚠ `min-height` AND NOT `height`, WHICH IS THE WHOLE TRICK AND NOT A TYPO. `.money-share-photo`'s
+   note argues it in full: `Polaroid` writes the window's height as an INLINE style off its
+   `photoHeight` prop, and an inline declaration beats every rule in this sheet, so a media query
+   that set `height` here would do nothing at all. `min-height` is a DIFFERENT property – the used
+   height is the larger of the two – so the cascade lifts the window to 96 without an `!important`
+   and without touching the prop, which is also the phone's.
+
+   ⚠ AND IT IS THE OFFSET THAT GIVES WAY, NOT THE CARD. A 96px window makes the paper
+   4 + 96 + 12 = 112px tall, and `--tilt-4` is -7deg, so a 104 x 112 rectangle spans
+   104·sin7 + 112·cos7 = 123.84px down the card. The card's floor is 138 and its padding box 136, so
+   the tilted footprint has 12.16px of slack – and left at his round-36 `top: 30px` it would hang
+   11.92px through the bottom edge, where `.note-card`'s `overflow: hidden` would cut the corner of
+   the cream lip off square. `top: 12px` divides the slack evenly: 6.08px of air above the tilted
+   footprint and 6.08px below, measured. The tack moves the same 18px with it, because the note at
+   `.memory-tack` says the two are one object.
+   ⭐ The alternative was to grow the card by 26px and leave the offset alone. It is not taken, and
+   the reason is item #1: this card's row-mate is the coach note, a grid row is as tall as its
+   tallest card, and a taller coach card enlarges the portrait he asked to have TIDIED rather than
+   changed. Say the word and the floor moves instead – it is one declaration either way.
+
+   ⚠ HIGHER SPECIFICITY, NOT SOURCE ORDER, and that is deliberate rather than ornamental. A bare
+   `.memory-polaroid` here would TIE with `.memory-polaroid` in the round-36 block above, and
+   src/style.css's own `.tier-block .cm-art` note records what a tie costs: a browser and happy-dom
+   settle one in OPPOSITE directions, so the rule would be live on his screen and invisible to the
+   test. `.note-card >` is (0,2,0) against (0,1,0) and wins in both.
+
+   MEASURED IN CHROMIUM, the photograph's own box, at 768 / 900 / 1024 / 1280 – the same at all four:
+
+       before   101.62 x 63.31 as the tilt draws it   =  96 x 52 upright, 1.85:1
+       after    106.98 x 106.98                       =  96 x 96 upright, square
+
+   (the drawn numbers are bigger than 96 because the polaroid is tilted, and a square stays square
+   through a rotation, which is the reading that matters here.) The paper measures 104px at every one
+   of the four, before and after, and the card stays at its 138px floor – so his width is where he
+   left it and nothing else on the row moved.
+
+   ⚠ NOTHING BELOW 768 MOVES: the phone keeps the 68px paper, its 60 x 52 window, `top: 34px` and its
+   tack at 30. Measured at 375 and 520 before and after: every box identical to the pixel. */
+@media (min-width: 768px) {
+  .memory-polaroid :deep(img) {
+    min-height: 96px;
+  }
+
+  .note-card > .memory-polaroid {
+    top: 12px;
+  }
+
+  .note-card > .memory-tack {
+    top: 8px;
+  }
+}
 
 /* --- 4. what stays below the grid ---------------------------------------------------------------
    The tier ladder and the news feed keep their markup (and every rule that pins it) and only change
