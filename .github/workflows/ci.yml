@@ -105,6 +105,14 @@ jobs:
       # found it red with nine errors across six tools, one of them written the day before. An
       # archival probe is evidence, and evidence that no longer compiles cannot be re-run.
       # Measured at 4.2 s locally; it is a typecheck, so it sits beside the one above.
+      # ⚠ AND IT TYPECHECKS `src` A SECOND TIME. RECORDED, NOT FIXED (P-19, 05.09).
+      # `tsconfig.app.json` includes `src/**`, `tests/**` and 33 named `tools/*.ts`;
+      # `tsconfig.tools.json` includes all 185 of `tools/`, of which 181 import `../src/`, so the
+      # second program re-reads the engine and 33 files sit in both. The whole repeat costs 2.7 s of
+      # a 422 s gate. Trimming the 33 names would save a fraction of a second; making
+      # `tsconfig.tools.json` a project reference would save more and is a build-graph change.
+      # NEITHER IS WORTH DOING - this note exists so the next reader who spots the overlap does not
+      # spend an afternoon re-deriving its price.
       - run: npm run check:tools
       # ⚠ THE GATE RUNS THE `unit` PROJECT. The Monte-Carlo files are NOT in it and that is a
       # decision, not an omission - see .github/workflows/simulation.yml and the note in
@@ -122,7 +130,18 @@ jobs:
       # The mounted-component project (P9). Seconds of runtime, and it is the ONLY gate that
       # catches a UI regression: every other component test in this repo reads source text.
       - run: npm run test:component
-      - run: npm run build
+      # ⚠ `npx vite build`, NOT `npm run build`, AND THE DIFFERENCE IS A SECOND TYPECHECK
+      # (T-06 / P-19 of the 05.09 review; QA-40 of the 02.09 one, open since). `npm run build` is
+      # `vue-tsc -b && vite build`, so this step used to re-run the typecheck `:101` above has
+      # already run - and re-run it in the INCREMENTAL mode the comment at :99-100 says has hidden
+      # real type errors. Priced on a quiet machine: the forced check is 7.7 s, the repeat 0.4 s on
+      # a warm `.tsbuildinfo`. So the reason to drop it is that the repeat was the LESS trustworthy
+      # of the two, not that it was dear - the saving is a second of runner time.
+      # ⚠ THE GATE DOES NOT MOVE. `npx vue-tsc -b --force` at :101 still fails this job on a type
+      # error, before anything is built, and `vite build` still fails it on a build error.
+      # `npm run check` has always had exactly this shape locally (package.json's `check` ends
+      # `… && vite build`); CI now matches the gate the owner runs before a push.
+      - run: npx vite build
 
   # ⭐ THE LONG POLE, ALONE. 501 s of pooled files - the one block worth its own runner.
   unit-bulk:
