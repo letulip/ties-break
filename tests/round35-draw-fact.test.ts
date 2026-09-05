@@ -61,7 +61,7 @@ import { aiSelectionRanking } from '../src/engine/world/weekField'
 import { coachTravelFareFor } from '../src/engine/world/sponsors'
 import { withPinnedFirstRound } from '../src/engine/season/tournament'
 import { DRAW_LEAD_WEEKS, previewEvent } from '../src/engine/season/preview'
-import { TIERS } from '../src/engine/season/calendar'
+import { TIERS, WEEKS_PER_YEAR } from '../src/engine/season/calendar'
 import { rngFromSeed } from '../src/engine/rng'
 import { DEFAULT_PROFILE } from '../src/shared/protocol'
 import type { MatchPlayer } from '../src/engine/match/types'
@@ -108,6 +108,8 @@ function redrawnAtBracketWeek(world: WorldState, e: SeasonEvent): string | null 
 interface Promise_ {
   eventId: string
   tier: string
+  /** the event's own week – E-01 reads it to tell a season boundary from an ordinary week */
+  week: number
   /** the id the card carried at week − 1 */
   promised: string
   /** the id the bracket actually played */
@@ -137,6 +139,7 @@ function walk(seed: string, weeks: number): Promise_[] {
         row = {
           eventId: due.id,
           tier: due.tier,
+          week: due.week,
           promised: card.preview.opponentId,
           played: null,
           redrawn: TIERS[due.tier].track === 'wta' ? null : redrawnAtBracketWeek(world, due),
@@ -200,16 +203,46 @@ describe('round 35 #14 – the published draw is a fact', () => {
   it('the bracket plays the girl the card named', () => {
     const played = ALL.filter((r) => r.played !== null)
     const broken = played.filter((r) => r.played !== r.promised)
-    // ⚠ THE ONE ALLOWED EXCEPTION IS NAMED RATHER THAN TOLERATED: the conveyor retires ~18 of 199
-    // players in the rollover week, and a girl who has left the world cannot be put on court. Every
-    // other break is a defect.
+    // ⚠⚠ RE-AIMED BY E-01 (05.09 engine review). This arm used to NAME AN EXCEPTION and tolerate it:
+    // «the conveyor retires ~18 of 199 players in the rollover week, and a girl who has left the
+    // world cannot be put on court». That sentence was the defect wearing the clothes of a rule –
+    // the reader (`phaseHerWeek`) falls back to a live draw with no record that a promise was broken,
+    // and the review reproduced it on 3 of 20 boundary-week events against 0 of 301 elsewhere. The
+    // conveyor now keeps a promised girl for the boundary that would have retired her
+    // (`renewCohort`'s `keep` set, wired at `phaseObligations`), so there is no exception left to
+    // name and the arm asserts the promise outright. `stillInCohort` stays in the row because the
+    // boundary arm below reads it as ITS instrument – the fix is exactly «she is still there».
     for (const r of broken) {
       expect(
-        r.stillInCohort,
-        `${r.eventId} (${r.tier}): promised ${r.promised}, played ${r.played}`,
-      ).toBe(false)
+        `${r.eventId} (${r.tier}) w${r.week}: promised ${r.promised}, played ${r.played}, still in cohort ${r.stillInCohort}`,
+      ).toBe('')
     }
-    expect(broken.length / played.length).toBeLessThan(0.05)
+    expect(broken.length).toBe(0)
+  })
+
+  it('⚠ E-01 – and the promise survives the SEASON BOUNDARY, which is the week it used to break', () => {
+    // ⭐ THE WEEK THE CONVEYOR RUNS. `tickWeek` records the draw at week 52k − 1 (its step 8) and
+    // plays it at week 52k (its step 5) – but step 1, `seasonBoundaryAndObligations`, runs the
+    // conveyor in between, so before the fix the girl the card named could have left the field
+    // before her own match. Measured on the unfixed tree with these two seeds: `r35-fact-b` week 52,
+    // event `1-w52-regional`, card said `ai-29` and the bracket played `ai-150`.
+    //
+    // ⚠ THE INSTRUMENT FIRST, as everywhere in this file: a walk that never puts an entered event on
+    // a multiple of 52 makes every assertion below vacuously green, which is precisely why the
+    // shipped v70 promise read as kept for two days.
+    const onBoundary = ALL.filter((r) => r.played !== null && r.week % WEEKS_PER_YEAR === 0)
+    expect(
+      onBoundary.length,
+      'the walk must enter an event ON a season boundary, or this arm proves nothing',
+    ).toBeGreaterThan(0)
+    for (const r of onBoundary) {
+      expect(
+        r.played,
+        `${r.eventId} (${r.tier}) w${r.week}: the card named ${r.promised}`,
+      ).toBe(r.promised)
+      // ...and the mechanism, not only the outcome: she is kept in the field she was promised out of.
+      expect(r.stillInCohort, `${r.promised} left the cohort on the boundary`).toBe(true)
+    }
   })
 
   it('the name is the same at every render of the card', () => {

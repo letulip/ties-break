@@ -56,7 +56,18 @@ function turnOverField(world: WorldState, seasonIndex: number): void {
   // The standings as they stand BEFORE the turnover – the only moment a departing player still has
   // a rank, because renewCohort removes her from the id list `fullRanking` is built over.
   const rankBefore = new Map(fullRanking(world).map((r) => [r.playerId, r.rank]))
-  const { left, joined } = renewCohort(world.cohort, world.seed, seasonIndex)
+  // ⭐⭐⭐ E-01 (05.09 engine review) – A PUBLISHED DRAW OUTRANKS THE CONVEYOR FOR ONE SEASON.
+  // `tickWeek` runs this phase (step 1) BEFORE her own competition (step 5), so on a week that is a
+  // multiple of 52 the girl the card named a week ago could be retired between the promise and the
+  // match, and `phaseHerWeek` would silently draw somebody else. Every id the world has published
+  // is handed to `renewCohort` as an exemption; the whole argument, the RNG discipline and the
+  // field-size accounting are on that parameter.
+  //
+  // ⚠ THE VALUES, NOT THE KEYS: `drawnFirstRounds` is event id -> OPPONENT id, and it is the
+  // opponent the field has to still hold. The table is bounded by `pruneDrawnFirstRounds` to the
+  // events that have not been played yet, so this is a handful of ids and usually none.
+  const promised = new Set(Object.values(world.drawnFirstRounds ?? {}))
+  const { left, joined } = renewCohort(world.cohort, world.seed, seasonIndex, promised)
   if (left.length === 0) return
 
   // The best-ranked of the ones who stopped. Named because a number alone ("9 players left") is
