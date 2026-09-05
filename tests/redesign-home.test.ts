@@ -25,6 +25,7 @@ import type { TierId } from '../src/engine/season/types'
 import type { Surface } from '../src/engine/match/types'
 import type { DiaryFacts, FamilyBackground, FinanceWeek } from '../src/shared/protocol'
 import { after, at, region, regionToLast } from './helpers/source'
+import { componentLogic } from './worldSource'
 
 const read = (rel: string) => readFileSync(new URL(rel, import.meta.url), 'utf8')
 const ROOT = fileURLToPath(new URL('../', import.meta.url))
@@ -41,6 +42,11 @@ const css = read('../src/style.css')
 // "lying test" trap the round-10 pass wrote up.
 /** Home's scoped block – the rules that only this page renders. */
 const homeCss = after(home, '<style scoped>')
+// ⚠ THE SFC **PLUS THE COMPOSABLES IT IMPORTS** – the helper CLAUDE.md names for a POSITIVE claim
+// that must survive an extraction (P2-6 moved her identity block's arithmetic into
+// `composables/kidIdentity.ts`). ⚠ NEVER IN A NEGATIVE ASSERTION: `home` above is the .vue alone and
+// is what every `not.toContain` / `not.toMatch` in this file keeps using (tests/pin-hygiene.test.ts).
+const homeLogic = componentLogic('components/screens/HomeScreen.vue')
 /** Home's TEMPLATE, and only the template: the style block below it legitimately quotes the owner in
  *  Russian, and the copy guards must not read that as player-facing text. */
 const homeTemplate = regionToLast(home, '<template>', '</template>')
@@ -106,7 +112,12 @@ describe('weekDateLine – the header date line, in one place', () => {
 
   it('the shape is spelled in shared/dates.ts and nowhere else', () => {
     // Home renders the computed, never a hand-rolled concatenation.
-    expect(home).toContain('weekDateLine(week.value)')
+    // ⚠ RE-AIMED BY P2-6, AND THE NEGATIVE HALF IS UNTOUCHED – which is the half that does the work.
+    // `dateLine` moved into `composables/kidIdentity.ts` with the rest of her identity block, because
+    // the shell's rail draws the same week on every page from 1024 and one computation is the whole
+    // point. So the POSITIVE claim reads the widened source (the SFC plus the composables it
+    // imports, tests/pin-hygiene.test.ts) and the NEGATIVE one still reads HomeScreen.vue alone.
+    expect(homeLogic).toContain('weekDateLine(week.value)')
     expect(home).not.toMatch(/`W\$\{/)
   })
 })
@@ -576,7 +587,7 @@ describe('the diary page: the structure the redesign decided', () => {
     // taking them out of `.diary-head` widens the date's box by 108px at 375). Cutting to the page
     // copy's own class keeps this region what its name and every assertion under it mean: the
     // PHOTOGRAPH and what is laid on it.
-// ⚠ RE-AIMED BY P2-4 – the second copy is GONE, because he sent the three icons back onto the
+    // ⚠ RE-AIMED BY P2-4 – the second copy is GONE, because he sent the three icons back onto the
     // photograph («давай их вернем на картинку в угол правый верхний», 05.09.2026), so the class this
     // region cut to no longer exists and `region` throws on an absent marker. The end marker goes
     // back to what it was before D74: `class="card-grid"`, the hero's real next block. ⚠ A MARKER IS
@@ -599,8 +610,7 @@ describe('the diary page: the structure the redesign decided', () => {
     // replaces: three on the photograph below 1024, three off it above, and six in the file – so a
     // copy that quietly gained or lost an icon reddens on the side it happened, and the two cannot
     // drift into being different rows.
-    expect(hero.match(/class="diary-tool"/g) ?? [], 'the hero row').toHaveLength(3)
-// ⚠ RE-AIMED BY P2-4 – BACK TO ONE ROW, AND THE «no second copy anywhere» HALF IS WHAT NOW DOES
+    // ⚠ RE-AIMED BY P2-4 – BACK TO ONE ROW, AND THE «no second copy anywhere» HALF IS WHAT NOW DOES
     // THE WORK. He sent the three back onto the photograph, so the page copy the line above counted
     // is deleted rather than hidden; three in the hero and three in the whole file is the same claim
     // the pre-D74 pin made, and it reddens if a second row is ever drawn again without being asked

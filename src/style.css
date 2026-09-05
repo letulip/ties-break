@@ -878,10 +878,14 @@ body {
 
 /* ⭐⭐⭐ ROUND 36 REVIEW #3 – THE RAIL'S IDENTITY BLOCK: her face and her rank, above every menu item.
    «Аватар и ранг тоже уезжают с картинки, но в левый верхний угол в меню над всеми пунктами».
-   The slot is App.vue's and is empty; HomeScreen teleports the two controls into it (see both files
-   for why the arithmetic stays on Home). Desktop-only by the same one declaration the dashboard uses
-   – `display: none`, never a `v-if` on a media query – so a phone is byte-for-box unchanged and the
-   bottom bar never grows a face. */
+
+   ⭐⭐⭐ AND THE SECOND PASS'S P2-6 MADE IT PERMANENT CHROME – his ruling on `D75`: «и аватар с
+   текущей позицией и рангом (так же, как и все остальные плашки) на десктоп в боковом меню живут на
+   всех страницах неизменно». It was an empty slot HomeScreen teleported into, so it was drawn on
+   Home and on none of the other nine pages; it is `RailIdentity.vue` now, mounted by the shell, and
+   the arithmetic it reads is `composables/kidIdentity.ts` – one owner, two renders.
+   Desktop-only by the same one declaration the dashboard uses – `display: none`, never a `v-if` on a
+   media query – so a phone is byte-for-box unchanged and the bottom bar never grows a face. */
 .rail-id {
   display: none;
 }
@@ -2679,6 +2683,119 @@ tr.kid-row td {
 /* Positive (income) ledger amounts read green, like the accent-positive .pill.ok. */
 .num.positive {
   color: var(--accent);
+}
+
+/* =================================================================================================
+   ⭐⭐⭐ HER IDENTITY BLOCK – SHARED BY TWO RENDERS SINCE ROUND 36's SECOND PASS (P2-6)
+   =================================================================================================
+   «и аватар с текущей позицией и рангом (так же, как и все остальные плашки) на десктоп в боковом
+   меню живут на всех страницах неизменно» (05.09.2026). Her face, the callout that explains it and
+   her rank chip are drawn twice now – on Home's photograph below 1024 (`HomeScreen.vue`) and in the
+   rail above it (`RailIdentity.vue`, the shell's, on all ten screens).
+
+   ⚠⚠ THESE RULES MOVED HERE FROM `HomeScreen.vue`'s SCOPED BLOCK, VALUE FOR VALUE. Not one number,
+   colour, radius or shadow changed – only the file. A scoped rule cannot reach a sibling component,
+   so leaving them on Home would have drawn the rail's copy as an unstyled button: the surface has
+   two consumers now, which is exactly what `src/style.css` is for (`.rank-move` below has been in
+   this file for the same reason since the chip was written). The rail's own overrides – 46px, a
+   static callout, no arrow – are up beside `.rail-id`.
+   ================================================================================================= */
+/* The small round avatar with the lime ring, moved here from the deleted header – same object, same
+   job (the door to her profile), now sitting on the photograph beside the date. */
+.diary-avatar-btn {
+  flex: none;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+}
+
+.diary-avatar-btn:hover:not(:disabled) {
+  background: transparent;
+}
+
+.diary-avatar {
+  display: block;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1.5px solid var(--accent);
+  /* The ring needs to hold against a bright court too, so it carries its own dark halo. */
+  box-shadow: 0 0 0 1px rgba(6, 10, 14, 0.55), 0 2px 10px rgba(0, 0, 0, 0.45);
+}
+
+.diary-avatar-btn:hover:not(:disabled) .diary-avatar {
+  border-color: #ffffff;
+}
+
+/* The one-time callout, moved with the avatar it explains. It hangs under the avatar rather than
+   beside it – at 30px there is no room on a 390px screen, and the arrow makes the target obvious. */
+.diary-kid-hint {
+  position: absolute;
+  left: 16px;
+  top: 58px;
+  z-index: 2;
+  padding: 6px 11px;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--accent);
+  background: rgba(10, 15, 20, 0.82);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  color: var(--ink);
+  font-size: 12px;
+  font-weight: 500;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.45);
+}
+
+.diary-kid-hint::before {
+  content: '';
+  position: absolute;
+  left: 12px;
+  top: -5px;
+  width: 8px;
+  height: 8px;
+  transform: rotate(45deg);
+  background: rgba(10, 15, 20, 0.82);
+  border-left: 1px solid var(--accent);
+  border-top: 1px solid var(--accent);
+}
+
+/* The rank chip – the page's ONE table-number, and the door to the best-6 explainer (round-6: the
+   owner was confused by the windowed ranking twice). It is a button, which is why the old separate
+   "?" is gone: one affordance where there used to be two. */
+.diary-rank {
+  pointer-events: auto;
+  margin-top: 10px;
+  display: inline-flex;
+  align-items: baseline;
+  gap: 5px;
+  padding: 3px 10px;
+  border-radius: var(--radius-pill);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  background: rgba(10, 15, 20, 0.55);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  color: rgba(255, 255, 255, 0.92);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+
+/* WHICH TABLE the number belongs to. Quieter than the rank itself – it is the unit, not the figure –
+   and uppercase/tracked so it reads as a label rather than as a word in a sentence. */
+.rank-ladder {
+  font-size: 9px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  opacity: 0.72;
+}
+
+.diary-rank:hover:not(:disabled) {
+  border-color: var(--accent);
+  background: rgba(10, 15, 20, 0.55);
+  color: #ffffff;
 }
 
 /* Player-card rank + week-over-week movement. */

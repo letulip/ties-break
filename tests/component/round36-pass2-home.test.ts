@@ -21,11 +21,14 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest'
 import { mount, flushPromises, type VueWrapper } from '@vue/test-utils'
 import { nextTick } from 'vue'
 import { createPinia, setActivePinia } from 'pinia'
+import { readFileSync } from 'node:fs'
 import '../../src/style.css'
 import App from '../../src/App.vue'
 import SplashScreen from '../../src/components/SplashScreen.vue'
 import { useGameStore } from '../../src/stores/game'
 import { careerSnapshot } from '../helpers/career'
+import { LADDER_LABEL } from '../../src/shared/protocol'
+import { rankLabel } from '../../src/shared/format'
 import { resetKidHintForTests } from '../../src/composables/kidIdentity'
 import type { Snapshot } from '../../src/shared/protocol'
 import { DESKTOP, PHONE, TABLET, setViewport } from './fits'
@@ -97,6 +100,19 @@ function has(selector: string): boolean {
   return document.querySelector(selector) !== null
 }
 
+function text(selector: string): string {
+  const el = document.querySelector(selector)
+  if (!el) throw new Error(`nothing matches ${selector} – the assertion below would be vacuous`)
+  return (el.textContent ?? '').replace(/\s+/g, ' ').trim()
+}
+
+/** ⚠ THE PATH IS A PLAIN VARIABLE AND NEVER AN INLINE LITERAL – Vite rewrites
+ *  `new URL('…', import.meta.url)` into its own asset resolver and the result is not a `file:` URL
+ *  under this runner. Same helper, same reason, as the sibling round-36 files. */
+function sfc(rel: string): string {
+  return readFileSync(new URL(rel, import.meta.url), 'utf8')
+}
+
 let wrapper: VueWrapper | null = null
 
 beforeEach(() => {
@@ -116,6 +132,20 @@ async function homeAt(vp: { width: number; height: number }, snapshot?: Snapshot
   const snap = snapshot ?? rankedCareer(CAREER_SEED)
   setViewport(vp)
   wrapper = await mountShell(snap)
+  await nextTick()
+  return snap
+}
+
+/** The shell, at one width, on a screen that is NOT Home – which is the whole of P2-6. */
+async function screenAt(
+  vp: { width: number; height: number },
+  tab: string,
+  snapshot?: Snapshot,
+): Promise<Snapshot> {
+  const snap = await homeAt(vp, snapshot)
+  const button = document.querySelector<HTMLElement>(`nav.tab-bar .tab-btn[data-tour="tab-${tab}"]`)
+  if (!button) throw new Error(`no ${tab} tab in the rail – the walk below would measure Home`)
+  button.click()
   await nextTick()
   return snap
 }
@@ -201,5 +231,83 @@ describe('round 36 second pass, P2-4 – the three tools are on the picture at e
     expect(css('.tb-screen-body').paddingTop, 'the band above the two columns is still open').not.toBe(
       '34px',
     )
+  })
+})
+
+// =================================================================================================
+// P2-6 – HER FACE, THE WEEK AND HER RANK ARE PERMANENT CHROME ON THE DESKTOP
+// =================================================================================================
+//
+// ⚠ MUTATION-VERIFIED: putting the block back behind HomeScreen's `<Teleport>` reddens the
+// «on a screen that is not Home» arm by finding no avatar in the rail on Stats.
+
+describe('round 36 second pass, P2-6 – the identity block lives on every page', () => {
+  it('⭐⭐⭐ it is drawn on a screen that is NOT Home, inside the one navigation the app has', async () => {
+    await screenAt(DESKTOP, 'stats', rankedCareer('r36-pass2-stats'))
+    expect(has('.diary-hero'), 'the walk never left Home, so this proves nothing about the rail').toBe(
+      false,
+    )
+    const block = document.querySelector('#app > nav.tab-bar > .rail-id')
+    expect(block, 'the identity block is not a child of the navigation').toBeTruthy()
+    expect(
+      block!.querySelector('button[aria-label="Open her profile"]'),
+      'her face is not on a page that is not Home',
+    ).toBeTruthy()
+    expect(
+      block!.querySelector('button[aria-label="How ranking points work"]'),
+      'her rank is not on a page that is not Home',
+    ).toBeTruthy()
+    // «над всеми пунктами» – and it has to beat the Home tab's own `order: -1` (review #8).
+    expect(getComputedStyle(block!).order, 'the block is not above the menu items').toBe('-2')
+  })
+
+  it('⚠ …and on a phone that same page draws none of it, so the bottom bar is unchanged', async () => {
+    await screenAt(PHONE, 'stats', rankedCareer('r36-pass2-stats-phone'))
+    expect(has('#app > nav.tab-bar > .rail-id'), 'the block is in the DOM at every width').toBe(true)
+    expect(css('#app > nav.tab-bar > .rail-id').display, 'the bottom bar grew a face').toBe('none')
+  })
+
+  it('⭐⭐⭐ NOT ONE FIGURE IS DERIVED IN THE SHELL – the chip is the snapshot’s own two fields', async () => {
+    const snap = rankedCareer('r36-pass2-derive')
+    await screenAt(DESKTOP, 'stats', snap)
+    // ⚠⚠ REBUILT FROM THE SNAPSHOT'S OWN FIELDS, never read back off Home – the sibling file's
+    // hard-won rule: comparing two renders of one computed is a SHARING claim and stays green on any
+    // arithmetic at all. This says what the chip must SAY.
+    const ladder = snap.ladders[snap.activeLadder]
+    expect(text('.rail-id-rank .rank-ladder'), 'the chip names the wrong table').toBe(
+      LADDER_LABEL[snap.activeLadder],
+    )
+    expect(
+      text('.rail-id-rank').startsWith(LADDER_LABEL[snap.activeLadder]),
+      'the chip does not lead with the table it is reading',
+    ).toBe(true)
+    expect(
+      text('.rail-id-rank'),
+      'the rail is showing a rank the engine did not give it',
+    ).toContain(rankLabel(ladder.rank ?? 0, ladder.rank !== null))
+  })
+
+  it('⭐⭐ …and there is ONE owner of that arithmetic, which is the whole reason this is a composable', () => {
+    // ⚠ A SOURCE PIN, DELIBERATELY, AND IT IS THE ONE CLAIM A MOUNTED TEST CANNOT MAKE. Two
+    // components rendering the same string prove SHARING only if there is one computation; two
+    // copies of the sum would render the same string too, right up to the day one of them was
+    // edited. So the negative is asserted where it lives: neither surface calls the ladder
+    // arithmetic itself, and both read the one module that does.
+    const home = sfc('../../src/components/screens/HomeScreen.vue')
+    const rail = sfc('../../src/components/RailIdentity.vue')
+    for (const [name, src] of [
+      ['HomeScreen.vue', home],
+      ['RailIdentity.vue', rail],
+    ] as const) {
+      expect(src, `${name} does not read the identity composable`).toContain(
+        "composables/kidIdentity'",
+      )
+      expect(src, `${name} computes the rank chip's track itself`).not.toContain('rankChipTrack(')
+      expect(src, `${name} reaches for the ladder table itself`).not.toContain('snapshot?.ladders')
+    }
+    // …and the module that DOES own it is the one both of them name.
+    const owner = sfc('../../src/composables/kidIdentity.ts')
+    expect(owner, 'the composable does not own the chip’s track').toContain('rankChipTrack(game.snapshot)')
+    expect(owner, 'the composable does not own the movement since last week').toContain('prevRank')
   })
 })
