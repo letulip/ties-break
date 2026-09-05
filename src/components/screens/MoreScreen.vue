@@ -4,7 +4,7 @@
 // skip), and About. Destructive/generation-switching actions go through the shared
 // ConfirmDialog popup; "New career" keeps its pre-existing inline confirm (only the
 // copy changed) since it doesn't touch any stored data.
-import { computed, onMounted, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useGameStore, type SaveOpKind } from '../../stores/game'
 import { sanitizeName } from '../../db/saves'
 import type { CareerMeta, SavePeek, SlotMeta } from '../../shared/protocol'
@@ -126,6 +126,24 @@ watch(
     if (op?.status === 'ok') okTimer = setTimeout(() => (okVisible.value = false), 2500)
   },
 )
+
+/** ⭐ U-08 (review of 05.09) – the seed-copied tick, held rather than fired and forgotten. */
+let copyTimer: ReturnType<typeof setTimeout> | undefined
+
+// ⭐ U-08 – THE TWO TIMERS ON THIS SCREEN NOW HAVE AN UNMOUNT, AND THEY WERE THE ONLY TWO WITHOUT
+// ONE. The review's lifecycle table is nineteen rows and every other timer, observer and listener in
+// the app is paired (`ConfettiBurst.vue`, `dayCrossSweep.ts`, `playbackClock.ts`, `weekPager.ts`,
+// `dialogFocus.ts`); `okTimer` was cleared only when the NEXT `saveOp` arrived, which cannot happen
+// after the screen is gone, and `copyTimer` was never held at all.
+//
+// ⚠ WHAT IT COSTS TODAY IS NOTHING, AND THAT IS THE ARGUMENT FOR FIXING IT RATHER THAN AGAINST. A
+// ref write after unmount is a no-op in Vue 3, so neither timer can throw or leak state. What it
+// costs is the pattern: this file is where the next screen's author looks for how a toast is
+// dismissed, and an unpaired timer copied five times is a leak nobody wrote on purpose.
+onBeforeUnmount(() => {
+  clearTimeout(okTimer)
+  clearTimeout(copyTimer)
+})
 
 function fmtDate(ts: number) {
   return new Date(ts).toLocaleString('en-GB', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })
@@ -302,7 +320,10 @@ async function copySeed(): Promise<void> {
   try {
     await navigator.clipboard.writeText(game.snapshot.seed)
     seedCopied.value = true
-    setTimeout(() => (seedCopied.value = false), 1500)
+    // ⭐ U-08 – HELD, so it can be cleared. It is also cleared before it is re-armed, which is what
+    // makes a second copy inside the window reset the tick rather than inherit the first one's.
+    clearTimeout(copyTimer)
+    copyTimer = setTimeout(() => (seedCopied.value = false), 1500)
   } catch {
     // Clipboard permission denied or unavailable – the seed is still visible to copy by hand.
   }
