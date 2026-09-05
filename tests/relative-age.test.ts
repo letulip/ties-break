@@ -53,7 +53,7 @@ import {
   tickWeek,
   toSnapshot,
 } from '../src/engine/world'
-import { engineModuleSource } from './worldSource'
+import { engineModuleFunction } from './worldSource'
 import { TIERS } from '../src/engine/season/calendar'
 import { START_AGE_YEARS } from '../src/engine/world'
 import type { SeasonEvent } from '../src/engine/season/types'
@@ -394,25 +394,18 @@ describe('the band and the girl are two different numbers', () => {
           return !t.startsWith('//') && !t.startsWith('*') && !t.startsWith('/*')
         })
         .join('\n')
-    // ⚠ ITS OWN EXTRACTOR, AND MUTATION TESTING IS WHY. `engineModuleFunction` matches on
-    // `function ${name}` with no parenthesis and cuts at the first line-initial `}`, so
+    // ⚠ IT HAD ITS OWN EXTRACTOR, AND MUTATION TESTING IS WHY. `engineModuleFunction` matched on
+    // `function ${name}` with no parenthesis and cut at the first line-initial `}`, so
     // `mandatoryBinds` silently resolved to `mandatoryBindsRank` - a PREFIX COLLISION - and the pin
     // passed green against a function that had never read the band at all. Caught by breaking the
     // mandatory call site and watching this test stay green, which is the only way it could have
     // been caught. The paren makes the match exact and the brace walk makes the slice exact.
-    const body = (src: string, name: string): string => {
-      const at = src.indexOf(`function ${name}(`)
-      if (at < 0) return ''
-      const open = src.indexOf('{', at)
-      if (open < 0) return ''
-      let depth = 0
-      for (let j = open; j < src.length; j++) {
-        if (src[j] === '{') depth++
-        else if (src[j] === '}' && --depth === 0) return src.slice(at, j + 1)
-      }
-      return ''
-    }
-    const source = engineModuleSource('world')
+    //
+    // ⚠ RE-AIMED BY T-01 (05.09 review): both of those are now IN `engineModuleFunction`, together
+    // with the throw this copy still lacked - it returned '' three ways, which is the same vacuous
+    // green one file over. Folded onto the shared helper so the next module set inherits the
+    // lesson instead of the next reader re-learning it. The two guards below are kept as harmless
+    // redundancy; a guard is not deleted because it became belt-and-braces.
     for (const fn of [
       'entryCapUsage', // the ITF annual allowance
       'proEntryCapUsage', // the WTA AER
@@ -424,7 +417,7 @@ describe('the band and the girl are two different numbers', () => {
       'toSnapshot', // the printed age every screen reads
       'slotBeginning', // «14 years old, and we said yes»
     ]) {
-      const src = body(source, fn)
+      const src = engineModuleFunction('world', fn)
       expect(src.startsWith(`function ${fn}(`), `${fn}: the extractor found the wrong function`).toBe(true)
       expect(src.length, `${fn} not found – the pin would pass on an empty string`).toBeGreaterThan(50)
       expect(stripped(src), `${fn} reads the band`).not.toContain('ageAtWeek(')

@@ -387,6 +387,25 @@ describe('bundle I: which band each rung reaches, walked through the real engine
     backwards: number
   }
   const walked = new Map<CoachTier, Walk>()
+  // ⚠⚠ THE HOOK'S BUDGET IS 50 s AND IT WAS 120 s – RE-AIMED BY P-15/T-05 (05.09), and the number is
+  // the whole point of the change. This hook is the most expensive thing in the file by two orders
+  // of magnitude: measured 05.09, the file runs 13.4 s solo of which the fifteen tests are 0.24 s,
+  // and the review measured the hook at 22.0 s of a 22.6 s wall IN THE POOL and 31.2 s of 32.2 s
+  // under four concurrent lanes.
+  //
+  // ⚠ 120 s WAS A BUDGET THE RUNNER CANNOT HONOUR, which is T-05's finding about thirty files and
+  // this is one of them. `tests/round34-reachable-ceiling.test.ts` is NOT in `HEAVY_UNIT_FILES`
+  // (scripts/heavy-tests.mjs), so it runs in the parallel bulk pool, where birpc's per-FILE reporter
+  // wall is 60 s and unraisable – the wall five recorded incidents in that script's own header were
+  // killed by. A hook allowed 120 s in a pool that kills the file at 60 can never spend its budget:
+  // at 61 s the FILE dies with every test green and nothing named, which is the «all green, exit 1»
+  // shape scripts/lib/stall.mjs was written to classify. 50 s spends first, 10 s under the wall.
+  //
+  // ⚠ AND THE BUDGET DOES BITE ON A SYNCHRONOUS HOOK, which was worth proving rather than assuming:
+  // vitest cannot INTERRUPT a synchronous walk – the wall clock is unchanged either way – but it
+  // measures the elapsed time and fails the suite when it returns. Verified 05.09 by setting this
+  // number to 1_000: «Error: Hook timed out in 1000ms», file red, 9 passed / 6 skipped, exit 1. So
+  // the number is the difference between a named hook failure and an unattributed file kill.
   beforeAll(() => {
     for (const tier of RUNGS) {
       const world = createWorld(`r34h-walk-${tier}`, { ...DEFAULT_PROFILE, coachTier: tier })
@@ -420,7 +439,7 @@ describe('bundle I: which band each rung reaches, walked through the real engine
       }
       walked.set(tier, { seen, peakRatio, pinnedWeeks, topAtAge, backwards })
     }
-  }, 120_000)
+  }, 50_000)
 
   it('no rung flickers – the band never steps back on a career that is merely progressing', () => {
     // A band that stepped back and forth across a threshold would put two different sentences on

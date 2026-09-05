@@ -199,6 +199,12 @@ describe('round 23 #3b – the line a rival retirement writes', () => {
   })
 
   it('draws nothing: the writer takes no Rng and touches no stream', () => {
+    // ⚠ RE-AIMED BY T-01 (05.09 review): this is a NEGATIVE assertion and it used to be vacuous.
+    // `engineModuleFunction` returned '' for an absent function, and `expect('').not.toMatch(...)`
+    // passes for every pattern there is – so renaming `rivalRetirementNews` satisfied the pin
+    // instead of breaking it. The helper now THROWS on an absent function, which is where the
+    // guard belongs; the seven sites that wrote `expect(fn).not.toBe('')` by hand were carrying
+    // it for the helper.
     const src = engineModuleFunction('world/matchNews', 'rivalRetirementNews')
     expect(src).not.toMatch(/\brng\b|Math\.random|rngFromSeed|pickInt|pickOne/)
   })
