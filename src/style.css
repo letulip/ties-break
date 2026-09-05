@@ -4966,6 +4966,78 @@ tr.kid-row td {
   .tier-block .cm-row {
     margin-bottom: 0;
   }
+
+  /* ⭐⭐⭐ ROUND 36, SECOND PASS, P2-7 – THE SHOP CARD'S PORTHOLE OPENS TO 66px, AND D4's REFUSAL IS
+     THE OWNER'S TO LIFT. He looked at the shipped tablet and desktop and asked again: «а еще
+     микро-правка для аватаров тренеров в списке тренеров на планшете и десктопе: сделай картинку
+     шире пожалуйста на обоих сохраняя вертикальный размер, вписанный в карточку. Запас по ширине у
+     картинок вроде бы есть.» (05.09.)
+
+     ⚠ HE IS RIGHT ABOUT THE HEADROOM, AND D4 ABOVE WAS MEASURING THE WRONG BOX. That refusal read
+     the CARD (a two-up card at 768 is 364px against the phone's 343 – nineteen pixels, nothing to
+     spend). But this strip is a porthole onto a HEIGHT-DRIVEN portrait, so what it has to spend is
+     the PICTURE's own width – and there the surplus is large: measured in Chromium on a real career,
+     the 62px strip was throwing away 26.3-70.7px of the man at 768, 14.3-36.6 at 900, 26.3-62.7 at
+     1024 and 9.9-36.6 at 1280.
+
+     ⚠ ROUND-18 #2's MASK GEOMETRY SETS ONE CEILING, AND IT IS NOT THE BINDING ONE. The mask reaches
+     transparent exactly at the strip's right edge, so the clip is invisible only while the picture is
+     at least as wide as the strip. The shortest ordinary row anywhere at or above 768 is 126.34px
+     (measured at 900, 1000, 1023, 1100, 1200, 1280, 1440, 1600 and 1920 – the all-on-one-line card,
+     which is what a wide card produces), so a 124.34px padding box; and budget-2.webp is 162x280
+     rather than 162x264, which makes it the NARROWEST portrait for a given height, so the honest
+     supply at that row is 124.34 x 162/280 = 71.94px. That ceiling would allow 70.
+
+     ⚠⚠ 66 IS THE SECOND CEILING, AND IT IS THE TEXT COLUMN'S. `.cm-art` is `position: absolute` and
+     costs the layout nothing – but the corridor rule means `.cm-body` must move with it, and a
+     narrower text column wraps a line, which makes the CARD taller. Measured in Chromium, the largest
+     strip that leaves every card's height untouched, per viewport width:
+
+         768  →72     850  →71     1000 →67     1060 →66     1200 →67     1440 →67
+         800  →80+    900  →67     1023 →67     1100 →63     1280 →67     1920 →67
+
+     66 is free at fourteen of those fifteen widths. It costs height at ONE, 1100, where two budget
+     cards gain a line (+28.36px on a 2057px page). 63 is the only strip free at every width and it is
+     +1px, which is not a change he would see; 70 – the mask ceiling minus slack – would cost that
+     line across most of the desktop band. ⚠ AND THE WIDTHS HE NAMED ARE FREE: at 768 (frame AJ) and
+     1024 (frame AK) nothing moves at all, because those cards are narrow enough that the notes have
+     already wrapped.
+
+     ⚠ THE FLOOR MOVES WITH THE STRIP, exactly as round-21 #1 moved it for the hired card: 66px of
+     strip needs a 66 x 280/162 = 114.1px padding box, hence a 116.1px border box, and 118 is that
+     rounded up. It binds on nothing that ships – 126.34 is the shortest row measured, 8.34px above it
+     – so the floor changes no card's height either. The image keeps `height: 100%; width: auto`:
+     nothing is scaled, stretched or cropped («сохраняя вертикальный размер, вписанный в карточку»),
+     the window simply clips less.
+
+     ⚠ THE HIRED ROW STAYS AT 78. docs/specs/coach-match-edge.md §4's anti-shopping rule says an
+     unhired card may not be made more attractive than the one she has, and 66 < 78 keeps that true;
+     78 is also the owner's own round-21 number and he did not ask for it again.
+
+     ⚠⚠ ONE CLASS HEAVIER THAN THE BASE RULES, FOR THE REASON PHASE 3 RECORDS BELOW: a media query
+     adds NO specificity, so a bare `.cm-art` here would tie with `.cm-art` above and be settled by
+     source order – which a browser and happy-dom resolve in OPPOSITE directions. `.tier-block .cm-art`
+     wins in both, and still loses to `.cm-row.current .cm-art`, which is what reserves the hired
+     window. ⚠ The hired row's floor is RESTATED for the same reason and is not a duplicate:
+     `.cm-row.current` is (0,2,0) and so is `.tier-block .cm-row`, so without this line the 132 would
+     be a coin flip between the two engines.
+
+     tests/component/round18-coach.test.ts holds all four numbers at 375, 767, 768, 1024 and 1280 and
+     fails on any one of them alone. */
+  .tier-block .cm-row {
+    min-height: 118px;
+  }
+  .tier-block .cm-row.current {
+    min-height: 132px;
+  }
+  .tier-block .cm-art {
+    width: 66px;
+  }
+  .tier-block .cm-body {
+    /* 66 (the strip) + the same 12 of air every other width keeps. The pair is tied by a test, not
+       by this comment – see `.cm-body` above. Move one, move the other. */
+    margin-left: 78px;
+  }
 }
 
 /* ⭐⭐ ROUND 36 PHASE 3 – «2–3 В РЯД, С ПЕРЕНОСОМ» AS A RULE RATHER THAN AS A COUNT. The owner, on
