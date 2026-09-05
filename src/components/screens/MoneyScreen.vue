@@ -2374,9 +2374,20 @@ function shopRowCornerAction(row: ShopRowView): boolean {
                `shopRowCornerAction` in the script block, which is where Cyrillic is allowed.
                ⚠⚠ AND THE NOTE IS AN HTML COMMENT RATHER THAN A `//` ONE INSIDE THE BINDING, WHICH
                IS A RULE AND NOT A STYLE. `tests/coach-voice.test.ts` (R15-7, «no surface guesses a
-               professional's gender») strips `<!-- -->` from a template before it scans and cannot
-               see a `//` line inside an expression - so the first draft of this slice put a prose
-               note in the class array, wrote the word it forbids, and reddened that file by name. -->
+               professional's gender») strips every HTML comment out of a template before it scans,
+               and cannot see a `//` line inside an expression - so the first draft of this slice put
+               a prose note in the class array, wrote the word it forbids, and reddened that file by
+               name.
+               ⚠⚠ AND NEITHER HTML COMMENT DELIMITER MAY BE SPELLED INSIDE ONE. Round 36 P2-1, and
+               it is this comment's own history rather than a precaution: the paragraph above used to
+               QUOTE the opening and closing delimiters in order to name the thing it is about. HTML
+               comments do not nest, so that quoted terminator closed this comment two and a half
+               lines early and what followed became a TEXT NODE - inside the `v-for` over families,
+               so the rest of that paragraph rendered under EVERY family heading on EVERY page of
+               the shop, which is where the owner found it. Name them in words, as here.
+               `tests/template-comment-terminators.test.ts` parses every component and forbids the
+               shape, and the mounted arm in `tests/component/round36-pass2-shop-recap.test.ts`
+               reads the six shop pages back. -->
           <Card
             v-for="row in shopRowsOf(family.key)"
             :key="row.id"
