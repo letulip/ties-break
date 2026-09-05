@@ -2718,13 +2718,66 @@ button.note-card:active:not(:disabled) {
   }
 }
 
-/* ⚠ THE COACH'S PORTRAIT IS DELIBERATELY LEFT ALONE, and that is a decision rather than an
-   oversight. `.coach-body`'s own note above names the fix a wider card would seem to want – «bound
-   the STRIP's width so the picture stops tracking the height» – and it is NOT taken: the portrait is
-   `height: 100%; width: auto` because the owner asked for the whole frame with no vertical crop
-   (A2c/d, 28.07), and a `max-width` on the strip is a crop by another name. The mask that fades him
-   into the card is what carries the overlap on a phone today, and it carries it here for the same
-   reason. Measured after #7 rather than assumed – see the ledger. */
+/* ⚠ ROUND 36 LEFT THE COACH'S PORTRAIT ALONE, ON PURPOSE, AND ROUND 37 #1 BELOW REVERSES EXACTLY
+   THAT ONE CONCLUSION. The paragraph is kept because its reasoning is still the reasoning: the
+   portrait is `height: 100%; width: auto` because the owner asked for the whole frame with no
+   vertical crop (A2c/d, 28.07), so the fix a wider card seems to want – «bound the STRIP's width so
+   the picture stops tracking the height» – is a change to the export's geometry and was not an
+   agent's to take. What has changed is that he has now asked for it. Read the block below with this
+   one; on the phone, where nothing was asked and nothing moved, this note still stands as written:
+   the mask that fades him into the card is what carries the overlap there. */
+
+/* ═════════════════════════════════════════════════════════════════════════════════════════════════
+   ⭐⭐⭐ ROUND 37 #1 – THE LETTERS COME OFF THE PORTRAIT, AND THE STRIP IS GIVEN A WIDTH AT LAST
+   ═════════════════════════════════════════════════════════════════════════════════════════════════
+   «Coach Note на home desktop tablet все буквы убрать с картинки и сдвинуть направо с небольшим
+   отступом от самой картинки (примерно как на карточках тренеров), место есть, станет аккуратнее»
+
+   ⚠ THIS IS THE FIX THIS FILE HAS BEEN NAMING AND REFUSING TO TAKE. `.coach-body`'s own note above
+   ends «If Home is ever asked to clear its portrait for real, the fix is the one #2 used next door:
+   bound the STRIP's width so the picture stops tracking the height. That is a change to the export's
+   geometry and needs the owner, so it is not taken here.» He is the owner and this is the ask.
+
+   THE MODEL IS HIS OWN – «примерно как на карточках тренеров» – and it is `.cm-art` / `.cm-body` in
+   src/style.css, round-18 #2. There the strip is 62px full stop and the text column starts at 74:
+   62 plus the 12px corridor he asked for next door as «10-15 пикселей». Here the strip is 84 and the
+   column starts at 96 – the same 12, and the same guarantee rather than a hope, because a strip with
+   a width cannot grow into the corridor.
+
+   WHY 84 AND NOT A NUMBER OF ITS OWN. The portrait is height-driven over a 162x264 master, so at
+   this band's 138px card it measures 136 x 83.45 – MEASURED IN CHROMIUM at 768, 900, 1024 and 1280,
+   where it comes out 83.45px at all four. 84 is that number at the next whole pixel: the picture the
+   player has today, to half a pixel, and the first width at which it stops being a function of how
+   many lines the quote wraps to.
+
+   ⚠ NOTHING VISIBLE IS CUT, AND THE MASK IS WHY – the same argument round-18 #2 makes. The mask's
+   stops are percentages of THIS box, so it reaches transparent at 96% of 84 = 80.64px, and whatever
+   the clip takes past that is already fully transparent. A taller card enlarges the man and fades
+   him a touch earlier against his own width; it can never draw a hard edge down his side.
+
+   MEASURED IN CHROMIUM, card-relative, at 768 / 900 / 1024 / 1280 – the same four numbers at all
+   four, because the card's floor is what sizes the strip:
+
+       before   picture's right edge 84.45   first glyph 66.00   –18.45   the letters are ON him
+       after    picture's right edge 85.00   first glyph 108.00  +23.00   12 corridor + 11 padding
+
+   (85 rather than 84 because the strip starts past the card's 1px hairline; the body's own
+   `padding: 13px 11px 11px` is the other 11.)
+
+   ⚠ AND NOTHING BELOW 768 MOVES. The phone and the 520 column keep `margin-left: 54px` over an
+   unbounded strip, which is round-18 #1's restored export geometry – 54 -> 66 -> 80 -> 54, and the
+   ledger for that chase is at `.coach-body` above. Measured at 375 and 520 before and after: every
+   box identical to the pixel. */
+@media (min-width: 768px) {
+  .coach-art {
+    width: 84px;
+    overflow: hidden;
+  }
+
+  .coach-body {
+    margin-left: 96px;
+  }
+}
 
 /* --- 4. what stays below the grid ---------------------------------------------------------------
    The tier ladder and the news feed keep their markup (and every rule that pins it) and only change
