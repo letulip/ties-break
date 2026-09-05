@@ -464,6 +464,16 @@ describe('round 34 #14 – and it fits a 375x667 phone (round-20 #3)', () => {
 // ⚠ AND ONE MUTATION WENT GREEN WHEN IT SHOULD NOT HAVE, recorded because it was mine: `width: 88%`
 // inserted ABOVE the tablet width in the SAME rule changes nothing, because the later declaration
 // wins. A mutation has to be a replacement here, not an addition.
+//
+// ⭐⭐⭐ ROUND 37 #3 (05.09) – AND THE DESKTOP IS NOW MEASURED IN THIS SAME BLOCK, because it is now
+// the same rule. The owner: «Season - давай сделаем сетку на 2 карточки desktop (как на tablet) по
+// дефолту, а те недели, где 3 карточки будет и больше (их вроде не очень много) будут иметь листалки
+// (мы же этот функционал реализовали уже?)» – so phase 3's `@media (min-width: 1024px)` block is gone
+// and the widths here carry on up. Four arms above are RE-AIMED (each says so and why, at the arm),
+// and the `R37-3` pair below is new.
+// ⚠ MUTATION-VERIFIED against the unfixed tree – phase 3's whole 1024 block put back reddens exactly
+// six arms: the four re-aimed ones and both `R37-3` arms, while every tablet and phone arm in this
+// file stays GREEN. That asymmetry is the item's own rule 4: nothing below 768 moved.
 describe('round 36 phase 2 – a week is two cards wide on a tablet, and the third is a swipe away', () => {
   beforeEach(() => {
     setActivePinia(createPinia())
@@ -571,20 +581,28 @@ describe('round 36 phase 2 – a week is two cards wide on a tablet, and the thi
   })
 
 
-  it('⭐ a desktop column is a THIRD of the row, and every week takes one', () => {
-    const strips = stripWidths(DESKTOP).filter((s) => s.cards <= 3)
-    expect(strips.length, 'the fixture must draw a week of three or fewer, or this measures nothing')
+  // ⚠ RE-AIMED BY R37-3 – THIS ARM PINNED THE EXACT SHAPE HIS ITEM CHANGES, so it is re-aimed and
+  // not deleted. It read «a desktop column is a THIRD of the row» and asserted `1/3 - 8/room` with
+  // «three fill the row exactly» beside it, which was phase 3's answer off frame AE. His ruling of
+  // 05.09 replaces the third with the tablet's half – «сетку на 2 карточки desktop (как на tablet) по
+  // дефолту» – so the same claim is asserted at the new number: ONE COLUMN WIDTH FOR EVERY WEEK is
+  // D2 untouched, and what moved is only what a column IS at 1024 and up.
+  it('⭐ a desktop column is HALF the row – the tablet\'s own – and every week takes one', () => {
+    const strips = stripWidths(DESKTOP).filter((s) => s.cards <= 2)
+    expect(strips.length, 'the fixture must draw a week of two or fewer, or this measures nothing')
       .toBeGreaterThan(0)
     for (const strip of strips) {
-      // D2's rule one rung up: one COLUMN width for every week, so a week of one, two or three all
-      // give each card a third of the row and three of them fill it exactly. AE draws its own
-      // single-card weeks W3 and W5 at exactly that.
-      expect(strip.frac, 'each card takes a third of the row').toBeCloseTo(1 / 3 - 8 / strip.room, 2)
-      expect(3 * strip.frac + 24 / strip.room, 'and three fill the row exactly').toBeCloseTo(1, 2)
+      // D2's rule, and now at the SAME rung as the tablet's: a week of one card and a week of two
+      // both give each card half the row, and the pair fills it exactly with nothing hanging past.
+      expect(strip.frac, 'each card takes half the row').toBeCloseTo(0.5 - 6 / strip.room, 2)
+      expect(2 * strip.frac + 12 / strip.room, 'and two fill the row exactly').toBeCloseTo(1, 2)
     }
   })
 
-  it('⭐ …and a non-tournament week takes that same third, as AE draws it', () => {
+  // ⚠ RE-AIMED BY R37-3 – same reason as the arm above: it asserted the non-tournament week at the
+  // desktop's THIRD, which is the number his item moves. D2 itself is untouched – a training,
+  // off-season, exam or vacation week still takes exactly one column, whatever a column is.
+  it('⭐ …and a non-tournament week takes that same half, one column like every other week', () => {
     setViewport(DESKTOP)
     const { snap } = careerWithAStackedWeek()
     useGameStore().snapshot = snap
@@ -595,8 +613,8 @@ describe('round 36 phase 2 – a week is two cards wide on a tablet, and the thi
       const room = availableWidth(card.element, DESKTOP)
       const declared = getComputedStyle(card.element).width
       expect(declared, 'the card declares no width at 1280').not.toBe('')
-      expect(fracOfRow(declared, room), 'a training or off-season week is a third of the row').toBeCloseTo(
-        1 / 3 - 8 / room,
+      expect(fracOfRow(declared, room), 'a training or off-season week is half the row').toBeCloseTo(
+        0.5 - 6 / room,
         2,
       )
     }
@@ -611,7 +629,18 @@ describe('round 36 phase 2 – a week is two cards wide on a tablet, and the thi
   // element the rule is read back off is the app's own card in the app's own strip, one sibling
   // deeper. This is the exact case the specificity ladder exists for – at three cards the TABLET's
   // «shrink so the third shows» rule is still matching, and the desktop's must outrank it.
-  it('⭐ three fit on a desktop – and the tablet\'s shrink rule does not win at three', () => {
+  // ⚠⚠ RE-AIMED BY R37-3, AND THIS IS THE ARM HIS ITEM IS ABOUT. It was «three fit on a desktop – and
+  // the tablet's shrink rule does not win at three», which asserted the exact behaviour he asked to
+  // remove: «давай сделаем сетку на 2 карточки desktop (как на tablet) по дефолту, а те недели, где 3
+  // карточки будет и больше … будут иметь листалки». So the same grown strip is measured for the
+  // opposite verdict – at three the tablet's shrink rule is now the DESKTOP's rule too, and what it
+  // leaves past the second card is the edge the pager pages to.
+  //
+  // ⚠ THE STRIP IS STILL GROWN RATHER THAN SEARCHED FOR, for the reason the block below keeps: the
+  // golden save's stacks are 2, 4 and 2 deep, so a `.filter(s => s.cards === 3)` arm would assert
+  // nothing for ever. `:has(> .event-card:nth-child(3))` is a live selector over the real cascade,
+  // so the element the rule is read back off is the app's own card in the app's own strip.
+  it('⭐ three do NOT fit on a desktop any more – the tablet\'s shrink rule is the desktop\'s', () => {
     setViewport(DESKTOP)
     const { snap } = careerWithAStackedWeek()
     useGameStore().snapshot = snap
@@ -623,46 +652,123 @@ describe('round 36 phase 2 – a week is two cards wide on a tablet, and the thi
     expect(strip, 'the fixture must draw a two-card strip to grow').toBeTruthy()
     const cards = strip!.findAll('.event-card')
     const room = availableWidth(cards[0].element, DESKTOP)
-    expect(fracOfRow(getComputedStyle(cards[0].element).width, room), 'two take two thirds').toBeCloseTo(
-      1 / 3 - 8 / room,
+    expect(fracOfRow(getComputedStyle(cards[0].element).width, room), 'two take the whole row').toBeCloseTo(
+      0.5 - 6 / room,
       2,
     )
 
     // GROW IT TO THREE.
     strip!.element.appendChild(cards[0].element.cloneNode(true))
+    const three = fracOfRow(getComputedStyle(cards[0].element).width, room)
+    expect(three, 'a third card shrinks the strip to the tablet\'s two-and-a-sliver').toBeLessThan(0.47)
+    expect(three, 'and it is still nearly half the row, not a third of it').toBeGreaterThan(0.4)
+    expect(2 * three, 'two of the three still fill the row').toBeGreaterThan(0.8)
+    // ⭐⭐ AND THIS IS THE PAGER'S OWN CONDITION, WRITTEN OUT. `pagerEnds` draws the arrows when
+    // `scrollWidth - clientWidth > 1`, and three cards plus their two gutters ARE the strip's scroll
+    // width: past 1 they overflow the row and the pager is on the screen. happy-dom has no layout, so
+    // the overflow is derived from the declared widths rather than read off a box – the browser reads
+    // the same fact off real boxes in `e2e/parity.spec.ts`'s honest half.
+    expect(
+      3 * three + 24 / room,
+      'three cards and two gutters must be MORE than the row, or a three-card week has nothing to page',
+    ).toBeGreaterThan(1)
+
+    // AND TO FOUR, which on a desktop is now the same shape rather than a shape of its own.
+    strip!.element.appendChild(cards[0].element.cloneNode(true))
     expect(
       fracOfRow(getComputedStyle(cards[0].element).width, room),
-      'three fit, so each still takes a third of the row',
-    ).toBeCloseTo(1 / 3 - 8 / room, 2)
-    expect(
-      3 * fracOfRow(getComputedStyle(cards[0].element).width, room) + 24 / room,
-      'and three fill the row exactly',
-    ).toBeCloseTo(1, 2)
-
-    // AND TO FOUR, where the sliver is the affordance again.
-    strip!.element.appendChild(cards[0].element.cloneNode(true))
-    const four = fracOfRow(getComputedStyle(cards[0].element).width, room)
-    expect(3 * four + 24 / room, 'a fourth card leaves an edge showing past the third').toBeLessThan(0.95)
-    expect(3 * four, 'and three still fill most of the row').toBeGreaterThan(0.85)
+      'four is three-or-more, so the desktop no longer has a fourth-card width of its own',
+    ).toBeCloseTo(three, 3)
     w.unmount()
   })
 
-  it('⭐ …and four or more still leaves an edge to swipe at, so no pager is needed', () => {
+  // ⚠ RE-AIMED BY R37-3 – it was «four or more still leaves an edge to swipe at, so no pager is
+  // needed», and «no pager is needed» is exactly the clause his item retires: a desktop week of four
+  // now overflows and pages, the same as at 768. The edge assertion is kept because the edge is kept.
+  it('⭐ …and four or more is that same two-and-a-sliver, so it pages like the tablet', () => {
     const strips = stripWidths(DESKTOP)
     const deep = strips.filter((s) => s.cards >= 4)
     expect(deep.length, 'the fixture must draw a week of four, which is the case under test')
       .toBeGreaterThan(0)
     for (const strip of deep) {
       expect(
-        3 * strip.frac + 24 / strip.room,
+        2 * strip.frac + 12 / strip.room,
         `a ${strip.cards}-card week gives each card ${(strip.frac * 100).toFixed(1)}% of the row – ` +
-          'three of these plus two gutters must leave a sliver, or there is nothing to swipe at',
+          'two of these plus a gutter must leave a sliver, or there is nothing to swipe at',
       ).toBeLessThan(0.95)
-      // THREE CARDS VISIBLE, NOT FOUR: the trio plus its gutters still takes most of the row.
-      expect(3 * strip.frac, 'three cards still fill the row').toBeGreaterThan(0.85)
+      // TWO CARDS VISIBLE, NOT THREE: the pair plus its gutter still takes most of the row.
+      expect(2 * strip.frac, 'two cards still fill the row').toBeGreaterThan(0.8)
+      // ...and it overflows, which is what puts the arrows there.
+      expect(
+        strip.cards * strip.frac + (strip.cards - 1) * (12 / strip.room),
+        'a four-card week must overflow the desktop row, or his «листалки» has nothing to page',
+      ).toBeGreaterThan(1)
     }
   })
 
+
+  // ⭐⭐⭐ ROUND 37 #3 – THE ITEM ITSELF, AND IT IS ONE CLAIM ASKED AT BOTH ENDS OF THE DESKTOP BAND.
+  //
+  // The owner, off the stand on 05.09: «Season - давай сделаем сетку на 2 карточки desktop (как на
+  // tablet) по дефолту, а те недели, где 3 карточки будет и больше (их вроде не очень много) будут
+  // иметь листалки (мы же этот функционал реализовали уже?)»
+  //
+  // ⚠⚠ THE TWO ARMS ABOVE MEASURE 1280 ONLY, WHICH IS `DESKTOP`. The rule they read is written at
+  // `min-width: 768px` now, so the width that could still break is the FIRST desktop width – 1024,
+  // where phase 3's block used to start and where the column is at its narrowest (measured in
+  // Chromium: 772px of row at 1024 against 868px at 900, because the rail takes its width there).
+  // A desktop block left behind at 1024 would pass every arm above and fail here, which is exactly
+  // the failure this arm is for.
+  //
+  // ⚠ AND IT ASSERTS BOTH HALVES OF HIS SENTENCE ON ONE MOUNT: two cards fill the row exactly (so
+  // «сетка на 2 карточки» is what a common week draws, and `pagerEnds` finds nothing past the edge),
+  // and three overflow it (so «листалки» has something to page). One without the other is satisfied
+  // by a screen that pages everything or by one that pages nothing.
+  const DESKTOP_1024 = { width: 1024, height: 800 }
+  for (const [name, vp] of [['1024', DESKTOP_1024], ['1280', DESKTOP]] as const) {
+    it(`⭐⭐⭐ R37-3 – at ${name} a week is TWO cards, and a third overflows the row into the pager`, () => {
+      const pairs = stripWidths(vp).filter((s) => s.cards === 2)
+      expect(pairs.length, 'the fixture must draw a two-card week, or this measures nothing').toBeGreaterThan(0)
+      for (const strip of pairs) {
+        expect(strip.frac, `at ${name} a two-card week gives each card half the row`).toBeCloseTo(
+          0.5 - 6 / strip.room,
+          2,
+        )
+        expect(
+          2 * strip.frac + 12 / strip.room,
+          `at ${name} the pair must fill the row EXACTLY – anything past it and the common week ` +
+            'grows a pager his ruling took off the screen',
+        ).toBeCloseTo(1, 2)
+      }
+
+      // ...and now the same strip with a third card in it, read back off the real cascade.
+      setViewport(vp)
+      const { snap } = careerWithAStackedWeek()
+      useGameStore().snapshot = snap
+      const w = mount(SeasonScreen, { global: { stubs: { teleport: true } }, attachTo: document.body })
+      const strip = w
+        .findAll('.week-stack')
+        .filter((s) => s.classes().includes('swipeable'))
+        .find((s) => s.findAll('.event-card').length === 2)
+      expect(strip, 'the fixture must draw a two-card strip to grow').toBeTruthy()
+      const cards = strip!.findAll('.event-card')
+      const room = availableWidth(cards[0].element, vp)
+      strip!.element.appendChild(cards[0].element.cloneNode(true))
+      const three = fracOfRow(getComputedStyle(cards[0].element).width, room)
+      expect(
+        3 * three + 24 / room,
+        `at ${name} three cards and two gutters must be MORE than the row – a three-card week that ` +
+          'fitted whole is the desktop grid his item replaced, and it would draw no pager',
+      ).toBeGreaterThan(1)
+      expect(
+        2 * three + 12 / room,
+        `and at ${name} two of the three are still on screen with a sliver of the third – the ` +
+          'affordance the phone and the tablet already have',
+      ).toBeLessThan(1)
+      expect(2 * three, `and those two still fill most of the row at ${name}`).toBeGreaterThan(0.8)
+      w.unmount()
+    })
+  }
 
   it('⚠ and the phone is untouched – the same strip is still 88% of ONE card there', () => {
     // The other half of «формат карточки … без изменений», and the guard on rule 4 of this phase:

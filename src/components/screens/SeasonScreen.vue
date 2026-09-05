@@ -2412,6 +2412,35 @@ function closeExhibition(): void {
    is explicit - «Сетки вместо каруселей … Свайп-ряды и стрелки ‹ › были пробой и отвергнуты» - and
    he asked for the swipe anyway, on the screen he called his hardest case. His ruling wins; the
    divergence is the first row in the decisions document. */
+
+/* ⭐⭐⭐ ROUND 37 #3 – AND SINCE 05.09 THIS BLOCK IS THE DESKTOP'S TOO. The owner, off the stand:
+   «Season - давай сделаем сетку на 2 карточки desktop (как на tablet) по дефолту, а те недели, где
+   3 карточки будет и больше (их вроде не очень много) будут иметь листалки (мы же этот функционал
+   реализовали уже?)»
+
+   ⭐ THE ANSWER TO HIS QUESTION IS YES, WHICH IS WHY THIS IS A GRID CHANGE AND NOT A NEW MECHANISM.
+   The JS pager with arrows shipped in round 36 phase 5 (`composables/weekPager.ts`) and phase 7 made
+   it draw them only where the strip overflows – his own «показываем только если есть что листать».
+   So the desktop stops fitting three cards across and takes the tablet's two, and a week of three or
+   more becomes a paged strip under the rule that was already there. NOTHING IN THE PAGER MOVED.
+
+   ⚠ SO THE `@media (min-width: 1024px)` BLOCK THAT USED TO FOLLOW IS GONE, RULES AND ALL. It held
+   nothing but four widths making the desktop column a THIRD of the row – a third for every week, a
+   third again at three cards so the tablet's shrink rule could not win, 29.333% at four or more, and
+   a third for a week that is not a tournament. Deleting it is what «как на tablet» spells: with no
+   rule at 1024 the widths in THIS block simply carry on up, so the desktop IS the tablet by
+   construction rather than by a second copy of one number.
+
+   ⚠⚠ «ИХ ВРОДЕ НЕ ОЧЕНЬ МНОГО» IS A CLAIM AND IT WAS MEASURED, BECAUSE IT DECIDES WHETHER THIS MAKES
+   THE COMMON WEEK BETTER OR WORSE. Of the weeks that draw a card at all, three or more is 11.6% on
+   the golden save's season (24 weeks of one card, 14 of two, 4 of three, 1 of four), 3.2% on `pro`,
+   20% on `sinking`, 23.1% on `ending` – the two busiest careers in the fixture set – and 0% on every
+   career still below the ITF rung. He is right: the common week is one card or two.
+
+   ⚠ AND THE NUMBER THAT SAYS THIS IS NOT TASTE: the desktop column is NARROWER than the tablet's
+   (772px at 1024 against 868px at 900 – the rail takes its width there), so the old third was 249px
+   per card, SMALLER THAN THE PHONE'S OWN CARD at 375 (301.8px). Two across makes it 380px at 1024
+   and 468px at 1280. Measured in Chromium on `sinking`, before and after. */
 @media (min-width: 768px) {
   /* The plain wrapper becomes a row too, so the single-card week and the two-card week are the same
      box with the same arithmetic. `.swipeable` still adds the overflow and the snapping. */
@@ -2450,6 +2479,10 @@ function closeExhibition(): void {
      nothing showing past the second - and the phone's affordance is precisely that something shows.
      So a stack of three or more shrinks by the same 12% the phone gives up: two cards and a sliver
      of the third, «свайп для 3+» with an edge to swipe at.
+     ⭐⭐ ROUND 37 #3 – AND THIS IS NOW THE RULE THAT PUTS THE ARROWS ON A DESKTOP. A strip shrunk here
+     overflows its row by construction (three of these plus two gutters come to 132% of it), and
+     phase 7 draws the pager exactly where a strip overflows – so «те недели, где 3 карточки будет и
+     больше … будут иметь листалки» needs nothing added to the pager, only this width to reach 1024.
      ⚠ `:has()` rather than a class from the template, because this is a fact about the CSS box and
      not about the week - the template already says how many cards there are by rendering them.
      `.ob-select-wrap:has(...)` in OnboardingWizard.vue is the same idiom, already shipped. */
@@ -2465,53 +2498,26 @@ function closeExhibition(): void {
   }
 }
 
-/* ⭐⭐⭐ ROUND 36 PHASE 3 – THE DESKTOP WEEK: THREE FIT, SO THREE ARE SHOWN. The owner, on frame
-   AE-season-desktop-1024.png: «как на планшете, но могут влезть три карточки; если не влезают -
-   стрелочная листалка. Формат карточки, оформление и кнопки - мобильные.» AE draws exactly that:
-   W1's three tournaments stand across the row, and W3 and W5 - one card each - take one third of it
-   and stop, which is the same «1 неделя = 1 ряд» answer phase 2 shipped at 768.
+/* ⭐⭐⭐ ROUND 36 PHASE 3 BUILT A DESKTOP WEEK OF THREE CARDS HERE, AND ROUND 37 #3 TOOK IT OUT.
+   Phase 3 read frame AE-season-desktop-1024.png with him – «как на планшете, но могут влезть три
+   карточки; если не влезают - стрелочная листалка» – and shipped a `@media (min-width: 1024px)`
+   block of four widths that made the desktop column a THIRD of the row. He played it and asked for
+   the tablet's two instead; his sentence, the measurement behind it and what «как на tablet» spells
+   in CSS are all in the ⭐⭐⭐ ROUND 37 #3 paragraph above the 768 block, which is now the only place
+   on this screen a card width is written.
 
-   ⚠⚠ AND THERE IS NO ARROW PAGER, WHICH IS A REFUSAL WITH A REASON RATHER THAN AN OVERSIGHT. His
-   sentence makes it the fallback for «if they do not fit», and past three they still do: the strip
-   shrinks by the same 12% the phone and the tablet give up, so a fourth card's own edge is showing
-   and the row swipes. Arrows would also be TWO NEW CONTROLS PER WEEK on a desktop and on no other
-   format, which fails «ничего нового по идее не должно появиться» in e2e/parity.spec.ts by name -
-   the same collision phase 2's D9 records about the season strip. It is a row in
-   docs/specs/responsive-decisions-2026-09.md.
+   ⚠ SO THERE IS DELIBERATELY NO `@media (min-width: 1024px)` HERE, AND THAT IS THE POINT RATHER THAN
+   AN ABSENCE. Phase 3's own specificity ladder – `.event-cards.event-cards`, and one class heavier
+   again for four-or-more – existed only so a desktop rule could outrank the tablet rule it repeated.
+   With the desktop inheriting the tablet outright there is nothing to outrank: one rule per shape,
+   no ladder, and no second copy of a number to drift.
 
-   ⚠ THE SELECTORS REPEAT `.event-cards` TO WIN ON SPECIFICITY, and that is phase 2's own lesson
-   applied forwards rather than a tic. A media query adds NO specificity, so «later block, wider
-   screen» is not a rule that wins anything - and at equal specificity happy-dom keeps the FIRST
-   declaration where a browser keeps the last, so a tie is a layout that works in Chromium and does
-   not exist in the mounted gate. Each rule here is written exactly one class heavier than the 768
-   rule it has to beat, and the four-or-more rule one heavier again than the three-or-more one, so
-   nothing on this screen depends on source order in either engine. */
-@media (min-width: 1024px) {
-  /* A third of the row, less two thirds of the one gutter each card carries - the same arithmetic
-     as the tablet's half, and spelled the same way for the same reason (happy-dom drops a `calc`
-     that divides a parenthesised subexpression, so `calc((100% - 24px) / 3)` is a rule with no
-     test). ONE COLUMN WIDTH FOR EVERY WEEK is D2's rule carried up a rung: at 768 a column is half
-     the row, at 1024 it is a third, and AE draws its single-card weeks W3 and W5 at exactly that. */
-  .event-cards.event-cards .week-stack > .event-card,
-  .event-cards.event-cards .week-stack.swipeable > .event-card {
-    width: calc(33.333% - 8px);
-  }
-  /* THREE FIT. The tablet's «shrink so the third shows» rule is aimed at three-or-more and would
-     otherwise still be the winning rule here, at a width where three no longer need the swipe. */
-  .event-cards.event-cards .week-stack.swipeable:has(> .event-card:nth-child(3)) > .event-card {
-    width: calc(33.333% - 8px);
-  }
-  /* FOUR OR MORE, and now the sliver is the affordance again: 88% of the row across three cards and
-     their two gutters, which leaves 114px of the fourth showing at 1280. */
-  .event-cards.event-cards.event-cards
-    .week-stack.swipeable:has(> .event-card:nth-child(4))
-    > .event-card {
-    width: calc(29.333% - 8px);
-  }
-  .event-cards.event-cards .week-card {
-    width: calc(33.333% - 8px);
-  }
-}
+   ⚠ ONE REFUSAL PHASE 3 RECORDED HERE IS NOW SPENT, AND IT SHOULD BE READ AS SPENT. It argued that
+   arrows on a desktop and on no other format would be «two new controls» failing
+   `e2e/parity.spec.ts` by name – which was true in phase 3, and stopped being true in phase 5, when
+   the pager shipped on every device, and in phase 7, which drew it by overflow at every width and
+   bought the stated exemption that pays for it. A three-card week paging at 1024 is that same one
+   mechanism reaching one more width, not a control the desktop alone has. */
 
 /* The export's list gutter is 14px of the screen; ours already has 16px from #app, so the cards
    simply stop being inset a second time by a panel. */

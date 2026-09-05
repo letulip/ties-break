@@ -1469,8 +1469,8 @@ test.describe('her identity block is exempt – and the exemption is bounded', (
 
 /** Every week row on the Season screen as the browser actually measures it – the overflow the ruling
  *  turns on, and the arrows it turns on and off. Read from the live boxes, never from the stylesheet:
- *  a card width of `88%` / `50%` / `calc(33.333% - 8px)` is exactly the thing that must not be
- *  re-derived here, or this arm would be asserting the rule against a copy of itself. */
+ *  a card width of `88%` / `calc(50% - 6px)` / `calc(44% - 6px)` is exactly the thing that must not
+ *  be re-derived here, or this arm would be asserting the rule against a copy of itself. */
 async function weekRowsAt(page: Page): Promise<
   { cards: number; overflow: number; arrows: string[]; pagers: number }[]
 > {
