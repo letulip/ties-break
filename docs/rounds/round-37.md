@@ -259,12 +259,26 @@ He walked the stand at `cec32a1a` and answered the open decisions as he went.
 - [>] **14. «на вертикальном рейле навигации на десктопе слева сделаем такой же отступ, как и справа
   (меньше то есть)»** – build. The rail's right padding is 12px and its left is
   `12px + var(--app-pad-x)`; he wants them equal at 12.
-  ⚠ **The asymmetry is deliberate and its reason is written at the rule**, so this is a reversal
-  rather than a typo being corrected: the rail is pulled out to the frame's own edge by a negative
-  left margin – «flush to the frame's own edge rather than inset by the frame's gutter, which is
-  where AC puts it» – and the gutter is then re-spent as the rail's own left padding so the LABELS
-  keep their inset. Cutting the padding moves every label left by `--app-pad-x`, which is what he is
-  asking for; it is worth saying that it is what the change does.
+  ⚠ The asymmetry was deliberate and its reason is written at the rule: the rail is pulled out to the
+  frame's own edge by a negative left margin – «flush to the frame's own edge rather than inset by
+  the frame's gutter, which is where AC puts it» – and the gutter is then re-spent as the rail's own
+  left padding so the LABELS keep their inset.
+
+  ⭐⭐ **HIS RULING, 06.09, WITH A SCREENSHOT – AND IT IS BIGGER THAN THE ITEM:** «любые отрицательные
+  отступы - это антипаттерн» and «текущий отступ слева визуально больше отступа справа». Both halves
+  are right, and the second is the visible symptom of the first.
+
+  **So the fix is not to equalise two paddings; it is to remove the reason the negative margin
+  exists.** The mechanism, found by reading: `src/style.css:693` puts the frame's gutter on `#app`
+  itself – `padding: var(--app-pad-top) var(--app-pad-x) var(--app-pad-bottom)` – and on the desktop
+  `#app` IS the grid container (`:761`). So the rail, a grid item, is born inside a padding that was
+  meant for the reading column, and `:813`'s negative margin exists only to climb back out of it.
+  Move the gutter off the grid container and onto the content column and the rail is flush with no
+  negative anything, its own padding can be a symmetric 12, and the reading column keeps its inset.
+
+  ⚠ **The general principle he stated is worth carrying past this item**: a negative margin used to
+  escape an ancestor's padding is a sign the box is in the wrong container, and the honest fix is the
+  container, not the offset.
 
 - [>] **15. «при прокручивании страницы вниз на десктоп под рейлом навигации остается пустое
   пространство 50-60 пикселей примерно, проверь что это пожалуйста и желательно этот дефект убрать»**
