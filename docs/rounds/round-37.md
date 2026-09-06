@@ -129,3 +129,36 @@ What it is not is a build step: it runs once when the logo is redrawn, never in 
 CI, and `art-src/` is gitignored by design so a fresh clone never has a master. The old message said
 only «no logo source found», which reads as breakage. It now says where the file goes, why its
 absence is normal, and what to run instead to check what ships.
+
+---
+
+## The follow-ups he asked for on 06.09, after reading the wave
+
+| his instruction | what shipped |
+| --- | --- |
+| «country проверяется на форму, а не по списку – мне кажется это надо исправить, у меня в планах было расширить список стран вообще» | The playable CODES are a rule and moved to `src/shared/countries.ts`, which imports nothing; the names and the flags stay presentation in `src/composables/countries.ts` and **derive their keys from it**. Adding a country is one line plus its name, and THREE things object if the name is forgotten – `vue-tsc` in both directions and a runtime test. |
+| «а зачем нам такие длинные имена? мы же не твиттер… например 20» | 200 → **20 per field**. The measurement that answers his own question: the cap was per field, not for the pair, and the game's own pool tops out at `Camila` (6) of 44 first names and `Ostergaard` (10) of 211 surnames. Four sites now say one number. |
+| «npm run icons… если он избыточен или не нужен нам, то зачем нам этот функционал?» | Kept – it holds the recipe – and its failure now says where the master goes, why its absence is normal, and what to run instead. |
+| «добавь пожалуйста [axe]… нам нужна вся возможная уверенность» | 23 surfaces, `wcag2a` + `wcag2aa`. **19 of 23 clean**; the four failures are ONE defect – `--ink-dim` at 4.388:1 against AA's 4.5. Baselined with the ratio, the elements and the prescription, not papered over. +22.9 s in CI, in the existing job. |
+| «если функции удаляются, то и тесты надо чистить» | Four pins re-aimed, three of them proved in BOTH arms – the same mutation passes the old pin and fails the new one. |
+
+⚠⚠ **Two things this batch found that nobody was looking for, and both are gate holes:**
+
+1. **`scripts/engine-purity.mjs` enforced half of invariant 1.** It banned `vue`/`pinia`/`@vueuse` and
+   said nothing about a zone file importing `src/components`, `src/composables`, `src/stores` or
+   `src/viz` – the same coupling, one import away. An agent trying to close the country hole PROVED
+   it: the gate printed `ok` on the exact import. **Extended and mutation-verified.**
+2. **`tools/generated/world-symbol-map.md` was stale before this wave** and `map:world:check` was red
+   on it – 2,300 lines recorded against 2,305 actual. Regenerated: 391 symbols.
+
+⚠ **And one incident, recorded because the lesson is cheap and the cost was not.** An agent passed a
+commit message through `git commit -m` containing backticks, zsh command-substituted them, and the
+substituted text was `npm i -D @axe-core/playwright`. The install emptied the shared `node_modules`
+that ~25 worktrees symlink to. It was caught, repaired and reported by the agent itself, and verified
+independently afterwards. **The rule: commit messages go through `-F <file>`, never `-m` with
+backticks.** ⭐ The same trap then caught ME, one command later and knowingly: installing axe
+replaced my own worktree's symlink with a private tree. Repaired the same way.
+
+⚠ **Left open, filed rather than fixed:** `tools/domestic-ladder-probe.ts` holds a third hand-copied
+array of the same 24 country codes, and its own comment admits the copy. It goes stale the moment the
+list grows.
