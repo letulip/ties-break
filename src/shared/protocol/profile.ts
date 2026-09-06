@@ -126,20 +126,32 @@ const BACKGROUNDS_ALLOWED: readonly FamilyBackground[] = ['wealthy', 'middle', '
 const COACH_TIERS_ALLOWED: readonly CoachTier[] = ['self', 'budget', 'middle', 'high', 'elite']
 const PLAY_STYLES_ALLOWED: readonly PlayStyle[] = ['aggressive', 'counterpuncher', 'serve-first', 'all-court']
 
-/** The longest name a career may be opened under.
+/** The longest name a career may be opened under – PER FIELD, so `kidName` and `kidLastName` get
+ *  twenty each and not twenty between them.
  *
- *  ⚠ IT IS `saveGuard`'s `MAX_ID_CHARS` AND NOT A NEW NUMBER, and the alignment is the whole point:
- *  the spine rule there already refuses an imported save whose `profile.kidName` runs past 200
- *  characters, so a career opened under a longer name could be played and exported and then never
- *  read back. The value is repeated rather than imported for the cycle reason above; the test holds
- *  the two constants equal.
+ *  ⚠ TWENTY SINCE 06.09, AND IT WAS 200 (owner: «Ограничение имени 200 символов – а зачем нам такие
+ *  длинные имена? мы же не твиттер… например 20»). Twenty is his own number and it is still twice
+ *  the longest surname the game itself produces: `engine/season/names.ts` tops out at six characters
+ *  for a first name (`Camila`, of 44) and ten for a surname (`Ostergaard`, of 211), so every name
+ *  the world draws for a rival, for the next daughter on the ending screen and for the wizard's own
+ *  dice fits with room to spare.
+ *
+ *  ⚠⚠ IT IS NO LONGER `saveGuard`'s `MAX_ID_CHARS`, AND THAT IS DELIBERATE RATHER THAN DRIFT. The
+ *  spine rule there still refuses an imported save whose `profile.kidName` runs past 200, and it
+ *  must: it reads files written by OLDER BUILDS, and a career started yesterday under a forty-
+ *  character name is a legitimate file that has to keep loading. The two numbers answer two
+ *  different questions – what a player may TYPE today, and what the reader must still ACCEPT – and
+ *  the direction that matters is preserved: the creation cap is INSIDE the import cap, so every
+ *  career this function opens can still be read back. (`MAX_ID_CHARS` is also the seed/careerId
+ *  bound, and generated career ids run to ~30 characters, so moving it would refuse the game's own
+ *  saves.) The test asserts the INEQUALITY where it used to assert the equality.
  *
  *  ⚠ AND THE WIZARD CARRIES THE SAME NUMBER as its inputs' `maxlength` (E-06's own risk note: a cap
  *  the wizard does not have is a cap that refuses a name a player really typed). So this bound is
  *  unreachable from the wizard by construction, which is what a hygiene guard should be. That is
  *  `ASSET_NAME_MAX_CHARS`'s own idiom, in that constant's own words: the screen sets the same number
  *  as the field's `maxlength`, so the cap is FELT while typing rather than met as a refusal. */
-export const PROFILE_NAME_MAX_CHARS = 200
+export const PROFILE_NAME_MAX_CHARS = 20
 
 const isObject = (v: unknown): v is Record<string, unknown> =>
   typeof v === 'object' && v !== null && !Array.isArray(v)

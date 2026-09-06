@@ -17,11 +17,16 @@
 import { computed, reactive, ref, watch } from 'vue'
 import { useGameStore } from '../stores/game'
 // ⭐ E-06 (05.09 engine review) – `PROFILE_NAME_MAX_CHARS` IS THE ENGINE'S OWN CAP, and it is here
-// so the two agree. `profileShapeError` refuses a career whose name runs past it (the same 200 the
-// save-file spine has always enforced on `profile.kidName`), and the risk the review named is a cap
-// the wizard does not have: a name typed here and refused there. Setting it as the fields'
-// `maxlength` makes the refusal unreachable from this screen – `ASSET_NAME_MAX_CHARS`'s idiom, where
-// the cap is felt while typing rather than met as a refusal. No wording moves.
+// so the two agree. `profileShapeError` refuses a career whose name runs past it, and the risk the
+// review named is a cap the wizard does not have: a name typed here and refused there. Setting it as
+// the fields' `maxlength` makes the refusal unreachable from this screen – `ASSET_NAME_MAX_CHARS`'s
+// idiom, where the cap is felt while typing rather than met as a refusal. No wording moves.
+//
+// ⚠ THE NUMBER IS TWENTY PER FIELD SINCE 06.09 AND WAS 200 (owner: «мы же не твиттер… например
+// 20»), which is why the two `maxlength` bindings below read the constant instead of a literal:
+// there is one number and the screen, the two refusal sentences and this field all take it from
+// the same place. It is NOT the save spine's `MAX_ID_CHARS` any more – see that constant's own note
+// in shared/protocol/profile.ts for why the import gate deliberately stayed at 200.
 import { DEFAULT_PROFILE, PROFILE_NAME_MAX_CHARS, type CoachTier, type FamilyBackground, type PlayerProfile, type PlayStyle } from '../shared/protocol'
 import { SURNAMES } from '../engine/season/cohort'
 import { daysInBirthMonth } from '../shared/dates'
