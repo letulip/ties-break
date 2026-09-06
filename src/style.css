@@ -1657,6 +1657,59 @@ select {
   padding-inline: var(--app-pad-x);
 }
 
+/* ⭐⭐⭐ ROUND 37 ITEM 12 – THE MATCH TAKES THE WIDTH IT IS GIVEN, AND ONLY THE MATCH. The owner,
+   06.09: «в матче ширина окна внутри ограничена 880px, как-будто можно еще пошире сделать, т.е. уже
+   в 880 начиная можно по ширине экрана место занимать и до 1024 резиново расширять, как раз за счет
+   расширения чата и можно сделать, мне кажется.»
+
+   ⚠⚠ IT IS A MATCH-ONLY RULE AND DELIBERATELY NOT A MOVE OF `--app-max-width`, which is the whole
+   reason it is written here instead of in the ladder. That token caps THREE surfaces – the
+   onboarding wizard (R14-9), the tour briefing, and `--takeover-col-max` for every takeover – and
+   `tests/component/tour-briefing.test.ts` measures the 880 it gives the briefing. Laddering it once
+   before turned that test red with «expected 1200 to be 880», which is the sheet's own record of
+   what widening the token costs. The match is one of the takeovers, so it overrides the token FOR
+   ITS OWN SUBTREE and the other two are untouched.
+
+   ⚠ `min(100%, 1024px)` IS HIS SENTENCE READ LITERALLY, and between 880 and 1024 it needs no
+   breakpoint of its own: `.tf-body` is `width: 100%` in a full-screen takeover, so from 880 up the
+   `100%` term IS «по ширине экрана» and the 1024 is «до 1024 резиново». Measured: the body is 880 at
+   880, 900 at 900, 960 at 960, 1024 at 1024, and 1024 centred on anything wider.
+
+   ⚠⚠ AND IT IS INSIDE THE LADDER'S OWN 768 GATE BECAUSE `100%` CUTS BOTH WAYS – a defect this rule
+   shipped with for one measurement, caught by the round's identity contract rather than by reasoning
+   about it. Below 768 `--takeover-col-max` is 480px, and 480 is BIGGER than a 375px phone but
+   SMALLER than a 576px one: unscoped, `min(100%, 1024px)` took the friendly's viewer from 480 to 576
+   at exactly his own phone width. The 375 arm never moved and would have passed it. Inside the gate
+   the token below 768 is untouched, and at 768–880 the two spellings agree to the pixel (768 at 768,
+   860 at 860), because there the old 880 did not bite either.
+
+   ⚠ `:has()` NAMES THE MATCH BY WHAT IS IN THE SHELL, which is the only thing that distinguishes it:
+   all four match surfaces (TournamentFlow, PracticeFlow, MatchReplay and Season's sandbox) mount
+   `MatchViewer` as slot content of `ui/TakeoverShell.vue`, and `.mv` is MatchViewer's own root, so
+   it is in the shell exactly when the match is on screen and in no other screen of the flow (the
+   viewer is a `v-if` SIBLING of the phase sections, never a peer of them). Same instrument as
+   `#app:has(> nav.tab-bar)` two screens up, and it keeps this a rule about a SHELL rather than a
+   prop threaded through one shared component for four callers.
+   ⚠⚠ AND IT IS THE DESCENDANT FORM RATHER THAN `:has(> .tf-body > .mv)` FOR A MEASURED REASON.
+   happy-dom – the mounted layer's runner – supports `:has()` but mis-evaluates a relative selector
+   that STARTS WITH A COMBINATOR: probed 06.09, `.tournament-flow:has(> .tf-body > .mv)` matched a
+   takeover with no match in it as well as one with, while `:has(.mv)` answered correctly on both.
+   The child form is not more precise here anyway – nothing else in the app draws a `.mv` – and the
+   loose one cost a false red in `tests/component/round36-phase4.test.ts`, whose «a takeover with no
+   match keeps its 880» arm is exactly the claim this scoping exists to keep true.
+   ⚠ THE PROLOGUE'S WEEKEND IS OUT OF REACH BY CONSTRUCTION and stays at 880: its `.mv` is a child of
+   `.plo`, not of a takeover shell (`PrologueLocalOpen.vue` caps it on `--takeover-col-max` itself).
+   That is phase 4's pinned decision about a different surface, and item 12 does not reopen it.
+   ⚠ AND THE HEADER FOLLOWS THE BODY, for free: `.tf-top` reads the same token, and «the header and
+   the body of one screen are one column to the eye» is `.tf-top`'s own note further down the sheet.
+   ⭐ WHERE THE NEW ROOM GOES is MatchViewer.vue's business, not this rule's – «как раз за счет
+   расширения чата» is spelled there, on the two grid track lists that decide it. */
+@media (min-width: 768px) {
+  .tournament-flow:has(.mv) {
+    --takeover-col-max: min(100%, 1024px);
+  }
+}
+
 /* ⚠ THE TAKEOVER'S BOTTOM ROOM IS CONTENT, NOT THE SCROLLPORT'S PADDING - AND IT HAD TO BECOME ONE
    (owner, 31.07: on the live match screen «the bottom buttons float in the air: there is unpainted
    space beneath them through which the text commentary shows. Paint it»).

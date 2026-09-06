@@ -2211,7 +2211,24 @@ watch(finished, (isFinished) => {
      instead of shrinking its own track. */
   .mv {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(0, 344px);
+    /* ⭐⭐⭐ ROUND 37 ITEM 12 – AND THE EXTRA WIDTH IS THE COMMENTARY'S. The owner, 06.09: «уже в 880
+       начиная можно по ширине экрана место занимать и до 1024 резиново расширять, КАК РАЗ ЗА СЧЕТ
+       РАСШИРЕНИЯ ЧАТА». The cap itself moved in src/style.css; this is the half that says where the
+       room it buys goes, and «за счёт расширения чата» rules out the obvious spelling – leaving the
+       tracks alone spends every new pixel on the LEFT column, because `1fr` is the one that gives.
+
+       ⚠ `--mv-drawn` IS THE SHELL THESE TWO FRAMES WERE DRAWN AGAINST, not a new number: 880 less
+       the takeover's own two gutters = 848px, which is what `.tf-body` measured at every width from
+       880 up before item 12. Derived rather than typed, for `--app-pad-x`'s own reason – a literal
+       848 here is a copy of two tokens that would drift the day either moves.
+
+       ⚠ AND THE TRACK IS A `max()` SO THE TABLET DOES NOT MOVE. Below the old cap `100%` is smaller
+       than `--mv-drawn`, so the second term is negative and the commentary is his 344 exactly as
+       before; past it the commentary is 344 plus every pixel the shell gained, and the left track –
+       `1fr`, the transport's – keeps the 494px it had at 848. Measured: 344 at 768 and at 880
+       (unchanged), 364 at 900, 424 at 960. */
+    --mv-drawn: calc(var(--app-max-width) - 2 * var(--app-pad-x));
+    grid-template-columns: minmax(0, 1fr) minmax(0, max(344px, calc(100% + 344px - var(--mv-drawn))));
     /* Row 1 is the panel's own height; row 2 takes everything left, which is what hands the
        commentary the height it has never had here (measured: 92px – its FLOOR – at every width from
        768 up before this item, because the panel and the bar between them left it nothing).
@@ -2316,10 +2333,22 @@ watch(finished, (isFinished) => {
    commentary takes the remaining 329.2 – within 15px of the 344 his frame gives it.
    ⚠ The 680px cap on `.mv-court` is untouched and simply stops biting here: it is the canvas's own
    drawing width (phase 4, D23) and a court drawn WIDER than it would be an upscaled bitmap. A court
-   drawn narrower is only a smaller picture of the same drawing, which costs nothing. */
+   drawn narrower is only a smaller picture of the same drawing, which costs nothing.
+
+   ⭐⭐ ROUND 37 ITEM 12 – AND THE SENTENCE ABOVE IS WHY THE 60% IS NOW A CEILING RATHER THAN A
+   RATIO. «Ширину на десктопе получает только она» was already his ruling about this exact band, and
+   item 12 is that ruling with more width to spend: the shell is 992px here now (1024 less the two
+   gutters) instead of 848, and a bare 60% would have handed 86 of the 144 new pixels to the tennis –
+   «за счёт расширения чата» read backwards. `min()` keeps his ratio wherever it is the smaller of
+   the two and pins the court at what that ratio drew it on the 848 shell, so every pixel past the
+   old cap goes to the log. Measured: court 508.8 -> 508.8 (unchanged at 1024, 1100 and 1280),
+   commentary 329.2 -> 473.2.
+   ⚠ THE CEILING IS DERIVED FROM `--mv-drawn`, the same token the tablet block above reads, and for
+   the same reason: 508.8 is 0.6 x 848, and typing it would be a third copy of `--app-max-width` and
+   `--app-pad-x` waiting to drift. */
 @media (min-width: 1024px) {
   .mv {
-    grid-template-columns: minmax(0, 60%) minmax(0, 1fr);
+    grid-template-columns: minmax(0, min(60%, calc(0.6 * var(--mv-drawn)))) minmax(0, 1fr);
   }
 
   .mv-panel {
