@@ -223,3 +223,47 @@ rail's own content is 641px in a 600px box, so about 21px of the third dashboard
 rail's fold. It DOES scroll – the rail is `overflow-y: auto` and a wheel over it moves it, measured
 `scrollTop` 0 → 40 – and no control is unreachable, so it is not what he reported. Worth a look if he
 raises it: the page scroll does not reveal it, because the rail is sticky.
+
+---
+
+## Third pass, 06.09 – five more, and seven decisions closed by him
+
+He walked the stand at `cec32a1a` and answered the open decisions as he went.
+
+- [>] **9. «наша плашка "Her own account" в магазине шумит сильно, давай ее только на spending будем
+  показывать, мне кажется на других экранах она не очень нужна вообще»** – build. The plate is drawn
+  on more of the money screen's chapters than it earns; it belongs to Spending alone.
+
+- [>] **10. «Spending еще больше воздуха в 3 раза на планшетах и десктопах вокруг записки, фото и
+  пайчарта. Саму записку тоже можно на 1/3 шире сделать на планшетах и десктопах»** – build, and it
+  extends round 36 review item 15, which gave that right-hand sector air for the first time. Three
+  times as much now, and the note itself a third wider. Tablet and desktop only.
+
+- [>] **11. «записку справа от картинки на week results поверни немного против часовой стрелки,
+  градусов на 5»** – build. The scrap beside the photograph turns about 5 degrees anticlockwise.
+  ⚠ Its tilt is `PaperNote`'s own prop and the card already passes one; this changes the number the
+  card passes, not the component.
+
+- [>] **12. «в матче ширина окна внутри ограничена 880px, как-будто можно еще пошире сделать, т.е.
+  уже в 880 начиная можно по ширине экрана место занимать и до 1024 резиново расширять, как раз за
+  счет расширения чата»** – build. From 880 the match takes the width it is given, fluid to 1024, and
+  the room goes to the commentary.
+  ⚠⚠ **880 is `--app-shell-max`, and the token decides THREE surfaces**, not one – its own comment in
+  `src/style.css` says so, and `tests/component/tour-briefing.test.ts` measures it. So this is a
+  match-only rule, not a move of the token, or it silently widens the wizard and the briefing too.
+
+- [>] **13. «Кнопка Next round по прежнему очень широкая, давай тоже 500 ограничим»** – build.
+  `TournamentFlow.vue:1244`. Round 36 review item 18 capped every affirmative CTA at 500; this control
+  was missed by that sweep, which is worth knowing – the census that item ran looked at 1280 only.
+
+### What he closed on the same walk
+
+| decision | his words | now |
+| --- | --- | --- |
+| `D19` the desktop hero's shape | «не вижу проблем, вроде ок» | **closed, accepted** |
+| `D24`, `D25` the wizard's column and the shop's six cards | «С магазином вроде всё ок»; «Онбординг отдельно посмотрю, но кроме предыдущих замечаний остальное вроде было ок» | **closed, accepted** |
+| `D75` her face and rank in the rail | «вроде есть и работает» | **closed, accepted** |
+| `D76` the bell on every screen | «да, утвердили, что только на главной» | **closed – Home only, as built** |
+| `D83` the coaching-budget tile's four figures | «вроде ок» | **closed, accepted** |
+| Home as a whole | «на home вроде бы всё нормально» | – |
+| the live match | «в матче вроде всё корректно» apart from item 12 | – |
