@@ -92,3 +92,40 @@ looking rather than by a red run: `tests/weekPager.test.ts`'s desktop constant s
 third of the row, and `round18-coach.test.ts`'s first test took no viewport at all, so it read the
 runner's 1024 default while calling the answer «the export's geometry». Both re-aimed, neither
 weakened.
+
+---
+
+## The dangling branches, and his ruling on them (06.09)
+
+Thirteen local branches were not merged into `round/37`. Each was read rather than guessed at.
+**Three carried real unmerged work and are now in:**
+
+| branch | what it carried |
+| --- | --- |
+| `prologue/wave` | ⭐ **HIS OWN REPLACEMENT PAINTING** for the training scene, re-encoded through the art pipeline, which had never reached a merged branch: round 37 was still shipping the older 55,900-byte file against his 63,240-byte one |
+| `review/principles-2026-09-02` | the 02.09 principles review, which the 05.09 review cites throughout and which was not in the tree |
+| `fix/callup-walk-timeout` | the shared career walk is paid by a hook instead of by whichever test reaches it first – the structural half of the per-test budget problem, unmerged since the hotfix |
+
+**His ruling on the rest: «измерим заново вместе с волной C позже, остальное не тащим.»**
+
+* `measure/potential-band`, `measure/first-round-exit`, `measure/fortnight-bisect` – **held for wave C
+  and re-measured there rather than imported.** Their numbers are August's, and a balance wave that
+  starts from stale measurements is the thing invariant 5 exists to prevent.
+* `audit/round-29-forgotten` – its documents are already in the tree; the branch is 551 files behind.
+* `age-clock-safety`, `codex/principles-review-2026-08-18` – August reviews, superseded by two later
+  ones; the code fix inside has long been in main.
+* `codex/backlog-perspective-2026-08-23`, `codex/narrative-language-backlog-2026-08-29`,
+  `codex/pitch-commercial-2026-08-17`, `film/promo-clips` – documents and promotional material, a
+  separate concern from this wave.
+
+## `npm run icons` – kept, and its failure now teaches (his ruling, 06.09)
+
+He asked whether a script that cannot run is worth keeping. It is: it holds the RECIPE – the
+rounded-square corner at 20%, the maskable safe zone at 80%, the circular favicon, the `#0f172a`
+ground and, since `D92`, the palette encoding. Deleting the script would mean rebuilding that in
+Figma next time.
+
+What it is not is a build step: it runs once when the logo is redrawn, never in `check` and never in
+CI, and `art-src/` is gitignored by design so a fresh clone never has a master. The old message said
+only «no logo source found», which reads as breakage. It now says where the file goes, why its
+absence is normal, and what to run instead to check what ships.

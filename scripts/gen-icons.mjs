@@ -66,10 +66,33 @@ const CORNER_FRACTION = 0.2 // rounded-square corner radius as a fraction of ico
 const MASKABLE_SAFE_FRACTION = 0.8 // maskable: logo scaled to the OS safe zone
 const FAVICON_FRACTION = 1 // favicon: full-bleed circular crop, no margin
 
+/** ⚠ THIS SCRIPT IS A RECIPE, NOT A BUILD STEP – it runs once, when the logo is redrawn, and never
+ *  in `check` or in CI. The five icons it writes are committed, and round 37 re-encoded them from
+ *  themselves without it (see the note at the top of this file).
+ *
+ *  So its failure has to TEACH rather than merely stop: `art-src/` is the author's local master
+ *  library and is gitignored on purpose, which means a fresh clone – and every agent worktree – has
+ *  no master at all and this script cannot run there. That is by design and not a defect. What was
+ *  a defect is that the old message said only «no logo source found», which reads as breakage.
+ *  The owner asked for it to say what to do instead (06.09: «оставить, но починить сообщение»). */
 function findLogoSource() {
   const source = join(root, 'art-src/logo-lucia-app.png')
   if (!existsSync(source)) {
-    throw new Error('gen-icons: no logo source found (expected art-src/logo-lucia-app.png)')
+    throw new Error(
+      [
+        `gen-icons: the logo master is not here, so there is nothing to redraw from.`,
+        ``,
+        `  expected: ${source}`,
+        ``,
+        `  This is not breakage. \`art-src/\` is the author's LOCAL master library and is gitignored`,
+        `  (see .gitignore and the note above it), so a fresh clone or an agent worktree never has`,
+        `  one. The five icons this script writes are committed and shipping; you only need it when`,
+        `  the logo itself changes.`,
+        ``,
+        `  To run it: put the 330x330 master at the path above and re-run \`npm run icons\`.`,
+        `  To check what ships without it: \`npx vitest run tests/pwa-icon-weight.test.ts\`.`,
+      ].join('\n'),
+    )
   }
   return source
 }
