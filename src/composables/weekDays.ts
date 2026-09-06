@@ -405,6 +405,29 @@ export function layoffReturnWeek(snap: Pick<Snapshot, 'week' | 'injury'>): numbe
   return snap.injury ? snap.week + snap.injury.weeksRemaining : null
 }
 
+/**
+ * ⭐⭐ WHAT THE LAYOFF SAYS, ONCE (owner, 06.09: «layoffNote пишется трижды, причём в одном месте с
+ * точкой на конце»).
+ *
+ * ⚠ THE SENTENCE DID NOT CHANGE AND IS NOT ALLOWED TO – CLAUDE.md invariant 4. Three screens each
+ * computed it: PlanWeekSheet, CalendarScreen and SeasonScreen, all three with the same words and the
+ * same arithmetic, and all three carrying the same comment saying they use «the tournament card's
+ * injured lock's own words». That lock (`lockLabel`'s `'injured'` arm in SeasonScreen) is the
+ * original and it ends without a full stop, which is what this returns. The one copy that had
+ * drifted – the sheet's – ends its own paragraph with a full stop because a SECOND sentence follows
+ * it inside the same `<p>`; that stop stays where it is, spelled as a join at the site that needs
+ * it, so nothing on any screen renders differently than it did yesterday.
+ *
+ * ⚠ IT ANSWERS FOR THE INJURY AND NOT FOR A WEEK. Whether the layoff covers the week being LOOKED at
+ * is a different question with a different answer per screen (`layoffBlock` in the sheet,
+ * `row.injured` on the two grids), so it stays at the call sites – this only puts the words in one
+ * place. Empty string when she is healthy, which is what a `title` binding and a `{{ }}` both want.
+ */
+export function layoffNoteFor(snap: Pick<Snapshot, 'week' | 'injury'> | null | undefined): string {
+  const back = snap ? layoffReturnWeek(snap) : null
+  return back === null ? '' : `Injured – back ${weekLabel(back)}`
+}
+
 /** ⭐ ROUND 28 #1 – WHICH DAYS THE MASSEUR'S TABLE LANDS ON, given how many sessions the rung buys.
  *
  *  THE RULE IS "THE TABLE FOLLOWS THE WORK": her training days first, in day order, and then the

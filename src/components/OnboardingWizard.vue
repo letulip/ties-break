@@ -16,7 +16,13 @@
 // контента 14px (онбординг N–S — 22px)"). Every other screen inherits the app frame.
 import { computed, reactive, ref, watch } from 'vue'
 import { useGameStore } from '../stores/game'
-import { DEFAULT_PROFILE, type CoachTier, type FamilyBackground, type PlayerProfile, type PlayStyle } from '../shared/protocol'
+// ⭐ E-06 (05.09 engine review) – `PROFILE_NAME_MAX_CHARS` IS THE ENGINE'S OWN CAP, and it is here
+// so the two agree. `profileShapeError` refuses a career whose name runs past it (the same 200 the
+// save-file spine has always enforced on `profile.kidName`), and the risk the review named is a cap
+// the wizard does not have: a name typed here and refused there. Setting it as the fields'
+// `maxlength` makes the refusal unreachable from this screen – `ASSET_NAME_MAX_CHARS`'s idiom, where
+// the cap is felt while typing rather than met as a refusal. No wording moves.
+import { DEFAULT_PROFILE, PROFILE_NAME_MAX_CHARS, type CoachTier, type FamilyBackground, type PlayerProfile, type PlayStyle } from '../shared/protocol'
 import { SURNAMES } from '../engine/season/cohort'
 import { daysInBirthMonth } from '../shared/dates'
 import { onboardingHeroUrl, portraitUrl } from '../art/preload'
@@ -328,7 +334,10 @@ function start(): void {
         </ol>
 
         <header v-if="step === 1" class="ob-head ob-head--hero">
-          <h1 class="ob-hero-title">Raise a Champion.<br /><span>Together.</span></h1>
+          <!-- U-11: the `id` the welcome section's `aria-labelledby` has always pointed at. It was a
+               class and nothing else, so the reference resolved to nothing and the section had no
+               accessible name at all. Not a wording change – see the note in the script. -->
+          <h1 id="ob-hero-title" class="ob-hero-title">Raise a Champion.<br /><span>Together.</span></h1>
         </header>
         <header v-else class="ob-head">
           <h1 class="ob-title">{{ head.title }}</h1>
@@ -357,7 +366,7 @@ function start(): void {
             <!-- The mock's fields are never empty, so its placeholder is invisible; ours can be
                  cleared, and then the placeholder is the only thing saying what Next is waiting
                  for. It costs nothing when the field is filled. -->
-            <input id="ob-first" v-model="profile.kidName" class="ob-input" type="text" :placeholder="IDENTITY_COPY.firstName" autocomplete="off" />
+            <input id="ob-first" v-model="profile.kidName" class="ob-input" type="text" :maxlength="PROFILE_NAME_MAX_CHARS" :placeholder="IDENTITY_COPY.firstName" autocomplete="off" />
             <button class="ob-dice" type="button" aria-label="Random first name" @click="reroll">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                 <rect x="4" y="4" width="16" height="16" rx="4" />
@@ -373,7 +382,7 @@ function start(): void {
         <div class="ob-field">
           <label class="ob-label" for="ob-last">{{ IDENTITY_COPY.lastName }}</label>
           <div class="ob-field-row">
-            <input id="ob-last" v-model="profile.kidLastName" class="ob-input" type="text" :placeholder="IDENTITY_COPY.lastName" autocomplete="off" />
+            <input id="ob-last" v-model="profile.kidLastName" class="ob-input" type="text" :maxlength="PROFILE_NAME_MAX_CHARS" :placeholder="IDENTITY_COPY.lastName" autocomplete="off" />
             <button class="ob-dice" type="button" aria-label="Random last name" @click="rerollLast">
               <!-- A different face on the second die, on purpose (the design draws three pips here). -->
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
