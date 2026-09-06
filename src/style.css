@@ -737,6 +737,38 @@ body {
     margin-left: auto;
     margin-right: auto;
   }
+
+  /* ⭐⭐⭐ ROUND 37 ITEM 13 – THE ONE CONTROL THE SWEEP ABOVE COULD NOT REACH. The owner, 06.09:
+     «Кнопка Next round по прежнему очень широкая, давай тоже 500 ограничим» – «тоже», because it is
+     the same 500 and the same sentence as review #18 one rule up.
+
+     ⚠ WHY IT SURVIVED THAT SWEEP, AND IT IS A LESSON ABOUT THE CENSUS RATHER THAN ABOUT THE RULE.
+     #18 capped the CLASS – every affirmative CTA in the app is `PrimaryPill variant="cta"` – and
+     this control is not one: a takeover's action row is a bare `<button class="primary">` in
+     `.tf-actions`, which is `display: flex` with `flex: 1` on its children, so a row holding ONE
+     button is a button as wide as the card. `.tf-actions` holds a PAIR on four of the five surfaces
+     that use it (the tournament's pre-match card and box score, the friendly's two) and each half is
+     ~418px at 848 of shell, comfortably inside the cap; the spectate card is the only one that puts
+     a single button in the row, and a lone `flex: 1` child is exactly the shape #18 was written
+     about. Measured on the shipped build: 702px at 768 and 814px at 900, 1024 and 1280 alike.
+
+     ⚠ THE CAP IS ON THE ROW'S CHILDREN AND NOT ON THE SPECTATE CARD, deliberately – the same choice
+     #18 made and for the same reason («the cap is the class and not the screen»): it reaches the
+     next lone action row before it is written, and it cannot reach the pairs, which are already
+     under 500 at every width the app draws them at.
+     ⚠ `justify-content` IS WHAT MAKES «ПО ЦЕНТРУ» TRUE HERE. A capped `flex: 1` child leaves free
+     space in the row, and a flex line's default `flex-start` would leave the button against the left
+     edge of the card; the pairs still fill their row, so this is inert for them. It is the row's
+     counterpart of the `display: block` + auto margins one rule up, which a flex child cannot use.
+     ⚠ AND IT STARTS AT 768 WITH THE REST OF THE BLOCK: below it the takeover column is 480px and the
+     card inside it 446, so no button in this row can reach 500 anyway. Censused at 375 and 576. */
+  .tf-actions {
+    justify-content: center;
+  }
+
+  .tf-actions button {
+    max-width: 500px;
+  }
 }
 
 /* ⭐⭐⭐ ROUND 36 PHASE 3 – THE DESKTOP SHELL. The owner, on his frames AC–AQ:

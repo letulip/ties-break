@@ -168,3 +168,74 @@ test('item 12 – below 768 not one pixel of the match moves', async ({ page, ca
     scroll.clientHeight,
   )
 })
+
+// =================================================================================================
+// ITEM 13 – «КНОПКА NEXT ROUND ПО ПРЕЖНЕМУ ОЧЕНЬ ШИРОКАЯ, ДАВАЙ ТОЖЕ 500 ОГРАНИЧИМ»
+// =================================================================================================
+// ⚠ THIS IS THE LAYER THAT CAN REACH THE CONTROL AT ALL. The spectate card only exists after she is
+// beaten before the Final, and getting there runs `showResult()` – an RPC to the worker – so the
+// mounted layer holds the rule and the room while this one holds the button.
+//
+// ⚠ MUTATION-VERIFIED: `.tf-actions button { max-width: 500px }` deleted -> the width arm («expected
+// 814 to be less than or equal to 500»); `.tf-actions { justify-content: center }` deleted -> the
+// centring arm alone.
+test('item 13 – the lone Next round control stops at 500 and is centred', async ({
+  page,
+  careerAt,
+}) => {
+  await resize(page, 1280, 900)
+  await careerAt('junior')
+  await answerOpeningKnock(page)
+  await dismissTourBriefing(page)
+  await weekButton(page).click()
+  await page.getByRole('button', { name: 'Begin', exact: true }).click()
+
+  // ⚠ THE PAIR FIRST, AS THE CONTROL ARM. Four of the five surfaces that use `.tf-actions` put TWO
+  // controls in it, and each half is well inside the cap – so a cap that changed them would be a
+  // redesign of the row rather than the fix he asked for. Measured before this item and after it:
+  // 418px each at 848 of shell.
+  const pair = page.locator('.tf-actions button')
+  await expect(pair).toHaveCount(2)
+  const pairWidths = await pair.evaluateAll((els) => els.map((el) => Math.round(el.getBoundingClientRect().width)))
+  expect(pairWidths, 'the pre-match pair is unchanged and never met the cap').toEqual([418, 418])
+
+  // Walk her run out: skip each round's match, take the box score's Next, until she is beaten before
+  // the Final and the flow offers the spectate card – the one action row in the app with a single
+  // control in it.
+  const spectate = page.locator('.tf-spectate')
+  for (let step = 0; step < 12 && !(await spectate.count()); step++) {
+    const skip = page.getByRole('button', { name: 'Skip', exact: true })
+    if (await skip.isVisible().catch(() => false)) {
+      // `click()` auto-waits for the control to be enabled, which is what the reveal RPC turns off.
+      await skip.click()
+      await expect(page.locator('.tf-result-head'), 'the skip lands on a box score').toBeVisible()
+      continue
+    }
+    const next = page.getByRole('button', { name: 'Next', exact: true })
+    if (await next.isVisible().catch(() => false)) {
+      await next.click()
+      await expect(page.locator('.tf-scene, .tf-spectate, .tf-poster').first()).toBeVisible()
+      continue
+    }
+    break
+  }
+  await expect(spectate, 'her run has to end short of the Final, or there is nothing to measure').toHaveCount(1)
+
+  const lone = spectate.locator('.tf-actions button')
+  await expect(lone, 'and the spectate card really holds exactly one control').toHaveCount(1)
+
+  for (const screen of [768, 900, 1024, 1280]) {
+    await resize(page, screen, 900)
+    const row = (await spectate.locator('.tf-actions').boundingBox())!
+    const button = (await lone.boundingBox())!
+    // Before this item: 702px at 768 and 814px at 900, 1024 and 1280 alike – «очень широкая».
+    expect(Math.round(button.width), `at ${screen} the control`).toBeLessThanOrEqual(500)
+    // ...and the precondition that keeps that from being vacuous: the row it sits in is wider than
+    // the cap, so the cap is what is holding it.
+    expect(row.width, `at ${screen} the row is wide enough for the cap to matter`).toBeGreaterThan(500)
+    // «С выравниванием по центру» – his own words for the same rule in review #18.
+    const leftGap = button.x - row.x
+    const rightGap = row.x + row.width - (button.x + button.width)
+    expect(Math.abs(leftGap - rightGap), `at ${screen} the control is centred in its row`).toBeLessThan(1)
+  }
+})

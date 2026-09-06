@@ -311,3 +311,124 @@ describe('round 37 item 12 – and the new room goes to the commentary', () => {
     wrapper.unmount()
   })
 })
+
+// =================================================================================================
+// ITEM 13 – «КНОПКА NEXT ROUND ПО ПРЕЖНЕМУ ОЧЕНЬ ШИРОКАЯ, ДАВАЙ ТОЖЕ 500 ОГРАНИЧИМ»
+// =================================================================================================
+// «Тоже» – the same 500 round 36's review #18 put on every affirmative CTA, and the same sentence:
+// «кнопок в 700 пикселей не должно быть, максимум 500 пожалуйста с выравниванием по центру».
+//
+// ⚠ WHY #18's SWEEP MISSED THIS ONE. That rule caps a CLASS – `PrimaryPill variant="cta"` – and a
+// takeover's action row is a bare `<button class="primary">` in `.tf-actions`, which is a flex row
+// with `flex: 1` on its children. A row holding a PAIR gives each half ~418px at 848 of shell, which
+// is inside the cap; the spectate card is the one surface that puts a SINGLE button in that row, and
+// a lone `flex: 1` child is a button as wide as its card.
+//
+// ⚠ THE LONE BUTTON ITSELF IS MEASURED IN CHROMIUM (`e2e/r37-frame.spec.ts`: 702 -> 500 at 768 and
+// 814 -> 500 at 900, 1024 and 1280). Reaching the spectate card needs the worker – `showResult()` is
+// an RPC – so what this layer holds is the rule and the ROOM: how wide a single child of that row
+// would be if nothing capped it.
+//
+// MUTATION-VERIFIED, each alone:
+//   * `.tf-actions button { max-width: 500px }` deleted -> the cap arm and the room arm;
+//   * `.tf-actions { justify-content: center }` deleted -> the centring arm alone;
+//   * the `@media (min-width: 768px)` gate widened to every width -> the phone arm alone.
+describe('round 37 item 13 – a lone control in a takeover’s action row stops at 500', () => {
+  beforeEach(() => {
+    setActivePinia(createPinia())
+    document.body.innerHTML = ''
+  })
+  afterEach(() => setViewport(PHONE))
+
+  /** A career parked on a revealed tournament – round36-phase4.test.ts's own recipe. */
+  function atTournament(seed: string): Snapshot {
+    const world = createWorld(seed)
+    const rng = rngFromSeed(world.seed)
+    for (let i = 0; i < 160; i++) {
+      world.fundsCents = Math.max(world.fundsCents, 500_000_00)
+      if (pendingKnock(world)) decideKnock(world, 'rest')
+      for (const e of world.season) {
+        if (e.week > world.week && !world.entries.includes(e.id)) {
+          try {
+            enterEvent(world, e.id)
+          } catch {
+            /* eligibility and caps are the engine's business */
+          }
+        }
+      }
+      tickWeek(world, rng)
+      if (world.pendingTournament) return toSnapshot(world)
+    }
+    throw new Error('no tournament reached – the fixture is broken, not the assertion')
+  }
+
+  /** The real row, on the real screen, at `vp`: its first control and the room the row has. */
+  async function actionRow(vp: Viewport) {
+    setViewport(vp)
+    useGameStore().snapshot = atTournament('r37-item13')
+    const wrapper = mount(TournamentFlow, { attachTo: document.body })
+    await nextTick()
+    // ⚠ THE FLOW OPENS ON ITS SPLASH AND THE ACTION ROW IS ONE PRESS IN. `beginFromSplash` is
+    // synchronous – it only swaps the phase – so this runner can walk it without a worker, which is
+    // exactly what `showResult()` (an RPC) is why the spectate card cannot be reached here.
+    const begin = wrapper.findAll('button').find((b) => b.text().trim() === 'Begin')
+    if (begin) {
+      await begin.trigger('click')
+      await nextTick()
+    }
+    const row = document.querySelector('.tf-actions')
+    if (!row) throw new Error('the flow drew no action row – there is nothing to measure')
+    const button = row.querySelector('button')
+    if (!button) throw new Error('the action row holds no control')
+    // ⚠ THE ROW'S CONTENT WIDTH IS WHAT A LONE `flex: 1` CHILD TAKES, which is exactly the spectate
+    // card's shape. `availableWidth` walks every padding, border, margin and cap between the
+    // document and the button's parent, so this is the real chain and not an assumption about it.
+    // ⚠ THE ROW'S OWN DECLARATIONS ARE READ BEFORE THE WALK, and that is not tidiness. happy-dom
+    // caches a computed declaration on the element and re-derives it when another element is
+    // measured; `availableWidth` walks every ancestor, and a `cs.justifyContent` read after that
+    // walk came back as the empty string while the same read before it came back as `center`
+    // (measured 06.09, on this file). Everything this function needs off the row is taken up front.
+    const cs = getComputedStyle(row)
+    const rowStyle = {
+      justify: cs.justifyContent,
+      padLeft: cs.paddingLeft,
+      padRight: cs.paddingRight,
+    }
+    const cap = lengthPx(getComputedStyle(button).maxWidth, 0)
+    const outer = availableWidth(button, vp)
+    const room =
+      outer - (lengthPx(rowStyle.padLeft, outer) || 0) - (lengthPx(rowStyle.padRight, outer) || 0)
+    wrapper.unmount()
+    document.body.innerHTML = ''
+    return { room, cap, justify: rowStyle.justify }
+  }
+
+  it('⭐⭐ the room is over 500 at every desktop width, and the cap is what holds it there', async () => {
+    assertSheetPresent()
+    for (const vp of [TABLET, TABLET_TOP, DESKTOP_ENTRY, DESKTOP]) {
+      const { room, cap } = await actionRow(vp)
+      // The precondition, asserted rather than assumed: without it the cap arm below would pass on a
+      // row that was never wide enough to need capping.
+      expect(room, `at ${vp.width} the row is wide enough for the cap to matter`).toBeGreaterThan(500)
+      expect(cap, `at ${vp.width} a lone control in this row stops at 500`).toBe(500)
+      expect(Math.min(room, cap), `at ${vp.width} that is what it takes across`).toBe(500)
+    }
+  })
+
+  it('⭐ …and «с выравниванием по центру» – the row centres what is left', async () => {
+    assertSheetPresent()
+    // A capped `flex: 1` child leaves free space in the line, and a flex line's default
+    // `flex-start` would leave the button against the left edge of the card. `#app .tb-pill--cta`
+    // solves the same problem with `display: block` and auto margins; a flex child cannot.
+    expect((await actionRow(DESKTOP)).justify, 'at 1280').toBe('center')
+    expect((await actionRow(TABLET)).justify, 'at 768').toBe('center')
+  })
+
+  it('⚠ …and a phone is untouched: no cap, no centring, the room is under 500 anyway', async () => {
+    assertSheetPresent()
+    const { room, cap, justify } = await actionRow(PHONE)
+    expect(Number.isNaN(cap), 'below 768 the button declares no width bound at all').toBe(true)
+    expect(justify === '' || justify === 'normal' || justify === 'flex-start').toBe(true)
+    expect(room, 'and it could not reach 500 there in any case').toBeLessThan(500)
+  })
+})
