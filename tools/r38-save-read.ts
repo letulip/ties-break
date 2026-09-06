@@ -11,7 +11,6 @@ import { readFileSync } from 'node:fs'
 import { decodeExportFile } from '../src/engine/saveCodec'
 import { WEEKS_PER_YEAR } from '../src/engine/season/calendar'
 import {
-  PHYSICAL_SKILL_KEYS,
   SKILL_KEYS,
   ageCurveOf,
   ageFactor,
@@ -22,8 +21,7 @@ import { startingSkills, withHeadStart } from '../src/engine/world/player'
 import { kidAgeExact, kidAgeYears } from '../src/engine/world/age'
 import { rankingFor, fieldProsOf, cohortIds } from '../src/engine/world/ladder'
 import { brandSignalsOf, brandWeeklyGrossCents, brandMultipleX, brandGrossWorthCents, brandReachOf } from '../src/engine/world/brand'
-import { fameAt, fameFloorOf, fameShootMultOf } from '../src/engine/world/fame'
-import { brandStrengthAt } from '../src/engine/world/brandStrength'
+import { fameFloorOf, fameShootMultOf } from '../src/engine/world/fame'
 import { assetWeeklyIncomeCents, academyReputationOf, academyWeeklyIncomeCents, merchWeeklyIncomeCents } from '../src/engine/world/business'
 import { ECONOMY } from '../src/engine/economy'
 import { basePServe } from '../src/engine/match/point'
@@ -130,8 +128,9 @@ async function main() {
   console.log('C. THE BRAND – what it earns, what it is worth, and why both move')
   console.log('='.repeat(96))
 
-  const merchItem = (ECONOMY.shop.catalogue as any[]).find((i) => i.id === 'merch-brand')
-  const baseX = merchItem?.earningsMultipleX
+  const merchItem = (ECONOMY.shop.catalogue as unknown as { id: string; entryCents: number; earningsMultipleX?: number }[])
+    .find((i) => i.id === 'merch-brand')
+  const baseX = merchItem?.earningsMultipleX ?? 14
   console.log(`merch rung: entry ${money(merchItem?.entryCents ?? 0)} · earningsMultipleX ${baseX} · fame halfLifeWeeks ${ECONOMY.fame.halfLifeWeeks}`)
   console.log(`value band: unknownX ${ECONOMY.business.merch.value.unknownX} · maxX ${ECONOMY.business.merch.value.maxX}`)
   console.log()
