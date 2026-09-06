@@ -484,8 +484,15 @@ describe('⭐⭐ the last offer, read off a walked body', () => {
     // this line. §3a's 41.2 is the CROSSING; the question is asked once a winter, so on
     // `DEFAULT_PROFILE`'s 15 June birthday the offer itself lands at 41.5 – still 41, still Federer.
     expect(ENDINGS.lastOfferPeakShare, 'the owner\'s ruling of 26.08: «я бы взял 55% по уходу»').toBe(0.55)
-    expect(first!.ageYears).toBe(41)
-    expect(first!.exact).toBeCloseTo(41.503, 3)
+    // ⚠ RE-AIMED, ROUND 38 #3d (06.09) – WAS 41 / 41.503, MEASURED 42 / 42.500. `declineAccel` went
+    // 0.28 -> 0.24 on the owner's «плавнее», so the CROSSING moved 41.2 -> 41.9 and the annual
+    // question therefore lands one winter later. ⚠⚠ THE CLAIM ABOVE IS UNTOUCHED and is what still
+    // guards this: the offer may not anticipate the crossing and may not be a season late, and both
+    // of those lines are threshold-independent and unchanged. What moved is the calibration, and it
+    // moved because it was moved – see docs/specs/fame-presence-2026-09.md §6. ⚠ The other pin in
+    // this file – 70% at 38 – did NOT move, deliberately: 0.24 is the softest accel that keeps it.
+    expect(first!.ageYears).toBe(42)
+    expect(first!.exact).toBeCloseTo(42.5, 3)
   })
 
   it('⚠⚠ AND IT IS AGE-EQUIVALENT TODAY: two bodies 25% apart read the SAME share, off-season for off-season', () => {

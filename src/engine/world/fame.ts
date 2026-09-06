@@ -75,6 +75,31 @@ export function shootFloorDecayAt(deltaWeeks: number, band: number): number {
   return Math.pow(0.5, deltaWeeks / halfLife)
 }
 
+/** ⭐⭐⭐ ROUND 38 #2c – HOW MUCH OF A FINISHED SEASON'S OWN FAME SURVIVES `delta` WEEKS. A THIRD
+ *  CURVE, and it exists because a SEASON is not a RESULT.
+ *
+ *  THE OWNER, 06.09: «спортсменка проводит свой лучший сезон (и не один) находясь в топ-100 и входя
+ *  иногда в топ-50 даже, у нее явно есть и репутация и о ней знают, не могу забыть за год.»
+ *
+ *  ⚠⚠ WHAT HE IS POINTING AT, IN THIS FUNCTION'S OWN NUMBERS. A season ended inside a band used to
+ *  decay on `decayAt` – the TITLE clock, 104 weeks – so his week-1115 career's best season ever
+ *  (#20, wrapped at week 884) was worth `4 x 2^(-231/104) = 0.86` fame points, against **8** for one
+ *  WTA 500 title won on a single Sunday. A decade of being a professional the world can name faded
+ *  like an afternoon.
+ *
+ *  ⚠ A THIRD CURVE AND NOT A THIRD COPY. `decayAt` is the title clock, `shootFloorDecayAt` is the
+ *  campaign clock, and this is the CAREER clock; three facts about how long the world remembers
+ *  three different kinds of thing, so three constants and one shape. The precedent is exactly
+ *  `shootFloorDecayAt` above, which was split off `decayAt` on the same argument in round 32 #5.
+ *
+ *  ⚠ IT MUST BE THE LONGEST OF THE THREE or it is not a career clock. A season that is forgotten
+ *  faster than the title won inside it is the defect this function ends, written the other way up.
+ */
+export function seasonFloorDecayAt(deltaWeeks: number): number {
+  if (deltaWeeks < 0) return 0
+  return Math.pow(0.5, deltaWeeks / ECONOMY.fame.seasonHalfLifeWeeks)
+}
+
 /** ⭐ THE FLOOR – what the court earned, decayed to `week`, clamped to the cap. Zero for a career
  *  the world has not noticed, which is every junior and most of the tour: the fame ladder starts
  *  at the professional tiers because the world does not read junior draws. */
@@ -107,7 +132,8 @@ export function fameFloorOf(world: WorldState, week: number): number {
     if (endRank == null) continue
     const band = F.seasonEndBands.find((b) => endRank <= b.maxEndRank)
     if (!band) continue
-    floor += band.add * decayAt(week - (row.seasonIndex + 1) * WEEKS_PER_YEAR)
+    // ⭐⭐⭐ ROUND 38 #2c – ON THE CAREER CLOCK AND NOT THE TITLE ONE. See `seasonFloorDecayAt`.
+    floor += band.add * seasonFloorDecayAt(week - (row.seasonIndex + 1) * WEEKS_PER_YEAR)
   }
   // ⭐⭐⭐ ROUND 32 #5 – AND THE COLLABORATIONS SHE HAS ACTUALLY DELIVERED, on the same ledger as a
   // title (docs/specs/collaborations-as-early-fame-2026-08.md). The owner: «на раннем этапе

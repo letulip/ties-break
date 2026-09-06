@@ -303,8 +303,13 @@ describe('round 30 #9 §3 – ⭐⭐ IT FALLS', () => {
     // ⭐ It is still far above the pre-#4 arithmetic, which is the comparison that matters: the same
     // two seasons cost five sixths of the asset before this wave and cost four fifths of it now,
     // against an income that has stopped collapsing. docs/specs/brand-inertia-2026-08.md §16.
-    expect(twoOn / atPeak).toBeGreaterThan(0.18)
-    expect(twoOn / atPeak).toBeLessThan(0.40)
+    // ⚠ RE-AIMED, ROUND 38 #2c (06.09) – the band WAS (0.18, 0.40) and the measured hold WAS about a
+    // fifth. `strength.retention` went 0.78 -> 0.95 on the owner's «делая его более плавным», and the
+    // income squares its argument, so a floor worth `retention` of the stock now buys `retention²` =
+    // 0.90 of the income instead of 0.61: the hold is about a HALF. The claim is unchanged and the
+    // arm below – that it beats its own fame-priced control – is what still proves it.
+    expect(twoOn / atPeak).toBeGreaterThan(0.40)
+    expect(twoOn / atPeak).toBeLessThan(0.60)
     // ⚠ AND IT IS ABOVE ITS OWN PRE-#4 CONTROL ON THE SAME FIXTURE, so «about a fifth» is a
     // measurement of the feature and not of its absence. `fameClock` is round 32 #3's arithmetic
     // read off this same walk, with the stock neutralised.
@@ -533,9 +538,16 @@ describe('round 30 #23 §7 – income and worth are two functions, not one dial'
     const durable = parkAt(shopper('r30-23-durable'), W)
     winTitles(flash, 'wta1000', [W - 2, W - 5])
     winTitles(durable, 'wta1000', [W - 2, W - 5])
-    // ...and the durable one has a CAREER behind the same noise: ten professional seasons at #60
-    // (below every fame band, so the stock cannot move) and a winning record.
-    proSeasons(durable, 10, 60, 20, 8)
+    // ...and the durable one has a CAREER behind the same noise: ten professional seasons BELOW every
+    // fame band, so the stock cannot move, and a winning record.
+    // ⚠⚠ RE-AIMED, ROUND 38 #2c (06.09) – #60 USED TO BE BELOW EVERY BAND AND IS NOT ANY MORE. The
+    // ladder gained a `{maxEndRank: 100}` rung, so ten seasons at #60 now pay fame and the fixture's
+    // own premise – «fame is held EQUAL by construction» – stopped being true. This is the SECOND
+    // time this line has had to move for that reason (round 34 #17 did it for the lost finals) and
+    // the repair is the same: keep the experiment, move the fixture below whatever the ladder now
+    // reaches. #150 is outside every band, and `seasonX` in the MULTIPLE still counts the seasons –
+    // which is exactly the split this arm exists to prove.
+    proSeasons(durable, 10, 150, 20, 8)
     // ⚠⚠ THE TEN LOST FINALS ARE NOW GIVEN TO BOTH CAREERS, RE-AIMED BY ROUND 34 #17 (03.09). They
     // used to be `durable`'s alone, because a lost final below a Slam bought no fame and could
     // therefore differentiate the MULTIPLE while leaving fame untouched. Round 34 made a lost final
@@ -877,8 +889,17 @@ describe('round 30 #24 – a top-20 who never wins is no longer invisible to her
     // owner's own item #5 answering the owner's own question: this fixture has signed NOTHING, and
     // the same career with two band-2 deals is worth $105,512 with no new mechanism at all. The arm
     // below asserts that direction rather than the capital gain #4 briefly gave her.
-    expect(ownedOf(w, MERCH)!.valueCents, 'a career that signs nothing is worth the mark, and the mark is real money')
-      .toBe(Math.round(PRICE * ECONOMY.shop.businessValueFloorShare))
+    // ⚠⚠ RE-AIMED, ROUND 38 #2c (06.09) – AND THE RE-AIM IS THE ITEM, NOT A CASUALTY OF IT. The
+    // paragraph above ends «the floor would have to retain 97% of the stock to lift her over the
+    // mark, which is a retention that has stopped being one». `strength.retention` is now 0.95, and
+    // she clears the mark: 0.95 x 8.61 > 7.24, so the stock binds on her and her brand is worth more
+    // than the price of the shelf it sits on. That is the owner's «у нее явно есть и репутация и о
+    // ней знают» arriving at the one career round 30 #24 was written about – a top-20 who never won
+    // anything – so the assertion flips from «she is stuck at the mark» to «she is past it», and the
+    // arm below still proves that SIGNING lifts her further again.
+    const mark = Math.round(PRICE * ECONOMY.shop.businessValueFloorShare)
+    expect(ownedOf(w, MERCH)!.valueCents, 'a top-20 who signs nothing is now worth MORE than the mark')
+      .toBeGreaterThan(mark)
     // ⭐⭐ ...and the SAME career once she signs what her band already writes her clears it, on the
     // multiplier that has always been there plus the collaboration add round 32 #5 put on the floor.
     const signed = parkAt(shopper('r30-24-top20-signed'), 5 * WEEKS_PER_YEAR)

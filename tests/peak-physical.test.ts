@@ -176,7 +176,13 @@ describe('what is LEFT of her, past the peak', () => {
       weeks += 1
     }
     expect(weeks, 'thirteen seasons of decline were really walked').toBeGreaterThan(600)
-    expect(prevShare).toBeLessThan(0.55)
+    // ⚠ RE-AIMED, ROUND 38 #3d (06.09) – WAS `< 0.55`, MEASURED 0.5454 AFTER THE SAME 675 WEEKS.
+    // `ageCurve.declineAccel` went 0.28 -> 0.24 on the owner's «они и не беспомощны… может разве что
+    // тоже плавнее сделать», so thirteen seasons of decline now leave slightly MORE of her. The
+    // claim this line makes is unchanged and is still the point – she really is most of the way down
+    // after thirteen seasons – so the bound moves and the assertion is not weakened: it still fails
+    // if the decline stops working at all. See docs/specs/fame-presence-2026-09.md §6.
+    expect(prevShare).toBeLessThan(0.6)
   })
 
   it('is the same share at the same age however good she got – which is why one number is enough', () => {
@@ -317,9 +323,15 @@ describe('the v62 migration seeds an existing save at the peak it actually had',
     // ⭐ THE CONSEQUENCE OF THE SEEDING CHOICE, STATED AS A NUMBER. Step 2 puts the last retirement
     // offer on `current / peak`; the point of reconstructing rather than defaulting is that a
     // migrated career arrives at the SAME share as a fresh one of the same age, so the threshold
-    // fires at the same birthday on both. Measured off the shipped curve: ~89% at 33, ~69% at 38,
-    // ~56% at 41 – which is also the row the owner's 55% ruling sits on.
-    const expected: Record<number, number> = { 33: 0.892, 38: 0.689, 41: 0.557 }
+    // fires at the same birthday on both.
+    // ⚠ RE-AIMED, ROUND 38 #3d (06.09). The table WAS 89% / 69% / 56% at 33 / 38 / 41 and is now
+    // 90% / 71% / 59%, because `ageCurve.declineAccel` went 0.28 -> 0.24. What the test checks is
+    // unchanged – a migrated career and a fresh one of the same age read the SAME share – and the
+    // numbers are the shipped curve's, re-measured rather than adjusted to pass.
+    // ⚠⚠ AND THE ROW THE OWNER'S 55% RULING SAT ON HAS MOVED: 41 used to read 56%, just past the
+    // threshold, and now reads 59%, just short of it. That is the measured cost of the softer curve
+    // and it is why `tests/ending.test.ts`'s last offer moved from 41 to 42 – one winter, not more.
+    const expected: Record<number, number> = { 33: 0.8971, 38: 0.7102, 41: 0.5866 }
     for (const age of [33, 38, 41]) {
       const { today, migrated } = asV61(age)
       expect(today / migrated.peakPhysical, `age ${age}`).toBeCloseTo(expected[age], 2)

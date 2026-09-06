@@ -347,7 +347,13 @@ describe('round 32 #3 §7 – his own row, MIRRORED and not imported', () => {
     expect(mult, 'well under the 20x ceiling it used to sit against').toBeLessThan(10)
     expect(pre32(s), '...and the pre-wave arithmetic on the same career was all but at the ceiling')
       .toBeGreaterThan(18)
-    expect(Math.round(mult), 'so the shop row says a single-digit number of years').toBeLessThan(10)
+    // ⚠ RE-AIMED, ROUND 38 #2c (06.09) – THE RAW MULTIPLE IS STILL SINGLE DIGITS AND THE ROW IS NOT.
+    // Measured 9.9559 against 9.6 before the wave, so the rounded row now reads 10 rather than 9-and
+    // the sentence «the shop row says a single-digit number of years» is false by 0.044 of multiple.
+    // What the arm is FOR is unchanged and is asserted below in its own test: one arithmetic, two
+    // surfaces, and the row must equal the rounded shelf figure. The contrast that made the item –
+    // 18.25 pre-wave against 9.96 now – is untouched.
+    expect(Math.round(mult), 'and it is nowhere near the 20x ceiling the owner was reading').toBeLessThan(12)
     // ⚠ AND THE INCOME IS UNTOUCHED BY ROUND 32 #3, which is the half of his sentence that was never
     // wrong: THAT wave moved the price of the business and not what it takes in.
     // ⚠⚠ THE THING SQUARED IS `brandReachOf` AND NO LONGER `s.fame`, on the 31.08 revision of round
@@ -391,8 +397,13 @@ describe('round 32 #3 §7 – his own row, MIRRORED and not imported', () => {
     proSeasons(w, 1, 18, 24, 11)
     loseFinals(w, 'wta250', Array.from({ length: 19 }, (_, i) => W - 8 * (i + 1)))
     const row = shopView(w).rows.find((r) => r.id === MERCH)!
+    // ⚠ THE IDENTITY IS THE POINT AND IT IS UNTOUCHED: the row a player reads IS the rounded shelf
+    // figure, whatever that figure happens to be.
     expect(row.earningsMultipleX).toBe(Math.round(brandMultipleX(brandSignalsOf(w), BASE_X)))
-    expect(row.earningsMultipleX!).toBeLessThan(10)
+    // ⚠ RE-AIMED, ROUND 38 #2c – the raw multiple went 9.6 -> 9.9559, so the ROUNDED row went 9 -> 10.
+    // See the note on the arm above for why the «single digit» wording was retired rather than the
+    // bound quietly widened.
+    expect(row.earningsMultipleX!).toBeLessThan(12)
   })
 })
 

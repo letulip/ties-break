@@ -2010,12 +2010,43 @@ export const ECONOMY = {
       { maxEndRank: 10, add: 10 },
       { maxEndRank: 20, add: 4 },
       { maxEndRank: 50, add: 1.5 },
+      /** ⭐⭐⭐ ROUND 38 #2c (06.09) – THE RUNG THE LADDER STOPPED ONE SHORT OF, and the owner's own
+       *  words are the argument: «спортсменка проводит свой лучший сезон (и не один) находясь в
+       *  ТОП-100 … у нее явно есть и репутация и о ней знают».
+       *
+       *  ⚠⚠ WHAT IT ENDS, on his week-1115 career: NINE seasons ended inside the top 100 were worth
+       *  exactly ZERO fame, because the ladder stopped at 50. A decade of being a professional the
+       *  world can name bought nothing at all, while one WTA 500 title on one Sunday bought 8.
+       *
+       *  ⚠ 0.6 IS THE LADDER'S OWN RATIO CONTINUED AND NOT A NEW LEVEL. The rungs above step by
+       *  10 / 4 / 1.5 – ratios of 2.50 and 2.67 – and 1.5 / 2.6 is 0.58. Rounded to 0.6, so the
+       *  shape of the ladder decides the number rather than a preference about how much a top-100
+       *  season "should" be worth. */
+      { maxEndRank: 100, add: 0.6 },
     ] as readonly { maxEndRank: number; add: number }[],
     /** ⭐ THE SLOW DECAY – the half-life of every contribution, in weeks. Two seasons: a Slam won
      *  six seasons ago still carries an eighth of its step, so a reign fades over about four to
      *  six seasons rather than overnight. ⚠ Decay is what makes fame a lever and not a rank by
      *  another name (spec §3) – a stock that only rises is a trophy cabinet. */
     halfLifeWeeks: 104,
+    /** ⭐⭐⭐ ROUND 38 #2c (06.09) – THE CAREER CLOCK: how long a FINISHED SEASON inside a band the
+     *  world notices is remembered, against `halfLifeWeeks` above for a single title.
+     *
+     *  THE OWNER: «у нее явно есть и репутация и о ней знают, не могу забыть за год.»
+     *
+     *  ⚠⚠ IT SHIPPED AT 104 FIRST – identical to the title clock, deliberately, so the split could be
+     *  proved a no-op before it was tuned. The value below is the tuned one; `seasonFloorDecayAt`'s
+     *  header carries what it ends and `docs/specs/fame-presence-2026-09.md` carries predicted
+     *  against measured over 29 of his own careers.
+     *
+     *  ⚠ IT MUST BE THE LONGEST OF THE THREE CLOCKS (title 104, campaign 52-156 by band, this one),
+     *  or a season is forgotten faster than the title won inside it.
+     *
+     *  ⚠⚠ 312 = SIX YEARS, AND IT IS MEASURED. His best season ever – #20, wrapped at week 884 – was
+     *  worth 0.86 fame points at week 1115 on the title clock and is worth 2.39 on this one. The
+     *  sweep is `tools/r38-fame-presence-sweep.ts` over 29 of his own careers; 104 / 208 / 312 / 416
+     *  are all in it and the table is in docs/specs/fame-presence-2026-09.md. */
+    seasonHalfLifeWeeks: 312,
     /** ⭐ THE MULTIPLIER'S STEP – each shoot week ALREADY LIVED multiplies the floor by
      *  (1 + step), the step itself decaying on the same half-life. Twelve fresh shoots ≈ ×1.6:
      *  enough to reorder two comparable floors (the census's #30-on-court / #2-off-court shape),
@@ -2351,13 +2382,30 @@ export const ECONOMY = {
          *  years ~50%, and it lands on the floor below rather than on zero. ⚠ It must be LONGER
          *  than `ECONOMY.fame.halfLifeWeeks` or there is no second stock at all – only fame wearing
          *  a slower coat, and the split the spec exists for collapses. */
-        halfLifeWeeks: 208,
+        /** ⚠⚠ ROUND 38 #2c RAISED THIS 208 -> 312 (six years). The owner: «делая его более плавным».
+         *  208 made the STOCK fall 15.9% a season, which – once `retention` below let the stock
+         *  govern the tail at all – was the whole of the slope he was complaining about. Measured
+         *  with it: his week-1115 career's brand falls 23.3% a season instead of 27.2%, and its
+         *  five-year tail holds $822,515 instead of $185,285. */
+        halfLifeWeeks: 312,
         /** ⭐⭐ ...AND THE FLOOR, AS A SHARE OF HER OWN PEAK. A career that was genuinely big never
          *  prices at the minimum however long the silence runs; a career that was never noticed has
          *  a peak of nothing and a floor of nothing, so this hands an unknown exactly zero.
          *  ⚠ IT IS A SHARE AND NOT A FLOOR IN POINTS, which is the personal half of his ruling: 0.4
          *  of a Slam champion's peak is a large brand and 0.4 of a club player's is still nothing. */
-        floorShare: 0.4,
+        /** ⚠⚠ ROUND 38 #2c RAISED THIS 0.4 -> 0.55, and it is a PURE TAIL DIAL: measured over 29 of
+         *  his careers, every figure at every live week is IDENTICAL at 0.4, 0.5, 0.55 and 0.65,
+         *  because the exponential still dominates for the first two years. What it decides is where
+         *  the decay STOPS – $185,285 at 0.4 against $822,515 at 0.55 on his week-1115 career, five
+         *  years after she stops winning.
+         *  ⚠⚠ 0.5 AND NOT HIGHER, AND THE KERNEL IS WHY. `strengthDecayAt` is
+         *  `max(floorShare, 2^(-d / halfLifeWeeks))`, so a floor ABOVE 0.5 clips the curve BEFORE it
+         *  has completed a single halving and `halfLifeWeeks` stops describing anything – a constant
+         *  whose name is a lie. At exactly 0.5 the two meet: the stock fades by half, on the
+         *  half-life, and then it stops. That is also the sentence the shop card can honestly carry.
+         *  ⭐ Measured: the five-year tail on his week-1115 career is $662,364 at 0.5 against $185,285
+         *  before this wave. 0.55 measured $822,515 and was refused for the reason above. */
+        floorShare: 0.5,
         /** ⭐⭐⭐ REVISION (31.08) – HOW MUCH OF THE STOCK STILL SELLS SHIRTS, 0..1. THE OWNER, reading
          *  the first shipped result and stopping it: «меня смущает вот это: На пятом году бренд
          *  стоит $166 060 при годовом доходе $1 352».
@@ -2387,7 +2435,16 @@ export const ECONOMY = {
          *  ⚠ It is a BOUND drawn from one case and not a law; the frontier either side of it is in
          *  docs/specs/brand-inertia-2026-08.md §18, and moving it is a decision about how much of a
          *  business survives its founder's silence rather than a correction. */
-        retention: 0.78,
+        /** ⚠⚠ ROUND 38 #2c RAISED THIS 0.78 -> 0.95, AND IT IS THE DIAL THAT MAKES THE OTHERS WORK.
+         *  Measured: at 0.78 the stock floors the reach at 78% of the best she has been, so lifting
+         *  her FAME (the season ladder above) simply pushed her back OFF the floor and onto the fast
+         *  title clock – the level rose and the SLOPE GOT WORSE, -27.2% a season becoming -33.8%. At
+         *  0.95 the stock binds again and the tail is governed by the stock's own six-year clock,
+         *  which is what «более плавным» asks for: -23.3%.
+         *  ⚠ IT STAYS BELOW 1 AND THAT IS LOAD-BEARING – see this block's own header: `retention < 1`
+         *  is the entire proof that the top of the shelf cannot move, and the measurement confirms it
+         *  (his two peak careers read the same worth to the cent at 0.78, 0.85, 0.90 and 0.95). */
+        retention: 0.95,
       },
       /** ⭐⭐⭐ ROUND 34 #17 (03.09) – THE BRAND FOLLOWS THE CONTRACTS. Approved by the owner:
        *  **+1 point of reach per $50,000 of LIVE annual contract value, the contribution capped at
@@ -2540,8 +2597,44 @@ export const ECONOMY = {
       plateauRate: 0.0009,
       /** share of an attribute lost per week at `declineStart` */
       declineRate: 0.00035,
-      /** ...growing each year past it, so a career ends rather than fading forever */
-      declineAccel: 0.28,
+      /** ...growing each year past it, so a career ends rather than fading forever.
+       *
+       *  ⭐⭐⭐ ROUND 38 #3d (06.09) – 0.28 -> 0.22. THE OWNER: «я вижу ветеранов на корте, да, они уже
+       *  не могут так быстро бегать, как раньше, но они и не беспомощны… Может разве что тоже плавнее
+       *  сделать.»
+       *
+       *  ⚠⚠ AND HE ALLOWED THE OTHER HALF TO STAY – «Хотя может быть для формального окончания игры
+       *  это и ок» – which is the constraint this number is chosen against rather than a courtesy.
+       *  `ENDINGS.lastOfferPeakShare` is 0.55 and `ending.ts` marks an off-season offer FINAL at or
+       *  below it, so the body must still be able to end a career. Measured
+       *  (`tools/r38-decline-shape.ts`, exact arithmetic – past `declineStart` nothing else moves a
+       *  physical attribute, so the share of peak is the product of the weekly factors):
+       *
+       *      accel   loss/season at 35   share at 40   body can end the career at
+       *      0.28              4.76%          0.601                            42
+       *      0.24              4.35%          0.628                            42
+       *      0.22              4.14%          0.642                            43
+       *      0.18              3.72%          0.671                            44
+       *      0.14              3.29%          0.701                            45
+       *
+       *  ⚠⚠ 0.24 AND NOT 0.22, AND THE REASON IS A PIN THIS REPO LEFT AS A TRIPWIRE. `ending.test.ts`
+       *  pins that the off-season her body first falls to 70% is the off-season she is first 38 –
+       *  the equivalence that let `ENDINGS.stopAskingAgeYears = 38` be DELETED and replaced by a
+       *  body-share rule, and whose own comment says «if this line ever needs changing then the claim
+       *  the change was sold on has stopped holding». Measured: at 0.22 she reads 0.7019 at 38 and
+       *  crosses during her 39th year – the equivalence breaks by 0.0019 of share. At 0.24 she reads
+       *  0.6905 at 38 and the body and the birthday name the SAME off-season, exactly as before.
+       *  So the softening is taken right up to that pin and stops there.
+       *
+       *  ⚠ A FLOOR WAS MEASURED AND REFUSED: at 0.45 or 0.50 it never binds before 0.55 is crossed,
+       *  so it would have been decoration.
+       *
+       *  ⚠⚠ AND IT IS NOT WHAT CAUSED HIS «из топ-50 до топ-150 за сезон». That fall is her ABSOLUTE
+       *  level against the field's – she is at 47 on four attributes where the tour's elite sit at
+       *  65-70 – so any loss at all is decisive there. This dial softens the slope; the level is C2's
+       *  question and it is still open. Said out loud so the next reader does not credit this change
+       *  with a fix it does not deliver. */
+      declineAccel: 0.24,
     },
     /** ⭐⭐⭐ ROUND 31 #10 – THE FORK SHAPES THE CURVE, and until now it only priced it.
      *

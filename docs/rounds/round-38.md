@@ -78,11 +78,22 @@ the repo keeps is the derived statistics below.
   afternoon, and what it does buy evaporates on the clock built for single results. That is his
   «не могу забыть за год», stated in the game's own numbers. The fix is item 2c.
 
-- [>] **2c. Presence is a different fact from a result** – build. Two changes, both inside
+- [x] **2c. Presence is a different fact from a result** – SHIPPED, `docs/specs/fame-presence-2026-09.md`. Two changes, both inside
   `fameFloorOf`, both precedented in the same function: the season ladder reaches **100**, and the
   season term gets its OWN slower clock instead of borrowing the title one (`shootFloorDecayAt`
-  already does exactly this for shoots, per band). ⚠ Measured against the standing constraint that
-  the TOP of the shelf cannot move.
+  already does exactly this for shoots, per band).
+
+  ⚠ IT TOOK FIVE DIALS AND NOT TWO, and the reason is measured rather than argued: lifting her FAME
+  pushed her back ABOVE the stock's floor and therefore back onto the fast title clock, so the level
+  rose and **the slope got worse** (-27.2% a season becoming -33.8%). `strength.retention` 0.78 ->
+  0.95 is what makes the stock govern the tail again. Final set: rung `{100, 0.6}` ·
+  `seasonHalfLifeWeeks` 312 · `retention` 0.95 · `strength.halfLifeWeeks` 312 · `floorShare` 0.5.
+
+  **Measured on his own week-1115 career:** fame 14.4 -> **22.6**, weekly $4,565 -> **$8,111**, worth
+  $2,576,989 -> **$5,172,791**, the season fall -27.2% -> **-23.3%**, and the five-year tail $185,285
+  -> **$662,364**. ⚠ The top of the shelf held across every tail dial (his two peak careers read the
+  same worth to the cent at 0.78 / 0.85 / 0.90 / 0.95 retention); the fame LADDER does lift them,
+  +12.5% and +9.9%, which is presence paying everybody who has it.
 
 - [~] **3. «Оценка перформанса вообще для Алисы и её возраста в частности. Чем она отличается от
   Ostergaard #3 в списке? А ещё очень интересует наша роза скиллов, которая упала в некоторых местах
@@ -132,15 +143,28 @@ the repo keeps is the derived statistics below.
   her peak book and she RETIRES at 26-34 (`ECONOMY.field.career`). Hers is floored at 20/58 = 34% and
   she never has to stop. The two populations age on different rules, which is item 3d.
 
-- [>] **3d. One floor or two** – ⭐ **HE RULED, 06.09:** «я вижу ветеранов на корте, да, они уже не
+- [x] **3d. One floor or two** – SHIPPED as a RATE and not a floor. ⭐ **HE RULED, 06.09:** «я вижу ветеранов на корте, да, они уже не
   могут так быстро бегать, как раньше, но они и не беспомощны… Может разве что тоже плавнее сделать,
   потому что она за 1 сезон скатилась из топ-50 до топ-150 и это довольно жестко.»
 
   ⚠ AND HE ALLOWED THE HARSH END TO STAY: «Хотя может быть для формального окончания игры это и ок.»
   So this is a FLOOR and not a flattening – the career must still end, and what must stop is the
   free fall on the way there. The field's own pros already have exactly this
-  (`ECONOMY.field.career.declineFloor: 0.55` of peak, then they retire at 26-34); she is the only
-  person in the world without one. Build: the same shape, measured on whether careers still end.
+  (`ECONOMY.field.career.declineFloor: 0.55` of peak, then they retire at 26-34).
+
+  ⚠⚠ **AND THE FLOOR WAS MEASURED AND REFUSED.** `ENDINGS.lastOfferPeakShare` is 0.55 and the
+  off-season offer is FINAL at or below it, so a floor at 0.45 or 0.50 never binds before 0.55 is
+  crossed – decoration – and a floor at 0.55 or above would make the ending unreachable. What shipped
+  is the RATE: `ageCurve.declineAccel` **0.28 -> 0.24**, which is 4.35% of her body a season at 35
+  instead of 4.76%. ⚠ 0.24 and not softer because `ending.test.ts` pins the 70%-at-38 equivalence
+  that let `stopAskingAgeYears` be deleted, and 0.22 breaks it by 0.0019 of share.
+
+  ⚠ **What it costs:** the last offer arrives at 42 instead of 41, and the recovery corridor opens
+  slightly for veterans (3.55 at 38 instead of 3.45) because it reads the same share. Both are in
+  `docs/specs/fame-presence-2026-09.md` §6.
+
+  ⚠⚠ **And it is NOT what caused «из топ-50 до топ-150».** Her four attributes read 45-50 where the
+  tour's elite read 65-70, so any loss at all is decisive. That is the LEVEL, which is C2's question.
 
 - [ ] **4. The academy's worth stands still** – ⭐ HIS OBSERVATION, 06.09: «Академия при этом стоит
   ровно на месте – и это не очень корректно, как мне кажется. Но можем отдельно обсудить.» Recorded,

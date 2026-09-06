@@ -328,7 +328,13 @@ describe('round 32 #4 §3 – ⭐⭐ THE ASSET HOLDS WHILE THE INCOME BREATHES',
     const heldFall = 1 - brandGrossWorthCents(later, BASE_X) / brandGrossWorthCents(now, BASE_X)
 
     // ⭐⭐ THE FEATURE: five years of silence used to take all but a hundredth of the revenue.
-    expect(bareFall, 'the pre-wave income all but disappears').toBeGreaterThan(0.95)
+    // ⚠ RE-AIMED, ROUND 38 #2c (06.09) – the CONTROL itself moved, and that is worth reading twice.
+    // `bareFall` is the pre-wave arithmetic (income as a bare function of fame), and fame is exactly
+    // what #2c changed: seasons inside a band now decay on a six-year career clock instead of the
+    // title's two, so five years of silence take 89% of the bare revenue where they used to take 96%.
+    // The claim is unchanged – silence still all but empties an unfloored brand – and the arm below,
+    // which compares the floored income against this control, is the one doing the work.
+    expect(bareFall, 'the pre-wave income all but disappears').toBeGreaterThan(0.85)
     expect(incomeFall, 'and with the floor it does not').toBeLessThan(bareFall - 0.05)
     // ⭐⭐⭐ AND THE WORTH NOW FALLS WITH IT rather than floating free of it – «of the same ORDER as
     // the fall in income» is the acceptance, and this is that sentence as arithmetic. The pre-wave
@@ -386,11 +392,20 @@ describe('round 32 #4 §3 – ⭐⭐ THE ASSET HOLDS WHILE THE INCOME BREATHES',
     const w = hisShape()
     // ⚠ THE FLOOR DOES NOT BIND THE MOMENT THE DECLINE STARTS, AND THAT IS THE DESIGN RATHER THAN A
     // SHORTFALL: `retention < 1`, so it takes hold only once fame has fallen to `retention` of the
-    // stock. A year in it has not; by two it has. Both halves are asserted so a retention pushed to
-    // 1 – which would move the top of the shelf – reddens the arm above instead of passing here.
+    // stock.
+    // ⚠⚠ RE-AIMED, ROUND 38 #2c (06.09), AND THIS PIN WAS WATCHING FOR EXACTLY THIS. It used to read
+    // «a year in it has not; by two it has», with the note that «a retention pushed to 1 – which
+    // would move the top of the shelf – reddens the arm above instead of passing here». `retention`
+    // is now 0.95 on the owner's «более плавным», so the floor takes hold in the FIRST year. The
+    // guard it was protecting is intact and is now pinned in two places rather than one: `retention`
+    // stays strictly below 1 (`tests/r38-fame-presence.test.ts`), and the top of the shelf was
+    // MEASURED unmoved across 0.78 / 0.85 / 0.90 / 0.95 on 29 of the owner's careers
+    // (docs/specs/fame-presence-2026-09.md §5). So the direction is asserted here instead of the
+    // year, which is what the arm was ever for.
     const early = brandSignalsOf(w, w.week + WEEKS_PER_YEAR)
     expect(early.strength, 'a year in the stock is already above fame').toBeGreaterThan(early.fame)
-    expect(brandWeeklyGrossCents(early), '...but the floor has not taken hold yet').toBe(flatWeekly(early))
+    expect(brandWeeklyGrossCents(early), '...and the floor already carries her past the bare income')
+      .toBeGreaterThan(flatWeekly(early))
     for (const offset of [2 * WEEKS_PER_YEAR, 3 * WEEKS_PER_YEAR, 5 * WEEKS_PER_YEAR]) {
       const s = brandSignalsOf(w, w.week + offset)
       expect(s.strength, `+${offset}w: the stock has genuinely diverged from fame`).toBeGreaterThan(s.fame)
