@@ -1507,3 +1507,14 @@ call whether the phone's floors move.**
 | ⚠ **which surface** | The childhood prologue's card, NOT `OnboardingWizard` – established by measurement: `.prologue-answers` is the only choice set in the new-career flow under a picture, its first button began on the painting's last pixel on four of five cards, and it is the only one paired above 768. The wizard's pair is two columns at every width including 375, so changing it there would have moved the phone. |
 | **shipped** | One column capped at **500px** – round 36 review item 18's own number – with `width: 100%` (a grid item with auto inline margins does not stretch, and the cap alone shrank the column to 105px on the age-6 card), and the hero gains the tablet band's 14px margin. Four answers: three shared rows → four rows; button 608/848 → 500; gap under the painting **0 → 14px**. |
 | ⚠ **two calls left to him** | 500 is now spelled twice (here and `.tb-pill--cta`) and is deliberately not yet a token – a third subject is when it becomes one. And one column is taller than two, so the tallest card grows 810 → 847px inside its 640px port at 768-1023; it has scrolled since round-20 #3, so this changes how far, not whether. |
+
+### D101 `[x]` The frame's gutter belongs to the grid, not to a negative margin
+
+| | |
+| --- | --- |
+| **his ruling** | «любые отрицательные отступы - это антипаттерн», with a screenshot showing the rail's left inset visibly larger than its right |
+| **what it was** | `#app` carries the frame's gutter AND is the grid container past 1024, so the rail – a grid item – was born inside a padding meant only for the reading column, and three `calc(-1 * …)` margins existed to climb back out. The visible asymmetry was the symptom: the gutter was then re-spent as the rail's own left padding. |
+| **shipped** | The rail's track is `calc(var(--app-rail-w) + var(--app-pad-x))` and the vertical gutter is the grid's first and last rows. All three negatives gone from the declarations; the only occurrences left in the sheet are the comments that explain their removal. |
+| ⚠ **what is NOT changed, and why** | The right gutter stays on the container. There is no box climbing out of anything on that side – the gutter IS the column's inset – and reaching zero there costs a negative track or a 16px shift of `.app-content`'s border box. |
+| **proof** | 72 snapshots, seven widths, five tabs, top and foot, notices up and down: 84 differing fields, all four of them the computed-style fields this change is about. Zero geometric differences. Phone and tablet byte-identical. |
+| ⭐ **the guard** | Put one negative back and **six of the seven specs stay green** – the insets still read 12/12 and the band is still absent. Only the new arm reddens, which is the whole argument for adding it. |

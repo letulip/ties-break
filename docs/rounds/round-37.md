@@ -230,21 +230,21 @@ raises it: the page scroll does not reveal it, because the rail is sticky.
 
 He walked the stand at `cec32a1a` and answered the open decisions as he went.
 
-- [>] **9. «наша плашка "Her own account" в магазине шумит сильно, давай ее только на spending будем
+- [x] **9. «наша плашка "Her own account" в магазине шумит сильно, давай ее только на spending будем
   показывать, мне кажется на других экранах она не очень нужна вообще»** – build. The plate is drawn
   on more of the money screen's chapters than it earns; it belongs to Spending alone.
 
-- [>] **10. «Spending еще больше воздуха в 3 раза на планшетах и десктопах вокруг записки, фото и
+- [x] **10. «Spending еще больше воздуха в 3 раза на планшетах и десктопах вокруг записки, фото и
   пайчарта. Саму записку тоже можно на 1/3 шире сделать на планшетах и десктопах»** – build, and it
   extends round 36 review item 15, which gave that right-hand sector air for the first time. Three
   times as much now, and the note itself a third wider. Tablet and desktop only.
 
-- [>] **11. «записку справа от картинки на week results поверни немного против часовой стрелки,
+- [x] **11. «записку справа от картинки на week results поверни немного против часовой стрелки,
   градусов на 5»** – build. The scrap beside the photograph turns about 5 degrees anticlockwise.
   ⚠ Its tilt is `PaperNote`'s own prop and the card already passes one; this changes the number the
   card passes, not the component.
 
-- [>] **12. «в матче ширина окна внутри ограничена 880px, как-будто можно еще пошире сделать, т.е.
+- [x] **12. «в матче ширина окна внутри ограничена 880px, как-будто можно еще пошире сделать, т.е.
   уже в 880 начиная можно по ширине экрана место занимать и до 1024 резиново расширять, как раз за
   счет расширения чата»** – build. From 880 the match takes the width it is given, fluid to 1024, and
   the room goes to the commentary.
@@ -252,11 +252,11 @@ He walked the stand at `cec32a1a` and answered the open decisions as he went.
   `src/style.css` says so, and `tests/component/tour-briefing.test.ts` measures it. So this is a
   match-only rule, not a move of the token, or it silently widens the wizard and the briefing too.
 
-- [>] **13. «Кнопка Next round по прежнему очень широкая, давай тоже 500 ограничим»** – build.
+- [x] **13. «Кнопка Next round по прежнему очень широкая, давай тоже 500 ограничим»** – build.
   `TournamentFlow.vue:1244`. Round 36 review item 18 capped every affirmative CTA at 500; this control
   was missed by that sweep, which is worth knowing – the census that item ran looked at 1280 only.
 
-- [>] **14. «на вертикальном рейле навигации на десктопе слева сделаем такой же отступ, как и справа
+- [x] **14. «на вертикальном рейле навигации на десктопе слева сделаем такой же отступ, как и справа
   (меньше то есть)»** – build. The rail's right padding is 12px and its left is
   `12px + var(--app-pad-x)`; he wants them equal at 12.
   ⚠ The asymmetry was deliberate and its reason is written at the rule: the rail is pulled out to the
@@ -280,7 +280,7 @@ He walked the stand at `cec32a1a` and answered the open decisions as he went.
   escape an ancestor's padding is a sign the box is in the wrong container, and the honest fix is the
   container, not the offset.
 
-- [>] **15. «при прокручивании страницы вниз на десктоп под рейлом навигации остается пустое
+- [x] **15. «при прокручивании страницы вниз на десктоп под рейлом навигации остается пустое
   пространство 50-60 пикселей примерно, проверь что это пожалуйста и желательно этот дефект убрать»**
   – measure first, then build. ⚠ **50-60px is suspiciously close to the height of the PHONE'S BOTTOM
   BAR**, which the desktop turns into this rail – so the first hypothesis to test is a reservation
@@ -298,3 +298,43 @@ He walked the stand at `cec32a1a` and answered the open decisions as he went.
 | `D83` the coaching-budget tile's four figures | «вроде ок» | **closed, accepted** |
 | Home as a whole | «на home вроде бы всё нормально» | – |
 | the live match | «в матче вроде всё корректно» apart from item 12 | – |
+
+- [x] **16. «любые отрицательные отступы - это антипаттерн»** – his ruling on item 14, built as its
+  own item because it is a refactor and not a tweak. **`D101`.**
+
+  All three negative offsets are gone from the declarations. The gutter moved into the grid: the
+  rail's own track is `calc(var(--app-rail-w) + var(--app-pad-x))` – 212px, which is exactly what the
+  rail's border box has always measured – and the vertical gutter became the grid's first and last
+  rows, `var(--app-pad-top) repeat(4, auto) var(--app-pad-bottom)`, which the rail spans.
+
+  ⚠ **The right gutter stays as the container's padding, and the reason is argued rather than
+  assumed:** on the right there is no box climbing out of an ancestor's padding – the gutter IS the
+  reading column's inset. Reaching zero padding there costs something real either way: a third
+  gutter track needs a second gap and then a NEGATIVE track to compensate, and moving it onto
+  `.app-content` shifts that element's border box 16px right.
+
+  ⭐ **Nothing moved, and it is measured rather than claimed:** 72 snapshots across five tabs at
+  375 / 768 / 900 / 1024x800 / 1280x900 / 1280x600 / 1440x900, at the top of the page and scrolled to
+  the foot, plus Home with both notices up. **84 fields differ and every one of them is one of the
+  four computed-style fields this change is about; zero geometric differences.** The phone and the
+  tablet are byte-identical.
+
+  ⭐⭐ **And the new guard earns its place by a mutation that proves the others could not do its job:**
+  with the negative margin put back, **six of the seven specs stay green** – the insets still measure
+  12/12 and there is still no band, so every arm written for items 14 and 15 passes a build with the
+  antipattern in it. Only the new one goes red.
+
+---
+
+## What the third pass shipped
+
+| item | what changed | measured |
+| --- | --- | --- |
+| 9 | «Her own account» is Spending's alone | one site, drawn on 4 chapters + 2 shop levels → 1 |
+| 10 | Spending's air x3 and the note a third wider | 32 → 96 per side; column 146 → 194.66 |
+| 11 | the scrap beside the photograph turns | −0.5° → −5.5° past 768, phone untouched |
+| 12 | the match takes the width it is given | shell 880 → 900/960/1024; every new pixel is the commentary's |
+| 13 | Next round is capped and centred | 702/814 → 500 at four widths |
+| 14 | the rail's insets match | left 28 → 12 |
+| 15 | the band under the rail | 48.0 → 0.0 at every width and both heights |
+| 16 | and no negative offset buys any of it | three removed, 72 snapshots identical |
