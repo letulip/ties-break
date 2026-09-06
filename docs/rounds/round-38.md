@@ -108,7 +108,12 @@ the repo keeps is the derived statistics below.
 
 ## Wave C, as `docs/specs/next-waves-2026-09.md` recorded it
 
-- [ ] **C1 – the age curve.** `plateauStart` 23 -> 28, `declineStart` 29 -> 33, rate untouched.
+- [?] **C1 – the age curve.** ⚠ **C0 measured it and the proposal does not survive.** The pair C1
+  would move (`ECONOMY.development.ageCurve`) is the PRE-FORK curve; a real career resolves
+  `ageRoutes` – `direct {22, 27}`, `college {23, 29}` – so moving it would have moved nothing.
+  And growth does not stop at `plateauStart`: `plateauRate` is 0.0009, and careers already peak at
+  **26.55 direct / 28.56 college** against his own reference of `24-26 / 25-28`. C1 as written would
+  push the peak to 32-33. Now an `ask` – question 4.
 - [ ] **C2 – `potentialBand`.** [4, 26] at a measured 93.3% exhausted; target 30-40%. After C1.
 - [ ] **C3 – coach tenure.** ⚠ BLOCKED on his own «как это не превратить в гарантию?».
 - [ ] **C4 – the two skills that never reach the field.** One calibrated closed form for everybody.
@@ -133,7 +138,15 @@ the repo keeps is the derived statistics below.
    old; **C** make the retirement offer harder to refuse past a point, so the six extensions become
    two. My reading: **B and C together**, and B first – it is one constant and one guard.
 
-3. **The travel class (1).** What is the choice actually made of? **A** a class per trip, chosen
+4. **The age curve (C1).** You objected that «рост как раз идёт до 28-29», and the measurement says
+   you are right about the age: she peaks at **26.6** going direct and **28.6** via college. What she
+   gains between 22 and that peak is **under one point**. So: **A** leave the curve alone – the peak
+   is already where your own reference table puts it; **B** raise `plateauRate` so the late years are
+   worth something without moving the peak; **C** move the peak anyway, which means moving
+   `ageRoutes` and accepting peaks at 31-33. My reading: **B**, and only after C2 – the plateau being
+   thin and the ceiling being exhausted are the same complaint seen from two ends.
+
+5. **The travel class (1).** What is the choice actually made of? **A** a class per trip, chosen
    when she enters (economy / standard / business), price and a condition effect; **B** a standing
    family policy she sets once and can change; **C** a policy plus a separate one for the travelling
    team, which is his «для специалистов отдельно». My reading: **B for her, C's second half only if

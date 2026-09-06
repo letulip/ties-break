@@ -169,6 +169,48 @@ phase boundaries move. Growth to 28, maintenance 28-33, decline after 33.
 ⚠ **This gives every career five more years of growth, so it almost certainly raises every ceiling at
 once – which makes C2 mandatory rather than optional, and makes the order below load-bearing.**
 
+---
+
+#### ⚠⚠ C0 MEASURED THIS AND IT DOES NOT HOLD (06.09, `npm run bench:agecurve`, 24 seeds)
+
+**C1's premise above is wrong, and C1 must not ship as written.** Three facts, in the order they
+break it:
+
+**1. The pair C1 proposes to move is read by almost nothing.** `ECONOMY.development.ageCurve` is the
+**pre-fork** curve since round 31 #10. A career past the fork resolves `ECONOMY.development.ageRoutes`
+instead – `direct { 22, 27 }`, `college { 23, 29 }` – plus its own `declineSpreadYears` draw. Moving
+only the default would have moved nothing for any career that has answered the fork, which is every
+career the change is for. Predicted a fix, measured it doing nothing: `rank-plateau.md`'s own shape.
+
+**2. Growth does not stop at `plateauStart`. It thins.** `plateauRate` is 0.0009, not 0 – she keeps
+gaining through the plateau, slowly, and the measured PEAK lands at `declineStart`, not at
+`plateauStart`. Physical mean by age, same seed, one thing different:
+
+| age | direct | college |
+| --- | --- | --- |
+| 22 | 59.21 | 59.42 |
+| 26 | **59.76** (peak) | 60.00 |
+| 28 | 57.88 | **60.19** (peak) |
+| 30 | 54.47 | 58.34 |
+
+**Careers already peak at 26.55 direct and 28.56 college.** His own reference table – the one round
+31 was built against – is `24-26 direct, 25-28 via college`. Both routes therefore peak at or just
+past the TOP EDGE of his own windows. There is no missing five years; if anything the peak is late.
+
+**3. So C1 as specced would push the peak to 32-33**, five years outside his reference, and it would
+do it while C2 was trying to tune the ceiling underneath. That is two dials fighting.
+
+**What his objection «рост как раз идёт до 28-29» actually points at.** He is right about the AGE and
+the disagreement is about the WORD. She is still improving at 28 – by **under one point** between 22
+and her peak (59.21 → 59.76 direct; 59.42 → 60.19 college). If what he means is that the improvement
+should still be worth something at 26-28, the dial is **`plateauRate`**, not `plateauStart`: raise
+what the plateau is worth and the peak stays where his reference says it belongs. If he means the
+peak itself is early, the measurement says it is not.
+
+⚠ **C1 is therefore an `ask`, not a build.** The fork is in `docs/rounds/round-38.md`'s question list.
+
+---
+
 ### C2 – `potentialBand`
 
 `ECONOMY.development.potentialBand` is `[4, 26]` – the spread of potential a girl is born with over
