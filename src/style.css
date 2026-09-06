@@ -737,6 +737,38 @@ body {
     margin-left: auto;
     margin-right: auto;
   }
+
+  /* ⭐⭐⭐ ROUND 37 ITEM 13 – THE ONE CONTROL THE SWEEP ABOVE COULD NOT REACH. The owner, 06.09:
+     «Кнопка Next round по прежнему очень широкая, давай тоже 500 ограничим» – «тоже», because it is
+     the same 500 and the same sentence as review #18 one rule up.
+
+     ⚠ WHY IT SURVIVED THAT SWEEP, AND IT IS A LESSON ABOUT THE CENSUS RATHER THAN ABOUT THE RULE.
+     #18 capped the CLASS – every affirmative CTA in the app is `PrimaryPill variant="cta"` – and
+     this control is not one: a takeover's action row is a bare `<button class="primary">` in
+     `.tf-actions`, which is `display: flex` with `flex: 1` on its children, so a row holding ONE
+     button is a button as wide as the card. `.tf-actions` holds a PAIR on four of the five surfaces
+     that use it (the tournament's pre-match card and box score, the friendly's two) and each half is
+     ~418px at 848 of shell, comfortably inside the cap; the spectate card is the only one that puts
+     a single button in the row, and a lone `flex: 1` child is exactly the shape #18 was written
+     about. Measured on the shipped build: 702px at 768 and 814px at 900, 1024 and 1280 alike.
+
+     ⚠ THE CAP IS ON THE ROW'S CHILDREN AND NOT ON THE SPECTATE CARD, deliberately – the same choice
+     #18 made and for the same reason («the cap is the class and not the screen»): it reaches the
+     next lone action row before it is written, and it cannot reach the pairs, which are already
+     under 500 at every width the app draws them at.
+     ⚠ `justify-content` IS WHAT MAKES «ПО ЦЕНТРУ» TRUE HERE. A capped `flex: 1` child leaves free
+     space in the row, and a flex line's default `flex-start` would leave the button against the left
+     edge of the card; the pairs still fill their row, so this is inert for them. It is the row's
+     counterpart of the `display: block` + auto margins one rule up, which a flex child cannot use.
+     ⚠ AND IT STARTS AT 768 WITH THE REST OF THE BLOCK: below it the takeover column is 480px and the
+     card inside it 446, so no button in this row can reach 500 anyway. Censused at 375 and 576. */
+  .tf-actions {
+    justify-content: center;
+  }
+
+  .tf-actions button {
+    max-width: 500px;
+  }
 }
 
 /* ⭐⭐⭐ ROUND 36 PHASE 3 – THE DESKTOP SHELL. The owner, on his frames AC–AQ:
@@ -809,9 +841,64 @@ body {
     width: auto;
     max-width: none;
     /* Flush to the frame's own edge rather than inset by the frame's gutter, which is where AC puts
-       it – the gutter is re-spent as the rail's own padding so the labels keep their inset. */
-    margin: calc(-1 * var(--app-pad-top)) 0 0 calc(-1 * var(--app-pad-x));
-    padding: 20px 12px calc(20px + env(safe-area-inset-bottom, 0)) calc(12px + var(--app-pad-x));
+       it.
+       ⭐⭐⭐ ROUND 37 ITEM 15 – AND THE BOTTOM EDGE IS AN EDGE TOO, WHICH IS THE WHOLE OF THAT ITEM.
+       The owner, 06.09: «при прокручивании страницы вниз на десктоп под рейлом навигации остается
+       пустое пространство 50-60 пикселей примерно, проверь что это пожалуйста и желательно этот
+       дефект убрать.»
+
+       ⚠⚠ MEASURED BEFORE ANYTHING WAS REMOVED, AND THE FIRST HYPOTHESIS WAS WRONG. It is NOT a
+       reservation left behind for the phone's bottom bar – that reservation is `.app-content`'s own
+       `padding-bottom` (88 / 96 / 148px), it lives INSIDE the second column, and the rail spans it
+       happily because it spans `grid-row: 1 / -1`. What the band actually is: `#app`'s own
+       `--app-pad-bottom`, 48px, and the arithmetic is exact rather than approximate. The grid's rows
+       fill the frame's CONTENT box, so the rail's grid area – and therefore its sticky travel – ends
+       48px above the document's last pixel; scrolled to the foot of the page, the rail, its
+       `border-right` and its background all stop there and the frame's bottom gutter shows through.
+       Measured in Chromium, scrolled to the end, before this line: 48.0px on Home and on Season, at
+       1280x900, at 1024x800 and at 1280x600 alike, with `elementFromPoint` in the band returning
+       `#app` itself.
+       ⚠ IT IS A DIFFERENT DEFECT FROM THE RAIL SCROLLING ITSELF. At 1280x600 the rail's own content
+       is 728px in a 600px box, so its last dashboard card is below the RAIL's fold – that is
+       `overflow-y: auto` doing its job and is not this band.
+
+       THE FIX IS THE SENTENCE ABOVE, FINISHED. The top and left gutters are already unwound by
+       negative margins so the rail meets the frame's edge; the bottom one was simply never in the
+       list. A negative bottom margin lets the rail's border box travel `--app-pad-bottom` past the
+       bottom of its grid area – a sticky box is constrained by its MARGIN box, so this is the same
+       instrument the `-1 * --app-pad-top` above uses, in the other direction – and the band closes
+       to 0. The gutter is not re-spent as padding on this side: the rail's own 20px bottom padding
+       plus the safe area is what holds its last card off the edge, exactly as it did. */
+    margin: calc(-1 * var(--app-pad-top)) 0 calc(-1 * var(--app-pad-bottom)) calc(-1 * var(--app-pad-x));
+    /* ⭐⭐⭐ ROUND 37 ITEM 14 – THE LEFT INSET IS THE RIGHT ONE NOW. The owner, 06.09: «на
+       вертикальном рейле навигации на десктопе слева сделаем такой же отступ, как и справа (меньше
+       то есть)».
+       ⚠ THIS IS A REVERSAL AND NOT A TYPO BEING CORRECTED, so what it costs is stated rather than
+       discovered. The 12 + `--app-pad-x` that stood here was the second half of the negative margin
+       above: the frame's gutter was re-spent as the rail's own left padding, so the rail met the
+       frame's edge while its LABELS kept the same inset as the rest of the page. Cutting it to 12
+       moves every label, icon, the identity block and the dashboard cards left by `--app-pad-x`, and
+       that is what he is asking for – he is looking at the gap between the rail's left edge and its
+       contents, and at 28 against 12 on the right it is visibly lopsided.
+       Measured before -> after: at 1024 the first tab's icon 40 -> 24 and its label 72 -> 56; at
+       1280, 80 -> 64 and 112 -> 96. Nothing moves on the right: the rail's own right edge and its
+       hairline stay at 199 / 239, so the change is one-sided, which is what «такой же, как и
+       справа» asks for.
+       ⚠ THE NEGATIVE MARGIN STAYS. It is a separate fact – «flush to the frame's own edge rather
+       than inset by the frame's gutter, which is where AC puts it» – and dropping it would keep the
+       labels where they are today and move the rail's EDGE right instead, which is neither the
+       thing he pointed at nor a smaller inset. Measured both ways at 1024: with the margin the rail
+       stands at x=0 and the labels at 56; without it, x=16 and the labels back at 72, i.e. the
+       screen he is already looking at.
+       ⚠ AND IT IS TWO DECLARATIONS RATHER THAN ONE FOUR-VALUE SHORTHAND, for the reason the CTA cap
+       states two lines of `margin-left` / `margin-right` instead of `margin-inline`: a rule no test
+       can see is a rule the next wave can delete. Measured on happy-dom 06.09 – it drops a
+       `padding` shorthand whose value contains `env()` ENTIRELY, so while the bottom safe area was
+       inside the shorthand the mounted layer read the rail's four insets as the empty string and
+       could not have caught this item going the wrong way. The safe area is its own declaration now
+       and the three plain sides are readable. */
+    padding: 20px 12px;
+    padding-bottom: calc(20px + env(safe-area-inset-bottom, 0));
     flex-direction: column;
     justify-content: flex-start;
     gap: 2px;
@@ -1655,6 +1742,59 @@ select {
    looking at. That is why this override exists instead of the shared declaration above changing. */
 .tf-body {
   padding-inline: var(--app-pad-x);
+}
+
+/* ⭐⭐⭐ ROUND 37 ITEM 12 – THE MATCH TAKES THE WIDTH IT IS GIVEN, AND ONLY THE MATCH. The owner,
+   06.09: «в матче ширина окна внутри ограничена 880px, как-будто можно еще пошире сделать, т.е. уже
+   в 880 начиная можно по ширине экрана место занимать и до 1024 резиново расширять, как раз за счет
+   расширения чата и можно сделать, мне кажется.»
+
+   ⚠⚠ IT IS A MATCH-ONLY RULE AND DELIBERATELY NOT A MOVE OF `--app-max-width`, which is the whole
+   reason it is written here instead of in the ladder. That token caps THREE surfaces – the
+   onboarding wizard (R14-9), the tour briefing, and `--takeover-col-max` for every takeover – and
+   `tests/component/tour-briefing.test.ts` measures the 880 it gives the briefing. Laddering it once
+   before turned that test red with «expected 1200 to be 880», which is the sheet's own record of
+   what widening the token costs. The match is one of the takeovers, so it overrides the token FOR
+   ITS OWN SUBTREE and the other two are untouched.
+
+   ⚠ `min(100%, 1024px)` IS HIS SENTENCE READ LITERALLY, and between 880 and 1024 it needs no
+   breakpoint of its own: `.tf-body` is `width: 100%` in a full-screen takeover, so from 880 up the
+   `100%` term IS «по ширине экрана» and the 1024 is «до 1024 резиново». Measured: the body is 880 at
+   880, 900 at 900, 960 at 960, 1024 at 1024, and 1024 centred on anything wider.
+
+   ⚠⚠ AND IT IS INSIDE THE LADDER'S OWN 768 GATE BECAUSE `100%` CUTS BOTH WAYS – a defect this rule
+   shipped with for one measurement, caught by the round's identity contract rather than by reasoning
+   about it. Below 768 `--takeover-col-max` is 480px, and 480 is BIGGER than a 375px phone but
+   SMALLER than a 576px one: unscoped, `min(100%, 1024px)` took the friendly's viewer from 480 to 576
+   at exactly his own phone width. The 375 arm never moved and would have passed it. Inside the gate
+   the token below 768 is untouched, and at 768–880 the two spellings agree to the pixel (768 at 768,
+   860 at 860), because there the old 880 did not bite either.
+
+   ⚠ `:has()` NAMES THE MATCH BY WHAT IS IN THE SHELL, which is the only thing that distinguishes it:
+   all four match surfaces (TournamentFlow, PracticeFlow, MatchReplay and Season's sandbox) mount
+   `MatchViewer` as slot content of `ui/TakeoverShell.vue`, and `.mv` is MatchViewer's own root, so
+   it is in the shell exactly when the match is on screen and in no other screen of the flow (the
+   viewer is a `v-if` SIBLING of the phase sections, never a peer of them). Same instrument as
+   `#app:has(> nav.tab-bar)` two screens up, and it keeps this a rule about a SHELL rather than a
+   prop threaded through one shared component for four callers.
+   ⚠⚠ AND IT IS THE DESCENDANT FORM RATHER THAN `:has(> .tf-body > .mv)` FOR A MEASURED REASON.
+   happy-dom – the mounted layer's runner – supports `:has()` but mis-evaluates a relative selector
+   that STARTS WITH A COMBINATOR: probed 06.09, `.tournament-flow:has(> .tf-body > .mv)` matched a
+   takeover with no match in it as well as one with, while `:has(.mv)` answered correctly on both.
+   The child form is not more precise here anyway – nothing else in the app draws a `.mv` – and the
+   loose one cost a false red in `tests/component/round36-phase4.test.ts`, whose «a takeover with no
+   match keeps its 880» arm is exactly the claim this scoping exists to keep true.
+   ⚠ THE PROLOGUE'S WEEKEND IS OUT OF REACH BY CONSTRUCTION and stays at 880: its `.mv` is a child of
+   `.plo`, not of a takeover shell (`PrologueLocalOpen.vue` caps it on `--takeover-col-max` itself).
+   That is phase 4's pinned decision about a different surface, and item 12 does not reopen it.
+   ⚠ AND THE HEADER FOLLOWS THE BODY, for free: `.tf-top` reads the same token, and «the header and
+   the body of one screen are one column to the eye» is `.tf-top`'s own note further down the sheet.
+   ⭐ WHERE THE NEW ROOM GOES is MatchViewer.vue's business, not this rule's – «как раз за счет
+   расширения чата» is spelled there, on the two grid track lists that decide it. */
+@media (min-width: 768px) {
+  .tournament-flow:has(.mv) {
+    --takeover-col-max: min(100%, 1024px);
+  }
 }
 
 /* ⚠ THE TAKEOVER'S BOTTOM ROOM IS CONTENT, NOT THE SCROLLPORT'S PADDING - AND IT HAD TO BECOME ONE
