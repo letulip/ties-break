@@ -85,6 +85,11 @@ describe('E-06 – a profile the engine will not open a career on', () => {
     { what: "gender: 'boy'", profile: bad({ gender: 'boy' }), says: 'Unknown gender: boy' },
     { what: "country: 'zz' (lower case)", profile: bad({ country: 'zz' }), says: 'Unknown country: zz' },
     { what: 'country: 4 digits', profile: bad({ country: 'USAA' }), says: 'Unknown country: USAA' },
+    // ⭐ ROUND 37 – THE ROW THE ORIGINAL PROBE COULD NOT MAKE RED. `'ZZ'` is a well-formed alpha-2
+    // code and was ACCEPTED by the shape rule this gate shipped with; the owner asked for the list
+    // («country проверяется на форму, а не по списку»), and the sentence did not have to change to
+    // give it to him. The whole of the list behaviour is in tests/r37-playable-countries.test.ts.
+    { what: "country: 'ZZ' (well-formed, not a country the game offers)", profile: bad({ country: 'ZZ' }), says: 'Unknown country: ZZ' },
     { what: 'birthMonth: 13', profile: bad({ birthMonth: 13 }), says: 'A birth month is 1 to 12' },
     { what: 'birthMonth: 0', profile: bad({ birthMonth: 0 }), says: 'A birth month is 1 to 12' },
     { what: 'birthMonth: 6.5', profile: bad({ birthMonth: 6.5 }), says: 'A birth month is 1 to 12' },

@@ -9,6 +9,9 @@
 // ⚠ `shared/dates.ts` IMPORTS NOTHING AT ALL, which is what makes this edge free: `profileShapeError`
 // below needs the days-in-month table and this module stays a leaf of the wire.
 import { daysInBirthMonth } from '../dates'
+// ⚠ AND `shared/countries.ts` IMPORTS NOTHING EITHER, for the same reason and to the same effect –
+// see the country note above `profileShapeError`.
+import { isPlayableCountry } from '../countries'
 
 export type FamilyBackground = 'wealthy' | 'middle' | 'working'
 /** The coach ladder (docs/specs/coach-tiers.md), cheapest rung first. Replaces the old
@@ -104,12 +107,19 @@ export const DEFAULT_PROFILE: PlayerProfile = {
 // private and the drift is caught behaviourally instead: the test walks `engine/coach.ts`'s own
 // `COACH_TIERS` through this function and every rung has to be accepted.
 //
-// ⚠ `country` IS CHECKED AS A SHAPE AND NOT AGAINST THE PLAYABLE LIST, deliberately. The review
-// asked for the enumeration; the enumeration is `COUNTRIES` in `composables/countries.ts`, whose own
-// header rules that it is PRESENTATION and "the engine stays unaware it exists". So the engine asks
-// the only country question it can answer alone – is this an ISO 3166-1 alpha-2 code at all – and
-// 'ZZ' still gets through. Naming a country the game does not draw a flag for costs a fallback
-// label; it is not the class of defect this gate is for.
+// ⚠⚠ `country` IS CHECKED AGAINST THE PLAYABLE LIST SINCE 06.09, AND USED TO BE CHECKED AS A SHAPE.
+// The owner: «country проверяется на форму, а не по списку – мне кажется это надо исправить, у меня
+// в планах было расширить список стран вообще». The old note here argued that the enumeration was
+// `COUNTRIES` in `composables/countries.ts`, that that file's header rules it PRESENTATION, and that
+// the engine may therefore only ask whether the value LOOKS like an ISO 3166-1 alpha-2 code – so
+// 'ZZ' got through and cost a fallback label.
+//
+// BOTH HALVES OF THAT ARE TRUE AT ONCE, WHICH IS THE DESIGN, and the fix is the split rather than a
+// side. *Which* countries are playable is a RULE and now lives in `shared/countries.ts`, which this
+// module asks; *how* a country is rendered – the English name, the flag – is presentation and stays
+// in the composable, which derives its keys from that same list. Neither file can drift from the
+// other and neither had to learn about the other's job. See `shared/countries.ts`'s header for the
+// whole argument, and for what adding a twenty-fifth country costs.
 // =================================================================================================
 
 const BACKGROUNDS_ALLOWED: readonly FamilyBackground[] = ['wealthy', 'middle', 'working']
@@ -134,9 +144,6 @@ export const PROFILE_NAME_MAX_CHARS = 200
 const isObject = (v: unknown): v is Record<string, unknown> =>
   typeof v === 'object' && v !== null && !Array.isArray(v)
 
-/** ISO 3166-1 alpha-2: two capital letters, and nothing else. */
-const ALPHA2 = /^[A-Z]{2}$/
-
 function nameError(value: unknown, what: string): string | null {
   if (typeof value !== 'string' || value.trim().length === 0) return `${what} is needed`
   if (value.length > PROFILE_NAME_MAX_CHARS) return `${what} is at most ${PROFILE_NAME_MAX_CHARS} characters`
@@ -158,7 +165,12 @@ export function profileShapeError(profile: unknown): string | null {
   if (last !== null) return last
 
   if (profile.gender !== 'girl') return `Unknown gender: ${String(profile.gender)}`
-  if (typeof profile.country !== 'string' || !ALPHA2.test(profile.country)) {
+  // ⚠ THE LIST, NOT THE SHAPE – see the country note in the block above. `'ZZ'` is a well-formed
+  // alpha-2 code and is not a country this game offers, so it is refused here rather than surfacing
+  // later as a bare label and a pair of stray letters where the flag belongs. The SENTENCE is
+  // unchanged: it said «Unknown country» when it meant "not two capitals" and it says «Unknown
+  // country» now that it means "not one of ours", which is the word that was always right.
+  if (!isPlayableCountry(profile.country)) {
     return `Unknown country: ${String(profile.country)}`
   }
   if (!BACKGROUNDS_ALLOWED.includes(profile.background as FamilyBackground)) {
