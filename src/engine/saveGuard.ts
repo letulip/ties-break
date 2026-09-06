@@ -182,6 +182,15 @@ const SPINE: SpineRule[] = [
     field: 'profile',
     since: 2,
     check: (v) =>
+      // ⚠⚠ THE NAME BOUND HERE IS STILL 200 AND DELIBERATELY DID NOT FOLLOW THE CREATION CAP DOWN
+      // TO 20 (round 37, 06.09). This is an IMPORT gate: it reads files written by older builds, and
+      // a career started yesterday under a forty-character name is a legitimate save that has to
+      // keep loading. Narrowing it would delete somebody's daughter to enforce a rule about what may
+      // be TYPED today. `MAX_ID_CHARS` is also the `seed` / `careerId` bound above and below, so
+      // moving the constant would refuse the game's own generated ids besides. The direction that
+      // matters is preserved and pinned in tests/r37-command-refusals.test.ts: the creation cap
+      // (`PROFILE_NAME_MAX_CHARS`, shared/protocol/profile.ts) is INSIDE this one, so every career
+      // the engine will open can still be read back.
       isObject(v) && typeof v.kidName === 'string' && v.kidName.length > 0 && v.kidName.length <= MAX_ID_CHARS
         ? null
         : 'must carry the player profile',

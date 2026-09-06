@@ -85,6 +85,11 @@ describe('E-06 – a profile the engine will not open a career on', () => {
     { what: "gender: 'boy'", profile: bad({ gender: 'boy' }), says: 'Unknown gender: boy' },
     { what: "country: 'zz' (lower case)", profile: bad({ country: 'zz' }), says: 'Unknown country: zz' },
     { what: 'country: 4 digits', profile: bad({ country: 'USAA' }), says: 'Unknown country: USAA' },
+    // ⭐ ROUND 37 – THE ROW THE ORIGINAL PROBE COULD NOT MAKE RED. `'ZZ'` is a well-formed alpha-2
+    // code and was ACCEPTED by the shape rule this gate shipped with; the owner asked for the list
+    // («country проверяется на форму, а не по списку»), and the sentence did not have to change to
+    // give it to him. The whole of the list behaviour is in tests/r37-playable-countries.test.ts.
+    { what: "country: 'ZZ' (well-formed, not a country the game offers)", profile: bad({ country: 'ZZ' }), says: 'Unknown country: ZZ' },
     { what: 'birthMonth: 13', profile: bad({ birthMonth: 13 }), says: 'A birth month is 1 to 12' },
     { what: 'birthMonth: 0', profile: bad({ birthMonth: 0 }), says: 'A birth month is 1 to 12' },
     { what: 'birthMonth: 6.5', profile: bad({ birthMonth: 6.5 }), says: 'A birth month is 1 to 12' },
@@ -95,7 +100,11 @@ describe('E-06 – a profile the engine will not open a career on', () => {
     { what: "kidName: ''", profile: bad({ kidName: '' }), says: 'A first name is needed' },
     { what: 'kidName: three spaces', profile: bad({ kidName: '   ' }), says: 'A first name is needed' },
     { what: "kidLastName: ''", profile: bad({ kidLastName: '' }), says: 'A family name is needed' },
-    { what: 'kidName: 201 characters', profile: bad({ kidName: 'a'.repeat(201) }), says: 'A first name is at most 200 characters' },
+    // ⭐ ROUND 37 – TWENTY, AND IT WAS 200 (owner: «мы же не твиттер… например 20»). The number is
+    // written out rather than interpolated on purpose: interpolating it would make this row agree
+    // with the constant whatever the constant said, and the row is here to pin the SENTENCE.
+    { what: 'kidName: 21 characters', profile: bad({ kidName: 'a'.repeat(21) }), says: 'A first name is at most 20 characters' },
+    { what: 'kidLastName: 21 characters', profile: bad({ kidLastName: 'a'.repeat(21) }), says: 'A family name is at most 20 characters' },
     { what: 'no profile at all', profile: null, says: 'A career needs a profile' },
     { what: 'a profile that is a list', profile: [], says: 'A career needs a profile' },
   ]
@@ -116,17 +125,32 @@ describe('E-06 – a profile the engine will not open a career on', () => {
     expect(profileShapeError({ ...DEFAULT_PROFILE, kidName: 'a'.repeat(PROFILE_NAME_MAX_CHARS) })).toBeNull()
   })
 
-  it('⚠ the name cap is the save-file spine\'s own, so a career it opens can always be imported back', () => {
-    // `MAX_ID_CHARS` in engine/saveGuard.ts is module-private, so the equality is asserted through
-    // the gate that reads it: a name of exactly the cap survives the import spine, one character
-    // more does not. A cap raised here and not there would build careers that cannot be read back.
+  it('⚠ the name cap is INSIDE the save-file spine\'s, so a career it opens can always be imported back', () => {
+    // ⚠⚠ THIS ARM ASSERTED AN EQUALITY UNTIL 06.09 AND NOW ASSERTS AN INEQUALITY, WHICH IS A
+    // DECISION AND NOT A LOOSENING. The creation cap dropped to 20 on the owner's ask; the SPINE's
+    // 200 deliberately did not move, because that rule reads files written by OLDER BUILDS and a
+    // career started yesterday under a forty-character name is a legitimate save that has to keep
+    // loading. (`MAX_ID_CHARS` is also the `seed` and `careerId` bound – generated career ids run to
+    // ~30 characters – so narrowing it would refuse the game's own files on a question that has
+    // nothing to do with her name.)
+    //
+    // What the old equality was really protecting survives whole, and it is the direction below: a
+    // name this engine will OPEN a career under is a name the import gate will still ACCEPT. That
+    // holds for every cap inside 200 and would break the moment one was raised past it.
     const spine = (kidName: string) =>
       guardDeclaredShape(
         { schemaVersion: 2, seed: 's', week: 0, fundsCents: 0, profile: { kidName } },
         2,
       )
     expect(() => spine('a'.repeat(PROFILE_NAME_MAX_CHARS))).not.toThrow()
-    expect(() => spine('a'.repeat(PROFILE_NAME_MAX_CHARS + 1))).toThrow(/profile/)
+    // The longest name the wizard can now produce, and one longer than it, both still import.
+    expect(() => spine('a'.repeat(PROFILE_NAME_MAX_CHARS + 1))).not.toThrow()
+    // ⚠ AND THE SPINE IS STILL A GATE, at its own number: a save written by no build this game ever
+    // shipped is still refused, so «it stayed at 200» does not mean «it stopped checking».
+    expect(() => spine('a'.repeat(200))).not.toThrow()
+    expect(() => spine('a'.repeat(201))).toThrow(/profile/)
+    // ...and the one-way relationship, stated as the thing a future cap change must not break.
+    expect(PROFILE_NAME_MAX_CHARS).toBeLessThanOrEqual(200)
   })
 
   it('the worker refuses it with the code AND the sentence, and no career is adopted', async () => {

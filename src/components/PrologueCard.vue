@@ -67,6 +67,12 @@ import { COUNTRIES, COUNTRY_NAMES, POPULAR_COUNTRIES, flagEmoji } from '../compo
 // declared twice is a string that can drift in one copy. See that module's header.
 import { IDENTITY_COPY, MONTHS } from '../composables/identityCopy'
 import { daysInBirthMonth } from '../shared/dates'
+// ⚠ THE WIZARD'S OWN CAP, ON THE WIZARD'S OWN IDIOM. This card asks for her name too and reaches
+// `newCareer` on exactly the same path, so `profileShapeError`'s name refusal is as reachable from
+// here as from there. It carried no `maxlength` while the cap was 200 and nobody types 201
+// characters by accident; at twenty (06.09) a real name can meet it, and a refusal a player can
+// reach by typing is the risk E-06 named. Same constant, same effect: the cap is felt, not met.
+import { PROFILE_NAME_MAX_CHARS } from '../shared/protocol'
 import type { PortraitEmotion } from '../shared/avatarEmotion'
 import { TOURNAMENT_ANSWER } from '../prologue/cards'
 import type { PrologueCard, PrologueOption, TournamentAsk } from '../prologue/cards'
@@ -348,6 +354,7 @@ useDialogFocus(cardEl)
               id="prologue-first"
               class="prologue-input"
               type="text"
+              :maxlength="PROFILE_NAME_MAX_CHARS"
               :value="identity.kidName"
               :placeholder="IDENTITY_COPY.firstName"
               autocomplete="off"
@@ -361,6 +368,7 @@ useDialogFocus(cardEl)
               id="prologue-last"
               class="prologue-input"
               type="text"
+              :maxlength="PROFILE_NAME_MAX_CHARS"
               :value="identity.kidLastName"
               :placeholder="IDENTITY_COPY.lastName"
               autocomplete="off"

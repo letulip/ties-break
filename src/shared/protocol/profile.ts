@@ -9,6 +9,9 @@
 // ⚠ `shared/dates.ts` IMPORTS NOTHING AT ALL, which is what makes this edge free: `profileShapeError`
 // below needs the days-in-month table and this module stays a leaf of the wire.
 import { daysInBirthMonth } from '../dates'
+// ⚠ AND `shared/countries.ts` IMPORTS NOTHING EITHER, for the same reason and to the same effect –
+// see the country note above `profileShapeError`.
+import { isPlayableCountry } from '../countries'
 
 export type FamilyBackground = 'wealthy' | 'middle' | 'working'
 /** The coach ladder (docs/specs/coach-tiers.md), cheapest rung first. Replaces the old
@@ -104,38 +107,54 @@ export const DEFAULT_PROFILE: PlayerProfile = {
 // private and the drift is caught behaviourally instead: the test walks `engine/coach.ts`'s own
 // `COACH_TIERS` through this function and every rung has to be accepted.
 //
-// ⚠ `country` IS CHECKED AS A SHAPE AND NOT AGAINST THE PLAYABLE LIST, deliberately. The review
-// asked for the enumeration; the enumeration is `COUNTRIES` in `composables/countries.ts`, whose own
-// header rules that it is PRESENTATION and "the engine stays unaware it exists". So the engine asks
-// the only country question it can answer alone – is this an ISO 3166-1 alpha-2 code at all – and
-// 'ZZ' still gets through. Naming a country the game does not draw a flag for costs a fallback
-// label; it is not the class of defect this gate is for.
+// ⚠⚠ `country` IS CHECKED AGAINST THE PLAYABLE LIST SINCE 06.09, AND USED TO BE CHECKED AS A SHAPE.
+// The owner: «country проверяется на форму, а не по списку – мне кажется это надо исправить, у меня
+// в планах было расширить список стран вообще». The old note here argued that the enumeration was
+// `COUNTRIES` in `composables/countries.ts`, that that file's header rules it PRESENTATION, and that
+// the engine may therefore only ask whether the value LOOKS like an ISO 3166-1 alpha-2 code – so
+// 'ZZ' got through and cost a fallback label.
+//
+// BOTH HALVES OF THAT ARE TRUE AT ONCE, WHICH IS THE DESIGN, and the fix is the split rather than a
+// side. *Which* countries are playable is a RULE and now lives in `shared/countries.ts`, which this
+// module asks; *how* a country is rendered – the English name, the flag – is presentation and stays
+// in the composable, which derives its keys from that same list. Neither file can drift from the
+// other and neither had to learn about the other's job. See `shared/countries.ts`'s header for the
+// whole argument, and for what adding a twenty-fifth country costs.
 // =================================================================================================
 
 const BACKGROUNDS_ALLOWED: readonly FamilyBackground[] = ['wealthy', 'middle', 'working']
 const COACH_TIERS_ALLOWED: readonly CoachTier[] = ['self', 'budget', 'middle', 'high', 'elite']
 const PLAY_STYLES_ALLOWED: readonly PlayStyle[] = ['aggressive', 'counterpuncher', 'serve-first', 'all-court']
 
-/** The longest name a career may be opened under.
+/** The longest name a career may be opened under – PER FIELD, so `kidName` and `kidLastName` get
+ *  twenty each and not twenty between them.
  *
- *  ⚠ IT IS `saveGuard`'s `MAX_ID_CHARS` AND NOT A NEW NUMBER, and the alignment is the whole point:
- *  the spine rule there already refuses an imported save whose `profile.kidName` runs past 200
- *  characters, so a career opened under a longer name could be played and exported and then never
- *  read back. The value is repeated rather than imported for the cycle reason above; the test holds
- *  the two constants equal.
+ *  ⚠ TWENTY SINCE 06.09, AND IT WAS 200 (owner: «Ограничение имени 200 символов – а зачем нам такие
+ *  длинные имена? мы же не твиттер… например 20»). Twenty is his own number and it is still twice
+ *  the longest surname the game itself produces: `engine/season/names.ts` tops out at six characters
+ *  for a first name (`Camila`, of 44) and ten for a surname (`Ostergaard`, of 211), so every name
+ *  the world draws for a rival, for the next daughter on the ending screen and for the wizard's own
+ *  dice fits with room to spare.
+ *
+ *  ⚠⚠ IT IS NO LONGER `saveGuard`'s `MAX_ID_CHARS`, AND THAT IS DELIBERATE RATHER THAN DRIFT. The
+ *  spine rule there still refuses an imported save whose `profile.kidName` runs past 200, and it
+ *  must: it reads files written by OLDER BUILDS, and a career started yesterday under a forty-
+ *  character name is a legitimate file that has to keep loading. The two numbers answer two
+ *  different questions – what a player may TYPE today, and what the reader must still ACCEPT – and
+ *  the direction that matters is preserved: the creation cap is INSIDE the import cap, so every
+ *  career this function opens can still be read back. (`MAX_ID_CHARS` is also the seed/careerId
+ *  bound, and generated career ids run to ~30 characters, so moving it would refuse the game's own
+ *  saves.) The test asserts the INEQUALITY where it used to assert the equality.
  *
  *  ⚠ AND THE WIZARD CARRIES THE SAME NUMBER as its inputs' `maxlength` (E-06's own risk note: a cap
  *  the wizard does not have is a cap that refuses a name a player really typed). So this bound is
  *  unreachable from the wizard by construction, which is what a hygiene guard should be. That is
  *  `ASSET_NAME_MAX_CHARS`'s own idiom, in that constant's own words: the screen sets the same number
  *  as the field's `maxlength`, so the cap is FELT while typing rather than met as a refusal. */
-export const PROFILE_NAME_MAX_CHARS = 200
+export const PROFILE_NAME_MAX_CHARS = 20
 
 const isObject = (v: unknown): v is Record<string, unknown> =>
   typeof v === 'object' && v !== null && !Array.isArray(v)
-
-/** ISO 3166-1 alpha-2: two capital letters, and nothing else. */
-const ALPHA2 = /^[A-Z]{2}$/
 
 function nameError(value: unknown, what: string): string | null {
   if (typeof value !== 'string' || value.trim().length === 0) return `${what} is needed`
@@ -158,7 +177,12 @@ export function profileShapeError(profile: unknown): string | null {
   if (last !== null) return last
 
   if (profile.gender !== 'girl') return `Unknown gender: ${String(profile.gender)}`
-  if (typeof profile.country !== 'string' || !ALPHA2.test(profile.country)) {
+  // ⚠ THE LIST, NOT THE SHAPE – see the country note in the block above. `'ZZ'` is a well-formed
+  // alpha-2 code and is not a country this game offers, so it is refused here rather than surfacing
+  // later as a bare label and a pair of stray letters where the flag belongs. The SENTENCE is
+  // unchanged: it said «Unknown country» when it meant "not two capitals" and it says «Unknown
+  // country» now that it means "not one of ours", which is the word that was always right.
+  if (!isPlayableCountry(profile.country)) {
     return `Unknown country: ${String(profile.country)}`
   }
   if (!BACKGROUNDS_ALLOWED.includes(profile.background as FamilyBackground)) {
