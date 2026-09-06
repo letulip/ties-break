@@ -214,6 +214,8 @@ produced a *defect list* instead of a workaround list.
 | `parity.spec.ts` | the week pager's ARROWS are the second and last exempt region (owner's ruling, round 36 phase 7 – they are drawn only where a strip overflows, which depends on the width) – bounded the same four ways: asserted by CONTAINER, that container may hold nothing but the two arrows, only the arrows are taken (the strip, the cards and their controls stay in the check), and the HONEST HALF – a strip that DOES overflow at a width must have them | 4 |
 | `a11y.spec.ts` | axe (WCAG 2 A/AA) over every screen at 375 and 1280 and over three overlays, against an explicit per-rule per-screen debt baseline | 4 |
 | `a11y.spec.ts` | the blocking overlays hold the keyboard: focus lands inside, Tab and Shift+Tab stay inside, Escape follows each card's documented policy, and a confirm returns focus to its opener | 4, 5 |
+| `r37-frame.spec.ts` | the frame at real sizes: the match takes the width it is given from 880 fluid to 1024 and the room goes to the commentary, the tournament flow's lone control stops at 500 and is centred, and the rail's insets match | 4 |
+| `r37-frame.spec.ts` | and no negative offset buys any of it – the rail carries none at 1024 or 1280, it still meets the frame's edge, and the frame's bottom gutter is below its reach rather than a band under it | 4 |
 | `offline.spec.ts` | after one visit the app boots with the network cut | 3 |
 | `coverage-map.spec.ts` | this document has not rotted (§11) | – |
 <!-- /COVERAGE-MAP:JOURNEYS -->
