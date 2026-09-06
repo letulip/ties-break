@@ -841,8 +841,35 @@ body {
     width: auto;
     max-width: none;
     /* Flush to the frame's own edge rather than inset by the frame's gutter, which is where AC puts
-       it – the gutter is re-spent as the rail's own padding so the labels keep their inset. */
-    margin: calc(-1 * var(--app-pad-top)) 0 0 calc(-1 * var(--app-pad-x));
+       it.
+       ⭐⭐⭐ ROUND 37 ITEM 15 – AND THE BOTTOM EDGE IS AN EDGE TOO, WHICH IS THE WHOLE OF THAT ITEM.
+       The owner, 06.09: «при прокручивании страницы вниз на десктоп под рейлом навигации остается
+       пустое пространство 50-60 пикселей примерно, проверь что это пожалуйста и желательно этот
+       дефект убрать.»
+
+       ⚠⚠ MEASURED BEFORE ANYTHING WAS REMOVED, AND THE FIRST HYPOTHESIS WAS WRONG. It is NOT a
+       reservation left behind for the phone's bottom bar – that reservation is `.app-content`'s own
+       `padding-bottom` (88 / 96 / 148px), it lives INSIDE the second column, and the rail spans it
+       happily because it spans `grid-row: 1 / -1`. What the band actually is: `#app`'s own
+       `--app-pad-bottom`, 48px, and the arithmetic is exact rather than approximate. The grid's rows
+       fill the frame's CONTENT box, so the rail's grid area – and therefore its sticky travel – ends
+       48px above the document's last pixel; scrolled to the foot of the page, the rail, its
+       `border-right` and its background all stop there and the frame's bottom gutter shows through.
+       Measured in Chromium, scrolled to the end, before this line: 48.0px on Home and on Season, at
+       1280x900, at 1024x800 and at 1280x600 alike, with `elementFromPoint` in the band returning
+       `#app` itself.
+       ⚠ IT IS A DIFFERENT DEFECT FROM THE RAIL SCROLLING ITSELF. At 1280x600 the rail's own content
+       is 728px in a 600px box, so its last dashboard card is below the RAIL's fold – that is
+       `overflow-y: auto` doing its job and is not this band.
+
+       THE FIX IS THE SENTENCE ABOVE, FINISHED. The top and left gutters are already unwound by
+       negative margins so the rail meets the frame's edge; the bottom one was simply never in the
+       list. A negative bottom margin lets the rail's border box travel `--app-pad-bottom` past the
+       bottom of its grid area – a sticky box is constrained by its MARGIN box, so this is the same
+       instrument the `-1 * --app-pad-top` above uses, in the other direction – and the band closes
+       to 0. The gutter is not re-spent as padding on this side: the rail's own 20px bottom padding
+       plus the safe area is what holds its last card off the edge, exactly as it did. */
+    margin: calc(-1 * var(--app-pad-top)) 0 calc(-1 * var(--app-pad-bottom)) calc(-1 * var(--app-pad-x));
     /* ⭐⭐⭐ ROUND 37 ITEM 14 – THE LEFT INSET IS THE RIGHT ONE NOW. The owner, 06.09: «на
        вертикальном рейле навигации на десктопе слева сделаем такой же отступ, как и справа (меньше
        то есть)».

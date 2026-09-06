@@ -434,7 +434,7 @@ describe('round 37 item 13 – a lone control in a takeover’s action row stops
 })
 
 // =================================================================================================
-// ITEM 14 – THE RAIL'S LEFT INSET
+// ITEMS 14 AND 15 – THE RAIL'S LEFT INSET, AND THE BAND UNDER IT
 // =================================================================================================
 // «На вертикальном рейле навигации на десктопе слева сделаем такой же отступ, как и справа (меньше
 // то есть)», and «при прокручивании страницы вниз на десктоп под рейлом навигации остается пустое
@@ -455,7 +455,7 @@ describe('round 37 item 13 – a lone control in a takeover’s action row stops
 //   * the rail's `padding-left` put back to `calc(12px + var(--app-pad-x))` -> the item 14 arms;
 //   * the rail's `margin-bottom` put back to `0` -> the item 15 arms;
 //   * the negative left margin deleted -> the «the rail still meets the frame's edge» arm alone.
-describe('round 37 item 14 – the rail’s left inset', () => {
+describe('round 37 items 14 and 15 – the rail’s own edges', () => {
   beforeEach(() => {
     setActivePinia(createPinia())
     backing.clear()
@@ -525,11 +525,34 @@ describe('round 37 item 14 – the rail’s left inset', () => {
     expect(pxOf(r.marginLeft), 'the rail is still pulled out to the frame’s own edge').toBe(-gutter)
   })
 
-  it('⚠ …and the item does not reach a phone or a tablet – the bar is untouched below 1024', async () => {
+  it('⭐⭐⭐ ITEM 15 – the frame’s bottom gutter is pulled through too, so no band is left', async () => {
+    assertSheetPresent()
+    // WHAT THE BAND ACTUALLY WAS, as arithmetic rather than as a guess: the rail spans
+    // `grid-row: 1 / -1`, the grid's rows fill `#app`'s CONTENT box, so the rail's sticky travel
+    // stopped `--app-pad-bottom` above the last pixel of the document. Measured in Chromium at the
+    // foot of the page: 48.0px on Home and Season, at 1280x900, 1024x800 and 1280x600 alike.
+    const gutter = lengthPx(token('--app-pad-bottom'), 0)
+    expect(gutter, 'the frame’s bottom gutter is the 48 the band measured').toBe(48)
+    for (const vp of [DESKTOP_ENTRY, DESKTOP]) {
+      const r = await rail(vp)
+      expect(pxOf(r.marginBottom), `at ${vp.width} the rail travels the gutter’s full depth`).toBe(-gutter)
+      // The three facts that make that margin mean «no band»: the rail spans every row, it is the
+      // sticky column, and its own bottom padding is untouched, so its last card is no closer to the
+      // edge than it was.
+      expect(r.gridRow, 'and it still spans the whole grid').toBe('1 / -1')
+      expect(pxOf(r.marginTop), 'the top gutter is unwound exactly as before').toBe(
+        -lengthPx(token('--app-pad-top'), 0),
+      )
+      expect(r.padTop, 'and the rail’s own room for its first tab is unchanged').toBe('20px')
+    }
+  })
+
+  it('⚠ …and neither item reaches a phone or a tablet – the bar is untouched below 1024', async () => {
     assertSheetPresent()
     for (const vp of [PHONE, TABLET, TABLET_TOP]) {
       const r = await rail(vp)
       expect(pxOf(r.marginLeft) || 0, `at ${vp.width} no negative margin`).toBe(0)
+      expect(pxOf(r.marginBottom) || 0, `at ${vp.width} no bottom pull`).toBe(0)
       expect(r.padLeft === '' || r.padLeft === '0px', `at ${vp.width} the bar has no rail padding`).toBe(true)
     }
   })

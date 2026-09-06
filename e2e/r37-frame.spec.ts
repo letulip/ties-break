@@ -241,7 +241,7 @@ test('item 13 – the lone Next round control stops at 500 and is centred', asyn
 })
 
 // =================================================================================================
-// ITEM 14 – THE RAIL'S LEFT INSET
+// ITEMS 14 AND 15 – THE RAIL'S LEFT INSET, AND THE BAND UNDER IT
 // =================================================================================================
 // «Слева сделаем такой же отступ, как и справа (меньше то есть)», and «под рейлом навигации остается
 // пустое пространство 50-60 пикселей примерно».
@@ -249,7 +249,7 @@ test('item 13 – the lone Next round control stops at 500 and is centred', asyn
 // ⚠ MUTATION-VERIFIED: the rail's `padding-left` put back to `calc(12px + var(--app-pad-x))` -> the
 // item 14 arms; its `margin-bottom` put back to `0` -> the item 15 arms, with the band measuring
 // 48.0px again.
-test('item 14 – the rail’s left inset is its right one', async ({
+test('items 14 and 15 – the rail’s insets match, and no band is left under it', async ({
   page,
   careerAt,
 }) => {
@@ -296,10 +296,38 @@ test('item 14 – the rail’s left inset is its right one', async ({
     )
     expect(inset.labelLeft - inset.left, 'the label rides in with it').toBeLessThan(60)
 
+    // --- ITEM 15: the band, at the foot of the page ----------------------------------------------
+    await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight))
+    await page.waitForFunction(
+      () =>
+        document.documentElement.scrollHeight <= window.innerHeight ||
+        Math.abs(window.scrollY + window.innerHeight - document.documentElement.scrollHeight) < 2,
+    )
+    const band = await page.evaluate(() => {
+      const app = document.querySelector('#app') as HTMLElement
+      const rail = document.querySelector('nav.tab-bar') as HTMLElement
+      return {
+        // WHAT THE BAND WAS: the frame's own bottom gutter, below the rail's grid area.
+        gutter: parseFloat(getComputedStyle(app).paddingBottom),
+        under: app.getBoundingClientRect().bottom - rail.getBoundingClientRect().bottom,
+        // ...and the rail's own fold, which is a different thing and is left alone.
+        railOverflow: rail.scrollHeight - rail.clientHeight,
+      }
+    })
+    expect(band.gutter, `at ${screen}x${height} the frame's bottom gutter is the 48 the band measured`).toBe(
+      48,
+    )
+    expect(
+      band.under,
+      `at ${screen}x${height} there is nothing but rail between its last pixel and the page's`,
+    ).toBeLessThan(1)
+    if (height === 600) {
+      expect(band.railOverflow, 'and the rail still scrolls itself on a short window').toBeGreaterThan(0)
+    }
   }
 })
 
-test('item 14 – and below 1024 the bar across the bottom is untouched', async ({
+test('items 14 and 15 – and below 1024 the bar across the bottom is untouched', async ({
   page,
   careerAt,
 }) => {
@@ -328,6 +356,7 @@ test('item 14 – and below 1024 the bar across the bottom is untouched', async 
     })
     expect(bar.position, `at ${screen} the bar is still pinned to the window`).toBe('fixed')
     expect(bar.bottom, 'at the bottom of it').toBeCloseTo(height, 0)
+    expect(bar.marginBottom, 'no bottom pull below 1024').toBe(0)
     expect(bar.marginLeft, 'no negative margin below 1024').toBe(0)
     expect(bar.paddingLeft, 'and no rail padding either').toBe(0)
   }
