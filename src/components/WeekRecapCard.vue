@@ -771,12 +771,16 @@ const practiceWeekLabel = computed(() => weekLabel(week.value))
     </div>
 
     <!-- The line about the week, handwritten, riding up over the bottom of the painting. On a
-         come-home week it is the parent's note about her; otherwise the week's own flavour line. -->
+         come-home week it is the parent's note about her; otherwise the week's own flavour line.
+         ⭐ ROUND 37 #11 – THE ANGLE IS A TOKEN NOW, NOT A LITERAL, and `tilt` takes one: the prop is
+         documented as «degrees as a number, OR any CSS angle», so the card still passes the tilt
+         and `PaperNote` is untouched. The reason it has to be a token is the BREAKPOINT – the
+         owner's words and the whole argument are at `--recap-note-tilt` in the style block. -->
     <PaperNote
       v-if="noteText"
       class="recap-note"
       :class="{ 'recap-note--travel': noteIsProse }"
-      :tilt="-0.5"
+      :tilt="'var(--recap-note-tilt)'"
       ruled
       torn
       margin-rule
@@ -1018,8 +1022,48 @@ const practiceWeekLabel = computed(() => weekLabel(week.value))
    kept as a token rather than folded back into a literal because it is what caps row 1 of the grid,
    and «the card may not grow» is a claim about exactly that number – the mounted arm in
    `tests/component/round36-pass2-shop-recap.test.ts` reads it. */
+/* ⭐⭐ ROUND 37 #11 – THE SCRAP BESIDE THE PHOTOGRAPH TURNS FIVE DEGREES ANTICLOCKWISE, AND ONLY
+   WHERE IT IS BESIDE THE PHOTOGRAPH.
+   The owner off the stand, 06.09: «записку справа от картинки на week results поверни немного против
+   часовой стрелки, градусов на 5». (Quoted here rather than in the template, for the reason the
+   blocks below give: `tests/template-copy-rules.test.ts` bans Cyrillic inside a `<template>`.)
+
+   BEFORE −0.5°, AFTER −5.5°. Anticlockwise is the NEGATIVE direction in CSS `rotate`, so «на 5
+   градусов против часовой» is the shipped value minus 5. D's own paper angles are
+   −4 · −3 · −0.8 · −0.5 · +0.4 · +2 · +3 · +6; −5.5 is not one of them and is not meant to be – it
+   is his number, arrived at from the one this scrap already had.
+
+   ⚠ WHY A TOKEN AND NOT A NUMBER ON THE TAG, which is the obvious road and the wrong one. «Справа
+   от картинки» is a PLACE THAT ONLY EXISTS PAST 768: below it the scrap is full width and rides the
+   painting on a −34px lift, and `tilt` is a prop, so a literal on the tag would have turned the
+   phone's scrap too. Measured, that is a paper 375 wide swinging its corners about 5.7px past each
+   edge of the screen – on an object his sentence does not name, and against this round's standing
+   contract that nothing below 768 moves. A custom property is the only place an angle can be said
+   ONCE PER BREAKPOINT, and `PaperNote.tilt` already takes one: «degrees as a number, OR any CSS
+   angle (one of the `--tilt-*` tokens, say)». So the card still passes the tilt and the component
+   is untouched, which is what the round's ledger asks for.
+
+   ⚠ AND AN UNDEFINED TOKEN RENDERS THE PAPER FLAT RATHER THAN LOUDLY. `rotate(var(--x))` with no
+   `--x` is guaranteed-invalid at computed-value time: the whole `transform` is dropped and the
+   scrap stands bolt upright with nothing to say so. There is deliberately NO fallback inside the
+   `var()` – a fallback would be this angle written twice, one edit away from disagreeing with
+   itself, which is the pair `--recap-art-h` exists to avoid. What guards it instead is the mounted
+   arm in `tests/component/r37-week-note-tilt.test.ts`, which reads the RENDERED rotation at five
+   widths and fails on a non-finite angle by name.
+
+   ⚠ THE TURNED FOOTPRINT WAS MEASURED, because a rotated box occupies more room than its upright
+   one and this family of card has paid for that before – D93's polaroid on Home, «tilted −7° it
+   spans 123.84px», one `overflow: hidden` away from a cut lip. A box w x h turned by θ spans
+   `w·cos θ + h·sin θ` across and `w·sin θ + h·cos θ` down. At −5.5° this scrap spans 363.4x128.4 at
+   768, 429.1x134.7 at 900, 490.9x140.7 at 1024 and 615.4x122.7 at 1280. Every one of those sits
+   inside the card (8.3–10.3px of clearance at the right edge), laps only into the 16px column gap
+   on the left – the dark ground item 16 put there for the paper to be laid on, still 12.3–14.3px
+   clear of the photograph – and stays far under the 286px band that caps row 1. Nothing had to make
+   room, and a `transform` paints without laying out, so the card's modelled height is the one
+   `tests/component/round36-pass2-shop-recap.test.ts` already pins. */
 .recap-card {
   --recap-art-h: 286px;
+  --recap-note-tilt: -0.5deg;
 }
 
 .recap-art {
@@ -1119,6 +1163,10 @@ const practiceWeekLabel = computed(() => weekLabel(week.value))
 @media (min-width: 768px) {
   .recap-card {
     --recap-art-w: 50%;
+    /* ⭐ ROUND 37 #11 – the turn, and it lives HERE because this is the only band where the scrap is
+       «справа от картинки». Its whole argument, his words and the footprint numbers are at the base
+       declaration of this token above. */
+    --recap-note-tilt: -5.5deg;
     display: grid;
     grid-template-columns: var(--recap-art-w) minmax(0, 1fr);
     column-gap: 16px;
