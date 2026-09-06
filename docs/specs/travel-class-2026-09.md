@@ -59,34 +59,86 @@ plane rung off the shelf – so the seam exists, has a precedent and is one numb
 ⚠ **It must not become a second plane.** The shelf's plane rung is the END of this ladder, not a
 competitor to it: whatever a class can buy, the plane must still be strictly better.
 
-## 4. The three shapes, and my reading
+## 4. HIS DESIGN, 06.09 – and it is bigger and better than the three shapes I offered
 
-**A – per trip.** The class is chosen when she enters an event, beside the entry fee. Most control,
-most clicks: 31 entries in his last season means 31 more decisions a year on a screen he already
-called busy.
+He read the three and replaced them with one, which reframes the item from «a dial on a fare» to
+«stop pricing the world by who is looking at it». In his words:
 
-**B – a standing policy.** One setting the family holds – economy / standard / business – changed
-whenever he likes, applied to every fare from then on. One decision, revisited when the money
-changes, which is how a household actually behaves. ⭐ **My reading.**
+> «Идея в том, что она сама может первым классом лететь (пока самолета нет), например, а тренер и
+> массажист бизнес или эконом. И может быть бизнес/первый/эконом как-то на ее состоянии отражаются.
+> И когда мы снимаем бонусы для рабочей с средней семьи на цены перелетов тоже надо понять, как раз
+> под это можно и стоимость билетов сделать и сразу дать пользователю выбор в Family budget где-то,
+> тогда он сможет туда возвращаться сам и не будет жестко привязан к нашим ценам, и нам вообще не
+> надо следить кому и какие цены ставить – будет просто цена билетов.»
 
-**C – B, plus a second policy for the team.** Her class and the team's class set separately, which
-is his «для специалистов отдельно» read literally. It is honest – the coach's fare is a real
-uncovered line today – and it is a second dial on a screen that would then hold two.
+Three things, and the third is the one that matters most:
 
-**My recommendation: B now, C's second half only after he has seen the team's fares as their own
-line in the ledger.** Today they are inside `coaching` and `staff`, so a player asked to economise
-on the team's seats cannot see what he is economising.
+**4a. The class is PER PERSON, not per family.** Her seat and the team's seats are separate choices –
+she flies first while there is no plane, the coach and the masseur fly business or economy. ⚠ This is
+the shape the code already has (`world/sponsors.ts:837`: her fare carries every cover, his is the
+full price) and it is why C was the honest option and A/B were not.
 
-## 5. If B is chosen – the work
+**4b. The class reaches her CONDITION.** «может быть бизнес/первый/эконом как-то на ее состоянии
+отражаются». The seam exists and has a precedent: the plane rung off the shelf already adds a point
+to a travelling week in `world/medical.ts`. ⚠ Only HER seat may touch her condition – the coach
+flying economy is a cost decision and not a fatigue one, unless we also want a tired coach to be
+worth less, which is a different feature and should not arrive by accident.
+
+**4c. ⭐⭐⭐ THE FARE STOPS BEING PRICED BY WHO IS BUYING IT.** Today `ECONOMY.travelBgFactor` scales
+every fare by the family's background, so a working family and a wealthy one are quoted DIFFERENT
+prices for the same flight. That is a strange object: it is a wealth simulation wearing a price tag,
+and it means every future fare question («is a Slam trip too dear at 15?») has three answers and no
+way to check any of them. His replacement is exact and it is simpler than what is there:
+
+    a ticket has ONE price, and what the family chooses is which ticket to buy.
+
+⚠⚠ AND THAT IS WHY THE CLASS CHOICE HAS TO SHIP WITH THE REMOVAL AND NOT AFTER IT. Delete
+`travelBgFactor` alone and a working-class career's costs jump with nothing to answer them; give the
+family a class dial and the poor family flies economy, which is the SAME saving arriving as a
+decision instead of as a hidden coefficient. Two halves of one change.
+
+**4d. Where it lives: Family budget.** «сразу дать пользователю выбор в Family budget где-то, тогда
+он сможет туда возвращаться сам». A standing setting on the money screen, beside the household strip
+(`components/HouseholdStrip.vue`, «Household, every week») – not a decision re-asked at every entry.
+That is the B I recommended, arriving as the home for his C.
+
+## 5. My considerations, since he asked for them
+
+**5a. ⚠ The one real risk: a third compounding wealth advantage.** Money already buys coaching and
+medicine, both of which reach the court. If a class reaches her condition, travel becomes the third,
+and the three multiply. The defence is to size the condition delta so it is **smaller than one
+week's difference between a rested and a travelling week** – a real but not decisive edge – and to
+measure the win-rate gap between a career that always flies first and one that always flies economy
+before anything ships. If that gap is large, the feature is a money faucet on results and should be
+cost-only.
+
+**5b. The plane must stay strictly better.** The shelf's plane rung is the end of this ladder. First
+class has to be worth less than owning the aircraft at every fare, or the shelf's most expensive rung
+is beaten by a setting.
+
+**5c. «Мы ни за что не наказываем» cuts both ways.** Economy must not injure her – it is a smaller
+recovery, never a penalty – and first class must not be mandatory to compete. If the top class is
+needed to keep up, the dial is not a choice.
+
+**5d. What it costs to build.** The class table and the per-person choice are small. The expensive
+half is 4c: deleting `travelBgFactor` moves the largest cost line in the game for every existing
+career, so it needs `tools/econ-bench.ts` over the three backgrounds before and after, and it will
+move the frozen careers.
+
+**5e. What I would NOT do.** Do not put a class on the junior rungs. Before the professional tiers
+she travels with a parent to a national event, and a first-class dial there is a shop for a
+fourteen-year-old, not a decision.
+
+## 6. If it is built – the work
 
 | step | what | proof |
 | --- | --- | --- |
-| 1 | `ECONOMY.travel.classes`: three rungs, each a fare multiplier and a condition delta | the table, and the plane still strictly better than the best class |
-| 2 | `world.travelClass` persisted, defaulting to `standard` – ⚠ a schema bump and a migration that writes `standard` into every old save | `tests/goldenSaves.test.ts` over all 71 fixtures |
-| 3 | The multiplier applied at the HEAD of the sponsors.ts chain, before every cover | one function, and the ledger's travel line equals the sum of the seats |
-| 4 | The gate: the control appears only when `wtaEverCounted(world)` | a mounted test at both sides of the gate |
-| 5 | The condition delta into the travelling week | `tools/fatigue-bench.ts` before and after |
-| 6 | A season of each class, walked | `tools/econ-bench.ts`: what a season costs and what her mean condition is, per class |
+| 1 | `ECONOMY.travel.classes`: three rungs, each a fare multiplier and (her seat only) a condition delta | the table, and the plane still strictly better than first |
+| 2 | The base fares re-derived without `travelBgFactor` – one price per tier | `tools/econ-bench.ts` over three backgrounds: what a season costs before and after |
+| 3 | `world.travelClass: { her, team }` persisted, defaulting to the class whose cost matches today's background factor – ⚠ a schema bump and a migration, so no existing career's bill jumps | `tests/goldenSaves.test.ts` over every fixture |
+| 4 | The multiplier at the HEAD of the `world/sponsors.ts` chain, before every cover | the ledger's travel line equals the sum of the seats |
+| 5 | The control on the money screen, beside the household strip | a mounted test, and the gate at `wtaEverCounted` |
+| 6 | The condition delta, sized under one travelling week | `tools/fatigue-bench.ts`, and the win-rate gap of 5a |
 
-**Effort: 2-3 days, of which the migration is half.** **Risk: the schema move.** Everything else is
-arithmetic on a chain that already exists.
+**Effort: 3-4 days, and 4c is most of it.** **Risk: the largest cost line in the game moves for every
+career.** That is the reason this document exists before the work does.

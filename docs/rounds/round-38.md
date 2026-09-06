@@ -31,7 +31,13 @@ the repo keeps is the derived statistics below.
   and the family has no say in it; the travelling team is booked separately
   (`world/bookings.ts`) but rides the same fare. What he is asking for is a CHOICE – a class –
   from the professional rungs up, and possibly a second one for the people she travels with.
-  ⚠ Spec written: `docs/specs/travel-class-2026-09.md`. It is an `ask` until he picks the shape.
+  ⭐ **HE ANSWERED ON 06.09 AND REPLACED MY THREE SHAPES WITH A BETTER ONE**, and asked that it be
+  written down rather than built now: «давай про класс перелета отдельный документ пока сделаем…
+  это можно не сейчас делать, просто хочу закрепить». The class is PER PERSON (she flies first, the
+  coach and the masseur business or economy), it reaches HER condition, and – the part that matters
+  most – `ECONOMY.travelBgFactor` goes away with it: «нам вообще не надо следить кому и какие цены
+  ставить – будет просто цена билетов», with the choice living in Family budget. Spec rewritten
+  around his design: `docs/specs/travel-class-2026-09.md` §4-§6. ⚠ NOT in this wave, by his word.
 
 - [~] **2. «Бизнес в начале сезона стоил около 5млн и приносил 6к в месяц, к концу стал стоить 3млн и
   приносить 3к в месяц. Позиция в таблице практически не изменилась. В чём проблема?»** – answered
@@ -51,8 +57,32 @@ the repo keeps is the derived statistics below.
   as fame² and the multiple falls with fame on top of it»); what is NOT settled is whether -25% a
   season is the number we want, and that is item 2b.
 
-- [ ] **2b. The rate, not the mechanism** – `ask`, and the one real question inside item 2. See the
-  question list at the foot of this file.
+- [>] **2b. The rate, not the mechanism** – ⭐ **HE RULED, 06.09, and it is a build now, not an ask:**
+  «спортсменка проводит свой лучший сезон (и не один) находясь в топ-100 и входя иногда в топ-50
+  даже, у нее явно есть и репутация и о ней знают, не могу забыть за год… мы должны были чинить это
+  поведение в купе со стоимостью и доходностью делая его более плавным.»
+
+  ⚠ HE HAD RAISED IT BEFORE AND IT WAS BUILT – `brand-inertia-2026-08.md`, round 32 #4: the slow
+  stock, a 208-week half-life and a floor at 0.4 of her own peak. That mechanism is live and
+  measured on this save. What his argument points at is a DIFFERENT hole, and the code confirms it
+  exactly:
+
+  | what the world pays her for | what it is worth to her today |
+  | --- | --- |
+  | 9 seasons ended inside the top 100 | **0** – `fame.seasonEndBands` stops at rank 50 |
+  | 4 seasons ended inside the top 50 | 1.5 each, on the 104-week TITLE clock |
+  | her best season ever, #20 at week 884 | 4 x 2^(-231/104) = **0.86 fame points** |
+  | one WTA 500 title | 8 fame points, immediately |
+
+  So a decade of being a professional the world can name buys less fame than a single Sunday
+  afternoon, and what it does buy evaporates on the clock built for single results. That is his
+  «не могу забыть за год», stated in the game's own numbers. The fix is item 2c.
+
+- [>] **2c. Presence is a different fact from a result** – build. Two changes, both inside
+  `fameFloorOf`, both precedented in the same function: the season ladder reaches **100**, and the
+  season term gets its OWN slower clock instead of borrowing the title one (`shootFloorDecayAt`
+  already does exactly this for shoots, per band). ⚠ Measured against the standing constraint that
+  the TOP of the shelf cannot move.
 
 - [~] **3. «Оценка перформанса вообще для Алисы и её возраста в частности. Чем она отличается от
   Ostergaard #3 в списке? А ещё очень интересует наша роза скиллов, которая упала в некоторых местах
@@ -102,7 +132,23 @@ the repo keeps is the derived statistics below.
   her peak book and she RETIRES at 26-34 (`ECONOMY.field.career`). Hers is floored at 20/58 = 34% and
   she never has to stop. The two populations age on different rules, which is item 3d.
 
-- [ ] **3d. One floor or two** – `ask`. See the question list.
+- [>] **3d. One floor or two** – ⭐ **HE RULED, 06.09:** «я вижу ветеранов на корте, да, они уже не
+  могут так быстро бегать, как раньше, но они и не беспомощны… Может разве что тоже плавнее сделать,
+  потому что она за 1 сезон скатилась из топ-50 до топ-150 и это довольно жестко.»
+
+  ⚠ AND HE ALLOWED THE HARSH END TO STAY: «Хотя может быть для формального окончания игры это и ок.»
+  So this is a FLOOR and not a flattening – the career must still end, and what must stop is the
+  free fall on the way there. The field's own pros already have exactly this
+  (`ECONOMY.field.career.declineFloor: 0.55` of peak, then they retire at 26-34); she is the only
+  person in the world without one. Build: the same shape, measured on whether careers still end.
+
+- [ ] **4. The academy's worth stands still** – ⭐ HIS OBSERVATION, 06.09: «Академия при этом стоит
+  ровно на месте – и это не очень корректно, как мне кажется. Но можем отдельно обсудить.» Recorded,
+  not built. Measured: `academy-land` and `academy-courts` both read `valueCents === paidCents`
+  ($2,000,000 and $3,000,000) at every week, because the shop values a non-`business` rung off what
+  was paid for it and only the merch rung carries a valuation. Its INCOME does move – it reads
+  `academyReputationOf` (2.83 on this career) – so the asset earns like a business and is priced like
+  a car. ⚠ His «обсудим отдельно» is honoured: this is a note, and it starts when he says so.
 
 ---
 
@@ -122,7 +168,11 @@ the repo keeps is the derived statistics below.
 
 ## Questions for him
 
-1. **The brand's decay rate (2b).** A brand loses about a quarter of its worth and its income every
+⭐ **Questions 1, 2 and 4 were ANSWERED on 06.09 and are struck through below rather than deleted –
+the ledger records what was asked and what came back, and the next round audits both.**
+
+1. ~~**The brand's decay rate (2b).**~~ **ANSWERED: smoother, and together with worth and income.**
+   Building as 2c. Kept for the argument it carries: A brand loses about a quarter of its worth and its income every
    season once the titles stop, and it compounds because the multiple falls with fame too. Three
    shapes: **A** leave it – a business built on fame is supposed to fade with fame; **B** floor the
    WORTH at a share of its own peak, the way `brandStrengthAt` already floors the reach, so a
@@ -132,13 +182,16 @@ the repo keeps is the derived statistics below.
    the player bought, and an asset with no floor is the one thing on the shelf that can quietly go
    to zero while he is looking at something else.
 
-2. **The decline floor (3d).** The field's pros stop falling at 55% of their peak and then retire.
+2. ~~**The decline floor (3d).**~~ **ANSWERED: «плавнее», with the harsh end allowed to stay.**
+   Building as 3d. Kept for the argument: The field's pros stop falling at 55% of their peak and then retire.
    She has no such floor and no such retirement. Three shapes: **A** leave it; **B** give her the
    same 0.55 floor of her own peak, so a 35-year-old is a diminished player and not a fourteen-year-
    old; **C** make the retirement offer harder to refuse past a point, so the six extensions become
    two. My reading: **B and C together**, and B first – it is one constant and one guard.
 
-4. **The age curve (C1).** You objected that «рост как раз идёт до 28-29», and the measurement says
+4. ~~**The age curve (C1).**~~ ⚠ STILL OPEN – he answered 1 and 2 and did not reach this one.
+
+4b. **The age curve (C1), restated.** You objected that «рост как раз идёт до 28-29», and the measurement says
    you are right about the age: she peaks at **26.6** going direct and **28.6** via college. What she
    gains between 22 and that peak is **under one point**. So: **A** leave the curve alone – the peak
    is already where your own reference table puts it; **B** raise `plateauRate` so the late years are
@@ -146,8 +199,5 @@ the repo keeps is the derived statistics below.
    `ageRoutes` and accepting peaks at 31-33. My reading: **B**, and only after C2 – the plateau being
    thin and the ceiling being exhausted are the same complaint seen from two ends.
 
-5. **The travel class (1).** What is the choice actually made of? **A** a class per trip, chosen
-   when she enters (economy / standard / business), price and a condition effect; **B** a standing
-   family policy she sets once and can change; **C** a policy plus a separate one for the travelling
-   team, which is his «для специалистов отдельно». My reading: **B for her, C's second half only if
-   the team's fares are already a line he can see**. Spec: `docs/specs/travel-class-2026-09.md`.
+5. ~~**The travel class (1).**~~ **ANSWERED, and better than any of the three offered** – see item 1
+   and `docs/specs/travel-class-2026-09.md` §4. Held out of this wave by his own word.
