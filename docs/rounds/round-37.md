@@ -266,6 +266,13 @@ He walked the stand at `cec32a1a` and answered the open decisions as he went.
   keep their inset. Cutting the padding moves every label left by `--app-pad-x`, which is what he is
   asking for; it is worth saying that it is what the change does.
 
+- [>] **15. «при прокручивании страницы вниз на десктоп под рейлом навигации остается пустое
+  пространство 50-60 пикселей примерно, проверь что это пожалуйста и желательно этот дефект убрать»**
+  – measure first, then build. ⚠ **50-60px is suspiciously close to the height of the PHONE'S BOTTOM
+  BAR**, which the desktop turns into this rail – so the first hypothesis to test is a reservation
+  made for a bar that is no longer at the bottom. It is a hypothesis and not a finding: it is the
+  agent's job to measure what the space actually is before removing anything.
+
 ### What he closed on the same walk
 
 | decision | his words | now |
