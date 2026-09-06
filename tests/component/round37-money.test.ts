@@ -1,15 +1,19 @@
-// ⭐⭐⭐ ROUND 37, THE MONEY SCREEN'S THIRD PASS, MOUNTED.
+// ⭐⭐⭐ ROUND 37 ITEMS 9 AND 10 – THE MONEY SCREEN'S THIRD PASS, MOUNTED.
 //
 // His words are in docs/rounds/round-37.md and quoted in full in the rules they became – a template
 // carries no Cyrillic, comments included (tests/template-copy-rules.test.ts), so the quotes live in
 // `MoneyScreen.vue`'s script and style blocks and the paraphrases are here.
 //
 //   #9  «Her own account» is noisy in the shop; it is drawn on the Spending chapter alone now.
+//   #10 the right-hand sector gets THREE TIMES the air round 36 review #15 gave it, and the note
+//       itself is a third wider. Tablet and desktop only.
 //
-// ⚠ WHAT IS NOT IN THIS FILE, AND WHERE IT IS INSTEAD. Round 35 #3's «на каждой странице магазина»
-// arm is the one this item reverses, and it is re-aimed in place in `round35-shop.test.ts` rather
-// than re-asserted here – a new file claiming the absence while the old one still claims the
-// presence is two tests disagreeing, which is worse than either.
+// ⚠ WHAT IS NOT IN THIS FILE, AND WHERE IT IS INSTEAD. Item 10's air is a MULTIPLIER on a rule that
+// already had a mutation-verified guard, so those two numbers are re-aimed in place in
+// `round36-review.test.ts` §3 rather than re-asserted here – a new file claiming 96 while the old one
+// still claims 32 is two tests disagreeing, which that file's own header calls worse than either.
+// What is here is everything neither file had ever asserted: which CHAPTER draws the plate, that the
+// note grew, that the photograph and the pie chart did NOT, and that the phone is untouched.
 //
 // ⚠ THE ORDER IS ALWAYS `setViewport` -> mount -> read, and `attachTo: document.body` is mandatory:
 // happy-dom evaluates a media query on the FIRST computed-style read and caches it, and applies no
@@ -35,8 +39,22 @@ import {
 } from '../../src/engine/world'
 import { rngFromSeed } from '../../src/engine/rng'
 import type { Snapshot } from '../../src/shared/protocol'
-import { DESKTOP, PHONE, setViewport } from './fits'
+import { DESKTOP, PHONE, TABLET, lengthPx, setViewport, type Viewport } from './fits'
 import { openShelfTab } from './shelf'
+
+function assertSheetPresent(): void {
+  if (!document.head.querySelector('style')) {
+    throw new Error('no stylesheet in the document – the component project needs `css: true`')
+  }
+}
+
+/** ⭐ HIS LADDER, ALL FIVE RUNGS. `fits.ts` carries three of them; 900 is the top of his tablet band
+ *  and 1024 is where the desktop rail arrives (docs/specs/responsive-2026-09.md, «768 как раз тоже
+ *  можно до 900 тянуть вполне, потом фиксировать посередине, а дальше десктоп от 1024»), and item 10
+ *  has to be measured at every width it claims to change. */
+const TABLET_WIDE: Viewport = { width: 900, height: 1024 }
+const LAPTOP: Viewport = { width: 1024, height: 800 }
+const WIDE: Viewport[] = [TABLET, TABLET_WIDE, LAPTOP, DESKTOP]
 
 /** A real career, walked by the real engine – `shop-tab.test.ts`'s recipe, shared by every mounted
  *  file that reaches this screen. */
@@ -92,6 +110,29 @@ async function openChapter(wrapper: Awaited<ReturnType<typeof mountMoney>>, labe
   const pill = wrapper.findAll('.money-tabs button.tab-pill').find((n) => n.text().trim() === label)
   expect(pill, `the ${label} chapter button`).toBeTruthy()
   await pill!.trigger('click')
+}
+
+/**
+ * The box a rule declares, in px. happy-dom has no layout engine (fits.ts's header), so every number
+ * here is read out of the cascade rather than off a rendered rectangle.
+ *
+ * ⚠ IT FOLDS TWO `calc` FORMS AND NOTHING ELSE, and both are shapes this screen already uses:
+ * `calc(<n> * <length>)` – round 36 review #15's «two of the app's own gutters», which item 10
+ * multiplies to six – and `calc(<length> * <a> / <b>)`, which is item 10's «a third wider» said as
+ * the arithmetic instead of as a 194.67 that cannot be traced back to the 146 it came from.
+ * happy-dom substitutes the variable and leaves the ARITHMETIC alone (`calc(6 * 16px)`, measured),
+ * so the fold happens here. Same precedent and the same reason as `round36-review.test.ts`'s own
+ * `px` and `round35-shop.test.ts`'s `calcPx`.
+ */
+function px(value: string, base: number): number {
+  const v = value.trim()
+  const direct = lengthPx(v, base)
+  if (Number.isFinite(direct)) return direct
+  const times = /^calc\(\s*(-?[\d.]+)\s*\*\s*(-?[\d.]+)px\s*\)$/.exec(v)
+  if (times) return Number(times[1]) * Number(times[2])
+  const scaled = /^calc\(\s*(-?[\d.]+)px\s*\*\s*(-?[\d.]+)\s*\/\s*(-?[\d.]+)\s*\)$/.exec(v)
+  if (scaled) return (Number(scaled[1]) * Number(scaled[2])) / Number(scaled[3])
+  return NaN
 }
 
 // =================================================================================================
@@ -169,5 +210,111 @@ describe('round 37 #9 – the account plate is the Spending chapter’s alone', 
       expect(wrapper.find('.money-share').exists(), `the shop at ${vp.width}`).toBe(false)
       wrapper.unmount()
     }
+  })
+})
+
+// =================================================================================================
+// 10. THE NOTE IS A THIRD WIDER – AND THE PHOTOGRAPH AND THE PIE CHART ARE NOT
+// =================================================================================================
+// «Саму записку тоже можно на 1/3 шире сделать на планшетах и десктопах». The receipt is `width: 100%`
+// of the artefact column, so a third wider is the COLUMN a third wider: 146px -> 194.67px. The other
+// two objects in that column are then held to their own measures – the polaroid at its 132px, the
+// donut pinned back to the 146 it has today – because he asked for AIR around them and width on the
+// note alone, and a pie chart a third bigger is round 36 review #15's «not a bigger paper» warning
+// repeated on a new object.
+//
+// ⚠ THE AIR ITSELF (32 -> 96 on each side) IS RE-AIMED IN `round36-review.test.ts` §3, beside the
+// rule it multiplies. It is asserted here only as the RATIO, which is the half of his sentence that
+// file cannot state: three times, not a new number.
+//
+// MUTATION-VERIFIED: the `width` line dropped from the media block -> the wide arm; the `.money-donut`
+// media block deleted -> the pie arm alone; the whole media block moved above `.money-donut`'s base
+// rule (the cascade trap the rule's own comment names) -> the pie arm alone.
+describe('round 37 #10 – three times the air, and the note a third wider', () => {
+  beforeEach(() => {
+    setActivePinia(createPinia())
+    document.body.innerHTML = ''
+  })
+  afterEach(() => setViewport(PHONE))
+
+  /** Every measure the item touches, at one viewport, read off the cascade. */
+  async function sector(vp: Viewport) {
+    setViewport(vp)
+    document.body.innerHTML = ''
+    const wrapper = await mountMoney(grown())
+    const body = document.querySelector('.money-body')
+    const column = document.querySelector('.money-artefacts')
+    const note = document.querySelector('.money-receipt')
+    const photo = document.querySelector('.money-polaroid')
+    const pie = document.querySelector('.money-donut')
+    expect(body, 'the Spending chapter is the one the screen opens on').toBeTruthy()
+    expect(column, 'and the artefact column is beside the figures').toBeTruthy()
+    expect(note, 'with the receipt in it').toBeTruthy()
+    expect(pie, 'and the pie chart under the photograph').toBeTruthy()
+    const cs = getComputedStyle(body!)
+    const out = {
+      // ⚠ `gap` AND NOT `columnGap`: happy-dom does not expand the shorthand into its longhands.
+      gapLeft: px(cs.gap || cs.columnGap, vp.width),
+      gapRight: px(getComputedStyle(column!).marginRight || '0px', vp.width),
+      column: px(getComputedStyle(column!).width, vp.width),
+      // The note is `width: 100%` of the column at every width – the column is what grows, which is
+      // why the declaration is read as well as the number it resolves to.
+      noteDeclared: getComputedStyle(note!).width.trim(),
+      photo: px(getComputedStyle(photo!).width, vp.width),
+      pieDeclared: getComputedStyle(pie!).width.trim(),
+    }
+    wrapper.unmount()
+    return out
+  }
+
+  it('⭐⭐ the sector is a third wider at 768, 900, 1024 and 1280 – and the note fills it', async () => {
+    assertSheetPresent()
+    for (const vp of WIDE) {
+      const wide = await sector(vp)
+      // 146 is round 36 review #15's own number for this column and its comment names all three
+      // objects that share it. A third wider is 4/3 of it.
+      expect(wide.column, `the column is a third wider at ${vp.width}`).toBeCloseTo((146 * 4) / 3, 2)
+      expect(wide.column / 146, `and «на 1/3 шире» is the ratio at ${vp.width}`).toBeCloseTo(4 / 3, 4)
+      expect(wide.noteDeclared, `the note takes the whole of it at ${vp.width}`).toBe('100%')
+    }
+  })
+
+  it('⭐⭐ the air on each side is THREE TIMES what round 36 review #15 shipped', async () => {
+    assertSheetPresent()
+    // 32px was the accepted figure – `calc(2 * var(--app-pad-x))`, two of the app's own gutters on
+    // each side. «В 3 раза» is a multiplier on it, so the assertion is written as the multiplication
+    // rather than as a 96 that has forgotten where it came from.
+    const ACCEPTED = 2 * 16
+    for (const vp of WIDE) {
+      const wide = await sector(vp)
+      expect(wide.gapLeft, `three times the air on the left at ${vp.width}`).toBe(3 * ACCEPTED)
+      expect(wide.gapRight, `and on the right at ${vp.width}`).toBe(3 * ACCEPTED)
+      expect(wide.gapLeft, 'symmetric, as item 15 left it').toBe(wide.gapRight)
+    }
+  })
+
+  it('⚠ the photograph and the pie chart do NOT grow with it', async () => {
+    assertSheetPresent()
+    const phone = await sector(PHONE)
+    for (const vp of WIDE) {
+      const wide = await sector(vp)
+      expect(wide.photo, `the trip polaroid keeps its 132px at ${vp.width}`).toBe(phone.photo)
+      expect(wide.photo, 'which is the number its own rule states').toBe(132)
+      // ⚠⚠ THE ARM THAT MATTERS. The ring is `width: 100%` of the column on a phone, so without a
+      // rule of its own it would have followed the column to 194.67 and the pie would be a third
+      // bigger – the item overshooting into an object he asked for AIR around, not width on.
+      expect(wide.pieDeclared, `the pie keeps its own 146px at ${vp.width}`).toBe('146px')
+    }
+  })
+
+  it('⚠ nothing below 768 moves, to the pixel', async () => {
+    assertSheetPresent()
+    const phone = await sector(PHONE)
+    expect(phone.gapLeft, 'the 8px gap the phone shipped with').toBe(8)
+    expect(phone.gapRight, 'and no margin at all').toBe(0)
+    expect(phone.column, 'the 146px column, untouched').toBe(146)
+    expect(phone.noteDeclared, 'the note across it').toBe('100%')
+    expect(phone.photo, 'the polaroid').toBe(132)
+    expect(phone.pieDeclared, 'and the ring across the whole column, as it always was').toBe('100%')
   })
 })

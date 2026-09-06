@@ -3097,14 +3097,37 @@ function shopRowCornerAction(row: ShopRowView): boolean {
 
    ⚠ FROM 768 UP. His sentence names no width and the round's contract is that nothing below 768
    moves without one – and the phone is the one place his premise is false: 375 leaves the figures
-   189px beside the paper, so 64px of air would come straight out of the amounts. */
+   189px beside the paper, so 64px of air would come straight out of the amounts.
+
+   ⭐⭐⭐ ROUND 37 #10 – THE SAME SECTOR, THREE TIMES THE AIR, AND THE NOTE A THIRD WIDER. The owner,
+   06.09: «Spending еще больше воздуха в 3 раза на планшетах и десктопах вокруг записки, фото и
+   пайчарта. Саму записку тоже можно на 1/3 шире сделать на планшетах и десктопах».
+
+   ⚠ «В 3 РАЗА» IS A MULTIPLIER ON THE NUMBER ABOVE, NOT A NEW NUMBER. Item 15 spent two of the
+   app's own gutters on each side and he accepted it, so this spends SIX – `calc(6 * var(--app-pad-x))`
+   is 3 x `calc(2 * var(--app-pad-x))`, and the token stays the unit so a change to the app's gutter
+   still carries here. Measured, at the four widths from 768 up: 32px -> 96px on each side.
+
+   ⚠ AND «САМУ ЗАПИСКУ» IS THE ONE OBJECT THAT GROWS. The receipt is `width: 100%` of this column,
+   so a third wider is the COLUMN a third wider – 146px -> 194.67px – and the other two objects are
+   then held to their own measures so that they do not come along: the polaroid is 132px by its own
+   rule and always was, and the donut is pinned back to the 146 it has today instead of following
+   the column. He asked for air around the photo and the pie chart and for width on the note alone;
+   a pie chart a third bigger is item 15's «not a bigger paper» warning repeated on a new object.
+
+   ⚠ WHAT IT COSTS THE FIGURES, measured in Chromium rather than argued: the list column goes
+   526 -> 349px at 768, 658 -> 481 at 900, 562 -> 385 at 1024 and 738 -> 561 at 1280. All four are
+   far above the 190px column this screen's CTA metrics were written for, and no width scrolls
+   sideways. Nothing below 768 moves: every declaration here is inside the query. */
 @media (min-width: 768px) {
   .money-body {
-    gap: calc(2 * var(--app-pad-x));
+    gap: calc(6 * var(--app-pad-x));
   }
 
   .money-artefacts {
-    margin-right: calc(2 * var(--app-pad-x));
+    /* 146px, a third wider. Spelled as the arithmetic so the number it came from stays readable. */
+    width: calc(146px * 4 / 3);
+    margin-right: calc(6 * var(--app-pad-x));
   }
 }
 
@@ -3155,6 +3178,26 @@ function shopRowCornerAction(row: ShopRowView): boolean {
   width: 100%;
   height: auto;
   margin-top: 18px;
+}
+
+/* ⭐⭐ ROUND 37 #10 – THE PIE CHART KEEPS ITS SIZE WHILE THE COLUMN GROWS AROUND IT. The item's whole
+   argument is on `.money-artefacts`'s media block above; what is here is the half that cannot live
+   there. He asked for the NOTE a third wider and for AIR around the pie, so the ring is held to the
+   146 it is today rather than following the column's new 194.67 – and this rule has to sit AFTER the
+   `width: 100%` above, because a media query adds no specificity and the later of two equal rules
+   wins. Written above `.money-artefacts` it would have been silently overridden and the pie would
+   have grown anyway, which is the item half-done and looks like the item working.
+
+   ⚠ `display: block` IS WHAT MAKES `margin-left: auto` MEAN ANYTHING, and it is not a tidy-up: an
+   `<svg>` is an inline-level replaced element and `auto` on an inline box computes to zero, so
+   without it the ring would sit at the LEFT edge of a column that just grew. Its right edge is where
+   it has always been, in line with the note and the photograph above it. */
+@media (min-width: 768px) {
+  .money-donut {
+    display: block;
+    width: 146px;
+    margin-left: auto;
+  }
 }
 
 /* The stroke comes from the template, one `--cat-*` per slice (see CAT_COLOR in the script). The

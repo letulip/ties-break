@@ -92,18 +92,25 @@ async function mountShop(snapshot: Snapshot) {
  * The box a rule declares, in px. happy-dom has no layout engine (fits.ts's own header), so every
  * number here is read out of the cascade rather than off a rendered rectangle.
  *
- * ⚠ IT FOLDS `calc(<n> * <length>)` AND NOTHING ELSE, which is the one form this wave adds:
- * `calc(2 * var(--app-pad-x))` – «two of the app's own gutter», said once instead of as a 32 that
- * cannot follow the token. happy-dom substitutes the variable and leaves the ARITHMETIC alone
- * (`calc(2 * 16px)`, measured), so the fold happens here rather than in `fits.ts`, which every other
- * measurement in the suite reads through. Same precedent and the same reason as
- * `round35-shop.test.ts`'s own `calcPx`, which folds `calc(<pct> + <length>)`.
+ * ⚠ IT FOLDS `calc(<n> * <length>)`, which is the form this wave adds: `calc(2 * var(--app-pad-x))`
+ * – «two of the app's own gutter», said once instead of as a 32 that cannot follow the token.
+ * happy-dom substitutes the variable and leaves the ARITHMETIC alone (`calc(2 * 16px)`, measured),
+ * so the fold happens here rather than in `fits.ts`, which every other measurement in the suite
+ * reads through. Same precedent and the same reason as `round35-shop.test.ts`'s own `calcPx`, which
+ * folds `calc(<pct> + <length>)`.
+ *
+ * ⚙ ROUND 37 #10 ADDS THE SECOND FORM, `calc(<length> * <a> / <b>)` – «a third wider» written as the
+ * arithmetic instead of as a 194.67 nobody can trace back to the 146 it came from. Additive: every
+ * value the file folded before folds identically.
  */
 function px(value: string, base: number): number {
   const direct = lengthPx(value, base)
   if (Number.isFinite(direct)) return direct
-  const m = /^calc\(\s*(-?[\d.]+)\s*\*\s*(-?[\d.]+)px\s*\)$/.exec(value.trim())
-  return m ? Number(m[1]) * Number(m[2]) : NaN
+  const trimmed = value.trim()
+  const m = /^calc\(\s*(-?[\d.]+)\s*\*\s*(-?[\d.]+)px\s*\)$/.exec(trimmed)
+  if (m) return Number(m[1]) * Number(m[2])
+  const scaled = /^calc\(\s*(-?[\d.]+)px\s*\*\s*(-?[\d.]+)\s*\/\s*(-?[\d.]+)\s*\)$/.exec(trimmed)
+  return scaled ? (Number(scaled[1]) * Number(scaled[2])) / Number(scaled[3]) : NaN
 }
 
 // =================================================================================================
@@ -287,6 +294,16 @@ describe('round 36 review #14 – her account’s photograph grows', () => {
 //
 // MUTATION-VERIFIED: the media block deleted -> both wide arms, phone green; the `margin-right`
 // dropped and the gap left -> the right-hand arm alone, which is the half his sentence would lose.
+//
+// ⚠⚠ RE-AIMED BY ROUND 37 #10 (06.09) – NOTHING HERE IS DELETED OR LOOSENED, THREE NUMBERS MOVED.
+// «Spending еще больше воздуха в 3 раза на планшетах и десктопах вокруг записки, фото и пайчарта.
+// Саму записку тоже можно на 1/3 шире сделать на планшетах и десктопах.» So the air on each side is
+// three times the figure he accepted here (32 -> 96, still `--app-pad-x` and now six of them), and
+// the sector – whose width this arm pinned at 146 precisely because item 15 did NOT grow it – is a
+// third wider because the note inside it is. The phone arm is untouched and still passes unchanged,
+// which is the property both rounds committed to. The rest of item 10's claims, and the ones this
+// arm never made (the photograph and the pie chart do not grow), are in
+// `tests/component/round37-money.test.ts`.
 describe('round 36 review #15 – the artefact column gets air', () => {
   beforeEach(() => {
     setActivePinia(createPinia())
@@ -315,16 +332,22 @@ describe('round 36 review #15 – the artefact column gets air', () => {
 
   it('⭐⭐ the same air on the left and on the right, from 768 up', async () => {
     assertSheetPresent()
+    // ⚙ ROUND 37 #10's MULTIPLIER, written as the multiplication: 32px is what item 15 shipped and
+    // he accepted, and «в 3 раза» is three of them rather than a fresh 96.
+    const ITEM_15 = 32
     const tablet = await air(TABLET, 'r36r-15-tablet')
-    expect(tablet.left, 'air between the figures and the paper').toBe(32)
-    expect(tablet.right, 'and the same again before the column’s edge').toBe(32)
+    expect(tablet.left, 'air between the figures and the paper').toBe(3 * ITEM_15)
+    expect(tablet.right, 'and the same again before the column’s edge').toBe(3 * ITEM_15)
     expect(tablet.left, 'symmetric, because he named both sides in one breath').toBe(tablet.right)
     const desktop = await air(DESKTOP, 'r36r-15-desktop')
-    expect(desktop.left, 'and it carries to the desktop').toBe(32)
-    expect(desktop.right).toBe(32)
-    // ⚠ THE SECTOR ITSELF DOES NOT GROW. He asked for air around the paper, not for a bigger paper,
-    // and 146 is the shared measure of the receipt, the polaroid and the donut.
-    expect(desktop.width, 'the artefacts keep their own width').toBe(146)
+    expect(desktop.left, 'and it carries to the desktop').toBe(3 * ITEM_15)
+    expect(desktop.right).toBe(3 * ITEM_15)
+    // ⚠ THE SECTOR GREW ONCE, AND ONLY BECAUSE HE ASKED FOR THE NOTE. Item 15 pinned this at 146 –
+    // «air around the paper, not a bigger paper» – and round 37 #10 asked for «саму записку … на 1/3
+    // шире». The receipt is `width: 100%` of this column, so a third wider is the column a third
+    // wider; the polaroid and the donut are held to their own measures so that they do NOT come
+    // along, which is round37-money.test.ts's own arm.
+    expect(desktop.width, 'the note is a third wider, so its column is').toBeCloseTo((146 * 4) / 3, 2)
   })
 
   it('⚠ …and the phone is untouched, where his premise does not hold', async () => {
