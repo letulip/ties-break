@@ -32,6 +32,7 @@ import { isOffSeasonWeek } from '../engine/season/calendar'
 import { weekLabel, weekRange } from '../shared/dates'
 import { vacationArtUrl } from '../art/weeks'
 import { restCostFor, restCostLines } from '../composables/restCost'
+import { layoffNoteFor } from '../composables/weekDays'
 import IconButton from './ui/IconButton.vue'
 import TakeoverShell from './ui/TakeoverShell.vue'
 import StoreError from './ui/StoreError.vue'
@@ -135,10 +136,21 @@ const layoff = computed(() => {
   const s = game.snapshot
   return layoffBlock({ currentWeek: s?.week ?? 0, injury: s?.injury ?? null, week: props.week })
 })
-/** The refusal's first words – the same words the tournament card's injured lock uses. */
+/** The refusal's first words – the same words the tournament card's injured lock uses, and since
+ *  06.09 literally the same string: `layoffNoteFor` is where they live (composables/weekDays.ts),
+ *  because this comment was true of three files that each wrote them out.
+ *
+ *  ⚠ THE FULL STOP IS A JOIN AND NOT A SECOND COPY OF THE WORDS. Both sites that render this put a
+ *  SECOND sentence after it inside the same paragraph («A friendly is still a match…», «A week away
+ *  is still hers to book…»), so without the stop the two sentences run together. The chips on the
+ *  other two screens are `title` tooltips with nothing after them, which is why they end where the
+ *  sentence ends. Nothing on screen moved when the words were centralised.
+ *
+ *  ⚠ AND THE WEEK IT IS SHOWN FOR IS STILL THIS SHEET'S: `layoff` is `layoffBlock` against
+ *  `props.week`, so a healed week says nothing even while she is hurt today. */
 const layoffNote = computed(() => {
-  const s = game.snapshot
-  return s?.injury && layoff.value ? `Injured – back ${weekLabel(s.week + s.injury.weeksRemaining)}.` : ''
+  const note = layoff.value ? layoffNoteFor(game.snapshot) : ''
+  return note === '' ? '' : `${note}.`
 })
 
 function askPractice(): void {

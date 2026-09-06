@@ -64,7 +64,7 @@
 // argument and for the arrival-gate bug it is written against.
 import { computed, onMounted, ref } from 'vue'
 import { useGameStore } from '../../stores/game'
-import { useCalendarWeek, useLookAhead, DAY_LONG, type CalendarDay, type DayKind } from '../../composables/weekDays'
+import { useCalendarWeek, useLookAhead, layoffNoteFor, DAY_LONG, type CalendarDay, type DayKind } from '../../composables/weekDays'
 // The SECOND drawing of the same week: the design's time x day grid. What a day of each kind looks
 // like across a morning and an afternoon is a rule with content in it, so it lives in a pure module
 // beside the day layout rather than in this template - see composables/weekGrid.ts for the owner's
@@ -150,11 +150,11 @@ const injuredNow = computed(() => calendar.value?.days[0]?.kind === 'rehab')
 const awayNow = computed(() => calendar.value?.days[0]?.kind === 'away')
 /** The layoff's clock, for the chips' tooltips. Same arithmetic every other surface prints, so the
  *  DATE can never differ from the Season screen's plaque even though the sentence has a different
- *  lead (a calendar has room to name what is wrong with her; a 6px chip has not). */
-const layoffNote = computed(() => {
-  const s = game.snapshot
-  return s?.injury ? `Injured – back ${weekLabel(s.week + s.injury.weeksRemaining)}` : ''
-})
+ *  lead (a calendar has room to name what is wrong with her; a 6px chip has not).
+ *
+ *  ⚠ SINCE 06.09 IT IS THE SAME STRING AND NOT MERELY THE SAME ARITHMETIC – `layoffNoteFor` in
+ *  composables/weekDays.ts, where the words live once. What this computed still owns is nothing. */
+const layoffNote = computed(() => layoffNoteFor(game.snapshot))
 
 // --- the grid's vocabulary ---------------------------------------------------------------------
 // One word per day kind, and it is the ACCESSIBLE name rather than a caption: the cell shows a mark

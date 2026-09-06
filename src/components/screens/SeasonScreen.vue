@@ -89,6 +89,7 @@ import { readingColor } from '../../composables/readingColor'
 // Calendar so the two surfaces cannot call the same tournament two different things.
 import { enterActionName } from '../../composables/eventName'
 import { TIER_SHORT } from '../../composables/weekAhead'
+import { layoffNoteFor } from '../../composables/weekDays'
 import { consumePostAdvanceNav, holdPostAdvanceNav } from '../../composables/weekRecap'
 import { rankLabel } from '../../shared/format'
 import { seasonWeekRange, weekLabel, weekRange } from '../../shared/dates'
@@ -664,11 +665,10 @@ function layoffCovers(w: number): boolean {
   const s = game.snapshot
   return s?.injury != null && w < s.week + s.injury.weeksRemaining
 }
-/** The chip's tooltip – the same words the tournament card's injured lock uses. */
-const layoffNote = computed(() => {
-  const s = game.snapshot
-  return s?.injury ? `Injured – back ${weekLabel(s.week + s.injury.weeksRemaining)}` : ''
-})
+/** The chip's tooltip – the same words the tournament card's injured lock uses, and since 06.09 the
+ *  same STRING: `layoffNoteFor` (composables/weekDays.ts). `lockLabel`'s own `'injured'` arm below
+ *  reads it too, so the claim this comment has always made is now structural. */
+const layoffNote = computed(() => layoffNoteFor(game.snapshot))
 /** ⭐⭐⭐ ROUND 34 #14 – WHAT A WEEK OFFERS, AS A LIST, and the rule is in `composables/tierState.ts`
  *  beside `preferredWeekEvent` rather than in this file, and his ruling is quoted verbatim on
  *  `weekEventStack` there. It lives there for the reason the PICK does: the measurement tool that
@@ -877,8 +877,13 @@ function feeSentence(cents: number): string {
 function lockLabel(e: UpcomingEvent): string {
   switch (e.ineligibleReason) {
     case 'injured': {
-      const s = game.snapshot
-      return s?.injury ? `Injured – back ${weekLabel(s.week + s.injury.weeksRemaining)}` : 'Injured – rest up'
+      // ⚠ THE FOURTH WRITER OF THE SAME SENTENCE, AND THE ONE THE OTHER THREE CITED. Every
+      // `layoffNote` in the app carried a comment saying it used «the tournament card's injured
+      // lock's own words»; this is that lock, and it now reads the shared `layoffNoteFor` rather than
+      // being a fourth copy of them. The FALLBACK is this arm's alone and stays: a card can be
+      // ineligible-because-injured on a snapshot that carries no `injury` object, and there is no
+      // return week to name.
+      return layoffNoteFor(game.snapshot) || 'Injured – rest up'
     }
     // The doctor's veto (below ECONOMY.availability.medicalFloor): the one hard body-gate. The
     // card says WHY in three words; the confirm never appears, because there is nothing to confirm.
