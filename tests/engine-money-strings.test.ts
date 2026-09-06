@@ -103,8 +103,12 @@ describe('E-12 – the engine builds its dollar strings with shared/money, and t
     expect(line!.text).not.toContain('funds -$0')
   })
 
-  it('⚠ HELD FOR THE OWNER – the career-opening line still prints the reserve to the cent', () => {
-    // ⭐ THE MEASUREMENT BEHIND THE ONE SITE THIS WAVE DID NOT TOUCH. A career started WITHOUT the
+  it('⭐ RULED 06.09 – the career-opening line rounds, and the cents stay in the world', () => {
+    // ⚠⚠ RE-AIMED BY HIS RULING, 06.09: «по умолчанию округлять, нам вроде бы нигде в интерфейсе не
+    // нужна такая точность, но в расчетах использовать корректно без округления». The measurement
+    // below is kept because it is what the decision was taken on, and because a zero here would
+    // mean the arm can go.
+    // ⭐ THE MEASUREMENT THE DECISION WAS TAKEN ON. A career started WITHOUT the
     // prologue opens on a whole number of dollars, so the old spelling and `formatCents` agree and
     // the line could be swapped today with nothing moving:
     for (const background of ['wealthy', 'middle', 'working'] as FamilyBackground[]) {
@@ -134,10 +138,26 @@ describe('E-12 – the engine builds its dollar strings with shared/money, and t
     expect(differing, 'prologue openings whose spelling differs').toBeGreaterThan(20)
     expect(differing).toBeLessThan(sampled)
 
-    // And the line the engine actually writes still carries the unrounded spelling – recorded, not
-    // blessed. When the owner rules, this arm becomes `toContain(formatCents(w.fundsCents))`.
-    const w: WorldState = createWorld('e12-opening', { ...DEFAULT_PROFILE })
+    // AND THE LINE THE ENGINE WRITES NOW ROUNDS. Two arms, because one of them cannot fail on its
+    // own: a career opened WITHOUT the prologue lands on whole dollars, so both spellings agree
+    // there and the assertion would be green against the old hand-rolled form too.
+    const plain: WorldState = createWorld('e12-opening', { ...DEFAULT_PROFILE })
+    const plainLine = plain.events.find((e) => e.text.includes('Family budget'))
+    expect(plainLine?.text).toContain(formatCents(plain.fundsCents))
+
+    // ⭐ THIS is the arm that bites: a prologue career whose reserve is NOT a whole number of
+    // dollars. The old spelling printed the cents; `formatCents` rounds them away, and the world
+    // keeps every one of them – which is the whole of his ruling in one assertion pair.
+    const spentCents = Math.round(ECONOMY.prologue.referenceSpendCents + ECONOMY.prologue.spendSwingCents / 3)
+    const withCents = prologueFundsCents('middle', spentCents)
+    expect(withCents % 100, 'the fixture must actually carry cents, or this arm proves nothing').not.toBe(0)
+    const w: WorldState = createWorld('e12-opening-prologue', { ...DEFAULT_PROFILE }, 'e12-cents', {
+      years: [],
+      spentCents,
+    })
+    expect(w.fundsCents % 100, 'and the world keeps them').not.toBe(0)
     const opening = w.events.find((e) => e.text.includes('Family budget'))
-    expect(opening?.text).toContain(`$${(w.fundsCents / 100).toLocaleString('en-US')}`)
+    expect(opening?.text, 'the line rounds').toContain(formatCents(w.fundsCents))
+    expect(opening?.text, 'and prints no cents').not.toMatch(/\$[\d,]+\.\d/)
   })
 })

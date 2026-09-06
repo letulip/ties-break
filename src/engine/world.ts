@@ -1488,7 +1488,12 @@ export function createWorld(
     week: 0,
     type: 'info',
     keep: true,
-    text: `${profile.kidName}'s career started (seed "${seed}"). Family budget: $${(fundsCents / 100).toLocaleString('en-US')}.`,
+    // ⭐ ROUND 37 – HIS RULING, 06.09: «по умолчанию округлять, нам вроде бы нигде в интерфейсе не
+    //   нужна такая точность, но в расчетах использовать корректно без округления». The hand-rolled
+    //   form printed whatever `fundsCents / 100` came to, and since the childhood prologue landed,
+    //   `prologueFundsCents` rounds to whole CENTS – so 32 of 75 sampled openings read «$29,583.33».
+    //   `formatCents` is the rule he stated: whole dollars on screen, cents untouched in the world.
+    text: `${profile.kidName}'s career started (seed "${seed}"). Family budget: ${formatCents(fundsCents)}.`,
   })
   ensureSeason(world)
   recomputeKidRank(world)
