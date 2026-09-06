@@ -1489,3 +1489,21 @@ call whether the phone's floors move.**
 | **the second half: no** | Re-measured on D97's tree, because D97 changes heights. The largest strip that grows no card past 66, per width: 768 → 72, 800 → 67, 850 → 71, 900 → 67, 1000 → 67, 1023 → 67, 1024 → 69, **1060 → 66**, 1100 → 75, 1200 → 67, 1280 → 67, 1440 → 67. One band takes the minimum, so the band is **66, bound at 1060**, where 67 already puts a line on four cards for a pixel nobody can see. A tablet-only rule caps at 67 for the same reason. |
 | ⚠ **the mask is still not the binding ceiling** | Its 71.94px stands, but a 70px strip grows a card at **nine of those twelve widths**. So no pixel changes and the record IS the answer. |
 | **why D97 had to be measured first** | It moved three of these numbers: 800 and 1024 read «80+» while the grid stretched, because a card that grew a line was hidden inside its taller neighbour, and are 67 and 69 now; 1100 loosened 63 → 75, since the line it was protecting is one P2-7 already spent. |
+
+### D99 `[x]` The live match's grid may not shrink its own panel to nothing
+
+| | |
+| --- | --- |
+| **his words** | «как будто вертикальный скролл запрещен, из-за этого на невысоких экранах часть интерфейса вообще не видна» |
+| **what it was** | Past 768 `.mv`'s row 1 was `auto`. With negative free space an `auto` track falls back to its item's minimum contribution, and `.mv-panel` is a `Card variant="photo"` – an `overflow: hidden` box, whose automatic minimum size is ZERO. So the panel was shrunk under its own content, clipped the remainder, and `.tf-body`'s `scrollHeight` equalled its `clientHeight`: nothing in the chain had anything left to scroll to. |
+| **shipped** | `grid-template-rows: auto minmax(0, 1fr)` → `max-content minmax(auto, 1fr)`. Score readout clipped 81 / 101 / 14px at 768x640 / 900x620 / 1280x600 → **0 at all five short viewports**; `.tf-body` gains 106-213px of real scroll. A window that already fitted does not move, because `max-content` is what `auto` computed to whenever there was room. |
+| **scope, measured** | ⭐ Every other surface was swept and is clean – all ten tab screens, every dialog, every takeover and the nine prologue cards. The ordinary screens scroll correctly at every width. 375 byte-identical. |
+
+### D100 `[x]` The prologue's answers are one centred column, and they come off the painting
+
+| | |
+| --- | --- |
+| **his words** | «на низких экранах кнопки выбора на онбординге прилипают к картинке, надо починить. И давай эти кнопки делать не в 2 колонки, а посередине просто одну под другой» |
+| ⚠ **which surface** | The childhood prologue's card, NOT `OnboardingWizard` – established by measurement: `.prologue-answers` is the only choice set in the new-career flow under a picture, its first button began on the painting's last pixel on four of five cards, and it is the only one paired above 768. The wizard's pair is two columns at every width including 375, so changing it there would have moved the phone. |
+| **shipped** | One column capped at **500px** – round 36 review item 18's own number – with `width: 100%` (a grid item with auto inline margins does not stretch, and the cap alone shrank the column to 105px on the age-6 card), and the hero gains the tablet band's 14px margin. Four answers: three shared rows → four rows; button 608/848 → 500; gap under the painting **0 → 14px**. |
+| ⚠ **two calls left to him** | 500 is now spelled twice (here and `.tb-pill--cta`) and is deliberately not yet a token – a third subject is when it becomes one. And one column is taller than two, so the tallest card grows 810 → 847px inside its 640px port at 768-1023; it has scrolled since round-20 #3, so this changes how far, not whether. |

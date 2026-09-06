@@ -162,3 +162,64 @@ replaced my own worktree's symlink with a private tree. Repaired the same way.
 ⚠ **Left open, filed rather than fixed:** `tools/domestic-ladder-probe.ts` holds a third hand-copied
 array of the same 24 country codes, and its own comment admits the copy. It goes stale the moment the
 list grows.
+
+---
+
+## Two more from the stand, 06.09 evening
+
+- [x] **7. «надо сделать фикс для планшетов и десктопов, там интерфейс перестроен, но как будто
+  вертикальный скролл запрещен, из-за этого на невысоких экранах часть интерфейса вообще не видна»**
+  – build. **`D99`.**
+
+  ⚠ **The surface is the LIVE MATCH screen and only it**, found by sweeping every takeover, every
+  dialog, all ten tab screens and the nine prologue cards at 1280x600, 1024x620, 900x620, 768x640 and
+  375x600 – first for unreachable controls, then for any element clipped by an ancestor nothing can
+  scroll. Everything else came back clean; ⭐ **the ordinary tab screens scroll correctly at every
+  width** (measured before the agent started: content 1108-1487px in a 600px window, wheel and End
+  both reach the bottom).
+
+  **The mechanism, and it is subtle.** Past 768 `.mv` is a grid whose row 1 was `auto`. On a short
+  window the grid has negative free space, and an `auto` track then falls back to its item's minimum
+  contribution – which for `.mv-panel`, a `Card variant="photo"` and therefore an `overflow: hidden`
+  box, is **zero**. The row shrank the panel under its own content, the panel clipped the difference,
+  and `.tf-body`'s `scrollHeight` **equalled** its `clientHeight`. There was nothing left anywhere in
+  the chain to scroll to. That is his sentence exactly: the content exists and cannot be reached.
+  Row 2 collapsed the same way and laid the transport bar back over the court.
+
+  **One declaration:** `auto minmax(0, 1fr)` → `max-content minmax(auto, 1fr)`. `max-content` is what
+  `auto` already computed to whenever there WAS room, so a window that fitted does not move. Measured
+  clipping of the score readout: **81px at 768x640, 101px at 900x620, 14px at 1280x600 → 0 at all
+  five viewports**, and `.tf-body` now has 106-213px of real scroll where it had none. **375 is
+  byte-identical in every column.**
+
+- [x] **8. «на низких экранах кнопки выбора на онбординге прилипают к картинке, надо починить. И
+  давай эти кнопки делать не в 2 колонки, а посередине просто одну под другой»** – build. **`D100`.**
+
+  ⚠ **It is the childhood prologue's card, not the onboarding wizard**, and that was established by
+  measurement before anything was changed: `.prologue-answers` is the only choice set in the
+  new-career flow that sits under a picture, its first button began on the painting's **last pixel**
+  (gap 0px at 1024x620 and 1280x600) on four of the five cards walked, and it is the only one
+  arranged two-to-a-row above 768. The wizard's own pair is two columns at **every** width including
+  375, so «не в 2 колонки» there would have moved the phone, which he did not ask for.
+
+  **Shipped:** one column capped at **500px** – his own number from round 36 review item 18 – and the
+  hero gains the tablet band's own 14px margin. Four answers went from three shared rows to four
+  rows; the button from 608/848px to 500; the gap under the painting from **0 to 14px**. 375
+  unchanged to the pixel, asserted rather than claimed: the phone arms of both new tests pass on the
+  UNFIXED tree too.
+
+⚠ **Two calls that belong to him**, both named by the agent rather than taken:
+
+1. **500 is now spelled twice** – `.tb-pill--cta` in `src/style.css` and the prologue's answers.
+   Deliberately not a token yet: turning that literal into one changes what
+   `round36-review-home.test.ts` reads off `getComputedStyle().maxWidth` for every CTA in the app. A
+   third subject is the moment it becomes a token.
+2. **One column is taller than two**, so the tallest prologue card grows at 768-1023 (810 → 847px
+   inside 640). It has scrolled since round-20 #3, so this changes how far it scrolls, not whether it
+   can.
+
+⚠ **And one thing found in passing and deliberately NOT widened into:** at 1280x600 the desktop
+rail's own content is 641px in a 600px box, so about 21px of the third dashboard card sits below the
+rail's fold. It DOES scroll – the rail is `overflow-y: auto` and a wheel over it moves it, measured
+`scrollTop` 0 → 40 – and no control is unreachable, so it is not what he reported. Worth a look if he
+raises it: the page scroll does not reveal it, because the rail is sticky.
