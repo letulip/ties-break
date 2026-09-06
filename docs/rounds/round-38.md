@@ -176,6 +176,61 @@ the repo keeps is the derived statistics below.
 
 ---
 
+## His second pass, 06-07.09
+
+- [~] **5. «У 35 летней всё равно приходит по 9 в неделю на пустых неделях, может мы где-то что-то не
+  считаем?»** – answered, and he is right. Measured (`tools/r38-decline-cliff.ts` §1): her free week
+  returns **9.02**, of which the age fade touches **4.02**. The other five are the rest slider (1),
+  the physio (1) and the daily masseur (3) – BOUGHT SERVICES THAT DO NOT AGE. And
+  `condition.recoveryAgeFloor` is 0.5, so the worst free week any woman can ever have with this staff
+  is 7.50 against a twenty-year-old's 10.00. ⚠ Build candidate B in
+  `docs/specs/ageing-mechanism-2026-09.md` §6.
+
+- [~] **6. «Что у нас деградирует и по какому механизму»** – measured, and it found THREE mechanisms,
+  only one of which is the skill curve. `docs/specs/ageing-mechanism-2026-09.md`:
+
+  * her body fell **16.8%** from 30 to 35.3 – and her chance against a #50 fell **53%**. The
+    skill-to-result curve amplifies three to four times, which is what a Markov match does and what
+    tennis does. ⚠ So `declineAccel` is the wrong dial for his complaint.
+  * ⚠⚠ **she still beats a #400 player 86% of the time.** On court she is not finished.
+  * ⭐⭐⭐ **and the actual mechanism is ACCESS, not skill.** At #141 she is squeezed from both ends:
+    w15 and w35 are SHUT BEHIND HER (`tierOutgrown`, and «professional rungs never re-open»), and
+    wta500 / wta1000 / slam are shut in front (cuts at 120 / 65 / 112). What is left is w50-wta250,
+    where the field sits around #200-330. Nine of her last 26 results are worth ONE point.
+  * condition is not the cause: `conditionMatchFactor` is flat from 70 to 100 and she is at 94.1.
+
+- [ ] **6b. The ladder's way down** – build, and it is the first of the three. A rung re-opens when
+  her CURRENT rank has fallen far enough below what it was when the rung closed. ⚠ Needs his word on
+  the shape.
+
+- [ ] **6c. His own proposal: the ageing penalty moves from skills toward condition** – «может она
+  должна больше уставать и больше терять за матч своей кондиции, но не падать по навыкам до уровня
+  12 лет». Costed in the spec §5: it is real, the code is closer to it than it looks
+  (`conditionMatchFactor` already scales all five attributes), and it touches three curves and every
+  AI result. ⚠ Needs his word.
+
+- [ ] **6d. Her own voice on her own decline** – «нужно чётко понимать, что карьера уже не та и явно
+  это подсвечивать, как раз срез года закончить/продолжать... там нужно больше её голоса (или голоса
+  тренера, если он есть, или совместного)». Content on a screen that already exists. ⚠ Ships with
+  whichever of 6b/6c goes first, so the player is told what is happening while it happens.
+
+- [~] **7. «Куда делась надпись с плашки тренера на главной?»** – answered: **he moved it himself.**
+  Round 34 #2a, his own words: «Тренер на главном экране (почему-то, давай на карточку тренера
+  вернём лучше) написал 14 летней девочке Close to her ceiling … звучит как приговор». It lives on
+  the coach card (`CoachMarketScreen`, `.cm-room-band`) and `HomeScreen.vue`'s note at the site says
+  so. ⚠ What he is asking for NOW is different and is 6d: the coach speaking about her DECLINE, which
+  has never existed anywhere.
+
+- [ ] **8. The academy's worth** – his «давай обсудим, излагай, в этот же раунд пойдёт». The
+  observation and the three shapes are in the report; the spec follows his choice.
+
+- [ ] **9. Wave A – the snapshot cache** – he pulled it into this round. Plan already written:
+  `docs/specs/next-waves-2026-09.md` Wave A, steps A1-A5. Nothing about saves changes.
+
+- [ ] **10. Wave B – one owner out of `App.vue`** – same, steps B1-B4.
+
+---
+
 ## Wave C, as `docs/specs/next-waves-2026-09.md` recorded it
 
 - [?] **C1 – the age curve.** ⚠ **C0 measured it and the proposal does not survive.** The pair C1
