@@ -256,6 +256,16 @@ He walked the stand at `cec32a1a` and answered the open decisions as he went.
   `TournamentFlow.vue:1244`. Round 36 review item 18 capped every affirmative CTA at 500; this control
   was missed by that sweep, which is worth knowing – the census that item ran looked at 1280 only.
 
+- [>] **14. «на вертикальном рейле навигации на десктопе слева сделаем такой же отступ, как и справа
+  (меньше то есть)»** – build. The rail's right padding is 12px and its left is
+  `12px + var(--app-pad-x)`; he wants them equal at 12.
+  ⚠ **The asymmetry is deliberate and its reason is written at the rule**, so this is a reversal
+  rather than a typo being corrected: the rail is pulled out to the frame's own edge by a negative
+  left margin – «flush to the frame's own edge rather than inset by the frame's gutter, which is
+  where AC puts it» – and the gutter is then re-spent as the rail's own left padding so the LABELS
+  keep their inset. Cutting the padding moves every label left by `--app-pad-x`, which is what he is
+  asking for; it is worth saying that it is what the change does.
+
 ### What he closed on the same walk
 
 | decision | his words | now |
