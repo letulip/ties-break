@@ -22,6 +22,11 @@ function load(file: string): unknown {
   return JSON.parse(readFileSync(`${DIR}/${file}`, 'utf8'))
 }
 
+/** The first fixture whose save carries a college quote through the ladder. Measured 05.09: every
+ *  fixture from here on carries exactly one, twenty of them. It is the anti-vacuity floor for the
+ *  v61 sweep – see the note there. */
+const FIRST_QUOTE_FIXTURE = 51
+
 /** "This record is numbers all the way down" – the season-history row's size guarantee, asked of the
  *  LEAVES rather than of the top level so a nested value (v46's `byTrack`) is covered rather than
  *  waved through. Arrays and objects recurse; anything else must be a number. */
@@ -186,22 +191,50 @@ describe('golden saves corpus', () => {
   // `CollegeQuote.open` left the type – and a value left behind in a save is worse than one that was
   // never removed, because `answerFork` used to filter on it. NINE fixtures (v52..v60) carry a fork
   // offer with `open: true`, so this sweep is not vacuous and its own anti-vacuity line says so.
-  it('⭐⭐⭐⭐ v61: no migrated save carries a college quote\'s `open` flag', () => {
-    let quotesSeen = 0
-    for (const file of FILES) {
-      const migrated = migrateSave(load(file)) as unknown as {
-        fork?: { offer?: { quotes?: Array<Record<string, unknown>> } | null } | null
-      }
-      for (const q of migrated.fork?.offer?.quotes ?? []) {
-        quotesSeen += 1
-        expect('open' in q, `${file}: a shut flag survived the migration`).toBe(false)
-        // ⚠ AND NOTHING ELSE ON THE QUOTE MOVED. The migration deletes one key and re-prices nothing
-        // – `ForkState.offer`'s own doctrine that a career is not re-priced halfway through a bill.
-        expect(typeof q.costPerYearCents, `${file}: the sticker is still there`).toBe('number')
-        expect(typeof q.familyPerYearCents, `${file}: and so is what the family pays`).toBe('number')
-      }
+  //
+  // ⚠⚠ ONE TEST PER FIXTURE, AND THE SPLIT IS THE FIX ROUND 31 ALREADY MADE ONCE (P-14, 05.09).
+  // This was a single `it` walking the whole corpus, and `migrateSave` runs the WHOLE ladder on each
+  // fixture, so it grew TWICE with every wave: one more fixture, and one more step in every other
+  // fixture's chain. Measured here at v70: this sweep and the v62 one below were 6.3 s and 6.1 s of
+  // the file's 19.0 s of test time – 65 % of it, in two tests, against a 20 s PER-TEST ceiling that
+  // has already killed this exact file (27.08, red four times on `check` with zero assertion
+  // failures). `tests/round31-age-curve.test.ts:298-311` records the same failure and the same fix;
+  // its own words apply here unchanged: «`it.each` is not a loosening – the same assertions run over
+  // the same fixtures. Each one now gets its own budget, a failure names the fixture instead of the
+  // sweep, and the arm cannot cross the line again however many schema versions accumulate.»
+  //
+  // ⚠ AND THE CORPUS IS DELIBERATELY NOT MIGRATED ONCE INTO A SHARED CONSTANT, which was the other
+  // remedy on the table. It would take ~12 s out of the file, and it would put that work at MODULE
+  // level, where no per-test budget and no `hookTimeout` covers it and the reporter attributes it to
+  // no test – which is the defect P-15 is about, one file over. Cheaper is not the same as bounded.
+  it.each(FILES)('⭐⭐⭐⭐ v61: %s carries no college quote `open` flag', (file) => {
+    const migrated = migrateSave(load(file)) as unknown as {
+      fork?: { offer?: { quotes?: Array<Record<string, unknown>> } | null } | null
     }
-    expect(quotesSeen, 'the corpus really does carry college quotes to check').toBeGreaterThanOrEqual(9)
+    const quotes = migrated.fork?.offer?.quotes ?? []
+    // ⚠ THE ANTI-VACUITY HALF, RE-AIMED BY P-14 AND STRICTLY STRONGER THAN WHAT IT REPLACES. The
+    // sweep used to count quotes across the whole corpus and assert `>= 9` once; per fixture, the
+    // same claim is made of EACH carrier by name, so a fixture that quietly stopped carrying its
+    // quote is red instead of being absorbed by the other nineteen. Measured 05.09: every fixture
+    // from v51 on carries exactly one, twenty of them – the comment this replaces still said nine.
+    if (Number(file.match(/\d+/)![0]) >= FIRST_QUOTE_FIXTURE) {
+      expect(quotes.length, `${file}: at or past v${FIRST_QUOTE_FIXTURE} and carrying no college quote – the case below would prove nothing`)
+        .toBeGreaterThanOrEqual(1)
+    }
+    for (const q of quotes) {
+      expect('open' in q, `${file}: a shut flag survived the migration`).toBe(false)
+      // ⚠ AND NOTHING ELSE ON THE QUOTE MOVED. The migration deletes one key and re-prices nothing
+      // – `ForkState.offer`'s own doctrine that a career is not re-priced halfway through a bill.
+      expect(typeof q.costPerYearCents, `${file}: the sticker is still there`).toBe('number')
+      expect(typeof q.familyPerYearCents, `${file}: and so is what the family pays`).toBe('number')
+    }
+  })
+
+  it('⚠ ...and the corpus really does carry college quotes for that sweep to check', () => {
+    // The corpus-scale half of the anti-vacuity, kept as its own claim now that the sweep is
+    // per-fixture: there have to BE carriers, or every case above is a loop over an empty array.
+    const carriers = FILES.filter((f) => Number(f.match(/\d+/)![0]) >= FIRST_QUOTE_FIXTURE)
+    expect(carriers.length, 'no fixture is old enough to carry a college quote').toBeGreaterThanOrEqual(9)
   })
 
   // ⭐⭐⭐⭐ v62 – EVERY SAVE THIS GAME HAS EVER WRITTEN COMES BACK WITH A PEAK, AND IT IS AT LEAST THE
@@ -220,16 +253,17 @@ describe('golden saves corpus', () => {
   // loader-side FLOOR – every historical shape survives the ladder and comes back with a usable
   // number – and the reconstruction's accuracy is measured where a career can actually be old, on
   // walked careers of 33 / 38 / 41 in tests/peak-physical.test.ts. Neither can do the other's job.
-  it('⭐⭐⭐⭐ v62: every migrated save carries a peak physical, and it is never below her build', () => {
-    for (const file of FILES) {
-      const migrated = migrateSave(load(file))
-      expect(typeof migrated.peakPhysical, `${file}: no stored peak`).toBe('number')
-      expect(Number.isFinite(migrated.peakPhysical), `${file}: the peak is not a real number`).toBe(true)
-      // A hundredth of tolerance for the floating-point walk the reconstruction does, and no more.
-      expect(migrated.peakPhysical, `${file}: the peak is BELOW her current body`)
-        .toBeGreaterThanOrEqual(physicalMean(migrated.skills) - 0.01)
-      expect(migrated.peakPhysical, `${file}: the peak is above anything this engine can produce`)
-        .toBeLessThanOrEqual(SKILL_CEILING_MAX)
-    }
+  //
+  // ⚠ ONE TEST PER FIXTURE – P-14, for the reason written out above the v61 sweep. This one was the
+  // slowest test in the file (6.3 s of 19.0 s, and 10.2 s on the review's machine).
+  it.each(FILES)('⭐⭐⭐⭐ v62: %s carries a peak physical, and it is never below her build', (file) => {
+    const migrated = migrateSave(load(file))
+    expect(typeof migrated.peakPhysical, `${file}: no stored peak`).toBe('number')
+    expect(Number.isFinite(migrated.peakPhysical), `${file}: the peak is not a real number`).toBe(true)
+    // A hundredth of tolerance for the floating-point walk the reconstruction does, and no more.
+    expect(migrated.peakPhysical, `${file}: the peak is BELOW her current body`)
+      .toBeGreaterThanOrEqual(physicalMean(migrated.skills) - 0.01)
+    expect(migrated.peakPhysical, `${file}: the peak is above anything this engine can produce`)
+      .toBeLessThanOrEqual(SKILL_CEILING_MAX)
   })
 })

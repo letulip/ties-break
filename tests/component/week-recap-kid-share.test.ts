@@ -661,8 +661,13 @@ describe('the Budget plaque is demoted, not deleted', () => {
       plaque.compareDocumentPosition(tabs) & 2,
       'the switcher precedes the plaque – the strip has moved down the page',
     ).toBeTruthy()
-    // ⚠ AND IT IS STILL OUTSIDE EVERY TAB GUARD, which was the half of its old placement that was
-    // never about height: the ledger tab is where the prize rows it is about live.
+    // ⚠⚠ IT WAS OUTSIDE EVERY TAB GUARD UNTIL ROUND 37 #9, AND THE 27.08 DEMOTION IS UNAFFECTED BY
+    // THAT. The old note here read «the ledger tab is where the prize rows it is about live», which
+    // the owner has since overruled – «давай ее только на spending будем показывать» – so the strip
+    // is behind the Spending guard now and the ledger draws it no more. What this arm asserts is
+    // untouched by the move: the screen opens ON Spending, so the plate is still on this mount and
+    // still BELOW the switcher, which is the whole of 27.08's claim. The chapter census lives in
+    // `round37-money.test.ts`.
     expect(wrapper.find('.money-share').exists()).toBe(true)
   })
 })

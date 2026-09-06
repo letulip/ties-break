@@ -32,6 +32,7 @@ import type { LadderTrack } from '../engine/season/types'
 import { rankLabel } from '../shared/format'
 import { weekDateLine, weekSpan, weekYearLabel } from '../shared/dates'
 import { useHeaderAvatar } from './headerAvatar'
+import { readLocal, writeLocal } from './localStore'
 
 /** The long form, where a chip has no room: which table, and the one fact about it that matters.
  *  A TOTAL Record over LadderTrack (the LADDER_TIP discipline from Stats): a fourth table cannot
@@ -125,12 +126,18 @@ export function useKidIdentity(): KidIdentity {
     return now < prev ? { dir: 'up', by: prev - now } : { dir: 'down', by: now - prev }
   })
 
-  if (!hintOpen) hintOpen = ref(!localStorage.getItem(KID_HINT_KEY))
+  // ⚠⚠ U-07 – GUARDED, AND IT IS THE READ THAT MATTERS. A browser with site data blocked throws
+  // `SecurityError` on the PROPERTY ACCESS, not on the call, so the bare form threw during setup –
+  // and this runs on Home, which is the first screen of every career. It was the last unguarded
+  // access in the app (it lived in `HomeScreen.vue`'s own setup until P2-6 moved the block here);
+  // `composables/localStore.ts` is the shared spelling of the guard the other eight readers each
+  // wrote out by hand. The default is unchanged: no mark read means the callout is shown.
+  if (!hintOpen) hintOpen = ref(!readLocal(KID_HINT_KEY))
   const showKidHint = hintOpen
   function dismissKidHint(): void {
     if (showKidHint.value) {
       showKidHint.value = false
-      localStorage.setItem(KID_HINT_KEY, '1')
+      writeLocal(KID_HINT_KEY, '1')
     }
   }
 

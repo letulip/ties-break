@@ -443,6 +443,13 @@ export default defineConfig({
           name: 'component',
           include: ['tests/component/**/*.test.ts'],
           environment: 'happy-dom',
+          // ⚠ ONE SETUP FILE, AND IT REFUSES THE NETWORK (P-17, 05.09). happy-dom gives the document
+          // a base URL of `http://localhost:3000/`, so `src/audio/sfx.ts`'s existence probe – the
+          // only `fetch(` in the whole of `src/` – resolved to an absolute http URL and opened a real
+          // TCP connection from a mounted test: 18 `AggregateError` blocks across 17 files, 474 of
+          // the gate's 1,296 output lines. The file says why the stub is on `fetch` rather than on
+          // the module, and why it rejects rather than answering 404.
+          setupFiles: ['./tests/component/setup.ts'],
           // ⚠ `css: true` SO A COLOUR CAN BE A TESTABLE FACT. Vitest drops stylesheets by default,
           // so until now a mounted test could see the DOM but never what it LOOKED like - and the
           // round-17 #3 regression is precisely what that blind spot lets through: BirthdayDialog
@@ -453,6 +460,22 @@ export default defineConfig({
           // `getComputedStyle` (happy-dom resolves `var()` and its fallbacks correctly - measured)
           // and the contrast ratio becomes an assertion like any other.
           css: true,
+          // ⚠ 20s, AND IT IS THE SAME CONTENTION BUDGET THE UNIT PROJECT CARRIES, one project over
+          // (P-16, 05.09). This literal set `name`, `include`, `environment` and `css` and nothing
+          // else, so the project ran at vitest's DEFAULT 5000ms while the unit project ran at 20s –
+          // and that difference is why contention reddens `test:component` first. Measured 05.09
+          // with four review lanes on the machine: the gate failed in 81.2s with FOUR
+          // `Test timed out in 5000ms` and ZERO assertion failures, in `prologue-handover`,
+          // `round21-school-cutoff` (x2) and `round35-shop`; on a quiet machine the same suite is
+          // 39.5s, exit 0, and its slowest test is 0.44s.
+          //
+          // So 5000ms was enforcing exactly what the note above says it enforced in the unit project
+          // – «no test may be unlucky» – and it enforced it on the project LEAST able to afford it:
+          // mounting an SFC with `css: true` through the real cascade puts 20% of this project's CPU
+          // in collect, which is the work that stretches under load. 20s is 45x the slowest real
+          // test and still low enough to catch a genuine hang, which is the only thing a timeout is
+          // for. It is not unbounded: birpc's per-file 60s wall still stands above it.
+          testTimeout: 20_000,
         },
       },
     ],

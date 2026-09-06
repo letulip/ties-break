@@ -44,6 +44,24 @@ describe('D11 - the two top banners do not answer to the same name', () => {
   const app = componentFile('App.vue')
 
   it('every dismiss control in the shell carries an accessible name of its own', () => {
+    // ⚠ RE-AIMED BY T-08 (06.09) – THE COUNT FIRST, AND A MUTATION ARM IS WHY. This `it` was one of
+    // four in the estate the tests-and-tooling lane classified as «could pass against a deleted
+    // feature» (docs/review-principles-2026-09-05/06-tests-tooling.md, T-08), and its verdict is
+    // exactly right about this line: `not.toMatch` is a claim about an ABSENCE, and the emptiest
+    // possible App.vue - one with no banners at all - satisfies it perfectly. A nameless `Dismiss`
+    // is "back" only in a file that still has a `Dismiss`. So the census comes first, on the house
+    // pattern of tests/college-league.test.ts:467-472: TWO dismiss controls exist, and only then is
+    // it worth saying neither is nameless.
+    //
+    // ⚠ THE COUNT IS DELIBERATELY THE SAME TWO the third `it` below asserts, and the duplication is
+    // the point rather than an oversight: that one is about the owner's ONE WORD surviving (round 28
+    // #10) and this one is about the control existing at all before its name is judged. Each has to
+    // stand up on its own, because the lane sampled `it` blocks and a reader runs them one at a time.
+    expect(
+      app.match(/>\s*Dismiss\s*</g)?.length ?? 0,
+      'App.vue no longer draws two `Dismiss` controls. If a banner was deliberately removed, say ' +
+        'which and retire the claim; until then the ban below is guarding nothing.',
+    ).toBe(2)
     // The defect, stated backwards, at the layer the name now lives on. A bare `Dismiss` with no
     // `aria-label` in front of it is exactly the collision D11 found.
     expect(app, 'a `Dismiss` button with no accessible name is back - which banner is it?').not.toMatch(

@@ -54,6 +54,9 @@ const SHELL = 'src/App.vue'
 const SHEET = 'src/style.css'
 /** R2-08: where the cabinet's mark is actually read and written, since the shell stopped doing it. */
 const WATERMARK = 'src/composables/inboxCue.ts'
+/** ⭐ U-05 (05.09): the app's ONE reduced-motion predicate, which `trophyArrival` calls instead of
+ *  spelling the media query for itself – see the re-aimed assertion below. */
+const REDUCED_MOTION = 'src/composables/reducedMotion.ts'
 
 /** url -> path on disk (strip the Vite base the builder prepends) – the preload suite's own helper. */
 function assetPath(url: string): string {
@@ -264,7 +267,18 @@ describe('the flight is assembly, and it stays out of the simulation', () => {
     const arrival = read(ARRIVAL)
     // Refused in SCRIPT, not by a `@media` rule that sets `animation: none` – that variant would
     // still mount an image and leave it lying over the tab bar (the ConfettiBurst rule).
-    expect(arrival).toContain("'(prefers-reduced-motion: reduce)'")
+    // ⚠ RE-AIMED BY U-05 (05.09) – THE CLAIM IS UNCHANGED AND THE QUERY MOVED ONE FILE. This module
+    // spelled `matchMedia('(prefers-reduced-motion: reduce)')` itself, and so did four others in
+    // four different guarded shapes; `composables/reducedMotion.ts` owns the question now. What
+    // matters here is still that the refusal happens in SCRIPT before anything is mounted, so the
+    // pin follows it: this file must ASK, and the module it asks must be the one that reads the
+    // system. Both halves, because either alone would go green on a call to a stub.
+    expect(arrival, 'the flight no longer asks whether the player wants motion').toContain(
+      'prefersReducedMotion()',
+    )
+    expect(read(REDUCED_MOTION), 'the shared predicate stopped reading the system').toContain(
+      "'(prefers-reduced-motion: reduce)'",
+    )
     expect(read(SHEET)).not.toMatch(/prefers-reduced-motion[\s\S]{0,400}\.trophy-flight/)
     // Nothing to fly from means nothing flies, and the caller is told so rather than left guessing.
     expect(armTrophyFlight('images/trophies/local-gold.webp', null)).toBe(false)

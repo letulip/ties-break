@@ -1,6 +1,14 @@
 import 'fake-indexeddb/auto'
 import { describe, it, expect, beforeAll, vi } from 'vitest'
-import { createWorld, tickWeek, replayMainState, type WorldState } from '../src/engine/world'
+import {
+  createWorld,
+  tickWeek,
+  replayMainState,
+  maxMainDraws,
+  MAIN_DRAWS_PER_WEEK_MAX,
+  type WorldState,
+} from '../src/engine/world'
+import { COHORT_SIZE } from '../src/engine/season/cohort'
 import { resumeMain, mainStateConsistent, initMainState } from '../src/engine/rng'
 import { encodeExportFile, decodeExportFile } from '../src/engine/saveCodec'
 import { DEFAULT_PROFILE } from '../src/shared/protocol'
@@ -165,4 +173,52 @@ describe('corruption recovers, loudly', () => {
     expect(res.ok, res.error).toBe(true)
     expect(res.recovered).toBeUndefined()
   }, 60_000)
+})
+
+// =================================================================================================
+// ⭐⭐ E-04 (05.09 ENGINE REVIEW) – THE BOUND, RELATED TO THE TICK THAT HAS TO FIT INSIDE IT.
+//
+// `maxMainDraws` had two tests and both compared STORED FIXTURES to it (`goldenSaves`,
+// `e2e-fixtures`). Nothing compared it to what a week of the LIVE tick actually spends – and
+// measured, the answer was 799.06 draws a week against a bound of 804: a margin of five draws,
+// 0.6 %. The failure that margin invites is quiet and expensive. A wave that adds one MAIN draw per
+// rival updates the frozen capture as CLAUDE.md prescribes and ships green; from then on every
+// career more than a few weeks old fails the plausibility bound on EVERY load, is replayed under
+// current code on every load – the O(career) path v35 retired – and shows the repair flag every
+// time. Nothing in the suite would have said a word.
+//
+// ⚠ THIS ARM IS THE THING THAT WOULD SAY IT, AND IT IS A RATIO, NOT A LITERAL. It measures the
+// tick's real per-week cost and asserts the bound is at least 1.25× it, so it fails on the wave that
+// eats the slack rather than on the wave that changes a number. Mutate to see it: set
+// `MAIN_DRAWS_FLAT_PER_WEEK` back to 8 (804/week) and the 1.25 headroom is gone.
+// =================================================================================================
+describe('the bound is slack the tick can grow into', () => {
+  const WEEKS = 52
+  /** The headroom E-04 asks the bound to keep: room for half again the tick's whole weekly cost,
+   *  so a wave that adds a draw per rival does not silently turn every load into a replay. */
+  const REQUIRED_HEADROOM = 1.25
+
+  it('one week of the live tick costs well under the bound one week is given', () => {
+    // The cost is MEASURED, from a career walked the worker's own way, never quoted: the whole
+    // point of the arm is that the number moves when the tick's draw count moves.
+    const world = liveCareer('rng-budget', WEEKS)
+    const perWeek = world.rngMain.n / WEEKS
+    // The instrument first – a walk that stopped drawing would make the assertion vacuous.
+    expect(perWeek, 'the probe must actually spend MAIN draws').toBeGreaterThan(100)
+    expect(
+      perWeek * REQUIRED_HEADROOM,
+      `a week costs ${perWeek.toFixed(2)} draws and the bound gives ${MAIN_DRAWS_PER_WEEK_MAX}`,
+    ).toBeLessThanOrEqual(MAIN_DRAWS_PER_WEEK_MAX)
+  }, 60_000)
+
+  it('and `maxMainDraws` is that per-week number, scaled – the two cannot drift apart', () => {
+    // The named constant and the function are one statement about the budget, not two: a wave that
+    // widens one and forgets the other is exactly the drift this item is about.
+    expect(maxMainDraws(1, COHORT_SIZE)).toBe(MAIN_DRAWS_PER_WEEK_MAX)
+    expect(maxMainDraws(10, COHORT_SIZE)).toBe(10 * MAIN_DRAWS_PER_WEEK_MAX)
+    // ...and the COHORT_SIZE floor still holds, which is what lets a v6-era fixture with a trimmed
+    // cohort be judged against the field its position was really drawn against.
+    expect(maxMainDraws(1, 3)).toBe(MAIN_DRAWS_PER_WEEK_MAX)
+    expect(maxMainDraws(1, COHORT_SIZE * 2)).toBeGreaterThan(MAIN_DRAWS_PER_WEEK_MAX)
+  })
 })

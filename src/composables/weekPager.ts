@@ -56,6 +56,7 @@
 // is the only way to know the test is testing it.
 
 import { onBeforeUnmount, reactive } from 'vue'
+import { prefersReducedMotion } from './reducedMotion'
 
 /** How far a pointer must travel before this is a DRAG and not a press.
  *
@@ -104,11 +105,17 @@ export interface PagerEnds {
  * strip as at both ends at once, which is what they mean. Nothing about the paging arithmetic moved –
  * the only new thing is a third fact about the same three numbers.
  *
- * The 1px tolerance is fractional-pixel slack, not a fudge: a card width of `calc(33.333% - 8px)`
- * lands `scrollLeft` on a fraction, and `>= max` would be false forever at the right-hand end. It
- * does the same job for `overflows`: three cards of `calc(33.333% - 8px)` in a 948px row can leave a
+ * The 1px tolerance is fractional-pixel slack, not a fudge: every card width on this screen is a
+ * percentage inside a `calc`, so `scrollLeft` lands on a fraction and `>= max` would be false forever
+ * at the right-hand end. It does the same job for `overflows`: a pair that fills the row can leave a
  * sub-pixel of scroll that is not a card hanging past the edge, and a pager drawn for half a pixel
  * would be exactly the control «которая ей никогда не понадобится».
+ *
+ * ⭐ ROUND 37 #3 MADE THAT SECOND HALF MATTER MORE, WITHOUT TOUCHING A LINE OF IT. The owner asked
+ * for the tablet's grid on the desktop – «сетку на 2 карточки desktop (как на tablet) по дефолту» –
+ * so from 768 UP a two-card week's pair plus its gutter comes to the row EXACTLY, at every width
+ * rather than only at 768. The commonest stacked week there is now sits on this tolerance's boundary,
+ * and the arm holding it is in tests/weekPager.test.ts.
  */
 export function pagerEnds(scrollLeft: number, scrollWidth: number, clientWidth: number): PagerEnds {
   const max = Math.max(0, scrollWidth - clientWidth)
@@ -207,8 +214,9 @@ export function useWeekPager(): WeekPager {
   /** Cleared by the next `pointerdown`, so it can never block a press that had no drag before it. */
   let blockClick = false
 
-  const smooth = (): ScrollBehavior =>
-    (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false) ? 'auto' : 'smooth'
+  // ⭐ U-05 – one predicate, asked here at the moment of the scroll (`composables/reducedMotion.ts`).
+  // It was this expression written out inline, and it was the least guarded of the five copies.
+  const smooth = (): ScrollBehavior => (prefersReducedMotion() ? 'auto' : 'smooth')
 
   /** Each card's left edge in the strip's scroll coordinates. Read from the boxes rather than from
    *  a declared width, so a card whose width is a `calc` nobody parsed still lands in the right
@@ -281,10 +289,11 @@ export function useWeekPager(): WeekPager {
     //
     // ⚠ THE CARDS ARE OBSERVED TOO, NOT ONLY THE STRIP, and that is not belt-and-braces. Overflow is
     // `scrollWidth - clientWidth`: the strip's own box gives the second term, and the CARDS give the
-    // first. Their width is a percentage that CHANGES ON HIS LADDER – 88% of a phone, 50% of a
-    // tablet row, `calc(33.333% - 8px)` on a desktop – so a media query can move `scrollWidth`
-    // without the strip's own box being the thing that moved. Observing only the strip would leave
-    // that transition unmeasured.
+    // first. Their width is a percentage that CHANGES ON HIS LADDER – 88% of a phone, and from 768 up
+    // half the row, or `calc(44% - 6px)` when the week stacks three or more (round 37 #3 took the
+    // desktop's own third of a row away and gave it the tablet's half) – so a media query can move
+    // `scrollWidth` without the strip's own box being the thing that moved. Observing only the strip
+    // would leave that transition unmeasured.
     //
     // ⚠ AND IT CANNOT LOOP, WHICH IS THE USUAL HAZARD WITH A RESIZE OBSERVER THAT CHANGES THE DOM.
     // The arrows are `position: absolute` against `.week-row` and live in their own container, so

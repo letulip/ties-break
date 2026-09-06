@@ -370,13 +370,25 @@ describe('the stacked-week pick', () => {
 })
 
 describe('the oracle reaches the UI on the snapshot, as a copy', () => {
-  it('toSnapshot surfaces tierOpen and onRampCleared read-only', () => {
+  it('toSnapshot surfaces tierOpen, and the latch reaches the UI THROUGH it', () => {
+    // ⚠⚠ RE-AIMED BY E-07 (05.09 engine review), AND ONTO THE STRONGER CLAIM. This arm read
+    // `snap.onRampCleared` – a member no screen, store, composable or viz module has read since
+    // W2-LADDER §4 made the calendar derive its pair from `tierOpen` ("the on-ramp rungs' openness
+    // IS the latch"), so E-07 took it off the wire. What the FEATURE needs is not that the latch is
+    // copied onto the snapshot but that flipping it moves what the UI is handed, and that is what
+    // is asserted here instead: the same fact, one derivation later, and it cannot pass against a
+    // world whose latch has stopped feeding the oracle. `world.onRampCleared` is untouched.
     const world = createWorld('tier-window-snap')
-    const snap = toSnapshot(world)
-    expect(snap.onRampCleared).toEqual({ itf: false, wta: false })
-    // A copy, never a live view: the snapshot crosses the worker boundary.
-    expect(snap.onRampCleared).not.toBe(world.onRampCleared)
+    const before = toSnapshot(world)
+    const onRamp = TIER_LADDER.find((t) => !before.tierOpen[t] && TIERS[t].track === 'itf')
+    expect(onRamp, 'a fresh kid must have a closed ITF rung for this arm to move').toBeTruthy()
+    world.onRampCleared.itf = true
+    const after = toSnapshot(world)
+    expect(after.tierOpen[onRamp!], `${onRamp} must open once the latch is set`).toBe(true)
+    // ...and the latch is the world's, not the snapshot's: nothing on the wire aliases it.
+    expect(Object.values(before.tierOpen).some((v) => v === true)).toBe(true)
     // ...and the feed's own input is the per-rung verdict map, total over the ladder.
+    const snap = after
     for (const tier of TIER_LADDER) expect(typeof snap.tierOpen[tier], tier).toBe('boolean')
     // A fresh kid's pair: local working, regional adjacent - derived here as the screens derive it.
     const ctx = feedContext({ ageYears: snap.ageYears, tierOpen: snap.tierOpen, upcoming: snap.upcoming })

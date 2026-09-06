@@ -484,7 +484,9 @@ export function reviewSponsors(world: WorldState): void {
     //   see what he just lost. Reporting the value only on a renewal would make the number a reward
     //   for having done well, which is the opposite of what it is for. The REASON is read off the
     //   goodbye letter the brand already posted, so the feed and the paper cannot disagree.
-    const worth = `$${Math.round((ended.coveredCents ?? 0) / 100).toLocaleString('en-US')}`
+    // ⚠ E-12: `formatCents`, which this module already imports – the hand-roll was that function's
+    // body written out. Byte-identical: what a kit deal covered is never negative.
+    const worth = formatCents(ended.coveredCents ?? 0)
     const goodbye = world.offers.find((o) => o.id === `kit-end-${ended.id}`)
     const why = goodbye ? (goodbye.terms as KitOfferTerms).ended : 'term'
     // ⚠ THE COUNT COMES OFF THE GOODBYE LETTER, like the reason one line up (06.08). The letter was

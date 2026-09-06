@@ -29,8 +29,19 @@ last-reviewed: 2026-08-31
 
 ## Now
 
-⚙ THE LIVE WAVE IS ROUND 36 – this line is machine-checked against the newest ledger in
+⚙ THE LIVE WAVE IS ROUND 37 – this line is machine-checked against the newest ledger in
 `docs/rounds/` by `scripts/doc-facts.mjs`; edit the number only by shipping a ledger.
+
+**Round 37 is the review wave and its follow-ups** ([round-37.md](rounds/round-37.md), 05.09) – the
+five-lane project review of 05.09 ([review-principles-2026-09-05](review-principles-2026-09-05/README.md)),
+its automatic fix bundles, and six items he took off the stand afterwards. ⭐ The review found no P0
+and reproduced the load-bearing invariants rather than reading them: engine purity, zero runtime
+import cycles across 119 modules, the MAIN stream byte-identical between a no-action arm and one
+firing fifteen kinds of command, zero lifecycle leaks in nineteen inventoried listeners, zero vacuous
+tests in 5,556 `it` blocks. What it did find, and what round 37 shipped, is narrower: the v70 draw
+promise broke once a season at the boundary; a refused boot load opened the prologue over an intact
+career; three guards could pass while the thing they guarded was gone; and 219 s of the 367 s unit
+gate was thirteen files run one at a time.
 
 **Round 36 is the responsive wave** ([round-36.md](rounds/round-36.md), 04.09) – the interfaces on
 tablet and desktop, five phases against [`specs/responsive-2026-09.md`](specs/responsive-2026-09.md)

@@ -48,6 +48,12 @@ import {
   toSnapshot,
 } from '../src/engine/world'
 import { weekSceneArtUrl, weekArtUrl, weekHomeArtUrl, WEEK_HOME_ART_STEMS } from '../src/art/weeks'
+import { portraitStage } from '../src/shared/avatarEmotion'
+import { kidAgeYears } from '../src/engine/world/age'
+import { selectMemory } from '../src/engine/diary'
+import type { Milestone } from '../src/shared/protocol'
+import { resumeMain } from '../src/engine/rng'
+import { DEFAULT_PROFILE } from '../src/shared/protocol'
 import { portraitUrl, travelHomeUrl } from '../src/art/preload'
 import { rngFromSeed } from '../src/engine/rng'
 import { isOffSeasonWeek } from '../src/engine/season/calendar'
@@ -90,7 +96,7 @@ const view = (over: Partial<DiaryWorldView> = {}): DiaryWorldView => ({
   // W4-SCHOOL: a schoolgirl – every fixture here is a girl of 14-17.
   schoolOver: false,
   kidId: KID_ID,
-  startAgeYears: 14,
+  kidAgeAt: FIXTURE_AGE_AT,
   condition: 70,
   fundsCents: 100_000_00,
   injury: null,
@@ -119,6 +125,16 @@ const view = (over: Partial<DiaryWorldView> = {}): DiaryWorldView => ({
 const facts = (over: Partial<DiaryWorldView> = {}): DiaryFacts => assembleDiaryFacts(view(over))
 const scene = (over: Partial<DiaryWorldView> = {}, vacationPackageId: string | null = null): WeekScene =>
   weekSceneFor({ facts: facts(over), stage: 'young', vacationPackageId })
+
+/** ⭐ D-01 (05.09 review) – THE AGE CLOCK A FIXTURE CARRIES WHEN ITS SUBJECT IS NOT HER AGE.
+ *
+ *  `DiaryWorldView.startAgeYears: 14` became `kidAgeAt: (week) => number` – the diary no longer
+ *  rebuilds an age from a starting number and a season count (the BAND clock, which parted from her
+ *  real age by up to a year for a girl born late in the calendar). Every fixture in this file was
+ *  written about the WORDS, so it wants the simplest total clock there is: she is fourteen in every
+ *  week, which is exactly what `startAgeYears: 14` meant here. An arm about the PORTRAIT passes its
+ *  own clock. */
+const FIXTURE_AGE_AT = (): number => 14
 
 const INJURY = { kind: 'ankle strain', weeksRemaining: 6, totalWeeks: 9 }
 
@@ -224,18 +240,21 @@ describe('W5 — the priority order, which is the only real design decision here
   })
 
   it('W6: both new frames are HER AGE BAND, and the two painted bands really differ', () => {
-    // The same arithmetic the layoff band test uses: her start age plus the completed years, so +52*3
-    // is a girl of 17. `isExamWeek` reads the season offset, so the exam fixture stays an exam week.
+    // ⚠⚠ RE-AIMED BY D-01 (05.09 review). The old arm moved only the WEEK and expected the painting
+    // to age with it, because the scene's stage was `startAgeYears + Math.floor(week / 52)` – the
+    // band clock. It is her age now (`view.ageYears`, the same number the header prints), so the
+    // thing this arm has to move is her AGE. The claim is unchanged and is the one in its own title.
+    // `isExamWeek` reads the season offset, so the exam fixture stays an exam week either way.
     const bandOf = (s: WeekScene) => ('stage' in s ? s.stage : null)
-    const at = (week: number, over: Partial<DiaryWorldView> = {}) =>
-      buildDiarySnapshot(view({ week, ...over })).scene
+    const at = (week: number, ageYears: number, over: Partial<DiaryWorldView> = {}) =>
+      buildDiarySnapshot(view({ week, ageYears, ...over })).scene
     const cases: [WeekScene['kind'], number, Partial<DiaryWorldView>][] = [
       ['exam', EXAM_WEEK, {}],
       ['knock', 11, { knockChoice: 'rest', knockPart: 'ankle' }],
     ]
     for (const [kind, week, over] of cases) {
-      const young = at(week, over)
-      const teen = at(week + 52 * 3, over)
+      const young = at(week, 14, over)
+      const teen = at(week + 52 * 3, 17, over)
       expect(young.kind, `${kind} at 14`).toBe(kind)
       expect(teen.kind, `${kind} at 17`).toBe(kind)
       expect(bandOf(young)).toBe('young')
@@ -310,10 +329,12 @@ describe('W5 — the priority order, which is the only real design decision here
   })
 
   it('the layoff painting is HER AGE BAND – what makes five seasons feel like five seasons', () => {
-    // The same arithmetic `selectMemory` uses: her start age plus the completed years.
-    const at = (week: number) => buildDiarySnapshot(view({ week, injury: INJURY })).scene
-    const young = at(11) // 14
-    const teen = at(11 + 52 * 3) // 17
+    // ⚠ RE-AIMED BY D-01, same reason as the W6 arm above: the stage follows her AGE now, not the
+    // season count, so this moves her age alongside the week instead of deriving one from the other.
+    const at = (week: number, ageYears: number) =>
+      buildDiarySnapshot(view({ week, ageYears, injury: INJURY })).scene
+    const young = at(11, 14)
+    const teen = at(11 + 52 * 3, 17)
     expect(young.kind === 'rehab' && young.stage).toBe('young')
     expect(teen.kind === 'rehab' && teen.stage).toBe('teen')
     expect(weekSceneArtUrl(young)).not.toBe(weekSceneArtUrl(teen))
@@ -592,5 +613,94 @@ describe('W5 — the handle in settings, and the thing it must not do', () => {
     expect(template.length).toBeGreaterThan(500)
     expect(template).not.toContain('—')
     expect(template).not.toMatch(/[Ѐ-ӿ]/)
+  })
+})
+
+// =================================================================================================
+// ⭐⭐⭐ D-01 (05.09 REVIEW) – ONE GIRL, ONE FACE: THE DIARY'S PAINTING AND THE HEADER AGREE.
+//
+// THE FINDING. The diary computed her portrait stage from the BAND clock – `startAgeYears +
+// Math.floor(week / 52)` – at two sites, while the very view it read carried `ageYears: kidAgeAt(…)`
+// and every other surface (the header avatar, Money, Season, the album, the dialogs) reads
+// `Snapshot.ageYears`. `world/age.ts:65` says of that arithmetic, in capitals: «IF YOU ARE ASKING
+// HOW OLD SHE IS, THIS IS THE WRONG FUNCTION».
+//
+// THE SIZE OF IT, measured over ten seasons before the fix: a girl born 20 December was painted one
+// portrait stage OLDER than her own header for 51 consecutive weeks at each `portraitStage`
+// boundary (career weeks 156-206 and 468-518). Even a 15 January birthday drifts for two weeks.
+// `world/album.ts:68-73` records the last time this class of drift shipped: «header said «2031 –
+// she was 13» while Home, about the same week, read 14».
+//
+// ⚠ THE ARM WALKS A REAL CAREER, not a fixture, because the defect is a disagreement between two
+// numbers that are both derived from a world – and a hand-built view can be made to agree by
+// accident. `toSnapshot` builds both: `snapshot.ageYears` is the header's, `snapshot.diary.scene`
+// is the painting's.
+// =================================================================================================
+describe('D-01 – the diary paints the girl the header is describing', () => {
+  const BIRTH_MONTH = 12
+  const BIRTH_DAY = 20
+  /** The band clock the diary used to use: her opening age plus completed seasons. Re-spelled here
+   *  deliberately, so what these arms compare is two INDEPENDENT answers rather than the engine
+   *  against itself – the discipline tests/plan.test.ts states for its own restatement. */
+  const bandAge = (week: number): number => 14 + Math.floor(week / 52)
+  /** Her real age, off the one clock every other surface reads. */
+  const realAge = (week: number): number => kidAgeYears(week, BIRTH_MONTH, BIRTH_DAY)
+
+  it('the drift is real before anything is asserted about it – 51 weeks of the wrong face', () => {
+    // ⚠ THE INSTRUMENT, AND IT IS THE FINDING. If the two clocks agreed there would be nothing to
+    // fix and both arms below would be green for free.
+    const wrong = Array.from({ length: 52 * 10 }, (_, w) => w).filter(
+      (w) => portraitStage(bandAge(w)) !== portraitStage(realAge(w)),
+    )
+    expect(wrong.length, 'a 20 December girl must cross a stage boundary early').toBeGreaterThan(90)
+    expect(wrong[0]).toBe(156)
+  })
+
+  it('⚠ the week scene is painted at HER age, inside the window the band clock gets wrong', () => {
+    const world = createWorld('d01-december', {
+      ...DEFAULT_PROFILE,
+      birthMonth: BIRTH_MONTH,
+      birthDay: BIRTH_DAY,
+    })
+    const rng = resumeMain(world.rngMain)
+    let checked = 0
+    for (let w = 0; w < 207; w++) {
+      tickWeek(world, rng)
+      if (world.pendingTournament) {
+        skipTournament(world)
+        closeTournament(world)
+      }
+      if (world.week < 156) continue
+      const snap = toSnapshot(world)
+      const scene = snap.diary.scene
+      if (!('stage' in scene)) continue // a travel or vacation frame paints no portrait
+      // The two clocks disagree on this week, so the assertion has a side to be wrong on.
+      expect(snap.ageYears, `w${snap.week}`).not.toBe(bandAge(snap.week))
+      expect(portraitStage(bandAge(snap.week)), `w${snap.week}`).not.toBe(portraitStage(snap.ageYears))
+      // ...and the painting is the girl the header is describing.
+      expect(scene.stage, `w${snap.week}`).toBe(portraitStage(snap.ageYears))
+      checked += 1
+    }
+    expect(checked, 'the walk must reach a portrait week inside the drift window').toBeGreaterThan(0)
+  })
+
+  it('⚠ and so is the Memory card – the girl who won it, at the age she WAS that week', () => {
+    // A title in week 160: the band clock calls her seventeen (14 + 3 completed seasons) and she is
+    // sixteen until her December birthday. `portraitStage` cuts at 16/17, so the two answers are two
+    // different paintings of the same afternoon.
+    const title: Milestone = { type: 'title', week: 160, tier: 'j30' }
+    expect(portraitStage(realAge(160)), 'the fixture must straddle the boundary').not.toBe(
+      portraitStage(bandAge(160)),
+    )
+    for (let week = 168; week < 400; week++) {
+      const card = selectMemory([title], week, 'd01-memory', realAge)
+      if (!card || card.milestone === null) continue
+      expect(card.stage).toBe(portraitStage(realAge(160)))
+      expect(card.stage, 'the band clock would have painted her a stage older').not.toBe(
+        portraitStage(bandAge(160)),
+      )
+      return
+    }
+    throw new Error('the rotation never landed on the milestone – the arm proved nothing')
   })
 })

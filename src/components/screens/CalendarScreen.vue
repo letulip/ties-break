@@ -64,7 +64,7 @@
 // argument and for the arrival-gate bug it is written against.
 import { computed, onMounted, ref } from 'vue'
 import { useGameStore } from '../../stores/game'
-import { useCalendarWeek, useLookAhead, DAY_LONG, type CalendarDay, type DayKind } from '../../composables/weekDays'
+import { useCalendarWeek, useLookAhead, layoffNoteFor, DAY_LONG, type CalendarDay, type DayKind } from '../../composables/weekDays'
 // The SECOND drawing of the same week: the design's time x day grid. What a day of each kind looks
 // like across a morning and an afternoon is a rule with content in it, so it lives in a pure module
 // beside the day layout rather than in this template - see composables/weekGrid.ts for the owner's
@@ -92,6 +92,7 @@ import { DRAW_NOT_MADE_NOTE, fieldChanceLabel, fieldChanceTitle, firstMatchLabel
 // not let the two be confused.
 import { readingColor } from '../../composables/readingColor'
 import ScreenShell from '../ui/ScreenShell.vue'
+import StoreError from '../ui/StoreError.vue'
 import PaperNote from '../ui/PaperNote.vue'
 import TakeoverShell from '../ui/TakeoverShell.vue'
 import Card from '../ui/Card.vue'
@@ -149,11 +150,11 @@ const injuredNow = computed(() => calendar.value?.days[0]?.kind === 'rehab')
 const awayNow = computed(() => calendar.value?.days[0]?.kind === 'away')
 /** The layoff's clock, for the chips' tooltips. Same arithmetic every other surface prints, so the
  *  DATE can never differ from the Season screen's plaque even though the sentence has a different
- *  lead (a calendar has room to name what is wrong with her; a 6px chip has not). */
-const layoffNote = computed(() => {
-  const s = game.snapshot
-  return s?.injury ? `Injured – back ${weekLabel(s.week + s.injury.weeksRemaining)}` : ''
-})
+ *  lead (a calendar has room to name what is wrong with her; a 6px chip has not).
+ *
+ *  ⚠ SINCE 06.09 IT IS THE SAME STRING AND NOT MERELY THE SAME ARITHMETIC – `layoffNoteFor` in
+ *  composables/weekDays.ts, where the words live once. What this computed still owns is nothing. */
+const layoffNote = computed(() => layoffNoteFor(game.snapshot))
 
 // --- the grid's vocabulary ---------------------------------------------------------------------
 // One word per day kind, and it is the ACCESSIBLE name rather than a caption: the cell shows a mark
@@ -260,18 +261,17 @@ function enterMarker(e: UpcomingEvent): void {
   marker.value = null
 }
 
-const fundsCents = computed(() => game.snapshot?.fundsCents ?? 0)
-function fundsShort(e: UpcomingEvent): boolean {
-  return fundsCents.value < e.entryFeeCents
-}
-// ⚠ THE MARKER CARD'S FOUR SHARED FACTS ARE `composables/eventCard.ts` NOW – the scholarship's
+// ⚠ THE MARKER CARD'S SHARED FACTS ARE `composables/eventCard.ts` NOW – the scholarship's
 // share, the court's verdict for her build, the photograph, and the odds ring's colour. All four
 // were written out here AND on the Season screen, and one of them under a different name: this file
 // called it `surfaceVerdict` and Season called it `surfaceNote`, the same call to
 // `surfaceStyleHint`, so a grep for either name found one copy and reported no duplication.
 // The names the two screens read best under are kept – `surfaceVerdict` is this file's word for it
 // and the shared module took that word – but there is one definition behind them.
-const { academyCoverPct, surfaceVerdict, venueUrl } = useEventCard()
+// ⭐ U-12 – AND `fundsShort` IS THE FIFTH, joined 05.09. It was two byte-identical lines here and on
+// the Season screen, listed as still open by two reviews running; the name this file used is the
+// name the module took, so nothing at the call sites below reads differently.
+const { academyCoverPct, fundsShort, surfaceVerdict, venueUrl } = useEventCard()
 
 // --- (b) THE DAYS CROSS THEMSELVES OUT ----------------------------------------------------------
 //
@@ -348,6 +348,13 @@ const showGo = computed(() => !game.snapshot?.pending)
           </div>
         </div>
       </template>
+
+      <!-- ⚠⚠ U-02 – THE STORE'S REFUSAL, WHICH THIS SCREEN USED TO SWALLOW. The calendar enters
+           events and plays the week, and both can be refused – by the engine, by another tab that
+           committed first, or by the stale-revision guard. Nothing here rendered `game.error`, so
+           the tap did nothing and said nothing. Below the header so the week's title stays the top
+           of the page; no new wording, the sentence is the store's own. -->
+      <StoreError />
 
       <!-- ============================================================================
            THE WEEK, ONCE, ON EVERY WEEK OF A CAREER.

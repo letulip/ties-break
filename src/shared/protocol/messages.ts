@@ -7,6 +7,7 @@
 // Part of the `shared/protocol` module set – see src/shared/protocol.ts, which re-exports every
 // name below under the historical public path. Nothing here imports that barrel back.
 
+import type { SaveFileErrorCode } from '../../engine/saveGuard'
 import type { CollegeTier, ForkAnswer } from './career'
 import type { KnockChoice } from './health'
 import type { KitGrade, KitLine, ShootClashChoice } from './offers'
@@ -83,8 +84,48 @@ export interface SavePeek {
  *   STALE_REVISION  the mutation's `baseRevision` is not the worker's committed revision; the
  *                   response's `revision` carries the current one so the caller can refresh.
  *   SAVE_CONFLICT   the on-disk career revision is ahead of the one being written (another tab
- *                   committed since we loaded) – the write was refused, nothing was clobbered. */
-export type WorkerErrorCode = 'STALE_REVISION' | 'SAVE_CONFLICT'
+ *                   committed since we loaded) – the write was refused, nothing was clobbered.
+ *
+ *  ⭐⭐ AND THE SEVEN SAVE-FILE KINDS (E-05, 05.09 engine review). `SaveFileError` has carried a
+ *  machine-readable `code` since the import gate was written, and that gate's header says why it
+ *  exists: "the code exists so tests (and any future UI that wants to branch) never match on
+ *  prose". It never crossed this boundary. `errorMsg` mapped two error classes and turned every
+ *  `SaveFileError` into a bare sentence, so a UI wanting to tell `future-schema` ("update the app,
+ *  then import it") from `corrupted` had nothing to branch on but English – the exact failure mode
+ *  the code was added to prevent, with the header claiming it was prevented.
+ *
+ *  ⚠ `import type`, WHICH IS THE ONLY EDGE THIS DIRECTION IS ALLOWED. `shared/protocol/*` already
+ *  reaches into `engine/*` for types this way (`competition.ts`, `events.ts`, `ladder.ts` and four
+ *  more); the import is erased at compile time, so the runtime graph is unchanged and invariant 1
+ *  holds – `saveGuard.ts` imports `SAVE_SCHEMA_VERSION` from the engine at RUNTIME, and a value
+ *  import here would put the whole engine behind every protocol consumer. */
+export type WorkerErrorCode = 'STALE_REVISION' | 'SAVE_CONFLICT' | 'INVALID_COMMAND' | SaveFileErrorCode
+
+/**
+ * ⭐⭐ E-06 (05.09 engine review) – A COMMAND WHOSE PAYLOAD THE ENGINE WILL NOT TAKE.
+ *
+ * The third refusal class on this wire, and it is `StaleRevisionError`'s and `SaveConflictError`'s
+ * own shape rather than a new one: an Error carrying a player-facing sentence, mapped to a
+ * machine-readable code by `errorMsg`. The reason for the code is `SaveFileErrorCode`'s, verbatim
+ * from the import gate's header – "the code exists so tests (and any future UI that wants to
+ * branch) never match on prose" – and E-05 had just finished making that claim true of save files.
+ *
+ * ⚠ IT LIVES HERE, BESIDE `WorkerErrorCode`, exactly as `SaveFileError` lives beside
+ * `SaveFileErrorCode`: the code and the class that carries it are one decision. The two commands
+ * that throw it are in `worker/sim.worker.ts` and the third is in `db/saves.ts`, and none of them
+ * could reach a class declared in either of the other two.
+ *
+ * ⚠ THE SENTENCE IS THE PLAYER'S. `stores/game.ts` puts `err.message` straight into `error`, which
+ * `StoreError.vue` renders and the onboarding wizard renders on its own last step – so every string
+ * handed to this constructor is on screen (CLAUDE.md invariant 4: they were proposed to the owner,
+ * 06.09, not invented in passing).
+ */
+export class CommandRefusedError extends Error {
+  constructor(message: string) {
+    super(message)
+    this.name = 'CommandRefusedError'
+  }
+}
 
 export type ToWorker =
   // ⭐ `prologue` IS OPTIONAL AND ITS ABSENCE IS THE WIZARD (build spec §6: «new game -> the prologue

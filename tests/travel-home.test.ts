@@ -71,6 +71,16 @@ import type {
 } from '../src/shared/protocol'
 
 const AIR: TravelHomeScene[] = ['airport', 'plane']
+/** ⭐ D-01 (05.09 review) – THE AGE CLOCK A FIXTURE CARRIES WHEN ITS SUBJECT IS NOT HER AGE.
+ *
+ *  `DiaryWorldView.startAgeYears: 14` became `kidAgeAt: (week) => number` – the diary no longer
+ *  rebuilds an age from a starting number and a season count (the BAND clock, which parted from her
+ *  real age by up to a year for a girl born late in the calendar). Every fixture in this file was
+ *  written about the WORDS, so it wants the simplest total clock there is: she is fourteen in every
+ *  week, which is exactly what `startAgeYears: 14` meant here. An arm about the PORTRAIT passes its
+ *  own clock. */
+const FIXTURE_AGE_AT = (): number => 14
+
 const ROAD: TravelHomeScene[] = ['bus', 'car']
 const ALL_SCENES: TravelHomeScene[] = [...AIR, ...ROAD]
 const ALL_MOODS: TravelHomeMood[] = ['sleepy', 'happy', 'sad']
@@ -250,7 +260,7 @@ describe('R14-2 — on the facts object, and on a real career', () => {
     // W4-SCHOOL: a schoolgirl – every fixture here is a girl of 14-17.
     schoolOver: false,
     kidId: KID_ID,
-    startAgeYears: 14,
+    kidAgeAt: FIXTURE_AGE_AT,
     condition: 80,
     fundsCents: 100_000_00,
     injury: null,
@@ -671,7 +681,7 @@ describe('ui/travel-set — the mood is the owner\'s rule and nothing else', () 
 
   it('the facts carry the mood, and it is null on exactly the weeks the scene is', () => {
     const view = (over: Partial<DiaryWorldView>): DiaryWorldView => ({
-      seed: 's', week: 11, ageYears: 14, inCollege: false, schoolOver: false, kidId: KID_ID, startAgeYears: 14, condition: 80, fundsCents: 100_000_00,
+      seed: 's', week: 11, ageYears: 14, inCollege: false, schoolOver: false, kidId: KID_ID, kidAgeAt: FIXTURE_AGE_AT, condition: 80, fundsCents: 100_000_00,
       injury: null, events: [], lossStreak: null, kidRank: 50, prevKidRank: 50,
       pendingUnfinished: false, runPointsThisWeek: 0, milestones: [], vacationWeek: false,
       vacationPackageId: null,
@@ -1028,7 +1038,7 @@ describe('ui/travel-set — on a real career', () => {
 
   it('buildDiarySnapshot is field-for-field deterministic with the journey on it', () => {
     const view: DiaryWorldView = {
-      seed: 's', week: 11, ageYears: 14, inCollege: false, schoolOver: false, kidId: KID_ID, startAgeYears: 14, condition: 30, fundsCents: 100_000_00,
+      seed: 's', week: 11, ageYears: 14, inCollege: false, schoolOver: false, kidId: KID_ID, kidAgeAt: FIXTURE_AGE_AT, condition: 30, fundsCents: 100_000_00,
       // ⚠ W4: the trip is in the view's OWN week now (11), not the one before it.
       injury: null, events: trip(11, 'j300'), lossStreak: null, kidRank: 50, prevKidRank: 50,
       pendingUnfinished: false, runPointsThisWeek: 0, milestones: [], vacationWeek: false,

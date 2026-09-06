@@ -154,7 +154,14 @@ describe('round 36 phase 3 – the bar stands up and becomes the rail', () => {
       'the rail takes a fixed strip and the page takes the rest',
       // happy-dom resolves the `var()` and leaves the rest, so this reads the rail's own 196px as
       // well as the shape of the frame.
-    ).toBe('196px minmax(0, 1fr)')
+      // ⚠ RE-AIMED BY R37-16 – THE STRIP GREW BY THE FRAME'S GUTTER AND THE RAIL'S BOX DID NOT MOVE.
+      // Round 37 item 16 («любые отрицательные отступы - это антипаттерн») took the frame's gutter
+      // off this grid container, so the first track carries the 16px the rail's negative left margin
+      // used to borrow back: the track is 212px where it was 196 + a `-16px` margin, and the rail's
+      // border box measures the same 212 in Chromium as it did before (x=0 at 1024, x=40 at 1280).
+      // The claim is unchanged – a fixed strip, then the rest – and the 196 is still read here,
+      // inside the calc, so a re-tuned `--app-rail-w` still lands in this string.
+    ).toBe('calc(196px + 16px) minmax(0, 1fr)')
 
     const bar = wrapper.find('nav.tab-bar')
     expect(bar.exists(), 'the shell drew its navigation, or this measures nothing').toBe(true)

@@ -13,9 +13,12 @@
 //
 // ⚠ MUTATION-VERIFIED. Each mutation applied alone to src/composables/weekPager.ts, and the verdicts
 // differ, which is what says these are separate claims:
-//   * `pageTarget`'s final clamp -> `return target` reddens TWO: the two-card-phone arm and the
-//     range arm. That is the sharpest verdict here, because the clamp is what actually runs a strip
-//     to its end – the last card's own edge lies PAST `maxScroll` on every layout the app ships.
+//   * `pageTarget`'s final clamp -> `return target` reddens THREE: the two-card-phone arm, the range
+//     arm and the desktop arm. That is the sharpest verdict here, because the clamp is what actually
+//     runs a strip to its end – the last card's own edge lies PAST `maxScroll` on every layout the
+//     app ships. ⚠ IT SAID «TWO» UNTIL R37-3 (05.09), and the third is not a new claim: the desktop
+//     arm was re-aimed onto the two-across grid he asked for, and its second press now lands on the
+//     clamp where the old three-across arm's first press did. Re-measured, not assumed.
 //   * `pagerEnds`'s `scrollLeft >= max - 1` -> `>= max` reddens the fractional-end arm ALONE.
 //   * `PAGER_DRAG_PX` -> 0 reddens the threshold arm ALONE.
 //
@@ -43,11 +46,21 @@ function strip(room: number, card: number, cards: number, gap = 12) {
 //   375   `.app-content` is 343px (round 36 phase 1's census) and `.week-stack.swipeable >
 //         .event-card` is `width: 88%` -> 301.84px. Two cards already overflow, which is why the
 //         phone has needed a way to reach the second one since round 34.
-//   1280  the row is 948px wide (the rail takes 220 of the 1168 column – phase 3's D21) and a card
-//         is `calc(33.333% - 8px)` -> 308px, the 307.98 phase 3 recorded. THREE FIT, which is
-//         exactly D16's finding; the fourth does not.
+//   1280  the row is 948px wide (the rail takes 220 of the 1168 column – phase 3's D21).
+//
+// ⚠ RE-AIMED BY R37-3 (05.09) – THE DESKTOP GEOMETRY IS NOT THE ONE PHASE 5 MEASURED, and a constant
+// that kept the old one would be this file quietly describing a screen that is gone. It was
+// `strip(948, 948 / 3 - 8, 4)` – a card of `calc(33.333% - 8px)` -> 308px, three across, D16's
+// finding. The owner then asked for the tablet's grid on the desktop: «сетку на 2 карточки desktop
+// (как на tablet) по дефолту, а те недели, где 3 карточки будет и больше … будут иметь листалки», so
+// a stacked week of three or more is `calc(44% - 6px)` at every width from 768 up -> 411.12px in a
+// 948px row. TWO FIT AND A SLIVER OF THE THIRD SHOWS, which is what the pager pages to. Measured in
+// Chromium on `sinking` at 1280: card 411.1px, scrollWidth 1257, overflow 309.
+// ⚠ NOT ONE ASSERTION BELOW WAS DROPPED OR LOOSENED – the clamp arm, the range arm and the snap arm
+// all still run on this constant; what changed is which press hits the clamp, and the arm that names
+// it says so.
 const PHONE = strip(343, 343 * 0.88, 4)
-const DESKTOP = strip(948, 948 / 3 - 8, 4)
+const DESKTOP = strip(948, 948 * 0.44 - 6, 4)
 
 /** Is a card WHOLLY inside the strip's window at this scroll position? The reachability question,
  *  written once: an edge showing past the frame is the affordance, not the answer. */
@@ -77,9 +90,12 @@ describe('round 36 phase 5 – which arrows are live', () => {
   })
 
   it('a fractional last pixel is still the end – the card widths are calc()s', () => {
-    // `calc(33.333% - 8px)` does not land on an integer, so `scrollLeft >= max` is false for ever at
-    // the right-hand end and the Next arrow would stay live with nothing left to show.
-    expect(pagerEnds(319.6, 1268, 948).atEnd).toBe(true)
+    // ⚠ RE-AIMED BY R37-3 – THE NUMBERS ARE THE NEW DESKTOP'S, the claim is untouched. `calc(44% -
+    // 6px)` does not land on an integer either: three of them in a 948px row come to 1257.36, so the
+    // scroll ends at 309.36 while the browser parks `scrollLeft` on 309 (both measured in Chromium,
+    // on `sinking` at 1280). `scrollLeft >= max` would then be false for ever at the right-hand end,
+    // leaving the Next arrow live with nothing left to show.
+    expect(pagerEnds(309, 1257.36, 948).atEnd).toBe(true)
   })
 })
 
@@ -98,15 +114,26 @@ describe('round 36 phase 7 – whether there is anything to page', () => {
     expect(pagerEnds(0, 616, 343)).toMatchObject({ overflows: true })
     // 768: strip 736, two cards of 362 + 12 -> 736 exactly. Nothing hangs past the edge.
     expect(pagerEnds(0, 736, 736)).toMatchObject({ overflows: false })
-    // 1280: strip 948, two cards of 308 + 12 -> 628, well inside a row built for three.
-    expect(pagerEnds(0, 628, 948)).toMatchObject({ overflows: false })
+    // ⚠ RE-AIMED BY R37-3 – SAME VERDICT, TIGHTER CASE, and that is worth saying out loud. It used to
+    // read «1280: strip 948, two cards of 308 + 12 -> 628, well inside a row built for three», which
+    // was the three-across desktop. His «сетку на 2 карточки desktop (как на tablet)» makes the pair
+    // fill the row EXACTLY, as it already did at 768: 468 + 12 + 468 = 948. So the desktop's answer
+    // is no longer «comfortably inside» but «on the boundary», which is precisely why the sub-pixel
+    // arm below now matters more than it did – half a pixel of rounding is all that stands between
+    // his ruling and two grey arrows on the commonest stacked week there is.
+    expect(pagerEnds(0, 948, 948)).toMatchObject({ overflows: false })
+    // ...and a THREE-card desktop week is the other half of his sentence: 411.12 x 3 + 24 -> 1257.36,
+    // which overflows by 309 and is what «будут иметь листалки» pages. Measured in Chromium.
+    expect(pagerEnds(0, 1257.36, 948)).toMatchObject({ overflows: true })
   })
 
   it('⚠ a sub-pixel of scroll is NOT something to page – the same 1px slack `atEnd` uses', () => {
-    // ⚠ THIS IS THE ARM THAT STOPS THE RULING BEING DEFEATED BY ROUNDING. Three cards of
-    // `calc(33.333% - 8px)` in a 948px row do not sum to an integer, and a pager drawn because the
-    // strip scrolls by half a pixel is exactly «стрелки, которые ей никогда не понадобятся» – the
-    // control he asked to be rid of, returned by arithmetic.
+    // ⚠ THIS IS THE ARM THAT STOPS THE RULING BEING DEFEATED BY ROUNDING, and R37-3 made it the arm
+    // that carries the commonest week on the screen. Two cards of `calc(50% - 6px)` plus their gutter
+    // come to the row EXACTLY at every width from 768 up, and a `calc` of a percentage does not land
+    // on an integer – so a pager drawn because the strip scrolls by half a pixel would be exactly
+    // «стрелки, которые ей никогда не понадобятся» on a two-card week, the control he asked to be rid
+    // of, returned by arithmetic.
     expect(pagerEnds(0, 948.5, 948).overflows).toBe(false)
     expect(pagerEnds(0, 949, 948).overflows).toBe(false)
     expect(pagerEnds(0, 950, 948).overflows).toBe(true)
@@ -135,18 +162,30 @@ describe('round 36 phase 5 – one press of an arrow, and where it lands', () =>
     expect(fullyVisible(PHONE, 2, at, card), 'two presses and the third card is wholly on screen').toBe(true)
   })
 
-  it('⭐⭐ AT 1280 THREE FIT, SO THE PRESS THAT MATTERS IS THE ONE THAT REACHES THE FOURTH', () => {
-    const card = 948 / 3 - 8
-    // D16's finding, read back: at this width the third card needs no pager at all.
-    expect(fullyVisible(DESKTOP, 2, 0, card), 'three fit at 1280').toBe(true)
-    expect(fullyVisible(DESKTOP, 3, 0, card), 'and the fourth does not').toBe(false)
-    const at = pageTarget(0, DESKTOP.maxScroll, DESKTOP.offsets, 1)
-    // ⚠ THE FOURTH CARD'S OWN EDGE IS PAST THE END OF THE SCROLL – it is the tail of the row, not
-    // the head of a page – so this lands on `maxScroll` rather than on `offsets[3]`. A pager that
-    // only ever scrolled to a card edge could never bring the last card fully on screen.
+  // ⚠⚠ RE-AIMED BY R37-3 – IT WAS «AT 1280 THREE FIT, SO THE PRESS THAT MATTERS IS THE ONE THAT
+  // REACHES THE FOURTH», which read D16's three-across desktop back off the arithmetic. The owner
+  // replaced that grid with the tablet's, so at 1280 TWO fit and the third is the first card a press
+  // has to reach – the same shape the phone has always had, one card further along. Every assertion
+  // the old arm made is still made here: the card-edge step, the clamp that runs the strip to its
+  // end, `maxScroll` sitting BELOW the last card's own offset, and the last card arriving whole.
+  it('⭐⭐ AT 1280 TWO FIT, so a press reaches the third, and the clamp is what brings the fourth', () => {
+    const card = 948 * 0.44 - 6
+    expect(fullyVisible(DESKTOP, 1, 0, card), 'two fit at 1280 – his «сетка на 2 карточки»').toBe(true)
+    expect(fullyVisible(DESKTOP, 2, 0, card), 'and the third does not, which is what pages').toBe(false)
+
+    // ONE PRESS: a card edge, exactly as on the phone. The third card arrives whole.
+    let at = pageTarget(0, DESKTOP.maxScroll, DESKTOP.offsets, 1)
+    expect(at).toBeCloseTo(DESKTOP.offsets[1], 5)
+    expect(fullyVisible(DESKTOP, 2, at, card), 'one press and the third card is wholly on screen').toBe(true)
+
+    // ⚠ AND THE SECOND PRESS IS THE CLAMP. The fourth card's own edge is PAST the end of the scroll –
+    // it is the tail of the row, not the head of a page – so this lands on `maxScroll` rather than on
+    // `offsets[3]`. A pager that only ever scrolled to a card edge could never bring the last card
+    // fully on screen, and `pageTarget`'s own header names this as the mutation that reddens here.
+    at = pageTarget(at, DESKTOP.maxScroll, DESKTOP.offsets, 1)
     expect(at).toBeCloseTo(DESKTOP.maxScroll, 5)
     expect(at).toBeLessThan(DESKTOP.offsets[3])
-    expect(fullyVisible(DESKTOP, 3, at, card), 'one press and the fourth card is wholly on screen').toBe(true)
+    expect(fullyVisible(DESKTOP, 3, at, card), 'and the fourth card is wholly on screen').toBe(true)
   })
 
   it('Back walks the same steps in reverse and stops at the head', () => {

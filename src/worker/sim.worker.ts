@@ -44,6 +44,7 @@ import {
 import { mainStateConsistent, resumeMain, type MainRngState, type Rng } from '../engine/rng'
 import { planFromWeek, planShapeError, planWeek } from '../engine/plan'
 import { encodeExportFile, decodeExportFile } from '../engine/saveCodec'
+import { SaveFileError } from '../engine/saveGuard'
 import {
   commitAutosave,
   adoptAutosave,
@@ -57,7 +58,8 @@ import {
   deleteCareer,
   touchCareer,
 } from '../db/saves'
-import type { ErrorReply, SnapshotReply, StopReason, ToWorker, ToUI } from '../shared/protocol'
+import { CommandRefusedError, profileShapeError } from '../shared/protocol'
+import type { ErrorReply, Snapshot, SnapshotReply, StopReason, ToWorker, ToUI } from '../shared/protocol'
 
 // The worker owns the authoritative world state (plain objects, non-reactive) for the ACTIVE career.
 // The RNG stream position is part of determinism, and since v35 IT LIVES ON THE WORLD
@@ -122,16 +124,31 @@ function makeCareerId(seed: string): string {
  *  assign to, its own arm does. The two `if`s are unchanged and the asymmetry between them is
  *  deliberate: `recovered` is only ever ADDED when true (never written as `false`), which is the
  *  shape tests/sim-worker-pipeline.test.ts asserts on a clean restore. */
+/*  ⭐⭐ AND `snapshot` IS E-02's HALF OF THE ORDERING (05.09 engine review). `toSnapshot` is the one
+ *  step of a lifecycle command that can THROW on a file the gate let through, and on `new`,
+ *  `restoreSlot` and `importSave` it used to run last – after `adoptAutosave`, after `world =
+ *  candidate`. So an import whose snapshot throws had already been adopted as the active career AND
+ *  written as the newest autosave when the throw became an error reply, and every later
+ *  `getSnapshot`/`advance` threw the same way: a persisted career that cannot render. Those three
+ *  cases now build the snapshot BEFORE they commit anything and hand it in here – the queue's own
+ *  rule, "the reply is DECIDED before it is posted", moved one step earlier so that the reply is
+ *  decided before the world is ADOPTED. `revision` is still read off `committedRevision` at reply
+ *  time, which is why this stays one function and not two. */
 function snapshotMsg(
   id: number,
   w: WorldState,
-  opts: { recovered?: boolean; restoredFrom?: string; stopReasons?: StopReason[] } = {},
+  opts: {
+    recovered?: boolean
+    restoredFrom?: string
+    stopReasons?: StopReason[]
+    snapshot?: Snapshot
+  } = {},
 ): SnapshotReply {
   const msg: SnapshotReply = {
     id,
     ok: true,
     type: 'snapshot',
-    snapshot: toSnapshot(w, opts.stopReasons),
+    snapshot: opts.snapshot ?? toSnapshot(w, opts.stopReasons),
     revision: committedRevision,
   }
   if (opts.recovered) msg.recovered = true
@@ -221,6 +238,27 @@ async function mutate(
   return snapshotMsg(id, candidate, { stopReasons })
 }
 
+/** THE SPAN OF THE TWO COMMANDS THAT MOVE TIME (E-06, 05.09 engine review).
+ *
+ *  ⚠ IT IS THE LOOP BOUND, WHICH IS WHY IT IS CHECKED AT ALL. `tick` counts `msg.weeks` iterations
+ *  by hand and `advance` hands the number to `advanceWeeks`; neither looked at it. The measured
+ *  results: a non-integer runs `ceil(weeks)` ticks – so 1.5 weeks is two weeks of her life – and
+ *  `NaN` runs none at all and still commits a revision, i.e. an autosave and a snapshot for a world
+ *  that did not move. Both are silent.
+ *
+ *  ⚠ 52 IS THE DEV FAST-FORWARD'S OWN SPAN and not a new rule: `▶▶ 52 (dev)` ships in every build
+ *  (the owner's ruling – the deployed build is the playtest device) and is the largest span any
+ *  surface asks for, `spanWeeksFor`'s pill included. A year at a time is the ceiling the UI has.
+ *
+ *  ⚠ 1 AND NOT 0. A zero-week advance is the `NaN` case wearing a legal number: it commits a
+ *  revision for a world that did not move, which is the thing the check exists to stop. */
+const MAX_SPAN_WEEKS = 52
+function guardWeeks(weeks: number): void {
+  if (!Number.isInteger(weeks) || weeks < 1 || weeks > MAX_SPAN_WEEKS) {
+    throw new CommandRefusedError(`Time moves 1 to ${MAX_SPAN_WEEKS} whole weeks at a time`)
+  }
+}
+
 /**
  * ⚠ THE SWITCH IS EXPLICIT AND STAYS EXPLICIT – a `case` per command, no handler table, no dynamic
  * dispatch on `msg.type`. Two things depend on that and neither is negotiable: `noFallthroughCasesInSwitch`
@@ -240,18 +278,33 @@ async function handle(msg: ToWorker): Promise<ToUI> {
   switch (msg.type) {
     // ------------------------------------------------------------------ lifecycle
     case 'new': {
+      // ⭐⭐ E-06 – THE PROFILE IS RE-VALIDATED BEFORE A CAREER EXISTS, the way `setPlan` re-validates
+      // a week (`planShapeError`, below). `new` is the one command that turns its payload into
+      // PERSISTED state, so this is the last place a malformed profile can be refused instead of
+      // adopted: past this line `createWorld` has run, `adoptAutosave` has written it to the
+      // player's disk and the only exit is deleting the career. The measured alternative was a bare
+      // `TypeError` out of `ECONOMY.travelBgFactor[background]` for one field and silent acceptance
+      // for seven others.
+      const badProfile = profileShapeError(msg.profile)
+      if (badProfile) throw new CommandRefusedError(`New career: ${badProfile}`)
       const seed = msg.seed.trim() || 'wildcard'
       // createWorld owns the stream's birth now: `rngMain` is position zero, on the world.
       // Candidate-first like every other path: the fresh world only becomes the active one after
       // its first autosave is durable, so a storage failure cannot strand an unsaveable career.
       const candidate = createWorld(seed, msg.profile, makeCareerId(seed), msg.prologue)
+      // ⭐ E-02: the reply is BUILT before the career is adopted – see `snapshotMsg`. `createWorld`
+      // writes every required field itself, so this cannot throw today; it is here because the
+      // ordering is the property, and a lifecycle path that commits before it can render is the
+      // defect regardless of which of the three found it first.
+      const snapshot = toSnapshot(candidate)
       const { revision } = await adoptAutosave(candidate)
       world = candidate
       committedRevision = revision
-      return snapshotMsg(msg.id, candidate)
+      return snapshotMsg(msg.id, candidate, { snapshot })
     }
     // ------------------------------------------------------------------ mutations
     case 'tick': {
+      guardWeeks(msg.weeks)
       return mutate(msg.id, msg.baseRevision, (world, rng) => {
         // ⚠ THE RAW LOOP MUST NOT OUTRUN A DECISION (P6 (c)). `advanceWeeks` refuses to move time
         // while a reveal or an unanswered knock is open – that contract is the whole W4 slice – but
@@ -309,6 +362,7 @@ async function handle(msg: ToWorker): Promise<ToUI> {
       })
     }
     case 'advance': {
+      guardWeeks(msg.weeks)
       // R11-1: EVERY reason the advance stopped rides along (an injury landing on the wrap-up week
       // is both 'injury' and 'season-end'); `advance` is still the only message that sets them.
       return mutate(msg.id, msg.baseRevision, (world, rng) => advanceWeeks(world, rng, msg.weeks))
@@ -543,6 +597,9 @@ async function handle(msg: ToWorker): Promise<ToUI> {
     case 'restoreSlot': {
       const candidate = await readSlot(msg.slot)
       const rngRecovered = ensureMainState(candidate)
+      // ⭐ E-02: after every repair, before any commit – see `snapshotMsg`. A slot that cannot render
+      // must leave the world the player is playing exactly where it was.
+      const snapshot = toSnapshot(candidate)
       let revision: number
       if (world && candidate.careerId === world.careerId) {
         // The ordinary restore (MoreScreen: previous autosave / a named save of the active
@@ -556,7 +613,11 @@ async function handle(msg: ToWorker): Promise<ToUI> {
       }
       world = candidate
       committedRevision = revision
-      return snapshotMsg(msg.id, candidate, { recovered: rngRecovered, restoredFrom: msg.slot })
+      return snapshotMsg(msg.id, candidate, {
+        recovered: rngRecovered,
+        restoredFrom: msg.slot,
+        snapshot,
+      })
     }
     case 'importSave': {
       // Candidate-first: decode and repair BEFORE touching module state, adopt the disk lineage
@@ -564,10 +625,17 @@ async function handle(msg: ToWorker): Promise<ToUI> {
       // commit memory once the autosave is durable.
       const candidate = await decodeExportFile(new Uint8Array(msg.bytes))
       const rngRecovered = ensureMainState(candidate)
+      // ⭐⭐ E-02, AND THIS IS THE PATH THE REVIEW MEASURED IT ON. The spine above refuses eight more
+      // shapes than it did, but a gate can only refuse what it knows to look for, and the file door
+      // is the one input in the game that arrives from outside our own writers. So the last step
+      // that can throw runs BEFORE the file becomes the active career and before it is written as
+      // the newest autosave: a foreign file that cannot render is now a refused import rather than a
+      // persisted career that renders nothing. See `snapshotMsg`.
+      const snapshot = toSnapshot(candidate)
       const { revision } = await adoptAutosave(candidate)
       world = candidate
       committedRevision = revision
-      return snapshotMsg(msg.id, candidate, { recovered: rngRecovered })
+      return snapshotMsg(msg.id, candidate, { recovered: rngRecovered, snapshot })
     }
     // ⭐ ROUND-21 #1 – THE IMPORT'S CONFIRM NEEDS TO KNOW WHOSE CAREER IS IN THE FILE, and the only
     // place that can answer is here: `careerId` is inside the gzipped payload, so no filename and no
@@ -646,6 +714,26 @@ function errorMsg(id: number, err: unknown): ErrorReply {
   }
   if (err instanceof SaveConflictError) {
     return { id, ok: false, error: err.message, code: 'SAVE_CONFLICT', revision: err.diskRevision }
+  }
+  // ⭐⭐ E-06 – THE PAYLOAD ITSELF WAS REFUSED. Same reasoning as the save-file codes below: the
+  // sentence is the player's and the code is the test's, so neither has to be read out of the other.
+  // ⚠ NO `revision` – nothing was measured against one; the field belongs to the two concurrency
+  // kinds above (tests/worker-reply-correlation.test.ts asserts its absence alongside the code).
+  if (err instanceof CommandRefusedError) {
+    return { id, ok: false, error: err.message, code: 'INVALID_COMMAND' }
+  }
+  // ⭐⭐ E-05 (05.09 engine review) – AND THE SAVE-FILE CODE CROSSES THE BOUNDARY TOO. `SaveFileError`
+  // has carried seven machine-readable kinds since the import gate was written, and that gate's own
+  // header states the reason: "the code exists so tests (and any future UI that wants to branch)
+  // never match on prose". This function dropped every one of them, so `future-schema` – whose whole
+  // point is that the answer is «update the app, then import it» rather than «this file is broken» –
+  // reached the store as an untyped sentence. The claim in the header was simply false.
+  //
+  // ⚠ NO `revision`: a refused file never measured itself against one. The field is for the two
+  // concurrency kinds above and stays absent here, which is what the arm in
+  // tests/worker-reply-correlation.test.ts asserts alongside the code.
+  if (err instanceof SaveFileError) {
+    return { id, ok: false, error: err.message, code: err.code }
   }
   return { id, ok: false, error: err instanceof Error ? err.message : String(err) }
 }

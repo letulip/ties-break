@@ -774,7 +774,13 @@ describe('the marker opens ONE event, with enter-or-close', () => {
 
   it('ENTER, and then out – the card is a door in, not an entry manager', () => {
     expect(template).toContain('@click="enterMarker(marker)"')
-    const enter = region(screen, 'function enterMarker', 'const fundsCents')
+    // ⚠ RE-AIMED BY U-12 (05.09): the end marker was `const fundsCents`, and that computed is gone –
+    // `fundsShort` was its only reader and both moved into `composables/eventCard.ts`, where the
+    // Season screen's byte-identical copy of the same two lines went too. The helper caught it
+    // exactly as it is meant to (end marker not found, rather than a region silently widening to the
+    // rest of the file). The claim is UNCHANGED and the region is no wider: `useEventCard()` is the
+    // next statement after `enterMarker` and the first one that is not part of it.
+    const enter = region(screen, 'function enterMarker', 'useEventCard()')
     expect(enter).toContain('game.enterEvent(e.id)')
     expect(enter).toContain('marker.value = null')
     // withdrawing and cancelling stay where the whole horizon is in view

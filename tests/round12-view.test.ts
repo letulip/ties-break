@@ -208,8 +208,21 @@ describe('R12-8b — a red "injury" chip on every card the layoff covers', () =>
   it('the chip explains itself with the tournament lock\'s own words', () => {
     // round-12 follow-up: both sites route through weekLabel() – the pin moved with the wording
     // (it existed to keep the two surfaces IDENTICAL, and that property is what it still asserts).
-    expect(seasonScreen).toContain('`Injured – back ${weekLabel(s.week + s.injury.weeksRemaining)}`')
-    expect(planSheet).toContain('`Injured – back ${weekLabel(s.week + s.injury.weeksRemaining)}.`')
+    //
+    // ⚠ RE-AIMED 06.09, AND THE PROPERTY GOT STRONGER RATHER THAN LOOSER. The pin read the two
+    // template literals and compared them by eye; the owner counted the copies («layoffNote пишется
+    // трижды, причём в одном месте с точкой на конце») and there were four – these two, the Calendar
+    // screen's, and `lockLabel`'s own arm, which is the lock this test is named after. They all read
+    // `layoffNoteFor` now (composables/weekDays.ts), so "the two surfaces are identical" is no longer
+    // something a reader has to check: it is the same function call. tests/r37-layoff-note.test.ts
+    // owns the words themselves.
+    expect(seasonScreen).toContain('layoffNoteFor(game.snapshot)')
+    expect(planSheet).toContain('layoffNoteFor(game.snapshot)')
+    expect(seasonScreen).not.toContain('`Injured – back ${weekLabel(s.week + s.injury.weeksRemaining)}`')
+    expect(planSheet).not.toContain('`Injured – back ${weekLabel(s.week + s.injury.weeksRemaining)}.`')
+    // ...and the sheet's full stop survives the move, because a SECOND sentence follows the note in
+    // the same paragraph there. It is a join, spelled at the site that needs it.
+    expect(planSheet).toContain('`${note}.`')
   })
 
   // ⚠ RE-AIMED, round-17 #11. This pinned the Vacation tab as REFUSING during a layoff – rendering

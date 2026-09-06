@@ -52,7 +52,13 @@ jobs:
       # ⚠ The `unit` project only. The Monte-Carlo calibration runs on its own schedule - see
       # .github/workflows/simulation.yml. A deploy must not be blocked by a statistical sweep.
       - run: npm test
-      - run: npm run build
+      # ⚠ `npx vite build`, NOT `npm run build` – the same second typecheck ci.yml dropped (T-06 /
+      # P-19, 05.09). `npm run build` is `vue-tsc -b && vite build`, so this step re-ran the check
+      # `:51` above has already run in its forced, trustworthy mode. The forced check still gates
+      # this job, and it still gates it BEFORE anything is uploaded, which is what the header's
+      # "nothing is uploaded until vue-tsc, the whole suite and the production build have all
+      # passed" means.
+      - run: npx vite build
         env:
           BASE_PATH: /${{ github.event.repository.name }}/
       - uses: actions/configure-pages@v6

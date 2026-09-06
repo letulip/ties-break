@@ -211,9 +211,14 @@ describe('round 36 review #1 – the prologue takes Home’s shape, and it overr
     // It has the card's own corner now, which a picture running off both edges of a phone cannot.
     expect(hero.borderRadius, 'the painting still has no edges of its own').not.toBe('0px')
     expect(hero.aspectRatio, 'the painting stopped being square').toBe('1 / 1')
-    // …and the answers pair up, which is #18 arriving on this screen: one column of a 640px card is
-    // a 608px button.
-    expect(css('.prologue-answers').display, 'the answers are still one column').toBe('grid')
+    // ⚠⚠ RE-AIMED BY ROUND 37, NOT WEAKENED. This line read «…and the answers pair up, which is #18
+    // arriving on this screen: one column of a 640px card is a 608px button» and asserted
+    // `display: grid`. The owner overruled the PAIRING on 06.09 – his words are in
+    // `docs/rounds/round-37.md` and beside the rule in PrologueCard.vue – and asked for one centred
+    // column instead. What #18 actually said is the CAP, and that half is untouched: the column is
+    // 500px wide and centred here, which is the same sentence this line was standing for.
+    // `tests/component/round37-short-screens.test.ts` owns the claim in full.
+    expect(css('.prologue-answers').maxWidth, 'his 500 cap left the answers').toBe('500px')
   })
 
   it('⭐⭐⭐ on a desktop the picture is BESIDE the words, and the decision is under both', () => {

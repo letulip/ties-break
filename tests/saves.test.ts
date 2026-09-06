@@ -15,6 +15,7 @@ import {
 } from '../src/db/saves'
 import { createWorld, tickWeek, type WorldState } from '../src/engine/world'
 import { rngFromSeed } from '../src/engine/rng'
+import { reqToPromise } from '../src/db/idb'
 import { compressWorld } from '../src/engine/saveCodec'
 
 // White-box: these are the DB name/store internal to src/db/saves.ts. Kept in sync deliberately
@@ -124,6 +125,71 @@ describe('save slots (careers + generations)', () => {
     // The adoption point is the HIGHEST revision on disk, not the loaded record's own (1):
     // adopting 1 would make the next CAS commit (2) collide with the corrupt corpse forever.
     expect(revision).toBe(2)
+  })
+
+  it('⚠ E-12 – two generations that TIE resolve by insertion order, not by the comparator flipping', async () => {
+    // ⭐ THE COMPARATOR, MADE A TOTAL ORDER (05.09 engine review). `readLatestAutosave` sorted with
+    // `(a, b) => recNewer(a, b) ? -1 : 1` – a predicate wearing a comparator's clothes: it never
+    // returns 0 and answers 1 for BOTH orders of a tied pair, which is not an ordering.
+    //
+    // ⚠⚠ AND THE HONEST VERSION OF WHY THIS ARM EXISTS, MEASURED RATHER THAN ASSUMED: the old
+    // spelling and the new one produce the SAME answer here, so this arm does NOT redden on the
+    // unfixed tree and no arm could. V8 sorts a two-element array by binary insertion and asks
+    // `comparefn(later, earlier)`; a comparator that always answers 1 therefore leaves the pair
+    // alone (`[a,b].sort(() => 1)` is `[a,b]`, checked on node v26). The defect is one of FORM, and
+    // the fix's value is that a comparator which is a total order cannot go wrong when the array
+    // grows, when the engine changes, or when somebody copies it.
+    //
+    // ⚠ SO WHAT THIS ARM PINS IS THE ORDERING CONTRACT ITSELF – a tie resolves to insertion order –
+    // and it is mutation-verified against the mistake that IS reachable: making the tie answer -1
+    // reddens it with «a tied pair must not be reordered: expected 9 to be 4».
+    //
+    // ⚠ A TIE NEEDS BOTH HALVES OF `recNewer` TO TIE – same revision AND same `savedAt` – so the
+    // commit path cannot produce one and this arm writes the rows itself, exactly as the migration
+    // and corruption arms above do. That is the point rather than a caveat: an ordering rule whose
+    // wrong case is unreachable by the writer is one that survives being copied somewhere reachable.
+    const cid = 'c-tied-generations'
+    await commitAutosave(worldAt('tied', 4, cid), 1) // gen a
+    await commitAutosave(worldAt('tied', 9, cid), 2) // gen b
+
+    const raw = await openRaw()
+    const t = raw.transaction(STORE, 'readwrite')
+    const store = t.objectStore(STORE)
+    const bReq = store.get(`auto:${cid}:b`)
+    bReq.onsuccess = () => {
+      const b = bReq.result as { revision: number; savedAt: number }
+      const aReq = store.get(`auto:${cid}:a`)
+      aReq.onsuccess = () => {
+        // Give `a` the same revision and the same clock reading as `b`: neither arm of `recNewer`
+        // can separate them any more.
+        const a = aReq.result as { revision: number; savedAt: number }
+        a.revision = b.revision
+        a.savedAt = b.savedAt
+        store.put(a)
+      }
+    }
+    await txDone(t)
+    raw.close()
+
+    // ⚠ THE INSTRUMENT FIRST: the two rows really do tie on BOTH arms of `recNewer`, or the arm
+    // below is asserting nothing about ordering at all.
+    const check = await openRaw()
+    const ct = check.transaction(STORE, 'readonly')
+    const [rowA, rowB] = (await Promise.all([
+      reqToPromise(ct.objectStore(STORE).get(`auto:${cid}:a`)),
+      reqToPromise(ct.objectStore(STORE).get(`auto:${cid}:b`)),
+    ])) as { revision: number; savedAt: number }[]
+    check.close()
+    expect(rowA.revision, 'the pair must tie on revision').toBe(rowB.revision)
+    expect(rowA.savedAt, 'and on savedAt').toBe(rowB.savedAt)
+
+    // `readLatestAutosave` reads [a, b] in that order and sorts. Under a total order a tie is left
+    // alone, so the FIRST row read wins – generation a, week 4.
+    const latest = await readLatestAutosave(cid)
+    expect(latest.recovered).toBe(false)
+    expect(latest.world.week, 'a tied pair must not be reordered').toBe(4)
+    // ...and the adoption point is still the highest revision on disk, tie or no tie.
+    expect(latest.revision).toBe(2)
   })
 
   it('isolates careers: five autosaves each keep two slots and never evict across careers', async () => {

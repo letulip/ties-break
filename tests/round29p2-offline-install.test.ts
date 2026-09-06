@@ -12,7 +12,16 @@
 // against a 12.3 MB precache; the `--arm=all` control reports 305 / 205 / 11.3 MB, so the counter
 // can see the failure it is claiming did not happen).
 //
-// WHAT IT DOES HOLD is the pair of decisions underneath both of those, which are cheap to lose:
+// ⚠ AND IT CANNOT MEASURE THE INSTALL EITHER, WHICH IS THE ONE THING IT LOOKED LIKE IT MEASURED
+// (P-04, 05.09 review). `public/` is what a build COPIES; what a phone downloads is the service
+// worker's precache, which is `public/` PLUS the hashed bundles, the stylesheet and index.html –
+// 14,596 KiB against 15,755 KiB on this tree, so 1,159 KiB was invisible to the ceiling below.
+// The unit project runs BEFORE `vite build` in `npm run check`, and in two CI jobs that never build
+// at all, so no test in it can read that number: an assertion over `dist/` here would be green on
+// an absent artefact, green on a stale one, or skipped. `scripts/install-size.mjs` reads it, one
+// step after the build. What stays here is the wiring, so the ceiling cannot be quietly unwired.
+//
+// WHAT IT DOES HOLD is the pair of decisions underneath all of those, which are cheap to lose:
 // what the install glob sweeps in, and the housekeeping that stops a phone paying twice.
 import { describe, it, expect } from 'vitest'
 import { readdirSync, readFileSync, statSync } from 'node:fs'
@@ -36,6 +45,22 @@ const PRECACHED_EXT = (() => {
   const m = read('vite.config.ts').match(/globPatterns: \['\*\*\/\*\.\{([^}]+)\}'\]/)
   if (!m) throw new Error('globPatterns is no longer a single brace list – re-aim this reader')
   return new Set(m[1].split(',').map((e) => `.${e.trim()}`))
+})()
+
+const pkg = JSON.parse(read('package.json')) as { scripts: Record<string, string> }
+
+/**
+ * The ceiling itself, READ OUT OF THE GATE THAT ENFORCES IT – the owner's 16,384 KiB ruling of
+ * 29.08, held in exactly one place.
+ *
+ * ⚠ Same reasoning as PRECACHED_EXT above, and the same failure it was found by: a number written
+ * out by hand here and enforced in a script over there is two constants that agree right up until
+ * they do not, and the one that goes stale is always the one in the test.
+ */
+const CEILING_KIB = (() => {
+  const m = read('scripts/install-size.mjs').match(/const CEILING_KIB = (\d+) \* 1024\b/)
+  if (!m) throw new Error('install-size.mjs no longer declares CEILING_KIB as N * 1024 – re-aim this reader')
+  return Number(m[1]) * 1024
 })()
 
 function walk(dir: string): string[] {
@@ -65,17 +90,42 @@ describe('round 29 part two #7 – the art is in the PWA install', () => {
     expect(art.filter((f) => f.precached).length).toBeGreaterThanOrEqual(205)
   })
 
-  it('the install budget has a ceiling, so an art wave cannot double it silently', () => {
+  it('the source half of the install cannot double silently – the cheap, offline half of the ceiling', () => {
     const inInstall = PUBLIC.filter((f) => f.precached)
-    // Measured 29.08: 301 files / 11221 KiB from public/, which the build turns into 313 precache
-    // entries / 12255 KiB once the hashed bundles and index.html join them.
+    // ⚠⚠ THIS `it` USED TO BE THE CEILING, AND IT WAS READING 93 % OF THE NUMBER (P-04, 05.09).
+    // Measured 29.08 it said «301 files / 11,221 KiB from public/, which the build turns into 313
+    // precache entries / 12,255 KiB» – and then only ever checked the first of those two. On this
+    // tree it is 350 files / 14,596 KiB from public/ against 356 entries / 15,755 KiB in the built
+    // manifest, so 1,159 KiB of hashed bundles, stylesheet and index.html sat outside the guard.
+    //
+    // The ceiling now lives in `scripts/install-size.mjs`, one step after `vite build`, and the
+    // test below pins it into the gate. THIS claim is deliberately the weaker one: it asserts
+    // strictly less than the script does, it costs nothing, it is offline, and it fails four
+    // seconds into `npm run check` rather than seven minutes in at the build.
     //
     // ⚠ A CEILING, NOT AN EQUALITY, AND THE DIFFERENCE IS THE WHOLE DESIGN. An exact pin goes red
     // every time the owner repaints a court, which trains everybody to re-aim it without reading –
-    // and a pin nobody reads guards nothing. 16 MB is ~35% of headroom over today: a new age band
-    // or a second venue set fits, and a set that doubles the install has to come and say so.
-    expect(kib(inInstall)).toBeLessThan(16 * 1024)
+    // and a pin nobody reads guards nothing.
+    expect(kib(inInstall)).toBeLessThan(CEILING_KIB)
     expect(inInstall.length).toBeGreaterThan(290)
+  })
+
+  it('...and the ceiling itself is measured on the BUILT precache, from inside the gate', () => {
+    // The house pattern from tests/sim-serialisation.test.ts: the rule lives in the runner, and the
+    // suite's job is to prove the runner is actually wired in. A ceiling that runs nowhere is the
+    // `check:tools` story a second time – «it used to run on demand, which meant it ran never».
+    const gate = 'node scripts/install-size.mjs'
+    expect(pkg.scripts.check, 'the install ceiling is not in the pre-push gate').toContain(gate)
+    expect(
+      pkg.scripts.check.indexOf(gate),
+      'the ceiling runs BEFORE the build, so it would be measuring whatever dist was left behind',
+    ).toBeGreaterThan(pkg.scripts.check.indexOf('vite build'))
+    expect(read('.github/workflows/ci.yml'), 'the install ceiling never runs on CI').toContain(gate)
+    // ...and it reads the BUILT manifest rather than public/, which is the whole of the fix. A
+    // rewritten script that went back to summing public/ would satisfy every line above.
+    const script = read('scripts/install-size.mjs')
+    expect(script, 'install-size.mjs no longer reads the built service worker').toContain("join(DIST, 'sw.js')")
+    expect(script, 'a missing dist/ must fail the gate, never skip it').toMatch(/dist\/sw\.js is missing/)
   })
 
   it('audio is IN, by his ruling – and cannot silently fall back out', () => {

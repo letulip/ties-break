@@ -1,6 +1,7 @@
 import { openDB, reqToPromise } from './idb'
 import { compressWorld, decompressWorld } from '../engine/saveCodec'
 import type { WorldState } from '../engine/world'
+import { CommandRefusedError } from '../shared/protocol'
 import type { SlotMeta, CareerMeta } from '../shared/protocol'
 
 // Save slots in IndexedDB: each record is one compressed, checksummed blob, scoped to a career.
@@ -418,6 +419,17 @@ export async function deleteSlot(slot: string): Promise<void> {
  * career list's resume pointer), while `lastPlayedAt` always bumps (saving is playing).
  */
 export async function writeNamed(world: WorldState, name: string, revision: number): Promise<SlotMeta> {
+  // ⭐⭐ E-06 (05.09 engine review) – A NAME THE SANITISER CANNOT KEEP IS NOT A SLOT. `sanitizeName`
+  // strips everything outside `[a-z0-9-]`, so «привет» and «!!!» both come out as the empty string
+  // and both address the SAME slot, `manual:<careerId>:` – the second save silently overwrites the
+  // first, and the More screen lists one row where the player made two. The UI guards this
+  // (MoreScreen's Save-as is disabled on an empty field), but the UI is not the gate: CLAUDE.md
+  // invariant 1 says a stale screen may not corrupt a career, and this is the same rule one layer
+  // down. Refused HERE rather than in the worker's `saveNamed` case because the collision is a
+  // property of the slot key, and `namedSlot` is this module's.
+  if (sanitizeName(name) === '') {
+    throw new CommandRefusedError('A save name needs at least one letter or number')
+  }
   const { payload, checksum } = await compressWorld(world)
   const savedAt = nextSavedAt()
   const database = await db()
@@ -520,7 +532,12 @@ export async function readLatestAutosave(
 
   const gens = [recA, recB]
     .filter((r): r is SaveRecord => r !== undefined)
-    .sort((a, b) => (recNewer(a, b) ? -1 : 1)) // newest first
+    // ⚠ E-12: A TOTAL ORDER, not a two-valued one. `(a, b) => recNewer(a, b) ? -1 : 1` never returns
+    // 0 and answers 1 for BOTH orders of a tied pair, which is not a comparator – it is a predicate
+    // wearing one. Harmless on this two-element array (there are exactly two generations, and a tie
+    // means the same revision AND the same savedAt, so either order is the same record), and that is
+    // precisely why it would have survived being copied somewhere it is not harmless.
+    .sort((a, b) => (recNewer(a, b) ? -1 : recNewer(b, a) ? 1 : 0)) // newest first
 
   if (gens.length === 0) throw new Error(`No autosave for career "${careerId}"`)
   const revision = Math.max(meta?.revision ?? 0, ...gens.map((g) => g.revision ?? 0))

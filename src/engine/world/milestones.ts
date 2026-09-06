@@ -12,6 +12,7 @@
 // notice this file.
 import { WEEKS_PER_YEAR, OFF_SEASON_WEEKS, TIER_LADDER, TIERS } from '../season/calendar'
 import { seasonYear } from '../../shared/dates'
+import { formatCentsSigned } from '../../shared/money'
 import { milestoneKey } from '../diary'
 import { schoolEndWeek, schoolIsOver } from '../kidLife'
 import type { LadderTrack, TierId } from '../season/types'
@@ -403,8 +404,15 @@ export function maybeFireSeasonWrapUp(world: WorldState): void {
       : wins + losses > 0
         ? 'no result that scored'
         : 'no tournaments played'
-  const fundsSign = fundsDeltaCents >= 0 ? '+' : '-'
-  const fundsText = `${fundsSign}$${Math.abs(Math.round(fundsDeltaCents / 100)).toLocaleString('en-US')}`
+  // ⚠⚠ E-12: `formatCentsSigned`, AND THIS ONE WAS NOT MERELY A COPY – IT DISAGREED. The hand-roll
+  // read the sign off the CENTS (`fundsDeltaCents >= 0`) while the figure is rounded to dollars, so
+  // a season that ended 49 ¢ down printed `-$0`. `shared/money.ts` calls that exact edge LOAD-BEARING
+  // and rules the other way: `Math.round(-49 / 100)` is negative zero, `-0 < 0` is false, and the
+  // signed form prints `+$0`. Identical for every other value – measured over the sign boundary in
+  // tests/engine-money-strings.test.ts – and the disagreement is confined to a delta of -1 to -50
+  // cents, which is the engine's own text breaking its own money contract rather than a number
+  // anybody has seen.
+  const fundsText = formatCentsSigned(fundsDeltaCents)
 
   // ⚠ THE RANK IS NAMED (30.07, fix/ranking-truth). This read a bare "rank #N" off `world.kidRank`,
   // which was a both-ladders fold at the time, so the popup and Home agreed with each other (#4) and

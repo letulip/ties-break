@@ -35,6 +35,13 @@ export interface PaintableEvent {
   surface: Surface
 }
 
+/** ⭐ U-12 – just enough of an event to price it against the account. Structural for the same reason
+ *  `PaintableEvent` is: the Calendar's marker and the Season feed's row hand over different shapes
+ *  and only this one field is being asked about. */
+export interface PricedEvent {
+  entryFeeCents: number
+}
+
 /** Just enough of a preview to name the odds ring. */
 export interface FirstMatchOdds {
   firstMatchChance: number | null
@@ -160,10 +167,11 @@ export function fieldRingShown(p: RingState): boolean {
   return !opponentRingShown(p) && p.fieldChance !== null
 }
 
-/** The store-backed half: the three facts that need the live snapshot to answer. */
+/** The store-backed half: the four facts that need the live snapshot to answer. */
 export function useEventCard(): {
   venueUrl: (e: PaintableEvent) => string
   surfaceVerdict: (surface: Surface) => string | null
+  fundsShort: (e: PricedEvent) => boolean
   academyCoverPct: ComputedRef<number>
 } {
   const game = useGameStore()
@@ -178,6 +186,17 @@ export function useEventCard(): {
      *  card that words the verdict itself is a card that can contradict the table. */
     surfaceVerdict: (surface: Surface) =>
       game.snapshot ? surfaceStyleHint(game.snapshot.profile.playStyle, surface) : null,
+    /** ⭐ U-12 – CAN THE FAMILY PAY THE ENTRY FEE? It disables the Enter control on both cards and
+     *  raises the same «Not enough funds» hint beside it, and it was the same two lines in both
+     *  screens (`SeasonScreen.vue:856-858` == `CalendarScreen.vue:265-267`, byte-identical, listed
+     *  as still-open by two reviews running).
+     *
+     *  ⚠ IT IS A GUESS AT THE ENGINE'S ANSWER AND ALWAYS WAS – the entry is re-validated worker-side
+     *  and refused there (`engine/world/entries.ts`), which is what actually protects the career.
+     *  What this decides is whether the card offers a control that would be refused. That is exactly
+     *  the kind of rule that must not exist twice: two copies can disagree about which cards are
+     *  offered while both stay green. */
+    fundsShort: (e: PricedEvent) => (game.snapshot?.fundsCents ?? 0) < e.entryFeeCents,
     academyCoverPct: useAcademyCoverPct(),
   }
 }

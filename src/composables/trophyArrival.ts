@@ -53,6 +53,11 @@
 import { ref, type Ref } from 'vue'
 import { TIER_LADDER } from '../engine/season/calendar'
 import type { Snapshot } from '../shared/protocol'
+// ⭐ U-05 – ASKED IN ONE PLACE NOW. The local copy checked `typeof window`; the shared one checks
+// `typeof matchMedia`, which is the same guard one level closer to the thing that can be missing.
+// Still called at TAKE-OFF rather than at module load: a player can change the preference without
+// reloading the PWA, and this module is imported by tests that have no `matchMedia` at all.
+import { prefersReducedMotion } from './reducedMotion'
 
 /** The one snapshot fact the dot reads. Structural, so a test can hand in a plain object. */
 export type TrophyFacts = Pick<Snapshot, 'trophiesByTier'>
@@ -129,13 +134,6 @@ const TROPHIES_TAB = '[data-tour="tab-trophies"]'
 
 const flight = ref<TrophyFlight | null>(null)
 let clearTimer: ReturnType<typeof setTimeout> | null = null
-
-/** Checked at take-off rather than at module load: `matchMedia` is a browser API and this module is
- *  imported by tests, and a player can change the preference without reloading the PWA. */
-function prefersReducedMotion(): boolean {
-  if (typeof window === 'undefined') return false
-  return window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false
-}
 
 /**
  * Send a trophy to the cabinet. Returns whether anything is actually flying — the caller does not

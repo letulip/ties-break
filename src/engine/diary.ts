@@ -495,13 +495,15 @@ const DEBUT_LINES: readonly string[] = [
   'The first walk through those gates.',
 ]
 
-function debutMemory(week: number, seed: string, startAgeYears: number): MemoryCard {
+function debutMemory(week: number, seed: string, kidAgeAt: (week: number) => number): MemoryCard {
   const rng = rngFromSeed(`${seed}:memory:debut:${week}`)
   return {
     kind: 'debut',
     milestone: null,
     whenLabel: weekLabel(0),
-    stage: portraitStage(startAgeYears),
+    // D-01: her age IN WEEK 0, not the band's opening number. They differ by a year for every girl
+    // whose birthday has not come round yet when the career opens.
+    stage: portraitStage(kidAgeAt(0)),
     emotion: 'norm',
     line: DEBUT_LINES[Math.floor(rng() * DEBUT_LINES.length)],
   }
@@ -532,13 +534,13 @@ export function selectMemory(
   milestones: readonly Milestone[],
   week: number,
   seed: string,
-  startAgeYears: number,
+  kidAgeAt: (week: number) => number,
 ): MemoryCard | null {
   if (week < MEMORY_DEBUT_WEEKS) return null
   const aged = milestones.filter((m) => week - m.week >= MEMORY_MIN_WEEKS)
   // An anniversary is the one thing loud enough to interrupt the rotation.
   const anniversary = aged.find((m) => Math.abs(week - 52 - m.week) <= MEMORY_ANNIVERSARY_TOLERANCE)
-  const debut = debutMemory(week, seed, startAgeYears)
+  const debut = debutMemory(week, seed, kidAgeAt)
   if (!anniversary && aged.length === 0) return debut
   // The album, oldest first: the opening week, then the milestones in capture order.
   const pick = anniversary ?? (week % (aged.length + 1) === 0 ? null : aged[(week % (aged.length + 1)) - 1])
@@ -551,7 +553,12 @@ export function selectMemory(
     kind: anniversary ? 'anniversary' : pick === aged[aged.length - 1] ? 'recent' : 'echo',
     milestone: pick,
     whenLabel: anniversary ? 'one year ago' : weekLabel(pick.week),
-    stage: portraitStage(startAgeYears + Math.floor(pick.week / 52)),
+    // ⭐ D-01: HER AGE AT THE MILESTONE'S WEEK, off the one clock. This read
+    // `startAgeYears + Math.floor(pick.week / 52)` – the band clock – which paints a girl born late
+    // in the year as the next stage up for most of the year the boundary falls in. The card's own
+    // promise, three lines above the function, is «a 17-year-old's Memory of her first Local title
+    // shows the 14-year-old who won it», and only her real age at that week can keep it.
+    stage: portraitStage(kidAgeAt(pick.week)),
     emotion: MEMORY_EMOTION[pick.type],
     line,
   }
@@ -586,12 +593,18 @@ export function buildDiarySnapshot(view: DiaryWorldView): DiarySnapshot {
     facts,
     photoLine,
     greeting: greetingFor(facts, photoLine, view.seed),
-    // W5: WHICH PAINTING THIS WEEK SHOWS, decided once, here, beside the facts it reads. The age band
-    // is the same arithmetic `selectMemory` uses below (start age plus completed years), so no new
-    // view field was needed for it.
+    // W5: WHICH PAINTING THIS WEEK SHOWS, decided once, here, beside the facts it reads.
+    //
+    // ⭐⭐ D-01 (05.09 review) – AND IT IS `view.ageYears` NOW, WHICH IS THE AGE THE REST OF THE APP
+    // ALREADY SHOWS. This read `startAgeYears + Math.floor(view.week / 52)` and the old note called
+    // that "the same arithmetic `selectMemory` uses below", which was true and was the defect: both
+    // were the BAND clock, and the header standing beside this painting reads `Snapshot.ageYears`
+    // off `kidAgeAt`. Measured over ten seasons, a girl born 20 December was painted one stage older
+    // than her own header for 51 straight weeks at each stage boundary. The view already carried
+    // `ageYears`; no new field was needed for THIS site, only for the Memory card's past weeks.
     scene: weekSceneFor({
       facts,
-      stage: portraitStage(view.startAgeYears + Math.floor(view.week / 52)),
+      stage: portraitStage(view.ageYears),
       vacationPackageId: view.vacationPackageId ?? null,
     }),
     travelNote: travelHome ? travelNoteFor(travelHome, view.seed) : null,
@@ -607,6 +620,6 @@ export function buildDiarySnapshot(view: DiaryWorldView): DiarySnapshot {
     // The licences cover every state the engine can produce (the coverage sweep in
     // tests/diary.test.ts proves it); the fallback is a sentence that is true of any week at all.
     conditionNote: diaryLine('condition', facts, view.seed) ?? 'The week went by.',
-    memory: selectMemory(view.milestones, view.week, view.seed, view.startAgeYears),
+    memory: selectMemory(view.milestones, view.week, view.seed, view.kidAgeAt),
   }
 }

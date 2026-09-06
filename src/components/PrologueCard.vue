@@ -67,6 +67,12 @@ import { COUNTRIES, COUNTRY_NAMES, POPULAR_COUNTRIES, flagEmoji } from '../compo
 // declared twice is a string that can drift in one copy. See that module's header.
 import { IDENTITY_COPY, MONTHS } from '../composables/identityCopy'
 import { daysInBirthMonth } from '../shared/dates'
+// ⚠ THE WIZARD'S OWN CAP, ON THE WIZARD'S OWN IDIOM. This card asks for her name too and reaches
+// `newCareer` on exactly the same path, so `profileShapeError`'s name refusal is as reachable from
+// here as from there. It carried no `maxlength` while the cap was 200 and nobody types 201
+// characters by accident; at twenty (06.09) a real name can meet it, and a refusal a player can
+// reach by typing is the risk E-06 named. Same constant, same effect: the cap is felt, not met.
+import { PROFILE_NAME_MAX_CHARS } from '../shared/protocol'
 import type { PortraitEmotion } from '../shared/avatarEmotion'
 import { TOURNAMENT_ANSWER } from '../prologue/cards'
 import type { PrologueCard, PrologueOption, TournamentAsk } from '../prologue/cards'
@@ -348,6 +354,7 @@ useDialogFocus(cardEl)
               id="prologue-first"
               class="prologue-input"
               type="text"
+              :maxlength="PROFILE_NAME_MAX_CHARS"
               :value="identity.kidName"
               :placeholder="IDENTITY_COPY.firstName"
               autocomplete="off"
@@ -361,6 +368,7 @@ useDialogFocus(cardEl)
               id="prologue-last"
               class="prologue-input"
               type="text"
+              :maxlength="PROFILE_NAME_MAX_CHARS"
               :value="identity.kidLastName"
               :placeholder="IDENTITY_COPY.lastName"
               autocomplete="off"
@@ -1039,7 +1047,7 @@ useDialogFocus(cardEl)
     /* The column grows for the TEXT. 640 is the app's own reading measure – the cap D18 puts on
        «Her own account» and D24 on the wizard – so the prologue joins a number the round already
        decided rather than inventing a third one. */
-    max-width: 640px;
+    max-width: var(--read-max);
   }
 
   /* ⭐⭐ THE PICTURE STOPS BEING THE COLUMN. The full-bleed trick above is a PHONE rule – it exists
@@ -1068,21 +1076,50 @@ useDialogFocus(cardEl)
     display: none;
   }
 
-  /* ⭐ THE ANSWERS GO TWO TO A ROW, and that is his item #18 arriving on this screen rather than a
-     taste: «кнопок в 700 пикселей не должно быть, максимум 500». One column of a 640px card is a
-     608px button; two are 300 each. The line that introduces the tournament question and the way out
-     of the prologue both span, because neither is an answer in the pair.
-     ⭐ It also buys back most of what the wider column costs in height, which is what makes «скролла
-     не будет» reachable on the tallest card in the walk. */
-  .prologue-card > .prologue-answers {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-    gap: 8px;
-  }
+  /* ⭐⭐⭐ ROUND 37 – THE ANSWERS ARE ONE CENTRED COLUMN AGAIN, AND THAT IS HIS OWN INSTRUCTION, NOT
+     A RESTORATION. The owner, 06.09: «И давай эти кнопки делать не в 2 колонки, а посередине просто
+     одну под другой.» He named no width, so it holds at every width he can be looking at – and
+     below 768 they were never anything else, so the phone is untouched by construction.
 
-  .prologue-answers > .prologue-ask,
-  .prologue-answers > .prologue-skip {
-    grid-column: 1 / -1;
+     ⚠ WHAT THIS BLOCK USED TO SAY, AND WHY THE HALF THAT STILL BINDS IS KEPT. It read «THE ANSWERS
+     GO TWO TO A ROW, and that is his item #18 arriving on this screen rather than a taste: «кнопок
+     в 700 пикселей не должно быть, максимум 500». One column of a 640px card is a 608px button; two
+     are 300 each.» The pairing is what he has now overruled; **the 500 is not**, and it is the whole
+     reason this rule cannot simply be deleted – one column of a 640px card really is a 608px button,
+     and at 1024 the answers span an 880px card, which is a 848px one. So the pairing goes and his
+     cap arrives in its place, with the centring he asked for in the same sentence.
+     ⚠ 500 IS HIS NUMBER FROM #18 AND IT IS SPELLED TWICE IN THIS REPOSITORY ON PURPOSE, which is
+     normally the drift this sheet warns about: `.tb-pill--cta` in src/style.css carries the other
+     copy. It is not a token because turning that literal into one would change what
+     `tests/component/round36-review-home.test.ts` reads off `getComputedStyle().maxWidth` on the
+     app's every CTA, for a tidy-up – and this rule and that one are one RULING with two subjects (a
+     CTA pill; a column of answers), not one number two rules share. If a third subject appears, that
+     is the moment it becomes a token.
+     ⚠ THE TWO LONGHANDS AND NOT `margin-inline`, for the reason src/style.css states at
+     `#app .tb-pill--cta`: happy-dom does not expand the logical shorthand, and a centring no mounted
+     test can see is a centring the next wave deletes.
+     ⚠ AND THE COLUMN IS CAPPED RATHER THAN EACH BUTTON, so the line that introduces the tournament
+     question and the way out of the prologue keep the answers' own measure instead of running the
+     width of the card beside them. `.prologue-answer` already declares `width: 100%`.
+     ⚠ IT COSTS HEIGHT, AND THAT IS PAID FOR RATHER THAN DENIED: the old block's second star claimed
+     the pairing «buys back most of what the wider column costs in height, which is what makes
+     «скролла не будет» reachable on the tallest card in the walk». Stacking gives that back, and the
+     card has been `max-height: 100%; overflow-y: auto` since round-20 #3 – measured at 768x640 the
+     tallest card was already 810px inside 640 and scrolling, so this changes how far it scrolls and
+     not whether it can. */
+  /* ⚠⚠ `width: 100%` IS NOT DECORATION HERE AND THE SHEET HAD ALREADY PAID FOR THIS LESSON ONCE.
+     src/style.css writes it out at `#app:has(> nav.tab-bar) > .app-content`: «a grid item with AUTO
+     INLINE MARGINS does not stretch – auto margins beat `justify-self: stretch`, so the box falls
+     back to max-content and the margins centre whatever is left.» At 1024 and up this element IS a
+     grid item (`grid-column: 1 / -1`, below), so the cap-plus-auto-margins pair alone shrank the
+     column to the widest LABEL: measured at 1280x600, the answers came out 105px wide on the age-6
+     card and 356 on the age-5 one. A definite width makes the auto margins resolve against the grid
+     area, the cap then bites, and the centring is centring. */
+  .prologue-card > .prologue-answers {
+    width: 100%;
+    max-width: 500px;
+    margin-left: auto;
+    margin-right: auto;
   }
 
   /* …and the age-5 card's three field rows pair up for the same reason: two of them are half-width
@@ -1124,14 +1161,29 @@ useDialogFocus(cardEl)
   }
 
   /* ⚠ AND THE HEIGHT CAP OF THE BAND BELOW IS LIFTED, because the reason for it is gone: beside the
-     words the picture costs the card no height at all unless it is taller than they are. */
+     words the picture costs the card no height at all unless it is taller than they are.
+
+     ⚠⚠ ROUND 37 – …AND ON THE CARDS WHERE IT *IS* TALLER, THE DECISION WAS RESTING ON IT. The
+     owner, 06.09: «на низких экранах кнопки выбора на онбординге прилипают к картинке, надо
+     починить.» Measured in Chromium on four of the five cards walked, at 1024x620 and at 1280x600
+     alike: the painting's bottom edge and the first answer's top edge were THE SAME PIXEL – gap 0.
+     The cause is this rule's own `margin: 0` meeting the card's `row-gap: 0` two rules up: the
+     card's rhythm is each block's own `margin-bottom`, and the picture is the one block that was
+     given none. Where the words are the taller column (the age-5 card, which carries the identity
+     form) the answers already stood 49px clear, which is why it reads as a defect on some cards and
+     not on others rather than as a layout that was never spaced.
+
+     ⚠ 14px IS THE BAND ABOVE'S OWN NUMBER, not a new one: `.prologue-card > .prologue-hero` at 768
+     is `margin: 0 auto 14px`. And it is on the PICTURE rather than on the answers deliberately – a
+     margin under the picture is absorbed whenever the words are taller, so the card that was
+     already clear does not gain 14px it never needed. */
   .prologue-card > .prologue-hero.prologue-hero {
     grid-column: 1;
     grid-row: 1 / span 20;
     align-self: start;
     width: 100%;
     height: auto;
-    margin: 0;
+    margin: 0 0 14px;
   }
 
   .prologue-card > .prologue-kicker,

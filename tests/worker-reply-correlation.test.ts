@@ -209,6 +209,47 @@ describe('every command answers with the arm REPLY_BY_COMMAND names for it', () 
       expect(arms.get(command), `'${command}' must succeed on a quiet career`).toBe(REPLY_BY_COMMAND[command])
     }
   }, 60_000)
+
+  it('⚠ E-05 – a refused save file answers with its CODE, not with prose the UI has to parse', async () => {
+    // ⭐ THE CLAIM THE GATE'S HEADER ALREADY MAKES: "the code exists so tests (and any future UI
+    // that wants to branch) never match on prose" (`engine/saveGuard.ts`). It was false at this
+    // boundary – `errorMsg` mapped `StaleRevisionError` and `SaveConflictError` and turned every
+    // `SaveFileError` into a bare sentence, so `WorkerErrorCode` could only ever hold two values
+    // and `game.ts`'s pass-through of `res.code` could only ever see them.
+    //
+    // ⚠ THREE KINDS, CHOSEN BECAUSE THEY DIE AT THREE DIFFERENT DEPTHS of the gate: the magic
+    // check before anything is read, the version check before decompression, and the checksum
+    // after it. One arm passing for all three is what says the code is being carried through the
+    // whole door rather than special-cased at one hatch.
+    const enc = new TextEncoder()
+    const good = await saveBytes(quietCareer('reply-codes'))
+
+    // ⚠ EACH ARM GETS ITS OWN COPY OF THE BYTES. A `new Uint8Array(buffer)` is a VIEW, so building
+    // the two damaged files over one buffer would have made the second edit land on top of the
+    // first and both arms describe the same file.
+    const notASave = enc.encode('definitely not a save').slice()
+    const future = new Uint8Array(good.slice(0))
+    new DataView(future.buffer).setUint32(8, 0xffff)
+    const rotted = new Uint8Array(good.slice(0))
+    rotted[rotted.length - 5] ^= 0xff
+
+    const cases: [string, ArrayBuffer][] = [
+      ['not-a-save', notASave.buffer as ArrayBuffer],
+      ['future-schema', future.slice().buffer as ArrayBuffer],
+      ['corrupted', rotted.slice().buffer as ArrayBuffer],
+    ]
+    for (const [code, bytes] of cases) {
+      const reply = await send({ type: 'importSave', bytes })
+      expect(reply.ok, `${code} must be refused`).toBe(false)
+      expect(reply.code, `${code}: the machine-readable kind must survive the boundary`).toBe(code)
+      // ...and the sentence is still there. `code` is ADDITIVE, which is the whole promise of the
+      // field – nothing that reads `error` today reads anything different.
+      expect(reply.error, `${code}: the player-readable message is still carried`).toBeTruthy()
+      // ⚠ AND NO `revision`: a refused file never measured itself against one. That field belongs
+      // to STALE_REVISION and SAVE_CONFLICT, and widening the union must not have widened it.
+      expect(reply.revision, `${code}: a refused file has no revision`).toBeUndefined()
+    }
+  }, 60_000)
 })
 
 describe('the four behaviours this typing wave promised not to disturb', () => {

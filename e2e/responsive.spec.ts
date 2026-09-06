@@ -18,7 +18,13 @@
 // is actually broken.
 
 import { test, expect } from './careerAt'
-import { answerOpeningKnock, dismissTourBriefing, enterConfirmButton, openMoney } from './journey'
+import {
+  answerOpeningKnock,
+  dismissTourBriefing,
+  enterConfirmButton,
+  openMoney,
+  weekButton,
+} from './journey'
 import type { Page } from '@playwright/test'
 
 test.use({ viewport: { width: 375, height: 812 } })
@@ -402,8 +408,15 @@ test('at 1280 the same week needs no paging, so it has no arrows – and the key
     cards: el.querySelectorAll('.event-card').length,
     overflow: el.scrollWidth - el.clientWidth,
   }))
-  // D16's finding, read back in a browser: three cards fit at this width, so a two-card week has
-  // nothing hanging past the edge.
+  // ⚠ RE-AIMED BY R37-3 (05.09) – THE ASSERTION IS UNTOUCHED AND ITS REASON IS NOT. It said «D16's
+  // finding, read back in a browser: three cards fit at this width», which was true while the desktop
+  // column was a third of the row. The owner then asked for the tablet's grid on the desktop –
+  // «сетку на 2 карточки desktop (как на tablet) по дефолту» – so three no longer fit, and a two-card
+  // week fits whole for the OTHER reason: the pair now fills the row exactly (measured in Chromium on
+  // this fixture, 468px + 12px + 468px = 948px of row at 1280). Either way there is nothing past the
+  // edge, which is what this test is about – but a comment that kept the old reason would be a lie
+  // the day somebody read it, and the three-card case is measured in
+  // tests/component/round34-week-stack.test.ts's `R37-3` arms instead.
   expect(state.cards).toBeGreaterThan(1)
   expect(state.overflow, 'a two-card week fits whole at 1280').toBe(0)
   await expect(row.locator('.week-arrow'), 'a week that fits whole draws no pager').toHaveCount(0)
@@ -636,3 +649,273 @@ test('P2-3: the week stands beside her face in the rail, on two lines, at 1280',
   // …and it fits the strip it lives in, which is the fit half a mounted test cannot answer.
   expect(seen!.widthUsed, 'the date is wider than the rail it sits in').toBeLessThan(seen!.railWidth)
 })
+
+// =================================================================================================
+// ⭐⭐⭐ THE HEIGHT THAT HURTS – round 37, 06.09
+// =================================================================================================
+//
+// ⚠ THIS HALF IS IN THIS FILE RATHER THAN IN ONE OF ITS OWN, and the reason is the file's own
+// subject rather than tidiness: seam #4 is «real layout at real sizes», and the suite that owns
+// that question at one size is the suite that owns it at the other. The header above asks «does it
+// fit ACROSS» at 375 and calls itself «the layout at the width that hurts»; the owner's two items
+// of 06.09 are the same question turned ninety degrees – a window WIDE enough for the rebuilt
+// tablet/desktop interface and NOT TALL ENOUGH for it. His words are in `docs/rounds/round-37.md`
+// and, in the original, beside each rule in the components.
+//
+// ⚠⚠ WHY THIS CANNOT BE A MOUNTED TEST, stated rather than assumed. Both defects are a BOX that is
+// smaller than what is in it: one grid track that collapsed and clipped an `overflow: hidden` card,
+// and one picture with no margin under it. happy-dom parses CSS and does no layout – every
+// `getBoundingClientRect()` there is zeros and no track has a size – so the mounted layer can say
+// only «is this rule on at this width». It does, in `tests/component/round37-short-screens.test.ts`.
+// This file is the half that measures.
+//
+// ⚠ AND IT ADDRESSES BOXES BY CLASS, WHICH IS THIS DIRECTORY'S ONE RULE BROKEN ON PURPOSE.
+// `e2e/README.md` and `journey.ts` say role-and-accessible-name only, and every NAVIGATION step
+// below obeys it – the knock, the week, `Begin`, `Watch`, `Tap to start` are all named. What cannot
+// obey it is the MEASUREMENT: a panel and a painting have no accessible name, because they are not
+// controls, and «the score readout is 81px taller than its own box» is not a claim about a control.
+// The same exemption `e2e/prologue.spec.ts` already takes for `.plo-skip` and `.prologue-answers`.
+//
+// ⚠ 375 IS WALKED WITH THE OTHERS AND ITS NUMBERS ARE ASSERTED, not skipped. Round 36's contract is
+// that nothing below 768 moves, and a phone that is merely absent from a suite is a phone nobody is
+// holding anyone to.
+interface Vp {
+  width: number
+  height: number
+}
+
+/** ⚠ EVERY ONE OF THESE IS SHORT, AND THE WIDTHS ARE HIS LADDER'S OWN BANDS
+ *  (docs/specs/responsive-2026-09.md): 768–900 fluid, the 901–1023 plateau, 1024+ desktop, and the
+ *  phone under all of it. A band missing from this list is a band where the defect can come back. */
+const SHORT: readonly Vp[] = [
+  { width: 1280, height: 600 },
+  { width: 1024, height: 620 },
+  { width: 900, height: 620 },
+  { width: 768, height: 640 },
+  { width: 375, height: 600 },
+]
+
+/** The phone at its own normal height, so «nothing moved below 768» is asserted where he plays it
+ *  and not only on a phone squeezed to 600. */
+const PHONE_TALL: Vp = { width: 375, height: 812 }
+
+// =================================================================================================
+// ITEM 1 – the live match, and «как будто вертикальный скролл запрещён»
+// =================================================================================================
+//
+// THE DEFECT, AS IT WAS MEASURED BEFORE THE FIX. Past 768 `.mv` is a grid whose first row is the
+// score panel and whose second is the transport and the commentary. `.mv` is `flex: 1; min-height: 0`
+// inside the takeover's scroller, so on a short window it is pinned to the port's height and the
+// grid has NEGATIVE free space – and an `auto` track then falls back to its item's minimum
+// contribution, which for `.mv-panel` (a `Card variant="photo"`, i.e. an `overflow: hidden` box) is
+// ZERO. So the row shrank the panel under its own content and the panel clipped the rest, with
+// nothing left in the chain to scroll: `.tf-body`'s scrollHeight EQUALLED its clientHeight.
+// Measured: 101px of the readout gone at 900x620, 81 at 768x640, 14 at 1280x600, and the takeover
+// with nothing to scroll at all.
+//
+// ⚠ SO THE ASSERTION IS REACHABILITY AND NOT PRESENCE, which is CLAUDE.md's own standard for this
+// family of defect («whatever you fix, the assertion is that the control can be REACHED, at every
+// width and at a short height»). Two halves, and both are needed: the panel does not clip, AND at
+// the end of the takeover's scroll the readout is inside the window with nothing over it.
+
+/** Into a live match on the `junior` career, by the route a player takes. */
+async function intoTheMatch(page: Page, vp: Vp): Promise<void> {
+  await page.setViewportSize(vp)
+  await answerOpeningKnock(page)
+  await weekButton(page).click()
+  const begin = page.getByRole('button', { name: 'Begin', exact: true })
+  await expect(begin).toBeVisible()
+  await begin.click()
+  await page.getByRole('button', { name: /^Watch/ }).first().click()
+  await expect(page.locator('.mv-panel')).toBeVisible()
+}
+
+interface MatchFit {
+  panelContent: number
+  panelBox: number
+  clipped: number
+  takeoverOverflow: number
+  statsTop: number
+  statsBottom: number
+  viewportHeight: number
+  coveredBy: string | null
+}
+
+/** Scroll the takeover to its end, then read the score readout off the window. */
+async function matchFit(page: Page): Promise<MatchFit> {
+  return page.evaluate(() => {
+    const body = document.querySelector('.tf-body') as HTMLElement
+    const panel = document.querySelector('.mv-panel') as HTMLElement
+    const stats = document.querySelector('.mv-stats') as HTMLElement
+    body.scrollTop = body.scrollHeight
+    const r = stats.getBoundingClientRect()
+    // What is actually painted at the readout's own bottom edge? A control pinned over it – the
+    // transport bar is `position: sticky` against the port's floor – would leave it "visible" to a
+    // box measurement and unreadable to a player.
+    const at = document.elementFromPoint(r.left + r.width / 2, r.bottom - 2)
+    const covered = at && !(at === stats || stats.contains(at))
+    return {
+      panelContent: panel.scrollHeight,
+      panelBox: panel.clientHeight,
+      clipped: panel.scrollHeight - panel.clientHeight,
+      takeoverOverflow: body.scrollHeight - body.clientHeight,
+      statsTop: Math.round(r.top),
+      statsBottom: Math.round(r.bottom),
+      viewportHeight: window.innerHeight,
+      coveredBy: covered ? `${at!.tagName.toLowerCase()}.${at!.className.toString().split(' ')[0]}` : null,
+    }
+  })
+}
+
+for (const vp of [...SHORT, PHONE_TALL]) {
+  test(`the live match's score readout can be reached at ${vp.width}x${vp.height}`, async ({
+    page,
+    careerAt,
+  }) => {
+    const crashes: string[] = []
+    page.on('pageerror', (error) => crashes.push(error.message))
+
+    await careerAt('junior')
+    await intoTheMatch(page, vp)
+    const fit = await matchFit(page)
+
+    // ⚠ THE ANTI-VACUITY ARM FIRST. A readout that is not on the page passes every claim below, and
+    // «four empty sets are equal» is the failure this round keeps writing down.
+    expect(fit.panelContent, 'the score panel measures as nothing – there is nothing to reach').toBeGreaterThan(200)
+
+    // ① The panel is never smaller than what is in it. This is the whole defect: `overflow: hidden`
+    //    makes the difference unreachable rather than merely below the fold.
+    // ⚠ SOFT for the same reason as the prologue's arms below: the two halves are two different
+    // failures of the same fix (the row-1 squeeze and the row-2 collapse), and on the unfixed tree
+    // they show up at different viewports – clipping at 768/900/1280, the transport bar over the
+    // readout at 1024. A hard first assertion would hide whichever came second.
+    expect
+      .soft(
+        fit.clipped,
+        `the score panel is clipping ${fit.clipped}px of itself at ${vp.width}x${vp.height} and it is an overflow:hidden box, so nothing can scroll to it`,
+      )
+      .toBeLessThanOrEqual(1)
+
+    // ② …and the readout really is on the window at the end of the scroll, with nothing over it.
+    expect.soft(fit.statsBottom, 'the readout ends below the window').toBeLessThanOrEqual(fit.viewportHeight)
+    expect.soft(fit.statsTop, 'the readout starts above the window').toBeGreaterThanOrEqual(0)
+    expect
+      .soft(fit.coveredBy, 'something is painted over the readout at the end of the scroll')
+      .toBeNull()
+
+    expect(crashes, 'the match screen threw').toEqual([])
+  })
+}
+
+// =================================================================================================
+// ITEM 2 – the prologue's choices, «прилипают к картинке» and «не в 2 колонки»
+// =================================================================================================
+//
+// ⚠ WHICH SURFACE HE MEANT WAS ESTABLISHED BY MEASUREMENT, NOT BY READING. Two facts, both taken in
+// Chromium before a line was changed, and only one surface in the new-career flow has either:
+//   * `.prologue-answers` is the only set of CHOICE buttons that sits under a picture, and on four
+//     of the five cards walked its first button began on the painting's LAST PIXEL – gap 0 at
+//     1024x620 and at 1280x600 alike;
+//   * it is also the only one arranged TWO to a row above 768 and one below, which is what makes
+//     «не в 2 колонки» a change that exists to be made. The wizard's own pair (`.ob-pair`) is two
+//     columns at EVERY width including 375, so «not two columns» there would move the phone – which
+//     he did not ask for and round 36's contract forbids.
+
+interface ChoiceFit {
+  buttons: { x: number; y: number; w: number }[]
+  rows: number
+  leftPad: number
+  rightPad: number
+  cardContentWidth: number
+  gapUnderThePicture: number
+}
+
+async function choiceFit(page: Page): Promise<ChoiceFit> {
+  return page.evaluate(() => {
+    const card = document.querySelector('.prologue-card') as HTMLElement
+    const hero = document.querySelector('.prologue-hero') as HTMLElement
+    const answers = document.querySelector('.prologue-answers') as HTMLElement
+    const cr = card.getBoundingClientRect()
+    const ar = answers.getBoundingClientRect()
+    const pad = getComputedStyle(card)
+    const buttons = Array.from(answers.querySelectorAll('button')).map((b) => {
+      const r = b.getBoundingClientRect()
+      return { x: Math.round(r.x), y: Math.round(r.y), w: Math.round(r.width) }
+    })
+    return {
+      buttons,
+      rows: new Set(buttons.map((b) => b.y)).size,
+      leftPad: Math.round(ar.left - cr.left),
+      rightPad: Math.round(cr.right - ar.right),
+      cardContentWidth: Math.round(cr.width - parseFloat(pad.paddingLeft) - parseFloat(pad.paddingRight)),
+      gapUnderThePicture: Math.round(ar.top - hero.getBoundingClientRect().bottom),
+    }
+  })
+}
+
+for (const vp of [...SHORT, PHONE_TALL]) {
+  test(`the onboarding's choices are one centred column at ${vp.width}x${vp.height}`, async ({
+    page,
+  }) => {
+    const crashes: string[] = []
+    page.on('pageerror', (error) => crashes.push(error.message))
+
+    await page.setViewportSize(vp)
+    await page.goto('/')
+    await page.getByRole('button', { name: 'Tap to start' }).click()
+    const card = page.getByRole('dialog')
+    await expect(card.getByRole('heading').first()).toBeVisible()
+
+    // --- the arrangement, on the card that carries FOUR controls -----------------------------
+    // ⚠ THE COUNT IS THE ANTI-VACUITY ARM. One button cannot tell a column from a grid, and the
+    // age-5 card is the only one in the walk with enough of them to say – three family origins and
+    // the way out. Taken as a COUNT rather than by label: every sentence in the prologue is a draft
+    // the owner has not read (`e2e/prologue.spec.ts` §8), so this file names none of them.
+    const five = await choiceFit(page)
+    expect(five.buttons.length, 'the age-5 card stopped carrying four controls').toBe(4)
+
+    // ⚠ SOFT, AND FOR ONE REASON THAT IS ABOUT PROVING THIS TEST RATHER THAN ABOUT TOLERANCE. The
+    // arrangement and the gap are his TWO complaints and they are one walk apart, so a hard failure
+    // on the first would stop the run before the second was ever measured – and a claim that has
+    // never been watched failing is a claim nobody has verified. On the unfixed tree this file
+    // reports both: «four controls are sharing 3 rows» AND «the first answer begins 0px under the
+    // painting». Every soft failure still fails the test.
+    expect
+      .soft(five.rows, `«одну под другой»: four controls are sharing ${five.rows} rows at ${vp.width}px`)
+      .toBe(4)
+    expect
+      .soft(
+        Math.abs(five.leftPad - five.rightPad),
+        `«посередине»: the column sits ${five.leftPad}px from the left and ${five.rightPad}px from the right`,
+      )
+      .toBeLessThanOrEqual(1)
+
+    if (vp.width < 768) {
+      // ⚠ BELOW 768 NOT ONE PIXEL MAY MOVE. The column is the card's own content width there, which
+      // is exactly what it was before this round – so a cap or a margin leaking under the media
+      // query fails here rather than in his hands.
+      expect
+        .soft(five.buttons[0].w, 'the phone column stopped being the card')
+        .toBe(five.cardContentWidth)
+    } else {
+      // #18, the half of the old two-up rule that survived: «максимум 500».
+      expect.soft(five.buttons[0].w, 'a choice button is over his 500 cap').toBeLessThanOrEqual(500)
+      expect.soft(five.buttons[0].w, 'the column collapsed to its labels').toBeGreaterThan(200)
+    }
+
+    // --- the gap, on the card where the picture is the taller column ---------------------------
+    // The age-6 card: no identity form beside the painting, so past 1024 the painting is what
+    // decides where the answers begin. Reached by taking the second control on the five, the way
+    // `e2e/prologue.spec.ts` walks it.
+    await page.locator('.prologue-answers').getByRole('button').nth(1).click()
+    await expect(card.getByRole('heading').first()).toBeVisible()
+    const six = await choiceFit(page)
+    expect(six.buttons.length, 'the age-6 card is not the one-answer card any more').toBe(1)
+    expect(
+      six.gapUnderThePicture,
+      `«прилипают к картинке»: the first answer begins ${six.gapUnderThePicture}px under the painting at ${vp.width}x${vp.height}`,
+    ).toBeGreaterThanOrEqual(12)
+
+    expect(crashes, 'the prologue threw').toEqual([])
+  })
+}

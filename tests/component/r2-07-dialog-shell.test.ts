@@ -82,8 +82,10 @@ import ForkDialog from '../../src/components/ForkDialog.vue'
 import RetirementDialog from '../../src/components/RetirementDialog.vue'
 import InjuryStopDialog from '../../src/components/InjuryStopDialog.vue'
 import ConfirmDialog from '../../src/components/ConfirmDialog.vue'
+import BirthdayDialog from '../../src/components/BirthdayDialog.vue'
+import KnockDialog from '../../src/components/KnockDialog.vue'
 import { useGameStore } from '../../src/stores/game'
-import { createWorld, measureCollegeOffer, tickWeek, toSnapshot } from '../../src/engine/world'
+import { createWorld, decideKnock, measureCollegeOffer, pendingBirthday, pendingKnock, tickWeek, toSnapshot } from '../../src/engine/world'
 import { onsetInjury } from '../../src/engine/world/injury'
 import { BODY_REGIONS } from '../../src/engine/body'
 import { rngFromSeed } from '../../src/engine/rng'
@@ -745,5 +747,140 @@ describe('R2-07 – round-20 #3 on all four: the decision is inside the phone', 
       /taller than the screen|outside the viewport/,
     )
     w.unmount()
+  })
+})
+
+// =================================================================================================
+// 7. T-04 – THE TWO BLOCKING OVERLAYS NOBODY HAD MEASURED: the birthday and the knock
+// =================================================================================================
+//
+// ⚠ THEY ARE NOT R2-07's FOUR, AND THEY ARE HERE ANYWAY. The birthday and the knock took the
+// accessible shell from D1 – the header at the top of this file says so – so they were never part of
+// the adoption this file is named for. What they never took is the measurement: mapping the thirteen
+// overlay components in `src/components/` to the files that both mount them and call `measureDialog`
+// or `assertDismissReachable`, ten were covered on 05.09 and three were not, and two of those three
+// are these. The third, `RankHelpDialog`, is informational and not mounted directly by any test.
+//
+// ⚠ AND THESE TWO ARE THE WORST TWO TO HAVE MISSED, which is why they come here rather than waiting
+// for the wave that next touches them. `src/engine/world/multiWeek.ts:314` lists BOTH `'knock'` and
+// `'birthday'` in `ADVANCE_REFUSALS`: while either is up the engine REFUSES to advance, and
+// `App.vue` says the birthday popup «fires ALWAYS». So a card of theirs that outgrows a phone is not
+// a cosmetic defect – it is the exact shape of round-20 #3, where the owner's career stopped on a
+// dismiss control he could not reach. Neither card had one `setViewport(` anywhere near it.
+//
+// ⚠ THE DECISION BLOCK IS THE DISMISS CONTROL on both, as it is on the fork and the retirement:
+// `birthday-dialog.test.ts` asserts in as many words that the birthday has «no way out that is not
+// an answer», and the knock has two answers and nothing else. So "reachable" means the ANSWERS are
+// reachable, and on both the block is the last thing in the card's flow.
+
+/** A real career ticked to a real birthday – the fixture birthday-dialog.test.ts walks, with its
+ *  own note: born 15 June so the ask lands mid-season. */
+function birthdaySnapshot(seed = 'r2-07-birthday'): Snapshot {
+  const world = createWorld(seed, { ...DEFAULT_PROFILE, birthMonth: 6, birthDay: 15, coachTier: 'self' })
+  const rng = rngFromSeed(world.seed)
+  for (let i = 0; i < 60 && pendingBirthday(world) === null; i++) {
+    if (pendingKnock(world)) decideKnock(world, 'rest')
+    tickWeek(world, rng)
+  }
+  const snap = toSnapshot(world)
+  expect(snap.birthdayPrompt, 'the fixture never reached a birthday – nothing below would be a measurement').toBeTruthy()
+  return snap
+}
+
+/** A real knock, raised by the real tick and left UNANSWERED – which is the state the engine refuses
+ *  to advance out of. */
+function knockSnapshot(seed = 'r2-07-knock'): Snapshot {
+  const world = createWorld(seed)
+  const rng = rngFromSeed(world.seed)
+  for (let i = 0; i < 120 && !pendingKnock(world); i++) tickWeek(world, rng)
+  const snap = toSnapshot(world)
+  expect(snap.knockPrompt, 'the fixture never reached a knock – nothing below would be a measurement').toBeTruthy()
+  return snap
+}
+
+function mountRefusalForFit(which: 'birthday' | 'knock'): Measured {
+  setViewport(PHONE)
+  const store = useGameStore()
+  let w: VueWrapper
+  let dismissSelector: string
+  if (which === 'birthday') {
+    store.snapshot = birthdaySnapshot()
+    w = mount(BirthdayDialog, { attachTo: document.body })
+    dismissSelector = '.birthday-choices'
+  } else {
+    store.snapshot = knockSnapshot()
+    w = mount(KnockDialog, { attachTo: document.body })
+    dismissSelector = '.knock-choices'
+  }
+  const card = document.querySelector('.dialog-overlay .dialog-card')!
+  const dismiss = document.querySelector(`.dialog-overlay ${dismissSelector}`)!
+  expect(card, `${which}: the card is up – nothing below is vacuous`).toBeTruthy()
+  expect(dismiss.querySelectorAll('button').length, `${which}: the decision block IS the way out`).toBeGreaterThan(0)
+  return { w, card, dismiss }
+}
+
+const REFUSALS = ['birthday', 'knock'] as const
+
+describe('⭐ T-04 – the birthday and the knock refuse the advance, so their answers must be on the phone', () => {
+  beforeEach(reset)
+
+  for (const which of REFUSALS) {
+    it(`⚠ ${which}: at 375x667 the answers are inside the viewport, and the card is bounded`, () => {
+      const { w, card, dismiss } = mountRefusalForFit(which)
+      const fit = assertDismissReachable(card, dismiss, PHONE, `${which} (T-04)`)
+      // The same 667 - 2x16 = 635 the four above are measured in: one scrim, one arithmetic.
+      expect(fit.available.height).toBe(635)
+      expect(fit.cap).toBeLessThanOrEqual(635)
+      w.unmount()
+    })
+  }
+
+  it('⚠⚠ MUTATION PROOF, HALF ONE – strip the height cap and the same assertion goes red on both', () => {
+    for (const which of REFUSALS) {
+      reset()
+      const { w, card, dismiss } = mountRefusalForFit(which)
+      ;(card as HTMLElement).style.maxHeight = 'none'
+      ;(card as HTMLElement).style.overflowY = 'visible'
+      expect(
+        () => assertDismissReachable(card, dismiss, PHONE, `${which} (cap removed)`),
+        `${which}: the cap could be removed and this test would not notice`,
+      ).toThrow(/declares no height bound|taller than the screen|outside the viewport/)
+      w.unmount()
+    }
+  })
+
+  it('⚠⚠ MUTATION PROOF, HALF TWO – MAKE THE DIALOG TOO TALL and the answers leave the screen', () => {
+    // ⚠ THE HALF THAT MATTERS, AND THE REASON IT IS SEPARATE. Half one proves the DECLARATION is
+    // there; it fires on a card whose content still fits. Round-20 #3 was not a missing declaration,
+    // it was a card that had grown «one honest sentence at a time» until Continue sat at y=821 on a
+    // 667px screen. So this arm reproduces the defect itself: one more paragraph in the card, tall
+    // enough to push past the fold, with the cap gone – the state the shipped bug was in. On a
+    // bounded card the same paragraph changes nothing, which is what the cap is FOR.
+    for (const which of REFUSALS) {
+      reset()
+      const { w, card, dismiss } = mountRefusalForFit(which)
+      const bounded = assertDismissReachable(card, dismiss, PHONE, `${which} (bounded)`)
+      const grown = document.createElement('p')
+      grown.style.height = '900px' // one very long paragraph, as tall as a phone and a half
+      card.insertBefore(grown, dismiss)
+      // Still fine WHILE the cap holds: the card cannot grow past 635 and the answers stay put.
+      const capped = assertDismissReachable(card, dismiss, PHONE, `${which} (grown, still capped)`)
+      expect(capped.contentFloor, `${which}: the paragraph really did make the content taller`).toBeGreaterThan(
+        bounded.contentFloor + 800,
+      )
+      // ...and the cap is what absorbs it: the card stops at the room it has instead of following
+      // its content, and the answers stay on the screen (the call above would have thrown).
+      expect(capped.cardHeight, `${which}: the cap absorbed the growth`).toBeLessThanOrEqual(capped.available.height)
+      expect(capped.cardBottom, `${which}: ...and the card's bottom is still on the phone`).toBeLessThanOrEqual(667)
+      expect(capped.scrollable, `${which}: and what is past the fold can be brought into view`).toBe(true)
+      // Now the round-20 card: too tall AND unbounded.
+      ;(card as HTMLElement).style.maxHeight = 'none'
+      ;(card as HTMLElement).style.overflowY = 'visible'
+      expect(
+        () => assertDismissReachable(card, dismiss, PHONE, `${which} (too tall, unbounded)`),
+        `${which}: a card taller than the phone with no bound must not pass`,
+      ).toThrow(/taller than the screen|outside the viewport/)
+      w.unmount()
+    }
   })
 })

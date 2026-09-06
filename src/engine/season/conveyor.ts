@@ -99,8 +99,35 @@ export function stayChance(ageYears: number, standing: number): number {
 }
 
 /** ONE SEASON of turnover, applied in place. Call it at the season boundary, AFTER `ageCohort` –
- *  the question is who is still here at her new age, not at her old one. */
-export function renewCohort(cohort: AiPlayer[], seedStr: string, seasonIndex: number): Turnover {
+ *  the question is who is still here at her new age, not at her old one.
+ *
+ *  ⭐⭐⭐ `keep` – E-01 (05.09 engine review): IDS THE WORLD HAS ALREADY PROMISED, WHICH THIS FUNCTION
+ *  MAY NOT RETIRE THIS SEASON. Round 35 #14 made the published first-round draw a fact
+ *  (`world/draw.ts`), and `tickWeek` publishes it at week 52k − 1 and plays it at week 52k – with
+ *  the conveyor running BETWEEN them, in phase 1, against a match that resolves in phase 5. A girl
+ *  retired here at that moment leaves the field before her own match, `phaseHerWeek` cannot find her
+ *  and falls back to a live draw with no record that a promise was broken. Reproduced by the review
+ *  on 3 of 20 boundary-week events and 0 of 301 elsewhere; it is the owner's own 03.09 complaint
+ *  («мне сказали "играем против №118" … соперник в первом раунде №76») recurring once a season.
+ *
+ *  ⚠ IT DEFERS A DEPARTURE, IT DOES NOT CANCEL ONE. A kept player is asked again at the next
+ *  boundary with no memory of this one, and by then her promise has been played and pruned.
+ *
+ *  ⚠ ZERO EFFECT ON THE STREAM, AND THAT IS WHY THE FLAG IS READ AFTER THE DRAW AND NOT INSTEAD OF
+ *  IT. `rng()` is still called once per player, in cohort order, before `keep` is consulted – the
+ *  same discipline `resolveBaseCosts` follows for its conditional fourth draw – so the intake begins
+ *  at the same stream position it always did and the same (seed, season, field) yields the same
+ *  verdicts. The MAIN stream is not involved at all (this is `seed:conveyor:<season>`).
+ *
+ *  ⚠ AND THE FIELD SIZE DOES NOT MOVE, which is the one thing this module says nothing is allowed to
+ *  do: the intake below is built from `left` AFTER the exemption, so a kept player takes the chair a
+ *  newcomer would have had. `left` and `joined` stay the same length. */
+export function renewCohort(
+  cohort: AiPlayer[],
+  seedStr: string,
+  seasonIndex: number,
+  keep?: ReadonlySet<string>,
+): Turnover {
   const rng = rngFromSeed(`${seedStr}:conveyor:${seasonIndex}`)
 
   // Standing is read ONCE, from the field as it stands before anybody leaves, so a player's fate
@@ -115,7 +142,10 @@ export function renewCohort(cohort: AiPlayer[], seedStr: string, seasonIndex: nu
   // One draw per player, in cohort order – the count depends on the field SIZE, which never changes,
   // so the stream position where the intake begins is fixed.
   for (const p of cohort) {
-    if (rng() <= stayChance(p.ageYears, standing.get(p.id) ?? 0)) survivors.push(p)
+    // ⚠ THE DRAW IS TAKEN FIRST AND UNCONDITIONALLY. `keep` decides what to do with the answer, never
+    // whether to ask the question – see the note on the parameter.
+    const stays = rng() <= stayChance(p.ageYears, standing.get(p.id) ?? 0)
+    if (stays || keep?.has(p.id)) survivors.push(p)
     else left.push(p)
   }
 

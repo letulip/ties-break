@@ -38,6 +38,7 @@
 import { computed, ref, useTemplateRef } from 'vue'
 import { useGameStore } from '../stores/game'
 import { useDialogFocus } from '../composables/dialogFocus'
+import StoreError from './ui/StoreError.vue'
 import { TIERS, TIER_SHORT, WEEKS_PER_YEAR } from '../engine/season/calendar'
 import {
   COLLEGE_TIER_NAME,
@@ -449,6 +450,17 @@ useDialogFocus(card)
              this card by exactly the route CLAUDE.md describes: one honest sentence at a time. -->
         <p class="fork-places-note">Four years after she leaves, over 53 careers.</p>
       </section>
+
+      <!-- ⚠⚠ U-02 – THE STORE'S REFUSAL, ABOVE THE THREE ANSWERS AND BELOW EVERYTHING ELSE.
+           Answering this card commits, and until now a refused answer left the dialog standing
+           with nothing said: the card has no dismiss and no way out that is not an answer, so a
+           silent refusal reads as a dead control. It stays ABOVE `.fork-answers` because
+           `measureDialog` reads the dismiss box off the card's bottom edge and the answers have
+           to remain the last thing in the flow. The card is capped and scrolls
+           (`.dialog-card`, round-20 #3), so a line that appears only on a refusal cannot put the
+           answers out of reach – asserted at 375x667 and 320x568 WITH the line up in
+           tests/component/round36-error-surfaces.test.ts. No new wording. -->
+      <StoreError />
 
       <div class="fork-answers">
         <button class="fork-answer" type="button" :disabled="game.busy" @click="answer('continue')">

@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 
+import { createHash } from 'node:crypto'
 import { promises as fs } from 'node:fs'
 import path from 'node:path'
 
@@ -23,6 +24,7 @@ const updateBaseline = args.has('--update-baseline')
 //
 //   unclassified docs -> ERROR for a new one. Frontmatter costs six lines; there is no legitimate
 //                        reason for a document added today to arrive without it.
+//                        ...AND ERROR FOR AN EDITED GRANDFATHERED ONE – see the block below.
 //   source size       -> WARNING, always, for both "newly over" and "grew fast". Everything the
 //                        SOURCE_BUDGETS note below says still stands: a size trigger is a review
 //                        question, not a defect, and a gate that goes red on the first honest
@@ -32,6 +34,43 @@ const updateBaseline = args.has('--update-baseline')
 // A baseline entry that DISAPPEARS never fails. Tightening must not require a co-ordinated commit,
 // or the next person banks their new debt into the baseline instead of paying it.
 const BASELINE_FILE = 'tools/generated/context-baseline.json'
+
+// --- ...AND THE SECOND HALF OF THAT SENTENCE, WHICH THE CODE DID NOT KEEP (T-03, 05.09) ---------
+//
+// ⚠ THE GATE PROMISED A PROPERTY IT DID NOT ENFORCE, for two reviews running. The header above says
+// «an existing unclassified document needs metadata when MATERIALLY EDITED», and the check was
+// `unclassified.filter((file) => !legacyUnclassified.has(file))` – MEMBERSHIP ONLY. So a
+// grandfathered document could be rewritten end to end, doubled in size, or repurposed into a
+// different document under the same path, and the audit stayed green. 135 paths are grandfathered;
+// that is 135 files with no governance and no ratchet on them at all. QA-35 said so on 2 September
+// and the code was unchanged on 5 September.
+//
+// ⚠ A GATE WHOSE COMMENT OVERSTATES IT IS WORSE THAN A GATE THAT DOES LESS AND SAYS SO, because the
+// next reader stops looking. That is the actual defect here – the enforcement gap is a day's work,
+// the false confidence had already survived two reviews.
+//
+// SO: the baseline records a CONTENT HASH per grandfathered path, and an edit that leaves the file
+// still unclassified is an ERROR naming it. Three properties, all deliberate:
+//
+//   * CONTENT, NOT mtime AND NOT THE GIT INDEX. mtime moves on a checkout, a stash pop and a clone,
+//     so it would redden a gate for work nobody did; the index needs git to be present and the
+//     script runs in `check` before anything else. A hash of the bytes is exactly the question
+//     being asked – "is this a different document than the one we grandfathered?" – and needs
+//     neither a network call nor a repository.
+//   * IT IS STILL ONE-WAY. Classifying the file removes it from `unclassified` and the hash stops
+//     being consulted; deleting it does the same. Only "edited AND still ungoverned" is an error,
+//     and the fix is the four frontmatter lines the document should have had.
+//   * A PATH WITH NO RECORDED HASH IS A WARNING, NOT AN ERROR. A baseline written by the version of
+//     this script that predates the hashes cannot arm this half, and a gate that goes red because
+//     its own baseline is old is a gate people delete. It says so and asks for `context:baseline`.
+const HASH_LENGTH = 16 // 64 bits of sha256 – a collision here would have to be a crafted document
+
+// ⚠ THE HASHES WERE ADDED WITHOUT RE-SNAPSHOTTING THE SIZE HALF, ON PURPOSE. Running
+// `--update-baseline` would also have re-recorded `sourceOverBudget` and `sourceMeasures` at
+// today's tree, silently discarding sixteen live "growing fast" deltas (world/coachMarket.ts
+// 1,303 -> 1,742 lines and fifteen others) – which is precisely the "bank the new debt into the
+// baseline" move the note above forbids. So `unclassifiedDocHashes` was written beside the
+// untouched 2026-08-24 fields, and carries its own date.
 
 // A file joins the watch list at 60% of a trigger, not at 100%: the interesting warning is the one
 // that arrives BEFORE the threshold, and a baseline listing only over-budget files cannot produce a
@@ -260,6 +299,11 @@ async function sourceBudgets() {
 }
 
 /** The committed snapshot the ratchet and the delta report are measured against. */
+/** The document's bytes, as a short sha256. See the HASH_LENGTH note. */
+function contentHash(text) {
+  return createHash('sha256').update(text).digest('hex').slice(0, HASH_LENGTH)
+}
+
 async function readBaseline() {
   try {
     return JSON.parse(await fs.readFile(path.join(root, BASELINE_FILE), 'utf8'))
@@ -542,6 +586,9 @@ async function main() {
       characters: text.length,
       lines: text.split(/\r?\n/).length,
       estimatedTokens: estimateTokens(text),
+      // The whole file, frontmatter included: a document that GAINS frontmatter leaves the
+      // unclassified list altogether, so the hash is never consulted for it again.
+      sha: contentHash(text),
       metadata: frontmatter?.metadata ?? null,
       body: frontmatter?.body ?? text,
       // ⚠ HOW MANY LINES THE FRONTMATTER ATE. Without it a body-relative line number is reported as a
@@ -659,17 +706,25 @@ async function main() {
   const baseline = await readBaseline()
 
   if (updateBaseline) {
+    const today = new Date().toISOString().slice(0, 10)
     const next = {
       note: 'Generated by `npm run context:baseline`. A one-way ratchet – see scripts/context-audit.mjs.',
-      updated: new Date().toISOString().slice(0, 10),
+      updated: today,
       unclassifiedDocs: [...unclassified].sort(),
+      // The edit half of the document ratchet: what each grandfathered path CONTAINED when it was
+      // grandfathered. Rewriting one of these without adding frontmatter is an error, not a shrug.
+      unclassifiedDocHashesUpdated: today,
+      unclassifiedDocHashes: Object.fromEntries(
+        [...unclassified].sort().map((file) => [file, byFile.get(file).sha]),
+      ),
       sourceOverBudget: source.over.map((entry) => entry.file).sort(),
       sourceMeasures: Object.fromEntries(Object.entries(source.measures).sort(([a], [b]) => (a < b ? -1 : 1))),
     }
     await fs.mkdir(path.dirname(path.join(root, BASELINE_FILE)), { recursive: true })
     await fs.writeFile(path.join(root, BASELINE_FILE), `${JSON.stringify(next, null, 2)}\n`)
     console.log(
-      `context baseline written: ${next.unclassifiedDocs.length} unclassified docs, ` +
+      `context baseline written: ${next.unclassifiedDocs.length} unclassified docs ` +
+        `(${Object.keys(next.unclassifiedDocHashes).length} hashed), ` +
         `${next.sourceOverBudget.length} over budget, ${Object.keys(next.sourceMeasures).length} watched source files`,
     )
     return
@@ -685,6 +740,28 @@ async function main() {
     errors.push(
       `${file}: new document with no governance frontmatter – add type/status/area/last-reviewed ` +
         `(the legacy ${legacyUnclassified.size} are grandfathered, a new one is not)`,
+    )
+  }
+
+  // ...AND THE EDIT HALF – T-03. Grandfathered is not the same as exempt: the promise at the head of
+  // this file is that an EDITED legacy document has to gain metadata, and until now nothing looked.
+  const legacyHashes = baseline?.unclassifiedDocHashes ?? {}
+  const editedUnclassified = unclassified
+    .filter((file) => legacyUnclassified.has(file) && legacyHashes[file] && byFile.get(file)?.sha !== legacyHashes[file])
+    .sort()
+  const unhashedLegacy = [...legacyUnclassified].filter((file) => unclassified.includes(file) && !legacyHashes[file])
+  for (const file of editedUnclassified) {
+    errors.push(
+      `${file}: grandfathered document EDITED and still has no governance frontmatter – add ` +
+        `type/status/area/last-reviewed (baseline ${legacyHashes[file]}, now ${byFile.get(file).sha}). ` +
+        `Grandfathered means "not classified yet", not "exempt": the day it is touched is the day it is classified`,
+    )
+  }
+  if (baseline && unhashedLegacy.length) {
+    warnings.push(
+      `${unhashedLegacy.length} grandfathered ${unhashedLegacy.length === 1 ? 'document has' : 'documents have'} ` +
+        `no recorded hash, so the EDIT half of the ratchet is unarmed for ${unhashedLegacy.length === 1 ? 'it' : 'them'} – ` +
+        `run \`npm run context:baseline\``,
     )
   }
   if (!baseline) {
@@ -719,6 +796,8 @@ async function main() {
     ratchet: {
       baseline: baseline ? `${BASELINE_FILE} (${baseline.updated})` : null,
       newUnclassifiedDocs: newlyUnclassified,
+      editedUnclassifiedDocs: editedUnclassified,
+      unhashedGrandfathered: unhashedLegacy.length,
       classifiedSinceBaseline,
       newlyOverBudget: deltas.newlyOver,
       growing: deltas.growing,
@@ -773,7 +852,9 @@ async function main() {
       `  since ${baseline ? `the baseline of ${baseline.updated}` : 'no baseline (run npm run context:baseline)'}:` +
         (baseline
           ? ` ${deltas.newlyOver.length} newly over a trigger, ${deltas.growing.length} growing fast, ` +
-            `${deltas.shrunk.length} smaller, ${classifiedSinceBaseline.length} docs classified`
+            `${deltas.shrunk.length} smaller, ${classifiedSinceBaseline.length} docs classified, ` +
+            `${editedUnclassified.length} grandfathered docs edited without classifying ` +
+            `(${legacyUnclassified.size - unhashedLegacy.length} of ${legacyUnclassified.size} hashed)`
           : ''),
     )
     for (const entry of deltas.newlyOver) {

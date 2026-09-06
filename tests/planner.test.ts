@@ -1232,7 +1232,14 @@ describe('P8 — deadline stop respects the point band', () => {
 // P9 — snapshot + UI wiring (source-level, mirroring the B7 pattern).
 // ---------------------------------------------------------------------------
 describe('P9 — snapshot + planner UI', () => {
-  it('the snapshot carries bookings and the recovery buff', () => {
+  it('the snapshot carries bookings, and the recovery buff lives on the world', () => {
+    // ⚠⚠ RE-AIMED BY E-07 (05.09 engine review), NOT WEAKENED. The last line read
+    // `snap.recoveryBuff`, a Snapshot member no screen, store, composable or viz module has ever
+    // read – it was surfaced "so the UI can show that the expensive package is still working" and
+    // no UI ever did, so E-07 took it off the wire. The BUFF is untouched, and the claim worth
+    // making about it is the one below: it is persisted state that this file's own arms above
+    // create and expire, not a field on a message. Losing the wire copy must not be allowed to read
+    // as losing the mechanic, which is precisely why the assertion moved instead of going away.
     const w = createWorld('p9-snap', bgProfile('middle'))
     const week = freeWeek(w)
     bookVacation(w, week, 'grandma')
@@ -1240,7 +1247,7 @@ describe('P9 — snapshot + planner UI', () => {
     const snap = toSnapshot(w)
     expect(snap.vacations).toEqual([{ week, packageId: 'grandma', paidCents: w.vacations[0].paidCents }])
     expect(snap.practices).toEqual([{ week: week + 1, paidCents: w.practices[0].paidCents, withCoach: true }])
-    expect(snap.recoveryBuff).toBeNull()
+    expect(w.recoveryBuff).toBeNull()
   })
 
   it('SeasonScreen hides OUTGROWN events, keeps locked-ahead ones, and offers "+ Plan week"', () => {

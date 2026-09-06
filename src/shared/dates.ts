@@ -241,25 +241,14 @@ export function weekOfDate(month: number, day: number, year: number): number | n
   return null
 }
 
-/** The FIRST career week whose Monday falls in `month` of `year`, or null when that month is outside the
- *  career's calendar.
- *
- *  Walks rather than computes: a season's anchor is a Monday and months are not week-aligned, so
- *  closed-form arithmetic would be off by up to six days twelve times a year. One season is 52
- *  comparisons and this is called at most once per season, so the loop is free.
- *
- *  ⚠ SCANS ONE SEASON, not the whole career, because re-anchoring made that exact: season N covers
- *  `year` = EPOCH_YEAR + N from its first Monday (always Jan 1-7) to its offset-51 Monday (always in
- *  December). No month of `year` can be reached from any other season's weeks. */
-export function firstWeekOfMonth(month: number, year: number): number | null {
-  const seasonIndex = year - EPOCH_YEAR
-  for (let offset = 0; offset < WEEKS_IN_SEASON; offset++) {
-    const w = seasonIndex * WEEKS_IN_SEASON + offset
-    const d = weekStart(w)
-    if (d.year === year && d.month + 1 === month) return w
-  }
-  return null
-}
+/** ⚠ `firstWeekOfMonth(month, year)` STOOD HERE AND IS GONE (E-08, 05.09 engine review). It answered
+ *  "the first career week whose Monday falls in this month" by walking one season, and it had ZERO
+ *  references anywhere in `src`, `tests`, `tools`, `scripts` or `e2e` – not even inside this file.
+ *  Two previous reviews had already reported it (docs/review-principles-2026-08 and -08-23) and no
+ *  ruling ever reprieved it, which is the difference between this and `ENDING_BLURB`: an unconsumed
+ *  EXPORT is a candidate for deletion, unconsumed WRITING is a candidate for the owner (round 22).
+ *  Its arithmetic is not lost – `weekOfDate` above answers the general question, `weekStart` gives
+ *  any week its date, and the walk was six lines. */
 
 /** The calendar year the week's Monday falls in.
  *
