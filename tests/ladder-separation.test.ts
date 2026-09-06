@@ -338,13 +338,42 @@ describe('S4 — no surface answers "her rank" with the international alias', ()
     //
     // It bans the READ, not the field: `Snapshot.kidRank` is a deliberate, pinned alias of
     // `ladders.itf` and the season wrap-up prints it ON PURPOSE, labelled "International rank".
-    for (const rel of [
-      '../src/App.vue',
-      '../src/components/WeekRecapCard.vue',
-      '../src/components/TournamentFlow.vue',
-      '../src/components/screens/SeasonScreen.vue',
-    ]) {
+    //
+    // ⚠ RE-AIMED BY T-08 (06.09) – THE BAN NEEDED A POSITIVE HALF, BECAUSE A BAN IS SATISFIED BEST
+    // BY A FILE THAT SAYS NOTHING. The tests-and-tooling lane sampled this `it` and classified it as
+    // one of four in the estate that «could pass against a deleted feature»
+    // (docs/review-principles-2026-09-05/06-tests-tooling.md, T-08). It was right, and the hole is
+    // exact: take the rank read OUT of any of these four surfaces – print no rank there at all –
+    // and every assertion below stays green, because the only thing asserted was an absence. The
+    // owner's ruling on the class was «мне кажется если функции удаляются, то и тесты надо
+    // чистить»; a pin that cannot notice the deletion is not cleaned by removing it, it is cleaned
+    // by making it bite, so the read each surface DOES make is now required by name.
+    //
+    // ⚠ AND THE REQUIREMENT IS PER FILE, WHICH IS THE HONEST SHAPE AND NOT A CONVENIENCE. Three of
+    // the four ask the SNAPSHOT which table she is in (`activeLadderOfSnapshot`, one implementation
+    // of one question). The fourth cannot and its own header says why: TournamentFlow prints the
+    // rank of the table THIS tournament is played on, which only the engine knows at reveal time,
+    // so it reads `PendingView.kidRank` / `PendingView.ladder` instead – «a component re-deriving
+    // "which ladder is this" is a second place to get it wrong». One shared expectation would have
+    // been wrong for it, and making it adopt `activeLadderOfSnapshot` to satisfy a test would be
+    // this file re-introducing the bug it exists to prevent.
+    const ACTIVE_LADDER_READ: Record<string, readonly RegExp[]> = {
+      '../src/App.vue': [/activeLadderOfSnapshot\(/],
+      '../src/components/WeekRecapCard.vue': [/activeLadderOfSnapshot\(/],
+      '../src/components/screens/SeasonScreen.vue': [/activeLadderOfSnapshot\(/],
+      '../src/components/TournamentFlow.vue': [/pending\.value\?\.kidRank/, /pending\.value\?\.ladder/],
+    }
+    for (const [rel, reads] of Object.entries(ACTIVE_LADDER_READ)) {
       const src = codeOnly(read(rel))
+      for (const pattern of reads) {
+        expect(
+          src,
+          `${rel} no longer reads a rank off the ACTIVE ladder (${pattern.source}). Either the surface ` +
+            `stopped printing a rank – in which case say so and take its row out of this map – or it ` +
+            `went back to a field that answers a different question. The bans below cannot tell those ` +
+            `two apart, which is why this line is in front of them.`,
+        ).toMatch(pattern)
+      }
       expect(src, `${rel} still reads snapshot.kidRank`).not.toMatch(/snapshot\?*\.\s*kidRank/)
       expect(src, `${rel} still reads snapshot.prevKidRank`).not.toMatch(/snapshot\?*\.\s*prevKidRank/)
     }

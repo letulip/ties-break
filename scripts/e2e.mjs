@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
-// THE END-TO-END SUITE: real Chromium, a real production build, and two preconditions checked
-// before any of it starts.
+// THE END-TO-END SUITE: real Chromium, a real production build, three preconditions checked before
+// any of it starts, and one post-condition over what the run produced.
 //
 // ⚠ WHY THIS IS A SCRIPT AND NOT `"test:e2e": "playwright test"`. Both of the ways this run fails
 // before it has run anything produce an error that names the wrong thing:
@@ -31,8 +31,11 @@
 
 import { spawnSync } from 'node:child_process'
 import { existsSync, readFileSync } from 'node:fs'
+import { createRequire } from 'node:module'
 import { createServer } from 'node:net'
+import { fileURLToPath } from 'node:url'
 import { chromium } from '@playwright/test'
+import { staleBaselineEntries } from './lib/a11y-baseline.mjs'
 
 /** Parsed out of playwright.config.ts so the two cannot drift - the same idiom scripts/sim.mjs uses
  *  to read HEAVY_SIM_FILES out of vite.config.ts. A port checked here that the config no longer
@@ -78,6 +81,32 @@ for (const port of servePorts()) {
   process.exit(1)
 }
 
+// ⚠⚠ THE THIRD PRECONDITION, AND IT IS A WARNING RATHER THAN A STOP (T-09, 06.09). `e2e/a11y.spec.ts`
+// runs axe-core over every screen and every overlay; `@axe-core/playwright` is not yet in
+// `package.json`, so those tests SKIP and the rest of the suite is untouched. This is the same
+// argument as the two stops above and as scripts/graph.mjs's: a dependency that is merely absent
+// must announce itself in one line, because the failure mode otherwise is a suite that quietly
+// stops asking - and a skipped a11y pass looks exactly like a passing one in a summary.
+//
+// ⚠ IT DOES NOT EXIT. The missing package costs the run 23 scans; it costs it no coverage that ever
+// existed, and the keyboard half of that spec - focus trap, Escape policy, focus restoration - needs
+// no dependency and runs today. Failing the whole suite over it would take the parity harness and
+// the seven journeys down with it, which is a worse trade than a loud line.
+//
+// The one command is in e2e/axe.ts's header along with the reason it is not already run: adding the
+// package to `package.json` WITHOUT `package-lock.json` breaks `npm ci`, which is the first step of
+// the CI e2e job, so the two files have to move together and only an install moves them together.
+const require = createRequire(import.meta.url)
+try {
+  require.resolve('@axe-core/playwright')
+} catch {
+  console.warn('  e2e: @axe-core/playwright is not installed - the accessibility SCAN will skip.')
+  console.warn('       Run:  npm i -D @axe-core/playwright')
+  console.warn('       (~640 KiB, once. It updates package.json AND package-lock.json together,')
+  console.warn('        which is what keeps `npm ci` - and the CI e2e job - valid.)')
+  console.warn('       The keyboard half of e2e/a11y.spec.ts needs no dependency and still runs.')
+}
+
 // ⚠ `--report` IS THE SHOWCASE MODE, AND IT IS A SECOND MODE ON PURPOSE (S3). The default run is
 // deliberately fast and quiet: `trace: 'on-first-retry'` in playwright.config.ts records nothing at
 // all on a green run, because a trace is tens of MB and the only run anyone opens is the one that
@@ -104,9 +133,41 @@ if (wantsReport) {
   process.exitCode = run.status ?? 1
 } else if (run.status === 0) {
   console.log(`  e2e: green in ${secs}s`)
+  pruneA11yBaseline(passThrough)
 } else {
   // The HTML report is the thing to open, and it is also what CI uploads - so name it in both
   // places rather than leaving a failed run to guess.
   console.error(`  e2e: FAILED (${secs}s) - open the report with \`npx playwright show-report\``)
   process.exitCode = run.status ?? 1
+}
+
+// ⭐⭐ THE ACCESSIBILITY BASELINE'S ONE-WAY RATCHET – the shrink direction, once, after the suite.
+//
+// `e2e/a11y.spec.ts` fails a screen when a NEW violation appears; it deliberately does not fail when
+// one disappears. The cost of that choice is a debt file that only ever grows, and an unpruned debt
+// file is an allowlist wearing a different hat. The whole argument, and why this is not a Playwright
+// test, is in scripts/lib/a11y-baseline.mjs.
+//
+// ⚠⚠ TWO PRECONDITIONS, AND BOTH MAKE AN HONEST "CANNOT TELL" RATHER THAN A WRONG ANSWER:
+//   * A GREEN RUN ONLY (the caller). A red run may have stopped a screen before it scanned.
+//   * NO ARGUMENTS AT ALL. This is deliberately blunt rather than a list of "filtering" flags:
+//     `-g`, a spec path, `--shard`, `--last-failed` and `--only-changed` all run a SUBSET, and every
+//     surface a subset did not visit would look like a fixed defect. Enumerating them is a list that
+//     rots the next time Playwright adds one. `npm run test:e2e` with no arguments is what CI runs
+//     and what a pre-PR check runs, which is where this needs to be right.
+function pruneA11yBaseline(passedArgs) {
+  if (passedArgs.length > 0) return
+
+  const stale = staleBaselineEntries(
+    fileURLToPath(new URL('../test-results/a11y-findings.jsonl', import.meta.url)),
+    fileURLToPath(new URL('../e2e/a11y-baseline.json', import.meta.url)),
+  )
+  if (stale === null || stale.length === 0) return
+
+  console.error('  e2e: these accessibility baseline entries no longer describe anything:')
+  for (const entry of stale) console.error(`         ${entry}`)
+  console.error('       The violations they recorded are FIXED. Delete those entries from')
+  console.error('       e2e/a11y-baseline.json - an entry that guards nothing is how a debt file')
+  console.error('       turns into an allowlist, which is the one thing that file must not become.')
+  process.exitCode = 1
 }

@@ -90,6 +90,25 @@ describe('the unranked sentinel is denominated in the table it is a rank in', ()
         return !t.startsWith('//') && !t.startsWith('*') && !t.startsWith('/*')
       })
       .join('\n')
+    // ⚠ RE-AIMED BY T-08 (06.09) – «EXACTLY ONE» IS A COUNT, AND THIS `it` WAS ONLY ASSERTING THE
+    // ZERO HALF OF IT. The tests-and-tooling lane sampled it and put it in the four that «could pass
+    // against a deleted feature» (docs/review-principles-2026-09-05/06-tests-tooling.md, T-08). The
+    // hole is the same one its own title names: delete `tableSize` and every `?? tableSize(...)`
+    // site with it, and the two bans below are MORE satisfied than they are today - a corpus that
+    // derives nothing hand-rolls nothing. "One derivation" then reads as "no derivation", which is
+    // the defect this file was written about (three copies drifting apart) reached from the other
+    // end. The owner's ruling on the class: «мне кажется если функции удаляются, то и тесты надо
+    // чистить.» So the derivation is required to exist, and to be one, before the copies are banned.
+    expect(
+      code.match(/export function tableSize\(/g)?.length ?? 0,
+      'the ONE derivation is gone (or there are now two). `tableSize` is what these bans send every ' +
+        'site to; without it they ban a copy of nothing.',
+    ).toBe(1)
+    expect(
+      code.match(/\?\? tableSize\(world, 'wta'\)/g)?.length ?? 0,
+      'no W-side site defaults through `tableSize` any more. The bans below then hold over a corpus ' +
+        'that has stopped answering the question, which is not the same as answering it once.',
+    ).toBeGreaterThanOrEqual(3)
     expect(code).not.toContain('?? world.cohort.length + 1')
     expect(code).not.toContain('?? save.cohort.length + 1')
   })

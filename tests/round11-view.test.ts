@@ -90,6 +90,26 @@ describe('the surface mark on the Season card (R11-15, reversed by the owner in 
     const place = region(seasonScreen, '<div class="event-place">', '</div>')
     // the card asks the component for the mark, and hands it the row's OWN surface
     expect(place).toContain('<SurfaceMark :surface="ev.surface"')
+    // ⚠ RE-AIMED BY T-08 (06.09) – THE MISSING NON-EMPTY GUARD, AND `cssBodies` IS DOCUMENTED AS
+    // NEEDING ONE. The tests-and-tooling lane sampled this `it` and put its negative half in the
+    // four that «could pass against a deleted feature»
+    // (docs/review-principles-2026-09-05/06-tests-tooling.md, T-08). It is right, and the mechanism
+    // is written down in tests/helpers/source.ts: `regions()` returns `[]` for an ABSENT start
+    // marker on purpose - «zero occurrences is an answer, not an error» - so `cssBodies('.x')` is
+    // empty both when that rule was deleted AND when the stylesheet around it was. Rename or delete
+    // `.surface-ring {` in src/style.css and the ring stops being drawn at all, while the line below
+    // reads greener than ever, because the dot it bans is even more absent than before. The two
+    // `toContain`s in this block read SurfaceMark.vue's TEMPLATE and cannot see that.
+    //
+    // So the mark's own rule has to be there before its predecessor's absence means anything. This
+    // asserts existence and not shape - the ring's geometry is measured properly by
+    // `the ring is two rings` further down, and duplicating that here would just be a second place
+    // to update when the design moves.
+    expect(
+      cssBodies('.surface-ring').length,
+      'src/style.css draws no `.surface-ring` any more, so the ban below is guarding a card that ' +
+        'has no mark on it at all - which is R10-11 arrived at by deletion instead of by a dot.',
+    ).toBeGreaterThan(0)
     expect(place).not.toContain('surface-dot') // R10-11's bare dot is still gone
     expect(cssBodies('.surface-dot')).toEqual([])
     // ...and the component is still the export's ring with the name beside it
