@@ -843,7 +843,35 @@ body {
     /* Flush to the frame's own edge rather than inset by the frame's gutter, which is where AC puts
        it – the gutter is re-spent as the rail's own padding so the labels keep their inset. */
     margin: calc(-1 * var(--app-pad-top)) 0 0 calc(-1 * var(--app-pad-x));
-    padding: 20px 12px calc(20px + env(safe-area-inset-bottom, 0)) calc(12px + var(--app-pad-x));
+    /* ⭐⭐⭐ ROUND 37 ITEM 14 – THE LEFT INSET IS THE RIGHT ONE NOW. The owner, 06.09: «на
+       вертикальном рейле навигации на десктопе слева сделаем такой же отступ, как и справа (меньше
+       то есть)».
+       ⚠ THIS IS A REVERSAL AND NOT A TYPO BEING CORRECTED, so what it costs is stated rather than
+       discovered. The 12 + `--app-pad-x` that stood here was the second half of the negative margin
+       above: the frame's gutter was re-spent as the rail's own left padding, so the rail met the
+       frame's edge while its LABELS kept the same inset as the rest of the page. Cutting it to 12
+       moves every label, icon, the identity block and the dashboard cards left by `--app-pad-x`, and
+       that is what he is asking for – he is looking at the gap between the rail's left edge and its
+       contents, and at 28 against 12 on the right it is visibly lopsided.
+       Measured before -> after: at 1024 the first tab's icon 40 -> 24 and its label 72 -> 56; at
+       1280, 80 -> 64 and 112 -> 96. Nothing moves on the right: the rail's own right edge and its
+       hairline stay at 199 / 239, so the change is one-sided, which is what «такой же, как и
+       справа» asks for.
+       ⚠ THE NEGATIVE MARGIN STAYS. It is a separate fact – «flush to the frame's own edge rather
+       than inset by the frame's gutter, which is where AC puts it» – and dropping it would keep the
+       labels where they are today and move the rail's EDGE right instead, which is neither the
+       thing he pointed at nor a smaller inset. Measured both ways at 1024: with the margin the rail
+       stands at x=0 and the labels at 56; without it, x=16 and the labels back at 72, i.e. the
+       screen he is already looking at.
+       ⚠ AND IT IS TWO DECLARATIONS RATHER THAN ONE FOUR-VALUE SHORTHAND, for the reason the CTA cap
+       states two lines of `margin-left` / `margin-right` instead of `margin-inline`: a rule no test
+       can see is a rule the next wave can delete. Measured on happy-dom 06.09 – it drops a
+       `padding` shorthand whose value contains `env()` ENTIRELY, so while the bottom safe area was
+       inside the shorthand the mounted layer read the rail's four insets as the empty string and
+       could not have caught this item going the wrong way. The safe area is its own declaration now
+       and the three plain sides are readable. */
+    padding: 20px 12px;
+    padding-bottom: calc(20px + env(safe-area-inset-bottom, 0));
     flex-direction: column;
     justify-content: flex-start;
     gap: 2px;

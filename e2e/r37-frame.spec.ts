@@ -239,3 +239,96 @@ test('item 13 – the lone Next round control stops at 500 and is centred', asyn
     expect(Math.abs(leftGap - rightGap), `at ${screen} the control is centred in its row`).toBeLessThan(1)
   }
 })
+
+// =================================================================================================
+// ITEM 14 – THE RAIL'S LEFT INSET
+// =================================================================================================
+// «Слева сделаем такой же отступ, как и справа (меньше то есть)», and «под рейлом навигации остается
+// пустое пространство 50-60 пикселей примерно».
+//
+// ⚠ MUTATION-VERIFIED: the rail's `padding-left` put back to `calc(12px + var(--app-pad-x))` -> the
+// item 14 arms; its `margin-bottom` put back to `0` -> the item 15 arms, with the band measuring
+// 48.0px again.
+test('item 14 – the rail’s left inset is its right one', async ({
+  page,
+  careerAt,
+}) => {
+  await resize(page, 1280, 900)
+  await careerAt('junior')
+  await answerOpeningKnock(page)
+  await dismissTourBriefing(page)
+
+  for (const [screen, height] of [
+    [1024, 800],
+    [1280, 900],
+    // ⚠ A SHORT WINDOW TOO. The rail is `height: 100vh` and scrolls itself; at 600px of window its
+    // own content is 728px, so it has a fold of its own – which is NOT the band this item is about,
+    // and measuring here is what keeps the two apart.
+    [1280, 600],
+  ] as const) {
+    await resize(page, screen, height)
+
+    // --- ITEM 14: the two insets ----------------------------------------------------------------
+    const inset = await page.evaluate(() => {
+      const rail = document.querySelector('nav.tab-bar') as HTMLElement
+      const cs = getComputedStyle(rail)
+      const r = rail.getBoundingClientRect()
+      const label = document.querySelector('nav.tab-bar .tab-label') as HTMLElement
+      const button = document.querySelector('nav.tab-bar .tab-btn') as HTMLElement
+      return {
+        padLeft: parseFloat(cs.paddingLeft),
+        padRight: parseFloat(cs.paddingRight),
+        left: r.x,
+        right: r.right,
+        labelLeft: label.getBoundingClientRect().x,
+        buttonLeft: button.getBoundingClientRect().x,
+        buttonRight: button.getBoundingClientRect().right,
+      }
+    })
+    expect(inset.padLeft, `at ${screen} the rail's left inset is its right one`).toBe(inset.padRight)
+    expect(inset.padLeft, 'and it is the 12 the right side has always had').toBe(12)
+    // The measurement he is actually looking at: what stands between the rail's own edge and the
+    // first thing printed on it. Before this item the left was 28 against a right of 12.
+    expect(inset.buttonLeft - inset.left, `at ${screen} the tab starts 12px in`).toBeCloseTo(12, 1)
+    expect(inset.right - inset.buttonRight, 'and stops 12px + the hairline short of the edge').toBeCloseTo(
+      13,
+      1,
+    )
+    expect(inset.labelLeft - inset.left, 'the label rides in with it').toBeLessThan(60)
+
+  }
+})
+
+test('item 14 – and below 1024 the bar across the bottom is untouched', async ({
+  page,
+  careerAt,
+}) => {
+  await resize(page, 375, 812)
+  await careerAt('junior')
+  await answerOpeningKnock(page)
+  await dismissTourBriefing(page)
+
+  for (const [screen, height] of [
+    [375, 812],
+    [768, 1024],
+    [900, 900],
+  ] as const) {
+    await resize(page, screen, height)
+    const bar = await page.evaluate(() => {
+      const el = document.querySelector('nav.tab-bar') as HTMLElement
+      const cs = getComputedStyle(el)
+      const r = el.getBoundingClientRect()
+      return {
+        position: cs.position,
+        bottom: r.bottom,
+        marginBottom: parseFloat(cs.marginBottom) || 0,
+        marginLeft: parseFloat(cs.marginLeft) || 0,
+        paddingLeft: parseFloat(cs.paddingLeft) || 0,
+      }
+    })
+    expect(bar.position, `at ${screen} the bar is still pinned to the window`).toBe('fixed')
+    expect(bar.bottom, 'at the bottom of it').toBeCloseTo(height, 0)
+    expect(bar.marginLeft, 'no negative margin below 1024').toBe(0)
+    expect(bar.paddingLeft, 'and no rail padding either').toBe(0)
+  }
+})

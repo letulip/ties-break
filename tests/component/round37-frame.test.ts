@@ -432,3 +432,105 @@ describe('round 37 item 13 – a lone control in a takeover’s action row stops
     expect(room, 'and it could not reach 500 there in any case').toBeLessThan(500)
   })
 })
+
+// =================================================================================================
+// ITEM 14 – THE RAIL'S LEFT INSET
+// =================================================================================================
+// «На вертикальном рейле навигации на десктопе слева сделаем такой же отступ, как и справа (меньше
+// то есть)», and «при прокручивании страницы вниз на десктоп под рейлом навигации остается пустое
+// пространство 50-60 пикселей примерно».
+//
+// ⚠ THE TWO ARE ONE RULE'S TWO EDGES. The rail is pulled out of the frame's TOP and LEFT gutters by
+// negative margins so it meets the frame's own edge, and the left gutter was then re-spent as the
+// rail's own left padding so the labels kept the page's inset. Item 14 stops re-spending it; item 15
+// adds the BOTTOM gutter to the list of edges the rail is pulled through, which is what the band
+// turned out to be – `#app`'s own `--app-pad-bottom`, 48px, measured in Chromium and NOT the phone
+// bottom bar's reservation, which lives inside `.app-content` in the other column.
+//
+// ⚠ MOUNTING `App.vue` INTO A REAL `#app` IS MANDATORY: every rail rule is keyed on
+// `#app:has(> nav.tab-bar)` and VTU mounts into an anonymous div. Same helper, same reasoning, as
+// round36-desktop-shell.test.ts.
+//
+// MUTATION-VERIFIED, each alone:
+//   * the rail's `padding-left` put back to `calc(12px + var(--app-pad-x))` -> the item 14 arms;
+//   * the rail's `margin-bottom` put back to `0` -> the item 15 arms;
+//   * the negative left margin deleted -> the «the rail still meets the frame's edge» arm alone.
+describe('round 37 item 14 – the rail’s left inset', () => {
+  beforeEach(() => {
+    setActivePinia(createPinia())
+    backing.clear()
+    document.body.innerHTML = ''
+  })
+  afterEach(() => setViewport(PHONE))
+
+  /** The tab shell, on screen, inside an element with the id the shipped page gives it. */
+  async function mountShell(): Promise<VueWrapper> {
+    const store = useGameStore()
+    const wrapper = mount(App, { attachTo: document.body, global: { stubs: { teleport: true } } })
+    await flushPromises()
+    store.snapshot = careerSnapshot(4, 'r37-frame')
+    store.ready = true
+    store.phase = 'ready'
+    await nextTick()
+    wrapper.findComponent(SplashScreen).vm.$emit('done')
+    await nextTick()
+    const bar = wrapper.find('nav.tab-bar')
+    if (!bar.exists()) throw new Error('the shell drew no navigation – there is no frame to name')
+    const container = bar.element.parentElement
+    if (!container) throw new Error('the bar has no parent – #app cannot be named')
+    container.id = 'app'
+    return wrapper
+  }
+
+  async function rail(vp: Viewport) {
+    setViewport(vp)
+    const wrapper = await mountShell()
+    const cs = getComputedStyle(wrapper.find('nav.tab-bar').element)
+    const out = {
+      padLeft: cs.paddingLeft,
+      padRight: cs.paddingRight,
+      padTop: cs.paddingTop,
+      marginLeft: cs.marginLeft,
+      marginTop: cs.marginTop,
+      marginBottom: cs.marginBottom,
+      gridRow: cs.gridRow.replace(/\s+/g, ' ').trim(),
+    }
+    wrapper.unmount()
+    document.body.innerHTML = ''
+    return out
+  }
+
+  it('⭐⭐ ITEM 14 – the left inset is the right one: 12 against 12', async () => {
+    assertSheetPresent()
+    for (const vp of [DESKTOP_ENTRY, DESKTOP]) {
+      const r = await rail(vp)
+      expect(r.padLeft, `at ${vp.width} the rail’s left inset`).toBe('12px')
+      expect(r.padLeft, `at ${vp.width} …is the same as its right one`).toBe(r.padRight)
+      // «Меньше то есть» – smaller, not merely equal. `--app-pad-x` is what it used to carry on top.
+      expect(lengthPx(r.padLeft, 0), 'and smaller than the 12 + gutter it was').toBeLessThan(
+        12 + lengthPx(token('--app-pad-x'), 0),
+      )
+      expect(r.padTop, 'the top inset is the 20 it has always been').toBe('20px')
+    }
+  })
+
+  it('⚠ ITEM 14 – …and the rail still meets the frame’s edge: the negative margin stays', async () => {
+    assertSheetPresent()
+    // The other half of the asymmetry, and it is NOT part of his ask. Dropping it would move the
+    // rail's own edge right by the gutter and put the labels back where they are today – which is
+    // neither a smaller inset nor the thing he pointed at. Measured both ways in Chromium at 1024:
+    // with the margin the rail stands at x=0 and the labels at 56; without it, x=16 and 72.
+    const gutter = lengthPx(token('--app-pad-x'), 0)
+    const r = await rail(DESKTOP)
+    expect(pxOf(r.marginLeft), 'the rail is still pulled out to the frame’s own edge').toBe(-gutter)
+  })
+
+  it('⚠ …and the item does not reach a phone or a tablet – the bar is untouched below 1024', async () => {
+    assertSheetPresent()
+    for (const vp of [PHONE, TABLET, TABLET_TOP]) {
+      const r = await rail(vp)
+      expect(pxOf(r.marginLeft) || 0, `at ${vp.width} no negative margin`).toBe(0)
+      expect(r.padLeft === '' || r.padLeft === '0px', `at ${vp.width} the bar has no rail padding`).toBe(true)
+    }
+  })
+})
