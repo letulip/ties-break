@@ -1,0 +1,38 @@
+{
+  "$what": "The WCAG 2 A/AA violations e2e/a11y.spec.ts found ALREADY PRESENT the day it landed (06.09.2026, T-09). One entry per RULE per SURFACE, and every entry is a DEBT, not a decision: it records that the defect is real and unfixed, never that it is acceptable.",
+  "$rules": [
+    "A rule that fires on a surface with NO entry here fails the run by name, with the offending elements and axe's own measurement. There is no blanket disable and no globally-disabled rule.",
+    "`nodes` is a CEILING, in the shape of scripts/pin-ratchet.mjs: the debt may shrink freely, and the run goes red the moment it grows.",
+    "`why` is required prose. An entry with no reason is an allowlist line, which is the thing this file exists not to be.",
+    "An entry that stops describing anything fails `no baseline entry is guarding nothing` - delete it when the defect is fixed, do not leave it as cover."
+  ],
+  "$surface": "`<screen or overlay>@<viewport width>`. The width is part of the key because a contrast failure can be real at one width and absent at another - an element hidden at 375 has no contrast to measure - so a defect present at both widths is TWO entries on purpose.",
+  "$reading": "23 surfaces were scanned on the first run (10 screens x 2 widths, 3 overlays). 19 came back with ZERO WCAG 2 A/AA violations. All four entries below are ONE defect: the token `--ink-dim` at small sizes on the page ground. Nothing else in the app failed.",
+  "$the-one-defect": "src/style.css:134 `--ink-dim: #6d7a83`. On the page ground `#0a0e13` it measures 4.388:1 and AA asks 4.5:1 for text under 18.66px bold / 24px - a miss of 0.11. It passes everywhere it is drawn larger or on a lighter card, which is why only these two screens fire. Measured fix: `#6f7c85` (+2 per channel) reaches 4.513:1. ⚠ NOT APPLIED BY THE AGENT WHO MEASURED IT: `--ink-dim` is read in 56 places in src/, so nudging it repaints secondary text across the whole product, and what the app looks like is the owner's - «я утром буду всё уже сам глазами смотреть». It is a one-line change waiting on his yes, not a hard problem.",
+  "entries": {
+    "MoneyScreen.vue@375": {
+      "color-contrast": {
+        "nodes": 8,
+        "why": "DEBT. `.tb-statrow-meta` (src/components/ui/StatRow.vue:129-133) is `var(--ink-dim)` at 12px on the page ground: 4.388:1 against AA's 4.5:1. These are the percentage-and-amount lines under each spending row ('Travel - 82% - -$46,911'), so the figure itself is fine and its caption is the miss. Closes with the one-token change described in `$the-one-defect`, which needs the owner's yes because it repaints 56 sites."
+      }
+    },
+    "MoneyScreen.vue@1280": {
+      "color-contrast": {
+        "nodes": 8,
+        "why": "DEBT. The same eight `.tb-statrow-meta` elements as at 375 - the screen is one column at both widths, so the defect is width-independent and is entered twice because the baseline key is per width. Same one-token fix."
+      }
+    },
+    "CoachMarketScreen.vue@375": {
+      "color-contrast": {
+        "nodes": 6,
+        "why": "DEBT. `.tier-count` (src/components/screens/CoachMarketScreen.vue:960, the 'N coaches' count on each tier heading) is `var(--ink-dim)` at 10.5px on the page ground: 4.388:1 against AA's 4.5:1. Smaller than Money's, same colour, same cause. Same one-token fix."
+      }
+    },
+    "CoachMarketScreen.vue@1280": {
+      "color-contrast": {
+        "nodes": 6,
+        "why": "DEBT. The same six `.tier-count` elements as at 375, entered twice for the same per-width-key reason. Same one-token fix."
+      }
+    }
+  }
+}
