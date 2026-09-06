@@ -58,6 +58,7 @@ import {
   deleteCareer,
   touchCareer,
 } from '../db/saves'
+import { CommandRefusedError, profileShapeError } from '../shared/protocol'
 import type { ErrorReply, Snapshot, SnapshotReply, StopReason, ToWorker, ToUI } from '../shared/protocol'
 
 // The worker owns the authoritative world state (plain objects, non-reactive) for the ACTIVE career.
@@ -237,6 +238,27 @@ async function mutate(
   return snapshotMsg(id, candidate, { stopReasons })
 }
 
+/** THE SPAN OF THE TWO COMMANDS THAT MOVE TIME (E-06, 05.09 engine review).
+ *
+ *  ⚠ IT IS THE LOOP BOUND, WHICH IS WHY IT IS CHECKED AT ALL. `tick` counts `msg.weeks` iterations
+ *  by hand and `advance` hands the number to `advanceWeeks`; neither looked at it. The measured
+ *  results: a non-integer runs `ceil(weeks)` ticks – so 1.5 weeks is two weeks of her life – and
+ *  `NaN` runs none at all and still commits a revision, i.e. an autosave and a snapshot for a world
+ *  that did not move. Both are silent.
+ *
+ *  ⚠ 52 IS THE DEV FAST-FORWARD'S OWN SPAN and not a new rule: `▶▶ 52 (dev)` ships in every build
+ *  (the owner's ruling – the deployed build is the playtest device) and is the largest span any
+ *  surface asks for, `spanWeeksFor`'s pill included. A year at a time is the ceiling the UI has.
+ *
+ *  ⚠ 1 AND NOT 0. A zero-week advance is the `NaN` case wearing a legal number: it commits a
+ *  revision for a world that did not move, which is the thing the check exists to stop. */
+const MAX_SPAN_WEEKS = 52
+function guardWeeks(weeks: number): void {
+  if (!Number.isInteger(weeks) || weeks < 1 || weeks > MAX_SPAN_WEEKS) {
+    throw new CommandRefusedError(`Time moves 1 to ${MAX_SPAN_WEEKS} whole weeks at a time`)
+  }
+}
+
 /**
  * ⚠ THE SWITCH IS EXPLICIT AND STAYS EXPLICIT – a `case` per command, no handler table, no dynamic
  * dispatch on `msg.type`. Two things depend on that and neither is negotiable: `noFallthroughCasesInSwitch`
@@ -256,6 +278,15 @@ async function handle(msg: ToWorker): Promise<ToUI> {
   switch (msg.type) {
     // ------------------------------------------------------------------ lifecycle
     case 'new': {
+      // ⭐⭐ E-06 – THE PROFILE IS RE-VALIDATED BEFORE A CAREER EXISTS, the way `setPlan` re-validates
+      // a week (`planShapeError`, below). `new` is the one command that turns its payload into
+      // PERSISTED state, so this is the last place a malformed profile can be refused instead of
+      // adopted: past this line `createWorld` has run, `adoptAutosave` has written it to the
+      // player's disk and the only exit is deleting the career. The measured alternative was a bare
+      // `TypeError` out of `ECONOMY.travelBgFactor[background]` for one field and silent acceptance
+      // for seven others.
+      const badProfile = profileShapeError(msg.profile)
+      if (badProfile) throw new CommandRefusedError(`New career: ${badProfile}`)
       const seed = msg.seed.trim() || 'wildcard'
       // createWorld owns the stream's birth now: `rngMain` is position zero, on the world.
       // Candidate-first like every other path: the fresh world only becomes the active one after
@@ -273,6 +304,7 @@ async function handle(msg: ToWorker): Promise<ToUI> {
     }
     // ------------------------------------------------------------------ mutations
     case 'tick': {
+      guardWeeks(msg.weeks)
       return mutate(msg.id, msg.baseRevision, (world, rng) => {
         // ⚠ THE RAW LOOP MUST NOT OUTRUN A DECISION (P6 (c)). `advanceWeeks` refuses to move time
         // while a reveal or an unanswered knock is open – that contract is the whole W4 slice – but
@@ -330,6 +362,7 @@ async function handle(msg: ToWorker): Promise<ToUI> {
       })
     }
     case 'advance': {
+      guardWeeks(msg.weeks)
       // R11-1: EVERY reason the advance stopped rides along (an injury landing on the wrap-up week
       // is both 'injury' and 'season-end'); `advance` is still the only message that sets them.
       return mutate(msg.id, msg.baseRevision, (world, rng) => advanceWeeks(world, rng, msg.weeks))
@@ -681,6 +714,13 @@ function errorMsg(id: number, err: unknown): ErrorReply {
   }
   if (err instanceof SaveConflictError) {
     return { id, ok: false, error: err.message, code: 'SAVE_CONFLICT', revision: err.diskRevision }
+  }
+  // ⭐⭐ E-06 – THE PAYLOAD ITSELF WAS REFUSED. Same reasoning as the save-file codes below: the
+  // sentence is the player's and the code is the test's, so neither has to be read out of the other.
+  // ⚠ NO `revision` – nothing was measured against one; the field belongs to the two concurrency
+  // kinds above (tests/worker-reply-correlation.test.ts asserts its absence alongside the code).
+  if (err instanceof CommandRefusedError) {
+    return { id, ok: false, error: err.message, code: 'INVALID_COMMAND' }
   }
   // ⭐⭐ E-05 (05.09 engine review) – AND THE SAVE-FILE CODE CROSSES THE BOUNDARY TOO. `SaveFileError`
   // has carried seven machine-readable kinds since the import gate was written, and that gate's own

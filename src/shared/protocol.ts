@@ -58,6 +58,8 @@ export {
   DEFAULT_PROFILE,
   SESSION_KINDS,
   WEEK_PLAN_PRESETS,
+  PROFILE_NAME_MAX_CHARS,
+  profileShapeError,
 } from './protocol/profile'
 
 // --- events --------------------------------------------------------------------------------------
@@ -245,4 +247,5 @@ export type {
 } from './protocol/messages'
 export {
   REPLY_BY_COMMAND,
+  CommandRefusedError,
 } from './protocol/messages'

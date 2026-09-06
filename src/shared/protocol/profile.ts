@@ -6,6 +6,10 @@
 // Part of the `shared/protocol` module set – see src/shared/protocol.ts, which re-exports every
 // name below under the historical public path. Nothing here imports that barrel back.
 
+// ⚠ `shared/dates.ts` IMPORTS NOTHING AT ALL, which is what makes this edge free: `profileShapeError`
+// below needs the days-in-month table and this module stays a leaf of the wire.
+import { daysInBirthMonth } from '../dates'
+
 export type FamilyBackground = 'wealthy' | 'middle' | 'working'
 /** The coach ladder (docs/specs/coach-tiers.md), cheapest rung first. Replaces the old
  *  `CoachSetup = 'parent' | 'hired'` boolean, whose single `hired` band turned out to be a smear
@@ -73,6 +77,114 @@ export const DEFAULT_PROFILE: PlayerProfile = {
   playStyle: 'all-court',
   birthMonth: 6,
   birthDay: 15,
+}
+
+// =================================================================================================
+// ⭐⭐ E-06 (05.09 engine review) – IS THIS A CAREER THE ENGINE MAY OPEN?
+//
+// CLAUDE.md invariant 1 says every command is re-validated engine-side, and `new` was the one
+// command that took its payload on trust: it goes straight into `createWorld`. The review measured
+// what that costs. `background: 'nope'` threw a bare `TypeError: undefined is not iterable` out of
+// `ECONOMY.travelBgFactor[background]` deep inside `ensureSeason` – closed, but as a stack trace
+// rather than a sentence – while `birthMonth: 13`, `birthMonth: 0`, `birthDay: 31` in February,
+// `kidName: ''`, `coachTier: 'bogus'`, `playStyle: 'bogus'` and `country: 'ZZ'` were all ACCEPTED,
+// ticked and reloaded without complaint (`coachTier: 'bogus'` silently yields a self-coached
+// career). `new` is the one command that creates PERSISTED state out of its payload, so a payload
+// it should never have taken becomes a career on the player's device.
+//
+// ⚠ IT IS `planShapeError`'s SHAPE AND `planShapeError`'s VOICE – returns the reason it is illegal,
+// or null, and the worker prefixes the subject exactly as `setPlan` does. Same reason that one is
+// not a boolean: the refusal has to be able to SAY which field, and a validator that answers
+// true/false makes the caller invent the sentence.
+//
+// ⚠⚠ THE THREE ENUMERATIONS ARE DECLARED HERE, module-private, RATHER THAN IMPORTED. `COACH_TIERS`
+// already exists in `engine/coach.ts`, and reaching for it would put a RUNTIME edge from the wire
+// into the engine (and a second `COACH_TIERS` into the `shared/protocol` barrel, which
+// `engine/world.ts` re-exports from – the duplicate-identifier failure CLAUDE.md names). They stay
+// private and the drift is caught behaviourally instead: the test walks `engine/coach.ts`'s own
+// `COACH_TIERS` through this function and every rung has to be accepted.
+//
+// ⚠ `country` IS CHECKED AS A SHAPE AND NOT AGAINST THE PLAYABLE LIST, deliberately. The review
+// asked for the enumeration; the enumeration is `COUNTRIES` in `composables/countries.ts`, whose own
+// header rules that it is PRESENTATION and "the engine stays unaware it exists". So the engine asks
+// the only country question it can answer alone – is this an ISO 3166-1 alpha-2 code at all – and
+// 'ZZ' still gets through. Naming a country the game does not draw a flag for costs a fallback
+// label; it is not the class of defect this gate is for.
+// =================================================================================================
+
+const BACKGROUNDS_ALLOWED: readonly FamilyBackground[] = ['wealthy', 'middle', 'working']
+const COACH_TIERS_ALLOWED: readonly CoachTier[] = ['self', 'budget', 'middle', 'high', 'elite']
+const PLAY_STYLES_ALLOWED: readonly PlayStyle[] = ['aggressive', 'counterpuncher', 'serve-first', 'all-court']
+
+/** The longest name a career may be opened under.
+ *
+ *  ⚠ IT IS `saveGuard`'s `MAX_ID_CHARS` AND NOT A NEW NUMBER, and the alignment is the whole point:
+ *  the spine rule there already refuses an imported save whose `profile.kidName` runs past 200
+ *  characters, so a career opened under a longer name could be played and exported and then never
+ *  read back. The value is repeated rather than imported for the cycle reason above; the test holds
+ *  the two constants equal.
+ *
+ *  ⚠ AND THE WIZARD CARRIES THE SAME NUMBER as its inputs' `maxlength` (E-06's own risk note: a cap
+ *  the wizard does not have is a cap that refuses a name a player really typed). So this bound is
+ *  unreachable from the wizard by construction, which is what a hygiene guard should be. That is
+ *  `ASSET_NAME_MAX_CHARS`'s own idiom, in that constant's own words: the screen sets the same number
+ *  as the field's `maxlength`, so the cap is FELT while typing rather than met as a refusal. */
+export const PROFILE_NAME_MAX_CHARS = 200
+
+const isObject = (v: unknown): v is Record<string, unknown> =>
+  typeof v === 'object' && v !== null && !Array.isArray(v)
+
+/** ISO 3166-1 alpha-2: two capital letters, and nothing else. */
+const ALPHA2 = /^[A-Z]{2}$/
+
+function nameError(value: unknown, what: string): string | null {
+  if (typeof value !== 'string' || value.trim().length === 0) return `${what} is needed`
+  if (value.length > PROFILE_NAME_MAX_CHARS) return `${what} is at most ${PROFILE_NAME_MAX_CHARS} characters`
+  return null
+}
+
+/**
+ * IS THIS A PROFILE A CAREER MAY BE OPENED ON? Returns the reason it is not, or null.
+ *
+ * Total over `unknown` on purpose – this is the engine's re-validation of a WIRE payload, and the
+ * whole point is that the sender may be anything.
+ */
+export function profileShapeError(profile: unknown): string | null {
+  if (!isObject(profile)) return 'A career needs a profile'
+
+  const first = nameError(profile.kidName, 'A first name')
+  if (first !== null) return first
+  const last = nameError(profile.kidLastName, 'A family name')
+  if (last !== null) return last
+
+  if (profile.gender !== 'girl') return `Unknown gender: ${String(profile.gender)}`
+  if (typeof profile.country !== 'string' || !ALPHA2.test(profile.country)) {
+    return `Unknown country: ${String(profile.country)}`
+  }
+  if (!BACKGROUNDS_ALLOWED.includes(profile.background as FamilyBackground)) {
+    return `Unknown family background: ${String(profile.background)}`
+  }
+  if (!COACH_TIERS_ALLOWED.includes(profile.coachTier as CoachTier)) {
+    return `Unknown coach tier: ${String(profile.coachTier)}`
+  }
+  if (!PLAY_STYLES_ALLOWED.includes(profile.playStyle as PlayStyle)) {
+    return `Unknown play style: ${String(profile.playStyle)}`
+  }
+
+  const month = profile.birthMonth
+  if (typeof month !== 'number' || !Number.isInteger(month) || month < 1 || month > 12) {
+    return 'A birth month is 1 to 12'
+  }
+  // ⚠ THE DAY IS JUDGED AGAINST ITS OWN MONTH, which is what makes `birthDay: 31` in February a
+  // refusal rather than a date. `daysInBirthMonth` is the same function the wizard's own day picker
+  // and the prologue's identity card count with – February is 28 there and 28 here, for the reason
+  // that function's note gives (her birth year is not a leap year).
+  const days = daysInBirthMonth(month)
+  const day = profile.birthDay
+  if (typeof day !== 'number' || !Number.isInteger(day) || day < 1 || day > days) {
+    return `A birth day is 1 to ${days}`
+  }
+  return null
 }
 
 /** WHAT ONE KIND OF SESSION IS (v47, docs/specs/training-dials.md §2). Five blocks, one line each on

@@ -1,6 +1,7 @@
 import { openDB, reqToPromise } from './idb'
 import { compressWorld, decompressWorld } from '../engine/saveCodec'
 import type { WorldState } from '../engine/world'
+import { CommandRefusedError } from '../shared/protocol'
 import type { SlotMeta, CareerMeta } from '../shared/protocol'
 
 // Save slots in IndexedDB: each record is one compressed, checksummed blob, scoped to a career.
@@ -418,6 +419,17 @@ export async function deleteSlot(slot: string): Promise<void> {
  * career list's resume pointer), while `lastPlayedAt` always bumps (saving is playing).
  */
 export async function writeNamed(world: WorldState, name: string, revision: number): Promise<SlotMeta> {
+  // ⭐⭐ E-06 (05.09 engine review) – A NAME THE SANITISER CANNOT KEEP IS NOT A SLOT. `sanitizeName`
+  // strips everything outside `[a-z0-9-]`, so «привет» and «!!!» both come out as the empty string
+  // and both address the SAME slot, `manual:<careerId>:` – the second save silently overwrites the
+  // first, and the More screen lists one row where the player made two. The UI guards this
+  // (MoreScreen's Save-as is disabled on an empty field), but the UI is not the gate: CLAUDE.md
+  // invariant 1 says a stale screen may not corrupt a career, and this is the same rule one layer
+  // down. Refused HERE rather than in the worker's `saveNamed` case because the collision is a
+  // property of the slot key, and `namedSlot` is this module's.
+  if (sanitizeName(name) === '') {
+    throw new CommandRefusedError('A save name needs at least one letter or number')
+  }
   const { payload, checksum } = await compressWorld(world)
   const savedAt = nextSavedAt()
   const database = await db()
