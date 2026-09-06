@@ -29,10 +29,17 @@ last-reviewed: 2026-08-31
 
 ## Now
 
-⚙ THE LIVE WAVE IS ROUND 37 – this line is machine-checked against the newest ledger in
+⚙ THE LIVE WAVE IS ROUND 38 – this line is machine-checked against the newest ledger in
 `docs/rounds/` by `scripts/doc-facts.mjs`; edit the number only by shipping a ledger.
 
-**Round 37 is the review wave and its follow-ups** ([round-37.md](rounds/round-37.md), 05.09) – the
+**Round 38 is the balance wave** ([round-38.md](rounds/round-38.md), 06.09) – Wave C of
+[next-waves-2026-09](specs/next-waves-2026-09.md), which he deferred to «после мержа 37», plus three
+observations he brought back from the merged build: a travel-class choice from the professional
+rungs ([travel-class-2026-09](specs/travel-class-2026-09.md)), the brand halving while her rank held,
+and the skills rose falling below the level she was born with. The last two are answered off his own
+week-1115 career and each leaves one question for him.
+
+**Round 37 was the review wave and its follow-ups** ([round-37.md](rounds/round-37.md), 05.09) – the
 five-lane project review of 05.09 ([review-principles-2026-09-05](review-principles-2026-09-05/README.md)),
 its automatic fix bundles, and six items he took off the stand afterwards. ⭐ The review found no P0
 and reproduced the load-bearing invariants rather than reading them: engine purity, zero runtime

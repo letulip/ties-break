@@ -223,3 +223,41 @@ matches what the simulation actually produces. Then:
 ⚠ **This moves every AI result, and therefore rankings and every calibration band.** It is the reason
 C4 belongs in this wave and not in a UI round. The order is C1 → measure → C2 → measure → C4 →
 measure, with C3 waiting on his answer.
+
+### Plan of work
+
+⭐ **Written 06.09 on his «если план ещё не готов – надо дописать».** The wave had a spec and an
+ORDER but no step table, which is what waves A and B carry and what makes a wave auditable. It has
+one now. Every step names the instrument that already exists – none of this needs a new bench.
+
+⚠⚠ **THE MEASUREMENT COMES FIRST AND IT IS NOT A FORMALITY.** `docs/specs/rank-plateau.md` predicted
+a fix, measured it doing nothing and found the real cause; that is the shape every step below has to
+survive. A step whose "after" has no "before" is not done.
+
+| step | what | instrument | proof |
+| --- | --- | --- | --- |
+| **C0** | The baseline, all of it, on today's constants: the age profile of the top 100, the ceiling realisation, where careers peak, and his own three saves as the floor | `tools/r31-top100-age.ts`, `tools/r34-reachable-ceiling.ts`, `npm run bench:agecurve`, `tools/real-vs-bench.ts` | one table in `docs/specs/wave-c-measurements.md`, committed BEFORE any constant moves |
+| **C1a** | Sweep `plateauStart` / `declineStart` without shipping anything – the sweep patches the constant in place and restores it | `tools/growth-age-sweep.ts` | the (23,29) column reproduces C0; (28,33) predicted |
+| **C1b** | Ship (28,33) if and only if C1a's prediction is inside the band C0 measured | the constants in `ECONOMY.development.ageCurve` | C0's four arms re-run; ⚠ the three frozen career hashes WILL move, and each one is re-baselined with the reading beside it |
+| **C1c** | The peak window against his own reference table – direct 24-26, college 25-28 | `npm run bench:agecurve` arm 3 | peak ages inside his own bands, printed |
+| **C2a** | Re-measure realisation AFTER C1 – the 93.3% is a pre-C1 number and C1 raises every ceiling | `tools/r34-reachable-ceiling.ts` | the new figure, which is the one C2 tunes against |
+| **C2b** | Sweep `potentialBand` for the band that lands realisation at 30-40% | `tools/potential-band-sweep.ts` | predicted band, then measured; the coach's ceiling read (0.40/0.75/0.90) re-checked, because it is a fraction OF this |
+| **C2c** | Ship the band, re-run the top-100 age profile and the ceiling walk | as C0 | `#237` best-rank finding re-measured: the tour must still be climbable |
+| **C4a** | Fit a correction to `basePServe` against the point loop – same pair, same surface, both models, over a grid of (stamina, composure) gaps | a new arm on `tools/winrate-read.ts`, or its own probe | the residual before and after, printed per gap size; the 5.1 pp case named |
+| **C4b** | Ship the one closed form and let everybody read it | `engine/match/point.ts` | ⚠ every AI result moves: rankings, acceptance cuts, calibration bands. All three frozen careers re-baselined WITH the reading |
+| **C4c** | The card's printed chance re-checked against a simulated match of the same pair | `tools/winrate-read.ts` | the gap is under 1 pp at every gap size, or the reason it is not |
+| **C3** | ⚠ NOT STARTED. Blocked on «как это не превратить в гарантию?» | – | – |
+
+**Order, and it is load-bearing:** C0 → C1a → C1b → C1c → C2a → C2b → C2c → C4a → C4b → C4c.
+C4 goes LAST because it moves every AI result and would otherwise contaminate C1's and C2's
+measurements; C2 goes after C1 because C1 raises the ceilings C2 is tuning.
+
+**Effort: 4-6 days, and C4 is over half of it.** **Risk: the highest of the three waves**, because
+unlike A and B this one is SUPPOSED to change behaviour – which means the frozen careers move by
+design and the only defence against moving them wrongly is that every step above prints its number
+before and after.
+
+⚠ **The three `measure/*` branches are superseded.** `measure/potential-band`,
+`measure/first-round-exit` and `measure/fortnight-bisect` are ~318k lines behind main; his own
+ruling was «измерим заново вместе с волной C позже, остальное не тащим». C0 re-measures on main and
+the three branches are deleted after it, not merged.
