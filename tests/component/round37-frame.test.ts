@@ -434,18 +434,24 @@ describe('round 37 item 13 – a lone control in a takeover’s action row stops
 })
 
 // =================================================================================================
-// ITEMS 14 AND 15 – THE RAIL'S LEFT INSET, AND THE BAND UNDER IT
+// ITEMS 14, 15 AND 16 – THE RAIL'S LEFT INSET, THE BAND UNDER IT, AND WHERE THE FRAME'S GUTTER LIVES
 // =================================================================================================
 // «На вертикальном рейле навигации на десктопе слева сделаем такой же отступ, как и справа (меньше
-// то есть)», and «при прокручивании страницы вниз на десктоп под рейлом навигации остается пустое
-// пространство 50-60 пикселей примерно».
+// то есть)», «при прокручивании страницы вниз на десктоп под рейлом навигации остается пустое
+// пространство 50-60 пикселей примерно», and – with a screenshot, on the same walk – «любые
+// отрицательные отступы - это антипаттерн».
 //
-// ⚠ THE TWO ARE ONE RULE'S TWO EDGES. The rail is pulled out of the frame's TOP and LEFT gutters by
-// negative margins so it meets the frame's own edge, and the left gutter was then re-spent as the
-// rail's own left padding so the labels kept the page's inset. Item 14 stops re-spending it; item 15
-// adds the BOTTOM gutter to the list of edges the rail is pulled through, which is what the band
-// turned out to be – `#app`'s own `--app-pad-bottom`, 48px, measured in Chromium and NOT the phone
-// bottom bar's reservation, which lives inside `.app-content` in the other column.
+// ⚠⚠ THE THIRD SENTENCE IS THE ONE THAT MOVED THE MECHANISM, AND THE FIRST TWO ARE ITS SYMPTOMS.
+// Items 14 and 15 were built with the rail pulled out of the frame's top, left and bottom gutters by
+// three negative margins, because `#app` carries the frame's gutter AND is the grid container past
+// 1024, so the rail was born inside a padding meant for the reading column. Item 16 moved the gutter
+// off the container – the first COLUMN is `rail + gutter` wide, the first and last ROWS are the
+// vertical gutter, and the frame keeps only the right one, which nothing has to escape – so all
+// three negatives are gone and not one box moved (measured in Chromium at 1024, 1280 and 1440, on
+// five tabs, with both notices up and at the foot of the page).
+//
+// ⚠ SO THE ARMS BELOW ARE AIMED AT THE BEHAVIOUR AND NOT AT THE INSTRUMENT. Each one that used to
+// assert a margin's VALUE now asserts what the margin was FOR, and says so at the assertion.
 //
 // ⚠ MOUNTING `App.vue` INTO A REAL `#app` IS MANDATORY: every rail rule is keyed on
 // `#app:has(> nav.tab-bar)` and VTU mounts into an anonymous div. Same helper, same reasoning, as
@@ -453,9 +459,46 @@ describe('round 37 item 13 – a lone control in a takeover’s action row stops
 //
 // MUTATION-VERIFIED, each alone:
 //   * the rail's `padding-left` put back to `calc(12px + var(--app-pad-x))` -> the item 14 arms;
-//   * the rail's `margin-bottom` put back to `0` -> the item 15 arms;
-//   * the negative left margin deleted -> the «the rail still meets the frame's edge» arm alone.
-describe('round 37 items 14 and 15 – the rail’s own edges', () => {
+//   * `padding-bottom: 0` on the grid container reverted to the frame's `--app-pad-bottom` -> the
+//     item 15 arm ALONE («at 1024 nothing of the frame is below the grid: expected '48px' to be
+//     '0px'»), 1 failed / 14 passed;
+//   * the first track reverted to a bare `var(--app-rail-w)` -> the «meets the frame's edge» arm and
+//     item 16's accounting arm, both «expected 196 to be 212», 2 failed / 13 passed;
+//   * `margin-left: calc(-1 * var(--app-pad-x))` put back on the rail -> the item 16 guard AND this
+//     block's «meets the frame's edge» arm, both with «expected [ 'marginLeft' ] to deeply equal
+//     []», and nothing else in the file – 2 failed, 13 passed.
+/** The tab shell, on screen, inside an element with the id the shipped page gives it.
+ *
+ *  ⚠ AT MODULE SCOPE SINCE R37-16, because item 16's guard is its own `describe` and needs the same
+ *  shell – a second copy of this is a second thing to keep in step with `App.vue`. */
+async function mountShell(): Promise<VueWrapper> {
+  const store = useGameStore()
+  const wrapper = mount(App, { attachTo: document.body, global: { stubs: { teleport: true } } })
+  await flushPromises()
+  store.snapshot = careerSnapshot(4, 'r37-frame')
+  store.ready = true
+  store.phase = 'ready'
+  await nextTick()
+  wrapper.findComponent(SplashScreen).vm.$emit('done')
+  await nextTick()
+  const bar = wrapper.find('nav.tab-bar')
+  if (!bar.exists()) throw new Error('the shell drew no navigation – there is no frame to name')
+  const container = bar.element.parentElement
+  if (!container) throw new Error('the bar has no parent – #app cannot be named')
+  container.id = 'app'
+  return wrapper
+}
+
+/** The sides of a box whose computed offset is BELOW ZERO. An undeclared side reads as the empty
+ *  string in this runner, which is «no offset» and not «a negative one». */
+function negativeSides(box: Record<string, string>, sides: readonly string[]): string[] {
+  return sides.filter((side) => {
+    const px = pxOf(box[side] ?? '')
+    return Number.isFinite(px) && px < 0
+  })
+}
+
+describe('round 37 items 14, 15 and 16 – the rail’s own edges', () => {
   beforeEach(() => {
     setActivePinia(createPinia())
     backing.clear()
@@ -463,37 +506,31 @@ describe('round 37 items 14 and 15 – the rail’s own edges', () => {
   })
   afterEach(() => setViewport(PHONE))
 
-  /** The tab shell, on screen, inside an element with the id the shipped page gives it. */
-  async function mountShell(): Promise<VueWrapper> {
-    const store = useGameStore()
-    const wrapper = mount(App, { attachTo: document.body, global: { stubs: { teleport: true } } })
-    await flushPromises()
-    store.snapshot = careerSnapshot(4, 'r37-frame')
-    store.ready = true
-    store.phase = 'ready'
-    await nextTick()
-    wrapper.findComponent(SplashScreen).vm.$emit('done')
-    await nextTick()
-    const bar = wrapper.find('nav.tab-bar')
-    if (!bar.exists()) throw new Error('the shell drew no navigation – there is no frame to name')
-    const container = bar.element.parentElement
-    if (!container) throw new Error('the bar has no parent – #app cannot be named')
-    container.id = 'app'
-    return wrapper
-  }
-
   async function rail(vp: Viewport) {
     setViewport(vp)
     const wrapper = await mountShell()
     const cs = getComputedStyle(wrapper.find('nav.tab-bar').element)
+    // ⚠ RE-AIMED BY R37-16 – THE FRAME IS READ BESIDE THE RAIL NOW. Every claim these arms used to
+    // make about a negative margin is a claim about where the frame's gutter is, so the container's
+    // own boxes are taken in the same pass. Read BEFORE the rail's, because happy-dom re-derives a
+    // cached declaration when another element is measured (the same hazard `actionRow` above names).
+    const frame = getComputedStyle(document.querySelector('#app') as HTMLElement)
     const out = {
       padLeft: cs.paddingLeft,
       padRight: cs.paddingRight,
       padTop: cs.paddingTop,
       marginLeft: cs.marginLeft,
+      marginRight: cs.marginRight,
       marginTop: cs.marginTop,
       marginBottom: cs.marginBottom,
       gridRow: cs.gridRow.replace(/\s+/g, ' ').trim(),
+      framePadTop: frame.paddingTop,
+      framePadRight: frame.paddingRight,
+      framePadBottom: frame.paddingBottom,
+      framePadLeft: frame.paddingLeft,
+      frameCols: frame.gridTemplateColumns.replace(/\s+/g, ' ').trim(),
+      frameRows: frame.gridTemplateRows.replace(/\s+/g, ' ').trim(),
+      frameDisplay: frame.display,
     }
     wrapper.unmount()
     document.body.innerHTML = ''
@@ -514,46 +551,169 @@ describe('round 37 items 14 and 15 – the rail’s own edges', () => {
     }
   })
 
-  it('⚠ ITEM 14 – …and the rail still meets the frame’s edge: the negative margin stays', async () => {
+  it('⚠ ITEM 14 – …and the rail still meets the frame’s edge, by construction now', async () => {
     assertSheetPresent()
-    // The other half of the asymmetry, and it is NOT part of his ask. Dropping it would move the
-    // rail's own edge right by the gutter and put the labels back where they are today – which is
-    // neither a smaller inset nor the thing he pointed at. Measured both ways in Chromium at 1024:
-    // with the margin the rail stands at x=0 and the labels at 56; without it, x=16 and 72.
+    // ⚠ RE-AIMED BY R37-16. This arm read `margin-left === -16px` and asserted the INSTRUMENT. The
+    // behaviour it was written for is «flush to the frame's own edge rather than inset by the
+    // frame's gutter, which is where AC puts it» – and that fact is unchanged; what delivers it is
+    // not. Item 16 («любые отрицательные отступы - это антипаттерн») took the gutter off the grid
+    // container, so the rail's own COLUMN starts at the frame's edge and is `rail + gutter` wide.
+    // ⚠ AND THE ARM IS NOT WEAKER FOR IT. Deleting the old margin on its own would have moved the
+    // rail's edge right by the gutter (measured in Chromium at 1024: x=16 and the labels back at
+    // 72) and passed a `>= 0` check; what is asserted here is the pair that makes x=0 true – no
+    // padding on the side the rail sits against, and a track wide enough to hold the gutter with it.
     const gutter = lengthPx(token('--app-pad-x'), 0)
-    const r = await rail(DESKTOP)
-    expect(pxOf(r.marginLeft), 'the rail is still pulled out to the frame’s own edge').toBe(-gutter)
+    const strip = lengthPx(token('--app-rail-w'), 0)
+    for (const vp of [DESKTOP_ENTRY, DESKTOP]) {
+      const r = await rail(vp)
+      expect(r.framePadLeft, `at ${vp.width} the frame’s left gutter is not on the grid container`).toBe(
+        '0px',
+      )
+      expect(
+        lengthPx(r.frameCols.split(' minmax')[0], 0),
+        `at ${vp.width} the rail’s own column carries it instead: the strip plus the gutter`,
+      ).toBe(strip + gutter)
+      expect(
+        negativeSides(r, ['marginTop', 'marginRight', 'marginBottom', 'marginLeft']),
+        `at ${vp.width} and nothing is unwound by a negative offset`,
+      ).toEqual([])
+    }
   })
 
-  it('⭐⭐⭐ ITEM 15 – the frame’s bottom gutter is pulled through too, so no band is left', async () => {
+  it('⭐⭐⭐ ITEM 15 – the frame’s bottom gutter is below the rail’s reach, so no band is left', async () => {
     assertSheetPresent()
     // WHAT THE BAND ACTUALLY WAS, as arithmetic rather than as a guess: the rail spans
-    // `grid-row: 1 / -1`, the grid's rows fill `#app`'s CONTENT box, so the rail's sticky travel
+    // `grid-row: 1 / -1`, the grid's rows filled `#app`'s CONTENT box, so the rail's sticky travel
     // stopped `--app-pad-bottom` above the last pixel of the document. Measured in Chromium at the
     // foot of the page: 48.0px on Home and Season, at 1280x900, 1024x800 and 1280x600 alike.
+    //
+    // ⚠ RE-AIMED BY R37-16. This arm read `margin-bottom === -48px`, i.e. «the rail travels the
+    // gutter's full depth» – the instrument again. The gutter is no longer BETWEEN the rail's grid
+    // area and the page's last pixel: the grid container has no bottom padding, and the 48 is the
+    // grid's own LAST ROW, which the rail spans with everything else. Same band, closed one layer
+    // up. The pixels («there is nothing but rail between its last pixel and the page's») are
+    // measured in `e2e/r37-frame.spec.ts`, which is the only layer that can lay a page out.
     const gutter = lengthPx(token('--app-pad-bottom'), 0)
     expect(gutter, 'the frame’s bottom gutter is the 48 the band measured').toBe(48)
     for (const vp of [DESKTOP_ENTRY, DESKTOP]) {
       const r = await rail(vp)
-      expect(pxOf(r.marginBottom), `at ${vp.width} the rail travels the gutter’s full depth`).toBe(-gutter)
-      // The three facts that make that margin mean «no band»: the rail spans every row, it is the
-      // sticky column, and its own bottom padding is untouched, so its last card is no closer to the
-      // edge than it was.
-      expect(r.gridRow, 'and it still spans the whole grid').toBe('1 / -1')
-      expect(pxOf(r.marginTop), 'the top gutter is unwound exactly as before').toBe(
-        -lengthPx(token('--app-pad-top'), 0),
+      expect(r.framePadBottom, `at ${vp.width} nothing of the frame is below the grid`).toBe('0px')
+      // ...and the 48 did not simply vanish – it is the last row, so the page is exactly as tall.
+      const rows = r.frameRows.split(' ')
+      expect(lengthPx(rows[rows.length - 1], 0), `at ${vp.width} the gutter is the grid’s last row`).toBe(
+        gutter,
       )
+      expect(lengthPx(rows[0], 0), 'and the top one is the frame’s own top inset').toBe(
+        lengthPx(token('--app-pad-top'), 0),
+      )
+      // The three facts that make that mean «no band»: the rail spans every row, it is the sticky
+      // column, and its own bottom padding is untouched, so its last card is no closer to the edge
+      // than it was.
+      expect(r.gridRow, 'and it still spans the whole grid').toBe('1 / -1')
+      expect(r.framePadTop, 'the top gutter is off the container as well').toBe('0px')
       expect(r.padTop, 'and the rail’s own room for its first tab is unchanged').toBe('20px')
     }
   })
 
-  it('⚠ …and neither item reaches a phone or a tablet – the bar is untouched below 1024', async () => {
+  it('⚠ …and no item here reaches a phone or a tablet – the bar and the frame are untouched below 1024', async () => {
     assertSheetPresent()
     for (const vp of [PHONE, TABLET, TABLET_TOP]) {
       const r = await rail(vp)
       expect(pxOf(r.marginLeft) || 0, `at ${vp.width} no negative margin`).toBe(0)
       expect(pxOf(r.marginBottom) || 0, `at ${vp.width} no bottom pull`).toBe(0)
       expect(r.padLeft === '' || r.padLeft === '0px', `at ${vp.width} the bar has no rail padding`).toBe(true)
+      // ⚠ ADDED BY R37-16. The gutter only moves inside the desktop grid, and below 1024 there is no
+      // grid at all – so the frame keeps the padding it has had since the app had a frame. This is
+      // the arm that would go red if the container change escaped its media query.
+      expect(r.frameDisplay === '' || r.frameDisplay === 'block', `at ${vp.width} no grid`).toBe(true)
+      expect(
+        [r.framePadTop, r.framePadRight, r.framePadBottom, r.framePadLeft],
+        `at ${vp.width} the frame’s own gutter, exactly as it was`,
+      ).toEqual([token('--app-pad-top'), token('--app-pad-x'), token('--app-pad-bottom'), token('--app-pad-x')])
+    }
+  })
+})
+
+// =================================================================================================
+// ITEM 16 – «ЛЮБЫЕ ОТРИЦАТЕЛЬНЫЕ ОТСТУПЫ - ЭТО АНТИПАТТЕРН»
+// =================================================================================================
+// His ruling of 06.09, with a screenshot, and it is a rule rather than a fix: the guard below exists
+// so that the next wave reaching for this trick is stopped by a machine instead of by memory.
+//
+// ⚠ WHAT IT ASSERTS AND WHY THAT IS ENOUGH. Not «the sheet contains no minus sign» – a negative
+// offset can arrive through a token, a `calc()` or a cascade this file cannot grep – but the rail's
+// COMPUTED margin, on the mounted shell, at both desktop rungs. `e2e/r37-frame.spec.ts` asks the
+// same question of a real browser, where `calc(-1 * 16px)` has been reduced to `-16px` and no
+// parsing is involved at all.
+//
+// ⚠ AND THE OTHER HALF: THE GUTTER MUST STILL BE SOMEWHERE. A guard that only forbids the negative
+// would be satisfied by deleting the frame's inset entirely, which moves every box on the page. So
+// the accounting is asserted beside it – the gutter is in the rail's column, in the first and last
+// rows, and on the container's right – and that is what makes «nothing moved» a claim rather than a
+// hope.
+//
+// MUTATION-VERIFIED: `margin-left: calc(-1 * var(--app-pad-x))` put back on the rail turns the first
+// arm red at both widths («at 1024 the rail escapes nothing – it is placed where it belongs:
+// expected [ 'marginLeft' ] to deeply equal []»); the only other red in the file is the «meets the
+// frame's edge» arm above, which asks the same question from the other side.
+describe('round 37 item 16 – no negative offset on the rail, at either desktop rung', () => {
+  beforeEach(() => {
+    setActivePinia(createPinia())
+    backing.clear()
+    document.body.innerHTML = ''
+  })
+  afterEach(() => setViewport(PHONE))
+
+  async function railBox(vp: Viewport) {
+    setViewport(vp)
+    const wrapper = await mountShell()
+    const cs = getComputedStyle(wrapper.find('nav.tab-bar').element)
+    const out = {
+      marginTop: cs.marginTop,
+      marginRight: cs.marginRight,
+      marginBottom: cs.marginBottom,
+      marginLeft: cs.marginLeft,
+    }
+    wrapper.unmount()
+    document.body.innerHTML = ''
+    return out
+  }
+
+  it('⭐⭐⭐ the rail’s computed margin has no negative side at 1024 or at 1280', async () => {
+    assertSheetPresent()
+    for (const vp of [DESKTOP_ENTRY, DESKTOP]) {
+      const box = await railBox(vp)
+      expect(
+        negativeSides(box, ['marginTop', 'marginRight', 'marginBottom', 'marginLeft']),
+        `at ${vp.width} the rail escapes nothing – it is placed where it belongs`,
+      ).toEqual([])
+    }
+  })
+
+  it('⚠ …and the gutter it used to unwind is still on the page, in the grid', async () => {
+    assertSheetPresent()
+    const padX = lengthPx(token('--app-pad-x'), 0)
+    const padTop = lengthPx(token('--app-pad-top'), 0)
+    const padBottom = lengthPx(token('--app-pad-bottom'), 0)
+    const strip = lengthPx(token('--app-rail-w'), 0)
+    for (const vp of [DESKTOP_ENTRY, DESKTOP]) {
+      setViewport(vp)
+      const wrapper = await mountShell()
+      const frame = getComputedStyle(document.querySelector('#app') as HTMLElement)
+      const cols = frame.gridTemplateColumns.replace(/\s+/g, ' ').trim()
+      const rows = frame.gridTemplateRows.replace(/\s+/g, ' ').trim().split(' ')
+      expect(lengthPx(cols.split(' minmax')[0], 0), `at ${vp.width} the left gutter is in the rail’s column`).toBe(
+        strip + padX,
+      )
+      expect(lengthPx(rows[0], 0), `at ${vp.width} the top gutter is the first row`).toBe(padTop)
+      expect(lengthPx(rows[rows.length - 1], 0), `at ${vp.width} the bottom gutter is the last row`).toBe(
+        padBottom,
+      )
+      expect(frame.paddingRight, `at ${vp.width} and the right one is still the frame’s own`).toBe(
+        token('--app-pad-x'),
+      )
+      wrapper.unmount()
+      document.body.innerHTML = ''
     }
   })
 })

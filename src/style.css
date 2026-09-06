@@ -787,14 +787,74 @@ body {
 
    ⚠ AND THE ROWS ARE DECLARED. `grid-row: 1 / -1` counts `-1` from the end of the EXPLICIT grid, so
    with no `grid-template-rows` it degenerates to a single row and the rail's sticky range collapses
-   to the height of whatever shares its row. Four explicit `auto` rows cost nothing when they are
-   empty and cover the shell's real worst case: two top notices, the main column, and one spare. */
+   to the height of whatever shares its row. Explicit `auto` rows cost nothing when they are empty
+   and cover the shell's real worst case: two top notices, the main column, and one spare.
+
+   ⭐⭐⭐ ROUND 37 ITEM 16 – AND THE FRAME'S GUTTER IS NOT THIS GRID'S PADDING ANY MORE. The owner,
+   06.09, with a screenshot: «любые отрицательные отступы - это антипаттерн». Three of them stood on
+   the rail below – `calc(-1 * var(--app-pad-top))`, `calc(-1 * var(--app-pad-bottom))` and
+   `calc(-1 * var(--app-pad-x))` – and all three existed for ONE reason: `#app` carries the frame's
+   gutter (`padding: var(--app-pad-top) var(--app-pad-x) var(--app-pad-bottom)`, up the file) and on
+   a desktop `#app` IS the grid container, so the rail was born inside a padding meant for the
+   reading column and had to climb back out of it.
+
+   ⚠ THE GENERAL PRINCIPLE HE STATED, AND IT OUTLIVES THIS RULE: a negative margin used to escape an
+   ancestor's padding is a sign the box is in the wrong container, and the honest fix is the
+   container, not the offset.
+
+   SO THE GUTTER MOVES INTO THE GRID ITSELF, side by side:
+     * LEFT – the rail's own track carries it. The first column is `rail + gutter` wide and starts at
+       the frame's own edge, so the rail is flush BY CONSTRUCTION and the reading column still begins
+       gutter + rail + gap in, exactly where it did.
+     * TOP and BOTTOM – the first and last ROWS carry it. Two fixed-size rows the rail spans with
+       everything else, instead of a padding its grid area stopped short of.
+     * RIGHT – stays the frame's padding, deliberately. Nothing on that side has to escape it: the
+       reading column is the only box there and the gutter IS its inset from the frame. What the
+       ruling names is a box climbing out of an ancestor's padding, and there is no such box here.
+
+   ⚠ MEASURED BEFORE AND AFTER AT 1024, 1280 AND 1440, ON ALL FIVE TABS AND WITH BOTH TOP NOTICES UP:
+   every box is where it was to the pixel – the rail at x=0/40/120 and 212 wide, the reading column
+   at 236/276/356 and 772/948/948 wide, the first tab's label at 56/96, the document 1202.61px tall
+   on Home at 1280, and nothing at all below 1024, where this grid does not exist. */
 @media (min-width: 1024px) {
   #app:has(> nav.tab-bar) {
     display: grid;
-    grid-template-columns: var(--app-rail-w) minmax(0, 1fr);
-    grid-template-rows: repeat(4, auto);
+    /* ⭐ ITEM 16 – THE FRAME'S LEFT GUTTER IS THE RAIL'S TRACK NOW. `calc(rail + gutter)` is the 212
+       the rail's border box has always measured: it was 196 of track plus the 16 the negative left
+       margin borrowed back, and it is one track that is 212 wide instead. `column-gap` still
+       separates the rail from the reading column, so the column's own left edge does not move. */
+    grid-template-columns: calc(var(--app-rail-w) + var(--app-pad-x)) minmax(0, 1fr);
+    /* ⭐ ...AND THE VERTICAL GUTTER IS THE FIRST AND LAST ROWS. Both are FIXED rather than `auto`, so
+       they hold the frame's inset whether or not anything is ever placed in them, and the rail's
+       `grid-row: 1 / -1` spans them with the rest – which is what closes the band item 15 measured
+       under the rail, without a margin reaching past a grid area. The four `auto` rows between them
+       are the shell's own worst case, unchanged. */
+    grid-template-rows: var(--app-pad-top) repeat(4, auto) var(--app-pad-bottom);
     column-gap: var(--app-rail-gap);
+    /* The three sides a grid item had to climb out of are zero; the fourth is the frame's, and see
+       the header for why it stays. Four longhands and not the shorthand, for the reason the CTA cap
+       gives two lines of `margin-left` / `margin-right` instead of `margin-inline`: a rule no test
+       can see is a rule the next wave can delete, and happy-dom reads longhands where it drops
+       shorthands. */
+    padding-top: 0;
+    padding-right: var(--app-pad-x);
+    padding-bottom: 0;
+    padding-left: 0;
+  }
+
+  /* ⚠⚠ AND THIS IS WHAT KEEPS THE CONTENT OUT OF THE TOP GUTTER ROW. A fixed-size row holds its
+     height whether it is occupied or not, so the BOTTOM one needs nothing; the top one is different,
+     because auto-placement fills the first free cell it finds and that cell is row 1 of column 2.
+     An empty pseudo-element parks there – it is a grid item, it is first in order, and it draws
+     nothing – and the notices and the reading column start at row 2 where they always did.
+     ⚠ IT NEEDS ITS OWN `grid-column`: `> *` below is a CHILD selector and a pseudo-element is not a
+     child, so it would otherwise land in the rail's column and lengthen the first row.
+     ⚠ AND THE PLACEMENT IS SPELLED RATHER THAN LEFT TO THE CURSOR, so the reason it is here does not
+     depend on reading the auto-placement algorithm to see it. */
+  #app:has(> nav.tab-bar)::before {
+    content: '';
+    grid-column: 2;
+    grid-row: 1;
   }
 
   /* Everything that is not the rail lives in the second column. The two top notices are in-flow
@@ -840,36 +900,34 @@ body {
     overflow-y: auto;
     width: auto;
     max-width: none;
-    /* Flush to the frame's own edge rather than inset by the frame's gutter, which is where AC puts
-       it.
-       ⭐⭐⭐ ROUND 37 ITEM 15 – AND THE BOTTOM EDGE IS AN EDGE TOO, WHICH IS THE WHOLE OF THAT ITEM.
-       The owner, 06.09: «при прокручивании страницы вниз на десктоп под рейлом навигации остается
-       пустое пространство 50-60 пикселей примерно, проверь что это пожалуйста и желательно этот
-       дефект убрать.»
+    /* ⭐⭐⭐ ROUND 37 ITEM 16 – AND THERE IS NO MARGIN HERE AT ALL, WHICH IS THE WHOLE OF THAT ITEM.
+       The owner, 06.09, with a screenshot: «любые отрицательные отступы - это антипаттерн».
 
-       ⚠⚠ MEASURED BEFORE ANYTHING WAS REMOVED, AND THE FIRST HYPOTHESIS WAS WRONG. It is NOT a
-       reservation left behind for the phone's bottom bar – that reservation is `.app-content`'s own
-       `padding-bottom` (88 / 96 / 148px), it lives INSIDE the second column, and the rail spans it
-       happily because it spans `grid-row: 1 / -1`. What the band actually is: `#app`'s own
-       `--app-pad-bottom`, 48px, and the arithmetic is exact rather than approximate. The grid's rows
-       fill the frame's CONTENT box, so the rail's grid area – and therefore its sticky travel – ends
-       48px above the document's last pixel; scrolled to the foot of the page, the rail, its
-       `border-right` and its background all stop there and the frame's bottom gutter shows through.
-       Measured in Chromium, scrolled to the end, before this line: 48.0px on Home and on Season, at
-       1280x900, at 1024x800 and at 1280x600 alike, with `elementFromPoint` in the band returning
-       `#app` itself.
-       ⚠ IT IS A DIFFERENT DEFECT FROM THE RAIL SCROLLING ITSELF. At 1280x600 the rail's own content
-       is 728px in a 600px box, so its last dashboard card is below the RAIL's fold – that is
-       `overflow-y: auto` doing its job and is not this band.
+       WHAT USED TO STAND ON THIS LINE, and what it was for. Three negative offsets –
+       `margin: calc(-1 * var(--app-pad-top)) 0 calc(-1 * var(--app-pad-bottom))
+       calc(-1 * var(--app-pad-x))` – and every one of them said the same thing twice: the rail is a
+       grid item, the grid container is `#app`, `#app` carries the frame's gutter, so the rail was
+       born inset by a padding meant for the reading column and each margin was one side of it being
+       climbed back out of.
+         * the LEFT one bought «flush to the frame's own edge rather than inset by the frame's
+           gutter, which is where AC puts it»;
+         * the TOP one put the rail's first pixel on the frame's first pixel;
+         * the BOTTOM one was item 15 – «при прокручивании страницы вниз на десктоп под рейлом
+           навигации остается пустое пространство 50-60 пикселей примерно». Measured then: exactly
+           `--app-pad-bottom`, 48px, because the grid's rows fill the frame's CONTENT box, so the
+           rail's grid area – and its sticky travel with it – ended 48px above the document's last
+           pixel and the frame's bottom gutter showed through under the border and the background.
 
-       THE FIX IS THE SENTENCE ABOVE, FINISHED. The top and left gutters are already unwound by
-       negative margins so the rail meets the frame's edge; the bottom one was simply never in the
-       list. A negative bottom margin lets the rail's border box travel `--app-pad-bottom` past the
-       bottom of its grid area – a sticky box is constrained by its MARGIN box, so this is the same
-       instrument the `-1 * --app-pad-top` above uses, in the other direction – and the band closes
-       to 0. The gutter is not re-spent as padding on this side: the rail's own 20px bottom padding
-       plus the safe area is what holds its last card off the edge, exactly as it did. */
-    margin: calc(-1 * var(--app-pad-top)) 0 calc(-1 * var(--app-pad-bottom)) calc(-1 * var(--app-pad-x));
+       ALL THREE FACTS ARE STILL TRUE AND NONE OF THEM IS A MARGIN NOW. The gutter moved off the grid
+       container and into the grid – the first column is `rail + gutter` wide and starts at the
+       frame's edge, the first and last rows ARE the vertical gutter – so the rail's grid area is the
+       frame's whole box and being flush costs nothing. See the header of the grid rule above.
+
+       ⚠ WHAT DID NOT CHANGE, and the two are separate facts. The rail's own 20px bottom padding plus
+       the safe area still holds its last card off the edge, and the gutter is still not re-spent as
+       padding on any side (item 14). And the band this closes is NOT the rail scrolling itself: at
+       1280x600 the rail's own content is 728px in a 600px box, so its last dashboard card is below
+       the RAIL's fold, which is `overflow-y: auto` doing its job. */
     /* ⭐⭐⭐ ROUND 37 ITEM 14 – THE LEFT INSET IS THE RIGHT ONE NOW. The owner, 06.09: «на
        вертикальном рейле навигации на десктопе слева сделаем такой же отступ, как и справа (меньше
        то есть)».
@@ -884,12 +942,15 @@ body {
        1280, 80 -> 64 and 112 -> 96. Nothing moves on the right: the rail's own right edge and its
        hairline stay at 199 / 239, so the change is one-sided, which is what «такой же, как и
        справа» asks for.
-       ⚠ THE NEGATIVE MARGIN STAYS. It is a separate fact – «flush to the frame's own edge rather
-       than inset by the frame's gutter, which is where AC puts it» – and dropping it would keep the
-       labels where they are today and move the rail's EDGE right instead, which is neither the
-       thing he pointed at nor a smaller inset. Measured both ways at 1024: with the margin the rail
-       stands at x=0 and the labels at 56; without it, x=16 and the labels back at 72, i.e. the
-       screen he is already looking at.
+       ⚠ THE NEGATIVE MARGIN STAYED FOR THIS ITEM AND ITEM 16 THEN REMOVED IT – WITHOUT MOVING ANY OF
+       THIS. It was a separate fact – «flush to the frame's own edge rather than inset by the frame's
+       gutter, which is where AC puts it» – and DELETING it on its own would have kept the labels
+       where they are and moved the rail's EDGE right instead, which is neither the thing he pointed
+       at nor a smaller inset. Measured both ways at 1024 while this item was built: with the margin
+       the rail stands at x=0 and the labels at 56; with the margin merely deleted, x=16 and the
+       labels back at 72, i.e. the screen he was already looking at. That is why item 16 moved the
+       CONTAINER instead of the offset: the gutter is in the grid's own first column and rows now, so
+       x=0 and 56 hold with no margin anywhere on this rule. The 12 below is untouched by it.
        ⚠ AND IT IS TWO DECLARATIONS RATHER THAN ONE FOUR-VALUE SHORTHAND, for the reason the CTA cap
        states two lines of `margin-left` / `margin-right` instead of `margin-inline`: a rule no test
        can see is a rule the next wave can delete. Measured on happy-dom 06.09 – it drops a
