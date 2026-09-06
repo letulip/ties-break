@@ -216,31 +216,44 @@ describe('#3 – the shop has a front door', () => {
     wrapper.unmount()
   })
 
-  it('⭐ her account, with her photograph, on the home AND on a category page', async () => {
-    // «ниже her account с фоточкой как в макете (а также на каждой странице магазина)». The strip
-    // itself is round 26 #5b's and is not re-worded here; what round 35 added is the picture, and
-    // the «every shop page» half is satisfied by the block sitting outside every tab guard.
+  // ⚠⚠ RE-AIMED BY ROUND 37 #9 (06.09), AND IT IS A REVERSAL RATHER THAN A CORRECTION – said out
+  // loud here because a reader finding this arm inverted deserves to know it was asked for. Round 35
+  // #3 asked for her account «а также на каждой странице магазина» and this arm held exactly that;
+  // the owner, from the shipped build: «наша плашка "Her own account" в магазине шумит сильно, давай
+  // ее только на spending будем показывать, мне кажется на других экранах она не очень нужна вообще».
+  // The shop half of round 35 #3 is therefore withdrawn BY ITS AUTHOR, and this arm now asserts the
+  // absence it used to forbid – the same two places, pressed the same way, with the answer the other
+  // way round. What round 35 #3 KEPT is still asserted, one chapter over: the photograph, the role
+  // and both sentences are held on Spending in `tests/component/round37-money.test.ts`, and not one
+  // word of the copy moved. Nothing here is deleted, because a claim quietly dropped is how the shop
+  // half would come back by accident.
+  it('⭐ her account is NOT on the shop any more – neither on its home nor on a category page', async () => {
     // ⚠ THE RAMP HAS TO BE RUNNING for the strip to exist at all, which is her eighteenth – so the
-    // fixture is walked to it rather than faked.
+    // fixture is walked to it rather than faked, and without that walk this arm would be measuring
+    // an absence it gets for free.
     const world = rich('r35-3-account', 52 * 5)
     const snap = toSnapshot(world)
     expect(snap.ageYears, 'the fixture is past the threshold birthday').toBeGreaterThanOrEqual(18)
     const wrapper = await mountShop(snap)
 
-    const onHome = wrapper.find('.money-share')
-    expect(onHome.exists(), 'her account is on the shop home').toBe(true)
-    expect(onHome.find('.money-share-photo').exists(), 'and it carries her photograph').toBe(true)
-    const photo = onHome.find('.money-share-photo img').attributes('src')
-    expect(photo, 'a real crop, not a placeholder').toMatch(/avatars\/.*\.webp$/)
-    // ⚠ AND THE TWO SENTENCES ROUND 26 #5b SHIPPED ARE UNTOUCHED – the element changed from `p` to
-    // `div` so a polaroid could live in it, and nothing else did.
-    expect(onHome.text()).toContain('split before it reaches this account')
-    expect(onHome.attributes('role')).toBe('note')
-
+    expect(wrapper.find('.money-share').exists(), 'the shop home draws it no more').toBe(false)
     await openShelfTab(wrapper, 'Water')
-    const onPage = wrapper.find('.money-share')
-    expect(onPage.exists(), 'and on a category page too').toBe(true)
-    expect(onPage.find('.money-share-photo').exists(), 'with the photograph there as well').toBe(true)
+    expect(wrapper.find('.money-share').exists(), 'and neither does a category page').toBe(false)
+
+    // ⚠⚠ AND THE ABSENCE IS THE CHAPTER'S, NOT THE CAREER'S. Without this the arm would pass on a
+    // fixture whose ramp never started, on a snapshot with no account line, or on a strip somebody
+    // deleted outright – three ways to be green while proving nothing. Pressing back into Spending
+    // is what separates «guarded» from «gone».
+    const spending = wrapper.findAll('.money-tabs button.tab-pill').find((n) => n.text().trim() === 'Spending')
+    expect(spending, 'the Spending chapter button').toBeTruthy()
+    await spending!.trigger('click')
+    const plate = wrapper.find('.money-share')
+    expect(plate.exists(), 'her account is on Spending, where he asked for it').toBe(true)
+    expect(plate.find('.money-share-photo').exists(), 'still carrying round 35 #3’s photograph').toBe(true)
+    const photo = plate.find('.money-share-photo img').attributes('src')
+    expect(photo, 'a real crop, not a placeholder').toMatch(/avatars\/.*\.webp$/)
+    expect(plate.text()).toContain('split before it reaches this account')
+    expect(plate.attributes('role')).toBe('note')
     wrapper.unmount()
   })
 
