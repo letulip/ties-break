@@ -2214,8 +2214,45 @@ watch(finished, (isFinished) => {
     grid-template-columns: minmax(0, 1fr) minmax(0, 344px);
     /* Row 1 is the panel's own height; row 2 takes everything left, which is what hands the
        commentary the height it has never had here (measured: 92px – its FLOOR – at every width from
-       768 up before this item, because the panel and the bar between them left it nothing). */
-    grid-template-rows: auto minmax(0, 1fr);
+       768 up before this item, because the panel and the bar between them left it nothing).
+
+       ⚠⚠ ROUND 37 – AND NEITHER ROW MAY BE SQUEEZED BELOW WHAT IS IN IT. The owner, 06.09:
+       «надо сделать фикс для планшетов и десктопов, там интерфейс перестроен, но как будто
+       вертикальный скролл запрещен, из-за этого на невысоких экранах часть интерфейса вообще не
+       видна.» (A style comment may carry his own words; a template may not.)
+
+       THE MECHANISM, MEASURED IN CHROMIUM RATHER THAN REASONED ABOUT. `.mv` is `flex: 1;
+       min-height: 0` inside `.tf-body`, so on a short window it is pinned to the scrollport's
+       height and the grid has NEGATIVE free space. `auto` then falls back to its base size, which
+       is the item's minimum contribution – and `.mv-panel` is a `Card variant="photo"`, i.e. an
+       `overflow: hidden` box, whose automatic minimum size is ZERO. So the row shrank the panel
+       under its own content and the panel CLIPPED the difference, with nothing in the chain left
+       to scroll: `.tf-body`'s scrollHeight equalled its clientHeight, so the takeover had nothing
+       to scroll to. Measured at 900x620: panel content 628 in a 527px box – 101px of the score and
+       stats readout unreachable at any scroll, `.tf-body` 571/571. At 768x640: 81px. At 1280x600:
+       14px. And row 2 collapsed to 0px, which put the transport bar back over the court.
+
+       `max-content` is the same size `auto` computes to WHENEVER THERE IS ROOM – an `fr` sibling
+       absorbs the free space either way – so nothing moves on a window that already fitted;
+       measured identical at 1024/1280x700, x800, x900 and 768/900x900. What changes is only the
+       deficit case: the row keeps the panel's height, the grid outgrows the port, and `.tf-body` –
+       which has been `overflow-y: auto` all along – scrolls.
+
+       ⭐ `minmax(auto, 1fr)` IS THE SAME SENTENCE ABOUT ROW 2, and `auto` there is load-bearing
+       rather than a synonym for the `0` it replaces. `auto` as a track MINIMUM means each item's
+       AUTOMATIC MINIMUM SIZE, and the two items in that row answer it differently, which is exactly
+       the difference the row needs: `.mv-log` is a scroll container carrying an explicit
+       `min-height: 0` one rule down, so its automatic minimum is zero and the commentary still gives
+       first, precisely as it did; `.mv-controls` is not, so the transport bar contributes its own
+       136px and stops being laid over the court. Measured before this line, at 900x800 – a window
+       that fitted – the bar's top stood 46px INSIDE the panel's bottom edge, i.e. over the stats
+       readout; at 768x640 it stood 126px inside it. `minmax(min-content, 1fr)` was tried first and
+       is the wrong instrument: min-content asks the LOG for its content height too (202px), which
+       floors the row nearly twice as high as the bar needs and makes three windows scroll that had
+       no reason to.
+       ⚠ Below 768 there is no grid at all – `.mv` is the flex column above and `.tf-body` already
+       scrolled – so not one pixel of the phone is in this rule's reach. */
+    grid-template-rows: max-content minmax(auto, 1fr);
   }
 
   /* The wrapper stops being a box – see the block comment. Everything it declares (the column, the
