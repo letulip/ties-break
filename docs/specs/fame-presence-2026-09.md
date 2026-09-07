@@ -49,7 +49,7 @@ part of it that WAS paid faded on the clock built for single results. That is «
 | `fame.seasonHalfLifeWeeks` | (did not exist) | **312** | a season is remembered on a CAREER clock, six years, not the title's two |
 | `merch.strength.retention` | 0.78 | **0.95** | lets the slow stock actually govern the tail |
 | `merch.strength.halfLifeWeeks` | 208 | **312** | the stock itself falls half as fast |
-| `merch.strength.floorShare` | 0.4 | **0.5** | where the decay STOPS |
+| ~~`merch.strength.floorShare`~~ | 0.4 | **0.4 – RAISED AND SENT BACK, see below** | where the decay stops |
 
 ⚠⚠ **`retention` is the dial that makes the others work, and the reason is counter-intuitive enough
 to be worth stating.** `brandReachOf` reads `max(fame, retention x strength)`. At 0.78 the stock
@@ -80,18 +80,28 @@ a season forgotten faster than the title won inside it is this change written up
 | + rung 100 only | 15.8 | $4,805 | $2,739,555 | -30.7% | $199,488 | 7.3% |
 | + career clock 312w | 22.6 | $6,102 | $3,653,858 | -33.8% | $260,008 | 7.1% |
 | + retention 0.95 | 22.6 | $6,965 | $4,291,862 | -29.1% | $401,640 | 9.4% |
-| **+ stock clock 312w and floorShare 0.5 = SHIPPED** | 22.6 | **$8,111** | **$5,172,791** | **-23.3%** | **$662,364** | **12.8%** |
+| **+ stock clock 312w = SHIPPED** | 22.6 | **$8,111** | **$5,172,791** | **-23.3%** | **$401,640** | **7.8%** |
 
 **What it buys him:** the brand is worth twice what it was, it falls a quarter less steeply, and five
-years after she stops it holds $662,364 instead of $185,285 – the difference between an asset and a
-receipt.
+years after she stops it holds $401,640 instead of $185,285.
 
-⚠⚠ **`floorShare` IS 0.5 AND NOT HIGHER, AND THE KERNEL DECIDES IT.** `strengthDecayAt` is
+⚠⚠ **THE FLOOR WAS RAISED TO 0.5 AND HE SENT IT BACK THE SAME DAY.** 07.09: «он вполне может падать
+и на 185к и ниже, особенно если давно не было рекламных контрактов… Или она вообще не играла и в
+турниры не ходила 5 лет. Это тоже можно смоделировать. Вопрос в формуле расчёта стоимости бренда
+здесь мне кажется. А ставить планку "не ниже 662к" – это немного странно, кому нужен бренд, если он
+пустой?» So `floorShare` is his own round-32 0.4 again, untouched, and the $662,364 line below is
+kept as the measurement rather than as a proposal. ⚠ HIS QUESTION IS ABOUT THE FORMULA AND IS STILL
+OPEN: should a brand be able to reach nothing at all, and what does five years of a career that
+STOPPED ENTIRELY – no tournaments, no contracts – look like? That is a modelling job
+(`tools/r38-fame-presence-sweep.ts` already projects a tail; what it does not do is stop her
+playing), and it is not this wave.
+
+⚠ **AND THE KERNEL PUTS A CEILING ON THIS DIAL ANYWAY.** `strengthDecayAt` is
 `max(floorShare, 2^(-d / halfLifeWeeks))`, so any floor above 0.5 clips the curve before it has
 completed a single halving and `halfLifeWeeks` stops describing anything – a constant whose name is a
-lie, and `tests/round32-brand-inertia.test.ts` says so directly («half at the half-life»). At exactly
-0.5 the two meet: the stock fades by half, on the half-life, and then it stops. 0.55 measured a
-$822,515 tail and was refused for that reason.
+lie, and `tests/round32-brand-inertia.test.ts` says so directly («half at the half-life»). So
+whatever the answer to his formula question turns out to be, it cannot be a `floorShare` above 0.5 –
+it has to be a change to the shape.
 
 **⚠ What it does NOT buy:** the season-over-season fall is -23.3%, not zero. A brand whose owner
 stopped winning three years ago SHOULD fade; what it may not do is evaporate.

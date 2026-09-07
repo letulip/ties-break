@@ -2392,20 +2392,18 @@ export const ECONOMY = {
          *  prices at the minimum however long the silence runs; a career that was never noticed has
          *  a peak of nothing and a floor of nothing, so this hands an unknown exactly zero.
          *  ⚠ IT IS A SHARE AND NOT A FLOOR IN POINTS, which is the personal half of his ruling: 0.4
-         *  of a Slam champion's peak is a large brand and 0.4 of a club player's is still nothing. */
-        /** ⚠⚠ ROUND 38 #2c RAISED THIS 0.4 -> 0.55, and it is a PURE TAIL DIAL: measured over 29 of
-         *  his careers, every figure at every live week is IDENTICAL at 0.4, 0.5, 0.55 and 0.65,
-         *  because the exponential still dominates for the first two years. What it decides is where
-         *  the decay STOPS – $185,285 at 0.4 against $822,515 at 0.55 on his week-1115 career, five
-         *  years after she stops winning.
-         *  ⚠⚠ 0.5 AND NOT HIGHER, AND THE KERNEL IS WHY. `strengthDecayAt` is
-         *  `max(floorShare, 2^(-d / halfLifeWeeks))`, so a floor ABOVE 0.5 clips the curve BEFORE it
-         *  has completed a single halving and `halfLifeWeeks` stops describing anything – a constant
-         *  whose name is a lie. At exactly 0.5 the two meet: the stock fades by half, on the
-         *  half-life, and then it stops. That is also the sentence the shop card can honestly carry.
-         *  ⭐ Measured: the five-year tail on his week-1115 career is $662,364 at 0.5 against $185,285
-         *  before this wave. 0.55 measured $822,515 and was refused for the reason above. */
-        floorShare: 0.5,
+         *  of a Slam champion's peak is a large brand and 0.4 of a club player's is still nothing.
+         *
+         *  ⚠⚠ ROUND 38 #2c RAISED THIS TO 0.5 AND THE OWNER SENT IT BACK THE SAME DAY, so it is 0.4
+         *  again – his own round-32 number, untouched. His words, 07.09: «он вполне может падать и на
+         *  185к и ниже, особенно если давно не было рекламных контрактов… А ставить планку "не ниже
+         *  662к" – это немного странно, кому нужен бренд, если он пустой?» ⚠ THE MEASUREMENT THAT
+         *  PROMPTED THE RAISE STANDS AND IS NOT THE ARGUMENT FOR IT: 0.4 / 0.5 / 0.55 / 0.65 are
+         *  IDENTICAL at every live week on 29 of his careers and differ only in where the fall stops,
+         *  five years out. What he is asking is whether it should stop at all, and that is a design
+         *  question about the FORMULA rather than a value for this constant – see
+         *  docs/specs/fame-presence-2026-09.md §5. */
+        floorShare: 0.4,
         /** ⭐⭐⭐ REVISION (31.08) – HOW MUCH OF THE STOCK STILL SELLS SHIRTS, 0..1. THE OWNER, reading
          *  the first shipped result and stopping it: «меня смущает вот это: На пятом году бренд
          *  стоит $166 060 при годовом доходе $1 352».

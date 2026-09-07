@@ -221,8 +221,69 @@ the repo keeps is the derived statistics below.
   so. ⚠ What he is asking for NOW is different and is 6d: the coach speaking about her DECLINE, which
   has never existed anywhere.
 
-- [ ] **8. The academy's worth** – his «давай обсудим, излагай, в этот же раунд пойдёт». The
-  observation and the three shapes are in the report; the spec follows his choice.
+- [!] **7b. THE COACH CARD IS TELLING A 35-YEAR-OLD SHE HAS «HUGE POTENTIAL»** – found while checking
+  item 7, and it is a real defect rather than a wording nit. Measured on his week-1115 save, the
+  shipped `coachRoomNote` returns:
+
+  > «Huge potential – most of her game is still ahead of her, and this is where a coach buys the most.»
+
+  ⚠⚠ THE CAUSE: `realisedShare` is `gained / (room x reachable)` where `gained = Σ(skills − born)`.
+  As she DECLINES, `gained` falls – so an ageing player walks BACKWARDS through the bands and ends up
+  being told she is a prospect. The measure has no notion of a peak. Her sum of gains is +22.92 of a
+  75.93 room, i.e. 30.9%, which is the bottom band.
+
+  ⚠ It is also why he could not find the sentence: it IS on the coach card and it reads as if nothing
+  had happened. The fix is 6d's other half – past `declineStart` the read must stop measuring headroom
+  and start measuring what is going.
+
+- [~] **7c. «Замер какой-то был на эту тему. Поищи пожалуйста»** – found:
+  `docs/specs/skill-model-audit-2026-08.md`, and it says something sharper than he remembers.
+  * **P1** – the asymptote (the last few per cent) costs **1.85 skill points at a middle coach, 0.66
+    at elite+grind, 2.88 at self-coached** – under a year of development.
+  * **P6** – and a skill point is worth about nine rank places: `+7.25` of skill moved the best rank
+    **#203 → #139**. So the last few per cent are worth roughly 6-26 places, not 2-3.
+  * **§6a, and this is the one that matters for his C1/C2 question** – across the WHOLE potential
+    band, from the least talented girl the model can roll to the most, **the realised share does not
+    move at all: 94.1% every time.** Realisation is a constant, not an outcome.
+  * **P2** – what DOES move it is whether the career survives: 94.1% isolated against **72.8%** for a
+    grinder, and **44.3%** for a p10 career that is over at nineteen.
+
+  ⚠⚠ **So the differentiator today is whether the career ENDS, not how well it is run** – which is
+  the opposite of what he is asking for («1. игрок тренирует сам и грамотно 2. долгосрочный тренер и
+  метч 3. элитный тренер»). C1/C2 is therefore neither «raise the ceiling» nor «lower it» but **make
+  realisation respond to how the career was run at all.**
+
+- [~] **6e. His challenge to my #400 number, and he was right to make it** – «будучи в топ-100 и
+  топ-50 она сливала матчи в w50, w75 причем хорошо сливала, стабильно». I had quoted a closed form
+  against whoever sits at a RANK in the merged table, which is not who a w50 draw contains. Asked the
+  game instead (`tools/r38-field-read.ts`, the shipped previewer's own `fieldChance`), at week 1115,
+  rank #141:
+
+  | rung | may she enter | vs the FIELD | the card's word |
+  | --- | --- | ---: | --- |
+  | w15 | **no – outgrown** | **72.6%** | favourite |
+  | w35 | **no – outgrown** | **57.8%** | even |
+  | w50 | yes | 47.2% | even |
+  | w75 | yes | 38.8% | even |
+  | w100 | yes | 31.1% | strong |
+  | wta125 | yes | 26.7% | strong |
+  | wta250 | yes | 19.6% | strong |
+  | wta500 | **no – misses the cut** | 18.0% | strong |
+  | slam | **no – misses the cut** | 27.7% | strong |
+
+  **His memory is exact: at w50 she is a coin flip and at w75 she is 38.8%.** The two rungs where she
+  is a favourite are the two she is barred from. ⚠ And the card next week literally offers her a
+  **90.7%** first-round chance at a w15 she may not enter, beside a **20.6%** at the wta500 she may.
+
+- [>] **8. The academy's worth** – ⭐ **HE CHOSE C AND ADDED THE HALF I HAD MISSED**, 07.09: «хорошо
+  звучит, а что на счет стоимости и индексации этой стоимости с годами? Как с домами, например.»
+
+  ⚠ AND THE ANSWER IS ONE NUMBER: `assetValueCents` already indexes every rung by
+  `annualRateBps`, and **the academy is the only family on the shelf carrying ZERO** – houses carry
+  +300 bps, the fund +700, cars −600 to −1500, boats and planes −500 to −700. Spec:
+  `docs/specs/academy-worth-2026-09.md`, two independent halves: the houses' drift, and the
+  reputation premium with the paid price as a floor. ⚠ Option B (price it on earnings like the brand)
+  was measured and refused – it would have cut his academy from $5.0M to $1.4M.
 
 - [ ] **9. Wave A – the snapshot cache** – he pulled it into this round. Plan already written:
   `docs/specs/next-waves-2026-09.md` Wave A, steps A1-A5. Nothing about saves changes.
