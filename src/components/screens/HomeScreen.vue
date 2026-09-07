@@ -506,6 +506,9 @@ const COACH_QUOTES: Record<PlayStyle, [string, string, string, string, string]> 
 const coachQuote = computed(() =>
   game.snapshot ? COACH_QUOTES[game.snapshot.profile.playStyle][Math.floor(week.value / 4) % 5] : '',
 )
+/** ROUND 38 #6d – the engine's decline read, printed and not derived. '' on a growing career, which
+ *  is the guarantee described above; this screen adds no condition of its own to it. */
+const coachDecline = computed(() => game.snapshot?.coachDeclineNote ?? '')
 
 // ⚠⚠ ROUND 34 #2a – THE CEILING READ IS NO LONGER ON THIS SCREEN, and the `roomBand` computed that
 // fed it is gone with it. It lived here from round 24 to round 34: round 23 asked for «подсказки про
@@ -528,6 +531,23 @@ const coachQuote = computed(() =>
 // START marker – so the first draft of this note moved the region up here and swept the whole screen
 // into a "no money on this card" assertion, which promptly went red on a `$` five hundred lines away.
 // The helper caught it (tests/helpers/source.ts); a raw `indexOf` would have widened in silence.
+
+// ⭐⭐⭐ ROUND 38 #6d – AND THE PLATE GETS A READ BACK, THE OTHER ONE. The owner, 07.09, on the same
+// note he had removed: «вполне можно вернуть на home и как раз расширить на старение тоже, чтобы
+// было видно, что оно пошло» – and, on why it matters at all, «нужно чётко понимать, что карьера уже
+// не та и явно это подсвечивать».
+//
+// ⚠⚠ IT IS NOT THE CEILING READ COMING BACK, AND THE DIFFERENCE IS STRUCTURAL RATHER THAN A GATE
+// WRITTEN HERE. `Snapshot.coachDeclineNote` is a DIFFERENT FIELD from `coachRoomNote` and it is the
+// empty string on every career that has not passed its own `declineStart` – so the sentence his
+// fourteen-year-old was shown cannot reach this screen through this line even if every condition on
+// it were deleted. That is the whole reason the engine emits two fields instead of one plus a flag:
+// the guarantee lives in the data, where a later edit to this template cannot lose it.
+//
+// ⚠ WHAT IT SAYS, AND WHY IT MAY CARRY DIGITS WHERE THE OLD LINE COULD NOT. The removed band was a
+// bucketed reading of her CEILING and the fog-of-war rule forbids quoting that. This one reads her
+// RANK and how many seasons her body has left – see `coachDeclineNote` in engine/world/coachMarket.ts
+// for the derivation and for the three examples of his own the wording follows.
 
 
 // --- Season strip: REAL tier progress. Reads the kid's best finish per tier off the snapshot: a
@@ -1479,6 +1499,12 @@ async function leaveCollege(): Promise<void> {
                  7 #5d - five lines per play style, settling every four weeks - and it was never part
                  of the complaint. Nothing replaced the band: an invented filler line here would be
                  exactly the wording change invariant 4 forbids. -->
+            <!-- ⭐⭐⭐ ROUND 38 #6d – THE DECLINE READ, AND ONLY EVER THAT ONE. This is a different
+                 snapshot field from the one round 34 sent away: it is the empty string on every
+                 career that has not passed its own decline age, so a child's screen has nothing to
+                 render here and cannot acquire one by an edit to this template. His words are in the
+                 script block above, where Cyrillic is allowed. -->
+            <p v-if="coachDecline" class="coach-decline">{{ coachDecline }}</p>
             <!-- The export's handwritten sign-off, Caveat in lime at 0.72. It is his NAME, so it
                  appears only when there is a him. -->
             <p v-if="coachSignature" class="coach-sign">{{ coachSignature }}</p>
@@ -2541,6 +2567,22 @@ button.note-card:active:not(:disabled) {
   margin-bottom: 0;
 }
 
+/* ⭐⭐ ROUND 38 #6d – THE DECLINE READ, SET AS A SECOND PARAGRAPH OF ONE NOTE and not as a second
+   kind of thing. It is the same coach still speaking, so it keeps his family and his measure and
+   loses only a step of weight and colour – the relationship `.cm-room-note` already has to
+   `.cm-room-band` on the market screen. It is NOT `.coach-room`, the round-34 selector: that rule
+   was deleted with the line it dressed and is not being quietly revived under a new name.
+   ⚠ NO HEIGHT AND NO CLAMP. `.note-card.card-short` declares a min-height, not a max, so the card
+   grows by exactly the lines this paragraph needs and the signature keeps its own 6px above it. A
+   clamp here would hide the half of the sentence carrying the number. */
+.coach-decline {
+  margin: 6px 0 0;
+  font-size: 11.5px;
+  line-height: 1.4;
+  color: var(--ink-dim);
+  text-wrap: pretty;
+}
+
 /* --- RECENT MEMORY ------------------------------------------------------------------------------ */
 
 /* A REAL polaroid: cream paper, a fat bottom lip, tilted, dropped on the corner of the card. The
@@ -2689,6 +2731,12 @@ button.note-card:active:not(:disabled) {
      family, no new weight – only the size, which is what he asked for. */
   .coach-line {
     font-size: 14px;
+  }
+
+  /* One rung up with the line it follows, in the family it was already set in – the same rule #7
+     applied to the quote above it, and for the same reason. */
+  .coach-decline {
+    font-size: 13px;
   }
 
   .coach-sign {

@@ -215,10 +215,40 @@ the repo keeps is the derived statistics below.
   (`conditionMatchFactor` already scales all five attributes), and it touches three curves and every
   AI result. ⚠ Needs his word.
 
-- [ ] **6d. Her own voice on her own decline** – «нужно чётко понимать, что карьера уже не та и явно
+- [x] **6d. Her own voice on her own decline** – «нужно чётко понимать, что карьера уже не та и явно
   это подсвечивать, как раз срез года закончить/продолжать... там нужно больше её голоса (или голоса
   тренера, если он есть, или совместного)». Content on a screen that already exists. ⚠ Ships with
   whichever of 6b/6c goes first, so the player is told what is happening while it happens.
+
+  **SHIPPED, in two places, and it ships WITHOUT 6b/6c** – his 07.09 follow-up moved it: «вполне
+  можно вернуть на home и как раз расширить на старение тоже, чтобы было видно, что оно пошло». No
+  save schema, no migration, no MAIN draw: both readings are derived at snapshot time.
+
+  **(a) THE COACH PLATE IS BACK ON HOME, CARRYING THE DECLINE READ AND NOTHING ELSE.**
+  `Snapshot.coachDeclineNote` is a NEW field beside `coachRoomNote` and it is the empty string on
+  every career that has not passed its own `declineStart` – so the sentence round 34 #2a sent away
+  («Close to her ceiling» to a fourteen-year-old, «звучит как приговор») cannot reach Home through
+  this line even if every condition on the template were deleted. ⭐ The guarantee is in the DATA,
+  not in a `v-if`. Rendered on his week-1115 career:
+
+  > Past her peak – down 57 places on the year, and her body has about 6 more seasons in it.
+
+  **(b) SHE SPEAKS AT THE SEASON CUT.** `RetirementDialog` already carried round 31 #9's rung, which
+  is her BODY; her PERFORMANCE was nowhere on the one card where a season is closed. One added
+  passage, hers, with his coach agreeing under it when she has one, off `seasonHistory`'s own
+  integers:
+
+  > «#68 last winter, #125 this one. I can read a table as well as you can.»
+  > M. Ricci does not argue with her. The work holds what she has left; it stopped adding to it a
+  > while ago.
+
+  ⚠ IT SAYS NOTHING RATHER THAN SOMETHING VAGUE – three silences, all deliberate: no banked
+  professional season, a year she IMPROVED on that is also her own best, and a history with a gap
+  where «last winter» would be a false sentence with a true number in it.
+
+  ⚠ HIS ROUND-30 LEDE AND ROUND-31 RUNG ARE UNTOUCHED, to the byte, and `tests/component/
+  last-word.test.ts`'s pins on them stay green. The added paragraphs are measured against a 375x667
+  phone (`assertDismissReachable`) and the measurement is mutation-proved.
 
 - [~] **7. «Куда делась надпись с плашки тренера на главной?»** – answered: **he moved it himself.**
   Round 34 #2a, his own words: «Тренер на главном экране (почему-то, давай на карточку тренера
@@ -227,7 +257,7 @@ the repo keeps is the derived statistics below.
   so. ⚠ What he is asking for NOW is different and is 6d: the coach speaking about her DECLINE, which
   has never existed anywhere.
 
-- [!] **7b. THE COACH CARD IS TELLING A 35-YEAR-OLD SHE HAS «HUGE POTENTIAL»** – found while checking
+- [x] **7b. THE COACH CARD IS TELLING A 35-YEAR-OLD SHE HAS «HUGE POTENTIAL»** – found while checking
   item 7, and it is a real defect rather than a wording nit. Measured on his week-1115 save, the
   shipped `coachRoomNote` returns:
 
@@ -241,6 +271,38 @@ the repo keeps is the derived statistics below.
   ⚠ It is also why he could not find the sentence: it IS on the coach card and it reads as if nothing
   had happened. The fix is 6d's other half – past `declineStart` the read must stop measuring headroom
   and start measuring what is going.
+
+  **FIXED, and reproduced on his save before and after.** `tools/r38-decline-read.ts` reads the
+  week-1115 career through `decodeExportFile` and prints the rendered sentence. Before:
+
+  > Huge potential – most of her game is still ahead of her, and this is where a coach buys the most.
+
+  After:
+
+  > Past her peak – down 57 places on the year, and her body has about 6 more seasons in it.
+
+  **HOW.** `coachRoomNote` asks `coachDeclineNote` first, and past her own `declineStart` –
+  `ageCurveOf(world.ageCurve, weeksLost)`, **28.85** for her, never the shipped 29 – it stops reading
+  `realisedShare` at all. ⚠ `realisedShare` IS NOT TOUCHED and is not wrong: it answers «is there
+  still room worth buying», which is the right question right up until the week `ageFactor` returns 0
+  and there is no room to buy at all.
+
+  **WHAT IT SAYS, AND WHY EACH NUMBER IS ONE THE ENGINE CAN STAND BEHIND.**
+  * **the year-on-year move** – `seasonHistory[].byTrack.wta.endRank`, last banked season against the
+    one before it, and ONLY when the two are adjacent (her own history skips s6-s8). #68 → #125.
+  * **how many seasons the body has** – her measured `physicalMean / peakPhysical` walked forward at
+    her own curve until it crosses `ENDINGS.lastOfferPeakShare`, which is the rule `ending.ts` itself
+    uses to make a winter's question final. ⚠ **«Пара лет» is NOT derivable as a couple**: the honest
+    figure on his save is **6.45 years**, so the sentence says six. A prose figure that contradicts
+    its own constant is worse than one that cannot move with it.
+  * **the fallbacks** – she may still CLIMB past her peak, so a year she rose reads «N places below
+    her best season» instead, and a career sitting on its own best reads «no coach buys that back»,
+    which is `ageFactor(age) === 0` said in words.
+
+  ⚠ THE FOG OF WAR IS INTACT. Nothing in the decline read touches `skills` against `potential`; it
+  reads her RANK (printed on four screens already) and `physicalShare` (on the wire since round 31
+  #9). ⚠ And the label is deliberately NOT one of `ROOM_BANDS`': «Close to her ceiling» past the peak
+  would say the one thing that is now false.
 
 - [~] **7c. «Замер какой-то был на эту тему. Поищи пожалуйста»** – found:
   `docs/specs/skill-model-audit-2026-08.md`, and it says something sharper than he remembers.
