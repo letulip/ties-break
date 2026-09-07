@@ -42,6 +42,13 @@ import type { TierId } from '../src/engine/season/types'
 // what the emoji it replaced used to be. A ban that reads the comments fires on its own
 // documentation, and the only way to satisfy it would be to delete the reasoning.
 import { codeOf, region, regionToLast } from './helpers/source'
+// ⚠ WAVE B (07.09) – THE SHELL'S LOGIC IS TWO FILES NOW. `App.vue`'s four tab "seen" marks, their
+// watchers and their dot computeds moved to `composables/tabSeen.ts` (U-04), so every POSITIVE claim
+// this file makes about "the shell" is aimed at `componentLogic` – the SFC PLUS the composables it
+// imports, the helper CLAUDE.md names for a claim that must survive an extraction.
+// ⚠ NEVER IN A NEGATIVE ASSERTION (tests/pin-hygiene.test.ts): `read(SHELL)` below is still the .vue
+// alone and is what the template and "no private treatment" claims keep using.
+import { componentLogic } from './worldSource'
 
 const ROOT = fileURLToPath(new URL('../', import.meta.url))
 const read = (p: string) => readFileSync(`${ROOT}${p}`, 'utf8')
@@ -51,6 +58,8 @@ const ARRIVAL = 'src/composables/trophyArrival.ts'
 const FLOW = 'src/components/TournamentFlow.vue'
 const CABINET = 'src/components/screens/TrophiesScreen.vue'
 const SHELL = 'src/App.vue'
+/** ⚠ WAVE B: where the cabinet's dot, its watermark and its two watchers live since 07.09. */
+const TAB_SEEN = 'src/composables/tabSeen.ts'
 const SHEET = 'src/style.css'
 /** R2-08: where the cabinet's mark is actually read and written, since the shell stopped doing it. */
 const WATERMARK = 'src/composables/inboxCue.ts'
@@ -108,7 +117,7 @@ describe('the podium hangs the real trophy, and there is ONE builder for it', ()
 
   it('⚠ NEITHER SCREEN SPELLS THE PATH ITSELF – one place knows how a trophy is addressed', () => {
     // The whole point of the extraction. `images/trophies/` may appear in exactly one source file.
-    const spellers = [RESOLVER, ARRIVAL, FLOW, CABINET, SHELL].filter((p) =>
+    const spellers = [RESOLVER, ARRIVAL, FLOW, CABINET, SHELL, TAB_SEEN].filter((p) =>
       read(p).includes('images/trophies/'),
     )
     expect(spellers).toEqual([RESOLVER])
@@ -144,7 +153,7 @@ describe('the podium hangs the real trophy, and there is ONE builder for it', ()
     // closed for that reason and not for an art budget – a 'bronze' would not fail to find a file,
     // it would fail to describe the sport.
     expect(read(RESOLVER)).toContain("export type TrophyMetal = 'gold' | 'silver'")
-    for (const p of [RESOLVER, ARRIVAL, FLOW, CABINET, SHELL]) {
+    for (const p of [RESOLVER, ARRIVAL, FLOW, CABINET, SHELL, TAB_SEEN]) {
       expect(codeOf(read(p)).toLowerCase(), `${p} mentions a third metal`).not.toContain('bronze')
     }
     expect(readdirSync(`${ROOT}public/images/trophies`).some((f) => f.includes('bronze'))).toBe(false)
@@ -184,8 +193,10 @@ describe('⚠ THE TAB DOT ASSERTS A FACT, not the "unread" it cannot know', () =
   })
 
   it('the shell uses the shared predicate, a PER-CAREER watermark, and nothing else', () => {
-    const app = read(SHELL)
-    expect(app).toContain('trophyDotShows(')
+    // ⚠ `shellLogic`, NOT `app` – tests/pin-hygiene.test.ts is FILE-scoped, and this file binds `app`
+    // to the .vue alone in two other blocks that assert negatively on it. One name per source kind.
+    const shellLogic = componentLogic('App.vue')
+    expect(shellLogic).toContain('trophyDotShows(')
     // ⚠ RE-AIMED BY R2-08, NOT WEAKENED, AND THE TWO CLAIMS ARE THE SAME TWO. The cabinet's mark was
     // hand-rolled here – a composed key literal and an inline "missing means current" read – and is
     // now one `useWatermark` call. Both facts still have to be true of the shell; what changed is
@@ -195,20 +206,27 @@ describe('⚠ THE TAB DOT ASSERTS A FACT, not the "unread" it cannot know', () =
     // lesson, which this file is deliberately copying rather than re-deriving). The composition
     // `prefix:careerId` is `careerKey`'s, proved in tests/component/career-watermarks.test.ts by
     // switching careers on a live store – a behaviour claim this text search cannot make.
-    expect(app).toContain("const TROPHY_SEEN_PREFIX = 'tb:lastSeenTrophies'")
-    expect(app).toMatch(/useWatermark\(\s*TROPHY_SEEN_PREFIX/)
+    expect(shellLogic).toContain("const TROPHY_SEEN_PREFIX = 'tb:lastSeenTrophies'")
+    expect(shellLogic).toMatch(/useWatermark\(\s*TROPHY_SEEN_PREFIX/)
     // ⚠ A MISSING WATERMARK IS THE CURRENT COUNT, NEVER ZERO. A career with trophies and no stored
     // watermark is a case where the app does not KNOW whether the cabinet was ever opened, and a dot
     // must not claim a fact it cannot hold. In `useWatermark` that is the CLAIM-NOTHING form: the
     // `absent` argument OMITTED. So the pin is that the trophy call passes three arguments and no
     // fourth – a sentinel smuggled in here would zero the cabinet on every save that predates the
     // watermark, which is the defect this line has always been about.
-    const trophyCall = region(app, 'const TROPHY_SEEN_PREFIX', '// The flight is armed')
+    //
+    // ⚠ RE-AIMED BY WAVE B, AND THE REGION IS CUT OFF THE MODULE THAT OWNS IT RATHER THAN OFF THE
+    // WIDENED TEXT. Two reasons, and the second is a rule: the end marker moved out of the shell with
+    // the block, and a region cut from a `componentLogic` binding is itself widened, so the two
+    // NEGATIVE assertions below would be reading composables they were never talking about
+    // (tests/pin-hygiene.test.ts fails that shape by name). `read(TAB_SEEN)` is one file, which is
+    // what an honest negative needs.
+    const trophyCall = region(read(TAB_SEEN), 'const TROPHY_SEEN_PREFIX', 'const trophyTabDot = computed(')
     expect(trophyCall.length, 'the trophy block moved – re-aim, do not widen').toBeGreaterThan(0)
     expect(trophyCall, 'the cabinet must claim nothing when the key is missing').not.toContain('absent')
     expect(trophyCall, 'a sentinel here would zero every pre-watermark cabinet').not.toMatch(/\{\s*value:/)
     // ...and it goes out when the cabinet is opened, which is when the sentence stops being true.
-    expect(app).toMatch(/if \(t === 'trophies'\) markTrophiesSeen\(\)/)
+    expect(shellLogic).toMatch(/if \(t === 'trophies'\) markTrophiesSeen\(\)/)
   })
 
   it('the dot is the SAME object as Season\'s and Home\'s – no private treatment for one tab', () => {
@@ -252,7 +270,7 @@ describe('⚠ THE TAB DOT ASSERTS A FACT, not the "unread" it cannot know', () =
     // more – `useWatermark` owns every read and write – so the claim is asserted where it is now
     // true: the cabinet goes through the localStorage watermark helper, and NOTHING about the
     // trophy dot reaches the worker or the schema (the two lines below, unchanged).
-    expect(read(SHELL)).toMatch(/useWatermark\(\s*TROPHY_SEEN_PREFIX/)
+    expect(componentLogic('App.vue')).toMatch(/useWatermark\(\s*TROPHY_SEEN_PREFIX/)
     expect(read(WATERMARK), 'the helper is what puts the mark in localStorage').toContain('localStorage.setItem(')
     for (const p of [RESOLVER, ARRIVAL]) {
       expect(read(p), `${p} must not reach into the store or the worker`).not.toContain('stores/game')
@@ -329,7 +347,13 @@ describe('the flight is assembly, and it stays out of the simulation', () => {
   it('the flight is the shell\'s, because it crosses from a takeover to the bar', () => {
     const app = read(SHELL)
     expect(app).toContain('class="trophy-flight"')
-    expect(app).toContain("import { trophyDotShows, trophyPieces, useTrophyFlight } from './composables/trophyArrival'")
+    // ⚠ RE-AIMED BY WAVE B, AND THE SPLIT IS THE POINT OF THE ASSERTION NOW. The shell used to import
+    // all three names; the DOT's two (`trophyDotShows`, `trophyPieces`) went to `composables/tabSeen.ts`
+    // and the FLIGHT stayed here, because the flying element crosses from a takeover to the bar and
+    // only the root can draw the whole path. So the pin names both halves and where each one lives -
+    // which is a stronger statement than the single line was, not a weaker one.
+    expect(app).toContain("import { useTrophyFlight } from './composables/trophyArrival'")
+    expect(read(TAB_SEEN)).toContain("import { trophyDotShows, trophyPieces, useTrophyFlight } from './trophyArrival'")
     // Over the bar (40) and over the takeover it is leaving (55), under anything modal (60).
     const rule = /\.trophy-flight\s*\{([^}]*)\}/.exec(read(SHEET))?.[1] ?? ''
     expect(rule).toContain('position: fixed')

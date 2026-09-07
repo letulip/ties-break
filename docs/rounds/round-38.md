@@ -288,7 +288,28 @@ the repo keeps is the derived statistics below.
 - [ ] **9. Wave A – the snapshot cache** – he pulled it into this round. Plan already written:
   `docs/specs/next-waves-2026-09.md` Wave A, steps A1-A5. Nothing about saves changes.
 
-- [ ] **10. Wave B – one owner out of `App.vue`** – same, steps B1-B4.
+- [x] **10. Wave B – one owner out of `App.vue`** – same, steps B1-B4. **SHIPPED, all four steps.**
+  `src/composables/tabSeen.ts` owns the four tab "seen" marks, their four watchers and their four dot
+  computeds; `App.vue` calls it once and renders. Nothing else moved – the mail chime, the week loop
+  and the trophy flight stayed, and each is named in the module header as staying.
+  - **B1** – `tests/component/r38-tab-seen.test.ts`, six arms, mounted, driven through the bar's
+    buttons and Home's next-tournament plate. Written and made red BEFORE the move: inverting any of
+    the four conditions (`t === 'x'` → `t !== 'x'`) fails it in two arms each. Green, byte-unchanged,
+    after the move. A **seventh arm was added after B2**, deliberately not folded into the five: the
+    per-device property itself – a private window (storage that THROWS on the property access) costs
+    the dots and never the shell. Unguarding `useWatermark`'s read turns that arm, and only that arm,
+    red on the mount with `SecurityError`.
+  - **B2** – the move, verbatim, comments included. `vue-tsc -b --force` clean.
+  - **B3** – the pin query first (`git grep -l "App.vue'" -- tests/`): 48 files / 76 line hits, of
+    which 27 comment-only, 21 SFC imports, 28 source reads. Exactly **3 files / 7 tests** went red and
+    every one had been predicted. All re-aimed at `componentLogic`, none deleted or weakened.
+    ⚠ And `componentLogic` itself had a hole: its pattern required `../composables/`, so for `App.vue`
+    – the one SFC at the root of `src/` – it silently returned the `.vue` alone. Fixed and
+    mutation-proved (narrowing it back turns six of the re-aimed tests red).
+  - **B4** – `App.vue`'s script block: **1,505 → 1,378 lines (−127, −8.4%)**, of which 1,014 → 957
+    are comments. `tabSeen.ts` is 258 lines: 87 code, 160 comment, 11 blank. The shell still holds
+    seven concerns and is still too long to read in one sitting; this is one seam, reported and not
+    celebrated.
 
 ---
 

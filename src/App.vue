@@ -36,9 +36,10 @@ import { calendarOwnsWeekAhead } from './composables/weekAhead'
 // The sweep's own preference gate, read here for one reason: the detour to the calendar exists to
 // SHOW the animation, so with the animation off there is no detour and the press behaves as it did.
 import { dayCrossRuns } from './composables/dayCross'
-// R13-12: the This-week tab's accent dot reads the SAME recap-existence rule the tab's screen
-// renders the card by – one predicate, two consumers, zero drift.
-import { consumePostAdvanceNav, recapExists, storyOpensItself, thisWeekDotShows } from './composables/weekRecap'
+// ⚠ WAVE B: the This-week ACCENT DOT and its recap-existence read left with the other three tab
+// dots (composables/tabSeen.ts). What this file still asks weekRecap.ts is about the week LOOP – may
+// the story open itself on this advance, and has a screen already claimed the navigation.
+import { consumePostAdvanceNav, storyOpensItself } from './composables/weekRecap'
 // R9-21b's news watermark, and the inbox cue that rides beside it (04.08). Both live in
 // composables/inboxCue.ts so Home's bell reads the same rule this bar does - see the module header.
 //
@@ -47,11 +48,17 @@ import { consumePostAdvanceNav, recapExists, storyOpensItself, thisWeekDotShows 
 // below, with the two opposite "what does a missing key mean" rules passed in as `absent` rather
 // than re-argued per block. Nothing in this file touches `localStorage` any more, which is what
 // makes "a browser that throws on storage does not take the app out" one property instead of six.
-import { useDeviceFlag, useLetterWatermark, useNewsWatermark, useWatermark } from './composables/inboxCue'
-// The Trophies tab's dot and the trophy that flies there to leave it. Same shape as the line above:
-// the PREDICATE is a pure function in the composable and this file only wires it to a watermark, so
-// "when does the dot show" is one testable sentence rather than a computed buried in a shell.
-import { trophyDotShows, trophyPieces, useTrophyFlight } from './composables/trophyArrival'
+// ⚠ WAVE B: the news and letter watermarks are the HOME TAB's dot, so both moved with it; the three
+// `useWatermark` calls left here are the season wrap-up, the injury report and the college card,
+// which are popups rather than dots.
+import { useDeviceFlag, useWatermark } from './composables/inboxCue'
+// The four tab "seen" marks and the four dots they decide – see the call below, and the module's own
+// header for what each one is keyed on.
+import { useTabSeen } from './composables/tabSeen'
+// The trophy that flies to the Trophies tab. ⚠ WAVE B: its DOT went to composables/tabSeen.ts with
+// the other three; what the shell keeps is the flight itself, because the flying element is rendered
+// at the root of this component and nothing else can draw the whole path.
+import { useTrophyFlight } from './composables/trophyArrival'
 import { useScrollReset } from './composables/scrollReset'
 import { blockingOverlay, popupMayShow, visibleOverlay } from './composables/blockingOverlay'
 import { playSfx, primeSfx } from './audio/sfx'
@@ -105,10 +112,6 @@ import RailIdentity from './components/RailIdentity.vue'
 // not. Same component, no props, reads the store – there is nothing to keep in step.
 import RankHelpDialog from './components/RankHelpDialog.vue'
 
-// Round 5 item 23: a small accent dot on the Season tab until the player has visited it
-// since the last "New events on the calendar" marker. UI-only state (localStorage), no
-// engine change – the marker text itself is emitted from world.ts's ensureSeason.
-const SEASON_SEEN_KEY = 'tb:lastSeenSeasonWeek'
 // Round 5 item 10: the coach-mark tour is shown once, ever, per device – so this key is NOT
 // career-scoped, and `useDeviceFlag` rather than `useWatermark` is what says so in code.
 const TOUR_SEEN_KEY = 'tb:onboardingTourSeen'
@@ -376,69 +379,29 @@ watch(
 
 const week = computed(() => game.snapshot?.week ?? 0)
 
-// --- Season tab "new events" accent dot (item 23) ---------------------------
+// --- THE FOUR TAB "SEEN" MARKS AND THEIR DOTS – composables/tabSeen.ts ---------------------------
 //
-// ⚠⚠ R2-08 – THIS ONE WAS NOT MERELY DUPLICATED, IT WAS WRONG, and it is the find that pays for the
-// whole consolidation. The key was GLOBAL (`tb:lastSeenSeasonWeek`, no career on it) while the value
-// under it is a WEEK NUMBER, so two careers shared one mark: opening Season on a week-90 career
-// wrote 90, and the week-12 career beside it then read every marker it had never been shown as
-// already seen, for the next seventy-eight weeks. That is precisely the R9-21b collision
-// composables/inboxCue.ts was written to end, still living in the file that learned the lesson.
-// Going through `useWatermark` scopes it by `careerId` and repairs it; a device's season dot lights
-// once more on the changeover, which is the trade every watermark in this app already makes.
+// ⚠ WAVE B (07.09): season, This-week, Home and Trophies each had a mark, a watcher and a dot in
+// this file, spread over three hundred lines of it and interleaved with the week loop and the mail
+// chime. They are ONE concern with one kind of state – a per-device watermark that decides one dot –
+// and they are one call now. Nothing about them changed in the move; the module's header says what
+// each mark is keyed on, and `tests/component/r38-tab-seen.test.ts` mounts this shell and drives all
+// four through the bar and Home's plate.
 //
-// ⚠ THE MARK NAMES THE MARKER'S WEEK, NOT THE CURRENT ONE. It used to store `week` on the visit; the
-// helper stores whatever `newest` says, which is the newest marker's week. The predicate is
-// unchanged either way – markers are only ever emitted for weeks that have happened, so both values
-// make `latest > seen` false – and the honest one is the one that names what was actually seen.
-const latestSeasonMarkWeek = computed(() => {
-  let latest = -1
-  for (const e of game.snapshot?.events ?? []) {
-    if (e.type === 'info' && e.text === 'New events on the calendar' && e.week > latest) latest = e.week
-  }
-  return latest
-})
-const { unseen: seasonHasNew, markSeen: markSeasonSeen } = useWatermark(
-  SEASON_SEEN_KEY,
-  latestSeasonMarkWeek,
-  // `now >= 0` is the "there is no marker at all" arm, kept explicit: a sentinel of -1 makes the
-  // comparison alone sufficient today and would stop being sufficient the day the sentinel moved.
-  (now, seen) => now >= 0 && now > seen,
-  { value: -1 },
-)
-watch(tab, (t) => {
-  if (t === 'play') markSeasonSeen()
-})
-
-// --- R13-12: the This-week tab's accent dot – a FRESH recap is unseen -------------
-// "Fresh" is the shared rule in composables/weekRecap.ts: a recap exists for the CURRENT week
-// (same predicate ThisWeekScreen renders the card by) and the tab has not been visited since it
-// appeared. The seen watermark is the snapshot week at the last visit, persisted per career
-// (careers advance independently, so a global key would collide – the R9-21b news lesson), and
-// re-read on a career switch so a plain load never invents freshness the stored watermark denies.
-//
-// ⚠ R2-08 – IT IS `useWatermark`'s NOW, and the three sentences above are its three parameters.
-// "Persisted per career" is `careerKey` inside the helper; "re-read on a career switch" is
-// `useCareerSync`; "a missing key is -1, i.e. never visited" is the SENTINEL form of `absent`, which
-// is also what keeps this scope from seeding a key for a career nobody has shown anything to. The
-// dot needs the NUMBER rather than the verdict (`thisWeekDotShows` also asks whether a recap
-// exists), which is exactly why `Watermark.seen` is on the interface.
-const WEEK_SEEN_PREFIX = 'tb:lastSeenThisWeek'
-const { seen: lastSeenThisWeek, markSeen: markThisWeekSeen } = useWatermark(
-  WEEK_SEEN_PREFIX,
-  week,
-  // NOT `>`: the mark is "the week I was last on this tab", and a career loaded at an EARLIER week
-  // than the mark (an imported save, a rolled-back device) must re-arm rather than stay silent.
-  // This is character for character the old `lastSeenThisWeek.value !== week.value` write gate.
-  (now, seen) => now !== seen,
-  { value: -1 },
-)
-const weekTabDot = computed(() =>
-  thisWeekDotShows(recapExists(game.snapshot), week.value, lastSeenThisWeek.value),
-)
-watch(tab, (t) => {
-  if (t === 'week') markThisWeekSeen()
-})
+// ⚠ THE TWO MARKS COME BACK BECAUSE TWO OTHER WATCHERS IN THIS FILE SPEND THEM, and both are about
+// something else: the post-advance watcher below marks This-week when a week resolves while that tab
+// is open, and the chime watcher marks Home when post lands while Home is up. Neither is a tab dot,
+// so neither moved.
+const {
+  seasonHasNew,
+  weekTabDot,
+  homeHasNews,
+  trophyTabDot,
+  markThisWeekSeen,
+  markHomeSeen,
+  latestNewsId,
+  newestLetterId,
+} = useTabSeen(tab, week)
 
 // --- W1: THE WEEK'S STORY OPENS ITSELF -----------------------------------------------------------
 //
@@ -585,37 +548,6 @@ watch(
 // A2 moved the avatar itself onto Home (App has no header any more), so the hint's state moved
 // with it – HomeScreen owns both, and the shell only learns that a navigation happened.
 
-// --- R9-21b: news cue – a soft "тилинь" + a Season-style accent dot on the Home tab -----
-// News = the non-financial events HomeScreen's feed shows (expense/income live on Money).
-// "Last looked at the feed" ≈ the Home tab being active: seen is marked when Home becomes
-// active and whenever a snapshot lands while it is. The cue fires on any genuinely NEW news
-// event (id above the last-seen watermark), whatever tab is up – the owner's complaint was
-// missing news entirely while week-skipping. Watermark persisted per career (event ids are
-// per-career counters, so a global key would collide across careers).
-// ⚠ THE WATERMARK MOVED INTO composables/inboxCue.ts, WHERE HOME'S BELL CAN READ THE SAME RULE. The
-// derivation that used to sit inline here (walk the feed, take the highest non-financial id, compare
-// against a per-career localStorage number) is unchanged - it is `useNewsWatermark`, and the storage
-// key it is given is the one this block has always used, so an existing device keeps its place. What
-// changed is that the bell on Home now gets a watermark of its own from the same module instead of
-// re-deriving "is there news" a third way and getting it wrong (item 5, 04.08).
-const { latestId: latestNewsId, unseen: newsUnseenOffHome, markSeen: markNewsSeen } =
-  useNewsWatermark('tb:lastSeenNewsId')
-
-// --- THE INBOX CUE (owner, 04.08: «Добавить отключаемый, но очень аккуратный и консервативный дзынь
-// на входящее письмо и точечку возле иконки home») ------------------------------------------------
-//
-// ⚠ A LETTER IS NOT A NEWS EVENT, which is why it needs its own watch even though the feed already
-// has one. A sponsor's letter does write a feed line beside itself; the TOURNAMENT DESK's receipts
-// (engine/offers.ts `raiseEntryLetter`) write none at all, so under the news rule alone half the
-// post arrives in silence. `newestLetterId` is the arrival, and the module's header argues why it is
-// the last id rather than a count or `offerOpen`.
-//
-// ⚠ MUTEABLE BY CONSTRUCTION, NOT BY A NEW SWITCH: `playSfx` returns at once while `muted`, and
-// `muted` is the persisted `tb-muted` flag behind More's "Sound effects" row (src/audio/sfx.ts). So
-// the owner's «отключаемый» is the switch he already has, it survives a reload, and no second player
-// or second preference was invented for this.
-const { unseen: letterUnseen, markSeen: markLettersSeen, newestId: newestLetterId } =
-  useLetterWatermark('tb:lastSeenLetter')
 // ⚠ WARMED UP FRONT, FOR THE REASON `primeSfx` EXISTS AT ALL (R10-6). The mail cue is the second
 // sound in the app that NEVER plays during the flow it belongs to - like `applauseFinal`, it is
 // always cold at the exact moment it has to land, and it pays a HEAD probe plus a fetch/decode
@@ -623,18 +555,6 @@ const { unseen: letterUnseen, markSeen: markLettersSeen, newestId: newestLetterI
 // Fire-and-forget, needs no gesture, free on repeat, and skipped entirely while muted.
 primeSfx('mail')
 
-// ONE DOT ON THE HOME TAB, TWO FACTS BEHIND IT - «точечку возле иконки home». It is deliberately the
-// same dot the news already raised rather than a second marker beside it: both sentences are "there
-// is something on Home you have not seen", the tab has room for one answer, and a bar with two dots
-// on one icon says nothing that one dot does not.
-const homeHasNews = computed(() => tab.value !== 'home' && (newsUnseenOffHome.value || letterUnseen.value))
-function markHomeSeen(): void {
-  markNewsSeen()
-  markLettersSeen()
-}
-watch(tab, (t) => {
-  if (t === 'home') markHomeSeen()
-})
 // ⚠ ONE WATCHER FOR BOTH ARRIVALS, SO THE CHIME NEVER DOUBLES. A sponsor letter lands as a letter AND
 // as a feed line in the same tick; two independent watchers would have rung twice for it.
 watch([latestNewsId, newestLetterId], ([nowNews, nowLetter], [beforeNews, beforeLetter]) => {
@@ -658,47 +578,13 @@ watch([latestNewsId, newestLetterId], ([nowNews, nowLetter], [beforeNews, before
   if (tab.value === 'home') markHomeSeen()
 })
 
-// --- THE TROPHIES TAB'S DOT (31.07, the podium slice) --------------------------------------------
-//
-// ⚠ IT ASSERTS A FACT, NOT AN "UNREAD". Home's bell states the house rule in its own words – "the
-// bell's dot asserts one FACT and not the 'unread' it cannot know" – and this dot's fact is:
-//
-//     THE CABINET HOLDS A PIECE OF SILVERWARE THAT ARRIVED AFTER THE LAST TIME IT WAS OPENED.
-//
-// `trophiesByTier` only ever grows, so the count of pieces in it is monotonic and the watermark is
-// that count at the player's last visit. `pieces > seen` is then arithmetic on two integers, and it
-// stops being true the instant the cabinet is opened – which is why the dot goes out then, rather
-// than because we have decided anybody has "seen" anything. The long argument is in the composable.
-//
-// The watermark is per career, in localStorage, like the news and This-week ones: careers advance
-// independently, so a global key would collide (the R9-21b lesson).
-//
-// ⚠ A MISSING WATERMARK IS THE CURRENT COUNT, NEVER ZERO. A career with trophies and no stored
-// watermark – a save from before this shipped, another device – is a case where the app does not
-// KNOW whether the cabinet was ever opened, and a dot must not claim a fact it cannot hold. Reading
-// the present count asserts nothing and lets the next trophy be the first one it speaks about.
-//
-// ⚠ R2-08 – THAT PARAGRAPH IS NOW A PARAMETER, WHICH IS THE WHOLE POINT OF THE MOVE. It is
-// `useWatermark`'s CLAIM-NOTHING form – `absent` omitted – and the helper's own header argues it at
-// length beside the opposite rule the reports below take. It also brings the SEEDING WRITE with it:
-// a claim-nothing mark that is never persisted is re-seeded to "now" on every mount (every screen
-// here is a plain `v-if`, so it mounts fresh on each visit) and its dot can never light. That used
-// to be the hand-written `if (getItem(...) === null) markTrophiesSeen()` in the career watcher.
-const TROPHY_SEEN_PREFIX = 'tb:lastSeenTrophies'
-const trophyPieceCount = computed(() => trophyPieces(game.snapshot))
-const { seen: seenTrophyPieces, markSeen: markTrophiesSeen } = useWatermark(
-  TROPHY_SEEN_PREFIX,
-  trophyPieceCount,
-  (now, seen) => now > seen,
-)
 // The flight is armed by the finale (`TournamentFlow`'s Continue) and rendered below; while it is in
 // the air the dot is held, so it lands WITH the trophy instead of already being there when it
 // arrives. Nothing is withheld from anybody by that: the ledger gained this trophy several taps ago,
 // behind a full-screen takeover that covers the bar.
+// ⚠ WAVE B: the DOT that does the holding is in composables/tabSeen.ts now, reading this same
+// module-level flight through the same accessor. What the shell keeps is the flying ELEMENT below.
 const { flight: trophyFlight } = useTrophyFlight()
-const trophyTabDot = computed(() =>
-  trophyDotShows(trophyPieceCount.value, seenTrophyPieces.value, trophyFlight.value !== null),
-)
 
 // =================================================================================================
 // D7 – THE BAR'S DOTS, AS WORDS (a11y, docs/specs/e2e-coverage.md §12)
@@ -743,19 +629,6 @@ const trophyFlightStyle = computed<Record<string, string> | undefined>(() => {
     '--trophy-dy': `${f.dy}px`,
     '--trophy-scale': String(f.scale),
   }
-})
-// ⚠ THE CAREER WATCHER THAT USED TO SIT HERE IS `useCareerSync`'s, INSIDE THE HELPER – it re-reads
-// THAT career's own watermark on a switch and writes one for a career that has never had one, so a
-// plain load never invents a trophy the player has not been shown. It was the fifth transcription of
-// that rule in this file; there are none left.
-watch(tab, (t) => {
-  if (t === 'trophies') markTrophiesSeen()
-})
-// A trophy landing while the cabinet is ALREADY the open screen is seen the moment it lands – the
-// same clause the news watermark carries for the Home tab, and the reason neither dot can appear on
-// the screen that would clear it.
-watch(trophyPieceCount, () => {
-  if (tab.value === 'trophies') markTrophiesSeen()
 })
 
 // Package K2: a corrupted-generation recovery is rare and stays a one-time hint –

@@ -32,6 +32,14 @@ const home = read('../src/components/screens/HomeScreen.vue')
 // ⚠ NEVER IN A NEGATIVE ASSERTION (tests/pin-hygiene.test.ts): `home` above is still the .vue alone
 // and is what every `not.toContain` in this file keeps using.
 const homeLogic = componentLogic('components/screens/HomeScreen.vue')
+// ⚠ AND THE SHELL NEEDED THE SAME TREATMENT – WAVE B, 07.09. The four tab "seen" marks, their
+// watchers and their dot computeds left `App.vue` for `composables/tabSeen.ts` (U-04), so the
+// This-week watermark this file pins is one file further out. Same helper, same reason as `homeLogic`
+// above: `componentLogic` is the SFC PLUS the composables it imports, so a POSITIVE claim about the
+// shell's logic survives an extraction, which is the whole point of the name.
+// ⚠ NEVER IN A NEGATIVE ASSERTION (tests/pin-hygiene.test.ts): `app` above is still the .vue alone
+// and is what every `not.toContain` in this file keeps using.
+const appLogic = componentLogic('App.vue')
 const weekScreen = read('../src/components/screens/ThisWeekScreen.vue')
 const tour = read('../src/components/OnboardingTour.vue')
 
@@ -413,7 +421,15 @@ describe('R13-12 — the This-week tab owns the plan and the recap', () => {
     // ⚠ RE-AIMED 01.08, not weakened: the shell's import gained `consumePostAdvanceNav` (the one-shot
     // navigation hold - see "the post-advance navigation can be claimed" below). The pin's job is
     // unchanged: the shell reads the shared rules from weekRecap.ts and re-derives none of them.
-    expect(app).toContain("import { consumePostAdvanceNav, recapExists, storyOpensItself, thisWeekDotShows } from './composables/weekRecap'")
+    //
+    // ⚠ RE-AIMED AGAIN BY WAVE B (07.09), AND IT IS NOW TWO LINES BECAUSE THE READERS ARE TWO FILES.
+    // The DOT's half of this import - `recapExists` and `thisWeekDotShows` - went to
+    // `composables/tabSeen.ts` with the four tab dots; what the shell still asks weekRecap.ts is
+    // about the week LOOP. The protected fact has not moved an inch: both halves are still IMPORTED
+    // from the one module and neither is re-derived, and asserting the two import lines by name says
+    // that more precisely than the single line did, because it also says which reader owns which rule.
+    expect(appLogic).toContain("import { consumePostAdvanceNav, storyOpensItself } from './composables/weekRecap'")
+    expect(appLogic).toContain("import { recapExists, thisWeekDotShows } from './weekRecap'")
     // ...and the CARD still renders on `recapExists` alone. The preference stops the page opening
     // itself; it must never stop the This-week tab from having the week's story on it.
     expect(weekScreen).toContain('recapExists(game.snapshot)')
@@ -488,12 +504,17 @@ describe('R13-12 — the dot rule (unit): a FRESH recap is unseen', () => {
     //     entire shell rather than against the This-week block for as long as the marker has been
     //     wrong. It is anchored on two markers that are BOTH in this file now, and the test asserts
     //     they were found before it slices – so this cannot rot back into a whole-file search.
-    expect(app).toContain("const WEEK_SEEN_PREFIX = 'tb:lastSeenThisWeek'")
-    const from = app.indexOf('const WEEK_SEEN_PREFIX')
-    const to = app.indexOf('// --- W1: THE WEEK\'S STORY OPENS ITSELF')
-    expect(from, 'the This-week block moved – re-aim the marker, do not widen the slice').toBeGreaterThan(-1)
-    expect(to, 'the end marker moved – a -1 here silently reads the rest of the file').toBeGreaterThan(from)
-    const block = app.slice(from, to)
+    //
+    // (c) ⚠ RE-AIMED BY WAVE B (07.09) – THE BLOCK IS IN `composables/tabSeen.ts` NOW, verbatim,
+    //     with the other three tab dots. Two things follow and both make this stricter rather than
+    //     looser. The PREFIX assertion moves to `appLogic` (the SFC plus its composables), which is
+    //     the helper for a positive claim that has to survive an extraction. And the block itself is
+    //     cut with `region()` off the module that owns it: the old hand-rolled `indexOf` pair is
+    //     exactly the shape paragraph (b) is about, and `region` THROWS on an absent marker instead
+    //     of quietly widening - so the two guards below it are no longer the only thing standing
+    //     between a moved marker and a whole-file search.
+    expect(appLogic).toContain("const WEEK_SEEN_PREFIX = 'tb:lastSeenThisWeek'")
+    const block = region(read('../src/composables/tabSeen.ts'), 'const WEEK_SEEN_PREFIX', '// --- R9-21b: news cue')
     expect(block).toContain("if (t === 'week') markThisWeekSeen()")
     // ...and the landing-while-on-it clause, which lives in the story watcher just past the block.
     expect(app).toContain("if (tab.value === 'week') markThisWeekSeen()")
@@ -677,7 +698,15 @@ describe('W1 — the end of a week lands on the story', () => {
     // ⚠ RE-AIMED 01.08, not weakened: the shell's import gained `consumePostAdvanceNav` (the one-shot
     // navigation hold - see "the post-advance navigation can be claimed" below). The pin's job is
     // unchanged: the shell reads the shared rules from weekRecap.ts and re-derives none of them.
-    expect(app).toContain("import { consumePostAdvanceNav, recapExists, storyOpensItself, thisWeekDotShows } from './composables/weekRecap'")
+    //
+    // ⚠ RE-AIMED AGAIN BY WAVE B (07.09), AND IT IS NOW TWO LINES BECAUSE THE READERS ARE TWO FILES.
+    // The DOT's half of this import - `recapExists` and `thisWeekDotShows` - went to
+    // `composables/tabSeen.ts` with the four tab dots; what the shell still asks weekRecap.ts is
+    // about the week LOOP. The protected fact has not moved an inch: both halves are still IMPORTED
+    // from the one module and neither is re-derived, and asserting the two import lines by name says
+    // that more precisely than the single line did, because it also says which reader owns which rule.
+    expect(appLogic).toContain("import { consumePostAdvanceNav, storyOpensItself } from './composables/weekRecap'")
+    expect(appLogic).toContain("import { recapExists, thisWeekDotShows } from './weekRecap'")
     // ...and it must be an ADVANCE of the SAME career, not merely a higher week number. `week` is
     // `snapshot?.week ?? 0`, so the first snapshot of a load reads as 0 -> N; the first draft of this
     // fix opened last week's story on every app start because of it. Caught in the browser.

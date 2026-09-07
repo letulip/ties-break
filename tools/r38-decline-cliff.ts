@@ -24,7 +24,7 @@ import { readFileSync } from 'node:fs'
 import { decodeExportFile } from '../src/engine/saveCodec'
 import { ECONOMY } from '../src/engine/economy'
 import { WEEKS_PER_YEAR } from '../src/engine/season/calendar'
-import { ageCurveOf, declineFactor, physicalMean, SKILL_KEYS, type KidSkills } from '../src/engine/development'
+import { ageCurveOf, declineFactor, physicalMean, SKILL_KEYS } from '../src/engine/development'
 import { kidAgeExact } from '../src/engine/world/age'
 import { recoveryBaseFor, recoveryAgeFade, restRecoveryBonus } from '../src/engine/world/medical'
 import { masseurRungOf, masseurWorksThisWeek } from '../src/engine/world/masseur'
@@ -36,6 +36,12 @@ import { kidMatchPlayer } from '../src/engine/world/player'
 import { rivalMatchPlayer } from '../src/engine/season/rival'
 import { conditionMatchFactor } from '../src/engine/condition'
 import type { MatchOptions } from '../src/engine/match/types'
+// ⚠ `KidSkills` IS `engine/development`'s AND IS NOT ON THE BARREL. `engine/world` re-exports the
+// decomposed modules' VALUES under their historical names (CLAUDE.md, the P4 rules), and this type
+// was never one of them - every other probe that needs it imports it from `development` directly
+// (career-vs-bench.ts, childhood-bench.ts, growth-age-sweep.ts). `check:tools` is in `npm run check`
+// since 02.09 for exactly this: an archival probe that stops compiling is found at the gate.
+import type { KidSkills } from '../src/engine/development'
 import type { WorldState } from '../src/engine/world'
 
 const args = process.argv.slice(2)
