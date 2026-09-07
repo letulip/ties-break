@@ -101,6 +101,35 @@ dependency. It is bounded by A4 and by the frozen hashes, and it never reaches d
 
 ---
 
+#### ⭐⭐ SHIPPED, A1-A5, 07.09 – and two things in the plan above were wrong about WHERE the cost is
+
+The delivered numbers, the profile, the mutation evidence and the frozen hashes are in
+`docs/rounds/round-38.md` item 9, which is where the wave's ledger belongs. **Measured: 14.7 → 3.3 ms
+hot on the professional career and 20.5 → 5.9 ms on the junior one**, against the 5 ms target above.
+`SAVE_SCHEMA_VERSION` did not move, no migration was written and no golden fixture was added, exactly
+as the design section promised.
+
+Two corrections worth carrying, because both were found by measuring and neither was guessable from
+the profile-by-file table this spec was written against:
+
+1. **`rankingFor` is not the expensive ledger fold – `kidPoints` is.** 7.7% against 11.4% of a
+   snapshot. The entry gates (`tierOutgrown`, `playDownBars`, `tierFloorOpen`, `hasOutgrown`) ask it
+   once per upcoming event and each ask re-filters the whole ledger, so `season/ranking.ts`' 15.4%
+   share was mostly arriving through a function this spec never names. A2 memoises both.
+2. **A memo around `previewEvent` alone would have bought about a quarter of what A3 buys.** Of
+   `preview`'s 46.4%, only 10.3 points are inside `previewEvent`; the other 36 are `argsFor`
+   ASSEMBLING the arguments – `ratedField` 15.8, `weekFieldExclusion` 13.5. So the memo sits one
+   frame out, on the whole card, and its key is exact there because past `DRAW_LEAD_WEEKS` there is
+   no opponent and the card reads `ranking`, `standing` and `excluded` nowhere.
+
+⚠ **And A4's own arm needed a second mutation before it was worth anything.** Dropping the ledger
+from the ranking key went red immediately; dropping HER RATING from the far-card key left all 79
+tests green, because no fixture in the corpus presents two worlds that share a week and a cohort
+while she is a different player. The kit-purchase case that closes it is in
+`tests/snapshot-cache-verify.test.ts`.
+
+---
+
 ## Wave B – one owner out of `App.vue`
 
 ### What is wrong
@@ -169,6 +198,48 @@ phase boundaries move. Growth to 28, maintenance 28-33, decline after 33.
 ⚠ **This gives every career five more years of growth, so it almost certainly raises every ceiling at
 once – which makes C2 mandatory rather than optional, and makes the order below load-bearing.**
 
+---
+
+#### ⚠⚠ C0 MEASURED THIS AND IT DOES NOT HOLD (06.09, `npm run bench:agecurve`, 24 seeds)
+
+**C1's premise above is wrong, and C1 must not ship as written.** Three facts, in the order they
+break it:
+
+**1. The pair C1 proposes to move is read by almost nothing.** `ECONOMY.development.ageCurve` is the
+**pre-fork** curve since round 31 #10. A career past the fork resolves `ECONOMY.development.ageRoutes`
+instead – `direct { 22, 27 }`, `college { 23, 29 }` – plus its own `declineSpreadYears` draw. Moving
+only the default would have moved nothing for any career that has answered the fork, which is every
+career the change is for. Predicted a fix, measured it doing nothing: `rank-plateau.md`'s own shape.
+
+**2. Growth does not stop at `plateauStart`. It thins.** `plateauRate` is 0.0009, not 0 – she keeps
+gaining through the plateau, slowly, and the measured PEAK lands at `declineStart`, not at
+`plateauStart`. Physical mean by age, same seed, one thing different:
+
+| age | direct | college |
+| --- | --- | --- |
+| 22 | 59.21 | 59.42 |
+| 26 | **59.76** (peak) | 60.00 |
+| 28 | 57.88 | **60.19** (peak) |
+| 30 | 54.47 | 58.34 |
+
+**Careers already peak at 26.55 direct and 28.56 college.** His own reference table – the one round
+31 was built against – is `24-26 direct, 25-28 via college`. Both routes therefore peak at or just
+past the TOP EDGE of his own windows. There is no missing five years; if anything the peak is late.
+
+**3. So C1 as specced would push the peak to 32-33**, five years outside his reference, and it would
+do it while C2 was trying to tune the ceiling underneath. That is two dials fighting.
+
+**What his objection «рост как раз идёт до 28-29» actually points at.** He is right about the AGE and
+the disagreement is about the WORD. She is still improving at 28 – by **under one point** between 22
+and her peak (59.21 → 59.76 direct; 59.42 → 60.19 college). If what he means is that the improvement
+should still be worth something at 26-28, the dial is **`plateauRate`**, not `plateauStart`: raise
+what the plateau is worth and the peak stays where his reference says it belongs. If he means the
+peak itself is early, the measurement says it is not.
+
+⚠ **C1 is therefore an `ask`, not a build.** The fork is in `docs/rounds/round-38.md`'s question list.
+
+---
+
 ### C2 – `potentialBand`
 
 `ECONOMY.development.potentialBand` is `[4, 26]` – the spread of potential a girl is born with over
@@ -194,6 +265,12 @@ swaps. If it is entirely invisible, changing coach is a lottery. **That is a des
 his; C3 does not start until it is answered.**
 
 ### C4 – the two skills that do not reach the field
+
+⭐⭐ **SHIPPED 07.09.2026.** Everything below is kept as the PROPOSAL it was; what was built and what
+it measured are in `docs/specs/one-closed-form-2026-09.md`, and the ledger entry is in
+`docs/rounds/round-38.md`. Two readings from it belong here because they answer this section's own
+sentences: the composure case reproduced the **1.7 pp** quoted below to the second decimal (1.68), and
+the residual over 315 cells went **rms 3.06 pp → 0.36 pp**.
 
 ⭐ **This entered the wave on 06.09, after he challenged a claim I had relayed wrongly.**
 
@@ -223,3 +300,46 @@ matches what the simulation actually produces. Then:
 ⚠ **This moves every AI result, and therefore rankings and every calibration band.** It is the reason
 C4 belongs in this wave and not in a UI round. The order is C1 → measure → C2 → measure → C4 →
 measure, with C3 waiting on his answer.
+
+### Plan of work
+
+⭐ **Written 06.09 on his «если план ещё не готов – надо дописать».** The wave had a spec and an
+ORDER but no step table, which is what waves A and B carry and what makes a wave auditable. It has
+one now. Every step names the instrument that already exists – none of this needs a new bench.
+
+⚠⚠ **THE MEASUREMENT COMES FIRST AND IT IS NOT A FORMALITY.** `docs/specs/rank-plateau.md` predicted
+a fix, measured it doing nothing and found the real cause; that is the shape every step below has to
+survive. A step whose "after" has no "before" is not done.
+
+| step | what | instrument | proof |
+| --- | --- | --- | --- |
+| **C0** | The baseline, all of it, on today's constants: the age profile of the top 100, the ceiling realisation, where careers peak, and his own three saves as the floor | `tools/r31-top100-age.ts`, `tools/r34-reachable-ceiling.ts`, `npm run bench:agecurve`, `tools/real-vs-bench.ts` | one table in `docs/specs/wave-c-measurements.md`, committed BEFORE any constant moves |
+| **C1a** | Sweep `plateauStart` / `declineStart` without shipping anything – the sweep patches the constant in place and restores it | `tools/growth-age-sweep.ts` | the (23,29) column reproduces C0; (28,33) predicted |
+| **C1b** | Ship (28,33) if and only if C1a's prediction is inside the band C0 measured | the constants in `ECONOMY.development.ageCurve` | C0's four arms re-run; ⚠ the three frozen career hashes WILL move, and each one is re-baselined with the reading beside it |
+| **C1c** | The peak window against his own reference table – direct 24-26, college 25-28 | `npm run bench:agecurve` arm 3 | peak ages inside his own bands, printed |
+| **C2a** | Re-measure realisation AFTER C1 – the 93.3% is a pre-C1 number and C1 raises every ceiling | `tools/r34-reachable-ceiling.ts` | the new figure, which is the one C2 tunes against |
+| **C2b** | Sweep `potentialBand` for the band that lands realisation at 30-40% | `tools/potential-band-sweep.ts` | predicted band, then measured; the coach's ceiling read (0.40/0.75/0.90) re-checked, because it is a fraction OF this |
+| **C2c** | Ship the band, re-run the top-100 age profile and the ceiling walk | as C0 | `#237` best-rank finding re-measured: the tour must still be climbable |
+| ~~**C4a**~~ | ⭐ DONE 07.09 – `tools/r38-closed-form-residual.ts`, 315 fit cells + 108 held-out skill-gap cells x 20,000 matches | its own probe | rms **3.06 -> 0.36 pp**, worst **6.11 -> 1.04 pp**; stamina 30v90 **4.77 pp**, composure 30v80 **1.68 pp** (his 1.7, reproduced) |
+| ~~**C4b**~~ | ⭐ DONE 07.09 – `nerveAndLegs` + `calibratedPServe`, a DIFFERENCE term BESIDE `basePServe` (inside it closes only 3% of the gap – measured) | `engine/match/point.ts` | all 63 frozen constants re-baselined with a per-key diff; `rngMain` and the whole MAIN stream byte-identical |
+| ~~**C4c**~~ | ⭐ DONE 07.09 – four readers, one model; the card and the live curve at 0-0 are one number by construction | `tools/r38-closed-form-residual.ts`, `tests/match/calibration.test.ts` | rms **0.36 pp** – the 0.35 pp sampling floor; the worst single cell of 315 is 1.04 pp, which is what a maximum over that many noisy cells looks like |
+| **C3** | ⚠ NOT STARTED. Blocked on «как это не превратить в гарантию?» | – | – |
+
+**Order, and it is load-bearing:** C0 → C1a → C1b → C1c → C2a → C2b → C2c → C4a → C4b → C4c.
+C4 goes LAST because it moves every AI result and would otherwise contaminate C1's and C2's
+measurements; C2 goes after C1 because C1 raises the ceilings C2 is tuning.
+
+⭐ **C4 SHIPPED 07.09 AHEAD OF C1/C2, on the owner's «можно делать по готовности».** The ordering
+argument above is unharmed and now points the other way: C1 and C2 have not been measured yet, so
+their baselines must be taken ON TOP of C4 rather than under it. `docs/specs/one-closed-form-2026-09.md`
+is the spec; `docs/rounds/round-38.md` carries the ledger entry and everything that moved.
+
+**Effort: 4-6 days, and C4 is over half of it.** **Risk: the highest of the three waves**, because
+unlike A and B this one is SUPPOSED to change behaviour – which means the frozen careers move by
+design and the only defence against moving them wrongly is that every step above prints its number
+before and after.
+
+⚠ **The three `measure/*` branches are superseded.** `measure/potential-band`,
+`measure/first-round-exit` and `measure/fortnight-bisect` are ~318k lines behind main; his own
+ruling was «измерим заново вместе с волной C позже, остальное не тащим». C0 re-measures on main and
+the three branches are deleted after it, not merged.

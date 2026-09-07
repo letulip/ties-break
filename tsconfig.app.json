@@ -52,9 +52,10 @@
     "tools/radar-bench.ts",
     "tools/retired-college-rule.ts",
     "tools/retirement-rate.ts",
-    "tools/shop-probe.ts",
     "tools/season-mirror.ts",
+    "tools/shop-probe.ts",
     "tools/skill-ceiling.ts",
+    "tools/snapshot-bench.ts",
     "tools/sponsor-window-bench.ts",
     "tools/world-turnover.ts"
   ]

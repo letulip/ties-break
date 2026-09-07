@@ -121,6 +121,14 @@ export const HEAVY_SIM_FILES = [
   'tests/fatigue-bench-policy-condition-middle.test.ts',
   'tests/fatigue-bench-policy-104w.test.ts',
   'tests/match/calibration.test.ts',
+  // ⭐ WAVE A, A4 (07.09) – the snapshot cache asserted over all 71 golden fixtures with
+  // `TB_SNAPSHOT_VERIFY=1`, each one projected three times (once uncached, twice cached, and the
+  // cached passes doubled by the verify mode itself). It is here for the reason the header gives:
+  // minutes of synchronous work in one file is what the birpc wall is about, and a process of its
+  // own is what keeps it away from that wall. It is NOT a Monte-Carlo sweep – it is a regression
+  // test – but it is the same SHAPE, and `endings-bench`'s move in the other direction is the
+  // precedent for judging by shape rather than by category.
+  'tests/snapshot-cache-verify.test.ts',
 ]
 
 /** THE HEAVY UNIT TAIL – regression tests, so they stay in the PR gate, but they hold a core long

@@ -29,6 +29,27 @@
 // ⚠ REGENERATING IS DELIBERATE AND LOUD: `TB_WRITE_MATCH_ANNOTATION_PARITY=1 npx vitest run
 // --project unit tests/match/match-annotation-parity.test.ts` rewrites the fixture. A refactor that
 // needs it has changed behaviour, and THAT is the finding.
+//
+// =================================================================================================
+// ⭐⭐ RE-FROZEN 07.09.2026 – ROUND 38, C4, AND THE DIFF IS THE PROOF RATHER THAN THE COST.
+// =================================================================================================
+//
+// C4 moved the closed form onto `calibratedPServe`, which reads composure and stamina; `annotateMatch`
+// followed it, because the live curve at 0-0 IS the card's own probability and leaving one of them
+// behind would have split them silently. Nothing else in this file's path was touched. The per-field
+// diff, taken against the fixture as it stood, says exactly that:
+//
+//     hard-even            HASH BYTE-IDENTICAL – nothing moved at all
+//     clay-cannon          only `winProbA`, at all 9 sampled points
+//     grass-legacy         only `winProbA`, at all 6 sampled points
+//     hard-second-server   only `winProbA`, at all 8 sampled points
+//
+// ⚠⚠ TWO READINGS IN THAT TABLE, AND BOTH ARE LOAD-BEARING. `pServe` DID NOT MOVE on a single
+// sampled point of a single record – nor did the winner, the sets, the stats, the rally shots, the
+// serve speeds or the clock – which is the proof that C4 left the POINT LOOP alone: the correction
+// lives beside `basePServe` and only the closed form reads it. And `hard-even` is the only record
+// whose two players are LEVEL in composure and stamina (50/50 both), which is why its hash is
+// unchanged to the last bit: the term is a difference and a difference of equals is exactly zero.
 import { describe, it, expect } from 'vitest'
 import { readFileSync, writeFileSync, mkdirSync, existsSync } from 'node:fs'
 import { resolve } from 'node:path'

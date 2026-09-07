@@ -88,11 +88,25 @@ const SRC = new URL('../src/', import.meta.url)
 //   componentFile()   – the .vue ALONE. Answers "this FILE itself does / does not ...", which is the
 //                       only honest source for a negative claim about the component's own imports.
 
+// ⚠⚠ `./composables/` COUNTS TOO, AND UNTIL WAVE B IT DID NOT – 07.09.
+//
+// The pattern used to require at least one `../`, which every component under `src/components/`
+// writes. `src/App.vue` is the one SFC that sits at the ROOT of `src/`, so ITS composable imports are
+// spelled `'./composables/x'` and NONE of them matched: `componentLogic('App.vue')` returned the SFC
+// alone and was a silent synonym for `componentFile('App.vue')`.
+//
+// That is this repo's recurring failure shape – a search that quietly answers a different question –
+// and it was about to be load-bearing: wave B moved four watchers out of the shell into
+// `composables/tabSeen.ts`, and every pin re-aimed at `componentLogic` would have gone on reading a
+// file the code had left, passing or failing for the wrong reason. Widening can only ADD text, so no
+// positive pin can lose a claim; negative pins may not use this helper at all
+// (`tests/pin-hygiene.test.ts` enforces that mechanically), so there is no direction in which this
+// makes an assertion weaker. No caller named `App.vue` before today, so nothing else moves.
 /** The SFC plus every `composables/*` module it imports. POSITIVE assertions only – see above. */
 export function componentLogic(relFromSrc: string): string {
   const sfc = componentFile(relFromSrc)
   const parts: string[] = []
-  for (const m of sfc.matchAll(/from '(?:\.\.\/)+composables\/([A-Za-z0-9_]+)'/g)) {
+  for (const m of sfc.matchAll(/from '(?:\.\.?\/)+composables\/([A-Za-z0-9_]+)'/g)) {
     try {
       parts.push(`\n// ==== src/composables/${m[1]}.ts ====\n` + readFileSync(new URL(`composables/${m[1]}.ts`, SRC), 'utf8'))
     } catch {

@@ -12,14 +12,24 @@ import type {
   Side,
 } from './types'
 import { createScore, awardPoint, contextOf, formatScore } from './scoring'
-import { basePServe, modifiedPServe, retireDurability, retireHazard, type Streak } from './point'
+import { basePServe, calibratedPServe, modifiedPServe, retireDurability, retireHazard, type Streak } from './point'
 import { pMatchBo3 } from './closedForm'
 import { rngFromSeed } from '../rng'
 
-// Closed-form match win probability from base serve strengths only. No RNG, no
-// per-point modifiers – the world "fast sim" path when a full log isn't needed.
+// Closed-form match win probability. No RNG, no per-point modifiers – the world "fast sim" path
+// when a full log isn't needed, and the number the calendar card quotes.
+//
+// ⭐⭐ IT READS `calibratedPServe`, NOT `basePServe` (round 38, C4). The difference is the two
+// attributes the point loop spends and the base form cannot see: composure and stamina. Before this
+// they were computed onto every rival and then never consulted, so an AI-vs-AI bracket was decided
+// by three of the five skills the player trains, and the card quoted a chance up to 6.1 pp away from
+// the match she would actually play. See `nerveAndLegs` in point.ts for the fit and for why the term
+// lives beside `basePServe` rather than inside it.
+//
+// ⚠ ZERO EFFECT ON A PAIR LEVEL IN BOTH – the term is a difference, so `pMatchBo3` here is handed
+// byte-identical arguments for every symmetric fixture and every calibration band.
 export function fastMatchProbability(a: MatchPlayer, b: MatchPlayer, opts: MatchOptions): number {
-  return pMatchBo3(basePServe(a, b, opts), basePServe(b, a, opts))
+  return pMatchBo3(calibratedPServe(a, b, opts), calibratedPServe(b, a, opts))
 }
 
 function emptyStats(): SideMatchStats {

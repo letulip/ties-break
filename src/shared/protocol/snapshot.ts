@@ -423,8 +423,28 @@ export interface Snapshot {
   }
   /** ONE SENTENCE ABOUT HOW MUCH ROOM IS LEFT IN HER (08.08) – the context every uplift on screen T
    *  is relative to, since a rung's worth is a share of remaining headroom and collapses as she
-   *  fills her ceiling. Never quotes the ceiling itself; see `coachRoomNote`. */
+   *  fills her ceiling. Never quotes the ceiling itself; see `coachRoomNote`.
+   *
+   *  ⚠ PAST HER OWN PEAK IT IS THE DECLINE READ INSTEAD – the identical string this field's sibling
+   *  below carries, because a headroom sentence about a career that has no headroom left was telling
+   *  a 35-year-old she had «Huge potential» (round 38 #7b). */
   coachRoomNote: string
+  /** ⭐⭐⭐ ROUND 38 #6d/#7b – THE DECLINE HALF OF THE COACH'S READ, AND '' WHILE SHE IS STILL
+   *  GROWING. Home renders this field and NEVER `coachRoomNote`, which is what makes round 34 #2a's
+   *  ruling structural instead of a condition on a screen: «Тренер на главном экране … написал 14
+   *  летней девочке Close to her ceiling … звучит как приговор». A child's snapshot carries an empty
+   *  string here, so there is nothing for Home to print however the template is later edited; only a
+   *  career past its own `declineStart` has anything in it. The owner, 07.09: «вполне можно вернуть
+   *  на home и как раз расширить на старение тоже, чтобы было видно, что оно пошло».
+   *
+   *  ⚠ IT IS THE ONE STRING ON THIS INTERFACE THAT CARRIES DIGITS ABOUT HER, and they are her RANK
+   *  and her body's remaining seasons – both already public (`kidRank` on four screens,
+   *  `physicalShare` since round 31 #9). Her CEILING is still behind the fog: nothing in
+   *  `coachDeclineNote` reads `skills` against `potential`.
+   *
+   *  ⚠ DERIVED AT SNAPSHOT TIME, exactly like `coachRoomNote`: it persists nothing, owes no
+   *  migration and does not move `SAVE_SCHEMA_VERSION`. */
+  coachDeclineNote: string
   /** ⭐⭐ THE HANDOVER'S READ, AND IT IS EMPTY ON EVERY WEEK BUT THE FIRST (childhood prologue §5).
    *
    *  One of the three words this game already grades remaining room in – `Huge potential` /

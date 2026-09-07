@@ -40,6 +40,7 @@ import {
   assetValueCents,
   assetWorthCents,
   brandCrowdMult,
+  brandGrossWorthCents,
   brandMultipleX,
   brandSignalsOf,
   brandWeeklyGrossCents,
@@ -50,6 +51,7 @@ import {
   fameFloorOf,
   merchWeeklyIncomeCents,
   ownedAssets,
+  revalueAssets,
   sellAsset,
   shopCatalogue,
   shopItem,
@@ -59,6 +61,7 @@ import {
   type BrandSignals,
   type WorldState,
 } from '../src/engine/world'
+import type { ShopItem } from '../src/engine/world/assets'
 import { ECONOMY } from '../src/engine/economy'
 import { rngFromSeed } from '../src/engine/rng'
 import { WEEKS_PER_YEAR } from '../src/engine/season/calendar'
@@ -81,9 +84,33 @@ function walk(world: WorldState, n: number, keepSolvent = false): void {
       skipTournament(world)
       closeTournament(world)
     }
-    if (keepSolvent) world.fundsCents = 5_000_000_00
+    if (keepSolvent) world.fundsCents = SHOPPER_FUNDS_CENTS
   }
 }
+
+/** ⚠⚠ RE-AIMED, ROUND 38 #14 (07.09) – WAS $5,000,000, AND THE FIXTURES STARTED FAILING WITH «Not
+ *  enough funds for that» RATHER THAN WITH A WRONG NUMBER. `buyAsset` now charges
+ *  `max(catalogue, what the rung is worth)` – the owner's ruling that closed a sell-and-rebuy loop
+ *  worth $2,326,989 a cycle on his own save – so a career famous enough to make these arms mean
+ *  anything must now find its brand's full worth in cash.
+ *
+ *  ⭐ THE WALLET IS SCENERY IN THIS FILE and raising it weakens no claim: every arm here is about
+ *  what a brand EARNS and what it is WORTH, and not one of them asserts a balance. The alternative –
+ *  making the fixtures poorer and less famous – would have moved the very numbers they exist to pin.
+ *
+ *  ⚠ AND IT IS A REAL CONSEQUENCE OF THE RULING, not a fixture quirk: on the owner's week-1115 career
+ *  a first brand now costs $5,172,791 against a $250,000 sticker. Recorded in the round-38 PR body so
+ *  he can rule on it, because it closes a line of play that was open.
+ *
+ *  ⚠⚠ AND HE RULED ON IT THE SAME DAY: #14 IS WITHDRAWN AND THE PARAGRAPH ABOVE DESCRIBES A RULE
+ *  THAT NO LONGER EXISTS. It is kept rather than deleted because the WALLET it raised is still
+ *  raised. «Если мы до пика известности бренд не покупали, то он всё равно поднимался в цене? Это
+ *  супер-странно» – `purchasePriceCents` is gone, `buyAsset` charges the catalogue price again, and a
+ *  first brand costs $250,000 on every career in this file. The loop moved one layer down, into what
+ *  a fresh row is WORTH (`rampedWorthCents`, round 38 #16). ⚠ The raise costs nothing either way:
+ *  no arm here asserts a balance, so a fixture that can afford anything measures exactly what it
+ *  measured at $5,000,000. */
+const SHOPPER_FUNDS_CENTS = 500_000_000_00
 
 function shopper(seed: string, weeks = 12): WorldState {
   const world = professional(createWorld(seed))
@@ -95,7 +122,7 @@ function shopper(seed: string, weeks = 12): WorldState {
       closeTournament(world)
     }
   }
-  world.fundsCents = 5_000_000_00
+  world.fundsCents = SHOPPER_FUNDS_CENTS
   return world
 }
 
@@ -199,7 +226,27 @@ describe('round 30 #9 §2 – the worth is years of what it earns, and the earni
       .toBeGreaterThan(ECONOMY.business.merch.value.unknownX)
     // ⚠ THE RATIO IS THE CLAIM. A test that recomputed `fame x dial x 52 x N` would pass on a second
     // copy of the formula; this reads the engine's own income for the row it is pricing.
-    expect(row.valueCents! / (brandWeeklyGrossCents(s) * WEEKS_PER_YEAR)).toBeCloseTo(earned, 1)
+    //
+    // ⚠⚠ RE-AIMED, ROUND 38 #16 (07.09), AND IT IS THE ROW THAT MOVED RATHER THAN THE MULTIPLE. It
+    // read `row.valueCents / (a year of income)` and asked it to BE the multiple. The owner ruled
+    // that a brand is a process – «он неизменно для первого открытия стоит 250к, а потом МОЖЕТ
+    // набрать свои 5млн, но не за 1 день» – so a row four weeks old is not yet what the career says
+    // it is worth. MEASURED on this fixture, four weeks in: the row reads $572,332 and the ratio
+    // 1.3684 against an earned multiple of 8.6527.
+    //
+    // ⭐ THE CLAIM IS UNCHANGED AND IT IS ASKED ONE STEP UPSTREAM, WHERE IT IS STILL EXACT: the value
+    // the row is WALKING TOWARD, `brandGrossWorthCents`, over a year of what the ledger pays it, IS
+    // the multiple – measured 8.652736 against `brandMultipleX`'s 8.652736, to six places. That is
+    // still the engine's own income and the engine's own worth, not a second copy of the formula;
+    // what #16 inserted between them is time.
+    const destination = brandGrossWorthCents(s, shopItem(MERCH)!.earningsMultipleX!)
+    expect(destination / (brandWeeklyGrossCents(s) * WEEKS_PER_YEAR)).toBeCloseTo(earned, 1)
+    // ⚠⚠ AND THE ROW IS BETWEEN THE TWO, WHICH IS THE RAMP AND THE ANTI-VACUITY ARM AT ONCE. Revert
+    // `rampedWorthCents` to the derived value and the row lands ON the destination, so the upper
+    // bound reddens; delete the multiple and the destination collapses to the floor, so the lower
+    // one does. Measured: $250,000 paid, $572,332 on the row, $3,619,048 to go to.
+    expect(row.valueCents!, 'four weeks in, the row is past what was paid').toBeGreaterThan(PRICE)
+    expect(row.valueCents!, '...and has not arrived – a process, not a purchase').toBeLessThan(destination)
     expect(row.earningsMultipleX, 'and the card quotes the same multiple, whole').toBe(Math.round(earned))
     // ⚠ AND THE STOCK IS REALLY LIVE ON THIS FIXTURE, which is what stops the arm above being a
     // tautology about a career sitting on its own peak.
@@ -261,8 +308,26 @@ describe('round 30 #9 §3 – ⭐⭐ IT FALLS', () => {
       brandWeeklyGrossCents(bare(world)) *
       WEEKS_PER_YEAR *
       brandMultipleX(bare(world), shopItem(MERCH)!.earningsMultipleX!)
-    walk(w, 2, true)
+    // ⚠⚠ RE-AIMED, ROUND 38 #16 (07.09) – THE FIXTURE HOLDS THE ROW TWO SEASONS BEFORE THE FIRST
+    // READING, AND THE CLAIM AND THE BAND ARE BOTH UNTOUCHED. It read `walk(w, 2, true)`: two weeks
+    // after the purchase, which under the old code was already the full derived worth. The owner
+    // ruled that a valuation is a process – «не за 1 день, т.к. это процесс» – so for the first
+    // season the row is still CLIMBING toward a value that is already falling, and «two seasons of
+    // quiet» measured from week 2 read a RISE of 4.43x rather than a fall. That is the ramp, not a
+    // brand that stopped fading. MEASURED on this fixture: $1,654,804 at two weeks held,
+    // $9,171,037 at one season, $7,417,644 at two – it has turned by then, and the arm below reads
+    // the falling side. ⚠ HOLDING LONGER RATHER THAN LOWERING THE BAR IS THE POINT: the band is
+    // untouched at (0.40, 0.60) and the measured hold is 0.53338, where the old fixture read 0.48563
+    // under the old arithmetic. ⭐ AND THE FALL ITSELF DID NOT MOVE, which is the check that says the
+    // settling walk is the only thing that changed here: the pre-#16 arithmetic read 0.53190 at this
+    // same two-season settle (measured by reverting `rampedWorthCents` to the derived value).
+    walk(w, WEEKS_PER_YEAR, true)
+    const climbing = ownedOf(w, MERCH)!.valueCents
+    walk(w, WEEKS_PER_YEAR, true)
     const atPeak = ownedOf(w, MERCH)!.valueCents
+    // ⚠ AND THE RAMP REALLY HAS TURNED BEFORE THE MEASUREMENT STARTS – the line that fails if the
+    // settling walk is ever shortened back, and the one that says WHY it is there.
+    expect(atPeak, 'the row is on its falling side before the fall is measured').toBeLessThan(climbing)
     const preAtPeak = preWorth(w)
     const at32Peak = fameClock(w)
     const titlesThen = w.trophiesByTier.slam!.titles.length + w.trophiesByTier.wta1000!.titles.length
@@ -303,8 +368,13 @@ describe('round 30 #9 §3 – ⭐⭐ IT FALLS', () => {
     // ⭐ It is still far above the pre-#4 arithmetic, which is the comparison that matters: the same
     // two seasons cost five sixths of the asset before this wave and cost four fifths of it now,
     // against an income that has stopped collapsing. docs/specs/brand-inertia-2026-08.md §16.
-    expect(twoOn / atPeak).toBeGreaterThan(0.18)
-    expect(twoOn / atPeak).toBeLessThan(0.40)
+    // ⚠ RE-AIMED, ROUND 38 #2c (06.09) – the band WAS (0.18, 0.40) and the measured hold WAS about a
+    // fifth. `strength.retention` went 0.78 -> 0.95 on the owner's «делая его более плавным», and the
+    // income squares its argument, so a floor worth `retention` of the stock now buys `retention²` =
+    // 0.90 of the income instead of 0.61: the hold is about a HALF. The claim is unchanged and the
+    // arm below – that it beats its own fame-priced control – is what still proves it.
+    expect(twoOn / atPeak).toBeGreaterThan(0.40)
+    expect(twoOn / atPeak).toBeLessThan(0.60)
     // ⚠ AND IT IS ABOVE ITS OWN PRE-#4 CONTROL ON THE SAME FIXTURE, so «about a fifth» is a
     // measurement of the feature and not of its absence. `fameClock` is round 32 #3's arithmetic
     // read off this same walk, with the stock neutralised.
@@ -347,20 +417,47 @@ describe('round 30 #9 §4 – the floor is the mark', () => {
     expect(fameAt(w), 'the fixture really has no fame').toBe(0)
     buyAsset(w, MERCH)
     const held = ownedOf(w, MERCH)!
-    expect(held.valueCents).toBe(Math.round(PRICE * ECONOMY.shop.businessValueFloorShare))
-    expect(held.valueCents).toBeGreaterThan(0)
+    const mark = Math.round(PRICE * ECONOMY.shop.businessValueFloorShare)
+    const R = ECONOMY.shop.worthRamp
+    /** what the row is worth `weeks` from now, through the same function `revalueAssets` asks. */
+    const after = (world: WorldState, row: typeof held, weeks: number): number =>
+      assetWorthCents({ ...world, week: world.week + weeks } as WorldState, row, shopItem(MERCH)!)
+    // ⚠⚠ RE-AIMED, ROUND 38 #16 (07.09) – WAS «worth the mark ON THE BUYING WEEK», IS «walks DOWN to
+    // the mark, and never under it». The owner: «он неизменно для первого открытия стоит 250к, а
+    // потом МОЖЕТ набрать свои 5млн, но не за 1 день, т.к. это процесс», and the same curve runs the
+    // other way for a brand nobody wants. So the row opens at the $250,000 that was paid – measured,
+    // and it is the whole of the sell-and-rebuy fix – and falls toward the $62,500 mark from there.
+    expect(held.valueCents, 'the week it is bought it is what was paid for it').toBe(PRICE)
+    // ⭐⭐ ONE HALF-LIFE CLOSES EXACTLY HALF THE GAP, AND A CAREER THE WORLD HAS NEVER HEARD OF RUNS
+    // ON THE CLAMP – `maxHalfLifeWeeks`, 416 weeks, because `worthRampHalfLife` cannot divide by a
+    // fame of zero and «медленно» is not «никогда» (the constant's own note). MEASURED to the cent:
+    // $234,438 after one season, $156,250 after 416 weeks, $68,359 after five of them.
+    expect(after(w, held, R.maxHalfLifeWeeks), 'one half-life, exactly half the way to the mark')
+      .toBe(Math.round((PRICE + mark) / 2))
+    expect(after(w, held, 5 * R.maxHalfLifeWeeks), 'five half-lives, and still not there').toBe(6_835_938)
+    expect(after(w, held, 5 * R.maxHalfLifeWeeks), 'the mark is a floor and it is never crossed')
+      .toBeGreaterThan(mark)
+    expect(mark).toBeGreaterThan(0)
     // ⚠⚠ AND IT IS A REAL LOSS, WHICH IS THE HALF THE FIRST DRAFT OF THIS ARM COULD NOT SEE. Reading
     // the constant back at itself passes at ANY share, 1.0 included – and a floor at the full price
     // would mean a brand can never be worth less than it cost, which is exactly the risk-free shape
     // the fund spent two rounds removing. Caught in this file's own mutation pass (the share moved
     // to 1.0 and nothing went red) and closed by asserting the DIRECTION as well as the figure.
-    expect(held.valueCents, 'a brand nobody has heard of is worth less than it cost').toBeLessThan(PRICE)
+    // ⚠ THE DIRECTION IS WHAT CARRIES THAT GUARD THROUGH #16: at a floor share of 1.0 the mark IS
+    // the price, the midpoint above is the price too, and only this line goes red.
+    expect(after(w, held, R.maxHalfLifeWeeks), 'a brand nobody has heard of is worth less than it cost')
+      .toBeLessThan(PRICE)
     // ⚠ AND THE FLOOR IS A FLOOR RATHER THAN THE ANSWER: a famous career is worth far more than it,
     // which is what makes the assertion above about the quiet case and not about the mechanic.
+    // ⚠⚠ RE-AIMED WITH IT: both rows are read A SEASON IN rather than on the buying week, because on
+    // the buying week every brand on the shelf is worth the $250,000 it cost and the comparison
+    // would be $250,000 against $250,000. MEASURED at one season held: $1,417,710 against $234,438.
     const famous = shopper('r30-9-floor-2')
     winTitles(famous, 'slam', [2, 5])
     buyAsset(famous, MERCH)
-    expect(ownedOf(famous, MERCH)!.valueCents).toBeGreaterThan(held.valueCents)
+    const famousHeld = ownedOf(famous, MERCH)!
+    expect(famousHeld.valueCents, 'and she paid the same sticker for it').toBe(PRICE)
+    expect(after(famous, famousHeld, WEEKS_PER_YEAR)).toBeGreaterThan(after(w, held, WEEKS_PER_YEAR))
   })
 })
 
@@ -370,10 +467,45 @@ describe('round 30 #9 §5 – bought and sold at the number on the row', () => {
     winTitles(w, 'slam', [2, 4, 6])
     buyAsset(w, MERCH)
     const held = ownedOf(w, MERCH)!
-    // ⚠ NO TICK BETWEEN THE PURCHASE AND THE READ. `revalueAssets` would have corrected this next
-    // week; a player looking at the row he has just bought would have seen $250,000 in the meantime.
-    expect(held.valueCents).not.toBe(PRICE)
+    // ⚠⚠⚠ THE LAW THIS ARM WAS WRITTEN FOR WAS OVERTURNED BY THE OWNER ON 07.09 (ROUND 38 #16), AND
+    // THIS PARAGRAPH IS THE CORRECTION rather than a rewrite – the same shape `physicalMean`'s header
+    // uses for its own superseded claim, and for the same reason: what it said is what three other
+    // arms in this file were built on. It used to read:
+    //
+    //     «⚠ NO TICK BETWEEN THE PURCHASE AND THE READ. `revalueAssets` would have corrected this
+    //      next week; a player looking at the row he has just bought would have seen $250,000 in the
+    //      meantime.»
+    //
+    // – with `expect(held.valueCents).not.toBe(PRICE)` under it. $250,000 on a freshly bought brand
+    // was the DEFECT that sentence named. It is now the ANSWER, and the ruling that made it one is
+    // his: «если мы до пика известности бренд не покупали, то он всё равно поднимался в цене? Это
+    // супер-странно. Я бы сказал, что он неизменно для первого открытия стоит 250к, а потом МОЖЕТ
+    // набрать свои 5млн, но не за 1 день, т.к. это процесс.»
+    //
+    // ⭐⭐ WHAT REPLACED IT: `assetWorthCents` no longer returns the derived value, it returns
+    // `rampedWorthCents(paid, derived, weeksHeld, halfLife)` – a stored worth that CHASES the derived
+    // one, halving the gap every `worthRampHalfLife(fame, medianFame)` weeks. At `weeksHeld === 0`
+    // that is exactly what was paid, by construction, which is what closes a sell-and-rebuy loop
+    // measured at +$2,326,989 of wealth a cycle on his own week-1115 save – and it is why round 38
+    // #14's `max(catalogue, worth)` could be withdrawn and the sticker left honest.
+    //
+    // ⚠ WHAT SURVIVES UNCHANGED, AND IT IS THE HALF THE TITLE IS ABOUT: there is still NO TICK
+    // between the purchase and the read, and the row still carries the engine's own answer rather
+    // than a placeholder waiting for `revalueAssets`. Both lines below are the original ones; only
+    // the number the first of them expects has moved, from «not the price» to «the price».
+    //
+    // ⚠⚠ SO DO NOT REBUILD A «FRESH ROWS ARE WORTH MORE THAN THEY COST» CLAIM ANYWHERE. It is false
+    // of every rung on the shelf now, deliberately, and the three arms that used to lean on it (§4's
+    // floor, §7's decoupling, #24's mark) are re-aimed onto a hold or onto the derived value.
+    expect(held.valueCents, 'the week it is bought, the row IS what was paid').toBe(PRICE)
     expect(held.valueCents).toBe(assetWorthCents(w, held, shopItem(MERCH)!))
+    // ⚠⚠ AND IT IS A STARTING LINE, NOT A FROZEN ROW – the arm that keeps the two lines above from
+    // being a tautology about a brand that is worth nothing, and the pair that reddens the moment
+    // `rampedWorthCents` is reverted to the derived value: measured, the row then opens at
+    // $9,686,343 and the equality above fails. MEASURED as it ships: $250,000 at the door, and
+    // $4,961,743 a season in.
+    expect(assetWorthCents(w, held, shopItem(MERCH)!, WEEKS_PER_YEAR), 'a season on, the same row is a business')
+      .toBeGreaterThan(PRICE * 10)
     // ...and every other fixed rung is byte-identical to what it always was at purchase.
     buyAsset(w, 'car-good')
     expect(ownedOf(w, 'car-good')!.valueCents).toBe(110_000_00)
@@ -388,7 +520,15 @@ describe('round 30 #9 §5 – bought and sold at the number on the row', () => {
     const w = shopper('r30-9-offset')
     winTitles(w, 'slam', [2, 4])
     buyAsset(w, MERCH)
-    walk(w, 4, true)
+    // ⚠⚠ RE-AIMED, ROUND 38 #16 (07.09) – WAS `walk(w, 4, true)`, IS TWO SEASONS, AND THE CLAIM AND
+    // BOTH ASSERTIONS ARE UNTOUCHED. The offset now moves TWO things at once: it is a week further
+    // from her titles (less fame, the claim) and a week further from the purchase (more of the ramp
+    // closed). For the first season the ramp is the bigger of the two and the meter reads UP.
+    // MEASURED on this fixture: at four weeks held one more week ADDS $53,989; at two seasons held
+    // it takes off $5,434, which is the fall this arm is about. ⚠ Holding longer, not loosening –
+    // and the mutation this arm exists for still bites, because a `fameAt` that ignored the week
+    // argument would leave the ramp alone in the answer and the meter would read UP again.
+    walk(w, 2 * WEEKS_PER_YEAR, true)
     const held = ownedOf(w, MERCH)!
     const item = shopItem(MERCH)!
     const now = assetWorthCents(w, held, item, 0)
@@ -422,26 +562,54 @@ describe('round 30 #11 – what the engine does to the rungs that say they neith
     // is not even a real-terms slide behind the nominal figure.
     const w = shopper('r30-11-holds')
     const zeros = shopCatalogue().filter((r) => r.annualRateBps === 0 && r.earningsMultipleX === undefined)
-    expect(zeros.map((r) => r.id), 'the rungs the sentence is now said of').toEqual([
-      'academy-land',
-      'academy-courts',
-      'academy-building',
-      'academy-staff',
-    ])
-    for (const item of zeros) {
-      const owned = { id: item.id, boughtWeek: 0, paidCents: item.entryCents, valueCents: item.entryCents }
-      for (const years of [1, 5, 15]) {
-        const later = { ...w, week: years * WEEKS_PER_YEAR } as WorldState
-        expect(assetWorthCents(later, owned, item), `${item.id} after ${years} seasons`).toBe(item.entryCents)
-      }
+    // ⚠⚠⚠ RE-AIMED BY ROUND 38 #8 (07.09), AND THE SET WENT TO EMPTY. This line used to name the four
+    // academy stages – the only rungs the sentence «Neither gains nor loses» was said of – and the
+    // owner has since taken them out of it himself: «а что насчёт стоимости и индексации этой
+    // стоимости с годами? Как с домами, например.» They carry +300 bps now, the houses' own number,
+    // so `rateLine` picks the houses' sentence for them and NO rung on the shelf reaches the zero
+    // branch any more.
+    //
+    // ⚠⚠ THE BRANCH IS KEPT AND SO IS THIS TEST, and both for the same reason. `MoneyScreen.vue`'s
+    // `annualRatePct === 0` arm is still the honest answer for the next rate-0 rung somebody adds,
+    // and deleting a correct branch because today's catalogue happens not to reach it is how a shelf
+    // quietly loses a case. So the ENGINE claim below moves off the catalogue and onto a hand-built
+    // rung: what round 30 #11 actually proved is that rate-0 arithmetic really is flat, and that is
+    // a fact about `assetWorthCents`, not about which ids happened to carry the rate that month.
+    expect(zeros.map((r) => r.id), 'no rung on the shelf carries a zero rate any more').toEqual([])
+    // ⚠ A RUNG THAT IS NOT ON THE SHELF, ON PURPOSE – it is the branch under test and nothing else.
+    // ⚠⚠ AND ITS FAMILY IS `house` RATHER THAN `academy`, WHICH IS THE WHOLE CARE IN THIS FIXTURE:
+    // an academy rung would take round 38 #8's premium branch and stop measuring the thing this test
+    // is named after. The zero it proves is the RATE's, not the premium's.
+    const flat: ShopItem = {
+      id: 'test-flat-rung',
+      family: 'house',
+      stake: 'fixed',
+      label: 'A rung at rest',
+      blurb: 'It neither gains nor loses.',
+      entryCents: 1_000_000_00,
+      annualRateBps: 0,
     }
-    // ⭐ AND THE SALE IS WHOLE. Bought, held four seasons, sold: the family gets its money back.
+    const owned = { id: flat.id, boughtWeek: 0, paidCents: flat.entryCents, valueCents: flat.entryCents }
+    for (const years of [1, 5, 15]) {
+      const later = { ...w, week: years * WEEKS_PER_YEAR } as WorldState
+      expect(assetWorthCents(later, owned, flat), `${flat.id} after ${years} seasons`).toBe(flat.entryCents)
+    }
+    // ⭐⭐ AND THE ACADEMY'S OWN SALE, WHICH IS THE LINE THAT MOVED. It used to read «the family gets
+    // its money back… four seasons later, to the cent», and the item is precisely that it now gets
+    // MORE back. ⚠ This career has banked no season, so `academyReputationOf` is 1.0 and the premium
+    // term is exactly zero – what the sale hands over is the drift alone, which is the floor option C
+    // guarantees and the honest reading of «как с домами».
     w.fundsCents = 20_000_000_00
     buyAsset(w, 'academy-land')
     walk(w, 4 * WEEKS_PER_YEAR, true)
     const before = w.fundsCents
+    const held = ownedOf(w, 'academy-land')!.valueCents
     sellAsset(w, 'academy-land')
-    expect(w.fundsCents - before, 'four seasons later, to the cent').toBe(2_000_000_00)
+    expect(w.fundsCents - before, 'the sale still hands back the row figure, whole').toBe(held)
+    expect(held, 'four seasons of the houses drift, and no premium on a career with no seasons')
+      .toBe(assetValueCents(shopItem('academy-land')!, 2_000_000_00, 4 * WEEKS_PER_YEAR))
+    // ⚠ AND IT REALLY GREW – the mutation guard. At rate 0 this equals the price and cannot fail.
+    expect(held, 'the land outgrew what was paid for it').toBeGreaterThan(2_000_000_00)
   })
 
   it('⚠⚠ ...and the merch brand is no longer one of them, which is why the row he read changed', () => {
@@ -533,9 +701,16 @@ describe('round 30 #23 §7 – income and worth are two functions, not one dial'
     const durable = parkAt(shopper('r30-23-durable'), W)
     winTitles(flash, 'wta1000', [W - 2, W - 5])
     winTitles(durable, 'wta1000', [W - 2, W - 5])
-    // ...and the durable one has a CAREER behind the same noise: ten professional seasons at #60
-    // (below every fame band, so the stock cannot move) and a winning record.
-    proSeasons(durable, 10, 60, 20, 8)
+    // ...and the durable one has a CAREER behind the same noise: ten professional seasons BELOW every
+    // fame band, so the stock cannot move, and a winning record.
+    // ⚠⚠ RE-AIMED, ROUND 38 #2c (06.09) – #60 USED TO BE BELOW EVERY BAND AND IS NOT ANY MORE. The
+    // ladder gained a `{maxEndRank: 100}` rung, so ten seasons at #60 now pay fame and the fixture's
+    // own premise – «fame is held EQUAL by construction» – stopped being true. This is the SECOND
+    // time this line has had to move for that reason (round 34 #17 did it for the lost finals) and
+    // the repair is the same: keep the experiment, move the fixture below whatever the ladder now
+    // reaches. #150 is outside every band, and `seasonX` in the MULTIPLE still counts the seasons –
+    // which is exactly the split this arm exists to prove.
+    proSeasons(durable, 10, 150, 20, 8)
     // ⚠⚠ THE TEN LOST FINALS ARE NOW GIVEN TO BOTH CAREERS, RE-AIMED BY ROUND 34 #17 (03.09). They
     // used to be `durable`'s alone, because a lost final below a Slam bought no fame and could
     // therefore differentiate the MULTIPLE while leaving fame untouched. Round 34 made a lost final
@@ -554,16 +729,37 @@ describe('round 30 #23 §7 – income and worth are two functions, not one dial'
 
     buyAsset(flash, MERCH)
     buyAsset(durable, MERCH)
+    // ⚠⚠ RE-AIMED, ROUND 38 #16 (07.09), AND WITHOUT THE HOLD THIS ARM IS DEAD RATHER THAN WRONG.
+    // Both careers pay the same $250,000 sticker and a row is worth exactly what was paid on the
+    // week it is bought, so read at the door the two brands are worth $250,000 each and «worth
+    // different money» cannot be said at all. Two seasons of holding is what lets the ramp carry
+    // each row toward its own value. MEASURED: $2,371,058 against $3,038,451.
+    // ⚠ The week is advanced and `revalueAssets` re-prices, rather than `walk`: these two worlds are
+    // held equal by construction and a tick would give them different careers.
+    flash.week += 2 * WEEKS_PER_YEAR
+    durable.week += 2 * WEEKS_PER_YEAR
+    revalueAssets(flash)
+    revalueAssets(durable)
     const thin = ownedOf(flash, MERCH)!.valueCents
     const thick = ownedOf(durable, MERCH)!.valueCents
     expect(thick, 'the career that lasted is the better asset').toBeGreaterThan(thin)
     // ⚠ AND BY THE MULTIPLE, WHICH IS THE MECHANISM AND NOT A COINCIDENCE: the ratio of the two
     // worths IS the ratio of the two multiples, because the income underneath them is identical.
+    //
+    // ⚠⚠ RE-AIMED WITH IT, AND THE MECHANISM IS ASKED WHERE IT IS STILL EXACT. Both rows are anchored
+    // to the SAME $250,000 for as long as they are climbing, and a common anchor pulls a ratio toward
+    // 1: measured 1.281475 on the rows against 1.287862 on the multiples. So the equality moves onto
+    // the two DESTINATIONS – `brandGrossWorthCents`, the engine's own worth – where it is exact to
+    // six places, and the rows carry the inequality that the anchor CANNOT invert.
     const base = shopItem(MERCH)!.earningsMultipleX!
-    expect(thick / thin).toBeCloseTo(
-      brandMultipleX(brandSignalsOf(durable), base) / brandMultipleX(brandSignalsOf(flash), base),
-      2,
-    )
+    const multRatio = brandMultipleX(brandSignalsOf(durable), base) / brandMultipleX(brandSignalsOf(flash), base)
+    const destThin = brandGrossWorthCents(brandSignalsOf(flash), base)
+    const destThick = brandGrossWorthCents(brandSignalsOf(durable), base)
+    expect(destThick / destThin, 'the destinations differ by the multiple, exactly').toBeCloseTo(multRatio, 2)
+    expect(thick / thin, 'and the rows are on their way there').toBeGreaterThan(1)
+    // ⚠ THE UPPER BOUND IS THE ANTI-VACUITY ARM: revert `rampedWorthCents` to the derived value and
+    // the two rows ARE their destinations, so this line goes red.
+    expect(thick / thin, '...diluted by the anchor they share, and never past it').toBeLessThan(destThick / destThin)
   })
 
   it('⭐⭐ each of the four signals he named moves the multiple on its own, and each cap binds', () => {
@@ -718,20 +914,39 @@ describe('round 30 #23 §7 – income and worth are two functions, not one dial'
     winTitles(w, 'slam', [2])
     winTitles(w, 'wta1000', [3, 5])
     buyAsset(w, MERCH)
-    walk(w, 4, true)
+    // ⚠⚠ RE-AIMED, ROUND 38 #16 (07.09) – WAS FOUR WEEKS OF HOLDING AND ONE SEASON OF SLUMP, IS TWO
+    // SEASONS OF EACH, AND THE CLAIM IS WORD FOR WORD THE SAME. A row bought four weeks ago is worth
+    // very little of what her career says it is worth, so the year that follows is dominated by the
+    // ramp CLIMBING rather than by the value falling – measured, the row read $556,416 and then
+    // $2,048,869, a rise, while the value under it fell from $3,431,621 to $2,926,480. The fall was
+    // always there; what the old window measured was the row still arriving.
+    //
+    // ⚠ SO THE ROW IS GIVEN TWO SEASONS TO ARRIVE AND THE SLUMP IS GIVEN TWO TO BITE. MEASURED:
+    // $1,462,402 -> $1,109,760 on the row, against a multiple that rises 6.967 -> 7.312. ⚠ At ONE
+    // season the row still reads $1,466,186 – a rise of 0.26% – which is how narrow the crossing is
+    // and why the window is stated in seasons rather than left at whatever passed last time.
+    walk(w, 2 * WEEKS_PER_YEAR, true)
     const base = shopItem(MERCH)!.earningsMultipleX!
     const before = ownedOf(w, MERCH)!.valueCents
     const multBefore = brandMultipleX(brandSignalsOf(w), base)
+    const destBefore = brandGrossWorthCents(brandSignalsOf(w), base)
 
-    // a season goes by: no new title, and the career banks a professional season, so the MULTIPLE
+    // two seasons go by: no new title, and the career banks two professional seasons, so the MULTIPLE
     // rises while the fame stock falls.
     proSeasons(w, 2, 15, 20, 10)
-    walk(w, WEEKS_PER_YEAR, true)
+    walk(w, 2 * WEEKS_PER_YEAR, true)
     const after = ownedOf(w, MERCH)!.valueCents
     const multAfter = brandMultipleX(brandSignalsOf(w), base)
 
     expect(multAfter, 'the career really did earn a higher multiple over that year').toBeGreaterThan(multBefore)
     expect(after, '...and the brand is still worth less, because the income fell further').toBeLessThan(before)
+    // ⚠⚠ AND THE VALUE UNDER THE ROW FELL FURTHER THAN THE ROW DID, which is the anti-vacuity arm and
+    // the one sentence #16 adds to this claim: a chased value smooths the fall as well as the climb
+    // («делая его более плавным», item 2). Measured $1,885,535 -> $1,246,667 on the destination,
+    // -33.9%, against -24.1% on the row. Revert the ramp and the two are the same number.
+    const destAfter = brandGrossWorthCents(brandSignalsOf(w), base)
+    expect(destAfter / destBefore, 'the smoothing is real and it is measured, not asserted')
+      .toBeLessThan(after / before)
   })
 })
 
@@ -877,8 +1092,26 @@ describe('round 30 #24 – a top-20 who never wins is no longer invisible to her
     // owner's own item #5 answering the owner's own question: this fixture has signed NOTHING, and
     // the same career with two band-2 deals is worth $105,512 with no new mechanism at all. The arm
     // below asserts that direction rather than the capital gain #4 briefly gave her.
-    expect(ownedOf(w, MERCH)!.valueCents, 'a career that signs nothing is worth the mark, and the mark is real money')
-      .toBe(Math.round(PRICE * ECONOMY.shop.businessValueFloorShare))
+    // ⚠⚠ RE-AIMED, ROUND 38 #2c (06.09) – AND THE RE-AIM IS THE ITEM, NOT A CASUALTY OF IT. The
+    // paragraph above ends «the floor would have to retain 97% of the stock to lift her over the
+    // mark, which is a retention that has stopped being one». `strength.retention` is now 0.95, and
+    // she clears the mark: 0.95 x 8.61 > 7.24, so the stock binds on her and her brand is worth more
+    // than the price of the shelf it sits on. That is the owner's «у нее явно есть и репутация и о
+    // ней знают» arriving at the one career round 30 #24 was written about – a top-20 who never won
+    // anything – so the assertion flips from «she is stuck at the mark» to «she is past it», and the
+    // arm below still proves that SIGNING lifts her further again.
+    const mark = Math.round(PRICE * ECONOMY.shop.businessValueFloorShare)
+    const base = shopItem(MERCH)!.earningsMultipleX!
+    // ⚠⚠ RE-AIMED, ROUND 38 #16 (07.09) – WAS READ OFF THE OWNED ROW, IS READ OFF WHAT THE ROW IS
+    // WALKING TOWARD, and the move is forced rather than convenient. Every brand on the shelf is now
+    // worth the $250,000 it cost on the week it is bought, so «worth MORE than the mark» read off a
+    // fresh row is true of a career with no name at all and says nothing about this one. The claim –
+    // hers is a career the world pays for – lives on `brandGrossWorthCents`, and it is the same
+    // number the arm asserted before #16 because that is exactly what the row used to be handed.
+    // MEASURED: $140,307 against a $62,500 mark – and the same reading on the career with no name at
+    // all, four blocks down, is exactly zero, which is what keeps this a claim about HER.
+    expect(brandGrossWorthCents(brandSignalsOf(w), base), 'a top-20 who signs nothing is now worth MORE than the mark')
+      .toBeGreaterThan(mark)
     // ⭐⭐ ...and the SAME career once she signs what her band already writes her clears it, on the
     // multiplier that has always been there plus the collaboration add round 32 #5 put on the floor.
     const signed = parkAt(shopper('r30-24-top20-signed'), 5 * WEEKS_PER_YEAR)
@@ -902,16 +1135,47 @@ describe('round 30 #24 – a top-20 who never wins is no longer invisible to her
       })
     }
     buyAsset(signed, MERCH)
-    expect(ownedOf(signed, MERCH)!.valueCents, 'the top-20 career that signs its own shelf clears the mark')
+    expect(brandGrossWorthCents(brandSignalsOf(signed), base), 'the top-20 career that signs its own shelf clears the mark')
       .toBeGreaterThan(Math.round(PRICE * ECONOMY.shop.businessValueFloorShare))
+    // ⭐⭐ AND SIGNING REACHES THE ROW HE ACTUALLY LOOKS AT, WHICH IS THE HALF THE DESTINATION CANNOT
+    // SAY ON ITS OWN. Two seasons of holding, the same $250,000 paid by both, and the signed career's
+    // row is ahead: measured $225,085 against $182,851. That is «the arm below still proves that
+    // SIGNING lifts her further again», re-pointed at a row that has had time to move.
+    signed.week += 2 * WEEKS_PER_YEAR
+    w.week += 2 * WEEKS_PER_YEAR
+    revalueAssets(signed)
+    revalueAssets(w)
+    expect(ownedOf(signed, MERCH)!.valueCents, 'and two seasons on it is the better row of the two')
+      .toBeGreaterThan(ownedOf(w, MERCH)!.valueCents)
     // ⚠ THE MARK IS STILL THE FLOOR UNDER HER and is still the thing that stops a quiet brand
     // reaching zero – asserted on a career with no results at all, so the guard cannot be read as
     // «the floor was removed».
+    // ⚠⚠ RE-AIMED, ROUND 38 #16 (07.09) – WAS «the row IS the mark on the buying week», IS «the row
+    // is what was paid, and walks DOWN to the mark». Both halves are asserted, because losing either
+    // one loses the item: the $250,000 is the sell-and-rebuy fix and the $62,500 is Björn Borg's
+    // name. MEASURED to the cent: $250,000 at the door, $156,250 one clamp half-life later – the
+    // midpoint, exactly – and never under the mark.
     const unknown = parkAt(shopper('r30-24-unknown'), 5 * WEEKS_PER_YEAR)
     buyAsset(unknown, MERCH)
     expect(fameAt(unknown, unknown.week), 'nobody has heard of her').toBe(0)
+    // ⚠ HER EARNINGS-BASED WORTH IS EXACTLY NOTHING – `brandGrossWorthCents` is the un-floored
+    // figure and `assetWorthCents` is where the mark is applied over it. So the mark is not merely
+    // ABOVE what she earns, it is the whole of what her row is walking toward.
+    expect(brandGrossWorthCents(brandSignalsOf(unknown), base), 'a career nobody has heard of earns nothing')
+      .toBe(0)
+    expect(ownedOf(unknown, MERCH)!.valueCents, 'she still pays the sticker for it').toBe(PRICE)
+    unknown.week += ECONOMY.shop.worthRamp.maxHalfLifeWeeks
+    revalueAssets(unknown)
+    expect(ownedOf(unknown, MERCH)!.valueCents, 'one half-life down toward a name nobody knows')
+      .toBe(Math.round((PRICE + mark) / 2))
+    expect(ownedOf(unknown, MERCH)!.valueCents, '...and it is a fall, which is the direction')
+      .toBeLessThan(PRICE)
+    // ⚠⚠ AND THE MARK IS WHERE THE FALL STOPS, which is the sentence the paragraph above is about
+    // and the arm that dies if the floor is deleted: four more half-lives and she is still over it.
+    unknown.week += 4 * ECONOMY.shop.worthRamp.maxHalfLifeWeeks
+    revalueAssets(unknown)
     expect(ownedOf(unknown, MERCH)!.valueCents, 'and the mark is what her name is worth')
-      .toBe(Math.round(PRICE * ECONOMY.shop.businessValueFloorShare))
+      .toBeGreaterThan(mark)
     // ⭐ AND THE SAME CAREER, ONCE THE WORLD KNOWS HER, IS WORTH REAL MONEY – which is the direction
     // #24 was about and the arm that stops «worth the mark» being read as «invisible again».
     const known = brandMultipleX({ ...brandSignalsOf(w), fame: ECONOMY.fame.cap }, shopItem(MERCH)!.earningsMultipleX!)
@@ -1015,4 +1279,25 @@ describe('round 30 #24 – a top-20 who never wins is no longer invisible to her
 //      arm – an unbounded tilt stops being a tilt.
 //  M23 «no evidence» answering `minMult` instead of 1             -> 2 RED. An empty appearance ledger
 //      is not an empty stand, which is `shared/money.ts`' house rule about facts and missing values.
+//
+// --- ROUND 38 #16, 07.09. THE RAMP. Eight arms in this file were re-aimed for it, so the one
+//     mutation that matters is whether they can still lose. Applied alone to the engine, reverted,
+//     and RUN over the whole unit project. ------------------------------------------------------
+//  M24 `rampedWorthCents` returning `Math.round(derivedCents)` – the ramp deleted, a row worth its
+//      derived value on the buying week again -> 12 RED across three files, 6 of them HERE:
+//        * §2's ratio arm         – the row lands ON its destination ($3,619,048), so «has not
+//                                   arrived» fails;
+//        * §4's floor arm         – the row opens at the mark ($62,500) instead of the $250,000 paid;
+//        * §5's «priced the WEEK it is bought» – the row opens at $9,686,343 instead of $250,000,
+//                                   which is the superseded law reappearing and is the arm written
+//                                   for exactly that;
+//        * §7's decoupling arm    – the two rows ARE their destinations, so the ratio stops being
+//                                   diluted and the upper bound fails;
+//        * §7's slump arm         – the row and the value under it fall by the same figure, so the
+//                                   smoothing arm fails;
+//        * #24's mark arm         – the unknown's row opens at the mark instead of the sticker.
+//      ⚠ THE OTHER SIX: three in `tests/r38-worth-ramp.test.ts` (the ramp's own file) and three in
+//      `tests/round38-academy-worth.test.ts`. ⚠⚠ AND TWO ARMS HERE STAY GREEN ON PURPOSE – §3's «it
+//      falls» and §5's meter offset. Both are claims about FAME and neither is about the ramp;
+//      their fixtures moved (a settling walk) and their assertions did not.
 // =================================================================================================

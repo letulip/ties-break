@@ -511,7 +511,23 @@ export const ECONOMY = {
     // another, never a reason to buy up a rung. At these values a Budget coach who is great for her
     // (0.95 x 1.05 = 0.998) just edges a Middle coach who is wrong for her (1.04 x 0.94 = 0.978),
     // which is exactly the size of trade the pills are meant to be advertising.
-    fitFactor: { great: 1.05, good: 1.0, off: 0.94 } as Record<'great' | 'good' | 'off', number>,
+    /** ⭐⭐⭐ ROUND 38 #17 (07.09) – THE SPAN WIDENS 1.05/0.94 -> 1.25/0.75, AND IT IS THE HALF THAT
+     *  MAKES THE THREE ROUTES DIFFERENT.
+     *
+     *  THE OWNER named three ways to reach the ceiling – «1. игрок тренирует сам и грамотно 2. она с
+     *  тренером долгосрочно и у них метч 3. она с элитным тренером» – and then asked of the fit:
+     *  «вопрос в том, как его показать?»
+     *
+     *  ⚠ THE ANSWER TO THAT QUESTION IS THAT IT ALREADY IS SHOWN. `CoachMarketScreen` prints «Great
+     *  fit» / «Good fit» / «Off-style» and carries a lens for what a coach would be worth against
+     *  another style. It does not FEEL like anything because the whole span was 12% – which is the
+     *  real content of his question, and it is a number rather than a screen.
+     *
+     *  ⚠⚠ IT WIDENS THE SPREAD WHERE `plateauRate` NARROWS IT (see that constant's own table), which
+     *  is why the two are one decision: a great fit is worth more to a career being run well, and an
+     *  off-style partnership costs a mismatched one 93.2% against 98.9%. Measured with
+     *  `tools/r38-ceiling-dials.ts`; the owner chose the pair. */
+    fitFactor: { great: 1.25, good: 1.0, off: 0.75 } as Record<'great' | 'good' | 'off', number>,
 
     // THE PARENT'S OWN FIT. Self-coaching has no specialty to match: he taught her the game she
     // plays, so he is never wrong for it and never a specialist in it.
@@ -2010,12 +2026,43 @@ export const ECONOMY = {
       { maxEndRank: 10, add: 10 },
       { maxEndRank: 20, add: 4 },
       { maxEndRank: 50, add: 1.5 },
+      /** ⭐⭐⭐ ROUND 38 #2c (06.09) – THE RUNG THE LADDER STOPPED ONE SHORT OF, and the owner's own
+       *  words are the argument: «спортсменка проводит свой лучший сезон (и не один) находясь в
+       *  ТОП-100 … у нее явно есть и репутация и о ней знают».
+       *
+       *  ⚠⚠ WHAT IT ENDS, on his week-1115 career: NINE seasons ended inside the top 100 were worth
+       *  exactly ZERO fame, because the ladder stopped at 50. A decade of being a professional the
+       *  world can name bought nothing at all, while one WTA 500 title on one Sunday bought 8.
+       *
+       *  ⚠ 0.6 IS THE LADDER'S OWN RATIO CONTINUED AND NOT A NEW LEVEL. The rungs above step by
+       *  10 / 4 / 1.5 – ratios of 2.50 and 2.67 – and 1.5 / 2.6 is 0.58. Rounded to 0.6, so the
+       *  shape of the ladder decides the number rather than a preference about how much a top-100
+       *  season "should" be worth. */
+      { maxEndRank: 100, add: 0.6 },
     ] as readonly { maxEndRank: number; add: number }[],
     /** ⭐ THE SLOW DECAY – the half-life of every contribution, in weeks. Two seasons: a Slam won
      *  six seasons ago still carries an eighth of its step, so a reign fades over about four to
      *  six seasons rather than overnight. ⚠ Decay is what makes fame a lever and not a rank by
      *  another name (spec §3) – a stock that only rises is a trophy cabinet. */
     halfLifeWeeks: 104,
+    /** ⭐⭐⭐ ROUND 38 #2c (06.09) – THE CAREER CLOCK: how long a FINISHED SEASON inside a band the
+     *  world notices is remembered, against `halfLifeWeeks` above for a single title.
+     *
+     *  THE OWNER: «у нее явно есть и репутация и о ней знают, не могу забыть за год.»
+     *
+     *  ⚠⚠ IT SHIPPED AT 104 FIRST – identical to the title clock, deliberately, so the split could be
+     *  proved a no-op before it was tuned. The value below is the tuned one; `seasonFloorDecayAt`'s
+     *  header carries what it ends and `docs/specs/fame-presence-2026-09.md` carries predicted
+     *  against measured over 29 of his own careers.
+     *
+     *  ⚠ IT MUST BE THE LONGEST OF THE THREE CLOCKS (title 104, campaign 52-156 by band, this one),
+     *  or a season is forgotten faster than the title won inside it.
+     *
+     *  ⚠⚠ 312 = SIX YEARS, AND IT IS MEASURED. His best season ever – #20, wrapped at week 884 – was
+     *  worth 0.86 fame points at week 1115 on the title clock and is worth 2.39 on this one. The
+     *  sweep is `tools/r38-fame-presence-sweep.ts` over 29 of his own careers; 104 / 208 / 312 / 416
+     *  are all in it and the table is in docs/specs/fame-presence-2026-09.md. */
+    seasonHalfLifeWeeks: 312,
     /** ⭐ THE MULTIPLIER'S STEP – each shoot week ALREADY LIVED multiplies the floor by
      *  (1 + step), the step itself decaying on the same half-life. Twelve fresh shoots ≈ ×1.6:
      *  enough to reorder two comparable floors (the census's #30-on-court / #2-off-court shape),
@@ -2351,12 +2398,27 @@ export const ECONOMY = {
          *  years ~50%, and it lands on the floor below rather than on zero. ⚠ It must be LONGER
          *  than `ECONOMY.fame.halfLifeWeeks` or there is no second stock at all – only fame wearing
          *  a slower coat, and the split the spec exists for collapses. */
-        halfLifeWeeks: 208,
+        /** ⚠⚠ ROUND 38 #2c RAISED THIS 208 -> 312 (six years). The owner: «делая его более плавным».
+         *  208 made the STOCK fall 15.9% a season, which – once `retention` below let the stock
+         *  govern the tail at all – was the whole of the slope he was complaining about. Measured
+         *  with it: his week-1115 career's brand falls 23.3% a season instead of 27.2%, and its
+         *  five-year tail holds $822,515 instead of $185,285. */
+        halfLifeWeeks: 312,
         /** ⭐⭐ ...AND THE FLOOR, AS A SHARE OF HER OWN PEAK. A career that was genuinely big never
          *  prices at the minimum however long the silence runs; a career that was never noticed has
          *  a peak of nothing and a floor of nothing, so this hands an unknown exactly zero.
          *  ⚠ IT IS A SHARE AND NOT A FLOOR IN POINTS, which is the personal half of his ruling: 0.4
-         *  of a Slam champion's peak is a large brand and 0.4 of a club player's is still nothing. */
+         *  of a Slam champion's peak is a large brand and 0.4 of a club player's is still nothing.
+         *
+         *  ⚠⚠ ROUND 38 #2c RAISED THIS TO 0.5 AND THE OWNER SENT IT BACK THE SAME DAY, so it is 0.4
+         *  again – his own round-32 number, untouched. His words, 07.09: «он вполне может падать и на
+         *  185к и ниже, особенно если давно не было рекламных контрактов… А ставить планку "не ниже
+         *  662к" – это немного странно, кому нужен бренд, если он пустой?» ⚠ THE MEASUREMENT THAT
+         *  PROMPTED THE RAISE STANDS AND IS NOT THE ARGUMENT FOR IT: 0.4 / 0.5 / 0.55 / 0.65 are
+         *  IDENTICAL at every live week on 29 of his careers and differ only in where the fall stops,
+         *  five years out. What he is asking is whether it should stop at all, and that is a design
+         *  question about the FORMULA rather than a value for this constant – see
+         *  docs/specs/fame-presence-2026-09.md §5. */
         floorShare: 0.4,
         /** ⭐⭐⭐ REVISION (31.08) – HOW MUCH OF THE STOCK STILL SELLS SHIRTS, 0..1. THE OWNER, reading
          *  the first shipped result and stopping it: «меня смущает вот это: На пятом году бренд
@@ -2387,7 +2449,16 @@ export const ECONOMY = {
          *  ⚠ It is a BOUND drawn from one case and not a law; the frontier either side of it is in
          *  docs/specs/brand-inertia-2026-08.md §18, and moving it is a decision about how much of a
          *  business survives its founder's silence rather than a correction. */
-        retention: 0.78,
+        /** ⚠⚠ ROUND 38 #2c RAISED THIS 0.78 -> 0.95, AND IT IS THE DIAL THAT MAKES THE OTHERS WORK.
+         *  Measured: at 0.78 the stock floors the reach at 78% of the best she has been, so lifting
+         *  her FAME (the season ladder above) simply pushed her back OFF the floor and onto the fast
+         *  title clock – the level rose and the SLOPE GOT WORSE, -27.2% a season becoming -33.8%. At
+         *  0.95 the stock binds again and the tail is governed by the stock's own six-year clock,
+         *  which is what «более плавным» asks for: -23.3%.
+         *  ⚠ IT STAYS BELOW 1 AND THAT IS LOAD-BEARING – see this block's own header: `retention < 1`
+         *  is the entire proof that the top of the shelf cannot move, and the measurement confirms it
+         *  (his two peak careers read the same worth to the cent at 0.78, 0.85, 0.90 and 0.95). */
+        retention: 0.95,
       },
       /** ⭐⭐⭐ ROUND 34 #17 (03.09) – THE BRAND FOLLOWS THE CONTRACTS. Approved by the owner:
        *  **+1 point of reach per $50,000 of LIVE annual contract value, the contribution capped at
@@ -2486,6 +2557,36 @@ export const ECONOMY = {
        *  docs/rounds/round-34.md under item 17 for his eye – not compensated for here. */
       reputationCapBase: 4,
       reputationCapPerSeason: 0.5,
+      /** ⭐⭐⭐ ROUND 38 #8 (07.09) – HOW MUCH ONE POINT OF REPUTATION ADDS TO WHAT THE ACADEMY IS
+       *  WORTH, as a share of the drifted price. `worth = paid x (1+300bps)^years x (1 +
+       *  premiumPerRep x (reputation − 1))`. Option C, which the owner approved out loud: «хорошо
+       *  звучит».
+       *
+       *  ⚠⚠ IT STARTS AT EXACTLY ZERO AND THAT IS THE DESIGN, not a coincidence of the number.
+       *  Reputation is 1.0 for every career that has not banked a season (`academyReputationOf`),
+       *  so the premium is `0.15 x 0` on the day the shelf opens and the paid price times the drift
+       *  is a FLOOR. See `academyPremiumX` for why the clamp under it is written down anyway.
+       *
+       *  ⭐⭐ WHY 0.15, AND IT IS A BAND FROM THE RESEARCH RATHER THAN A FEELING. The two published
+       *  player-academy/brand transactions this repo has found are the Nadal academy at ~31x
+       *  earnings and Beckham's DRJB at ~10.9x (docs/research/player-brands-and-what-they-are-worth.md
+       *  §5.4) – a going concern on real property trades ABOVE its bricks, and the question this
+       *  number answers is by how much. ⚠ MEASURED ON HIS OWN WEEK-1115 CAREER rather than argued
+       *  (`npx vite-node tools/r38-academy-worth.ts`): at reputation 2.825 it prices his two stages
+       *  at $6,890,384 against $5,409,526 of drifted bricks – a **+27.37% premium**, so the going
+       *  concern is a bit over a quarter of the row and the land and the courts are the rest of it.
+       *  The alternative measured at the same time was option B, earnings x a multiple, which read
+       *  $1.4M against $5.0M paid and was refused for saying an academy is worth less than its own
+       *  land.
+       *
+       *  ⚠ AND IT DOES NOT COMPOUND. This is a LEVEL on the drifted price, not a second rate: an
+       *  academy at a steady reputation gains 3% a year and no more, which is what keeps «assets
+       *  never beat a career, they only survive one» true of the dearest thing on the shelf. What
+       *  moves the premium is her seasons – so the career pays for it, which is the whole of option
+       *  C. ⚠ At the reputation cap a long elite career can reach (8.2 on twelve top-10 seasons) the
+       *  premium is +108%; the academy doubles, over a career that spent twelve years in the world
+       *  top ten to do it. */
+      premiumPerRep: 0.15,
     },
   },
 
@@ -2536,13 +2637,114 @@ export const ECONOMY = {
       peakRate: 0.0062,
       /** how much of that is gone by `growthEnd` (0.5 = half the rate at 18 that she had at 13) */
       growthEase: 0.5,
-      /** across the peak she maintains rather than climbs */
-      plateauRate: 0.0009,
+      /** ⭐⭐⭐ ROUND 38 #17 (07.09) – 0.0009 -> 0.0027, AND IT IS C1 AND C3 TURNING OUT TO BE ONE DIAL.
+       *
+       *  THE OWNER, on the coach: «нет варианта, что они и дальше гармонично сотрудничают до
+       *  абсолютного потолка» – he read it as a fact about COACHES and it is not. Measured: at 23 the
+       *  weekly rate sits on this number, so with an elite coach, a great fit and a grind plan a year
+       *  buys about 5-7% of what headroom is left; on two remaining points that is the «+0,1%» he was
+       *  seeing. No coach can be the one who takes her all the way, because the PLATEAU is what has
+       *  flattened, not the coaching.
+       *
+       *  ⚠ AND IT IS THE SAME LEVER C1 NEEDED. His «рост как раз идёт до 28-29» is already true –
+       *  careers peak at 26.6 direct and 28.6 via college – so nothing about the phase BOUNDARIES had
+       *  to move; what was missing is that the late years were worth almost nothing. One number
+       *  answers both, and the boundaries stay where his own reference table puts them.
+       *
+       *  MEASURED (`tools/r38-ceiling-dials.ts`, the analytic share of her own headroom that can EVER
+       *  arrive, walked to 38 – `skill-ceiling.ts` §1's arithmetic):
+       *
+       *      arm                     nonsense  self-run-well  coach+fit  coach-off  elite  yardstick  spread
+       *      shipped 0.0009             61.2%          92.3%      92.4%      90.0%  97.3%      98.3%    37.1
+       *      x3      0.0027             75.1%          97.7%      97.7%      96.6%  99.5%      99.7%    24.7
+       *      x3 + the fit span below    67.0%          98.9%      98.9%      93.2%  99.8%      99.9%    32.9
+       *
+       *  ⚠⚠ ON ITS OWN IT NARROWS THE SPREAD – it lifts the bottom more than the top, because the top
+       *  was already at 98%. That is why it ships WITH the fit span and not before it: the pair moves
+       *  the well-run career to 98.9% while a mismatched partnership falls to 93.2%, which is the
+       *  «три пути должны различаться» half. The owner picked that row: «очень хорошо выглядит». */
+      plateauRate: 0.0027,
       /** share of an attribute lost per week at `declineStart` */
       declineRate: 0.00035,
-      /** ...growing each year past it, so a career ends rather than fading forever */
-      declineAccel: 0.28,
+      /** ...growing each year past it, so a career ends rather than fading forever.
+       *
+       *  ⭐⭐⭐ ROUND 38 #3d (06.09) – 0.28 -> 0.22. THE OWNER: «я вижу ветеранов на корте, да, они уже
+       *  не могут так быстро бегать, как раньше, но они и не беспомощны… Может разве что тоже плавнее
+       *  сделать.»
+       *
+       *  ⚠⚠ AND HE ALLOWED THE OTHER HALF TO STAY – «Хотя может быть для формального окончания игры
+       *  это и ок» – which is the constraint this number is chosen against rather than a courtesy.
+       *  `ENDINGS.lastOfferPeakShare` is 0.55 and `ending.ts` marks an off-season offer FINAL at or
+       *  below it, so the body must still be able to end a career. Measured
+       *  (`tools/r38-decline-shape.ts`, exact arithmetic – past `declineStart` nothing else moves a
+       *  physical attribute, so the share of peak is the product of the weekly factors):
+       *
+       *      accel   loss/season at 35   share at 40   body can end the career at
+       *      0.28              4.76%          0.601                            42
+       *      0.24              4.35%          0.628                            42
+       *      0.22              4.14%          0.642                            43
+       *      0.18              3.72%          0.671                            44
+       *      0.14              3.29%          0.701                            45
+       *
+       *  ⚠⚠ 0.24 AND NOT 0.22, AND THE REASON IS A PIN THIS REPO LEFT AS A TRIPWIRE. `ending.test.ts`
+       *  pins that the off-season her body first falls to 70% is the off-season she is first 38 –
+       *  the equivalence that let `ENDINGS.stopAskingAgeYears = 38` be DELETED and replaced by a
+       *  body-share rule, and whose own comment says «if this line ever needs changing then the claim
+       *  the change was sold on has stopped holding». Measured: at 0.22 she reads 0.7019 at 38 and
+       *  crosses during her 39th year – the equivalence breaks by 0.0019 of share. At 0.24 she reads
+       *  0.6905 at 38 and the body and the birthday name the SAME off-season, exactly as before.
+       *  So the softening is taken right up to that pin and stops there.
+       *
+       *  ⚠ A FLOOR WAS MEASURED AND REFUSED: at 0.45 or 0.50 it never binds before 0.55 is crossed,
+       *  so it would have been decoration.
+       *
+       *  ⚠⚠ AND IT IS NOT WHAT CAUSED HIS «из топ-50 до топ-150 за сезон». That fall is her ABSOLUTE
+       *  level against the field's – she is at 47 on four attributes where the tour's elite sit at
+       *  65-70 – so any loss at all is decisive there. This dial softens the slope; the level is C2's
+       *  question and it is still open. Said out loud so the next reader does not credit this change
+       *  with a fix it does not deliver. */
+      declineAccel: 0.24,
     },
+    /** ⭐⭐⭐ ROUND 38 #6c (07.09) – WHICH SKILLS AGE, AND HOW FAST RELATIVE TO EACH OTHER.
+     *
+     *  THE OWNER: «может быть и навыки могут деградировать, это вполне ок, надо только подумать
+     *  какие и с какой скоростью» – and, on the four below: «веса ок, строй и меряй пожалуйста».
+     *
+     *  ⚠⚠ WHAT THIS ENDS. `growWeek`'s decline branch charged `decline x skills[k]` to all four
+     *  physical attributes at the SAME proportional rate, so a thirty-five-year-old lost her serve
+     *  at exactly the rate she lost her legs. Nothing about that was wrong arithmetic; it was
+     *  shapeless, and it is the one thing every tennis broadcast in the world says is not true.
+     *
+     *  ⚠⚠⚠ THESE ARE RAW WEIGHTS AND THE CODE NORMALISES THEM, WHICH IS THE WHOLE SAFETY OF THE
+     *  CHANGE AND IS DELIBERATELY NOT FOUR HAND-TYPED DECIMALS. `ageWeightOf` divides by their own
+     *  mean, so `mean(normalised) === 1` holds BY CONSTRUCTION however these four are retuned –
+     *  and that is what keeps `physicalMean(skills) / peakPhysical` on its old path. Three things
+     *  read that ratio and none of them may move: `ENDINGS.lastOfferPeakShare` (the last off-season
+     *  offer), `recoveryAgeFade` (the corridor), and `realisedShare` (the coach's ceiling read).
+     *  ⚠ A fifth attribute appended to `SKILL_KEYS` without a row here reads 1 and is therefore
+     *  ordinary, never zero – see `ageWeightOf`.
+     *
+     *  ⚠ COMPOSURE IS ABSENT ON PURPOSE and would be inert if present: `isPhysicalSkill` excludes
+     *  it from the decline branch entirely and it GAINS `veteranPoise` past the peak instead.
+     *
+     *  Measured predicted-against-measured in docs/specs/what-ages-first-2026-09.md §3. */
+    ageWeight: {
+      /** struck from a standing start – the last thing to go, and a serve is a career extender */
+      serve: 0.6,
+      /** the return is movement and reaction before it is technique */
+      ret: 1.2,
+      /** endurance goes first and fastest, and it is the loss everybody can see */
+      stamina: 1.6,
+      /** rally quality: half movement, half shot-making */
+      groundstrokes: 1.0,
+      // ⚠ TYPED `string` AND NOT `SkillKey`, AND THE REASON IS THE IMPORT GRAPH. `SkillKey` is
+      // declared in `engine/development.ts`, which imports THIS file – a type-only import back
+      // would still be a cycle for the tools' project (`match/style.ts` declares a second copy of
+      // the union, and a third reader of it is not a trade worth making). The membership check
+      // that a plain `string` gives up is made mechanically instead:
+      // `tests/r38-age-weights.test.ts` asserts every key here is in `SKILL_KEYS`, so a typo
+      // reddens rather than reading 1 in silence.
+    } as Record<string, number>,
     /** ⭐⭐⭐ ROUND 31 #10 – THE FORK SHAPES THE CURVE, and until now it only priced it.
      *
      *  The owner supplied real WTA reference data and the round-31 ledger checked the engine against
@@ -4636,16 +4838,42 @@ export const ECONOMY = {
       // ⚠ NO BUILD WAIT AND NO UPKEEP, because §3g asks for neither and this file does not invent
       // what it was not given. §3f's «время постройки» and «годовое обслуживание» are said of the
       // boats and the planes; the academy's own sentence is «each stage is a decision and a bill»,
-      // and a stage IS the wait. ⚠ AND IT NEITHER GAINS NOR LOSES (rate 0) for the same reason: §3g
-      // calls it «the one asset that outlives the career» and gives it no rate.
+      // and a stage IS the wait.
+      //
+      // ⭐⭐⭐ ROUND 38 #8 (07.09) – THE FOUR RATES MOVED 0 -> +300 bps, WHICH IS THE HOUSES' OWN
+      // NUMBER, AND THE OWNER ASKED FOR EXACTLY THAT COMPARISON: «а что насчёт стоимости и индексации
+      // этой стоимости с годами? Как с домами, например.»
+      //
+      // ⚠⚠ WHAT HE WAS LOOKING AT WHEN HE SAID IT, 06.09: «Академия при этом стоит ровно на месте –
+      // и это не очень корректно, как мне кажется.» And he was reading the catalogue correctly.
+      // `assetValueCents` indexes EVERY rung by `annualRateBps`; the academy was the only family on
+      // the shelf carrying a literal zero, so «стоит ровно на месте» was not a rounding artefact or a
+      // missing formula – it was this field, four times. The fix is this field, four times.
+      //
+      // ⚠⚠ ONE RATE AND NOT TWO, AND THE SPLIT IS REFUSED ON PURPOSE (the spec's §2). A real
+      // academy's LAND appreciates while its BUILDINGS depreciate and have to be maintained – true,
+      // and deliberately not modelled, because this family carries no `upkeepBps` at all. Splitting
+      // the drift would ship the LOSS without the upkeep line that justifies it, and the four stages
+      // would quietly diverge on a screen that offers no reason why. The honest version of that split
+      // is a later item WITH a maintenance line beside it, and it is his call, not this one's.
+      //
+      // ⚠ THE SENTENCE ON THE CARD MOVES WITH THE NUMBER, AND NO STRING WAS EDITED TO MOVE IT.
+      // `rateLine` picks its branch off `annualRatePct`, so these four rows now read the HOUSES'
+      // sentence («Gains about 3% a season») instead of the zero branch's «Neither gains nor loses» –
+      // which is precisely «как с домами» arriving on screen. Invariant 4 is satisfied the strict
+      // way rather than the convenient one: the copy in `MoneyScreen.vue` is untouched to the byte,
+      // and what changed is the data the existing sentence is chosen by. ⚠ The zero branch is now
+      // reachable from no rung on the shelf; it is KEPT, because it is the honest answer for the next
+      // rate-0 rung and deleting a correct branch to chase coverage is how a shelf loses a case.
       //
       // ⚠ THIS NOTE USED TO END «and the shelf says so in as many words («Holds its value»)» AND THAT
       // SENTENCE IS GONE FROM THE SHELF – round 30 #11, the owner: «Holds its value странно звучит –
       // это напрямую значит, что оно обесценивается, а это вроде бы не совсем так». The MECHANIC did
-      // not move a cent (checked first: a rate-0 rung is worth what was paid for it forever and the
-      // sale is whole), only the words. A comment naming a string that no longer exists is the one
-      // way a comment must not be wrong, so it names the new one: **«Neither gains nor loses»**, said
-      // of these four stages and of nothing else since the merch brand became a business (#9).
+      // not move a cent then (checked first: a rate-0 rung is worth what was paid for it forever and
+      // the sale is whole), only the words. This time it is the other way round: the mechanic moved
+      // and the words followed it. A comment naming a string that no longer exists is the one way a
+      // comment must not be wrong, so it names the new one: **«Gains about 3% a season»**, the same
+      // sentence all four houses read.
       {
         id: 'academy-land',
         family: 'academy',
@@ -4653,7 +4881,7 @@ export const ECONOMY = {
         label: 'The land',
         blurb: 'Twelve hectares outside town, and a name on the deeds.',
         entryCents: 2_000_000_00,
-        annualRateBps: 0,
+        annualRateBps: 300,
       },
       {
         id: 'academy-courts',
@@ -4662,7 +4890,7 @@ export const ECONOMY = {
         label: 'The courts',
         blurb: 'Sixteen of them, and the lights that keep them open till nine.',
         entryCents: 3_000_000_00,
-        annualRateBps: 0,
+        annualRateBps: 300,
         requiresId: 'academy-land',
       },
       {
@@ -4672,7 +4900,7 @@ export const ECONOMY = {
         label: 'The clubhouse',
         blurb: 'Gym, kitchen, forty beds and somewhere to do the homework.',
         entryCents: 4_000_000_00,
-        annualRateBps: 0,
+        annualRateBps: 300,
         requiresId: 'academy-courts',
       },
       {
@@ -4682,7 +4910,7 @@ export const ECONOMY = {
         label: 'The staff',
         blurb: 'Coaches, physios and the person who answers the telephone.',
         entryCents: 3_000_000_00,
-        annualRateBps: 0,
+        annualRateBps: 300,
         requiresId: 'academy-building',
       },
     ],
@@ -4755,6 +4983,48 @@ export const ECONOMY = {
      *  a sale possible in the years she is quiet, which is what makes the decision to sell a real
      *  fork rather than a trap. */
     businessValueFloorShare: 0.25,
+    /** ⭐⭐⭐ ROUND 38 #16 (07.09) – A BRAND IS A PROCESS, NOT A PURCHASE.
+     *
+     *  THE OWNER, overturning the `max(catalogue, worth)` rule he had approved the day before:
+     *  «если мы до пика известности бренд не покупали, то он всё равно поднимался в цене? Это
+     *  супер-странно. Я бы сказал, что он неизменно для первого открытия стоит 250к, а потом МОЖЕТ
+     *  набрать свои 5млн, но не за 1 день, т.к. это процесс. Если уровень известности большой, то
+     *  набор будет идти быстрее (может быть кратно быстрее), но он всё равно будет идти, на это надо
+     *  время.» And on the number: «полураспад 2 года при средней славе, кратно быстрее при высокой».
+     *
+     *  ⚠⚠ WHAT IT REPLACES AND WHY HIS SHAPE IS BETTER. A rung whose worth is DERIVED used to be
+     *  worth its full derived value the instant it was bought, so it could be sold at that value and
+     *  bought back at the catalogue price – +$2,326,989 a cycle on his own save, repeatable, in one
+     *  week. `max(catalogue, worth)` closed that by making the PURCHASE dear, which also made a FIRST
+     *  brand on a famous career cost $5,172,791 – the strange half he objected to, and it needed a
+     *  price on the card that was not the price on the card. A worth that RAMPS from what was paid
+     *  toward the derived value closes the same loop by construction: a freshly bought brand is worth
+     *  what was paid for it, so selling at $5.17M and buying back at $250,000 LOSES $4.9M.
+     *
+     *  ⭐ AND IT ANSWERS THE FIRST THING HE ASKED THIS ROUND FROM THE OTHER SIDE. A stored value that
+     *  CHASES its derived value smooths the FALL as well as the climb – «делая его более плавным»,
+     *  item 2. One mechanism, both directions.
+     *
+     *  ⚠ NO SCHEMA MOVE: the ramp is a function of `boughtWeek` and `paidCents`, both persisted since
+     *  the shelf shipped. An existing save's brand simply starts converging from where it is. */
+    worthRamp: {
+      /** the half-life of the gap between what was paid and what it is worth, at `medianDriver` */
+      halfLifeWeeks: 104,
+      /** ⚠ MEASURED, NOT PICKED: fame across the owner's 22 professional careers reads p10 3.2,
+       *  MEDIAN 12.8, p90 39.3, max 81.3. So «средняя слава» is 12.8 and the pace is the ratio to it –
+       *  p90 closes the gap three times faster, which is his «кратно быстрее». */
+      medianFame: 12.8,
+      /** ...and the academy's driver is REPUTATION above its 1.0 base, on its own scale. */
+      medianReputationOver1: 1.8,
+      /** ⚠ THE CLAMP THAT STOPS A DIVISION BY NOTHING. A career the world has never heard of has a
+       *  driver at or near zero; without this the half-life is infinite and the rung would be frozen
+       *  at what was paid for ever, which is not «медленно» but «никогда». Eight years is slow. */
+      maxHalfLifeWeeks: 416,
+      /** ...and the other end: a driver this far above the median stops buying more speed. Four
+       *  weeks is one month, and below that the ramp stops being a process at all – which is the one
+       *  thing his ruling is about. */
+      minHalfLifeWeeks: 13,
+    },
   },
 } as const
 

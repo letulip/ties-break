@@ -484,8 +484,15 @@ describe('⭐⭐ the last offer, read off a walked body', () => {
     // this line. §3a's 41.2 is the CROSSING; the question is asked once a winter, so on
     // `DEFAULT_PROFILE`'s 15 June birthday the offer itself lands at 41.5 – still 41, still Federer.
     expect(ENDINGS.lastOfferPeakShare, 'the owner\'s ruling of 26.08: «я бы взял 55% по уходу»').toBe(0.55)
-    expect(first!.ageYears).toBe(41)
-    expect(first!.exact).toBeCloseTo(41.503, 3)
+    // ⚠ RE-AIMED, ROUND 38 #3d (06.09) – WAS 41 / 41.503, MEASURED 42 / 42.500. `declineAccel` went
+    // 0.28 -> 0.24 on the owner's «плавнее», so the CROSSING moved 41.2 -> 41.9 and the annual
+    // question therefore lands one winter later. ⚠⚠ THE CLAIM ABOVE IS UNTOUCHED and is what still
+    // guards this: the offer may not anticipate the crossing and may not be a season late, and both
+    // of those lines are threshold-independent and unchanged. What moved is the calibration, and it
+    // moved because it was moved – see docs/specs/fame-presence-2026-09.md §6. ⚠ The other pin in
+    // this file – 70% at 38 – did NOT move, deliberately: 0.24 is the softest accel that keeps it.
+    expect(first!.ageYears).toBe(42)
+    expect(first!.exact).toBeCloseTo(42.5, 3)
   })
 
   it('⚠⚠ AND IT IS AGE-EQUIVALENT TODAY: two bodies 25% apart read the SAME share, off-season for off-season', () => {
@@ -510,8 +517,14 @@ describe('⭐⭐ the last offer, read off a walked body', () => {
     for (let i = 0; i < kept.wraps.length; i++) {
       const a = kept.wraps[i]
       const b = never.wraps[i]
+      // ⚠ RE-AIMED, ROUND 38 #6c – WAS 6 DECIMALS, MEASURED 2.4e-4. Four decline rates instead of
+      // one, so two differently-shaped bodies no longer read an identical share; the weights are
+      // normalised to a mean of 1, which is why the drift stays small. MEASURED, WORST OF THE WALK:
+      // 0.0084 – it is exactly 0 until `declineStart` and grows from there. The claim – that the two
+      // are asked for the last time in the SAME year – is asserted on the line below and is
+      // unchanged, which is the half that decides anything.
       expect(b.share, `age ${a.ageYears}: the kept body and the wrecked one read differently`)
-        .toBeCloseTo(a.share, 6)
+        .toBeCloseTo(a.share, 1)
       expect(b.final, `age ${a.ageYears}: they were asked for the last time in different years`).toBe(a.final)
     }
   })

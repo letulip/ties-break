@@ -160,7 +160,19 @@ describe('from declineStart the corridor closes, continuously, by the share of h
     expect(checked).toBeGreaterThan(600)
   })
 
-  it('⭐ it reproduces §4a’s corrected table – 5.00 / 4.46 / 4.09 / 3.45 / 2.79 at 29 / 33 / 35 / 38 / 41', () => {
+  // ⚠ RE-AIMED, ROUND 38 #3d (06.09) – the table WAS 5.00 / 4.46 / 4.09 / 3.45 / 2.79 and is now
+  // 5.00 / 4.49 / 4.14 / 3.55 / 2.93, because `ageCurve.declineAccel` went 0.28 -> 0.24 on the
+  // owner's «они и не беспомощны». The corridor reads `physicalMean / peakPhysical`, so a body that
+  // decays more slowly ALSO RECOVERS BETTER – a consequence of #3d that nothing asked for and that
+  // this line is where it becomes visible. The shape is unchanged: it still closes, monotonically,
+  // from `declineStart`. See docs/specs/fame-presence-2026-09.md §6.
+  // ⚠ RE-AIMED AGAIN, ROUND 38 #6c (07.09) – 5.00 / 4.49 / 4.14 / 3.55 / 2.93 becomes
+  // 5.00 / 4.46 / 4.11 / 3.51 / 2.89, at most 0.04 of a point. The corridor reads
+  // `physicalMean / peakPhysical`, and `ageWeightOf` gave each attribute its own decline rate, so the
+  // mean's path shifts very slightly. The weights are normalised to a mean of 1, which is why this is
+  // hundredths rather than a re-balance. Shape unchanged: it still closes monotonically from
+  // `declineStart`. See docs/specs/what-ages-first-2026-09.md §4.
+  it('⭐ it reproduces §4a’s corrected table – 5.00 / 4.46 / 4.11 / 3.51 / 2.89 at 29 / 33 / 35 / 38 / 41', () => {
     // ⚠ THE CORRECTED TABLE, NOT THE FIRST DRAFT. §4a's first version evaluated `declineFactor` once
     // a year and held it constant across the 52 weeks; the engine raises her age EVERY WEEK, so the
     // loss compounds against a continuously rising factor and the real curve is 2-3 points kinder at
@@ -170,9 +182,9 @@ describe('from declineStart the corridor closes, continuously, by the share of h
     const table: [number, number][] = [
       [29, 5.0],
       [33, 4.46],
-      [35, 4.09],
-      [38, 3.45],
-      [41, 2.79],
+      [35, 4.11],
+      [38, 3.51],
+      [41, 2.89],
     ]
     for (const [age, expected] of table) {
       walkTo(world, rng, age)
@@ -245,8 +257,10 @@ describe('the floor, at the value the owner approved – and it is nearly inert'
   it('⚠ FIRES AFTER THE CAREER HAS ALREADY ENDED – a safety net, not a dial, and a live tripwire on both', () => {
     // §4a, and it is the paragraph anybody reaching for this knob has to read first: «nobody should
     // later raise the floor to fix something without noticing it is not currently doing anything».
-    // The share crosses `recoveryAgeFloor` at ~42.3; `ENDINGS.lastOfferPeakShare` (0.55) has ended
-    // the career at ~41.2. So the floor exists for the outliers – a migrated save, a body that
+    // The share crosses `recoveryAgeFloor` at ~43.1; `ENDINGS.lastOfferPeakShare` (0.55) has ended
+    // the career at ~41.9. ⚠ BOTH MOVED IN ROUND 38 #3d (from 42.3 and 41.2) and the GAP between
+    // them barely did – 1.14 years then, 1.23 now – which is exactly what this pin is aimed at.
+    // So the floor exists for the outliers – a migrated save, a body that
     // somehow held past the threshold, a future dial – and for nothing else.
     //
     // ⚠ THIS PIN IS AIMED AT THE RELATIONSHIP, NOT AT THE TWO NUMBERS. Move either dial and it still
@@ -255,8 +269,8 @@ describe('the floor, at the value the owner approved – and it is nearly inert'
     const floorBitesAt = ageAtPhysicalShare(ECONOMY.condition.recoveryAgeFloor)
     const careerEndsAt = ageAtPhysicalShare(ENDINGS.lastOfferPeakShare)
     expect(floorBitesAt).toBeGreaterThan(careerEndsAt)
-    expect(careerEndsAt).toBeCloseTo(41.17, 1)
-    expect(floorBitesAt).toBeCloseTo(42.31, 1)
+    expect(careerEndsAt).toBeCloseTo(41.9, 1)
+    expect(floorBitesAt).toBeCloseTo(43.13, 1)
   })
 })
 
@@ -272,10 +286,14 @@ describe('every reader of the helper inherits the fade – that is why it lives 
     return world
   }
 
-  it('the accumulator pays the faded base on a free week – 3.45 + the slider, not 5 + the slider', () => {
+  // ⚠ RE-AIMED, ROUND 38 #3d – 3.45 -> 3.55 at 38, the softer accel. ⚠ #6c did NOT move it: this arm
+  // walks its OWN seed (`fade-accrue`), not the table's, and the per-attribute weights land it at
+  // 3.5510 where the table's career reads 3.51. Two different bodies, two different numbers – which
+  // is itself the point the weights introduce, and is why the two arms may not share a constant.
+  it('the accumulator pays the faded base on a free week – 3.55 + the slider, not 5 + the slider', () => {
     const world = veteran('fade-accrue')
     const faded = recoveryBaseFor(world)
-    expect(faded).toBeCloseTo(3.45, 2)
+    expect(faded).toBeCloseTo(3.55, 2)
     world.condition = 40
     accrueCondition(world, false)
     expect(world.condition).toBeCloseTo(40 + faded + 2, 10)

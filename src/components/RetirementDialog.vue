@@ -95,12 +95,48 @@
 //
 // ⚠ AND NOTHING IS DRAWN HERE, ON PURPOSE. The band picks the sentence, so re-opening this card
 // cannot change it – round 31 #4's defect, which he reported the first time it happened.
+//
+// ⭐⭐⭐ ROUND 38 #6d – AND NOW SHE SAYS THE YEAR OUT LOUD. THE OWNER, 07.09:
+//
+//     «нужно чётко понимать, что карьера уже не та и явно это подсвечивать, как раз срез года
+//      закончить/продолжать... там нужно больше её голоса (или голоса тренера, если он есть, или
+//      совместного), чтобы можно было отслеживать её состояние и перформанс»
+//
+// ⚠⚠ THE CARD ALREADY HAD HALF OF THAT AND WAS MISSING THE OTHER HALF. Round 31 #9's rung is her
+// STATE – how much of her body is left, off `physicalShare`. Her PERFORMANCE was nowhere on the
+// card at all: the one screen where a season is closed and «one more year» is answered said nothing
+// about what the season had actually done to her place on the table. `herSeasonWord` below is that
+// half, and it is in her voice because he asked for her voice.
+//
+// ⚠ THE NUMBERS ARE THE SEASON HISTORY'S OWN, NOT PROSE. `Snapshot.seasonHistory` carries
+// `byTrack.wta.endRank` per banked season (schema v46), so the card subtracts two integers the
+// engine wrote and never parses a rendered sentence for a fact – R2-02's rule, which this file's
+// header already states for `lastWordLine`. ⚠ And the per-track row is the professional table; the
+// flat `endRank` beside it is the ITF alias and would name a table she left a decade ago.
+//
+// ⚠⚠ IT SAYS NOTHING RATHER THAN SOMETHING VAGUE. Three ways this paragraph is absent, all of them
+// deliberate: no banked professional season (nothing to compare), a season she IMPROVED on and which
+// is her own best (there is no decline in those numbers and inventing one would be a lie), and any
+// snapshot that carries no history at all. A card that always speaks stops being information –
+// `DRAW_CLAUSES`' own warning in SeasonScreen.vue.
+//
+// ⚠ AND THE COACH'S HALF IS CONDITIONAL ON THERE BEING A COACH, which is his own «или голоса
+// тренера, если он есть». It is a claim about the MECHANIC and not a mood: past `declineStart`
+// `ageFactor` returns 0, so `growWeek`'s whole rate is 0 and no rung of the market adds a point to
+// her – the work holds what is left and cannot add to it. `HomeScreen`'s `currentCoach` is the same
+// one read, the roster row marked `current`.
+//
+// ⚠ NOTHING NEW IS DRAWN, exactly as above: two subtractions and a `find`. Re-opening the card
+// cannot change a word of it.
 import { computed, useTemplateRef } from 'vue'
 import { useGameStore } from '../stores/game'
 import { useDialogFocus } from '../composables/dialogFocus'
 import { activeLadderOfSnapshot } from '../shared/protocol'
+// ⚠ THE SAME ONE SPELLING OF HIS NAME the coach note on Home signs itself with – «M. Ricci», not the
+// roster's full string. Two surfaces naming the same person must name him identically.
+import { formatShortName } from '../shared/format'
 import { lastWordLine } from '../engine/ending'
-import { declineRung } from '../composables/declineVoice'
+import { declineRung, pastHerPeak } from '../composables/declineVoice'
 import { portraitStage } from '../shared/avatarEmotion'
 import { portraitUrl } from '../art/preload'
 import { facePoint } from '../art/faceRects'
@@ -118,6 +154,52 @@ const lastWord = computed(() => lastWordLine(game.snapshot?.oneMoreYearCount ?? 
 // ⭐⭐ WHICH YEAR IT IS, off the share alone – null at her peak and on any snapshot that carries no
 // share, which is what keeps this paragraph off the card until there is something true to put in it.
 const rung = computed(() => declineRung(game.snapshot?.physicalShare))
+
+// ⭐⭐⭐ ROUND 38 #6d – HER PERFORMANCE, IN HER VOICE. See the header for the ask and for every rule
+// these three lines obey. The seasons she actually banked a professional result in, oldest first.
+const proSeasons = computed(() =>
+  (game.snapshot?.seasonHistory ?? [])
+    .map((h) => ({ seasonIndex: h.seasonIndex, rank: h.byTrack?.wta?.endRank }))
+    .filter((r): r is { seasonIndex: number; rank: number } => typeof r.rank === 'number'),
+)
+
+/** HER LINE ABOUT THE YEAR JUST CLOSED, or null when the numbers do not support one.
+ *
+ *  ⚠ THE YEAR-ON-YEAR ARM NEEDS THE TWO SEASONS TO BE ADJACENT. A career with a college fork or a
+ *  season with no counting professional result has gaps in this list, and «last winter» across a
+ *  three-season gap is a false sentence with a true number in it – the same guard
+ *  `coachDeclineNote` states in the engine. It falls through to her best year, which needs no
+ *  adjacency, and then to silence. */
+const herSeasonWord = computed<string | null>(() => {
+  const rows = proSeasons.value
+  if (!rows.length) return null
+  const last = rows[rows.length - 1]
+  const prev = rows.length > 1 ? rows[rows.length - 2] : null
+  const best = rows.reduce((a, b) => (b.rank < a.rank ? b : a))
+  if (prev && last.seasonIndex - prev.seasonIndex === 1 && last.rank > prev.rank) {
+    return `«#${prev.rank} last winter, #${last.rank} this one. I can read a table as well as you can.»`
+  }
+  if (last.rank > best.rank) {
+    return `«#${last.rank} this winter. My best year finished #${best.rank}, and I know the difference.»`
+  }
+  return null
+})
+
+/** ...AND HIS, WHEN THERE IS A HIM. Never on its own: it is the second half of her paragraph, so a
+ *  card with nothing of hers to say has nothing of his either. */
+const coachSeasonWord = computed<string | null>(() => {
+  if (!herSeasonWord.value) return null
+  // ⚠⚠ «it stopped adding to it» IS A MECHANICAL CLAIM AND IT NEEDS THE RUNG'S OWN GATE. `ageFactor`
+  // returns 0 from HER `declineStart` – but the winter question opens at 29 and `declineStart` is a
+  // per-career draw (round 31 #10), so a girl who drew 31 is asked twice while she is still GROWING.
+  // Ungated, his line would be false on exactly those two cards. `pastHerPeak` reads
+  // `physicalShare`, which is exactly 1 until her own peak is behind her, and it is already the gate
+  // on the paragraph above.
+  if (!pastHerPeak(game.snapshot?.physicalShare)) return null
+  const coach = game.snapshot?.coachMarket.find((c) => c.current)
+  if (!coach) return null
+  return `${formatShortName(coach.name)} does not argue with her. The work holds what she has left; it stopped adding to it a while ago.`
+})
 
 const stage = computed(() => portraitStage(age.value))
 const artUrl = computed(() => portraitUrl(stage.value, 'serious'))
@@ -212,6 +294,15 @@ useDialogFocus(card)
              entirely while she is at her peak, so this card reads exactly as it always did until the
              week the engine says otherwise. The three sentences are in composables/declineVoice.ts. -->
         <p v-if="rung" class="retire-rung">{{ rung }}</p>
+        <!-- ⭐⭐⭐ ROUND 38 #6d – HER PERFORMANCE, WHICH THE RUNG ABOVE DELIBERATELY DOES NOT COVER:
+             that one is her BODY and this one is the table. Her voice first and the coach's after
+             it, and his only when she has one. Both sentences are built on the script side, off the
+             season history's own integers; his words asking for this are quoted there, where
+             Cyrillic is allowed. Absent whenever the numbers cannot support a true sentence. -->
+        <template v-if="herSeasonWord">
+          <p class="retire-season">{{ herSeasonWord }}</p>
+          <p v-if="coachSeasonWord" class="retire-season-coach">{{ coachSeasonWord }}</p>
+        </template>
       </template>
 
       <div class="retire-answers">
@@ -279,6 +370,26 @@ useDialogFocus(card)
 .retire-rung {
   margin: 0 0 18px;
   font-size: 14px;
+  line-height: 1.5;
+  color: var(--ink-soft);
+}
+
+/* ROUND 38 #6d – HER LINE, and it is the only sentence on this card set in her own colour. The rung
+   above is the narrator reporting her body; this is her speaking, so it takes `--ink` at the same
+   measure rather than a second dim paragraph the eye reads as more of the same. Adjacent block
+   margins collapse to 18px exactly as the rung's do, so the gap down to the answers is unchanged
+   whether these two paragraphs are on the card or not. */
+.retire-season {
+  margin: 0 0 18px;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--ink);
+}
+
+/* ...and his, back at the rung's weight: he is agreeing with her, not competing with her. */
+.retire-season-coach {
+  margin: 0 0 18px;
+  font-size: 13px;
   line-height: 1.5;
   color: var(--ink-soft);
 }

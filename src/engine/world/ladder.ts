@@ -22,6 +22,7 @@ import { seasonIndexOf } from './ledger'
 import { kidAgeAt } from './age'
 import { acceleratorAdmits, juniorReservedRank, proEntryCapUsage, yearEndJuniorRank } from './entryCaps'
 import { KID_ID, RESULTS_WINDOW } from './constants'
+import { appendOnlyToken, fold, foldNumber, FOLD_SEED, memoise } from './derivedCache'
 import type { WorldState } from '../world'
 
 export function cohortIds(world: WorldState): string[] {
@@ -85,7 +86,83 @@ export function tableSize(world: WorldState, track: LadderTrack): number {
   return track === 'wta' ? live + fieldProsOf(world).length : live
 }
 
+// =================================================================================================
+// THE CONTENT KEYS – Wave A, step A2 (docs/specs/next-waves-2026-09.md; see world/derivedCache.ts
+// for why the cache may not live on the world and may not be keyed by its identity).
+// =================================================================================================
+//
+// ⚠⚠ A KEY IS A PROMISE ABOUT WHAT THE FOLD READS, and the promise is checked by a machine:
+// `TB_SNAPSHOT_VERIFY=1` computes both answers and throws on a difference, and it is ON for the
+// whole golden-fixture corpus in `tests/snapshot-cache-verify.test.ts`. So the rule for editing
+// anything below this line is simple: if the fold learns to read a new field, that field joins its
+// key in the same commit, or the verify arm goes red on the next run.
+
+/** WHAT THE LEDGER SAYS, AS A NUMBER. Every field of `SeasonResult` that any fold reads – the five
+ *  of them – and nothing else, because a key that folds something the answer does not depend on
+ *  costs a miss for every change to it. See `appendOnlyToken` for why this is paid once per
+ *  snapshot rather than once per call. */
+function ledgerToken(world: WorldState): string {
+  return appendOnlyToken(world.results, (rows) => {
+    let h = FOLD_SEED
+    for (const r of rows as readonly SeasonResult[]) {
+      h = fold(h, r.playerId)
+      h = foldNumber(h, r.week)
+      h = foldNumber(h, r.points)
+      h = fold(h, r.tier ?? '')
+      h = foldNumber(h, r.mandatoryMiss === true ? 1 : 0)
+    }
+    return h
+  })
+}
+
+/** WHO IS IN THE TABLE – the roster `computeRanking` filters on, plus the NAMES, which are the
+ *  cohort half of `fieldProsFor`'s own key. Folded in full every time: `driftCohort` moves a
+ *  cohort row in place, so the append-only shortcut would be a lie here (`appendOnlyToken`). */
+function rosterToken(world: WorldState): string {
+  let h = FOLD_SEED
+  for (const p of world.cohort) {
+    h = fold(h, p.id)
+    h = fold(h, p.name)
+  }
+  return `${world.cohort.length}.${h}`
+}
+
+/** THE FIELD'S SEASON TALLY (v53), which `mergedWtaRanking` reads and which `runAiTournament`
+ *  writes IN PLACE – so it is folded by content, never by identity. W table only. */
+function fieldPointsToken(world: WorldState): string {
+  const earned = world.fieldSeasonPoints
+  if (!earned) return '-'
+  let h = FOLD_SEED
+  let n = 0
+  for (const id of Object.keys(earned)) {
+    h = fold(h, id)
+    h = foldNumber(h, earned[id] ?? 0)
+    n++
+  }
+  return `${n}.${h}`
+}
+
+/** ⭐ THE RANKING TABLE'S KEY. The fold below reads exactly four things – the ledger, the week, the
+ *  roster and (on the W table only) the seed, the cohort names and the field's season tally – so
+ *  those are what the key is, and a plan change or a purchase touches none of them.
+ *
+ *  ⚠ THE TRACK IS FIRST AND THE WEEK IS SECOND, deliberately: they are the two components that make
+ *  a key HUMAN-READABLE in the verify arm's error message, which is the only place anyone will ever
+ *  read one. */
+function rankingKey(world: WorldState, track: LadderTrack): string {
+  const base = `${track}|w${world.week}|${ledgerToken(world)}|${rosterToken(world)}`
+  // The seed and the tally reach the answer only through `mergedWtaRanking`, and the whole W branch
+  // is skipped on the other two tables – so they are skipped in the key too rather than folded and
+  // ignored. `fieldProsFor` keys on (seed, season index, cohort names): the week gives the season
+  // index and the roster token gives the names.
+  return track === 'wta' ? `${base}|${world.seed}|${fieldPointsToken(world)}` : base
+}
+
 export function rankingFor(world: WorldState, track: LadderTrack): RankingRow[] {
+  return memoise('ranking', rankingKey(world, track), () => rankingForUncached(world, track))
+}
+
+function rankingForUncached(world: WorldState, track: LadderTrack): RankingRow[] {
   // THE WINDOW SPLIT LANDS HERE (W2-LADDER §3): best-6 for domestic/itf, EIGHTEEN for the
   // professional table (the rulebook's own number since 05.08, with eleven of the eighteen reserved
   // for Slams and 1000s - `MANDATORY_SLOTS`), and because this is the ONE fold every table-reader
@@ -278,7 +355,21 @@ export function latchOnRamps(world: WorldState): void {
 // 2026-08.md §6 is about and the reason `rankingFor` is a single fold at all. One rule, both
 // readers. The measured consequence for HER climb is in docs/rounds/round-23.md #12.
 export function kidPoints(world: WorldState, track: LadderTrack): number {
-  return windowedBestSum(world.results, world.week, KID_ID, BEST_N_BY_TRACK[track], inTrack(track), WINDOW_BY_TRACK[track])
+  // ⭐ MEMOISED ON THE SAME KEY AS THE TABLE ITSELF (Wave A, A2) – and it belongs in this step
+  // rather than the next because it is the SAME FOLD over the SAME ledger, one player wide. It is
+  // also where the cost is: measured with `node --cpu-prof` over a snapshot-only loop on the `pro`
+  // fixture, `kidPoints` is **11.4%** of `toSnapshot` against `rankingFor`'s 7.7%, because the entry
+  // gates (`tierOutgrown`, `playDownBars`, `tierFloorOpen`, `hasOutgrown`) ask it once per upcoming
+  // event – 22 of them – and each ask filters the whole 2,234-row ledger again.
+  //
+  // ⚠ AND ITS KEY IS NARROWER THAN THE TABLE'S, BECAUSE THE FOLD IS. `windowedBestSum` takes
+  // (results, week, KID_ID, the track's two window facts) and reads nothing else – no roster, no
+  // seed, no field tally – so folding those into the key would buy nothing and cost a miss every
+  // time a rival's name or a pro's tally moved. The key states what the fold reads, which is the
+  // rule for every key in this file.
+  return memoise('ranking', `kid|${track}|w${world.week}|${ledgerToken(world)}`, () =>
+    windowedBestSum(world.results, world.week, KID_ID, BEST_N_BY_TRACK[track], inTrack(track), WINDOW_BY_TRACK[track]),
+  )
 }
 
 /** Her domestic best-6 - the number the domestic rungs' bands are denominated in. */

@@ -83,13 +83,40 @@ describe('the rating predicts the match it labels', () => {
     expect(ratingOf(build('a', 50, { serve: 75, ret: 25 }), 'hard', 'wta')).toBe(ratingOf(build('b', 50), 'hard', 'wta'))
   })
 
-  it('⚠ COMPOSURE AND STAMINA ARE INVISIBLE TO IT, exactly as they are to the card it explains', () => {
-    // They act through `modifiedPServe` (big points, past point 120), never through `basePServe`.
-    // `fastMatchProbability` – the number the calendar card has always shown – cannot see them
-    // either, so the rating is neither more nor less complete than the ring beside it.
-    expect(ratingOf(build('a', 50, { composure: 99, stamina: 99 }), 'hard', 'wta')).toBe(
-      ratingOf(build('b', 50, { composure: 1, stamina: 1 }), 'hard', 'wta'),
+  // ⚠⚠ RE-AIMED 07.09 BY ROUND 38 C4, AND THE CLAIM IT DEFENDS IS THE ONE IT ALWAYS DEFENDED.
+  //
+  // It used to read «COMPOSURE AND STAMINA ARE INVISIBLE TO IT, exactly as they are to the card it
+  // explains», and asserted that a build with composure/stamina 99 rated the SAME as one at 1. Both
+  // halves of that were true and the first half was the DEFECT: `basePServe` could not see the two
+  // attributes, so neither could `fastMatchProbability`, so neither could this. C4 made the card
+  // read all five skills (`calibratedPServe`), so the rating had to follow – a rating blind to two
+  // of them would now disagree with the very odds it exists to explain, and the 1.5-point promise
+  // above is what would have caught it.
+  //
+  // ⚠ THE TEST IS NOT WEAKENED, IT IS POINTED THE OTHER WAY. The old one asserted an EQUALITY that
+  // is now false; this asserts the ORDERING and the AGREEMENT, which is strictly more than the old
+  // one checked – it would go red if the rating started reading them at a different weight from the
+  // model, which the equality could never have noticed.
+  it('⚠ COMPOSURE AND STAMINA REACH IT, at exactly the weight the card reads them at (C4)', () => {
+    const composed = build('a', 50, { composure: 99, stamina: 99 })
+    const nervy = build('b', 50, { composure: 1, stamina: 1 })
+    expect(ratingOf(composed, 'hard', 'wta')).toBeGreaterThan(ratingOf(nervy, 'hard', 'wta'))
+    // ...and the gap is the pair's own odds, not a second opinion about them.
+    const truth = fastMatchProbability(composed, nervy, { surface: 'hard', tour: 'wta', seed: '' })
+    const quoted = chanceFromRatings(ratingOf(composed, 'hard', 'wta'), ratingOf(nervy, 'hard', 'wta'))
+    expect(Math.abs(truth - quoted)).toBeLessThan(0.015)
+  })
+
+  it('⚠ IT IS MONOTONE IN THEM, AND THE ORIGIN OF THE SCALE DID NOT MOVE', () => {
+    // Monotone: more nerve and more legs is a better player, not merely a different one.
+    expect(ratingOf(build('a', 50, { composure: 80, stamina: 80 }), 'hard', 'wta')).toBeGreaterThan(
+      ratingOf(build('b', 50, { composure: 20, stamina: 20 }), 'hard', 'wta'),
     )
+    // ...and the ORIGIN is untouched to the last bit, which is the other half of C4's promise. The
+    // reference build is 50 in every attribute, so a flat-50 player is LEVEL with it on both new
+    // legs, the term is exactly 0, and the whole scale is anchored where it always was. The `toBe`
+    // at the top of this describe asserts the same thing; this one says WHY it still holds.
+    expect(ratingOf(build('flat', 50), 'hard', 'wta')).toBe(RATING_BASE)
   })
 
   it('the formula is the published one: 100 points is a 64% favourite', () => {
