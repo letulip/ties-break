@@ -78,7 +78,12 @@ function businessWorld(seed = 'p5a-surfaces'): WorldState {
   reviewAdOffer(world)
   const letter = world.offers.find((o) => o.kind === 'ad' && o.state === 'open')
   if (letter) acceptOffer(world, letter.id)
-  world.fundsCents = 15_000_000_00
+  // ⚠ RE-AIMED, ROUND 38 #14 (07.09) – WAS $15,000,000, and the fixture failed with «Not enough funds
+  // for that» rather than with a wrong figure. `buyAsset` now charges `max(catalogue, what the rung
+  // is worth)` – the owner's ruling closing a sell-and-rebuy loop – so a fixture with fame and four
+  // academy stages needs more cash than the stickers add up to. ⭐ The wallet is scenery here: every
+  // arm below reads what the shelf QUOTES and what the strip BANKS, and none asserts a balance.
+  world.fundsCents = 500_000_000_00
   buyAsset(world, 'merch-brand')
   for (const id of ['academy-land', 'academy-courts', 'academy-building', 'academy-staff']) buyAsset(world, id)
   return world
