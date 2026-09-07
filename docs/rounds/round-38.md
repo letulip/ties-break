@@ -683,8 +683,42 @@ the repo keeps is the derived statistics below.
   ⚠⚠ ONE HONEST CASE DOES CHANGE: an already-famous career now pays what its own name is worth rather
   than the sticker – which is his ruling seen from the buying side.
 
-- [ ] **15. The drift loop** – see the table above. ⚠ Pre-existing on houses, extended to the academy
-  by item 8. Two shapes offered, both need his word, neither is a constant.
+- [!] **15. The drift loop – ⚠⚠ AND MY OWN NUMBER FOR IT WAS WRONG.** I measured CASH and called it a
+  loop. Re-measured as WEALTH (cash plus every row at its own value), on one settled world, one
+  sell-and-rebuy per rung:
+
+  | rung | cash | **wealth** | |
+  | --- | ---: | ---: | --- |
+  | house-first | +$58,036 | **$0** | not a loop at all |
+  | merch-brand | $0 | **$0** | closed by #14 |
+  | car-good | −$9,900 | $0 | |
+  | academy-land | +$357,466 | **+$697,378** | a real loop |
+  | academy-courts | +$164,167 | **+$1,046,067** | a real loop |
+
+  ⚠ **The house was never a loop.** You sell an appreciated house for $298,036 and buy a cheaper one
+  worth $240,000: the cash gain is exactly the asset you gave up. I reported it to him as a loop in
+  the round-38 PR body and it is corrected there too.
+
+  ⭐ **What IS a loop is the academy, and it is the same defect he had just diagnosed on the brand:
+  a rung is worth more than it cost the instant it is bought.** His fix for one is the fix for both –
+  item 16.
+
+- [>] **16. A brand is a process, not a purchase** – ⭐ HIS RULING, 07.09, and it OVERTURNS my own #14:
+  «если мы до пика известности бренд не покупали, то он всё равно поднимался в цене? Это супер-странно.
+  Я бы сказал, что он неизменно для первого открытия стоит 250к, а потом МОЖЕТ набрать свои 5млн, но
+  не за 1 день, т.к. это процесс. Если уровень известности большой, то набор будет идти быстрее (может
+  быть кратно быстрее), но он всё равно будет идти, на это надо время.»
+
+  ⚠⚠ **HE IS RIGHT AND HIS MODEL IS STRICTLY BETTER THAN THE ONE HE APPROVED YESTERDAY.** `max(catalogue,
+  worth)` made a FIRST purchase expensive, which is the strange half he objects to, and it needed a
+  price on the card that is not the price on the card. A worth that RAMPS from what was paid toward
+  the derived value closes the loop by construction instead: a freshly bought brand is worth $250,000,
+  so selling at $5,172,791 and buying back at $250,000 loses $4.9M rather than gaining it.
+
+  ⭐ AND IT ANSWERS THE FIRST THING HE ASKED THIS ROUND. A stored value that CHASES its derived value
+  smooths the fall as well as the climb – «делая его более плавным», item 2, from the other side. One
+  mechanism, both directions, and `purchasePriceCents` (#14) is withdrawn with it: the sticker becomes
+  honest again.
 
 ---
 

@@ -450,45 +450,37 @@ export function academyPremiumX(world: WorldState): number {
  *  `world/market.ts`'s header for why a purchase cannot move the world's dice through it.
  *
  *  Pure: reads the world, writes nothing. */
-/** ⭐⭐⭐ ROUND 38 #14 – WHAT A RUNG COSTS TO BUY, and it is not always the catalogue price.
+/** ⭐⭐⭐ ROUND 38 #16 – HOW LONG THIS RUNG TAKES TO BECOME WHAT IT IS WORTH, in weeks.
  *
- *  ⚠⚠ THE DEFECT IT ENDS, MEASURED ON THE OWNER'S OWN WEEK-1115 SAVE THROUGH THE SHIPPED COMMANDS:
+ *  THE OWNER: «полураспад 2 года при средней славе, кратно быстрее при высокой». The pace is the
+ *  driver's ratio to its own median, so a career the world talks about closes the gap in months and
+ *  one it has never heard of takes years. Clamped at both ends – see the constants for why an
+ *  unclamped low driver is «никогда» rather than «медленно».
  *
- *      merch-brand: paid $250,000, worth $2,576,989
- *         sold for $2,576,989, re-bought for $250,000
- *         NET +$2,326,989 ... and worth $5,172,791 again
+ *  ⚠ THE DRIVER IS THE RUNG'S OWN. Fame for a brand, reputation-above-its-base for an academy: two
+ *  different scales, each compared against its OWN median, never one number standing for both. Pure. */
+export function worthRampHalfLife(driver: number, medianDriver: number): number {
+  const R = ECONOMY.shop.worthRamp
+  if (!(medianDriver > 0)) return R.maxHalfLifeWeeks
+  const pace = Math.max(0, driver) / medianDriver
+  if (!(pace > 0)) return R.maxHalfLifeWeeks
+  return Math.min(R.maxHalfLifeWeeks, Math.max(R.minHalfLifeWeeks, R.halfLifeWeeks / pace))
+}
+
+/** ⭐⭐ THE RAMP ITSELF – what a row is worth `weeksHeld` after it was bought, given what it was paid
+ *  for and what the world says it is worth.
  *
- *  `buyAsset` charged `entryCents` while `sellAsset` paid `owned.valueCents`, and the only refusal is
- *  on a rung CURRENTLY owned – so any rung whose worth is DERIVED rather than equal to what was paid
- *  could be sold and bought straight back, in one week, without limit. The academy premium (#8) would
- *  have opened a second one at about $985,000 a cycle, with no `buildWeeks` on any academy rung to
- *  slow it.
+ *  ⚠⚠ AT `weeksHeld === 0` THIS IS EXACTLY `paidCents`, AND THAT IS THE WHOLE OF THE LOOP FIX. A rung
+ *  bought this week is worth what was paid for it, so selling a grown one and buying it back hands
+ *  the family the difference in cash and takes the same difference off the shelf.
  *
- *  ⭐ THE OWNER'S RULING, 07.09: «да, чини по max(каталог, стоимость)». A market does not sell you
- *  back your own name at the sticker price.
- *
- *  ⚠ WHAT IS DELIBERATELY UNCHANGED, and each of the three is a case this could have broken:
- *
- *    1. AN `open` RUNG – the deposit and the fund. The family names an amount and receives UNITS at
- *       the unit price, so there is no gap between price and worth to arbitrage. Returns the stake.
- *    2. EVERY ORDINARY RUNG – a car, a house, a boat, a plane. Their worth IS what was paid, worn by
- *       a rate from the week of purchase, so `max` resolves to `entryCents` by arithmetic rather than
- *       by a special case.
- *    3. A FIRST BRAND ON AN UNKNOWN CAREER. A girl with no fame is worth the floor, which is far under
- *       the catalogue price, so the rung still costs exactly what the card says.
- *
- *  ⚠⚠ AND IT DOES CHANGE ONE HONEST CASE: a career that is ALREADY famous now pays what its own name
- *  is worth rather than the sticker. That is the same sentence as the ruling, seen from the buying
- *  side, and it is measured in docs/specs/academy-worth-2026-09.md.
- *
- *  Pure: reads the world, writes nothing, draws nothing. */
-export function purchasePriceCents(world: WorldState, item: ShopItem, stakeCents?: number): number {
-  if (item.stake === 'open') return Math.floor(stakeCents ?? 0)
-  // The worth this rung WOULD have the moment it is bought: the same arithmetic `assetWorthCents`
-  // runs, on a hypothetical row paid at the catalogue price this very week. One function, so a rung
-  // can never be priced by one rule and valued by another.
-  const hypothetical: OwnedAsset = { id: item.id, boughtWeek: world.week, paidCents: item.entryCents, valueCents: item.entryCents }
-  return Math.max(item.entryCents, assetWorthCents(world, hypothetical, item))
+ *  ⚠ IT CONVERGES FROM BOTH SIDES. When the derived value is BELOW what was paid – a brand whose fame
+ *  has gone – the same curve walks the row DOWN to it instead of up, which is why one function
+ *  answers «стоимость набирается не за день» and «падение должно быть более плавным» at once. */
+export function rampedWorthCents(paidCents: number, derivedCents: number, weeksHeld: number, halfLifeWeeks: number): number {
+  if (!(halfLifeWeeks > 0)) return Math.round(derivedCents)
+  const kept = Math.pow(0.5, Math.max(0, weeksHeld) / halfLifeWeeks)
+  return Math.round(derivedCents + (paidCents - derivedCents) * kept)
 }
 
 export function assetWorthCents(world: WorldState, owned: OwnedAsset, item: ShopItem, weekOffset = 0): number {
@@ -522,7 +514,14 @@ export function assetWorthCents(world: WorldState, owned: OwnedAsset, item: Shop
     // listed company today (the research §4d) – a brand with no earnings left is not a brand with no
     // value. It is also what keeps «мы ни за что не наказываем» true of the week she is between
     // reigns: the family can always sell the name.
-    return Math.round(Math.max(owned.paidCents * ECONOMY.shop.businessValueFloorShare, grossCents))
+    // ⭐⭐ ROUND 38 #16 – THE DERIVED FIGURE IS WHERE THE ROW IS GOING, NOT WHERE IT IS. At the week it
+    // was bought `rampedWorthCents` returns exactly what was paid for it, which is what closes the
+    // sell-and-rebuy loop by construction instead of by a price rule on the door – and the same
+    // curve walks a fading brand DOWN, which is «более плавным» from the other side.
+    const derived = Math.max(owned.paidCents * ECONOMY.shop.businessValueFloorShare, grossCents)
+    if (item.family !== 'business') return Math.round(derived)
+    const brandHalf = worthRampHalfLife(brandSignalsOf(world, week).fame, ECONOMY.shop.worthRamp.medianFame)
+    return rampedWorthCents(owned.paidCents, derived, week - (owned.basisWeek ?? owned.boughtWeek), brandHalf)
   }
   const drifted = assetValueCents(item, owned.paidCents, week - (owned.basisWeek ?? owned.boughtWeek))
   // ⭐⭐⭐ ROUND 38 #8 – THE FOURTH ARITHMETIC, AND IT IS THE THIRD ONE'S MIRROR IMAGE ON PURPOSE.
@@ -556,7 +555,13 @@ export function assetWorthCents(world: WorldState, owned: OwnedAsset, item: Shop
   // reputation, and a rung handed one by mistake would be valued off a dial that says nothing about
   // it. `tests/round38-academy-worth.test.ts` asserts the zero in both directions.
   if (item.family !== 'academy') return drifted
-  return Math.round(drifted * academyPremiumX(world))
+  // ⭐⭐ ROUND 38 #16 – AND THE PREMIUM RAMPS, WHILE THE DRIFT DOES NOT NEED TO. `assetValueCents` is
+  // already a function of weeks held, so a stage bought this week is worth exactly what was paid on
+  // that half; it was the PREMIUM that arrived WHOLE on the buying week and made the academy loopable
+  // at about $1M of WEALTH a cycle. Same curve, same constants, its own driver.
+  const acadHeld = week - (owned.basisWeek ?? owned.boughtWeek)
+  const acadHalf = worthRampHalfLife(Math.max(0, academyReputationOf(world) - 1), ECONOMY.shop.worthRamp.medianReputationOver1)
+  return rampedWorthCents(drifted, Math.round(drifted * academyPremiumX(world)), acadHeld, acadHalf)
 }
 
 /** ⭐⭐⭐ ROUND 30 #9 – WHAT AN EARNING RUNG TAKES IN THIS WEEK, in cents, BEFORE the question of

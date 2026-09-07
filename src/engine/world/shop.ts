@@ -85,7 +85,6 @@ import {
   unitPriceHistory,
   weeklyAssetUpkeepCents,
   type ShopItem,
-  purchasePriceCents,
 } from './assets'
 export {
   ASSET_NAME_MAX_CHARS,
@@ -111,7 +110,6 @@ export {
   unitPriceCents,
   unitPriceHistory,
   weeklyAssetUpkeepCents,
-  purchasePriceCents,
 }
 export type { ShopItem }
 
@@ -350,10 +348,12 @@ export function buyAsset(world: WorldState, itemId: string, stakeCents?: number,
   // ⚠ THE AMOUNT IS DECIDED BEFORE THE WALLET IS ASKED, and a 'fixed' rung ignores whatever the
   // caller sent rather than refusing it: the price of a car is the catalogue's, and a screen that
   // passed a number would otherwise be able to name its own.
-  // ⭐⭐ ROUND 38 #14 – `max(catalogue, what it is worth)`, and `world/assets.ts` owns the arithmetic
-  // so a rung can never be PRICED by one rule and VALUED by another. See `purchasePriceCents` for
-  // the loop it closes and for the three cases it deliberately leaves alone.
-  const paidCents = purchasePriceCents(world, item, stakeCents)
+  // ⚠⚠ ROUND 38 #16 WITHDREW #14's `max(catalogue, worth)` AND THE STICKER IS HONEST AGAIN. The owner
+  // overturned his own previous day's ruling once he saw what it did to a FIRST purchase: «если мы до
+  // пика известности бренд не покупали, то он всё равно поднимался в цене? Это супер-странно.» The
+  // loop that rule existed to close is now closed one layer down, in what a fresh row is WORTH
+  // (`rampedWorthCents`), so nothing has to be charged at the door. This line is what it always was.
+  const paidCents = item.stake === 'open' ? Math.floor(stakeCents ?? 0) : item.entryCents
   // ⚠ ONE MINIMUM, NOT TWO. A top-up is held to the same floor as the opening stake because that
   // floor is already the sentence on screen («How much, from $5,000») and a second, smaller
   // threshold would be a balance number no player could find and no screen states.

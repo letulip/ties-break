@@ -4942,6 +4942,48 @@ export const ECONOMY = {
      *  a sale possible in the years she is quiet, which is what makes the decision to sell a real
      *  fork rather than a trap. */
     businessValueFloorShare: 0.25,
+    /** ⭐⭐⭐ ROUND 38 #16 (07.09) – A BRAND IS A PROCESS, NOT A PURCHASE.
+     *
+     *  THE OWNER, overturning the `max(catalogue, worth)` rule he had approved the day before:
+     *  «если мы до пика известности бренд не покупали, то он всё равно поднимался в цене? Это
+     *  супер-странно. Я бы сказал, что он неизменно для первого открытия стоит 250к, а потом МОЖЕТ
+     *  набрать свои 5млн, но не за 1 день, т.к. это процесс. Если уровень известности большой, то
+     *  набор будет идти быстрее (может быть кратно быстрее), но он всё равно будет идти, на это надо
+     *  время.» And on the number: «полураспад 2 года при средней славе, кратно быстрее при высокой».
+     *
+     *  ⚠⚠ WHAT IT REPLACES AND WHY HIS SHAPE IS BETTER. A rung whose worth is DERIVED used to be
+     *  worth its full derived value the instant it was bought, so it could be sold at that value and
+     *  bought back at the catalogue price – +$2,326,989 a cycle on his own save, repeatable, in one
+     *  week. `max(catalogue, worth)` closed that by making the PURCHASE dear, which also made a FIRST
+     *  brand on a famous career cost $5,172,791 – the strange half he objected to, and it needed a
+     *  price on the card that was not the price on the card. A worth that RAMPS from what was paid
+     *  toward the derived value closes the same loop by construction: a freshly bought brand is worth
+     *  what was paid for it, so selling at $5.17M and buying back at $250,000 LOSES $4.9M.
+     *
+     *  ⭐ AND IT ANSWERS THE FIRST THING HE ASKED THIS ROUND FROM THE OTHER SIDE. A stored value that
+     *  CHASES its derived value smooths the FALL as well as the climb – «делая его более плавным»,
+     *  item 2. One mechanism, both directions.
+     *
+     *  ⚠ NO SCHEMA MOVE: the ramp is a function of `boughtWeek` and `paidCents`, both persisted since
+     *  the shelf shipped. An existing save's brand simply starts converging from where it is. */
+    worthRamp: {
+      /** the half-life of the gap between what was paid and what it is worth, at `medianDriver` */
+      halfLifeWeeks: 104,
+      /** ⚠ MEASURED, NOT PICKED: fame across the owner's 22 professional careers reads p10 3.2,
+       *  MEDIAN 12.8, p90 39.3, max 81.3. So «средняя слава» is 12.8 and the pace is the ratio to it –
+       *  p90 closes the gap three times faster, which is his «кратно быстрее». */
+      medianFame: 12.8,
+      /** ...and the academy's driver is REPUTATION above its 1.0 base, on its own scale. */
+      medianReputationOver1: 1.8,
+      /** ⚠ THE CLAMP THAT STOPS A DIVISION BY NOTHING. A career the world has never heard of has a
+       *  driver at or near zero; without this the half-life is infinite and the rung would be frozen
+       *  at what was paid for ever, which is not «медленно» but «никогда». Eight years is slow. */
+      maxHalfLifeWeeks: 416,
+      /** ...and the other end: a driver this far above the median stops buying more speed. Four
+       *  weeks is one month, and below that the ramp stops being a process at all – which is the one
+       *  thing his ruling is about. */
+      minHalfLifeWeeks: 13,
+    },
   },
 } as const
 
