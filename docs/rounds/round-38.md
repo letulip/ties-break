@@ -234,7 +234,10 @@ the repo keeps is the derived statistics below.
   - **B1** – `tests/component/r38-tab-seen.test.ts`, six arms, mounted, driven through the bar's
     buttons and Home's next-tournament plate. Written and made red BEFORE the move: inverting any of
     the four conditions (`t === 'x'` → `t !== 'x'`) fails it in two arms each. Green, byte-unchanged,
-    after the move.
+    after the move. A **seventh arm was added after B2**, deliberately not folded into the five: the
+    per-device property itself – a private window (storage that THROWS on the property access) costs
+    the dots and never the shell. Unguarding `useWatermark`'s read turns that arm, and only that arm,
+    red on the mount with `SecurityError`.
   - **B2** – the move, verbatim, comments included. `vue-tsc -b --force` clean.
   - **B3** – the pin query first (`git grep -l "App.vue'" -- tests/`): 48 files / 76 line hits, of
     which 27 comment-only, 21 SFC imports, 28 source reads. Exactly **3 files / 7 tests** went red and

@@ -53,12 +53,25 @@ import type { Offer, Snapshot, WorldEvent } from '../../src/shared/protocol'
 // there in full: happy-dom is configured here without web storage. The test supplies the browser's
 // object; it does not weaken the code. `backing` is also what the assertions read – the marks ARE
 // storage, so reading them anywhere else would be reading a copy.
+//
+// ⚠ `storageThrows` IS THE PRIVATE WINDOW, AND IT IS A DIFFERENT FAILURE FROM AN ABSENT ONE. A
+// browser that blocks site data raises `SecurityError` on the PROPERTY ACCESS; `localStorage` being
+// missing is a `ReferenceError` at a different moment, and code that survives one can die on the
+// other. Arm 6 needs the throwing kind. Same distinction career-watermarks.test.ts draws for the
+// helper; this file draws it for the shell that now mounts through the helper.
 const backing = new Map<string, string>()
+let storageThrows = false
 Object.defineProperty(globalThis, 'localStorage', {
   configurable: true,
   value: {
-    getItem: (k: string) => (backing.has(k) ? backing.get(k)! : null),
-    setItem: (k: string, v: string) => void backing.set(k, String(v)),
+    getItem: (k: string) => {
+      if (storageThrows) throw new DOMException('The operation is insecure.', 'SecurityError')
+      return backing.has(k) ? backing.get(k)! : null
+    },
+    setItem: (k: string, v: string) => {
+      if (storageThrows) throw new DOMException('The quota has been exceeded.', 'QuotaExceededError')
+      backing.set(k, String(v))
+    },
     removeItem: (k: string) => void backing.delete(k),
     clear: () => backing.clear(),
     key: (i: number) => [...backing.keys()][i] ?? null,
@@ -203,6 +216,7 @@ const mark = (prefix: string, snap: Snapshot): string | undefined =>
 beforeEach(() => {
   setActivePinia(createPinia())
   backing.clear()
+  storageThrows = false
 })
 
 // =================================================================================================
@@ -363,6 +377,49 @@ describe('B1 – the four tab-seen watchers, mounted, through their real doors',
     expect(mark(WEEK_KEY, snap), 'the week screen still is not').toBeUndefined()
     expect(mark(NEWS_KEY, snap), 'and neither is the feed').toBe('900001')
     expect(barDot(wrapper, 'home'), 'the home dot is untouched by the season').toBe(true)
+    wrapper.unmount()
+  })
+
+  // ===============================================================================================
+  it('6. ⚠ A PRIVATE WINDOW COSTS THE DOTS, NEVER THE SHELL', async () => {
+    // ⚠ ADDED AFTER THE MOVE, and deliberately not folded into the five arms above: those five are
+    // the before/after pin and are byte-identical across B2, which is what makes "green, unchanged"
+    // a statement about behaviour. THIS arm is about the composable, which did not exist when they
+    // were written.
+    //
+    // THE PROPERTY (spec §Wave B; U-07). The four marks are per-device web storage, and a browser
+    // that blocks site data throws on the PROPERTY ACCESS itself - there is no `?.` that helps. The
+    // composable is called at `<script setup>` time, ABOVE every screen, so an unguarded read there
+    // is not a missing dot, it is a blank career on the app's first screen. Nothing in tabSeen.ts
+    // touches `localStorage`: `inboxCue.ts`'s watermark owns every read and write and swallows both.
+    //
+    // ⚠ MUTATION-VERIFIED: dropping the try/catch around `useWatermark`'s `getItem` turns this red on
+    // the mount itself, before any assertion - which is exactly the failure it is here to prevent.
+    storageThrows = true
+    const snap = fixture('r38-b1-private')
+    const store = useGameStore()
+    const wrapper = mount(App, { global: { stubs: { teleport: true } } })
+    await flushPromises()
+    store.snapshot = snap
+    store.ready = true
+    store.phase = 'ready'
+    await nextTick()
+    wrapper.findComponent(SplashScreen).vm.$emit('done')
+    await nextTick()
+
+    expect(wrapper.find('nav.tab-bar').exists(), 'the shell is on screen, not a blank career').toBe(true)
+    // ...and the dots answer the way each one's missing-key rule says it must, which is the second
+    // half of the property: storage being unreachable is the same case as a key that is not there.
+    // The SENTINEL marks read -1 and still light; the CLAIM-NOTHING ones read the current value and
+    // stay dark, because a cabinet that cannot know whether it was opened must not say it was.
+    expect(barDot(wrapper, 'play'), 'a sentinel mark still lights its dot').toBe(true)
+    expect(weekDot(wrapper), 'and so does the This-week one').toBe(true)
+    expect(barDot(wrapper, 'trophies'), 'a claim-nothing mark asserts nothing it cannot know').toBe(false)
+
+    // The bar still navigates, and the write that a visit makes goes nowhere instead of throwing.
+    await tapBar(wrapper, 'play')
+    expect(wrapper.find('nav.tab-bar').exists(), 'the visit did not take the shell down').toBe(true)
+    expect(backing.size, 'nothing reached storage, and nothing escaped setup').toBe(0)
     wrapper.unmount()
   })
 })
