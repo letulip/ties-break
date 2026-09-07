@@ -34,6 +34,15 @@
 //      which is exactly the arm written to reach an otherwise unreachable guard;
 //   M5 `premiumPerRep: 0.15` → `0`                             → 4 red (the same four as M2).
 //
+// ⭐ ROUND 38 #16 (07.09) ADDED A SIXTH, because the premium stopped arriving on the buying week and
+// three arms above were re-aimed onto the ramp. Same regime, applied alone and run over the whole
+// unit project:
+//   M6 `rampedWorthCents` returning `Math.round(derivedCents)` – the ramp deleted → 12 red across
+//      three files, 3 of them HERE: §2's real-career arm (the stage lands ON `drift x premium`
+//      instead of 66.6% of the way to it), §2's level arm (the 5-vs-10 ratio drops back to the pure
+//      drift 1.159274076 against the measured 1.196541152) and §5's gate arm. ⚠ §1's drift arms,
+//      §3's floors and §4's table stay GREEN, which is right: none of them is a claim about time.
+//
 // ⚠⚠ AND THE WHOLE ITEM WAS REVERTED AT ONCE (rate -> 0 AND premium -> 0) AND MEASURED THROUGH THE
 // SHIPPED PATH on the owner's own week-1115 save: `tools/r38-academy-worth.ts` reproduces the
 // pre-item table to the cent – `academy-land` $2,000,000, `academy-courts` $3,000,000, the shelf
@@ -54,12 +63,16 @@ import {
   shopView,
   type WorldState,
 } from '../src/engine/world'
-import { academyPremiumX } from '../src/engine/world/assets'
+import { academyPremiumX, rampedWorthCents, worthRampHalfLife } from '../src/engine/world/assets'
 import { ECONOMY } from '../src/engine/economy'
 import { WEEKS_PER_YEAR } from '../src/engine/season/calendar'
 import { DEFAULT_PROFILE, type SeasonHistoryEntry } from '../src/shared/protocol'
 
 const A = ECONOMY.business.academy
+/** ⭐ ROUND 38 #16 – the ramp's own constants. The premium is a PROCESS on the reputation's clock
+ *  now, so three of this file's arms ask the engine where a row has got to rather than assuming it
+ *  arrived on the buying week. See the note on each. */
+const R = ECONOMY.shop.worthRamp
 const STAGES = ['academy-land', 'academy-courts', 'academy-building', 'academy-staff']
 
 /** A fresh world parked at an adult week with money in it. Reputation is a fold over hand-plantable
@@ -165,13 +178,34 @@ describe('§2 the premium – option C, and it starts at exactly zero', () => {
     const rep = academyReputationOf(w)
     expect(rep, 'two top-10 and two top-25 seasons').toBeCloseTo(2.9, 10)
     expect(academyPremiumX(w)).toBeCloseTo(1 + A.premiumPerRep * (rep - 1), 12)
+    // ⚠⚠ RE-AIMED, ROUND 38 #16 (07.09). It read `worth === Math.round(drift x premium)`, full stop.
+    // The owner then ruled that a valuation is a PROCESS – «он неизменно для первого открытия стоит
+    // 250к, а потом МОЖЕТ набрать свои 5млн, но не за 1 день» – so the premium no longer arrives on
+    // the buying week; the row RAMPS from the drift toward `drift x premium`, halving the gap every
+    // `worthRampHalfLife(reputation − 1, medianReputationOver1)` weeks.
+    //
+    // ⚠ THE DESTINATION IS UNCHANGED AND IS STILL THE SPEC'S FORMULA – it is now where the row is
+    // GOING rather than where it is, and the arithmetic below still writes `drift x premium` out in
+    // full, so a broken premium still reddens here. What is asked of the engine, and never copied,
+    // is the RAMP itself: `rampedWorthCents` and `worthRampHalfLife` are the shipped functions.
+    //
+    // ⚠ MEASURED, this career at three seasons held (rep 2.90, half-life 98.53 weeks, 156 weeks of
+    // holding = 1.583 half-lives, so 66.629% of the gap closed):
+    //   academy-land   drift $2,185,454 -> WAS $2,808,308, IS $2,600,456
+    //   academy-courts drift $3,278,181 -> WAS $4,212,463, IS $3,900,684
+    const half = worthRampHalfLife(rep - 1, R.medianReputationOver1)
     for (const owned of ownedAssets(w)) {
       const item = shopItem(owned.id)!
       const drift = assetValueCents(item, owned.paidCents, w.week - owned.boughtWeek)
-      expect(assetWorthCents(w, owned, item), `${owned.id} is priced at drift x premium`)
-        .toBe(Math.round(drift * (1 + A.premiumPerRep * (rep - 1))))
+      const destination = Math.round(drift * (1 + A.premiumPerRep * (rep - 1)))
+      expect(assetWorthCents(w, owned, item), `${owned.id} is priced at its own way to drift x premium`)
+        .toBe(rampedWorthCents(drift, destination, w.week - owned.boughtWeek, half))
       // ⚠ AND IT REALLY IS ABOVE THE DRIFT – the arm that fails when the premium is deleted.
       expect(assetWorthCents(w, owned, item)).toBeGreaterThan(drift)
+      // ⚠⚠ ...AND STILL BELOW THE DESTINATION, which is the arm that fails when the RAMP is deleted:
+      // revert `rampedWorthCents` to `derivedCents` and the row arrives on the buying week again.
+      expect(assetWorthCents(w, owned, item), `${owned.id} has not arrived yet – three seasons is three seasons`)
+        .toBeLessThan(destination)
     }
   })
 
@@ -185,9 +219,30 @@ describe('§2 the premium – option C, and it starts at exactly zero', () => {
     // they only survive one» true of the dearest thing on the shelf. Held twice as long at the SAME
     // reputation, the row grows by the drift alone: the ratio of the two worths is the drift's
     // ratio, with the premium cancelling out of both sides.
+    //
+    // ⚠⚠ RE-AIMED, ROUND 38 #16 (07.09), AND THE CLAIM IS KEPT BY HOLDING LONGER RATHER THAN BY
+    // LOWERING THE BAR. It read 5 seasons against 10 and asserted the drift ratio 1.159274074
+    // (1.03^5) to six places. The premium now arrives over a half-life instead of on the buying
+    // week, so while BOTH rows are still climbing the longer-held one has also closed more of its
+    // own gap, and the ratio carries that too: MEASURED 1.196541152 at 5-vs-10 seasons, against the
+    // drift's 1.159274074. That is the ramp and not a second rate – it goes away with time, which is
+    // the whole content of «a LEVEL, not a second rate», so the claim is asked where the ramp has
+    // finished. ⚠ The spans are arithmetic rather than a career: at 30-vs-35 the residual is still
+    // 6.2e-6 and would fail the tolerance below, so the arm is not passing on slack.
     const later = built('r38-8-ramp-c', ['academy-land'], 10 * WEEKS_PER_YEAR, [8, 9, 8])
     const grew = ownedOf(later, 'academy-land')!.valueCents / ownedOf(good, 'academy-land')!.valueCents
-    expect(grew).toBeCloseTo(Math.pow(1 + shopItem('academy-land')!.annualRateBps / 10_000, 5), 6)
+    const driftRatio = Math.pow(1 + shopItem('academy-land')!.annualRateBps / 10_000, 5)
+    expect(grew, 'five seasons in, the ramp is still adding to the drift').toBeCloseTo(1.196541152, 6)
+    expect(grew, '...and what it adds is above the drift alone').toBeGreaterThan(driftRatio)
+    // ⭐ AND ONCE BOTH ROWS HAVE ARRIVED IT IS THE DRIFT AND NOTHING ELSE – measured residual
+    // 1.9e-7 at 40 vs 45 seasons held, against 6.2e-6 at 30 vs 35.
+    const arrived = built('r38-8-ramp-d', ['academy-land'], 40 * WEEKS_PER_YEAR, [8, 9, 8])
+    const arrivedLater = built('r38-8-ramp-e', ['academy-land'], 45 * WEEKS_PER_YEAR, [8, 9, 8])
+    const grewArrived =
+      ownedOf(arrivedLater, 'academy-land')!.valueCents / ownedOf(arrived, 'academy-land')!.valueCents
+    expect(grewArrived, 'the premium cancels out of both sides once it is fully on both').toBeCloseTo(driftRatio, 6)
+    expect(Math.abs(grewArrived - driftRatio), 'and it is closer to the drift than the climbing pair is')
+      .toBeLessThan(Math.abs(grew - driftRatio))
   })
 })
 
@@ -312,6 +367,7 @@ describe('§5 the family gate – no other rung can be priced off a reputation i
   it('⚠⚠ the premium is applied to `academy` and refused to everything else, both directions', () => {
     const w = still('r38-8-gate')
     w.seasonHistory = [3, 4, 5].map((r, i) => seasonAt(i, r))
+    const rep = academyReputationOf(w)
     const premium = academyPremiumX(w)
     expect(premium, 'a reputable career, so the gate has something to refuse').toBeGreaterThan(1)
     // ⚠ THE SAME PRICE, THE SAME SPAN, THE SAME RATE, AND ONLY THE FAMILY DIFFERENT – which is what
@@ -325,9 +381,17 @@ describe('§5 the family gate – no other rung can be priced off a reputation i
     const asLand = { id: land.id, boughtWeek: w.week, paidCents: 1_000_000_00, valueCents: 1_000_000_00 }
     const flat = assetValueCents(house, 1_000_000_00, span)
     expect(assetWorthCents(later, asHouse, house), 'a house gets the drift and no premium').toBe(flat)
-    expect(assetWorthCents(later, asLand, land), 'the academy stage gets both')
-      .toBe(Math.round(flat * premium))
+    // ⚠⚠ RE-AIMED, ROUND 38 #16 (07.09) – WAS `toBe(Math.round(flat * premium))`, IS the same figure
+    // seen from three seasons out. The premium is a process now, not a purchase: the stage ramps
+    // toward `flat x premium` on the reputation's own half-life, so at 156 weeks held (rep 2.80,
+    // half-life 104 weeks, 1.5 half-lives, 64.6% of the gap closed) it reads $1,283,452 where it
+    // used to read $1,395,124 – with $1,092,727 of drift under it either way. The GATE is untouched
+    // and is what this arm is about; only the week the destination is reached moved.
+    expect(assetWorthCents(later, asLand, land), 'the academy stage gets both, on its way')
+      .toBe(rampedWorthCents(flat, Math.round(flat * premium), span, worthRampHalfLife(rep - 1, R.medianReputationOver1)))
     expect(assetWorthCents(later, asLand, land)).toBeGreaterThan(assetWorthCents(later, asHouse, house))
+    // ⚠ AND IT HAS NOT ARRIVED – the line that reddens if the ramp is reverted to the derived value.
+    expect(assetWorthCents(later, asLand, land)).toBeLessThan(Math.round(flat * premium))
   })
 
   it('⚠ and the BUSINESS branch still runs first – a brand is not priced off the academy dial', () => {
