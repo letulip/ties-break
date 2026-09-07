@@ -752,10 +752,20 @@ describe('pt4 — UI wiring', () => {
   })
 
   it('R9-21b: the Home tab carries an unread-news dot and a soft cue on arrival', () => {
-    const app = read('../src/App.vue')
-    expect(app).toContain('homeHasNews')
-    expect(app).toContain("playSfx('clickSoft')")
-    expect(app).toContain('lastSeenNewsId')
+    // ⚠ RE-AIMED BY WAVE B (07.09), NOT WEAKENED. The Home tab's dot, its news watermark and the key
+    // under it moved to `composables/tabSeen.ts` with the other three tab dots (U-04); the chime is
+    // a sound and stayed in the shell. All three claims here are POSITIVE - "the shell has this
+    // wiring" - so they go on `componentLogic`, the SFC plus the composables it imports, which is the
+    // helper that survives exactly this kind of move. Nothing about what is asserted changed.
+    //
+    // ⚠ AND IT IS `appLogic`, NOT `app` – tests/pin-hygiene.test.ts is FILE-scoped, so reusing the
+    // name this file already binds to a plain `read()` in other blocks makes every `expect(app).not.`
+    // in the file look like a negative assertion on a widened corpus. It caught this on the first
+    // run, which is the guard doing its job; one name per source kind per file, as CLAUDE.md says.
+    const appLogic = componentLogic('App.vue')
+    expect(appLogic).toContain('homeHasNews')
+    expect(appLogic).toContain("playSfx('clickSoft')")
+    expect(appLogic).toContain('lastSeenNewsId')
   })
 
   it('R9-23: reaction cues fire at the scoring instant; the *-end event starts are silent', () => {
