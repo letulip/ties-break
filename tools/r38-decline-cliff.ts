@@ -37,10 +37,12 @@ import { rivalMatchPlayer } from '../src/engine/season/rival'
 import { conditionMatchFactor } from '../src/engine/condition'
 import type { MatchOptions } from '../src/engine/match/types'
 // ⚠ `KidSkills` IS `engine/development`'s AND IS NOT ON THE BARREL. `engine/world` re-exports the
-// decomposed modules' VALUES under their historical names (CLAUDE.md, the P4 rules), and this type
-// was never one of them - every other probe that needs it imports it from `development` directly
-// (career-vs-bench.ts, childhood-bench.ts, growth-age-sweep.ts). `check:tools` is in `npm run check`
-// since 02.09 for exactly this: an archival probe that stops compiling is found at the gate.
+// decomposed modules' VALUES under their historical names (CLAUDE.md, the P4 rules) and this type was
+// never one of them - every other probe that needs it imports it from `development` directly
+// (career-vs-bench.ts, childhood-bench.ts, growth-age-sweep.ts). ⚠⚠ AND `check:tools` FAILS FAST, so
+// the one bad import took the WHOLE of `npm run check` down before the unit suite had run: both wave
+// agents hit it, both reproduced it at the branch point before touching anything, and both fixed it.
+// That is what `check:tools` has been inside `npm run check` for since 02.09.
 import type { KidSkills } from '../src/engine/development'
 import type { WorldState } from '../src/engine/world'
 

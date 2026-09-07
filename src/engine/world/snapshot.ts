@@ -45,13 +45,15 @@ import { rngFromSeed } from '../rng'
 import { COLLEGE_LEAGUE, COLLEGE_LEAGUE_ROUNDS, wonTheLeague } from '../collegeLeague'
 import { NATIONAL_TEAM, NATIONS_CUP_AWARDS_NOTHING, callUpOpponent, nationFinishLabel } from '../nationalTeam'
 import { axisReadings, buildRadar, buildTrainingRead } from '../radar'
-import { previewEvent, eventCrowd, eventTemperature, firstRoundDraw, ratedField } from '../season/preview'
+import { previewEvent, eventCrowd, eventTemperature, firstRoundDraw, ratedField, DRAW_LEAD_WEEKS } from '../season/preview'
 import { FRESH_KIT } from '../equipment'
 import type { EventPreview, RatedEntrant } from '../season/preview'
 import { BEST_N_BY_TRACK, WINDOW_BY_TRACK, isCountingResult, windowFromWeek, windowSlots, windowedBestSum } from '../season/ranking'
 import { isFieldProId, universeForTier } from '../season/fieldPros'
-import { entrantNationAt, weekFieldExclusion } from '../season/tournament'
+import { entrantNationAt, weekFieldExclusion, JUNIOR_TOUR } from '../season/tournament'
 import { rivalConditions } from '../season/rival'
+import { ratingOf } from '../match/rating'
+import { fold, foldNumber, FOLD_SEED, memoise } from './derivedCache'
 import type { AiPlayer, LadderTrack, RankingRow, SeasonEvent, TierId } from '../season/types'
 import type { SeasonResult } from '../season/ranking'
 import {
@@ -340,15 +342,53 @@ export function makeEventPreviewer(world: WorldState): EventPreviewer {
   // cohort, which every card of that surface shares. Memoised on (universe, surface) for the same
   // reason `ranking` is hoisted out of the loop: at most six folds against one per card, and the two
   // universes are genuinely different populations (a W card previews LIVE cohort ∪ field pros).
+  //
+  // ⭐⭐ ...AND SINCE WAVE A (A3) IT SURVIVES THE COMMAND TOO. The per-call map below is unchanged –
+  // it is what stops two cards of the same surface folding the cohort twice – and behind it sits a
+  // module-level memo keyed on the POPULATION'S CONTENT, so a plan change or a purchase reuses the
+  // table the last tick built. Measured with `node --cpu-prof` on the `pro` fixture, `ratedField` is
+  // **15.8%** of `toSnapshot`: it composes a full match player for every one of ~1,800 rows in the W
+  // universe, on every call, and the only thing that can move its answer is the world itself.
+  //
+  // ⚠ THE KEY IS THE UNIVERSE'S OWN, AND IT IS FOLDED IN FULL. `driftCohort` nudges a cohort row's
+  // attributes in place every week, so identity and length both hold still while the answer moves –
+  // see `appendOnlyToken`'s own warning about exactly this list.
   const ratedCache = new Map<string, RatedEntrant[]>()
   const ratedFor = (universe: 'junior' | 'wta', surface: SeasonEvent['surface']): RatedEntrant[] => {
     const key = `${universe}:${surface}`
     let table = ratedCache.get(key)
     if (!table) {
-      table = ratedField(universe === 'wta' ? wtaCtx!.universe : world.cohort, surface)
+      const rows = universe === 'wta' ? wtaUniverse! : world.cohort
+      table = memoise('rated', `${universeToken(universe)}|${surface}`, () => ratedField(rows, surface))
       ratedCache.set(key, table)
     }
     return table
+  }
+  /** WHAT `ratedField` READS OFF A POPULATION, folded to a token: the id (which is the whole of
+   *  `rivalGroundstrokes`' `gs:<id>` offset), the age it returns, and the four stored attributes
+   *  `rivalMatchPlayer` scales and `styleOf` reads. `name`, `nation`, `growth` and `potential` reach
+   *  neither the rating nor the age, so they are deliberately absent – a key that folds what the
+   *  answer does not depend on buys a miss every time it moves. ⚠ If `ratedField` ever learns to read
+   *  a fifth field, it joins this fold in the same commit; `TB_SNAPSHOT_VERIFY=1` over the golden
+   *  corpus is what makes that a red test rather than a memory. */
+  const universeTokens = new Map<string, string>()
+  const universeToken = (universe: 'junior' | 'wta'): string => {
+    let token = universeTokens.get(universe)
+    if (token === undefined) {
+      const rows = universe === 'wta' ? wtaUniverse! : world.cohort
+      let h = FOLD_SEED
+      for (const p of rows) {
+        h = fold(h, p.id)
+        h = foldNumber(h, p.ageYears)
+        h = foldNumber(h, p.serve)
+        h = foldNumber(h, p.ret)
+        h = foldNumber(h, p.composure)
+        h = foldNumber(h, p.stamina)
+      }
+      token = `${universe}.${rows.length}.${h}`
+      universeTokens.set(universe, token)
+    }
+    return token
   }
   const standingCache = new Map<LadderTrack, RankingRow[]>()
   const standingFor = (tier: TierId): RankingRow[] => {
@@ -366,21 +406,33 @@ export function makeEventPreviewer(world: WorldState): EventPreviewer {
   // contain. Same lazy-once shape as `ranking` above, paid only on windows that actually show a W
   // card; `previewEvent`'s own contract is untouched, it is simply handed the professional
   // universe as the cohort (the parameter always WAS "who can be drawn").
-  let wtaCtx: { universe: AiPlayer[]; ranking: RankingRow[]; conditions: Map<string, number> } | null = null
-  const wtaWorldFor = (e: SeasonEvent) => {
-    wtaCtx ??= {
-      universe: universeForTier(e.tier, world.cohort, fieldProsOf(world)),
-      ranking: rankingFor(world, 'wta'),
-      conditions: rivalConditions(world.results, world.week),
-    }
-    return { seed: world.seed, week: world.week, cohort: wtaCtx.universe, results: world.results }
-  }
+  //
+  // ⚠ SPLIT IN TWO AT WAVE A (A3), AND THE HALVES ARE STILL LAZY-ONCE. `universe` is what the BAND's
+  // population and its content key are folded from; `ranking` and `conditions` are what the DRAW
+  // reads, and a card past `DRAW_LEAD_WEEKS` makes no draw. Keeping them in one object meant every
+  // window that showed a single W card paid `rivalConditions` – a walk of the whole 2,234-row ledger
+  // – even when not one card in it could name an opponent. Nothing about the values moved: both
+  // halves are still built exactly once, off the first W event that asks, and `universeForTier`
+  // answers the same for every W rung (it branches on the TRACK), so which W card asks first cannot
+  // change what either half holds.
+  let wtaUniverse: AiPlayer[] | null = null
+  const wtaUniverseFor = (e: SeasonEvent): AiPlayer[] =>
+    (wtaUniverse ??= universeForTier(e.tier, world.cohort, fieldProsOf(world)))
+  let wtaDraw: { ranking: RankingRow[]; conditions: Map<string, number> } | null = null
+  const wtaDrawFor = (): { ranking: RankingRow[]; conditions: Map<string, number> } =>
+    (wtaDraw ??= { ranking: rankingFor(world, 'wta'), conditions: rivalConditions(world.results, world.week) })
+  const wtaWorldFor = (e: SeasonEvent) => ({
+    seed: world.seed,
+    week: world.week,
+    cohort: wtaUniverseFor(e),
+    results: world.results,
+  })
   // ...and the card obeys the same week-exclusivity rule its own bracket will (W2-FIELD2 §8.2), or
   // it would name an opponent the higher rung has already taken. Computed HERE because only this
   // function holds `world.season`; `previewEvent`'s own contract stays a single event's worth of
   // inputs. Lazy per card and only on the W track — a J or domestic card never asks.
   const wtaExclusionFor = (e: SeasonEvent) =>
-    weekFieldExclusion(e, world.season, wtaCtx!.universe, wtaCtx!.ranking, world.seed, wtaCtx!.conditions)
+    weekFieldExclusion(e, world.season, wtaUniverseFor(e), wtaDrawFor().ranking, world.seed, wtaDrawFor().conditions)
   // ⭐⭐ THE ARGUMENTS, ASSEMBLED ONCE PER EVENT AND SPENT TWICE. Both readings below – the whole card
   // and the draw alone – are handed the SAME six values, so «the card and the fact behind it agree»
   // cannot decay into «two assemblies that happen to agree». The W branch and the junior/domestic
@@ -398,7 +450,7 @@ export function makeEventPreviewer(world: WorldState): EventPreviewer {
     return TIERS[e.tier].track === 'wta'
       ? {
           pWorld: wtaWorldFor(e) as PreviewWorld,
-          ranking: wtaCtx!.ranking,
+          ranking: wtaDrawFor().ranking,
           kid,
           excluded: wtaExclusionFor(e),
           standing: standingFor(e.tier),
@@ -419,6 +471,47 @@ export function makeEventPreviewer(world: WorldState): EventPreviewer {
   }
   return {
     preview: (e: SeasonEvent): EventPreview => {
+      // ⭐⭐ WAVE A, A3 – THE CARD PAST THE DRAW HORIZON IS A MEMO, AND IT IS THE WHOLE CARD RATHER
+      // THAN `previewEvent`'S HALF OF IT. Measured with `node --cpu-prof` on the `pro` fixture, of
+      // `preview`'s 46.4% of a snapshot only 10.3 points are inside `previewEvent`: the other 36 are
+      // `argsFor` assembling the arguments – `ratedField` 15.8, `weekFieldExclusion` 13.5. A memo
+      // wrapped around `previewEvent` alone would have left three quarters of the cost outside it.
+      //
+      // ⚠⚠ WHY THE KEY IS EXACT OUT HERE, AND IT IS `firstRoundDraw`'s OWN FIRST LINE THAT MAKES IT
+      // SO. Past `DRAW_LEAD_WEEKS` that function returns null before reading anything, so on this
+      // branch there is no opponent – and with no opponent `previewEvent` reads `ranking`,
+      // `standing`, `excluded` and `pinnedOpponentId` NOWHERE. What is left is exactly seven inputs,
+      // and every one of them is in the key below:
+      //
+      //     drawMade                     false, by the branch
+      //     firstMatchChance/opponent*   null / '' , by the absent opponent
+      //     kidRating                    ratingOf(kid, surface)          -> `mine`
+      //     fieldStrength / fieldChance  (tierExpectedField(tier, rated), ratingOf(kidAtRest))
+      //                                                                  -> `tier`, `rated`, `rest`
+      //     temperatureC / crowd         f(seed, event.id, surface, tier)
+      //
+      // `rated` is pinned by (universe content, surface) – the same token `ratedFor` keys on – so
+      // the whole of the band's population is in the key without folding it twice. And the two
+      // ratings are NUMBERS rather than a digest of her: everything she is reaches this card through
+      // them, so a racket that moves her rating moves the key, and one that does not, does not.
+      //
+      // ⚠ THE NEAR CARD IS UNTOUCHED. Inside the horizon the answer names a girl drawn out of a
+      // field that this week's conditions, standings and exclusions all move; it is memoised
+      // nowhere, exactly as before.
+      if (e.week - world.week > DRAW_LEAD_WEEKS) {
+        const help = coachTravelFareFor(world, e) > 0
+        const kid = kidMatchPlayerFor(world, e.surface, help)
+        const rest = kidAtRestFor(e.surface, help)
+        const universe = TIERS[e.tier].track === 'wta' ? 'wta' : 'junior'
+        if (universe === 'wta') wtaUniverseFor(e)
+        const key =
+          `far|${world.seed}|${e.id}|${e.tier}|${e.surface}|${universeToken(universe)}` +
+          `|${ratingOf(kid, e.surface, JUNIOR_TOUR)}|${ratingOf(rest, e.surface, JUNIOR_TOUR)}`
+        return memoise('preview', key, () => {
+          const a = argsFor(e)
+          return previewEvent(a.pWorld, e, a.ranking, a.kid, a.excluded, a.standing, a.kidAtRest, a.rated, a.pinned)
+        })
+      }
       const a = argsFor(e)
       return previewEvent(a.pWorld, e, a.ranking, a.kid, a.excluded, a.standing, a.kidAtRest, a.rated, a.pinned)
     },

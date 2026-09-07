@@ -291,8 +291,153 @@ the repo keeps is the derived statistics below.
   reputation premium with the paid price as a floor. ⚠ Option B (price it on earnings like the brand)
   was measured and refused – it would have cut his academy from $5.0M to $1.4M.
 
-- [ ] **9. Wave A – the snapshot cache** – he pulled it into this round. Plan already written:
+- [x] **9. Wave A – the snapshot cache** – he pulled it into this round. Plan already written:
   `docs/specs/next-waves-2026-09.md` Wave A, steps A1-A5. Nothing about saves changes.
+
+  **SHIPPED, A1-A5, and `SAVE_SCHEMA_VERSION` did not move** – no migration, no new golden fixture,
+  no user-facing string. `toSnapshot` hot: **14.7 → 3.3 ms** on the professional career and
+  **20.5 → 5.9 ms** on the junior one, against the spec's target of «13 ms → 5 ms or less».
+
+  **A1 – the bench first** (`tools/snapshot-bench.ts`, `npm run bench:snapshot`). It times the
+  worker's real loop – `structuredClone` → command → `toSnapshot` – per command kind on the three
+  careers the 05.09 review profiled. Baseline before a single memo existed, 25 repeats, load 3.3-4.4,
+  ms:
+
+  | fixture | repeat | setPlan | setPhysio | buyKit | enterEvent | tick | clone |
+  | --- | --- | --- | --- | --- | --- | --- | --- |
+  | junior@w120 | 18.53 | 17.83 | 17.81 | 18.20 | 18.21 | 19.60 | 1.7 |
+  | pro@w412 | 11.97 | 11.48 | 11.60 | 11.37 | 11.76 | 11.94 | 2.2 |
+  | golden@w333 | 2.59 | 2.47 | 2.46 | refused | 2.44 | 1.36 | 1.8 |
+
+  It reproduces P-02 within noise (the review read 13.0 ms hot / 2.3 ms clone on `pro`). The golden
+  v70 career is at college, which is why it is cheap – no upcoming feed to preview – and why `buyKit`
+  is refused there: `guardNotEnded`, the engine being right.
+
+  **⚠ WHERE THE COST ACTUALLY WAS, and it is not where the review's remedy pointed.**
+  `node --cpu-prof` over a snapshot-only loop on `pro`, inclusive share of `toSnapshot`:
+
+  | | | | |
+  | --- | --- | --- | --- |
+  | `upcomingEvents` | 55.2% | `ratedField` | 15.8% |
+  | ` preview` | 46.4% | `weekFieldExclusion` | 13.5% |
+  | `  argsFor` | 36.0% | `kidPoints` | 11.4% |
+  | `  previewEvent` | 10.3% | `rankingFor` | **7.7%** |
+  | ` entryStatus` | 5.1% | `tierExpectedField` | 7.4% |
+
+  Two corrections fell out of it. `kidPoints` is the LARGER of the two ledger folds, not `rankingFor`
+  – the entry gates ask it once per upcoming event and each ask re-filters all 2,234 rows – so A2
+  memoises both on the same content. And three quarters of a card's cost is `argsFor` ASSEMBLING the
+  arguments rather than `previewEvent` folding them, so A3's memo sits one frame further out than the
+  spec's wording suggests; wrapped around `previewEvent` alone it would have bought about a quarter
+  of what it buys.
+
+  **A2 – the ranking table's key and memo, alone** (`src/engine/world/ladder.ts`,
+  `src/engine/world/derivedCache.ts`). Module-level, keyed by CONTENT: `(track, week, ledger, roster)`
+  plus `(seed, fieldSeasonPoints)` on the W table; `kidPoints` takes the narrower key its fold
+  deserves. The ledger's digest is paid once per snapshot through `appendOnlyToken`, whose
+  append-only precondition was checked rather than assumed – three `push` sites, one filter that
+  builds a new array, one wholesale replacement, and no line in `src/engine` that writes a row's
+  fields. `world.cohort` is explicitly NOT such a list (`driftCohort` moves rows in place) and is
+  folded in full. A2 alone: junior 20.5 → 12.2, pro 14.5 → 10.4 hot.
+
+  **A3 – the far-horizon card, and the field it is banded against** (`src/engine/world/snapshot.ts`).
+  Two memos. `ratedField` per (universe content, surface) – it composes a full match player for every
+  one of ~1,800 rows in the W universe. And the WHOLE card past `DRAW_LEAD_WEEKS`, keyed
+  `(seed, event id, tier, surface, universe token, her rating on that surface, her rested rating)`.
+  ⭐ The key is exact out there and `firstRoundDraw`'s own first line is why: past the horizon it
+  returns null before reading anything, so with no opponent the card reads `ranking`, `standing`,
+  `excluded` and the pinned draw NOWHERE. The near card is untouched and memoised nowhere. One
+  structural change rides with it: `wtaCtx` splits into the universe (what the BAND is folded from)
+  and the draw's ranking + conditions, so a window of far cards no longer walks the whole ledger
+  through `rivalConditions` to answer a question none of them asks.
+
+  **A1's probe re-run, both arms on this commit, separated by `TB_SNAPSHOT_CACHE` only** – the
+  control CLAUDE.md asks for, expressed as a switch rather than a worktree. 25 repeats, load 4.9-5.4,
+  snapshot hot, ms:
+
+  | fixture | command | off | on | delta |
+  | --- | --- | --- | --- | --- |
+  | junior@w120 | repeat | 20.51 | **5.85** | −71% |
+  | junior@w120 | setPlan | 20.05 | **5.74** | −71% |
+  | junior@w120 | setPhysio | 20.68 | **6.92** | −67% |
+  | junior@w120 | buyKit | 19.97 | **5.99** | −70% |
+  | junior@w120 | enterEvent | 19.92 | **5.43** | −73% |
+  | junior@w120 | tick ⚠ | 21.43 | 15.54 | −27% |
+  | pro@w412 | repeat | 14.71 | **3.27** | −78% |
+  | pro@w412 | setPlan | 14.68 | **3.46** | −76% |
+  | pro@w412 | setPhysio | 14.14 | **3.14** | −78% |
+  | pro@w412 | buyKit | 13.10 | **3.11** | −76% |
+  | pro@w412 | enterEvent | 12.93 | **2.96** | −77% |
+  | pro@w412 | tick ⚠ | 13.16 | 12.19 | −7% |
+  | golden@w333 | repeat | 3.11 | 2.16 | −31% |
+  | golden@w333 | enterEvent | 3.44 | 2.08 | −40% |
+  | golden@w333 | tick ⚠ | 1.81 | 1.94 | +7% |
+
+  ⚠ **The `tick` rows run against an EMPTIED memo**, which is what a new week really is – without
+  that, every repeat ticks the same base world to the same week and the second one would read the
+  first one's cache. What they still show is within-snapshot de-duplication of ~490 identical folds,
+  which is real and is not reuse across a command. ⚠ And `golden`'s +7% is the honest cost of the
+  keys themselves on a career the memo cannot help: she is at college, there is no feed, and building
+  a key buys nothing. It is ~0.1 ms. ⚠ Two more numbers that are NOT in the medians: `pro buyKit`
+  reads **8.75 ms cold** – a purchase moves her rating, so every card's key changes and the first
+  snapshot after it re-previews the window – and the bench's own null-arm check prints
+  `ranking 242,761 hit / 673 miss · preview 6,890 / 1,370 · rated 293 / 284` with the cache on and
+  `0/0` with it off, so neither arm is measuring the wrong tree.
+
+  **A4 – `TB_SNAPSHOT_VERIFY=1`** (`tests/snapshot-cache-verify.test.ts`, in `HEAVY_SIM_FILES`).
+  Every memoised fold computes both answers and throws on a difference NAMING THE KEY; off in the
+  product, on for all 71 golden fixtures and the six e2e careers. **Mutation-verified, and the second
+  mutation found a real hole in the arm rather than confirming it:**
+
+  * `rankingKey` with the ledger dropped → RED on the first fixture,
+    `the ranking memo returned a different answer than a fresh fold for key "itf|w3|199.4051447544"`,
+    cached all-zero table against a fresh one with 1,800 points – thrown inside `migrateSave` →
+    `replayMainState` → `recomputeKidRank`, i.e. on the LOAD path, which is exactly where his
+    question about old saves lives.
+  * the far-card key with her two RATINGS dropped → still **green, 79/79**. No fixture in the corpus
+    presents two worlds that share a week, a cohort and an event id while she is a different player.
+    A guard that cannot fail on the mutation it exists for is not a guard, so the kit-purchase case
+    was added – buy her a rung of strings, which moves her rating and nothing either table reads –
+    and the same mutation then reads
+    `the preview memo returned a different answer … for key "far|e2e-pro-0|8-w416-w15|w15|hard|wta.1799.2520396076"`.
+    It asserts the rating actually moved, so it cannot decay into two identical worlds agreeing.
+
+  It also carries an anti-vacuity census: 21 of the 71 fixtures are at college and preview nothing,
+  so the corpus is required to reach all three memos (measured today: 49 fixtures carry a feed;
+  16,229 / 390 / 91 misses across it). Both mutations reverted, files diffed clean against their
+  pre-mutation copies. 80/80 green in 20.6 s.
+
+  **A5 – the frozen careers and the parity spec.** `tests/coachTravelEdgeFixtures.ts` is untouched by
+  this branch and its three hashes are **unmoved**, asserted green:
+
+  ```
+  middleGrinder    0ea52c5e584c92945c926cd41ad13a6d5a004dc9048937a047e0d052584ee051
+  eliteGrinder     58025fd6210842129fca13520f3c4b664ebe584006f1f9ad7c3895cc0eba15f3
+  selfTravelling   24353723dc9af07d04d4d4eddb534d9d573939436564f22f2ba7362643242867
+  ```
+
+  `coach-travel-edge`, `-helping`, `-older-schemas`, `condition` (the frozen MAIN capture 41550 /
+  `e6b0c709`), `goldenSaves`, `migrations` and `round32-brand-inertia`: **377/377 green**. The parity
+  harness `e2e/parity.spec.ts` re-run against a fresh production build: **29/29 green in 18.1 s**.
+  Nothing here draws on any RNG stream, so the MAIN capture needed no re-pin – and could not have
+  moved.
+
+  **The gate, read out of the files and not out of a notification.** `CHECK_EXIT=0` – bulk unit 4,342
+  tests + 13 heavy shards, component 142 files / 1,604 tests, seven doc gates, both typechecks, the
+  build and the install-size guard (15,768 KiB, 616 under the ceiling). `SIM_EXIT=0` – 13 files green
+  in 372 s, `snapshot-cache-verify` among them at 19 s. ⚠ Both background completion notices claimed
+  *exit code 0* for the FIRST `check`, whose log said `CHECK_EXIT=2`; CLAUDE.md's note about that lie
+  earned its place again.
+
+  ⚠ **One inherited red had to be cleared to gate at all**, and it is not this wave's:
+  `tools/r38-decline-cliff.ts` arrived with `91084738` importing `KidSkills` from the `world` barrel,
+  which does not export it. `check:tools` fails fast, so that one line took the unit suite, the
+  component suite, the build and the install-size guard down with it for everybody on `round/38`.
+  Reproduced at `91084738` in a detached worktree – identical error, exit 2 – then fixed the way
+  `52c9ab78` fixed `r38-save-read`: the import moved to `src/engine/development`, where the type is
+  declared, and nothing else touched.
+
+- [ ] **10. Wave B – one owner out of `App.vue`** – same, steps B1-B4.
 
 - [x] **10. Wave B – one owner out of `App.vue`** – same, steps B1-B4. **SHIPPED, all four steps.**
   `src/composables/tabSeen.ts` owns the four tab "seen" marks, their four watchers and their four dot
