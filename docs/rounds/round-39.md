@@ -10,17 +10,17 @@ Class: **build** · **answer** · **measure** · **ask** · **already-works**
 
 ---
 
-- [ ] **1. «A spare key on her own ring... В 35 лет звучит уже довольно странно. Давай проведём
+- [>] **1. «A spare key on her own ring... В 35 лет звучит уже довольно странно. Давай проведём
   общее ревью этих фразочек на home с целью максимально убрать вот такие вот несоответствия»** –
   **build.** Home's flavour lines are written for a child and are still printed at 35. This is not
   one string: he is asking for a SWEEP of the home copy against the age it is shown at. Done means
   every home line has an age (or life-stage) gate that a mounted test can fail on.
 
-- [ ] **2a. «„Past her peak – down 57 places on the year, and her body has about 6 more seasons in
+- [>] **2a. «„Past her peak – down 57 places on the year, and her body has about 6 more seasons in
   it." – вот это как раз можно на карточку тренера в списке тренеров перенести, много текста»** –
   **build.** The long decline sentence moves off Home and onto the coach card in the coach list.
 
-- [ ] **2b. «А вот на home хотелось бы увидеть что-то короткое, емкое и яркое (в плане цвета), как
+- [>] **2b. «А вот на home хотелось бы увидеть что-то короткое, емкое и яркое (в плане цвета), как
   было до этого про потолок и прочее»** – **build.** Home keeps a SHORT, coloured read. ⚠ The old
   ceiling plate is the shape he is naming; match its length and its colour treatment, not its words.
 
@@ -44,7 +44,12 @@ Class: **build** · **answer** · **measure** · **ask** · **already-works**
   signed a 2-season one; the 3-year ad deals land at wta#7 and wta#16 alike. So this is not «all
   contracts became 12 months» – it is a flat 1-3 ladder with no top end.
 
-- [ ] **4. «В яхтах и (подразумеваю) самолётах на уже купленных тоже убрать с карточки серую надпись
+  **OWNER (08.09):** «ну давай тоже какой-то ресерч проведем может быть на эту тему, чтобы было на
+  что опираться? я бы сказал, что для растущей карьеры не больше, чем на 12 месяцев, для топ-100 до
+  1-2 года, топ-50 1-3 года, для топ-20 и выше до 10 лет. Но может у тебя есть предложения лучше.»
+  → research on real endorsement terms is MINE, then the ladder proposal comes back to him.
+
+- [>] **4. «В яхтах и (подразумеваю) самолётах на уже купленных тоже убрать с карточки серую надпись
   „paid ..."»** – **build.** The `paid …` caption must not show on an owned yacht or plane. He
   assumes planes have it too – verify rather than assume, and fix every shelf rung that shows it.
 
@@ -77,6 +82,12 @@ Class: **build** · **answer** · **measure** · **ask** · **already-works**
   **One week turns $250,000 into $1.84 million** – 7.4x, and the cycle restarts the moment it is
   sold. His own brand: paid $250,000 at week 597, held 235 weeks, now $35,879,827.
 
+  **OWNER (08.09):** «мне сложно проверить, но кажется что у меня свежекупленный бренд возвращался к
+  своей стоимости уже в течение 5 недель… Мне кажется, что нам надо как-то вообще более вариативно
+  смотреть на цену бренда с точки зрения развития карьеры. Но и с продажей надо что-то тоже подумать
+  как быть. Надо подумать хорошенько. У тебя какие мысли?» → the measured 5-week point is $8,243,530
+  (23% of derived) – his feel is right in kind. Design proposal is MINE, back to him before any build.
+
 - [ ] **6. «2 года подряд спонсор с духами не пришёл»** – **measure.** A named sponsor category
   absent two seasons running. Is the perfume slot gated (rank, fame, exclusivity) or is it draw
   luck? Measure the arrival rate before touching anything.
@@ -87,6 +98,10 @@ Class: **build** · **answer** · **measure** · **ask** · **already-works**
   and her WTA end-rank since is **#16, #14, #15**. Three seasons out of the top ten, so the most
   valuable category in the game stopped writing. ⚠ Worth telling him plainly: the perfume deal IS
   the top-10 bonus, and it is what sliding to #15 costs.
+
+  **OWNER (08.09), REOPENING THE ANSWER:** «я это помню, но кажется, что 2 сезона в топ-10 прошли без
+  него.» → so the question is now the offer CADENCE, not the gate: when did she hold a top-10 rank,
+  when did fragrance offers arrive, and what cooldown sits between ad offers of one category. MINE.
 
 - [ ] **7. «Странно, что после шлема в 40м году она не смогла взять больше ни одного»** –
   **measure.** One Slam in season 40 and never again. Read her actual title history and the field
@@ -99,6 +114,12 @@ Class: **build** · **answer** · **measure** · **ask** · **already-works**
   825) and 10 WTA500s. One extra round cannot explain it: at her observed 70.4% match rate a slam QF
   is p^4 = 24%, so eleven attempts should have produced two or three. ⚠ A real asymmetry between the
   slam draw and every other tier, and it needs its own measurement before any fix.
+
+  **OWNER (08.09), REFRAMING:** «вот у меня и вопрос тогда, а корректно ли работает наша формула по
+  скиллам и прочему, тут даже не совсем в ранге и позиции в таблице вопрос, сколько в её скиллах и
+  тому, как они относятся к остальным соперникам, особенно ниже 50» → #7 and #10 merge into ONE
+  audit: her skills against the field's, expected win probabilities from the match model, actual
+  results over them – slams and sub-top-50 opponents as the two lenses. MINE.
 
 - [ ] **8. «Meridian sport прислал контракт за 300к для #7»** – **measure then build.** A world #7
   offered $300k reads as insulting. Measure the offer curve against rank and check whether the top
@@ -120,7 +141,7 @@ Class: **build** · **answer** · **measure** · **ask** · **already-works**
   Every ad category roughly HALVED between season 11 and season 14 while she stayed top-20. That is
   the item; the $300k offer is one symptom of it.
 
-- [!] **9. «Опять just one day. Я просил сделать много вариантов подарков для разных возрастных
+- [>] **9. «Опять just one day (REOPENED against round 26 #9). Я просил сделать много вариантов подарков для разных возрастных
   групп. Мне кажется, что вполне допустимо чтобы что-то повторялось, но не больше 2-3 раз за всю
   карьеру и с разницей не меньше 5 лет»** – **REOPENED against round 26 #9.**
 
@@ -139,7 +160,7 @@ Class: **build** · **answer** · **measure** · **ask** · **already-works**
   Against his rule (at most 2-3 a career, never under 5 years apart) that is double the count at a
   third of the spacing. Every other gift appears exactly once.
 
-- [ ] **9c. NOT RAISED BY HIM, found in the same log: two birthdays one week apart.** Week 569
+- [>] **9c. NOT RAISED BY HIM, found in the same log: two birthdays one week apart.** Week 569
   `day` at age 24 and week 570 `dog` at age 24. Folded in because it lives in the same file.
 
 - [ ] **10. «Очень печально смотреть, как она регулярно сливает кому-то, сильно ниже #50 (хотя может
@@ -179,6 +200,10 @@ Class: **build** · **answer** · **measure** · **ask** · **already-works**
   cost $12,000,000 and is worth $21.1M; the brand cost **$250,000** and is worth $35.9M. That gap –
   143x on the purchase price – is the same fact as #5.
 
+  **OWNER (08.09):** «видимо вторая половина её, но ее не видно, поэтому и был вопрос, т.к. в
+  интерфейсе доход около 17к» → the engine pays $33,169 and his screen says ~17k. Find where the
+  half goes on the MoneyScreen and either show it or name it. MINE to measure, then a small build.
+
 - [ ] **12. «Мне кажется, что когда у нас появляется самолёт можно перелёты зачеркнуть на карточке
   и не считать в неделе: мы и так платим за самолёт еженедельно. Или это не так работает?»** –
   **answer first, then build if it confirms.** He is asking how it works before asking for a change.
@@ -198,7 +223,11 @@ Class: **build** · **answer** · **measure** · **ask** · **already-works**
   call), and the money at stake is small: the whole remaining calendar is a few thousand dollars
   against the plane's own upkeep.
 
-- [ ] **13a. «Ей почти 29, а тренер говорит, что она протянет ещё 13 сезонов, при этом она уже
+  **OWNER (08.09):** «окей, хорошо, но вот я и пытаюсь понять он должен их вообще снимать или нет,
+  т.к. мы уже платим недельный тариф, я не знаком так глубоко с частной авиацией. Нужен небольшой
+  ресерч.» → research on what owning an aircraft actually removes per trip is MINE, verdict back to him.
+
+- [>] **13a. «Ей почти 29, а тренер говорит, что она протянет ещё 13 сезонов, при этом она уже
   начинает постепенно сдавать, что видно в статистике сезонов: уже не топ-10»** – **build.** The
   coach's remaining-seasons number contradicts the decline the same screen is reporting. 13 seasons
   at 29 puts her at 42.
@@ -208,7 +237,7 @@ Class: **build** · **answer** · **measure** · **ask** · **already-works**
   `seasonsOfBodyLeft`, which extrapolates from `physicalMean / peakPhysical` – and hers is **63.03
   of 63.19 = 99.7%**. She has barely declined yet, so the extrapolation runs to age 42.
 
-- [ ] **13c. NOT RAISED BY HIM, found in the same sentence: «down 1 places».** `coachDeclineNote`
+- [>] **13c. NOT RAISED BY HIM, found in the same sentence: «down 1 places».** `coachDeclineNote`
   interpolates `down ${yearMove} places` with no singular. Folded in – same file, same line.
 
 - [~] **13b. «Но очень хорошо, что тренер стал обращать внимание, что перформанс падает»** –
@@ -219,21 +248,35 @@ Class: **build** · **answer** · **measure** · **ask** · **already-works**
   **build + ask.** The retirement-thought copy repeats verbatim. He is asking BOTH for variety and
   what the variants should be, so the variants come back to him as a choice before they ship.
 
+  **OWNER (08.09):** «да, подумай пожалуйста» → the variant sets and the she-is-done mechanism are
+  MINE to draft, back to him before any build.
+
 - [ ] **14b. «И как-то надо подсветить, когда она сама дальше вообще не готова играть продолжать.
   Какой-то механизм для этого»** – **ask then build.** Today the line always ends «She will keep
   playing if you want her to». He wants a state where she genuinely will not, and a signal for it.
   That is a mechanic, not copy – sharpen it to a choice before building.
 
-- [ ] **15a. «В прологе во время травмы нужно как-то аккуратно объяснить игроку, что всё нормально
+- [>] **15a. «В прологе во время травмы нужно как-то аккуратно объяснить игроку, что всё нормально
   и ребёнок выживет и вернётся в строй»** – **build.** A first-time player reads a child's injury as
   a catastrophe. The prologue must say, in its own voice, that she recovers.
 
-- [ ] **15b. «И вообще чуть больше тепла в этих экранах надо сделать, как мне кажется. Например на
+- [>] **15b. «И вообще чуть больше тепла в этих экранах надо сделать, как мне кажется. Например на
   варианте rest добавить hug и ещё как-то над самим текстом подумать»** – **build.** Warmth pass on
   the prologue injury screens; `hug` named explicitly as an addition to the `rest` option.
 
 ---
 
-## Bundles
+## Bundles (dispatched 08.09, owner's «можно запускать дальше»)
 
-To be filled in at step 3, after triage – no two bundles may touch the same file.
+No two bundles touch the same file. Each agent appends to its OWN ledger lines only, on its own
+branch, and reports per item number.
+
+| wave | branch | items | surface |
+| --- | --- | --- | --- |
+| A | `r39/wave-a` | 1, 2a, 2b, 13a, 13c | Home's flavour + coach voice: HomeScreen.vue, coachMarket.ts, the coach list card |
+| B | `r39/wave-b` | 4 | the shelf's owned-asset cards (yacht, plane) |
+| C | `r39/wave-c` | 9, 9c | birthday.ts and its tests |
+| D | `r39/wave-d` | 15a, 15b | the prologue injury screens |
+
+MINE, not waved: 3 + 12 (research), 5 (design), 6 + 8 (sponsor economy measure), 7 + 10 (the skill
+formula audit), 11 (the invisible half of the academy's income), 14 (variants + the mechanism).
