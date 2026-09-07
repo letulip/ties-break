@@ -14,7 +14,14 @@ import { bestFitCoachAt, buildCoachRoster, coachBillRangeCents, coachById, coach
 import { OFF_SEASON_WEEKS, TIERS, TIER_LADDER, WEEKS_PER_YEAR } from '../season/calendar'
 import { ECONOMY } from '../economy'
 import type { LadderTrack, SeasonEvent, TierId } from '../season/types'
-import { ageFactor, reachableHeadroomShare, SKILL_KEYS, trainFactor } from '../development'
+// ⭐ ROUND 38 #7b – the decline read's four ingredients, every one of them already this engine's own:
+// her career's resolved curve (`ageCurveOf`, NOT the shipped constant), what a week past the peak
+// costs her (`declineFactor`), and the body-share the ending itself reads (`physicalMean`).
+import { ageCurveOf, ageFactor, declineFactor, physicalMean, reachableHeadroomShare, SKILL_KEYS, trainFactor } from '../development'
+import type { AgeCurveBounds } from '../development'
+// ⚠ `ending.ts` IMPORTS ONLY `./kidLife` AND THE PROTOCOL'S TYPES, so this runs one way exactly as
+// `./masseur` and `./business` above do. `world/college.ts` reads the same constants the same way.
+import { ENDINGS } from '../ending'
 import { LADDER_LABEL, LADDER_TRACKS } from '../../shared/protocol'
 import type { CoachEdgePlacement, CoachMarketRow, CoachTier, HandoverBaseBand, HouseholdWeekly, KitOfferTerms, PlayerProfile } from '../../shared/protocol'
 import { managerCommissionCents, parentIncomeForWeekCents } from '../economy'
@@ -34,7 +41,10 @@ import { assetWorthCents, ownedAssets, shopItem, weeklyAssetUpkeepCents } from '
 // Round 29 part four P7 – the businesses' one arithmetic; the till banks the same two functions.
 import { academyWeeklyIncomeCents, merchFamilyWeeklyIncomeCents } from './business'
 import { addEvent, seasonIndexOf, seasonStartWeek } from './ledger'
-import { ageAtWeek, START_AGE_YEARS } from './age'
+// ⚠ `kidAgeExact` AND NOT `ageAtWeek` FOR THE DECLINE GATE. The roster's band is birth-month-free on
+// purpose (see the header); the CURVE is not – `phaseGrowth.ts` hands `growWeek` her exact age, so
+// the week her growth stops and the week this module says it stopped have to be the same week.
+import { ageAtWeek, kidAgeExact, START_AGE_YEARS } from './age'
 // ⭐ HER BIRTH BUILD, RE-DERIVED, and two readers need it: `handoverRoomBand` measures how big her
 // room is (`potential - born`) and `realisedShare` - round 34 #2b - measures how much of it she has
 // FILLED, because the skill she was born with is not an achievement. Pure and seed-only
@@ -1107,13 +1117,170 @@ const TRAVEL_EDGE_LINE = 'Twice that on the trips the coach travels to.'
  * and nothing persisted to give it any. `tests/coachTiers.test.ts` ticks a real career and asserts
  * exactly that.
  *
+ * ⚠⚠⚠ AND THE NO-FLICKER CLAIM ABOVE IS WHY ROUND 38 #7b HAD TO EXIST. Every word of it is true
+ * WHILE SHE IS GROWING and false the week she stops: `growSkills` only ever adds until
+ * `declineFactor` opens, so past that week the numerator FALLS and the band walks BACKWARDS. See
+ * `coachDeclineNote` below for the sentence a 35-year-old was actually being shown. From that week
+ * this function no longer reads `realisedShare` at all.
+ *
  * Pure, zero draws, derived at snapshot time.
  */
 export function coachRoomNote(world: WorldState): string {
+  // ⚠⚠ PAST THE PEAK THE QUESTION CHANGES, AND SO DOES THE ANSWER (round 38 #7b). The headroom read
+  // below is not wrong – it is measuring something that has stopped being the subject.
+  const decline = coachDeclineNote(world)
+  if (decline) return decline
   const realised = realisedShare(world)
   if (realised === null) return ''
   const band = ROOM_BANDS[coachRoomBandIndex(realised)]
   return `${band.label}${ROOM_NOTE_SEP}${band.note}`
+}
+
+// =================================================================================================
+// ⭐⭐⭐ ROUND 38 #7b / #6d – WHAT IS GOING, RATHER THAN WHAT IS LEFT
+// =================================================================================================
+//
+// ⚠⚠ THE DEFECT, MEASURED ON THE OWNER'S OWN WEEK-1115 SAVE AND NOT ARGUED. `realisedShare` is
+// `gained / (room x reachable)` with `gained = Σ(skills − born)`. Past `declineStart` those skills
+// FALL, so `gained` falls with them, and an ageing career walks BACKWARDS down the ladder the
+// no-flicker note above promises is monotone. His Alice Martin – 35.3 years old, 80.4% of the body
+// she had at her peak, #141 on a table she once finished #20 on – was reading:
+//
+//     «Huge potential – most of her game is still ahead of her, and this is where a coach buys the
+//      most.»
+//
+// She was in band 0 of 4 at +27.42 gained of an 80.44 room. The measure has no notion of a peak, so
+// it cannot tell a girl who has not filled her room from a woman who filled it and is losing it.
+//
+// ⚠ THE HEADROOM MEASURE IS NOT WRONG AND IS NOT TOUCHED. It answers «is there still room worth
+// buying», which is the right question right up until the week there is no room to buy at all:
+// `ageFactor` returns 0 from `declineStart`, so from that week `growWeek`'s whole rate is 0 and no
+// rung of the ladder adds a point to her. What changes here is which question gets answered.
+//
+// ⚠⚠ THE GATE IS HER OWN `declineStart` AND MAY NEVER BE THE CONSTANT. `ageCurveOf` resolves the
+// pair round 31 #10 drew for this career and pulls it earlier by the weeks she has lost;
+// `ECONOMY.development.ageCurve.declineStart` is the shipped 29 for everybody, which is precisely
+// the bug that round fixed. Alice's is 28.85 – close, and a career that drew 31 and lost a season to
+// injury is not.
+//
+// ⚠⚠ AND IT IS THE ONLY PLACE IN THIS MODULE THAT PRINTS A DIGIT, DELIBERATELY. The fog-of-war rule
+// on `coachRoomNote` above forbids quoting her CEILING – `Snapshot` carries no `skills` and
+// `KidScreen`'s whole radar design exists to keep it that way. Nothing below reads her ceiling. It
+// reads her RANK, which the game prints on four screens already, and her body's share of its own
+// peak, which has crossed the wire as `Snapshot.physicalShare` since round 31 #9. The owner asked
+// for exactly this, 07.09, and gave three examples of the register he wanted: «ей осталось играть
+// пара лет», «она упала в рейтинге за год на N», «она ниже своего лучшего года на N позиций».
+//
+// ⚠ WHAT IS NOT SAID IS AS MEASURED AS WHAT IS. «A couple of years» is NOT derivable as a couple:
+// the number the engine can stand behind is how long her body has before `ENDINGS.lastOfferPeakShare`
+// makes the winter question final, and on his save that is 6.45 years, not two. So the sentence says
+// six. A prose figure that cannot move with its constant is the R2-02 hazard, and a prose figure
+// that contradicts the constant is worse.
+
+/** ⭐ THE LABEL, and it is deliberately NOT one of `ROOM_BANDS`'. Those four are a headroom ladder
+ *  and this is not a rung of it; reusing «Close to her ceiling» here would say the one thing that is
+ *  now false – there is no ceiling left to be close to. `tests/component/round24-coach-card.test.ts`
+ *  sweeps all four off Home by name, so a label borrowed from that list would also silently re-open
+ *  the round-34 complaint on a fourteen-year-old's screen. */
+const DECLINE_LABEL = 'Past her peak'
+
+/** HOW MANY MORE SEASONS THE BODY HAS, walked forward off her CURRENT share at her OWN curve.
+ *
+ *  ⚠ THE STOP IS `ENDINGS.lastOfferPeakShare` BECAUSE THAT IS WHERE THE GAME ITSELF STOPS ASKING –
+ *  `ending.ts` marks the off-season offer `final` at `physicalShare <= ENDINGS.lastOfferPeakShare`.
+ *  So this is not a mood about ageing, it is the engine's own rule read forward, and it moves the
+ *  day the owner moves the dial.
+ *
+ *  ⚠ A LOOP AND NOT A FORMULA, for `ageAtPhysicalShare`'s own reason one file over: the loss
+ *  compounds against a factor that rises every WEEK, and a once-a-year evaluation is 2-3 points out.
+ *  ⚠ AND IT WALKS HER MEASURED SHARE RATHER THAN HER AGE, so a save whose peak was frozen anywhere
+ *  but on the shipped curve still reads its own body. The cap is a guard against a `declineFactor`
+ *  of 0 (impossible past `declineStart`, which is this function's only caller's gate) and never a
+ *  balance number: forty seasons is longer than any career the model can produce.
+ *
+ *  Returns null when the save carries no peak to measure against. */
+function seasonsOfBodyLeft(world: WorldState, bounds: AgeCurveBounds, age: number): number | null {
+  const peak = world.peakPhysical
+  if (!peak || peak <= 0) return null
+  let share = physicalMean(world.skills) / peak
+  if (!Number.isFinite(share)) return null
+  const stop = ENDINGS.lastOfferPeakShare
+  let walked = age
+  let weeks = 0
+  while (share > stop && weeks < 40 * WEEKS_PER_YEAR) {
+    share *= 1 - declineFactor(walked, bounds)
+    walked += 1 / WEEKS_PER_YEAR
+    weeks++
+  }
+  return weeks / WEEKS_PER_YEAR
+}
+
+/** WHERE THE TABLE HAS TAKEN HER, off the seasons the career actually banked.
+ *
+ *  ⚠ `byTrack.wta.endRank` AND NOT `endRank`. The flat field is and stays the ITF alias
+ *  (`SeasonHistoryEntry`'s own note), which is not the table a woman past her peak is playing on;
+ *  the per-track row is the professional one. Rows banked before schema v46 carry no `byTrack` at
+ *  all and are skipped rather than guessed at – `pruneResults` deleted the results they came from
+ *  years before this question was asked.
+ *
+ *  ⚠ THE YEAR-ON-YEAR MOVE IS ONLY A YEAR WHEN THE TWO SEASONS ARE ADJACENT. Alice's history skips
+ *  s6-s8 (a college fork, then seasons with no counting professional result), and «she fell N places
+ *  in a year» across a three-season gap is a false sentence with a true number in it. */
+function seasonRankRead(world: WorldState): { yearMove: number | null; belowBest: number | null } {
+  const rows: { seasonIndex: number; rank: number }[] = []
+  for (const season of world.seasonHistory ?? []) {
+    const rank = season.byTrack?.wta?.endRank
+    if (typeof rank === 'number') rows.push({ seasonIndex: season.seasonIndex, rank })
+  }
+  if (!rows.length) return { yearMove: null, belowBest: null }
+  const last = rows[rows.length - 1]
+  const prev = rows.length > 1 ? rows[rows.length - 2] : null
+  const best = rows.reduce((a, b) => (b.rank < a.rank ? b : a))
+  return {
+    yearMove: prev && last.seasonIndex - prev.seasonIndex === 1 ? last.rank - prev.rank : null,
+    belowBest: last.rank - best.rank,
+  }
+}
+
+/** ⭐⭐⭐ THE COACH'S READ ON A CAREER PAST ITS PEAK, or '' while she is still climbing.
+ *
+ *  ⚠⚠ '' IS THE WHOLE OF HOME'S GUARANTEE, AND IT IS STRUCTURAL RATHER THAN A `v-if` ON THE SCREEN.
+ *  Round 34 #2a took the ceiling read off Home on the owner's own words – «Тренер на главном экране
+ *  … написал 14 летней девочке Close to her ceiling … звучит как приговор» – and it may not come
+ *  back: a girl who is still growing must see no such line there. `Snapshot.coachDeclineNote` is
+ *  EMPTY until the week her body turns, so Home cannot render a verdict on a child even if every
+ *  condition on the screen were deleted. Only a career past its peak has anything in the field.
+ *  The owner, 07.09: «вполне можно вернуть на home и как раз расширить на старение тоже, чтобы было
+ *  видно, что оно пошло».
+ *
+ *  ⚠ THE SHAPE IS `ROOM_BANDS`', down to `ROOM_NOTE_SEP`, so screen T's ONE splitter (`coachRoomBand`)
+ *  sets this label in bold exactly as it sets the other four. A second separator convention would be
+ *  the "two sides asking different functions about one question" defect this project keeps finding.
+ *
+ *  ⚠ THE THREE ARMS ARE FALLBACKS AND NOT MOODS. Every one of them says the seasons her body has
+ *  left, because that is the number that always exists past this gate; what varies is which RANK
+ *  fact the history can support. She may still CLIMB past her peak – the table is not her body – so
+ *  a year she improved falls through to «below her best season», and a career sitting on its own
+ *  best falls through to the coach clause, which is the mechanical truth (`ageFactor` is 0 here, so
+ *  no rung of the market adds a point to her) rather than a consolation.
+ *
+ *  Pure, zero draws, derived at snapshot time – exactly like `coachRoomNote` above. */
+export function coachDeclineNote(world: WorldState): string {
+  const bounds = ageCurveOf(world.ageCurve, world.careerTotals?.weeksLostToInjury ?? 0)
+  const age = kidAgeExact(world.week, world.profile.birthMonth, world.profile.birthDay)
+  if (age < bounds.declineStart) return ''
+  const years = seasonsOfBodyLeft(world, bounds, age)
+  if (years === null) return ''
+  const seasons = Math.max(1, Math.round(years))
+  const left = `her body has about ${seasons} more ${seasons === 1 ? 'season' : 'seasons'} in it`
+  const { yearMove, belowBest } = seasonRankRead(world)
+  const note =
+    yearMove !== null && yearMove > 0
+      ? `down ${yearMove} places on the year, and ${left}.`
+      : belowBest !== null && belowBest > 0
+        ? `${belowBest} places below her best season, and ${left}.`
+        : `${left}, and no coach buys that back.`
+  return `${DECLINE_LABEL}${ROOM_NOTE_SEP}${note}`
 }
 
 /** ⭐⭐ ROUND 34 #2b – HOW MUCH OF WHAT SHE COULD BECOME SHE HAS ACTUALLY BECOME. One definition,

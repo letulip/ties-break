@@ -105,7 +105,7 @@ import { arrivalStatus, entryStatus, layoffCovering, tierVerdict } from './medic
 import { eventById, vacationForWeek } from './bookings'
 import { kidMatchPlayerFor } from './player'
 import type { MatchPlayer } from '../match/types'
-import { coachBilling, coachEdgeView, coachEntryLine, coachLadderNote, coachMarket, coachRoomNote, coachTravelsWithHer, handoverBaseBand, handoverRoomBand } from './coachMarket'
+import { coachBilling, coachDeclineNote, coachEdgeView, coachEntryLine, coachLadderNote, coachMarket, coachRoomNote, coachTravelsWithHer, handoverBaseBand, handoverRoomBand } from './coachMarket'
 import { masseurRoomNote, masseurRungOf, masseurUnlocked, masseurWeeklyCents } from './masseur'
 import { kitDealView, kitLineViews } from './kit'
 import { shopView } from './shop'
@@ -1784,6 +1784,10 @@ export function toSnapshot(world: WorldState, stopReasons?: StopReason[]): Snaps
     coachMarket: coachMarket(world),
     coachBilling: coachBilling(world),
     coachRoomNote: coachRoomNote(world),
+    // ⭐ ROUND 38 #6d/#7b – the decline half on its own wire, EMPTY until she is past her own peak.
+    // Home reads this and never `coachRoomNote`: see the field's note for why the guarantee lives
+    // here rather than in a `v-if` on the screen.
+    coachDeclineNote: coachDeclineNote(world),
     // ⚠ WEEK 0 ONLY – see the field's own note. The handover is the one screen that reads it and it
     // exists for one week; a career past its first tick must not carry a reading of her true ceiling.
     handoverBand: world.week === 0 ? handoverRoomBand(world) : '',
