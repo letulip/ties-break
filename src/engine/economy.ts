@@ -2541,6 +2541,36 @@ export const ECONOMY = {
        *  docs/rounds/round-34.md under item 17 for his eye – not compensated for here. */
       reputationCapBase: 4,
       reputationCapPerSeason: 0.5,
+      /** ⭐⭐⭐ ROUND 38 #8 (07.09) – HOW MUCH ONE POINT OF REPUTATION ADDS TO WHAT THE ACADEMY IS
+       *  WORTH, as a share of the drifted price. `worth = paid x (1+300bps)^years x (1 +
+       *  premiumPerRep x (reputation − 1))`. Option C, which the owner approved out loud: «хорошо
+       *  звучит».
+       *
+       *  ⚠⚠ IT STARTS AT EXACTLY ZERO AND THAT IS THE DESIGN, not a coincidence of the number.
+       *  Reputation is 1.0 for every career that has not banked a season (`academyReputationOf`),
+       *  so the premium is `0.15 x 0` on the day the shelf opens and the paid price times the drift
+       *  is a FLOOR. See `academyPremiumX` for why the clamp under it is written down anyway.
+       *
+       *  ⭐⭐ WHY 0.15, AND IT IS A BAND FROM THE RESEARCH RATHER THAN A FEELING. The two published
+       *  player-academy/brand transactions this repo has found are the Nadal academy at ~31x
+       *  earnings and Beckham's DRJB at ~10.9x (docs/research/player-brands-and-what-they-are-worth.md
+       *  §5.4) – a going concern on real property trades ABOVE its bricks, and the question this
+       *  number answers is by how much. ⚠ MEASURED ON HIS OWN WEEK-1115 CAREER rather than argued
+       *  (`npx vite-node tools/r38-academy-worth.ts`): at reputation 2.825 it prices his two stages
+       *  at $6,890,384 against $5,409,526 of drifted bricks – a **+27.37% premium**, so the going
+       *  concern is a bit over a quarter of the row and the land and the courts are the rest of it.
+       *  The alternative measured at the same time was option B, earnings x a multiple, which read
+       *  $1.4M against $5.0M paid and was refused for saying an academy is worth less than its own
+       *  land.
+       *
+       *  ⚠ AND IT DOES NOT COMPOUND. This is a LEVEL on the drifted price, not a second rate: an
+       *  academy at a steady reputation gains 3% a year and no more, which is what keeps «assets
+       *  never beat a career, they only survive one» true of the dearest thing on the shelf. What
+       *  moves the premium is her seasons – so the career pays for it, which is the whole of option
+       *  C. ⚠ At the reputation cap a long elite career can reach (8.2 on twelve top-10 seasons) the
+       *  premium is +108%; the academy doubles, over a career that spent twelve years in the world
+       *  top ten to do it. */
+      premiumPerRep: 0.15,
     },
   },
 
@@ -4767,16 +4797,42 @@ export const ECONOMY = {
       // ⚠ NO BUILD WAIT AND NO UPKEEP, because §3g asks for neither and this file does not invent
       // what it was not given. §3f's «время постройки» and «годовое обслуживание» are said of the
       // boats and the planes; the academy's own sentence is «each stage is a decision and a bill»,
-      // and a stage IS the wait. ⚠ AND IT NEITHER GAINS NOR LOSES (rate 0) for the same reason: §3g
-      // calls it «the one asset that outlives the career» and gives it no rate.
+      // and a stage IS the wait.
+      //
+      // ⭐⭐⭐ ROUND 38 #8 (07.09) – THE FOUR RATES MOVED 0 -> +300 bps, WHICH IS THE HOUSES' OWN
+      // NUMBER, AND THE OWNER ASKED FOR EXACTLY THAT COMPARISON: «а что насчёт стоимости и индексации
+      // этой стоимости с годами? Как с домами, например.»
+      //
+      // ⚠⚠ WHAT HE WAS LOOKING AT WHEN HE SAID IT, 06.09: «Академия при этом стоит ровно на месте –
+      // и это не очень корректно, как мне кажется.» And he was reading the catalogue correctly.
+      // `assetValueCents` indexes EVERY rung by `annualRateBps`; the academy was the only family on
+      // the shelf carrying a literal zero, so «стоит ровно на месте» was not a rounding artefact or a
+      // missing formula – it was this field, four times. The fix is this field, four times.
+      //
+      // ⚠⚠ ONE RATE AND NOT TWO, AND THE SPLIT IS REFUSED ON PURPOSE (the spec's §2). A real
+      // academy's LAND appreciates while its BUILDINGS depreciate and have to be maintained – true,
+      // and deliberately not modelled, because this family carries no `upkeepBps` at all. Splitting
+      // the drift would ship the LOSS without the upkeep line that justifies it, and the four stages
+      // would quietly diverge on a screen that offers no reason why. The honest version of that split
+      // is a later item WITH a maintenance line beside it, and it is his call, not this one's.
+      //
+      // ⚠ THE SENTENCE ON THE CARD MOVES WITH THE NUMBER, AND NO STRING WAS EDITED TO MOVE IT.
+      // `rateLine` picks its branch off `annualRatePct`, so these four rows now read the HOUSES'
+      // sentence («Gains about 3% a season») instead of the zero branch's «Neither gains nor loses» –
+      // which is precisely «как с домами» arriving on screen. Invariant 4 is satisfied the strict
+      // way rather than the convenient one: the copy in `MoneyScreen.vue` is untouched to the byte,
+      // and what changed is the data the existing sentence is chosen by. ⚠ The zero branch is now
+      // reachable from no rung on the shelf; it is KEPT, because it is the honest answer for the next
+      // rate-0 rung and deleting a correct branch to chase coverage is how a shelf loses a case.
       //
       // ⚠ THIS NOTE USED TO END «and the shelf says so in as many words («Holds its value»)» AND THAT
       // SENTENCE IS GONE FROM THE SHELF – round 30 #11, the owner: «Holds its value странно звучит –
       // это напрямую значит, что оно обесценивается, а это вроде бы не совсем так». The MECHANIC did
-      // not move a cent (checked first: a rate-0 rung is worth what was paid for it forever and the
-      // sale is whole), only the words. A comment naming a string that no longer exists is the one
-      // way a comment must not be wrong, so it names the new one: **«Neither gains nor loses»**, said
-      // of these four stages and of nothing else since the merch brand became a business (#9).
+      // not move a cent then (checked first: a rate-0 rung is worth what was paid for it forever and
+      // the sale is whole), only the words. This time it is the other way round: the mechanic moved
+      // and the words followed it. A comment naming a string that no longer exists is the one way a
+      // comment must not be wrong, so it names the new one: **«Gains about 3% a season»**, the same
+      // sentence all four houses read.
       {
         id: 'academy-land',
         family: 'academy',
@@ -4784,7 +4840,7 @@ export const ECONOMY = {
         label: 'The land',
         blurb: 'Twelve hectares outside town, and a name on the deeds.',
         entryCents: 2_000_000_00,
-        annualRateBps: 0,
+        annualRateBps: 300,
       },
       {
         id: 'academy-courts',
@@ -4793,7 +4849,7 @@ export const ECONOMY = {
         label: 'The courts',
         blurb: 'Sixteen of them, and the lights that keep them open till nine.',
         entryCents: 3_000_000_00,
-        annualRateBps: 0,
+        annualRateBps: 300,
         requiresId: 'academy-land',
       },
       {
@@ -4803,7 +4859,7 @@ export const ECONOMY = {
         label: 'The clubhouse',
         blurb: 'Gym, kitchen, forty beds and somewhere to do the homework.',
         entryCents: 4_000_000_00,
-        annualRateBps: 0,
+        annualRateBps: 300,
         requiresId: 'academy-courts',
       },
       {
@@ -4813,7 +4869,7 @@ export const ECONOMY = {
         label: 'The staff',
         blurb: 'Coaches, physios and the person who answers the telephone.',
         entryCents: 3_000_000_00,
-        annualRateBps: 0,
+        annualRateBps: 300,
         requiresId: 'academy-building',
       },
     ],

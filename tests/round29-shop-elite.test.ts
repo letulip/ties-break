@@ -23,7 +23,9 @@
 // come through this file – the rule `tests/shop.test.ts` was written under.
 import { describe, it, expect } from 'vitest'
 import {
+  academyReputationOf,
   accrueCondition,
+  assetValueCents,
   buyAsset,
   bookVacation,
   coachBilling,
@@ -323,8 +325,16 @@ describe('§4 – §3g, the academy: four stages, in order, and a half-built one
     // pinned is the BAND, which is his.
     expect(total).toBeGreaterThanOrEqual(8_000_000_00)
     expect(total).toBeLessThanOrEqual(15_000_000_00)
-    // ⚠ AND IT NEITHER EARNS NOR DECAYS, because §3g gives it no rate and this file invents none.
-    for (const s of stages) expect(s.annualRatePct, `${s.id} holds its value`).toBe(0)
+    // ⚠⚠ RE-AIMED BY ROUND 38 #8 (07.09), AND THE MEASURED NUMBER THAT MOVED IS THIS ONE: 0 -> 3.
+    // It used to read «AND IT NEITHER EARNS NOR DECAYS, because §3g gives it no rate and this file
+    // invents none», which was true of round 29 and is not a rule – §3g gave no rate, and the OWNER
+    // has now given one: «а что насчёт стоимости и индексации этой стоимости с годами? Как с домами,
+    // например.» So the four stages carry the HOUSES' +300 bps, and what this line pins is that they
+    // carry it UNIFORMLY – one rate across all four, which is the spec's §2 refusing a land/building
+    // split while this family has no maintenance line to justify the losing half.
+    // ⚠ THE ASSERTION IS NOT WEAKENED, it is re-pointed: it still names every stage individually and
+    // still fails if any one of them drifts away from its siblings.
+    for (const s of stages) expect(s.annualRatePct, `${s.id} indexes like a house`).toBe(3)
     // ...nor a wait, nor an upkeep: §3f's «время постройки» and «годовое обслуживание» are said of
     // the boats and the planes.
     for (const s of stages) {
@@ -359,8 +369,23 @@ describe('§4 – §3g, the academy: four stages, in order, and a half-built one
     // ⚠ THE UNBUILT STAGES KEEP THEIR PRICE ON SCREEN – §2's «never a locked row, a progress bar or
     // a teaser», read one storey up.
     for (const s of stages.filter((x) => x.valueCents === null)) expect(s.entryCents).toBeGreaterThan(0)
-    // ...and four weeks later the land is worth exactly what it cost.
-    expect(ownedOf(w, 'academy-land')!.valueCents).toBe(2_000_000_00)
+    // ⚠⚠ RE-AIMED BY ROUND 38 #8 – it used to read «four weeks later the land is worth exactly what
+    // it cost», and it no longer is: the four stages carry the houses' +300 bps since the owner's
+    // «как с домами», so four weeks of holding is four weeks of drift. What replaces it is a
+    // STRICTER claim rather than a looser one, and it is the one the item is accepted on.
+    //
+    // ⭐⭐ THE PREMIUM IS EXACTLY ZERO HERE, TO THE CENT, AND THAT IS THE POINT OF PINNING IT ON THIS
+    // WORLD. `shopper()` has banked no season, so `academyReputationOf` is 1.0 and option C's
+    // premium term is `0.15 x 0` – which makes `assetWorthCents` and `assetValueCents` the SAME
+    // NUMBER, byte for byte, on the shipped path. A career that has won nothing sees the drift and
+    // nothing else, which is what «the paid price is a floor» means on day one.
+    const land = ownedOf(w, 'academy-land')!
+    expect(academyReputationOf(w), 'a career with no banked season sits at the base').toBe(1)
+    expect(land.valueCents, 'four weeks of the houses drift, and not a cent of premium')
+      .toBe(assetValueCents(shopItem('academy-land')!, 2_000_000_00, 4))
+    // ⚠ AND IT REALLY MOVED, which is the half that stops this passing on a reverted engine: at
+    // rate 0 the two sides above are BOTH `paidCents` and the assertion cannot fail.
+    expect(land.valueCents, 'the land is worth more than it cost').toBeGreaterThan(2_000_000_00)
   })
 })
 

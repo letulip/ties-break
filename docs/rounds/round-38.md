@@ -343,7 +343,7 @@ the repo keeps is the derived statistics below.
   is a favourite are the two she is barred from. ⚠ And the card next week literally offers her a
   **90.7%** first-round chance at a w15 she may not enter, beside a **20.6%** at the wta500 she may.
 
-- [>] **8. The academy's worth** – ⭐ **HE CHOSE C AND ADDED THE HALF I HAD MISSED**, 07.09: «хорошо
+- [x] **8. The academy's worth** – ⭐ **HE CHOSE C AND ADDED THE HALF I HAD MISSED**, 07.09: «хорошо
   звучит, а что на счет стоимости и индексации этой стоимости с годами? Как с домами, например.»
 
   ⚠ AND THE ANSWER IS ONE NUMBER: `assetValueCents` already indexes every rung by
@@ -352,6 +352,50 @@ the repo keeps is the derived statistics below.
   `docs/specs/academy-worth-2026-09.md`, two independent halves: the houses' drift, and the
   reputation premium with the paid price as a floor. ⚠ Option B (price it on earnings like the brand)
   was measured and refused – it would have cut his academy from $5.0M to $1.4M.
+
+  **SHIPPED, both halves, and `SAVE_SCHEMA_VERSION` did not move** – no migration and no new golden
+  fixture, because the rate is read at valuation time off `paidCents` and `boughtWeek`, which every
+  save already carries. **On his own week-1115 career, through `revalueAssets` and `shopView`:**
+
+  | | today | + the drift | + the premium |
+  | --- | ---: | ---: | ---: |
+  | academy-land | $2,000,000 | $2,280,641 | **$2,904,966** |
+  | academy-courts | $3,000,000 | $3,128,885 | **$3,985,417** |
+  | **together** | **$5,000,000** | **$5,409,526** | **$6,890,384** |
+
+  ⚠⚠ **And nothing else on the shelf moved a cent** – index-fund $1,819,442, house-first $298,036,
+  merch-brand $5,172,791, car-good $100,100, identical in all three arms. The control was run rather
+  than assumed: with both halves reverted in place the probe reprints the "today" column exactly and
+  five pins in four files go red (`tools/r38-academy-worth.ts` – the shop probe walks synthetic bench
+  careers and takes no save).
+
+  ⭐ **HALF ONE** is four fields: `annualRateBps: 0 -> 300` on the four `academy-*` rungs, the houses'
+  own number. One rate and not two – the spec's §2 refuses a land/building split while this family
+  carries no maintenance line to justify the losing half.
+
+  ⭐ **HALF TWO** is `premiumPerRep: 0.15` in `ECONOMY.business.academy`, read in `assetWorthCents`'s
+  non-business branch for `family === 'academy'` only. At his reputation of 2.825 that is **+27.37%**
+  on top of the drifted price. It starts at exactly zero – reputation is 1.0 until a season is banked
+  – so **the paid price times the drift is a floor by construction**, which is the whole of option C.
+
+  ⚠ **Three consequences named rather than absorbed** (spec §3a, and (a) is the one he will see
+  first):
+  * the shop card's sentence moved to the houses' own – **«Gains about 3% a season»** in place of
+    «Neither gains nor loses». ⚠ **No string was edited**: `rateLine` picks its branch off
+    `annualRatePct`, `MoneyScreen.vue` is untouched to the byte, and the mounted pin now also asserts
+    the card says nothing about the premium. The zero branch is kept for the next rate-0 rung.
+  * the academy now feeds the household strip's **shelf line** – the line the houses and the fund
+    were already on. Nothing was added to the strip; a rate-0 academy simply moved it by zero.
+  * ⚠ a stage bought today is worth more than it cost **the same week** on a reputable career (~$3.82M
+    on a $3M `academy-staff` at reputation 2.825), because the shelf has priced a rung at what it is
+    WORTH on the buying week since round 30 #9. That is the existing law applied to a second family –
+    the merch brand already carries a 20x version of it on his save – but it is his call whether a
+    premium bankable on the buying week stays open.
+
+  ⚠ **One structural move**: `academyReputationOf` went from `world/business.ts` **down** into
+  `world/assets.ts`. `assets.ts` is deliberately a leaf and `business.ts` imports it at runtime, so
+  importing upward would have been a real cycle; `business.ts` re-exports the name, so every importer
+  is untouched. Same shape, same reason as round 30 #9's `assetEarningsRateCents`.
 
 - [x] **9. Wave A – the snapshot cache** – he pulled it into this round. Plan already written:
   `docs/specs/next-waves-2026-09.md` Wave A, steps A1-A5. Nothing about saves changes.

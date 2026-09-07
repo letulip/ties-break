@@ -360,6 +360,66 @@ export function unitPriceHistory(seed: string, week: number, item: ShopItem, mon
   return out.reverse()
 }
 
+/** ⭐ REPUTATION – 1.0 base plus the BEST band of every finished season, counted once per season,
+ *  capped. The fold the round-29 ledger proposed off `seasonHistory[].byTrack.wta.endRank` (his
+ *  own save reads 1.925 since round 34's two new rungs, 1.75 before them, and 2.825 on his
+ *  week-1115 career). A season with no recorded WTA end-rank – a pre-v46 row, a null rank – counts
+ *  nothing: «not recorded» is not «top-100», the season mirror's own distinction.
+ *
+ *  ⭐⭐ ROUND 34 #17 (03.09) – AND THE CAP IS THE CAREER'S OWN, `capBase + capPerSeason x the
+ *  PROFESSIONAL seasons played`. The owner: a long professional career should be worth something
+ *  and a short one should not. ⚠ «PROFESSIONAL SEASONS» IS THE SAME COUNT THE LADDER ITSELF WALKS –
+ *  the rows carrying a WTA end-rank, `BrandSignals.proSeasons`' own definition – so the cap and the
+ *  ladder can never disagree about what a season is. ⚠ Measured: at 4 + 0.5 the cap no longer binds
+ *  below THIRTY professional seasons; see the constants' own header.
+ *
+ *  ⚠⚠⚠ ROUND 38 #8 MOVED THIS FUNCTION HERE FROM `world/business.ts`, AND THE REASON IS A CYCLE
+ *  THAT WAS TRACED BEFORE THE MOVE RATHER THAN AFTER IT. `assetWorthCents` below now needs the
+ *  reputation – it is half of what an academy stage is worth – and `world/business.ts` imports THIS
+ *  file (`assetEarningsRateCents`, `deliveredAssets`, `shopItem`), so a leaf importing it back would
+ *  close a real runtime loop. It is the SAME argument `assetEarningsRateCents` makes further
+ *  down this file, in the same words, for the same reason: the valuation lives here, so the arithmetic the
+ *  valuation needs has to be reachable from here. ⚠ `world/business.ts` re-exports it under its
+ *  historical name, so `engine/world`, the tests and the three tools that import it are untouched;
+ *  and it needed no new import to move, because `ECONOMY` and `WorldState` were already on this
+ *  file's list. `tests/import-cycles.test.ts` is the mechanical half of this claim.
+ *
+ *  Pure: reads the world, writes nothing, draws nothing. */
+export function academyReputationOf(world: WorldState): number {
+  const A = ECONOMY.business.academy
+  let rep = 1
+  let proSeasons = 0
+  for (const row of world.seasonHistory ?? []) {
+    const endRank = row.byTrack?.wta?.endRank
+    if (endRank == null) continue
+    proSeasons++
+    // bands are strongest-first; the FIRST that holds is the season's best and the only one counted
+    const band = A.reputationBands.find((b) => endRank <= b.maxEndRank)
+    if (band) rep += band.add
+  }
+  return Math.min(A.reputationCapBase + A.reputationCapPerSeason * proSeasons, rep)
+}
+
+/** ⭐⭐⭐ ROUND 38 #8 – HOW MUCH THE ACADEMY'S STANDING ADDS TO WHAT IT IS WORTH, as a multiplier of
+ *  the drifted price. `1 + premiumPerRep x (reputation − 1)`, and it is 1 exactly at reputation 1.0.
+ *
+ *  THE OWNER, 07.09, on option C: «хорошо звучит».
+ *
+ *  ⚠⚠ `Math.max(0, rep − 1)` IS THE FLOOR AND IT IS LOAD-BEARING, not a defensive shrug. Option C's
+ *  whole content is that **the cost is a floor**: «a career that collapses cannot take back the land
+ *  and the courts», which is the property that makes the academy the thing worth moving money INTO
+ *  near the end of a career and is deliberately the OPPOSITE of the merch brand. Today the fold
+ *  above cannot answer below 1 – it starts at 1 and every band adds – so the clamp is unreachable
+ *  and that is exactly why it is written down: a negative `add` in `reputationBands` tomorrow would
+ *  otherwise turn a premium into a DISCOUNT and break «мы ни за что не наказываем» silently, on a
+ *  five-million-dollar row, with no test between the catalogue and the money.
+ *  `tests/round38-academy-worth.test.ts` drives a hostile band through it rather than trusting this note.
+ *
+ *  Pure: reads the world, writes nothing, draws nothing. */
+export function academyPremiumX(world: WorldState): number {
+  return 1 + ECONOMY.business.academy.premiumPerRep * Math.max(0, academyReputationOf(world) - 1)
+}
+
 /** ⭐⭐⭐ WHAT A HOLDING IS WORTH, ASKED OF THE WORLD. THE one entry point: `revalueAssets` (which
  *  stores it) and `householdWeekly` (which quotes the week's move) both call this and nothing else,
  *  so the till and the meter cannot describe two different markets.
@@ -423,7 +483,39 @@ export function assetWorthCents(world: WorldState, owned: OwnedAsset, item: Shop
     // reigns: the family can always sell the name.
     return Math.round(Math.max(owned.paidCents * ECONOMY.shop.businessValueFloorShare, grossCents))
   }
-  return assetValueCents(item, owned.paidCents, week - (owned.basisWeek ?? owned.boughtWeek))
+  const drifted = assetValueCents(item, owned.paidCents, week - (owned.basisWeek ?? owned.boughtWeek))
+  // ⭐⭐⭐ ROUND 38 #8 – THE FOURTH ARITHMETIC, AND IT IS THE THIRD ONE'S MIRROR IMAGE ON PURPOSE.
+  //
+  // THE OWNER, 06.09: «Академия при этом стоит ровно на месте – и это не очень корректно, как мне
+  // кажется.» And 07.09, choosing option C and adding the half the analysis had missed: «хорошо
+  // звучит, а что насчёт стоимости и индексации этой стоимости с годами? Как с домами, например.»
+  //
+  // ⚠⚠ TWO INDEPENDENT HALVES AND ONLY ONE OF THEM IS HERE. The indexation is his «как с домами» and
+  // it is not a line of code at all – it is `annualRateBps: 300` in the catalogue, the houses' own
+  // number, read by `assetValueCents` one line up exactly as it is read for every other rung. This
+  // line is the OTHER half: an academy is real property PLUS a going concern, and what a going
+  // concern is worth is its standing.
+  //
+  // ⚠⚠⚠ THE PAID PRICE, DRIFTED, IS A FLOOR BY CONSTRUCTION – and that sentence is the whole of
+  // option C rather than a nicety attached to it. `academyPremiumX` is 1 at reputation 1.0 and can
+  // only ever rise, so this multiplication cannot subtract; and because it multiplies the number
+  // `assetValueCents` ALREADY ROUNDED, the equality at reputation 1.0 is exact to the cent rather
+  // than approximate – `assetWorthCents === assetValueCents` byte for byte on a career that has
+  // banked no season. A career that collapses cannot take back the land and the courts. That is what
+  // makes the academy the thing worth moving money INTO near the end of a career, and it is
+  // deliberately the OPPOSITE property from the merch brand, whose worth follows fame down.
+  //
+  // ⚠⚠ OPTION B WAS MEASURED AND REFUSED, which is why this is a premium ON the property and not a
+  // valuation OF the business. Pricing the academy on its earnings the way the brand is priced –
+  // $139,568 a year at a 10x multiple – is $1.4M against $5.0M paid: the change would have cut his
+  // academy's value by 72%. A going concern standing on real property cannot be worth less than the
+  // property. See docs/specs/academy-worth-2026-09.md §2.
+  //
+  // ⚠ THE FAMILY GATE IS THE PREDICATE, the same shape the branch above uses: no other family has a
+  // reputation, and a rung handed one by mistake would be valued off a dial that says nothing about
+  // it. `tests/round38-academy-worth.test.ts` asserts the zero in both directions.
+  if (item.family !== 'academy') return drifted
+  return Math.round(drifted * academyPremiumX(world))
 }
 
 /** ⭐⭐⭐ ROUND 30 #9 – WHAT AN EARNING RUNG TAKES IN THIS WEEK, in cents, BEFORE the question of

@@ -16,7 +16,7 @@ Regenerate with `node scripts/world-map.mjs`; `node scripts/world-map.mjs --chec
 | --- | --- | ---: |
 | `src/engine/world.ts` | THE INTEGRATION CORE: what the barrel itself still owns – career creation, the reveal/finalize trio, the advance and the college resume, and `tickWeek`, which is now the ordered recipe that calls the five phases in `world/phase*.ts` | 20 |
 | `src/engine/world/college.ts` | ⭐⭐ WHAT IS BEHIND THE DOOR – the college years, wired into the world (P5, 16.08.2026, docs/specs/college-as-a-second-act-2026-08.md) | 37 |
-| `src/engine/world/assets.ts` | ⭐⭐ WHAT THE FAMILY OWNS – the shelf's PURE READS, and nothing that spends money | 24 |
+| `src/engine/world/assets.ts` | ⭐⭐ WHAT THE FAMILY OWNS – the shelf's PURE READS, and nothing that spends money | 25 |
 | `src/engine/world/ladder.ts` | THE LADDER: where she stands, and what that standing opens | 22 |
 | `src/engine/world/medical.ts` | THE GATES: condition, the doctor's veto, the layoff, and whether she may enter at all | 21 |
 | `src/engine/world/entryCaps.ts` | THE ANNUAL ENTRY CAPS: the ITF junior allowance, the WTA professional one (AER) – and since P1 the JUNIOR ACCESS rules, which are the same family of rule from the same two rulebooks | 17 |
@@ -32,11 +32,11 @@ Regenerate with `node scripts/world-map.mjs`; `node scripts/world-map.mjs --chec
 | `src/engine/world/knock.ts` | THE KNOCK: she comes off court sore, and the parent rests it or sends her back out | 8 |
 | `src/engine/world/market.ts` | ⭐⭐⭐ THE MARKET – round 29 part three #16, and it is the answer to one sentence of his | 8 |
 | `src/engine/world/brand.ts` | ⭐⭐⭐ THE BRAND – round 30 #23 and #24, and it is TWO functions of ONE signal set | 7 |
-| `src/engine/world/business.ts` | ⭐⭐ THE PARENT'S BUSINESSES – round 29 part four P7, parts two and three of his order: «нам нужен мерч, растущий от частоты и обилия рекламных контрактов, съемок, выступлений, титулов и прочего» and «нам нужна академия, которая зарабатывает» | 7 |
 | `src/engine/world/fame.ts` | ⭐⭐ FAME – round 29 part four P7/P8, the first implementation of docs/specs/fame-and-the-shoots-2026-08.md | 7 |
 | `src/engine/world/injury.ts` | INJURIES AND PHYSIO: the weekly roll, the hazard shape behind it, and the recovery the family pays for – plus the sweep that cleans up everything an injury invalidates | 7 |
 | `src/engine/world/planner.ts` | THE SEASON PLANNER: the two things a parent can put on an empty week – a family holiday and a practice match – and what the engine does with them when the week arrives | 7 |
 | `src/engine/world/shop.ts` | ⭐⭐ THE SHOP – the tab, static prices, buy / own / sell, and since round 29 #5 the storeys above | 7 |
+| `src/engine/world/business.ts` | ⭐⭐ THE PARENT'S BUSINESSES – round 29 part four P7, parts two and three of his order: «нам нужен мерч, растущий от частоты и обилия рекламных контрактов, съемок, выступлений, титулов и прочего» and «нам нужна академия, которая зарабатывает» | 6 |
 | `src/engine/world/entries.ts` | THE ENTRY COMMANDS: putting her in a draw, and taking her back out | 6 |
 | `src/engine/world/milestones.ts` | WHAT THE FAMILY KEEPS: the moments that are never pruned, and the season they add up to | 6 |
 | `src/engine/world/shootClash.ts` | ⭐⭐ ROUND 29 #3 – THE SHOOT THAT LANDS ON A TOURNAMENT WEEK, AND THE FOUR ANSWERS TO IT | 6 |
@@ -134,6 +134,7 @@ THE INTEGRATION CORE: what the barrel itself still owns – career creation, the
 
 ⭐⭐ WHAT THE FAMILY OWNS – the shelf's PURE READS, and nothing that spends money.
 
+- `academyReputationOf` – `src/engine/world/assets.ts`
 - `ASSET_NAME_MAX_CHARS` – `src/engine/world/assets.ts`
 - `assetDelivered` – `src/engine/world/assets.ts`
 - `assetEarningsRateCents` – `src/engine/world/assets.ts`
@@ -436,18 +437,6 @@ THE KNOCK: she comes off court sore, and the parent rests it or sends her back o
 - `brandSignalsOf` – `src/engine/world/brand.ts`
 - `brandWeeklyGrossCents` – `src/engine/world/brand.ts`
 
-### `src/engine/world/business.ts`
-
-⭐⭐ THE PARENT'S BUSINESSES – round 29 part four P7, parts two and three of his order: «нам нужен мерч, растущий от частоты и обилия рекламных контрактов, съемок, выступлений, титулов и прочего» and «нам нужна академия, которая зарабатывает».
-
-- `academyReputationOf` – `src/engine/world/business.ts`
-- `academyWeeklyIncomeCents` – `src/engine/world/business.ts`
-- `assetKidShareCents` – `src/engine/world/business.ts`
-- `assetWeeklyFamilyIncomeCents` – `src/engine/world/business.ts`
-- `assetWeeklyIncomeCents` – `src/engine/world/business.ts`
-- `merchFamilyWeeklyIncomeCents` – `src/engine/world/business.ts`
-- `merchWeeklyIncomeCents` – `src/engine/world/business.ts`
-
 ### `src/engine/world/fame.ts`
 
 ⭐⭐ FAME – round 29 part four P7/P8, the first implementation of docs/specs/fame-and-the-shoots-2026-08.md.
@@ -495,6 +484,17 @@ THE SEASON PLANNER: the two things a parent can put on an empty week – a famil
 - `sellableAsset` – `src/engine/world/shop.ts`
 - `sellAsset` – `src/engine/world/shop.ts`
 - `shopView` – `src/engine/world/shop.ts`
+
+### `src/engine/world/business.ts`
+
+⭐⭐ THE PARENT'S BUSINESSES – round 29 part four P7, parts two and three of his order: «нам нужен мерч, растущий от частоты и обилия рекламных контрактов, съемок, выступлений, титулов и прочего» and «нам нужна академия, которая зарабатывает».
+
+- `academyWeeklyIncomeCents` – `src/engine/world/business.ts`
+- `assetKidShareCents` – `src/engine/world/business.ts`
+- `assetWeeklyFamilyIncomeCents` – `src/engine/world/business.ts`
+- `assetWeeklyIncomeCents` – `src/engine/world/business.ts`
+- `merchFamilyWeeklyIncomeCents` – `src/engine/world/business.ts`
+- `merchWeeklyIncomeCents` – `src/engine/world/business.ts`
 
 ### `src/engine/world/entries.ts`
 

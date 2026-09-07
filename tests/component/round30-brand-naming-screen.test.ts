@@ -226,7 +226,7 @@ describe('round 30 #8/#10 – the worst name a player can type fits a phone', ()
 })
 
 describe('round 30 #11 and #9 – what the rate line says now', () => {
-  it('⭐⭐⭐ the merch row says what a business is worth, and the academy says it neither gains nor loses', async () => {
+  it('⭐⭐⭐ the merch row says what a business is worth, and the academy reads the houses own sentence', async () => {
     // ⚠ #11 IS THE ONLY RE-WORDING ON THIS SCREEN AND IT IS LICENSED: «И как будто бы Holds its
     // value странно звучит тоже – это напрямую значит, что оно обесценивается, а это вроде бы не
     // совсем так». The engine was checked first (tests/round30-brand-value.test.ts §6): a rung at
@@ -274,14 +274,36 @@ describe('round 30 #11 and #9 – what the rate line says now', () => {
     expect(Math.round(ramp + 10 * V.finalX)).toBeGreaterThan(Math.round(V.unknownX))
     richer.unmount()
 
+    // ⚠⚠⚠ RE-AIMED BY ROUND 38 #8 (07.09) – THIS ROW'S SENTENCE MOVED, AND IT IS THE ONE SENTENCE ON
+    // THE SHELF THAT DID. It read «Neither gains nor loses»; it now reads the HOUSES' sentence,
+    // because the owner asked for the houses' behaviour in as many words: «а что насчёт стоимости и
+    // индексации этой стоимости с годами? Как с домами, например.»
+    //
+    // ⚠⚠ INVARIANT 4 IS SATISFIED THE STRICT WAY, and this pin is where that is checkable. NO STRING
+    // WAS EDITED: `rateLine` in `MoneyScreen.vue` is untouched to the byte, all four of its branches
+    // still exist, and the branch this row lands in changed because `annualRatePct` went 0 -> 3 in
+    // the catalogue. That is the same mechanism the merch row's note twenty lines up describes –
+    // «what moved, again, is the value it interpolates» – and it is the reason the item needed no
+    // wording ask. ⚠ The zero branch is now unreachable from the shelf and is deliberately kept; the
+    // engine half of that is in `tests/round30-brand-value.test.ts`.
     const land = await shelfRow(wrapper, 'The land')
-    expect(land.find('.shop-row-rate').text()).toBe('Neither gains nor loses')
+    expect(land.find('.shop-row-rate').text()).toBe('Gains about 3% a season')
+
+    // ⚠⚠ AND IT IS LITERALLY THE HOUSE'S OWN SENTENCE, not merely a similar one – which is «как с
+    // домами» made checkable on screen rather than asserted in a comment.
+    const house = await shelfRow(wrapper, shopItem('house-first')!.label)
+    expect(house.find('.shop-row-rate').text()).toBe(land.find('.shop-row-rate').text())
 
     // ⚠ AND THE TWO SENTENCES THE ITEM DID **NOT** TOUCH ARE UNCHANGED, to the byte – invariant 4.
     const car = await shelfRow(wrapper, 'The luxury four-by-four')
     expect(car.find('.shop-row-rate').text()).toBe('Loses 9% a season')
     const fund = await shelfRow(wrapper, 'An index fund')
     expect(fund.find('.shop-row-rate').text()).toBe('Gains about 7% a season')
+    // ⚠⚠ AND THE PREMIUM IS NOWHERE ON THE CARD, which is the spec's §4 step 4 and a NEGATIVE claim
+    // no other test makes: the row says what the rung IS, never what its reputation is worth. A
+    // premium sentence would be exactly the self-authored copy invariant 4 forbids.
+    expect(land.text()).not.toContain('reputation')
+    expect(land.text()).not.toContain('premium')
     wrapper.unmount()
   })
 })
