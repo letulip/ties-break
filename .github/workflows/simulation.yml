@@ -1,3 +1,53 @@
+# ⚠⚠ 07.09 – THE WEEKLY RUN HAD BEEN RED SINCE 17.08 AND NOBODY KNEW, INCLUDING THE PART OF THIS
+# FILE WHOSE ONE JOB IS TO MAKE SURE SOMEBODY KNOWS. Read off the run history, not inferred:
+#
+#     #7  07.09  23m29s  red   test:sim   audit SKIPPED   issue step 403
+#     #6  31.08  16m13s  red   test:sim   audit SKIPPED   issue step 403
+#     #5  24.08  17m14s  red   test:sim   audit SKIPPED   issue step 403
+#     #4  22.08  17m29s  red   test:sim   (the one-day pull_request experiment)
+#     #3  17.08  13m27s  red   test:sim
+#
+# Six of the seven runs this workflow has ever had are red. Only #1 was ever green, at 4m24s.
+#
+# THREE SEPARATE FAULTS, and only one of them is about tennis:
+#
+#   1. THE ALARM COULD NEVER RING. `actions/github-script` needs `issues: write`, and this file
+#      declared no `permissions:` block at all – so the job ran on the repository default, which is
+#      read-only. Every red run since the step was added on 22.08 ended in a 403. The "reader loop
+#      that exists" has filed exactly zero issues in its entire life: the mechanism built to stop
+#      rot sitting unread WAS the rot sitting unread, for three weeks, and the owner found it by
+#      reading the Actions tab himself – which is the job it was supposed to take off him.
+#   2. `npm audit` HAS NEVER RUN ONCE. It sat behind `test:sim` in the same job, so a red sim
+#      skipped it every single week. It is red right now: nanoid <3.3.18, high, and genuinely in the
+#      PRODUCTION tree (vue -> @vue/compiler-sfc -> postcss -> nanoid), so `--omit=dev` does not
+#      excuse it. Dependency health is its own job below and can never be shadowed by the sim again.
+#   3. THE SIM ITSELF went red on econ-bench: 11 tests of 11 GREEN, exit 1, `Timeout calling
+#      "onTaskUpdate"` at 90.55 s. That is birpc's 60 s ceiling – the exact shape scripts/sim.mjs
+#      was written to classify. It retried once, per doctrine, and stalled again.
+#
+# ⭐ THE LESSON IS ABOUT SHAPE, NOT ABOUT PERMISSIONS. Every one of the three is the same failure:
+# a step that reports on other steps was placed WHERE THOSE STEPS COULD SILENCE IT. Fixing the 403
+# alone would have left the audit shadowed; fixing the audit alone would have left the alarm mute.
+# So the run is now four jobs that cannot silence one another, and the reporter is downstream of
+# all of them.
+#
+# WHAT THE MATRIX BUYS, AND WHAT IT DOES NOT (owner's call, 07.09 – «по третьему давай матрицу»).
+# BUYS: 23 minutes of wall clock become the slowest single file plus its install; a red file is
+# NAMED in the run list instead of buried in a 23-minute log; `fail-fast: false` means one dead file
+# no longer hides the twelve behind it; and the Issue can now say WHICH file went red. It costs
+# nothing that is metered – this repository is public, so Actions minutes are free, and the trade is
+# ~13 npm installs of billed time against a fifth of the wall clock.
+# ⚠ DOES NOT BUY a cure for the birpc wall, and this file must not pretend otherwise.
+# `scripts/sim.mjs` ALREADY spawns one vitest per file, so there was never contention BETWEEN sim
+# files for the matrix to remove. If econ-bench crosses the 60 s ceiling on its own merits it will
+# stall on a fresh runner too, and the retry-once classifier remains the only thing standing between
+# that and a false red. Whether the stall is intrinsic or co-tenancy is the NEXT measurement.
+#
+# ⚠ AND THE FILE LIST IS NOT WRITTEN HERE. The matrix is generated from scripts/heavy-tests.mjs at
+# run time, because a list hand-copied into YAML would be the third copy of exactly the list whose
+# second copy scripts/heavy-tests.mjs was created to abolish.
+#
+# =================================================================================================
 # THE MONTE-CARLO CALIBRATION – WEEKLY AND ON DEMAND, NEVER IN FRONT OF A PULL REQUEST.
 #
 # ⚠⚠ FINAL RULING (owner, 22.08) – DO NOT REVISIT WITHOUT NEW EVIDENCE. The pull_request trigger
@@ -105,11 +155,37 @@ on:
     - cron: '0 4 * * 1' # Mondays, 04:00 UTC
   workflow_dispatch:
 
+# Read-only by default; the one job that writes says so itself, next to the write.
+permissions:
+  contents: read
+
 jobs:
-  simulation:
+  # The matrix's own source of truth, imported rather than copied. See the header.
+  list:
     runs-on: ubuntu-latest
-    # Sized for the 2-core runner: ~330s locally on 10 cores measured as 20+ minutes here.
-    timeout-minutes: 60
+    outputs:
+      files: ${{ steps.read.outputs.files }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+      - id: read
+        run: |
+          FILES=$(node -e "import('./scripts/heavy-tests.mjs').then(m => process.stdout.write(JSON.stringify(m.HEAVY_SIM_FILES)))")
+          echo "read ${FILES}"
+          echo "files=${FILES}" >> "$GITHUB_OUTPUT"
+
+  sim:
+    needs: list
+    runs-on: ubuntu-latest
+    # One file, not thirteen: sized for the slowest of them on a 2-core runner, plus its install.
+    timeout-minutes: 20
+    strategy:
+      # A dead file must not hide the twelve behind it – that is half of what the matrix is for.
+      fail-fast: false
+      matrix:
+        file: ${{ fromJSON(needs.list.outputs.files) }}
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
@@ -117,19 +193,70 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
-      - run: npm run test:sim
-      # Weekly dependency health rides the same weekly slot - not on PRs, where it would flake
-      # on registry weather. High and above only; dev-only advisories do not reach a player.
+      # Through scripts/sim.mjs, never straight at vitest: the stall classifier and its ONE retry
+      # live in that script, and a matrix that called vitest directly would lose both.
+      # The value goes through the environment rather than into the command line – it comes from a
+      # file in the repository, and interpolating repository text into a shell is a habit that only
+      # has to be wrong once.
+      - env:
+          SIM_FILE: ${{ matrix.file }}
+        run: npm run test:sim -- "$SIM_FILE"
+
+  # Its own job since 07.09. It spent three weeks behind a red sim in the same job and never ran.
+  # Weekly, not on PRs, where it would flake on registry weather. High and above only; a dev-only
+  # advisory does not reach a player.
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
       - run: npm audit --omit=dev --audit-level=high
-      # ⭐ THE READER LOOP THAT EXISTS: a red run opens (or refreshes) an Issue the owner will see.
+
+  # ⭐ THE READER LOOP, DOWNSTREAM OF EVERYTHING IT REPORTS ON so that nothing it reports on can
+  # silence it. `always()` because a failed `needs` would otherwise skip this job outright.
+  report:
+    needs: [list, sim, audit]
+    if: ${{ always() && contains(needs.*.result, 'failure') }}
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write # the 403 that hid five red runs: this line was missing
+      actions: read # to name the jobs that failed
+    steps:
       - uses: actions/github-script@v7
-        if: failure()
         with:
           script: |
             const title = 'Weekly simulation calibration is RED'
             const runUrl = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`
+            const jobs = await github.paginate(github.rest.actions.listJobsForWorkflowRun, {
+              ...context.repo,
+              run_id: context.runId,
+              per_page: 100,
+            })
+            // Name the red jobs. Before the matrix an Issue could only say "something in a
+            // 23-minute log"; now it says which file, which is the difference between a reader
+            // loop and a notification.
+            const red = jobs.filter((j) => j.conclusion === 'failure').map((j) => `- \`${j.name}\``)
+            const which = red.length ? `\n\nRed:\n${red.join('\n')}` : ''
+            const body = `The weekly calibration failed.${which}\n\nRun: ${runUrl}\n\nThe working rule stands: every PR assembly runs \`npm run test:sim\` locally and brings the numbers.`
+            // The label did not exist in the repository on 07.09, and BOTH halves below lean on
+            // it – the dedupe query and the create call. Whether `issues.create` conjures a missing
+            // label is folklore either way, so make it, and let an already-exists 422 pass.
+            try {
+              await github.rest.issues.createLabel({
+                ...context.repo,
+                name: 'sim-health',
+                color: 'b60205',
+                description: 'The weekly simulation calibration is red',
+              })
+            } catch (err) {
+              if (err.status !== 422) throw err
+            }
             const open = await github.rest.issues.listForRepo({ ...context.repo, state: 'open', labels: 'sim-health' })
-            const body = `The weekly \`test:sim\` (or \`npm audit\`) run failed.\n\nRun: ${runUrl}\n\nThe working rule stands: whoever touched the match model last runs \`npm run test:sim\` locally and brings the numbers.`
             if (open.data.length) {
               await github.rest.issues.createComment({ ...context.repo, issue_number: open.data[0].number, body })
             } else {
