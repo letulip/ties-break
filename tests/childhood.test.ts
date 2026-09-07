@@ -71,11 +71,31 @@ describe('the control – why the prologue may not reuse the game\'s curve', () 
     const junior = ageTermOver(14, 18)
     const toPeak = ageTermOver(14, 23)
     // The build spec's §1a, re-measured here: 2.56 / 0.90 / 1.43.
+    //
+    // ⚠⚠ RE-AIMED, ROUND 38 #17 – ONE OF THE THREE MOVED AND IT IS THE THIRD. `ageFactor` below 13
+    // is clamped to `peakRate` and 14->18 is the eased steep band, so the prologue and the junior
+    // window are untouched to four decimals; 14->23 crosses `plateauStart` at 18 and reads
+    // `ECONOMY.development.ageCurve.plateauRate`, which round 38 #17 took 0.0009 -> 0.0027.
+    // Measured on this tree, one dial at a time:
+    //
+    //     arm                                 prologue 6->14   junior 14->18   toPeak 14->23
+    //     pre-#17                                     2.5634          0.9040          1.4251
+    //     fitFactor 1.05/0.94 -> 1.25/0.75 alone      2.5634          0.9040          1.4251
+    //     plateauRate 0.0009 -> 0.0027 alone          2.5634          0.9040          1.6582
+    //     SHIPPED, both                               2.5634          0.9040          1.6582
+    //
+    // ⭐ THE CONTROL'S CLAIM IS UNTOUCHED AND IS THE REASON THIS IS A RE-AIM AND NOT A LOOSENING: a
+    // prologue that reused the game's curve would still hand a child 2.84x the whole junior window
+    // and 1.55x the entire run to the peak. #17 made the late years worth something, so the ratio
+    // fell 1.7988 -> 1.5459; it did not stop being absurd, which is what the block exists to say.
     expect(prologue).toBeCloseTo(2.56, 2)
     expect(junior).toBeCloseTo(0.9, 2)
-    expect(toPeak).toBeCloseTo(1.43, 2)
+    expect(toPeak).toBeCloseTo(1.6582, 3)
     expect(prologue / junior).toBeGreaterThan(2.8)
-    expect(prologue / toPeak).toBeGreaterThan(1.7)
+    // ⚠ RE-AIMED FROM `> 1.7`, measured at 1.5459. The bound is cut just under the measurement the
+    // same way the 2.8 above is – close enough that a further flattening of the plateau reddens it
+    // rather than sliding past.
+    expect(prologue / toPeak).toBeGreaterThan(1.5)
   })
 })
 

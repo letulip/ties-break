@@ -265,7 +265,35 @@ describe('#1 the room note leads with a named band', () => {
     // ⚠ «Close to her ceiling» arrives at age 19.3 on this career rather than at 24. That is well
     // past the fourteen he complained about, and it is a measured consequence of the re-normalisation
     // he asked for - §A1's «the verdict arrives after twenty» was written about the raw scale.
-    expect(seen, 'the bands a middle-rung career passes through, in order').toEqual([0, 1, 2])
+    //
+    // ⚠⚠⚠ RE-AIMED, ROUND 38 #17 – IT PUT THE LIST BACK TO `[0, 1, 2, 3]`. Read all four notes
+    // together: the list has been `[0,1,2]` (#2b), `[0,1,2,3]` (bundle H), `[0,1,2]` (bundle I) and is now
+    // `[0,1,2,3]` again – and only ONE of those four moves was a change to what the read MEANS.
+    // Bundle H's and I's were denominator arguments. This one is not: the denominator's definition
+    // is untouched, the edges are still the owner's 0.40 / 0.75 / 0.90, and what moved is that this
+    // career GREW MORE. `ECONOMY.development.ageCurve.plateauRate` 0.0009 -> 0.0027 pays her for
+    // every week past 18, and `ECONOMY.coach.fitFactor` 1.05/0.94 -> 1.25/0.75 pays her middle coach
+    // for fitting her from week one. Measured on this very walk, the shown share at each 52-week
+    // mark from age 15 to 23:
+    //
+    //     age      15     16     17     18     19     20     21     22     23
+    //     bundle I 0.302  0.482  0.605  0.686  0.740  0.780  0.811  0.832  0.847
+    //     now      0.340  0.532  0.656  0.734  0.785  0.825  0.860  0.886  0.907
+    //
+    // ...and she enters the fourth band at WEEK 450, age 22.7, ending the nine-season walk at 0.9073
+    // shown. ⚠ THE ASSERTION IS NOT WEAKER FOR THE CHANGE, for the third time in this comment:
+    // `toEqual` on the whole walk still forbids a skipped band, a repeated one and any step
+    // backwards, and the monotone guard inside the loop above is untouched. ⚠ AND THE ROUND-23
+    // CLAIM IS UNAFFECTED – «At her ceiling» being reachable by a MIDDLE-rung career is a stronger
+    // statement about dead copy than the elite-only one below it, not a weaker one.
+    //
+    // ⚠⚠ WHAT A READER SHOULD NOTICE, FILED FOR THE OWNER AS ITS PREDECESSOR WAS: bundle I's «this
+    // career reaches «At her ceiling» NEVER inside the growth arc» was an open item for him, and
+    // #17 closed it from underneath without anybody moving the edges he reserved. The verdict now
+    // arrives at 22.7 on a middle rung – past the fourteen and the nineteen he objected to, and
+    // inside her career rather than after it. See tests/round34-reachable-ceiling.test.ts for the
+    // five-rung table.
+    expect(seen, 'the bands a middle-rung career passes through, in order').toEqual([0, 1, 2, 3])
     expect(steps, 'every change is a step it never takes back').toBe(seen.length - 1)
   })
 

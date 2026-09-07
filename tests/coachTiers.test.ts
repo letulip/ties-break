@@ -291,12 +291,87 @@ describe('fit and development – what the rung is worth', () => {
     expect(coachFitFor(null, 'serve-first')).toBe('good')
   })
 
-  it('keeps the fit pill smaller than one rung of the ladder', () => {
-    // Fit must be a reason to prefer one affordable coach over another, never a reason to buy up a
-    // rung: a Budget coach who is great for her should just edge a Middle coach who is wrong for
-    // her, and nothing wider than that.
-    expect(coachFactor('budget', 'great')).toBeGreaterThan(coachFactor('middle', 'off'))
-    expect(coachFactor('budget', 'great')).toBeLessThan(coachFactor('middle', 'good'))
+  // ⚠⚠⚠ RE-AIMED, ROUND 38 #17 – THE RULE THIS ARM ENFORCED IS RETIRED, AND THE OWNER RETIRED IT.
+  // This paragraph is the correction, kept rather than rewritten because the rule it describes was
+  // load-bearing for four rounds and a reader who meets the new numbers cold will otherwise think
+  // they are a mistake. The arm used to be titled «keeps the fit pill smaller than one rung of the
+  // ladder» and it read, verbatim:
+  //
+  //     «Fit must be a reason to prefer one affordable coach over another, never a reason to buy up
+  //      a rung: a Budget coach who is great for her should just edge a Middle coach who is wrong
+  //      for her, and nothing wider than that.»
+  //
+  //     expect(coachFactor('budget', 'great')).toBeGreaterThan(coachFactor('middle', 'off'))
+  //     expect(coachFactor('budget', 'great')).toBeLessThan(coachFactor('middle', 'good'))
+  //
+  // ⚠⚠ THAT IS A RULE AND NOT A NUMBER, SO IT IS NOT RE-POINTED – IT IS RETIRED. `fitFactor` moved
+  // 1.05/0.94 -> 1.25/0.75 and the second line above is now false by construction: measured, the fit
+  // span is x1.6667 against the WHOLE coach ladder's x1.4024 (self 0.82 -> elite 1.15), so a budget
+  // coach who fits reads 1.1875 against a middle coach who is merely not wrong at 1.04, and against
+  // an ELITE coach who is wrong for her at 0.8625. Fit is now a reason to buy up a rung – or to
+  // refuse to.
+  //
+  // ⭐⭐⭐ AND THAT IS DELIBERATE, RULED BY THE OWNER FROM THE REAL SPORT. His example was Björn
+  // Borg, whose career-long coach was not a star coach: the PARTNERSHIP was what mattered, and a
+  // model in which the dearest rung outweighs the match cannot tell that story. The old rule was a
+  // design choice nobody had objected to, never a fact about tennis.
+  //
+  // ⚠ HIS OWN CLAUSE IS THE BOUND, AND IT IS ASSERTED BELOW: «если и только если случился метч». An
+  // elite coach who DOES fit still reads 1.4375 – 21.05% on top of a budget coach who fits – so the
+  // tier still buys something real on top of a match. What it no longer buys is a SUBSTITUTE for
+  // one.
+  //
+  // WHAT SURVIVES, and it is all asserted here rather than described: (a) the best thing money can
+  // buy is still the dearest rung teaching the game she actually plays; (b) at EQUAL fit the ladder
+  // is intact and monotone, so buying up a rung is never a downgrade; (c) `good` is still exactly 1,
+  // the neutral pill; (d) the inversion itself, pinned so that a later retune cannot walk it back by
+  // accident and call it tidying. Measured with `tools/r38-ceiling-dials.ts`, the row the owner
+  // chose: a mismatched middle partnership reaches 93.2% of her headroom against a matched one's
+  // 98.9%.
+  it('⚠ RE-AIMED (#17): the fit now outweighs the tier – and an elite coach who fits is still the best money can buy', () => {
+    const FITS = ['great', 'good', 'off'] as const
+    const ladder = ECONOMY.coach.developmentFactor
+    const fit = ECONOMY.coach.fitFactor
+
+    // (d) THE INVERSION, as one line. A budget coach who is great for her beats an ELITE coach who
+    // is wrong for her – 1.1875 against 0.8625 – which is the Borg case stated in the model's own
+    // arithmetic, and the thing the retired rule forbade.
+    expect(coachFactor('budget', 'great')).toBeGreaterThan(coachFactor('elite', 'off'))
+    expect(coachFactor('budget', 'great')).toBeGreaterThan(coachFactor('middle', 'good'))
+
+    // ...and the one number behind it, derived from the shipped constants rather than quoted, so a
+    // retune of either end moves this assertion with the code.
+    const ladderSpan = ladder.elite / ladder.self
+    const fitSpan = fit.great / fit.off
+    expect(ladderSpan, 'the whole ladder, end to end').toBeCloseTo(1.4024, 4)
+    expect(fitSpan, 'the fit span, end to end').toBeCloseTo(1.6667, 4)
+    expect(fitSpan, 'the fit is WIDER than the ladder – round 38 #17').toBeGreaterThan(ladderSpan)
+
+    // (a) HIS BOUND. The dearest rung teaching her own game is the maximum of the whole table – not
+    // a rung of it, the whole of it – so «если и только если случился метч» is a statement about
+    // what the tier is worth ON TOP of a match, never a demotion of the tier.
+    const every = COACH_TIERS.flatMap((t) => FITS.map((f) => coachFactor(t, f)))
+    expect(coachFactor('elite', 'great'), 'elite + great fit is still the top of the table').toBe(
+      Math.max(...every),
+    )
+    expect(
+      coachFactor('elite', 'great') / coachFactor('budget', 'great'),
+      'and it is worth 21% over a budget coach who also fits',
+    ).toBeCloseTo(1.2105, 4)
+
+    // (b) AT EQUAL FIT THE LADDER IS INTACT. Every rung beats the one below it on every pill, so
+    // money never buys a worse week – which is the half of the old rule that was never in question
+    // and is now the one that carries the claim.
+    for (const f of FITS) {
+      for (let i = 1; i < COACH_TIERS.length; i++) {
+        expect(
+          coachFactor(COACH_TIERS[i], f),
+          `${COACH_TIERS[i]} must beat ${COACH_TIERS[i - 1]} at ${f} fit`,
+        ).toBeGreaterThan(coachFactor(COACH_TIERS[i - 1], f))
+      }
+    }
+
+    // (c) ...and the middle pill is still exactly neutral, so `good` costs and pays nothing.
     expect(ECONOMY.coach.fitFactor.good).toBe(1)
   })
 

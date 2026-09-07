@@ -43,6 +43,15 @@
 // `plateauStart` 23 -> 28 and `declineStart` 29 -> 33; a hardcoded 0.9766 would survive it in
 // silence. That test moves the curve AND the coach ladder AND the match bonus in a fixture and fails
 // if the normaliser stands still – all three, because since bundle I all three are inputs.
+//
+// ⚠⚠⚠ ROUND 38 #17 IS THAT WAVE, ARRIVING FROM A DIFFERENT DIRECTION, AND THE GUARD WORKED. It did
+// not move the phase BOUNDARIES – `plateauStart` is still 23 and `declineStart` still 29 – it moved
+// `ECONOMY.development.ageCurve.plateauRate` 0.0009 -> 0.0027 and `ECONOMY.coach.fitFactor`
+// 1.05/0.94 -> 1.25/0.75, which are the two other kinds of input this file guards. Four arms went
+// red and every one of them is re-aimed to a measurement below rather than widened: 0.9766 ->
+// 0.99805 of her headroom, a best-coached multiplier of 1.8596 -> 2.21375, and a top band that now
+// arrives at 21.3 – 23.7 on every hired rung instead of 25.5 – 28.9 on two of them. The numbers this
+// header quotes above are bundle I's and are kept as the record of what they were.
 import { describe, it, expect, beforeAll } from 'vitest'
 import { coachRoomBandOf, coachRoomBandLabel, coachRoomNote } from '../src/engine/world/coachMarket'
 import { reachableHeadroomShare, SKILL_KEYS } from '../src/engine/development'
@@ -74,7 +83,7 @@ function careerAtShown(seed: string, shown: number) {
 }
 
 describe('bundle I: the normaliser is derived from the age curve AND the coach ladder', () => {
-  it('⭐ the shipped curve and ladder reach 0.9766 of her headroom, and that is the number', () => {
+  it('⭐ the shipped curve and ladder reach 0.99805 of her headroom, and that is the number', () => {
     // ⚠ THIS IS A MEASUREMENT, AND A WAVE THAT MOVES ITS INPUTS IS SUPPOSED TO REDDEN IT. The value
     // is not an input anywhere – nothing reads a literal – but it IS the fact the whole bundle rests
     // on, so it is pinned here rather than left to be rediscovered. If the approved plateauStart /
@@ -83,12 +92,27 @@ describe('bundle I: the normaliser is derived from the age curve AND the coach l
     // tools/r34-reachable-ceiling.ts --skip-walk`), not to widen the tolerance.
     // ⚠ RE-AIMED FROM BUNDLE H, WHICH PINNED 0.8668 HERE – the bare-curve walk. Same assertion, same
     // job; what moved is the multiplier the walk runs at. See this file's header for why.
+    //
+    // ⚠⚠ RE-AIMED, ROUND 38 #17 – 0.9766 -> 0.99805, AND THE WAVE THIS PIN WAS BUILT TO CATCH IS THE
+    // ONE THAT ARRIVED. It used to assert `toBeCloseTo(0.9766, 4)`; it now asserts 0.99805, and the
+    // job of the line is unchanged – it is the measurement, re-measured, at the same tolerance. Both
+    // dials moved it and BOTH halves are the reason, measured one at a time on this tree:
+    //
+    //     arm                                        best coached rate   reachable
+    //     pre-#17  plateau 0.0009, fit 1.05/0.94             1.859550    0.97659603
+    //     plateauRate 0.0009 -> 0.0027 alone                 1.859550    0.99468887
+    //     fitFactor 1.05/0.94 -> 1.25/0.75 alone             2.213750    0.98858623
+    //     SHIPPED, both                                      2.213750    0.99804964
+    //
     const reachable = reachableHeadroomShare()
-    expect(reachable).toBeCloseTo(0.9766, 4)
+    expect(reachable).toBeCloseTo(0.99805, 4)
 
     // ...and it is STILL genuinely short of the ceiling, which is the round-34 #2b defect in one
     // line: even taking the best coaching money can buy, every week of her life, ~2.3% of her
     // headroom is arithmetically unreachable and `potential` remains an asymptote.
+    // ⚠ ROUND 38 #17 MADE THIS THE TIGHT ONE. The unreachable remainder is 0.195% now, not 2.3%, so
+    // the asymptote claim is a hair from the clamp rather than comfortably clear of it – which is
+    // the whole point of leaving the assertion where it is instead of restating it as a margin.
     expect(reachable, 'the ceiling is an asymptote, not a destination').toBeLessThan(1)
 
     // ⭐⭐ AND IT IS ABOVE THE TOP EDGE, WHICH IS THE PROPERTY BUNDLE I EXISTS TO CREATE. The band
@@ -109,10 +133,16 @@ describe('bundle I: the normaliser is derived from the age curve AND the coach l
 
     // And the multiplier is the one the ledger names, so a reader can check the arithmetic: the
     // dearest rung teaching the game she actually plays, and the match bonus at its cap.
+    //
+    // ⚠ RE-AIMED, ROUND 38 #17 – 1.8596 -> 2.21375, AND IT IS THE FIT HALF ALONE. It used to assert
+    // `toBeCloseTo(1.8596, 4)`. `coachFactor('elite','great')` is `developmentFactor.elite x
+    // fitFactor.great`, so `fitFactor.great` 1.05 -> 1.25 takes it 1.2075 -> 1.4375 and the match
+    // term (x1.54, untouched) carries it to 2.21375 exactly. `plateauRate` does not appear in this
+    // product at all – measured, the plateau-only arm still reads 1.859550.
     const best =
       coachFactor('elite', 'great') *
       (1 + ECONOMY.development.matchBonusCap * ECONOMY.development.matchBonus)
-    expect(best).toBeCloseTo(1.8596, 4)
+    expect(best).toBeCloseTo(2.21375, 4)
 
     // ⚠⚠ AND THE CONSEQUENCE THAT IS THE WHOLE POINT: a career that took everything the BARE CURVE
     // offers – i.e. a girl who was never coached and never played – reads «Close to her ceiling» and
@@ -372,6 +402,31 @@ describe('bundle I: the approved edges still mean what they say', () => {
 // the claim – is how a known gap stops being known. Both knobs that would close it are his: the
 // edges (0.40 / 0.75 / 0.90, approved 02.09) and the choice of denominator. See
 // docs/rounds/round-34.md, bundle I.
+//
+// =================================================================================================
+// ⚠⚠⚠ RE-AIMED, ROUND 38 #17 – THE TABLE ABOVE IS BUNDLE I'S AND IS SUPERSEDED. It is kept because
+// the two arms below are re-pointed against it and a reader needs both columns to see what moved.
+// Re-walked on this tree, one seed per rung, the same 780 weeks (14 -> 29):
+//
+//   rung     bands seen    reaches «At her ceiling»   peak shown share   was (bundle I, 1 seed)
+//   self     [0,1,2]       never                      0.8940             ~0.855, never
+//   budget   [0,1,2,3]     age 23.67                  0.9626             never
+//   middle   [0,1,2,3]     age 22.40                  0.9740             28.9 on 3 of 8 seeds
+//   high     [0,1,2,3]     age 21.65                  0.9801             27.1
+//   elite    [0,1,2,3]     age 21.35                  0.9826             25.5
+//
+// ⭐⭐ SO THE OPEN CONSEQUENCE BUNDLE I FILED FOR THE OWNER IS CLOSED, AND BY HIS OWN DIALS RATHER
+// THAN BY THE EDGES HE RESERVED. `plateauRate` 0.0009 -> 0.0027 makes the late years worth something
+// and `fitFactor` 1.05/0.94 -> 1.25/0.75 pays a matched partnership for them, so a budget coach who
+// fits now takes a career to the top band at 23.7 – the parent whose girl has genuinely stopped
+// growing IS told to stop paying, which is the whole argument bundle H was built on.
+//
+// ⚠⚠ AND WHAT IT COSTS IS NAMED RATHER THAN ABSORBED: the top band now arrives in her EARLY TWENTIES
+// on every hired rung (21.3 – 23.7 against bundle I's 25.5 – 28.9), and the `self` row – the one
+// guarantee this bundle exists to make – clears the 0.90 edge by 0.006 of share instead of by 0.045.
+// It still holds and is still asserted below, untouched; it is now a thin margin rather than a
+// comfortable one, and that is for the owner to look at, not for a test to tune away.
+// =================================================================================================
 describe('bundle I: which band each rung reaches, walked through the real engine', () => {
   const RUNGS: CoachTier[] = ['self', 'budget', 'middle', 'high', 'elite']
   /** One 780-week walk per rung – 15 seasons, 14 -> 29, the whole growth arc and none of the decline
@@ -476,29 +531,74 @@ describe('bundle I: which band each rung reaches, walked through the real engine
     // Measured: high at 26.3, elite at 25.2 on these seeds (26.5-27.8 and 24.8-25.8 across eight).
     // Pinned as a BAND rather than a point – the claim is "late in her career but inside it", and a
     // tighter pin would redden on a tuning change that did not move the meaning.
-    expect(walked.get('high')!.topAtAge!).toBeGreaterThan(24)
-    expect(walked.get('high')!.topAtAge!).toBeLessThan(29)
+    //
+    // ⚠⚠ RE-AIMED, ROUND 38 #17 – THE BAND MOVED AND SO DID THE SENTENCE THAT JUSTIFIED IT. It used
+    // to assert `> 24` and `< 29` on «late in her career but inside it». Measured on this tree, high
+    // reaches the top band at 21.65 and elite at 21.35, so «late in her career» is no longer a true
+    // description of when it arrives and is not restated here. WHAT THE ARM STILL CLAIMS, and what
+    // the band is now cut to, is the half that was always the point: the fourth band is EARNED
+    // inside the growth arc rather than handed over at fourteen or unreachable at twenty-nine – it
+    // arrives after five to eight seasons of paying for it, and the dearest rung gets there first.
+    // Both dials moved it: `plateauRate` 0.0009 -> 0.0027 raises the shown share every week past 18,
+    // and `fitFactor.great` 1.05 -> 1.25 raises it from week one for a coach who fits.
+    expect(walked.get('high')!.topAtAge!).toBeGreaterThan(20)
+    expect(walked.get('high')!.topAtAge!).toBeLessThan(25)
     expect(walked.get('elite')!.topAtAge!).toBeLessThan(walked.get('high')!.topAtAge!)
   })
 
-  it('⚠⚠ the BUDGET rung does not reach it inside the growth arc – measured, reported, not adjusted', () => {
-    // ⚠⚠ AN OPEN CONSEQUENCE FOR THE OWNER, PINNED SO THAT IT CANNOT BE FORGOTTEN. Bundle H's whole
-    // argument was that «a parent whose girl had genuinely stopped growing was never told to stop
-    // paying», and bundle I re-opens exactly that at the bottom of the hired ladder: 0/8 budget
-    // careers and 3/8 middle ones ever hear «At her ceiling», the middle ones only at 28.9.
-    //
-    // ⚠ IT IS NOT A DEFECT IN THIS CODE AND IT WAS NOT SILENTLY TUNED AWAY. Both knobs that would
-    // close it belong to the owner: the band edges (0.40 / 0.75 / 0.90, approved 02.09, explicitly
-    // out of scope for this bundle) and the choice of denominator (his «да, перенормируй показ
-    // сразу», measured both ways in docs/rounds/round-34.md). This test records where the code
-    // actually stands so that a later wave moving either knob turns it red and gets read.
+  // ⚠⚠⚠ RE-AIMED, ROUND 38 #17 – THE OPEN ITEM THIS ARM WAS FILING IS CLOSED, SO THE ARM SAYS SO.
+  // It used to be titled «⚠⚠ the BUDGET rung does not reach it inside the growth arc – measured,
+  // reported, not adjusted», and its note, kept verbatim because it is the record of a decision the
+  // owner was owed and has now effectively made:
+  //
+  //     «⚠⚠ AN OPEN CONSEQUENCE FOR THE OWNER, PINNED SO THAT IT CANNOT BE FORGOTTEN. Bundle H's
+  //      whole argument was that «a parent whose girl had genuinely stopped growing was never told
+  //      to stop paying», and bundle I re-opens exactly that at the bottom of the hired ladder: 0/8
+  //      budget careers and 3/8 middle ones ever hear «At her ceiling», the middle ones only at
+  //      28.9. ⚠ IT IS NOT A DEFECT IN THIS CODE AND IT WAS NOT SILENTLY TUNED AWAY. Both knobs
+  //      that would close it belong to the owner: the band edges (0.40 / 0.75 / 0.90, approved
+  //      02.09, explicitly out of scope for this bundle) and the choice of denominator (his «да,
+  //      перенормируй показ сразу», measured both ways in docs/rounds/round-34.md). This test
+  //      records where the code actually stands so that a later wave moving either knob turns it
+  //      red and gets read.»
+  //
+  //     expect(budget.seen).toEqual([0, 1, 2])
+  //     expect(budget.topAtAge).toBeNull()
+  //     expect(budget.peakRatio).toBeGreaterThan(0.85); expect(budget.peakRatio).toBeLessThan(0.9)
+  //
+  // ⚠⚠ IT TURNED RED AND IT GOT READ, WHICH IS EXACTLY WHAT IT WAS FOR. Neither of the two knobs it
+  // named is what closed the gap – the edges are untouched and so is the denominator's DEFINITION –
+  // it was closed from underneath by round 38 #17's two development dials, which raise the
+  // numerator faster than they raise the denominator. Measured on this tree: a budget career now
+  // reaches «At her ceiling» at 23.67 with a peak shown share of 0.9626, against never and ~0.855.
+  //
+  // WHAT THE ARM ASSERTS NOW, and it is the claim that survives the closure: the fourth band is
+  // reachable on the CHEAPEST hired rung, and the ladder still pays – budget gets there LAST of the
+  // four, so money no longer buys access to the top band but it still buys the years back. ⚠ The
+  // negative half of this file has not gone away; it moved next door and is unchanged: `self` still
+  // never reaches it, which is the claim bundle I actually exists for.
+  it('⭐⭐ RE-AIMED (#17): the BUDGET rung now DOES reach it – last of the four, which is the ladder', () => {
     const budget = walked.get('budget')!
-    expect(budget.seen, 'budget: reaches «Close to her ceiling» and stops there').toEqual([0, 1, 2])
-    expect(budget.topAtAge, 'budget does NOT reach «At her ceiling» – the open item').toBeNull()
-    // ...and it is MARGINAL rather than remote, which is the part that makes it a question for him
-    // and not a structural fact: she ends a couple of points under the edge.
-    expect(budget.peakRatio, 'budget lands just under the 0.90 edge').toBeGreaterThan(0.85)
-    expect(budget.peakRatio).toBeLessThan(0.9)
+    expect(budget.seen, 'budget: every band, in order, none skipped and none repeated').toEqual([0, 1, 2, 3])
+    expect(budget.topAtAge, 'budget reaches «At her ceiling»').not.toBeNull()
+    // Pinned as a BAND rather than a point, the same way the high/elite arm above is: measured 23.67
+    // here, and the claim is «late in the growth arc, after the rungs that cost more».
+    expect(budget.topAtAge!).toBeGreaterThan(22)
+    expect(budget.topAtAge!).toBeLessThan(26)
+    // ⭐ THE STRUCTURAL HALF, AND THE REASON THIS IS NOT MERELY A LOOSENED PIN: the cheapest hired
+    // rung is the SLOWEST to it, strictly, and the order is the price order. A retune that let a
+    // budget coach arrive first would redden here – which is the round-34 #2b inversion in the one
+    // place it could still hide.
+    for (const dearer of ['middle', 'high', 'elite'] as CoachTier[]) {
+      expect(
+        walked.get(dearer)!.topAtAge!,
+        `${dearer} must reach the top band before budget does`,
+      ).toBeLessThan(budget.topAtAge!)
+    }
+    // ...and she is genuinely over the edge rather than sitting on it – the mirror of the old arm's
+    // «marginal rather than remote», read from the other side.
+    expect(budget.peakRatio, 'budget clears the 0.90 edge').toBeGreaterThan(0.93)
+    expect(budget.peakRatio).toBeLessThan(0.99)
   })
 
   it('the peak share is a strict ladder across the five rungs, which is the structural claim', () => {

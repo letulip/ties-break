@@ -319,7 +319,7 @@ describe('(B) the season wrap-up - best result', () => {
     }
   })
 
-  it('...and the old event-feed scrape would have got it wrong, so this is not vacuous', () => {
+  it('...and the capped feed cannot hold a whole season, so this is not vacuous', () => {
     // THE BUG'S OWN WITNESS, the R11-12a idiom. `world.events` prunes by COUNT, so a season's
     // tournament summaries decay out of it gradually: the wrap-up was already reporting a WEAKER
     // finish than she achieved seasons before it collapsed into the owner's "no tournaments
@@ -348,10 +348,61 @@ describe('(B) the season wrap-up - best result', () => {
     // ⚠ RE-AIMED 14.08 to the seasons she PLAYED, and the bound is a SHARE rather than a count so it
     // cannot go vacuous by the career simply getting shorter: strictly more than half of her playing
     // seasons must show the decay.
+    //
+    // ⚠⚠⚠ RE-AIMED, ROUND 38 (#17 + C4 TOGETHER) – THE OUTCOME-LEVEL WITNESS HAS GONE VACUOUS ON
+    // THIS CAREER AND IS RETIRED RATHER THAN RE-POINTED. It read, and this is the whole of it:
+    //
+    //     const wrong = played.filter((w) => w.legacyBestText !== w.ledgerBestText)
+    //     expect(wrong.length).toBeGreaterThan(0)
+    //
+    // ⚠ ITS PREMISE IS NOT REBUILDABLE ON THIS CAREER, so nothing here fabricates a passing form of
+    // it. Measured on this tree, the ten wrap-ups: she is CHAMPION in every one of the six seasons
+    // she plays, and the handful of rows the feed still holds contains a title in every one of them,
+    // so the scrape agrees everywhere. `wrong` is 0 and no re-cut of the same quantity can make it
+    // anything else while the best result of every season is the best result there is.
+    //
+    // ⚠⚠ AND WHY IT MOVED WAS MEASURED BEFORE ANYTHING WAS TOUCHED, because the obvious suspect –
+    // #17's development dials – is not the answer. The same 520-week walk on four trees:
+    //
+    //     tree                                        seasons played   decayed   wrong   ending
+    //     8d0b6bf4  the wave before both                          10         7       1   none
+    //     2cc6f63a  #17/#18 alone (the two dials)                 10         7       2   none
+    //     cffdcb11  C4 alone (the one closed form)                10         8       3   none
+    //     795dccfc  the merge of the two – this tree               6         4       0   injury, week 307
+    //
+    // ⭐ SO IT IS NEITHER CHANGE. Each ARM ON ITS OWN leaves the witness stronger than the base
+    // did – 2 and 3 against 1. What ends it is the two together, and what they do is end the CAREER:
+    // she is injured out at week 307, age 19, «61 weeks already lost, and then this one», so four of
+    // the ten seasons are never played and the six that are, she wins.
+    //
+    // ⚠⚠ THIS FILE'S OWN HEADER PREDICTED THIS EXACT WEEK, WHICH IS WHY THE ENDING IS NOT PINNED
+    // HERE AND IS NOT PINNED NOW: «On 14.08 this career ended (injury, week 307, age 19) under the
+    // 128-draw wave's first cut, SURVIVED all ten seasons once the owner's run-fatigue curve
+    // replaced it, and ENDED AGAIN at the same week 307 once round-21 #4 seeded her at her real
+    // standing – she wins more, plays deeper, and spends more weeks on court.» That is the third
+    // flip at week 307 and the fourth balance state, and the mechanism named there is precisely what
+    // #17 and C4 do to her between them.
+    //
+    // WHAT SURVIVES IS THE MECHANISM, WHICH IS ALREADY THE FIRST ASSERTION AND IS WHY THE 13.08 NOTE
+    // ABOVE PUT IT THERE: the feed cannot see the whole season, whatever she does in it. Kept, and
+    // joined by the SEVERITY of the same fact so the arm still has something that can fail after the
+    // outcome half has stopped being able to – both derived from the two row counts, neither able to
+    // go quiet because the girl got better or because the career got shorter.
     const decayed = played.filter((w) => w.feedRows < w.ledgerRows)
     expect(decayed.length, 'the feed no longer loses rows – the read-side fix has gone vacuous').toBeGreaterThan(played.length / 2)
-    const wrong = played.filter((w) => w.legacyBestText !== w.ledgerBestText)
-    expect(wrong.length).toBeGreaterThan(0)
+    // ⚠ RE-AIMED: the outcome-level witness, replaced by the row-level one it was always a proxy
+    // for. In at least one played season the feed holds strictly FEWER THAN HALF the counting
+    // results the ledger holds – measured 6 of 13 in two of the six seasons – so a fold over the
+    // feed is reading a minority of the year and the read-side fix is doing real work. If the prune
+    // floor ever grew enough to hold a whole season, this reddens.
+    const halved = played.filter((w) => w.feedRows * 2 < w.ledgerRows)
+    expect(
+      halved.length,
+      'no season where the feed lost half its rows – the read-side fix has gone vacuous',
+    ).toBeGreaterThan(0)
+    // ...and the total the scrape cannot see, so a single wide season cannot carry the claim alone.
+    const lost = decayed.reduce((s, w) => s + (w.ledgerRows - w.feedRows), 0)
+    expect(lost, 'rows the capped feed has lost across the career').toBeGreaterThan(10)
   })
 })
 
