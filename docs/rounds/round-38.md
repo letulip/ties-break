@@ -462,6 +462,48 @@ the repo keeps is the derived statistics below.
     seven concerns and is still too long to read in one sitting; this is one seam, reported and not
     celebrated.
 
+- [~] **11. «Может ли бренд дойти до нуля?»** – answered, and the answer is that **the state he
+  describes is not reachable.** «При условии, что нет вообще участия в турнирах и движения по
+  лестнице» requires a world that ticks while she does not play, and `guardNotEnded` refuses EVERY
+  mutating command the moment `world.ending` is set – the only pause that is not an end is the college
+  freeze, and that one also refuses the shop. So there is no five-year silence to price: in the game
+  the brand's worth is always read on a career that is still going.
+
+  ⭐ **So my recommendation is to leave the formula alone**, and the round-32 argument is the one that
+  covers what is left: `assetWorthCents`' own note cites Björn Borg's company going bankrupt in 1990
+  and the NAME selling outright for $18M in 2006. A floor at 0.4 of her own peak fame is only ever
+  read by a name that is still on tour. ⚠ What WAS wrong – presence buying nothing – is fixed in #2c,
+  and that was the real content of his complaint.
+
+  ⚠ If he wants the zero case anyway it is a different feature, not a constant: a career that can be
+  PAUSED, and there is no such state today.
+
+- [~] **12. C1/C2, and his memory of the measurement was right** – «мощный тренер + мощный скилл могут
+  выше 100% дать совокупно». Confirmed, `tools/r34-reachable-ceiling.ts` §2:
+
+  | arm | reaches | against the BARE-CURVE denominator |
+  | --- | ---: | --- |
+  | bare curve – no coach, no matches | 0.8668 | 1.000 |
+  | self-coached, badly matched | 0.7885 | 0.910 |
+  | budget coach, well matched | 0.8661 | 0.999 |
+  | middle coach, well matched | 0.8894 | **1.000, clamped** |
+  | elite + great fit | 0.9124 | **1.000, clamped** |
+  | elite + great + grind + three matches a week | **0.9919** | **1.000, clamped** |
+
+  ⭐⭐ **AND IT REFRAMES C2 A THIRD TIME.** A perfectly-run career already reaches **99.2%** of the raw
+  headroom – 100% is reachable today. What does NOT happen is the other end: the WORST-run career, self
+  coached and badly matched, still realises **78.9%**. So the spread is not missing at the top, it is
+  missing at the bottom, and «раздвинуть шкалу» means **making bad career management cost more**, not
+  moving the ceiling at either end. That is a different measurement from the one C2 has written and it
+  is the one to run.
+
+- [ ] **6c. Which skills age, and how fast** – ⭐ HIS RULING, 07.09: «может быть и навыки могут
+  деградировать, это вполне ок, надо только подумать какие и с какой скоростью», and «деньги покупают
+  восстановление и это ок» – which CLOSES the recovery finding (§1 of the ageing spec) as a
+  non-defect. Spec written with the four weights and his own career's table:
+  `docs/specs/what-ages-first-2026-09.md`. ⚠ Not started – the weights are a claim about tennis and
+  they are his to approve.
+
 ---
 
 ## Wave C, as `docs/specs/next-waves-2026-09.md` recorded it
