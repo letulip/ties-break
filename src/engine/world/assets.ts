@@ -450,6 +450,47 @@ export function academyPremiumX(world: WorldState): number {
  *  `world/market.ts`'s header for why a purchase cannot move the world's dice through it.
  *
  *  Pure: reads the world, writes nothing. */
+/** ⭐⭐⭐ ROUND 38 #14 – WHAT A RUNG COSTS TO BUY, and it is not always the catalogue price.
+ *
+ *  ⚠⚠ THE DEFECT IT ENDS, MEASURED ON THE OWNER'S OWN WEEK-1115 SAVE THROUGH THE SHIPPED COMMANDS:
+ *
+ *      merch-brand: paid $250,000, worth $2,576,989
+ *         sold for $2,576,989, re-bought for $250,000
+ *         NET +$2,326,989 ... and worth $5,172,791 again
+ *
+ *  `buyAsset` charged `entryCents` while `sellAsset` paid `owned.valueCents`, and the only refusal is
+ *  on a rung CURRENTLY owned – so any rung whose worth is DERIVED rather than equal to what was paid
+ *  could be sold and bought straight back, in one week, without limit. The academy premium (#8) would
+ *  have opened a second one at about $985,000 a cycle, with no `buildWeeks` on any academy rung to
+ *  slow it.
+ *
+ *  ⭐ THE OWNER'S RULING, 07.09: «да, чини по max(каталог, стоимость)». A market does not sell you
+ *  back your own name at the sticker price.
+ *
+ *  ⚠ WHAT IS DELIBERATELY UNCHANGED, and each of the three is a case this could have broken:
+ *
+ *    1. AN `open` RUNG – the deposit and the fund. The family names an amount and receives UNITS at
+ *       the unit price, so there is no gap between price and worth to arbitrage. Returns the stake.
+ *    2. EVERY ORDINARY RUNG – a car, a house, a boat, a plane. Their worth IS what was paid, worn by
+ *       a rate from the week of purchase, so `max` resolves to `entryCents` by arithmetic rather than
+ *       by a special case.
+ *    3. A FIRST BRAND ON AN UNKNOWN CAREER. A girl with no fame is worth the floor, which is far under
+ *       the catalogue price, so the rung still costs exactly what the card says.
+ *
+ *  ⚠⚠ AND IT DOES CHANGE ONE HONEST CASE: a career that is ALREADY famous now pays what its own name
+ *  is worth rather than the sticker. That is the same sentence as the ruling, seen from the buying
+ *  side, and it is measured in docs/specs/academy-worth-2026-09.md.
+ *
+ *  Pure: reads the world, writes nothing, draws nothing. */
+export function purchasePriceCents(world: WorldState, item: ShopItem, stakeCents?: number): number {
+  if (item.stake === 'open') return Math.floor(stakeCents ?? 0)
+  // The worth this rung WOULD have the moment it is bought: the same arithmetic `assetWorthCents`
+  // runs, on a hypothetical row paid at the catalogue price this very week. One function, so a rung
+  // can never be priced by one rule and valued by another.
+  const hypothetical: OwnedAsset = { id: item.id, boughtWeek: world.week, paidCents: item.entryCents, valueCents: item.entryCents }
+  return Math.max(item.entryCents, assetWorthCents(world, hypothetical, item))
+}
+
 export function assetWorthCents(world: WorldState, owned: OwnedAsset, item: ShopItem, weekOffset = 0): number {
   const week = world.week + weekOffset
   if (owned.units !== undefined) return Math.round(owned.units * unitPriceCents(world.seed, week, item))

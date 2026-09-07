@@ -57,7 +57,7 @@ the repo keeps is the derived statistics below.
   as fame² and the multiple falls with fame on top of it»); what is NOT settled is whether -25% a
   season is the number we want, and that is item 2b.
 
-- [>] **2b. The rate, not the mechanism** – ⭐ **HE RULED, 06.09, and it is a build now, not an ask:**
+- [x] **2b. The rate, not the mechanism** – answered AND built, as item 2c. ⭐ **HE RULED, 06.09:**
   «спортсменка проводит свой лучший сезон (и не один) находясь в топ-100 и входя иногда в топ-50
   даже, у нее явно есть и репутация и о ней знают, не могу забыть за год… мы должны были чинить это
   поведение в купе со стоимостью и доходностью делая его более плавным.»
@@ -166,7 +166,7 @@ the repo keeps is the derived statistics below.
   ⚠⚠ **And it is NOT what caused «из топ-50 до топ-150».** Her four attributes read 45-50 where the
   tour's elite read 65-70, so any loss at all is decisive. That is the LEVEL, which is C2's question.
 
-- [ ] **4. The academy's worth stands still** – ⭐ HIS OBSERVATION, 06.09: «Академия при этом стоит
+- [x] **4. The academy's worth stands still** – ⭐ SUPERSEDED BY ITEM 8, WHICH SHIPPED. HIS OBSERVATION, 06.09: «Академия при этом стоит
   ровно на месте – и это не очень корректно, как мне кажется. Но можем отдельно обсудить.» Recorded,
   not built. Measured: `academy-land` and `academy-courts` both read `valueCents === paidCents`
   ($2,000,000 and $3,000,000) at every week, because the shop values a non-`business` rung off what
@@ -209,11 +209,11 @@ the repo keeps is the derived statistics below.
   See the correction above. Nothing to build; what is left of the finding is the LAG, and that is a
   question about the ranking window rather than about access.
 
-- [ ] **6c. His own proposal: the ageing penalty moves from skills toward condition** – «может она
-  должна больше уставать и больше терять за матч своей кондиции, но не падать по навыкам до уровня
-  12 лет». Costed in the spec §5: it is real, the code is closer to it than it looks
-  (`conditionMatchFactor` already scales all five attributes), and it touches three curves and every
-  AI result. ⚠ Needs his word.
+- [~] **6c-ask. His own proposal: move the ageing penalty from skills into fatigue** – ⚠ **WITHDRAWN
+  BY HIM, 07.09**: «может быть и навыки могут деградировать, это вполне ок, надо только подумать
+  какие и с какой скоростью». The transplant is off; what replaced it is the per-attribute weights,
+  built and measured further down this file. ⚠ And the same ruling closed the recovery finding (item
+  5) as a non-defect: «деньги покупают восстановление и это ок».
 
 - [x] **6d. Her own voice on her own decline** – «нужно чётко понимать, что карьера уже не та и явно
   это подсвечивать, как раз срез года закончить/продолжать... там нужно больше её голоса (или голоса
@@ -543,7 +543,6 @@ the repo keeps is the derived statistics below.
   `52c9ab78` fixed `r38-save-read`: the import moved to `src/engine/development`, where the type is
   declared, and nothing else touched.
 
-- [ ] **10. Wave B – one owner out of `App.vue`** – same, steps B1-B4.
 
 - [x] **10. Wave B – one owner out of `App.vue`** – same, steps B1-B4. **SHIPPED, all four steps.**
   `src/composables/tabSeen.ts` owns the four tab "seen" marks, their four watchers and their four dot
@@ -632,7 +631,7 @@ the repo keeps is the derived statistics below.
   ⚠ The recovery corridor moved by at most 0.04 of a point (4.49 → 4.46 at 33), re-aimed with its
   reading.
 
-- [!] **13. ⚠⚠ A LIVE MONEY LOOP ON THE SHELF, AND IT IS NOT ROUND 38'S** – found while checking a
+- [x] **13. ⚠⚠ A LIVE MONEY LOOP ON THE SHELF, AND IT IS NOT ROUND 38'S** – FIXED as item 14. – found while checking a
   consequence the academy agent flagged. `buyAsset` charges the CATALOGUE price (`entryCents`) while
   `sellAsset` pays what the row is WORTH (`owned.valueCents`), and `buyAsset` refuses only a rung
   currently owned. So a rung whose worth is DERIVED rather than paid can be sold and bought straight
@@ -653,10 +652,39 @@ the repo keeps is the derived statistics below.
   cycle would pay about **$985,000** with no build delay to slow it (no academy rung carries
   `buildWeeks`).
 
-  ⭐ **Proposed fix, one line, closing both:** a rung whose worth is derived is BOUGHT at
-  `max(entryCents, its current worth)`. A first purchase is unchanged – a brand with no fame is worth
-  its floor – and a buy-back after a sale costs what the thing is now worth, which is what any market
-  does. ⚠ HIS CALL, and item 8 is held until it is made.
+  ⭐ **HE RULED, 07.09: «да, чини по max(каталог, стоимость)».** SHIPPED as `purchasePriceCents` in
+  `world/assets.ts`, read by `buyAsset`. Measured on his save after the fix:
+
+  | rung | sold for | re-bought for | net |
+  | --- | ---: | ---: | ---: |
+  | merch-brand | $5,172,791 | $5,172,791 | **$0** |
+  | car-good | $100,100 | $110,000 | −$9,900 |
+  | house-first | $298,036 | $240,000 | **+$58,036** |
+  | academy-land | $2,904,966 | $2,547,500 | **+$357,466** |
+  | academy-courts | $3,985,417 | $3,821,250 | **+$164,167** |
+
+  ⚠⚠ **HIS RULE CLOSES THE CASE HE WAS SHOWN – the brand is now exactly $0 – AND A SECOND, DIFFERENT
+  LOOP SURVIVES.** A rung whose worth is `paid x drift^yearsHeld` can be sold at its AGED value and
+  re-bought at a catalogue price that never inflates. `house-first` does it for $58,036 and has done
+  since houses got a drift – it owes nothing to this round – and the academy's new drift extends the
+  same class to two more rungs.
+
+  Closing it needs one of two things, and both are his: a **catalogue that ages with the world**
+  (which changes the price printed on the card for every appreciating rung – a first house at week
+  1115 would read about $448,000 against today's $240,000), or a **refusal to re-buy a rung once
+  sold** (price-neutral, but it forbids selling the villa in a lean year and buying it back). Filed as
+  item 15, not fixed.
+
+- [x] **14. `max(catalogue, worth)`** – SHIPPED. `purchasePriceCents` in `world/assets.ts`, read by
+  `buyAsset`, with `world/shop.ts` re-exporting it under the file's own re-export rule. ⚠ THREE CASES
+  DELIBERATELY UNCHANGED and each is pinned: an `open` rung is still whatever the family puts in; an
+  ordinary car or house resolves to the catalogue price by arithmetic rather than by a special case;
+  and a first brand on a career the world has never heard of still costs exactly what the card says.
+  ⚠⚠ ONE HONEST CASE DOES CHANGE: an already-famous career now pays what its own name is worth rather
+  than the sticker – which is his ruling seen from the buying side.
+
+- [ ] **15. The drift loop** – see the table above. ⚠ Pre-existing on houses, extended to the academy
+  by item 8. Two shapes offered, both need his word, neither is a constant.
 
 ---
 
