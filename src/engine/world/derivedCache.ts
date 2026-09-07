@@ -220,3 +220,35 @@ const BUF_F64 = new Float64Array(1)
 const BUF_U32 = new Uint32Array(BUF_F64.buffer)
 
 export const FOLD_SEED = 0x811c9dc5
+
+/**
+ * THE TOKEN OF AN **APPEND-ONLY** LIST, computed once per (array object, length).
+ *
+ * ⚠⚠ READ THE PRECONDITION BEFORE USING THIS ON ANYTHING ELSE. It is sound for exactly one shape of
+ * list: one whose rows are never edited in place, so that "a different content" always means "a
+ * different array object, or a different length". `world.results` is that list and it was checked
+ * rather than assumed – its only writers in the whole of `src/engine` are three `results.push`
+ * (world.ts:944, world/mandatory.ts:498, world/phaseAiWeek.ts:330), the RESULTS_WINDOW prune
+ * (world/bookkeeping.ts:101, `world.results = world.results.filter(...)`, a NEW array) and one
+ * wholesale replacement in the repair path (world.ts:1574). No line anywhere assigns to a row's
+ * `points`, `week`, `tier` or `mandatoryMiss`.
+ *
+ * ⚠ `world.cohort` IS NOT SUCH A LIST and must never come through here: `driftCohort`
+ * (season/cohort.ts:254) nudges every player's attributes in place every week, so identity and
+ * length both hold still while the content moves. Its token is folded in full, every time.
+ *
+ * Why the shortcut is worth having at all: `kidPoints` folds the ledger once per upcoming event
+ * through the entry gates – 22-29 times per snapshot – so without it the digest would be paid more
+ * often than the fold it is protecting. `structuredClone` gives each command a fresh array, so this
+ * is a within-snapshot saving and never a cross-command one; the CONTENT key is what survives the
+ * clone.
+ */
+export function appendOnlyToken<T>(list: readonly T[], digest: (list: readonly T[]) => number): string {
+  const found = APPEND_TOKENS.get(list as unknown as object)
+  if (found && found.size === list.length) return found.token
+  const token = `${list.length}.${digest(list)}`
+  APPEND_TOKENS.set(list as unknown as object, { size: list.length, token })
+  return token
+}
+
+const APPEND_TOKENS = new WeakMap<object, { size: number; token: string }>()

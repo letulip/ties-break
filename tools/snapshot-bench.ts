@@ -22,7 +22,9 @@
  *   buyKit    `setKitGrade` – money and equipment, still nothing either table reads
  *   enterEvent`world.entries` grows – the entry gates move, the ranking does not
  *   tick      `tickWeek` – the week moves and results are appended, so EVERY key legitimately misses.
- *             This arm must NOT get faster; if it does, the key is not reading the ledger.
+ *             It runs against an EMPTIED memo (see `coldCache`), which is what a new week really is,
+ *             and it is the arm that says how much of the gain is within-snapshot de-duplication of
+ *             one fold rather than reuse across commands.
  *
  * MEASUREMENT ONLY. Imports the engine, reads snapshots, changes nothing on disk.
  *
@@ -45,7 +47,7 @@ import { enterEvent, entryStatus, kitStateOf, setKitGrade, tickWeek, toSnapshot,
 import { planWeek } from '../src/engine/plan'
 import { resumeMain } from '../src/engine/rng'
 import type { KitGrade } from '../src/shared/protocol'
-import { derivedCacheStats, resetDerivedCacheStats, snapshotCacheEnabled } from '../src/engine/world/derivedCache'
+import { clearDerivedCache, derivedCacheStats, resetDerivedCacheStats, snapshotCacheEnabled } from '../src/engine/world/derivedCache'
 
 const args = process.argv.slice(2)
 function flag(name: string, fallback: number): number {
@@ -81,7 +83,16 @@ async function loadFixture(name: string): Promise<WorldState> {
 
 // --- the arms ------------------------------------------------------------------------------------
 
-type Arm = { name: string; run: (world: WorldState) => void }
+type Arm = {
+  name: string
+  run: (world: WorldState) => void
+  /** ⚠ EMPTY THE MEMO BEFORE THE TIMED SNAPSHOT. Set on `tick` and only on `tick`, and it is what
+   *  makes that row honest: every repeat starts from the same base world and ticks it to the same
+   *  next week, so without this the second repeat would read the FIRST one's cache and the arm whose
+   *  job is to show a legitimate full miss would show a hit instead. In real play each week is new.
+   *  The clear itself is bench scaffolding and is not inside any timing region. */
+  coldCache?: boolean
+}
 
 /** The kit ladder's own order – `KIT_GRADES` in engine/equipment.ts walks the same one. */
 const LADDER: KitGrade[] = ['alloy', 'composite', 'performance', 'pro']
@@ -119,6 +130,7 @@ const ARMS: Arm[] = [
   },
   {
     name: 'tick',
+    coldCache: true,
     run: (w) => {
       // ⚠ THE ARM THAT MUST NOT GET FASTER. The week moves and results are appended, so every
       // content key legitimately misses. A `tick` row that improved with the memo would mean the key
@@ -164,11 +176,13 @@ function timeArm(fixture: string, base: WorldState, arm: Arm): Row {
       return { fixture, arm: arm.name, cloneMs: 0, commandMs: 0, coldMs: 0, hotMs: 0, refused: String((e as Error).message).slice(0, 48) }
     }
     const t2 = performance.now()
+    if (arm.coldCache) clearDerivedCache()
+    const t2b = performance.now()
     toSnapshot(candidate)
     const t3 = performance.now()
     clones.push(t1 - t0)
     commands.push(t2 - t1)
-    snaps.push(t3 - t2)
+    snaps.push(t3 - t2b)
   }
   return {
     fixture,
