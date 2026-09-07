@@ -607,9 +607,25 @@ describe('§4 the ledger rows and the strip total – round 28 #8\'s law', () =>
     expect(merch, 'and it really is the SMALLER figure – her cut has come off').toBeLessThan(
       merchWeeklyIncomeCents(b.world),
     )
+    // ⚠⚠ RE-AIMED AGAIN AT ROUND 38 #8, AND ROUND 28 #8'S LAW IS WHAT FORCED THE RE-AIM RATHER THAN
+    // WHAT SURVIVED IT. «The strip must total EVERY weekly line» – and the academy now feeds a
+    // SECOND one. Its four stages carry the houses' +300 bps since the owner's «как с домами», so a
+    // held stage gains value every week, and `householdWeekly` has quoted that gain as `shelfCents`
+    // since slice 1 (`assetWorthCents` at 0 against at 1 – the difference of one function with
+    // itself). Nothing new was added to the strip: the academy simply joined the line the houses and
+    // the fund were already on. ⚠ The arm was EXACT before this item only because a rate-0 stage
+    // moved the shelf by zero and the brand's own decay left `shelfCents` at or below zero, so
+    // `Math.max(0, shelfCents)` contributed nothing on either side.
+    // ⚠⚠ AND IT IS THE FULL SUM, NOT A TOLERANCE. Absorbing the difference into a `toBeCloseTo`
+    // would have retired the law this arm exists to state.
+    const shelf = Math.max(0, hb.shelfCents) - Math.max(0, ha.shelfCents)
     expect(hb.incomeCents - ha.incomeCents, 'round 28 #8: the strip must total every weekly line').toBe(
-      merch + academy,
+      merch + academy + shelf,
     )
+    // ⚠ AND THE NEW LINE IS REALLY THERE, which is the half that stops this passing on a reverted
+    // engine: at rate 0 the academy's stages move the shelf by nothing and `shelf` is 0, so a
+    // greater-than-zero claim is exactly the mutation guard.
+    expect(shelf, 'the drifting academy is a weekly line of its own now').toBeGreaterThan(0)
     expect(hb.merchCents).toBe(merch)
     expect(hb.academyIncomeCents).toBe(academy)
     expect(ha.merchCents).toBe(0)

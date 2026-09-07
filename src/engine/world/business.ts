@@ -35,7 +35,7 @@ import { kidAgeYears } from './age'
 // `world/assets.ts` – which this file imports, so the rate had to be reachable from there or there
 // would be two copies of `fame x the dial`. `assetEarningsRateCents` is that one copy; everything
 // this file adds to it is the ownership and delivery guards.
-import { assetEarningsRateCents, deliveredAssets, shopItem } from './assets'
+import { academyReputationOf, assetEarningsRateCents, deliveredAssets, shopItem } from './assets'
 import type { WorldState } from '../world'
 
 /** ⭐⭐ WHAT ONE OWNED RUNG BRINGS IN THIS WEEK, in whole cents – THE arithmetic, and the only
@@ -137,31 +137,17 @@ export function merchFamilyWeeklyIncomeCents(world: WorldState): number {
 }
 
 /** ⭐ REPUTATION – 1.0 base plus the BEST band of every finished season, counted once per season,
- *  capped. The fold the round-29 ledger proposed off `seasonHistory[].byTrack.wta.endRank` (his
- *  own save reads 1.925 since round 34's two new rungs, 1.75 before them). A season with
- *  no recorded WTA end-rank – a pre-v46 row, a null rank – counts nothing: «not recorded» is not
- *  «top-100», the season mirror's own distinction.
+ *  capped. Re-exported under its historical name; the fold itself is in `world/assets.ts`.
  *
- *  ⭐⭐ ROUND 34 #17 (03.09) – AND THE CAP IS THE CAREER'S OWN, `capBase + capPerSeason x the
- *  PROFESSIONAL seasons played`. The owner: a long professional career should be worth something
- *  and a short one should not. ⚠ «PROFESSIONAL SEASONS» IS THE SAME COUNT THE LADDER ITSELF WALKS –
- *  the rows carrying a WTA end-rank, `BrandSignals.proSeasons`' own definition – so the cap and the
- *  ladder can never disagree about what a season is. ⚠ Measured: at 4 + 0.5 the cap no longer binds
- *  below THIRTY professional seasons; see the constants' own header. */
-export function academyReputationOf(world: WorldState): number {
-  const A = ECONOMY.business.academy
-  let rep = 1
-  let proSeasons = 0
-  for (const row of world.seasonHistory ?? []) {
-    const endRank = row.byTrack?.wta?.endRank
-    if (endRank == null) continue
-    proSeasons++
-    // bands are strongest-first; the FIRST that holds is the season's best and the only one counted
-    const band = A.reputationBands.find((b) => endRank <= b.maxEndRank)
-    if (band) rep += band.add
-  }
-  return Math.min(A.reputationCapBase + A.reputationCapPerSeason * proSeasons, rep)
-}
+ *  ⚠⚠⚠ ROUND 38 #8 MOVED IT DOWN A FILE AND THE MOVE IS A CYCLE, NOT A TIDY-UP. The academy's
+ *  WORTH now reads the reputation – `assetWorthCents`' fourth arithmetic, the owner's «стоит ровно
+ *  на месте» – and `assetWorthCents` lives in `world/assets.ts`, which THIS file imports at runtime
+ *  (four lines up). A leaf importing back would close a real loop, so the fold went to the leaf and
+ *  the name stayed here. ⚠ THE PRECEDENT IS EXACT AND IT IS `assetEarningsRateCents`: round 30 #9
+ *  moved the merch rate the same distance for the same reason, and its own note in `world/assets.ts`
+ *  spells out the argument this one is a second instance of. Every importer – `engine/world`, three
+ *  tools and `tests/round29p5-business.test.ts` – is untouched, which is what a re-export is for. */
+export { academyReputationOf }
 
 /** ⭐⭐ WHAT THE ACADEMY BRINGS IN THIS WEEK, in whole cents – the DELIVERED stages' own figures,
  *  summed. The land alone is a field and earns nothing (its base is 0); a half-built academy

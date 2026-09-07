@@ -59,6 +59,7 @@ import {
   type BrandSignals,
   type WorldState,
 } from '../src/engine/world'
+import type { ShopItem } from '../src/engine/world/assets'
 import { ECONOMY } from '../src/engine/economy'
 import { rngFromSeed } from '../src/engine/rng'
 import { WEEKS_PER_YEAR } from '../src/engine/season/calendar'
@@ -427,26 +428,54 @@ describe('round 30 #11 – what the engine does to the rungs that say they neith
     // is not even a real-terms slide behind the nominal figure.
     const w = shopper('r30-11-holds')
     const zeros = shopCatalogue().filter((r) => r.annualRateBps === 0 && r.earningsMultipleX === undefined)
-    expect(zeros.map((r) => r.id), 'the rungs the sentence is now said of').toEqual([
-      'academy-land',
-      'academy-courts',
-      'academy-building',
-      'academy-staff',
-    ])
-    for (const item of zeros) {
-      const owned = { id: item.id, boughtWeek: 0, paidCents: item.entryCents, valueCents: item.entryCents }
-      for (const years of [1, 5, 15]) {
-        const later = { ...w, week: years * WEEKS_PER_YEAR } as WorldState
-        expect(assetWorthCents(later, owned, item), `${item.id} after ${years} seasons`).toBe(item.entryCents)
-      }
+    // ⚠⚠⚠ RE-AIMED BY ROUND 38 #8 (07.09), AND THE SET WENT TO EMPTY. This line used to name the four
+    // academy stages – the only rungs the sentence «Neither gains nor loses» was said of – and the
+    // owner has since taken them out of it himself: «а что насчёт стоимости и индексации этой
+    // стоимости с годами? Как с домами, например.» They carry +300 bps now, the houses' own number,
+    // so `rateLine` picks the houses' sentence for them and NO rung on the shelf reaches the zero
+    // branch any more.
+    //
+    // ⚠⚠ THE BRANCH IS KEPT AND SO IS THIS TEST, and both for the same reason. `MoneyScreen.vue`'s
+    // `annualRatePct === 0` arm is still the honest answer for the next rate-0 rung somebody adds,
+    // and deleting a correct branch because today's catalogue happens not to reach it is how a shelf
+    // quietly loses a case. So the ENGINE claim below moves off the catalogue and onto a hand-built
+    // rung: what round 30 #11 actually proved is that rate-0 arithmetic really is flat, and that is
+    // a fact about `assetWorthCents`, not about which ids happened to carry the rate that month.
+    expect(zeros.map((r) => r.id), 'no rung on the shelf carries a zero rate any more').toEqual([])
+    // ⚠ A RUNG THAT IS NOT ON THE SHELF, ON PURPOSE – it is the branch under test and nothing else.
+    // ⚠⚠ AND ITS FAMILY IS `house` RATHER THAN `academy`, WHICH IS THE WHOLE CARE IN THIS FIXTURE:
+    // an academy rung would take round 38 #8's premium branch and stop measuring the thing this test
+    // is named after. The zero it proves is the RATE's, not the premium's.
+    const flat: ShopItem = {
+      id: 'test-flat-rung',
+      family: 'house',
+      stake: 'fixed',
+      label: 'A rung at rest',
+      blurb: 'It neither gains nor loses.',
+      entryCents: 1_000_000_00,
+      annualRateBps: 0,
     }
-    // ⭐ AND THE SALE IS WHOLE. Bought, held four seasons, sold: the family gets its money back.
+    const owned = { id: flat.id, boughtWeek: 0, paidCents: flat.entryCents, valueCents: flat.entryCents }
+    for (const years of [1, 5, 15]) {
+      const later = { ...w, week: years * WEEKS_PER_YEAR } as WorldState
+      expect(assetWorthCents(later, owned, flat), `${flat.id} after ${years} seasons`).toBe(flat.entryCents)
+    }
+    // ⭐⭐ AND THE ACADEMY'S OWN SALE, WHICH IS THE LINE THAT MOVED. It used to read «the family gets
+    // its money back… four seasons later, to the cent», and the item is precisely that it now gets
+    // MORE back. ⚠ This career has banked no season, so `academyReputationOf` is 1.0 and the premium
+    // term is exactly zero – what the sale hands over is the drift alone, which is the floor option C
+    // guarantees and the honest reading of «как с домами».
     w.fundsCents = 20_000_000_00
     buyAsset(w, 'academy-land')
     walk(w, 4 * WEEKS_PER_YEAR, true)
     const before = w.fundsCents
+    const held = ownedOf(w, 'academy-land')!.valueCents
     sellAsset(w, 'academy-land')
-    expect(w.fundsCents - before, 'four seasons later, to the cent').toBe(2_000_000_00)
+    expect(w.fundsCents - before, 'the sale still hands back the row figure, whole').toBe(held)
+    expect(held, 'four seasons of the houses drift, and no premium on a career with no seasons')
+      .toBe(assetValueCents(shopItem('academy-land')!, 2_000_000_00, 4 * WEEKS_PER_YEAR))
+    // ⚠ AND IT REALLY GREW – the mutation guard. At rate 0 this equals the price and cannot fail.
+    expect(held, 'the land outgrew what was paid for it').toBeGreaterThan(2_000_000_00)
   })
 
   it('⚠⚠ ...and the merch brand is no longer one of them, which is why the row he read changed', () => {
