@@ -101,6 +101,35 @@ dependency. It is bounded by A4 and by the frozen hashes, and it never reaches d
 
 ---
 
+#### ⭐⭐ SHIPPED, A1-A5, 07.09 – and two things in the plan above were wrong about WHERE the cost is
+
+The delivered numbers, the profile, the mutation evidence and the frozen hashes are in
+`docs/rounds/round-38.md` item 9, which is where the wave's ledger belongs. **Measured: 14.7 → 3.3 ms
+hot on the professional career and 20.5 → 5.9 ms on the junior one**, against the 5 ms target above.
+`SAVE_SCHEMA_VERSION` did not move, no migration was written and no golden fixture was added, exactly
+as the design section promised.
+
+Two corrections worth carrying, because both were found by measuring and neither was guessable from
+the profile-by-file table this spec was written against:
+
+1. **`rankingFor` is not the expensive ledger fold – `kidPoints` is.** 7.7% against 11.4% of a
+   snapshot. The entry gates (`tierOutgrown`, `playDownBars`, `tierFloorOpen`, `hasOutgrown`) ask it
+   once per upcoming event and each ask re-filters the whole ledger, so `season/ranking.ts`' 15.4%
+   share was mostly arriving through a function this spec never names. A2 memoises both.
+2. **A memo around `previewEvent` alone would have bought about a quarter of what A3 buys.** Of
+   `preview`'s 46.4%, only 10.3 points are inside `previewEvent`; the other 36 are `argsFor`
+   ASSEMBLING the arguments – `ratedField` 15.8, `weekFieldExclusion` 13.5. So the memo sits one
+   frame out, on the whole card, and its key is exact there because past `DRAW_LEAD_WEEKS` there is
+   no opponent and the card reads `ranking`, `standing` and `excluded` nowhere.
+
+⚠ **And A4's own arm needed a second mutation before it was worth anything.** Dropping the ledger
+from the ranking key went red immediately; dropping HER RATING from the far-card key left all 79
+tests green, because no fixture in the corpus presents two worlds that share a week and a cohort
+while she is a different player. The kit-purchase case that closes it is in
+`tests/snapshot-cache-verify.test.ts`.
+
+---
+
 ## Wave B – one owner out of `App.vue`
 
 ### What is wrong
