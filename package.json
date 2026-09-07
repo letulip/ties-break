@@ -44,6 +44,7 @@
     "bench:radar": "vite-node tools/radar-bench.ts",
     "bench:retire": "vite-node tools/retirement-rate.ts",
     "bench:skill": "vite-node tools/skill-ceiling.ts",
+    "bench:snapshot": "vite-node tools/snapshot-bench.ts",
     "bench:sponsor": "vite-node tools/sponsor-window-bench.ts",
     "probe:shop": "vite-node tools/shop-probe.ts",
     "bench:world": "vite-node tools/world-turnover.ts",
