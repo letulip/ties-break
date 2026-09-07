@@ -121,16 +121,32 @@ function capWeekWithBonus() {
   if (cached) return cached
   const world = createWorld('r29-kid-cut', { ...DEFAULT_PROFILE, birthMonth: 1, birthDay: 5 })
   const rng = rngFromSeed(world.seed)
+  // ⚠⚠ THE DEAL IS KEPT LIVE, NOT SIGNED ONCE – round 38 C4, and it is the second half of the same
+  // luck this function was running on. A `tour` kit runs `terms.seasons` (2) and then EXPIRES, so
+  // signing once bought a 104-week window and the fixture needed her to win at `bonusFromTier` (w75)
+  // INSIDE it. Pre-C4 she did, in the second week; after C4 the same career's four w75 titles land
+  // at weeks 930, 950 and 1115 instead – outside a window that closed at 728 – and the walk found no
+  // mixed week in thirty-two seasons. She is not weaker (she still takes four w75s and a wta125 on
+  // this seed); her big weeks simply moved. Re-signing when the previous deal runs out is what a
+  // career actually does, and it makes the fixture depend on the MECHANISM rather than on the
+  // timing of one seed.
+  //
+  // ⚠ VERIFIED A NO-OP ON THE PRE-C4 TREE: this file, with this change AND the strengthened
+  // predicate below, run in a worktree at the branch point still selects **week 626** – the same
+  // fixture week, all ten tests green. On this branch it selects **week 731**. A fixture fix that
+  // moved the control would be a second change wearing the first one's clothes.
+  let signedUntil = -1
   let signed = false
   while (world.week < WEEKS_PER_YEAR * 32) {
     // The family is kept solvent so the walk is about the cheques and not about a career dying –
     // `week-recap-kid-share.test.ts`'s own device.
     world.fundsCents = Math.max(world.fundsCents, 5_000_000_00)
     const age = kidAgeYears(world.week, world.profile.birthMonth, world.profile.birthDay)
-    if (!signed && age >= ECONOMY.kidShare.fromAgeYears + 8) {
+    if (age >= ECONOMY.kidShare.fromAgeYears + 8 && world.week > signedUntil) {
       try {
-        signKit(world, 'tour')
+        const terms = signKit(world, 'tour')
         signed = true
+        signedUntil = world.week + terms.seasons * WEEKS_PER_YEAR
       } catch {
         /* no rung open yet */
       }
@@ -155,14 +171,26 @@ function capWeekWithBonus() {
       closeTournament(world)
     }
     const fw = world.financeWeeks.find((w) => w.week === world.week)
-    // A week that split a cheque AND paid a prize row – i.e. a real tournament week, which is the
-    // only kind his report is about.
-    if (signed && fw?.kidShare?.baseCents && (fw.byCategory.prize ?? 0) > 0) {
+    // A week that split a cheque AND paid a prize row AND carried the kit contract's result bonus –
+    // i.e. a real MIXED tournament week, which is the only kind his report is about.
+    //
+    // ⚠⚠ THE `sponsor` CLAUSE WAS MISSING AND ROUND 38 C4 FOUND IT, which is worth recording because
+    // the predicate had been wrong since the file was written and nothing could see it. This
+    // function's own docstring three lines up says «THE POINT OF WALKING IT IS THE SECOND CHEQUE» –
+    // and then accepted the first week with a prize row and any `kidShare` at all. Pre-C4 the first
+    // such week happened to carry a result bonus too, so six assertions downstream were riding on
+    // luck. C4 moved every AI-vs-AI result, the walk found a DIFFERENT first week, that week paid
+    // only a prize, and six tests went red at once against a mechanism that had not moved a line.
+    //
+    // ⚠ SO THIS IS A STRENGTHENING, NOT A RE-AIM. The fixture now asserts its own premise – the
+    // selection demands the mixed week the whole file is about – and the `throw` below is the
+    // non-vacuity guard the file already believed it had. Nothing downstream was touched.
+    if (signed && fw?.kidShare?.baseCents && (fw.byCategory.prize ?? 0) > 0 && fw.kidShare.prize && fw.kidShare.sponsor) {
       cached = { world, snap: toSnapshot(world), week: world.week }
       return cached
     }
   }
-  throw new Error('the walk never reached a paid prize week with a kit deal live')
+  throw new Error('the walk never reached a MIXED week – a paid prize row plus a kit result bonus, kit deal live')
 }
 
 describe('round 29 #10 – the fixture is the week he was looking at', () => {
@@ -296,7 +324,24 @@ describe('round 29 #10 – §2 the LABEL, pinned against that same base', () => 
     // «это не 50% по сравнению с income», and it never was: income is the family's remainder. If a
     // future refactor ever makes the base equal the income figure, this item has been undone.
     expect(point.kidShareBaseCents).not.toBe(point.incomeCents)
-    expect(point.kidShareBaseCents!).toBeGreaterThan(point.incomeCents)
+    // ⚠⚠ RE-AIMED BY ROUND 38 C4 (07.09) FROM `> point.incomeCents`, AND THE OLD FORM WAS AN
+    // OVER-CLAIM RATHER THAN A CASUALTY. `incomeCents` is the family's WHOLE week net of her cut, so
+    // it carries the retainer, the appearance fee and every other row beside the cheques this base
+    // is made of – `base > income` therefore holds only on a week with no other income, which is
+    // what the old fixture week happened to be. C4 moved which week the walk selects and the new one
+    // reads base 198,000 against income 198,202: 202 cents of other income, and the assertion fell
+    // over on a mechanism that had not changed a line.
+    //
+    // ⚠ THE REPLACEMENT IS STRICTLY STRONGER, not a widened bound. The claim being made is that the
+    // base is the GROSS of the cheques and not what the family KEPT of them, and `prizeIncomeCents`
+    // is exactly «how much of `incomeCents` came from the tournament» – the kept half of the very
+    // money this base is the gross of. So this compares like with like, is invariant to whatever
+    // else the week paid, and it is the ORIGINAL DEFECT's own signature: putting the family's net in
+    // the base is precisely the case where these two numbers meet.
+    expect(point.prizeIncomeCents, 'the week really paid a tournament row').toBeGreaterThan(0)
+    expect(point.kidShareBaseCents!, 'the base is the gross, never what the family kept of it').toBeGreaterThan(
+      point.prizeIncomeCents!,
+    )
   })
 })
 

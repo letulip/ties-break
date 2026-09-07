@@ -22,7 +22,7 @@ import type {
 } from '../../shared/matchViz'
 import { COURT } from '../../shared/matchViz'
 import { createScore, awardPoint } from './scoring'
-import { basePServe } from './point'
+import { calibratedPServe } from './point'
 import { rngFromSeed, type Rng } from '../rng'
 import { expectedServeSpeed, LEGACY_SNAPSHOT_AGE } from './serveSpeed'
 import { matchWinProbability } from './liveProb'
@@ -321,8 +321,14 @@ export function annotateMatch(
   b: MatchPlayer,
   opts: MatchOptions,
 ): AnnotatedMatch {
-  const pA = basePServe(a, b, opts)
-  const pB = basePServe(b, a, opts)
+  // ⭐⭐ THE SAME CLOSED FORM THE CARD QUOTED (round 38, C4). This used to read `basePServe`, and
+  // that was right while the card did too – `matchWinProbability` at 0-0 IS `pMatchBo3(pA, pB)`, so
+  // the ring on the calendar and the first point of this curve were provably one number. C4 moved
+  // the card onto `calibratedPServe`; leaving this on `basePServe` would have broken that identity
+  // SILENTLY, with no test to catch it, and a viewer that opens two points below the chance she was
+  // promised is the same defect C4 exists to close, one screen along.
+  const pA = calibratedPServe(a, b, opts)
+  const pB = calibratedPServe(b, a, opts)
   // Jitter-free, so the ace rate is a property of the PLAYER and not of the point: within one match
   // every serve she strikes is the same girl's serve, and the +/-8 is how hard she happened to hit
   // that one. Resolved once here rather than per point - `expectedServeSpeed` is pure.

@@ -55,7 +55,7 @@
 // again. If he asks for one, move the guard – do not delete it.
 
 import type { MatchPlayer, Surface, Tour } from './types'
-import { basePServe } from './point'
+import { calibratedPServe } from './point'
 
 /** The scale's origin, chosen so the world #1 of the shipped population (core 76.4 – `SKILL_LAW` in
  *  season/fieldPros.ts) reads about **2195**, which is the live 2026 WTA Elo list's own number one.
@@ -99,12 +99,16 @@ const REFERENCE: MatchPlayer = {
  *  pair's own serve-point gap, scaled; the only residual is the logistic's fit to the best-of-three
  *  curve, and that is the 1.03 points `tests/rating.test.ts` pins.
  *
- *  ⚠ WHAT IT DOES NOT SEE, AND THE CARD ALREADY DID NOT: `basePServe` reads serve, return and
- *  groundstrokes. **Composure and stamina do not enter it at all** – they act through
- *  `modifiedPServe` on big points and past point 120. So the rating is exactly as complete as the
- *  percentage the card has always shown, which is the honest bar: it never claims to know something
- *  the ring beside it does not. ⚠ And two builds that trade serve for return one-for-one rate the
- *  SAME, because the model says they are the same – that is a property, not a rounding.
+ *  ⭐⭐ IT NOW SEES ALL FIVE SKILLS, AND IT MOVED FOR THE SAME REASON THE RING BESIDE IT DID (round
+ *  38, C4). It used to read `basePServe`, which is blind to `composure` and `stamina`; this comment
+ *  used to say so and called that "exactly as complete as the percentage the card has always shown".
+ *  The percentage stopped being blind, so the rating had to stop with it – a rating that could not
+ *  see two of the five skills would now disagree with the very odds it exists to explain, and
+ *  `tests/rating.test.ts`'s 1.5-point promise is what would have caught it.
+ *
+ *  The bar is unchanged and it is the honest one: **the rating is neither more nor less complete
+ *  than the ring beside it.** ⚠ And two builds that trade serve for return one-for-one still rate
+ *  the SAME, because the model still says they are the same – that is a property, not a rounding.
  *
  *  ⚠ SURFACE IS NEARLY INERT HERE, ON PURPOSE. The engine's own surface term is symmetric (both
  *  players get it), so it cancels in the gap; what makes a court favour a PLAYER is
@@ -112,7 +116,11 @@ const REFERENCE: MatchPlayer = {
  *  styled player the match will use and the rating is the styled one. */
 export function ratingOf(player: MatchPlayer, surface: Surface, tour: Tour): number {
   const opts = { surface, tour, seed: '' }
-  const driver = basePServe(player, REFERENCE, opts) - basePServe(REFERENCE, player, opts)
+  // ⚠ THE FORM STILL COMPOSES EXACTLY, WHICH IS WHY THE C4 TERM COULD JOIN IT WITHOUT A RE-DERIVATION.
+  // `calibratedPServe` is `basePServe` plus a term LINEAR IN A DIFFERENCE, so the reference still
+  // cancels: `driver(A) − driver(B)` is identically the pair's own serve-point gap, for any two
+  // builds. The only residual is still the logistic's fit to the best-of-three curve.
+  const driver = calibratedPServe(player, REFERENCE, opts) - calibratedPServe(REFERENCE, player, opts)
   return Math.round(RATING_BASE + ELO_PER_SERVE_EDGE * driver)
 }
 

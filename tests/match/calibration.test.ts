@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { simulateMatch, fastMatchProbability } from '../../src/engine/match/engine'
 import { basePServe } from '../../src/engine/match/point'
+import { pMatchBo3 } from '../../src/engine/match/closedForm'
 import type { MatchPlayer, MatchOptions, Tour, Surface, MatchResult } from '../../src/engine/match/types'
 
 // All Monte Carlo runs use fixed string seeds, so every number below is deterministic.
@@ -113,6 +114,53 @@ describe('calibration — Monte Carlo tracks the closed form', () => {
     },
     MC_TIMEOUT,
   )
+})
+
+// =================================================================================================
+// ⭐⭐ ROUND 38, C4 – THE CLOSED FORM AND THE POINT LOOP ARE ONE MODEL, MEASURED.
+// =================================================================================================
+//
+// ⚠ THIS IS THE REGRESSION NET FOR THE WHOLE SLICE, and it is built so it CANNOT pass on the old
+// model. Each cell asserts two things about the same 20,000 matches:
+//
+//   1. the CALIBRATED closed form (`fastMatchProbability`, what the card quotes and what resolves
+//      every AI-vs-AI match) is within a point of what the loop actually produces;
+//   2. the UNCALIBRATED one (`pMatchBo3(basePServe…)`, the pre-C4 formula, evaluated live off the
+//      function C4 did not touch) is NOT – it misses by at least three times as much.
+//
+// The second assertion is the mutation proof: revert `fastMatchProbability` to `basePServe` and both
+// halves collapse onto the same number, so line 1 fails and line 2 fails with it.
+//
+// ⚠ THE TWO CELLS ARE THE OWNER'S OWN CASES, from `docs/specs/next-waves-2026-09.md` §C4: «stamina
+// 30 against 90; composure 30 against 80 is 1.7 pp». Measured pre-C4 by
+// `tools/r38-closed-form-residual.ts` over 315 cells x 20,000 matches: the composure case reproduced
+// his 1.7 pp exactly (1.68), and the stamina case read 4.77 pp here against the 5.1 pp the spec
+// quotes from a different pair. Both close to under a point.
+describe('calibration — C4: the closed form is the match she plays', () => {
+  const CASES = [
+    { tag: 'stamina 30 v 90', a: player({ id: 'a', stamina: 90 }), b: player({ id: 'b', stamina: 30 }) },
+    { tag: 'composure 30 v 80', a: player({ id: 'a', composure: 80 }), b: player({ id: 'b', composure: 30 }) },
+  ]
+
+  for (const { tag, a, b } of CASES) {
+    it(
+      `${tag}: the calibrated form tracks the loop, the uncalibrated one does not (20k)`,
+      () => {
+        const over = { tour: 'wta' as const, surface: 'hard' as const }
+        const o = baseOpts(over)
+        const mc = winRateA(a, b, 20000, over, `c4-${tag.replace(/ /g, '-')}`)
+        const calibrated = fastMatchProbability(a, b, o)
+        const uncalibrated = pMatchBo3(basePServe(a, b, o), basePServe(b, a, o))
+        const after = Math.abs(mc - calibrated)
+        const before = Math.abs(mc - uncalibrated)
+        // 1 pp, against a 0.35 pp standard error on 20,000 matches.
+        expect(after, `${tag}: calibrated ${calibrated} vs mc ${mc}`).toBeLessThan(0.01)
+        // ...and the model it replaced is out by a multiple of that, which is what C4 bought.
+        expect(before, `${tag}: uncalibrated ${uncalibrated} vs mc ${mc}`).toBeGreaterThan(3 * after)
+      },
+      MC_TIMEOUT,
+    )
+  }
 })
 
 describe('calibration — momentum is bounded', () => {
