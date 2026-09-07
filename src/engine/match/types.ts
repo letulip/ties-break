@@ -12,9 +12,20 @@ export interface MatchPlayer {
   serve: number
   /** 0-100: return + neutralizing quality */
   ret: number
-  /** 0-100: big-point nerves; 100 = no choke penalty on break points */
+  /** 0-100: big-point nerves; 100 = no choke penalty on break points.
+   *
+   *  ⭐ AND SINCE ROUND 38 (C4) IT REACHES THE CLOSED FORM TOO, through `nerveAndLegs` – so an
+   *  AI-vs-AI bracket and the calendar card feel it exactly as much as her own point loop does. It
+   *  is still absent from `basePServe`: the loop spends it per point and the term beside the base
+   *  form is what the CLOSED form spends instead, never both. */
   composure: number
-  /** 0-100: resistance to late-match fatigue */
+  /** 0-100: resistance to late-match fatigue – and to stopping, since `retireHazard` reads it too.
+   *
+   *  ⭐ AND SINCE ROUND 38 (C4) IT REACHES THE CLOSED FORM TOO, through `nerveAndLegs`. That is the
+   *  half of C4 that closes an AGEING asymmetry rather than a display one: `ECONOMY.development
+   *  .ageWeight` decays stamina fastest of the four, and until C4 the field's lost legs cost it
+   *  nothing because AI-vs-AI could not see them. Same note as `composure` above: the loop spends it
+   *  per point, the closed form spends the term, never both. */
   stamina: number
   /** 0-100: damage off the ground – THE RALLY, added v25 (docs/specs/skills-radar.md §5).
    *

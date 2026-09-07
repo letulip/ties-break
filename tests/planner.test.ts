@@ -299,7 +299,19 @@ function hashOf(draws: number[]): string {
   // that table moved one place. The MAIN stream did NOT move: the draw-tail and A/B arms in this
   // very file pass unchanged, which is the assertion that blocks a merge - this one is the
   // documented companion CLAUDE.md says to update with a real change.
-const REF = { kidRank: 90 }
+// ⚠ RE-PINNED 90 -> 89 BY ROUND 38 C4 (07.09, docs/specs/one-closed-form-2026-09.md), and it is the
+// same class of move this pin's own history records six times above: the MATCH MODEL GAINED A LEG,
+// so asymmetric matchups resolve differently and a different set of juniors ends the year holding
+// counting points. The leg this time is composure and stamina reaching the CLOSED FORM
+// (`calibratedPServe`), which is what every AI-vs-AI bracket is decided by.
+// THE CAPTURE ITSELF DID NOT MOVE, asserted BEFORE this line in this very test and reproduced
+// byte-for-byte: count 41550, hash e6b0c709. It cannot move by construction either - `nerveAndLegs`
+// is pure arithmetic over two numbers each player already carried, and the same 156-week career
+// walk instrumented to count every MAIN draw reads an IDENTICAL 124,649 draws / 3e2b2e12 on both
+// arms (tests/coachTravelEdgeFixtures.ts carries the table for all three frozen careers).
+// Verified on BOTH arms: the control is this branch's start `8d0b6bf4` in a worktree, which
+// reproduces 90.
+const REF = { kidRank: 89 }
 // ⚠ CHECKED AND HELD AT v25 (30.07, the fifth attribute), and the checking is the point - this
 // number was expected to move and did not. `count`/`hash`/`head`/`tail` cannot move by
 // construction: v25 adds no draw to any stream the weekly tick walks. Her build's fifth number

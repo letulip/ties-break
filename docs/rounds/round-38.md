@@ -121,6 +121,13 @@ the repo keeps is the derived statistics below.
   one of the two attributes `basePServe` never reads – which is C4, and which is why the 7.11% is
   computed as if her nerve did not exist.
 
+  ⭐ **C4 SHIPPED 07.09 AND THIS READING IS NOW PRE-C4.** The closed form reads composure and stamina
+  now, and this pair is exactly the case the fix is about: she is **+1.09** on nerve and **−21.63** on
+  legs against Nina, so the term is worth roughly `1.09 × 2.2e-5 − 21.63 × 7.0e-5 ≈ −1.5e-3` of p to
+  her – her nerve is finally counted, and it is nowhere near paying for her legs. Re-run
+  `tools/r38-save-read.ts` against his save for the new figure; the 7.11% above is kept as the reading
+  that made the case.
+
 - [~] **3c. «Роза скиллов упала ниже уровня начала игры – разве такое возможно?»** – **yes, and it is
   the model working as written, not a defect.** Her birth build, recomputed from her own seed
   (`startingSkills` + `withHeadStart`), against today:
@@ -732,7 +739,70 @@ the repo keeps is the derived statistics below.
   push the peak to 32-33. Now an `ask` – question 4.
 - [ ] **C2 – `potentialBand`.** [4, 26] at a measured 93.3% exhausted; target 30-40%. After C1.
 - [ ] **C3 – coach tenure.** ⚠ BLOCKED on his own «как это не превратить в гарантию?».
-- [ ] **C4 – the two skills that never reach the field.** One calibrated closed form for everybody.
+- [x] **C4 – the two skills that never reach the field.** SHIPPED. One calibrated closed form, read by
+  everybody – `docs/specs/one-closed-form-2026-09.md`.
+
+  ⭐ **HIS INSTRUCTION, 06.09:** «хорошо бы одинаковые условия для всех, раз уж мы считаем.»
+
+  **The defect.** `basePServe` reads serve, return, groundstrokes, pace and surface, and **not**
+  composure or stamina. Her own matches run the point loop, which reads both; every AI-vs-AI match
+  and the calendar card resolve through the closed form. So two of the five attributes the player
+  trains changed nothing for anybody but her – and round 38 #6c made it worse, because
+  `ECONOMY.development.ageWeight` decays **stamina fastest of the four** (1.45 normalised against the
+  serve's 0.55), so an ageing player paid for her lost legs in her own matches while the field paid
+  for them nowhere.
+
+  **C4a – measured first.** `tools/r38-closed-form-residual.ts`: (stamina gap × composure gap) at
+  three skill levels on all three surfaces, 315 fit cells plus 108 held-out cells that also carry a
+  skill gap, **20,000 matches each** through the real point loop – momentum on, retirements live.
+  8.46M matches, 565 s. Standard error per cell **0.35 pp**.
+
+  | | before | after |
+  | --- | --- | --- |
+  | 315 fit cells | **rms 3.06 pp**, worst 6.11 pp | **rms 0.36 pp**, worst 1.04 pp |
+  | 108 held-out skill-gap cells | rms 1.98 pp, worst 4.74 pp | **rms 0.60 pp**, worst 1.21 pp |
+  | stamina 30 against 90 | 4.77 pp | **−0.58 pp** |
+  | composure 30 against 80 | **1.68 pp** – his own 1.7 pp, reproduced | **0.51 pp** |
+
+  **C4b – the shape, and the placement is a measurement.** A term BESIDE `basePServe`, read by the
+  closed form alone: `(composure gap) × 2.2e-5 + (stamina gap) × 7.0e-5`, a DIFFERENCE on both legs
+  exactly as `groundstrokes` already is. ⚠ Putting it INSIDE `basePServe` does not work and that was
+  measured rather than argued – the loop reads the base once and spends the two attributes per point
+  on top, so both sides of the comparison move together: on the worst cell the residual went
+  −6.11 → **−5.92** inside (3% of the gap) against **−0.56** beside.
+
+  ⚠⚠ **BOTH CONSTANTS CAME OUT LARGER THAN THEIR OWN ARITHMETIC, and that is the finding.** From the
+  loop's own constants at the measured break-point rate (11.23%) and mean fatigue offset (10.18),
+  `COMPOSURE_K` predicts 1.68e-5 against a fitted 2.22e-5 (**1.32x**) and `STAMINA_K` predicts 3.05e-5
+  against 6.97e-5 (**2.28x**). The stamina half is measured, not argued: `retireHazard` reads stamina
+  too, and the probe's §1b puts the retirement swing at **0.42-0.53x of the residual at every stamina
+  gap** – so the hazard is about half the constant, which is nearly the whole factor of two. The rest,
+  and the whole of composure's 1.32x, is LEVERAGE: fatigue starts at point 120 and a break point is by
+  definition a point that ends a game, so both act only where the match is still undecided.
+
+  ⭐ **The after-run also proves the loop did not move, cell by cell.** The same probe run twice at
+  N=20,000, the two grids diffed over all 423 cells: `mc` (the loop's own win rate) moved in **0**,
+  `pMatchBo3(basePServe)` moved in **0**, `fastMatchProbability` moved in **402** – and the 21 that
+  did not are exactly the cells level in both, all of them and only them.
+
+  **C4c – four readers, one model.** `fastMatchProbability` (every AI-vs-AI match, and the card),
+  `ratingOf`, and `annotateMatch`'s live curve – so the ring on the calendar and the curve at 0-0 are
+  the same number by construction. `simulateMatch` deliberately does **not** read it.
+
+  **What moved, with the reading beside each.** All **63** frozen career constants
+  (`tests/coachTravelEdgeFixtures.ts`), per-key diff taken first against a worktree at this branch's
+  own start: **36 / 34 / 32 of ~73 keys**. ⭐ `rngMain` is byte-identical in all three and so is the
+  whole MAIN stream under it – the same 156-week walk instrumented to count every draw reads an
+  identical **124,649 / 124,652 / 124,652 draws** and the same hashes on both arms. Her rank moved
+  74→36, 54→64, 73→45. The `kidRank` companion in `condition` / `injuries` / `planner` re-pinned
+  **90 → 89** with the frozen capture (41550 / `e6b0c709`) unmoved and asserted before it.
+
+  ⚠ **And two fixtures turned out to have been running on luck, both found by this change and both
+  STRENGTHENED rather than re-aimed.** `round29-kid-cut-base` selected «a real prize week with a
+  result bonus in it» with a predicate that never checked for the bonus, and kept its `tour` kit deal
+  for the one two-season window it was signed in; `round23-kid-share`'s realised-share bound was a
+  tenth of a point against a rounding slack that is widest in her thinnest year. Both fixes are
+  verified **no-ops on the pre-C4 tree** – the same fixture week, the same numbers, all green.
 
 ---
 

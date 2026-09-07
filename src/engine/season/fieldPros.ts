@@ -206,7 +206,13 @@ export interface FieldPro extends AiPlayer {
 //     can ever climb; a world #1 at the p99 is one every good career equals. So the storey's top
 //     sits at the midpoint of those two, core 77 – reachable, and only by a career that rolled
 //     near-max talent and spent a decade realising it.
-//   * THE MEDIAN is bounded by the match engine. `fastMatchProbability`, reference build (power
+//   * THE MEDIAN is bounded by the match engine. ⚠ THE FIVE FIGURES BELOW WERE READ BEFORE ROUND 38
+//     C4 AND ARE KEPT AS THE READING THAT SET THE BAND, not re-cut: `fastMatchProbability` now also
+//     reads composure and stamina, and these are FLAT builds, so each of them carries a gap on both
+//     of the new legs. Re-measured they move by a few tenths in the direction the storey already
+//     wanted (a flat 72 is a slightly harder opponent for a flat 56.75, not an easier one). The band
+//     is [67, 77] on the argument, not on the third decimal – re-run `--storey-probe` before moving
+//     it. `fastMatchProbability`, reference build (power
 //     56.75) vs a flat core: 61.8 → 47.3% · 70 → 25.9% · 72 → 21.6% · 74 → 17.7% · 77 → ~12%. The
 //     storey's median (core 72) therefore holds the girl who is meant to win 15-35% of her W15s to
 //     21.6% – the same number, which is the point: a median elite is a coin flip for her and a

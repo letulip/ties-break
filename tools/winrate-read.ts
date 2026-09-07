@@ -231,7 +231,11 @@ function cause(w: WorldState): void {
     return s / n
   }
   console.log(`\n  SENSITIVITY – what ONE point of each attribute is worth to her win probability, here`)
-  for (const k of ['serve', 'ret', 'groundstrokes'] as const) {
+  // ⭐ FIVE KEYS SINCE ROUND 38 C4, AND THE TWO NEW ONES ARE THE ITEM. `composure` and `stamina` used
+  // to report an exact 0.00 pp here – not because they did nothing in her matches, but because the
+  // closed form this probes could not see them. `calibratedPServe` reads all five now, so this list
+  // is the answer to "what should I train?" for the first time.
+  for (const k of ['serve', 'ret', 'groundstrokes', 'composure', 'stamina'] as const) {
     const up = probe((p) => ({ ...p, [k]: (p[k] as number) + 1 }))
     console.log(`    +1 ${k.padEnd(14)} → ${(100 * (up - mean) >= 0 ? '+' : '')}${(100 * (up - mean)).toFixed(2)} pp`)
   }

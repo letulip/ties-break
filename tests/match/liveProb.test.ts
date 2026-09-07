@@ -7,9 +7,9 @@ import {
   tiebreakServer,
   tiebreakOpenerFrom,
 } from '../../src/engine/match/scoring'
-import { simulateMatch } from '../../src/engine/match/engine'
+import { simulateMatch, fastMatchProbability } from '../../src/engine/match/engine'
 import { annotateMatch } from '../../src/engine/match/rally'
-import { basePServe } from '../../src/engine/match/point'
+import { basePServe, calibratedPServe } from '../../src/engine/match/point'
 import type { MatchScore, MatchPlayer, MatchOptions, Side } from '../../src/engine/match/types'
 
 // ⚠ `groundstrokes: 50` ON BOTH SIDES BY DEFAULT (v25), and that is not filler - it is what keeps
@@ -26,6 +26,39 @@ function opts(overrides: Partial<MatchOptions> = {}): MatchOptions {
 function freshScore(server: Side = 0): MatchScore {
   return createScore(server)
 }
+
+// =================================================================================================
+// ⭐⭐ THE MISSING ASSERTION, ADDED BY ROUND 38 C4 – the ring on the card and the first point of the
+// live curve are ONE NUMBER.
+// =================================================================================================
+//
+// ⚠ IT WAS TRUE BEFORE C4 AND NOTHING SAID SO, which is why it is here now rather than instead of
+// something. `annotateMatch` read `basePServe`, the card read `pMatchBo3(basePServe…)`, and
+// `matchWinProbability` at 0-0 IS `pMatchBo3(pA, pB)` – so the two agreed by construction and no
+// test knew it. C4 moved the card onto `calibratedPServe`; had `annotateMatch` been left behind, the
+// viewer would have opened up to two points below the chance the calendar promised, with NOTHING in
+// the suite going red. A silent inconsistency is the one thing C4 exists to remove, so the identity
+// is now stated out loud and holds for pairs that are NOT level in composure and stamina – which is
+// exactly the case that could break it.
+describe('C4 – the card and the live curve at 0-0 are the same number', () => {
+  it('the first annotated point is the same probability the card quotes, for an unlevel pair', () => {
+    for (const [surface, a, b] of [
+      ['hard', player({ id: 'a', serve: 62, composure: 70, stamina: 80 }), player({ id: 'b', ret: 58, composure: 40, stamina: 35 })],
+      ['clay', player({ id: 'a', serve: 48, composure: 30, stamina: 30 }), player({ id: 'b', serve: 60, composure: 85, stamina: 90 })],
+      ['grass', player({ id: 'a', serve: 71, ret: 44, composure: 55, stamina: 52 }), player({ id: 'b', serve: 63, ret: 62, composure: 58, stamina: 61 })],
+    ] as const) {
+      const o = opts({ surface, tour: 'wta', seed: `c4-open-${surface}`, momentum: false })
+      const card = fastMatchProbability(a, b, o)
+      // The curve's own value BEFORE a point is played: the same DP the annotation walks, at 0-0.
+      const atLoveAll = matchWinProbability(freshScore(o.firstServer ?? 0), calibratedPServe(a, b, o), calibratedPServe(b, a, o))
+      expect(atLoveAll, surface).toBeCloseTo(card, 9)
+      // ...and the annotation is drawn from those same two numbers, so its first point is one point
+      // of movement away from the card rather than a different model's opinion.
+      const annotated = annotateMatch(simulateMatch(a, b, o), a, b, o)
+      expect(Math.abs(annotated.points[0]!.winProbA - card), surface).toBeLessThan(0.05)
+    }
+  })
+})
 
 describe('liveProb — required test 1: fresh match equals closed-form Bo3', () => {
   it('equal p -> 0.5 within 1e-9', () => {

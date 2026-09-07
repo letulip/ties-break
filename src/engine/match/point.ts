@@ -101,6 +101,124 @@ export function paceAdvantage(server: MatchPlayer, receiver: MatchPlayer): numbe
   return serveSpeedBase(bandOf(server)) - serveSpeedBase(bandOf(receiver))
 }
 
+// =================================================================================================
+// ⭐⭐ THE TWO SKILLS THAT NEVER REACHED THE FIELD – round 38, C4, and the owner's «хорошо бы
+// одинаковые условия для всех, раз уж мы считаем» (06.09).
+// =================================================================================================
+//
+// ⚠ THE DEFECT, IN ONE SENTENCE. `basePServe` above reads serve, return, groundstrokes, pace and
+// surface, and NOT `composure` or `stamina`. Her own matches run the point loop, which reads both –
+// nerve through `modifiedPServe`'s break-point penalty, exhaustion through `fatigueTerm` AND again
+// through `retireHazard`. Every AI-vs-AI match is one Bernoulli against the closed form, and so is
+// the percentage on the calendar card. So two of the five attributes the player trains changed
+// nothing for anybody but her, and the card was quoting a number she would not experience.
+//
+// ⚠⚠ AND ROUND 38 MADE IT AN AGEING ASYMMETRY, which is why it was fixed in this wave and not a
+// later one. `ECONOMY.development.ageWeight` decays STAMINA fastest of the four (1.45 normalised
+// against the serve's 0.55, #6c), so an ageing player paid for her lost legs in her own matches
+// while the field – which ages on its own arc – paid for them nowhere.
+//
+// =================================================================================================
+// WHY THE TERM IS HERE AND NOT INSIDE `basePServe`, AND IT IS A MEASUREMENT
+// =================================================================================================
+//
+// The loop reads `basePServe` ONCE PER MATCH and then spends the two attributes per point on top of
+// it. A term added INSIDE `basePServe` therefore moves the loop and the closed form by the same
+// amount, and the gap between them – the whole defect – barely moves. Measured, not reasoned:
+// `tools/r38-closed-form-residual.ts` §4, worst cell (hard, core 55, stamina gap −60, composure gap
+// −50), 20,000 matches:
+//
+//     residual with no term at all                                        −6.11 pp
+//     the term INSIDE `basePServe` (the loop sees it too)                 −5.92 pp   ← bought 3%
+//     the term BESIDE it, read by the closed form alone                   −0.56 pp
+//
+// So the loop stays the truth and the closed form is calibrated TO it. `basePServe` is untouched by
+// this slice, which is also what makes every symmetric fixture byte-identical rather than merely
+// close – see `calibratedPServe`.
+
+/** p per point of COMPOSURE ADVANTAGE, for the closed form only.
+ *
+ *  ⚠ FITTED, AND ITS PREDICTION WAS WRITTEN FIRST – then missed, by a third. `modifiedPServe` docks
+ *  the server `(1 − composure/100) × BIG_POINT_MAX_PENALTY` on a break point, so the PAIR's per-point
+ *  edge moves by `breakPointRate × 0.03 × (cA − cB) / 100`; a difference term moves it by
+ *  `2K(cA − cB)`, so the prediction is `breakPointRate × 0.03 / 200`. At the MEASURED break-point rate
+ *  of **11.23%** of served points that is **1.68e-5**, and the free fit over 315 cells landed on
+ *  **2.22e-5** – **1.32x** the arithmetic.
+ *
+ *  The gap is LEVERAGE, and it is the same effect `STAMINA_K` shows in a stronger form: a break point
+ *  is not an average point. It is by definition a point that ends a game, and the games it ends are
+ *  the ones that decide sets – so an edge that only exists there moves more matches than the same
+ *  edge spread evenly. The prediction is a flat average and the match is not flat.
+ *
+ *  Re-fit with `npx vite-node tools/r38-closed-form-residual.ts -- --fit` if
+ *  `BIG_POINT_MAX_PENALTY`, the scoring format or the hold rate ever move. */
+const COMPOSURE_K = 2.2e-5
+
+/** p per point of STAMINA ADVANTAGE, for the closed form only.
+ *
+ *  ⚠⚠ FITTED, AND IT IS 2.3x ITS OWN NAIVE PREDICTION – which is the finding of this slice rather
+ *  than a mis-fit. The per-point fatigue arithmetic alone predicts
+ *  `mean max(0, n − FATIGUE_START) × FATIGUE_RATE / 100`; measured over the played points that mean is
+ *  **10.18**, so the prediction is **3.05e-5** against a fitted **6.97e-5**. Two channels the
+ *  arithmetic cannot see, and the first of them is MEASURED rather than argued:
+ *
+ *    * `retireHazard` READS STAMINA TOO. A tired player does not only lose points, she stops – and a
+ *      retirement is a whole match, not a point. `tools/r38-closed-form-residual.ts` §1b prints the
+ *      retirement swing beside the residual it is part of, and it is **0.42-0.53x of it at every
+ *      stamina gap** – i.e. the hazard is about HALF this constant, which is very nearly the whole
+ *      of the factor of two.
+ *    * BOTH CHANNELS FIRE WHERE THE MATCH IS STILL UNDECIDED. Fatigue starts at point 120 and the
+ *      hazard integrates past it, so neither touches a straight-sets rout and both act on exactly
+ *      the long matches whose winner is not yet settled. That is the remaining ~14%, and it is the
+ *      same leverage `COMPOSURE_K` shows on its own.
+ *
+ *  ⚠ SO IT IS NOT «STAMINA IS WORTH 3.2x COMPOSURE» AS A DESIGN CHOICE. It is what the loop already
+ *  did, measured. Moving `RETIRE_K`, `FATIGUE_RATE` or `FATIGUE_START` moves this number and it must
+ *  be re-fitted with them – the bench is one command and it prints both constants. */
+const STAMINA_K = 7.0e-5
+
+/** ⭐⭐ WHAT THE POINT LOOP SPENDS AND `basePServe` CANNOT SEE – composure and stamina, as one term,
+ *  in `basePServe`'s own units.
+ *
+ *  ⚠ A DIFFERENCE ON BOTH LEGS, EXACTLY AS `groundstrokes` AND `paceAdvantage` ARE, and for exactly
+ *  their reason: nerve and legs are contested by both players, so `(server − receiver)` is the honest
+ *  shape and the term is **exactly 0 when the two are level**. That is what makes every symmetric
+ *  calibration fixture, every hold-rate band and the tour's own average untouched by construction
+ *  rather than by luck – `x + 0 === x` for every finite x, so the identity is byte-level and
+ *  `tests/match/point.test.ts` proves it against `basePServe` itself rather than asserting it.
+ *
+ *  ⚠ IT IS THE CLOSED FORM'S TERM AND THE LOOP MUST NEVER READ IT. See the block above: the loop
+ *  already spends these two attributes per point, and paying for them twice is measurably worse than
+ *  not paying for them at all. */
+export function nerveAndLegs(server: MatchPlayer, receiver: MatchPlayer): number {
+  return (
+    (server.composure - receiver.composure) * COMPOSURE_K + (server.stamina - receiver.stamina) * STAMINA_K
+  )
+}
+
+/** ⭐⭐ THE ONE CLOSED FORM, READ BY EVERYONE. `basePServe` plus the term above, clamped by the same
+ *  clamp `basePServe` already applies – so nothing new can escape the legal band.
+ *
+ *  This is what `fastMatchProbability` resolves every AI-vs-AI match with, what the calendar card
+ *  quotes, what `ratingOf` is derived from and what `annotateMatch` draws the live curve against.
+ *  Four readers, one model, and the card and the curve at 0-0 are the same number by construction.
+ *
+ *  MEASURED (`tools/r38-closed-form-residual.ts`, 315 cells x 20,000 matches, all three surfaces,
+ *  three skill levels, stamina gaps ±60 and composure gaps ±50):
+ *
+ *      residual against the point loop      rms 3.06 pp -> 0.36 pp     worst 6.11 pp -> 1.04 pp
+ *      held-out cells that also carry a skill gap
+ *                                           rms 1.98 pp -> 0.60 pp     worst 4.74 pp -> 1.21 pp
+ *      stamina 30 against 90                     4.77 pp -> 0.58 pp
+ *      composure 30 against 80                   1.68 pp -> 0.51 pp
+ *
+ *  ⚠ 0.36 pp IS THE SAMPLING FLOOR, NOT A REMAINING DEFECT. One cell of 20,000 matches has a
+ *  standard error of 0.35 pp, so the worst of 315 cells is expected near 1.1 pp from noise alone –
+ *  which is where it landed. Nothing is left on the table for a third constant to pick up. */
+export function calibratedPServe(server: MatchPlayer, receiver: MatchPlayer, opts: MatchOptions): number {
+  return clamp(basePServe(server, receiver, opts) + nerveAndLegs(server, receiver), BASE_CLAMP)
+}
+
 // Per-point term (already min-capped at FATIGUE_CAP) for one player's stamina.
 //
 // ⚠ EXPORTED SINCE THE RETIREMENT SLICE, and the export is the whole design of that feature rather

@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest'
 import { simulateMatch, fastMatchProbability } from '../../src/engine/match/engine'
 import { createScore, awardPoint, contextOf, formatScore } from '../../src/engine/match/scoring'
 import { basePServe } from '../../src/engine/match/point'
+import { pMatchBo3 } from '../../src/engine/match/closedForm'
 import type { MatchPlayer, MatchOptions, SetGames } from '../../src/engine/match/types'
 
 // ⚠ `groundstrokes: 50` ON BOTH SIDES BY DEFAULT (v25), and that is not filler - it is what keeps
@@ -215,5 +216,40 @@ describe('fastMatchProbability', () => {
     const p2 = fastMatchProbability(a, b, opts({ seed: 'totally-different' }))
     expect(p1).toBe(p2)
     expect(p1).toBeGreaterThan(0.5)
+  })
+
+  // ⭐⭐ ROUND 38, C4 – THE CLOSED FORM NOW READS ALL FIVE SKILLS, and these two tests are the
+  // opposite halves of one claim: it reads them, and reading them costs a level pair nothing.
+  it('⚠ C4: composure and stamina now MOVE it – they used to be computed and never consulted', () => {
+    const o = opts({ tour: 'wta' })
+    const flat = player({ id: 'a' })
+    const opp = player({ id: 'b' })
+    const base = fastMatchProbability(flat, opp, o)
+    expect(fastMatchProbability(player({ id: 'a', stamina: 90 }), opp, o)).toBeGreaterThan(base)
+    expect(fastMatchProbability(player({ id: 'a', composure: 90 }), opp, o)).toBeGreaterThan(base)
+    expect(fastMatchProbability(player({ id: 'a', stamina: 10 }), opp, o)).toBeLessThan(base)
+    expect(fastMatchProbability(player({ id: 'a', composure: 10 }), opp, o)).toBeLessThan(base)
+  })
+
+  it('⚠ C4: and a pair LEVEL in both gets the pre-C4 number to the last bit', () => {
+    // The right-hand side is the pre-C4 formula, evaluated live off the function C4 did not touch.
+    // `toBe`, not `toBeCloseTo`: the term is a difference, so it is exactly +0 here and `x + 0 === x`.
+    for (const surface of ['hard', 'clay', 'grass'] as const) {
+      for (const tour of ['wta', 'atp'] as const) {
+        for (const [sa, sb, c, s] of [
+          [50, 50, 50, 50],
+          [62.5, 43.75, 100, 100],
+          [70, 50, 61, 58],
+          [88, 48, 0, 0],
+        ] as const) {
+          const a = player({ id: 'a', serve: sa, composure: c, stamina: s })
+          const b = player({ id: 'b', serve: sb, composure: c, stamina: s })
+          const o = opts({ surface, tour })
+          expect(fastMatchProbability(a, b, o), `${surface}/${tour} ${sa}v${sb} c${c} s${s}`).toBe(
+            pMatchBo3(basePServe(a, b, o), basePServe(b, a, o)),
+          )
+        }
+      }
+    }
   })
 })

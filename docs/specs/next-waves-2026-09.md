@@ -266,6 +266,12 @@ his; C3 does not start until it is answered.**
 
 ### C4 – the two skills that do not reach the field
 
+⭐⭐ **SHIPPED 07.09.2026.** Everything below is kept as the PROPOSAL it was; what was built and what
+it measured are in `docs/specs/one-closed-form-2026-09.md`, and the ledger entry is in
+`docs/rounds/round-38.md`. Two readings from it belong here because they answer this section's own
+sentences: the composure case reproduced the **1.7 pp** quoted below to the second decimal (1.68), and
+the residual over 315 cells went **rms 3.06 pp → 0.36 pp**.
+
 ⭐ **This entered the wave on 06.09, after he challenged a claim I had relayed wrongly.**
 
 The facts, verified in the code:
@@ -314,14 +320,19 @@ survive. A step whose "after" has no "before" is not done.
 | **C2a** | Re-measure realisation AFTER C1 – the 93.3% is a pre-C1 number and C1 raises every ceiling | `tools/r34-reachable-ceiling.ts` | the new figure, which is the one C2 tunes against |
 | **C2b** | Sweep `potentialBand` for the band that lands realisation at 30-40% | `tools/potential-band-sweep.ts` | predicted band, then measured; the coach's ceiling read (0.40/0.75/0.90) re-checked, because it is a fraction OF this |
 | **C2c** | Ship the band, re-run the top-100 age profile and the ceiling walk | as C0 | `#237` best-rank finding re-measured: the tour must still be climbable |
-| **C4a** | Fit a correction to `basePServe` against the point loop – same pair, same surface, both models, over a grid of (stamina, composure) gaps | a new arm on `tools/winrate-read.ts`, or its own probe | the residual before and after, printed per gap size; the 5.1 pp case named |
-| **C4b** | Ship the one closed form and let everybody read it | `engine/match/point.ts` | ⚠ every AI result moves: rankings, acceptance cuts, calibration bands. All three frozen careers re-baselined WITH the reading |
-| **C4c** | The card's printed chance re-checked against a simulated match of the same pair | `tools/winrate-read.ts` | the gap is under 1 pp at every gap size, or the reason it is not |
+| ~~**C4a**~~ | ⭐ DONE 07.09 – `tools/r38-closed-form-residual.ts`, 315 fit cells + 108 held-out skill-gap cells x 20,000 matches | its own probe | rms **3.06 -> 0.36 pp**, worst **6.11 -> 1.04 pp**; stamina 30v90 **4.77 pp**, composure 30v80 **1.68 pp** (his 1.7, reproduced) |
+| ~~**C4b**~~ | ⭐ DONE 07.09 – `nerveAndLegs` + `calibratedPServe`, a DIFFERENCE term BESIDE `basePServe` (inside it closes only 3% of the gap – measured) | `engine/match/point.ts` | all 63 frozen constants re-baselined with a per-key diff; `rngMain` and the whole MAIN stream byte-identical |
+| ~~**C4c**~~ | ⭐ DONE 07.09 – four readers, one model; the card and the live curve at 0-0 are one number by construction | `tools/r38-closed-form-residual.ts`, `tests/match/calibration.test.ts` | rms **0.36 pp** – the 0.35 pp sampling floor; the worst single cell of 315 is 1.04 pp, which is what a maximum over that many noisy cells looks like |
 | **C3** | ⚠ NOT STARTED. Blocked on «как это не превратить в гарантию?» | – | – |
 
 **Order, and it is load-bearing:** C0 → C1a → C1b → C1c → C2a → C2b → C2c → C4a → C4b → C4c.
 C4 goes LAST because it moves every AI result and would otherwise contaminate C1's and C2's
 measurements; C2 goes after C1 because C1 raises the ceilings C2 is tuning.
+
+⭐ **C4 SHIPPED 07.09 AHEAD OF C1/C2, on the owner's «можно делать по готовности».** The ordering
+argument above is unharmed and now points the other way: C1 and C2 have not been measured yet, so
+their baselines must be taken ON TOP of C4 rather than under it. `docs/specs/one-closed-form-2026-09.md`
+is the spec; `docs/rounds/round-38.md` carries the ledger entry and everything that moved.
 
 **Effort: 4-6 days, and C4 is over half of it.** **Risk: the highest of the three waves**, because
 unlike A and B this one is SUPPOSED to change behaviour – which means the frozen careers move by
