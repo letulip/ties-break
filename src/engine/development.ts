@@ -86,17 +86,53 @@ export function isPhysicalSkill(k: SkillKey): boolean {
 /** The attributes `declineFactor` erodes, in `SKILL_KEYS`' order. DERIVED, never written down. */
 export const PHYSICAL_SKILL_KEYS: readonly SkillKey[] = SKILL_KEYS.filter(isPhysicalSkill)
 
+/** ⭐⭐⭐ ROUND 38 #6c – HOW FAST THIS ATTRIBUTE AGES RELATIVE TO THE OTHERS, normalised so the four
+ *  weights have a mean of EXACTLY 1.
+ *
+ *  ⚠⚠ THE NORMALISATION IS THE WHOLE SAFETY OF THE FEATURE and is why `ECONOMY.development.ageWeight`
+ *  holds RAW numbers rather than four hand-typed decimals. Everything downstream of ageing reads
+ *  `physicalMean(skills) / peakPhysical` – the last off-season offer, the recovery corridor, the
+ *  coach's ceiling read – and dividing by the weights' own mean is what keeps that ratio on its old
+ *  path however the four are retuned. Retune one weight and the other three are re-based for free;
+ *  there is no way to write a set that quietly speeds the whole decline up.
+ *
+ *  ⚠ THE MEAN IS TAKEN OVER `PHYSICAL_SKILL_KEYS`, NOT OVER THE OBJECT'S OWN KEYS. A key nobody
+ *  declines (composure, or a typo) must not be able to move the divisor; and an attribute with NO row
+ *  reads a raw 1, so appending a fifth physical skill without touching the constant makes it decline
+ *  ordinarily rather than not at all.
+ *
+ *  Pure: no world, no rng, no clock. */
+export function ageWeightOf(k: SkillKey): number {
+  const raw = ECONOMY.development.ageWeight as Record<string, number>
+  let total = 0
+  for (const key of PHYSICAL_SKILL_KEYS) total += raw[key] ?? 1
+  const mean = total / PHYSICAL_SKILL_KEYS.length
+  if (!(mean > 0)) return 1
+  return (raw[k] ?? 1) / mean
+}
+
 /** HER BODY AS ONE NUMBER: the mean of the attributes age takes points off.
  *
- *  ⭐⭐ A SCALAR MEAN IS EXACT HERE RATHER THAN A SIMPLIFICATION, and it has to be said out loud
- *  because the next reader will otherwise assume it is a fudge that got waved through. `growWeek`'s
- *  decline is PROPORTIONAL PER ATTRIBUTE – `loss = decline * skills[k]` – and past `declineStart`
- *  nothing else moves a physical attribute at all (`ageFactor` returns 0 from that age, so the gain
- *  term is 0). Each physical attribute is therefore multiplied by the SAME `(1 - decline)` every
- *  week, so each one keeps the same SHARE of its own peak, week for week – and the mean of numbers
- *  that have all been scaled by one factor is that factor times the mean. `physicalMean(now) / peak`
- *  is not an approximation of "how much of her body is left": it IS each attribute's own share, to
- *  the last decimal.
+ *  ⚠⚠⚠ IT WAS EXACT UNTIL ROUND 38 #6c AND IT IS NOW A SUMMARY. THIS PARAGRAPH IS THE CORRECTION,
+ *  kept rather than rewritten because the property it describes is what three other files were built
+ *  on. It used to read: «`growWeek`'s decline is PROPORTIONAL PER ATTRIBUTE – `loss = decline *
+ *  skills[k]` – so each physical attribute is multiplied by the SAME `(1 - decline)` every week and
+ *  each keeps the same SHARE of its own peak… `physicalMean(now) / peak` is not an approximation of
+ *  "how much of her body is left": it IS each attribute's own share, to the last decimal.»
+ *
+ *  `ageWeightOf` ended that. The four attributes now decline at four rates – the serve slowest, the
+ *  legs fastest – so they no longer hold a common share and this mean is a MEAN again.
+ *
+ *  ⚠⚠ WHAT SURVIVES, AND IT IS WHY THE CHANGE IS SAFE: the weights are normalised to a mean of
+ *  exactly 1 over the physical keys, so the mean's own PATH is materially unchanged – measured at
+ *  0.01 of a point on the owner's week-1115 career over 340 weeks of decline. The three readers of
+ *  `physicalMean / peakPhysical` – `ENDINGS.lastOfferPeakShare`, `recoveryAgeFade` and
+ *  `realisedShare` – were re-measured rather than reasoned about; the readings are in
+ *  docs/specs/what-ages-first-2026-09.md §4.
+ *
+ *  ⚠ SO DO NOT REBUILD A PER-ATTRIBUTE CLAIM ON THIS NUMBER. "How much of her body is left" is still
+ *  honest about the BODY; it is no longer the answer for any single attribute, and a reader who needs
+ *  one must divide that attribute by its own peak.
  *
  *  ⚠ AND THAT IS EXACTLY WHY COMPOSURE IS OUT rather than merely "not very physical". It GAINS
  *  `veteranPoise` past the peak, so folding it in would put a rising number inside a falling one:
@@ -730,7 +766,10 @@ export function growWeek(args: {
     // stored peak physical reads the same question now (`physicalMean`, and through it
     // `WorldState.peakPhysical`), so the answer is `isPhysicalSkill` in both places and the two
     // cannot drift apart. Byte-identical behaviour: `isPhysicalSkill` IS `k !== 'composure'`.
-    const loss = decline > 0 && isPhysicalSkill(k) ? decline * skills[k] : 0
+    // ⭐⭐ ROUND 38 #6c – AND THE RATE IS NOW THE ATTRIBUTE'S OWN. `ageWeightOf` is normalised to a
+    // mean of 1 over the physical keys, so the MEAN of the four still follows the curve it always
+    // did; what changed is the shape underneath it. See `ageWeightOf` and `physicalMean`'s header.
+    const loss = decline > 0 && isPhysicalSkill(k) ? decline * ageWeightOf(k) * skills[k] : 0
     const veteranPoise = decline > 0 && !isPhysicalSkill(k) ? d.veteranPoise : 0
     out[k] = Math.max(d.floor, skills[k] + gain - loss + veteranPoise)
   }

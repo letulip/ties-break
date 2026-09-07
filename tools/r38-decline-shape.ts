@@ -19,8 +19,13 @@
  *
  * Run: npx vite-node tools/r38-decline-shape.ts
  */
+import { readFileSync } from 'node:fs'
+import { decodeExportFile } from '../src/engine/saveCodec'
 import { ECONOMY } from '../src/engine/economy'
-import { declineFactor } from '../src/engine/development'
+import { PHYSICAL_SKILL_KEYS, ageCurveOf, ageWeightOf, declineFactor, physicalMean } from '../src/engine/development'
+import { kidAgeExact } from '../src/engine/world/age'
+import { startingSkills, withHeadStart } from '../src/engine/world/player'
+import type { WorldState } from '../src/engine/world'
 import { ENDINGS } from '../src/engine/ending'
 import { WEEKS_PER_YEAR } from '../src/engine/season/calendar'
 
@@ -106,3 +111,76 @@ for (const arm of ARMS) {
 console.log()
 console.log('⚠ "ends at" is the first whole age at which the body alone can end the career. NEVER means')
 console.log('  the floor sits at or above lastOfferPeakShare and the final offer becomes unreachable.')
+
+
+// =================================================================================================
+// ⭐⭐ ROUND 38 #6c – WHAT THE PER-ATTRIBUTE WEIGHTS DO TO A REAL CAREER
+// =================================================================================================
+//
+// ⚠ THIS IS THE SHIPPED ARITHMETIC AND NOT A MODEL OF IT. Past `declineStart` `ageFactor` returns 0,
+// so `growWeek`'s only surviving term for a physical attribute is
+// `loss = decline x ageWeightOf(k) x skills[k]` – which is what the walk below applies, week by week,
+// off her own stored peak. The single-rate column is the same walk with every weight forced to 1.
+//
+// Run: npx vite-node tools/r38-decline-shape.ts -- --save /path/career.tsave
+const f2 = (n: number) => n.toFixed(2)
+
+async function perAttribute(savePath: string) {
+  const world = (await decodeExportFile(new Uint8Array(readFileSync(savePath)))) as WorldState
+  const age = kidAgeExact(world.week, world.profile.birthMonth, world.profile.birthDay)
+  const bounds = ageCurveOf(world.ageCurve, world.careerTotals?.weeksLostToInjury ?? 0)
+  const birth = withHeadStart(startingSkills(world.seed, world.profile), world.profile.birthMonth)
+
+  /** Walk from `declineStart` to her age, applying the shipped loss per week. `weighted: false`
+   *  forces every weight to 1, i.e. the pre-#6c engine, so the two columns differ in ONE thing. */
+  function walk(weighted: boolean): Record<string, number> {
+    const out: Record<string, number> = {}
+    for (const k of PHYSICAL_SKILL_KEYS) out[k] = 1
+    for (let a = bounds.declineStart; a < age; a += 1 / WEEKS_PER_YEAR) {
+      const d = declineFactor(a, bounds)
+      for (const k of PHYSICAL_SKILL_KEYS) out[k]! *= 1 - d * (weighted ? ageWeightOf(k) : 1)
+    }
+    return out
+  }
+
+  const single = walk(false)
+  const split = walk(true)
+  // ⚠⚠ HER PEAK IS BACK-DERIVED THROUGH THE **SINGLE-RATE** FACTOR, AND GETTING THIS BACKWARDS IS
+  // THE ONE WAY TO MAKE THIS TABLE CIRCULAR. The save was PLAYED under one rate – the weights did not
+  // exist when it was written – so today's values are `peak x single`, and dividing them by the
+  // WEIGHTED factor would invent a peak she never had and then "prove" that the weights change
+  // nothing. Divide by the model she actually lived under, and the weighted column is then the honest
+  // counterfactual: what she would read today if the weights had been in force all along.
+  const peak: Record<string, number> = {}
+  for (const k of PHYSICAL_SKILL_KEYS) peak[k] = world.skills[k] / single[k]!
+
+  console.log()
+  console.log('='.repeat(96))
+  console.log(`PER-ATTRIBUTE DECLINE – ${world.profile.kidName} at ${f2(age)}, declineStart ${f2(bounds.declineStart)}`)
+  console.log('='.repeat(96))
+  console.log(padR('skill', 16) + padL('birth', 9) + padL('peak', 9) + padL('one rate', 10) + padL('weighted', 10) + padL('weight', 8) + padL('vs birth', 10))
+  const cells: Record<string, number> = {}
+  for (const k of PHYSICAL_SKILL_KEYS) {
+    const one = peak[k]! * single[k]!
+    const w = peak[k]! * split[k]!
+    cells[k] = w
+    console.log(
+      padR(k, 16) + padL(f2(birth[k]), 9) + padL(f2(peak[k]!), 9) + padL(f2(one), 10) + padL(f2(w), 10) +
+      padL(ageWeightOf(k).toFixed(2), 8) + padL((w - birth[k] >= 0 ? '+' : '') + f2(w - birth[k]), 10),
+    )
+  }
+  const meanOne = PHYSICAL_SKILL_KEYS.reduce((t, k) => t + peak[k]! * single[k]!, 0) / PHYSICAL_SKILL_KEYS.length
+  const meanW = physicalMean({ ...world.skills, ...cells } as never)
+  console.log(padR('MEAN', 16) + padL(f2(physicalMean(birth)), 9) + padL(f2(world.peakPhysical ?? 0), 9) + padL(f2(meanOne), 10) + padL(f2(meanW), 10))
+  console.log()
+  console.log(`  ⚠ the mean moves by ${f2(Math.abs(meanW - meanOne))} of a point – that is the normalisation holding.`)
+  const below = PHYSICAL_SKILL_KEYS.filter((k) => cells[k]! < birth[k])
+  console.log(`  ⭐ attributes now BELOW the build she was born with: ${below.length ? below.join(', ') : 'none'}`)
+  const belowOne = PHYSICAL_SKILL_KEYS.filter((k) => peak[k]! * single[k]! < birth[k])
+  console.log(`     ...against ${belowOne.length ? belowOne.join(', ') : 'none'} on one rate.`)
+}
+
+const saveArg = process.argv.indexOf('--save')
+if (saveArg >= 0 && process.argv[saveArg + 1]) {
+  await perAttribute(process.argv[saveArg + 1]!)
+}

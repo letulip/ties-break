@@ -67,9 +67,28 @@ shape moves:
 That is his «не падать по навыкам до уровня 12 лет и ниже», delivered without touching the rate at
 which she declines overall – the mean moves by **0.01**.
 
-⚠ **This table is arithmetic, not a measurement.** It assumes the per-week factor composes as
-`share^weight`, which is exact in the limit and very close over 340 weeks. The bench in §5 is what has
-to reproduce it.
+### PREDICTED against MEASURED – `tools/r38-decline-shape.ts --save`, the shipped arithmetic
+
+| skill | predicted | **measured** | miss |
+| --- | ---: | ---: | ---: |
+| serve | 49.84 | **49.62** | 0.22 |
+| ret | 48.88 | **48.92** | 0.04 |
+| stamina | 44.11 | **44.30** | 0.19 |
+| groundstrokes | 46.18 | **46.14** | 0.04 |
+| **physical mean** | 47.25 | **47.25** | **0.00** |
+
+The prediction assumed the per-week factor composes as `share^weight`; over 340 weeks it is within
+0.22 of a point on every attribute and **exact on the mean**.
+
+⭐ **Attributes finishing below the build she was born with: two on one rate (serve −0.77 and
+groundstrokes −2.63), ONE with the weights (groundstrokes, −1.76).** Her serve ends **+3.72 above**
+where it started instead of below it.
+
+⚠⚠ **AND THE PROBE HAS A TRAP IN IT THAT IS WORTH THE COMMENT IT CARRIES.** Her peak must be
+back-derived through the **single-rate** factor, because the save was PLAYED under one rate – the
+weights did not exist when it was written. Dividing today's values by the WEIGHTED factor invents a
+peak she never had and then "proves" the weights change nothing; the first run of this probe did
+exactly that and read a 0.22-point move in the mean that was pure circularity.
 
 ## 4. ⚠⚠ THE ONE HONEST COST, and it is in a comment the repo already wrote
 

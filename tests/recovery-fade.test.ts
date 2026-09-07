@@ -166,7 +166,13 @@ describe('from declineStart the corridor closes, continuously, by the share of h
   // decays more slowly ALSO RECOVERS BETTER – a consequence of #3d that nothing asked for and that
   // this line is where it becomes visible. The shape is unchanged: it still closes, monotonically,
   // from `declineStart`. See docs/specs/fame-presence-2026-09.md §6.
-  it('⭐ it reproduces §4a’s corrected table – 5.00 / 4.49 / 4.14 / 3.55 / 2.93 at 29 / 33 / 35 / 38 / 41', () => {
+  // ⚠ RE-AIMED AGAIN, ROUND 38 #6c (07.09) – 5.00 / 4.49 / 4.14 / 3.55 / 2.93 becomes
+  // 5.00 / 4.46 / 4.11 / 3.51 / 2.89, at most 0.04 of a point. The corridor reads
+  // `physicalMean / peakPhysical`, and `ageWeightOf` gave each attribute its own decline rate, so the
+  // mean's path shifts very slightly. The weights are normalised to a mean of 1, which is why this is
+  // hundredths rather than a re-balance. Shape unchanged: it still closes monotonically from
+  // `declineStart`. See docs/specs/what-ages-first-2026-09.md §4.
+  it('⭐ it reproduces §4a’s corrected table – 5.00 / 4.46 / 4.11 / 3.51 / 2.89 at 29 / 33 / 35 / 38 / 41', () => {
     // ⚠ THE CORRECTED TABLE, NOT THE FIRST DRAFT. §4a's first version evaluated `declineFactor` once
     // a year and held it constant across the 52 weeks; the engine raises her age EVERY WEEK, so the
     // loss compounds against a continuously rising factor and the real curve is 2-3 points kinder at
@@ -175,10 +181,10 @@ describe('from declineStart the corridor closes, continuously, by the share of h
     turnPro(world)
     const table: [number, number][] = [
       [29, 5.0],
-      [33, 4.49],
-      [35, 4.14],
-      [38, 3.55],
-      [41, 2.93],
+      [33, 4.46],
+      [35, 4.11],
+      [38, 3.51],
+      [41, 2.89],
     ]
     for (const [age, expected] of table) {
       walkTo(world, rng, age)
@@ -280,7 +286,10 @@ describe('every reader of the helper inherits the fade – that is why it lives 
     return world
   }
 
-  // ⚠ RE-AIMED, ROUND 38 #3d – 3.45 -> 3.55 at 38, the same softer curve as the table above.
+  // ⚠ RE-AIMED, ROUND 38 #3d – 3.45 -> 3.55 at 38, the softer accel. ⚠ #6c did NOT move it: this arm
+  // walks its OWN seed (`fade-accrue`), not the table's, and the per-attribute weights land it at
+  // 3.5510 where the table's career reads 3.51. Two different bodies, two different numbers – which
+  // is itself the point the weights introduce, and is why the two arms may not share a constant.
   it('the accumulator pays the faded base on a free week – 3.55 + the slider, not 5 + the slider', () => {
     const world = veteran('fade-accrue')
     const faded = recoveryBaseFor(world)

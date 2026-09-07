@@ -517,8 +517,14 @@ describe('⭐⭐ the last offer, read off a walked body', () => {
     for (let i = 0; i < kept.wraps.length; i++) {
       const a = kept.wraps[i]
       const b = never.wraps[i]
+      // ⚠ RE-AIMED, ROUND 38 #6c – WAS 6 DECIMALS, MEASURED 2.4e-4. Four decline rates instead of
+      // one, so two differently-shaped bodies no longer read an identical share; the weights are
+      // normalised to a mean of 1, which is why the drift stays small. MEASURED, WORST OF THE WALK:
+      // 0.0084 – it is exactly 0 until `declineStart` and grows from there. The claim – that the two
+      // are asked for the last time in the SAME year – is asserted on the line below and is
+      // unchanged, which is the half that decides anything.
       expect(b.share, `age ${a.ageYears}: the kept body and the wrecked one read differently`)
-        .toBeCloseTo(a.share, 6)
+        .toBeCloseTo(a.share, 1)
       expect(b.final, `age ${a.ageYears}: they were asked for the last time in different years`).toBe(a.final)
     }
   })

@@ -497,12 +497,34 @@ the repo keeps is the derived statistics below.
   moving the ceiling at either end. That is a different measurement from the one C2 has written and it
   is the one to run.
 
-- [ ] **6c. Which skills age, and how fast** – ⭐ HIS RULING, 07.09: «может быть и навыки могут
+- [x] **6c. Which skills age, and how fast** – SHIPPED. ⭐ HIS RULING, 07.09: «может быть и навыки могут
   деградировать, это вполне ок, надо только подумать какие и с какой скоростью», and «деньги покупают
   восстановление и это ок» – which CLOSES the recovery finding (§1 of the ageing spec) as a
   non-defect. Spec written with the four weights and his own career's table:
-  `docs/specs/what-ages-first-2026-09.md`. ⚠ Not started – the weights are a claim about tennis and
-  they are his to approve.
+  `docs/specs/what-ages-first-2026-09.md`. ⭐ **HE APPROVED THEM: «веса ок, строй и меряй пожалуйста».**
+
+  **Built:** `ECONOMY.development.ageWeight` holds the four RAW numbers (serve 0.6, ret 1.2, stamina
+  1.6, groundstrokes 1.0) and `ageWeightOf` divides by their own mean, so `mean === 1` holds BY
+  CONSTRUCTION however they are retuned – which is what keeps `physicalMean / peakPhysical` on its
+  path. `growWeek`'s decline branch reads it.
+
+  **Measured** (`tools/r38-decline-shape.ts --save`, the shipped arithmetic, predicted against
+  measured): serve **49.62** where one rate gives 45.13, stamina **44.30** where one rate gives 48.71,
+  and the physical mean moves by **0.00**. ⭐ Attributes finishing below the build she was born with:
+  **two on one rate, ONE with the weights** – her serve ends **+3.72 above** where it started instead
+  of below it. Every prediction within 0.22 of a point.
+
+  ⚠ **Four pins re-aimed, none deleted, each with the measured worst-case drift**: the weekly mean is
+  no longer exactly `(1 − decline)` (worst 0.0031 of 675 weeks), two differently-shaped bodies no
+  longer hold an identical share (worst 0.0084), three careers at 38 spread by 0.0020, and the v62
+  peak reconstruction lands within 1.37% instead of on floating-point equality. ⚠⚠ That last one is an
+  artefact of the FIXTURE and not a defect for any real save – a genuine v61 career was played
+  entirely under the single factor, so running that factor backwards is exactly right for it, and the
+  migration is deliberately untouched. `physicalMean`'s header, which claimed the mean was EXACT, is
+  corrected in the same commit.
+
+  ⚠ The recovery corridor moved by at most 0.04 of a point (4.49 → 4.46 at 33), re-aimed with its
+  reading.
 
 ---
 

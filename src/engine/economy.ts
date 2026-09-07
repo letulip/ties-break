@@ -2634,6 +2634,46 @@ export const ECONOMY = {
        *  with a fix it does not deliver. */
       declineAccel: 0.24,
     },
+    /** ⭐⭐⭐ ROUND 38 #6c (07.09) – WHICH SKILLS AGE, AND HOW FAST RELATIVE TO EACH OTHER.
+     *
+     *  THE OWNER: «может быть и навыки могут деградировать, это вполне ок, надо только подумать
+     *  какие и с какой скоростью» – and, on the four below: «веса ок, строй и меряй пожалуйста».
+     *
+     *  ⚠⚠ WHAT THIS ENDS. `growWeek`'s decline branch charged `decline x skills[k]` to all four
+     *  physical attributes at the SAME proportional rate, so a thirty-five-year-old lost her serve
+     *  at exactly the rate she lost her legs. Nothing about that was wrong arithmetic; it was
+     *  shapeless, and it is the one thing every tennis broadcast in the world says is not true.
+     *
+     *  ⚠⚠⚠ THESE ARE RAW WEIGHTS AND THE CODE NORMALISES THEM, WHICH IS THE WHOLE SAFETY OF THE
+     *  CHANGE AND IS DELIBERATELY NOT FOUR HAND-TYPED DECIMALS. `ageWeightOf` divides by their own
+     *  mean, so `mean(normalised) === 1` holds BY CONSTRUCTION however these four are retuned –
+     *  and that is what keeps `physicalMean(skills) / peakPhysical` on its old path. Three things
+     *  read that ratio and none of them may move: `ENDINGS.lastOfferPeakShare` (the last off-season
+     *  offer), `recoveryAgeFade` (the corridor), and `realisedShare` (the coach's ceiling read).
+     *  ⚠ A fifth attribute appended to `SKILL_KEYS` without a row here reads 1 and is therefore
+     *  ordinary, never zero – see `ageWeightOf`.
+     *
+     *  ⚠ COMPOSURE IS ABSENT ON PURPOSE and would be inert if present: `isPhysicalSkill` excludes
+     *  it from the decline branch entirely and it GAINS `veteranPoise` past the peak instead.
+     *
+     *  Measured predicted-against-measured in docs/specs/what-ages-first-2026-09.md §3. */
+    ageWeight: {
+      /** struck from a standing start – the last thing to go, and a serve is a career extender */
+      serve: 0.6,
+      /** the return is movement and reaction before it is technique */
+      ret: 1.2,
+      /** endurance goes first and fastest, and it is the loss everybody can see */
+      stamina: 1.6,
+      /** rally quality: half movement, half shot-making */
+      groundstrokes: 1.0,
+      // ⚠ TYPED `string` AND NOT `SkillKey`, AND THE REASON IS THE IMPORT GRAPH. `SkillKey` is
+      // declared in `engine/development.ts`, which imports THIS file – a type-only import back
+      // would still be a cycle for the tools' project (`match/style.ts` declares a second copy of
+      // the union, and a third reader of it is not a trade worth making). The membership check
+      // that a plain `string` gives up is made mechanically instead:
+      // `tests/r38-age-weights.test.ts` asserts every key here is in `SKILL_KEYS`, so a typo
+      // reddens rather than reading 1 in silence.
+    } as Record<string, number>,
     /** ⭐⭐⭐ ROUND 31 #10 – THE FORK SHAPES THE CURVE, and until now it only priced it.
      *
      *  The owner supplied real WTA reference data and the round-31 ledger checked the engine against
