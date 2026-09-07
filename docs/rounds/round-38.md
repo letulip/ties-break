@@ -355,6 +355,21 @@ the repo keeps is the derived statistics below.
   Nothing here draws on any RNG stream, so the MAIN capture needed no re-pin – and could not have
   moved.
 
+  **The gate, read out of the files and not out of a notification.** `CHECK_EXIT=0` – bulk unit 4,342
+  tests + 13 heavy shards, component 142 files / 1,604 tests, seven doc gates, both typechecks, the
+  build and the install-size guard (15,768 KiB, 616 under the ceiling). `SIM_EXIT=0` – 13 files green
+  in 372 s, `snapshot-cache-verify` among them at 19 s. ⚠ Both background completion notices claimed
+  *exit code 0* for the FIRST `check`, whose log said `CHECK_EXIT=2`; CLAUDE.md's note about that lie
+  earned its place again.
+
+  ⚠ **One inherited red had to be cleared to gate at all**, and it is not this wave's:
+  `tools/r38-decline-cliff.ts` arrived with `91084738` importing `KidSkills` from the `world` barrel,
+  which does not export it. `check:tools` fails fast, so that one line took the unit suite, the
+  component suite, the build and the install-size guard down with it for everybody on `round/38`.
+  Reproduced at `91084738` in a detached worktree – identical error, exit 2 – then fixed the way
+  `52c9ab78` fixed `r38-save-read`: the import moved to `src/engine/development`, where the type is
+  declared, and nothing else touched.
+
 - [ ] **10. Wave B – one owner out of `App.vue`** – same, steps B1-B4.
 
 ---
