@@ -690,7 +690,15 @@ the repo keeps is the derived statistics below.
   ⚠⚠ ONE HONEST CASE DOES CHANGE: an already-famous career now pays what its own name is worth rather
   than the sticker – which is his ruling seen from the buying side.
 
-- [!] **15. The drift loop – ⚠⚠ AND MY OWN NUMBER FOR IT WAS WRONG.** I measured CASH and called it a
+- [x] **15. The drift loop – CLOSED BY #16, and ⚠⚠ MY OWN NUMBER FOR IT WAS WRONG.**
+
+  ⭐ **The ramp closed every one of them, measured in WEALTH on his own save, one settled world and one
+  sell-and-rebuy per rung: merch-brand $0, academy-land $0, academy-courts $0, house-first $0,
+  car-good $0.** A rung bought this week is worth what was paid for it, so there is no gap left to
+  arbitrage on any family – which is why `purchasePriceCents` (#14) could be withdrawn with it and the
+  sticker is honest again.
+
+  The original entry, kept because it is where the cash-versus-wealth error was made: I measured CASH and called it a
   loop. Re-measured as WEALTH (cash plus every row at its own value), on one settled world, one
   sell-and-rebuy per rung:
 
@@ -710,7 +718,7 @@ the repo keeps is the derived statistics below.
   a rung is worth more than it cost the instant it is bought.** His fix for one is the fix for both –
   item 16.
 
-- [>] **16. A brand is a process, not a purchase** – ⭐ HIS RULING, 07.09, and it OVERTURNS my own #14:
+- [x] **16. A brand is a process, not a purchase** – SHIPPED. – ⭐ HIS RULING, 07.09, and it OVERTURNS my own #14:
   «если мы до пика известности бренд не покупали, то он всё равно поднимался в цене? Это супер-странно.
   Я бы сказал, что он неизменно для первого открытия стоит 250к, а потом МОЖЕТ набрать свои 5млн, но
   не за 1 день, т.к. это процесс. Если уровень известности большой, то набор будет идти быстрее (может
@@ -727,18 +735,62 @@ the repo keeps is the derived statistics below.
   mechanism, both directions, and `purchasePriceCents` (#14) is withdrawn with it: the sticker becomes
   honest again.
 
+- [x] **17. The two calibration dials, and C1 and C3 turn out to be one lever** – ⭐ HIS CHOICE off the
+  measured table: `plateauRate` 0.0009 -> **0.0027** and `coach.fitFactor` 1.05/0.94 -> **1.25/0.75**.
+  «Очень хорошо выглядит, давай этот.» Shipped row: nonsense 67.0% · self-run-well 98.9% · coach+fit
+  98.9% · coach-off 93.2% · elite 99.8% · yardstick 99.9%, spread 32.9.
+
+  ⚠⚠ **The fit is now wider than the whole coach ladder** – x1.667 against x1.402 – so a budget coach
+  who fits (1.1875) beats an elite who does not (0.8625). ⭐ **He ruled it from the real sport:** Björn
+  Borg's career-long coach was not a star coach, and the partnership was what mattered. His own clause
+  is the bound and is pinned: «если и только если случился метч» – an elite who DOES fit still reads
+  1.4375, so the tier still buys 21% on top of a match; what it no longer buys is a substitute for one.
+  The old rule «the fit weighs less than one rung» is retired with its sentence kept verbatim.
+
+- [x] **18. A decade of campaigns is remembered** – ⭐ HIS OBSERVATION: «долгосрочные контракты могут
+  подогревать интерес у публики и держать известность долго, даже после спада пика». The stock's
+  high-water mark now reads fame PLUS contract reach, and `contractFame` moved INSIDE the max in the
+  same commit because leaving it outside paid one deal twice (ten points of paper reached 19.5 where
+  ten points of fame reached 10).
+
+  **Measured, five silent years, share of its own value a brand keeps:** the small careers do not move
+  at all (25-28%), and the three biggest go **6.7 -> 24.3%**, **7.1 -> 24.6%**, **7.8 -> 26.6%**.
+  ⚠ A HIGHER FLOOR WAS MEASURED AND REFUSED first: at 0.75 the big three reached only 12-14% while the
+  small ones rose to 48%, because what a big career loses is the contract book and no floor on the
+  stock could see it.
+
+- [x] **C4. One calibrated closed form, read by everyone** – SHIPPED. Residual over 8.46M simulated
+  matches: 315 fitted cells **rms 3.06 -> 0.36 pp**, and 108 HELD-OUT cells carrying a skill gap the
+  fit never saw **1.98 -> 0.60 pp**. His two named cases: stamina 30 v 90 **4.77 -> −0.58 pp**,
+  composure 30 v 80 **1.68 -> 0.51 pp**.
+
+  ⚠⚠ The placement was measured rather than reasoned: INSIDE `basePServe` the term closes 3% of the
+  gap, because the loop reads the base once and spends both attributes per point on top. Beside it,
+  the worst cell goes −6.11 -> −0.56.
+  ⚠ All 63 frozen career constants moved across the wave and the RNG contract held: `rngMain`
+  byte-identical on every arm, the MAIN stream instrumented at 124,649 / 124,652 / 124,652 draws with
+  matching hashes. 42 of the 63 were re-cut at the wave's close; the 21 `selfTravelling` values are
+  byte-untouched, and the reason is itself the measurement – **a fit factor prices a coach-player
+  match, and a family with no coach has no match to price.**
+
 ---
 
 ## Wave C, as `docs/specs/next-waves-2026-09.md` recorded it
 
-- [?] **C1 – the age curve.** ⚠ **C0 measured it and the proposal does not survive.** The pair C1
+- [x] **C1 – the age curve.** CLOSED BY #17 – the phase boundaries never had to move; what was
+  missing was that the late years were worth nothing, and `plateauRate` is that. Original line: ⚠ **C0 measured it and the proposal does not survive.** The pair C1
   would move (`ECONOMY.development.ageCurve`) is the PRE-FORK curve; a real career resolves
   `ageRoutes` – `direct {22, 27}`, `college {23, 29}` – so moving it would have moved nothing.
   And growth does not stop at `plateauStart`: `plateauRate` is 0.0009, and careers already peak at
   **26.55 direct / 28.56 college** against his own reference of `24-26 / 25-28`. C1 as written would
   push the peak to 32-33. Now an `ask` – question 4.
-- [ ] **C2 – `potentialBand`.** [4, 26] at a measured 93.3% exhausted; target 30-40%. After C1.
-- [ ] **C3 – coach tenure.** ⚠ BLOCKED on his own «как это не превратить в гарантию?».
+- [x] **C2 – `potentialBand`.** CLOSED AS ANSWERED, NOT BUILT. Its premise – «careers exhaust 93.3%
+  of their band» – was measured on the PROTECTED arm only (wealthy, elite coach, no bankruptcy, plays
+  on). Real careers read p10 47.3% / median 77.5% / p90 89.5%, and the analytic span by management is
+  63.5% -> 98.7%. There is no missing spread. Original line: [4, 26] at a measured 93.3% exhausted; target 30-40%. After C1.
+- [x] **C3 – coach tenure.** CLOSED BY #17 AND WITHOUT A HIDDEN CEILING. His «как это не превратить в
+  гарантию?» is answered by not building one: his «+0,1%» was the plateau, not the coach, and the fit
+  span is what makes a long matched partnership a real route. Original line: ⚠ BLOCKED on his own «как это не превратить в гарантию?».
 - [x] **C4 – the two skills that never reach the field.** SHIPPED. One calibrated closed form, read by
   everybody – `docs/specs/one-closed-form-2026-09.md`.
 
