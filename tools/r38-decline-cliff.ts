@@ -36,7 +36,13 @@ import { kidMatchPlayer } from '../src/engine/world/player'
 import { rivalMatchPlayer } from '../src/engine/season/rival'
 import { conditionMatchFactor } from '../src/engine/condition'
 import type { MatchOptions } from '../src/engine/match/types'
-import type { KidSkills, WorldState } from '../src/engine/world'
+// ⚠ `KidSkills` IS `engine/development`'s, NOT THE BARREL'S. `src/engine/world` re-exports hundreds
+// of names but not this one, so `check:tools` reported TS2305 here and – because it fails fast –
+// took the whole of `npm run check` down with it before the unit suite had run. Fixed on the wave-A
+// branch (07.09) rather than left, for the same reason `52c9ab78` fixed `r38-save-read`: a tool that
+// does not typecheck blocks everybody's gate, and the fix is where the type is declared.
+import type { KidSkills } from '../src/engine/development'
+import type { WorldState } from '../src/engine/world'
 
 const args = process.argv.slice(2)
 let savePath = ''
