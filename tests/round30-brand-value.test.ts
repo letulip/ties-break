@@ -82,9 +82,24 @@ function walk(world: WorldState, n: number, keepSolvent = false): void {
       skipTournament(world)
       closeTournament(world)
     }
-    if (keepSolvent) world.fundsCents = 5_000_000_00
+    if (keepSolvent) world.fundsCents = SHOPPER_FUNDS_CENTS
   }
 }
+
+/** ⚠⚠ RE-AIMED, ROUND 38 #14 (07.09) – WAS $5,000,000, AND THE FIXTURES STARTED FAILING WITH «Not
+ *  enough funds for that» RATHER THAN WITH A WRONG NUMBER. `buyAsset` now charges
+ *  `max(catalogue, what the rung is worth)` – the owner's ruling that closed a sell-and-rebuy loop
+ *  worth $2,326,989 a cycle on his own save – so a career famous enough to make these arms mean
+ *  anything must now find its brand's full worth in cash.
+ *
+ *  ⭐ THE WALLET IS SCENERY IN THIS FILE and raising it weakens no claim: every arm here is about
+ *  what a brand EARNS and what it is WORTH, and not one of them asserts a balance. The alternative –
+ *  making the fixtures poorer and less famous – would have moved the very numbers they exist to pin.
+ *
+ *  ⚠ AND IT IS A REAL CONSEQUENCE OF THE RULING, not a fixture quirk: on the owner's week-1115 career
+ *  a first brand now costs $5,172,791 against a $250,000 sticker. Recorded in the round-38 PR body so
+ *  he can rule on it, because it closes a line of play that was open. */
+const SHOPPER_FUNDS_CENTS = 500_000_000_00
 
 function shopper(seed: string, weeks = 12): WorldState {
   const world = professional(createWorld(seed))
@@ -96,7 +111,7 @@ function shopper(seed: string, weeks = 12): WorldState {
       closeTournament(world)
     }
   }
-  world.fundsCents = 5_000_000_00
+  world.fundsCents = SHOPPER_FUNDS_CENTS
   return world
 }
 
