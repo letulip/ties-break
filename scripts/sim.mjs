@@ -90,7 +90,22 @@ function runFile(file) {
   return { secs: ((Date.now() - at) / 1000).toFixed(0), output, ...classify(run.status, output) }
 }
 
-const files = HEAVY_SIM_FILES
+// ⚠ ARGUMENTS ARE A SUBSET OF THE LIST, NEVER A PATH THE CALLER INVENTED (07.09, for the CI
+// matrix in .github/workflows/simulation.yml, which runs one file per job). A name that is not in
+// HEAVY_SIM_FILES is FATAL rather than passed through to vitest, because the whole point of
+// scripts/heavy-tests.mjs is that there is one list: a matrix entry that has quietly stopped
+// matching must go red here, not run zero tests and report itself green one job at a time. That is
+// the same "the number a script reads disagrees with the number a human reads" failure this file's
+// header opens with, and a matrix multiplies it by thirteen.
+const requested = process.argv.slice(2)
+const unknown = requested.filter((f) => !HEAVY_SIM_FILES.includes(f))
+if (unknown.length) {
+  console.error(`  sim: not in HEAVY_SIM_FILES – ${unknown.join(', ')}`)
+  console.error('  The list lives in scripts/heavy-tests.mjs. Add it there, or fix the caller.')
+  process.exit(1)
+}
+
+const files = requested.length ? requested : HEAVY_SIM_FILES
 const started = Date.now()
 const failed = []
 const stalled = []
@@ -135,7 +150,7 @@ for (const r of recovered) console.error(recoveredNote(r.file, r.firstSecs))
 
 if (failed.length === 0 && stalled.length === 0) {
   const tail = recovered.length ? ` (${recovered.length} recovered after a stall)` : ''
-  console.log(`  sim: ${files.length} files green in ${total}s${tail}`)
+  console.log(`  sim: ${files.length} file${files.length === 1 ? '' : 's'} green in ${total}s${tail}`)
 } else {
   for (const f of [...failed, ...stalled]) {
     console.error(`\n===== ${f.file} =====\n${f.output}`)

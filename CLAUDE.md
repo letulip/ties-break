@@ -84,14 +84,16 @@ slice returning −1. Verify scope, range arithmetic and anchoring before filing
 
 ## The simulation suite's standing regime (owner's final ruling, 22.08 – do not revisit)
 
-`test:sim` NEVER runs in front of a pull request. It was tried for one day and the runner measured
-it out (20+ min on 2 cores against ~5.5 min locally, red by timeout). The regime that stands:
-weekly cron + on-demand in `.github/workflows/simulation.yml`, **a red weekly run files a
-`sim-health` Issue by itself** (the reader loop that was always missing), and the working rule,
-UPGRADED 22.08 at the owner's ask: **every PR assembly runs `npm run test:sim` locally,
-unconditionally** – the August drift came from commits that did not LOOK like model changes, so
-"only when the model moved" is exactly the heuristic that failed. The `pull-request` skill runs it
-as a fixed step and the PR body carries the verdict.
+`test:sim` NEVER runs in front of a pull request: tried for a day and measured out (20+ min on
+2 cores against ~5.5 min locally, red by timeout). What stands – weekly cron + on-demand in
+`.github/workflows/simulation.yml`, whose four jobs file a `sim-health` Issue on any red; and the
+working rule, UPGRADED 22.08 at the owner's ask: **every PR assembly runs `npm run test:sim`
+locally, unconditionally**, since the August drift came from commits that did not LOOK like model
+changes. The `pull-request` skill runs it as a fixed step and the PR body carries the verdict.
+
+`npm run test:sim -- <file>` runs one file. **⚠ The birpc stall is NOT fixed** – 45 s here, 90 s on
+the runner, 60 s ceiling – so sim.mjs's retry classifier carries it, and the Issue step 403'd
+unnoticed 17.08–07.09.
 
 ## Git workflow
 
