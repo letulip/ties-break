@@ -526,6 +526,32 @@ the repo keeps is the derived statistics below.
   ⚠ The recovery corridor moved by at most 0.04 of a point (4.49 → 4.46 at 33), re-aimed with its
   reading.
 
+- [!] **13. ⚠⚠ A LIVE MONEY LOOP ON THE SHELF, AND IT IS NOT ROUND 38'S** – found while checking a
+  consequence the academy agent flagged. `buyAsset` charges the CATALOGUE price (`entryCents`) while
+  `sellAsset` pays what the row is WORTH (`owned.valueCents`), and `buyAsset` refuses only a rung
+  currently owned. So a rung whose worth is DERIVED rather than paid can be sold and bought straight
+  back. Measured on his week-1115 save, through the shipped commands:
+
+  ```
+  merch-brand: paid $250,000, worth $2,576,989
+     sold for $2,576,989, re-bought for $250,000
+     NET +$2,326,989 ... and it is worth $5,172,791 again
+  ```
+
+  ⚠ **Repeatable, in one week, unbounded.** It exists on `main` today – it is `entryCents` against
+  `brandGrossWorthCents` and owes nothing to this round.
+
+  ⚠⚠ **AND THE ACADEMY PREMIUM WOULD OPEN A SECOND ONE.** The same probe reads **NET $0** on
+  `academy-courts` today, because its worth is exactly what was paid – which is the very thing item 8
+  changes. At the measured premium a $3,000,000 stage is worth ~$3,985,000 the same week, so the
+  cycle would pay about **$985,000** with no build delay to slow it (no academy rung carries
+  `buildWeeks`).
+
+  ⭐ **Proposed fix, one line, closing both:** a rung whose worth is derived is BOUGHT at
+  `max(entryCents, its current worth)`. A first purchase is unchanged – a brand with no fame is worth
+  its floor – and a buy-back after a sale costs what the thing is now worth, which is what any market
+  does. ⚠ HIS CALL, and item 8 is held until it is made.
+
 ---
 
 ## Wave C, as `docs/specs/next-waves-2026-09.md` recorded it
