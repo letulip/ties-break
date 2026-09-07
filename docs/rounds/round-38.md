@@ -193,15 +193,21 @@ the repo keeps is the derived statistics below.
     skill-to-result curve amplifies three to four times, which is what a Markov match does and what
     tennis does. ⚠ So `declineAccel` is the wrong dial for his complaint.
   * ⚠⚠ **she still beats a #400 player 86% of the time.** On court she is not finished.
-  * ⭐⭐⭐ **and the actual mechanism is ACCESS, not skill.** At #141 she is squeezed from both ends:
-    w15 and w35 are SHUT BEHIND HER (`tierOutgrown`, and «professional rungs never re-open»), and
-    wta500 / wta1000 / slam are shut in front (cuts at 120 / 65 / 112). What is left is w50-wta250,
-    where the field sits around #200-330. Nine of her last 26 results are worth ONE point.
+  * ⚠⚠ **I FIRST WROTE THAT THE LADDER HAS NO WAY DOWN. THAT WAS WRONG AND IT IS CORRECTED.**
+    `playDownBars` is a RANK READ that persists nothing: `fromAllW: 50` bars every W event inside
+    the top 50, `fromLowW: 150` bars w15 and w35 inside 150 – and the owner named the property
+    himself on 15.08, «когда она вывалится из топ-50 и топ-150 оно само откроется обратно». She is
+    **#141**: those two rungs are shut by NINE PLACES and open by themselves. Everything from w50
+    upward was open all along.
+  * **What is actually wrong is LAG.** Her rank is a 52-week trailing sum, so it stands about a
+    hundred places above her level for a season: #141 on the table, ~#250 by her chance against a w50
+    field. ⭐ Which is what he said before the measurement ran: «она играет на уровне #250 с рангом
+    #141… до конца сезона она просто по очкам проигрыша как раз упадет к этим 250».
   * condition is not the cause: `conditionMatchFactor` is flat from 70 to 100 and she is at 94.1.
 
-- [ ] **6b. The ladder's way down** – build, and it is the first of the three. A rung re-opens when
-  her CURRENT rank has fallen far enough below what it was when the rung closed. ⚠ Needs his word on
-  the shape.
+- [~] **6b. The ladder's way down** – ⚠ **WITHDRAWN: it already exists and it is his own design.**
+  See the correction above. Nothing to build; what is left of the finding is the LAG, and that is a
+  question about the ranking window rather than about access.
 
 - [ ] **6c. His own proposal: the ageing penalty moves from skills toward condition** – «может она
   должна больше уставать и больше терять за матч своей кондиции, но не падать по навыкам до уровня

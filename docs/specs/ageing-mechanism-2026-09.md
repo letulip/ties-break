@@ -59,7 +59,7 @@ change the shape, and the shape is the amplifier, not the input.
 ⚠ **And note the last column.** She still beats a #400 **86%** of the time. On the court she is not
 finished at all.
 
-## 3. ⭐⭐⭐ THE ACTUAL MECHANISM: THE LADDER HAS NO WAY DOWN
+## 3. THE ACCESS SQUEEZE – and ⚠⚠ THE FIRST DRAFT OF THIS SECTION WAS WRONG
 
 This is the finding, and it is not about skills at all. Her rungs at week 1115, ranked **#141**:
 
@@ -85,10 +85,39 @@ What is left is w50 to wta250, where the field is drawn around ranks 200-330 and
 playing at a #250 level. Her last 26 results say exactly that: **nine of them are worth 1 point** – a
 first-round loss – and her single w35 of the season is worth 8.
 
-⚠⚠ **So «внезапно вообще не смогла» is not a skill cliff. It is an ACCESS cliff.** The window
-(`WINDOW_RUNGS = 3`) is keyed on POINTS, and points are a 52-week trailing sum, so a falling player
-stays barred from the tennis she could win on the strength of results she can no longer repeat – and
-by the time the points age out she has spent two seasons collecting single points.
+### ⚠⚠ THE CORRECTION, 07.09 – «the ladder has no way down» IS FALSE
+
+The first draft of this section said the small rungs are «shut behind her forever», quoting
+`tierOutgrown`'s note that «professional rungs never re-open». **That note is about the pro-entry-cap
+clause and I quoted it out of context.** The W rungs are shut by a different limb – `playDownBars` –
+and it is a RANK READ that persists nothing and re-reads `kidRankWta` every time it is asked:
+
+```
+PLAY_DOWN.fromAllW  = 50    a rank inside 50 is barred from EVERY W-series event
+PLAY_DOWN.fromLowW  = 150   ...and inside 150, from w15 and w35 only
+```
+
+⭐ **And the owner named the property himself on 15.08:** «когда она вывалится из топ-50 и топ-150 оно
+само откроется обратно.» `tests/play-down.test.ts` asserts both directions in one case.
+
+**She is #141. w15 and w35 are shut by NINE RANK PLACES, and they open by themselves the week she
+falls past 150** – which her own points arithmetic will do inside this season. Everything from w50
+upward has been open to her all along.
+
+### So what is actually wrong, stated correctly
+
+Not access – **LAG**. Her rank is a 52-week trailing sum of results she can no longer repeat, so for
+roughly a season it stands about a hundred places above her level:
+
+* her rank says **#141**; her chance against a w50 field says she belongs around **#250**;
+* at #141 the two rungs where she would be a favourite are shut by nine places;
+* and at #141 she is entered into fields she loses to, which is what pushes the rank down – slowly,
+  through a trailing window, over a whole season.
+
+⚠ **This is exactly what the owner said before the measurement was run:** «она играет на уровне #250
+с рангом #141 – вот именно об этом я и говорю… думаю, что до конца сезона она просто по очкам
+проигрыша как раз упадет к этим 250, потому что в предыдущий год накопилось.» He was right and the
+first draft of this section was not.
 
 ## 4. Condition is not the cause, and cannot be with today's curve
 
@@ -126,9 +155,9 @@ an old body). It also moves every AI result, because rivals read `conditionMatch
 
 | # | what | why it is first, second, third |
 | --- | --- | --- |
-| **A** | **The ladder's way down** – a rung re-opens when her CURRENT rank falls far enough below what it was when it closed | It is the actual mechanism (§3), it is bounded, and it makes the other two legible. Without it, a fixed body still has nowhere to play. |
-| **B** | **The age fade reaches the whole recovery**, not just the base – or the staff's own bonuses fade with her | §1, one line, and it is what makes «she tires more» true at all. |
-| **C** | **The ageing penalty moves from skills toward condition** – his own proposal, §5 | The largest, and it should be measured against A and B rather than instead of them: with a way down and a real fatigue curve, the skill decline may not need to be as steep. |
+| **A** | ~~The ladder's way down~~ – ⚠ **WITHDRAWN 07.09: it already exists** (`playDownBars`, and it self-reverses at #150). What is left of §3 is the LAG, and a rank that trails her level by a hundred places for a season is a question about the ranking WINDOW, not about access. |
+| **A** | **The age fade reaches the whole recovery**, not just the base – or the staff's own bonuses fade with her | §1, one line, and it is what makes «she tires more» true at all. |
+| **B** | **The ageing penalty moves from skills toward condition** – his own proposal, §5 | The largest, and it should be measured against A and B rather than instead of them: with a way down and a real fatigue curve, the skill decline may not need to be as steep. |
 
 ⚠ **And one thing he asked for that is NOT a mechanism at all:** «нужно и чётко понимать, что карьера
 уже не та и явно это подсвечивать, как раз срез года закончить/продолжать это как раз про это, там
