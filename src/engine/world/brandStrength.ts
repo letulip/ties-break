@@ -51,7 +51,7 @@
 // that a stock nothing writes weekly cannot appear on a career the migration never touched, which is
 // what keeps the eighteen frozen career hashes moving by `schemaVersion` alone.
 import { ECONOMY } from '../economy'
-import { fameAt, fameEventWeeks } from './fame'
+import { contractFameAt, fameAt, fameEventWeeks } from './fame'
 import type { WorldState } from '../world'
 
 /** ⭐ WHAT SHARE OF A PEAK SURVIVES `delta` WEEKS – the years-long fade, FLOORED at
@@ -88,6 +88,30 @@ export function strengthDecayAt(deltaWeeks: number): number {
  *  ⚠ A CAREER WITH NO SEED READS ITS WHOLE HISTORY, which is every career started after this ships.
  *  A career with no fame reads 0 from every candidate and answers 0: an unknown's brand is still an
  *  unknown's brand, and this feature hands a career that built nothing exactly nothing. */
+/** ⭐⭐⭐ ROUND 38 #18 – WHAT THE STOCK TAKES ITS HIGH-WATER MARK OVER, and it is no longer fame alone.
+ *
+ *  THE OWNER, 07.09: «долгосрочные контракты могут "подогревать" интерес у публики и держать
+ *  известность долго, даже после спада пика и низких уровней в рейтинге.»
+ *
+ *  ⚠⚠ THIS OVERTURNS A STATED DECISION, AND THE PARAGRAPH IT OVERTURNS IS `brandReachOf`'s: «`strength`
+ *  is the brand's slow STOCK, "the best she has ever been"; a contract is CURRENT FORM and has no
+ *  business raising a career's high-water mark. Adding it after the max means the term arrives with
+ *  the shelf and leaves with it.» That was a defensible reading and it is the one his sentence
+ *  replaces – a decade of campaigns IS something the public remembers, and «arrives and leaves with
+ *  the shelf» is exactly what made the biggest careers fall hardest.
+ *
+ *  ⚠ MEASURED, WHICH IS WHY IT IS THIS AND NOT A HIGHER FLOOR: projected five silent years, the three
+ *  biggest careers kept 6.7-7.8% of their value while SMALL ones kept 25-28%, and raising
+ *  `floorShare` all the way to 0.75 moved the big ones only to 12-14% while lifting the small ones to
+ *  48%. The floor was the wrong lever because what the big careers lose is the contract book, and no
+ *  floor on `strength` could see it – it was added outside the max.
+ *
+ *  ⚠ THE REACH IS STILL CLAMPED AT `fame.cap` where it is CONSUMED (`brandReachOf`), so this cannot
+ *  lift the top of the shelf; what it does is give the fall something to land on. */
+function reachAt(world: WorldState, week: number): number {
+  return fameAt(world, week) + contractFameAt(world, week)
+}
+
 export function brandStrengthAt(world: WorldState, week = world.week): number {
   // ⚠ A PIN DATED AFTER THE WEEK BEING ASKED ABOUT IS NOT A PIN FOR THAT WEEK. `assetWorthCents`
   // quotes «one more week of holding» by asking at `week + 1`, and a bench reads the week it has
@@ -98,7 +122,7 @@ export function brandStrengthAt(world: WorldState, week = world.week): number {
   const from = pinned ? pinned.week : -1
   for (const t of fameEventWeeks(world)) {
     if (t <= from || t > week) continue
-    const v = fameAt(world, t) * strengthDecayAt(week - t)
+    const v = reachAt(world, t) * strengthDecayAt(week - t)
     if (v > best) best = v
   }
   // ⚠ THE WEEK ITSELF IS ALWAYS A CANDIDATE, and it is asked here rather than pushed into the list
@@ -106,7 +130,7 @@ export function brandStrengthAt(world: WorldState, week = world.week): number {
   // It is what makes `strength ≥ fame` an identity: property (1) of the header, and the reason no
   // career can be worth less after this wave than before it.
   if (week > from) {
-    const now = fameAt(world, week)
+    const now = reachAt(world, week)
     if (now > best) best = now
   }
   return best

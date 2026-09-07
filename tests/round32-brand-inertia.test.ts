@@ -844,13 +844,39 @@ describe('round 34 #17 – ⭐⭐⭐ the brand follows the contracts', () => {
     liveDeal(paper, 'a', 500_000_00, W - 20, W + 20)
     const s = brandSignalsOf(paper, W)
     expect(s.contractFame, 'ten points of it are paper').toBeCloseTo(10, 10)
-    const famous: BrandSignals = { ...s, fame: s.fame + 10, strength: s.strength + 10, contractFame: 0 }
-    expect(brandReachOf(famous), 'the two reaches are the same number').toBeCloseTo(brandReachOf(s), 9)
+    // ⚠⚠ RE-AIMED, ROUND 38 #18 – AND THE OLD CONSTRUCTION IS THE INTERESTING PART. It built the
+    // comparison as `strength: s.strength + 10`, which was right while the stock could not hear about
+    // a contract; now that it can, `s.strength` has ALREADY absorbed the campaign and adding ten more
+    // counts it twice – the fixture, not the engine, was the thing double-counting. Measured: 19.5
+    // against 19. So the twin is built with the stock left alone.
+    const famous: BrandSignals = { ...s, fame: s.fame + 10, contractFame: 0 }
+    expect(brandReachOf(famous), 'ten points of paper reach as far as ten points of fame')
+      .toBeCloseTo(brandReachOf(s), 9)
     expect(brandWeeklyGrossCents(famous), 'so the income is the same, to the cent').toBe(brandWeeklyGrossCents(s))
     expect(brandGrossWorthCents(famous, BASE_X), '...and so is the worth').toBe(brandGrossWorthCents(s, BASE_X))
   })
 
-  it('⚠ the contracts lift the REACH and never the brand`s own stock, and the top cannot move', () => {
+  // ⚠⚠⚠ RE-AIMED, ROUND 38 #18 (07.09) – THIS ARM PINNED A DECISION THE OWNER HAS OVERTURNED, AND THE
+  // OLD SENTENCE IS KEPT HERE RATHER THAN REWRITTEN. It used to read «the contracts lift the REACH and
+  // never the brand's own stock, and the top cannot move», enforcing `brandReachOf`'s own paragraph:
+  // «`strength` is the brand's slow STOCK, "the best she has ever been"; a contract is CURRENT FORM
+  // and has no business raising a career's high-water mark. Adding it after the max means the term
+  // arrives with the shelf and leaves with it.»
+  //
+  // HIS RULING, 07.09: «долгосрочные контракты могут "подогревать" интерес у публики и держать
+  // известность долго, даже после спада пика и низких уровней в рейтинге.»
+  //
+  // ⚠⚠ AND THE MEASUREMENT IS WHY HE IS RIGHT. «Arrives and leaves with the shelf» is exactly what
+  // made the BIGGEST careers fall hardest: projected five silent years, the three biggest of his kept
+  // 6.7-7.8% of their value while small ones kept 25-28%, and raising `floorShare` to 0.75 moved the
+  // big ones only to 12-14% while lifting the small ones to 48%. The floor could not see what they
+  // were losing, because the contract book was added OUTSIDE the max. With the stock reading reach,
+  // the same three keep 24.3% / 24.6% / 11.2% and the small ones do not move at all.
+  //
+  // WHAT SURVIVES AND IS STILL ASSERTED BELOW: fame itself does not hear about the paper, and the top
+  // of the shelf cannot move – `brandReachOf` still clamps at `fame.cap` where the reach is CONSUMED.
+  // What is retired is «never the stock».
+  it('⚠ the contracts lift the reach AND the stock now – and fame still never hears about the paper', () => {
     const W = 6 * WEEKS_PER_YEAR
     const w = parkAt(shopper('r34-17-stock'), W)
     winTitles(w, 'wta500', [W - 10])
@@ -859,9 +885,18 @@ describe('round 34 #17 – ⭐⭐⭐ the brand follows the contracts', () => {
     const after = brandSignalsOf(w, W)
     // ⚠ OUTSIDE THE `max`, DELIBERATELY: `strength` is «the best she has ever been» and a contract is
     // current form. A shelf must not be able to raise a career's high-water mark.
-    expect(after.strength, 'the slow stock does not hear about the paper').toBe(before.strength)
+    // ⚠ RE-AIMED: the stock DOES hear about it now, and that is the item. Measured on this fixture:
+    // 7.824229662495594 before, 27.484189840851677 after – the high-water mark records the campaign.
+    expect(after.strength, 'the slow stock records the campaign').toBeGreaterThan(before.strength)
     expect(after.fame, '...and neither does fame itself').toBe(before.fame)
-    expect(brandReachOf(after) - brandReachOf(before), 'only the reach moves').toBeCloseTo(20, 9)
+    // ⭐ AND IT IS STILL EXACTLY THE PAPER'S OWN TWENTY, which is the half of round 34 #17 that
+    // survives #18 untouched: the campaign is paid ONCE this week. What #18 added is what happens
+    // AFTERWARDS – the stock keeps the mark when the deal ends, instead of the term vanishing with
+    // the shelf. ⚠ An intermediate draft of #18 left `contractFame` outside the max and this line
+    // read 38.63: the deal was being paid twice, once as noise and again through the floor it had
+    // just raised. That is what moved it inside.
+    expect(brandReachOf(after) - brandReachOf(before), 'the paper is paid once, this week')
+      .toBeCloseTo(20, 9)
 
     // ⚠⚠ AND THE TOP OF THE SHELF ROUND 32 #3 FIXED BY CONSTRUCTION CANNOT MOVE, which is what the
     // clamp is for: at the fame cap the income and the multiple are the pre-wave ones whatever the

@@ -90,14 +90,12 @@
 // the frozen MAIN capture (41550 / e6b0c709) cannot see it. A valuation is a fold over history.
 import { ECONOMY } from '../economy'
 import { WEEKS_PER_YEAR } from '../season/calendar'
-import { decayAt, fameAt } from './fame'
+import { contractFameAt, decayAt, fameAt } from './fame'
 import { brandStrengthAt } from './brandStrength'
 import { tierCrowdMid } from '../season/preview'
 // ⭐ ROUND 34 #17 – the live shelf, read for the reach term. `offers.ts` does not import this file
 // (it reaches `world/ledger` and stops), so the edge is a straight one and not a cycle – the same
 // argument `world/fame.ts` states for its own import of `adBandOfTerms`.
-import { activeAdDeals } from '../offers'
-import type { AdOfferTerms } from '../../shared/protocol'
 import type { TierId } from '../season/types'
 import type { WorldState } from '../world'
 
@@ -252,11 +250,6 @@ export function brandSignalsOf(world: WorldState, week = world.week): BrandSigna
   // ⭐⭐⭐ ROUND 34 #17 – THE LIVE SHELF, in cents a contract year. `activeAdDeals` is the portfolio's
   // own predicate (signed, and inside `fromWeek`..`untilWeek`), asked at the week being priced – so
   // a deal that has run out stops counting the week it runs out and this term falls with the shelf.
-  const C = ECONOMY.business.merch.contracts
-  let liveAnnualCents = 0
-  for (const deal of activeAdDeals(world.offers ?? [], week)) {
-    liveAnnualCents += (deal.terms as AdOfferTerms).cashCents ?? 0
-  }
   const played = wins + losses
   return {
     fame: fameAt(world, week),
@@ -264,7 +257,10 @@ export function brandSignalsOf(world: WorldState, week = world.week): BrandSigna
     proSeasons,
     topSeasons,
     finalsLost,
-    contractFame: Math.min(C.fameCap, liveAnnualCents / C.famePerCents),
+    // ⭐ ROUND 38 #18 – ONE COPY, IN `world/fame.ts`. It moved to the leaf so `brandStrengthAt` could
+    // read it without a cycle, and this file asks the same function rather than keeping a second
+    // spelling of it – the repo's most-repeated defect, refused where it would have been easiest.
+    contractFame: contractFameAt(world, week),
     // ⚠ THE DECAY CANCELS IN THE RATIO and that is the point – see the field's own note. A career
     // with no recorded appearance answers 0, which `brandCrowdMult` reads as «no evidence».
     roomSize: appearances > 0 ? audience / appearances : 0,
@@ -491,6 +487,16 @@ export function brandGrossWorthCents(signals: BrandSignals, baseX: number): numb
  *  unclamped +30 would lift the top of the shelf 69% – a change to the one end this item is
  *  forbidden to touch. Below the cap the clamp cannot bite, so nothing the owner measured moves. */
 export function brandReachOf(signals: BrandSignals): number {
-  const built = Math.max(signals.fame, ECONOMY.business.merch.strength.retention * signals.strength)
-  return Math.min(ECONOMY.fame.cap, built + signals.contractFame)
+  // ⭐⭐⭐ ROUND 38 #18 – `contractFame` MOVED INSIDE THE MAX, AND IT HAD TO. Round 34 #17 added it
+  // OUTSIDE deliberately, because the stock could not hear about a contract and the term had to reach
+  // the brand somehow. Now that the stock records the campaign (`brandStrength.ts#reachAt`, the
+  // owner's «долгосрочные контракты… держат известность долго»), leaving it outside pays one deal
+  // TWICE – once as this week's noise and again through the floor it just raised. Measured on a
+  // hand-built pair: ten points of paper reached 19.5 where ten points of fame reached 10.
+  //
+  // ⚠ INSIDE THE MAX IT IS PAID ONCE AND REMEMBERED AFTERWARDS, which is the whole of what he asked
+  // for: while the deal is live it lifts THIS WEEK's reach; when it ends the stock still carries the
+  // mark it made, fading on the stock's own years-long clock instead of vanishing with the shelf.
+  const built = Math.max(signals.fame + signals.contractFame, ECONOMY.business.merch.strength.retention * signals.strength)
+  return Math.min(ECONOMY.fame.cap, built)
 }

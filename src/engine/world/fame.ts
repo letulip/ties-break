@@ -33,7 +33,7 @@ import { ECONOMY } from '../economy'
 // ⭐ ROUND 32 #5 – the band a signed letter was written at, read off the cheque the paper states.
 // `offers.ts` does not import this file (it reaches `world/ledger` and stops), so the edge is a
 // straight one and not a cycle.
-import { adBandOfTerms } from '../offers'
+import { activeAdDeals, adBandOfTerms } from '../offers'
 import { WEEKS_PER_YEAR } from '../season/calendar'
 import type { TierId } from '../season/types'
 import type { AdOfferTerms } from '../../shared/protocol'
@@ -237,6 +237,22 @@ export function fameShootMultOf(world: WorldState, week: number): number {
  *  here too, which is the one coupling this function has and is stated so it is not discovered.
  *
  *  Pure: reads the world, writes nothing, draws nothing. */
+/** ⭐⭐⭐ ROUND 38 #18 – WHAT HER LIVE CAMPAIGNS ARE WORTH IN REACH AT `week`, on the same scale as
+ *  fame. Round 34 #17 put this in `world/brand.ts`; it moves here so `brandStrengthAt` can read it
+ *  WITHOUT a cycle (`brand.ts` imports `brandStrength.ts`, so the arrow may only run this way), and
+ *  `brand.ts` now asks this one function instead of keeping a second copy.
+ *
+ *  THE OWNER, 07.09: «долгосрочные контракты могут "подогревать" интерес у публики и держать
+ *  известность долго, даже после спада пика и низких уровней в рейтинге.» */
+export function contractFameAt(world: WorldState, week: number): number {
+  const C = ECONOMY.business.merch.contracts
+  let liveAnnualCents = 0
+  for (const deal of activeAdDeals(world.offers ?? [], week)) {
+    liveAnnualCents += (deal.terms as { cashCents?: number }).cashCents ?? 0
+  }
+  return Math.min(C.fameCap, liveAnnualCents / C.famePerCents)
+}
+
 export function fameEventWeeks(world: WorldState): number[] {
   const seen = new Set<number>()
   for (const tier of Object.keys(ECONOMY.fame.titleFloor) as TierId[]) {
@@ -247,6 +263,16 @@ export function fameEventWeeks(world: WorldState): number[] {
     for (const w of world.trophiesByTier?.[tier]?.finals ?? []) seen.add(w)
   }
   for (const w of world.trophiesByTier?.slam?.finals ?? []) seen.add(w)
+  // ⭐⭐ ROUND 38 #18 – AND THE WEEKS A CAMPAIGN STARTS, because the stock now reads contract reach
+  // too. This is the coupling the header three lines up demands in so many words: a source added to
+  // what the stock can see has to be added here, or `brandStrengthAt` walks a list that no longer
+  // contains every week reach can rise on and under-reads the peak. ⚠ THE START ONLY: reach can only
+  // RISE when a deal begins, and the week it ends is a fall, which a maximum has no use for.
+  for (const o of world.offers ?? []) {
+    if (o.kind !== 'ad' || o.state !== 'signed') continue
+    const from = o.fromWeek ?? o.decidedWeek
+    if (typeof from === 'number') seen.add(from)
+  }
   for (const row of world.seasonHistory ?? []) {
     if (row.byTrack?.wta?.endRank == null) continue
     seen.add((row.seasonIndex + 1) * WEEKS_PER_YEAR)

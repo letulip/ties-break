@@ -511,7 +511,23 @@ export const ECONOMY = {
     // another, never a reason to buy up a rung. At these values a Budget coach who is great for her
     // (0.95 x 1.05 = 0.998) just edges a Middle coach who is wrong for her (1.04 x 0.94 = 0.978),
     // which is exactly the size of trade the pills are meant to be advertising.
-    fitFactor: { great: 1.05, good: 1.0, off: 0.94 } as Record<'great' | 'good' | 'off', number>,
+    /** ⭐⭐⭐ ROUND 38 #17 (07.09) – THE SPAN WIDENS 1.05/0.94 -> 1.25/0.75, AND IT IS THE HALF THAT
+     *  MAKES THE THREE ROUTES DIFFERENT.
+     *
+     *  THE OWNER named three ways to reach the ceiling – «1. игрок тренирует сам и грамотно 2. она с
+     *  тренером долгосрочно и у них метч 3. она с элитным тренером» – and then asked of the fit:
+     *  «вопрос в том, как его показать?»
+     *
+     *  ⚠ THE ANSWER TO THAT QUESTION IS THAT IT ALREADY IS SHOWN. `CoachMarketScreen` prints «Great
+     *  fit» / «Good fit» / «Off-style» and carries a lens for what a coach would be worth against
+     *  another style. It does not FEEL like anything because the whole span was 12% – which is the
+     *  real content of his question, and it is a number rather than a screen.
+     *
+     *  ⚠⚠ IT WIDENS THE SPREAD WHERE `plateauRate` NARROWS IT (see that constant's own table), which
+     *  is why the two are one decision: a great fit is worth more to a career being run well, and an
+     *  off-style partnership costs a mismatched one 93.2% against 98.9%. Measured with
+     *  `tools/r38-ceiling-dials.ts`; the owner chose the pair. */
+    fitFactor: { great: 1.25, good: 1.0, off: 0.75 } as Record<'great' | 'good' | 'off', number>,
 
     // THE PARENT'S OWN FIT. Self-coaching has no specialty to match: he taught her the game she
     // plays, so he is never wrong for it and never a specialist in it.
@@ -2621,8 +2637,33 @@ export const ECONOMY = {
       peakRate: 0.0062,
       /** how much of that is gone by `growthEnd` (0.5 = half the rate at 18 that she had at 13) */
       growthEase: 0.5,
-      /** across the peak she maintains rather than climbs */
-      plateauRate: 0.0009,
+      /** ⭐⭐⭐ ROUND 38 #17 (07.09) – 0.0009 -> 0.0027, AND IT IS C1 AND C3 TURNING OUT TO BE ONE DIAL.
+       *
+       *  THE OWNER, on the coach: «нет варианта, что они и дальше гармонично сотрудничают до
+       *  абсолютного потолка» – he read it as a fact about COACHES and it is not. Measured: at 23 the
+       *  weekly rate sits on this number, so with an elite coach, a great fit and a grind plan a year
+       *  buys about 5-7% of what headroom is left; on two remaining points that is the «+0,1%» he was
+       *  seeing. No coach can be the one who takes her all the way, because the PLATEAU is what has
+       *  flattened, not the coaching.
+       *
+       *  ⚠ AND IT IS THE SAME LEVER C1 NEEDED. His «рост как раз идёт до 28-29» is already true –
+       *  careers peak at 26.6 direct and 28.6 via college – so nothing about the phase BOUNDARIES had
+       *  to move; what was missing is that the late years were worth almost nothing. One number
+       *  answers both, and the boundaries stay where his own reference table puts them.
+       *
+       *  MEASURED (`tools/r38-ceiling-dials.ts`, the analytic share of her own headroom that can EVER
+       *  arrive, walked to 38 – `skill-ceiling.ts` §1's arithmetic):
+       *
+       *      arm                     nonsense  self-run-well  coach+fit  coach-off  elite  yardstick  spread
+       *      shipped 0.0009             61.2%          92.3%      92.4%      90.0%  97.3%      98.3%    37.1
+       *      x3      0.0027             75.1%          97.7%      97.7%      96.6%  99.5%      99.7%    24.7
+       *      x3 + the fit span below    67.0%          98.9%      98.9%      93.2%  99.8%      99.9%    32.9
+       *
+       *  ⚠⚠ ON ITS OWN IT NARROWS THE SPREAD – it lifts the bottom more than the top, because the top
+       *  was already at 98%. That is why it ships WITH the fit span and not before it: the pair moves
+       *  the well-run career to 98.9% while a mismatched partnership falls to 93.2%, which is the
+       *  «три пути должны различаться» half. The owner picked that row: «очень хорошо выглядит». */
+      plateauRate: 0.0027,
       /** share of an attribute lost per week at `declineStart` */
       declineRate: 0.00035,
       /** ...growing each year past it, so a career ends rather than fading forever.
