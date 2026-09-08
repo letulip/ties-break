@@ -445,13 +445,21 @@ export interface Snapshot {
    *  ⚠ DERIVED AT SNAPSHOT TIME, exactly like `coachRoomNote`: it persists nothing, owes no
    *  migration and does not move `SAVE_SCHEMA_VERSION`. */
   coachDeclineNote: string
-  /** ⭐⭐ ROUND 39 #2a/#2b – THE SHORT PLATE FOR HOME, and '' while she is still growing. The owner:
-   *  the long sentence above is «много текста» for Home and moved to the coach card in the market
-   *  list; Home keeps this – the same state in the old ceiling plate's shape, «короткое, емкое и
-   *  яркое (в плане цвета)». One derivation writes both fields (`declineRead` in
-   *  `world/coachMarket.ts`), so the plate and the card can never disagree; the empty-on-a-child
-   *  guarantee is the same data-level one `coachDeclineNote` carries, for the same round-34 reason. */
-  coachDeclineShort: string
+  /** ⭐⭐ ROUND 39 #2a/#2b (REOPENED 08.09) – HOME'S SHORT PLATE, either read, exactly one at a time.
+   *  The short sibling of `coachRoomNote` above, with the same fallthrough: past her peak it is the
+   *  one clause the owner kept of wave A's three draft arms («Past her peak – about N seasons left»;
+   *  the two rank clauses live on the coach card's long sentence alone – «остальное всё пусть на
+   *  карточке тренера живет»), and on a growing career it is her headroom band compressed to the
+   *  3-5 words he sized («вот это тоже всё-таки можно показывать буквально в 3-5 слов на home») –
+   *  the round-34 removal reversed by his own word, with the child guarantee narrowed to its
+   *  data-level core: '' where the engine has nothing to say, no digit in any growing read, and
+   *  «Past her peak» still unreachable before her own `declineStart`.
+   *
+   *  ⚠ ONE FIELD, so Home cannot render both reads however the template is later edited; one
+   *  derivation per half (`declineRead` / `roomBandRow` in `world/coachMarket.ts`), shared with the
+   *  long forms, so the plate and the coach card can never disagree. Replaces wave A's
+   *  `coachDeclineShort`, whose two rank arms moved to the card on the same ruling. */
+  coachRoomShort: string
   /** ⭐⭐ THE HANDOVER'S READ, AND IT IS EMPTY ON EVERY WEEK BUT THE FIRST (childhood prologue §5).
    *
    *  One of the three words this game already grades remaining room in – `Huge potential` /

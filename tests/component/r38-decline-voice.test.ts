@@ -116,16 +116,18 @@ function pastPeakWorld(opts: { seasons: SeasonHistoryEntry[]; share?: number; ag
 
 /** Home, mounted, with a real snapshot behind it. Reads what the coach plate actually renders.
  *
- *  ⚠ RE-AIMED BY ROUND 39 #2a/#2b: Home's selector is `.coach-decline-short` now – the LONG
- *  sentence renders on the current coach's card in the market list (`.cm-decline`, pinned in
- *  r39-decline-surfaces.test.ts) and the round-38 `.coach-decline` paragraph must NOT come back,
- *  which is what `longGone` is for. */
-function homePlate(world: WorldState): { decline: string; quote: string; card: string; longGone: boolean } {
+ *  ⚠ RE-AIMED BY ROUND 39 #2a/#2b: Home's selector is `.coach-room-short` now (wave A's
+ *  `.coach-decline-short`, renamed when the 08.09 reopen made the plate carry EITHER read – the
+ *  seasons clause past her peak, the band short while she grows). The LONG sentence renders on the
+ *  current coach's card in the market list (`.cm-decline`, pinned in r39-decline-surfaces.test.ts)
+ *  and the round-38 `.coach-decline` paragraph must NOT come back, which is what `longGone` is
+ *  for. `plate` is whatever the one plate says – arms below assert which read it is. */
+function homePlate(world: WorldState): { plate: string; quote: string; card: string; longGone: boolean } {
   const store = useGameStore()
   store.snapshot = toSnapshot(world)
   const wrapper = mount(HomeScreen, { props: { recapFresh: false }, global: { stubs: { teleport: true } } })
   const out = {
-    decline: wrapper.find('.coach-decline-short').exists() ? wrapper.get('.coach-decline-short').text() : '',
+    plate: wrapper.find('.coach-room-short').exists() ? wrapper.get('.coach-room-short').text() : '',
     quote: wrapper.find('.coach-line').exists() ? wrapper.get('.coach-line').text() : '',
     card: wrapper.find('.coach-card').exists() ? wrapper.get('.coach-card').text() : '',
     longGone: !wrapper.find('.coach-decline').exists(),
@@ -164,25 +166,30 @@ describe('round 38 #7b – the coach stops calling a 35-year-old a prospect', ()
 describe('round 38 #6d – the coach plate on Home, and only past her peak', () => {
   beforeEach(() => setActivePinia(createPinia()))
 
-  it('⭐⭐ A GROWING FOURTEEN-YEAR-OLD SEES NOTHING – round 34 #2a still holds', () => {
+  it('⭐⭐ A GROWING FOURTEEN-YEAR-OLD SEES NO VERDICT – the decline gate holds (⚠ re-aimed, round 39 #2b reopen)', () => {
     // ⚠⚠ THIS IS THE ARM THAT GOES RED IF THE AGE GATE IS REMOVED, and it is not vacuous: a fresh
     // world DOES carry `peakPhysical` (`createWorld` writes `physicalMean(arrival)`), so every
     // ingredient the decline read needs is present on this snapshot. The only thing keeping the line
-    // off a child's screen is `age < bounds.declineStart` in `coachDeclineNote`. Deleting that line
+    // off a child's screen is `age < bounds.declineStart` in `declineRead`. Deleting that line
     // makes `seasonsOfBodyLeft` walk a `declineFactor` of 0 to its own cap and this screen print
-    // «Past her peak – her body has about 40 more seasons in it…» to a girl of fourteen.
+    // «Past her peak – about 40 seasons left» to a girl of fourteen.
+    //
+    // ⚠⚠ RE-AIMED 08.09: «sees NOTHING» became «sees no VERDICT». The owner asked the growing band
+    // back onto Home in 3-5 words («вот это тоже всё-таки можно показывать буквально в 3-5 слов на
+    // home»), so her plate now says a band SHORT – digitless, the engine's own row, pinned as
+    // rendered in round24-coach-card/r39-decline-surfaces – and what this arm keeps holding is the
+    // round-34 core: «Past her peak» unreachable at fourteen, and no digit about her on the card's
+    // read.
     const world = createWorld('r38-home-young', { ...DEFAULT_PROFILE, coachTier: 'middle' })
     world.seasonHistory = [season(0, 411), season(1, 198)]
     expect(world.peakPhysical, 'the fixture proves nothing without a peak on it').toBeGreaterThan(0)
     expect(kidAgeExact(world.week, world.profile.birthMonth, world.profile.birthDay)).toBeLessThan(15)
 
-    const { decline, quote, card } = homePlate(world)
-    expect(decline, `a verdict on a fourteen-year-old: "${decline}"`).toBe('')
-    // ...and it did not arrive under another class name either. Neither the four labels round 34 sent
-    // away nor this item's own may appear anywhere in the card's text.
-    for (const label of [...CEILING_LABELS, 'Past her peak']) {
-      expect(card, `"${label}" is on Home's coach card at fourteen`).not.toContain(label)
-    }
+    const { plate, quote, card } = homePlate(world)
+    expect(plate, 'the growing read the owner asked back is not rendered').not.toBe('')
+    expect(plate, `a verdict on a fourteen-year-old: "${plate}"`).not.toContain('Past her peak')
+    expect(plate, `a figure about a child: "${plate}"`).not.toMatch(/\d/)
+    expect(card, '«Past her peak» is on Home\'s coach card at fourteen').not.toContain('Past her peak')
     // ⚠ NON-VACUITY: the card really did render, so an empty wrapper cannot be what passed above.
     expect(quote, 'the round-7 coach quote has gone missing').not.toBe('')
   })
@@ -190,28 +197,35 @@ describe('round 38 #6d – the coach plate on Home, and only past her peak', () 
   it('⭐⭐ ...AND A CAREER PAST ITS PEAK DOES – the short plate, as rendered (⚠ re-aimed, round 39 #2a/#2b)', () => {
     // ⚠ RE-AIMED 08.09: this arm used to assert the WHOLE sentence on Home. The owner sent the long
     // form to the coach card in the market list («много текста») and kept a short plate here; the
-    // rendered-on-the-card assertion lives in r39-decline-surfaces.test.ts now, and what Home must
-    // show is the short read – same state, same subtraction, no body clause.
+    // rendered-on-the-card assertion lives in r39-decline-surfaces.test.ts now.
+    // ⚠ RE-AIMED AGAIN BY THE #2b REOPEN (08.09): of wave A's three short arms the owner kept ONE –
+    // «может быть разве что – about 4 seasons left еще можно оставить» – so the plate says the
+    // seasons clause and the rank subtraction lives in the card's long sentence alone (its arm one
+    // test down).
     const world = pastPeakWorld({ seasons: [season(16, 20), season(19, 68), season(20, 125)] })
-    const { decline, quote, card, longGone } = homePlate(world)
+    const { plate, quote, card, longGone } = homePlate(world)
 
-    // ⚠ THE SUBTRACTION IS THE CLAIM. 125 - 68 = 57, off ranks this test chose, so an off-by-one or a
-    // reversed operand fails here rather than merely reading oddly.
-    expect(decline).toContain('down 57 places on the year')
-    expect(decline.startsWith('Past her peak – ')).toBe(true)
-    // ...and the long form's tell may not be on Home any more: the body clause moved with it.
+    expect(plate).toMatch(/^Past her peak – about \d+ seasons? left$/)
+    // ...the rank clause may not be on Home any more, on the very fixture that fell 57 places...
+    expect(plate).not.toContain('places')
+    expect(card, 'the rank clause is still on Home').not.toContain('places')
+    // ...and the long form's tell may not be on Home either: the body clause moved with it.
     expect(longGone, 'the round-38 long paragraph is rendered beside the plate').toBe(true)
     expect(card, 'the body clause is still on Home').not.toContain('more seasons in it')
     // The coach's own voice is untouched beside it - round 7 #5d copy, never part of any complaint.
     expect(card, 'the decline read pushed his quote off the card').toContain(quote)
-    expect(CYRILLIC.test(decline), `Cyrillic in the read: ${decline}`).toBe(false)
-    expect(LONG_DASH.test(decline), `a long dash in the read: ${decline}`).toBe(false)
+    expect(CYRILLIC.test(plate), `Cyrillic in the read: ${plate}`).toBe(false)
+    expect(LONG_DASH.test(plate), `a long dash in the read: ${plate}`).toBe(false)
   })
 
-  it('⚠ the rank move really is a subtraction – a second career, different ranks', () => {
+  it('⚠ the rank move really is a subtraction – a second career, different ranks (⚠ re-aimed to the engine string)', () => {
     // One data point is satisfied by a constant. Two are not.
+    // ⚠ RE-AIMED 08.09 (#2b reopen): the year clause left Home's plate for the coach card's long
+    // sentence, so the subtraction is pinned where the words now are – `coachDeclineNote`, whose
+    // rendered home (the market list's current-coach card) is pinned in r39-decline-surfaces.
     const world = pastPeakWorld({ seasons: [season(17, 40), season(18, 40), season(19, 90)] })
-    expect(homePlate(world).decline).toContain('down 50 places on the year')
+    expect(coachDeclineNote(world)).toContain('down 50 places on the year')
+    expect(homePlate(world).plate).toMatch(/^Past her peak – about \d+ seasons? left$/)
   })
 
   it('⚠ ...and it is HER BODY that decides the second half, walked and not guessed', () => {

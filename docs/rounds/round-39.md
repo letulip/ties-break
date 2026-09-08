@@ -81,6 +81,44 @@ Class: **build** · **answer** · **measure** · **ask** · **already-works**
   weight 600, attachTo per birthday-dialog's rule) – mutation-verified by de-accenting the CSS rule
   (red, restored). A growing fourteen-year-old still sees no plate of either length.
 
+  **SHIPPED (wave A2, 08.09) on his ruling over wave A's drafts – band shorts = DRAFT FOR HIS
+  REVIEW.** The ruling, verbatim: «Past her peak хорошо и коротко, остальное всё пусть на карточке
+  тренера живет, может быть разве что – about 4 seasons left еще можно оставить. И до этого были
+  фразочки про то, что ей недалеко до потолка, что потолок достигнут и прочее, вот это тоже
+  всё-таки можно показывать буквально в 3-5 слов на home». Built in his words' order:
+
+  1. The decline plate says only «Past her peak – about N seasons left» – 13c's singular care
+     carried to the surviving clause («about 1 season left» on the 0.70 tail) – and the two rank
+     clauses live on the coach card's long sentence ALONE (#2a's card untouched, its arms still
+     pinning «down 57 places» there).
+  2. A GROWING career's plate RETURNS, in the same plate and treatment: the ceiling read in 3-5
+     words, derived from the SAME `ROOM_BANDS` row the market's long note reads (`roomBandRow` –
+     one lookup under both surfaces, the `declineRead` pattern applied to the growing half).
+     ⚠ The four band shorts, drafted for his review – three are the band labels verbatim, band 0
+     is its own sentence compressed because «Huge potential» is two words and he sized 3-5:
+     «Most of her game ahead» · «Still room to grow» · «Close to her ceiling» · «At her ceiling».
+     No digit in any of them (the fog rule crosses to Home with the read).
+  3. Exactly one read at a time, structurally: ONE snapshot field – `coachRoomShort`, wave A's
+     `coachDeclineShort` renamed, since it carries either read now and a decline-only name would
+     lie half the career – with `coachRoomNote`'s own fallthrough, and '' where the engine says
+     nothing (the round-34 child guarantee at its data-level core; «Past her peak» still gated on
+     her own `declineStart`). Home's plate is `.coach-room-short`, same 11px/600/accent rule.
+
+  Evidence: `tests/r39-coach-short.test.ts` (engine – walk the four bands and the long note and
+  short move together off one row; shorts are 3-5 digitless words of the bands' own vocabulary; the
+  seasons N equals the long sentence's own on all three of wave A's worlds; partition + '' arms)
+  plus the re-aimed mounted arms, ⚠-noted where the reopen legitimately moved a pin, none deleted:
+  r39-decline-surfaces (plate = exact seasons string past peak, exact band short on a growing
+  world, no rank clause anywhere on Home, colour through the real cascade on BOTH reads),
+  round24-coach-card (Home's short = the same row the market's bold label names, swept over six
+  realisations – the mounted band-mutation evidence – and the argument sentence never on Home; the
+  retired `.coach-room` selector still absent), r38-decline-voice (no verdict and no digit at
+  fourteen, the rank subtraction re-pinned on the engine string whose rendered home is the card).
+  Mutation-verified six ways, each red on its own arms alone, restored green: de-accented CSS rule /
+  short forced to row 0 / fallthrough removed / wave A's rank arms restored / plate line deleted /
+  ''-guarantee broken. Final: unit 215/215, component 41/41, `vue-tsc -b --force` clean,
+  pins:check ok (the round24 sweep cuts the note with the ONE splitter, not a raw indexOf).
+
 - [>] **3. «У нас все контракты стали на 12 месяцев? Или мне только кажется? Увидел пару штук на 2
   года - лучше. Но мы обсуждали, что на 12 месяцев дают контракты тем, кто только идёт в топ, а чем
   выше - тем дольше. В спорте я видел, что они и на 5, и на 10 лет заключают. А некоторые и

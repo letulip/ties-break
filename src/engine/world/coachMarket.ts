@@ -1131,10 +1131,21 @@ export function coachRoomNote(world: WorldState): string {
   // below is not wrong – it is measuring something that has stopped being the subject.
   const decline = coachDeclineNote(world)
   if (decline) return decline
-  const realised = realisedShare(world)
-  if (realised === null) return ''
-  const band = ROOM_BANDS[coachRoomBandIndex(realised)]
+  const band = roomBandRow(world)
+  if (band === null) return ''
   return `${band.label}${ROOM_NOTE_SEP}${band.note}`
+}
+
+/** ⭐ ROUND 39 #2b (REOPENED 08.09) – ONE BAND READ UNDER TWO SENTENCES, the `declineRead` pattern
+ *  applied to the growing half. The long room note (the market list, above) and the short plate
+ *  (Home, `coachRoomShort` below) both resolve her band through this one lookup – one realisation,
+ *  one threshold walk, one table row – so the two surfaces can never disagree about which rung she
+ *  is on: mutate the band and both sentences move together, which is exactly what
+ *  `tests/r39-coach-short.test.ts` walks. Null where there is nothing to say (no room at all),
+ *  which both callers already treat as «say nothing» – the round-34 child guarantee, in the data. */
+function roomBandRow(world: WorldState): { label: string; note: string; short: string } | null {
+  const realised = realisedShare(world)
+  return realised === null ? null : ROOM_BANDS[coachRoomBandIndex(realised)]
 }
 
 // =================================================================================================
@@ -1330,30 +1341,49 @@ export function coachDeclineNote(world: WorldState): string {
   return `${DECLINE_LABEL}${ROOM_NOTE_SEP}${note}`
 }
 
-/** ⭐⭐ ROUND 39 #2b – THE SHORT PLATE FOR HOME: the same state, the sharpest single number, in the
- *  old ceiling plate's shape (owner: «на home хотелось бы увидеть что-то короткое, емкое и яркое (в
+/** ⭐⭐ ROUND 39 #2b – THE DECLINE HALF OF HOME'S SHORT PLATE: the same state, one clause, in the old
+ *  ceiling plate's shape (owner: «на home хотелось бы увидеть что-то короткое, емкое и яркое (в
  *  плане цвета), как было до этого про потолок»). The LONG sentence moved to the coach card in the
  *  market list (#2a: «много текста» for Home), and this is what Home keeps.
  *
- *  ⚠ SAME GATE, SAME DERIVATION, SAME FALLBACK ORDER as `coachDeclineNote` – `declineRead` is the
- *  one source, so the plate and the card always describe the same week. '' while she is growing:
- *  round 34 #2a's guarantee (no verdict on a child's Home) holds for this field exactly as it holds
- *  for the long one, in the data rather than in a template condition.
+ *  ⚠⚠ RE-AIMED BY THE REOPEN (owner, 08.09), which ruled on wave A's three draft arms: «Past her
+ *  peak хорошо и коротко, остальное всё пусть на карточке тренера живет, может быть разве что –
+ *  about 4 seasons left еще можно оставить». So the two RANK arms («down N places on the year» /
+ *  «N places below her best») live in the card's long sentence ALONE now, and this is the label
+ *  plus the one clause he kept – his own words with the number substituted. It always exists past
+ *  the gate (`declineRead` guarantees `seasons`), so the plate never falls back to a rank fact.
  *
- *  ⚠ THE WORDING IS A ROUND-39 DRAFT flagged for the owner's review in the round ledger: each arm
- *  is the long sentence's own clause compressed, no new vocabulary. `ROOM_NOTE_SEP` keeps the label
- *  splittable by the same one splitter every other plate uses. */
+ *  ⚠ SAME GATE, SAME DERIVATION as `coachDeclineNote` – `declineRead` is the one source, so the
+ *  plate and the card always describe the same week, and the seasons figure is the long sentence's
+ *  own («her body has about N more seasons in it», compressed). '' while she is growing: round 34
+ *  #2a's guarantee (no ageing verdict on a child's Home) holds for this field exactly as it holds
+ *  for the long one, in the data rather than in a template condition. #13c's singular care carries
+ *  to the surviving clause; `ROOM_NOTE_SEP` keeps the label splittable by the one splitter. */
 export function coachDeclineShort(world: WorldState): string {
   const read = declineRead(world)
   if (read === null) return ''
-  const { seasons, yearMove, belowBest } = read
-  const note =
-    yearMove !== null && yearMove > 0
-      ? `down ${places(yearMove)} on the year`
-      : belowBest !== null && belowBest > 0
-        ? `${places(belowBest)} below her best`
-        : `about ${seasons} ${seasons === 1 ? 'season' : 'seasons'} left`
-  return `${DECLINE_LABEL}${ROOM_NOTE_SEP}${note}`
+  const { seasons } = read
+  return `${DECLINE_LABEL}${ROOM_NOTE_SEP}about ${seasons} ${seasons === 1 ? 'season' : 'seasons'} left`
+}
+
+/** ⭐⭐⭐ ROUND 39 #2b (REOPENED 08.09) – THE ONE SHORT READ HOME RENDERS, either half. The owner: «И
+ *  до этого были фразочки про то, что ей недалеко до потолка, что потолок достигнут и прочее, вот
+ *  это тоже всё-таки можно показывать буквально в 3-5 слов на home». So a GROWING career's plate
+ *  says its headroom band again – compressed to the 3-5 words he sized – and a declining one says
+ *  the seasons read above. `coachRoomNote`'s own fallthrough shape one function up: past the peak
+ *  the question changes, and exactly one of the two reads can ever be in the string, so Home
+ *  renders one field and the exclusivity lives here rather than in a template condition.
+ *
+ *  ⚠ THE BAND COMES THROUGH `roomBandRow`, THE SAME LOOKUP THE LONG NOTE READS – so the market's
+ *  sentence and Home's plate cannot disagree about her rung, exactly as `declineRead` already
+ *  guarantees for the ageing half. And the round-34 child guarantee narrows, on his 08.09 word,
+ *  from «no band on Home» to its data-level core: '' where the engine has nothing to say (no room
+ *  at all), no digit in any growing read (the fog rule), and «Past her peak» still unreachable
+ *  before her own `declineStart` (`declineRead`'s gate). */
+export function coachRoomShort(world: WorldState): string {
+  const decline = coachDeclineShort(world)
+  if (decline) return decline
+  return roomBandRow(world)?.short ?? ''
 }
 
 /** ⭐⭐ ROUND 34 #2b – HOW MUCH OF WHAT SHE COULD BECOME SHE HAS ACTUALLY BECOME. One definition,
@@ -1627,23 +1657,35 @@ export function handoverBaseBand(world: WorldState): HandoverBaseBand {
  *
  *  ⚠ AND NOT ONE OF THEM CONTAINS A DIGIT. That is the fog-of-war rule restated as a property a test
  *  can check on the RENDERED line, and it is why the labels are words ("Huge potential") rather than
- *  the obvious grades ("Band 1 of 4"), which would be the percentage wearing a hat. */
-const ROOM_BANDS: { label: string; note: string }[] = [
+ *  the obvious grades ("Band 1 of 4"), which would be the percentage wearing a hat.
+ *
+ *  ⭐ ROUND 39 #2b (REOPENED 08.09) – `short` IS HOME'S 3-5 WORD COMPRESSION OF THE SAME ROW («вот
+ *  это тоже всё-таки можно показывать буквально в 3-5 слов на home»), drafted for the owner's
+ *  review in the round ledger. Three are the labels verbatim – already inside the window he sized,
+ *  inventing nothing – and band 0's is its own note's first clause compressed («most of her game is
+ *  still ahead of her»), because «Huge potential» is two words. No digit in any of them: the fog
+ *  rule holds on Home exactly as it holds here, and the row is ONE row, so the market's long
+ *  sentence and Home's short can only ever describe the same rung. */
+const ROOM_BANDS: { label: string; note: string; short: string }[] = [
   {
     label: 'Huge potential',
     note: 'most of her game is still ahead of her, and this is where a coach buys the most.',
+    short: 'Most of her game ahead',
   },
   {
     label: 'Still room to grow',
     note: 'there is real room left in her game, and a coach is what buys it.',
+    short: 'Still room to grow',
   },
   {
     label: 'Close to her ceiling',
     note: 'she is running out of room, and every rung is worth less than it was.',
+    short: 'Close to her ceiling',
   },
   {
     label: 'At her ceiling',
     note: 'no coach can add much more now, whatever the price.',
+    short: 'At her ceiling',
   },
 ]
 
@@ -1732,6 +1774,12 @@ export function coachRoomBandOf(world: WorldState): number | null {
 /** The label of one band, for a test that wants the words without re-deriving them from a sentence. */
 export function coachRoomBandLabel(index: number): string {
   return ROOM_BANDS[index].label
+}
+
+/** The short of one band, for the same kind of test – Home's 3-5 word form (round 39 #2b reopen)
+ *  without re-deriving it from the plate. */
+export function coachRoomBandShort(index: number): string {
+  return ROOM_BANDS[index].short
 }
 
 /** WHAT EACH RUNG DOES ABOUT HER BODY, for the market card - the load wave's two new differences said
