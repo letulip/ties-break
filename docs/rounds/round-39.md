@@ -954,7 +954,16 @@ Class: **build** · **answer** · **measure** · **ask** · **already-works**
     The miss surfaces in the INBOX – the letter reads «Expired – they needed an answer» and the dot
     goes out – not in the week's feed. Option A still holds (a missed notice costs a season of kit
     allowance and travel share), but it is quieter than this ruling assumed. A feed row is one line
-    to add if the owner wants the miss louder.
+    to add if the owner wants the miss louder. **HIS ANSWER (08.09): «в ленту не надо» – no feed row. The
+    inbox is where a letter lives and where its lapse is read; the week's feed keeps its budget.**
+
+  **AND THE OFF-SEASON ROW STAYS (his ruling, 08.09: «оставляем строку»).** Wave G2 flagged that its
+  third string went past the letter view into the winter's summary row – correctly, because that is
+  outside the item's own surface. Kept on his word, and the reason is the mechanism's: without it
+  the winter swept the renewal notice into «letters from X and Y – they all want to put her in their
+  kit», describing as a pitch the one letter his own ruling says is not one. The row now names it:
+  `<Brand> already have her on their posters and would like her back in their kit – their renewal is
+  in the inbox.`
   * **The lifetime letter is exempt and dresses her free for life** – he accepted both framings and
     took the simpler one.
 
