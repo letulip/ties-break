@@ -165,14 +165,6 @@ Status: `[x]` shipped on the branch · `[~]` answered, nothing to build · `[>]`
 
 ---
 
-- [>] **3. «чтобы он "приземлялся", это одна строка — придержать карточку на ~200 мс после выбора -
-  можно сделать вполне, давай»** – **build.** ⚠ The reason it is needed came from the promo recorder,
-  not from a tester: on cards 8, 9 and 10 answering advances the walk IMMEDIATELY, so the ball fills
-  and the card is gone – the affordance says «this is a choice» and the player still never sees the
-  choice register. He accepted the momentary visibility («главное, что мячик будет виден») and then
-  took the hold when it was priced at one line. A short hold after the answer, before the card
-  advances, so the mark lands.
-
 ## Carried in from round 39, still open
 
 - [x] **r39 #14a/#14b – the retirement voice and «she is done» as a state.** The four ledes are
