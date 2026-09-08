@@ -128,6 +128,25 @@
 //
 // ⚠ NOTHING NEW IS DRAWN, exactly as above: two subtractions and a `find`. Re-opening the card
 // cannot change a word of it.
+//
+// ⭐⭐⭐ ROUND 39 #14a – THE PLATEAU LEDE IS FOUR SENTENCES NOW, AND ONE PARAGRAPH STILL. THE OWNER,
+// 08.09: «„She said it in the car. Three seasons on the professional table and it has not moved…" –
+// одно и то же опять, давай какую-то вариативность в этих фразах сделаем».
+//
+// ⚠⚠ HIS SENTENCE IS BAND 0 AND IS BYTE-IDENTICAL (invariant 4). It moved out of this template into
+// `plateauLede` (src/engine/ending.ts) without a character changing, and it is the DEFAULT band
+// there, so a career that has never answered reads exactly what it has always read. The three new
+// bands are keyed on `oneMoreYearCount` – the same field her last word above reads, and the same one
+// the epilogue prints – and they are DRAFT copy awaiting the owner's word.
+//
+// ⚠ THE ENGINE HOLDS THE ARGUMENT, not this header: why every lede is her doubt and never a
+// forecast (measured – the card is contradicted by the world 96.2% of the time and is right about
+// her every time), and why no band may spell a count the save does not carry. The card's own rule
+// is unchanged: `tableName` is the one table `activeLadderOfSnapshot` resolves, and it is safe to
+// read on this week because an open offer blocks the world.
+//
+// ⚠ NOTHING NEW IS DRAWN HERE EITHER, and nothing about the OTHER TWO readings moved: the age
+// lede, its rung, her season word, the coach's, the headings and both controls are untouched.
 import { computed, useTemplateRef } from 'vue'
 import { useGameStore } from '../stores/game'
 import { useDialogFocus } from '../composables/dialogFocus'
@@ -135,7 +154,7 @@ import { activeLadderOfSnapshot } from '../shared/protocol'
 // ⚠ THE SAME ONE SPELLING OF HIS NAME the coach note on Home signs itself with – «M. Ricci», not the
 // roster's full string. Two surfaces naming the same person must name him identically.
 import { formatShortName } from '../shared/format'
-import { lastWordLine } from '../engine/ending'
+import { lastWordLine, plateauLede } from '../engine/ending'
 import { declineRung, pastHerPeak } from '../composables/declineVoice'
 import { portraitStage } from '../shared/avatarEmotion'
 import { portraitUrl } from '../art/preload'
@@ -150,6 +169,15 @@ const tableName = computed(() => activeLadderOfSnapshot(game.snapshot).label.toL
 // the line ALONE while the feed prints `She is 41.` in front of it - the same sentence, and neither
 // surface repeats the other's furniture.
 const lastWord = computed(() => lastWordLine(game.snapshot?.oneMoreYearCount ?? 0))
+
+// ⭐⭐⭐ ROUND 39 #14a – AND THE PLATEAU LEDE IS FOUR SENTENCES NOW, PICKED BY THE SAME FIELD. See
+// `plateauLede` in src/engine/ending.ts for the owner's ask, the measurement that shapes the copy
+// and the rule about numbers. Imported as a symbol and not retyped here, exactly as her last word
+// above is: band 0 is his shipped sentence and must stay byte-identical, and a copy of it living in
+// this template is how that quietly stops being true.
+const plateauLine = computed(() =>
+  plateauLede(game.snapshot?.oneMoreYearCount ?? 0, tableName.value),
+)
 
 // ⭐⭐ WHICH YEAR IT IS, off the share alone – null at her peak and on any snapshot that carries no
 // share, which is what keeps this paragraph off the card until there is something true to put in it.
@@ -274,12 +302,12 @@ useDialogFocus(card)
              "this is HER wish, nothing is being forced" - but it names THE GAME, which is a wall no
              line of copy here is allowed to break, and the owner read it as noise (round-17, his
              report of 12.08). Same meaning, said in-fiction.
-             ROUND-19 #1: ...and it names the table now - see the note at the top of this file. -->
-        <p class="retire-lede">
-          Three seasons on the {{ tableName }} table and it has not moved. If she cannot reach the
-          top, she would rather go now – that is how she put it. She will keep playing if you want
-          her to.
-        </p>
+             ROUND-19 #1: ...and it names the table now - see the note at the top of this file.
+             ⭐⭐⭐ ROUND 39 #14a: ...and the sentence those two notes describe is BAND 0 of
+             `plateauLede` now, byte-identical and interpolating the same table. The other three
+             bands escalate with `oneMoreYearCount`; the engine holds all four, so the count that
+             picks them and the words they are made of cannot drift apart. -->
+        <p class="retire-lede">{{ plateauLine }}</p>
       </template>
       <!-- ⭐⭐⭐ ROUND 30 #7 – RE-WORDED, AND THE LEDE ONLY. See the note at the top of this file for
            what the mechanic actually promises and why the old sentence was not the whole of it. -->
