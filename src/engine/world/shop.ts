@@ -64,6 +64,7 @@ import {
   ASSET_NAME_MAX_CHARS,
   assetDelivered,
   assetEarningsRateCents,
+  assetEntryPriceCents,
   assetHeldWeeks,
   assetNameOf,
   assetNameSuggestions,
@@ -90,6 +91,7 @@ export {
   ASSET_NAME_MAX_CHARS,
   assetDelivered,
   assetEarningsRateCents,
+  assetEntryPriceCents,
   assetHeldWeeks,
   assetNameOf,
   assetNameSuggestions,
@@ -352,8 +354,13 @@ export function buyAsset(world: WorldState, itemId: string, stakeCents?: number,
   // overturned his own previous day's ruling once he saw what it did to a FIRST purchase: «если мы до
   // пика известности бренд не покупали, то он всё равно поднимался в цене? Это супер-странно.» The
   // loop that rule existed to close is now closed one layer down, in what a fresh row is WORTH
-  // (`rampedWorthCents`), so nothing has to be charged at the door. This line is what it always was.
-  const paidCents = item.stake === 'open' ? Math.floor(stakeCents ?? 0) : item.entryCents
+  // (`rampedWorthCents`), so nothing has to be charged at the door.
+  // ⭐⭐ ROUND 39 #5 (REOPENED) – EXCEPT A REPEAT FOUNDING, which is the one case #16 left open OVER
+  // TIME: sell the ramped brand, re-found the «garage» at $250,000, wait out the ramp again.
+  // `assetEntryPriceCents` charges a repeat founding the market's current derived worth and answers
+  // the catalogue price for everything else – and `shopView` quotes the SAME function on the card,
+  // so the sticker stays honest by construction rather than by restraint (#14's own lesson).
+  const paidCents = item.stake === 'open' ? Math.floor(stakeCents ?? 0) : assetEntryPriceCents(world, item)
   // ⚠ ONE MINIMUM, NOT TWO. A top-up is held to the same floor as the opening stake because that
   // floor is already the sentence on screen («How much, from $5,000») and a second, smaller
   // threshold would be a balance number no player could find and no screen states.
@@ -424,6 +431,11 @@ export function buyAsset(world: WorldState, itemId: string, stakeCents?: number,
     row.valueCents = assetWorthCents(world, row, item)
     world.assets.push(row)
   }
+  // ⭐ ROUND 39 #5 (v71) – THE WORLD REMEMBERS THE FOUNDING. Written on every business-family
+  // purchase and never unset: a founding is a thing that HAPPENED, and the row that would prove it
+  // is deleted the day the brand is sold (`sellAsset` filters it out), so the fact lives on the
+  // career. `assetEntryPriceCents` reads it to price the NEXT founding as a repeat.
+  if (item.family === 'business') world.brandFounded = true
   // ⭐⭐⭐ ROUND 30 #8 AND #10 – AND THE FAMILY NAMES IT, ON THE FIRST RUNG OF ITS FAMILY AND ONLY
   // THERE. «Merch brand давай предложим пользователю несколько вариантов именования при покупке…
   // это придаст +100 к индивидуальности сразу», and the academy «по принципу бренда».
@@ -645,13 +657,18 @@ export function shopView(world: WorldState): ShopView {
     // §3g – the stage under it, hoisted because `nameOptions` below has to read it too: a naming
     // control on a stage that cannot be bought yet is a control the player cannot use.
     const requirementMet = !item.requiresId || owned.some((a) => a.id === item.requiresId)
+    // ⭐⭐ ROUND 39 #5 (REOPENED) – THE STICKER IS THE DOOR'S OWN PRICE. `assetEntryPriceCents` is
+    // the function `buyAsset` charges, asked here so a REPEAT brand founding shows the derived
+    // price it would actually cost – round 38 #14's defect was exactly a door price the card never
+    // stated. For every rung and every career that is not a repeat founding this IS `item.entryCents`.
+    const entryCents = assetEntryPriceCents(world, item)
     return {
       id: item.id,
       family: item.family,
       stake: item.stake,
       label: item.label,
       blurb: item.blurb,
-      entryCents: item.entryCents,
+      entryCents,
       annualRatePct: Math.round(item.annualRateBps / 100),
       // ⭐ ROUND 30 #9 – ...and the one rung the rate above cannot describe says so here instead.
       // ⭐⭐⭐ ROUND 30 #23 – AND SINCE 30.08 IT IS THE CAREER'S OWN MULTIPLE, NOT THE CATALOGUE'S BASE.
@@ -719,7 +736,10 @@ export function shopView(world: WorldState): ShopView {
       // ⚠ THE PRICE IS ON SCREEN EITHER WAY. This says whether the control is pressable, never
       // whether the row is drawn: §2 rules out the locked row and the progress bar, and a shop
       // window is a thing you look into before you can afford it.
-      affordable: world.fundsCents >= item.entryCents,
+      // ⚠ AGAINST THE SAME `entryCents` THE CARD SHOWS AND THE DOOR CHARGES (round 39 #5): a
+      // pressable Buy on a repeat founding the wallet cannot cover would be the round-38 sticker
+      // lie pointing the other way.
+      affordable: world.fundsCents >= entryCents,
       // ⭐⭐ ROUND 29 #5 – THE THREE NUMBERS §3f GAVE THE ELITE, AND THE ENGINE WORKED OUT ALL THREE.
       // What it costs is `entryCents` above; what it loses is `annualRatePct`; what it takes every
       // week to keep is this, quoted off what the family PAID when it owns one and off the price

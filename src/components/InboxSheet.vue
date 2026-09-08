@@ -264,6 +264,12 @@ const confirmMessage = computed(() => {
   // them, starting now.
   if (pendingSign.value.kind === 'ad') {
     const t = pendingSign.value.terms as AdOfferTerms
+    // ⭐ ROUND 39 #3 – the lifetime letter's confirm: no until-week exists to quote (the paper has
+    // no end) and no shoot weeks exist to preview (it names none), so the sentence carries the two
+    // facts that ARE the deal – the yearly fee and that it never stops. DRAFT copy.
+    if (t.lifetime === true) {
+      return `Sign with ${t.brand}? ${formatCents(t.cashCents)} a year, paid to her every year for life – no shoot weeks, no end date. This cannot be undone.`
+    }
     const until = weekLabel(week.value + Math.max(1, t.termWeeks) - 1)
     const years = Math.max(1, t.termYears ?? 1)
     // ⭐ P6 – the fee is PER CONTRACT YEAR on a multi-year paper, and the confirm says when the

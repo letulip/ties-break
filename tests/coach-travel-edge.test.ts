@@ -42,9 +42,24 @@ import {
   PRE_V67,
   PRE_V68,
   PRE_V69,
+  PRE_V71,
 } from './coachTravelEdgeFixtures'
 
 describe('the byte-identity of a career that does not travel', () => {
+  it('⭐⭐ v71: rolling ONLY the schema number back to 70 reproduces the v70 hashes byte for byte', () => {
+    // ⚠ THE WHOLE OF WHAT ROUND 39 #5's SCHEMA MOVE DID TO A FROZEN CAREER, as an identity – and the
+    // answer is the version number and nothing else. v71 adds `brandFounded`, written only by
+    // `buyAsset` on a business rung and by the migration where a merch brand is owned; no frozen
+    // policy buys the shelf and `createWorld` writes no such key, so there is nothing to peel and a
+    // v70 serialisation of this world is exactly this world with the number moved back. The same
+    // wave's term ladder (round 39 #3) provably cannot reach these careers either: an ad letter
+    // cannot arrive before eighteen and the walk stops at week 156. Per-key diff first, as the
+    // fixtures module demands – 1 of 74 keys on all three careers, `schemaVersion` alone.
+    expect(careerHashAtSchema(5, 0, 70), '25k · middle coach · grinder').toBe(PRE_V71.middleGrinder)
+    expect(careerHashAtSchema(8, 0, 70), '120k · elite coach · grinder').toBe(PRE_V71.eliteGrinder)
+    expect(careerHashAtSchema(0, 1, 70), '8k · self-coached · player').toBe(PRE_V71.selfTravelling)
+  })
+
   it('reproduces the pre-change hash for a hired coach who stays at home, at two rungs', () => {
     expect(careerHash(5, 0), '25k · middle coach · grinder').toBe(FROZEN.middleGrinder)
     expect(careerHash(8, 0), '120k · elite coach · grinder').toBe(FROZEN.eliteGrinder)

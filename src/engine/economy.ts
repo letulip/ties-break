@@ -12,7 +12,7 @@
 // look-ups or post-draw scalings that leave the draw sequence untouched.
 
 import { rngFromSeed, pickInt, type Rng } from './rng'
-import type { AdCategory, CoachTier, FamilyBackground, InjurySeverity, KitGrade, KitLine, PlayStyle } from '../shared/protocol'
+import type { AdTradeCategory, CoachTier, FamilyBackground, InjurySeverity, KitGrade, KitLine, PlayStyle } from '../shared/protocol'
 
 /** ONE CATEGORY OF THE ADVERTISING PORTFOLIO (round 29 part four P6/P7) – see
  *  `ECONOMY.advertising.categories` for the shelf itself and the gradient it is priced on. Named
@@ -39,12 +39,21 @@ export interface AdCategoryDef {
 
 /** ONE BAND OF THE GRADIENT (§8) – the professional cut it opens at, and what a year of a deal
  *  signed inside it asks in shoot weeks. The CHEQUE is deliberately not here: it is the one axis
- *  that scales, and it scales per category (`AdCategoryDef.feeCentsByBand`). */
+ *  that scales, and it scales per category (`AdCategoryDef.feeCentsByBand`). ⭐ ROUND 39 #3 added
+ *  the TERM as the second axis that scales with the band – see `termYearsMin`/`termYearsMax`. */
 export interface AdBandDef {
   /** the standing at or inside which this band's cheques are written */
   maxWtaRank: number
   /** how many shoot weeks one deal asks per contract year at this band */
   shootWeeksPerYear: number
+  /** ⭐⭐ ROUND 39 #3 – THE TERM RUNS WITH THE STANDING (owner 08.09, «давай так попробуем, как ты
+   *  предложил», on his own shape: «для растущей карьеры не больше, чем на 12 месяцев, для топ-100
+   *  до 1-2 года, топ-50 1-3 года, для топ-20 и выше» – research anchors Sharapova-Nike 8y,
+   *  Federer-Uniqlo 10y, Djokovic-Lacoste 5y). The letter's ONE term draw maps into
+   *  [termYearsMin, termYearsMax], both inclusive; a band where they are equal writes that term
+   *  with the draw spent, never skipped – the draw COUNT is the RNG discipline, not the width. */
+  termYearsMin: number
+  termYearsMax: number
 }
 import type { TierId } from './season/types'
 // ⚠ THE SEASON LENGTH COMES FROM THE SHARED DATES LEAF, NOT FROM season/calendar.ts – see the note
@@ -1743,12 +1752,19 @@ export const ECONOMY = {
      *  is $200,000 a year for the world #240, and the band that has to hold him has to reach past
      *  #240. ⭐ Checked against the engine rather than assumed: a career in this band plays 22 events
      *  ≈ 44 matches a year, so the film's arithmetic and ours agree. */
+    // ⭐⭐ ROUND 39 #3 (08.09) – THE TERM LADDER, his approved shape cell for cell: the rising career
+    // (≤400/≤200) signs one year only, the top 100 up to two, the top 50 up to three, the top 10
+    // two to five – «в спорте я видел, что они и на 5, и на 10 лет заключают», and the 5 lands
+    // here while the 8-year capstone and the lifetime letter carry the top end he named. ⚠ The
+    // MEASURED defect this replaces: a flat 1–3 at every band – «at wta#5 she signed a 3-season
+    // kit; at wta#91 she signed a 2-season one; the 3-year ad deals land at wta#7 and wta#16
+    // alike» (his save, tools/r39-save-read.ts --report).
     bands: [
-      { maxWtaRank: 400, shootWeeksPerYear: 1 },
-      { maxWtaRank: 200, shootWeeksPerYear: 1 },
-      { maxWtaRank: 100, shootWeeksPerYear: 1 },
-      { maxWtaRank: 50, shootWeeksPerYear: 2 },
-      { maxWtaRank: 10, shootWeeksPerYear: 2 },
+      { maxWtaRank: 400, shootWeeksPerYear: 1, termYearsMin: 1, termYearsMax: 1 },
+      { maxWtaRank: 200, shootWeeksPerYear: 1, termYearsMin: 1, termYearsMax: 1 },
+      { maxWtaRank: 100, shootWeeksPerYear: 1, termYearsMin: 1, termYearsMax: 2 },
+      { maxWtaRank: 50, shootWeeksPerYear: 2, termYearsMin: 1, termYearsMax: 3 },
+      { maxWtaRank: 10, shootWeeksPerYear: 2, termYearsMin: 2, termYearsMax: 5 },
     ] as readonly AdBandDef[],
     /** ⭐⭐⭐ THE PORTFOLIO'S CATEGORIES (P7, his own list mapped onto ours) – the shelf the player
      *  sees, one live deal per category, the cheque per band in each row.
@@ -1852,7 +1868,7 @@ export const ECONOMY = {
         houses: ['Rivelle', 'Maison Ondelle', 'Blanche & Noir'],
         feeCentsByBand: [null, null, null, null, 2_500_000_00],
       },
-    } as Record<Exclude<AdCategory, 'capstone'>, AdCategoryDef>,
+    } as Record<AdTradeCategory, AdCategoryDef>,
     /** ⭐⭐⭐ THE CAPSTONE (P6, approved twice – §6 «D … очень хорошо» and §8's own last row): the
      *  one kit-shaped deal on top of the whole shelf. His anchor sentence, verbatim: «Федерер
      *  получал контракт с Nike на 10+ миллионов, это 1-2млн для родителя.»
@@ -1878,11 +1894,55 @@ export const ECONOMY = {
       termYears: 8,
       shootWeeksPerYear: 2,
     },
-    /** 1–3 contract years for every category deal – the research's own law for non-endemic paper
-     *  («kit deals run 8–10 years while non-endemic deals run 1–3», off-court-money.md), drawn per
-     *  letter on the letter's own sub-stream. The churn is the variety: short paper is what makes
-     *  the 2–4 houses per category actually rotate. */
-    termYearsMax: 3,
+    /** ⚠ `termYearsMax: 3` STOOD HERE AND ROUND 39 #3 MOVED THE TERM ONTO THE BAND (owner 08.09,
+     *  «давай так попробуем, как ты предложил»). Its note called 1–3 «the research's own law for
+     *  non-endemic paper», and the flat law was the measured defect: at wta#5 and wta#91 alike the
+     *  ladder wrote the same 1–3 draw, and NOTHING above three years existed in the game at all.
+     *  The band's own `termYearsMin`/`termYearsMax` carry the ladder now – 1y for the rising
+     *  career, up to 5y at the top – and the churn note survives where it is still true: short
+     *  paper at the foot is what makes the 2–4 houses per category rotate. */
+    /** ⭐⭐⭐ ROUND 39 #3 – THE LIFETIME LETTER («А некоторые и пожизненно»), once per career, at
+     *  legend status: the icon exception the research names (Messi, Ronaldo, LeBron), mostly
+     *  outside tennis, so it is ONE letter and not a band.
+     *
+     *  ⚠⚠ THE GATE IS THE CAPSTONE'S OWN TENURE READ PLUS THE ONE THING THE CAPSTONE NEVER ASKS: a
+     *  Slam title. Four seasons ended inside the top 10 – `capstoneSeasonsOf`, the same fold, never
+     *  a second derivation – AND at least one Slam on the trophy ledger. A lifetime deal is written
+     *  to a legend, and in this sport a legend without a Slam is not one.
+     *
+     *  ⚠ THE FEE IS THE ICON BAND'S OWN BIGGEST TRADE CHEQUE, MADE PERMANENT – fragrance's
+     *  $2,500,000, the top cell of the ordinary shelf – and NOT a second capstone: the real
+     *  lifetime deals pay roughly a peak year-fee forever, and the game's peak ORDINARY fee is
+     *  this cell. $10M/yr forever beside the capstone's $10M x 8 would double the top of the
+     *  economy; the annuity shape – top-shelf money that never expires and survives retirement –
+     *  is the «пожизненно» he named, and the walk (tools/r39-terms-walk.ts) is the measurement.
+     *
+     *  ⚠ ZERO SHOOT WEEKS, deliberately: shoot weeks are named at signature for the whole term,
+     *  and a term with no end has no «whole term» to name them across. The house pays for the name
+     *  she already made; the letter asks nothing back – which is also what lets it survive
+     *  retirement without owing weeks she no longer has. */
+    lifetime: {
+      /** ⭐⭐ THREE, NOT THE CAPSTONE'S FOUR, AND THE NUMBER IS MEASURED (owner, 08.09: «тогда окей
+       *  и не вижу причин это не сделать»). His questions were «не будет ли это большим облегчением?
+       *  сколько реально игроков в % … какая ценность будет?», and `tools/r39-tenure-reach.ts`
+       *  answered them over the round-29 corpus shape – 9 presets x 2 policies x 6 seeds = 108
+       *  careers, 900 weeks:
+       *
+       *      >= 4 top-10 seasons AND a slam    11 of 108   10.2%
+       *      >= 3 top-10 seasons AND a slam    11 of 108   10.2%
+       *
+       *  ⚠ IDENTICAL - the two careers holding exactly three top-10 seasons hold ZERO slams, so the
+       *  SLAM is the binding gate and this number was never doing the work it looked like it was
+       *  doing. Dropping it is therefore not a loosening: it costs nothing measurable, and it is the
+       *  difference between his own best career (Ines: 3 seasons + a slam) earning the letter and
+       *  never learning the mechanic exists. ⚠ The capstone above stays at FOUR - it is tenure
+       *  without a title, and it is right for that to be the stricter bar. */
+      seasonsInTop10: 3,
+      /** Slam titles on the ledger before the house writes – the legend line */
+      slamTitles: 1,
+      /** per contract year, for ever – banked at signature and on every anniversary */
+      cashCents: 2_500_000_00,
+    },
     /** The earliest a shoot may land after the signature, in weeks – the studio is booked about a
      *  month out, and it is the same courtesy the letter's own decide weeks extend: a cost the
      *  player can SEE coming is a plan, a cost that lands the week he agreed to it is a trap. Engine
@@ -5020,10 +5080,19 @@ export const ECONOMY = {
        *  driver at or near zero; without this the half-life is infinite and the rung would be frozen
        *  at what was paid for ever, which is not «медленно» but «никогда». Eight years is slow. */
       maxHalfLifeWeeks: 416,
-      /** ...and the other end: a driver this far above the median stops buying more speed. Four
-       *  weeks is one month, and below that the ramp stops being a process at all – which is the one
-       *  thing his ruling is about. */
-      minHalfLifeWeeks: 13,
+      /** ...and the other end: a driver this far above the median stops buying more speed.
+       *
+       *  ⭐⭐ ROUND 39 #5 (REOPENED, owner 08.09 «давай попробуем») – 13 → 52, AND THE OLD FLOOR IS
+       *  WHY THE LOOP SURVIVED ROUND 38. At the fame cap the pace ratio is 100/12.8 ≈ 7.8, so the
+       *  half-life ran all the way down to ~13.3 weeks and a $250,000 brand was worth $1,844,174
+       *  ONE WEEK after purchase (his own report: «свежекупленный бренд возвращался к своей
+       *  стоимости уже в течение 5 недель» – measured, the 5-week point was $8.2M of $35.9M).
+       *  His round-38 law stands unmoved – «полураспад 2 года при средней славе, кратно быстрее
+       *  при высокой» – because 104/52 = 2x faster at the cap is still «кратно»; what the old
+       *  floor allowed was 8x, which is «за несколько недель», the exact complaint. At 52 the
+       *  week-1 worth of a fresh cap-fame brand is ~$723k and half the derived value takes a full
+       *  year: «это процесс» at every level of fame. Measured in tools/r39-brand-loop.ts. */
+      minHalfLifeWeeks: 52,
     },
   },
 } as const

@@ -564,6 +564,46 @@ export function assetWorthCents(world: WorldState, owned: OwnedAsset, item: Shop
   return rampedWorthCents(drifted, Math.round(drifted * academyPremiumX(world)), acadHeld, acadHalf)
 }
 
+/** ⭐⭐⭐ ROUND 39 #5 (REOPENED) – WHAT A RUNG COSTS AT THE DOOR, and for exactly one case it is not
+ *  the catalogue price: a REPEAT founding of a brand, on a career that has already founded one.
+ *
+ *  THE OWNER, 08.09: «Я завел бренд у Инэс, он за несколько недель стал стоить 22 млн, я его продал.
+ *  Потом купил новый за 250к, а он снова за несколько недель уже 30+ стоит.» His cycle is sell at
+ *  the ramped worth, re-buy at the flat $250,000, wait for the ramp to climb back – round 38 #16
+ *  closed the loop AT the trade (`rampedWorthCents` opens at what was paid) and left it open OVER
+ *  TIME, because the re-buy price never moved. This closes the price: the second garage story costs
+ *  what the market says her name is worth, so sell-at-derived → re-buy-at-derived nets ~$0.
+ *
+ *  ⚠⚠ THE FIRST FOUNDING IS UNTOUCHABLE, and that is his own round-38 law standing in the way of a
+ *  simpler rule: «он неизменно для первого открытия стоит 250к». Round 38 #14 charged
+ *  `max(catalogue, worth)` on EVERY purchase and he overturned it the same day, precisely because a
+ *  first brand on a famous career stopped costing what the card said. So the predicate is the
+ *  career's own memory – `world.brandFounded`, v71 – and everything that is not a repeat business
+ *  founding walks past this function byte-identically.
+ *
+ *  ⚠⚠ THE STICKER IS HONEST BY CONSTRUCTION – the round-38 lesson, kept structurally this time:
+ *  `shopView` routes `entryCents` and `affordable` through THIS function, and `buyAsset` charges
+ *  THIS function, so whatever price the purchase would take is the price the card shows. #14's
+ *  defect was a door price the card never stated; there is no second price anywhere now.
+ *
+ *  ⚠ `max(entryCents, derived)` AND NOT THE DERIVED ALONE: a repeat founding on a career whose fame
+ *  has gone quiet still costs at least the catalogue price – founding a brand is never CHEAPER the
+ *  second time, and the floor keeps the repeat from undercutting his own first-founding law.
+ *
+ *  ⚠ THE DERIVED FIGURE IS THE VALUATION'S OWN – `brandGrossWorthCents` over `brandSignalsOf`, the
+ *  same pair `assetWorthCents` multiplies for an owned row – so the door and the shelf cannot price
+ *  two different brands («a screen and a valuation disagreeing, this repo's most-repeated defect»).
+ *  The row this purchase writes then opens at exactly what was paid (the ramp's own law), which is
+ *  the derived worth itself: bought at the market, worth the market.
+ *
+ *  Pure: reads the world, writes nothing, draws nothing. */
+export function assetEntryPriceCents(world: WorldState, item: ShopItem): number {
+  if (item.family !== 'business' || item.earningsMultipleX === undefined) return item.entryCents
+  if (world.brandFounded !== true) return item.entryCents
+  const derived = brandGrossWorthCents(brandSignalsOf(world), item.earningsMultipleX)
+  return Math.max(item.entryCents, derived)
+}
+
 /** ⭐⭐⭐ ROUND 30 #9 – WHAT AN EARNING RUNG TAKES IN THIS WEEK, in cents, BEFORE the question of
  *  whether the family owns one. THE arithmetic for the merch line, and it lives here rather than in
  *  `world/business.ts` for one structural reason: `assetWorthCents` above has to ask it, `business.ts`

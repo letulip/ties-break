@@ -240,6 +240,18 @@ async function resumeCollege(): Promise<void> {
           </template>
         </p>
 
+        <!-- ⭐ ROUND 39 #3 – THE LIFETIME DEAL'S LINE, the academy note's own division of labour one
+             paragraph up: the engine hands the signed paper's frozen facts (`EndingView.lifetimeDeal`,
+             null when none was signed), the template writes the fixed sentence, and it renders only
+             when there is a deal to name. This is the epilogue half of the lifetime letter's ruling
+             (his words are on `ECONOMY.advertising.lifetime` – no Cyrillic may appear in a template):
+             an ended world no longer ticks, so what survives the retirement is the fact, said out
+             loud. DRAFT copy, like every new sentence in this wave. -->
+        <p v-if="view.lifetimeDeal" class="ending-note">
+          The {{ view.lifetimeDeal.brand }} deal never ran out –
+          {{ formatCents(view.lifetimeDeal.cashCents) }} a year, for life.
+        </p>
+
         <button class="ending-link" type="button" @click="scrollOpen = true">The whole record</button>
 
         <!-- ⭐⭐⭐ ROUND 24 #2b/#3 – THE COLLEGE YEAR BLOCK HAS LEFT THIS SCREEN, and its absence is

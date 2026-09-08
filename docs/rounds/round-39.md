@@ -200,7 +200,7 @@ Class: **build** · **answer** · **measure** · **ask** · **already-works**
   timeouts at load 20, and re-run on a quiet machine the same shard was green in 160 s – the
   contention hazard CLAUDE.md records, caught by its own tell (the failing set was assertion-free).
 
-- [>] **3. «У нас все контракты стали на 12 месяцев? Или мне только кажется? Увидел пару штук на 2
+- [x] **3. «У нас все контракты стали на 12 месяцев? Или мне только кажется? Увидел пару штук на 2
   года - лучше. Но мы обсуждали, что на 12 месяцев дают контракты тем, кто только идёт в топ, а чем
   выше - тем дольше. В спорте я видел, что они и на 5, и на 10 лет заключают. А некоторые и
   пожизненно»** – **measure then build.** First measure the actual term distribution by rank on his
@@ -276,6 +276,60 @@ Class: **build** · **answer** · **measure** · **ask** · **already-works**
   bank 6-9 top-10 seasons, while his own #5 career banked 3. So a real player meets these gates LESS
   often than 10.2%, and the corpus is the optimistic bound, not the expected one.
 
+  **SHIPPED (wave EF, `r39/wave-ef`, 08.09) – the approved ladder, exactly, plus the lifetime
+  letter.** The term moved onto the BAND (`AdBandDef.termYearsMin`/`termYearsMax`; the flat
+  `termYearsMax: 3` is gone): 1y at ≤400 and ≤200, 1–2 at ≤100, 1–3 at ≤50, 2–5 at ≤10; the 8-year
+  capstone untouched (its «longer than every term» pin now reads every band's own max). ⚠ RNG: the
+  term is still ONE draw on the letter's own sub-stream – the band changes the MAPPING of the
+  uniform, never the draw count (a 1-year band still spends its uniform onto {1}) – proved by
+  stream replay in `tests/r39-term-ladder.test.ts` §2, and made VISIBLE in the measurement: the
+  ≤50 band's distribution is numerically identical before/after because its mapping equals the old
+  flat one. MAIN untouched; `tests/condition.test.ts` green, capture 41550/`e6b0c709` unchanged.
+
+  **The LIFETIME letter («А некоторые и пожизненно»):** category `lifetime` above the capstone,
+  once per career. Gate = a Slam title AND four seasons ended in the top 10 – `capstoneSeasonsOf`
+  REUSED, never a second derivation (`ECONOMY.advertising.lifetime`). Fee $2,500,000/yr – the icon
+  band's own biggest trade cheque (fragrance's ≤10 cell) made permanent, the Messi/Ronaldo shape
+  (a peak year-fee that never expires) at the game's own scale; NOT a second capstone, which would
+  have doubled the top of the economy. Zero shoot weeks by construction (weeks are named across a
+  term; this paper has none). «Once per career» is `adSpokenFor` doing what it always does: a
+  signed lifetime deal has NO `untilWeek` and never lapses, so the slot never re-opens – and a
+  REFUSED letter shuts nothing (a mis-tap must not cost the career its one lifetime deal).
+  `payAdAnniversaries` pays it every year for ever through the same splitter. It SURVIVES
+  retirement into the epilogue as the smallest honest hook: an ended world no longer ticks (nothing
+  banks post-ending for ANY source, the academy included), so what survives is the FACT –
+  `EndingView.lifetimeDeal` off the signed paper's frozen terms, one `ending-note` line on
+  EndingScreen. ⚠ All new sentences (letter body, confirm, portfolio row, epilogue line) are DRAFT
+  for his review.
+
+  **MEASURED (`tools/r39-terms-walk.ts`).** Walked 9 presets x 2 seeds x 832 weeks (his save's own
+  length): the default bench-policy careers only ever reach the ≤200 band – 30 letters, before
+  11/10/9 across 1–3y → after 30 x 1y. Per-band probes (the engine's own letter path, 40 drinks
+  letters per band, before recovered from the SAME uniform under the old mapping):
+
+  | band | before 1y/2y/3y/4y/5y | after 1y/2y/3y/4y/5y |
+  | --- | --- | --- |
+  | ≤400 | 11/15/14/–/– | **40/–/–/–/–** |
+  | ≤200 | 9/10/21/–/– | **40/–/–/–/–** |
+  | ≤100 | 14/11/15/–/– | **22/18/–/–/–** |
+  | ≤50 | 13/10/17/–/– | 13/10/17/–/– (byte-identical – the one-draw proof) |
+  | ≤10 | 13/17/10/–/– | **–/10/11/12/7** |
+
+  ⚠ **The lifetime letter NEVER fired on the walked set** – reported, not hidden: no walked career
+  banked a single top-10 season or slam (best live rank seen wta#265; most careers end bankrupt
+  under the default bench policy – the wrong instrument for legend careers, said plainly). The
+  gate's reach anchor stands elsewhere: round 29 measured 4+ top-10 seasons at 7 of 72 careers,
+  and the Slam requirement narrows that further – the letter is deliberately the icon exception.
+  The gate itself is exercised deterministically in `tests/r39-term-ladder.test.ts` §3 (arrives
+  past both halves, refused-re-arrives, pays at +1/+2/+10/+25 years, never between, epilogue fact)
+  and `tests/component/r39-lifetime-letter.test.ts` (the letter, the signed record, the epilogue
+  line, with an ordinary-letter CONTROL per absence claim). Re-aimed with ⚠ notes, none deleted:
+  `ad-offer.test.ts` (the replay helper maps per band), `round29p4-ad-portfolio` (the term sweep
+  reads the ladder's two ends), `round29p2-ad-ladder` (per-band bounds), `round29p2-ladder-monotone`
+  (the clamp sweep + the capstone-outlasts arm), `round32-brand-inertia`/`sponsor-ladder-reach`
+  (`AdTradeCategory` – the trade catalogue's own index type, so 'lifetime' cannot index a row that
+  is not there). Kit deals untouched – out of scope by his approval.
+
 - [x] **4. «В яхтах и (подразумеваю) самолётах на уже купленных тоже убрать с карточки серую надпись
 
   „paid ..."»** – **build.** The `paid …` caption must not show on an owned yacht or plane. He
@@ -297,7 +351,7 @@ Class: **build** · **answer** · **measure** · **ask** · **already-works**
   green across the five shelf files (r39-owned-shelf-paid, round35-shop, round29-shop-elite,
   shop-tab, round36-review).
 
-- [>] **5. (REOPENED) «Я завел бренд у Инэс, он за несколько недель стал стоить 22 млн, я его продал. Потом
+- [x] **5. (REOPENED) «Я завел бренд у Инэс, он за несколько недель стал стоить 22 млн, я его продал. Потом
   купил новый за 250к, а он снова за несколько недель уже 30+ стоит. Кажется надо ещё что-то с этой
   механикой подумать»** – **REOPENED against round 38 #15/#16.**
 
@@ -342,6 +396,49 @@ Class: **build** · **answer** · **measure** · **ask** · **already-works**
   D is written out in docs/now-next-later.md's Later.** He also refined the observation: «кажется
   что у меня свежекупленный бренд возвращался к своей стоимости уже в течение 5 недель» – at the
   13.3-week floor the 5-week point is $8.2M of $35.9M, so the feel was right in kind.
+
+  **SHIPPED (wave EF, `r39/wave-ef`, 08.09) – A+C, both prongs.** **C:**
+  `worthRamp.minHalfLifeWeeks` 13 → 52. His round-38 law stands – 104/52 = 2x faster at the cap is
+  still «кратно быстрее» – where the old floor allowed 8x, which is «за несколько недель». **A:** a
+  REPEAT founding of `merch-brand` is priced at the market's current derived worth
+  (`assetEntryPriceCents`, world/assets.ts); the FIRST founding of a career stays the flat catalogue
+  $250,000, pinned – his «неизменно для первого открытия стоит 250к» untouched. ⭐ The sticker is
+  honest BY CONSTRUCTION: `buyAsset`'s charge and `shopView`'s `entryCents`/`affordable` are one
+  function, so a card can never show a price the door does not take (round 38 #14's lesson, kept
+  structurally). Schema move, all three parts: `SAVE_SCHEMA_VERSION` 70 → 71 + `world.brandFounded`
+  (a founding survives the sold row nowhere else), append-only v70→v71 migration – a save OWNING a
+  merch brand back-fills `true` (his live career must not keep the $250k re-buy), a save owning
+  none keeps the benefit of the doubt = first-founding price – and golden fixture
+  `tests/fixtures/saves/v71.json` (goldenSaves one-per-version law green).
+
+  **MEASURED (`tools/r39-brand-loop.ts`, synthetic cap-fame world – his saves stay read-only, never
+  fixtures).** Re-buy curve of a fresh $250,000 brand at fame 100, derived worth $25,116,000 on the
+  synthetic state:
+
+  | after | before (13w floor) | after (52w floor) |
+  | --- | ---: | ---: |
+  | 1 week | $1,511,625 | **$579,258** |
+  | 5 weeks | $5,949,678 | $1,853,267 |
+  | 13 weeks | $12,479,368 | $4,206,270 |
+  | 26 weeks | $18,694,201 | $7,533,083 |
+  | 52 weeks | $23,457,530 | $12,683,000 |
+
+  Predicted before measuring: w1 = paid + gap x (1 − 0.5^(1/52)) = $579,353; measured $579,258. On
+  HIS save's derived ($35.9M) the same arithmetic gives ~$723k at week 1 – the proposal's own
+  figure, confirmed. Full cycle (sell a converged brand, re-found the same week): before
+  **+$24,768,867** a cycle; after **−$97,133** – the ramp's own unconverged 0.4%, the loop closed
+  to ≤ $0. ⚠ RNG: zero draws on any stream; `tests/condition.test.ts` green, capture
+  41550/`e6b0c709` unchanged. Re-aimed guards, none deleted: `r38-worth-ramp`'s «кратно» arm (3x
+  median now rides the floor; proportionality asserted at 1.5x, the floor pinned at 3x) and
+  `round30-brand-value`'s falls fixture (one more settling season – the turn measured at season 3
+  under the 52w floor; claim and band untouched at 0.40–0.60, hold 0.5385). New pins:
+  `tests/r39-brand-rebuy.test.ts` – the first-founding law, sticker = door on a repeat, the
+  quiet-career floor, `affordable` at the true price, the 52w floor at the cap, both migration arms.
+  ⚠ The schema byte's full blast radius, surfaced by the units gate and closed in the wave's second
+  commit: the three FROZEN career hashes re-cut (per-key diff against a control worktree at the
+  wave base = **1 of 74 keys, `schemaVersion` alone**, on all three; `PRE_V71` rollback rung
+  appended, every older rung untouched), the e2e fixtures regenerated at v71, and the migrations
+  suite's schema-head pin moved with the ladder (its sixth re-aim, claim unchanged).
 
 - [~] **6. «2 года подряд спонсор с духами не пришёл»** – **measure.** A named sponsor category
   absent two seasons running. Is the perfume slot gated (rank, fame, exclusivity) or is it draw

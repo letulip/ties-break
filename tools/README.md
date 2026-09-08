@@ -11,7 +11,7 @@ last-reviewed: 2026-08-24
 when this page and the repository disagree, and it also asserts that `tsconfig.app.json` lists
 exactly the live set.
 
-199 TypeScript files: **31 live**, **168 archival**.
+201 TypeScript files: **31 live**, **170 archival**.
 
 ## Why the split exists
 
@@ -100,13 +100,14 @@ the gate now runs – so evidence that stops compiling reddens a pull request in
 - `r34-reachable-ceiling.ts` · `r34-savings-income.ts` · `r34-zero-lock.ts` · `r35-brand-share.ts`
 - `r35-draw-fact.ts` · `r38-academy-worth.ts` · `r38-ceiling-dials.ts` · `r38-closed-form-residual.ts`
 - `r38-decline-cliff.ts` · `r38-decline-read.ts` · `r38-decline-shape.ts` · `r38-fame-presence-sweep.ts`
-- `r38-field-read.ts` · `r38-save-read.ts` · `r39-body-seasons.ts` · `r39-decline-rotation.ts`
-- `r39-save-read.ts` · `r39-tenure-reach.ts` · `reach-sweep.ts` · `real-vs-bench.ts`
-- `rehab-lever.ts` · `restore-bench.ts` · `retirement-shape-probe.ts` · `rival-fatigue-audit.ts`
-- `round15-read.ts` · `round16-read.ts` · `round17-read.ts` · `round18-read.ts`
-- `round23-read.ts` · `round26-probe.ts` · `runway-probe.ts` · `school-bench.ts`
-- `season-anchor-read.ts` · `skill-gap-odds.ts` · `slam-difficulty.ts` · `slam-door-cost.ts`
-- `sponsor-ladder-reach.ts` · `summer-bench.ts` · `teen-at-the-top.ts` · `top50-season-probe.ts`
-- `two-cells.ts` · `two-seasons-read.ts` · `two-tour-overlap.ts` · `w-onramp-probe.ts`
-- `wall-freeze-probe.ts` · `wall-l1-bench.ts` · `wallet-audit.ts` · `week-story-trace.ts`
-- `what-drives-progress.ts` · `what-money-buys.ts` · `wild-card-reach.ts` · `winrate-read.ts`
+- `r38-field-read.ts` · `r38-save-read.ts` · `r39-body-seasons.ts` · `r39-brand-loop.ts`
+- `r39-decline-rotation.ts` · `r39-save-read.ts` · `r39-tenure-reach.ts` · `r39-terms-walk.ts`
+- `reach-sweep.ts` · `real-vs-bench.ts` · `rehab-lever.ts` · `restore-bench.ts`
+- `retirement-shape-probe.ts` · `rival-fatigue-audit.ts` · `round15-read.ts` · `round16-read.ts`
+- `round17-read.ts` · `round18-read.ts` · `round23-read.ts` · `round26-probe.ts`
+- `runway-probe.ts` · `school-bench.ts` · `season-anchor-read.ts` · `skill-gap-odds.ts`
+- `slam-difficulty.ts` · `slam-door-cost.ts` · `sponsor-ladder-reach.ts` · `summer-bench.ts`
+- `teen-at-the-top.ts` · `top50-season-probe.ts` · `two-cells.ts` · `two-seasons-read.ts`
+- `two-tour-overlap.ts` · `w-onramp-probe.ts` · `wall-freeze-probe.ts` · `wall-l1-bench.ts`
+- `wallet-audit.ts` · `week-story-trace.ts` · `what-drives-progress.ts` · `what-money-buys.ts`
+- `wild-card-reach.ts` · `winrate-read.ts`

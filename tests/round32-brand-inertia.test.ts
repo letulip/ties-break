@@ -73,7 +73,7 @@ import { ECONOMY } from '../src/engine/economy'
 import { rngFromSeed } from '../src/engine/rng'
 import { WEEKS_PER_YEAR } from '../src/engine/season/calendar'
 import type { TierId } from '../src/engine/season/types'
-import type { AdCategory, AdOfferTerms } from '../src/shared/protocol'
+import type { AdTradeCategory, AdOfferTerms } from '../src/shared/protocol'
 
 const MERCH = 'merch-brand'
 const BASE_X = shopItem(MERCH)!.earningsMultipleX!
@@ -558,7 +558,9 @@ describe('round 32 #5 §6 – ⭐⭐ a delivered shoot ADDS to the floor, by the
     // so those two letters read back one rung ABOVE the band they were written at – the strongest
     // band whose cell they exactly are, which is `adBandOfTerms`' shipped rule unchanged. Listing
     // them here means a later edit that creates a THIRD collision reddens this arm.
-    const collisions: [Exclude<AdCategory, 'capstone'>, number, number][] = [
+    // ⚠ `AdTradeCategory` since round 39 #3 – the lifetime letter joined `AdCategory` beside the
+    // capstone, and neither is a row of the trade catalogue this arm indexes.
+    const collisions: [AdTradeCategory, number, number][] = [
       ['watches', 1, 2], // $200,000 at ≤200 and at ≤100
       ['drinks', 0, 1], //  $80,000 at ≤400 and at ≤200
     ]
@@ -568,7 +570,7 @@ describe('round 32 #5 §6 – ⭐⭐ a delivered shoot ADDS to the floor, by the
         .toBe(readsAs)
     }
     const seen = new Set<string>()
-    for (const category of Object.keys(ECONOMY.advertising.categories) as Exclude<AdCategory, 'capstone'>[]) {
+    for (const category of Object.keys(ECONOMY.advertising.categories) as AdTradeCategory[]) {
       const ladder = ECONOMY.advertising.categories[category].feeCentsByBand
       for (let b = 0; b < ladder.length; b++) {
         const cell = ladder[b]

@@ -165,6 +165,7 @@ export type {
   SponsorTier,
   AdTier,
   AdCategory,
+  AdTradeCategory,
   KitLine,
   KitGrade,
   KitGrades,

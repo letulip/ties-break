@@ -275,8 +275,12 @@ describe('⭐ the ADVERTISING gradient is monotone – round 29 part four P6/§8
         expect(terms!.category).toBe(c)
         expect(terms!.trade).toBe(def.trade)
         expect(terms!.cashCents).toBe(fee)
-        expect(terms!.termYears).toBe(2)
-        expect(terms!.termWeeks).toBe(104)
+        // ⚠ RE-AIMED, ROUND 39 #3 – the requested 2 years now clamps into the BAND's own ladder
+        // (1y at the two rising bands, 1–2/1–3/2–5 above), where it used to clamp into a flat 1–3;
+        // the sweep asks for 2 everywhere precisely so the clamp is exercised at both edges.
+        const expectYears = Math.max(BANDS[band].termYearsMin, Math.min(BANDS[band].termYearsMax, 2))
+        expect(terms!.termYears).toBe(expectYears)
+        expect(terms!.termWeeks).toBe(expectYears * 52)
         expect(terms!.shootCount).toBe(BANDS[band].shootWeeksPerYear)
       }
     }
@@ -331,7 +335,9 @@ describe('⭐ the ADVERTISING gradient is monotone – round 29 part four P6/§8
     }
     expect(cap.cashCents).toBe(10_000_000_00) // his sentence: «контракт с Nike на 10+ миллионов»
     expect(cap.termYears).toBe(8) // kit-shaped: «kit deals run 8–10 years» (off-court-money.md)
-    expect(cap.termYears).toBeGreaterThan(ECONOMY.advertising.termYearsMax)
+    // ⚠ RE-AIMED, ROUND 39 #3 – «longer than every term» is measured against every BAND's own
+    // ceiling now (the flat `termYearsMax` moved onto the bands): 8 outlasts even the top band's 5.
+    for (const b of BANDS) expect(cap.termYears).toBeGreaterThan(b.termYearsMax)
     expect(cap.seasonsInTop10).toBe(4) // the ruling: 4 seasons ENDED inside the top 10
   })
 })

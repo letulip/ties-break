@@ -321,19 +321,36 @@ describe('the churn – «игрок устанет смотреть на одн
     expect(pickAdHouse(['Only House'], 'Only House', true, 0.5)).toBe('Only House')
   })
 
-  it('terms run one to three years, and the drawn years price the whole paper', () => {
-    // Swept over many letters: every term the engine issues is 1–3 years, the span is years×52,
-    // and at least two different lengths occur – the churn is real, not a constant wearing dice.
-    const seen = new Set<number>()
-    for (let n = 0; n < 12; n++) {
+  it('terms run the BAND\'s own ladder, and the drawn years price the whole paper', () => {
+    // ⚠ RE-AIMED, ROUND 39 #3 (owner 08.09: «давай так попробуем, как ты предложил») – WAS «terms
+    // run one to three years», the flat law, and the flat law was the measured defect: at wta#5 and
+    // wta#91 alike the same 1–3 draw wrote the paper. The term now maps into the band's own
+    // `termYearsMin`/`termYearsMax` (1y for the rising career, 1–2 at ≤100, 1–3 at ≤50, 2–5 at
+    // ≤10), on the SAME single draw. Two fixtures, the ladder's two ends:
+    // the ≤200 band – every letter is exactly one year, the rising career's law...
+    for (let n = 0; n < 6; n++) {
       const seed = `p4a-years-${n}`
       const hit = rollFor(seed, 'cars', 300)
       const world = probeWorld(seed, hit, 150)
       reviewAdOffer(world)
       const t = post(world, 'cars')[0]?.terms as AdOfferTerms | undefined
       if (!t) continue
-      expect(t.termYears).toBeGreaterThanOrEqual(1)
-      expect(t.termYears).toBeLessThanOrEqual(AD.termYearsMax)
+      expect(t.termYears, 'a rising career signs a year, never more').toBe(1)
+      expect(t.termWeeks).toBe(WEEKS_PER_YEAR)
+    }
+    // ...and the ≤10 band – two to five years, at least two lengths seen: the churn is real where
+    // the ladder is wide, not a constant wearing dice.
+    const top = AD.bands[AD.bands.length - 1]
+    const seen = new Set<number>()
+    for (let n = 0; n < 12; n++) {
+      const seed = `p4a-years-${n}`
+      const hit = rollFor(seed, 'cars', 300)
+      const world = probeWorld(seed, hit, 5)
+      reviewAdOffer(world)
+      const t = post(world, 'cars')[0]?.terms as AdOfferTerms | undefined
+      if (!t) continue
+      expect(t.termYears).toBeGreaterThanOrEqual(top.termYearsMin)
+      expect(t.termYears).toBeLessThanOrEqual(top.termYearsMax)
       expect(t.termWeeks).toBe(t.termYears! * WEEKS_PER_YEAR)
       seen.add(t.termYears!)
     }

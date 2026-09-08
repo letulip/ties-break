@@ -314,6 +314,7 @@ describe('round 36 phase 4 – the epilogue gets a column', () => {
       titles: 2,
       oneMoreYearCount: 0,
       academy: null,
+      lifetimeDeal: null,
       college: null,
     }
   }

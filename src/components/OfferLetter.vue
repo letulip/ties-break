@@ -204,8 +204,12 @@ const callUpBecause = computed(() => {
 })
 const isAd = computed(() => props.offer.kind === 'ad')
 const adTerms = computed(() => props.offer.terms as AdOfferTerms)
+/** ⭐ ROUND 39 #3 – is this the paper that never runs out? Every term clause below branches on it
+ *  first, because a lifetime letter has no years to count and no week to run to. */
+const adLifetime = computed(() => adTerms.value.lifetime === true)
 /** How many contract years the paper runs – 1 on every letter written before the portfolio
- *  (`termYears` absent), 1–3 on a category letter, 8 on the capstone. */
+ *  (`termYears` absent), the band's own 1–5 ladder on a category letter (round 39 #3), 8 on the
+ *  capstone. Meaningless on a lifetime letter – every reader checks `adLifetime` first. */
 const adYears = computed(() => Math.max(1, adTerms.value.termYears ?? (adTerms.value.termWeeks === 52 ? 1 : Math.round(adTerms.value.termWeeks / 52))))
 /** "Twelve months" / "Two years" / "Eight years", because a house writing to a family says it the
  *  way the kit letters say "three seasons" – words, not a numeral – falling back to the numeral
@@ -220,6 +224,9 @@ const adTermWord = computed(() => {
  *  frozen onto it (`AcademyLetterTerms`' rule). */
 const adFeeLine = computed(() => {
   const fee = formatCents(adTerms.value.cashCents)
+  // ⭐ ROUND 39 #3 – the lifetime letter's money sentence: the same anniversary arithmetic as any
+  // multi-year paper, with no last year. DRAFT copy, like the whole letter.
+  if (adLifetime.value) return `${fee} every year, for as long as she lives – the first paid the day this is signed, the rest on its anniversary, with no last one. Money for her name, nothing else.`
   if (adYears.value === 1) return `A one-time fee of ${fee}, paid the day this is signed. Money, not kit – we are not a tennis house.`
   return `${fee} for each contract year – the first paid the day this is signed, the rest on its anniversary. Money for her face, nothing else.`
 })
@@ -228,6 +235,9 @@ const adFeeLine = computed(() => {
  *  before the portfolio keeps its original whole-post sentence – that is what its paper promised. */
 const adExclusivityLine = computed(() => {
   const c = adTerms.value.category
+  // ⭐ ROUND 39 #3 – the lifetime clause carries its own whole sentence: there is no term word to
+  // open with, because there is no term. DRAFT copy.
+  if (adLifetime.value) return 'From signing, her name is with us for life – one of these is ever written, and it does not run out.'
   if (!c) return `${adTermWord.value} from signing, her face is with us – and in no other campaign while that runs.`
   if (c === 'capstone') return `${adTermWord.value} from signing, her face is with us – the house deal of her career, and there is only ever one of these.`
   const trade: Record<string, string> = {
@@ -267,6 +277,8 @@ const adSettled = computed(() => {
   const o = props.offer
   switch (o.state) {
     case 'signed': {
+      // ⭐ ROUND 39 #3 – a signed lifetime paper has no untilWeek and never runs its course.
+      if (adLifetime.value) return 'Signed – the fee is banked, and it comes again every year, for life.'
       const running = props.week <= (o.untilWeek ?? -1)
       const shoots = adShootWeekLine.value
       return running
@@ -699,10 +711,13 @@ const settled = computed(() => {
           {{ adExclusivityLine }}
         </li>
 
-        <li>
+        <li v-if="adTerms.shootCount > 0">
           <!-- ⭐ P9 – the shoots prefer the WINTER now (the six empty weeks are the shoot season);
                the in-season sentence survives for the overflow, which still clashes and still
-               costs exactly as round-29 #3 priced it. Per year since the multi-year terms. -->
+               costs exactly as round-29 #3 priced it. Per year since the multi-year terms.
+               ⚠ ROUND 39 #3 gated this bullet on the count, byte-identical on every letter that
+               asks a week: only the lifetime letter asks none, and «Zero weeks of her year are
+               shoot weeks» is not a clause a house would write. -->
           {{ adShootCountWord }} {{ adTerms.shootCount === 1 ? 'week' : 'weeks' }} of her year
           {{ adTerms.shootCount === 1 ? 'is a shoot week' : 'are shoot weeks' }} – ours, each year
           of the term. We book the winter first – the off-season is the shoot season – and what the
@@ -710,9 +725,15 @@ const settled = computed(() => {
           family can plan around it. A shoot is a working week: she will rest less in it, as she
           would on any trip.
         </li>
-        <li>
+        <li v-if="adTerms.shootCount > 0">
           Beyond those weeks nothing is owed: no tournaments, no results, nothing to pay back –
           whatever the season brings.
+        </li>
+        <li v-else>
+          <!-- ⭐ ROUND 39 #3 – the lifetime letter's own closing bound: it asks no weeks at all,
+               and the sentence has to say so where the shoot clause would have stood. DRAFT. -->
+          Nothing is owed, ever: no shoots, no tournaments, no results – the name she made is the
+          whole of it.
         </li>
       </ul>
       <p class="offer-sign-off">– {{ adTerms.brand }}</p>
