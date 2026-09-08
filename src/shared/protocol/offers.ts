@@ -740,6 +740,25 @@ export interface KitOfferTerms {
    *  as. An old save's letters simply lack it and render exactly as they did; there is nothing to
    *  back-fill, because before this wave no letter was ever a renewal. */
   renewal?: boolean
+  /** ⭐⭐⭐ ROUND 39 #17, HIS RULING OF 08.09 – THIS LETTER IS A RENEWAL NOTICE FROM THE HOUSE THAT
+   *  ALREADY DRESSES HER AND ALREADY PAYS HER FOR POSTERS («мы можем прислать не просто новое письмо
+   *  Meridian Sport с целью "подпиши, если пропустишь, то без формы", а уведомление о продлении»).
+   *  It is the apparel bond's guaranteed letter (`apparelBondLetter`), and the flag exists because
+   *  the paper's VOICE is the whole of what he asked for: that house is CONTINUING, not competing.
+   *
+   *  ⚠ IT IS NOT `renewal`, AND THE TWO MAY NEVER BE COLLAPSED. `renewal` means the contract that is
+   *  ending offered again on the same paper – `raiseKitRenewal` copies its terms verbatim, and the
+   *  letter says «the same deal, another year». This one carries the terms of the rung she clears
+   *  TODAY (his ruling 2), so that sentence would be a lie on it: the deal is not the same one, and
+   *  the copy under this flag says which parts are and are not.
+   *
+   *  ⚠ STILL SIGNED BY HAND. His own emphasis – «а игрок уже сам будет решать с кем подписывать» –
+   *  so this changes nothing about the letter's mechanics: it is an ordinary `open` kit offer with a
+   *  deadline, refusable, expirable, and beaten by any rival letter he signs instead.
+   *
+   *  ⚠ ADDITIVE AND OPTIONAL, SO NO SCHEMA BUMP – the same move `renewal` itself shipped as. An old
+   *  save's letters simply lack it and render exactly as they did. */
+  apparelBond?: boolean
 }
 
 /** What a TOURNAMENT-DESK letter states (W2-LADDER §6, the informational half of the entry

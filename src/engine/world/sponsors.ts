@@ -510,8 +510,22 @@ export function reviewSponsors(world: WorldState): void {
   // this window, so it would otherwise be swept into "letters from X and Y – they all want to put her
   // in their kit", which is the one thing a renewal is not: they already have her, and the row would
   // name the same brand twice in two different voices one sentence apart.
+  // ⭐⭐⭐ ROUND 39 #17, WAVE G2 – AND THE APPAREL BOND'S NOTICE IS EXCLUDED FOR THE RENEWAL'S OWN
+  // REASON. His ruling of 08.09 makes that letter «уведомление о продлении»: the house is already
+  // dressing her and already paying for the posters, so sweeping it into «letters from X and Y –
+  // they all want to put her in their kit» would describe a relationship as a pitch, which is the
+  // one thing the ruling says it is not. It gets its own clause below, in its own voice, exactly as
+  // the incumbent's renewal does.
+  //
+  // ⚠ ONLY WHILE IT IS STILL OPEN, and that is load-bearing rather than tidy. A SIGNED bond letter
+  // must stay in `post` or `signedNow` below would miss it and the row would not report the news it
+  // exists to report – «She is in X's kit for next season.» The renewal cannot hit that seam (it is
+  // raised on this very week and cannot have been answered yet); this letter can, because it is
+  // raised on the window's opening week and he has four more to sign it in.
+  const bondNotice =
+    world.offers.find((o) => o.id === `kit-bond-${opened}` && o.state === 'open') ?? null
   const post = world.offers.filter(
-    (o) => o.kind === 'kit' && o.week >= opened && o.state !== 'info' && o !== renewal,
+    (o) => o.kind === 'kit' && o.week >= opened && o.state !== 'info' && o !== renewal && o !== bondNotice,
   )
   const signedNow = post.find((o) => o.state === 'signed')
   if (signedNow) {
@@ -528,6 +542,16 @@ export function reviewSponsors(world: WorldState): void {
         ? `A letter from ${brands} – they want to put her in their kit (${gate}). It is in the inbox.`
         : `Letters from ${brands} – they all want to put her in their kit (${gate}). They are in the inbox.`,
     )
+  }
+  // ⭐⭐⭐ ROUND 39 #17, WAVE G2 – THE BOND'S NOTICE IN ITS OWN VOICE: a house that has her on its
+  //   posters asking for her back in its kit is not one of the winter's suitors, and the row would
+  //   be naming a relationship as a stranger if it said otherwise. It sits ABOVE the incumbent's
+  //   clause because the incumbent's is always last – it is the last letter of the winter. The two
+  //   can never both appear (`apparelBondLetter` stands down for the winter its own house renews in),
+  //   which is why neither clause has to know about the other. DRAFT copy.
+  if (bondNotice) {
+    const t = bondNotice.terms as KitOfferTerms
+    parts.push(`${t.brand} already have her on their posters and would like her back in their kit – their renewal is in the inbox.`)
   }
   // ⚠ AND THE INCUMBENT GETS ITS OWN SENTENCE, in its own voice. It is the last clause because it is
   //   the last letter: by the time the parent reads this line every rung that would have her has

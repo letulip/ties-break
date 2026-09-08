@@ -167,6 +167,12 @@ function subjectOf(o: Offer): string {
   if (o.kind === 'ad') return `Her face in a campaign – ${formatCents((o.terms as AdOfferTerms).cashCents)}`
   const t = o.terms as KitOfferTerms
   if (t.ended) return 'The kit deal has ended'
+  // ⭐⭐⭐ ROUND 39 #17, WAVE G2 – THE APPAREL BOND'S LETTER IS A RENEWAL NOTICE (his ruling of
+  // 08.09), so the subject line has to say so: the house is already dressing her and already paying
+  // for the posters. It is NOT `renewal` – that one is the same contract offered again, and this one
+  // is the ladder's rung for her rank today – so it gets its own subject rather than borrowing one
+  // that would misdescribe the terms inside. DRAFT copy.
+  if (t.apparelBond) return 'Renewing her kit with us'
   return t.renewal ? 'Another year in our kit' : 'A kit deal for your daughter'
 }
 

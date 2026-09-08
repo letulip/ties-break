@@ -819,13 +819,30 @@ const settled = computed(() => {
     <!-- tilt is 0 and STAYS 0 – see the block comment at the top of this file. -->
     <PaperNote class="offer-paper" size="letter" :tilt="0">
       <img class="offer-mark" :src="markUrl" :alt="terms.brand" />
+      <!-- ⭐⭐⭐ ROUND 39 #17, WAVE G2 – AND THE HOUSE THAT ALREADY SHOOTS HER CAMPAIGN IS RENEWING,
+           NOT PITCHING. His ruling of 08.09 is a RENEWAL NOTICE rather than a fresh pitch – his own
+           words are quoted in engine/offers.ts (`apparelBondLetter`), because no Cyrillic passes this
+           line (tests/offers.test.ts). So the paper opens in the voice of a relationship being
+           carried on, and it says the ONE thing that makes it different from the incumbent's own
+           renewal one arm down: the terms are the rung her ranking earns TODAY (his ruling 2), not
+           the paper that ran out. A letter that claimed «the same deal, another year» would be lying
+           about the only number a parent could check.
+           ⚠ IT IS ITS OWN ARM AND NOT `renewal`, because those two sentences are not both true of
+           one letter. ⚠ AND IT IS STILL SIGNED BY HAND – nothing below this line changes; the Sign
+           and Refuse controls, the deadline and the exclusivity clause are the ordinary letter's.
+           DRAFT copy. -->
+      <p v-if="terms.apparelBond" class="offer-body">
+        Her face is already on our posters, and we would rather she wore our kit while it is there.
+        Our kit paper with her has run out, so this is us renewing it – on the terms her ranking
+        earns today.
+      </p>
       <!-- ⚠ ONE LINE IS THE WHOLE DIFFERENCE, AND IT HAS TO BE THERE. A renewal (10.08) carries the
            SAME terms as the contract that is ending – `raiseKitRenewal` copies them verbatim, because
            that is what renewing is – so without this arm the incumbent's letter would introduce
            itself to a family it has kitted out all season, in the voice of a stranger. Everything
            below is unchanged and stays true of a second year: the coverage, the freshness, the
            events she owes, the exclusivity and the term. -->
-      <p v-if="terms.renewal" class="offer-body">
+      <p v-else-if="terms.renewal" class="offer-body">
         She has been in our kit all season and we have enjoyed every week of it. We would like to keep
         her in it – the same deal, another year.
       </p>

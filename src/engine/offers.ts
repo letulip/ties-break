@@ -2348,7 +2348,32 @@ export function adCampaignCutShort(offer: Offer): boolean {
  *
  *  ⚠ THE ID IS THE WINDOW'S, NOT THE WEEK'S (`kit-bond-<opened>`) – the same identity rule every
  *  letter in this file keeps since fix/sponsor-catchup, so a career that reaches the window late
- *  finds one guaranteed letter waiting rather than one per week it was away. */
+ *  finds one guaranteed letter waiting rather than one per week it was away.
+ *
+ *  ⭐⭐⭐ WAVE G2, HIS RULING OF 08.09 – IT IS A RENEWAL NOTICE AND IT SAYS SO: «мы можем прислать не
+ *  просто новое письмо Meridian Sport с целью "подпиши, если пропустишь, то без формы", а уведомление
+ *  о продлении». The house that is already paying to put her face on a poster is CONTINUING, not
+ *  competing, and the paper has to be in that voice – `terms.apparelBond` carries it to
+ *  `OfferLetter` / `InboxSheet` / the winter's feed row. ⚠ NOTHING ELSE MOVES: it is still an `open`
+ *  offer with a deadline, still refusable, still beaten by a rival letter he signs instead, because
+ *  an auto-renewal would delete the decision the whole mechanism exists to create («а игрок уже сам
+ *  будет решать с кем подписывать»).
+ *
+ *  ⭐⭐⭐ ...AND A MISSED ONE RE-ARMS ONCE PER OFF-SEASON (his option A, 08.09). ⚠ THAT IS THE ID
+ *  ABOVE AND NOT A SECOND MECHANISM – no flag, no counter, no new state: `kit-bond-<opened>` is the
+ *  WINDOW's identity, so a notice that lapses undecided is simply not in next winter's inbox and the
+ *  same house writes again, for as long as its campaign runs and her kit is not promised. Measured
+ *  before it was pinned rather than assumed: an eight-year campaign walked week by week produced
+ *  `kit-bond-671`, `-723`, `-775`, `-827`, `-879` – exactly one per off-season, all from the same
+ *  house, each lapsing on its own deadline. `tests/r39-apparel-bond.test.ts` §11 is the guard.
+ *
+ *  ⚠ ONCE PER OFF-SEASON IS THE CEILING, AND IT IS WEIGHED AGAINST THIS FILE'S OWN DOCTRINE.
+ *  `offerChanceFor` says nobody is guaranteed a letter, and `expireOffers` says a letter left too
+ *  long «is gone whether or not the player ever opened it – which is the whole of what makes waiting
+ *  a real gamble rather than a free option». This is the game's FIRST guaranteed letter, so the
+ *  cadence is what keeps that true: a missed notice costs a SEASON of kit allowance and travel share,
+ *  which is real money at every rung, and never the career. A standing always-open letter would have
+ *  overturned the doctrine; one per winter does not. */
 export function apparelBondLetter(
   offers: Offer[],
   week: number,
@@ -2366,6 +2391,28 @@ export function apparelBondLetter(
   if (already) return already
   const campaign = runningClothingCampaign(offers, week)
   if (!campaign) return null
+  // ⭐⭐⭐ WAVE G2 – AND THE WINTER THE INCUMBENT'S OWN RENEWAL OWNS IS NOT THIS LETTER'S. The house
+  // whose contract is finishing WITH this season already writes to her – `raiseKitRenewal`, on the
+  // window's closing week, on the same paper – so when that house is X, the winter is spoken for and
+  // the guarantee stands down.
+  //
+  // ⚠ IT IS NOT BELT AND BRACES; IT WAS MEASURED FAILING. `raiseKitOffers` seeds `alreadyWritten`
+  // with the incumbent's TIER, which dedupes the two letters only while the tier she clears today is
+  // the tier she signed at. Probed on a career whose kit was `tour` and whose standing now clears
+  // `icon`: the inbox held `kit-bond-671` (icon terms, Baseline Athletic's name) AND
+  // `kit-renew-kit-old-471` (tour terms, Baseline Athletic's name) – one house, one winter, two
+  // letters. That is round 28 #17's own defect wearing a new hat («one brand in two voices»), and
+  // this is the same fix asked one question further along: identity by BRAND, not by rung.
+  //
+  // ⚠ THE BRAND IS THE TEST AND THE RUNG IS NOT. A DIFFERENT house's deal ending the same winter is
+  // two houses writing, which is the ordinary competitive post and is exactly what the inbox is for.
+  //
+  // ⚠ WHAT IT COSTS, STATED: a career that has already signed somebody else this window turns
+  // `raiseKitRenewal` away (`seasonSpokenFor`), so in that corner the incumbent writes nothing and
+  // this letter stands down too. She is signed for next season either way – which is the state the
+  // guarantee exists to prevent – and the guarantee re-arms the next off-season (see the header).
+  const ending = dealEndingWithSeason(offers, week)
+  if (ending && (ending.terms as KitOfferTerms).brand === (campaign.terms as AdOfferTerms).brand) return null
   const tier = rungFor(standing)
   if (!tier || alreadyWritten.has(tier)) return null
   if (rungTurnedAway(offers, week, tier)) return null
@@ -2376,10 +2423,11 @@ export function apparelBondLetter(
     kind: 'kit',
     week,
     deadlineWeek: kitOfferDeadline(week),
-    // ⚠ ONE FIELD OVERRIDDEN AND NOTHING ELSE. The allowance, the covers, the freshness, the events
+    // ⚠ TWO FIELDS OVERRIDDEN AND NOTHING ELSE. The allowance, the covers, the freshness, the events
     // she owes, the travel share and the term are the ladder's own for her rank today; only the name
-    // on the paper is X's, because X is who is writing.
-    terms: { ...base, brand: (campaign.terms as AdOfferTerms).brand },
+    // on the paper is X's, because X is who is writing – and `apparelBond` is the VOICE it writes in
+    // (wave G2). Neither is a number: the deal this letter offers is the ladder's own, unchanged.
+    terms: { ...base, brand: (campaign.terms as AdOfferTerms).brand, apparelBond: true },
     state: 'open',
   }
   offers.push(offer)
