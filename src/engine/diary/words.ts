@@ -70,6 +70,35 @@ export const collegeVoice = (f: HasLifeStage): boolean => f.lifeStage === 'colle
  *  state») this is the one function that has to change, and no line has to be re-read. */
 export const underOneRoof = (f: HasLifeStage): boolean => familyHomeVoice(f)
 
+/** ⭐ ROUND 39 #1 – THE OTHER SIDE OF THE SAME DOOR: she lives elsewhere (a dorm or her own place)
+ *  and the parent HEARS about the week – calls, voice notes, the family chat – rather than watching
+ *  it. It exists because the phone-register lines were licensed `independentVoice` alone, which left
+ *  a COLLEGE career with no birthday caption, no away voice for a bad loss and no one to say the
+ *  money line to – a dorm kid sends the same voice notes a tenant does. Lines about HER OWN flat
+ *  stay `independentVoice`; lines about the distance itself take this. */
+export const awayVoice = (f: HasLifeStage): boolean => f.lifeStage === 'college' || f.lifeStage === 'independent'
+
+// ---- ROUND 39 #1: the age gate inside adulthood ----
+//
+// ⚠⚠ `independent` IS FOURTEEN YEARS WIDE, AND ONE LINE PROVED IT ON THE OWNER'S OWN SAVE: «A spare
+// key on her own ring. We are still getting used to that.» – written for the season she moves out,
+// printed at 35 («В 35 лет звучит уже довольно странно», 08.09). A stage predicate cannot catch
+// this: 24 and 35 are the same stage. So the two predicates below split adulthood on `ageYears`,
+// which `DiaryFacts` has carried since the viewpoint slice for exactly this kind of question.
+//
+// ⚠ 25 IS A REGISTER BOUNDARY, NOT A BALANCE DIAL. Independence begins at 22 (`diaryLifeStageFor`),
+// so "freshly" covers the first three seasons of her own place – the years «still getting used to
+// that» is a sentence a parent would say. It gates COPY selection only: no mechanic, no draw, no
+// save field reads it.
+interface HasAdultAge extends HasLifeStage {
+  ageYears: number
+}
+export const SETTLED_ADULT_AGE = 25
+/** Her own place is still news – the moving-out lines live here and nowhere else. */
+export const freshlyIndependent = (f: HasAdultAge): boolean => independentVoice(f) && f.ageYears < SETTLED_ADULT_AGE
+/** ...and the years after the novelty: the flat is just where she lives now. */
+export const settledAdult = (f: HasAdultAge): boolean => independentVoice(f) && f.ageYears >= SETTLED_ADULT_AGE
+
 // ---- justHurt + quiet ----
 
 /** THE WEEK IT HAPPENED (R14-1). Nothing has been ticked off the layoff yet – `rollInjury` sets

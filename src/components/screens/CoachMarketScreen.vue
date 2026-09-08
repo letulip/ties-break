@@ -377,7 +377,18 @@ async function doSendToJuniors() {
 // contain another dash keeps the rest of itself. A note with no separator at all (or an empty one)
 // falls through to `band = ''` and the whole string as the body, which is the shipped rendering before
 // this change: the split can shorten the line's emphasis, never its content.
-const roomNote = computed(() => game.snapshot?.coachRoomNote ?? '')
+// ⭐⭐ ROUND 39 #2a – THE DECLINE SENTENCE LIVES ON THE CURRENT COACH'S CARD IN THE LIST NOW (owner,
+// 08.09: «вот это как раз можно на карточку тренера в списке тренеров перенести, много текста»).
+// `coachRoomNote` still falls through to the decline read past her peak (round 38 #7b, so the
+// headroom hint can never call an ageing career «Huge potential») – but printing the SAME sentence
+// twice on one screen is the kind of thing rounds are made of, so while a hired coach's card carries
+// it, the hint above the list stands down. Self-coached careers keep the fallthrough: there is no
+// card to carry the sentence, and the read must not vanish with the coach.
+const declineNote = computed(() => game.snapshot?.coachDeclineNote ?? '')
+const roomNote = computed(() => {
+  if (declineNote.value && current.value) return ''
+  return game.snapshot?.coachRoomNote ?? ''
+})
 // ⚠ THE SPLIT MOVED TO THE ENGINE (`coachRoomBand`, 20.08) because Home's coach card needs the same
 // clause, and two screens each running their own `indexOf` on one string is how the two drift apart.
 //
@@ -1041,6 +1052,12 @@ function scrollToTier(tier: CoachTier): void {
                `plaqueLine` block in the script for why it lives here rather than on Home, and for
                the register both sentences are held to. -->
           <span v-if="r.current" class="cm-plaque">{{ plaqueLine }}</span>
+          <!-- ROUND 39 #2a - THE DECLINE READ, off Home and onto his card (the owner: too much text
+               for Home, and this is the card he named). The engine's whole sentence, unedited - rank
+               move and remaining seasons - and only ever on the coach she actually has: it is HIS
+               read on her, not a fact about anybody for hire. Empty until her own decline starts,
+               which is the same data-level guarantee Home's short plate inherits. -->
+          <span v-if="r.current && declineNote" class="cm-decline">{{ declineNote }}</span>
           <!-- WHAT HE DOES ABOUT HER BODY (load slice). The card used to make exactly one claim - the
                development uplift - so the two differences that wave introduced (how good his medical
                team is, and how much of the deciding he takes off you) were spent money with nothing on

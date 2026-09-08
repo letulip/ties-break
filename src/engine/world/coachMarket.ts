@@ -21,7 +21,8 @@ import { ageCurveOf, ageFactor, declineFactor, physicalMean, reachableHeadroomSh
 import type { AgeCurveBounds } from '../development'
 // ⚠ `ending.ts` IMPORTS ONLY `./kidLife` AND THE PROTOCOL'S TYPES, so this runs one way exactly as
 // `./masseur` and `./business` above do. `world/college.ts` reads the same constants the same way.
-import { ENDINGS } from '../ending'
+// ⚠ ROUND 39 #13a – `ENDINGS` left this file with the 0.55 stop: the coach's sentence now ends at
+// `COACH_BODY_END_SHARE` (see the constant), and nothing else here reads the endings config.
 import { LADDER_LABEL, LADDER_TRACKS } from '../../shared/protocol'
 import type { CoachEdgePlacement, CoachMarketRow, CoachTier, HandoverBaseBand, HouseholdWeekly, KitOfferTerms, PlayerProfile } from '../../shared/protocol'
 import { managerCommissionCents, parentIncomeForWeekCents } from '../economy'
@@ -1176,6 +1177,15 @@ export function coachRoomNote(world: WorldState): string {
 // makes the winter question final, and on his save that is 6.45 years, not two. So the sentence says
 // six. A prose figure that cannot move with its constant is the R2-02 hazard, and a prose figure
 // that contradicts the constant is worse.
+//
+// ⭐⭐ ROUND 39 #13a AMENDS THE PARAGRAPH ABOVE – the 0.55 stop was the wrong END for this sentence,
+// and the owner met the proof at 29.0: «Ей почти 29, а тренер говорит, что она протянет ещё 13
+// сезонов, при этом она уже начинает постепенно сдавать». Both sides were right: 13 IS the walk to
+// 0.55 (age ~41-42, the winter the QUESTION runs out – Federer territory, reachable and earned), and
+// 13 is absurd as a coach's read on a body that is already sliding. The sentence now walks to
+// `COACH_BODY_END_SHARE` below – the model's own end of a professional body – and his «пара лет»
+// register lands on its own: measured on the #7b fixture's shape (35.3, 80.4%), the sentence says
+// two. The full before/after table is in `tools/r39-body-seasons.ts`'s output, in the round ledger.
 
 /** ⭐ THE LABEL, and it is deliberately NOT one of `ROOM_BANDS`'. Those four are a headroom ladder
  *  and this is not a rung of it; reusing «Close to her ceiling» here would say the one thing that is
@@ -1184,19 +1194,42 @@ export function coachRoomNote(world: WorldState): string {
  *  the round-34 complaint on a fourteen-year-old's screen. */
 const DECLINE_LABEL = 'Past her peak'
 
+/** ⭐⭐ ROUND 39 #13a – WHERE A PROFESSIONAL BODY ENDS, for the coach's sentence and nothing else.
+ *
+ *  ⚠ IT IS 0.70 AND NOT `ENDINGS.lastOfferPeakShare`, AND THE DIFFERENCE IS TWO DIFFERENT ENDS.
+ *  0.55 is where the retirement QUESTION runs out (`ending.ts`, the owner's own 26.08 dial: age
+ *  ~41.2, «Federer's age, reachable only on a body kept well») – the borrowed-time tail a career may
+ *  choose to play. 0.70 is the model's own end of a professional body: it is the share the DELETED
+ *  hard finish mapped to, and `tests/ending.test.ts` still pins the equivalence – the off-season her
+ *  body first reads 70% is the off-season she is first 38, which is exactly the claim
+ *  `stopAskingAgeYears: 38` was deleted and replaced on. A coach saying «her body has about N more
+ *  seasons in it» is talking about seasons of PROFESSIONAL TENNIS, not about the last winter anybody
+ *  asks – walked to 0.55 the sentence told a barely-declined 29-year-old «about 13 more seasons»
+ *  (age 42) in the same breath as «down 1 place on the year», which is the contradiction the owner
+ *  reported. Measured across the decline (tools/r39-body-seasons.ts, table in the round-39 ledger):
+ *  29.0/99.7% says 9 instead of 13, and the #7b fixture's shape (35.3, 80.4%) says 2 – his own
+ *  «ей осталось играть пара лет» register from 07.09.
+ *
+ *  ⚠ A DIAL, LIKE THE 0.55 IT SITS BESIDE – if the pinned 70%⇔38 equivalence ever moves, this is
+ *  the constant that has to move with it, and the tripwire in ending.test.ts is what makes that a
+ *  loud event instead of a silent drift. */
+export const COACH_BODY_END_SHARE = 0.7
+
 /** HOW MANY MORE SEASONS THE BODY HAS, walked forward off her CURRENT share at her OWN curve.
  *
- *  ⚠ THE STOP IS `ENDINGS.lastOfferPeakShare` BECAUSE THAT IS WHERE THE GAME ITSELF STOPS ASKING –
- *  `ending.ts` marks the off-season offer `final` at `physicalShare <= ENDINGS.lastOfferPeakShare`.
- *  So this is not a mood about ageing, it is the engine's own rule read forward, and it moves the
- *  day the owner moves the dial.
+ *  ⚠ THE STOP WAS `ENDINGS.lastOfferPeakShare` FROM ROUND 38 #6d TO ROUND 39 #13a and is
+ *  `COACH_BODY_END_SHARE` now – see that constant for the two ends and the owner's report that
+ *  forced the split. Still not a mood about ageing: it is the engine's own (pinned) equivalence
+ *  read forward, and it moves the day the owner moves the dial.
  *
  *  ⚠ A LOOP AND NOT A FORMULA, for `ageAtPhysicalShare`'s own reason one file over: the loss
  *  compounds against a factor that rises every WEEK, and a once-a-year evaluation is 2-3 points out.
  *  ⚠ AND IT WALKS HER MEASURED SHARE RATHER THAN HER AGE, so a save whose peak was frozen anywhere
  *  but on the shipped curve still reads its own body. The cap is a guard against a `declineFactor`
  *  of 0 (impossible past `declineStart`, which is this function's only caller's gate) and never a
- *  balance number: forty seasons is longer than any career the model can produce.
+ *  balance number: forty seasons is longer than any career the model can produce. A body already at
+ *  or under the stop walks zero weeks and the callers' `max(1, …)` says «about 1 more season» for
+ *  the whole 0.70-0.55 tail, which is the honest floor: the question is still being asked there.
  *
  *  Returns null when the save carries no peak to measure against. */
 function seasonsOfBodyLeft(world: WorldState, bounds: AgeCurveBounds, age: number): number | null {
@@ -1204,7 +1237,7 @@ function seasonsOfBodyLeft(world: WorldState, bounds: AgeCurveBounds, age: numbe
   if (!peak || peak <= 0) return null
   let share = physicalMean(world.skills) / peak
   if (!Number.isFinite(share)) return null
-  const stop = ENDINGS.lastOfferPeakShare
+  const stop = COACH_BODY_END_SHARE
   let walked = age
   let weeks = 0
   while (share > stop && weeks < 40 * WEEKS_PER_YEAR) {
@@ -1265,21 +1298,61 @@ function seasonRankRead(world: WorldState): { yearMove: number | null; belowBest
  *  no rung of the market adds a point to her) rather than a consolation.
  *
  *  Pure, zero draws, derived at snapshot time – exactly like `coachRoomNote` above. */
-export function coachDeclineNote(world: WorldState): string {
+/** ⭐ ROUND 39 #2a/#2b – ONE DERIVATION UNDER TWO SENTENCES. The long note (the coach card in the
+ *  market list) and the short plate (Home) read the same three numbers from the same gate, so the
+ *  two surfaces can never disagree about whether she is past her peak or by how much – the "two
+ *  sides asking different functions about one question" defect, prevented structurally. Null while
+ *  she is still growing, which is the '' guarantee both formatters inherit. */
+function declineRead(world: WorldState): { seasons: number; yearMove: number | null; belowBest: number | null } | null {
   const bounds = ageCurveOf(world.ageCurve, world.careerTotals?.weeksLostToInjury ?? 0)
   const age = kidAgeExact(world.week, world.profile.birthMonth, world.profile.birthDay)
-  if (age < bounds.declineStart) return ''
+  if (age < bounds.declineStart) return null
   const years = seasonsOfBodyLeft(world, bounds, age)
-  if (years === null) return ''
-  const seasons = Math.max(1, Math.round(years))
+  if (years === null) return null
+  return { seasons: Math.max(1, Math.round(years)), ...seasonRankRead(world) }
+}
+
+/** ⚠ ROUND 39 #13c – «down 1 places» had no singular. The seasons clause next to it always had one
+ *  (`season/seasons`), so the defect was one word wide and lived in both rank arms. */
+const places = (n: number): string => `${n} ${n === 1 ? 'place' : 'places'}`
+
+export function coachDeclineNote(world: WorldState): string {
+  const read = declineRead(world)
+  if (read === null) return ''
+  const { seasons, yearMove, belowBest } = read
   const left = `her body has about ${seasons} more ${seasons === 1 ? 'season' : 'seasons'} in it`
-  const { yearMove, belowBest } = seasonRankRead(world)
   const note =
     yearMove !== null && yearMove > 0
-      ? `down ${yearMove} places on the year, and ${left}.`
+      ? `down ${places(yearMove)} on the year, and ${left}.`
       : belowBest !== null && belowBest > 0
-        ? `${belowBest} places below her best season, and ${left}.`
+        ? `${places(belowBest)} below her best season, and ${left}.`
         : `${left}, and no coach buys that back.`
+  return `${DECLINE_LABEL}${ROOM_NOTE_SEP}${note}`
+}
+
+/** ⭐⭐ ROUND 39 #2b – THE SHORT PLATE FOR HOME: the same state, the sharpest single number, in the
+ *  old ceiling plate's shape (owner: «на home хотелось бы увидеть что-то короткое, емкое и яркое (в
+ *  плане цвета), как было до этого про потолок»). The LONG sentence moved to the coach card in the
+ *  market list (#2a: «много текста» for Home), and this is what Home keeps.
+ *
+ *  ⚠ SAME GATE, SAME DERIVATION, SAME FALLBACK ORDER as `coachDeclineNote` – `declineRead` is the
+ *  one source, so the plate and the card always describe the same week. '' while she is growing:
+ *  round 34 #2a's guarantee (no verdict on a child's Home) holds for this field exactly as it holds
+ *  for the long one, in the data rather than in a template condition.
+ *
+ *  ⚠ THE WORDING IS A ROUND-39 DRAFT flagged for the owner's review in the round ledger: each arm
+ *  is the long sentence's own clause compressed, no new vocabulary. `ROOM_NOTE_SEP` keeps the label
+ *  splittable by the same one splitter every other plate uses. */
+export function coachDeclineShort(world: WorldState): string {
+  const read = declineRead(world)
+  if (read === null) return ''
+  const { seasons, yearMove, belowBest } = read
+  const note =
+    yearMove !== null && yearMove > 0
+      ? `down ${places(yearMove)} on the year`
+      : belowBest !== null && belowBest > 0
+        ? `${places(belowBest)} below her best`
+        : `about ${seasons} ${seasons === 1 ? 'season' : 'seasons'} left`
   return `${DECLINE_LABEL}${ROOM_NOTE_SEP}${note}`
 }
 

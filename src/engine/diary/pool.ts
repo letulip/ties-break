@@ -13,7 +13,7 @@
 // ⚠ RNG: `diaryLine` picks on a PURPOSE-SCOPED sub-stream derived from the passed seed, never MAIN.
 import { rngFromSeed } from '../rng'
 import type { DiaryFacts } from '../../shared/protocol'
-import { short, plural, justHurt, quiet, ageWord, capitalise, familyHomeVoice, independentVoice } from './words'
+import { short, plural, justHurt, quiet, ageWord, capitalise, familyHomeVoice, independentVoice, underOneRoof, awayVoice, freshlyIndependent, settledAdult } from './words'
 
 // --- the phrase pool ------------------------------------------------------------------------
 
@@ -112,25 +112,30 @@ export const DIARY_POOL: readonly DiaryPhrase[] = [
     claims: { affect: 'neutral', birthday: true },
     license: (f) => f.birthdayAge !== null && familyHomeVoice(f),
   },
+  // ⚠ ROUND 39 #1: `awayVoice`, NOT `independentVoice` – a college birthday licensed NO photo line
+  // at all (the family arms need her home, these two needed her past 22), so the one week the fact
+  // is on her face went silent for four years. Both sentences are about distance, not tenancy.
   {
     surface: 'photo',
     text: (f) => `${capitalise(ageWord(f.birthdayAge))} today. We found a gap in her calendar.`,
     claims: { affect: 'neutral', birthday: true },
-    license: (f) => f.birthdayAge !== null && independentVoice(f),
+    license: (f) => f.birthdayAge !== null && awayVoice(f),
   },
   {
     surface: 'photo',
     text: (f) => `${capitalise(ageWord(f.birthdayAge))}. Cake when she could make it.`,
     claims: { affect: 'neutral', birthday: true },
-    license: (f) => f.birthdayAge !== null && independentVoice(f),
+    license: (f) => f.birthdayAge !== null && awayVoice(f),
   },
   // --- photo card (D2): fresh WIN --------------------------------------------------------------
   { surface: 'photo', text: "Can't stop smiling.", claims: { affect: 'positive', won: true }, license: (f) => f.won },
+  // ⚠ ROUND 39 #1: `underOneRoof` – "the car the whole way home" is the family car with the parent
+  // in it, a sight and not a story she would retell. The away stages keep the voice note below.
   {
     surface: 'photo',
     text: 'She hummed in the car the whole way home.',
     claims: { affect: 'positive', won: true },
-    license: (f) => f.won,
+    license: (f) => f.won && underOneRoof(f),
   },
   {
     surface: 'photo',
@@ -144,23 +149,27 @@ export const DIARY_POOL: readonly DiaryPhrase[] = [
     claims: { affect: 'positive', won: true, title: true },
     license: (f) => f.won && f.titleThisWeek && familyHomeVoice(f),
   },
+  // ⚠ ROUND 39 #1: `underOneRoof` – somebody in the house saw her asleep. The away title week has
+  // the trophy-photo line below.
   {
     surface: 'photo',
     text: 'She fell asleep holding the draw sheet.',
     claims: { affect: 'positive', won: true, title: true },
-    license: (f) => f.won && f.titleThisWeek,
+    license: (f) => f.won && f.titleThisWeek && underOneRoof(f),
   },
+  // ⚠ ROUND 39 #1: the two phone-register lines widen to `awayVoice` – a dorm kid sends voice notes
+  // and match photos exactly as a tenant does, and college had no won-week voice of its own.
   {
     surface: 'photo',
     text: 'A voice note after the last point. Mostly laughing.',
     claims: { affect: 'positive', won: true },
-    license: (f) => f.won && independentVoice(f),
+    license: (f) => f.won && awayVoice(f),
   },
   {
     surface: 'photo',
     text: 'The trophy appeared in a photo before she did.',
     claims: { affect: 'positive', won: true, title: true },
-    license: (f) => f.won && f.titleThisWeek && independentVoice(f),
+    license: (f) => f.won && f.titleThisWeek && awayVoice(f),
   },
   // --- photo card: runner-up (serious by R8-6a) ------------------------------------------------
   // R13-4: a final lost is a GOOD result and deserves its own words – the pool grew, and while it
@@ -190,11 +199,13 @@ export const DIARY_POOL: readonly DiaryPhrase[] = [
     claims: { affect: 'neutral', lost: true, runnerUp: true },
     license: (f) => f.resultFresh && !f.won && f.lostFinal,
   },
+  // ⚠ ROUND 39 #1: `underOneRoof` – the shared table is the claim. The four lines above carry the
+  // runner-up week for every stage.
   {
     surface: 'photo',
     text: 'A finalist. We let that word sit at dinner.',
     claims: { affect: 'neutral', lost: true, runnerUp: true },
-    license: (f) => f.resultFresh && !f.won && f.lostFinal,
+    license: (f) => f.resultFresh && !f.won && f.lostFinal && underOneRoof(f),
   },
   // --- photo card: the owner's "good loss" – lost, and the table moved up anyway ---------------
   // R13-2: licensed by (lost AND rankClimbed AND runPointsThisWeek > 0) – she must have EARNED the
@@ -222,18 +233,29 @@ export const DIARY_POOL: readonly DiaryPhrase[] = [
     license: (f) => f.resultFresh && !f.won && !f.lostFinal && f.rankClimbed && f.runPointsThisWeek > 0 && f.emotion === 'serious',
   },
   // --- photo card: a softened loss (local exit / a shielded champion) --------------------------
+  // ⚠ ROUND 39 #1: `underOneRoof` on the bus – the junior road's transport, and "she was fine by
+  // evening" is an evening spent in the same rooms. The away stages get the sibling below: the same
+  // claims, the same softened register, heard down a phone instead of across a kitchen.
   {
     surface: 'photo',
     text: 'An early bus home. She was fine by evening.',
     claims: { affect: 'neutral', lost: true },
-    license: (f) => f.resultFresh && !f.won && !f.lostFinal && f.emotion === 'serious',
+    license: (f) => f.resultFresh && !f.won && !f.lostFinal && f.emotion === 'serious' && underOneRoof(f),
+  },
+  {
+    surface: 'photo',
+    text: 'An early exit. She was fine on the evening call.',
+    claims: { affect: 'neutral', lost: true },
+    license: (f) => f.resultFresh && !f.won && !f.lostFinal && f.emotion === 'serious' && awayVoice(f),
   },
   // --- photo card: a real loss (sad) -----------------------------------------------------------
+  // ⚠ ROUND 39 #1: `underOneRoof` – her silence on the way home is the parent's own experience of
+  // the seat beside her, not something she reports. The two phone lines below carry the away weeks.
   {
     surface: 'photo',
     text: "She didn't say much on the way home.",
     claims: { affect: 'negative', lost: true },
-    license: (f) => f.resultFresh && f.emotion === 'sad',
+    license: (f) => f.resultFresh && f.emotion === 'sad' && underOneRoof(f),
   },
   {
     surface: 'photo',
@@ -257,13 +279,15 @@ export const DIARY_POOL: readonly DiaryPhrase[] = [
     surface: 'photo',
     text: 'One short message: home safe. Nothing about the match.',
     claims: { affect: 'negative', lost: true },
-    license: (f) => f.resultFresh && f.emotion === 'sad' && independentVoice(f),
+    // ROUND 39 #1: awayVoice - the short message is the distance itself, dorm and flat alike.
+    license: (f) => f.resultFresh && f.emotion === 'sad' && awayVoice(f),
   },
   {
     surface: 'photo',
     text: 'She called from the car park and talked about the weather.',
     claims: { affect: 'negative', lost: true },
-    license: (f) => f.resultFresh && f.emotion === 'sad' && independentVoice(f),
+    // ROUND 39 #1: awayVoice - same call, either address.
+    license: (f) => f.resultFresh && f.emotion === 'sad' && awayVoice(f),
   },
   // --- photo card: the crossing (angry) --------------------------------------------------------
   {
@@ -276,13 +300,16 @@ export const DIARY_POOL: readonly DiaryPhrase[] = [
     surface: 'photo',
     text: 'She slammed the car door. We let it go.',
     claims: { affect: 'negative', lost: true, angry: true },
-    license: (f) => f.emotion === 'angry',
+    // ROUND 39 #1: underOneRoof - a slam is heard from the passenger seat; the away stages keep
+    // the nineteen-second call below.
+    license: (f) => f.emotion === 'angry' && underOneRoof(f),
   },
   {
     surface: 'photo',
     text: 'The call lasted nineteen seconds. We let it be enough.',
     claims: { affect: 'negative', lost: true, angry: true },
-    license: (f) => f.emotion === 'angry' && independentVoice(f),
+    // ROUND 39 #1: awayVoice - the call is the whole scene, dorm and flat alike.
+    license: (f) => f.emotion === 'angry' && awayVoice(f),
   },
   // --- photo card: THE MOMENT she got hurt ------------------------------------------------------
   // R14-1: these three lines all read `emotion === 'injury'` when that was one meaning wearing two
@@ -301,7 +328,8 @@ export const DIARY_POOL: readonly DiaryPhrase[] = [
     surface: 'photo',
     text: 'The first photo was of the ice pack, not the injury.',
     claims: { affect: 'negative', injured: true, justHurt: true },
-    license: (f) => justHurt(f) && independentVoice(f),
+    // ROUND 39 #1: awayVoice - the photo travels the same distance from a dorm.
+    license: (f) => justHurt(f) && awayVoice(f),
   },
   // --- photo card: the LAYOFF (idle rehab) ------------------------------------------------------
   // ...and these two are about the weeks that follow. Watching from the bench and counting down are
@@ -336,13 +364,15 @@ export const DIARY_POOL: readonly DiaryPhrase[] = [
     surface: 'photo',
     text: 'The racquet stayed by the door all weekend.',
     claims: { affect: 'negative', tired: true },
-    license: (f) => f.emotion === 'tired',
+    // ROUND 39 #1: underOneRoof - whose door, if not the one the parent walks past all weekend?
+    license: (f) => f.emotion === 'tired' && underOneRoof(f),
   },
   {
     surface: 'photo',
     text: 'Her replies arrived the next morning.',
     claims: { affect: 'negative', tired: true },
-    license: (f) => f.emotion === 'tired' && independentVoice(f),
+    // ROUND 39 #1: awayVoice - slow replies read the same from a dorm.
+    license: (f) => f.emotion === 'tired' && awayVoice(f),
   },
   // --- photo card: composed but low (idle serious, 40-59) --------------------------------------
   {
@@ -361,7 +391,8 @@ export const DIARY_POOL: readonly DiaryPhrase[] = [
     surface: 'photo',
     text: 'She called, then changed the subject before we could ask.',
     claims: { affect: 'neutral', tired: true },
-    license: (f) => !f.resultFresh && f.emotion === 'serious' && independentVoice(f),
+    // ROUND 39 #1: awayVoice - the subject changes at the same speed from a dorm.
+    license: (f) => !f.resultFresh && f.emotion === 'serious' && awayVoice(f),
   },
   // --- photo card: the week itself (idle norm, something domestic happened) --------------------
   {
@@ -446,7 +477,8 @@ export const DIARY_POOL: readonly DiaryPhrase[] = [
     surface: 'photo',
     text: 'We talk about money after the call ends.',
     claims: { affect: 'negative', fundsTight: true },
-    license: (f) => independentVoice(f) && f.fundsPressure === 'tight' && !f.resultFresh && f.emotion !== 'happy',
+    // ROUND 39 #1: awayVoice - tight weeks do not pause for a scholarship, and the call is the scene.
+    license: (f) => awayVoice(f) && f.fundsPressure === 'tight' && !f.resultFresh && f.emotion !== 'happy',
   },
   // --- photo card: an ordinary week (idle norm) – lines AND silences ---------------------------
   // R13-10 (owner, first Diary-1 playtest: «там же тоже жизнь продолжается»): the ordinary-week
@@ -557,11 +589,21 @@ export const DIARY_POOL: readonly DiaryPhrase[] = [
     claims: { affect: 'neutral', quietWeek: true },
     license: (f) => quiet(f) && f.emotion === 'norm' && independentVoice(f),
   },
+  // ⚠⚠ ROUND 39 #1 – THE LINE THE OWNER CAUGHT AT 35: «В 35 лет звучит уже довольно странно». It is
+  // a moving-out line and it now says so in its licence: `freshlyIndependent` is her first seasons
+  // of her own place (22-24), where "still getting used to that" is a true sentence. The settled
+  // years get the Sunday-call line below instead – the same quiet register, thirteen years on.
   {
     surface: 'photo',
     text: 'A spare key on her own ring. We are still getting used to that.',
     claims: { affect: 'neutral', quietWeek: true },
-    license: (f) => quiet(f) && f.emotion === 'norm' && independentVoice(f),
+    license: (f) => quiet(f) && f.emotion === 'norm' && freshlyIndependent(f),
+  },
+  {
+    surface: 'photo',
+    text: 'The Sunday call ran long. Nobody minded.',
+    claims: { affect: 'neutral', quietWeek: true },
+    license: (f) => quiet(f) && f.emotion === 'norm' && settledAdult(f),
   },
   {
     surface: 'photo',

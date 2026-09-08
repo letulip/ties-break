@@ -5087,6 +5087,17 @@ tr.kid-row td {
   line-height: 1.35;
   color: var(--muted);
 }
+/* ROUND 39 #2a - THE DECLINE READ ON THE CURRENT COACH'S CARD, moved off Home on the owner's ask.
+   `.cm-plaque`'s exact treatment and for its exact reasons: a fact about THIS person's read on her,
+   one step of weight over the rung prose, and deliberately off the accent - «down 57 places on the
+   year» set in lime would read as a fanfare. Wraps freely; 375px is where it has to survive. */
+.cm-decline {
+  font-size: 10.5px;
+  font-weight: 500;
+  line-height: 1.35;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-soft);
+}
 /* WHAT HE DOES ABOUT HER BODY (load slice). Below the uplift and quieter than it: the uplift is the
    card's headline claim and this is the second thing the money buys, so it must not compete. Wraps
    freely - these are sentences, and a 375px card is where they have to survive. */

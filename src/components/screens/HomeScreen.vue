@@ -507,8 +507,16 @@ const coachQuote = computed(() =>
   game.snapshot ? COACH_QUOTES[game.snapshot.profile.playStyle][Math.floor(week.value / 4) % 5] : '',
 )
 /** ROUND 38 #6d – the engine's decline read, printed and not derived. '' on a growing career, which
- *  is the guarantee described above; this screen adds no condition of its own to it. */
-const coachDecline = computed(() => game.snapshot?.coachDeclineNote ?? '')
+ *  is the guarantee described above; this screen adds no condition of its own to it.
+ *
+ *  ⭐⭐ ROUND 39 #2a/#2b – THE SHORT FIELD NOW, NOT THE LONG ONE. The owner, 08.09, on the shipped
+ *  sentence: «вот это как раз можно на карточку тренера в списке тренеров перенести, много текста.
+ *  А вот на home хотелось бы увидеть что-то короткое, емкое и яркое (в плане цвета), как было до
+ *  этого про потолок и прочее». So the long `coachDeclineNote` renders on the current coach's card
+ *  in the market LIST, and Home keeps `coachDeclineShort` – same engine derivation, same
+ *  empty-on-a-child guarantee, one clause and one number – dressed in the old ceiling plate's own
+ *  treatment (accent, a step smaller than the quote), which is the shape he named. */
+const coachDeclineShort = computed(() => game.snapshot?.coachDeclineShort ?? '')
 
 // ⚠⚠ ROUND 34 #2a – THE CEILING READ IS NO LONGER ON THIS SCREEN, and the `roomBand` computed that
 // fed it is gone with it. It lived here from round 24 to round 34: round 23 asked for «подсказки про
@@ -1503,8 +1511,12 @@ async function leaveCollege(): Promise<void> {
                  snapshot field from the one round 34 sent away: it is the empty string on every
                  career that has not passed its own decline age, so a child's screen has nothing to
                  render here and cannot acquire one by an edit to this template. His words are in the
-                 script block above, where Cyrillic is allowed. -->
-            <p v-if="coachDecline" class="coach-decline">{{ coachDecline }}</p>
+                 script block above, where Cyrillic is allowed.
+                 ⭐⭐ ROUND 39 #2b – THE SHORT PLATE, in the old ceiling plate's place and treatment.
+                 The LONG sentence left for the current coach's card in the market list (#2a); what
+                 stays is one clause and one number, and the same structural guarantee: the field is
+                 '' on every growing career, so a child's card still renders no verdict. -->
+            <p v-if="coachDeclineShort" class="coach-decline-short">{{ coachDeclineShort }}</p>
             <!-- The export's handwritten sign-off, Caveat in lime at 0.72. It is his NAME, so it
                  appears only when there is a him. -->
             <p v-if="coachSignature" class="coach-sign">{{ coachSignature }}</p>
@@ -2574,12 +2586,22 @@ button.note-card:active:not(:disabled) {
    was deleted with the line it dressed and is not being quietly revived under a new name.
    ⚠ NO HEIGHT AND NO CLAMP. `.note-card.card-short` declares a min-height, not a max, so the card
    grows by exactly the lines this paragraph needs and the signature keeps its own 6px above it. A
-   clamp here would hide the half of the sentence carrying the number. */
-.coach-decline {
+   clamp here would hide the half of the sentence carrying the number.
+
+   ⭐⭐ ROUND 39 #2b – THE PARAGRAPH ABOVE BECAME A PLATE. The long sentence moved to the current
+   coach's card in the market list («много текста» for Home), and what stays is the SHORT read in
+   the old ceiling plate's exact treatment – `.coach-room`'s own 11px / 600 / accent, round 24's
+   measured quiet-but-found register («Accent-toned because it is the one thing on this card the
+   player came looking for»). This is a REVIVAL of that treatment for a NEW line, not of the
+   round-34 selector: the class is its own name, and what it dresses is the decline state the owner
+   asked to keep on Home in exactly this shape («яркое (в плане цвета), как было до этого про
+   потолок»). */
+.coach-decline-short {
   margin: 6px 0 0;
-  font-size: 11.5px;
-  line-height: 1.4;
-  color: var(--ink-dim);
+  font-size: 11px;
+  line-height: 1.36;
+  font-weight: 600;
+  color: var(--accent);
   text-wrap: pretty;
 }
 
@@ -2734,9 +2756,10 @@ button.note-card:active:not(:disabled) {
   }
 
   /* One rung up with the line it follows, in the family it was already set in – the same rule #7
-     applied to the quote above it, and for the same reason. */
-  .coach-decline {
-    font-size: 13px;
+     applied to the quote above it, and for the same reason. Round 39 #2b: the long paragraph became
+     the short plate; the +1.5px step of this block is kept (11px base, as the old ceiling plate). */
+  .coach-decline-short {
+    font-size: 12.5px;
   }
 
   .coach-sign {
