@@ -1922,8 +1922,22 @@ export const ECONOMY = {
      *  she already made; the letter asks nothing back – which is also what lets it survive
      *  retirement without owing weeks she no longer has. */
     lifetime: {
-      /** the capstone's own bar, stated here so the letter's gate is findable beside its money */
-      seasonsInTop10: 4,
+      /** ⭐⭐ THREE, NOT THE CAPSTONE'S FOUR, AND THE NUMBER IS MEASURED (owner, 08.09: «тогда окей
+       *  и не вижу причин это не сделать»). His questions were «не будет ли это большим облегчением?
+       *  сколько реально игроков в % … какая ценность будет?», and `tools/r39-tenure-reach.ts`
+       *  answered them over the round-29 corpus shape – 9 presets x 2 policies x 6 seeds = 108
+       *  careers, 900 weeks:
+       *
+       *      >= 4 top-10 seasons AND a slam    11 of 108   10.2%
+       *      >= 3 top-10 seasons AND a slam    11 of 108   10.2%
+       *
+       *  ⚠ IDENTICAL - the two careers holding exactly three top-10 seasons hold ZERO slams, so the
+       *  SLAM is the binding gate and this number was never doing the work it looked like it was
+       *  doing. Dropping it is therefore not a loosening: it costs nothing measurable, and it is the
+       *  difference between his own best career (Ines: 3 seasons + a slam) earning the letter and
+       *  never learning the mechanic exists. ⚠ The capstone above stays at FOUR - it is tenure
+       *  without a title, and it is right for that to be the stricter bar. */
+      seasonsInTop10: 3,
       /** Slam titles on the ledger before the house writes – the legend line */
       slamTitles: 1,
       /** per contract year, for ever – banked at signature and on every anniversary */

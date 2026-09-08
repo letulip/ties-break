@@ -148,8 +148,12 @@ describe('round 39 #3 §3 – the lifetime letter: gate, paper, money, once, epi
     expect(post(noSlam, 'lifetime'), 'four top-10 seasons and no Slam is not a legend').toHaveLength(0)
 
     // ...and a Slam without the tenure is not one either: the gate REUSES capstoneSeasonsOf.
+    // ⚠ RE-AIMED 08.09, when the owner cut the gate from four seasons to three: this fixture used to
+    // bank three top-10 seasons to sit one under the bar, and the cut made those three PASS - the
+    // negative arm was asserting nothing. It is built off the constant now, so it can never again
+    // be silently overtaken by a threshold move. The claim is unchanged.
     const noTenure = probeWorld(seed, hit, 5)
-    noTenure.seasonHistory = [seasonAt(0, 8), seasonAt(1, 4), seasonAt(2, 40), seasonAt(3, 2)]
+    noTenure.seasonHistory = Array.from({ length: Math.max(0, L.seasonsInTop10 - 1) }, (_, i) => seasonAt(i, 4))
     noTenure.trophiesByTier.slam ??= { titles: [], finals: [] }
     noTenure.trophiesByTier.slam!.titles.push(hit - 30)
     expect(capstoneSeasonsOf(noTenure)).toBeLessThan(L.seasonsInTop10)
